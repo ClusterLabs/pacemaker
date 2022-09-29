@@ -812,24 +812,25 @@ can_interleave_actions(pe_action_t *first, pe_action_t *then)
  * flags (and runnable_before members if appropriate) as appropriate for the
  * ordering. In some cases, the ordering could be disabled as well.
  *
- * \param[in] first     'First' action in an ordering
- * \param[in] then      'Then' action in an ordering
- * \param[in] node      If not NULL, limit scope of ordering to this node
- *                      (only used when interleaving instances)
- * \param[in] flags     Action flags for \p first for ordering purposes
- * \param[in] filter    Action flags to limit scope of certain updates (may
- *                      include pe_action_optional to affect only mandatory
- *                      actions, and pe_action_runnable to affect only
- *                      runnable actions)
- * \param[in] type      Group of enum pe_ordering flags to apply
- * \param[in] data_set  Cluster working set
+ * \param[in,out] first     'First' action in an ordering
+ * \param[in,out] then      'Then' action in an ordering
+ * \param[in]     node      If not NULL, limit scope of ordering to this node
+ *                          (only used when interleaving instances)
+ * \param[in]     flags     Action flags for \p first for ordering purposes
+ * \param[in]     filter    Action flags to limit scope of certain updates (may
+ *                          include pe_action_optional to affect only mandatory
+ *                          actions, and pe_action_runnable to affect only
+ *                          runnable actions)
+ * \param[in]     type      Group of enum pe_ordering flags to apply
+ * \param[in,out] data_set  Cluster working set
  *
  * \return Group of enum pcmk__updated flags indicating what was updated
  */
 uint32_t
 pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
-                           pe_node_t *node, uint32_t flags, uint32_t filter,
-                           uint32_t type, pe_working_set_t *data_set)
+                           const pe_node_t *node, uint32_t flags,
+                           uint32_t filter, uint32_t type,
+                           pe_working_set_t *data_set)
 {
     uint32_t changed = pcmk__updated_none;
 

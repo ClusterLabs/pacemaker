@@ -55,11 +55,12 @@ void pcmk__clone_add_utilization(const pe_resource_t *rsc,
 void pcmk__clone_shutdown_lock(pe_resource_t *rsc);
 
 uint32_t group_update_actions(pe_action_t *first, pe_action_t *then,
-                              pe_node_t *node, uint32_t flags, uint32_t filter,
-                              uint32_t type, pe_working_set_t *data_set);
+                              const pe_node_t *node, uint32_t flags,
+                              uint32_t filter, uint32_t type,
+                              pe_working_set_t *data_set);
 uint32_t pcmk__multi_update_actions(pe_action_t *first,
                                     pe_action_t *then,
-                                    pe_node_t *node, uint32_t flags,
+                                    const pe_node_t *node, uint32_t flags,
                                     uint32_t filter, uint32_t type,
                                     pe_working_set_t *data_set);
 
