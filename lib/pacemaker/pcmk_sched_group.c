@@ -17,9 +17,6 @@
 
 #include "libpacemaker_private.h"
 
-#define VARIANT_GROUP 1
-#include <lib/pengine/variant.h>
-
 /*!
  * \internal
  * \brief Expand a group's colocations to its members
@@ -29,14 +26,11 @@
 static void
 expand_group_colocations(pe_resource_t *rsc)
 {
-    group_variant_data_t *group_data = NULL;
     pe_resource_t *member = NULL;
     bool any_unmanaged = false;
 
-    get_group_variant_data(group_data, rsc);
-
     // Treat "group with R" colocations as "first member with R"
-    member = group_data->first_child;
+    member = (pe_resource_t *) rsc->children->data;
     member->rsc_cons = g_list_concat(member->rsc_cons, rsc->rsc_cons);
 
 
@@ -75,7 +69,7 @@ expand_group_colocations(pe_resource_t *rsc)
     rsc->rsc_cons = NULL;
 
     // Treat "R with group" colocations as "R with last member"
-    member = group_data->last_child;
+    member = pe__last_group_member(rsc);
     member->rsc_cons_lhs = g_list_concat(member->rsc_cons_lhs,
                                          rsc->rsc_cons_lhs);
     rsc->rsc_cons_lhs = NULL;
@@ -95,10 +89,8 @@ pcmk__group_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
 {
     pe_node_t *node = NULL;
     pe_node_t *group_node = NULL;
+    pe_resource_t *first_member = NULL;
     GList *gIter = NULL;
-    group_variant_data_t *group_data = NULL;
-
-    get_group_variant_data(group_data, rsc);
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
         return rsc->allocated_to;
@@ -108,14 +100,15 @@ pcmk__group_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
         return NULL;
     }
 
-    if (group_data->first_child == NULL) {
+    if (rsc->children == NULL) {
         // Nothing to allocate
         pe__clear_resource_flags(rsc, pe_rsc_provisional);
         return NULL;
     }
 
     pe__set_resource_flags(rsc, pe_rsc_allocating);
-    rsc->role = group_data->first_child->role;
+    first_member = (pe_resource_t *) rsc->children->data;
+    rsc->role = first_member->role;
 
     expand_group_colocations(rsc);
 
@@ -134,17 +127,11 @@ pcmk__group_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
         }
     }
 
-    pe__set_next_role(rsc, group_data->first_child->next_role,
-                      "first group member");
+    pe__set_next_role(rsc, first_member->next_role, "first group member");
     pe__clear_resource_flags(rsc, pe_rsc_allocating|pe_rsc_provisional);
 
-    if (group_data->colocated) {
-        return group_node;
-    }
-    return NULL;
+    return pe__group_flag_is_set(rsc, pe__group_colocated)? group_node : NULL;
 }
-
-void group_update_pseudo_status(pe_resource_t * parent, pe_resource_t * child);
 
 void
 group_create_actions(pe_resource_t *rsc)
@@ -159,25 +146,20 @@ group_create_actions(pe_resource_t *rsc)
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         child_rsc->cmds->create_actions(child_rsc);
-        group_update_pseudo_status(rsc, child_rsc);
     }
 
-    op = start_action(rsc, NULL, TRUE /* !group_data->child_starting */ );
+    op = start_action(rsc, NULL, TRUE);
     pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
-    op = custom_action(rsc, started_key(rsc),
-                       RSC_STARTED, NULL,
-                       TRUE /* !group_data->child_starting */ ,
-                       TRUE, rsc->cluster);
+    op = custom_action(rsc, started_key(rsc), RSC_STARTED, NULL,
+                       TRUE, TRUE, rsc->cluster);
     pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
-    op = stop_action(rsc, NULL, TRUE /* !group_data->child_stopping */ );
+    op = stop_action(rsc, NULL, TRUE);
     pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
-    op = custom_action(rsc, stopped_key(rsc),
-                       RSC_STOPPED, NULL,
-                       TRUE /* !group_data->child_stopping */ ,
-                       TRUE, rsc->cluster);
+    op = custom_action(rsc, stopped_key(rsc), RSC_STOPPED, NULL,
+                       TRUE, TRUE, rsc->cluster);
     pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
     value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_PROMOTABLE);
@@ -201,52 +183,14 @@ group_create_actions(pe_resource_t *rsc)
 }
 
 void
-group_update_pseudo_status(pe_resource_t * parent, pe_resource_t * child)
-{
-    GList *gIter = child->actions;
-    group_variant_data_t *group_data = NULL;
-
-    get_group_variant_data(group_data, parent);
-
-    if (group_data->ordered == FALSE) {
-        /* If this group is not ordered, then leave the meta-actions as optional */
-        return;
-    }
-
-    if (group_data->child_stopping && group_data->child_starting) {
-        return;
-    }
-
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
-
-        if (pcmk_is_set(action->flags, pe_action_optional)) {
-            continue;
-        }
-        if (pcmk__str_eq(RSC_STOP, action->task, pcmk__str_casei)
-            && pcmk_is_set(action->flags, pe_action_runnable)) {
-
-            group_data->child_stopping = TRUE;
-            pe_rsc_trace(action->rsc, "Based on %s the group is stopping", action->uuid);
-
-        } else if (pcmk__str_eq(RSC_START, action->task, pcmk__str_casei)
-                   && pcmk_is_set(action->flags, pe_action_runnable)) {
-            group_data->child_starting = TRUE;
-            pe_rsc_trace(action->rsc, "Based on %s the group is starting", action->uuid);
-        }
-    }
-}
-
-void
 group_internal_constraints(pe_resource_t *rsc)
 {
     GList *gIter = rsc->children;
     pe_resource_t *last_rsc = NULL;
     pe_resource_t *last_active = NULL;
     pe_resource_t *top = uber_parent(rsc);
-    group_variant_data_t *group_data = NULL;
-
-    get_group_variant_data(group_data, rsc);
+    bool ordered = pe__group_flag_is_set(rsc, pe__group_ordered);
+    bool colocated = pe__group_flag_is_set(rsc, pe__group_colocated);
 
     pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, RSC_START,
                                  pe_order_optional);
@@ -266,12 +210,12 @@ group_internal_constraints(pe_resource_t *rsc)
         child_rsc->cmds->internal_constraints(child_rsc);
 
         if (last_rsc == NULL) {
-            if (group_data->ordered) {
+            if (ordered) {
                 pe__set_order_flags(stop, pe_order_optional);
                 stopped = pe_order_implies_then;
             }
 
-        } else if (group_data->colocated) {
+        } else if (colocated) {
             pcmk__new_colocation("group:internal_colocation", NULL, INFINITY,
                                  child_rsc, last_rsc, NULL, NULL,
                                  pcmk_is_set(child_rsc->flags, pe_rsc_critical),
@@ -303,7 +247,7 @@ group_internal_constraints(pe_resource_t *rsc)
         pcmk__order_resource_actions(child_rsc, RSC_START, rsc, RSC_STARTED,
                                      started);
 
-        if (group_data->ordered == FALSE) {
+        if (!ordered) {
             pcmk__order_starts(rsc, child_rsc,
                                start|pe_order_implies_first_printed);
             if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
@@ -336,8 +280,7 @@ group_internal_constraints(pe_resource_t *rsc)
          * Make sure they still shut down in sequence
          */
         if (child_rsc->running_on) {
-            if (group_data->ordered
-                && last_rsc
+            if (ordered && (last_rsc != NULL)
                 && last_rsc->running_on == NULL && last_active && last_active->running_on) {
                 pcmk__order_stops(child_rsc, last_active, pe_order_optional);
             }
@@ -347,7 +290,7 @@ group_internal_constraints(pe_resource_t *rsc)
         last_rsc = child_rsc;
     }
 
-    if (group_data->ordered && last_rsc != NULL) {
+    if (ordered && (last_rsc != NULL)) {
         int stop_stop_flags = pe_order_implies_then;
         int stop_stopped_flags = pe_order_optional;
 
@@ -384,7 +327,7 @@ pcmk__group_apply_coloc_score(pe_resource_t *dependent,
                               bool for_dependent)
 {
     GList *gIter = NULL;
-    group_variant_data_t *group_data = NULL;
+    pe_resource_t *member = NULL;
 
     CRM_CHECK((colocation != NULL) && (dependent != NULL) && (primary != NULL),
               return);
@@ -396,12 +339,9 @@ pcmk__group_apply_coloc_score(pe_resource_t *dependent,
     gIter = dependent->children;
     pe_rsc_trace(dependent, "Processing constraints from %s", dependent->id);
 
-    get_group_variant_data(group_data, dependent);
-
-    if (group_data->colocated) {
-        group_data->first_child->cmds->apply_coloc_score(group_data->first_child,
-                                                         primary, colocation,
-                                                         true);
+    if (pe__group_flag_is_set(dependent, pe__group_colocated)) {
+        member = (pe_resource_t *) dependent->children->data;
+        member->cmds->apply_coloc_score(member, primary, colocation, true);
         return;
 
     } else if (colocation->score >= INFINITY) {
@@ -421,29 +361,24 @@ pcmk__group_apply_coloc_score(pe_resource_t *dependent,
 
 for_primary:
     gIter = primary->children;
-    get_group_variant_data(group_data, primary);
     CRM_CHECK(dependent->variant == pe_native, return);
 
     pe_rsc_trace(primary,
                  "Processing colocation %s (%s with group %s) for primary",
                  colocation->id, dependent->id, primary->id);
 
+    member = (pe_resource_t *) primary->children->data;
+
     if (pcmk_is_set(primary->flags, pe_rsc_provisional)) {
         return;
 
-    } else if (group_data->colocated && group_data->first_child) {
+    } else if (pe__group_flag_is_set(primary, pe__group_colocated)
+               && (member != NULL)) {
         if (colocation->score >= INFINITY) {
             // Dependent can't start until group is fully up
-            group_data->last_child->cmds->apply_coloc_score(dependent,
-                                                            group_data->last_child,
-                                                            colocation, false);
-        } else {
-            // Dependent can start as long as group is partially up
-            group_data->first_child->cmds->apply_coloc_score(dependent,
-                                                             group_data->first_child,
-                                                             colocation, false);
-        }
-
+            member = pe__last_group_member(primary);
+        } // else dependent can start as long as group is partially up
+        member->cmds->apply_coloc_score(dependent, member, colocation, false);
         return;
 
     } else if (colocation->score >= INFINITY) {
@@ -559,10 +494,7 @@ group_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
     GList *gIter = rsc->children;
     GList *saved = constraint->node_list_rh;
     GList *zero = pcmk__copy_node_list(constraint->node_list_rh, true);
-    gboolean reset_scores = TRUE;
-    group_variant_data_t *group_data = NULL;
-
-    get_group_variant_data(group_data, rsc);
+    gboolean reset_scores = pe__group_flag_is_set(rsc, pe__group_colocated);
 
     pe_rsc_debug(rsc, "Processing rsc_location %s for %s", constraint->id, rsc->id);
 
@@ -572,7 +504,7 @@ group_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         child_rsc->cmds->apply_location(child_rsc, constraint);
-        if (group_data->colocated && reset_scores) {
+        if (reset_scores) {
             reset_scores = FALSE;
             constraint->node_list_rh = zero;
         }
@@ -606,15 +538,12 @@ pcmk__group_add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
 {
     GList *gIter = rsc->rsc_cons_lhs;
     pe_resource_t *member = NULL;
-    group_variant_data_t *group_data = NULL;
 
     CRM_CHECK((rsc != NULL) && (nodes != NULL), return);
 
     if (log_id == NULL) {
         log_id = rsc->id;
     }
-
-    get_group_variant_data(group_data, rsc);
 
     if (pcmk_is_set(rsc->flags, pe_rsc_merging)) {
         pe_rsc_info(rsc, "Breaking dependency loop with %s at %s",
@@ -624,7 +553,7 @@ pcmk__group_add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
 
     pe__set_resource_flags(rsc, pe_rsc_merging);
 
-    member = group_data->first_child;
+    member = (pe_resource_t *) rsc->children->data;
     member->cmds->add_colocated_node_scores(member, log_id, nodes, attr,
                                             factor, flags);
 
@@ -651,15 +580,13 @@ pcmk__group_colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
                                 GList *colocated_rscs)
 {
     pe_resource_t *child_rsc = NULL;
-    group_variant_data_t *group_data = NULL;
-
-    get_group_variant_data(group_data, rsc);
 
     if (orig_rsc == NULL) {
         orig_rsc = rsc;
     }
 
-    if (group_data->colocated || pe_rsc_is_clone(rsc->parent)) {
+    if (pe__group_flag_is_set(rsc, pe__group_colocated)
+        || pe_rsc_is_clone(rsc->parent)) {
         /* This group has colocated members and/or is cloned -- either way,
          * add every child's colocated resources to the list.
          */
@@ -670,11 +597,11 @@ pcmk__group_colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
                                                                   colocated_rscs);
         }
 
-    } else if (group_data->first_child != NULL) {
+    } else if (rsc->children != NULL) {
         /* This group's members are not colocated, and the group is not cloned,
          * so just add the first child's colocations to the list.
          */
-        child_rsc = group_data->first_child;
+        child_rsc = (pe_resource_t *) rsc->children->data;
         colocated_rscs = child_rsc->cmds->colocated_resources(child_rsc,
                                                               orig_rsc,
                                                               colocated_rscs);
@@ -692,7 +619,6 @@ pcmk__group_add_utilization(const pe_resource_t *rsc,
                             const pe_resource_t *orig_rsc, GList *all_rscs,
                             GHashTable *utilization)
 {
-    group_variant_data_t *group_data = NULL;
     pe_resource_t *child = NULL;
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
@@ -701,8 +627,8 @@ pcmk__group_add_utilization(const pe_resource_t *rsc,
 
     pe_rsc_trace(orig_rsc, "%s: Adding group %s as colocated utilization",
                  orig_rsc->id, rsc->id);
-    get_group_variant_data(group_data, rsc);
-    if (group_data->colocated || pe_rsc_is_clone(rsc->parent)) {
+    if (pe__group_flag_is_set(rsc, pe__group_colocated)
+        || pe_rsc_is_clone(rsc->parent)) {
         // Every group member will be on same node, so sum all members
         for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
             child = (pe_resource_t *) iter->data;
@@ -716,7 +642,7 @@ pcmk__group_add_utilization(const pe_resource_t *rsc,
 
     } else {
         // Just add first child's utilization
-        child = group_data->first_child;
+        child = (pe_resource_t *) rsc->children->data;
         if ((child != NULL)
             && pcmk_is_set(child->flags, pe_rsc_provisional)
             && (g_list_find(all_rscs, child) == NULL)) {
