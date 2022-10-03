@@ -72,14 +72,19 @@ allocate_ip(pe__bundle_variant_data_t *data, pe__bundle_replica_t *replica,
                 g_string_append_printf(buffer, " --add-host=%s-%d:%s",
                                        data->prefix, replica->offset,
                                        replica->ipaddr);
-                break;
+            } else {
+                g_string_append_printf(buffer, " --hosts-entry=%s=%s-%d",
+                                       replica->ipaddr, data->prefix,
+                                       replica->offset);
             }
-            // fall through
+            break;
+
         case PE__CONTAINER_AGENT_RKT:
             g_string_append_printf(buffer, " --hosts-entry=%s=%s-%d",
                                    replica->ipaddr, data->prefix,
                                    replica->offset);
             break;
+
         default: // PE__CONTAINER_AGENT_UNKNOWN
             break;
     }

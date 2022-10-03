@@ -582,11 +582,13 @@ do_state_transition(enum crmd_fsa_state cur_state,
     switch (next_state) {
         case S_PENDING:
             fsa_cib_conn->cmds->set_secondary(fsa_cib_conn, cib_scope_local);
-            /* fall through */
-        case S_ELECTION:
-            crm_trace("Resetting our DC to NULL on transition to %s", fsa_state2string(next_state));
             update_dc(NULL);
             break;
+
+        case S_ELECTION:
+            update_dc(NULL);
+            break;
+
         case S_NOT_DC:
             election_trigger->counter = 0;
             purge_stonith_cleanup();
@@ -600,6 +602,7 @@ do_state_transition(enum crmd_fsa_state cur_state,
                 crm_err("Reached S_NOT_DC without a DC" " being recorded");
             }
             break;
+
         case S_RECOVERY:
             clear_recovery_bit = FALSE;
             break;

@@ -569,11 +569,13 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup)
         switch (op->result.execution_status) {
             case PCMK_EXEC_NO_FENCE_DEVICE:
                 break;
+
             case PCMK_EXEC_INVALID:
-                if (op->result.exit_status == CRM_EX_EXPIRED) {
-                    break;
+                if (op->result.exit_status != CRM_EX_EXPIRED) {
+                    op->delegate = delegate_from_xml(data);
                 }
-                // else fall through
+                break;
+
             default:
                 op->delegate = delegate_from_xml(data);
                 break;
