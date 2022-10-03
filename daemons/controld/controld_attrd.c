@@ -36,25 +36,30 @@ controld_close_attrd_ipc(void)
     }
 }
 
+static inline const char *
+node_type(bool is_remote)
+{
+    return is_remote? "Pacemaker Remote" : "cluster";
+}
+
 static void
 log_attrd_error(const char *host, const char *name, const char *value,
                 gboolean is_remote, enum attrd_command command, int rc)
 {
-    const char *node_type = (is_remote? "Pacemaker Remote" : "cluster");
     gboolean shutting_down = pcmk_is_set(fsa_input_register, R_SHUTDOWN);
     const char *when = (shutting_down? " at shutdown" : "");
 
     switch (command) {
         case cmd_clear:
             crm_err("Could not clear failure attributes for %s on %s node %s%s: %s "
-                    CRM_XS " rc=%d", (name? name : "all resources"), node_type,
-                    host, when, pcmk_rc_str(rc), rc);
+                    CRM_XS " rc=%d", (name? name : "all resources"),
+                    node_type(is_remote), host, when, pcmk_rc_str(rc), rc);
             break;
 
         case cmd_purge:
             crm_err("Could not purge %s node %s in attribute manager%s: %s "
                     CRM_XS " rc=%d",
-                    node_type, host, when, pcmk_rc_str(rc), rc);
+                    node_type(is_remote), host, when, pcmk_rc_str(rc), rc);
             break;
 
         case cmd_update:
@@ -64,8 +69,8 @@ log_attrd_error(const char *host, const char *name, const char *value,
              */
             do_crm_log(AM_I_DC? LOG_CRIT : LOG_ERR,
                        "Could not update attribute %s=%s for %s node %s%s: %s "
-                       CRM_XS " rc=%d", name, value, node_type, host, when,
-                       pcmk_rc_str(rc), rc);
+                       CRM_XS " rc=%d", name, value, node_type(is_remote), host,
+                       when, pcmk_rc_str(rc), rc);
 
 
             if (AM_I_DC) {
@@ -157,7 +162,6 @@ update_attrd_clear_failures(const char *host, const char *rsc, const char *op,
 {
     const char *op_desc = NULL;
     const char *interval_desc = NULL;
-    const char *node_type = is_remote_node? "Pacemaker Remote" : "cluster";
 
     if (op) {
         interval_desc = interval_spec? interval_spec : "nonrecurring";
@@ -167,6 +171,6 @@ update_attrd_clear_failures(const char *host, const char *rsc, const char *op,
         op_desc = "operations";
     }
     crm_info("Asking pacemaker-attrd to clear failure of %s %s for %s on %s node %s",
-             interval_desc, op_desc, rsc, node_type, host);
+             interval_desc, op_desc, rsc, node_type(is_remote_node), host);
     update_attrd_helper(host, rsc, op, interval_spec, NULL, is_remote_node, cmd_clear);
 }
