@@ -151,8 +151,21 @@ update_attrd(const char *host, const char *name, const char *value,
 void
 update_attrd_list(GList *attrs, uint32_t opts)
 {
-    pcmk__attrd_api_update_list(attrd_api, attrs, NULL, NULL, NULL,
-                                opts | pcmk__node_attr_value);
+    int rc = pcmk_rc_ok;
+
+    if (attrd_api == NULL) {
+        rc = pcmk_new_ipc_api(&attrd_api, pcmk_ipc_attrd);
+    }
+    if (rc == pcmk_rc_ok) {
+        rc = pcmk__attrd_api_update_list(attrd_api, attrs, NULL, NULL, NULL,
+                                         opts | pcmk__node_attr_value);
+    }
+    if (rc != pcmk_rc_ok) {
+        do_crm_log(AM_I_DC? LOG_CRIT : LOG_ERR,
+                   "Could not update multiple node attributes: %s "
+                   CRM_XS " rc=%d", pcmk_rc_str(rc), rc);
+        handle_attr_error();
+    }
 }
 
 void
