@@ -42,24 +42,27 @@ node_type(bool is_remote)
     return is_remote? "Pacemaker Remote" : "cluster";
 }
 
+static inline const char *
+when(void)
+{
+    return pcmk_is_set(fsa_input_register, R_SHUTDOWN)? " at shutdown" : "";
+}
+
 static void
 log_attrd_error(const char *host, const char *name, const char *value,
                 gboolean is_remote, enum attrd_command command, int rc)
 {
-    gboolean shutting_down = pcmk_is_set(fsa_input_register, R_SHUTDOWN);
-    const char *when = (shutting_down? " at shutdown" : "");
-
     switch (command) {
         case cmd_clear:
             crm_err("Could not clear failure attributes for %s on %s node %s%s: %s "
                     CRM_XS " rc=%d", (name? name : "all resources"),
-                    node_type(is_remote), host, when, pcmk_rc_str(rc), rc);
+                    node_type(is_remote), host, when(), pcmk_rc_str(rc), rc);
             break;
 
         case cmd_purge:
             crm_err("Could not purge %s node %s in attribute manager%s: %s "
                     CRM_XS " rc=%d",
-                    node_type(is_remote), host, when, pcmk_rc_str(rc), rc);
+                    node_type(is_remote), host, when(), pcmk_rc_str(rc), rc);
             break;
 
         case cmd_update:
@@ -70,7 +73,7 @@ log_attrd_error(const char *host, const char *name, const char *value,
             do_crm_log(AM_I_DC? LOG_CRIT : LOG_ERR,
                        "Could not update attribute %s=%s for %s node %s%s: %s "
                        CRM_XS " rc=%d", name, value, node_type(is_remote), host,
-                       when, pcmk_rc_str(rc), rc);
+                       when(), pcmk_rc_str(rc), rc);
 
 
             if (AM_I_DC) {
@@ -80,7 +83,7 @@ log_attrd_error(const char *host, const char *name, const char *value,
                  */
                 crmd_exit(CRM_EX_FATAL);
 
-            } else if (shutting_down) {
+            } else if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
                 // Fast-track shutdown since unable to request via attribute
                 register_fsa_input(C_FSA_INTERNAL, I_FAIL, NULL);
             }
