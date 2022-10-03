@@ -38,26 +38,26 @@ controld_close_attrd_ipc(void)
 
 static void
 log_attrd_error(const char *host, const char *name, const char *value,
-                gboolean is_remote, char command, int rc)
+                gboolean is_remote, enum attrd_command command, int rc)
 {
     const char *node_type = (is_remote? "Pacemaker Remote" : "cluster");
     gboolean shutting_down = pcmk_is_set(fsa_input_register, R_SHUTDOWN);
     const char *when = (shutting_down? " at shutdown" : "");
 
     switch (command) {
-        case 0:
+        case cmd_clear:
             crm_err("Could not clear failure attributes for %s on %s node %s%s: %s "
                     CRM_XS " rc=%d", (name? name : "all resources"), node_type,
                     host, when, pcmk_rc_str(rc), rc);
             break;
 
-        case 'C':
+        case cmd_purge:
             crm_err("Could not purge %s node %s in attribute manager%s: %s "
                     CRM_XS " rc=%d",
                     node_type, host, when, pcmk_rc_str(rc), rc);
             break;
 
-        case 'U':
+        case cmd_update:
             /* We weren't able to update an attribute after several retries,
              * so something is horribly wrong with the attribute manager or the
              * underlying system.
