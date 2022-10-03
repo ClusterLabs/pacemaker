@@ -49,6 +49,22 @@ when(void)
 }
 
 static void
+handle_attr_error(void)
+{
+    if (AM_I_DC) {
+        /* We are unable to provide accurate information to the
+         * scheduler, so allow another node to take over DC.
+         * @TODO Should we do this unconditionally on any failure?
+         */
+        crmd_exit(CRM_EX_FATAL);
+
+    } else if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
+        // Fast-track shutdown since unable to request via attribute
+        register_fsa_input(C_FSA_INTERNAL, I_FAIL, NULL);
+    }
+}
+
+static void
 log_attrd_error(const char *host, const char *name, const char *value,
                 gboolean is_remote, enum attrd_command command, int rc)
 {
@@ -74,19 +90,7 @@ log_attrd_error(const char *host, const char *name, const char *value,
                        "Could not update attribute %s=%s for %s node %s%s: %s "
                        CRM_XS " rc=%d", name, value, node_type(is_remote), host,
                        when(), pcmk_rc_str(rc), rc);
-
-
-            if (AM_I_DC) {
-                /* We are unable to provide accurate information to the
-                 * scheduler, so allow another node to take over DC.
-                 * @TODO Should we do this unconditionally on any failure?
-                 */
-                crmd_exit(CRM_EX_FATAL);
-
-            } else if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
-                // Fast-track shutdown since unable to request via attribute
-                register_fsa_input(C_FSA_INTERNAL, I_FAIL, NULL);
-            }
+            handle_attr_error();
             break;
     }
 }
