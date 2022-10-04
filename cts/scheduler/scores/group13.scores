@@ -1,7 +1,7 @@
 
-pcmk__group_allocate: fs allocation score on jamesltc: 0
-pcmk__group_allocate: nfs allocation score on jamesltc: 0
-pcmk__group_allocate: resource_fs allocation score on jamesltc: -INFINITY
-pcmk__group_allocate: resource_nfs allocation score on jamesltc: 0
+pcmk__group_assign: fs allocation score on jamesltc: 0
+pcmk__group_assign: nfs allocation score on jamesltc: 0
+pcmk__group_assign: resource_fs allocation score on jamesltc: -INFINITY
+pcmk__group_assign: resource_nfs allocation score on jamesltc: 0
 pcmk__primitive_assign: resource_fs allocation score on jamesltc: -INFINITY
 pcmk__primitive_assign: resource_nfs allocation score on jamesltc: -INFINITY

@@ -1,7 +1,7 @@
 
-pcmk__group_allocate: ClusterIP allocation score on fc16-builder: 0
-pcmk__group_allocate: ClusterIP2 allocation score on fc16-builder: 0
-pcmk__group_allocate: group1 allocation score on fc16-builder: 0
-pcmk__group_allocate: group2 allocation score on fc16-builder: 0
+pcmk__group_assign: ClusterIP allocation score on fc16-builder: 0
+pcmk__group_assign: ClusterIP2 allocation score on fc16-builder: 0
+pcmk__group_assign: group1 allocation score on fc16-builder: 0
+pcmk__group_assign: group2 allocation score on fc16-builder: 0
 pcmk__primitive_assign: ClusterIP allocation score on fc16-builder: 0
 pcmk__primitive_assign: ClusterIP2 allocation score on fc16-builder: 0

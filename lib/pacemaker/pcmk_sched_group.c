@@ -14,7 +14,6 @@
 #include <crm/msg_xml.h>
 
 #include <pacemaker-internal.h>
-
 #include "libpacemaker_private.h"
 
 /*!
@@ -79,29 +78,30 @@ expand_group_colocations(pe_resource_t *rsc)
  * \internal
  * \brief Assign a group resource to a node
  *
- * \param[in,out] rsc     Resource to assign to a node
+ * \param[in,out] rsc     Group resource to assign to a node
  * \param[in]     prefer  Node to prefer, if all else is equal
  *
  * \return Node that \p rsc is assigned to, if assigned entirely to one node
  */
 pe_node_t *
-pcmk__group_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
+pcmk__group_assign(pe_resource_t *rsc, const pe_node_t *prefer)
 {
-    pe_node_t *node = NULL;
-    pe_node_t *group_node = NULL;
+    pe_node_t *first_assigned_node = NULL;
     pe_resource_t *first_member = NULL;
-    GList *gIter = NULL;
+
+    CRM_ASSERT(rsc != NULL);
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
-        return rsc->allocated_to;
+        return rsc->allocated_to; // Assignment already done
     }
     if (pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
-        pe_rsc_debug(rsc, "Dependency loop detected involving %s", rsc->id);
+        pe_rsc_debug(rsc, "Assignment dependency loop detected involving %s",
+                     rsc->id);
         return NULL;
     }
 
     if (rsc->children == NULL) {
-        // Nothing to allocate
+        // No members to assign
         pe__clear_resource_flags(rsc, pe_rsc_provisional);
         return NULL;
     }
@@ -115,196 +115,235 @@ pcmk__group_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
     pe__show_node_weights(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
                           rsc, __func__, rsc->allowed_nodes, rsc->cluster);
 
-    gIter = rsc->children;
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *member = (pe_resource_t *) iter->data;
+        pe_node_t *node = NULL;
 
-        pe_rsc_trace(rsc, "Allocating group %s member %s",
-                     rsc->id, child_rsc->id);
-        node = child_rsc->cmds->assign(child_rsc, prefer);
-        if (group_node == NULL) {
-            group_node = node;
+        pe_rsc_trace(rsc, "Assigning group %s member %s",
+                     rsc->id, member->id);
+        node = member->cmds->assign(member, prefer);
+        if (first_assigned_node == NULL) {
+            first_assigned_node = node;
         }
     }
 
     pe__set_next_role(rsc, first_member->next_role, "first group member");
     pe__clear_resource_flags(rsc, pe_rsc_allocating|pe_rsc_provisional);
 
-    return pe__group_flag_is_set(rsc, pe__group_colocated)? group_node : NULL;
+    if (!pe__group_flag_is_set(rsc, pe__group_colocated)) {
+        return NULL;
+    }
+    return first_assigned_node;
 }
 
-void
-group_create_actions(pe_resource_t *rsc)
+/*!
+ * \internal
+ * \brief Create a pseudo-operation for a group as an ordering point
+ *
+ * \param[in,out] group   Group resource to create action for
+ * \param[in]     action  Action name
+ *
+ * \return Newly created pseudo-operation
+ */
+static pe_action_t *
+create_group_pseudo_op(pe_resource_t *group, const char *action)
 {
-    pe_action_t *op = NULL;
-    const char *value = NULL;
-    GList *gIter = rsc->children;
+    pe_action_t *op = custom_action(group, pcmk__op_key(group->id, action, 0),
+                                    action, NULL, TRUE, TRUE, group->cluster);
+    pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
+    return op;
+}
 
-    pe_rsc_trace(rsc, "Creating actions for %s", rsc->id);
+/*!
+ * \internal
+ * \brief Create all actions needed for a given group resource
+ *
+ * \param[in,out] rsc  Group resource to create actions for
+ */
+void
+pcmk__group_create_actions(pe_resource_t *rsc)
+{
+    CRM_ASSERT(rsc != NULL);
 
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
+    pe_rsc_trace(rsc, "Creating actions for group %s", rsc->id);
 
-        child_rsc->cmds->create_actions(child_rsc);
+    // Create actions for individual group members
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *member = (pe_resource_t *) iter->data;
+
+        member->cmds->create_actions(member);
     }
 
-    op = start_action(rsc, NULL, TRUE);
-    pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
-
-    op = custom_action(rsc, started_key(rsc), RSC_STARTED, NULL,
-                       TRUE, TRUE, rsc->cluster);
-    pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
-
-    op = stop_action(rsc, NULL, TRUE);
-    pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
-
-    op = custom_action(rsc, stopped_key(rsc), RSC_STOPPED, NULL,
-                       TRUE, TRUE, rsc->cluster);
-    pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
-
-    value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_PROMOTABLE);
-    if (crm_is_true(value)) {
-        op = custom_action(rsc, demote_key(rsc), RSC_DEMOTE, NULL, TRUE, TRUE,
-                           rsc->cluster);
-        pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
-
-        op = custom_action(rsc, demoted_key(rsc), RSC_DEMOTED, NULL, TRUE, TRUE,
-                           rsc->cluster);
-        pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
-
-        op = custom_action(rsc, promote_key(rsc), RSC_PROMOTE, NULL, TRUE, TRUE,
-                           rsc->cluster);
-        pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
-
-        op = custom_action(rsc, promoted_key(rsc), RSC_PROMOTED, NULL, TRUE,
-                           TRUE, rsc->cluster);
-        pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
+    // Create pseudo-actions for group itself to serve as ordering points
+    create_group_pseudo_op(rsc, RSC_START);
+    create_group_pseudo_op(rsc, RSC_STARTED);
+    create_group_pseudo_op(rsc, RSC_STOP);
+    create_group_pseudo_op(rsc, RSC_STOPPED);
+    if (crm_is_true(g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_PROMOTABLE))) {
+        create_group_pseudo_op(rsc, RSC_DEMOTE);
+        create_group_pseudo_op(rsc, RSC_DEMOTED);
+        create_group_pseudo_op(rsc, RSC_PROMOTE);
+        create_group_pseudo_op(rsc, RSC_PROMOTED);
     }
 }
 
-void
-group_internal_constraints(pe_resource_t *rsc)
-{
-    GList *gIter = rsc->children;
-    pe_resource_t *last_rsc = NULL;
-    pe_resource_t *last_active = NULL;
-    pe_resource_t *top = uber_parent(rsc);
-    bool ordered = pe__group_flag_is_set(rsc, pe__group_ordered);
-    bool colocated = pe__group_flag_is_set(rsc, pe__group_colocated);
+// User data for member_internal_constraints()
+struct member_data {
+    // These could be derived from member but this avoids some function calls
+    bool ordered;
+    bool colocated;
+    bool promotable;
 
+    pe_resource_t *last_active;
+    pe_resource_t *previous_member;
+};
+
+/*!
+ * \internal
+ * \brief Create implicit constraints needed for a group member
+ *
+ * \param[in,out] data       Group member to create implicit constraints for
+ * \param[in,out] user_data  Group member to create implicit constraints for
+ */
+static void
+member_internal_constraints(gpointer data, gpointer user_data)
+{
+    pe_resource_t *member = (pe_resource_t *) data;
+    struct member_data *member_data = (struct member_data *) user_data;
+
+    // For ordering demote vs demote or stop vs stop
+    uint32_t down_flags = pe_order_implies_first_printed;
+
+    // For ordering demote vs demoted or stop vs stopped
+    uint32_t post_down_flags = pe_order_implies_then_printed;
+
+    // Create the individual member's implicit constraints
+    member->cmds->internal_constraints(member);
+
+    if (member_data->previous_member == NULL) {
+        // This is first member
+        if (member_data->ordered) {
+            pe__set_order_flags(down_flags, pe_order_optional);
+            post_down_flags = pe_order_implies_then;
+        }
+
+    } else if (member_data->colocated) {
+        // Colocate this member with the previous one
+        pcmk__new_colocation("group:internal_colocation", NULL, INFINITY,
+                             member, member_data->previous_member, NULL, NULL,
+                             pcmk_is_set(member->flags, pe_rsc_critical),
+                             member->cluster);
+    }
+
+    if (member_data->promotable) {
+        // Demote group -> demote member -> group is demoted
+        pcmk__order_resource_actions(member->parent, RSC_DEMOTE,
+                                     member, RSC_DEMOTE, down_flags);
+        pcmk__order_resource_actions(member, RSC_DEMOTE,
+                                     member->parent, RSC_DEMOTED,
+                                     post_down_flags);
+
+        // Promote group -> promote member -> group is promoted
+        pcmk__order_resource_actions(member, RSC_PROMOTE,
+                                     member->parent, RSC_PROMOTED,
+                                     pe_order_runnable_left
+                                     |pe_order_implies_then
+                                     |pe_order_implies_then_printed);
+        pcmk__order_resource_actions(member->parent, RSC_PROMOTE,
+                                     member, RSC_PROMOTE,
+                                     pe_order_implies_first_printed);
+    }
+
+    // Stop group -> stop member -> group is stopped
+    pcmk__order_stops(member->parent, member, down_flags);
+    pcmk__order_resource_actions(member, RSC_STOP, member->parent, RSC_STOPPED,
+                                 post_down_flags);
+
+    // Start group -> start member -> group is started
+    pcmk__order_starts(member->parent, member, pe_order_implies_first_printed);
+    pcmk__order_resource_actions(member, RSC_START, member->parent, RSC_STARTED,
+                                 pe_order_runnable_left
+                                 |pe_order_implies_then
+                                 |pe_order_implies_then_printed);
+
+    if (!member_data->ordered) {
+        pcmk__order_starts(member->parent, member,
+                           pe_order_implies_then
+                           |pe_order_runnable_left
+                           |pe_order_implies_first_printed);
+        if (member_data->promotable) {
+            pcmk__order_resource_actions(member->parent, RSC_PROMOTE, member,
+                                         RSC_PROMOTE,
+                                         pe_order_implies_then
+                                         |pe_order_runnable_left
+                                         |pe_order_implies_first_printed);
+        }
+
+    } else if (member_data->previous_member == NULL) {
+        pcmk__order_starts(member->parent, member, pe_order_none);
+        if (member_data->promotable) {
+            pcmk__order_resource_actions(member->parent, RSC_PROMOTE, member,
+                                         RSC_PROMOTE, pe_order_none);
+        }
+
+    } else {
+        // Order this member relative to the previous one
+        pcmk__order_starts(member_data->previous_member, member,
+                           pe_order_implies_then|pe_order_runnable_left);
+        pcmk__order_stops(member, member_data->previous_member,
+                          pe_order_optional|pe_order_restart);
+        if (member_data->promotable) {
+            pcmk__order_resource_actions(member_data->previous_member,
+                                         RSC_PROMOTE, member, RSC_PROMOTE,
+                                         pe_order_implies_then
+                                         |pe_order_runnable_left);
+            pcmk__order_resource_actions(member, RSC_DEMOTE,
+                                         member_data->previous_member,
+                                         RSC_DEMOTE, pe_order_optional);
+        }
+    }
+
+    // Make sure partially active groups shut down in sequence
+    if (member->running_on != NULL) {
+        if (member_data->ordered && (member_data->previous_member != NULL)
+            && (member_data->previous_member->running_on == NULL)
+            && (member_data->last_active != NULL)
+            && (member_data->last_active->running_on != NULL)) {
+            pcmk__order_stops(member, member_data->last_active, pe_order_optional);
+        }
+        member_data->last_active = member;
+    }
+
+    member_data->previous_member = member;
+}
+
+/*!
+ * \internal
+ * \brief Create implicit constraints needed for a group resource
+ *
+ * \param[in,out] rsc  Group resource to create implicit constraints for
+ */
+void
+pcmk__group_internal_constraints(pe_resource_t *rsc)
+{
+    struct member_data member_data = { false, };
+
+    CRM_ASSERT(rsc != NULL);
+
+    /* Order group pseudo-actions relative to each other for restarting:
+     * stop group -> group is stopped -> start group -> group is started
+     */
+    pcmk__order_resource_actions(rsc, RSC_STOP, rsc, RSC_STOPPED,
+                                 pe_order_runnable_left);
     pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, RSC_START,
                                  pe_order_optional);
     pcmk__order_resource_actions(rsc, RSC_START, rsc, RSC_STARTED,
                                  pe_order_runnable_left);
-    pcmk__order_resource_actions(rsc, RSC_STOP, rsc, RSC_STOPPED,
-                                 pe_order_runnable_left);
 
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-        int stop = pe_order_none;
-        int stopped = pe_order_implies_then_printed;
-        int start = pe_order_implies_then | pe_order_runnable_left;
-        int started =
-            pe_order_runnable_left | pe_order_implies_then | pe_order_implies_then_printed;
-
-        child_rsc->cmds->internal_constraints(child_rsc);
-
-        if (last_rsc == NULL) {
-            if (ordered) {
-                pe__set_order_flags(stop, pe_order_optional);
-                stopped = pe_order_implies_then;
-            }
-
-        } else if (colocated) {
-            pcmk__new_colocation("group:internal_colocation", NULL, INFINITY,
-                                 child_rsc, last_rsc, NULL, NULL,
-                                 pcmk_is_set(child_rsc->flags, pe_rsc_critical),
-                                 rsc->cluster);
-        }
-
-        if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
-            pcmk__order_resource_actions(rsc, RSC_DEMOTE, child_rsc, RSC_DEMOTE,
-                                         stop|pe_order_implies_first_printed);
-
-            pcmk__order_resource_actions(child_rsc, RSC_DEMOTE, rsc,
-                                         RSC_DEMOTED, stopped);
-
-            pcmk__order_resource_actions(child_rsc, RSC_PROMOTE, rsc,
-                                         RSC_PROMOTED, started);
-
-            pcmk__order_resource_actions(rsc, RSC_PROMOTE, child_rsc,
-                                         RSC_PROMOTE,
-                                         pe_order_implies_first_printed);
-
-        }
-
-        pcmk__order_starts(rsc, child_rsc, pe_order_implies_first_printed);
-        pcmk__order_stops(rsc, child_rsc,
-                          stop|pe_order_implies_first_printed);
-
-        pcmk__order_resource_actions(child_rsc, RSC_STOP, rsc, RSC_STOPPED,
-                                     stopped);
-        pcmk__order_resource_actions(child_rsc, RSC_START, rsc, RSC_STARTED,
-                                     started);
-
-        if (!ordered) {
-            pcmk__order_starts(rsc, child_rsc,
-                               start|pe_order_implies_first_printed);
-            if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
-                pcmk__order_resource_actions(rsc, RSC_PROMOTE, child_rsc,
-                                             RSC_PROMOTE,
-                                             start|pe_order_implies_first_printed);
-            }
-
-        } else if (last_rsc != NULL) {
-            pcmk__order_starts(last_rsc, child_rsc, start);
-            pcmk__order_stops(child_rsc, last_rsc,
-                              pe_order_optional|pe_order_restart);
-
-            if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
-                pcmk__order_resource_actions(last_rsc, RSC_PROMOTE, child_rsc,
-                                             RSC_PROMOTE, start);
-                pcmk__order_resource_actions(child_rsc, RSC_DEMOTE, last_rsc,
-                                             RSC_DEMOTE, pe_order_optional);
-            }
-
-        } else {
-            pcmk__order_starts(rsc, child_rsc, pe_order_none);
-            if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
-                pcmk__order_resource_actions(rsc, RSC_PROMOTE, child_rsc,
-                                             RSC_PROMOTE, pe_order_none);
-            }
-        }
-
-        /* Look for partially active groups
-         * Make sure they still shut down in sequence
-         */
-        if (child_rsc->running_on) {
-            if (ordered && (last_rsc != NULL)
-                && last_rsc->running_on == NULL && last_active && last_active->running_on) {
-                pcmk__order_stops(child_rsc, last_active, pe_order_optional);
-            }
-            last_active = child_rsc;
-        }
-
-        last_rsc = child_rsc;
-    }
-
-    if (ordered && (last_rsc != NULL)) {
-        int stop_stop_flags = pe_order_implies_then;
-        int stop_stopped_flags = pe_order_optional;
-
-        pcmk__order_stops(rsc, last_rsc, stop_stop_flags);
-        pcmk__order_resource_actions(last_rsc, RSC_STOP, rsc, RSC_STOPPED,
-                                     stop_stopped_flags);
-
-        if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
-            pcmk__order_resource_actions(rsc, RSC_DEMOTE, last_rsc, RSC_DEMOTE,
-                                         stop_stop_flags);
-            pcmk__order_resource_actions(last_rsc, RSC_DEMOTE, rsc, RSC_DEMOTED,
-                                         stop_stopped_flags);
-        }
-    }
+    member_data.ordered = pe__group_flag_is_set(rsc, pe__group_ordered);
+    member_data.colocated = pe__group_flag_is_set(rsc, pe__group_colocated);
+    member_data.promotable = pcmk_is_set(uber_parent(rsc)->flags, pe_rsc_promotable);
+    g_list_foreach(rsc->children, member_internal_constraints, &member_data);
 }
 
 /*!

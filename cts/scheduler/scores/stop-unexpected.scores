@@ -1,12 +1,12 @@
 
-pcmk__group_allocate: dgroup allocation score on node2: 0
-pcmk__group_allocate: dgroup allocation score on node3: 0
-pcmk__group_allocate: dummy allocation score on node2: 0
-pcmk__group_allocate: dummy allocation score on node3: 0
-pcmk__group_allocate: dummy2 allocation score on node2: 100
-pcmk__group_allocate: dummy2 allocation score on node3: 0
-pcmk__group_allocate: dummy3 allocation score on node2: 100
-pcmk__group_allocate: dummy3 allocation score on node3: 0
+pcmk__group_assign: dgroup allocation score on node2: 0
+pcmk__group_assign: dgroup allocation score on node3: 0
+pcmk__group_assign: dummy allocation score on node2: 0
+pcmk__group_assign: dummy allocation score on node3: 0
+pcmk__group_assign: dummy2 allocation score on node2: 100
+pcmk__group_assign: dummy2 allocation score on node3: 0
+pcmk__group_assign: dummy3 allocation score on node2: 100
+pcmk__group_assign: dummy3 allocation score on node3: 0
 pcmk__primitive_assign: dummy allocation score on node2: 200
 pcmk__primitive_assign: dummy allocation score on node3: 0
 pcmk__primitive_assign: dummy2 allocation score on node2: 200

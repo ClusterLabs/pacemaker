@@ -60,7 +60,7 @@ state2text(enum remote_connection_state state)
 
 static inline void
 order_start_then_action(pe_resource_t *first_rsc, pe_action_t *then_action,
-                        enum pe_ordering extra, pe_working_set_t *data_set)
+                        uint32_t extra, pe_working_set_t *data_set)
 {
     if ((first_rsc != NULL) && (then_action != NULL) && (data_set != NULL)) {
         pcmk__new_ordering(first_rsc, start_key(first_rsc), NULL,
@@ -72,7 +72,7 @@ order_start_then_action(pe_resource_t *first_rsc, pe_action_t *then_action,
 
 static inline void
 order_action_then_stop(pe_action_t *first_action, pe_resource_t *then_rsc,
-                       enum pe_ordering extra, pe_working_set_t *data_set)
+                       uint32_t extra, pe_working_set_t *data_set)
 {
     if ((first_action != NULL) && (then_rsc != NULL) && (data_set != NULL)) {
         pcmk__new_ordering(first_action->rsc, NULL, first_action,
@@ -168,7 +168,7 @@ apply_remote_ordering(pe_action_t *action, pe_working_set_t *data_set)
     enum action_tasks task = text2task(action->task);
     enum remote_connection_state state = get_remote_node_state(action->node);
 
-    enum pe_ordering order_opts = pe_order_none;
+    uint32_t order_opts = pe_order_none;
 
     if (action->rsc == NULL) {
         return;

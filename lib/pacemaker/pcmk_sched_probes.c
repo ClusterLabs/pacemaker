@@ -152,7 +152,7 @@ probe_action(pe_resource_t *rsc, pe_node_t *node)
 bool
 pcmk__probe_rsc_on_node(pe_resource_t *rsc, pe_node_t *node)
 {
-    enum pe_ordering flags = pe_order_optional;
+    uint32_t flags = pe_order_optional;
     pe_action_t *probe = NULL;
     pe_node_t *allowed = NULL;
     pe_resource_t *top = uber_parent(rsc);
@@ -338,12 +338,12 @@ add_probe_orderings_for_stops(pe_working_set_t *data_set)
          iter = iter->next) {
 
         pe__ordering_t *order = iter->data;
-        enum pe_ordering order_type = pe_order_optional;
+        uint32_t order_flags = pe_order_optional;
         GList *probes = NULL;
         GList *then_actions = NULL;
 
         // Skip disabled orderings
-        if (order->type == pe_order_none) {
+        if (order->flags == pe_order_none) {
             continue;
         }
 
@@ -386,18 +386,18 @@ add_probe_orderings_for_stops(pe_working_set_t *data_set)
         }
 
         // Preserve certain order options for future filtering
-        if (pcmk_is_set(order->type, pe_order_apply_first_non_migratable)) {
-            pe__set_order_flags(order_type,
+        if (pcmk_is_set(order->flags, pe_order_apply_first_non_migratable)) {
+            pe__set_order_flags(order_flags,
                                 pe_order_apply_first_non_migratable);
         }
-        if (pcmk_is_set(order->type, pe_order_same_node)) {
-            pe__set_order_flags(order_type, pe_order_same_node);
+        if (pcmk_is_set(order->flags, pe_order_same_node)) {
+            pe__set_order_flags(order_flags, pe_order_same_node);
         }
 
         // Preserve certain order types for future filtering
-        if ((order->type == pe_order_anti_colocation)
-            || (order->type == pe_order_load)) {
-            order_type = order->type;
+        if ((order->flags == pe_order_anti_colocation)
+            || (order->flags == pe_order_load)) {
+            order_flags = order->flags;
         }
 
         // List all scheduled probes for the first resource
@@ -423,7 +423,7 @@ add_probe_orderings_for_stops(pe_working_set_t *data_set)
                   "(id=%d, type=%.6x)",
                   order->lh_action? order->lh_action->uuid : order->lh_action_task,
                   order->rh_action? order->rh_action->uuid : order->rh_action_task,
-                  order->id, order->type);
+                  order->id, order->flags);
 
         for (GList *probe_iter = probes; probe_iter != NULL;
              probe_iter = probe_iter->next) {
@@ -436,7 +436,7 @@ add_probe_orderings_for_stops(pe_working_set_t *data_set)
                 pe_action_t *then = (pe_action_t *) then_iter->data;
 
                 if (probe_needed_before_action(probe, then)) {
-                    order_actions(probe, then, order_type);
+                    order_actions(probe, then, order_flags);
                 }
             }
         }

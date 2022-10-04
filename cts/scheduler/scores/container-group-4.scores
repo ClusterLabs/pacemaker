@@ -1,12 +1,12 @@
 
-pcmk__group_allocate: container-group allocation score on node1: 0
-pcmk__group_allocate: container-group allocation score on node2: 0
-pcmk__group_allocate: container1 allocation score on node1: -INFINITY
-pcmk__group_allocate: container1 allocation score on node2: 0
-pcmk__group_allocate: rsc1 allocation score on node1: 0
-pcmk__group_allocate: rsc1 allocation score on node2: 0
-pcmk__group_allocate: rsc2 allocation score on node1: 0
-pcmk__group_allocate: rsc2 allocation score on node2: 0
+pcmk__group_assign: container-group allocation score on node1: 0
+pcmk__group_assign: container-group allocation score on node2: 0
+pcmk__group_assign: container1 allocation score on node1: -INFINITY
+pcmk__group_assign: container1 allocation score on node2: 0
+pcmk__group_assign: rsc1 allocation score on node1: 0
+pcmk__group_assign: rsc1 allocation score on node2: 0
+pcmk__group_assign: rsc2 allocation score on node1: 0
+pcmk__group_assign: rsc2 allocation score on node2: 0
 pcmk__primitive_assign: container1 allocation score on node1: -INFINITY
 pcmk__primitive_assign: container1 allocation score on node2: 0
 pcmk__primitive_assign: rsc1 allocation score on node1: -INFINITY

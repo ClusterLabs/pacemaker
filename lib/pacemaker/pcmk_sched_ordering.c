@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <inttypes.h>               // PRIx32
 #include <stdbool.h>
 #include <glib.h>
 
@@ -172,11 +173,11 @@ get_ordering_symmetry(xmlNode *xml_obj, enum pe_order_kind parent_kind,
  *
  * \return Minimal ordering flags appropriate to \p kind
  */
-static enum pe_ordering
+static uint32_t
 ordering_flags_for_kind(enum pe_order_kind kind, const char *first,
                         enum ordering_symmetry symmetry)
 {
-    enum pe_ordering flags = pe_order_none; // so we trace-log all flags set
+    uint32_t flags = pe_order_none; // so we trace-log all flags set
 
     pe__set_order_flags(flags, pe_order_optional);
 
@@ -330,8 +331,7 @@ static void
 clone_min_ordering(const char *id,
                    pe_resource_t *rsc_first, const char *action_first,
                    pe_resource_t *rsc_then, const char *action_then,
-                   enum pe_ordering flags, int clone_min,
-                   pe_working_set_t *data_set)
+                   uint32_t flags, int clone_min, pe_working_set_t *data_set)
 {
     // Create a pseudo-action for when the minimum instances are active
     char *task = crm_strdup_printf(CRM_OP_RELAXED_CLONE ":%s", id);
@@ -407,8 +407,8 @@ inverse_ordering(const char *id, enum pe_order_kind kind,
         pcmk__config_warn("Cannot invert constraint '%s' "
                           "(please specify inverse manually)", id);
     } else {
-        enum pe_ordering flags = ordering_flags_for_kind(kind, action_first,
-                                                         ordering_symmetric_inverse);
+        uint32_t flags = ordering_flags_for_kind(kind, action_first,
+                                                 ordering_symmetric_inverse);
 
         handle_restart_type(rsc_then, kind, pe_order_implies_first, flags);
         pcmk__order_resource_actions(rsc_then, action_then, rsc_first,
@@ -423,7 +423,7 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
     pe_resource_t *rsc_first = NULL;
     int min_required_before = 0;
     enum pe_order_kind kind = pe_order_kind_mandatory;
-    enum pe_ordering cons_weight = pe_order_none;
+    uint32_t cons_weight = pe_order_none;
     enum ordering_symmetry symmetry;
 
     const char *action_then = NULL;
@@ -522,7 +522,7 @@ void
 pcmk__new_ordering(pe_resource_t *first_rsc, char *first_action_task,
                    pe_action_t *first_action, pe_resource_t *then_rsc,
                    char *then_action_task, pe_action_t *then_action,
-                   enum pe_ordering type, pe_working_set_t *data_set)
+                   uint32_t flags, pe_working_set_t *data_set)
 {
     pe__ordering_t *order = NULL;
 
@@ -542,7 +542,7 @@ pcmk__new_ordering(pe_resource_t *first_rsc, char *first_action_task,
     CRM_ASSERT(order != NULL);
 
     order->id = data_set->order_id++;
-    order->type = type;
+    order->flags = flags;
     order->lh_rsc = first_rsc;
     order->rh_rsc = then_rsc;
     order->lh_action = first_action;
@@ -599,7 +599,7 @@ unpack_order_set(xmlNode *set, enum pe_order_kind parent_kind,
 
     int local_kind = parent_kind;
     bool sequential = false;
-    enum pe_ordering flags = pe_order_optional;
+    uint32_t flags = pe_order_optional;
     enum ordering_symmetry symmetry;
 
     char *key = NULL;
@@ -720,7 +720,7 @@ order_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2,
     const char *action_1 = crm_element_value(set1, "action");
     const char *action_2 = crm_element_value(set2, "action");
 
-    enum pe_ordering flags = pe_order_none;
+    uint32_t flags = pe_order_none;
 
     bool require_all = true;
 
@@ -1186,7 +1186,7 @@ pcmk__order_stops_before_shutdown(pe_node_t *node, pe_action_t *shutdown_op)
  * \note It is the caller's responsibility to free the result with g_list_free()
  */
 static GList *
-find_actions_by_task(pe_resource_t *rsc, const char *original_key)
+find_actions_by_task(const pe_resource_t *rsc, const char *original_key)
 {
     // Search under given task key directly
     GList *list = find_actions(rsc->actions, original_key, NULL);
@@ -1209,31 +1209,36 @@ find_actions_by_task(pe_resource_t *rsc, const char *original_key)
     return list;
 }
 
+/*!
+ * \internal
+ * \brief Order relevant resource actions after a given action
+ *
+ * \param[in,out] first_action  Action to order after (or NULL if none runnable)
+ * \param[in]     rsc           Resource whose actions should be ordered
+ * \param[in,out] order         Ordering constraint being applied
+ */
 static void
-rsc_order_then(pe_action_t *first_action, pe_resource_t *rsc,
-               pe__ordering_t *order)
+order_resource_actions_after(pe_action_t *first_action,
+                             const pe_resource_t *rsc, pe__ordering_t *order)
 {
     GList *then_actions = NULL;
-    pe_action_t *then_action = NULL;
-    enum pe_ordering type;
+    uint32_t flags = pe_order_none;
 
-    CRM_CHECK(rsc != NULL, return);
-    CRM_CHECK(order != NULL, return);
+    CRM_CHECK((rsc != NULL) && (order != NULL), return);
 
-    type = order->type;
-    then_action = order->rh_action;
-    crm_trace("Applying ordering constraint %d (then: %s)", order->id, rsc->id);
+    flags = order->flags;
+    pe_rsc_trace(rsc, "Applying ordering %d for 'then' resource %s",
+                 order->id, rsc->id);
 
-    if (then_action != NULL) {
-        then_actions = g_list_prepend(NULL, then_action);
+    if (order->rh_action != NULL) {
+        then_actions = g_list_prepend(NULL, order->rh_action);
 
-    } else if (rsc != NULL) {
+    } else {
         then_actions = find_actions_by_task(rsc, order->rh_action_task);
     }
 
     if (then_actions == NULL) {
-        pe_rsc_trace(rsc,
-                     "Ignoring constraint %d: then (%s for %s) not found",
+        pe_rsc_trace(rsc, "Ignoring ordering %d: no %s actions found for %s",
                      order->id, order->rh_action_task, rsc->id);
         return;
     }
@@ -1241,22 +1246,30 @@ rsc_order_then(pe_action_t *first_action, pe_resource_t *rsc,
     if ((first_action != NULL) && (first_action->rsc == rsc)
         && pcmk_is_set(first_action->flags, pe_action_dangle)) {
 
-        pe_rsc_trace(rsc, "Detected dangling operation %s -> %s",
-                     first_action->uuid, order->rh_action_task);
-        pe__clear_order_flags(type, pe_order_implies_then);
+        pe_rsc_trace(rsc,
+                     "Detected dangling migration ordering (%s then %s %s)",
+                     first_action->uuid, order->rh_action_task, rsc->id);
+        pe__clear_order_flags(flags, pe_order_implies_then);
     }
 
-    for (GList *gIter = then_actions; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *then_action_iter = (pe_action_t *) gIter->data;
+    if ((first_action == NULL) && !pcmk_is_set(flags, pe_order_implies_then)) {
+        pe_rsc_debug(rsc,
+                     "Ignoring ordering %d for %s: No first action found",
+                     order->id, rsc->id);
+        g_list_free(then_actions);
+        return;
+    }
+
+    for (GList *iter = then_actions; iter != NULL; iter = iter->next) {
+        pe_action_t *then_action_iter = (pe_action_t *) iter->data;
 
         if (first_action != NULL) {
-            order_actions(first_action, then_action_iter, type);
-
-        } else if (type & pe_order_implies_then) {
-            pe__clear_action_flags(then_action_iter, pe_action_runnable);
-            crm_warn("Unrunnable %s %#.6x", then_action_iter->uuid, type);
+            order_actions(first_action, then_action_iter, flags);
         } else {
-            crm_warn("neither %s %#.6x", then_action_iter->uuid, type);
+            pe__clear_action_flags(then_action_iter, pe_action_runnable);
+            crm_warn("%s of %s is unrunnable because there is no %s of %s "
+                     "to order it after", then_action_iter->task, rsc->id,
+                     order->lh_action_task, order->lh_rsc->id);
         }
     }
 
@@ -1333,10 +1346,10 @@ rsc_order_first(pe_resource_t *first_rsc, pe__ordering_t *order,
         first_action = (pe_action_t *) gIter->data;
 
         if (then_rsc == NULL) {
-            order_actions(first_action, order->rh_action, order->type);
+            order_actions(first_action, order->rh_action, order->flags);
 
         } else {
-            rsc_order_then(first_action, then_rsc, order);
+            order_resource_actions_after(first_action, then_rsc, order);
         }
     }
 
@@ -1348,11 +1361,17 @@ pcmk__apply_orderings(pe_working_set_t *data_set)
 {
     crm_trace("Applying ordering constraints");
 
-    /* Don't ask me why, but apparently they need to be processed in
-     * the order they were created in... go figure
+    /* Ordering constraints need to be processed in the order they were created.
+     * rsc_order_first() and order_resource_actions_after() require the relevant
+     * actions to already exist in some cases, but rsc_order_first() will create
+     * the 'first' action in certain cases. Thus calling rsc_order_first() can
+     * change the behavior of later-created orderings.
      *
-     * Also g_list_append() has horrendous performance characteristics
-     * So we need to use g_list_prepend() and then reverse the list here
+     * Also, g_list_append() should be avoided for performance reasons, so we
+     * prepend orderings when creating them and reverse the list here.
+     *
+     * @TODO This is brittle and should be carefully redesigned so that the
+     * order of creation doesn't matter, and the reverse becomes unneeded.
      */
     data_set->ordering_constraints = g_list_reverse(data_set->ordering_constraints);
 
@@ -1369,12 +1388,12 @@ pcmk__apply_orderings(pe_working_set_t *data_set)
 
         rsc = order->rh_rsc;
         if (rsc != NULL) {
-            rsc_order_then(order->lh_action, rsc, order);
+            order_resource_actions_after(order->lh_action, rsc, order);
 
         } else {
             crm_trace("Applying ordering constraint %d (non-resource actions)",
                       order->id);
-            order_actions(order->lh_action, order->rh_action, order->type);
+            order_actions(order->lh_action, order->rh_action, order->flags);
         }
     }
 

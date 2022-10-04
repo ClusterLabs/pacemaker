@@ -1,12 +1,12 @@
 
-pcmk__group_allocate: child_rsc1 allocation score on node1: 0
-pcmk__group_allocate: child_rsc1 allocation score on node2: 0
-pcmk__group_allocate: child_rsc2 allocation score on node1: 0
-pcmk__group_allocate: child_rsc2 allocation score on node2: 0
-pcmk__group_allocate: child_rsc3 allocation score on node1: 0
-pcmk__group_allocate: child_rsc3 allocation score on node2: 0
-pcmk__group_allocate: rsc2 allocation score on node1: 0
-pcmk__group_allocate: rsc2 allocation score on node2: 0
+pcmk__group_assign: child_rsc1 allocation score on node1: 0
+pcmk__group_assign: child_rsc1 allocation score on node2: 0
+pcmk__group_assign: child_rsc2 allocation score on node1: 0
+pcmk__group_assign: child_rsc2 allocation score on node2: 0
+pcmk__group_assign: child_rsc3 allocation score on node1: 0
+pcmk__group_assign: child_rsc3 allocation score on node2: 0
+pcmk__group_assign: rsc2 allocation score on node1: 0
+pcmk__group_assign: rsc2 allocation score on node2: 0
 pcmk__primitive_assign: child_rsc1 allocation score on node1: 0
 pcmk__primitive_assign: child_rsc1 allocation score on node2: 0
 pcmk__primitive_assign: child_rsc2 allocation score on node1: -INFINITY
