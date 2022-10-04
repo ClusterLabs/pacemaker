@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <inttypes.h>               // PRIx32
 #include <stdbool.h>
 #include <glib.h>
 
@@ -1185,7 +1186,7 @@ pcmk__order_stops_before_shutdown(pe_node_t *node, pe_action_t *shutdown_op)
  * \note It is the caller's responsibility to free the result with g_list_free()
  */
 static GList *
-find_actions_by_task(pe_resource_t *rsc, const char *original_key)
+find_actions_by_task(const pe_resource_t *rsc, const char *original_key)
 {
     // Search under given task key directly
     GList *list = find_actions(rsc->actions, original_key, NULL);
@@ -1208,31 +1209,36 @@ find_actions_by_task(pe_resource_t *rsc, const char *original_key)
     return list;
 }
 
+/*!
+ * \internal
+ * \brief Order relevant resource actions after a given action
+ *
+ * \param[in,out] first_action  Action to order after (or NULL if none runnable)
+ * \param[in]     rsc           Resource whose actions should be ordered
+ * \param[in,out] order         Ordering constraint being applied
+ */
 static void
-rsc_order_then(pe_action_t *first_action, pe_resource_t *rsc,
-               pe__ordering_t *order)
+order_resource_actions_after(pe_action_t *first_action,
+                             const pe_resource_t *rsc, pe__ordering_t *order)
 {
     GList *then_actions = NULL;
-    pe_action_t *then_action = NULL;
-    uint32_t flags;
+    uint32_t flags = pe_order_none;
 
-    CRM_CHECK(rsc != NULL, return);
-    CRM_CHECK(order != NULL, return);
+    CRM_CHECK((rsc != NULL) && (order != NULL), return);
 
     flags = order->flags;
-    then_action = order->rh_action;
-    crm_trace("Applying ordering constraint %d (then: %s)", order->id, rsc->id);
+    pe_rsc_trace(rsc, "Applying ordering %d for 'then' resource %s",
+                 order->id, rsc->id);
 
-    if (then_action != NULL) {
-        then_actions = g_list_prepend(NULL, then_action);
+    if (order->rh_action != NULL) {
+        then_actions = g_list_prepend(NULL, order->rh_action);
 
-    } else if (rsc != NULL) {
+    } else {
         then_actions = find_actions_by_task(rsc, order->rh_action_task);
     }
 
     if (then_actions == NULL) {
-        pe_rsc_trace(rsc,
-                     "Ignoring constraint %d: then (%s for %s) not found",
+        pe_rsc_trace(rsc, "Ignoring ordering %d: no %s actions found for %s",
                      order->id, order->rh_action_task, rsc->id);
         return;
     }
@@ -1240,22 +1246,30 @@ rsc_order_then(pe_action_t *first_action, pe_resource_t *rsc,
     if ((first_action != NULL) && (first_action->rsc == rsc)
         && pcmk_is_set(first_action->flags, pe_action_dangle)) {
 
-        pe_rsc_trace(rsc, "Detected dangling operation %s -> %s",
-                     first_action->uuid, order->rh_action_task);
+        pe_rsc_trace(rsc,
+                     "Detected dangling migration ordering (%s then %s %s)",
+                     first_action->uuid, order->rh_action_task, rsc->id);
         pe__clear_order_flags(flags, pe_order_implies_then);
     }
 
-    for (GList *gIter = then_actions; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *then_action_iter = (pe_action_t *) gIter->data;
+    if ((first_action == NULL) && !pcmk_is_set(flags, pe_order_implies_then)) {
+        pe_rsc_debug(rsc,
+                     "Ignoring ordering %d for %s: No first action found",
+                     order->id, rsc->id);
+        g_list_free(then_actions);
+        return;
+    }
+
+    for (GList *iter = then_actions; iter != NULL; iter = iter->next) {
+        pe_action_t *then_action_iter = (pe_action_t *) iter->data;
 
         if (first_action != NULL) {
             order_actions(first_action, then_action_iter, flags);
-
-        } else if (pcmk_is_set(flags, pe_order_implies_then)) {
-            pe__clear_action_flags(then_action_iter, pe_action_runnable);
-            crm_warn("Unrunnable %s %#.6x", then_action_iter->uuid, flags);
         } else {
-            crm_warn("neither %s %#.6x", then_action_iter->uuid, flags);
+            pe__clear_action_flags(then_action_iter, pe_action_runnable);
+            crm_warn("%s of %s is unrunnable because there is no %s of %s "
+                     "to order it after", then_action_iter->task, rsc->id,
+                     order->lh_action_task, order->lh_rsc->id);
         }
     }
 
@@ -1335,7 +1349,7 @@ rsc_order_first(pe_resource_t *first_rsc, pe__ordering_t *order,
             order_actions(first_action, order->rh_action, order->flags);
 
         } else {
-            rsc_order_then(first_action, then_rsc, order);
+            order_resource_actions_after(first_action, then_rsc, order);
         }
     }
 
@@ -1348,9 +1362,9 @@ pcmk__apply_orderings(pe_working_set_t *data_set)
     crm_trace("Applying ordering constraints");
 
     /* Ordering constraints need to be processed in the order they were created.
-     * rsc_order_first() and rsc_order_then() require the relevant actions to
-     * already exist in some cases, but rsc_order_first() will create the
-     * 'first' action in certain cases. Thus calling rsc_order_first() can
+     * rsc_order_first() and order_resource_actions_after() require the relevant
+     * actions to already exist in some cases, but rsc_order_first() will create
+     * the 'first' action in certain cases. Thus calling rsc_order_first() can
      * change the behavior of later-created orderings.
      *
      * Also, g_list_append() should be avoided for performance reasons, so we
@@ -1374,7 +1388,7 @@ pcmk__apply_orderings(pe_working_set_t *data_set)
 
         rsc = order->rh_rsc;
         if (rsc != NULL) {
-            rsc_order_then(order->lh_action, rsc, order);
+            order_resource_actions_after(order->lh_action, rsc, order);
 
         } else {
             crm_trace("Applying ordering constraint %d (non-resource actions)",
