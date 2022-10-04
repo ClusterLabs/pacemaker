@@ -344,23 +344,6 @@ pcmk__group_internal_constraints(pe_resource_t *rsc)
     member_data.colocated = pe__group_flag_is_set(rsc, pe__group_colocated);
     member_data.promotable = pcmk_is_set(uber_parent(rsc)->flags, pe_rsc_promotable);
     g_list_foreach(rsc->children, member_internal_constraints, &member_data);
-
-    if (member_data.ordered && (member_data.previous_member != NULL)) {
-        // Stop group -> stop last member -> group is stopped
-        pcmk__order_stops(rsc, member_data.previous_member,
-                          pe_order_implies_then);
-        pcmk__order_resource_actions(member_data.previous_member, RSC_STOP,
-                                     rsc, RSC_STOPPED, pe_order_optional);
-        if (member_data.promotable) {
-            // Demote group -> demote last member -> group is demoted
-            pcmk__order_resource_actions(rsc, RSC_DEMOTE,
-                                         member_data.previous_member,
-                                         RSC_DEMOTE, pe_order_implies_then);
-            pcmk__order_resource_actions(member_data.previous_member,
-                                         RSC_DEMOTE, rsc, RSC_DEMOTED,
-                                         pe_order_optional);
-        }
-    }
 }
 
 /*!
