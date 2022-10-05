@@ -1423,16 +1423,17 @@ class Tests(object):
         test.add_stonith_log_pattern("Undoing remap of reboot targeting node_fake")
 
         test = self.new_test("cpg_remap_simple_off",
-                             "Verify sequential topology reboot is remapped "
-                             "to all-off if pcmk_reboot_action=off", 1)
+                             "Verify sequential topology reboot skips 'on' if "
+                             "pcmk_reboot_action=off or agent doesn't support "
+                             "'on'", 1)
         test.add_cmd("stonith_admin",
                      "--output-as=xml -R true1 -a fence_dummy -o mode=pass "
                      "-o pcmk_host_list=node_fake -o pcmk_off_timeout=1 "
                      "-o pcmk_reboot_timeout=10 -o pcmk_reboot_action=off")
         test.add_cmd("stonith_admin",
-                     "--output-as=xml -R true2 -a fence_dummy -o mode=pass "
-                     "-o pcmk_host_list=node_fake -o pcmk_off_timeout=2 "
-                     "-o pcmk_reboot_timeout=20 -o pcmk_reboot_action=off")
+                     "--output-as=xml -R true2 -a fence_dummy_no_on "
+                     "-o mode=pass -o pcmk_host_list=node_fake "
+                     "-o pcmk_off_timeout=2 -o pcmk_reboot_timeout=20")
         test.add_cmd("stonith_admin",
                      "--output-as=xml -r node_fake -i 1 -v true1 -v true2")
         test.add_cmd("stonith_admin", "--output-as=xml -B node_fake -t 5")
@@ -1446,9 +1447,8 @@ class Tests(object):
         test.add_stonith_log_pattern("Not turning node_fake back on using "
                                      "true1 because the device is configured "
                                      "to stay off")
-        test.add_stonith_log_pattern("Not turning node_fake back on using "
-                                     "true2 because the device is configured "
-                                     "to stay off")
+        test.add_stonith_log_pattern("Not turning node_fake back on using true2"
+                                     " because the agent doesn't support 'on'")
         test.add_stonith_log_pattern("Undoing remap of reboot targeting node_fake")
 
         test = self.new_test("cpg_remap_automatic",
