@@ -2,7 +2,7 @@
 #
 # ocf:pacemaker:ifspeed resource agent
 #
-# Copyright 2011-2021 the Pacemaker project contributors
+# Copyright 2011-2022 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -11,27 +11,11 @@
 #
 
 #
-# OCF resource agent which monitors state of network interface and records it
-# as a node attribute in the CIB based on the sum of speeds of its active (up,
-# link detected, not blocked) underlying interfaces.
+# Record speed of a network interface as a node attribute, based on the sum of
+# speeds of its active (up, link detected, not blocked) underlying interfaces.
 #
-# Partially based on 'ping' RA by Andrew Beekhof
+# Originally based on ocf:pacemaker:ping agent
 #
-# Change on 2017 by Tomer Azran <tomerazran@gmail.com>:
-#     Add "ip" parameter to detect network interface name by ip address:
-#     http://lists.clusterlabs.org/pipermail/users/2017-August/006224.html
-#
-# OCF instance parameters:
-#    OCF_RESKEY_name:         name of attribute to set in CIB
-#    OCF_RESKEY_ip            ip address to check
-#    OCF_RESKEY_iface:        network interface to monitor
-#    OCF_RESKEY_bridge_ports: if not null and OCF_RESKEY_iface is a bridge, list of
-#                             bridge ports to consider.
-#                             Default is all ports which have designated_bridge=root_id
-#    OCF_RESKEY_weight_base:  Relative weight of 1Gbps. This can be used to tune
-#                             value of resulting CIB attribute.
-#
-# Initialization:
 
 : ${OCF_FUNCTIONS:="${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs"}
 
@@ -60,78 +44,77 @@ OCF_RESKEY_dampen_default=5
 : ${OCF_RESKEY_ip:=""}
 : ${OCF_RESKEY_debug:="false"}
 
-
 meta_data() {
         cat <<END
 <?xml version="1.0"?>
-<resource-agent name="ifspeed" version="1.0">
-<version>1.0</version>
+<resource-agent name="ifspeed" version="1.1">
+<version>1.1</version>
 
 <longdesc lang="en">
-Every time the monitor action is run, this resource agent records (in the CIB)
-(relative) speed of network interface it monitors.
+This agent's monitor action records the speed of a specified network interface
+as a node attribute. The attribute can be used in rules to prefer nodes based
+on network speeds.
 
-This RA can monitor physical interfaces, bonds, bridges, vlans and (hopefully)
-any combination of them.
+This agent can monitor physical interfaces, bonded interfaces, bridges, VLANs,
+or any combination thereof. For example:
 
-Examples:
 *) Bridge on top of one 10Gbps interface (eth2) and 802.3ad bonding (bond0) built
    on two 1Gbps interfaces (eth0 and eth1).
-*) Active-backup bonding built on top of one physical interface and one vlan on
+*) Active-backup bonding built on top of one physical interface and one VLAN on
    another interface.
 
-For STP-enabled bridges this RA tries to some-how guess network topology and by
-default looks only on ports which are connected to upstream switch. This can be
-overridden by 'bridge_ports' parameter. Active interfaces in this case are those
-in "forwarding" state.
+For STP-enabled bridges, this agent tries to determine the network topology, and
+by default looks only on ports which are connected to an upstream switch. This
+can be overridden by 'bridge_ports' parameter. Active interfaces in this case
+are those in "forwarding" state.
 
-For balancing bonds this RA summs speeds of underlying "up" slave interfaces
-(and applies coefficient 0.8 to result).
+For balancing bonded interfaces, this agent uses 80% of the sum of the speeds of
+underlying "up" ports.
 
-For non-balancing bonds ('active-backup' and probably 'broadcast'), only the
-speed of the currently active slave is used.
+For non-balancing bonded interfaces ("active-backup" and probably "broadcast"),
+only the speed of the currently active port is considered.
 </longdesc>
 <shortdesc lang="en">Network interface speed monitor</shortdesc>
 
 <parameters>
 
-<parameter name="name" unique="1">
+<parameter name="name" unique-group="name">
 <longdesc lang="en">
-The name of the attribute to set.  This is the name to be used in the constraints.
+Name of the node attribute to set
 </longdesc>
 <shortdesc lang="en">Attribute name</shortdesc>
 <content type="string" default="${OCF_RESKEY_name_default}"/>
 </parameter>
 
-<parameter name="iface" unique="0" required="1">
+<parameter name="iface" unique-group="iface">
 <longdesc lang="en">
-Network interface to monitor.
+If this is set, monitor this network interface. One of iface or ip must be set.
 </longdesc>
 <shortdesc lang="en">Network interface</shortdesc>
 <content type="string" default=""/>
 </parameter>
 
-<parameter name="ip" unique="0" required="0">
+<parameter name="ip" unique-group="ip">
 <longdesc lang="en">
-Try to detect interface name by detecting the interface that holds the IP address.
-The IPv4 (dotted quad notation) or IPv6 address (colon hexadecimal notation)
-example IPv4 "192.168.1.1".
-example IPv6 "2001:db8:DC28:0:0:FC57:D4C8:1FFF".
+If this is set instead of iface, monitor the interface that holds this IP
+address. The address may be specified in dotted-quad notation for IPv4 (for
+example, 192.168.1.1) or hexadecimal notation for IPv6 (for example,
+2001:db8:DC28:0:0:FC57:D4C8:1FFF). One of iface or ip must be set.
 </longdesc>
 <shortdesc lang="en">IPv4 or IPv6 address</shortdesc>
 <content type="string" default="" />
 </parameter>
 
-<parameter name="bridge_ports" unique="0">
+<parameter name="bridge_ports" unique-group="iface">
 <longdesc lang="en">
-If not null and OCF_RESKEY_iface is a bridge, list of bridge ports to consider.
-Default is all ports which have designated_bridge=root_id.
+If set and iface is a bridge, consider these bridge ports (by default, all ports
+which have designated_bridge=root_id)
 </longdesc>
 <shortdesc lang="en">Bridge ports</shortdesc>
 <content type="string" default="${OCF_RESKEY_bridge_ports_default}"/>
 </parameter>
 
-<parameter name="weight_base" unique="0">
+<parameter name="weight_base">
 <longdesc lang="en">
 Relative weight of 1Gbps in interface speed.
 Can be used to tune how big attribute value will be.
@@ -140,7 +123,7 @@ Can be used to tune how big attribute value will be.
 <content type="integer" default="${OCF_RESKEY_weight_base_default}"/>
 </parameter>
 
-<parameter name="dampen" unique="0">
+<parameter name="dampen">
 <longdesc lang="en">
 The time to wait (dampening) for further changes to occur.
 </longdesc>
@@ -148,9 +131,9 @@ The time to wait (dampening) for further changes to occur.
 <content type="integer" default="${OCF_RESKEY_dampen_default}"/>
 </parameter>
 
-<parameter name="debug" unique="0">
+<parameter name="debug">
 <longdesc lang="en">
-Log what have been done more verbosely.
+Log more verbosely.
 </longdesc>
 <shortdesc lang="en">Verbose logging</shortdesc>
 <content type="string" default="false"/>
@@ -171,7 +154,7 @@ END
 
 usage() {
     cat <<END
-usage: $0 {start|stop|monitor|validate-all|meta-data}
+Usage: $0 {start|stop|monitor|validate-all|meta-data}
 
 Expects to have a fully populated OCF RA-compliant environment set.
 END
@@ -195,6 +178,7 @@ stop() {
 
 monitor() {
     local ret
+
     ha_pseudo_resource "${ha_pseudo_resource_name}" monitor
     ret=$?
     if [ ${ret} -eq $OCF_SUCCESS ] ; then
@@ -203,8 +187,7 @@ monitor() {
     return ${ret}
 }
 
-# This function tries to guess nic interface by IP
-get_nic_name_by_ip(){
+get_nic_name_by_ip() {
     # $FINDIF takes its parameters from the environment.
     # Its output is as follows:
     # [NIC_NAME] netmask [NETMASK] broadcast [BROADCAST}
@@ -219,20 +202,27 @@ get_nic_name_by_ip(){
 }
 
 validate() {
-    # Check the interface parameter
     if [ -z "${OCF_RESKEY_iface}" ]; then
         if [ -z "${OCF_RESKEY_ip}" ]; then
-            ocf_log err "Empty iface and ip parameters. Please specify either an interface name or valid ip address."
+            ocf_log err "Must specify either an interface name or valid IP address"
+            ocf_exit_reason "no interface or IP address specified"
             exit $OCF_ERR_CONFIGURED
         else
             ipcheck_ipv4 "${OCF_RESKEY_ip}"
             if [ $? -eq 1 ] ; then
                 ipcheck_ipv6 "${OCF_RESKEY_ip}"
                 if [ $? -eq 1 ] ; then
-                  ocf_exit_reason "ip parameter [${OCF_RESKEY_ip}] is not a valid ip address."
+                  ocf_exit_reason "'${OCF_RESKEY_ip}' is not a valid IP"
                   exit $OCF_ERR_CONFIGURED
                 fi
             fi
+        fi
+    fi
+    if [ "$1" = "10" ]; then
+        if [ "$(uname)" != "Linux" ] ; then
+            ocf_log err "This resource agent works only on Linux"
+            ocf_exit_reason "not Linux"
+            exit $OCF_ERR_INSTALLED
         fi
     fi
     return $OCF_SUCCESS
@@ -275,33 +265,39 @@ iface_get_speed() {
 
 iface_is_vlan() {
     local iface="$1"
+
     [ -e "/proc/net/vlan/${iface}" ] && return 0 || return 1
 }
 
 iface_is_bridge() {
     local iface="$1"
+
     [ -e "/sys/class/net/${iface}/bridge" ] && return 0 || return 1
 }
 
 iface_is_bond() {
     local iface="$1"
+
     [ -e "/sys/class/net/${iface}/bonding" ] && return 0 || return 1
 }
 
 iface_is_hfi1() {
     local iface="$1"
+
     driver=$(readlink "/sys/class/net/${iface}/device/driver")
     [[ $(basename "${driver}") =~ "hfi1" ]] && return 0 || return 1
 }
 
 vlan_get_phy() {
     local iface="$1"
+
     sed -ne "s/^${iface} .*| *//p" < /proc/net/vlan/config
 }
 
 bridge_is_stp_enabled() {
     local iface="$1"
     local stp
+
     read stp < "/sys/class/net/${iface}/bridge/stp_state"
     [ "${stp}" = "1" ] && return 0 || return 1
 }
@@ -330,7 +326,7 @@ bridge_get_root_ports() {
     fi
 }
 
-# From /inlude/linux/if_bridge.h:
+# From /usr/include/linux/if_bridge.h:
 #define BR_STATE_DISABLED 0
 #define BR_STATE_LISTENING 1
 #define BR_STATE_LEARNING 2
@@ -398,7 +394,7 @@ hfi1_get_speed() {
     local hfi1_value
     local hfi1_desc
 
-    # Currently (9/14/2017 Intel Omni Path v10.5.0.0.155), Intel doesn't have
+    # At least as of 9/14/2017 Intel Omni Path v10.5.0.0.155, Intel doesn't have
     # dual- or multiple-port Host Channel Adapters, and it's safe to use this
     # method to get the speed. Example output:
     # [root@es-host0 ~]# cat /sys/class/net/ib0/device/infiniband/*/ports/*/rate
@@ -410,20 +406,22 @@ hfi1_get_speed() {
     echo $(( hfi1_speed * 1000 ))
 }
 
-bond_get_slaves() {
+bond_get_ports() {
     local iface="$1"
-    local slaves
-    read slaves < "/sys/class/net/${iface}/bonding/slaves"
+    local ports
+
+    read ports < "/sys/class/net/${iface}/bonding/slaves"
     if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell.
-        eval "$2=\${slaves}"
+        eval "$2=\${ports}"
     else # Expect sub-shell
-        echo ${slaves}
+        echo ${ports}
     fi
 }
 
 bond_get_active_iface() {
     local iface="$1"
     local active
+
     read active < "/sys/class/net/${iface}/bonding/active_slave"
     if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell.
         eval "$2=\${active}"
@@ -450,18 +448,18 @@ bond_get_speed() {
     local iface="$1"
     local aggregate_speed=0
     local active_iface
-    local bond_slaves
+    local bond_ports
 
     if ! iface_is_bond "${iface}" ; then
         echo 0
         return
     fi
 
-    bond_get_slaves "${iface}" bond_slaves
+    bond_get_ports "${iface}" bond_ports
 
     if bond_is_balancing "${iface}" ; then
-        for slave in ${bond_slaves} ; do
-            : $(( aggregate_speed += $( iface_get_speed "${slave}" ) ))
+        for port in ${bond_ports} ; do
+            : $(( aggregate_speed += $( iface_get_speed "${port}" ) ))
         done
         # Bonding is unable to get speed*n
         : $(( aggregate_speed = aggregate_speed * 8 / 10 ))
@@ -479,10 +477,12 @@ bond_get_speed() {
 update() {
     local speed;
     local nic="${OCF_RESKEY_iface}";
+
     if [ -z "${OCF_RESKEY_iface}" ]; then
         nic=$( get_nic_name_by_ip )
         if [ -z "${nic}" ];then
-            ocf_log err "Could not retrieve network interface name from ip address (${OCF_RESKEY_ip})"
+            ocf_log err "Could not determine network interface name from IP address (${OCF_RESKEY_ip})"
+            ocf_exit_reason "unable to determine interface name"
             exit $OCF_ERR_GENERIC
         fi
     fi
@@ -517,31 +517,28 @@ case $__OCF_ACTION in
         ;;
 esac
 
-if [ "$(uname)" != "Linux" ] ; then
-    ocf_log err "This RA works only on linux."
-    exit $OCF_ERR_INSTALLED
-fi
-
 : ${ha_pseudo_resource_name:="ifspeed-${OCF_RESOURCE_INSTANCE}"}
 
-attrd_options='-q'
+attrd_options=''
 if ocf_is_true "${OCF_RESKEY_debug}" ; then
-    attrd_options=''
+    attrd_options='-VV'
 fi
-
-validate || exit $?
 
 case "$__OCF_ACTION" in
     start)
+        validate 10
         start
         ;;
     stop)
+        validate 10
         stop
         ;;
     monitor)
+        validate 10
         monitor
         ;;
     validate-all)
+        validate "$OCF_CHECK_LEVEL"
         ;;
     *)
         usage
