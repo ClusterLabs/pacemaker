@@ -417,10 +417,16 @@ colocate_with_group(pe_resource_t *dependent, const pe_resource_t *primary,
     if (pe__group_flag_is_set(primary, pe__group_colocated)) {
 
         if (colocation->score >= INFINITY) {
-            // Dependent can't start until group is fully up
+            /* For mandatory colocations, the entire group must be assignable
+             * (and in the specified role if any), so apply the colocation based
+             * on the last member.
+             */
             member = pe__last_group_member(primary);
         } else {
-            // Dependent can start as long as group is partially up
+            /* For optional colocations, whether the group is partially or fully
+             * up doesn't matter, so apply the colocation based on the first
+             * member.
+             */
             member = (pe_resource_t *) primary->children->data;
         }
         if (member == NULL) {
