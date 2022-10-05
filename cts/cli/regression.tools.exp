@@ -4564,6 +4564,25 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 </pacemaker-result>
 =#=#=#= End test: Show resource digests with overrides - OK (0) =#=#=#=
 * Passed: crm_resource   - Show resource digests with overrides
+=#=#=#= Begin test: Show resource operations =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource --list-operations --output-as=xml">
+  <operations>
+    <operation op="rsc1_monitor_0" node="node4" call="136" rc="7" status="complete" rsc="rsc1" agent="ocf:pacemaker:Dummy" exec-time="28"/>
+    <operation op="Fencing_monitor_0" node="node4" call="5" rc="7" status="complete" rsc="Fencing" agent="stonith::fence_xvm" exec-time="2"/>
+    <operation op="rsc1_monitor_0" node="node2" call="101" rc="7" status="complete" rsc="rsc1" agent="ocf:pacemaker:Dummy" exec-time="45"/>
+    <operation op="Fencing_monitor_0" node="node2" call="5" rc="7" status="complete" rsc="Fencing" agent="stonith::fence_xvm" exec-time="4"/>
+    <operation op="Fencing_monitor_0" node="node3" call="5" rc="7" status="complete" rsc="Fencing" agent="stonith::fence_xvm" exec-time="24"/>
+    <operation op="rsc1_monitor_0" node="node5" call="99" rc="193" status="pending" rsc="rsc1" agent="ocf:pacemaker:Dummy" exec-time="27"/>
+    <operation op="Fencing_monitor_0" node="node5" call="5" rc="7" status="complete" rsc="Fencing" agent="stonith::fence_xvm" exec-time="14"/>
+    <operation op="rsc1_start_0" node="node1" call="104" rc="0" status="complete" rsc="rsc1" agent="ocf:pacemaker:Dummy" exec-time="22"/>
+    <operation op="rsc1_monitor_10000" node="node1" call="106" rc="0" status="complete" rsc="rsc1" agent="ocf:pacemaker:Dummy" exec-time="20"/>
+    <operation op="Fencing_start_0" node="node1" call="10" rc="0" status="complete" rsc="Fencing" agent="stonith::fence_xvm" exec-time="59"/>
+    <operation op="Fencing_monitor_120000" node="node1" call="12" rc="0" status="complete" rsc="Fencing" agent="stonith::fence_xvm" exec-time="70"/>
+  </operations>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Show resource operations - OK (0) =#=#=#=
+* Passed: crm_resource   - Show resource operations
 =#=#=#= Begin test: List all nodes =#=#=#=
 cluster node: overcloud-controller-0 (1)
 cluster node: overcloud-controller-1 (2)

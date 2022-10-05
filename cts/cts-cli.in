@@ -1253,6 +1253,10 @@ function test_tools() {
     cmd="$cmd CRM_meta_interval=10000 CRM_meta_timeout=20000"
     test_assert $CRM_EX_OK 0
 
+    desc="Show resource operations"
+    cmd="crm_resource --list-operations --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
     unset CIB_file
 
     export CIB_file="$test_home/cli/crmadmin-cluster-remote-guest-nodes.xml"
