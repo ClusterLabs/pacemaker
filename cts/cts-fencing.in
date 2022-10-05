@@ -1422,6 +1422,35 @@ class Tests(object):
         test.add_stonith_log_pattern("Ignoring true2 'on' failure (no capable peers) targeting node_fake")
         test.add_stonith_log_pattern("Undoing remap of reboot targeting node_fake")
 
+        test = self.new_test("cpg_remap_simple_off",
+                             "Verify sequential topology reboot is remapped "
+                             "to all-off if pcmk_reboot_action=off", 1)
+        test.add_cmd("stonith_admin",
+                     "--output-as=xml -R true1 -a fence_dummy -o mode=pass "
+                     "-o pcmk_host_list=node_fake -o pcmk_off_timeout=1 "
+                     "-o pcmk_reboot_timeout=10 -o pcmk_reboot_action=off")
+        test.add_cmd("stonith_admin",
+                     "--output-as=xml -R true2 -a fence_dummy -o mode=pass "
+                     "-o pcmk_host_list=node_fake -o pcmk_off_timeout=2 "
+                     "-o pcmk_reboot_timeout=20 -o pcmk_reboot_action=off")
+        test.add_cmd("stonith_admin",
+                     "--output-as=xml -r node_fake -i 1 -v true1 -v true2")
+        test.add_cmd("stonith_admin", "--output-as=xml -B node_fake -t 5")
+        test.add_stonith_log_pattern("Remapping multiple-device reboot targeting node_fake")
+        # timeout should be sum of off timeouts (1+2=3), not reboot timeouts (10+20=30)
+        test.add_stonith_log_pattern("Total timeout set to 3 for peer's fencing targeting node_fake")
+        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using true1")
+        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using true2")
+        test.add_stonith_log_pattern("Remapped 'off' targeting node_fake complete, remapping to 'on'")
+        # "on" should be skipped
+        test.add_stonith_log_pattern("Not turning node_fake back on using "
+                                     "true1 because the device is configured "
+                                     "to stay off")
+        test.add_stonith_log_pattern("Not turning node_fake back on using "
+                                     "true2 because the device is configured "
+                                     "to stay off")
+        test.add_stonith_log_pattern("Undoing remap of reboot targeting node_fake")
+
         test = self.new_test("cpg_remap_automatic",
                              "Verify remapped topology reboot skips automatic 'on'", 1)
         test.add_cmd("stonith_admin",
