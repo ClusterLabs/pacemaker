@@ -80,16 +80,25 @@ ________________
 .. table:: **Properties of a Group Resource**
    :widths: 1 4
 
-   +-------+--------------------------------------+
-   | Field | Description                          |
-   +=======+======================================+
-   | id    | .. index::                           |
-   |       |    single: group; property, id       |
-   |       |    single: property; id (group)      |
-   |       |    single: id; group property        |
-   |       |                                      |
-   |       | A unique name for the group          |
-   +-------+--------------------------------------+
+   +-------------+------------------------------------------------------------------+
+   | Field       | Description                                                      |
+   +=============+==================================================================+
+   | id          | .. index::                                                       |
+   |             |    single: group; property, id                                   |
+   |             |    single: property; id (group)                                  |
+   |             |    single: id; group property                                    |
+   |             |                                                                  |
+   |             | A unique name for the group                                      |
+   +-------------+------------------------------------------------------------------+
+   | description | .. index::                                                       |
+   |             |    single: group; attribute, description                         |
+   |             |    single: attribute; description (group)                        |
+   |             |    single: description; group attribute                          |   
+   |             |                                                                  |
+   |             | An optional description of the group, for the user's own         |
+   |             | purposes.                                                        |
+   |             | E.g. ``resources needed for website``                            |
+   +-------------+------------------------------------------------------------------+
 
 Group Options
 _____________
@@ -199,16 +208,25 @@ ________________
 .. table:: **Properties of a Clone Resource**
    :widths: 1 4
 
-   +-------+--------------------------------------+
-   | Field | Description                          |
-   +=======+======================================+
-   | id    | .. index::                           |
-   |       |    single: clone; property, id       |
-   |       |    single: property; id (clone)      |
-   |       |    single: id; clone property        |
-   |       |                                      |
-   |       | A unique name for the clone          |
-   +-------+--------------------------------------+
+   +-------------+------------------------------------------------------------------+
+   | Field       | Description                                                      |
+   +=============+==================================================================+
+   | id          | .. index::                                                       |
+   |             |    single: clone; property, id                                   |
+   |             |    single: property; id (clone)                                  |
+   |             |    single: id; clone property                                    |
+   |             |                                                                  |
+   |             | A unique name for the clone                                      |
+   +-------------+------------------------------------------------------------------+
+   | description | .. index::                                                       |
+   |             |    single: clone; attribute, description                         |
+   |             |    single: attribute; description (clone)                        |
+   |             |    single: description; clone attribute                          |   
+   |             |                                                                  |
+   |             | An optional description of the clone, for the user's own         |
+   |             | purposes.                                                        |
+   |             | E.g. ``IP address for website``                                  |
+   +-------------+------------------------------------------------------------------+
 
 .. index::
    pair: options; clone
@@ -1092,24 +1110,27 @@ _________________
 .. table:: **XML Attributes of a bundle Element**
    :widths: 1 4
 
-   +-------------+-----------------------------------------------+
-   | Attribute   | Description                                   |
-   +=============+===============================================+
-   | id          | .. index::                                    |
-   |             |    single: bundle; attribute, id              |
-   |             |    single: attribute; id (bundle)             |
-   |             |    single: id; bundle attribute               |
-   |             |                                               |
-   |             | A unique name for the bundle (required)       |
-   +-------------+-----------------------------------------------+
-   | description | .. index::                                    |
-   |             |    single: bundle; attribute, description     |
-   |             |    single: attribute; description (bundle)    |
-   |             |    single: description; bundle attribute      |
-   |             |                                               |
-   |             | Arbitrary text (not used by Pacemaker)        |
-   +-------------+-----------------------------------------------+
-   
+   +-------------+------------------------------------------------------------------+
+   | Field       | Description                                                      |
+   +=============+==================================================================+
+   | id          | .. index::                                                       |
+   |             |    single: bundle; attribute, id                                 |
+   |             |    single: attribute; id (bundle)                                |
+   |             |    single: id; bundle attribute                                  |
+   |             |                                                                  |
+   |             | A unique name for the bundle (required)                          |
+   +-------------+------------------------------------------------------------------+
+   | description | .. index::                                                       |
+   |             |    single: bundle; attribute, description                        |
+   |             |    single: attribute; description (bundle)                       |
+   |             |    single: description; bundle attribute                         |
+   |             |                                                                  |
+   |             | An optional description of the group, for the user's own         |
+   |             | purposes.                                                        |
+   |             | E.g. ``manages the container that runs the service``             |
+   +-------------+------------------------------------------------------------------+
+
+
 A bundle must contain exactly one ``docker``, ``podman``, or ``rkt`` element.
 
 .. index::

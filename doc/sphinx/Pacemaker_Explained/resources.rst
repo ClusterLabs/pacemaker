@@ -245,38 +245,45 @@ where to find that resource agent and what standards it conforms to.
 .. table:: **Properties of a Primitive Resource**
    :widths: 1 4
 
-   +----------+------------------------------------------------------------------+
-   | Field    | Description                                                      |
-   +==========+==================================================================+
-   | id       | .. index::                                                       |
-   |          |    single: id; resource                                          |
-   |          |    single: resource; property, id                                |
-   |          |                                                                  |
-   |          | Your name for the resource                                       |
-   +----------+------------------------------------------------------------------+
-   | class    | .. index::                                                       |
-   |          |    single: class; resource                                       |
-   |          |    single: resource; property, class                             |
-   |          |                                                                  |
-   |          | The standard the resource agent conforms to. Allowed values:     |
-   |          | ``lsb``, ``nagios``, ``ocf``, ``service``, ``stonith``,          |
-   |          | ``systemd``, ``upstart``                                         |
-   +----------+------------------------------------------------------------------+
-   | type     | .. index::                                                       |
-   |          |    single: type; resource                                        |
-   |          |    single: resource; property, type                              |
-   |          |                                                                  |
-   |          | The name of the Resource Agent you wish to use. E.g.             |
-   |          | ``IPaddr`` or ``Filesystem``                                     |
-   +----------+------------------------------------------------------------------+
-   | provider | .. index::                                                       |
-   |          |    single: provider; resource                                    |
-   |          |    single: resource; property, provider                          |
-   |          |                                                                  |
-   |          | The OCF spec allows multiple vendors to supply the same resource |
-   |          | agent. To use the OCF resource agents supplied by the Heartbeat  |
-   |          | project, you would specify ``heartbeat`` here.                   |
-   +----------+------------------------------------------------------------------+
+   +-------------+------------------------------------------------------------------+
+   | Field       | Description                                                      |
+   +=============+==================================================================+
+   | id          | .. index::                                                       |
+   |             |    single: id; resource                                          |
+   |             |    single: resource; property, id                                |
+   |             |                                                                  |
+   |             | Your name for the resource                                       |
+   +-------------+------------------------------------------------------------------+
+   | class       | .. index::                                                       |
+   |             |    single: class; resource                                       |
+   |             |    single: resource; property, class                             |
+   |             |                                                                  |
+   |             | The standard the resource agent conforms to. Allowed values:     |
+   |             | ``lsb``, ``nagios``, ``ocf``, ``service``, ``stonith``,          |
+   |             | ``systemd``, ``upstart``                                         |
+   +-------------+------------------------------------------------------------------+
+   | description | .. index::                                                       |
+   |             |    single: description; resource                                 |
+   |             |    single: resource; property, description                       |
+   |             |                                                                  |
+   |             | A description of the Resource Agent, intended for local use.     |
+   |             | E.g. ``IP address for website``                                  |
+   +-------------+------------------------------------------------------------------+
+   | type        | .. index::                                                       |
+   |             |    single: type; resource                                        |
+   |             |    single: resource; property, type                              |
+   |             |                                                                  |
+   |             | The name of the Resource Agent you wish to use. E.g.             |
+   |             | ``IPaddr`` or ``Filesystem``                                     |
+   +-------------+------------------------------------------------------------------+
+   | provider    | .. index::                                                       |
+   |             |    single: provider; resource                                    |
+   |             |    single: resource; property, provider                          |
+   |             |                                                                  |
+   |             | The OCF spec allows multiple vendors to supply the same resource |
+   |             | agent. To use the OCF resource agents supplied by the Heartbeat  |
+   |             | project, you would specify ``heartbeat`` here.                   |
+   +-------------+------------------------------------------------------------------+
 
 The XML definition of a resource can be queried with the **crm_resource** tool.
 For example:
