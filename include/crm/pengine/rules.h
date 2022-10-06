@@ -20,15 +20,18 @@ extern "C" {
 #endif
 
 enum expression_type {
-    not_expr,
-    nested_rule,
-    attr_expr,
-    loc_expr,
-    role_expr,
-    time_expr,
-    version_expr,
-    rsc_expr,
-    op_expr
+    not_expr        = 0,
+    nested_rule     = 1,
+    attr_expr       = 2,
+    loc_expr        = 3,
+    role_expr       = 4,
+    time_expr       = 5,
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated Do not use (will be removed in a future release)
+    version_expr    = 6,
+#endif
+    rsc_expr        = 7,
+    op_expr         = 8,
 };
 
 enum expression_type find_expression_type(xmlNode * expr);

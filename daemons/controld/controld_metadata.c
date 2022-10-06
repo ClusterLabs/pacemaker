@@ -37,9 +37,6 @@ metadata_free(void *metadata)
     if (metadata) {
         struct ra_metadata_s *md = (struct ra_metadata_s *) metadata;
 
-        if (md->ra_version) {
-            free(md->ra_version);
-        }
         g_list_free_full(md->ra_params, ra_param_free);
         free(metadata);
     }

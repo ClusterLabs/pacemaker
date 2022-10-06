@@ -51,7 +51,6 @@ struct ra_param_s {
 };
 
 struct ra_metadata_s {
-    char *ra_version;
     GList *ra_params;   // ra_param_s
     uint32_t ra_flags;  // bitmask of ra_flags_e
 };
