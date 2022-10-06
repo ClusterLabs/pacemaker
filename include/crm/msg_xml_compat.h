@@ -43,6 +43,18 @@ extern "C" {
 //! \deprecated Use PCMK_XA_PROMOTED_NODE_MAX_LEGACY instead
 #define XML_RSC_ATTR_MASTER_NODEMAX PCMK_XA_PROMOTED_NODE_MAX_LEGACY
 
+//! \deprecated Do not use (will be removed in a future release)
+#define XML_ATTR_RA_VERSION "ra-version"
+
+//! \deprecated Do not use (will be removed in a future release)
+#define XML_TAG_RSC_VER_ATTRS "rsc_versioned_attrs"
+
+//! \deprecated Do not use (will be removed in a future release)
+#define XML_TAG_OP_VER_ATTRS "op_versioned_attrs"
+
+//! \deprecated Do not use (will be removed in a future release)
+#define XML_TAG_OP_VER_META "op_versioned_meta"
+
 #ifdef __cplusplus
 }
 #endif

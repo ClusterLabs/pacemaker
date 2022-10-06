@@ -1,7 +1,0 @@
-digraph "g" {
-"fencing_monitor_0 node1" -> "fencing_start_0 node1" [ style = bold]
-"fencing_monitor_0 node1" [ style=bold color="green" fontcolor="black"]
-"fencing_monitor_0 node2" -> "fencing_start_0 node1" [ style = bold]
-"fencing_monitor_0 node2" [ style=bold color="green" fontcolor="black"]
-"fencing_start_0 node1" [ style=bold color="green" fontcolor="black"]
-}

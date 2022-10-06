@@ -734,10 +734,6 @@ build_operation_update(xmlNode * parent, const lrmd_rsc_info_t *rsc,
         return TRUE;
     }
 
-#if ENABLE_VERSIONED_ATTRS
-    crm_xml_add(xml_op, XML_ATTR_RA_VERSION, metadata->ra_version);
-#endif
-
     crm_trace("Including additional digests for %s:%s:%s",
               rsc->standard, rsc->provider, rsc->type);
     append_restart_list(op, metadata, xml_op, caller_version);
@@ -1928,62 +1924,6 @@ do_lrm_invoke(long long action,
     }
 }
 
-#if ENABLE_VERSIONED_ATTRS
-static void
-resolve_versioned_parameters(lrm_state_t *lrm_state, const char *rsc_id,
-                             const xmlNode *rsc_op, GHashTable *params)
-{
-    /* Resource info *should* already be cached, so we don't get
-     * executor call */
-    lrmd_rsc_info_t *rsc = lrm_state_get_rsc_info(lrm_state, rsc_id, 0);
-    struct ra_metadata_s *metadata;
-
-    metadata = controld_get_rsc_metadata(lrm_state, rsc,
-                                         controld_metadata_from_cache);
-    if (metadata) {
-        xmlNode *versioned_attrs = NULL;
-        GHashTable *hash = NULL;
-        char *key = NULL;
-        char *value = NULL;
-        GHashTableIter iter;
-
-        versioned_attrs = first_named_child(rsc_op, XML_TAG_OP_VER_ATTRS);
-        hash = pe_unpack_versioned_parameters(versioned_attrs, metadata->ra_version);
-        g_hash_table_iter_init(&iter, hash);
-        while (g_hash_table_iter_next(&iter, (gpointer *) &key, (gpointer *) &value)) {
-            g_hash_table_iter_steal(&iter);
-            g_hash_table_replace(params, key, value);
-        }
-        g_hash_table_destroy(hash);
-
-        versioned_attrs = first_named_child(rsc_op, XML_TAG_OP_VER_META);
-        hash = pe_unpack_versioned_parameters(versioned_attrs, metadata->ra_version);
-        g_hash_table_iter_init(&iter, hash);
-        while (g_hash_table_iter_next(&iter, (gpointer *) &key, (gpointer *) &value)) {
-            g_hash_table_replace(params, crm_meta_name(key), strdup(value));
-
-            if (pcmk__str_eq(key, XML_ATTR_TIMEOUT, pcmk__str_casei)) {
-                pcmk__scan_min_int(value, &op->timeout, 0);
-            } else if (pcmk__str_eq(key, XML_OP_ATTR_START_DELAY, pcmk__str_casei)) {
-                pcmk__scan_min_int(value, &op->start_delay, 0);
-            }
-        }
-        g_hash_table_destroy(hash);
-
-        versioned_attrs = first_named_child(rsc_op, XML_TAG_RSC_VER_ATTRS);
-        hash = pe_unpack_versioned_parameters(versioned_attrs, metadata->ra_version);
-        g_hash_table_iter_init(&iter, hash);
-        while (g_hash_table_iter_next(&iter, (gpointer *) &key, (gpointer *) &value)) {
-            g_hash_table_iter_steal(&iter);
-            g_hash_table_replace(params, key, value);
-        }
-        g_hash_table_destroy(hash);
-    }
-
-    lrmd_free_rsc_info(rsc);
-}
-#endif
-
 static lrmd_event_data_t *
 construct_op(const lrm_state_t *lrm_state, const xmlNode *rsc_op,
              const char *rsc_id, const char *operation)
@@ -2050,14 +1990,6 @@ construct_op(const lrm_state_t *lrm_state, const xmlNode *rsc_op,
             op->timeout = crm_get_msec(op_timeout);
         }
     }
-
-#if ENABLE_VERSIONED_ATTRS
-    if (lrm_state && !is_remote_lrmd_ra(NULL, NULL, rsc_id)
-        && !pcmk__strcase_any_of(op_type, CRMD_ACTION_METADATA, CRMD_ACTION_DELETE,
-                                 NULL)) {
-        resolve_versioned_parameters(lrm_state, rsc_id, rsc_op, params);
-    }
-#endif
 
     if (!pcmk__str_eq(operation, RSC_STOP, pcmk__str_casei)) {
         op->params = params;

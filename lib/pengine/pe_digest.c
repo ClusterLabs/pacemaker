@@ -80,45 +80,6 @@ attr_in_string(xmlAttrPtr a, void *user_data)
     return filter;
 }
 
-#if ENABLE_VERSIONED_ATTRS
-static void
-append_versioned_params(xmlNode *versioned_params, const char *ra_version, xmlNode *params)
-{
-    GHashTable *hash = pe_unpack_versioned_parameters(versioned_params, ra_version);
-    char *key = NULL;
-    char *value = NULL;
-    GHashTableIter iter;
-
-    g_hash_table_iter_init(&iter, hash);
-    while (g_hash_table_iter_next(&iter, (gpointer *) &key, (gpointer *) &value)) {
-        crm_xml_add(params, key, value);
-    }
-    g_hash_table_destroy(hash);
-}
-
-static void
-append_all_versioned_params(pe_resource_t *rsc, pe_node_t *node,
-                            pe_action_t *action, xmlNode *xml_op,
-                            pe_working_set_t *data_set)
-{
-    const char *ra_version = NULL;
-    xmlNode *local_versioned_params = NULL;
-    pe_rsc_action_details_t *details = pe_rsc_action_details(action);
-
-    local_versioned_params = create_xml_node(NULL, XML_TAG_RSC_VER_ATTRS);
-    pe_get_versioned_attributes(local_versioned_params, rsc, node, data_set);
-    if (xml_op != NULL) {
-        ra_version = crm_element_value(xml_op, XML_ATTR_RA_VERSION);
-    }
-    append_versioned_params(local_versioned_params, ra_version,
-                            data->params_all);
-    append_versioned_params(rsc->versioned_parameters, ra_version,
-                            data->params_all);
-    append_versioned_params(details->versioned_parameters, ra_version,
-                            data->params_all);
-}
-#endif
-
 /*!
  * \internal
  * \brief Add digest of all parameters to a digest cache entry
@@ -174,10 +135,6 @@ calculate_main_digest(op_digest_cache_t *data, pe_resource_t *rsc,
     g_hash_table_foreach(params, hash2field, data->params_all);
     g_hash_table_foreach(action->extra, hash2field, data->params_all);
     g_hash_table_foreach(action->meta, hash2metafield, data->params_all);
-
-#if ENABLE_VERSIONED_ATTRS
-    append_all_versioned_params(rsc, node, action, xml_op, data_set);
-#endif
 
     pcmk__filter_op_for_digest(data->params_all);
 

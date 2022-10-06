@@ -118,7 +118,6 @@ extern "C" {
 #  define XML_ATTR_CRM_VERSION		"crm_feature_set"
 #  define XML_ATTR_DIGEST		"digest"
 #  define XML_ATTR_VALIDATION		"validate-with"
-#  define XML_ATTR_RA_VERSION		"ra-version"
 
 #  define XML_ATTR_QUORUM_PANIC		"no-quorum-panic"
 #  define XML_ATTR_HAVE_QUORUM		"have-quorum"
@@ -210,9 +209,6 @@ extern "C" {
 #  define XML_TAG_ATTR_SETS	   	"instance_attributes"
 #  define XML_TAG_META_SETS	   	"meta_attributes"
 #  define XML_TAG_ATTRS			"attributes"
-#  define XML_TAG_RSC_VER_ATTRS	"rsc_versioned_attrs"
-#  define XML_TAG_OP_VER_ATTRS         "op_versioned_attrs"
-#  define XML_TAG_OP_VER_META          "op_versioned_meta"
 #  define XML_TAG_PARAMS		"parameters"
 #  define XML_TAG_PARAM			"param"
 #  define XML_TAG_UTILIZATION		"utilization"

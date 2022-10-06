@@ -227,7 +227,6 @@ crmd_exit(crm_exit_t exit_code)
     controld_clear_fsa_input_flags(R_MEMBERSHIP);
     g_list_free(fsa_message_queue); fsa_message_queue = NULL;
 
-    metadata_cache_fini();
     controld_election_fini();
 
     /* Tear down the CIB manager connection, but don't free it yet -- it could

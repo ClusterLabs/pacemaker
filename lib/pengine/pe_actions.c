@@ -578,90 +578,6 @@ unpack_start_delay(const char *value, GHashTable *meta)
     return start_delay;
 }
 
-#if ENABLE_VERSIONED_ATTRS
-pe_rsc_action_details_t *
-pe_rsc_action_details(pe_action_t *action)
-{
-    pe_rsc_action_details_t *details;
-
-    CRM_CHECK(action != NULL, return NULL);
-
-    if (action->action_details == NULL) {
-        action->action_details = calloc(1, sizeof(pe_rsc_action_details_t));
-        CRM_CHECK(action->action_details != NULL, return NULL);
-    }
-
-    details = (pe_rsc_action_details_t *) action->action_details;
-    if (details->versioned_parameters == NULL) {
-        details->versioned_parameters = create_xml_node(NULL,
-                                                        XML_TAG_OP_VER_ATTRS);
-    }
-    if (details->versioned_meta == NULL) {
-        details->versioned_meta = create_xml_node(NULL, XML_TAG_OP_VER_META);
-    }
-    return details;
-}
-
-static void
-pe_free_rsc_action_details(pe_action_t *action)
-{
-    pe_rsc_action_details_t *details;
-
-    if ((action == NULL) || (action->action_details == NULL)) {
-        return;
-    }
-
-    details = (pe_rsc_action_details_t *) action->action_details;
-
-    if (details->versioned_parameters) {
-        free_xml(details->versioned_parameters);
-    }
-    if (details->versioned_meta) {
-        free_xml(details->versioned_meta);
-    }
-
-    action->action_details = NULL;
-}
-
-static void
-unpack_versioned_meta(xmlNode *versioned_meta, xmlNode *xml_obj,
-                      guint interval_ms, crm_time_t *now)
-{
-    xmlNode *attrs = NULL;
-    xmlNode *attr = NULL;
-
-    for (attrs = pcmk__xe_first_child(versioned_meta); attrs != NULL;
-         attrs = pcmk__xe_next(attrs)) {
-
-        for (attr = pcmk__xe_first_child(attrs); attr != NULL;
-             attr = pcmk__xe_next(attr)) {
-
-            const char *name = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
-            const char *value = crm_element_value(attr, XML_NVPAIR_ATTR_VALUE);
-
-            if (pcmk__str_eq(name, XML_OP_ATTR_START_DELAY, pcmk__str_casei)) {
-                int start_delay = unpack_start_delay(value, NULL);
-
-                crm_xml_add_int(attr, XML_NVPAIR_ATTR_VALUE, start_delay);
-            } else if (pcmk__str_eq(name, XML_OP_ATTR_ORIGIN, pcmk__str_casei)) {
-                long long start_delay = 0;
-
-                if (unpack_interval_origin(value, xml_obj, interval_ms, now,
-                                           &start_delay)) {
-                    crm_xml_add(attr, XML_NVPAIR_ATTR_NAME,
-                                XML_OP_ATTR_START_DELAY);
-                    crm_xml_add_ll(attr, XML_NVPAIR_ATTR_VALUE, start_delay);
-                }
-            } else if (pcmk__str_eq(name, XML_ATTR_TIMEOUT, pcmk__str_casei)) {
-                int timeout_ms = unpack_timeout(value);
-
-                crm_xml_add_int(attr, XML_NVPAIR_ATTR_VALUE, timeout_ms);
-            }
-        }
-    }
-}
-#endif
-
 static xmlNode *
 find_min_interval_mon(pe_resource_t * rsc, gboolean include_disabled)
 {
@@ -722,9 +638,6 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
     int timeout_ms = 0;
     const char *value = NULL;
     bool is_probe = false;
-#if ENABLE_VERSIONED_ATTRS
-    pe_rsc_action_details_t *rsc_details = NULL;
-#endif
 
     pe_rsc_eval_data_t rsc_rule_data = {
         .standard = crm_element_value(action->rsc->xml, XML_AGENT_ATTR_CLASS),
@@ -775,19 +688,6 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
         // <op> <meta_attributes> take precedence over defaults
         pe__unpack_dataset_nvpairs(xml_obj, XML_TAG_META_SETS, &rule_data,
                                    action->meta, NULL, TRUE, data_set);
-
-#if ENABLE_VERSIONED_ATTRS
-        rsc_details = pe_rsc_action_details(action);
-
-        /* Non-versioned attributes also unpack XML_TAG_ATTR_SETS, but that
-         * capability is deprecated, so we don't need to extend that support to
-         * versioned attributes.
-         */
-        pe_eval_versioned_attributes(data_set->input, xml_obj,
-                                     XML_TAG_META_SETS, &rule_data,
-                                     rsc_details->versioned_meta,
-                                     NULL);
-#endif
 
         /* Anything set as an <op> XML property has highest precedence.
          * This ensures we use the name and interval from the <op> tag.
@@ -1017,11 +917,6 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
                                  crm_strdup_printf("%lld", start_delay));
         }
     }
-
-#if ENABLE_VERSIONED_ATTRS
-    unpack_versioned_meta(rsc_details->versioned_meta, xml_obj, interval_ms,
-                          data_set->now);
-#endif
 }
 
 /*!
@@ -1308,11 +1203,6 @@ pe_free_action(pe_action_t * action)
     if (action->meta) {
         g_hash_table_destroy(action->meta);
     }
-#if ENABLE_VERSIONED_ATTRS
-    if (action->rsc) {
-        pe_free_rsc_action_details(action);
-    }
-#endif
     free(action->cancel_task);
     free(action->reason);
     free(action->task);

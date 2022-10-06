@@ -20,15 +20,18 @@ extern "C" {
 #endif
 
 enum expression_type {
-    not_expr,
-    nested_rule,
-    attr_expr,
-    loc_expr,
-    role_expr,
-    time_expr,
-    version_expr,
-    rsc_expr,
-    op_expr
+    not_expr        = 0,
+    nested_rule     = 1,
+    attr_expr       = 2,
+    loc_expr        = 3,
+    role_expr       = 4,
+    time_expr       = 5,
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated Do not use (will be removed in a future release)
+    version_expr    = 6,
+#endif
+    rsc_expr        = 7,
+    op_expr         = 8,
 };
 
 enum expression_type find_expression_type(xmlNode * expr);
@@ -54,14 +57,6 @@ void pe_unpack_nvpairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
                        GHashTable *node_hash, GHashTable *hash,
                        const char *always_first, gboolean overwrite,
                        crm_time_t *now, crm_time_t *next_change);
-
-#if ENABLE_VERSIONED_ATTRS
-void pe_eval_versioned_attributes(xmlNode *top, const xmlNode *xml_obj,
-                                  const char *set_name, pe_rule_eval_data_t *rule_data,
-                                  xmlNode *hash, crm_time_t *next_change);
-
-GHashTable *pe_unpack_versioned_parameters(xmlNode *versioned_params, const char *ra_version);
-#endif
 
 char *pe_expand_re_matches(const char *string, pe_re_match_data_t * match_data);
 
