@@ -191,10 +191,11 @@ rsc_fail_name(pe_resource_t *rsc)
  * \param[in]  is_unique Whether the resource is a globally unique clone
  * \param[out] re        Where to store resulting regular expression
  *
+ * \return Standard Pacemaker return code
  * \note Fail attributes are named like PREFIX-RESOURCE#OP_INTERVAL.
  *       The caller is responsible for freeing re with regfree().
  */
-static void
+static int
 generate_fail_regex(const char *prefix, const char *rsc_name,
                     gboolean is_legacy, gboolean is_unique, regex_t *re)
 {
@@ -215,8 +216,13 @@ generate_fail_regex(const char *prefix, const char *rsc_name,
 
     pattern = crm_strdup_printf("^%s-%s%s%s$", prefix, rsc_name,
                                 instance_pattern, op_pattern);
-    CRM_LOG_ASSERT(regcomp(re, pattern, REG_EXTENDED|REG_NOSUB) == 0);
+    if (regcomp(re, pattern, REG_EXTENDED|REG_NOSUB) != 0) {
+        free(pattern);
+        return EINVAL;
+    }
+
     free(pattern);
+    return pcmk_rc_ok;
 }
 
 /*!
@@ -228,9 +234,10 @@ generate_fail_regex(const char *prefix, const char *rsc_name,
  * \param[out] failcount_re    Storage for regular expression for fail count
  * \param[out] lastfailure_re  Storage for regular expression for last failure
  *
+ * \return Standard Pacemaker return code
  * \note The caller is responsible for freeing the expressions with regfree().
  */
-static void
+static int
 generate_fail_regexes(pe_resource_t *rsc, pe_working_set_t *data_set,
                       regex_t *failcount_re, regex_t *lastfailure_re)
 {
@@ -238,13 +245,21 @@ generate_fail_regexes(pe_resource_t *rsc, pe_working_set_t *data_set,
     const char *version = crm_element_value(data_set->input, XML_ATTR_CRM_VERSION);
     gboolean is_legacy = (compare_version(version, "3.0.13") < 0);
 
-    generate_fail_regex(PCMK__FAIL_COUNT_PREFIX, rsc_name, is_legacy,
-                        pcmk_is_set(rsc->flags, pe_rsc_unique), failcount_re);
+    if (generate_fail_regex(PCMK__FAIL_COUNT_PREFIX, rsc_name, is_legacy,
+                            pcmk_is_set(rsc->flags, pe_rsc_unique),
+                            failcount_re) != pcmk_rc_ok) {
+        return EINVAL;
+    }
 
-    generate_fail_regex(PCMK__LAST_FAILURE_PREFIX, rsc_name, is_legacy,
-                        pcmk_is_set(rsc->flags, pe_rsc_unique), lastfailure_re);
+    if (generate_fail_regex(PCMK__LAST_FAILURE_PREFIX, rsc_name, is_legacy,
+                            pcmk_is_set(rsc->flags, pe_rsc_unique),
+                            lastfailure_re) != pcmk_rc_ok) {
+        regfree(failcount_re);
+        return EINVAL;
+    }
 
     free(rsc_name);
+    return pcmk_rc_ok;
 }
 
 int
@@ -258,7 +273,9 @@ pe_get_failcount(pe_node_t *node, pe_resource_t *rsc, time_t *last_failure,
     time_t last = 0;
     GHashTableIter iter;
 
-    generate_fail_regexes(rsc, data_set, &failcount_re, &lastfailure_re);
+    CRM_CHECK(generate_fail_regexes(rsc, data_set, &failcount_re,
+                                    &lastfailure_re) == pcmk_rc_ok,
+              return 0);
 
     /* Resource fail count is sum of all matching operation fail counts */
     g_hash_table_iter_init(&iter, node->details->attrs);
