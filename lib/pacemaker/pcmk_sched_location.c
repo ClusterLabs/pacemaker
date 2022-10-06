@@ -310,11 +310,10 @@ unpack_simple_location(xmlNode *xml_obj, pe_working_set_t *data_set)
             invert = true;
         }
 
-        if (regcomp(r_patt, value, REG_EXTENDED)) {
+        if (regcomp(r_patt, value, REG_EXTENDED) != 0) {
             pcmk__config_err("Ignoring constraint '%s' because "
                              XML_LOC_ATTR_SOURCE_PATTERN
                              " has invalid value '%s'", id, value);
-            regfree(r_patt);
             free(r_patt);
             return;
         }
