@@ -209,7 +209,6 @@ extern "C" {
 #  define XML_TAG_ATTR_SETS	   	"instance_attributes"
 #  define XML_TAG_META_SETS	   	"meta_attributes"
 #  define XML_TAG_ATTRS			"attributes"
-#  define XML_TAG_RSC_VER_ATTRS	"rsc_versioned_attrs"
 #  define XML_TAG_OP_VER_ATTRS         "op_versioned_attrs"
 #  define XML_TAG_OP_VER_META          "op_versioned_meta"
 #  define XML_TAG_PARAMS		"parameters"
