@@ -47,7 +47,7 @@ pcmk__free_acls(GList *acls)
 }
 
 static GList *
-create_acl(xmlNode *xml, GList *acls, enum xml_private_flags mode)
+create_acl(const xmlNode *xml, GList *acls, enum xml_private_flags mode)
 {
     xml_acl_t *acl = NULL;
 
@@ -125,7 +125,7 @@ create_acl(xmlNode *xml, GList *acls, enum xml_private_flags mode)
  * \note This function is recursive
  */
 static GList *
-parse_acl_entry(xmlNode *acl_top, xmlNode *acl_entry, GList *acls)
+parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
 {
     xmlNode *child = NULL;
 
@@ -275,11 +275,11 @@ pcmk__apply_acl(xmlNode *xml)
  * \internal
  * \brief Unpack ACLs for a given user into the
  * metadata of the target XML tree
- * 
- * Taking the description of ACLs from the source XML tree and 
+ *
+ * Taking the description of ACLs from the source XML tree and
  * marking up the target XML tree with access information for the
  * given user by tacking it onto the relevant nodes
- * 
+ *
  * \param[in]     source  XML with ACL definitions
  * \param[in,out] target  XML that ACLs will be applied to
  * \param[in]     user    Username whose ACLs need to be unpacked
@@ -381,7 +381,7 @@ test_acl_mode(enum xml_private_flags allowed, enum xml_private_flags requested)
  * \internal
  * \brief Rid XML tree of all unreadable nodes and node properties
  *
- * \param[in]     xml root node to be purged of attributes
+ * \param[in,out] xml   Root XML node to be purged of attributes
  *
  * \return true if this node or any of its children are readable
  *         if false is returned, xml will be freed
@@ -528,7 +528,7 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
  * \return true if XML element is implicitly allowed, false otherwise
  */
 static bool
-implicitly_allowed(xmlNode *xml)
+implicitly_allowed(const xmlNode *xml)
 {
     GString *path = NULL;
 
@@ -564,7 +564,7 @@ implicitly_allowed(xmlNode *xml)
  * \param[in,out] xml        XML to check
  * \param[in]     check_top  Whether to apply checks to argument itself
  *                           (if true, xml might get freed)
- * 
+ *
  * \note This function is recursive
  */
 void
@@ -610,7 +610,7 @@ pcmk__apply_creation_acl(xmlNode *xml, bool check_top)
  * \return true if XML node exists and is ACL-denied, false otherwise
  */
 bool
-xml_acl_denied(xmlNode *xml)
+xml_acl_denied(const xmlNode *xml)
 {
     if (xml && xml->doc && xml->doc->_private){
         xml_doc_private_t *docpriv = xml->doc->_private;
@@ -641,7 +641,7 @@ xml_acl_disable(xmlNode *xml)
  * \return true if XML node exists and is ACL-enabled, false otherwise
  */
 bool
-xml_acl_enabled(xmlNode *xml)
+xml_acl_enabled(const xmlNode *xml)
 {
     if (xml && xml->doc && xml->doc->_private){
         xml_doc_private_t *docpriv = xml->doc->_private;
