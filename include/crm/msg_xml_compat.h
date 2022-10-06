@@ -52,6 +52,9 @@ extern "C" {
 //! \deprecated Do not use (will be removed in a future release)
 #define XML_TAG_OP_VER_ATTRS "op_versioned_attrs"
 
+//! \deprecated Do not use (will be removed in a future release)
+#define XML_TAG_OP_VER_META "op_versioned_meta"
+
 #ifdef __cplusplus
 }
 #endif
