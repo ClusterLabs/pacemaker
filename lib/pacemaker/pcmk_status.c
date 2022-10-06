@@ -263,10 +263,6 @@ pcmk__status(pcmk__output_t *out, cib_t *cib, enum pcmk__fence_history fence_his
 
     if (fence_history != pcmk__fence_history_none && cib->variant == cib_native) {
         st = fencing_connect();
-
-        if (st == NULL) {
-            return ENOTCONN;
-        }
     }
 
     rc = cib_connect(out, cib, &current_cib);
