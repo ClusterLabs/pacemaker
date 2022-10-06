@@ -34,6 +34,9 @@ extern "C" {
 //! \deprecated This defined constant will be removed in a future release
 #define CRM_OP_LRM_QUERY "lrm_query"
 
+//! \deprecated This defined constant will be removed in a future release
+#define CRM_ATTR_RA_VERSION "#ra-version"
+
 //!@{
 //! \deprecated This macro will be removed in a future release
 

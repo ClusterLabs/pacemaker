@@ -120,7 +120,6 @@ extern char *crm_system_name;
 #  define CRM_ATTR_UNFENCED         "#node-unfenced"
 #  define CRM_ATTR_DIGESTS_ALL      "#digests-all"
 #  define CRM_ATTR_DIGESTS_SECURE   "#digests-secure"
-#  define CRM_ATTR_RA_VERSION       "#ra-version"
 #  define CRM_ATTR_PROTOCOL         "#attrd-protocol"
 #  define CRM_ATTR_FEATURE_SET      "#feature-set"
 
