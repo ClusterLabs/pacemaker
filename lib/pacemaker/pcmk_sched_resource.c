@@ -43,12 +43,12 @@ static resource_alloc_functions_t allocation_methods[] = {
         pcmk__group_apply_coloc_score,
         pcmk__group_add_colocated_node_scores,
         pcmk__group_colocated_resources,
-        group_rsc_location,
-        group_action_flags,
-        group_update_actions,
+        pcmk__group_apply_location,
+        pcmk__group_action_flags,
+        pcmk__group_update_ordered_actions,
         pcmk__output_resource_actions,
         pcmk__add_rsc_actions_to_graph,
-        group_append_meta,
+        pcmk__noop_add_graph_meta,
         pcmk__group_add_utilization,
         pcmk__group_shutdown_lock,
     },
@@ -82,7 +82,7 @@ static resource_alloc_functions_t allocation_methods[] = {
         pcmk__multi_update_actions,
         pcmk__output_bundle_actions,
         pcmk__bundle_expand,
-        pcmk__bundle_append_meta,
+        pcmk__noop_add_graph_meta,
         pcmk__bundle_add_utilization,
         pcmk__bundle_shutdown_lock,
     }
@@ -272,6 +272,12 @@ pcmk__colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
     }
 
     return colocated_rscs;
+}
+
+// No-op function for variants that don't need to implement add_graph_meta()
+void
+pcmk__noop_add_graph_meta(pe_resource_t *rsc, xmlNode *xml)
+{
 }
 
 void

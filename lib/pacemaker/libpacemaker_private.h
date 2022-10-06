@@ -184,22 +184,22 @@ struct resource_alloc_functions_s {
      * flags (and runnable_before members if appropriate) as appropriate for the
      * ordering. In some cases, the ordering could be disabled as well.
      *
-     * \param[in] first     'First' action in an ordering
-     * \param[in] then      'Then' action in an ordering
-     * \param[in] node      If not NULL, limit scope of ordering to this node
-     *                      (only used when interleaving instances)
-     * \param[in] flags     Action flags for \p first for ordering purposes
-     * \param[in] filter    Action flags to limit scope of certain updates (may
-     *                      include pe_action_optional to affect only mandatory
-     *                      actions, and pe_action_runnable to affect only
-     *                      runnable actions)
-     * \param[in] type      Group of enum pe_ordering flags to apply
-     * \param[in] data_set  Cluster working set
+     * \param[in,out] first     'First' action in an ordering
+     * \param[in,out] then      'Then' action in an ordering
+     * \param[in]     node      If not NULL, limit scope of ordering to this
+     *                          node (only used when interleaving instances)
+     * \param[in]     flags     Action flags for \p first for ordering purposes
+     * \param[in]     filter    Action flags to limit scope of certain updates
+     *                          (may include pe_action_optional to affect only
+     *                          mandatory actions, and pe_action_runnable to
+     *                          affect only runnable actions)
+     * \param[in]     type      Group of enum pe_ordering flags to apply
+     * \param[in,out] data_set  Cluster working set
      *
      * \return Group of enum pcmk__updated flags indicating what was updated
      */
     uint32_t (*update_ordered_actions)(pe_action_t *first, pe_action_t *then,
-                                       pe_node_t *node, uint32_t flags,
+                                       const pe_node_t *node, uint32_t flags,
                                        uint32_t filter, uint32_t type,
                                        pe_working_set_t *data_set);
 
@@ -261,7 +261,7 @@ void pcmk__update_action_for_orderings(pe_action_t *action,
 
 G_GNUC_INTERNAL
 uint32_t pcmk__update_ordered_actions(pe_action_t *first, pe_action_t *then,
-                                      pe_node_t *node, uint32_t flags,
+                                      const pe_node_t *node, uint32_t flags,
                                       uint32_t filter, uint32_t type,
                                       pe_working_set_t *data_set);
 
@@ -641,6 +641,21 @@ void pcmk__group_apply_coloc_score(pe_resource_t *dependent,
                                    bool for_dependent);
 
 G_GNUC_INTERNAL
+void pcmk__group_apply_location(pe_resource_t *rsc, pe__location_t *location);
+
+G_GNUC_INTERNAL
+enum pe_action_flags pcmk__group_action_flags(pe_action_t *action,
+                                              const pe_node_t *node);
+
+G_GNUC_INTERNAL
+uint32_t pcmk__group_update_ordered_actions(pe_action_t *first,
+                                            pe_action_t *then,
+                                            const pe_node_t *node,
+                                            uint32_t flags, uint32_t filter,
+                                            uint32_t type,
+                                            pe_working_set_t *data_set);
+
+G_GNUC_INTERNAL
 void pcmk__group_add_colocated_node_scores(pe_resource_t *rsc,
                                            const char *log_id,
                                            GHashTable **nodes, const char *attr,
@@ -650,6 +665,15 @@ G_GNUC_INTERNAL
 GList *pcmk__group_colocated_resources(pe_resource_t *rsc,
                                        pe_resource_t *orig_rsc,
                                        GList *colocated_rscs);
+
+G_GNUC_INTERNAL
+void pcmk__group_add_utilization(const pe_resource_t *rsc,
+                                 const pe_resource_t *orig_rsc, GList *all_rscs,
+                                 GHashTable *utilization);
+
+G_GNUC_INTERNAL
+void pcmk__group_shutdown_lock(pe_resource_t *rsc);
+
 
 // Clones (pcmk_sched_clone.c)
 
@@ -736,6 +760,9 @@ GList *pcmk__rscs_matching_id(const char *id, pe_working_set_t *data_set);
 G_GNUC_INTERNAL
 GList *pcmk__colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
                                  GList *colocated_rscs);
+
+G_GNUC_INTERNAL
+void pcmk__noop_add_graph_meta(pe_resource_t *rsc, xmlNode *xml);
 
 G_GNUC_INTERNAL
 void pcmk__output_resource_actions(pe_resource_t *rsc);

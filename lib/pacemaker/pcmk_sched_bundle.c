@@ -607,11 +607,11 @@ find_compatible_child_by_node(const pe_resource_t *local_child,
 }
 
 static pe__bundle_replica_t *
-replica_for_container(pe_resource_t *rsc, pe_resource_t *container,
-                      pe_node_t *node)
+replica_for_container(const pe_resource_t *rsc, const pe_resource_t *container,
+                      const pe_node_t *node)
 {
     if (rsc->variant == pe_container) {
-        pe__bundle_variant_data_t *data = NULL;
+        const pe__bundle_variant_data_t *data = NULL;
 
         get_bundle_variant_data(data, rsc);
         for (GList *gIter = data->replicas; gIter != NULL;
@@ -620,7 +620,7 @@ replica_for_container(pe_resource_t *rsc, pe_resource_t *container,
 
             if (replica->child
                 && (container == replica->container)
-                && (node->details == replica->node->details)) {
+                && pe__same_node(node, replica->node)) {
                 return replica;
             }
         }
@@ -630,8 +630,8 @@ replica_for_container(pe_resource_t *rsc, pe_resource_t *container,
 
 static uint32_t
 multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
-                                pe_node_t *node, uint32_t filter, uint32_t type,
-                                pe_working_set_t *data_set)
+                                const pe_node_t *node, uint32_t filter,
+                                uint32_t type, pe_working_set_t *data_set)
 {
     GList *gIter = NULL;
     GList *children = NULL;
@@ -812,24 +812,25 @@ can_interleave_actions(pe_action_t *first, pe_action_t *then)
  * flags (and runnable_before members if appropriate) as appropriate for the
  * ordering. In some cases, the ordering could be disabled as well.
  *
- * \param[in] first     'First' action in an ordering
- * \param[in] then      'Then' action in an ordering
- * \param[in] node      If not NULL, limit scope of ordering to this node
- *                      (only used when interleaving instances)
- * \param[in] flags     Action flags for \p first for ordering purposes
- * \param[in] filter    Action flags to limit scope of certain updates (may
- *                      include pe_action_optional to affect only mandatory
- *                      actions, and pe_action_runnable to affect only
- *                      runnable actions)
- * \param[in] type      Group of enum pe_ordering flags to apply
- * \param[in] data_set  Cluster working set
+ * \param[in,out] first     'First' action in an ordering
+ * \param[in,out] then      'Then' action in an ordering
+ * \param[in]     node      If not NULL, limit scope of ordering to this node
+ *                          (only used when interleaving instances)
+ * \param[in]     flags     Action flags for \p first for ordering purposes
+ * \param[in]     filter    Action flags to limit scope of certain updates (may
+ *                          include pe_action_optional to affect only mandatory
+ *                          actions, and pe_action_runnable to affect only
+ *                          runnable actions)
+ * \param[in]     type      Group of enum pe_ordering flags to apply
+ * \param[in,out] data_set  Cluster working set
  *
  * \return Group of enum pcmk__updated flags indicating what was updated
  */
 uint32_t
 pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
-                           pe_node_t *node, uint32_t flags, uint32_t filter,
-                           uint32_t type, pe_working_set_t *data_set)
+                           const pe_node_t *node, uint32_t flags,
+                           uint32_t filter, uint32_t type,
+                           pe_working_set_t *data_set)
 {
     uint32_t changed = pcmk__updated_none;
 
@@ -1088,11 +1089,6 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node)
         }
     }
     return any_created;
-}
-
-void
-pcmk__bundle_append_meta(pe_resource_t *rsc, xmlNode *xml)
-{
 }
 
 void
