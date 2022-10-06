@@ -70,11 +70,6 @@ metadata_cache_reset(GHashTable *mdc)
     }
 }
 
-void
-metadata_cache_fini(void)
-{
-}
-
 static struct ra_param_s *
 ra_param_from_xml(xmlNode *param_xml)
 {

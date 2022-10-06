@@ -71,7 +71,6 @@ struct ra_metadata_s {
 GHashTable *metadata_cache_new(void);
 void metadata_cache_free(GHashTable *mdc);
 void metadata_cache_reset(GHashTable *mdc);
-void metadata_cache_fini(void);
 
 struct ra_metadata_s *controld_cache_metadata(GHashTable *mdc,
                                               const lrmd_rsc_info_t *rsc,
