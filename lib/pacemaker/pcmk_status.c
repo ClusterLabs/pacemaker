@@ -79,12 +79,13 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
     enum pcmk_pacemakerd_state *state =
         (enum pcmk_pacemakerd_state *) user_data;
 
-    /* we are just interested in the latest reply */
-    *state = pcmk_pacemakerd_state_invalid;
-
-    if (event_type != pcmk_ipc_event_reply || status != CRM_EX_OK) {
+    if ((state == NULL) || (event_type != pcmk_ipc_event_reply)
+        || (status != CRM_EX_OK)) {
         return;
     }
+
+    // We're only interested in the latest reply
+    *state = pcmk_pacemakerd_state_invalid;
 
     if (reply->reply_type == pcmk_pacemakerd_reply_ping &&
         reply->data.ping.last_good != (time_t) 0 &&
@@ -94,11 +95,10 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
 }
 
 static int
-pacemakerd_status(pcmk__output_t *out)
+pacemakerd_status(pcmk__output_t *out, enum pcmk_pacemakerd_state *state)
 {
     int rc = pcmk_rc_ok;
     pcmk_ipc_api_t *pacemakerd_api = NULL;
-    enum pcmk_pacemakerd_state state = pcmk_pacemakerd_state_invalid;
 
     rc = pcmk_new_ipc_api(&pacemakerd_api, pcmk_ipc_pacemakerd);
     if (pacemakerd_api == NULL) {
@@ -107,7 +107,8 @@ pacemakerd_status(pcmk__output_t *out)
         return rc;
     }
 
-    pcmk_register_ipc_callback(pacemakerd_api, pacemakerd_event_cb, (void *) &state);
+    pcmk_register_ipc_callback(pacemakerd_api, pacemakerd_event_cb,
+                               (void *) state);
 
     rc = pcmk_connect_ipc(pacemakerd_api, pcmk_ipc_dispatch_sync);
     if (rc == EREMOTEIO) {
@@ -120,16 +121,6 @@ pacemakerd_status(pcmk__output_t *out)
     }
 
     rc = pcmk_pacemakerd_api_ping(pacemakerd_api, crm_system_name);
-
-    if (rc != pcmk_rc_ok) {
-        /* Got some error from pcmk_pacemakerd_api_ping, so return it. */
-    } else if (state == pcmk_pacemakerd_state_running) {
-        rc = pcmk_rc_ok;
-    } else if (state == pcmk_pacemakerd_state_shutting_down) {
-        rc = ENOTCONN;
-    } else {
-        rc = EAGAIN;
-    }
 
     pcmk_free_ipc_api(pacemakerd_api);
     return rc;
@@ -229,7 +220,8 @@ pcmk_status(xmlNodePtr *xml)
     stonith__register_messages(out);
 
     rc = pcmk__status(out, cib, pcmk__fence_history_full, pcmk_section_all,
-                      show_opts, NULL, NULL, NULL, false);
+                      show_opts, NULL, NULL, NULL, false, NULL);
+
     pcmk__xml_output_finish(out, xml);
 
     cib_delete(cib);
@@ -239,11 +231,17 @@ pcmk_status(xmlNodePtr *xml)
 int
 pcmk__status(pcmk__output_t *out, cib_t *cib, enum pcmk__fence_history fence_history,
              uint32_t show, uint32_t show_opts, char *only_node, char *only_rsc,
-             const char *neg_location_prefix, bool simple_output)
+             const char *neg_location_prefix, bool simple_output,
+             enum pcmk_pacemakerd_state *pcmkd_state)
 {
     xmlNode *current_cib = NULL;
     int rc = pcmk_rc_ok;
     stonith_t *st = NULL;
+    enum pcmk_pacemakerd_state state = pcmk_pacemakerd_state_invalid;
+
+    if (pcmkd_state != NULL) {
+        *pcmkd_state = state;
+    }
 
     if (cib == NULL) {
         return ENOTCONN;
@@ -252,8 +250,26 @@ pcmk__status(pcmk__output_t *out, cib_t *cib, enum pcmk__fence_history fence_his
     if (cib->variant == cib_native) {
         if (cib->state == cib_connected_query || cib->state == cib_connected_command) {
             rc = pcmk_rc_ok;
+
         } else {
-            rc = pacemakerd_status(out);
+            rc = pacemakerd_status(out, &state);
+            if (pcmkd_state != NULL) {
+                *pcmkd_state = state;
+            }
+            switch (state) {
+                case pcmk_pacemakerd_state_init:
+                case pcmk_pacemakerd_state_starting_daemons:
+                case pcmk_pacemakerd_state_wait_for_ping:
+                    rc = EAGAIN;
+                    goto done;
+                case pcmk_pacemakerd_state_running:
+                case pcmk_pacemakerd_state_shutting_down:
+                    // CIB may still be accessible while shutting down
+                    break;
+                default:
+                    rc = ENOTCONN;
+                    goto done;
+            }
         }
     }
 

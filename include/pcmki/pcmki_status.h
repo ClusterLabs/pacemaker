@@ -44,9 +44,11 @@ int pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *st, cib_t *cib,
                                 char *only_rsc, const char *neg_location_prefix,
                                 bool simple_output);
 
-int pcmk__status(pcmk__output_t *out, cib_t *cib, enum pcmk__fence_history fence_history,
-                 uint32_t show, uint32_t show_opts, char *only_node, char *only_rsc,
-                 const char *neg_location_prefix, bool simple_output);
+int pcmk__status(pcmk__output_t *out, cib_t *cib,
+                 enum pcmk__fence_history fence_history, uint32_t show,
+                 uint32_t show_opts, char *only_node, char *only_rsc,
+                 const char *neg_location_prefix, bool simple_output,
+                 enum pcmk_pacemakerd_state *pcmkd_state);
 
 #ifdef __cplusplus
 }

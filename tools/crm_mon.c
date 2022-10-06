@@ -1330,10 +1330,50 @@ clean_up_on_connection_failure(int rc)
 static void
 one_shot(void)
 {
+    enum pcmk_pacemakerd_state state = pcmk_pacemakerd_state_invalid;
     int rc = pcmk__status(out, cib, fence_history, show, show_opts,
                           options.only_node, options.only_rsc,
                           options.neg_location_prefix,
-                          output_format == mon_output_monitor);
+                          (output_format == mon_output_monitor), &state);
+
+    if (rc != pcmk_rc_ok) {
+        const char *msg = NULL;
+
+        /* Unless pacemakerd is shut down, return success. Some resource agents
+         * may depend on a successful crm_mon --one-shot exit code.
+         */
+        switch (state) {
+            case pcmk_pacemakerd_state_init:
+                msg = "pacemakerd initializing";
+                rc = pcmk_rc_ok;
+                break;
+            case pcmk_pacemakerd_state_starting_daemons:
+                msg = "Pacemaker daemons starting";
+                rc = pcmk_rc_ok;
+                break;
+            case pcmk_pacemakerd_state_wait_for_ping:
+                msg = "Waiting for startup-trigger from SBD";
+                rc = pcmk_rc_ok;
+                break;
+            case pcmk_pacemakerd_state_running:
+                msg = "Error connecting to CIB or displaying status";
+                rc = pcmk_rc_ok;
+                break;
+            case pcmk_pacemakerd_state_shutting_down:
+                msg = "Pacemaker daemons shutting down";
+                rc = pcmk_rc_ok;
+                break;
+            case pcmk_pacemakerd_state_shutdown_complete:
+                msg = "Pacemaker daemons shut down - reporting to SBD";
+                break;
+            default:    // pcmk_pacemakerd_state_invalid
+                break;
+        }
+
+        if (msg != NULL) {
+            out->err(out, "Cluster status is not available: %s", msg);
+        }
+    }
 
     if (rc == pcmk_rc_ok) {
         clean_up(pcmk_rc2exitc(rc));
