@@ -647,21 +647,27 @@ health_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *", "const char *", "const char *")
+PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *", "int", "const char *",
+                  "const char *")
 static int
 pacemakerd_health(pcmk__output_t *out, va_list args)
 {
     const char *sys_from = va_arg(args, const char *);
-    const char *state = va_arg(args, const char *);
+    enum pcmk_pacemakerd_state state =
+        (enum pcmk_pacemakerd_state) va_arg(args, int);
+    const char *state_s = va_arg(args, const char *);
     const char *last_updated = va_arg(args, const char *);
 
+    if (state_s == NULL) {
+        state_s = pcmk__pcmkd_state_enum2friendly(state);
+    }
     return out->info(out, "Status of %s: '%s' (last updated %s)",
-                     pcmk__s(sys_from, "unknown node"),
-                     pcmk__s(state, "unknown state"),
+                     pcmk__s(sys_from, "unknown node"), state_s,
                      pcmk__s(last_updated, "at unknown time"));
 }
 
-PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *", "const char *", "const char *")
+PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *", "int", "const char *",
+                  "const char *")
 static int
 pacemakerd_health_text(pcmk__output_t *out, va_list args)
 {
@@ -669,24 +675,36 @@ pacemakerd_health_text(pcmk__output_t *out, va_list args)
         return pacemakerd_health(out, args);
     } else {
         const char *sys_from G_GNUC_UNUSED = va_arg(args, const char *);
-        const char *state = va_arg(args, const char *);
+        enum pcmk_pacemakerd_state state =
+            (enum pcmk_pacemakerd_state) va_arg(args, int);
+        const char *state_s = va_arg(args, const char *);
         const char *last_updated G_GNUC_UNUSED = va_arg(args, const char *);
 
-        pcmk__formatted_printf(out, "%s\n", pcmk__s(state, "<null>"));
+        if (state_s == NULL) {
+            state_s = pcmk_pacemakerd_api_daemon_state_enum2text(state);
+        }
+        pcmk__formatted_printf(out, "%s\n", state_s);
         return pcmk_rc_ok;
     }
 }
 
-PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *", "const char *", "const char *")
+PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *", "int", "const char *",
+                  "const char *")
 static int
 pacemakerd_health_xml(pcmk__output_t *out, va_list args)
 {
     const char *sys_from = va_arg(args, const char *);
-    const char *state = va_arg(args, const char *);
+    enum pcmk_pacemakerd_state state =
+        (enum pcmk_pacemakerd_state) va_arg(args, int);
+    const char *state_s = va_arg(args, const char *);
     const char *last_updated = va_arg(args, const char *);
 
+    if (state_s == NULL) {
+        state_s = pcmk_pacemakerd_api_daemon_state_enum2text(state);
+    }
+
     pcmk__output_create_xml_node(out, pcmk__s(sys_from, "<null>"),
-                                 "state", pcmk__s(state, ""),
+                                 "state", state_s,
                                  "last_updated", pcmk__s(last_updated, ""),
                                  NULL);
     return pcmk_rc_ok;

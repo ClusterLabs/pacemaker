@@ -180,9 +180,6 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
     pcmk__output_t *out = data->out;
     pcmk_pacemakerd_api_reply_t *reply = event_data;
 
-    crm_time_t *crm_when;
-    char *pinged_buf = NULL;
-
     switch (event_type) {
         case pcmk_ipc_event_disconnect:
             if (data->rc == ECONNRESET) { // Unexpected
@@ -220,22 +217,29 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
     }
 
     // Parse desired information from reply
-    crm_when = crm_time_new(NULL);
-    crm_time_set_timet(crm_when, &reply->data.ping.last_good);
-    pinged_buf = crm_time_as_string(crm_when,
-        crm_time_log_date | crm_time_log_timeofday |
-            crm_time_log_with_timezone);
+    if (reply->data.ping.status == pcmk_rc_ok) {
+        crm_time_t *when = crm_time_new(NULL);
+        char *when_s = NULL;
 
-    out->message(out, "pacemakerd-health",
-        reply->data.ping.sys_from,
-        (reply->data.ping.status == pcmk_rc_ok)?
-            pcmk_pacemakerd_api_daemon_state_enum2text(
-                reply->data.ping.state):"query failed",
-        (reply->data.ping.status == pcmk_rc_ok)? pinged_buf : NULL);
+        crm_time_set_timet(when, &reply->data.ping.last_good);
+        when_s = crm_time_as_string(when,
+                                    crm_time_log_date
+                                    |crm_time_log_timeofday
+                                    |crm_time_log_with_timezone);
+
+        out->message(out, "pacemakerd-health",
+                     reply->data.ping.sys_from, reply->data.ping.state, NULL,
+                     when_s);
+
+        crm_time_free(when);
+        free(when_s);
+
+    } else {
+        out->message(out, "pacemakerd-health",
+                     reply->data.ping.sys_from, reply->data.ping.state,
+                     "query failed", NULL);
+    }
     data->rc = pcmk_rc_ok;
-    crm_time_free(crm_when);
-    free(pinged_buf);
-
     event_done(data, pacemakerd_api);
 }
 
