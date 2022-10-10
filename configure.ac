@@ -777,6 +777,7 @@ AS_CASE(["$host_os"],
         ])
 
 AC_SUBST(INIT_EXT)
+AM_CONDITIONAL([SUPPORT_PROCFS], [test $PROCFS -eq 1])
 AC_DEFINE_UNQUOTED([HAVE_LINUX_PROCFS], [$PROCFS],
                    [Define to 1 if procfs is supported])
 

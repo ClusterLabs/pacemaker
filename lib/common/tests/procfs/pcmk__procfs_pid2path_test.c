@@ -17,8 +17,6 @@
 #include <string.h>
 #include <errno.h>
 
-#if HAVE_LINUX_PROCFS
-
 static void
 no_exe_file(void **state)
 {
@@ -79,12 +77,7 @@ contents_ok(void **state)
     pcmk__mock_readlink = false;
 }
 
-#endif // HAVE_LINUX_PROCFS
-
 PCMK__UNIT_TEST(NULL, NULL,
-#if HAVE_LINUX_PROCFS
                 cmocka_unit_test(no_exe_file),
                 cmocka_unit_test(contents_too_long),
-                cmocka_unit_test(contents_ok)
-#endif
-               )
+                cmocka_unit_test(contents_ok))
