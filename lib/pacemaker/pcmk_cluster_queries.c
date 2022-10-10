@@ -358,8 +358,19 @@ pcmk_designated_controller(xmlNodePtr *xml, unsigned int message_timeout_ms)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Get and output \p pacemakerd status
+ *
+ * \param[in,out] out                 Output object
+ * \param[in]     ipc_name            IPC name for request
+ * \param[in]     message_timeout_ms  Message timeout
+ *
+ * \return Standard Pacemaker return code
+ */
 int
-pcmk__pacemakerd_status(pcmk__output_t *out, char *ipc_name, guint message_timeout_ms)
+pcmk__pacemakerd_status(pcmk__output_t *out, const char *ipc_name,
+                        guint message_timeout_ms)
 {
     data_t data = {
         .out = out,
@@ -385,8 +396,10 @@ pcmk__pacemakerd_status(pcmk__output_t *out, char *ipc_name, guint message_timeo
     return data.rc;
 }
 
+// Documented in header
 int
-pcmk_pacemakerd_status(xmlNodePtr *xml, char *ipc_name, unsigned int message_timeout_ms)
+pcmk_pacemakerd_status(xmlNodePtr *xml, const char *ipc_name,
+                       unsigned int message_timeout_ms)
 {
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;

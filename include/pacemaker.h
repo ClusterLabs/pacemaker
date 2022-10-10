@@ -107,15 +107,16 @@ int pcmk_designated_controller(xmlNodePtr *xml, unsigned int message_timeout_ms)
 void pcmk_free_injections(pcmk_injections_t *injections);
 
 /*!
- * \brief Get pacemakerd status
+ * \brief Get and output \p pacemakerd status
  *
- * \param[in,out] xml                The destination for the result, as an XML tree.
- * \param[in]     ipc_name           IPC name for request
- * \param[in]     message_timeout_ms Message timeout
+ * \param[in,out] xml                 Destination for the result, as an XML tree
+ * \param[in]     ipc_name            IPC name for request
+ * \param[in]     message_timeout_ms  Message timeout
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_pacemakerd_status(xmlNodePtr *xml, char *ipc_name, unsigned int message_timeout_ms);
+int pcmk_pacemakerd_status(xmlNodePtr *xml, const char *ipc_name,
+                           unsigned int message_timeout_ms);
 
 /*!
  * \brief Calculate and output resource operation digests
