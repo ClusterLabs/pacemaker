@@ -229,7 +229,7 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
         (reply->data.ping.status == pcmk_rc_ok)?
             pcmk_pacemakerd_api_daemon_state_enum2text(
                 reply->data.ping.state):"query failed",
-        (reply->data.ping.status == pcmk_rc_ok)?pinged_buf:"");
+        (reply->data.ping.status == pcmk_rc_ok)? pinged_buf : NULL);
     data->rc = pcmk_rc_ok;
     crm_time_free(crm_when);
     free(pinged_buf);
