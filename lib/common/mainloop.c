@@ -491,22 +491,11 @@ gio_poll_destroy(gpointer data)
 static gint
 conv_prio_libqb2glib(enum qb_loop_priority prio)
 {
-    gint ret = G_PRIORITY_DEFAULT;
     switch (prio) {
-        case QB_LOOP_LOW:
-            ret = G_PRIORITY_LOW;
-            break;
-        case QB_LOOP_HIGH:
-            ret = G_PRIORITY_HIGH;
-            break;
-        default:
-            crm_trace("Invalid libqb's loop priority %d, assuming QB_LOOP_MED",
-                      prio);
-            /* fall-through */
-        case QB_LOOP_MED:
-            break;
+        case QB_LOOP_LOW:   return G_PRIORITY_LOW;
+        case QB_LOOP_HIGH:  return G_PRIORITY_HIGH;
+        default:            return G_PRIORITY_DEFAULT; // QB_LOOP_MED
     }
-    return ret;
 }
 
 /*!
@@ -516,27 +505,16 @@ conv_prio_libqb2glib(enum qb_loop_priority prio)
  * \param[in] prio  libqb's poll priority (#QB_LOOP_MED assumed as fallback)
  *
  * \return  best matching rate limiting spec
+ * \note This is the inverse of libqb's qb_ipcs_request_rate_limit().
  */
 static enum qb_ipcs_rate_limit
 conv_libqb_prio2ratelimit(enum qb_loop_priority prio)
 {
-    /* this is an inversion of what libqb's qb_ipcs_request_rate_limit does */
-    enum qb_ipcs_rate_limit ret = QB_IPCS_RATE_NORMAL;
     switch (prio) {
-        case QB_LOOP_LOW:
-            ret = QB_IPCS_RATE_SLOW;
-            break;
-        case QB_LOOP_HIGH:
-            ret = QB_IPCS_RATE_FAST;
-            break;
-        default:
-            crm_trace("Invalid libqb's loop priority %d, assuming QB_LOOP_MED",
-                      prio);
-            /* fall-through */
-        case QB_LOOP_MED:
-            break;
+        case QB_LOOP_LOW:   return QB_IPCS_RATE_SLOW;
+        case QB_LOOP_HIGH:  return QB_IPCS_RATE_FAST;
+        default:            return QB_IPCS_RATE_NORMAL; // QB_LOOP_MED
     }
-    return ret;
 }
 
 static int32_t

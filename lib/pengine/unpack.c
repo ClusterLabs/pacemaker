@@ -3087,7 +3087,7 @@ static const char *get_op_key(xmlNode *xml_op)
 }
 
 static const char *
-last_change_str(xmlNode *xml_op)
+last_change_str(const xmlNode *xml_op)
 {
     time_t when;
     const char *when_s = NULL;
@@ -3338,6 +3338,44 @@ unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * x
 
 /*!
  * \internal
+ * \brief Check whether a resource with a failed action can be recovered
+ *
+ * If resource action is a failed stop and fencing is not possible, mark the
+ * resource as unmanaged and blocked, since recovery cannot be done.
+ *
+ * \param[in,out] rsc          Resource with failed action
+ * \param[in]     node         Node where action failed
+ * \param[in]     task         Name of action that failed
+ * \param[in]     exit_status  Exit status of failed action (for logging only)
+ * \param[in]     xml_op       XML of failed action result (for logging only)
+ */
+static void
+check_recoverable(pe_resource_t *rsc, pe_node_t *node, const char *task,
+                  int exit_status, const xmlNode *xml_op)
+{
+    const char *exit_reason = NULL;
+
+    if (strcmp(task, CRMD_ACTION_STOP) != 0) {
+        return; // All actions besides stop are always recoverable
+    }
+    if (pe_can_fence(node->details->data_set, node)) {
+        return; // Failed stops are recoverable via fencing
+    }
+
+    exit_reason = crm_element_value(xml_op, XML_LRM_ATTR_EXIT_REASON);
+    pe_proc_err("No further recovery can be attempted for %s "
+                "because %s on %s failed (%s%s%s) at %s "
+                CRM_XS " rc=%d id=%s", rsc->id, task, pe__node_name(node),
+                services_ocf_exitcode_str(exit_status),
+                ((exit_reason == NULL)? "" : ": "), pcmk__s(exit_reason, ""),
+                last_change_str(xml_op), exit_status, ID(xml_op));
+
+    pe__clear_resource_flags(rsc, pe_rsc_managed);
+    pe__set_resource_flags(rsc, pe_rsc_block);
+}
+
+/*!
+ * \internal
  * \brief Remap informational monitor results and operation status
  *
  * For the monitor results, certain OCF codes are for providing extended information
@@ -3482,32 +3520,25 @@ remap_operation(xmlNode *xml_op, pe_resource_t *rsc, pe_node_t *node,
             *status = PCMK_EXEC_ERROR_FATAL;
             break;
 
-        case PCMK_OCF_UNIMPLEMENT_FEATURE: {
-            guint interval_ms = 0;
-            crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
+        case PCMK_OCF_UNIMPLEMENT_FEATURE:
+            {
+                guint interval_ms = 0;
+                crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS,
+                                     &interval_ms);
 
-            if (interval_ms > 0) {
-                *status = PCMK_EXEC_NOT_SUPPORTED;
-                break;
+                if (interval_ms == 0) {
+                    check_recoverable(rsc, node, task, *rc, xml_op);
+                    *status = PCMK_EXEC_ERROR_HARD;
+                } else {
+                    *status = PCMK_EXEC_NOT_SUPPORTED;
+                }
             }
-        }
-            // fall through
+            break;
 
         case PCMK_OCF_NOT_INSTALLED:
         case PCMK_OCF_INVALID_PARAM:
         case PCMK_OCF_INSUFFICIENT_PRIV:
-            if (!pe_can_fence(data_set, node)
-                && !strcmp(task, CRMD_ACTION_STOP)) {
-                /* If a stop fails and we can't fence, there's nothing else we can do */
-                pe_proc_err("No further recovery can be attempted for %s "
-                            "because %s on %s failed (%s%s%s) at %s "
-                            CRM_XS " rc=%d id=%s", rsc->id, task,
-                            pe__node_name(node), services_ocf_exitcode_str(*rc),
-                            (*exit_reason? ": " : ""), exit_reason,
-                            last_change_str(xml_op), *rc, ID(xml_op));
-                pe__clear_resource_flags(rsc, pe_rsc_managed);
-                pe__set_resource_flags(rsc, pe_rsc_block);
-            }
+            check_recoverable(rsc, node, task, *rc, xml_op);
             *status = PCMK_EXEC_ERROR_HARD;
             break;
 
