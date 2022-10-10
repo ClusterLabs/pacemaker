@@ -36,6 +36,7 @@ typedef struct {
     int rc;
     guint message_timer_id;
     guint message_timeout_ms;
+    enum pcmk_pacemakerd_state pcmkd_state;
 } data_t;
 
 static void
@@ -217,6 +218,7 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
     }
 
     // Parse desired information from reply
+    data->pcmkd_state = reply->data.ping.state;
     if (reply->data.ping.status == pcmk_rc_ok) {
         crm_time_t *when = crm_time_new(NULL);
         char *when_s = NULL;
@@ -282,7 +284,8 @@ pcmk__controller_status(pcmk__output_t *out, char *dest_node, guint message_time
         .mainloop = NULL,
         .rc = pcmk_rc_ok,
         .message_timer_id = 0,
-        .message_timeout_ms = message_timeout_ms
+        .message_timeout_ms = message_timeout_ms,
+        .pcmkd_state = pcmk_pacemakerd_state_invalid,
     };
     pcmk_ipc_api_t *controld_api = ipc_connect(&data, pcmk_ipc_controld, controller_status_event_cb);
 
@@ -327,7 +330,8 @@ pcmk__designated_controller(pcmk__output_t *out, guint message_timeout_ms)
         .mainloop = NULL,
         .rc = pcmk_rc_ok,
         .message_timer_id = 0,
-        .message_timeout_ms = message_timeout_ms
+        .message_timeout_ms = message_timeout_ms,
+        .pcmkd_state = pcmk_pacemakerd_state_invalid,
     };
     pcmk_ipc_api_t *controld_api = ipc_connect(&data, pcmk_ipc_controld, designated_controller_event_cb);
 
@@ -371,19 +375,23 @@ pcmk_designated_controller(xmlNodePtr *xml, unsigned int message_timeout_ms)
  * \param[in,out] out                 Output object
  * \param[in]     ipc_name            IPC name for request
  * \param[in]     message_timeout_ms  Message timeout
+ * \param[out]    state               Where to store the \p pacemakerd state, if
+ *                                    not \p NULL
  *
  * \return Standard Pacemaker return code
  */
 int
 pcmk__pacemakerd_status(pcmk__output_t *out, const char *ipc_name,
-                        guint message_timeout_ms)
+                        guint message_timeout_ms,
+                        enum pcmk_pacemakerd_state *state)
 {
     data_t data = {
         .out = out,
         .mainloop = NULL,
         .rc = pcmk_rc_ipc_unresponsive,
         .message_timer_id = 0,
-        .message_timeout_ms = message_timeout_ms
+        .message_timeout_ms = message_timeout_ms,
+        .pcmkd_state = pcmk_pacemakerd_state_invalid,
     };
     pcmk_ipc_api_t *pacemakerd_api = ipc_connect(&data, pcmk_ipc_pacemakerd, pacemakerd_event_cb);
 
@@ -399,6 +407,9 @@ pcmk__pacemakerd_status(pcmk__output_t *out, const char *ipc_name,
         pcmk_free_ipc_api(pacemakerd_api);
     }
 
+    if (state != NULL) {
+        *state = data.pcmkd_state;
+    }
     return data.rc;
 }
 
@@ -417,7 +428,8 @@ pcmk_pacemakerd_status(xmlNodePtr *xml, const char *ipc_name,
 
     pcmk__register_lib_messages(out);
 
-    rc = pcmk__pacemakerd_status(out, ipc_name, (guint) message_timeout_ms);
+    rc = pcmk__pacemakerd_status(out, ipc_name, (guint) message_timeout_ms,
+                                 NULL);
     pcmk__xml_output_finish(out, xml);
     return rc;
 }
