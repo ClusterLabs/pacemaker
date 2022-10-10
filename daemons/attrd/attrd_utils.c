@@ -93,6 +93,8 @@ attrd_shutdown(int nsig)
     mainloop_destroy_signal(SIGUSR2);
     mainloop_destroy_signal(SIGTRAP);
 
+    attrd_free_waitlist();
+
     if ((mloop == NULL) || !g_main_loop_is_running(mloop)) {
         /* If there's no main loop active, just exit. This should be possible
          * only if we get SIGTERM in brief windows at start-up and shutdown.

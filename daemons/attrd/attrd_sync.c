@@ -113,6 +113,17 @@ attrd_add_client_to_waitlist(pcmk__request_t *request)
 }
 
 void
+attrd_free_waitlist(void)
+{
+    if (waitlist == NULL) {
+        return;
+    }
+
+    g_hash_table_destroy(waitlist);
+    waitlist = NULL;
+}
+
+void
 attrd_remove_client_from_waitlist(pcmk__client_t *client)
 {
     GHashTableIter iter;
