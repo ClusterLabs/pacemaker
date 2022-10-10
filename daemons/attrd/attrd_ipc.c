@@ -101,8 +101,6 @@ attrd_client_clear_failure(pcmk__request_t *request)
     xmlNode *xml = request->xml;
     const char *rsc, *op, *interval_spec;
 
-    attrd_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags);
-
     if (minimum_protocol_version >= 2) {
         /* Propagate to all peers (including ourselves).
          * This ends up at attrd_peer_message().

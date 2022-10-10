@@ -42,6 +42,25 @@ handle_clear_failure_request(pcmk__request_t *request)
         pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
         return NULL;
     } else {
+        if (attrd_request_has_sync_point(request->xml)) {
+            /* If this client supplied a sync point it wants to wait for, add it to
+             * the wait list.  Clients on this list will not receive an ACK until
+             * their sync point is hit which will result in the client stalled there
+             * until it receives a response.
+             *
+             * All other clients will receive the expected response as normal.
+             */
+            attrd_add_client_to_waitlist(request);
+
+        } else {
+            /* If the client doesn't want to wait for a sync point, go ahead and send
+             * the ACK immediately.  Otherwise, we'll send the ACK when the appropriate
+             * sync point is reached.
+             */
+            attrd_send_ack(request->ipc_client, request->ipc_id,
+                           request->ipc_flags);
+        }
+
         return attrd_client_clear_failure(request);
     }
 }
