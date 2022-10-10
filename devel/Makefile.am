@@ -67,6 +67,27 @@ cocci-test:
 	done
 
 #
+# Static analysis
+#
+
+## cppcheck
+
+# Use CPPCHECK_ARGS to pass extra cppcheck options, e.g.:
+# --enable={warning,style,performance,portability,information,all}
+# --inconclusive --std=posix
+# -DBUILD_PUBLIC_LIBPACEMAKER -DDEFAULT_CONCURRENT_FENCING_TRUE
+CPPCHECK_ARGS ?=
+
+CPPCHECK_DIRS = replace lib daemons tools
+
+cppcheck:
+	cppcheck $(CPPCHECK_ARGS) -I $(top_srcdir)/include	\
+		--max-configs=30 --inline-suppr -q		\
+		--library=posix --library=gnu --library=gtk	\
+		$(GLIB_CFLAGS) -D__GNUC__ 			\
+		$(foreach dir,$(CPPCHECK_DIRS),$(top_srcdir)/$(dir))
+
+#
 # indent cannot cope with all our exceptions and needs heavy manual editing
 #
 

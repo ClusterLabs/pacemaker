@@ -57,12 +57,15 @@ $(PACKAGE).spec chroot dirty export mock rc release rpm rpmlint srpm:
 mock-% rpm-% spec-% srpm-%:
 	$(MAKE) $(AM_MAKEFLAGS) -C rpm $(USE_FILE) "$@"
 
-## indent-related targets (deprecated; use targets in devel subdir instead)
+## Targets that moved to devel subdirectory
 
-.PHONY: indent
-indent:
+.PHONY: cppcheck indent
+cppcheck indent:
 	@echo 'Deprecated: Use "make -C devel $@" instead'
-	$(MAKE) $(AM_MAKEFLAGS) -C devel "$@"
+	$(MAKE) $(AM_MAKEFLAGS)				\
+		CPPCHECK_ARGS=$(CPPCHECK_ARGS)		\
+		-C devel "$@"
+
 
 ## Static analysis via coverity
 
@@ -133,19 +136,6 @@ rel-tags: tags
 	find . -name TAGS -exec sed -i 's:\(.*\)/\(.*\)/TAGS:\2/TAGS:g' \{\} \;
 
 CLANG_checkers = 
-
-# Use CPPCHECK_ARGS to pass extra cppcheck options, e.g.:
-# --enable={warning,style,performance,portability,information,all}
-# --inconclusive --std=posix
-CPPCHECK_ARGS ?=
-BASE_CPPCHECK_ARGS = -I include --max-configs=30 --library=posix --library=gnu \
-					 --library=gtk $(GLIB_CFLAGS) -D__GNUC__ --inline-suppr -q
-cppcheck-all:
-	cppcheck $(CPPCHECK_ARGS) $(BASE_CPPCHECK_ARGS) -DBUILD_PUBLIC_LIBPACEMAKER \
-		-DDEFAULT_CONCURRENT_FENCING_TRUE replace lib daemons tools
-
-cppcheck:
-	cppcheck $(CPPCHECK_ARGS) $(BASE_CPPCHECK_ARGS) replace lib daemons tools
 
 clang:
 	OUT=$$(scan-build $(CLANG_checkers:%=-enable-checker %)		\
