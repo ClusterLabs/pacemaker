@@ -954,26 +954,26 @@ pacemakerd_status(void)
                     rc = ENOTCONN;
                     if ((output_format == mon_output_console) ||
                         (output_format == mon_output_plain)) {
+
+                        const char *state_str = NULL;
+                        state_str = pcmk__pcmkd_state_enum2friendly(state);
                         switch (state) {
                             case pcmk_pacemakerd_state_running:
                                 rc = pcmk_rc_ok;
                                 break;
                             case pcmk_pacemakerd_state_starting_daemons:
-                                out->info(out,"Pacemaker daemons starting ...");
+                                out->info(out, "%s", state_str);
                                 break;
                             case pcmk_pacemakerd_state_wait_for_ping:
-                                out->info(out,"Waiting for startup-trigger from SBD ...");
+                                out->info(out, "%s", state_str);
                                 break;
                             case pcmk_pacemakerd_state_shutting_down:
-                                out->info(out,"Pacemaker daemons shutting down ...");
+                                out->info(out, "%s", state_str);
                                 /* try our luck maybe CIB is still accessible */
                                 rc = pcmk_rc_ok;
                                 break;
                             case pcmk_pacemakerd_state_shutdown_complete:
-                                /* assuming pacemakerd doesn't dispatch any pings after entering
-                                * that state unless it is waiting for SBD
-                                */
-                                out->info(out,"Pacemaker daemons shut down - reporting to SBD ...");
+                                out->info(out, "%s", state_str);
                                 break;
                             default:
                                 break;

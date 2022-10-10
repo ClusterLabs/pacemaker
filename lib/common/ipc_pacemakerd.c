@@ -62,6 +62,39 @@ pcmk_pacemakerd_api_daemon_state_enum2text(
     return "invalid";
 }
 
+/*!
+ * \internal
+ * \brief Return a friendly string representation of a \p pacemakerd state
+ *
+ * \param[in] state  \p pacemakerd state
+ *
+ * \return A user-friendly string representation of \p state, or
+ *         <tt>"Invalid pacemakerd state"</tt>
+ */
+const char *
+pcmk__pcmkd_state_enum2friendly(enum pcmk_pacemakerd_state state)
+{
+    switch (state) {
+        case pcmk_pacemakerd_state_init:
+            return "Initializing pacemaker";
+        case pcmk_pacemakerd_state_starting_daemons:
+            return "Pacemaker daemons are starting";
+        case pcmk_pacemakerd_state_wait_for_ping:
+            return "Waiting for startup trigger from SBD";
+        case pcmk_pacemakerd_state_running:
+            return "Pacemaker is running";
+        case pcmk_pacemakerd_state_shutting_down:
+            return "Pacemaker daemons are shutting down";
+        case pcmk_pacemakerd_state_shutdown_complete:
+            /* Assuming pacemakerd won't process messages while in
+             * shutdown_complete state unless reporting to SBD
+             */
+            return "Pacemaker daemons are shut down (reporting to SBD)";
+        default:
+            return "Invalid pacemakerd state";
+    }
+}
+
 // \return Standard Pacemaker return code
 static int
 new_data(pcmk_ipc_api_t *api)
