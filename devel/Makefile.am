@@ -70,6 +70,20 @@ cocci-test:
 # Static analysis
 #
 
+## clang
+
+# See scan-build(1) for possible checkers (leave empty to use default set)
+CLANG_checkers ?=
+
+clang:
+	OUT=$$(cd $(top_builddir)					\
+		&& scan-build $(CLANG_checkers:%=-enable-checker %)	\
+		$(MAKE) $(AM_MAKEFLAGS) CFLAGS="-std=c99 $(CFLAGS)"	\
+		clean all 2>&1);					\
+	REPORT=$$(echo "$$OUT"						\
+		| sed -n -e "s/.*'scan-view \(.*\)'.*/\1/p");		\
+	[ -z "$$REPORT" ] && echo "$$OUT" || scan-view "$$REPORT"
+
 ## cppcheck
 
 # Use CPPCHECK_ARGS to pass extra cppcheck options, e.g.:
@@ -94,6 +108,7 @@ cppcheck:
 .PHONY: cppcheck-clean
 cppcheck-clean:
 	-rm -f "$(CPPCHECK_OUT)"
+
 
 #
 # indent cannot cope with all our exceptions and needs heavy manual editing

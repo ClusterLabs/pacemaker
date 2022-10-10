@@ -59,10 +59,11 @@ mock-% rpm-% spec-% srpm-%:
 
 ## Targets that moved to devel subdirectory
 
-.PHONY: cppcheck indent
-cppcheck indent:
+.PHONY: clang cppcheck indent
+clang cppcheck indent:
 	@echo 'Deprecated: Use "make -C devel $@" instead'
 	$(MAKE) $(AM_MAKEFLAGS)				\
+		CLANG_checkers=$(CLANG_checkers)	\
 		CPPCHECK_ARGS=$(CPPCHECK_ARGS)		\
 		-C devel "$@"
 
@@ -134,16 +135,6 @@ coverity-clean:
 
 rel-tags: tags
 	find . -name TAGS -exec sed -i 's:\(.*\)/\(.*\)/TAGS:\2/TAGS:g' \{\} \;
-
-CLANG_checkers = 
-
-clang:
-	OUT=$$(scan-build $(CLANG_checkers:%=-enable-checker %)		\
-		$(MAKE) $(AM_MAKEFLAGS) CFLAGS="-std=c99 $(CFLAGS)"	\
-		clean all 2>&1);					\
-	REPORT=$$(echo "$$OUT"						\
-		| sed -n -e "s/.*'scan-view \(.*\)'.*/\1/p");		\
-	[ -z "$$REPORT" ] && echo "$$OUT" || scan-view "$$REPORT"
 
 ## Coverage/profiling
 
