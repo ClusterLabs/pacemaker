@@ -213,6 +213,7 @@ TAGS
 coverity-*
 pacemaker_*.info
 /coverage
+/cppcheck.out
 /cts/scheduler/*.ref
 /cts/scheduler/*.up
 /cts/scheduler/*.up.err

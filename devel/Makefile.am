@@ -79,13 +79,21 @@ cocci-test:
 CPPCHECK_ARGS ?=
 
 CPPCHECK_DIRS = replace lib daemons tools
+CPPCHECK_OUT = $(abs_top_builddir)/cppcheck.out
 
 cppcheck:
 	cppcheck $(CPPCHECK_ARGS) -I $(top_srcdir)/include	\
+		--output-file=$(CPPCHECK_OUT)			\
 		--max-configs=30 --inline-suppr -q		\
 		--library=posix --library=gnu --library=gtk	\
 		$(GLIB_CFLAGS) -D__GNUC__ 			\
 		$(foreach dir,$(CPPCHECK_DIRS),$(top_srcdir)/$(dir))
+	@echo "Done: See $(CPPCHECK_OUT)"
+	@echo "When no longer needed, make cppcheck-clean"
+
+.PHONY: cppcheck-clean
+cppcheck-clean:
+	-rm -f "$(CPPCHECK_OUT)"
 
 #
 # indent cannot cope with all our exceptions and needs heavy manual editing
@@ -146,5 +154,5 @@ EXTRA_PROGRAMS		= scratch
 nodist_scratch_SOURCES	= scratch.c
 scratch_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la
 
-clean-local:
+clean-local: cppcheck-clean
 	-rm -f $(EXTRA_PROGRAMS)
