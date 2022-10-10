@@ -270,6 +270,7 @@ ipc_connect(data_t *data, enum pcmk_ipc_server server, pcmk_ipc_callback_t cb)
                 pcmk_ipc_name(api, true),
                 pcmk_rc_str(rc));
         data->rc = rc;
+        pcmk_free_ipc_api(api);
         return NULL;
     }
 
