@@ -532,8 +532,7 @@ main(int argc, char **argv)
 {
     GError *error = NULL;
     crm_exit_t exit_code = CRM_EX_OK;
-
-    crm_trigger_t *trig;
+    crm_trigger_t *trig = NULL;
 
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
     /* Typically we'd pass all the single character options that take an argument
@@ -566,20 +565,26 @@ main(int argc, char **argv)
     }
 
     if (options.is_running) {
-        if (!options.timeout) {
-            options.timeout = 30000;
-        }
-        options.interval_ms = 0;
-        if (!options.rsc_id) {
-            exit_code = CRM_EX_ERROR;
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "rsc-id must be given when is-running is used");
+        int rc = pcmk_rc_ok;
+
+        if (options.rsc_id == NULL) {
+            exit_code = CRM_EX_USAGE;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "--is-running requires --rsc-id");
             goto done;
         }
 
-        if (generate_params()) {
-            exit_code = CRM_EX_ERROR;
-            print_result("Failed to retrieve rsc parameters from cib, "
-                         "can not determine if rsc is running");
+        options.interval_ms = 0;
+        if (options.timeout == 0) {
+            options.timeout = 30000;
+        }
+
+        rc = generate_params();
+        if (rc != pcmk_rc_ok) {
+            exit_code = pcmk_rc2exitc(rc);
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Can not determine resource status: "
+                        "unable to get parameters from CIB");
             goto done;
         }
         options.api_call = "exec";
@@ -587,11 +592,11 @@ main(int argc, char **argv)
         options.exec_call_opts = lrmd_opt_notify_orig_only;
     }
 
-    /* if we can't perform an api_call or listen for events, 
-     * there is nothing to do */
     if (!options.api_call && !options.listen) {
+        exit_code = CRM_EX_USAGE;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Nothing to be done.  Please specify 'api-call' and/or 'listen'");
+                    "Must specify at least one of --api-call, --listen, "
+                    "or --is-running");
         goto done;
     }
 
@@ -616,5 +621,5 @@ done:
     free(val);
 
     pcmk__output_and_clear_error(error, NULL);
-    return test_exit(CRM_EX_OK);
+    return test_exit(exit_code);
 }
