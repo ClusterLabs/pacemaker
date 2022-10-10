@@ -1355,6 +1355,7 @@ crm_time_subtract(const crm_time_t *dt, const crm_time_t *value)
     }
     crm_time_add_days(answer, -utc->days);
     crm_time_add_seconds(answer, -utc->seconds);
+    crm_time_free(utc);
 
     return answer;
 }
