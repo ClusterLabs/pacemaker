@@ -433,86 +433,83 @@ start_test(gpointer user_data)
     return 0;
 }
 
+/*!
+ * \internal
+ * \brief Generate resource parameters from CIB if none explicitly given
+ *
+ * \return Standard Pacemaker return code
+ */
 static int
 generate_params(void)
 {
-    int rc = 0;
+    int rc = pcmk_rc_ok;
     pe_working_set_t *data_set = NULL;
     xmlNode *cib_xml_copy = NULL;
     pe_resource_t *rsc = NULL;
     GHashTable *params = NULL;
     GHashTable *meta = NULL;
     GHashTableIter iter;
+    char *key = NULL;
+    char *value = NULL;
 
-    if (options.params) {
-        return 0;
+    if (options.params != NULL) {
+        return pcmk_rc_ok; // User specified parameters explicitly
     }
 
+    // Retrieve and update CIB
+    rc = cib__signon_query(NULL, &cib_xml_copy);
+    if (rc != pcmk_rc_ok) {
+        crm_err("CIB query failed: %s", pcmk_rc_str(rc));
+        return rc;
+    }
+    if (!cli_config_update(&cib_xml_copy, NULL, FALSE)) {
+        crm_err("Could not update CIB");
+        return pcmk_rc_cib_corrupt;
+    }
+
+    // Calculate cluster status
     data_set = pe_new_working_set();
     if (data_set == NULL) {
         crm_crit("Could not allocate working set");
-        return -ENOMEM;
+        return ENOMEM;
     }
     pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
-
-    rc = cib__signon_query(NULL, &cib_xml_copy);
-
-    if (rc != pcmk_rc_ok) {
-        crm_err("CIB query failed: %s", pcmk_rc_str(rc));
-        goto param_gen_bail;
-    }
-
-    if (cli_config_update(&cib_xml_copy, NULL, FALSE) == FALSE) {
-        crm_err("Error updating cib configuration");
-        rc = -1;
-        goto param_gen_bail;
-    }
-
     data_set->input = cib_xml_copy;
     data_set->now = crm_time_new(NULL);
-
     cluster_status(data_set);
-    if (options.rsc_id) {
-        rsc = pe_find_resource_with_flags(data_set->resources, options.rsc_id,
-                                          pe_find_renamed|pe_find_any);
-    }
 
-    if (!rsc) {
+    // Find resource in CIB
+    rsc = pe_find_resource_with_flags(data_set->resources, options.rsc_id,
+                                      pe_find_renamed|pe_find_any);
+    if (rsc == NULL) {
         crm_err("Resource does not exist in config");
-        rc = -1;
-        goto param_gen_bail;
+        pe_free_working_set(data_set);
+        return EINVAL;
     }
 
+    // Add resource instance parameters to options.params
     params = pe_rsc_params(rsc, NULL, data_set);
-    meta = pcmk__strkey_table(free, free);
-
-    get_meta_attributes(meta, rsc, NULL, data_set);
-
     if (params != NULL) {
-        char *key = NULL;
-        char *value = NULL;
-
         g_hash_table_iter_init(&iter, params);
-        while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
+        while (g_hash_table_iter_next(&iter, (gpointer *) &key,
+                                      (gpointer *) &value)) {
             options.params = lrmd_key_value_add(options.params, key, value);
         }
     }
 
-    if (meta) {
-        char *key = NULL;
-        char *value = NULL;
+    // Add resource meta-attributes to options.params
+    meta = pcmk__strkey_table(free, free);
+    get_meta_attributes(meta, rsc, NULL, data_set);
+    g_hash_table_iter_init(&iter, meta);
+    while (g_hash_table_iter_next(&iter, (gpointer *) &key,
+                                  (gpointer *) &value)) {
+        char *crm_name = crm_meta_name(key);
 
-        g_hash_table_iter_init(&iter, meta);
-        while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
-            char *crm_name = crm_meta_name(key);
-
-            options.params = lrmd_key_value_add(options.params, crm_name, value);
-            free(crm_name);
-        }
-        g_hash_table_destroy(meta);
+        options.params = lrmd_key_value_add(options.params, crm_name, value);
+        free(crm_name);
     }
+    g_hash_table_destroy(meta);
 
-  param_gen_bail:
     pe_free_working_set(data_set);
     return rc;
 }
