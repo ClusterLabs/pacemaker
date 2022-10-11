@@ -662,7 +662,7 @@ pacemakerd_health(pcmk__output_t *out, va_list args)
         state_s = pcmk__pcmkd_state_enum2friendly(state);
     }
     return out->info(out, "Status of %s: '%s' (last updated %s)",
-                     pcmk__s(sys_from, "unknown node"), state_s,
+                     pcmk__s(sys_from, "unknown subsystem"), state_s,
                      pcmk__s(last_updated, "at unknown time"));
 }
 
@@ -683,7 +683,7 @@ pacemakerd_health_html(pcmk__output_t *out, va_list args)
     }
 
     msg = crm_strdup_printf("Status of %s: '%s' (last updated %s)",
-                            pcmk__s(sys_from, "unknown node"), state_s,
+                            pcmk__s(sys_from, "unknown subsystem"), state_s,
                             pcmk__s(last_updated, "at unknown time"));
     pcmk__output_create_html_node(out, "li", NULL, NULL, msg);
 
