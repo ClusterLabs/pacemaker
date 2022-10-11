@@ -844,9 +844,9 @@ pe__build_rsc_list(pe_working_set_t *data_set, const char *s) {
                 resources = g_list_prepend(resources, strdup(rsc_printable_id(rsc)));
             }
         } else {
-            /* The given string was not a valid resource name.  It's either
-             * a tag or it's a typo or something.  See build_uname_list for
-             * more detail.
+            /* The given string was not a valid resource name. It's a tag or a
+             * typo or something. See pe__build_node_name_list() for more
+             * detail.
              */
             resources = pe__rscs_with_tag(data_set, s);
         }
