@@ -728,9 +728,10 @@ pacemakerd_health_xml(pcmk__output_t *out, va_list args)
         state_s = pcmk_pacemakerd_api_daemon_state_enum2text(state);
     }
 
-    pcmk__output_create_xml_node(out, pcmk__s(sys_from, "<null>"),
+    pcmk__output_create_xml_node(out, "pacemakerd",
+                                 "sys_from", sys_from,
                                  "state", state_s,
-                                 "last_updated", pcmk__s(last_updated, ""),
+                                 "last_updated", last_updated,
                                  NULL);
     return pcmk_rc_ok;
 }
