@@ -207,6 +207,7 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
         out->err(out, "error: Bad reply from pacemakerd: %s",
                 crm_exit_str(status));
         event_done(data, pacemakerd_api);
+        data->rc = EBADMSG;
         return;
     }
 
@@ -214,6 +215,7 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
         out->err(out, "error: Unknown reply type %d from pacemakerd",
                 reply->reply_type);
         event_done(data, pacemakerd_api);
+        data->rc = EBADMSG;
         return;
     }
 
@@ -375,7 +377,7 @@ pcmk__pacemakerd_status(pcmk__output_t *out, const char *ipc_name,
     data_t data = {
         .out = out,
         .mainloop = NULL,
-        .rc = pcmk_rc_ok,
+        .rc = pcmk_rc_ipc_unresponsive,
         .message_timer_id = 0,
         .message_timeout_ms = message_timeout_ms
     };
