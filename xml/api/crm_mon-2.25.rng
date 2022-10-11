@@ -8,6 +8,9 @@
 
     <define name="element-crm-mon">
         <optional>
+            <externalRef href="pacemakerd-health-2.25.rng" />
+        </optional>
+        <optional>
             <ref name="element-summary" />
         </optional>
         <optional>

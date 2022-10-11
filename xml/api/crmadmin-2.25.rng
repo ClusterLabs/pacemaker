@@ -11,7 +11,7 @@
             <ref name="element-status" />
         </optional>
         <optional>
-            <ref name="element-pacemakerd" />
+            <externalRef href="pacemakerd-health-2.25.rng" />
         </optional>
         <optional>
             <ref name="element-dc" />
@@ -26,13 +26,6 @@
             <attribute name="node_name"> <text /> </attribute>
             <attribute name="state"> <text /> </attribute>
             <attribute name="result"> <text /> </attribute>
-        </element>
-    </define>
-
-    <define name="element-pacemakerd">
-        <element name="pacemakerd">
-            <attribute name="state"> <text /> </attribute>
-            <attribute name="last_updated"> <text /> </attribute>
         </element>
     </define>
 
