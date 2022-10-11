@@ -111,7 +111,13 @@ void pcmk_free_injections(pcmk_injections_t *injections);
  *
  * \param[in,out] xml                 Destination for the result, as an XML tree
  * \param[in]     ipc_name            IPC name for request
- * \param[in]     message_timeout_ms  Message timeout
+ * \param[in]     message_timeout_ms  How long to wait for a reply from the
+ *                                    \p pacemakerd API. If 0,
+ *                                    \p pcmk_ipc_dispatch_sync will be used.
+ *                                    If positive, \p pcmk_ipc_dispatch_main
+ *                                    will be used, and a new mainloop will be
+ *                                    created for this purpose (freed before
+ *                                    return).
  *
  * \return Standard Pacemaker return code
  */

@@ -246,12 +246,12 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
 }
 
 static pcmk_ipc_api_t *
-ipc_connect(data_t *data, enum pcmk_ipc_server server, pcmk_ipc_callback_t cb)
+ipc_connect(data_t *data, enum pcmk_ipc_server server, pcmk_ipc_callback_t cb,
+            enum pcmk_ipc_dispatch dispatch_type)
 {
     int rc;
     pcmk__output_t *out = data->out;
     pcmk_ipc_api_t *api = NULL;
-
 
     rc = pcmk_new_ipc_api(&api, server);
     if (api == NULL) {
@@ -264,7 +264,8 @@ ipc_connect(data_t *data, enum pcmk_ipc_server server, pcmk_ipc_callback_t cb)
     if (cb != NULL) {
         pcmk_register_ipc_callback(api, cb, data);
     }
-    rc = pcmk_connect_ipc(api, pcmk_ipc_dispatch_main);
+
+    rc = pcmk_connect_ipc(api, dispatch_type);
     if (rc != pcmk_rc_ok) {
         out->err(out, "error: Could not connect to %s: %s",
                 pcmk_ipc_name(api, true),
@@ -288,16 +289,26 @@ pcmk__controller_status(pcmk__output_t *out, char *dest_node, guint message_time
         .message_timeout_ms = message_timeout_ms,
         .pcmkd_state = pcmk_pacemakerd_state_invalid,
     };
-    pcmk_ipc_api_t *controld_api = ipc_connect(&data, pcmk_ipc_controld, controller_status_event_cb);
+    enum pcmk_ipc_dispatch dispatch_type = pcmk_ipc_dispatch_main;
+    pcmk_ipc_api_t *controld_api = NULL;
+
+    if (message_timeout_ms == 0) {
+        dispatch_type = pcmk_ipc_dispatch_sync;
+    }
+    controld_api = ipc_connect(&data, pcmk_ipc_controld,
+                               controller_status_event_cb, dispatch_type);
 
     if (controld_api != NULL) {
         int rc = pcmk_controld_api_ping(controld_api, dest_node);
         if (rc != pcmk_rc_ok) {
-            out->err(out, "error: Command failed: %s", pcmk_rc_str(rc));
+            out->err(out, "error: Could not ping controller API: %s",
+                     pcmk_rc_str(rc));
             data.rc = rc;
         }
 
-        start_main_loop(&data);
+        if (dispatch_type == pcmk_ipc_dispatch_main) {
+            start_main_loop(&data);
+        }
 
         pcmk_free_ipc_api(controld_api);
     }
@@ -334,16 +345,26 @@ pcmk__designated_controller(pcmk__output_t *out, guint message_timeout_ms)
         .message_timeout_ms = message_timeout_ms,
         .pcmkd_state = pcmk_pacemakerd_state_invalid,
     };
-    pcmk_ipc_api_t *controld_api = ipc_connect(&data, pcmk_ipc_controld, designated_controller_event_cb);
+    enum pcmk_ipc_dispatch dispatch_type = pcmk_ipc_dispatch_main;
+    pcmk_ipc_api_t *controld_api = NULL;
+
+    if (message_timeout_ms == 0) {
+        dispatch_type = pcmk_ipc_dispatch_sync;
+    }
+    controld_api = ipc_connect(&data, pcmk_ipc_controld,
+                               designated_controller_event_cb, dispatch_type);
 
     if (controld_api != NULL) {
         int rc = pcmk_controld_api_ping(controld_api, NULL);
         if (rc != pcmk_rc_ok) {
-            out->err(out, "error: Command failed: %s", pcmk_rc_str(rc));
+            out->err(out, "error: Could not ping controller API: %s",
+                     pcmk_rc_str(rc));
             data.rc = rc;
         }
 
-        start_main_loop(&data);
+        if (dispatch_type == pcmk_ipc_dispatch_main) {
+            start_main_loop(&data);
+        }
 
         pcmk_free_ipc_api(controld_api);
     }
@@ -375,7 +396,13 @@ pcmk_designated_controller(xmlNodePtr *xml, unsigned int message_timeout_ms)
  *
  * \param[in,out] out                 Output object
  * \param[in]     ipc_name            IPC name for request
- * \param[in]     message_timeout_ms  Message timeout
+ * \param[in]     message_timeout_ms  How long to wait for a reply from the
+ *                                    \p pacemakerd API. If 0,
+ *                                    \p pcmk_ipc_dispatch_sync will be used.
+ *                                    If positive, \p pcmk_ipc_dispatch_main
+ *                                    will be used, and a new mainloop will be
+ *                                    created for this purpose (freed before
+ *                                    return).
  * \param[out]    state               Where to store the \p pacemakerd state, if
  *                                    not \p NULL
  *
@@ -394,17 +421,26 @@ pcmk__pacemakerd_status(pcmk__output_t *out, const char *ipc_name,
         .message_timeout_ms = message_timeout_ms,
         .pcmkd_state = pcmk_pacemakerd_state_invalid,
     };
-    pcmk_ipc_api_t *pacemakerd_api = ipc_connect(&data, pcmk_ipc_pacemakerd, pacemakerd_event_cb);
+    enum pcmk_ipc_dispatch dispatch_type = pcmk_ipc_dispatch_main;
+    pcmk_ipc_api_t *pacemakerd_api = NULL;
+
+    if (message_timeout_ms == 0) {
+        dispatch_type = pcmk_ipc_dispatch_sync;
+    }
+    pacemakerd_api = ipc_connect(&data, pcmk_ipc_pacemakerd,
+                                 pacemakerd_event_cb, dispatch_type);
 
     if (pacemakerd_api != NULL) {
         int rc = pcmk_pacemakerd_api_ping(pacemakerd_api, ipc_name);
         if (rc != pcmk_rc_ok) {
-            out->err(out, "error: Command failed: %s", pcmk_rc_str(rc));
+            out->err(out, "error: Could not ping launcher API: %s",
+                     pcmk_rc_str(rc));
             data.rc = rc;
         }
 
-        start_main_loop(&data);
-
+        if (dispatch_type == pcmk_ipc_dispatch_main) {
+            start_main_loop(&data);
+        }
         pcmk_free_ipc_api(pacemakerd_api);
     }
 
