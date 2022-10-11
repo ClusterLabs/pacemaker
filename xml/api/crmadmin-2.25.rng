@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <start>
+        <ref name="element-crmadmin"/>
+    </start>
+
+    <define name="element-crmadmin">
+        <optional>
+            <ref name="element-status" />
+        </optional>
+        <optional>
+            <ref name="element-pacemakerd" />
+        </optional>
+        <optional>
+            <ref name="element-dc" />
+        </optional>
+        <optional>
+            <ref name="crmadmin-nodes-list" />
+        </optional>
+    </define>
+
+    <define name="element-status">
+        <element name="crmd">
+            <attribute name="node_name"> <text /> </attribute>
+            <attribute name="state"> <text /> </attribute>
+            <attribute name="result"> <text /> </attribute>
+        </element>
+    </define>
+
+    <define name="element-pacemakerd">
+        <element name="pacemakerd">
+            <attribute name="state"> <text /> </attribute>
+            <attribute name="last_updated"> <text /> </attribute>
+        </element>
+    </define>
+
+    <define name="element-dc">
+        <element name="dc">
+            <attribute name="node_name"> <text /> </attribute>
+        </element>
+    </define>
+
+    <define name="crmadmin-nodes-list">
+        <element name="nodes">
+            <zeroOrMore>
+                <ref name="element-crmadmin-node" />
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="element-crmadmin-node">
+        <element name="node">
+            <attribute name="type">
+                <choice>
+                    <value>unknown</value>
+                    <value>member</value>
+                    <value>remote</value>
+                    <value>ping</value>
+                </choice>
+            </attribute>
+
+            <attribute name="name"> <text/> </attribute>
+            <attribute name="id"> <text/> </attribute>
+        </element>
+    </define>
+</grammar>
