@@ -21,12 +21,7 @@ EXTRA_CLEAN_TARGETS	= ancillary-clean
 # without having to call autogen.sh and configure first. That means automake
 # variables may or may not be defined. Here, we use the current working
 # directory if a relevant variable hasn't been defined.
-#
-# The idea is to keep generated artifacts in the build tree, in case a VPATH
-# build is in use, but in practice it would be difficult to make the targets
-# here usable from a different location than the source tree.
 abs_srcdir	?= $(shell pwd)
-abs_builddir	?= $(shell pwd)
 
 # Define release-related variables
 include $(abs_srcdir)/mk/release.mk
@@ -59,78 +54,17 @@ mock-% rpm-% spec-% srpm-%:
 
 ## Targets that moved to devel subdirectory
 
+COVLEVEL        ?= low
+
 .PHONY: clang cppcheck indent
-clang cppcheck indent:
+.PHONY: coverity coverity-analyze coverity-clean coverity-corp
+clang coverity coverity-analyze coverity-clean coverity-corp cppcheck indent:
 	@echo 'Deprecated: Use "make -C devel $@" instead'
 	$(MAKE) $(AM_MAKEFLAGS)				\
 		CLANG_checkers=$(CLANG_checkers)	\
+		COVLEVEL=$(COVLEVEL)			\
 		CPPCHECK_ARGS=$(CPPCHECK_ARGS)		\
 		-C devel "$@"
-
-
-## Static analysis via coverity
-
-# Aggressiveness (low, medium, or high)
-COVLEVEL	?= low
-
-# Generated outputs
-COVERITY_DIR	= $(abs_builddir)/coverity-$(TAG)
-COVTAR		= $(abs_builddir)/$(PACKAGE)-coverity-$(TAG).tgz
-COVEMACS	= $(abs_builddir)/$(TAG).coverity
-COVHTML		= $(COVERITY_DIR)/output/errors
-
-# Coverity outputs are phony so they get rebuilt every invocation
-
-.PHONY: $(COVERITY_DIR)
-$(COVERITY_DIR): init core-clean coverity-clean
-	$(AM_V_GEN)cov-build --dir "$@" $(MAKE) $(AM_MAKEFLAGS) core
-
-# Public coverity instance
-
-.PHONY: $(COVTAR)
-$(COVTAR): $(COVERITY_DIR)
-	$(AM_V_GEN)tar czf "$@" --transform="s@.*$(TAG)@cov-int@" "$<"
-
-.PHONY: coverity
-coverity: $(COVTAR)
-	@echo "Now go to https://scan.coverity.com/users/sign_in and upload:"
-	@echo "  $(COVTAR)"
-	@echo "then make core-clean coverity-clean"
-
-# Licensed coverity instance
-#
-# The prerequisites are a little hacky; rather than actually required, some
-# of them are designed so that things execute in the proper order (which is
-# not the same as GNU make's order-only prerequisites).
-
-.PHONY: coverity-analyze
-coverity-analyze: $(COVERITY_DIR)
-	@echo ""
-	@echo "Analyzing (waiting for coverity license if necessary) ..."
-	cov-analyze --dir "$<" --wait-for-license --security		\
-		--aggressiveness-level "$(COVLEVEL)"
-
-.PHONY: $(COVEMACS)
-$(COVEMACS): coverity-analyze
-	$(AM_V_GEN)cov-format-errors --dir "$(COVERITY_DIR)" --emacs-style > "$@"
-
-.PHONY: $(COVHTML)
-$(COVHTML): $(COVEMACS)
-	$(AM_V_GEN)cov-format-errors --dir "$(COVERITY_DIR)" --html-output "$@"
-
-.PHONY: coverity-corp
-coverity-corp: $(COVHTML)
-	$(MAKE) $(AM_MAKEFLAGS) core-clean
-	@echo "Done. See:"
-	@echo "  file://$(COVHTML)/index.html"
-	@echo "When no longer needed, make coverity-clean"
-
-# Remove all outputs regardless of tag
-.PHONY: coverity-clean
-coverity-clean:
-	-rm -rf "$(abs_builddir)"/coverity-*			\
-		"$(abs_builddir)"/$(PACKAGE)-coverity-*.tgz	\
-		"$(abs_builddir)"/*.coverity
 
 
 rel-tags: tags
@@ -172,4 +106,4 @@ coverage-clean:
 	-rm -rf coverage
 	-find . \( -name "*.gcno" -o -name "*.gcda" \) -exec rm -f \{\} \;
 
-ancillary-clean: mock-clean coverity-clean coverage-clean
+ancillary-clean: coverage-clean
