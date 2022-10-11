@@ -135,11 +135,38 @@ pacemakerd_status(pcmk__output_t *out)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Output the cluster status given a fencer and CIB connection
+ *
+ * \param[in,out] out                  Output object
+ * \param[in,out] stonith              Fencer connection
+ * \param[in,out] cib                  CIB connection
+ * \param[in]     current_cib          Current CIB XML
+ * \param[in]     fence_history        How much of the fencing history to output
+ * \param[in]     show                 Group of \p pcmk_section_e flags
+ * \param[in]     show_opts            Group of \p pcmk_show_opt_e flags
+ * \param[in]     only_node            If a node name or tag, include only the
+ *                                     matching node(s) (if any) in the output.
+ *                                     If \p "*" or \p NULL, include all nodes
+ *                                     in the output.
+ * \param[in]     only_rsc             If a resource ID or tag, include only the
+ *                                     matching resource(s) (if any) in the
+ *                                     output. If \p "*" or \p NULL, include all
+ *                                     resources in the output.
+ * \param[in]     neg_location_prefix  Prefix denoting a ban in a constraint ID
+ * \param[in]     simple_output        Whether to use a simple output format.
+ *                                     Note: This is for use by \p crm_mon only
+ *                                     and is planned to be deprecated.
+ *
+ * \return Standard Pacemaker return code
+ */
 int
-pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *st, cib_t *cib,
+pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith, cib_t *cib,
                             xmlNode *current_cib, enum pcmk__fence_history fence_history,
-                            uint32_t show, uint32_t show_opts, char *only_node,
-                            char *only_rsc, const char *neg_location_prefix, bool simple_output)
+                            uint32_t show, uint32_t show_opts,
+                            const char *only_node, const char *only_rsc,
+                            const char *neg_location_prefix, bool simple_output)
 {
     xmlNode *cib_copy = copy_xml(current_cib);
     stonith_history_t *stonith_history = NULL;
@@ -160,7 +187,8 @@ pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *st, cib_t *cib,
 
     /* get the stonith-history if there is evidence we need it */
     if (fence_history != pcmk__fence_history_none) {
-        history_rc = pcmk__get_fencing_history(st, &stonith_history, fence_history);
+        history_rc = pcmk__get_fencing_history(stonith, &stonith_history,
+                                               fence_history);
     }
 
     data_set = pe_new_working_set();
@@ -236,14 +264,43 @@ pcmk_status(xmlNodePtr *xml)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Query and output the cluster status
+ *
+ * The operation is considered a success if we're able to get the \p pacemakerd
+ * state. If possible, we'll also try to connect to the fencer and CIB and
+ * output their respective status information.
+ *
+ * \param[in,out] out                  Output object
+ * \param[in,out] cib                  CIB connection
+ * \param[in]     fence_history        How much of the fencing history to output
+ * \param[in]     show                 Group of \p pcmk_section_e flags
+ * \param[in]     show_opts            Group of \p pcmk_show_opt_e flags
+ * \param[in]     only_node            If a node name or tag, include only the
+ *                                     matching node(s) (if any) in the output.
+ *                                     If \p "*" or \p NULL, include all nodes
+ *                                     in the output.
+ * \param[in]     only_rsc             If a resource ID or tag, include only the
+ *                                     matching resource(s) (if any) in the
+ *                                     output. If \p "*" or \p NULL, include all
+ *                                     resources in the output.
+ * \param[in]     neg_location_prefix  Prefix denoting a ban in a constraint ID
+ * \param[in]     simple_output        Whether to use a simple output format.
+ *                                     Note: This is for use by \p crm_mon only
+ *                                     and is planned to be deprecated.
+ *
+ * \return Standard Pacemaker return code
+ */
 int
-pcmk__status(pcmk__output_t *out, cib_t *cib, enum pcmk__fence_history fence_history,
-             uint32_t show, uint32_t show_opts, char *only_node, char *only_rsc,
+pcmk__status(pcmk__output_t *out, cib_t *cib,
+             enum pcmk__fence_history fence_history, uint32_t show,
+             uint32_t show_opts, const char *only_node, const char *only_rsc,
              const char *neg_location_prefix, bool simple_output)
 {
     xmlNode *current_cib = NULL;
     int rc = pcmk_rc_ok;
-    stonith_t *st = NULL;
+    stonith_t *stonith = NULL;
 
     if (cib == NULL) {
         return ENOTCONN;
@@ -262,9 +319,9 @@ pcmk__status(pcmk__output_t *out, cib_t *cib, enum pcmk__fence_history fence_his
     }
 
     if (fence_history != pcmk__fence_history_none && cib->variant == cib_native) {
-        st = fencing_connect();
+        stonith = fencing_connect();
 
-        if (st == NULL) {
+        if (stonith == NULL) {
             return ENOTCONN;
         }
     }
@@ -274,17 +331,19 @@ pcmk__status(pcmk__output_t *out, cib_t *cib, enum pcmk__fence_history fence_his
         goto done;
     }
 
-    rc = pcmk__output_cluster_status(out, st, cib, current_cib, fence_history, show, show_opts,
-                                     only_node, only_rsc, neg_location_prefix, simple_output);
+    rc = pcmk__output_cluster_status(out, stonith, cib, current_cib,
+                                     fence_history, show, show_opts, only_node,
+                                     only_rsc, neg_location_prefix,
+                                     simple_output);
 
 done:
-    if (st != NULL) {
-        if (st->state != stonith_disconnected) {
-            st->cmds->remove_notification(st, NULL);
-            st->cmds->disconnect(st);
+    if (stonith != NULL) {
+        if (stonith->state != stonith_disconnected) {
+            stonith->cmds->remove_notification(stonith, NULL);
+            stonith->cmds->disconnect(stonith);
         }
 
-        stonith_api_delete(st);
+        stonith_api_delete(stonith);
     }
 
     if (current_cib != NULL) {
