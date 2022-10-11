@@ -273,6 +273,9 @@ int fenced_handle_manual_confirmation(const pcmk__client_t *client,
                                       xmlNode *msg);
 void fencer_metadata(void);
 
+const char *fenced_device_reboot_action(const char *device_id);
+bool fenced_device_supports_on(const char *device_id);
+
 gboolean node_has_attr(const char *node, const char *name, const char *value);
 
 gboolean node_does_watchdog_fencing(const char *node);

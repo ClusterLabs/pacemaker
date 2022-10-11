@@ -2,7 +2,7 @@
 #
 # Installer for support files needed by Pacemaker's Cluster Test Suite
 #
-# Copyright 2018-2020 the Pacemaker project contributors
+# Copyright 2018-2022 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -38,7 +38,7 @@ COROSYNC_RUNTIME_CONF="cts.conf"
 LSB_DUMMY="LSBDummy"
 UPSTART_DUMMY="pacemaker-cts-dummyd.conf"
 FENCE_DUMMY="fence_dummy"
-FENCE_DUMMY_ALIASES="fence_dummy_auto_unfence fence_dummy_no_reboot"
+FENCE_DUMMY_ALIASES="auto_unfence no_reboot no_on"
 
 # If the install directory doesn't exist, assume we're in a build directory.
 if [ ! -d "$DATA_DIR" ]; then
@@ -92,7 +92,7 @@ support_uninstall() {
         fi
     done
     for ALIAS in $FENCE_DUMMY_ALIASES; do \
-        FILE="$PCMK__FENCE_BINDIR/$ALIAS"
+        FILE="$PCMK__FENCE_BINDIR/fence_dummy_$ALIAS"
         if [ -L "$FILE" ] || [ -e "$FILE" ]; then
             echo "Removing $FILE ..."
             rm -f "$FILE"
@@ -129,8 +129,11 @@ support_install() {
     mkdir -p "$PCMK__FENCE_BINDIR"
     install -m 0755 "$FENCE_DUMMY" "$PCMK__FENCE_BINDIR" || return $CRM_EX_ERROR
     for alias in $FENCE_DUMMY_ALIASES; do \
-        echo "Installing $alias to $PCMK__FENCE_BINDIR ..."
-        ln -s "$FENCE_DUMMY" "$PCMK__FENCE_BINDIR/$alias" || return $CRM_EX_ERROR
+        echo "Installing fence_dummy_$alias to $PCMK__FENCE_BINDIR ..."
+        ln -s "$FENCE_DUMMY" "$PCMK__FENCE_BINDIR/fence_dummy_$alias"
+	if [ $? -ne 0 ]; then
+		return $CRM_EX_ERROR
+	fi
     done
 
     echo "Installing $LSB_DUMMY to $INIT_DIR ..."

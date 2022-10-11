@@ -170,6 +170,7 @@ ALL_OPT = {
 
 auto_unfence = False
 no_reboot = False
+no_on = False
 
 def agent():
     """ Return name this file was run as. """
@@ -275,11 +276,12 @@ def metadata(avail_opt, options):
             print('    </parameter>')
 
     print('  </parameters>\n  <actions>')
-    if auto_unfence:
-        attr_name = 'automatic'
-    else:
-        attr_name = 'on_target'
-    print('    <action name="on" ' + attr_name + '="1" />')
+    if not no_on:
+        if auto_unfence:
+            attr_name = 'automatic'
+        else:
+            attr_name = 'on_target'
+        print('    <action name="on" ' + attr_name + '="1" />')
     print('    <action name="off" />')
     if not no_reboot:
         print('    <action name="reboot" />')
@@ -433,13 +435,16 @@ def main():
 
     global auto_unfence
     global no_reboot
+    global no_on
 
     # Meta-data can't take parameters, so we simulate different meta-data
     # behavior based on the executable name (which can be a symbolic link).
-    if (sys.argv[0].endswith("_auto_unfence")):
+    if sys.argv[0].endswith("_auto_unfence"):
         auto_unfence = True
-    elif (sys.argv[0].endswith("_no_reboot")):
+    elif sys.argv[0].endswith("_no_reboot"):
         no_reboot = True
+    elif sys.argv[0].endswith("_no_on"):
+        no_on = True
 
     device_opt = ALL_OPT.keys()
 

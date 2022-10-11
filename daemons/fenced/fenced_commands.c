@@ -257,6 +257,50 @@ cmd_device(const async_command_t *cmd)
     return g_hash_table_lookup(device_list, cmd->device);
 }
 
+/*!
+ * \internal
+ * \brief Return the configured reboot action for a given device
+ *
+ * \param[in] device_id  Device ID
+ *
+ * \return Configured reboot action for \p device_id
+ */
+const char *
+fenced_device_reboot_action(const char *device_id)
+{
+    const char *action = NULL;
+
+    if ((device_list != NULL) && (device_id != NULL)) {
+        stonith_device_t *device = g_hash_table_lookup(device_list, device_id);
+
+        if ((device != NULL) && (device->params != NULL)) {
+            action = g_hash_table_lookup(device->params, "pcmk_reboot_action");
+        }
+    }
+    return pcmk__s(action, "reboot");
+}
+
+/*!
+ * \internal
+ * \brief Check whether a given device supports the "on" action
+ *
+ * \param[in] device_id  Device ID
+ *
+ * \return true if \p device_id supports "on", otherwise false
+ */
+bool
+fenced_device_supports_on(const char *device_id)
+{
+    if ((device_list != NULL) && (device_id != NULL)) {
+        stonith_device_t *device = g_hash_table_lookup(device_list, device_id);
+
+        if (device != NULL) {
+            return pcmk_is_set(device->flags, st_device_supports_on);
+        }
+    }
+    return false;
+}
+
 static void
 free_async_command(async_command_t * cmd)
 {

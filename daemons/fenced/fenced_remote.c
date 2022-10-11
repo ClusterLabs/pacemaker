@@ -1729,6 +1729,36 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
     crm_trace("Action %.8s targeting %s for %s is %s",
               op->id, op->target, op->client_name,
               stonith_op_state_str(op->state));
+
+    if ((op->phase == st_phase_on) && (op->devices != NULL)) {
+        /* We are in the "on" phase of a remapped topology reboot. If this
+         * device has pcmk_reboot_action="off", or doesn't support the "on"
+         * action, skip it.
+         *
+         * We can't check device properties at this point because we haven't
+         * chosen a peer for this stage yet. Instead, we check the local node's
+         * knowledge about the device. If different versions of the fence agent
+         * are installed on different nodes, there's a chance this could be
+         * mistaken, but the worst that could happen is we don't try turning the
+         * node back on when we should.
+         */
+        device = op->devices->data;
+        if (pcmk__str_eq(fenced_device_reboot_action(device), "off",
+                         pcmk__str_none)) {
+            crm_info("Not turning %s back on using %s because the device is "
+                     "configured to stay off (pcmk_reboot_action='off')",
+                     op->target, device);
+            advance_topology_device_in_level(op, device, NULL);
+            return;
+        }
+        if (!fenced_device_supports_on(device)) {
+            crm_info("Not turning %s back on using %s because the agent "
+                     "doesn't support 'on'", op->target, device);
+            advance_topology_device_in_level(op, device, NULL);
+            return;
+        }
+    }
+
     timeout = op->base_timeout;
     if ((peer == NULL) && !pcmk_is_set(op->call_options, st_opt_topology)) {
         peer = stonith_choose_peer(op);
