@@ -247,7 +247,7 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
 
 static pcmk_ipc_api_t *
 ipc_connect(data_t *data, enum pcmk_ipc_server server, pcmk_ipc_callback_t cb,
-            enum pcmk_ipc_dispatch dispatch_type)
+            enum pcmk_ipc_dispatch dispatch_type, bool eremoteio_ok)
 {
     int rc;
     pcmk__output_t *out = data->out;
@@ -267,9 +267,15 @@ ipc_connect(data_t *data, enum pcmk_ipc_server server, pcmk_ipc_callback_t cb,
 
     rc = pcmk_connect_ipc(api, dispatch_type);
     if (rc != pcmk_rc_ok) {
-        out->err(out, "error: Could not connect to %s: %s",
-                pcmk_ipc_name(api, true),
-                pcmk_rc_str(rc));
+        if ((rc == EREMOTEIO) && eremoteio_ok) {
+            /* EREMOTEIO may be expected and acceptable for some callers.
+             * Preserve the return code in case callers need to handle it
+             * specially.
+             */
+        } else {
+            out->err(out, "error: Could not connect to %s: %s",
+                     pcmk_ipc_name(api, true), pcmk_rc_str(rc));
+        }
         data->rc = rc;
         pcmk_free_ipc_api(api);
         return NULL;
@@ -296,7 +302,8 @@ pcmk__controller_status(pcmk__output_t *out, char *dest_node, guint message_time
         dispatch_type = pcmk_ipc_dispatch_sync;
     }
     controld_api = ipc_connect(&data, pcmk_ipc_controld,
-                               controller_status_event_cb, dispatch_type);
+                               controller_status_event_cb, dispatch_type,
+                               false);
 
     if (controld_api != NULL) {
         int rc = pcmk_controld_api_ping(controld_api, dest_node);
@@ -352,7 +359,8 @@ pcmk__designated_controller(pcmk__output_t *out, guint message_timeout_ms)
         dispatch_type = pcmk_ipc_dispatch_sync;
     }
     controld_api = ipc_connect(&data, pcmk_ipc_controld,
-                               designated_controller_event_cb, dispatch_type);
+                               designated_controller_event_cb, dispatch_type,
+                               false);
 
     if (controld_api != NULL) {
         int rc = pcmk_controld_api_ping(controld_api, NULL);
@@ -407,6 +415,11 @@ pcmk_designated_controller(xmlNodePtr *xml, unsigned int message_timeout_ms)
  *                                    not \p NULL
  *
  * \return Standard Pacemaker return code
+ *
+ * \note This function returns \p EREMOTEIO if run on a Pacemaker Remote node
+ *       with \p pacemaker-remoted running, since \p pacemakerd is not proxied
+ *       to remote nodes. The fencer and CIB may still be accessible, but
+ *       \p state will be \p pcmk_pacemakerd_state_invalid.
  */
 int
 pcmk__pacemakerd_status(pcmk__output_t *out, const char *ipc_name,
@@ -428,7 +441,7 @@ pcmk__pacemakerd_status(pcmk__output_t *out, const char *ipc_name,
         dispatch_type = pcmk_ipc_dispatch_sync;
     }
     pacemakerd_api = ipc_connect(&data, pcmk_ipc_pacemakerd,
-                                 pacemakerd_event_cb, dispatch_type);
+                                 pacemakerd_event_cb, dispatch_type, true);
 
     if (pacemakerd_api != NULL) {
         int rc = pcmk_pacemakerd_api_ping(pacemakerd_api, ipc_name);

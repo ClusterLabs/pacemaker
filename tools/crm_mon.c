@@ -1333,7 +1333,7 @@ one_shot(void)
     int rc = pcmk__status(out, cib, fence_history, show, show_opts,
                           options.only_node, options.only_rsc,
                           options.neg_location_prefix,
-                          output_format == mon_output_monitor);
+                          output_format == mon_output_monitor, 0);
 
     if (rc == pcmk_rc_ok) {
         clean_up(pcmk_rc2exitc(rc));
