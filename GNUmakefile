@@ -67,9 +67,6 @@ clang coverity coverity-analyze coverity-clean coverity-corp cppcheck indent:
 		-C devel "$@"
 
 
-rel-tags: tags
-	find . -name TAGS -exec sed -i 's:\(.*\)/\(.*\)/TAGS:\2/TAGS:g' \{\} \;
-
 ## Coverage/profiling
 
 .PHONY: coverage
