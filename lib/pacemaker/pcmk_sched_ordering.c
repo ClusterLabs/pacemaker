@@ -724,7 +724,7 @@ order_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2,
 
     bool require_all = true;
 
-    pcmk__xe_get_bool_attr(set1, "require-all", &require_all);
+    (void) pcmk__xe_get_bool_attr(set1, "require-all", &require_all);
 
     if (action_1 == NULL) {
         action_1 = RSC_START;
