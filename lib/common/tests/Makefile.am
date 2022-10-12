@@ -20,10 +20,13 @@ SUBDIRS = \
 	operations	\
 	options		\
 	output 		\
-	procfs		\
 	results		\
 	scores		\
 	strings		\
 	utils		\
 	xml 		\
 	xpath
+
+if SUPPORT_PROCFS
+SUBDIRS	+=	procfs
+endif

@@ -248,7 +248,7 @@ remoted_spawn_pidone(int argc, char **argv, char **envp)
     /* Parent becomes the reaper of zombie processes */
     /* Safe to initialize logging now if needed */
 
-#  ifdef HAVE___PROGNAME
+#  ifdef HAVE_PROGNAME
     /* Differentiate ourselves in the 'ps' output */
     {
         char *p;
@@ -281,7 +281,7 @@ remoted_spawn_pidone(int argc, char **argv, char **envp)
         }
         argv[1] = NULL;
     }
-#  endif // HAVE___PROGNAME
+#  endif // HAVE_PROGNAME
 
     while (1) {
         int sig;

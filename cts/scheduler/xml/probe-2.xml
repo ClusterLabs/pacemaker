@@ -250,7 +250,6 @@
         <primitive id="stonith_rackpdu" class="stonith" type="external/rackpdu">
           <operations>
             <op id="stonith_rackpdu_monitor" name="monitor" interval="5s" timeout="20s"/>
-            <op id="sontith_rackpdu_start" name="start" interval="20s"/>
           </operations>
           <meta_attributes id="meta_attributes-requires">
             <nvpair id="nvpair-requires" name="requires" value="nothing"/>

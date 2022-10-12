@@ -777,6 +777,7 @@ AS_CASE(["$host_os"],
         ])
 
 AC_SUBST(INIT_EXT)
+AM_CONDITIONAL([SUPPORT_PROCFS], [test $PROCFS -eq 1])
 AC_DEFINE_UNQUOTED([HAVE_LINUX_PROCFS], [$PROCFS],
                    [Define to 1 if procfs is supported])
 
@@ -1016,13 +1017,16 @@ AC_CHECK_FUNCS([uuid_unparse], [],
                [AC_MSG_FAILURE([Could not find required C function uuid_unparse()])])
 
 AC_CACHE_CHECK([whether __progname and __progname_full are available],
-               [pf_cv_var_progname], AC_LINK_IFELSE([
-                   AC_LANG_PROGRAM([[extern char *__progname, *__progname_full;]],
-                                   [[__progname = "foo"; __progname_full = "foo bar";]],
-                                   [pf_cv_var_progname="yes"],
-                                   [pf_cv_var_progname="no"])
-               ]))
-AS_IF([test x"$pf_cv_var_progname" = x"yes"], [AC_DEFINE(HAVE___PROGNAME,1,[ ])])
+               [pf_cv_var_progname],
+               [AC_LINK_IFELSE(
+                   [AC_LANG_PROGRAM([[extern char *__progname, *__progname_full;]],
+                                    [[__progname = "foo"; __progname_full = "foo bar";]])],
+                   [pf_cv_var_progname="yes"],
+                   [pf_cv_var_progname="no"]
+               )]
+              )
+AS_IF([test x"$pf_cv_var_progname" = x"yes"],
+      [AC_DEFINE(HAVE_PROGNAME,1,[Define to 1 if processes can change their name])])
 
 dnl ========================================================================
 dnl Generic declarations

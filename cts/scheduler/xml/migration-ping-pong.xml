@@ -9,7 +9,7 @@
         <nvpair name="cluster-name" value="ha-idg" id="cib-bootstrap-options-cluster-name"/>
         <nvpair name="no-quorum-policy" value="ignore" id="cib-bootstrap-options-no-quorum-policy"/>
         <nvpair name="stonith-enabled" value="true" id="cib-bootstrap-options-stonith-enabled"/>
-        <nvpair name="stonith-action" value="Off" id="cib-bootstrap-options-stonith-action"/>
+        <nvpair name="stonith-action" value="off" id="cib-bootstrap-options-stonith-action"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
