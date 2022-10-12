@@ -262,7 +262,7 @@ pcmk__cli_help(char cmd, crm_exit_t exit_code)
         }
     }
 
-    fprintf(stream, "\nReport bugs to %s\n", PACKAGE_BUGREPORT);
+    fprintf(stream, "\nReport bugs to " PCMK__BUG_URL "\n");
 
   out:
     crm_exit(exit_code);
