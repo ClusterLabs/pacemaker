@@ -38,15 +38,19 @@ extern "C" {
  */
 int pcmk__output_simple_status(pcmk__output_t *out, pe_working_set_t *data_set);
 
-int pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *st, cib_t *cib,
-                                xmlNode *current_cib, enum pcmk__fence_history fence_history,
-                                uint32_t show, uint32_t show_opts, char *only_node,
-                                char *only_rsc, const char *neg_location_prefix,
+int pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith,
+                                cib_t *cib, xmlNode *current_cib,
+                                enum pcmk__fence_history fence_history,
+                                uint32_t show, uint32_t show_opts,
+                                const char *only_node, const char *only_rsc,
+                                const char *neg_location_prefix,
                                 bool simple_output);
 
-int pcmk__status(pcmk__output_t *out, cib_t *cib, enum pcmk__fence_history fence_history,
-                 uint32_t show, uint32_t show_opts, char *only_node, char *only_rsc,
-                 const char *neg_location_prefix, bool simple_output);
+int pcmk__status(pcmk__output_t *out, cib_t *cib,
+                 enum pcmk__fence_history fence_history, uint32_t show,
+                 uint32_t show_opts, const char *only_node,
+                 const char *only_rsc, const char *neg_location_prefix,
+                 bool simple_output, guint timeout_ms);
 
 #ifdef __cplusplus
 }

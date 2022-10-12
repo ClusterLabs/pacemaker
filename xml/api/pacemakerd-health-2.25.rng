@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <start>
+        <ref name="element-pacemakerd-health"/>
+    </start>
+
+    <define name="element-pacemakerd-health">
+        <element name="pacemakerd">
+            <optional>
+                <attribute name="sys_from"> <text /> </attribute>
+            </optional>
+            <attribute name="state"> <text /> </attribute>
+            <optional>
+                <attribute name="last_updated"> <text /> </attribute>
+            </optional>
+        </element>
+    </define>
+</grammar>

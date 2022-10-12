@@ -70,76 +70,38 @@ fencing_connect(void)
     }
 }
 
-static void
-pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
-                    enum pcmk_ipc_event event_type, crm_exit_t status,
-                    void *event_data, void *user_data)
-{
-    pcmk_pacemakerd_api_reply_t *reply = event_data;
-    enum pcmk_pacemakerd_state *state =
-        (enum pcmk_pacemakerd_state *) user_data;
-
-    /* we are just interested in the latest reply */
-    *state = pcmk_pacemakerd_state_invalid;
-
-    if (event_type != pcmk_ipc_event_reply || status != CRM_EX_OK) {
-        return;
-    }
-
-    if (reply->reply_type == pcmk_pacemakerd_reply_ping &&
-        reply->data.ping.last_good != (time_t) 0 &&
-        reply->data.ping.status == pcmk_rc_ok) {
-        *state = reply->data.ping.state;
-    }
-}
-
-static int
-pacemakerd_status(pcmk__output_t *out)
-{
-    int rc = pcmk_rc_ok;
-    pcmk_ipc_api_t *pacemakerd_api = NULL;
-    enum pcmk_pacemakerd_state state = pcmk_pacemakerd_state_invalid;
-
-    rc = pcmk_new_ipc_api(&pacemakerd_api, pcmk_ipc_pacemakerd);
-    if (pacemakerd_api == NULL) {
-        out->err(out, "Could not connect to pacemakerd: %s",
-                 pcmk_rc_str(rc));
-        return rc;
-    }
-
-    pcmk_register_ipc_callback(pacemakerd_api, pacemakerd_event_cb, (void *) &state);
-
-    rc = pcmk_connect_ipc(pacemakerd_api, pcmk_ipc_dispatch_sync);
-    if (rc == EREMOTEIO) {
-        return pcmk_rc_ok;
-    } else if (rc != pcmk_rc_ok) {
-        out->err(out, "Could not connect to pacemakerd: %s",
-                 pcmk_rc_str(rc));
-        pcmk_free_ipc_api(pacemakerd_api);
-        return rc;
-    }
-
-    rc = pcmk_pacemakerd_api_ping(pacemakerd_api, crm_system_name);
-
-    if (rc != pcmk_rc_ok) {
-        /* Got some error from pcmk_pacemakerd_api_ping, so return it. */
-    } else if (state == pcmk_pacemakerd_state_running) {
-        rc = pcmk_rc_ok;
-    } else if (state == pcmk_pacemakerd_state_shutting_down) {
-        rc = ENOTCONN;
-    } else {
-        rc = EAGAIN;
-    }
-
-    pcmk_free_ipc_api(pacemakerd_api);
-    return rc;
-}
-
+/*!
+ * \internal
+ * \brief Output the cluster status given a fencer and CIB connection
+ *
+ * \param[in,out] out                  Output object
+ * \param[in,out] stonith              Fencer connection
+ * \param[in,out] cib                  CIB connection
+ * \param[in]     current_cib          Current CIB XML
+ * \param[in]     fence_history        How much of the fencing history to output
+ * \param[in]     show                 Group of \p pcmk_section_e flags
+ * \param[in]     show_opts            Group of \p pcmk_show_opt_e flags
+ * \param[in]     only_node            If a node name or tag, include only the
+ *                                     matching node(s) (if any) in the output.
+ *                                     If \p "*" or \p NULL, include all nodes
+ *                                     in the output.
+ * \param[in]     only_rsc             If a resource ID or tag, include only the
+ *                                     matching resource(s) (if any) in the
+ *                                     output. If \p "*" or \p NULL, include all
+ *                                     resources in the output.
+ * \param[in]     neg_location_prefix  Prefix denoting a ban in a constraint ID
+ * \param[in]     simple_output        Whether to use a simple output format.
+ *                                     Note: This is for use by \p crm_mon only
+ *                                     and is planned to be deprecated.
+ *
+ * \return Standard Pacemaker return code
+ */
 int
-pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *st, cib_t *cib,
+pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith, cib_t *cib,
                             xmlNode *current_cib, enum pcmk__fence_history fence_history,
-                            uint32_t show, uint32_t show_opts, char *only_node,
-                            char *only_rsc, const char *neg_location_prefix, bool simple_output)
+                            uint32_t show, uint32_t show_opts,
+                            const char *only_node, const char *only_rsc,
+                            const char *neg_location_prefix, bool simple_output)
 {
     xmlNode *cib_copy = copy_xml(current_cib);
     stonith_history_t *stonith_history = NULL;
@@ -160,7 +122,8 @@ pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *st, cib_t *cib,
 
     /* get the stonith-history if there is evidence we need it */
     if (fence_history != pcmk__fence_history_none) {
-        history_rc = pcmk__get_fencing_history(st, &stonith_history, fence_history);
+        history_rc = pcmk__get_fencing_history(stonith, &stonith_history,
+                                               fence_history);
     }
 
     data_set = pe_new_working_set();
@@ -229,44 +192,93 @@ pcmk_status(xmlNodePtr *xml)
     stonith__register_messages(out);
 
     rc = pcmk__status(out, cib, pcmk__fence_history_full, pcmk_section_all,
-                      show_opts, NULL, NULL, NULL, false);
+                      show_opts, NULL, NULL, NULL, false, 0);
     pcmk__xml_output_finish(out, xml);
 
     cib_delete(cib);
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Query and output the cluster status
+ *
+ * The operation is considered a success if we're able to get the \p pacemakerd
+ * state. If possible, we'll also try to connect to the fencer and CIB and
+ * output their respective status information.
+ *
+ * \param[in,out] out                  Output object
+ * \param[in,out] cib                  CIB connection
+ * \param[in]     fence_history        How much of the fencing history to output
+ * \param[in]     show                 Group of \p pcmk_section_e flags
+ * \param[in]     show_opts            Group of \p pcmk_show_opt_e flags
+ * \param[in]     only_node            If a node name or tag, include only the
+ *                                     matching node(s) (if any) in the output.
+ *                                     If \p "*" or \p NULL, include all nodes
+ *                                     in the output.
+ * \param[in]     only_rsc             If a resource ID or tag, include only the
+ *                                     matching resource(s) (if any) in the
+ *                                     output. If \p "*" or \p NULL, include all
+ *                                     resources in the output.
+ * \param[in]     neg_location_prefix  Prefix denoting a ban in a constraint ID
+ * \param[in]     simple_output        Whether to use a simple output format.
+ *                                     Note: This is for use by \p crm_mon only
+ *                                     and is planned to be deprecated.
+ * \param[in]     timeout_ms           How long to wait for a reply from the
+ *                                     \p pacemakerd API. If 0,
+ *                                     \p pcmk_ipc_dispatch_sync will be used.
+ *                                     If positive, \p pcmk_ipc_dispatch_main
+ *                                     will be used, and a new mainloop will be
+ *                                     created for this purpose (freed before
+ *                                     return).
+ *
+ * \return Standard Pacemaker return code
+ */
 int
-pcmk__status(pcmk__output_t *out, cib_t *cib, enum pcmk__fence_history fence_history,
-             uint32_t show, uint32_t show_opts, char *only_node, char *only_rsc,
-             const char *neg_location_prefix, bool simple_output)
+pcmk__status(pcmk__output_t *out, cib_t *cib,
+             enum pcmk__fence_history fence_history, uint32_t show,
+             uint32_t show_opts, const char *only_node, const char *only_rsc,
+             const char *neg_location_prefix, bool simple_output,
+             guint timeout_ms)
 {
     xmlNode *current_cib = NULL;
     int rc = pcmk_rc_ok;
-    stonith_t *st = NULL;
+    stonith_t *stonith = NULL;
+    enum pcmk_pacemakerd_state state = pcmk_pacemakerd_state_invalid;
 
     if (cib == NULL) {
         return ENOTCONN;
     }
 
-    if (cib->variant == cib_native) {
-        if (cib->state == cib_connected_query || cib->state == cib_connected_command) {
-            rc = pcmk_rc_ok;
-        } else {
-            rc = pacemakerd_status(out);
-        }
-    }
+    if ((cib->variant == cib_native)
+        && (cib->state != cib_connected_query)
+        && (cib->state != cib_connected_command)) {
 
-    if (rc != pcmk_rc_ok) {
-        return rc;
+        rc = pcmk__pacemakerd_status(out, crm_system_name, timeout_ms, &state);
+        switch (rc) {
+            case pcmk_rc_ok:
+                switch (state) {
+                    case pcmk_pacemakerd_state_running:
+                    case pcmk_pacemakerd_state_shutting_down:
+                        // CIB may still be available while shutting down
+                        break;
+                    default:
+                        return rc;
+                }
+                break;
+            case EREMOTEIO:
+                /* We'll always get EREMOTEIO if we run this on a Pacemaker
+                 * Remote node. The fencer and CIB might be available.
+                 */
+                rc = pcmk_rc_ok;
+                break;
+            default:
+                return rc;
+        }
     }
 
     if (fence_history != pcmk__fence_history_none && cib->variant == cib_native) {
-        st = fencing_connect();
-
-        if (st == NULL) {
-            return ENOTCONN;
-        }
+        stonith = fencing_connect();
     }
 
     rc = cib_connect(out, cib, &current_cib);
@@ -274,24 +286,29 @@ pcmk__status(pcmk__output_t *out, cib_t *cib, enum pcmk__fence_history fence_his
         goto done;
     }
 
-    rc = pcmk__output_cluster_status(out, st, cib, current_cib, fence_history, show, show_opts,
-                                     only_node, only_rsc, neg_location_prefix, simple_output);
+    rc = pcmk__output_cluster_status(out, stonith, cib, current_cib,
+                                     fence_history, show, show_opts, only_node,
+                                     only_rsc, neg_location_prefix,
+                                     simple_output);
+    if (rc != pcmk_rc_ok) {
+        out->err(out, "Error outputting status info from the fencer or CIB");
+    }
 
 done:
-    if (st != NULL) {
-        if (st->state != stonith_disconnected) {
-            st->cmds->remove_notification(st, NULL);
-            st->cmds->disconnect(st);
+    if (stonith != NULL) {
+        if (stonith->state != stonith_disconnected) {
+            stonith->cmds->remove_notification(stonith, NULL);
+            stonith->cmds->disconnect(stonith);
         }
 
-        stonith_api_delete(st);
+        stonith_api_delete(stonith);
     }
 
     if (current_cib != NULL) {
         free_xml(current_cib);
     }
 
-    return rc;
+    return pcmk_rc_ok;
 }
 
 /* This is an internal-only function that is planned to be deprecated and removed.

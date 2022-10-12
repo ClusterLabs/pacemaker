@@ -238,7 +238,8 @@ main(int argc, char **argv)
             rc = pcmk__controller_status(out, options.optarg, options.timeout);
             break;
         case cmd_pacemakerd_health:
-            rc = pcmk__pacemakerd_status(out, options.ipc_name, options.timeout);
+            rc = pcmk__pacemakerd_status(out, options.ipc_name, options.timeout,
+                                         NULL);
             break;
         case cmd_list_nodes:
             rc = pcmk__list_nodes(out, options.optarg, options.bash_export);

@@ -647,21 +647,52 @@ health_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *", "const char *", "const char *")
+PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *", "int", "const char *",
+                  "const char *")
 static int
 pacemakerd_health(pcmk__output_t *out, va_list args)
 {
     const char *sys_from = va_arg(args, const char *);
-    const char *state = va_arg(args, const char *);
+    enum pcmk_pacemakerd_state state =
+        (enum pcmk_pacemakerd_state) va_arg(args, int);
+    const char *state_s = va_arg(args, const char *);
     const char *last_updated = va_arg(args, const char *);
 
+    if (state_s == NULL) {
+        state_s = pcmk__pcmkd_state_enum2friendly(state);
+    }
     return out->info(out, "Status of %s: '%s' (last updated %s)",
-                     pcmk__s(sys_from, "unknown node"),
-                     pcmk__s(state, "unknown state"),
+                     pcmk__s(sys_from, "unknown subsystem"), state_s,
                      pcmk__s(last_updated, "at unknown time"));
 }
 
-PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *", "const char *", "const char *")
+PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *", "int", "const char *",
+                  "const char *")
+static int
+pacemakerd_health_html(pcmk__output_t *out, va_list args)
+{
+    const char *sys_from = va_arg(args, const char *);
+    enum pcmk_pacemakerd_state state =
+        (enum pcmk_pacemakerd_state) va_arg(args, int);
+    const char *state_s = va_arg(args, const char *);
+    const char *last_updated = va_arg(args, const char *);
+    char *msg = NULL;
+
+    if (state_s == NULL) {
+        state_s = pcmk__pcmkd_state_enum2friendly(state);
+    }
+
+    msg = crm_strdup_printf("Status of %s: '%s' (last updated %s)",
+                            pcmk__s(sys_from, "unknown subsystem"), state_s,
+                            pcmk__s(last_updated, "at unknown time"));
+    pcmk__output_create_html_node(out, "li", NULL, NULL, msg);
+
+    free(msg);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *", "int", "const char *",
+                  "const char *")
 static int
 pacemakerd_health_text(pcmk__output_t *out, va_list args)
 {
@@ -669,25 +700,38 @@ pacemakerd_health_text(pcmk__output_t *out, va_list args)
         return pacemakerd_health(out, args);
     } else {
         const char *sys_from G_GNUC_UNUSED = va_arg(args, const char *);
-        const char *state = va_arg(args, const char *);
+        enum pcmk_pacemakerd_state state =
+            (enum pcmk_pacemakerd_state) va_arg(args, int);
+        const char *state_s = va_arg(args, const char *);
         const char *last_updated G_GNUC_UNUSED = va_arg(args, const char *);
 
-        pcmk__formatted_printf(out, "%s\n", pcmk__s(state, "<null>"));
+        if (state_s == NULL) {
+            state_s = pcmk_pacemakerd_api_daemon_state_enum2text(state);
+        }
+        pcmk__formatted_printf(out, "%s\n", state_s);
         return pcmk_rc_ok;
     }
 }
 
-PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *", "const char *", "const char *")
+PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *", "int", "const char *",
+                  "const char *")
 static int
 pacemakerd_health_xml(pcmk__output_t *out, va_list args)
 {
     const char *sys_from = va_arg(args, const char *);
-    const char *state = va_arg(args, const char *);
+    enum pcmk_pacemakerd_state state =
+        (enum pcmk_pacemakerd_state) va_arg(args, int);
+    const char *state_s = va_arg(args, const char *);
     const char *last_updated = va_arg(args, const char *);
 
-    pcmk__output_create_xml_node(out, pcmk__s(sys_from, "<null>"),
-                                 "state", pcmk__s(state, ""),
-                                 "last_updated", pcmk__s(last_updated, ""),
+    if (state_s == NULL) {
+        state_s = pcmk_pacemakerd_api_daemon_state_enum2text(state);
+    }
+
+    pcmk__output_create_xml_node(out, "pacemakerd",
+                                 "sys_from", sys_from,
+                                 "state", state_s,
+                                 "last_updated", last_updated,
                                  NULL);
     return pcmk_rc_ok;
 }
@@ -2114,6 +2158,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "node-action", "default", node_action },
     { "node-action", "xml", node_action_xml },
     { "pacemakerd-health", "default", pacemakerd_health },
+    { "pacemakerd-health", "html", pacemakerd_health_html },
     { "pacemakerd-health", "text", pacemakerd_health_text },
     { "pacemakerd-health", "xml", pacemakerd_health_xml },
     { "profile", "default", profile_default, },
