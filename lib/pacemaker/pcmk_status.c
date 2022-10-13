@@ -255,22 +255,17 @@ pcmk__status(pcmk__output_t *out, cib_t *cib,
         && (cib->state != cib_connected_command)) {
 
         rc = pcmk__pacemakerd_status(out, crm_system_name, timeout_ms, &state);
-        switch (rc) {
-            case pcmk_rc_ok:
-                switch (state) {
-                    case pcmk_pacemakerd_state_running:
-                    case pcmk_pacemakerd_state_shutting_down:
-                        // CIB may still be available while shutting down
-                        break;
-                    default:
-                        return rc;
-                }
-                break;
-            case EREMOTEIO:
-                /* We'll always get EREMOTEIO if we run this on a Pacemaker
-                 * Remote node. The fencer and CIB might be available.
+        if (rc != pcmk_rc_ok) {
+            return rc;
+        }
+
+        switch (state) {
+            case pcmk_pacemakerd_state_running:
+            case pcmk_pacemakerd_state_shutting_down:
+            case pcmk_pacemakerd_state_remote:
+                /* Fencer and CIB may still be available while shutting down or
+                 * running on a Pacemaker Remote node
                  */
-                rc = pcmk_rc_ok;
                 break;
             default:
                 return rc;

@@ -211,7 +211,7 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
     // Parse desired information from reply
     data->pcmkd_state = reply->data.ping.state;
     if (reply->data.ping.status == pcmk_rc_ok) {
-        crm_time_t *when = crm_time_new(NULL);
+        crm_time_t *when = crm_time_new_undefined();
         char *when_s = NULL;
 
         crm_time_set_timet(when, &reply->data.ping.last_good);
@@ -256,15 +256,19 @@ ipc_connect(data_t *data, enum pcmk_ipc_server server, pcmk_ipc_callback_t cb,
     }
 
     rc = pcmk_connect_ipc(api, dispatch_type);
+
     if (rc != pcmk_rc_ok) {
-        if ((rc == EREMOTEIO) && eremoteio_ok) {
-            /* EREMOTEIO may be expected and acceptable for some callers.
-             * Preserve the return code in case callers need to handle it
-             * specially.
-             */
-        } else {
-            out->err(out, "error: Could not connect to %s: %s",
-                     pcmk_ipc_name(api, true), pcmk_rc_str(rc));
+        if (rc == EREMOTEIO) {
+            data->pcmkd_state = pcmk_pacemakerd_state_remote;
+            if (eremoteio_ok) {
+                /* EREMOTEIO may be expected and acceptable for some callers
+                 * on a Pacemaker Remote node
+                 */
+                rc = pcmk_rc_ok;
+            } else {
+                out->err(out, "error: Could not connect to %s: %s",
+                         pcmk_ipc_name(api, true), pcmk_rc_str(rc));
+            }
         }
         data->rc = rc;
         pcmk_free_ipc_api(api);
@@ -488,10 +492,11 @@ pcmk_designated_controller(xmlNodePtr *xml, unsigned int message_timeout_ms)
  *
  * \return Standard Pacemaker return code
  *
- * \note This function returns \p EREMOTEIO if run on a Pacemaker Remote node
- *       with \p pacemaker-remoted running, since \p pacemakerd is not proxied
- *       to remote nodes. The fencer and CIB may still be accessible, but
- *       \p state will be \p pcmk_pacemakerd_state_invalid.
+ * \note This function sets \p state to \p pcmk_pacemakerd_state_remote and
+ *       returns \p pcmk_rc_ok if the IPC connection attempt returns
+ *       \p EREMOTEIO. That code indicates that this is a Pacemaker Remote node
+ *       with \p pacemaker-remoted running. The node may be connected to the
+ *       cluster.
  */
 int
 pcmk__pacemakerd_status(pcmk__output_t *out, const char *ipc_name,
@@ -526,6 +531,19 @@ pcmk__pacemakerd_status(pcmk__output_t *out, const char *ipc_name,
             poll_until_reply(&data, pacemakerd_api, NULL);
         }
         pcmk_free_ipc_api(pacemakerd_api);
+
+    } else if (data.pcmkd_state == pcmk_pacemakerd_state_remote) {
+        // No API connection so the callback wasn't run
+        crm_time_t *when = crm_time_new(NULL);
+        char *when_s = crm_time_as_string(when,
+                                          crm_time_log_date
+                                          |crm_time_log_timeofday
+                                          |crm_time_log_with_timezone);
+
+        out->message(out, "pacemakerd-health",
+                     "pacemaker-remoted", data.pcmkd_state, NULL, when_s);
+        crm_time_free(when);
+        free(when_s);
     }
 
     if (state != NULL) {
