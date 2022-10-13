@@ -87,8 +87,21 @@ event_done(data_t *data, pcmk_ipc_api_t *api)
     quit_main_loop(data);
 }
 
+/*!
+ * \internal
+ * \brief Process a reply from the controller IPC API
+ *
+ * \param[in,out] data          API results and options
+ * \param[in,out] controld_api  Controller connection
+ * \param[in]     event_type    Type of event that occurred
+ * \param[in]     status        Event status
+ * \param[in]     event_data    \p pcmk_controld_api_reply_t object containing
+ *                              event-specific data
+ */
 static pcmk_controld_api_reply_t *
-controld_event_reply(data_t *data, pcmk_ipc_api_t *controld_api, enum pcmk_ipc_event event_type, crm_exit_t status, void *event_data)
+controld_event_reply(data_t *data, pcmk_ipc_api_t *controld_api,
+                     enum pcmk_ipc_event event_type, crm_exit_t status,
+                     const void *event_data)
 {
     pcmk__output_t *out = data->out;
     pcmk_controld_api_reply_t *reply = event_data;
@@ -115,7 +128,7 @@ controld_event_reply(data_t *data, pcmk_ipc_api_t *controld_api, enum pcmk_ipc_e
 
     if (status != CRM_EX_OK) {
         out->err(out, "error: Bad reply from controller: %s",
-                crm_exit_str(status));
+                 crm_exit_str(status));
         data->rc = EBADMSG;
         event_done(data, controld_api);
         return NULL;
@@ -123,7 +136,7 @@ controld_event_reply(data_t *data, pcmk_ipc_api_t *controld_api, enum pcmk_ipc_e
 
     if (reply->reply_type != pcmk_controld_reply_ping) {
         out->err(out, "error: Unknown reply type %d from controller",
-                reply->reply_type);
+                 reply->reply_type);
         data->rc = EBADMSG;
         event_done(data, controld_api);
         return NULL;
@@ -132,22 +145,32 @@ controld_event_reply(data_t *data, pcmk_ipc_api_t *controld_api, enum pcmk_ipc_e
     return reply;
 }
 
+/*!
+ * \internal
+ * \brief Process a controller status IPC event
+ *
+ * \param[in,out] controld_api  Controller connection
+ * \param[in]     event_type    Type of event that occurred
+ * \param[in]     status        Event status
+ * \param[in,out] event_data    \p pcmk_controld_api_reply_t object containing
+ *                              event-specific data
+ * \param[in,out] user_data     \p data_t object for API results and options
+ */
 static void
 controller_status_event_cb(pcmk_ipc_api_t *controld_api,
-                    enum pcmk_ipc_event event_type, crm_exit_t status,
-                    void *event_data, void *user_data)
+                           enum pcmk_ipc_event event_type, crm_exit_t status,
+                           void *event_data, void *user_data)
 {
-    data_t *data = user_data;
+    data_t *data = (data_t *) user_data;
     pcmk__output_t *out = data->out;
     pcmk_controld_api_reply_t *reply = controld_event_reply(data, controld_api,
-        event_type, status, event_data);
+                                                            event_type, status,
+                                                            event_data);
 
     if (reply != NULL) {
         out->message(out, "health",
-               reply->data.ping.sys_from,
-               reply->host_from,
-               reply->data.ping.fsa_state,
-               reply->data.ping.result);
+                     reply->data.ping.sys_from, reply->host_from,
+                     reply->data.ping.fsa_state, reply->data.ping.result);
         data->rc = pcmk_rc_ok;
     }
 
@@ -284,8 +307,26 @@ ipc_connect(data_t *data, enum pcmk_ipc_server server, pcmk_ipc_callback_t cb,
     return api;
 }
 
+/*!
+ * \internal
+ * \brief Get and output controller status
+ *
+ * \param[in,out] out                 Output object
+ * \param[in]     node_name           Name of node whose status is desired
+ *                                    (\p NULL for DC)
+ * \param[in]     message_timeout_ms  How long to wait for a reply from the
+ *                                    \p pacemaker-controld API. If 0,
+ *                                    \p pcmk_ipc_dispatch_sync will be used.
+ *                                    Otherwise, \p pcmk_ipc_dispatch_main will
+ *                                    be used, and a new mainloop will be
+ *                                    created for this purpose (freed before
+ *                                    return).
+ *
+ * \return Standard Pacemaker return code
+ */
 int
-pcmk__controller_status(pcmk__output_t *out, char *dest_node, guint message_timeout_ms)
+pcmk__controller_status(pcmk__output_t *out, const char *node_name,
+                        guint message_timeout_ms)
 {
     data_t data = {
         .out = out,
@@ -306,10 +347,10 @@ pcmk__controller_status(pcmk__output_t *out, char *dest_node, guint message_time
                                false);
 
     if (controld_api != NULL) {
-        int rc = pcmk_controld_api_ping(controld_api, dest_node);
+        int rc = pcmk_controld_api_ping(controld_api, node_name);
         if (rc != pcmk_rc_ok) {
-            out->err(out, "error: Could not ping controller API: %s",
-                     pcmk_rc_str(rc));
+            out->err(out, "error: Could not ping controller API on %s: %s",
+                     pcmk__s(node_name, "DC"), pcmk_rc_str(rc));
             data.rc = rc;
         }
 
@@ -323,8 +364,10 @@ pcmk__controller_status(pcmk__output_t *out, char *dest_node, guint message_time
     return data.rc;
 }
 
+// Documented in header
 int
-pcmk_controller_status(xmlNodePtr *xml, char *dest_node, unsigned int message_timeout_ms)
+pcmk_controller_status(xmlNodePtr *xml, const char *node_name,
+                       unsigned int message_timeout_ms)
 {
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
@@ -336,7 +379,7 @@ pcmk_controller_status(xmlNodePtr *xml, char *dest_node, unsigned int message_ti
 
     pcmk__register_lib_messages(out);
 
-    rc = pcmk__controller_status(out, dest_node, (guint) message_timeout_ms);
+    rc = pcmk__controller_status(out, node_name, (guint) message_timeout_ms);
     pcmk__xml_output_finish(out, xml);
     return rc;
 }
