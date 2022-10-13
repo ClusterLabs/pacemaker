@@ -235,17 +235,19 @@ main(int argc, char **argv)
 
     switch (command) {
         case cmd_health:
-            rc = pcmk__controller_status(out, options.optarg, options.timeout);
+            rc = pcmk__controller_status(out, options.optarg,
+                                         (unsigned int) options.timeout);
             break;
         case cmd_pacemakerd_health:
-            rc = pcmk__pacemakerd_status(out, options.ipc_name, options.timeout,
-                                         NULL);
+            rc = pcmk__pacemakerd_status(out, options.ipc_name,
+                                         (unsigned int) options.timeout, NULL);
             break;
         case cmd_list_nodes:
             rc = pcmk__list_nodes(out, options.optarg, options.bash_export);
             break;
         case cmd_whois_dc:
-            rc = pcmk__designated_controller(out, options.timeout);
+            rc = pcmk__designated_controller(out,
+                                             (unsigned int) options.timeout);
             break;
         case cmd_none:
             rc = pcmk_rc_error;

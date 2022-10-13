@@ -25,67 +25,15 @@
 #include <crm/common/iso8601.h>
 #include <crm/common/ipc_controld.h>
 #include <crm/common/ipc_pacemakerd.h>
-#include <crm/common/mainloop.h>
 
-#define DEFAULT_MESSAGE_TIMEOUT_MS 30000
-
-
+//! Object to store API results, a timeout, and an output object
 typedef struct {
     pcmk__output_t *out;
-    GMainLoop *mainloop;
     int rc;
-    guint message_timer_id;
-    guint message_timeout_ms;
+    bool reply_received;
+    unsigned int message_timeout_ms;
     enum pcmk_pacemakerd_state pcmkd_state;
 } data_t;
-
-static void
-quit_main_loop(data_t *data)
-{
-    if (data->mainloop != NULL) {
-        GMainLoop *mloop = data->mainloop;
-
-        data->mainloop = NULL; // Don't re-enter this block
-        pcmk_quit_main_loop(mloop, 10);
-        g_main_loop_unref(mloop);
-    }
-}
-
-static gboolean
-admin_message_timeout(gpointer user_data)
-{
-    data_t *data = user_data;
-    pcmk__output_t *out = data->out;
-
-    out->err(out, "error: No reply received from controller before timeout (%dms)",
-            data->message_timeout_ms);
-    data->message_timer_id = 0;
-    data->rc = ETIMEDOUT;
-    quit_main_loop(data);
-    return FALSE; // Tells glib to remove source
-}
-
-static void
-start_main_loop(data_t *data)
-{
-    if (data->message_timeout_ms < 1) {
-        data->message_timeout_ms = DEFAULT_MESSAGE_TIMEOUT_MS;
-    }
-
-    data->rc = ECONNRESET; // For unexpected disconnects
-    data->mainloop = g_main_loop_new(NULL, FALSE);
-    data->message_timer_id = g_timeout_add(data->message_timeout_ms,
-                                     admin_message_timeout,
-                                     data);
-    g_main_loop_run(data->mainloop);
-}
-
-static void
-event_done(data_t *data, pcmk_ipc_api_t *api)
-{
-    pcmk_disconnect_ipc(api);
-    quit_main_loop(data);
-}
 
 /*!
  * \internal
@@ -111,7 +59,6 @@ controld_event_reply(data_t *data, pcmk_ipc_api_t *controld_api,
             if (data->rc == ECONNRESET) { // Unexpected
                 out->err(out, "error: Lost connection to controller");
             }
-            event_done(data, controld_api);
             return NULL;
 
         case pcmk_ipc_event_reply:
@@ -121,16 +68,10 @@ controld_event_reply(data_t *data, pcmk_ipc_api_t *controld_api,
             return NULL;
     }
 
-    if (data->message_timer_id != 0) {
-        g_source_remove(data->message_timer_id);
-        data->message_timer_id = 0;
-    }
-
     if (status != CRM_EX_OK) {
         out->err(out, "error: Bad reply from controller: %s",
                  crm_exit_str(status));
         data->rc = EBADMSG;
-        event_done(data, controld_api);
         return NULL;
     }
 
@@ -138,7 +79,6 @@ controld_event_reply(data_t *data, pcmk_ipc_api_t *controld_api,
         out->err(out, "error: Unknown reply type %d from controller",
                  reply->reply_type);
         data->rc = EBADMSG;
-        event_done(data, controld_api);
         return NULL;
     }
 
@@ -172,9 +112,8 @@ controller_status_event_cb(pcmk_ipc_api_t *controld_api,
                      reply->data.ping.sys_from, reply->host_from,
                      reply->data.ping.fsa_state, reply->data.ping.result);
         data->rc = pcmk_rc_ok;
+        data->reply_received = true;
     }
-
-    event_done(data, controld_api);
 }
 
 /*!
@@ -203,9 +142,8 @@ designated_controller_event_cb(pcmk_ipc_api_t *controld_api,
     if (reply != NULL) {
         out->message(out, "dc", reply->host_from);
         data->rc = pcmk_rc_ok;
+        data->reply_received = true;
     }
-
-    event_done(data, controld_api);
 }
 
 /*!
@@ -233,7 +171,6 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
             if (data->rc == ECONNRESET) { // Unexpected
                 out->err(out, "error: Lost connection to pacemakerd");
             }
-            event_done(data, pacemakerd_api);
             return;
 
         case pcmk_ipc_event_reply:
@@ -243,15 +180,9 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
             return;
     }
 
-    if (data->message_timer_id != 0) {
-        g_source_remove(data->message_timer_id);
-        data->message_timer_id = 0;
-    }
-
     if (status != CRM_EX_OK) {
         out->err(out, "error: Bad reply from pacemakerd: %s",
                  crm_exit_str(status));
-        event_done(data, pacemakerd_api);
         data->rc = EBADMSG;
         return;
     }
@@ -259,10 +190,11 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
     if (reply->reply_type != pcmk_pacemakerd_reply_ping) {
         out->err(out, "error: Unknown reply type %d from pacemakerd",
                  reply->reply_type);
-        event_done(data, pacemakerd_api);
         data->rc = EBADMSG;
         return;
     }
+
+    data->reply_received = true;
 
     // Parse desired information from reply
     data->pcmkd_state = reply->data.ping.state;
@@ -289,7 +221,6 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
                      "query failed", NULL);
     }
     data->rc = pcmk_rc_ok;
-    event_done(data, pacemakerd_api);
 }
 
 static pcmk_ipc_api_t *
@@ -333,6 +264,60 @@ ipc_connect(data_t *data, enum pcmk_ipc_server server, pcmk_ipc_callback_t cb,
 
 /*!
  * \internal
+ * \brief Poll an IPC API connection until timeout or a reply is received
+ *
+ * \param[in,out] data     API results and options
+ * \param[in,out] api      IPC API connection
+ * \param[in]     on_node  If not \p NULL, name of the node to poll (used only
+ *                         for logging)
+ *
+ * \note Sets the \p rc member of \p data on error
+ */
+static void
+poll_until_reply(data_t *data, pcmk_ipc_api_t *api, const char *on_node)
+{
+    pcmk__output_t *out = data->out;
+
+    uint64_t start_nsec = qb_util_nano_current_get();
+    uint64_t end_nsec = start_nsec;
+    uint64_t elapsed_ms = 0;
+    uint64_t remaining_ms = data->message_timeout_ms;
+
+    while (remaining_ms > 0) {
+        int rc = pcmk_poll_ipc(api, remaining_ms);
+
+        if (rc == EAGAIN) {
+            // Poll timed out
+            break;
+        }
+
+        if (rc != pcmk_rc_ok) {
+            out->err(out, "error: Failed to poll %s API%s%s: %s",
+                     pcmk_ipc_name(api, true), (on_node != NULL)? " on " : "",
+                     pcmk__s(on_node, ""), pcmk_rc_str(rc));
+            data->rc = rc;
+            return;
+        }
+
+        pcmk_dispatch_ipc(api);
+
+        if (data->reply_received) {
+            return;
+        }
+        end_nsec = qb_util_nano_current_get();
+        elapsed_ms = (end_nsec - start_nsec) / QB_TIME_NS_IN_MSEC;
+        remaining_ms = data->message_timeout_ms - elapsed_ms;
+    }
+
+    out->err(out,
+             "error: Timed out after %ums waiting for reply from %s API%s%s",
+             data->message_timeout_ms, pcmk_ipc_name(api, true),
+             (on_node != NULL)? " on " : "", pcmk__s(on_node, ""));
+    data->rc = EAGAIN;
+}
+
+/*!
+ * \internal
  * \brief Get and output controller status
  *
  * \param[in,out] out                 Output object
@@ -341,26 +326,23 @@ ipc_connect(data_t *data, enum pcmk_ipc_server server, pcmk_ipc_callback_t cb,
  * \param[in]     message_timeout_ms  How long to wait for a reply from the
  *                                    \p pacemaker-controld API. If 0,
  *                                    \p pcmk_ipc_dispatch_sync will be used.
- *                                    Otherwise, \p pcmk_ipc_dispatch_main will
- *                                    be used, and a new mainloop will be
- *                                    created for this purpose (freed before
- *                                    return).
+ *                                    Otherwise, \p pcmk_ipc_dispatch_poll will
+ *                                    be used.
  *
  * \return Standard Pacemaker return code
  */
 int
 pcmk__controller_status(pcmk__output_t *out, const char *node_name,
-                        guint message_timeout_ms)
+                        unsigned int message_timeout_ms)
 {
     data_t data = {
         .out = out,
-        .mainloop = NULL,
         .rc = pcmk_rc_ok,
-        .message_timer_id = 0,
+        .reply_received = false,
         .message_timeout_ms = message_timeout_ms,
         .pcmkd_state = pcmk_pacemakerd_state_invalid,
     };
-    enum pcmk_ipc_dispatch dispatch_type = pcmk_ipc_dispatch_main;
+    enum pcmk_ipc_dispatch dispatch_type = pcmk_ipc_dispatch_poll;
     pcmk_ipc_api_t *controld_api = NULL;
 
     if (message_timeout_ms == 0) {
@@ -378,15 +360,15 @@ pcmk__controller_status(pcmk__output_t *out, const char *node_name,
             data.rc = rc;
         }
 
-        if (dispatch_type == pcmk_ipc_dispatch_main) {
-            start_main_loop(&data);
+        if (dispatch_type == pcmk_ipc_dispatch_poll) {
+            poll_until_reply(&data, controld_api, pcmk__s(node_name, "DC"));
         }
-
         pcmk_free_ipc_api(controld_api);
     }
 
     return data.rc;
 }
+
 
 // Documented in header
 int
@@ -403,7 +385,7 @@ pcmk_controller_status(xmlNodePtr *xml, const char *node_name,
 
     pcmk__register_lib_messages(out);
 
-    rc = pcmk__controller_status(out, node_name, (guint) message_timeout_ms);
+    rc = pcmk__controller_status(out, node_name, message_timeout_ms);
     pcmk__xml_output_finish(out, xml);
     return rc;
 }
@@ -416,25 +398,23 @@ pcmk_controller_status(xmlNodePtr *xml, const char *node_name,
  * \param[in]     message_timeout_ms  How long to wait for a reply from the
  *                                    \p pacemaker-controld API. If 0,
  *                                    \p pcmk_ipc_dispatch_sync will be used.
- *                                    Otherwise, \p pcmk_ipc_dispatch_main will
- *                                    be used, and a new mainloop will be
- *                                    created for this purpose (freed before
- *                                    return).
+ *                                    Otherwise, \p pcmk_ipc_dispatch_poll will
+ *                                    be used.
  *
  * \return Standard Pacemaker return code
  */
 int
-pcmk__designated_controller(pcmk__output_t *out, guint message_timeout_ms)
+pcmk__designated_controller(pcmk__output_t *out,
+                            unsigned int message_timeout_ms)
 {
     data_t data = {
         .out = out,
-        .mainloop = NULL,
         .rc = pcmk_rc_ok,
-        .message_timer_id = 0,
+        .reply_received = false,
         .message_timeout_ms = message_timeout_ms,
         .pcmkd_state = pcmk_pacemakerd_state_invalid,
     };
-    enum pcmk_ipc_dispatch dispatch_type = pcmk_ipc_dispatch_main;
+    enum pcmk_ipc_dispatch dispatch_type = pcmk_ipc_dispatch_poll;
     pcmk_ipc_api_t *controld_api = NULL;
 
     if (message_timeout_ms == 0) {
@@ -452,10 +432,9 @@ pcmk__designated_controller(pcmk__output_t *out, guint message_timeout_ms)
             data.rc = rc;
         }
 
-        if (dispatch_type == pcmk_ipc_dispatch_main) {
-            start_main_loop(&data);
+        if (dispatch_type == pcmk_ipc_dispatch_poll) {
+            poll_until_reply(&data, controld_api, "DC");
         }
-
         pcmk_free_ipc_api(controld_api);
     }
 
@@ -476,7 +455,7 @@ pcmk_designated_controller(xmlNodePtr *xml, unsigned int message_timeout_ms)
 
     pcmk__register_lib_messages(out);
 
-    rc = pcmk__designated_controller(out, (guint) message_timeout_ms);
+    rc = pcmk__designated_controller(out, message_timeout_ms);
     pcmk__xml_output_finish(out, xml);
     return rc;
 }
@@ -490,10 +469,8 @@ pcmk_designated_controller(xmlNodePtr *xml, unsigned int message_timeout_ms)
  * \param[in]     message_timeout_ms  How long to wait for a reply from the
  *                                    \p pacemakerd API. If 0,
  *                                    \p pcmk_ipc_dispatch_sync will be used.
- *                                    Otherwise, \p pcmk_ipc_dispatch_main will
- *                                    be used, and a new mainloop will be
- *                                    created for this purpose (freed before
- *                                    return).
+ *                                    Otherwise, \p pcmk_ipc_dispatch_poll will
+ *                                    be used.
  * \param[out]    state               Where to store the \p pacemakerd state, if
  *                                    not \p NULL
  *
@@ -506,18 +483,17 @@ pcmk_designated_controller(xmlNodePtr *xml, unsigned int message_timeout_ms)
  */
 int
 pcmk__pacemakerd_status(pcmk__output_t *out, const char *ipc_name,
-                        guint message_timeout_ms,
+                        unsigned int message_timeout_ms,
                         enum pcmk_pacemakerd_state *state)
 {
     data_t data = {
         .out = out,
-        .mainloop = NULL,
-        .rc = pcmk_rc_ipc_unresponsive,
-        .message_timer_id = 0,
+        .rc = pcmk_rc_ok,
+        .reply_received = false,
         .message_timeout_ms = message_timeout_ms,
         .pcmkd_state = pcmk_pacemakerd_state_invalid,
     };
-    enum pcmk_ipc_dispatch dispatch_type = pcmk_ipc_dispatch_main;
+    enum pcmk_ipc_dispatch dispatch_type = pcmk_ipc_dispatch_poll;
     pcmk_ipc_api_t *pacemakerd_api = NULL;
 
     if (message_timeout_ms == 0) {
@@ -534,8 +510,8 @@ pcmk__pacemakerd_status(pcmk__output_t *out, const char *ipc_name,
             data.rc = rc;
         }
 
-        if (dispatch_type == pcmk_ipc_dispatch_main) {
-            start_main_loop(&data);
+        if (dispatch_type == pcmk_ipc_dispatch_poll) {
+            poll_until_reply(&data, pacemakerd_api, NULL);
         }
         pcmk_free_ipc_api(pacemakerd_api);
     }
@@ -561,8 +537,7 @@ pcmk_pacemakerd_status(xmlNodePtr *xml, const char *ipc_name,
 
     pcmk__register_lib_messages(out);
 
-    rc = pcmk__pacemakerd_status(out, ipc_name, (guint) message_timeout_ms,
-                                 NULL);
+    rc = pcmk__pacemakerd_status(out, ipc_name, message_timeout_ms, NULL);
     pcmk__xml_output_finish(out, xml);
     return rc;
 }

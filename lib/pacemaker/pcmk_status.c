@@ -239,7 +239,7 @@ pcmk__status(pcmk__output_t *out, cib_t *cib,
              enum pcmk__fence_history fence_history, uint32_t show,
              uint32_t show_opts, const char *only_node, const char *only_rsc,
              const char *neg_location_prefix, bool simple_output,
-             guint timeout_ms)
+             unsigned int timeout_ms)
 {
     xmlNode *current_cib = NULL;
     int rc = pcmk_rc_ok;
