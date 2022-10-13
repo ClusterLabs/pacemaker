@@ -2037,14 +2037,14 @@ rule_check_xml(pcmk__output_t *out, va_list args)
     }
 }
 
-PCMK__OUTPUT_ARGS("result-code", "int", "char *", "char *");
+PCMK__OUTPUT_ARGS("result-code", "int", "char *", "char *")
 static int
 result_code_none(pcmk__output_t *out, va_list args)
 {
     return pcmk_rc_no_output;
 }
 
-PCMK__OUTPUT_ARGS("result-code", "int", "char *", "char *");
+PCMK__OUTPUT_ARGS("result-code", "int", "char *", "char *")
 static int
 result_code_text(pcmk__output_t *out, va_list args)
 {
@@ -2099,7 +2099,7 @@ result_code_text(pcmk__output_t *out, va_list args)
     return out->info(out, "% *d", code_width, code);
 }
 
-PCMK__OUTPUT_ARGS("result-code", "int", "char *", "char *");
+PCMK__OUTPUT_ARGS("result-code", "int", "char *", "char *")
 static int
 result_code_xml(pcmk__output_t *out, va_list args)
 {
