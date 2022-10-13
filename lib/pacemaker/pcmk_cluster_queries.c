@@ -177,15 +177,28 @@ controller_status_event_cb(pcmk_ipc_api_t *controld_api,
     event_done(data, controld_api);
 }
 
+/*!
+ * \internal
+ * \brief Process a designated controller IPC event
+ *
+ * \param[in,out] controld_api  Controller connection
+ * \param[in]     event_type    Type of event that occurred
+ * \param[in]     status        Event status
+ * \param[in,out] event_data    \p pcmk_controld_api_reply_t object containing
+ *                              event-specific data
+ * \param[in,out] user_data     \p data_t object for API results and options
+ */
 static void
 designated_controller_event_cb(pcmk_ipc_api_t *controld_api,
-                    enum pcmk_ipc_event event_type, crm_exit_t status,
-                    void *event_data, void *user_data)
+                               enum pcmk_ipc_event event_type,
+                               crm_exit_t status, void *event_data,
+                               void *user_data)
 {
-    data_t *data = user_data;
+    data_t *data = (data_t *) user_data;
     pcmk__output_t *out = data->out;
     pcmk_controld_api_reply_t *reply = controld_event_reply(data, controld_api,
-        event_type, status, event_data);
+                                                            event_type, status,
+                                                            event_data);
 
     if (reply != NULL) {
         out->message(out, "dc", reply->host_from);
@@ -384,6 +397,21 @@ pcmk_controller_status(xmlNodePtr *xml, const char *node_name,
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Get and output designated controller node name
+ *
+ * \param[in,out] out                 Output object
+ * \param[in]     message_timeout_ms  How long to wait for a reply from the
+ *                                    \p pacemaker-controld API. If 0,
+ *                                    \p pcmk_ipc_dispatch_sync will be used.
+ *                                    Otherwise, \p pcmk_ipc_dispatch_main will
+ *                                    be used, and a new mainloop will be
+ *                                    created for this purpose (freed before
+ *                                    return).
+ *
+ * \return Standard Pacemaker return code
+ */
 int
 pcmk__designated_controller(pcmk__output_t *out, guint message_timeout_ms)
 {
@@ -408,7 +436,7 @@ pcmk__designated_controller(pcmk__output_t *out, guint message_timeout_ms)
     if (controld_api != NULL) {
         int rc = pcmk_controld_api_ping(controld_api, NULL);
         if (rc != pcmk_rc_ok) {
-            out->err(out, "error: Could not ping controller API: %s",
+            out->err(out, "error: Could not ping controller API on DC: %s",
                      pcmk_rc_str(rc));
             data.rc = rc;
         }
@@ -423,6 +451,7 @@ pcmk__designated_controller(pcmk__output_t *out, guint message_timeout_ms)
     return data.rc;
 }
 
+// Documented in header
 int
 pcmk_designated_controller(xmlNodePtr *xml, unsigned int message_timeout_ms)
 {
