@@ -159,17 +159,16 @@ default_includes(mon_output_format_t fmt) {
         case mon_output_monitor:
         case mon_output_plain:
         case mon_output_console:
-            return pcmk_section_summary | pcmk_section_nodes | pcmk_section_resources |
-                   pcmk_section_failures;
+        case mon_output_html:
+        case mon_output_cgi:
+            return pcmk_section_summary
+                   |pcmk_section_nodes
+                   |pcmk_section_resources
+                   |pcmk_section_failures;
 
         case mon_output_xml:
         case mon_output_legacy_xml:
             return all_includes(fmt);
-
-        case mon_output_html:
-        case mon_output_cgi:
-            return pcmk_section_summary | pcmk_section_nodes | pcmk_section_resources |
-                   pcmk_section_failures;
 
         default:
             return 0;
