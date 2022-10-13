@@ -37,52 +37,86 @@ typedef struct {
 
 /*!
  * \internal
- * \brief Process a reply from the controller IPC API
+ * \brief Validate a reply event from an IPC API
  *
- * \param[in,out] data          API results and options
- * \param[in,out] controld_api  Controller connection
- * \param[in]     event_type    Type of event that occurred
- * \param[in]     status        Event status
- * \param[in]     event_data    \p pcmk_controld_api_reply_t object containing
- *                              event-specific data
+ * \param[in,out] data        API results and options
+ * \param[in]     api         IPC API connection
+ * \param[in]     event_type  Type of event that occurred
+ * \param[in]     status      Event status
+ * \param[in]     event_data  \p pcmk_controld_api_reply_t object containing
+ *                            event-specific data
+ * \param[in]     server      Which Pacemaker daemon \p api is connected to
+ *
+ * \return Standard Pacemaker return code
  */
-static pcmk_controld_api_reply_t *
-controld_event_reply(data_t *data, pcmk_ipc_api_t *controld_api,
+static int
+validate_reply_event(data_t *data, const pcmk_ipc_api_t *api,
                      enum pcmk_ipc_event event_type, crm_exit_t status,
-                     const void *event_data)
+                     const void *event_data, enum pcmk_ipc_server server)
 {
     pcmk__output_t *out = data->out;
-    pcmk_controld_api_reply_t *reply = event_data;
+    bool valid_reply = false;
+    int reply_type = -1;
 
     switch (event_type) {
-        case pcmk_ipc_event_disconnect:
-            if (data->rc == ECONNRESET) { // Unexpected
-                out->err(out, "error: Lost connection to controller");
-            }
-            return NULL;
-
         case pcmk_ipc_event_reply:
             break;
 
+        case pcmk_ipc_event_disconnect:
+            if (data->rc == ECONNRESET) { // Unexpected
+                out->err(out, "error: Lost connection to %s",
+                         pcmk_ipc_name(api, true));
+            }
+            // Nothing bad but not the reply we're looking for
+            return ENOTSUP;
+
         default:
-            return NULL;
+            // Ditto
+            return ENOTSUP;
     }
 
     if (status != CRM_EX_OK) {
-        out->err(out, "error: Bad reply from controller: %s",
-                 crm_exit_str(status));
+        out->err(out, "error: Bad reply from %s: %s",
+                 pcmk_ipc_name(api, true), crm_exit_str(status));
         data->rc = EBADMSG;
-        return NULL;
+        return data->rc;
     }
 
-    if (reply->reply_type != pcmk_controld_reply_ping) {
-        out->err(out, "error: Unknown reply type %d from controller",
-                 reply->reply_type);
-        data->rc = EBADMSG;
-        return NULL;
+    switch (server) {
+        case pcmk_ipc_controld:
+            {
+                const pcmk_controld_api_reply_t *reply = NULL;
+
+                reply = (const pcmk_controld_api_reply_t *) event_data;
+                valid_reply = (reply->reply_type == pcmk_controld_reply_ping);
+                reply_type = (int) reply->reply_type;
+            }
+            break;
+        case pcmk_ipc_pacemakerd:
+            {
+                const pcmk_pacemakerd_api_reply_t *reply = NULL;
+
+                reply = (const pcmk_pacemakerd_api_reply_t *) event_data;
+                valid_reply = (reply->reply_type == pcmk_pacemakerd_reply_ping);
+                reply_type = (int) reply->reply_type;
+            }
+            break;
+        default:
+            out->err(out, "error: Unsupported IPC server type %s",
+                     pcmk_ipc_name(api, true));
+            data->rc = EINVAL;
+            return data->rc;
     }
 
-    return reply;
+    if (!valid_reply) {
+        out->err(out, "error: Unknown reply type %d from %s",
+                 reply_type, pcmk_ipc_name(api, true));
+        data->rc = EBADMSG;
+        return data->rc;
+    }
+
+    data->reply_received = true;
+    return pcmk_rc_ok;
 }
 
 /*!
@@ -103,16 +137,16 @@ controller_status_event_cb(pcmk_ipc_api_t *controld_api,
 {
     data_t *data = (data_t *) user_data;
     pcmk__output_t *out = data->out;
-    pcmk_controld_api_reply_t *reply = controld_event_reply(data, controld_api,
-                                                            event_type, status,
-                                                            event_data);
+    pcmk_controld_api_reply_t *reply = (pcmk_controld_api_reply_t *) event_data;
 
-    if (reply != NULL) {
+    int rc = validate_reply_event(data, controld_api, event_type, status,
+                                  event_data, pcmk_ipc_controld);
+
+    if (rc == pcmk_rc_ok) {
         out->message(out, "health",
                      reply->data.ping.sys_from, reply->host_from,
                      reply->data.ping.fsa_state, reply->data.ping.result);
         data->rc = pcmk_rc_ok;
-        data->reply_received = true;
     }
 }
 
@@ -135,14 +169,14 @@ designated_controller_event_cb(pcmk_ipc_api_t *controld_api,
 {
     data_t *data = (data_t *) user_data;
     pcmk__output_t *out = data->out;
-    pcmk_controld_api_reply_t *reply = controld_event_reply(data, controld_api,
-                                                            event_type, status,
-                                                            event_data);
+    pcmk_controld_api_reply_t *reply = (pcmk_controld_api_reply_t *) event_data;
 
-    if (reply != NULL) {
+    int rc = validate_reply_event(data, controld_api, event_type, status,
+                                  event_data, pcmk_ipc_controld);
+
+    if (rc == pcmk_rc_ok) {
         out->message(out, "dc", reply->host_from);
         data->rc = pcmk_rc_ok;
-        data->reply_received = true;
     }
 }
 
@@ -164,37 +198,15 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
 {
     data_t *data = user_data;
     pcmk__output_t *out = data->out;
-    pcmk_pacemakerd_api_reply_t *reply = event_data;
+    pcmk_pacemakerd_api_reply_t *reply =
+        (pcmk_pacemakerd_api_reply_t *) event_data;
 
-    switch (event_type) {
-        case pcmk_ipc_event_disconnect:
-            if (data->rc == ECONNRESET) { // Unexpected
-                out->err(out, "error: Lost connection to pacemakerd");
-            }
-            return;
+    int rc = validate_reply_event(data, pacemakerd_api, event_type, status,
+                                  event_data, pcmk_ipc_pacemakerd);
 
-        case pcmk_ipc_event_reply:
-            break;
-
-        default:
-            return;
-    }
-
-    if (status != CRM_EX_OK) {
-        out->err(out, "error: Bad reply from pacemakerd: %s",
-                 crm_exit_str(status));
-        data->rc = EBADMSG;
+    if (rc != pcmk_rc_ok) {
         return;
     }
-
-    if (reply->reply_type != pcmk_pacemakerd_reply_ping) {
-        out->err(out, "error: Unknown reply type %d from pacemakerd",
-                 reply->reply_type);
-        data->rc = EBADMSG;
-        return;
-    }
-
-    data->reply_received = true;
 
     // Parse desired information from reply
     data->pcmkd_state = reply->data.ping.state;
