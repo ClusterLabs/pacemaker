@@ -710,6 +710,8 @@ AC_DEFINE_UNQUOTED([PCMK_GNUTLS_PRIORITIES], ["$PCMK_GNUTLS_PRIORITIES"],
 AS_IF([test x"${BUG_URL}" = x""],
       [BUG_URL="https://bugs.clusterlabs.org/enter_bug.cgi?product=Pacemaker"])
 AC_SUBST(BUG_URL)
+AC_DEFINE_UNQUOTED([PCMK__BUG_URL], ["$BUG_URL"],
+                   [Where bugs should be reported])
 
 for j in prefix exec_prefix bindir sbindir libexecdir datadir sysconfdir \
     sharedstatedir localstatedir libdir includedir oldincludedir infodir \
