@@ -2037,20 +2037,20 @@ rule_check_xml(pcmk__output_t *out, va_list args)
     }
 }
 
-PCMK__OUTPUT_ARGS("result-code", "int", "char *", "char *")
+PCMK__OUTPUT_ARGS("result-code", "int", "const char *", "const char *")
 static int
 result_code_none(pcmk__output_t *out, va_list args)
 {
     return pcmk_rc_no_output;
 }
 
-PCMK__OUTPUT_ARGS("result-code", "int", "char *", "char *")
+PCMK__OUTPUT_ARGS("result-code", "int", "const char *", "const char *")
 static int
 result_code_text(pcmk__output_t *out, va_list args)
 {
     int code = va_arg(args, int);
-    char *name = va_arg(args, char *);
-    char *desc = va_arg(args, char *);
+    const char *name = va_arg(args, const char *);
+    const char *desc = va_arg(args, const char *);
 
     static int code_width = 0;
 
@@ -2099,13 +2099,13 @@ result_code_text(pcmk__output_t *out, va_list args)
     return out->info(out, "% *d", code_width, code);
 }
 
-PCMK__OUTPUT_ARGS("result-code", "int", "char *", "char *")
+PCMK__OUTPUT_ARGS("result-code", "int", "const char *", "const char *")
 static int
 result_code_xml(pcmk__output_t *out, va_list args)
 {
     int code = va_arg(args, int);
-    char *name = va_arg(args, char *);
-    char *desc = va_arg(args, char *);
+    const char *name = va_arg(args, const char *);
+    const char *desc = va_arg(args, const char *);
 
     char *code_str = pcmk__itoa(code);
 
