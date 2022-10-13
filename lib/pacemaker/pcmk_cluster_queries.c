@@ -208,6 +208,17 @@ designated_controller_event_cb(pcmk_ipc_api_t *controld_api,
     event_done(data, controld_api);
 }
 
+/*!
+ * \internal
+ * \brief Process a \p pacemakerd status IPC event
+ *
+ * \param[in,out] pacemakerd_api  \p pacemakerd connection
+ * \param[in]     event_type      Type of event that occurred
+ * \param[in]     status          Event status
+ * \param[in,out] event_data      \p pcmk_pacemakerd_api_reply_t object
+ *                                containing event-specific data
+ * \param[in,out] user_data       \p data_t object for API results and options
+ */
 static void
 pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
                     enum pcmk_ipc_event event_type, crm_exit_t status,
@@ -239,7 +250,7 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
 
     if (status != CRM_EX_OK) {
         out->err(out, "error: Bad reply from pacemakerd: %s",
-                crm_exit_str(status));
+                 crm_exit_str(status));
         event_done(data, pacemakerd_api);
         data->rc = EBADMSG;
         return;
@@ -247,7 +258,7 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
 
     if (reply->reply_type != pcmk_pacemakerd_reply_ping) {
         out->err(out, "error: Unknown reply type %d from pacemakerd",
-                reply->reply_type);
+                 reply->reply_type);
         event_done(data, pacemakerd_api);
         data->rc = EBADMSG;
         return;
@@ -479,8 +490,8 @@ pcmk_designated_controller(xmlNodePtr *xml, unsigned int message_timeout_ms)
  * \param[in]     message_timeout_ms  How long to wait for a reply from the
  *                                    \p pacemakerd API. If 0,
  *                                    \p pcmk_ipc_dispatch_sync will be used.
- *                                    If positive, \p pcmk_ipc_dispatch_main
- *                                    will be used, and a new mainloop will be
+ *                                    Otherwise, \p pcmk_ipc_dispatch_main will
+ *                                    be used, and a new mainloop will be
  *                                    created for this purpose (freed before
  *                                    return).
  * \param[out]    state               Where to store the \p pacemakerd state, if
