@@ -290,19 +290,8 @@ pcmk__status(pcmk__output_t *out, cib_t *cib,
     }
 
 done:
-    if (stonith != NULL) {
-        if (stonith->state != stonith_disconnected) {
-            stonith->cmds->remove_notification(stonith, NULL);
-            stonith->cmds->disconnect(stonith);
-        }
-
-        stonith_api_delete(stonith);
-    }
-
-    if (current_cib != NULL) {
-        free_xml(current_cib);
-    }
-
+    stonith_api_delete(stonith);
+    free_xml(current_cib);
     return pcmk_rc_ok;
 }
 
