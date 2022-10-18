@@ -2085,16 +2085,22 @@ can_fence_host_with_device(stonith_device_t *dev,
                            struct device_search_s *search)
 {
     gboolean can = FALSE;
-    const char *check_type = NULL;
+    const char *check_type = "Internal bug";
     const char *target = NULL;
     const char *alias = NULL;
+    const char *dev_id = "Unspecified device";
     const char *action = (search == NULL)? NULL : search->action;
 
     CRM_CHECK((dev != NULL) && (action != NULL), goto search_report_results);
 
+    if (dev->id != NULL) {
+        dev_id = dev->id;
+    }
+
     target = search->host;
     if (target == NULL) {
         can = TRUE;
+        check_type = "No target";
         goto search_report_results;
     }
 
@@ -2108,17 +2114,16 @@ can_fence_host_with_device(stonith_device_t *dev,
         if (!localhost_is_eligible(dev, "reboot", target, search->allow_suicide)
             && !localhost_is_eligible(dev, "off", target, search->allow_suicide)
             && !localhost_is_eligible(dev, "on", target, FALSE)) {
+            check_type = "This node is not allowed to execute action";
             goto search_report_results;
         }
     } else if (!localhost_is_eligible(dev, action, target,
                                       search->allow_suicide)) {
+        check_type = "This node is not allowed to execute action";
         goto search_report_results;
     }
 
     alias = g_hash_table_lookup(dev->aliases, target);
-    if (alias == NULL) {
-        alias = target;
-    }
 
     check_type = target_list_type(dev);
 
@@ -2146,11 +2151,11 @@ can_fence_host_with_device(stonith_device_t *dev,
 
             if (device_timeout > search->per_device_timeout) {
                 crm_notice("Since the pcmk_list_timeout(%ds) parameter of %s is larger than stonith-timeout(%ds), timeout may occur",
-                    device_timeout, dev->id, search->per_device_timeout);
+                    device_timeout, dev_id, search->per_device_timeout);
             }
 
             crm_trace("Running '%s' to check whether %s is eligible to fence %s (%s)",
-                      check_type, dev->id, target, action);
+                      check_type, dev_id, target, action);
 
             schedule_internal_command(__func__, dev, "list", NULL,
                                       search->per_device_timeout, search, dynamic_list_search_cb);
@@ -2159,7 +2164,8 @@ can_fence_host_with_device(stonith_device_t *dev,
             return;
         }
 
-        if (pcmk__str_in_list(alias, dev->targets, pcmk__str_casei)) {
+        if (pcmk__str_in_list(((alias == NULL)? target : alias), dev->targets,
+                              pcmk__str_casei)) {
             can = TRUE;
         }
 
@@ -2168,11 +2174,11 @@ can_fence_host_with_device(stonith_device_t *dev,
 
         if (device_timeout > search->per_device_timeout) {
             crm_notice("Since the pcmk_status_timeout(%ds) parameter of %s is larger than stonith-timeout(%ds), timeout may occur",
-                device_timeout, dev->id, search->per_device_timeout);
+                device_timeout, dev_id, search->per_device_timeout);
         }
 
         crm_trace("Running '%s' to check whether %s is eligible to fence %s (%s)",
-                  check_type, dev->id, target, action);
+                  check_type, dev_id, target, action);
         schedule_internal_command(__func__, dev, "status", target,
                                   search->per_device_timeout, search, status_search_cb);
         /* we'll respond to this search request async in the cb */
@@ -2182,17 +2188,13 @@ can_fence_host_with_device(stonith_device_t *dev,
         check_type = "Invalid " PCMK_STONITH_HOST_CHECK;
     }
 
-    if (pcmk__str_eq(target, alias, pcmk__str_casei)) {
-        crm_info("%s is%s eligible to fence (%s) %s: %s",
-                 dev->id, (can? "" : " not"), action, target, check_type);
-    } else {
-        crm_info("%s is%s eligible to fence (%s) %s (aka. '%s'): %s",
-                 dev->id, (can? "" : " not"), action, target, alias,
-                 check_type);
-    }
-
   search_report_results:
-    search_devices_record_result(search, dev ? dev->id : NULL, can);
+    crm_info("%s is%s eligible to fence (%s) %s%s%s%s: %s",
+             dev_id, (can? "" : " not"), pcmk__s(action, "unspecified action"),
+             pcmk__s(target, "unspecified target"),
+             (alias == NULL)? "" : " (as '", pcmk__s(alias, ""),
+             (alias == NULL)? "" : "')", check_type);
+    search_devices_record_result(search, ((dev == NULL)? NULL : dev_id), can);
 }
 
 static void
