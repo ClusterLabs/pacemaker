@@ -2104,6 +2104,13 @@ can_fence_host_with_device(stonith_device_t *dev,
         goto search_report_results;
     }
 
+    // Short-circuit if device does not support action
+    if (pcmk__str_eq(action, "on", pcmk__str_none)
+        && !pcmk_is_set(dev->flags, st_device_supports_on)) {
+        check_type = "Agent does not support 'on'";
+        goto search_report_results;
+    }
+
     /* Short-circuit query if this host is not allowed to perform the action */
     if (pcmk__str_eq(action, "reboot", pcmk__str_casei)) {
         /* A "reboot" *might* get remapped to "off" then "on", so short-circuit
