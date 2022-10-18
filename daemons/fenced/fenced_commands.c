@@ -2081,42 +2081,43 @@ localhost_is_eligible(const stonith_device_t *device, const char *action,
 }
 
 static void
-can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *search)
+can_fence_host_with_device(stonith_device_t *dev,
+                           struct device_search_s *search)
 {
     gboolean can = FALSE;
     const char *check_type = NULL;
-    const char *host = search->host;
+    const char *target = NULL;
     const char *alias = NULL;
+    const char *action = (search == NULL)? NULL : search->action;
 
-    CRM_LOG_ASSERT(dev != NULL);
+    CRM_CHECK((dev != NULL) && (action != NULL), goto search_report_results);
 
-    if (dev == NULL) {
-        goto search_report_results;
-    } else if (host == NULL) {
+    target = search->host;
+    if (target == NULL) {
         can = TRUE;
         goto search_report_results;
     }
 
     /* Short-circuit query if this host is not allowed to perform the action */
-    if (pcmk__str_eq(search->action, "reboot", pcmk__str_casei)) {
+    if (pcmk__str_eq(action, "reboot", pcmk__str_casei)) {
         /* A "reboot" *might* get remapped to "off" then "on", so short-circuit
          * only if all three are disallowed. If only one or two are disallowed,
          * we'll report that with the results. We never allow suicide for
          * remapped "on" operations because the host is off at that point.
          */
-        if (!localhost_is_eligible(dev, "reboot", host, search->allow_suicide)
-            && !localhost_is_eligible(dev, "off", host, search->allow_suicide)
-            && !localhost_is_eligible(dev, "on", host, FALSE)) {
+        if (!localhost_is_eligible(dev, "reboot", target, search->allow_suicide)
+            && !localhost_is_eligible(dev, "off", target, search->allow_suicide)
+            && !localhost_is_eligible(dev, "on", target, FALSE)) {
             goto search_report_results;
         }
-    } else if (!localhost_is_eligible(dev, search->action, host,
+    } else if (!localhost_is_eligible(dev, action, target,
                                       search->allow_suicide)) {
         goto search_report_results;
     }
 
-    alias = g_hash_table_lookup(dev->aliases, host);
+    alias = g_hash_table_lookup(dev->aliases, target);
     if (alias == NULL) {
-        alias = host;
+        alias = target;
     }
 
     check_type = target_list_type(dev);
@@ -2130,10 +2131,10 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
          * Only use if all hosts on which the device can be active can always fence all listed hosts
          */
 
-        if (pcmk__str_in_list(host, dev->targets, pcmk__str_casei)) {
+        if (pcmk__str_in_list(target, dev->targets, pcmk__str_casei)) {
             can = TRUE;
         } else if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_MAP)
-                   && g_hash_table_lookup(dev->aliases, host)) {
+                   && g_hash_table_lookup(dev->aliases, target)) {
             can = TRUE;
         }
 
@@ -2149,7 +2150,7 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
             }
 
             crm_trace("Running '%s' to check whether %s is eligible to fence %s (%s)",
-                      check_type, dev->id, search->host, search->action);
+                      check_type, dev->id, target, action);
 
             schedule_internal_command(__func__, dev, "list", NULL,
                                       search->per_device_timeout, search, dynamic_list_search_cb);
@@ -2171,8 +2172,8 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
         }
 
         crm_trace("Running '%s' to check whether %s is eligible to fence %s (%s)",
-                  check_type, dev->id, search->host, search->action);
-        schedule_internal_command(__func__, dev, "status", search->host,
+                  check_type, dev->id, target, action);
+        schedule_internal_command(__func__, dev, "status", target,
                                   search->per_device_timeout, search, status_search_cb);
         /* we'll respond to this search request async in the cb */
         return;
@@ -2181,12 +2182,12 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
         check_type = "Invalid " PCMK_STONITH_HOST_CHECK;
     }
 
-    if (pcmk__str_eq(host, alias, pcmk__str_casei)) {
+    if (pcmk__str_eq(target, alias, pcmk__str_casei)) {
         crm_info("%s is%s eligible to fence (%s) %s: %s",
-                 dev->id, (can? "" : " not"), search->action, host, check_type);
+                 dev->id, (can? "" : " not"), action, target, check_type);
     } else {
         crm_info("%s is%s eligible to fence (%s) %s (aka. '%s'): %s",
-                 dev->id, (can? "" : " not"), search->action, host, alias,
+                 dev->id, (can? "" : " not"), action, target, alias,
                  check_type);
     }
 
