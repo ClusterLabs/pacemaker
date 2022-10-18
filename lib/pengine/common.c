@@ -186,26 +186,26 @@ static pcmk__cluster_option_t pe_opts[] = {
     {
         "stop-all-resources", NULL, "boolean", NULL,
         "false", pcmk__valid_boolean,
-        "Whether the cluster should stop all active resources",
+        N_("Whether the cluster should stop all active resources"),
         NULL
     },
     {
         "stop-orphan-resources", NULL, "boolean", NULL,
         "true", pcmk__valid_boolean,
-        "Whether to stop resources that were removed from the configuration",
+        N_("Whether to stop resources that were removed from the configuration"),
         NULL
     },
     {
         "stop-orphan-actions", NULL, "boolean", NULL,
         "true", pcmk__valid_boolean,
-        "Whether to cancel recurring actions removed from the configuration",
+        N_("Whether to cancel recurring actions removed from the configuration"),
         NULL
     },
     {
         "remove-after-stop", NULL, "boolean", NULL,
         "false", pcmk__valid_boolean,
-        "*** Deprecated *** Whether to remove stopped resources from "
-            "the executor",
+        N_("*** Deprecated *** Whether to remove stopped resources from "
+            "the executor"),
         "Values other than default are poorly tested and potentially dangerous."
             " This option will be removed in a future release."
     },
