@@ -2080,6 +2080,45 @@ localhost_is_eligible(const stonith_device_t *device, const char *action,
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Check if local node is allowed to execute (possibly remapped) action
+ *
+ * \param[in] device      Fence device to check
+ * \param[in] action      Fence action to check
+ * \param[in] target      Node name of fence target
+ * \param[in] allow_self  Whether self-fencing is allowed for this operation
+ *
+ * \return true if local node is allowed to execute \p action or any actions it
+ *         might be remapped to, otherwise false
+ */
+static bool
+localhost_is_eligible_with_remap(const stonith_device_t *device,
+                                 const char *action, const char *target,
+                                 gboolean allow_self)
+{
+    // Check exact action
+    if (localhost_is_eligible(device, action, target, allow_self)) {
+        return true;
+    }
+
+    // Check potential remaps
+
+    if (pcmk__str_eq(action, "reboot", pcmk__str_none)) {
+        /* "reboot" might get remapped to "off" then "on", so even if reboot is
+         * disallowed, return true if either of those is allowed. We'll report
+         * the disallowed actions with the results. We never allow self-fencing
+         * for remapped "on" actions because the target is off at that point.
+         */
+        if (localhost_is_eligible(device, "off", target, allow_self)
+            || localhost_is_eligible(device, "on", target, FALSE)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 static void
 can_fence_host_with_device(stonith_device_t *dev,
                            struct device_search_s *search)
@@ -2104,45 +2143,27 @@ can_fence_host_with_device(stonith_device_t *dev,
         goto search_report_results;
     }
 
-    // Short-circuit if device does not support action
+    /* Answer immediately if the device does not support the action
+     * or the local node is not allowed to perform it
+     */
     if (pcmk__str_eq(action, "on", pcmk__str_none)
         && !pcmk_is_set(dev->flags, st_device_supports_on)) {
         check_type = "Agent does not support 'on'";
         goto search_report_results;
-    }
 
-    /* Short-circuit query if this host is not allowed to perform the action */
-    if (pcmk__str_eq(action, "reboot", pcmk__str_none)) {
-        /* A "reboot" *might* get remapped to "off" then "on", so short-circuit
-         * only if all three are disallowed. If only one or two are disallowed,
-         * we'll report that with the results. We never allow suicide for
-         * remapped "on" operations because the host is off at that point.
-         */
-        if (!localhost_is_eligible(dev, "reboot", target, search->allow_suicide)
-            && !localhost_is_eligible(dev, "off", target, search->allow_suicide)
-            && !localhost_is_eligible(dev, "on", target, FALSE)) {
-            check_type = "This node is not allowed to execute action";
-            goto search_report_results;
-        }
-    } else if (!localhost_is_eligible(dev, action, target,
-                                      search->allow_suicide)) {
+    } else if (!localhost_is_eligible_with_remap(dev, action, target,
+                                                 search->allow_suicide)) {
         check_type = "This node is not allowed to execute action";
         goto search_report_results;
     }
 
-    alias = g_hash_table_lookup(dev->aliases, target);
-
+    // Check eligibility as specified by pcmk_host_check
     check_type = target_list_type(dev);
-
+    alias = g_hash_table_lookup(dev->aliases, target);
     if (pcmk__str_eq(check_type, PCMK__VALUE_NONE, pcmk__str_casei)) {
         can = TRUE;
 
     } else if (pcmk__str_eq(check_type, "static-list", pcmk__str_casei)) {
-
-        /* Presence in the hostmap is sufficient
-         * Only use if all hosts on which the device can be active can always fence all listed hosts
-         */
-
         if (pcmk__str_in_list(target, dev->targets, pcmk__str_casei)) {
             can = TRUE;
         } else if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_MAP)
