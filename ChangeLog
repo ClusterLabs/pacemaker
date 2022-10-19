@@ -1,3 +1,183 @@
+* Thu Oct 20 2022 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.5-rc1
+- Changesets: 1225
+- Diff: 447 files changed, 33257 insertions(+), 21374 deletions(-)
+
+- Features added since Pacemaker-2.1.4
+  + CIB: access control lists (ACLs) for groups are supported
+  + CIB: ACL target and group XML supports "name" attribute to specify a name
+         that is not a unique XML ID
+  + CIB: deprecate pacemaker-next schema
+  + CIB: deprecate first-instance and then-instance in ordering constraints
+         and rsc-instance and with-rsc-instance in colocation constraints
+         (only usable with pacemaker-next schema)
+  + CIB: deprecate "collocated" and "ordered" meta-attributes for groups
+         (true is default, and resource sets should be used instead of false)
+  + build: support building with -D_TIME_BITS=64
+  + build: support building with compilers that are strict about void
+  + fencer: deprecate stand-alone mode
+  + agents: ClusterMon, controld, HealthCPU, ifspeed, and SysInfo agents support
+            OCF 1.1 standard
+  + agents: non-functional SystemHealth agent has been removed
+  + tools: non-functional ipmiservicelogd and notifyServicelogEvent tools have
+           been removed
+  + tools: crm_attribute supports querying all attributes on a given node
+  + tools: crm_attribute --query, --delete, and --update support
+           regular expressions
+  + tools: crm_error supports standard --output-as/--output-to arguments
+  + tools: crm_error lists all return codes if none are specified
+  + tools: crm_mon --show-detail displays the CRM feature set of each node
+           and makes display of fencing actions more technical
+  + tools: crm_resource --why checks node health
+
+- Fixes since Pacemaker-2.1.4
+  + tools: crm_error does not print spurious output when given a negative
+           return code argument (regression introduced in 2.0.4)
+  + tools: avoid crash if crm_resource is given extraneous arguments
+           (regression introduced in 2.0.5)
+  + tools: stonith_admin --validate XML output shows correct validation status
+           and errors (regressions introduced in 2.0.5 and 2.1.2)
+  + tools: crm_resource --list-operations shows pending operations as pending
+           instead of complete (regression introduced in 2.1.0)
+  + controller: move resources if appropriate after they are reordered in CIB
+                (regression introduced in 2.1.3)
+  + fencing: allow fence devices to be registered if local node is not in CIB
+             (regression introduced in 2.1.3)
+  + tools: crm_mon --one-shot succeeds even if pacemaker is shutting down
+           (regression introduced in 2.1.3)
+  + tools: avoid memory leak in crm_mon (regression introduced in 2.1.3)
+  + tools: crm_attribute --quiet outputs nothing instead of "(null)" if
+           attribute has no value (regression introduced in 2.1.3)
+  + tools: accept deprecated and unused attrd_updater --quiet option
+           (regression introduced in 2.1.3)
+  + CIB: avoid crashes when XML IDs grow very long
+  + controller: pre-load agent metadata asynchronously to avoid timeout when
+                agent's metadata action runs crm_node
+  + controller: avoid timing issue that increments resource fail count twice
+  + fencing: unfence all nodes after device configuration changes
+  + fencing: avoid memory leaks when processing topology requests
+  + fencing: ignore node that executed action when checking whether actions
+             are equivalent
+  + scheduler,controller: calculate secure digest consistently
+  + scheduler: handle corner cases in live migrations
+  + scheduler: avoid perpetual moving of bundle containers in certain situations
+  + scheduler: properly calculate resource parameter digests without history
+  + scheduler: do not enforce stop if newer monitor indicates resource was not
+               running on target of failed migrate_to
+  + scheduler: do not enforce stop on rejoined node after failed migrate_to
+  + scheduler: don't demote on expected node when multiple-active is set to
+               stop_unexpected
+  + scheduler: prevent resources running on multiple nodes after partial live
+               migration
+  + scheduler: restart resource instead of reload if extra parameters in
+               operation change
+  + schemas: Consider days, minutes, seconds, and yeardays in date expressions
+             valid
+  + schemas: Consider in_range with an end and duration valid
+  + schemas: Consider score and score-attribute optional in rules
+  + tools: crm_resource --digests uses most recent operation history entry
+  + tools: if multiple return code options are given to crm_error, use the
+           last one
+  + tools: crm_resource correctly detects if a resource is unmanaged
+           or disabled even if there are multiple settings using rules
+
+- Public API changes since Pacemaker-2.1.4
+  + libcib: add cib_api_operations_t:set_primary
+  + libcib: add cib_api_operations_t:set_secondary
+  + libcib: deprecate cib_api_operations_t:delete_absolute()
+  + libcib: deprecate cib_api_operations_t:is_master
+  + libcib: deprecate cib_api_operations_t:set_master
+  + libcib: deprecate cib_api_operations_t:set_slave
+  + libcib: deprecate cib_api_operations_t:set_slave_all
+  + libcrmcommon: deprecated XML_CIB_TAG_MASTER constant is usable again
+                  (regression introduced in 2.1.0)
+  + libcrmcommon: pcmk_ipc_api_t supports attribute manager IPC
+  + libcrmcommon: add pcmk_rc_unpack_error
+  + libcrmcommon: add CRM_EX_FAILED_PROMOTED
+  + libcrmcommon: add CRM_EX_NONE
+  + libcrmcommon: add CRM_EX_PROMOTED
+  + libcrmcommon: add pcmk_readable_score()
+  + libcrmcommon: add PCMK_XA_PROMOTED_MAX_LEGACY string constant
+  + libcrmcommon: add PCMK_XA_PROMOTED_NODE_MAX_LEGACY string constant
+  + libcrmcommon: argument to crm_time_check() is now const
+  + libcrmcommon: argument to pcmk_controld_api_replies_expected() is now const
+  + libcrmcommon: argument to pcmk_xml_attrs2nvpairs() is now const
+  + libcrmcommon: argument to xml2list() is now const
+  + libcrmcommon: argument to xml_acl_denied() is now const
+  + libcrmcommon: argument to xml_acl_enabled() is now const
+  + libcrmcommon: argument to xml_get_path() is now const
+  + libcrmcommon: arguments to crm_time_add() are now const
+  + libcrmcommon: arguments to crm_time_compare() are now const
+  + libcrmcommon: arguments to crm_time_subtract() are now const
+  + libcrmcommon: argv argument to crm_log_preinit() is now char *const *
+  + libcrmcommon: crm_time_calculate_duration() arguments are now const
+  + libcrmcommon: deprecate CRM_ATTR_RA_VERSION
+  + libcrmcommon: deprecate crm_destroy_xml()
+  + libcrmcommon: deprecate crm_ipc_server_error
+  + libcrmcommon: deprecate crm_ipc_server_info
+  + libcrmcommon: deprecate CRM_OP_LRM_QUERY
+  + libcrmcommon: deprecate crm_str()
+  + libcrmcommon: deprecate PCMK_XE_PROMOTED_MAX_LEGACY string constant
+  + libcrmcommon: deprecate PCMK_XE_PROMOTED_NODE_MAX_LEGACY constant
+  + libcrmcommon: deprecate score2char()
+  + libcrmcommon: deprecate score2char_stack()
+  + libcrmcommon: deprecate XML_ATTR_RA_VERSION
+  + libcrmcommon: deprecate xml_get_path()
+  + libcrmcommon: deprecate XML_PARANOIA_CHECKS
+  + libcrmcommon: deprecate XML_TAG_OP_VER_ATTRS
+  + libcrmcommon: deprecate XML_TAG_OP_VER_META
+  + libcrmcommon: deprecate XML_TAG_RSC_VER_ATTRS
+  + libcrmcommon: dt argument of crm_time_get_gregorian() is now const
+  + libcrmcommon: dt argument of crm_time_get_isoweek() is now const
+  + libcrmcommon: dt argument of crm_time_get_ordinal() is now const
+  + libcrmcommon: dt argument of crm_time_get_timeofday() is now const
+  + libcrmcommon: dt argument of crm_time_get_timezone() is now const
+  + libcrmcommon: first argument to create_reply() is now const
+  + libcrmcommon: first argument to crm_copy_xml_element() is now const
+  + libcrmcommon: first argument to find_xml_node() is now const
+  + libcrmcommon: first argument to get_message_xml() is now const
+  + libcrmcommon: first argument to pcmk_ipc_name() is now const
+  + libcrmcommon: first argument to xml_patch_versions() is now const
+  + libcrmcommon: last argument to crm_write_blackbox() is now const
+  + libcrmcommon: add pcmk_rc_duplicate_id
+  + libcrmcommon: add pcmk_result_get_strings()
+  + libcrmcommon: add pcmk_result_type enum
+  + libcrmcommon: add PCMK_XE_DATE_EXPRESSION constant
+  + libcrmcommon: add PCMK_XE_OP_EXPRESSION constant
+  + libcrmcommon: add PCMK_XE_RSC_EXPRESSION constant
+  + libcrmcommon: first argument to crm_time_as_string() is now const
+  + libcrmcommon: crm_time_t argument to crm_time_log_alias() is now const
+  + libcrmcommon: argument to crm_time_get_seconds() is now const
+  + libcrmcommon: argument to crm_time_get_seconds_since_epoch() is now const
+  + libcrmcommon: sixth argument to log_data_element() is now const
+  + libcrmcommon: source argument to crm_time_set() is now const
+  + libcrmcommon: source argument to crm_time_set_timet() is now const
+  + libcrmcommon: source argument to pcmk_copy_time() is now const
+  + libpacemaker: add pcmk_check_rule()
+  + libpacemaker: add pcmk_check_rules()
+  + libpacemaker: add pcmk_show_result_code()
+  + libpacemaker: add pcmk_list_result_codes()
+  + libpacemaker: add pcmk_rc_disp_flags enum
+  + libpacemaker: ipc_name argument to pcmk_pacemakerd_status() is now const
+  + libpe_rules: deprecate version_expr enum value
+  + libpe_rules: second argument to pe_eval_nvpairs() is now const
+  + libpe_status: argument to pe_rsc_is_anon_clone() is now const
+  + libpe_status: argument to pe_rsc_is_unique_clone() is now const
+  + libpe_status: deprecate enum pe_graph_flags
+  + libpe_status: first argument to pe_rsc_is_clone() is now const
+  + libpe_status: two arguments to get_rsc_attributes() are now const
+  + libpe_status: second argument to pe_eval_versioned_attributes() is now const
+  + libpe_status: second argument to pe_rsc_params() is now const
+  + libstonithd: deprecate stonith_event_t:message
+  + libstonithd: deprecate stonith_event_t:type
+  + libstonithd: last argument to stonith_api_operations_t:register_device()
+                 is now const
+  + libstonithd: last argument to stonith_api_operations_t:register_level() is
+                 now const
+  + libstonithd: last argument to
+		 stonith_api_operations_t:register_level_full() is now const
+  + libstonithd: params argument to stonith_api_operations_t:validate() is now
+                 const
+
 * Mon Jun 13 2022 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.4
 - Changesets: 17
 - Diff: 9 files changed, 52 insertions(+), 18 deletions(-)
