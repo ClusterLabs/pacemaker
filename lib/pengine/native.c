@@ -658,6 +658,8 @@ pcmk__native_output_string(const pe_resource_t *rsc, const char *name,
     if (pcmk_is_set(rsc->flags, pe_rsc_failure_ignored)) {
         have_flags = add_output_flag(outstr, "failure ignored", have_flags);
     }
+
+
     if (have_flags) {
         g_string_append_c(outstr, ')');
     }
@@ -668,7 +670,10 @@ pcmk__native_output_string(const pe_resource_t *rsc, const char *name,
         const char *desc = crm_element_value(rsc->xml, XML_ATTR_DESC);
 
         if (desc) {
-            pcmk__add_word(&outstr, 0, desc);
+            g_string_append(outstr, " (");
+            g_string_append(outstr, desc);
+            g_string_append(outstr, ")");
+
         }
     }
 
@@ -942,7 +947,8 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     char *nodes_running_on = NULL;
     const char *lock_node_name = NULL;
     int rc = pcmk_rc_no_output;
-    const char *target_role = NULL;
+    const char *target_role = NULL;    
+    const char *desc = NULL;
 
     if (rsc->meta != NULL) {
        target_role = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
@@ -965,7 +971,13 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
         lock_node_name = rsc->lock_node->details->uname;
     }
 
-    rc = pe__name_and_nvpairs_xml(out, true, "resource", 14,
+    // User-supplied description
+    if (pcmk_is_set(show_opts, pcmk_show_rsc_only)
+        || pcmk__list_of_multiple(rsc->running_on)) {
+        desc = crm_element_value(rsc->xml, XML_ATTR_DESC);
+    }
+
+    rc = pe__name_and_nvpairs_xml(out, true, "resource", 15,
              "id", rsc_printable_id(rsc),
              "resource_agent", ra_name,
              "role", rsc_state,
@@ -979,7 +991,8 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
              "failure_ignored", pe__rsc_bool_str(rsc, pe_rsc_failure_ignored),
              "nodes_running_on", nodes_running_on,
              "pending", (print_pending? native_pending_task(rsc) : NULL),
-             "locked_to", lock_node_name);
+             "locked_to", lock_node_name,
+             "description", desc);
     free(nodes_running_on);
 
     CRM_ASSERT(rc == pcmk_rc_ok);

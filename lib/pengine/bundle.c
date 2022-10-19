@@ -1233,8 +1233,10 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
     gboolean printed_header = FALSE;
     gboolean print_everything = TRUE;
 
-    CRM_ASSERT(rsc != NULL);
+    const char *desc = NULL;
 
+    CRM_ASSERT(rsc != NULL);
+    
     get_bundle_variant_data(bundle_data, rsc);
 
     if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
@@ -1270,14 +1272,21 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
         if (!printed_header) {
             printed_header = TRUE;
 
-            rc = pe__name_and_nvpairs_xml(out, true, "bundle", 7,
+            // User-supplied description
+            if (pcmk_is_set(show_opts, pcmk_show_rsc_only)
+                || pcmk__list_of_multiple(rsc->running_on)) {
+                desc = crm_element_value(rsc->xml, XML_ATTR_DESC);
+            }
+
+            rc = pe__name_and_nvpairs_xml(out, true, "bundle", 8,
                      "id", rsc->id,
                      "type", container_agent_str(bundle_data->agent_type),
                      "image", bundle_data->image,
                      "unique", pe__rsc_bool_str(rsc, pe_rsc_unique),
                      "maintenance", pe__rsc_bool_str(rsc, pe_rsc_maintenance),
                      "managed", pe__rsc_bool_str(rsc, pe_rsc_managed),
-                     "failed", pe__rsc_bool_str(rsc, pe_rsc_failed));
+                     "failed", pe__rsc_bool_str(rsc, pe_rsc_failed),
+                     "description", desc);
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
 

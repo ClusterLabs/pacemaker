@@ -786,6 +786,8 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
     gboolean printed_header = FALSE;
     gboolean print_everything = TRUE;
 
+    const char *desc = NULL;
+
     if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
         return rc;
     }
@@ -809,7 +811,12 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
         if (!printed_header) {
             printed_header = TRUE;
 
-            rc = pe__name_and_nvpairs_xml(out, true, "clone", 9,
+            // User-supplied description
+            if (pcmk_is_set(show_opts, pcmk_show_rsc_only)
+                || pcmk__list_of_multiple(rsc->running_on)) {
+                desc = crm_element_value(rsc->xml, XML_ATTR_DESC);
+            }
+            rc = pe__name_and_nvpairs_xml(out, true, "clone", 10,
                     "id", rsc->id,
                     "multi_state", pe__rsc_bool_str(rsc, pe_rsc_promotable),
                     "unique", pe__rsc_bool_str(rsc, pe_rsc_unique),
@@ -818,7 +825,8 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
                     "disabled", pcmk__btoa(pe__resource_is_disabled(rsc)),
                     "failed", pe__rsc_bool_str(rsc, pe_rsc_failed),
                     "failure_ignored", pe__rsc_bool_str(rsc, pe_rsc_failure_ignored),
-                    "target_role", configured_role_str(rsc));
+                    "target_role", configured_role_str(rsc),
+                    "description", desc);
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
 
