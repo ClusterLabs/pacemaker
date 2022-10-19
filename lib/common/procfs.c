@@ -37,7 +37,7 @@
  *       limit, but there isn't.
  */
 static int
-pcmk__procfs_process_info(struct dirent *entry, char *name, pid_t *pid)
+pcmk__procfs_process_info(const struct dirent *entry, char *name, pid_t *pid)
 {
     int fd, local_pid;
     FILE *file;
@@ -178,7 +178,7 @@ pcmk__procfs_num_cores(void)
 int
 pcmk__procfs_pid2path(pid_t pid, char path[], size_t path_size)
 {
-#if SUPPORT_PROCFS
+#if HAVE_LINUX_PROCFS
     char procfs_exe_path[PATH_MAX];
     ssize_t link_rc;
 
@@ -198,7 +198,7 @@ pcmk__procfs_pid2path(pid_t pid, char path[], size_t path_size)
     return pcmk_rc_ok;
 #else
     return EOPNOTSUPP;
-#endif
+#endif // HAVE_LINUX_PROCFS
 }
 
 /*!
@@ -210,7 +210,7 @@ pcmk__procfs_pid2path(pid_t pid, char path[], size_t path_size)
 bool
 pcmk__procfs_has_pids(void)
 {
-#if SUPPORT_PROCFS
+#if HAVE_LINUX_PROCFS
     static bool have_pids = false;
     static bool checked = false;
 
@@ -223,5 +223,5 @@ pcmk__procfs_has_pids(void)
     return have_pids;
 #else
     return false;
-#endif
+#endif // HAVE_LINUX_PROCFS
 }

@@ -14,8 +14,8 @@
       <clone id="ms1">
         <primitive id="rsc1" class="ocf" provider="pacemaker" type="Stateful">
           <operations id="rsc1-operations">
-            <op id="rsc1-monitor-master-5" interval="5" name="monitor" role="Promoted"/>
-            <op id="rsc1-monitor-slave-5" interval="5" name="monitor" role="Unpromoted"/>
+            <op id="rsc1-monitor-promoted-5" interval="5" name="monitor" role="Promoted"/>
+            <op id="rsc1-monitor-unpromoted-5" interval="5" name="monitor" role="Unpromoted"/>
           </operations>
         </primitive>
         <meta_attributes id="ms1-meta_attributes">
@@ -29,15 +29,15 @@
         </meta_attributes>
         <primitive id="rsc2" class="ocf" provider="pacemaker" type="Stateful">
           <operations id="rsc2-operations">
-            <op id="rsc2-monitor-master-5" interval="5" name="monitor" role="Promoted"/>
-            <op id="rsc2-monitor-slave-5" interval="5" name="monitor" role="Unpromoted"/>
+            <op id="rsc2-monitor-promoted-5" interval="5" name="monitor" role="Promoted"/>
+            <op id="rsc2-monitor-unpromoted-5" interval="5" name="monitor" role="Unpromoted"/>
           </operations>
         </primitive>
       </clone>
     </resources>
     <constraints>
-      <rsc_location id="ms1-master-location" rsc="ms1" role="Promoted" node="node1" score="100"/>
-      <rsc_location id="ms2-master-location" rsc="ms2" role="Promoted" node="node2" score="100"/>
+      <rsc_location id="ms1-promoted-location" rsc="ms1" role="Promoted" node="node1" score="100"/>
+      <rsc_location id="ms2-promoted-location" rsc="ms2" role="Promoted" node="node2" score="100"/>
       <rsc_order id="order-ms1-ms2" first="ms1" first-action="promote" then="ms2" then-action="start" kind="Mandatory" symmetrical="false"/>
     </constraints>
   </configuration>

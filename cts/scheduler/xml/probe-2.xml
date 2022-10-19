@@ -70,8 +70,8 @@
         <primitive id="drbd_mysql" class="ocf" provider="heartbeat" type="drbd">
           <operations>
             <op name="monitor" id="drbd_mysql_mon_normal" interval="15s" timeout="10s" role="Started"/>
-            <op name="monitor" id="drbd_mysql_mon_slave" interval="10s" timeout="10s" role="Unpromoted"/>
-            <op name="monitor" id="drbd_mysql_mon_master" interval="5s" timeout="10s" role="Promoted"/>
+            <op name="monitor" id="drbd_mysql_mon_unpromoted" interval="10s" timeout="10s" role="Unpromoted"/>
+            <op name="monitor" id="drbd_mysql_mon_promoted" interval="5s" timeout="10s" role="Promoted"/>
           </operations>
           <instance_attributes id="drbd_mysql_ia">
             <nvpair id="drbd_mysql_attr_0" name="drbd_resource" value="mysql"/>
@@ -133,8 +133,8 @@
         <primitive class="ocf" id="drbd_www" provider="heartbeat" type="drbd">
           <operations>
             <op name="monitor" id="drbd_www_mon_normal" interval="15s" timeout="10s" role="Started"/>
-            <op name="monitor" id="drbd_www_mon_slave" interval="10s" timeout="10s" role="Unpromoted"/>
-            <op name="monitor" id="drbd_www_mon_master" interval="5s" timeout="10s" role="Promoted"/>
+            <op name="monitor" id="drbd_www_mon_unpromoted" interval="10s" timeout="10s" role="Unpromoted"/>
+            <op name="monitor" id="drbd_www_mon_promoted" interval="5s" timeout="10s" role="Promoted"/>
           </operations>
           <instance_attributes id="drbd_www_ia">
             <nvpair id="drbd_www_attr_0" name="drbd_resource" value="www"/>
@@ -250,7 +250,6 @@
         <primitive id="stonith_rackpdu" class="stonith" type="external/rackpdu">
           <operations>
             <op id="stonith_rackpdu_monitor" name="monitor" interval="5s" timeout="20s"/>
-            <op id="sontith_rackpdu_start" name="start" interval="20s"/>
           </operations>
           <meta_attributes id="meta_attributes-requires">
             <nvpair id="nvpair-requires" name="requires" value="nothing"/>
@@ -295,8 +294,8 @@
           <nvpair id="status-31de4ab3-2d05-476e-8f9a-627ad6cd94ca-probe_complete" name="probe_complete" value="true"/>
         </instance_attributes>
         <instance_attributes id="master-31de4ab3-2d05-476e-8f9a-627ad6cd94ca">
-          <nvpair id="status-master-drbd_www:0-31de4ab3-2d05-476e-8f9a-627ad6cd94ca" name="master-drbd_www:0" value="75"/>
-          <nvpair id="status-master-drbd_mysql:0-31de4ab3-2d05-476e-8f9a-627ad6cd94ca" name="master-drbd_mysql:0" value="75"/>
+          <nvpair id="status-promoted-drbd_www:0-31de4ab3-2d05-476e-8f9a-627ad6cd94ca" name="master-drbd_www:0" value="75"/>
+          <nvpair id="status-promoted-drbd_mysql:0-31de4ab3-2d05-476e-8f9a-627ad6cd94ca" name="master-drbd_mysql:0" value="75"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="31de4ab3-2d05-476e-8f9a-627ad6cd94ca">
@@ -473,7 +472,7 @@
           <nvpair id="status-f36760d8-d84a-46b2-b452-4c8cac8b3396-probe_complete" name="probe_complete" value="true"/>
         </instance_attributes>
         <instance_attributes id="master-f36760d8-d84a-46b2-b452-4c8cac8b3396">
-          <nvpair id="status-master-drbd_mysql:1-f36760d8-d84a-46b2-b452-4c8cac8b3396" name="master-drbd_mysql:1" value="75"/>
+          <nvpair id="status-promoted-drbd_mysql:1-f36760d8-d84a-46b2-b452-4c8cac8b3396" name="master-drbd_mysql:1" value="75"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

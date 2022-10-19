@@ -1,7 +1,7 @@
 Current cluster status:
   * Node List:
     * Online: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
-    * GuestOnline: [ lxc1@rhel7-1 lxc2@rhel7-1 ]
+    * GuestOnline: [ lxc1 lxc2 ]
 
   * Full List of Resources:
     * Fencing	(stonith:fence_xvm):	 Started rhel7-3
@@ -77,7 +77,7 @@ Executing Cluster Transition:
 Revised Cluster Status:
   * Node List:
     * Online: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
-    * GuestOnline: [ lxc1@rhel7-2 lxc2@rhel7-1 ]
+    * GuestOnline: [ lxc1 lxc2 ]
 
   * Full List of Resources:
     * Fencing	(stonith:fence_xvm):	 Started rhel7-3

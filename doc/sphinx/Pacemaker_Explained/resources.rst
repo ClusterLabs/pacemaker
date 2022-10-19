@@ -11,24 +11,18 @@ What is a Cluster Resource?
 .. index::
    single: resource
 
-A resource is a service made highly available by a cluster.
-The simplest type of resource, a *primitive* resource, is described
-in this chapter. More complex forms, such as groups and clones,
-are described in later chapters.
+A *resource* is a service managed by Pacemaker. The simplest type of resource,
+a *primitive*, is described in this chapter. More complex forms, such as groups
+and clones, are described in later chapters.
 
-Every primitive resource has a *resource agent*. A resource agent is an
-external program that abstracts the service it provides and present a
-consistent view to the cluster.
+Every primitive has a *resource agent* that provides Pacemaker a standardized
+interface for managing the service. This allows Pacemaker to be agnostic about
+the services it manages. Pacemaker doesn't need to understand how the service
+works because it relies on the resource agent to do the right thing when asked.
 
-This allows the cluster to be agnostic about the resources it manages.
-The cluster doesn't need to understand how the resource works because
-it relies on the resource agent to do the right thing when given a
-**start**, **stop** or **monitor** command. For this reason, it is crucial
-that resource agents are well-tested.
+Every resource has a *class* specifying the standard that its resource agent
+follows, and a *type* identifying the specific service being managed.
 
-Typically, resource agents come in the form of shell scripts. However,
-they can be written using any technology (such as C, Python or Perl)
-that the author is comfortable with.
 
 .. _s-resource-supported:
 
@@ -38,7 +32,7 @@ that the author is comfortable with.
 Resource Classes
 ################
 
-Pacemaker supports several classes of agents:
+Pacemaker supports several classes, or standards, of resource agents:
 
 * OCF
 * LSB
@@ -46,7 +40,8 @@ Pacemaker supports several classes of agents:
 * Upstart (deprecated)
 * Service
 * Fencing
-* Nagios Plugins
+* Nagios
+
 
 .. index::
    single: resource; OCF
@@ -56,68 +51,21 @@ Pacemaker supports several classes of agents:
 Open Cluster Framework
 ______________________
 
-The OCF standard [#]_ is basically an extension of the Linux Standard
-Base conventions for init scripts to:
+The Open Cluster Framework (OCF) Resource Agent API is a ClusterLabs
+standard for managing services. It is the most preferred since it is
+specifically designed for use in a Pacemaker cluster.
 
-* support parameters,
-* make them self-describing, and
-* make them extensible
+OCF agents are scripts that support a variety of actions including ``start``,
+``stop``, and ``monitor``. They may accept parameters, making them more
+flexible than other classes. The number and purpose of parameters is left to
+the agent, which advertises them via the ``meta-data`` action.
 
-OCF specs have strict definitions of the exit codes that actions must return [#]_.
+Unlike other classes, OCF agents have a *provider* as well as a class and type.
 
-The cluster follows these specifications exactly, and giving the wrong
-exit code will cause the cluster to behave in ways you will likely
-find puzzling and annoying.  In particular, the cluster needs to
-distinguish a completely stopped resource from one which is in some
-erroneous and indeterminate state.
+For more information, see the "Resource Agents" chapter of *Pacemaker
+Administration* and the `OCF standard
+<https://github.com/ClusterLabs/OCF-spec/tree/main/ra>`_.
 
-Parameters are passed to the resource agent as environment variables, with the
-special prefix ``OCF_RESKEY_``.  So, a parameter which the user thinks
-of as ``ip`` will be passed to the resource agent as ``OCF_RESKEY_ip``.  The
-number and purpose of the parameters is left to the resource agent; however,
-the resource agent should use the **meta-data** command to advertise any that it
-supports.
-
-The OCF class is the most preferred as it is an industry standard,
-highly flexible (allowing parameters to be passed to agents in a
-non-positional manner) and self-describing.
-
-For more information, see the
-`reference <http://www.linux-ha.org/wiki/OCF_Resource_Agents>`_ and
-the *Resource Agents* chapter of *Pacemaker Administration*.
-
-.. index::
-   single: resource; LSB
-   single: LSB; resources
-   single: Linux Standard Base; resources
-
-Linux Standard Base
-___________________
-
-*LSB* resource agents are more commonly known as *init scripts*. If a full path
-is not given, they are assumed to be located in ``/etc/init.d``.
-
-Commonly, they are provided by the OS distribution. In order to be used
-with a Pacemaker cluster, they must conform to the LSB specification [#]_.
-
-.. warning::
-
-   Many distributions or particular software packages claim LSB compliance
-   but ship with broken init scripts.  For details on how to check whether
-   your init script is LSB-compatible, see the `Resource Agents` chapter of
-   `Pacemaker Administration`. Common problematic violations of the LSB
-   standard include:
-
-   * Not implementing the ``status`` operation at all
-   * Not observing the correct exit status codes for
-     ``start``/``stop``/``status`` actions
-   * Starting a started resource returns an error
-   * Stopping a stopped resource returns an error
-
-.. important::
-
-   Remember to make sure the computer is `not` configured to start any
-   services at boot time -- that should be controlled by the cluster.
 
 .. _s-resource-supported-systemd:
 
@@ -128,21 +76,57 @@ with a Pacemaker cluster, they must conform to the LSB specification [#]_.
 Systemd
 _______
 
-Most Linux distributions have replaced the old
-`SysV <http://en.wikipedia.org/wiki/Init#SysV-style>`_ style of
-initialization daemons and scripts with
-`Systemd <http://www.freedesktop.org/wiki/Software/systemd>`_.
+Most Linux distributions use `Systemd
+<http://www.freedesktop.org/wiki/Software/systemd>`_ for system initialization
+and service management. *Unit files* specify how to manage services and are
+usually provided by the distribution.
 
-Pacemaker is able to manage these services `if they are present`.
-
-Instead of init scripts, systemd has `unit files`.  Generally, the
-services (unit files) are provided by the OS distribution, but there
-are online guides for converting from init scripts [#]_.
+Pacemaker can manage systemd services. Simply create a resource with
+``systemd`` as the resource class and the unit file name as the resource type.
+Do *not* run ``systemctl enable`` on the unit.
 
 .. important::
 
-   Remember to make sure the computer is `not` configured to start any
-   services at boot time -- that should be controlled by the cluster.
+   Make sure that any systemd services to be controlled by the cluster are
+   *not* enabled to start at boot.
+
+
+.. index::
+   single: resource; LSB
+   single: LSB; resources
+   single: Linux Standard Base; resources
+
+Linux Standard Base
+___________________
+
+*LSB* resource agents, also known as `SysV-style
+<https://en.wikipedia.org/wiki/Init#SysV-style init scripts>`_, are scripts that
+provide start, stop, and status actions for a service.
+
+They are provided by some operating system distributions. If a full path is not
+given, they are assumed to be located in a directory specified when your
+Pacemaker software was built (usually ``/etc/init.d``).
+
+In order to be used with Pacemaker, they must conform to the `LSB specification
+<http://refspecs.linux-foundation.org/LSB_5.0.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html>`_
+as it relates to init scripts.
+
+.. warning::
+
+   Some LSB scripts do not fully comply with the standard. For details on how
+   to check whether your script is LSB-compatible, see the "Resource Agents"
+   chapter of `Pacemaker Administration`. Common problems include:
+
+   * Not implementing the ``status`` action
+   * Not observing the correct exit status codes
+   * Starting a started resource returns an error
+   * Stopping a stopped resource returns an error
+
+.. important::
+
+   Make sure the host is *not* configured to start any LSB services at boot
+   that will be controlled by the cluster.
+
 
 .. index::
    single: Resource; Upstart
@@ -151,27 +135,25 @@ are online guides for converting from init scripts [#]_.
 Upstart
 _______
 
-Some distributions replaced the old
-`SysV <http://en.wikipedia.org/wiki/Init#SysV-style>`_ style of
-initialization daemons (and scripts) with
-`Upstart <http://upstart.ubuntu.com/>`_.
+Some Linux distributions previously used `Upstart
+<https://upstart.ubuntu.com/>`_ for system initialization and service
+management. Pacemaker is able to manage services using Upstart if the local
+system supports them and support was enabled when your Pacemaker software was
+built.
 
-Pacemaker is able to manage these services `if they are present`.
-
-Instead of init scripts, Upstart has `jobs`.  Generally, the
-services (jobs) are provided by the OS distribution.
+The *jobs* that specify how services are managed are usually provided by the
+operating system distribution.
 
 .. important::
 
-   Remember to make sure the computer is `not` configured to start any
-   services at boot time -- that should be controlled by the cluster.
+   Make sure the host is *not* configured to start any Upstart services at boot
+   that will be controlled by the cluster.
 
 .. warning::
 
-   Upstart support is deprecated in Pacemaker. Upstart is no longer an actively
-   maintained project, and test platforms for it are no longer readily usable.
-   Support will likely be dropped entirely at the next major release of
-   Pacemaker.
+   Upstart support is deprecated in Pacemaker. Upstart is no longer actively
+   maintained, and test platforms for it are no longer readily usable. Support
+   will be dropped entirely at the next major release of Pacemaker.
 
 
 .. index::
@@ -191,10 +173,9 @@ This is particularly useful when the cluster contains a mix of
 In order, Pacemaker will try to find the named service as:
 
 * an LSB init script
-
 * a Systemd unit file
-
 * an Upstart job
+
 
 .. index::
    single: Resource; STONITH
@@ -203,8 +184,9 @@ In order, Pacemaker will try to find the named service as:
 STONITH
 _______
 
-The STONITH class is used exclusively for fencing-related resources.  This is
-discussed later in :ref:`fencing`.
+The ``stonith`` class is used for managing fencing devices, discussed later in
+:ref:`fencing`.
+
 
 .. index::
    single: Resource; Nagios Plugins
@@ -1059,17 +1041,6 @@ Once you've done whatever you needed to do, you can then re-enable it with
 .. code-block:: none
 
    # cibadmin --modify --xml-text '<op id="public-ip-check" enabled="true"/>'
-
-.. [#] See https://github.com/ClusterLabs/OCF-spec/tree/main/ra. The
-       Pacemaker implementation has been somewhat extended from the OCF specs.
-
-.. [#] The resource-agents source code includes the **ocf-tester** script,
-       which can be useful in this regard.
-
-.. [#] See http://refspecs.linux-foundation.org/LSB_3.0.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html
-       for the LSB Spec as it relates to init scripts.
-
-.. [#] For example, http://0pointer.de/blog/projects/systemd-for-admins-3.html
 
 .. [#] The project has two independent forks, hosted at
        https://www.nagios-plugins.org/ and https://www.monitoring-plugins.org/. Output

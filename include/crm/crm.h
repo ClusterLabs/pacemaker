@@ -66,7 +66,7 @@ extern "C" {
  * >=3.0.13: Fail counts include operation name and interval
  * >=3.2.0:  DC supports PCMK_EXEC_INVALID and PCMK_EXEC_NOT_CONNECTED
  */
-#  define CRM_FEATURE_SET		"3.15.1"
+#  define CRM_FEATURE_SET		"3.16.1"
 
 /* Pacemaker's CPG protocols use fixed-width binary fields for the sender and
  * recipient of a CPG message. This imposes an arbitrary limit on cluster node
@@ -100,8 +100,7 @@ extern char *crm_system_name;
 
 /* Sub-systems */
 #  define CRM_SYSTEM_DC		"dc"
-#  define CRM_SYSTEM_DCIB		"dcib"
-                                        /*  The master CIB */
+#define CRM_SYSTEM_DCIB         "dcib" // Primary instance of CIB manager
 #  define CRM_SYSTEM_CIB		"cib"
 #  define CRM_SYSTEM_CRMD		"crmd"
 #  define CRM_SYSTEM_LRMD		"lrmd"
@@ -121,7 +120,6 @@ extern char *crm_system_name;
 #  define CRM_ATTR_UNFENCED         "#node-unfenced"
 #  define CRM_ATTR_DIGESTS_ALL      "#digests-all"
 #  define CRM_ATTR_DIGESTS_SECURE   "#digests-secure"
-#  define CRM_ATTR_RA_VERSION       "#ra-version"
 #  define CRM_ATTR_PROTOCOL         "#attrd-protocol"
 #  define CRM_ATTR_FEATURE_SET      "#feature-set"
 
@@ -147,8 +145,7 @@ extern char *crm_system_name;
 #  define CRM_OP_REGISTER		"register"
 #  define CRM_OP_IPC_FWD		"ipc_fwd"
 #  define CRM_OP_INVOKE_LRM	"lrm_invoke"
-#  define CRM_OP_LRM_REFRESH	"lrm_refresh" /* Deprecated */
-#  define CRM_OP_LRM_QUERY	"lrm_query"
+#  define CRM_OP_LRM_REFRESH "lrm_refresh" //!< Deprecated since 1.1.10
 #  define CRM_OP_LRM_DELETE	"lrm_delete"
 #  define CRM_OP_LRM_FAIL		"lrm_fail"
 #  define CRM_OP_PROBED		"probe_complete"

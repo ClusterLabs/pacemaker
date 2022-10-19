@@ -82,11 +82,13 @@ typedef struct private_data_s {
 
 static void
 xml_free_priv(pcmk__output_t *out) {
-    private_data_t *priv = out->priv;
+    private_data_t *priv = NULL;
 
-    if (priv == NULL) {
+    if (out == NULL || out->priv == NULL) {
         return;
     }
+
+    priv = out->priv;
 
     free_xml(priv->root);
     g_queue_free(priv->parent_q);
@@ -98,6 +100,8 @@ xml_free_priv(pcmk__output_t *out) {
 static bool
 xml_init(pcmk__output_t *out) {
     private_data_t *priv = NULL;
+
+    CRM_ASSERT(out != NULL);
 
     /* If xml_init was previously called on this output struct, just return. */
     if (out->priv != NULL) {
@@ -436,6 +440,7 @@ pcmk__output_xml_create_parent(pcmk__output_t *out, const char *name, ...) {
     xmlNodePtr node = NULL;
 
     CRM_ASSERT(out != NULL);
+    CRM_CHECK(pcmk__str_any_of(out->fmt_name, "xml", "html", NULL), return NULL);
 
     node = pcmk__output_create_xml_node(out, name, NULL);
 
@@ -453,10 +458,7 @@ pcmk__output_xml_add_node(pcmk__output_t *out, xmlNodePtr node) {
 
     CRM_ASSERT(out != NULL && out->priv != NULL);
     CRM_ASSERT(node != NULL);
-
-    if (!pcmk__str_any_of(out->fmt_name, "xml", "html", NULL)) {
-        return;
-    }
+    CRM_CHECK(pcmk__str_any_of(out->fmt_name, "xml", "html", NULL), return);
 
     priv = out->priv;
 
@@ -470,7 +472,7 @@ pcmk__output_create_xml_node(pcmk__output_t *out, const char *name, ...) {
     va_list args;
 
     CRM_ASSERT(out != NULL && out->priv != NULL);
-    CRM_ASSERT(pcmk__str_any_of(out->fmt_name, "xml", "html", NULL));
+    CRM_CHECK(pcmk__str_any_of(out->fmt_name, "xml", "html", NULL), return NULL);
 
     priv = out->priv;
 
@@ -487,6 +489,7 @@ pcmk__output_create_xml_text_node(pcmk__output_t *out, const char *name, const c
     xmlNodePtr node = NULL;
 
     CRM_ASSERT(out != NULL);
+    CRM_CHECK(pcmk__str_any_of(out->fmt_name, "xml", "html", NULL), return NULL);
 
     node = pcmk__output_create_xml_node(out, name, NULL);
     xmlNodeSetContent(node, (pcmkXmlStr) content);
@@ -499,10 +502,7 @@ pcmk__output_xml_push_parent(pcmk__output_t *out, xmlNodePtr parent) {
 
     CRM_ASSERT(out != NULL && out->priv != NULL);
     CRM_ASSERT(parent != NULL);
-
-    if (!pcmk__str_any_of(out->fmt_name, "xml", "html", NULL)) {
-        return;
-    }
+    CRM_CHECK(pcmk__str_any_of(out->fmt_name, "xml", "html", NULL), return);
 
     priv = out->priv;
 
@@ -514,10 +514,7 @@ pcmk__output_xml_pop_parent(pcmk__output_t *out) {
     private_data_t *priv = NULL;
 
     CRM_ASSERT(out != NULL && out->priv != NULL);
-
-    if (!pcmk__str_any_of(out->fmt_name, "xml", "html", NULL)) {
-        return;
-    }
+    CRM_CHECK(pcmk__str_any_of(out->fmt_name, "xml", "html", NULL), return);
 
     priv = out->priv;
 
@@ -530,7 +527,7 @@ pcmk__output_xml_peek_parent(pcmk__output_t *out) {
     private_data_t *priv = NULL;
 
     CRM_ASSERT(out != NULL && out->priv != NULL);
-    CRM_ASSERT(pcmk__str_any_of(out->fmt_name, "xml", "html", NULL));
+    CRM_CHECK(pcmk__str_any_of(out->fmt_name, "xml", "html", NULL), return NULL);
 
     priv = out->priv;
 

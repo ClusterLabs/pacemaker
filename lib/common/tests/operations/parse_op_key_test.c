@@ -9,13 +9,9 @@
 
 #include <crm_internal.h>
 
+#include <crm/common/unittest_internal.h>
+
 #include <glib.h>
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <setjmp.h>
-#include <cmocka.h>
 
 static void
 basic(void **state)
@@ -212,23 +208,14 @@ malformed_input(void **state)
     assert_int_equal(ms, 0);
 }
 
-int main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(basic),
-        cmocka_unit_test(colon_in_rsc),
-        cmocka_unit_test(dashes_in_rsc),
-        cmocka_unit_test(migrate_to_from),
-        cmocka_unit_test(pre_post),
-
-        cmocka_unit_test(skip_rsc),
-        cmocka_unit_test(skip_ty),
-        cmocka_unit_test(skip_ms),
-
-        cmocka_unit_test(empty_input),
-        cmocka_unit_test(malformed_input),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(basic),
+                cmocka_unit_test(colon_in_rsc),
+                cmocka_unit_test(dashes_in_rsc),
+                cmocka_unit_test(migrate_to_from),
+                cmocka_unit_test(pre_post),
+                cmocka_unit_test(skip_rsc),
+                cmocka_unit_test(skip_ty),
+                cmocka_unit_test(skip_ms),
+                cmocka_unit_test(empty_input),
+                cmocka_unit_test(malformed_input))

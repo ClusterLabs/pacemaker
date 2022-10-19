@@ -33,11 +33,13 @@ log_subprocess_output(pcmk__output_t *out, int exit_status,
 
 static void
 log_free_priv(pcmk__output_t *out) {
-    private_data_t *priv = out->priv;
+    private_data_t *priv = NULL;
 
-    if (priv == NULL) {
+    if (out == NULL || out->priv == NULL) {
         return;
     }
+
+    priv = out->priv;
 
     g_queue_free(priv->prefixes);
     free(priv);
@@ -47,6 +49,8 @@ log_free_priv(pcmk__output_t *out) {
 static bool
 log_init(pcmk__output_t *out) {
     private_data_t *priv = NULL;
+
+    CRM_ASSERT(out != NULL);
 
     /* If log_init was previously called on this output struct, just return. */
     if (out->priv != NULL) {
@@ -306,10 +310,7 @@ pcmk__output_set_log_level(pcmk__output_t *out, int log_level) {
     private_data_t *priv = NULL;
 
     CRM_ASSERT(out != NULL && out->priv != NULL);
-
-    if (!pcmk__str_eq(out->fmt_name, "log", pcmk__str_none)) {
-        return;
-    }
+    CRM_CHECK(pcmk__str_eq(out->fmt_name, "log", pcmk__str_none), return);
 
     priv = out->priv;
     priv->log_level = log_level;

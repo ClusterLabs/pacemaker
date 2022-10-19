@@ -22,8 +22,6 @@
 
 #include "libpacemaker_private.h"
 
-#define STATUS_PATH_MAX 512
-
 static pcmk__output_t *out = NULL;
 static cib_t *fake_cib = NULL;
 static GList *fake_resource_list = NULL;
@@ -150,7 +148,7 @@ print_cluster_status(pe_working_set_t *data_set, uint32_t show_opts,
 
     PCMK__OUTPUT_SPACER_IF(out, print_spacer);
     out->begin_list(out, NULL, NULL, "%s", title);
-    out->message(out, "cluster-status", data_set, stonith_rc, NULL, FALSE,
+    out->message(out, "cluster-status", data_set, stonith_rc, NULL, false,
                  section_opts, show_opts, NULL, all, all);
     out->end_list(out);
 
@@ -686,7 +684,7 @@ simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
     if (!pcmk__str_eq(op, "on", pcmk__str_casei)) {
         int rc = pcmk_ok;
-        char xpath[STATUS_PATH_MAX];
+        GString *xpath = g_string_sized_new(512);
 
         // Set node state to offline
         xmlNode *cib_node = pcmk__inject_node_state_change(fake_cib, target,
@@ -699,17 +697,23 @@ simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         CRM_ASSERT(rc == pcmk_ok);
 
         // Simulate controller clearing node's resource history and attributes
-        snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s",
-                 target, XML_CIB_TAG_LRM);
-        fake_cib->cmds->remove(fake_cib, xpath, NULL,
+        pcmk__g_strcat(xpath,
+                       "//" XML_CIB_TAG_STATE
+                       "[@" XML_ATTR_UNAME "='", target, "']/" XML_CIB_TAG_LRM,
+                       NULL);
+        fake_cib->cmds->remove(fake_cib, (const char *) xpath->str, NULL,
                                cib_xpath|cib_sync_call|cib_scope_local);
 
-        snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s",
-                 target, XML_TAG_TRANSIENT_NODEATTRS);
-        fake_cib->cmds->remove(fake_cib, xpath, NULL,
+        g_string_truncate(xpath, 0);
+        pcmk__g_strcat(xpath,
+                       "//" XML_CIB_TAG_STATE
+                       "[@" XML_ATTR_UNAME "='", target, "']"
+                       "/" XML_TAG_TRANSIENT_NODEATTRS, NULL);
+        fake_cib->cmds->remove(fake_cib, (const char *) xpath->str, NULL,
                                cib_xpath|cib_sync_call|cib_scope_local);
 
         free_xml(cib_node);
+        g_string_free(xpath, TRUE);
     }
 
     pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);

@@ -8,16 +8,12 @@
  */
 
 #include <crm_internal.h>
+
+#include <crm/common/unittest_internal.h>
 #include <crm/common/acl.h>
+
 #include "../../crmcommon_private.h"
-
 #include "mock_private.h"
-
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <setjmp.h>
-#include <cmocka.h>
 
 static void
 is_pcmk__is_user_in_group(void **state)
@@ -38,13 +34,5 @@ is_pcmk__is_user_in_group(void **state)
     pcmk__mock_grent = false;
 }
 
-int
-main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(is_pcmk__is_user_in_group)
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(is_pcmk__is_user_in_group))

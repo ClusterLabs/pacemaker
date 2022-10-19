@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2021 the Pacemaker project contributors
+ * Copyright 2012-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -47,7 +47,7 @@ static GHashTable *ipc_clients = NULL;
  *       use it.
  */
 pcmk__client_t *
-ipc_proxy_get_provider()
+ipc_proxy_get_provider(void)
 {
     return ipc_providers? (pcmk__client_t *) (ipc_providers->data) : NULL;
 }
@@ -281,6 +281,8 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 /*!
  * \internal
  * \brief Notify a proxy provider that we wish to shut down
+ *
+ * \param[in,out] ipc_proxy  IPC client connection to proxy provider
  *
  * \return 0 on success, -1 on error
  */

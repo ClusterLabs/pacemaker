@@ -5,11 +5,11 @@ pcmk__clone_allocate: pgsqld:0 allocation score on srv1: 1001
 pcmk__clone_allocate: pgsqld:0 allocation score on srv2: 1000
 pcmk__clone_allocate: pgsqld:1 allocation score on srv1: 1001
 pcmk__clone_allocate: pgsqld:1 allocation score on srv2: 1000
-pcmk__native_allocate: pgsql-master-ip allocation score on srv1: 1001
-pcmk__native_allocate: pgsql-master-ip allocation score on srv2: -INFINITY
-pcmk__native_allocate: pgsqld:0 allocation score on srv1: 1001
-pcmk__native_allocate: pgsqld:0 allocation score on srv2: 1000
-pcmk__native_allocate: pgsqld:1 allocation score on srv1: -INFINITY
-pcmk__native_allocate: pgsqld:1 allocation score on srv2: 1000
+pcmk__primitive_assign: pgsql-master-ip allocation score on srv1: 1001
+pcmk__primitive_assign: pgsql-master-ip allocation score on srv2: -INFINITY
+pcmk__primitive_assign: pgsqld:0 allocation score on srv1: 1001
+pcmk__primitive_assign: pgsqld:0 allocation score on srv2: 1000
+pcmk__primitive_assign: pgsqld:1 allocation score on srv1: -INFINITY
+pcmk__primitive_assign: pgsqld:1 allocation score on srv2: 1000
 pgsqld:0 promotion score on srv1: 1001
 pgsqld:1 promotion score on srv2: 1000

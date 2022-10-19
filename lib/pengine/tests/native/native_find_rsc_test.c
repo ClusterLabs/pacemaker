@@ -9,12 +9,7 @@
 
 #include <crm_internal.h>
 
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <setjmp.h>
-#include <cmocka.h>
-
+#include <crm/common/unittest_internal.h>
 #include <crm/common/xml.h>
 #include <crm/pengine/internal.h>
 #include <crm/pengine/status.h>
@@ -661,29 +656,22 @@ clone_group_member_rsc(void **state) {
     assert_ptr_equal(mysql_proxy, native_find_rsc(mysql_proxy, "mysql-proxy:0", cluster02, pe_find_current));
 }
 
-int main(int argc, char **argv) {
-    /* TODO: Add tests for finding on allocated node (passing a node without
-     * pe_find_current, after scheduling, for a resource that is starting/stopping/moving.
-     */
-
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(bad_args),
-        cmocka_unit_test(primitive_rsc),
-        cmocka_unit_test(group_rsc),
-        cmocka_unit_test(inactive_group_rsc),
-        cmocka_unit_test(group_member_rsc),
-        cmocka_unit_test(inactive_group_member_rsc),
-        cmocka_unit_test(clone_rsc),
-        cmocka_unit_test(inactive_clone_rsc),
-        cmocka_unit_test(clone_instance_rsc),
-        cmocka_unit_test(renamed_rsc),
-        cmocka_unit_test(bundle_rsc),
-        cmocka_unit_test(bundle_replica_rsc),
-        cmocka_unit_test(clone_group_rsc),
-        cmocka_unit_test(clone_group_instance_rsc),
-        cmocka_unit_test(clone_group_member_rsc),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, setup, teardown);
-}
+/* TODO: Add tests for finding on allocated node (passing a node without
+ * pe_find_current, after scheduling, for a resource that is starting/stopping/moving.
+ */
+PCMK__UNIT_TEST(setup, teardown,
+                cmocka_unit_test(bad_args),
+                cmocka_unit_test(primitive_rsc),
+                cmocka_unit_test(group_rsc),
+                cmocka_unit_test(inactive_group_rsc),
+                cmocka_unit_test(group_member_rsc),
+                cmocka_unit_test(inactive_group_member_rsc),
+                cmocka_unit_test(clone_rsc),
+                cmocka_unit_test(inactive_clone_rsc),
+                cmocka_unit_test(clone_instance_rsc),
+                cmocka_unit_test(renamed_rsc),
+                cmocka_unit_test(bundle_rsc),
+                cmocka_unit_test(bundle_replica_rsc),
+                cmocka_unit_test(clone_group_rsc),
+                cmocka_unit_test(clone_group_instance_rsc),
+                cmocka_unit_test(clone_group_member_rsc))

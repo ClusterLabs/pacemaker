@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <start>
+        <ref name="command-output" />
+    </start>
+
+    <define name="command-output">
+        <element name="command">
+            <externalRef href="subprocess-output-2.23.rng" />
+        </element>
+    </define>
+</grammar>

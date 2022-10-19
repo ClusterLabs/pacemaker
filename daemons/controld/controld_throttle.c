@@ -62,7 +62,7 @@ load2str(enum throttle_state_e mode)
     }
 }
 
-#if SUPPORT_PROCFS
+#if HAVE_LINUX_PROCFS
 /*!
  * \internal
  * \brief Return name of /proc file containing the CIB daemon's load statistics
@@ -250,7 +250,8 @@ throttle_load_avg(float *load)
  * \return Throttle mode corresponding to load value
  */
 static enum throttle_state_e
-throttle_check_thresholds(float load, const char *desc, float thresholds[4])
+throttle_check_thresholds(float load, const char *desc,
+                          const float thresholds[4])
 {
     if (load > thresholds[3]) {
         crm_notice("Extreme %s detected: %f", desc, load);
@@ -294,14 +295,14 @@ throttle_handle_load(float load, const char *desc, int cores)
 
     return throttle_check_thresholds(load, desc, thresholds);
 }
-#endif
+#endif // HAVE_LINUX_PROCFS
 
 static enum throttle_state_e
 throttle_mode(void)
 {
     enum throttle_state_e mode = throttle_none;
 
-#if SUPPORT_PROCFS
+#if HAVE_LINUX_PROCFS
     unsigned int cores;
     float load;
     float thresholds[4];
@@ -351,7 +352,7 @@ throttle_mode(void)
         }
         crm_debug("Current load is %f across %u core(s)", load, cores);
     }
-#endif // SUPPORT_PROCFS
+#endif // HAVE_LINUX_PROCFS
     return mode;
 }
 

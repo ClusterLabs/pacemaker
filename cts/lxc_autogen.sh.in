@@ -1,6 +1,6 @@
 #!@BASH_PATH@
 #
-# Copyright 2013-2021 the Pacemaker project contributors
+# Copyright 2013-2022 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -73,7 +73,7 @@ while true ; do
     -A|--allow-anywhere) anywhere=1; shift;;
     -C|--add-clone) add_clone=1; shift;;
     -m|--add-master)
-        echo "-m/--add-master is deprecated (use -C/--add-clone instead)"
+        echo "$1 is deprecated (use -C/--add-clone instead)"
         echo
         add_clone=1
         shift
@@ -163,7 +163,7 @@ sync_file()
 
 download_agent()
 {
-    wget https://raw.github.com/ClusterLabs/resource-agents/master/heartbeat/VirtualDomain
+    wget https://raw.github.com/ClusterLabs/resource-agents/main/heartbeat/VirtualDomain
     chmod 755 VirtualDomain
     mv -f VirtualDomain /usr/lib/ocf/resource.d/heartbeat/VirtualDomain
     sync_file /usr/lib/ocf/resource.d/heartbeat/VirtualDomain

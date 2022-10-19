@@ -29,7 +29,7 @@ static pid_t sbd_pid = 0;
 static void
 sysrq_trigger(char t)
 {
-#if SUPPORT_PROCFS
+#if HAVE_LINUX_PROCFS
     FILE *procf;
 
     // Root can always write here, regardless of kernel.sysrq value
@@ -41,7 +41,7 @@ sysrq_trigger(char t)
     crm_info("sysrq-trigger: %c", t);
     fprintf(procf, "%c\n", t);
     fclose(procf);
-#endif // SUPPORT_PROCFS
+#endif // HAVE_LINUX_PROCFS
     return;
 }
 
@@ -69,7 +69,7 @@ panic_local(void)
         return;
 
     } else if (uid != 0) {
-#if SUPPORT_PROCFS
+#if HAVE_LINUX_PROCFS
         /*
          * No permissions, and no pacemakerd parent to escalate to.
          * Track down the new pacemakerd process and send a signal instead.
@@ -84,7 +84,7 @@ panic_local(void)
             crm_perror(LOG_EMERG, "Cannot signal pacemakerd[%lld] to panic",
                        (long long) ppid);
         }
-#endif // SUPPORT_PROCFS
+#endif // HAVE_LINUX_PROCFS
 
         /* The best we can do now is die */
         crm_exit(CRM_EX_PANIC);
@@ -216,13 +216,13 @@ pcmk__locate_sbd(void)
         crm_trace("SBD detected at pid %lld (via PID file %s)",
                   (long long) sbd_pid, pidfile);
 
-#if SUPPORT_PROCFS
+#if HAVE_LINUX_PROCFS
     } else {
         /* Fall back to /proc for systems that support it */
         sbd_pid = pcmk__procfs_pid_of("sbd");
         crm_trace("SBD detected at pid %lld (via procfs)",
                   (long long) sbd_pid);
-#endif // SUPPORT_PROCFS
+#endif // HAVE_LINUX_PROCFS
     }
 
     if(sbd_pid < 0) {
@@ -271,7 +271,7 @@ pcmk__get_sbd_sync_resource_startup(void)
 }
 
 long
-pcmk__auto_watchdog_timeout()
+pcmk__auto_watchdog_timeout(void)
 {
     long sbd_timeout = pcmk__get_sbd_timeout();
 

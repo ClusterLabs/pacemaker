@@ -567,7 +567,7 @@ finish_op_output(svc_action_t *op, bool is_stderr)
 
     if (op->synchronous || *source) {
         crm_trace("Finish reading %s[%d] %s",
-                  op->id, op->pid, (is_stderr? "stdout" : "stderr"));
+                  op->id, op->pid, (is_stderr? "stderr" : "stdout"));
         svc_read_output(fd, op, is_stderr);
         if (op->synchronous) {
             close(fd);

@@ -1,11 +1,11 @@
 
-pcmk__group_allocate: dummy-g allocation score on bl460g6a: 0
-pcmk__group_allocate: dummy-g allocation score on bl460g6b: 0
-pcmk__group_allocate: dummy01 allocation score on bl460g6a: INFINITY
-pcmk__group_allocate: dummy01 allocation score on bl460g6b: 0
-pcmk__group_allocate: dummy02 allocation score on bl460g6a: -INFINITY
-pcmk__group_allocate: dummy02 allocation score on bl460g6b: 0
-pcmk__native_allocate: dummy01 allocation score on bl460g6a: -INFINITY
-pcmk__native_allocate: dummy01 allocation score on bl460g6b: 0
-pcmk__native_allocate: dummy02 allocation score on bl460g6a: -INFINITY
-pcmk__native_allocate: dummy02 allocation score on bl460g6b: -INFINITY
+pcmk__group_assign: dummy-g allocation score on bl460g6a: 0
+pcmk__group_assign: dummy-g allocation score on bl460g6b: 0
+pcmk__group_assign: dummy01 allocation score on bl460g6a: INFINITY
+pcmk__group_assign: dummy01 allocation score on bl460g6b: 0
+pcmk__group_assign: dummy02 allocation score on bl460g6a: -INFINITY
+pcmk__group_assign: dummy02 allocation score on bl460g6b: 0
+pcmk__primitive_assign: dummy01 allocation score on bl460g6a: -INFINITY
+pcmk__primitive_assign: dummy01 allocation score on bl460g6b: 0
+pcmk__primitive_assign: dummy02 allocation score on bl460g6a: -INFINITY
+pcmk__primitive_assign: dummy02 allocation score on bl460g6b: -INFINITY

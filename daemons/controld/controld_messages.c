@@ -501,14 +501,14 @@ authorize_version(xmlNode *message_data, const char *field,
  * that nothing further needs to be done with the message. If the message is not
  * a hello, just return true to indicate it needs further processing.
  *
- * \param[in] client_msg     XML of IPC message
- * \param[in] curr_client    If IPC is not proxied, client that sent message
- * \param[in] proxy_session  If IPC is proxied, the session ID
+ * \param[in]     client_msg     XML of IPC message
+ * \param[in,out] curr_client    If IPC is not proxied, client that sent message
+ * \param[in]     proxy_session  If IPC is proxied, the session ID
  *
  * \return true if message needs further processing, false if it doesn't
  */
 bool
-controld_authorize_ipc_message(xmlNode *client_msg, pcmk__client_t *curr_client,
+controld_authorize_ipc_message(const xmlNode *client_msg, pcmk__client_t *curr_client,
                                const char *proxy_session)
 {
     xmlNode *message_data = NULL;
@@ -718,7 +718,7 @@ handle_lrm_delete(xmlNode *stored_msg)
  * \return Next FSA input
  */
 static enum crmd_fsa_input
-handle_remote_state(xmlNode *msg)
+handle_remote_state(const xmlNode *msg)
 {
     const char *remote_uname = ID(msg);
     crm_node_t *remote_peer;
@@ -746,10 +746,11 @@ handle_remote_state(xmlNode *msg)
  * \return Next FSA input
  */
 static enum crmd_fsa_input
-handle_ping(xmlNode *msg)
+handle_ping(const xmlNode *msg)
 {
     const char *value = NULL;
     xmlNode *ping = NULL;
+    xmlNode *reply = NULL;
 
     // Build reply
 
@@ -767,11 +768,11 @@ handle_ping(xmlNode *msg)
     crm_xml_add(ping, XML_PING_ATTR_STATUS, "ok");
 
     // Send reply
-    msg = create_reply(msg, ping);
+    reply = create_reply(msg, ping);
     free_xml(ping);
-    if (msg) {
-        (void) relay_message(msg, TRUE);
-        free_xml(msg);
+    if (reply != NULL) {
+        (void) relay_message(reply, TRUE);
+        free_xml(reply);
     }
 
     // Nothing further to do
@@ -781,10 +782,12 @@ handle_ping(xmlNode *msg)
 /*!
  * \brief Handle a PCMK__CONTROLD_CMD_NODES message
  *
+ * \param[in] request  Message XML
+ *
  * \return Next FSA input
  */
 static enum crmd_fsa_input
-handle_node_list(xmlNode *request)
+handle_node_list(const xmlNode *request)
 {
     GHashTableIter iter;
     crm_node_t *node = NULL;
@@ -822,20 +825,21 @@ handle_node_list(xmlNode *request)
  * \return Next FSA input
  */
 static enum crmd_fsa_input
-handle_node_info_request(xmlNode *msg)
+handle_node_info_request(const xmlNode *msg)
 {
     const char *value = NULL;
     crm_node_t *node = NULL;
     int node_id = 0;
     xmlNode *reply = NULL;
+    xmlNode *reply_data = NULL;
 
     // Build reply
 
-    reply = create_xml_node(NULL, XML_CIB_TAG_NODE);
-    crm_xml_add(reply, XML_PING_ATTR_SYSFROM, CRM_SYSTEM_CRMD);
+    reply_data = create_xml_node(NULL, XML_CIB_TAG_NODE);
+    crm_xml_add(reply_data, XML_PING_ATTR_SYSFROM, CRM_SYSTEM_CRMD);
 
     // Add whether current partition has quorum
-    pcmk__xe_set_bool_attr(reply, XML_ATTR_HAVE_QUORUM, fsa_has_quorum);
+    pcmk__xe_set_bool_attr(reply_data, XML_ATTR_HAVE_QUORUM, fsa_has_quorum);
 
     // Check whether client requested node info by ID and/or name
     crm_element_value_int(msg, XML_ATTR_ID, &node_id);
@@ -851,20 +855,20 @@ handle_node_info_request(xmlNode *msg)
 
     node = pcmk__search_node_caches(node_id, value, CRM_GET_PEER_ANY);
     if (node) {
-        crm_xml_add_int(reply, XML_ATTR_ID, node->id);
-        crm_xml_add(reply, XML_ATTR_UUID, node->uuid);
-        crm_xml_add(reply, XML_ATTR_UNAME, node->uname);
-        crm_xml_add(reply, XML_NODE_IS_PEER, node->state);
-        pcmk__xe_set_bool_attr(reply, XML_NODE_IS_REMOTE,
+        crm_xml_add_int(reply_data, XML_ATTR_ID, node->id);
+        crm_xml_add(reply_data, XML_ATTR_UUID, node->uuid);
+        crm_xml_add(reply_data, XML_ATTR_UNAME, node->uname);
+        crm_xml_add(reply_data, XML_NODE_IS_PEER, node->state);
+        pcmk__xe_set_bool_attr(reply_data, XML_NODE_IS_REMOTE,
                                pcmk_is_set(node->flags, crm_remote_node));
     }
 
     // Send reply
-    msg = create_reply(msg, reply);
-    free_xml(reply);
-    if (msg) {
-        (void) relay_message(msg, TRUE);
-        free_xml(msg);
+    reply = create_reply(msg, reply_data);
+    free_xml(reply_data);
+    if (reply != NULL) {
+        (void) relay_message(reply, TRUE);
+        free_xml(reply);
     }
 
     // Nothing further to do
@@ -1060,7 +1064,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
         return handle_lrm_delete(stored_msg);
 
     } else if ((strcmp(op, CRM_OP_LRM_FAIL) == 0)
-               || (strcmp(op, CRM_OP_LRM_REFRESH) == 0)
+               || (strcmp(op, CRM_OP_LRM_REFRESH) == 0) // @COMPAT
                || (strcmp(op, CRM_OP_REPROBE) == 0)) {
 
         crm_xml_add(stored_msg, F_CRM_SYS_TO, CRM_SYSTEM_LRMD);

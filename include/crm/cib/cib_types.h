@@ -93,10 +93,19 @@ typedef struct cib_api_operations_s {
                   int call_options);
     int (*query_from) (cib_t *cib, const char *host, const char *section,
                        xmlNode **output_data, int call_options);
+
+    //! \deprecated This method will be removed and should not be used
     int (*is_master) (cib_t *cib);
+
+    //! \deprecated Use the set_primary() method instead
     int (*set_master) (cib_t *cib, int call_options);
+
+    //! \deprecated Use the set_secondary() method instead
     int (*set_slave) (cib_t *cib, int call_options);
+
+    //! \deprecated This method will be removed and should not be used
     int (*set_slave_all) (cib_t *cib, int call_options);
+
     int (*sync) (cib_t *cib, const char *section, int call_options);
     int (*sync_from) (cib_t *cib, const char *host, const char *section,
                       int call_options);
@@ -132,6 +141,26 @@ typedef struct cib_api_operations_s {
                                        void (*callback)(xmlNode *, int, int,
                                                         xmlNode *, void *),
                                        void (*free_func)(void *));
+
+    /*!
+     * \brief Set the local CIB manager as the cluster's primary instance
+     *
+     * \param[in,out] cib           CIB connection
+     * \param[in]     call_options  Group of enum cib_call_options flags
+     *
+     * \return Legacy Pacemaker return code (in particular, pcmk_ok on success)
+     */
+    int (*set_primary)(cib_t *cib, int call_options);
+
+    /*!
+     * \brief Set the local CIB manager as a secondary instance
+     *
+     * \param[in,out] cib           CIB connection
+     * \param[in]     call_options  Group of enum cib_call_options flags
+     *
+     * \return Legacy Pacemaker return code (in particular, pcmk_ok on success)
+     */
+    int (*set_secondary)(cib_t *cib, int call_options);
 } cib_api_operations_t;
 
 struct cib_s {

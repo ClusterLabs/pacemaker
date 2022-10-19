@@ -4,7 +4,7 @@ Current cluster status:
     * Node node2: UNCLEAN (offline)
     * Node node3: UNCLEAN (offline)
     * Online: [ node1 ]
-    * GuestOnline: [ galera-bundle-0@node1 rabbitmq-bundle-0@node1 ]
+    * GuestOnline: [ galera-bundle-0 rabbitmq-bundle-0 ]
 
   * Full List of Resources:
     * Container bundle set: rabbitmq-bundle [192.168.122.139:8787/rhosp13/openstack-rabbitmq:pcmklatest]:

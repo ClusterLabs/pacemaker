@@ -1,10 +1,10 @@
 
-pcmk__native_allocate: dummystateful allocation score on 18node1: 0
-pcmk__native_allocate: dummystateful allocation score on 18node2: 0
-pcmk__native_allocate: dummystateful allocation score on 18node3: 0
-pcmk__native_allocate: shoot1 allocation score on 18node1: 0
-pcmk__native_allocate: shoot1 allocation score on 18node2: 0
-pcmk__native_allocate: shoot1 allocation score on 18node3: 0
-pcmk__native_allocate: shoot2 allocation score on 18node1: 0
-pcmk__native_allocate: shoot2 allocation score on 18node2: 0
-pcmk__native_allocate: shoot2 allocation score on 18node3: 0
+pcmk__primitive_assign: dummystateful allocation score on 18node1: 0
+pcmk__primitive_assign: dummystateful allocation score on 18node2: 0
+pcmk__primitive_assign: dummystateful allocation score on 18node3: 0
+pcmk__primitive_assign: shoot1 allocation score on 18node1: 0
+pcmk__primitive_assign: shoot1 allocation score on 18node2: 0
+pcmk__primitive_assign: shoot1 allocation score on 18node3: 0
+pcmk__primitive_assign: shoot2 allocation score on 18node1: 0
+pcmk__primitive_assign: shoot2 allocation score on 18node2: 0
+pcmk__primitive_assign: shoot2 allocation score on 18node3: 0

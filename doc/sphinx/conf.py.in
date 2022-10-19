@@ -1,7 +1,7 @@
 """ Sphinx configuration for Pacemaker documentation
 """
 
-__copyright__ = "Copyright 2020 the Pacemaker project contributors"
+__copyright__ = "Copyright 2020-2022 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 # This file is execfile()d with the current directory set to its containing dir.
@@ -28,10 +28,10 @@ doc_license += " version 4.0 or later (CC-BY-SA v4.0+)"
 #
 # where occurrences of |<abbr>| in the rST will be substituted with <Full text>
 rst_prolog="""
-.. |CFS_DISTRO| replace:: CentOS Stream
-.. |CFS_DISTRO_VER| replace:: 8
-.. |REMOTE_DISTRO| replace:: CentOS Stream
-.. |REMOTE_DISTRO_VER| replace:: 8
+.. |CFS_DISTRO| replace:: AlmaLinux
+.. |CFS_DISTRO_VER| replace:: 9
+.. |REMOTE_DISTRO| replace:: AlmaLinux
+.. |REMOTE_DISTRO_VER| replace:: 9
 """
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -282,7 +282,7 @@ epub_scheme = 'URL'
 
 # The unique identifier of the text. This can be a ISBN number
 # or the project homepage.
-epub_identifier = 'https://www.clusterlabs.org/pacemaker/doc/2.0/%BOOK_ID%/epub/%BOOK_ID%.epub'
+epub_identifier = 'https://www.clusterlabs.org/pacemaker/doc/2.1/%BOOK_ID%/epub/%BOOK_ID%.epub'
 
 # A unique identification for the text.
 epub_uid = 'ClusterLabs.org-Pacemaker-%BOOK_ID%'

@@ -1,4 +1,4 @@
 
-pcmk__native_allocate: child_DoFencing allocation score on hadev1: 0
-pcmk__native_allocate: child_DoFencing allocation score on hadev2: 0
-pcmk__native_allocate: child_DoFencing allocation score on hadev3: 0
+pcmk__primitive_assign: child_DoFencing allocation score on hadev1: 0
+pcmk__primitive_assign: child_DoFencing allocation score on hadev2: 0
+pcmk__primitive_assign: child_DoFencing allocation score on hadev3: 0

@@ -109,11 +109,6 @@ pcmk__copy_node_list(const GList *list, bool reset)
     return result;
 }
 
-struct node_weight_s {
-    pe_node_t *active;
-    pe_working_set_t *data_set;
-};
-
 /*!
  * \internal
  * \brief Compare two nodes for allocation desirability
@@ -133,7 +128,7 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
 {
     const pe_node_t *node1 = (const pe_node_t *) a;
     const pe_node_t *node2 = (const pe_node_t *) b;
-    struct node_weight_s *nw = data;
+    pe_node_t *active = (pe_node_t *) data;
 
     int node1_weight = 0;
     int node2_weight = 0;
@@ -154,39 +149,39 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
 
     if (node1_weight > node2_weight) {
         crm_trace("%s (%d) > %s (%d) : weight",
-                  node1->details->uname, node1_weight, node2->details->uname,
+                  pe__node_name(node1), node1_weight, pe__node_name(node2),
                   node2_weight);
         return -1;
     }
 
     if (node1_weight < node2_weight) {
         crm_trace("%s (%d) < %s (%d) : weight",
-                  node1->details->uname, node1_weight, node2->details->uname,
+                  pe__node_name(node1), node1_weight, pe__node_name(node2),
                   node2_weight);
         return 1;
     }
 
     crm_trace("%s (%d) == %s (%d) : weight",
-              node1->details->uname, node1_weight, node2->details->uname,
+              pe__node_name(node1), node1_weight, pe__node_name(node2),
               node2_weight);
 
     // If appropriate, compare node utilization
 
-    if (pcmk__str_eq(nw->data_set->placement_strategy, "minimal",
+    if (pcmk__str_eq(node1->details->data_set->placement_strategy, "minimal",
                      pcmk__str_casei)) {
         goto equal;
     }
 
-    if (pcmk__str_eq(nw->data_set->placement_strategy, "balanced",
+    if (pcmk__str_eq(node1->details->data_set->placement_strategy, "balanced",
                      pcmk__str_casei)) {
         result = pcmk__compare_node_capacities(node1, node2);
         if (result < 0) {
             crm_trace("%s > %s : capacity (%d)",
-                      node1->details->uname, node2->details->uname, result);
+                      pe__node_name(node1), pe__node_name(node2), result);
             return -1;
         } else if (result > 0) {
             crm_trace("%s < %s : capacity (%d)",
-                      node1->details->uname, node2->details->uname, result);
+                      pe__node_name(node1), pe__node_name(node2), result);
             return 1;
         }
     }
@@ -195,36 +190,36 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
 
     if (node1->details->num_resources < node2->details->num_resources) {
         crm_trace("%s (%d) > %s (%d) : resources",
-                  node1->details->uname, node1->details->num_resources,
-                  node2->details->uname, node2->details->num_resources);
+                  pe__node_name(node1), node1->details->num_resources,
+                  pe__node_name(node2), node2->details->num_resources);
         return -1;
 
     } else if (node1->details->num_resources > node2->details->num_resources) {
         crm_trace("%s (%d) < %s (%d) : resources",
-                  node1->details->uname, node1->details->num_resources,
-                  node2->details->uname, node2->details->num_resources);
+                  pe__node_name(node1), node1->details->num_resources,
+                  pe__node_name(node2), node2->details->num_resources);
         return 1;
     }
 
     // Check whether one node is already running desired resource
 
-    if (nw->active != NULL) {
-        if (nw->active->details == node1->details) {
+    if (active != NULL) {
+        if (active->details == node1->details) {
             crm_trace("%s (%d) > %s (%d) : active",
-                      node1->details->uname, node1->details->num_resources,
-                      node2->details->uname, node2->details->num_resources);
+                      pe__node_name(node1), node1->details->num_resources,
+                      pe__node_name(node2), node2->details->num_resources);
             return -1;
-        } else if (nw->active->details == node2->details) {
+        } else if (active->details == node2->details) {
             crm_trace("%s (%d) < %s (%d) : active",
-                      node1->details->uname, node1->details->num_resources,
-                      node2->details->uname, node2->details->num_resources);
+                      pe__node_name(node1), node1->details->num_resources,
+                      pe__node_name(node2), node2->details->num_resources);
             return 1;
         }
     }
 
     // If all else is equal, prefer node with lowest-sorting name
 equal:
-    crm_trace("%s = %s", node1->details->uname, node2->details->uname);
+    crm_trace("%s = %s", pe__node_name(node1), pe__node_name(node2));
     return strcmp(node1->details->uname, node2->details->uname);
 }
 
@@ -239,12 +234,9 @@ equal:
  * \return New head of sorted list
  */
 GList *
-pcmk__sort_nodes(GList *nodes, pe_node_t *active_node,
-                 pe_working_set_t *data_set)
+pcmk__sort_nodes(GList *nodes, pe_node_t *active_node)
 {
-    struct node_weight_s nw = { active_node, data_set };
-
-    return g_list_sort_with_data(nodes, compare_nodes, &nw);
+    return g_list_sort_with_data(nodes, compare_nodes, active_node);
 }
 
 /*!
@@ -307,8 +299,8 @@ pcmk__apply_node_health(pe_working_set_t *data_set)
         if (health == 0) {
             continue;
         }
-        crm_info("Node %s overall system health is %d",
-                 node->details->uname, health);
+        crm_info("Overall system health of %s is %d",
+                 pe__node_name(node), health);
 
         // Use node health as a location score for each resource on the node
         for (GList *r = data_set->resources; r != NULL; r = r->next) {
@@ -328,7 +320,7 @@ pcmk__apply_node_health(pe_working_set_t *data_set)
                                    data_set);
             } else {
                 pe_rsc_trace(rsc, "%s is immune from health ban on %s",
-                             rsc->id, node->details->uname);
+                             rsc->id, pe__node_name(node));
             }
         }
     }

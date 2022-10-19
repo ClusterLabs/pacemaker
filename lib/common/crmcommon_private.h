@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2021 the Pacemaker project contributors
+ * Copyright 2018-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -24,6 +24,11 @@
 // Decent chunk size for processing large amounts of data
 #define PCMK__BUFFER_SIZE 4096
 
+#if defined(PCMK__UNIT_TESTING)
+#undef G_GNUC_INTERNAL
+#define G_GNUC_INTERNAL
+#endif
+
 /* When deleting portions of an XML tree, we keep a record so we can know later
  * (e.g. when checking differences) that something was deleted.
  */
@@ -32,13 +37,18 @@ typedef struct pcmk__deleted_xml_s {
         int position;
 } pcmk__deleted_xml_t;
 
-typedef struct xml_private_s {
+typedef struct xml_node_private_s {
+        long check;
+        uint32_t flags;
+} xml_node_private_t;
+
+typedef struct xml_doc_private_s {
         long check;
         uint32_t flags;
         char *user;
         GList *acls;
         GList *deleted_objs; // List of pcmk__deleted_xml_t
-} xml_private_t;
+} xml_doc_private_t;
 
 #define pcmk__set_xml_flags(xml_priv, flags_to_set) do {                    \
         (xml_priv)->flags = pcmk__set_flags_as(__func__, __LINE__,          \
@@ -53,39 +63,34 @@ typedef struct xml_private_s {
     } while (0)
 
 G_GNUC_INTERNAL
-void pcmk__xml2text(xmlNode *data, int options, char **buffer, int *offset,
-                    int *max, int depth);
-
-G_GNUC_INTERNAL
-void pcmk__buffer_add_char(char **buffer, int *offset, int *max, char c);
+void pcmk__xml2text(xmlNodePtr data, int options, GString *buffer, int depth);
 
 G_GNUC_INTERNAL
 bool pcmk__tracking_xml_changes(xmlNode *xml, bool lazy);
 
 G_GNUC_INTERNAL
-int pcmk__element_xpath(const char *prefix, xmlNode *xml, char *buffer,
-                        int offset, size_t buffer_size);
-
-G_GNUC_INTERNAL
 void pcmk__mark_xml_created(xmlNode *xml);
 
 G_GNUC_INTERNAL
-int pcmk__xml_position(xmlNode *xml, enum xml_private_flags ignore_if_set);
+int pcmk__xml_position(const xmlNode *xml,
+                       enum xml_private_flags ignore_if_set);
 
 G_GNUC_INTERNAL
-xmlNode *pcmk__xml_match(xmlNode *haystack, xmlNode *needle, bool exact);
+xmlNode *pcmk__xml_match(const xmlNode *haystack, const xmlNode *needle,
+                         bool exact);
 
 G_GNUC_INTERNAL
-void pcmk__xe_log(int log_level, const char *file, const char *function,
-                  int line, const char *prefix, xmlNode *data, int depth,
-                  int options);
+void pcmk__xml_log(int log_level, const char *file, const char *function,
+                   int line, const char *prefix, const xmlNode *data, int depth,
+                   int options);
 
 G_GNUC_INTERNAL
 void pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
                       bool as_diff);
 
 G_GNUC_INTERNAL
-xmlNode *pcmk__xc_match(xmlNode *root, xmlNode *search_comment, bool exact);
+xmlNode *pcmk__xc_match(const xmlNode *root, const xmlNode *search_comment,
+                        bool exact);
 
 G_GNUC_INTERNAL
 void pcmk__xc_update(xmlNode *parent, xmlNode *target, xmlNode *update);
@@ -133,7 +138,7 @@ typedef struct pcmk__ipc_methods_s {
      * \internal
      * \brief Allocate any private data needed by daemon IPC
      *
-     * \param[in] api  IPC API connection
+     * \param[in,out] api  IPC API connection
      *
      * \return Standard Pacemaker return code
      */
@@ -143,7 +148,7 @@ typedef struct pcmk__ipc_methods_s {
      * \internal
      * \brief Free any private data used by daemon IPC
      *
-     * \param[in] api_data  Data allocated by new_data() method
+     * \param[in,out] api_data  Data allocated by new_data() method
      */
     void (*free_data)(void *api_data);
 
@@ -157,7 +162,7 @@ typedef struct pcmk__ipc_methods_s {
      * reply). Ideally this would be consistent across all daemons, but for now
      * this allows each to do its own authorization.
      *
-     * \param[in] api  IPC API connection
+     * \param[in,out] api  IPC API connection
      *
      * \return Standard Pacemaker return code
      */
@@ -167,8 +172,8 @@ typedef struct pcmk__ipc_methods_s {
      * \internal
      * \brief Check whether an IPC request results in a reply
      *
-     * \param[in] api      IPC API connection
-     * \param[in] request  IPC request XML
+     * \param[in,out] api      IPC API connection
+     * \param[in,out] request  IPC request XML
      *
      * \return true if request would result in an IPC reply, false otherwise
      */
@@ -178,8 +183,8 @@ typedef struct pcmk__ipc_methods_s {
      * \internal
      * \brief Perform daemon-specific handling of an IPC message
      *
-     * \param[in] api  IPC API connection
-     * \param[in] msg  Message read from IPC connection
+     * \param[in,out] api  IPC API connection
+     * \param[in,out] msg  Message read from IPC connection
      *
      * \return true if more IPC reply messages should be expected
      */
@@ -189,7 +194,7 @@ typedef struct pcmk__ipc_methods_s {
      * \internal
      * \brief Perform daemon-specific handling of an IPC disconnect
      *
-     * \param[in] api  IPC API connection
+     * \param[in,out] api  IPC API connection
      */
     void (*post_disconnect)(pcmk_ipc_api_t *api);
 } pcmk__ipc_methods_t;
@@ -282,8 +287,16 @@ pcmk__ipc_methods_t *pcmk__schedulerd_api_methods(void);
  *       the least privilege principle and may pose an additional risk
  *       (i.e. such accidental inconsistency shall be eventually fixed).
  */
-int pcmk__crm_ipc_is_authentic_process(qb_ipcc_connection_t *qb_ipc, int sock, uid_t refuid, gid_t refgid,
-                                       pid_t *gotpid, uid_t *gotuid, gid_t *gotgid);
+int pcmk__crm_ipc_is_authentic_process(qb_ipcc_connection_t *qb_ipc, int sock,
+                                       uid_t refuid, gid_t refgid,
+                                       pid_t *gotpid, uid_t *gotuid,
+                                       gid_t *gotgid);
+
+
+/*
+ * Utils
+ */
+#define PCMK__PW_BUFFER_LEN 500
 
 
 #endif  // CRMCOMMON_PRIVATE__H

@@ -8,16 +8,10 @@
  */
 
 #include <crm_internal.h>
+
+#include <crm/common/unittest_internal.h>
 #include <crm/common/xml_internal.h>
 #include <crm/msg_xml.h>
-
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <setjmp.h>
-#include <cmocka.h>
 
 static void
 set_attr(void **state)
@@ -33,13 +27,5 @@ set_attr(void **state)
     free_xml(node);
 }
 
-int
-main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(set_attr),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(set_attr))

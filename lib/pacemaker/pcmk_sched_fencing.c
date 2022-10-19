@@ -88,7 +88,7 @@ order_start_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op,
                      * its status with it.
                      */
                     pe_rsc_debug(rsc, "Ordering %s after %s recovery", action->uuid,
-                                 target->details->uname);
+                                 pe__node_name(target));
                     order_actions(stonith_op, action,
                                   pe_order_optional | pe_order_runnable_left);
                 }
@@ -169,15 +169,15 @@ order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op,
         if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
             crm_notice("Stop of failed resource %s is implicit %s %s is fenced",
                        rsc->id, (order_implicit? "after" : "because"),
-                       target->details->uname);
+                       pe__node_name(target));
         } else {
             crm_info("%s is implicit %s %s is fenced",
                      action->uuid, (order_implicit? "after" : "because"),
-                     target->details->uname);
+                     pe__node_name(target));
         }
 
         if (pcmk_is_set(rsc->flags, pe_rsc_notify)) {
-            pcmk__order_notifs_after_fencing(action, rsc, stonith_op);
+            pe__order_notifs_after_fencing(action, rsc, stonith_op);
         }
 
 #if 0
@@ -200,7 +200,7 @@ order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op,
          * resources instead of the above.
          */
          crm_info("Moving healthy resource %s off %s before fencing",
-                  rsc->id, node->details->uname);
+                  rsc->id, pe__node_name(node));
          pcmk__new_ordering(rsc, stop_key(rsc), NULL, NULL,
                             strdup(CRM_OP_FENCE), stonith_op,
                             pe_order_optional, data_set);
@@ -221,10 +221,10 @@ order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op,
             if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
                 pe_rsc_info(rsc,
                             "Demote of failed resource %s is implicit after %s is fenced",
-                            rsc->id, target->details->uname);
+                            rsc->id, pe__node_name(target));
             } else {
                 pe_rsc_info(rsc, "%s is implicit after %s is fenced",
-                            action->uuid, target->details->uname);
+                            action->uuid, pe__node_name(target));
             }
 
             /* The demote would never complete and is now implied by the
@@ -304,11 +304,10 @@ pcmk__order_vs_fence(pe_action_t *stonith_op, pe_working_set_t *data_set)
  * \param[in] node      Node that action is on
  * \param[in] action    Action to be ordered after unfencing
  * \param[in] order     Ordering flags
- * \param[in] data_set  Cluster working set
  */
 void
 pcmk__order_vs_unfence(pe_resource_t *rsc, pe_node_t *node, pe_action_t *action,
-                       enum pe_ordering order, pe_working_set_t *data_set)
+                       enum pe_ordering order)
 {
     /* When unfencing is in use, we order unfence actions before any probe or
      * start of resources that require unfencing, and also of fence devices.
@@ -318,14 +317,15 @@ pcmk__order_vs_unfence(pe_resource_t *rsc, pe_node_t *node, pe_action_t *action,
      * information to even probe or start unless the node is first unfenced.
      */
     if ((pcmk_is_set(rsc->flags, pe_rsc_fence_device)
-         && pcmk_is_set(data_set->flags, pe_flag_enable_unfencing))
+         && pcmk_is_set(rsc->cluster->flags, pe_flag_enable_unfencing))
         || pcmk_is_set(rsc->flags, pe_rsc_needs_unfencing)) {
 
         /* Start with an optional ordering. Requiring unfencing would result in
          * the node being unfenced, and all its resources being stopped,
          * whenever a new resource is added -- which would be highly suboptimal.
          */
-        pe_action_t *unfence = pe_fence_op(node, "on", TRUE, NULL, FALSE, data_set);
+        pe_action_t *unfence = pe_fence_op(node, "on", TRUE, NULL, FALSE,
+                                           rsc->cluster);
 
         order_actions(unfence, action, order);
 
@@ -334,7 +334,7 @@ pcmk__order_vs_unfence(pe_resource_t *rsc, pe_node_t *node, pe_action_t *action,
             char *reason = crm_strdup_printf("required by %s %s",
                                              rsc->id, action->task);
 
-            trigger_unfencing(NULL, node, reason, NULL, data_set);
+            trigger_unfencing(NULL, node, reason, NULL, rsc->cluster);
             free(reason);
         }
     }
@@ -393,18 +393,18 @@ pcmk__fence_guest(pe_node_t *node)
                                                      NULL, FALSE,
                                                      node->details->data_set);
 
-        crm_info("Implying guest node %s is down (action %d) after %s fencing",
-                 node->details->uname, stonith_op->id,
-                 stop->node->details->uname);
+        crm_info("Implying guest %s is down (action %d) after %s fencing",
+                 pe__node_name(node), stonith_op->id,
+                 pe__node_name(stop->node));
         order_actions(parent_stonith_op, stonith_op,
                       pe_order_runnable_left|pe_order_implies_then);
 
     } else if (stop) {
         order_actions(stop, stonith_op,
                       pe_order_runnable_left|pe_order_implies_then);
-        crm_info("Implying guest node %s is down (action %d) "
+        crm_info("Implying guest %s is down (action %d) "
                  "after container %s is stopped (action %d)",
-                 node->details->uname, stonith_op->id,
+                 pe__node_name(node), stonith_op->id,
                  container->id, stop->id);
     } else {
         /* If we're fencing the guest node but there's no stop for the guest
@@ -419,15 +419,15 @@ pcmk__fence_guest(pe_node_t *node)
 
         if (stop) {
             order_actions(stop, stonith_op, pe_order_optional);
-            crm_info("Implying guest node %s is down (action %d) "
+            crm_info("Implying guest %s is down (action %d) "
                      "after connection is stopped (action %d)",
-                     node->details->uname, stonith_op->id, stop->id);
+                     pe__node_name(node), stonith_op->id, stop->id);
         } else {
             /* Not sure why we're fencing, but everything must already be
              * cleanly stopped.
              */
-            crm_info("Implying guest node %s is down (action %d) ",
-                     node->details->uname, stonith_op->id);
+            crm_info("Implying guest %s is down (action %d) ",
+                     pe__node_name(node), stonith_op->id);
         }
     }
 
@@ -450,4 +450,49 @@ pcmk__node_unfenced(pe_node_t *node)
     const char *unfenced = pe_node_attribute_raw(node, CRM_ATTR_UNFENCED);
 
     return !pcmk__str_eq(unfenced, "0", pcmk__str_null_matches);
+}
+
+/*!
+ * \internal
+ * \brief Order a resource's start and stop relative to unfencing of a node
+ *
+ * \param[in]     data       Node that could be unfenced
+ * \param[in,out] user_data  Resource to order
+ */
+void
+pcmk__order_restart_vs_unfence(gpointer data, gpointer user_data)
+{
+    pe_node_t *node = (pe_node_t *) data;
+    pe_resource_t *rsc = (pe_resource_t *) user_data;
+
+    pe_action_t *unfence = pe_fence_op(node, "on", true, NULL, false,
+                                       rsc->cluster);
+
+    crm_debug("Ordering any stops of %s before %s, and any starts after",
+              rsc->id, unfence->uuid);
+
+    /*
+     * It would be more efficient to order clone resources once,
+     * rather than order each instance, but ordering the instance
+     * allows us to avoid unnecessary dependencies that might conflict
+     * with user constraints.
+     *
+     * @TODO: This constraint can still produce a transition loop if the
+     * resource has a stop scheduled on the node being unfenced, and
+     * there is a user ordering constraint to start some other resource
+     * (which will be ordered after the unfence) before stopping this
+     * resource. An example is "start some slow-starting cloned service
+     * before stopping an associated virtual IP that may be moving to
+     * it":
+     *       stop this -> unfencing -> start that -> stop this
+     */
+    pcmk__new_ordering(rsc, stop_key(rsc), NULL,
+                       NULL, strdup(unfence->uuid), unfence,
+                       pe_order_optional|pe_order_same_node,
+                       rsc->cluster);
+
+    pcmk__new_ordering(NULL, strdup(unfence->uuid), unfence,
+                       rsc, start_key(rsc), NULL,
+                       pe_order_implies_then_on_node|pe_order_same_node,
+                       rsc->cluster);
 }

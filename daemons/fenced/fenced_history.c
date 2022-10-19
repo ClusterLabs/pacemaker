@@ -219,7 +219,7 @@ stonith_fence_history_trim(void)
  * \return Fence-history as hash-table
  */
 static GHashTable *
-stonith_xml_history_to_list(xmlNode *history)
+stonith_xml_history_to_list(const xmlNode *history)
 {
     xmlNode *xml_op = NULL;
     GHashTable *rv = NULL;
@@ -289,17 +289,16 @@ stonith_xml_history_to_list(xmlNode *history)
  * \brief Craft xml difference between local fence-history and a history
  *        coming from remote, and merge the remote history into the local
  *
- * \param[in] remote_history    Fence-history as hash-table (may be NULL)
- * \param[in] add_id            If crafting the answer for an API
- *                              history-request there is no need for the id
- * \param[in] target            Optionally limit to certain fence-target
+ * \param[in,out] remote_history  Fence-history as hash-table (may be NULL)
+ * \param[in]     add_id          If crafting the answer for an API
+ *                                history-request there is no need for the id
+ * \param[in]     target          Optionally limit to certain fence-target
  *
  * \return The fence-history as xml
  */
 static xmlNode *
 stonith_local_history_diff_and_merge(GHashTable *remote_history,
-                           gboolean add_id,
-                           const char *target)
+                                     gboolean add_id, const char *target)
 {
     xmlNode *history = NULL;
     GHashTableIter iter;
@@ -448,14 +447,12 @@ stonith_local_history(gboolean add_id, const char *target)
 
 /*!
  * \internal
- * \brief Handle fence-history messages (either from API or coming in as
- *        broadcasts
+ * \brief Handle fence-history messages (from API or coming in as broadcasts)
  *
- * \param[in] msg       Request message
- * \param[in] output    In case of a request from the API used to craft
- *                      a reply from
- * \param[in] remote_peer
- * \param[in] options   call-options from the request
+ * \param[in,out] msg          Request XML
+ * \param[out]    output       Where to set local history, if requested
+ * \param[in]     remote_peer  If broadcast, peer that sent it
+ * \param[in]     options      Call options from the request
  */
 void
 stonith_fence_history(xmlNode *msg, xmlNode **output,

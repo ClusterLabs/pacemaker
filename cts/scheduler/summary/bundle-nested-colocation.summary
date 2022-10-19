@@ -90,7 +90,7 @@ Revised Cluster Status:
   * Node List:
     * Online: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 overcloud-galera-0 overcloud-galera-1 overcloud-galera-2 ]
     * RemoteOnline: [ overcloud-rabbit-0 overcloud-rabbit-1 overcloud-rabbit-2 ]
-    * GuestOnline: [ rabbitmq-bundle-0@overcloud-controller-0 rabbitmq-bundle-1@overcloud-controller-1 rabbitmq-bundle-2@overcloud-controller-2 ]
+    * GuestOnline: [ rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 ]
 
   * Full List of Resources:
     * overcloud-rabbit-0	(ocf:pacemaker:remote):	 Started overcloud-controller-0

@@ -7,6 +7,7 @@ __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT AN
 
 import io
 import os
+import psutil
 import re
 import sys
 import subprocess
@@ -160,12 +161,43 @@ def localname():
     return our_uname
 
 
-def killall(process):
-    """ Kill all instances of a process """
+def killall(process_names=[], terminate=False):
+    """ Kill all instances of every process in a list """
 
-    cmd = shlex.split("killall -9 -q %s" % process)
-    test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-    test.wait()
+    if not process_names:
+        return
+
+    procs = []
+    for proc in psutil.process_iter(["name"]):
+        if proc.info["name"] in process_names:
+            procs.append(proc)
+
+    if terminate:
+        for proc in procs:
+            proc.terminate()
+        gone, alive = psutil.wait_procs(procs, timeout=3)
+        procs = alive
+
+    for proc in procs:
+        proc.kill()
+
+
+def is_proc_running(process_name):
+    """ Check whether a process with a given name is running """
+
+    for proc in psutil.process_iter(["name"]):
+        if proc.info["name"] == process_name:
+            return True
+    return False
+
+
+def exit_if_proc_running(process_name):
+    """ Exit with error if a given process is running """
+
+    if is_proc_running(process_name):
+        print("Error: %s is already running!" % process_name)
+        print("Run %s only when the cluster is stopped." % sys.argv[0])
+        sys.exit(CrmExit.ERROR)
 
 
 class TestError(Exception):
@@ -266,8 +298,7 @@ class Test(object):
         """ Prepare the host for executing a test """
 
         # Make sure we are in full control
-        killall("pacemakerd")
-        killall("pacemaker-fenced")
+        killall(["pacemakerd", "pacemaker-fenced"])
 
         if self.verbose:
             self.stonith_options = self.stonith_options + " -V"
@@ -833,7 +864,9 @@ class Tests(object):
             test.add_cmd("stonith_admin",
                          "--output-as=xml -R true2 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node2\"")
 
-            test.add_expected_fail_cmd("stonith_admin", "--output-as=xml -F node3 -t 5", CrmExit.ERROR)
+            test.add_expected_fail_cmd("stonith_admin",
+                                       "--output-as=xml -F node3 -t 5",
+                                       CrmExit.NOSUCH)
             test.add_cmd("stonith_admin", "--output-as=xml -F node2 -t 5")
 
         # simple topology test for one device
@@ -1043,7 +1076,9 @@ class Tests(object):
 
             test.add_cmd("stonith_admin", "--output-as=xml -Q true1")
             test.add_cmd("stonith_admin", "--output-as=xml -Q false1")
-            test.add_expected_fail_cmd("stonith_admin", "--output-as=xml -Q true2", CrmExit.ERROR)
+            test.add_expected_fail_cmd("stonith_admin",
+                                       "--output-as=xml -Q true2",
+                                       CrmExit.NOSUCH)
 
         # Verify monitor occurs for duration of timeout period on failure
         for test_type in test_types:
@@ -1076,7 +1111,9 @@ class Tests(object):
 
             test.add_cmd("stonith_admin", "--output-as=xml -D true1")
 
-            test.add_expected_fail_cmd("stonith_admin", "--output-as=xml -Q true1", CrmExit.ERROR)
+            test.add_expected_fail_cmd("stonith_admin",
+                                       "--output-as=xml -Q true1",
+                                       CrmExit.NOSUCH)
 
         # simple reboot test
         for test_type in test_types:
@@ -1089,7 +1126,9 @@ class Tests(object):
 
             test.add_cmd("stonith_admin", "--output-as=xml -D true1")
 
-            test.add_expected_fail_cmd("stonith_admin", "--output-as=xml -Q true1", CrmExit.ERROR)
+            test.add_expected_fail_cmd("stonith_admin",
+                                       "--output-as=xml -Q true1",
+                                       CrmExit.NOSUCH)
 
         # test fencing history.
         for test_type in test_types:
@@ -1320,7 +1359,9 @@ class Tests(object):
                              1)
         test.add_cmd("stonith_admin",
                      "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=%s node_fake_1234\"" % (our_uname))
-        test.add_expected_fail_cmd("stonith_admin", "--output-as=xml -U node_fake_1234 -t 3", CrmExit.ERROR)
+        test.add_expected_fail_cmd("stonith_admin",
+                                   "--output-as=xml -U node_fake_1234 -t 3",
+                                   CrmExit.NOSUCH)
         test.add_stonith_log_pattern("(on) to be executed on target")
 
         ### verify unfencing using on_target device with topology
@@ -1339,7 +1380,7 @@ class Tests(object):
         test.add_cmd("stonith_admin", "--output-as=xml -U %s -t 3" % (our_uname))
         test.add_stonith_log_pattern("(on) to be executed on target")
 
-        ### verify unfencing using on_target device with topology fails when victim node doesn't exist
+        ### verify unfencing using on_target device with topology fails when target node doesn't exist
         test = self.new_test("cpg_unfence_on_target_4",
                              "Verify unfencing failure with on_target = true using topology",
                              1)
@@ -1352,7 +1393,9 @@ class Tests(object):
         test.add_cmd("stonith_admin", "--output-as=xml -r node_fake -i 1 -v true1")
         test.add_cmd("stonith_admin", "--output-as=xml -r node_fake -i 2 -v true2")
 
-        test.add_expected_fail_cmd("stonith_admin", "--output-as=xml -U node_fake -t 3", CrmExit.ERROR)
+        test.add_expected_fail_cmd("stonith_admin",
+                                   "--output-as=xml -U node_fake -t 3",
+                                   CrmExit.NOSUCH)
         test.add_stonith_log_pattern("(on) to be executed on target")
 
     def build_remap_tests(self):
@@ -1377,6 +1420,35 @@ class Tests(object):
         # fence_dummy sets "on" as an on_target action
         test.add_stonith_log_pattern("Ignoring true1 'on' failure (no capable peers) targeting node_fake")
         test.add_stonith_log_pattern("Ignoring true2 'on' failure (no capable peers) targeting node_fake")
+        test.add_stonith_log_pattern("Undoing remap of reboot targeting node_fake")
+
+        test = self.new_test("cpg_remap_simple_off",
+                             "Verify sequential topology reboot skips 'on' if "
+                             "pcmk_reboot_action=off or agent doesn't support "
+                             "'on'", 1)
+        test.add_cmd("stonith_admin",
+                     "--output-as=xml -R true1 -a fence_dummy -o mode=pass "
+                     "-o pcmk_host_list=node_fake -o pcmk_off_timeout=1 "
+                     "-o pcmk_reboot_timeout=10 -o pcmk_reboot_action=off")
+        test.add_cmd("stonith_admin",
+                     "--output-as=xml -R true2 -a fence_dummy_no_on "
+                     "-o mode=pass -o pcmk_host_list=node_fake "
+                     "-o pcmk_off_timeout=2 -o pcmk_reboot_timeout=20")
+        test.add_cmd("stonith_admin",
+                     "--output-as=xml -r node_fake -i 1 -v true1 -v true2")
+        test.add_cmd("stonith_admin", "--output-as=xml -B node_fake -t 5")
+        test.add_stonith_log_pattern("Remapping multiple-device reboot targeting node_fake")
+        # timeout should be sum of off timeouts (1+2=3), not reboot timeouts (10+20=30)
+        test.add_stonith_log_pattern("Total timeout set to 3 for peer's fencing targeting node_fake")
+        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using true1")
+        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using true2")
+        test.add_stonith_log_pattern("Remapped 'off' targeting node_fake complete, remapping to 'on'")
+        # "on" should be skipped
+        test.add_stonith_log_pattern("Not turning node_fake back on using "
+                                     "true1 because the device is configured "
+                                     "to stay off")
+        test.add_stonith_log_pattern("Not turning node_fake back on using true2"
+                                     " because the agent doesn't support 'on'")
         test.add_stonith_log_pattern("Undoing remap of reboot targeting node_fake")
 
         test = self.new_test("cpg_remap_automatic",
@@ -1475,7 +1547,7 @@ class Tests(object):
                 corosync_cfg.close()
 
             ### make sure we are in control ###
-            killall("corosync")
+            killall(["corosync"])
             self.start_corosync()
 
         subprocess.call(["cts-support", "install"])
@@ -1484,7 +1556,7 @@ class Tests(object):
         """ Clean up the host after executing desired tests """
 
         if use_corosync:
-            killall("corosync")
+            killall(["corosync"])
 
             if self.autogen_corosync_cfg:
                 if self.verbose:
@@ -1579,7 +1651,11 @@ def main(argv):
     opts = TestOptions()
     opts.build_options(argv)
 
-    use_corosync = 1
+    exit_if_proc_running("pacemaker-fenced")
+
+    use_corosync = not opts.options['no-cpg']
+    if use_corosync:
+        exit_if_proc_running("corosync")
 
     # Create a temporary directory for log files (the directory and its
     # contents will automatically be erased when done)
@@ -1607,9 +1683,6 @@ def main(argv):
             sys.exit(CrmExit.OK)
 
         print("Starting ...")
-
-        if opts.options['no-cpg']:
-            use_corosync = 0
 
         tests.setup_environment(use_corosync)
 

@@ -21,15 +21,15 @@
       </node>
     </nodes>
     <resources>
-      <clone id="MASTER_RSC_A">
-        <meta_attributes id="MASTER_RSC_A-meta_attributes">
-          <nvpair id="MASTER_RSC_A-meta_attributes-promotable" name="promotable" value="true"/>
-          <nvpair id="MASTER_RSC_A-meta_attributes-promoted-max" name="promoted-max" value="0"/>
-          <nvpair id="MASTER_RSC_A-meta_attributes-promoted-node-max" name="promoted-node-max" value="0"/>
-          <nvpair id="MASTER_RSC_A-meta_attributes-clone-max" name="clone-max" value="1"/>
-          <nvpair id="MASTER_RSC_A-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
-          <nvpair id="MASTER_RSC_A-meta_attributes-notify" name="notify" value="true"/>
-          <nvpair id="MASTER_RSC_A-meta_attributes-target-role" name="target-role" value="Started"/>
+      <clone id="PROMOTABLE_RSC_A">
+        <meta_attributes id="PROMOTABLE_RSC_A-meta_attributes">
+          <nvpair id="PROMOTABLE_RSC_A-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="PROMOTABLE_RSC_A-meta_attributes-promoted-max" name="promoted-max" value="0"/>
+          <nvpair id="PROMOTABLE_RSC_A-meta_attributes-promoted-node-max" name="promoted-node-max" value="0"/>
+          <nvpair id="PROMOTABLE_RSC_A-meta_attributes-clone-max" name="clone-max" value="1"/>
+          <nvpair id="PROMOTABLE_RSC_A-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
+          <nvpair id="PROMOTABLE_RSC_A-meta_attributes-notify" name="notify" value="true"/>
+          <nvpair id="PROMOTABLE_RSC_A-meta_attributes-target-role" name="target-role" value="Started"/>
         </meta_attributes>
         <primitive class="ocf" id="NATIVE_RSC_A" provider="pacemaker" type="Stateful">
           <operations>
@@ -51,7 +51,7 @@
       </primitive>
     </resources>
     <constraints>
-      <rsc_order first="NATIVE_RSC_B" first-action="start" then="MASTER_RSC_A" then-action="start" id="promote_then_start"/>
+      <rsc_order first="NATIVE_RSC_B" first-action="start" then="PROMOTABLE_RSC_A" then-action="start" id="promote_then_start"/>
     </constraints>
   </configuration>
   <status>
@@ -59,7 +59,7 @@
       <transient_attributes id="fc16-builder">
         <instance_attributes id="status-fc16-builder">
           <nvpair id="status-fc16-builder-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-fc16-builder-master-NATIVE_RSC_A.0" name="master-NATIVE_RSC_A:0" value="5"/>
+          <nvpair id="status-fc16-builder-promoted-NATIVE_RSC_A.0" name="master-NATIVE_RSC_A:0" value="5"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="fc16-builder">

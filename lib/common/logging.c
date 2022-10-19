@@ -471,7 +471,7 @@ crm_disable_blackbox(int nsig)
  * @TODO actually make this async-safe
  */
 void
-crm_write_blackbox(int nsig, struct qb_log_callsite *cs)
+crm_write_blackbox(int nsig, const struct qb_log_callsite *cs)
 {
     static volatile int counter = 1;
     static volatile time_t last = 0;
@@ -723,9 +723,9 @@ crm_priority2int(const char *name)
  * If the identifier crm_system_name is not already set, then it is set as follows:
  * - it is passed to the function via the "entity" parameter, or
  * - it is derived from the executable name
- * 
+ *
  * The identifier can be used in logs, IPC, and more.
- * 
+ *
  * This method also sets the PCMK_service environment variable.
  *
  * \param[in] entity  If not NULL, will be assigned to the identifier
@@ -733,7 +733,7 @@ crm_priority2int(const char *name)
  * \param[in] argv    The command line parameter values
  */
 static void
-set_identity(const char *entity, int argc, char **argv)
+set_identity(const char *entity, int argc, char *const *argv)
 {
     if (crm_system_name != NULL) {
         return; // Already set, don't overwrite
@@ -762,7 +762,7 @@ set_identity(const char *entity, int argc, char **argv)
 }
 
 void
-crm_log_preinit(const char *entity, int argc, char **argv)
+crm_log_preinit(const char *entity, int argc, char *const *argv)
 {
     /* Configure libqb logging with nothing turned on */
 

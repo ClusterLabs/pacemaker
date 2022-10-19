@@ -1,10 +1,10 @@
 
-pcmk__group_allocate: Filesystem_2 allocation score on paul: 0
-pcmk__group_allocate: IPaddr_5 allocation score on paul: 0
-pcmk__group_allocate: datadisk_1 allocation score on paul: 0
-pcmk__group_allocate: group_1 allocation score on paul: 0
-pcmk__group_allocate: postfix_9 allocation score on paul: 0
-pcmk__native_allocate: Filesystem_2 allocation score on paul: 0
-pcmk__native_allocate: IPaddr_5 allocation score on paul: 0
-pcmk__native_allocate: datadisk_1 allocation score on paul: 0
-pcmk__native_allocate: postfix_9 allocation score on paul: 0
+pcmk__group_assign: Filesystem_2 allocation score on paul: 0
+pcmk__group_assign: IPaddr_5 allocation score on paul: 0
+pcmk__group_assign: datadisk_1 allocation score on paul: 0
+pcmk__group_assign: group_1 allocation score on paul: 0
+pcmk__group_assign: postfix_9 allocation score on paul: 0
+pcmk__primitive_assign: Filesystem_2 allocation score on paul: 0
+pcmk__primitive_assign: IPaddr_5 allocation score on paul: 0
+pcmk__primitive_assign: datadisk_1 allocation score on paul: 0
+pcmk__primitive_assign: postfix_9 allocation score on paul: 0

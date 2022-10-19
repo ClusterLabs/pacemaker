@@ -26,7 +26,7 @@ void send_rsc_command(pcmk__graph_action_t *action);
 static void te_update_job_count(pcmk__graph_action_t *action, int offset);
 
 static void
-te_start_action_timer(pcmk__graph_t *graph, pcmk__graph_action_t *action)
+te_start_action_timer(const pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
     action->timer = g_timeout_add(action->timeout + graph->network_delay,
                                   action_timer_callback, (void *) action);
@@ -37,8 +37,8 @@ te_start_action_timer(pcmk__graph_t *graph, pcmk__graph_action_t *action)
  * \internal
  * \brief Execute a graph pseudo-action
  *
- * \param[in] graph   Transition graph being executed
- * \param[in] pseudo  Pseudo-action to execute
+ * \param[in,out] graph   Transition graph being executed
+ * \param[in,out] pseudo  Pseudo-action to execute
  *
  * \return Standard Pacemaker return code
  */
@@ -92,8 +92,8 @@ get_target_rc(pcmk__graph_action_t *action)
  * \internal
  * \brief Execute a cluster action from a transition graph
  *
- * \param[in] graph   Transition graph being executed
- * \param[in] action  Cluster action to execute
+ * \param[in,out] graph   Transition graph being executed
+ * \param[in,out] action  Cluster action to execute
  *
  * \return Standard Pacemaker return code
  */
@@ -207,7 +207,7 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
  *       lrmd_free_event().
  */
 static lrmd_event_data_t *
-synthesize_timeout_event(pcmk__graph_action_t *action, int target_rc)
+synthesize_timeout_event(const pcmk__graph_action_t *action, int target_rc)
 {
     lrmd_event_data_t *op = NULL;
     const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
@@ -324,8 +324,8 @@ controld_record_action_timeout(pcmk__graph_action_t *action)
  * \internal
  * \brief Execute a resource action from a transition graph
  *
- * \param[in] graph   Transition graph being executed
- * \param[in] action  Resource action to execute
+ * \param[in,out] graph   Transition graph being executed
+ * \param[in,out] action  Resource action to execute
  *
  * \return Standard Pacemaker return code
  */
@@ -547,7 +547,7 @@ te_update_job_count(pcmk__graph_action_t *action, int offset)
  * \return true if action is allowed, otherwise false
  */
 static bool
-allowed_on_node(pcmk__graph_t *graph, pcmk__graph_action_t *action,
+allowed_on_node(const pcmk__graph_t *graph, const pcmk__graph_action_t *action,
                 const char *target)
 {
     int limit = 0;
@@ -635,8 +635,8 @@ graph_action_allowed(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 /*!
  * \brief Confirm a graph action (and optionally update graph)
  *
- * \param[in] action  Action to confirm
- * \param[in] graph   Update and trigger this graph (if non-NULL)
+ * \param[in,out] action  Action to confirm
+ * \param[in,out] graph   Update and trigger this graph (if non-NULL)
  */
 void
 te_action_confirmed(pcmk__graph_action_t *action, pcmk__graph_t *graph)

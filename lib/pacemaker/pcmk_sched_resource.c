@@ -19,49 +19,46 @@
 // Resource allocation methods that vary by resource variant
 static resource_alloc_functions_t allocation_methods[] = {
     {
-        pcmk__native_merge_weights,
-        pcmk__native_allocate,
-        native_create_actions,
-        native_create_probe,
-        native_internal_constraints,
-        native_rsc_colocation_lh,
-        native_rsc_colocation_rh,
+        pcmk__primitive_assign,
+        pcmk__primitive_create_actions,
+        pcmk__probe_rsc_on_node,
+        pcmk__primitive_internal_constraints,
+        pcmk__primitive_apply_coloc_score,
+        pcmk__add_colocated_node_scores,
         pcmk__colocated_resources,
-        native_rsc_location,
-        native_action_flags,
-        native_update_actions,
+        pcmk__apply_location,
+        pcmk__primitive_action_flags,
+        pcmk__update_ordered_actions,
         pcmk__output_resource_actions,
-        native_expand,
-        native_append_meta,
+        pcmk__add_rsc_actions_to_graph,
+        pcmk__primitive_add_graph_meta,
         pcmk__primitive_add_utilization,
         pcmk__primitive_shutdown_lock,
     },
     {
-        pcmk__group_merge_weights,
-        pcmk__group_allocate,
-        group_create_actions,
-        native_create_probe,
-        group_internal_constraints,
-        group_rsc_colocation_lh,
-        group_rsc_colocation_rh,
+        pcmk__group_assign,
+        pcmk__group_create_actions,
+        pcmk__probe_rsc_on_node,
+        pcmk__group_internal_constraints,
+        pcmk__group_apply_coloc_score,
+        pcmk__group_add_colocated_node_scores,
         pcmk__group_colocated_resources,
-        group_rsc_location,
-        group_action_flags,
-        group_update_actions,
+        pcmk__group_apply_location,
+        pcmk__group_action_flags,
+        pcmk__group_update_ordered_actions,
         pcmk__output_resource_actions,
-        group_expand,
-        group_append_meta,
+        pcmk__add_rsc_actions_to_graph,
+        pcmk__noop_add_graph_meta,
         pcmk__group_add_utilization,
         pcmk__group_shutdown_lock,
     },
     {
-        pcmk__native_merge_weights,
         pcmk__clone_allocate,
         clone_create_actions,
         clone_create_probe,
         clone_internal_constraints,
-        clone_rsc_colocation_lh,
-        clone_rsc_colocation_rh,
+        pcmk__clone_apply_coloc_score,
+        pcmk__add_colocated_node_scores,
         pcmk__colocated_resources,
         clone_rsc_location,
         clone_action_flags,
@@ -73,20 +70,19 @@ static resource_alloc_functions_t allocation_methods[] = {
         pcmk__clone_shutdown_lock,
     },
     {
-        pcmk__native_merge_weights,
         pcmk__bundle_allocate,
         pcmk__bundle_create_actions,
         pcmk__bundle_create_probe,
         pcmk__bundle_internal_constraints,
-        pcmk__bundle_rsc_colocation_lh,
-        pcmk__bundle_rsc_colocation_rh,
+        pcmk__bundle_apply_coloc_score,
+        pcmk__add_colocated_node_scores,
         pcmk__colocated_resources,
         pcmk__bundle_rsc_location,
         pcmk__bundle_action_flags,
         pcmk__multi_update_actions,
         pcmk__output_bundle_actions,
         pcmk__bundle_expand,
-        pcmk__bundle_append_meta,
+        pcmk__noop_add_graph_meta,
         pcmk__bundle_add_utilization,
         pcmk__bundle_shutdown_lock,
     }
@@ -125,7 +121,7 @@ pcmk__rsc_agent_changed(pe_resource_t *rsc, pe_node_t *node,
             if (active_on_node) {
                 crm_notice("Forcing restart of %s on %s "
                            "because %s changed from '%s' to '%s'",
-                           rsc->id, node->details->uname, attr_list[i],
+                           rsc->id, pe__node_name(node), attr_list[i],
                            pcmk__s(old_value, ""), pcmk__s(value, ""));
             }
         }
@@ -278,6 +274,12 @@ pcmk__colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
     return colocated_rscs;
 }
 
+// No-op function for variants that don't need to implement add_graph_meta()
+void
+pcmk__noop_add_graph_meta(pe_resource_t *rsc, xmlNode *xml)
+{
+}
+
 void
 pcmk__output_resource_actions(pe_resource_t *rsc)
 {
@@ -299,9 +301,8 @@ pcmk__output_resource_actions(pe_resource_t *rsc)
     if (rsc->running_on) {
         current = pe__current_node(rsc);
         if (rsc->role == RSC_ROLE_STOPPED) {
-            /*
-             * This can occur when resources are being recovered
-             * We fiddle with the current role in native_create_actions()
+            /* This can occur when resources are being recovered because
+             * the current role can change in pcmk__primitive_create_actions()
              */
             rsc->role = RSC_ROLE_STARTED;
         }
@@ -337,7 +338,7 @@ pcmk__output_resource_actions(pe_resource_t *rsc)
  *       actions created for the resource.
  */
 bool
-pcmk__assign_primitive(pe_resource_t *rsc, pe_node_t *chosen, bool force)
+pcmk__finalize_assignment(pe_resource_t *rsc, pe_node_t *chosen, bool force)
 {
     pcmk__output_t *out = rsc->cluster->priv;
 
@@ -351,7 +352,7 @@ pcmk__assign_primitive(pe_resource_t *rsc, pe_node_t *chosen, bool force)
 
             crm_debug("All nodes for resource %s are unavailable, unclean or "
                       "shutting down (%s can%s run resources, with weight %d)",
-                      rsc->id, chosen->details->uname,
+                      rsc->id, pe__node_name(chosen),
                       (pcmk__node_available(chosen, true, false)? "" : "not"),
                       chosen->weight);
             pe__set_next_role(rsc, RSC_ROLE_STOPPED, "node availability");
@@ -399,7 +400,7 @@ pcmk__assign_primitive(pe_resource_t *rsc, pe_node_t *chosen, bool force)
         return false;
     }
 
-    crm_debug("Assigning %s to %s", rsc->id, chosen->details->uname);
+    crm_debug("Assigning %s to %s", rsc->id, pe__node_name(chosen));
     rsc->allocated_to = pe__copy_node(chosen);
 
     chosen->details->allocated_rsc = g_list_prepend(chosen->details->allocated_rsc,
@@ -443,7 +444,7 @@ pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force)
         if (rsc->allocated_to != NULL) {
             changed = true;
         }
-        pcmk__assign_primitive(rsc, node, force);
+        pcmk__finalize_assignment(rsc, node, force);
 
     } else {
         for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
@@ -474,7 +475,7 @@ pcmk__unassign_resource(pe_resource_t *rsc)
         return;
     }
 
-    crm_info("Unassigning %s from %s", rsc->id, old->details->uname);
+    crm_info("Unassigning %s from %s", rsc->id, pe__node_name(old));
     pe__set_resource_flags(rsc, pe_rsc_provisional);
     rsc->allocated_to = NULL;
 
@@ -536,7 +537,7 @@ pcmk__threshold_reached(pe_resource_t *rsc, pe_node_t *node,
         crm_warn("%s cannot run on %s due to reaching migration threshold "
                  "(clean up resource to allow again)"
                  CRM_XS " failures=%d migration-threshold=%d",
-                 rsc_to_ban->id, node->details->uname, fail_count,
+                 rsc_to_ban->id, pe__node_name(node), fail_count,
                  rsc->migration_threshold);
         if (failed != NULL) {
             *failed = rsc_to_ban;
@@ -547,7 +548,7 @@ pcmk__threshold_reached(pe_resource_t *rsc, pe_node_t *node,
     crm_info("%s can fail %d more time%s on "
              "%s before reaching migration threshold (%d)",
              rsc_to_ban->id, remaining_tries, pcmk__plural_s(remaining_tries),
-             node->details->uname, rsc->migration_threshold);
+             pe__node_name(node), rsc->migration_threshold);
     return false;
 }
 
@@ -625,12 +626,12 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
     }
 
     // Calculate and log node weights
-    r1_nodes = pcmk__native_merge_weights(convert_const_pointer(resource1),
-                                          resource1->id, NULL, NULL, 1,
-                                          pe_weights_forward | pe_weights_init);
-    r2_nodes = pcmk__native_merge_weights(convert_const_pointer(resource2),
-                                          resource2->id, NULL, NULL, 1,
-                                          pe_weights_forward | pe_weights_init);
+    pcmk__add_colocated_node_scores(convert_const_pointer(resource1),
+                                    resource1->id, &r1_nodes, NULL, 1,
+                                    pcmk__coloc_select_this_with);
+    pcmk__add_colocated_node_scores(convert_const_pointer(resource2),
+                                    resource2->id, &r2_nodes, NULL, 1,
+                                    pcmk__coloc_select_this_with);
     pe__show_node_weights(true, NULL, resource1->id, r1_nodes,
                           resource1->cluster);
     pe__show_node_weights(true, NULL, resource2->id, r2_nodes,
@@ -702,7 +703,7 @@ pcmk__sort_resources(pe_working_set_t *data_set)
 {
     GList *nodes = g_list_copy(data_set->nodes);
 
-    nodes = pcmk__sort_nodes(nodes, NULL, data_set);
+    nodes = pcmk__sort_nodes(nodes, NULL);
     data_set->resources = g_list_sort_with_data(data_set->resources,
                                                 cmp_resources, nodes);
     g_list_free(nodes);
@@ -743,20 +744,20 @@ apply_parent_colocations(const pe_resource_t *rsc, GHashTable **nodes)
 
     for (iter = rsc->parent->rsc_cons; iter != NULL; iter = iter->next) {
         colocation = (pcmk__colocation_t *) iter->data;
-        *nodes = pcmk__native_merge_weights(colocation->primary, rsc->id,
-                                            *nodes, colocation->node_attribute,
-                                            colocation->score / (float) INFINITY,
-                                            0);
+        pcmk__add_colocated_node_scores(colocation->primary, rsc->id, nodes,
+                                        colocation->node_attribute,
+                                        colocation->score / (float) INFINITY,
+                                        pcmk__coloc_select_default);
     }
     for (iter = rsc->parent->rsc_cons_lhs; iter != NULL; iter = iter->next) {
         colocation = (pcmk__colocation_t *) iter->data;
         if (!pcmk__colocation_has_influence(colocation, rsc)) {
             continue;
         }
-        *nodes = pcmk__native_merge_weights(colocation->dependent, rsc->id,
-                                            *nodes, colocation->node_attribute,
-                                            colocation->score / (float) INFINITY,
-                                            pe_weights_positive);
+        pcmk__add_colocated_node_scores(colocation->dependent, rsc->id, nodes,
+                                        colocation->node_attribute,
+                                        colocation->score / (float) INFINITY,
+                                        pcmk__coloc_select_nonnegative);
     }
 }
 
@@ -806,14 +807,14 @@ cmp_instance_by_colocation(const pe_resource_t *instance1,
     // Compare nodes by updated scores
     if (node1->weight < node2->weight) {
         crm_trace("Assign %s (%d on %s) after %s (%d on %s)",
-                  instance1->id, node1->weight, node1->details->uname,
-                  instance2->id, node2->weight, node2->details->uname);
+                  instance1->id, node1->weight, pe__node_name(node1),
+                  instance2->id, node2->weight, pe__node_name(node2));
         rc = 1;
 
     } else if (node1->weight > node2->weight) {
         crm_trace("Assign %s (%d on %s) before %s (%d on %s)",
-                  instance1->id, node1->weight, node1->details->uname,
-                  instance2->id, node2->weight, node2->details->uname);
+                  instance1->id, node1->weight, pe__node_name(node1),
+                  instance2->id, node2->weight, pe__node_name(node2));
         rc = -1;
     }
 
@@ -861,7 +862,7 @@ node_is_allowed(const pe_resource_t *rsc, pe_node_t **node)
                                                   (*node)->details->id);
         if ((allowed == NULL) || (allowed->weight < 0)) {
             pe_rsc_trace(rsc, "%s: current location (%s) is unavailable",
-                         rsc->id, (*node)->details->uname);
+                         rsc->id, pe__node_name(*node));
             *node = NULL;
             return false;
         }

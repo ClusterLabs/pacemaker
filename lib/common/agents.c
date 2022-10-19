@@ -92,14 +92,18 @@ char *
 crm_generate_ra_key(const char *standard, const char *provider,
                     const char *type)
 {
-    if (!standard && !provider && !type) {
+    bool std_empty = pcmk__str_empty(standard);
+    bool prov_empty = pcmk__str_empty(provider);
+    bool ty_empty = pcmk__str_empty(type);
+
+    if (std_empty || ty_empty) {
         return NULL;
     }
 
     return crm_strdup_printf("%s%s%s:%s",
-                             (standard? standard : ""),
-                             (provider? ":" : ""), (provider? provider : ""),
-                             (type? type : ""));
+                             standard,
+                             (prov_empty ? "" : ":"), (prov_empty ? "" : provider),
+                             type);
 }
 
 /*!

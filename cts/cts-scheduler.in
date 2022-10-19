@@ -93,6 +93,7 @@ TESTS = [
         [ "not-reschedule-unneeded-monitor",
                      "Do not reschedule unneeded monitors while resource definitions have changed" ],
         [ "reload-becomes-restart", "Cancel reload if restart becomes required" ],
+        [ "restart-with-extra-op-params", "Restart if with extra operation parameters upon changes of any" ],
     ],
     [
         [ "target-0", "Target Role : baseline" ],
@@ -379,10 +380,6 @@ TESTS = [
         [ "probe-target-of-failed-migrate_to-1", "Failed migrate_to, target rejoins" ],
         [ "probe-target-of-failed-migrate_to-2", "Failed migrate_to, target rejoined and probed" ],
         [ "partial-live-migration-multiple-active", "Prevent running on multiple nodes due to partial live migration" ],
-
-        # @TODO: If pacemaker implements versioned attributes, uncomment this test
-        #[ "migrate-versioned", "Disable migration for versioned resources" ],
-
         [ "bug-lf-2422", "Dependency on partially active group - stop ocfs:*" ],
     ],
     [
@@ -415,9 +412,6 @@ TESTS = [
         [ "bug-lf-2153", "Clone ordering constraints" ],
         [ "bug-lf-2361", "Ensure clones observe mandatory ordering constraints if the LHS is unrunnable" ],
         [ "bug-lf-2317", "Avoid needless restart of primitive depending on a clone" ],
-        [ "clone-colocate-instance-1", "Colocation with a specific clone instance (negative example)" ],
-        [ "clone-colocate-instance-2", "Colocation with a specific clone instance" ],
-        [ "clone-order-instance", "Ordering with specific clone instances" ],
         [ "bug-lf-2453", "Enforce mandatory clone ordering without colocation" ],
         [ "bug-lf-2508", "Correctly reconstruct the status of anonymous cloned groups" ],
         [ "bug-lf-2544", "Balanced clone placement" ],
@@ -953,6 +947,7 @@ TESTS = [
         [ "bundle-probe-order-3", "order 3" ],
         [ "bundle-probe-remotes", "Ensure remotes get probed too" ],
         [ "bundle-replicas-change", "Change bundle from 1 replica to multiple" ],
+        [ "bundle-connection-with-container", "Don't move a container due to connection preferences" ],
         [ "nested-remote-recovery", "Recover bundle's container hosted on remote node" ],
     ],
     [
@@ -1011,6 +1006,7 @@ TESTS = [
         [ "remote-reconnect-delay", "Waiting for remote reconnect interval to expire" ],
         [ "remote-connection-unrecoverable",
           "Remote connection host must be fenced, with connection unrecoverable" ],
+        [ "remote-connection-shutdown", "Remote connection shutdown" ],
         [ "cancel-behind-moving-remote",
           "Route recurring monitor cancellations through original node of a moving remote connection" ],
     ],
@@ -1032,19 +1028,6 @@ TESTS = [
     [   [ "ocf_degraded-remap-ocf_ok", "Test degraded remapped to OK" ],
         [ "ocf_degraded_promoted-remap-ocf_ok", "Test degraded promoted remapped to OK"],
     ],
-    
-    # @TODO: If pacemaker implements versioned attributes, uncomment these tests
-    #[
-    #    [ "versioned-resources", "Start resources with #ra-version rules" ],
-    #    [ "restart-versioned", "Restart resources on #ra-version change" ],
-    #    [ "reload-versioned", "Reload resources on #ra-version change" ],
-    #],
-    #[
-    #    [ "versioned-operations-1", "Use #ra-version to configure operations of native resources" ],
-    #    [ "versioned-operations-2", "Use #ra-version to configure operations of stonith resources" ],
-    #    [ "versioned-operations-3", "Use #ra-version to configure operations of promotable resources" ],
-    #    [ "versioned-operations-4", "Use #ra-version to configure operations of groups of the resources" ],
-    #],
 ]
 
 TESTS_64BIT = [
@@ -1523,6 +1506,7 @@ class CtsScheduler(object):
             did_fail = True
 
         remove_files([ output_filename,
+                       dot_output_filename,
                        score_output_filename,
                        summary_output_filename])
 

@@ -8,13 +8,9 @@
  */
 
 #include <crm_internal.h>
-#include <crm/msg_xml.h>
 
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <setjmp.h>
-#include <cmocka.h>
+#include <crm/common/unittest_internal.h>
+#include <crm/msg_xml.h>
 
 #include <glib.h>
 
@@ -54,14 +50,7 @@ key_in_table(void **state)
     g_hash_table_destroy(tbl);
 }
 
-int main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(empty_params),
-        cmocka_unit_test(key_not_in_table),
-        cmocka_unit_test(key_in_table),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(empty_params),
+                cmocka_unit_test(key_not_in_table),
+                cmocka_unit_test(key_in_table))

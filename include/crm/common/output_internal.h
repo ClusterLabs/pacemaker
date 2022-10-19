@@ -28,7 +28,7 @@ extern "C" {
  */
 
 
-#  define PCMK__API_VERSION "2.21"
+#  define PCMK__API_VERSION "2.25"
 
 #if defined(PCMK__WITH_ATTRIBUTE_OUTPUT_ARGS)
 #  define PCMK__OUTPUT_ARGS(ARGS...) __attribute__((output_args(ARGS)))
@@ -60,6 +60,9 @@ typedef pcmk__output_t * (*pcmk__output_factory_t)(char **argv);
  * The meaning of the return value will be different for each message.
  * In general, however, 0 should be returned on success and a positive value
  * on error.
+ *
+ * \param[in,out] out   Output object to use to display message
+ * \param[in,out] args  Message-specific arguments needed
  *
  * \note These functions must not call va_start or va_end - that is done
  *       automatically before the custom formatting function is called.
@@ -359,6 +362,9 @@ struct pcmk__output_s {
      * \note A newline will automatically be added to the end of the format
      *       string, so callers should not include a newline.
      *
+     * \note It is possible for a formatter that supports this method to
+     *       still not print anything out if is_quiet returns true.
+     *
      * \param[in,out] out The output functions structure.
      * \param[in]     buf The message to be printed.
      * \param[in]     ... Arguments to be formatted.
@@ -377,6 +383,9 @@ struct pcmk__output_s {
      *
      * \note A newline will automatically be added to the end of the format
      *       string, so callers should not include a newline.
+     *
+     * \note Formatters that support this method should always generate output,
+     *       even if is_quiet returns true.
      *
      * \param[in,out] out The output functions structure.
      * \param[in]     buf The message to be printed.
@@ -462,7 +471,7 @@ struct pcmk__output_s {
      * \note This takes into account both the \p quiet value as well as the
      *       current formatter.
      *
-     * \param[in] out The output functions structure.
+     * \param[in,out] out The output functions structure.
      *
      * \return true if output should be supressed, false otherwise.
      */
@@ -472,7 +481,7 @@ struct pcmk__output_s {
      * \internal
      * \brief Output a spacer.  Not all formatters will do this.
      *
-     * \param[in] out The output functions structure.
+     * \param[in,out] out The output functions structure.
      */
     void (*spacer) (pcmk__output_t *out);
 
@@ -481,9 +490,9 @@ struct pcmk__output_s {
      * \brief Output a progress indicator.  This is likely only useful for
      *        plain text, console based formatters.
      *
-     * \param[in] out The output functions structure.
-     * \param[in] end If true, output a newline afterwards.  This should
-     *                only be used the last time this function is called.
+     * \param[in,out] out  The output functions structure
+     * \param[in]     end  If true, output a newline afterwards (this should
+     *                     only be used the last time this function is called)
      *
      */
     void (*progress) (pcmk__output_t *out, bool end);
@@ -567,11 +576,12 @@ int pcmk__output_new(pcmk__output_t **out, const char *fmt_name,
  * \param[in]     options Format-specific command line options.  These will be
  *                        added to the context.  This argument can also be NULL.
  *
- * \return 0 on success or an error code on error.
+ * \return Standard Pacemaker return code
  */
 int
 pcmk__register_format(GOptionGroup *group, const char *name,
-                      pcmk__output_factory_t create, GOptionEntry *options);
+                      pcmk__output_factory_t create,
+                      const GOptionEntry *options);
 
 /*!
  * \internal
@@ -585,7 +595,8 @@ pcmk__register_format(GOptionGroup *group, const char *name,
  *
  */
 void
-pcmk__register_formats(GOptionGroup *group, pcmk__supported_format_t *table);
+pcmk__register_formats(GOptionGroup *group,
+                       const pcmk__supported_format_t *table);
 
 /*!
  * \internal
@@ -622,7 +633,8 @@ pcmk__register_message(pcmk__output_t *out, const char *message_id,
  *                      all be registered.  This array must be NULL-terminated.
  */
 void
-pcmk__register_messages(pcmk__output_t *out, pcmk__message_entry_t *table);
+pcmk__register_messages(pcmk__output_t *out,
+                        const pcmk__message_entry_t *table);
 
 /* Functions that are useful for implementing custom message formatters */
 
@@ -631,10 +643,15 @@ pcmk__register_messages(pcmk__output_t *out, pcmk__message_entry_t *table);
  * \brief A printf-like function.
  *
  * This function writes to out->dest and indents the text to the current level
- * of the text formatter's nesting.  This should be used when implementing
- * custom message functions instead of printf.
+ * of the text formatter's nesting.  This function should be used when implementing
+ * custom message functions for the text output format.  It should not be used
+ * for any other purpose.
  *
- * \param[in,out] out The output functions structure.
+ * Typically, this function should be used instead of printf.
+ *
+ * \param[in,out] out    The output functions structure.
+ * \param[in]     format The format string.
+ * \param[in]     ...    Arguments to be passed to the format string.
  */
 void
 pcmk__indented_printf(pcmk__output_t *out, const char *format, ...) G_GNUC_PRINTF(2, 3);
@@ -644,8 +661,10 @@ pcmk__indented_printf(pcmk__output_t *out, const char *format, ...) G_GNUC_PRINT
  * \brief A vprintf-like function.
  *
  * This function is like pcmk__indented_printf(), except it takes a va_list instead
- * of a list of arguments.  This should be used when implementing custom message
- * functions instead of vprintf.
+ * of a list of arguments.  This function should be used when implementing custom
+ * functions for the text output format.  It should not be used for any other purpose.
+ *
+ * Typically, this function should be used instead of vprintf.
  *
  * \param[in,out] out    The output functions structure.
  * \param[in]     format The format string.
@@ -659,10 +678,13 @@ pcmk__indented_vprintf(pcmk__output_t *out, const char *format, va_list args) G_
  * \internal
  * \brief A printf-like function.
  *
- * This function writes to out->dest without indenting the text.  This should be
- * used with implementing custom message functions instead of printf.
+ * This function writes to out->dest without indenting the text.  This function
+ * should be used when implementing custom message functions for the text output
+ * format.  It should not be used for any other purpose.
  *
- * \param[in,out] out The output functions structure.
+ * \param[in,out] out    The output functions structure.
+ * \param[in]     format The format string.
+ * \param[in]     ...    Arguments to be passed to the format string.
  */
 void
 pcmk__formatted_printf(pcmk__output_t *out, const char *format, ...) G_GNUC_PRINTF(2, 3);
@@ -672,8 +694,9 @@ pcmk__formatted_printf(pcmk__output_t *out, const char *format, ...) G_GNUC_PRIN
  * \brief A vprintf-like function.
  *
  * This function is like pcmk__formatted_printf(), except it takes a va_list instead
- * of a list of arguments.  This should be used when implementing custom message
- * functions instead of vprintf.
+ * of a list of arguments.  This function should be used when implementing custom
+ * message functions for the text output format.  It should not be used for any
+ * other purpose.
  *
  * \param[in,out] out    The output functions structure.
  * \param[in]     format The format string.
@@ -771,11 +794,11 @@ pcmk__output_create_xml_text_node(pcmk__output_t *out, const char *name, const c
  * other formatting functions will have their nodes added as children of this new
  * parent.
  *
- * \param[in,out] out  The output functions structure.
- * \param[in]     node The node to be added/
+ * \param[in,out] out     The output functions structure
+ * \param[in]     parent  XML node to add
  */
 void
-pcmk__output_xml_push_parent(pcmk__output_t *out, xmlNodePtr node);
+pcmk__output_xml_push_parent(pcmk__output_t *out, xmlNodePtr parent);
 
 /*!
  * \internal
@@ -853,7 +876,7 @@ G_GNUC_NULL_TERMINATED;
  *
  * \param[in,out] error A GError object potentially containing some error.
  *                      If NULL, do nothing.
- * \param[in]     out   The output functions structure.  If NULL, any errors
+ * \param[in,out] out   The output functions structure.  If NULL, any errors
  *                      will simply be printed to stderr.
  */
 void pcmk__output_and_clear_error(GError *error, pcmk__output_t *out);
@@ -861,6 +884,13 @@ void pcmk__output_and_clear_error(GError *error, pcmk__output_t *out);
 int pcmk__xml_output_new(pcmk__output_t **out, xmlNodePtr *xml);
 void pcmk__xml_output_finish(pcmk__output_t *out, xmlNodePtr *xml);
 int pcmk__log_output_new(pcmk__output_t **out);
+
+#if defined(PCMK__UNIT_TESTING)
+/* If we are building libcrmcommon_test.a, add this accessor function so we can
+ * inspect the internal formatters hash table.
+ */
+GHashTable *pcmk__output_formatters(void);
+#endif
 
 #define PCMK__OUTPUT_SPACER_IF(out_obj, cond)   \
     if (cond) {                                 \

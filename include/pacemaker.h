@@ -107,15 +107,22 @@ int pcmk_designated_controller(xmlNodePtr *xml, unsigned int message_timeout_ms)
 void pcmk_free_injections(pcmk_injections_t *injections);
 
 /*!
- * \brief Get pacemakerd status
+ * \brief Get and output \p pacemakerd status
  *
- * \param[in,out] xml                The destination for the result, as an XML tree.
- * \param[in]     ipc_name           IPC name for request
- * \param[in]     message_timeout_ms Message timeout
+ * \param[in,out] xml                 Destination for the result, as an XML tree
+ * \param[in]     ipc_name            IPC name for request
+ * \param[in]     message_timeout_ms  How long to wait for a reply from the
+ *                                    \p pacemakerd API. If 0,
+ *                                    \p pcmk_ipc_dispatch_sync will be used.
+ *                                    If positive, \p pcmk_ipc_dispatch_main
+ *                                    will be used, and a new mainloop will be
+ *                                    created for this purpose (freed before
+ *                                    return).
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_pacemakerd_status(xmlNodePtr *xml, char *ipc_name, unsigned int message_timeout_ms);
+int pcmk_pacemakerd_status(xmlNodePtr *xml, const char *ipc_name,
+                           unsigned int message_timeout_ms);
 
 /*!
  * \brief Calculate and output resource operation digests
@@ -185,6 +192,80 @@ int pcmk_list_nodes(xmlNodePtr *xml, char *node_types);
  * \return Standard Pacemaker return code
  */
 int pcmk_status(xmlNodePtr *xml);
+
+/*!
+ * \brief Check whether each rule in a list is in effect
+ *
+ * \param[in,out] xml       The destination for the result, as an XML tree
+ * \param[in]     input     The CIB XML to check (if \c NULL, use current CIB)
+ * \param[in]     date      Check whether the rule is in effect at this date and
+ *                          time (if \c NULL, use current date and time)
+ * \param[in]     rule_ids  The IDs of the rules to check, as a <tt>NULL</tt>-
+ *                          terminated list.
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_check_rules(xmlNodePtr *xml, xmlNodePtr input, const crm_time_t *date,
+                     const char **rule_ids);
+
+/*!
+ * \brief Check whether a given rule is in effect
+ *
+ * \param[in,out] xml       The destination for the result, as an XML tree
+ * \param[in]     input     The CIB XML to check (if \c NULL, use current CIB)
+ * \param[in]     date      Check whether the rule is in effect at this date and
+ *                          time (if \c NULL, use current date and time)
+ * \param[in]     rule_ids  The ID of the rule to check
+ *
+ * \return Standard Pacemaker return code
+ */
+static inline int
+pcmk_check_rule(xmlNodePtr *xml, xmlNodePtr input, const crm_time_t *date,
+                const char *rule_id)
+{
+    const char *rule_ids[] = {rule_id, NULL};
+    return pcmk_check_rules(xml, input, date, rule_ids);
+}
+
+/*
+ * \enum pcmk_rc_disp_flags
+ * \brief Bit flags to control which fields of result code info are displayed
+ */
+enum pcmk_rc_disp_flags {
+    pcmk_rc_disp_none = 0,          //!< (Does nothing)
+    pcmk_rc_disp_code = (1 << 0),   //!< Display result code number
+    pcmk_rc_disp_name = (1 << 1),   //!< Display result code name
+    pcmk_rc_disp_desc = (1 << 2),   //!< Display result code description
+};
+
+/*
+ * \brief Display the name and/or description of a result code
+ *
+ * \param[in,out] xml    The destination for the result, as an XML tree
+ * \param[in]     code   The result code
+ * \param[in]     type   Interpret \c code as this type of result code.
+ *                       Supported values: \c pcmk_result_legacy,
+ *                       \c pcmk_result_rc, \c pcmk_result_exitcode.
+ * \param[in]     flags  Group of \c pcmk_rc_disp_flags
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_show_result_code(xmlNodePtr *xml, int code, enum pcmk_result_type type,
+                          uint32_t flags);
+
+/*!
+ * \brief List all valid result codes in a particular family
+ *
+ * \param[in,out] xml    The destination for the result, as an XML tree
+ * \param[in]     type   The family of result codes to list. Supported
+ *                       values: \c pcmk_result_legacy, \c pcmk_result_rc,
+ *                       \c pcmk_result_exitcode.
+ * \param[in]     flags  Group of \c pcmk_rc_disp_flags
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_list_result_codes(xmlNodePtr *xml, enum pcmk_result_type type,
+                           uint32_t flags);
 
 #ifdef BUILD_PUBLIC_LIBPACEMAKER
 

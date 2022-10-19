@@ -204,13 +204,13 @@ apply_stickiness(pe_resource_t *rsc, pe_working_set_t *data_set)
                                  node->details->id) == NULL)) {
         pe_rsc_debug(rsc,
                      "Ignoring %s stickiness because the cluster is "
-                     "asymmetric and node %s is not explicitly allowed",
-                     rsc->id, node->details->uname);
+                     "asymmetric and %s is not explicitly allowed",
+                     rsc->id, pe__node_name(node));
         return;
     }
 
-    pe_rsc_debug(rsc, "Resource %s has %d stickiness on node %s",
-                 rsc->id, rsc->stickiness, node->details->uname);
+    pe_rsc_debug(rsc, "Resource %s has %d stickiness on %s",
+                 rsc->id, rsc->stickiness, pe__node_name(node));
     resource_location(rsc, node, rsc->stickiness, "stickiness",
                       rsc->cluster);
 }
@@ -318,8 +318,7 @@ allocate_resources(pe_working_set_t *data_set)
             if (rsc->is_remote_node) {
                 pe_rsc_trace(rsc, "Allocating remote connection resource '%s'",
                              rsc->id);
-                rsc->cmds->allocate(rsc, rsc->partial_migration_target,
-                                    data_set);
+                rsc->cmds->assign(rsc, rsc->partial_migration_target);
             }
         }
     }
@@ -331,7 +330,7 @@ allocate_resources(pe_working_set_t *data_set)
         if (!rsc->is_remote_node) {
             pe_rsc_trace(rsc, "Allocating %s resource '%s'",
                          crm_element_name(rsc->xml), rsc->id);
-            rsc->cmds->allocate(rsc, NULL, data_set);
+            rsc->cmds->assign(rsc, NULL);
         }
     }
 
@@ -406,7 +405,7 @@ schedule_resource_actions(pe_working_set_t *data_set)
     for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
         pe_resource_t *rsc = (pe_resource_t *) iter->data;
 
-        rsc->cmds->create_actions(rsc, data_set);
+        rsc->cmds->create_actions(rsc);
     }
 }
 
@@ -525,7 +524,7 @@ schedule_fencing(pe_node_t *node, pe_working_set_t *data_set)
     pe_action_t *fencing = pe_fence_op(node, NULL, FALSE, "node is unclean",
                                        FALSE, data_set);
 
-    pe_warn("Scheduling node %s for fencing", node->details->uname);
+    pe_warn("Scheduling node %s for fencing", pe__node_name(node));
     pcmk__order_vs_fence(fencing, data_set);
     return fencing;
 }
@@ -590,7 +589,7 @@ schedule_fencing_and_shutdowns(pe_working_set_t *data_set)
         if ((fencing == NULL) && node->details->unclean) {
             integrity_lost = true;
             pe_warn("Node %s is unclean but cannot be fenced",
-                    node->details->uname);
+                    pe__node_name(node));
         }
     }
 
@@ -724,10 +723,16 @@ log_unrunnable_actions(pe_working_set_t *data_set)
 static void
 unpack_cib(xmlNode *cib, unsigned long long flags, pe_working_set_t *data_set)
 {
+    const char* localhost_save = NULL;
+
     if (pcmk_is_set(data_set->flags, pe_flag_have_status)) {
         crm_trace("Reusing previously calculated cluster status");
         pe__set_working_set_flags(data_set, flags);
         return;
+    }
+
+    if (data_set->localhost) {
+        localhost_save = data_set->localhost;
     }
 
     CRM_ASSERT(cib != NULL);
@@ -739,6 +744,10 @@ unpack_cib(xmlNode *cib, unsigned long long flags, pe_working_set_t *data_set)
      * previously called, whether directly or via pcmk__schedule_actions()).
      */
     set_working_set_defaults(data_set);
+
+    if (localhost_save) {
+        data_set->localhost = localhost_save;
+    }
 
     pe__set_working_set_flags(data_set, flags);
     data_set->input = cib;

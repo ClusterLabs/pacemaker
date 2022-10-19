@@ -62,7 +62,7 @@ Executing Cluster Transition:
 Revised Cluster Status:
   * Node List:
     * Online: [ 18node1 18node2 18node3 ]
-    * GuestOnline: [ lxc1@18node1 lxc2@18node1 ]
+    * GuestOnline: [ lxc1 lxc2 ]
 
   * Full List of Resources:
     * shooter	(stonith:fence_xvm):	 Started 18node2

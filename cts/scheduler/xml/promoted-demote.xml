@@ -55,7 +55,7 @@
             <nvpair id="nvpair.id22158" name="drbd_resource" value="drbd3"/>
           </instance_attributes>
           <operations>
-            <op name="monitor" interval="10s" id="cyrus_drbd_mon_master" timeout="5s" role="Promoted"/>
+            <op name="monitor" interval="10s" id="cyrus_drbd_mon_promoted" timeout="5s" role="Promoted"/>
           </operations>
         </primitive>
         <meta_attributes id="clone-cyrus_drbd.meta"/>
@@ -105,7 +105,7 @@
             <nvpair id="nvpair.id22460" name="drbd_resource" value="drbd4"/>
           </instance_attributes>
           <operations>
-            <op name="monitor" interval="10s" id="named_drbd_mon_master" timeout="5s" role="Promoted"/>
+            <op name="monitor" interval="10s" id="named_drbd_mon_promoted" timeout="5s" role="Promoted"/>
           </operations>
         </primitive>
         <meta_attributes id="clone-named_drbd.meta"/>
@@ -162,7 +162,7 @@
       <rsc_colocation id="cyrus_volgroup_with_drbd" rsc="cyrus_volgroup" with-rsc="cyrus_drbd" with-rsc-role="Promoted" score="INFINITY"/>
       <rsc_colocation id="cyrus_filesys_with_volgroup" rsc="cyrus_filesys" with-rsc="cyrus_volgroup" with-rsc-role="Started" score="INFINITY"/>
       <rsc_colocation id="cyrus_syslogd_with_filesys" rsc="cyrus_syslogd" with-rsc="cyrus_filesys" with-rsc-role="Started" score="INFINITY"/>
-      <rsc_colocation id="cyrus_master_with_syslogd" rsc="cyrus_master" with-rsc="cyrus_syslogd" with-rsc-role="Started" score="INFINITY"/>
+      <rsc_colocation id="cyrus_promoted_with_syslogd" rsc="cyrus_master" with-rsc="cyrus_syslogd" with-rsc-role="Started" score="INFINITY"/>
       <rsc_colocation id="named_drbd_with_address" rsc="named_address" with-rsc="named_drbd" with-rsc-role="Started" score="INFINITY"/>
       <rsc_colocation id="named_volgroup_with_drbd" rsc="named_volgroup" with-rsc="named_drbd" with-rsc-role="Started" score="INFINITY"/>
       <rsc_colocation id="named_filesys_with_volgroup" rsc="named_filesys" with-rsc="named_volgroup" with-rsc-role="Started" score="INFINITY"/>
@@ -172,7 +172,7 @@
       <rsc_order id="cyrus_volgroup_after_drbd" first="cyrus_drbd" then="cyrus_volgroup" then-action="start" first-action="promote"/>
       <rsc_order id="cyrus_filesys_after_volgroup" first="cyrus_volgroup" then="cyrus_filesys" then-action="start" first-action="start"/>
       <rsc_order id="cyrus_syslogd_after_filesys" first="cyrus_filesys" then="cyrus_syslogd" then-action="start" first-action="start"/>
-      <rsc_order id="cyrus_master_after_syslogd" first="cyrus_syslogd" then="cyrus_master" then-action="start" first-action="start"/>
+      <rsc_order id="cyrus_promoted_after_syslogd" first="cyrus_syslogd" then="cyrus_master" then-action="start" first-action="start"/>
       <rsc_order id="named_drbd_after_address" first="named_address" then="named_drbd" then-action="promote" first-action="start"/>
       <rsc_order id="named_volgroup_after_drbd" first="named_drbd" then="named_volgroup" then-action="start" first-action="promote"/>
       <rsc_order id="named_filesys_after_volgroup" first="named_volgroup" then="named_filesys" then-action="start" first-action="start"/>

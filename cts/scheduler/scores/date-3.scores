@@ -1,11 +1,11 @@
 
-pcmk__group_allocate: test allocation score on router1: 100
-pcmk__group_allocate: test allocation score on router2: 0
-pcmk__group_allocate: test_ip allocation score on router1: 100
-pcmk__group_allocate: test_ip allocation score on router2: 0
-pcmk__group_allocate: test_mailto allocation score on router1: 0
-pcmk__group_allocate: test_mailto allocation score on router2: 0
-pcmk__native_allocate: test_ip allocation score on router1: 100
-pcmk__native_allocate: test_ip allocation score on router2: 0
-pcmk__native_allocate: test_mailto allocation score on router1: -INFINITY
-pcmk__native_allocate: test_mailto allocation score on router2: -INFINITY
+pcmk__group_assign: test allocation score on router1: 100
+pcmk__group_assign: test allocation score on router2: 0
+pcmk__group_assign: test_ip allocation score on router1: 100
+pcmk__group_assign: test_ip allocation score on router2: 0
+pcmk__group_assign: test_mailto allocation score on router1: 0
+pcmk__group_assign: test_mailto allocation score on router2: 0
+pcmk__primitive_assign: test_ip allocation score on router1: 100
+pcmk__primitive_assign: test_ip allocation score on router2: 0
+pcmk__primitive_assign: test_mailto allocation score on router1: -INFINITY
+pcmk__primitive_assign: test_mailto allocation score on router2: -INFINITY

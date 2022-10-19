@@ -14,6 +14,15 @@
  * declared with G_GNUC_INTERNAL for efficiency.
  */
 
+#if defined(PCMK__UNIT_TESTING)
+#undef G_GNUC_INTERNAL
+#define G_GNUC_INTERNAL
+#endif
+
+/*!
+ * \internal
+ * \deprecated This macro will be removed in a future release
+ */
 #  define status_print(fmt, args...)           \
    if(options & pe_print_html) {           \
        FILE *stream = print_data;      \
@@ -36,6 +45,13 @@ pe_resource_t *pe__create_clone_child(pe_resource_t *rsc,
 G_GNUC_INTERNAL
 void pe__force_anon(const char *standard, pe_resource_t *rsc, const char *rid,
                     pe_working_set_t *data_set);
+
+G_GNUC_INTERNAL
+gint pe__cmp_rsc_priority(gconstpointer a, gconstpointer b);
+
+G_GNUC_INTERNAL
+gboolean pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
+                             pe_resource_t *parent, pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
 gboolean unpack_remote_nodes(xmlNode *xml_resources, pe_working_set_t *data_set);

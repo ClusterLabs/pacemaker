@@ -15,35 +15,6 @@
 #include <crm/common/lists_internal.h>
 #include <crm/services_internal.h>
 
-resource_checks_t *
-cli_check_resource(pe_resource_t *rsc, char *role_s, char *managed)
-{
-    pe_resource_t *parent = uber_parent(rsc);
-    resource_checks_t *rc = calloc(1, sizeof(resource_checks_t));
-
-    if (role_s) {
-        enum rsc_role_e role = text2role(role_s);
-
-        if (role == RSC_ROLE_STOPPED) {
-            rc->flags |= rsc_remain_stopped;
-        } else if (pcmk_is_set(parent->flags, pe_rsc_promotable) &&
-                   (role == RSC_ROLE_UNPROMOTED)) {
-            rc->flags |= rsc_unpromotable;
-        }
-    }
-
-    if (managed && !crm_is_true(managed)) {
-        rc->flags |= rsc_unmanaged;
-    }
-
-    if (rsc->lock_node) {
-        rc->lock_node = rsc->lock_node->details->uname;
-    }
-
-    rc->rsc = rsc;
-    return rc;
-}
-
 static GList *
 build_node_info_list(pe_resource_t *rsc)
 {
@@ -99,18 +70,15 @@ cli_resource_search(pe_resource_t *rsc, const char *requested_name,
     return retval;
 }
 
-#define XPATH_MAX 1024
-
 // \return Standard Pacemaker return code
 static int
 find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
                    const char *rsc, const char *attr_set_type, const char *set_name,
                    const char *attr_id, const char *attr_name, char **value)
 {
-    int offset = 0;
     int rc = pcmk_rc_ok;
     xmlNode *xml_search = NULL;
-    char *xpath_string = NULL;
+    GString *xpath = NULL;
     const char *xpath_base = NULL;
 
     if(value) {
@@ -127,34 +95,33 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
         return ENOMSG;
     }
 
-    xpath_string = calloc(1, XPATH_MAX);
-    offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "%s",
-                       xpath_base);
+    xpath = g_string_sized_new(1024);
+    pcmk__g_strcat(xpath,
+                   xpath_base, "//*[@" XML_ATTR_ID "=\"", rsc, "\"]", NULL);
 
-    offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "//*[@id=\"%s\"]", rsc);
-
-    if (attr_set_type) {
-        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "/%s", attr_set_type);
-        if (set_name) {
-            offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "[@id=\"%s\"]", set_name);
+    if (attr_set_type != NULL) {
+        pcmk__g_strcat(xpath, "/", attr_set_type, NULL);
+        if (set_name != NULL) {
+            pcmk__g_strcat(xpath, "[@" XML_ATTR_ID "=\"", set_name, "\"]",
+                           NULL);
         }
     }
 
-    offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "//nvpair[");
-    if (attr_id) {
-        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "@id=\"%s\"", attr_id);
+    g_string_append(xpath, "//" XML_CIB_TAG_NVPAIR "[");
+    if (attr_id != NULL) {
+        pcmk__g_strcat(xpath, "@" XML_ATTR_ID "=\"", attr_id, "\"", NULL);
     }
 
-    if (attr_name) {
-        if (attr_id) {
-            offset += snprintf(xpath_string + offset, XPATH_MAX - offset, " and ");
+    if (attr_name != NULL) {
+        if (attr_id != NULL) {
+            g_string_append(xpath, " and ");
         }
-        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "@name=\"%s\"", attr_name);
+        pcmk__g_strcat(xpath, "@" XML_NVPAIR_ATTR_NAME "=\"", attr_name, "\"",
+                       NULL);
     }
-    offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "]");
-    CRM_LOG_ASSERT(offset > 0);
+    g_string_append_c(xpath, ']');
 
-    rc = the_cib->cmds->query(the_cib, xpath_string, &xml_search,
+    rc = the_cib->cmds->query(the_cib, (const char *) xpath->str, &xml_search,
                               cib_sync_call | cib_scope_local | cib_xpath);
     rc = pcmk_legacy2rc(rc);
 
@@ -182,7 +149,7 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
     }
 
   done:
-    free(xpath_string);
+    g_string_free(xpath, TRUE);
     free_xml(xml_search);
     return rc;
 }
@@ -897,31 +864,118 @@ cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
     return rc;
 }
 
-int
-cli_resource_check(pcmk__output_t *out, cib_t * cib_conn, pe_resource_t *rsc)
+static void
+check_role(resource_checks_t *checks)
 {
-    char *role_s = NULL;
-    char *managed = NULL;
-    pe_resource_t *parent = uber_parent(rsc);
-    int rc = pcmk_rc_no_output;
-    resource_checks_t *checks = NULL;
+    const char *role_s = g_hash_table_lookup(checks->rsc->meta,
+                                             XML_RSC_ATTR_TARGET_ROLE);
 
-    find_resource_attr(out, cib_conn, XML_NVPAIR_ATTR_VALUE, parent->id,
-                       NULL, NULL, NULL, XML_RSC_ATTR_MANAGED, &managed);
-
-    find_resource_attr(out, cib_conn, XML_NVPAIR_ATTR_VALUE, parent->id,
-                       NULL, NULL, NULL, XML_RSC_ATTR_TARGET_ROLE, &role_s);
-
-    checks = cli_check_resource(rsc, role_s, managed);
-
-    if (checks->flags != 0 || checks->lock_node != NULL) {
-        rc = out->message(out, "resource-check-list", checks);
+    if (role_s == NULL) {
+        return;
     }
+    switch (text2role(role_s)) {
+        case RSC_ROLE_STOPPED:
+            checks->flags |= rsc_remain_stopped;
+            break;
 
-    free(role_s);
-    free(managed);
-    free(checks);
-    return rc;
+        case RSC_ROLE_UNPROMOTED:
+            if (pcmk_is_set(uber_parent(checks->rsc)->flags,
+                            pe_rsc_promotable)) {
+                checks->flags |= rsc_unpromotable;
+            }
+            break;
+
+        default:
+            break;
+    }
+}
+
+static void
+check_managed(resource_checks_t *checks)
+{
+    const char *managed_s = g_hash_table_lookup(checks->rsc->meta,
+                                                XML_RSC_ATTR_MANAGED);
+
+    if ((managed_s != NULL) && !crm_is_true(managed_s)) {
+        checks->flags |= rsc_unmanaged;
+    }
+}
+
+static void
+check_locked(resource_checks_t *checks)
+{
+    if (checks->rsc->lock_node != NULL) {
+        checks->flags |= rsc_locked;
+        checks->lock_node = checks->rsc->lock_node->details->uname;
+    }
+}
+
+static bool
+node_is_unhealthy(pe_node_t *node)
+{
+    switch (pe__health_strategy(node->details->data_set)) {
+        case pcmk__health_strategy_none:
+            break;
+
+        case pcmk__health_strategy_no_red:
+            if (pe__node_health(node) < 0) {
+                return true;
+            }
+            break;
+
+        case pcmk__health_strategy_only_green:
+            if (pe__node_health(node) <= 0) {
+                return true;
+            }
+            break;
+
+        case pcmk__health_strategy_progressive:
+        case pcmk__health_strategy_custom:
+            /* @TODO These are finite scores, possibly with rules, and possibly
+             * combining with other scores, so attributing these as a cause is
+             * nontrivial.
+             */
+            break;
+    }
+    return false;
+}
+
+static void
+check_node_health(resource_checks_t *checks, pe_node_t *node)
+{
+    if (node == NULL) {
+        GHashTableIter iter;
+        bool allowed = false;
+        bool all_nodes_unhealthy = true;
+
+        g_hash_table_iter_init(&iter, checks->rsc->allowed_nodes);
+        while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
+            allowed = true;
+            if (!node_is_unhealthy(node)) {
+                all_nodes_unhealthy = false;
+                break;
+            }
+        }
+        if (allowed && all_nodes_unhealthy) {
+            checks->flags |= rsc_node_health;
+        }
+
+    } else if (node_is_unhealthy(node)) {
+        checks->flags |= rsc_node_health;
+    }
+}
+
+int
+cli_resource_check(pcmk__output_t *out, pe_resource_t *rsc, pe_node_t *node)
+{
+    resource_checks_t checks = { .rsc = rsc };
+
+    check_role(&checks);
+    check_managed(&checks);
+    check_locked(&checks);
+    check_node_health(&checks, node);
+
+    return out->message(out, "resource-check-list", &checks);
 }
 
 // \return Standard Pacemaker return code
@@ -1630,7 +1684,8 @@ print_pending_actions(pcmk__output_t *out, GList *actions)
         }
 
         if (a->node) {
-            out->info(out, "\tAction %d: %s\ton %s", a->id, a->uuid, a->node->details->uname);
+            out->info(out, "\tAction %d: %s\ton %s",
+                      a->id, a->uuid, pe__node_name(a->node));
         } else {
             out->info(out, "\tAction %d: %s", a->id, a->uuid);
         }
@@ -1677,7 +1732,7 @@ wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
         /* Abort if timeout is reached */
         time_diff = expire_time - time(NULL);
         if (time_diff > 0) {
-            crm_info("Waiting up to %ld seconds for cluster actions to complete", time_diff);
+            crm_info("Waiting up to %lld seconds for cluster actions to complete", (long long) time_diff);
         } else {
             print_pending_actions(out, data_set->actions);
             pe_free_working_set(data_set);
@@ -2004,7 +2059,8 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
         cur_is_dest = true;
         if (force) {
             crm_info("%s is already %s on %s, reinforcing placement with location constraint.",
-                     rsc_id, promoted_role_only?"promoted":"active", dest->details->uname);
+                     rsc_id, promoted_role_only?"promoted":"active",
+                     pe__node_name(dest));
         } else {
             return pcmk_rc_already;
         }
@@ -2021,9 +2077,9 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
     rc = cli_resource_prefer(out, rsc_id, dest->details->uname, move_lifetime,
                              cib, cib_options, promoted_role_only);
 
-    crm_trace("%s%s now prefers node %s%s",
+    crm_trace("%s%s now prefers %s%s",
               rsc->id, (promoted_role_only? " (promoted)" : ""),
-              dest->details->uname, force?"(forced)":"");
+              pe__node_name(dest), force?"(forced)":"");
 
     /* only ban the previous location if current location != destination location.
      * it is possible to use -M to enforce a location without regard of where the
@@ -2038,7 +2094,7 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
             out->info(out, "Resource '%s' is currently %s in %d locations. "
                       "One may now move to %s",
                       rsc_id, (promoted_role_only? "promoted" : "active"),
-                      count, dest->details->uname);
+                      count, pe__node_name(dest));
             out->info(out, "To prevent '%s' from being %s at a specific location, "
                       "specify a node.",
                       rsc_id, (promoted_role_only? "promoted" : "active"));

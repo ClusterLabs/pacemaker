@@ -104,7 +104,7 @@
       <transient_attributes id="2">
         <instance_attributes id="status-2">
           <nvpair id="status-2-shutdown" name="shutdown" value="0"/>
-          <nvpair id="status-2-master-galera" name="master-galera" value="100"/>
+          <nvpair id="status-2-promoted-galera" name="master-galera" value="100"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

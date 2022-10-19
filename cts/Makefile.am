@@ -31,11 +31,14 @@ dist_cli_DATA	= cli/constraints.xml 				\
 		  cli/crm_mon.xml				\
 		  cli/crm_mon-feature_set.xml			\
 		  cli/crm_mon-partial.xml			\
+		  cli/crm_mon-T180.xml				\
 		  cli/crm_mon-unmanaged.xml			\
 		  cli/crm_resource_digests.xml			\
 		  cli/regression.acls.exp			\
 		  cli/regression.crm_mon.exp			\
+		  cli/regression.daemons.exp			\
 		  cli/regression.dates.exp			\
+		  cli/regression.error_codes.exp		\
 		  cli/regression.feature_set.exp		\
 		  cli/regression.rules.exp			\
 		  cli/regression.tools.exp			\

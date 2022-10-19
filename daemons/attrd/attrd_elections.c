@@ -17,21 +17,34 @@
 static char *peer_writer = NULL;
 static election_t *writer = NULL;
 
+static gboolean
+attrd_election_cb(gpointer user_data)
+{
+    attrd_declare_winner();
+
+    /* Update the peers after an election */
+    attrd_peer_sync(NULL, NULL);
+
+    /* Update the CIB after an election */
+    attrd_write_attributes(true, false);
+    return FALSE;
+}
+
 void
-attrd_election_init()
+attrd_election_init(void)
 {
     writer = election_init(T_ATTRD, attrd_cluster->uname, 120000,
                            attrd_election_cb);
 }
 
 void
-attrd_election_fini()
+attrd_election_fini(void)
 {
     election_fini(writer);
 }
 
 void
-attrd_start_election_if_needed()
+attrd_start_election_if_needed(void)
 {
     if ((peer_writer == NULL)
         && (election_state(writer) != election_in_progress)
@@ -43,7 +56,7 @@ attrd_start_election_if_needed()
 }
 
 bool
-attrd_election_won()
+attrd_election_won(void)
 {
     return (election_state(writer) == election_won);
 }
@@ -120,7 +133,7 @@ attrd_check_for_new_writer(const crm_node_t *peer, const xmlNode *xml)
 }
 
 void
-attrd_declare_winner()
+attrd_declare_winner(void)
 {
     crm_notice("Recorded local node as attribute writer (was %s)",
                (peer_writer? peer_writer : "unset"));

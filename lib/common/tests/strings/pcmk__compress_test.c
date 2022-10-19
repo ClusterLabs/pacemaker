@@ -9,11 +9,9 @@
 
 #include <crm_internal.h>
 
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <setjmp.h>
-#include <cmocka.h>
+#include <crm/common/unittest_internal.h>
+
+#include "mock_private.h"
 
 #define SIMPLE_DATA "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
 
@@ -38,14 +36,23 @@ max_too_small(void **state)
     assert_int_equal(pcmk__compress(SIMPLE_DATA, 40, 10, &result, &len), pcmk_rc_error);
 }
 
-int
-main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(simple_compress),
-        cmocka_unit_test(max_too_small),
-    };
+static void
+calloc_fails(void **state) {
+    char *result = calloc(1024, sizeof(char));
+    unsigned int len;
 
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
+    pcmk__assert_asserts(
+        {
+            pcmk__mock_calloc = true;   // calloc() will return NULL
+            expect_value(__wrap_calloc, nmemb, (size_t) ((40 * 1.01) + 601));
+            expect_value(__wrap_calloc, size, sizeof(char));
+            pcmk__compress(SIMPLE_DATA, 40, 0, &result, &len);
+            pcmk__mock_calloc = false;  // Use the real calloc()
+        }
+    );
 }
+
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(simple_compress),
+                cmocka_unit_test(max_too_small),
+                cmocka_unit_test(calloc_fails))

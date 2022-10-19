@@ -100,7 +100,7 @@ enum xml_log_options
 
 void crm_enable_blackbox(int nsig);
 void crm_disable_blackbox(int nsig);
-void crm_write_blackbox(int nsig, struct qb_log_callsite *callsite);
+void crm_write_blackbox(int nsig, const struct qb_log_callsite *callsite);
 
 void crm_update_callsites(void);
 
@@ -113,7 +113,7 @@ void crm_log_deinit(void);
  * \param[in] argc    The number of command line parameters
  * \param[in] argv    The command line parameter values
  */
-void crm_log_preinit(const char *entity, int argc, char **argv);
+void crm_log_preinit(const char *entity, int argc, char *const *argv);
 gboolean crm_log_init(const char *entity, uint8_t level, gboolean daemon,
                       gboolean to_stderr, int argc, char **argv, gboolean quiet);
 
@@ -131,8 +131,9 @@ void crm_enable_stderr(int enable);
 
 gboolean crm_is_callsite_active(struct qb_log_callsite *cs, uint8_t level, uint32_t tags);
 
-void log_data_element(int log_level, const char *file, const char *function, int line,
-                      const char *prefix, xmlNode * data, int depth, gboolean formatted);
+void log_data_element(int log_level, const char *file, const char *function,
+                      int line, const char *prefix, const xmlNode *data,
+                      int depth, gboolean formatted);
 
 /* returns the old value */
 unsigned int set_crm_log_level(unsigned int level);

@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<grammar xmlns="http://relaxng.org/ns/structure/1.0" 
+<!--
+    @COMPAT: The constraints-next schema is deprecated since 2.1.5 and will be
+    removed in a future release.
+-->
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
          datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
   <start>
       <ref name="element-constraints"/>
@@ -43,7 +47,13 @@
           <attribute name="node"><text/></attribute>
         </group>
         <oneOrMore>
-          <externalRef href="rule-3.5.rng"/>
+          <grammar>
+            <include href="rule-3.9.rng">
+              <start>
+                <ref name="element-rule-location"/>
+              </start>
+            </include>
+          </grammar>
         </oneOrMore>
       </choice>
       <optional>
@@ -88,7 +98,12 @@
             </attribute>
           </optional>
           <optional>
-            <externalRef href="score.rng"/>
+            <choice>
+              <externalRef href="score.rng"/>
+              <attribute name="kind">
+                <ref name="order-types"/>
+              </attribute>
+             </choice>
           </optional>
           <oneOrMore>
             <element name="resource_ref">
@@ -105,6 +120,9 @@
       <attribute name="id"><data type="ID"/></attribute>
       <optional>
         <externalRef href="score.rng"/>
+      </optional>
+      <optional>
+        <attribute name="influence"><text/></attribute>
       </optional>
       <optional>
         <ref name="element-lifetime"/>
@@ -187,7 +205,7 @@
       </choice>
     </element>
   </define>
- 
+
   <define name="element-rsc_ticket">
     <element name="rsc_ticket">
       <attribute name="id"><data type="ID"/></attribute>
@@ -234,7 +252,7 @@
       <value>stop</value>
     </choice>
   </define>
-      
+
   <define name="attribute-roles">
     <choice>
       <value>Stopped</value>
@@ -257,9 +275,15 @@
   <define name="element-lifetime">
     <element name="lifetime">
       <oneOrMore>
-        <externalRef href="rule-3.5.rng"/>
+        <grammar>
+          <include href="rule-3.9.rng">
+            <start>
+              <ref name="element-rule-location"/>
+            </start>
+          </include>
+        </grammar>
       </oneOrMore>
     </element>
   </define>
-  
+
 </grammar>

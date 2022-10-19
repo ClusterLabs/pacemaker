@@ -226,9 +226,10 @@ pcmk__write_series_sequence(const char *directory, const char *series,
  * \internal
  * \brief Change the owner and group of a file series' .last file
  *
- * \param[in] dir  Directory that contains series
- * \param[in] uid  User ID of desired file owner
- * \param[in] gid  Group ID of desired file group
+ * \param[in] directory  Directory that contains series
+ * \param[in] series     Series to change
+ * \param[in] uid        User ID of desired file owner
+ * \param[in] gid        Group ID of desired file group
  *
  * \return Standard Pacemaker return code
  * \note The caller must have the appropriate privileges.
@@ -537,7 +538,7 @@ pcmk__set_nonblocking(int fd)
  * \return Name of directory to be used for temporary files
  */
 const char *
-pcmk__get_tmpdir()
+pcmk__get_tmpdir(void)
 {
     const char *dir = getenv("TMPDIR");
 
@@ -578,14 +579,14 @@ pcmk__close_fds_in_child(bool all)
      * Use this if available, because it's more efficient than a shotgun
      * approach to closing descriptors.
      */
-#if SUPPORT_PROCFS
+#if HAVE_LINUX_PROCFS
     dir = opendir("/proc/self/fd");
     if (dir == NULL) {
         dir = opendir("/dev/fd");
     }
 #else
     dir = opendir("/dev/fd");
-#endif
+#endif // HAVE_LINUX_PROCFS
     if (dir != NULL) {
         struct dirent *entry;
         int dir_fd = dirfd(dir);

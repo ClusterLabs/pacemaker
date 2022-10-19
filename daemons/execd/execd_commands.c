@@ -98,7 +98,7 @@ typedef struct lrmd_cmd_s {
 } lrmd_cmd_t;
 
 static void cmd_finalize(lrmd_cmd_t * cmd, lrmd_rsc_t * rsc);
-static gboolean lrmd_rsc_dispatch(gpointer user_data);
+static gboolean execute_resource_action(gpointer user_data);
 static void cancel_all_recurring(lrmd_rsc_t * rsc, const char *client_id);
 
 #ifdef PCMK__TIME_USE_CGT
@@ -112,7 +112,7 @@ static void cancel_all_recurring(lrmd_rsc_t * rsc, const char *client_id);
  * \return true if timespec has been set (i.e. is nonzero), false otherwise
  */
 static inline bool
-time_is_set(struct timespec *timespec)
+time_is_set(const struct timespec *timespec)
 {
     return (timespec != NULL) &&
            ((timespec->tv_sec != 0) || (timespec->tv_nsec != 0));
@@ -147,7 +147,7 @@ get_current_time(struct timespec *t_current, struct timespec *t_orig)
  *       24 days or more.
  */
 static int
-time_diff_ms(struct timespec *now, struct timespec *old)
+time_diff_ms(const struct timespec *now, const struct timespec *old)
 {
     int diff_ms = 0;
 
@@ -172,7 +172,7 @@ time_diff_ms(struct timespec *now, struct timespec *old)
  * command, so we report the entire time since then and not just the time since
  * the most recent command (for recurring and systemd operations).
  *
- * \param[in] cmd  Executor command object to reset
+ * \param[in,out] cmd  Executor command object to reset
  *
  * \note It's not obvious what the queued time should be for a systemd
  *       start/stop operation, which might go like this:
@@ -193,7 +193,7 @@ cmd_original_times(lrmd_cmd_t * cmd)
 #endif
 
 static inline bool
-action_matches(lrmd_cmd_t *cmd, const char *action, guint interval_ms)
+action_matches(const lrmd_cmd_t *cmd, const char *action, guint interval_ms)
 {
     return (cmd->interval_ms == interval_ms)
            && pcmk__str_eq(cmd->action, action, pcmk__str_casei);
@@ -208,7 +208,7 @@ action_matches(lrmd_cmd_t *cmd, const char *action, guint interval_ms)
  * \param[in] queue_time_ms  Queue time in milliseconds, if known
  */
 static void
-log_finished(lrmd_cmd_t *cmd, int exec_time_ms, int queue_time_ms)
+log_finished(const lrmd_cmd_t *cmd, int exec_time_ms, int queue_time_ms)
 {
     int log_level = LOG_INFO;
     GString *str = g_string_sized_new(100); // reasonable starting size
@@ -217,8 +217,8 @@ log_finished(lrmd_cmd_t *cmd, int exec_time_ms, int queue_time_ms)
         log_level = LOG_DEBUG;
     }
 
-    g_string_printf(str, "%s %s (call %d",
-                    cmd->rsc_id, cmd->action, cmd->call_id);
+    g_string_append_printf(str, "%s %s (call %d",
+                           cmd->rsc_id, cmd->action, cmd->call_id);
     if (cmd->last_pid != 0) {
         g_string_append_printf(str, ", PID %d", cmd->last_pid);
     }
@@ -226,21 +226,22 @@ log_finished(lrmd_cmd_t *cmd, int exec_time_ms, int queue_time_ms)
         g_string_append_printf(str, ") exited with status %d",
                                cmd->result.exit_status);
     } else {
-        g_string_append_printf(str, ") could not be executed: %s",
-                               pcmk_exec_status_str(cmd->result.execution_status));
+        pcmk__g_strcat(str, ") could not be executed: ",
+                       pcmk_exec_status_str(cmd->result.execution_status),
+                       NULL);
     }
     if (cmd->result.exit_reason != NULL) {
-        g_string_append_printf(str, " (%s)", cmd->result.exit_reason);
+        pcmk__g_strcat(str, " (", cmd->result.exit_reason, ")", NULL);
     }
 
 #ifdef PCMK__TIME_USE_CGT
-    g_string_append_printf(str, " (execution time %s",
-                           pcmk__readable_interval(exec_time_ms));
+    pcmk__g_strcat(str, " (execution time ",
+                   pcmk__readable_interval(exec_time_ms), NULL);
     if (queue_time_ms > 0) {
-        g_string_append_printf(str, " after being queued %s",
-                               pcmk__readable_interval(queue_time_ms));
+        pcmk__g_strcat(str, " after being queued ",
+                       pcmk__readable_interval(queue_time_ms), NULL);
     }
-    g_string_append(str, ")");
+    g_string_append_c(str, ')');
 #endif
 
     do_crm_log(log_level, "%s", str->str);
@@ -284,7 +285,8 @@ build_rsc_from_xml(xmlNode * msg)
     rsc->class = crm_element_value_copy(rsc_xml, F_LRMD_CLASS);
     rsc->provider = crm_element_value_copy(rsc_xml, F_LRMD_PROVIDER);
     rsc->type = crm_element_value_copy(rsc_xml, F_LRMD_TYPE);
-    rsc->work = mainloop_add_trigger(G_PRIORITY_HIGH, lrmd_rsc_dispatch, rsc);
+    rsc->work = mainloop_add_trigger(G_PRIORITY_HIGH, execute_resource_action,
+                                     rsc);
 
     // Initialize fence device probes (to return "not running")
     pcmk__set_result(&rsc->fence_probe_result, CRM_EX_ERROR,
@@ -418,11 +420,14 @@ start_delay_helper(gpointer data)
 /*!
  * \internal
  * \brief Check whether a list already contains the equivalent of a given action
+ *
+ * \param[in] action_list  List to search
+ * \param[in] cmd          Action to search for
  */
 static lrmd_cmd_t *
-find_duplicate_action(GList *action_list, lrmd_cmd_t *cmd)
+find_duplicate_action(const GList *action_list, const lrmd_cmd_t *cmd)
 {
-    for (GList *item = action_list; item != NULL; item = item->next) {
+    for (const GList *item = action_list; item != NULL; item = item->next) {
         lrmd_cmd_t *dup = item->data;
 
         if (action_matches(cmd, dup->action, dup->interval_ms)) {
@@ -595,17 +600,14 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
 #endif
     log_finished(cmd, exec_time, queue_time);
 
-    /* if the first notify result for a cmd has already been sent earlier, and the
-     * the option to only send notifies on result changes is set. Check to see
-     * if the last result is the same as the new one. If so, suppress this update */
-    if (cmd->first_notify_sent && (cmd->call_opts & lrmd_opt_notify_changes_only)) {
-        if ((cmd->last_notify_rc == cmd->result.exit_status) &&
-            (cmd->last_notify_op_status == cmd->result.execution_status)) {
-
-            /* only send changes */
-            return;
-        }
-
+    /* If the originator requested to be notified only for changes in recurring
+     * operation results, skip the notification if the result hasn't changed.
+     */
+    if (cmd->first_notify_sent
+        && pcmk_is_set(cmd->call_opts, lrmd_opt_notify_changes_only)
+        && (cmd->last_notify_rc == cmd->result.exit_status)
+        && (cmd->last_notify_op_status == cmd->result.execution_status)) {
+        return;
     }
 
     cmd->first_notify_sent = true;
@@ -661,10 +663,12 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
             hash2smartfield((gpointer) key, (gpointer) value, args);
         }
     }
-    if (cmd->client_id && (cmd->call_opts & lrmd_opt_notify_orig_only)) {
+    if ((cmd->client_id != NULL)
+        && pcmk_is_set(cmd->call_opts, lrmd_opt_notify_orig_only)) {
+
         pcmk__client_t *client = pcmk__find_client_by_id(cmd->client_id);
 
-        if (client) {
+        if (client != NULL) {
             send_client_notify(client->id, client, notify);
         }
     } else {
@@ -790,7 +794,7 @@ client_disconnect_cleanup(const char *client_id)
 
     g_hash_table_iter_init(&iter, rsc_list);
     while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & rsc)) {
-        if (rsc->call_opts & lrmd_opt_drop_recurring) {
+        if (pcmk_all_flags_set(rsc->call_opts, lrmd_opt_drop_recurring)) {
             /* This client is disconnecting, drop any recurring operations
              * it may have initiated on the resource */
             cancel_all_recurring(rsc, client_id);
@@ -964,10 +968,10 @@ action_complete(svc_action_t * action)
  * \internal
  * \brief Process the result of a fence device action (start, stop, or monitor)
  *
- * \param[in] cmd               Fence device action that completed
- * \param[in] exit_status       Fencer API exit status for action
- * \param[in] execution_status  Fencer API execution status for action
- * \param[in] exit_reason       Human-friendly detail, if action failed
+ * \param[in,out] cmd               Fence device action that completed
+ * \param[in]     exit_status       Fencer API exit status for action
+ * \param[in]     execution_status  Fencer API execution status for action
+ * \param[in]     exit_reason       Human-friendly detail, if action failed
  */
 static void
 stonith_action_complete(lrmd_cmd_t *cmd, int exit_status,
@@ -1134,14 +1138,15 @@ stonith_connection_failed(void)
  * Start a stonith resource by registering it with the fencer.
  * (Stonith agents don't have a start command.)
  *
- * \param[in] stonith_api  Connection to fencer
- * \param[in] rsc          Stonith resource to start
- * \param[in] cmd          Start command to execute
+ * \param[in,out] stonith_api  Connection to fencer
+ * \param[in]     rsc          Stonith resource to start
+ * \param[in]     cmd          Start command to execute
  *
  * \return pcmk_ok on success, -errno otherwise
  */
 static int
-execd_stonith_start(stonith_t *stonith_api, lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
+execd_stonith_start(stonith_t *stonith_api, const lrmd_rsc_t *rsc,
+                    const lrmd_cmd_t *cmd)
 {
     char *key = NULL;
     char *value = NULL;
@@ -1179,8 +1184,8 @@ execd_stonith_start(stonith_t *stonith_api, lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
  * Stop a stonith resource by unregistering it with the fencer.
  * (Stonith agents don't have a stop command.)
  *
- * \param[in] stonith_api  Connection to fencer
- * \param[in] rsc          Stonith resource to stop
+ * \param[in,out] stonith_api  Connection to fencer
+ * \param[in]     rsc          Stonith resource to stop
  *
  * \return pcmk_ok on success, -errno otherwise
  */
@@ -1198,9 +1203,9 @@ execd_stonith_stop(stonith_t *stonith_api, const lrmd_rsc_t *rsc)
  * \internal
  * \brief Initiate a stonith resource agent recurring "monitor" action
  *
- * \param[in] stonith_api  Connection to fencer
- * \param[in] rsc          Stonith resource to monitor
- * \param[in] cmd          Monitor command being executed
+ * \param[in,out] stonith_api  Connection to fencer
+ * \param[in,out] rsc          Stonith resource to monitor
+ * \param[in]     cmd          Monitor command being executed
  *
  * \return pcmk_ok if monitor was successfully initiated, -errno otherwise
  */
@@ -1223,7 +1228,7 @@ execd_stonith_monitor(stonith_t *stonith_api, lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
 }
 
 static void
-lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
+execute_stonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
 {
     int rc = 0;
     bool do_monitor = FALSE;
@@ -1277,8 +1282,8 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
                             ((rc == -pcmk_err_generic)? NULL : pcmk_strerror(rc)));
 }
 
-static int
-lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
+static void
+execute_nonstonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
 {
     svc_action_t *action = NULL;
     GHashTable *params_copy = NULL;
@@ -1295,7 +1300,8 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
         && pcmk__str_eq(cmd->action, "stop", pcmk__str_casei)) {
 
         cmd->result.exit_status = PCMK_OCF_OK;
-        goto exec_done;
+        cmd_finalize(cmd, rsc);
+        return;
     }
 #endif
 
@@ -1310,39 +1316,48 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     if (action == NULL) {
         pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
                          PCMK_EXEC_ERROR, strerror(ENOMEM));
-        goto exec_done;
+        cmd_finalize(cmd, rsc);
+        return;
     }
 
     if (action->rc != PCMK_OCF_UNKNOWN) {
         pcmk__set_result(&(cmd->result), action->rc, action->status,
                          services__exit_reason(action));
         services_action_free(action);
-        goto exec_done;
+        cmd_finalize(cmd, rsc);
+        return;
     }
 
     action->cb_data = cmd;
 
     if (services_action_async(action, action_complete)) {
-        /* When services_action_async() returns TRUE, the callback might have
-         * been called -- in this case action_complete(), which might free cmd,
-         * so cmd cannot be used here.
+        /* The services library has taken responsibility for the action. It
+         * could be pending, blocked, or merged into a duplicate recurring
+         * action, in which case the action callback (action_complete())
+         * will be called when the action completes, otherwise the callback has
+         * already been called.
+         *
+         * action_complete() calls cmd_finalize() which can free cmd, so cmd
+         * cannot be used here.
          */
-        return TRUE;
+    } else {
+        /* This is a recurring action that is not being cancelled and could not
+         * be initiated. It has been rescheduled, and the action callback
+         * (action_complete()) has been called, which in this case has already
+         * called cmd_finalize(), which in this case should only reset (not
+         * free) cmd.
+         */
+
+        pcmk__set_result(&(cmd->result), action->rc, action->status,
+                         services__exit_reason(action));
+        services_action_free(action);
     }
-
-    pcmk__set_result(&(cmd->result), action->rc, action->status,
-                     services__exit_reason(action));
-    services_action_free(action);
-    action = NULL;
-
-  exec_done:
-    cmd_finalize(cmd, rsc);
-    return TRUE;
 }
 
 static gboolean
-lrmd_rsc_execute(lrmd_rsc_t * rsc)
+execute_resource_action(gpointer user_data)
 {
+    lrmd_rsc_t *rsc = (lrmd_rsc_t *) user_data;
     lrmd_cmd_t *cmd = NULL;
 
     CRM_CHECK(rsc != NULL, return FALSE);
@@ -1384,18 +1399,12 @@ lrmd_rsc_execute(lrmd_rsc_t * rsc)
     log_execute(cmd);
 
     if (pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
-        lrmd_rsc_execute_stonith(rsc, cmd);
+        execute_stonith_action(rsc, cmd);
     } else {
-        lrmd_rsc_execute_service_lib(rsc, cmd);
+        execute_nonstonith_action(rsc, cmd);
     }
 
     return TRUE;
-}
-
-static gboolean
-lrmd_rsc_dispatch(gpointer user_data)
-{
-    return lrmd_rsc_execute(user_data);
 }
 
 void
@@ -1473,7 +1482,10 @@ process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
 
     if (pcmk__xe_attr_is_true(request, F_LRMD_IS_IPC_PROVIDER)) {
 #ifdef PCMK__COMPILE_REMOTE
-        if ((client->remote != NULL) && client->remote->tls_handshake_complete) {
+        if ((client->remote != NULL)
+            && pcmk_is_set(client->flags,
+                           pcmk__client_tls_handshake_complete)) {
+
             // This is a remote connection from a cluster node's controller
             ipc_proxy_add_provider(client);
         } else {

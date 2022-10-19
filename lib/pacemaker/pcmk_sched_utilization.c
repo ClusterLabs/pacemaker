@@ -184,7 +184,8 @@ pcmk__consume_node_capacity(GHashTable *current_utilization, pe_resource_t *rsc)
  * \param[in] rsc                  Resource with utilization to add
  */
 void
-pcmk__release_node_capacity(GHashTable *current_utilization, pe_resource_t *rsc)
+pcmk__release_node_capacity(GHashTable *current_utilization,
+                            const pe_resource_t *rsc)
 {
     struct calculate_data data = {
         .current_utilization = current_utilization,
@@ -229,7 +230,7 @@ check_capacity(gpointer key, gpointer value, gpointer user_data)
     if (required > remaining) {
         crm_debug("Remaining capacity for %s on %s (%d) is insufficient "
                   "for resource %s usage (%d)",
-                  (const char *) key, data->node->details->uname, remaining,
+                  (const char *) key, pe__node_name(data->node), remaining,
                   data->rsc_id, required);
         data->is_enough = false;
     }
@@ -287,32 +288,34 @@ sum_resource_utilization(pe_resource_t *orig_rsc, GList *rscs)
  * \internal
  * \brief Ban resource from nodes with insufficient utilization capacity
  *
- * \param[in]     rsc       Resource to check
- * \param[in,out] prefer    Resource's preferred node (might be updated)
+ * \param[in] rsc  Resource to check
+ *
+ * \return Allowed node for \p rsc with most spare capacity, if there are no
+ *         nodes with enough capacity for \p rsc and all its colocated resources
  */
-void
-pcmk__ban_insufficient_capacity(pe_resource_t *rsc, pe_node_t **prefer)
+const pe_node_t *
+pcmk__ban_insufficient_capacity(pe_resource_t *rsc)
 {
     bool any_capable = false;
     char *rscs_id = NULL;
     pe_node_t *node = NULL;
-    pe_node_t *most_capable_node = NULL;
+    const pe_node_t *most_capable_node = NULL;
     GList *colocated_rscs = NULL;
     GHashTable *unallocated_utilization = NULL;
     GHashTableIter iter;
 
-    CRM_CHECK((rsc != NULL) && (prefer != NULL), return);
+    CRM_CHECK(rsc != NULL, return NULL);
 
     // The default placement strategy ignores utilization
     if (pcmk__str_eq(rsc->cluster->placement_strategy, "default",
                      pcmk__str_casei)) {
-        return;
+        return NULL;
     }
 
     // Check whether any resources are colocated with this one
     colocated_rscs = rsc->cmds->colocated_resources(rsc, NULL, NULL);
     if (colocated_rscs == NULL) {
-        return;
+        return NULL;
     }
 
     rscs_id = crm_strdup_printf("%s and its colocated resources", rsc->id);
@@ -351,23 +354,21 @@ pcmk__ban_insufficient_capacity(pe_resource_t *rsc, pe_node_t **prefer)
                 && !have_enough_capacity(node, rscs_id,
                                          unallocated_utilization)) {
                 pe_rsc_debug(rsc, "%s does not have enough capacity for %s",
-                             node->details->uname, rscs_id);
+                             pe__node_name(node), rscs_id);
                 resource_location(rsc, node, -INFINITY, "__limit_utilization__",
                                   rsc->cluster);
             }
         }
+        most_capable_node = NULL;
 
     } else {
         // Otherwise, ban from nodes with insufficient capacity for rsc alone
-        if (*prefer == NULL) {
-            *prefer = most_capable_node;
-        }
         g_hash_table_iter_init(&iter, rsc->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
             if (pcmk__node_available(node, true, false)
                 && !have_enough_capacity(node, rsc->id, rsc->utilization)) {
                 pe_rsc_debug(rsc, "%s does not have enough capacity for %s",
-                             node->details->uname, rsc->id);
+                             pe__node_name(node), rsc->id);
                 resource_location(rsc, node, -INFINITY, "__limit_utilization__",
                                   rsc->cluster);
             }
@@ -380,6 +381,7 @@ pcmk__ban_insufficient_capacity(pe_resource_t *rsc, pe_node_t **prefer)
 
     pe__show_node_weights(true, rsc, "Post-utilization",
                           rsc->allowed_nodes, rsc->cluster);
+    return most_capable_node;
 }
 
 /*!

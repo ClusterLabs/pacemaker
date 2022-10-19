@@ -31,7 +31,7 @@
  *       pe_free_working_set() when the instance is no longer needed.
  */
 pe_working_set_t *
-pe_new_working_set()
+pe_new_working_set(void)
 {
     pe_working_set_t *data_set = calloc(1, sizeof(pe_working_set_t));
 
@@ -208,7 +208,7 @@ pe_free_nodes(GList *nodes)
          * use node->details->uname for Pacemaker Remote nodes.
          */
         crm_trace("Freeing node %s", (pe__is_guest_or_remote_node(node)?
-                  "(guest or remote)" : node->details->uname));
+                  "(guest or remote)" : pe__node_name(node)));
 
         if (node->details->attrs != NULL) {
             g_hash_table_destroy(node->details->attrs);

@@ -50,20 +50,30 @@ extern "C" {
 typedef const xmlChar *pcmkXmlStr;
 
 gboolean add_message_xml(xmlNode * msg, const char *field, xmlNode * xml);
-xmlNode *get_message_xml(xmlNode * msg, const char *field);
+xmlNode *get_message_xml(const xmlNode *msg, const char *field);
 
 xmlDoc *getDocPtr(xmlNode * node);
 
 /*
- * Replacement function for xmlCopyPropList which at the very least,
- * doesn't work the way *I* would expect it to.
+ * \brief xmlCopyPropList ACLs-sensitive replacement expading i++ notation
  *
- * Copy all the attributes/properties from src into target.
+ * The gist is the same as with \c{xmlCopyPropList(target, src->properties)}.
+ * The function exits prematurely when any attribute cannot be copied for
+ * ACLs violation.  Even without bailing out, the result can possibly be
+ * incosistent with expectations in that case, hence the caller shall,
+ * aposteriori, verify that no document-level-tracked denial was indicated
+ * with \c{xml_acl_denied(target)} and drop whole such intermediate object.
  *
- * Not recursive, does not return anything.
+ * \param[in,out] target  Element to receive attributes from #src element
+ * \param[in]     src     Element carrying attributes to copy over to #target
  *
+ * \note Original commit 1c632c506 sadly haven't stated which otherwise
+ *       assumed behaviours of xmlCopyPropList were missing beyond otherwise
+ *       custom extensions like said ACLs and "atomic increment" (that landed
+ *       later on, anyway).
  */
-void copy_in_properties(xmlNode * target, xmlNode * src);
+void copy_in_properties(xmlNode *target, xmlNode *src);
+
 void expand_plus_plus(xmlNode * target, const char *name, const char *value);
 void fix_plus_plus_recursive(xmlNode * target);
 
@@ -146,7 +156,8 @@ gboolean can_prune_leaf(xmlNode * xml_node);
 /*
  * Searching & Modifying
  */
-xmlNode *find_xml_node(xmlNode * cib, const char *node_path, gboolean must_find);
+xmlNode *find_xml_node(const xmlNode *root, const char *search_path,
+                       gboolean must_find);
 
 void xml_remove_prop(xmlNode * obj, const char *name);
 
@@ -276,7 +287,7 @@ void xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml);
 void xml_accept_changes(xmlNode * xml);
 void xml_log_changes(uint8_t level, const char *function, xmlNode *xml);
 void xml_log_patchset(uint8_t level, const char *function, xmlNode *xml);
-bool xml_patch_versions(xmlNode *patchset, int add[3], int del[3]);
+bool xml_patch_versions(const xmlNode *patchset, int add[3], int del[3]);
 
 xmlNode *xml_create_patchset(
     int format, xmlNode *source, xmlNode *target, bool *config, bool manage_version);
@@ -285,16 +296,10 @@ int xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version);
 void patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target, bool with_digest);
 
 void save_xml_to_file(xmlNode * xml, const char *desc, const char *filename);
-char *xml_get_path(xmlNode *xml);
 
 char * crm_xml_escape(const char *text);
 void crm_xml_sanitize_id(char *id);
 void crm_xml_set_id(xmlNode *xml, const char *format, ...) G_GNUC_PRINTF(2, 3);
-
-/*!
- * \brief xmlNode destructor which can be used in glib collections
- */
-void crm_destroy_xml(gpointer data);
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 #include <crm/common/xml_compat.h>

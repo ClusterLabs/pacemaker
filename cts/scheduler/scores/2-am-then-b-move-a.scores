@@ -1,7 +1,7 @@
 
-pcmk__native_allocate: A allocation score on 18node1: 0
-pcmk__native_allocate: A allocation score on 18node2: INFINITY
-pcmk__native_allocate: A allocation score on 18node3: 0
-pcmk__native_allocate: B allocation score on 18node1: 0
-pcmk__native_allocate: B allocation score on 18node2: INFINITY
-pcmk__native_allocate: B allocation score on 18node3: 0
+pcmk__primitive_assign: A allocation score on 18node1: 0
+pcmk__primitive_assign: A allocation score on 18node2: INFINITY
+pcmk__primitive_assign: A allocation score on 18node3: 0
+pcmk__primitive_assign: B allocation score on 18node1: 0
+pcmk__primitive_assign: B allocation score on 18node2: INFINITY
+pcmk__primitive_assign: B allocation score on 18node3: 0

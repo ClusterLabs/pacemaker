@@ -2,7 +2,7 @@ Using the original execution date of: 2022-01-05 22:04:47Z
 Current cluster status:
   * Node List:
     * Online: [ rhel8-1 rhel8-2 rhel8-3 rhel8-4 rhel8-5 ]
-    * GuestOnline: [ httpd-bundle-0@rhel8-2 ]
+    * GuestOnline: [ httpd-bundle-0 ]
 
   * Full List of Resources:
     * dummy3	(ocf:pacemaker:Dummy):	 Started rhel8-1
@@ -121,7 +121,7 @@ Using the original execution date of: 2022-01-05 22:04:47Z
 Revised Cluster Status:
   * Node List:
     * Online: [ rhel8-1 rhel8-2 rhel8-3 rhel8-4 rhel8-5 ]
-    * GuestOnline: [ httpd-bundle-0@rhel8-5 ]
+    * GuestOnline: [ httpd-bundle-0 ]
 
   * Full List of Resources:
     * dummy3	(ocf:pacemaker:Dummy):	 Stopped

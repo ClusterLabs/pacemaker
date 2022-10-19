@@ -2,7 +2,7 @@ Using the original execution date of: 2018-10-15 16:02:04Z
 Current cluster status:
   * Node List:
     * Online: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
-    * GuestOnline: [ lxc2@rhel7-1 ]
+    * GuestOnline: [ lxc2 ]
 
   * Full List of Resources:
     * Fencing	(stonith:fence_xvm):	 Started rhel7-2
@@ -43,7 +43,7 @@ Using the original execution date of: 2018-10-15 16:02:04Z
 Revised Cluster Status:
   * Node List:
     * Online: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
-    * GuestOnline: [ lxc1@rhel7-1 lxc2@rhel7-1 ]
+    * GuestOnline: [ lxc1 lxc2 ]
 
   * Full List of Resources:
     * Fencing	(stonith:fence_xvm):	 Started rhel7-2

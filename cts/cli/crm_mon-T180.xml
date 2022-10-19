@@ -1,0 +1,160 @@
+<cib crm_feature_set="3.0.14" validate-with="pacemaker-2.10" epoch="9" num_updates="17" admin_epoch="0" cib-last-written="Thu Dec  6 13:23:17 2018" update-origin="cent7-host1" update-client="crm_resource" update-user="root" have-quorum="1" dc-uuid="3232262829">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.19-c3c624ea3d"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair name="no-quorum-policy" value="ignore" id="cib-bootstrap-options-no-quorum-policy"/>
+        <nvpair name="stonith-enabled" value="false" id="cib-bootstrap-options-stonith-enabled"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="3232262828" uname="cent7-host1">
+        <instance_attributes id="nodes-3232262828">
+          <nvpair id="nodes-3232262828-standby" name="standby" value="off"/>
+        </instance_attributes>
+      </node>
+      <node id="3232262829" uname="cent7-host2"/>
+    </nodes>
+    <resources>
+      <group id="group1">
+        <primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy">
+          <operations>
+            <op name="start" interval="0s" timeout="60s" on-fail="restart" id="dummy-start-0s"/>
+            <op name="monitor" interval="10s" timeout="60s" on-fail="restart" id="dummy-monitor-10s"/>
+            <op name="stop" interval="0s" timeout="60s" on-fail="block" id="dummy-stop-0s"/>
+          </operations>
+        </primitive>
+      </group>
+      <group id="group2">
+        <primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy">
+          <operations>
+            <op name="start" interval="0s" timeout="60s" on-fail="restart" id="dummy2-start-0s"/>
+            <op name="monitor" interval="10s" timeout="60s" on-fail="restart" id="dummy2-monitor-10s"/>
+            <op name="stop" interval="0s" timeout="60s" on-fail="block" id="dummy2-stop-0s"/>
+          </operations>
+        </primitive>
+      </group>
+      <bundle id="httpd-bundle1">
+        <docker image="pcmktest:http" replicas="1" replicas-per-host="1" options="--log-driver=journald"/>
+        <network ip-range-start="192.168.20.188" host-interface="ens192" host-netmask="24">
+          <port-mapping id="httpd-port" port="80"/>
+        </network>
+        <storage>
+          <storage-mapping id="httpd-root1" source-dir-root="/var/local/containers" target-dir="/var/www/html" options="rw"/>
+          <storage-mapping id="httpd-logs1" source-dir-root="/var/log/pacemaker/bundles" target-dir="/etc/httpd/logs" options="rw"/>
+        </storage>
+        <primitive class="ocf" id="httpd1" provider="heartbeat" type="apache"/>
+      </bundle>
+      <bundle id="httpd-bundle2">
+        <docker image="pcmktest:http" replicas="1" replicas-per-host="1" options="--log-driver=journald"/>
+        <network ip-range-start="192.168.20.190" host-interface="ens192" host-netmask="24">
+          <port-mapping id="httpd-port2" port="80"/>
+        </network>
+        <storage>
+          <storage-mapping id="httpd-root2" source-dir-root="/var/local/containers" target-dir="/var/www/html" options="rw"/>
+          <storage-mapping id="httpd-logs2" source-dir-root="/var/log/pacemaker/bundles" target-dir="/etc/httpd/logs" options="rw"/>
+        </storage>
+        <primitive class="ocf" id="httpd2" provider="heartbeat" type="apache"/>
+      </bundle>
+    </resources>
+    <constraints/>
+    <rsc_defaults/>
+  </configuration>
+  <status>
+    <node_state id="3232262828" uname="cent7-host1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="3232262828">
+        <lrm_resources>
+          <lrm_resource id="dummy1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dummy1_last_0" operation_key="dummy1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="11:7:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" transition-magic="0:0;11:7:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" exit-reason="" on_node="cent7-host1" call-id="40" rc-code="0" op-status="0" interval="0" last-run="1544070156" last-rc-change="1544070156" exec-time="24" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" envfile  op_sleep  passwd  state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dummy1_monitor_10000" operation_key="dummy1_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="12:7:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" transition-magic="0:0;12:7:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" exit-reason="" on_node="cent7-host1" call-id="41" rc-code="0" op-status="0" interval="10000" last-rc-change="1544070156" exec-time="20" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dummy2_last_0" operation_key="dummy2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="3:1:7:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" transition-magic="0:7;3:1:7:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" exit-reason="" on_node="cent7-host1" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1544070006" last-rc-change="1544070006" exec-time="107" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" envfile  op_sleep  passwd  state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle1-ip-192.168.20.188" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="httpd-bundle1-ip-192.168.20.188_last_0" operation_key="httpd-bundle1-ip-192.168.20.188_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="24:7:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" transition-magic="0:0;24:7:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" exit-reason="" on_node="cent7-host1" call-id="42" rc-code="0" op-status="0" interval="0" last-run="1544070170" last-rc-change="1544070170" exec-time="148" queue-time="1" op-digest="bed932c9e12e6a9f54826c22f0c0c741"/>
+            <lrm_rsc_op id="httpd-bundle1-ip-192.168.20.188_monitor_60000" operation_key="httpd-bundle1-ip-192.168.20.188_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="25:7:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" transition-magic="0:0;25:7:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" exit-reason="" on_node="cent7-host1" call-id="43" rc-code="0" op-status="0" interval="60000" last-rc-change="1544070170" exec-time="144" queue-time="0" op-digest="bfe7247114ffd09887005fb41035f1c7"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle1-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="httpd-bundle1-docker-0_last_0" operation_key="httpd-bundle1-docker-0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="26:11:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" transition-magic="0:0;26:11:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" exit-reason="" on_node="cent7-host1" call-id="48" rc-code="0" op-status="0" interval="0" last-run="1544070230" last-rc-change="1544070230" exec-time="983" queue-time="0" op-digest="c78f50451e7c5c013663cbf35f043d7b"/>
+            <lrm_rsc_op id="httpd-bundle1-docker-0_monitor_60000" operation_key="httpd-bundle1-docker-0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="3:11:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" transition-magic="0:0;3:11:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" exit-reason="" on_node="cent7-host1" call-id="49" rc-code="0" op-status="0" interval="60000" last-rc-change="1544070231" exec-time="322" queue-time="0" op-digest="9f30b5a64540743a9e5bcd85abdc7c24"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle2-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="httpd-bundle2-docker-0_last_0" operation_key="httpd-bundle2-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="8:1:7:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" transition-magic="0:7;8:1:7:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" exit-reason="" on_node="cent7-host1" call-id="25" rc-code="7" op-status="0" interval="0" last-run="1544070006" last-rc-change="1544070006" exec-time="88" queue-time="0" op-digest="18027dfd1c76ba580428a1095647d39d"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle2-ip-192.168.20.190" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="httpd-bundle2-ip-192.168.20.190_last_0" operation_key="httpd-bundle2-ip-192.168.20.190_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="7:1:7:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" transition-magic="0:7;7:1:7:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" exit-reason="" on_node="cent7-host1" call-id="21" rc-code="7" op-status="0" interval="0" last-run="1544070006" last-rc-change="1544070006" exec-time="156" queue-time="0" op-digest="b15750595f38793008d791dfb905caf4"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle1-0" type="remote" class="ocf" provider="pacemaker" container="httpd-bundle1-docker-0">
+            <lrm_rsc_op id="httpd-bundle1-0_last_0" operation_key="httpd-bundle1-0_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="27:11:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" transition-magic="0:0;27:11:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" exit-reason="" on_node="cent7-host1" call-id="10" rc-code="0" op-status="0" interval="0" last-run="1544070229" last-rc-change="1544070229" exec-time="0" queue-time="0" op-digest="a307ec40ef4478a192b587881f6932c1" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="httpd-bundle1-0_monitor_60000" operation_key="httpd-bundle1-0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="28:8:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" transition-magic="0:0;28:8:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" exit-reason="" on_node="cent7-host1" call-id="9" rc-code="0" op-status="0" interval="60000" last-rc-change="1544070171" exec-time="0" queue-time="0" op-digest="b826e10b6e1fbc3900415f9940a1d315"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle2-0" type="remote" class="ocf" provider="pacemaker" container="httpd-bundle2-docker-0">
+            <lrm_rsc_op id="httpd-bundle2-0_last_0" operation_key="httpd-bundle2-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="9:1:7:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" transition-magic="0:7;9:1:7:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" exit-reason="" on_node="cent7-host1" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1544070007" last-rc-change="1544070007" exec-time="0" queue-time="0" op-digest="e238d81edc240b99ad2c3a41afb4a69a" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="3232262829" uname="cent7-host2" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="3232262829">
+        <lrm_resources>
+          <lrm_resource id="dummy2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dummy2_last_0" operation_key="dummy2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="24:1:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" transition-magic="0:0;24:1:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" exit-reason="" on_node="cent7-host2" call-id="18" rc-code="0" op-status="0" interval="0" last-run="1544070005" last-rc-change="1544070005" exec-time="92" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" envfile  op_sleep  passwd  state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dummy2_monitor_10000" operation_key="dummy2_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="25:1:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" transition-magic="0:0;25:1:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" exit-reason="" on_node="cent7-host2" call-id="27" rc-code="0" op-status="0" interval="10000" last-rc-change="1544070005" exec-time="51" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dummy1_last_0" operation_key="dummy1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="10:7:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" transition-magic="0:0;10:7:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" exit-reason="" on_node="cent7-host2" call-id="41" rc-code="0" op-status="0" interval="0" last-run="1544070155" last-rc-change="1544070155" exec-time="58" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" envfile  op_sleep  passwd  state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dummy1_monitor_10000" operation_key="dummy1_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="12:3:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" transition-magic="0:0;12:3:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" exit-reason="" on_node="cent7-host2" call-id="35" rc-code="0" op-status="0" interval="10000" last-rc-change="1544070076" exec-time="41" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea" op-secure-params=" passwd " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle1-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="httpd-bundle1-docker-0_last_0" operation_key="httpd-bundle1-docker-0_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="8:11:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" transition-magic="0:0;8:11:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" exit-reason="" on_node="cent7-host2" call-id="46" rc-code="0" op-status="0" interval="0" last-run="1544070229" last-rc-change="1544070229" exec-time="195" queue-time="1" op-digest="c78f50451e7c5c013663cbf35f043d7b"/>
+            <lrm_rsc_op id="httpd-bundle1-docker-0_monitor_60000" operation_key="httpd-bundle1-docker-0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="28:3:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" transition-magic="0:0;28:3:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" exit-reason="" on_node="cent7-host2" call-id="39" rc-code="0" op-status="0" interval="60000" last-rc-change="1544070091" exec-time="237" queue-time="0" op-digest="9f30b5a64540743a9e5bcd85abdc7c24"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle1-ip-192.168.20.188" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="httpd-bundle1-ip-192.168.20.188_last_0" operation_key="httpd-bundle1-ip-192.168.20.188_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="23:7:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" transition-magic="0:0;23:7:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" exit-reason="" on_node="cent7-host2" call-id="45" rc-code="0" op-status="0" interval="0" last-run="1544070169" last-rc-change="1544070169" exec-time="115" queue-time="1" op-digest="bed932c9e12e6a9f54826c22f0c0c741"/>
+            <lrm_rsc_op id="httpd-bundle1-ip-192.168.20.188_monitor_60000" operation_key="httpd-bundle1-ip-192.168.20.188_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="25:3:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" transition-magic="0:0;25:3:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" exit-reason="" on_node="cent7-host2" call-id="37" rc-code="0" op-status="0" interval="60000" last-rc-change="1544070090" exec-time="136" queue-time="0" op-digest="bfe7247114ffd09887005fb41035f1c7"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle2-ip-192.168.20.190" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="httpd-bundle2-ip-192.168.20.190_last_0" operation_key="httpd-bundle2-ip-192.168.20.190_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="45:1:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" transition-magic="0:0;45:1:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" exit-reason="" on_node="cent7-host2" call-id="28" rc-code="0" op-status="0" interval="0" last-run="1544070005" last-rc-change="1544070005" exec-time="83" queue-time="0" op-digest="b15750595f38793008d791dfb905caf4"/>
+            <lrm_rsc_op id="httpd-bundle2-ip-192.168.20.190_monitor_60000" operation_key="httpd-bundle2-ip-192.168.20.190_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="46:1:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" transition-magic="0:0;46:1:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" exit-reason="" on_node="cent7-host2" call-id="29" rc-code="0" op-status="0" interval="60000" last-rc-change="1544070005" exec-time="66" queue-time="0" op-digest="d66b395d765aa54ef26f683efa1d0e11"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle2-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="httpd-bundle2-docker-0_last_0" operation_key="httpd-bundle2-docker-0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="47:1:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" transition-magic="0:0;47:1:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" exit-reason="" on_node="cent7-host2" call-id="30" rc-code="0" op-status="0" interval="0" last-run="1544070005" last-rc-change="1544070005" exec-time="916" queue-time="0" op-digest="18027dfd1c76ba580428a1095647d39d"/>
+            <lrm_rsc_op id="httpd-bundle2-docker-0_monitor_60000" operation_key="httpd-bundle2-docker-0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="48:1:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" transition-magic="0:0;48:1:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" exit-reason="" on_node="cent7-host2" call-id="32" rc-code="0" op-status="0" interval="60000" last-rc-change="1544070006" exec-time="285" queue-time="0" op-digest="1fe1e584f801bf9c9b66ca380a2dad83"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle1-0" type="remote" class="ocf" provider="pacemaker" container="httpd-bundle1-docker-0">
+            <lrm_rsc_op id="httpd-bundle1-0_last_0" operation_key="httpd-bundle1-0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="28:11:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" transition-magic="0:0;28:11:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" exit-reason="" on_node="cent7-host2" call-id="6" rc-code="0" op-status="0" interval="0" last-run="1544070231" last-rc-change="1544070231" exec-time="0" queue-time="0" op-digest="a307ec40ef4478a192b587881f6932c1" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="httpd-bundle1-0_monitor_60000" operation_key="httpd-bundle1-0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="28:12:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" transition-magic="0:0;28:12:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" exit-reason="" on_node="cent7-host2" call-id="7" rc-code="0" op-status="0" interval="60000" last-rc-change="1544070232" exec-time="0" queue-time="0" op-digest="b826e10b6e1fbc3900415f9940a1d315"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle2-0" type="remote" class="ocf" provider="pacemaker" container="httpd-bundle2-docker-0">
+            <lrm_rsc_op id="httpd-bundle2-0_last_0" operation_key="httpd-bundle2-0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="49:1:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" transition-magic="0:0;49:1:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" exit-reason="" on_node="cent7-host2" call-id="3" rc-code="0" op-status="0" interval="0" last-run="1544070006" last-rc-change="1544070006" exec-time="0" queue-time="0" op-digest="e238d81edc240b99ad2c3a41afb4a69a" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="httpd-bundle2-0_monitor_60000" operation_key="httpd-bundle2-0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="44:2:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" transition-magic="0:0;44:2:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" exit-reason="" on_node="cent7-host2" call-id="4" rc-code="0" op-status="0" interval="60000" last-rc-change="1544070007" exec-time="0" queue-time="0" op-digest="3043b179543a9a9b16c91fae06f3922d"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="3232262829">
+          <instance_attributes id="status-3232262829"/>
+      </transient_attributes>
+    </node_state>
+    <node_state remote_node="true" id="httpd-bundle1-0" uname="httpd-bundle1-0" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0">
+      <lrm id="httpd-bundle1-0">
+        <lrm_resources>
+          <lrm_resource id="httpd1" type="apache" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="httpd1_last_0" operation_key="httpd1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="33:12:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" transition-magic="0:0;33:12:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" exit-reason="" on_node="cent7-host1" call-id="8" rc-code="0" op-status="0" interval="0" last-run="1544070233" last-rc-change="1544070233" exec-time="1116" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="httpd-bundle2-0" uname="httpd-bundle2-0" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0">
+      <lrm id="httpd-bundle2-0">
+        <lrm_resources>
+          <lrm_resource id="httpd2" type="apache" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="httpd2_last_0" operation_key="httpd2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="49:2:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" transition-magic="0:0;49:2:0:173a0661-aaa2-4c3d-a9a3-2e9342720d2d" exit-reason="" on_node="cent7-host2" call-id="8" rc-code="0" op-status="0" interval="0" last-run="1544070008" last-rc-change="1544070008" exec-time="1022" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

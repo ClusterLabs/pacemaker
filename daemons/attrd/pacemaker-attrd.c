@@ -48,50 +48,7 @@ static pcmk__supported_format_t formats[] = {
 lrmd_t *the_lrmd = NULL;
 crm_cluster_t *attrd_cluster = NULL;
 crm_trigger_t *attrd_config_read = NULL;
-static crm_exit_t attrd_exit_status = CRM_EX_OK;
-
-static void
-attrd_cpg_dispatch(cpg_handle_t handle,
-                 const struct cpg_name *groupName,
-                 uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
-{
-    uint32_t kind = 0;
-    xmlNode *xml = NULL;
-    const char *from = NULL;
-    char *data = pcmk_message_common_cs(handle, nodeid, pid, msg, &kind, &from);
-
-    if(data == NULL) {
-        return;
-    }
-
-    if (kind == crm_class_cluster) {
-        xml = string2xml(data);
-    }
-
-    if (xml == NULL) {
-        crm_err("Bad message of class %d received from %s[%u]: '%.120s'", kind, from, nodeid, data);
-    } else {
-        crm_node_t *peer = crm_get_peer(nodeid, from);
-
-        attrd_peer_message(peer, xml);
-    }
-
-    free_xml(xml);
-    free(data);
-}
-
-static void
-attrd_cpg_destroy(gpointer unused)
-{
-    if (attrd_shutting_down()) {
-        crm_info("Corosync disconnection complete");
-
-    } else {
-        crm_crit("Lost connection to cluster layer, shutting down");
-        attrd_exit_status = CRM_EX_DISCONNECT;
-        attrd_shutdown(0);
-    }
-}
+crm_exit_t attrd_exit_status = CRM_EX_OK;
 
 static void
 attrd_cib_destroy_cb(gpointer user_data)
@@ -228,104 +185,6 @@ attrd_cib_init(void)
     mainloop_set_trigger(attrd_config_read);
 }
 
-static qb_ipcs_service_t *ipcs = NULL;
-
-static int32_t
-attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
-{
-    uint32_t id = 0;
-    uint32_t flags = 0;
-    pcmk__client_t *client = pcmk__find_client(c);
-    xmlNode *xml = NULL;
-    const char *op;
-
-    // Sanity-check, and parse XML from IPC data
-    CRM_CHECK((c != NULL) && (client != NULL), return 0);
-    if (data == NULL) {
-        crm_debug("No IPC data from PID %d", pcmk__client_pid(c));
-        return 0;
-    }
-    xml = pcmk__client_data2xml(client, data, &id, &flags);
-    if (xml == NULL) {
-        crm_debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
-        return 0;
-    }
-
-    CRM_ASSERT(client->user != NULL);
-    pcmk__update_acl_user(xml, PCMK__XA_ATTR_USER, client->user);
-
-    op = crm_element_value(xml, PCMK__XA_TASK);
-
-    if (client->name == NULL) {
-        const char *value = crm_element_value(xml, F_ORIG);
-        client->name = crm_strdup_printf("%s.%d", value?value:"unknown", client->pid);
-    }
-
-    if (pcmk__str_eq(op, PCMK__ATTRD_CMD_PEER_REMOVE, pcmk__str_casei)) {
-        attrd_send_ack(client, id, flags);
-        attrd_client_peer_remove(client, xml);
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_CLEAR_FAILURE, pcmk__str_casei)) {
-        attrd_send_ack(client, id, flags);
-        attrd_client_clear_failure(xml);
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE, pcmk__str_casei)) {
-        attrd_send_ack(client, id, flags);
-        attrd_client_update(xml);
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_BOTH, pcmk__str_casei)) {
-        attrd_send_ack(client, id, flags);
-        attrd_client_update(xml);
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_DELAY, pcmk__str_casei)) {
-        attrd_send_ack(client, id, flags);
-        attrd_client_update(xml);
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_REFRESH, pcmk__str_casei)) {
-        attrd_send_ack(client, id, flags);
-        attrd_client_refresh();
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_QUERY, pcmk__str_casei)) {
-        /* queries will get reply, so no ack is necessary */
-        attrd_client_query(client, id, flags, xml);
-
-    } else {
-        crm_info("Ignoring request from client %s with unknown operation %s",
-                 pcmk__client_name(client), op);
-    }
-
-    free_xml(xml);
-    return 0;
-}
-
-void
-attrd_ipc_fini(void)
-{
-    if (ipcs != NULL) {
-        pcmk__drop_all_clients(ipcs);
-        qb_ipcs_destroy(ipcs);
-        ipcs = NULL;
-    }
-}
-
-static int
-attrd_cluster_connect(void)
-{
-    attrd_cluster = calloc(1, sizeof(crm_cluster_t));
-
-    attrd_cluster->destroy = attrd_cpg_destroy;
-    attrd_cluster->cpg.cpg_deliver_fn = attrd_cpg_dispatch;
-    attrd_cluster->cpg.cpg_confchg_fn = pcmk_cpg_membership;
-
-    crm_set_status_callback(&attrd_peer_change_cb);
-
-    if (crm_cluster_connect(attrd_cluster) == FALSE) {
-        crm_err("Cluster connection failed");
-        return -ENOTCONN;
-    }
-    return pcmk_ok;
-}
-
 static bool
 ipc_already_running(void)
 {
@@ -400,7 +259,7 @@ main(int argc, char **argv)
         crm_exit(CRM_EX_OK);
     }
 
-    attributes = pcmk__strkey_table(NULL, free_attribute);
+    attributes = pcmk__strkey_table(NULL, attrd_free_attribute);
 
     /* Connect to the CIB before connecting to the cluster or listening for IPC.
      * This allows us to assume the CIB is connected whenever we process a
@@ -429,7 +288,7 @@ main(int argc, char **argv)
      */
     attrd_broadcast_protocol();
 
-    attrd_init_ipc(&ipcs, attrd_ipc_dispatch);
+    attrd_init_ipc();
     crm_notice("Pacemaker node attribute manager successfully started and accepting connections");
     attrd_run_mainloop();
 

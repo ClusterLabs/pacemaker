@@ -6,13 +6,12 @@
 # This source code is licensed under the GNU General Public License version 2
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
-AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include \
-			  -I$(top_builddir) -I$(top_srcdir)
-LDADD = $(top_builddir)/lib/common/libcrmcommon.la \
-		$(top_builddir)/lib/pengine/libpe_status.la \
-		-lcmocka
 
 include $(top_srcdir)/mk/tap.mk
+include $(top_srcdir)/mk/unittest.mk
+
+AM_CPPFLAGS += -I$(top_srcdir)
+LDADD += $(top_builddir)/lib/pengine/libpe_status_test.la
 
 AM_TESTS_ENVIRONMENT += PCMK_CTS_CLI_DIR=$(top_srcdir)/cts/cli
 

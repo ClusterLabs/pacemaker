@@ -92,7 +92,7 @@ typedef struct pe__bundle_variant_data_s {
         char *container_network;
         char *ip_range_start;
         gboolean add_host;
-        char *container_host_options;
+        gchar *container_host_options;
         char *container_command;
         char *launcher_options;
         const char *attribute_target;
@@ -111,39 +111,6 @@ typedef struct pe__bundle_variant_data_s {
 	CRM_ASSERT(rsc->variant == pe_container);                       \
 	CRM_ASSERT(rsc->variant_opaque != NULL);			\
 	data = (pe__bundle_variant_data_t *)rsc->variant_opaque;		\
-
-#  elif VARIANT_GROUP
-
-typedef struct group_variant_data_s {
-    int num_children;
-    pe_resource_t *first_child;
-    pe_resource_t *last_child;
-
-    gboolean colocated;
-    gboolean ordered;
-
-    gboolean child_starting;
-    gboolean child_stopping;
-
-} group_variant_data_t;
-
-#    define get_group_variant_data(data, rsc)				\
-	CRM_ASSERT(rsc != NULL);					\
-	CRM_ASSERT(rsc->variant == pe_group);				\
-	CRM_ASSERT(rsc->variant_opaque != NULL);			\
-	data = (group_variant_data_t *)rsc->variant_opaque;		\
-
-#  elif VARIANT_NATIVE
-
-typedef struct native_variant_data_s {
-    int dummy;
-} native_variant_data_t;
-
-#    define get_native_variant_data(data, rsc)				\
-	CRM_ASSERT(rsc != NULL);					\
-	CRM_ASSERT(rsc->variant == pe_native);				\
-	CRM_ASSERT(rsc->variant_opaque != NULL);			\
-	data = (native_variant_data_t *)rsc->variant_opaque;
 
 #  endif
 

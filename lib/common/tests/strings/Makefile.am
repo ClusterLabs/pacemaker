@@ -7,13 +7,8 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
-AM_CPPFLAGS = -I$(top_srcdir)/include		\
-	      -I$(top_builddir)/include		\
-	      -I$(top_srcdir)/lib/common
-LDADD = $(top_builddir)/lib/common/libcrmcommon_test.la
-AM_LDFLAGS = $(LDFLAGS_WRAP)
-
 include $(top_srcdir)/mk/tap.mk
+include $(top_srcdir)/mk/unittest.mk
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
 check_PROGRAMS = \
@@ -25,9 +20,11 @@ check_PROGRAMS = \
 		pcmk__char_in_any_str_test	\
 		pcmk__compress_test	\
 		pcmk__ends_with_test 		\
+		pcmk__g_strcat_test		\
 		pcmk__guint_from_hash_test	\
 		pcmk__numeric_strcasecmp_test \
 		pcmk__parse_ll_range_test	\
+		pcmk__s_test				\
 		pcmk__scan_double_test		\
 		pcmk__scan_min_int_test		\
 		pcmk__scan_port_test		\

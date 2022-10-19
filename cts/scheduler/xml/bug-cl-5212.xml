@@ -112,13 +112,13 @@
         </rule>
       </rsc_location>
       <rsc_location id="rsc_location-msPostgresql-1" rsc="msPostgresql">
-        <rule role="master" score="300" id="rsc_location-msPostgresql-1-rule">
+        <rule role="Promoted" score="300" id="rsc_location-msPostgresql-1-rule">
           <expression attribute="#uname" operation="eq" value="srv01" id="rsc_location-msPostgresql-1-expression"/>
         </rule>
-        <rule role="master" score="200" id="rsc_location-msPostgresql-1-rule-0">
+        <rule role="Promoted" score="200" id="rsc_location-msPostgresql-1-rule-0">
           <expression attribute="#uname" operation="eq" value="srv02" id="rsc_location-msPostgresql-1-expression-0"/>
         </rule>
-        <rule role="master" score="100" id="rsc_location-msPostgresql-1-rule-1">
+        <rule role="Promoted" score="100" id="rsc_location-msPostgresql-1-rule-1">
           <expression attribute="#uname" operation="eq" value="srv03" id="rsc_location-msPostgresql-1-expression-1"/>
         </rule>
       </rsc_location>
@@ -172,7 +172,7 @@
           <nvpair id="status-3232238290-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-3232238290-probe_complete" name="probe_complete" value="true"/>
           <nvpair id="status-3232238290-default_ping_set" name="default_ping_set" value="100"/>
-          <nvpair id="status-3232238290-master-pgsql" name="master-pgsql" value="5"/>
+          <nvpair id="status-3232238290-promoted-pgsql" name="master-pgsql" value="5"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -205,7 +205,7 @@
           <nvpair id="status-3232238280-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-3232238280-probe_complete" name="probe_complete" value="true"/>
           <nvpair id="status-3232238280-default_ping_set" name="default_ping_set" value="100"/>
-          <nvpair id="status-3232238280-master-pgsql" name="master-pgsql" value="10"/>
+          <nvpair id="status-3232238280-promoted-pgsql" name="master-pgsql" value="10"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -215,7 +215,7 @@
           <nvpair id="status-3232238300-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-3232238300-probe_complete" name="probe_complete" value="true"/>
           <nvpair id="status-3232238300-default_ping_set" name="default_ping_set" value="100"/>
-          <nvpair id="status-3232238300-master-pgsql" name="master-pgsql" value="5"/>
+          <nvpair id="status-3232238300-promoted-pgsql" name="master-pgsql" value="5"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="3232238300">

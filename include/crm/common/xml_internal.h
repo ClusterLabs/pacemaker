@@ -156,12 +156,14 @@ enum pcmk__xml_artefact_ns {
 void pcmk__strip_xml_text(xmlNode *xml);
 const char *pcmk__xe_add_last_written(xmlNode *xe);
 
-xmlNode *pcmk__xe_match(xmlNode *parent, const char *node_name,
+xmlNode *pcmk__xe_match(const xmlNode *parent, const char *node_name,
                         const char *attr_n, const char *attr_v);
 
 void pcmk__xe_remove_matching_attrs(xmlNode *element,
                                     bool (*match)(xmlAttrPtr, void *),
                                     void *user_data);
+
+GString *pcmk__element_xpath(const xmlNode *xml);
 
 /*!
  * \internal
@@ -266,6 +268,9 @@ pcmk__xe_next(const xmlNode *child)
  * \internal
  * \brief Like pcmk__xe_set_props, but takes a va_list instead of
  *        arguments directly.
+ *
+ * \param[in,out] node   XML to add attributes to
+ * \param[in]     pairs  NULL-terminated list of name/value pairs to add
  */
 void
 pcmk__xe_set_propv(xmlNodePtr node, va_list pairs);
@@ -335,5 +340,30 @@ enum xml_private_flags {
 };
 
 void pcmk__set_xml_doc_flag(xmlNode *xml, enum xml_private_flags flag);
+
+/*!
+ * \internal
+ * \brief Iterate over child elements of \p xml
+ *
+ * This function iterates over the children of \p xml, performing the
+ * callback function \p handler on each node.  If the callback returns
+ * a value other than pcmk_rc_ok, the iteration stops and the value is
+ * returned.  It is therefore possible that not all children will be
+ * visited.
+ *
+ * \param[in,out] xml                 The starting XML node.  Can be NULL.
+ * \param[in]     child_element_name  The name that the node must match in order
+ *                                    for \p handler to be run.  If NULL, all
+ *                                    child elements will match.
+ * \param[in]     handler             The callback function.
+ * \param[in,out] userdata            User data to pass to the callback function.
+ *                                    Can be NULL.
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__xe_foreach_child(xmlNode *xml, const char *child_element_name,
+                       int (*handler)(xmlNode *xml, void *userdata),
+                       void *userdata);
 
 #endif // PCMK__XML_INTERNAL__H

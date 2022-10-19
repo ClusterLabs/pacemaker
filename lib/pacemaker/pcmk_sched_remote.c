@@ -59,24 +59,24 @@ state2text(enum remote_connection_state state)
  */
 
 static inline void
-order_start_then_action(pe_resource_t *lh_rsc, pe_action_t *rh_action,
-                        enum pe_ordering extra, pe_working_set_t *data_set)
+order_start_then_action(pe_resource_t *first_rsc, pe_action_t *then_action,
+                        uint32_t extra, pe_working_set_t *data_set)
 {
-    if ((lh_rsc != NULL) && (rh_action != NULL) && (data_set != NULL)) {
-        pcmk__new_ordering(lh_rsc, start_key(lh_rsc), NULL,
-                           rh_action->rsc, NULL, rh_action,
+    if ((first_rsc != NULL) && (then_action != NULL) && (data_set != NULL)) {
+        pcmk__new_ordering(first_rsc, start_key(first_rsc), NULL,
+                           then_action->rsc, NULL, then_action,
                            pe_order_preserve|pe_order_runnable_left|extra,
                            data_set);
     }
 }
 
 static inline void
-order_action_then_stop(pe_action_t *lh_action, pe_resource_t *rh_rsc,
-                       enum pe_ordering extra, pe_working_set_t *data_set)
+order_action_then_stop(pe_action_t *first_action, pe_resource_t *then_rsc,
+                       uint32_t extra, pe_working_set_t *data_set)
 {
-    if ((lh_action != NULL) && (rh_rsc != NULL) && (data_set != NULL)) {
-        pcmk__new_ordering(lh_action->rsc, NULL, lh_action,
-                           rh_rsc, stop_key(rh_rsc), NULL,
+    if ((first_action != NULL) && (then_rsc != NULL) && (data_set != NULL)) {
+        pcmk__new_ordering(first_action->rsc, NULL, first_action,
+                           then_rsc, stop_key(then_rsc), NULL,
                            pe_order_preserve|extra, data_set);
     }
 }
@@ -157,19 +157,6 @@ get_remote_node_state(pe_node_t *node)
     return remote_state_alive;
 }
 
-static int
-is_recurring_action(pe_action_t *action)
-{
-    guint interval_ms;
-
-    if (pcmk__guint_from_hash(action->meta,
-                              XML_LRM_ATTR_INTERVAL_MS, 0,
-                              &interval_ms) != pcmk_rc_ok) {
-        return 0;
-    }
-    return (interval_ms > 0);
-}
-
 /*!
  * \internal
  * \brief Order actions on remote node relative to actions for the connection
@@ -181,7 +168,7 @@ apply_remote_ordering(pe_action_t *action, pe_working_set_t *data_set)
     enum action_tasks task = text2task(action->task);
     enum remote_connection_state state = get_remote_node_state(action->node);
 
-    enum pe_ordering order_opts = pe_order_none;
+    uint32_t order_opts = pe_order_none;
 
     if (action->rsc == NULL) {
         return;
@@ -267,7 +254,7 @@ apply_remote_ordering(pe_action_t *action, pe_working_set_t *data_set)
 
         default:
             /* Wait for the connection resource to be up */
-            if (is_recurring_action(action)) {
+            if (pcmk__action_is_recurring(action)) {
                 /* In case we ever get the recovery logic wrong, force
                  * recurring monitors to be restarted, even if just
                  * the connection was re-established
@@ -385,7 +372,7 @@ apply_container_ordering(pe_action_t *action, pe_working_set_t *data_set)
 
         default:
             /* Wait for the connection resource to be up */
-            if (is_recurring_action(action)) {
+            if (pcmk__action_is_recurring(action)) {
                 /* In case we ever get the recovery logic wrong, force
                  * recurring monitors to be restarted, even if just
                  * the connection was re-established

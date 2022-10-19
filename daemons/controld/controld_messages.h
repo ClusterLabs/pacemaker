@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -73,7 +73,7 @@ extern gboolean relay_message(xmlNode * relay_message, gboolean originated_local
 gboolean crmd_is_proxy_session(const char *session);
 void crmd_proxy_send(const char *session, xmlNode *msg);
 
-bool controld_authorize_ipc_message(xmlNode *client_msg,
+bool controld_authorize_ipc_message(const xmlNode *client_msg,
                                     pcmk__client_t *curr_client,
                                     const char *proxy_session);
 

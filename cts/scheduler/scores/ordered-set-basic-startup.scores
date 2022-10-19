@@ -1,13 +1,13 @@
 
-pcmk__native_allocate: A allocation score on fc16-builder2: 0
-pcmk__native_allocate: A allocation score on fc16-builder: 0
-pcmk__native_allocate: B allocation score on fc16-builder2: 0
-pcmk__native_allocate: B allocation score on fc16-builder: 0
-pcmk__native_allocate: C allocation score on fc16-builder2: -INFINITY
-pcmk__native_allocate: C allocation score on fc16-builder: -INFINITY
-pcmk__native_allocate: D allocation score on fc16-builder2: -INFINITY
-pcmk__native_allocate: D allocation score on fc16-builder: -INFINITY
-pcmk__native_allocate: E allocation score on fc16-builder2: 0
-pcmk__native_allocate: E allocation score on fc16-builder: 0
-pcmk__native_allocate: F allocation score on fc16-builder2: 0
-pcmk__native_allocate: F allocation score on fc16-builder: 0
+pcmk__primitive_assign: A allocation score on fc16-builder2: 0
+pcmk__primitive_assign: A allocation score on fc16-builder: 0
+pcmk__primitive_assign: B allocation score on fc16-builder2: 0
+pcmk__primitive_assign: B allocation score on fc16-builder: 0
+pcmk__primitive_assign: C allocation score on fc16-builder2: -INFINITY
+pcmk__primitive_assign: C allocation score on fc16-builder: -INFINITY
+pcmk__primitive_assign: D allocation score on fc16-builder2: -INFINITY
+pcmk__primitive_assign: D allocation score on fc16-builder: -INFINITY
+pcmk__primitive_assign: E allocation score on fc16-builder2: 0
+pcmk__primitive_assign: E allocation score on fc16-builder: 0
+pcmk__primitive_assign: F allocation score on fc16-builder2: 0
+pcmk__primitive_assign: F allocation score on fc16-builder: 0

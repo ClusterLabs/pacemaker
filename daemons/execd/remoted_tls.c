@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2021 the Pacemaker project contributors
+ * Copyright 2012-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -47,6 +47,10 @@ debug_log(int level, const char *str)
 /*!
  * \internal
  * \brief Read (more) TLS handshake data from client
+ *
+ * \param[in,out] client  IPC client doing handshake
+ *
+ * \return 0 on success or more data needed, -1 on error
  */
 static int
 remoted__read_handshake_data(pcmk__client_t *client)
@@ -67,7 +71,7 @@ remoted__read_handshake_data(pcmk__client_t *client)
     }
     client->remote->auth_timeout = 0;
 
-    client->remote->tls_handshake_complete = TRUE;
+    pcmk__set_client_flags(client, pcmk__client_tls_handshake_complete);
     crm_notice("Remote client connection accepted");
 
     /* Only a client with access to the TLS key can connect, so we can treat
@@ -88,7 +92,8 @@ lrmd_remote_client_msg(gpointer data)
     xmlNode *request = NULL;
     pcmk__client_t *client = data;
 
-    if (client->remote->tls_handshake_complete == FALSE) {
+    if (!pcmk_is_set(client->flags,
+                     pcmk__client_tls_handshake_complete)) {
         return remoted__read_handshake_data(client);
     }
 
@@ -184,7 +189,8 @@ lrmd_auth_timeout_cb(gpointer data)
 
     client->remote->auth_timeout = 0;
 
-    if (client->remote->tls_handshake_complete == TRUE) {
+    if (pcmk_is_set(client->flags,
+                    pcmk__client_tls_handshake_complete)) {
         return FALSE;
     }
 
@@ -332,7 +338,7 @@ get_address_info(const char *bind_name, int port, struct addrinfo **res)
 }
 
 int
-lrmd_init_remote_tls_server()
+lrmd_init_remote_tls_server(void)
 {
     int filter;
     int port = crm_default_remote_port();

@@ -73,7 +73,7 @@ typedef struct {
 } pcmk__server_command_t;
 
 const char *pcmk__message_name(const char *name);
-GHashTable *pcmk__register_handlers(pcmk__server_command_t handlers[]);
+GHashTable *pcmk__register_handlers(const pcmk__server_command_t handlers[]);
 xmlNode *pcmk__process_request(pcmk__request_t *request, GHashTable *handlers);
 void pcmk__reset_request(pcmk__request_t *request);
 
@@ -87,7 +87,7 @@ void pcmk__reset_request(pcmk__request_t *request);
  *         if unknown
  */
 static inline const char *
-pcmk__request_origin_type(pcmk__request_t *request)
+pcmk__request_origin_type(const pcmk__request_t *request)
 {
     if ((request != NULL) && (request->ipc_client != NULL)) {
         return "client";
@@ -108,7 +108,7 @@ pcmk__request_origin_type(pcmk__request_t *request)
  *         "(unspecified)" if unknown
  */
 static inline const char *
-pcmk__request_origin(pcmk__request_t *request)
+pcmk__request_origin(const pcmk__request_t *request)
 {
     if ((request != NULL) && (request->ipc_client != NULL)) {
         return pcmk__client_name(request->ipc_client);

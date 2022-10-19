@@ -262,7 +262,7 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
                                     PCMK__ATTRD_CMD_UPDATE,
                                     PCMK__ATTRD_CMD_UPDATE_BOTH,
                                     PCMK__ATTRD_CMD_UPDATE_DELAY, NULL)) {
-                crm_xml_add(request, PCMK__XA_ATTR_NODE_NAME, proxy->node_name);
+                pcmk__xe_add_node(request, proxy->node_name, 0);
             }
 
             rc = crm_ipc_send(proxy->ipc, request, flags, 5000, NULL);

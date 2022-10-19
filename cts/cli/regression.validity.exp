@@ -125,7 +125,11 @@ update_validation 	debug: Testing 'pacemaker-3.8' validation (22 of X)
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
 update_validation 	trace: pacemaker-3.8 validation failed
-Cannot upgrade configuration (claiming schema pacemaker-1.2) to at least pacemaker-3.0 because it does not validate with any schema from pacemaker-1.2 to pacemaker-3.8
+update_validation 	debug: Testing 'pacemaker-3.9' validation (23 of X)
+element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+update_validation 	trace: pacemaker-3.9 validation failed
+Cannot upgrade configuration (claiming schema pacemaker-1.2) to at least pacemaker-3.0 because it does not validate with any schema from pacemaker-1.2 to pacemaker-3.9
 =#=#=#= End test: Run crm_simulate with invalid CIB (enum violation) - Invalid configuration (78) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with invalid CIB (enum violation)
 =#=#=#= Begin test: Try to make resulting CIB invalid (unrecognized validate-with) =#=#=#=
@@ -233,7 +237,10 @@ update_validation 	trace: pacemaker-3.7 validation failed
 update_validation 	debug: Testing 'pacemaker-3.8' validation (22 of X)
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
 update_validation 	trace: pacemaker-3.8 validation failed
-Cannot upgrade configuration (claiming schema pacemaker-9999.0) to at least pacemaker-3.0 because it does not validate with any schema from unknown to pacemaker-3.8
+update_validation 	debug: Testing 'pacemaker-3.9' validation (23 of X)
+element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
+update_validation 	trace: pacemaker-3.9 validation failed
+Cannot upgrade configuration (claiming schema pacemaker-9999.0) to at least pacemaker-3.0 because it does not validate with any schema from unknown to pacemaker-3.9
 =#=#=#= End test: Run crm_simulate with invalid CIB (unrecognized validate-with) - Invalid configuration (78) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with invalid CIB (unrecognized validate-with)
 =#=#=#= Begin test: Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1) =#=#=#=
@@ -336,8 +343,14 @@ update_validation 	debug: Configuration valid for schema: pacemaker-3.7
 update_validation 	debug: pacemaker-3.7-style configuration is also valid for pacemaker-3.8
 update_validation 	debug: Testing 'pacemaker-3.8' validation (22 of X)
 update_validation 	debug: Configuration valid for schema: pacemaker-3.8
-update_validation 	trace: Stopping at pacemaker-3.8
-update_validation 	info: Transformed the configuration from pacemaker-1.2 to pacemaker-3.8
+update_validation 	debug: pacemaker-3.8-style configuration is also valid for pacemaker-3.9
+update_validation 	debug: Testing 'pacemaker-3.9' validation (23 of X)
+update_validation 	debug: Configuration valid for schema: pacemaker-3.9
+update_validation 	trace: Stopping at pacemaker-3.9
+update_validation 	info: Transformed the configuration from pacemaker-1.2 to pacemaker-3.9
+unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
+unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
@@ -345,9 +358,6 @@ Current cluster status:
   * Full List of Resources:
     * dummy1	(ocf:pacemaker:Dummy):	 Stopped
     * dummy2	(ocf:pacemaker:Dummy):	 Stopped
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 
 Transition Summary:
 
@@ -382,13 +392,13 @@ Schema validation of configuration is disabled (enabling is encouraged and preve
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
+unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Current cluster status:
   * Full List of Resources:
     * dummy1	(ocf:pacemaker:Dummy):	 Stopped
     * dummy2	(ocf:pacemaker:Dummy):	 Stopped
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 
 Transition Summary:
 
@@ -401,6 +411,8 @@ Revised Cluster Status:
 =#=#=#= End test: Run crm_simulate with valid CIB, but without validate-with attribute - OK (0) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with valid CIB, but without validate-with attribute
 =#=#=#= Begin test: Make resulting CIB invalid, and without validate-with attribute =#=#=#=
+element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
@@ -516,6 +528,11 @@ validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attrib
 validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
 validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
+unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
@@ -523,9 +540,6 @@ Current cluster status:
   * Full List of Resources:
     * dummy1	(ocf:pacemaker:Dummy):	 Stopped
     * dummy2	(ocf:pacemaker:Dummy):	 Stopped
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 
 Transition Summary:
 

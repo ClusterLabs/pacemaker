@@ -13,7 +13,7 @@
         <nvpair id="redis_replication-redis_REPL_INFO" name="redis_REPL_INFO" value="controller-2"/>
       </cluster_property_set>
       <cluster_property_set id="ovn_ovsdb_master_server">
-        <nvpair id="ovn_ovsdb_master_server-OVN_REPL_INFO" name="OVN_REPL_INFO" value="controller-2"/>
+        <nvpair id="ovn_ovsdb_promoted_server-OVN_REPL_INFO" name="OVN_REPL_INFO" value="controller-2"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
@@ -210,7 +210,7 @@
           <instance_attributes id="redis-instance_attributes">
             <nvpair id="redis-instance_attributes-tunnel_host" name="tunnel_host" value="127.0.0.1"/>
             <nvpair id="redis-instance_attributes-tunnel_port_map" name="tunnel_port_map" value="controller-0:6660;controller-1:6661;controller-2:6662"/>
-            <nvpair id="redis-instance_attributes-wait_last_known_master" name="wait_last_known_master" value="true"/>
+            <nvpair id="redis-instance_attributes-wait_last_known_promoted" name="wait_last_known_master" value="true"/>
           </instance_attributes>
           <meta_attributes id="redis-meta_attributes">
             <nvpair id="redis-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
@@ -354,19 +354,19 @@
         <primitive class="ocf" id="ovndb_servers" provider="ovn" type="ovndb-servers">
           <instance_attributes id="ovndb_servers-instance_attributes">
             <nvpair id="ovndb_servers-instance_attributes-inactive_probe_interval" name="inactive_probe_interval" value="180000"/>
-            <nvpair id="ovndb_servers-instance_attributes-listen_on_master_ip_only" name="listen_on_master_ip_only" value="yes"/>
+            <nvpair id="ovndb_servers-instance_attributes-listen_on_promoted_ip_only" name="listen_on_master_ip_only" value="yes"/>
             <nvpair id="ovndb_servers-instance_attributes-manage_northd" name="manage_northd" value="yes"/>
-            <nvpair id="ovndb_servers-instance_attributes-master_ip" name="master_ip" value="172.17.1.57"/>
-            <nvpair id="ovndb_servers-instance_attributes-nb_master_port" name="nb_master_port" value="6641"/>
-            <nvpair id="ovndb_servers-instance_attributes-nb_master_protocol" name="nb_master_protocol" value="ssl"/>
+            <nvpair id="ovndb_servers-instance_attributes-promoted_ip" name="master_ip" value="172.17.1.57"/>
+            <nvpair id="ovndb_servers-instance_attributes-nb_promoted_port" name="nb_master_port" value="6641"/>
+            <nvpair id="ovndb_servers-instance_attributes-nb_promoted_protocol" name="nb_master_protocol" value="ssl"/>
             <nvpair id="ovndb_servers-instance_attributes-ovn_nb_db_cacert" name="ovn_nb_db_cacert" value="/etc/ipa/ca.crt"/>
             <nvpair id="ovndb_servers-instance_attributes-ovn_nb_db_cert" name="ovn_nb_db_cert" value="/etc/pki/tls/certs/ovn_dbs.crt"/>
             <nvpair id="ovndb_servers-instance_attributes-ovn_nb_db_privkey" name="ovn_nb_db_privkey" value="/etc/pki/tls/private/ovn_dbs.key"/>
             <nvpair id="ovndb_servers-instance_attributes-ovn_sb_db_cacert" name="ovn_sb_db_cacert" value="/etc/ipa/ca.crt"/>
             <nvpair id="ovndb_servers-instance_attributes-ovn_sb_db_cert" name="ovn_sb_db_cert" value="/etc/pki/tls/certs/ovn_dbs.crt"/>
             <nvpair id="ovndb_servers-instance_attributes-ovn_sb_db_privkey" name="ovn_sb_db_privkey" value="/etc/pki/tls/private/ovn_dbs.key"/>
-            <nvpair id="ovndb_servers-instance_attributes-sb_master_port" name="sb_master_port" value="6642"/>
-            <nvpair id="ovndb_servers-instance_attributes-sb_master_protocol" name="sb_master_protocol" value="ssl"/>
+            <nvpair id="ovndb_servers-instance_attributes-sb_promoted_port" name="sb_master_port" value="6642"/>
+            <nvpair id="ovndb_servers-instance_attributes-sb_promoted_protocol" name="sb_master_protocol" value="ssl"/>
           </instance_attributes>
           <meta_attributes id="ovndb_servers-meta_attributes">
             <nvpair id="ovndb_servers-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
@@ -776,7 +776,7 @@
           <nvpair id="status-4-.node-unfenced" name="#node-unfenced" value="1605581396"/>
           <nvpair id="status-4-fail-count-ovndb_servers.cancel_10000" name="fail-count-ovndb_servers#cancel_10000" value="493"/>
           <nvpair id="status-4-last-failure-ovndb_servers.cancel_10000" name="last-failure-ovndb_servers#cancel_10000" value="1605589343"/>
-          <nvpair id="status-4-master-galera" name="master-galera" value="100"/>
+          <nvpair id="status-4-promoted-galera" name="master-galera" value="100"/>
           <nvpair id="status-4-fail-count-stonith-fence_compute-fence-nova.start_0" name="fail-count-stonith-fence_compute-fence-nova#start_0" value="INFINITY"/>
           <nvpair id="status-4-last-failure-stonith-fence_compute-fence-nova.start_0" name="last-failure-stonith-fence_compute-fence-nova#start_0" value="1605589970"/>
         </instance_attributes>
@@ -890,7 +890,7 @@
           <nvpair id="status-5-.node-unfenced" name="#node-unfenced" value="1605582735"/>
           <nvpair id="status-5-fail-count-ovndb_servers.cancel_10000" name="fail-count-ovndb_servers#cancel_10000" value="363"/>
           <nvpair id="status-5-last-failure-ovndb_servers.cancel_10000" name="last-failure-ovndb_servers#cancel_10000" value="1605586055"/>
-          <nvpair id="status-5-master-galera" name="master-galera" value="100"/>
+          <nvpair id="status-5-promoted-galera" name="master-galera" value="100"/>
           <nvpair id="status-5-fail-count-stonith-fence_compute-fence-nova.start_0" name="fail-count-stonith-fence_compute-fence-nova#start_0" value="INFINITY"/>
           <nvpair id="status-5-last-failure-stonith-fence_compute-fence-nova.start_0" name="last-failure-stonith-fence_compute-fence-nova#start_0" value="1605589978"/>
         </instance_attributes>
@@ -1004,7 +1004,7 @@
           <nvpair id="status-6-.node-unfenced" name="#node-unfenced" value="1605581857"/>
           <nvpair id="status-6-fail-count-ovndb_servers.cancel_10000" name="fail-count-ovndb_servers#cancel_10000" value="385"/>
           <nvpair id="status-6-last-failure-ovndb_servers.cancel_10000" name="last-failure-ovndb_servers#cancel_10000" value="1605586209"/>
-          <nvpair id="status-6-master-galera" name="master-galera" value="100"/>
+          <nvpair id="status-6-promoted-galera" name="master-galera" value="100"/>
           <nvpair id="status-6-fail-count-stonith-fence_compute-fence-nova.start_0" name="fail-count-stonith-fence_compute-fence-nova#start_0" value="INFINITY"/>
           <nvpair id="status-6-last-failure-stonith-fence_compute-fence-nova.start_0" name="last-failure-stonith-fence_compute-fence-nova#start_0" value="1605589987"/>
         </instance_attributes>
@@ -1115,8 +1115,8 @@
     <node_state id="1" uname="controller-0" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource">
       <transient_attributes id="1">
         <instance_attributes id="status-1">
-          <nvpair id="status-1-master-redis" name="master-redis" value="1"/>
-          <nvpair id="status-1-master-ovndb_servers" name="master-ovndb_servers" value="5"/>
+          <nvpair id="status-1-promoted-redis" name="master-redis" value="1"/>
+          <nvpair id="status-1-promoted-ovndb_servers" name="master-ovndb_servers" value="5"/>
           <nvpair id="status-1-.node-unfenced" name="#node-unfenced" value="1605578651"/>
           <nvpair id="status-1-fail-count-stonith-fence_compute-fence-nova.start_0" name="fail-count-stonith-fence_compute-fence-nova#start_0" value="INFINITY"/>
           <nvpair id="status-1-last-failure-stonith-fence_compute-fence-nova.start_0" name="last-failure-stonith-fence_compute-fence-nova#start_0" value="1605590014"/>
@@ -1274,8 +1274,8 @@
     <node_state id="2" uname="controller-1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource">
       <transient_attributes id="2">
         <instance_attributes id="status-2">
-          <nvpair id="status-2-master-redis" name="master-redis" value="1"/>
-          <nvpair id="status-2-master-ovndb_servers" name="master-ovndb_servers" value="5"/>
+          <nvpair id="status-2-promoted-redis" name="master-redis" value="1"/>
+          <nvpair id="status-2-promoted-ovndb_servers" name="master-ovndb_servers" value="5"/>
           <nvpair id="status-2-.node-unfenced" name="#node-unfenced" value="1605579758"/>
           <nvpair id="status-2-fail-count-stonith-fence_compute-fence-nova.start_0" name="fail-count-stonith-fence_compute-fence-nova#start_0" value="INFINITY"/>
           <nvpair id="status-2-last-failure-stonith-fence_compute-fence-nova.start_0" name="last-failure-stonith-fence_compute-fence-nova#start_0" value="1605590021"/>
@@ -1430,8 +1430,8 @@
     <node_state id="3" uname="controller-2" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource">
       <transient_attributes id="3">
         <instance_attributes id="status-3">
-          <nvpair id="status-3-master-redis" name="master-redis" value="1"/>
-          <nvpair id="status-3-master-ovndb_servers" name="master-ovndb_servers" value="10"/>
+          <nvpair id="status-3-promoted-redis" name="master-redis" value="1"/>
+          <nvpair id="status-3-promoted-ovndb_servers" name="master-ovndb_servers" value="10"/>
           <nvpair id="status-3-.node-unfenced" name="#node-unfenced" value="1605577897"/>
           <nvpair id="status-3-fail-count-stonith-fence_compute-fence-nova.start_0" name="fail-count-stonith-fence_compute-fence-nova#start_0" value="INFINITY"/>
           <nvpair id="status-3-last-failure-stonith-fence_compute-fence-nova.start_0" name="last-failure-stonith-fence_compute-fence-nova#start_0" value="1605590030"/>

@@ -18,8 +18,7 @@ dist_ocf_SCRIPTS	= attribute	\
 			  HealthIOWait	\
 			  ping		\
 			  remote	\
-			  Stateful	\
-			  SystemHealth
+			  Stateful
 ocf_SCRIPTS		= ClusterMon	\
 			  HealthSMART	\
 			  ifspeed	\

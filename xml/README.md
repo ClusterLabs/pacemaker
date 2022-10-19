@@ -16,13 +16,12 @@ A versioned schema offers transparent backward and forward compatibility.
   supplemental transformations to promote cluster configurations based on
   older, incompatible schema versions into the desired form.
 
-- It allows experimental features with a possibly unstable configuration
-  interface to be developed using the special `next` version of the schema.
-
 ## Mapping Pacemaker Versions to Schema Versions
 
 | Pacemaker | Latest Schema | Changed
 | --------- | ------------- | ----------------------------------------------
+| `2.1.5`   | `3.9`         | `alerts`, `constraints`, `nodes`, `nvset`,
+|           |               | `options`, `resources`, `rule`
 | `2.1.3`   | `3.8`         | `acls`
 | `2.1.0`   | `3.7`         | `constraints`, `resources`
 | `2.0.5`   | `3.5`         | `api`, `resources`, `rule`
@@ -36,7 +35,7 @@ A versioned schema offers transparent backward and forward compatibility.
 | `1.1.14`  | `2.4`         | `fencing`
 | `1.1.13`  | `2.3`         | `constraints`
 | `1.1.12`  | `2.0`         | `nodes`, `nvset`, `resources`, `tags`, `acls`
-| `1.1.8`+  | `1.2`         |
+| `1.1.8`   | `1.2`         |
 
 ## Schema generation
 
@@ -50,19 +49,9 @@ generated from the other files via the Makefile.
 
 # Updating schema files #
 
-## Experimental features ##
+## New features ##
 
-Experimental features go into `${base}-next.rng` where `${base}` is the
-affected portion of the schema. If such a file does not already exist,
-create it by copying the most recent `${base}-${X}.${Y}.rng`.
-
-Pacemaker will not use the experimental schema by default; the cluster
-administrator must explicitly set the `validate-with` property appropriately to
-use it.
-
-## Stable features ##
-
-The current stable version is determined at runtime when
+The current schema version is determined at runtime when
 crm\_schema\_init() scans the CRM\_SCHEMA\_DIRECTORY.
 
 It will have the form `pacemaker-${X}.${Y}` and the highest
@@ -117,31 +106,31 @@ itself, allowing for more sophistication down the road.
 1. Copy the most recent version of `${base}-*.rng` to `${base}-${X}.${Y}.rng`,
    such that the new file name increments the highest number of any schema file,
    not just the file being edited.
-1. Commit the copy, e.g. `"Low: xml: clone ${base} schema in preparation for
+2. Commit the copy, e.g. `"Low: xml: clone ${base} schema in preparation for
    changes"`. This way, the actual change will be obvious in the commit history.
-1. Modify `${base}-${X}.${Y}.rng` as required.
-1. If required, add an XSLT file, and update `xslt\_SCRIPTS` in `xml/Makefile.am`.
-1. Commit
-1. `make -C xml clean; make -C xml all` to rebuild the schemas in the local
+3. Modify `${base}-${X}.${Y}.rng` as required.
+4. If required, add an XSLT file, and update `xslt\_SCRIPTS` in `xml/Makefile.am`.
+5. Commit.
+6. Run `make -C xml clean; make -C xml` to rebuild the schemas in the local
+6. Run `make -C xml clean; make -C xml` to rebuild the schemas in the local
    source directory.
-1. The CIB validity regression tests will break after the schema is updated.
-   Run `cts/cts-cli -s` to make the referential outcomes reflect the transient
-   changes made so far, `git diff` to ensure the these changes look sane, then
-   commit them.
-1. Similarly, with the new major version `${X}`, it's advisable to refresh
-   scheduler tests at some point, see the instructions in `cts/README.md`.
+7. The CIB validity and upgrade regression tests will break after the schema is
+   updated. Run `cts/cts-cli -s` to make the expected outputs reflect the
+   changes made so far, and run `git diff` to ensure that these changes look
+   sane. Finally, commit the changes.
+8. Similarly, with the new major version `${X}`, it's advisable to refresh
+   scheduler tests at some point. See the instructions in `cts/README.md`.
 
 ## Using a New Schema
 
 New features will not be available until the cluster administrator:
 
 1. Updates all the nodes
-1. Runs the equivalent of `cibadmin --upgrade --force`
+2. Runs the equivalent of `cibadmin --upgrade --force`
 
 ## Random Notes
 
 From the source directory, run `make -C xml diff` to see the changes
-in the current schema (compared to the previous ones) and also the
-pending changes in `pacemaker-next`.
+in the current schema (compared to the previous ones).
 Alternatively, if the intention is to grok the overall historical schema
 evolution, use `make -C xml fulldiff`.

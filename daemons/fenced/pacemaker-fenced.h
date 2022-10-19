@@ -27,12 +27,14 @@ typedef struct stonith_device_s {
     char *namespace;
 
     /*! list of actions that must execute on the target node. Used for unfencing */
-    char *on_target_actions;
+    GString *on_target_actions;
     GList *targets;
     time_t targets_age;
     gboolean has_attr_map;
-    /* should nodeid parameter for victim be included in agent arguments */
+
+    // Whether target's nodeid should be passed as a parameter to the agent
     gboolean include_nodeid;
+
     /* whether the cluster should automatically unfence nodes with the device */
     gboolean automatic_unfencing;
     guint priority;
@@ -155,7 +157,7 @@ typedef struct remote_fencing_op_s {
     pcmk__action_result_t result;
 } remote_fencing_op_t;
 
-void fenced_broadcast_op_result(remote_fencing_op_t *op, bool op_merged);
+void fenced_broadcast_op_result(const remote_fencing_op_t *op, bool op_merged);
 
 // Fencer-specific client flags
 enum st_client_flags {
@@ -221,7 +223,7 @@ int stonith_device_register(xmlNode *msg, gboolean from_cib);
 
 void stonith_device_remove(const char *id, bool from_cib);
 
-char *stonith_level_key(xmlNode * msg, int mode);
+char *stonith_level_key(const xmlNode *msg, int mode);
 void fenced_register_level(xmlNode *msg, char **desc,
                            pcmk__action_result_t *result);
 void fenced_unregister_level(xmlNode *msg, char **desc,
@@ -232,8 +234,8 @@ stonith_topology_t *find_topology_for_host(const char *host);
 void do_local_reply(xmlNode *notify_src, pcmk__client_t *client,
                     int call_options);
 
-xmlNode *fenced_construct_reply(xmlNode *request, xmlNode *data,
-                                pcmk__action_result_t *result);
+xmlNode *fenced_construct_reply(const xmlNode *request, xmlNode *data,
+                                const pcmk__action_result_t *result);
 
 void
  do_stonith_async_timeout_update(const char *client, const char *call_id, int timeout);
@@ -248,7 +250,7 @@ void fenced_send_level_notification(const char *op,
                                     const pcmk__action_result_t *result,
                                     const char *desc);
 
-remote_fencing_op_t *initiate_remote_stonith_op(pcmk__client_t *client,
+remote_fencing_op_t *initiate_remote_stonith_op(const pcmk__client_t *client,
                                                 xmlNode *request,
                                                 gboolean manual_ack);
 
@@ -267,7 +269,12 @@ bool fencing_peer_active(crm_node_t *peer);
 
 void set_fencing_completed(remote_fencing_op_t * op);
 
-int fenced_handle_manual_confirmation(pcmk__client_t *client, xmlNode *msg);
+int fenced_handle_manual_confirmation(const pcmk__client_t *client,
+                                      xmlNode *msg);
+void fencer_metadata(void);
+
+const char *fenced_device_reboot_action(const char *device_id);
+bool fenced_device_supports_on(const char *device_id);
 
 gboolean node_has_attr(const char *node, const char *name, const char *value);
 
@@ -278,6 +285,24 @@ fenced_set_protocol_error(pcmk__action_result_t *result)
 {
     pcmk__set_result(result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
                      "Fencer API request missing required information (bug?)");
+}
+
+/*!
+ * \internal
+ * \brief Get the device flag to use with a given action when searching devices
+ *
+ * \param[in] action  Action to check
+ *
+ * \return st_device_supports_on if \p action is "on", otherwise
+ *         st_device_supports_none
+ */
+static inline uint32_t
+fenced_support_flag(const char *action)
+{
+    if (pcmk__str_eq(action, "on", pcmk__str_none)) {
+        return st_device_supports_on;
+    }
+    return st_device_supports_none;
 }
 
 extern char *stonith_our_uname;

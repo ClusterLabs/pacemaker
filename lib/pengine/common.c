@@ -36,56 +36,56 @@ static pcmk__cluster_option_t pe_opts[] = {
     {
         "no-quorum-policy", NULL, "select", "stop, freeze, ignore, demote, suicide",
         "stop", pcmk__valid_quorum,
-        "What to do when the cluster does not have quorum",
+        N_("What to do when the cluster does not have quorum"),
         NULL
     },
     {
         "symmetric-cluster", NULL, "boolean", NULL,
         "true", pcmk__valid_boolean,
-        "Whether resources can run on any node by default",
+        N_("Whether resources can run on any node by default"),
         NULL
     },
     {
         "maintenance-mode", NULL, "boolean", NULL,
         "false", pcmk__valid_boolean,
-        "Whether the cluster should refrain from monitoring, starting, "
-            "and stopping resources",
+        N_("Whether the cluster should refrain from monitoring, starting, "
+            "and stopping resources"),
         NULL
     },
     {
         "start-failure-is-fatal", NULL, "boolean", NULL,
         "true", pcmk__valid_boolean,
-        "Whether a start failure should prevent a resource from being "
-            "recovered on the same node",
-        "When true, the cluster will immediately ban a resource from a node "
+        N_("Whether a start failure should prevent a resource from being "
+            "recovered on the same node"),
+        N_("When true, the cluster will immediately ban a resource from a node "
             "if it fails to start there. When false, the cluster will instead "
-            "check the resource's fail count against its migration-threshold."
+            "check the resource's fail count against its migration-threshold.")
     },
     {
         "enable-startup-probes", NULL, "boolean", NULL,
         "true", pcmk__valid_boolean,
-        "Whether the cluster should check for active resources during start-up",
+        N_("Whether the cluster should check for active resources during start-up"),
         NULL
     },
     {
         XML_CONFIG_ATTR_SHUTDOWN_LOCK, NULL, "boolean", NULL,
         "false", pcmk__valid_boolean,
-        "Whether to lock resources to a cleanly shut down node",
-        "When true, resources active on a node when it is cleanly shut down "
+        N_("Whether to lock resources to a cleanly shut down node"),
+        N_("When true, resources active on a node when it is cleanly shut down "
             "are kept \"locked\" to that node (not allowed to run elsewhere) "
             "until they start again on that node after it rejoins (or for at "
             "most shutdown-lock-limit, if set). Stonith resources and "
             "Pacemaker Remote connections are never locked. Clone and bundle "
             "instances and the promoted role of promotable clones are currently"
-            " never locked, though support could be added in a future release."
+            " never locked, though support could be added in a future release.")
     },
     {
         XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT, NULL, "time", NULL,
         "0", pcmk__valid_interval_spec,
-        "Do not lock resources to a cleanly shut down node longer than this",
-        "If shutdown-lock is true and this is set to a nonzero time duration, "
+        N_("Do not lock resources to a cleanly shut down node longer than this"),
+        N_("If shutdown-lock is true and this is set to a nonzero time duration, "
             "shutdown locks will expire after this much time has passed since "
-            "the shutdown was initiated, even if the node has not rejoined."
+            "the shutdown was initiated, even if the node has not rejoined.")
     },
 
     // Fencing-related options
@@ -186,26 +186,26 @@ static pcmk__cluster_option_t pe_opts[] = {
     {
         "stop-all-resources", NULL, "boolean", NULL,
         "false", pcmk__valid_boolean,
-        "Whether the cluster should stop all active resources",
+        N_("Whether the cluster should stop all active resources"),
         NULL
     },
     {
         "stop-orphan-resources", NULL, "boolean", NULL,
         "true", pcmk__valid_boolean,
-        "Whether to stop resources that were removed from the configuration",
+        N_("Whether to stop resources that were removed from the configuration"),
         NULL
     },
     {
         "stop-orphan-actions", NULL, "boolean", NULL,
         "true", pcmk__valid_boolean,
-        "Whether to cancel recurring actions removed from the configuration",
+        N_("Whether to cancel recurring actions removed from the configuration"),
         NULL
     },
     {
         "remove-after-stop", NULL, "boolean", NULL,
         "false", pcmk__valid_boolean,
-        "*** Deprecated *** Whether to remove stopped resources from "
-            "the executor",
+        N_("*** Deprecated *** Whether to remove stopped resources from "
+            "the executor"),
         "Values other than default are poorly tested and potentially dangerous."
             " This option will be removed in a future release."
     },
@@ -287,12 +287,14 @@ static pcmk__cluster_option_t pe_opts[] = {
 void
 pe_metadata(pcmk__output_t *out)
 {
-    char *s = pcmk__format_option_metadata("pacemaker-schedulerd",
-                                           "Pacemaker scheduler options",
-                                           "Cluster options used by Pacemaker's scheduler",
-                                           pe_opts, PCMK__NELEM(pe_opts));
+    const char *desc_short = "Pacemaker scheduler options";
+    const char *desc_long = "Cluster options used by Pacemaker's scheduler";
+
+    gchar *s = pcmk__format_option_metadata("pacemaker-schedulerd", desc_short,
+                                            desc_long, pe_opts,
+                                            PCMK__NELEM(pe_opts));
     out->output_xml(out, "metadata", s);
-    free(s);
+    g_free(s);
 }
 
 void
@@ -383,8 +385,6 @@ text2task(const char *task)
     } else if (pcmk__str_eq(task, CRMD_ACTION_DELETE, pcmk__str_casei)) {
         return no_action;
     } else if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
-        return no_action;
-    } else if (pcmk__str_eq(task, CRM_OP_LRM_REFRESH, pcmk__str_casei)) {
         return no_action;
     } else if (pcmk__str_eq(task, CRMD_ACTION_MIGRATE, pcmk__str_casei)) {
         return no_action;
@@ -548,7 +548,8 @@ pe_node_attribute_calculated(const pe_node_t *node, const char *name,
 
     if(node->details->remote_rsc->container->running_on) {
         pe_node_t *host = node->details->remote_rsc->container->running_on->data;
-        pe_rsc_trace(rsc, "%s: Looking for %s on the container host %s", rsc->id, name, host->details->uname);
+        pe_rsc_trace(rsc, "%s: Looking for %s on the container host %s",
+                     rsc->id, name, pe__node_name(host));
         return g_hash_table_lookup(host->details->attrs, name);
     }
 
@@ -558,7 +559,7 @@ pe_node_attribute_calculated(const pe_node_t *node, const char *name,
 }
 
 const char *
-pe_node_attribute_raw(pe_node_t *node, const char *name)
+pe_node_attribute_raw(const pe_node_t *node, const char *name)
 {
     if(node == NULL) {
         return NULL;

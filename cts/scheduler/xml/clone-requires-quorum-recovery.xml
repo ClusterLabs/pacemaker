@@ -188,7 +188,7 @@
     <node_state id="3" uname="rhel7-3" in_ccm="true" crmd="online" crm-debug-origin="post_cache_update" join="member" expected="member">
       <transient_attributes id="3">
         <instance_attributes id="status-3">
-          <nvpair id="status-3-master-dummy-boss" name="master-dummy-boss" value="10"/>
+          <nvpair id="status-3-promoted-dummy-boss" name="master-dummy-boss" value="10"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="3">
@@ -216,7 +216,7 @@
     <node_state id="4" uname="rhel7-4" in_ccm="true" crmd="online" crm-debug-origin="post_cache_update" join="member" expected="member">
       <transient_attributes id="4">
         <instance_attributes id="status-4">
-          <nvpair id="status-4-master-dummy-boss" name="master-dummy-boss" value="5"/>
+          <nvpair id="status-4-promoted-dummy-boss" name="master-dummy-boss" value="5"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="4">
@@ -244,7 +244,7 @@
     <node_state id="2" uname="rhel7-2" in_ccm="true" crmd="online" crm-debug-origin="post_cache_update" join="member" expected="member">
       <transient_attributes id="2">
         <instance_attributes id="status-2">
-          <nvpair id="status-2-master-dummy-boss" name="master-dummy-boss" value="5"/>
+          <nvpair id="status-2-promoted-dummy-boss" name="master-dummy-boss" value="5"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="2">

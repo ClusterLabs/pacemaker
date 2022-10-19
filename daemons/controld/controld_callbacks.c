@@ -289,8 +289,13 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             }
 
         } else if (appeared == FALSE) {
-            crm_warn("Stonith/shutdown of node %s was not expected",
-                     node->uname);
+            if (transition_graph == NULL || transition_graph->id == -1) {
+                crm_info("Stonith/shutdown of node %s is unknown to the "
+                         "current DC", node->uname);
+            } else {
+                crm_warn("Stonith/shutdown of node %s was not expected",
+                         node->uname);
+            }
             if (!is_remote) {
                 crm_update_peer_join(__func__, node, crm_join_none);
                 check_join_state(fsa_state, __func__);

@@ -47,22 +47,23 @@ can_run_instance(pe_resource_t * rsc, pe_node_t * node, int limit)
     local_node = pcmk__top_allowed_node(rsc, node);
 
     if (local_node == NULL) {
-        crm_warn("%s cannot run on %s: node not allowed", rsc->id, node->details->uname);
+        crm_warn("%s cannot run on %s: node not allowed",
+                 rsc->id, pe__node_name(node));
         goto bail;
 
     } else if (local_node->weight < 0) {
         common_update_score(rsc, node->details->id, local_node->weight);
         pe_rsc_trace(rsc, "%s cannot run on %s: Parent node weight doesn't allow it.",
-                     rsc->id, node->details->uname);
+                     rsc->id, pe__node_name(node));
 
     } else if (local_node->count < limit) {
         pe_rsc_trace(rsc, "%s can run on %s (already running %d)",
-                     rsc->id, node->details->uname, local_node->count);
+                     rsc->id, pe__node_name(node), local_node->count);
         return local_node;
 
     } else {
         pe_rsc_trace(rsc, "%s cannot run on %s: node full (%d >= %d)",
-                     rsc->id, node->details->uname, local_node->count, limit);
+                     rsc->id, pe__node_name(node), local_node->count, limit);
     }
 
   bail:
@@ -102,7 +103,7 @@ allocate_instance(pe_resource_t *rsc, pe_node_t *prefer, gboolean all_coloc,
 
         if (local_prefer == NULL || local_prefer->weight < 0) {
             pe_rsc_trace(rsc, "Not pre-allocating %s to %s - unavailable", rsc->id,
-                         prefer->details->uname);
+                         pe__node_name(prefer));
             return NULL;
         }
     }
@@ -111,10 +112,10 @@ allocate_instance(pe_resource_t *rsc, pe_node_t *prefer, gboolean all_coloc,
 
     backup = pcmk__copy_node_table(rsc->allowed_nodes);
     pe_rsc_trace(rsc, "Allocating instance %s", rsc->id);
-    chosen = rsc->cmds->allocate(rsc, prefer, data_set);
+    chosen = rsc->cmds->assign(rsc, prefer);
     if (chosen && prefer && (chosen->details != prefer->details)) {
         crm_info("Not pre-allocating %s to %s because %s is better",
-                 rsc->id, prefer->details->uname, chosen->details->uname);
+                 rsc->id, pe__node_name(prefer), pe__node_name(chosen));
         g_hash_table_destroy(rsc->allowed_nodes);
         rsc->allowed_nodes = backup;
         pcmk__unassign_resource(rsc);
@@ -223,26 +224,26 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
 
         pe_rsc_trace(rsc,
                      "Checking pre-allocation of %s to %s (%d remaining of %d)",
-                     child->id, child_node->details->uname, max - allocated,
+                     child->id, pe__node_name(child_node), max - allocated,
                      max);
 
         if (!pcmk__node_available(child_node, true, false)) {
             pe_rsc_trace(rsc, "Not pre-allocating because %s can not run %s",
-                         child_node->details->uname, child->id);
+                         pe__node_name(child_node), child->id);
             continue;
         }
 
         if ((local_node != NULL) && (local_node->count >= loop_max)) {
             pe_rsc_trace(rsc,
                          "Not pre-allocating because %s already allocated "
-                         "optimal instances", child_node->details->uname);
+                         "optimal instances", pe__node_name(child_node));
             continue;
         }
 
         if (allocate_instance(child, child_node, all_coloc, per_host_max,
                               data_set)) {
             pe_rsc_trace(rsc, "Pre-allocated %s to %s", child->id,
-                         child_node->details->uname);
+                         pe__node_name(child_node));
             allocated++;
         }
     }
@@ -258,7 +259,7 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
 
             if (local_node == NULL) {
                 crm_err("%s is running on %s which isn't allowed",
-                        child->id, child_node->details->uname);
+                        child->id, pe__node_name(child_node));
             }
         }
 
@@ -278,10 +279,17 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
                  allocated, rsc->id, max);
 }
 
-
+/*!
+ * \internal
+ * \brief Assign a clone resource to a node
+ *
+ * \param[in,out] rsc     Resource to assign to a node
+ * \param[in]     prefer  Node to prefer, if all else is equal
+ *
+ * \return Node that \p rsc is assigned to, if assigned entirely to one node
+ */
 pe_node_t *
-pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
-                     pe_working_set_t *data_set)
+pcmk__clone_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
 {
     GList *nodes = NULL;
     clone_variant_data_t *clone_data = NULL;
@@ -310,33 +318,37 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
 
         pe_rsc_trace(rsc, "%s: Allocating %s first",
                      rsc->id, constraint->primary->id);
-        constraint->primary->cmds->allocate(constraint->primary, prefer,
-                                            data_set);
+        constraint->primary->cmds->assign(constraint->primary, prefer);
     }
 
     for (GList *gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
-        if (!pcmk__colocation_has_influence(constraint, NULL)) {
-            continue;
+        if (pcmk__colocation_has_influence(constraint, NULL)) {
+            pe_resource_t *dependent = constraint->dependent;
+            const char *attr = constraint->node_attribute;
+            const float factor = constraint->score / (float) INFINITY;
+            const uint32_t flags = pcmk__coloc_select_active
+                                   |pcmk__coloc_select_nonnegative;
+
+            dependent->cmds->add_colocated_node_scores(dependent, rsc->id,
+                                                       &rsc->allowed_nodes,
+                                                       attr, factor, flags);
         }
-        rsc->allowed_nodes = constraint->dependent->cmds->merge_weights(
-            constraint->dependent, rsc->id, rsc->allowed_nodes,
-            constraint->node_attribute, (float)constraint->score / INFINITY,
-            (pe_weights_rollback | pe_weights_positive));
     }
 
-    pe__show_node_weights(!pcmk_is_set(data_set->flags, pe_flag_show_scores),
-                          rsc, __func__, rsc->allowed_nodes, data_set);
+    pe__show_node_weights(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
+                          rsc, __func__, rsc->allowed_nodes, rsc->cluster);
 
     nodes = g_hash_table_get_values(rsc->allowed_nodes);
-    nodes = pcmk__sort_nodes(nodes, NULL, data_set);
+    nodes = pcmk__sort_nodes(nodes, NULL);
     rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance);
-    distribute_children(rsc, rsc->children, nodes, clone_data->clone_max, clone_data->clone_node_max, data_set);
+    distribute_children(rsc, rsc->children, nodes, clone_data->clone_max,
+                        clone_data->clone_node_max, rsc->cluster);
     g_list_free(nodes);
 
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
-        pcmk__set_instance_roles(rsc, data_set);
+        pcmk__set_instance_roles(rsc);
     }
 
     pe__clear_resource_flags(rsc, pe_rsc_provisional|pe_rsc_allocating);
@@ -470,21 +482,26 @@ child_ordering_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 }
 
 void
-clone_create_actions(pe_resource_t *rsc, pe_working_set_t *data_set)
+clone_create_actions(pe_resource_t *rsc)
 {
     clone_variant_data_t *clone_data = NULL;
 
     get_clone_variant_data(clone_data, rsc);
-    clone_create_pseudo_actions(rsc, rsc->children, &clone_data->start_notify, &clone_data->stop_notify,data_set);
-    child_ordering_constraints(rsc, data_set);
+
+    pe_rsc_debug(rsc, "Creating actions for clone %s", rsc->id);
+    clone_create_pseudo_actions(rsc, rsc->children, &clone_data->start_notify,
+                                &clone_data->stop_notify);
+    child_ordering_constraints(rsc, rsc->cluster);
+
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
-        create_promotable_actions(rsc, data_set);
+        pcmk__create_promotable_actions(rsc);
     }
 }
 
 void
-clone_create_pseudo_actions(
-    pe_resource_t * rsc, GList *children, notify_data_t **start_notify, notify_data_t **stop_notify,  pe_working_set_t * data_set)
+clone_create_pseudo_actions(pe_resource_t *rsc, GList *children,
+                            notify_data_t **start_notify,
+                            notify_data_t **stop_notify)
 {
     gboolean child_active = FALSE;
     gboolean child_starting = FALSE;
@@ -504,7 +521,7 @@ clone_create_pseudo_actions(
         gboolean starting = FALSE;
         gboolean stopping = FALSE;
 
-        child_rsc->cmds->create_actions(child_rsc, data_set);
+        child_rsc->cmds->create_actions(child_rsc);
         clone_update_pseudo_status(child_rsc, &stopping, &starting, &child_active);
         if (stopping && starting) {
             allow_dependent_migrations = FALSE;
@@ -515,9 +532,9 @@ clone_create_pseudo_actions(
     }
 
     /* start */
-    start = pcmk__new_rsc_pseudo_action(rsc, RSC_START, !child_starting, true);
-    started = pcmk__new_rsc_pseudo_action(rsc, RSC_STARTED, !child_starting,
-                                          false);
+    start = pe__new_rsc_pseudo_action(rsc, RSC_START, !child_starting, true);
+    started = pe__new_rsc_pseudo_action(rsc, RSC_STARTED, !child_starting,
+                                        false);
     started->priority = INFINITY;
 
     if (child_active || child_starting) {
@@ -525,22 +542,21 @@ clone_create_pseudo_actions(
     }
 
     if (start_notify != NULL && *start_notify == NULL) {
-        *start_notify = pcmk__clone_notif_pseudo_ops(rsc, RSC_START, start,
-                                                     started);
+        *start_notify = pe__clone_notif_pseudo_ops(rsc, RSC_START, start,
+                                                   started);
     }
 
     /* stop */
-    stop = pcmk__new_rsc_pseudo_action(rsc, RSC_STOP, !child_stopping, true);
-    stopped = pcmk__new_rsc_pseudo_action(rsc, RSC_STOPPED, !child_stopping,
-                                          true);
+    stop = pe__new_rsc_pseudo_action(rsc, RSC_STOP, !child_stopping, true);
+    stopped = pe__new_rsc_pseudo_action(rsc, RSC_STOPPED, !child_stopping,
+                                        true);
     stopped->priority = INFINITY;
     if (allow_dependent_migrations) {
         pe__set_action_flags(stop, pe_action_migrate_runnable);
     }
 
     if (stop_notify != NULL && *stop_notify == NULL) {
-        *stop_notify = pcmk__clone_notif_pseudo_ops(rsc, RSC_STOP, stop,
-                                                    stopped);
+        *stop_notify = pe__clone_notif_pseudo_ops(rsc, RSC_STOP, stop, stopped);
 
         if (start_notify && *start_notify && *stop_notify) {
             order_actions((*stop_notify)->post_done, (*start_notify)->pre, pe_order_optional);
@@ -549,7 +565,7 @@ clone_create_pseudo_actions(
 }
 
 void
-clone_internal_constraints(pe_resource_t *rsc, pe_working_set_t *data_set)
+clone_internal_constraints(pe_resource_t *rsc)
 {
     pe_resource_t *last_rsc = NULL;
     GList *gIter;
@@ -557,17 +573,17 @@ clone_internal_constraints(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     pe_rsc_trace(rsc, "Internal constraints for %s", rsc->id);
     pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, RSC_START,
-                                 pe_order_optional, data_set);
+                                 pe_order_optional);
     pcmk__order_resource_actions(rsc, RSC_START, rsc, RSC_STARTED,
-                                 pe_order_runnable_left, data_set);
+                                 pe_order_runnable_left);
     pcmk__order_resource_actions(rsc, RSC_STOP, rsc, RSC_STOPPED,
-                                 pe_order_runnable_left, data_set);
+                                 pe_order_runnable_left);
 
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
         pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, RSC_STOP,
-                                     pe_order_optional, data_set);
+                                     pe_order_optional);
         pcmk__order_resource_actions(rsc, RSC_STARTED, rsc, RSC_PROMOTE,
-                                     pe_order_runnable_left, data_set);
+                                     pe_order_runnable_left);
     }
 
     if (ordered) {
@@ -577,35 +593,33 @@ clone_internal_constraints(pe_resource_t *rsc, pe_working_set_t *data_set)
     for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        child_rsc->cmds->internal_constraints(child_rsc, data_set);
+        child_rsc->cmds->internal_constraints(child_rsc);
 
         pcmk__order_starts(rsc, child_rsc,
-                           pe_order_runnable_left|pe_order_implies_first_printed,
-                           data_set);
+                           pe_order_runnable_left|pe_order_implies_first_printed);
         pcmk__order_resource_actions(child_rsc, RSC_START, rsc, RSC_STARTED,
-                                     pe_order_implies_then_printed, data_set);
+                                     pe_order_implies_then_printed);
         if (ordered && (last_rsc != NULL)) {
-            pcmk__order_starts(last_rsc, child_rsc, pe_order_optional,
-                               data_set);
+            pcmk__order_starts(last_rsc, child_rsc, pe_order_optional);
         }
 
-        pcmk__order_stops(rsc, child_rsc, pe_order_implies_first_printed,
-                          data_set);
+        pcmk__order_stops(rsc, child_rsc, pe_order_implies_first_printed);
         pcmk__order_resource_actions(child_rsc, RSC_STOP, rsc, RSC_STOPPED,
-                                     pe_order_implies_then_printed, data_set);
+                                     pe_order_implies_then_printed);
         if (ordered && (last_rsc != NULL)) {
-            pcmk__order_stops(child_rsc, last_rsc, pe_order_optional, data_set);
+            pcmk__order_stops(child_rsc, last_rsc, pe_order_optional);
         }
 
         last_rsc = child_rsc;
     }
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
-        promotable_constraints(rsc, data_set);
+        pcmk__order_promotable_instances(rsc);
     }
 }
 
 gboolean
-is_child_compatible(pe_resource_t *child_rsc, pe_node_t * local_node, enum rsc_role_e filter, gboolean current) 
+is_child_compatible(const pe_resource_t *child_rsc, const pe_node_t *local_node,
+                    enum rsc_role_e filter, gboolean current)
 {
     pe_node_t *node = NULL;
     enum rsc_role_e next_role = child_rsc->fns->state(child_rsc, current);
@@ -625,8 +639,8 @@ is_child_compatible(pe_resource_t *child_rsc, pe_node_t * local_node, enum rsc_r
         return TRUE;
 
     } else if (node) {
-        crm_trace("%s - %s vs %s", child_rsc->id, node->details->uname,
-                  local_node->details->uname);
+        crm_trace("%s - %s vs %s", child_rsc->id, pe__node_name(node),
+                  pe__node_name(local_node));
 
     } else {
         crm_trace("%s - not allocated %d", child_rsc->id, current);
@@ -635,9 +649,9 @@ is_child_compatible(pe_resource_t *child_rsc, pe_node_t * local_node, enum rsc_r
 }
 
 pe_resource_t *
-find_compatible_child(pe_resource_t *local_child, pe_resource_t *rsc,
-                      enum rsc_role_e filter, gboolean current,
-                      pe_working_set_t *data_set)
+find_compatible_child(const pe_resource_t *local_child,
+                      const pe_resource_t *rsc, enum rsc_role_e filter,
+                      gboolean current)
 {
     pe_resource_t *pair = NULL;
     GList *gIter = NULL;
@@ -650,7 +664,7 @@ find_compatible_child(pe_resource_t *local_child, pe_resource_t *rsc,
     }
 
     scratch = g_hash_table_get_values(local_child->allowed_nodes);
-    scratch = pcmk__sort_nodes(scratch, NULL, data_set);
+    scratch = pcmk__sort_nodes(scratch, NULL);
 
     gIter = scratch;
     for (; gIter != NULL; gIter = gIter->next) {
@@ -668,63 +682,80 @@ find_compatible_child(pe_resource_t *local_child, pe_resource_t *rsc,
     return pair;
 }
 
+/*!
+ * \internal
+ * \brief Apply a colocation's score to node weights or resource priority
+ *
+ * Given a colocation constraint, apply its score to the dependent's
+ * allowed node weights (if we are still placing resources) or priority (if
+ * we are choosing promotable clone instance roles).
+ *
+ * \param[in,out] dependent      Dependent resource in colocation
+ * \param[in]     primary        Primary resource in colocation
+ * \param[in]     colocation     Colocation constraint to apply
+ * \param[in]     for_dependent  true if called on behalf of dependent
+ */
 void
-clone_rsc_colocation_lh(pe_resource_t *dependent, pe_resource_t *primary,
-                        pcmk__colocation_t *constraint,
-                        pe_working_set_t *data_set)
-{
-    /* -- Never called --
-     *
-     * Instead we add the colocation constraints to the child and call from there
-     */
-    CRM_ASSERT(FALSE);
-}
-
-void
-clone_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
-                        pcmk__colocation_t *constraint,
-                        pe_working_set_t *data_set)
+pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
+                              const pe_resource_t *primary,
+                              const pcmk__colocation_t *colocation,
+                              bool for_dependent)
 {
     GList *gIter = NULL;
     gboolean do_interleave = FALSE;
     const char *interleave_s = NULL;
 
-    CRM_CHECK(constraint != NULL, return);
-    CRM_CHECK(dependent != NULL,
-              pe_err("dependent was NULL for %s", constraint->id); return);
-    CRM_CHECK(primary != NULL,
-              pe_err("primary was NULL for %s", constraint->id); return);
+    /* This should never be called for the clone itself as a dependent. Instead,
+     * we add its colocation constraints to its instances and call the
+     * apply_coloc_score() for the instances as dependents.
+     */
+    CRM_ASSERT(!for_dependent);
+
+    CRM_CHECK((colocation != NULL) && (dependent != NULL) && (primary != NULL),
+              return);
     CRM_CHECK(dependent->variant == pe_native, return);
 
     pe_rsc_trace(primary, "Processing constraint %s: %s -> %s %d",
-                 constraint->id, dependent->id, primary->id, constraint->score);
+                 colocation->id, dependent->id, primary->id, colocation->score);
 
     if (pcmk_is_set(primary->flags, pe_rsc_promotable)) {
         if (pcmk_is_set(primary->flags, pe_rsc_provisional)) {
+            // We haven't placed the primary yet, so we can't apply colocation
             pe_rsc_trace(primary, "%s is still provisional", primary->id);
             return;
-        } else if (constraint->primary_role == RSC_ROLE_UNKNOWN) {
+
+        } else if (colocation->primary_role == RSC_ROLE_UNKNOWN) {
+            // This isn't a role-specfic colocation, so handle normally
             pe_rsc_trace(primary, "Handling %s as a clone colocation",
-                         constraint->id);
-        } else {
-            promotable_colocation_rh(dependent, primary, constraint, data_set);
+                         colocation->id);
+
+        } else if (pcmk_is_set(dependent->flags, pe_rsc_provisional)) {
+            // We're placing the dependent
+            pcmk__update_dependent_with_promotable(primary, dependent,
+                                                   colocation);
+            return;
+
+        } else if (colocation->dependent_role == RSC_ROLE_PROMOTED) {
+            // We're choosing roles for the dependent
+            pcmk__update_promotable_dependent_priority(primary, dependent,
+                                                       colocation);
             return;
         }
     }
 
-    /* only the LHS side needs to be labeled as interleave */
-    interleave_s = g_hash_table_lookup(constraint->dependent->meta,
+    // Only the dependent needs to be marked for interleave
+    interleave_s = g_hash_table_lookup(colocation->dependent->meta,
                                        XML_RSC_ATTR_INTERLEAVE);
     if (crm_is_true(interleave_s)
-        && (constraint->dependent->variant > pe_group)) {
+        && (colocation->dependent->variant > pe_group)) {
         /* @TODO Do we actually care about multiple primary copies sharing a
          * dependent copy anymore?
          */
-        if (copies_per_node(constraint->dependent) != copies_per_node(constraint->primary)) {
+        if (copies_per_node(colocation->dependent) != copies_per_node(colocation->primary)) {
             pcmk__config_err("Cannot interleave %s and %s because they do not "
                              "support the same number of instances per node",
-                             constraint->dependent->id,
-                             constraint->primary->id);
+                             colocation->dependent->id,
+                             colocation->primary->id);
 
         } else {
             do_interleave = TRUE;
@@ -739,15 +770,14 @@ clone_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
         pe_resource_t *primary_instance = NULL;
 
         primary_instance = find_compatible_child(dependent, primary,
-                                                 RSC_ROLE_UNKNOWN, FALSE,
-                                                 data_set);
+                                                 RSC_ROLE_UNKNOWN, FALSE);
         if (primary_instance != NULL) {
             pe_rsc_debug(primary, "Pairing %s with %s",
                          dependent->id, primary_instance->id);
-            dependent->cmds->rsc_colocation_lh(dependent, primary_instance,
-                                               constraint, data_set);
+            dependent->cmds->apply_coloc_score(dependent, primary_instance,
+                                               colocation, true);
 
-        } else if (constraint->score >= INFINITY) {
+        } else if (colocation->score >= INFINITY) {
             crm_notice("Cannot pair %s with instance of %s",
                        dependent->id, primary->id);
             pcmk__assign_resource(dependent, NULL, true);
@@ -759,7 +789,7 @@ clone_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
 
         return;
 
-    } else if (constraint->score >= INFINITY) {
+    } else if (colocation->score >= INFINITY) {
         GList *affected_nodes = NULL;
 
         gIter = primary->children;
@@ -769,7 +799,7 @@ clone_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
 
             if (chosen != NULL && is_set_recursive(child_rsc, pe_rsc_block, TRUE) == FALSE) {
                 pe_rsc_trace(primary, "Allowing %s: %s %d",
-                             constraint->id, chosen->details->uname,
+                             colocation->id, pe__node_name(chosen),
                              chosen->weight);
                 affected_nodes = g_list_prepend(affected_nodes, chosen);
             }
@@ -784,8 +814,8 @@ clone_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        child_rsc->cmds->rsc_colocation_rh(dependent, child_rsc, constraint,
-                                           data_set);
+        child_rsc->cmds->apply_coloc_score(dependent, child_rsc, colocation,
+                                           false);
     }
 }
 
@@ -834,7 +864,8 @@ clone_child_action(pe_action_t * action)
     } while (0)
 
 enum pe_action_flags
-summary_action_flags(pe_action_t * action, GList *children, pe_node_t * node)
+summary_action_flags(pe_action_t *action, GList *children,
+                     const pe_node_t *node)
 {
     GList *gIter = NULL;
     gboolean any_runnable = FALSE;
@@ -849,7 +880,7 @@ summary_action_flags(pe_action_t * action, GList *children, pe_node_t * node)
 
         child_action = find_first_action(child->actions, NULL, task_s, child->children ? NULL : node);
         pe_rsc_trace(action->rsc, "Checking for %s in %s on %s (%s)", task_s, child->id,
-                     node ? node->details->uname : "none", child_action?child_action->uuid:"NA");
+                     pe__node_name(node), child_action?child_action->uuid:"NA");
         if (child_action) {
             enum pe_action_flags child_flags = child->cmds->action_flags(child_action, node);
 
@@ -878,7 +909,7 @@ summary_action_flags(pe_action_t * action, GList *children, pe_node_t * node)
 }
 
 enum pe_action_flags
-clone_action_flags(pe_action_t * action, pe_node_t * node)
+clone_action_flags(pe_action_t *action, const pe_node_t *node)
 {
     return summary_action_flags(action, action->rsc->children, node);
 }
@@ -890,17 +921,23 @@ clone_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 
     pe_rsc_trace(rsc, "Processing location constraint %s for %s", constraint->id, rsc->id);
 
-    pcmk__apply_location(constraint, rsc);
+    pcmk__apply_location(rsc, constraint);
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        child_rsc->cmds->rsc_location(child_rsc, constraint);
+        child_rsc->cmds->apply_location(child_rsc, constraint);
     }
 }
 
+/*!
+ * \internal
+ * \brief Add a resource's actions to the transition graph
+ *
+ * \param[in] rsc  Resource whose actions should be added
+ */
 void
-clone_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
+clone_expand(pe_resource_t *rsc)
 {
     GList *gIter = NULL;
     clone_variant_data_t *clone_data = NULL;
@@ -909,10 +946,10 @@ clone_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
 
     g_list_foreach(rsc->actions, (GFunc) rsc->cmds->action_flags, NULL);
 
-    pcmk__create_notifications(rsc, clone_data->start_notify);
-    pcmk__create_notifications(rsc, clone_data->stop_notify);
-    pcmk__create_notifications(rsc, clone_data->promote_notify);
-    pcmk__create_notifications(rsc, clone_data->demote_notify);
+    pe__create_notifications(rsc, clone_data->start_notify);
+    pe__create_notifications(rsc, clone_data->stop_notify);
+    pe__create_notifications(rsc, clone_data->promote_notify);
+    pe__create_notifications(rsc, clone_data->demote_notify);
 
     /* Now that the notifcations have been created we can expand the children */
 
@@ -920,19 +957,19 @@ clone_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        child_rsc->cmds->expand(child_rsc, data_set);
+        child_rsc->cmds->add_actions_to_graph(child_rsc);
     }
 
-    native_expand(rsc, data_set);
+    pcmk__add_rsc_actions_to_graph(rsc);
 
     /* The notifications are in the graph now, we can destroy the notify_data */
-    pcmk__free_notification_data(clone_data->demote_notify);
+    pe__free_notification_data(clone_data->demote_notify);
     clone_data->demote_notify = NULL;
-    pcmk__free_notification_data(clone_data->stop_notify);
+    pe__free_notification_data(clone_data->stop_notify);
     clone_data->stop_notify = NULL;
-    pcmk__free_notification_data(clone_data->start_notify);
+    pe__free_notification_data(clone_data->start_notify);
     clone_data->start_notify = NULL;
-    pcmk__free_notification_data(clone_data->promote_notify);
+    pe__free_notification_data(clone_data->promote_notify);
     clone_data->promote_notify = NULL;
 }
 
@@ -979,28 +1016,9 @@ find_instance_on(const pe_resource_t *clone, const pe_node_t *node)
     return NULL;
 }
 
-// For unique clones, probe each instance separately
-static gboolean
-probe_unique_clone(pe_resource_t *rsc, pe_node_t *node, pe_action_t *complete,
-                   gboolean force, pe_working_set_t *data_set)
-{
-    gboolean any_created = FALSE;
-
-    for (GList *child_iter = rsc->children; child_iter != NULL;
-         child_iter = child_iter->next) {
-
-        pe_resource_t *child = (pe_resource_t *) child_iter->data;
-
-        any_created |= child->cmds->create_probe(child, node, complete, force,
-                                                 data_set);
-    }
-    return any_created;
-}
-
 // For anonymous clones, only a single instance needs to be probed
-static gboolean
+static bool
 probe_anonymous_clone(pe_resource_t *rsc, pe_node_t *node,
-                      pe_action_t *complete, gboolean force,
                       pe_working_set_t *data_set)
 {
     // First, check if we probed an instance on this node last time
@@ -1028,21 +1046,28 @@ probe_anonymous_clone(pe_resource_t *rsc, pe_node_t *node,
         child = rsc->children->data;
     }
     CRM_ASSERT(child);
-    return child->cmds->create_probe(child, node, complete, force, data_set);
+    return child->cmds->create_probe(child, node);
 }
 
-gboolean
-clone_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complete,
-                   gboolean force, pe_working_set_t * data_set)
+/*!
+ * \internal
+ *
+ * \brief Schedule any probes needed for a resource on a node
+ *
+ * \param[in] rsc   Resource to create probe for
+ * \param[in] node  Node to create probe on
+ *
+ * \return true if any probe was created, otherwise false
+ */
+bool
+clone_create_probe(pe_resource_t *rsc, pe_node_t *node)
 {
-    gboolean any_created = FALSE;
-
     CRM_ASSERT(rsc);
 
     rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance_number);
     if (rsc->children == NULL) {
         pe_warn("Clone %s has no children", rsc->id);
-        return FALSE;
+        return false;
     }
 
     if (rsc->exclusive_discover) {
@@ -1058,17 +1083,15 @@ clone_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complete
             g_hash_table_remove(rsc->allowed_nodes, node->details->id);
 
             /* Bit of a shortcut - might as well take it */
-            return FALSE;
+            return false;
         }
     }
 
     if (pcmk_is_set(rsc->flags, pe_rsc_unique)) {
-        any_created = probe_unique_clone(rsc, node, complete, force, data_set);
+        return pcmk__probe_resource_list(rsc->children, node);
     } else {
-        any_created = probe_anonymous_clone(rsc, node, complete, force,
-                                            data_set);
+        return probe_anonymous_clone(rsc, node, rsc->cluster);
     }
-    return any_created;
 }
 
 void
@@ -1096,31 +1119,35 @@ clone_append_meta(pe_resource_t * rsc, xmlNode * xml)
     free(name);
 
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
+        int promoted_max = pe__clone_promoted_max(rsc);
+        int promoted_node_max = pe__clone_promoted_node_max(rsc);
+
         name = crm_meta_name(XML_RSC_ATTR_PROMOTED_MAX);
-        crm_xml_add_int(xml, name, clone_data->promoted_max);
+        crm_xml_add_int(xml, name, promoted_max);
         free(name);
 
         name = crm_meta_name(XML_RSC_ATTR_PROMOTED_NODEMAX);
-        crm_xml_add_int(xml, name, clone_data->promoted_node_max);
+        crm_xml_add_int(xml, name, promoted_node_max);
         free(name);
 
         /* @COMPAT Maintain backward compatibility with resource agents that
          * expect the old names (deprecated since 2.0.0).
          */
-        name = crm_meta_name(PCMK_XE_PROMOTED_MAX_LEGACY);
-        crm_xml_add_int(xml, name, clone_data->promoted_max);
+        name = crm_meta_name(PCMK_XA_PROMOTED_MAX_LEGACY);
+        crm_xml_add_int(xml, name, promoted_max);
         free(name);
 
-        name = crm_meta_name(PCMK_XE_PROMOTED_NODE_MAX_LEGACY);
-        crm_xml_add_int(xml, name, clone_data->promoted_node_max);
+        name = crm_meta_name(PCMK_XA_PROMOTED_NODE_MAX_LEGACY);
+        crm_xml_add_int(xml, name, promoted_node_max);
         free(name);
     }
 }
 
 // Clone implementation of resource_alloc_functions_t:add_utilization()
 void
-pcmk__clone_add_utilization(pe_resource_t *rsc, pe_resource_t *orig_rsc,
-                            GList *all_rscs, GHashTable *utilization)
+pcmk__clone_add_utilization(const pe_resource_t *rsc,
+                            const pe_resource_t *orig_rsc, GList *all_rscs,
+                            GHashTable *utilization)
 {
     bool existing = false;
     pe_resource_t *child = NULL;

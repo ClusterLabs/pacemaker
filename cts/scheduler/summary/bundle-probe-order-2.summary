@@ -1,7 +1,7 @@
 Using the original execution date of: 2017-10-12 07:31:57Z
 Current cluster status:
   * Node List:
-    * GuestNode galera-bundle-0@centos2: maintenance
+    * GuestNode galera-bundle-0: maintenance
     * Online: [ centos1 centos2 centos3 ]
 
   * Full List of Resources:
@@ -24,7 +24,7 @@ Using the original execution date of: 2017-10-12 07:31:57Z
 
 Revised Cluster Status:
   * Node List:
-    * GuestNode galera-bundle-0@centos2: maintenance
+    * GuestNode galera-bundle-0: maintenance
     * Online: [ centos1 centos2 centos3 ]
 
   * Full List of Resources:

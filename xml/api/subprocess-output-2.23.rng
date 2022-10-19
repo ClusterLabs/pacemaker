@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <start>
+        <ref name="subprocess-output" />
+    </start>
+
+    <define name="subprocess-output">
+        <attribute name="code"> <data type="integer" /> </attribute>
+        <optional>
+            <element name="output">
+                <attribute name="source"><value>stdout</value></attribute>
+                <text />
+            </element>
+        </optional>
+        <optional>
+            <element name="output">
+                <attribute name="source"><value>stderr</value></attribute>
+                <text />
+            </element>
+        </optional>
+    </define>
+</grammar>

@@ -66,7 +66,7 @@ class BasePatterns(object):
 
             "Pat:Fencing_start"   : r"Requesting peer fencing .* targeting %s",
             "Pat:Fencing_ok"      : r"pacemaker-fenced.*:\s*Operation .* targeting %s by .* for .*@.*: OK",
-            "Pat:Fencing_recover" : r"pacemaker-schedulerd.*: Recover %s",
+            "Pat:Fencing_recover" : r"pacemaker-schedulerd.*: Recover\s+%s",
             "Pat:Fencing_active"  : r"stonith resource .* is active on 2 nodes (attempting recovery)",
             "Pat:Fencing_probe"   : r"pacemaker-controld.* Result of probe operation for %s on .*: Error",
 
@@ -179,7 +179,7 @@ class crm_corosync(BasePatterns):
             r"Parameters to .* action changed:",
             r"Parameters to .* changed",
             r"pacemakerd.*\[[0-9]+\] terminated( with signal| as IPC server|$)",
-            r"pacemaker-schedulerd.*Recover .*\(.* -\> .*\)",
+            r"pacemaker-schedulerd.*Recover\s+.*\(.* -\> .*\)",
             r"rsyslogd.* imuxsock lost .* messages from pid .* due to rate-limiting",
             r"Peer is not part of our cluster",
             r"We appear to be in an election loop",
@@ -270,7 +270,8 @@ class crm_corosync(BasePatterns):
         ]
         self.components["pacemaker-based-ignore"] = [
             r"pacemaker-execd.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
-            r"pacemaker-controld.*:\s+Result of .* operation for Fencing.*Error (Lost connection to fencer)",
+            r"pacemaker-controld.*:\s+Result of .* operation for Fencing.*Error \(Lost connection to fencer\)",
+            r"pacemaker-controld.*:Could not connect to attrd: Connection refused",
             # This is overbroad, but we don't have a way to say that only
             # certain transition errors are acceptable (if the fencer respawns,
             # fence devices may appear multiply active). We have to rely on
@@ -295,11 +296,8 @@ class crm_corosync(BasePatterns):
         ]
 
         self.components["pacemaker-controld"] = [
-#                    "WARN: determine_online_status: Node .* is unclean",
-#                    "Scheduling node .* for fencing",
-# Only if the node wasn't the DC:  "State transition S_IDLE",
-                    "State transition .* -> S_IDLE",
-                    ]
+            r"State transition .* -> S_IDLE",
+        ]
         self.components["pacemaker-controld-ignore"] = []
 
         self.components["pacemaker-attrd"] = []
@@ -327,7 +325,7 @@ class crm_corosync(BasePatterns):
             r"(error|warning):.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
             r"crit:.*Fencing daemon connection failed",
             r"error:.*Fencer connection failed \(will retry\)",
-            r"pacemaker-controld.*:\s+Result of .* operation for Fencing.*Error (Lost connection to fencer)",
+            r"pacemaker-controld.*:\s+Result of .* operation for Fencing.*Error \(Lost connection to fencer\)",
             # This is overbroad, but we don't have a way to say that only
             # certain transition errors are acceptable (if the fencer respawns,
             # fence devices may appear multiply active). We have to rely on
@@ -336,19 +334,6 @@ class crm_corosync(BasePatterns):
             r"pacemaker-schedulerd.* Calculated transition .*/pe-error",
         ]
         self.components["pacemaker-fenced-ignore"].extend(self.components["common-ignore"])
-
-
-class crm_corosync_docker(crm_corosync):
-    '''
-    Patterns for Corosync version 2 cluster manager class
-    '''
-    def __init__(self, name):
-        crm_corosync.__init__(self, name)
-
-        self.commands.update({
-            "StartCmd"       : "pcmk_start",
-            "StopCmd"        : "pcmk_stop",
-        })
 
 
 class PatternSelector(object):
@@ -361,8 +346,6 @@ class PatternSelector(object):
             crm_corosync("crm-corosync")
         elif name == "crm-corosync":
             crm_corosync(name)
-        elif name == "crm-corosync-docker":
-            crm_corosync_docker(name)
 
     def get_variant(self, variant):
         if variant in patternvariants:

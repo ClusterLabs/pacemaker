@@ -16,13 +16,14 @@
 #  include <crm/common/output_internal.h>
 #  include <crm/stonith-ng.h>
 
-enum st_device_flags
-{
-    st_device_supports_list   = 0x0001,
-    st_device_supports_status = 0x0002,
-    st_device_supports_reboot = 0x0004,
-    st_device_supports_parameter_plug = 0x0008,
-    st_device_supports_parameter_port = 0x0010,
+enum st_device_flags {
+    st_device_supports_none             = (0 << 0),
+    st_device_supports_list             = (1 << 0),
+    st_device_supports_status           = (1 << 1),
+    st_device_supports_reboot           = (1 << 2),
+    st_device_supports_parameter_plug   = (1 << 3),
+    st_device_supports_parameter_port   = (1 << 4),
+    st_device_supports_on               = (1 << 5),
 };
 
 #define stonith__set_device_flags(device_flags, device_id, flags_to_set) do { \
@@ -49,14 +50,14 @@ enum st_device_flags
 struct stonith_action_s;
 typedef struct stonith_action_s stonith_action_t;
 
-stonith_action_t *stonith_action_create(const char *agent,
-                                        const char *_action,
-                                        const char *victim,
-                                        uint32_t victim_nodeid,
-                                        int timeout,
-                                        GHashTable * device_args,
-                                        GHashTable * port_map,
-                                        const char * host_arg);
+stonith_action_t *stonith__action_create(const char *agent,
+                                         const char *action_name,
+                                         const char *target,
+                                         uint32_t target_nodeid,
+                                         int timeout_sec,
+                                         GHashTable *device_args,
+                                         GHashTable *port_map,
+                                         const char *host_arg);
 void stonith__destroy_action(stonith_action_t *action);
 pcmk__action_result_t *stonith__action_result(stonith_action_t *action);
 int stonith__result2rc(const pcmk__action_result_t *result);
@@ -64,23 +65,27 @@ void stonith__xe_set_result(xmlNode *xml, const pcmk__action_result_t *result);
 void stonith__xe_get_result(xmlNode *xml, pcmk__action_result_t *result);
 xmlNode *stonith__find_xe_with_result(xmlNode *xml);
 
-int
-stonith_action_execute_async(stonith_action_t * action,
-                             void *userdata,
-                             void (*done) (int pid,
-                                           const pcmk__action_result_t *result,
-                                           void *user_data),
-                             void (*fork_cb) (int pid, void *user_data));
+int stonith__execute_async(stonith_action_t *action, void *userdata,
+                           void (*done) (int pid,
+                                         const pcmk__action_result_t *result,
+                                         void *user_data),
+                           void (*fork_cb) (int pid, void *user_data));
+
+int stonith__metadata_async(const char *agent, int timeout_sec,
+                            void (*callback)(int pid,
+                                             const pcmk__action_result_t *result,
+                                             void *user_data),
+                            void *user_data);
 
 xmlNode *create_level_registration_xml(const char *node, const char *pattern,
                                        const char *attr, const char *value,
                                        int level,
-                                       stonith_key_value_t *device_list);
+                                       const stonith_key_value_t *device_list);
 
 xmlNode *create_device_registration_xml(const char *id,
                                         enum stonith_namespace namespace,
                                         const char *agent,
-                                        stonith_key_value_t *params,
+                                        const stonith_key_value_t *params,
                                         const char *rsc_provides);
 
 void stonith__register_messages(pcmk__output_t *out);
@@ -132,6 +137,7 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
 #  define F_STONITH_NOTIFY_ACTIVATE   "st_notify_activate"
 #  define F_STONITH_NOTIFY_DEACTIVATE "st_notify_deactivate"
 #  define F_STONITH_DELEGATE      "st_delegate"
+#  define F_STONITH_DEVICE_SUPPORT_FLAGS "st_device_support_flags"
 /*! The node initiating the stonith operation.  If an operation
  * is relayed, this is the last node the operation lands on. When
  * in standalone mode, origin is the client's id that originated the
@@ -173,12 +179,6 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
 /* Don't change 2 below as it would break rolling upgrade */
 #  define STONITH_WATCHDOG_AGENT_INTERNAL "#watchdog"
 #  define STONITH_WATCHDOG_ID             "watchdog"
-
-/* Exported for crm_mon to reference */
-int stonith__failed_history(pcmk__output_t *out, va_list args);
-int stonith__history(pcmk__output_t *out, va_list args);
-int stonith__full_history(pcmk__output_t *out, va_list args);
-int stonith__pending_actions(pcmk__output_t *out, va_list args);
 
 stonith_history_t *stonith__first_matching_event(stonith_history_t *history,
                                                  bool (*matching_fn)(stonith_history_t *, void *),

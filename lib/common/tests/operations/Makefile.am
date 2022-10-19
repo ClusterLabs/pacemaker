@@ -7,16 +7,14 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
-AM_CPPFLAGS = -I$(top_srcdir)/include		\
-	      -I$(top_builddir)/include		\
-	      -I$(top_srcdir)/lib/common
-LDADD = $(top_builddir)/lib/common/libcrmcommon_test.la
-AM_LDFLAGS = $(LDFLAGS_WRAP)
-
 include $(top_srcdir)/mk/tap.mk
+include $(top_srcdir)/mk/unittest.mk
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
-check_PROGRAMS = parse_op_key_test \
+check_PROGRAMS = copy_in_properties_test \
+				 expand_plus_plus_test \
+				 fix_plus_plus_recursive_test \
+				 parse_op_key_test \
 				 pcmk_is_probe_test \
 				 pcmk_xe_is_probe_test \
 				 pcmk_xe_mask_probe_failure_test

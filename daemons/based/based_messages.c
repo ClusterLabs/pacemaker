@@ -33,7 +33,7 @@
 /* Maximum number of diffs to ignore while waiting for a resync */
 #define MAX_DIFF_RETRY 5
 
-gboolean cib_is_master = FALSE;
+bool based_is_primary = false;
 
 xmlNode *the_cib = NULL;
 int revision_check(xmlNode * cib_update, xmlNode * cib_copy, int flags);
@@ -86,10 +86,7 @@ cib_process_default(const char *op, int options, const char *section, xmlNode * 
         result = -EINVAL;
         crm_err("No operation specified");
 
-    } else if (strcasecmp(CRM_OP_NOOP, op) == 0) {
-        ;
-
-    } else {
+    } else if (strcmp(PCMK__CIB_REQUEST_NOOP, op) != 0) {
         result = -EPROTONOSUPPORT;
         crm_err("Action [%s] is not supported by the CIB manager", op);
     }
@@ -105,8 +102,8 @@ cib_process_readwrite(const char *op, int options, const char *section, xmlNode 
 
     crm_trace("Processing \"%s\" event", op);
 
-    if (pcmk__str_eq(op, CIB_OP_ISMASTER, pcmk__str_casei)) {
-        if (cib_is_master == TRUE) {
+    if (pcmk__str_eq(op, PCMK__CIB_REQUEST_IS_PRIMARY, pcmk__str_none)) {
+        if (based_is_primary) {
             result = pcmk_ok;
         } else {
             result = -EPERM;
@@ -114,17 +111,17 @@ cib_process_readwrite(const char *op, int options, const char *section, xmlNode 
         return result;
     }
 
-    if (pcmk__str_eq(op, CIB_OP_MASTER, pcmk__str_casei)) {
-        if (cib_is_master == FALSE) {
+    if (pcmk__str_eq(op, PCMK__CIB_REQUEST_PRIMARY, pcmk__str_none)) {
+        if (!based_is_primary) {
             crm_info("We are now in R/W mode");
-            cib_is_master = TRUE;
+            based_is_primary = true;
         } else {
             crm_debug("We are still in R/W mode");
         }
 
-    } else if (cib_is_master) {
+    } else if (based_is_primary) {
         crm_info("We are now in R/O mode");
-        cib_is_master = FALSE;
+        based_is_primary = false;
     }
 
     return result;
@@ -144,7 +141,7 @@ send_sync_request(const char *host)
     sync_in_progress = 1;
 
     crm_xml_add(sync_me, F_TYPE, "cib");
-    crm_xml_add(sync_me, F_CIB_OPERATION, CIB_OP_SYNC_ONE);
+    crm_xml_add(sync_me, F_CIB_OPERATION, PCMK__CIB_REQUEST_SYNC_TO_ONE);
     crm_xml_add(sync_me, F_CIB_DELEGATED, cib_our_uname);
 
     send_cluster_message(host ? crm_get_peer(0, host) : NULL, crm_msg_cib, sync_me, FALSE);
@@ -246,14 +243,14 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
             crm_notice("Upgrade request from %s verified", host);
 
             crm_xml_add(up, F_TYPE, "cib");
-            crm_xml_add(up, F_CIB_OPERATION, CIB_OP_UPGRADE);
+            crm_xml_add(up, F_CIB_OPERATION, PCMK__CIB_REQUEST_UPGRADE);
             crm_xml_add(up, F_CIB_SCHEMA_MAX, get_schema_name(new_version));
             crm_xml_add(up, F_CIB_DELEGATED, host);
             crm_xml_add(up, F_CIB_CLIENTID, client_id);
             crm_xml_add(up, F_CIB_CALLOPTS, call_opts);
             crm_xml_add(up, F_CIB_CALLID, call_id);
 
-            if (cib_legacy_mode() && cib_is_master) {
+            if (cib_legacy_mode() && based_is_primary) {
                 rc = cib_process_upgrade(
                     op, options, section, up, input, existing_cib, result_cib, answer);
 
@@ -279,7 +276,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
                 xmlNode *up = create_xml_node(NULL, __func__);
 
                 crm_xml_add(up, F_TYPE, "cib");
-                crm_xml_add(up, F_CIB_OPERATION, CIB_OP_UPGRADE);
+                crm_xml_add(up, F_CIB_OPERATION, PCMK__CIB_REQUEST_UPGRADE);
                 crm_xml_add(up, F_CIB_DELEGATED, host);
                 crm_xml_add(up, F_CIB_ISREPLY, host);
                 crm_xml_add(up, F_CIB_CLIENTID, client_id);
@@ -320,8 +317,8 @@ cib_server_process_diff(const char *op, int options, const char *section, xmlNod
         sync_in_progress = 0;
     }
 
-    /* The master should never ignore a diff */
-    if (sync_in_progress && !cib_is_master) {
+    // The primary instance should never ignore a diff
+    if (sync_in_progress && !based_is_primary) {
         int diff_add_updates = 0;
         int diff_add_epoch = 0;
         int diff_add_admin_epoch = 0;
@@ -342,9 +339,10 @@ cib_server_process_diff(const char *op, int options, const char *section, xmlNod
     }
 
     rc = cib_process_diff(op, options, section, req, input, existing_cib, result_cib, answer);
-    crm_trace("result: %s (%d), %s", pcmk_strerror(rc), rc, cib_is_master?"master":"slave");
+    crm_trace("result: %s (%d), %s", pcmk_strerror(rc), rc,
+              (based_is_primary? "primary": "secondary"));
 
-    if (rc == -pcmk_err_diff_resync && cib_is_master == FALSE) {
+    if ((rc == -pcmk_err_diff_resync) && !based_is_primary) {
         free_xml(*result_cib);
         *result_cib = NULL;
         send_sync_request(NULL);
@@ -355,7 +353,7 @@ cib_server_process_diff(const char *op, int options, const char *section, xmlNod
             crm_warn("Not requesting full refresh in R/W mode");
         }
 
-    } else if ((rc != pcmk_ok) && !cib_is_master && cib_legacy_mode()) {
+    } else if ((rc != pcmk_ok) && !based_is_primary && cib_legacy_mode()) {
         crm_warn("Requesting full CIB refresh because update failed: %s"
                  CRM_XS " rc=%d", pcmk_strerror(rc), rc);
         xml_log_patchset(LOG_INFO, __func__, input);
@@ -423,7 +421,7 @@ sync_our_cib(xmlNode * request, gboolean all)
         xml_remove_prop(replace_request, F_CIB_HOST);
     }
 
-    crm_xml_add(replace_request, F_CIB_OPERATION, CIB_OP_REPLACE);
+    crm_xml_add(replace_request, F_CIB_OPERATION, PCMK__CIB_REQUEST_REPLACE);
     crm_xml_add(replace_request, "original_" F_CIB_OPERATION, op);
     pcmk__xe_set_bool_attr(replace_request, F_CIB_GLOBAL_UPDATE, true);
 

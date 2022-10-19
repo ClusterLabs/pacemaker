@@ -20,8 +20,81 @@
 #include <crm/common/xml_internal.h>
 #include <pe_status_private.h>
 
-#define VARIANT_GROUP 1
-#include "./variant.h"
+typedef struct group_variant_data_s {
+    pe_resource_t *last_child;  // Last group member
+    uint32_t flags;             // Group of enum pe__group_flags
+} group_variant_data_t;
+
+/*!
+ * \internal
+ * \brief Get a group's last member
+ *
+ * \param[in] group  Group resource to check
+ *
+ * \return Last member of \p group if any, otherwise NULL
+ */
+pe_resource_t *
+pe__last_group_member(const pe_resource_t *group)
+{
+    if (group != NULL) {
+        CRM_CHECK((group->variant == pe_group)
+                  && (group->variant_opaque != NULL), return NULL);
+        return ((group_variant_data_t *) group->variant_opaque)->last_child;
+    }
+    return NULL;
+}
+
+/*!
+ * \internal
+ * \brief Check whether a group flag is set
+ *
+ * \param[in] group  Group resource to check
+ * \param[in] flags  Flag or flags to check
+ *
+ * \return true if all \p flags are set for \p group, otherwise false
+ */
+bool
+pe__group_flag_is_set(const pe_resource_t *group, uint32_t flags)
+{
+    group_variant_data_t *group_data = NULL;
+
+    CRM_CHECK((group != NULL) && (group->variant == pe_group)
+              && (group->variant_opaque != NULL), return false);
+    group_data = (group_variant_data_t *) group->variant_opaque;
+    return pcmk_all_flags_set(group_data->flags, flags);
+}
+
+/*!
+ * \internal
+ * \brief Set a (deprecated) group flag
+ *
+ * \param[in,out] group   Group resource to check
+ * \param[in]     option  Name of boolean configuration option
+ * \param[in]     flag    Flag to set if \p option is true (which is default)
+ * \param[in]     wo_bit  "Warn once" flag to use for deprecation warning
+ */
+static void
+set_group_flag(pe_resource_t *group, const char *option, uint32_t flag,
+               uint32_t wo_bit)
+{
+    const char *value_s = NULL;
+    int value = 0;
+
+    value_s = g_hash_table_lookup(group->meta, option);
+
+    // We don't actually need the null check but it speeds up the common case
+    if ((value_s == NULL) || (crm_str_to_boolean(value_s, &value) < 0)
+        || (value != 0)) {
+
+        ((group_variant_data_t *) group->variant_opaque)->flags |= flag;
+
+    } else {
+        pe_warn_once(wo_bit,
+                     "Support for the '%s' group meta-attribute is deprecated "
+                     "and will be removed in a future release "
+                     "(use a resource set instead)", option);
+    }
+}
 
 static int
 inactive_resources(pe_resource_t *rsc)
@@ -42,27 +115,26 @@ inactive_resources(pe_resource_t *rsc)
 static void
 group_header(pcmk__output_t *out, int *rc, pe_resource_t *rsc, int n_inactive, bool show_inactive)
 {
-    char *attrs = NULL;
-    size_t len = 0;
+    GString *attrs = NULL;
 
     if (n_inactive > 0 && !show_inactive) {
-        char *word = crm_strdup_printf("%d member%s inactive", n_inactive, pcmk__plural_s(n_inactive));
-        pcmk__add_separated_word(&attrs, &len, word, ", ");
-        free(word);
+        attrs = g_string_sized_new(64);
+        g_string_append_printf(attrs, "%d member%s inactive", n_inactive,
+                               pcmk__plural_s(n_inactive));
     }
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
-        pcmk__add_separated_word(&attrs, &len, "unmanaged", ", ");
+        pcmk__add_separated_word(&attrs, 64, "unmanaged", ", ");
     }
 
     if (pe__resource_is_disabled(rsc)) {
-        pcmk__add_separated_word(&attrs, &len, "disabled", ", ");
+        pcmk__add_separated_word(&attrs, 64, "disabled", ", ");
     }
 
-    if (attrs) {
+    if (attrs != NULL) {
         PCMK__OUTPUT_LIST_HEADER(out, FALSE, *rc, "Resource Group: %s (%s)",
-                                 rsc->id, attrs);
-        free(attrs);
+                                 rsc->id, (const char *) attrs->str);
+        g_string_free(attrs, TRUE);
     } else {
         PCMK__OUTPUT_LIST_HEADER(out, FALSE, *rc, "Resource Group: %s", rsc->id);
     }
@@ -101,27 +173,18 @@ group_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
     xmlNode *xml_obj = rsc->xml;
     xmlNode *xml_native_rsc = NULL;
     group_variant_data_t *group_data = NULL;
-    const char *group_ordered = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_ORDERED);
-    const char *group_colocated = g_hash_table_lookup(rsc->meta, "collocated");
     const char *clone_id = NULL;
 
     pe_rsc_trace(rsc, "Processing resource %s...", rsc->id);
 
     group_data = calloc(1, sizeof(group_variant_data_t));
-    group_data->num_children = 0;
-    group_data->first_child = NULL;
     group_data->last_child = NULL;
     rsc->variant_opaque = group_data;
 
-    // We don't actually need the null checks but it speeds up the common case
-    if ((group_ordered == NULL)
-        || (crm_str_to_boolean(group_ordered, &(group_data->ordered)) < 0)) {
-        group_data->ordered = TRUE;
-    }
-    if ((group_colocated == NULL)
-        || (crm_str_to_boolean(group_colocated, &(group_data->colocated)) < 0)) {
-        group_data->colocated = TRUE;
-    }
+    // @COMPAT These are deprecated since 2.1.5
+    set_group_flag(rsc, XML_RSC_ATTR_ORDERED, pe__group_ordered,
+                   pe_wo_group_order);
+    set_group_flag(rsc, "collocated", pe__group_colocated, pe_wo_group_coloc);
 
     clone_id = crm_element_value(rsc->xml, XML_RSC_ATTR_INCARNATION);
 
@@ -133,7 +196,8 @@ group_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
             pe_resource_t *new_rsc = NULL;
 
             crm_xml_add(xml_native_rsc, XML_RSC_ATTR_INCARNATION, clone_id);
-            if (common_unpack(xml_native_rsc, &new_rsc, rsc, data_set) == FALSE) {
+            if (pe__unpack_resource(xml_native_rsc, &new_rsc, rsc,
+                                    data_set) != pcmk_rc_ok) {
                 pe_err("Failed unpacking resource %s", crm_element_value(xml_obj, XML_ATTR_ID));
                 if (new_rsc != NULL && new_rsc->fns != NULL) {
                     new_rsc->fns->free(new_rsc);
@@ -141,24 +205,16 @@ group_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
                 continue;
             }
 
-            group_data->num_children++;
             rsc->children = g_list_append(rsc->children, new_rsc);
-
-            if (group_data->first_child == NULL) {
-                group_data->first_child = new_rsc;
-            }
             group_data->last_child = new_rsc;
             pe_rsc_trace(rsc, "Added %s member %s", rsc->id, new_rsc->id);
         }
     }
 
-    if (group_data->num_children == 0) {
+    if (rsc->children == NULL) {
+        // Allow empty groups, children can be added later
         pcmk__config_warn("Group %s does not have any children", rsc->id);
-        return TRUE; // Allow empty groups, children can be added later
     }
-
-    pe_rsc_trace(rsc, "Added %d children to resource %s...", group_data->num_children, rsc->id);
-
     return TRUE;
 }
 
@@ -187,8 +243,13 @@ group_active(pe_resource_t * rsc, gboolean all)
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \deprecated This function will be removed in a future release
+ */
 static void
-group_print_xml(pe_resource_t * rsc, const char *pre_text, long options, void *print_data)
+group_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
+                void *print_data)
 {
     GList *gIter = rsc->children;
     char *child_text = crm_strdup_printf("%s     ", pre_text);
@@ -207,8 +268,13 @@ group_print_xml(pe_resource_t * rsc, const char *pre_text, long options, void *p
     free(child_text);
 }
 
+/*!
+ * \internal
+ * \deprecated This function will be removed in a future release
+ */
 void
-group_print(pe_resource_t * rsc, const char *pre_text, long options, void *print_data)
+group_print(pe_resource_t *rsc, const char *pre_text, long options,
+            void *print_data)
 {
     char *child_text = NULL;
     GList *gIter = rsc->children;

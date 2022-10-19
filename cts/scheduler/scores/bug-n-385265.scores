@@ -1,11 +1,11 @@
 
-pcmk__group_allocate: group_common allocation score on ih01: 0
-pcmk__group_allocate: group_common allocation score on ih02: 0
-pcmk__group_allocate: resource_idvscommon allocation score on ih01: -INFINITY
-pcmk__group_allocate: resource_idvscommon allocation score on ih02: -INFINITY
-pcmk__group_allocate: resource_ip_common allocation score on ih01: 0
-pcmk__group_allocate: resource_ip_common allocation score on ih02: 10
-pcmk__native_allocate: resource_idvscommon allocation score on ih01: -INFINITY
-pcmk__native_allocate: resource_idvscommon allocation score on ih02: -INFINITY
-pcmk__native_allocate: resource_ip_common allocation score on ih01: 0
-pcmk__native_allocate: resource_ip_common allocation score on ih02: 10
+pcmk__group_assign: group_common allocation score on ih01: 0
+pcmk__group_assign: group_common allocation score on ih02: 0
+pcmk__group_assign: resource_idvscommon allocation score on ih01: -INFINITY
+pcmk__group_assign: resource_idvscommon allocation score on ih02: -INFINITY
+pcmk__group_assign: resource_ip_common allocation score on ih01: 0
+pcmk__group_assign: resource_ip_common allocation score on ih02: 10
+pcmk__primitive_assign: resource_idvscommon allocation score on ih01: -INFINITY
+pcmk__primitive_assign: resource_idvscommon allocation score on ih02: -INFINITY
+pcmk__primitive_assign: resource_ip_common allocation score on ih01: 0
+pcmk__primitive_assign: resource_ip_common allocation score on ih02: 10

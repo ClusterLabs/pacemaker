@@ -1,11 +1,11 @@
 
-pcmk__native_allocate: dummy0 allocation score on hex-13: 0
-pcmk__native_allocate: dummy0 allocation score on hex-14: 0
-pcmk__native_allocate: dummy1 allocation score on hex-13: -INFINITY
-pcmk__native_allocate: dummy1 allocation score on hex-14: 0
-pcmk__native_allocate: dummy2 allocation score on hex-13: -INFINITY
-pcmk__native_allocate: dummy2 allocation score on hex-14: 0
-pcmk__native_allocate: dummy3 allocation score on hex-13: -INFINITY
-pcmk__native_allocate: dummy3 allocation score on hex-14: 0
-pcmk__native_allocate: fencing-sbd allocation score on hex-13: 0
-pcmk__native_allocate: fencing-sbd allocation score on hex-14: 0
+pcmk__primitive_assign: dummy0 allocation score on hex-13: 0
+pcmk__primitive_assign: dummy0 allocation score on hex-14: 0
+pcmk__primitive_assign: dummy1 allocation score on hex-13: -INFINITY
+pcmk__primitive_assign: dummy1 allocation score on hex-14: 0
+pcmk__primitive_assign: dummy2 allocation score on hex-13: -INFINITY
+pcmk__primitive_assign: dummy2 allocation score on hex-14: 0
+pcmk__primitive_assign: dummy3 allocation score on hex-13: -INFINITY
+pcmk__primitive_assign: dummy3 allocation score on hex-14: 0
+pcmk__primitive_assign: fencing-sbd allocation score on hex-13: 0
+pcmk__primitive_assign: fencing-sbd allocation score on hex-14: 0

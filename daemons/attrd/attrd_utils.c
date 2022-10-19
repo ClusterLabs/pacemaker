@@ -19,13 +19,14 @@
 #include <crm/crm.h>
 #include <crm/common/ipc_internal.h>
 #include <crm/common/mainloop.h>
+#include <crm/msg_xml.h>
 
 #include "pacemaker-attrd.h"
 
 cib_t *the_cib = NULL;
 
-static bool requesting_shutdown = FALSE;
-static bool shutting_down = FALSE;
+static bool requesting_shutdown = false;
+static bool shutting_down = false;
 static GMainLoop *mloop = NULL;
 
 /*!
@@ -33,9 +34,9 @@ static GMainLoop *mloop = NULL;
  * \brief  Set requesting_shutdown state
  */
 void
-attrd_set_requesting_shutdown()
+attrd_set_requesting_shutdown(void)
 {
-    requesting_shutdown = TRUE;
+    requesting_shutdown = true;
 }
 
 /*!
@@ -43,19 +44,19 @@ attrd_set_requesting_shutdown()
  * \brief  Clear requesting_shutdown state
  */
 void
-attrd_clear_requesting_shutdown()
+attrd_clear_requesting_shutdown(void)
 {
-    requesting_shutdown = FALSE;
+    requesting_shutdown = false;
 }
 
 /*!
  * \internal
  * \brief Check whether we're currently requesting shutdown
  *
- * \return TRUE if requesting shutdown, FALSE otherwise
+ * \return true if requesting shutdown, false otherwise
  */
-gboolean
-attrd_requesting_shutdown()
+bool
+attrd_requesting_shutdown(void)
 {
     return requesting_shutdown;
 }
@@ -64,10 +65,10 @@ attrd_requesting_shutdown()
  * \internal
  * \brief Check whether we're currently shutting down
  *
- * \return TRUE if shutting down, FALSE otherwise
+ * \return true if shutting down, false otherwise
  */
-gboolean
-attrd_shutting_down()
+bool
+attrd_shutting_down(void)
 {
     return shutting_down;
 }
@@ -82,7 +83,7 @@ void
 attrd_shutdown(int nsig)
 {
     // Tell various functions not to do anthing
-    shutting_down = TRUE;
+    shutting_down = true;
 
     // Don't respond to signals while shutting down
     mainloop_destroy_signal(SIGTERM);
@@ -108,7 +109,7 @@ attrd_shutdown(int nsig)
  * \brief Create a main loop for attrd
  */
 void
-attrd_init_mainloop()
+attrd_init_mainloop(void)
 {
     mloop = g_main_loop_new(NULL, FALSE);
 }
@@ -118,100 +119,13 @@ attrd_init_mainloop()
  * \brief Run attrd main loop
  */
 void
-attrd_run_mainloop()
+attrd_run_mainloop(void)
 {
     g_main_loop_run(mloop);
 }
 
-/*!
- * \internal
- * \brief Accept a new client IPC connection
- *
- * \param[in] c    New connection
- * \param[in] uid  Client user id
- * \param[in] gid  Client group id
- *
- * \return pcmk_ok on success, -errno otherwise
- */
-static int32_t
-attrd_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
-{
-    crm_trace("New client connection %p", c);
-    if (shutting_down) {
-        crm_info("Ignoring new connection from pid %d during shutdown",
-                 pcmk__client_pid(c));
-        return -EPERM;
-    }
-
-    if (pcmk__new_client(c, uid, gid) == NULL) {
-        return -EIO;
-    }
-    return pcmk_ok;
-}
-
-/*!
- * \internal
- * \brief Destroy a client IPC connection
- *
- * \param[in] c  Connection to destroy
- *
- * \return FALSE (i.e. do not re-run this callback)
- */
-static int32_t
-attrd_ipc_closed(qb_ipcs_connection_t *c)
-{
-    pcmk__client_t *client = pcmk__find_client(c);
-
-    if (client == NULL) {
-        crm_trace("Ignoring request to clean up unknown connection %p", c);
-    } else {
-        crm_trace("Cleaning up closed client connection %p", c);
-        pcmk__free_client(client);
-    }
-    return FALSE;
-}
-
-/*!
- * \internal
- * \brief Destroy a client IPC connection
- *
- * \param[in] c  Connection to destroy
- *
- * \note We handle a destroyed connection the same as a closed one,
- *       but we need a separate handler because the return type is different.
- */
-static void
-attrd_ipc_destroy(qb_ipcs_connection_t *c)
-{
-    crm_trace("Destroying client connection %p", c);
-    attrd_ipc_closed(c);
-}
-
-/*!
- * \internal
- * \brief Set up attrd IPC communication
- *
- * \param[out] ipcs         Will be set to newly allocated server connection
- * \param[in]  dispatch_fn  Handler for new messages on connection
- */
 void
-attrd_init_ipc(qb_ipcs_service_t **ipcs, qb_ipcs_msg_process_fn dispatch_fn)
-{
-
-    static struct qb_ipcs_service_handlers ipc_callbacks = {
-        .connection_accept = attrd_ipc_accept,
-        .connection_created = NULL,
-        .msg_process = NULL,
-        .connection_closed = attrd_ipc_closed,
-        .connection_destroyed = attrd_ipc_destroy
-    };
-
-    ipc_callbacks.msg_process = dispatch_fn;
-    pcmk__serve_attrd_ipc(ipcs, &ipc_callbacks);
-}
-
-void
-attrd_cib_disconnect()
+attrd_cib_disconnect(void)
 {
     CRM_CHECK(the_cib != NULL, return);
     the_cib->cmds->del_notify_callback(the_cib, T_CIB_REPLACE_NOTIFY, attrd_cib_replaced_cb);
@@ -233,7 +147,7 @@ attrd_cib_replaced_cb(const char *event, xmlNode * msg)
     if (attrd_election_won()) {
         if (change_section & (cib_change_section_nodes | cib_change_section_status)) {
             crm_notice("Updating all attributes after %s event", event);
-            write_attributes(TRUE, FALSE);
+            attrd_write_attributes(true, false);
         }
     }
 
@@ -252,9 +166,9 @@ attrd_cib_replaced_cb(const char *event, xmlNode * msg)
  *
  * \param[in] value  Attribute value to check
  *
- * \return TRUE if value needs expansion, FALSE otherwise
+ * \return true if value needs expansion, false otherwise
  */
-gboolean
+bool
 attrd_value_needs_expansion(const char *value)
 {
     return ((strlen(value) >= (plus_plus_len + 2))
@@ -327,4 +241,46 @@ attrd_failure_regex(regex_t *regex, const char *rsc, const char *op,
     free(pattern);
 
     return (rc == 0)? pcmk_ok : -EINVAL;
+}
+
+void
+attrd_free_attribute_value(gpointer data)
+{
+    attribute_value_t *v = data;
+
+    free(v->nodename);
+    free(v->current);
+    free(v->requested);
+    free(v);
+}
+
+void
+attrd_free_attribute(gpointer data)
+{
+    attribute_t *a = data;
+    if(a) {
+        free(a->id);
+        free(a->set);
+        free(a->uuid);
+        free(a->user);
+
+        mainloop_timer_del(a->timer);
+        g_hash_table_destroy(a->values);
+
+        free(a);
+    }
+}
+
+void
+attrd_update_minimum_protocol_ver(const char *value)
+{
+    int ver;
+
+    pcmk__scan_min_int(value, &ver, 0);
+
+    if (ver > 0 && (minimum_protocol_version == -1 || ver < minimum_protocol_version)) {
+        minimum_protocol_version = ver;
+        crm_trace("Set minimum attrd protocol version to %d",
+                  minimum_protocol_version);
+    }
 }

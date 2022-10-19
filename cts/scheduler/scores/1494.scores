@@ -8,9 +8,9 @@ pcmk__clone_allocate: ima_rscid:0 allocation score on hb3: 0
 pcmk__clone_allocate: ima_rscid:1 allocation score on hb1: -INFINITY
 pcmk__clone_allocate: ima_rscid:1 allocation score on hb2: INFINITY
 pcmk__clone_allocate: ima_rscid:1 allocation score on hb3: 0
-pcmk__native_allocate: ima_rscid:0 allocation score on hb1: -INFINITY
-pcmk__native_allocate: ima_rscid:0 allocation score on hb2: -INFINITY
-pcmk__native_allocate: ima_rscid:0 allocation score on hb3: -INFINITY
-pcmk__native_allocate: ima_rscid:1 allocation score on hb1: -INFINITY
-pcmk__native_allocate: ima_rscid:1 allocation score on hb2: INFINITY
-pcmk__native_allocate: ima_rscid:1 allocation score on hb3: -INFINITY
+pcmk__primitive_assign: ima_rscid:0 allocation score on hb1: -INFINITY
+pcmk__primitive_assign: ima_rscid:0 allocation score on hb2: -INFINITY
+pcmk__primitive_assign: ima_rscid:0 allocation score on hb3: -INFINITY
+pcmk__primitive_assign: ima_rscid:1 allocation score on hb1: -INFINITY
+pcmk__primitive_assign: ima_rscid:1 allocation score on hb2: INFINITY
+pcmk__primitive_assign: ima_rscid:1 allocation score on hb3: -INFINITY

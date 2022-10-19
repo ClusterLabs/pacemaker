@@ -341,57 +341,20 @@ add_action_attributes(pe_action_t *action, xmlNode *action_xml)
 
         g_hash_table_foreach(params, hash2smartfield, args_xml);
 
-#if ENABLE_VERSIONED_ATTRS
-        {
-            xmlNode *versioned_parameters = create_xml_node(NULL, XML_TAG_RSC_VER_ATTRS);
-
-            pe_get_versioned_attributes(versioned_parameters, action->rsc,
-                                        action->node, action->rsc->cluster);
-            if (xml_has_children(versioned_parameters)) {
-                add_node_copy(action_xml, versioned_parameters);
-            }
-            free_xml(versioned_parameters);
-        }
-#endif
-
     } else if ((action->rsc != NULL) && (action->rsc->variant <= pe_native)) {
         GHashTable *params = pe_rsc_params(action->rsc, NULL,
                                            action->rsc->cluster);
 
         g_hash_table_foreach(params, hash2smartfield, args_xml);
-
-#if ENABLE_VERSIONED_ATTRS
-        if (xml_has_children(action->rsc->versioned_parameters)) {
-            add_node_copy(action_xml, action->rsc->versioned_parameters);
-        }
-#endif
     }
-
-#if ENABLE_VERSIONED_ATTRS
-    if (rsc_details != NULL) {
-        if (xml_has_children(rsc_details->versioned_parameters)) {
-            add_node_copy(action_xml, rsc_details->versioned_parameters);
-        }
-        if (xml_has_children(rsc_details->versioned_meta)) {
-            add_node_copy(action_xml, rsc_details->versioned_meta);
-        }
-    }
-#endif
 
     g_hash_table_foreach(action->meta, hash2metafield, args_xml);
     if (action->rsc != NULL) {
-        const char *value = g_hash_table_lookup(action->rsc->meta,
-                                                "external-ip");
         pe_resource_t *parent = action->rsc;
 
         while (parent != NULL) {
-            parent->cmds->append_meta(parent, args_xml);
+            parent->cmds->add_graph_meta(parent, args_xml);
             parent = parent->parent;
-        }
-
-        if (value != NULL) {
-            hash2smartfield((gpointer) "pcmk_external_ip", (gpointer) value,
-                            (gpointer) args_xml);
         }
 
         pcmk__add_bundle_meta_to_xml(args_xml, action);
@@ -427,9 +390,6 @@ create_graph_action(xmlNode *parent, pe_action_t *action, bool skip_details,
     bool needs_node_info = true;
     bool needs_maintenance_info = false;
     xmlNode *action_xml = NULL;
-#if ENABLE_VERSIONED_ATTRS
-    pe_rsc_action_details_t *rsc_details = NULL;
-#endif
 
     if ((action == NULL) || (data_set == NULL)) {
         return;
@@ -446,8 +406,7 @@ create_graph_action(xmlNode *parent, pe_action_t *action, bool skip_details,
 
     } else if (pcmk__str_any_of(action->task,
                                 CRM_OP_SHUTDOWN,
-                                CRM_OP_CLEAR_FAILCOUNT,
-                                CRM_OP_LRM_REFRESH, NULL)) {
+                                CRM_OP_CLEAR_FAILCOUNT, NULL)) {
         action_xml = create_xml_node(parent, XML_GRAPH_TAG_CRM_EVENT);
 
     } else if (pcmk__str_eq(action->task, CRM_OP_LRM_DELETE, pcmk__str_none)) {
@@ -465,9 +424,6 @@ create_graph_action(xmlNode *parent, pe_action_t *action, bool skip_details,
 
     } else {
         action_xml = create_xml_node(parent, XML_GRAPH_TAG_RSC_OP);
-#if ENABLE_VERSIONED_ATTRS
-        rsc_details = pe_rsc_action_details(action);
-#endif
     }
 
     crm_xml_add_int(action_xml, XML_ATTR_ID, action->id);
@@ -587,13 +543,13 @@ should_add_action_to_graph(pe_action_t *action)
     if (pcmk_is_set(action->flags, pe_action_dc)) {
         crm_trace("Action %s (%d) should be dumped: "
                   "can run on DC instead of %s",
-                  action->uuid, action->id, action->node->details->uname);
+                  action->uuid, action->id, pe__node_name(action->node));
 
     } else if (pe__is_guest_node(action->node)
                && !action->node->details->remote_requires_reset) {
         crm_trace("Action %s (%d) should be dumped: "
-                  "assuming will be runnable on guest node %s",
-                  action->uuid, action->id, action->node->details->uname);
+                  "assuming will be runnable on guest %s",
+                  action->uuid, action->id, pe__node_name(action->node));
 
     } else if (!action->node->details->online) {
         pe_err("Skipping action %s (%d) "
@@ -744,8 +700,8 @@ should_add_input_to_graph(pe_action_t *action, pe_action_wrapper_t *input)
                       "anti-colocation node mismatch %s vs %s",
                       action->uuid, action->id,
                       input->action->uuid, input->action->id,
-                      action->node->details->uname,
-                      input->action->node->details->uname);
+                      pe__node_name(action->node),
+                      pe__node_name(input->action->node));
             input->type = pe_order_none;
             return false;
 
@@ -902,8 +858,8 @@ create_graph_synapse(pe_action_t *action, pe_working_set_t *data_set)
  * \internal
  * \brief Add an action to the transition graph XML if appropriate
  *
- * \param[in] action    Action to possibly add
- * \param[in] data_set  Cluster working set
+ * \param[in] data       Action to possibly add
+ * \param[in] user_data  Cluster working set
  *
  * \note This will de-duplicate the action inputs, meaning that the
  *       pe_action_wrapper_t:type flags can no longer be relied on to retain
@@ -914,9 +870,12 @@ create_graph_synapse(pe_action_t *action, pe_working_set_t *data_set)
  *       particular combinations of flags -- such code must be done before
  *       pcmk__create_graph().)
  */
-void
-pcmk__add_action_to_graph(pe_action_t *action, pe_working_set_t *data_set)
+static void
+add_action_to_graph(gpointer data, gpointer user_data)
 {
+    pe_action_t *action = (pe_action_t *) data;
+    pe_working_set_t *data_set = (pe_working_set_t *) user_data;
+
     xmlNode *syn = NULL;
     xmlNode *set = NULL;
     xmlNode *in = NULL;
@@ -935,6 +894,11 @@ pcmk__add_action_to_graph(pe_action_t *action, pe_working_set_t *data_set)
         return;
     }
     pe__set_action_flags(action, pe_action_dumped);
+
+    crm_trace("Adding action %d (%s%s%s) to graph",
+              action->id, action->uuid,
+              ((action->node == NULL)? "" : " on "),
+              ((action->node == NULL)? "" : action->node->details->uname));
 
     syn = create_graph_synapse(action, data_set);
     set = create_xml_node(syn, "action_set");
@@ -986,6 +950,31 @@ pcmk__log_transition_summary(const char *filename)
     if (crm_config_error) {
         crm_notice("Configuration errors found during scheduler processing,"
                    "  please run \"crm_verify -L\" to identify issues");
+    }
+}
+
+/*!
+ * \internal
+ * \brief Add a resource's actions to the transition graph
+ *
+ * \param[in] rsc  Resource whose actions should be added
+ */
+void
+pcmk__add_rsc_actions_to_graph(pe_resource_t *rsc)
+{
+    GList *iter = NULL;
+
+    CRM_ASSERT(rsc != NULL);
+    pe_rsc_trace(rsc, "Adding actions for %s to graph", rsc->id);
+
+    // First add the resource's own actions
+    g_list_foreach(rsc->actions, add_action_to_graph, rsc->cluster);
+
+    // Then recursively add its children's actions (appropriate to variant)
+    for (iter = rsc->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *child_rsc = (pe_resource_t *) iter->data;
+
+        child_rsc->cmds->add_actions_to_graph(child_rsc);
     }
 }
 
@@ -1050,7 +1039,7 @@ pcmk__create_graph(pe_working_set_t *data_set)
         pe_resource_t *rsc = (pe_resource_t *) iter->data;
 
         pe_rsc_trace(rsc, "Processing actions for %s", rsc->id);
-        rsc->cmds->expand(rsc, data_set);
+        rsc->cmds->add_actions_to_graph(rsc);
     }
 
     // Add pseudo-action for list of nodes with maintenance state update
@@ -1073,16 +1062,16 @@ pcmk__create_graph(pe_working_set_t *data_set)
              */
             if (pcmk_is_set(data_set->flags, pe_flag_have_quorum)
                 || (data_set->no_quorum_policy == no_quorum_ignore)) {
-                crm_crit("Cannot %s node '%s' because of %s:%s%s (%s)",
+                crm_crit("Cannot %s %s because of %s:%s%s (%s)",
                          action->node->details->unclean? "fence" : "shut down",
-                         action->node->details->uname, action->rsc->id,
+                         pe__node_name(action->node), action->rsc->id,
                          pcmk_is_set(action->rsc->flags, pe_rsc_managed)? " blocked" : " unmanaged",
                          pcmk_is_set(action->rsc->flags, pe_rsc_failed)? " failed" : "",
                          action->uuid);
             }
         }
 
-        pcmk__add_action_to_graph(action, data_set);
+        add_action_to_graph((gpointer) action, (gpointer) data_set);
     }
 
     crm_log_xml_trace(data_set->graph, "graph");

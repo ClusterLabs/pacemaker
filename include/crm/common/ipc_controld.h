@@ -102,7 +102,7 @@ int pcmk_controld_api_refresh(pcmk_ipc_api_t *api, const char *target_node,
                               bool cib_only);
 int pcmk_controld_api_ping(pcmk_ipc_api_t *api, const char *node_name);
 int pcmk_controld_api_list_nodes(pcmk_ipc_api_t *api);
-unsigned int pcmk_controld_api_replies_expected(pcmk_ipc_api_t *api);
+unsigned int pcmk_controld_api_replies_expected(const pcmk_ipc_api_t *api);
 
 #ifdef __cplusplus
 }

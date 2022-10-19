@@ -106,11 +106,11 @@ pe_fence_node(pe_working_set_t * data_set, pe_node_t * node,
                 crm_notice("Not fencing guest node %s "
                            "(otherwise would because %s): "
                            "its guest resource %s is unmanaged",
-                           node->details->uname, reason, rsc->id);
+                           pe__node_name(node), reason, rsc->id);
             } else {
                 crm_warn("Guest node %s will be fenced "
                          "(by recovering its guest resource %s): %s",
-                         node->details->uname, rsc->id, reason);
+                         pe__node_name(node), rsc->id, reason);
 
                 /* We don't mark the node as unclean because that would prevent the
                  * node from running resources. We want to allow it to run resources
@@ -125,7 +125,7 @@ pe_fence_node(pe_working_set_t * data_set, pe_node_t * node,
         crm_info("Cleaning up dangling connection for guest node %s: "
                  "fencing was already done because %s, "
                  "and guest resource no longer exists",
-                 node->details->uname, reason);
+                 pe__node_name(node), reason);
         pe__set_resource_flags(node->details->remote_rsc,
                                pe_rsc_failed|pe_rsc_stop);
 
@@ -135,11 +135,11 @@ pe_fence_node(pe_working_set_t * data_set, pe_node_t * node,
         if ((rsc != NULL) && !pcmk_is_set(rsc->flags, pe_rsc_managed)) {
             crm_notice("Not fencing remote node %s "
                        "(otherwise would because %s): connection is unmanaged",
-                       node->details->uname, reason);
+                       pe__node_name(node), reason);
         } else if(node->details->remote_requires_reset == FALSE) {
             node->details->remote_requires_reset = TRUE;
             crm_warn("Remote node %s %s: %s",
-                     node->details->uname,
+                     pe__node_name(node),
                      pe_can_fence(data_set, node)? "will be fenced" : "is unclean",
                      reason);
         }
@@ -149,13 +149,13 @@ pe_fence_node(pe_working_set_t * data_set, pe_node_t * node,
 
     } else if (node->details->unclean) {
         crm_trace("Cluster node %s %s because %s",
-                  node->details->uname,
+                  pe__node_name(node),
                   pe_can_fence(data_set, node)? "would also be fenced" : "also is unclean",
                   reason);
 
     } else {
         crm_warn("Cluster node %s %s: %s",
-                 node->details->uname,
+                 pe__node_name(node),
                  pe_can_fence(data_set, node)? "will be fenced" : "is unclean",
                  reason);
         node->details->unclean = TRUE;
@@ -447,7 +447,8 @@ pe_create_node(const char *id, const char *uname, const char *type,
     new_node->details->digest_cache = pcmk__strkey_table(free,
                                                           pe__free_digests);
 
-    data_set->nodes = g_list_insert_sorted(data_set->nodes, new_node, sort_node_uname);
+    data_set->nodes = g_list_insert_sorted(data_set->nodes, new_node,
+                                           pe__cmp_node_name);
     return new_node;
 }
 
@@ -574,12 +575,6 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
             if (new_node == NULL) {
                 return FALSE;
             }
-
-/* 		if(data_set->have_quorum == FALSE */
-/* 		   && data_set->no_quorum_policy == no_quorum_stop) { */
-/* 			/\* start shutting resources down *\/ */
-/* 			new_node->weight = -INFINITY; */
-/* 		} */
 
             handle_startup_fencing(data_set, new_node);
 
@@ -720,8 +715,8 @@ link_rsc2remotenode(pe_working_set_t *data_set, pe_resource_t *new_rsc)
     remote_node = pe_find_node(data_set->nodes, new_rsc->id);
     CRM_CHECK(remote_node != NULL, return);
 
-    pe_rsc_trace(new_rsc, "Linking remote connection resource %s to node %s",
-                 new_rsc->id, remote_node->details->uname);
+    pe_rsc_trace(new_rsc, "Linking remote connection resource %s to %s",
+                 new_rsc->id, pe__node_name(remote_node));
     remote_node->details->remote_rsc = new_rsc;
 
     if (new_rsc->container == NULL) {
@@ -761,7 +756,7 @@ destroy_tag(gpointer data)
  * \return TRUE
  *
  * \note unpack_remote_nodes() MUST be called before this, so that the nodes can
- *       be used when common_unpack() calls resource_location()
+ *       be used when pe__unpack_resource() calls resource_location()
  */
 gboolean
 unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
@@ -794,7 +789,10 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
         }
 
         crm_trace("Unpacking <%s id='%s'>", crm_element_name(xml_obj), id);
-        if (common_unpack(xml_obj, &new_rsc, NULL, data_set) && (new_rsc != NULL)) {
+        if ((pe__unpack_resource(xml_obj, &new_rsc, NULL,
+                                 data_set) == pcmk_rc_ok)
+            && (new_rsc != NULL)) {
+
             data_set->resources = g_list_append(data_set->resources, new_rsc);
             pe_rsc_trace(new_rsc, "Added resource %s", new_rsc->id);
 
@@ -815,7 +813,8 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
         link_rsc2remotenode(data_set, rsc);
     }
 
-    data_set->resources = g_list_sort(data_set->resources, sort_rsc_priority);
+    data_set->resources = g_list_sort(data_set->resources,
+                                      pe__cmp_rsc_priority);
     if (pcmk_is_set(data_set->flags, pe_flag_quick_location)) {
         /* Ignore */
 
@@ -978,7 +977,7 @@ unpack_handle_remote_attrs(pe_node_t *this_node, xmlNode *state, pe_working_set_
     if ((this_node == NULL) || !pe__is_guest_or_remote_node(this_node)) {
         return;
     }
-    crm_trace("Processing remote node id=%s, uname=%s", this_node->details->id, this_node->details->uname);
+    crm_trace("Processing Pacemaker Remote node %s", pe__node_name(this_node));
 
     pcmk__scan_min_int(crm_element_value(state, XML_NODE_IS_MAINTENANCE),
                        &(this_node->details->remote_maintenance), 0);
@@ -992,18 +991,18 @@ unpack_handle_remote_attrs(pe_node_t *this_node, xmlNode *state, pe_working_set_
     add_node_attrs(attrs, this_node, TRUE, data_set);
 
     if (pe__shutdown_requested(this_node)) {
-        crm_info("Node %s is shutting down", this_node->details->uname);
+        crm_info("%s is shutting down", pe__node_name(this_node));
         this_node->details->shutdown = TRUE;
     }
  
     if (crm_is_true(pe_node_attribute_raw(this_node, "standby"))) {
-        crm_info("Node %s is in standby-mode", this_node->details->uname);
+        crm_info("%s is in standby mode", pe__node_name(this_node));
         this_node->details->standby = TRUE;
     }
 
     if (crm_is_true(pe_node_attribute_raw(this_node, "maintenance")) ||
         ((rsc != NULL) && !pcmk_is_set(rsc->flags, pe_rsc_managed))) {
-        crm_info("Node %s is in maintenance-mode", this_node->details->uname);
+        crm_info("%s is in maintenance mode", pe__node_name(this_node));
         this_node->details->maintenance = TRUE;
     }
 
@@ -1011,15 +1010,18 @@ unpack_handle_remote_attrs(pe_node_t *this_node, xmlNode *state, pe_working_set_
     if (resource_discovery_enabled && !crm_is_true(resource_discovery_enabled)) {
         if (pe__is_remote_node(this_node)
             && !pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
-            crm_warn("Ignoring %s attribute on remote node %s because stonith is disabled",
-                     XML_NODE_ATTR_RSC_DISCOVERY, this_node->details->uname);
+            crm_warn("Ignoring " XML_NODE_ATTR_RSC_DISCOVERY
+                     " attribute on Pacemaker Remote node %s"
+                     " because fencing is disabled",
+                     pe__node_name(this_node));
         } else {
             /* This is either a remote node with fencing enabled, or a guest
              * node. We don't care whether fencing is enabled when fencing guest
              * nodes, because they are "fenced" by recovering their containing
              * resource.
              */
-            crm_info("Node %s has resource discovery disabled", this_node->details->uname);
+            crm_info("%s has resource discovery disabled",
+                     pe__node_name(this_node));
             this_node->details->rsc_discovery_enabled = FALSE;
         }
     }
@@ -1043,20 +1045,20 @@ unpack_transient_attributes(xmlNode *state, pe_node_t *node,
     add_node_attrs(attrs, node, TRUE, data_set);
 
     if (crm_is_true(pe_node_attribute_raw(node, "standby"))) {
-        crm_info("Node %s is in standby-mode", node->details->uname);
+        crm_info("%s is in standby mode", pe__node_name(node));
         node->details->standby = TRUE;
     }
 
     if (crm_is_true(pe_node_attribute_raw(node, "maintenance"))) {
-        crm_info("Node %s is in maintenance-mode", node->details->uname);
+        crm_info("%s is in maintenance mode", pe__node_name(node));
         node->details->maintenance = TRUE;
     }
 
     discovery = pe_node_attribute_raw(node, XML_NODE_ATTR_RSC_DISCOVERY);
     if ((discovery != NULL) && !crm_is_true(discovery)) {
-        crm_warn("Ignoring %s attribute for node %s because disabling "
-                 "resource discovery is not allowed for cluster nodes",
-                 XML_NODE_ATTR_RSC_DISCOVERY, node->details->uname);
+        crm_warn("Ignoring " XML_NODE_ATTR_RSC_DISCOVERY
+                 " attribute for %s because disabling resource discovery "
+                 "is not allowed for cluster nodes", pe__node_name(node));
     }
 }
 
@@ -1120,7 +1122,7 @@ unpack_node_state(xmlNode *state, pe_working_set_t *data_set)
     this_node->details->unseen = FALSE;
 
     crm_trace("Determining online status of cluster node %s (id %s)",
-              this_node->details->uname, id);
+              pe__node_name(this_node), id);
     determine_online_status(state, this_node, data_set);
 
     if (!pcmk_is_set(data_set->flags, pe_flag_have_quorum)
@@ -1392,7 +1394,7 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
     }
 
     crm_trace("%s: in_cluster=%s is_peer=%s join=%s expected=%s term=%d",
-              this_node->details->uname, pcmk__s(in_cluster, "<null>"),
+              pe__node_name(this_node), pcmk__s(in_cluster, "<null>"),
               pcmk__s(is_peer, "<null>"), pcmk__s(join, "<null>"),
               pcmk__s(exp_state, "<null>"), do_terminate);
 
@@ -1403,7 +1405,7 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
     }
 
     if (this_node->details->shutdown) {
-        crm_debug("%s is shutting down", this_node->details->uname);
+        crm_debug("%s is shutting down", pe__node_name(this_node));
 
         /* Slightly different criteria since we can't shut down a dead peer */
         online = crmd_online;
@@ -1418,17 +1420,19 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
     } else if (do_terminate == FALSE && pcmk__str_eq(exp_state, CRMD_JOINSTATE_DOWN, pcmk__str_casei)) {
 
         if (crm_is_true(in_cluster) || crmd_online) {
-            crm_info("- Node %s is not ready to run resources", this_node->details->uname);
+            crm_info("- %s is not ready to run resources",
+                     pe__node_name(this_node));
             this_node->details->standby = TRUE;
             this_node->details->pending = TRUE;
 
         } else {
-            crm_trace("%s is down or still coming up", this_node->details->uname);
+            crm_trace("%s is down or still coming up",
+                      pe__node_name(this_node));
         }
 
     } else if (do_terminate && pcmk__str_eq(join, CRMD_JOINSTATE_DOWN, pcmk__str_casei)
                && crm_is_true(in_cluster) == FALSE && !crmd_online) {
-        crm_info("Node %s was just shot", this_node->details->uname);
+        crm_info("%s was just shot", pe__node_name(this_node));
         online = FALSE;
 
     } else if (crm_is_true(in_cluster) == FALSE) {
@@ -1443,17 +1447,17 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
         pe_fence_node(data_set, this_node, "termination was requested", FALSE);
 
     } else if (pcmk__str_eq(join, CRMD_JOINSTATE_MEMBER, pcmk__str_casei)) {
-        crm_info("Node %s is active", this_node->details->uname);
+        crm_info("%s is active", pe__node_name(this_node));
 
     } else if (pcmk__strcase_any_of(join, CRMD_JOINSTATE_PENDING, CRMD_JOINSTATE_DOWN, NULL)) {
-        crm_info("Node %s is not ready to run resources", this_node->details->uname);
+        crm_info("%s is not ready to run resources", pe__node_name(this_node));
         this_node->details->standby = TRUE;
         this_node->details->pending = TRUE;
 
     } else {
         pe_fence_node(data_set, this_node, "peer was in an unknown state", FALSE);
         crm_warn("%s: in-cluster=%s is-peer=%s join=%s expected=%s term=%d shutdown=%d",
-                 this_node->details->uname, pcmk__s(in_cluster, "<null>"),
+                 pe__node_name(this_node), pcmk__s(in_cluster, "<null>"),
                  pcmk__s(is_peer, "<null>"), pcmk__s(join, "<null>"),
                  pcmk__s(exp_state, "<null>"), do_terminate,
                  this_node->details->shutdown);
@@ -1579,20 +1583,20 @@ determine_online_status(xmlNode * node_state, pe_node_t * this_node, pe_working_
     }
 
     if (this_node->details->type == node_ping) {
-        crm_info("Node %s is not a Pacemaker node", this_node->details->uname);
+        crm_info("%s is not a Pacemaker node", pe__node_name(this_node));
 
     } else if (this_node->details->unclean) {
-        pe_proc_warn("Node %s is unclean", this_node->details->uname);
+        pe_proc_warn("%s is unclean", pe__node_name(this_node));
 
     } else if (this_node->details->online) {
-        crm_info("Node %s is %s", this_node->details->uname,
+        crm_info("%s is %s", pe__node_name(this_node),
                  this_node->details->shutdown ? "shutting down" :
                  this_node->details->pending ? "pending" :
                  this_node->details->standby ? "standby" :
                  this_node->details->maintenance ? "maintenance" : "online");
 
     } else {
-        crm_trace("Node %s is offline", this_node->details->uname);
+        crm_trace("%s is offline", pe__node_name(this_node));
     }
 }
 
@@ -1692,7 +1696,7 @@ create_fake_resource(const char *rsc_id, xmlNode * rsc_entry, pe_working_set_t *
     crm_xml_add(xml_rsc, XML_ATTR_ID, rsc_id);
     crm_log_xml_debug(xml_rsc, "Orphan resource");
 
-    if (!common_unpack(xml_rsc, &rsc, NULL, data_set)) {
+    if (pe__unpack_resource(xml_rsc, &rsc, NULL, data_set) != pcmk_rc_ok) {
         return NULL;
     }
 
@@ -1736,7 +1740,7 @@ create_anonymous_orphan(pe_resource_t *parent, const char *rsc_id,
     pe_resource_t *orphan = top->fns->find_rsc(top, rsc_id, NULL, pe_find_clone);
 
     pe_rsc_debug(parent, "Created orphan %s for %s: %s on %s",
-                 top->id, parent->id, rsc_id, node->details->uname);
+                 top->id, parent->id, rsc_id, pe__node_name(node));
     return orphan;
 }
 
@@ -1768,7 +1772,8 @@ find_anonymous_clone(pe_working_set_t * data_set, pe_node_t * node, pe_resource_
     CRM_ASSERT(!pcmk_is_set(parent->flags, pe_rsc_unique));
 
     // Check for active (or partially active, for cloned groups) instance
-    pe_rsc_trace(parent, "Looking for %s on %s in %s", rsc_id, node->details->uname, parent->id);
+    pe_rsc_trace(parent, "Looking for %s on %s in %s",
+                 rsc_id, pe__node_name(node), parent->id);
     for (rIter = parent->children; rsc == NULL && rIter; rIter = rIter->next) {
         GList *locations = NULL;
         pe_resource_t *child = rIter->data;
@@ -1816,7 +1821,7 @@ find_anonymous_clone(pe_working_set_t * data_set, pe_node_t * node, pe_resource_
                     if (rsc->running_on) {
                         crm_notice("Active (now-)anonymous clone %s has "
                                    "multiple (orphan) instance histories on %s",
-                                   parent->id, node->details->uname);
+                                   parent->id, pe__node_name(node));
                         skip_inactive = TRUE;
                         rsc = NULL;
                     } else {
@@ -1932,7 +1937,7 @@ unpack_find_resource(pe_working_set_t * data_set, pe_node_t * node, const char *
 
         pcmk__str_update(&rsc->clone_name, rsc_id);
         pe_rsc_debug(rsc, "Internally renamed %s on %s to %s%s",
-                     rsc_id, node->details->uname, rsc->id,
+                     rsc_id, pe__node_name(node), rsc->id,
                      (pcmk_is_set(rsc->flags, pe_rsc_orphan)? " (ORPHAN)" : ""));
     }
     return rsc;
@@ -1944,7 +1949,7 @@ process_orphan_resource(xmlNode * rsc_entry, pe_node_t * node, pe_working_set_t 
     pe_resource_t *rsc = NULL;
     const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
 
-    crm_debug("Detected orphan resource %s on %s", rsc_id, node->details->uname);
+    crm_debug("Detected orphan resource %s on %s", rsc_id, pe__node_name(node));
     rsc = create_fake_resource(rsc_id, rsc_entry, data_set);
     if (rsc == NULL) {
         return NULL;
@@ -1972,7 +1977,8 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
 
     CRM_ASSERT(rsc);
     pe_rsc_trace(rsc, "Resource %s is %s on %s: on_fail=%s",
-                 rsc->id, role2text(rsc->role), node->details->uname, fail2text(on_fail));
+                 rsc->id, role2text(rsc->role), pe__node_name(node),
+                 fail2text(on_fail));
 
     /* process current state */
     if (rsc->role != RSC_ROLE_UNKNOWN) {
@@ -1986,7 +1992,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
                              rsc->id,
                              ((rsc->clone_name == NULL)? "" : " also known as "),
                              ((rsc->clone_name == NULL)? "" : rsc->clone_name),
-                             n->details->uname);
+                             pe__node_name(n));
                 g_hash_table_insert(iter->known_on, (gpointer) n->details->id, n);
             }
             if (pcmk_is_set(iter->flags, pe_rsc_unique)) {
@@ -2167,12 +2173,12 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
         if (pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
             if (pcmk_is_set(rsc->flags, pe_rsc_managed)) {
                 pcmk__config_warn("Detected active orphan %s running on %s",
-                                  rsc->id, node->details->uname);
+                                  rsc->id, pe__node_name(node));
             } else {
                 pcmk__config_warn("Resource '%s' must be stopped manually on "
                                   "%s because cluster is configured not to "
                                   "stop active orphans",
-                                  rsc->id, node->details->uname);
+                                  rsc->id, pe__node_name(node));
             }
         }
 
@@ -2248,34 +2254,39 @@ process_recurring(pe_node_t * node, pe_resource_t * rsc,
         counter++;
 
         if (node->details->online == FALSE) {
-            pe_rsc_trace(rsc, "Skipping %s/%s: node is offline", rsc->id, node->details->uname);
+            pe_rsc_trace(rsc, "Skipping %s on %s: node is offline",
+                         rsc->id, pe__node_name(node));
             break;
 
             /* Need to check if there's a monitor for role="Stopped" */
         } else if (start_index < stop_index && counter <= stop_index) {
-            pe_rsc_trace(rsc, "Skipping %s/%s: resource is not active", id, node->details->uname);
+            pe_rsc_trace(rsc, "Skipping %s on %s: resource is not active",
+                         id, pe__node_name(node));
             continue;
 
         } else if (counter < start_index) {
-            pe_rsc_trace(rsc, "Skipping %s/%s: old %d", id, node->details->uname, counter);
+            pe_rsc_trace(rsc, "Skipping %s on %s: old %d",
+                         id, pe__node_name(node), counter);
             continue;
         }
 
         crm_element_value_ms(rsc_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
         if (interval_ms == 0) {
-            pe_rsc_trace(rsc, "Skipping %s/%s: non-recurring", id, node->details->uname);
+            pe_rsc_trace(rsc, "Skipping %s on %s: non-recurring",
+                         id, pe__node_name(node));
             continue;
         }
 
         status = crm_element_value(rsc_op, XML_LRM_ATTR_OPSTATUS);
         if (pcmk__str_eq(status, "-1", pcmk__str_casei)) {
-            pe_rsc_trace(rsc, "Skipping %s/%s: status", id, node->details->uname);
+            pe_rsc_trace(rsc, "Skipping %s on %s: status",
+                         id, pe__node_name(node));
             continue;
         }
         task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
         /* create the action */
         key = pcmk__op_key(rsc->id, task, interval_ms);
-        pe_rsc_trace(rsc, "Creating %s/%s", key, node->details->uname);
+        pe_rsc_trace(rsc, "Creating %s on %s", key, pe__node_name(node));
         custom_action(rsc, key, task, node, TRUE, TRUE, data_set);
     }
 }
@@ -2342,7 +2353,7 @@ unpack_shutdown_lock(xmlNode *rsc_entry, pe_resource_t *rsc, pe_node_t *node,
             && (get_effective_time(data_set)
                 > (lock_time + data_set->shutdown_lock))) {
             pe_rsc_info(rsc, "Shutdown lock for %s on %s expired",
-                        rsc->id, node->details->uname);
+                        rsc->id, pe__node_name(node));
             pe__clear_resource_history(rsc, node, data_set);
         } else {
             rsc->lock_node = node;
@@ -2390,7 +2401,7 @@ unpack_lrm_resource(pe_node_t *node, xmlNode *lrm_resource,
         return NULL;
     }
     crm_trace("Unpacking " XML_LRM_TAG_RESOURCE " for %s on %s",
-              rsc_id, node->details->uname);
+              rsc_id, pe__node_name(node));
 
     // Build a list of individual lrm_rsc_op entries, so we can sort them
     for (rsc_op = first_named_child(lrm_resource, XML_LRM_TAG_RSC_OP);
@@ -2571,39 +2582,41 @@ set_node_score(gpointer key, gpointer value, gpointer user_data)
     node->weight = *score;
 }
 
-#define STATUS_PATH_MAX 1024
 static xmlNode *
 find_lrm_op(const char *resource, const char *op, const char *node, const char *source,
             int target_rc, pe_working_set_t *data_set)
 {
-    int offset = 0;
-    char xpath[STATUS_PATH_MAX];
+    GString *xpath = NULL;
     xmlNode *xml = NULL;
 
-    offset += snprintf(xpath + offset, STATUS_PATH_MAX - offset, "//node_state[@uname='%s']", node);
-    offset +=
-        snprintf(xpath + offset, STATUS_PATH_MAX - offset, "//" XML_LRM_TAG_RESOURCE "[@id='%s']",
-                 resource);
+    CRM_CHECK((resource != NULL) && (op != NULL) && (node != NULL),
+              return NULL);
+
+    xpath = g_string_sized_new(256);
+    pcmk__g_strcat(xpath,
+                   "//" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='", node, "']"
+                   "//" XML_LRM_TAG_RESOURCE
+                   "[@" XML_ATTR_ID "='", resource, "']"
+                   "/" XML_LRM_TAG_RSC_OP "[@" XML_LRM_ATTR_TASK "='", op, "'",
+                   NULL);
 
     /* Need to check against transition_magic too? */
-    if (source && pcmk__str_eq(op, CRMD_ACTION_MIGRATE, pcmk__str_casei)) {
-        offset +=
-            snprintf(xpath + offset, STATUS_PATH_MAX - offset,
-                     "/" XML_LRM_TAG_RSC_OP "[@operation='%s' and @migrate_target='%s']", op,
-                     source);
-    } else if (source && pcmk__str_eq(op, CRMD_ACTION_MIGRATED, pcmk__str_casei)) {
-        offset +=
-            snprintf(xpath + offset, STATUS_PATH_MAX - offset,
-                     "/" XML_LRM_TAG_RSC_OP "[@operation='%s' and @migrate_source='%s']", op,
-                     source);
+    if ((source != NULL) && (strcmp(op, CRMD_ACTION_MIGRATE) == 0)) {
+        pcmk__g_strcat(xpath,
+                       " and @" XML_LRM_ATTR_MIGRATE_TARGET "='", source, "']",
+                       NULL);
+
+    } else if ((source != NULL) && (strcmp(op, CRMD_ACTION_MIGRATED) == 0)) {
+        pcmk__g_strcat(xpath,
+                       " and @" XML_LRM_ATTR_MIGRATE_SOURCE "='", source, "']",
+                       NULL);
     } else {
-        offset +=
-            snprintf(xpath + offset, STATUS_PATH_MAX - offset,
-                     "/" XML_LRM_TAG_RSC_OP "[@operation='%s']", op);
+        g_string_append_c(xpath, ']');
     }
 
-    CRM_LOG_ASSERT(offset > 0);
-    xml = get_xpath_object(xpath, data_set->input, LOG_DEBUG);
+    xml = get_xpath_object((const char *) xpath->str, data_set->input,
+                           LOG_DEBUG);
+    g_string_free(xpath, TRUE);
 
     if (xml && target_rc >= 0) {
         int rc = PCMK_OCF_UNKNOWN_ERROR;
@@ -2622,19 +2635,23 @@ static xmlNode *
 find_lrm_resource(const char *rsc_id, const char *node_name,
                   pe_working_set_t *data_set)
 {
-    int offset = 0;
-    char xpath[STATUS_PATH_MAX];
+    GString *xpath = NULL;
     xmlNode *xml = NULL;
 
-    offset += snprintf(xpath + offset, STATUS_PATH_MAX - offset,
-                       "//node_state[@uname='%s']", node_name);
-    offset +=
-        snprintf(xpath + offset, STATUS_PATH_MAX - offset,
-                 "//" XML_LRM_TAG_RESOURCE "[@id='%s']", rsc_id);
+    CRM_CHECK((rsc_id != NULL) && (node_name != NULL), return NULL);
 
-    CRM_LOG_ASSERT(offset > 0);
-    xml = get_xpath_object(xpath, data_set->input, LOG_DEBUG);
+    xpath = g_string_sized_new(256);
+    pcmk__g_strcat(xpath,
+                   "//" XML_CIB_TAG_STATE
+                   "[@" XML_ATTR_UNAME "='", node_name, "']"
+                   "//" XML_LRM_TAG_RESOURCE
+                   "[@" XML_ATTR_ID "='", rsc_id, "']",
+                   NULL);
 
+    xml = get_xpath_object((const char *) xpath->str, data_set->input,
+                           LOG_DEBUG);
+
+    g_string_free(xpath, TRUE);
     return xml;
 }
 
@@ -3048,12 +3065,13 @@ record_failed_op(xmlNode *op, const pe_node_t *node,
         const char *uname = crm_element_value(xIter, XML_ATTR_UNAME);
 
         if(pcmk__str_eq(op_key, key, pcmk__str_casei) && pcmk__str_eq(uname, node->details->uname, pcmk__str_casei)) {
-            crm_trace("Skipping duplicate entry %s on %s", op_key, node->details->uname);
+            crm_trace("Skipping duplicate entry %s on %s",
+                      op_key, pe__node_name(node));
             return;
         }
     }
 
-    crm_trace("Adding entry %s on %s", op_key, node->details->uname);
+    crm_trace("Adding entry %s on %s", op_key, pe__node_name(node));
     crm_xml_add(op, XML_ATTR_UNAME, node->details->uname);
     crm_xml_add(op, XML_LRM_ATTR_RSCID, rsc->id);
     add_node_copy(data_set->failed, op);
@@ -3069,7 +3087,7 @@ static const char *get_op_key(xmlNode *xml_op)
 }
 
 static const char *
-last_change_str(xmlNode *xml_op)
+last_change_str(const xmlNode *xml_op)
 {
     time_t when;
     const char *when_s = NULL;
@@ -3207,14 +3225,14 @@ unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * x
                   "%s of %s on %s at %s " CRM_XS " rc=%d id=%s",
                   services_ocf_exitcode_str(rc),
                   (*exit_reason? ": " : ""), exit_reason,
-                  (is_probe? "probe" : task), rsc->id, node->details->uname,
+                  (is_probe? "probe" : task), rsc->id, pe__node_name(node),
                   last_change_str(xml_op), rc, ID(xml_op));
     } else {
         crm_warn("Unexpected result (%s%s%s) was recorded for "
                   "%s of %s on %s at %s " CRM_XS " rc=%d id=%s",
                  services_ocf_exitcode_str(rc),
                  (*exit_reason? ": " : ""), exit_reason,
-                 (is_probe? "probe" : task), rsc->id, node->details->uname,
+                 (is_probe? "probe" : task), rsc->id, pe__node_name(node),
                  last_change_str(xml_op), rc, ID(xml_op));
 
         if (is_probe && (rc != PCMK_OCF_OK)
@@ -3226,7 +3244,7 @@ unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * x
              */
             crm_notice("If it is not possible for %s to run on %s, see "
                        "the resource-discovery option for location constraints",
-                       rsc->id, node->details->uname);
+                       rsc->id, pe__node_name(node));
         }
 
         record_failed_op(xml_op, node, rsc, data_set);
@@ -3320,6 +3338,44 @@ unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * x
 
 /*!
  * \internal
+ * \brief Check whether a resource with a failed action can be recovered
+ *
+ * If resource action is a failed stop and fencing is not possible, mark the
+ * resource as unmanaged and blocked, since recovery cannot be done.
+ *
+ * \param[in,out] rsc          Resource with failed action
+ * \param[in]     node         Node where action failed
+ * \param[in]     task         Name of action that failed
+ * \param[in]     exit_status  Exit status of failed action (for logging only)
+ * \param[in]     xml_op       XML of failed action result (for logging only)
+ */
+static void
+check_recoverable(pe_resource_t *rsc, pe_node_t *node, const char *task,
+                  int exit_status, const xmlNode *xml_op)
+{
+    const char *exit_reason = NULL;
+
+    if (strcmp(task, CRMD_ACTION_STOP) != 0) {
+        return; // All actions besides stop are always recoverable
+    }
+    if (pe_can_fence(node->details->data_set, node)) {
+        return; // Failed stops are recoverable via fencing
+    }
+
+    exit_reason = crm_element_value(xml_op, XML_LRM_ATTR_EXIT_REASON);
+    pe_proc_err("No further recovery can be attempted for %s "
+                "because %s on %s failed (%s%s%s) at %s "
+                CRM_XS " rc=%d id=%s", rsc->id, task, pe__node_name(node),
+                services_ocf_exitcode_str(exit_status),
+                ((exit_reason == NULL)? "" : ": "), pcmk__s(exit_reason, ""),
+                last_change_str(xml_op), exit_status, ID(xml_op));
+
+    pe__clear_resource_flags(rsc, pe_rsc_managed);
+    pe__set_resource_flags(rsc, pe_rsc_block);
+}
+
+/*!
+ * \internal
  * \brief Remap informational monitor results and operation status
  *
  * For the monitor results, certain OCF codes are for providing extended information
@@ -3409,12 +3465,12 @@ remap_operation(xmlNode *xml_op, pe_resource_t *rsc, pe_node_t *node,
          */
         *status = PCMK_EXEC_ERROR;
         crm_warn("Expected result not found for %s on %s (corrupt or obsolete CIB?)",
-                 key, node->details->uname);
+                 key, pe__node_name(node));
 
     } else if (target_rc != *rc) {
         *status = PCMK_EXEC_ERROR;
         pe_rsc_debug(rsc, "%s on %s: expected %d (%s), got %d (%s%s%s)",
-                     key, node->details->uname,
+                     key, pe__node_name(node),
                      target_rc, services_ocf_exitcode_str(target_rc),
                      *rc, services_ocf_exitcode_str(*rc),
                      (*exit_reason? ": " : ""), exit_reason);
@@ -3425,7 +3481,7 @@ remap_operation(xmlNode *xml_op, pe_resource_t *rsc, pe_node_t *node,
             if (is_probe && (target_rc == PCMK_OCF_NOT_RUNNING)) {
                 *status = PCMK_EXEC_DONE;
                 pe_rsc_info(rsc, "Probe found %s active on %s at %s",
-                            rsc->id, node->details->uname,
+                            rsc->id, pe__node_name(node),
                             last_change_str(xml_op));
             }
             break;
@@ -3448,7 +3504,7 @@ remap_operation(xmlNode *xml_op, pe_resource_t *rsc, pe_node_t *node,
                 *status = PCMK_EXEC_DONE;
                 pe_rsc_info(rsc,
                             "Probe found %s active and promoted on %s at %s",
-                            rsc->id, node->details->uname,
+                            rsc->id, pe__node_name(node),
                             last_change_str(xml_op));
             }
             rsc->role = RSC_ROLE_PROMOTED;
@@ -3464,32 +3520,25 @@ remap_operation(xmlNode *xml_op, pe_resource_t *rsc, pe_node_t *node,
             *status = PCMK_EXEC_ERROR_FATAL;
             break;
 
-        case PCMK_OCF_UNIMPLEMENT_FEATURE: {
-            guint interval_ms = 0;
-            crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
+        case PCMK_OCF_UNIMPLEMENT_FEATURE:
+            {
+                guint interval_ms = 0;
+                crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS,
+                                     &interval_ms);
 
-            if (interval_ms > 0) {
-                *status = PCMK_EXEC_NOT_SUPPORTED;
-                break;
+                if (interval_ms == 0) {
+                    check_recoverable(rsc, node, task, *rc, xml_op);
+                    *status = PCMK_EXEC_ERROR_HARD;
+                } else {
+                    *status = PCMK_EXEC_NOT_SUPPORTED;
+                }
             }
-            // fall through
-        }
+            break;
 
         case PCMK_OCF_NOT_INSTALLED:
         case PCMK_OCF_INVALID_PARAM:
         case PCMK_OCF_INSUFFICIENT_PRIV:
-            if (!pe_can_fence(data_set, node)
-                && !strcmp(task, CRMD_ACTION_STOP)) {
-                /* If a stop fails and we can't fence, there's nothing else we can do */
-                pe_proc_err("No further recovery can be attempted for %s "
-                            "because %s on %s failed (%s%s%s) at %s "
-                            CRM_XS " rc=%d id=%s", rsc->id, task,
-                            node->details->uname, services_ocf_exitcode_str(*rc),
-                            (*exit_reason? ": " : ""), exit_reason,
-                            last_change_str(xml_op), *rc, ID(xml_op));
-                pe__clear_resource_flags(rsc, pe_rsc_managed);
-                pe__set_resource_flags(rsc, pe_rsc_block);
-            }
+            check_recoverable(rsc, node, task, *rc, xml_op);
             *status = PCMK_EXEC_ERROR_HARD;
             break;
 
@@ -3497,7 +3546,7 @@ remap_operation(xmlNode *xml_op, pe_resource_t *rsc, pe_node_t *node,
             if (*status == PCMK_EXEC_DONE) {
                 crm_info("Treating unknown exit status %d from %s of %s "
                          "on %s at %s as failure",
-                         *rc, task, rsc->id, node->details->uname,
+                         *rc, task, rsc->id, pe__node_name(node),
                          last_change_str(xml_op));
                 *status = PCMK_EXEC_ERROR;
             }
@@ -3820,7 +3869,7 @@ update_resource_state(pe_resource_t * rsc, pe_node_t * node, xmlNode * xml_op, c
         unpack_migrate_to_success(rsc, node, xml_op, data_set);
 
     } else if (rsc->role < RSC_ROLE_STARTED) {
-        pe_rsc_trace(rsc, "%s active on %s", rsc->id, node->details->uname);
+        pe_rsc_trace(rsc, "%s active on %s", rsc->id, pe__node_name(node));
         set_active(rsc);
     }
 
@@ -3910,12 +3959,14 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     }
 
     pe_rsc_trace(rsc, "Unpacking task %s/%s (call_id=%d, status=%d, rc=%d) on %s (role=%s)",
-                 task_key, task, task_id, status, rc, node->details->uname, role2text(rsc->role));
+                 task_key, task, task_id, status, rc, pe__node_name(node),
+                 role2text(rsc->role));
 
     if (node->details->unclean) {
-        pe_rsc_trace(rsc, "Node %s (where %s is running) is unclean."
-                     " Further action depends on the value of the stop's on-fail attribute",
-                     node->details->uname, rsc->id);
+        pe_rsc_trace(rsc,
+                     "%s is running on %s, which is unclean (further action "
+                     "depends on value of stop's on-fail attribute)",
+                     rsc->id, pe__node_name(node));
     }
 
     /* It should be possible to call remap_operation() first then call
@@ -3956,7 +4007,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
         if (interval_ms == 0) {
             crm_notice("Ignoring expired %s failure on %s "
                        CRM_XS " actual=%d expected=%d magic=%s",
-                       task_key, node->details->uname, rc, target_rc, magic);
+                       task_key, pe__node_name(node), rc, target_rc, magic);
             goto done;
 
         } else if(node->details->online && node->details->unclean == FALSE) {
@@ -3972,7 +4023,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
              */
             crm_notice("Rescheduling %s after failure expired on %s "
                        CRM_XS " actual=%d expected=%d magic=%s",
-                       task_key, node->details->uname, rc, target_rc, magic);
+                       task_key, pe__node_name(node), rc, target_rc, magic);
             crm_xml_add(xml_op, XML_LRM_ATTR_RESTART_DIGEST, "calculated-failure-timeout");
             goto done;
         }
@@ -3980,7 +4031,8 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 
     if (maskable_probe_failure) {
         crm_notice("Treating probe result '%s' for %s on %s as 'not running'",
-                   services_ocf_exitcode_str(old_rc), rsc->id, node->details->uname);
+                   services_ocf_exitcode_str(old_rc), rsc->id,
+                   pe__node_name(node));
         update_resource_state(rsc, node, xml_op, task, target_rc, *last_failure,
                               on_fail, data_set);
         crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
@@ -3995,7 +4047,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
             // Should never happen
             pe_err("Resource history contains cancellation '%s' "
                    "(%s of %s on %s at %s)",
-                   ID(xml_op), task, rsc->id, node->details->uname,
+                   ID(xml_op), task, rsc->id, pe__node_name(node),
                    last_change_str(xml_op));
             goto done;
 
@@ -4037,7 +4089,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 
         case PCMK_EXEC_DONE:
             pe_rsc_trace(rsc, "%s of %s on %s completed at %s " CRM_XS " id=%s",
-                         task, rsc->id, node->details->uname,
+                         task, rsc->id, pe__node_name(node),
                          last_change_str(xml_op), ID(xml_op));
             update_resource_state(rsc, node, xml_op, task, rc, *last_failure, on_fail, data_set);
             goto done;
@@ -4048,7 +4100,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                 crm_warn("Cannot ignore failed %s of %s on %s: "
                          "Resource agent doesn't exist "
                          CRM_XS " status=%d rc=%d id=%s",
-                         task, rsc->id, node->details->uname, status, rc,
+                         task, rsc->id, pe__node_name(node), status, rc,
                          ID(xml_op));
                 /* Also for printing it as "FAILED" by marking it as pe_rsc_failed later */
                 *on_fail = action_fail_migrate;
@@ -4094,7 +4146,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                  "succeeded " CRM_XS " rc=%d id=%s",
                  task, services_ocf_exitcode_str(rc),
                  (*exit_reason? ": " : ""), exit_reason, rsc->id,
-                 node->details->uname, last_change_str(xml_op), rc,
+                 pe__node_name(node), last_change_str(xml_op), rc,
                  ID(xml_op));
 
         update_resource_state(rsc, node, xml_op, task, target_rc, *last_failure,
@@ -4117,7 +4169,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
             do_crm_log(rc != PCMK_OCF_NOT_INSTALLED?LOG_ERR:LOG_NOTICE,
                        "Preventing %s from restarting on %s because "
                        "of hard failure (%s%s%s)" CRM_XS " rc=%d id=%s",
-                       parent->id, node->details->uname,
+                       parent->id, pe__node_name(node),
                        services_ocf_exitcode_str(rc),
                        (*exit_reason? ": " : ""), exit_reason,
                        rc, ID(xml_op));

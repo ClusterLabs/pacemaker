@@ -185,26 +185,40 @@ static void
 remove_core_file_limit(void)
 {
     struct rlimit cores;
-    int rc = getrlimit(RLIMIT_CORE, &cores);
 
-    if (rc < 0) {
-        crm_warn("Cannot determine current maximum core file size: %s",
-                 strerror(errno));
+    // Get current limits
+    if (getrlimit(RLIMIT_CORE, &cores) < 0) {
+        crm_notice("Unable to check system core file limits "
+                   "(consider ensuring the size is unlimited): %s",
+                   strerror(errno));
         return;
     }
 
-    if ((cores.rlim_max == 0) && (geteuid() == 0)) {
-        cores.rlim_max = RLIM_INFINITY;
-    } else {
-        crm_info("Maximum core file size is %llu bytes",
-                 (unsigned long long) cores.rlim_max);
+    // Check whether core dumps are disabled
+    if (cores.rlim_max == 0) {
+        if (geteuid() != 0) { // Yes, and there's nothing we can do about it
+            crm_notice("Core dumps are disabled (consider enabling them)");
+            return;
+        }
+        cores.rlim_max = RLIM_INFINITY; // Yes, but we're root, so enable them
     }
-    cores.rlim_cur = cores.rlim_max;
 
-    rc = setrlimit(RLIMIT_CORE, &cores);
-    if (rc < 0) {
-        crm_warn("Cannot raise system limit on core file size "
-                 "(consider doing so manually)");
+    // Raise soft limit to hard limit (if not already done)
+    if (cores.rlim_cur != cores.rlim_max) {
+        cores.rlim_cur = cores.rlim_max;
+        if (setrlimit(RLIMIT_CORE, &cores) < 0) {
+            crm_notice("Unable to raise system limit on core file size "
+                       "(consider doing so manually): %s",
+                       strerror(errno));
+            return;
+        }
+    }
+
+    if (cores.rlim_cur == RLIM_INFINITY) {
+        crm_trace("Core file size is unlimited");
+    } else {
+        crm_trace("Core file size is limited to %llu bytes",
+                  (unsigned long long) cores.rlim_cur);
     }
 }
 

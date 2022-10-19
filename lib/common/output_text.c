@@ -37,11 +37,13 @@ typedef struct private_data_s {
 
 static void
 text_free_priv(pcmk__output_t *out) {
-    private_data_t *priv = out->priv;
+    private_data_t *priv = NULL;
 
-    if (priv == NULL) {
+    if (out == NULL || out->priv == NULL) {
         return;
     }
+
+    priv = out->priv;
 
     g_queue_free(priv->parent_q);
     free(priv);
@@ -51,6 +53,8 @@ text_free_priv(pcmk__output_t *out) {
 static bool
 text_init(pcmk__output_t *out) {
     private_data_t *priv = NULL;
+
+    CRM_ASSERT(out != NULL);
 
     /* If text_init was previously called on this output struct, just return. */
     if (out->priv != NULL) {
@@ -70,6 +74,7 @@ text_init(pcmk__output_t *out) {
 
 static void
 text_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_dest) {
+    CRM_ASSERT(out != NULL && out->dest != NULL);
     fflush(out->dest);
 }
 
@@ -103,7 +108,7 @@ text_subprocess_output(pcmk__output_t *out, int exit_status,
 
 static void
 text_version(pcmk__output_t *out, bool extended) {
-    CRM_ASSERT(out != NULL);
+    CRM_ASSERT(out != NULL && out->dest != NULL);
 
     if (extended) {
         fprintf(out->dest, "Pacemaker %s (Build: %s): %s\n", PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
@@ -329,6 +334,7 @@ pcmk__formatted_vprintf(pcmk__output_t *out, const char *format, va_list args) {
     int len = 0;
 
     CRM_ASSERT(out != NULL);
+    CRM_CHECK(pcmk__str_eq(out->fmt_name, "text", pcmk__str_none), return);
 
     len = vfprintf(out->dest, format, args);
     CRM_ASSERT(len >= 0);
@@ -350,10 +356,7 @@ G_GNUC_PRINTF(2, 0)
 void
 pcmk__indented_vprintf(pcmk__output_t *out, const char *format, va_list args) {
     CRM_ASSERT(out != NULL);
-
-    if (!pcmk__str_eq(out->fmt_name, "text", pcmk__str_none)) {
-        return;
-    }
+    CRM_CHECK(pcmk__str_eq(out->fmt_name, "text", pcmk__str_none), return);
 
     if (fancy) {
         int level = 0;
@@ -414,7 +417,7 @@ pcmk__text_prompt(const char *prompt, bool echo, char **dest)
             *dest = NULL;
         }
 
-#if SSCANF_HAS_M
+#if HAVE_SSCANF_M
         rc = scanf("%ms", dest);
 #else
         *dest = calloc(1, 1024);

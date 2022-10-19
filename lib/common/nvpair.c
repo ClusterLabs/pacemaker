@@ -62,7 +62,7 @@ pcmk__new_nvpair(const char *name, const char *value)
  * \internal
  * \brief Free a name/value pair
  *
- * \param[in] nvpair  Name/value pair to free
+ * \param[in,out] nvpair  Name/value pair to free
  */
 static void
 pcmk__free_nvpair(gpointer data)
@@ -96,7 +96,7 @@ pcmk_prepend_nvpair(GSList *nvpairs, const char *name, const char *value)
 /*!
  * \brief Free a list of name/value pairs
  *
- * \param[in] list  List to free
+ * \param[in,out] list  List to free
  */
 void
 pcmk_free_nvpairs(GSList *nvpairs)
@@ -158,7 +158,7 @@ pcmk_sort_nvpairs(GSList *list)
  *       \c pcmk_free_nvpairs().
  */
 GSList *
-pcmk_xml_attrs2nvpairs(xmlNode *xml)
+pcmk_xml_attrs2nvpairs(const xmlNode *xml)
 {
     GSList *result = NULL;
 
@@ -194,7 +194,7 @@ pcmk__nvpair_add_xml_attr(gpointer data, gpointer user_data)
 /*!
  * \brief Add XML attributes based on a list of name/value pairs
  *
- * \param[in]     list  List of name/value pairs
+ * \param[in,out] list  List of name/value pairs
  * \param[in,out] xml   XML node to add attributes to
  */
 void
@@ -220,7 +220,7 @@ pcmk_nvpairs2xml_attrs(GSList *list, xmlNode *xml)
 int
 pcmk__scan_nvpair(const char *input, char **name, char **value)
 {
-#ifdef SSCANF_HAS_M
+#ifdef HAVE_SSCANF_M
     *name = NULL;
     *value = NULL;
     if (sscanf(input, "%m[^=]=%m[^\n]", name, value) <= 0) {
@@ -543,9 +543,9 @@ crm_element_value(const xmlNode *data, const char *name)
  *
  * This is like \c crm_element_value() but getting the value as an integer.
  *
- * \param[in] data   XML node to check
- * \param[in] name   Attribute name to check
- * \param[in] dest   Where to store element value
+ * \param[in]  data  XML node to check
+ * \param[in]  name  Attribute name to check
+ * \param[out] dest  Where to store element value
  *
  * \return 0 on success, -1 otherwise
  */
@@ -575,9 +575,9 @@ crm_element_value_int(const xmlNode *data, const char *name, int *dest)
  *
  * This is like \c crm_element_value() but getting the value as a long long int.
  *
- * \param[in] data   XML node to check
- * \param[in] name   Attribute name to check
- * \param[in] dest   Where to store element value
+ * \param[in]  data  XML node to check
+ * \param[in]  name  Attribute name to check
+ * \param[out] dest  Where to store element value
  *
  * \return 0 on success, -1 otherwise
  */
@@ -728,9 +728,9 @@ crm_element_value_copy(const xmlNode *data, const char *name)
  * name starts with a digit, this will instead add a \<param name=NAME
  * value=VALUE/> child to the XML (for legacy compatibility with heartbeat).
  *
- * \param[in] key        Key of hash table entry
- * \param[in] value      Value of hash table entry
- * \param[in] user_data  XML node
+ * \param[in]     key        Key of hash table entry
+ * \param[in]     value      Value of hash table entry
+ * \param[in,out] user_data  XML node
  */
 void
 hash2smartfield(gpointer key, gpointer value, gpointer user_data)
@@ -762,9 +762,9 @@ hash2smartfield(gpointer key, gpointer value, gpointer user_data)
  * and value, with an XML node passed as user data, and adds an XML attribute
  * with the specified name and value if it does not already exist.
  *
- * \param[in] key        Key of hash table entry
- * \param[in] value      Value of hash table entry
- * \param[in] user_data  XML node
+ * \param[in]     key        Key of hash table entry
+ * \param[in]     value      Value of hash table entry
+ * \param[in,out] user_data  XML node
  */
 void
 hash2field(gpointer key, gpointer value, gpointer user_data)
@@ -790,9 +790,9 @@ hash2field(gpointer key, gpointer value, gpointer user_data)
  * with the meta-attribute version of the specified name and value if it does
  * not already exist and if the name does not appear to be cluster-internal.
  *
- * \param[in] key        Key of hash table entry
- * \param[in] value      Value of hash table entry
- * \param[in] user_data  XML node
+ * \param[in]     key        Key of hash table entry
+ * \param[in]     value      Value of hash table entry
+ * \param[in,out] user_data  XML node
  */
 void
 hash2metafield(gpointer key, gpointer value, gpointer user_data)
@@ -822,10 +822,10 @@ hash2metafield(gpointer key, gpointer value, gpointer user_data)
 /*!
  * \brief Create an XML name/value pair
  *
- * \param[in] parent  If not \c NULL, make new XML node a child of this one
- * \param[in] id      If not \c NULL, use this as ID (otherwise auto-generate)
- * \param[in] name    Name to use
- * \param[in] value   Value to use
+ * \param[in,out] parent  If not \c NULL, make new XML node a child of this one
+ * \param[in]     id      Set this as XML ID (or NULL to auto-generate)
+ * \param[in]     name    Name to use
+ * \param[in]     value   Value to use
  *
  * \return New XML object on success, \c NULL otherwise
  */
@@ -863,9 +863,9 @@ crm_create_nvpair_xml(xmlNode *parent, const char *id, const char *name,
  * and value, with an XML node passed as the user data, and adds an \c nvpair
  * XML element with the specified name and value.
  *
- * \param[in] key        Key of hash table entry
- * \param[in] value      Value of hash table entry
- * \param[in] user_data  XML node
+ * \param[in]     key        Key of hash table entry
+ * \param[in]     value      Value of hash table entry
+ * \param[in,out] user_data  XML node
  */
 void
 hash2nvpair(gpointer key, gpointer value, gpointer user_data)
@@ -893,7 +893,7 @@ hash2nvpair(gpointer key, gpointer value, gpointer user_data)
  *       \c g_hash_table_destroy().
  */
 GHashTable *
-xml2list(xmlNode *parent)
+xml2list(const xmlNode *parent)
 {
     xmlNode *child = NULL;
     xmlAttrPtr pIter = NULL;
@@ -945,7 +945,8 @@ pcmk__xe_set_bool_attr(xmlNodePtr node, const char *name, bool value)
 }
 
 int
-pcmk__xe_get_bool_attr(xmlNodePtr node, const char *name, bool *value) {
+pcmk__xe_get_bool_attr(const xmlNode *node, const char *name, bool *value)
+{
     const char *xml_value = NULL;
     int ret, rc;
 
@@ -971,7 +972,7 @@ pcmk__xe_get_bool_attr(xmlNodePtr node, const char *name, bool *value) {
 }
 
 bool
-pcmk__xe_attr_is_true(xmlNodePtr node, const char *name)
+pcmk__xe_attr_is_true(const xmlNode *node, const char *name)
 {
     bool value = false;
     int rc;

@@ -40,11 +40,13 @@ typedef struct private_data_s {
 
 static void
 curses_free_priv(pcmk__output_t *out) {
-    private_data_t *priv = out->priv;
+    private_data_t *priv = NULL;
 
-    if (priv == NULL) {
+    if (out == NULL || out->priv == NULL) {
         return;
     }
+
+    priv = out->priv;
 
     g_queue_free(priv->parent_q);
     free(priv);
@@ -54,6 +56,8 @@ curses_free_priv(pcmk__output_t *out) {
 static bool
 curses_init(pcmk__output_t *out) {
     private_data_t *priv = NULL;
+
+    CRM_ASSERT(out != NULL);
 
     /* If curses_init was previously called on this output struct, just return. */
     if (out->priv != NULL) {
@@ -296,8 +300,7 @@ curses_prompt(const char *prompt, bool do_echo, char **dest)
 {
     int rc = OK;
 
-    CRM_ASSERT(prompt != NULL);
-    CRM_ASSERT(dest != NULL);
+    CRM_ASSERT(prompt != NULL && dest != NULL);
 
     /* This is backwards from the text version of this function on purpose.  We
      * disable echo by default in curses_init, so we need to enable it here if
@@ -394,9 +397,11 @@ G_GNUC_PRINTF(2, 0)
 void
 curses_indented_vprintf(pcmk__output_t *out, const char *format, va_list args) {
     int level = 0;
-    private_data_t *priv = out->priv;
+    private_data_t *priv = NULL;
 
-    CRM_ASSERT(priv != NULL);
+    CRM_ASSERT(out != NULL && out->priv != NULL);
+
+    priv = out->priv;
 
     level = g_queue_get_length(priv->parent_q);
 
@@ -440,8 +445,8 @@ cluster_maint_mode_console(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("cluster-status", "pe_working_set_t *", "crm_exit_t",
-                  "stonith_history_t *", "gboolean", "uint32_t", "uint32_t",
-                  "const char *", "GList *", "GList *")
+                  "stonith_history_t *", "enum pcmk__fence_history", "uint32_t",
+                  "uint32_t", "const char *", "GList *", "GList *")
 static int
 cluster_status_console(pcmk__output_t *out, va_list args) {
     int rc = pcmk_rc_no_output;
@@ -452,13 +457,14 @@ cluster_status_console(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("stonith-event", "stonith_history_t *", "int", "const char *",
-                  "uint32_t")
+PCMK__OUTPUT_ARGS("stonith-event", "stonith_history_t *", "bool", "bool",
+                  "const char *", "uint32_t")
 static int
 stonith_event_console(pcmk__output_t *out, va_list args)
 {
     stonith_history_t *event = va_arg(args, stonith_history_t *);
-    int full_history = va_arg(args, int);
+    bool full_history = va_arg(args, int);
+    bool completed_only G_GNUC_UNUSED = va_arg(args, int);
     const char *succeeded = va_arg(args, const char *);
     uint32_t show_opts = va_arg(args, uint32_t);
 

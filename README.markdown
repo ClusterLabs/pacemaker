@@ -39,7 +39,7 @@ development code, or download one of the official
 
 ## How do I install Pacemaker?
 
-See [INSTALL.md](https://github.com/ClusterLabs/pacemaker/blob/master/INSTALL.md).
+See [INSTALL.md](https://github.com/ClusterLabs/pacemaker/blob/main/INSTALL.md).
 
 ## What higher-level interfaces to Pacemaker are available?
 
@@ -65,7 +65,7 @@ a one based on pacemaker with corosync. See its documentation for details.
 
 ## How can I help?
 
-See [CONTRIBUTING.md](https://github.com/ClusterLabs/pacemaker/blob/master/CONTRIBUTING.md).
+See [CONTRIBUTING.md](https://github.com/ClusterLabs/pacemaker/blob/main/CONTRIBUTING.md).
 
 ## Where can I find more information about Pacemaker?
 

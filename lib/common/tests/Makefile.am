@@ -18,9 +18,15 @@ SUBDIRS = \
 	lists		\
 	nvpair 		\
 	operations	\
-	procfs		\
+	options		\
+	output 		\
 	results		\
 	scores		\
 	strings		\
 	utils		\
+	xml 		\
 	xpath
+
+if SUPPORT_PROCFS
+SUBDIRS	+=	procfs
+endif

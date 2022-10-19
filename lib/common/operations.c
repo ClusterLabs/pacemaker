@@ -263,7 +263,7 @@ decode_transition_magic(const char *magic, char **uuid, int *transition_id, int 
 
     CRM_CHECK(magic != NULL, return FALSE);
 
-#ifdef SSCANF_HAS_M
+#ifdef HAVE_SSCANF_M
     res = sscanf(magic, "%d:%d;%ms", &local_op_status, &local_op_rc, &key);
 #else
     key = calloc(1, strlen(magic) - 3); // magic must have >=4 other characters
@@ -462,11 +462,11 @@ did_rsc_op_fail(lrmd_event_data_t * op, int target_rc)
 /*!
  * \brief Create a CIB XML element for an operation
  *
- * \param[in] parent         If not NULL, make new XML node a child of this one
- * \param[in] prefix         Generate an ID using this prefix
- * \param[in] task           Operation task to set
- * \param[in] interval_spec  Operation interval to set
- * \param[in] timeout        If not NULL, operation timeout to set
+ * \param[in,out] parent         If not NULL, make new XML node a child of this
+ * \param[in]     prefix         Generate an ID using this prefix
+ * \param[in]     task           Operation task to set
+ * \param[in]     interval_spec  Operation interval to set
+ * \param[in]     timeout        If not NULL, operation timeout to set
  *
  * \return New XML object on success, NULL otherwise
  */

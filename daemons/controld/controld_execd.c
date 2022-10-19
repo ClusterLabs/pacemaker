@@ -40,10 +40,12 @@ static gboolean is_rsc_active(lrm_state_t * lrm_state, const char *rsc_id);
 static gboolean build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list);
 static gboolean stop_recurring_actions(gpointer key, gpointer value, gpointer user_data);
 
-static lrmd_event_data_t *construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op,
-                                       const char *rsc_id, const char *operation);
+static lrmd_event_data_t *construct_op(const lrm_state_t *lrm_state,
+                                       const xmlNode *rsc_op,
+                                       const char *rsc_id,
+                                       const char *operation);
 static void do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
-                          const char *operation, xmlNode *msg);
+                          xmlNode *msg, struct ra_metadata_s *md);
 
 static gboolean lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
                                          int log_level);
@@ -266,9 +268,9 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
  * \param[in] ack_sys    IPC system name to ack
  */
 static void
-send_task_ok_ack(lrm_state_t *lrm_state, ha_msg_input_t *input,
-                 const char *rsc_id, lrmd_rsc_info_t *rsc, const char *task,
-                 const char *ack_host, const char *ack_sys)
+send_task_ok_ack(const lrm_state_t *lrm_state, const ha_msg_input_t *input,
+                 const char *rsc_id, const lrmd_rsc_info_t *rsc,
+                 const char *task, const char *ack_host, const char *ack_sys)
 {
     lrmd_event_data_t *op = construct_op(lrm_state, input->xml, rsc_id, task);
 
@@ -502,11 +504,11 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
  * \internal
  * \brief Build XML and string of parameters meeting some criteria, for digest
  *
- * \param[in]  op              Executor event with parameter table to use
- * \param[in]  metadata        Parsed meta-data for executed resource agent
- * \param[in]  param_type      Flag used for selection criteria
- * \param[out] result          Will be set to newly created XML with selected
- *                             parameters as attributes
+ * \param[in]  op          Executor event with parameter table to use
+ * \param[in]  metadata    Parsed meta-data for executed resource agent
+ * \param[in]  param_type  Flag used for selection criteria
+ * \param[out] result      Will be set to newly created XML with selected
+ *                         parameters as attributes
  *
  * \return Newly allocated space-separated string of parameter names
  * \note Selection criteria varies by param_type: for the restart digest, we
@@ -515,17 +517,25 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
  *       secure digest, we want parameters that *are* marked private for the
  *       string, but parameters that are *not* marked private for the XML.
  * \note It is the caller's responsibility to free the string return value with
- *       free() and the XML result with free_xml().
+ *       \p g_string_free() and the XML result with \p free_xml().
  */
-static char *
+static GString *
 build_parameter_list(const lrmd_event_data_t *op,
                      const struct ra_metadata_s *metadata,
                      enum ra_param_flags_e param_type, xmlNode **result)
 {
-    char *list = NULL;
-    size_t len = 0;
+    GString *list = NULL;
 
     *result = create_xml_node(NULL, XML_TAG_PARAMS);
+
+    /* Consider all parameters only except private ones to be consistent with
+     * what scheduler does with calculate_secure_digest().
+     */
+    if (param_type == ra_param_private
+        && compare_version(fsa_our_dc_version, "3.16.0") >= 0) {
+        g_hash_table_foreach(op->params, hash2field, *result);
+        pcmk__filter_op_for_digest(*result);
+    }
 
     for (GList *iter = metadata->ra_params; iter != NULL; iter = iter->next) {
         struct ra_param_s *param = (struct ra_param_s *) iter->data;
@@ -555,9 +565,9 @@ build_parameter_list(const lrmd_event_data_t *op,
 
             if (list == NULL) {
                 // We will later search for " WORD ", so start list with a space
-                pcmk__add_word(&list, &len, " ");
+                pcmk__add_word(&list, 256, " ");
             }
-            pcmk__add_word(&list, &len, param->rap_name);
+            pcmk__add_word(&list, 0, param->rap_name);
 
         } else {
             crm_trace("Rejecting %s for %s", param->rap_name, ra_param_flag2text(param_type));
@@ -570,12 +580,16 @@ build_parameter_list(const lrmd_event_data_t *op,
                 crm_trace("Adding attr %s=%s to the xml result", param->rap_name, v);
                 crm_xml_add(*result, param->rap_name, v);
             }
+
+        } else {
+            crm_trace("Removing attr %s from the xml result", param->rap_name);
+            xml_remove_prop(*result, param->rap_name);
         }
     }
 
     if (list != NULL) {
         // We will later search for " WORD ", so end list with a space
-        pcmk__add_word(&list, &len, " ");
+        pcmk__add_word(&list, 0, " ");
     }
     return list;
 }
@@ -584,7 +598,7 @@ static void
 append_restart_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
                     xmlNode *update, const char *version)
 {
-    char *list = NULL;
+    GString *list = NULL;
     char *digest = NULL;
     xmlNode *restart = NULL;
 
@@ -617,22 +631,28 @@ append_restart_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
     digest = calculate_operation_digest(restart, version);
     /* Add "op-force-restart" and "op-restart-digest" to indicate the resource supports reload,
      * no matter if it actually supports any parameters with unique="1"). */
-    crm_xml_add(update, XML_LRM_ATTR_OP_RESTART, list? list: "");
+    crm_xml_add(update, XML_LRM_ATTR_OP_RESTART,
+                (list == NULL)? "" : (const char *) list->str);
     crm_xml_add(update, XML_LRM_ATTR_RESTART_DIGEST, digest);
 
-    crm_trace("%s: %s, %s", op->rsc_id, digest, list);
-    crm_log_xml_trace(restart, "restart digest source");
+    if ((list != NULL) && (list->len > 0)) {
+        crm_trace("%s: %s, %s", op->rsc_id, digest, (const char *) list->str);
+    } else {
+        crm_trace("%s: %s", op->rsc_id, digest);
+    }
 
+    if (list != NULL) {
+        g_string_free(list, TRUE);
+    }
     free_xml(restart);
     free(digest);
-    free(list);
 }
 
 static void
 append_secure_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
                    xmlNode *update, const char *version)
 {
-    char *list = NULL;
+    GString *list = NULL;
     char *digest = NULL;
     xmlNode *secure = NULL;
 
@@ -647,30 +667,29 @@ append_secure_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
 
     if (list != NULL) {
         digest = calculate_operation_digest(secure, version);
-        crm_xml_add(update, XML_LRM_ATTR_OP_SECURE, list);
+        crm_xml_add(update, XML_LRM_ATTR_OP_SECURE, (const char *) list->str);
         crm_xml_add(update, XML_LRM_ATTR_SECURE_DIGEST, digest);
 
-        crm_trace("%s: %s, %s", op->rsc_id, digest, list);
-        crm_log_xml_trace(secure, "secure digest source");
+        crm_trace("%s: %s, %s", op->rsc_id, digest, (const char *) list->str);
+        g_string_free(list, TRUE);
     } else {
         crm_trace("%s: no secure parameters", op->rsc_id);
     }
 
     free_xml(secure);
     free(digest);
-    free(list);
 }
 
 static gboolean
-build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_t * op,
-                       const char *node_name, const char *src)
+build_operation_update(xmlNode * parent, const lrmd_rsc_info_t *rsc,
+                       lrmd_event_data_t *op, const char *node_name,
+                       const char *src)
 {
     int target_rc = 0;
     xmlNode *xml_op = NULL;
     struct ra_metadata_s *metadata = NULL;
     const char *caller_version = NULL;
     lrm_state_t *lrm_state = NULL;
-    uint32_t metadata_source = controld_metadata_from_agent;
 
     if (op == NULL) {
         return FALSE;
@@ -678,18 +697,8 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
 
     target_rc = rsc_op_expected_rc(op);
 
-    /* there is a small risk in formerly mixed clusters that it will
-     * be sub-optimal.
-     *
-     * however with our upgrade policy, the update we send should
-     * still be completely supported anyway
-     */
     caller_version = g_hash_table_lookup(op->params, XML_ATTR_CRM_VERSION);
-    CRM_LOG_ASSERT(caller_version != NULL);
-
-    if(caller_version == NULL) {
-        caller_version = CRM_FEATURE_SET;
-    }
+    CRM_CHECK(caller_version != NULL, caller_version = CRM_FEATURE_SET);
 
     xml_op = pcmk__create_history_xml(parent, op, caller_version, target_rc,
                                       fsa_our_uname, src);
@@ -713,26 +722,17 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
         return TRUE;
     }
 
-    /* Getting meta-data from cache is OK unless this is a successful start
-     * action -- always refresh from the agent for those, in case the
-     * resource agent was updated.
+    /* Ideally the metadata is cached, and the agent is just a fallback.
      *
-     * @TODO Only refresh the meta-data after starts if the agent actually
-     * changed (using something like inotify, or a hash or modification time of
-     * the agent executable).
+     * @TODO Go through all callers and ensure they get metadata asynchronously
+     * first.
      */
-    if ((op->op_status != PCMK_EXEC_DONE) || (op->rc != target_rc)
-        || !pcmk__str_eq(op->op_type, CRMD_ACTION_START, pcmk__str_none)) {
-        metadata_source |= controld_metadata_from_cache;
-    }
-    metadata = controld_get_rsc_metadata(lrm_state, rsc, metadata_source);
+    metadata = controld_get_rsc_metadata(lrm_state, rsc,
+                                         controld_metadata_from_agent
+                                         |controld_metadata_from_cache);
     if (metadata == NULL) {
         return TRUE;
     }
-
-#if ENABLE_VERSIONED_ATTRS
-    crm_xml_add(xml_op, XML_ATTR_RA_VERSION, metadata->ra_version);
-#endif
 
     crm_trace("Including additional digests for %s:%s:%s",
               rsc->standard, rsc->provider, rsc->type);
@@ -811,19 +811,26 @@ build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list)
     return FALSE;
 }
 
-static xmlNode *
-do_lrm_query_internal(lrm_state_t *lrm_state, int update_flags)
+xmlNode *
+controld_query_executor_state(void)
 {
     xmlNode *xml_state = NULL;
     xmlNode *xml_data = NULL;
     xmlNode *rsc_list = NULL;
     crm_node_t *peer = NULL;
+    lrm_state_t *lrm_state = lrm_state_find(fsa_our_uname);
+
+    if (!lrm_state) {
+        crm_err("Could not find executor state for node %s", fsa_our_uname);
+        return NULL;
+    }
 
     peer = crm_get_peer_full(0, lrm_state->node_name, CRM_GET_PEER_ANY);
     CRM_CHECK(peer != NULL, return NULL);
 
-    xml_state = create_node_state_update(peer, update_flags, NULL,
-                                         __func__);
+    xml_state = create_node_state_update(peer,
+                                         node_update_cluster|node_update_peer,
+                                         NULL, __func__);
     if (xml_state == NULL) {
         return NULL;
     }
@@ -838,19 +845,6 @@ do_lrm_query_internal(lrm_state_t *lrm_state, int update_flags)
     crm_log_xml_trace(xml_state, "Current executor state");
 
     return xml_state;
-}
-
-xmlNode *
-controld_query_executor_state(const char *node_name)
-{
-    lrm_state_t *lrm_state = lrm_state_find(node_name);
-
-    if (!lrm_state) {
-        crm_err("Could not find executor state for node %s", node_name);
-        return NULL;
-    }
-    return do_lrm_query_internal(lrm_state,
-                                 node_update_cluster|node_update_peer);
 }
 
 /*!
@@ -985,11 +979,10 @@ delete_rsc_entry(lrm_state_t * lrm_state, ha_msg_input_t * input, const char *rs
  * \internal
  * \brief Erase an LRM history entry from the CIB, given the operation data
  *
- * \param[in] lrm_state  LRM state of the desired node
  * \param[in] op         Operation whose history should be deleted
  */
 static void
-erase_lrm_history_by_op(lrm_state_t *lrm_state, lrmd_event_data_t *op)
+erase_lrm_history_by_op(const lrmd_event_data_t *op)
 {
     xmlNode *xml_top = NULL;
 
@@ -1048,7 +1041,7 @@ erase_lrm_history_by_op(lrm_state_t *lrm_state, lrmd_event_data_t *op)
  * \param[in] call_id    If specified, delete entry only if it has this call ID
  */
 static void
-erase_lrm_history_by_id(lrm_state_t *lrm_state, const char *rsc_id,
+erase_lrm_history_by_id(const lrm_state_t *lrm_state, const char *rsc_id,
                         const char *key, const char *orig_op, int call_id)
 {
     char *op_xpath = NULL;
@@ -1241,10 +1234,10 @@ cancel_op_key(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *key, g
  * \internal
  * \brief Retrieve resource information from LRM
  *
- * \param[in]  lrm_state LRM connection to use
- * \param[in]  rsc_xml   XML containing resource configuration
- * \param[in]  do_create If true, register resource with LRM if not already
- * \param[out] rsc_info  Where to store resource information obtained from LRM
+ * \param[in,out]  lrm_state  Executor connection state to use
+ * \param[in]      rsc_xml    XML containing resource configuration
+ * \param[in]      do_create  If true, register resource if not already
+ * \param[out]     rsc_info   Where to store information obtained from executor
  *
  * \retval pcmk_ok   Success (and rsc_info holds newly allocated result)
  * \retval -EINVAL   Required information is missing from arguments
@@ -1255,8 +1248,8 @@ cancel_op_key(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *key, g
  * \note Caller is responsible for freeing result on success.
  */
 static int
-get_lrm_resource(lrm_state_t *lrm_state, xmlNode *rsc_xml, gboolean do_create,
-                 lrmd_rsc_info_t **rsc_info)
+get_lrm_resource(lrm_state_t *lrm_state, const xmlNode *rsc_xml,
+                 gboolean do_create, lrmd_rsc_info_t **rsc_info)
 {
     const char *id = ID(rsc_xml);
 
@@ -1431,14 +1424,14 @@ force_reprobe(lrm_state_t *lrm_state, const char *from_sys,
  * execution result, with specified error status (except for notify actions,
  * which will always be treated as successful).
  *
- * \param[in] lrm_state  Executor connection that action is for
- * \param[in] action     Action XML from request
- * \param[in] rc         Desired return code to use
- * \param[in] op_status  Desired operation status to use
- * \param[in] exit_reason  Human-friendly detail, if error
+ * \param[in,out] lrm_state    Executor connection that action is for
+ * \param[in]     action       Action XML from request
+ * \param[in]     rc           Desired return code to use
+ * \param[in]     op_status    Desired operation status to use
+ * \param[in]     exit_reason  Human-friendly detail, if error
  */
 static void
-synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action,
+synthesize_lrmd_failure(lrm_state_t *lrm_state, const xmlNode *action,
                         int op_status, enum ocf_exitcode rc,
                         const char *exit_reason)
 {
@@ -1486,7 +1479,7 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action,
  * \return LRM operation target node name (local node or Pacemaker Remote node)
  */
 static const char *
-lrm_op_target(xmlNode *xml)
+lrm_op_target(const xmlNode *xml)
 {
     const char *target = NULL;
 
@@ -1551,46 +1544,6 @@ fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
 
     controld_ack_event_directly(from_host, from_sys, NULL, op, ID(xml_rsc));
     lrmd_free_event(op);
-}
-
-static void
-handle_refresh_op(lrm_state_t *lrm_state, const char *user_name,
-                  const char *from_host, const char *from_sys)
-{
-    int rc = pcmk_ok;
-    xmlNode *fragment = do_lrm_query_internal(lrm_state, node_update_all);
-
-    fsa_cib_update(XML_CIB_TAG_STATUS, fragment, cib_quorum_override, rc, user_name);
-    crm_info("Forced a local resource history refresh: call=%d", rc);
-
-    if (!pcmk__str_eq(CRM_SYSTEM_CRMD, from_sys, pcmk__str_casei)) {
-        xmlNode *reply = create_request(CRM_OP_INVOKE_LRM, fragment, from_host,
-                                        from_sys, CRM_SYSTEM_LRMD,
-                                        fsa_our_uuid);
-
-        crm_debug("ACK'ing refresh from %s (%s)", from_sys, from_host);
-
-        if (relay_message(reply, TRUE) == FALSE) {
-            crm_log_xml_err(reply, "Unable to route reply");
-        }
-        free_xml(reply);
-    }
-
-    free_xml(fragment);
-}
-
-static void
-handle_query_op(xmlNode *msg, lrm_state_t *lrm_state)
-{
-    xmlNode *data = do_lrm_query_internal(lrm_state, node_update_all);
-    xmlNode *reply = create_reply(msg, data);
-
-    if (relay_message(reply, TRUE) == FALSE) {
-        crm_err("Unable to route reply");
-        crm_log_xml_err(reply, "reply");
-    }
-    free_xml(reply);
-    free_xml(data);
 }
 
 static void
@@ -1729,6 +1682,56 @@ do_lrm_delete(ha_msg_input_t *input, lrm_state_t *lrm_state,
                     user_name, input, unregister);
 }
 
+// User data for asynchronous metadata execution
+struct metadata_cb_data {
+    lrmd_rsc_info_t *rsc;   // Copy of resource information
+    xmlNode *input_xml;     // Copy of FSA input XML
+};
+
+static struct metadata_cb_data *
+new_metadata_cb_data(lrmd_rsc_info_t *rsc, xmlNode *input_xml)
+{
+    struct metadata_cb_data *data = NULL;
+
+    data = calloc(1, sizeof(struct metadata_cb_data));
+    CRM_ASSERT(data != NULL);
+    data->input_xml = copy_xml(input_xml);
+    data->rsc = lrmd_copy_rsc_info(rsc);
+    return data;
+}
+
+static void
+free_metadata_cb_data(struct metadata_cb_data *data)
+{
+    lrmd_free_rsc_info(data->rsc);
+    free_xml(data->input_xml);
+    free(data);
+}
+
+/*!
+ * \internal
+ * \brief Execute an action after metadata has been retrieved
+ *
+ * \param[in] pid        Ignored
+ * \param[in] result     Result of metadata action
+ * \param[in] user_data  Metadata callback data
+ */
+static void
+metadata_complete(int pid, const pcmk__action_result_t *result, void *user_data)
+{
+    struct metadata_cb_data *data = (struct metadata_cb_data *) user_data;
+
+    struct ra_metadata_s *md = NULL;
+    lrm_state_t *lrm_state = lrm_state_find(lrm_op_target(data->input_xml));
+
+    if ((lrm_state != NULL) && pcmk__result_ok(result)) {
+        md = controld_cache_metadata(lrm_state->metadata_cache, data->rsc,
+                                     result->action_stdout);
+    }
+    do_lrm_rsc_op(lrm_state, data->rsc, data->input_xml, md);
+    free_metadata_cb_data(data);
+}
+
 /*	 A_LRM_INVOKE	*/
 void
 do_lrm_invoke(long long action,
@@ -1791,10 +1794,12 @@ do_lrm_invoke(long long action,
                           from_sys);
 
     } else if (pcmk__str_eq(crm_op, CRM_OP_LRM_REFRESH, pcmk__str_none)) {
-        handle_refresh_op(lrm_state, user_name, from_host, from_sys);
-
-    } else if (pcmk__str_eq(crm_op, CRM_OP_LRM_QUERY, pcmk__str_none)) {
-        handle_query_op(input->msg, lrm_state);
+        /* @COMPAT This can only be sent by crm_resource --refresh on a
+         * Pacemaker Remote node running Pacemaker 1.1.9, which is extremely
+         * unlikely. It previously would cause the controller to re-write its
+         * resource history to the CIB. Just ignore it.
+         */
+        crm_notice("Ignoring refresh request from Pacemaker Remote 1.1.9 node");
 
     // @COMPAT DCs <1.1.14 in a rolling upgrade might schedule this op
     } else if (pcmk__str_eq(operation, CRM_OP_PROBED, pcmk__str_none)) {
@@ -1866,26 +1871,48 @@ do_lrm_invoke(long long action,
             do_lrm_delete(input, lrm_state, rsc, from_sys, from_host,
                           crm_rsc_delete, user_name);
 
-        } else if (pcmk__str_any_of(operation, CRMD_ACTION_RELOAD,
-                                    CRMD_ACTION_RELOAD_AGENT, NULL)) {
-            /* Pre-2.1.0 DCs will schedule reload actions only, and 2.1.0+ DCs
-             * will schedule reload-agent actions only. In either case, we need
-             * to map that to whatever the resource agent actually supports.
-             * Default to the OCF 1.1 name.
-             */
-            struct ra_metadata_s *md = NULL;
-            const char *reload_name = CRMD_ACTION_RELOAD_AGENT;
-
-            md = controld_get_rsc_metadata(lrm_state, rsc,
-                                           controld_metadata_from_cache);
-            if ((md != NULL)
-                && pcmk_is_set(md->ra_flags, ra_supports_legacy_reload)) {
-                reload_name = CRMD_ACTION_RELOAD;
-            }
-            do_lrm_rsc_op(lrm_state, rsc, reload_name, input->xml);
-
         } else {
-            do_lrm_rsc_op(lrm_state, rsc, operation, input->xml);
+            struct ra_metadata_s *md = NULL;
+
+            /* Getting metadata from cache is OK except for start actions --
+             * always refresh from the agent for those, in case the resource
+             * agent was updated.
+             *
+             * @TODO Only refresh metadata for starts if the agent actually
+             * changed (using something like inotify, or a hash or modification
+             * time of the agent executable).
+             */
+            if (strcmp(operation, CRMD_ACTION_START) != 0) {
+                md = controld_get_rsc_metadata(lrm_state, rsc,
+                                               controld_metadata_from_cache);
+            }
+
+            if ((md == NULL) && crm_op_needs_metadata(rsc->standard,
+                                                      operation)) {
+                /* Most likely, we'll need the agent metadata to record the
+                 * pending operation and the operation result. Get it now rather
+                 * than wait until then, so the metadata action doesn't eat into
+                 * the real action's timeout.
+                 *
+                 * @TODO Metadata is retrieved via direct execution of the
+                 * agent, which has a couple of related issues: the executor
+                 * should execute agents, not the controller; and metadata for
+                 * Pacemaker Remote nodes should be collected on those nodes,
+                 * not locally.
+                 */
+                struct metadata_cb_data *data = NULL;
+
+                data = new_metadata_cb_data(rsc, input->xml);
+                crm_info("Retrieving metadata for %s (%s%s%s:%s) asynchronously",
+                         rsc->id, rsc->standard,
+                         ((rsc->provider == NULL)? "" : ":"),
+                         ((rsc->provider == NULL)? "" : rsc->provider),
+                         rsc->type);
+                (void) lrmd__metadata_async(rsc, metadata_complete,
+                                            (void *) data);
+            } else {
+                do_lrm_rsc_op(lrm_state, rsc, input->xml, md);
+            }
         }
 
         lrmd_free_rsc_info(rsc);
@@ -1897,65 +1924,9 @@ do_lrm_invoke(long long action,
     }
 }
 
-#if ENABLE_VERSIONED_ATTRS
-static void
-resolve_versioned_parameters(lrm_state_t *lrm_state, const char *rsc_id,
-                             const xmlNode *rsc_op, GHashTable *params)
-{
-    /* Resource info *should* already be cached, so we don't get
-     * executor call */
-    lrmd_rsc_info_t *rsc = lrm_state_get_rsc_info(lrm_state, rsc_id, 0);
-    struct ra_metadata_s *metadata;
-
-    metadata = controld_get_rsc_metadata(lrm_state, rsc,
-                                         controld_metadata_from_cache);
-    if (metadata) {
-        xmlNode *versioned_attrs = NULL;
-        GHashTable *hash = NULL;
-        char *key = NULL;
-        char *value = NULL;
-        GHashTableIter iter;
-
-        versioned_attrs = first_named_child(rsc_op, XML_TAG_OP_VER_ATTRS);
-        hash = pe_unpack_versioned_parameters(versioned_attrs, metadata->ra_version);
-        g_hash_table_iter_init(&iter, hash);
-        while (g_hash_table_iter_next(&iter, (gpointer *) &key, (gpointer *) &value)) {
-            g_hash_table_iter_steal(&iter);
-            g_hash_table_replace(params, key, value);
-        }
-        g_hash_table_destroy(hash);
-
-        versioned_attrs = first_named_child(rsc_op, XML_TAG_OP_VER_META);
-        hash = pe_unpack_versioned_parameters(versioned_attrs, metadata->ra_version);
-        g_hash_table_iter_init(&iter, hash);
-        while (g_hash_table_iter_next(&iter, (gpointer *) &key, (gpointer *) &value)) {
-            g_hash_table_replace(params, crm_meta_name(key), strdup(value));
-
-            if (pcmk__str_eq(key, XML_ATTR_TIMEOUT, pcmk__str_casei)) {
-                pcmk__scan_min_int(value, &op->timeout, 0);
-            } else if (pcmk__str_eq(key, XML_OP_ATTR_START_DELAY, pcmk__str_casei)) {
-                pcmk__scan_min_int(value, &op->start_delay, 0);
-            }
-        }
-        g_hash_table_destroy(hash);
-
-        versioned_attrs = first_named_child(rsc_op, XML_TAG_RSC_VER_ATTRS);
-        hash = pe_unpack_versioned_parameters(versioned_attrs, metadata->ra_version);
-        g_hash_table_iter_init(&iter, hash);
-        while (g_hash_table_iter_next(&iter, (gpointer *) &key, (gpointer *) &value)) {
-            g_hash_table_iter_steal(&iter);
-            g_hash_table_replace(params, key, value);
-        }
-        g_hash_table_destroy(hash);
-    }
-
-    lrmd_free_rsc_info(rsc);
-}
-#endif
-
 static lrmd_event_data_t *
-construct_op(lrm_state_t *lrm_state, xmlNode *rsc_op, const char *rsc_id,
-             const char *operation)
+construct_op(const lrm_state_t *lrm_state, const xmlNode *rsc_op,
+             const char *rsc_id, const char *operation)
 {
     lrmd_event_data_t *op = NULL;
     const char *op_delay = NULL;
@@ -2020,14 +1991,6 @@ construct_op(lrm_state_t *lrm_state, xmlNode *rsc_op, const char *rsc_id,
         }
     }
 
-#if ENABLE_VERSIONED_ATTRS
-    if (lrm_state && !is_remote_lrmd_ra(NULL, NULL, rsc_id)
-        && !pcmk__strcase_any_of(op_type, CRMD_ACTION_METADATA, CRMD_ACTION_DELETE,
-                                 NULL)) {
-        resolve_versioned_parameters(lrm_state, rsc_id, rsc_op, params);
-    }
-#endif
-
     if (!pcmk__str_eq(operation, RSC_STOP, pcmk__str_casei)) {
         op->params = params;
 
@@ -2088,15 +2051,15 @@ construct_op(lrm_state_t *lrm_state, xmlNode *rsc_op, const char *rsc_id,
  * Reply with a synthesized event result directly, as opposed to going through
  * the executor.
  *
- * \param[in] to_host  Host to send result to
- * \param[in] to_sys   IPC name to send result to (NULL for transition engine)
- * \param[in] rsc      Type information about resource the result is for
- * \param[in] op       Event with result to send
- * \param[in] rsc_id   ID of resource the result is for
+ * \param[in]     to_host  Host to send result to
+ * \param[in]     to_sys   IPC name to send result (NULL for transition engine)
+ * \param[in]     rsc      Type information about resource the result is for
+ * \param[in,out] op       Event with result to send
+ * \param[in]     rsc_id   ID of resource the result is for
  */
 void
 controld_ack_event_directly(const char *to_host, const char *to_sys,
-                            lrmd_rsc_info_t *rsc, lrmd_event_data_t *op,
+                            const lrmd_rsc_info_t *rsc, lrmd_event_data_t *op,
                             const char *rsc_id)
 {
     xmlNode *reply = NULL;
@@ -2234,8 +2197,8 @@ record_pending_op(const char *node_name, lrmd_rsc_info_t *rsc, lrmd_event_data_t
 }
 
 static void
-do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
-              const char *operation, xmlNode *msg)
+do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
+              struct ra_metadata_s *md)
 {
     int rc;
     int call_id = 0;
@@ -2244,16 +2207,43 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
     lrmd_key_value_t *params = NULL;
     fsa_data_t *msg_data = NULL;
     const char *transition = NULL;
+    const char *operation = NULL;
     gboolean stop_recurring = FALSE;
     const char *nack_reason = NULL;
 
-    CRM_CHECK(rsc != NULL, return);
-    CRM_CHECK(operation != NULL, return);
+    CRM_CHECK((rsc != NULL) && (msg != NULL), return);
 
-    if (msg != NULL) {
-        transition = crm_element_value(msg, XML_ATTR_TRANSITION_KEY);
-        if (transition == NULL) {
-            crm_log_xml_err(msg, "Missing transition number");
+    operation = crm_element_value(msg, XML_LRM_ATTR_TASK);
+    CRM_CHECK(!pcmk__str_empty(operation), return);
+
+    transition = crm_element_value(msg, XML_ATTR_TRANSITION_KEY);
+    if (pcmk__str_empty(transition)) {
+        crm_log_xml_err(msg, "Missing transition number");
+    }
+
+    if (lrm_state == NULL) {
+        // This shouldn't be possible, but provide a failsafe just in case
+        crm_err("Cannot execute %s of %s: No executor connection "
+                CRM_XS " transition_key=%s",
+                operation, rsc->id, pcmk__s(transition, ""));
+        synthesize_lrmd_failure(NULL, msg, PCMK_EXEC_INVALID,
+                                PCMK_OCF_UNKNOWN_ERROR,
+                                "No executor connection");
+        return;
+    }
+
+    if (pcmk__str_any_of(operation, CRMD_ACTION_RELOAD,
+                         CRMD_ACTION_RELOAD_AGENT, NULL)) {
+        /* Pre-2.1.0 DCs will schedule reload actions only, and 2.1.0+ DCs
+         * will schedule reload-agent actions only. In either case, we need
+         * to map that to whatever the resource agent actually supports.
+         * Default to the OCF 1.1 name.
+         */
+        if ((md != NULL)
+            && pcmk_is_set(md->ra_flags, ra_supports_legacy_reload)) {
+            operation = CRMD_ACTION_RELOAD;
+        } else {
+            operation = CRMD_ACTION_RELOAD_AGENT;
         }
     }
 
@@ -2298,7 +2288,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
     crm_notice("Requesting local execution of %s operation for %s on %s "
                CRM_XS " transition_key=%s op_key=" PCMK__OP_FMT,
                crm_action_str(op->op_type, op->interval_ms), rsc->id, lrm_state->node_name,
-               transition, rsc->id, operation, op->interval_ms);
+               pcmk__s(transition, ""), rsc->id, operation, op->interval_ms);
 
     if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)
         && pcmk__str_eq(operation, RSC_START, pcmk__str_casei)) {
@@ -2632,43 +2622,44 @@ did_lrm_rsc_op_fail(lrm_state_t *lrm_state, const char * rsc_id,
  * \param[in] confirmed  Whether to log that graph action was confirmed
  */
 static void
-log_executor_event(lrmd_event_data_t *op, const char *op_key,
+log_executor_event(const lrmd_event_data_t *op, const char *op_key,
                    const char *node_name, int update_id, gboolean confirmed)
 {
     int log_level = LOG_ERR;
     GString *str = g_string_sized_new(100); // reasonable starting size
 
-    g_string_printf(str, "Result of %s operation for %s",
-                    crm_action_str(op->op_type, op->interval_ms), op->rsc_id);
+    pcmk__g_strcat(str,
+                   "Result of ", crm_action_str(op->op_type, op->interval_ms),
+                   " operation for ", op->rsc_id, NULL);
 
     if (node_name != NULL) {
-        g_string_append_printf(str, " on %s", node_name);
+        pcmk__g_strcat(str, " on ", node_name, NULL);
     }
 
     switch (op->op_status) {
         case PCMK_EXEC_DONE:
             log_level = LOG_NOTICE;
-            g_string_append_printf(str, ": %s",
-                                   services_ocf_exitcode_str(op->rc));
+            pcmk__g_strcat(str, ": ", services_ocf_exitcode_str(op->rc), NULL);
             break;
 
         case PCMK_EXEC_TIMEOUT:
-            g_string_append_printf(str, ": %s after %s",
-                                   pcmk_exec_status_str(op->op_status),
-                                   pcmk__readable_interval(op->timeout));
+            pcmk__g_strcat(str,
+                           ": ", pcmk_exec_status_str(op->op_status), " after ",
+                           pcmk__readable_interval(op->timeout), NULL);
             break;
 
         case PCMK_EXEC_CANCELLED:
             log_level = LOG_INFO;
             // Fall through
         default:
-            g_string_append_printf(str, ": %s",
-                                   pcmk_exec_status_str(op->op_status));
+            pcmk__g_strcat(str, ": ", pcmk_exec_status_str(op->op_status),
+                           NULL);
     }
 
     if ((op->exit_reason != NULL)
         && ((op->op_status != PCMK_EXEC_DONE) || (op->rc != PCMK_OCF_OK))) {
-        g_string_append_printf(str, " (%s)", op->exit_reason);
+
+        pcmk__g_strcat(str, " (", op->exit_reason, ")", NULL);
     }
 
     g_string_append(str, " " CRM_XS);
@@ -2699,7 +2690,7 @@ log_executor_event(lrmd_event_data_t *op, const char *op_key,
 
 void
 process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
-                  active_op_t *pending, xmlNode *action_xml)
+                  active_op_t *pending, const xmlNode *action_xml)
 {
     char *op_id = NULL;
     char *op_key = NULL;
@@ -2840,7 +2831,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
          * have been waiting for it to finish.
          */
         if (lrm_state) {
-            erase_lrm_history_by_op(lrm_state, op);
+            erase_lrm_history_by_op(op);
         }
 
         /* If the recurring operation had failed, the lrm_rsc_op is recorded as
@@ -2904,7 +2895,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
         } else if (rsc && (op->rc == PCMK_OCF_OK)) {
             char *metadata = unescape_newlines(op->output);
 
-            metadata_cache_update(lrm_state->metadata_cache, rsc, metadata);
+            controld_cache_metadata(lrm_state->metadata_cache, rsc, metadata);
             free(metadata);
         }
     }

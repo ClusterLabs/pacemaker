@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 the Pacemaker project contributors
+ * Copyright 2020-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -26,7 +26,8 @@ extern "C" {
  *
  * \return Newly allocated list
  */
-GList* pcmk__subtract_lists(GList *from, GList *items, GCompareFunc cmp);
+GList *pcmk__subtract_lists(GList *from, const GList *items,
+                            GCompareFunc cmp);
 
 #ifdef __cplusplus
 }

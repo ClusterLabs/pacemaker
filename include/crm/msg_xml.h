@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -46,8 +46,8 @@ extern "C" {
 /* These have been deprecated as CIB <clone> element attributes (aliases for
  * "promoted-max" and "promoted-node-max") since 2.0.0.
  */
-#define PCMK_XE_PROMOTED_MAX_LEGACY         "master-max"
-#define PCMK_XE_PROMOTED_NODE_MAX_LEGACY    "master-node-max"
+#define PCMK_XA_PROMOTED_MAX_LEGACY         "master-max"
+#define PCMK_XA_PROMOTED_NODE_MAX_LEGACY    "master-node-max"
 
 /*
  * Older constants that don't follow current naming
@@ -118,7 +118,6 @@ extern "C" {
 #  define XML_ATTR_CRM_VERSION		"crm_feature_set"
 #  define XML_ATTR_DIGEST		"digest"
 #  define XML_ATTR_VALIDATION		"validate-with"
-#  define XML_ATTR_RA_VERSION		"ra-version"
 
 #  define XML_ATTR_QUORUM_PANIC		"no-quorum-panic"
 #  define XML_ATTR_HAVE_QUORUM		"have-quorum"
@@ -210,9 +209,6 @@ extern "C" {
 #  define XML_TAG_ATTR_SETS	   	"instance_attributes"
 #  define XML_TAG_META_SETS	   	"meta_attributes"
 #  define XML_TAG_ATTRS			"attributes"
-#  define XML_TAG_RSC_VER_ATTRS	"rsc_versioned_attrs"
-#  define XML_TAG_OP_VER_ATTRS         "op_versioned_attrs"
-#  define XML_TAG_OP_VER_META          "op_versioned_meta"
 #  define XML_TAG_PARAMS		"parameters"
 #  define XML_TAG_PARAM			"param"
 #  define XML_TAG_UTILIZATION		"utilization"
@@ -343,6 +339,9 @@ extern "C" {
 #  define XML_RULE_ATTR_BOOLEAN_OP	"boolean-op"
 
 #  define XML_TAG_EXPRESSION		"expression"
+#  define PCMK_XE_DATE_EXPRESSION	"date_expression"
+#  define PCMK_XE_OP_EXPRESSION		"op_expression"
+#  define PCMK_XE_RSC_EXPRESSION	"rsc_expression"
 #  define XML_EXPR_ATTR_ATTRIBUTE	"attribute"
 #  define XML_EXPR_ATTR_OPERATION	"operation"
 #  define XML_EXPR_ATTR_VALUE		"value"
@@ -363,9 +362,13 @@ extern "C" {
 #  define XML_COLOC_ATTR_TARGET		"with-rsc"
 #  define XML_COLOC_ATTR_TARGET_ROLE	"with-rsc-role"
 #  define XML_COLOC_ATTR_NODE_ATTR	"node-attribute"
-#  define XML_COLOC_ATTR_SOURCE_INSTANCE	"rsc-instance"
-#  define XML_COLOC_ATTR_TARGET_INSTANCE	"with-rsc-instance"
 #  define XML_COLOC_ATTR_INFLUENCE          "influence"
+
+//! \deprecated Deprecated since 2.1.5
+#  define XML_COLOC_ATTR_SOURCE_INSTANCE	"rsc-instance"
+
+//! \deprecated Deprecated since 2.1.5
+#  define XML_COLOC_ATTR_TARGET_INSTANCE	"with-rsc-instance"
 
 #  define XML_LOC_ATTR_SOURCE           "rsc"
 #  define XML_LOC_ATTR_SOURCE_PATTERN   "rsc-pattern"
@@ -374,9 +377,13 @@ extern "C" {
 #  define XML_ORDER_ATTR_THEN		"then"
 #  define XML_ORDER_ATTR_FIRST_ACTION	"first-action"
 #  define XML_ORDER_ATTR_THEN_ACTION	"then-action"
-#  define XML_ORDER_ATTR_FIRST_INSTANCE	"first-instance"
-#  define XML_ORDER_ATTR_THEN_INSTANCE	"then-instance"
 #  define XML_ORDER_ATTR_KIND		"kind"
+
+//! \deprecated Deprecated since 2.1.5
+#  define XML_ORDER_ATTR_FIRST_INSTANCE	"first-instance"
+
+//! \deprecated Deprecated since 2.1.5
+#  define XML_ORDER_ATTR_THEN_INSTANCE	"then-instance"
 
 #  define XML_TICKET_ATTR_TICKET	"ticket"
 #  define XML_TICKET_ATTR_LOSS_POLICY	"loss-policy"

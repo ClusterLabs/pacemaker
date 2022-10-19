@@ -48,7 +48,7 @@
       <transient_attributes id="21c624bd-c426-43dc-9665-bbfb92054bcd">
         <instance_attributes id="status-21c624bd-c426-43dc-9665-bbfb92054bcd">
           <nvpair id="status-21c624bd-c426-43dc-9665-bbfb92054bcd-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-21c624bd-c426-43dc-9665-bbfb92054bcd-master-dummy:0" name="master-dummy:0" value="10"/>
+          <nvpair id="status-21c624bd-c426-43dc-9665-bbfb92054bcd-promoted-dummy:0" name="master-dummy:0" value="10"/>
           <nvpair id="status-21c624bd-c426-43dc-9665-bbfb92054bcd-fail-count-dummy:0" name="fail-count-dummy:0" value="1"/>
           <nvpair id="status-21c624bd-c426-43dc-9665-bbfb92054bcd-last-failure-dummy:0" name="last-failure-dummy:0" value="1357810019"/>
         </instance_attributes>
@@ -67,7 +67,7 @@
       <transient_attributes id="3f6ec88d-ee47-4f63-bfeb-652b8dd96027">
         <instance_attributes id="status-3f6ec88d-ee47-4f63-bfeb-652b8dd96027">
           <nvpair id="status-3f6ec88d-ee47-4f63-bfeb-652b8dd96027-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-3f6ec88d-ee47-4f63-bfeb-652b8dd96027-master-dummy:1" name="master-dummy:1" value="5"/>
+          <nvpair id="status-3f6ec88d-ee47-4f63-bfeb-652b8dd96027-promoted-dummy:1" name="master-dummy:1" value="5"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="3f6ec88d-ee47-4f63-bfeb-652b8dd96027">

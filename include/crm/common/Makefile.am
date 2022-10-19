@@ -40,6 +40,7 @@ noinst_HEADERS = acl_internal.h 	\
 				 cmdline_internal.h	\
 				 health_internal.h	\
 				 internal.h		\
+				 io_internal.h		\
 				 ipc_internal.h		\
 				 iso8601_internal.h	\
 				 lists_internal.h	\
@@ -50,4 +51,5 @@ noinst_HEADERS = acl_internal.h 	\
 				 remote_internal.h	\
 				 results_internal.h	\
 				 strings_internal.h	\
+				 unittest_internal.h \
 				 xml_internal.h

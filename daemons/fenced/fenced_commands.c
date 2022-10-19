@@ -37,7 +37,7 @@
 
 GHashTable *device_list = NULL;
 GHashTable *topology = NULL;
-GList *cmd_list = NULL;
+static GList *cmd_list = NULL;
 
 static GHashTable *fenced_handlers = NULL;
 
@@ -61,6 +61,8 @@ struct device_search_s {
     void (*callback) (GList * devices, void *user_data);
     /* devices capable of performing requested action (or off if remapping) */
     GList *capable;
+    /* Whether to perform searches that support the action */
+    uint32_t support_action_only;
 };
 
 static gboolean stonith_device_dispatch(gpointer user_data);
@@ -74,7 +76,7 @@ static void search_devices_record_result(struct device_search_s *search, const c
 
 static int get_agent_metadata(const char *agent, xmlNode **metadata);
 static void read_action_metadata(stonith_device_t *device);
-static enum fenced_target_by unpack_level_kind(xmlNode *level);
+static enum fenced_target_by unpack_level_kind(const xmlNode *level);
 
 typedef struct async_command_s {
 
@@ -85,7 +87,7 @@ typedef struct async_command_s {
     int default_timeout; /* seconds */
     int timeout; /* seconds */
 
-    int start_delay; /* seconds */
+    int start_delay; // seconds (-1 means disable static/random fencing delays)
     int delay_id;
 
     char *op;
@@ -94,13 +96,13 @@ typedef struct async_command_s {
     char *client_name;
     char *remote_op_id;
 
-    char *victim;
-    uint32_t victim_nodeid;
+    char *target;
+    uint32_t target_nodeid;
     char *action;
     char *device;
 
     GList *device_list;
-    GList *device_next;
+    GList *next_device_iter; // device_list entry for next device to execute
 
     void *internal_user_data;
     void (*done_cb) (int pid, const pcmk__action_result_t *result,
@@ -115,18 +117,18 @@ typedef struct async_command_s {
     stonith_device_t *activating_on;
 } async_command_t;
 
-static xmlNode *construct_async_reply(async_command_t *cmd,
+static xmlNode *construct_async_reply(const async_command_t *cmd,
                                       const pcmk__action_result_t *result);
 
 static gboolean
-is_action_required(const char *action, stonith_device_t *device)
+is_action_required(const char *action, const stonith_device_t *device)
 {
-    return device && device->automatic_unfencing && pcmk__str_eq(action, "on",
-                                                                 pcmk__str_casei);
+    return (device != NULL) && device->automatic_unfencing
+           && pcmk__str_eq(action, "on", pcmk__str_none);
 }
 
 static int
-get_action_delay_max(stonith_device_t * device, const char * action)
+get_action_delay_max(const stonith_device_t *device, const char *action)
 {
     const char *value = NULL;
     int delay_max = 0;
@@ -144,7 +146,8 @@ get_action_delay_max(stonith_device_t * device, const char * action)
 }
 
 static int
-get_action_delay_base(stonith_device_t *device, const char *action, const char *victim)
+get_action_delay_base(const stonith_device_t *device, const char *action,
+                      const char *target)
 {
     char *hash_value = NULL;
     int delay_base = 0;
@@ -161,7 +164,7 @@ get_action_delay_base(stonith_device_t *device, const char *action, const char *
 
         CRM_ASSERT(value != NULL);
 
-        if (victim) {
+        if (target != NULL) {
             for (char *val = strtok(value, "; \t"); val != NULL; val = strtok(NULL, "; \t")) {
                 char *mapval = strchr(val, ':');
 
@@ -170,9 +173,10 @@ get_action_delay_base(stonith_device_t *device, const char *action, const char *
                     continue;
                 }
 
-                if (mapval != val && strncasecmp(victim, val, (size_t)(mapval - val)) == 0) {
+                if (mapval != val && strncasecmp(target, val, (size_t)(mapval - val)) == 0) {
                     value = mapval + 1;
-                    crm_debug("pcmk_delay_base mapped to %s for %s", value, victim);
+                    crm_debug("pcmk_delay_base mapped to %s for %s",
+                              value, target);
                     break;
                 }
             }
@@ -209,7 +213,8 @@ get_action_delay_base(stonith_device_t *device, const char *action, const char *
  *       the device is registered, whether by CIB change or API call.
  */
 static int
-get_action_timeout(stonith_device_t * device, const char *action, int default_timeout)
+get_action_timeout(const stonith_device_t *device, const char *action,
+                   int default_timeout)
 {
     if (action && device && device->params) {
         char buffer[64] = { 0, };
@@ -218,7 +223,7 @@ get_action_timeout(stonith_device_t * device, const char *action, int default_ti
         /* If "reboot" was requested but the device does not support it,
          * we will remap to "off", so check timeout for "off" instead
          */
-        if (pcmk__str_eq(action, "reboot", pcmk__str_casei)
+        if (pcmk__str_eq(action, "reboot", pcmk__str_none)
             && !pcmk_is_set(device->flags, st_device_supports_reboot)) {
             crm_trace("%s doesn't support reboot, using timeout for off instead",
                       device->id);
@@ -233,6 +238,67 @@ get_action_timeout(stonith_device_t * device, const char *action, int default_ti
         }
     }
     return default_timeout;
+}
+
+/*!
+ * \internal
+ * \brief Get the currently executing device for a fencing operation
+ *
+ * \param[in] cmd  Fencing operation to check
+ *
+ * \return Currently executing device for \p cmd if any, otherwise NULL
+ */
+static stonith_device_t *
+cmd_device(const async_command_t *cmd)
+{
+    if ((cmd == NULL) || (cmd->device == NULL) || (device_list == NULL)) {
+        return NULL;
+    }
+    return g_hash_table_lookup(device_list, cmd->device);
+}
+
+/*!
+ * \internal
+ * \brief Return the configured reboot action for a given device
+ *
+ * \param[in] device_id  Device ID
+ *
+ * \return Configured reboot action for \p device_id
+ */
+const char *
+fenced_device_reboot_action(const char *device_id)
+{
+    const char *action = NULL;
+
+    if ((device_list != NULL) && (device_id != NULL)) {
+        stonith_device_t *device = g_hash_table_lookup(device_list, device_id);
+
+        if ((device != NULL) && (device->params != NULL)) {
+            action = g_hash_table_lookup(device->params, "pcmk_reboot_action");
+        }
+    }
+    return pcmk__s(action, "reboot");
+}
+
+/*!
+ * \internal
+ * \brief Check whether a given device supports the "on" action
+ *
+ * \param[in] device_id  Device ID
+ *
+ * \return true if \p device_id supports "on", otherwise false
+ */
+bool
+fenced_device_supports_on(const char *device_id)
+{
+    if ((device_list != NULL) && (device_id != NULL)) {
+        stonith_device_t *device = g_hash_table_lookup(device_list, device_id);
+
+        if (device != NULL) {
+            return pcmk_is_set(device->flags, st_device_supports_on);
+        }
+    }
+    return false;
 }
 
 static void
@@ -251,7 +317,7 @@ free_async_command(async_command_t * cmd)
     g_list_free_full(cmd->device_list, free);
     free(cmd->device);
     free(cmd->action);
-    free(cmd->victim);
+    free(cmd->target);
     free(cmd->remote_op_id);
     free(cmd->client);
     free(cmd->client_name);
@@ -260,38 +326,61 @@ free_async_command(async_command_t * cmd)
     free(cmd);
 }
 
+/*!
+ * \internal
+ * \brief Create a new asynchronous fencing operation from request XML
+ *
+ * \param[in] msg  Fencing request XML (from IPC or CPG)
+ *
+ * \return Newly allocated fencing operation on success, otherwise NULL
+ *
+ * \note This asserts on memory errors, so a NULL return indicates an
+ *       unparseable message.
+ */
 static async_command_t *
-create_async_command(xmlNode * msg)
+create_async_command(xmlNode *msg)
 {
+    xmlNode *op = NULL;
     async_command_t *cmd = NULL;
-    xmlNode *op = get_xpath_object("//@" F_STONITH_ACTION, msg, LOG_ERR);
-    const char *action = crm_element_value(op, F_STONITH_ACTION);
 
-    CRM_CHECK(action != NULL, crm_log_xml_warn(msg, "NoAction"); return NULL);
+    if (msg == NULL) {
+        return NULL;
+    }
 
-    crm_log_xml_trace(msg, "Command");
+    op = get_xpath_object("//@" F_STONITH_ACTION, msg, LOG_ERR);
+    if (op == NULL) {
+        return NULL;
+    }
+
     cmd = calloc(1, sizeof(async_command_t));
+    CRM_ASSERT(cmd != NULL);
+
+    // All messages must include these
+    cmd->action = crm_element_value_copy(op, F_STONITH_ACTION);
+    cmd->op = crm_element_value_copy(msg, F_STONITH_OPERATION);
+    cmd->client = crm_element_value_copy(msg, F_STONITH_CLIENTID);
+    if ((cmd->action == NULL) || (cmd->op == NULL) || (cmd->client == NULL)) {
+        free_async_command(cmd);
+        return NULL;
+    }
+
     crm_element_value_int(msg, F_STONITH_CALLID, &(cmd->id));
     crm_element_value_int(msg, F_STONITH_CALLOPTS, &(cmd->options));
+    crm_element_value_int(msg, F_STONITH_DELAY, &(cmd->start_delay));
     crm_element_value_int(msg, F_STONITH_TIMEOUT, &(cmd->default_timeout));
     cmd->timeout = cmd->default_timeout;
-    // Value -1 means disable any static/random fencing delays
-    crm_element_value_int(msg, F_STONITH_DELAY, &(cmd->start_delay));
 
     cmd->origin = crm_element_value_copy(msg, F_ORIG);
     cmd->remote_op_id = crm_element_value_copy(msg, F_STONITH_REMOTE_OP_ID);
-    cmd->client = crm_element_value_copy(msg, F_STONITH_CLIENTID);
     cmd->client_name = crm_element_value_copy(msg, F_STONITH_CLIENTNAME);
-    cmd->op = crm_element_value_copy(msg, F_STONITH_OPERATION);
-    cmd->action = strdup(action);
-    cmd->victim = crm_element_value_copy(op, F_STONITH_TARGET);
+    cmd->target = crm_element_value_copy(op, F_STONITH_TARGET);
     cmd->device = crm_element_value_copy(op, F_STONITH_DEVICE);
 
-    CRM_CHECK(cmd->op != NULL, crm_log_xml_warn(msg, "NoOp"); free_async_command(cmd); return NULL);
-    CRM_CHECK(cmd->client != NULL, crm_log_xml_warn(msg, "NoClient"));
-
     cmd->done_cb = st_child_done;
+
+    // Track in global command list
     cmd_list = g_list_append(cmd_list, cmd);
+
     return cmd;
 }
 
@@ -345,9 +434,8 @@ fork_cb(int pid, void *user_data)
     CRM_ASSERT(device);
     crm_debug("Operation '%s' [%d]%s%s using %s now running with %ds timeout",
               cmd->action, pid,
-              ((cmd->victim == NULL)? "" : " targeting "),
-              ((cmd->victim == NULL)? "" : cmd->victim),
-              device->id, cmd->timeout);
+              ((cmd->target == NULL)? "" : " targeting "),
+              pcmk__s(cmd->target, ""), device->id, cmd->timeout);
     cmd->active_on = device;
     cmd->activating_on = NULL;
 }
@@ -382,10 +470,10 @@ get_agent_metadata_cb(gpointer data) {
  * \internal
  * \brief Call a command's action callback for an internal (not library) result
  *
- * \param[in] cmd               Command to report result for
- * \param[in] execution_status  Execution status to use for result
- * \param[in] exit_status       Exit status to use for result
- * \param[in] exit_reason       Exit reason to use for result
+ * \param[in,out] cmd               Command to report result for
+ * \param[in]     execution_status  Execution status to use for result
+ * \param[in]     exit_status       Exit status to use for result
+ * \param[in]     exit_reason       Exit reason to use for result
  */
 static void
 report_internal_result(async_command_t *cmd, int exit_status,
@@ -431,8 +519,8 @@ stonith_device_execute(stonith_device_t * device)
             crm_trace("Operation '%s'%s%s using %s was asked to run too early, "
                       "waiting for start delay of %ds",
                       pending_op->action,
-                      ((pending_op->victim == NULL)? "" : " targeting "),
-                      ((pending_op->victim == NULL)? "" : pending_op->victim),
+                      ((pending_op->target == NULL)? "" : " targeting "),
+                      pcmk__s(pending_op->target, ""),
                       device->id, pending_op->start_delay);
             continue;
         }
@@ -466,7 +554,7 @@ stonith_device_execute(stonith_device_t * device)
 #if SUPPORT_CIBSECRETS
     exec_rc = pcmk__substitute_secrets(device->id, device->params);
     if (exec_rc != pcmk_rc_ok) {
-        if (pcmk__str_eq(cmd->action, "stop", pcmk__str_casei)) {
+        if (pcmk__str_eq(cmd->action, "stop", pcmk__str_none)) {
             crm_info("Proceeding with stop operation for %s "
                      "despite being unable to load CIB secrets (%s)",
                      device->id, pcmk_rc_str(exec_rc));
@@ -482,14 +570,13 @@ stonith_device_execute(stonith_device_t * device)
 #endif
 
     action_str = cmd->action;
-    if (pcmk__str_eq(cmd->action, "reboot", pcmk__str_casei)
+    if (pcmk__str_eq(cmd->action, "reboot", pcmk__str_none)
         && !pcmk_is_set(device->flags, st_device_supports_reboot)) {
 
         crm_notice("Remapping 'reboot' action%s%s using %s to 'off' "
                    "because agent '%s' does not support reboot",
-                   ((cmd->victim == NULL)? "" : " targeting "),
-                   ((cmd->victim == NULL)? "" : cmd->victim),
-                   device->id, device->agent);
+                   ((cmd->target == NULL)? "" : " targeting "),
+                   pcmk__s(cmd->target, ""), device->id, device->agent);
         action_str = "off";
     }
 
@@ -500,18 +587,15 @@ stonith_device_execute(stonith_device_t * device)
         host_arg = "plug";
     }
 
-    action = stonith_action_create(device->agent,
-                                   action_str,
-                                   cmd->victim,
-                                   cmd->victim_nodeid,
-                                   cmd->timeout, device->params,
-                                   device->aliases, host_arg);
+    action = stonith__action_create(device->agent, action_str, cmd->target,
+                                    cmd->target_nodeid, cmd->timeout,
+                                    device->params, device->aliases, host_arg);
 
     /* for async exec, exec_rc is negative for early error exit
        otherwise handling of success/errors is done via callbacks */
     cmd->activating_on = device;
-    exec_rc = stonith_action_execute_async(action, (void *)cmd,
-                                           cmd->done_cb, fork_cb);
+    exec_rc = stonith__execute_async(action, (void *)cmd, cmd->done_cb,
+                                     fork_cb);
     if (exec_rc < 0) {
         cmd->activating_on = NULL;
         cmd->done_cb(0, stonith__action_result(action), cmd);
@@ -538,11 +622,9 @@ static gboolean
 start_delay_helper(gpointer data)
 {
     async_command_t *cmd = data;
-    stonith_device_t *device = NULL;
+    stonith_device_t *device = cmd_device(cmd);
 
     cmd->delay_id = 0;
-    device = cmd->device ? g_hash_table_lookup(device_list, cmd->device) : NULL;
-
     if (device) {
         mainloop_set_trigger(device->work);
     }
@@ -564,10 +646,10 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
         free(cmd->device);
     }
 
-    if (device->include_nodeid && cmd->victim) {
-        crm_node_t *node = crm_get_peer(0, cmd->victim);
+    if (device->include_nodeid && (cmd->target != NULL)) {
+        crm_node_t *node = crm_get_peer(0, cmd->target);
 
-        cmd->victim_nodeid = node->id;
+        cmd->target_nodeid = node->id;
     }
 
     cmd->device = strdup(device->id);
@@ -577,12 +659,14 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
         crm_debug("Scheduling '%s' action%s%s using %s for remote peer %s "
                   "with op id %.8s and timeout %ds",
                   cmd->action,
-                  cmd->victim ? " targeting " : "", cmd->victim ? cmd->victim : "",
+                  (cmd->target == NULL)? "" : " targeting ",
+                  pcmk__s(cmd->target, ""),
                   device->id, cmd->origin, cmd->remote_op_id, cmd->timeout);
     } else {
         crm_debug("Scheduling '%s' action%s%s using %s for %s with timeout %ds",
                   cmd->action,
-                  cmd->victim ? " targeting " : "", cmd->victim ? cmd->victim : "",
+                  (cmd->target == NULL)? "" : " targeting ",
+                  pcmk__s(cmd->target, ""),
                   device->id, cmd->client, cmd->timeout);
     }
 
@@ -595,7 +679,7 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
     }
 
     delay_max = get_action_delay_max(device, cmd->action);
-    delay_base = get_action_delay_base(device, cmd->action, cmd->victim);
+    delay_base = get_action_delay_base(device, cmd->action, cmd->target);
     if (delay_max == 0) {
         delay_max = delay_base;
     }
@@ -617,7 +701,8 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
         crm_notice("Delaying '%s' action%s%s using %s for %ds " CRM_XS
                    " timeout=%ds requested_delay=%ds base=%ds max=%ds",
                    cmd->action,
-                   cmd->victim ? " targeting " : "", cmd->victim ? cmd->victim : "",
+                   (cmd->target == NULL)? "" : " targeting ",
+                   pcmk__s(cmd->target, ""),
                    device->id, cmd->start_delay, cmd->timeout,
                    requested_delay, delay_base, delay_max);
         cmd->delay_id =
@@ -654,7 +739,9 @@ free_device(gpointer data)
 
     free_xml(device->agent_metadata);
     free(device->namespace);
-    free(device->on_target_actions);
+    if (device->on_target_actions != NULL) {
+        g_string_free(device->on_target_actions, TRUE);
+    }
     free(device->agent);
     free(device->id);
     free(device);
@@ -833,27 +920,6 @@ is_nodeid_required(xmlNode * xml)
     return TRUE;
 }
 
-#define MAX_ACTION_LEN 256
-
-static char *
-add_action(char *actions, const char *action)
-{
-    int offset = 0;
-
-    if (actions == NULL) {
-        actions = calloc(1, MAX_ACTION_LEN);
-    } else {
-        offset = strlen(actions);
-    }
-
-    if (offset > 0) {
-        offset += snprintf(actions+offset, MAX_ACTION_LEN - offset, " ");
-    }
-    offset += snprintf(actions+offset, MAX_ACTION_LEN - offset, "%s", action);
-
-    return actions;
-}
-
 static void
 read_action_metadata(stonith_device_t *device)
 {
@@ -882,25 +948,27 @@ read_action_metadata(stonith_device_t *device)
 
         action = crm_element_value(match, "name");
 
-        if(pcmk__str_eq(action, "list", pcmk__str_casei)) {
+        if (pcmk__str_eq(action, "list", pcmk__str_none)) {
             stonith__set_device_flags(device->flags, device->id,
                                       st_device_supports_list);
-        } else if(pcmk__str_eq(action, "status", pcmk__str_casei)) {
+        } else if (pcmk__str_eq(action, "status", pcmk__str_none)) {
             stonith__set_device_flags(device->flags, device->id,
                                       st_device_supports_status);
-        } else if(pcmk__str_eq(action, "reboot", pcmk__str_casei)) {
+        } else if (pcmk__str_eq(action, "reboot", pcmk__str_none)) {
             stonith__set_device_flags(device->flags, device->id,
                                       st_device_supports_reboot);
-        } else if (pcmk__str_eq(action, "on", pcmk__str_casei)) {
+        } else if (pcmk__str_eq(action, "on", pcmk__str_none)) {
             /* "automatic" means the cluster will unfence node when it joins */
             /* "required" is a deprecated synonym for "automatic" */
             if (pcmk__xe_attr_is_true(match, "automatic") || pcmk__xe_attr_is_true(match, "required")) {
                 device->automatic_unfencing = TRUE;
             }
+            stonith__set_device_flags(device->flags, device->id,
+                                      st_device_supports_on);
         }
 
-        if (action && pcmk__xe_attr_is_true(match, "on_target")) {
-            device->on_target_actions = add_action(device->on_target_actions, action);
+        if ((action != NULL) && pcmk__xe_attr_is_true(match, "on_target")) {
+            pcmk__add_word(&(device->on_target_actions), 64, action);
         }
     }
 
@@ -935,11 +1003,11 @@ map_action(GHashTable *params, const char *action, const char *value)
  * \internal
  * \brief Create device parameter table from XML
  *
- * \param[in]     name    Device name (used for logging only)
- * \param[in,out] params  Device parameters
+ * \param[in]  name    Device name (used for logging only)
+ * \param[in]  dev     XML containing device parameters
  */
 static GHashTable *
-xml2device_params(const char *name, xmlNode *dev)
+xml2device_params(const char *name, const xmlNode *dev)
 {
     GHashTable *params = xml2list(dev);
     const char *value;
@@ -1068,9 +1136,10 @@ build_device_from_xml(xmlNode *dev)
         crm_info("Fencing device '%s' requires unfencing", device->id);
     }
 
-    if (device->on_target_actions) {
+    if (device->on_target_actions != NULL) {
         crm_info("Fencing device '%s' requires actions (%s) to be executed "
-                 "on target", device->id, device->on_target_actions);
+                 "on target", device->id,
+                 (const char *) device->on_target_actions->str);
     }
 
     device->work = mainloop_add_trigger(G_PRIORITY_HIGH, stonith_device_dispatch, device);
@@ -1083,7 +1152,7 @@ static void
 schedule_internal_command(const char *origin,
                           stonith_device_t * device,
                           const char *action,
-                          const char *victim,
+                          const char *target,
                           int timeout,
                           void *internal_user_data,
                           void (*done_cb) (int pid,
@@ -1098,7 +1167,7 @@ schedule_internal_command(const char *origin,
     cmd->default_timeout = timeout ? timeout : 60;
     cmd->timeout = cmd->default_timeout;
     cmd->action = strdup(action);
-    pcmk__str_update(&cmd->victim, victim);
+    pcmk__str_update(&cmd->target, target);
     cmd->device = strdup(device->id);
     cmd->origin = strdup(origin);
     cmd->client = strdup(crm_system_name);
@@ -1123,7 +1192,7 @@ status_search_cb(int pid, const pcmk__action_result_t *result, void *user_data)
 {
     async_command_t *cmd = user_data;
     struct device_search_s *search = cmd->internal_user_data;
-    stonith_device_t *dev = cmd->device ? g_hash_table_lookup(device_list, cmd->device) : NULL;
+    stonith_device_t *dev = cmd_device(cmd);
     gboolean can = FALSE;
 
     free_async_command(cmd);
@@ -1173,7 +1242,7 @@ dynamic_list_search_cb(int pid, const pcmk__action_result_t *result,
 {
     async_command_t *cmd = user_data;
     struct device_search_s *search = cmd->internal_user_data;
-    stonith_device_t *dev = cmd->device ? g_hash_table_lookup(device_list, cmd->device) : NULL;
+    stonith_device_t *dev = cmd_device(cmd);
     gboolean can_fence = FALSE;
 
     free_async_command(cmd);
@@ -1283,7 +1352,7 @@ device_params_diff(GHashTable *first, GHashTable *second) {
  * \brief Checks to see if an identical device already exists in the device_list
  */
 static stonith_device_t *
-device_has_duplicate(stonith_device_t * device)
+device_has_duplicate(const stonith_device_t *device)
 {
     stonith_device_t *dup = g_hash_table_lookup(device_list, device->id);
 
@@ -1454,7 +1523,7 @@ stonith_device_remove(const char *id, bool from_cib)
  * \note This function is used only for log messages.
  */
 static int
-count_active_levels(stonith_topology_t * tp)
+count_active_levels(const stonith_topology_t *tp)
 {
     int lpc = 0;
     int count = 0;
@@ -1504,7 +1573,7 @@ init_topology_list(void)
 }
 
 char *
-stonith_level_key(xmlNode *level, enum fenced_target_by mode)
+stonith_level_key(const xmlNode *level, enum fenced_target_by mode)
 {
     if (mode == fenced_target_by_unknown) {
         mode = unpack_level_kind(level);
@@ -1535,7 +1604,7 @@ stonith_level_key(xmlNode *level, enum fenced_target_by mode)
  * \return How to identify target of \p level
  */
 static int
-unpack_level_kind(xmlNode *level)
+unpack_level_kind(const xmlNode *level)
 {
     if (crm_element_value(level, XML_ATTR_STONITH_TARGET) != NULL) {
         return fenced_target_by_name;
@@ -1903,7 +1972,7 @@ execute_agent_action(xmlNode *msg, pcmk__action_result_t *result)
                              "Watchdog fence device not configured");
             return;
 
-        } else if (pcmk__str_eq(action, "list", pcmk__str_casei)) {
+        } else if (pcmk__str_eq(action, "list", pcmk__str_none)) {
             pcmk__set_result(result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
             pcmk__set_result_output(result,
                                     list_to_string(stonith_watchdog_targets,
@@ -1911,7 +1980,7 @@ execute_agent_action(xmlNode *msg, pcmk__action_result_t *result)
                                     NULL);
             return;
 
-        } else if (pcmk__str_eq(action, "monitor", pcmk__str_casei)) {
+        } else if (pcmk__str_eq(action, "monitor", pcmk__str_none)) {
             pcmk__set_result(result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
             return;
         }
@@ -1936,6 +2005,7 @@ execute_agent_action(xmlNode *msg, pcmk__action_result_t *result)
 
     cmd = create_async_command(msg);
     if (cmd == NULL) {
+        crm_log_xml_warn(msg, "invalid");
         fenced_set_protocol_error(result);
         return;
     }
@@ -1948,8 +2018,13 @@ static void
 search_devices_record_result(struct device_search_s *search, const char *device, gboolean can_fence)
 {
     search->replies_received++;
-
     if (can_fence && device) {
+        if (search->support_action_only != st_device_supports_none) {
+            stonith_device_t *dev = g_hash_table_lookup(device_list, device);
+            if (dev && !pcmk_is_set(dev->flags, search->support_action_only)) {
+                return;
+            }
+        }
         search->capable = g_list_append(search->capable, strdup(device));
     }
 
@@ -1987,11 +2062,14 @@ localhost_is_eligible(const stonith_device_t *device, const char *action,
     gboolean localhost_is_target = pcmk__str_eq(target, stonith_our_uname,
                                                 pcmk__str_casei);
 
-    if (device && action && device->on_target_actions
-        && strstr(device->on_target_actions, action)) {
+    if ((device != NULL) && (action != NULL)
+        && (device->on_target_actions != NULL)
+        && (strstr((const char*) device->on_target_actions->str,
+                   action) != NULL)) {
+
         if (!localhost_is_target) {
-            crm_trace("Operation '%s' using %s can only be executed for "
-                      "local host, not %s", action, device->id, target);
+            crm_trace("Operation '%s' using %s can only be executed for local "
+                      "host, not %s", action, device->id, target);
             return FALSE;
         }
 
@@ -2002,60 +2080,94 @@ localhost_is_eligible(const stonith_device_t *device, const char *action,
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Check if local node is allowed to execute (possibly remapped) action
+ *
+ * \param[in] device      Fence device to check
+ * \param[in] action      Fence action to check
+ * \param[in] target      Node name of fence target
+ * \param[in] allow_self  Whether self-fencing is allowed for this operation
+ *
+ * \return true if local node is allowed to execute \p action or any actions it
+ *         might be remapped to, otherwise false
+ */
+static bool
+localhost_is_eligible_with_remap(const stonith_device_t *device,
+                                 const char *action, const char *target,
+                                 gboolean allow_self)
+{
+    // Check exact action
+    if (localhost_is_eligible(device, action, target, allow_self)) {
+        return true;
+    }
+
+    // Check potential remaps
+
+    if (pcmk__str_eq(action, "reboot", pcmk__str_none)) {
+        /* "reboot" might get remapped to "off" then "on", so even if reboot is
+         * disallowed, return true if either of those is allowed. We'll report
+         * the disallowed actions with the results. We never allow self-fencing
+         * for remapped "on" actions because the target is off at that point.
+         */
+        if (localhost_is_eligible(device, "off", target, allow_self)
+            || localhost_is_eligible(device, "on", target, FALSE)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 static void
-can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *search)
+can_fence_host_with_device(stonith_device_t *dev,
+                           struct device_search_s *search)
 {
     gboolean can = FALSE;
-    const char *check_type = NULL;
-    const char *host = search->host;
+    const char *check_type = "Internal bug";
+    const char *target = NULL;
     const char *alias = NULL;
+    const char *dev_id = "Unspecified device";
+    const char *action = (search == NULL)? NULL : search->action;
 
-    CRM_LOG_ASSERT(dev != NULL);
+    CRM_CHECK((dev != NULL) && (action != NULL), goto search_report_results);
 
-    if (dev == NULL) {
-        goto search_report_results;
-    } else if (host == NULL) {
+    if (dev->id != NULL) {
+        dev_id = dev->id;
+    }
+
+    target = search->host;
+    if (target == NULL) {
         can = TRUE;
+        check_type = "No target";
         goto search_report_results;
     }
 
-    /* Short-circuit query if this host is not allowed to perform the action */
-    if (pcmk__str_eq(search->action, "reboot", pcmk__str_casei)) {
-        /* A "reboot" *might* get remapped to "off" then "on", so short-circuit
-         * only if all three are disallowed. If only one or two are disallowed,
-         * we'll report that with the results. We never allow suicide for
-         * remapped "on" operations because the host is off at that point.
-         */
-        if (!localhost_is_eligible(dev, "reboot", host, search->allow_suicide)
-            && !localhost_is_eligible(dev, "off", host, search->allow_suicide)
-            && !localhost_is_eligible(dev, "on", host, FALSE)) {
-            goto search_report_results;
-        }
-    } else if (!localhost_is_eligible(dev, search->action, host,
-                                      search->allow_suicide)) {
+    /* Answer immediately if the device does not support the action
+     * or the local node is not allowed to perform it
+     */
+    if (pcmk__str_eq(action, "on", pcmk__str_none)
+        && !pcmk_is_set(dev->flags, st_device_supports_on)) {
+        check_type = "Agent does not support 'on'";
+        goto search_report_results;
+
+    } else if (!localhost_is_eligible_with_remap(dev, action, target,
+                                                 search->allow_suicide)) {
+        check_type = "This node is not allowed to execute action";
         goto search_report_results;
     }
 
-    alias = g_hash_table_lookup(dev->aliases, host);
-    if (alias == NULL) {
-        alias = host;
-    }
-
+    // Check eligibility as specified by pcmk_host_check
     check_type = target_list_type(dev);
-
+    alias = g_hash_table_lookup(dev->aliases, target);
     if (pcmk__str_eq(check_type, PCMK__VALUE_NONE, pcmk__str_casei)) {
         can = TRUE;
 
     } else if (pcmk__str_eq(check_type, "static-list", pcmk__str_casei)) {
-
-        /* Presence in the hostmap is sufficient
-         * Only use if all hosts on which the device can be active can always fence all listed hosts
-         */
-
-        if (pcmk__str_in_list(host, dev->targets, pcmk__str_casei)) {
+        if (pcmk__str_in_list(target, dev->targets, pcmk__str_casei)) {
             can = TRUE;
         } else if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_MAP)
-                   && g_hash_table_lookup(dev->aliases, host)) {
+                   && g_hash_table_lookup(dev->aliases, target)) {
             can = TRUE;
         }
 
@@ -2067,11 +2179,11 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
 
             if (device_timeout > search->per_device_timeout) {
                 crm_notice("Since the pcmk_list_timeout(%ds) parameter of %s is larger than stonith-timeout(%ds), timeout may occur",
-                    device_timeout, dev->id, search->per_device_timeout);
+                    device_timeout, dev_id, search->per_device_timeout);
             }
 
             crm_trace("Running '%s' to check whether %s is eligible to fence %s (%s)",
-                      check_type, dev->id, search->host, search->action);
+                      check_type, dev_id, target, action);
 
             schedule_internal_command(__func__, dev, "list", NULL,
                                       search->per_device_timeout, search, dynamic_list_search_cb);
@@ -2080,7 +2192,8 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
             return;
         }
 
-        if (pcmk__str_in_list(alias, dev->targets, pcmk__str_casei)) {
+        if (pcmk__str_in_list(((alias == NULL)? target : alias), dev->targets,
+                              pcmk__str_casei)) {
             can = TRUE;
         }
 
@@ -2089,12 +2202,12 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
 
         if (device_timeout > search->per_device_timeout) {
             crm_notice("Since the pcmk_status_timeout(%ds) parameter of %s is larger than stonith-timeout(%ds), timeout may occur",
-                device_timeout, dev->id, search->per_device_timeout);
+                device_timeout, dev_id, search->per_device_timeout);
         }
 
         crm_trace("Running '%s' to check whether %s is eligible to fence %s (%s)",
-                  check_type, dev->id, search->host, search->action);
-        schedule_internal_command(__func__, dev, "status", search->host,
+                  check_type, dev_id, target, action);
+        schedule_internal_command(__func__, dev, "status", target,
                                   search->per_device_timeout, search, status_search_cb);
         /* we'll respond to this search request async in the cb */
         return;
@@ -2103,17 +2216,13 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
         check_type = "Invalid " PCMK_STONITH_HOST_CHECK;
     }
 
-    if (pcmk__str_eq(host, alias, pcmk__str_casei)) {
-        crm_info("%s is%s eligible to fence (%s) %s: %s",
-                 dev->id, (can? "" : " not"), search->action, host, check_type);
-    } else {
-        crm_info("%s is%s eligible to fence (%s) %s (aka. '%s'): %s",
-                 dev->id, (can? "" : " not"), search->action, host, alias,
-                 check_type);
-    }
-
   search_report_results:
-    search_devices_record_result(search, dev ? dev->id : NULL, can);
+    crm_info("%s is%s eligible to fence (%s) %s%s%s%s: %s",
+             dev_id, (can? "" : " not"), pcmk__s(action, "unspecified action"),
+             pcmk__s(target, "unspecified target"),
+             (alias == NULL)? "" : " (as '", pcmk__s(alias, ""),
+             (alias == NULL)? "" : "')", check_type);
+    search_devices_record_result(search, ((dev == NULL)? NULL : dev_id), can);
 }
 
 static void
@@ -2128,7 +2237,7 @@ search_devices(gpointer key, gpointer value, gpointer user_data)
 #define DEFAULT_QUERY_TIMEOUT 20
 static void
 get_capable_devices(const char *host, const char *action, int timeout, bool suicide, void *user_data,
-                    void (*callback) (GList * devices, void *user_data))
+                    void (*callback) (GList * devices, void *user_data), uint32_t support_action_only)
 {
     struct device_search_s *search;
     guint ndevices = g_hash_table_size(device_list);
@@ -2152,6 +2261,7 @@ get_capable_devices(const char *host, const char *action, int timeout, bool suic
     search->allow_suicide = suicide;
     search->callback = callback;
     search->user_data = user_data;
+    search->support_action_only = support_action_only;
 
     /* We are guaranteed this many replies, even if a device is
      * unregistered while the search is in progress.
@@ -2185,7 +2295,8 @@ struct st_query_data {
  */
 static void
 add_action_specific_attributes(xmlNode *xml, const char *action,
-                               stonith_device_t *device, const char *target)
+                               const stonith_device_t *device,
+                               const char *target)
 {
     int action_specific_timeout;
     int delay_max;
@@ -2241,7 +2352,7 @@ add_action_specific_attributes(xmlNode *xml, const char *action,
  * \param[in]     allow_suicide  Whether self-fencing is allowed
  */
 static void
-add_disallowed(xmlNode *xml, const char *action, stonith_device_t *device,
+add_disallowed(xmlNode *xml, const char *action, const stonith_device_t *device,
                const char *target, gboolean allow_suicide)
 {
     if (!localhost_is_eligible(device, action, target, allow_suicide)) {
@@ -2262,8 +2373,9 @@ add_disallowed(xmlNode *xml, const char *action, stonith_device_t *device,
  * \param[in]     allow_suicide  Whether self-fencing is allowed
  */
 static void
-add_action_reply(xmlNode *xml, const char *action, stonith_device_t *device,
-               const char *target, gboolean allow_suicide)
+add_action_reply(xmlNode *xml, const char *action,
+                 const stonith_device_t *device, const char *target,
+                 gboolean allow_suicide)
 {
     xmlNode *child = create_xml_node(xml, F_STONITH_ACTION);
 
@@ -2311,12 +2423,13 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
         crm_xml_add(dev, "namespace", device->namespace);
         crm_xml_add(dev, "agent", device->agent);
         crm_xml_add_int(dev, F_STONITH_DEVICE_VERIFIED, device->verified);
+        crm_xml_add_int(dev, F_STONITH_DEVICE_SUPPORT_FLAGS, device->flags);
 
         /* If the originating fencer wants to reboot the node, and we have a
          * capable device that doesn't support "reboot", remap to "off" instead.
          */
         if (!pcmk_is_set(device->flags, st_device_supports_reboot)
-            && pcmk__str_eq(query->action, "reboot", pcmk__str_casei)) {
+            && pcmk__str_eq(query->action, "reboot", pcmk__str_none)) {
             crm_trace("%s doesn't support reboot, using values for off instead",
                       device->id);
             action = "off";
@@ -2324,7 +2437,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
 
         /* Add action-specific values if available */
         add_action_specific_attributes(dev, action, device, query->target);
-        if (pcmk__str_eq(query->action, "reboot", pcmk__str_casei)) {
+        if (pcmk__str_eq(query->action, "reboot", pcmk__str_none)) {
             /* A "reboot" *might* get remapped to "off" then "on", so after
              * sending the "reboot"-specific values in the main element, we add
              * sub-elements for "off" and "on" values.
@@ -2391,57 +2504,58 @@ done:
  * \param[in] op_merged  Whether this command was merged with an earlier one
  */
 static void
-log_async_result(async_command_t *cmd, const pcmk__action_result_t *result,
+log_async_result(const async_command_t *cmd,
+                 const pcmk__action_result_t *result,
                  int pid, const char *next, bool op_merged)
 {
     int log_level = LOG_ERR;
     int output_log_level = LOG_NEVER;
-    guint devices_remaining = g_list_length(cmd->device_next);
+    guint devices_remaining = g_list_length(cmd->next_device_iter);
 
     GString *msg = g_string_sized_new(80); // Reasonable starting size
 
     // Choose log levels appropriately if we have a result
     if (pcmk__result_ok(result)) {
-        log_level = (cmd->victim == NULL)? LOG_DEBUG : LOG_NOTICE;
+        log_level = (cmd->target == NULL)? LOG_DEBUG : LOG_NOTICE;
         if ((result->action_stdout != NULL)
-            && !pcmk__str_eq(cmd->action, "metadata", pcmk__str_casei)) {
+            && !pcmk__str_eq(cmd->action, "metadata", pcmk__str_none)) {
             output_log_level = LOG_DEBUG;
         }
         next = NULL;
     } else {
-        log_level = (cmd->victim == NULL)? LOG_NOTICE : LOG_ERR;
+        log_level = (cmd->target == NULL)? LOG_NOTICE : LOG_ERR;
         if ((result->action_stdout != NULL)
-            && !pcmk__str_eq(cmd->action, "metadata", pcmk__str_casei)) {
+            && !pcmk__str_eq(cmd->action, "metadata", pcmk__str_none)) {
             output_log_level = LOG_WARNING;
         }
     }
 
     // Build the log message piece by piece
-    g_string_printf(msg, "Operation '%s' ", cmd->action);
+    pcmk__g_strcat(msg, "Operation '", cmd->action, "' ", NULL);
     if (pid != 0) {
         g_string_append_printf(msg, "[%d] ", pid);
     }
-    if (cmd->victim != NULL) {
-        g_string_append_printf(msg, "targeting %s ", cmd->victim);
+    if (cmd->target != NULL) {
+        pcmk__g_strcat(msg, "targeting ", cmd->target, " ", NULL);
     }
     if (cmd->device != NULL) {
-        g_string_append_printf(msg, "using %s ", cmd->device);
+        pcmk__g_strcat(msg, "using ", cmd->device, " ", NULL);
     }
 
     // Add exit status or execution status as appropriate
     if (result->execution_status == PCMK_EXEC_DONE) {
         g_string_append_printf(msg, "returned %d", result->exit_status);
     } else {
-        g_string_append_printf(msg, "could not be executed: %s",
-                               pcmk_exec_status_str(result->execution_status));
+        pcmk__g_strcat(msg, "could not be executed: ",
+                       pcmk_exec_status_str(result->execution_status), NULL);
     }
 
     // Add exit reason and next device if appropriate
     if (result->exit_reason != NULL) {
-        g_string_append_printf(msg, " (%s)", result->exit_reason);
+        pcmk__g_strcat(msg, " (", result->exit_reason, ")", NULL);
     }
     if (next != NULL) {
-        g_string_append_printf(msg, ", retrying with %s", next);
+        pcmk__g_strcat(msg, ", retrying with ", next, NULL);
     }
     if (devices_remaining > 0) {
         g_string_append_printf(msg, " (%u device%s remaining)",
@@ -2475,7 +2589,7 @@ log_async_result(async_command_t *cmd, const pcmk__action_result_t *result,
  * \param[in] merged   If true, command was merged with another, not executed
  */
 static void
-send_async_reply(async_command_t *cmd, const pcmk__action_result_t *result,
+send_async_reply(const async_command_t *cmd, const pcmk__action_result_t *result,
                  int pid, bool merged)
 {
     xmlNode *reply = NULL;
@@ -2499,12 +2613,12 @@ send_async_reply(async_command_t *cmd, const pcmk__action_result_t *result,
     }
 
     if (!stand_alone && pcmk__is_fencing_action(cmd->action)
-        && pcmk__str_eq(cmd->origin, cmd->victim, pcmk__str_casei)) {
+        && pcmk__str_eq(cmd->origin, cmd->target, pcmk__str_casei)) {
         /* The target was also the originator, so broadcast the result on its
          * behalf (since it will be unable to).
          */
         crm_trace("Broadcast '%s' result for %s (target was also originator)",
-                  cmd->action, cmd->victim);
+                  cmd->action, cmd->target);
         crm_xml_add(reply, F_SUBTYPE, "broadcast");
         crm_xml_add(reply, F_STONITH_OPERATION, T_STONITH_NOTIFY);
         send_cluster_message(NULL, crm_msg_stonith_ng, reply, FALSE);
@@ -2521,7 +2635,7 @@ send_async_reply(async_command_t *cmd, const pcmk__action_result_t *result,
         xmlNode *notify_data = create_xml_node(NULL, T_STONITH_NOTIFY_FENCE);
 
         stonith__xe_set_result(notify_data, result);
-        crm_xml_add(notify_data, F_STONITH_TARGET, cmd->victim);
+        crm_xml_add(notify_data, F_STONITH_TARGET, cmd->target);
         crm_xml_add(notify_data, F_STONITH_OPERATION, cmd->op);
         crm_xml_add(notify_data, F_STONITH_DELEGATE, "localhost");
         crm_xml_add(notify_data, F_STONITH_DEVICE, cmd->device);
@@ -2536,15 +2650,7 @@ send_async_reply(async_command_t *cmd, const pcmk__action_result_t *result,
 static void
 cancel_stonith_command(async_command_t * cmd)
 {
-    stonith_device_t *device;
-
-    CRM_CHECK(cmd != NULL, return);
-
-    if (!cmd->device) {
-        return;
-    }
-
-    device = g_hash_table_lookup(device_list, cmd->device);
+    stonith_device_t *device = cmd_device(cmd);
 
     if (device) {
         crm_trace("Cancel scheduled '%s' action using %s",
@@ -2553,22 +2659,111 @@ cancel_stonith_command(async_command_t * cmd)
     }
 }
 
+/*!
+ * \internal
+ * \brief Cancel and reply to any duplicates of a just-completed operation
+ *
+ * Check whether any fencing operations are scheduled to do the same thing as
+ * one that just succeeded. If so, rather than performing the same operation
+ * twice, return the result of this operation for all matching pending commands.
+ *
+ * \param[in,out] cmd     Fencing operation that just succeeded
+ * \param[in]     result  Result of \p cmd
+ * \param[in]     pid     If nonzero, process ID of agent invocation (for logs)
+ *
+ * \note Duplicate merging will do the right thing for either type of remapped
+ *       reboot. If the executing fencer remapped an unsupported reboot to off,
+ *       then cmd->action will be "reboot" and will be merged with any other
+ *       reboot requests. If the originating fencer remapped a topology reboot
+ *       to off then on, we will get here once with cmd->action "off" and once
+ *       with "on", and they will be merged separately with similar requests.
+ */
+static void
+reply_to_duplicates(async_command_t *cmd, const pcmk__action_result_t *result,
+                    int pid)
+{
+    GList *next = NULL;
+
+    for (GList *iter = cmd_list; iter != NULL; iter = next) {
+        async_command_t *cmd_other = iter->data;
+
+        next = iter->next; // We might delete this entry, so grab next now
+
+        if (cmd == cmd_other) {
+            continue;
+        }
+
+        /* A pending operation matches if:
+         * 1. The client connections are different.
+         * 2. The target is the same.
+         * 3. The fencing action is the same.
+         * 4. The device scheduled to execute the action is the same.
+         */
+        if (pcmk__str_eq(cmd->client, cmd_other->client, pcmk__str_casei) ||
+            !pcmk__str_eq(cmd->target, cmd_other->target, pcmk__str_casei) ||
+            !pcmk__str_eq(cmd->action, cmd_other->action, pcmk__str_none) ||
+            !pcmk__str_eq(cmd->device, cmd_other->device, pcmk__str_casei)) {
+
+            continue;
+        }
+
+        crm_notice("Merging fencing action '%s'%s%s originating from "
+                   "client %s with identical fencing request from client %s",
+                   cmd_other->action,
+                   (cmd_other->target == NULL)? "" : " targeting ",
+                   pcmk__s(cmd_other->target, ""), cmd_other->client_name,
+                   cmd->client_name);
+
+        // Stop tracking the duplicate, send its result, and cancel it
+        cmd_list = g_list_remove_link(cmd_list, iter);
+        send_async_reply(cmd_other, result, pid, true);
+        cancel_stonith_command(cmd_other);
+
+        free_async_command(cmd_other);
+        g_list_free_1(iter);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Return the next required device (if any) for an operation
+ *
+ * \param[in,out] cmd  Fencing operation that just succeeded
+ *
+ * \return Next device required for action if any, otherwise NULL
+ */
+static stonith_device_t *
+next_required_device(async_command_t *cmd)
+{
+    for (GList *iter = cmd->next_device_iter; iter != NULL; iter = iter->next) {
+        stonith_device_t *next_device = g_hash_table_lookup(device_list,
+                                                            iter->data);
+
+        if (is_action_required(cmd->action, next_device)) {
+            /* This is only called for successful actions, so it's OK to skip
+             * non-required devices.
+             */
+            cmd->next_device_iter = iter->next;
+            return next_device;
+        }
+    }
+    return NULL;
+}
+
 static void
 st_child_done(int pid, const pcmk__action_result_t *result, void *user_data)
 {
-    stonith_device_t *device = NULL;
-    stonith_device_t *next_device = NULL;
     async_command_t *cmd = user_data;
 
-    GList *gIter = NULL;
-    GList *gIterNext = NULL;
+    stonith_device_t *device = NULL;
+    stonith_device_t *next_device = NULL;
 
     CRM_CHECK(cmd != NULL, return);
 
+    device = cmd_device(cmd);
     cmd->active_on = NULL;
 
     /* The device is ready to do something else now */
-    device = g_hash_table_lookup(device_list, cmd->device);
     if (device) {
         if (!device->verified && pcmk__result_ok(result) &&
             (pcmk__strcase_any_of(cmd->action, "list", "monitor", "status", NULL))) {
@@ -2580,92 +2775,28 @@ st_child_done(int pid, const pcmk__action_result_t *result, void *user_data)
     }
 
     if (pcmk__result_ok(result)) {
-        GList *iter;
-        /* see if there are any required devices left to execute for this op */
-        for (iter = cmd->device_next; iter != NULL; iter = iter->next) {
-            next_device = g_hash_table_lookup(device_list, iter->data);
+        next_device = next_required_device(cmd);
 
-            if (next_device != NULL && is_action_required(cmd->action, next_device)) {
-                cmd->device_next = iter->next;
-                break;
-            }
-            next_device = NULL;
-        }
-
-    } else if ((cmd->device_next != NULL)
+    } else if ((cmd->next_device_iter != NULL)
                && !is_action_required(cmd->action, device)) {
         /* if this device didn't work out, see if there are any others we can try.
          * if the failed device was 'required', we can't pick another device. */
-        next_device = g_hash_table_lookup(device_list, cmd->device_next->data);
-        cmd->device_next = cmd->device_next->next;
+        next_device = g_hash_table_lookup(device_list,
+                                          cmd->next_device_iter->data);
+        cmd->next_device_iter = cmd->next_device_iter->next;
     }
 
-    /* this operation requires more fencing, hooray! */
-    if (next_device) {
+    if (next_device == NULL) {
+        send_async_reply(cmd, result, pid, false);
+        if (pcmk__result_ok(result)) {
+            reply_to_duplicates(cmd, result, pid);
+        }
+        free_async_command(cmd);
+
+    } else { // This operation requires more fencing
         log_async_result(cmd, result, pid, next_device->id, false);
         schedule_stonith_command(cmd, next_device);
-        /* Prevent cmd from being freed */
-        cmd = NULL;
-        goto done;
     }
-
-    send_async_reply(cmd, result, pid, false);
-
-    if (!pcmk__result_ok(result)) {
-        goto done;
-    }
-
-    /* Check to see if any operations are scheduled to do the exact
-     * same thing that just completed.  If so, rather than
-     * performing the same fencing operation twice, return the result
-     * of this operation for all pending commands it matches. */
-    for (gIter = cmd_list; gIter != NULL; gIter = gIterNext) {
-        async_command_t *cmd_other = gIter->data;
-
-        gIterNext = gIter->next;
-
-        if (cmd == cmd_other) {
-            continue;
-        }
-
-        /* A pending scheduled command matches the command that just finished if.
-         * 1. The client connections are different.
-         * 2. The node victim is the same.
-         * 3. The fencing action is the same.
-         * 4. The device scheduled to execute the action is the same.
-         */
-        if (pcmk__str_eq(cmd->client, cmd_other->client, pcmk__str_casei) ||
-            !pcmk__str_eq(cmd->victim, cmd_other->victim, pcmk__str_casei) ||
-            !pcmk__str_eq(cmd->action, cmd_other->action, pcmk__str_casei) ||
-            !pcmk__str_eq(cmd->device, cmd_other->device, pcmk__str_casei)) {
-
-            continue;
-        }
-
-        /* Duplicate merging will do the right thing for either type of remapped
-         * reboot. If the executing fencer remapped an unsupported reboot to
-         * off, then cmd->action will be reboot and will be merged with any
-         * other reboot requests. If the originating fencer remapped a
-         * topology reboot to off then on, we will get here once with
-         * cmd->action "off" and once with "on", and they will be merged
-         * separately with similar requests.
-         */
-        crm_notice("Merging fencing action '%s' targeting %s originating from "
-                   "client %s with identical fencing request from client %s",
-                   cmd_other->action, cmd_other->victim, cmd_other->client_name,
-                   cmd->client_name);
-
-        cmd_list = g_list_remove_link(cmd_list, gIter);
-
-        send_async_reply(cmd_other, result, pid, true);
-        cancel_stonith_command(cmd_other);
-
-        free_async_command(cmd_other);
-        g_list_free_1(gIter);
-    }
-
-  done:
-    free_async_command(cmd);
 }
 
 static gint
@@ -2690,7 +2821,7 @@ stonith_fence_get_devices_cb(GList * devices, void *user_data)
     guint ndevices = g_list_length(devices);
 
     crm_info("Found %d matching device%s for target '%s'",
-             ndevices, pcmk__plural_s(ndevices), cmd->victim);
+             ndevices, pcmk__plural_s(ndevices), cmd->target);
 
     if (devices != NULL) {
         /* Order based on priority */
@@ -2703,7 +2834,7 @@ stonith_fence_get_devices_cb(GList * devices, void *user_data)
 
         pcmk__format_result(&result, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
                             "No device configured for target '%s'",
-                            cmd->victim);
+                            cmd->target);
         send_async_reply(cmd, &result, 0, false);
         pcmk__reset_result(&result);
         free_async_command(cmd);
@@ -2711,7 +2842,7 @@ stonith_fence_get_devices_cb(GList * devices, void *user_data)
 
     } else { // Device found, schedule it for fencing
         cmd->device_list = devices;
-        cmd->device_next = devices->next;
+        cmd->next_device_iter = devices->next;
         schedule_stonith_command(cmd, device);
     }
 }
@@ -2728,12 +2859,16 @@ fence_locally(xmlNode *msg, pcmk__action_result_t *result)
 {
     const char *device_id = NULL;
     stonith_device_t *device = NULL;
-    async_command_t *cmd = create_async_command(msg);
-    xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, msg, LOG_ERR);
+    async_command_t *cmd = NULL;
+    xmlNode *dev = NULL;
 
-    CRM_CHECK(result != NULL, return);
+    CRM_CHECK((msg != NULL) && (result != NULL), return);
 
+    dev = get_xpath_object("//@" F_STONITH_TARGET, msg, LOG_ERR);
+
+    cmd = create_async_command(msg);
     if (cmd == NULL) {
+        crm_log_xml_warn(msg, "invalid");
         fenced_set_protocol_error(result);
         return;
     }
@@ -2765,7 +2900,8 @@ fence_locally(xmlNode *msg, pcmk__action_result_t *result)
 
         /* If we get to here, then self-fencing is implicitly allowed */
         get_capable_devices(host, cmd->action, cmd->default_timeout,
-                            TRUE, cmd, stonith_fence_get_devices_cb);
+                            TRUE, cmd, stonith_fence_get_devices_cb,
+                            fenced_support_flag(cmd->action));
     }
 
     pcmk__set_result(result, CRM_EX_OK, PCMK_EXEC_PENDING, NULL);
@@ -2786,8 +2922,8 @@ fence_locally(xmlNode *msg, pcmk__action_result_t *result)
  *       request.
  */
 xmlNode *
-fenced_construct_reply(xmlNode *request, xmlNode *data,
-                       pcmk__action_result_t *result)
+fenced_construct_reply(const xmlNode *request, xmlNode *data,
+                       const pcmk__action_result_t *result)
 {
     xmlNode *reply = NULL;
 
@@ -2842,7 +2978,8 @@ fenced_construct_reply(xmlNode *request, xmlNode *data,
  * \param[in] result  Command result
  */
 static xmlNode *
-construct_async_reply(async_command_t *cmd, const pcmk__action_result_t *result)
+construct_async_reply(const async_command_t *cmd,
+                      const pcmk__action_result_t *result)
 {
     xmlNode *reply = create_xml_node(NULL, T_STONITH_REPLY);
 
@@ -2853,7 +2990,7 @@ construct_async_reply(async_command_t *cmd, const pcmk__action_result_t *result)
     crm_xml_add(reply, F_STONITH_REMOTE_OP_ID, cmd->remote_op_id);
     crm_xml_add(reply, F_STONITH_CLIENTID, cmd->client);
     crm_xml_add(reply, F_STONITH_CLIENTNAME, cmd->client_name);
-    crm_xml_add(reply, F_STONITH_TARGET, cmd->victim);
+    crm_xml_add(reply, F_STONITH_TARGET, cmd->target);
     crm_xml_add(reply, F_STONITH_ACTION, cmd->op);
     crm_xml_add(reply, F_STONITH_ORIGIN, cmd->origin);
     crm_xml_add_int(reply, F_STONITH_CALLID, cmd->id);
@@ -2897,43 +3034,32 @@ set_fencing_completed(remote_fencing_op_t *op)
 static const char *
 check_alternate_host(const char *target)
 {
-    const char *alternate_host = NULL;
-
-    crm_trace("Checking if we (%s) can fence %s", stonith_our_uname, target);
-    if (find_topology_for_host(target) && pcmk__str_eq(target, stonith_our_uname, pcmk__str_casei)) {
+    if (pcmk__str_eq(target, stonith_our_uname, pcmk__str_casei)) {
         GHashTableIter gIter;
         crm_node_t *entry = NULL;
 
         g_hash_table_iter_init(&gIter, crm_peer_cache);
         while (g_hash_table_iter_next(&gIter, NULL, (void **)&entry)) {
-            crm_trace("Checking for %s.%d != %s", entry->uname, entry->id, target);
             if (fencing_peer_active(entry)
                 && !pcmk__str_eq(entry->uname, target, pcmk__str_casei)) {
-                alternate_host = entry->uname;
-                break;
+                crm_notice("Forwarding self-fencing request to %s",
+                           entry->uname);
+                return entry->uname;
             }
         }
-        if (alternate_host == NULL) {
-            crm_err("No alternate host available to handle request "
-                    "for self-fencing with topology");
-            g_hash_table_iter_init(&gIter, crm_peer_cache);
-            while (g_hash_table_iter_next(&gIter, NULL, (void **)&entry)) {
-                crm_notice("Peer[%d] %s", entry->id, entry->uname);
-            }
-        }
+        crm_warn("Will handle own fencing because no peer can");
     }
-
-    return alternate_host;
+    return NULL;
 }
 
 /*!
  * \internal
  * \brief Send a reply to a CPG peer or IPC client
  *
- * \param[in] reply         XML reply to send
- * \param[in] call_options  Send synchronously if st_opt_sync_call is set here
- * \param[in] remote_peer   If not NULL, name of peer node to send CPG reply
- * \param[in] client        If not NULL, client to send IPC reply
+ * \param[in]     reply         XML reply to send
+ * \param[in]     call_options  Send synchronously if st_opt_sync_call is set
+ * \param[in]     remote_peer   If not NULL, name of peer node to send CPG reply
+ * \param[in,out] client        If not NULL, client to send IPC reply
  */
 static void
 stonith_send_reply(xmlNode *reply, int call_options, const char *remote_peer,
@@ -2990,10 +3116,13 @@ remove_relay_op(xmlNode * request)
                     }
                 }
             }
-            crm_debug("Deleting relay op %s ('%s' targeting %s for %s), "
-                      "replaced by op %s ('%s' targeting %s for %s)",
-                      relay_op->id, relay_op->action, relay_op->target,
-                      relay_op->client_name, op_id, relay_op->action, target,
+            crm_debug("Deleting relay op %s ('%s'%s%s for %s), "
+                      "replaced by op %s ('%s'%s%s for %s)",
+                      relay_op->id, relay_op->action,
+                      (relay_op->target == NULL)? "" : " targeting ",
+                      pcmk__s(relay_op->target, ""),
+                      relay_op->client_name, op_id, relay_op->action,
+                      (target == NULL)? "" : " targeting ", pcmk__s(target, ""),
                       client_name);
 
             g_hash_table_remove(stonith_remote_op_list, relay_op_id);
@@ -3016,7 +3145,7 @@ remove_relay_op(xmlNode * request)
  * \return true if sender is peer or privileged client, otherwise false
  */
 static inline bool
-is_privileged(pcmk__client_t *c, const char *op)
+is_privileged(const pcmk__client_t *c, const char *op)
 {
     if ((c == NULL) || pcmk_is_set(c->flags, pcmk__client_privileged)) {
         return true;
@@ -3113,7 +3242,7 @@ handle_query_request(pcmk__request_t *request)
     crm_element_value_int(request->xml, F_STONITH_TIMEOUT, &timeout);
     get_capable_devices(target, action, timeout,
                         pcmk_is_set(query->call_options, st_opt_allow_suicide),
-                        query, stonith_query_capable_device_cb);
+                        query, stonith_query_capable_device_cb, st_device_supports_none);
     return NULL;
 }
 
@@ -3212,6 +3341,7 @@ handle_fence_request(pcmk__request_t *request)
                 return fenced_construct_reply(request->xml, NULL,
                                               &request->result);
             }
+            alternate_host = check_alternate_host(target);
 
         } else {
             crm_notice("Peer %s wants to fence (%s) '%s' with device '%s'",
@@ -3219,14 +3349,9 @@ handle_fence_request(pcmk__request_t *request)
                        (device == NULL)? "(any)" : device);
         }
 
-        alternate_host = check_alternate_host(target);
-
-        if ((alternate_host != NULL) && (request->ipc_client != NULL)) {
+        if (alternate_host != NULL) {
             const char *client_id = NULL;
             remote_fencing_op_t *op = NULL;
-
-            crm_notice("Forwarding self-fencing request to peer %s "
-                       "due to topology", alternate_host);
 
             if (request->ipc_client->id == 0) {
                 client_id = crm_element_value(request->xml, F_STONITH_CLIENTID);
@@ -3493,11 +3618,11 @@ handle_reply(pcmk__client_t *client, xmlNode *request, const char *remote_peer)
  * \internal
  * \brief Handle a message from an IPC client or CPG peer
  *
- * \param[in] client      If not NULL, IPC client that sent message
- * \param[in] id          If from IPC client, IPC message ID
- * \param[in] flags       Message flags
- * \param[in] message     Message XML
- * \param[in] remote_peer If not NULL, CPG peer that sent message
+ * \param[in,out] client      If not NULL, IPC client that sent message
+ * \param[in]     id          If from IPC client, IPC message ID
+ * \param[in]     flags       Message flags
+ * \param[in,out] message     Message XML
+ * \param[in]     remote_peer If not NULL, CPG peer that sent message
  */
 void
 stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,

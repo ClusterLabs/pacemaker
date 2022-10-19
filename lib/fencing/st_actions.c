@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -29,10 +30,9 @@ struct stonith_action_s {
     /*! user defined data */
     char *agent;
     char *action;
-    char *victim;
     GHashTable *args;
     int timeout;
-    int async;
+    bool async;
     void *userdata;
     void (*done_cb) (int pid, const pcmk__action_result_t *result,
                      void *user_data);
@@ -105,10 +105,24 @@ append_config_arg(gpointer key, gpointer value, gpointer user_data)
     }
 }
 
+/*!
+ * \internal
+ * \brief Create a table of arguments for a fencing action
+ *
+ * \param[in] agent          Fencing agent name
+ * \param[in] action         Name of fencing action
+ * \param[in] target         Name of target node for fencing action
+ * \param[in] target_nodeid  Node ID of target node for fencing action
+ * \param[in] device_args    Fence device parameters
+ * \param[in] port_map       Target node-to-port mapping for fence device
+ * \param[in] host_arg       Argument name for passing target
+ *
+ * \return Newly created hash table of arguments for fencing action
+ */
 static GHashTable *
-make_args(const char *agent, const char *action, const char *victim,
-          uint32_t victim_nodeid, GHashTable * device_args,
-          GHashTable * port_map, const char *host_arg)
+make_args(const char *agent, const char *action, const char *target,
+          uint32_t target_nodeid, GHashTable *device_args,
+          GHashTable *port_map, const char *host_arg)
 {
     GHashTable *arg_list = NULL;
     const char *value = NULL;
@@ -125,7 +139,7 @@ make_args(const char *agent, const char *action, const char *victim,
         value = g_hash_table_lookup(device_args, buffer);
         if (value) {
             crm_debug("Substituting '%s' for fence action %s targeting %s",
-                      value, action, victim);
+                      value, action, pcmk__s(target, "no node"));
             action = value;
         }
     }
@@ -135,21 +149,21 @@ make_args(const char *agent, const char *action, const char *victim,
     /* If this is a fencing operation against another node, add more standard
      * arguments.
      */
-    if (victim && device_args) {
+    if ((target != NULL) && (device_args != NULL)) {
         const char *param = NULL;
 
         /* Always pass the target's name, per
-         * https://github.com/ClusterLabs/fence-agents/blob/master/doc/FenceAgentAPI.md
+         * https://github.com/ClusterLabs/fence-agents/blob/main/doc/FenceAgentAPI.md
          */
-        g_hash_table_insert(arg_list, strdup("nodename"), strdup(victim));
+        g_hash_table_insert(arg_list, strdup("nodename"), strdup(target));
 
         // If the target's node ID was specified, pass it, too
-        if (victim_nodeid) {
-            char *nodeid = crm_strdup_printf("%" PRIu32, victim_nodeid);
+        if (target_nodeid != 0) {
+            char *nodeid = crm_strdup_printf("%" PRIu32, target_nodeid);
 
             // cts-fencing looks for this log message
             crm_info("Passing '%s' as nodeid with fence action '%s' targeting %s",
-                     nodeid, action, victim);
+                     nodeid, action, pcmk__s(target, "no node"));
             g_hash_table_insert(arg_list, strdup("nodeid"), nodeid);
         }
 
@@ -174,13 +188,13 @@ make_args(const char *agent, const char *action, const char *victim,
                 const char *alias = NULL;
 
                 if (port_map) {
-                    alias = g_hash_table_lookup(port_map, victim);
+                    alias = g_hash_table_lookup(port_map, target);
                 }
                 if (alias == NULL) {
-                    alias = victim;
+                    alias = target;
                 }
                 crm_debug("Passing %s='%s' with fence action %s targeting %s",
-                          param, alias, action, victim);
+                          param, alias, action, pcmk__s(target, "no node"));
                 g_hash_table_insert(arg_list, strdup(param), strdup(alias));
             }
         }
@@ -208,7 +222,6 @@ stonith__destroy_action(stonith_action_t *action)
             g_hash_table_destroy(action->args);
         }
         free(action->action);
-        free(action->victim);
         if (action->svc_action) {
             services_action_free(action->svc_action);
         }
@@ -232,27 +245,39 @@ stonith__action_result(stonith_action_t *action)
 }
 
 #define FAILURE_MAX_RETRIES 2
-stonith_action_t *
-stonith_action_create(const char *agent,
-                      const char *_action,
-                      const char *victim,
-                      uint32_t victim_nodeid,
-                      int timeout, GHashTable * device_args,
-                      GHashTable * port_map, const char *host_arg)
-{
-    stonith_action_t *action;
 
-    action = calloc(1, sizeof(stonith_action_t));
+/*!
+ * \internal
+ * \brief Create a new fencing action to be executed
+ *
+ * \param[in] agent          Fence agent to use
+ * \param[in] action_name    Fencing action to be executed
+ * \param[in] target         Name of target of fencing action (if known)
+ * \param[in] target_nodeid  Node ID of target of fencing action (if known)
+ * \param[in] timeout_sec    Timeout to be used when executing action
+ * \param[in] device_args    Parameters to pass to fence agent
+ * \param[in] port_map       Mapping of target names to device ports
+ * \param[in] host_arg       Agent parameter used to pass target name
+ *
+ * \return Newly created fencing action (asserts on error, never NULL)
+ */
+stonith_action_t *
+stonith__action_create(const char *agent, const char *action_name,
+                       const char *target, uint32_t target_nodeid,
+                       int timeout_sec, GHashTable *device_args,
+                       GHashTable *port_map, const char *host_arg)
+{
+    stonith_action_t *action = calloc(1, sizeof(stonith_action_t));
+
     CRM_ASSERT(action != NULL);
 
-    action->args = make_args(agent, _action, victim, victim_nodeid,
+    action->args = make_args(agent, action_name, target, target_nodeid,
                              device_args, port_map, host_arg);
-    crm_debug("Preparing '%s' action for %s using agent %s",
-              _action, (victim? victim : "no target"), agent);
+    crm_debug("Preparing '%s' action targeting %s using agent %s",
+              action_name, pcmk__s(target, "no node"), agent);
     action->agent = strdup(agent);
-    action->action = strdup(_action);
-    pcmk__str_update(&action->victim, victim);
-    action->timeout = action->remaining_timeout = timeout;
+    action->action = strdup(action_name);
+    action->timeout = action->remaining_timeout = timeout_sec;
     action->max_retries = FAILURE_MAX_RETRIES;
 
     pcmk__set_result(&(action->result), PCMK_OCF_UNKNOWN, PCMK_EXEC_UNKNOWN,
@@ -262,7 +287,7 @@ stonith_action_create(const char *agent,
         char buffer[512];
         const char *value = NULL;
 
-        snprintf(buffer, sizeof(buffer), "pcmk_%s_retries", _action);
+        snprintf(buffer, sizeof(buffer), "pcmk_%s_retries", action_name);
         value = g_hash_table_lookup(device_args, buffer);
 
         if (value) {
@@ -592,8 +617,9 @@ internal_stonith_action_execute(stonith_action_t * action)
 
     svc_action->timeout = 1000 * action->remaining_timeout;
     svc_action->standard = strdup(PCMK_RESOURCE_CLASS_STONITH);
-    svc_action->id = crm_strdup_printf("%s_%s_%d", basename(action->agent),
-                                       action->action, action->tries);
+    svc_action->id = crm_strdup_printf("%s_%s_%dof%d", basename(action->agent),
+                                       action->action, action->tries,
+                                       action->max_retries);
     svc_action->agent = strdup(action->agent);
     svc_action->sequence = stonith_sequence++;
     svc_action->params = action->args;
@@ -642,12 +668,11 @@ internal_stonith_action_execute(stonith_action_t * action)
  * \return pcmk_ok if ownership of action has been taken, -errno otherwise
  */
 int
-stonith_action_execute_async(stonith_action_t * action,
-                             void *userdata,
-                             void (*done) (int pid,
-                                           const pcmk__action_result_t *result,
-                                           void *user_data),
-                             void (*fork_cb) (int pid, void *user_data))
+stonith__execute_async(stonith_action_t * action, void *userdata,
+                       void (*done) (int pid,
+                                     const pcmk__action_result_t *result,
+                                     void *user_data),
+                       void (*fork_cb) (int pid, void *user_data))
 {
     if (!action) {
         return -EINVAL;
@@ -656,7 +681,7 @@ stonith_action_execute_async(stonith_action_t * action,
     action->userdata = userdata;
     action->done_cb = done;
     action->fork_cb = fork_cb;
-    action->async = 1;
+    action->async = true;
 
     return internal_stonith_action_execute(action);
 }

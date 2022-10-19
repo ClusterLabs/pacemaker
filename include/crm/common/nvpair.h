@@ -34,7 +34,7 @@ typedef struct pcmk_nvpair_s {
 GSList *pcmk_prepend_nvpair(GSList *nvpairs, const char *name, const char *value);
 void pcmk_free_nvpairs(GSList *nvpairs);
 GSList *pcmk_sort_nvpairs(GSList *list);
-GSList *pcmk_xml_attrs2nvpairs(xmlNode *xml);
+GSList *pcmk_xml_attrs2nvpairs(const xmlNode *xml);
 void pcmk_nvpairs2xml_attrs(GSList *list, xmlNode *xml);
 
 xmlNode *crm_create_nvpair_xml(xmlNode *parent, const char *id,
@@ -43,7 +43,7 @@ void hash2nvpair(gpointer key, gpointer value, gpointer user_data);
 void hash2field(gpointer key, gpointer value, gpointer user_data);
 void hash2metafield(gpointer key, gpointer value, gpointer user_data);
 void hash2smartfield(gpointer key, gpointer value, gpointer user_data);
-GHashTable *xml2list(xmlNode *parent);
+GHashTable *xml2list(const xmlNode *parent);
 
 const char *crm_xml_add(xmlNode *node, const char *name, const char *value);
 const char *crm_xml_replace(xmlNode *node, const char *name, const char *value);
@@ -73,7 +73,7 @@ char *crm_element_value_copy(const xmlNode *data, const char *name);
  * \return Pointer to copied value (from source)
  */
 static inline const char *
-crm_copy_xml_element(xmlNode *obj1, xmlNode *obj2, const char *element)
+crm_copy_xml_element(const xmlNode *obj1, xmlNode *obj2, const char *element)
 {
     const char *value = crm_element_value(obj1, element);
 

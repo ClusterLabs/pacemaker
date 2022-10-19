@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <start>
+        <ref name="element-crm_error" />
+    </start>
+
+    <define name="element-crm_error">
+        <zeroOrMore>
+            <ref name="element-result-code" />
+        </zeroOrMore>
+    </define>
+
+    <define name="element-result-code">
+        <element name="result-code">
+            <attribute name="code"> <data type="integer" /> </attribute>
+            <attribute name="description"> <text /> </attribute>
+            <optional>
+                <attribute name="name"> <text /> </attribute>
+            </optional>
+        </element>
+    </define>
+</grammar>

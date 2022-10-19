@@ -23,7 +23,7 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_colocation id="dummy1-nerver-with-ms1-master" score="-INFINITY" rsc="dummy1" rsc-role="Started" with-rsc="ms1" with-rsc-role="Promoted"/>
+      <rsc_colocation id="dummy1-nerver-with-ms1-promoted" score="-INFINITY" rsc="dummy1" rsc-role="Started" with-rsc="ms1" with-rsc-role="Promoted"/>
       <rsc_location id="cli-ban-ms1-on-sle12sp2-1" rsc="ms1" role="Promoted" node="sle12sp2-1" score="-INFINITY"/>
     </constraints>
     <rsc_defaults/>
@@ -33,7 +33,7 @@
       <transient_attributes id="1084783156">
         <instance_attributes id="status-1084783156">
           <nvpair id="status-1084783156-shutdown" name="shutdown" value="0"/>
-          <nvpair id="status-1084783156-master-state1" name="master-state1" value="5"/>
+          <nvpair id="status-1084783156-promoted-state1" name="master-state1" value="5"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="1084783156">
@@ -54,7 +54,7 @@
       <transient_attributes id="1084783155">
         <instance_attributes id="status-1084783155">
           <nvpair id="status-1084783155-shutdown" name="shutdown" value="0"/>
-          <nvpair id="status-1084783155-master-state1" name="master-state1" value="10"/>
+          <nvpair id="status-1084783155-promoted-state1" name="master-state1" value="10"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="1084783155">

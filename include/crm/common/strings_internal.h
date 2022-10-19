@@ -37,8 +37,8 @@ bool pcmk__starts_with(const char *str, const char *prefix);
 bool pcmk__ends_with(const char *s, const char *match);
 bool pcmk__ends_with_ext(const char *s, const char *match);
 char *pcmk__trim(char *str);
-void pcmk__add_separated_word(char **list, size_t *len, const char *word,
-                              const char *separator);
+void pcmk__add_separated_word(GString **list, size_t init_size,
+                              const char *word, const char *separator);
 int pcmk__compress(const char *data, unsigned int length, unsigned int max,
                    char **result, unsigned int *result_len);
 
@@ -122,8 +122,8 @@ pcmk__intkey_table_lookup(GHashTable *hash_table, int key)
  * \internal
  * \brief Remove a key/value from a hash table with integer keys
  *
- * \param[in] hash_table  Table to modify
- * \param[in] key         Integer key of entry to remove
+ * \param[in,out] hash_table  Table to modify
+ * \param[in]     key         Integer key of entry to remove
  *
  * \return Whether \p key was found and removed from \p hash_table
  */
@@ -133,7 +133,7 @@ pcmk__intkey_table_remove(GHashTable *hash_table, int key)
     return g_hash_table_remove(hash_table, GINT_TO_POINTER(key));
 }
 
-gboolean pcmk__str_in_list(const gchar *s, GList *lst, uint32_t flags);
+gboolean pcmk__str_in_list(const gchar *s, const GList *lst, uint32_t flags);
 
 bool pcmk__strcase_any_of(const char *s, ...) G_GNUC_NULL_TERMINATED;
 bool pcmk__str_any_of(const char *s, ...) G_GNUC_NULL_TERMINATED;
@@ -142,6 +142,7 @@ bool pcmk__char_in_any_str(int ch, ...) G_GNUC_NULL_TERMINATED;
 int pcmk__strcmp(const char *s1, const char *s2, uint32_t flags);
 int pcmk__numeric_strcasecmp(const char *s1, const char *s2);
 void pcmk__str_update(char **str, const char *value);
+void pcmk__g_strcat(GString *buffer, ...) G_GNUC_NULL_TERMINATED;
 
 static inline bool
 pcmk__str_eq(const char *s1, const char *s2, uint32_t flags)
@@ -151,9 +152,9 @@ pcmk__str_eq(const char *s1, const char *s2, uint32_t flags)
 
 // Like pcmk__add_separated_word() but using a space as separator
 static inline void
-pcmk__add_word(char **list, size_t *len, const char *word)
+pcmk__add_word(GString **list, size_t init_size, const char *word)
 {
-    return pcmk__add_separated_word(list, len, word, " ");
+    return pcmk__add_separated_word(list, init_size, word, " ");
 }
 
 /* Correctly displaying singular or plural is complicated; consider "1 node has"

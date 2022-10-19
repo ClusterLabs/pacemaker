@@ -1004,7 +1004,7 @@ ban_or_move(pcmk__output_t *out, pe_resource_t *rsc, const char *move_lifetime)
 }
 
 static void
-cleanup(pcmk__output_t *out, pe_resource_t *rsc)
+cleanup(pcmk__output_t *out, pe_resource_t *rsc, pe_node_t *node)
 {
     int rc = pcmk_rc_ok;
 
@@ -1019,7 +1019,7 @@ cleanup(pcmk__output_t *out, pe_resource_t *rsc)
 
     if ((rc == pcmk_rc_ok) && !out->is_quiet(out)) {
         // Show any reasons why resource might stay stopped
-        cli_resource_check(out, cib_conn, rsc);
+        cli_resource_check(out, rsc, node);
     }
 
     if (rc == pcmk_rc_ok) {
@@ -1311,7 +1311,7 @@ refresh(pcmk__output_t *out)
 }
 
 static void
-refresh_resource(pcmk__output_t *out, pe_resource_t *rsc)
+refresh_resource(pcmk__output_t *out, pe_resource_t *rsc, pe_node_t *node)
 {
     int rc = pcmk_rc_ok;
 
@@ -1326,7 +1326,7 @@ refresh_resource(pcmk__output_t *out, pe_resource_t *rsc)
 
     if ((rc == pcmk_rc_ok) && !out->is_quiet(out)) {
         // Show any reasons why resource might stay stopped
-        cli_resource_check(out, cib_conn, rsc);
+        cli_resource_check(out, rsc, node);
     }
 
     if (rc == pcmk_rc_ok) {
@@ -1625,20 +1625,26 @@ main(int argc, char **argv)
 
         CRM_ASSERT(len > 0);
 
-        strv = calloc(len, sizeof(char *));
-        strv[0] = strdup("non-option ARGV-elements:");
+        /* Add 1 for the strv[0] string below, and add another 1 for the NULL
+         * at the end of the array so g_strjoinv knows when to stop.
+         */
+        strv = calloc(len+2, sizeof(char *));
+        strv[0] = strdup("non-option ARGV-elements:\n");
 
         for (gchar **s = options.remainder; *s; s++) {
             strv[i] = crm_strdup_printf("[%d of %d] %s\n", i, len, *s);
             i++;
         }
 
+        strv[i] = NULL;
+
         exit_code = CRM_EX_USAGE;
         msg = g_strjoinv("", strv);
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "%s", msg);
         g_free(msg);
 
-        for(i = 0; i < len; i++) {
+        /* Don't try to free the last element, which is just NULL. */
+        for(i = 0; i < len+1; i++) {
             free(strv[i]);
         }
         free(strv);
@@ -1815,7 +1821,7 @@ main(int argc, char **argv)
             all = g_list_prepend(all, (gpointer) "*");
             rc = out->message(out, "resource-list", data_set,
                               pcmk_show_inactive_rscs | pcmk_show_rsc_only | pcmk_show_pending,
-                              TRUE, all, all, FALSE);
+                              true, all, all, false);
             g_list_free(all);
 
             if (rc == pcmk_rc_no_output) {
@@ -1930,18 +1936,18 @@ main(int argc, char **argv)
         }
 
         case cmd_query_xml:
-            rc = cli_resource_print(rsc, data_set, TRUE);
+            rc = cli_resource_print(rsc, data_set, true);
             break;
 
         case cmd_query_raw_xml:
-            rc = cli_resource_print(rsc, data_set, FALSE);
+            rc = cli_resource_print(rsc, data_set, false);
             break;
 
         case cmd_why:
             if ((options.host_uname != NULL) && (node == NULL)) {
                 rc = pcmk_rc_node_unknown;
             } else {
-                rc = out->message(out, "resource-reasons-list", cib_conn,
+                rc = out->message(out, "resource-reasons-list",
                                   data_set->resources, rsc, node);
             }
             break;
@@ -2075,7 +2081,7 @@ main(int argc, char **argv)
                     start_mainloop(controld_api);
                 }
             } else {
-                cleanup(out, rsc);
+                cleanup(out, rsc, node);
             }
             break;
 
@@ -2083,7 +2089,7 @@ main(int argc, char **argv)
             if (rsc == NULL) {
                 rc = refresh(out);
             } else {
-                refresh_resource(out, rsc);
+                refresh_resource(out, rsc, node);
             }
             break;
 

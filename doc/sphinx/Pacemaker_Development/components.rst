@@ -348,6 +348,40 @@ later).
 
 
 .. index::
+   single: pe__colocation_t
+
+Colocations
+___________
+
+``pcmk__colocation_t`` is the data object representing colocations.
+
+Colocation constraints come into play in these parts of the scheduler code:
+
+* When sorting resources for assignment, so resources with highest node score
+  are assigned first (see ``cmp_resources()``)
+* When updating node scores for resource assigment or promotion priority
+* When assigning resources, so any resources to be colocated with can be
+  assigned first, and so colocations affect where the resource is assigned
+* When choosing roles for promotable clone instances, so colocations involving
+  a specific role can affect which instances are promoted
+
+The resource allocation functions have several methods related to colocations:
+
+* ``apply_coloc_score():`` This applies a colocation's score to either the
+  dependent's allowed node scores (if called while resources are being
+  assigned) or the dependent's priority (if called while choosing promotable
+  instance roles). It can behave differently depending on whether it is being
+  called as the primary's method or as the dependent's method.
+* ``add_colocated_node_scores():`` This updates a table of nodes for a given
+  colocation attribute and score. It goes through colocations involving a given
+  resource, and updates the scores of the nodes in the table with the best
+  scores of nodes that match up according to the colocation criteria.
+* ``colocated_resources():`` This generates a list of all resources involved
+  in mandatory colocations (directly or indirectly via colocation chains) with
+  a given resource.
+
+
+.. index::
    single: pe__ordering_t
    single: pe_ordering
 

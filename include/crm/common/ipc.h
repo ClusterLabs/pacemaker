@@ -37,7 +37,7 @@ extern "C" {
 #define create_reply(request, xml_response_data)    \
     create_reply_adv(request, xml_response_data, __func__)
 
-xmlNode *create_reply_adv(xmlNode *request, xmlNode *xml_response_data,
+xmlNode *create_reply_adv(const xmlNode *request, xmlNode *xml_response_data,
                           const char *origin);
 
 #define create_request(task, xml_data, host_to, sys_to, sys_from, uuid_from) \
@@ -97,11 +97,11 @@ typedef struct pcmk_ipc_api_s pcmk_ipc_api_t;
 /*!
  * \brief Callback function type for Pacemaker daemon IPC APIs
  *
- * \param[in] api         IPC API connection
- * \param[in] event_type  The type of event that occurred
- * \param[in] status      Event status
- * \param[in] event_data  Event-specific data
- * \param[in] user_data   Caller data provided when callback was registered
+ * \param[in,out] api         IPC API connection
+ * \param[in]     event_type  The type of event that occurred
+ * \param[in]     status      Event status
+ * \param[in,out] event_data  Event-specific data
+ * \param[in,out] user_data   Caller data provided when callback was registered
  *
  * \note For connection and disconnection events, event_data may be NULL (for
  *       local IPC) or the name of the connected node (for remote IPC, for
@@ -121,14 +121,14 @@ int pcmk_connect_ipc(pcmk_ipc_api_t *api, enum pcmk_ipc_dispatch dispatch_type);
 
 void pcmk_disconnect_ipc(pcmk_ipc_api_t *api);
 
-int pcmk_poll_ipc(pcmk_ipc_api_t *api, int timeout_ms);
+int pcmk_poll_ipc(const pcmk_ipc_api_t *api, int timeout_ms);
 
 void pcmk_dispatch_ipc(pcmk_ipc_api_t *api);
 
 void pcmk_register_ipc_callback(pcmk_ipc_api_t *api, pcmk_ipc_callback_t cb,
                                 void *user_data);
 
-const char *pcmk_ipc_name(pcmk_ipc_api_t *api, bool for_log);
+const char *pcmk_ipc_name(const pcmk_ipc_api_t *api, bool for_log);
 
 bool pcmk_ipc_is_connected(pcmk_ipc_api_t *api);
 

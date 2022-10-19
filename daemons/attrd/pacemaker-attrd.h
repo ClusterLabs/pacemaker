@@ -15,6 +15,7 @@
 #include <crm/crm.h>
 #include <crm/cluster.h>
 #include <crm/cluster/election_internal.h>
+#include <crm/common/messages_internal.h>
 #include <crm/cib/internal.h>
 
 /*
@@ -43,21 +44,23 @@
  */
 #define ATTRD_PROTOCOL_VERSION "4"
 
+#define attrd_send_ack(client, id, flags) \
+    pcmk__ipc_send_ack((client), (id), (flags), "ack", ATTRD_PROTOCOL_VERSION, CRM_EX_INDETERMINATE)
+
 void attrd_init_mainloop(void);
 void attrd_run_mainloop(void);
 
 void attrd_set_requesting_shutdown(void);
 void attrd_clear_requesting_shutdown(void);
-gboolean attrd_requesting_shutdown(void);
-gboolean attrd_shutting_down(void);
+bool attrd_requesting_shutdown(void);
+bool attrd_shutting_down(void);
 void attrd_shutdown(int nsig);
-void attrd_init_ipc(qb_ipcs_service_t **ipcs,
-                    qb_ipcs_msg_process_fn dispatch_fn);
+void attrd_init_ipc(void);
 void attrd_ipc_fini(void);
 
 void attrd_cib_disconnect(void);
 
-gboolean attrd_value_needs_expansion(const char *value);
+bool attrd_value_needs_expansion(const char *value);
 int attrd_expand_value(const char *value, const char *old_value);
 
 /* regular expression to clear failures of all resources */
@@ -141,24 +144,42 @@ typedef struct attribute_value_s {
 extern crm_cluster_t *attrd_cluster;
 extern GHashTable *attributes;
 
-#define attrd_send_ack(client, id, flags) \
-    pcmk__ipc_send_ack((client), (id), (flags), "ack", ATTRD_PROTOCOL_VERSION, CRM_EX_INDETERMINATE)
-
 #define CIB_OP_TIMEOUT_S 120
 
-void write_attributes(bool all, bool ignore_delay);
+int attrd_cluster_connect(void);
+void attrd_peer_update(const crm_node_t *peer, xmlNode *xml, const char *host,
+                       bool filter);
+void attrd_peer_sync(crm_node_t *peer, xmlNode *xml);
+void attrd_peer_remove(const char *host, bool uncache, const char *source);
+void attrd_peer_clear_failure(pcmk__request_t *request);
+void attrd_peer_sync_response(const crm_node_t *peer, bool peer_won,
+                              xmlNode *xml);
+
 void attrd_broadcast_protocol(void);
-void attrd_peer_message(crm_node_t *client, xmlNode *msg);
-void attrd_client_peer_remove(pcmk__client_t *client, xmlNode *xml);
-void attrd_client_clear_failure(xmlNode *xml);
-void attrd_client_update(xmlNode *xml);
-void attrd_client_refresh(void);
-void attrd_client_query(pcmk__client_t *client, uint32_t id, uint32_t flags,
-                        xmlNode *query);
+xmlNode *attrd_client_peer_remove(pcmk__request_t *request);
+xmlNode *attrd_client_clear_failure(pcmk__request_t *request);
+xmlNode *attrd_client_update(pcmk__request_t *request);
+xmlNode *attrd_client_refresh(pcmk__request_t *request);
+xmlNode *attrd_client_query(pcmk__request_t *request);
+gboolean attrd_send_message(crm_node_t * node, xmlNode * data);
 
-void free_attribute(gpointer data);
+xmlNode *attrd_add_value_xml(xmlNode *parent, const attribute_t *a,
+                             const attribute_value_t *v, bool force_write);
+void attrd_clear_value_seen(void);
+void attrd_free_attribute(gpointer data);
+void attrd_free_attribute_value(gpointer data);
+attribute_t *attrd_populate_attribute(xmlNode *xml, const char *attr);
 
-gboolean attrd_election_cb(gpointer user_data);
-void attrd_peer_change_cb(enum crm_status_type type, crm_node_t *peer, const void *data);
+void attrd_write_attribute(attribute_t *a, bool ignore_delay);
+void attrd_write_attributes(bool all, bool ignore_delay);
+void attrd_write_or_elect_attribute(attribute_t *a);
+
+extern int minimum_protocol_version;
+void attrd_update_minimum_protocol_ver(const char *value);
+
+mainloop_timer_t *attrd_add_timer(const char *id, int timeout_ms, attribute_t *attr);
+
+void attrd_unregister_handlers(void);
+void attrd_handle_request(pcmk__request_t *request);
 
 #endif /* PACEMAKER_ATTRD__H */

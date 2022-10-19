@@ -165,7 +165,7 @@
     <node_state id="1" uname="node1" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
       <transient_attributes id="1">
         <instance_attributes id="status-1">
-          <nvpair id="status-1-master-galera" name="master-galera" value="100"/>
+          <nvpair id="status-1-promoted-galera" name="master-galera" value="100"/>
           <nvpair id="status-1-rmq-node-attr-rabbitmq" name="rmq-node-attr-rabbitmq" value="rabbit@node1"/>
         </instance_attributes>
       </transient_attributes>
@@ -226,7 +226,7 @@
     <node_state id="2" uname="node2" in_ccm="false" crmd="offline" crm-debug-origin="do_state_transition" join="down" expected="down">
       <transient_attributes id="2">
         <instance_attributes id="status-2">
-          <nvpair id="status-2-master-galera" name="master-galera" value="100"/>
+          <nvpair id="status-2-promoted-galera" name="master-galera" value="100"/>
           <nvpair id="status-2-rmq-node-attr-rabbitmq" name="rmq-node-attr-rabbitmq" value="rabbit@node2"/>
         </instance_attributes>
       </transient_attributes>

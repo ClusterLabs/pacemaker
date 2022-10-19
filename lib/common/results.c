@@ -25,6 +25,96 @@
 G_DEFINE_QUARK(pcmk-rc-error-quark, pcmk__rc_error)
 G_DEFINE_QUARK(pcmk-exitc-error-quark, pcmk__exitc_error)
 
+// General (all result code types)
+
+/*!
+ * \brief Get the name and description of a given result code
+ *
+ * A result code can be interpreted as a member of any one of several families.
+ *
+ * \param[in]  code  The result code to look up
+ * \param[in]  type  How \p code should be interpreted
+ * \param[out] name  Where to store the result code's name
+ * \param[out] desc  Where to store the result code's description
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk_result_get_strings(int code, enum pcmk_result_type type, const char **name,
+                        const char **desc)
+{
+    const char *code_name = NULL;
+    const char *code_desc = NULL;
+
+    switch (type) {
+        case pcmk_result_legacy:
+            code_name = pcmk_errorname(code);
+            code_desc = pcmk_strerror(code);
+            break;
+        case pcmk_result_rc:
+            code_name = pcmk_rc_name(code);
+            code_desc = pcmk_rc_str(code);
+            break;
+        case pcmk_result_exitcode:
+            code_name = crm_exit_name(code);
+            code_desc = crm_exit_str((crm_exit_t) code);
+            break;
+        default:
+            return pcmk_rc_undetermined;
+    }
+
+    if (name != NULL) {
+        *name = code_name;
+    }
+    
+    if (desc != NULL) {
+        *desc = code_desc;
+    }
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
+ * \brief Get the lower and upper bounds of a result code family
+ *
+ * \param[in]   type    Type of result code
+ * \param[out]  lower   Where to store the lower bound
+ * \param[out]  upper   Where to store the upper bound
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note There is no true upper bound on standard Pacemaker return codes or
+ *       legacy return codes. All system \p errno values are valid members of
+ *       these result code families, and there is no global upper limit nor a
+ *       constant by which to refer to the highest \p errno value on a given
+ *       system.
+ */
+int
+pcmk__result_bounds(enum pcmk_result_type type, int *lower, int *upper)
+{
+    CRM_ASSERT((lower != NULL) && (upper != NULL));
+
+    switch (type) {
+        case pcmk_result_legacy:
+            *lower = pcmk_ok;
+            *upper = 256;   // should be enough for almost any system error code
+            break;
+        case pcmk_result_rc:
+            *lower = pcmk_rc_error - pcmk__n_rc + 1;
+            *upper = 256;
+            break;
+        case pcmk_result_exitcode:
+            *lower = CRM_EX_OK;
+            *upper = CRM_EX_MAX;
+            break;
+        default:
+            *lower = 0;
+            *upper = -1;
+            return pcmk_rc_undetermined;
+    }
+    return pcmk_rc_ok;
+}
+
 // @COMPAT Legacy function return codes
 
 //! \deprecated Use standard return codes and pcmk_rc_name() instead
@@ -66,7 +156,7 @@ pcmk_strerror(int rc)
  * kept in the exact reverse order of the enum value numbering (i.e. add new
  * values to the end of the array).
  */
-static struct pcmk__rc_info {
+static const struct pcmk__rc_info {
     const char *name;
     const char *desc;
     int legacy_rc;
@@ -139,19 +229,19 @@ static struct pcmk__rc_info {
       "Operation requires quorum",
       -pcmk_err_no_quorum,
     },
-    { "pcmk_rc_ipc_pid_only",
-      "IPC server process is active but not accepting connections",
+    { "pcmk_rc_ipc_unauthorized",
+      "IPC server is blocked by unauthorized process",
       -pcmk_err_generic,
     },
     { "pcmk_rc_ipc_unresponsive",
       "IPC server is unresponsive",
       -pcmk_err_generic,
     },
-    { "pcmk_rc_ipc_unauthorized",
-      "IPC server is blocked by unauthorized process",
+    { "pcmk_rc_ipc_pid_only",
+      "IPC server process is active but not accepting connections",
       -pcmk_err_generic,
     },
-    { "pcmk_rc_op_unsatisifed",
+    { "pcmk_rc_op_unsatisfied",
       "Not applicable under current conditions",
       -pcmk_err_generic,
     },
@@ -195,9 +285,25 @@ static struct pcmk__rc_info {
       "Cluster simulation produced invalid transition",
       -pcmk_err_generic,
     },
+    { "pcmk_rc_unpack_error",
+      "Unable to parse CIB XML",
+      -pcmk_err_generic,
+    },
+    { "pcmk_rc_duplicate_id",
+      "Two or more XML elements have the same ID",
+      -pcmk_err_generic,
+    },
 };
 
-#define PCMK__N_RC (sizeof(pcmk__rcs) / sizeof(struct pcmk__rc_info))
+/*!
+ * \internal
+ * \brief The number of <tt>enum pcmk_rc_e</tt> values, excluding \c pcmk_rc_ok
+ *
+ * This constant stores the number of negative standard Pacemaker return codes.
+ * These represent Pacemaker-custom error codes. The count does not include
+ * positive system error numbers, nor does it include \c pcmk_rc_ok (success).
+ */
+const size_t pcmk__n_rc = PCMK__NELEM(pcmk__rcs);
 
 /*!
  * \brief Get a return code constant name as a string
@@ -209,7 +315,7 @@ static struct pcmk__rc_info {
 const char *
 pcmk_rc_name(int rc)
 {
-    if ((rc <= pcmk_rc_error) && ((pcmk_rc_error - rc) < PCMK__N_RC)) {
+    if ((rc <= pcmk_rc_error) && ((pcmk_rc_error - rc) < pcmk__n_rc)) {
         return pcmk__rcs[pcmk_rc_error - rc].name;
     }
     switch (rc) {
@@ -372,7 +478,7 @@ pcmk_rc_str(int rc)
     if (rc == pcmk_rc_ok) {
         return "OK";
     }
-    if ((rc <= pcmk_rc_error) && ((pcmk_rc_error - rc) < PCMK__N_RC)) {
+    if ((rc <= pcmk_rc_error) && ((pcmk_rc_error - rc) < pcmk__n_rc)) {
         return pcmk__rcs[pcmk_rc_error - rc].desc;
     }
     if (rc < 0) {
@@ -417,7 +523,7 @@ pcmk_rc2legacy(int rc)
     if (rc >= 0) {
         return -rc; // OK or system errno
     }
-    if ((rc <= pcmk_rc_error) && ((pcmk_rc_error - rc) < PCMK__N_RC)) {
+    if ((rc <= pcmk_rc_error) && ((pcmk_rc_error - rc) < pcmk__n_rc)) {
         return pcmk__rcs[pcmk_rc_error - rc].legacy_rc;
     }
     return -pcmk_err_generic;
@@ -582,6 +688,7 @@ pcmk_rc2exitc(int rc)
 
         case pcmk_rc_schema_validation:
         case pcmk_rc_transform_failed:
+        case pcmk_rc_unpack_error:
             return CRM_EX_CONFIG;
 
         case pcmk_rc_bad_nvpair:
@@ -637,6 +744,8 @@ pcmk_rc2exitc(int rc)
         case pcmk_rc_multiple:
             return CRM_EX_MULTIPLE;
 
+        case ENODEV:
+        case ENOENT:
         case ENXIO:
         case pcmk_rc_node_unknown:
         case pcmk_rc_unknown_format:
@@ -667,6 +776,9 @@ pcmk_rc2exitc(int rc)
 
         case pcmk_rc_no_input:
             return CRM_EX_NOINPUT;
+
+        case pcmk_rc_duplicate_id:
+            return CRM_EX_MULTIPLE;
 
         default:
             return CRM_EX_ERROR;
@@ -866,7 +978,7 @@ pcmk__set_result_output(pcmk__action_result_t *result, char *out, char *err)
  * \internal
  * \brief Clear a result's exit reason, output, and error output
  *
- * \param[in] result  Result to reset
+ * \param[in,out] result  Result to reset
  */
 void
 pcmk__reset_result(pcmk__action_result_t *result)
@@ -893,14 +1005,14 @@ pcmk__reset_result(pcmk__action_result_t *result)
  * \param[out] dst  Where to copy \p src to
  */
 void
-pcmk__copy_result(pcmk__action_result_t *src, pcmk__action_result_t *dst)
+pcmk__copy_result(const pcmk__action_result_t *src, pcmk__action_result_t *dst)
 {
     CRM_CHECK((src != NULL) && (dst != NULL), return);
     dst->exit_status = src->exit_status;
     dst->execution_status = src->execution_status;
-    pcmk__str_update(&src->exit_reason, dst->exit_reason);
-    pcmk__str_update(&src->action_stdout, dst->action_stdout);
-    pcmk__str_update(&src->action_stderr, dst->action_stderr);
+    pcmk__str_update(&dst->exit_reason, src->exit_reason);
+    pcmk__str_update(&dst->action_stdout, src->action_stdout);
+    pcmk__str_update(&dst->action_stderr, src->action_stderr);
 }
 
 // Deprecated functions kept only for backward API compatibility

@@ -11,8 +11,6 @@
 
 #include <crm_resource.h>
 
-#define XPATH_MAX 1024
-
 static char *
 parse_cli_lifetime(pcmk__output_t *out, const char *move_lifetime)
 {
@@ -341,76 +339,86 @@ cli_resource_clear(const char *rsc_id, const char *host, GList *allnodes, cib_t 
     return rc;
 }
 
-static char *
-build_clear_xpath_string(xmlNode *constraint_node, const char *rsc, const char *node, gboolean promoted_role_only)
+static void
+build_clear_xpath_string(GString *buf, const xmlNode *constraint_node,
+                         const char *rsc, const char *node,
+                         bool promoted_role_only)
 {
-    int offset = 0;
-    char *xpath_string = NULL;
-    char *first_half = NULL;
-    char *rsc_role_substr = NULL;
-    char *date_substr = NULL;
+    const char *cons_id = ID(constraint_node);
+    const char *cons_rsc = crm_element_value(constraint_node,
+                                             XML_LOC_ATTR_SOURCE);
+    GString *rsc_role_substr = NULL;
 
-    if (pcmk__starts_with(ID(constraint_node), "cli-ban-")) {
-        date_substr = crm_strdup_printf("//date_expression[@id='%s-lifetime']",
-                                        ID(constraint_node));
+    CRM_ASSERT(buf != NULL);
+    g_string_truncate(buf, 0);
 
-    } else if (pcmk__starts_with(ID(constraint_node), "cli-prefer-")) {
-        date_substr = crm_strdup_printf("//date_expression[@id='cli-prefer-lifetime-end-%s']",
-                                        crm_element_value(constraint_node, "rsc"));
-    } else {
-        return NULL;
+    if (!pcmk__starts_with(cons_id, "cli-ban-")
+        && !pcmk__starts_with(cons_id, "cli-prefer-")) {
+        return;
     }
 
-    first_half = calloc(1, XPATH_MAX);
-    offset += snprintf(first_half + offset, XPATH_MAX - offset, "//rsc_location");
+    g_string_append(buf, "//" XML_CONS_TAG_RSC_LOCATION);
 
-    if (node != NULL || rsc != NULL || promoted_role_only == TRUE) {
-        offset += snprintf(first_half + offset, XPATH_MAX - offset, "[");
+    if ((node != NULL) || (rsc != NULL) || promoted_role_only) {
+        g_string_append_c(buf, '[');
 
         if (node != NULL) {
-            if (rsc != NULL || promoted_role_only == TRUE) {
-                offset += snprintf(first_half + offset, XPATH_MAX - offset, "@node='%s' and ", node);
-            } else {
-                offset += snprintf(first_half + offset, XPATH_MAX - offset, "@node='%s'", node);
+            pcmk__g_strcat(buf, "@" XML_CIB_TAG_NODE "='", node, "'", NULL);
+
+            if (promoted_role_only || (rsc != NULL)) {
+                g_string_append(buf, " and ");
             }
         }
 
-        if (rsc != NULL && promoted_role_only == TRUE) {
-            rsc_role_substr = crm_strdup_printf("@rsc='%s' and @role='%s'",
-                                                rsc, promoted_role_name());
-            offset += snprintf(first_half + offset, XPATH_MAX - offset,
-                               "@rsc='%s' and @role='%s']",
-                               rsc, promoted_role_name());
+        if ((rsc != NULL) && promoted_role_only) {
+            rsc_role_substr = g_string_sized_new(64);
+            pcmk__g_strcat(rsc_role_substr,
+                           "@" XML_LOC_ATTR_SOURCE "='", rsc, "' "
+                           "and @" XML_RULE_ATTR_ROLE "='",
+                           promoted_role_name(), "'", NULL);
+
         } else if (rsc != NULL) {
-            rsc_role_substr = crm_strdup_printf("@rsc='%s'", rsc);
-            offset += snprintf(first_half + offset, XPATH_MAX - offset, "@rsc='%s']", rsc);
-        } else if (promoted_role_only == TRUE) {
-            rsc_role_substr = crm_strdup_printf("@role='%s'",
-                                                promoted_role_name());
-            offset += snprintf(first_half + offset, XPATH_MAX - offset,
-                               "@role='%s']", promoted_role_name());
-        } else {
-            offset += snprintf(first_half + offset, XPATH_MAX - offset, "]");
+            rsc_role_substr = g_string_sized_new(64);
+            pcmk__g_strcat(rsc_role_substr,
+                           "@" XML_LOC_ATTR_SOURCE "='", rsc, "'", NULL);
+
+        } else if (promoted_role_only) {
+            rsc_role_substr = g_string_sized_new(64);
+            pcmk__g_strcat(rsc_role_substr,
+                           "@" XML_RULE_ATTR_ROLE "='", promoted_role_name(),
+                           "'", NULL);
         }
+
+        if (rsc_role_substr != NULL) {
+            g_string_append(buf, rsc_role_substr->str);
+        }
+        g_string_append_c(buf, ']');
     }
 
     if (node != NULL) {
+        g_string_append(buf, "|//" XML_CONS_TAG_RSC_LOCATION);
+
         if (rsc_role_substr != NULL) {
-            xpath_string = crm_strdup_printf("%s|//rsc_location[%s]/rule[expression[@attribute='#uname' and @value='%s']]%s",
-                                             first_half, rsc_role_substr, node, date_substr);
-        } else {
-            xpath_string = crm_strdup_printf("%s|//rsc_location/rule[expression[@attribute='#uname' and @value='%s']]%s",
-                                             first_half, node, date_substr);
+            pcmk__g_strcat(buf, "[", rsc_role_substr, "]", NULL);
         }
-    } else {
-        xpath_string = crm_strdup_printf("%s%s", first_half, date_substr);
+        pcmk__g_strcat(buf,
+                       "/" XML_TAG_RULE "[" XML_TAG_EXPRESSION
+                       "[@" XML_EXPR_ATTR_ATTRIBUTE "='" CRM_ATTR_UNAME "' "
+                       "and @" XML_EXPR_ATTR_VALUE "='", node, "']]", NULL);
     }
 
-    free(first_half);
-    free(date_substr);
-    free(rsc_role_substr);
+    g_string_append(buf, "//" PCMK_XE_DATE_EXPRESSION "[@" XML_ATTR_ID "='");
+    if (pcmk__starts_with(cons_id, "cli-ban-")) {
+        pcmk__g_strcat(buf, cons_id, "-lifetime']", NULL);
 
-    return xpath_string;
+    } else {    // starts with "cli-prefer-"
+        pcmk__g_strcat(buf,
+                       "cli-prefer-lifetime-end-", cons_rsc, "']", NULL);
+    }
+
+    if (rsc_role_substr != NULL) {
+        g_string_free(rsc_role_substr, TRUE);
+    }
 }
 
 // \return Standard Pacemaker return code
@@ -418,6 +426,7 @@ int
 cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, int cib_options,
                                const char *rsc, const char *node, gboolean promoted_role_only)
 {
+    GString *buf = NULL;
     xmlXPathObject *xpathObj = NULL;
     xmlNode *cib_constraints = NULL;
     crm_time_t *now = crm_time_new(NULL);
@@ -431,16 +440,20 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, int cib_options,
         xmlNode *constraint_node = getXpathResult(xpathObj, i);
         xmlNode *date_expr_node = NULL;
         crm_time_t *end = NULL;
-        char *xpath_string = NULL;
 
-        xpath_string = build_clear_xpath_string(constraint_node, rsc, node, promoted_role_only);
-        if (xpath_string == NULL) {
+        if (buf == NULL) {
+            buf = g_string_sized_new(1024);
+        }
+
+        build_clear_xpath_string(buf, constraint_node, rsc, node,
+                                 promoted_role_only);
+        if (buf->len == 0) {
             continue;
         }
 
-        date_expr_node = get_xpath_object(xpath_string, constraint_node, LOG_DEBUG);
+        date_expr_node = get_xpath_object((const char *) buf->str,
+                                          constraint_node, LOG_DEBUG);
         if (date_expr_node == NULL) {
-            free(xpath_string);
             continue;
         }
 
@@ -463,7 +476,6 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, int cib_options,
             rc = pcmk_legacy2rc(rc);
 
             if (rc != pcmk_rc_ok) {
-                free(xpath_string);
                 goto done;
             }
 
@@ -471,10 +483,12 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, int cib_options,
         }
 
         crm_time_free(end);
-        free(xpath_string);
     }
 
 done:
+    if (buf != NULL) {
+        g_string_free(buf, TRUE);
+    }
     freeXpathObject(xpathObj);
     crm_time_free(now);
     return rc;

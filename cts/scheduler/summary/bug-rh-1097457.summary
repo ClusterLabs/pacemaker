@@ -3,7 +3,7 @@
 Current cluster status:
   * Node List:
     * Online: [ lama2 lama3 ]
-    * GuestOnline: [ lamaVM1@lama2 lamaVM2@lama3 lamaVM3@lama3 ]
+    * GuestOnline: [ lamaVM1 lamaVM2 lamaVM3 ]
 
   * Full List of Resources:
     * restofencelama2	(stonith:fence_ipmilan):	 Started lama3
@@ -95,7 +95,7 @@ Executing Cluster Transition:
 Revised Cluster Status:
   * Node List:
     * Online: [ lama2 lama3 ]
-    * GuestOnline: [ lamaVM1@lama2 lamaVM2@lama3 lamaVM3@lama3 ]
+    * GuestOnline: [ lamaVM1 lamaVM2 lamaVM3 ]
 
   * Full List of Resources:
     * restofencelama2	(stonith:fence_ipmilan):	 Started lama3

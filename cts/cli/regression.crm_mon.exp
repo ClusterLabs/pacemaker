@@ -9,7 +9,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
@@ -488,7 +488,7 @@ Active Resources:
 =#=#=#= Begin test: Text output with only the node section =#=#=#=
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 =#=#=#= End test: Text output with only the node section - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output with only the node section
 =#=#=#= Begin test: Complete text output =#=#=#=
@@ -502,7 +502,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
@@ -582,10 +582,10 @@ Operations:
     * httpd-bundle-0: migration-threshold=1000000:
       * (2) start
       * (3) monitor: interval="30000ms"
-  * Node: httpd-bundle-0@cluster01:
+  * Node: httpd-bundle-0:
     * httpd: migration-threshold=1000000:
       * (1) start
-  * Node: httpd-bundle-1@cluster02:
+  * Node: httpd-bundle-1:
     * httpd: migration-threshold=1000000:
       * (1) start
 
@@ -728,7 +728,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * 1	(ocf:pacemaker:Dummy):	Active cluster02
@@ -808,10 +808,10 @@ Operations:
     * httpd-bundle-0: migration-threshold=1000000:
       * (2) start
       * (3) monitor: interval="30000ms"
-  * Node: httpd-bundle-0@cluster01:
+  * Node: httpd-bundle-0:
     * httpd: migration-threshold=1000000:
       * (1) start
-  * Node: httpd-bundle-1@cluster02:
+  * Node: httpd-bundle-1:
     * httpd: migration-threshold=1000000:
       * (1) start
 
@@ -847,13 +847,13 @@ Node List:
       * promotable-rsc	(ocf:pacemaker:Stateful):	 Promoted
       * httpd-bundle-ip-192.168.122.132	(ocf:heartbeat:IPaddr2):	 Started
       * httpd-bundle-docker-1	(ocf:heartbeat:docker):	 Started
-  * GuestNode httpd-bundle-0@cluster01: online:
+  * GuestNode httpd-bundle-0: online:
     * Resources:
       * httpd	(ocf:heartbeat:apache):	 Started
-  * GuestNode httpd-bundle-1@cluster02: online:
+  * GuestNode httpd-bundle-1: online:
     * Resources:
       * httpd	(ocf:heartbeat:apache):	 Started
-  * GuestNode httpd-bundle-2@: OFFLINE:
+  * GuestNode httpd-bundle-2: OFFLINE:
     * Resources:
 
 Node Attributes:
@@ -916,10 +916,10 @@ Operations:
     * httpd-bundle-0: migration-threshold=1000000:
       * (2) start
       * (3) monitor: interval="30000ms"
-  * Node: httpd-bundle-0@cluster01:
+  * Node: httpd-bundle-0:
     * httpd: migration-threshold=1000000:
       * (1) start
-  * Node: httpd-bundle-1@cluster02:
+  * Node: httpd-bundle-1:
     * httpd: migration-threshold=1000000:
       * (1) start
 
@@ -957,10 +957,10 @@ Node List:
       * 1	(ocf:pacemaker:Stateful):	Active 
       * 1	(ocf:pacemaker:ping):	Active 
       * 1	(ocf:pacemaker:remote):	Active 
-  * GuestNode httpd-bundle-0@cluster01: online:
+  * GuestNode httpd-bundle-0: online:
     * Resources:
       * 1	(ocf:heartbeat:apache):	Active 
-  * GuestNode httpd-bundle-1@cluster02: online:
+  * GuestNode httpd-bundle-1: online:
     * Resources:
       * 1	(ocf:heartbeat:apache):	Active 
 
@@ -1024,10 +1024,10 @@ Operations:
     * httpd-bundle-0: migration-threshold=1000000:
       * (2) start
       * (3) monitor: interval="30000ms"
-  * Node: httpd-bundle-0@cluster01:
+  * Node: httpd-bundle-0:
     * httpd: migration-threshold=1000000:
       * (1) start
-  * Node: httpd-bundle-1@cluster02:
+  * Node: httpd-bundle-1:
     * httpd: migration-threshold=1000000:
       * (1) start
 
@@ -1687,7 +1687,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * Fencing	(stonith:fence_xvm):	 Started cluster01
@@ -1803,7 +1803,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Full List of Resources:
   * Clone Set: ping-clone [ping]:
@@ -1873,7 +1873,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * Fencing	(stonith:fence_xvm):	 Started cluster01
@@ -1947,7 +1947,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * Resource Group: exim-group:
@@ -2031,7 +2031,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * Resource Group: exim-group:
@@ -2106,7 +2106,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
@@ -2196,7 +2196,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
@@ -2376,7 +2376,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * No active resources
@@ -2426,7 +2426,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Full List of Resources:
   * Clone Set: inactive-clone [inactive-dhcpd] (disabled):
@@ -2447,7 +2447,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
@@ -2576,7 +2576,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
@@ -2675,7 +2675,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
@@ -2772,7 +2772,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
@@ -2871,7 +2871,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
@@ -3485,6 +3485,8 @@ Operations:
 =#=#=#= End test: XML output, filtered by exact primitive instance name in cloned group - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output, filtered by exact primitive instance name in cloned group
 =#=#=#= Begin test: Text output of partially active resources =#=#=#=
+unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature)| rc=3 id=dummy-2_last_failure_0
+unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter)| rc=2 id=httpd_last_failure_0
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (2) (version) - partition with quorum
@@ -3524,6 +3526,8 @@ Failed Resource Actions:
 =#=#=#= End test: Text output of partially active resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of partially active resources
 =#=#=#= Begin test: XML output of partially active resources =#=#=#=
+unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature)| rc=3 id=dummy-2_last_failure_0
+unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter)| rc=2 id=httpd_last_failure_0
 <pacemaker-result api-version="X" request="crm_mon -1 --output-as=xml">
   <summary>
     <stack type="corosync"/>
@@ -3671,6 +3675,8 @@ Failed Resource Actions:
 =#=#=#= End test: XML output of partially active resources - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output of partially active resources
 =#=#=#= Begin test: Text output of partially active resources, with inactive resources =#=#=#=
+unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature)| rc=3 id=dummy-2_last_failure_0
+unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter)| rc=2 id=httpd_last_failure_0
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (2) (version) - partition with quorum
@@ -3713,6 +3719,8 @@ Failed Resource Actions:
 =#=#=#= End test: Text output of partially active resources, with inactive resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of partially active resources, with inactive resources
 =#=#=#= Begin test: Complete brief text output, with inactive resources =#=#=#=
+unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature)| rc=3 id=dummy-2_last_failure_0
+unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter)| rc=2 id=httpd_last_failure_0
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (2) (version) - partition with quorum
@@ -3802,6 +3810,8 @@ Failed Resource Actions:
 =#=#=#= End test: Complete brief text output, with inactive resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete brief text output, with inactive resources
 =#=#=#= Begin test: Text output of partially active group =#=#=#=
+unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature)| rc=3 id=dummy-2_last_failure_0
+unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter)| rc=2 id=httpd_last_failure_0
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (version) - partition with quorum
@@ -3812,7 +3822,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster02 httpd-bundle-1@cluster01 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * Resource Group: partially-active-group (2 members inactive):
@@ -3821,6 +3831,8 @@ Active Resources:
 =#=#=#= End test: Text output of partially active group - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of partially active group
 =#=#=#= Begin test: Text output of partially active group, with inactive resources =#=#=#=
+unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature)| rc=3 id=dummy-2_last_failure_0
+unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter)| rc=2 id=httpd_last_failure_0
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (version) - partition with quorum
@@ -3831,7 +3843,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster02 httpd-bundle-1@cluster01 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Full List of Resources:
   * Resource Group: partially-active-group:
@@ -3842,6 +3854,8 @@ Full List of Resources:
 =#=#=#= End test: Text output of partially active group, with inactive resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of partially active group, with inactive resources
 =#=#=#= Begin test: Text output of active member of partially active group =#=#=#=
+unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature)| rc=3 id=dummy-2_last_failure_0
+unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter)| rc=2 id=httpd_last_failure_0
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (version) - partition with quorum
@@ -3852,7 +3866,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster02 httpd-bundle-1@cluster01 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * Resource Group: partially-active-group (2 members inactive):
@@ -3860,6 +3874,8 @@ Active Resources:
 =#=#=#= End test: Text output of active member of partially active group - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of active member of partially active group
 =#=#=#= Begin test: Text output of inactive member of partially active group =#=#=#=
+unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature)| rc=3 id=dummy-2_last_failure_0
+unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter)| rc=2 id=httpd_last_failure_0
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (2) (version) - partition with quorum
@@ -3883,6 +3899,8 @@ Failed Resource Actions:
 =#=#=#= End test: Text output of inactive member of partially active group - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of inactive member of partially active group
 =#=#=#= Begin test: Complete brief text output grouped by node, with inactive resources =#=#=#=
+unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature)| rc=3 id=dummy-2_last_failure_0
+unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter)| rc=2 id=httpd_last_failure_0
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (2) (version) - partition with quorum
@@ -3975,6 +3993,8 @@ Failed Resource Actions:
 =#=#=#= End test: Complete brief text output grouped by node, with inactive resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete brief text output grouped by node, with inactive resources
 =#=#=#= Begin test: Text output of partially active resources, with inactive resources, filtered by node =#=#=#=
+unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature)| rc=3 id=dummy-2_last_failure_0
+unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter)| rc=2 id=httpd_last_failure_0
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (version) - partition with quorum
@@ -3996,6 +4016,8 @@ Full List of Resources:
 =#=#=#= End test: Text output of partially active resources, with inactive resources, filtered by node - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of partially active resources, with inactive resources, filtered by node
 =#=#=#= Begin test: Text output of partially active resources, filtered by node =#=#=#=
+unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature)| rc=3 id=dummy-2_last_failure_0
+unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter)| rc=2 id=httpd_last_failure_0
 <pacemaker-result api-version="X" request="crm_mon -1 --output-as=xml --node=cluster01">
   <summary>
     <stack type="corosync"/>
@@ -4191,8 +4213,8 @@ Cluster Summary:
   The cluster will not attempt to start, stop or recover services
 
 Node List:
-  * GuestNode httpd-bundle-0@cluster01: maintenance
-  * GuestNode httpd-bundle-1@cluster02: maintenance
+  * GuestNode httpd-bundle-0: maintenance
+  * GuestNode httpd-bundle-1: maintenance
   * Online: [ cluster01 cluster02 ]
 
 Full List of Resources:
@@ -4223,3 +4245,59 @@ Full List of Resources:
     * promotable-rsc	(ocf:pacemaker:Stateful):	 Unpromoted cluster01 (unmanaged)
 =#=#=#= End test: Text output of all resources with maintenance-mode enabled - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of all resources with maintenance-mode enabled
+=#=#=#= Begin test: Text output of guest node's container on different node from its remote resource =#=#=#=
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: cent7-host2 (version) - partition with quorum
+  * Last updated:
+  * Last change:
+  * 4 nodes configured
+  * 10 resource instances configured
+
+Node List:
+  * Online: [ cent7-host1 cent7-host2 ]
+  * GuestOnline: [ httpd-bundle1-0 httpd-bundle2-0 ]
+
+Active Resources:
+  * Resource Group: group1:
+    * dummy1	(ocf:pacemaker:Dummy):	 Started cent7-host1
+  * Resource Group: group2:
+    * dummy2	(ocf:pacemaker:Dummy):	 Started cent7-host2
+  * Container bundle: httpd-bundle1 [pcmktest:http]:
+    * httpd-bundle1-0 (192.168.20.188)	(ocf:heartbeat:apache):	 Started cent7-host1
+  * Container bundle: httpd-bundle2 [pcmktest:http]:
+    * httpd-bundle2-0 (192.168.20.190)	(ocf:heartbeat:apache):	 Started cent7-host2
+=#=#=#= End test: Text output of guest node's container on different node from its remote resource - OK (0) =#=#=#=
+* Passed: crm_mon        - Text output of guest node's container on different node from its remote resource
+=#=#=#= Begin test: Complete text output of guest node's container on different node from its remote resource =#=#=#=
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: cent7-host2 (3232262829) (version) - partition with quorum
+  * Last updated:
+  * Last change:
+  * 4 nodes configured
+  * 10 resource instances configured
+
+Node List:
+  * Node cent7-host1 (3232262828): online, feature set <3.15.1
+  * Node cent7-host2 (3232262829): online, feature set <3.15.1
+  * GuestNode httpd-bundle1-0@cent7-host1: online
+  * GuestNode httpd-bundle2-0@cent7-host2: online
+
+Active Resources:
+  * Resource Group: group1:
+    * dummy1	(ocf:pacemaker:Dummy):	 Started cent7-host1
+  * Resource Group: group2:
+    * dummy2	(ocf:pacemaker:Dummy):	 Started cent7-host2
+  * Container bundle: httpd-bundle1 [pcmktest:http]:
+      * httpd-bundle1-ip-192.168.20.188	(ocf:heartbeat:IPaddr2):	 Started cent7-host1
+      * httpd1	(ocf:heartbeat:apache):	 Started httpd-bundle1-0
+      * httpd-bundle1-docker-0	(ocf:heartbeat:docker):	 Started cent7-host1
+      * httpd-bundle1-0	(ocf:pacemaker:remote):	 Started cent7-host2
+  * Container bundle: httpd-bundle2 [pcmktest:http]:
+      * httpd-bundle2-ip-192.168.20.190	(ocf:heartbeat:IPaddr2):	 Started cent7-host2
+      * httpd2	(ocf:heartbeat:apache):	 Started httpd-bundle2-0
+      * httpd-bundle2-docker-0	(ocf:heartbeat:docker):	 Started cent7-host2
+      * httpd-bundle2-0	(ocf:pacemaker:remote):	 Started cent7-host2
+=#=#=#= End test: Complete text output of guest node's container on different node from its remote resource - OK (0) =#=#=#=
+* Passed: crm_mon        - Complete text output of guest node's container on different node from its remote resource

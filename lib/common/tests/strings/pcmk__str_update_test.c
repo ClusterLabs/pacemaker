@@ -9,11 +9,9 @@
 
 #include <crm_internal.h>
 
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <setjmp.h>
-#include <cmocka.h>
+#include <crm/common/unittest_internal.h>
+
+#include "mock_private.h"
 
 static void
 update_null(void **state) {
@@ -55,15 +53,26 @@ update_different(void **state) {
     free(str);
 }
 
-int
-main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(update_null),
-        cmocka_unit_test(update_same),
-        cmocka_unit_test(update_different),
-    };
+static void
+strdup_fails(void **state) {
+    char *str = NULL;
 
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
+    str = strdup("hello");
+
+    pcmk__assert_asserts(
+        {
+            pcmk__mock_strdup = true;   // strdup() will return NULL
+            expect_string(__wrap_strdup, s, "world");
+            pcmk__str_update(&str, "world");
+            pcmk__mock_strdup = false;  // Use the real strdup()
+        }
+    );
+
+    free(str);
 }
+
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(update_null),
+                cmocka_unit_test(update_same),
+                cmocka_unit_test(update_different),
+                cmocka_unit_test(strdup_fails))

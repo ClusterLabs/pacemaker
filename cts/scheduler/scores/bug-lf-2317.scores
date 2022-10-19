@@ -7,9 +7,9 @@ pcmk__clone_allocate: drbd_r0:1 allocation score on ibm1.isg.si: 10010
 pcmk__clone_allocate: drbd_r0:1 allocation score on ibm2.isg.si: 0
 pcmk__clone_allocate: ms_drbd_r0 allocation score on ibm1.isg.si: 0
 pcmk__clone_allocate: ms_drbd_r0 allocation score on ibm2.isg.si: 0
-pcmk__native_allocate: HostingIsg allocation score on ibm1.isg.si: 0
-pcmk__native_allocate: HostingIsg allocation score on ibm2.isg.si: 10
-pcmk__native_allocate: drbd_r0:0 allocation score on ibm1.isg.si: 0
-pcmk__native_allocate: drbd_r0:0 allocation score on ibm2.isg.si: 10010
-pcmk__native_allocate: drbd_r0:1 allocation score on ibm1.isg.si: 10010
-pcmk__native_allocate: drbd_r0:1 allocation score on ibm2.isg.si: -INFINITY
+pcmk__primitive_assign: HostingIsg allocation score on ibm1.isg.si: 0
+pcmk__primitive_assign: HostingIsg allocation score on ibm2.isg.si: 10
+pcmk__primitive_assign: drbd_r0:0 allocation score on ibm1.isg.si: 0
+pcmk__primitive_assign: drbd_r0:0 allocation score on ibm2.isg.si: 10010
+pcmk__primitive_assign: drbd_r0:1 allocation score on ibm1.isg.si: 10010
+pcmk__primitive_assign: drbd_r0:1 allocation score on ibm2.isg.si: -INFINITY

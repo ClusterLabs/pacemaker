@@ -34,7 +34,7 @@ extern ha_msg_input_t *copy_ha_msg_input(ha_msg_input_t * orig);
  * \param[in] msg  A join message from the DC
  */
 static void
-update_dc_expected(xmlNode *msg)
+update_dc_expected(const xmlNode *msg)
 {
     if (fsa_our_dc && pcmk__xe_attr_is_true(msg, F_CRM_DC_LEAVING)) {
         crm_node_t *dc_node = crm_get_peer(0, fsa_our_dc);
@@ -272,7 +272,7 @@ do_cl_join_finalize_respond(long long action,
                  FALSE);
 
     /* send our status section to the DC */
-    tmp1 = controld_query_executor_state(fsa_our_uname);
+    tmp1 = controld_query_executor_state();
     if (tmp1 != NULL) {
         xmlNode *reply = create_request(CRM_OP_JOIN_CONFIRM, tmp1, fsa_our_dc,
                                         CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);

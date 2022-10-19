@@ -54,7 +54,7 @@
           <nvpair id="ms_drbd-meta_attributes-promotable" name="promotable" value="true"/>
           <nvpair id="ms_drbd-meta_attributes-clone-max" name="clone-max" value="2"/>
           <nvpair id="ms_drbd-meta_attributes-notify" name="notify" value="true"/>
-          <nvpair id="ms_drbd-meta_attributes-target-role" name="target-role" value="master"/>
+          <nvpair id="ms_drbd-meta_attributes-target-role" name="target-role" value="Promoted"/>
           <nvpair id="ms_drbd-meta_attributes-priority" name="priority" value="0"/>
           <nvpair id="ms_drbd-meta_attributes-allow-migrate" name="allow-migrate" value="false"/>
         </meta_attributes>
@@ -268,7 +268,7 @@
     <node_state id="asttest1" uname="asttest1" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
       <transient_attributes id="asttest1">
         <instance_attributes id="status-asttest1">
-          <nvpair id="status-asttest1-master-drbd.0" name="master-drbd:0" value="5"/>
+          <nvpair id="status-asttest1-promoted-drbd.0" name="master-drbd:0" value="5"/>
           <nvpair id="status-asttest1-probe_complete" name="probe_complete" value="true"/>
           <nvpair id="status-asttest1-last-failure-ip_voip_route_default.0" name="last-failure-ip_voip_route_default:0" value="1375354971"/>
           <nvpair id="status-asttest1-last-failure-fonulator" name="last-failure-fonulator" value="1375426327"/>
@@ -364,7 +364,7 @@
     <node_state id="asttest2" uname="asttest2" crmd="online" crm-debug-origin="do_update_resource" ha="active" in_ccm="true" join="member" expected="member" shutdown="0">
       <transient_attributes id="asttest2">
         <instance_attributes id="status-asttest2">
-          <nvpair id="status-asttest2-master-drbd.1" name="master-drbd:1" value="5"/>
+          <nvpair id="status-asttest2-promoted-drbd.1" name="master-drbd:1" value="5"/>
           <nvpair id="status-asttest2-probe_complete" name="probe_complete" value="true"/>
         </instance_attributes>
       </transient_attributes>

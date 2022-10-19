@@ -19,9 +19,6 @@
 #include <crm/msg_xml.h>
 #include <pe_status_private.h>
 
-#define VARIANT_NATIVE 1
-#include "./variant.h"
-
 #ifdef PCMK__COMPAT_2_0
 #define PROVIDER_SEP "::"
 #else
@@ -61,8 +58,8 @@ native_priority_to_node(pe_resource_t * rsc, pe_node_t * node, gboolean failed)
     }
 
     node->details->priority += priority;
-    pe_rsc_trace(rsc, "Node '%s' now has priority %d with %s'%s' (priority: %d%s)",
-                 node->details->uname, node->details->priority,
+    pe_rsc_trace(rsc, "%s now has priority %d with %s'%s' (priority: %d%s)",
+                 pe__node_name(node), node->details->priority,
                  (rsc->role == RSC_ROLE_PROMOTED)? "promoted " : "",
                  rsc->id, rsc->priority,
                  (rsc->role == RSC_ROLE_PROMOTED)? " + 1" : "");
@@ -77,13 +74,13 @@ native_priority_to_node(pe_resource_t * rsc, pe_node_t * node, gboolean failed)
             pe_node_t *a_node = gIter->data;
 
             a_node->details->priority += priority;
-            pe_rsc_trace(rsc, "Node '%s' now has priority %d with %s'%s' (priority: %d%s) "
-                         "from guest node '%s'",
-                         a_node->details->uname, a_node->details->priority,
+            pe_rsc_trace(rsc, "%s now has priority %d with %s'%s' (priority: %d%s) "
+                         "from guest node %s",
+                         pe__node_name(a_node), a_node->details->priority,
                          (rsc->role == RSC_ROLE_PROMOTED)? "promoted " : "",
                          rsc->id, rsc->priority,
                          (rsc->role == RSC_ROLE_PROMOTED)? " + 1" : "",
-                         node->details->uname);
+                         pe__node_name(node));
         }
     }
 }
@@ -103,7 +100,7 @@ native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * dat
         }
     }
 
-    pe_rsc_trace(rsc, "Adding %s to %s %s", rsc->id, node->details->uname,
+    pe_rsc_trace(rsc, "Adding %s to %s %s", rsc->id, pe__node_name(node),
                  pcmk_is_set(rsc->flags, pe_rsc_managed)? "" : "(unmanaged)");
 
     rsc->running_on = g_list_append(rsc->running_on, node);
@@ -176,11 +173,12 @@ native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * dat
                 break;
         }
         crm_debug("%s is active on multiple nodes including %s: %s",
-                  rsc->id, node->details->uname,
+                  rsc->id, pe__node_name(node),
                   recovery2text(rsc->recovery_type));
 
     } else {
-        pe_rsc_trace(rsc, "Resource %s is active on: %s", rsc->id, node->details->uname);
+        pe_rsc_trace(rsc, "Resource %s is active on %s",
+                     rsc->id, pe__node_name(node));
     }
 
     if (rsc->parent != NULL) {
@@ -200,14 +198,10 @@ gboolean
 native_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
     pe_resource_t *parent = uber_parent(rsc);
-    native_variant_data_t *native_data = NULL;
     const char *standard = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     uint32_t ra_caps = pcmk_get_ra_caps(standard);
 
     pe_rsc_trace(rsc, "Processing resource %s...", rsc->id);
-
-    native_data = calloc(1, sizeof(native_variant_data_t));
-    rsc->variant_opaque = native_data;
 
     // Only some agent standards support unique and promotable clones
     if (!pcmk_is_set(ra_caps, pcmk_ra_cap_unique)
@@ -243,7 +237,7 @@ static bool
 rsc_is_on_node(pe_resource_t *rsc, const pe_node_t *node, int flags)
 {
     pe_rsc_trace(rsc, "Checking whether %s is on %s",
-                 rsc->id, node->details->uname);
+                 rsc->id, pe__node_name(node));
 
     if (pcmk_is_set(flags, pe_find_current) && rsc->running_on) {
 
@@ -349,15 +343,15 @@ native_active(pe_resource_t * rsc, gboolean all)
         pe_node_t *a_node = (pe_node_t *) gIter->data;
 
         if (a_node->details->unclean) {
-            pe_rsc_trace(rsc, "Resource %s: node %s is unclean",
-                         rsc->id, a_node->details->uname);
+            pe_rsc_trace(rsc, "Resource %s: %s is unclean",
+                         rsc->id, pe__node_name(a_node));
             return TRUE;
         } else if (a_node->details->online == FALSE && pcmk_is_set(rsc->flags, pe_rsc_managed)) {
-            pe_rsc_trace(rsc, "Resource %s: node %s is offline",
-                         rsc->id, a_node->details->uname);
+            pe_rsc_trace(rsc, "Resource %s: %s is offline",
+                         rsc->id, pe__node_name(a_node));
         } else {
             pe_rsc_trace(rsc, "Resource %s active on %s",
-                         rsc->id, a_node->details->uname);
+                         rsc->id, pe__node_name(a_node));
             return TRUE;
         }
     }
@@ -446,8 +440,13 @@ native_displayable_state(pe_resource_t *rsc, bool print_pending)
     return rsc_state;
 }
 
+/*!
+ * \internal
+ * \deprecated This function will be removed in a future release
+ */
 static void
-native_print_xml(pe_resource_t * rsc, const char *pre_text, long options, void *print_data)
+native_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
+                 void *print_data)
 {
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
@@ -498,7 +497,7 @@ native_print_xml(pe_resource_t * rsc, const char *pre_text, long options, void *
             pe_node_t *node = (pe_node_t *) gIter->data;
 
             status_print("%s    <node name=\"%s\" id=\"%s\" cached=\"%s\"/>\n", pre_text,
-                         node->details->uname, node->details->id,
+                         pcmk__s(node->details->uname, ""), node->details->id,
                          pcmk__btoa(node->details->online == FALSE));
         }
         status_print("%s</resource>\n", pre_text);
@@ -546,7 +545,6 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     const char *provider = NULL;
     const char *kind = crm_element_value(rsc->xml, XML_ATTR_TYPE);
-    gchar *retval = NULL;
     GString *outstr = NULL;
     bool have_flags = false;
 
@@ -570,16 +568,12 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
         node = NULL;
     }
 
-    // We need a string of at least this size
-    outstr = g_string_sized_new(strlen(name) + strlen(class) + strlen(kind)
-                                + (provider? (strlen(provider) + 2) : 0)
-                                + (node? strlen(node->details->uname) + 1 : 0)
-                                + 11);
+    outstr = g_string_sized_new(128);
 
     // Resource name and agent
-    g_string_printf(outstr, "%s\t(%s%s%s:%s):\t", name, class,
-                    ((provider == NULL)? "" : PROVIDER_SEP),
-                    ((provider == NULL)? "" : provider), kind);
+    pcmk__g_strcat(outstr,
+                   name, "\t(", class, ((provider == NULL)? "" : PROVIDER_SEP),
+                   pcmk__s(provider, ""), ":", kind, "):\t", NULL);
 
     // State on node
     if (pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
@@ -588,16 +582,17 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
     if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
         enum rsc_role_e role = native_displayable_role(rsc);
 
+        g_string_append(outstr, " FAILED");
         if (role > RSC_ROLE_UNPROMOTED) {
-            g_string_append_printf(outstr, " FAILED %s", role2text(role));
-        } else {
-            g_string_append(outstr, " FAILED");
+            pcmk__add_word(&outstr, 0, role2text(role));
         }
     } else {
-        g_string_append_printf(outstr, " %s", native_displayable_state(rsc, pcmk_is_set(show_opts, pcmk_show_pending)));
+        bool show_pending = pcmk_is_set(show_opts, pcmk_show_pending);
+
+        pcmk__add_word(&outstr, 0, native_displayable_state(rsc, show_pending));
     }
     if (node) {
-        g_string_append_printf(outstr, " %s", node->details->uname);
+        pcmk__add_word(&outstr, 0, pe__node_name(node));
     }
 
     // Failed probe operation
@@ -607,7 +602,8 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
             int rc;
 
             pcmk__scan_min_int(crm_element_value(probe_op, XML_LRM_ATTR_RC), &rc, 0);
-            g_string_append_printf(outstr, " (%s) ", services_ocf_exitcode_str(rc));
+            pcmk__g_strcat(outstr, " (", services_ocf_exitcode_str(rc), ") ",
+                           NULL);
         }
     }
 
@@ -650,7 +646,7 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
         have_flags = add_output_flag(outstr, "failure ignored", have_flags);
     }
     if (have_flags) {
-        g_string_append(outstr, ")");
+        g_string_append_c(outstr, ')');
     }
 
     // User-supplied description
@@ -659,7 +655,7 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
         const char *desc = crm_element_value(rsc->xml, XML_ATTR_DESC);
 
         if (desc) {
-            g_string_append_printf(outstr, " %s", desc);
+            pcmk__add_word(&outstr, 0, desc);
         }
     }
 
@@ -677,9 +673,7 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
         }
     }
 
-    retval = outstr->str;
-    g_string_free(outstr, FALSE);
-    return retval;
+    return g_string_free(outstr, FALSE);
 }
 
 int
@@ -769,8 +763,13 @@ pe__common_output_text(pcmk__output_t *out, pe_resource_t * rsc,
     return pcmk_rc_ok;
 }
 
+/*!
+ * \internal
+ * \deprecated This function will be removed in a future release
+ */
 void
-common_print(pe_resource_t * rsc, const char *pre_text, const char *name, pe_node_t *node, long options, void *print_data)
+common_print(pe_resource_t *rsc, const char *pre_text, const char *name,
+             pe_node_t *node, long options, void *print_data)
 {
     const char *target_role = NULL;
 
@@ -849,17 +848,17 @@ common_print(pe_resource_t * rsc, const char *pre_text, const char *name, pe_nod
             counter++;
 
             if (options & pe_print_html) {
-                status_print("<li>\n%s", n->details->uname);
+                status_print("<li>\n%s", pe__node_name(n));
 
             } else if ((options & pe_print_printf)
                        || (options & pe_print_ncurses)) {
-                status_print(" %s", n->details->uname);
+                status_print(" %s", pe__node_name(n));
 
             } else if ((options & pe_print_log)) {
-                status_print("\t%d : %s", counter, n->details->uname);
+                status_print("\t%d : %s", counter, pe__node_name(n));
 
             } else {
-                status_print("%s", n->details->uname);
+                status_print("%s", pe__node_name(n));
             }
             if (options & pe_print_html) {
                 status_print("</li>\n");
@@ -884,8 +883,13 @@ common_print(pe_resource_t * rsc, const char *pre_text, const char *name, pe_nod
     }
 }
 
+/*!
+ * \internal
+ * \deprecated This function will be removed in a future release
+ */
 void
-native_print(pe_resource_t * rsc, const char *pre_text, long options, void *print_data)
+native_print(pe_resource_t *rsc, const char *pre_text, long options,
+             void *print_data)
 {
     pe_node_t *node = NULL;
 
@@ -921,6 +925,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
 
     char ra_name[LINE_MAX];
     char *nodes_running_on = NULL;
+    const char *lock_node_name = NULL;
     int rc = pcmk_rc_no_output;
     const char *target_role = NULL;
 
@@ -941,7 +946,11 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
 
     nodes_running_on = pcmk__itoa(g_list_length(rsc->running_on));
 
-    rc = pe__name_and_nvpairs_xml(out, true, "resource", 12,
+    if (rsc->lock_node != NULL) {
+        lock_node_name = rsc->lock_node->details->uname;
+    }
+
+    rc = pe__name_and_nvpairs_xml(out, true, "resource", 13,
              "id", rsc_printable_id(rsc),
              "resource_agent", ra_name,
              "role", rsc_state,
@@ -953,7 +962,8 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
              "failed", pe__rsc_bool_str(rsc, pe_rsc_failed),
              "failure_ignored", pe__rsc_bool_str(rsc, pe_rsc_failure_ignored),
              "nodes_running_on", nodes_running_on,
-             "pending", (print_pending? native_pending_task(rsc) : NULL));
+             "pending", (print_pending? native_pending_task(rsc) : NULL),
+             "locked_to", lock_node_name);
     free(nodes_running_on);
 
     CRM_ASSERT(rc == pcmk_rc_ok);
@@ -1186,6 +1196,10 @@ destroy_node_table(gpointer data)
     }
 }
 
+/*!
+ * \internal
+ * \deprecated This function will be removed in a future release
+ */
 void
 print_rscs_brief(GList *rsc_list, const char *pre_text, long options,
                  void *print_data, gboolean print_all)

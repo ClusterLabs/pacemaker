@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2021 the Pacemaker project contributors
+ * Copyright 2012-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,20 +8,37 @@
  */
 
 #include <crm_internal.h>
+#include <crm/msg_xml.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/output_internal.h>
 #include <crm/common/strings_internal.h>
 
 #include <crm/crm.h>
 
+#include <pacemaker-internal.h>
+
 #define SUMMARY "crm_error - display name or description of a Pacemaker error code"
 
 struct {
-    gboolean as_exit_code;
-    gboolean as_rc;
     gboolean with_name;
     gboolean do_list;
-} options;
+    enum pcmk_result_type result_type; // How to interpret result codes
+} options = {
+    .result_type = pcmk_result_legacy,
+};
+
+static gboolean
+result_type_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+               GError **error)
+{
+    if (pcmk__str_any_of(option_name, "--exit", "-X", NULL)) {
+        options.result_type = pcmk_result_exitcode;
+    } else if (pcmk__str_any_of(option_name, "--rc", "-r", NULL)) {
+        options.result_type = pcmk_result_rc;
+    }
+
+    return TRUE;
+}
 
 static GOptionEntry entries[] = {
     { "name", 'n', 0, G_OPTION_ARG_NONE, &options.with_name,
@@ -29,39 +46,31 @@ static GOptionEntry entries[] = {
       "of the error in source code)",
        NULL },
     { "list", 'l', 0, G_OPTION_ARG_NONE, &options.do_list,
-      "Show all known errors",
+      "Show all known errors (enabled by default if no rc is specified)",
       NULL },
-    { "exit", 'X', 0, G_OPTION_ARG_NONE, &options.as_exit_code,
+    { "exit", 'X', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, result_type_cb,
       "Interpret as exit code rather than legacy function return value",
       NULL },
-    { "rc", 'r', 0, G_OPTION_ARG_NONE, &options.as_rc,
+    { "rc", 'r', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, result_type_cb,
       "Interpret as return code rather than legacy function return value",
       NULL },
 
     { NULL }
 };
 
-static void
-get_strings(int rc, const char **name, const char **str)
-{
-    if (options.as_exit_code) {
-        *str = crm_exit_str((crm_exit_t) rc);
-        *name = crm_exit_name(rc);
-    } else if (options.as_rc) {
-        *str = pcmk_rc_str(rc);
-        *name = pcmk_rc_name(rc);
-    } else {
-        *str = pcmk_strerror(rc);
-        *name = pcmk_errorname(rc);
-    }
-}
-
+static pcmk__supported_format_t formats[] = {
+    PCMK__SUPPORTED_FORMAT_NONE,
+    PCMK__SUPPORTED_FORMAT_TEXT,
+    PCMK__SUPPORTED_FORMAT_XML,
+    { NULL, NULL, NULL }
+};
 
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
 
-    context = pcmk__build_arg_context(args, NULL, group, "-- <rc> [...]");
+    context = pcmk__build_arg_context(args, "text (default), xml", group,
+                                      "[-- <rc> [<rc>...]]");
     pcmk__add_main_args(context, entries);
     return context;
 }
@@ -71,9 +80,8 @@ main(int argc, char **argv)
 {
     crm_exit_t exit_code = CRM_EX_OK;
     int rc = pcmk_rc_ok;
-    int lpc;
-    const char *name = NULL;
-    const char *desc = NULL;
+
+    pcmk__output_t *out = NULL;
 
     GError *error = NULL;
 
@@ -82,6 +90,7 @@ main(int argc, char **argv)
     gchar **processed_args = pcmk__cmdline_preproc(argv, NULL);
     GOptionContext *context = build_arg_context(args, &output_group);
 
+    pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
         goto done;
@@ -89,60 +98,65 @@ main(int argc, char **argv)
 
     pcmk__cli_init_logging("crm_error", args->verbosity);
 
-    if (args->version) {
-        g_strfreev(processed_args);
-        pcmk__free_arg_context(context);
-        /* FIXME:  When crm_error is converted to use formatted output, this can go. */
-        pcmk__cli_help('v', CRM_EX_OK);
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    if (rc != pcmk_rc_ok) {
+        exit_code = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Error creating output format %s: %s", args->output_ty,
+                    pcmk_rc_str(rc));
+        goto done;
     }
 
+    if (g_strv_length(processed_args) < 2) {
+        // If no result codes were specified, list them all
+        options.do_list = TRUE;
+    }
+
+    if (args->version) {
+        out->version(out, false);
+        goto done;
+    }
+
+    pcmk__register_lib_messages(out);
+
     if (options.do_list) {
-        int start, end, width;
+        uint32_t flags = pcmk_rc_disp_code|pcmk_rc_disp_desc;
 
-        // 256 is a hacky magic number that "should" be enough
-        if (options.as_rc) {
-            start = pcmk_rc_error - 256;
-            end = PCMK_CUSTOM_OFFSET;
-            width = 4;
-        } else {
-            start = 0;
-            end = 256;
-            width = 3;
+        if (options.with_name) {
+            flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,
+                                       "pcmk_rc_disp_flags",
+                                       "pcmk__list_result_codes", flags,
+                                       pcmk_rc_disp_name, "pcmk_rc_disp_name");
         }
-
-        for (rc = start; rc < end; rc++) {
-            if (rc == (pcmk_rc_error + 1)) {
-                // Values in between are reserved for callers, no use iterating
-                rc = pcmk_rc_ok;
-            }
-            get_strings(rc, &name, &desc);
-            if (pcmk__str_eq(name, "Unknown", pcmk__str_null_matches) || !strcmp(name, "CRM_EX_UNKNOWN")) {
-                // Undefined
-            } else if(options.with_name) {
-                printf("% .*d: %-26s  %s\n", width, rc, name, desc);
-            } else {
-                printf("% .*d: %s\n", width, rc, desc);
-            }
-        }
+        pcmk__list_result_codes(out, options.result_type, flags);
 
     } else {
-        if (g_strv_length(processed_args) < 2) {
-            char *help = g_option_context_get_help(context, TRUE, NULL);
-            fprintf(stderr, "%s", help);
-            g_free(help);
-            exit_code = CRM_EX_USAGE;
-            goto done;
+        uint32_t flags = pcmk_rc_disp_desc;
+
+        // For text output, print only "[name -] description" by default
+        if (args->verbosity > 0) {
+            flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,
+                                       "pcmk_rc_disp_flags",
+                                       "pcmk__show_result_code", flags,
+                                       pcmk_rc_disp_code, "pcmk_rc_disp_code");
+        }
+
+        if (options.with_name) {
+            flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,
+                                       "pcmk_rc_disp_flags",
+                                       "pcmk__show_result_code", flags,
+                                       pcmk_rc_disp_name, "pcmk_rc_disp_name");
         }
 
         /* Skip #1 because that's the program name. */
-        for (lpc = 1; processed_args[lpc] != NULL; lpc++) {
-            pcmk__scan_min_int(processed_args[lpc], &rc, INT_MIN);
-            get_strings(rc, &name, &desc);
-            if (options.with_name) {
-                printf("%s - %s\n", name, desc);
-            } else {
-                printf("%s\n", desc);
+        for (int lpc = 1; processed_args[lpc] != NULL; lpc++) {
+            int code = 0;
+
+            if (pcmk__str_eq(processed_args[lpc], "--", pcmk__str_none)) {
+                continue;
             }
+            pcmk__scan_min_int(processed_args[lpc], &code, INT_MIN);
+            pcmk__show_result_code(out, code, options.result_type, flags);
         }
     }
 
@@ -150,6 +164,11 @@ main(int argc, char **argv)
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
 
-    pcmk__output_and_clear_error(error, NULL);
-    return exit_code;
+    pcmk__output_and_clear_error(error, out);
+
+    if (out != NULL) {
+        out->finish(out, exit_code, true, NULL);
+        pcmk__output_free(out);
+    }
+    crm_exit(exit_code);
 }

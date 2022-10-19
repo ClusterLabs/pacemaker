@@ -96,8 +96,6 @@ lsb_meta_helper_get_value(const char *line, char **value, const char *prefix)
     return FALSE;
 }
 
-#define DESC_MAX 2048
-
 int
 services__get_lsb_metadata(const char *type, char **output)
 {
@@ -113,9 +111,7 @@ services__get_lsb_metadata(const char *type, char **output)
     char *dflt_stop = NULL;
     char *s_dscrpt = NULL;
     char *xml_l_dscrpt = NULL;
-    int offset = 0;
     bool in_header = FALSE;
-    char description[DESC_MAX] = { 0, };
 
     if (type[0] == '/') {
         snprintf(ra_pathname, sizeof(ra_pathname), "%s", type);
@@ -169,13 +165,13 @@ services__get_lsb_metadata(const char *type, char **output)
         }
 
         /* Long description may cross multiple lines */
-        if ((offset == 0) // haven't already found long description
+        if ((xml_l_dscrpt == NULL) // haven't already found long description
             && pcmk__starts_with(buffer, DESCRIPTION)) {
             bool processed_line = TRUE;
+            GString *desc = g_string_sized_new(2048);
 
             // Get remainder of description line itself
-            offset += snprintf(description, DESC_MAX, "%s",
-                               buffer + strlen(DESCRIPTION));
+            g_string_append(desc, buffer + sizeof(DESCRIPTION) - 1);
 
             // Read any continuation lines of the description
             buffer[0] = '\0';
@@ -185,8 +181,7 @@ services__get_lsb_metadata(const char *type, char **output)
                     /* '#' followed by a tab or more than one space indicates a
                      * continuation of the long description.
                      */
-                    offset += snprintf(description + offset, DESC_MAX - offset,
-                                       "%s", buffer + 1);
+                    g_string_append(desc, buffer + 1);
                 } else {
                     /* This line is not part of the long description,
                      * so continue with normal processing.
@@ -197,7 +192,10 @@ services__get_lsb_metadata(const char *type, char **output)
             }
 
             // Make long description safe to use in XML
-            xml_l_dscrpt = (char *)xmlEncodeEntitiesReentrant(NULL, BAD_CAST(description));
+            xml_l_dscrpt =
+                (char *) xmlEncodeEntitiesReentrant(NULL,
+                                                    (pcmkXmlStr) desc->str);
+            g_string_free(desc, TRUE);
 
             if (processed_line) {
                 // We grabbed the line into the long description

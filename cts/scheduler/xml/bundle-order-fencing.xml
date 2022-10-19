@@ -146,7 +146,7 @@
         </storage>
         <primitive class="ocf" id="redis" provider="heartbeat" type="redis">
           <instance_attributes id="redis-instance_attributes">
-            <nvpair id="redis-instance_attributes-wait_last_known_master" name="wait_last_known_master" value="true"/>
+            <nvpair id="redis-instance_attributes-wait_last_known_promoted" name="wait_last_known_master" value="true"/>
           </instance_attributes>
           <meta_attributes id="redis-meta_attributes">
             <nvpair id="redis-meta_attributes-interleave" name="interleave" value="true"/>
@@ -381,9 +381,9 @@
       <transient_attributes id="3">
         <instance_attributes id="status-3">
           <nvpair id="status-3-shutdown" name="shutdown" value="0"/>
-          <nvpair id="status-3-master-galera" name="master-galera" value="100"/>
+          <nvpair id="status-3-promoted-galera" name="master-galera" value="100"/>
           <nvpair id="status-3-rmq-node-attr-rabbitmq" name="rmq-node-attr-rabbitmq" value="rabbit@controller-2"/>
-          <nvpair id="status-3-master-redis" name="master-redis" value="1"/>
+          <nvpair id="status-3-promoted-redis" name="master-redis" value="1"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="3">
@@ -482,8 +482,8 @@
       <transient_attributes id="2">
         <instance_attributes id="status-2">
           <nvpair id="status-2-shutdown" name="shutdown" value="0"/>
-          <nvpair id="status-2-master-redis" name="master-redis" value="1"/>
-          <nvpair id="status-2-master-galera" name="master-galera" value="100"/>
+          <nvpair id="status-2-promoted-redis" name="master-redis" value="1"/>
+          <nvpair id="status-2-promoted-galera" name="master-galera" value="100"/>
           <nvpair id="status-2-rmq-node-attr-rabbitmq" name="rmq-node-attr-rabbitmq" value="rabbit@controller-1"/>
         </instance_attributes>
       </transient_attributes>
@@ -748,7 +748,7 @@
     <node_state remote_node="true" id="redis-bundle-0" uname="redis-bundle-0" in_ccm="true" crm-debug-origin="do_state_transition" node_fenced="0">
       <transient_attributes id="redis-bundle-0">
         <instance_attributes id="status-redis-bundle-0">
-          <nvpair id="status-redis-bundle-0-master-redis" name="master-redis" value="1"/>
+          <nvpair id="status-redis-bundle-0-promoted-redis" name="master-redis" value="1"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="redis-bundle-0">
@@ -775,14 +775,14 @@
         <instance_attributes id="status-redis-bundle-2">
           <nvpair id="status-redis-bundle-2-fail-count-redis" name="fail-count-redis" value="1"/>
           <nvpair id="status-redis-bundle-2-last-failure-redis" name="last-failure-redis" value="1505143894"/>
-          <nvpair id="status-redis-bundle-2-master-redis" name="master-redis" value="1"/>
+          <nvpair id="status-redis-bundle-2-promoted-redis" name="master-redis" value="1"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
     <node_state remote_node="true" id="redis-bundle-1" uname="redis-bundle-1" in_ccm="true" crm-debug-origin="do_state_transition" node_fenced="0">
       <transient_attributes id="redis-bundle-1">
         <instance_attributes id="status-redis-bundle-1">
-          <nvpair id="status-redis-bundle-1-master-redis" name="master-redis" value="1"/>
+          <nvpair id="status-redis-bundle-1-promoted-redis" name="master-redis" value="1"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="redis-bundle-1">

@@ -126,8 +126,8 @@
           <nvpair id="status-f36760d8-d84a-46b2-b452-4c8cac8b3396-probe_complete" name="probe_complete" value="true"/>
           <nvpair id="status-f36760d8-d84a-46b2-b452-4c8cac8b3396-fail-count-stonith_rackpdu:0" name="fail-count-stonith_rackpdu:0" value="1000000"/>
           <nvpair id="status-f36760d8-d84a-46b2-b452-4c8cac8b3396-last-failure-stonith_rackpdu:0" name="last-failure-stonith_rackpdu:0" value="1235174838"/>
-          <nvpair id="status-master-drbd_www:1-f36760d8-d84a-46b2-b452-4c8cac8b3396" name="master-drbd_www:1" value="75"/>
-          <nvpair id="status-master-drbd_mysql:1-f36760d8-d84a-46b2-b452-4c8cac8b3396" name="master-drbd_mysql:1" value="75"/>
+          <nvpair id="status-promoted-drbd_www:1-f36760d8-d84a-46b2-b452-4c8cac8b3396" name="master-drbd_www:1" value="75"/>
+          <nvpair id="status-promoted-drbd_mysql:1-f36760d8-d84a-46b2-b452-4c8cac8b3396" name="master-drbd_mysql:1" value="75"/>
           <nvpair id="status-f36760d8-d84a-46b2-b452-4c8cac8b3396-last-failure-apache2:0" name="last-failure-apache2:0" value="1235670173"/>
         </instance_attributes>
       </transient_attributes>
@@ -158,9 +158,9 @@
       <transient_attributes id="31de4ab3-2d05-476e-8f9a-627ad6cd94ca">
         <instance_attributes id="status-31de4ab3-2d05-476e-8f9a-627ad6cd94ca">
           <nvpair id="status-31de4ab3-2d05-476e-8f9a-627ad6cd94ca-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-master-drbd_mysql:0-31de4ab3-2d05-476e-8f9a-627ad6cd94ca" name="master-drbd_mysql:0" value="75"/>
+          <nvpair id="status-promoted-drbd_mysql:0-31de4ab3-2d05-476e-8f9a-627ad6cd94ca" name="master-drbd_mysql:0" value="75"/>
           <nvpair id="status-31de4ab3-2d05-476e-8f9a-627ad6cd94ca-pingd" name="pingd" value="100"/>
-          <nvpair id="status-master-drbd_www:0-31de4ab3-2d05-476e-8f9a-627ad6cd94ca" name="master-drbd_www:0" value="75"/>
+          <nvpair id="status-promoted-drbd_www:0-31de4ab3-2d05-476e-8f9a-627ad6cd94ca" name="master-drbd_www:0" value="75"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="31de4ab3-2d05-476e-8f9a-627ad6cd94ca">

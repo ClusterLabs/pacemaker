@@ -18,7 +18,7 @@
 #include <stdint.h>     // uint32_t, uint64_t, UINT64_C()
 #include <errno.h>
 #include <fcntl.h>
-#include <inttypes.h>  /* U64T ~ PRIu64 */
+#include <inttypes.h>   // PRIu64
 
 #include <crm/crm.h>
 #include <crm/cib.h>
@@ -51,7 +51,7 @@ qb_ipcs_service_t *ipcs_shm = NULL;
 
 void send_cib_replace(const xmlNode * sync_request, const char *host);
 static void cib_process_request(xmlNode *request, gboolean privileged,
-                                pcmk__client_t *cib_client);
+                                const pcmk__client_t *cib_client);
 
 
 static int cib_process_command(xmlNode *request, xmlNode **reply,
@@ -276,7 +276,7 @@ int sync_our_cib(xmlNode * request, gboolean all);
 static gboolean
 cib_digester_cb(gpointer data)
 {
-    if (cib_is_master) {
+    if (based_is_primary) {
         char buffer[32];
         xmlNode *ping = create_xml_node(NULL, "ping");
 
@@ -284,7 +284,7 @@ cib_digester_cb(gpointer data)
         free(ping_digest);
         ping_digest = NULL;
         ping_modified_since = FALSE;
-        snprintf(buffer, 32, "%" U64T, ping_seq);
+        snprintf(buffer, 32, "%" PRIu64, ping_seq);
         crm_trace("Requesting peer digests (%s)", buffer);
 
         crm_xml_add(ping, F_TYPE, "cib");
@@ -483,7 +483,7 @@ queue_local_notify(xmlNode * notify_src, const char *client_id, gboolean sync_re
 }
 
 static void
-parse_local_options_v1(pcmk__client_t *cib_client, int call_type,
+parse_local_options_v1(const pcmk__client_t *cib_client, int call_type,
                        int call_options, const char *host, const char *op,
                        gboolean *local_notify, gboolean *needs_reply,
                        gboolean *process, gboolean *needs_forward)
@@ -501,8 +501,8 @@ parse_local_options_v1(pcmk__client_t *cib_client, int call_type,
                   op, pcmk__client_name(cib_client));
         *local_notify = TRUE;
 
-    } else if (host == NULL && cib_is_master) {
-        crm_trace("Processing master %s op locally from client %s",
+    } else if ((host == NULL) && based_is_primary) {
+        crm_trace("Processing %s op locally from client %s as primary",
                   op, pcmk__client_name(cib_client));
         *local_notify = TRUE;
 
@@ -519,20 +519,21 @@ parse_local_options_v1(pcmk__client_t *cib_client, int call_type,
     } else {
         crm_trace("%s op from %s needs to be forwarded to client %s",
                   op, pcmk__client_name(cib_client),
-                  (host? host : "the master instance"));
+                  pcmk__s(host, "the primary instance"));
         *needs_forward = TRUE;
         *process = FALSE;
     }
 }
 
 static void
-parse_local_options_v2(pcmk__client_t *cib_client, int call_type,
+parse_local_options_v2(const pcmk__client_t *cib_client, int call_type,
                        int call_options, const char *host, const char *op,
                        gboolean *local_notify, gboolean *needs_reply,
                        gboolean *process, gboolean *needs_forward)
 {
     if (cib_op_modifies(call_type)) {
-        if (pcmk__strcase_any_of(op, CIB_OP_MASTER, CIB_OP_SLAVE, NULL)) {
+        if (pcmk__str_any_of(op, PCMK__CIB_REQUEST_PRIMARY,
+                             PCMK__CIB_REQUEST_SECONDARY, NULL)) {
             /* Always handle these locally */
             *process = TRUE;
             *needs_reply = FALSE;
@@ -547,7 +548,7 @@ parse_local_options_v2(pcmk__client_t *cib_client, int call_type,
             *process = FALSE;
             crm_trace("%s op from %s needs to be forwarded to client %s",
                       op, pcmk__client_name(cib_client),
-                      (host? host : "the master instance"));
+                      pcmk__s(host, "the primary instance"));
             return;
         }
     }
@@ -579,7 +580,7 @@ parse_local_options_v2(pcmk__client_t *cib_client, int call_type,
 }
 
 static void
-parse_local_options(pcmk__client_t *cib_client, int call_type,
+parse_local_options(const pcmk__client_t *cib_client, int call_type,
                     int call_options, const char *host, const char *op,
                     gboolean *local_notify, gboolean *needs_reply,
                     gboolean *process, gboolean *needs_forward)
@@ -620,7 +621,7 @@ parse_peer_options_v1(int call_type, xmlNode * request,
 
     op = crm_element_value(request, F_CIB_OPERATION);
     crm_trace("Processing %s request sent by %s", op, originator);
-    if (pcmk__str_eq(op, "cib_shutdown_req", pcmk__str_casei)) {
+    if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SHUTDOWN, pcmk__str_none)) {
         /* Always process these */
         *local_notify = FALSE;
         if (reply_to == NULL || is_reply) {
@@ -655,24 +656,25 @@ parse_peer_options_v1(int call_type, xmlNode * request,
         *needs_reply = TRUE;
         return TRUE;
 
-    } else if (host == NULL && cib_is_master == TRUE) {
-        crm_trace("Processing %s request sent to master instance from %s", op, originator);
+    } else if ((host == NULL) && based_is_primary) {
+        crm_trace("Processing %s request sent to primary instance from %s",
+                  op, originator);
         return TRUE;
     }
 
     delegated = crm_element_value(request, F_CIB_DELEGATED);
     if (delegated != NULL) {
-        crm_trace("Ignoring msg for master instance");
+        crm_trace("Ignoring message for primary instance");
 
     } else if (host != NULL) {
         /* this is for a specific instance and we're not it */
         crm_trace("Ignoring msg for instance on %s", host);
 
-    } else if (reply_to == NULL && cib_is_master == FALSE) {
-        /* this is for the master instance and we're not it */
+    } else if ((reply_to == NULL) && !based_is_primary) {
+        // This is for the primary instance, and we're not it
         crm_trace("Ignoring reply for primary instance");
 
-    } else if (pcmk__str_eq(op, "cib_shutdown_req", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SHUTDOWN, pcmk__str_none)) {
         if (reply_to != NULL) {
             crm_debug("Processing %s from %s", op, originator);
             *needs_reply = FALSE;
@@ -703,25 +705,27 @@ parse_peer_options_v2(int call_type, xmlNode * request,
 
     gboolean is_reply = pcmk__str_eq(reply_to, cib_our_uname, pcmk__str_casei);
 
-    if(pcmk__str_eq(op, CIB_OP_REPLACE, pcmk__str_casei)) {
+    if (pcmk__str_eq(op, PCMK__CIB_REQUEST_REPLACE, pcmk__str_none)) {
         /* sync_our_cib() sets F_CIB_ISREPLY */
         if (reply_to) {
             delegated = reply_to;
         }
         goto skip_is_reply;
 
-    } else if(pcmk__str_eq(op, CIB_OP_SYNC, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SYNC_TO_ALL,
+                            pcmk__str_none)) {
+        // Nothing to do
 
     } else if (is_reply && pcmk__str_eq(op, CRM_OP_PING, pcmk__str_casei)) {
         process_ping_reply(request);
         return FALSE;
 
-    } else if (pcmk__str_eq(op, CIB_OP_UPGRADE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_UPGRADE, pcmk__str_none)) {
         /* Only the DC (node with the oldest software) should process
          * this operation if F_CIB_SCHEMA_MAX is unset
          *
          * If the DC is happy it will then send out another
-         * CIB_OP_UPGRADE which will tell all nodes to do the actual
+         * PCMK__CIB_REQUEST_UPGRADE which will tell all nodes to do the actual
          * upgrade.
          *
          * Except this time F_CIB_SCHEMA_MAX will be set which puts a
@@ -732,14 +736,14 @@ parse_peer_options_v2(int call_type, xmlNode * request,
 
         crm_trace("Parsing %s operation%s for %s with max=%s and upgrade_rc=%s",
                   op, (is_reply? " reply" : ""),
-                  (cib_is_master? "master" : "slave"),
+                  (based_is_primary? "primary" : "secondary"),
                   (max? max : "none"), (upgrade_rc? upgrade_rc : "none"));
 
         if (upgrade_rc != NULL) {
             // Our upgrade request was rejected by DC, notify clients of result
             crm_xml_add(request, F_CIB_RC, upgrade_rc);
 
-        } else if ((max == NULL) && cib_is_master) {
+        } else if ((max == NULL) && based_is_primary) {
             /* We are the DC, check if this upgrade is allowed */
             goto skip_is_reply;
 
@@ -762,7 +766,7 @@ parse_peer_options_v2(int call_type, xmlNode * request,
         crm_trace("Ignoring legacy %s reply sent from %s to local clients", op, originator);
         return FALSE;
 
-    } else if (pcmk__str_eq(op, "cib_shutdown_req", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SHUTDOWN, pcmk__str_none)) {
         /* Legacy handling */
         crm_debug("Legacy handling of %s message from %s", op, originator);
         *local_notify = FALSE;
@@ -831,7 +835,7 @@ parse_peer_options(int call_type, xmlNode * request,
 }
 
 static void
-forward_request(xmlNode * request, pcmk__client_t *cib_client, int call_options)
+forward_request(xmlNode *request, int call_options)
 {
     const char *op = crm_element_value(request, F_CIB_OPERATION);
     const char *host = crm_element_value(request, F_CIB_HOST);
@@ -843,7 +847,7 @@ forward_request(xmlNode * request, pcmk__client_t *cib_client, int call_options)
         send_cluster_message(crm_get_peer(0, host), crm_msg_cib, request, FALSE);
 
     } else {
-        crm_trace("Forwarding %s op to master instance", op);
+        crm_trace("Forwarding %s op to primary instance", op);
         send_cluster_message(NULL, crm_msg_cib, request, FALSE);
     }
 
@@ -890,7 +894,7 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
 
         crm_xml_add(msg, F_CIB_ISREPLY, originator);
         pcmk__xe_set_bool_attr(msg, F_CIB_GLOBAL_UPDATE, true);
-        crm_xml_add(msg, F_CIB_OPERATION, CIB_OP_APPLY_DIFF);
+        crm_xml_add(msg, F_CIB_OPERATION, PCMK__CIB_REQUEST_APPLY_PATCH);
         crm_xml_add(msg, F_CIB_USER, CRM_DAEMON_USER);
 
         if (format == 1) {
@@ -915,14 +919,14 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
  * \internal
  * \brief Handle an IPC or CPG message containing a request
  *
- * \param[in] request            Request XML
+ * \param[in,out] request        Request XML
  * \param[in] privileged         Whether privileged commands may be run
  *                               (see cib_server_ops[] definition)
  * \param[in] cib_client         IPC client that sent request (or NULL if CPG)
  */
 static void
 cib_process_request(xmlNode *request, gboolean privileged,
-                    pcmk__client_t *cib_client)
+                    const pcmk__client_t *cib_client)
 {
     int call_type = 0;
     int call_options = 0;
@@ -959,7 +963,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
         target = "local host";
 
     } else {
-        target = "master";
+        target = "primary";
     }
 
     if (cib_client == NULL) {
@@ -1001,7 +1005,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
         const char *section = crm_element_value(request, F_CIB_SECTION);
         int log_level = LOG_INFO;
 
-        if (pcmk__str_eq(op, CRM_OP_NOOP, pcmk__str_casei)) {
+        if (pcmk__str_eq(op, PCMK__CIB_REQUEST_NOOP, pcmk__str_none)) {
             log_level = LOG_DEBUG;
         }
 
@@ -1009,11 +1013,11 @@ cib_process_request(xmlNode *request, gboolean privileged,
                    "Forwarding %s operation for section %s to %s (origin=%s/%s/%s)",
                    op,
                    section ? section : "'all'",
-                   host ? host : cib_legacy_mode() ? "master" : "all",
+                   pcmk__s(host, (cib_legacy_mode() ? "primary" : "all")),
                    originator ? originator : "local",
                    client_name, call_id);
 
-        forward_request(request, cib_client, call_options);
+        forward_request(request, call_options);
         return;
     }
 
@@ -1094,8 +1098,8 @@ cib_process_request(xmlNode *request, gboolean privileged,
                   local_notify?" with local notification":"");
 
     } else if (!needs_reply || stand_alone) {
-        // This was a non-originating slave update
-        crm_trace("Completed slave update");
+        // This was a non-originating secondary update
+        crm_trace("Completed update as secondary");
 
     } else if (cib_legacy_mode() &&
                rc == pcmk_ok && result_diff != NULL && !(call_options & cib_inhibit_bcast)) {
@@ -1206,7 +1210,9 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     char *current_nodes_digest = NULL;
     char *current_alerts_digest = NULL;
     char *current_status_digest = NULL;
-    int change_section = cib_change_section_nodes | cib_change_section_alerts | cib_change_section_status;
+    uint32_t change_section = cib_change_section_nodes
+                              |cib_change_section_alerts
+                              |cib_change_section_status;
 
     CRM_ASSERT(cib_status == pcmk_ok);
 
@@ -1273,7 +1279,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         }
 
         /* Calculate the hash value of the section before the change. */
-        if (pcmk__str_eq(CIB_OP_REPLACE, op, pcmk__str_none)) {
+        if (pcmk__str_eq(PCMK__CIB_REQUEST_REPLACE, op, pcmk__str_none)) {
             current_nodes_digest = calculate_section_digest("//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_NODES, current_cib);
             current_alerts_digest = calculate_section_digest("//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_ALERTS, current_cib);
             current_status_digest = calculate_section_digest("//" XML_TAG_CIB "/" XML_CIB_TAG_STATUS, current_cib);
@@ -1302,7 +1308,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         /* Always write to disk for replace ops,
          * this also negates the need to detect ordering changes
          */
-        if (pcmk__str_eq(CIB_OP_REPLACE, op, pcmk__str_none)) {
+        if (pcmk__str_eq(PCMK__CIB_REQUEST_REPLACE, op, pcmk__str_none)) {
             config_changed = TRUE;
         }
     }
@@ -1323,7 +1329,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
             cib_read_config(config_hash, result_cib);
         }
 
-        if (pcmk__str_eq(CIB_OP_REPLACE, op, pcmk__str_none)) {
+        if (pcmk__str_eq(PCMK__CIB_REQUEST_REPLACE, op, pcmk__str_none)) {
             char *result_nodes_digest = NULL;
             char *result_alerts_digest = NULL;
             char *result_status_digest = NULL;
@@ -1334,17 +1340,34 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
             result_status_digest = calculate_section_digest("//" XML_TAG_CIB "/" XML_CIB_TAG_STATUS, result_cib);
             crm_trace("result-digest %s:%s:%s", result_nodes_digest, result_alerts_digest, result_status_digest);
 
-            if (pcmk__str_eq(current_nodes_digest, result_nodes_digest, pcmk__str_none)) {
-                change_section = change_section ^ cib_change_section_nodes;
-            }
-            if (pcmk__str_eq(current_alerts_digest, result_alerts_digest, pcmk__str_none)) {
-                change_section = change_section ^ cib_change_section_alerts;
-            }
-            if (pcmk__str_eq(current_status_digest, result_status_digest, pcmk__str_none)) {
-                change_section = change_section ^ cib_change_section_status;
+            if (pcmk__str_eq(current_nodes_digest, result_nodes_digest,
+                             pcmk__str_none)) {
+                change_section =
+                    pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE,
+                                         "CIB change section",
+                                         "change_section", change_section,
+                                         cib_change_section_nodes, "nodes");
             }
 
-            if (change_section) {
+            if (pcmk__str_eq(current_alerts_digest, result_alerts_digest,
+                             pcmk__str_none)) {
+                change_section =
+                    pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE,
+                                         "CIB change section",
+                                         "change_section", change_section,
+                                         cib_change_section_alerts, "alerts");
+            }
+
+            if (pcmk__str_eq(current_status_digest, result_status_digest,
+                             pcmk__str_none)) {
+                change_section =
+                    pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE,
+                                         "CIB change section",
+                                         "change_section", change_section,
+                                         cib_change_section_status, "status");
+            }
+
+            if (change_section != cib_change_section_none) {
                 send_r_notify = TRUE;
             }
             
@@ -1352,7 +1375,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
             free(result_alerts_digest);
             free(result_status_digest);
 
-        } else if (pcmk__str_eq(CIB_OP_ERASE, op, pcmk__str_none)) {
+        } else if (pcmk__str_eq(PCMK__CIB_REQUEST_ERASE, op, pcmk__str_none)) {
             send_r_notify = TRUE;
         }
 
@@ -1568,7 +1591,7 @@ initiate_exit(void)
 
     leaving = create_xml_node(NULL, "exit-notification");
     crm_xml_add(leaving, F_TYPE, "cib");
-    crm_xml_add(leaving, F_CIB_OPERATION, "cib_shutdown_req");
+    crm_xml_add(leaving, F_CIB_OPERATION, PCMK__CIB_REQUEST_SHUTDOWN);
 
     send_cluster_message(NULL, crm_msg_cib, leaving, TRUE);
     free_xml(leaving);

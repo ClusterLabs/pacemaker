@@ -18,10 +18,6 @@
 
 #include <pacemaker-controld.h>
 
-#if ENABLE_VERSIONED_ATTRS
-static regex_t *version_format_regex = NULL;
-#endif
-
 static void
 ra_param_free(void *param)
 {
@@ -41,16 +37,13 @@ metadata_free(void *metadata)
     if (metadata) {
         struct ra_metadata_s *md = (struct ra_metadata_s *) metadata;
 
-        if (md->ra_version) {
-            free(md->ra_version);
-        }
         g_list_free_full(md->ra_params, ra_param_free);
         free(metadata);
     }
 }
 
 GHashTable *
-metadata_cache_new()
+metadata_cache_new(void)
 {
     return pcmk__strkey_table(free, metadata_free);
 }
@@ -74,73 +67,6 @@ metadata_cache_reset(GHashTable *mdc)
     }
 }
 
-#if ENABLE_VERSIONED_ATTRS
-static gboolean
-valid_version_format(const char *version)
-{
-    if (version == NULL) {
-        return FALSE;
-    }
-
-    if (version_format_regex == NULL) {
-        /* The OCF standard allows free-form versioning, but for our purposes of
-         * versioned resource and operation attributes, we constrain it to
-         * dot-separated numbers. Agents are still free to use other schemes,
-         * but we can't determine attributes based on them.
-         */
-        const char *regex_string = "^[[:digit:]]+([.][[:digit:]]+)*$";
-
-        version_format_regex = calloc(1, sizeof(regex_t));
-        regcomp(version_format_regex, regex_string, REG_EXTENDED | REG_NOSUB);
-
-        /* If our regex doesn't compile, it's a bug on our side, so CRM_CHECK()
-         * will give us a core dump to catch it. Pretend the version is OK
-         * because we don't want our mistake to break versioned attributes
-         * (which should only ever happen in a development branch anyway).
-         */
-        CRM_CHECK(version_format_regex != NULL, return TRUE);
-    }
-
-    return regexec(version_format_regex, version, 0, NULL, 0) == 0;
-}
-#endif
-
-void
-metadata_cache_fini()
-{
-#if ENABLE_VERSIONED_ATTRS
-    if (version_format_regex) {
-        regfree(version_format_regex);
-        free(version_format_regex);
-        version_format_regex = NULL;
-    }
-#endif
-}
-
-#if ENABLE_VERSIONED_ATTRS
-static char *
-ra_version_from_xml(xmlNode *metadata_xml, const lrmd_rsc_info_t *rsc)
-{
-    const char *version = crm_element_value(metadata_xml, XML_ATTR_VERSION);
-
-    if (version == NULL) {
-        crm_debug("Metadata for %s:%s:%s does not specify a version",
-                  rsc->standard, rsc->provider, rsc->type);
-        version = PCMK_DEFAULT_AGENT_VERSION;
-
-    } else if (!valid_version_format(version)) {
-        crm_notice("%s:%s:%s metadata version has unrecognized format",
-                  rsc->standard, rsc->provider, rsc->type);
-        version = PCMK_DEFAULT_AGENT_VERSION;
-
-    } else {
-        crm_debug("Metadata for %s:%s:%s has version %s",
-                  rsc->standard, rsc->provider, rsc->type, version);
-    }
-    return strdup(version);
-}
-#endif
-
 static struct ra_param_s *
 ra_param_from_xml(xmlNode *param_xml)
 {
@@ -149,13 +75,11 @@ ra_param_from_xml(xmlNode *param_xml)
 
     p = calloc(1, sizeof(struct ra_param_s));
     if (p == NULL) {
-        crm_crit("Could not allocate memory for resource metadata");
         return NULL;
     }
 
     p->rap_name = strdup(param_name);
     if (p->rap_name == NULL) {
-        crm_crit("Could not allocate memory for resource metadata");
         free(p);
         return NULL;
     }
@@ -196,10 +120,11 @@ log_ra_ocf_version(const char *ra_key, const char *ra_ocf_version)
 }
 
 struct ra_metadata_s *
-metadata_cache_update(GHashTable *mdc, lrmd_rsc_info_t *rsc,
-                      const char *metadata_str)
+controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
+                        const char *metadata_str)
 {
     char *key = NULL;
+    const char *reason = NULL;
     xmlNode *metadata = NULL;
     xmlNode *match = NULL;
     struct ra_metadata_s *md = NULL;
@@ -210,26 +135,21 @@ metadata_cache_update(GHashTable *mdc, lrmd_rsc_info_t *rsc,
 
     key = crm_generate_ra_key(rsc->standard, rsc->provider, rsc->type);
     if (!key) {
-        crm_crit("Could not allocate memory for resource metadata");
+        reason = "Invalid resource agent standard or type";
         goto err;
     }
 
     metadata = string2xml(metadata_str);
     if (!metadata) {
-        crm_err("Metadata for %s:%s:%s is not valid XML",
-                rsc->standard, rsc->provider, rsc->type);
+        reason = "Metadata is not valid XML";
         goto err;
     }
 
     md = calloc(1, sizeof(struct ra_metadata_s));
     if (md == NULL) {
-        crm_crit("Could not allocate memory for resource metadata");
+        reason = "Could not allocate memory";
         goto err;
     }
-
-#if ENABLE_VERSIONED_ATTRS
-    md->ra_version = ra_version_from_xml(metadata, rsc);
-#endif
 
     if (strcmp(rsc->standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
         xmlChar *content = NULL;
@@ -281,6 +201,7 @@ metadata_cache_update(GHashTable *mdc, lrmd_rsc_info_t *rsc,
             struct ra_param_s *p = ra_param_from_xml(match);
 
             if (p == NULL) {
+                reason = "Could not allocate memory";
                 goto err;
             }
             if (pcmk_is_set(p->rap_flags, ra_param_private)) {
@@ -311,6 +232,9 @@ metadata_cache_update(GHashTable *mdc, lrmd_rsc_info_t *rsc,
     return md;
 
 err:
+    crm_warn("Unable to update metadata for %s (%s%s%s:%s): %s",
+             rsc->id, rsc->standard, ((rsc->provider == NULL)? "" : ":"),
+             pcmk__s(rsc->provider, ""), rsc->type, reason);
     free(key);
     free_xml(metadata);
     metadata_free(md);
@@ -321,15 +245,15 @@ err:
  * \internal
  * \brief Get meta-data for a resource
  *
- * \param[in] lrm_state  Use meta-data cache from this executor connection
- * \param[in] rsc        Resource to get meta-data for
- * \param[in] source     Allowed meta-data sources (bitmask of enum
- *                       controld_metadata_source_e values)
+ * \param[in,out] lrm_state  Use meta-data cache from this executor connection
+ * \param[in]     rsc        Resource to get meta-data for
+ * \param[in]     source     Allowed meta-data sources (bitmask of
+ *                           enum controld_metadata_source_e values)
  *
  * \return Meta-data cache entry for given resource, or NULL if not available
  */
 struct ra_metadata_s *
-controld_get_rsc_metadata(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
+controld_get_rsc_metadata(lrm_state_t *lrm_state, const lrmd_rsc_info_t *rsc,
                           uint32_t source)
 {
     struct ra_metadata_s *metadata = NULL;
@@ -346,6 +270,11 @@ controld_get_rsc_metadata(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
             free(key);
         }
         if (metadata != NULL) {
+            crm_debug("Retrieved metadata for %s (%s%s%s:%s) from cache",
+                      rsc->id, rsc->standard,
+                      ((rsc->provider == NULL)? "" : ":"),
+                      ((rsc->provider == NULL)? "" : rsc->provider),
+                      rsc->type);
             return metadata;
         }
     }
@@ -354,18 +283,25 @@ controld_get_rsc_metadata(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
         return NULL;
     }
 
-    /* For now, we always collect resource agent meta-data via a local,
-     * synchronous, direct execution of the agent. This has multiple issues:
-     * the executor should execute agents, not the controller; meta-data for
-     * Pacemaker Remote nodes should be collected on those nodes, not
-     * locally; and the meta-data call shouldn't eat into the timeout of the
-     * real action being performed.
+    /* For most actions, metadata was cached asynchronously before action
+     * execution (via metadata_complete()).
      *
-     * These issues are planned to be addressed by having the scheduler
-     * schedule a meta-data cache check at the beginning of each transition.
-     * Once that is working, this block will only be a fallback in case the
-     * initial collection fails.
+     * However if that failed, and for other actions, retrieve the metadata now
+     * via a local, synchronous, direct execution of the agent.
+     *
+     * This has multiple issues, which is why this is just a fallback: the
+     * executor should execute agents, not the controller; metadata for
+     * Pacemaker Remote nodes should be collected on those nodes, not locally;
+     * the metadata call shouldn't eat into the timeout of the real action being
+     * performed; and the synchronous call blocks the controller (which also
+     * means that if the metadata action tries to contact the controller,
+     * everything will hang until the timeout).
      */
+    crm_debug("Retrieving metadata for %s (%s%s%s:%s) synchronously",
+              rsc->id, rsc->standard,
+              ((rsc->provider == NULL)? "" : ":"),
+              ((rsc->provider == NULL)? "" : rsc->provider),
+              rsc->type);
     rc = lrm_state_get_metadata(lrm_state, rsc->standard, rsc->provider,
                                 rsc->type, &metadata_str, 0);
     if (rc != pcmk_ok) {
@@ -377,13 +313,8 @@ controld_get_rsc_metadata(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
         return NULL;
     }
 
-    metadata = metadata_cache_update(lrm_state->metadata_cache, rsc,
-                                     metadata_str);
+    metadata = controld_cache_metadata(lrm_state->metadata_cache, rsc,
+                                       metadata_str);
     free(metadata_str);
-    if (metadata == NULL) {
-        crm_warn("Failed to update metadata for %s (%s%s%s:%s)",
-                 rsc->id, rsc->standard, ((rsc->provider == NULL)? "" : ":"),
-                 ((rsc->provider == NULL)? "" : rsc->provider), rsc->type);
-    }
     return metadata;
 }

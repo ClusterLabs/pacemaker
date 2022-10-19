@@ -759,7 +759,7 @@ void crmd_peer_down(crm_node_t *peer, bool full)
 #define MIN_CIB_OP_TIMEOUT (30)
 
 unsigned int
-cib_op_timeout()
+cib_op_timeout(void)
 {
     static int env_timeout = -1;
     unsigned int calculated_timeout = 0;

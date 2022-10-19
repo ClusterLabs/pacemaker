@@ -7,10 +7,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="12" operation="demote" operation_key="master_slave_Stateful:1_demote_0" on_node="process1a" on_node_uuid="4dbb8c56-330e-4835-a15e-c0aa632d4e89"/>
+        <rsc_op id="12" operation="demote" operation_key="promotable_Stateful:1_demote_0" on_node="process1a" on_node_uuid="4dbb8c56-330e-4835-a15e-c0aa632d4e89"/>
       </trigger>
       <trigger>
-        <rsc_op id="14" operation="demote" operation_key="master_slave_procdctl:1_demote_0" on_node="process1a" on_node_uuid="4dbb8c56-330e-4835-a15e-c0aa632d4e89"/>
+        <rsc_op id="14" operation="demote" operation_key="promotable_procdctl:1_demote_0" on_node="process1a" on_node_uuid="4dbb8c56-330e-4835-a15e-c0aa632d4e89"/>
       </trigger>
     </inputs>
   </synapse>
@@ -34,10 +34,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="13" operation="stop" operation_key="master_slave_Stateful:1_stop_0" on_node="process1a" on_node_uuid="4dbb8c56-330e-4835-a15e-c0aa632d4e89"/>
+        <rsc_op id="13" operation="stop" operation_key="promotable_Stateful:1_stop_0" on_node="process1a" on_node_uuid="4dbb8c56-330e-4835-a15e-c0aa632d4e89"/>
       </trigger>
       <trigger>
-        <rsc_op id="15" operation="stop" operation_key="master_slave_procdctl:1_stop_0" on_node="process1a" on_node_uuid="4dbb8c56-330e-4835-a15e-c0aa632d4e89"/>
+        <rsc_op id="15" operation="stop" operation_key="promotable_procdctl:1_stop_0" on_node="process1a" on_node_uuid="4dbb8c56-330e-4835-a15e-c0aa632d4e89"/>
       </trigger>
       <trigger>
         <pseudo_event id="18" operation="stop" operation_key="ms-sf_group:1_stop_0"/>
@@ -58,14 +58,14 @@
   </synapse>
   <synapse id="4">
     <action_set>
-      <rsc_op id="13" operation="stop" operation_key="master_slave_Stateful:1_stop_0" on_node="process1a" on_node_uuid="4dbb8c56-330e-4835-a15e-c0aa632d4e89">
-        <primitive id="master_slave_Stateful:1" class="ocf" provider="heartbeat" type="Dummy-statful"/>
+      <rsc_op id="13" operation="stop" operation_key="promotable_Stateful:1_stop_0" on_node="process1a" on_node_uuid="4dbb8c56-330e-4835-a15e-c0aa632d4e89">
+        <primitive id="promotable_Stateful:1" class="ocf" provider="heartbeat" type="Dummy-statful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_fail="stop" CRM_meta_on_node="process1a" CRM_meta_on_node_uuid="4dbb8c56-330e-4835-a15e-c0aa632d4e89" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="60000"  sleep_time="10000"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="12" operation="demote" operation_key="master_slave_Stateful:1_demote_0" on_node="process1a" on_node_uuid="4dbb8c56-330e-4835-a15e-c0aa632d4e89"/>
+        <rsc_op id="12" operation="demote" operation_key="promotable_Stateful:1_demote_0" on_node="process1a" on_node_uuid="4dbb8c56-330e-4835-a15e-c0aa632d4e89"/>
       </trigger>
       <trigger>
         <pseudo_event id="18" operation="stop" operation_key="ms-sf_group:1_stop_0"/>
@@ -74,8 +74,8 @@
   </synapse>
   <synapse id="5">
     <action_set>
-      <rsc_op id="12" operation="demote" operation_key="master_slave_Stateful:1_demote_0" on_node="process1a" on_node_uuid="4dbb8c56-330e-4835-a15e-c0aa632d4e89">
-        <primitive id="master_slave_Stateful:1" class="ocf" provider="heartbeat" type="Dummy-statful"/>
+      <rsc_op id="12" operation="demote" operation_key="promotable_Stateful:1_demote_0" on_node="process1a" on_node_uuid="4dbb8c56-330e-4835-a15e-c0aa632d4e89">
+        <primitive id="promotable_Stateful:1" class="ocf" provider="heartbeat" type="Dummy-statful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="process1a" CRM_meta_on_node_uuid="4dbb8c56-330e-4835-a15e-c0aa632d4e89" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000"  sleep_time="10000"/>
       </rsc_op>
     </action_set>
@@ -87,14 +87,14 @@
   </synapse>
   <synapse id="6">
     <action_set>
-      <rsc_op id="15" operation="stop" operation_key="master_slave_procdctl:1_stop_0" on_node="process1a" on_node_uuid="4dbb8c56-330e-4835-a15e-c0aa632d4e89">
-        <primitive id="master_slave_procdctl:1" class="ocf" provider="heartbeat" type="procdctl"/>
+      <rsc_op id="15" operation="stop" operation_key="promotable_procdctl:1_stop_0" on_node="process1a" on_node_uuid="4dbb8c56-330e-4835-a15e-c0aa632d4e89">
+        <primitive id="promotable_procdctl:1" class="ocf" provider="heartbeat" type="procdctl"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_fail="stop" CRM_meta_on_node="process1a" CRM_meta_on_node_uuid="4dbb8c56-330e-4835-a15e-c0aa632d4e89" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="60000"  procd="sleep 10000"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="14" operation="demote" operation_key="master_slave_procdctl:1_demote_0" on_node="process1a" on_node_uuid="4dbb8c56-330e-4835-a15e-c0aa632d4e89"/>
+        <rsc_op id="14" operation="demote" operation_key="promotable_procdctl:1_demote_0" on_node="process1a" on_node_uuid="4dbb8c56-330e-4835-a15e-c0aa632d4e89"/>
       </trigger>
       <trigger>
         <pseudo_event id="18" operation="stop" operation_key="ms-sf_group:1_stop_0"/>
@@ -103,8 +103,8 @@
   </synapse>
   <synapse id="7">
     <action_set>
-      <rsc_op id="14" operation="demote" operation_key="master_slave_procdctl:1_demote_0" on_node="process1a" on_node_uuid="4dbb8c56-330e-4835-a15e-c0aa632d4e89">
-        <primitive id="master_slave_procdctl:1" class="ocf" provider="heartbeat" type="procdctl"/>
+      <rsc_op id="14" operation="demote" operation_key="promotable_procdctl:1_demote_0" on_node="process1a" on_node_uuid="4dbb8c56-330e-4835-a15e-c0aa632d4e89">
+        <primitive id="promotable_procdctl:1" class="ocf" provider="heartbeat" type="procdctl"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="process1a" CRM_meta_on_node_uuid="4dbb8c56-330e-4835-a15e-c0aa632d4e89" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000"  procd="sleep 10000"/>
       </rsc_op>
     </action_set>
@@ -175,10 +175,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="13" operation="stop" operation_key="master_slave_Stateful:1_stop_0" on_node="process1a" on_node_uuid="4dbb8c56-330e-4835-a15e-c0aa632d4e89"/>
+        <rsc_op id="13" operation="stop" operation_key="promotable_Stateful:1_stop_0" on_node="process1a" on_node_uuid="4dbb8c56-330e-4835-a15e-c0aa632d4e89"/>
       </trigger>
       <trigger>
-        <rsc_op id="15" operation="stop" operation_key="master_slave_procdctl:1_stop_0" on_node="process1a" on_node_uuid="4dbb8c56-330e-4835-a15e-c0aa632d4e89"/>
+        <rsc_op id="15" operation="stop" operation_key="promotable_procdctl:1_stop_0" on_node="process1a" on_node_uuid="4dbb8c56-330e-4835-a15e-c0aa632d4e89"/>
       </trigger>
     </inputs>
   </synapse>

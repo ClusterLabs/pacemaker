@@ -49,6 +49,7 @@ struct {
     char *attr_value;
     int attr_options;
     gboolean query_all;
+    gboolean quiet;
 } options = {
     .attr_options = pcmk__node_attr_none,
     .command = 'Q',
@@ -117,15 +118,16 @@ static GOptionEntry command_entries[] = {
       INDENT "pacemaker-attrd. If this causes the value or dampening to change,\n"
       INDENT "the attribute will also be written to the cluster configuration,\n"
       INDENT "so be aware that repeatedly changing the dampening reduces its\n"
-      INDENT "effectiveness.",
+      INDENT "effectiveness.\n"
+      INDENT "Requires -d/--delay",
       "VALUE" },
 
     { "update-delay", 'Y', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
-      "Update attribute's dampening in pacemaker-attrd (requires\n"
-      INDENT "-d/--delay). If this causes the dampening to change, the\n"
-      INDENT "attribute will also be written to the cluster configuration, so\n"
-      INDENT "be aware that repeatedly changing the dampening reduces its\n"
-      INDENT "effectiveness.",
+      "Update attribute's dampening in pacemaker-attrd. If this causes\n"
+      INDENT "the dampening to change, the attribute will also be written\n"
+      INDENT "to the cluster configuration, so be aware that repeatedly\n"
+      INDENT "changing the dampening reduces its effectiveness.\n"
+      INDENT "Requires -d/--delay",
       NULL },
 
     { "query", 'Q', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
@@ -177,6 +179,10 @@ static GOptionEntry addl_entries[] = {
 };
 
 static GOptionEntry deprecated_entries[] = {
+    { "quiet", 'q', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &options.quiet,
+      NULL,
+      NULL },
+
     { "update", 'v', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, command_cb,
       NULL,
       NULL },
@@ -250,6 +256,8 @@ main(int argc, char **argv)
         exit_code = CRM_EX_USAGE;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Command requires --name argument");
         goto done;
+    } else if ((options.command == 'B'|| options.command == 'Y') && options.attr_dampen == NULL) {
+        out->info(out, "Warning: '%c' command given without required --delay", options.command);
     }
 
     pcmk__register_lib_messages(out);
@@ -344,8 +352,8 @@ send_attrd_query(pcmk__output_t *out, const char *attr_name, const char *attr_no
     // Create attrd IPC object
     rc = pcmk_new_ipc_api(&attrd_api, pcmk_ipc_attrd);
     if (rc != pcmk_rc_ok) {
-        fprintf(stderr, "error: Could not connect to attrd: %s\n",
-                pcmk_rc_str(rc));
+        g_set_error(&error, PCMK__RC_ERROR, rc,
+                    "Could not connect to attrd: %s", pcmk_rc_str(rc));
         return ENOTCONN;
     }
 
@@ -354,8 +362,8 @@ send_attrd_query(pcmk__output_t *out, const char *attr_name, const char *attr_no
     // Connect to attrd (without main loop)
     rc = pcmk_connect_ipc(attrd_api, pcmk_ipc_dispatch_sync);
     if (rc != pcmk_rc_ok) {
-        fprintf(stderr, "error: Could not connect to attrd: %s\n",
-                pcmk_rc_str(rc));
+        g_set_error(&error, PCMK__RC_ERROR, rc,
+                    "Could not connect to attrd: %s", pcmk_rc_str(rc));
         pcmk_free_ipc_api(attrd_api);
         return rc;
     }

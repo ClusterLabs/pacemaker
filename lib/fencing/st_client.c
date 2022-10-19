@@ -291,7 +291,8 @@ stonith_connection_destroy(gpointer user_data)
 
 xmlNode *
 create_device_registration_xml(const char *id, enum stonith_namespace namespace,
-                               const char *agent, stonith_key_value_t *params,
+                               const char *agent,
+                               const stonith_key_value_t *params,
                                const char *rsc_provides)
 {
     xmlNode *data = create_xml_node(NULL, F_STONITH_DEVICE);
@@ -325,9 +326,10 @@ create_device_registration_xml(const char *id, enum stonith_namespace namespace,
 }
 
 static int
-stonith_api_register_device(stonith_t * st, int call_options,
-                            const char *id, const char *namespace, const char *agent,
-                            stonith_key_value_t * params)
+stonith_api_register_device(stonith_t *st, int call_options,
+                            const char *id, const char *namespace,
+                            const char *agent,
+                            const stonith_key_value_t *params)
 {
     int rc = 0;
     xmlNode *data = NULL;
@@ -412,10 +414,9 @@ stonith_api_remove_level(stonith_t * st, int options, const char *node, int leve
 xmlNode *
 create_level_registration_xml(const char *node, const char *pattern,
                               const char *attr, const char *value,
-                              int level, stonith_key_value_t *device_list)
+                              int level, const stonith_key_value_t *device_list)
 {
-    size_t len = 0;
-    char *list = NULL;
+    GString *list = NULL;
     xmlNode *data;
 
     CRM_CHECK(node || pattern || (attr && value), return NULL);
@@ -438,23 +439,22 @@ create_level_registration_xml(const char *node, const char *pattern,
         crm_xml_add(data, XML_ATTR_STONITH_TARGET_VALUE, value);
     }
 
-    // cppcheck seems not to understand the abort logic behind pcmk__realloc
-    // cppcheck-suppress memleak
     for (; device_list; device_list = device_list->next) {
-        pcmk__add_separated_word(&list, &len, device_list->value, ",");
+        pcmk__add_separated_word(&list, 1024, device_list->value, ",");
     }
 
-    crm_xml_add(data, XML_ATTR_STONITH_DEVICES, list);
-
-    free(list);
+    if (list != NULL) {
+        crm_xml_add(data, XML_ATTR_STONITH_DEVICES, (const char *) list->str);
+        g_string_free(list, TRUE);
+    }
     return data;
 }
 
 static int
-stonith_api_register_level_full(stonith_t * st, int options, const char *node,
-                                const char *pattern,
-                                const char *attr, const char *value,
-                                int level, stonith_key_value_t *device_list)
+stonith_api_register_level_full(stonith_t *st, int options, const char *node,
+                                const char *pattern, const char *attr,
+                                const char *value, int level,
+                                const stonith_key_value_t *device_list)
 {
     int rc = 0;
     xmlNode *data = create_level_registration_xml(node, pattern, attr, value,
@@ -469,7 +469,7 @@ stonith_api_register_level_full(stonith_t * st, int options, const char *node,
 
 static int
 stonith_api_register_level(stonith_t * st, int options, const char *node, int level,
-                           stonith_key_value_t * device_list)
+                           const stonith_key_value_t * device_list)
 {
     return stonith_api_register_level_full(st, options, node, NULL, NULL, NULL,
                                            level, device_list);
@@ -502,9 +502,11 @@ stonith_api_device_list(stonith_t * stonith, int call_options, const char *names
     return count;
 }
 
+// See stonith_api_operations_t:metadata() documentation
 static int
-stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *agent,
-                            const char *namespace, char **output, int timeout)
+stonith_api_device_metadata(stonith_t *stonith, int call_options,
+                            const char *agent, const char *namespace,
+                            char **output, int timeout_sec)
 {
     /* By executing meta-data directly, we can get it from stonith_admin when
      * the cluster is not running, which is important for higher-level tools.
@@ -512,16 +514,20 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
 
     enum stonith_namespace ns = stonith_get_namespace(agent, namespace);
 
+    if (timeout_sec <= 0) {
+        timeout_sec = CRMD_METADATA_CALL_TIMEOUT;
+    }
+
     crm_trace("Looking up metadata for %s agent %s",
               stonith_namespace2text(ns), agent);
 
     switch (ns) {
         case st_namespace_rhcs:
-            return stonith__rhcs_metadata(agent, timeout, output);
+            return stonith__rhcs_metadata(agent, timeout_sec, output);
 
 #if HAVE_STONITH_STONITH_H
         case st_namespace_lha:
-            return stonith__lha_metadata(agent, timeout, output);
+            return stonith__lha_metadata(agent, timeout_sec, output);
 #endif
 
         default:
@@ -579,11 +585,22 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
     return max;
 }
 
+/*!
+ * \internal
+ * \brief Make a STONITH_OP_EXEC request
+ *
+ * \param[in]  stonith       Fencer connection
+ * \param[in]  call_options  Bitmask of \c stonith_call_options
+ * \param[in]  id            Fence device ID that request is for
+ * \param[in]  action        Agent action to request (list, status, or monitor)
+ * \param[in]  target        Name of target node for requested action
+ * \param[in]  timeout_sec   Error if not completed within this many seconds
+ * \param[out] output        Where to set agent output
+ */
 static int
-stonith_api_call(stonith_t * stonith,
-                 int call_options,
-                 const char *id,
-                 const char *action, const char *victim, int timeout, xmlNode ** output)
+stonith_api_call(stonith_t *stonith, int call_options, const char *id,
+                 const char *action, const char *target, int timeout_sec,
+                 xmlNode **output)
 {
     int rc = 0;
     xmlNode *data = NULL;
@@ -592,9 +609,10 @@ stonith_api_call(stonith_t * stonith,
     crm_xml_add(data, F_STONITH_ORIGIN, __func__);
     crm_xml_add(data, F_STONITH_DEVICE, id);
     crm_xml_add(data, F_STONITH_ACTION, action);
-    crm_xml_add(data, F_STONITH_TARGET, victim);
+    crm_xml_add(data, F_STONITH_TARGET, target);
 
-    rc = stonith_send_command(stonith, STONITH_OP_EXEC, data, output, call_options, timeout);
+    rc = stonith_send_command(stonith, STONITH_OP_EXEC, data, output,
+                              call_options, timeout_sec);
     free_xml(data);
 
     return rc;
@@ -1698,8 +1716,8 @@ stonith_api_delete(stonith_t * stonith)
 static int
 stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
                      const char *namespace_s, const char *agent,
-                     stonith_key_value_t *params, int timeout, char **output,
-                     char **error_output)
+                     const stonith_key_value_t *params, int timeout_sec,
+                     char **output, char **error_output)
 {
     /* Validation should be done directly via the agent, so we can get it from
      * stonith_admin when the cluster is not running, which is important for
@@ -1745,17 +1763,21 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
         *error_output = NULL;
     }
 
+    if (timeout_sec <= 0) {
+        timeout_sec = CRMD_METADATA_CALL_TIMEOUT; // Questionable
+    }
+
     switch (stonith_get_namespace(agent, namespace_s)) {
         case st_namespace_rhcs:
             rc = stonith__rhcs_validate(st, call_options, target, agent,
-                                        params_table, host_arg, timeout,
+                                        params_table, host_arg, timeout_sec,
                                         output, error_output);
             break;
 
 #if HAVE_STONITH_STONITH_H
         case st_namespace_lha:
             rc = stonith__lha_validate(st, call_options, target, agent,
-                                       params_table, timeout, output,
+                                       params_table, timeout_sec, output,
                                        error_output);
             break;
 #endif
@@ -2400,6 +2422,86 @@ stonith__device_parameter_flags(uint32_t *device_flags, const char *device_name,
     }
 
     freeXpathObject(xpath);
+}
+
+/*!
+ * \internal
+ * \brief Retrieve fence agent meta-data asynchronously
+ *
+ * \param[in] agent        Agent to execute
+ * \param[in] timeout_sec  Error if not complete within this time
+ * \param[in] callback     Function to call with result (this will always be
+ *                         called, whether by this function directly or later
+ *                         via the main loop, and on success the metadata will
+ *                         be in its result argument's action_stdout)
+ * \param[in] user_data    User data to pass to callback
+ *
+ * \return Standard Pacemaker return code
+ * \note The caller must use a main loop. This function is not a
+ *       stonith_api_operations_t method because it does not need a stonith_t
+ *       object and does not go through the fencer, but executes the agent
+ *       directly.
+ */
+int
+stonith__metadata_async(const char *agent, int timeout_sec,
+                        void (*callback)(int pid,
+                                         const pcmk__action_result_t *result,
+                                         void *user_data),
+                        void *user_data)
+{
+    switch (stonith_get_namespace(agent, NULL)) {
+        case st_namespace_rhcs:
+            {
+                stonith_action_t *action = NULL;
+                int rc = pcmk_ok;
+
+                action = stonith__action_create(agent, "metadata", NULL, 0,
+                                                timeout_sec, NULL, NULL, NULL);
+
+                rc = stonith__execute_async(action, user_data, callback, NULL);
+                if (rc != pcmk_ok) {
+                    callback(0, stonith__action_result(action), user_data);
+                    stonith__destroy_action(action);
+                }
+                return pcmk_legacy2rc(rc);
+            }
+
+#if HAVE_STONITH_STONITH_H
+        case st_namespace_lha:
+            // LHA metadata is simply synthesized, so simulate async
+            {
+                pcmk__action_result_t result = {
+                    .exit_status = CRM_EX_OK,
+                    .execution_status = PCMK_EXEC_DONE,
+                    .exit_reason = NULL,
+                    .action_stdout = NULL,
+                    .action_stderr = NULL,
+                };
+
+                stonith__lha_metadata(agent, timeout_sec,
+                                      &result.action_stdout);
+                callback(0, &result, user_data);
+                pcmk__reset_result(&result);
+                return pcmk_rc_ok;
+            }
+#endif
+
+        default:
+            {
+                pcmk__action_result_t result = {
+                    .exit_status = CRM_EX_NOSUCH,
+                    .execution_status = PCMK_EXEC_ERROR_HARD,
+                    .exit_reason = crm_strdup_printf("No such agent '%s'",
+                                                     agent),
+                    .action_stdout = NULL,
+                    .action_stderr = NULL,
+                };
+
+                callback(0, &result, user_data);
+                pcmk__reset_result(&result);
+                return ENOENT;
+            }
+    }
 }
 
 /*!

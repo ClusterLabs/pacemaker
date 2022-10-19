@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -43,19 +43,16 @@ pe_node_t *pe_find_node_any(GList *node_list, const char *id, const char *uname)
 GList *find_operations(const char *rsc, const char *node, gboolean active_filter,
                          pe_working_set_t * data_set);
 int pe_bundle_replicas(const pe_resource_t *rsc);
-#if ENABLE_VERSIONED_ATTRS
-pe_rsc_action_details_t *pe_rsc_action_details(pe_action_t *action);
-#endif
 
 /*!
  * \brief Check whether a resource is any clone type
  *
  * \param[in] rsc  Resource to check
  *
- * \return TRUE if resource is clone, FALSE otherwise
+ * \return true if resource is clone, false otherwise
  */
 static inline bool
-pe_rsc_is_clone(pe_resource_t *rsc)
+pe_rsc_is_clone(const pe_resource_t *rsc)
 {
     return rsc && (rsc->variant == pe_clone);
 }
@@ -65,10 +62,10 @@ pe_rsc_is_clone(pe_resource_t *rsc)
  *
  * \param[in] rsc  Resource to check
  *
- * \return TRUE if resource is unique clone, FALSE otherwise
+ * \return true if resource is unique clone, false otherwise
  */
 static inline bool
-pe_rsc_is_unique_clone(pe_resource_t *rsc)
+pe_rsc_is_unique_clone(const pe_resource_t *rsc)
 {
     return pe_rsc_is_clone(rsc) && pcmk_is_set(rsc->flags, pe_rsc_unique);
 }
@@ -78,10 +75,10 @@ pe_rsc_is_unique_clone(pe_resource_t *rsc)
  *
  * \param[in] rsc  Resource to check
  *
- * \return TRUE if resource is anonymous clone, FALSE otherwise
+ * \return true if resource is anonymous clone, false otherwise
  */
 static inline bool
-pe_rsc_is_anon_clone(pe_resource_t *rsc)
+pe_rsc_is_anon_clone(const pe_resource_t *rsc)
 {
     return pe_rsc_is_clone(rsc) && !pcmk_is_set(rsc->flags, pe_rsc_unique);
 }
@@ -91,7 +88,7 @@ pe_rsc_is_anon_clone(pe_resource_t *rsc)
  *
  * \param[in] rsc  Resource to check
  *
- * \return TRUE if resource is part of a bundle, FALSE otherwise
+ * \return true if resource is part of a bundle, false otherwise
  */
 static inline bool
 pe_rsc_is_bundled(pe_resource_t *rsc)

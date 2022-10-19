@@ -76,6 +76,10 @@
 #define PCMK__XA_ATTR_VALUE             "attr_value"
 #define PCMK__XA_ATTR_VERSION           "attr_version"
 #define PCMK__XA_ATTR_WRITER            "attr_writer"
+#define PCMK__XA_CONFIG_ERRORS          "config-errors"
+#define PCMK__XA_CONFIG_WARNINGS        "config-warnings"
+#define PCMK__XA_GRAPH_ERRORS           "graph-errors"
+#define PCMK__XA_GRAPH_WARNINGS         "graph-warnings"
 #define PCMK__XA_MODE                   "mode"
 #define PCMK__XA_TASK                   "task"
 

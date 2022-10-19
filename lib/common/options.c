@@ -31,19 +31,19 @@
  */
 
 static char *crm_short_options = NULL;
-static pcmk__cli_option_t *crm_long_options = NULL;
+static const pcmk__cli_option_t *crm_long_options = NULL;
 static const char *crm_app_description = NULL;
 static const char *crm_app_usage = NULL;
 
 void
-pcmk__cli_option_cleanup()
+pcmk__cli_option_cleanup(void)
 {
     free(crm_short_options);
     crm_short_options = NULL;
 }
 
 static struct option *
-create_long_opts(pcmk__cli_option_t *long_options)
+create_long_opts(const pcmk__cli_option_t *long_options)
 {
     struct option *long_opts = NULL;
 
@@ -103,7 +103,8 @@ create_long_opts(pcmk__cli_option_t *long_options)
  */
 void
 pcmk__set_cli_options(const char *short_options, const char *app_usage,
-                      pcmk__cli_option_t *long_options, const char *app_desc)
+                      const pcmk__cli_option_t *long_options,
+                      const char *app_desc)
 {
     if (short_options) {
         crm_short_options = strdup(short_options);
@@ -280,26 +281,37 @@ pcmk__cli_help(char cmd, crm_exit_t exit_code)
  *
  * \param[in] option  Environment variable name (without prefix)
  *
- * \return Value of environment variable option
+ * \return Value of environment variable option, or NULL in case of
+ *         option name too long or value not found
  */
 const char *
 pcmk__env_option(const char *option)
 {
+    const char *const prefixes[] = {"PCMK_", "HA_"};
     char env_name[NAME_MAX];
     const char *value = NULL;
 
-    snprintf(env_name, NAME_MAX, "PCMK_%s", option);
-    value = getenv(env_name);
-    if (value != NULL) {
-        crm_trace("Found %s = %s", env_name, value);
-        return value;
-    }
+    CRM_CHECK(!pcmk__str_empty(option), return NULL);
 
-    snprintf(env_name, NAME_MAX, "HA_%s", option);
-    value = getenv(env_name);
-    if (value != NULL) {
-        crm_trace("Found %s = %s", env_name, value);
-        return value;
+    for (int i = 0; i < PCMK__NELEM(prefixes); i++) {
+        int rv = snprintf(env_name, NAME_MAX, "%s%s", prefixes[i], option);
+
+        if (rv < 0) {
+            crm_err("Failed to write %s%s to buffer: %s", prefixes[i], option,
+                    strerror(errno));
+            return NULL;
+        }
+
+        if (rv >= sizeof(env_name)) {
+            crm_trace("\"%s%s\" is too long", prefixes[i], option);
+            continue;
+        }
+
+        value = getenv(env_name);
+        if (value != NULL) {
+            crm_trace("Found %s = %s", env_name, value);
+            return value;
+        }
     }
 
     crm_trace("Nothing found for %s", option);
@@ -318,24 +330,38 @@ pcmk__env_option(const char *option)
 void
 pcmk__set_env_option(const char *option, const char *value)
 {
+    const char *const prefixes[] = {"PCMK_", "HA_"};
     char env_name[NAME_MAX];
 
-    snprintf(env_name, NAME_MAX, "PCMK_%s", option);
-    if (value) {
-        crm_trace("Setting %s to %s", env_name, value);
-        setenv(env_name, value, 1);
-    } else {
-        crm_trace("Unsetting %s", env_name);
-        unsetenv(env_name);
-    }
+    CRM_CHECK(!pcmk__str_empty(option) && (strchr(option, '=') == NULL),
+              return);
 
-    snprintf(env_name, NAME_MAX, "HA_%s", option);
-    if (value) {
-        crm_trace("Setting %s to %s", env_name, value);
-        setenv(env_name, value, 1);
-    } else {
-        crm_trace("Unsetting %s", env_name);
-        unsetenv(env_name);
+    for (int i = 0; i < PCMK__NELEM(prefixes); i++) {
+        int rv = snprintf(env_name, NAME_MAX, "%s%s", prefixes[i], option);
+
+        if (rv < 0) {
+            crm_err("Failed to write %s%s to buffer: %s", prefixes[i], option,
+                    strerror(errno));
+            return;
+        }
+
+        if (rv >= sizeof(env_name)) {
+            crm_trace("\"%s%s\" is too long", prefixes[i], option);
+            continue;
+        }
+
+        if (value != NULL) {
+            crm_trace("Setting %s to %s", env_name, value);
+            rv = setenv(env_name, value, 1);
+        } else {
+            crm_trace("Unsetting %s", env_name);
+            rv = unsetenv(env_name);
+        }
+
+        if (rv < 0) {
+            crm_err("Failed to %sset %s: %s", (value != NULL)? "" : "un",
+                    env_name, strerror(errno));
+        }
     }
 }
 
@@ -347,7 +373,7 @@ pcmk__set_env_option(const char *option, const char *value)
  * or a list of daemon names, return true if the option is enabled for a given
  * daemon.
  *
- * \param[in] daemon   Daemon name
+ * \param[in] daemon   Daemon name (can be NULL)
  * \param[in] option   Pacemaker environment variable name
  *
  * \return true if variable is enabled for daemon, otherwise false
@@ -357,7 +383,9 @@ pcmk__env_option_enabled(const char *daemon, const char *option)
 {
     const char *value = pcmk__env_option(option);
 
-    return (value != NULL) && (crm_is_true(value) || strstr(value, daemon));
+    return (value != NULL)
+        && (crm_is_true(value)
+            || ((daemon != NULL) && (strstr(value, daemon) != NULL)));
 }
 
 
@@ -452,11 +480,11 @@ pcmk__valid_percentage(const char *value)
  * \internal
  * \brief Check a table of configured options for a particular option
  *
- * \param[in] options    Name/value pairs for configured options
- * \param[in] validate   If not NULL, validator function for option value
- * \param[in] name       Option name to look for
- * \param[in] old_name   Alternative option name to look for
- * \param[in] def_value  Default to use if option not configured
+ * \param[in,out] options    Name/value pairs for configured options
+ * \param[in]     validate   If not NULL, validator function for option value
+ * \param[in]     name       Option name to look for
+ * \param[in]     old_name   Alternative option name to look for
+ * \param[in]     def_value  Default to use if option not configured
  *
  * \return Option value (from supplied options table or default value)
  */
@@ -528,14 +556,15 @@ cluster_option_value(GHashTable *options, bool (*validate)(const char *),
  * \internal
  * \brief Get the value of a cluster option
  *
- * \param[in] options      Name/value pairs for configured options
- * \param[in] option_list  Possible cluster options
- * \param[in] name         (Primary) option name to look for
+ * \param[in,out] options      Name/value pairs for configured options
+ * \param[in]     option_list  Possible cluster options
+ * \param[in]     name         (Primary) option name to look for
  *
  * \return Option value
  */
 const char *
-pcmk__cluster_option(GHashTable *options, pcmk__cluster_option_t *option_list,
+pcmk__cluster_option(GHashTable *options,
+                     const pcmk__cluster_option_t *option_list,
                      int len, const char *name)
 {
     const char *value = NULL;
@@ -557,22 +586,28 @@ pcmk__cluster_option(GHashTable *options, pcmk__cluster_option_t *option_list,
  * \internal
  * \brief Add a description element to a meta-data string
  *
- * \param[in] s       Meta-data string to add to
- * \param[in] tag     Name of element to add ("longdesc" or "shortdesc")
- * \param[in] desc    Textual description to add
- * \param[in] values  If not NULL, the allowed values for the parameter
+ * \param[in,out] s       Meta-data string to add to
+ * \param[in]     tag     Name of element to add ("longdesc" or "shortdesc")
+ * \param[in]     desc    Textual description to add
+ * \param[in]     values  If not \p NULL, the allowed values for the parameter
+ * \param[in]     spaces  If not \p NULL, spaces to insert at the beginning of
+ *                        each line
  */
 static void
-add_desc(GString *s, const char *tag, const char *desc, const char *values, const char *spaces)
+add_desc(GString *s, const char *tag, const char *desc, const char *values,
+         const char *spaces)
 {
     char *escaped_en = crm_xml_escape(desc);
 
-    g_string_append_printf(s, "<%s lang=\"en\">%s",
-                           tag, escaped_en);
-    if (values != NULL) {
-        g_string_append_printf(s, "  Allowed values: %s", values);
+    if (spaces != NULL) {
+        g_string_append(s, spaces);
     }
-    g_string_append_printf(s, "</%s>\n", tag);
+    pcmk__g_strcat(s, "<", tag, " lang=\"en\">", escaped_en, NULL);
+
+    if (values != NULL) {
+        pcmk__g_strcat(s, "  Allowed values: ", values, NULL);
+    }
+    pcmk__g_strcat(s, "</", tag, ">\n", NULL);
 
 #ifdef ENABLE_NLS
     {
@@ -585,16 +620,16 @@ add_desc(GString *s, const char *tag, const char *desc, const char *values, cons
                 locale = strtok(setlocale(LC_ALL, NULL), "_");
             }
 
-	    if (spaces != NULL) {
-                g_string_append_printf(s, "%s", spaces);
+            if (spaces != NULL) {
+                g_string_append(s, spaces);
             }
-            g_string_append_printf(s, "<%s lang=\"%s\">%s",
-                                   tag, locale, localized);
+            pcmk__g_strcat(s, "<", tag, " lang=\"", locale, "\">", localized,
+                           NULL);
+
             if (values != NULL) {
-                g_string_append(s, _("  Allowed values: "));
-                g_string_append_printf(s, "%s", _(values));
+                pcmk__g_strcat(s, _("  Allowed values: "), _(values), NULL);
             }
-            g_string_append_printf(s, "</%s>\n", tag);
+            pcmk__g_strcat(s, "</", tag, ">\n", NULL);
         }
         free(localized);
     }
@@ -603,80 +638,79 @@ add_desc(GString *s, const char *tag, const char *desc, const char *values, cons
     free(escaped_en);
 }
 
-char *
+gchar *
 pcmk__format_option_metadata(const char *name, const char *desc_short,
                              const char *desc_long,
                              pcmk__cluster_option_t *option_list, int len)
 {
-    char *retval;
     /* big enough to hold "pacemaker-schedulerd metadata" output */
     GString *s = g_string_sized_new(13000);
-    int lpc = 0;
 
-    g_string_append_printf(s, "<?xml version=\"1.0\"?>"
-                              "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
-                              "<resource-agent name=\"%s\">\n"
-                              "  <version>%s</version>\n",
-                              name, PCMK_OCF_VERSION);
+    pcmk__g_strcat(s,
+                   "<?xml version=\"1.0\"?>\n"
+                   "<resource-agent name=\"", name, "\" "
+                                   "version=\"" PACEMAKER_VERSION "\">\n"
+                   "  <version>" PCMK_OCF_VERSION "</version>\n", NULL);
 
-    g_string_append(s, "  ");
     add_desc(s, "longdesc", desc_long, NULL, "  ");
-
-    g_string_append(s, "  ");
     add_desc(s, "shortdesc", desc_short, NULL, "  ");
 
     g_string_append(s, "  <parameters>\n");
 
-    for (lpc = 0; lpc < len; lpc++) {
-        const char *long_desc = option_list[lpc].description_long;
+    for (int lpc = 0; lpc < len; lpc++) {
+        const char *opt_name = option_list[lpc].name;
+        const char *opt_type = option_list[lpc].type;
+        const char *opt_values = option_list[lpc].values;
+        const char *opt_default = option_list[lpc].default_value;
+        const char *opt_desc_short = option_list[lpc].description_short;
+        const char *opt_desc_long = option_list[lpc].description_long;
 
-        if (long_desc == NULL) {
-            long_desc = option_list[lpc].description_short;
-            if (long_desc == NULL) {
-                continue; // The standard requires a parameter description
-            }
+        // The standard requires long and short parameter descriptions
+        CRM_ASSERT((opt_desc_short != NULL) || (opt_desc_long != NULL));
+
+        if (opt_desc_short == NULL) {
+            opt_desc_short = opt_desc_long;
+        } else if (opt_desc_long == NULL) {
+            opt_desc_long = opt_desc_short;
         }
 
-        g_string_append_printf(s, "    <parameter name=\"%s\">\n",
-                               option_list[lpc].name);
+        // The standard requires a parameter type
+        CRM_ASSERT(opt_type != NULL);
 
-        g_string_append(s, "      ");
-        add_desc(s, "longdesc", long_desc, option_list[lpc].values, "      ");
+        pcmk__g_strcat(s, "    <parameter name=\"", opt_name, "\">\n", NULL);
 
-        g_string_append(s, "      ");
-        add_desc(s, "shortdesc", option_list[lpc].description_short, NULL, "      ");
+        add_desc(s, "longdesc", opt_desc_long, opt_values, "      ");
+        add_desc(s, "shortdesc", opt_desc_short, NULL, "      ");
 
-        if (option_list[lpc].values && !strcmp(option_list[lpc].type, "select")) {
-            char *str = strdup(option_list[lpc].values);
-            char delim[] = ", ";
+        pcmk__g_strcat(s, "      <content type=\"", opt_type, "\"", NULL);
+        if (opt_default != NULL) {
+            pcmk__g_strcat(s, " default=\"", opt_default, "\"", NULL);
+        }
+
+        if ((opt_values != NULL) && (strcmp(opt_type, "select") == 0)) {
+            char *str = strdup(opt_values);
+            const char *delim = ", ";
             char *ptr = strtok(str, delim);
 
-            g_string_append_printf(s, "      <content type=\"%s\" default=\"%s\">\n",
-                                   option_list[lpc].type,
-                                   option_list[lpc].default_value);
+            g_string_append(s, ">\n");
 
             while (ptr != NULL) {
-                g_string_append_printf(s, "        <option value=\"%s\" />\n", ptr);
+                pcmk__g_strcat(s, "        <option value=\"", ptr, "\" />\n",
+                               NULL);
                 ptr = strtok(NULL, delim);
             }
-
             g_string_append_printf(s, "      </content>\n");
             free(str);
 
         } else {
-            g_string_append_printf(s, "      <content type=\"%s\" default=\"%s\"/>\n",
-                                   option_list[lpc].type,
-                                   option_list[lpc].default_value
-            );
+            g_string_append(s, "/>\n");
         }
 
-        g_string_append_printf(s, "    </parameter>\n");
+        g_string_append(s, "    </parameter>\n");
     }
-    g_string_append_printf(s, "  </parameters>\n</resource-agent>\n");
+    g_string_append(s, "  </parameters>\n</resource-agent>\n");
 
-    retval = s->str;
-    g_string_free(s, FALSE);
-    return retval;
+    return g_string_free(s, FALSE);
 }
 
 void

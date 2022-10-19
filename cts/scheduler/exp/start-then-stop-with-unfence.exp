@@ -151,7 +151,7 @@
   <synapse id="11">
     <action_set>
       <crm_event id="5" operation="stonith" operation_key="stonith-rhel7-node1.example.com-on" on_node="rhel7-node1.example.com" on_node_uuid="1">
-        <attributes CRM_meta_on_node="rhel7-node1.example.com" CRM_meta_on_node_uuid="1" CRM_meta_probe_complete="true" CRM_meta_shutdown="0" CRM_meta_stonith_action="on" />
+        <attributes CRM_meta_digests_all="mpath-node1:fence_mpath:019ed48e26413030411da3ae8888a649,mpath-node2:fence_mpath:b97ef86afabe0426040d1bef247023ee," CRM_meta_digests_secure="mpath-node1:fence_mpath:21f9562fe6837f7357aab98ba69f71fb,mpath-node2:fence_mpath:563e5d6a67b7dcdb65d2f0325aed9fc1," CRM_meta_on_node="rhel7-node1.example.com" CRM_meta_on_node_uuid="1" CRM_meta_probe_complete="true" CRM_meta_shutdown="0" CRM_meta_stonith_action="on" />
       </crm_event>
     </action_set>
     <inputs/>

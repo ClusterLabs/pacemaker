@@ -292,8 +292,6 @@ node_list_update_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, 
     }
 }
 
-#define NODE_PATH_MAX 512
-
 void
 populate_cib_nodes(enum node_update_flags flags, const char *source)
 {
@@ -311,14 +309,19 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
     if (from_hashtable) {
         GHashTableIter iter;
         crm_node_t *node = NULL;
+        GString *xpath = NULL;
 
         g_hash_table_iter_init(&iter, crm_peer_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             xmlNode *new_node = NULL;
 
-            crm_trace("Creating node entry for %s/%s", node->uname, node->uuid);
-            if(node->uuid && node->uname) {
-                char xpath[NODE_PATH_MAX];
+            if ((node->uuid != NULL) && (node->uname != NULL)) {
+                crm_trace("Creating node entry for %s/%s", node->uname, node->uuid);
+                if (xpath == NULL) {
+                    xpath = g_string_sized_new(512);
+                } else {
+                    g_string_truncate(xpath, 0);
+                }
 
                 /* We need both to be valid */
                 new_node = create_xml_node(node_list, XML_CIB_TAG_NODE);
@@ -326,16 +329,23 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
                 crm_xml_add(new_node, XML_ATTR_UNAME, node->uname);
 
                 /* Search and remove unknown nodes with the conflicting uname from CIB */
-                snprintf(xpath, NODE_PATH_MAX,
-                         "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_NODES
-                         "/" XML_CIB_TAG_NODE "[@uname='%s'][@id!='%s']",
-                         node->uname, node->uuid);
+                pcmk__g_strcat(xpath,
+                               "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION
+                               "/" XML_CIB_TAG_NODES "/" XML_CIB_TAG_NODE
+                               "[@" XML_ATTR_UNAME "='", node->uname, "']"
+                               "[@" XML_ATTR_ID "!='", node->uuid, "']", NULL);
 
-                call_id = fsa_cib_conn->cmds->query(fsa_cib_conn, xpath, NULL,
+                call_id = fsa_cib_conn->cmds->query(fsa_cib_conn,
+                                                    (const char *) xpath->str,
+                                                    NULL,
                                                     cib_scope_local | cib_xpath);
                 fsa_register_cib_callback(call_id, FALSE, strdup(node->uuid),
                                           search_conflicting_node_callback);
             }
+        }
+
+        if (xpath != NULL) {
+            g_string_free(xpath, TRUE);
         }
     }
 

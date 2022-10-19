@@ -44,10 +44,6 @@
 
 #include "crmcommon_private.h"
 
-#ifndef PW_BUFFER_LEN
-#  define PW_BUFFER_LEN		500
-#endif
-
 CRM_TRACE_INIT_DATA(common);
 
 gboolean crm_config_error = FALSE;
@@ -94,12 +90,12 @@ crm_user_lookup(const char *name, uid_t * uid, gid_t * gid)
     struct passwd pwd;
     struct passwd *pwentry = NULL;
 
-    buffer = calloc(1, PW_BUFFER_LEN);
+    buffer = calloc(1, PCMK__PW_BUFFER_LEN);
     if (buffer == NULL) {
         return -ENOMEM;
     }
 
-    rc = getpwnam_r(name, &pwd, buffer, PW_BUFFER_LEN, &pwentry);
+    rc = getpwnam_r(name, &pwd, buffer, PCMK__PW_BUFFER_LEN, &pwentry);
     if (pwentry) {
         if (uid) {
             *uid = pwentry->pw_uid;
@@ -515,6 +511,7 @@ crm_generate_uuid(void)
     unsigned char uuid[16];
     char *buffer = malloc(37);  /* Including NUL byte */
 
+    CRM_ASSERT(buffer != NULL);
     uuid_generate(uuid);
     uuid_unparse(uuid, buffer);
     return buffer;
@@ -535,7 +532,7 @@ crm_gnutls_global_init(void)
  * \return Newly allocated string with name, or NULL (and set errno) on error
  */
 char *
-pcmk_hostname()
+pcmk_hostname(void)
 {
     struct utsname hostinfo;
 

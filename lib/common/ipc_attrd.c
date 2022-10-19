@@ -48,9 +48,13 @@ reply_expected(pcmk_ipc_api_t *api, xmlNode *request)
 {
     const char *command = crm_element_value(request, PCMK__XA_TASK);
 
-    return pcmk__str_any_of(command, PCMK__ATTRD_CMD_UPDATE,
-                            PCMK__ATTRD_CMD_UPDATE_BOTH, PCMK__ATTRD_CMD_UPDATE_DELAY,
-                            PCMK__ATTRD_CMD_QUERY, NULL);
+    return pcmk__str_any_of(command,
+                            PCMK__ATTRD_CMD_QUERY,
+                            PCMK__ATTRD_CMD_REFRESH,
+                            PCMK__ATTRD_CMD_UPDATE,
+                            PCMK__ATTRD_CMD_UPDATE_BOTH,
+                            PCMK__ATTRD_CMD_UPDATE_DELAY,
+                            NULL);
 }
 
 static bool
@@ -109,7 +113,7 @@ done:
 }
 
 pcmk__ipc_methods_t *
-pcmk__attrd_api_methods()
+pcmk__attrd_api_methods(void)
 {
     pcmk__ipc_methods_t *cmds = calloc(1, sizeof(pcmk__ipc_methods_t));
 
@@ -149,7 +153,7 @@ create_api(pcmk_ipc_api_t **api)
     int rc = pcmk_new_ipc_api(api, pcmk_ipc_attrd);
 
     if (rc != pcmk_rc_ok) {
-        crm_err("error: Could not connect to attrd: %s", pcmk_rc_str(rc));
+        crm_err("Could not connect to attrd: %s", pcmk_rc_str(rc));
     }
 
     return rc;
@@ -180,7 +184,7 @@ connect_and_send_attrd_request(pcmk_ipc_api_t *api, xmlNode *request)
             sleep(5 - max);
             max--;
         } else {
-            crm_err("error: Could not connect to attrd: %s", pcmk_rc_str(rc));
+            crm_err("Could not connect to attrd: %s", pcmk_rc_str(rc));
             break;
         }
     }
@@ -211,7 +215,7 @@ pcmk__attrd_api_clear_failures(pcmk_ipc_api_t *api, const char *node,
     }
 
     crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_CLEAR_FAILURE);
-    crm_xml_add(request, PCMK__XA_ATTR_NODE_NAME, node);
+    pcmk__xe_add_node(request, node, 0);
     crm_xml_add(request, PCMK__XA_ATTR_RESOURCE, resource);
     crm_xml_add(request, PCMK__XA_ATTR_OPERATION, operation);
     crm_xml_add(request, PCMK__XA_ATTR_INTERVAL, interval_spec);
@@ -289,7 +293,7 @@ pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node)
     request = create_attrd_op(NULL);
 
     crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_PEER_REMOVE);
-    crm_xml_add(request, PCMK__XA_ATTR_NODE_NAME, node);
+    pcmk__xe_add_node(request, node, 0);
 
     if (api == NULL) {
         rc = create_api(&api);
@@ -337,7 +341,7 @@ pcmk__attrd_api_query(pcmk_ipc_api_t *api, const char *node, const char *name,
 
     crm_xml_add(request, PCMK__XA_ATTR_NAME, name);
     crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_QUERY);
-    crm_xml_add(request, PCMK__XA_ATTR_NODE_NAME, node);
+    pcmk__xe_add_node(request, node, 0);
 
     rc = send_attrd_request(api, request);
     free_xml(request);
@@ -368,7 +372,7 @@ pcmk__attrd_api_refresh(pcmk_ipc_api_t *api, const char *node)
     request = create_attrd_op(NULL);
 
     crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_REFRESH);
-    crm_xml_add(request, PCMK__XA_ATTR_NODE_NAME, node);
+    pcmk__xe_add_node(request, node, 0);
 
     if (api == NULL) {
         rc = create_api(&api);
@@ -420,7 +424,7 @@ populate_update_op(xmlNode *op, const char *node, const char *name, const char *
 
     crm_xml_add(op, PCMK__XA_ATTR_VALUE, value);
     crm_xml_add(op, PCMK__XA_ATTR_DAMPENING, dampen);
-    crm_xml_add(op, PCMK__XA_ATTR_NODE_NAME, node);
+    pcmk__xe_add_node(op, node, 0);
     crm_xml_add(op, PCMK__XA_ATTR_SET, set);
     crm_xml_add_int(op, PCMK__XA_ATTR_IS_REMOTE,
                     pcmk_is_set(options, pcmk__node_attr_remote));

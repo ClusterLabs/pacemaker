@@ -2,7 +2,7 @@ Current cluster status:
   * Node List:
     * Node kiff-01: UNCLEAN (offline)
     * Online: [ kiff-02 ]
-    * GuestOnline: [ lxc-01_kiff-02@kiff-02 lxc-02_kiff-02@kiff-02 ]
+    * GuestOnline: [ lxc-01_kiff-02 lxc-02_kiff-02 ]
 
   * Full List of Resources:
     * vm-fs	(ocf:heartbeat:Filesystem):	 FAILED lxc-01_kiff-01
@@ -83,7 +83,7 @@ Revised Cluster Status:
   * Node List:
     * Online: [ kiff-02 ]
     * OFFLINE: [ kiff-01 ]
-    * GuestOnline: [ lxc-01_kiff-01@kiff-02 lxc-01_kiff-02@kiff-02 lxc-02_kiff-01@kiff-02 lxc-02_kiff-02@kiff-02 ]
+    * GuestOnline: [ lxc-01_kiff-01 lxc-01_kiff-02 lxc-02_kiff-01 lxc-02_kiff-02 ]
 
   * Full List of Resources:
     * vm-fs	(ocf:heartbeat:Filesystem):	 Started lxc-01_kiff-01

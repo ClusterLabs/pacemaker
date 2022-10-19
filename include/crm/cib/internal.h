@@ -13,22 +13,25 @@
 #  include <crm/common/ipc_internal.h>
 #  include <crm/common/output_internal.h>
 
-#  define CIB_OP_SLAVE	"cib_slave"
-#  define CIB_OP_SLAVEALL	"cib_slave_all"
-#  define CIB_OP_MASTER	"cib_master"
-#  define CIB_OP_SYNC	"cib_sync"
-#  define CIB_OP_SYNC_ONE	"cib_sync_one"
-#  define CIB_OP_ISMASTER	"cib_ismaster"
-#  define CIB_OP_BUMP	"cib_bump"
-#  define CIB_OP_QUERY	"cib_query"
-#  define CIB_OP_CREATE	"cib_create"
-#  define CIB_OP_MODIFY	"cib_modify"
-#  define CIB_OP_DELETE	"cib_delete"
-#  define CIB_OP_ERASE	"cib_erase"
-#  define CIB_OP_REPLACE	"cib_replace"
-#  define CIB_OP_APPLY_DIFF "cib_apply_diff"
-#  define CIB_OP_UPGRADE    "cib_upgrade"
-#  define CIB_OP_DELETE_ALT	"cib_delete_alt"
+// Request types for CIB manager IPC/CPG
+#define PCMK__CIB_REQUEST_SECONDARY     "cib_slave"
+#define PCMK__CIB_REQUEST_ALL_SECONDARY "cib_slave_all"
+#define PCMK__CIB_REQUEST_PRIMARY       "cib_master"
+#define PCMK__CIB_REQUEST_SYNC_TO_ALL   "cib_sync"
+#define PCMK__CIB_REQUEST_SYNC_TO_ONE   "cib_sync_one"
+#define PCMK__CIB_REQUEST_IS_PRIMARY    "cib_ismaster"
+#define PCMK__CIB_REQUEST_BUMP          "cib_bump"
+#define PCMK__CIB_REQUEST_QUERY         "cib_query"
+#define PCMK__CIB_REQUEST_CREATE        "cib_create"
+#define PCMK__CIB_REQUEST_MODIFY        "cib_modify"
+#define PCMK__CIB_REQUEST_DELETE        "cib_delete"
+#define PCMK__CIB_REQUEST_ERASE         "cib_erase"
+#define PCMK__CIB_REQUEST_REPLACE       "cib_replace"
+#define PCMK__CIB_REQUEST_APPLY_PATCH   "cib_apply_diff"
+#define PCMK__CIB_REQUEST_UPGRADE       "cib_upgrade"
+#define PCMK__CIB_REQUEST_ABS_DELETE    "cib_delete_alt"
+#define PCMK__CIB_REQUEST_NOOP          "noop"
+#define PCMK__CIB_REQUEST_SHUTDOWN      "cib_shutdown_req"
 
 #  define F_CIB_CLIENTID  "cib_clientid"
 #  define F_CIB_CALLOPTS  "cib_callopt"
@@ -68,11 +71,16 @@
 #  define T_CIB_UPDATE_CONFIRM	"cib_update_confirmation"
 #  define T_CIB_REPLACE_NOTIFY	"cib_refresh_notify"
 
+/*!
+ * \internal
+ * \enum cib_change_section_info
+ * \brief Flags to indicate which sections of the CIB have changed
+ */
 enum cib_change_section_info {
-    cib_change_section_none     = 0x00000000,
-    cib_change_section_nodes    = 0x00000001,
-    cib_change_section_alerts   = 0x00000002,
-    cib_change_section_status   = 0x00000004
+    cib_change_section_none     = 0,        //!< No sections have changed
+    cib_change_section_nodes    = (1 << 0), //!< The nodes section has changed
+    cib_change_section_alerts   = (1 << 1), //!< The alerts section has changed
+    cib_change_section_status   = (1 << 2), //!< The status section has changed
 };
 
 
@@ -188,24 +196,27 @@ int cib_process_upgrade(const char *op, int options, const char *section, xmlNod
  * \internal
  * \brief Query or modify a CIB
  *
- * \param[in]     op            CIB_OP_* operation to be performed
+ * \param[in]     op            PCMK__CIB_REQUEST_* operation to be performed
  * \param[in]     options       Flag set of \c cib_call_options
  * \param[in]     section       XPath to query or modify
  * \param[in]     req           unused
  * \param[in]     input         Portion of CIB to modify (used with
- *                              CIB_OP_CREATE, CIB_OP_MODIFY, and
- *                              CIB_OP_REPLACE)
- * \param[in]     existing_cib  Input CIB (used with CIB_OP_QUERY)
+ *                              PCMK__CIB_REQUEST_CREATE,
+ *                              PCMK__CIB_REQUEST_MODIFY, and
+ *                              PCMK__CIB_REQUEST_REPLACE)
+ * \param[in,out] existing_cib  Input CIB (used with PCMK__CIB_REQUEST_QUERY)
  * \param[in,out] result_cib    CIB copy to make changes in (used with
- *                              CIB_OP_CREATE, CIB_OP_MODIFY, CIB_OP_DELETE, and
- *                              CIB_OP_REPLACE)
- * \param[out]    answer        Query result (used with CIB_OP_QUERY)
+ *                              PCMK__CIB_REQUEST_CREATE,
+ *                              PCMK__CIB_REQUEST_MODIFY,
+ *                              PCMK__CIB_REQUEST_DELETE, and
+ *                              PCMK__CIB_REQUEST_REPLACE)
+ * \param[out]    answer        Query result (used with PCMK__CIB_REQUEST_QUERY)
  *
  * \return Legacy Pacemaker return code
  */
-int cib_process_xpath(const char *op, int options, const char *section, xmlNode * req,
-                      xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                      xmlNode ** answer);
+int cib_process_xpath(const char *op, int options, const char *section,
+                      const xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                      xmlNode **result_cib, xmlNode ** answer);
 
 gboolean cib_config_changed(xmlNode * last, xmlNode * next, xmlNode ** diff);
 gboolean update_results(xmlNode * failed, xmlNode * target, const char *operation, int return_code);

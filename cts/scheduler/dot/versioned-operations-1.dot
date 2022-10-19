@@ -1,9 +1,0 @@
-digraph "g" {
-"A_monitor_0 node1" -> "A_start_0 node1" [ style = bold]
-"A_monitor_0 node1" [ style=bold color="green" fontcolor="black"]
-"A_monitor_0 node2" -> "A_start_0 node1" [ style = bold]
-"A_monitor_0 node2" [ style=bold color="green" fontcolor="black"]
-"A_monitor_30000 node1" [ style=bold color="green" fontcolor="black"]
-"A_start_0 node1" -> "A_monitor_30000 node1" [ style = bold]
-"A_start_0 node1" [ style=bold color="green" fontcolor="black"]
-}

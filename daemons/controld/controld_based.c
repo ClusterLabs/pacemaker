@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -31,7 +31,9 @@ do_cib_updated(const char *event, xmlNode * msg)
 void
 do_cib_replaced(const char *event, xmlNode * msg)
 {
-    int change_section = cib_change_section_nodes | cib_change_section_status;
+    uint32_t change_section = cib_change_section_nodes
+                              |cib_change_section_status;
+    long long value = 0;
 
     crm_debug("Updating the CIB after a replace: DC=%s", pcmk__btoa(AM_I_DC));
     if (AM_I_DC == FALSE) {
@@ -43,8 +45,17 @@ do_cib_replaced(const char *event, xmlNode * msg)
         return;
     }
 
-    crm_element_value_int(msg, F_CIB_CHANGE_SECTION, &change_section);
-    if (change_section & (cib_change_section_nodes | cib_change_section_status)) {
+    if ((crm_element_value_ll(msg, F_CIB_CHANGE_SECTION, &value) < 0)
+        || (value < 0) || (value > UINT32_MAX)) {
+
+        crm_trace("Couldn't parse '%s' from message", F_CIB_CHANGE_SECTION);
+    } else {
+        change_section = (uint32_t) value;
+    }
+
+    if (pcmk_any_flags_set(change_section, cib_change_section_nodes
+                                           |cib_change_section_status)) {
+
         /* start the join process again so we get everyone's LRM status */
         populate_cib_nodes(node_update_quick|node_update_all, __func__);
 
@@ -65,8 +76,8 @@ controld_disconnect_cib_manager(void)
     fsa_cib_conn->cmds->del_notify_callback(fsa_cib_conn, T_CIB_DIFF_NOTIFY, do_cib_updated);
     cib_free_callbacks(fsa_cib_conn);
     if (fsa_cib_conn->state != cib_disconnected) {
-        /* Does not require a set_slave() reply to sign out from based. */
-        fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local | cib_discard_reply);
+        fsa_cib_conn->cmds->set_secondary(fsa_cib_conn,
+                                          cib_scope_local|cib_discard_reply);
         fsa_cib_conn->cmds->signoff(fsa_cib_conn);
     }
 
@@ -154,11 +165,12 @@ do_cib_control(long long action,
 
 /*!
  * \internal
- * \brief Get CIB call options to use local scope if master unavailable
+ * \brief Get CIB call options to use local scope if primary is unavailable
  *
  * \return CIB call options
  */
-int crmd_cib_smart_opt()
+int
+crmd_cib_smart_opt(void)
 {
     int call_opt = cib_quorum_override;
 
@@ -318,8 +330,8 @@ controld_delete_resource_history(const char *rsc_id, const char *node,
 
     // Ask CIB to delete the entry
     xpath = crm_strdup_printf(XPATH_RESOURCE_HISTORY, node, rsc_id);
-    rc = cib_internal_op(fsa_cib_conn, CIB_OP_DELETE, NULL, xpath, NULL,
-                         NULL, call_options|cib_xpath, user_name);
+    rc = cib_internal_op(fsa_cib_conn, PCMK__CIB_REQUEST_DELETE, NULL, xpath,
+                         NULL, NULL, call_options|cib_xpath, user_name);
 
     if (rc < 0) {
         rc = pcmk_legacy2rc(rc);

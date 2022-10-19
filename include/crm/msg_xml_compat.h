@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,8 @@
 
 #ifndef PCMK__CRM_MSG_XML_COMPAT__H
 #  define PCMK__CRM_MSG_XML_COMPAT__H
+
+#include <crm/common/agents.h>      // PCMK_STONITH_PROVIDES
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,16 +26,34 @@ extern "C" {
  */
 
 //! \deprecated Use PCMK_STONITH_PROVIDES instead
-#define XML_RSC_ATTR_PROVIDES       "provides"
+#define XML_RSC_ATTR_PROVIDES PCMK_STONITH_PROVIDES
 
-//! \deprecated Use PCMK_XE_PROMOTED_LEGACY instead
-#define XML_CIB_TAG_MASTER PCMK_XE_PROMOTED_LEGACY
+//! \deprecated Use PCMK_XE_PROMOTABLE_LEGACY instead
+#define XML_CIB_TAG_MASTER PCMK_XE_PROMOTABLE_LEGACY
 
-//! \deprecated Use PCMK_XE_PROMOTED_LEGACY instead
-#define XML_RSC_ATTR_MASTER_MAX PCMK_XE_PROMOTED_MAX_LEGACY
+//! \deprecated Use PCMK_XA_PROMOTED_MAX_LEGACY instead
+#define PCMK_XE_PROMOTED_MAX_LEGACY PCMK_XA_PROMOTED_MAX_LEGACY
 
-//! \deprecated Use PCMK_XE_PROMOTED_LEGACY instead
-#define XML_RSC_ATTR_MASTER_NODEMAX PCMK_XE_PROMOTED_NODE_MAX_LEGACY
+//! \deprecated Use PCMK_XA_PROMOTED_MAX_LEGACY instead
+#define XML_RSC_ATTR_MASTER_MAX PCMK_XA_PROMOTED_MAX_LEGACY
+
+//! \deprecated Use PCMK_XA_PROMOTED_NODE_MAX_LEGACY instead
+#define PCMK_XE_PROMOTED_NODE_MAX_LEGACY PCMK_XA_PROMOTED_NODE_MAX_LEGACY
+
+//! \deprecated Use PCMK_XA_PROMOTED_NODE_MAX_LEGACY instead
+#define XML_RSC_ATTR_MASTER_NODEMAX PCMK_XA_PROMOTED_NODE_MAX_LEGACY
+
+//! \deprecated Do not use (will be removed in a future release)
+#define XML_ATTR_RA_VERSION "ra-version"
+
+//! \deprecated Do not use (will be removed in a future release)
+#define XML_TAG_RSC_VER_ATTRS "rsc_versioned_attrs"
+
+//! \deprecated Do not use (will be removed in a future release)
+#define XML_TAG_OP_VER_ATTRS "op_versioned_attrs"
+
+//! \deprecated Do not use (will be removed in a future release)
+#define XML_TAG_OP_VER_META "op_versioned_meta"
 
 #ifdef __cplusplus
 }

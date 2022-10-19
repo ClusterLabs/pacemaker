@@ -1,7 +1,7 @@
 Current cluster status:
   * Node List:
     * Online: [ undercloud ]
-    * GuestOnline: [ rabbitmq-bundle-0@undercloud redis-bundle-0@undercloud ]
+    * GuestOnline: [ rabbitmq-bundle-0 redis-bundle-0 ]
 
   * Full List of Resources:
     * Container bundle: rabbitmq-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest]:
@@ -76,7 +76,7 @@ Executing Cluster Transition:
 Revised Cluster Status:
   * Node List:
     * Online: [ undercloud ]
-    * GuestOnline: [ galera-bundle-0@undercloud rabbitmq-bundle-0@undercloud redis-bundle-0@undercloud ]
+    * GuestOnline: [ galera-bundle-0 rabbitmq-bundle-0 redis-bundle-0 ]
 
   * Full List of Resources:
     * Container bundle: rabbitmq-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest]:

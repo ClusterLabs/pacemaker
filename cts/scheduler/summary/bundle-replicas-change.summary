@@ -1,7 +1,7 @@
 Current cluster status:
   * Node List:
     * Online: [ rh74-test ]
-    * GuestOnline: [ httpd-bundle-0@rh74-test ]
+    * GuestOnline: [ httpd-bundle-0 ]
 
   * Full List of Resources:
     * Container bundle set: httpd-bundle [pcmktest:http] (unique):
@@ -68,7 +68,7 @@ Executing Cluster Transition:
 Revised Cluster Status:
   * Node List:
     * Online: [ rh74-test ]
-    * GuestOnline: [ httpd-bundle-0@rh74-test httpd-bundle-1@rh74-test httpd-bundle-2@rh74-test ]
+    * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
   * Full List of Resources:
     * Container bundle set: httpd-bundle [pcmktest:http] (unique):

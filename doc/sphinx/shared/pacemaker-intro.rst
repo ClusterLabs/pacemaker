@@ -18,7 +18,7 @@ Pacemaker's key features include:
   etc.)
 * Automatically replicated configuration that can be updated from any node
 * Ability to specify cluster-wide relationships between services,
-  such as ordering, colocation and anti-colocation
+  such as ordering, colocation, and anti-colocation
 * Support for advanced service types, such as *clones* (services that need to
   be active on multiple nodes), *promotable clones* (clones that can run in
   one of two roles), and containerized services
@@ -82,46 +82,46 @@ ______________________
 
 Pacemaker itself is composed of multiple daemons that work together:
 
-* pacemakerd
-* pacemaker-attrd
-* pacemaker-based
-* pacemaker-controld
-* pacemaker-execd
-* pacemaker-fenced
-* pacemaker-schedulerd
+* ``pacemakerd``
+* ``pacemaker-attrd``
+* ``pacemaker-based``
+* ``pacemaker-controld``
+* ``pacemaker-execd``
+* ``pacemaker-fenced``
+* ``pacemaker-schedulerd``
 
 .. image:: ../shared/images/pcmk-internals.png
    :alt: Pacemaker software components
    :align: center
 
-Pacemaker's main process (pacemakerd) spawns all the other daemons, and
+Pacemaker's main process (``pacemakerd``) spawns all the other daemons, and
 respawns them if they unexpectedly exit.
 
 The *Cluster Information Base* (CIB) is an
 `XML <https://en.wikipedia.org/wiki/XML>`_ representation of the cluster's
 configuration and the state of all nodes and resources. The *CIB manager*
-(pacemaker-based) keeps the CIB synchronized across the cluster, and handles
-requests to modify it.
+(``pacemaker-based``) keeps the CIB synchronized across the cluster, and
+handles requests to modify it.
 
-The *attribute manager* (pacemaker-attrd) maintains a database of attributes
-for all nodes, keeps it synchronized across the cluster, and handles requests
-to modify them. These attributes are usually recorded in the CIB.
+The *attribute manager* (``pacemaker-attrd``) maintains a database of
+attributes for all nodes, keeps it synchronized across the cluster, and handles
+requests to modify them. These attributes are usually recorded in the CIB.
 
-Given a snapshot of the CIB as input, the *scheduler* (pacemaker-schedulerd)
-determines what actions are necessary to achieve the desired state of the
-cluster.
+Given a snapshot of the CIB as input, the *scheduler*
+(``pacemaker-schedulerd``) determines what actions are necessary to achieve the
+desired state of the cluster.
 
-The *local executor* (pacemaker-execd) handles requests to execute
+The *local executor* (``pacemaker-execd``) handles requests to execute
 resource agents on the local cluster node, and returns the result.
 
-The *fencer* (pacemaker-fenced) handles requests to fence nodes. Given a target
-node, the fencer decides which cluster node(s) should execute which fencing
-device(s), and calls the necessary fencing agents (either directly, or via
-requests to the fencer peers on other nodes), and returns the result.
+The *fencer* (``pacemaker-fenced``) handles requests to fence nodes. Given a
+target node, the fencer decides which cluster node(s) should execute which
+fencing device(s), and calls the necessary fencing agents (either directly, or
+via requests to the fencer peers on other nodes), and returns the result.
 
-The *controller* (pacemaker-controld) is Pacemaker's coordinator, maintaining a
-consistent view of the cluster membership and orchestrating all the other
-components.
+The *controller* (``pacemaker-controld``) is Pacemaker's coordinator,
+maintaining a consistent view of the cluster membership and orchestrating all
+the other components.
 
 Pacemaker centralizes cluster decision-making by electing one of the controller
 instances as the *Designated Controller* (*DC*). Should the elected DC process
@@ -139,28 +139,28 @@ necessary actions.
 
     .. table::
 
-       +-------------------+---------------------+
-       | Old name          | New name            |
-       +===================+=====================+
-       | attrd             | pacemaker-attrd     |
-       +-------------------+---------------------+
-       | cib               | pacemaker-based     |
-       +-------------------+---------------------+
-       | crmd              | pacemaker-controld  |
-       +-------------------+---------------------+
-       | lrmd              | pacemaker-execd     |
-       +-------------------+---------------------+
-       | stonithd          | pacemaker-fenced    |
-       +-------------------+---------------------+
-       | pacemaker_remoted | pacemaker-remoted   |
-       +-------------------+---------------------+
+       +-----------------------+------------------------+
+       | Old name              | New name               |
+       +=======================+========================+
+       | ``attrd``             | ``pacemaker-attrd``    |
+       +-----------------------+------------------------+
+       | ``cib``               | ``pacemaker-based``    |
+       +-----------------------+------------------------+
+       | ``crmd``              | ``pacemaker-controld`` |
+       +-----------------------+------------------------+
+       | ``lrmd``              | ``pacemaker-execd``    |
+       +-----------------------+------------------------+
+       | ``stonithd``          | ``pacemaker-fenced``   |
+       +-----------------------+------------------------+
+       | ``pacemaker_remoted`` | ``pacemaker-remoted``  |
+       +-----------------------+------------------------+
 
 Node Redundancy Designs
 _______________________
 
 Pacemaker supports practically any `node redundancy configuration
 <https://en.wikipedia.org/wiki/High-availability_cluster#Node_configurations>`_
-including *Active/Active*, *Active/Passive*, *N+1*, *N+M*, *N-to-1* and
+including *Active/Active*, *Active/Passive*, *N+1*, *N+M*, *N-to-1*, and
 *N-to-N*.
 
 Active/passive clusters with two (or more) nodes using Pacemaker and
@@ -183,7 +183,7 @@ share a common backup node.
 
 When shared storage is available, every node can potentially be used for
 failover. Pacemaker can even run multiple copies of services to spread out the
-workload. This is sometimes called N to N Redundancy.
+workload. This is sometimes called N-to-N redundancy.
 
 .. image:: ../shared/images/pcmk-active-active.png
    :alt: N to N Redundancy

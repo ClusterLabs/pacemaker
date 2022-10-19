@@ -23,22 +23,22 @@
 #define BEST_EFFORT_STATUS 0
 
 /*!
+ * \internal
  * \brief Dump XML in a format used with v1 digests
  *
- * \param[in] an_xml_node Root of XML to dump
+ * \param[in] xml  Root of XML to dump
  *
  * \return Newly allocated buffer containing dumped XML
  */
-static char *
-dump_xml_for_digest(xmlNode * an_xml_node)
+static GString *
+dump_xml_for_digest(xmlNodePtr xml)
 {
-    char *buffer = NULL;
-    int offset = 0, max = 0;
+    GString *buffer = g_string_sized_new(1024);
 
     /* for compatibility with the old result which is used for v1 digests */
-    pcmk__buffer_add_char(&buffer, &offset, &max, ' ');
-    pcmk__xml2text(an_xml_node, 0, &buffer, &offset, &max, 0);
-    pcmk__buffer_add_char(&buffer, &offset, &max, '\n');
+    g_string_append_c(buffer, ' ');
+    pcmk__xml2text(xml, 0, buffer, 0);
+    g_string_append_c(buffer, '\n');
 
     return buffer;
 }
@@ -54,10 +54,10 @@ dump_xml_for_digest(xmlNode * an_xml_node)
  * \note Example return value: "c048eae664dba840e1d2060f00299e9d"
  */
 static char *
-calculate_xml_digest_v1(xmlNode * input, gboolean sort, gboolean ignored)
+calculate_xml_digest_v1(xmlNode *input, gboolean sort, gboolean ignored)
 {
     char *digest = NULL;
-    char *buffer = NULL;
+    GString *buffer = NULL;
     xmlNode *copy = NULL;
 
     if (sort) {
@@ -68,14 +68,14 @@ calculate_xml_digest_v1(xmlNode * input, gboolean sort, gboolean ignored)
     }
 
     buffer = dump_xml_for_digest(input);
-    CRM_CHECK(buffer != NULL && strlen(buffer) > 0, free_xml(copy);
-              free(buffer);
+    CRM_CHECK(buffer->len > 0, free_xml(copy);
+              g_string_free(buffer, TRUE);
               return NULL);
 
-    digest = crm_md5sum(buffer);
+    digest = crm_md5sum((const char *) buffer->str);
     crm_log_xml_trace(input, "digest:source");
 
-    free(buffer);
+    g_string_free(buffer, TRUE);
     free_xml(copy);
     return digest;
 }
@@ -89,35 +89,18 @@ calculate_xml_digest_v1(xmlNode * input, gboolean sort, gboolean ignored)
  * \return Newly allocated string containing digest
  */
 static char *
-calculate_xml_digest_v2(xmlNode * source, gboolean do_filter)
+calculate_xml_digest_v2(xmlNode *source, gboolean do_filter)
 {
     char *digest = NULL;
-    char *buffer = NULL;
-    int offset, max;
+    GString *buffer = g_string_sized_new(1024);
 
     static struct qb_log_callsite *digest_cs = NULL;
 
     crm_trace("Begin digest %s", do_filter?"filtered":"");
-    if (do_filter && BEST_EFFORT_STATUS) {
-        /* Exclude the status calculation from the digest
-         *
-         * This doesn't mean it won't be sync'd, we just won't be paranoid
-         * about it being an _exact_ copy
-         *
-         * We don't need it to be exact, since we throw it away and regenerate
-         * from our peers whenever a new DC is elected anyway
-         *
-         * Importantly, this reduces the amount of XML to copy+export as
-         * well as the amount of data for MD5 needs to operate on
-         */
-
-    } else {
-        pcmk__xml2text(source, (do_filter? xml_log_option_filtered : 0),
-                       &buffer, &offset, &max, 0);
-    }
+    pcmk__xml2text(source, (do_filter? xml_log_option_filtered : 0), buffer, 0);
 
     CRM_ASSERT(buffer != NULL);
-    digest = crm_md5sum(buffer);
+    digest = crm_md5sum((const char *) buffer->str);
 
     if (digest_cs == NULL) {
         digest_cs = qb_log_callsite_get(__func__, __FILE__, "cib-digest", LOG_TRACE, __LINE__,
@@ -135,7 +118,7 @@ calculate_xml_digest_v2(xmlNode * source, gboolean do_filter)
         free(trace_file);
     }
 
-    free(buffer);
+    g_string_free(buffer, TRUE);
     crm_trace("End digest");
     return digest;
 }
@@ -148,7 +131,7 @@ calculate_xml_digest_v2(xmlNode * source, gboolean do_filter)
  * \return Newly allocated string containing digest
  */
 char *
-calculate_on_disk_digest(xmlNode * input)
+calculate_on_disk_digest(xmlNode *input)
 {
     /* Always use the v1 format for on-disk digests
      * a) it's a compatibility nightmare
@@ -161,8 +144,8 @@ calculate_on_disk_digest(xmlNode * input)
 /*!
  * \brief Calculate and return digest of XML operation
  *
- * \param[in] input Root of XML to digest
- * \param[in] version Not used
+ * \param[in] input    Root of XML to digest
+ * \param[in] version  Unused
  *
  * \return Newly allocated string containing digest
  */
@@ -176,16 +159,16 @@ calculate_operation_digest(xmlNode *input, const char *version)
 /*!
  * \brief Calculate and return digest of XML tree
  *
- * \param[in] input Root of XML to digest
- * \param[in] sort Whether to sort XML before calculating digest
- * \param[in] do_filter Whether to filter certain XML attributes
- * \param[in] version CRM feature set version (used to select v1/v2 digest)
+ * \param[in] input      Root of XML to digest
+ * \param[in] sort       Whether to sort XML before calculating digest
+ * \param[in] do_filter  Whether to filter certain XML attributes
+ * \param[in] version    CRM feature set version (used to select v1/v2 digest)
  *
  * \return Newly allocated string containing digest
  */
 char *
-calculate_xml_versioned_digest(xmlNode * input, gboolean sort, gboolean do_filter,
-                               const char *version)
+calculate_xml_versioned_digest(xmlNode *input, gboolean sort,
+                               gboolean do_filter, const char *version)
 {
     /*
      * @COMPAT digests (on-disk or in diffs/patchsets) created <1.1.4;

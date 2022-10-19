@@ -572,13 +572,15 @@ static pcmk__cluster_option_t cib_opts[] = {
 void
 cib_metadata(void)
 {
-    char *s = pcmk__format_option_metadata("pacemaker-based",
-                                           "Cluster Information Base manager options",
-                                           "Cluster options used by Pacemaker's "
-                                               "Cluster Information Base manager",
-                                           cib_opts, PCMK__NELEM(cib_opts));
+    const char *desc_short = "Cluster Information Base manager options";
+    const char *desc_long = "Cluster options used by Pacemaker's Cluster "
+                            "Information Base manager";
+
+    gchar *s = pcmk__format_option_metadata("pacemaker-based", desc_short,
+                                            desc_long, cib_opts,
+                                            PCMK__NELEM(cib_opts));
     printf("%s", s);
-    free(s);
+    g_free(s);
 }
 
 void
@@ -719,6 +721,8 @@ cib__signon_query(cib_t **cib, xmlNode **cib_object)
     int rc = pcmk_rc_ok;
     cib_t *cib_conn = NULL;
 
+    CRM_ASSERT(cib_object != NULL);
+
     if (cib == NULL) {
         cib_conn = cib_new();
     } else {
@@ -742,11 +746,10 @@ cib__signon_query(cib_t **cib, xmlNode **cib_object)
         cib__clean_up_connection(&cib_conn);
     }
 
-    if (cib_object == NULL) {
+    if (*cib_object == NULL) {
         return pcmk_rc_no_input;
-    } else {
-        return rc;
     }
+    return rc;
 }
 
 int

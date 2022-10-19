@@ -76,7 +76,7 @@
   <synapse id="5">
     <action_set>
       <crm_event id="6" operation="stonith" operation_key="stonith-virt-013-on" on_node="virt-013" on_node_uuid="3">
-        <attributes CRM_meta_on_node="virt-013" CRM_meta_on_node_uuid="3" CRM_meta_shutdown="0" CRM_meta_stonith_action="on" />
+        <attributes CRM_meta_digests_all="fence_scsi:fence_scsi:5950f402238c1e5058a556fe39bb09de," CRM_meta_digests_secure="fence_scsi:fence_scsi:a911b9a554cdc5844d863a91b1ef283a," CRM_meta_on_node="virt-013" CRM_meta_on_node_uuid="3" CRM_meta_shutdown="0" CRM_meta_stonith_action="on" />
       </crm_event>
     </action_set>
     <inputs/>
@@ -84,7 +84,7 @@
   <synapse id="6">
     <action_set>
       <crm_event id="4" operation="stonith" operation_key="stonith-virt-009-on" on_node="virt-009" on_node_uuid="2">
-        <attributes CRM_meta_on_node="virt-009" CRM_meta_on_node_uuid="2" CRM_meta_shutdown="0" CRM_meta_stonith_action="on" />
+        <attributes CRM_meta_digests_all="fence_scsi:fence_scsi:5950f402238c1e5058a556fe39bb09de," CRM_meta_digests_secure="fence_scsi:fence_scsi:a911b9a554cdc5844d863a91b1ef283a," CRM_meta_on_node="virt-009" CRM_meta_on_node_uuid="2" CRM_meta_shutdown="0" CRM_meta_stonith_action="on" />
       </crm_event>
     </action_set>
     <inputs/>
@@ -92,7 +92,7 @@
   <synapse id="7">
     <action_set>
       <crm_event id="2" operation="stonith" operation_key="stonith-virt-008-on" on_node="virt-008" on_node_uuid="1">
-        <attributes CRM_meta_on_node="virt-008" CRM_meta_on_node_uuid="1" CRM_meta_shutdown="0" CRM_meta_stonith_action="on" />
+        <attributes CRM_meta_digests_all="fence_scsi:fence_scsi:5950f402238c1e5058a556fe39bb09de," CRM_meta_digests_secure="fence_scsi:fence_scsi:a911b9a554cdc5844d863a91b1ef283a," CRM_meta_on_node="virt-008" CRM_meta_on_node_uuid="1" CRM_meta_shutdown="0" CRM_meta_stonith_action="on" />
       </crm_event>
     </action_set>
     <inputs/>

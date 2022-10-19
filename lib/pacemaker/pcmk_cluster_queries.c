@@ -36,6 +36,7 @@ typedef struct {
     int rc;
     guint message_timer_id;
     guint message_timeout_ms;
+    enum pcmk_pacemakerd_state pcmkd_state;
 } data_t;
 
 static void
@@ -180,9 +181,6 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
     pcmk__output_t *out = data->out;
     pcmk_pacemakerd_api_reply_t *reply = event_data;
 
-    crm_time_t *crm_when;
-    char *pinged_buf = NULL;
-
     switch (event_type) {
         case pcmk_ipc_event_disconnect:
             if (data->rc == ECONNRESET) { // Unexpected
@@ -207,6 +205,7 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
         out->err(out, "error: Bad reply from pacemakerd: %s",
                 crm_exit_str(status));
         event_done(data, pacemakerd_api);
+        data->rc = EBADMSG;
         return;
     }
 
@@ -214,36 +213,45 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
         out->err(out, "error: Unknown reply type %d from pacemakerd",
                 reply->reply_type);
         event_done(data, pacemakerd_api);
+        data->rc = EBADMSG;
         return;
     }
 
     // Parse desired information from reply
-    crm_when = crm_time_new(NULL);
-    crm_time_set_timet(crm_when, &reply->data.ping.last_good);
-    pinged_buf = crm_time_as_string(crm_when,
-        crm_time_log_date | crm_time_log_timeofday |
-            crm_time_log_with_timezone);
+    data->pcmkd_state = reply->data.ping.state;
+    if (reply->data.ping.status == pcmk_rc_ok) {
+        crm_time_t *when = crm_time_new(NULL);
+        char *when_s = NULL;
 
-    out->message(out, "pacemakerd-health",
-        reply->data.ping.sys_from,
-        (reply->data.ping.status == pcmk_rc_ok)?
-            pcmk_pacemakerd_api_daemon_state_enum2text(
-                reply->data.ping.state):"query failed",
-        (reply->data.ping.status == pcmk_rc_ok)?pinged_buf:"");
+        crm_time_set_timet(when, &reply->data.ping.last_good);
+        when_s = crm_time_as_string(when,
+                                    crm_time_log_date
+                                    |crm_time_log_timeofday
+                                    |crm_time_log_with_timezone);
+
+        out->message(out, "pacemakerd-health",
+                     reply->data.ping.sys_from, reply->data.ping.state, NULL,
+                     when_s);
+
+        crm_time_free(when);
+        free(when_s);
+
+    } else {
+        out->message(out, "pacemakerd-health",
+                     reply->data.ping.sys_from, reply->data.ping.state,
+                     "query failed", NULL);
+    }
     data->rc = pcmk_rc_ok;
-    crm_time_free(crm_when);
-    free(pinged_buf);
-
     event_done(data, pacemakerd_api);
 }
 
 static pcmk_ipc_api_t *
-ipc_connect(data_t *data, enum pcmk_ipc_server server, pcmk_ipc_callback_t cb)
+ipc_connect(data_t *data, enum pcmk_ipc_server server, pcmk_ipc_callback_t cb,
+            enum pcmk_ipc_dispatch dispatch_type, bool eremoteio_ok)
 {
     int rc;
     pcmk__output_t *out = data->out;
     pcmk_ipc_api_t *api = NULL;
-
 
     rc = pcmk_new_ipc_api(&api, server);
     if (api == NULL) {
@@ -256,12 +264,20 @@ ipc_connect(data_t *data, enum pcmk_ipc_server server, pcmk_ipc_callback_t cb)
     if (cb != NULL) {
         pcmk_register_ipc_callback(api, cb, data);
     }
-    rc = pcmk_connect_ipc(api, pcmk_ipc_dispatch_main);
+
+    rc = pcmk_connect_ipc(api, dispatch_type);
     if (rc != pcmk_rc_ok) {
-        out->err(out, "error: Could not connect to %s: %s",
-                pcmk_ipc_name(api, true),
-                pcmk_rc_str(rc));
+        if ((rc == EREMOTEIO) && eremoteio_ok) {
+            /* EREMOTEIO may be expected and acceptable for some callers.
+             * Preserve the return code in case callers need to handle it
+             * specially.
+             */
+        } else {
+            out->err(out, "error: Could not connect to %s: %s",
+                     pcmk_ipc_name(api, true), pcmk_rc_str(rc));
+        }
         data->rc = rc;
+        pcmk_free_ipc_api(api);
         return NULL;
     }
 
@@ -276,18 +292,30 @@ pcmk__controller_status(pcmk__output_t *out, char *dest_node, guint message_time
         .mainloop = NULL,
         .rc = pcmk_rc_ok,
         .message_timer_id = 0,
-        .message_timeout_ms = message_timeout_ms
+        .message_timeout_ms = message_timeout_ms,
+        .pcmkd_state = pcmk_pacemakerd_state_invalid,
     };
-    pcmk_ipc_api_t *controld_api = ipc_connect(&data, pcmk_ipc_controld, controller_status_event_cb);
+    enum pcmk_ipc_dispatch dispatch_type = pcmk_ipc_dispatch_main;
+    pcmk_ipc_api_t *controld_api = NULL;
+
+    if (message_timeout_ms == 0) {
+        dispatch_type = pcmk_ipc_dispatch_sync;
+    }
+    controld_api = ipc_connect(&data, pcmk_ipc_controld,
+                               controller_status_event_cb, dispatch_type,
+                               false);
 
     if (controld_api != NULL) {
         int rc = pcmk_controld_api_ping(controld_api, dest_node);
         if (rc != pcmk_rc_ok) {
-            out->err(out, "error: Command failed: %s", pcmk_rc_str(rc));
+            out->err(out, "error: Could not ping controller API: %s",
+                     pcmk_rc_str(rc));
             data.rc = rc;
         }
 
-        start_main_loop(&data);
+        if (dispatch_type == pcmk_ipc_dispatch_main) {
+            start_main_loop(&data);
+        }
 
         pcmk_free_ipc_api(controld_api);
     }
@@ -321,18 +349,30 @@ pcmk__designated_controller(pcmk__output_t *out, guint message_timeout_ms)
         .mainloop = NULL,
         .rc = pcmk_rc_ok,
         .message_timer_id = 0,
-        .message_timeout_ms = message_timeout_ms
+        .message_timeout_ms = message_timeout_ms,
+        .pcmkd_state = pcmk_pacemakerd_state_invalid,
     };
-    pcmk_ipc_api_t *controld_api = ipc_connect(&data, pcmk_ipc_controld, designated_controller_event_cb);
+    enum pcmk_ipc_dispatch dispatch_type = pcmk_ipc_dispatch_main;
+    pcmk_ipc_api_t *controld_api = NULL;
+
+    if (message_timeout_ms == 0) {
+        dispatch_type = pcmk_ipc_dispatch_sync;
+    }
+    controld_api = ipc_connect(&data, pcmk_ipc_controld,
+                               designated_controller_event_cb, dispatch_type,
+                               false);
 
     if (controld_api != NULL) {
         int rc = pcmk_controld_api_ping(controld_api, NULL);
         if (rc != pcmk_rc_ok) {
-            out->err(out, "error: Command failed: %s", pcmk_rc_str(rc));
+            out->err(out, "error: Could not ping controller API: %s",
+                     pcmk_rc_str(rc));
             data.rc = rc;
         }
 
-        start_main_loop(&data);
+        if (dispatch_type == pcmk_ipc_dispatch_main) {
+            start_main_loop(&data);
+        }
 
         pcmk_free_ipc_api(controld_api);
     }
@@ -358,35 +398,75 @@ pcmk_designated_controller(xmlNodePtr *xml, unsigned int message_timeout_ms)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Get and output \p pacemakerd status
+ *
+ * \param[in,out] out                 Output object
+ * \param[in]     ipc_name            IPC name for request
+ * \param[in]     message_timeout_ms  How long to wait for a reply from the
+ *                                    \p pacemakerd API. If 0,
+ *                                    \p pcmk_ipc_dispatch_sync will be used.
+ *                                    If positive, \p pcmk_ipc_dispatch_main
+ *                                    will be used, and a new mainloop will be
+ *                                    created for this purpose (freed before
+ *                                    return).
+ * \param[out]    state               Where to store the \p pacemakerd state, if
+ *                                    not \p NULL
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note This function returns \p EREMOTEIO if run on a Pacemaker Remote node
+ *       with \p pacemaker-remoted running, since \p pacemakerd is not proxied
+ *       to remote nodes. The fencer and CIB may still be accessible, but
+ *       \p state will be \p pcmk_pacemakerd_state_invalid.
+ */
 int
-pcmk__pacemakerd_status(pcmk__output_t *out, char *ipc_name, guint message_timeout_ms)
+pcmk__pacemakerd_status(pcmk__output_t *out, const char *ipc_name,
+                        guint message_timeout_ms,
+                        enum pcmk_pacemakerd_state *state)
 {
     data_t data = {
         .out = out,
         .mainloop = NULL,
-        .rc = pcmk_rc_ok,
+        .rc = pcmk_rc_ipc_unresponsive,
         .message_timer_id = 0,
-        .message_timeout_ms = message_timeout_ms
+        .message_timeout_ms = message_timeout_ms,
+        .pcmkd_state = pcmk_pacemakerd_state_invalid,
     };
-    pcmk_ipc_api_t *pacemakerd_api = ipc_connect(&data, pcmk_ipc_pacemakerd, pacemakerd_event_cb);
+    enum pcmk_ipc_dispatch dispatch_type = pcmk_ipc_dispatch_main;
+    pcmk_ipc_api_t *pacemakerd_api = NULL;
+
+    if (message_timeout_ms == 0) {
+        dispatch_type = pcmk_ipc_dispatch_sync;
+    }
+    pacemakerd_api = ipc_connect(&data, pcmk_ipc_pacemakerd,
+                                 pacemakerd_event_cb, dispatch_type, true);
 
     if (pacemakerd_api != NULL) {
         int rc = pcmk_pacemakerd_api_ping(pacemakerd_api, ipc_name);
         if (rc != pcmk_rc_ok) {
-            out->err(out, "error: Command failed: %s", pcmk_rc_str(rc));
+            out->err(out, "error: Could not ping launcher API: %s",
+                     pcmk_rc_str(rc));
             data.rc = rc;
         }
 
-        start_main_loop(&data);
-
+        if (dispatch_type == pcmk_ipc_dispatch_main) {
+            start_main_loop(&data);
+        }
         pcmk_free_ipc_api(pacemakerd_api);
     }
 
+    if (state != NULL) {
+        *state = data.pcmkd_state;
+    }
     return data.rc;
 }
 
+// Documented in header
 int
-pcmk_pacemakerd_status(xmlNodePtr *xml, char *ipc_name, unsigned int message_timeout_ms)
+pcmk_pacemakerd_status(xmlNodePtr *xml, const char *ipc_name,
+                       unsigned int message_timeout_ms)
 {
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
@@ -398,7 +478,8 @@ pcmk_pacemakerd_status(xmlNodePtr *xml, char *ipc_name, unsigned int message_tim
 
     pcmk__register_lib_messages(out);
 
-    rc = pcmk__pacemakerd_status(out, ipc_name, (guint) message_timeout_ms);
+    rc = pcmk__pacemakerd_status(out, ipc_name, (guint) message_timeout_ms,
+                                 NULL);
     pcmk__xml_output_finish(out, xml);
     return rc;
 }
@@ -409,7 +490,7 @@ struct node_data {
     int found;
     const char *field;  /* XML attribute to check for node name */
     const char *type;
-    gboolean BASH_EXPORT;
+    gboolean bash_export;
 };
 
 static void
@@ -424,13 +505,13 @@ remote_node_print_helper(xmlNode *result, void *user_data)
     out->message(out, "crmadmin-node", data->type,
                  name ? name : id,
                  id,
-                 data->BASH_EXPORT);
+                 data->bash_export);
     data->found++;
 }
 
 // \return Standard Pacemaker return code
 int
-pcmk__list_nodes(pcmk__output_t *out, char *node_types, gboolean BASH_EXPORT)
+pcmk__list_nodes(pcmk__output_t *out, char *node_types, gboolean bash_export)
 {
     xmlNode *xml_node = NULL;
     int rc;
@@ -441,7 +522,7 @@ pcmk__list_nodes(pcmk__output_t *out, char *node_types, gboolean BASH_EXPORT)
         struct node_data data = {
             .out = out,
             .found = 0,
-            .BASH_EXPORT = BASH_EXPORT
+            .bash_export = bash_export
         };
 
         out->begin_list(out, NULL, NULL, "nodes");

@@ -36,11 +36,11 @@ struct {
     gint timeout;
     char *optarg;
     char *ipc_name;
-    gboolean BASH_EXPORT;
+    gboolean bash_export;
 } options = {
     .optarg = NULL,
     .ipc_name = NULL,
-    .BASH_EXPORT = FALSE
+    .bash_export = FALSE
 };
 
 gboolean command_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
@@ -84,7 +84,7 @@ static GOptionEntry additional_options[] = {
       "\n                             failed",
       "TIMESPEC"
     },
-    { "bash-export", 'B', 0, G_OPTION_ARG_NONE, &options.BASH_EXPORT,
+    { "bash-export", 'B', 0, G_OPTION_ARG_NONE, &options.bash_export,
       "Display nodes as shell commands of the form 'export uname=uuid'"
       "\n                             (valid with -N/--nodes)",
     },
@@ -238,10 +238,11 @@ main(int argc, char **argv)
             rc = pcmk__controller_status(out, options.optarg, options.timeout);
             break;
         case cmd_pacemakerd_health:
-            rc = pcmk__pacemakerd_status(out, options.ipc_name, options.timeout);
+            rc = pcmk__pacemakerd_status(out, options.ipc_name, options.timeout,
+                                         NULL);
             break;
         case cmd_list_nodes:
-            rc = pcmk__list_nodes(out, options.optarg, options.BASH_EXPORT);
+            rc = pcmk__list_nodes(out, options.optarg, options.bash_export);
             break;
         case cmd_whois_dc:
             rc = pcmk__designated_controller(out, options.timeout);

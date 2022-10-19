@@ -1,64 +1,80 @@
 =#=#=#= Begin test: Invalid period - [] =#=#=#=
+crm_time_parse_period 	error: No ISO 8601 time period given
 iso8601: Invalid interval specified: 
 =#=#=#= End test: Invalid period - [] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601        - Invalid period - []
 =#=#=#= Begin test: Invalid period - [2019-01-01 00:00:00Z] =#=#=#=
+crm_time_parse_period 	error: '2019-01-01 00:00:00Z' is not a valid ISO 8601 time period because it has no duration or ending time
 iso8601: Invalid interval specified: 2019-01-01 00:00:00Z
 =#=#=#= End test: Invalid period - [2019-01-01 00:00:00Z] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601        - Invalid period - [2019-01-01 00:00:00Z]
 =#=#=#= Begin test: Invalid period - [2019-01-01 00:00:00Z/] =#=#=#=
+parse_date 	error: No ISO 8601 date/time specification given
 iso8601: Invalid interval specified: 2019-01-01 00:00:00Z/
 =#=#=#= End test: Invalid period - [2019-01-01 00:00:00Z/] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601        - Invalid period - [2019-01-01 00:00:00Z/]
 =#=#=#= Begin test: Invalid period - [PT2S/P1M] =#=#=#=
+crm_time_parse_period 	error: 'PT2S/P1M' is not a valid ISO 8601 time period because it has two durations
 iso8601: Invalid interval specified: PT2S/P1M
 =#=#=#= End test: Invalid period - [PT2S/P1M] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601        - Invalid period - [PT2S/P1M]
 =#=#=#= Begin test: Invalid period - [2019-13-01 00:00:00Z/P1M] =#=#=#=
+parse_date 	error: '2019-13-01 00:00:00Z/P1M' is not a valid ISO 8601 date/time specification because '13' is not a valid month
 iso8601: Invalid interval specified: 2019-13-01 00:00:00Z/P1M
 =#=#=#= End test: Invalid period - [2019-13-01 00:00:00Z/P1M] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601        - Invalid period - [2019-13-01 00:00:00Z/P1M]
 =#=#=#= Begin test: Invalid period - [20191077T15/P1M] =#=#=#=
+parse_date 	error: '20191077T15/P1M' is not a valid ISO 8601 date/time specification because '77' is not a valid day of the month
 iso8601: Invalid interval specified: 20191077T15/P1M
 =#=#=#= End test: Invalid period - [20191077T15/P1M] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601        - Invalid period - [20191077T15/P1M]
 =#=#=#= Begin test: Invalid period - [2019-10-01T25:00:00Z/P1M] =#=#=#=
+crm_time_parse_sec 	error: 25:00:00Z/P1M is not a valid ISO 8601 time specification because 25 is not a valid hour
 iso8601: Invalid interval specified: 2019-10-01T25:00:00Z/P1M
 =#=#=#= End test: Invalid period - [2019-10-01T25:00:00Z/P1M] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601        - Invalid period - [2019-10-01T25:00:00Z/P1M]
 =#=#=#= Begin test: Invalid period - [2019-10-01T24:00:01Z/P1M] =#=#=#=
+crm_time_parse_sec 	error: 24:00:01Z/P1M is not a valid ISO 8601 time specification because 24 is not a valid hour
 iso8601: Invalid interval specified: 2019-10-01T24:00:01Z/P1M
 =#=#=#= End test: Invalid period - [2019-10-01T24:00:01Z/P1M] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601        - Invalid period - [2019-10-01T24:00:01Z/P1M]
 =#=#=#= Begin test: Invalid period - [PT5H/20191001T007000Z] =#=#=#=
+crm_time_parse_sec 	error: 007000Z is not a valid ISO 8601 time specification because 70 is not a valid minute
 iso8601: Invalid interval specified: PT5H/20191001T007000Z
 =#=#=#= End test: Invalid period - [PT5H/20191001T007000Z] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601        - Invalid period - [PT5H/20191001T007000Z]
 =#=#=#= Begin test: Invalid period - [2019-10-01 00:00:80Z/P1M] =#=#=#=
+crm_time_parse_sec 	error: 00:00:80Z/P1M is not a valid ISO 8601 time specification because 80 is not a valid second
 iso8601: Invalid interval specified: 2019-10-01 00:00:80Z/P1M
 =#=#=#= End test: Invalid period - [2019-10-01 00:00:80Z/P1M] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601        - Invalid period - [2019-10-01 00:00:80Z/P1M]
 =#=#=#= Begin test: Invalid period - [2019-10-01 00:00:10 +25:00/P1M] =#=#=#=
+crm_time_parse_sec 	error: 25:00/P1M is not a valid ISO 8601 time specification because 25 is not a valid hour
 iso8601: Invalid interval specified: 2019-10-01 00:00:10 +25:00/P1M
 =#=#=#= End test: Invalid period - [2019-10-01 00:00:10 +25:00/P1M] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601        - Invalid period - [2019-10-01 00:00:10 +25:00/P1M]
 =#=#=#= Begin test: Invalid period - [20191001T000010 -00:61/P1M] =#=#=#=
+crm_time_parse_sec 	error: 00:61/P1M is not a valid ISO 8601 time specification because 61 is not a valid minute
 iso8601: Invalid interval specified: 20191001T000010 -00:61/P1M
 =#=#=#= End test: Invalid period - [20191001T000010 -00:61/P1M] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601        - Invalid period - [20191001T000010 -00:61/P1M]
 =#=#=#= Begin test: Invalid period - [P1Y/2019-02-29 00:00:00Z] =#=#=#=
+parse_date 	error: '2019-02-29 00:00:00Z' is not a valid ISO 8601 date/time specification because '29' is not a valid day of the month
 iso8601: Invalid interval specified: P1Y/2019-02-29 00:00:00Z
 =#=#=#= End test: Invalid period - [P1Y/2019-02-29 00:00:00Z] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601        - Invalid period - [P1Y/2019-02-29 00:00:00Z]
 =#=#=#= Begin test: Invalid period - [2019-01-01 00:00:00Z/P] =#=#=#=
+crm_time_parse_duration 	error: 'P' is not a valid ISO 8601 time duration because nothing follows 'P'
 iso8601: Invalid interval specified: 2019-01-01 00:00:00Z/P
 =#=#=#= End test: Invalid period - [2019-01-01 00:00:00Z/P] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601        - Invalid period - [2019-01-01 00:00:00Z/P]
 =#=#=#= Begin test: Invalid period - [P1Z/2019-02-20 00:00:00Z] =#=#=#=
+crm_time_parse_duration 	error: 'P1Z/2019-02-20 00:00:00Z' is not a valid ISO 8601 time duration because 'Z' is not a valid time unit
 iso8601: Invalid interval specified: P1Z/2019-02-20 00:00:00Z
 =#=#=#= End test: Invalid period - [P1Z/2019-02-20 00:00:00Z] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601        - Invalid period - [P1Z/2019-02-20 00:00:00Z]
 =#=#=#= Begin test: Invalid period - [P1YM/2019-02-20 00:00:00Z] =#=#=#=
+crm_time_parse_duration 	error: 'P1YM/2019-02-20 00:00:00Z' is not a valid ISO 8601 time duration because no integer at 'M/2019-02-20 00:00:00Z'
 iso8601: Invalid interval specified: P1YM/2019-02-20 00:00:00Z
 =#=#=#= End test: Invalid period - [P1YM/2019-02-20 00:00:00Z] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601        - Invalid period - [P1YM/2019-02-20 00:00:00Z]

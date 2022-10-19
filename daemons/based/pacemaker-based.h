@@ -54,7 +54,7 @@ typedef struct cib_operation_s {
                xmlNode *, xmlNode *, xmlNode **, xmlNode **);
 } cib_operation_t;
 
-extern gboolean cib_is_master;
+extern bool based_is_primary;
 extern GHashTable *peer_hash;
 extern GHashTable *config_hash;
 extern xmlNode *the_cib;
@@ -146,7 +146,7 @@ void cib_diff_notify(int options, const char *client, const char *call_id,
                      const char *op, xmlNode *update, int result,
                      xmlNode *old_cib);
 void cib_replace_notify(const char *origin, xmlNode *update, int result,
-                        xmlNode *diff, int change_section);
+                        xmlNode *diff, uint32_t change_section);
 
 static inline const char *
 cib_config_lookup(const char *opt)

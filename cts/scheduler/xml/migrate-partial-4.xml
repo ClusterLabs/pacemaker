@@ -666,11 +666,11 @@
       <rsc_colocation id="drbd-testfs-ost0002-with-ip-testfs-ost0002-left" rsc="ms-drbd-testfs-ost0002" score="INFINITY" with-rsc="ip-testfs-ost0002-left"/>
       <rsc_colocation id="drbd-testfs-ost0003-with-drbd-testfs-ost0003-left" rsc="ms-drbd-testfs-ost0003" score="INFINITY" with-rsc="ms-drbd-testfs-ost0003-left" with-rsc-role="Promoted"/>
       <rsc_colocation id="drbd-testfs-ost0003-with-ip-testfs-ost0003-left" rsc="ms-drbd-testfs-ost0003" score="INFINITY" with-rsc="ip-testfs-ost0003-left"/>
-      <rsc_colocation id="ip-testfs-mdt0000-left-with-drbd-testfs-mdt0000-left-master" rsc="ip-testfs-mdt0000-left" score="INFINITY" with-rsc="ms-drbd-testfs-mdt0000-left" with-rsc-role="Promoted"/>
-      <rsc_colocation id="ip-testfs-ost0000-left-with-drbd-testfs-ost0000-left-master" rsc="ip-testfs-ost0000-left" score="INFINITY" with-rsc="ms-drbd-testfs-ost0000-left" with-rsc-role="Promoted"/>
-      <rsc_colocation id="ip-testfs-ost0001-left-with-drbd-testfs-ost0001-left-master" rsc="ip-testfs-ost0001-left" score="INFINITY" with-rsc="ms-drbd-testfs-ost0001-left" with-rsc-role="Promoted"/>
-      <rsc_colocation id="ip-testfs-ost0002-left-with-drbd-testfs-ost0002-left-master" rsc="ip-testfs-ost0002-left" score="INFINITY" with-rsc="ms-drbd-testfs-ost0002-left" with-rsc-role="Promoted"/>
-      <rsc_colocation id="ip-testfs-ost0003-left-with-drbd-testfs-ost0003-left-master" rsc="ip-testfs-ost0003-left" score="INFINITY" with-rsc="ms-drbd-testfs-ost0003-left" with-rsc-role="Promoted"/>
+      <rsc_colocation id="ip-testfs-mdt0000-left-with-drbd-testfs-mdt0000-left-promoted" rsc="ip-testfs-mdt0000-left" score="INFINITY" with-rsc="ms-drbd-testfs-mdt0000-left" with-rsc-role="Promoted"/>
+      <rsc_colocation id="ip-testfs-ost0000-left-with-drbd-testfs-ost0000-left-promoted" rsc="ip-testfs-ost0000-left" score="INFINITY" with-rsc="ms-drbd-testfs-ost0000-left" with-rsc-role="Promoted"/>
+      <rsc_colocation id="ip-testfs-ost0001-left-with-drbd-testfs-ost0001-left-promoted" rsc="ip-testfs-ost0001-left" score="INFINITY" with-rsc="ms-drbd-testfs-ost0001-left" with-rsc-role="Promoted"/>
+      <rsc_colocation id="ip-testfs-ost0002-left-with-drbd-testfs-ost0002-left-promoted" rsc="ip-testfs-ost0002-left" score="INFINITY" with-rsc="ms-drbd-testfs-ost0002-left" with-rsc-role="Promoted"/>
+      <rsc_colocation id="ip-testfs-ost0003-left-with-drbd-testfs-ost0003-left-promoted" rsc="ip-testfs-ost0003-left" score="INFINITY" with-rsc="ms-drbd-testfs-ost0003-left" with-rsc-role="Promoted"/>
       <rsc_colocation id="mgs-with-drbd-mgs" rsc="mgs" score="INFINITY" with-rsc="ms-drbd-mgs" with-rsc-role="Promoted"/>
       <rsc_colocation id="testfs-mdt0000-with-drbd-testfs-mdt0000" rsc="testfs-mdt0000" score="INFINITY" with-rsc="ms-drbd-testfs-mdt0000" with-rsc-role="Promoted"/>
       <rsc_colocation id="testfs-ost0000-with-drbd-testfs-ost0000" rsc="testfs-ost0000" score="INFINITY" with-rsc="ms-drbd-testfs-ost0000" with-rsc-role="Promoted"/>

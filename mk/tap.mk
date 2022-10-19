@@ -17,10 +17,15 @@ CLEANFILES = *.log *.trs
 
 WRAPPED = calloc		\
 	  endgrent		\
+	  fopen 		\
 	  getenv		\
+	  getpid		\
 	  getgrent		\
 	  getpwnam_r		\
 	  readlink		\
+	  setenv		\
 	  setgrent		\
-	  uname
+	  strdup 		\
+	  uname			\
+	  unsetenv
 LDFLAGS_WRAP = $(foreach fn,$(WRAPPED),-Wl,--wrap=$(fn))

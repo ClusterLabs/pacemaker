@@ -2,7 +2,7 @@ Using the original execution date of: 2015-08-12 02:53:40Z
 Current cluster status:
   * Node List:
     * Online: [ bl460g8n3 bl460g8n4 ]
-    * GuestOnline: [ pgsr01@bl460g8n3 ]
+    * GuestOnline: [ pgsr01 ]
 
   * Full List of Resources:
     * prmDB1	(ocf:heartbeat:VirtualDomain):	 Started bl460g8n3
@@ -70,7 +70,7 @@ Using the original execution date of: 2015-08-12 02:53:40Z
 Revised Cluster Status:
   * Node List:
     * Online: [ bl460g8n3 bl460g8n4 ]
-    * GuestOnline: [ pgsr01@bl460g8n3 ]
+    * GuestOnline: [ pgsr01 ]
 
   * Full List of Resources:
     * prmDB1	(ocf:heartbeat:VirtualDomain):	 Started bl460g8n3

@@ -51,7 +51,7 @@ controld_remove_voter(const char *uname)
 }
 
 void
-controld_election_fini()
+controld_election_fini(void)
 {
     election_fini(fsa_election);
     fsa_election = NULL;
@@ -64,7 +64,7 @@ controld_set_election_period(const char *value)
 }
 
 void
-controld_stop_election_timer()
+controld_stop_election_timer(void)
 {
     election_timeout_stop(fsa_election);
 }
@@ -158,7 +158,8 @@ do_election_count_vote(long long action,
 
             if (fsa_input_register & R_THE_DC) {
                 register_fsa_input(C_FSA_INTERNAL, I_RELEASE_DC, NULL);
-                fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
+                fsa_cib_conn->cmds->set_secondary(fsa_cib_conn,
+                                                  cib_scope_local);
 
             } else if (cur_state != S_STARTING) {
                 register_fsa_input(C_FSA_INTERNAL, I_PENDING, NULL);
@@ -201,7 +202,7 @@ do_dc_takeover(long long action,
     election_reset(fsa_election);
     controld_set_fsa_input_flags(R_JOIN_OK|R_INVOKE_PE);
 
-    fsa_cib_conn->cmds->set_master(fsa_cib_conn, cib_scope_local);
+    fsa_cib_conn->cmds->set_primary(fsa_cib_conn, cib_scope_local);
 
     cib = create_xml_node(NULL, XML_TAG_CIB);
     crm_xml_add(cib, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
