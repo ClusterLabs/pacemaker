@@ -208,8 +208,8 @@ static gboolean
 grab_peer_device(const remote_fencing_op_t *op, peer_device_info_t *peer,
                  const char *device, gboolean verified_devices_only)
 {
-    device_properties_t *props = find_peer_device(op, peer, device, 
-                                     pcmk__str_eq(op->action, "on", pcmk__str_casei)? st_device_supports_on: st_device_supports_none);
+    device_properties_t *props = find_peer_device(op, peer, device,
+                                                  fenced_support_flag(op->action));
 
     if ((props == NULL) || (verified_devices_only && !props->verified)) {
         return FALSE;
@@ -958,7 +958,8 @@ advance_topology_level(remote_fencing_op_t *op, bool empty_ok)
             op->delay = 0;
         }
 
-        if (g_list_next(op->devices_list) && pcmk__str_eq(op->action, "reboot", pcmk__str_casei)) {
+        if ((g_list_next(op->devices_list) != NULL)
+            && pcmk__str_eq(op->action, "reboot", pcmk__str_none)) {
             /* A reboot has been requested for a topology level with multiple
              * devices. Instead of rebooting the devices sequentially, we will
              * turn them all off, then turn them all on again. (Think about
@@ -1006,7 +1007,7 @@ merge_duplicates(remote_fencing_op_t *op)
                       op->id, other->id, op->target, other->target);
             continue;
         }
-        if (!pcmk__str_eq(op->action, other_action, pcmk__str_casei)) {
+        if (!pcmk__str_eq(op->action, other_action, pcmk__str_none)) {
             crm_trace("%.8s not duplicate of %.8s: action %s vs. %s",
                       op->id, other->id, op->action, other_action);
             continue;
@@ -1368,9 +1369,9 @@ find_best_peer(const char *device, remote_fencing_op_t * op, enum find_best_peer
                 return peer;
             }
 
-        } else if ((peer->tried == FALSE)
-                   && count_peer_devices(op, peer, verified_devices_only, 
-                          pcmk__str_eq(op->action, "on", pcmk__str_casei)? st_device_supports_on : st_device_supports_none)) {
+        } else if (!peer->tried
+                   && count_peer_devices(op, peer, verified_devices_only,
+                                         fenced_support_flag(op->action))) {
             /* No topology: Use the current best peer */
             crm_trace("Simple fencing");
             return peer;
@@ -1514,7 +1515,8 @@ get_op_total_timeout(const remote_fencing_op_t *op,
         GList *iter = NULL;
         GList *auto_list = NULL;
 
-        if (pcmk__str_eq(op->action, "on", pcmk__str_casei) && op->automatic_list) {
+        if (pcmk__str_eq(op->action, "on", pcmk__str_none)
+            && (op->automatic_list != NULL)) {
             auto_list = g_list_copy(op->automatic_list);
         }
 
@@ -1541,8 +1543,8 @@ get_op_total_timeout(const remote_fencing_op_t *op,
                         }
                     }
 
-                    if (find_peer_device(op, peer, device_list->data, 
-                            pcmk__str_eq(op->action, "on", pcmk__str_casei)? st_device_supports_on: st_device_supports_none)) {
+                    if (find_peer_device(op, peer, device_list->data,
+                                         fenced_support_flag(op->action))) {
                         total_timeout += get_device_timeout(op, peer,
                                                             device_list->data);
                         break;
@@ -1648,7 +1650,8 @@ advance_topology_device_in_level(remote_fencing_op_t *op, const char *device,
     }
 
     /* Handle automatic unfencing if an "on" action was requested */
-    if ((op->phase == st_phase_requested) && pcmk__str_eq(op->action, "on", pcmk__str_casei)) {
+    if ((op->phase == st_phase_requested)
+        && pcmk__str_eq(op->action, "on", pcmk__str_none)) {
         /* If the device we just executed was required, it's not anymore */
         remove_required_device(op, device);
 
@@ -1824,12 +1827,11 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
             g_source_remove(op->op_timer_one);
         }
 
-        if (!(stonith_watchdog_timeout_ms > 0 && (
-                (pcmk__str_eq(device, STONITH_WATCHDOG_ID,
-                                        pcmk__str_none)) ||
-                (pcmk__str_eq(peer->host, op->target, pcmk__str_casei)
-                    && !pcmk__str_eq(op->action, "on", pcmk__str_casei))) &&
-             check_watchdog_fencing_and_wait(op))) {
+        if (!((stonith_watchdog_timeout_ms > 0)
+              && (pcmk__str_eq(device, STONITH_WATCHDOG_ID, pcmk__str_none)
+                  || (pcmk__str_eq(peer->host, op->target, pcmk__str_casei)
+                      && !pcmk__str_eq(op->action, "on", pcmk__str_none)))
+              && check_watchdog_fencing_and_wait(op))) {
 
             /* Some thoughts about self-fencing cases reaching this point:
                - Actually check in check_watchdog_fencing_and_wait
@@ -2035,7 +2037,7 @@ parse_action_specific(const xmlNode *xml, const char *peer, const char *device,
     }
 
     /* Handle devices with automatic unfencing */
-    if (pcmk__str_eq(action, "on", pcmk__str_casei)) {
+    if (pcmk__str_eq(action, "on", pcmk__str_none)) {
         int required = 0;
 
         crm_element_value_int(xml, F_STONITH_DEVICE_REQUIRED, &required);
@@ -2098,10 +2100,10 @@ add_device_properties(const xmlNode *xml, remote_fencing_op_t *op,
          * values for "off" and "on" in child elements, just in case the reboot
          * winds up getting remapped.
          */
-        if (pcmk__str_eq(ID(child), "off", pcmk__str_casei)) {
+        if (pcmk__str_eq(ID(child), "off", pcmk__str_none)) {
             parse_action_specific(child, peer->host, device, "off",
                                   op, st_phase_off, props);
-        } else if (pcmk__str_eq(ID(child), "on", pcmk__str_casei)) {
+        } else if (pcmk__str_eq(ID(child), "on", pcmk__str_none)) {
             parse_action_specific(child, peer->host, device, "on",
                                   op, st_phase_on, props);
         }
@@ -2229,7 +2231,8 @@ process_remote_stonith_query(xmlNode *msg)
         }
 
     } else if (op->state == st_query) {
-        int nverified = count_peer_devices(op, peer, TRUE, pcmk__str_eq(op->action, "on", pcmk__str_casei)? st_device_supports_on : st_device_supports_none);
+        int nverified = count_peer_devices(op, peer, TRUE,
+                                           fenced_support_flag(op->action));
 
         /* We have a result for a non-topology fencing op that looks promising,
          * go ahead and start fencing before query timeout */
