@@ -287,6 +287,24 @@ fenced_set_protocol_error(pcmk__action_result_t *result)
                      "Fencer API request missing required information (bug?)");
 }
 
+/*!
+ * \internal
+ * \brief Get the device flag to use with a given action when searching devices
+ *
+ * \param[in] action  Action to check
+ *
+ * \return st_device_supports_on if \p action is "on", otherwise
+ *         st_device_supports_none
+ */
+static inline uint32_t
+fenced_support_flag(const char *action)
+{
+    if (pcmk__str_eq(action, "on", pcmk__str_none)) {
+        return st_device_supports_on;
+    }
+    return st_device_supports_none;
+}
+
 extern char *stonith_our_uname;
 extern gboolean stand_alone;
 extern GHashTable *device_list;
