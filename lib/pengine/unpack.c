@@ -393,7 +393,6 @@ pe_create_node(const char *id, const char *uname, const char *type,
     }
 
     new_node->weight = char2score(score);
-    new_node->fixed = FALSE;
     new_node->details = calloc(1, sizeof(struct pe_node_shared_s));
 
     if (new_node->details == NULL) {
@@ -1567,13 +1566,13 @@ determine_online_status(xmlNode * node_state, pe_node_t * this_node, pe_working_
 
     } else {
         /* remove node from contention */
-        this_node->fixed = TRUE;
+        this_node->fixed = TRUE; // @COMPAT deprecated and unused
         this_node->weight = -INFINITY;
     }
 
     if (online && this_node->details->shutdown) {
         /* don't run resources here */
-        this_node->fixed = TRUE;
+        this_node->fixed = TRUE; // @COMPAT deprecated and unused
         this_node->weight = -INFINITY;
     }
 

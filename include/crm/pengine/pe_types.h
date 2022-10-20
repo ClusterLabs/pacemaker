@@ -247,7 +247,7 @@ struct pe_node_shared_s {
 
 struct pe_node_s {
     int weight;
-    gboolean fixed;
+    gboolean fixed; //!< \deprecated Will be removed in a future release
     int count;
     struct pe_node_shared_s *details;
     int rsc_discover_mode;

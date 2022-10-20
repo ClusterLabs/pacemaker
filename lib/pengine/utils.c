@@ -97,7 +97,7 @@ pe__copy_node(const pe_node_t *this_node)
 
     new_node->rsc_discover_mode = this_node->rsc_discover_mode;
     new_node->weight = this_node->weight;
-    new_node->fixed = this_node->fixed;
+    new_node->fixed = this_node->fixed; // @COMPAT deprecated and unused
     new_node->details = this_node->details;
 
     return new_node;
