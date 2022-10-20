@@ -182,4 +182,7 @@ mainloop_timer_t *attrd_add_timer(const char *id, int timeout_ms, attribute_t *a
 void attrd_unregister_handlers(void);
 void attrd_handle_request(pcmk__request_t *request);
 
+const char *attrd_request_sync_point(xmlNode *xml);
+bool attrd_request_has_sync_point(xmlNode *xml);
+
 #endif /* PACEMAKER_ATTRD__H */
