@@ -547,6 +547,8 @@ void
 attrd_peer_update(const crm_node_t *peer, xmlNode *xml, const char *host,
                   bool filter)
 {
+    bool handle_sync_point = false;
+
     if (xml_has_children(xml)) {
         for (xmlNode *child = first_named_child(xml, XML_ATTR_OP); child != NULL;
              child = crm_next_same_xml(child)) {
@@ -556,9 +558,25 @@ attrd_peer_update(const crm_node_t *peer, xmlNode *xml, const char *host,
             }
 
             attrd_peer_update_one(peer, child, filter);
+
+            if (attrd_request_has_sync_point(child)) {
+                handle_sync_point = true;
+            }
         }
 
     } else {
         attrd_peer_update_one(peer, xml, filter);
+
+        if (attrd_request_has_sync_point(xml)) {
+            handle_sync_point = true;
+        }
+    }
+
+    /* If the update XML specified that the client wanted to wait for a sync
+     * point, process that now.
+     */
+    if (handle_sync_point) {
+        crm_debug("Hit local sync point for attribute update");
+        attrd_ack_waitlist_clients(attrd_sync_point_local, xml);
     }
 }

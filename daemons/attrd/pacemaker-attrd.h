@@ -182,6 +182,13 @@ mainloop_timer_t *attrd_add_timer(const char *id, int timeout_ms, attribute_t *a
 void attrd_unregister_handlers(void);
 void attrd_handle_request(pcmk__request_t *request);
 
+enum attrd_sync_point {
+    attrd_sync_point_local,
+    attrd_sync_point_cluster,
+};
+
+void attrd_add_client_to_waitlist(pcmk__request_t *request);
+void attrd_ack_waitlist_clients(enum attrd_sync_point sync_point, const xmlNode *xml);
 const char *attrd_request_sync_point(xmlNode *xml);
 bool attrd_request_has_sync_point(xmlNode *xml);
 
