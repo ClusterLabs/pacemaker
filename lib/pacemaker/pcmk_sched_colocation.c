@@ -1269,8 +1269,7 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
          * should initialize it with the resource's allowed node scores.
          */
         if (is_nonempty_group(rsc)) {
-            GList *last = g_list_last(rsc->children);
-            pe_resource_t *last_rsc = last->data;
+            pe_resource_t *last_rsc = pe__last_group_member(rsc);
 
             pe_rsc_trace(rsc, "%s: Merging scores from group %s "
                          "using last member %s (at %.6f)",
@@ -1321,7 +1320,7 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
                          g_list_length(gIter), rsc->id);
 
         } else if (is_nonempty_group(rsc)) {
-            pe_resource_t *last_rsc = g_list_last(rsc->children)->data;
+            pe_resource_t *last_rsc = pe__last_group_member(rsc);
 
             gIter = last_rsc->rsc_cons_lhs;
             pe_rsc_trace(rsc, "Checking additional %d optional 'with group %s' "
