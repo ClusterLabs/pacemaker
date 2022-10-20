@@ -208,8 +208,16 @@ group_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
     }
 
     if (rsc->children == NULL) {
-        // Allow empty groups, children can be added later
-        pcmk__config_warn("Group %s does not have any children", rsc->id);
+        /* The schema does not allow empty groups, but if validation is
+         * disabled, we allow them (members can be added later).
+         *
+         * @COMPAT At a major release bump, we should consider this a failure so
+         *         that group methods can assume children is not NULL, and there
+         *         are no strange effects from phantom groups due to their
+         *         presence or meta-attributes.
+         */
+        pcmk__config_warn("Group %s will be ignored because it does not have "
+                          "any members", rsc->id);
     }
     return TRUE;
 }

@@ -28,6 +28,10 @@ expand_group_colocations(pe_resource_t *rsc)
     pe_resource_t *member = NULL;
     bool any_unmanaged = false;
 
+    if (rsc->children == NULL) {
+        return;
+    }
+
     // Treat "group with R" colocations as "first member with R"
     member = (pe_resource_t *) rsc->children->data;
     member->rsc_cons = g_list_concat(member->rsc_cons, rsc->rsc_cons);
@@ -364,6 +368,10 @@ colocate_group_with(pe_resource_t *dependent, const pe_resource_t *primary,
 {
     pe_resource_t *member = NULL;
 
+    if (dependent->children == NULL) {
+        return;
+    }
+
     pe_rsc_trace(primary, "Processing %s (group %s with %s) for dependent",
                  colocation->id, dependent->id, primary->id);
 
@@ -422,7 +430,7 @@ colocate_with_group(pe_resource_t *dependent, const pe_resource_t *primary,
              * on the last member.
              */
             member = pe__last_group_member(primary);
-        } else {
+        } else if (primary->children != NULL) {
             /* For optional colocations, whether the group is partially or fully
              * up doesn't matter, so apply the colocation based on the first
              * member.
@@ -680,6 +688,10 @@ pcmk__group_add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
 
     CRM_ASSERT((rsc != NULL) && (nodes != NULL));
 
+    if (rsc->children == NULL) {
+        return;
+    }
+
     if (log_id == NULL) {
         log_id = rsc->id;
     }
@@ -777,7 +789,7 @@ pcmk__group_add_utilization(const pe_resource_t *rsc,
             }
         }
 
-    } else {
+    } else if (rsc->children != NULL) {
         // Just add first member's utilization
         member = (pe_resource_t *) rsc->children->data;
         if ((member != NULL)
