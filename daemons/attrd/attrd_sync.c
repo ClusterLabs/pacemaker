@@ -113,6 +113,27 @@ attrd_add_client_to_waitlist(pcmk__request_t *request)
 }
 
 void
+attrd_remove_client_from_waitlist(pcmk__client_t *client)
+{
+    GHashTableIter iter;
+    gpointer value;
+
+    if (waitlist == NULL) {
+        return;
+    }
+
+    g_hash_table_iter_init(&iter, waitlist);
+
+    while (g_hash_table_iter_next(&iter, NULL, &value)) {
+        struct waitlist_node *wl = (struct waitlist_node *) value;
+
+        if (wl->client_id == client->id) {
+            g_hash_table_iter_remove(&iter);
+        }
+    }
+}
+
+void
 attrd_ack_waitlist_clients(enum attrd_sync_point sync_point, const xmlNode *xml)
 {
     int callid;

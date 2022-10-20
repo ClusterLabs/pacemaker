@@ -189,6 +189,7 @@ enum attrd_sync_point {
 
 void attrd_add_client_to_waitlist(pcmk__request_t *request);
 void attrd_ack_waitlist_clients(enum attrd_sync_point sync_point, const xmlNode *xml);
+void attrd_remove_client_from_waitlist(pcmk__client_t *client);
 const char *attrd_request_sync_point(xmlNode *xml);
 bool attrd_request_has_sync_point(xmlNode *xml);
 

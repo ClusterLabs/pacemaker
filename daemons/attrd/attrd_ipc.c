@@ -412,8 +412,13 @@ attrd_ipc_closed(qb_ipcs_connection_t *c)
         crm_trace("Ignoring request to clean up unknown connection %p", c);
     } else {
         crm_trace("Cleaning up closed client connection %p", c);
+
+        /* Remove the client from the sync point waitlist if it's present. */
+        attrd_remove_client_from_waitlist(client);
+
         pcmk__free_client(client);
     }
+
     return FALSE;
 }
 
