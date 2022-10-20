@@ -568,7 +568,6 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     const char *id = NULL;
     bool guest_node = false;
     bool remote_node = false;
-    bool has_versioned_params = false;
 
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
@@ -691,18 +690,16 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_OP_ATTR_ALLOW_MIGRATE);
-    if (crm_is_true(value) && has_versioned_params) {
-        pe_rsc_trace((*rsc), "Migration is disabled for resources with versioned parameters");
-    } else if (crm_is_true(value)) {
+    if (crm_is_true(value)) {
         pe__set_resource_flags(*rsc, pe_rsc_allow_migrate);
-    } else if ((value == NULL) && remote_node && !has_versioned_params) {
+    } else if ((value == NULL) && remote_node) {
         /* By default, we want remote nodes to be able
          * to float around the cluster without having to stop all the
          * resources within the remote-node before moving. Allowing
          * migration support enables this feature. If this ever causes
          * problems, migration support can be explicitly turned off with
          * allow-migrate=false.
-         * We don't support migration for versioned resources, though. */
+         */
         pe__set_resource_flags(*rsc, pe_rsc_allow_migrate);
     }
 
