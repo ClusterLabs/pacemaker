@@ -137,12 +137,21 @@ handle_update_request(pcmk__request_t *request)
         attrd_peer_update(peer, request->xml, host, false);
         pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
         return NULL;
+
     } else {
-        /* Because attrd_client_update can be called recursively, we send the ACK
-         * here to ensure that the client only ever receives one.
-         */
-        attrd_send_ack(request->ipc_client, request->ipc_id,
-                       request->flags|crm_ipc_client_response);
+        if (!attrd_request_has_sync_point(request->xml)) {
+            /* If the client doesn't want to wait for a sync point, go ahead and send
+             * the ACK immediately.  Otherwise, we'll send the ACK when the appropriate
+             * sync point is reached.
+             *
+             * In the normal case, attrd_client_update can be called recursively which
+             * makes where to send the ACK tricky.  Doing it here ensures the client
+             * only ever receives one.
+             */
+            attrd_send_ack(request->ipc_client, request->ipc_id,
+                           request->flags|crm_ipc_client_response);
+        }
+
         return attrd_client_update(request);
     }
 }
