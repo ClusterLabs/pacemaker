@@ -1601,7 +1601,6 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
         return stonith->call_id;
     }
 
-    rc = pcmk_ok;
     crm_element_value_int(op_reply, F_STONITH_CALLID, &reply_id);
 
     if (reply_id == stonith->call_id) {
