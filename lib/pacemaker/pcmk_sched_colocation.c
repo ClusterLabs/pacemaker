@@ -1274,9 +1274,8 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
             pe_rsc_trace(rsc, "%s: Merging scores from group %s "
                          "using last member %s (at %.6f)",
                          log_id, rsc->id, last_rsc->id, factor);
-            last_rsc->cmds->add_colocated_node_scores(last_rsc, log_id,
-                                                      &work, attr, factor,
-                                                      flags);
+            pcmk__add_colocated_node_scores(last_rsc, log_id, &work, attr,
+                                            factor, flags);
         } else {
             work = pcmk__copy_node_table(rsc->allowed_nodes);
         }
@@ -1297,8 +1296,8 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
         pe_rsc_trace(rsc, "%s: Merging scores from first member of group %s "
                      "(at %.6f)", log_id, rsc->id, factor);
         work = pcmk__copy_node_table(*nodes);
-        member->cmds->add_colocated_node_scores(member, log_id, &work, attr,
-                                                factor, flags);
+        pcmk__add_colocated_node_scores(member, log_id, &work, attr, factor,
+                                        flags);
 
     } else {
         pe_rsc_trace(rsc, "%s: Merging scores from %s (at %.6f)",

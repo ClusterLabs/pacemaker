@@ -331,9 +331,9 @@ pcmk__clone_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
             const uint32_t flags = pcmk__coloc_select_active
                                    |pcmk__coloc_select_nonnegative;
 
-            dependent->cmds->add_colocated_node_scores(dependent, rsc->id,
-                                                       &rsc->allowed_nodes,
-                                                       attr, factor, flags);
+            pcmk__add_colocated_node_scores(dependent, rsc->id,
+                                            &rsc->allowed_nodes, attr, factor,
+                                            flags);
         }
     }
 
