@@ -64,7 +64,7 @@ pcmk__primitive_assign: drbd:1 allocation score on asttest2: 6
 pcmk__primitive_assign: fonulator allocation score on asttest1: -INFINITY
 pcmk__primitive_assign: fonulator allocation score on asttest2: 0
 pcmk__primitive_assign: fs_drbd allocation score on asttest1: -INFINITY
-pcmk__primitive_assign: fs_drbd allocation score on asttest2: 7
+pcmk__primitive_assign: fs_drbd allocation score on asttest2: 8
 pcmk__primitive_assign: httpd allocation score on asttest1: -INFINITY
 pcmk__primitive_assign: httpd allocation score on asttest2: 0
 pcmk__primitive_assign: iax2_mon allocation score on asttest1: -INFINITY
