@@ -1220,12 +1220,6 @@ add_node_scores_matching_attr(GHashTable *nodes, const pe_resource_t *rsc,
     }
 }
 
-static inline bool
-is_nonempty_group(pe_resource_t *rsc)
-{
-    return rsc && (rsc->variant == pe_group) && (rsc->children != NULL);
-}
-
 /*!
  * \internal
  * \brief Update nodes with scores of colocated resources' nodes
@@ -1252,6 +1246,11 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
 
     CRM_CHECK((rsc != NULL) && (nodes != NULL), return);
 
+    // Ignore empty groups (only possible with schema validation disabled)
+    if ((rsc->variant == pe_group) && (rsc->children == NULL)) {
+        return;
+    }
+
     if (log_id == NULL) {
         log_id = rsc->id;
     }
@@ -1268,7 +1267,7 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
         /* Only cmp_resources() passes a NULL nodes table, which indicates we
          * should initialize it with the resource's allowed node scores.
          */
-        if (is_nonempty_group(rsc)) {
+        if (rsc->variant == pe_group) {
             pe_resource_t *last_rsc = pe__last_group_member(rsc);
 
             pe_rsc_trace(rsc, "%s: Merging scores from group %s "
@@ -1280,7 +1279,7 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
             work = pcmk__copy_node_table(rsc->allowed_nodes);
         }
 
-    } else if (is_nonempty_group(rsc)) {
+    } else if (rsc->variant == pe_group) {
         pe_resource_t *member = rsc->children->data;
 
         /* The first member of the group will recursively incorporate any
@@ -1318,7 +1317,7 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
                          "Checking additional %d optional '%s with' constraints",
                          g_list_length(gIter), rsc->id);
 
-        } else if (is_nonempty_group(rsc)) {
+        } else if (rsc->variant == pe_group) {
             pe_resource_t *last_rsc = pe__last_group_member(rsc);
 
             gIter = last_rsc->rsc_cons_lhs;
