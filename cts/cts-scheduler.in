@@ -234,6 +234,7 @@ TESTS = [
           "cl#5187 - Prevent resources in an anti-colocation from even temporarily running on a same node" ],
         [ "anti-colocation-promoted", "Organize order of actions for promoted resources in anti-colocations" ],
         [ "anti-colocation-unpromoted", "Organize order of actions for unpromoted resources in anti-colocations" ],
+        [ "group-anticolocation", "Group with failed last member anti-colocated with another group" ],
         [ "enforce-colo1", "Always enforce B with A INFINITY" ],
         [ "complex_enforce_colo", "Always enforce B with A INFINITY. (make sure heat-engine stops)" ],
         [ "coloc-dependee-should-stay", "Stickiness outweighs group colocation" ],
