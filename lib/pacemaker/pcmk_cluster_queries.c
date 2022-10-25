@@ -56,7 +56,7 @@ validate_reply_event(data_t *data, const pcmk_ipc_api_t *api,
 {
     pcmk__output_t *out = data->out;
     bool valid_reply = false;
-    int reply_type = -1;
+    const char *reply_type = NULL;
 
     switch (event_type) {
         case pcmk_ipc_event_reply:
@@ -89,7 +89,7 @@ validate_reply_event(data_t *data, const pcmk_ipc_api_t *api,
 
                 reply = (const pcmk_controld_api_reply_t *) event_data;
                 valid_reply = (reply->reply_type == pcmk_controld_reply_ping);
-                reply_type = (int) reply->reply_type;
+                reply_type = pcmk__controld_api_reply2str(reply->reply_type);
             }
             break;
         case pcmk_ipc_pacemakerd:
@@ -98,7 +98,7 @@ validate_reply_event(data_t *data, const pcmk_ipc_api_t *api,
 
                 reply = (const pcmk_pacemakerd_api_reply_t *) event_data;
                 valid_reply = (reply->reply_type == pcmk_pacemakerd_reply_ping);
-                reply_type = (int) reply->reply_type;
+                reply_type = pcmk__pcmkd_api_reply2str(reply->reply_type);
             }
             break;
         default:
@@ -109,7 +109,7 @@ validate_reply_event(data_t *data, const pcmk_ipc_api_t *api,
     }
 
     if (!valid_reply) {
-        out->err(out, "error: Unknown reply type %d from %s",
+        out->err(out, "error: Unexpected reply type '%s' from %s",
                  reply_type, pcmk_ipc_name(api, true));
         data->rc = EBADMSG;
         return data->rc;
