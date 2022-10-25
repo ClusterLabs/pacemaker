@@ -1222,6 +1222,53 @@ add_node_scores_matching_attr(GHashTable *nodes, const pe_resource_t *rsc,
 
 /*!
  * \internal
+ * \brief Initialize colocated node table for a group resource
+ *
+ * \param[in] rsc     Group resource being colocated with another resource
+ * \param[in] log_id  Resource ID to use in log messages
+ * \param[in] nodes   Nodes to update
+ * \param[in] attr    Colocation attribute (NULL to use default)
+ * \param[in] factor  Incorporate scores multiplied by this factor
+ * \param[in] flags   Bitmask of enum pcmk__coloc_select values
+ *
+ * \return Table of node scores initialized for colocation
+ * \note The caller is responsible for freeing the return value using
+ *       g_hash_table_destroy().
+ */
+static GHashTable *
+init_group_colocated_nodes(const pe_resource_t *rsc, const char *log_id,
+                           GHashTable **nodes, const char *attr, float factor,
+                           uint32_t flags)
+{
+    GHashTable *work = NULL;
+    pe_resource_t *member = NULL;
+
+    if (*nodes == NULL) {
+        // Only cmp_resources() passes a NULL nodes table
+        member = pe__last_group_member(rsc);
+    } else {
+        /* The first member of the group will recursively incorporate any
+         * constraints involving other members (including the group internal
+         * colocation).
+         *
+         * @TODO The indirect colocations from the dependent group's other
+         *       members will be incorporated at full strength rather than by
+         *       factor, so the group's combined stickiness will be treated as
+         *       (factor + (#members - 1)) * stickiness. It is questionable what
+         *       the right approach should be.
+         */
+        member = rsc->children->data;
+    }
+
+    pe_rsc_trace(rsc, "%s: Merging scores from group %s using member %s "
+                 "(at %.6f)", log_id, rsc->id, member->id, factor);
+    work = pcmk__copy_node_table(*nodes);
+    pcmk__add_colocated_node_scores(member, log_id, &work, attr, factor, flags);
+    return work;
+}
+
+/*!
+ * \internal
  * \brief Update nodes with scores of colocated resources' nodes
  *
  * Given a table of nodes and a resource, update the nodes' scores with the
@@ -1263,40 +1310,15 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
     }
     pe__set_resource_flags(rsc, pe_rsc_merging);
 
-    if (*nodes == NULL) {
+    if (rsc->variant == pe_group) {
+        work = init_group_colocated_nodes(rsc, log_id, nodes, attr, factor,
+                                          flags);
+
+    } else if (*nodes == NULL) {
         /* Only cmp_resources() passes a NULL nodes table, which indicates we
          * should initialize it with the resource's allowed node scores.
          */
-        if (rsc->variant == pe_group) {
-            pe_resource_t *last_rsc = pe__last_group_member(rsc);
-
-            pe_rsc_trace(rsc, "%s: Merging scores from group %s "
-                         "using last member %s (at %.6f)",
-                         log_id, rsc->id, last_rsc->id, factor);
-            pcmk__add_colocated_node_scores(last_rsc, log_id, &work, attr,
-                                            factor, flags);
-        } else {
-            work = pcmk__copy_node_table(rsc->allowed_nodes);
-        }
-
-    } else if (rsc->variant == pe_group) {
-        pe_resource_t *member = rsc->children->data;
-
-        /* The first member of the group will recursively incorporate any
-         * constraints involving other members (including the group internal
-         * colocation).
-         *
-         * @TODO The indirect colocations from the dependent group's other
-         *       members will be incorporated at full strength rather than by
-         *       factor, so the group's combined stickiness will be treated as
-         *       (factor + (#members - 1)) * stickiness. It is questionable what
-         *       the right approach should be.
-         */
-        pe_rsc_trace(rsc, "%s: Merging scores from first member of group %s "
-                     "(at %.6f)", log_id, rsc->id, factor);
-        work = pcmk__copy_node_table(*nodes);
-        pcmk__add_colocated_node_scores(member, log_id, &work, attr, factor,
-                                        flags);
+        work = pcmk__copy_node_table(rsc->allowed_nodes);
 
     } else {
         pe_rsc_trace(rsc, "%s: Merging scores from %s (at %.6f)",
