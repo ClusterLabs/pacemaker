@@ -95,6 +95,27 @@ pcmk__pcmkd_state_enum2friendly(enum pcmk_pacemakerd_state state)
     }
 }
 
+/*!
+ * \internal
+ * \brief Get a string representation of a \p pacemakerd API reply type
+ *
+ * \param[in] reply  \p pacemakerd API reply type
+ *
+ * \return String representation of a \p pacemakerd API reply type
+ */
+const char *
+pcmk__pcmkd_api_reply2str(enum pcmk_pacemakerd_api_reply reply)
+{
+    switch (reply) {
+        case pcmk_pacemakerd_reply_ping:
+            return "ping";
+        case pcmk_pacemakerd_reply_shutdown:
+            return "shutdown";
+        default:
+            return "unknown";
+    }
+}
+
 // \return Standard Pacemaker return code
 static int
 new_data(pcmk_ipc_api_t *api)
