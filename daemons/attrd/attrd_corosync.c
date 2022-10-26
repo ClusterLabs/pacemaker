@@ -25,6 +25,19 @@
 
 extern crm_exit_t attrd_exit_status;
 
+static xmlNode *
+attrd_confirmation(int callid)
+{
+    xmlNode *node = create_xml_node(NULL, __func__);
+
+    crm_xml_add(node, F_TYPE, T_ATTRD);
+    crm_xml_add(node, F_ORIG, get_local_node_name());
+    crm_xml_add(node, PCMK__XA_TASK, PCMK__ATTRD_CMD_CONFIRM);
+    crm_xml_add_int(node, XML_LRM_ATTR_CALLID, callid);
+
+    return node;
+}
+
 static void
 attrd_peer_message(crm_node_t *peer, xmlNode *xml)
 {
@@ -57,6 +70,31 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
         CRM_CHECK(request.op != NULL, return);
 
         attrd_handle_request(&request);
+
+        /* Having finished handling the request, check to see if the originating
+         * peer requested confirmation.  If so, send that confirmation back now.
+         */
+        if (pcmk__xe_attr_is_true(xml, PCMK__XA_CONFIRM)) {
+            int callid = 0;
+            xmlNode *reply = NULL;
+
+            /* Add the confirmation ID for the message we are confirming to the
+             * response so the originating peer knows what they're a confirmation
+             * for.
+             */
+            crm_element_value_int(xml, XML_LRM_ATTR_CALLID, &callid);
+            reply = attrd_confirmation(callid);
+
+            /* And then send the confirmation back to the originating peer.  This
+             * ends up right back in this same function (attrd_peer_message) on the
+             * peer where it will have to do something with a PCMK__XA_CONFIRM type
+             * message.
+             */
+            crm_debug("Sending %s a confirmation", peer->uname);
+            attrd_send_message(peer, reply, false);
+            free_xml(reply);
+        }
+
         pcmk__reset_request(&request);
     }
 }

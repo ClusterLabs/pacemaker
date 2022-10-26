@@ -66,6 +66,18 @@ handle_clear_failure_request(pcmk__request_t *request)
 }
 
 static xmlNode *
+handle_confirm_request(pcmk__request_t *request)
+{
+    if (request->peer != NULL) {
+        crm_debug("Received confirmation from %s", request->peer);
+        pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+        return NULL;
+    } else {
+        return handle_unknown_request(request);
+    }
+}
+
+static xmlNode *
 handle_flush_request(pcmk__request_t *request)
 {
     if (request->peer != NULL) {
@@ -190,6 +202,7 @@ attrd_register_handlers(void)
 {
     pcmk__server_command_t handlers[] = {
         { PCMK__ATTRD_CMD_CLEAR_FAILURE, handle_clear_failure_request },
+        { PCMK__ATTRD_CMD_CONFIRM, handle_confirm_request },
         { PCMK__ATTRD_CMD_FLUSH, handle_flush_request },
         { PCMK__ATTRD_CMD_PEER_REMOVE, handle_remove_request },
         { PCMK__ATTRD_CMD_QUERY, handle_query_request },

@@ -108,6 +108,7 @@
 #define PCMK__ATTRD_CMD_SYNC            "sync"
 #define PCMK__ATTRD_CMD_SYNC_RESPONSE   "sync-response"
 #define PCMK__ATTRD_CMD_CLEAR_FAILURE   "clear-failure"
+#define PCMK__ATTRD_CMD_CONFIRM         "confirm"
 
 #define PCMK__CONTROLD_CMD_NODES        "list-nodes"
 
