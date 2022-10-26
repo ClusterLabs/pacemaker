@@ -1269,6 +1269,45 @@ init_group_colocated_nodes(const pe_resource_t *rsc, const char *log_id,
 
 /*!
  * \internal
+ * \brief Initialize colocated node table for a non-group resource
+ *
+ * \param[in] rsc     Non-group resource being colocated with another resource
+ * \param[in] log_id  Resource ID to use in log messages
+ * \param[in] nodes   Nodes to update
+ * \param[in] attr    Colocation attribute (NULL to use default)
+ * \param[in] factor  Incorporate scores multiplied by this factor
+ * \param[in] flags   Bitmask of enum pcmk__coloc_select values
+ *
+ * \return Table of node scores initialized for colocation
+ * \note The caller is responsible for freeing the return value using
+ *       g_hash_table_destroy().
+ */
+static GHashTable *
+init_nongroup_colocated_nodes(const pe_resource_t *rsc, const char *log_id,
+                              GHashTable **nodes, const char *attr,
+                              float factor, uint32_t flags)
+{
+    GHashTable *work = NULL;
+
+    if (*nodes == NULL) {
+        /* Only cmp_resources() passes a NULL nodes table, which indicates we
+         * should initialize it with the resource's allowed node scores.
+         */
+        work = pcmk__copy_node_table(rsc->allowed_nodes);
+
+    } else {
+        pe_rsc_trace(rsc, "%s: Merging scores from %s (at %.6f)",
+                     log_id, rsc->id, factor);
+        work = pcmk__copy_node_table(*nodes);
+        add_node_scores_matching_attr(work, rsc, attr, factor,
+                                      pcmk_is_set(flags,
+                                                  pcmk__coloc_select_nonnegative));
+    }
+    return work;
+}
+
+/*!
+ * \internal
  * \brief Update nodes with scores of colocated resources' nodes
  *
  * Given a table of nodes and a resource, update the nodes' scores with the
@@ -1313,20 +1352,9 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
     if (rsc->variant == pe_group) {
         work = init_group_colocated_nodes(rsc, log_id, nodes, attr, factor,
                                           flags);
-
-    } else if (*nodes == NULL) {
-        /* Only cmp_resources() passes a NULL nodes table, which indicates we
-         * should initialize it with the resource's allowed node scores.
-         */
-        work = pcmk__copy_node_table(rsc->allowed_nodes);
-
     } else {
-        pe_rsc_trace(rsc, "%s: Merging scores from %s (at %.6f)",
-                     log_id, rsc->id, factor);
-        work = pcmk__copy_node_table(*nodes);
-        add_node_scores_matching_attr(work, rsc, attr, factor,
-                                      pcmk_is_set(flags,
-                                                  pcmk__coloc_select_nonnegative));
+        work = init_nongroup_colocated_nodes(rsc, log_id, nodes, attr, factor,
+                                             flags);
     }
 
     if (pcmk__any_node_available(work)) {
