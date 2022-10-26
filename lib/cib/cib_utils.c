@@ -734,7 +734,9 @@ cib__signon_query(pcmk__output_t *out, cib_t **cib, xmlNode **cib_object)
     if (cib == NULL) {
         cib_conn = cib_new();
     } else {
-        *cib = cib_new();
+        if (*cib == NULL) {
+            *cib = cib_new();
+        }
         cib_conn = *cib;
     }
 
@@ -742,8 +744,10 @@ cib__signon_query(pcmk__output_t *out, cib_t **cib, xmlNode **cib_object)
         return ENOMEM;
     }
 
-    rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
-    rc = pcmk_legacy2rc(rc);
+    if (cib_conn->state == cib_disconnected) {
+        rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
+        rc = pcmk_legacy2rc(rc);
+    }
 
     if (rc != pcmk_rc_ok) {
         log_signon_query_err(out, "Could not connect to the CIB: %s",

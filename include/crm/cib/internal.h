@@ -240,18 +240,22 @@ cib_callback_client_t* cib__lookup_id (int call_id);
  * \internal
  * \brief Connect to, query, and optionally disconnect from the CIB
  *
- * Open a read-write connection to the CIB manager. Then query the CIB and store
- * the resulting XML. Finally, disconnect if the new CIB connection isn't being
- * returned to the caller.
+ * Open a read-write connection to the CIB manager if an already connected
+ * client is not passed in. Then query the CIB and store the resulting XML.
+ * Finally, disconnect if the CIB connection isn't being returned to the caller.
  *
  * \param[in,out] out         Output object (may be \p NULL)
- * \param[out]    cib         If not \p NULL, where to store CIB connection
+ * \param[in,out] cib         If not \p NULL, where to store CIB connection
  * \param[out]    cib_object  Where to store query result
  *
  * \return Standard Pacemaker return code
  *
  * \note If \p cib is not \p NULL, the caller is responsible for freeing \p *cib
  *       using \p cib_delete().
+ * \note If \p *cib points to an existing \p cib_t object, this function will
+ *       reuse it instead of creating a new one. If the existing client is
+ *       already connected, the connection will be reused, even if it's
+ *       read-only.
  */
 int cib__signon_query(pcmk__output_t *out, cib_t **cib, xmlNode **cib_object);
 
