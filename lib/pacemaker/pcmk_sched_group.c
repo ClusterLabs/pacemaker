@@ -27,6 +27,7 @@ expand_group_colocations(pe_resource_t *rsc)
 {
     pe_resource_t *member = NULL;
     bool any_unmanaged = false;
+    GList *item = NULL;
 
     if (rsc->children == NULL) {
         return;
@@ -34,7 +35,9 @@ expand_group_colocations(pe_resource_t *rsc)
 
     // Treat "group with R" colocations as "first member with R"
     member = (pe_resource_t *) rsc->children->data;
-    member->rsc_cons = g_list_concat(member->rsc_cons, rsc->rsc_cons);
+    for (item = rsc->rsc_cons; item != NULL; item = item->next) {
+        pcmk__add_this_with(member, (pcmk__colocation_t *) (item->data));
+    }
 
 
     /* The above works for the whole group because each group member is
@@ -52,7 +55,7 @@ expand_group_colocations(pe_resource_t *rsc)
      * first.
      */
     any_unmanaged = !pcmk_is_set(member->flags, pe_rsc_managed);
-    for (GList *item = rsc->children->next; item != NULL; item = item->next) {
+    for (item = rsc->children->next; item != NULL; item = item->next) {
         member = item->data;
         if (any_unmanaged) {
             for (GList *cons_iter = rsc->rsc_cons; cons_iter != NULL;
@@ -61,7 +64,7 @@ expand_group_colocations(pe_resource_t *rsc)
                 pcmk__colocation_t *constraint = (pcmk__colocation_t *) cons_iter->data;
 
                 if (constraint->score == INFINITY) {
-                    member->rsc_cons = g_list_prepend(member->rsc_cons, constraint);
+                    pcmk__add_this_with(member, constraint);
                 }
             }
         } else if (!pcmk_is_set(member->flags, pe_rsc_managed)) {
@@ -69,12 +72,15 @@ expand_group_colocations(pe_resource_t *rsc)
         }
     }
 
+    g_list_free(rsc->rsc_cons);
     rsc->rsc_cons = NULL;
 
     // Treat "R with group" colocations as "R with last member"
     member = pe__last_group_member(rsc);
-    member->rsc_cons_lhs = g_list_concat(member->rsc_cons_lhs,
-                                         rsc->rsc_cons_lhs);
+    for (item = rsc->rsc_cons_lhs; item != NULL; item = item->next) {
+        pcmk__add_with_this(member, (pcmk__colocation_t *) (item->data));
+    }
+    g_list_free(rsc->rsc_cons_lhs);
     rsc->rsc_cons_lhs = NULL;
 }
 
