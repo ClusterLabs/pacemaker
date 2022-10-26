@@ -1231,8 +1231,9 @@ add_node_scores_matching_attr(GHashTable *nodes, const pe_resource_t *rsc,
  * \param[in] factor  Incorporate scores multiplied by this factor
  * \param[in] flags   Bitmask of enum pcmk__coloc_select values
  *
- * \return Table of node scores initialized for colocation
- * \note The caller is responsible for freeing the return value using
+ * \return Table of node scores initialized for colocation, or NULL if resource
+ *         should be ignored for colocation purposes
+ * \note The caller is responsible for freeing a non-NULL return value using
  *       g_hash_table_destroy().
  */
 static GHashTable *
@@ -1242,6 +1243,11 @@ init_group_colocated_nodes(const pe_resource_t *rsc, const char *log_id,
 {
     GHashTable *work = NULL;
     pe_resource_t *member = NULL;
+
+    // Ignore empty groups (only possible with schema validation disabled)
+    if (rsc->children == NULL) {
+        return NULL;
+    }
 
     if (*nodes == NULL) {
         // Only cmp_resources() passes a NULL nodes table
@@ -1278,8 +1284,9 @@ init_group_colocated_nodes(const pe_resource_t *rsc, const char *log_id,
  * \param[in] factor  Incorporate scores multiplied by this factor
  * \param[in] flags   Bitmask of enum pcmk__coloc_select values
  *
- * \return Table of node scores initialized for colocation
- * \note The caller is responsible for freeing the return value using
+ * \return Table of node scores initialized for colocation, or NULL if resource
+ *         should be ignored for colocation purposes
+ * \note The caller is responsible for freeing a non-NULL return value using
  *       g_hash_table_destroy().
  */
 static GHashTable *
@@ -1332,11 +1339,6 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
 
     CRM_CHECK((rsc != NULL) && (nodes != NULL), return);
 
-    // Ignore empty groups (only possible with schema validation disabled)
-    if ((rsc->variant == pe_group) && (rsc->children == NULL)) {
-        return;
-    }
-
     if (log_id == NULL) {
         log_id = rsc->id;
     }
@@ -1355,6 +1357,10 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
     } else {
         work = init_nongroup_colocated_nodes(rsc, log_id, nodes, attr, factor,
                                              flags);
+    }
+    if (work == NULL) {
+        pe__clear_resource_flags(rsc, pe_rsc_merging);
+        return;
     }
 
     if (pcmk__any_node_available(work)) {
