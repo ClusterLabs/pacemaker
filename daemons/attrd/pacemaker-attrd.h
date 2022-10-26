@@ -52,6 +52,7 @@ void attrd_run_mainloop(void);
 
 void attrd_set_requesting_shutdown(void);
 void attrd_clear_requesting_shutdown(void);
+void attrd_free_waitlist(void);
 bool attrd_requesting_shutdown(void);
 bool attrd_shutting_down(void);
 void attrd_shutdown(int nsig);
@@ -181,5 +182,16 @@ mainloop_timer_t *attrd_add_timer(const char *id, int timeout_ms, attribute_t *a
 
 void attrd_unregister_handlers(void);
 void attrd_handle_request(pcmk__request_t *request);
+
+enum attrd_sync_point {
+    attrd_sync_point_local,
+    attrd_sync_point_cluster,
+};
+
+void attrd_add_client_to_waitlist(pcmk__request_t *request);
+void attrd_ack_waitlist_clients(enum attrd_sync_point sync_point, const xmlNode *xml);
+void attrd_remove_client_from_waitlist(pcmk__client_t *client);
+const char *attrd_request_sync_point(xmlNode *xml);
+bool attrd_request_has_sync_point(xmlNode *xml);
 
 #endif /* PACEMAKER_ATTRD__H */

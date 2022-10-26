@@ -71,6 +71,7 @@
 #define PCMK__XA_ATTR_RESOURCE          "attr_resource"
 #define PCMK__XA_ATTR_SECTION           "attr_section"
 #define PCMK__XA_ATTR_SET               "attr_set"
+#define PCMK__XA_ATTR_SYNC_POINT        "attr_sync_point"
 #define PCMK__XA_ATTR_USER              "attr_user"
 #define PCMK__XA_ATTR_UUID              "attr_key"
 #define PCMK__XA_ATTR_VALUE             "attr_value"

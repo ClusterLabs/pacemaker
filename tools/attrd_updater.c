@@ -47,7 +47,7 @@ struct {
     gchar *attr_node;
     gchar *attr_set;
     char *attr_value;
-    int attr_options;
+    uint32_t attr_options;
     gboolean query_all;
     gboolean quiet;
 } options = {
@@ -95,6 +95,22 @@ section_cb (const gchar *option_name, const gchar *optarg, gpointer data, GError
     }
 
     return TRUE;
+}
+
+static gboolean
+wait_cb (const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+    if (pcmk__str_eq(optarg, "no", pcmk__str_none)) {
+        pcmk__clear_node_attr_flags(options.attr_options, pcmk__node_attr_sync_local | pcmk__node_attr_sync_cluster);
+        return TRUE;
+    } else if (pcmk__str_eq(optarg, PCMK__VALUE_LOCAL, pcmk__str_none)) {
+        pcmk__clear_node_attr_flags(options.attr_options, pcmk__node_attr_sync_local | pcmk__node_attr_sync_cluster);
+        pcmk__set_node_attr_flags(options.attr_options, pcmk__node_attr_sync_local);
+        return TRUE;
+    } else {
+        g_set_error(err, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                    "--wait= must be one of 'no', 'local', 'cluster'");
+        return FALSE;
+    }
 }
 
 #define INDENT "                              "
@@ -174,6 +190,14 @@ static GOptionEntry addl_entries[] = {
     { "private", 'p', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, private_cb,
       "If this creates a new attribute, never write the attribute to CIB",
       NULL },
+
+    { "wait", 'W', 0, G_OPTION_ARG_CALLBACK, wait_cb,
+      "Wait for some event to occur before returning.  Values are 'no' (wait\n"
+      INDENT "only for the attribute daemon to acknowledge the request) or\n"
+      INDENT "'local' (wait until the change has propagated to where a local\n"
+      INDENT "query will return the request value, or the value set by a\n"
+      INDENT "later request).  Default is 'no'.",
+      "UNTIL" },
 
     { NULL }
 };

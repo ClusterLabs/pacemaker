@@ -300,6 +300,7 @@ main(int argc, char **argv)
         attrd_ipc_fini();
         attrd_lrmd_disconnect();
         attrd_cib_disconnect();
+        attrd_free_waitlist();
         g_hash_table_destroy(attributes);
     }
 

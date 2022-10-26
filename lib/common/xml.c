@@ -510,7 +510,7 @@ find_xml_node(const xmlNode *root, const char *search_path, gboolean must_find)
  * \param[in] parent     XML element to search
  * \param[in] node_name  If not NULL, only match children of this type
  * \param[in] attr_n     If not NULL, only match children with an attribute
- *                       of this name and a value of \p attr_v
+ *                       of this name.
  * \param[in] attr_v     If \p attr_n and this are not NULL, only match children
  *                       with an attribute named \p attr_n and this value
  *
@@ -520,14 +520,16 @@ xmlNode *
 pcmk__xe_match(const xmlNode *parent, const char *node_name,
                const char *attr_n, const char *attr_v)
 {
-    /* ensure attr_v specified when attr_n is */
-    CRM_CHECK(attr_n == NULL || attr_v != NULL, return NULL);
+    CRM_CHECK(parent != NULL, return NULL);
+    CRM_CHECK(attr_v == NULL || attr_n != NULL, return NULL);
 
     for (xmlNode *child = pcmk__xml_first_child(parent); child != NULL;
          child = pcmk__xml_next(child)) {
         if (pcmk__str_eq(node_name, (const char *) (child->name),
                          pcmk__str_null_matches)
-            && ((attr_n == NULL) || attr_matches(child, attr_n, attr_v))) {
+            && ((attr_n == NULL) ||
+                (attr_v == NULL && xmlHasProp(child, (pcmkXmlStr) attr_n)) ||
+                (attr_v != NULL && attr_matches(child, attr_n, attr_v)))) {
             return child;
         }
     }

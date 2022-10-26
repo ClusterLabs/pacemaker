@@ -430,6 +430,12 @@ populate_update_op(xmlNode *op, const char *node, const char *name, const char *
                     pcmk_is_set(options, pcmk__node_attr_remote));
     crm_xml_add_int(op, PCMK__XA_ATTR_IS_PRIVATE,
                     pcmk_is_set(options, pcmk__node_attr_private));
+
+    if (pcmk_is_set(options, pcmk__node_attr_sync_local)) {
+        crm_xml_add(op, PCMK__XA_ATTR_SYNC_POINT, PCMK__VALUE_LOCAL);
+    } else if (pcmk_is_set(options, pcmk__node_attr_sync_cluster)) {
+        crm_xml_add(op, PCMK__XA_ATTR_SYNC_POINT, PCMK__VALUE_CLUSTER);
+    }
 }
 
 int
