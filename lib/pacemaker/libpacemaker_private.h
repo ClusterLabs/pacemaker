@@ -398,6 +398,12 @@ G_GNUC_INTERNAL
 void pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
+void pcmk__add_this_with(pe_resource_t *rsc, pcmk__colocation_t *colocation);
+
+G_GNUC_INTERNAL
+void pcmk__add_with_this(pe_resource_t *rsc, pcmk__colocation_t *colocation);
+
+G_GNUC_INTERNAL
 void pcmk__new_colocation(const char *id, const char *node_attr, int score,
                           pe_resource_t *dependent, pe_resource_t *primary,
                           const char *dependent_role, const char *primary_role,

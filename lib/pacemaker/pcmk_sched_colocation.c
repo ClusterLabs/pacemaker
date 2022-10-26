@@ -132,6 +132,34 @@ cmp_primary_priority(gconstpointer a, gconstpointer b)
 
 /*!
  * \internal
+ * \brief Add a "this with" colocation constraint to a resource
+ *
+ * \param[in,out] rsc         Resource to add colocation to
+ * \param[in]     colocation  Colocation constraint to add to \p rsc
+ */
+void
+pcmk__add_this_with(pe_resource_t *rsc, pcmk__colocation_t *colocation)
+{
+    rsc->rsc_cons = g_list_insert_sorted(rsc->rsc_cons, colocation,
+                                         cmp_primary_priority);
+}
+
+/*!
+ * \internal
+ * \brief Add a "with this" colocation constraint to a resource
+ *
+ * \param[in,out] rsc         Resource to add colocation to
+ * \param[in]     colocation  Colocation constraint to add to \p rsc
+ */
+void
+pcmk__add_with_this(pe_resource_t *rsc, pcmk__colocation_t *colocation)
+{
+    rsc->rsc_cons_lhs = g_list_insert_sorted(rsc->rsc_cons_lhs, colocation,
+                                             cmp_dependent_priority);
+}
+
+/*!
+ * \internal
  * \brief Add orderings necessary for an anti-colocation constraint
  */
 static void
@@ -242,11 +270,8 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
     pe_rsc_trace(dependent, "%s ==> %s (%s %d)",
                  dependent->id, primary->id, node_attr, score);
 
-    dependent->rsc_cons = g_list_insert_sorted(dependent->rsc_cons, new_con,
-                                               cmp_primary_priority);
-
-    primary->rsc_cons_lhs = g_list_insert_sorted(primary->rsc_cons_lhs, new_con,
-                                                 cmp_dependent_priority);
+    pcmk__add_this_with(dependent, new_con);
+    pcmk__add_with_this(primary, new_con);
 
     data_set->colocation_constraints = g_list_append(data_set->colocation_constraints,
                                                      new_con);
