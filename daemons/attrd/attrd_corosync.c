@@ -268,6 +268,7 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
     // Remove votes from cluster nodes that leave, in case election in progress
     if (gone && !is_remote) {
         attrd_remove_voter(peer);
+        attrd_remove_peer_protocol_ver(peer->uname);
 
     // Ensure remote nodes that come up are in the remote node cache
     } else if (!gone && is_remote) {
@@ -395,7 +396,7 @@ attrd_peer_update_one(const crm_node_t *peer, xmlNode *xml, bool filter)
      * version, check to see if it's a new minimum version.
      */
     if (pcmk__str_eq(attr, CRM_ATTR_PROTOCOL, pcmk__str_none)) {
-        attrd_update_minimum_protocol_ver(value);
+        attrd_update_minimum_protocol_ver(peer->uname, value);
     }
 }
 

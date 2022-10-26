@@ -29,6 +29,11 @@ static bool requesting_shutdown = false;
 static bool shutting_down = false;
 static GMainLoop *mloop = NULL;
 
+/* A hash table storing information on the protocol version of each peer attrd.
+ * The key is the peer's uname, and the value is the protocol version number.
+ */
+GHashTable *peer_protocol_vers = NULL;
+
 /*!
  * \internal
  * \brief  Set requesting_shutdown state
@@ -94,6 +99,10 @@ attrd_shutdown(int nsig)
     mainloop_destroy_signal(SIGTRAP);
 
     attrd_free_waitlist();
+    if (peer_protocol_vers != NULL) {
+        g_hash_table_destroy(peer_protocol_vers);
+        peer_protocol_vers = NULL;
+    }
 
     if ((mloop == NULL) || !g_main_loop_is_running(mloop)) {
         /* If there's no main loop active, just exit. This should be possible
@@ -273,16 +282,57 @@ attrd_free_attribute(gpointer data)
     }
 }
 
+/*!
+ * \internal
+ * \brief When a peer node leaves the cluster, stop tracking its protocol version.
+ *
+ * \param[in] host  The peer node's uname to be removed
+ */
 void
-attrd_update_minimum_protocol_ver(const char *value)
+attrd_remove_peer_protocol_ver(const char *host)
+{
+    if (peer_protocol_vers != NULL) {
+        g_hash_table_remove(peer_protocol_vers, host);
+    }
+}
+
+/*!
+ * \internal
+ * \brief When a peer node broadcasts a message with its protocol version, keep
+ *        track of that information.
+ *
+ * We keep track of each peer's protocol version so we know which peers to
+ * expect confirmation messages from when handling cluster-wide sync points.
+ * We additionally keep track of the lowest protocol version supported by all
+ * peers so we know when we can send IPC messages containing more than one
+ * request.
+ *
+ * \param[in] host  The peer node's uname to be tracked
+ * \param[in] value The peer node's protocol version
+ */
+void
+attrd_update_minimum_protocol_ver(const char *host, const char *value)
 {
     int ver;
 
+    if (peer_protocol_vers == NULL) {
+        peer_protocol_vers = pcmk__strkey_table(free, NULL);
+    }
+
     pcmk__scan_min_int(value, &ver, 0);
 
-    if (ver > 0 && (minimum_protocol_version == -1 || ver < minimum_protocol_version)) {
-        minimum_protocol_version = ver;
-        crm_trace("Set minimum attrd protocol version to %d",
-                  minimum_protocol_version);
+    if (ver > 0) {
+        char *host_name = strdup(host);
+
+        /* Record the peer attrd's protocol version. */
+        CRM_ASSERT(host_name != NULL);
+        g_hash_table_insert(peer_protocol_vers, host_name, GINT_TO_POINTER(ver));
+
+        /* If the protocol version is a new minimum, record it as such. */
+        if (minimum_protocol_version == -1 || ver < minimum_protocol_version) {
+            minimum_protocol_version = ver;
+            crm_trace("Set minimum attrd protocol version to %d",
+                      minimum_protocol_version);
+        }
     }
 }

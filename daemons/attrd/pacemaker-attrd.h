@@ -145,6 +145,7 @@ typedef struct attribute_value_s {
 
 extern crm_cluster_t *attrd_cluster;
 extern GHashTable *attributes;
+extern GHashTable *peer_protocol_vers;
 
 #define CIB_OP_TIMEOUT_S 120
 
@@ -177,7 +178,8 @@ void attrd_write_attributes(bool all, bool ignore_delay);
 void attrd_write_or_elect_attribute(attribute_t *a);
 
 extern int minimum_protocol_version;
-void attrd_update_minimum_protocol_ver(const char *value);
+void attrd_remove_peer_protocol_ver(const char *host);
+void attrd_update_minimum_protocol_ver(const char *host, const char *value);
 
 mainloop_timer_t *attrd_add_timer(const char *id, int timeout_ms, attribute_t *attr);
 
