@@ -106,6 +106,10 @@ wait_cb (const gchar *option_name, const gchar *optarg, gpointer data, GError **
         pcmk__clear_node_attr_flags(options.attr_options, pcmk__node_attr_sync_local | pcmk__node_attr_sync_cluster);
         pcmk__set_node_attr_flags(options.attr_options, pcmk__node_attr_sync_local);
         return TRUE;
+    } else if (pcmk__str_eq(optarg, PCMK__VALUE_CLUSTER, pcmk__str_none)) {
+        pcmk__clear_node_attr_flags(options.attr_options, pcmk__node_attr_sync_local | pcmk__node_attr_sync_cluster);
+        pcmk__set_node_attr_flags(options.attr_options, pcmk__node_attr_sync_cluster);
+        return TRUE;
     } else {
         g_set_error(err, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                     "--wait= must be one of 'no', 'local', 'cluster'");
@@ -193,10 +197,12 @@ static GOptionEntry addl_entries[] = {
 
     { "wait", 'W', 0, G_OPTION_ARG_CALLBACK, wait_cb,
       "Wait for some event to occur before returning.  Values are 'no' (wait\n"
-      INDENT "only for the attribute daemon to acknowledge the request) or\n"
+      INDENT "only for the attribute daemon to acknowledge the request),\n"
       INDENT "'local' (wait until the change has propagated to where a local\n"
       INDENT "query will return the request value, or the value set by a\n"
-      INDENT "later request).  Default is 'no'.",
+      INDENT "later request), or 'cluster' (wait until the change has propagated\n"
+      INDENT "to where a query anywhere on the cluster will return the requested\n"
+      INDENT "value, or the value set by a later request).  Default is 'no'.",
       "UNTIL" },
 
     { NULL }
