@@ -244,6 +244,7 @@ TESTS = [
         [ "coloc-dependee-should-move", "Group colocation outweighs stickiness" ],
         [ "colocation-influence", "Respect colocation influence" ],
         [ "colocation-priority-group", "Apply group colocations in order of primary priority" ],
+        [ "colocation-vs-stickiness", "Group stickiness outweighs anti-colocation score" ],
     ],
     [
         [ "rsc-sets-seq-true", "Resource Sets - sequential=false" ],
