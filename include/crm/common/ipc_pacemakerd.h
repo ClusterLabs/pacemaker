@@ -32,7 +32,8 @@ enum pcmk_pacemakerd_state {
     pcmk_pacemakerd_state_running,
     pcmk_pacemakerd_state_shutting_down,
     pcmk_pacemakerd_state_shutdown_complete,
-    pcmk_pacemakerd_state_max = pcmk_pacemakerd_state_shutdown_complete,
+    pcmk_pacemakerd_state_remote,
+    pcmk_pacemakerd_state_max = pcmk_pacemakerd_state_remote,
 };
 
 //! Possible types of pacemakerd replies
