@@ -367,6 +367,7 @@ attrd_client_update(pcmk__request_t *request)
          * the response ACK is not sent until this attrd broadcasts the update
          * and receives its own confirmation back from all peers.
          */
+        attrd_expect_confirmations(request, attrd_cluster_sync_point_update);
         attrd_send_message(NULL, xml, true); /* ends up at attrd_peer_message() */
 
     } else {
@@ -429,6 +430,9 @@ attrd_ipc_closed(qb_ipcs_connection_t *c)
 
         /* Remove the client from the sync point waitlist if it's present. */
         attrd_remove_client_from_waitlist(client);
+
+        /* And no longer wait for confirmations from any peers. */
+        attrd_do_not_wait_for_client(client);
 
         pcmk__free_client(client);
     }

@@ -99,6 +99,8 @@ attrd_shutdown(int nsig)
     mainloop_destroy_signal(SIGTRAP);
 
     attrd_free_waitlist();
+    attrd_free_confirmations();
+
     if (peer_protocol_vers != NULL) {
         g_hash_table_destroy(peer_protocol_vers);
         peer_protocol_vers = NULL;

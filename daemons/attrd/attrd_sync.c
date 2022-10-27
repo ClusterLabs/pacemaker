@@ -34,6 +34,51 @@ struct waitlist_node {
     uint32_t flags;
 };
 
+/* A hash table storing information on in-progress IPC requests that are awaiting
+ * confirmations.  These requests are currently being processed by peer attrds and
+ * we are waiting to receive confirmation messages from each peer indicating that
+ * processing is complete.
+ *
+ * Multiple requests could be waiting on confirmations at the same time.
+ *
+ * The key is the unique callid for the IPC request, and the value is a
+ * confirmation_action struct.
+ */
+static GHashTable *expected_confirmations = NULL;
+
+/*!
+ * \internal
+ * \brief A structure describing a single IPC request that is awaiting confirmations
+ */
+struct confirmation_action {
+    /*!
+     * \brief A list of peer attrds that we are waiting to receive confirmation
+     *        messages from
+     *
+     * This list is dynamic - as confirmations arrive from peer attrds, they will
+     * be removed from this list.  When the list is empty, all peers have processed
+     * the request and the associated confirmation action will be taken.
+     */
+    GList *respondents;
+
+    /*!
+     * \brief A function to run when all confirmations have been received
+     */
+    attrd_confirmation_action_fn fn;
+
+    /*!
+     * \brief Information required to construct and send a reply to the client
+     */
+    char *client_id;
+    uint32_t ipc_id;
+    uint32_t flags;
+
+    /*!
+     * \brief The XML request containing the callid associated with this action
+     */
+    void *xml;
+};
+
 static void
 next_key(void)
 {
@@ -114,11 +159,12 @@ attrd_add_client_to_waitlist(pcmk__request_t *request)
     wl->ipc_id = request->ipc_id;
     wl->flags = request->flags;
 
-    crm_debug("Added client %s to waitlist for %s sync point",
-              wl->client_id, sync_point_str(wl->sync_point));
-
     next_key();
     pcmk__intkey_table_insert(waitlist, waitlist_client, wl);
+
+    crm_trace("Added client %s to waitlist for %s sync point",
+              wl->client_id, sync_point_str(wl->sync_point));
+    crm_trace("%d clients now on waitlist", g_hash_table_size(waitlist));
 
     /* And then add the key to the request XML so we can uniquely identify
      * it when it comes time to issue the ACK.
@@ -166,6 +212,7 @@ attrd_remove_client_from_waitlist(pcmk__client_t *client)
 
         if (wl->client_id == client->id) {
             g_hash_table_iter_remove(&iter);
+            crm_trace("%d clients now on waitlist", g_hash_table_size(waitlist));
         }
     }
 }
@@ -206,7 +253,7 @@ attrd_ack_waitlist_clients(enum attrd_sync_point sync_point, const xmlNode *xml)
             return;
         }
 
-        crm_debug("Alerting client %s for reached %s sync point",
+        crm_trace("Alerting client %s for reached %s sync point",
                   wl->client_id, sync_point_str(wl->sync_point));
 
         client = pcmk__find_client_by_id(wl->client_id);
@@ -218,7 +265,26 @@ attrd_ack_waitlist_clients(enum attrd_sync_point sync_point, const xmlNode *xml)
 
         /* And then remove the client so it doesn't get alerted again. */
         pcmk__intkey_table_remove(waitlist, callid);
+
+        crm_trace("%d clients now on waitlist", g_hash_table_size(waitlist));
     }
+}
+
+/*!
+ * \internal
+ * \brief Action to take when a cluster sync point is hit for a
+ *        PCMK__ATTRD_CMD_UPDATE* message.
+ *
+ * \param[in] xml  The request that should be passed along to
+ *                 attrd_ack_waitlist_clients.  This should be the original
+ *                 IPC request containing the callid for this update message.
+ */
+int
+attrd_cluster_sync_point_update(xmlNode *xml)
+{
+    crm_trace("Hit cluster sync point for attribute update");
+    attrd_ack_waitlist_clients(attrd_sync_point_cluster, xml);
+    return pcmk_rc_ok;
 }
 
 /*!
@@ -267,4 +333,190 @@ bool
 attrd_request_has_sync_point(xmlNode *xml)
 {
     return attrd_request_sync_point(xml) != NULL;
+}
+
+static void
+free_action(gpointer data)
+{
+    struct confirmation_action *action = (struct confirmation_action *) data;
+    g_list_free_full(action->respondents, free);
+    free_xml(action->xml);
+    free(action->client_id);
+    free(action);
+}
+
+/*!
+ * \internal
+ * \brief When a peer disconnects from the cluster, no longer wait for its confirmation
+ *        for any IPC action.  If this peer is the last one being waited on, this will
+ *        trigger the confirmation action.
+ *
+ * \param[in] host   The disconnecting peer attrd's uname
+ */
+void
+attrd_do_not_expect_from_peer(const char *host)
+{
+    GList *keys = g_hash_table_get_keys(expected_confirmations);
+
+    crm_trace("Removing peer %s from expected confirmations", host);
+
+    for (GList *node = keys; node != NULL; node = node->next) {
+        int callid = *(int *) node->data;
+        attrd_handle_confirmation(callid, host);
+    }
+
+    g_list_free(keys);
+}
+
+/*!
+ * \internal
+ * \brief When a client disconnects from the cluster, no longer wait on confirmations
+ *        for it.  Because the peer attrds may still be processing the original IPC
+ *        message, they may still send us confirmations.  However, we will take no
+ *        action on them.
+ *
+ * \param[in] client    The disconnecting client
+ */
+void
+attrd_do_not_wait_for_client(pcmk__client_t *client)
+{
+    GHashTableIter iter;
+    gpointer value;
+
+    if (expected_confirmations == NULL) {
+        return;
+    }
+
+    g_hash_table_iter_init(&iter, expected_confirmations);
+
+    while (g_hash_table_iter_next(&iter, NULL, &value)) {
+        struct confirmation_action *action = (struct confirmation_action *) value;
+
+        if (pcmk__str_eq(action->client_id, client->id, pcmk__str_none)) {
+            crm_trace("Removing client %s from expected confirmations", client->id);
+            g_hash_table_iter_remove(&iter);
+            crm_trace("%d requests now in expected confirmations table", g_hash_table_size(expected_confirmations));
+            break;
+        }
+    }
+}
+
+/*!
+ * \internal
+ * \brief Register some action to be taken when IPC request confirmations are
+ *        received
+ *
+ * When this function is called, a list of all peer attrds that support confirming
+ * requests is generated.  As confirmations from these peer attrds are received,
+ * they are removed from this list.  When the list is empty, the registered action
+ * will be called.
+ *
+ * \note This function should always be called before attrd_send_message is called
+ *       to broadcast to the peers to ensure that we know what replies we are
+ *       waiting on.  Otherwise, it is possible the peer could finish and confirm
+ *       before we know to expect it.
+ *
+ * \param[in] request The request that is awaiting confirmations
+ * \param[in] fn      A function to be run after all confirmations are received
+ */
+void
+attrd_expect_confirmations(pcmk__request_t *request, attrd_confirmation_action_fn fn)
+{
+    struct confirmation_action *action = NULL;
+    GHashTableIter iter;
+    gpointer host, ver;
+    GList *respondents = NULL;
+    int callid;
+
+    if (expected_confirmations == NULL) {
+        expected_confirmations = pcmk__intkey_table((GDestroyNotify) free_action);
+    }
+
+    if (crm_element_value_int(request->xml, XML_LRM_ATTR_CALLID, &callid) == -1) {
+        crm_err("Could not get callid from xml");
+        return;
+    }
+
+    if (pcmk__intkey_table_lookup(expected_confirmations, callid)) {
+        crm_err("Already waiting on confirmations for call id %d", callid);
+        return;
+    }
+
+    g_hash_table_iter_init(&iter, peer_protocol_vers);
+    while (g_hash_table_iter_next(&iter, &host, &ver)) {
+        if (GPOINTER_TO_INT(ver) >= 5) {
+            char *s = strdup((char *) host);
+
+            CRM_ASSERT(s != NULL);
+            respondents = g_list_prepend(respondents, s);
+        }
+    }
+
+    action = calloc(1, sizeof(struct confirmation_action));
+    CRM_ASSERT(action != NULL);
+
+    action->respondents = respondents;
+    action->fn = fn;
+    action->xml = copy_xml(request->xml);
+
+    action->client_id = strdup(request->ipc_client->id);
+    CRM_ASSERT(action->client_id != NULL);
+
+    action->ipc_id = request->ipc_id;
+    action->flags = request->flags;
+
+    pcmk__intkey_table_insert(expected_confirmations, callid, action);
+    crm_trace("Callid %d now waiting on %d confirmations", callid, g_list_length(respondents));
+    crm_trace("%d requests now in expected confirmations table", g_hash_table_size(expected_confirmations));
+}
+
+void
+attrd_free_confirmations(void)
+{
+    if (expected_confirmations != NULL) {
+        g_hash_table_destroy(expected_confirmations);
+        expected_confirmations = NULL;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Process a confirmation message from a peer attrd
+ *
+ * This function is called every time a PCMK__ATTRD_CMD_CONFIRM message is
+ * received from a peer attrd.  If this is the last confirmation we are waiting
+ * on for a given operation, the registered action will be called.
+ *
+ * \param[in] callid The unique callid for the XML IPC request
+ * \param[in] host   The confirming peer attrd's uname
+ */
+void
+attrd_handle_confirmation(int callid, const char *host)
+{
+    struct confirmation_action *action = NULL;
+    GList *node = NULL;
+
+    if (expected_confirmations == NULL) {
+        return;
+    }
+
+    action = pcmk__intkey_table_lookup(expected_confirmations, callid);
+    if (action == NULL) {
+        return;
+    }
+
+    node = g_list_find_custom(action->respondents, host, (GCompareFunc) strcasecmp);
+
+    if (node == NULL) {
+        return;
+    }
+
+    action->respondents = g_list_remove(action->respondents, node->data);
+    crm_trace("Callid %d now waiting on %d confirmations", callid, g_list_length(action->respondents));
+
+    if (action->respondents == NULL) {
+        action->fn(action->xml);
+        pcmk__intkey_table_remove(expected_confirmations, callid);
+        crm_trace("%d requests now in expected confirmations table", g_hash_table_size(expected_confirmations));
+    }
 }

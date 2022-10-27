@@ -69,7 +69,17 @@ static xmlNode *
 handle_confirm_request(pcmk__request_t *request)
 {
     if (request->peer != NULL) {
+        int callid;
+
         crm_debug("Received confirmation from %s", request->peer);
+
+        if (crm_element_value_int(request->xml, XML_LRM_ATTR_CALLID, &callid) == -1) {
+            pcmk__set_result(&request->result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
+                             "Could not get callid from XML");
+        } else {
+            attrd_handle_confirmation(callid, request->peer);
+        }
+
         pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
         return NULL;
     } else {

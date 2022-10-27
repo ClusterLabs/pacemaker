@@ -269,6 +269,7 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
     if (gone && !is_remote) {
         attrd_remove_voter(peer);
         attrd_remove_peer_protocol_ver(peer->uname);
+        attrd_do_not_expect_from_peer(peer->uname);
 
     // Ensure remote nodes that come up are in the remote node cache
     } else if (!gone && is_remote) {

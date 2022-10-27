@@ -191,8 +191,16 @@ enum attrd_sync_point {
     attrd_sync_point_cluster,
 };
 
+typedef int (*attrd_confirmation_action_fn)(xmlNode *);
+
 void attrd_add_client_to_waitlist(pcmk__request_t *request);
 void attrd_ack_waitlist_clients(enum attrd_sync_point sync_point, const xmlNode *xml);
+int attrd_cluster_sync_point_update(xmlNode *xml);
+void attrd_do_not_expect_from_peer(const char *host);
+void attrd_do_not_wait_for_client(pcmk__client_t *client);
+void attrd_expect_confirmations(pcmk__request_t *request, attrd_confirmation_action_fn fn);
+void attrd_free_confirmations(void);
+void attrd_handle_confirmation(int callid, const char *host);
 void attrd_remove_client_from_waitlist(pcmk__client_t *client);
 const char *attrd_request_sync_point(xmlNode *xml);
 bool attrd_request_has_sync_point(xmlNode *xml);
