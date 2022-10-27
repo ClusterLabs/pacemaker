@@ -11,9 +11,9 @@ pcmk__primitive_assign: member1a allocation score on node1: 0
 pcmk__primitive_assign: member1a allocation score on node2: -4000
 pcmk__primitive_assign: member1b allocation score on node1: 0
 pcmk__primitive_assign: member1b allocation score on node2: -INFINITY
-pcmk__primitive_assign: rsc2 allocation score on node1: 0
+pcmk__primitive_assign: rsc2 allocation score on node1: 16
 pcmk__primitive_assign: rsc2 allocation score on node2: 0
-pcmk__primitive_assign: rsc3 allocation score on node1: 16
+pcmk__primitive_assign: rsc3 allocation score on node1: 0
 pcmk__primitive_assign: rsc3 allocation score on node2: 0
 pcmk__primitive_assign: rsc4 allocation score on node1: 0
 pcmk__primitive_assign: rsc4 allocation score on node2: 0
