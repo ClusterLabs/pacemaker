@@ -788,7 +788,7 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
     xmlNodePtr input = NULL;
     cib_t *cib = NULL;
 
-    rc = cib__signon_query(&cib, &input);
+    rc = cib__signon_query(out, &cib, &input);
     if (rc != pcmk_rc_ok) {
         goto simulate_done;
     }

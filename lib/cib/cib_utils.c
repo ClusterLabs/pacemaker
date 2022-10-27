@@ -715,8 +715,16 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
     return rc;
 }
 
+#define log_signon_query_err(out, fmt, args...) do {    \
+        if (out != NULL) {                              \
+            out->err(out, fmt, ##args);                 \
+        } else {                                        \
+            crm_err(fmt, ##args);                       \
+        }                                               \
+    } while (0)
+
 int
-cib__signon_query(cib_t **cib, xmlNode **cib_object)
+cib__signon_query(pcmk__output_t *out, cib_t **cib, xmlNode **cib_object)
 {
     int rc = pcmk_rc_ok;
     cib_t *cib_conn = NULL;
@@ -737,11 +745,24 @@ cib__signon_query(cib_t **cib, xmlNode **cib_object)
     rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
     rc = pcmk_legacy2rc(rc);
 
-    if (rc == pcmk_rc_ok) {
-        rc = cib_conn->cmds->query(cib_conn, NULL, cib_object, cib_scope_local | cib_sync_call);
-        rc = pcmk_legacy2rc(rc);
+    if (rc != pcmk_rc_ok) {
+        log_signon_query_err(out, "Could not connect to the CIB: %s",
+                             pcmk_rc_str(rc));
+        goto done;
     }
 
+    if (out != NULL) {
+        out->transient(out, "Querying CIB...");
+    }
+    rc = cib_conn->cmds->query(cib_conn, NULL, cib_object,
+                               cib_scope_local|cib_sync_call);
+    rc = pcmk_legacy2rc(rc);
+
+    if (rc != pcmk_rc_ok) {
+        log_signon_query_err(out, "CIB query failed: %s", pcmk_rc_str(rc));
+    }
+
+done:
     if (cib == NULL) {
         cib__clean_up_connection(&cib_conn);
     }

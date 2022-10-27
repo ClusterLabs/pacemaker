@@ -147,10 +147,10 @@ main(int argc, char **argv)
 
     if (options.use_live_cib) {
         crm_info("Reading XML from: live cluster");
-        rc = cib__signon_query(NULL, &cib_object);
+        rc = cib__signon_query(out, NULL, &cib_object);
 
         if (rc != pcmk_rc_ok) {
-            g_set_error(&error, PCMK__RC_ERROR, rc, "CIB query failed: %s", pcmk_rc_str(rc));
+            // cib__signon_query() outputs any relevant error
             goto done;
         }
 

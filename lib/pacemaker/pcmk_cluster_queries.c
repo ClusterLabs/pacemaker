@@ -604,7 +604,7 @@ pcmk__list_nodes(pcmk__output_t *out, char *node_types, gboolean bash_export)
     xmlNode *xml_node = NULL;
     int rc;
 
-    rc = cib__signon_query(NULL, &xml_node);
+    rc = cib__signon_query(out, NULL, &xml_node);
 
     if (rc == pcmk_rc_ok) {
         struct node_data data = {
