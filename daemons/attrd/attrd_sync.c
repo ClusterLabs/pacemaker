@@ -66,6 +66,20 @@ sync_point_str(enum attrd_sync_point sync_point)
     }
 }
 
+/*!
+ * \internal
+ * \brief Add a client to the attrd waitlist
+ *
+ * Typically, a client receives an ACK for its XML IPC request immediately.  However,
+ * some clients want to wait until their request has been processed and taken effect.
+ * This is called a sync point.  Any client placed on this waitlist will have its
+ * ACK message delayed until either its requested sync point is hit, or until it
+ * times out.
+ *
+ * The XML IPC request must specify the type of sync point it wants to wait for.
+ *
+ * \param[in,out] request   The request describing the client to place on the waitlist.
+ */
 void
 attrd_add_client_to_waitlist(pcmk__request_t *request)
 {
@@ -112,6 +126,11 @@ attrd_add_client_to_waitlist(pcmk__request_t *request)
     crm_xml_add_int(request->xml, XML_LRM_ATTR_CALLID, waitlist_client);
 }
 
+/*!
+ * \internal
+ * \brief Free all memory associated with the waitlist.  This is most typically
+ *        used when attrd shuts down.
+ */
 void
 attrd_free_waitlist(void)
 {
@@ -123,6 +142,13 @@ attrd_free_waitlist(void)
     waitlist = NULL;
 }
 
+/*!
+ * \internal
+ * \brief Unconditionally remove a client from the waitlist, such as when the client
+ *        node disconnects from the cluster
+ *
+ * \param[in] client    The client to remove
+ */
 void
 attrd_remove_client_from_waitlist(pcmk__client_t *client)
 {
@@ -144,6 +170,18 @@ attrd_remove_client_from_waitlist(pcmk__client_t *client)
     }
 }
 
+/*!
+ * \internal
+ * \brief Send an IPC ACK message to all awaiting clients
+ *
+ * This function will search the waitlist for all clients that are currently awaiting
+ * an ACK indicating their attrd operation is complete.  Only those clients with a
+ * matching sync point type and callid from their original XML IPC request will be
+ * ACKed.  Once they have received an ACK, they will be removed from the waitlist.
+ *
+ * \param[in] sync_point What kind of sync point have we hit?
+ * \param[in] xml        The original XML IPC request.
+ */
 void
 attrd_ack_waitlist_clients(enum attrd_sync_point sync_point, const xmlNode *xml)
 {
@@ -183,6 +221,23 @@ attrd_ack_waitlist_clients(enum attrd_sync_point sync_point, const xmlNode *xml)
     }
 }
 
+/*!
+ * \internal
+ * \brief Return the sync point attribute for an IPC request
+ *
+ * This function will check both the top-level element of \p xml for a sync
+ * point attribute, as well as all of its \p op children, if any.  The latter
+ * is useful for newer versions of attrd that can put multiple IPC requests
+ * into a single message.
+ *
+ * \param[in] xml   An XML IPC request
+ *
+ * \note It is assumed that if one child element has a sync point attribute,
+ *       all will have a sync point attribute and they will all be the same
+ *       sync point.  No other configuration is supported.
+ *
+ * \return The sync point attribute of \p xml, or NULL if none.
+ */
 const char *
 attrd_request_sync_point(xmlNode *xml)
 {
@@ -200,6 +255,14 @@ attrd_request_sync_point(xmlNode *xml)
     }
 }
 
+/*!
+ * \internal
+ * \brief Does an IPC request contain any sync point attribute?
+ *
+ * \param[in] xml   An XML IPC request
+ *
+ * \return true if there's a sync point attribute, false otherwise
+ */
 bool
 attrd_request_has_sync_point(xmlNode *xml)
 {
