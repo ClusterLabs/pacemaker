@@ -254,7 +254,7 @@ attrd_client_update(pcmk__request_t *request)
      * two ways we can handle that.
      */
     if (xml_has_children(xml)) {
-        if (minimum_protocol_version >= 4) {
+        if (ATTRD_SUPPORTS_MULTI_MESSAGE(minimum_protocol_version)) {
             /* First, if all peers support a certain protocol version, we can
              * just broadcast the big message and they'll handle it.
              */

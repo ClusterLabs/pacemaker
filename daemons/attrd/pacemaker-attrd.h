@@ -45,6 +45,9 @@
  */
 #define ATTRD_PROTOCOL_VERSION "5"
 
+#define ATTRD_SUPPORTS_MULTI_MESSAGE(x) ((x) >= 4)
+#define ATTRD_SUPPORTS_CONFIRMATION(x)  ((x) >= 5)
+
 #define attrd_send_ack(client, id, flags) \
     pcmk__ipc_send_ack((client), (id), (flags), "ack", ATTRD_PROTOCOL_VERSION, CRM_EX_INDETERMINATE)
 

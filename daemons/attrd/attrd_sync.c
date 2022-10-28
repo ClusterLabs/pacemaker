@@ -444,7 +444,7 @@ attrd_expect_confirmations(pcmk__request_t *request, attrd_confirmation_action_f
 
     g_hash_table_iter_init(&iter, peer_protocol_vers);
     while (g_hash_table_iter_next(&iter, &host, &ver)) {
-        if (GPOINTER_TO_INT(ver) >= 5) {
+        if (ATTRD_SUPPORTS_CONFIRMATION(GPOINTER_TO_INT(ver))) {
             char *s = strdup((char *) host);
 
             CRM_ASSERT(s != NULL);
