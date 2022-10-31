@@ -210,7 +210,7 @@ attrd_remove_client_from_waitlist(pcmk__client_t *client)
     while (g_hash_table_iter_next(&iter, NULL, &value)) {
         struct waitlist_node *wl = (struct waitlist_node *) value;
 
-        if (wl->client_id == client->id) {
+        if (pcmk__str_eq(wl->client_id, client->id, pcmk__str_none)) {
             g_hash_table_iter_remove(&iter);
             crm_trace("%d clients now on waitlist", g_hash_table_size(waitlist));
         }
