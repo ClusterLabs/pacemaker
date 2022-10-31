@@ -40,6 +40,11 @@
                     <data type="boolean" />
                 </attribute>
             </optional>
+            <optional>
+                <attribute name="description">
+                    <text/>
+                </attribute>
+            </optional>
             <attribute name="managed"> <data type="boolean" /> </attribute>
             <attribute name="failed"> <data type="boolean" /> </attribute>
             <zeroOrMore>
@@ -63,6 +68,11 @@
                     <data type="boolean" />
                 </attribute>
             </optional>
+            <optional>
+                <attribute name="description">
+                    <text/>
+                </attribute>
+            </optional>
             <attribute name="managed"> <data type="boolean" /> </attribute>
             <attribute name="disabled"> <data type="boolean" /> </attribute>
             <attribute name="failed"> <data type="boolean" /> </attribute>
@@ -81,6 +91,11 @@
             <optional>
                 <attribute name="maintenance">
                     <data type="boolean" />
+                </attribute>
+            </optional>
+            <optional>
+                <attribute name="description">
+                    <text/>
                 </attribute>
             </optional>
             <attribute name="managed"> <data type="boolean" /> </attribute>
@@ -105,6 +120,11 @@
             <optional>
                 <attribute name="maintenance">
                     <data type="boolean" />
+                </attribute>
+            </optional>
+            <optional>
+                <attribute name="description">
+                    <text/>
                 </attribute>
             </optional>
             <attribute name="failed"> <data type="boolean" /> </attribute>
