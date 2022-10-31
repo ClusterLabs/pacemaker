@@ -169,6 +169,7 @@ extern "C" {
 #  define XML_PING_ATTR_PACEMAKERDSTATE_RUNNING "running"
 #  define XML_PING_ATTR_PACEMAKERDSTATE_SHUTTINGDOWN "shutting_down"
 #  define XML_PING_ATTR_PACEMAKERDSTATE_SHUTDOWNCOMPLETE "shutdown_complete"
+#  define XML_PING_ATTR_PACEMAKERDSTATE_REMOTE "remote"
 
 #  define XML_TAG_FRAGMENT		"cib_fragment"
 

@@ -79,25 +79,41 @@ typedef struct {
 } pcmk_injections_t;
 
 /*!
- * \brief Get controller status
+ * \brief Get and output controller status
  *
- * \param[in,out] xml                The destination for the result, as an XML tree.
- * \param[in]     dest_node          Destination node for request
- * \param[in]     message_timeout_ms Message timeout
+ * \param[in,out] xml                 Destination for the result, as an XML tree
+ * \param[in]     node_name           Name of node whose status is desired
+ *                                    (\p NULL for DC)
+ * \param[in]     message_timeout_ms  How long to wait for a reply from the
+ *                                    \p pacemaker-controld API. If 0,
+ *                                    \p pcmk_ipc_dispatch_sync will be used.
+ *                                    Otherwise, \p pcmk_ipc_dispatch_main will
+ *                                    be used, and a new mainloop will be
+ *                                    created for this purpose (freed before
+ *                                    return).
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_controller_status(xmlNodePtr *xml, char *dest_node, unsigned int message_timeout_ms);
+int pcmk_controller_status(xmlNodePtr *xml, const char *node_name,
+                           unsigned int message_timeout_ms);
 
 /*!
- * \brief Get designated controller
+ * \brief Get and output designated controller node name
  *
- * \param[in,out] xml                The destination for the result, as an XML tree.
- * \param[in]     message_timeout_ms Message timeout
+ * \param[in,out] xml                 Destination for the result, as an XML tree
+ * \param[in]     message_timeout_ms  How long to wait for a reply from the
+ *                                    \p pacemaker-controld API. If 0,
+ *                                    \p pcmk_ipc_dispatch_sync will be used.
+ *                                    Otherwise, \p pcmk_ipc_dispatch_main will
+ *                                    be used, and a new mainloop will be
+ *                                    created for this purpose (freed before
+ *                                    return).
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_designated_controller(xmlNodePtr *xml, unsigned int message_timeout_ms);
+
+int pcmk_designated_controller(xmlNodePtr *xml,
+                               unsigned int message_timeout_ms);
 
 /*!
  * \brief Free a :pcmk_injections_t structure
@@ -114,8 +130,8 @@ void pcmk_free_injections(pcmk_injections_t *injections);
  * \param[in]     message_timeout_ms  How long to wait for a reply from the
  *                                    \p pacemakerd API. If 0,
  *                                    \p pcmk_ipc_dispatch_sync will be used.
- *                                    If positive, \p pcmk_ipc_dispatch_main
- *                                    will be used, and a new mainloop will be
+ *                                    Otherwise, \p pcmk_ipc_dispatch_main will
+ *                                    be used, and a new mainloop will be
  *                                    created for this purpose (freed before
  *                                    return).
  *

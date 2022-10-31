@@ -239,7 +239,7 @@ pcmk__status(pcmk__output_t *out, cib_t *cib,
              enum pcmk__fence_history fence_history, uint32_t show,
              uint32_t show_opts, const char *only_node, const char *only_rsc,
              const char *neg_location_prefix, bool simple_output,
-             guint timeout_ms)
+             unsigned int timeout_ms)
 {
     xmlNode *current_cib = NULL;
     int rc = pcmk_rc_ok;
@@ -255,22 +255,17 @@ pcmk__status(pcmk__output_t *out, cib_t *cib,
         && (cib->state != cib_connected_command)) {
 
         rc = pcmk__pacemakerd_status(out, crm_system_name, timeout_ms, &state);
-        switch (rc) {
-            case pcmk_rc_ok:
-                switch (state) {
-                    case pcmk_pacemakerd_state_running:
-                    case pcmk_pacemakerd_state_shutting_down:
-                        // CIB may still be available while shutting down
-                        break;
-                    default:
-                        return rc;
-                }
-                break;
-            case EREMOTEIO:
-                /* We'll always get EREMOTEIO if we run this on a Pacemaker
-                 * Remote node. The fencer and CIB might be available.
+        if (rc != pcmk_rc_ok) {
+            return rc;
+        }
+
+        switch (state) {
+            case pcmk_pacemakerd_state_running:
+            case pcmk_pacemakerd_state_shutting_down:
+            case pcmk_pacemakerd_state_remote:
+                /* Fencer and CIB may still be available while shutting down or
+                 * running on a Pacemaker Remote node
                  */
-                rc = pcmk_rc_ok;
                 break;
             default:
                 return rc;
@@ -295,19 +290,8 @@ pcmk__status(pcmk__output_t *out, cib_t *cib,
     }
 
 done:
-    if (stonith != NULL) {
-        if (stonith->state != stonith_disconnected) {
-            stonith->cmds->remove_notification(stonith, NULL);
-            stonith->cmds->disconnect(stonith);
-        }
-
-        stonith_api_delete(stonith);
-    }
-
-    if (current_cib != NULL) {
-        free_xml(current_cib);
-    }
-
+    stonith_api_delete(stonith);
+    free_xml(current_cib);
     return pcmk_rc_ok;
 }
 

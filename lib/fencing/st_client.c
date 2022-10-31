@@ -1679,7 +1679,9 @@ stonith_api_free(stonith_t * stonith)
     crm_trace("Destroying %p", stonith);
 
     if (stonith->state != stonith_disconnected) {
-        crm_trace("Disconnecting %p first", stonith);
+        crm_trace("Unregistering notifications and disconnecting %p first",
+                  stonith);
+        stonith->cmds->remove_notification(stonith, NULL);
         rc = stonith->cmds->disconnect(stonith);
     }
 

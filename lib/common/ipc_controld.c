@@ -27,6 +27,33 @@ struct controld_api_private_s {
     unsigned int replies_expected;
 };
 
+/*!
+ * \internal
+ * \brief Get a string representation of a controller API reply type
+ *
+ * \param[in] reply  Controller API reply type
+ *
+ * \return String representation of a controller API reply type
+ */
+const char *
+pcmk__controld_api_reply2str(enum pcmk_controld_api_reply reply)
+{
+    switch (reply) {
+        case pcmk_controld_reply_reprobe:
+            return "reprobe";
+        case pcmk_controld_reply_info:
+            return "info";
+        case pcmk_controld_reply_resource:
+            return "resource";
+        case pcmk_controld_reply_ping:
+            return "ping";
+        case pcmk_controld_reply_nodes:
+            return "nodes";
+        default:
+            return "unknown";
+    }
+}
+
 // \return Standard Pacemaker return code
 static int
 new_data(pcmk_ipc_api_t *api)

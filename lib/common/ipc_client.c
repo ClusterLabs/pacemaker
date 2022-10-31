@@ -404,7 +404,10 @@ pcmk_poll_ipc(const pcmk_ipc_api_t *api, int timeout_ms)
     pollfd.events = POLLIN;
     rc = poll(&pollfd, 1, timeout_ms);
     if (rc < 0) {
-        return errno;
+        /* Some UNIX systems return negative and set EAGAIN for failure to
+         * allocate memory; standardize the return code in that case
+         */
+        return (errno == EAGAIN)? ENOMEM : errno;
     } else if (rc == 0) {
         return EAGAIN;
     }
