@@ -585,15 +585,13 @@ Advisory Placement
 __________________
 
 If mandatory placement is about "must" and "must not", then advisory
-placement is the "I'd prefer if" alternative.  For constraints with
-scores greater than **-INFINITY** and less than **INFINITY**, the cluster
-will try to accommodate your wishes but may ignore them if the
-alternative is to stop some of the cluster resources.
+placement is the "I'd prefer if" alternative.
 
-As in life, where if enough people prefer something it effectively
-becomes mandatory, advisory colocation constraints can combine with
-other elements of the configuration to behave as if they were
-mandatory.
+For colocation constraints with scores greater than **-INFINITY** and less than
+**INFINITY**, the cluster will try to accommodate your wishes, but may ignore
+them if other factors outweigh the colocation score. Those factors might
+include other constraints, resource stickiness, failure thresholds, whether
+other resources would be prevented from being active, etc.
 
 .. topic:: Advisory colocation constraint for two resources
 

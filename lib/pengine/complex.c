@@ -554,6 +554,9 @@ unpack_requires(pe_resource_t *rsc, const char *value, bool is_default)
  * \param[in,out] data_set  Cluster working set
  *
  * \return Standard Pacemaker return code
+ * \note If pcmk_rc_ok is returned, \p *rsc is guaranteed to be non-NULL, and
+ *       the caller is responsible for freeing it using its variant-specific
+ *       free() method. Otherwise, \p *rsc is guaranteed to be NULL.
  */
 int
 pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
@@ -562,27 +565,32 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     xmlNode *expanded_xml = NULL;
     xmlNode *ops = NULL;
     const char *value = NULL;
-    const char *rclass = NULL; /* Look for this after any templates have been expanded */
-    const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
+    const char *id = NULL;
     bool guest_node = false;
     bool remote_node = false;
-    bool has_versioned_params = false;
 
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
         .role = RSC_ROLE_UNKNOWN,
-        .now = data_set->now,
+        .now = NULL,
         .match_data = NULL,
         .rsc_data = NULL,
         .op_data = NULL
     };
 
-    crm_log_xml_trace(xml_obj, "Processing resource input...");
-
     CRM_CHECK(rsc != NULL, return EINVAL);
+    CRM_CHECK((xml_obj != NULL) && (data_set != NULL),
+              *rsc = NULL;
+              return EINVAL);
 
+    rule_data.now = data_set->now;
+
+    crm_log_xml_trace(xml_obj, "[raw XML]");
+
+    id = crm_element_value(xml_obj, XML_ATTR_ID);
     if (id == NULL) {
-        pe_err("Must specify id tag in <resource>");
+        pe_err("Ignoring <%s> configuration without " XML_ATTR_ID,
+               crm_element_name(xml_obj));
         return pcmk_rc_unpack_error;
     }
 
@@ -591,10 +599,14 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     }
 
     *rsc = calloc(1, sizeof(pe_resource_t));
+    if (*rsc == NULL) {
+        crm_crit("Unable to allocate memory for resource '%s'", id);
+        return ENOMEM;
+    }
     (*rsc)->cluster = data_set;
 
     if (expanded_xml) {
-        crm_log_xml_trace(expanded_xml, "Expanded resource...");
+        crm_log_xml_trace(expanded_xml, "[expanded XML]");
         (*rsc)->xml = expanded_xml;
         (*rsc)->orig_xml = xml_obj;
 
@@ -604,7 +616,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     }
 
     /* Do not use xml_obj from here on, use (*rsc)->xml in case templates are involved */
-    rclass = crm_element_value((*rsc)->xml, XML_AGENT_ATTR_CLASS);
+
     (*rsc)->parent = parent;
 
     ops = find_xml_node((*rsc)->xml, "operations", FALSE);
@@ -612,8 +624,10 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
 
     (*rsc)->variant = get_resource_type(crm_element_name((*rsc)->xml));
     if ((*rsc)->variant == pe_unknown) {
-        pe_err("Unknown resource type: %s", crm_element_name((*rsc)->xml));
-        free(*rsc);
+        pe_err("Ignoring resource '%s' of unknown type '%s'",
+               id, crm_element_name((*rsc)->xml));
+        common_free(*rsc);
+        *rsc = NULL;
         return pcmk_rc_unpack_error;
     }
 
@@ -631,7 +645,6 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     }
 
     (*rsc)->fns = &resource_class_functions[(*rsc)->variant];
-    pe_rsc_trace((*rsc), "Unpacking resource...");
 
     get_meta_attributes((*rsc)->meta, *rsc, NULL, data_set);
     (*rsc)->parameters = pe_rsc_params(*rsc, NULL, data_set); // \deprecated
@@ -677,18 +690,16 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_OP_ATTR_ALLOW_MIGRATE);
-    if (crm_is_true(value) && has_versioned_params) {
-        pe_rsc_trace((*rsc), "Migration is disabled for resources with versioned parameters");
-    } else if (crm_is_true(value)) {
+    if (crm_is_true(value)) {
         pe__set_resource_flags(*rsc, pe_rsc_allow_migrate);
-    } else if ((value == NULL) && remote_node && !has_versioned_params) {
+    } else if ((value == NULL) && remote_node) {
         /* By default, we want remote nodes to be able
          * to float around the cluster without having to stop all the
          * resources within the remote-node before moving. Allowing
          * migration support enables this feature. If this ever causes
          * problems, migration support can be explicitly turned off with
          * allow-migrate=false.
-         * We don't support migration for versioned resources, though. */
+         */
         pe__set_resource_flags(*rsc, pe_rsc_allow_migrate);
     }
 
@@ -723,33 +734,36 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
         pe__set_resource_flags(*rsc, pe_rsc_unique);
     }
 
-    pe_rsc_trace((*rsc), "Options for %s", (*rsc)->id);
-
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_RESTART);
     if (pcmk__str_eq(value, "restart", pcmk__str_casei)) {
         (*rsc)->restart_type = pe_restart_restart;
-        pe_rsc_trace((*rsc), "\tDependency restart handling: restart");
+        pe_rsc_trace((*rsc), "%s dependency restart handling: restart",
+                     (*rsc)->id);
         pe_warn_once(pe_wo_restart_type,
                      "Support for restart-type is deprecated and will be removed in a future release");
 
     } else {
         (*rsc)->restart_type = pe_restart_ignore;
-        pe_rsc_trace((*rsc), "\tDependency restart handling: ignore");
+        pe_rsc_trace((*rsc), "%s dependency restart handling: ignore",
+                     (*rsc)->id);
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MULTIPLE);
     if (pcmk__str_eq(value, "stop_only", pcmk__str_casei)) {
         (*rsc)->recovery_type = recovery_stop_only;
-        pe_rsc_trace((*rsc), "\tMultiple running resource recovery: stop only");
+        pe_rsc_trace((*rsc), "%s multiple running resource recovery: stop only",
+                     (*rsc)->id);
 
     } else if (pcmk__str_eq(value, "block", pcmk__str_casei)) {
         (*rsc)->recovery_type = recovery_block;
-        pe_rsc_trace((*rsc), "\tMultiple running resource recovery: block");
+        pe_rsc_trace((*rsc), "%s multiple running resource recovery: block",
+                     (*rsc)->id);
 
     } else if (pcmk__str_eq(value, "stop_unexpected", pcmk__str_casei)) {
         (*rsc)->recovery_type = recovery_stop_unexpected;
-        pe_rsc_trace((*rsc), "\tMultiple running resource recovery: "
-                             "stop unexpected instances");
+        pe_rsc_trace((*rsc), "%s multiple running resource recovery: "
+                             "stop unexpected instances",
+                     (*rsc)->id);
 
     } else { // "stop_start"
         if (!pcmk__str_eq(value, "stop_start",
@@ -758,7 +772,8 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
                     ", using default of \"stop_start\"", value);
         }
         (*rsc)->recovery_type = recovery_stop_start;
-        pe_rsc_trace((*rsc), "\tMultiple running resource recovery: stop/start");
+        pe_rsc_trace((*rsc), "%s multiple running resource recovery: "
+                             "stop/start", (*rsc)->id);
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_STICKINESS);
@@ -781,7 +796,8 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
         }
     }
 
-    if (pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
+    if (pcmk__str_eq(crm_element_value((*rsc)->xml, XML_AGENT_ATTR_CLASS),
+                     PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         pe__set_working_set_flags(data_set, pe_flag_have_stonith_resource);
         pe__set_resource_flags(*rsc, pe_rsc_fence_device);
     }
@@ -816,10 +832,12 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     }
 
     get_target_role(*rsc, &((*rsc)->next_role));
-    pe_rsc_trace((*rsc), "\tDesired next state: %s",
+    pe_rsc_trace((*rsc), "%s desired next state: %s", (*rsc)->id,
                  (*rsc)->next_role != RSC_ROLE_UNKNOWN ? role2text((*rsc)->next_role) : "default");
 
     if ((*rsc)->fns->unpack(*rsc, data_set) == FALSE) {
+        (*rsc)->fns->free(*rsc);
+        *rsc = NULL;
         return pcmk_rc_unpack_error;
     }
 
@@ -833,7 +851,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
         resource_location(*rsc, NULL, 0, "remote_connection_default", data_set);
     }
 
-    pe_rsc_trace((*rsc), "\tAction notification: %s",
+    pe_rsc_trace((*rsc), "%s action notification: %s", (*rsc)->id,
                  pcmk_is_set((*rsc)->flags, pe_rsc_notify)? "required" : "not required");
 
     (*rsc)->utilization = pcmk__strkey_table(free, free);
@@ -841,10 +859,10 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     pe__unpack_dataset_nvpairs((*rsc)->xml, XML_TAG_UTILIZATION, &rule_data,
                                (*rsc)->utilization, NULL, FALSE, data_set);
 
-/* 	data_set->resources = g_list_append(data_set->resources, (*rsc)); */
-
     if (expanded_xml) {
         if (add_template_rsc(xml_obj, data_set) == FALSE) {
+            (*rsc)->fns->free(*rsc);
+            *rsc = NULL;
             return pcmk_rc_unpack_error;
         }
     }

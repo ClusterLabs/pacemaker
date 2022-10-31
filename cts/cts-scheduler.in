@@ -234,11 +234,17 @@ TESTS = [
           "cl#5187 - Prevent resources in an anti-colocation from even temporarily running on a same node" ],
         [ "anti-colocation-promoted", "Organize order of actions for promoted resources in anti-colocations" ],
         [ "anti-colocation-unpromoted", "Organize order of actions for unpromoted resources in anti-colocations" ],
+        [ "group-anticolocation", "Group with failed last member anti-colocated with another group" ],
+        [ "group-colocation-failure",
+          "Group with sole member failed, colocated with another group"
+        ],
         [ "enforce-colo1", "Always enforce B with A INFINITY" ],
         [ "complex_enforce_colo", "Always enforce B with A INFINITY. (make sure heat-engine stops)" ],
         [ "coloc-dependee-should-stay", "Stickiness outweighs group colocation" ],
         [ "coloc-dependee-should-move", "Group colocation outweighs stickiness" ],
         [ "colocation-influence", "Respect colocation influence" ],
+        [ "colocation-priority-group", "Apply group colocations in order of primary priority" ],
+        [ "colocation-vs-stickiness", "Group stickiness outweighs anti-colocation score" ],
     ],
     [
         [ "rsc-sets-seq-true", "Resource Sets - sequential=false" ],

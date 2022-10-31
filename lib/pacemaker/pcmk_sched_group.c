@@ -27,10 +27,17 @@ expand_group_colocations(pe_resource_t *rsc)
 {
     pe_resource_t *member = NULL;
     bool any_unmanaged = false;
+    GList *item = NULL;
+
+    if (rsc->children == NULL) {
+        return;
+    }
 
     // Treat "group with R" colocations as "first member with R"
     member = (pe_resource_t *) rsc->children->data;
-    member->rsc_cons = g_list_concat(member->rsc_cons, rsc->rsc_cons);
+    for (item = rsc->rsc_cons; item != NULL; item = item->next) {
+        pcmk__add_this_with(member, (pcmk__colocation_t *) (item->data));
+    }
 
 
     /* The above works for the whole group because each group member is
@@ -48,7 +55,7 @@ expand_group_colocations(pe_resource_t *rsc)
      * first.
      */
     any_unmanaged = !pcmk_is_set(member->flags, pe_rsc_managed);
-    for (GList *item = rsc->children->next; item != NULL; item = item->next) {
+    for (item = rsc->children->next; item != NULL; item = item->next) {
         member = item->data;
         if (any_unmanaged) {
             for (GList *cons_iter = rsc->rsc_cons; cons_iter != NULL;
@@ -57,7 +64,7 @@ expand_group_colocations(pe_resource_t *rsc)
                 pcmk__colocation_t *constraint = (pcmk__colocation_t *) cons_iter->data;
 
                 if (constraint->score == INFINITY) {
-                    member->rsc_cons = g_list_prepend(member->rsc_cons, constraint);
+                    pcmk__add_this_with(member, constraint);
                 }
             }
         } else if (!pcmk_is_set(member->flags, pe_rsc_managed)) {
@@ -65,12 +72,15 @@ expand_group_colocations(pe_resource_t *rsc)
         }
     }
 
+    g_list_free(rsc->rsc_cons);
     rsc->rsc_cons = NULL;
 
     // Treat "R with group" colocations as "R with last member"
     member = pe__last_group_member(rsc);
-    member->rsc_cons_lhs = g_list_concat(member->rsc_cons_lhs,
-                                         rsc->rsc_cons_lhs);
+    for (item = rsc->rsc_cons_lhs; item != NULL; item = item->next) {
+        pcmk__add_with_this(member, (pcmk__colocation_t *) (item->data));
+    }
+    g_list_free(rsc->rsc_cons_lhs);
     rsc->rsc_cons_lhs = NULL;
 }
 
@@ -364,6 +374,10 @@ colocate_group_with(pe_resource_t *dependent, const pe_resource_t *primary,
 {
     pe_resource_t *member = NULL;
 
+    if (dependent->children == NULL) {
+        return;
+    }
+
     pe_rsc_trace(primary, "Processing %s (group %s with %s) for dependent",
                  colocation->id, dependent->id, primary->id);
 
@@ -422,7 +436,7 @@ colocate_with_group(pe_resource_t *dependent, const pe_resource_t *primary,
              * on the last member.
              */
             member = pe__last_group_member(primary);
-        } else {
+        } else if (primary->children != NULL) {
             /* For optional colocations, whether the group is partially or fully
              * up doesn't matter, so apply the colocation based on the first
              * member.
@@ -654,61 +668,6 @@ pcmk__group_apply_location(pe_resource_t *rsc, pe__location_t *location)
     g_list_free_full(node_list_copy, free);
 }
 
-/*!
- * \internal
- * \brief Update nodes with scores of colocated resources' nodes
- *
- * Given a table of nodes and a group resource, update the nodes' scores with
- * the scores of the best nodes matching the attribute used for each of the
- * group's relevant colocations.
- *
- * \param[in,out] rsc      Group resource to check colocations for
- * \param[in]     log_id   Resource ID to use in log messages
- * \param[in,out] nodes    Nodes to update
- * \param[in]     attr     Colocation attribute (NULL to use default)
- * \param[in]     factor   Incorporate scores multiplied by this factor
- * \param[in]     flags    Bitmask of enum pcmk__coloc_select values
- *
- * \note The caller remains responsible for freeing \p *nodes.
- */
-void
-pcmk__group_add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
-                                      GHashTable **nodes, const char *attr,
-                                      float factor, uint32_t flags)
-{
-    pe_resource_t *member = NULL;
-
-    CRM_ASSERT((rsc != NULL) && (nodes != NULL));
-
-    if (log_id == NULL) {
-        log_id = rsc->id;
-    }
-
-    if (pcmk_is_set(rsc->flags, pe_rsc_merging)) {
-        pe_rsc_info(rsc, "Breaking colocation dependency loop with %s at %s",
-                    rsc->id, log_id);
-        return;
-    }
-    pe__set_resource_flags(rsc, pe_rsc_merging);
-
-    // Add first member's colocation scores (which incorporate other members')
-    member = (pe_resource_t *) rsc->children->data;
-    member->cmds->add_colocated_node_scores(member, log_id, nodes, attr,
-                                            factor, flags);
-
-    // Add scores of dependent in each colocation with this group
-    for (GList *iter = rsc->rsc_cons_lhs; iter != NULL; iter = iter->next) {
-        pcmk__colocation_t *colocation = (pcmk__colocation_t *) iter->data;
-
-        pcmk__add_colocated_node_scores(colocation->dependent, rsc->id, nodes,
-                                        colocation->node_attribute,
-                                        colocation->score / (float) INFINITY,
-                                        flags);
-    }
-
-    pe__clear_resource_flags(rsc, pe_rsc_merging);
-}
-
 // Group implementation of resource_alloc_functions_t:colocated_resources()
 GList *
 pcmk__group_colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
@@ -777,7 +736,7 @@ pcmk__group_add_utilization(const pe_resource_t *rsc,
             }
         }
 
-    } else {
+    } else if (rsc->children != NULL) {
         // Just add first member's utilization
         member = (pe_resource_t *) rsc->children->data;
         if ((member != NULL)

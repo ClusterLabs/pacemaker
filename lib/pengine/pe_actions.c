@@ -1244,7 +1244,7 @@ pe_get_configured_timeout(pe_resource_t *rsc, const char *action, pe_working_set
         timeout_spec = g_hash_table_lookup(action_meta, XML_ATTR_TIMEOUT);
     }
 
-    // @TODO check meta-attributes (including versioned meta-attributes)
+    // @TODO check meta-attributes
     // @TODO maybe use min-interval monitor timeout as default for monitors
 
     timeout_ms = crm_get_msec(timeout_spec);

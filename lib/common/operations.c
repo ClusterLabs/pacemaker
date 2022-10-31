@@ -494,29 +494,28 @@ crm_create_op_xml(xmlNode *parent, const char *prefix, const char *task,
  * \param[in] rsc_class  Resource agent class (or NULL to skip class check)
  * \param[in] op         Operation action (or NULL to skip op check)
  *
- * \return TRUE if operation needs meta-data, FALSE otherwise
+ * \return true if operation needs meta-data, false otherwise
  * \note At least one of rsc_class and op must be specified.
  */
 bool
 crm_op_needs_metadata(const char *rsc_class, const char *op)
 {
-    /* Agent meta-data is used to determine whether an agent reload is possible,
-     * and to evaluate versioned parameters -- so if this op is not relevant to
-     * those features, we don't need the meta-data.
+    /* Agent metadata is used to determine whether an agent reload is possible,
+     * so if this op is not relevant to that feature, we don't need metadata.
      */
 
     CRM_CHECK((rsc_class != NULL) || (op != NULL), return false);
 
     if ((rsc_class != NULL)
         && !pcmk_is_set(pcmk_get_ra_caps(rsc_class), pcmk_ra_cap_params)) {
-        /* Meta-data is only needed for resource classes that use parameters */
+        // Metadata is needed only for resource classes that use parameters
         return false;
     }
     if (op == NULL) {
         return true;
     }
 
-    /* Meta-data is only needed for these actions */
+    // Metadata is needed only for these actions
     return pcmk__str_any_of(op, CRMD_ACTION_START, CRMD_ACTION_STATUS,
                             CRMD_ACTION_PROMOTE, CRMD_ACTION_DEMOTE,
                             CRMD_ACTION_RELOAD, CRMD_ACTION_RELOAD_AGENT,

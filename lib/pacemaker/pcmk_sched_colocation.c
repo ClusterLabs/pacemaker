@@ -132,6 +132,34 @@ cmp_primary_priority(gconstpointer a, gconstpointer b)
 
 /*!
  * \internal
+ * \brief Add a "this with" colocation constraint to a resource
+ *
+ * \param[in,out] rsc         Resource to add colocation to
+ * \param[in]     colocation  Colocation constraint to add to \p rsc
+ */
+void
+pcmk__add_this_with(pe_resource_t *rsc, pcmk__colocation_t *colocation)
+{
+    rsc->rsc_cons = g_list_insert_sorted(rsc->rsc_cons, colocation,
+                                         cmp_primary_priority);
+}
+
+/*!
+ * \internal
+ * \brief Add a "with this" colocation constraint to a resource
+ *
+ * \param[in,out] rsc         Resource to add colocation to
+ * \param[in]     colocation  Colocation constraint to add to \p rsc
+ */
+void
+pcmk__add_with_this(pe_resource_t *rsc, pcmk__colocation_t *colocation)
+{
+    rsc->rsc_cons_lhs = g_list_insert_sorted(rsc->rsc_cons_lhs, colocation,
+                                             cmp_dependent_priority);
+}
+
+/*!
+ * \internal
  * \brief Add orderings necessary for an anti-colocation constraint
  */
 static void
@@ -242,11 +270,8 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
     pe_rsc_trace(dependent, "%s ==> %s (%s %d)",
                  dependent->id, primary->id, node_attr, score);
 
-    dependent->rsc_cons = g_list_insert_sorted(dependent->rsc_cons, new_con,
-                                               cmp_primary_priority);
-
-    primary->rsc_cons_lhs = g_list_insert_sorted(primary->rsc_cons_lhs, new_con,
-                                                 cmp_dependent_priority);
+    pcmk__add_this_with(dependent, new_con);
+    pcmk__add_with_this(primary, new_con);
 
     data_set->colocation_constraints = g_list_append(data_set->colocation_constraints,
                                                      new_con);
@@ -1220,10 +1245,97 @@ add_node_scores_matching_attr(GHashTable *nodes, const pe_resource_t *rsc,
     }
 }
 
-static inline bool
-is_nonempty_group(pe_resource_t *rsc)
+/*!
+ * \internal
+ * \brief Initialize colocated node table for a group resource
+ *
+ * \param[in] rsc     Group resource being colocated with another resource
+ * \param[in] log_id  Resource ID to use in log messages
+ * \param[in] nodes   Nodes to update
+ * \param[in] attr    Colocation attribute (NULL to use default)
+ * \param[in] factor  Incorporate scores multiplied by this factor
+ * \param[in] flags   Bitmask of enum pcmk__coloc_select values
+ *
+ * \return Table of node scores initialized for colocation, or NULL if resource
+ *         should be ignored for colocation purposes
+ * \note The caller is responsible for freeing a non-NULL return value using
+ *       g_hash_table_destroy().
+ */
+static GHashTable *
+init_group_colocated_nodes(const pe_resource_t *rsc, const char *log_id,
+                           GHashTable **nodes, const char *attr, float factor,
+                           uint32_t flags)
 {
-    return rsc && (rsc->variant == pe_group) && (rsc->children != NULL);
+    GHashTable *work = NULL;
+    pe_resource_t *member = NULL;
+
+    // Ignore empty groups (only possible with schema validation disabled)
+    if (rsc->children == NULL) {
+        return NULL;
+    }
+
+    if (*nodes == NULL) {
+        // Only cmp_resources() passes a NULL nodes table
+        member = pe__last_group_member(rsc);
+    } else {
+        /* The first member of the group will recursively incorporate any
+         * constraints involving other members (including the group internal
+         * colocation).
+         *
+         * @TODO The indirect colocations from the dependent group's other
+         *       members will be incorporated at full strength rather than by
+         *       factor, so the group's combined stickiness will be treated as
+         *       (factor + (#members - 1)) * stickiness. It is questionable what
+         *       the right approach should be.
+         */
+        member = rsc->children->data;
+    }
+
+    pe_rsc_trace(rsc, "%s: Merging scores from group %s using member %s "
+                 "(at %.6f)", log_id, rsc->id, member->id, factor);
+    work = pcmk__copy_node_table(*nodes);
+    pcmk__add_colocated_node_scores(member, log_id, &work, attr, factor, flags);
+    return work;
+}
+
+/*!
+ * \internal
+ * \brief Initialize colocated node table for a non-group resource
+ *
+ * \param[in] rsc     Non-group resource being colocated with another resource
+ * \param[in] log_id  Resource ID to use in log messages
+ * \param[in] nodes   Nodes to update
+ * \param[in] attr    Colocation attribute (NULL to use default)
+ * \param[in] factor  Incorporate scores multiplied by this factor
+ * \param[in] flags   Bitmask of enum pcmk__coloc_select values
+ *
+ * \return Table of node scores initialized for colocation, or NULL if resource
+ *         should be ignored for colocation purposes
+ * \note The caller is responsible for freeing a non-NULL return value using
+ *       g_hash_table_destroy().
+ */
+static GHashTable *
+init_nongroup_colocated_nodes(const pe_resource_t *rsc, const char *log_id,
+                              GHashTable **nodes, const char *attr,
+                              float factor, uint32_t flags)
+{
+    GHashTable *work = NULL;
+
+    if (*nodes == NULL) {
+        /* Only cmp_resources() passes a NULL nodes table, which indicates we
+         * should initialize it with the resource's allowed node scores.
+         */
+        work = pcmk__copy_node_table(rsc->allowed_nodes);
+
+    } else {
+        pe_rsc_trace(rsc, "%s: Merging scores from %s (at %.6f)",
+                     log_id, rsc->id, factor);
+        work = pcmk__copy_node_table(*nodes);
+        add_node_scores_matching_attr(work, rsc, attr, factor,
+                                      pcmk_is_set(flags,
+                                                  pcmk__coloc_select_nonnegative));
+    }
+    return work;
 }
 
 /*!
@@ -1264,50 +1376,16 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
     }
     pe__set_resource_flags(rsc, pe_rsc_merging);
 
-    if (*nodes == NULL) {
-        /* Only cmp_resources() passes a NULL nodes table, which indicates we
-         * should initialize it with the resource's allowed node scores.
-         */
-        if (is_nonempty_group(rsc)) {
-            GList *last = g_list_last(rsc->children);
-            pe_resource_t *last_rsc = last->data;
-
-            pe_rsc_trace(rsc, "%s: Merging scores from group %s "
-                         "using last member %s (at %.6f)",
-                         log_id, rsc->id, last_rsc->id, factor);
-            last_rsc->cmds->add_colocated_node_scores(last_rsc, log_id,
-                                                      &work, attr, factor,
-                                                      flags);
-        } else {
-            work = pcmk__copy_node_table(rsc->allowed_nodes);
-        }
-
-    } else if (is_nonempty_group(rsc)) {
-        pe_resource_t *member = rsc->children->data;
-
-        /* The first member of the group will recursively incorporate any
-         * constraints involving other members (including the group internal
-         * colocation).
-         *
-         * @TODO The indirect colocations from the dependent group's other
-         *       members will be incorporated at full strength rather than by
-         *       factor, so the group's combined stickiness will be treated as
-         *       (factor + (#members - 1)) * stickiness. It is questionable what
-         *       the right approach should be.
-         */
-        pe_rsc_trace(rsc, "%s: Merging scores from first member of group %s "
-                     "(at %.6f)", log_id, rsc->id, factor);
-        work = pcmk__copy_node_table(*nodes);
-        member->cmds->add_colocated_node_scores(member, log_id, &work, attr,
-                                                factor, flags);
-
+    if (rsc->variant == pe_group) {
+        work = init_group_colocated_nodes(rsc, log_id, nodes, attr, factor,
+                                          flags);
     } else {
-        pe_rsc_trace(rsc, "%s: Merging scores from %s (at %.6f)",
-                     log_id, rsc->id, factor);
-        work = pcmk__copy_node_table(*nodes);
-        add_node_scores_matching_attr(work, rsc, attr, factor,
-                                      pcmk_is_set(flags,
-                                                  pcmk__coloc_select_nonnegative));
+        work = init_nongroup_colocated_nodes(rsc, log_id, nodes, attr, factor,
+                                             flags);
+    }
+    if (work == NULL) {
+        pe__clear_resource_flags(rsc, pe_rsc_merging);
+        return;
     }
 
     if (pcmk__any_node_available(work)) {
@@ -1320,8 +1398,8 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
                          "Checking additional %d optional '%s with' constraints",
                          g_list_length(gIter), rsc->id);
 
-        } else if (is_nonempty_group(rsc)) {
-            pe_resource_t *last_rsc = g_list_last(rsc->children)->data;
+        } else if (rsc->variant == pe_group) {
+            pe_resource_t *last_rsc = pe__last_group_member(rsc);
 
             gIter = last_rsc->rsc_cons_lhs;
             pe_rsc_trace(rsc, "Checking additional %d optional 'with group %s' "
