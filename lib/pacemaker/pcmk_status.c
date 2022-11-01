@@ -21,36 +21,6 @@
 #include <pacemaker.h>
 #include <pacemaker-internal.h>
 
-static int
-cib_connect(pcmk__output_t *out, cib_t *cib, xmlNode **current_cib)
-{
-    int rc = pcmk_rc_ok;
-
-    CRM_CHECK(cib != NULL, return EINVAL);
-
-    if (cib->state == cib_connected_query ||
-        cib->state == cib_connected_command) {
-        return rc;
-    }
-
-    crm_trace("Connecting to the CIB");
-
-    rc = cib->cmds->signon(cib, crm_system_name, cib_query);
-    rc = pcmk_legacy2rc(rc);
-
-    if (rc != pcmk_rc_ok) {
-        out->err(out, "Could not connect to the CIB: %s",
-                 pcmk_rc_str(rc));
-        return rc;
-    }
-
-    rc = cib->cmds->query(cib, NULL, current_cib,
-                          cib_scope_local | cib_sync_call);
-    rc = pcmk_legacy2rc(rc);
-
-    return rc;
-}
-
 static stonith_t *
 fencing_connect(void)
 {
@@ -276,7 +246,7 @@ pcmk__status(pcmk__output_t *out, cib_t *cib,
         stonith = fencing_connect();
     }
 
-    rc = cib_connect(out, cib, &current_cib);
+    rc = cib__signon_query(out, &cib, &current_cib);
     if (rc != pcmk_rc_ok) {
         goto done;
     }
