@@ -62,6 +62,12 @@ struct confirmation_action {
     GList *respondents;
 
     /*!
+     * \brief A timer that will be used to remove the client should it time out
+     *        before receiving all confirmations
+     */
+    mainloop_timer_t *timer;
+
+    /*!
      * \brief A function to run when all confirmations have been received
      */
     attrd_confirmation_action_fn fn;
@@ -340,9 +346,49 @@ free_action(gpointer data)
 {
     struct confirmation_action *action = (struct confirmation_action *) data;
     g_list_free_full(action->respondents, free);
+    mainloop_timer_del(action->timer);
     free_xml(action->xml);
     free(action->client_id);
     free(action);
+}
+
+/* Remove an IPC request from the expected_confirmations table if the peer attrds
+ * don't respond before the timeout is hit.  We set the timeout to 15s.  The exact
+ * number isn't critical - we just want to make sure that the table eventually gets
+ * cleared of things that didn't complete.
+ */
+static gboolean
+confirmation_timeout_cb(gpointer data)
+{
+    struct confirmation_action *action = (struct confirmation_action *) data;
+
+    GHashTableIter iter;
+    gpointer value;
+
+    if (expected_confirmations == NULL) {
+        return G_SOURCE_REMOVE;
+    }
+
+    g_hash_table_iter_init(&iter, expected_confirmations);
+
+    while (g_hash_table_iter_next(&iter, NULL, &value)) {
+        if (value == action) {
+            pcmk__client_t *client = pcmk__find_client_by_id(action->client_id);
+            if (client == NULL) {
+                return G_SOURCE_REMOVE;
+            }
+
+            crm_trace("Timed out waiting for confirmations for client %s", client->id);
+            pcmk__ipc_send_ack(client, action->ipc_id, action->flags | crm_ipc_client_response,
+                               "ack", ATTRD_PROTOCOL_VERSION, CRM_EX_TIMEOUT);
+
+            g_hash_table_iter_remove(&iter);
+            crm_trace("%d requests now in expected confirmations table", g_hash_table_size(expected_confirmations));
+            break;
+        }
+    }
+
+    return G_SOURCE_REMOVE;
 }
 
 /*!
@@ -464,6 +510,9 @@ attrd_expect_confirmations(pcmk__request_t *request, attrd_confirmation_action_f
 
     action->ipc_id = request->ipc_id;
     action->flags = request->flags;
+
+    action->timer = mainloop_timer_add(NULL, 15000, FALSE, confirmation_timeout_cb, action);
+    mainloop_timer_start(action->timer);
 
     pcmk__intkey_table_insert(expected_confirmations, callid, action);
     crm_trace("Callid %d now waiting on %d confirmations", callid, g_list_length(respondents));
