@@ -648,7 +648,7 @@ health_xml(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *", "int", "const char *",
-                  "const char *")
+                  "long long")
 static int
 pacemakerd_health(pcmk__output_t *out, va_list args)
 {
@@ -656,18 +656,40 @@ pacemakerd_health(pcmk__output_t *out, va_list args)
     enum pcmk_pacemakerd_state state =
         (enum pcmk_pacemakerd_state) va_arg(args, int);
     const char *state_s = va_arg(args, const char *);
-    const char *last_updated = va_arg(args, const char *);
+    time_t last_updated = (time_t) va_arg(args, long long);
+
+    char *last_updated_s = NULL;
+    int rc = pcmk_rc_ok;
+
+    if (sys_from == NULL) {
+        if (state == pcmk_pacemakerd_state_remote) {
+            sys_from = "pacemaker-remoted";
+        } else {
+            sys_from = CRM_SYSTEM_MCP;
+        }
+    }
 
     if (state_s == NULL) {
         state_s = pcmk__pcmkd_state_enum2friendly(state);
     }
-    return out->info(out, "Status of %s: '%s' (last updated %s)",
-                     pcmk__s(sys_from, "unknown subsystem"), state_s,
-                     pcmk__s(last_updated, "at unknown time"));
+
+    if (last_updated != 0) {
+        last_updated_s = pcmk__epoch2str(&last_updated,
+                                         crm_time_log_date
+                                         |crm_time_log_timeofday
+                                         |crm_time_log_with_timezone);
+    }
+
+    rc = out->info(out, "Status of %s: '%s' (last updated %s)",
+                   sys_from, state_s,
+                   pcmk__s(last_updated_s, "at unknown time"));
+
+    free(last_updated_s);
+    return rc;
 }
 
 PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *", "int", "const char *",
-                  "const char *")
+                  "long long")
 static int
 pacemakerd_health_html(pcmk__output_t *out, va_list args)
 {
@@ -675,24 +697,42 @@ pacemakerd_health_html(pcmk__output_t *out, va_list args)
     enum pcmk_pacemakerd_state state =
         (enum pcmk_pacemakerd_state) va_arg(args, int);
     const char *state_s = va_arg(args, const char *);
-    const char *last_updated = va_arg(args, const char *);
+    time_t last_updated = (time_t) va_arg(args, long long);
+
+    char *last_updated_s = NULL;
     char *msg = NULL;
+
+    if (sys_from == NULL) {
+        if (state == pcmk_pacemakerd_state_remote) {
+            sys_from = "pacemaker-remoted";
+        } else {
+            sys_from = CRM_SYSTEM_MCP;
+        }
+    }
 
     if (state_s == NULL) {
         state_s = pcmk__pcmkd_state_enum2friendly(state);
     }
 
+    if (last_updated != 0) {
+        last_updated_s = pcmk__epoch2str(&last_updated,
+                                         crm_time_log_date
+                                         |crm_time_log_timeofday
+                                         |crm_time_log_with_timezone);
+    }
+
     msg = crm_strdup_printf("Status of %s: '%s' (last updated %s)",
-                            pcmk__s(sys_from, "unknown subsystem"), state_s,
-                            pcmk__s(last_updated, "at unknown time"));
+                            sys_from, state_s,
+                            pcmk__s(last_updated_s, "at unknown time"));
     pcmk__output_create_html_node(out, "li", NULL, NULL, msg);
 
     free(msg);
+    free(last_updated_s);
     return pcmk_rc_ok;
 }
 
 PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *", "int", "const char *",
-                  "const char *")
+                  "long long")
 static int
 pacemakerd_health_text(pcmk__output_t *out, va_list args)
 {
@@ -703,7 +743,7 @@ pacemakerd_health_text(pcmk__output_t *out, va_list args)
         enum pcmk_pacemakerd_state state =
             (enum pcmk_pacemakerd_state) va_arg(args, int);
         const char *state_s = va_arg(args, const char *);
-        const char *last_updated G_GNUC_UNUSED = va_arg(args, const char *);
+        time_t last_updated G_GNUC_UNUSED = (time_t) va_arg(args, long long);
 
         if (state_s == NULL) {
             state_s = pcmk_pacemakerd_api_daemon_state_enum2text(state);
@@ -714,7 +754,7 @@ pacemakerd_health_text(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *", "int", "const char *",
-                  "const char *")
+                  "long long")
 static int
 pacemakerd_health_xml(pcmk__output_t *out, va_list args)
 {
@@ -722,17 +762,35 @@ pacemakerd_health_xml(pcmk__output_t *out, va_list args)
     enum pcmk_pacemakerd_state state =
         (enum pcmk_pacemakerd_state) va_arg(args, int);
     const char *state_s = va_arg(args, const char *);
-    const char *last_updated = va_arg(args, const char *);
+    time_t last_updated = (time_t) va_arg(args, long long);
+
+    char *last_updated_s = NULL;
+
+    if (sys_from == NULL) {
+        if (state == pcmk_pacemakerd_state_remote) {
+            sys_from = "pacemaker-remoted";
+        } else {
+            sys_from = CRM_SYSTEM_MCP;
+        }
+    }
 
     if (state_s == NULL) {
-        state_s = pcmk_pacemakerd_api_daemon_state_enum2text(state);
+        state_s = pcmk__pcmkd_state_enum2friendly(state);
+    }
+
+    if (last_updated != 0) {
+        last_updated_s = pcmk__epoch2str(&last_updated,
+                                         crm_time_log_date
+                                         |crm_time_log_timeofday
+                                         |crm_time_log_with_timezone);
     }
 
     pcmk__output_create_xml_node(out, "pacemakerd",
                                  "sys_from", sys_from,
                                  "state", state_s,
-                                 "last_updated", last_updated,
+                                 "last_updated", last_updated_s,
                                  NULL);
+    free(last_updated_s);
     return pcmk_rc_ok;
 }
 

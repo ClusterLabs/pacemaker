@@ -218,23 +218,13 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
     }
 
     if (reply->data.ping.status == pcmk_rc_ok) {
-        crm_time_t *when = pcmk__copy_timet(reply->data.ping.last_good);
-        char *when_s = crm_time_as_string(when,
-                                          crm_time_log_date
-                                          |crm_time_log_timeofday
-                                          |crm_time_log_with_timezone);
-
         out->message(out, "pacemakerd-health",
                      reply->data.ping.sys_from, reply->data.ping.state, NULL,
-                     when_s);
-
-        crm_time_free(when);
-        free(when_s);
-
+                     reply->data.ping.last_good);
     } else {
         out->message(out, "pacemakerd-health",
                      reply->data.ping.sys_from, reply->data.ping.state,
-                     "query failed", NULL);
+                     "query failed", time(NULL));
     }
 }
 
@@ -542,14 +532,8 @@ pcmk__pacemakerd_status(pcmk__output_t *out, const char *ipc_name,
     } else if ((data.pcmkd_state == pcmk_pacemakerd_state_remote)
                && show_output) {
         // No API connection so the callback wasn't run
-        char *when_s = pcmk__epoch2str(NULL,
-                                       crm_time_log_date
-                                       |crm_time_log_timeofday
-                                       |crm_time_log_with_timezone);
-
         out->message(out, "pacemakerd-health",
-                     "pacemaker-remoted", data.pcmkd_state, NULL, when_s);
-        free(when_s);
+                     NULL, data.pcmkd_state, NULL, time(NULL));
     }
 
     if (state != NULL) {
