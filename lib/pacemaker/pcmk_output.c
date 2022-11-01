@@ -547,9 +547,10 @@ locations_list_xml(pcmk__output_t *out, va_list args) {
     return do_locations_list_xml(out, rsc, true);
 }
 
-PCMK__OUTPUT_ARGS("stacks-constraints", "pe_resource_t *", "pe_working_set_t *", "bool")
+PCMK__OUTPUT_ARGS("locations-and-colocations", "pe_resource_t *", "pe_working_set_t *", "bool")
 static int
-stacks_and_constraints(pcmk__output_t *out, va_list args) {
+locations_and_colocations(pcmk__output_t *out, va_list args)
+{
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
     bool recursive = va_arg(args, int);
@@ -569,9 +570,10 @@ stacks_and_constraints(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("stacks-constraints", "pe_resource_t *", "pe_working_set_t *", "bool")
+PCMK__OUTPUT_ARGS("locations-and-colocations", "pe_resource_t *", "pe_working_set_t *", "bool")
 static int
-stacks_and_constraints_xml(pcmk__output_t *out, va_list args) {
+locations_and_colocations_xml(pcmk__output_t *out, va_list args)
+{
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
     bool recursive = va_arg(args, int);
@@ -2175,8 +2177,8 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "rscs-colocated-with-list", "xml", rscs_colocated_with_list_xml },
     { "rule-check", "default", rule_check_default },
     { "rule-check", "xml", rule_check_xml },
-    { "stacks-constraints", "default", stacks_and_constraints },
-    { "stacks-constraints", "xml", stacks_and_constraints_xml },
+    { "locations-and-colocations", "default", locations_and_colocations },
+    { "locations-and-colocations", "xml", locations_and_colocations_xml },
 
     { NULL, NULL, NULL }
 };

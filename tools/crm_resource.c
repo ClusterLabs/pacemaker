@@ -1895,11 +1895,13 @@ main(int argc, char **argv)
             break;
 
         case cmd_colocations:
-            rc = out->message(out, "stacks-constraints", rsc, data_set, false);
+            rc = out->message(out, "locations-and-colocations", rsc, data_set,
+                              false);
             break;
 
         case cmd_colocations_deep:
-            rc = out->message(out, "stacks-constraints", rsc, data_set, true);
+            rc = out->message(out, "locations-and-colocations", rsc, data_set,
+                              true);
             break;
 
         case cmd_cts:
