@@ -29,6 +29,7 @@
 //! Object to store API results, a timeout, and an output object
 typedef struct {
     pcmk__output_t *out;
+    bool show_output;
     int rc;
     bool reply_received;
     unsigned int message_timeout_ms;
@@ -209,7 +210,13 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
     }
 
     // Parse desired information from reply
+    data->rc = pcmk_rc_ok;
     data->pcmkd_state = reply->data.ping.state;
+
+    if (!data->show_output) {
+        return;
+    }
+
     if (reply->data.ping.status == pcmk_rc_ok) {
         crm_time_t *when = crm_time_new_undefined();
         char *when_s = NULL;
@@ -232,7 +239,6 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
                      reply->data.ping.sys_from, reply->data.ping.state,
                      "query failed", NULL);
     }
-    data->rc = pcmk_rc_ok;
 }
 
 static pcmk_ipc_api_t *
@@ -353,6 +359,7 @@ pcmk__controller_status(pcmk__output_t *out, const char *node_name,
 {
     data_t data = {
         .out = out,
+        .show_output = true,
         .rc = pcmk_rc_ok,
         .reply_received = false,
         .message_timeout_ms = message_timeout_ms,
@@ -425,6 +432,7 @@ pcmk__designated_controller(pcmk__output_t *out,
 {
     data_t data = {
         .out = out,
+        .show_output = true,
         .rc = pcmk_rc_ok,
         .reply_received = false,
         .message_timeout_ms = message_timeout_ms,
@@ -478,7 +486,7 @@ pcmk_designated_controller(xmlNodePtr *xml, unsigned int message_timeout_ms)
 
 /*!
  * \internal
- * \brief Get and output \p pacemakerd status
+ * \brief Get and optionally output \p pacemakerd status
  *
  * \param[in,out] out                 Output object
  * \param[in]     ipc_name            IPC name for request
@@ -487,6 +495,7 @@ pcmk_designated_controller(xmlNodePtr *xml, unsigned int message_timeout_ms)
  *                                    \p pcmk_ipc_dispatch_sync will be used.
  *                                    Otherwise, \p pcmk_ipc_dispatch_poll will
  *                                    be used.
+ * \param[in]     show_output         Whether to show the \p pacemakerd state
  * \param[out]    state               Where to store the \p pacemakerd state, if
  *                                    not \p NULL
  *
@@ -500,11 +509,12 @@ pcmk_designated_controller(xmlNodePtr *xml, unsigned int message_timeout_ms)
  */
 int
 pcmk__pacemakerd_status(pcmk__output_t *out, const char *ipc_name,
-                        unsigned int message_timeout_ms,
+                        unsigned int message_timeout_ms, bool show_output,
                         enum pcmk_pacemakerd_state *state)
 {
     data_t data = {
         .out = out,
+        .show_output = show_output,
         .rc = pcmk_rc_ok,
         .reply_received = false,
         .message_timeout_ms = message_timeout_ms,
@@ -532,7 +542,8 @@ pcmk__pacemakerd_status(pcmk__output_t *out, const char *ipc_name,
         }
         pcmk_free_ipc_api(pacemakerd_api);
 
-    } else if (data.pcmkd_state == pcmk_pacemakerd_state_remote) {
+    } else if ((data.pcmkd_state == pcmk_pacemakerd_state_remote)
+               && show_output) {
         // No API connection so the callback wasn't run
         crm_time_t *when = crm_time_new(NULL);
         char *when_s = crm_time_as_string(when,
@@ -567,7 +578,7 @@ pcmk_pacemakerd_status(xmlNodePtr *xml, const char *ipc_name,
 
     pcmk__register_lib_messages(out);
 
-    rc = pcmk__pacemakerd_status(out, ipc_name, message_timeout_ms, NULL);
+    rc = pcmk__pacemakerd_status(out, ipc_name, message_timeout_ms, true, NULL);
     pcmk__xml_output_finish(out, xml);
     return rc;
 }

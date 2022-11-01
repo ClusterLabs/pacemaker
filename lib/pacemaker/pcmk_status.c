@@ -224,7 +224,8 @@ pcmk__status(pcmk__output_t *out, cib_t *cib,
         && (cib->state != cib_connected_query)
         && (cib->state != cib_connected_command)) {
 
-        rc = pcmk__pacemakerd_status(out, crm_system_name, timeout_ms, &state);
+        rc = pcmk__pacemakerd_status(out, crm_system_name, timeout_ms, true,
+                                     &state);
         if (rc != pcmk_rc_ok) {
             return rc;
         }
