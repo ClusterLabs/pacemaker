@@ -585,7 +585,7 @@ pcmk__get_fencing_history(stonith_t *st, stonith_history_t **stonith_history,
 {
     int rc = pcmk_rc_ok;
 
-    if (st == NULL) {
+    if ((st == NULL) || (st->state == stonith_disconnected)) {
         rc = ENOTCONN;
     } else if (fence_history != pcmk__fence_history_none) {
         rc = st->cmds->history(st, st_opt_sync_call, NULL, stonith_history, 120);
