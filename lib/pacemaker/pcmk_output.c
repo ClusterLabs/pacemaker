@@ -547,18 +547,22 @@ locations_list_xml(pcmk__output_t *out, va_list args) {
     return do_locations_list_xml(out, rsc, true);
 }
 
-PCMK__OUTPUT_ARGS("locations-and-colocations", "pe_resource_t *", "pe_working_set_t *", "bool")
+PCMK__OUTPUT_ARGS("locations-and-colocations", "pe_resource_t *",
+                  "pe_working_set_t *", "bool", "bool")
 static int
 locations_and_colocations(pcmk__output_t *out, va_list args)
 {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
     bool recursive = va_arg(args, int);
+    bool force = va_arg(args, int);
 
     pcmk__unpack_constraints(data_set);
 
     // Constraints apply to group/clone, not member/instance
-    rsc = uber_parent(rsc);
+    if (!force) {
+        rsc = uber_parent(rsc);
+    }
 
     out->message(out, "locations-list", rsc);
 
@@ -570,18 +574,22 @@ locations_and_colocations(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("locations-and-colocations", "pe_resource_t *", "pe_working_set_t *", "bool")
+PCMK__OUTPUT_ARGS("locations-and-colocations", "pe_resource_t *",
+                  "pe_working_set_t *", "bool", "bool")
 static int
 locations_and_colocations_xml(pcmk__output_t *out, va_list args)
 {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
     bool recursive = va_arg(args, int);
+    bool force = va_arg(args, int);
 
     pcmk__unpack_constraints(data_set);
 
     // Constraints apply to group/clone, not member/instance
-    rsc = uber_parent(rsc);
+    if (!force) {
+        rsc = uber_parent(rsc);
+    }
 
     pcmk__output_xml_create_parent(out, "constraints", NULL);
     do_locations_list_xml(out, rsc, false);

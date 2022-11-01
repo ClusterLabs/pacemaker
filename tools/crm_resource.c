@@ -398,7 +398,10 @@ static GOptionEntry query_entries[] = {
     { "constraints", 'a', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, flag_cb,
       "Display the location and colocation constraints that apply to a\n"
       INDENT "resource, and if --recursive is specified, to the resources\n"
-      INDENT "directly or indirectly involved in those colocations",
+      INDENT "directly or indirectly involved in those colocations.\n"
+      INDENT "If the named resource is part of a group, or a clone or\n"
+      INDENT "bundle instance, constraints for the collective resource\n"
+      INDENT "will be shown unless --force is given.",
       NULL },
     { "stack", 'A', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, flag_cb,
       "Equivalent to --constraints --recursive",
@@ -1898,7 +1901,7 @@ main(int argc, char **argv)
 
         case cmd_colocations:
             rc = out->message(out, "locations-and-colocations", rsc, data_set,
-                              options.recursive);
+                              options.recursive, (bool) options.force);
             break;
 
         case cmd_cts:
