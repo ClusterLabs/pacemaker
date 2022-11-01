@@ -40,7 +40,6 @@ enum rsc_command {
     cmd_cleanup,
     cmd_clear,
     cmd_colocations,
-    cmd_colocations_deep,
     cmd_cts,
     cmd_delete,
     cmd_delete_param,
@@ -396,12 +395,13 @@ static GOptionEntry query_entries[] = {
     { "locate", 'W', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, flag_cb,
       "Show node(s) currently running resource",
       NULL },
-    { "stack", 'A', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, flag_cb,
-      "Display the (co)location constraints that apply to a resource\n"
-      INDENT "and the resources is it colocated with",
-      NULL },
     { "constraints", 'a', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, flag_cb,
-      "Display the (co)location constraints that apply to a resource",
+      "Display the location and colocation constraints that apply to a\n"
+      INDENT "resource, and if --recursive is specified, to the resources\n"
+      INDENT "directly or indirectly involved in those colocations",
+      NULL },
+    { "stack", 'A', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, flag_cb,
+      "Equivalent to --constraints --recursive",
       NULL },
     { "why", 'Y', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, why_cb,
       "Show why resources are not running, optionally filtered by\n"
@@ -572,7 +572,7 @@ static GOptionEntry addl_entries[] = {
       "Node name",
       "NAME" },
     { "recursive", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &options.recursive,
-      "Follow colocation chains when using --set-parameter",
+      "Follow colocation chains when using --set-parameter or --constraints",
       NULL },
     { "resource-type", 't', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.rsc_type,
       "Resource XML element (primitive, group, etc.) (with -D)",
@@ -812,12 +812,15 @@ flag_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **e
     } else if (pcmk__str_any_of(option_name, "-W", "--locate", NULL)) {
         SET_COMMAND(cmd_locate);
         options.find_flags = pe_find_renamed|pe_find_anon;
-    } else if (pcmk__str_any_of(option_name, "-A", "--stack", NULL)) {
-        SET_COMMAND(cmd_colocations_deep);
-        options.find_flags = pe_find_renamed|pe_find_anon;
-    } else {
+
+    } else if (pcmk__str_any_of(option_name, "-a", "--constraints", NULL)) {
         SET_COMMAND(cmd_colocations);
         options.find_flags = pe_find_renamed|pe_find_anon;
+
+    } else if (pcmk__str_any_of(option_name, "-A", "--stack", NULL)) {
+        SET_COMMAND(cmd_colocations);
+        options.find_flags = pe_find_renamed|pe_find_anon;
+        options.recursive = TRUE;
     }
 
     return TRUE;
@@ -1664,7 +1667,6 @@ main(int argc, char **argv)
             case cmd_list_active_ops:
             case cmd_list_all_ops:
             case cmd_colocations:
-            case cmd_colocations_deep:
                 pcmk__force_args(context, &error, "%s --xml-simple-list --xml-substitute", g_get_prgname());
                 break;
 
@@ -1673,7 +1675,7 @@ main(int argc, char **argv)
                 break;
         }
     } else if (pcmk__str_eq(args->output_ty, "text", pcmk__str_null_matches)) {
-        if (options.rsc_cmd == cmd_colocations || options.rsc_cmd == cmd_colocations_deep ||
+        if ((options.rsc_cmd == cmd_colocations) ||
             options.rsc_cmd == cmd_list_resources) {
             pcmk__force_args(context, &error, "%s --text-fancy", g_get_prgname());
         }
@@ -1896,12 +1898,7 @@ main(int argc, char **argv)
 
         case cmd_colocations:
             rc = out->message(out, "locations-and-colocations", rsc, data_set,
-                              false);
-            break;
-
-        case cmd_colocations_deep:
-            rc = out->message(out, "locations-and-colocations", rsc, data_set,
-                              true);
+                              options.recursive);
             break;
 
         case cmd_cts:
