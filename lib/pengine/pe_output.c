@@ -1381,13 +1381,12 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
                                  &epoch) == pcmk_ok) && (epoch > 0)) {
         guint interval_ms = 0;
         char *s = NULL;
-        crm_time_t *crm_when = crm_time_new_undefined();
+        crm_time_t *crm_when = pcmk__copy_timet(epoch);
         char *rc_change = NULL;
 
         crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
         s = pcmk__itoa(interval_ms);
 
-        crm_time_set_timet(crm_when, &epoch);
         rc_change = crm_time_as_string(crm_when, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
 
         pcmk__xe_set_props(node, XML_RSC_OP_LAST_CHANGE, rc_change,

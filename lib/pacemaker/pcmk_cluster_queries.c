@@ -218,14 +218,11 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
     }
 
     if (reply->data.ping.status == pcmk_rc_ok) {
-        crm_time_t *when = crm_time_new_undefined();
-        char *when_s = NULL;
-
-        crm_time_set_timet(when, &reply->data.ping.last_good);
-        when_s = crm_time_as_string(when,
-                                    crm_time_log_date
-                                    |crm_time_log_timeofday
-                                    |crm_time_log_with_timezone);
+        crm_time_t *when = pcmk__copy_timet(reply->data.ping.last_good);
+        char *when_s = crm_time_as_string(when,
+                                          crm_time_log_date
+                                          |crm_time_log_timeofday
+                                          |crm_time_log_with_timezone);
 
         out->message(out, "pacemakerd-health",
                      reply->data.ping.sys_from, reply->data.ping.state, NULL,

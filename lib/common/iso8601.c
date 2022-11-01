@@ -91,18 +91,11 @@ crm_get_utc_time(const crm_time_t *dt)
 crm_time_t *
 crm_time_new(const char *date_time)
 {
-    time_t tm_now;
-    crm_time_t *dt = NULL;
-
     tzset();
     if (date_time == NULL) {
-        tm_now = time(NULL);
-        dt = crm_time_new_undefined();
-        crm_time_set_timet(dt, &tm_now);
-    } else {
-        dt = parse_date(date_time);
+        return pcmk__copy_timet(time(NULL));
     }
-    return dt;
+    return parse_date(date_time);
 }
 
 /*!
@@ -1267,6 +1260,23 @@ pcmk_copy_time(const crm_time_t *source)
     crm_time_t *target = crm_time_new_undefined();
 
     crm_time_set(target, source);
+    return target;
+}
+
+/*!
+ * \internal
+ * \brief Convert a \p time_t time to a \p crm_time_t time
+ *
+ * \param[in] source  Time to convert
+ *
+ * \return A \p crm_time_t object representing \p source
+ */
+crm_time_t *
+pcmk__copy_timet(time_t source)
+{
+    crm_time_t *target = crm_time_new_undefined();
+
+    crm_time_set_timet(target, &source);
     return target;
 }
 
