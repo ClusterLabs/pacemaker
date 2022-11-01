@@ -1177,10 +1177,13 @@ filename2xml(const char *filename)
 const char *
 pcmk__xe_add_last_written(xmlNode *xe)
 {
-    const char *now_str = pcmk__epoch2str(NULL);
+    char *now_s = pcmk__epoch2str(NULL, 0);
+    const char *result = NULL;
 
-    return crm_xml_add(xe, XML_CIB_ATTR_WRITTEN,
-                       now_str ? now_str : "Could not determine current time");
+    result = crm_xml_add(xe, XML_CIB_ATTR_WRITTEN,
+                         pcmk__s(now_s, "Could not determine current time"));
+    free(now_s);
+    return result;
 }
 
 /*!

@@ -302,9 +302,11 @@ pcmk__format_nvpair(const char *name, const char *value, const char *units)
 char *
 pcmk__format_named_time(const char *name, time_t epoch_time)
 {
-    const char *now_str = pcmk__epoch2str(&epoch_time);
+    char *now_s = pcmk__epoch2str(&epoch_time, 0);
+    char *result = crm_strdup_printf("%s=\"%s\"", name, pcmk__s(now_s, ""));
 
-    return crm_strdup_printf("%s=\"%s\"", name, now_str ? now_str : "");
+    free(now_s);
+    return result;
 }
 
 // XML attribute handling

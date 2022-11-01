@@ -542,15 +542,13 @@ pcmk__pacemakerd_status(pcmk__output_t *out, const char *ipc_name,
     } else if ((data.pcmkd_state == pcmk_pacemakerd_state_remote)
                && show_output) {
         // No API connection so the callback wasn't run
-        crm_time_t *when = crm_time_new(NULL);
-        char *when_s = crm_time_as_string(when,
-                                          crm_time_log_date
-                                          |crm_time_log_timeofday
-                                          |crm_time_log_with_timezone);
+        char *when_s = pcmk__epoch2str(NULL,
+                                       crm_time_log_date
+                                       |crm_time_log_timeofday
+                                       |crm_time_log_with_timezone);
 
         out->message(out, "pacemakerd-health",
                      "pacemaker-remoted", data.pcmkd_state, NULL, when_s);
-        crm_time_free(when);
         free(when_s);
     }
 

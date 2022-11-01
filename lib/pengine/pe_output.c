@@ -292,9 +292,10 @@ resource_history_string(pe_resource_t *rsc, const char *rsc_id, bool all,
             failcount_s = strdup("");
         }
         if (last_failure > 0) {
+            buf = pcmk__epoch2str(&last_failure, 0);
             lastfail_s = crm_strdup_printf(" %s='%s'",
-                                           PCMK__LAST_FAILURE_PREFIX,
-                                           pcmk__epoch2str(&last_failure));
+                                           PCMK__LAST_FAILURE_PREFIX, buf);
+            free(buf);
         }
 
         buf = crm_strdup_printf("%s: migration-threshold=%d%s%s",
@@ -1120,11 +1121,13 @@ cluster_times_html(pcmk__output_t *out, va_list args) {
     xmlNodePtr updated_node = pcmk__output_create_xml_node(out, "li", NULL);
     xmlNodePtr changed_node = pcmk__output_create_xml_node(out, "li", NULL);
 
-    char *buf = last_changed_string(last_written, user, client, origin);
+    char *buf = pcmk__epoch2str(NULL, 0);
 
     pcmk_create_html_node(updated_node, "span", NULL, "bold", "Last updated: ");
-    pcmk_create_html_node(updated_node, "span", NULL, NULL,
-                          pcmk__epoch2str(NULL));
+    pcmk_create_html_node(updated_node, "span", NULL, NULL, buf);
+
+    free(buf);
+    buf = last_changed_string(last_written, user, client, origin);
 
     pcmk_create_html_node(changed_node, "span", NULL, "bold", "Last change: ");
     pcmk_create_html_node(changed_node, "span", NULL, NULL, buf);
@@ -1141,9 +1144,12 @@ cluster_times_xml(pcmk__output_t *out, va_list args) {
     const char *client = va_arg(args, const char *);
     const char *origin = va_arg(args, const char *);
 
+    char *buf = pcmk__epoch2str(NULL, 0);
+
     pcmk__output_create_xml_node(out, "last_update",
-                                 "time", pcmk__epoch2str(NULL),
+                                 "time", buf,
                                  NULL);
+
     pcmk__output_create_xml_node(out, "last_change",
                                  "time", last_written ? last_written : "",
                                  "user", user ? user : "",
@@ -1151,6 +1157,7 @@ cluster_times_xml(pcmk__output_t *out, va_list args) {
                                  "origin", origin ? origin : "",
                                  NULL);
 
+    free(buf);
     return pcmk_rc_ok;
 }
 
@@ -1162,9 +1169,13 @@ cluster_times_text(pcmk__output_t *out, va_list args) {
     const char *client = va_arg(args, const char *);
     const char *origin = va_arg(args, const char *);
 
-    char *buf = last_changed_string(last_written, user, client, origin);
+    char *buf = pcmk__epoch2str(NULL, 0);
 
-    out->list_item(out, "Last updated", "%s", pcmk__epoch2str(NULL));
+    out->list_item(out, "Last updated", "%s", buf);
+
+    free(buf);
+    buf = last_changed_string(last_written, user, client, origin);
+
     out->list_item(out, "Last change", " %s", buf);
 
     free(buf);
@@ -1184,7 +1195,6 @@ failed_action_friendly(pcmk__output_t *out, xmlNodePtr xml_op,
     char *rsc_id = NULL;
     char *task = NULL;
     guint interval_ms = 0;
-    const char *last_change_str = NULL;
     time_t last_change_epoch = 0;
     GString *str = NULL;
 
@@ -1226,10 +1236,10 @@ failed_action_friendly(pcmk__output_t *out, xmlNodePtr xml_op,
 
     if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
                                 &last_change_epoch) == pcmk_ok) {
-        last_change_str = pcmk__epoch2str(&last_change_epoch);
-        if (last_change_str != NULL) {
-            pcmk__g_strcat(str, " at ", last_change_str, NULL);
-        }
+        char *s = pcmk__epoch2str(&last_change_epoch, 0);
+
+        pcmk__g_strcat(str, " at ", s, NULL);
+        free(s);
     }
     if (!pcmk__str_empty(exec_time)) {
         int exec_time_ms = 0;
@@ -1262,7 +1272,6 @@ failed_action_technical(pcmk__output_t *out, xmlNodePtr xml_op,
     const char *queue_time = crm_element_value(xml_op, XML_RSC_OP_T_QUEUE);
     const char *exit_status = services_ocf_exitcode_str(rc);
     const char *lrm_status = pcmk_exec_status_str(status);
-    const char *last_change_str = NULL;
     time_t last_change_epoch = 0;
     GString *str = NULL;
 
@@ -1288,12 +1297,12 @@ failed_action_technical(pcmk__output_t *out, xmlNodePtr xml_op,
 
     if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
                                 &last_change_epoch) == pcmk_ok) {
-        last_change_str = pcmk__epoch2str(&last_change_epoch);
-        if (last_change_str != NULL) {
-            pcmk__g_strcat(str,
-                           ", " XML_RSC_OP_LAST_CHANGE "="
-                           "'", last_change_str, "'", NULL);
-        }
+        char *last_change_str = pcmk__epoch2str(&last_change_epoch, 0);
+
+        pcmk__g_strcat(str,
+                       ", " XML_RSC_OP_LAST_CHANGE "="
+                       "'", last_change_str, "'", NULL);
+        free(last_change_str);
     }
     if (!pcmk__str_empty(queue_time)) {
         pcmk__g_strcat(str, ", queued=", queue_time, "ms", NULL);
@@ -2474,7 +2483,9 @@ op_history_xml(pcmk__output_t *out, va_list args) {
 
         if ((crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
                                      &epoch) == pcmk_ok) && (epoch > 0)) {
-            crm_xml_add(node, XML_RSC_OP_LAST_CHANGE, pcmk__epoch2str(&epoch));
+            char *s = pcmk__epoch2str(&epoch, 0);
+            crm_xml_add(node, XML_RSC_OP_LAST_CHANGE, s);
+            free(s);
         }
 
         value = crm_element_value(xml_op, XML_RSC_OP_T_EXEC);
@@ -2612,7 +2623,10 @@ resource_history_xml(pcmk__output_t *out, va_list args) {
         }
 
         if (last_failure > 0) {
-            crm_xml_add(node, PCMK__LAST_FAILURE_PREFIX, pcmk__epoch2str(&last_failure));
+            char *s = pcmk__epoch2str(&last_failure, 0);
+
+            crm_xml_add(node, PCMK__LAST_FAILURE_PREFIX, s);
+            free(s);
         }
     }
 
@@ -2894,7 +2908,10 @@ ticket_xml(pcmk__output_t *out, va_list args) {
                                         NULL);
 
     if (ticket->last_granted > -1) {
-        crm_xml_add(node, "last-granted", pcmk__epoch2str(&ticket->last_granted));
+        char *buf = pcmk__epoch2str(&ticket->last_granted, 0);
+
+        crm_xml_add(node, "last-granted", buf);
+        free(buf);
     }
 
     return pcmk_rc_ok;
