@@ -100,6 +100,104 @@ static pcmk__supported_format_t formats[] = {
     { NULL, NULL, NULL }
 };
 
+PCMK__OUTPUT_ARGS("crm-mon-disconnected", "const char *", "int")
+static int
+crm_mon_disconnected_default(pcmk__output_t *out, va_list args)
+{
+    return pcmk_rc_no_output;
+}
+
+PCMK__OUTPUT_ARGS("crm-mon-disconnected", "const char *", "int")
+static int
+crm_mon_disconnected_html(pcmk__output_t *out, va_list args)
+{
+    const char *desc = va_arg(args, const char *);
+    enum pcmk_pacemakerd_state state =
+        (enum pcmk_pacemakerd_state) va_arg(args, int);
+
+    if (out->dest != stdout) {
+        out->reset(out);
+    }
+
+    pcmk__output_create_xml_text_node(out, "span", "Not connected to CIB");
+
+    if (desc != NULL) {
+        pcmk__output_create_xml_text_node(out, "span", ": ");
+        pcmk__output_create_xml_text_node(out, "span", desc);
+    }
+
+    if (state != pcmk_pacemakerd_state_invalid) {
+        const char *state_s = pcmk__pcmkd_state_enum2friendly(state);
+
+        pcmk__output_create_xml_text_node(out, "span", " (");
+        pcmk__output_create_xml_text_node(out, "span", state_s);
+        pcmk__output_create_xml_text_node(out, "span", ")");
+    }
+
+    out->finish(out, CRM_EX_DISCONNECT, true, NULL);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("crm-mon-disconnected", "const char *", "int")
+static int
+crm_mon_disconnected_text(pcmk__output_t *out, va_list args)
+{
+    const char *desc = va_arg(args, const char *);
+    enum pcmk_pacemakerd_state state =
+        (enum pcmk_pacemakerd_state) va_arg(args, int);
+    int rc = pcmk_rc_ok;
+
+    if (out->dest != stdout) {
+        out->reset(out);
+    }
+
+    if (state != pcmk_pacemakerd_state_invalid) {
+        rc = out->info(out, "Not connected to CIB%s%s (%s)",
+                       (desc != NULL)? ": " : "", pcmk__s(desc, ""),
+                       pcmk__pcmkd_state_enum2friendly(state));
+    } else {
+        rc = out->info(out, "Not connected to CIB%s%s",
+                       (desc != NULL)? ": " : "", pcmk__s(desc, ""));
+    }
+
+    out->finish(out, CRM_EX_DISCONNECT, true, NULL);
+    return rc;
+}
+
+PCMK__OUTPUT_ARGS("crm-mon-disconnected", "const char *", "int")
+static int
+crm_mon_disconnected_xml(pcmk__output_t *out, va_list args)
+{
+    const char *desc = va_arg(args, const char *);
+    enum pcmk_pacemakerd_state state =
+        (enum pcmk_pacemakerd_state) va_arg(args, int);
+    const char *state_s = NULL;
+
+    if (out->dest != stdout) {
+        out->reset(out);
+    }
+
+    if (state != pcmk_pacemakerd_state_invalid) {
+        state_s = pcmk_pacemakerd_api_daemon_state_enum2text(state);
+    }
+
+    pcmk__output_create_xml_node(out, "crm-mon-disconnected",
+                                 XML_ATTR_DESC, desc,
+                                 "pacemakerd-state", state_s,
+                                 NULL);
+
+    out->finish(out, CRM_EX_DISCONNECT, true, NULL);
+    return pcmk_rc_ok;
+}
+
+static pcmk__message_entry_t fmt_functions[] = {
+    { "crm-mon-disconnected", "default", crm_mon_disconnected_default },
+    { "crm-mon-disconnected", "html", crm_mon_disconnected_html },
+    { "crm-mon-disconnected", "text", crm_mon_disconnected_text },
+    { "crm-mon-disconnected", "xml", crm_mon_disconnected_xml },
+    { NULL, NULL, NULL },
+};
+
 /* Define exit codes for monitoring-compatible output
  * For nagios plugins, the possibilities are
  * OK=0, WARN=1, CRIT=2, and UNKNOWN=3
@@ -660,6 +758,9 @@ reconnect_after_timeout(gpointer data)
         return G_SOURCE_REMOVE;
     }
 
+    out->message(out, "crm-mon-disconnected",
+                 "Latest connection attempt failed", pcmkd_state);
+
     reconnect_timer = g_timeout_add(options.reconnect_ms,
                                     reconnect_after_timeout, NULL);
     return G_SOURCE_REMOVE;
@@ -672,7 +773,16 @@ reconnect_after_timeout(gpointer data)
 static void
 mon_cib_connection_destroy(gpointer user_data)
 {
-    out->transient(out, "Connection to the cluster lost");
+    const char *msg = "Connection to the cluster lost";
+
+    pcmkd_state = pcmk_pacemakerd_state_invalid;
+
+    /* No crm-mon-disconnected message for console; a working implementation
+     * is not currently worth the effort
+     */
+    out->transient(out, "%s", msg);
+
+    out->message(out, "crm-mon-disconnected", msg, pcmkd_state);
 
     if (refresh_timer != NULL) {
         /* we'll trigger a refresh after reconnect */
@@ -695,7 +805,6 @@ mon_cib_connection_destroy(gpointer user_data)
         reconnect_timer = g_timeout_add(options.reconnect_ms,
                                         reconnect_after_timeout, NULL);
     }
-    return;
 }
 
 /* Signal handler installed into the mainloop for normal program shutdown */
@@ -858,7 +967,6 @@ static int
 setup_api_connections(void)
 {
     int rc = pcmk_rc_ok;
-    time_t last_updated = 0;
 
     CRM_CHECK(cib != NULL, return EINVAL);
 
@@ -874,8 +982,6 @@ setup_api_connections(void)
             return rc;
         }
 
-        last_updated = time(NULL);
-
         switch (pcmkd_state) {
             case pcmk_pacemakerd_state_running:
             case pcmk_pacemakerd_state_remote:
@@ -886,8 +992,6 @@ setup_api_connections(void)
                 break;
             default:
                 // Fencer and CIB are definitely unavailable
-                out->message(out, "pacemakerd-health",
-                             NULL, pcmkd_state, NULL, last_updated);
                 return ENOTCONN;
         }
 
@@ -895,12 +999,6 @@ setup_api_connections(void)
     }
 
     rc = setup_cib_connection();
-
-    if ((rc != pcmk_rc_ok) && (pcmkd_state != pcmk_pacemakerd_state_invalid)) {
-        // Invalid at this point means we didn't query the pcmkd state
-        out->message(out, "pacemakerd-health",
-                     NULL, pcmkd_state, NULL, last_updated);
-    }
     return rc;
 }
 
@@ -1434,6 +1532,9 @@ main(int argc, char **argv)
     pe__register_messages(out);
     stonith__register_messages(out);
 
+    // Messages internal to this file, nothing curses-specific
+    pcmk__register_messages(out, fmt_functions);
+
     if (args->version) {
         out->version(out, false);
         return clean_up(CRM_EX_OK);
@@ -1480,6 +1581,8 @@ main(int argc, char **argv)
         one_shot();
     }
 
+    out->message(out, "crm-mon-disconnected",
+                 "Waiting for initial connection", pcmkd_state);
     do {
         out->transient(out, "Connecting to cluster...");
         rc = setup_api_connections();
