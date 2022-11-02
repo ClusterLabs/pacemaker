@@ -789,9 +789,6 @@ setup_cib_connection(void)
             out->err(out,
                      "Notification setup not supported, won't be "
                      "able to reconnect after failure");
-            if (output_format == mon_output_console) {
-                sleep(2);
-            }
             rc = pcmk_rc_ok;
         }
 
