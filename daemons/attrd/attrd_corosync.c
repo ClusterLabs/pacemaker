@@ -616,7 +616,7 @@ attrd_peer_update(const crm_node_t *peer, xmlNode *xml, const char *host,
      * point, process that now.
      */
     if (handle_sync_point) {
-        crm_debug("Hit local sync point for attribute update");
+        crm_trace("Hit local sync point for attribute update");
         attrd_ack_waitlist_clients(attrd_sync_point_local, xml);
     }
 }
