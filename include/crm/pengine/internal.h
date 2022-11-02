@@ -18,6 +18,8 @@
 #  include <crm/common/options_internal.h>
 #  include <crm/common/output_internal.h>
 
+const char *pe__resource_description(const pe_resource_t *rsc, uint32_t show_opts);
+
 enum pe__clone_flags {
     // Whether instances should be started sequentially
     pe__clone_ordered               = (1 << 0),

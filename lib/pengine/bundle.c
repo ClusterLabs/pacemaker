@@ -1272,11 +1272,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
         if (!printed_header) {
             printed_header = TRUE;
 
-            // User-supplied description
-            if (pcmk_is_set(show_opts, pcmk_show_rsc_only)
-                || pcmk__list_of_multiple(rsc->running_on)) {
-                desc = crm_element_value(rsc->xml, XML_ATTR_DESC);
-            }
+            desc = pe__resource_description(rsc, show_opts);
 
             rc = pe__name_and_nvpairs_xml(out, true, "bundle", 8,
                      "id", rsc->id,
@@ -1383,6 +1379,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
+    const char *desc = NULL;
     pe__bundle_variant_data_t *bundle_data = NULL;
     int rc = pcmk_rc_no_output;
     gboolean print_everything = TRUE;
@@ -1390,6 +1387,8 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
     CRM_ASSERT(rsc != NULL);
 
     get_bundle_variant_data(bundle_data, rsc);
+
+    desc = pe__resource_description(rsc, show_opts);
 
     if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
         return rc;
@@ -1423,10 +1422,11 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
              */
             uint32_t new_show_opts = show_opts | pcmk_show_implicit_rscs;
 
-            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s",
+            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s%s%s%s",
                                      (bundle_data->nreplicas > 1)? " set" : "",
                                      rsc->id, bundle_data->image,
                                      pcmk_is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
+                                     desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
                                      get_unmanaged_str(rsc));
 
             if (pcmk__list_of_multiple(bundle_data->replicas)) {
@@ -1459,10 +1459,11 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
         } else if (print_everything == FALSE && !(print_ip || print_child || print_ctnr || print_remote)) {
             continue;
         } else {
-            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s",
+            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s%s%s%s",
                                      (bundle_data->nreplicas > 1)? " set" : "",
                                      rsc->id, bundle_data->image,
                                      pcmk_is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
+                                     desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
                                      get_unmanaged_str(rsc));
 
             pe__bundle_replica_output_html(out, replica, pe__current_node(replica->container),
@@ -1511,10 +1512,13 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
+    const char *desc = NULL;
     pe__bundle_variant_data_t *bundle_data = NULL;
     int rc = pcmk_rc_no_output;
     gboolean print_everything = TRUE;
 
+    desc = pe__resource_description(rsc, show_opts);
+    
     get_bundle_variant_data(bundle_data, rsc);
 
     CRM_ASSERT(rsc != NULL);
@@ -1551,10 +1555,11 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
              */
             uint32_t new_show_opts = show_opts | pcmk_show_implicit_rscs;
 
-            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s",
+            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s%s%s%s",
                                      (bundle_data->nreplicas > 1)? " set" : "",
                                      rsc->id, bundle_data->image,
                                      pcmk_is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
+                                     desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
                                      get_unmanaged_str(rsc));
 
             if (pcmk__list_of_multiple(bundle_data->replicas)) {
@@ -1587,10 +1592,11 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
         } else if (print_everything == FALSE && !(print_ip || print_child || print_ctnr || print_remote)) {
             continue;
         } else {
-            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s",
+            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s%s%s%s",
                                      (bundle_data->nreplicas > 1)? " set" : "",
                                      rsc->id, bundle_data->image,
                                      pcmk_is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
+                                     desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
                                      get_unmanaged_str(rsc));
 
             pe__bundle_replica_output_text(out, replica, pe__current_node(replica->container),

@@ -15,6 +15,18 @@
 #include <crm/msg_xml.h>
 #include <crm/pengine/internal.h>
 
+const char *
+pe__resource_description(const pe_resource_t *rsc, uint32_t show_opts)
+{
+    const char * desc = NULL;
+    // User-supplied description
+    if (pcmk_any_flags_set(show_opts, pcmk_show_rsc_only|pcmk_show_description)
+        || pcmk__list_of_multiple(rsc->running_on)) {
+        desc = crm_element_value(rsc->xml, XML_ATTR_DESC);
+    }
+    return desc;
+}
+
 /* Never display node attributes whose name starts with one of these prefixes */
 #define FILTER_STR { PCMK__FAIL_COUNT_PREFIX, PCMK__LAST_FAILURE_PREFIX,   \
                      "shutdown", "terminate", "standby", "#", NULL }

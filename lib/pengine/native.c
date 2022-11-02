@@ -567,7 +567,7 @@ pcmk__native_output_string(const pe_resource_t *rsc, const char *name,
     if ((node == NULL) && (rsc->lock_node != NULL)) {
         node = rsc->lock_node;
     }
-    if (pcmk_is_set(show_opts, pcmk_show_rsc_only)
+    if (pcmk_any_flags_set(show_opts, pcmk_show_rsc_only)
         || pcmk__list_of_multiple(rsc->running_on)) {
         node = NULL;
     }
@@ -665,7 +665,7 @@ pcmk__native_output_string(const pe_resource_t *rsc, const char *name,
     }
 
     // User-supplied description
-    if (pcmk_is_set(show_opts, pcmk_show_rsc_only)
+    if (pcmk_any_flags_set(show_opts, pcmk_show_rsc_only|pcmk_show_description)
         || pcmk__list_of_multiple(rsc->running_on)) {
         const char *desc = crm_element_value(rsc->xml, XML_ATTR_DESC);
 
@@ -943,12 +943,14 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
     const char *rsc_state = native_displayable_state(rsc, print_pending);
 
+    const char *desc = NULL;
     char ra_name[LINE_MAX];
     char *nodes_running_on = NULL;
     const char *lock_node_name = NULL;
     int rc = pcmk_rc_no_output;
-    const char *target_role = NULL;    
-    const char *desc = NULL;
+    const char *target_role = NULL;
+
+    desc = pe__resource_description(rsc, show_opts);
 
     if (rsc->meta != NULL) {
        target_role = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
@@ -969,12 +971,6 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
 
     if (rsc->lock_node != NULL) {
         lock_node_name = rsc->lock_node->details->uname;
-    }
-
-    // User-supplied description
-    if (pcmk_is_set(show_opts, pcmk_show_rsc_only)
-        || pcmk__list_of_multiple(rsc->running_on)) {
-        desc = crm_element_value(rsc->xml, XML_ATTR_DESC);
     }
 
     rc = pe__name_and_nvpairs_xml(out, true, "resource", 15,
