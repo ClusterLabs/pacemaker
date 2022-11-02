@@ -1105,7 +1105,8 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
         if (!config_mode)
             goto refresh;
 
-        blank_screen();
+        clear();
+        refresh();
 
         curses_formatted_printf(out, "%s", "Display option change mode\n");
         print_option_help(out, 'c', pcmk_is_set(show, pcmk_section_tickets));
@@ -1133,7 +1134,7 @@ refresh:
 
     return TRUE;
 }
-#endif
+#endif  // CURSES_ENABLED
 
 // Basically crm_signal_handler(SIGCHLD, SIG_IGN) plus the SA_NOCLDWAIT flag
 static void

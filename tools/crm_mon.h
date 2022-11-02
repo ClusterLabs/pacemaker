@@ -55,8 +55,6 @@ typedef enum mon_output_format_e {
     mon_output_cgi
 } mon_output_format_t;
 
-void blank_screen(void);
-
 void crm_mon_register_messages(pcmk__output_t *out);
 
 #if CURSES_ENABLED

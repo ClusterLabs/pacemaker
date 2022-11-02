@@ -452,7 +452,7 @@ static int
 cluster_status_console(pcmk__output_t *out, va_list args) {
     int rc = pcmk_rc_no_output;
 
-    blank_screen();
+    clear();
     rc = pcmk__cluster_status_text(out, args);
     refresh();
     return rc;
@@ -492,20 +492,5 @@ void
 crm_mon_register_messages(pcmk__output_t *out) {
 #if CURSES_ENABLED
     pcmk__register_messages(out, fmt_functions);
-#endif
-}
-
-void
-blank_screen(void)
-{
-#if CURSES_ENABLED
-    int lpc = 0;
-
-    for (lpc = 0; lpc < LINES; lpc++) {
-        move(lpc, 0);
-        clrtoeol();
-    }
-    move(0, 0);
-    refresh();
 #endif
 }
