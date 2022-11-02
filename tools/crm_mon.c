@@ -652,7 +652,7 @@ reconnect_after_timeout(gpointer data)
     }
 #endif
 
-    out->info(out, "Reconnecting...");
+    out->transient(out, "Reconnecting...");
     if (setup_api_connections() == pcmk_rc_ok) {
         // Trigger redrawing the screen (needs reconnect_timer == 0)
         reconnect_timer = 0;
@@ -672,7 +672,7 @@ reconnect_after_timeout(gpointer data)
 static void
 mon_cib_connection_destroy(gpointer user_data)
 {
-    out->info(out, "Connection to the cluster-daemons terminated");
+    out->transient(out, "Connection to the cluster lost");
 
     if (refresh_timer != NULL) {
         /* we'll trigger a refresh after reconnect */
@@ -787,8 +787,9 @@ setup_cib_connection(void)
             mon_cib_connection_destroy));
         if (rc == EPROTONOSUPPORT) {
             out->err(out,
-                     "Notification setup not supported, won't be "
-                     "able to reconnect after failure");
+                     "CIB client does not support connection loss "
+                     "notifications; crm_mon will be unable to reconnect after "
+                     "connection loss");
             rc = pcmk_rc_ok;
         }
 
@@ -800,7 +801,15 @@ setup_cib_connection(void)
         }
 
         if (rc != pcmk_rc_ok) {
-            out->err(out, "Notification setup failed, could not monitor CIB actions");
+            if (rc == EPROTONOSUPPORT) {
+                out->err(out,
+                         "CIB client does not support CIB diff "
+                         "notifications");
+            } else {
+                out->err(out, "CIB diff notification setup failed");
+            }
+
+            out->err(out, "Cannot monitor CIB changes; exiting");
             cib__clean_up_connection(&cib);
             stonith_api_delete(st);
             st = NULL;
@@ -1472,11 +1481,16 @@ main(int argc, char **argv)
     }
 
     do {
-        out->info(out,"Waiting until cluster is available on this node ...");
-
+        out->transient(out, "Connecting to cluster...");
         rc = setup_api_connections();
 
         if (rc != pcmk_rc_ok) {
+            if ((rc == ENOTCONN) || (rc == ECONNREFUSED)) {
+                out->transient(out, "Connection failed. Retrying in %ums...",
+                               options.reconnect_ms);
+            }
+
+            // Give some time to view all output even if we won't retry
             pcmk__sleep_ms(options.reconnect_ms);
 #if CURSES_ENABLED
             if (output_format == mon_output_console) {
@@ -1484,10 +1498,7 @@ main(int argc, char **argv)
                 refresh();
             }
 #endif
-        } else if (output_format == mon_output_html && out->dest != stdout) {
-            printf("Writing html to %s ...\n", args->output_dest);
         }
-
     } while ((rc == ENOTCONN) || (rc == ECONNREFUSED));
 
     if (rc != pcmk_rc_ok) {
