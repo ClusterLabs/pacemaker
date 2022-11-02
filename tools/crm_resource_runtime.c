@@ -394,7 +394,10 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
                 pe__clear_resource_flags_on_all(data_set, pe_rsc_detect_loop);
             }
 
-            crm_debug("Looking for dependencies %p", rsc->rsc_cons_lhs);
+            /* We want to set the attribute only on resources explicitly
+             * colocated with this one, so we use rsc->rsc_cons_lhs directly
+             * rather than the with_this_colocations() method.
+             */
             pe__set_resource_flags(rsc, pe_rsc_detect_loop);
             for (lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
                 pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;

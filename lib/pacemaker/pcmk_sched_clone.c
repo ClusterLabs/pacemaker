@@ -47,8 +47,9 @@ pcmk__clone_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
 
     pe__set_resource_flags(rsc, pe_rsc_allocating);
 
-    /* This information is used by pcmk__cmp_instance() when deciding the order
-     * in which to assign clone instances to nodes.
+    /* If this clone is colocated with any other resources, assign those first.
+     * Since the this_with_colocations() method boils down to a copy of rsc_cons
+     * for clones, we can use that here directly for efficiency.
      */
     for (GList *gIter = rsc->rsc_cons; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
@@ -58,6 +59,10 @@ pcmk__clone_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
         constraint->primary->cmds->assign(constraint->primary, prefer);
     }
 
+    /* If any resources are colocated with this one, consider their preferences.
+     * Because the with_this_colocations() method boils down to a copy of
+     * rsc_cons_lhs for clones, we can use that here directly for efficiency.
+     */
     for (GList *gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 

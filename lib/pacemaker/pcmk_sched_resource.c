@@ -745,6 +745,10 @@ apply_parent_colocations(const pe_resource_t *rsc, GHashTable **nodes)
     GList *iter = NULL;
     pcmk__colocation_t *colocation = NULL;
 
+    /* Because the this_with_colocations() and with_this_colocations() methods
+     * boil down to copies of rsc_cons and rsc_cons_lhs for clones and bundles,
+     * we can use those here directly for efficiency.
+     */
     for (iter = rsc->parent->rsc_cons; iter != NULL; iter = iter->next) {
         colocation = (pcmk__colocation_t *) iter->data;
         pcmk__add_colocated_node_scores(colocation->primary, rsc->id, nodes,

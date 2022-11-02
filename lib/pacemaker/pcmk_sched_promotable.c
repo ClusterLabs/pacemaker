@@ -450,6 +450,10 @@ sort_promotable_instances(pe_resource_t *clone)
     pe__show_node_weights(true, clone, "Before", clone->allowed_nodes,
                           clone->cluster);
 
+    /* Because the this_with_colocations() and with_this_colocations() methods
+     * boil down to copies of rsc_cons and rsc_cons_lhs for clones, we can use
+     * those here directly for efficiency.
+     */
     g_list_foreach(clone->children, add_sort_index_to_node_weight, clone);
     g_list_foreach(clone->rsc_cons, apply_coloc_to_dependent, clone);
     g_list_foreach(clone->rsc_cons_lhs, apply_coloc_to_primary, clone);
