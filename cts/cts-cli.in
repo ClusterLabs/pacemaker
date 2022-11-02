@@ -1241,6 +1241,14 @@ function test_tools() {
         test_assert_validate $CRM_EX_OK 0
     done
 
+    desc="Check locations and constraints for group member (referring to group)"
+    cmd="crm_resource -a -r gr2"
+    test_assert $CRM_EX_OK 0
+
+    desc="Check locations and constraints for group member (without referring to group)"
+    cmd="crm_resource -a -r gr2 --force"
+    test_assert $CRM_EX_OK 0
+
     unset CIB_file
 
     export CIB_file="$test_home/cli/crm_resource_digests.xml"

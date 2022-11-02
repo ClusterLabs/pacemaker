@@ -4350,6 +4350,16 @@ Resources colocated with clone:
 </pacemaker-result>
 =#=#=#= End test: Recursively check locations and constraints for clone in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for clone in XML
+=#=#=#= Begin test: Check locations and constraints for group member (referring to group) =#=#=#=
+Resources colocated with group:
+  * prim7 (score=INFINITY, id=colocation-prim7-group-INFINITY)
+=#=#=#= End test: Check locations and constraints for group member (referring to group) - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for group member (referring to group)
+=#=#=#= Begin test: Check locations and constraints for group member (without referring to group) =#=#=#=
+Resources colocated with gr2:
+  * prim8 (score=INFINITY, id=colocation-prim8-gr2-INFINITY)
+=#=#=#= End test: Check locations and constraints for group member (without referring to group) - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for group member (without referring to group)
 =#=#=#= Begin test: Show resource digests =#=#=#=
 <pacemaker-result api-version="X" request="crm_resource --digests -r rsc1 -N node1 --output-as=xml">
   <digests resource="rsc1" node="node1" task="start" interval="0ms">
