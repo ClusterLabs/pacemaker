@@ -215,6 +215,7 @@ pcmk__status(pcmk__output_t *out, cib_t *cib,
     int rc = pcmk_rc_ok;
     stonith_t *stonith = NULL;
     enum pcmk_pacemakerd_state state = pcmk_pacemakerd_state_invalid;
+    time_t last_updated = 0;
 
     if (cib == NULL) {
         return ENOTCONN;
@@ -227,6 +228,8 @@ pcmk__status(pcmk__output_t *out, cib_t *cib,
             return rc;
         }
 
+        last_updated = time(NULL);
+
         switch (state) {
             case pcmk_pacemakerd_state_running:
             case pcmk_pacemakerd_state_shutting_down:
@@ -238,7 +241,7 @@ pcmk__status(pcmk__output_t *out, cib_t *cib,
             default:
                 // Fencer and CIB are definitely unavailable
                 out->message(out, "pacemakerd-health",
-                             NULL, state, NULL, time(NULL));
+                             NULL, state, NULL, last_updated);
                 return rc;
         }
 
@@ -252,7 +255,7 @@ pcmk__status(pcmk__output_t *out, cib_t *cib,
         if (state != pcmk_pacemakerd_state_invalid) {
             // If we got this far, invalid means we didn't query the pcmkd state
             out->message(out, "pacemakerd-health",
-                         NULL, state, NULL, time(NULL));
+                         NULL, state, NULL, last_updated);
         }
         goto done;
     }
