@@ -74,7 +74,8 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
         /* Having finished handling the request, check to see if the originating
          * peer requested confirmation.  If so, send that confirmation back now.
          */
-        if (pcmk__xe_attr_is_true(xml, PCMK__XA_CONFIRM)) {
+        if (pcmk__xe_attr_is_true(xml, PCMK__XA_CONFIRM) &&
+            !pcmk__str_eq(request.op, PCMK__ATTRD_CMD_CONFIRM, pcmk__str_none)) {
             int callid = 0;
             xmlNode *reply = NULL;
 

@@ -310,6 +310,8 @@ attrd_broadcast_protocol(void)
 gboolean
 attrd_send_message(crm_node_t *node, xmlNode *data, bool confirm)
 {
+    const char *op = crm_element_value(data, PCMK__XA_TASK);
+
     crm_xml_add(data, F_TYPE, T_ATTRD);
     crm_xml_add(data, PCMK__XA_ATTR_VERSION, ATTRD_PROTOCOL_VERSION);
 
@@ -317,7 +319,9 @@ attrd_send_message(crm_node_t *node, xmlNode *data, bool confirm)
      * be all if node is NULL) that the message has been received and
      * acted upon.
      */
-    pcmk__xe_set_bool_attr(data, PCMK__XA_CONFIRM, confirm);
+    if (!pcmk__str_eq(op, PCMK__ATTRD_CMD_CONFIRM, pcmk__str_none)) {
+        pcmk__xe_set_bool_attr(data, PCMK__XA_CONFIRM, confirm);
+    }
 
     attrd_xml_add_writer(data);
     return send_cluster_message(node, crm_msg_attrd, data, TRUE);
