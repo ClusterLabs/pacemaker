@@ -7,36 +7,52 @@
     </start>
 
     <define name="element-crm-mon">
-        <optional>
-            <externalRef href="pacemakerd-health-2.25.rng" />
-        </optional>
-        <optional>
-            <ref name="element-summary" />
-        </optional>
-        <optional>
-            <ref name="nodes-list" />
-        </optional>
-        <optional>
-            <ref name="resources-list" />
-        </optional>
-        <optional>
-            <ref name="node-attributes-list" />
-        </optional>
-        <optional>
-            <externalRef href="node-history-2.12.rng"/>
-        </optional>
-        <optional>
-            <ref name="failures-list" />
-        </optional>
-        <optional>
-            <ref name="fence-event-list" />
-        </optional>
-        <optional>
-            <ref name="tickets-list" />
-        </optional>
-        <optional>
-            <ref name="bans-list" />
-        </optional>
+        <choice>
+            <ref name="element-crm-mon-disconnected" />
+            <group>
+                <optional>
+                    <externalRef href="pacemakerd-health-2.25.rng" />
+                </optional>
+                <optional>
+                    <ref name="element-summary" />
+                </optional>
+                <optional>
+                    <ref name="nodes-list" />
+                </optional>
+                <optional>
+                    <ref name="resources-list" />
+                </optional>
+                <optional>
+                    <ref name="node-attributes-list" />
+                </optional>
+                <optional>
+                    <externalRef href="node-history-2.12.rng"/>
+                </optional>
+                <optional>
+                    <ref name="failures-list" />
+                </optional>
+                <optional>
+                    <ref name="fence-event-list" />
+                </optional>
+                <optional>
+                    <ref name="tickets-list" />
+                </optional>
+                <optional>
+                    <ref name="bans-list" />
+                </optional>
+            </group>
+        </choice>
+    </define>
+
+    <define name="element-crm-mon-disconnected">
+        <element name="crm-mon-disconnected">
+            <optional>
+                <attribute name="description"> <text /> </attribute>
+            </optional>
+            <optional>
+                <attribute name="pacemakerd-state"> <text /> </attribute>
+            </optional>
+        </element>
     </define>
 
     <define name="element-summary">
@@ -44,6 +60,11 @@
             <optional>
                 <element name="stack">
                     <attribute name="type"> <text /> </attribute>
+                    <optional>
+                        <attribute name="pacemakerd-state">
+                            <text />
+                        </attribute>
+                    </optional>
                 </element>
             </optional>
             <optional>
