@@ -25,6 +25,19 @@
 
 extern crm_exit_t attrd_exit_status;
 
+static xmlNode *
+attrd_confirmation(int callid)
+{
+    xmlNode *node = create_xml_node(NULL, __func__);
+
+    crm_xml_add(node, F_TYPE, T_ATTRD);
+    crm_xml_add(node, F_ORIG, get_local_node_name());
+    crm_xml_add(node, PCMK__XA_TASK, PCMK__ATTRD_CMD_CONFIRM);
+    crm_xml_add_int(node, XML_LRM_ATTR_CALLID, callid);
+
+    return node;
+}
+
 static void
 attrd_peer_message(crm_node_t *peer, xmlNode *xml)
 {
@@ -57,6 +70,32 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
         CRM_CHECK(request.op != NULL, return);
 
         attrd_handle_request(&request);
+
+        /* Having finished handling the request, check to see if the originating
+         * peer requested confirmation.  If so, send that confirmation back now.
+         */
+        if (pcmk__xe_attr_is_true(xml, PCMK__XA_CONFIRM) &&
+            !pcmk__str_eq(request.op, PCMK__ATTRD_CMD_CONFIRM, pcmk__str_none)) {
+            int callid = 0;
+            xmlNode *reply = NULL;
+
+            /* Add the confirmation ID for the message we are confirming to the
+             * response so the originating peer knows what they're a confirmation
+             * for.
+             */
+            crm_element_value_int(xml, XML_LRM_ATTR_CALLID, &callid);
+            reply = attrd_confirmation(callid);
+
+            /* And then send the confirmation back to the originating peer.  This
+             * ends up right back in this same function (attrd_peer_message) on the
+             * peer where it will have to do something with a PCMK__XA_CONFIRM type
+             * message.
+             */
+            crm_debug("Sending %s a confirmation", peer->uname);
+            attrd_send_message(peer, reply, false);
+            free_xml(reply);
+        }
+
         pcmk__reset_request(&request);
     }
 }
@@ -124,7 +163,7 @@ broadcast_local_value(const attribute_t *a)
 
     crm_xml_add(sync, PCMK__XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
     attrd_add_value_xml(sync, a, v, false);
-    attrd_send_message(NULL, sync);
+    attrd_send_message(NULL, sync, false);
     free_xml(sync);
     return v;
 }
@@ -230,6 +269,8 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
     // Remove votes from cluster nodes that leave, in case election in progress
     if (gone && !is_remote) {
         attrd_remove_voter(peer);
+        attrd_remove_peer_protocol_ver(peer->uname);
+        attrd_do_not_expect_from_peer(peer->uname);
 
     // Ensure remote nodes that come up are in the remote node cache
     } else if (!gone && is_remote) {
@@ -357,7 +398,7 @@ attrd_peer_update_one(const crm_node_t *peer, xmlNode *xml, bool filter)
      * version, check to see if it's a new minimum version.
      */
     if (pcmk__str_eq(attr, CRM_ATTR_PROTOCOL, pcmk__str_none)) {
-        attrd_update_minimum_protocol_ver(value);
+        attrd_update_minimum_protocol_ver(peer->uname, value);
     }
 }
 
@@ -387,7 +428,7 @@ broadcast_unseen_local_values(void)
 
     if (sync != NULL) {
         crm_debug("Broadcasting local-only values");
-        attrd_send_message(NULL, sync);
+        attrd_send_message(NULL, sync, false);
         free_xml(sync);
     }
 }
@@ -539,7 +580,7 @@ attrd_peer_sync(crm_node_t *peer, xmlNode *xml)
     }
 
     crm_debug("Syncing values to %s", peer?peer->uname:"everyone");
-    attrd_send_message(peer, sync);
+    attrd_send_message(peer, sync, false);
     free_xml(sync);
 }
 
@@ -576,7 +617,7 @@ attrd_peer_update(const crm_node_t *peer, xmlNode *xml, const char *host,
      * point, process that now.
      */
     if (handle_sync_point) {
-        crm_debug("Hit local sync point for attribute update");
+        crm_trace("Hit local sync point for attribute update");
         attrd_ack_waitlist_clients(attrd_sync_point_local, xml);
     }
 }
