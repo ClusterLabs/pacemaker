@@ -91,18 +91,11 @@ crm_get_utc_time(const crm_time_t *dt)
 crm_time_t *
 crm_time_new(const char *date_time)
 {
-    time_t tm_now;
-    crm_time_t *dt = NULL;
-
     tzset();
     if (date_time == NULL) {
-        tm_now = time(NULL);
-        dt = crm_time_new_undefined();
-        crm_time_set_timet(dt, &tm_now);
-    } else {
-        dt = parse_date(date_time);
+        return pcmk__copy_timet(time(NULL));
     }
-    return dt;
+    return parse_date(date_time);
 }
 
 /*!
@@ -1270,6 +1263,23 @@ pcmk_copy_time(const crm_time_t *source)
     return target;
 }
 
+/*!
+ * \internal
+ * \brief Convert a \p time_t time to a \p crm_time_t time
+ *
+ * \param[in] source  Time to convert
+ *
+ * \return A \p crm_time_t object representing \p source
+ */
+crm_time_t *
+pcmk__copy_timet(time_t source)
+{
+    crm_time_t *target = crm_time_new_undefined();
+
+    crm_time_set_timet(target, &source);
+    return target;
+}
+
 crm_time_t *
 crm_time_add(const crm_time_t *dt, const crm_time_t *value)
 {
@@ -1716,38 +1726,37 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
 
 /*!
  * \internal
- * \brief Return human-friendly string corresponding to a time
+ * \brief Return a human-friendly string corresponding to an epoch time value
  *
- * \param[in] when   Pointer to epoch time value (or NULL for current time)
+ * \param[in]  source  Pointer to epoch time value (or \p NULL for current time)
+ * \param[in]  flags   Group of \p crm_time_* flags controlling display format
+ *                     format (0 to use \p ctime() with newline removed)
  *
- * \return Current time as string (as by ctime() but without newline) on
- *         success, NULL otherwise
- * \note The return value points to a statically allocated string which might be
- *       overwritten by subsequent calls to any of the C library date and time
- *       functions.
+ * \return String representation of \p source on success (may be empty depending
+ *         on \p flags; guaranteed not to be \p NULL)
+ *
+ * \note The caller is responsible for freeing the return value using \p free().
  */
-const char *
-pcmk__epoch2str(const time_t *when)
+char *
+pcmk__epoch2str(const time_t *source, uint32_t flags)
 {
-    char *since_epoch = NULL;
+    time_t epoch_time = (source == NULL)? time(NULL) : *source;
+    char *result = NULL;
 
-    if (when == NULL) {
-        time_t a_time = time(NULL);
+    if (flags == 0) {
+        const char *buf = pcmk__trim(ctime(&epoch_time));
 
-        if (a_time == (time_t) -1) {
-            return NULL;
-        } else {
-            since_epoch = ctime(&a_time);
+        if (buf != NULL) {
+            result = strdup(buf);
+            CRM_ASSERT(result != NULL);
         }
     } else {
-        since_epoch = ctime(when);
-    }
+        crm_time_t dt;
 
-    if (since_epoch == NULL) {
-        return NULL;
-    } else {
-        return pcmk__trim(since_epoch);
+        crm_time_set_timet(&dt, &epoch_time);
+        result = crm_time_as_string(&dt, flags);
     }
+    return result;
 }
 
 /*!

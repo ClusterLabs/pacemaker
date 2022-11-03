@@ -342,7 +342,8 @@ static GOptionEntry source_entries[] = {
 };
 
 static int
-setup_input(const char *input, const char *output, GError **error)
+setup_input(pcmk__output_t *out, const char *input, const char *output,
+            GError **error)
 {
     int rc = pcmk_rc_ok;
     xmlNode *cib_object = NULL;
@@ -350,10 +351,9 @@ setup_input(const char *input, const char *output, GError **error)
 
     if (input == NULL) {
         /* Use live CIB */
-        rc = cib__signon_query(NULL, &cib_object);
+        rc = cib__signon_query(out, NULL, &cib_object);
         if (rc != pcmk_rc_ok) {
-            g_set_error(error, PCMK__RC_ERROR, rc,
-                        "CIB query failed: %s", pcmk_rc_str(rc));
+            // cib__signon_query() outputs any relevant error
             return rc;
         }
 
@@ -535,7 +535,9 @@ main(int argc, char **argv)
         goto done;
     }
 
-    rc = setup_input(options.xml_file, options.store ? options.xml_file : options.output_file, &error);
+    rc = setup_input(out, options.xml_file,
+                     options.store? options.xml_file : options.output_file,
+                     &error);
     if (rc != pcmk_rc_ok) {
         goto done;
     }

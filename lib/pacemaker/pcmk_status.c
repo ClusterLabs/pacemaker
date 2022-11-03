@@ -21,36 +21,6 @@
 #include <pacemaker.h>
 #include <pacemaker-internal.h>
 
-static int
-cib_connect(pcmk__output_t *out, cib_t *cib, xmlNode **current_cib)
-{
-    int rc = pcmk_rc_ok;
-
-    CRM_CHECK(cib != NULL, return EINVAL);
-
-    if (cib->state == cib_connected_query ||
-        cib->state == cib_connected_command) {
-        return rc;
-    }
-
-    crm_trace("Connecting to the CIB");
-
-    rc = cib->cmds->signon(cib, crm_system_name, cib_query);
-    rc = pcmk_legacy2rc(rc);
-
-    if (rc != pcmk_rc_ok) {
-        out->err(out, "Could not connect to the CIB: %s",
-                 pcmk_rc_str(rc));
-        return rc;
-    }
-
-    rc = cib->cmds->query(cib, NULL, current_cib,
-                          cib_scope_local | cib_sync_call);
-    rc = pcmk_legacy2rc(rc);
-
-    return rc;
-}
-
 static stonith_t *
 fencing_connect(void)
 {
@@ -250,11 +220,9 @@ pcmk__status(pcmk__output_t *out, cib_t *cib,
         return ENOTCONN;
     }
 
-    if ((cib->variant == cib_native)
-        && (cib->state != cib_connected_query)
-        && (cib->state != cib_connected_command)) {
-
-        rc = pcmk__pacemakerd_status(out, crm_system_name, timeout_ms, &state);
+    if (cib->variant == cib_native) {
+        rc = pcmk__pacemakerd_status(out, crm_system_name, timeout_ms, false,
+                                     &state);
         if (rc != pcmk_rc_ok) {
             return rc;
         }
@@ -268,16 +236,24 @@ pcmk__status(pcmk__output_t *out, cib_t *cib,
                  */
                 break;
             default:
+                // Fencer and CIB are definitely unavailable
+                out->message(out, "pacemakerd-health",
+                             NULL, state, NULL, time(NULL));
                 return rc;
+        }
+
+        if (fence_history != pcmk__fence_history_none) {
+            stonith = fencing_connect();
         }
     }
 
-    if (fence_history != pcmk__fence_history_none && cib->variant == cib_native) {
-        stonith = fencing_connect();
-    }
-
-    rc = cib_connect(out, cib, &current_cib);
+    rc = cib__signon_query(out, &cib, &current_cib);
     if (rc != pcmk_rc_ok) {
+        if (state != pcmk_pacemakerd_state_invalid) {
+            // If we got this far, invalid means we didn't query the pcmkd state
+            out->message(out, "pacemakerd-health",
+                         NULL, state, NULL, time(NULL));
+        }
         goto done;
     }
 

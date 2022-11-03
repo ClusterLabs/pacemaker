@@ -359,6 +359,7 @@ crm_mon_mk_curses_output(char **argv) {
     retval->version = curses_ver;
     retval->err = curses_error;
     retval->info = curses_info;
+    retval->transient = curses_info;
     retval->output_xml = curses_output_xml;
 
     retval->begin_list = curses_begin_list;

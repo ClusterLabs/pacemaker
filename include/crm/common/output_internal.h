@@ -378,6 +378,26 @@ struct pcmk__output_s {
 
     /*!
      * \internal
+     * \brief Like \p info() but for messages that should appear only
+     *        transiently. Not all formatters will do this.
+     *
+     * The originally envisioned use case is for console output, where a
+     * transient status-related message may be quickly overwritten by a refresh.
+     *
+     * \param[in,out] out     The output functions structure.
+     * \param[in]     format  The format string of the message to be printed.
+     * \param[in]     ...     Arguments to be formatted.
+     *
+     * \return A standard Pacemaker return code. Generally: \p pcmk_rc_ok if
+     *         output was produced and \p pcmk_rc_no_output if it was not. As
+     *         not all formatters implement this function, those that do not
+     *         will always just return \p pcmk_rc_no_output.
+     */
+    int (*transient) (pcmk__output_t *out, const char *format, ...)
+        G_GNUC_PRINTF(2, 3);
+
+    /*!
+     * \internal
      * \brief Format an error message that should be shown to an interactive
      *        user.  Not all formatters will do this.
      *

@@ -83,10 +83,9 @@ init_rule_check(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
         }
 
     } else {
-        int rc = cib__signon_query(NULL, &(new_data_set->input));
+        int rc = cib__signon_query(out, NULL, &(new_data_set->input));
 
         if (rc != pcmk_rc_ok) {
-            out->err(out, "CIB query failed: %s", pcmk_rc_str(rc));
             pe_free_working_set(new_data_set);
             return rc;
         }

@@ -136,7 +136,7 @@ static crm_exit_t clean_up(crm_exit_t exit_code);
 static void crm_diff_update(const char *event, xmlNode * msg);
 static void clean_up_on_connection_failure(int rc);
 static int mon_refresh_display(gpointer user_data);
-static int cib_connect(void);
+static int setup_cib_connection(void);
 static int fencing_connect(void);
 static int pacemakerd_status(void);
 static void mon_st_callback_event(stonith_t * st, stonith_event_t * e);
@@ -656,7 +656,7 @@ reconnect_after_timeout(gpointer data)
     out->info(out, "Reconnecting...");
     if (pacemakerd_status() == pcmk_rc_ok) {
         fencing_connect();
-        if (cib_connect() == pcmk_rc_ok) {
+        if (setup_cib_connection() == pcmk_rc_ok) {
             /* trigger redrawing the screen (needs reconnect_timer == 0) */
             reconnect_timer = 0;
             refresh_after_event(FALSE, TRUE);
@@ -773,33 +773,18 @@ fencing_connect(void)
 }
 
 static int
-cib_connect(void)
+setup_cib_connection(void)
 {
     int rc = pcmk_rc_ok;
 
     CRM_CHECK(cib != NULL, return EINVAL);
 
-    if (cib->state == cib_connected_query ||
-        cib->state == cib_connected_command) {
+    if (cib->state != cib_disconnected) {
+        // Already connected with notifications registered for CIB updates
         return rc;
     }
 
-    crm_trace("Connecting to the CIB");
-
-    rc = pcmk_legacy2rc(cib->cmds->signon(cib, crm_system_name, cib_query));
-    if (rc != pcmk_rc_ok) {
-        out->err(out, "Could not connect to the CIB: %s",
-                 pcmk_rc_str(rc));
-        return rc;
-    }
-
-    /* just show this if refresh is gonna remove all traces */
-    if (output_format == mon_output_console) {
-        out->info(out,"Waiting for CIB ...");
-    }
-
-    rc = pcmk_legacy2rc(cib->cmds->query(cib, NULL, &current_cib,
-                                         cib_scope_local | cib_sync_call));
+    rc = cib__signon_query(out, &cib, &current_cib);
 
     if (rc == pcmk_rc_ok) {
         rc = pcmk_legacy2rc(cib->cmds->set_connection_dnotify(cib,
@@ -1595,7 +1580,7 @@ main(int argc, char **argv)
         rc = pacemakerd_status();
         if (rc == pcmk_rc_ok) {
             fencing_connect();
-            rc = cib_connect();
+            rc = setup_cib_connection();
         }
 
         if (rc != pcmk_rc_ok) {

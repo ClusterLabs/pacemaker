@@ -22,7 +22,7 @@ int pcmk__controller_status(pcmk__output_t *out, const char *node_name,
 int pcmk__designated_controller(pcmk__output_t *out,
                                 unsigned int message_timeout_ms);
 int pcmk__pacemakerd_status(pcmk__output_t *out, const char *ipc_name,
-                            unsigned int message_timeout_ms,
+                            unsigned int message_timeout_ms, bool show_output,
                             enum pcmk_pacemakerd_state *state);
 int pcmk__list_nodes(pcmk__output_t *out, char *node_types, gboolean bash_export);
 

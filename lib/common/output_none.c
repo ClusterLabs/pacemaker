@@ -134,6 +134,7 @@ pcmk__mk_none_output(char **argv) {
     retval->subprocess_output = none_subprocess_output;
     retval->version = none_version;
     retval->info = none_info;
+    retval->transient = none_info;
     retval->err = none_err;
     retval->output_xml = none_output_xml;
 

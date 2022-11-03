@@ -3086,24 +3086,31 @@ static const char *get_op_key(xmlNode *xml_op)
     return key;
 }
 
-static const char *
+static char *
 last_change_str(const xmlNode *xml_op)
 {
     time_t when;
-    const char *when_s = NULL;
+    char *result = NULL;
 
     if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
                                 &when) == pcmk_ok) {
-        when_s = pcmk__epoch2str(&when);
-        if (when_s) {
-            // Skip day of week to make message shorter
-            when_s = strchr(when_s, ' ');
-            if (when_s) {
-                ++when_s;
-            }
+        char *when_s = pcmk__epoch2str(&when, 0);
+        const char *p = strchr(when_s, ' ');
+
+        // Skip day of week to make message shorter
+        if ((p != NULL) && (*(++p) != '\0')) {
+            result = strdup(p);
+            CRM_ASSERT(result != NULL);
         }
+        free(when_s);
     }
-    return ((when_s && *when_s)? when_s : "unknown time");
+
+    if (result == NULL) {
+        result = strdup("unknown time");
+        CRM_ASSERT(result != NULL);
+    }
+
+    return result;
 }
 
 /*!
@@ -3207,6 +3214,7 @@ unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * x
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
     const char *exit_reason = crm_element_value(xml_op,
                                                 XML_LRM_ATTR_EXIT_REASON);
+    char *last_change_s = NULL;
 
     CRM_ASSERT(rsc);
     CRM_CHECK(task != NULL, return);
@@ -3214,6 +3222,7 @@ unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * x
     *last_failure = xml_op;
 
     is_probe = pcmk_xe_is_probe(xml_op);
+    last_change_s = last_change_str(xml_op);
 
     if (exit_reason == NULL) {
         exit_reason = "";
@@ -3226,14 +3235,14 @@ unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * x
                   services_ocf_exitcode_str(rc),
                   (*exit_reason? ": " : ""), exit_reason,
                   (is_probe? "probe" : task), rsc->id, pe__node_name(node),
-                  last_change_str(xml_op), rc, ID(xml_op));
+                  last_change_s, rc, ID(xml_op));
     } else {
         crm_warn("Unexpected result (%s%s%s) was recorded for "
                   "%s of %s on %s at %s " CRM_XS " rc=%d id=%s",
                  services_ocf_exitcode_str(rc),
                  (*exit_reason? ": " : ""), exit_reason,
                  (is_probe? "probe" : task), rsc->id, pe__node_name(node),
-                 last_change_str(xml_op), rc, ID(xml_op));
+                 last_change_s, rc, ID(xml_op));
 
         if (is_probe && (rc != PCMK_OCF_OK)
             && (rc != PCMK_OCF_NOT_RUNNING)
@@ -3249,6 +3258,8 @@ unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * x
 
         record_failed_op(xml_op, node, rsc, data_set);
     }
+
+    free(last_change_s);
 
     action = custom_action(rsc, strdup(key), task, NULL, TRUE, FALSE, data_set);
     if (cmp_on_fail(*on_fail, action->on_fail) < 0) {
@@ -3354,6 +3365,7 @@ check_recoverable(pe_resource_t *rsc, pe_node_t *node, const char *task,
                   int exit_status, const xmlNode *xml_op)
 {
     const char *exit_reason = NULL;
+    char *last_change_s = NULL;
 
     if (strcmp(task, CRMD_ACTION_STOP) != 0) {
         return; // All actions besides stop are always recoverable
@@ -3363,12 +3375,15 @@ check_recoverable(pe_resource_t *rsc, pe_node_t *node, const char *task,
     }
 
     exit_reason = crm_element_value(xml_op, XML_LRM_ATTR_EXIT_REASON);
+    last_change_s = last_change_str(xml_op);
     pe_proc_err("No further recovery can be attempted for %s "
                 "because %s on %s failed (%s%s%s) at %s "
                 CRM_XS " rc=%d id=%s", rsc->id, task, pe__node_name(node),
                 services_ocf_exitcode_str(exit_status),
                 ((exit_reason == NULL)? "" : ": "), pcmk__s(exit_reason, ""),
-                last_change_str(xml_op), exit_status, ID(xml_op));
+                last_change_s, exit_status, ID(xml_op));
+
+    free(last_change_s);
 
     pe__clear_resource_flags(rsc, pe_rsc_managed);
     pe__set_resource_flags(rsc, pe_rsc_block);
@@ -3410,6 +3425,7 @@ remap_operation(xmlNode *xml_op, pe_resource_t *rsc, pe_node_t *node,
     const char *key = get_op_key(xml_op);
     const char *exit_reason = crm_element_value(xml_op,
                                                 XML_LRM_ATTR_EXIT_REASON);
+    char *last_change_s = NULL;
 
     if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_none)) {
         int remapped_rc = pcmk__effective_rc(*rc);
@@ -3476,13 +3492,14 @@ remap_operation(xmlNode *xml_op, pe_resource_t *rsc, pe_node_t *node,
                      (*exit_reason? ": " : ""), exit_reason);
     }
 
+    last_change_s = last_change_str(xml_op);
+
     switch (*rc) {
         case PCMK_OCF_OK:
             if (is_probe && (target_rc == PCMK_OCF_NOT_RUNNING)) {
                 *status = PCMK_EXEC_DONE;
                 pe_rsc_info(rsc, "Probe found %s active on %s at %s",
-                            rsc->id, pe__node_name(node),
-                            last_change_str(xml_op));
+                            rsc->id, pe__node_name(node), last_change_s);
             }
             break;
 
@@ -3504,8 +3521,7 @@ remap_operation(xmlNode *xml_op, pe_resource_t *rsc, pe_node_t *node,
                 *status = PCMK_EXEC_DONE;
                 pe_rsc_info(rsc,
                             "Probe found %s active and promoted on %s at %s",
-                            rsc->id, pe__node_name(node),
-                            last_change_str(xml_op));
+                            rsc->id, pe__node_name(node), last_change_s);
             }
             rsc->role = RSC_ROLE_PROMOTED;
             break;
@@ -3547,11 +3563,13 @@ remap_operation(xmlNode *xml_op, pe_resource_t *rsc, pe_node_t *node,
                 crm_info("Treating unknown exit status %d from %s of %s "
                          "on %s at %s as failure",
                          *rc, task, rsc->id, pe__node_name(node),
-                         last_change_str(xml_op));
+                         last_change_s);
                 *status = PCMK_EXEC_ERROR;
             }
             break;
     }
+
+    free(last_change_s);
 
     pe_rsc_trace(rsc, "Remapped %s status to '%s'",
                  key, pcmk_exec_status_str(*status));
@@ -3928,6 +3946,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     pe_resource_t *parent = rsc;
     enum action_fail_response failure_strategy = action_fail_recover;
     bool maskable_probe_failure = false;
+    char *last_change_s = NULL;
 
     CRM_CHECK(rsc && node && xml_op, return);
 
@@ -3994,6 +4013,8 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 
     maskable_probe_failure = !pe_rsc_is_bundled(rsc) && pcmk_xe_mask_probe_failure(xml_op);
 
+    last_change_s = last_change_str(xml_op);
+
     if (expired && maskable_probe_failure && old_rc != old_target_rc) {
         if (rsc->role <= RSC_ROLE_STOPPED) {
             rsc->role = RSC_ROLE_UNKNOWN;
@@ -4048,7 +4069,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
             pe_err("Resource history contains cancellation '%s' "
                    "(%s of %s on %s at %s)",
                    ID(xml_op), task, rsc->id, pe__node_name(node),
-                   last_change_str(xml_op));
+                   last_change_s);
             goto done;
 
         case PCMK_EXEC_PENDING:
@@ -4090,7 +4111,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
         case PCMK_EXEC_DONE:
             pe_rsc_trace(rsc, "%s of %s on %s completed at %s " CRM_XS " id=%s",
                          task, rsc->id, pe__node_name(node),
-                         last_change_str(xml_op), ID(xml_op));
+                         last_change_s, ID(xml_op));
             update_resource_state(rsc, node, xml_op, task, rc, *last_failure, on_fail, data_set);
             goto done;
 
@@ -4146,8 +4167,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                  "succeeded " CRM_XS " rc=%d id=%s",
                  task, services_ocf_exitcode_str(rc),
                  (*exit_reason? ": " : ""), exit_reason, rsc->id,
-                 pe__node_name(node), last_change_str(xml_op), rc,
-                 ID(xml_op));
+                 pe__node_name(node), last_change_s, rc, ID(xml_op));
 
         update_resource_state(rsc, node, xml_op, task, target_rc, *last_failure,
                               on_fail, data_set);
@@ -4186,6 +4206,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     }
 
 done:
+    free(last_change_s);
     pe_rsc_trace(rsc, "Resource %s after %s: role=%s, next=%s",
                  rsc->id, task, role2text(rsc->role),
                  role2text(rsc->next_role));

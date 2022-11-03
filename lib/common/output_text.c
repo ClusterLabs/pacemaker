@@ -166,6 +166,13 @@ text_info(pcmk__output_t *out, const char *format, ...) {
     return pcmk_rc_ok;
 }
 
+G_GNUC_PRINTF(2, 3)
+static int
+text_transient(pcmk__output_t *out, const char *format, ...)
+{
+    return pcmk_rc_no_output;
+}
+
 static void
 text_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
     CRM_ASSERT(out != NULL);
@@ -312,6 +319,7 @@ pcmk__mk_text_output(char **argv) {
     retval->subprocess_output = text_subprocess_output;
     retval->version = text_version;
     retval->info = text_info;
+    retval->transient = text_transient;
     retval->err = text_err;
     retval->output_xml = text_output_xml;
 

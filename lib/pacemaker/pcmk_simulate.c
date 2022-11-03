@@ -437,10 +437,8 @@ set_effective_date(pe_working_set_t *data_set, bool print_original,
         crm_time_log(LOG_NOTICE, "Pretending 'now' is", data_set->now,
                      crm_time_log_date | crm_time_log_timeofday);
 
-    } else if (original_date) {
-
-        data_set->now = crm_time_new(NULL);
-        crm_time_set_timet(data_set->now, &original_date);
+    } else if (original_date != 0) {
+        data_set->now = pcmk__copy_timet(original_date);
 
         if (print_original) {
             char *when = crm_time_as_string(data_set->now,
@@ -788,7 +786,7 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
     xmlNodePtr input = NULL;
     cib_t *cib = NULL;
 
-    rc = cib__signon_query(&cib, &input);
+    rc = cib__signon_query(out, &cib, &input);
     if (rc != pcmk_rc_ok) {
         goto simulate_done;
     }

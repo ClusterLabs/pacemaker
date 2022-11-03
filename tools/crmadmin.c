@@ -240,7 +240,8 @@ main(int argc, char **argv)
             break;
         case cmd_pacemakerd_health:
             rc = pcmk__pacemakerd_status(out, options.ipc_name,
-                                         (unsigned int) options.timeout, NULL);
+                                         (unsigned int) options.timeout, true,
+                                         NULL);
             break;
         case cmd_list_nodes:
             rc = pcmk__list_nodes(out, options.optarg, options.bash_export);
