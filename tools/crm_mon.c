@@ -136,7 +136,7 @@ static void crm_diff_update(const char *event, xmlNode * msg);
 static void clean_up_on_connection_failure(int rc);
 static int mon_refresh_display(gpointer user_data);
 static int setup_cib_connection(void);
-static int fencing_connect(void);
+static int setup_fencer_connection(void);
 static int setup_api_connections(void);
 static void mon_st_callback_event(stonith_t * st, stonith_event_t * e);
 static void mon_st_callback_display(stonith_t * st, stonith_event_t * e);
@@ -736,7 +736,7 @@ mon_winresize(int nsig)
 #endif
 
 static int
-fencing_connect(void)
+setup_fencer_connection(void)
 {
     int rc = pcmk_ok;
 
@@ -885,7 +885,7 @@ setup_api_connections(void)
                 return ENOTCONN;
         }
 
-        fencing_connect();
+        setup_fencer_connection();
     }
 
     rc = setup_cib_connection();
@@ -1909,8 +1909,8 @@ mon_refresh_display(gpointer user_data)
     return G_SOURCE_CONTINUE;
 }
 
-/* This function is called for fencing events (see fencing_connect for which ones) when
- * --watch-fencing is used on the command line.
+/* This function is called for fencing events (see setup_fencer_connection() for
+ * which ones) when --watch-fencing is used on the command line
  */
 static void
 mon_st_callback_event(stonith_t * st, stonith_event_t * e)
@@ -1960,7 +1960,7 @@ refresh_after_event(gboolean data_updated, gboolean enforce)
      * fatal give it a retry here
      * not getting here if cib-reconnection is already on the way
      */
-    fencing_connect();
+    setup_fencer_connection();
 
     if (enforce ||
         ((now - last_refresh) > (options.reconnect_ms / 1000)) ||
@@ -1974,8 +1974,8 @@ refresh_after_event(gboolean data_updated, gboolean enforce)
     }
 }
 
-/* This function is called for fencing events (see fencing_connect for which ones) when
- * --watch-fencing is NOT used on the command line.
+/* This function is called for fencing events (see setup_fencer_connection() for
+ * which ones) when --watch-fencing is NOT used on the command line
  */
 static void
 mon_st_callback_display(stonith_t * st, stonith_event_t * e)
