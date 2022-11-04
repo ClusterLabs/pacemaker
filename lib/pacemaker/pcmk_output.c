@@ -1655,13 +1655,16 @@ inject_rsc_action_xml(pcmk__output_t *out, va_list args)
         retcode = pcmk_rc_ok;       \
     }
 
-PCMK__OUTPUT_ARGS("cluster-status", "pe_working_set_t *", "crm_exit_t", "stonith_history_t *",
-                  "enum pcmk__fence_history", "uint32_t", "uint32_t", "const char *", "GList *",
-                  "GList *")
+PCMK__OUTPUT_ARGS("cluster-status", "pe_working_set_t *",
+                  "enum pcmk_pacemakerd_state", "crm_exit_t",
+                  "stonith_history_t *", "enum pcmk__fence_history", "uint32_t",
+                  "uint32_t", "const char *", "GList *", "GList *")
 int
 pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
 {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    enum pcmk_pacemakerd_state pcmkd_state =
+        (enum pcmk_pacemakerd_state) va_arg(args, int);
     crm_exit_t history_rc = va_arg(args, crm_exit_t);
     stonith_history_t *stonith_history = va_arg(args, stonith_history_t *);
     enum pcmk__fence_history fence_history = va_arg(args, int);
@@ -1674,7 +1677,7 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
     int rc = pcmk_rc_no_output;
     bool already_printed_failure = false;
 
-    CHECK_RC(rc, out->message(out, "cluster-summary", data_set,
+    CHECK_RC(rc, out->message(out, "cluster-summary", data_set, pcmkd_state,
                               section_opts, show_opts));
 
     if (pcmk_is_set(section_opts, pcmk_section_nodes) && unames) {
@@ -1778,13 +1781,16 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("cluster-status", "pe_working_set_t *", "crm_exit_t", "stonith_history_t *",
-                  "enum pcmk__fence_history", "uint32_t", "uint32_t", "const char *", "GList *",
-                  "GList *")
+PCMK__OUTPUT_ARGS("cluster-status", "pe_working_set_t *",
+                  "enum pcmk_pacemakerd_state", "crm_exit_t",
+                  "stonith_history_t *", "enum pcmk__fence_history", "uint32_t",
+                  "uint32_t", "const char *", "GList *", "GList *")
 static int
 cluster_status_xml(pcmk__output_t *out, va_list args)
 {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    enum pcmk_pacemakerd_state pcmkd_state =
+        (enum pcmk_pacemakerd_state) va_arg(args, int);
     crm_exit_t history_rc = va_arg(args, crm_exit_t);
     stonith_history_t *stonith_history = va_arg(args, stonith_history_t *);
     enum pcmk__fence_history fence_history = va_arg(args, int);
@@ -1794,7 +1800,8 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
     GList *unames = va_arg(args, GList *);
     GList *resources = va_arg(args, GList *);
 
-    out->message(out, "cluster-summary", data_set, section_opts, show_opts);
+    out->message(out, "cluster-summary", data_set, pcmkd_state, section_opts,
+                 show_opts);
 
     /*** NODES ***/
     if (pcmk_is_set(section_opts, pcmk_section_nodes)) {
@@ -1854,13 +1861,16 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("cluster-status", "pe_working_set_t *", "crm_exit_t", "stonith_history_t *",
-                  "enum pcmk__fence_history", "uint32_t", "uint32_t", "const char *", "GList *",
-                  "GList *")
+PCMK__OUTPUT_ARGS("cluster-status", "pe_working_set_t *",
+                  "enum pcmk_pacemakerd_state", "crm_exit_t",
+                  "stonith_history_t *", "enum pcmk__fence_history", "uint32_t",
+                  "uint32_t", "const char *", "GList *", "GList *")
 static int
 cluster_status_html(pcmk__output_t *out, va_list args)
 {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    enum pcmk_pacemakerd_state pcmkd_state =
+        (enum pcmk_pacemakerd_state) va_arg(args, int);
     crm_exit_t history_rc = va_arg(args, crm_exit_t);
     stonith_history_t *stonith_history = va_arg(args, stonith_history_t *);
     enum pcmk__fence_history fence_history = va_arg(args, int);
@@ -1871,7 +1881,8 @@ cluster_status_html(pcmk__output_t *out, va_list args)
     GList *resources = va_arg(args, GList *);
     bool already_printed_failure = false;
 
-    out->message(out, "cluster-summary", data_set, section_opts, show_opts);
+    out->message(out, "cluster-summary", data_set, pcmkd_state, section_opts,
+                 show_opts);
 
     /*** NODE LIST ***/
     if (pcmk_is_set(section_opts, pcmk_section_nodes) && unames) {

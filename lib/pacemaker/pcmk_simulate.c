@@ -148,8 +148,9 @@ print_cluster_status(pe_working_set_t *data_set, uint32_t show_opts,
 
     PCMK__OUTPUT_SPACER_IF(out, print_spacer);
     out->begin_list(out, NULL, NULL, "%s", title);
-    out->message(out, "cluster-status", data_set, stonith_rc, NULL, false,
-                 section_opts, show_opts, NULL, all, all);
+    out->message(out, "cluster-status",
+                 data_set, pcmk_pacemakerd_state_invalid, stonith_rc, NULL,
+                 false, section_opts, show_opts, NULL, all, all);
     out->end_list(out);
 
     g_list_free(all);

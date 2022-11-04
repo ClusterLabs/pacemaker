@@ -1409,18 +1409,17 @@ main(int argc, char **argv)
                 break;
 
             case cib_file:
-                /* Don't try to connect to fencing as we
-                 * either don't have a running cluster or
-                 * the fencing-information would possibly
-                 * not match the cib data from a file.
-                 * As we don't expect cib-updates coming
-                 * in enforce one-shot. */
+                // Live fence history is not meaningful
                 fence_history_cb("--fence-history", "0", NULL, NULL);
+
+                /* Notifications are unsupported; nothing to monitor
+                 * @COMPAT: Let setup_cib_connection() handle this by exiting?
+                 */
                 options.one_shot = TRUE;
                 break;
 
             case cib_remote:
-                /* updates coming in but no fencing */
+                // We won't receive any fencing updates
                 fence_history_cb("--fence-history", "0", NULL, NULL);
                 break;
 
@@ -1970,6 +1969,7 @@ static int
 mon_refresh_display(gpointer user_data)
 {
     int rc = pcmk_rc_ok;
+    enum pcmk_pacemakerd_state pcmkd_state = pcmk_pacemakerd_state_invalid;
 
     last_refresh = time(NULL);
 
@@ -1981,15 +1981,22 @@ mon_refresh_display(gpointer user_data)
         !pcmk_all_flags_set(show, pcmk_section_fencing_all) &&
         output_format != mon_output_xml) {
         fence_history = pcmk__fence_history_reduced;
-     }
+    }
+
+    // Get an up-to-date pacemakerd status for the cluster summary
+    if (cib->variant == cib_native) {
+        pcmk__pacemakerd_status(out, crm_system_name, options.reconnect_ms / 2,
+                                false, &pcmkd_state);
+    }
 
     if (out->dest != stdout) {
         out->reset(out);
     }
 
-    rc = pcmk__output_cluster_status(out, st, cib, current_cib, fence_history,
-                                     show, show_opts, options.only_node,
-                                     options.only_rsc, options.neg_location_prefix,
+    rc = pcmk__output_cluster_status(out, st, cib, current_cib, pcmkd_state,
+                                     fence_history, show, show_opts,
+                                     options.only_node,options.only_rsc,
+                                     options.neg_location_prefix,
                                      output_format == mon_output_monitor);
 
     if (output_format == mon_output_monitor && rc != pcmk_rc_ok) {
