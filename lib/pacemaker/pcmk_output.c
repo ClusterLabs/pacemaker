@@ -647,8 +647,8 @@ health_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *", "int", "const char *",
-                  "long long")
+PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *",
+                  "enum pcmk_pacemakerd_state", "const char *", "long long")
 static int
 pacemakerd_health(pcmk__output_t *out, va_list args)
 {
@@ -688,8 +688,8 @@ pacemakerd_health(pcmk__output_t *out, va_list args)
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *", "int", "const char *",
-                  "long long")
+PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *",
+                  "enum pcmk_pacemakerd_state", "const char *", "long long")
 static int
 pacemakerd_health_html(pcmk__output_t *out, va_list args)
 {
@@ -731,8 +731,8 @@ pacemakerd_health_html(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *", "int", "const char *",
-                  "long long")
+PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *",
+                  "enum pcmk_pacemakerd_state", "const char *", "long long")
 static int
 pacemakerd_health_text(pcmk__output_t *out, va_list args)
 {
@@ -753,8 +753,8 @@ pacemakerd_health_text(pcmk__output_t *out, va_list args)
     }
 }
 
-PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *", "int", "const char *",
-                  "long long")
+PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *",
+                  "enum pcmk_pacemakerd_state", "const char *", "long long")
 static int
 pacemakerd_health_xml(pcmk__output_t *out, va_list args)
 {
