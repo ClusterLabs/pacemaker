@@ -775,7 +775,7 @@ pacemakerd_health_xml(pcmk__output_t *out, va_list args)
     }
 
     if (state_s == NULL) {
-        state_s = pcmk__pcmkd_state_enum2friendly(state);
+        state_s = pcmk_pacemakerd_api_daemon_state_enum2text(state);
     }
 
     if (last_updated != 0) {
