@@ -38,26 +38,20 @@ typedef struct {
 
 /*!
  * \internal
- * \brief Validate a reply event from an IPC API
+ * \brief Validate that an IPC API event is a good reply
  *
  * \param[in,out] data        API results and options
  * \param[in]     api         IPC API connection
  * \param[in]     event_type  Type of event that occurred
  * \param[in]     status      Event status
- * \param[in]     event_data  \p pcmk_controld_api_reply_t object containing
- *                            event-specific data
- * \param[in]     server      Which Pacemaker daemon \p api is connected to
  *
  * \return Standard Pacemaker return code
  */
 static int
 validate_reply_event(data_t *data, const pcmk_ipc_api_t *api,
-                     enum pcmk_ipc_event event_type, crm_exit_t status,
-                     const void *event_data, enum pcmk_ipc_server server)
+                     enum pcmk_ipc_event event_type, crm_exit_t status)
 {
     pcmk__output_t *out = data->out;
-    bool valid_reply = false;
-    const char *reply_type = NULL;
 
     switch (event_type) {
         case pcmk_ipc_event_reply:
@@ -82,36 +76,83 @@ validate_reply_event(data_t *data, const pcmk_ipc_api_t *api,
         data->rc = EBADMSG;
         return data->rc;
     }
+    return pcmk_rc_ok;
+}
 
-    switch (server) {
-        case pcmk_ipc_controld:
-            {
-                const pcmk_controld_api_reply_t *reply = NULL;
+/*!
+ * \internal
+ * \brief Validate that a controller API event is a good reply of expected type
+ *
+ * \param[in,out] data           API results and options
+ * \param[in]     api            Controller connection
+ * \param[in]     event_type     Type of event that occurred
+ * \param[in]     status         Event status
+ * \param[in]     event_data     Event-specific data
+ * \param[in]     expected_type  Expected reply type
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+validate_controld_reply(data_t *data, const pcmk_ipc_api_t *api,
+                        enum pcmk_ipc_event event_type, crm_exit_t status,
+                        const void *event_data,
+                        enum pcmk_controld_api_reply expected_type)
+{
+    pcmk__output_t *out = data->out;
+    int rc = pcmk_rc_ok;
+    const pcmk_controld_api_reply_t *reply = NULL;
 
-                reply = (const pcmk_controld_api_reply_t *) event_data;
-                valid_reply = (reply->reply_type == pcmk_controld_reply_ping);
-                reply_type = pcmk__controld_api_reply2str(reply->reply_type);
-            }
-            break;
-        case pcmk_ipc_pacemakerd:
-            {
-                const pcmk_pacemakerd_api_reply_t *reply = NULL;
-
-                reply = (const pcmk_pacemakerd_api_reply_t *) event_data;
-                valid_reply = (reply->reply_type == pcmk_pacemakerd_reply_ping);
-                reply_type = pcmk__pcmkd_api_reply2str(reply->reply_type);
-            }
-            break;
-        default:
-            out->err(out, "error: Unsupported IPC server type %s",
-                     pcmk_ipc_name(api, true));
-            data->rc = EINVAL;
-            return data->rc;
+    rc = validate_reply_event(data, api, event_type, status);
+    if (rc != pcmk_rc_ok) {
+        return rc;
     }
 
-    if (!valid_reply) {
-        out->err(out, "error: Unexpected reply type '%s' from %s",
-                 reply_type, pcmk_ipc_name(api, true));
+    reply = (const pcmk_controld_api_reply_t *) event_data;
+
+    if (reply->reply_type != expected_type) {
+        out->err(out, "error: Unexpected reply type '%s' from controller",
+                 pcmk__controld_api_reply2str(reply->reply_type));
+        data->rc = EBADMSG;
+        return data->rc;
+    }
+
+    data->reply_received = true;
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
+ * \brief Validate that a \p pacemakerd API event is a good reply of expected
+ *        type
+ *
+ * \param[in,out] data           API results and options
+ * \param[in]     api            \p pacemakerd connection
+ * \param[in]     event_type     Type of event that occurred
+ * \param[in]     status         Event status
+ * \param[in]     event_data     Event-specific data
+ * \param[in]     expected_type  Expected reply type
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+validate_pcmkd_reply(data_t *data, const pcmk_ipc_api_t *api,
+                     enum pcmk_ipc_event event_type, crm_exit_t status,
+                     const void *event_data,
+                     enum pcmk_pacemakerd_api_reply expected_type)
+{
+    pcmk__output_t *out = data->out;
+    const pcmk_pacemakerd_api_reply_t *reply = NULL;
+    int rc = validate_reply_event(data, api, event_type, status);
+
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    reply = (const pcmk_pacemakerd_api_reply_t *) event_data;
+
+    if (reply->reply_type != expected_type) {
+        out->err(out, "error: Unexpected reply type '%s' from pacemakerd",
+                 pcmk__pcmkd_api_reply2str(reply->reply_type));
         data->rc = EBADMSG;
         return data->rc;
     }
@@ -140,8 +181,8 @@ controller_status_event_cb(pcmk_ipc_api_t *controld_api,
     pcmk__output_t *out = data->out;
     pcmk_controld_api_reply_t *reply = (pcmk_controld_api_reply_t *) event_data;
 
-    int rc = validate_reply_event(data, controld_api, event_type, status,
-                                  event_data, pcmk_ipc_controld);
+    int rc = validate_controld_reply(data, controld_api, event_type, status,
+                                     event_data, pcmk_controld_reply_ping);
 
     if (rc == pcmk_rc_ok) {
         out->message(out, "health",
@@ -172,8 +213,8 @@ designated_controller_event_cb(pcmk_ipc_api_t *controld_api,
     pcmk__output_t *out = data->out;
     pcmk_controld_api_reply_t *reply = (pcmk_controld_api_reply_t *) event_data;
 
-    int rc = validate_reply_event(data, controld_api, event_type, status,
-                                  event_data, pcmk_ipc_controld);
+    int rc = validate_controld_reply(data, controld_api, event_type, status,
+                                     event_data, pcmk_controld_reply_ping);
 
     if (rc == pcmk_rc_ok) {
         out->message(out, "dc", reply->host_from);
@@ -202,8 +243,8 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
     pcmk_pacemakerd_api_reply_t *reply =
         (pcmk_pacemakerd_api_reply_t *) event_data;
 
-    int rc = validate_reply_event(data, pacemakerd_api, event_type, status,
-                                  event_data, pcmk_ipc_pacemakerd);
+    int rc = validate_pcmkd_reply(data, pacemakerd_api, event_type, status,
+                                  event_data, pcmk_pacemakerd_reply_ping);
 
     if (rc != pcmk_rc_ok) {
         return;
