@@ -17,13 +17,22 @@
 #include <crm/common/ipc_controld.h>
 #include <crm/common/ipc_pacemakerd.h>
 
+// CIB queries
+int pcmk__list_nodes(pcmk__output_t *out, char *node_types, gboolean bash_export);
+
+// Controller queries
 int pcmk__controller_status(pcmk__output_t *out, const char *node_name,
                             unsigned int message_timeout_ms);
 int pcmk__designated_controller(pcmk__output_t *out,
                                 unsigned int message_timeout_ms);
+int pcmk__query_node_info(pcmk__output_t *out, uint32_t *node_id,
+                          char **node_name, char **uuid, char **state,
+                          bool *have_quorum, bool *is_remote, bool show_output,
+                          unsigned int message_timeout_ms);
+
+// pacemakerd queries
 int pcmk__pacemakerd_status(pcmk__output_t *out, const char *ipc_name,
                             unsigned int message_timeout_ms, bool show_output,
                             enum pcmk_pacemakerd_state *state);
-int pcmk__list_nodes(pcmk__output_t *out, char *node_types, gboolean bash_export);
 
 #endif

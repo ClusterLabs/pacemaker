@@ -17,6 +17,7 @@
 #include <libxml/tree.h>
 #include <pacemaker-internal.h>
 
+#include <inttypes.h>
 #include <stdint.h>
 
 static char *
@@ -1266,6 +1267,52 @@ node_action_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("node-info", "uint32_t", "const char *", "const char *",
+                  "const char *", "bool", "bool")
+static int
+node_info_default(pcmk__output_t *out, va_list args)
+{
+    uint32_t node_id = va_arg(args, uint32_t);
+    const char *node_name = va_arg(args, const char *);
+    const char *uuid = va_arg(args, const char *);
+    const char *state = va_arg(args, const char *);
+    bool have_quorum = (bool) va_arg(args, int);
+    bool is_remote = (bool) va_arg(args, int);
+
+    return out->info(out,
+                     "Node %" PRIu32 ": %s "
+                     "(uuid=%s, state=%s, have_quorum=%s, is_remote=%s)",
+                     node_id, pcmk__s(node_name, "unknown"),
+                     pcmk__s(uuid, "unknown"), pcmk__s(state, "unknown"),
+                     pcmk__btoa(have_quorum), pcmk__btoa(is_remote));
+}
+
+PCMK__OUTPUT_ARGS("node-info", "uint32_t", "const char *", "bool", "bool",
+                  "const char *", "const char *")
+static int
+node_info_xml(pcmk__output_t *out, va_list args)
+{
+    uint32_t node_id = va_arg(args, uint32_t);
+    const char *node_name = va_arg(args, const char *);
+    const char *uuid = va_arg(args, const char *);
+    const char *state = va_arg(args, const char *);
+    bool have_quorum = (bool) va_arg(args, int);
+    bool is_remote = (bool) va_arg(args, int);
+
+    char *id_s = crm_strdup_printf("%" PRIu32, node_id);
+
+    pcmk__output_create_xml_node(out, "node-info",
+                                 "nodeid", id_s,
+                                 XML_ATTR_UNAME, node_name,
+                                 XML_ATTR_UUID, uuid,
+                                 XML_NODE_IS_PEER, state,
+                                 XML_ATTR_HAVE_QUORUM, pcmk__btoa(have_quorum),
+                                 XML_NODE_IS_REMOTE, pcmk__btoa(is_remote),
+                                 NULL);
+    free(id_s);
+    return pcmk_rc_ok;
+}
+
 PCMK__OUTPUT_ARGS("inject-cluster-action", "const char *", "const char *", "xmlNodePtr")
 static int
 inject_cluster_action(pcmk__output_t *out, va_list args)
@@ -2226,6 +2273,8 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "locations-list", "xml", locations_list_xml },
     { "node-action", "default", node_action },
     { "node-action", "xml", node_action_xml },
+    { "node-info", "default", node_info_default },
+    { "node-info", "xml", node_info_xml },
     { "pacemakerd-health", "default", pacemakerd_health },
     { "pacemakerd-health", "html", pacemakerd_health_html },
     { "pacemakerd-health", "text", pacemakerd_health_text },
