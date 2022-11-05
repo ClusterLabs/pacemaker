@@ -179,17 +179,20 @@ controller_status_event_cb(pcmk_ipc_api_t *controld_api,
 {
     data_t *data = (data_t *) user_data;
     pcmk__output_t *out = data->out;
-    pcmk_controld_api_reply_t *reply = (pcmk_controld_api_reply_t *) event_data;
+    const pcmk_controld_api_reply_t *reply = NULL;
 
     int rc = validate_controld_reply(data, controld_api, event_type, status,
                                      event_data, pcmk_controld_reply_ping);
 
-    if (rc == pcmk_rc_ok) {
-        out->message(out, "health",
-                     reply->data.ping.sys_from, reply->host_from,
-                     reply->data.ping.fsa_state, reply->data.ping.result);
-        data->rc = pcmk_rc_ok;
+    if (rc != pcmk_rc_ok) {
+        return;
     }
+
+    reply = (const pcmk_controld_api_reply_t *) event_data;
+    out->message(out, "health",
+                 reply->data.ping.sys_from, reply->host_from,
+                 reply->data.ping.fsa_state, reply->data.ping.result);
+    data->rc = pcmk_rc_ok;
 }
 
 /*!
@@ -211,15 +214,18 @@ designated_controller_event_cb(pcmk_ipc_api_t *controld_api,
 {
     data_t *data = (data_t *) user_data;
     pcmk__output_t *out = data->out;
-    pcmk_controld_api_reply_t *reply = (pcmk_controld_api_reply_t *) event_data;
+    const pcmk_controld_api_reply_t *reply = NULL;
 
     int rc = validate_controld_reply(data, controld_api, event_type, status,
                                      event_data, pcmk_controld_reply_ping);
 
-    if (rc == pcmk_rc_ok) {
-        out->message(out, "dc", reply->host_from);
-        data->rc = pcmk_rc_ok;
+    if (rc != pcmk_rc_ok) {
+        return;
     }
+
+    reply = (const pcmk_controld_api_reply_t *) event_data;
+    out->message(out, "dc", reply->host_from);
+    data->rc = pcmk_rc_ok;
 }
 
 /*!
@@ -240,8 +246,7 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
 {
     data_t *data = user_data;
     pcmk__output_t *out = data->out;
-    pcmk_pacemakerd_api_reply_t *reply =
-        (pcmk_pacemakerd_api_reply_t *) event_data;
+    const pcmk_pacemakerd_api_reply_t *reply = NULL;
 
     int rc = validate_pcmkd_reply(data, pacemakerd_api, event_type, status,
                                   event_data, pcmk_pacemakerd_reply_ping);
@@ -251,6 +256,8 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
     }
 
     // Parse desired information from reply
+    reply = (const pcmk_pacemakerd_api_reply_t *) event_data;
+
     data->rc = pcmk_rc_ok;
     data->pcmkd_state = reply->data.ping.state;
 
