@@ -747,9 +747,11 @@ pcmk_rc2exitc(int rc)
         case ENODEV:
         case ENOENT:
         case ENXIO:
-        case pcmk_rc_node_unknown:
         case pcmk_rc_unknown_format:
             return CRM_EX_NOSUCH;
+
+        case pcmk_rc_node_unknown:
+            return CRM_EX_NOHOST;
 
         case ETIME:
         case ETIMEDOUT:
