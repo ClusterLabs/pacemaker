@@ -87,10 +87,8 @@ typedef struct {
  * \param[in]     message_timeout_ms  How long to wait for a reply from the
  *                                    \p pacemaker-controld API. If 0,
  *                                    \p pcmk_ipc_dispatch_sync will be used.
- *                                    Otherwise, \p pcmk_ipc_dispatch_main will
- *                                    be used, and a new mainloop will be
- *                                    created for this purpose (freed before
- *                                    return).
+ *                                    Otherwise, \p pcmk_ipc_dispatch_poll will
+ *                                    be used.
  *
  * \return Standard Pacemaker return code
  */
@@ -104,10 +102,8 @@ int pcmk_controller_status(xmlNodePtr *xml, const char *node_name,
  * \param[in]     message_timeout_ms  How long to wait for a reply from the
  *                                    \p pacemaker-controld API. If 0,
  *                                    \p pcmk_ipc_dispatch_sync will be used.
- *                                    Otherwise, \p pcmk_ipc_dispatch_main will
- *                                    be used, and a new mainloop will be
- *                                    created for this purpose (freed before
- *                                    return).
+ *                                    Otherwise, \p pcmk_ipc_dispatch_poll will
+ *                                    be used.
  *
  * \return Standard Pacemaker return code
  */
@@ -130,10 +126,8 @@ void pcmk_free_injections(pcmk_injections_t *injections);
  * \param[in]     message_timeout_ms  How long to wait for a reply from the
  *                                    \p pacemakerd API. If 0,
  *                                    \p pcmk_ipc_dispatch_sync will be used.
- *                                    Otherwise, \p pcmk_ipc_dispatch_main will
- *                                    be used, and a new mainloop will be
- *                                    created for this purpose (freed before
- *                                    return).
+ *                                    Otherwise, \p pcmk_ipc_dispatch_poll will
+ *                                    be used.
  *
  * \return Standard Pacemaker return code
  */
