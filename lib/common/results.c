@@ -869,6 +869,8 @@ crm_exit(crm_exit_t rc)
 
     pcmk__cli_option_cleanup();
 
+    free(pcmk__our_nodename);
+
     if (crm_system_name) {
         crm_info("Exiting %s " CRM_XS " with status %d", crm_system_name, rc);
         free(crm_system_name);

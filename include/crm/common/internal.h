@@ -37,6 +37,9 @@
  */
 extern bool pcmk__is_daemon;
 
+//! Node name of the local node
+extern char *pcmk__our_nodename;
+
 // Number of elements in a statically defined array
 #define PCMK__NELEM(a) ((int) (sizeof(a)/sizeof(a[0])) )
 

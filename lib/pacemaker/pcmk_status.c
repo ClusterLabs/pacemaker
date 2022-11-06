@@ -107,6 +107,14 @@ pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith, cib_t *cib,
     data_set->priv = out;
     cluster_status(data_set);
 
+    if ((cib->variant == cib_native) && pcmk_is_set(show, pcmk_section_times)) {
+        if (pcmk__our_nodename == NULL) {
+            // Currently used only in the times section
+            pcmk__query_node_name(out, 0, &pcmk__our_nodename, 0);
+        }
+        data_set->localhost = pcmk__our_nodename;
+    }
+
     /* Unpack constraints if any section will need them
      * (tickets may be referenced in constraints but not granted yet,
      * and bans need negative location constraints) */
