@@ -692,6 +692,32 @@ pcmk__query_node_info(pcmk__output_t *out, uint32_t *node_id, char **node_name,
     return data.rc;
 }
 
+// Documented in header
+int
+pcmk_query_node_info(xmlNodePtr *xml, uint32_t *node_id, char **node_name,
+                     char **uuid, char **state, bool *have_quorum,
+                     bool *is_remote, bool show_output,
+                     unsigned int message_timeout_ms)
+{
+    pcmk__output_t *out = NULL;
+    int rc = pcmk_rc_ok;
+
+    CRM_ASSERT(node_name != NULL);
+
+    rc = pcmk__xml_output_new(&out, xml);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    pcmk__register_lib_messages(out);
+
+    rc = pcmk__query_node_info(out, node_id, node_name, uuid, state,
+                               have_quorum, is_remote, show_output,
+                               message_timeout_ms);
+    pcmk__xml_output_finish(out, xml);
+    return rc;
+}
+
 /*!
  * \internal
  * \brief Get and optionally output \p pacemakerd status

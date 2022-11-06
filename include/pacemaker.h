@@ -119,6 +119,42 @@ int pcmk_designated_controller(xmlNodePtr *xml,
 void pcmk_free_injections(pcmk_injections_t *injections);
 
 /*!
+ * \brief Get and optionally output node info corresponding to a node ID from
+ *        the controller
+ *
+ * \param[in,out] xml                 Destination for the result, as an XML tree
+ * \param[in,out] node_id             ID of node whose name to get. If \p NULL
+ *                                    or 0, get the local node name. If not
+ *                                    \p NULL, store the true node ID here on
+ *                                    success.
+ * \param[out]    node_name           If not \p NULL, where to store the node
+ *                                    name
+ * \param[out]    uuid                If not \p NULL, where to store the node
+ *                                    UUID
+ * \param[out]    state               If not \p NULL, where to store the
+ *                                    membership state
+ * \param[out]    is_remote           If not \p NULL, where to store whether the
+ *                                    node is a Pacemaker Remote node
+ * \param[out]    have_quorum         If not \p NULL, where to store whether the
+ *                                    node has quorum
+ * \param[in]     show_output         Whether to output the node info
+ * \param[in]     message_timeout_ms  How long to wait for a reply from the
+ *                                    \p pacemaker-controld API. If 0,
+ *                                    \p pcmk_ipc_dispatch_sync will be used.
+ *                                    Otherwise, \p pcmk_ipc_dispatch_poll will
+ *                                    be used.
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note The caller is responsible for freeing \p *node_name, \p *uuid, and
+ *       \p *state using \p free().
+ */
+int pcmk_query_node_info(xmlNodePtr *xml, uint32_t *node_id, char **node_name,
+                         char **uuid, char **state, bool *have_quorum,
+                         bool *is_remote, bool show_output,
+                         unsigned int message_timeout_ms);
+
+/*!
  * \brief Get and output \p pacemakerd status
  *
  * \param[in,out] xml                 Destination for the result, as an XML tree
