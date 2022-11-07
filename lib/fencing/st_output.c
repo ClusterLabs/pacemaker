@@ -22,16 +22,12 @@
 #include <crm/fencing/internal.h>
 #include <crm/pengine/internal.h>
 
-static char *
+static inline char *
 time_t_string(time_t when) {
-    crm_time_t *crm_when = pcmk__copy_timet(when);
-    char *buf = crm_time_as_string(crm_when,
-                                   crm_time_log_date
-                                   |crm_time_log_timeofday
-                                   |crm_time_log_with_timezone);
-
-    crm_time_free(crm_when);
-    return buf;
+    return pcmk__epoch2str(&when,
+                           crm_time_log_date
+                           |crm_time_log_timeofday
+                           |crm_time_log_with_timezone);
 }
 
 /*!
