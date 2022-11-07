@@ -640,9 +640,9 @@ reset_options(void) {
     options.require_crmd = FALSE;
     options.require_node = FALSE;
 
-    options.require_cib = TRUE,
-    options.require_dataset = TRUE,
-    options.require_resource = TRUE,
+    options.require_cib = TRUE;
+    options.require_dataset = TRUE;
+    options.require_resource = TRUE;
 
     options.find_flags = 0;
 }
