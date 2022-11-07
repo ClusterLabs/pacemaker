@@ -125,12 +125,15 @@ clone_header(pcmk__output_t *out, int *rc, pe_resource_t *rsc, clone_variant_dat
         pcmk__add_separated_word(&attrs, 64, "unique", ", ");
     }
 
-    if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
-        pcmk__add_separated_word(&attrs, 64, "unmanaged", ", ");
-    }
-
     if (pe__resource_is_disabled(rsc)) {
         pcmk__add_separated_word(&attrs, 64, "disabled", ", ");
+    }
+
+    if (pcmk_is_set(rsc->flags, pe_rsc_maintenance)) {
+        pcmk__add_separated_word(&attrs, 64, "maintenance", ", ");
+
+    } else if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+        pcmk__add_separated_word(&attrs, 64, "unmanaged", ", ");
     }
 
     if (attrs != NULL) {
@@ -790,10 +793,11 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
         if (!printed_header) {
             printed_header = TRUE;
 
-            rc = pe__name_and_nvpairs_xml(out, true, "clone", 8,
+            rc = pe__name_and_nvpairs_xml(out, true, "clone", 9,
                     "id", rsc->id,
                     "multi_state", pe__rsc_bool_str(rsc, pe_rsc_promotable),
                     "unique", pe__rsc_bool_str(rsc, pe_rsc_unique),
+                    "maintenance", pe__rsc_bool_str(rsc, pe_rsc_maintenance),
                     "managed", pe__rsc_bool_str(rsc, pe_rsc_managed),
                     "disabled", pcmk__btoa(pe__resource_is_disabled(rsc)),
                     "failed", pe__rsc_bool_str(rsc, pe_rsc_failed),

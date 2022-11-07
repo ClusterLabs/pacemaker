@@ -637,11 +637,19 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
             g_string_append(outstr, target_role);
         }
     }
-    if (pcmk_is_set(rsc->flags, pe_rsc_block)) {
-        have_flags = add_output_flag(outstr, "blocked", have_flags);
+
+    // Blocked or maintenance implies unmanaged
+    if (pcmk_any_flags_set(rsc->flags, pe_rsc_block|pe_rsc_maintenance)) {
+        if (pcmk_is_set(rsc->flags, pe_rsc_block)) {
+            have_flags = add_output_flag(outstr, "blocked", have_flags);
+
+        } else if (pcmk_is_set(rsc->flags, pe_rsc_maintenance)) {
+            have_flags = add_output_flag(outstr, "maintenance", have_flags);
+        }
     } else if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
         have_flags = add_output_flag(outstr, "unmanaged", have_flags);
     }
+
     if (pcmk_is_set(rsc->flags, pe_rsc_failure_ignored)) {
         have_flags = add_output_flag(outstr, "failure ignored", have_flags);
     }
@@ -950,7 +958,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
         lock_node_name = rsc->lock_node->details->uname;
     }
 
-    rc = pe__name_and_nvpairs_xml(out, true, "resource", 13,
+    rc = pe__name_and_nvpairs_xml(out, true, "resource", 14,
              "id", rsc_printable_id(rsc),
              "resource_agent", ra_name,
              "role", rsc_state,
@@ -958,6 +966,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
              "active", pcmk__btoa(rsc->fns->active(rsc, TRUE)),
              "orphaned", pe__rsc_bool_str(rsc, pe_rsc_orphan),
              "blocked", pe__rsc_bool_str(rsc, pe_rsc_block),
+             "maintenance", pe__rsc_bool_str(rsc, pe_rsc_maintenance),
              "managed", pe__rsc_bool_str(rsc, pe_rsc_managed),
              "failed", pe__rsc_bool_str(rsc, pe_rsc_failed),
              "failure_ignored", pe__rsc_bool_str(rsc, pe_rsc_failure_ignored),
