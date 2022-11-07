@@ -112,6 +112,7 @@ native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * dat
 
     if (rsc->variant == pe_native && node->details->maintenance) {
         pe__clear_resource_flags(rsc, pe_rsc_managed);
+        pe__set_resource_flags(rsc, pe_rsc_maintenance);
     }
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
