@@ -1436,23 +1436,23 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     if ((crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
                                  &epoch) == pcmk_ok) && (epoch > 0)) {
         guint interval_ms = 0;
-        char *s = NULL;
+        char *interval_ms_s = NULL;
         char *rc_change = pcmk__epoch2str(&epoch,
                                           crm_time_log_date
                                           |crm_time_log_timeofday
                                           |crm_time_log_with_timezone);
 
         crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
-        s = pcmk__itoa(interval_ms);
+        interval_ms_s = crm_strdup_printf("%u", interval_ms);
 
         pcmk__xe_set_props(node, XML_RSC_OP_LAST_CHANGE, rc_change,
                            "queued", crm_element_value(xml_op, XML_RSC_OP_T_QUEUE),
                            "exec", crm_element_value(xml_op, XML_RSC_OP_T_EXEC),
-                           "interval", s,
+                           "interval", interval_ms_s,
                            "task", crm_element_value(xml_op, XML_LRM_ATTR_TASK),
                            NULL);
 
-        free(s);
+        free(interval_ms_s);
         free(rc_change);
     }
 
