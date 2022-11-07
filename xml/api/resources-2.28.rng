@@ -35,6 +35,11 @@
             </attribute>
             <attribute name="image"> <text/> </attribute>
             <attribute name="unique"> <data type="boolean" /> </attribute>
+            <optional>
+                <attribute name="maintenance">
+                    <data type="boolean" />
+                </attribute>
+            </optional>
             <attribute name="managed"> <data type="boolean" /> </attribute>
             <attribute name="failed"> <data type="boolean" /> </attribute>
             <zeroOrMore>
@@ -53,6 +58,11 @@
             <attribute name="id"> <text/> </attribute>
             <attribute name="multi_state"> <data type="boolean" /> </attribute>
             <attribute name="unique"> <data type="boolean" /> </attribute>
+            <optional>
+                <attribute name="maintenance">
+                    <data type="boolean" />
+                </attribute>
+            </optional>
             <attribute name="managed"> <data type="boolean" /> </attribute>
             <attribute name="disabled"> <data type="boolean" /> </attribute>
             <attribute name="failed"> <data type="boolean" /> </attribute>
@@ -68,6 +78,11 @@
         <element name="group">
             <attribute name="id"> <text/> </attribute>
             <attribute name="number_resources"> <data type="nonNegativeInteger" /> </attribute>
+            <optional>
+                <attribute name="maintenance">
+                    <data type="boolean" />
+                </attribute>
+            </optional>
             <attribute name="managed"> <data type="boolean" /> </attribute>
             <attribute name="disabled"> <data type="boolean" /> </attribute>
             <ref name="element-resource-list" />
@@ -87,8 +102,13 @@
             <optional>
                 <attribute name="blocked"> <data type="boolean" /> </attribute>
             </optional>
-            <attribute name="managed"> <data type="boolean" /> </attribute>
+            <optional>
+                <attribute name="maintenance">
+                    <data type="boolean" />
+                </attribute>
+            </optional>
             <attribute name="failed"> <data type="boolean" /> </attribute>
+            <attribute name="managed"> <data type="boolean" /> </attribute>
             <attribute name="failure_ignored"> <data type="boolean" /> </attribute>
             <attribute name="nodes_running_on"> <data type="nonNegativeInteger" />  </attribute>
             <optional>
