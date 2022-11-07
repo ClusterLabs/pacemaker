@@ -22,12 +22,31 @@
 #include <crm/fencing/internal.h>
 #include <crm/pengine/internal.h>
 
-static inline char *
-time_t_string(time_t when) {
-    return pcmk__epoch2str(&when,
-                           crm_time_log_date
-                           |crm_time_log_timeofday
-                           |crm_time_log_with_timezone);
+/*!
+ * \internal
+ * \brief Convert seconds and nanoseconds to a date/time/time-zone string
+ *
+ * \param[in] sec        Seconds
+ * \param[in] nsec       Nanoseconds
+ * \param[in] show_usec  Whether to show time in microseconds resolution (if
+ *                       false, use seconds resolution)
+ *
+ * \return A string representation of \p sec and \nsec
+ *
+ * \note The caller is responsible for freeing the return value using \p free().
+ */
+static char *
+timespec_string(time_t sec, long nsec, bool show_usec) {
+    const struct timespec ts = {
+        .tv_sec = sec,
+        .tv_nsec = nsec,
+    };
+
+    return pcmk__timespec2str(&ts,
+                              crm_time_log_date
+                              |crm_time_log_timeofday
+                              |crm_time_log_with_timezone
+                              |(show_usec? crm_time_usecs : 0));
 }
 
 /*!
@@ -72,10 +91,11 @@ stonith__history_description(stonith_history_t *history, bool full_history,
                              const char *later_succeeded, uint32_t show_opts)
 {
     GString *str = g_string_sized_new(256); // Generous starting size
-    char *completed_time = NULL;
+    char *completed_time_s = NULL;
 
     if ((history->state == st_failed) || (history->state == st_done)) {
-        completed_time = time_t_string(history->completed);
+        completed_time_s = timespec_string(history->completed,
+                                           history->completed_nsec, true);
     }
 
     pcmk__g_strcat(str,
@@ -120,7 +140,7 @@ stonith__history_description(stonith_history_t *history, bool full_history,
                        NULL);
 
         // For completed actions, add completion time
-        if (completed_time != NULL) {
+        if (completed_time_s != NULL) {
             if (full_history) {
                 g_string_append(str, ", completed");
             } else if (history->state == st_failed) {
@@ -128,12 +148,11 @@ stonith__history_description(stonith_history_t *history, bool full_history,
             } else {
                 g_string_append(str, ", last-successful");
             }
-            pcmk__g_strcat(str, "='", completed_time, "'", NULL);
+            pcmk__g_strcat(str, "='", completed_time_s, "'", NULL);
         }
-    } else { // More human-friendly
-        if (completed_time != NULL) {
-            pcmk__g_strcat(str, " at ", completed_time, NULL);
-        }
+    } else if (completed_time_s != NULL) {
+        // More human-friendly
+        pcmk__g_strcat(str, " at ", completed_time_s, NULL);
     }
 
     if ((history->state == st_failed) && (later_succeeded != NULL)) {
@@ -142,7 +161,7 @@ stonith__history_description(stonith_history_t *history, bool full_history,
                        " succeeded)", NULL);
     }
 
-    free(completed_time);
+    free(completed_time_s);
     return g_string_free(str, FALSE);
 }
 
@@ -322,7 +341,7 @@ last_fenced_xml(pcmk__output_t *out, va_list args) {
     time_t when = va_arg(args, time_t);
 
     if (when) {
-        char *buf = time_t_string(when);
+        char *buf = timespec_string(when, 0, false);
 
         pcmk__output_create_xml_node(out, "last-fenced",
                                      "target", target,
@@ -436,8 +455,6 @@ stonith_event_xml(pcmk__output_t *out, va_list args)
     const char *succeeded G_GNUC_UNUSED = va_arg(args, const char *);
     uint32_t show_opts G_GNUC_UNUSED = va_arg(args, uint32_t);
 
-    char *buf = NULL;
-
     xmlNodePtr node = pcmk__output_create_xml_node(out, "fence_event",
                                                    "action", event->action,
                                                    "target", event->target,
@@ -470,10 +487,12 @@ stonith_event_xml(pcmk__output_t *out, va_list args)
         crm_xml_add(node, "delegate", event->delegate);
     }
 
-    if (event->state == st_failed || event->state == st_done) {
-        buf = time_t_string(event->completed);
-        crm_xml_add(node, "completed", buf);
-        free(buf);
+    if ((event->state == st_failed) || (event->state == st_done)) {
+        char *time_s = timespec_string(event->completed, event->completed_nsec,
+                                       true);
+
+        crm_xml_add(node, "completed", time_s);
+        free(time_s);
     }
 
     return pcmk_rc_ok;
