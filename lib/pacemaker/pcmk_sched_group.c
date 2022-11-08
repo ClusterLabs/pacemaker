@@ -714,12 +714,6 @@ pcmk__group_with_colocations(const pe_resource_t *rsc,
         return;
     }
 
-    if ((rsc != orig_rsc)
-        && pcmk_is_set(rsc->flags, pe_rsc_provisional)
-        && !pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
-        return; // Later members have not yet received group colocations
-    }
-
     /* Later group members honor the group's colocations indirectly, due to the
      * internal group colocations that chain everything from the first member.
      * However, if an earlier group member is unmanaged, this chaining will not
