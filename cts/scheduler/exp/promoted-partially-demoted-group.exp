@@ -25,7 +25,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="69" operation="demoted" operation_key="ms-cdev-pool-0-iscsi-vips-fw_demoted_0"/>
+        <pseudo_event id="67" operation="demoted" operation_key="ms-cdev-pool-0-iscsi-vips-fw_demoted_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -181,7 +181,7 @@
         <pseudo_event id="20" operation="stopped" operation_key="cdev-pool-0-iscsi-vips_stopped_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="69" operation="demoted" operation_key="ms-cdev-pool-0-iscsi-vips-fw_demoted_0"/>
+        <pseudo_event id="67" operation="demoted" operation_key="ms-cdev-pool-0-iscsi-vips-fw_demoted_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -310,72 +310,72 @@
   </synapse>
   <synapse id="20">
     <action_set>
-      <pseudo_event id="46" operation="promote" operation_key="cdev-pool-0-iscsi-vips-fw:0_promote_0">
+      <pseudo_event id="44" operation="promote" operation_key="cdev-pool-0-iscsi-vips-fw:0_promote_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="44" operation="demote" operation_key="cdev-pool-0-iscsi-vips-fw:0_demote_0"/>
+        <pseudo_event id="42" operation="demote" operation_key="cdev-pool-0-iscsi-vips-fw:0_demote_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="66" operation="promote" operation_key="ms-cdev-pool-0-iscsi-vips-fw_promote_0"/>
+        <pseudo_event id="64" operation="promote" operation_key="ms-cdev-pool-0-iscsi-vips-fw_promote_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="21">
     <action_set>
-      <pseudo_event id="45" operation="demoted" operation_key="cdev-pool-0-iscsi-vips-fw:0_demoted_0">
+      <pseudo_event id="43" operation="demoted" operation_key="cdev-pool-0-iscsi-vips-fw:0_demoted_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="34" operation="demote" operation_key="vip-164-fw_demote_0" internal_operation_key="vip-164-fw:0_demote_0" on_node="sd01-1" on_node_uuid="2"/>
+        <rsc_op id="32" operation="demote" operation_key="vip-164-fw_demote_0" internal_operation_key="vip-164-fw:0_demote_0" on_node="sd01-1" on_node_uuid="2"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="22">
     <action_set>
-      <pseudo_event id="44" operation="demote" operation_key="cdev-pool-0-iscsi-vips-fw:0_demote_0">
+      <pseudo_event id="42" operation="demote" operation_key="cdev-pool-0-iscsi-vips-fw:0_demote_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="68" operation="demote" operation_key="ms-cdev-pool-0-iscsi-vips-fw_demote_0"/>
+        <pseudo_event id="66" operation="demote" operation_key="ms-cdev-pool-0-iscsi-vips-fw_demote_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="23">
     <action_set>
-      <rsc_op id="36" operation="monitor" operation_key="vip-164-fw_monitor_10000" internal_operation_key="vip-164-fw:0_monitor_10000" on_node="sd01-1" on_node_uuid="2">
+      <rsc_op id="34" operation="monitor" operation_key="vip-164-fw_monitor_10000" internal_operation_key="vip-164-fw:0_monitor_10000" on_node="sd01-1" on_node_uuid="2">
         <primitive id="vip-164-fw" long-id="vip-164-fw:0" class="ocf" provider="vds-ok" type="VIPfirewall"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="sd01-1" CRM_meta_on_node_uuid="2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_start_delay="10000" CRM_meta_timeout="10000" allow_action="pass"  vip="10.5.4.164"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="34" operation="demote" operation_key="vip-164-fw_demote_0" internal_operation_key="vip-164-fw:0_demote_0" on_node="sd01-1" on_node_uuid="2"/>
+        <rsc_op id="32" operation="demote" operation_key="vip-164-fw_demote_0" internal_operation_key="vip-164-fw:0_demote_0" on_node="sd01-1" on_node_uuid="2"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="24">
     <action_set>
-      <rsc_op id="34" operation="demote" operation_key="vip-164-fw_demote_0" internal_operation_key="vip-164-fw:0_demote_0" on_node="sd01-1" on_node_uuid="2">
+      <rsc_op id="32" operation="demote" operation_key="vip-164-fw_demote_0" internal_operation_key="vip-164-fw:0_demote_0" on_node="sd01-1" on_node_uuid="2">
         <primitive id="vip-164-fw" long-id="vip-164-fw:0" class="ocf" provider="vds-ok" type="VIPfirewall"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="sd01-1" CRM_meta_on_node_uuid="2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" allow_action="pass"  vip="10.5.4.164"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="44" operation="demote" operation_key="cdev-pool-0-iscsi-vips-fw:0_demote_0"/>
+        <pseudo_event id="42" operation="demote" operation_key="cdev-pool-0-iscsi-vips-fw:0_demote_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="25">
     <action_set>
-      <rsc_op id="39" operation="monitor" operation_key="vip-165-fw_monitor_10000" internal_operation_key="vip-165-fw:0_monitor_10000" on_node="sd01-1" on_node_uuid="2">
+      <rsc_op id="37" operation="monitor" operation_key="vip-165-fw_monitor_10000" internal_operation_key="vip-165-fw:0_monitor_10000" on_node="sd01-1" on_node_uuid="2">
         <primitive id="vip-165-fw" long-id="vip-165-fw:0" class="ocf" provider="vds-ok" type="VIPfirewall"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="sd01-1" CRM_meta_on_node_uuid="2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_start_delay="10000" CRM_meta_timeout="10000" allow_action="pass"  vip="10.5.4.165"/>
       </rsc_op>
@@ -384,78 +384,78 @@
   </synapse>
   <synapse id="26">
     <action_set>
-      <pseudo_event id="61" operation="promoted" operation_key="cdev-pool-0-iscsi-vips-fw:1_promoted_0">
+      <pseudo_event id="59" operation="promoted" operation_key="cdev-pool-0-iscsi-vips-fw:1_promoted_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="50" operation="promote" operation_key="vip-164-fw_promote_0" internal_operation_key="vip-164-fw:1_promote_0" on_node="sd01-0" on_node_uuid="1"/>
+        <rsc_op id="48" operation="promote" operation_key="vip-164-fw_promote_0" internal_operation_key="vip-164-fw:1_promote_0" on_node="sd01-0" on_node_uuid="1"/>
       </trigger>
       <trigger>
-        <rsc_op id="53" operation="promote" operation_key="vip-165-fw_promote_0" internal_operation_key="vip-165-fw:1_promote_0" on_node="sd01-0" on_node_uuid="1"/>
+        <rsc_op id="51" operation="promote" operation_key="vip-165-fw_promote_0" internal_operation_key="vip-165-fw:1_promote_0" on_node="sd01-0" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="27">
     <action_set>
-      <pseudo_event id="60" operation="promote" operation_key="cdev-pool-0-iscsi-vips-fw:1_promote_0">
+      <pseudo_event id="58" operation="promote" operation_key="cdev-pool-0-iscsi-vips-fw:1_promote_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="66" operation="promote" operation_key="ms-cdev-pool-0-iscsi-vips-fw_promote_0"/>
+        <pseudo_event id="64" operation="promote" operation_key="ms-cdev-pool-0-iscsi-vips-fw_promote_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="28">
     <action_set>
-      <rsc_op id="50" operation="promote" operation_key="vip-164-fw_promote_0" internal_operation_key="vip-164-fw:1_promote_0" on_node="sd01-0" on_node_uuid="1">
+      <rsc_op id="48" operation="promote" operation_key="vip-164-fw_promote_0" internal_operation_key="vip-164-fw:1_promote_0" on_node="sd01-0" on_node_uuid="1">
         <primitive id="vip-164-fw" long-id="vip-164-fw:1" class="ocf" provider="vds-ok" type="VIPfirewall"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="sd01-0" CRM_meta_on_node_uuid="1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" allow_action="pass"  vip="10.5.4.164"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="60" operation="promote" operation_key="cdev-pool-0-iscsi-vips-fw:1_promote_0"/>
+        <pseudo_event id="58" operation="promote" operation_key="cdev-pool-0-iscsi-vips-fw:1_promote_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="29">
     <action_set>
-      <rsc_op id="53" operation="promote" operation_key="vip-165-fw_promote_0" internal_operation_key="vip-165-fw:1_promote_0" on_node="sd01-0" on_node_uuid="1">
+      <rsc_op id="51" operation="promote" operation_key="vip-165-fw_promote_0" internal_operation_key="vip-165-fw:1_promote_0" on_node="sd01-0" on_node_uuid="1">
         <primitive id="vip-165-fw" long-id="vip-165-fw:1" class="ocf" provider="vds-ok" type="VIPfirewall"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="sd01-0" CRM_meta_on_node_uuid="1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" allow_action="pass"  vip="10.5.4.165"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="50" operation="promote" operation_key="vip-164-fw_promote_0" internal_operation_key="vip-164-fw:1_promote_0" on_node="sd01-0" on_node_uuid="1"/>
+        <rsc_op id="48" operation="promote" operation_key="vip-164-fw_promote_0" internal_operation_key="vip-164-fw:1_promote_0" on_node="sd01-0" on_node_uuid="1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="60" operation="promote" operation_key="cdev-pool-0-iscsi-vips-fw:1_promote_0"/>
+        <pseudo_event id="58" operation="promote" operation_key="cdev-pool-0-iscsi-vips-fw:1_promote_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="30" priority="1000000">
     <action_set>
-      <pseudo_event id="69" operation="demoted" operation_key="ms-cdev-pool-0-iscsi-vips-fw_demoted_0">
+      <pseudo_event id="67" operation="demoted" operation_key="ms-cdev-pool-0-iscsi-vips-fw_demoted_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="45" operation="demoted" operation_key="cdev-pool-0-iscsi-vips-fw:0_demoted_0"/>
+        <pseudo_event id="43" operation="demoted" operation_key="cdev-pool-0-iscsi-vips-fw:0_demoted_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="68" operation="demote" operation_key="ms-cdev-pool-0-iscsi-vips-fw_demote_0"/>
+        <pseudo_event id="66" operation="demote" operation_key="ms-cdev-pool-0-iscsi-vips-fw_demote_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="31">
     <action_set>
-      <pseudo_event id="68" operation="demote" operation_key="ms-cdev-pool-0-iscsi-vips-fw_demote_0">
+      <pseudo_event id="66" operation="demote" operation_key="ms-cdev-pool-0-iscsi-vips-fw_demote_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -463,19 +463,19 @@
   </synapse>
   <synapse id="32" priority="1000000">
     <action_set>
-      <pseudo_event id="67" operation="promoted" operation_key="ms-cdev-pool-0-iscsi-vips-fw_promoted_0">
+      <pseudo_event id="65" operation="promoted" operation_key="ms-cdev-pool-0-iscsi-vips-fw_promoted_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="61" operation="promoted" operation_key="cdev-pool-0-iscsi-vips-fw:1_promoted_0"/>
+        <pseudo_event id="59" operation="promoted" operation_key="cdev-pool-0-iscsi-vips-fw:1_promoted_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="33">
     <action_set>
-      <pseudo_event id="66" operation="promote" operation_key="ms-cdev-pool-0-iscsi-vips-fw_promote_0">
+      <pseudo_event id="64" operation="promote" operation_key="ms-cdev-pool-0-iscsi-vips-fw_promote_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -487,7 +487,7 @@
         <pseudo_event id="28" operation="running" operation_key="cdev-pool-0-iscsi-export_running_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="69" operation="demoted" operation_key="ms-cdev-pool-0-iscsi-vips-fw_demoted_0"/>
+        <pseudo_event id="67" operation="demoted" operation_key="ms-cdev-pool-0-iscsi-vips-fw_demoted_0"/>
       </trigger>
     </inputs>
   </synapse>
