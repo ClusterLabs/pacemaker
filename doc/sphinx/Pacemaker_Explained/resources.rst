@@ -915,17 +915,30 @@ settings:
   may require the resource's ``target-role`` to be set to ``Stopped`` then
   ``Started`` to be recovered.
 
+* When a resource is put into maintenance mode (by setting
+  ``maintenance=true``): The resource will be marked as unmanaged. (This
+  overrides ``is-managed=true``.)
+
+  Additionally, all monitor operations will be stopped, except those specifying
+  ``role`` as ``Stopped`` (which will be newly initiated if appropriate). As
+  with unmanaged resources in general, starting a resource on a node other than
+  where the cluster expects it to be will cause problems.
+
 * When a node is put into standby: All resources will be moved away from the
   node, and all ``monitor`` operations will be stopped on the node, except those
   specifying ``role`` as ``Stopped`` (which will be newly initiated if
   appropriate).
 
-* When the cluster is put into maintenance mode: All resources will be marked
-  as unmanaged. All monitor operations will be stopped, except those
-  specifying ``role`` as ``Stopped`` (which will be newly initiated if
-  appropriate). As with single unmanaged resources, starting
-  a resource on a node other than where the cluster expects it to be will
-  cause problems.
+* When a node is put into maintenance mode: All resources that are active on the
+  node will be marked as in maintenance mode. See above for more details.
+
+* When the cluster is put into maintenance mode: All resources in the cluster
+  will be marked as in maintenance mode. See above for more details.
+
+A resource is in maintenance mode if the cluster, the node where the resource
+is active, or the resource itself is configured to be in maintenance mode. If a
+resource is in maintenance mode, then it is also unmanaged. However, if a
+resource is unmanaged, it is not necessarily in maintenance mode.
 
 .. _s-operation-defaults:
 
