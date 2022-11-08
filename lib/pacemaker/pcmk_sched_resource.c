@@ -220,6 +220,7 @@ pcmk__colocated_resources(const pe_resource_t *rsc, const pe_resource_t *orig_rs
                           GList *colocated_rscs)
 {
     const GList *iter = NULL;
+    GList *colocations = NULL;
 
     if (orig_rsc == NULL) {
         orig_rsc = rsc;
@@ -234,7 +235,8 @@ pcmk__colocated_resources(const pe_resource_t *rsc, const pe_resource_t *orig_rs
     colocated_rscs = g_list_append(colocated_rscs, (gpointer) rsc);
 
     // Follow colocations where this resource is the dependent resource
-    for (iter = rsc->rsc_cons; iter != NULL; iter = iter->next) {
+    colocations = pcmk__this_with_colocations(rsc);
+    for (iter = colocations; iter != NULL; iter = iter->next) {
         const pcmk__colocation_t *constraint = iter->data;
         const pe_resource_t *primary = constraint->primary;
 
@@ -251,9 +253,11 @@ pcmk__colocated_resources(const pe_resource_t *rsc, const pe_resource_t *orig_rs
                                                                 colocated_rscs);
         }
     }
+    g_list_free(colocations);
 
     // Follow colocations where this resource is the primary resource
-    for (iter = rsc->rsc_cons_lhs; iter != NULL; iter = iter->next) {
+    colocations = pcmk__with_this_colocations(rsc);
+    for (iter = colocations; iter != NULL; iter = iter->next) {
         const pcmk__colocation_t *constraint = iter->data;
         const pe_resource_t *dependent = constraint->dependent;
 
@@ -274,6 +278,7 @@ pcmk__colocated_resources(const pe_resource_t *rsc, const pe_resource_t *orig_rs
                                                                   colocated_rscs);
         }
     }
+    g_list_free(colocations);
 
     return colocated_rscs;
 }

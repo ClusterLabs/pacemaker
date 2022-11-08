@@ -18,69 +18,6 @@
 
 /*!
  * \internal
- * \brief Expand a group's colocations to its members
- *
- * \param[in,out] rsc  Group resource
- */
-static void
-expand_group_colocations(pe_resource_t *rsc)
-{
-    pe_resource_t *member = NULL;
-    bool any_unmanaged = false;
-    GList *item = NULL;
-
-    if (rsc->children == NULL) {
-        return;
-    }
-
-    // Treat "group with R" colocations as "first member with R"
-    member = (pe_resource_t *) rsc->children->data;
-    pcmk__add_this_with_list(&(member->rsc_cons), rsc->rsc_cons);
-
-    /* The above works for the whole group because each group member is
-     * colocated with the previous one.
-     *
-     * However, there is a special case when a group has a mandatory colocation
-     * with a resource that can't start. In that case,
-     * pcmk__block_colocation_dependents() will ensure that dependent resources
-     * in mandatory colocations (i.e. the first member for groups) can't start
-     * either. But if any group member is unmanaged and already started, the
-     * internal group colocations are no longer sufficient to make that apply to
-     * later members.
-     *
-     * To handle that case, add mandatory colocations to each member after the
-     * first.
-     */
-    any_unmanaged = !pcmk_is_set(member->flags, pe_rsc_managed);
-    for (item = rsc->children->next; item != NULL; item = item->next) {
-        member = item->data;
-        if (any_unmanaged) {
-            for (GList *cons_iter = rsc->rsc_cons; cons_iter != NULL;
-                 cons_iter = cons_iter->next) {
-
-                pcmk__colocation_t *constraint = (pcmk__colocation_t *) cons_iter->data;
-
-                if (constraint->score == INFINITY) {
-                    pcmk__add_this_with(&(member->rsc_cons), constraint);
-                }
-            }
-        } else if (!pcmk_is_set(member->flags, pe_rsc_managed)) {
-            any_unmanaged = true;
-        }
-    }
-
-    g_list_free(rsc->rsc_cons);
-    rsc->rsc_cons = NULL;
-
-    // Treat "R with group" colocations as "R with last member"
-    member = pe__last_group_member(rsc);
-    pcmk__add_with_this_list(&(member->rsc_cons_lhs), rsc->rsc_cons_lhs);
-    g_list_free(rsc->rsc_cons_lhs);
-    rsc->rsc_cons_lhs = NULL;
-}
-
-/*!
- * \internal
  * \brief Assign a group resource to a node
  *
  * \param[in,out] rsc     Group resource to assign to a node
@@ -114,8 +51,6 @@ pcmk__group_assign(pe_resource_t *rsc, const pe_node_t *prefer)
     pe__set_resource_flags(rsc, pe_rsc_allocating);
     first_member = (pe_resource_t *) rsc->children->data;
     rsc->role = first_member->role;
-
-    expand_group_colocations(rsc);
 
     pe__show_node_weights(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
                           rsc, __func__, rsc->allowed_nodes, rsc->cluster);

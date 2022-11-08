@@ -903,6 +903,7 @@ pcmk__block_colocation_dependents(pe_action_t *action,
                                   pe_working_set_t *data_set)
 {
     GList *gIter = NULL;
+    GList *colocations = NULL;
     pe_resource_t *rsc = NULL;
     bool is_start = false;
 
@@ -926,10 +927,6 @@ pcmk__block_colocation_dependents(pe_action_t *action,
         rsc = rsc->parent; // Bundle
     }
 
-    if (rsc->rsc_cons_lhs == NULL) {
-        return;
-    }
-
     // Colocation fails only if entire primary can't reach desired role
     for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child = (pe_resource_t *) gIter->data;
@@ -949,7 +946,8 @@ pcmk__block_colocation_dependents(pe_action_t *action,
               rsc->id, action->rsc->id, action->task);
 
     // Check each colocation where this resource is primary
-    for (gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
+    colocations = pcmk__with_this_colocations(rsc);
+    for (gIter = colocations; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *colocation = (pcmk__colocation_t *) gIter->data;
 
         if (colocation->score < INFINITY) {
@@ -974,6 +972,7 @@ pcmk__block_colocation_dependents(pe_action_t *action,
             mark_action_blocked(colocation->dependent, RSC_START, action->rsc);
         }
     }
+    g_list_free(colocations);
 }
 
 /*!
@@ -1507,33 +1506,32 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
     }
 
     if (pcmk__any_node_available(work)) {
-        GList *gIter = NULL;
+        GList *colocations = NULL;
         float multiplier = (factor < 0.0)? -1.0 : 1.0;
 
         if (pcmk_is_set(flags, pcmk__coloc_select_this_with)) {
-            gIter = rsc->rsc_cons;
+            colocations = pcmk__this_with_colocations(rsc);
             pe_rsc_trace(rsc,
                          "Checking additional %d optional '%s with' constraints",
-                         g_list_length(gIter), rsc->id);
-
+                         g_list_length(colocations), rsc->id);
         } else if (rsc->variant == pe_group) {
             pe_resource_t *last_rsc = pe__last_group_member(rsc);
 
-            gIter = last_rsc->rsc_cons_lhs;
+            colocations = pcmk__with_this_colocations(last_rsc);
             pe_rsc_trace(rsc, "Checking additional %d optional 'with group %s' "
                          "constraints using last member %s",
-                         g_list_length(gIter), rsc->id, last_rsc->id);
+                         g_list_length(colocations), rsc->id, last_rsc->id);
 
         } else {
-            gIter = rsc->rsc_cons_lhs;
+            colocations = pcmk__with_this_colocations(rsc);
             pe_rsc_trace(rsc,
                          "Checking additional %d optional 'with %s' constraints",
-                         g_list_length(gIter), rsc->id);
+                         g_list_length(colocations), rsc->id);
         }
 
-        for (; gIter != NULL; gIter = gIter->next) {
+        for (GList *iter = colocations; iter != NULL; iter = iter->next) {
             pe_resource_t *other = NULL;
-            pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
+            pcmk__colocation_t *constraint = (pcmk__colocation_t *) iter->data;
 
             if (pcmk_is_set(flags, pcmk__coloc_select_this_with)) {
                 other = constraint->primary;
@@ -1552,6 +1550,7 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
                                             flags|pcmk__coloc_select_active);
             pe__show_node_weights(true, NULL, log_id, work, rsc->cluster);
         }
+        g_list_free(colocations);
 
     } else if (pcmk_is_set(flags, pcmk__coloc_select_active)) {
         pe_rsc_info(rsc, "%s: Rolling back optional scores from %s",

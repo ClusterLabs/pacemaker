@@ -385,6 +385,8 @@ remote_connection_assigned(const pe_resource_t *connection)
 pe_node_t *
 pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer)
 {
+    GList *colocations = NULL;
+
     CRM_ASSERT(rsc != NULL);
 
     // Never assign a child without parent being assigned first
@@ -409,11 +411,15 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer)
     pe__show_node_weights(true, rsc, "Pre-assignment", rsc->allowed_nodes,
                           rsc->cluster);
 
-    g_list_foreach(rsc->rsc_cons, apply_this_with, rsc);
+    colocations = pcmk__this_with_colocations(rsc);
+    g_list_foreach(colocations, apply_this_with, rsc);
+    g_list_free(colocations);
     pe__show_node_weights(true, rsc, "Post-this-with", rsc->allowed_nodes,
                           rsc->cluster);
 
-    g_list_foreach(rsc->rsc_cons_lhs, apply_with_this, rsc);
+    colocations = pcmk__with_this_colocations(rsc);
+    g_list_foreach(colocations, apply_with_this, rsc);
+    g_list_free(colocations);
 
     if (rsc->next_role == RSC_ROLE_STOPPED) {
         pe_rsc_trace(rsc,
