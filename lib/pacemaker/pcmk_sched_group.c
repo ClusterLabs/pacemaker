@@ -656,13 +656,6 @@ pcmk__with_group_colocations(const pe_resource_t *rsc,
         return;
     }
 
-    // @COMPAT with previous (incorrect) behavior
-    if ((rsc == orig_rsc)
-        && (!pcmk_is_set(rsc->flags, pe_rsc_provisional)
-            || pcmk_is_set(rsc->flags, pe_rsc_allocating))) {
-        return; // Group colocations were moved to members
-    }
-
     /* "With this" colocations are needed only for the group itself and for its
      * last member. Add the group's colocations plus any relevant
      * parent colocations if cloned.
