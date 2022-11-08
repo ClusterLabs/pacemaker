@@ -509,6 +509,56 @@ pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
     g_list_free(allocated_primaries);
 }
 
+// Bundle implementation of resource_alloc_functions_t:with_this_colocations()
+void
+pcmk__with_bundle_colocations(const pe_resource_t *rsc,
+                              const pe_resource_t *orig_rsc, GList **list)
+{
+    CRM_CHECK((rsc != NULL) && (rsc->variant == pe_container)
+              && (orig_rsc != NULL) && (list != NULL),
+              return);
+
+    // @COMPAT with previous (incorrect) behavior
+    if ((rsc != orig_rsc)
+        && pcmk_is_set(rsc->flags, pe_rsc_provisional)
+        && !pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
+        return; // Containers have not yet received bundle colocations
+    }
+
+    if (rsc == orig_rsc) { // Colocations are wanted for bundle itself
+        pcmk__add_with_this_list(list, rsc->rsc_cons_lhs);
+
+    // Only the bundle replicas' containers get the bundle's constraints
+    } else if (pcmk_is_set(orig_rsc->flags, pe_rsc_replica_container)) {
+        pcmk__add_collective_constraints(list, orig_rsc, rsc, true);
+    }
+}
+
+// Bundle implementation of resource_alloc_functions_t:this_with_colocations()
+void
+pcmk__bundle_with_colocations(const pe_resource_t *rsc,
+                              const pe_resource_t *orig_rsc, GList **list)
+{
+    CRM_CHECK((rsc != NULL) && (rsc->variant == pe_container)
+              && (orig_rsc != NULL) && (list != NULL),
+              return);
+
+    // @COMPAT with previous (incorrect) behavior
+    if ((rsc != orig_rsc)
+        && pcmk_is_set(rsc->flags, pe_rsc_provisional)
+        && !pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
+        return; // Containers have not yet received bundle colocations
+    }
+
+    if (rsc == orig_rsc) { // Colocations are wanted for bundle itself
+        pcmk__add_this_with_list(list, rsc->rsc_cons);
+
+    // Only the bundle replicas' containers get the bundle's constraints
+    } else if (pcmk_is_set(orig_rsc->flags, pe_rsc_replica_container)) {
+        pcmk__add_collective_constraints(list, orig_rsc, rsc, false);
+    }
+}
+
 enum pe_action_flags
 pcmk__bundle_action_flags(pe_action_t *action, const pe_node_t *node)
 {

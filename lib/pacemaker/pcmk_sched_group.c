@@ -706,6 +706,118 @@ pcmk__group_colocated_resources(const pe_resource_t *rsc,
     return colocated_rscs;
 }
 
+// Group implementation of resource_alloc_functions_t:with_this_colocations()
+void
+pcmk__with_group_colocations(const pe_resource_t *rsc,
+                             const pe_resource_t *orig_rsc, GList **list)
+
+{
+    CRM_CHECK((rsc != NULL) && (rsc->variant == pe_group)
+              && (orig_rsc != NULL) && (list != NULL),
+              return);
+
+    // Ignore empty groups
+    if (rsc->children == NULL) {
+        return;
+    }
+
+    // @COMPAT with previous (incorrect) behavior
+    if ((rsc == orig_rsc)
+        && (!pcmk_is_set(rsc->flags, pe_rsc_provisional)
+            || pcmk_is_set(rsc->flags, pe_rsc_allocating))) {
+        return; // Group colocations were moved to members
+    } else if ((rsc != orig_rsc)
+        && pcmk_is_set(rsc->flags, pe_rsc_provisional)
+        && !pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
+        return; // Members have not yet received group colocations
+    }
+
+    /* "With this" colocations are needed only for the group itself and for its
+     * last member. Add the group's colocations plus any relevant
+     * parent colocations if cloned.
+     */
+    if ((rsc == orig_rsc) || (orig_rsc == pe__last_group_member(rsc))) {
+        crm_trace("Adding 'with %s' colocations to list for %s",
+                  rsc->id, orig_rsc->id);
+        pcmk__add_with_this_list(list, rsc->rsc_cons_lhs);
+        if (rsc->parent != NULL) { // Cloned group
+            rsc->parent->cmds->with_this_colocations(rsc->parent, orig_rsc,
+                                                     list);
+        }
+    }
+}
+
+// Group implementation of resource_alloc_functions_t:this_with_colocations()
+void
+pcmk__group_with_colocations(const pe_resource_t *rsc,
+                             const pe_resource_t *orig_rsc, GList **list)
+{
+    CRM_CHECK((rsc != NULL) && (rsc->variant == pe_group)
+              && (orig_rsc != NULL) && (list != NULL),
+              return);
+
+    // Ignore empty groups
+    if (rsc->children == NULL) {
+        return;
+    }
+
+    // @COMPAT with previous (incorrect) behavior
+    if ((rsc == orig_rsc)
+        && (!pcmk_is_set(rsc->flags, pe_rsc_provisional)
+            || pcmk_is_set(rsc->flags, pe_rsc_allocating))) {
+        return; // Group colocations were moved to members
+    } else if ((rsc != orig_rsc)
+        && pcmk_is_set(rsc->flags, pe_rsc_provisional)
+        && !pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
+        return; // Members have not yet received group colocations
+    }
+
+    /* Colocations for the group itself, or for its first member, consist of the
+     * group's colocations plus any relevant parent colocations if cloned.
+     */
+    if ((rsc == orig_rsc)
+        || (orig_rsc == (const pe_resource_t *) rsc->children->data)) {
+        crm_trace("Adding '%s with' colocations to list for %s",
+                  rsc->id, orig_rsc->id);
+        pcmk__add_this_with_list(list, rsc->rsc_cons);
+        if (rsc->parent != NULL) { // Cloned group
+            rsc->parent->cmds->this_with_colocations(rsc->parent, orig_rsc,
+                                                     list);
+        }
+        return;
+    }
+
+    /* Later group members honor the group's colocations indirectly, due to the
+     * internal group colocations that chain everything from the first member.
+     * However, if an earlier group member is unmanaged, this chaining will not
+     * happen, so the group's mandatory colocations must be explicitly added.
+     */
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        const pe_resource_t *member = (const pe_resource_t *) iter->data;
+
+        if (orig_rsc == member) {
+            break; // We've seen all earlier members, and none are unmanaged
+        }
+
+        if (!pcmk_is_set(member->flags, pe_rsc_managed)) {
+            crm_trace("Adding mandatory '%s with' colocations to list for "
+                      "member %s because earlier member %s is unmanaged",
+                      rsc->id, orig_rsc->id, member->id);
+            for (GList *cons_iter = rsc->rsc_cons; cons_iter != NULL;
+                 cons_iter = cons_iter->next) {
+                pcmk__colocation_t *colocation = NULL;
+
+                colocation = (pcmk__colocation_t *) cons_iter->data;
+                if (colocation->score == INFINITY) {
+                    pcmk__add_this_with(list, colocation);
+                }
+            }
+            // @TODO Add mandatory (or all?) clone constraints if cloned
+            break;
+        }
+    }
+}
+
 // Group implementation of resource_alloc_functions_t:add_utilization()
 void
 pcmk__group_add_utilization(const pe_resource_t *rsc,

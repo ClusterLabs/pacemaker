@@ -133,6 +133,32 @@ struct resource_alloc_functions_s {
 
     /*!
      * \internal
+     * \brief Add colocations affecting a resource as primary to a list
+     *
+     * \param[in]     rsc       Resource whose colocations should be added
+     * \param[in]     orig_rsc  Affected resource (\p rsc or a descendent)
+     * \param[in,out] list      List of colocations to add to
+     *
+     * \note All arguments should be non-NULL.
+     */
+    void (*with_this_colocations)(const pe_resource_t *rsc,
+                                  const pe_resource_t *orig_rsc, GList **list);
+
+    /*!
+     * \internal
+     * \brief Add colocations affecting a resource as dependent to a list
+     *
+     * \param[in]     rsc       Resource whose colocations should be added
+     * \param[in]     orig_rsc  Affected resource (\p rsc or a descendent)
+     * \param[in,out] list      List of colocations to add to
+     *
+     * \note All arguments should be non-NULL.
+     */
+    void (*this_with_colocations)(const pe_resource_t *rsc,
+                                  const pe_resource_t *orig_rsc, GList **list);
+
+    /*!
+     * \internal
      * \brief Apply a location constraint to a resource's allowed node scores
      *
      * \param[in,out] rsc       Resource to apply constraint to
@@ -603,6 +629,14 @@ void pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
                                        bool for_dependent);
 
 G_GNUC_INTERNAL
+void pcmk__with_primitive_colocations(const pe_resource_t *rsc,
+                                      const pe_resource_t *child, GList **list);
+
+G_GNUC_INTERNAL
+void pcmk__primitive_with_colocations(const pe_resource_t *rsc,
+                                      const pe_resource_t *child, GList **list);
+
+G_GNUC_INTERNAL
 void pcmk__schedule_cleanup(pe_resource_t *rsc, const pe_node_t *node,
                             bool optional);
 
@@ -634,6 +668,14 @@ void pcmk__group_apply_coloc_score(pe_resource_t *dependent,
                                    const pe_resource_t *primary,
                                    const pcmk__colocation_t *colocation,
                                    bool for_dependent);
+
+G_GNUC_INTERNAL
+void pcmk__with_group_colocations(const pe_resource_t *rsc,
+                                  const pe_resource_t *child, GList **list);
+
+G_GNUC_INTERNAL
+void pcmk__group_with_colocations(const pe_resource_t *rsc,
+                                  const pe_resource_t *child, GList **list);
 
 G_GNUC_INTERNAL
 void pcmk__group_apply_location(pe_resource_t *rsc, pe__location_t *location);
@@ -675,6 +717,14 @@ void pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
                                    const pcmk__colocation_t *colocation,
                                    bool for_dependent);
 
+G_GNUC_INTERNAL
+void pcmk__with_clone_colocations(const pe_resource_t *rsc,
+                                  const pe_resource_t *child, GList **list);
+
+G_GNUC_INTERNAL
+void pcmk__clone_with_colocations(const pe_resource_t *rsc,
+                                  const pe_resource_t *child, GList **list);
+
 // Bundles (pcmk_sched_bundle.c)
 
 G_GNUC_INTERNAL
@@ -685,6 +735,14 @@ void pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
                                     const pe_resource_t *primary,
                                     const pcmk__colocation_t *colocation,
                                     bool for_dependent);
+
+G_GNUC_INTERNAL
+void pcmk__with_bundle_colocations(const pe_resource_t *rsc,
+                                   const pe_resource_t *child, GList **list);
+
+G_GNUC_INTERNAL
+void pcmk__bundle_with_colocations(const pe_resource_t *rsc,
+                                   const pe_resource_t *child, GList **list);
 
 G_GNUC_INTERNAL
 void pcmk__output_bundle_actions(pe_resource_t *rsc);
@@ -724,6 +782,12 @@ G_GNUC_INTERNAL
 enum pe_action_flags pcmk__collective_action_flags(pe_action_t *action,
                                                    const GList *instances,
                                                    const pe_node_t *node);
+
+G_GNUC_INTERNAL
+void pcmk__add_collective_constraints(GList **list,
+                                      const pe_resource_t *instance,
+                                      const pe_resource_t *collective,
+                                      bool with_this);
 
 
 // Injections (pcmk_injections.c)

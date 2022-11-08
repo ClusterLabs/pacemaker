@@ -1045,6 +1045,44 @@ pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
     }
 }
 
+/* Primitive implementation of
+ * resource_alloc_functions_t:with_this_colocations()
+ */
+void
+pcmk__with_primitive_colocations(const pe_resource_t *rsc,
+                                 const pe_resource_t *orig_rsc, GList **list)
+{
+    // Primitives don't have children, so rsc should also be orig_rsc
+    CRM_CHECK((rsc != NULL) && (rsc->variant == pe_native)
+              && (rsc == orig_rsc) && (list != NULL),
+              return);
+
+    // Add primitive's own colocations plus any relevant ones from parent
+    pcmk__add_with_this_list(list, rsc->rsc_cons_lhs);
+    if (rsc->parent != NULL) {
+        rsc->parent->cmds->with_this_colocations(rsc->parent, rsc, list);
+    }
+}
+
+/* Primitive implementation of
+ * resource_alloc_functions_t:this_with_colocations()
+ */
+void
+pcmk__primitive_with_colocations(const pe_resource_t *rsc,
+                                 const pe_resource_t *orig_rsc, GList **list)
+{
+    // Primitives don't have children, so rsc should also be orig_rsc
+    CRM_CHECK((rsc != NULL) && (rsc->variant == pe_native)
+              && (rsc == orig_rsc) && (list != NULL),
+              return);
+
+    // Add primitive's own colocations plus any relevant ones from parent
+    pcmk__add_this_with_list(list, rsc->rsc_cons);
+    if (rsc->parent != NULL) {
+        rsc->parent->cmds->this_with_colocations(rsc->parent, rsc, list);
+    }
+}
+
 /*!
  * \internal
  * \brief Return action flags for a given primitive resource action

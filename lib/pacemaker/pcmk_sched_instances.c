@@ -1250,3 +1250,61 @@ pcmk__collective_action_flags(pe_action_t *action, const GList *instances,
 
     return flags;
 }
+
+/*!
+ * \internal
+ * \brief Add a collective resource's colocations to a list for an instance
+ *
+ * \param[in,out] list        Colocation list to add to
+ * \param[in]     instance    Clone or bundle instance or instance group member
+ * \param[in]     collective  Clone or bundle resource with colocations to add
+ * \param[in]     with_this   If true, add collective's "with this" colocations,
+ *                            otherwise add its "this with" colocations
+ */
+void
+pcmk__add_collective_constraints(GList **list, const pe_resource_t *instance,
+                                 const pe_resource_t *collective,
+                                 bool with_this)
+{
+    const GList *colocations = NULL;
+    bool everywhere = false;
+
+    CRM_CHECK((list != NULL) && (instance != NULL), return);
+
+    if (collective == NULL) {
+        return;
+    }
+    switch (collective->variant) {
+        case pe_clone:
+        case pe_container:
+            break;
+        default:
+            return;
+    }
+
+    everywhere = pcmk__is_everywhere(collective);
+
+    if (with_this) {
+        colocations = collective->rsc_cons_lhs;
+    } else {
+        colocations = collective->rsc_cons;
+    }
+
+    for (const GList *iter = colocations; iter != NULL; iter = iter->next) {
+        const pcmk__colocation_t *colocation = iter->data;
+
+        if (with_this
+            && !pcmk__colocation_has_influence(colocation, instance)) {
+           continue;
+        }
+        if (!everywhere || (colocation->score < 0)
+            || (!with_this && (colocation->score == INFINITY))) {
+
+            if (with_this) {
+                pcmk__add_with_this(list, colocation);
+            } else {
+                pcmk__add_this_with(list, colocation);
+            }
+        }
+    }
+}

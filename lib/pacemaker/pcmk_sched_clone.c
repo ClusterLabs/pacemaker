@@ -359,6 +359,48 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
     }
 }
 
+// Clone implementation of resource_alloc_functions_t:with_this_colocations()
+void
+pcmk__with_clone_colocations(const pe_resource_t *rsc,
+                             const pe_resource_t *orig_rsc, GList **list)
+{
+    CRM_CHECK((rsc != NULL) && (orig_rsc != NULL) && (list != NULL), return);
+
+    // @COMPAT with previous (incorrect) behavior
+    if ((rsc != orig_rsc)
+        && pcmk_is_set(rsc->flags, pe_rsc_provisional)
+        && !pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
+        return; // Instances have not yet received clone colocations
+    }
+
+    if (rsc == orig_rsc) { // Colocations are wanted for clone itself
+        pcmk__add_with_this_list(list, rsc->rsc_cons_lhs);
+    } else {
+        pcmk__add_collective_constraints(list, orig_rsc, rsc, true);
+    }
+}
+
+// Clone implementation of resource_alloc_functions_t:this_with_colocations()
+void
+pcmk__clone_with_colocations(const pe_resource_t *rsc,
+                             const pe_resource_t *orig_rsc, GList **list)
+{
+    CRM_CHECK((rsc != NULL) && (orig_rsc != NULL) && (list != NULL), return);
+
+    // @COMPAT with previous (incorrect) behavior
+    if ((rsc != orig_rsc)
+        && pcmk_is_set(rsc->flags, pe_rsc_provisional)
+        && !pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
+        return; // Instances have not yet received clone colocations
+    }
+
+    if (rsc == orig_rsc) { // Colocations are wanted for clone itself
+        pcmk__add_this_with_list(list, rsc->rsc_cons);
+    } else {
+        pcmk__add_collective_constraints(list, orig_rsc, rsc, false);
+    }
+}
+
 enum pe_action_flags
 clone_action_flags(pe_action_t *action, const pe_node_t *node)
 {
