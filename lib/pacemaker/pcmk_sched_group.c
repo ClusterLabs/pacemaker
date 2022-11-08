@@ -661,10 +661,6 @@ pcmk__with_group_colocations(const pe_resource_t *rsc,
         && (!pcmk_is_set(rsc->flags, pe_rsc_provisional)
             || pcmk_is_set(rsc->flags, pe_rsc_allocating))) {
         return; // Group colocations were moved to members
-    } else if ((rsc != orig_rsc)
-        && pcmk_is_set(rsc->flags, pe_rsc_provisional)
-        && !pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
-        return; // Members have not yet received group colocations
     }
 
     /* "With this" colocations are needed only for the group itself and for its
