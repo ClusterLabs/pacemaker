@@ -697,10 +697,6 @@ pcmk__group_with_colocations(const pe_resource_t *rsc,
         && (!pcmk_is_set(rsc->flags, pe_rsc_provisional)
             || pcmk_is_set(rsc->flags, pe_rsc_allocating))) {
         return; // Group colocations were moved to members
-    } else if ((rsc != orig_rsc)
-        && pcmk_is_set(rsc->flags, pe_rsc_provisional)
-        && !pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
-        return; // Members have not yet received group colocations
     }
 
     /* Colocations for the group itself, or for its first member, consist of the
@@ -716,6 +712,12 @@ pcmk__group_with_colocations(const pe_resource_t *rsc,
                                                      list);
         }
         return;
+    }
+
+    if ((rsc != orig_rsc)
+        && pcmk_is_set(rsc->flags, pe_rsc_provisional)
+        && !pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
+        return; // Later members have not yet received group colocations
     }
 
     /* Later group members honor the group's colocations indirectly, due to the
