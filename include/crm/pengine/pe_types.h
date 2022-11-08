@@ -376,6 +376,13 @@ struct pe_resource_s {
     gboolean is_remote_node;
     gboolean exclusive_discover;
 
+    /* Pay special attention to whether you want to use rsc_cons_lhs and
+     * rsc_cons directly, which include only colocations explicitly involving
+     * this resource, or call the pcmk__with_this_colocations() and
+     * pcmk__this_with_colocations() functions, which may return relevant
+     * colocations involving the resource's parents as well.
+     */
+
     //!@{
     //! This field should be treated as internal to Pacemaker
     GList *rsc_cons_lhs;      // List of pcmk__colocation_t*

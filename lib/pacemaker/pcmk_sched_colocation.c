@@ -1581,3 +1581,21 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
 
     pe__clear_resource_flags(rsc, pe_rsc_merging);
 }
+
+GList *
+pcmk__with_this_colocations(const pe_resource_t *rsc)
+{
+    GList *list = NULL;
+
+    rsc->cmds->with_this_colocations(rsc, rsc, &list);
+    return list;
+}
+
+GList *
+pcmk__this_with_colocations(const pe_resource_t *rsc)
+{
+    GList *list = NULL;
+
+    rsc->cmds->this_with_colocations(rsc, rsc, &list);
+    return list;
+}

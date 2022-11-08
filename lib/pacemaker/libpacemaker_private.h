@@ -140,6 +140,8 @@ struct resource_alloc_functions_s {
      * \param[in,out] list      List of colocations to add to
      *
      * \note All arguments should be non-NULL.
+     * \note The pcmk__with_this_colocations() wrapper should usually be used
+     *       instead of using this method directly.
      */
     void (*with_this_colocations)(const pe_resource_t *rsc,
                                   const pe_resource_t *orig_rsc, GList **list);
@@ -153,6 +155,8 @@ struct resource_alloc_functions_s {
      * \param[in,out] list      List of colocations to add to
      *
      * \note All arguments should be non-NULL.
+     * \note The pcmk__this_with_colocations() wrapper should usually be used
+     *       instead of using this method directly.
      */
     void (*this_with_colocations)(const pe_resource_t *rsc,
                                   const pe_resource_t *orig_rsc, GList **list);
