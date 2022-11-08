@@ -353,10 +353,13 @@ formatted_xml_buf(pe_resource_t *rsc, bool raw)
     }
 }
 
-PCMK__OUTPUT_ARGS("cluster-summary", "pe_working_set_t *", "uint32_t", "uint32_t")
+PCMK__OUTPUT_ARGS("cluster-summary", "pe_working_set_t *",
+                  "enum pcmk_pacemakerd_state", "uint32_t", "uint32_t")
 static int
 cluster_summary(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    enum pcmk_pacemakerd_state pcmkd_state =
+        (enum pcmk_pacemakerd_state) va_arg(args, int);
     uint32_t section_opts = va_arg(args, uint32_t);
     uint32_t show_opts = va_arg(args, uint32_t);
 
@@ -365,7 +368,7 @@ cluster_summary(pcmk__output_t *out, va_list args) {
 
     if (pcmk_is_set(section_opts, pcmk_section_stack)) {
         PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
-        out->message(out, "cluster-stack", stack_s);
+        out->message(out, "cluster-stack", stack_s, pcmkd_state);
     }
 
     if (pcmk_is_set(section_opts, pcmk_section_dc)) {
@@ -417,10 +420,13 @@ cluster_summary(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("cluster-summary", "pe_working_set_t *", "uint32_t", "uint32_t")
+PCMK__OUTPUT_ARGS("cluster-summary", "pe_working_set_t *",
+                  "enum pcmk_pacemakerd_state", "uint32_t", "uint32_t")
 static int
 cluster_summary_html(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    enum pcmk_pacemakerd_state pcmkd_state =
+        (enum pcmk_pacemakerd_state) va_arg(args, int);
     uint32_t section_opts = va_arg(args, uint32_t);
     uint32_t show_opts = va_arg(args, uint32_t);
 
@@ -429,7 +435,7 @@ cluster_summary_html(pcmk__output_t *out, va_list args) {
 
     if (pcmk_is_set(section_opts, pcmk_section_stack)) {
         PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
-        out->message(out, "cluster-stack", stack_s);
+        out->message(out, "cluster-stack", stack_s, pcmkd_state);
     }
 
     /* Always print DC if none, even if not requested */
@@ -1076,35 +1082,60 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("cluster-stack", "const char *")
+PCMK__OUTPUT_ARGS("cluster-stack", "const char *", "enum pcmk_pacemakerd_state")
 static int
 cluster_stack_html(pcmk__output_t *out, va_list args) {
     const char *stack_s = va_arg(args, const char *);
+    enum pcmk_pacemakerd_state pcmkd_state =
+        (enum pcmk_pacemakerd_state) va_arg(args, int);
 
     xmlNodePtr node = pcmk__output_create_xml_node(out, "li", NULL);
 
     pcmk_create_html_node(node, "span", NULL, "bold", "Stack: ");
     pcmk_create_html_node(node, "span", NULL, NULL, stack_s);
 
+    if (pcmkd_state != pcmk_pacemakerd_state_invalid) {
+        pcmk_create_html_node(node, "span", NULL, NULL, " (");
+        pcmk_create_html_node(node, "span", NULL, NULL,
+                              pcmk__pcmkd_state_enum2friendly(pcmkd_state));
+        pcmk_create_html_node(node, "span", NULL, NULL, ")");
+    }
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("cluster-stack", "const char *")
+PCMK__OUTPUT_ARGS("cluster-stack", "const char *", "enum pcmk_pacemakerd_state")
 static int
 cluster_stack_text(pcmk__output_t *out, va_list args) {
     const char *stack_s = va_arg(args, const char *);
+    enum pcmk_pacemakerd_state pcmkd_state =
+        (enum pcmk_pacemakerd_state) va_arg(args, int);
 
-    out->list_item(out, "Stack", "%s", stack_s);
+    if (pcmkd_state != pcmk_pacemakerd_state_invalid) {
+        out->list_item(out, "Stack", "%s (%s)",
+                       stack_s, pcmk__pcmkd_state_enum2friendly(pcmkd_state));
+    } else {
+        out->list_item(out, "Stack", "%s", stack_s);
+    }
+
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("cluster-stack", "const char *")
+PCMK__OUTPUT_ARGS("cluster-stack", "const char *", "enum pcmk_pacemakerd_state")
 static int
 cluster_stack_xml(pcmk__output_t *out, va_list args) {
     const char *stack_s = va_arg(args, const char *);
+    enum pcmk_pacemakerd_state pcmkd_state =
+        (enum pcmk_pacemakerd_state) va_arg(args, int);
+
+    const char *state_s = NULL;
+
+    if (pcmkd_state != pcmk_pacemakerd_state_invalid) {
+        state_s = pcmk_pacemakerd_api_daemon_state_enum2text(pcmkd_state);
+    }
 
     pcmk__output_create_xml_node(out, "stack",
                                  "type", stack_s,
+                                 "pacemakerd-state", state_s,
                                  NULL);
 
     return pcmk_rc_ok;

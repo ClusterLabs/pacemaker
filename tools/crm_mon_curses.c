@@ -445,14 +445,15 @@ cluster_maint_mode_console(pcmk__output_t *out, va_list args) {
     }
 }
 
-PCMK__OUTPUT_ARGS("cluster-status", "pe_working_set_t *", "crm_exit_t",
+PCMK__OUTPUT_ARGS("cluster-status", "pe_working_set_t *",
+                  "enum pcmk_pacemakerd_state", "crm_exit_t",
                   "stonith_history_t *", "enum pcmk__fence_history", "uint32_t",
                   "uint32_t", "const char *", "GList *", "GList *")
 static int
 cluster_status_console(pcmk__output_t *out, va_list args) {
     int rc = pcmk_rc_no_output;
 
-    blank_screen();
+    clear();
     rc = pcmk__cluster_status_text(out, args);
     refresh();
     return rc;
@@ -492,20 +493,5 @@ void
 crm_mon_register_messages(pcmk__output_t *out) {
 #if CURSES_ENABLED
     pcmk__register_messages(out, fmt_functions);
-#endif
-}
-
-void
-blank_screen(void)
-{
-#if CURSES_ENABLED
-    int lpc = 0;
-
-    for (lpc = 0; lpc < LINES; lpc++) {
-        move(lpc, 0);
-        clrtoeol();
-    }
-    move(0, 0);
-    refresh();
 #endif
 }

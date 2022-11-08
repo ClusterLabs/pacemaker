@@ -48,6 +48,7 @@ fencing_connect(void)
  * \param[in,out] stonith              Fencer connection
  * \param[in,out] cib                  CIB connection
  * \param[in]     current_cib          Current CIB XML
+ * \param[in]     pcmkd_state          \p pacemakerd state
  * \param[in]     fence_history        How much of the fencing history to output
  * \param[in]     show                 Group of \p pcmk_section_e flags
  * \param[in]     show_opts            Group of \p pcmk_show_opt_e flags
@@ -68,7 +69,9 @@ fencing_connect(void)
  */
 int
 pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith, cib_t *cib,
-                            xmlNode *current_cib, enum pcmk__fence_history fence_history,
+                            xmlNode *current_cib,
+                            enum pcmk_pacemakerd_state pcmkd_state,
+                            enum pcmk__fence_history fence_history,
                             uint32_t show, uint32_t show_opts,
                             const char *only_node, const char *only_rsc,
                             const char *neg_location_prefix, bool simple_output)
@@ -122,7 +125,8 @@ pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith, cib_t *cib,
     if (simple_output) {
         rc = pcmk__output_simple_status(out, data_set);
     } else {
-        out->message(out, "cluster-status", data_set, pcmk_rc2exitc(history_rc),
+        out->message(out, "cluster-status",
+                     data_set, pcmkd_state, pcmk_rc2exitc(history_rc),
                      stonith_history, fence_history, show, show_opts,
                      neg_location_prefix, unames, resources);
     }
@@ -214,7 +218,8 @@ pcmk__status(pcmk__output_t *out, cib_t *cib,
     xmlNode *current_cib = NULL;
     int rc = pcmk_rc_ok;
     stonith_t *stonith = NULL;
-    enum pcmk_pacemakerd_state state = pcmk_pacemakerd_state_invalid;
+    enum pcmk_pacemakerd_state pcmkd_state = pcmk_pacemakerd_state_invalid;
+    time_t last_updated = 0;
 
     if (cib == NULL) {
         return ENOTCONN;
@@ -222,12 +227,14 @@ pcmk__status(pcmk__output_t *out, cib_t *cib,
 
     if (cib->variant == cib_native) {
         rc = pcmk__pacemakerd_status(out, crm_system_name, timeout_ms, false,
-                                     &state);
+                                     &pcmkd_state);
         if (rc != pcmk_rc_ok) {
             return rc;
         }
 
-        switch (state) {
+        last_updated = time(NULL);
+
+        switch (pcmkd_state) {
             case pcmk_pacemakerd_state_running:
             case pcmk_pacemakerd_state_shutting_down:
             case pcmk_pacemakerd_state_remote:
@@ -238,7 +245,7 @@ pcmk__status(pcmk__output_t *out, cib_t *cib,
             default:
                 // Fencer and CIB are definitely unavailable
                 out->message(out, "pacemakerd-health",
-                             NULL, state, NULL, time(NULL));
+                             NULL, pcmkd_state, NULL, last_updated);
                 return rc;
         }
 
@@ -249,18 +256,18 @@ pcmk__status(pcmk__output_t *out, cib_t *cib,
 
     rc = cib__signon_query(out, &cib, &current_cib);
     if (rc != pcmk_rc_ok) {
-        if (state != pcmk_pacemakerd_state_invalid) {
-            // If we got this far, invalid means we didn't query the pcmkd state
+        if (pcmkd_state != pcmk_pacemakerd_state_invalid) {
+            // Invalid at this point means we didn't query the pcmkd state
             out->message(out, "pacemakerd-health",
-                         NULL, state, NULL, time(NULL));
+                         NULL, pcmkd_state, NULL, last_updated);
         }
         goto done;
     }
 
     rc = pcmk__output_cluster_status(out, stonith, cib, current_cib,
-                                     fence_history, show, show_opts, only_node,
-                                     only_rsc, neg_location_prefix,
-                                     simple_output);
+                                     pcmkd_state, fence_history, show,
+                                     show_opts, only_node, only_rsc,
+                                     neg_location_prefix, simple_output);
     if (rc != pcmk_rc_ok) {
         out->err(out, "Error outputting status info from the fencer or CIB");
     }

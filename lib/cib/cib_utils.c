@@ -771,7 +771,7 @@ done:
         cib__clean_up_connection(&cib_conn);
     }
 
-    if (*cib_object == NULL) {
+    if ((rc == pcmk_rc_ok) && (*cib_object == NULL)) {
         return pcmk_rc_no_input;
     }
     return rc;

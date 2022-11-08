@@ -71,6 +71,7 @@ static GMainLoop *mainloop = NULL;
 static guint reconnect_timer = 0;
 static mainloop_timer_t *refresh_timer = NULL;
 
+static enum pcmk_pacemakerd_state pcmkd_state = pcmk_pacemakerd_state_invalid;
 static cib_t *cib = NULL;
 static stonith_t *st = NULL;
 static xmlNode *current_cib = NULL;
@@ -85,8 +86,6 @@ static time_t last_refresh = 0;
 volatile crm_trigger_t *refresh_trigger = NULL;
 
 static enum pcmk__fence_history fence_history = pcmk__fence_history_none;
-static gboolean on_remote_node = FALSE;
-static gboolean use_cib_native = FALSE;
 
 int interactive_fence_level = 0;
 
@@ -99,6 +98,104 @@ static pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_TEXT,
     PCMK__SUPPORTED_FORMAT_XML,
     { NULL, NULL, NULL }
+};
+
+PCMK__OUTPUT_ARGS("crm-mon-disconnected", "const char *", "int")
+static int
+crm_mon_disconnected_default(pcmk__output_t *out, va_list args)
+{
+    return pcmk_rc_no_output;
+}
+
+PCMK__OUTPUT_ARGS("crm-mon-disconnected", "const char *", "int")
+static int
+crm_mon_disconnected_html(pcmk__output_t *out, va_list args)
+{
+    const char *desc = va_arg(args, const char *);
+    enum pcmk_pacemakerd_state state =
+        (enum pcmk_pacemakerd_state) va_arg(args, int);
+
+    if (out->dest != stdout) {
+        out->reset(out);
+    }
+
+    pcmk__output_create_xml_text_node(out, "span", "Not connected to CIB");
+
+    if (desc != NULL) {
+        pcmk__output_create_xml_text_node(out, "span", ": ");
+        pcmk__output_create_xml_text_node(out, "span", desc);
+    }
+
+    if (state != pcmk_pacemakerd_state_invalid) {
+        const char *state_s = pcmk__pcmkd_state_enum2friendly(state);
+
+        pcmk__output_create_xml_text_node(out, "span", " (");
+        pcmk__output_create_xml_text_node(out, "span", state_s);
+        pcmk__output_create_xml_text_node(out, "span", ")");
+    }
+
+    out->finish(out, CRM_EX_DISCONNECT, true, NULL);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("crm-mon-disconnected", "const char *", "int")
+static int
+crm_mon_disconnected_text(pcmk__output_t *out, va_list args)
+{
+    const char *desc = va_arg(args, const char *);
+    enum pcmk_pacemakerd_state state =
+        (enum pcmk_pacemakerd_state) va_arg(args, int);
+    int rc = pcmk_rc_ok;
+
+    if (out->dest != stdout) {
+        out->reset(out);
+    }
+
+    if (state != pcmk_pacemakerd_state_invalid) {
+        rc = out->info(out, "Not connected to CIB%s%s (%s)",
+                       (desc != NULL)? ": " : "", pcmk__s(desc, ""),
+                       pcmk__pcmkd_state_enum2friendly(state));
+    } else {
+        rc = out->info(out, "Not connected to CIB%s%s",
+                       (desc != NULL)? ": " : "", pcmk__s(desc, ""));
+    }
+
+    out->finish(out, CRM_EX_DISCONNECT, true, NULL);
+    return rc;
+}
+
+PCMK__OUTPUT_ARGS("crm-mon-disconnected", "const char *", "int")
+static int
+crm_mon_disconnected_xml(pcmk__output_t *out, va_list args)
+{
+    const char *desc = va_arg(args, const char *);
+    enum pcmk_pacemakerd_state state =
+        (enum pcmk_pacemakerd_state) va_arg(args, int);
+    const char *state_s = NULL;
+
+    if (out->dest != stdout) {
+        out->reset(out);
+    }
+
+    if (state != pcmk_pacemakerd_state_invalid) {
+        state_s = pcmk_pacemakerd_api_daemon_state_enum2text(state);
+    }
+
+    pcmk__output_create_xml_node(out, "crm-mon-disconnected",
+                                 XML_ATTR_DESC, desc,
+                                 "pacemakerd-state", state_s,
+                                 NULL);
+
+    out->finish(out, CRM_EX_DISCONNECT, true, NULL);
+    return pcmk_rc_ok;
+}
+
+static pcmk__message_entry_t fmt_functions[] = {
+    { "crm-mon-disconnected", "default", crm_mon_disconnected_default },
+    { "crm-mon-disconnected", "html", crm_mon_disconnected_html },
+    { "crm-mon-disconnected", "text", crm_mon_disconnected_text },
+    { "crm-mon-disconnected", "xml", crm_mon_disconnected_xml },
+    { NULL, NULL, NULL },
 };
 
 /* Define exit codes for monitoring-compatible output
@@ -137,8 +234,8 @@ static void crm_diff_update(const char *event, xmlNode * msg);
 static void clean_up_on_connection_failure(int rc);
 static int mon_refresh_display(gpointer user_data);
 static int setup_cib_connection(void);
-static int fencing_connect(void);
-static int pacemakerd_status(void);
+static int setup_fencer_connection(void);
+static int setup_api_connections(void);
 static void mon_st_callback_event(stonith_t * st, stonith_event_t * e);
 static void mon_st_callback_display(stonith_t * st, stonith_event_t * e);
 static void refresh_after_event(gboolean data_updated, gboolean enforce);
@@ -653,16 +750,16 @@ reconnect_after_timeout(gpointer data)
     }
 #endif
 
-    out->info(out, "Reconnecting...");
-    if (pacemakerd_status() == pcmk_rc_ok) {
-        fencing_connect();
-        if (setup_cib_connection() == pcmk_rc_ok) {
-            /* trigger redrawing the screen (needs reconnect_timer == 0) */
-            reconnect_timer = 0;
-            refresh_after_event(FALSE, TRUE);
-            return G_SOURCE_REMOVE;
-        }
+    out->transient(out, "Reconnecting...");
+    if (setup_api_connections() == pcmk_rc_ok) {
+        // Trigger redrawing the screen (needs reconnect_timer == 0)
+        reconnect_timer = 0;
+        refresh_after_event(FALSE, TRUE);
+        return G_SOURCE_REMOVE;
     }
+
+    out->message(out, "crm-mon-disconnected",
+                 "Latest connection attempt failed", pcmkd_state);
 
     reconnect_timer = g_timeout_add(options.reconnect_ms,
                                     reconnect_after_timeout, NULL);
@@ -676,7 +773,16 @@ reconnect_after_timeout(gpointer data)
 static void
 mon_cib_connection_destroy(gpointer user_data)
 {
-    out->info(out, "Connection to the cluster-daemons terminated");
+    const char *msg = "Connection to the cluster lost";
+
+    pcmkd_state = pcmk_pacemakerd_state_invalid;
+
+    /* No crm-mon-disconnected message for console; a working implementation
+     * is not currently worth the effort
+     */
+    out->transient(out, "%s", msg);
+
+    out->message(out, "crm-mon-disconnected", msg, pcmkd_state);
 
     if (refresh_timer != NULL) {
         /* we'll trigger a refresh after reconnect */
@@ -699,7 +805,6 @@ mon_cib_connection_destroy(gpointer user_data)
         reconnect_timer = g_timeout_add(options.reconnect_ms,
                                         reconnect_after_timeout, NULL);
     }
-    return;
 }
 
 /* Signal handler installed into the mainloop for normal program shutdown */
@@ -740,7 +845,7 @@ mon_winresize(int nsig)
 #endif
 
 static int
-fencing_connect(void)
+setup_fencer_connection(void)
 {
     int rc = pcmk_ok;
 
@@ -791,11 +896,9 @@ setup_cib_connection(void)
             mon_cib_connection_destroy));
         if (rc == EPROTONOSUPPORT) {
             out->err(out,
-                     "Notification setup not supported, won't be "
-                     "able to reconnect after failure");
-            if (output_format == mon_output_console) {
-                sleep(2);
-            }
+                     "CIB client does not support connection loss "
+                     "notifications; crm_mon will be unable to reconnect after "
+                     "connection loss");
             rc = pcmk_rc_ok;
         }
 
@@ -807,7 +910,15 @@ setup_cib_connection(void)
         }
 
         if (rc != pcmk_rc_ok) {
-            out->err(out, "Notification setup failed, could not monitor CIB actions");
+            if (rc == EPROTONOSUPPORT) {
+                out->err(out,
+                         "CIB client does not support CIB diff "
+                         "notifications");
+            } else {
+                out->err(out, "CIB diff notification setup failed");
+            }
+
+            out->err(out, "Cannot monitor CIB changes; exiting");
             cib__clean_up_connection(&cib);
             stonith_api_delete(st);
             st = NULL;
@@ -852,149 +963,43 @@ set_fencing_options(int level)
     }
 }
 
-/* Before trying to connect to fencer or cib check for state of
-   pacemakerd - just no sense in trying till pacemakerd has
-   taken care of starting all the sub-processes
-
-   Only noteworthy thing to show here is when pacemakerd is
-   waiting for startup-trigger from SBD.
- */
-static void
-pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
-                    enum pcmk_ipc_event event_type, crm_exit_t status,
-                    void *event_data, void *user_data)
-{
-    pcmk_pacemakerd_api_reply_t *reply = event_data;
-    enum pcmk_pacemakerd_state *state =
-        (enum pcmk_pacemakerd_state *) user_data;
-
-    /* we are just interested in the latest reply */
-    *state = pcmk_pacemakerd_state_invalid;
-
-    switch (event_type) {
-        case pcmk_ipc_event_reply:
-            break;
-
-        default:
-            return;
-    }
-
-    if (status != CRM_EX_OK) {
-        out->err(out, "Bad reply from pacemakerd: %s",
-                 crm_exit_str(status));
-        return;
-    }
-
-    if (reply->reply_type != pcmk_pacemakerd_reply_ping) {
-        out->err(out, "Unknown reply type %d from pacemakerd",
-                 reply->reply_type);
-    } else {
-        if ((reply->data.ping.last_good != (time_t) 0) &&
-            (reply->data.ping.status == pcmk_rc_ok)) {
-            *state = reply->data.ping.state;
-        }
-    }
-}
-
 static int
-pacemakerd_status(void)
+setup_api_connections(void)
 {
     int rc = pcmk_rc_ok;
-    pcmk_ipc_api_t *pacemakerd_api = NULL;
-    enum pcmk_pacemakerd_state state = pcmk_pacemakerd_state_invalid;
 
-    if (!use_cib_native) {
-        /* we don't need fully functional pacemakerd otherwise */
-        return rc;
-    }
-    if (cib != NULL &&
-        (cib->state == cib_connected_query ||
-         cib->state == cib_connected_command)) {
-        /* As long as we have a cib-connection let's go with
-         * that to fetch further cluster-status and avoid
-         * unnecessary pings to pacemakerd.
-         * If cluster is going down and fencer is down already
-         * this will lead to a silently failing fencer reconnect.
-         * On cluster startup we shouldn't see this situation
-         * as first we do is wait for pacemakerd to report all
-         * daemons running.
-         */
-        return rc;
-    }
-    rc = pcmk_new_ipc_api(&pacemakerd_api, pcmk_ipc_pacemakerd);
-    if (pacemakerd_api == NULL) {
-        out->err(out, "Could not connect to pacemakerd: %s",
-                 pcmk_rc_str(rc));
-        /* this is unrecoverable so return with rc we have */
-        return rc;
-    }
-    pcmk_register_ipc_callback(pacemakerd_api, pacemakerd_event_cb, (void *) &state);
-    rc = pcmk_connect_ipc(pacemakerd_api, pcmk_ipc_dispatch_poll);
-    switch (rc) {
-        case pcmk_rc_ok:
-            rc = pcmk_pacemakerd_api_ping(pacemakerd_api, crm_system_name);
-            if (rc == pcmk_rc_ok) {
-                rc = pcmk_poll_ipc(pacemakerd_api, options.reconnect_ms/2);
-                if (rc == pcmk_rc_ok) {
-                    pcmk_dispatch_ipc(pacemakerd_api);
-                    rc = ENOTCONN;
-                    if ((output_format == mon_output_console) ||
-                        (output_format == mon_output_plain)) {
+    CRM_CHECK(cib != NULL, return EINVAL);
 
-                        const char *state_str = NULL;
-                        state_str = pcmk__pcmkd_state_enum2friendly(state);
-                        switch (state) {
-                            case pcmk_pacemakerd_state_running:
-                                rc = pcmk_rc_ok;
-                                break;
-                            case pcmk_pacemakerd_state_starting_daemons:
-                                out->info(out, "%s", state_str);
-                                break;
-                            case pcmk_pacemakerd_state_wait_for_ping:
-                                out->info(out, "%s", state_str);
-                                break;
-                            case pcmk_pacemakerd_state_shutting_down:
-                                out->info(out, "%s", state_str);
-                                /* try our luck maybe CIB is still accessible */
-                                rc = pcmk_rc_ok;
-                                break;
-                            case pcmk_pacemakerd_state_shutdown_complete:
-                                out->info(out, "%s", state_str);
-                                break;
-                            default:
-                                break;
-                        }
-                    } else {
-                        switch (state) {
-                            case pcmk_pacemakerd_state_running:
-                                rc = pcmk_rc_ok;
-                                break;
-                            case pcmk_pacemakerd_state_shutting_down:
-                                /* try our luck maybe CIB is still accessible */
-                                rc = pcmk_rc_ok;
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                }
-            }
-            break;
-        case EREMOTEIO:
-            rc = pcmk_rc_ok;
-            on_remote_node = TRUE;
-            /* just show this if refresh is gonna remove all traces */
-            if (output_format == mon_output_console) {
-                out->info(out,
-                    "Running on remote-node waiting to be connected by cluster ...");
-            }
-            break;
-        default:
-            break;
+    if (cib->state != cib_disconnected) {
+        return rc;
     }
-    pcmk_free_ipc_api(pacemakerd_api);
-    /* returning with ENOTCONN triggers a retry */
-    return (rc == pcmk_rc_ok)?rc:ENOTCONN;
+
+    if (cib->variant == cib_native) {
+        rc = pcmk__pacemakerd_status(out, crm_system_name,
+                                     options.reconnect_ms / 2, false,
+                                     &pcmkd_state);
+        if (rc != pcmk_rc_ok) {
+            return rc;
+        }
+
+        switch (pcmkd_state) {
+            case pcmk_pacemakerd_state_running:
+            case pcmk_pacemakerd_state_remote:
+            case pcmk_pacemakerd_state_shutting_down:
+                /* Fencer and CIB may still be available while shutting down or
+                 * running on a Pacemaker Remote node
+                 */
+                break;
+            default:
+                // Fencer and CIB are definitely unavailable
+                return ENOTCONN;
+        }
+
+        setup_fencer_connection();
+    }
+
+    rc = setup_cib_connection();
+    return rc;
 }
 
 #if CURSES_ENABLED
@@ -1105,7 +1110,8 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
         if (!config_mode)
             goto refresh;
 
-        blank_screen();
+        clear();
+        refresh();
 
         curses_formatted_printf(out, "%s", "Display option change mode\n");
         print_option_help(out, 'c', pcmk_is_set(show, pcmk_section_tickets));
@@ -1133,7 +1139,7 @@ refresh:
 
     return TRUE;
 }
-#endif
+#endif  // CURSES_ENABLED
 
 // Basically crm_signal_handler(SIGCHLD, SIG_IGN) plus the SA_NOCLDWAIT flag
 static void
@@ -1301,7 +1307,7 @@ clean_up_on_connection_failure(int rc)
                     pcmk_rc_str(rc));
         clean_up(MON_STATUS_CRIT);
     } else if (rc == ENOTCONN) {
-        if (on_remote_node) {
+        if (pcmkd_state == pcmk_pacemakerd_state_remote) {
             g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Error: remote-node not connected to cluster");
         } else {
             g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Error: cluster is not available on this node");
@@ -1403,23 +1409,21 @@ main(int argc, char **argv)
 
         switch (cib->variant) {
             case cib_native:
-                /* cib & fencing - everything available */
-                use_cib_native = TRUE;
+                // Everything (fencer, CIB, pcmkd status) should be available
                 break;
 
             case cib_file:
-                /* Don't try to connect to fencing as we
-                 * either don't have a running cluster or
-                 * the fencing-information would possibly
-                 * not match the cib data from a file.
-                 * As we don't expect cib-updates coming
-                 * in enforce one-shot. */
+                // Live fence history is not meaningful
                 fence_history_cb("--fence-history", "0", NULL, NULL);
+
+                /* Notifications are unsupported; nothing to monitor
+                 * @COMPAT: Let setup_cib_connection() handle this by exiting?
+                 */
                 options.one_shot = TRUE;
                 break;
 
             case cib_remote:
-                /* updates coming in but no fencing */
+                // We won't receive any fencing updates
                 fence_history_cb("--fence-history", "0", NULL, NULL);
                 break;
 
@@ -1528,6 +1532,9 @@ main(int argc, char **argv)
     pe__register_messages(out);
     stonith__register_messages(out);
 
+    // Messages internal to this file, nothing curses-specific
+    pcmk__register_messages(out, fmt_functions);
+
     if (args->version) {
         out->version(out, false);
         return clean_up(CRM_EX_OK);
@@ -1574,16 +1581,19 @@ main(int argc, char **argv)
         one_shot();
     }
 
+    out->message(out, "crm-mon-disconnected",
+                 "Waiting for initial connection", pcmkd_state);
     do {
-        out->info(out,"Waiting until cluster is available on this node ...");
-
-        rc = pacemakerd_status();
-        if (rc == pcmk_rc_ok) {
-            fencing_connect();
-            rc = setup_cib_connection();
-        }
+        out->transient(out, "Connecting to cluster...");
+        rc = setup_api_connections();
 
         if (rc != pcmk_rc_ok) {
+            if ((rc == ENOTCONN) || (rc == ECONNREFUSED)) {
+                out->transient(out, "Connection failed. Retrying in %ums...",
+                               options.reconnect_ms);
+            }
+
+            // Give some time to view all output even if we won't retry
             pcmk__sleep_ms(options.reconnect_ms);
 #if CURSES_ENABLED
             if (output_format == mon_output_console) {
@@ -1591,11 +1601,8 @@ main(int argc, char **argv)
                 refresh();
             }
 #endif
-        } else if (output_format == mon_output_html && out->dest != stdout) {
-            printf("Writing html to %s ...\n", args->output_dest);
         }
-
-    } while (rc == ENOTCONN);
+    } while ((rc == ENOTCONN) || (rc == ECONNREFUSED));
 
     if (rc != pcmk_rc_ok) {
         clean_up_on_connection_failure(rc);
@@ -1980,15 +1987,22 @@ mon_refresh_display(gpointer user_data)
         !pcmk_all_flags_set(show, pcmk_section_fencing_all) &&
         output_format != mon_output_xml) {
         fence_history = pcmk__fence_history_reduced;
-     }
+    }
+
+    // Get an up-to-date pacemakerd status for the cluster summary
+    if (cib->variant == cib_native) {
+        pcmk__pacemakerd_status(out, crm_system_name, options.reconnect_ms / 2,
+                                false, &pcmkd_state);
+    }
 
     if (out->dest != stdout) {
         out->reset(out);
     }
 
-    rc = pcmk__output_cluster_status(out, st, cib, current_cib, fence_history,
-                                     show, show_opts, options.only_node,
-                                     options.only_rsc, options.neg_location_prefix,
+    rc = pcmk__output_cluster_status(out, st, cib, current_cib, pcmkd_state,
+                                     fence_history, show, show_opts,
+                                     options.only_node,options.only_rsc,
+                                     options.neg_location_prefix,
                                      output_format == mon_output_monitor);
 
     if (output_format == mon_output_monitor && rc != pcmk_rc_ok) {
@@ -2006,8 +2020,8 @@ mon_refresh_display(gpointer user_data)
     return G_SOURCE_CONTINUE;
 }
 
-/* This function is called for fencing events (see fencing_connect for which ones) when
- * --watch-fencing is used on the command line.
+/* This function is called for fencing events (see setup_fencer_connection() for
+ * which ones) when --watch-fencing is used on the command line
  */
 static void
 mon_st_callback_event(stonith_t * st, stonith_event_t * e)
@@ -2057,7 +2071,7 @@ refresh_after_event(gboolean data_updated, gboolean enforce)
      * fatal give it a retry here
      * not getting here if cib-reconnection is already on the way
      */
-    fencing_connect();
+    setup_fencer_connection();
 
     if (enforce ||
         ((now - last_refresh) > (options.reconnect_ms / 1000)) ||
@@ -2071,8 +2085,8 @@ refresh_after_event(gboolean data_updated, gboolean enforce)
     }
 }
 
-/* This function is called for fencing events (see fencing_connect for which ones) when
- * --watch-fencing is NOT used on the command line.
+/* This function is called for fencing events (see setup_fencer_connection() for
+ * which ones) when --watch-fencing is NOT used on the command line
  */
 static void
 mon_st_callback_display(stonith_t * st, stonith_event_t * e)
