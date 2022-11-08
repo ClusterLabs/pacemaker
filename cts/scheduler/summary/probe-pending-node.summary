@@ -9,22 +9,22 @@ Current cluster status:
     * Online: [ gcdoubwap01 ]
 
   * Full List of Resources:
-    * stonith_gcdoubwap01	(stonith:fence_gce):	 Stopped (unmanaged)
-    * stonith_gcdoubwap02	(stonith:fence_gce):	 Stopped (unmanaged)
-    * Clone Set: fs_UC5_SAPMNT-clone [fs_UC5_SAPMNT] (unmanaged):
+    * stonith_gcdoubwap01	(stonith:fence_gce):	 Stopped (maintenance)
+    * stonith_gcdoubwap02	(stonith:fence_gce):	 Stopped (maintenance)
+    * Clone Set: fs_UC5_SAPMNT-clone [fs_UC5_SAPMNT] (maintenance):
       * Stopped: [ gcdoubwap01 gcdoubwap02 ]
-    * Clone Set: fs_UC5_SYS-clone [fs_UC5_SYS] (unmanaged):
+    * Clone Set: fs_UC5_SYS-clone [fs_UC5_SYS] (maintenance):
       * Stopped: [ gcdoubwap01 gcdoubwap02 ]
-    * Resource Group: grp_UC5_ascs (unmanaged):
-      * rsc_vip_int_ascs	(ocf:heartbeat:IPaddr2):	 Stopped (unmanaged)
-      * rsc_vip_gcp_ascs	(ocf:heartbeat:gcp-vpc-move-vip):	 Started gcdoubwap01 (unmanaged)
-      * fs_UC5_ascs	(ocf:heartbeat:Filesystem):	 Stopped (unmanaged)
-      * rsc_sap_UC5_ASCS11	(ocf:heartbeat:SAPInstance):	 Stopped (unmanaged)
-    * Resource Group: grp_UC5_ers (unmanaged):
-      * rsc_vip_init_ers	(ocf:heartbeat:IPaddr2):	 Stopped (unmanaged)
-      * rsc_vip_gcp_ers	(ocf:heartbeat:gcp-vpc-move-vip):	 Stopped (unmanaged)
-      * fs_UC5_ers	(ocf:heartbeat:Filesystem):	 Stopped (unmanaged)
-      * rsc_sap_UC5_ERS12	(ocf:heartbeat:SAPInstance):	 Stopped (unmanaged)
+    * Resource Group: grp_UC5_ascs (maintenance):
+      * rsc_vip_int_ascs	(ocf:heartbeat:IPaddr2):	 Stopped (maintenance)
+      * rsc_vip_gcp_ascs	(ocf:heartbeat:gcp-vpc-move-vip):	 Started gcdoubwap01 (maintenance)
+      * fs_UC5_ascs	(ocf:heartbeat:Filesystem):	 Stopped (maintenance)
+      * rsc_sap_UC5_ASCS11	(ocf:heartbeat:SAPInstance):	 Stopped (maintenance)
+    * Resource Group: grp_UC5_ers (maintenance):
+      * rsc_vip_init_ers	(ocf:heartbeat:IPaddr2):	 Stopped (maintenance)
+      * rsc_vip_gcp_ers	(ocf:heartbeat:gcp-vpc-move-vip):	 Stopped (maintenance)
+      * fs_UC5_ers	(ocf:heartbeat:Filesystem):	 Stopped (maintenance)
+      * rsc_sap_UC5_ERS12	(ocf:heartbeat:SAPInstance):	 Stopped (maintenance)
 
 Transition Summary:
 
@@ -37,19 +37,19 @@ Revised Cluster Status:
     * Online: [ gcdoubwap01 ]
 
   * Full List of Resources:
-    * stonith_gcdoubwap01	(stonith:fence_gce):	 Stopped (unmanaged)
-    * stonith_gcdoubwap02	(stonith:fence_gce):	 Stopped (unmanaged)
-    * Clone Set: fs_UC5_SAPMNT-clone [fs_UC5_SAPMNT] (unmanaged):
+    * stonith_gcdoubwap01	(stonith:fence_gce):	 Stopped (maintenance)
+    * stonith_gcdoubwap02	(stonith:fence_gce):	 Stopped (maintenance)
+    * Clone Set: fs_UC5_SAPMNT-clone [fs_UC5_SAPMNT] (maintenance):
       * Stopped: [ gcdoubwap01 gcdoubwap02 ]
-    * Clone Set: fs_UC5_SYS-clone [fs_UC5_SYS] (unmanaged):
+    * Clone Set: fs_UC5_SYS-clone [fs_UC5_SYS] (maintenance):
       * Stopped: [ gcdoubwap01 gcdoubwap02 ]
-    * Resource Group: grp_UC5_ascs (unmanaged):
-      * rsc_vip_int_ascs	(ocf:heartbeat:IPaddr2):	 Stopped (unmanaged)
-      * rsc_vip_gcp_ascs	(ocf:heartbeat:gcp-vpc-move-vip):	 Started gcdoubwap01 (unmanaged)
-      * fs_UC5_ascs	(ocf:heartbeat:Filesystem):	 Stopped (unmanaged)
-      * rsc_sap_UC5_ASCS11	(ocf:heartbeat:SAPInstance):	 Stopped (unmanaged)
-    * Resource Group: grp_UC5_ers (unmanaged):
-      * rsc_vip_init_ers	(ocf:heartbeat:IPaddr2):	 Stopped (unmanaged)
-      * rsc_vip_gcp_ers	(ocf:heartbeat:gcp-vpc-move-vip):	 Stopped (unmanaged)
-      * fs_UC5_ers	(ocf:heartbeat:Filesystem):	 Stopped (unmanaged)
-      * rsc_sap_UC5_ERS12	(ocf:heartbeat:SAPInstance):	 Stopped (unmanaged)
+    * Resource Group: grp_UC5_ascs (maintenance):
+      * rsc_vip_int_ascs	(ocf:heartbeat:IPaddr2):	 Stopped (maintenance)
+      * rsc_vip_gcp_ascs	(ocf:heartbeat:gcp-vpc-move-vip):	 Started gcdoubwap01 (maintenance)
+      * fs_UC5_ascs	(ocf:heartbeat:Filesystem):	 Stopped (maintenance)
+      * rsc_sap_UC5_ASCS11	(ocf:heartbeat:SAPInstance):	 Stopped (maintenance)
+    * Resource Group: grp_UC5_ers (maintenance):
+      * rsc_vip_init_ers	(ocf:heartbeat:IPaddr2):	 Stopped (maintenance)
+      * rsc_vip_gcp_ers	(ocf:heartbeat:gcp-vpc-move-vip):	 Stopped (maintenance)
+      * fs_UC5_ers	(ocf:heartbeat:Filesystem):	 Stopped (maintenance)
+      * rsc_sap_UC5_ERS12	(ocf:heartbeat:SAPInstance):	 Stopped (maintenance)
