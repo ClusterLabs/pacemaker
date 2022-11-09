@@ -946,7 +946,7 @@ set_instance_priority(gpointer data, gpointer user_data)
     apply_promoted_locations(instance, instance->rsc_location, chosen);
     apply_promoted_locations(instance, clone->rsc_location, chosen);
 
-    // Apply relevant colocations with promoted role
+    // Consider instance's role-based colocations with other resources
     list = pcmk__this_with_colocations(instance);
     for (GList *iter = list; iter != NULL; iter = iter->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) iter->data;

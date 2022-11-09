@@ -616,8 +616,10 @@ pcmk__group_colocated_resources(const pe_resource_t *rsc,
     if (pe__group_flag_is_set(rsc, pe__group_colocated)
         || pe_rsc_is_clone(rsc->parent)) {
         /* This group has colocated members and/or is cloned -- either way,
-         * add every child's colocated resources to the list.
+         * add every child's colocated resources to the list. The first and last
+         * members will include the group's own colocations.
          */
+        colocated_rscs = g_list_append(colocated_rscs, (gpointer) rsc);
         for (const GList *iter = rsc->children;
              iter != NULL; iter = iter->next) {
 
@@ -628,15 +630,10 @@ pcmk__group_colocated_resources(const pe_resource_t *rsc,
 
     } else if (rsc->children != NULL) {
         /* This group's members are not colocated, and the group is not cloned,
-         * so just add the first child's colocations to the list.
+         * so just add the group's own colocations to the list.
          */
-        member = (const pe_resource_t *) rsc->children->data;
-        colocated_rscs = member->cmds->colocated_resources(member, orig_rsc,
-                                                           colocated_rscs);
+        colocated_rscs = pcmk__colocated_resources(rsc, orig_rsc, colocated_rscs);
     }
-
-    // Now consider colocations where the group itself is specified
-    colocated_rscs = pcmk__colocated_resources(rsc, orig_rsc, colocated_rscs);
 
     return colocated_rscs;
 }
@@ -683,13 +680,6 @@ pcmk__group_with_colocations(const pe_resource_t *rsc,
     // Ignore empty groups
     if (rsc->children == NULL) {
         return;
-    }
-
-    // @COMPAT with previous (incorrect) behavior
-    if ((rsc == orig_rsc)
-        && (!pcmk_is_set(rsc->flags, pe_rsc_provisional)
-            || pcmk_is_set(rsc->flags, pe_rsc_allocating))) {
-        return; // Group colocations were moved to members
     }
 
     /* Colocations for the group itself, or for its first member, consist of the
