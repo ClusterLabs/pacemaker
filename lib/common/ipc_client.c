@@ -1008,7 +1008,7 @@ crm_ipc_ready(crm_ipc_t *client)
 
     CRM_ASSERT(client != NULL);
 
-    if (crm_ipc_connected(client) == FALSE) {
+    if (!crm_ipc_connected(client)) {
         return -ENOTCONN;
     }
 
@@ -1103,7 +1103,7 @@ crm_ipc_read(crm_ipc_t * client)
         }
     }
 
-    if (crm_ipc_connected(client) == FALSE || client->msg_size == -ENOTCONN) {
+    if (!crm_ipc_connected(client) || client->msg_size == -ENOTCONN) {
         crm_err("Connection to %s IPC failed", client->server_name);
     }
 
@@ -1181,7 +1181,7 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
                 crm_log_xml_notice(bad, "ImpossibleReply");
                 CRM_ASSERT(hdr->qb.id <= request_id);
             }
-        } else if (crm_ipc_connected(client) == FALSE) {
+        } else if (!crm_ipc_connected(client)) {
             crm_err("%s IPC provider disconnected while waiting for message %d",
                     client->server_name, request_id);
             break;
@@ -1225,7 +1225,7 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
                    message);
         return -ENOTCONN;
 
-    } else if (crm_ipc_connected(client) == FALSE) {
+    } else if (!crm_ipc_connected(client)) {
         /* Don't even bother */
         crm_notice("Can't send %s IPC requests: Connection closed",
                    client->server_name);
@@ -1343,7 +1343,7 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
     }
 
   send_cleanup:
-    if (crm_ipc_connected(client) == FALSE) {
+    if (!crm_ipc_connected(client)) {
         crm_notice("Couldn't send %s IPC request %d: Connection closed "
                    CRM_XS " rc=%d", client->server_name, header->qb.id, rc);
 

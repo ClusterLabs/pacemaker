@@ -240,7 +240,7 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
         CRM_CHECK(proxy->is_local == FALSE,
                   remote_proxy_end_session(proxy); return);
 
-        if (crm_ipc_connected(proxy->ipc) == FALSE) {
+        if (!crm_ipc_connected(proxy->ipc)) {
             remote_proxy_end_session(proxy);
             return;
         }

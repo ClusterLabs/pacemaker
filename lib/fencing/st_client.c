@@ -1634,7 +1634,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
     }
 
   done:
-    if (crm_ipc_connected(native->ipc) == FALSE) {
+    if (!crm_ipc_connected(native->ipc)) {
         crm_err("Fencer disconnected");
         free(native->token); native->token = NULL;
         stonith->state = stonith_disconnected;
@@ -1662,7 +1662,7 @@ stonith_dispatch(stonith_t * st)
             stonith_dispatch_internal(msg, strlen(msg), st);
         }
 
-        if (crm_ipc_connected(private->ipc) == FALSE) {
+        if (!crm_ipc_connected(private->ipc)) {
             crm_err("Connection closed");
             stay_connected = FALSE;
         }
