@@ -854,6 +854,11 @@ crm_ipc_connect(crm_ipc_t *client)
     pid_t found_pid = 0; uid_t found_uid = 0; gid_t found_gid = 0;
     int rv;
 
+    if (client == NULL) {
+        errno = EINVAL;
+        return false;
+    }
+
     client->need_reply = FALSE;
     client->ipc = qb_ipcc_connect(client->server_name, client->buf_size);
 
