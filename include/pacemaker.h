@@ -155,6 +155,32 @@ int pcmk_query_node_info(xmlNodePtr *xml, uint32_t *node_id, char **node_name,
                          unsigned int message_timeout_ms);
 
 /*!
+ * \brief Get the node name corresponding to a node ID from the controller
+ *
+ * \param[in,out] xml                 Destination for the result, as an XML tree
+ * \param[in,out] node_id             ID of node whose name to get (or 0 for the
+ *                                    local node)
+ * \param[out]    node_name           If not \p NULL, where to store the node
+ *                                    name
+ * \param[in]     message_timeout_ms  How long to wait for a reply from the
+ *                                    \p pacemaker-controld API. If 0,
+ *                                    \p pcmk_ipc_dispatch_sync will be used.
+ *                                    Otherwise, \p pcmk_ipc_dispatch_poll will
+ *                                    be used.
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note The caller is responsible for freeing \p *node_name using \p free().
+ */
+static inline int
+pcmk_query_node_name(xmlNodePtr *xml, uint32_t node_id, char **node_name,
+                     unsigned int message_timeout_ms)
+{
+    return pcmk_query_node_info(xml, &node_id, node_name, NULL, NULL, NULL,
+                                NULL, false, message_timeout_ms);
+}
+
+/*!
  * \brief Get and output \p pacemakerd status
  *
  * \param[in,out] xml                 Destination for the result, as an XML tree
