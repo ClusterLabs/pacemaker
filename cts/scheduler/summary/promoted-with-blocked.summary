@@ -13,11 +13,11 @@ Current cluster status:
 
 Transition Summary:
   * Start      rsc1       (                   node2 )  due to unrunnable rsc3 start (blocked)
-  * Start      rsc2:0     (                   node3 )  due to colocation with rsc1 (blocked)
-  * Start      rsc2:1     (                   node4 )  due to colocation with rsc1 (blocked)
-  * Start      rsc2:2     (                   node5 )  due to colocation with rsc1 (blocked)
-  * Start      rsc2:3     (                   node1 )  due to colocation with rsc1 (blocked)
-  * Promote    rsc2:4     ( Stopped -> Promoted node2 )
+  * Start      rsc2:0     (                   node3 )
+  * Start      rsc2:1     (                   node4 )
+  * Start      rsc2:2     (                   node5 )
+  * Start      rsc2:3     (                   node1 )
+  * Promote    rsc2:4     ( Stopped -> Promoted node2 )  due to colocation with rsc1 (blocked)
 
 Executing Cluster Transition:
   * Resource action: rsc1            monitor on node5
@@ -30,13 +30,22 @@ Executing Cluster Transition:
   * Resource action: rsc2:2          monitor on node5
   * Resource action: rsc2:3          monitor on node1
   * Resource action: rsc2:4          monitor on node2
+  * Pseudo action:   rsc2-clone_start_0
   * Resource action: rsc3            monitor on node5
   * Resource action: rsc3            monitor on node4
   * Resource action: rsc3            monitor on node3
   * Resource action: rsc3            monitor on node2
   * Resource action: rsc3            monitor on node1
-Transition failed: terminated
-An invalid transition was produced
+  * Resource action: rsc2:0          start on node3
+  * Resource action: rsc2:1          start on node4
+  * Resource action: rsc2:2          start on node5
+  * Resource action: rsc2:3          start on node1
+  * Resource action: rsc2:4          start on node2
+  * Pseudo action:   rsc2-clone_running_0
+  * Resource action: rsc2:0          monitor=10000 on node3
+  * Resource action: rsc2:1          monitor=10000 on node4
+  * Resource action: rsc2:2          monitor=10000 on node5
+  * Resource action: rsc2:3          monitor=10000 on node1
 
 Revised Cluster Status:
   * Node List:
@@ -46,5 +55,5 @@ Revised Cluster Status:
     * Fencing	(stonith:fence_xvm):	 Started node1
     * rsc1	(ocf:pacemaker:Dummy):	 Stopped
     * Clone Set: rsc2-clone [rsc2] (promotable):
-      * Stopped: [ node1 node2 node3 node4 node5 ]
+      * Unpromoted: [ node1 node2 node3 node4 node5 ]
     * rsc3	(ocf:pacemaker:Dummy):	 Stopped (disabled)
