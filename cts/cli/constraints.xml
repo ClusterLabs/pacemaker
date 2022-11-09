@@ -15,6 +15,7 @@
       <node id="2" uname="cluster02"/>
     </nodes>
     <resources>
+      <primitive class="stonith" id="fencing" type="fence_xvm"/>
       <primitive class="ocf" id="prim1" provider="pacemaker" type="Dummy"/>
       <primitive class="ocf" id="prim2" provider="pacemaker" type="Dummy"/>
       <primitive class="ocf" id="prim3" provider="pacemaker" type="Dummy"/>

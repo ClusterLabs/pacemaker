@@ -3801,21 +3801,12 @@ Removing constraint: cli-prefer-dummy
 =#=#=#= End test: Create an XML patchset - Error occurred (1) =#=#=#=
 * Passed: crm_diff       - Create an XML patchset
 =#=#=#= Begin test: Check locations and constraints for prim1 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 =#=#=#= End test: Check locations and constraints for prim1 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim1
 =#=#=#= Begin test: Recursively check locations and constraints for prim1 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 =#=#=#= End test: Recursively check locations and constraints for prim1 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim1
 =#=#=#= Begin test: Check locations and constraints for prim1 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -a -r prim1 --output-as=xml">
   <constraints/>
   <status code="0" message="OK"/>
@@ -3823,9 +3814,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Check locations and constraints for prim1 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim1 in XML
 =#=#=#= Begin test: Recursively check locations and constraints for prim1 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -A -r prim1 --output-as=xml">
   <constraints/>
   <status code="0" message="OK"/>
@@ -3833,9 +3821,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Recursively check locations and constraints for prim1 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim1 in XML
 =#=#=#= Begin test: Check locations and constraints for prim2 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Locations:
   * Node cluster01 (score=INFINITY, id=prim2-on-cluster1, rsc=prim2)
 Resources prim2 is colocated with:
@@ -3843,9 +3828,6 @@ Resources prim2 is colocated with:
 =#=#=#= End test: Check locations and constraints for prim2 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim2
 =#=#=#= Begin test: Recursively check locations and constraints for prim2 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Locations:
   * Node cluster01 (score=INFINITY, id=prim2-on-cluster1, rsc=prim2)
 Resources prim2 is colocated with:
@@ -3859,9 +3841,6 @@ Resources prim2 is colocated with:
 =#=#=#= End test: Recursively check locations and constraints for prim2 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim2
 =#=#=#= Begin test: Check locations and constraints for prim2 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -a -r prim2 --output-as=xml">
   <constraints>
     <rsc_location node="cluster01" rsc="prim2" id="prim2-on-cluster1" score="INFINITY"/>
@@ -3872,9 +3851,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Check locations and constraints for prim2 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim2 in XML
 =#=#=#= Begin test: Recursively check locations and constraints for prim2 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -A -r prim2 --output-as=xml">
   <constraints>
     <rsc_location node="cluster01" rsc="prim2" id="prim2-on-cluster1" score="INFINITY"/>
@@ -3888,9 +3864,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Recursively check locations and constraints for prim2 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim2 in XML
 =#=#=#= Begin test: Check locations and constraints for prim3 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources colocated with prim3:
   * prim2 (score=INFINITY, id=colocation-prim2-prim3-INFINITY)
     * Locations:
@@ -3902,9 +3875,6 @@ Resources prim3 is colocated with:
 =#=#=#= End test: Check locations and constraints for prim3 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim3
 =#=#=#= Begin test: Recursively check locations and constraints for prim3 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources colocated with prim3:
   * prim2 (score=INFINITY, id=colocation-prim2-prim3-INFINITY)
     * Locations:
@@ -3918,9 +3888,6 @@ Resources prim3 is colocated with:
 =#=#=#= End test: Recursively check locations and constraints for prim3 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim3
 =#=#=#= Begin test: Check locations and constraints for prim3 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -a -r prim3 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim2-prim3-INFINITY" rsc="prim2" with-rsc="prim3" score="INFINITY"/>
@@ -3933,9 +3900,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Check locations and constraints for prim3 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim3 in XML
 =#=#=#= Begin test: Recursively check locations and constraints for prim3 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -A -r prim3 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim2-prim3-INFINITY" rsc="prim2" with-rsc="prim3" score="INFINITY"/>
@@ -3949,9 +3913,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Recursively check locations and constraints for prim3 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim3 in XML
 =#=#=#= Begin test: Check locations and constraints for prim4 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Locations:
   * Node cluster02 (score=INFINITY, id=prim4-on-cluster2, rsc=prim4)
 Resources colocated with prim4:
@@ -3962,9 +3923,6 @@ Resources prim4 is colocated with:
 =#=#=#= End test: Check locations and constraints for prim4 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim4
 =#=#=#= Begin test: Recursively check locations and constraints for prim4 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Locations:
   * Node cluster02 (score=INFINITY, id=prim4-on-cluster2, rsc=prim4)
 Resources colocated with prim4:
@@ -3979,9 +3937,6 @@ Resources prim4 is colocated with:
 =#=#=#= End test: Recursively check locations and constraints for prim4 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim4
 =#=#=#= Begin test: Check locations and constraints for prim4 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -a -r prim4 --output-as=xml">
   <constraints>
     <rsc_location node="cluster02" rsc="prim4" id="prim4-on-cluster2" score="INFINITY"/>
@@ -3994,9 +3949,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Check locations and constraints for prim4 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim4 in XML
 =#=#=#= Begin test: Recursively check locations and constraints for prim4 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -A -r prim4 --output-as=xml">
   <constraints>
     <rsc_location node="cluster02" rsc="prim4" id="prim4-on-cluster2" score="INFINITY"/>
@@ -4011,9 +3963,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Recursively check locations and constraints for prim4 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim4 in XML
 =#=#=#= Begin test: Check locations and constraints for prim5 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources colocated with prim5:
   * prim4 (score=INFINITY, id=colocation-prim4-prim5-INFINITY)
     * Locations:
@@ -4021,9 +3970,6 @@ Resources colocated with prim5:
 =#=#=#= End test: Check locations and constraints for prim5 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim5
 =#=#=#= Begin test: Recursively check locations and constraints for prim5 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources colocated with prim5:
   * prim4 (score=INFINITY, id=colocation-prim4-prim5-INFINITY)
     * Locations:
@@ -4038,9 +3984,6 @@ Resources colocated with prim5:
 =#=#=#= End test: Recursively check locations and constraints for prim5 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim5
 =#=#=#= Begin test: Check locations and constraints for prim5 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -a -r prim5 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim4-prim5-INFINITY" rsc="prim4" with-rsc="prim5" score="INFINITY"/>
@@ -4051,9 +3994,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Check locations and constraints for prim5 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim5 in XML
 =#=#=#= Begin test: Recursively check locations and constraints for prim5 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -A -r prim5 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim4-prim5-INFINITY" rsc="prim4" with-rsc="prim5" score="INFINITY"/>
@@ -4068,25 +4008,16 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Recursively check locations and constraints for prim5 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim5 in XML
 =#=#=#= Begin test: Check locations and constraints for prim6 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Locations:
   * Node cluster02 (score=-INFINITY, id=prim6-not-on-cluster2, rsc=prim6)
 =#=#=#= End test: Check locations and constraints for prim6 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim6
 =#=#=#= Begin test: Recursively check locations and constraints for prim6 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Locations:
   * Node cluster02 (score=-INFINITY, id=prim6-not-on-cluster2, rsc=prim6)
 =#=#=#= End test: Recursively check locations and constraints for prim6 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim6
 =#=#=#= Begin test: Check locations and constraints for prim6 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -a -r prim6 --output-as=xml">
   <constraints>
     <rsc_location node="cluster02" rsc="prim6" id="prim6-not-on-cluster2" score="-INFINITY"/>
@@ -4096,9 +4027,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Check locations and constraints for prim6 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim6 in XML
 =#=#=#= Begin test: Recursively check locations and constraints for prim6 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -A -r prim6 --output-as=xml">
   <constraints>
     <rsc_location node="cluster02" rsc="prim6" id="prim6-not-on-cluster2" score="-INFINITY"/>
@@ -4108,25 +4036,16 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Recursively check locations and constraints for prim6 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim6 in XML
 =#=#=#= Begin test: Check locations and constraints for prim7 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources prim7 is colocated with:
   * group (score=INFINITY, id=colocation-prim7-group-INFINITY)
 =#=#=#= End test: Check locations and constraints for prim7 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim7
 =#=#=#= Begin test: Recursively check locations and constraints for prim7 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources prim7 is colocated with:
   * group (score=INFINITY, id=colocation-prim7-group-INFINITY)
 =#=#=#= End test: Recursively check locations and constraints for prim7 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim7
 =#=#=#= Begin test: Check locations and constraints for prim7 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -a -r prim7 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim7-group-INFINITY" rsc="prim7" with-rsc="group" score="INFINITY"/>
@@ -4136,9 +4055,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Check locations and constraints for prim7 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim7 in XML
 =#=#=#= Begin test: Recursively check locations and constraints for prim7 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -A -r prim7 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim7-group-INFINITY" rsc="prim7" with-rsc="group" score="INFINITY"/>
@@ -4148,25 +4064,16 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Recursively check locations and constraints for prim7 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim7 in XML
 =#=#=#= Begin test: Check locations and constraints for prim8 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources prim8 is colocated with:
   * gr2 (score=INFINITY, id=colocation-prim8-gr2-INFINITY)
 =#=#=#= End test: Check locations and constraints for prim8 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim8
 =#=#=#= Begin test: Recursively check locations and constraints for prim8 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources prim8 is colocated with:
   * gr2 (score=INFINITY, id=colocation-prim8-gr2-INFINITY)
 =#=#=#= End test: Recursively check locations and constraints for prim8 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim8
 =#=#=#= Begin test: Check locations and constraints for prim8 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -a -r prim8 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim8-gr2-INFINITY" rsc="prim8" with-rsc="gr2" score="INFINITY"/>
@@ -4176,9 +4083,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Check locations and constraints for prim8 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim8 in XML
 =#=#=#= Begin test: Recursively check locations and constraints for prim8 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -A -r prim8 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim8-gr2-INFINITY" rsc="prim8" with-rsc="gr2" score="INFINITY"/>
@@ -4188,25 +4092,16 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Recursively check locations and constraints for prim8 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim8 in XML
 =#=#=#= Begin test: Check locations and constraints for prim9 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources prim9 is colocated with:
   * clone (score=INFINITY, id=colocation-prim9-clone-INFINITY)
 =#=#=#= End test: Check locations and constraints for prim9 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim9
 =#=#=#= Begin test: Recursively check locations and constraints for prim9 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources prim9 is colocated with:
   * clone (score=INFINITY, id=colocation-prim9-clone-INFINITY)
 =#=#=#= End test: Recursively check locations and constraints for prim9 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim9
 =#=#=#= Begin test: Check locations and constraints for prim9 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -a -r prim9 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim9-clone-INFINITY" rsc="prim9" with-rsc="clone" score="INFINITY"/>
@@ -4216,9 +4111,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Check locations and constraints for prim9 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim9 in XML
 =#=#=#= Begin test: Recursively check locations and constraints for prim9 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -A -r prim9 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim9-clone-INFINITY" rsc="prim9" with-rsc="clone" score="INFINITY"/>
@@ -4228,9 +4120,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Recursively check locations and constraints for prim9 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim9 in XML
 =#=#=#= Begin test: Check locations and constraints for prim10 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources prim10 is colocated with:
   * prim4 (score=INFINITY, id=colocation-prim10-prim4-INFINITY)
     * Locations:
@@ -4238,9 +4127,6 @@ Resources prim10 is colocated with:
 =#=#=#= End test: Check locations and constraints for prim10 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim10
 =#=#=#= Begin test: Recursively check locations and constraints for prim10 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources prim10 is colocated with:
   * prim4 (score=INFINITY, id=colocation-prim10-prim4-INFINITY)
     * Locations:
@@ -4250,9 +4136,6 @@ Resources prim10 is colocated with:
 =#=#=#= End test: Recursively check locations and constraints for prim10 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim10
 =#=#=#= Begin test: Check locations and constraints for prim10 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -a -r prim10 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim10-prim4-INFINITY" rsc="prim10" with-rsc="prim4" score="INFINITY"/>
@@ -4263,9 +4146,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Check locations and constraints for prim10 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim10 in XML
 =#=#=#= Begin test: Recursively check locations and constraints for prim10 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -A -r prim10 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim10-prim4-INFINITY" rsc="prim10" with-rsc="prim4" score="INFINITY"/>
@@ -4277,9 +4157,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Recursively check locations and constraints for prim10 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim10 in XML
 =#=#=#= Begin test: Check locations and constraints for prim11 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources colocated with prim11:
   * prim13 (score=INFINITY, id=colocation-prim13-prim11-INFINITY)
 Resources prim11 is colocated with:
@@ -4287,9 +4164,6 @@ Resources prim11 is colocated with:
 =#=#=#= End test: Check locations and constraints for prim11 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim11
 =#=#=#= Begin test: Recursively check locations and constraints for prim11 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources colocated with prim11:
   * prim13 (score=INFINITY, id=colocation-prim13-prim11-INFINITY)
     * Resources colocated with prim13:
@@ -4305,9 +4179,6 @@ Resources prim11 is colocated with:
 =#=#=#= End test: Recursively check locations and constraints for prim11 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim11
 =#=#=#= Begin test: Check locations and constraints for prim11 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -a -r prim11 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim13-prim11-INFINITY" rsc="prim13" with-rsc="prim11" score="INFINITY"/>
@@ -4318,9 +4189,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Check locations and constraints for prim11 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim11 in XML
 =#=#=#= Begin test: Recursively check locations and constraints for prim11 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -A -r prim11 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim13-prim11-INFINITY" rsc="prim13" with-rsc="prim11" score="INFINITY"/>
@@ -4335,9 +4203,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Recursively check locations and constraints for prim11 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim11 in XML
 =#=#=#= Begin test: Check locations and constraints for prim12 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources colocated with prim12:
   * prim11 (score=INFINITY, id=colocation-prim11-prim12-INFINITY)
 Resources prim12 is colocated with:
@@ -4345,9 +4210,6 @@ Resources prim12 is colocated with:
 =#=#=#= End test: Check locations and constraints for prim12 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim12
 =#=#=#= Begin test: Recursively check locations and constraints for prim12 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources colocated with prim12:
   * prim11 (score=INFINITY, id=colocation-prim11-prim12-INFINITY)
     * Resources colocated with prim11:
@@ -4363,9 +4225,6 @@ Resources prim12 is colocated with:
 =#=#=#= End test: Recursively check locations and constraints for prim12 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim12
 =#=#=#= Begin test: Check locations and constraints for prim12 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -a -r prim12 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim11-prim12-INFINITY" rsc="prim11" with-rsc="prim12" score="INFINITY"/>
@@ -4376,9 +4235,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Check locations and constraints for prim12 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim12 in XML
 =#=#=#= Begin test: Recursively check locations and constraints for prim12 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -A -r prim12 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim11-prim12-INFINITY" rsc="prim11" with-rsc="prim12" score="INFINITY"/>
@@ -4393,9 +4249,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Recursively check locations and constraints for prim12 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim12 in XML
 =#=#=#= Begin test: Check locations and constraints for prim13 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources colocated with prim13:
   * prim12 (score=INFINITY, id=colocation-prim12-prim13-INFINITY)
 Resources prim13 is colocated with:
@@ -4403,9 +4256,6 @@ Resources prim13 is colocated with:
 =#=#=#= End test: Check locations and constraints for prim13 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim13
 =#=#=#= Begin test: Recursively check locations and constraints for prim13 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources colocated with prim13:
   * prim12 (score=INFINITY, id=colocation-prim12-prim13-INFINITY)
     * Resources colocated with prim12:
@@ -4421,9 +4271,6 @@ Resources prim13 is colocated with:
 =#=#=#= End test: Recursively check locations and constraints for prim13 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim13
 =#=#=#= Begin test: Check locations and constraints for prim13 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -a -r prim13 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim12-prim13-INFINITY" rsc="prim12" with-rsc="prim13" score="INFINITY"/>
@@ -4434,9 +4281,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Check locations and constraints for prim13 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim13 in XML
 =#=#=#= Begin test: Recursively check locations and constraints for prim13 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -A -r prim13 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim12-prim13-INFINITY" rsc="prim12" with-rsc="prim13" score="INFINITY"/>
@@ -4451,25 +4295,16 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Recursively check locations and constraints for prim13 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim13 in XML
 =#=#=#= Begin test: Check locations and constraints for group =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources colocated with group:
   * prim7 (score=INFINITY, id=colocation-prim7-group-INFINITY)
 =#=#=#= End test: Check locations and constraints for group - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for group
 =#=#=#= Begin test: Recursively check locations and constraints for group =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources colocated with group:
   * prim7 (score=INFINITY, id=colocation-prim7-group-INFINITY)
 =#=#=#= End test: Recursively check locations and constraints for group - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for group
 =#=#=#= Begin test: Check locations and constraints for group in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -a -r group --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim7-group-INFINITY" rsc="prim7" with-rsc="group" score="INFINITY"/>
@@ -4479,9 +4314,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Check locations and constraints for group in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for group in XML
 =#=#=#= Begin test: Recursively check locations and constraints for group in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -A -r group --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim7-group-INFINITY" rsc="prim7" with-rsc="group" score="INFINITY"/>
@@ -4491,25 +4323,16 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Recursively check locations and constraints for group in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for group in XML
 =#=#=#= Begin test: Check locations and constraints for clone =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources colocated with clone:
   * prim9 (score=INFINITY, id=colocation-prim9-clone-INFINITY)
 =#=#=#= End test: Check locations and constraints for clone - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for clone
 =#=#=#= Begin test: Recursively check locations and constraints for clone =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources colocated with clone:
   * prim9 (score=INFINITY, id=colocation-prim9-clone-INFINITY)
 =#=#=#= End test: Recursively check locations and constraints for clone - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for clone
 =#=#=#= Begin test: Check locations and constraints for clone in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -a -r clone --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim9-clone-INFINITY" rsc="prim9" with-rsc="clone" score="INFINITY"/>
@@ -4519,9 +4342,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Check locations and constraints for clone in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for clone in XML
 =#=#=#= Begin test: Recursively check locations and constraints for clone in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -A -r clone --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim9-clone-INFINITY" rsc="prim9" with-rsc="clone" score="INFINITY"/>
@@ -4530,6 +4350,16 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 </pacemaker-result>
 =#=#=#= End test: Recursively check locations and constraints for clone in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for clone in XML
+=#=#=#= Begin test: Check locations and constraints for group member (referring to group) =#=#=#=
+Resources colocated with group:
+  * prim7 (score=INFINITY, id=colocation-prim7-group-INFINITY)
+=#=#=#= End test: Check locations and constraints for group member (referring to group) - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for group member (referring to group)
+=#=#=#= Begin test: Check locations and constraints for group member (without referring to group) =#=#=#=
+Resources colocated with gr2:
+  * prim8 (score=INFINITY, id=colocation-prim8-gr2-INFINITY)
+=#=#=#= End test: Check locations and constraints for group member (without referring to group) - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for group member (without referring to group)
 =#=#=#= Begin test: Show resource digests =#=#=#=
 <pacemaker-result api-version="X" request="crm_resource --digests -r rsc1 -N node1 --output-as=xml">
   <digests resource="rsc1" node="node1" task="start" interval="0ms">
@@ -5235,7 +5065,7 @@ Transition Summary:
   * Move       Public-IP                           ( cluster02 -> cluster01 )
   * Move       Email                               ( cluster02 -> cluster01 )
   * Stop       mysql-proxy:0                       (              cluster02 )  due to node availability
-  * Stop       promotable-rsc:0                    (     Promoted cluster02 )  due to node availability
+  * Stop       promotable-rsc:0                    (       Promoted cluster02 )  due to node availability
 
 Executing Cluster Transition:
   * Pseudo action:   httpd-bundle-1_stop_0
