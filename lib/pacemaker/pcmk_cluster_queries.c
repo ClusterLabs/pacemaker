@@ -45,7 +45,6 @@ typedef struct {
     pcmk__output_t *out;
     bool show_output;
     int rc;
-    bool reply_received;
     unsigned int message_timeout_ms;
     enum pcmk_pacemakerd_state pcmkd_state;
     node_info_t node_info;
@@ -131,7 +130,6 @@ validate_controld_reply(data_t *data, const pcmk_ipc_api_t *api,
         return data->rc;
     }
 
-    data->reply_received = true;
     return pcmk_rc_ok;
 }
 
@@ -172,7 +170,6 @@ validate_pcmkd_reply(data_t *data, const pcmk_ipc_api_t *api,
         return data->rc;
     }
 
-    data->reply_received = true;
     return pcmk_rc_ok;
 }
 
@@ -327,8 +324,8 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
     // Parse desired information from reply
     reply = (const pcmk_pacemakerd_api_reply_t *) event_data;
 
-    data->rc = pcmk_rc_ok;
     data->pcmkd_state = reply->data.ping.state;
+    data->rc = pcmk_rc_ok;
 
     if (!data->show_output) {
         return;
@@ -427,7 +424,8 @@ poll_until_reply(data_t *data, pcmk_ipc_api_t *api, const char *on_node)
 
         pcmk_dispatch_ipc(api);
 
-        if (data->reply_received) {
+        if (data->rc != EAGAIN) {
+            // Received a reply
             return;
         }
         end_nsec = qb_util_nano_current_get();
@@ -463,11 +461,8 @@ pcmk__controller_status(pcmk__output_t *out, const char *node_name,
 {
     data_t data = {
         .out = out,
-        .show_output = true,
-        .rc = pcmk_rc_ok,
-        .reply_received = false,
+        .rc = EAGAIN,
         .message_timeout_ms = message_timeout_ms,
-        .pcmkd_state = pcmk_pacemakerd_state_invalid,
     };
     enum pcmk_ipc_dispatch dispatch_type = pcmk_ipc_dispatch_poll;
     pcmk_ipc_api_t *controld_api = NULL;
@@ -536,11 +531,8 @@ pcmk__designated_controller(pcmk__output_t *out,
 {
     data_t data = {
         .out = out,
-        .show_output = true,
-        .rc = pcmk_rc_ok,
-        .reply_received = false,
+        .rc = EAGAIN,
         .message_timeout_ms = message_timeout_ms,
-        .pcmkd_state = pcmk_pacemakerd_state_invalid,
     };
     enum pcmk_ipc_dispatch dispatch_type = pcmk_ipc_dispatch_poll;
     pcmk_ipc_api_t *controld_api = NULL;
@@ -629,7 +621,7 @@ pcmk__query_node_info(pcmk__output_t *out, uint32_t *node_id, char **node_name,
     data_t data = {
         .out = out,
         .show_output = show_output,
-        .rc = pcmk_rc_ok,
+        .rc = EAGAIN,
         .message_timeout_ms = message_timeout_ms,
         .node_info = {
             .id = (node_id == NULL)? 0 : *node_id,
@@ -749,8 +741,7 @@ pcmk__pacemakerd_status(pcmk__output_t *out, const char *ipc_name,
     data_t data = {
         .out = out,
         .show_output = show_output,
-        .rc = pcmk_rc_ok,
-        .reply_received = false,
+        .rc = EAGAIN,
         .message_timeout_ms = message_timeout_ms,
         .pcmkd_state = pcmk_pacemakerd_state_invalid,
     };
