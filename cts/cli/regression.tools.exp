@@ -4760,6 +4760,27 @@ Resources colocated with gr2:
   * prim8 (score=INFINITY, id=colocation-prim8-gr2-INFINITY)
 =#=#=#= End test: Check locations and constraints for group member (without referring to group) - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for group member (without referring to group)
+Setting up shadow instance
+A new shadow instance was created.  To begin using it paste the following into your shell:
+  CIB_shadow=cts-cli ; export CIB_shadow
+=#=#=#= Begin test: Set a meta-attribute for primitive and resources colocated with it =#=#=#=
+Set 'prim5' option: id=prim5-meta_attributes-target-role set=prim5-meta_attributes name=target-role value=Stopped
+Set 'prim4' option: id=prim4-meta_attributes-target-role set=prim4-meta_attributes name=target-role value=Stopped
+Set 'prim10' option: id=prim10-meta_attributes-target-role set=prim10-meta_attributes name=target-role value=Stopped
+Set 'prim3' option: id=prim3-meta_attributes-target-role set=prim3-meta_attributes name=target-role value=Stopped
+Set 'prim2' option: id=prim2-meta_attributes-target-role set=prim2-meta_attributes name=target-role value=Stopped
+=#=#=#= End test: Set a meta-attribute for primitive and resources colocated with it - OK (0) =#=#=#=
+* Passed: crm_resource   - Set a meta-attribute for primitive and resources colocated with it
+=#=#=#= Begin test: Set a meta-attribute for group and resource colocated with it =#=#=#=
+Set 'group' option: id=group-meta_attributes-target-role set=group-meta_attributes name=target-role value=Stopped
+Set 'prim7' option: id=prim7-meta_attributes-target-role set=prim7-meta_attributes name=target-role value=Stopped
+=#=#=#= End test: Set a meta-attribute for group and resource colocated with it - OK (0) =#=#=#=
+* Passed: crm_resource   - Set a meta-attribute for group and resource colocated with it
+=#=#=#= Begin test: Set a meta-attribute for clone and resource colocated with it =#=#=#=
+Set 'clone' option: id=clone-meta_attributes-target-role set=clone-meta_attributes name=target-role value=Stopped
+Set 'prim9' option: id=prim9-meta_attributes-target-role set=prim9-meta_attributes name=target-role value=Stopped
+=#=#=#= End test: Set a meta-attribute for clone and resource colocated with it - OK (0) =#=#=#=
+* Passed: crm_resource   - Set a meta-attribute for clone and resource colocated with it
 =#=#=#= Begin test: Show resource digests =#=#=#=
 <pacemaker-result api-version="X" request="crm_resource --digests -r rsc1 -N node1 --output-as=xml">
   <digests resource="rsc1" node="node1" task="start" interval="0ms">
