@@ -263,11 +263,7 @@ crm_time_get_sec(int sec, uint32_t *h, uint32_t *m, uint32_t *s)
 {
     uint32_t hours, minutes, seconds;
 
-    if (sec < 0) {
-        seconds = 0 - sec;
-    } else {
-        seconds = sec;
-    }
+    seconds = QB_ABS(sec);
 
     hours = seconds / HOUR_SECONDS;
     seconds -= HOUR_SECONDS * hours;
@@ -466,16 +462,19 @@ crm_duration_as_string(const crm_time_t *dt, char *result)
                            dt->days, pcmk__plural_s(dt->days));
     }
 
-    if (((offset == 0) || (dt->seconds != 0))
-        && (dt->seconds > -60) && (dt->seconds < 60)) {
+    // At least print seconds
+    if ((offset == 0) || (dt->seconds != 0)) {
         offset += snprintf(result + offset, DATE_MAX - offset, "%d second%s",
                            dt->seconds, pcmk__plural_s(dt->seconds));
-    } else if (dt->seconds) {
+    }
+
+    // More than one minute, so provide a more readable breakdown into units
+    if (QB_ABS(dt->seconds) >= 60) {
         uint32_t h = 0, m = 0, s = 0;
 
-        offset += snprintf(result + offset, DATE_MAX - offset, "%d seconds (",
-                           dt->seconds);
         crm_time_get_sec(dt->seconds, &h, &m, &s);
+
+        offset += snprintf(result + offset, DATE_MAX - offset, " (");
         if (h) {
             offset += snprintf(result + offset, DATE_MAX - offset,
                                "%" PRIu32 " hour%s%s", h, pcmk__plural_s(h),
