@@ -795,6 +795,15 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
     reset(data_set, input, out, use_date, flags);
     cluster_status(data_set);
 
+    if ((cib->variant == cib_native)
+        && pcmk_is_set(section_opts, pcmk_section_times)) {
+        if (pcmk__our_nodename == NULL) {
+            // Currently used only in the times section
+            pcmk__query_node_name(out, 0, &pcmk__our_nodename, 0);
+        }
+        data_set->localhost = pcmk__our_nodename;
+    }
+
     if (!out->is_quiet(out)) {
         if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
             printed = out->message(out, "maint-mode", data_set->flags);

@@ -394,7 +394,8 @@ cluster_summary(pcmk__output_t *out, va_list args) {
         const char *origin = crm_element_value(data_set->input, XML_ATTR_UPDATE_ORIG);
 
         PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
-        out->message(out, "cluster-times", last_written, user, client, origin);
+        out->message(out, "cluster-times",
+                     data_set->localhost, last_written, user, client, origin);
     }
 
     if (pcmk_is_set(section_opts, pcmk_section_counts)) {
@@ -462,7 +463,8 @@ cluster_summary_html(pcmk__output_t *out, va_list args) {
         const char *origin = crm_element_value(data_set->input, XML_ATTR_UPDATE_ORIG);
 
         PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
-        out->message(out, "cluster-times", last_written, user, client, origin);
+        out->message(out, "cluster-times",
+                     data_set->localhost, last_written, user, client, origin);
     }
 
     if (pcmk_is_set(section_opts, pcmk_section_counts)) {
@@ -1141,9 +1143,11 @@ cluster_stack_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("cluster-times", "const char *", "const char *", "const char *", "const char *")
+PCMK__OUTPUT_ARGS("cluster-times", "const char *", "const char *",
+                  "const char *", "const char *", "const char *")
 static int
 cluster_times_html(pcmk__output_t *out, va_list args) {
+    const char *our_nodename = va_arg(args, const char *);
     const char *last_written = va_arg(args, const char *);
     const char *user = va_arg(args, const char *);
     const char *client = va_arg(args, const char *);
@@ -1152,33 +1156,41 @@ cluster_times_html(pcmk__output_t *out, va_list args) {
     xmlNodePtr updated_node = pcmk__output_create_xml_node(out, "li", NULL);
     xmlNodePtr changed_node = pcmk__output_create_xml_node(out, "li", NULL);
 
-    char *buf = pcmk__epoch2str(NULL, 0);
+    char *time_s = pcmk__epoch2str(NULL, 0);
 
     pcmk_create_html_node(updated_node, "span", NULL, "bold", "Last updated: ");
-    pcmk_create_html_node(updated_node, "span", NULL, NULL, buf);
+    pcmk_create_html_node(updated_node, "span", NULL, NULL, time_s);
 
-    free(buf);
-    buf = last_changed_string(last_written, user, client, origin);
+    if (our_nodename != NULL) {
+        pcmk_create_html_node(updated_node, "span", NULL, NULL, " on ");
+        pcmk_create_html_node(updated_node, "span", NULL, NULL, our_nodename);
+    }
+
+    free(time_s);
+    time_s = last_changed_string(last_written, user, client, origin);
 
     pcmk_create_html_node(changed_node, "span", NULL, "bold", "Last change: ");
-    pcmk_create_html_node(changed_node, "span", NULL, NULL, buf);
+    pcmk_create_html_node(changed_node, "span", NULL, NULL, time_s);
 
-    free(buf);
+    free(time_s);
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("cluster-times", "const char *", "const char *", "const char *", "const char *")
+PCMK__OUTPUT_ARGS("cluster-times", "const char *", "const char *",
+                  "const char *", "const char *", "const char *")
 static int
 cluster_times_xml(pcmk__output_t *out, va_list args) {
+    const char *our_nodename = va_arg(args, const char *);
     const char *last_written = va_arg(args, const char *);
     const char *user = va_arg(args, const char *);
     const char *client = va_arg(args, const char *);
     const char *origin = va_arg(args, const char *);
 
-    char *buf = pcmk__epoch2str(NULL, 0);
+    char *time_s = pcmk__epoch2str(NULL, 0);
 
     pcmk__output_create_xml_node(out, "last_update",
-                                 "time", buf,
+                                 "time", time_s,
+                                 "origin", our_nodename,
                                  NULL);
 
     pcmk__output_create_xml_node(out, "last_change",
@@ -1188,28 +1200,32 @@ cluster_times_xml(pcmk__output_t *out, va_list args) {
                                  "origin", origin ? origin : "",
                                  NULL);
 
-    free(buf);
+    free(time_s);
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("cluster-times", "const char *", "const char *", "const char *", "const char *")
+PCMK__OUTPUT_ARGS("cluster-times", "const char *", "const char *",
+                  "const char *", "const char *", "const char *")
 static int
 cluster_times_text(pcmk__output_t *out, va_list args) {
+    const char *our_nodename = va_arg(args, const char *);
     const char *last_written = va_arg(args, const char *);
     const char *user = va_arg(args, const char *);
     const char *client = va_arg(args, const char *);
     const char *origin = va_arg(args, const char *);
 
-    char *buf = pcmk__epoch2str(NULL, 0);
+    char *time_s = pcmk__epoch2str(NULL, 0);
 
-    out->list_item(out, "Last updated", "%s", buf);
+    out->list_item(out, "Last updated", "%s%s%s",
+                   time_s, (our_nodename != NULL)? " on " : "",
+                   pcmk__s(our_nodename, ""));
 
-    free(buf);
-    buf = last_changed_string(last_written, user, client, origin);
+    free(time_s);
+    time_s = last_changed_string(last_written, user, client, origin);
 
-    out->list_item(out, "Last change", " %s", buf);
+    out->list_item(out, "Last change", " %s", time_s);
 
-    free(buf);
+    free(time_s);
     return pcmk_rc_ok;
 }
 

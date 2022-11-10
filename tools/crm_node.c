@@ -321,7 +321,10 @@ print_node_name(void)
         return;
 
     } else {
-        // Otherwise ask the controller
+        /* Otherwise ask the controller.
+         * FIXME: Use pcmk__query_node_name() after conversion to formatted
+         * output.
+         */
         run_controller_mainloop(0, false);
     }
 }
@@ -576,6 +579,9 @@ main(int argc, char **argv)
         case 'i':
         case 'q':
         case 'N':
+            /* FIXME: Use pcmk__query_node_name() after conversion to formatted
+             * output
+             */
             run_controller_mainloop(options.nodeid, false);
             break;
         case 'l':

@@ -37,7 +37,7 @@
 #include <crm/common/output_internal.h>
 #include <sys/utsname.h>
 
-#include <pcmki/pcmki_output.h>
+#include <pacemaker-internal.h>
 
 #define SUMMARY "crm_attribute - query and update Pacemaker cluster options and node attributes"
 
@@ -280,41 +280,6 @@ static GOptionEntry deprecated_entries[] = {
 };
 
 static void
-controller_event_cb(pcmk_ipc_api_t *controld_api,
-                    enum pcmk_ipc_event event_type, crm_exit_t status,
-                    void *event_data, void *user_data)
-{
-    pcmk_controld_api_reply_t *reply = event_data;
-
-    if (event_type != pcmk_ipc_event_reply) {
-        return;
-    }
-
-    if (status != CRM_EX_OK) {
-        exit_code = status;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Bad reply from controller: %s", crm_exit_str(exit_code));
-        return;
-    }
-
-    if (reply->reply_type != pcmk_controld_reply_info) {
-        exit_code = CRM_EX_PROTOCOL;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Unknown reply type %d from controller", reply->reply_type);
-        return;
-    }
-
-    if (reply->data.node_info.uname == NULL) {
-        exit_code = CRM_EX_NOHOST;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Node is not known to cluster");
-    }
-
-    exit_code = CRM_EX_OK;
-    pcmk__str_update(&options.dest_uname, reply->data.node_info.uname);
-}
-
-static void
 get_node_name_from_local(void)
 {
     char *hostname = pcmk_hostname();
@@ -327,51 +292,6 @@ get_node_name_from_local(void)
      */
     options.dest_uname = g_strdup(hostname);
     free(hostname);
-}
-
-static int
-get_node_name_from_controller(void)
-{
-    int rc = pcmk_rc_ok;
-    pcmk_ipc_api_t *controld_api = NULL;
-
-    rc = pcmk_new_ipc_api(&controld_api, pcmk_ipc_controld);
-    if (controld_api == NULL) {
-        g_set_error(&error, PCMK__RC_ERROR, rc, "Could not connect to controller: %s",
-                    pcmk_rc_str(rc));
-        return rc;
-    }
-
-    pcmk_register_ipc_callback(controld_api, controller_event_cb, NULL);
-
-    rc = pcmk_connect_ipc(controld_api, pcmk_ipc_dispatch_sync);
-    if (rc != pcmk_rc_ok) {
-        g_set_error(&error, PCMK__RC_ERROR, rc, "Could not connect to controller: %s",
-                    pcmk_rc_str(rc));
-        pcmk_free_ipc_api(controld_api);
-        return rc;
-    }
-
-    rc = pcmk_controld_api_node_info(controld_api, 0);
-
-    if (rc != pcmk_rc_ok) {
-        g_set_error(&error, PCMK__RC_ERROR, rc, "Could not ping controller: %s",
-                    pcmk_rc_str(rc));
-    }
-
-    /* This is a synchronous call, so we have already received and processed
-     * the reply, which means controller_event_cb has been called.  If
-     * exit_code was set, return some generic error here.  The caller can
-     * then check for that and fail with exit_code.
-     */
-    if (exit_code != CRM_EX_OK) {
-        rc = pcmk_rc_error;
-    }
-
-    pcmk_disconnect_ipc(controld_api);
-    pcmk_free_ipc_api(controld_api);
-
-    return rc;
 }
 
 static int
@@ -825,20 +745,17 @@ main(int argc, char **argv)
         }
 
         if (options.dest_uname == NULL) {
-            rc = get_node_name_from_controller();
+            char *node_name = NULL;
 
-            if (rc == pcmk_rc_error) {
-                /* The callback failed with some error condition that is stored in
-                 * exit_code.
-                 */
-                goto done;
-            } else if (rc != pcmk_rc_ok) {
-                /* get_node_name_from_controller failed in some other way.  Convert
-                 * the return code to an exit code.
-                 */
+            rc = pcmk__query_node_name(out, 0, &node_name, 0);
+
+            if (rc != pcmk_rc_ok) {
                 exit_code = pcmk_rc2exitc(rc);
+                free(node_name);
                 goto done;
             }
+            options.dest_uname = g_strdup(node_name);
+            free(node_name);
         }
 
         rc = query_node_uuid(the_cib, options.dest_uname, &options.dest_node, &is_remote_node);

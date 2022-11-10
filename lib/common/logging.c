@@ -45,6 +45,7 @@ typedef time_t log_time_t;
 unsigned int crm_log_level = LOG_INFO;
 unsigned int crm_trace_nonlog = 0;
 bool pcmk__is_daemon = false;
+char *pcmk__our_nodename = NULL;
 
 static unsigned int crm_log_priority = LOG_NOTICE;
 static GLogFunc glib_log_default = NULL;
