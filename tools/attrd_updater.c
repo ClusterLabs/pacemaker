@@ -98,6 +98,15 @@ section_cb (const gchar *option_name, const gchar *optarg, gpointer data, GError
 }
 
 static gboolean
+attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    if (pcmk__str_any_of(option_name, "-z", "--utilization", NULL)) {
+        pcmk__set_node_attr_flags(options.attr_options, pcmk__node_attr_utilization);
+    }
+
+    return TRUE;
+}
+
+static gboolean
 wait_cb (const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     if (pcmk__str_eq(optarg, "no", pcmk__str_none)) {
         pcmk__clear_node_attr_flags(options.attr_options, pcmk__node_attr_sync_local | pcmk__node_attr_sync_cluster);
@@ -204,6 +213,13 @@ static GOptionEntry addl_entries[] = {
       INDENT "to where a query anywhere on the cluster will return the requested\n"
       INDENT "value, or the value set by a later request).  Default is 'no'.",
       "UNTIL" },
+
+    { "utilization", 'z', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, attr_set_type_cb,
+      "When creating a new attribute, create it as a node utilization attribute\n"
+      INDENT "instead of an instance attribute.  If the attribute already exists,\n"
+      INDENT "its existing type (utilization vs. instance) will be used regardless.\n"
+      INDENT "(with -B, -U, -Y)",
+      NULL },
 
     { NULL }
 };

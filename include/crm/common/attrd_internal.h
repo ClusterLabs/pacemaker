@@ -25,6 +25,7 @@ enum pcmk__node_attr_opts {
     pcmk__node_attr_perm           = (1 << 5),
     pcmk__node_attr_sync_local     = (1 << 6),
     pcmk__node_attr_sync_cluster   = (1 << 7),
+    pcmk__node_attr_utilization    = (1 << 8),
 };
 
 #define pcmk__set_node_attr_flags(node_attr_flags, flags_to_set) do {   \
