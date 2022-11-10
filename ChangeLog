@@ -1,3 +1,19 @@
+* Mon Nov 14 2022 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.5-rc2
+- Changesets: 39
+- Diff: 23 files changed, 388 insertions(+), 301 deletions(-)
+
+- Features added since Pacemaker-2.1.5-rc1
+  + tools: crm_resource --constraints now accepts --recursive (equivalent to
+           --stack) and --force (to show constraints for a group member
+	   instead of the group)
+
+- Fixes since Pacemaker-2.1.5-rc1
+  + tools: fix setting utilization attributes with crm_attribute
+    (regression introduced in 2.1.3)
+  + scheduler: consider roles when blocking colocation dependents
+  + scheduler: prioritize group colocations properly
+  + scheduler: properly consider effect of "with group" colocations
+
 * Thu Oct 20 2022 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.5-rc1
 - Changesets: 1225
 - Diff: 447 files changed, 33257 insertions(+), 21374 deletions(-)
