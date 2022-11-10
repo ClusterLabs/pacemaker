@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 2\n"
 "Report-Msgid-Bugs-To: developers@clusterlabs.org\n"
-"POT-Creation-Date: 2022-10-18 18:44+0800\n"
+"POT-Creation-Date: 2022-11-11 03:36+0800\n"
 "PO-Revision-Date: 2021-11-08 11:04+0800\n"
 "Last-Translator: Vivi <developers@clusterlabs.org>\n"
 "Language-Team: CHINESE <wangluwei@uniontech.org>\n"
@@ -659,6 +659,43 @@ msgid ""
 msgstr ""
 "如果shutdown-lock为true，并且将此选项设置为非零持续时间，则自从开始shutdown以"
 "来经过了这么长的时间后，shutdown锁将过期，即使该节点尚未重新加入。"
+
+#: lib/pengine/common.c:95
+msgid ""
+"*** Advanced Use Only *** Whether nodes may be fenced as part of recovery"
+msgstr ""
+"*** Advanced Use Only *** 集群恢复了一部分时节点是否可以被防护"
+
+#: lib/pengine/common.c:97
+msgid ""
+"If false, unresponsive nodes are immediately assumed to be harmless, and "
+"resources that were active on them may be recovered elsewhere. This can "
+"result in a \"split-brain\" situation, potentially leading to data loss and/"
+"or service unavailability."
+msgstr ""
+"如果为false，则立即假定无响应的节点是无害的，并且可以在其他位置恢复在其上活动"
+"的资源。 这可能会导致 \"split-brain\" 情况，可能导致数据丢失和/或服务不"
+"可用。"
+
+#: lib/pengine/common.c:105
+msgid ""
+"Action to send to fence device when a node needs to be fenced (\"poweroff\" "
+"is a deprecated alias for \"off\")"
+msgstr ""
+"发送到STONITH设备的操作（ \"poweroff\" 是 \"off \"的别名,不建议使用)"
+
+#: lib/pengine/common.c:112
+msgid "*** Advanced Use Only *** Unused by Pacemaker"
+msgstr ""
+"*** Advanced Use Only *** pacemaker未使用"
+
+#: lib/pengine/common.c:113
+msgid ""
+"This value is not used by Pacemaker, but is kept for backward compatibility, "
+"and certain legacy fence agents might use it."
+msgstr ""
+"Pacemaker不使用此值，但保留此值是为了向后兼容，某些传统的防护代理可能会使用"
+"它。"
 
 #: lib/pengine/common.c:119
 msgid "Whether watchdog integration is enabled"

@@ -92,26 +92,26 @@ static pcmk__cluster_option_t pe_opts[] = {
     {
         "stonith-enabled", NULL, "boolean", NULL,
         "true", pcmk__valid_boolean,
-        "*** Advanced Use Only *** "
-            "Whether nodes may be fenced as part of recovery",
-        "If false, unresponsive nodes are immediately assumed to be harmless, "
+        N_("*** Advanced Use Only *** "
+            "Whether nodes may be fenced as part of recovery"),
+        N_("If false, unresponsive nodes are immediately assumed to be harmless, "
             "and resources that were active on them may be recovered "
             "elsewhere. This can result in a \"split-brain\" situation, "
-            "potentially leading to data loss and/or service unavailability."
+            "potentially leading to data loss and/or service unavailability.")
     },
     {
         "stonith-action", NULL, "select", "reboot, off, poweroff",
         "reboot", pcmk__is_fencing_action,
-        "Action to send to fence device when a node needs to be fenced "
-            "(\"poweroff\" is a deprecated alias for \"off\")",
+        N_("Action to send to fence device when a node needs to be fenced "
+            "(\"poweroff\" is a deprecated alias for \"off\")"),
         NULL
     },
     {
         "stonith-timeout", NULL, "time", NULL,
         "60s", pcmk__valid_interval_spec,
-        "*** Advanced Use Only *** Unused by Pacemaker",
-        "This value is not used by Pacemaker, but is kept for backward "
-            "compatibility, and certain legacy fence agents might use it."
+        N_("*** Advanced Use Only *** Unused by Pacemaker"),
+        N_("This value is not used by Pacemaker, but is kept for backward "
+            "compatibility, and certain legacy fence agents might use it.")
     },
     {
         XML_ATTR_HAVE_WATCHDOG, NULL, "boolean", NULL,
