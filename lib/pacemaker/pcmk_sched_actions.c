@@ -656,7 +656,7 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
                   then->uuid);
         if (pcmk_is_set(last_flags, pe_action_runnable)
             && !pcmk_is_set(then->flags, pe_action_runnable)) {
-            pcmk__block_colocated_starts(then, data_set);
+            pcmk__block_colocation_dependents(then, data_set);
         }
         pcmk__update_action_for_orderings(then, data_set);
         for (lpc = then->actions_after; lpc != NULL; lpc = lpc->next) {
