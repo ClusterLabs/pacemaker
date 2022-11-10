@@ -787,9 +787,17 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
     }
 }
 
+/*!
+ * \internal
+ * \brief Make actions of a given type unrunnable for a given resource
+ *
+ * \param[in,out] rsc     Resource whose actions should be blocked
+ * \param[in]     task    Name of action to block
+ * \param[in]     reason  Unrunnable start action causing the block
+ */
 static void
-mark_start_blocked(pe_resource_t *rsc, pe_resource_t *reason,
-                   pe_working_set_t *data_set)
+mark_action_blocked(pe_resource_t *rsc, const char *task,
+                    const pe_resource_t *reason)
 {
     char *reason_text = crm_strdup_printf("colocation with %s", reason->id);
 
@@ -797,13 +805,18 @@ mark_start_blocked(pe_resource_t *rsc, pe_resource_t *reason,
         pe_action_t *action = (pe_action_t *) gIter->data;
 
         if (pcmk_is_set(action->flags, pe_action_runnable)
-            && pcmk__str_eq(action->task, RSC_START, pcmk__str_casei)) {
+            && pcmk__str_eq(action->task, task, pcmk__str_casei)) {
 
             pe__clear_action_flags(action, pe_action_runnable);
             pe_action_set_reason(action, reason_text, false);
-            pcmk__block_colocated_starts(action, data_set);
-            pcmk__update_action_for_orderings(action, data_set);
+            pcmk__block_colocated_starts(action, rsc->cluster);
+            pcmk__update_action_for_orderings(action, rsc->cluster);
         }
+    }
+
+    // If parent resource can't perform an action, neither can any children
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        mark_action_blocked((pe_resource_t *) (iter->data), task, reason);
     }
     free(reason_text);
 }
@@ -853,7 +866,8 @@ pcmk__block_colocated_starts(pe_action_t *action, pe_working_set_t *data_set)
         pcmk__colocation_t *colocate_with = (pcmk__colocation_t *) gIter->data;
 
         if (colocate_with->score == INFINITY) {
-            mark_start_blocked(colocate_with->dependent, action->rsc, data_set);
+            mark_action_blocked(colocate_with->dependent, RSC_START,
+                                action->rsc);
         }
     }
 }
