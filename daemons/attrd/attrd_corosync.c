@@ -552,7 +552,7 @@ attrd_peer_update(const crm_node_t *peer, xmlNode *xml, const char *host,
              child = crm_next_same_xml(child)) {
             /* Set the node name on the child message, assuming it isn't already. */
             if (crm_element_value(child, PCMK__XA_ATTR_NODE_NAME) == NULL) {
-                pcmk__xe_add_node(xml, host, 0);
+                pcmk__xe_add_node(child, host, 0);
             }
 
             attrd_peer_update_one(peer, child, filter);
