@@ -47,6 +47,22 @@
 #define HOUR_SECONDS    (60 * 60)
 #define DAY_SECONDS     (HOUR_SECONDS * 24)
 
+/*!
+ * \internal
+ * \brief Validate a seconds/microseconds tuple
+ *
+ * The microseconds value must be in the correct range, and if both are nonzero
+ * they must have the same sign.
+ *
+ * \param[in] sec   Seconds
+ * \param[in] usec  Microseconds
+ *
+ * \return true if the seconds/microseconds tuple is valid, or false otherwise
+ */
+#define valid_sec_usec(sec, usec)               \
+        ((QB_ABS(usec) < QB_TIME_US_IN_SEC)     \
+         && (((sec) == 0) || ((usec) == 0) || (((sec) < 0) == ((usec) < 0))))
+
 // A date/time or duration
 struct crm_time_s {
     int years;      // Calendar year (date/time) or number of years (duration)
@@ -444,10 +460,40 @@ crm_time_get_isoweek(const crm_time_t *dt, uint32_t *y, uint32_t *w,
 
 #define DATE_MAX 128
 
+/*!
+ * \internal
+ * \brief Print "<seconds>.<microseconds>" to a buffer
+ *
+ * \param[in]     sec     Seconds
+ * \param[in]     usec    Microseconds (must be of same sign as \p sec and of
+ *                        absolute value less than \p QB_TIME_US_IN_SEC)
+ * \param[in,out] buf     Result buffer
+ * \param[in,out] offset  Current offset within \p buf
+ */
+static inline void
+sec_usec_as_string(long long sec, int usec, char *buf, size_t *offset)
+{
+    *offset += snprintf(buf + *offset, DATE_MAX - *offset, "%s%lld.%06d",
+                        ((sec == 0) && (usec < 0))? "-" : "",
+                        sec, QB_ABS(usec));
+}
+
+/*!
+ * \internal
+ * \brief Get a string representation of a duration
+ *
+ * \param[in]  dt         Time object to interpret as a duration
+ * \param[in]  usec       Microseconds to add to \p dt
+ * \param[in]  show_usec  Whether to include microseconds in \p result
+ * \param[out] result     Where to store the result string
+ */
 static void
-crm_duration_as_string(const crm_time_t *dt, char *result)
+crm_duration_as_string(const crm_time_t *dt, int usec, bool show_usec,
+                       char *result)
 {
     size_t offset = 0;
+
+    CRM_ASSERT(valid_sec_usec(dt->seconds, usec));
 
     if (dt->years) {
         offset += snprintf(result + offset, DATE_MAX - offset, "%4d year%s ",
@@ -462,33 +508,54 @@ crm_duration_as_string(const crm_time_t *dt, char *result)
                            dt->days, pcmk__plural_s(dt->days));
     }
 
-    // At least print seconds
-    if ((offset == 0) || (dt->seconds != 0)) {
-        offset += snprintf(result + offset, DATE_MAX - offset, "%d second%s",
-                           dt->seconds, pcmk__plural_s(dt->seconds));
+    // At least print seconds (and optionally usecs)
+    if ((offset == 0) || (dt->seconds != 0) || (show_usec && (usec != 0))) {
+        if (show_usec) {
+            sec_usec_as_string(dt->seconds, usec, result, &offset);
+        } else {
+            offset += snprintf(result + offset, DATE_MAX - offset, "%d",
+                               dt->seconds);
+        }
+        offset += snprintf(result + offset, DATE_MAX - offset, " second%s",
+                           pcmk__plural_s(dt->seconds));
     }
 
     // More than one minute, so provide a more readable breakdown into units
     if (QB_ABS(dt->seconds) >= 60) {
-        uint32_t h = 0, m = 0, s = 0;
+        uint32_t h = 0;
+        uint32_t m = 0;
+        uint32_t s = 0;
+        uint32_t u = QB_ABS(usec);
+        bool print_sec_component = false;
 
         crm_time_get_sec(dt->seconds, &h, &m, &s);
+        print_sec_component = ((s != 0) || (show_usec && (u != 0)));
 
         offset += snprintf(result + offset, DATE_MAX - offset, " (");
+
         if (h) {
             offset += snprintf(result + offset, DATE_MAX - offset,
                                "%" PRIu32 " hour%s%s", h, pcmk__plural_s(h),
-                               ((m != 0) || (s != 0))? " " : "");
+                               ((m != 0) || print_sec_component)? " " : "");
         }
+
         if (m) {
             offset += snprintf(result + offset, DATE_MAX - offset,
                                "%" PRIu32 " minute%s%s", m, pcmk__plural_s(m),
-                               (s != 0)? " " : "");
+                               print_sec_component? " " : "");
         }
-        if (s) {
-            offset += snprintf(result + offset, DATE_MAX - offset,
-                               "%" PRIu32 " second%s", s, pcmk__plural_s(s));
+
+        if (print_sec_component) {
+            if (show_usec) {
+                sec_usec_as_string(s, u, result, &offset);
+            } else {
+                offset += snprintf(result + offset, DATE_MAX - offset,
+                                   "%" PRIu32, s);
+            }
+            offset += snprintf(result + offset, DATE_MAX - offset, " second%s",
+                               pcmk__plural_s(dt->seconds));
         }
+
         offset += snprintf(result + offset, DATE_MAX - offset, ")");
     }
 }
@@ -511,7 +578,7 @@ crm_time_as_string(const crm_time_t *dt, int flags)
      */
 
     if (pcmk_is_set(flags, crm_time_log_duration)) {
-        crm_duration_as_string(dt, result);
+        crm_duration_as_string(dt, 0, false, result);
         goto done;
     }
 
