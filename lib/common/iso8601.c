@@ -490,51 +490,49 @@ crm_duration_as_string(const crm_time_t *dt, char *result)
 }
 
 char *
-crm_time_as_string(const crm_time_t *date_time, int flags)
+crm_time_as_string(const crm_time_t *dt, int flags)
 {
-    const crm_time_t *dt = NULL;
     crm_time_t *utc = NULL;
     char result[DATE_MAX] = { '\0', };
     char *result_copy = NULL;
     size_t offset = 0;
-
-    // Convert to UTC if local timezone was not requested
-    if (date_time && date_time->offset
-        && !pcmk_is_set(flags, crm_time_log_with_timezone)) {
-        crm_trace("UTC conversion");
-        utc = crm_get_utc_time(date_time);
-        dt = utc;
-    } else {
-        dt = date_time;
-    }
 
     if (!crm_time_is_defined(dt)) {
         strcpy(result, "<undefined time>");
         goto done;
     }
 
-    // Simple cases: as duration, seconds, or seconds since epoch
+    /* Simple cases: as duration, seconds, or seconds since epoch.
+     * These never depend on time zone.
+     */
 
-    if (flags & crm_time_log_duration) {
-        crm_duration_as_string(date_time, result);
+    if (pcmk_is_set(flags, crm_time_log_duration)) {
+        crm_duration_as_string(dt, result);
         goto done;
     }
 
-    if (flags & crm_time_seconds) {
-        snprintf(result, DATE_MAX, "%lld", crm_time_get_seconds(date_time));
+    if (pcmk_is_set(flags, crm_time_seconds)) {
+        snprintf(result, DATE_MAX, "%lld", crm_time_get_seconds(dt));
         goto done;
     }
 
-    if (flags & crm_time_epoch) {
+    if (pcmk_is_set(flags, crm_time_epoch)) {
         snprintf(result, DATE_MAX, "%lld",
-                 crm_time_get_seconds_since_epoch(date_time));
+                 crm_time_get_seconds_since_epoch(dt));
         goto done;
+    }
+
+    // Convert to UTC if local timezone was not requested
+    if ((dt->offset != 0) && !pcmk_is_set(flags, crm_time_log_with_timezone)) {
+        crm_trace("UTC conversion");
+        utc = crm_get_utc_time(dt);
+        dt = utc;
     }
 
     // As readable string
 
-    if (flags & crm_time_log_date) {
-        if (flags & crm_time_weeks) { // YYYY-WW-D
+    if (pcmk_is_set(flags, crm_time_log_date)) {
+        if (pcmk_is_set(flags, crm_time_weeks)) { // YYYY-WW-D
             uint32_t y, w, d;
 
             if (crm_time_get_isoweek(dt, &y, &w, &d)) {
@@ -542,7 +540,7 @@ crm_time_as_string(const crm_time_t *date_time, int flags)
                                    "%u-W%.2u-%u", y, w, d);
             }
 
-        } else if (flags & crm_time_ordinal) { // YYYY-DDD
+        } else if (pcmk_is_set(flags, crm_time_ordinal)) { // YYYY-DDD
             uint32_t y, d;
 
             if (crm_time_get_ordinal(dt, &y, &d)) {
@@ -560,7 +558,7 @@ crm_time_as_string(const crm_time_t *date_time, int flags)
         }
     }
 
-    if (flags & crm_time_log_timeofday) {
+    if (pcmk_is_set(flags, crm_time_log_timeofday)) {
         uint32_t h = 0, m = 0, s = 0;
 
         if (offset > 0) {
@@ -572,7 +570,8 @@ crm_time_as_string(const crm_time_t *date_time, int flags)
                                "%.2u:%.2u:%.2u", h, m, s);
         }
 
-        if ((flags & crm_time_log_with_timezone) && (dt->offset != 0)) {
+        if (pcmk_is_set(flags, crm_time_log_with_timezone)
+            && (dt->offset != 0)) {
             crm_time_get_sec(dt->offset, &h, &m, &s);
             offset += snprintf(result + offset, DATE_MAX - offset,
                                " %c%.2u:%.2u",
@@ -585,8 +584,7 @@ crm_time_as_string(const crm_time_t *date_time, int flags)
   done:
     crm_time_free(utc);
 
-    result_copy = strdup(result);
-    CRM_ASSERT(result_copy != NULL);
+    pcmk__str_update(&result_copy, result);
     return result_copy;
 }
 
