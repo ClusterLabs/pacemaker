@@ -176,6 +176,11 @@ main(int argc, char **argv)
     crm_notice("Starting Pacemaker CIB manager");
 
     old_instance = crm_ipc_new(PCMK__SERVER_BASED_RO, 0);
+    if (old_instance == NULL) {
+        /* crm_ipc_new will have already printed an error message with crm_err. */
+        return CRM_EX_FATAL;
+    }
+
     if (crm_ipc_connect(old_instance)) {
         /* IPC end-point already up */
         crm_ipc_close(old_instance);

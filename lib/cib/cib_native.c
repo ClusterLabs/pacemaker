@@ -201,7 +201,7 @@ cib_native_signon_raw(cib_t * cib, const char *name, enum cib_conn_type type, in
         native->ipc = mainloop_get_ipc_client(native->source);
     }
 
-    if (rc != pcmk_ok || native->ipc == NULL || crm_ipc_connected(native->ipc) == FALSE) {
+    if (rc != pcmk_ok || native->ipc == NULL || !crm_ipc_connected(native->ipc)) {
         crm_info("Could not connect to CIB manager for %s", name);
         rc = -ENOTCONN;
     }
@@ -440,7 +440,7 @@ cib_native_perform_op_delegate(cib_t * cib, const char *op, const char *host, co
     }
 
   done:
-    if (crm_ipc_connected(native->ipc) == FALSE) {
+    if (!crm_ipc_connected(native->ipc)) {
         crm_err("The CIB manager disconnected");
         cib->state = cib_disconnected;
     }
