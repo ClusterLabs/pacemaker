@@ -560,37 +560,56 @@ crm_duration_as_string(const crm_time_t *dt, int usec, bool show_usec,
     }
 }
 
-char *
-crm_time_as_string(const crm_time_t *dt, int flags)
+/*!
+ * \internal
+ * \brief Get a string representation of a time object
+ *
+ * \param[in]  dt      Time to convert to string
+ * \param[in]  usec    Microseconds to add to \p dt
+ * \param[in]  flags   Group of \p crm_time_* string format options
+ * \param[out] result  Where to store the result string
+ *
+ * \note \p result must be of size \p DATE_MAX or larger.
+ */
+static void
+time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags,
+                      char *result)
 {
     crm_time_t *utc = NULL;
-    char result[DATE_MAX] = { '\0', };
-    char *result_copy = NULL;
     size_t offset = 0;
 
     if (!crm_time_is_defined(dt)) {
         strcpy(result, "<undefined time>");
-        goto done;
+        return;
     }
+
+    CRM_ASSERT(valid_sec_usec(dt->seconds, usec));
 
     /* Simple cases: as duration, seconds, or seconds since epoch.
      * These never depend on time zone.
      */
 
     if (pcmk_is_set(flags, crm_time_log_duration)) {
-        crm_duration_as_string(dt, 0, false, result);
-        goto done;
+        crm_duration_as_string(dt, usec, pcmk_is_set(flags, crm_time_usecs),
+                               result);
+        return;
     }
 
-    if (pcmk_is_set(flags, crm_time_seconds)) {
-        snprintf(result, DATE_MAX, "%lld", crm_time_get_seconds(dt));
-        goto done;
-    }
+    if (pcmk_any_flags_set(flags, crm_time_seconds|crm_time_epoch)) {
+        long long seconds = 0;
 
-    if (pcmk_is_set(flags, crm_time_epoch)) {
-        snprintf(result, DATE_MAX, "%lld",
-                 crm_time_get_seconds_since_epoch(dt));
-        goto done;
+        if (pcmk_is_set(flags, crm_time_seconds)) {
+            seconds = crm_time_get_seconds(dt);
+        } else {
+            seconds = crm_time_get_seconds_since_epoch(dt);
+        }
+
+        if (pcmk_is_set(flags, crm_time_usecs)) {
+            sec_usec_as_string(seconds, usec, result, &offset);
+        } else {
+            snprintf(result, DATE_MAX, "%lld", seconds);
+        }
+        return;
     }
 
     // Convert to UTC if local timezone was not requested
@@ -642,6 +661,11 @@ crm_time_as_string(const crm_time_t *dt, int flags)
             offset += snprintf(result + offset, DATE_MAX - offset,
                                "%.2" PRIu32 ":%.2" PRIu32 ":%.2" PRIu32,
                                h, m, s);
+
+            if (pcmk_is_set(flags, crm_time_usecs)) {
+                offset += snprintf(result + offset, DATE_MAX - offset,
+                                   ".%06" PRIu32, QB_ABS(usec));
+            }
         }
 
         if (pcmk_is_set(flags, crm_time_log_with_timezone)
@@ -655,8 +679,24 @@ crm_time_as_string(const crm_time_t *dt, int flags)
         }
     }
 
-  done:
     crm_time_free(utc);
+}
+
+/*!
+ * \brief Get a string representation of a \p crm_time_t object
+ *
+ * \param[in]  dt      Time to convert to string
+ * \param[in]  flags   Group of \p crm_time_* string format options
+ *
+ * \note The caller is responsible for freeing the return value using \p free().
+ */
+char *
+crm_time_as_string(const crm_time_t *dt, int flags)
+{
+    char result[DATE_MAX] = { '\0', };
+    char *result_copy = NULL;
+
+    time_as_string_common(dt, 0, flags, result);
 
     pcmk__str_update(&result_copy, result);
     return result_copy;
