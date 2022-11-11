@@ -17,6 +17,7 @@
 #include <crm/crm.h>
 #include <time.h>
 #include <ctype.h>
+#include <inttypes.h>
 #include <string.h>
 #include <stdbool.h>
 #include <crm/common/iso8601.h>
@@ -274,7 +275,8 @@ crm_time_get_sec(int sec, uint32_t *h, uint32_t *m, uint32_t *s)
     minutes = seconds / 60;
     seconds -= 60 * minutes;
 
-    crm_trace("%d == %.2d:%.2d:%.2d", sec, hours, minutes, seconds);
+    crm_trace("%d == %.2" PRIu32 ":%.2" PRIu32 ":%.2" PRIu32,
+              sec, hours, minutes, seconds);
 
     *h = hours;
     *m = minutes;
@@ -439,7 +441,8 @@ crm_time_get_isoweek(const crm_time_t *dt, uint32_t *y, uint32_t *w,
     }
 
     *y = year_num;
-    crm_trace("Converted %.4d-%.3d to %.4d-W%.2d-%d", dt->years, dt->days, *y, *w, *d);
+    crm_trace("Converted %.4d-%.3d to %.4" PRIu32 "-W%.2" PRIu32 "-%" PRIu32,
+              dt->years, dt->days, *y, *w, *d);
     return TRUE;
 }
 
@@ -474,16 +477,18 @@ crm_duration_as_string(const crm_time_t *dt, char *result)
                            dt->seconds);
         crm_time_get_sec(dt->seconds, &h, &m, &s);
         if (h) {
-            offset += snprintf(result + offset, DATE_MAX - offset, "%u hour%s%s",
-                               h, pcmk__plural_s(h), ((m || s)? " " : ""));
+            offset += snprintf(result + offset, DATE_MAX - offset,
+                               "%" PRIu32 " hour%s%s", h, pcmk__plural_s(h),
+                               ((m != 0) || (s != 0))? " " : "");
         }
         if (m) {
-            offset += snprintf(result + offset, DATE_MAX - offset, "%u minute%s%s",
-                               m, pcmk__plural_s(m), (s? " " : ""));
+            offset += snprintf(result + offset, DATE_MAX - offset,
+                               "%" PRIu32 " minute%s%s", m, pcmk__plural_s(m),
+                               (s != 0)? " " : "");
         }
         if (s) {
-            offset += snprintf(result + offset, DATE_MAX - offset, "%u second%s",
-                               s, pcmk__plural_s(s));
+            offset += snprintf(result + offset, DATE_MAX - offset,
+                               "%" PRIu32 " second%s", s, pcmk__plural_s(s));
         }
         offset += snprintf(result + offset, DATE_MAX - offset, ")");
     }
@@ -537,7 +542,8 @@ crm_time_as_string(const crm_time_t *dt, int flags)
 
             if (crm_time_get_isoweek(dt, &y, &w, &d)) {
                 offset += snprintf(result + offset, DATE_MAX - offset,
-                                   "%u-W%.2u-%u", y, w, d);
+                                   "%" PRIu32 "-W%.2" PRIu32 "-%" PRIu32,
+                                   y, w, d);
             }
 
         } else if (pcmk_is_set(flags, crm_time_ordinal)) { // YYYY-DDD
@@ -545,7 +551,7 @@ crm_time_as_string(const crm_time_t *dt, int flags)
 
             if (crm_time_get_ordinal(dt, &y, &d)) {
                 offset += snprintf(result + offset, DATE_MAX - offset,
-                                   "%u-%.3u", y, d);
+                                   "%" PRIu32 "-%.3" PRIu32, y, d);
             }
 
         } else { // YYYY-MM-DD
@@ -553,7 +559,8 @@ crm_time_as_string(const crm_time_t *dt, int flags)
 
             if (crm_time_get_gregorian(dt, &y, &m, &d)) {
                 offset += snprintf(result + offset, DATE_MAX - offset,
-                                   "%.4u-%.2u-%.2u", y, m, d);
+                                   "%.4" PRIu32 "-%.2" PRIu32 "-%.2" PRIu32,
+                                   y, m, d);
             }
         }
     }
@@ -567,14 +574,15 @@ crm_time_as_string(const crm_time_t *dt, int flags)
 
         if (crm_time_get_timeofday(dt, &h, &m, &s)) {
             offset += snprintf(result + offset, DATE_MAX - offset,
-                               "%.2u:%.2u:%.2u", h, m, s);
+                               "%.2" PRIu32 ":%.2" PRIu32 ":%.2" PRIu32,
+                               h, m, s);
         }
 
         if (pcmk_is_set(flags, crm_time_log_with_timezone)
             && (dt->offset != 0)) {
             crm_time_get_sec(dt->offset, &h, &m, &s);
             offset += snprintf(result + offset, DATE_MAX - offset,
-                               " %c%.2u:%.2u",
+                               " %c%.2" PRIu32 ":%.2" PRIu32,
                                ((dt->offset < 0)? '-' : '+'), h, m);
         } else {
             offset += snprintf(result + offset, DATE_MAX - offset, "Z");
@@ -610,9 +618,11 @@ crm_time_parse_sec(const char *time_str, int *result)
     *result = 0;
 
     // Must have at least hour, but minutes and seconds are optional
-    rc = sscanf(time_str, "%d:%d:%d", &hour, &minute, &second);
+    rc = sscanf(time_str, "%" SCNu32 ":%" SCNu32 ":%" SCNu32,
+                &hour, &minute, &second);
     if (rc == 1) {
-        rc = sscanf(time_str, "%2d%2d%2d", &hour, &minute, &second);
+        rc = sscanf(time_str, "%2" SCNu32 "%2" SCNu32 "%2" SCNu32,
+                    &hour, &minute, &second);
     }
     if (rc == 0) {
         crm_err("%s is not a valid ISO 8601 time specification", time_str);
@@ -620,25 +630,26 @@ crm_time_parse_sec(const char *time_str, int *result)
         return FALSE;
     }
 
-    crm_trace("Got valid time: %.2d:%.2d:%.2d", hour, minute, second);
+    crm_trace("Got valid time: %.2" PRIu32 ":%.2" PRIu32 ":%.2" PRIu32,
+              hour, minute, second);
 
     if ((hour == 24) && (minute == 0) && (second == 0)) {
         // Equivalent to 00:00:00 of next day, return number of seconds in day
     } else if (hour >= 24) {
         crm_err("%s is not a valid ISO 8601 time specification "
-                "because %d is not a valid hour", time_str, hour);
+                "because %" PRIu32 " is not a valid hour", time_str, hour);
         errno = EINVAL;
         return FALSE;
     }
     if (minute >= 60) {
         crm_err("%s is not a valid ISO 8601 time specification "
-                "because %d is not a valid minute", time_str, minute);
+                "because %" PRIu32 " is not a valid minute", time_str, minute);
         errno = EINVAL;
         return FALSE;
     }
     if (second >= 60) {
         crm_err("%s is not a valid ISO 8601 time specification "
-                "because %d is not a valid second", time_str, second);
+                "because %" PRIu32 " is not a valid second", time_str, second);
         errno = EINVAL;
         return FALSE;
     }
@@ -732,7 +743,8 @@ crm_time_parse(const char *time_str, crm_time_t *a_time)
         return FALSE;
     }
     crm_time_get_sec(a_time->offset, &h, &m, &s);
-    crm_trace("Got tz: %c%2.d:%.2d", ((a_time->offset < 0)? '-' : '+'), h, m);
+    crm_trace("Got tz: %c%2." PRIu32 ":%.2" PRIu32,
+              (a_time->offset < 0)? '-' : '+', h, m);
 
     if (a_time->seconds == DAY_SECONDS) {
         // 24:00:00 == 00:00:00 of next day
@@ -1478,7 +1490,8 @@ crm_time_add_months(crm_time_t * a_time, int extra)
     uint32_t y, m, d, dmax;
 
     crm_time_get_gregorian(a_time, &y, &m, &d);
-    crm_trace("Adding %d months to %.4d-%.2d-%.2d", extra, y, m, d);
+    crm_trace("Adding %d months to %.4" PRIu32 "-%.2" PRIu32 "-%.2" PRIu32,
+              extra, y, m, d);
 
     if (extra > 0) {
         for (lpc = extra; lpc > 0; lpc--) {
@@ -1504,13 +1517,13 @@ crm_time_add_months(crm_time_t * a_time, int extra)
         d = dmax;
     }
 
-    crm_trace("Calculated %.4d-%.2d-%.2d", y, m, d);
+    crm_trace("Calculated %.4" PRIu32 "-%.2" PRIu32 "-%.2" PRIu32, y, m, d);
 
     a_time->years = y;
     a_time->days = get_ordinal_days(y, m, d);
 
     crm_time_get_gregorian(a_time, &y, &m, &d);
-    crm_trace("Got %.4d-%.2d-%.2d", y, m, d);
+    crm_trace("Got %.4" PRIu32 "-%.2" PRIu32 "-%.2" PRIu32, y, m, d);
 }
 
 void
