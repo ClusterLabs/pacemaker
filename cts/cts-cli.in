@@ -1262,6 +1262,10 @@ function test_tools() {
     test_assert $CRM_EX_OK 0
 
     desc="Show resource operations"
+    cmd="crm_resource --list-operations"
+    test_assert $CRM_EX_OK 0
+
+    desc="Show resource operations (XML)"
     cmd="crm_resource --list-operations --output-as=xml"
     test_assert_validate $CRM_EX_OK 0
 
