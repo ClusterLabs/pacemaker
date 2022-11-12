@@ -56,7 +56,7 @@ register_fsa_error_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
     register_fsa_input_adv(cause, input, new_data, A_NOTHING, TRUE, raised_from);
 }
 
-int
+void
 register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
                        void *data, uint64_t with_actions,
                        gboolean prepend, const char *raised_from)
@@ -71,7 +71,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
     if (input == I_NULL && with_actions == A_NOTHING /* && data == NULL */ ) {
         /* no point doing anything */
         crm_err("Cannot add entry to queue: no input and no action");
-        return 0;
+        return;
     }
 
     if (input == I_WAIT_FOR_EVENT) {
@@ -87,7 +87,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
         if (data == NULL) {
             controld_set_fsa_action_flags(with_actions);
             fsa_dump_actions(with_actions, "Restored");
-            return 0;
+            return;
         }
 
         /* Store everything in the new event and reset fsa_actions */
@@ -167,7 +167,6 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
         crm_trace("Triggering FSA");
         mainloop_set_trigger(fsa_source);
     }
-    return last_data_id;
 }
 
 void

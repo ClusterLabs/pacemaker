@@ -36,9 +36,10 @@ extern void register_fsa_error_adv(enum crmd_fsa_cause cause, enum crmd_fsa_inpu
 #define register_fsa_error(cause, input, new_data)  \
     register_fsa_error_adv(cause, input, msg_data, new_data, __func__)
 
-extern int register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
-                                  void *data, uint64_t with_actions,
-                                  gboolean prepend, const char *raised_from);
+void register_fsa_input_adv(enum crmd_fsa_cause cause,
+                            enum crmd_fsa_input input, void *data,
+                            uint64_t with_actions, gboolean prepend,
+                            const char *raised_from);
 
 extern void fsa_dump_queue(int log_level);
 extern void route_message(enum crmd_fsa_cause cause, xmlNode * input);
