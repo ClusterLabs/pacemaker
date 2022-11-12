@@ -127,8 +127,6 @@ do_shutdown_req(long long action,
     free_xml(msg);
 }
 
-extern GHashTable *resource_history;
-extern GHashTable *voted;
 extern pcmk__output_t *logger_out;
 
 void
