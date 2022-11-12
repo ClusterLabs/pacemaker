@@ -22,8 +22,6 @@
 
 void post_cache_update(int instance);
 
-int last_peer_update = 0;
-
 extern gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
 
 static void
@@ -92,8 +90,6 @@ static void
 crmd_node_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
     fsa_data_t *msg_data = NULL;
-
-    last_peer_update = 0;
 
     if (rc == pcmk_ok) {
         crm_trace("Node update %d complete", call_id);
@@ -378,7 +374,6 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
 
         fsa_cib_update(XML_CIB_TAG_STATUS, node_list, call_options, call_id, NULL);
         fsa_register_cib_callback(call_id, FALSE, NULL, crmd_node_update_complete);
-        last_peer_update = call_id;
 
         free_xml(node_list);
     }
