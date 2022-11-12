@@ -543,7 +543,7 @@ do_state_transition(enum crmd_fsa_state cur_state,
                msg_data->origin);
 
     if (next_state != S_ELECTION && cur_state != S_RELEASE_DC) {
-        controld_stop_election_timer();
+        controld_stop_current_election_timeout();
     }
 #if 0
     if ((fsa_input_register & R_SHUTDOWN)) {

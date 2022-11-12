@@ -64,7 +64,7 @@ controld_set_election_period(const char *value)
 }
 
 void
-controld_stop_election_timer(void)
+controld_stop_current_election_timeout(void)
 {
     election_timeout_stop(fsa_election);
 }
