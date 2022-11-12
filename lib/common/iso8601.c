@@ -1878,6 +1878,41 @@ pcmk__epoch2str(const time_t *source, uint32_t flags)
 
 /*!
  * \internal
+ * \brief Return a human-friendly string corresponding to seconds-and-
+ *        nanoseconds value
+ *
+ * Time is shown with microsecond resolution if \p crm_time_usecs is in \p
+ * flags.
+ *
+ * \param[in]  ts     Time in seconds and nanoseconds (or \p NULL for current
+ *                    time)
+ * \param[in]  flags  Group of \p crm_time_* flags controlling display format
+ *
+ * \return String representation of \p ts on success (may be empty depending on
+ *         \p flags; guaranteed not to be \p NULL)
+ *
+ * \note The caller is responsible for freeing the return value using \p free().
+ */
+char *
+pcmk__timespec2str(const struct timespec *ts, uint32_t flags)
+{
+    struct timespec tmp_ts;
+    crm_time_t dt;
+    char result[DATE_MAX] = { 0 };
+    char *result_copy = NULL;
+
+    if (ts == NULL) {
+        qb_util_timespec_from_epoch_get(&tmp_ts);
+        ts = &tmp_ts;
+    }
+    crm_time_set_timet(&dt, &ts->tv_sec);
+    time_as_string_common(&dt, ts->tv_nsec / QB_TIME_NS_IN_USEC, flags, result);
+    pcmk__str_update(&result_copy, result);
+    return result_copy;
+}
+
+/*!
+ * \internal
  * \brief Given a millisecond interval, return a log-friendly string
  *
  * \param[in] interval_ms  Interval in milliseconds
