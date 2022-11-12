@@ -41,6 +41,4 @@ void controld_start_timer(fsa_timer_t *timer);
 void controld_start_recheck_timer(void);
 gboolean is_timer_started(fsa_timer_t *timer);
 
-const char *get_timer_desc(fsa_timer_t * timer);
-
 #endif
