@@ -18,7 +18,7 @@
 
 #include <pacemaker-controld.h>
 
-int cib_retries = 0;
+static int cib_retries = 0;
 
 void
 do_cib_updated(const char *event, xmlNode * msg)
