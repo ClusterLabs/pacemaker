@@ -21,7 +21,7 @@
 #include <pacemaker-controld.h>
 
 char *te_uuid = NULL;
-GHashTable *te_targets = NULL;
+static GHashTable *te_targets = NULL;
 void send_rsc_command(pcmk__graph_action_t *action);
 static void te_update_job_count(pcmk__graph_action_t *action, int offset);
 
