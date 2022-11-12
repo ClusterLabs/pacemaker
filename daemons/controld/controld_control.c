@@ -726,7 +726,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
                                    PCMK__NELEM(controller_options));
 
     value = controller_option(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
-    election_trigger->period_ms = crm_parse_interval_spec(value);
+    election_timer->period_ms = crm_parse_interval_spec(value);
 
     value = controller_option(config_hash, "node-action-limit");
     throttle_update_job_max(value);

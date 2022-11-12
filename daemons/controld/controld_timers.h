@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,7 +23,7 @@ typedef struct fsa_timer_s {
     int counter;                            // For detecting loops
 } fsa_timer_t;
 
-extern fsa_timer_t *election_trigger;
+extern fsa_timer_t *election_timer;
 extern fsa_timer_t *shutdown_escalation_timer;
 extern fsa_timer_t *transition_timer;
 extern fsa_timer_t *integration_timer;
