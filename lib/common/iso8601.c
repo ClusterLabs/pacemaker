@@ -1847,7 +1847,7 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
  *
  * \param[in]  source  Pointer to epoch time value (or \p NULL for current time)
  * \param[in]  flags   Group of \p crm_time_* flags controlling display format
- *                     format (0 to use \p ctime() with newline removed)
+ *                     (0 to use \p ctime() with newline removed)
  *
  * \return String representation of \p source on success (may be empty depending
  *         on \p flags; guaranteed not to be \p NULL)
