@@ -527,6 +527,8 @@ const char *fsa_action2string(long long action);
 
 enum crmd_fsa_state s_crmd_fsa(enum crmd_fsa_cause cause);
 
+void free_max_generation(void);
+
 #  define AM_I_DC pcmk_is_set(fsa_input_register, R_THE_DC)
 #  define AM_I_OPERATIONAL !pcmk_is_set(fsa_input_register, R_STARTING)
 #  define trigger_fsa() do {                    \

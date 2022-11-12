@@ -127,8 +127,6 @@ do_shutdown_req(long long action,
     free_xml(msg);
 }
 
-extern char *max_generation_from;
-extern xmlNode *max_generation_xml;
 extern GHashTable *resource_history;
 extern GHashTable *voted;
 extern pcmk__output_t *logger_out;
@@ -263,8 +261,7 @@ crmd_exit(crm_exit_t exit_code)
     free(failed_stop_offset); failed_stop_offset = NULL;
     free(failed_start_offset); failed_start_offset = NULL;
 
-    free(max_generation_from); max_generation_from = NULL;
-    free_xml(max_generation_xml); max_generation_xml = NULL;
+    free_max_generation();
 
     mainloop_destroy_signal(SIGPIPE);
     mainloop_destroy_signal(SIGUSR1);

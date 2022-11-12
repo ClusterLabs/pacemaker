@@ -17,9 +17,8 @@
 
 #include <pacemaker-controld.h>
 
-char *max_epoch = NULL;
-char *max_generation_from = NULL;
-xmlNode *max_generation_xml = NULL;
+static char *max_generation_from = NULL;
+static xmlNodePtr max_generation_xml = NULL;
 
 void finalize_join_for(gpointer key, gpointer value, gpointer user_data);
 void finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data);
@@ -468,6 +467,16 @@ do_dc_join_finalize(long long action,
 
     rc = fsa_cib_conn->cmds->sync_from(fsa_cib_conn, sync_from, NULL, cib_quorum_override);
     fsa_register_cib_callback(rc, FALSE, sync_from, finalize_sync_callback);
+}
+
+void
+free_max_generation(void)
+{
+    free(max_generation_from);
+    max_generation_from = NULL;
+
+    free_xml(max_generation_xml);
+    max_generation_xml = NULL;
 }
 
 void
