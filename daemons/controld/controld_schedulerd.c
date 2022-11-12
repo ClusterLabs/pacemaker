@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -234,7 +234,7 @@ do_pe_control(long long action,
     }
 }
 
-int fsa_pe_query = 0;
+static int fsa_pe_query = 0;
 char *fsa_pe_ref = NULL;
 static mainloop_timer_t *controld_sched_timer = NULL;
 
