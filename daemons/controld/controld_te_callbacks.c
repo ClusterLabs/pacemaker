@@ -22,7 +22,6 @@
 void te_update_confirm(const char *event, xmlNode * msg);
 
 extern char *te_uuid;
-gboolean shuttingdown = FALSE;
 pcmk__graph_t *transition_graph;
 crm_trigger_t *transition_trigger = NULL;
 
