@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,7 +14,7 @@
  *	The state transition table.  The rows are inputs, and
  *	the columns are states.
  */
-const enum crmd_fsa_state crmd_fsa_state[MAXINPUT][MAXSTATE] = {
+static const enum crmd_fsa_state controld_fsa_next_state[MAXINPUT][MAXSTATE] = {
 /* Got an I_NULL */
     {
      /* S_IDLE               ==> */ S_IDLE,
@@ -618,7 +618,7 @@ const enum crmd_fsa_state crmd_fsa_state[MAXINPUT][MAXSTATE] = {
 
 /* NOTE: In the fsa, the actions are extracted then state is updated. */
 
-const uint64_t crmd_fsa_actions[MAXINPUT][MAXSTATE] = {
+static const uint64_t crmd_fsa_actions[MAXINPUT][MAXSTATE] = {
 
 /* Got an I_NULL */
     {

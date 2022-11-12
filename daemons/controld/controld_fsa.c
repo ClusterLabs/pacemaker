@@ -215,7 +215,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 
         /* update state variables */
         last_state = fsa_state;
-        fsa_state = crmd_fsa_state[fsa_data->fsa_input][fsa_state];
+        fsa_state = controld_fsa_next_state[fsa_data->fsa_input][fsa_state];
 
         /*
          * Remove certain actions during shutdown
