@@ -40,8 +40,6 @@ uint64_t fsa_input_register = 0;
 uint64_t fsa_actions = A_NOTHING;
 enum crmd_fsa_state fsa_state = S_STARTING;
 
-extern uint num_join_invites;
-
 #define DOT_PREFIX "actions:trace: "
 #define do_dot_log(fmt, args...)     crm_trace( fmt, ##args)
 
