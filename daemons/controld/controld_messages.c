@@ -34,7 +34,7 @@ static enum crmd_fsa_input handle_shutdown_request(xmlNode *stored_msg);
 static void send_msg_via_ipc(xmlNode * msg, const char *sys);
 
 /* debug only, can wrap all it likes */
-int last_data_id = 0;
+static int last_data_id = 0;
 
 void
 register_fsa_error_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
