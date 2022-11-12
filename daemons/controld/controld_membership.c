@@ -20,7 +20,6 @@
 
 #include <pacemaker-controld.h>
 
-gboolean membership_flux_hack = FALSE;
 void post_cache_update(int instance);
 
 int last_peer_update = 0;
