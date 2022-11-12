@@ -18,7 +18,6 @@
 
 extern pcmk__output_t *logger_out;
 
-int reannounce_count = 0;
 void join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data);
 
 extern ha_msg_input_t *copy_ha_msg_input(ha_msg_input_t * orig);
