@@ -22,7 +22,7 @@
 
 #include <pacemaker-controld.h>
 
-qb_ipcs_service_t *ipcs = NULL;
+static qb_ipcs_service_t *ipcs = NULL;
 
 #if SUPPORT_COROSYNC
 extern gboolean crm_connect_corosync(crm_cluster_t * cluster);
