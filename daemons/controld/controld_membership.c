@@ -24,7 +24,6 @@ gboolean membership_flux_hack = FALSE;
 void post_cache_update(int instance);
 
 int last_peer_update = 0;
-guint highest_born_on = -1;
 
 extern gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
 

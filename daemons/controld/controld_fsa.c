@@ -40,7 +40,6 @@ uint64_t fsa_input_register = 0;
 uint64_t fsa_actions = A_NOTHING;
 enum crmd_fsa_state fsa_state = S_STARTING;
 
-extern uint highest_born_on;
 extern uint num_join_invites;
 
 #define DOT_PREFIX "actions:trace: "
@@ -567,9 +566,6 @@ do_state_transition(enum crmd_fsa_state cur_state,
 
     if (next_state != S_PENDING) {
         controld_set_fsa_action_flags(A_DC_TIMER_STOP);
-    }
-    if (next_state != S_ELECTION) {
-        highest_born_on = 0;
     }
     if (next_state != S_IDLE) {
         controld_stop_timer(recheck_timer);
