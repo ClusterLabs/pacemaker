@@ -192,15 +192,13 @@ do_te_invoke(long long action,
 
         te_reset_job_counts();
         value = crm_element_value(graph_data, "failed-stop-offset");
-        if (value) {
-            free(failed_stop_offset);
-            failed_stop_offset = strdup(value);
+        if (value != NULL) {
+            pcmk__str_update(&failed_stop_offset, value);
         }
 
         value = crm_element_value(graph_data, "failed-start-offset");
-        if (value) {
-            free(failed_start_offset);
-            failed_start_offset = strdup(value);
+        if (value != NULL) {
+            pcmk__str_update(&failed_start_offset, value);
         }
 
         if ((crm_element_value_epoch(graph_data, "recheck-by", &recheck_by)
