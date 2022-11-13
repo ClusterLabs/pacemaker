@@ -63,9 +63,13 @@ enum controld_flags {
     controld_shutdown_lock_enabled  = (1 << 5),
 };
 
+#  define controld_trigger_config()  \
+    controld_trigger_config_as(__func__, __LINE__)
+
 void do_cib_updated(const char *event, xmlNode * msg);
 void do_cib_replaced(const char *event, xmlNode * msg);
 void crmd_metadata(void);
+void controld_trigger_config_as(const char *fn, int line);
 void controld_election_init(const char *uname);
 void controld_remove_voter(const char *uname);
 void controld_election_fini(void);

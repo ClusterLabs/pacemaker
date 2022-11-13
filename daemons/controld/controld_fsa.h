@@ -509,7 +509,6 @@ extern GList *fsa_message_queue;
 extern char *fsa_cluster_name;
 
 extern crm_trigger_t *fsa_source;
-extern crm_trigger_t *config_read;
 
 extern unsigned long long saved_ccm_membership_id;
 

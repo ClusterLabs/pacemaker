@@ -234,7 +234,7 @@ do_dc_takeover(long long action,
     }
 #endif
 
-    mainloop_set_trigger(config_read);
+    controld_trigger_config();
     free_xml(cib);
 }
 

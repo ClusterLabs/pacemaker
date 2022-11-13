@@ -24,7 +24,7 @@ void
 do_cib_updated(const char *event, xmlNode * msg)
 {
     if (pcmk__alert_in_patchset(msg, TRUE)) {
-        mainloop_set_trigger(config_read);
+        controld_trigger_config();
     }
 }
 

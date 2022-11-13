@@ -24,15 +24,16 @@
 
 static qb_ipcs_service_t *ipcs = NULL;
 
+static crm_trigger_t *config_read_trigger = NULL;
+
 #if SUPPORT_COROSYNC
 extern gboolean crm_connect_corosync(crm_cluster_t * cluster);
 #endif
 
 void crm_shutdown(int nsig);
-gboolean crm_read_options(gpointer user_data);
+static gboolean crm_read_options(gpointer user_data);
 
 crm_trigger_t *fsa_source = NULL;
-crm_trigger_t *config_read = NULL;
 
 /*	 A_HA_CONNECT	*/
 void
@@ -235,7 +236,9 @@ crmd_exit(crm_exit_t exit_code)
     /* This basically will not work, since mainloop has a reference to it */
     mainloop_destroy_trigger(fsa_source); fsa_source = NULL;
 
-    mainloop_destroy_trigger(config_read); config_read = NULL;
+    mainloop_destroy_trigger(config_read_trigger);
+    config_read_trigger = NULL;
+
     mainloop_destroy_trigger(transition_trigger); transition_trigger = NULL;
 
     pcmk__client_cleanup();
@@ -341,8 +344,11 @@ do_startup(long long action,
     mainloop_add_signal(SIGTERM, crm_shutdown);
     mainloop_add_signal(SIGPIPE, sigpipe_ignore);
 
+    config_read_trigger = mainloop_add_trigger(G_PRIORITY_HIGH,
+                                               crm_read_options, NULL);
+
     fsa_source = mainloop_add_trigger(G_PRIORITY_HIGH, crm_fsa_trigger, NULL);
-    config_read = mainloop_add_trigger(G_PRIORITY_HIGH, crm_read_options, NULL);
+
     transition_trigger = mainloop_add_trigger(G_PRIORITY_LOW, te_graph_trigger, NULL);
 
     crm_debug("Creating CIB manager and executor objects");
@@ -792,6 +798,22 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     crm_time_free(now);
 }
 
+/*!
+ * \internal
+ * \brief Trigger read and processing of the configuration
+ *
+ * \param[in] fn    Calling function name
+ * \param[in] line  Line number where call occurred
+ */
+void
+controld_trigger_config_as(const char *fn, int line)
+{
+    if (config_read_trigger != NULL) {
+        crm_trace("%s:%d - Triggered config processing", fn, line);
+        mainloop_set_trigger(config_read_trigger);
+    }
+}
+
 gboolean
 crm_read_options(gpointer user_data)
 {
@@ -813,7 +835,7 @@ do_read_config(long long action,
                enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     throttle_init();
-    mainloop_set_trigger(config_read);
+    controld_trigger_config();
 }
 
 void
