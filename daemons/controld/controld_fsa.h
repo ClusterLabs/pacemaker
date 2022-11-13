@@ -506,8 +506,6 @@ extern char *fsa_our_dc;
 extern char *fsa_our_dc_version;
 extern GList *fsa_message_queue;
 
-extern char *fsa_cluster_name;
-
 extern crm_trigger_t *fsa_source;
 
 extern unsigned long long saved_ccm_membership_id;

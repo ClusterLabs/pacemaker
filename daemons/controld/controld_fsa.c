@@ -33,8 +33,6 @@ char *fsa_our_dc_version = NULL;
 char *fsa_our_uuid = NULL;
 char *fsa_our_uname = NULL;
 
-char *fsa_cluster_name = NULL;
-
 uint64_t fsa_input_register = 0;
 uint64_t fsa_actions = A_NOTHING;
 enum crmd_fsa_state fsa_state = S_STARTING;

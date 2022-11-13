@@ -253,7 +253,8 @@ crmd_exit(crm_exit_t exit_code)
     free(fsa_our_uuid); fsa_our_uuid = NULL;
     free(fsa_our_dc); fsa_our_dc = NULL;
 
-    free(fsa_cluster_name); fsa_cluster_name = NULL;
+    free(controld_globals.cluster_name);
+    controld_globals.cluster_name = NULL;
 
     free(te_uuid); te_uuid = NULL;
     free(failed_stop_offset); failed_stop_offset = NULL;
@@ -778,13 +779,8 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         controld_globals.flags &= ~controld_shutdown_lock_enabled;
     }
 
-    free(fsa_cluster_name);
-    fsa_cluster_name = NULL;
-
     value = g_hash_table_lookup(config_hash, "cluster-name");
-    if (value) {
-        fsa_cluster_name = strdup(value);
-    }
+    pcmk__str_update(&(controld_globals.cluster_name), value);
 
     alerts = first_named_child(output, XML_CIB_TAG_ALERTS);
     crmd_unpack_alerts(alerts);

@@ -222,7 +222,7 @@ do_dc_takeover(long long action,
                           cluster_type, NULL, NULL);
 
 #if SUPPORT_COROSYNC
-    if (fsa_cluster_name == NULL && is_corosync_cluster()) {
+    if ((controld_globals.cluster_name == NULL) && is_corosync_cluster()) {
         char *cluster_name = pcmk__corosync_cluster_name();
 
         if (cluster_name) {

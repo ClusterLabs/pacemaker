@@ -30,7 +30,10 @@ typedef struct {
     uint32_t flags;
 
 
-    // Mainloop
+    // Other
+
+    //! Cluster name
+    char *cluster_name;
 
     //! Main event loop
     GMainLoop *mainloop;
