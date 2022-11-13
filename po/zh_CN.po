@@ -664,7 +664,7 @@ msgstr ""
 msgid ""
 "*** Advanced Use Only *** Whether nodes may be fenced as part of recovery"
 msgstr ""
-"*** Advanced Use Only *** 集群恢复了一部分时节点是否可以被防护"
+"*** Advanced Use Only *** 节点是否可以被 fence 以作为集群恢复的一部分"
 
 #: lib/pengine/common.c:97
 msgid ""
@@ -682,7 +682,7 @@ msgid ""
 "Action to send to fence device when a node needs to be fenced (\"poweroff\" "
 "is a deprecated alias for \"off\")"
 msgstr ""
-"发送到STONITH设备的操作（ \"poweroff\" 是 \"off \"的别名,不建议使用)"
+"发送到 fence 设备的操作（ \"poweroff\" 是 \"off \"的别名,不建议使用)"
 
 #: lib/pengine/common.c:112
 msgid "*** Advanced Use Only *** Unused by Pacemaker"
@@ -694,7 +694,7 @@ msgid ""
 "This value is not used by Pacemaker, but is kept for backward compatibility, "
 "and certain legacy fence agents might use it."
 msgstr ""
-"Pacemaker不使用此值，但保留此值是为了向后兼容，某些传统的防护代理可能会使用"
+"Pacemaker不使用此值，但保留此值是为了向后兼容，某些传统的fence 代理可能会使用"
 "它。"
 
 #: lib/pengine/common.c:119
