@@ -153,7 +153,7 @@ crm_exit_t
 crmd_exit(crm_exit_t exit_code)
 {
     GList *gIter = NULL;
-    GMainLoop *mloop = crmd_mainloop;
+    GMainLoop *mloop = controld_globals.mainloop;
 
     static bool in_progress = FALSE;
 
@@ -187,7 +187,7 @@ crmd_exit(crm_exit_t exit_code)
     controld_shutdown_schedulerd_ipc();
     controld_disconnect_fencer(TRUE);
 
-    if ((exit_code == CRM_EX_OK) && (crmd_mainloop == NULL)) {
+    if ((exit_code == CRM_EX_OK) && (controld_globals.mainloop == NULL)) {
         crm_debug("No mainloop detected");
         exit_code = CRM_EX_ERROR;
     }
@@ -265,10 +265,10 @@ crmd_exit(crm_exit_t exit_code)
     /* leave SIGCHLD engaged as we might still want to drain some service-actions */
 
     if (mloop) {
-        GMainContext *ctx = g_main_loop_get_context(crmd_mainloop);
+        GMainContext *ctx = g_main_loop_get_context(controld_globals.mainloop);
 
         /* Don't re-enter this block */
-        crmd_mainloop = NULL;
+        controld_globals.mainloop = NULL;
 
         /* no signals on final draining anymore */
         mainloop_destroy_signal(SIGCHLD);
@@ -819,7 +819,8 @@ do_read_config(long long action,
 void
 crm_shutdown(int nsig)
 {
-    if ((crmd_mainloop == NULL) || !g_main_loop_is_running(crmd_mainloop)) {
+    if ((controld_globals.mainloop == NULL)
+        || !g_main_loop_is_running(controld_globals.mainloop)) {
         crmd_exit(CRM_EX_OK);
         return;
     }

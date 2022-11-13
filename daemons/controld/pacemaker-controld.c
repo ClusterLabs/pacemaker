@@ -32,8 +32,6 @@ _Noreturn void crmd_init(void);
 void crmd_hamsg_callback(const xmlNode * msg, void *private_data);
 extern void init_dotfile(void);
 
-GMainLoop *crmd_mainloop = NULL;
-
 pcmk__output_t *logger_out = NULL;
 
 controld_globals_t controld_globals;
@@ -59,7 +57,7 @@ main(int argc, char **argv)
     int argerr = 0;
     crm_ipc_t *old_instance = NULL;
 
-    crmd_mainloop = g_main_loop_new(NULL, FALSE);
+    controld_globals.mainloop = g_main_loop_new(NULL, FALSE);
     crm_log_preinit(NULL, argc, argv);
     pcmk__set_cli_options(NULL, "[options]", long_options,
                           "daemon for coordinating a Pacemaker cluster's "
@@ -172,7 +170,7 @@ crmd_init(void)
     if (state == S_PENDING || state == S_STARTING) {
         /* Create the mainloop and run it... */
         crm_trace("Starting %s's mainloop", crm_system_name);
-        g_main_loop_run(crmd_mainloop);
+        g_main_loop_run(controld_globals.mainloop);
         if (pcmk_is_set(fsa_input_register, R_STAYDOWN)) {
             crm_info("Inhibiting automated respawn");
             exit_code = CRM_EX_FATAL;

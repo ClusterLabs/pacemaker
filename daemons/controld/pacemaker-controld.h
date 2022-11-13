@@ -28,9 +28,14 @@ typedef struct {
 
     //! Group of \p controld_flags values
     uint32_t flags;
+
+
+    // Mainloop
+
+    //! Main event loop
+    GMainLoop *mainloop;
 } controld_globals_t;
 
-extern GMainLoop *crmd_mainloop;
 extern controld_globals_t controld_globals;
 
 /*!
