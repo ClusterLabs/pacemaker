@@ -690,7 +690,7 @@ fsa_dump_actions(uint64_t action, const char *text)
 gboolean
 update_dc(xmlNode * msg)
 {
-    char *last_dc = fsa_our_dc;
+    char *last_dc = controld_globals.dc_name;
     const char *dc_version = NULL;
     const char *welcome_from = NULL;
 
@@ -706,16 +706,20 @@ update_dc(xmlNode * msg)
         if (AM_I_DC && !pcmk__str_eq(welcome_from, fsa_our_uname, pcmk__str_casei)) {
             invalid = TRUE;
 
-        } else if (fsa_our_dc && !pcmk__str_eq(welcome_from, fsa_our_dc, pcmk__str_casei)) {
+        } else if ((controld_globals.dc_name != NULL)
+                   && !pcmk__str_eq(welcome_from, controld_globals.dc_name,
+                                    pcmk__str_casei)) {
             invalid = TRUE;
         }
 
         if (invalid) {
-            CRM_CHECK(fsa_our_dc != NULL, crm_err("We have no DC"));
+            CRM_CHECK(controld_globals.dc_name != NULL,
+                      crm_err("We have no DC"));
             if (AM_I_DC) {
                 crm_err("Not updating DC to %s (%s): we are also a DC", welcome_from, dc_version);
             } else {
-                crm_warn("New DC %s is not %s", welcome_from, fsa_our_dc);
+                crm_warn("New DC %s is not %s",
+                         welcome_from, controld_globals.dc_name);
             }
 
             controld_set_fsa_action_flags(A_CL_JOIN_QUERY | A_DC_TIMER_START);
@@ -724,18 +728,19 @@ update_dc(xmlNode * msg)
         }
     }
 
-    fsa_our_dc = NULL;          /* Free'd as last_dc */
-    pcmk__str_update(&fsa_our_dc, welcome_from);
+    controld_globals.dc_name = NULL;    // freed as last_dc
+    pcmk__str_update(&(controld_globals.dc_name), welcome_from);
     pcmk__str_update(&fsa_our_dc_version, dc_version);
 
-    if (pcmk__str_eq(fsa_our_dc, last_dc, pcmk__str_casei)) {
+    if (pcmk__str_eq(controld_globals.dc_name, last_dc, pcmk__str_casei)) {
         /* do nothing */
 
-    } else if (fsa_our_dc != NULL) {
-        crm_node_t *dc_node = crm_get_peer(0, fsa_our_dc);
+    } else if (controld_globals.dc_name != NULL) {
+        crm_node_t *dc_node = crm_get_peer(0, controld_globals.dc_name);
 
         crm_info("Set DC to %s (%s)",
-                 fsa_our_dc, pcmk__s(fsa_our_dc_version, "unknown version"));
+                 controld_globals.dc_name,
+                 pcmk__s(fsa_our_dc_version, "unknown version"));
         pcmk__update_peer_expected(__func__, dc_node, CRMD_JOINSTATE_MEMBER);
 
     } else if (last_dc != NULL) {

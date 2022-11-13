@@ -26,7 +26,6 @@
 #include <pacemaker-controld.h>
 #include <controld_matrix.h>
 
-char *fsa_our_dc = NULL;
 cib_t *fsa_cib_conn = NULL;
 char *fsa_our_dc_version = NULL;
 
@@ -592,8 +591,8 @@ do_state_transition(enum crmd_fsa_state cur_state,
                 crm_info("(Re)Issuing shutdown request now" " that we have a new DC");
                 controld_set_fsa_action_flags(A_SHUTDOWN_REQ);
             }
-            CRM_LOG_ASSERT(fsa_our_dc != NULL);
-            if (fsa_our_dc == NULL) {
+            CRM_LOG_ASSERT(controld_globals.dc_name != NULL);
+            if (controld_globals.dc_name == NULL) {
                 crm_err("Reached S_NOT_DC without a DC" " being recorded");
             }
             break;

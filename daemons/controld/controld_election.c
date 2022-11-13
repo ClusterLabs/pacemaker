@@ -42,7 +42,7 @@ controld_remove_voter(const char *uname)
 {
     election_remove(fsa_election, uname);
 
-    if (pcmk__str_eq(uname, fsa_our_dc, pcmk__str_casei)) {
+    if (pcmk__str_eq(uname, controld_globals.dc_name, pcmk__str_casei)) {
         /* Clear any election dampening in effect. Otherwise, if the lost DC had
          * just won, an immediate new election could fizzle out with no new DC.
          */

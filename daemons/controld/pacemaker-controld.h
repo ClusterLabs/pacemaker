@@ -35,6 +35,9 @@ typedef struct {
     //! Cluster name
     char *cluster_name;
 
+    //! Designated controller name
+    char *dc_name;
+
     //! Main event loop
     GMainLoop *mainloop;
 } controld_globals_t;

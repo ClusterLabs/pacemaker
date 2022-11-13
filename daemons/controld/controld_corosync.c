@@ -119,9 +119,10 @@ cpg_membership_callback(cpg_handle_t handle, const struct cpg_name *cpg_name,
      * Here, we set a global boolean if the DC is among the nodes that left, for
      * use by the peer callback.
      */
-    if (fsa_our_dc != NULL) {
-        crm_node_t *peer = pcmk__search_cluster_node_cache(0, fsa_our_dc);
+    if (controld_globals.dc_name != NULL) {
+        crm_node_t *peer = NULL;
 
+        peer = pcmk__search_cluster_node_cache(0, controld_globals.dc_name);
         if (peer != NULL) {
             for (int i = 0; i < left_list_entries; ++i) {
                 if (left_list[i].nodeid == peer->id) {

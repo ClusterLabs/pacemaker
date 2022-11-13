@@ -116,7 +116,7 @@ do_shutdown_req(long long action,
     controld_set_fsa_input_flags(R_SHUTDOWN);
     //controld_set_fsa_input_flags(R_STAYDOWN);
     crm_info("Sending shutdown request to all peers (DC is %s)",
-             (fsa_our_dc? fsa_our_dc : "not set"));
+             pcmk__s(controld_globals.dc_name, "not set"));
     msg = create_request(CRM_OP_SHUTDOWN_REQ, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
     if (send_cluster_message(NULL, crm_msg_crmd, msg, TRUE) == FALSE) {
@@ -251,7 +251,9 @@ crmd_exit(crm_exit_t exit_code)
     free(fsa_our_dc_version); fsa_our_dc_version = NULL;
     free(fsa_our_uname); fsa_our_uname = NULL;
     free(fsa_our_uuid); fsa_our_uuid = NULL;
-    free(fsa_our_dc); fsa_our_dc = NULL;
+
+    free(controld_globals.dc_name);
+    controld_globals.dc_name = NULL;
 
     free(controld_globals.cluster_name);
     controld_globals.cluster_name = NULL;

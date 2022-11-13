@@ -573,13 +573,17 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
                                  "External Fencing Operation", NULL);
             }
 
-            /* Assume it was our leader if we don't currently have one */
-        } else if (pcmk__str_eq(fsa_our_dc, event->target,
+        } else if (pcmk__str_eq(controld_globals.dc_name, event->target,
                                 pcmk__str_null_matches|pcmk__str_casei)
                    && !pcmk_is_set(peer->flags, crm_remote_node)) {
+            // Assume the target was our DC if we don't currently have one
 
-            crm_notice("Fencing target %s %s our leader",
-                       event->target, (fsa_our_dc? "was" : "may have been"));
+            if (controld_globals.dc_name != NULL) {
+                crm_notice("Fencing target %s was our DC", event->target);
+            } else {
+                crm_notice("Fencing target %s may have been our DC",
+                           event->target);
+            }
 
             /* Given the CIB resyncing that occurs around elections,
              * have one node update the CIB now and, if the new DC is different,

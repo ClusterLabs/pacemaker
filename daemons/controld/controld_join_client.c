@@ -35,8 +35,9 @@ extern ha_msg_input_t *copy_ha_msg_input(ha_msg_input_t * orig);
 static void
 update_dc_expected(const xmlNode *msg)
 {
-    if (fsa_our_dc && pcmk__xe_attr_is_true(msg, F_CRM_DC_LEAVING)) {
-        crm_node_t *dc_node = crm_get_peer(0, fsa_our_dc);
+    if ((controld_globals.dc_name != NULL)
+        && pcmk__xe_attr_is_true(msg, F_CRM_DC_LEAVING)) {
+        crm_node_t *dc_node = crm_get_peer(0, controld_globals.dc_name);
 
         pcmk__update_peer_expected(__func__, dc_node, CRMD_JOINSTATE_DOWN);
     }
@@ -134,7 +135,7 @@ do_cl_join_offer_respond(long long action,
 
     if (update_dc(input->msg) == FALSE) {
         crm_warn("Discarding cluster join offer from node %s (expected %s)",
-                 welcome_from, fsa_our_dc);
+                 welcome_from, controld_globals.dc_name);
         return;
     }
 
@@ -168,21 +169,24 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
                 join_id, pcmk_strerror(rc), rc);
         register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __func__);
 
-    } else if (fsa_our_dc == NULL) {
+    } else if (controld_globals.dc_name == NULL) {
         crm_debug("Membership is in flux, not continuing join-%s", join_id);
 
     } else {
         xmlNode *reply = NULL;
 
-        crm_debug("Respond to join offer join-%s from %s", join_id, fsa_our_dc);
+        crm_debug("Respond to join offer join-%s from %s",
+                  join_id, controld_globals.dc_name);
         copy_in_properties(generation, output);
 
-        reply = create_request(CRM_OP_JOIN_REQUEST, generation, fsa_our_dc,
-                               CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
+        reply = create_request(CRM_OP_JOIN_REQUEST, generation,
+                               controld_globals.dc_name, CRM_SYSTEM_DC,
+                               CRM_SYSTEM_CRMD, NULL);
 
         crm_xml_add(reply, F_CRM_JOIN_ID, join_id);
         crm_xml_add(reply, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
-        send_cluster_message(crm_get_peer(0, fsa_our_dc), crm_msg_crmd, reply, TRUE);
+        send_cluster_message(crm_get_peer(0, controld_globals.dc_name),
+                             crm_msg_crmd, reply, TRUE);
         free_xml(reply);
     }
 
@@ -260,7 +264,7 @@ do_cl_join_finalize_respond(long long action,
 
     if (update_dc(input->msg) == FALSE) {
         crm_warn("Discarding %s from node %s (expected from %s)",
-                 op, welcome_from, fsa_our_dc);
+                 op, welcome_from, controld_globals.dc_name);
         return;
     }
 
@@ -273,13 +277,14 @@ do_cl_join_finalize_respond(long long action,
     /* send our status section to the DC */
     tmp1 = controld_query_executor_state();
     if (tmp1 != NULL) {
-        xmlNode *reply = create_request(CRM_OP_JOIN_CONFIRM, tmp1, fsa_our_dc,
-                                        CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
+        xmlNode *reply = create_request(CRM_OP_JOIN_CONFIRM, tmp1,
+                                        controld_globals.dc_name, CRM_SYSTEM_DC,
+                                        CRM_SYSTEM_CRMD, NULL);
 
         crm_xml_add_int(reply, F_CRM_JOIN_ID, join_id);
 
         crm_debug("Confirming join-%d: sending local operation history to %s",
-                  join_id, fsa_our_dc);
+                  join_id, controld_globals.dc_name);
 
         /*
          * If this is the node's first join since the controller started on it,
@@ -300,7 +305,8 @@ do_cl_join_finalize_respond(long long action,
             }
         }
 
-        send_cluster_message(crm_get_peer(0, fsa_our_dc), crm_msg_crmd, reply, TRUE);
+        send_cluster_message(crm_get_peer(0, controld_globals.dc_name),
+                             crm_msg_crmd, reply, TRUE);
         free_xml(reply);
 
         if (AM_I_DC == FALSE) {
@@ -311,8 +317,8 @@ do_cl_join_finalize_respond(long long action,
         free_xml(tmp1);
 
     } else {
-        crm_err("Could not confirm join-%d with %s: Local operation history failed",
-                join_id, fsa_our_dc);
+        crm_err("Could not confirm join-%d with %s: Local operation history "
+                "failed", join_id, controld_globals.dc_name);
         register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
     }
 }

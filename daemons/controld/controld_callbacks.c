@@ -170,10 +170,18 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             old = *(const uint32_t *)data;
             appeared = pcmk_is_set(node->processes, crm_get_cluster_proc());
 
-            crm_info("Node %s is %s a peer " CRM_XS " DC=%s old=%#07x new=%#07x",
-                     node->uname, (appeared? "now" : "no longer"),
-                     (AM_I_DC? "true" : (fsa_our_dc? fsa_our_dc : "<none>")),
-                     old, node->processes);
+            {
+                const char *dc_s = "true";
+
+                if (!AM_I_DC) {
+                    dc_s = pcmk__s(controld_globals.dc_name, "<none>");
+                }
+
+                crm_info("Node %s is %s a peer " CRM_XS
+                         " DC=%s old=%#07x new=%#07x",
+                         node->uname, (appeared? "now" : "no longer"), dc_s,
+                         old, node->processes);
+            }
 
             if (!pcmk_is_set((node->processes ^ old), crm_get_cluster_proc())) {
                 /* Peer status did not change. This should not be possible,
@@ -203,9 +211,12 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 crm_notice("Our peer connection failed");
                 register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ERROR, NULL);
 
-            } else if (pcmk__str_eq(node->uname, fsa_our_dc, pcmk__str_casei) && crm_is_peer_active(node) == FALSE) {
+            } else if (pcmk__str_eq(node->uname, controld_globals.dc_name,
+                                    pcmk__str_casei)
+                       && !crm_is_peer_active(node)) {
                 /* Did the DC leave us? */
-                crm_notice("Our peer on the DC (%s) is dead", fsa_our_dc);
+                crm_notice("Our peer on the DC (%s) is dead",
+                           controld_globals.dc_name);
                 register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ELECTION, NULL);
 
                 /* @COMPAT DC < 1.1.13: If a DC shuts down normally, we don't
@@ -224,7 +235,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
 
             } else if (AM_I_DC
                        || pcmk_is_set(controld_globals.flags, controld_dc_left)
-                       || (fsa_our_dc == NULL)) {
+                       || (controld_globals.dc_name == NULL)) {
                 /* This only needs to be done once, so normally the DC should do
                  * it. However if there is no DC, every node must do it, since
                  * there is no other way to ensure some one node does it.

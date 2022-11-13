@@ -913,7 +913,7 @@ handle_shutdown_self_ack(xmlNode *stored_msg)
         return I_STOP;
     }
 
-    if (pcmk__str_eq(host_from, fsa_our_dc, pcmk__str_casei)) {
+    if (pcmk__str_eq(host_from, controld_globals.dc_name, pcmk__str_casei)) {
         // Must be logic error -- DC confirming its own unrequested shutdown
         crm_err("Shutting down controller immediately due to "
                 "unexpected shutdown confirmation");
@@ -945,7 +945,8 @@ handle_shutdown_ack(xmlNode *stored_msg)
         return I_NULL;
     }
 
-    if ((fsa_our_dc == NULL) || (strcmp(host_from, fsa_our_dc) == 0)) {
+    if ((controld_globals.dc_name == NULL)
+        || (strcasecmp(host_from, controld_globals.dc_name) == 0)) {
 
         if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
             crm_info("Shutting down controller after confirmation from %s",
@@ -959,7 +960,7 @@ handle_shutdown_ack(xmlNode *stored_msg)
     }
 
     crm_warn("Ignoring shutdown request from %s because DC is %s",
-             host_from, fsa_our_dc);
+             host_from, controld_globals.dc_name);
     return I_NULL;
 }
 
@@ -1272,16 +1273,18 @@ send_remote_state_message(const char *node_name, gboolean node_up)
      * the DC will eventually pick up the change via the CIB node state.
      * The message allows it to happen sooner if possible.
      */
-    if (fsa_our_dc) {
-        xmlNode *msg = create_request(CRM_OP_REMOTE_STATE, NULL, fsa_our_dc,
-                                      CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
+    if (controld_globals.dc_name != NULL) {
+        xmlNode *msg = create_request(CRM_OP_REMOTE_STATE, NULL,
+                                      controld_globals.dc_name, CRM_SYSTEM_DC,
+                                      CRM_SYSTEM_CRMD, NULL);
 
         crm_info("Notifying DC %s of Pacemaker Remote node %s %s",
-                 fsa_our_dc, node_name, (node_up? "coming up" : "going down"));
+                 controld_globals.dc_name, node_name,
+                 node_up? "coming up" : "going down");
         crm_xml_add(msg, XML_ATTR_ID, node_name);
         pcmk__xe_set_bool_attr(msg, XML_NODE_IN_CLUSTER, node_up);
-        send_cluster_message(crm_get_peer(0, fsa_our_dc), crm_msg_crmd, msg,
-                             TRUE);
+        send_cluster_message(crm_get_peer(0, controld_globals.dc_name),
+                             crm_msg_crmd, msg, TRUE);
         free_xml(msg);
     } else {
         crm_debug("No DC to notify of Pacemaker Remote node %s %s",
