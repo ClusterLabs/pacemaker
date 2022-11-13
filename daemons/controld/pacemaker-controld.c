@@ -144,19 +144,11 @@ main(int argc, char **argv)
     return 0; // not reachable
 }
 
-static void
-log_deprecation_warnings(void)
-{
-    // Add deprecations here as needed
-}
-
 void
 crmd_init(void)
 {
     crm_exit_t exit_code = CRM_EX_OK;
     enum crmd_fsa_state state;
-
-    log_deprecation_warnings();
 
     fsa_state = S_STARTING;
     fsa_input_register = 0;     /* zero out the regester */
