@@ -459,7 +459,6 @@ struct fsa_data_s {
 };
 
 /* Global FSA stuff */
-extern enum crmd_fsa_state fsa_state;
 extern uint64_t fsa_input_register;
 extern uint64_t fsa_actions;
 

@@ -432,7 +432,7 @@ do_dc_join_finalize(long long action,
         crm_debug("Finalization not needed for join-%d at the current time",
                   current_join_id);
         crmd_join_phase_log(LOG_DEBUG);
-        check_join_state(fsa_state, __func__);
+        check_join_state(controld_globals.fsa_state, __func__);
         return;
     }
 
@@ -500,16 +500,17 @@ finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, voi
     } else if (!AM_I_DC) {
         crm_debug("Sync'ed CIB for join-%d but no longer DC", current_join_id);
 
-    } else if (fsa_state != S_FINALIZE_JOIN) {
-        crm_debug("Sync'ed CIB for join-%d but no longer in S_FINALIZE_JOIN (%s)",
-                  current_join_id, fsa_state2string(fsa_state));
+    } else if (controld_globals.fsa_state != S_FINALIZE_JOIN) {
+        crm_debug("Sync'ed CIB for join-%d but no longer in S_FINALIZE_JOIN "
+                  "(%s)", current_join_id,
+                  fsa_state2string(controld_globals.fsa_state));
 
     } else {
         controld_set_fsa_input_flags(R_HAVE_CIB);
         controld_clear_fsa_input_flags(R_CIB_ASKED);
 
         /* make sure dc_uuid is re-set to us */
-        if (check_join_state(fsa_state, __func__) == FALSE) {
+        if (!check_join_state(controld_globals.fsa_state, __func__)) {
             int count_integrated = crmd_join_phase_count(crm_join_integrated);
 
             crm_debug("Notifying %d node%s of join-%d results",
@@ -528,7 +529,7 @@ join_update_complete_callback(xmlNode * msg, int call_id, int rc, xmlNode * outp
     if (rc == pcmk_ok) {
         crm_debug("join-%d node history update (via CIB call %d) complete",
                   current_join_id, call_id);
-        check_join_state(fsa_state, __func__);
+        check_join_state(controld_globals.fsa_state, __func__);
 
     } else {
         crm_err("join-%d node history update (via CIB call %d) failed: %s "

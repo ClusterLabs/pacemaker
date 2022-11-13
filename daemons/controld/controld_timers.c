@@ -116,7 +116,8 @@ crm_timer_popped(gpointer data)
 
     if (timer->log_error) {
         crm_err("%s just popped in state %s! " CRM_XS " input=%s time=%ums",
-                get_timer_desc(timer), fsa_state2string(fsa_state),
+                get_timer_desc(timer),
+                fsa_state2string(controld_globals.fsa_state),
                 fsa_input2string(timer->fsa_input), timer->period_ms);
     } else {
         crm_info("%s just popped " CRM_XS " input=%s time=%ums",
@@ -146,13 +147,17 @@ crm_timer_popped(gpointer data)
             register_fsa_input_before(C_TIMER_POPPED, timer->fsa_input, NULL);
         }
 
-    } else if (timer == recheck_timer && fsa_state != S_IDLE) {
+    } else if ((timer == recheck_timer)
+               && (controld_globals.fsa_state != S_IDLE)) {
         crm_debug("Discarding %s event in state: %s",
-                  fsa_input2string(timer->fsa_input), fsa_state2string(fsa_state));
+                  fsa_input2string(timer->fsa_input),
+                  fsa_state2string(controld_globals.fsa_state));
 
-    } else if (timer == finalization_timer && fsa_state != S_FINALIZE_JOIN) {
+    } else if ((timer == finalization_timer)
+               && (controld_globals.fsa_state != S_FINALIZE_JOIN)) {
         crm_debug("Discarding %s event in state: %s",
-                  fsa_input2string(timer->fsa_input), fsa_state2string(fsa_state));
+                  fsa_input2string(timer->fsa_input),
+                  fsa_state2string(controld_globals.fsa_state));
 
     } else if (timer->fsa_input != I_NULL) {
         register_fsa_input(C_TIMER_POPPED, timer->fsa_input, NULL);

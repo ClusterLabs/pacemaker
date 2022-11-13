@@ -38,7 +38,7 @@ crmd_ha_msg_filter(xmlNode * msg)
                 const char *op = crm_element_value(msg, F_CRM_TASK);
 
                 /* make sure the election happens NOW */
-                if (fsa_state != S_ELECTION) {
+                if (controld_globals.fsa_state != S_ELECTION) {
                     ha_msg_input_t new_input;
 
                     level = LOG_WARNING;
@@ -202,7 +202,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 crm_trace("Ignoring peer status change because not connected to CIB");
                 return;
 
-            } else if (fsa_state == S_STOPPING) {
+            } else if (controld_globals.fsa_state == S_STOPPING) {
                 crm_trace("Ignoring peer status change because stopping");
                 return;
             }
@@ -282,7 +282,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 if (!is_remote) {
                     flags |= node_update_join | node_update_expected;
                     crmd_peer_down(node, FALSE);
-                    check_join_state(fsa_state, __func__);
+                    check_join_state(controld_globals.fsa_state, __func__);
                 }
                 if (alive >= 0) {
                     crm_info("%s of peer %s is in progress " CRM_XS " action=%d",
@@ -312,7 +312,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             }
             if (!is_remote) {
                 crm_update_peer_join(__func__, node, crm_join_none);
-                check_join_state(fsa_state, __func__);
+                check_join_state(controld_globals.fsa_state, __func__);
             }
             abort_transition(INFINITY, pcmk__graph_restart, "Node failure",
                              NULL);

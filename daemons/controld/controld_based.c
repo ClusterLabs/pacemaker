@@ -39,7 +39,7 @@ do_cib_replaced(const char *event, xmlNode * msg)
     if (AM_I_DC == FALSE) {
         return;
 
-    } else if ((fsa_state == S_FINALIZE_JOIN)
+    } else if ((controld_globals.fsa_state == S_FINALIZE_JOIN)
                && pcmk_is_set(fsa_input_register, R_CIB_ASKED)) {
         /* no need to restart the join - we asked for this replace op */
         return;
@@ -174,8 +174,10 @@ crmd_cib_smart_opt(void)
 {
     int call_opt = cib_quorum_override;
 
-    if (fsa_state == S_ELECTION || fsa_state == S_PENDING) {
-        crm_info("Sending update to local CIB in state: %s", fsa_state2string(fsa_state));
+    if ((controld_globals.fsa_state == S_ELECTION)
+        || (controld_globals.fsa_state == S_PENDING)) {
+        crm_info("Sending update to local CIB in state: %s",
+                 fsa_state2string(controld_globals.fsa_state));
         cib__set_call_options(call_opt, "update", cib_scope_local);
     }
     return call_opt;

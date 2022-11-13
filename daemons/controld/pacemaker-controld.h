@@ -30,6 +30,12 @@ typedef struct {
     uint32_t flags;
 
 
+    // Controller FSA
+
+    //! FSA state
+    enum crmd_fsa_state fsa_state;
+
+
     // Other
 
     //! Cluster name

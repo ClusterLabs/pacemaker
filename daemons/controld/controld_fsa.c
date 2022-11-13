@@ -30,7 +30,6 @@ cib_t *fsa_cib_conn = NULL;
 
 uint64_t fsa_input_register = 0;
 uint64_t fsa_actions = A_NOTHING;
-enum crmd_fsa_state fsa_state = S_STARTING;
 
 #define DOT_PREFIX "actions:trace: "
 #define do_dot_log(fmt, args...)     crm_trace( fmt, ##args)
@@ -96,7 +95,8 @@ do_fsa_action(fsa_data_t * fsa_data, long long an_action,
 {
     controld_clear_fsa_action_flags(an_action);
     crm_trace(DOT_PREFIX "\t// %s", fsa_action2string(an_action));
-    function(an_action, fsa_data->fsa_cause, fsa_state, fsa_data->fsa_input, fsa_data);
+    function(an_action, fsa_data->fsa_cause, controld_globals.fsa_state,
+             fsa_data->fsa_input, fsa_data);
 }
 
 static const uint64_t startup_actions =
@@ -147,13 +147,15 @@ do_log(long long action, enum crmd_fsa_cause cause,
 enum crmd_fsa_state
 s_crmd_fsa(enum crmd_fsa_cause cause)
 {
+    controld_globals_t *globals = &controld_globals;
     fsa_data_t *fsa_data = NULL;
     uint64_t register_copy = fsa_input_register;
     uint64_t new_actions = A_NOTHING;
     enum crmd_fsa_state last_state;
 
     crm_trace("FSA invoked with Cause: %s\tState: %s",
-              fsa_cause2string(cause), fsa_state2string(fsa_state));
+              fsa_cause2string(cause),
+              fsa_state2string(globals->fsa_state));
 
     fsa_dump_actions(fsa_actions, "Initial");
 
@@ -184,14 +186,14 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
         fsa_dump_actions(fsa_data->actions, "Restored actions");
 
         /* get the next batch of actions */
-        new_actions = crmd_fsa_actions[fsa_data->fsa_input][fsa_state];
+        new_actions = crmd_fsa_actions[fsa_data->fsa_input][globals->fsa_state];
         controld_set_fsa_action_flags(new_actions);
         fsa_dump_actions(new_actions, "New actions");
 
         if (fsa_data->fsa_input != I_NULL && fsa_data->fsa_input != I_ROUTER) {
             crm_debug("Processing %s: [ state=%s cause=%s origin=%s ]",
                       fsa_input2string(fsa_data->fsa_input),
-                      fsa_state2string(fsa_state),
+                      fsa_state2string(globals->fsa_state),
                       fsa_cause2string(fsa_data->fsa_cause), fsa_data->origin);
         }
 
@@ -207,13 +209,15 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
         }
 
         /* update state variables */
-        last_state = fsa_state;
-        fsa_state = controld_fsa_next_state[fsa_data->fsa_input][fsa_state];
+        last_state = globals->fsa_state;
+        globals->fsa_state
+            = controld_fsa_next_state[fsa_data->fsa_input][globals->fsa_state];
 
         /*
          * Remove certain actions during shutdown
          */
-        if (fsa_state == S_STOPPING || ((fsa_input_register & R_SHUTDOWN) == R_SHUTDOWN)) {
+        if ((globals->fsa_state == S_STOPPING)
+            || pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
             controld_clear_fsa_action_flags(startup_actions);
         }
 
@@ -221,12 +225,12 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
          * Hook for change of state.
          * Allows actions to be added or removed when entering a state
          */
-        if (last_state != fsa_state) {
-            do_state_transition(last_state, fsa_state, fsa_data);
+        if (last_state != globals->fsa_state) {
+            do_state_transition(last_state, globals->fsa_state, fsa_data);
         } else {
             do_dot_log(DOT_PREFIX "\t// FSA input: State=%s \tCause=%s"
                        " \tInput=%s \tOrigin=%s() \tid=%d",
-                       fsa_state2string(fsa_state),
+                       fsa_state2string(globals->fsa_state),
                        fsa_cause2string(fsa_data->fsa_cause),
                        fsa_input2string(fsa_data->fsa_input), fsa_data->origin, fsa_data->id);
         }
@@ -259,7 +263,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
     fsa_dump_actions(fsa_actions, "Remaining");
     fsa_dump_queue(LOG_DEBUG);
 
-    return fsa_state;
+    return globals->fsa_state;
 }
 
 void

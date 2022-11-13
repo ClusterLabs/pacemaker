@@ -412,7 +412,8 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
             .origin = __func__,
         };
 
-        do_lrm_invoke(A_LRM_INVOKE, C_FSA_INTERNAL, fsa_state, I_NULL, &msg);
+        do_lrm_invoke(A_LRM_INVOKE, C_FSA_INTERNAL, controld_globals.fsa_state,
+                      I_NULL, &msg);
 
     } else {
         rc = send_cluster_message(crm_get_peer(0, router_node), crm_msg_lrmd, cmd, TRUE);
@@ -672,27 +673,28 @@ notify_crmd(pcmk__graph_t *graph)
     const char *type = "unknown";
     enum crmd_fsa_input event = I_NULL;
 
-    crm_debug("Processing transition completion in state %s", fsa_state2string(fsa_state));
+    crm_debug("Processing transition completion in state %s",
+              fsa_state2string(controld_globals.fsa_state));
 
     CRM_CHECK(graph->complete, graph->complete = true);
 
     switch (graph->completion_action) {
         case pcmk__graph_wait:
             type = "stop";
-            if (fsa_state == S_TRANSITION_ENGINE) {
+            if (controld_globals.fsa_state == S_TRANSITION_ENGINE) {
                 event = I_TE_SUCCESS;
             }
             break;
         case pcmk__graph_done:
             type = "done";
-            if (fsa_state == S_TRANSITION_ENGINE) {
+            if (controld_globals.fsa_state == S_TRANSITION_ENGINE) {
                 event = I_TE_SUCCESS;
             }
             break;
 
         case pcmk__graph_restart:
             type = "restart";
-            if (fsa_state == S_TRANSITION_ENGINE) {
+            if (controld_globals.fsa_state == S_TRANSITION_ENGINE) {
                 if (transition_timer->period_ms > 0) {
                     controld_stop_timer(transition_timer);
                     controld_start_timer(transition_timer);
@@ -700,7 +702,7 @@ notify_crmd(pcmk__graph_t *graph)
                     event = I_PE_CALC;
                 }
 
-            } else if (fsa_state == S_POLICY_ENGINE) {
+            } else if (controld_globals.fsa_state == S_POLICY_ENGINE) {
                 controld_set_fsa_action_flags(A_PE_INVOKE);
                 trigger_fsa();
             }

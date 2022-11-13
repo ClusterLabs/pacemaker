@@ -2298,16 +2298,26 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
         register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
         nack_reason = "Not attempting start due to shutdown in progress";
 
-    } else if (fsa_state != S_NOT_DC
-               && fsa_state != S_POLICY_ENGINE /* Recalculating */
-               && fsa_state != S_TRANSITION_ENGINE
-               && !pcmk__str_eq(operation, CRMD_ACTION_STOP, pcmk__str_casei)) {
-        nack_reason = "Controller cannot attempt actions at this time";
+    } else {
+        switch (controld_globals.fsa_state) {
+            case S_NOT_DC:
+            case S_POLICY_ENGINE:   // Recalculating
+            case S_TRANSITION_ENGINE:
+                break;
+            default:
+                if (!pcmk__str_eq(operation, CRMD_ACTION_STOP,
+                                  pcmk__str_none)) {
+                    nack_reason = "Controller cannot attempt actions at this "
+                                  "time";
+                }
+                break;
+        }
     }
 
     if (nack_reason != NULL) {
-        crm_notice("Discarding attempt to perform action %s on %s in state %s (shutdown=%s)",
-                   operation, rsc->id, fsa_state2string(fsa_state),
+        crm_notice("Discarding attempt to perform action %s on %s in state %s "
+                   "(shutdown=%s)", operation, rsc->id,
+                   fsa_state2string(controld_globals.fsa_state),
                    pcmk__btoa(pcmk_is_set(fsa_input_register, R_SHUTDOWN)));
 
         lrmd__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_INVALID,

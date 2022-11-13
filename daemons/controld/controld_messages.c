@@ -759,7 +759,7 @@ handle_ping(const xmlNode *msg)
     crm_xml_add(ping, XML_PING_ATTR_SYSFROM, value);
 
     // Add controller state
-    value = fsa_state2string(fsa_state);
+    value = fsa_state2string(controld_globals.fsa_state);
     crm_xml_add(ping, XML_PING_ATTR_CRMDSTATE, value);
     crm_notice("Current ping state: %s", value); // CTS needs this
 
@@ -921,7 +921,7 @@ handle_shutdown_self_ack(xmlNode *stored_msg)
         return I_TERMINATE;
     }
 
-    if (fsa_state != S_STOPPING) {
+    if (controld_globals.fsa_state != S_STOPPING) {
         // Shouldn't happen -- non-DC confirming unrequested shutdown
         crm_err("Starting new DC election because %s is "
                 "confirming shutdown we did not request",
@@ -1044,7 +1044,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
                                __func__);
 
         /* Sometimes we _must_ go into S_ELECTION */
-        if (fsa_state == S_HALT) {
+        if (controld_globals.fsa_state == S_HALT) {
             crm_debug("Forcing an election from S_HALT");
             return I_ELECTION;
 #if 0
@@ -1192,7 +1192,8 @@ handle_shutdown_request(xmlNode * stored_msg)
         host_from = controld_globals.our_nodename;
     }
 
-    crm_info("Creating shutdown request for %s (state=%s)", host_from, fsa_state2string(fsa_state));
+    crm_info("Creating shutdown request for %s (state=%s)", host_from,
+             fsa_state2string(controld_globals.fsa_state));
     crm_log_xml_trace(stored_msg, "message");
 
     now_s = pcmk__ttoa(time(NULL));
@@ -1240,7 +1241,8 @@ send_msg_via_ipc(xmlNode * msg, const char *sys)
         fsa_data.origin = __func__;
         fsa_data.data_type = fsa_dt_ha_msg;
 
-        do_lrm_invoke(A_LRM_INVOKE, C_IPC_MESSAGE, fsa_state, I_MESSAGE, &fsa_data);
+        do_lrm_invoke(A_LRM_INVOKE, C_IPC_MESSAGE, controld_globals.fsa_state,
+                      I_MESSAGE, &fsa_data);
 
     } else if (crmd_is_proxy_session(sys)) {
         crmd_proxy_send(sys, msg);

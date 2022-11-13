@@ -213,7 +213,7 @@ crmd_exit(crm_exit_t exit_code)
 
         crm_info("Dropping %s: [ state=%s cause=%s origin=%s ]",
                  fsa_input2string(fsa_data->fsa_input),
-                 fsa_state2string(fsa_state),
+                 fsa_state2string(controld_globals.fsa_state),
                  fsa_cause2string(fsa_data->fsa_cause), fsa_data->origin);
         delete_fsa_input(fsa_data);
     }
@@ -229,7 +229,7 @@ crmd_exit(crm_exit_t exit_code)
 
     controld_disconnect_cib_manager();
 
-    verify_stopped(fsa_state, LOG_WARNING);
+    verify_stopped(controld_globals.fsa_state, LOG_WARNING);
     controld_clear_fsa_input_flags(R_LRM_CONNECTED);
     lrm_state_destroy_all();
 

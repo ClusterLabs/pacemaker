@@ -34,7 +34,9 @@ extern void init_dotfile(void);
 
 pcmk__output_t *logger_out = NULL;
 
-controld_globals_t controld_globals;
+controld_globals_t controld_globals = {
+    .fsa_state = S_STARTING,
+};
 
 static pcmk__cli_option_t long_options[] = {
     // long option, argument type, storage, short option, description, flags
@@ -150,7 +152,6 @@ crmd_init(void)
     crm_exit_t exit_code = CRM_EX_OK;
     enum crmd_fsa_state state;
 
-    fsa_state = S_STARTING;
     fsa_input_register = 0;     /* zero out the regester */
 
     init_dotfile();

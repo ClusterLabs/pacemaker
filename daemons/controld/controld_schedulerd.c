@@ -358,7 +358,7 @@ do_pe_invoke(long long action,
     fsa_pe_query = fsa_cib_conn->cmds->query(fsa_cib_conn, NULL, NULL, cib_scope_local);
 
     crm_debug("Query %d: Requesting the current CIB: %s", fsa_pe_query,
-              fsa_state2string(fsa_state));
+              fsa_state2string(controld_globals.fsa_state));
 
     controld_expect_sched_reply(NULL);
     fsa_register_cib_callback(fsa_pe_query, FALSE, NULL, do_pe_invoke_callback);
@@ -448,9 +448,9 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         crm_debug("No need to invoke the scheduler anymore");
         return;
 
-    } else if (fsa_state != S_POLICY_ENGINE) {
+    } else if (controld_globals.fsa_state != S_POLICY_ENGINE) {
         crm_debug("Discarding scheduler request in state: %s",
-                  fsa_state2string(fsa_state));
+                  fsa_state2string(controld_globals.fsa_state));
         return;
 
     /* this callback counts as 1 */

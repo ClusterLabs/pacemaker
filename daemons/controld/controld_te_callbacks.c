@@ -542,10 +542,11 @@ te_update_diff(const char *event, xmlNode * msg)
         return;
 
     } else if (transition_graph->complete
-               && fsa_state != S_IDLE
-               && fsa_state != S_TRANSITION_ENGINE
-               && fsa_state != S_POLICY_ENGINE) {
-        crm_trace("Filter state=%s (complete)", fsa_state2string(fsa_state));
+               && (controld_globals.fsa_state != S_IDLE)
+               && (controld_globals.fsa_state != S_TRANSITION_ENGINE)
+               && (controld_globals.fsa_state != S_POLICY_ENGINE)) {
+        crm_trace("Filter state=%s (complete)",
+                  fsa_state2string(controld_globals.fsa_state));
         return;
     }
 
@@ -555,7 +556,7 @@ te_update_diff(const char *event, xmlNode * msg)
     xml_patch_versions(diff, p_add, p_del);
     crm_debug("Processing (%s) diff: %d.%d.%d -> %d.%d.%d (%s)", op,
               p_del[0], p_del[1], p_del[2], p_add[0], p_add[1], p_add[2],
-              fsa_state2string(fsa_state));
+              fsa_state2string(controld_globals.fsa_state));
 
     crm_element_value_int(diff, "format", &format);
     switch (format) {
