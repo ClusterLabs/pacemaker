@@ -111,7 +111,7 @@ handle_disconnect(void)
     }
 
     controld_clear_fsa_input_flags(R_PE_CONNECTED);
-    mainloop_set_trigger(fsa_source);
+    controld_trigger_fsa();
     return;
 }
 
@@ -337,7 +337,7 @@ do_pe_invoke(long long action,
             crm_info("Waiting for the scheduler to connect");
             crmd_fsa_stall(FALSE);
             controld_set_fsa_action_flags(A_PE_START);
-            trigger_fsa();
+            controld_trigger_fsa();
         }
         return;
     }
@@ -461,7 +461,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
                   (num_cib_op_callbacks() - 1));
         sleep(1);
         controld_set_fsa_action_flags(A_PE_INVOKE);
-        trigger_fsa();
+        controld_trigger_fsa();
         return;
     }
 

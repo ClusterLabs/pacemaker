@@ -724,7 +724,7 @@ update_dc(xmlNode * msg)
             }
 
             controld_set_fsa_action_flags(A_CL_JOIN_QUERY | A_DC_TIMER_START);
-            trigger_fsa();
+            controld_trigger_fsa();
             return FALSE;
         }
     }

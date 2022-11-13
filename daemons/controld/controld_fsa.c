@@ -27,6 +27,9 @@
 
 cib_t *fsa_cib_conn = NULL;
 
+//! Triggers an FSA invocation
+static crm_trigger_t *fsa_trigger = NULL;
+
 #define DOT_PREFIX "actions:trace: "
 #define do_dot_log(fmt, args...)     crm_trace( fmt, ##args)
 
@@ -137,6 +140,44 @@ do_log(long long action, enum crmd_fsa_cause cause,
                    "  New status if rc=0: %s",
                    input->rsc_id, input->call_id, input->rc,
                    input->op_status, (char *)input->user_data);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Initialize the FSA trigger
+ */
+void
+controld_init_fsa_trigger(void)
+{
+    fsa_trigger = mainloop_add_trigger(G_PRIORITY_HIGH, crm_fsa_trigger, NULL);
+}
+
+/*!
+ * \internal
+ * \brief Destroy the FSA trigger
+ */
+void
+controld_destroy_fsa_trigger(void)
+{
+    // This basically will not work, since mainloop has a reference to it
+    mainloop_destroy_trigger(fsa_trigger);
+    fsa_trigger = NULL;
+}
+
+/*!
+ * \internal
+ * \brief Trigger an FSA invocation
+ *
+ * \param[in] fn    Calling function name
+ * \param[in] line  Line number where call occurred
+ */
+void
+controld_trigger_fsa_as(const char *fn, int line)
+{
+    if (fsa_trigger != NULL) {
+        crm_trace("%s:%d - Triggered FSA invocation", fn, line);
+        mainloop_set_trigger(fsa_trigger);
     }
 }
 

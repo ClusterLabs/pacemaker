@@ -165,9 +165,8 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
         crm_err("Couldn't add message to the queue");
     }
 
-    if (fsa_source && input != I_WAIT_FOR_EVENT) {
-        crm_trace("Triggering FSA");
-        mainloop_set_trigger(fsa_source);
+    if (input != I_WAIT_FOR_EVENT) {
+        controld_trigger_fsa();
     }
 }
 
@@ -551,7 +550,7 @@ controld_authorize_ipc_message(const xmlNode *client_msg, pcmk__client_t *curr_c
     if (curr_client) {
         curr_client->userdata = strdup(client_name);
     }
-    mainloop_set_trigger(fsa_source);
+    controld_trigger_fsa();
     return false;
 
 rejected:

@@ -434,7 +434,7 @@ crmd_proxy_dispatch(const char *session, xmlNode *msg)
     if (controld_authorize_ipc_message(msg, NULL, session)) {
         route_message(C_IPC_MESSAGE, msg);
     }
-    trigger_fsa();
+    controld_trigger_fsa();
 }
 
 static void

@@ -33,8 +33,6 @@ extern gboolean crm_connect_corosync(crm_cluster_t * cluster);
 void crm_shutdown(int nsig);
 static gboolean crm_read_options(gpointer user_data);
 
-crm_trigger_t *fsa_source = NULL;
-
 /*	 A_HA_CONNECT	*/
 void
 do_ha_control(long long action,
@@ -234,12 +232,10 @@ crmd_exit(crm_exit_t exit_code)
     controld_clear_fsa_input_flags(R_LRM_CONNECTED);
     lrm_state_destroy_all();
 
-    /* This basically will not work, since mainloop has a reference to it */
-    mainloop_destroy_trigger(fsa_source); fsa_source = NULL;
-
     mainloop_destroy_trigger(config_read_trigger);
     config_read_trigger = NULL;
 
+    controld_destroy_fsa_trigger();
     controld_destroy_transition_trigger();
 
     pcmk__client_cleanup();
@@ -356,8 +352,7 @@ do_startup(long long action,
     config_read_trigger = mainloop_add_trigger(G_PRIORITY_HIGH,
                                                crm_read_options, NULL);
 
-    fsa_source = mainloop_add_trigger(G_PRIORITY_HIGH, crm_fsa_trigger, NULL);
-
+    controld_init_fsa_trigger();
     controld_init_transition_trigger();
 
     crm_debug("Creating CIB manager and executor objects");
@@ -406,7 +401,7 @@ dispatch_controller_ipc(qb_ipcs_connection_t * c, void *data, size_t size)
         route_message(C_IPC_MESSAGE, msg);
     }
 
-    trigger_fsa();
+    controld_trigger_fsa();
     free_xml(msg);
     return 0;
 }
@@ -422,7 +417,7 @@ ipc_client_disconnected(qb_ipcs_connection_t *c)
                   c, client);
         free(client->userdata);
         pcmk__free_client(client);
-        trigger_fsa();
+        controld_trigger_fsa();
     }
     return 0;
 }
@@ -798,8 +793,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     crmd_unpack_alerts(alerts);
 
     controld_set_fsa_input_flags(R_READ_CONFIG);
-    crm_trace("Triggering FSA: %s", __func__);
-    mainloop_set_trigger(fsa_source);
+    controld_trigger_fsa();
 
     g_hash_table_destroy(config_hash);
   bail:

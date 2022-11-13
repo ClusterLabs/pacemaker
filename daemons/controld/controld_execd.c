@@ -2428,7 +2428,7 @@ cib_rsc_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *use
 
     if (call_id == last_resource_update) {
         last_resource_update = 0;
-        trigger_fsa();
+        controld_trigger_fsa();
     }
 }
 
@@ -2925,7 +2925,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
     /* If a shutdown was escalated while operations were pending,
      * then the FSA will be stalled right now... allow it to continue
      */
-    mainloop_set_trigger(fsa_source);
+    controld_trigger_fsa();
     if (lrm_state && rsc) {
         update_history_cache(lrm_state, rsc, op);
     }

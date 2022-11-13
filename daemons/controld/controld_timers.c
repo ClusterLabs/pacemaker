@@ -163,8 +163,7 @@ crm_timer_popped(gpointer data)
         register_fsa_input(C_TIMER_POPPED, timer->fsa_input, NULL);
     }
 
-    crm_trace("Triggering FSA: %s", __func__);
-    mainloop_set_trigger(fsa_source);
+    controld_trigger_fsa();
 
     return TRUE;
 }

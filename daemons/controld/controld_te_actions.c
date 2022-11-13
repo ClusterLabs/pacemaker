@@ -704,7 +704,7 @@ notify_crmd(pcmk__graph_t *graph)
 
             } else if (controld_globals.fsa_state == S_POLICY_ENGINE) {
                 controld_set_fsa_action_flags(A_PE_INVOKE);
-                trigger_fsa();
+                controld_trigger_fsa();
             }
             break;
 
@@ -728,8 +728,7 @@ notify_crmd(pcmk__graph_t *graph)
 
     if (event != I_NULL) {
         register_fsa_input(C_FSA_INTERNAL, event, NULL);
-
-    } else if (fsa_source) {
-        mainloop_set_trigger(fsa_source);
+    } else {
+        controld_trigger_fsa();
     }
 }
