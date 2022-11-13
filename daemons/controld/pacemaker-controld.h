@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,8 +23,26 @@
 #include <controld_transition.h>
 #include <controld_utils.h>
 
+typedef struct {
+    // Booleans
+
+    //! Group of \p controld_flags values
+    uint32_t flags;
+} controld_globals_t;
+
 extern GMainLoop *crmd_mainloop;
 extern bool no_quorum_suicide_escalation;
+extern controld_globals_t controld_globals;
+
+/*!
+ * \internal
+ * \enum controld_flags
+ * \brief Bit flags to store various controller state and configuration info
+ */
+enum controld_flags {
+    //! The DC left in a membership change that is being processed
+    controld_dc_left                = (1 << 0),
+};
 
 void do_cib_updated(const char *event, xmlNode * msg);
 void do_cib_replaced(const char *event, xmlNode * msg);

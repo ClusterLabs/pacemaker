@@ -36,6 +36,8 @@ GMainLoop *crmd_mainloop = NULL;
 
 pcmk__output_t *logger_out = NULL;
 
+controld_globals_t controld_globals;
+
 static pcmk__cli_option_t long_options[] = {
     // long option, argument type, storage, short option, description, flags
     {

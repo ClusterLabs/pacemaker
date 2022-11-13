@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -87,8 +87,6 @@ crmd_cs_destroy(gpointer user_data)
     }
 }
 
-extern bool controld_dc_left;
-
 /*!
  * \brief Handle a Corosync notification of a CPG configuration change
  *
@@ -127,7 +125,7 @@ cpg_membership_callback(cpg_handle_t handle, const struct cpg_name *cpg_name,
         if (peer != NULL) {
             for (int i = 0; i < left_list_entries; ++i) {
                 if (left_list[i].nodeid == peer->id) {
-                    controld_dc_left = true;
+                    controld_globals.flags |= controld_dc_left;
                     break;
                 }
             }
@@ -139,7 +137,7 @@ cpg_membership_callback(cpg_handle_t handle, const struct cpg_name *cpg_name,
                         left_list, left_list_entries,
                         joined_list, joined_list_entries);
 
-    controld_dc_left = false;
+    controld_globals.flags &= ~controld_dc_left;
 }
 
 extern gboolean crm_connect_corosync(crm_cluster_t * cluster);
