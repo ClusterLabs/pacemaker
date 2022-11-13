@@ -1559,7 +1559,7 @@ handle_reprobe_op(lrm_state_t *lrm_state, const char *from_sys,
 
         xmlNode *reply = create_request(CRM_OP_INVOKE_LRM, NULL, from_host,
                                         from_sys, CRM_SYSTEM_LRMD,
-                                        fsa_our_uuid);
+                                        controld_globals.our_uuid);
 
         crm_debug("ACK'ing re-probe from %s (%s)", from_sys, from_host);
 
@@ -2081,7 +2081,7 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
                                       __func__);
 
     iter = create_xml_node(update, XML_CIB_TAG_LRM);
-    crm_xml_add(iter, XML_ATTR_ID, fsa_our_uuid);
+    crm_xml_add(iter, XML_ATTR_ID, controld_globals.our_uuid);
     iter = create_xml_node(iter, XML_LRM_TAG_RESOURCES);
     iter = create_xml_node(iter, XML_LRM_TAG_RESOURCE);
 
@@ -2464,7 +2464,7 @@ do_update_resource(const char *node_name, lrmd_rsc_info_t *rsc,
 
     if (pcmk__str_eq(node_name, controld_globals.our_nodename,
                      pcmk__str_casei)) {
-        uuid = fsa_our_uuid;
+        uuid = controld_globals.our_uuid;
 
     } else {
         /* remote nodes uuid and uname are equal */

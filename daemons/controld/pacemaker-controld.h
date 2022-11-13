@@ -44,6 +44,9 @@ typedef struct {
     //! Local node's node name
     char *our_nodename;
 
+    //! Local node's UUID
+    char *our_uuid;
+
     //! Main event loop
     GMainLoop *mainloop;
 } controld_globals_t;

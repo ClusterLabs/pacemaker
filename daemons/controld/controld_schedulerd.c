@@ -469,7 +469,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
      * scheduler is invoked */
     pcmk__refresh_node_caches_from_cib(output);
 
-    crm_xml_add(output, XML_ATTR_DC_UUID, fsa_our_uuid);
+    crm_xml_add(output, XML_ATTR_DC_UUID, controld_globals.our_uuid);
     pcmk__xe_set_bool_attr(output, XML_ATTR_HAVE_QUORUM,
                            pcmk_is_set(controld_globals.flags,
                                        controld_has_quorum));

@@ -69,7 +69,7 @@ do_ha_control(long long action,
         if (registered) {
             controld_election_init(cluster->uname);
             controld_globals.our_nodename = cluster->uname;
-            fsa_our_uuid = cluster->uuid;
+            controld_globals.our_uuid = cluster->uuid;
             if(cluster->uuid == NULL) {
                 crm_err("Could not obtain local uuid");
                 registered = FALSE;
@@ -251,7 +251,8 @@ crmd_exit(crm_exit_t exit_code)
     free(controld_globals.our_nodename);
     controld_globals.our_nodename = NULL;
 
-    free(fsa_our_uuid); fsa_our_uuid = NULL;
+    free(controld_globals.our_uuid);
+    controld_globals.our_uuid = NULL;
 
     free(controld_globals.dc_name);
     controld_globals.dc_name = NULL;

@@ -28,8 +28,6 @@
 
 cib_t *fsa_cib_conn = NULL;
 
-char *fsa_our_uuid = NULL;
-
 uint64_t fsa_input_register = 0;
 uint64_t fsa_actions = A_NOTHING;
 enum crmd_fsa_state fsa_state = S_STARTING;
