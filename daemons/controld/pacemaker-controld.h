@@ -53,6 +53,9 @@ enum controld_flags {
 
     //! Panic the local node if it loses quorum
     controld_no_quorum_suicide      = (1 << 4),
+
+    //! Lock resources to the local node when it shuts down cleanly
+    controld_shutdown_lock_enabled  = (1 << 5),
 };
 
 void do_cib_updated(const char *event, xmlNode * msg);

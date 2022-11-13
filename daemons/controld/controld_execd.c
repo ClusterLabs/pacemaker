@@ -2425,7 +2425,7 @@ cib_rsc_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *use
 static bool
 should_preserve_lock(lrmd_event_data_t *op)
 {
-    if (!controld_shutdown_lock_enabled) {
+    if (!pcmk_is_set(controld_globals.flags, controld_shutdown_lock_enabled)) {
         return false;
     }
     if (!strcmp(op->op_type, RSC_STOP) && (op->rc == PCMK_OCF_OK)) {

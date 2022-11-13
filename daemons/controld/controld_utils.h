@@ -51,7 +51,6 @@ fsa_cib_anon_update_discard_reply(const char *section, xmlNode *data) {
     }
 }
 
-extern bool controld_shutdown_lock_enabled;
 extern int last_resource_update;
 
 enum node_update_flags {

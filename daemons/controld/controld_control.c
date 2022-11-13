@@ -33,7 +33,6 @@ gboolean crm_read_options(gpointer user_data);
 
 crm_trigger_t *fsa_source = NULL;
 crm_trigger_t *config_read = NULL;
-bool controld_shutdown_lock_enabled = false;
 
 /*	 A_HA_CONNECT	*/
 void
@@ -767,7 +766,11 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     finalization_timer->period_ms = crm_parse_interval_spec(value);
 
     value = controller_option(config_hash, XML_CONFIG_ATTR_SHUTDOWN_LOCK);
-    controld_shutdown_lock_enabled = crm_is_true(value);
+    if (crm_is_true(value)) {
+        controld_globals.flags |= controld_shutdown_lock_enabled;
+    } else {
+        controld_globals.flags &= ~controld_shutdown_lock_enabled;
+    }
 
     free(fsa_cluster_name);
     fsa_cluster_name = NULL;

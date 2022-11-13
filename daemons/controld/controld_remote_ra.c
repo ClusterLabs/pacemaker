@@ -187,7 +187,7 @@ remote_node_up(const char *node_name)
      * number of corner cases, clear them here as well, to be sure.
      */
     call_opt = crmd_cib_smart_opt();
-    if (controld_shutdown_lock_enabled) {
+    if (pcmk_is_set(controld_globals.flags, controld_shutdown_lock_enabled)) {
         section = controld_section_all_unlocked;
     }
     /* Purge node from attrd's memory */

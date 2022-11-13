@@ -595,7 +595,7 @@ do_dc_join_ack(long long action,
     /* Update CIB with node's current executor state. A new transition will be
      * triggered later, when the CIB notifies us of the change.
      */
-    if (controld_shutdown_lock_enabled) {
+    if (pcmk_is_set(controld_globals.flags, controld_shutdown_lock_enabled)) {
         section = controld_section_lrm_unlocked;
     }
     controld_delete_node_state(join_from, section, cib_scope_local);
