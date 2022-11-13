@@ -512,7 +512,6 @@ extern crm_trigger_t *fsa_source;
 extern crm_trigger_t *config_read;
 
 extern unsigned long long saved_ccm_membership_id;
-extern gboolean ever_had_quorum;
 
 // These should be moved elsewhere
 void do_update_cib_nodes(gboolean overwrite, const char *caller);

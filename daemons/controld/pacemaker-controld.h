@@ -45,6 +45,9 @@ enum controld_flags {
 
     //! The FSA is stalled waiting for further input
     controld_fsa_is_stalled         = (1 << 1),
+
+    //! The local node has been in a quorate partition at some point
+    controld_ever_had_quorum        = (1 << 2),
 };
 
 void do_cib_updated(const char *event, xmlNode * msg);

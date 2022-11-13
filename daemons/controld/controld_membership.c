@@ -52,8 +52,6 @@ reap_dead_nodes(gpointer key, gpointer value, gpointer user_data)
     }
 }
 
-gboolean ever_had_quorum = FALSE;
-
 void
 post_cache_update(int instance)
 {
@@ -397,9 +395,11 @@ cib_quorum_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output,
 void
 crm_update_quorum(gboolean quorum, gboolean force_update)
 {
-    ever_had_quorum |= quorum;
+    if (quorum) {
+        controld_globals.flags |= controld_ever_had_quorum;
 
-    if(ever_had_quorum && quorum == FALSE && no_quorum_suicide_escalation) {
+    } else if (pcmk_is_set(controld_globals.flags, controld_ever_had_quorum)
+               && no_quorum_suicide_escalation) {
         pcmk__panic(__func__);
     }
 
