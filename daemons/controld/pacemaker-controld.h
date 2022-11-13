@@ -41,6 +41,9 @@ typedef struct {
     //! Designated controller's Pacemaker version
     char *dc_version;
 
+    //! Local node's node name
+    char *our_nodename;
+
     //! Main event loop
     GMainLoop *mainloop;
 } controld_globals_t;

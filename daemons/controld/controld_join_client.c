@@ -199,24 +199,25 @@ set_join_state(const char * start_state)
 {
     if (pcmk__str_eq(start_state, "standby", pcmk__str_casei)) {
         crm_notice("Forcing node %s to join in %s state per configured environment",
-                   fsa_our_uname, start_state);
+                   controld_globals.our_nodename, start_state);
         cib__update_node_attr(logger_out, fsa_cib_conn, cib_sync_call,
                               XML_CIB_TAG_NODES, fsa_our_uuid, NULL, NULL,
                               NULL, "standby", "on", NULL, NULL);
 
     } else if (pcmk__str_eq(start_state, "online", pcmk__str_casei)) {
         crm_notice("Forcing node %s to join in %s state per configured environment",
-                   fsa_our_uname, start_state);
+                   controld_globals.our_nodename, start_state);
         cib__update_node_attr(logger_out, fsa_cib_conn, cib_sync_call,
                               XML_CIB_TAG_NODES, fsa_our_uuid, NULL, NULL,
                               NULL, "standby", "off", NULL, NULL);
 
     } else if (pcmk__str_eq(start_state, "default", pcmk__str_casei)) {
-        crm_debug("Not forcing a starting state on node %s", fsa_our_uname);
+        crm_debug("Not forcing a starting state on node %s",
+                  controld_globals.our_nodename);
 
     } else {
         crm_warn("Unrecognized start state '%s', using 'default' (%s)",
-                 start_state, fsa_our_uname);
+                 start_state, controld_globals.our_nodename);
     }
 }
 
@@ -257,7 +258,9 @@ do_cl_join_finalize_respond(long long action,
         return;
     }
 
-    if (AM_I_DC == FALSE && pcmk__str_eq(welcome_from, fsa_our_uname, pcmk__str_casei)) {
+    if (!AM_I_DC
+        && pcmk__str_eq(welcome_from, controld_globals.our_nodename,
+                        pcmk__str_casei)) {
         crm_warn("Discarding our own welcome - we're no longer the DC");
         return;
     }
@@ -271,8 +274,8 @@ do_cl_join_finalize_respond(long long action,
     update_dc_expected(input->msg);
 
     /* record the node's feature set as a transient attribute */
-    update_attrd(fsa_our_uname, CRM_ATTR_FEATURE_SET, CRM_FEATURE_SET, NULL,
-                 FALSE);
+    update_attrd(controld_globals.our_nodename, CRM_ATTR_FEATURE_SET,
+                 CRM_FEATURE_SET, NULL, FALSE);
 
     /* send our status section to the DC */
     tmp1 = controld_query_executor_state();

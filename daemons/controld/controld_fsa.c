@@ -29,7 +29,6 @@
 cib_t *fsa_cib_conn = NULL;
 
 char *fsa_our_uuid = NULL;
-char *fsa_our_uname = NULL;
 
 uint64_t fsa_input_register = 0;
 uint64_t fsa_actions = A_NOTHING;

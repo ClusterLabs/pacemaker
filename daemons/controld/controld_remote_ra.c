@@ -511,7 +511,7 @@ synthesize_lrmd_success(lrm_state_t *lrm_state, const char *rsc_id, const char *
 
     if (lrm_state == NULL) {
         /* if lrm_state not given assume local */
-        lrm_state = lrm_state_find(fsa_our_uname);
+        lrm_state = lrm_state_find(controld_globals.our_nodename);
     }
     CRM_ASSERT(lrm_state != NULL);
 
@@ -912,7 +912,8 @@ is_remote_lrmd_ra(const char *agent, const char *provider, const char *id)
     if (agent && provider && !strcmp(agent, REMOTE_LRMD_RA) && !strcmp(provider, "pacemaker")) {
         return TRUE;
     }
-    if (id && lrm_state_find(id) && !pcmk__str_eq(id, fsa_our_uname, pcmk__str_casei)) {
+    if ((id != NULL) && (lrm_state_find(id) != NULL)
+        && !pcmk__str_eq(id, controld_globals.our_nodename, pcmk__str_casei)) {
         return TRUE;
     }
 

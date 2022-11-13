@@ -246,8 +246,8 @@ do_dc_join_offer_one(long long action,
     /* If the offer isn't to the local node, make an offer to the local node as
      * well, to ensure the correct value for max_generation_from.
      */
-    if (strcmp(join_to, fsa_our_uname) != 0) {
-        member = crm_get_peer(0, fsa_our_uname);
+    if (strcasecmp(join_to, controld_globals.our_nodename) != 0) {
+        member = crm_get_peer(0, controld_globals.our_nodename);
         join_make_offer(NULL, member, NULL);
     }
 
@@ -365,7 +365,10 @@ do_dc_join_filter_offer(long long action,
         max_generation_xml = copy_xml(generation);
         max_generation_from = strdup(join_from);
 
-    } else if (cmp < 0 || (cmp == 0 && pcmk__str_eq(join_from, fsa_our_uname, pcmk__str_casei))) {
+    } else if ((cmp < 0)
+               || ((cmp == 0)
+                   && pcmk__str_eq(join_from, controld_globals.our_nodename,
+                                   pcmk__str_casei))) {
         crm_debug("Accepting join-%d request from %s (with better "
                   "CIB generation than current best from %s) " CRM_XS " ref=%s",
                   join_id, join_from, max_generation_from, ref);
@@ -434,7 +437,8 @@ do_dc_join_finalize(long long action,
     }
 
     controld_clear_fsa_input_flags(R_HAVE_CIB);
-    if (pcmk__str_eq(max_generation_from, fsa_our_uname, pcmk__str_null_matches | pcmk__str_casei)) {
+    if (pcmk__str_eq(max_generation_from, controld_globals.our_nodename,
+                     pcmk__str_null_matches|pcmk__str_casei)) {
         controld_set_fsa_input_flags(R_HAVE_CIB);
     }
 
@@ -448,7 +452,7 @@ do_dc_join_finalize(long long action,
 
     if (max_generation_from && !pcmk_is_set(fsa_input_register, R_HAVE_CIB)) {
         /* ask for the agreed best CIB */
-        sync_from = strdup(max_generation_from);
+        pcmk__str_update(&sync_from, max_generation_from);
         controld_set_fsa_input_flags(R_CIB_ASKED);
         crm_notice("Finalizing join-%d for %d node%s (sync'ing CIB from %s)",
                    current_join_id, count_integrated,
@@ -457,7 +461,7 @@ do_dc_join_finalize(long long action,
 
     } else {
         /* Send _our_ CIB out to everyone */
-        sync_from = strdup(fsa_our_uname);
+        pcmk__str_update(&sync_from, controld_globals.our_nodename);
         crm_debug("Finalizing join-%d for %d node%s (sync'ing from local CIB)",
                   current_join_id, count_integrated,
                   pcmk__plural_s(count_integrated));
@@ -599,7 +603,8 @@ do_dc_join_ack(long long action,
         section = controld_section_lrm_unlocked;
     }
     controld_delete_node_state(join_from, section, cib_scope_local);
-    if (pcmk__str_eq(join_from, fsa_our_uname, pcmk__str_casei)) {
+    if (pcmk__str_eq(join_from, controld_globals.our_nodename,
+                     pcmk__str_casei)) {
         xmlNode *now_dc_lrmd_state = controld_query_executor_state();
 
         if (now_dc_lrmd_state != NULL) {

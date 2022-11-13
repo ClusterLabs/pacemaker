@@ -66,9 +66,9 @@ do_ha_control(long long action,
 #endif
         }
 
-        if (registered == TRUE) {
+        if (registered) {
             controld_election_init(cluster->uname);
-            fsa_our_uname = cluster->uname;
+            controld_globals.our_nodename = cluster->uname;
             fsa_our_uuid = cluster->uuid;
             if(cluster->uuid == NULL) {
                 crm_err("Could not obtain local uuid");
@@ -76,7 +76,7 @@ do_ha_control(long long action,
             }
         }
 
-        if (registered == FALSE) {
+        if (!registered) {
             controld_set_fsa_input_flags(R_HA_DISCONNECTED);
             register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
             return;
@@ -248,7 +248,9 @@ crmd_exit(crm_exit_t exit_code)
     te_cleanup_stonith_history_sync(NULL, TRUE);
     controld_free_sched_timer();
 
-    free(fsa_our_uname); fsa_our_uname = NULL;
+    free(controld_globals.our_nodename);
+    controld_globals.our_nodename = NULL;
+
     free(fsa_our_uuid); fsa_our_uuid = NULL;
 
     free(controld_globals.dc_name);

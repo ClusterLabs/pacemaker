@@ -93,16 +93,9 @@ fail_pending_op(gpointer key, gpointer value, gpointer user_data)
 gboolean
 lrm_state_is_local(lrm_state_t *lrm_state)
 {
-    if (lrm_state == NULL || fsa_our_uname == NULL) {
-        return FALSE;
-    }
-
-    if (strcmp(lrm_state->node_name, fsa_our_uname) != 0) {
-        return FALSE;
-    }
-
-    return TRUE;
-
+    return (lrm_state != NULL)
+           && pcmk__str_eq(lrm_state->node_name, controld_globals.our_nodename,
+                           pcmk__str_casei);
 }
 
 lrm_state_t *

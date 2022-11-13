@@ -390,7 +390,8 @@ relay_message(xmlNode * msg, gboolean originated_locally)
             is_local = true;
         }
 
-    } else if (pcmk__str_eq(fsa_our_uname, host_to, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(controld_globals.our_nodename, host_to,
+                            pcmk__str_casei)) {
         is_local = true;
     } else if (is_for_crm && pcmk__str_eq(task, CRM_OP_LRM_DELETE, pcmk__str_casei)) {
         xmlNode *msg_data = get_message_xml(msg, F_CRM_DATA);
@@ -851,7 +852,7 @@ handle_node_info_request(const xmlNode *msg)
 
     // Default to local node if none given
     if ((node_id == 0) && (value == NULL)) {
-        value = fsa_our_uname;
+        value = controld_globals.our_nodename;
     }
 
     node = pcmk__search_node_caches(node_id, value, CRM_GET_PEER_ANY);
@@ -1188,7 +1189,7 @@ handle_shutdown_request(xmlNode * stored_msg)
 
     if (host_from == NULL) {
         /* we're shutting down and the DC */
-        host_from = fsa_our_uname;
+        host_from = controld_globals.our_nodename;
     }
 
     crm_info("Creating shutdown request for %s (state=%s)", host_from, fsa_state2string(fsa_state));
@@ -1212,7 +1213,7 @@ send_msg_via_ipc(xmlNode * msg, const char *sys)
     client_channel = pcmk__find_client_by_id(sys);
 
     if (crm_element_value(msg, F_CRM_HOST_FROM) == NULL) {
-        crm_xml_add(msg, F_CRM_HOST_FROM, fsa_our_uname);
+        crm_xml_add(msg, F_CRM_HOST_FROM, controld_globals.our_nodename);
     }
 
     if (client_channel != NULL) {

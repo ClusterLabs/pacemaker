@@ -499,7 +499,6 @@ extern uint64_t fsa_actions;
 
 extern cib_t *fsa_cib_conn;
 
-extern char *fsa_our_uname;
 extern char *fsa_our_uuid;
 extern char *fsa_pe_ref;        // Last invocation of the scheduler
 extern GList *fsa_message_queue;

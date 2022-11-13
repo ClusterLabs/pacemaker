@@ -703,7 +703,9 @@ update_dc(xmlNode * msg)
         CRM_CHECK(dc_version != NULL, return FALSE);
         CRM_CHECK(welcome_from != NULL, return FALSE);
 
-        if (AM_I_DC && !pcmk__str_eq(welcome_from, fsa_our_uname, pcmk__str_casei)) {
+        if (AM_I_DC
+            && !pcmk__str_eq(welcome_from, controld_globals.our_nodename,
+                             pcmk__str_casei)) {
             invalid = TRUE;
 
         } else if ((controld_globals.dc_name != NULL)

@@ -261,7 +261,7 @@ do_dc_release(long long action,
 #endif
         if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
             xmlNode *update = NULL;
-            crm_node_t *node = crm_get_peer(0, fsa_our_uname);
+            crm_node_t *node = crm_get_peer(0, controld_globals.our_nodename);
 
             pcmk__update_peer_expected(__func__, node, CRMD_JOINSTATE_DOWN);
             update = create_node_state_update(node, node_update_expected, NULL,

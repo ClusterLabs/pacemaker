@@ -282,7 +282,7 @@ send_task_ok_ack(const lrm_state_t *lrm_state, const ha_msg_input_t *input,
 static inline const char *
 op_node_name(lrmd_event_data_t *op)
 {
-    return op->remote_nodename? op->remote_nodename : fsa_our_uname;
+    return pcmk__s(op->remote_nodename, controld_globals.our_nodename);
 }
 
 void
@@ -362,10 +362,10 @@ do_lrm_control(long long action,
 
     lrm_state_t *lrm_state = NULL;
 
-    if(fsa_our_uname == NULL) {
+    if (controld_globals.our_nodename == NULL) {
         return; /* Nothing to do */
     }
-    lrm_state = lrm_state_find_or_create(fsa_our_uname);
+    lrm_state = lrm_state_find_or_create(controld_globals.our_nodename);
     if (lrm_state == NULL) {
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
         return;
@@ -701,7 +701,7 @@ build_operation_update(xmlNode * parent, const lrmd_rsc_info_t *rsc,
     CRM_CHECK(caller_version != NULL, caller_version = CRM_FEATURE_SET);
 
     xml_op = pcmk__create_history_xml(parent, op, caller_version, target_rc,
-                                      fsa_our_uname, src);
+                                      controld_globals.our_nodename, src);
     if (xml_op == NULL) {
         return TRUE;
     }
@@ -818,10 +818,11 @@ controld_query_executor_state(void)
     xmlNode *xml_data = NULL;
     xmlNode *rsc_list = NULL;
     crm_node_t *peer = NULL;
-    lrm_state_t *lrm_state = lrm_state_find(fsa_our_uname);
+    lrm_state_t *lrm_state = lrm_state_find(controld_globals.our_nodename);
 
     if (!lrm_state) {
-        crm_err("Could not find executor state for node %s", fsa_our_uname);
+        crm_err("Could not find executor state for node %s",
+                controld_globals.our_nodename);
         return NULL;
     }
 
@@ -1487,7 +1488,7 @@ lrm_op_target(const xmlNode *xml)
         target = crm_element_value(xml, XML_LRM_ATTR_TARGET);
     }
     if (target == NULL) {
-        target = fsa_our_uname;
+        target = controld_globals.our_nodename;
     }
     return target;
 }
@@ -1751,7 +1752,7 @@ do_lrm_invoke(long long action,
     bool crm_rsc_delete = FALSE;
 
     target_node = lrm_op_target(input->xml);
-    is_remote_node = !pcmk__str_eq(target_node, fsa_our_uname,
+    is_remote_node = !pcmk__str_eq(target_node, controld_globals.our_nodename,
                                    pcmk__str_casei);
 
     lrm_state = lrm_state_find(target_node);
@@ -2075,7 +2076,7 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
         to_sys = CRM_SYSTEM_TENGINE;
     }
 
-    peer = crm_get_peer(0, fsa_our_uname);
+    peer = crm_get_peer(0, controld_globals.our_nodename);
     update = create_node_state_update(peer, node_update_none, NULL,
                                       __func__);
 
@@ -2086,7 +2087,8 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
 
     crm_xml_add(iter, XML_ATTR_ID, op->rsc_id);
 
-    build_operation_update(iter, rsc, op, fsa_our_uname, __func__);
+    build_operation_update(iter, rsc, op, controld_globals.our_nodename,
+                            __func__);
     reply = create_request(CRM_OP_INVOKE_LRM, update, to_host, to_sys, CRM_SYSTEM_LRMD, NULL);
 
     crm_log_xml_trace(update, "[direct ACK]");
@@ -2460,7 +2462,8 @@ do_update_resource(const char *node_name, lrmd_rsc_info_t *rsc,
     update = iter;
     iter = create_xml_node(iter, XML_CIB_TAG_STATE);
 
-    if (pcmk__str_eq(node_name, fsa_our_uname, pcmk__str_casei)) {
+    if (pcmk__str_eq(node_name, controld_globals.our_nodename,
+                     pcmk__str_casei)) {
         uuid = fsa_our_uuid;
 
     } else {
