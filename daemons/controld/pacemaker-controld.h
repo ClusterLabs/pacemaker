@@ -31,7 +31,6 @@ typedef struct {
 } controld_globals_t;
 
 extern GMainLoop *crmd_mainloop;
-extern bool no_quorum_suicide_escalation;
 extern controld_globals_t controld_globals;
 
 /*!
@@ -51,6 +50,9 @@ enum controld_flags {
 
     //! The local node is currently in a quorate partition
     controld_has_quorum             = (1 << 3),
+
+    //! Panic the local node if it loses quorum
+    controld_no_quorum_suicide      = (1 << 4),
 };
 
 void do_cib_updated(const char *event, xmlNode * msg);

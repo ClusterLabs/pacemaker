@@ -398,8 +398,9 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
     if (quorum) {
         controld_globals.flags |= controld_ever_had_quorum;
 
-    } else if (pcmk_is_set(controld_globals.flags, controld_ever_had_quorum)
-               && no_quorum_suicide_escalation) {
+    } else if (pcmk_all_flags_set(controld_globals.flags,
+                                  controld_ever_had_quorum
+                                  |controld_no_quorum_suicide)) {
         pcmk__panic(__func__);
     }
 

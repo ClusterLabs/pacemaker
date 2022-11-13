@@ -33,7 +33,6 @@ gboolean crm_read_options(gpointer user_data);
 
 crm_trigger_t *fsa_source = NULL;
 crm_trigger_t *config_read = NULL;
-bool no_quorum_suicide_escalation = FALSE;
 bool controld_shutdown_lock_enabled = false;
 
 /*	 A_HA_CONNECT	*/
@@ -737,7 +736,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     value = controller_option(config_hash, "no-quorum-policy");
     if (pcmk__str_eq(value, "suicide", pcmk__str_casei) && pcmk__locate_sbd()) {
-        no_quorum_suicide_escalation = TRUE;
+        controld_globals.flags |= controld_no_quorum_suicide;
     }
 
     set_fence_reaction(controller_option(config_hash,
