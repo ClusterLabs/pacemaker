@@ -198,7 +198,8 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 controld_remove_voter(node->uname);
             }
 
-            if (!pcmk_is_set(fsa_input_register, R_CIB_CONNECTED)) {
+            if (!pcmk_is_set(controld_globals.fsa_input_register,
+                             R_CIB_CONNECTED)) {
                 crm_trace("Ignoring peer status change because not connected to CIB");
                 return;
 
@@ -358,7 +359,7 @@ crmd_cib_connection_destroy(gpointer user_data)
     trigger_fsa();
     fsa_cib_conn->state = cib_disconnected;
 
-    if (!pcmk_is_set(fsa_input_register, R_CIB_CONNECTED)) {
+    if (!pcmk_is_set(controld_globals.fsa_input_register, R_CIB_CONNECTED)) {
         crm_info("Connection to the CIB manager terminated");
         return;
     }

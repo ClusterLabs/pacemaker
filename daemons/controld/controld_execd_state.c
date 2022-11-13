@@ -323,7 +323,7 @@ lrm_state_disconnect_only(lrm_state_t * lrm_state)
 
     ((lrmd_t *) lrm_state->conn)->cmds->disconnect(lrm_state->conn);
 
-    if (!pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
+    if (!pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
         removed = g_hash_table_foreach_remove(lrm_state->pending_ops, fail_pending_op, lrm_state);
         crm_trace("Synthesized %d operation failures for %s", removed, lrm_state->node_name);
     }

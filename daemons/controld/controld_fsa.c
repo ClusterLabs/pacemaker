@@ -28,7 +28,6 @@
 
 cib_t *fsa_cib_conn = NULL;
 
-uint64_t fsa_input_register = 0;
 uint64_t fsa_actions = A_NOTHING;
 
 #define DOT_PREFIX "actions:trace: "
@@ -149,7 +148,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 {
     controld_globals_t *globals = &controld_globals;
     fsa_data_t *fsa_data = NULL;
-    uint64_t register_copy = fsa_input_register;
+    uint64_t register_copy = controld_globals.fsa_input_register;
     uint64_t new_actions = A_NOTHING;
     enum crmd_fsa_state last_state;
 
@@ -217,7 +216,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
          * Remove certain actions during shutdown
          */
         if ((globals->fsa_state == S_STOPPING)
-            || pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
+            || pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
             controld_clear_fsa_action_flags(startup_actions);
         }
 
@@ -253,10 +252,11 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
     }
 
     /* cleanup inputs? */
-    if (register_copy != fsa_input_register) {
-        uint64_t same = register_copy & fsa_input_register;
+    if (register_copy != controld_globals.fsa_input_register) {
+        uint64_t same = register_copy & controld_globals.fsa_input_register;
 
-        fsa_dump_inputs(LOG_DEBUG, "Added", fsa_input_register ^ same);
+        fsa_dump_inputs(LOG_DEBUG, "Added",
+                        controld_globals.fsa_input_register ^ same);
         fsa_dump_inputs(LOG_DEBUG, "Removed", register_copy ^ same);
     }
 
@@ -546,7 +546,7 @@ do_state_transition(enum crmd_fsa_state cur_state,
         controld_stop_current_election_timeout();
     }
 #if 0
-    if ((fsa_input_register & R_SHUTDOWN)) {
+    if ((controld_globals.fsa_input_register & R_SHUTDOWN)) {
         controld_set_fsa_action_flags(A_DC_TIMER_STOP);
     }
 #endif
@@ -587,7 +587,7 @@ do_state_transition(enum crmd_fsa_state cur_state,
             election_timer->counter = 0;
             purge_stonith_cleanup();
 
-            if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
+            if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
                 crm_info("(Re)Issuing shutdown request now" " that we have a new DC");
                 controld_set_fsa_action_flags(A_SHUTDOWN_REQ);
             }
@@ -637,7 +637,7 @@ do_state_transition(enum crmd_fsa_state cur_state,
 
         case S_IDLE:
             CRM_LOG_ASSERT(AM_I_DC);
-            if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
+            if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
                 crm_info("(Re)Issuing shutdown request now" " that we are the DC");
                 controld_set_fsa_action_flags(A_SHUTDOWN_REQ);
             }

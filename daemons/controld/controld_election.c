@@ -97,7 +97,7 @@ do_election_vote(long long action,
     }
 
     if (not_voting == FALSE) {
-        if (pcmk_is_set(fsa_input_register, R_STARTING)) {
+        if (pcmk_is_set(controld_globals.fsa_input_register, R_STARTING)) {
             not_voting = TRUE;
         }
     }
@@ -140,7 +140,7 @@ do_election_count_vote(long long action,
     ha_msg_input_t *vote = fsa_typed_data(fsa_dt_ha_msg);
 
     if(crm_peer_cache == NULL) {
-        if (!pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
+        if (!pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
             crm_err("Internal error, no peer cache");
         }
         return;
@@ -156,7 +156,7 @@ do_election_count_vote(long long action,
         case election_lost:
             update_dc(NULL);
 
-            if (fsa_input_register & R_THE_DC) {
+            if (pcmk_is_set(controld_globals.fsa_input_register, R_THE_DC)) {
                 register_fsa_input(C_FSA_INTERNAL, I_RELEASE_DC, NULL);
                 fsa_cib_conn->cmds->set_secondary(fsa_cib_conn,
                                                   cib_scope_local);
@@ -259,7 +259,7 @@ do_dc_release(long long action,
             result = I_SHUTDOWN;
         }
 #endif
-        if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
+        if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
             xmlNode *update = NULL;
             crm_node_t *node = crm_get_peer(0, controld_globals.our_nodename);
 

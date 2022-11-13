@@ -152,8 +152,6 @@ crmd_init(void)
     crm_exit_t exit_code = CRM_EX_OK;
     enum crmd_fsa_state state;
 
-    fsa_input_register = 0;     /* zero out the regester */
-
     init_dotfile();
     register_fsa_input(C_STARTUP, I_STARTUP, NULL);
 
@@ -164,7 +162,7 @@ crmd_init(void)
         /* Create the mainloop and run it... */
         crm_trace("Starting %s's mainloop", crm_system_name);
         g_main_loop_run(controld_globals.mainloop);
-        if (pcmk_is_set(fsa_input_register, R_STAYDOWN)) {
+        if (pcmk_is_set(controld_globals.fsa_input_register, R_STAYDOWN)) {
             crm_info("Inhibiting automated respawn");
             exit_code = CRM_EX_FATAL;
         }

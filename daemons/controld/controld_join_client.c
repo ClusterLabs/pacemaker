@@ -301,7 +301,9 @@ do_cl_join_finalize_respond(long long action,
          * are _NOT_ lucky, we will probe for the "wrong" instance of anonymous
          * clones and end up with multiple active instances on the machine.
          */
-        if (first_join && !pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
+        if (first_join
+            && !pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
+
             first_join = FALSE;
             if (start_state) {
                 set_join_state(start_state);

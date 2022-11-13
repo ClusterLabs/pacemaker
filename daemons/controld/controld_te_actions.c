@@ -710,7 +710,7 @@ notify_crmd(pcmk__graph_t *graph)
 
         case pcmk__graph_shutdown:
             type = "shutdown";
-            if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
+            if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
                 event = I_STOP;
 
             } else {

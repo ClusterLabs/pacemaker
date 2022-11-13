@@ -55,7 +55,7 @@ static int do_update_resource(const char *node_name, lrmd_rsc_info_t *rsc,
 static void
 lrm_connection_destroy(void)
 {
-    if (pcmk_is_set(fsa_input_register, R_LRM_CONNECTED)) {
+    if (pcmk_is_set(controld_globals.fsa_input_register, R_LRM_CONNECTED)) {
         crm_crit("Connection to executor failed");
         register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
         controld_clear_fsa_input_flags(R_LRM_CONNECTED);
@@ -414,7 +414,7 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
         log_level = LOG_ERR;
         when = "shutdown";
 
-    } else if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
+    } else if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
         when = "shutdown... waiting";
     }
 
@@ -444,7 +444,8 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
                    counter, pcmk__plural_s(counter), when);
 
         if ((cur_state == S_TERMINATE)
-            || !pcmk_is_set(fsa_input_register, R_SENT_RSC_STOP)) {
+            || !pcmk_is_set(controld_globals.fsa_input_register,
+                            R_SENT_RSC_STOP)) {
             g_hash_table_iter_init(&gIter, lrm_state->pending_ops);
             while (g_hash_table_iter_next(&gIter, (gpointer*)&key, (gpointer*)&pending)) {
                 do_crm_log(log_level, "Pending action: %s (%s)", key, pending->op_key);
@@ -460,7 +461,7 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
         return rc;
     }
 
-    if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
+    if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
         /* At this point we're not waiting, we're just shutting down */
         when = "shutdown";
     }
@@ -2292,7 +2293,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
                crm_action_str(op->op_type, op->interval_ms), rsc->id, lrm_state->node_name,
                pcmk__s(transition, ""), rsc->id, operation, op->interval_ms);
 
-    if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)
+    if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)
         && pcmk__str_eq(operation, RSC_START, pcmk__str_casei)) {
 
         register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
@@ -2318,7 +2319,8 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
         crm_notice("Discarding attempt to perform action %s on %s in state %s "
                    "(shutdown=%s)", operation, rsc->id,
                    fsa_state2string(controld_globals.fsa_state),
-                   pcmk__btoa(pcmk_is_set(fsa_input_register, R_SHUTDOWN)));
+                   pcmk__btoa(pcmk_is_set(controld_globals.fsa_input_register,
+                                          R_SHUTDOWN)));
 
         lrmd__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_INVALID,
                          nack_reason);

@@ -78,7 +78,7 @@ crmd_quorum_callback(unsigned long long seq, gboolean quorate)
 static void
 crmd_cs_destroy(gpointer user_data)
 {
-    if (!pcmk_is_set(fsa_input_register, R_HA_DISCONNECTED)) {
+    if (!pcmk_is_set(controld_globals.fsa_input_register, R_HA_DISCONNECTED)) {
         crm_crit("Lost connection to cluster layer, shutting down");
         crmd_exit(CRM_EX_DISCONNECT);
 

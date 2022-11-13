@@ -40,7 +40,8 @@ do_cib_replaced(const char *event, xmlNode * msg)
         return;
 
     } else if ((controld_globals.fsa_state == S_FINALIZE_JOIN)
-               && pcmk_is_set(fsa_input_register, R_CIB_ASKED)) {
+               && pcmk_is_set(controld_globals.fsa_input_register,
+                              R_CIB_ASKED)) {
         /* no need to restart the join - we asked for this replace op */
         return;
     }
@@ -144,7 +145,8 @@ do_cib_control(long long action,
             cib_retries = 0;
         }
 
-        if (!pcmk_is_set(fsa_input_register, R_CIB_CONNECTED)) {
+        if (!pcmk_is_set(controld_globals.fsa_input_register,
+                         R_CIB_CONNECTED)) {
 
             cib_retries++;
             crm_warn("Couldn't complete CIB registration %d"

@@ -412,7 +412,7 @@ tengine_stonith_connection_destroy(stonith_t *st, stonith_event_t *e)
 {
     te_cleanup_stonith_history_sync(st, FALSE);
 
-    if (pcmk_is_set(fsa_input_register, R_ST_REQUIRED)) {
+    if (pcmk_is_set(controld_globals.fsa_input_register, R_ST_REQUIRED)) {
         crm_crit("Fencing daemon connection failed");
         mainloop_set_trigger(stonith_reconnect);
 
@@ -648,7 +648,8 @@ te_connect_stonith(gpointer user_data)
         // Non-blocking (retry failures later in main loop)
         rc = stonith_api->cmds->connect(stonith_api, crm_system_name, NULL);
         if (rc != pcmk_ok) {
-            if (pcmk_is_set(fsa_input_register, R_ST_REQUIRED)) {
+            if (pcmk_is_set(controld_globals.fsa_input_register,
+                            R_ST_REQUIRED)) {
                 crm_notice("Fencer connection failed (will retry): %s "
                            CRM_XS " rc=%d", pcmk_strerror(rc), rc);
                 mainloop_set_trigger(stonith_reconnect);

@@ -39,7 +39,8 @@ node_type(bool is_remote)
 static inline const char *
 when(void)
 {
-    return pcmk_is_set(fsa_input_register, R_SHUTDOWN)? " at shutdown" : "";
+    return pcmk_is_set(controld_globals.fsa_input_register,
+                       R_SHUTDOWN)? " at shutdown" : "";
 }
 
 static void
@@ -52,7 +53,7 @@ handle_attr_error(void)
          */
         crmd_exit(CRM_EX_FATAL);
 
-    } else if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
+    } else if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
         // Fast-track shutdown since unable to request via attribute
         register_fsa_input(C_FSA_INTERNAL, I_FAIL, NULL);
     }
