@@ -14,6 +14,9 @@
 
 #include <pacemaker-controld.h>
 
+//! Triggers transition graph processing
+static crm_trigger_t *transition_trigger = NULL;
+
 gboolean
 stop_te_timer(pcmk__graph_action_t *action)
 {
@@ -31,7 +34,7 @@ stop_te_timer(pcmk__graph_action_t *action)
     return TRUE;
 }
 
-gboolean
+static gboolean
 te_graph_trigger(gpointer user_data)
 {
     if (transition_graph == NULL) {
@@ -83,6 +86,28 @@ te_graph_trigger(gpointer user_data)
     notify_crmd(transition_graph);
 
     return TRUE;
+}
+
+/*!
+ * \internal
+ * \brief Initialize transition trigger
+ */
+void
+controld_init_transition_trigger(void)
+{
+    transition_trigger = mainloop_add_trigger(G_PRIORITY_LOW, te_graph_trigger,
+                                              NULL);
+}
+
+/*!
+ * \internal
+ * \brief Destroy transition trigger
+ */
+void
+controld_destroy_transition_trigger(void)
+{
+    mainloop_destroy_trigger(transition_trigger);
+    transition_trigger = NULL;
 }
 
 void
@@ -331,5 +356,5 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
         return;
     }
 
-    mainloop_set_trigger(transition_trigger);
+    trigger_graph();
 }

@@ -239,7 +239,7 @@ crmd_exit(crm_exit_t exit_code)
     mainloop_destroy_trigger(config_read_trigger);
     config_read_trigger = NULL;
 
-    mainloop_destroy_trigger(transition_trigger); transition_trigger = NULL;
+    controld_destroy_transition_trigger();
 
     pcmk__client_cleanup();
     crm_peer_destroy();
@@ -349,7 +349,7 @@ do_startup(long long action,
 
     fsa_source = mainloop_add_trigger(G_PRIORITY_HIGH, crm_fsa_trigger, NULL);
 
-    transition_trigger = mainloop_add_trigger(G_PRIORITY_LOW, te_graph_trigger, NULL);
+    controld_init_transition_trigger();
 
     crm_debug("Creating CIB manager and executor objects");
     fsa_cib_conn = cib_new();

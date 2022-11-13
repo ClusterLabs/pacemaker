@@ -23,7 +23,6 @@ void te_update_confirm(const char *event, xmlNode * msg);
 
 extern char *te_uuid;
 pcmk__graph_t *transition_graph;
-crm_trigger_t *transition_trigger = NULL;
 
 #define RSC_OP_PREFIX "//" XML_TAG_DIFF_ADDED "//" XML_TAG_CIB \
                       "//" XML_LRM_TAG_RSC_OP "[@" XML_ATTR_ID "='"
