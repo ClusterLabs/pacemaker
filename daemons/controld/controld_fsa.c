@@ -35,7 +35,6 @@ char *fsa_our_uname = NULL;
 
 char *fsa_cluster_name = NULL;
 
-gboolean do_fsa_stall = FALSE;
 uint64_t fsa_input_register = 0;
 uint64_t fsa_actions = A_NOTHING;
 enum crmd_fsa_state fsa_state = S_STARTING;
@@ -165,7 +164,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 
     fsa_dump_actions(fsa_actions, "Initial");
 
-    do_fsa_stall = FALSE;
+    controld_globals.flags &= ~controld_fsa_is_stalled;
     if ((fsa_message_queue == NULL) && (fsa_actions != A_NOTHING)) {
         /* fake the first message so we can get into the loop */
         fsa_data = calloc(1, sizeof(fsa_data_t));
@@ -176,7 +175,8 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
         fsa_message_queue = g_list_append(fsa_message_queue, fsa_data);
         fsa_data = NULL;
     }
-    while ((fsa_message_queue != NULL) && !do_fsa_stall) {
+    while ((fsa_message_queue != NULL)
+           && !pcmk_is_set(controld_globals.flags, controld_fsa_is_stalled)) {
         crm_trace("Checking messages (%d remaining)", g_list_length(fsa_message_queue));
 
         fsa_data = get_message();
@@ -245,10 +245,12 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
     }
 
     if ((fsa_message_queue != NULL) || (fsa_actions != A_NOTHING)
-        || do_fsa_stall) {
+        || pcmk_is_set(controld_globals.flags, controld_fsa_is_stalled)) {
         crm_debug("Exiting the FSA: queue=%d, fsa_actions=%#llx, stalled=%s",
                   g_list_length(fsa_message_queue),
-                  (unsigned long long) fsa_actions, pcmk__btoa(do_fsa_stall));
+                  (unsigned long long) fsa_actions,
+                  pcmk__btoa(pcmk_is_set(controld_globals.flags,
+                                         controld_fsa_is_stalled)));
     } else {
         crm_trace("Exiting the FSA");
     }
@@ -275,7 +277,8 @@ s_crmd_fsa_actions(fsa_data_t * fsa_data)
      * action at a time to avoid complicating the ordering.
      */
     CRM_CHECK(fsa_data != NULL, return);
-    while (fsa_actions != A_NOTHING && do_fsa_stall == FALSE) {
+    while ((fsa_actions != A_NOTHING)
+           && !pcmk_is_set(controld_globals.flags, controld_fsa_is_stalled)) {
 
         /* regular action processing in order of action priority
          *

@@ -42,6 +42,9 @@ extern controld_globals_t controld_globals;
 enum controld_flags {
     //! The DC left in a membership change that is being processed
     controld_dc_left                = (1 << 0),
+
+    //! The FSA is stalled waiting for further input
+    controld_fsa_is_stalled         = (1 << 1),
 };
 
 void do_cib_updated(const char *event, xmlNode * msg);
