@@ -560,6 +560,7 @@ cluster_option_value(GHashTable *options, bool (*validate)(const char *),
  *
  * \param[in,out] options      Name/value pairs for configured options
  * \param[in]     option_list  Possible cluster options
+ * \param[in]     len          Length of \p option_list
  * \param[in]     name         (Primary) option name to look for
  *
  * \return Option value
