@@ -458,9 +458,6 @@ struct fsa_data_s {
     enum fsa_data_type data_type;
 };
 
-/* Global FSA stuff */
-extern uint64_t fsa_actions;
-
 #define controld_set_fsa_input_flags(flags_to_set) do {                 \
         controld_globals.fsa_input_register                             \
             = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,         \
@@ -478,20 +475,20 @@ extern uint64_t fsa_actions;
                                    #flags_to_clear);                    \
     } while (0)
 
-#define controld_set_fsa_action_flags(flags_to_set) do {                    \
-        fsa_actions = pcmk__set_flags_as(__func__, __LINE__,                \
-                                         LOG_DEBUG,                         \
-                                         "FSA action", "controller",        \
-                                         fsa_actions, (flags_to_set),       \
-                                         #flags_to_set);                    \
+#define controld_set_fsa_action_flags(flags_to_set) do {            \
+        controld_globals.fsa_actions                                \
+            = pcmk__set_flags_as(__func__, __LINE__, LOG_DEBUG,     \
+                                 "FSA action", "controller",        \
+                                 controld_globals.fsa_actions,      \
+                                 (flags_to_set), #flags_to_set);    \
     } while (0)
 
-#define controld_clear_fsa_action_flags(flags_to_clear) do {                \
-        fsa_actions = pcmk__clear_flags_as(__func__, __LINE__,              \
-                                           LOG_DEBUG,                       \
-                                           "FSA action", "controller",      \
-                                           fsa_actions, (flags_to_clear),   \
-                                           #flags_to_clear);                \
+#define controld_clear_fsa_action_flags(flags_to_clear) do {            \
+        controld_globals.fsa_actions                                    \
+            = pcmk__clear_flags_as(__func__, __LINE__, LOG_DEBUG,       \
+                                   "FSA action", "controller",          \
+                                   controld_globals.fsa_actions,        \
+                                   (flags_to_clear), #flags_to_clear);  \
     } while (0)
 
 extern cib_t *fsa_cib_conn;

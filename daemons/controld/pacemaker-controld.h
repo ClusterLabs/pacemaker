@@ -35,6 +35,9 @@ typedef struct {
     //! FSA state
     enum crmd_fsa_state fsa_state;
 
+    //! FSA actions (group of \p A_* flags)
+    uint64_t fsa_actions;
+
     //! FSA input register contents (group of \p R_* flags)
     uint64_t fsa_input_register;
 

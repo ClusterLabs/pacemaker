@@ -36,6 +36,7 @@ pcmk__output_t *logger_out = NULL;
 
 controld_globals_t controld_globals = {
     .fsa_state = S_STARTING,
+    .fsa_actions = A_NOTHING,
 };
 
 static pcmk__cli_option_t long_options[] = {

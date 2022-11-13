@@ -41,16 +41,16 @@ register_fsa_error_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
                        fsa_data_t * cur_data, void *new_data, const char *raised_from)
 {
     /* save the current actions if any */
-    if (fsa_actions != A_NOTHING) {
+    if (controld_globals.fsa_actions != A_NOTHING) {
         register_fsa_input_adv(cur_data ? cur_data->fsa_cause : C_FSA_INTERNAL,
                                I_NULL, cur_data ? cur_data->data : NULL,
-                               fsa_actions, TRUE, __func__);
+                               controld_globals.fsa_actions, TRUE, __func__);
     }
 
     /* reset the action list */
     crm_info("Resetting the current action list");
-    fsa_dump_actions(fsa_actions, "Drop");
-    fsa_actions = A_NOTHING;
+    fsa_dump_actions(controld_globals.fsa_actions, "Drop");
+    controld_globals.fsa_actions = A_NOTHING;
 
     /* register the error */
     register_fsa_input_adv(cause, input, new_data, A_NOTHING, TRUE, raised_from);
@@ -90,9 +90,11 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
             return;
         }
 
-        /* Store everything in the new event and reset fsa_actions */
-        with_actions |= fsa_actions;
-        fsa_actions = A_NOTHING;
+        /* Store everything in the new event and reset
+         * controld_globals.fsa_actions
+         */
+        with_actions |= controld_globals.fsa_actions;
+        controld_globals.fsa_actions = A_NOTHING;
     }
 
     last_data_id++;
