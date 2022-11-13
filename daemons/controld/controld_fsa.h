@@ -502,7 +502,6 @@ extern cib_t *fsa_cib_conn;
 extern char *fsa_our_uname;
 extern char *fsa_our_uuid;
 extern char *fsa_pe_ref;        // Last invocation of the scheduler
-extern char *fsa_our_dc_version;
 extern GList *fsa_message_queue;
 
 extern crm_trigger_t *fsa_source;

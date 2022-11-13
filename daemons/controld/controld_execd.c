@@ -532,7 +532,7 @@ build_parameter_list(const lrmd_event_data_t *op,
      * what scheduler does with calculate_secure_digest().
      */
     if (param_type == ra_param_private
-        && compare_version(fsa_our_dc_version, "3.16.0") >= 0) {
+        && compare_version(controld_globals.dc_version, "3.16.0") >= 0) {
         g_hash_table_foreach(op->params, hash2field, *result);
         pcmk__filter_op_for_digest(*result);
     }
@@ -2706,7 +2706,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
     CRM_CHECK(op->rsc_id != NULL, return);
 
     // Remap new status codes for older DCs
-    if (compare_version(fsa_our_dc_version, "3.2.0") < 0) {
+    if (compare_version(controld_globals.dc_version, "3.2.0") < 0) {
         switch (op->op_status) {
             case PCMK_EXEC_NOT_CONNECTED:
                 lrmd__set_result(op, PCMK_OCF_CONNECTION_DIED,

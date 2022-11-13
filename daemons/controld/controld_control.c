@@ -248,12 +248,14 @@ crmd_exit(crm_exit_t exit_code)
     te_cleanup_stonith_history_sync(NULL, TRUE);
     controld_free_sched_timer();
 
-    free(fsa_our_dc_version); fsa_our_dc_version = NULL;
     free(fsa_our_uname); fsa_our_uname = NULL;
     free(fsa_our_uuid); fsa_our_uuid = NULL;
 
     free(controld_globals.dc_name);
     controld_globals.dc_name = NULL;
+
+    free(controld_globals.dc_version);
+    controld_globals.dc_version = NULL;
 
     free(controld_globals.cluster_name);
     controld_globals.cluster_name = NULL;

@@ -38,6 +38,9 @@ typedef struct {
     //! Designated controller name
     char *dc_name;
 
+    //! Designated controller's Pacemaker version
+    char *dc_version;
+
     //! Main event loop
     GMainLoop *mainloop;
 } controld_globals_t;

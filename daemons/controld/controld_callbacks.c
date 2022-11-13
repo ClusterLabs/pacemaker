@@ -227,7 +227,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                  * the only way to avoid fencing older DCs is to leave the
                  * transient attributes intact until it rejoins.
                  */
-                if (compare_version(fsa_our_dc_version, "3.0.9") > 0) {
+                if (compare_version(controld_globals.dc_version, "3.0.9") > 0) {
                     controld_delete_node_state(node->uname,
                                                controld_section_attrs,
                                                cib_scope_local);
