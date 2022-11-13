@@ -31,7 +31,6 @@ extern gboolean crm_connect_corosync(crm_cluster_t * cluster);
 void crm_shutdown(int nsig);
 gboolean crm_read_options(gpointer user_data);
 
-gboolean fsa_has_quorum = FALSE;
 crm_trigger_t *fsa_source = NULL;
 crm_trigger_t *config_read = NULL;
 bool no_quorum_suicide_escalation = FALSE;

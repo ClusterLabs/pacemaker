@@ -838,7 +838,9 @@ handle_node_info_request(const xmlNode *msg)
     crm_xml_add(reply_data, XML_PING_ATTR_SYSFROM, CRM_SYSTEM_CRMD);
 
     // Add whether current partition has quorum
-    pcmk__xe_set_bool_attr(reply_data, XML_ATTR_HAVE_QUORUM, fsa_has_quorum);
+    pcmk__xe_set_bool_attr(reply_data, XML_ATTR_HAVE_QUORUM,
+                           pcmk_is_set(controld_globals.flags,
+                                       controld_has_quorum));
 
     // Check whether client requested node info by ID and/or name
     crm_element_value_int(msg, XML_ATTR_ID, &node_id);

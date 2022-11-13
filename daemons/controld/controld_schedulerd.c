@@ -470,7 +470,9 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     pcmk__refresh_node_caches_from_cib(output);
 
     crm_xml_add(output, XML_ATTR_DC_UUID, fsa_our_uuid);
-    crm_xml_add_int(output, XML_ATTR_HAVE_QUORUM, fsa_has_quorum);
+    pcmk__xe_set_bool_attr(output, XML_ATTR_HAVE_QUORUM,
+                           pcmk_is_set(controld_globals.flags,
+                                       controld_has_quorum));
 
     force_local_option(output, XML_ATTR_HAVE_WATCHDOG, pcmk__btoa(watchdog));
 
@@ -488,7 +490,9 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     } else {
         CRM_ASSERT(ref != NULL);
         controld_expect_sched_reply(ref);
-        crm_debug("Invoking the scheduler: query=%d, ref=%s, seq=%llu, quorate=%d",
-                  fsa_pe_query, fsa_pe_ref, crm_peer_seq, fsa_has_quorum);
+        crm_debug("Invoking the scheduler: query=%d, ref=%s, seq=%llu, "
+                  "quorate=%s", fsa_pe_query, fsa_pe_ref, crm_peer_seq,
+                  pcmk__btoa(pcmk_is_set(controld_globals.flags,
+                                         controld_has_quorum)));
     }
 }

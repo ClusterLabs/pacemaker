@@ -403,7 +403,9 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
         pcmk__panic(__func__);
     }
 
-    if (AM_I_DC && (force_update || fsa_has_quorum != quorum)) {
+    if (AM_I_DC
+        && ((pcmk_is_set(controld_globals.flags, controld_has_quorum) != quorum)
+            || force_update)) {
         int call_id = 0;
         xmlNode *update = NULL;
         int call_options = cib_scope_local | cib_quorum_override;
@@ -440,5 +442,10 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
                              NULL);
         }
     }
-    fsa_has_quorum = quorum;
+
+    if (quorum) {
+        controld_globals.flags |= controld_has_quorum;
+    } else {
+        controld_globals.flags &= ~controld_has_quorum;
+    }
 }

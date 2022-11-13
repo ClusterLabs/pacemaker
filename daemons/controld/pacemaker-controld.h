@@ -48,6 +48,9 @@ enum controld_flags {
 
     //! The local node has been in a quorate partition at some point
     controld_ever_had_quorum        = (1 << 2),
+
+    //! The local node is currently in a quorate partition
+    controld_has_quorum             = (1 << 3),
 };
 
 void do_cib_updated(const char *event, xmlNode * msg);
