@@ -41,6 +41,9 @@ typedef struct {
     //! FSA input register contents (group of \p R_* flags)
     uint64_t fsa_input_register;
 
+    //! FSA message queue
+    GList *fsa_message_queue;
+
 
     // Other
 

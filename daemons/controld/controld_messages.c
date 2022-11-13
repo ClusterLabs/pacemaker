@@ -22,7 +22,6 @@
 
 #include <pacemaker-controld.h>
 
-GList *fsa_message_queue = NULL;
 extern void crm_shutdown(int nsig);
 
 static enum crmd_fsa_input handle_message(xmlNode *msg,
@@ -61,7 +60,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
                        void *data, uint64_t with_actions,
                        gboolean prepend, const char *raised_from)
 {
-    unsigned old_len = g_list_length(fsa_message_queue);
+    unsigned old_len = g_list_length(controld_globals.fsa_message_queue);
     fsa_data_t *fsa_data = NULL;
 
     if (raised_from == NULL) {
@@ -151,17 +150,19 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
 
     /* make sure to free it properly later */
     if (prepend) {
-        fsa_message_queue = g_list_prepend(fsa_message_queue, fsa_data);
+        controld_globals.fsa_message_queue
+            = g_list_prepend(controld_globals.fsa_message_queue, fsa_data);
     } else {
-        fsa_message_queue = g_list_append(fsa_message_queue, fsa_data);
+        controld_globals.fsa_message_queue
+            = g_list_append(controld_globals.fsa_message_queue, fsa_data);
     }
 
     crm_trace("FSA message queue length is %d",
-              g_list_length(fsa_message_queue));
+              g_list_length(controld_globals.fsa_message_queue));
 
     /* fsa_dump_queue(LOG_TRACE); */
 
-    if (old_len == g_list_length(fsa_message_queue)) {
+    if (old_len == g_list_length(controld_globals.fsa_message_queue)) {
         crm_err("Couldn't add message to the queue");
     }
 
@@ -174,10 +175,10 @@ void
 fsa_dump_queue(int log_level)
 {
     int offset = 0;
-    GList *lpc = NULL;
 
-    for (lpc = fsa_message_queue; lpc != NULL; lpc = lpc->next) {
-        fsa_data_t *data = (fsa_data_t *) lpc->data;
+    for (GList *iter = controld_globals.fsa_message_queue; iter != NULL;
+         iter = iter->next) {
+        fsa_data_t *data = (fsa_data_t *) iter->data;
 
         do_crm_log_unlikely(log_level,
                             "queue[%d.%d]: input %s raised by %s(%p.%d)\t(cause=%s)",
@@ -243,9 +244,11 @@ delete_fsa_input(fsa_data_t * fsa_data)
 fsa_data_t *
 get_message(void)
 {
-    fsa_data_t *message = g_list_nth_data(fsa_message_queue, 0);
+    fsa_data_t *message
+        = (fsa_data_t *) controld_globals.fsa_message_queue->data;
 
-    fsa_message_queue = g_list_remove(fsa_message_queue, message);
+    controld_globals.fsa_message_queue
+        = g_list_remove(controld_globals.fsa_message_queue, message);
     crm_trace("Processing input %d", message->id);
     return message;
 }

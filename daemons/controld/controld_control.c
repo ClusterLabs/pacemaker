@@ -152,7 +152,6 @@ crmd_fast_exit(crm_exit_t exit_code)
 crm_exit_t
 crmd_exit(crm_exit_t exit_code)
 {
-    GList *gIter = NULL;
     GMainLoop *mloop = controld_globals.mainloop;
 
     static bool in_progress = FALSE;
@@ -207,8 +206,9 @@ crmd_exit(crm_exit_t exit_code)
 
 /* Clean up as much memory as possible for valgrind */
 
-    for (gIter = fsa_message_queue; gIter != NULL; gIter = gIter->next) {
-        fsa_data_t *fsa_data = gIter->data;
+    for (GList *iter = controld_globals.fsa_message_queue; iter != NULL;
+         iter = iter->next) {
+        fsa_data_t *fsa_data = (fsa_data_t *) iter->data;
 
         crm_info("Dropping %s: [ state=%s cause=%s origin=%s ]",
                  fsa_input2string(fsa_data->fsa_input),
@@ -218,7 +218,9 @@ crmd_exit(crm_exit_t exit_code)
     }
 
     controld_clear_fsa_input_flags(R_MEMBERSHIP);
-    g_list_free(fsa_message_queue); fsa_message_queue = NULL;
+
+    g_list_free(controld_globals.fsa_message_queue);
+    controld_globals.fsa_message_queue = NULL;
 
     controld_election_fini();
 

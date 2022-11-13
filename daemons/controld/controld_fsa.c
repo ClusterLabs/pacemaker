@@ -197,7 +197,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
     fsa_dump_actions(controld_globals.fsa_actions, "Initial");
 
     controld_clear_global_flags(controld_fsa_is_stalled);
-    if ((fsa_message_queue == NULL)
+    if ((controld_globals.fsa_message_queue == NULL)
         && (controld_globals.fsa_actions != A_NOTHING)) {
         /* fake the first message so we can get into the loop */
         fsa_data = calloc(1, sizeof(fsa_data_t));
@@ -205,12 +205,14 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
         fsa_data->fsa_cause = C_FSA_INTERNAL;
         fsa_data->origin = __func__;
         fsa_data->data_type = fsa_dt_none;
-        fsa_message_queue = g_list_append(fsa_message_queue, fsa_data);
+        controld_globals.fsa_message_queue
+            = g_list_append(controld_globals.fsa_message_queue, fsa_data);
         fsa_data = NULL;
     }
-    while ((fsa_message_queue != NULL)
+    while ((controld_globals.fsa_message_queue != NULL)
            && !pcmk_is_set(controld_globals.flags, controld_fsa_is_stalled)) {
-        crm_trace("Checking messages (%d remaining)", g_list_length(fsa_message_queue));
+        crm_trace("Checking messages (%d remaining)",
+                  g_list_length(controld_globals.fsa_message_queue));
 
         fsa_data = get_message();
         if(fsa_data == NULL) {
@@ -280,11 +282,12 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
         fsa_data = NULL;
     }
 
-    if ((fsa_message_queue != NULL)
+    if ((controld_globals.fsa_message_queue != NULL)
         || (controld_globals.fsa_actions != A_NOTHING)
         || pcmk_is_set(controld_globals.flags, controld_fsa_is_stalled)) {
+
         crm_debug("Exiting the FSA: queue=%d, fsa_actions=%#llx, stalled=%s",
-                  g_list_length(fsa_message_queue),
+                  g_list_length(controld_globals.fsa_message_queue),
                   (unsigned long long) controld_globals.fsa_actions,
                   pcmk__btoa(pcmk_is_set(controld_globals.flags,
                                          controld_fsa_is_stalled)));

@@ -494,7 +494,6 @@ struct fsa_data_s {
 extern cib_t *fsa_cib_conn;
 
 extern char *fsa_pe_ref;        // Last invocation of the scheduler
-extern GList *fsa_message_queue;
 
 extern unsigned long long saved_ccm_membership_id;
 

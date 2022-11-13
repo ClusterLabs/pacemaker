@@ -374,8 +374,10 @@ crmd_cib_connection_destroy(gpointer user_data)
 gboolean
 crm_fsa_trigger(gpointer user_data)
 {
-    crm_trace("Invoked (queue len: %d)", g_list_length(fsa_message_queue));
+    crm_trace("Invoked (queue len: %d)",
+              g_list_length(controld_globals.fsa_message_queue));
     s_crmd_fsa(C_FSA_INTERNAL);
-    crm_trace("Exited  (queue len: %d)", g_list_length(fsa_message_queue));
+    crm_trace("Exited  (queue len: %d)",
+              g_list_length(controld_globals.fsa_message_queue));
     return TRUE;
 }
