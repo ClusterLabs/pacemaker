@@ -4605,17 +4605,17 @@ Resources colocated with gr2:
 =#=#=#= End test: Show resource digests with overrides - OK (0) =#=#=#=
 * Passed: crm_resource   - Show resource digests with overrides
 =#=#=#= Begin test: Show resource operations =#=#=#=
-rsc1	(ocf:pacemaker:Dummy):	 Started: rsc1_monitor_0 (node=node4, call=136, rc=7, last-rc-change=Sun Nov 22 21:22:53 2020, exec=28ms): complete
-Fencing	(stonith:fence_xvm):	 Started: Fencing_monitor_0 (node=node4, call=5, rc=7, last-rc-change=Sun Nov 22 21:17:07 2020, exec=2ms): complete
-rsc1	(ocf:pacemaker:Dummy):	 Started: rsc1_monitor_0 (node=node2, call=101, rc=7, last-rc-change=Sun Nov 22 21:22:53 2020, exec=45ms): complete
-Fencing	(stonith:fence_xvm):	 Started: Fencing_monitor_0 (node=node2, call=5, rc=7, last-rc-change=Sun Nov 22 21:17:07 2020, exec=4ms): complete
-Fencing	(stonith:fence_xvm):	 Started: Fencing_monitor_0 (node=node3, call=5, rc=7, last-rc-change=Sun Nov 22 21:17:07 2020, exec=24ms): complete
-rsc1	(ocf:pacemaker:Dummy):	 Started: rsc1_monitor_0 (node=node5, call=99, rc=193, last-rc-change=Sun Nov 22 21:22:53 2020, exec=27ms): pending
-Fencing	(stonith:fence_xvm):	 Started: Fencing_monitor_0 (node=node5, call=5, rc=7, last-rc-change=Sun Nov 22 21:17:07 2020, exec=14ms): complete
-rsc1	(ocf:pacemaker:Dummy):	 Started: rsc1_start_0 (node=node1, call=104, rc=0, last-rc-change=Sun Nov 22 21:45:16 2020, exec=22ms): complete
-rsc1	(ocf:pacemaker:Dummy):	 Started: rsc1_monitor_10000 (node=node1, call=106, rc=0, last-rc-change=Sun Nov 22 21:45:16 2020, exec=20ms): complete
-Fencing	(stonith:fence_xvm):	 Started: Fencing_start_0 (node=node1, call=10, rc=0, last-rc-change=Sun Nov 22 21:17:07 2020, exec=59ms): complete
-Fencing	(stonith:fence_xvm):	 Started: Fencing_monitor_120000 (node=node1, call=12, rc=0, last-rc-change=Sun Nov 22 21:17:07 2020, exec=70ms): complete
+rsc1	(ocf:pacemaker:Dummy):	 Started: rsc1_monitor_0 (node=node4, call=136, rc=7, exec=28ms): complete
+Fencing	(stonith:fence_xvm):	 Started: Fencing_monitor_0 (node=node4, call=5, rc=7, exec=2ms): complete
+rsc1	(ocf:pacemaker:Dummy):	 Started: rsc1_monitor_0 (node=node2, call=101, rc=7, exec=45ms): complete
+Fencing	(stonith:fence_xvm):	 Started: Fencing_monitor_0 (node=node2, call=5, rc=7, exec=4ms): complete
+Fencing	(stonith:fence_xvm):	 Started: Fencing_monitor_0 (node=node3, call=5, rc=7, exec=24ms): complete
+rsc1	(ocf:pacemaker:Dummy):	 Started: rsc1_monitor_0 (node=node5, call=99, rc=193, exec=27ms): pending
+Fencing	(stonith:fence_xvm):	 Started: Fencing_monitor_0 (node=node5, call=5, rc=7, exec=14ms): complete
+rsc1	(ocf:pacemaker:Dummy):	 Started: rsc1_start_0 (node=node1, call=104, rc=0, exec=22ms): complete
+rsc1	(ocf:pacemaker:Dummy):	 Started: rsc1_monitor_10000 (node=node1, call=106, rc=0, exec=20ms): complete
+Fencing	(stonith:fence_xvm):	 Started: Fencing_start_0 (node=node1, call=10, rc=0, exec=59ms): complete
+Fencing	(stonith:fence_xvm):	 Started: Fencing_monitor_120000 (node=node1, call=12, rc=0, exec=70ms): complete
 =#=#=#= End test: Show resource operations - OK (0) =#=#=#=
 * Passed: crm_resource   - Show resource operations
 =#=#=#= Begin test: Show resource operations (XML) =#=#=#=
