@@ -106,6 +106,8 @@ do_cl_join_offer_respond(long long action,
                          enum crmd_fsa_state cur_state,
                          enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
+    cib_t *cib_conn = controld_globals.cib_conn;
+
     ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
     const char *welcome_from;
     const char *join_id;
@@ -141,8 +143,8 @@ do_cl_join_offer_respond(long long action,
 
     update_dc_expected(input->msg);
 
-    query_call_id =
-        fsa_cib_conn->cmds->query(fsa_cib_conn, NULL, NULL, cib_scope_local | cib_no_children);
+    query_call_id = cib_conn->cmds->query(cib_conn, NULL, NULL,
+                                          cib_scope_local|cib_no_children);
     fsa_register_cib_callback(query_call_id, FALSE, strdup(join_id), join_query_callback);
     crm_trace("Registered join query callback: %d", query_call_id);
 
@@ -198,18 +200,20 @@ static void
 set_join_state(const char * start_state)
 {
     if (pcmk__str_eq(start_state, "standby", pcmk__str_casei)) {
-        crm_notice("Forcing node %s to join in %s state per configured environment",
-                   controld_globals.our_nodename, start_state);
-        cib__update_node_attr(logger_out, fsa_cib_conn, cib_sync_call,
-                              XML_CIB_TAG_NODES, controld_globals.our_uuid,
-                              NULL, NULL, NULL, "standby", "on", NULL, NULL);
+        crm_notice("Forcing node %s to join in %s state per configured "
+                   "environment", controld_globals.our_nodename, start_state);
+        cib__update_node_attr(logger_out, controld_globals.cib_conn,
+                              cib_sync_call, XML_CIB_TAG_NODES,
+                              controld_globals.our_uuid, NULL, NULL, NULL,
+                              "standby", "on", NULL, NULL);
 
     } else if (pcmk__str_eq(start_state, "online", pcmk__str_casei)) {
-        crm_notice("Forcing node %s to join in %s state per configured environment",
-                   controld_globals.our_nodename, start_state);
-        cib__update_node_attr(logger_out, fsa_cib_conn, cib_sync_call,
-                              XML_CIB_TAG_NODES, controld_globals.our_uuid,
-                              NULL, NULL, NULL, "standby", "off", NULL, NULL);
+        crm_notice("Forcing node %s to join in %s state per configured "
+                   "environment", controld_globals.our_nodename, start_state);
+        cib__update_node_attr(logger_out, controld_globals.cib_conn,
+                              cib_sync_call, XML_CIB_TAG_NODES,
+                              controld_globals.our_uuid, NULL, NULL, NULL,
+                              "standby", "off", NULL, NULL);
 
     } else if (pcmk__str_eq(start_state, "default", pcmk__str_casei)) {
         crm_debug("Not forcing a starting state on node %s",

@@ -103,7 +103,9 @@ handle_disconnect(void)
          * 5s is up, whichever comes first.
          *
          */
-        rc = fsa_cib_conn->cmds->query(fsa_cib_conn, NULL, NULL, cib_scope_local);
+        rc = controld_globals.cib_conn->cmds->query(controld_globals.cib_conn,
+                                                    NULL, NULL,
+                                                    cib_scope_local);
         fsa_register_cib_callback(rc, FALSE, uuid_str, save_cib_contents);
 
     } else {
@@ -322,6 +324,8 @@ do_pe_invoke(long long action,
              enum crmd_fsa_state cur_state,
              enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
+    cib_t *cib_conn = controld_globals.cib_conn;
+
     if (AM_I_DC == FALSE) {
         crm_err("Not invoking scheduler because not DC: %s",
                 fsa_action2string(action));
@@ -355,7 +359,7 @@ do_pe_invoke(long long action,
         return;
     }
 
-    fsa_pe_query = fsa_cib_conn->cmds->query(fsa_cib_conn, NULL, NULL, cib_scope_local);
+    fsa_pe_query = cib_conn->cmds->query(cib_conn, NULL, NULL, cib_scope_local);
 
     crm_debug("Query %d: Requesting the current CIB: %s", fsa_pe_query,
               fsa_state2string(controld_globals.fsa_state));

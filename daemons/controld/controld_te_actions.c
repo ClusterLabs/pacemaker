@@ -243,6 +243,8 @@ static void
 controld_record_action_event(pcmk__graph_action_t *action,
                              lrmd_event_data_t *op)
 {
+    cib_t *cib_conn = controld_globals.cib_conn;
+
     xmlNode *state = NULL;
     xmlNode *rsc = NULL;
     xmlNode *action_rsc = NULL;
@@ -295,7 +297,8 @@ controld_record_action_event(pcmk__graph_action_t *action,
     pcmk__create_history_xml(rsc, op, CRM_FEATURE_SET, target_rc, target,
                              __func__);
 
-    rc = fsa_cib_conn->cmds->update(fsa_cib_conn, XML_CIB_TAG_STATUS, state, call_options);
+    rc = cib_conn->cmds->update(cib_conn, XML_CIB_TAG_STATUS, state,
+                                call_options);
     fsa_register_cib_callback(rc, FALSE, NULL, cib_action_updated);
     free_xml(state);
 

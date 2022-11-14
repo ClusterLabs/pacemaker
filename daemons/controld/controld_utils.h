@@ -13,41 +13,46 @@
 #  include <crm/crm.h>
 #  include <crm/common/xml.h>
 #  include <crm/cib/internal.h>     // PCMK__CIB_REQUEST_MODIFY
-#  include <controld_fsa.h>         // fsa_cib_conn
 #  include <controld_alerts.h>
+#  include <controld_globals.h>
 
 #  define FAKE_TE_ID	"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
 
-#  define fsa_cib_update(section, data, options, call_id, user_name)	\
-	if(fsa_cib_conn != NULL) {					\
-	    call_id = cib_internal_op(                                  \
-        fsa_cib_conn, PCMK__CIB_REQUEST_MODIFY, NULL, section, data,    \
-		NULL, options, user_name);				\
-									\
-	} else {							\
-		crm_err("No CIB manager connection available");			\
-	}
+#  define fsa_cib_update(section, data, options, call_id, user_name)        \
+    if (controld_globals.cib_conn != NULL) {                                \
+        call_id = cib_internal_op(controld_globals.cib_conn,                \
+                                  PCMK__CIB_REQUEST_MODIFY, NULL, section,  \
+                                  data, NULL, options, user_name);          \
+                                                                            \
+    } else {                                                                \
+        crm_err("No CIB manager connection available");                     \
+    }
 
 static inline void
 fsa_cib_anon_update(const char *section, xmlNode *data) {
-    if (fsa_cib_conn == NULL) {
+    if (controld_globals.cib_conn == NULL) {
         crm_err("No CIB connection available");
     } else {
-        int opts = cib_scope_local | cib_quorum_override | cib_can_create;
+        const int opts = cib_scope_local|cib_quorum_override|cib_can_create;
 
-        fsa_cib_conn->cmds->modify(fsa_cib_conn, section, data, opts);
+        controld_globals.cib_conn->cmds->modify(controld_globals.cib_conn,
+                                                section, data, opts);
     }
 }
 
 static inline void
 fsa_cib_anon_update_discard_reply(const char *section, xmlNode *data) {
-    if (fsa_cib_conn == NULL) {
+    if (controld_globals.cib_conn == NULL) {
         crm_err("No CIB connection available");
     } else {
-        int opts = cib_scope_local | cib_quorum_override | cib_can_create | cib_discard_reply;
+        const int opts = cib_scope_local
+                         |cib_quorum_override
+                         |cib_can_create
+                         |cib_discard_reply;
 
-        fsa_cib_conn->cmds->modify(fsa_cib_conn, section, data, opts);
+        controld_globals.cib_conn->cmds->modify(controld_globals.cib_conn,
+                                                section, data, opts);
     }
 }
 
@@ -115,11 +120,12 @@ const char *get_node_id(xmlNode *lrm_rsc_op);
 /* Convenience macro for registering a CIB callback
  * (assumes that data can be freed with free())
  */
-#  define fsa_register_cib_callback(id, flag, data, fn) do {            \
-    CRM_ASSERT(fsa_cib_conn);                                           \
-    fsa_cib_conn->cmds->register_callback_full(                         \
-        fsa_cib_conn, id, cib_op_timeout(),                             \
-            flag, data, #fn, fn, free);                                 \
+#  define fsa_register_cib_callback(id, flag, data, fn) do {                \
+    cib_t *cib_conn = controld_globals.cib_conn;                            \
+                                                                            \
+    CRM_ASSERT(cib_conn != NULL);                                           \
+    cib_conn->cmds->register_callback_full(cib_conn, id, cib_op_timeout(),  \
+                                           flag, data, #fn, fn, free);      \
     } while(0)
 
 #endif

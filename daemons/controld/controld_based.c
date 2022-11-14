@@ -67,19 +67,24 @@ do_cib_replaced(const char *event, xmlNode * msg)
 void
 controld_disconnect_cib_manager(void)
 {
-    CRM_ASSERT(fsa_cib_conn != NULL);
+    cib_t *cib_conn = controld_globals.cib_conn;
+
+    CRM_ASSERT(cib_conn != NULL);
 
     crm_info("Disconnecting from the CIB manager");
 
     controld_clear_fsa_input_flags(R_CIB_CONNECTED);
 
-    fsa_cib_conn->cmds->del_notify_callback(fsa_cib_conn, T_CIB_REPLACE_NOTIFY, do_cib_replaced);
-    fsa_cib_conn->cmds->del_notify_callback(fsa_cib_conn, T_CIB_DIFF_NOTIFY, do_cib_updated);
-    cib_free_callbacks(fsa_cib_conn);
-    if (fsa_cib_conn->state != cib_disconnected) {
-        fsa_cib_conn->cmds->set_secondary(fsa_cib_conn,
-                                          cib_scope_local|cib_discard_reply);
-        fsa_cib_conn->cmds->signoff(fsa_cib_conn);
+    cib_conn->cmds->del_notify_callback(cib_conn, T_CIB_REPLACE_NOTIFY,
+                                        do_cib_replaced);
+    cib_conn->cmds->del_notify_callback(cib_conn, T_CIB_DIFF_NOTIFY,
+                                        do_cib_updated);
+    cib_free_callbacks(cib_conn);
+
+    if (cib_conn->state != cib_disconnected) {
+        cib_conn->cmds->set_secondary(cib_conn,
+                                      cib_scope_local|cib_discard_reply);
+        cib_conn->cmds->signoff(cib_conn);
     }
 
     crm_notice("Disconnected from the CIB manager");
@@ -92,75 +97,83 @@ do_cib_control(long long action,
                enum crmd_fsa_state cur_state,
                enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    CRM_ASSERT(fsa_cib_conn != NULL);
+    cib_t *cib_conn = controld_globals.cib_conn;
 
-    if (action & A_CIB_STOP) {
+    void (*dnotify_fn) (gpointer user_data) = crmd_cib_connection_destroy;
+    void (*replace_cb) (const char *event, xmlNodePtr msg) = do_cib_replaced;
+    void (*update_cb) (const char *event, xmlNodePtr msg) = do_cib_updated;
 
-        if (fsa_cib_conn->state != cib_disconnected && last_resource_update != 0) {
-            crm_info("Waiting for resource update %d to complete", last_resource_update);
+    int rc = pcmk_ok;
+
+    CRM_ASSERT(cib_conn != NULL);
+
+    if (pcmk_is_set(action, A_CIB_STOP)) {
+        if ((cib_conn->state != cib_disconnected)
+            && (last_resource_update != 0)) {
+
+            crm_info("Waiting for resource update %d to complete",
+                     last_resource_update);
             crmd_fsa_stall(FALSE);
             return;
         }
-
         controld_disconnect_cib_manager();
-
     }
 
-    if (action & A_CIB_START) {
-        int rc = pcmk_ok;
+    if (!pcmk_is_set(action, A_CIB_START)) {
+        return;
+    }
 
-        if (cur_state == S_STOPPING) {
-            crm_err("Ignoring request to connect to the CIB manager after shutdown");
-            return;
-        }
+    if (cur_state == S_STOPPING) {
+        crm_err("Ignoring request to connect to the CIB manager after "
+                "shutdown");
+        return;
+    }
 
-        rc = fsa_cib_conn->cmds->signon(fsa_cib_conn, CRM_SYSTEM_CRMD, cib_command_nonblocking);
+    rc = cib_conn->cmds->signon(cib_conn, CRM_SYSTEM_CRMD,
+                                cib_command_nonblocking);
 
-        if (rc != pcmk_ok) {
-            /* a short wait that usually avoids stalling the FSA */
-            sleep(1);
-            rc = fsa_cib_conn->cmds->signon(fsa_cib_conn, CRM_SYSTEM_CRMD, cib_command_nonblocking);
-        }
+    if (rc != pcmk_ok) {
+        // A short wait that usually avoids stalling the FSA
+        sleep(1);
+        rc = cib_conn->cmds->signon(cib_conn, CRM_SYSTEM_CRMD,
+                                    cib_command_nonblocking);
+    }
 
-        if (rc != pcmk_ok) {
-            crm_info("Could not connect to the CIB manager: %s", pcmk_strerror(rc));
+    if (rc != pcmk_ok) {
+        crm_info("Could not connect to the CIB manager: %s", pcmk_strerror(rc));
 
-        } else if (pcmk_ok !=
-                   fsa_cib_conn->cmds->set_connection_dnotify(fsa_cib_conn,
-                                                              crmd_cib_connection_destroy)) {
-            crm_err("Could not set dnotify callback");
+    } else if (cib_conn->cmds->set_connection_dnotify(cib_conn,
+                                                      dnotify_fn) != pcmk_ok) {
+        crm_err("Could not set dnotify callback");
 
-        } else if (pcmk_ok !=
-                   fsa_cib_conn->cmds->add_notify_callback(fsa_cib_conn, T_CIB_REPLACE_NOTIFY,
-                                                           do_cib_replaced)) {
-            crm_err("Could not set CIB notification callback (replace)");
+    } else if (cib_conn->cmds->add_notify_callback(cib_conn,
+                                                   T_CIB_REPLACE_NOTIFY,
+                                                   replace_cb) != pcmk_ok) {
+        crm_err("Could not set CIB notification callback (replace)");
 
-        } else if (pcmk_ok !=
-                   fsa_cib_conn->cmds->add_notify_callback(fsa_cib_conn, T_CIB_DIFF_NOTIFY,
-                                                           do_cib_updated)) {
-            crm_err("Could not set CIB notification callback (update)");
+    } else if (cib_conn->cmds->add_notify_callback(cib_conn,
+                                                   T_CIB_DIFF_NOTIFY,
+                                                   update_cb) != pcmk_ok) {
+        crm_err("Could not set CIB notification callback (update)");
+
+    } else {
+        controld_set_fsa_input_flags(R_CIB_CONNECTED);
+        cib_retries = 0;
+    }
+
+    if (!pcmk_is_set(controld_globals.fsa_input_register, R_CIB_CONNECTED)) {
+        cib_retries++;
+
+        if (cib_retries < 30) {
+            crm_warn("Couldn't complete CIB registration %d times... "
+                     "pause and retry", cib_retries);
+            controld_start_timer(wait_timer);
+            crmd_fsa_stall(FALSE);
 
         } else {
-            controld_set_fsa_input_flags(R_CIB_CONNECTED);
-            cib_retries = 0;
-        }
-
-        if (!pcmk_is_set(controld_globals.fsa_input_register,
-                         R_CIB_CONNECTED)) {
-
-            cib_retries++;
-            crm_warn("Couldn't complete CIB registration %d"
-                     " times... pause and retry", cib_retries);
-
-            if (cib_retries < 30) {
-                controld_start_timer(wait_timer);
-                crmd_fsa_stall(FALSE);
-
-            } else {
-                crm_err("Could not complete CIB"
-                        " registration  %d times..." " hard error", cib_retries);
-                register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
-            }
+            crm_err("Could not complete CIB registration %d times... "
+                    "hard error", cib_retries);
+            register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
         }
     }
 }
@@ -249,6 +262,8 @@ void
 controld_delete_node_state(const char *uname, enum controld_section_e section,
                            int options)
 {
+    cib_t *cib_conn = controld_globals.cib_conn;
+
     char *xpath = NULL;
     char *desc = NULL;
 
@@ -279,7 +294,7 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
             break;
     }
 
-    if (fsa_cib_conn == NULL) {
+    if (cib_conn == NULL) {
         crm_warn("Unable to delete %s: no CIB connection", desc);
         free(desc);
     } else {
@@ -287,7 +302,7 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
 
         cib__set_call_options(options, "node state deletion",
                               cib_quorum_override|cib_xpath|cib_multiple);
-        call_id = fsa_cib_conn->cmds->remove(fsa_cib_conn, xpath, NULL, options);
+        call_id = cib_conn->cmds->remove(cib_conn, xpath, NULL, options);
         crm_info("Deleting %s (via CIB call %d) " CRM_XS " xpath=%s",
                  desc, call_id, xpath);
         fsa_register_cib_callback(call_id, FALSE, desc, cib_delete_callback);
@@ -326,7 +341,7 @@ controld_delete_resource_history(const char *rsc_id, const char *node,
     CRM_CHECK((rsc_id != NULL) && (node != NULL), return EINVAL);
 
     desc = crm_strdup_printf("resource history for %s on %s", rsc_id, node);
-    if (fsa_cib_conn == NULL) {
+    if (controld_globals.cib_conn == NULL) {
         crm_err("Unable to clear %s: no CIB connection", desc);
         free(desc);
         return ENOTCONN;
@@ -334,8 +349,9 @@ controld_delete_resource_history(const char *rsc_id, const char *node,
 
     // Ask CIB to delete the entry
     xpath = crm_strdup_printf(XPATH_RESOURCE_HISTORY, node, rsc_id);
-    rc = cib_internal_op(fsa_cib_conn, PCMK__CIB_REQUEST_DELETE, NULL, xpath,
-                         NULL, NULL, call_options|cib_xpath, user_name);
+    rc = cib_internal_op(controld_globals.cib_conn, PCMK__CIB_REQUEST_DELETE,
+                         NULL, xpath, NULL, NULL, call_options|cib_xpath,
+                         user_name);
 
     if (rc < 0) {
         rc = pcmk_legacy2rc(rc);

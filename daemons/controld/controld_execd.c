@@ -895,8 +895,9 @@ controld_trigger_delete_refresh(const char *from_sys, const char *rsc_id)
         char *now_s = crm_strdup_printf("%lld", (long long) time(NULL));
 
         crm_debug("Triggering a refresh after %s cleaned %s", from_sys, rsc_id);
-        cib__update_node_attr(logger_out, fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
-                              NULL, NULL, NULL, NULL, "last-lrm-refresh", now_s, NULL, NULL);
+        cib__update_node_attr(logger_out, controld_globals.cib_conn, cib_none,
+                              XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
+                              "last-lrm-refresh", now_s, NULL, NULL);
         free(now_s);
     }
 }
@@ -1005,8 +1006,9 @@ erase_lrm_history_by_op(const lrmd_event_data_t *op)
     crm_debug("Erasing resource operation history for " PCMK__OP_FMT " (call=%d)",
               op->rsc_id, op->op_type, op->interval_ms, op->call_id);
 
-    fsa_cib_conn->cmds->remove(fsa_cib_conn, XML_CIB_TAG_STATUS, xml_top,
-                               cib_quorum_override);
+    controld_globals.cib_conn->cmds->remove(controld_globals.cib_conn,
+                                            XML_CIB_TAG_STATUS, xml_top,
+                                            cib_quorum_override);
 
     crm_log_xml_trace(xml_top, "op:cancel");
     free_xml(xml_top);
@@ -1066,8 +1068,9 @@ erase_lrm_history_by_id(const lrm_state_t *lrm_state, const char *rsc_id,
 
     crm_debug("Erasing resource operation history for %s on %s (call=%d)",
               key, rsc_id, call_id);
-    fsa_cib_conn->cmds->remove(fsa_cib_conn, op_xpath, NULL,
-                               cib_quorum_override | cib_xpath);
+    controld_globals.cib_conn->cmds->remove(controld_globals.cib_conn, op_xpath,
+                                            NULL,
+                                            cib_quorum_override|cib_xpath);
     free(op_xpath);
 }
 

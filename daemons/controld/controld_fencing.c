@@ -222,15 +222,21 @@ send_stonith_update(pcmk__graph_action_t *action, const char *target,
     /* Force our known ID */
     crm_xml_add(node_state, XML_ATTR_UUID, uuid);
 
-    rc = fsa_cib_conn->cmds->update(fsa_cib_conn, XML_CIB_TAG_STATUS, node_state,
-                                    cib_quorum_override | cib_scope_local | cib_can_create);
+    rc = controld_globals.cib_conn->cmds->update(controld_globals.cib_conn,
+                                                 XML_CIB_TAG_STATUS, node_state,
+                                                 cib_quorum_override
+                                                 |cib_scope_local
+                                                 |cib_can_create);
 
     /* Delay processing the trigger until the update completes */
     crm_debug("Sending fencing update %d for %s", rc, target);
     fsa_register_cib_callback(rc, FALSE, strdup(target), cib_fencing_updated);
 
-    /* Make sure it sticks */
-    /* fsa_cib_conn->cmds->bump_epoch(fsa_cib_conn, cib_quorum_override|cib_scope_local);    */
+    // Make sure it sticks
+    /* controld_globals.cib_conn->cmds->bump_epoch(controld_globals.cib_conn,
+     *                                             cib_quorum_override
+     *                                             |cib_scope_local);
+     */
 
     controld_delete_node_state(peer->uname, controld_section_all,
                                cib_scope_local);

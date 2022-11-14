@@ -25,8 +25,6 @@
 
 #include <pacemaker-controld.h>
 
-cib_t *fsa_cib_conn = NULL;
-
 //! Triggers an FSA invocation
 static crm_trigger_t *fsa_trigger = NULL;
 
@@ -654,7 +652,10 @@ do_state_transition(enum crmd_fsa_state cur_state,
 
     switch (next_state) {
         case S_PENDING:
-            fsa_cib_conn->cmds->set_secondary(fsa_cib_conn, cib_scope_local);
+            {
+                cib_t *cib_conn = controld_globals.cib_conn;
+                cib_conn->cmds->set_secondary(cib_conn, cib_scope_local);
+            }
             update_dc(NULL);
             break;
 

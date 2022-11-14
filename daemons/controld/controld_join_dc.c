@@ -471,7 +471,9 @@ do_dc_join_finalize(long long action,
     }
     crmd_join_phase_log(LOG_DEBUG);
 
-    rc = fsa_cib_conn->cmds->sync_from(fsa_cib_conn, sync_from, NULL, cib_quorum_override);
+    rc = controld_globals.cib_conn->cmds->sync_from(controld_globals.cib_conn,
+                                                    sync_from, NULL,
+                                                    cib_quorum_override);
     fsa_register_cib_callback(rc, FALSE, sync_from, finalize_sync_callback);
 }
 

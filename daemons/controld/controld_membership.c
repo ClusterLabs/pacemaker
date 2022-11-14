@@ -247,14 +247,17 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
         }
 
         if (known == FALSE) {
+            cib_t *cib_conn = controld_globals.cib_conn;
             int delete_call_id = 0;
             xmlNode *node_state_xml = NULL;
 
             crm_notice("Deleting unknown node %s/%s which has conflicting uname with %s",
                        node_uuid, node_uname, new_node_uuid);
 
-            delete_call_id = fsa_cib_conn->cmds->remove(fsa_cib_conn, XML_CIB_TAG_NODES, node_xml,
-                                                        cib_scope_local | cib_quorum_override);
+            delete_call_id = cib_conn->cmds->remove(cib_conn, XML_CIB_TAG_NODES,
+                                                    node_xml,
+                                                    cib_scope_local
+                                                    |cib_quorum_override);
             fsa_register_cib_callback(delete_call_id, FALSE, strdup(node_uuid),
                                       remove_conflicting_node_callback);
 
@@ -262,8 +265,11 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
             crm_xml_add(node_state_xml, XML_ATTR_ID, node_uuid);
             crm_xml_add(node_state_xml, XML_ATTR_UNAME, node_uname);
 
-            delete_call_id = fsa_cib_conn->cmds->remove(fsa_cib_conn, XML_CIB_TAG_STATUS, node_state_xml,
-                                                        cib_scope_local | cib_quorum_override);
+            delete_call_id = cib_conn->cmds->remove(cib_conn,
+                                                    XML_CIB_TAG_STATUS,
+                                                    node_state_xml,
+                                                    cib_scope_local
+                                                    |cib_quorum_override);
             fsa_register_cib_callback(delete_call_id, FALSE, strdup(node_uuid),
                                       remove_conflicting_node_callback);
             free_xml(node_state_xml);
@@ -291,6 +297,8 @@ node_list_update_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, 
 void
 populate_cib_nodes(enum node_update_flags flags, const char *source)
 {
+    cib_t *cib_conn = controld_globals.cib_conn;
+
     int call_id = 0;
     gboolean from_hashtable = TRUE;
     int call_options = cib_scope_local | cib_quorum_override;
@@ -331,10 +339,10 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
                                "[@" XML_ATTR_UNAME "='", node->uname, "']"
                                "[@" XML_ATTR_ID "!='", node->uuid, "']", NULL);
 
-                call_id = fsa_cib_conn->cmds->query(fsa_cib_conn,
-                                                    (const char *) xpath->str,
-                                                    NULL,
-                                                    cib_scope_local | cib_xpath);
+                call_id = cib_conn->cmds->query(cib_conn,
+                                                (const char *) xpath->str,
+                                                NULL,
+                                                cib_scope_local|cib_xpath);
                 fsa_register_cib_callback(call_id, FALSE, strdup(node->uuid),
                                           search_conflicting_node_callback);
             }

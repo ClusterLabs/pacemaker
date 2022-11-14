@@ -40,17 +40,18 @@ do_te_control(long long action,
               enum crmd_fsa_state cur_state,
               enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
+    cib_t *cib_conn = controld_globals.cib_conn;
     gboolean init_ok = TRUE;
 
-    if (action & A_TE_STOP) {
+    if (pcmk_is_set(action, A_TE_STOP)) {
         if (transition_graph) {
             pcmk__free_graph(transition_graph);
             transition_graph = NULL;
         }
 
-        if (fsa_cib_conn) {
-            fsa_cib_conn->cmds->del_notify_callback(fsa_cib_conn, T_CIB_DIFF_NOTIFY,
-                                                    te_update_diff);
+        if (cib_conn != NULL) {
+            cib_conn->cmds->del_notify_callback(cib_conn, T_CIB_DIFF_NOTIFY,
+                                                te_update_diff);
         }
 
         controld_clear_fsa_input_flags(R_TE_CONNECTED);
@@ -75,22 +76,19 @@ do_te_control(long long action,
         crm_info("Registering TE UUID: %s", te_uuid);
     }
 
-    if (fsa_cib_conn == NULL) {
+    if (cib_conn == NULL) {
         crm_err("Could not set CIB callbacks");
         init_ok = FALSE;
 
     } else {
-
-        if (fsa_cib_conn->cmds->add_notify_callback(fsa_cib_conn,
-            T_CIB_DIFF_NOTIFY, te_update_diff) != pcmk_ok) {
-
+        if (cib_conn->cmds->add_notify_callback(cib_conn, T_CIB_DIFF_NOTIFY,
+                                                te_update_diff) != pcmk_ok) {
             crm_err("Could not set CIB notification callback");
             init_ok = FALSE;
         }
 
-        if (fsa_cib_conn->cmds->set_op_callback(fsa_cib_conn,
-            global_cib_callback) != pcmk_ok) {
-
+        if (cib_conn->cmds->set_op_callback(cib_conn,
+                                            global_cib_callback) != pcmk_ok) {
             crm_err("Could not set CIB global callback");
             init_ok = FALSE;
         }

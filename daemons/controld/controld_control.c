@@ -304,8 +304,8 @@ crmd_exit(crm_exit_t exit_code)
         mainloop_destroy_signal(SIGCHLD);
     }
 
-    cib_delete(fsa_cib_conn);
-    fsa_cib_conn = NULL;
+    cib_delete(controld_globals.cib_conn);
+    controld_globals.cib_conn = NULL;
 
     throttle_fini();
 
@@ -358,7 +358,7 @@ do_startup(long long action,
     controld_init_transition_trigger();
 
     crm_debug("Creating CIB manager and executor objects");
-    fsa_cib_conn = cib_new();
+    controld_globals.cib_conn = cib_new();
 
     lrm_state_init_local();
     if (controld_init_fsa_timers() == FALSE) {
@@ -821,10 +821,11 @@ controld_trigger_config_as(const char *fn, int line)
 gboolean
 crm_read_options(gpointer user_data)
 {
-    int call_id =
-        fsa_cib_conn->cmds->query(fsa_cib_conn,
-            "//" XML_CIB_TAG_CRMCONFIG " | //" XML_CIB_TAG_ALERTS,
-            NULL, cib_xpath | cib_scope_local);
+    cib_t *cib_conn = controld_globals.cib_conn;
+    int call_id = cib_conn->cmds->query(cib_conn,
+                                        "//" XML_CIB_TAG_CRMCONFIG
+                                        " | //" XML_CIB_TAG_ALERTS,
+                                        NULL, cib_xpath|cib_scope_local);
 
     fsa_register_cib_callback(call_id, FALSE, NULL, config_query_callback);
     crm_trace("Querying the CIB... call %d", call_id);

@@ -353,10 +353,10 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
 void
 crmd_cib_connection_destroy(gpointer user_data)
 {
-    CRM_LOG_ASSERT(user_data == fsa_cib_conn);
+    CRM_LOG_ASSERT(user_data == controld_globals.cib_conn);
 
     controld_trigger_fsa();
-    fsa_cib_conn->state = cib_disconnected;
+    controld_globals.cib_conn->state = cib_disconnected;
 
     if (!pcmk_is_set(controld_globals.fsa_input_register, R_CIB_CONNECTED)) {
         crm_info("Connection to the CIB manager terminated");

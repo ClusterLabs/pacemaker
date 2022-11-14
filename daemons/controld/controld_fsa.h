@@ -491,8 +491,6 @@ struct fsa_data_s {
                                    (flags_to_clear), #flags_to_clear);  \
     } while (0)
 
-extern cib_t *fsa_cib_conn;
-
 extern char *fsa_pe_ref;        // Last invocation of the scheduler
 
 extern unsigned long long saved_ccm_membership_id;

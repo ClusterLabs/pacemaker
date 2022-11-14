@@ -157,9 +157,10 @@ do_election_count_vote(long long action,
             update_dc(NULL);
 
             if (pcmk_is_set(controld_globals.fsa_input_register, R_THE_DC)) {
+                cib_t *cib_conn = controld_globals.cib_conn;
+
                 register_fsa_input(C_FSA_INTERNAL, I_RELEASE_DC, NULL);
-                fsa_cib_conn->cmds->set_secondary(fsa_cib_conn,
-                                                  cib_scope_local);
+                cib_conn->cmds->set_secondary(cib_conn, cib_scope_local);
 
             } else if (cur_state != S_STARTING) {
                 register_fsa_input(C_FSA_INTERNAL, I_PENDING, NULL);
@@ -202,33 +203,37 @@ do_dc_takeover(long long action,
     election_reset(fsa_election);
     controld_set_fsa_input_flags(R_JOIN_OK|R_INVOKE_PE);
 
-    fsa_cib_conn->cmds->set_primary(fsa_cib_conn, cib_scope_local);
+    controld_globals.cib_conn->cmds->set_primary(controld_globals.cib_conn,
+                                                 cib_scope_local);
 
     cib = create_xml_node(NULL, XML_TAG_CIB);
     crm_xml_add(cib, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
     fsa_cib_update(XML_TAG_CIB, cib, cib_quorum_override, rc, NULL);
     fsa_register_cib_callback(rc, FALSE, NULL, feature_update_callback);
 
-    cib__update_node_attr(logger_out, fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
-                          NULL, NULL, NULL, NULL, XML_ATTR_HAVE_WATCHDOG,
-                          pcmk__btoa(watchdog), NULL, NULL);
+    cib__update_node_attr(logger_out, controld_globals.cib_conn, cib_none,
+                          XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
+                          XML_ATTR_HAVE_WATCHDOG, pcmk__btoa(watchdog), NULL,
+                          NULL);
 
-    cib__update_node_attr(logger_out, fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
-                          NULL, NULL, NULL, NULL, "dc-version",
-                          PACEMAKER_VERSION "-" BUILD_VERSION, NULL, NULL);
+    cib__update_node_attr(logger_out, controld_globals.cib_conn, cib_none,
+                          XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
+                          "dc-version", PACEMAKER_VERSION "-" BUILD_VERSION,
+                          NULL, NULL);
 
-    cib__update_node_attr(logger_out, fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
-                          NULL, NULL, NULL, NULL, "cluster-infrastructure",
-                          cluster_type, NULL, NULL);
+    cib__update_node_attr(logger_out, controld_globals.cib_conn, cib_none,
+                          XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
+                          "cluster-infrastructure", cluster_type, NULL, NULL);
 
 #if SUPPORT_COROSYNC
     if ((controld_globals.cluster_name == NULL) && is_corosync_cluster()) {
         char *cluster_name = pcmk__corosync_cluster_name();
 
-        if (cluster_name) {
-            cib__update_node_attr(logger_out, fsa_cib_conn, cib_none,
-                                  XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
-                                  "cluster-name", cluster_name, NULL, NULL);
+        if (cluster_name != NULL) {
+            cib__update_node_attr(logger_out, controld_globals.cib_conn,
+                                  cib_none, XML_CIB_TAG_CRMCONFIG, NULL, NULL,
+                                  NULL, NULL, "cluster-name", cluster_name,
+                                  NULL, NULL);
         }
         free(cluster_name);
     }
