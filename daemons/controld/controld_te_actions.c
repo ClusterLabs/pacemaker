@@ -20,7 +20,6 @@
 #include <pacemaker-internal.h>
 #include <pacemaker-controld.h>
 
-char *te_uuid = NULL;
 static GHashTable *te_targets = NULL;
 void send_rsc_command(pcmk__graph_action_t *action);
 static void te_update_job_count(pcmk__graph_action_t *action, int offset);
@@ -166,7 +165,8 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     cmd = create_request(task, action->xml, router_node, CRM_SYSTEM_CRMD, CRM_SYSTEM_TENGINE, NULL);
 
     counter = pcmk__transition_key(transition_graph->id, action->id,
-                                   get_target_rc(action), te_uuid);
+                                   get_target_rc(action),
+                                   controld_globals.te_uuid);
     crm_xml_add(cmd, XML_ATTR_TRANSITION_KEY, counter);
 
     rc = send_cluster_message(crm_get_peer(0, router_node), crm_msg_crmd, cmd, TRUE);
@@ -234,7 +234,7 @@ synthesize_timeout_event(const pcmk__graph_action_t *action, int target_rc)
                                        PCMK_OCF_UNKNOWN_ERROR, reason);
     op->call_id = -1;
     op->user_data = pcmk__transition_key(transition_graph->id, action->id,
-                                         target_rc, te_uuid);
+                                         target_rc, controld_globals.te_uuid);
     free(dynamic_reason);
     return op;
 }
@@ -378,7 +378,8 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     }
 
     counter = pcmk__transition_key(transition_graph->id, action->id,
-                                   get_target_rc(action), te_uuid);
+                                   get_target_rc(action),
+                                   controld_globals.te_uuid);
     crm_xml_add(rsc_op, XML_ATTR_TRANSITION_KEY, counter);
 
     if (pcmk__str_eq(router_node, controld_globals.our_nodename,

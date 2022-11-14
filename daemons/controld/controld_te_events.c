@@ -416,7 +416,9 @@ process_graph_event(xmlNode *event, const char *event_node)
         abort_transition(INFINITY, pcmk__graph_restart, "Unexpected event",
                          event);
 
-    } else if ((action_num < 0) || !pcmk__str_eq(update_te_uuid, te_uuid, pcmk__str_none)) {
+    } else if ((action_num < 0)
+               || !pcmk__str_eq(update_te_uuid, controld_globals.te_uuid,
+                                pcmk__str_none)) {
         desc = "initiated by a different DC";
         abort_transition(INFINITY, pcmk__graph_restart, "Foreign event", event);
 

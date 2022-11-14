@@ -261,7 +261,9 @@ crmd_exit(crm_exit_t exit_code)
     free(controld_globals.cluster_name);
     controld_globals.cluster_name = NULL;
 
-    free(te_uuid); te_uuid = NULL;
+    free(controld_globals.te_uuid);
+    controld_globals.te_uuid = NULL;
+
     free(failed_stop_offset); failed_stop_offset = NULL;
     free(failed_start_offset); failed_start_offset = NULL;
 

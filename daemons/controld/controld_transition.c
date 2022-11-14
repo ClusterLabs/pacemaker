@@ -71,9 +71,9 @@ do_te_control(long long action,
         return;
     }
 
-    if (te_uuid == NULL) {
-        te_uuid = crm_generate_uuid();
-        crm_info("Registering TE UUID: %s", te_uuid);
+    if (controld_globals.te_uuid == NULL) {
+        controld_globals.te_uuid = crm_generate_uuid();
+        crm_info("Registering TE UUID: %s", controld_globals.te_uuid);
     }
 
     if (cib_conn == NULL) {

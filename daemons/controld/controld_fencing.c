@@ -779,13 +779,14 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
               goto bail);
 
     if (transition_graph->complete || (stonith_id < 0)
-        || !pcmk__str_eq(uuid, te_uuid, pcmk__str_none)
+        || !pcmk__str_eq(uuid, controld_globals.te_uuid, pcmk__str_none)
         || (transition_graph->id != transition_id)) {
         crm_info("Ignoring fence operation %d result: "
                  "Not from current transition " CRM_XS
                  " complete=%s action=%d uuid=%s (vs %s) transition=%d (vs %d)",
                  data->call_id, pcmk__btoa(transition_graph->complete),
-                 stonith_id, uuid, te_uuid, transition_id, transition_graph->id);
+                 stonith_id, uuid, controld_globals.te_uuid, transition_id,
+                 transition_graph->id);
         goto bail;
     }
 
@@ -958,7 +959,7 @@ controld_execute_fence_action(pcmk__graph_t *graph,
 
     rc = fence_with_delay(target, type, priority_delay);
     transition_key = pcmk__transition_key(transition_graph->id, action->id, 0,
-                                          te_uuid),
+                                          controld_globals.te_uuid),
     stonith_api->cmds->register_callback(stonith_api, rc,
                                          (int) (transition_graph->stonith_timeout / 1000),
                                          st_opt_timeout_updates, transition_key,

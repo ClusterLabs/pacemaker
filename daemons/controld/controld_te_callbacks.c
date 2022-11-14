@@ -21,7 +21,6 @@
 
 void te_update_confirm(const char *event, xmlNode * msg);
 
-extern char *te_uuid;
 pcmk__graph_t *transition_graph;
 
 #define RSC_OP_PREFIX "//" XML_TAG_DIFF_ADDED "//" XML_TAG_CIB \

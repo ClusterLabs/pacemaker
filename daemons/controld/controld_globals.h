@@ -47,6 +47,12 @@ typedef struct {
     char *fsa_pe_ref;
 
 
+    // Transitioner
+
+    //! Transitioner UUID
+    char *te_uuid;
+
+
     // Logging
 
     //! Output object for controller log messages

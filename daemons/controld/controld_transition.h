@@ -31,8 +31,6 @@ void process_te_message(xmlNode *msg, xmlNode *xml_data);
 
 extern pcmk__graph_t *transition_graph;
 
-extern char *te_uuid;
-
 void notify_crmd(pcmk__graph_t * graph);
 
 void cib_action_updated(xmlNode *msg, int call_id, int rc, xmlNode *output,
