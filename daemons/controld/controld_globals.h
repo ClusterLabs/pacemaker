@@ -47,6 +47,12 @@ typedef struct {
     char *fsa_pe_ref;
 
 
+    // Logging
+
+    //! Output object for controller log messages
+    pcmk__output_t *logger_out;
+
+
     // Other
 
     //! Cluster name

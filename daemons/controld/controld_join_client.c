@@ -16,8 +16,6 @@
 
 #include <pacemaker-controld.h>
 
-extern pcmk__output_t *logger_out;
-
 void join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data);
 
 extern ha_msg_input_t *copy_ha_msg_input(ha_msg_input_t * orig);
@@ -202,18 +200,18 @@ set_join_state(const char * start_state)
     if (pcmk__str_eq(start_state, "standby", pcmk__str_casei)) {
         crm_notice("Forcing node %s to join in %s state per configured "
                    "environment", controld_globals.our_nodename, start_state);
-        cib__update_node_attr(logger_out, controld_globals.cib_conn,
-                              cib_sync_call, XML_CIB_TAG_NODES,
-                              controld_globals.our_uuid, NULL, NULL, NULL,
-                              "standby", "on", NULL, NULL);
+        cib__update_node_attr(controld_globals.logger_out,
+                              controld_globals.cib_conn, cib_sync_call,
+                              XML_CIB_TAG_NODES, controld_globals.our_uuid,
+                              NULL, NULL, NULL, "standby", "on", NULL, NULL);
 
     } else if (pcmk__str_eq(start_state, "online", pcmk__str_casei)) {
         crm_notice("Forcing node %s to join in %s state per configured "
                    "environment", controld_globals.our_nodename, start_state);
-        cib__update_node_attr(logger_out, controld_globals.cib_conn,
-                              cib_sync_call, XML_CIB_TAG_NODES,
-                              controld_globals.our_uuid, NULL, NULL, NULL,
-                              "standby", "off", NULL, NULL);
+        cib__update_node_attr(controld_globals.logger_out,
+                              controld_globals.cib_conn, cib_sync_call,
+                              XML_CIB_TAG_NODES, controld_globals.our_uuid,
+                              NULL, NULL, NULL, "standby", "off", NULL, NULL);
 
     } else if (pcmk__str_eq(start_state, "default", pcmk__str_casei)) {
         crm_debug("Not forcing a starting state on node %s",
