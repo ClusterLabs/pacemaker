@@ -52,6 +52,9 @@ typedef struct {
     //! Transitioner UUID
     char *te_uuid;
 
+    //! Graph of transition currently being processed
+    pcmk__graph_t *transition_graph;
+
 
     // Logging
 

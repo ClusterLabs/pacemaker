@@ -164,8 +164,8 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
     cmd = create_request(task, action->xml, router_node, CRM_SYSTEM_CRMD, CRM_SYSTEM_TENGINE, NULL);
 
-    counter = pcmk__transition_key(transition_graph->id, action->id,
-                                   get_target_rc(action),
+    counter = pcmk__transition_key(controld_globals.transition_graph->id,
+                                   action->id, get_target_rc(action),
                                    controld_globals.te_uuid);
     crm_xml_add(cmd, XML_ATTR_TRANSITION_KEY, counter);
 
@@ -233,8 +233,9 @@ synthesize_timeout_event(const pcmk__graph_action_t *action, int target_rc)
     op = pcmk__event_from_graph_action(NULL, action, PCMK_EXEC_TIMEOUT,
                                        PCMK_OCF_UNKNOWN_ERROR, reason);
     op->call_id = -1;
-    op->user_data = pcmk__transition_key(transition_graph->id, action->id,
-                                         target_rc, controld_globals.te_uuid);
+    op->user_data = pcmk__transition_key(controld_globals.transition_graph->id,
+                                         action->id, target_rc,
+                                         controld_globals.te_uuid);
     free(dynamic_reason);
     return op;
 }
@@ -377,8 +378,8 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         router_node = on_node;
     }
 
-    counter = pcmk__transition_key(transition_graph->id, action->id,
-                                   get_target_rc(action),
+    counter = pcmk__transition_key(controld_globals.transition_graph->id,
+                                   action->id, get_target_rc(action),
                                    controld_globals.te_uuid);
     crm_xml_add(rsc_op, XML_ATTR_TRANSITION_KEY, counter);
 
@@ -438,7 +439,7 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
          */
         crm_info("Action %d confirmed - no wait", action->id);
         pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
-        pcmk__update_graph(transition_graph, action);
+        pcmk__update_graph(controld_globals.transition_graph, action);
         trigger_graph();
 
     } else if (pcmk_is_set(action->flags, pcmk__graph_action_confirmed)) {

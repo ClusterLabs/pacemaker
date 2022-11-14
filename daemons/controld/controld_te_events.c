@@ -233,7 +233,8 @@ update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
 pcmk__graph_action_t *
 controld_get_action(int id)
 {
-    for (GList *item = transition_graph->synapses; item; item = item->next) {
+    for (GList *item = controld_globals.transition_graph->synapses;
+         item != NULL; item = item->next) {
         pcmk__graph_synapse_t *synapse = (pcmk__graph_synapse_t *) item->data;
 
         for (GList *item2 = synapse->actions; item2; item2 = item2->next) {
@@ -253,7 +254,7 @@ get_cancel_action(const char *id, const char *node)
     GList *gIter = NULL;
     GList *gIter2 = NULL;
 
-    gIter = transition_graph->synapses;
+    gIter = controld_globals.transition_graph->synapses;
     for (; gIter != NULL; gIter = gIter->next) {
         pcmk__graph_synapse_t *synapse = (pcmk__graph_synapse_t *) gIter->data;
 
@@ -302,7 +303,7 @@ confirm_cancel_action(const char *id, const char *node_id)
     node_name = crm_element_value(cancel->xml, XML_LRM_ATTR_TARGET);
 
     stop_te_timer(cancel);
-    te_action_confirmed(cancel, transition_graph);
+    te_action_confirmed(cancel, controld_globals.transition_graph);
 
     crm_info("Cancellation of %s on %s confirmed (action %d)",
              op_key, node_name, cancel->id);
@@ -329,7 +330,7 @@ match_down_event(const char *target)
 
     char *xpath = crm_strdup_printf(XPATH_DOWNED, target);
 
-    for (gIter = transition_graph->synapses;
+    for (gIter = controld_globals.transition_graph->synapses;
          gIter != NULL && match == NULL;
          gIter = gIter->next) {
 
@@ -422,8 +423,8 @@ process_graph_event(xmlNode *event, const char *event_node)
         desc = "initiated by a different DC";
         abort_transition(INFINITY, pcmk__graph_restart, "Foreign event", event);
 
-    } else if ((transition_graph->id != transition_num)
-               || transition_graph->complete) {
+    } else if ((controld_globals.transition_graph->id != transition_num)
+               || controld_globals.transition_graph->complete) {
 
         // Action is not from currently active transition
 
@@ -444,7 +445,7 @@ process_graph_event(xmlNode *event, const char *event_node)
             abort_transition(INFINITY, pcmk__graph_restart,
                              "Change in recurring result", event);
 
-        } else if (transition_graph->id != transition_num) {
+        } else if (controld_globals.transition_graph->id != transition_num) {
             desc = "arrived really late";
             abort_transition(INFINITY, pcmk__graph_restart, "Old event", event);
         } else {
@@ -486,7 +487,7 @@ process_graph_event(xmlNode *event, const char *event_node)
             }
 
             stop_te_timer(action);
-            te_action_confirmed(action, transition_graph);
+            te_action_confirmed(action, controld_globals.transition_graph);
 
             if (pcmk_is_set(action->flags, pcmk__graph_action_failed)) {
                 abort_transition(action->synapse->priority + 1,

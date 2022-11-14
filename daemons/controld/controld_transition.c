@@ -44,10 +44,8 @@ do_te_control(long long action,
     gboolean init_ok = TRUE;
 
     if (pcmk_is_set(action, A_TE_STOP)) {
-        if (transition_graph) {
-            pcmk__free_graph(transition_graph);
-            transition_graph = NULL;
-        }
+        pcmk__free_graph(controld_globals.transition_graph);
+        controld_globals.transition_graph = NULL;
 
         if (cib_conn != NULL) {
             cib_conn->cmds->del_notify_callback(cib_conn, T_CIB_DIFF_NOTIFY,
@@ -96,14 +94,11 @@ do_te_control(long long action,
 
     if (init_ok) {
         pcmk__set_graph_functions(&te_graph_fns);
-
-        if (transition_graph) {
-            pcmk__free_graph(transition_graph);
-        }
+        pcmk__free_graph(controld_globals.transition_graph);
 
         /* create a blank one */
         crm_debug("Transitioner is now active");
-        transition_graph = create_blank_graph();
+        controld_globals.transition_graph = create_blank_graph();
         controld_set_fsa_input_flags(R_TE_CONNECTED);
     }
 }
@@ -126,16 +121,16 @@ do_te_invoke(long long action,
     }
 
     if (action & A_TE_CANCEL) {
-        crm_debug("Cancelling the transition: %s",
-                  transition_graph->complete ? "inactive" : "active");
+        crm_debug("Cancelling the transition: %sactive",
+                  controld_globals.transition_graph->complete? "in" : "");
         abort_transition(INFINITY, pcmk__graph_restart, "Peer Cancelled", NULL);
-        if (!transition_graph->complete) {
+        if (!controld_globals.transition_graph->complete) {
             crmd_fsa_stall(FALSE);
         }
 
     } else if (action & A_TE_HALT) {
         abort_transition(INFINITY, pcmk__graph_wait, "Peer Halt", NULL);
-        if (!transition_graph->complete) {
+        if (!controld_globals.transition_graph->complete) {
             crmd_fsa_stall(FALSE);
         }
 
@@ -153,7 +148,7 @@ do_te_invoke(long long action,
             return;
         }
 
-        if (!transition_graph->complete) {
+        if (!controld_globals.transition_graph->complete) {
             crm_info("Another transition is already active");
             abort_transition(INFINITY, pcmk__graph_restart, "Transition Active",
                              NULL);
@@ -186,12 +181,14 @@ do_te_invoke(long long action,
                   crm_log_xml_err(input->msg, "Bad command");
                   return);
 
-        pcmk__free_graph(transition_graph);
-        transition_graph = pcmk__unpack_graph(graph_data, graph_input);
-        CRM_CHECK(transition_graph != NULL,
-                  transition_graph = create_blank_graph(); return);
-        crm_info("Processing graph %d (ref=%s) derived from %s", transition_graph->id, ref,
-                 graph_input);
+        pcmk__free_graph(controld_globals.transition_graph);
+        controld_globals.transition_graph = pcmk__unpack_graph(graph_data,
+                                                               graph_input);
+        CRM_CHECK(controld_globals.transition_graph != NULL,
+                  controld_globals.transition_graph = create_blank_graph();
+                  return);
+        crm_info("Processing graph %d (ref=%s) derived from %s",
+                 controld_globals.transition_graph->id, ref, graph_input);
 
         te_reset_job_counts();
         value = crm_element_value(graph_data, "failed-stop-offset");
@@ -210,7 +207,7 @@ do_te_invoke(long long action,
         }
 
         trigger_graph();
-        pcmk__log_graph(LOG_TRACE, transition_graph);
+        pcmk__log_graph(LOG_TRACE, controld_globals.transition_graph);
 
         if (graph_data != input->xml) {
             free_xml(graph_data);

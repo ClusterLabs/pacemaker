@@ -50,8 +50,9 @@ reap_dead_nodes(gpointer key, gpointer value, gpointer user_data)
             || (controld_globals.fsa_state == S_FINALIZE_JOIN)) {
             check_join_state(controld_globals.fsa_state, __func__);
         }
-        if(node && node->uuid) {
-            fail_incompletable_actions(transition_graph, node->uuid);
+        if ((node != NULL) && (node->uuid != NULL)) {
+            fail_incompletable_actions(controld_globals.transition_graph,
+                                       node->uuid);
         }
     }
 }
