@@ -61,6 +61,9 @@ typedef struct {
     //! Local node's UUID
     char *our_uuid;
 
+    //! Last saved cluster communication layer membership ID
+    unsigned long long membership_id;
+
     //! Main event loop
     GMainLoop *mainloop;
 } controld_globals_t;

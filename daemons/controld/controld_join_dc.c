@@ -29,8 +29,6 @@ gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
  */
 static int current_join_id = 0;
 
-unsigned long long saved_ccm_membership_id = 0;
-
 void
 crm_update_peer_join(const char *source, crm_node_t * node, enum crm_join_phase phase)
 {
@@ -146,8 +144,8 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
         return;
     }
 
-    if (saved_ccm_membership_id != crm_peer_seq) {
-        saved_ccm_membership_id = crm_peer_seq;
+    if (controld_globals.membership_id != crm_peer_seq) {
+        controld_globals.membership_id = crm_peer_seq;
         crm_info("Making join-%d offers based on membership event %llu",
                  current_join_id, crm_peer_seq);
     }
@@ -688,11 +686,11 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
 {
     static unsigned long long highest_seq = 0;
 
-    if (saved_ccm_membership_id != crm_peer_seq) {
+    if (controld_globals.membership_id != crm_peer_seq) {
         crm_debug("join-%d: Membership changed from %llu to %llu "
                   CRM_XS " highest=%llu state=%s for=%s",
-                  current_join_id, saved_ccm_membership_id, crm_peer_seq, highest_seq,
-                  fsa_state2string(cur_state), source);
+                  current_join_id, controld_globals.membership_id, crm_peer_seq,
+                  highest_seq, fsa_state2string(cur_state), source);
         if(highest_seq < crm_peer_seq) {
             /* Don't spam the FSA with duplicates */
             highest_seq = crm_peer_seq;

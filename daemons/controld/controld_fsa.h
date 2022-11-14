@@ -491,8 +491,6 @@ struct fsa_data_s {
                                    (flags_to_clear), #flags_to_clear);  \
     } while (0)
 
-extern unsigned long long saved_ccm_membership_id;
-
 // These should be moved elsewhere
 void do_update_cib_nodes(gboolean overwrite, const char *caller);
 int crmd_cib_smart_opt(void);

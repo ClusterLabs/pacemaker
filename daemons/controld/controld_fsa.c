@@ -567,9 +567,9 @@ check_join_counts(fsa_data_t *msg_data)
                 "than are in membership (%d > %u)", count, npeers);
         register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
 
-    } else if (saved_ccm_membership_id != crm_peer_seq) {
+    } else if (controld_globals.membership_id != crm_peer_seq) {
         crm_info("New join needed because membership changed (%llu -> %llu)",
-                 saved_ccm_membership_id, crm_peer_seq);
+                 controld_globals.membership_id, crm_peer_seq);
         register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
 
     } else {
