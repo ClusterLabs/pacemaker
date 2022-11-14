@@ -851,8 +851,9 @@ pcmk__block_colocation_dependents(pe_action_t *action,
 
     CRM_ASSERT(action->rsc != NULL); // Start and promote are resource actions
 
-    /* If this resource is part of a collective resource, the entirety must be
-     * unrunnable, so check the collective resource.
+    /* If this resource is part of a collective resource, dependents are blocked
+     * only if all instances of the collective are unrunnable, so check the
+     * collective resource.
      */
     rsc = uber_parent(action->rsc);
     if (rsc->parent != NULL) {
