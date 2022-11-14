@@ -131,7 +131,8 @@ handle_reply(pcmk_schedulerd_api_reply_t *reply)
     if (msg_ref == NULL) {
         crm_err("%s - Ignoring calculation with no reference", CRM_OP_PECALC);
 
-    } else if (pcmk__str_eq(msg_ref, fsa_pe_ref, pcmk__str_none)) {
+    } else if (pcmk__str_eq(msg_ref, controld_globals.fsa_pe_ref,
+                            pcmk__str_none)) {
         ha_msg_input_t fsa_input;
         xmlNode *crm_data_node;
 
@@ -237,7 +238,6 @@ do_pe_control(long long action,
 }
 
 static int fsa_pe_query = 0;
-char *fsa_pe_ref = NULL;
 static mainloop_timer_t *controld_sched_timer = NULL;
 
 // @TODO Make this a configurable cluster option if there's demand for it
@@ -272,8 +272,10 @@ controld_sched_timeout(gpointer user_data)
 void
 controld_stop_sched_timer(void)
 {
-    if (controld_sched_timer && fsa_pe_ref) {
-        crm_trace("Stopping timer for scheduler reply %s", fsa_pe_ref);
+    if ((controld_sched_timer != NULL)
+        && (controld_globals.fsa_pe_ref != NULL)) {
+        crm_trace("Stopping timer for scheduler reply %s",
+                  controld_globals.fsa_pe_ref);
     }
     mainloop_timer_stop(controld_sched_timer);
 }
@@ -300,8 +302,8 @@ controld_expect_sched_reply(char *ref)
     } else {
         controld_stop_sched_timer();
     }
-    free(fsa_pe_ref);
-    fsa_pe_ref = ref;
+    free(controld_globals.fsa_pe_ref);
+    controld_globals.fsa_pe_ref = ref;
 }
 
 /*!
@@ -497,8 +499,8 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         CRM_ASSERT(ref != NULL);
         controld_expect_sched_reply(ref);
         crm_debug("Invoking the scheduler: query=%d, ref=%s, seq=%llu, "
-                  "quorate=%s", fsa_pe_query, fsa_pe_ref, crm_peer_seq,
-                  pcmk__btoa(pcmk_is_set(controld_globals.flags,
-                                         controld_has_quorum)));
+                  "quorate=%s", fsa_pe_query, controld_globals.fsa_pe_ref,
+                  crm_peer_seq, pcmk__btoa(pcmk_is_set(controld_globals.flags,
+                                                       controld_has_quorum)));
     }
 }

@@ -38,6 +38,12 @@ typedef struct {
     cib_t *cib_conn;
 
 
+    // Scheduler
+
+    //! Reference of the scheduler request being waited on
+    char *fsa_pe_ref;
+
+
     // Other
 
     //! Cluster name

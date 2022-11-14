@@ -1156,7 +1156,8 @@ handle_response(xmlNode *stored_msg)
         if (msg_ref == NULL) {
             crm_err("%s - Ignoring calculation with no reference", op);
 
-        } else if (pcmk__str_eq(msg_ref, fsa_pe_ref, pcmk__str_casei)) {
+        } else if (pcmk__str_eq(msg_ref, controld_globals.fsa_pe_ref,
+                                pcmk__str_none)) {
             ha_msg_input_t fsa_input;
 
             controld_stop_sched_timer();
