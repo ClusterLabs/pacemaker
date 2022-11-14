@@ -2414,8 +2414,6 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
     lrmd_free_event(op);
 }
 
-int last_resource_update = 0;
-
 static void
 cib_rsc_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
@@ -2429,8 +2427,8 @@ cib_rsc_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *use
             crm_warn("Resource update %d failed: (rc=%d) %s", call_id, rc, pcmk_strerror(rc));
     }
 
-    if (call_id == last_resource_update) {
-        last_resource_update = 0;
+    if (call_id == controld_globals.resource_update) {
+        controld_globals.resource_update = 0;
         controld_trigger_fsa();
     }
 }
@@ -2559,7 +2557,7 @@ do_update_resource(const char *node_name, lrmd_rsc_info_t *rsc,
     fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, rc, NULL);
 
     if (rc > 0) {
-        last_resource_update = rc;
+        controld_globals.resource_update = rc;
     }
   done:
     /* the return code is a call number, not an error code */

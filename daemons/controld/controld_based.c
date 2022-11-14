@@ -109,10 +109,10 @@ do_cib_control(long long action,
 
     if (pcmk_is_set(action, A_CIB_STOP)) {
         if ((cib_conn->state != cib_disconnected)
-            && (last_resource_update != 0)) {
+            && (controld_globals.resource_update != 0)) {
 
             crm_info("Waiting for resource update %d to complete",
-                     last_resource_update);
+                     controld_globals.resource_update);
             crmd_fsa_stall(FALSE);
             return;
         }

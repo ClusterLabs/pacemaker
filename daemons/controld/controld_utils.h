@@ -56,8 +56,6 @@ fsa_cib_anon_update_discard_reply(const char *section, xmlNode *data) {
     }
 }
 
-extern int last_resource_update;
-
 enum node_update_flags {
     node_update_none = 0x0000,
     node_update_quick = 0x0001,
