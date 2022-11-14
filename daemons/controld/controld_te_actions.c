@@ -663,14 +663,23 @@ te_action_confirmed(pcmk__graph_action_t *action, pcmk__graph_t *graph)
     }
 }
 
-
-pcmk__graph_functions_t te_graph_fns = {
+static pcmk__graph_functions_t te_graph_fns = {
     execute_pseudo_action,
     execute_rsc_action,
     execute_cluster_action,
     controld_execute_fence_action,
     graph_action_allowed,
 };
+
+/*
+ * \internal
+ * \brief Register the transitioner's graph functions with \p libpacemaker
+ */
+void
+controld_register_graph_functions(void)
+{
+    pcmk__set_graph_functions(&te_graph_fns);
+}
 
 void
 notify_crmd(pcmk__graph_t *graph)

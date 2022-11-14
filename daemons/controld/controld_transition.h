@@ -29,6 +29,8 @@ const char *get_rsc_state(const char *task, enum pcmk_exec_status status);
 
 void process_te_message(xmlNode *msg, xmlNode *xml_data);
 
+void controld_register_graph_functions(void);
+
 void notify_crmd(pcmk__graph_t * graph);
 
 void cib_action_updated(xmlNode *msg, int call_id, int rc, xmlNode *output,

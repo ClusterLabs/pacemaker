@@ -15,8 +15,6 @@
 
 #include <pacemaker-controld.h>
 
-extern pcmk__graph_functions_t te_graph_fns;
-
 static void
 global_cib_callback(const xmlNode * msg, int callid, int rc, xmlNode * output)
 {
@@ -93,7 +91,7 @@ do_te_control(long long action,
     }
 
     if (init_ok) {
-        pcmk__set_graph_functions(&te_graph_fns);
+        controld_register_graph_functions();
         pcmk__free_graph(controld_globals.transition_graph);
 
         /* create a blank one */
