@@ -787,9 +787,17 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
     }
 }
 
+/*!
+ * \internal
+ * \brief Make actions of a given type unrunnable for a given resource
+ *
+ * \param[in,out] rsc     Resource whose actions should be blocked
+ * \param[in]     task    Name of action to block
+ * \param[in]     reason  Unrunnable start action causing the block
+ */
 static void
-mark_start_blocked(pe_resource_t *rsc, pe_resource_t *reason,
-                   pe_working_set_t *data_set)
+mark_action_blocked(pe_resource_t *rsc, const char *task,
+                    const pe_resource_t *reason)
 {
     char *reason_text = crm_strdup_printf("colocation with %s", reason->id);
 
@@ -797,63 +805,107 @@ mark_start_blocked(pe_resource_t *rsc, pe_resource_t *reason,
         pe_action_t *action = (pe_action_t *) gIter->data;
 
         if (pcmk_is_set(action->flags, pe_action_runnable)
-            && pcmk__str_eq(action->task, RSC_START, pcmk__str_casei)) {
+            && pcmk__str_eq(action->task, task, pcmk__str_casei)) {
 
             pe__clear_action_flags(action, pe_action_runnable);
             pe_action_set_reason(action, reason_text, false);
-            pcmk__block_colocated_starts(action, data_set);
-            pcmk__update_action_for_orderings(action, data_set);
+            pcmk__block_colocation_dependents(action, rsc->cluster);
+            pcmk__update_action_for_orderings(action, rsc->cluster);
         }
+    }
+
+    // If parent resource can't perform an action, neither can any children
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        mark_action_blocked((pe_resource_t *) (iter->data), task, reason);
     }
     free(reason_text);
 }
 
 /*!
  * \internal
- * \brief If a start action is unrunnable, block starts of colocated resources
+ * \brief If an action is unrunnable, block any relevant dependent actions
+ *
+ * If a given action is an unrunnable start or promote, block the start or
+ * promote actions of resources colocated with it, as appropriate to the
+ * colocations' configured roles.
  *
  * \param[in] action    Action to check
  * \param[in] data_set  Cluster working set
  */
 void
-pcmk__block_colocated_starts(pe_action_t *action, pe_working_set_t *data_set)
+pcmk__block_colocation_dependents(pe_action_t *action,
+                                  pe_working_set_t *data_set)
 {
     GList *gIter = NULL;
     pe_resource_t *rsc = NULL;
+    bool is_start = false;
 
-    if (!pcmk_is_set(action->flags, pe_action_runnable)
-        && pcmk__str_eq(action->task, RSC_START, pcmk__str_casei)) {
-
-        rsc = uber_parent(action->rsc);
-        if (rsc->parent) {
-            /* For bundles, uber_parent() returns the clone, not the bundle, so
-             * the existence of rsc->parent implies this is a bundle.
-             * In this case, we need the bundle resource, so that we can check
-             * if all containers are stopped/stopping.
-             */
-            rsc = rsc->parent;
-        }
+    if (pcmk_is_set(action->flags, pe_action_runnable)) {
+        return; // Only unrunnable actions block dependents
     }
 
-    if ((rsc == NULL) || (rsc->rsc_cons_lhs == NULL)) {
+    is_start = pcmk__str_eq(action->task, RSC_START, pcmk__str_none);
+    if (!is_start && !pcmk__str_eq(action->task, RSC_PROMOTE, pcmk__str_none)) {
+        return; // Only unrunnable starts and promotes block dependents
+    }
+
+    CRM_ASSERT(action->rsc != NULL); // Start and promote are resource actions
+
+    /* If this resource is part of a collective resource, dependents are blocked
+     * only if all instances of the collective are unrunnable, so check the
+     * collective resource.
+     */
+    rsc = uber_parent(action->rsc);
+    if (rsc->parent != NULL) {
+        rsc = rsc->parent; // Bundle
+    }
+
+    if (rsc->rsc_cons_lhs == NULL) {
         return;
     }
 
-    // Block colocated starts only if all children (if any) have unrunnable starts
+    // Colocation fails only if entire primary can't reach desired role
     for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child = (pe_resource_t *)gIter->data;
-        pe_action_t *start = find_first_action(child->actions, NULL, RSC_START, NULL);
+        pe_resource_t *child = (pe_resource_t *) gIter->data;
+        pe_action_t *child_action = find_first_action(child->actions, NULL,
+                                                      action->task, NULL);
 
-        if ((start == NULL) || pcmk_is_set(start->flags, pe_action_runnable)) {
-            return;
+        if ((child_action == NULL)
+            || pcmk_is_set(child_action->flags, pe_action_runnable)) {
+            crm_trace("Not blocking %s colocation dependents because "
+                      "at least %s has runnable %s",
+                      rsc->id, child->id, action->task);
+            return; // At least one child can reach desired role
         }
     }
 
-    for (gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
-        pcmk__colocation_t *colocate_with = (pcmk__colocation_t *) gIter->data;
+    crm_trace("Blocking %s colocation dependents due to unrunnable %s %s",
+              rsc->id, action->rsc->id, action->task);
 
-        if (colocate_with->score == INFINITY) {
-            mark_start_blocked(colocate_with->dependent, action->rsc, data_set);
+    // Check each colocation where this resource is primary
+    for (gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
+        pcmk__colocation_t *colocation = (pcmk__colocation_t *) gIter->data;
+
+        if (colocation->score < INFINITY) {
+            continue; // Only mandatory colocations block dependent
+        }
+
+        /* If the primary can't start, the dependent can't reach its colocated
+         * role, regardless of what the primary or dependent colocation role is.
+         *
+         * If the primary can't be promoted, the dependent can't reach its
+         * colocated role if the primary's colocation role is promoted.
+         */
+        if (!is_start && (colocation->primary_role != RSC_ROLE_PROMOTED)) {
+            continue;
+        }
+
+        // Block the dependent from reaching its colocated role
+        if (colocation->dependent_role == RSC_ROLE_PROMOTED) {
+            mark_action_blocked(colocation->dependent, RSC_PROMOTE,
+                                action->rsc);
+        } else {
+            mark_action_blocked(colocation->dependent, RSC_START, action->rsc);
         }
     }
 }

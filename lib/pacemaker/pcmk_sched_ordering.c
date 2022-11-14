@@ -1397,7 +1397,7 @@ pcmk__apply_orderings(pe_working_set_t *data_set)
         }
     }
 
-    g_list_foreach(data_set->actions, (GFunc) pcmk__block_colocated_starts,
+    g_list_foreach(data_set->actions, (GFunc) pcmk__block_colocation_dependents,
                    data_set);
 
     crm_trace("Ordering probes");

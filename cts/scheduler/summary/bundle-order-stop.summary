@@ -24,7 +24,7 @@ Current cluster status:
 Transition Summary:
   * Stop       rabbitmq-bundle-docker-0             (               undercloud )  due to node availability
   * Stop       rabbitmq-bundle-0                    (               undercloud )  due to node availability
-  * Stop       rabbitmq:0                           (        rabbitmq-bundle-0 )  due to unrunnable rabbitmq-bundle-0 start
+  * Stop       rabbitmq:0                           (      rabbitmq-bundle-0 )  due to colocation with haproxy-bundle-docker-0
   * Stop       galera-bundle-docker-0               (               undercloud )  due to node availability
   * Stop       galera-bundle-0                      (               undercloud )  due to node availability
   * Stop       galera:0                             ( Promoted galera-bundle-0 )  due to unrunnable galera-bundle-0 start

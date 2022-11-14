@@ -245,6 +245,7 @@ TESTS = [
         [ "colocation-influence", "Respect colocation influence" ],
         [ "colocation-priority-group", "Apply group colocations in order of primary priority" ],
         [ "colocation-vs-stickiness", "Group stickiness outweighs anti-colocation score" ],
+        [ "promoted-with-blocked", "Promoted role colocated with a resource with blocked start" ],
     ],
     [
         [ "rsc-sets-seq-true", "Resource Sets - sequential=false" ],
