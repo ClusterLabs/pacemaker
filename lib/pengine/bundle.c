@@ -1277,11 +1277,12 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
         if (!printed_header) {
             printed_header = TRUE;
 
-            rc = pe__name_and_nvpairs_xml(out, true, "bundle", 6,
+            rc = pe__name_and_nvpairs_xml(out, true, "bundle", 7,
                      "id", rsc->id,
                      "type", container_agent_str(bundle_data->agent_type),
                      "image", bundle_data->image,
                      "unique", pe__rsc_bool_str(rsc, pe_rsc_unique),
+                     "maintenance", pe__rsc_bool_str(rsc, pe_rsc_maintenance),
                      "managed", pe__rsc_bool_str(rsc, pe_rsc_managed),
                      "failed", pe__rsc_bool_str(rsc, pe_rsc_failed));
             CRM_ASSERT(rc == pcmk_rc_ok);
@@ -1350,6 +1351,27 @@ pe__bundle_replica_output_html(pcmk__output_t *out, pe__bundle_replica_t *replic
     pe__common_output_html(out, rsc, buffer, node, show_opts);
 }
 
+/*!
+ * \internal
+ * \brief Get a string describing a resource's unmanaged state or lack thereof
+ *
+ * \param[in] rsc  Resource to describe
+ *
+ * \return A string indicating that a resource is in maintenance mode or
+ *         otherwise unmanaged, or an empty string otherwise
+ */
+static const char *
+get_unmanaged_str(const pe_resource_t *rsc)
+{
+    if (pcmk_is_set(rsc->flags, pe_rsc_maintenance)) {
+        return " (maintenance)";
+    }
+    if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+        return " (unmanaged)";
+    }
+    return "";
+}
+
 PCMK__OUTPUT_ARGS("bundle", "uint32_t", "pe_resource_t *", "GList *", "GList *")
 int
 pe__bundle_html(pcmk__output_t *out, va_list args)
@@ -1403,7 +1425,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
                                      (bundle_data->nreplicas > 1)? " set" : "",
                                      rsc->id, bundle_data->image,
                                      pcmk_is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
-                                     pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
+                                     get_unmanaged_str(rsc));
 
             if (pcmk__list_of_multiple(bundle_data->replicas)) {
                 out->begin_list(out, NULL, NULL, "Replica[%d]", replica->offset);
@@ -1439,7 +1461,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
                                      (bundle_data->nreplicas > 1)? " set" : "",
                                      rsc->id, bundle_data->image,
                                      pcmk_is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
-                                     pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
+                                     get_unmanaged_str(rsc));
 
             pe__bundle_replica_output_html(out, replica, pe__current_node(replica->container),
                                            show_opts);
@@ -1531,7 +1553,7 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
                                      (bundle_data->nreplicas > 1)? " set" : "",
                                      rsc->id, bundle_data->image,
                                      pcmk_is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
-                                     pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
+                                     get_unmanaged_str(rsc));
 
             if (pcmk__list_of_multiple(bundle_data->replicas)) {
                 out->list_item(out, NULL, "Replica[%d]", replica->offset);
@@ -1567,7 +1589,7 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
                                      (bundle_data->nreplicas > 1)? " set" : "",
                                      rsc->id, bundle_data->image,
                                      pcmk_is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
-                                     pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
+                                     get_unmanaged_str(rsc));
 
             pe__bundle_replica_output_text(out, replica, pe__current_node(replica->container),
                                            show_opts);

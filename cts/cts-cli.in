@@ -558,14 +558,47 @@ function test_crm_mon() {
     cmd="crm_mon -1 --brief --group-by-node"
     test_assert $CRM_EX_OK 0
 
+    # Maintenance mode tests
+
     export CIB_file=$(mktemp ${TMPDIR:-/tmp}/cts-cli.crm_mon.xml.XXXXXXXXXX)
-    sed -e '/maintenance-mode/ s/false/true/' "$test_home/cli/crm_mon.xml" > $CIB_file
+    cp "$test_home/cli/crm_mon.xml" "$CIB_file"
+
+    crm_attribute -n maintenance-mode -v true
 
     desc="Text output of all resources with maintenance-mode enabled"
     cmd="crm_mon -1 -r"
     test_assert $CRM_EX_OK 0
 
-    rm -r "$CIB_file"
+    desc="XML output of all resources with maintenance-mode enabled"
+    cmd="crm_mon -1 -r --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    crm_attribute -n maintenance-mode -v false
+
+    crm_attribute -n maintenance -N cluster02 -v true
+
+    desc="Text output of all resources with maintenance enabled for a node"
+    cmd="crm_mon -1 -r"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output of all resources with maintenance enabled for a node"
+    cmd="crm_mon -1 -r --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    rm -f "$CIB_file"
+    unset CIB_file
+
+    export CIB_file="$test_home/cli/crm_mon-rsc-maint.xml"
+
+    # The fence resource is excluded, for comparison
+    desc="Text output of all resources with maintenance meta attribute true"
+    cmd="crm_mon -1 -r"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output of all resources with maintenance meta attribute true"
+    cmd="crm_mon -1 -r --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
     unset CIB_file
 
     export CIB_file="$test_home/cli/crm_mon-T180.xml"

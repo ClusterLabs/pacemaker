@@ -123,12 +123,15 @@ group_header(pcmk__output_t *out, int *rc, pe_resource_t *rsc, int n_inactive, b
                                pcmk__plural_s(n_inactive));
     }
 
-    if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
-        pcmk__add_separated_word(&attrs, 64, "unmanaged", ", ");
-    }
-
     if (pe__resource_is_disabled(rsc)) {
         pcmk__add_separated_word(&attrs, 64, "disabled", ", ");
+    }
+
+    if (pcmk_is_set(rsc->flags, pe_rsc_maintenance)) {
+        pcmk__add_separated_word(&attrs, 64, "maintenance", ", ");
+
+    } else if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+        pcmk__add_separated_word(&attrs, 64, "unmanaged", ", ");
     }
 
     if (attrs != NULL) {
@@ -332,7 +335,6 @@ pe__group_xml(pcmk__output_t *out, va_list args)
     GList *only_rsc = va_arg(args, GList *);
 
     GList *gIter = rsc->children;
-    char *count = pcmk__itoa(g_list_length(gIter));
 
     int rc = pcmk_rc_no_output;
 
@@ -340,7 +342,6 @@ pe__group_xml(pcmk__output_t *out, va_list args)
                              (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches));
 
     if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
-        free(count);
         return rc;
     }
 
@@ -352,11 +353,17 @@ pe__group_xml(pcmk__output_t *out, va_list args)
         }
 
         if (rc == pcmk_rc_no_output) {
-            rc = pe__name_and_nvpairs_xml(out, true, "group", 4
-                                          , "id", rsc->id
-                                          , "number_resources", count
-                                          , "managed", pe__rsc_bool_str(rsc, pe_rsc_managed)
-                                          , "disabled", pcmk__btoa(pe__resource_is_disabled(rsc)));
+            char *count = pcmk__itoa(g_list_length(gIter));
+            const char *maint_s = pe__rsc_bool_str(rsc, pe_rsc_maintenance);
+            const char *managed_s = pe__rsc_bool_str(rsc, pe_rsc_managed);
+            const char *disabled_s = pcmk__btoa(pe__resource_is_disabled(rsc));
+
+            rc = pe__name_and_nvpairs_xml(out, true, "group", 5,
+                                          XML_ATTR_ID, rsc->id,
+                                          "number_resources", count,
+                                          "maintenance", maint_s,
+                                          "managed", managed_s,
+                                          "disabled", disabled_s);
             free(count);
             CRM_ASSERT(rc == pcmk_rc_ok);
         }

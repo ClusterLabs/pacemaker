@@ -1128,7 +1128,7 @@ unpack_resources 	error: Either configure some or disable STONITH with the stoni
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -L --output-as=xml">
   <resources>
-    <resource id="dummy" resource_agent="ocf:pacemaker:Dummy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+    <resource id="dummy" resource_agent="ocf:pacemaker:Dummy" role="Stopped" active="false" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
   </resources>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -1169,7 +1169,7 @@ unpack_resources 	error: Either configure some or disable STONITH with the stoni
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -q -r dummy --output-as=xml">
   <resource_config>
-    <resource id="dummy" resource_agent="ocf:pacemaker:Dummy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+    <resource id="dummy" resource_agent="ocf:pacemaker:Dummy" role="Stopped" active="false" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
     <xml><![CDATA[<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
   <meta_attributes id="dummy-meta_attributes"/>
   <instance_attributes id="dummy-instance_attributes">
@@ -4656,103 +4656,103 @@ export overcloud-rabbit-2=overcloud-rabbit-2
       <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
     </nodes>
     <resources>
-      <clone id="ping-clone" multi_state="false" unique="false" managed="true" disabled="false" failed="false" failure_ignored="false">
-        <resource id="ping" resource_agent="ocf:pacemaker:ping" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+      <clone id="ping-clone" multi_state="false" unique="false" maintenance="false" managed="true" disabled="false" failed="false" failure_ignored="false">
+        <resource id="ping" resource_agent="ocf:pacemaker:ping" role="Started" active="true" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
           <node name="cluster02" id="2" cached="true"/>
         </resource>
-        <resource id="ping" resource_agent="ocf:pacemaker:ping" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <resource id="ping" resource_agent="ocf:pacemaker:ping" role="Started" active="true" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
           <node name="cluster01" id="1" cached="true"/>
         </resource>
       </clone>
-      <resource id="Fencing" resource_agent="stonith:fence_xvm" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+      <resource id="Fencing" resource_agent="stonith:fence_xvm" role="Started" active="true" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster01" id="1" cached="true"/>
       </resource>
-      <resource id="dummy" resource_agent="ocf:pacemaker:Dummy" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+      <resource id="dummy" resource_agent="ocf:pacemaker:Dummy" role="Started" active="true" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster02" id="2" cached="true"/>
       </resource>
-      <clone id="inactive-clone" multi_state="false" unique="false" managed="true" disabled="true" failed="false" failure_ignored="false" target_role="stopped">
-        <resource id="inactive-dhcpd" resource_agent="lsb:dhcpd" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="inactive-dhcpd" resource_agent="lsb:dhcpd" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      <clone id="inactive-clone" multi_state="false" unique="false" maintenance="false" managed="true" disabled="true" failed="false" failure_ignored="false" target_role="stopped">
+        <resource id="inactive-dhcpd" resource_agent="lsb:dhcpd" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="inactive-dhcpd" resource_agent="lsb:dhcpd" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </clone>
-      <group id="inactive-group" number_resources="2" managed="true" disabled="true">
-        <resource id="inactive-dummy-1" resource_agent="ocf:pacemaker:Dummy" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="inactive-dummy-2" resource_agent="ocf:pacemaker:Dummy" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      <group id="inactive-group" number_resources="2" maintenance="false" managed="true" disabled="true">
+        <resource id="inactive-dummy-1" resource_agent="ocf:pacemaker:Dummy" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="inactive-dummy-2" resource_agent="ocf:pacemaker:Dummy" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </group>
-      <bundle id="httpd-bundle" type="docker" image="pcmk:http" unique="false" managed="true" failed="false">
+      <bundle id="httpd-bundle" type="docker" image="pcmk:http" unique="false" maintenance="false" managed="true" failed="false">
         <replica id="0">
-          <resource id="httpd-bundle-ip-192.168.122.131" resource_agent="ocf:heartbeat:IPaddr2" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <resource id="httpd-bundle-ip-192.168.122.131" resource_agent="ocf:heartbeat:IPaddr2" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
             <node name="cluster01" id="1" cached="true"/>
           </resource>
-          <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
             <node name="httpd-bundle-0" id="httpd-bundle-0" cached="true"/>
           </resource>
-          <resource id="httpd-bundle-docker-0" resource_agent="ocf:heartbeat:docker" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <resource id="httpd-bundle-docker-0" resource_agent="ocf:heartbeat:docker" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
             <node name="cluster01" id="1" cached="true"/>
           </resource>
-          <resource id="httpd-bundle-0" resource_agent="ocf:pacemaker:remote" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <resource id="httpd-bundle-0" resource_agent="ocf:pacemaker:remote" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
             <node name="cluster01" id="1" cached="true"/>
           </resource>
         </replica>
         <replica id="1">
-          <resource id="httpd-bundle-ip-192.168.122.132" resource_agent="ocf:heartbeat:IPaddr2" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <resource id="httpd-bundle-ip-192.168.122.132" resource_agent="ocf:heartbeat:IPaddr2" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
             <node name="cluster02" id="2" cached="true"/>
           </resource>
-          <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
             <node name="httpd-bundle-1" id="httpd-bundle-1" cached="true"/>
           </resource>
-          <resource id="httpd-bundle-docker-1" resource_agent="ocf:heartbeat:docker" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <resource id="httpd-bundle-docker-1" resource_agent="ocf:heartbeat:docker" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
             <node name="cluster02" id="2" cached="true"/>
           </resource>
-          <resource id="httpd-bundle-1" resource_agent="ocf:pacemaker:remote" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <resource id="httpd-bundle-1" resource_agent="ocf:pacemaker:remote" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
             <node name="cluster02" id="2" cached="true"/>
           </resource>
         </replica>
         <replica id="2">
-          <resource id="httpd-bundle-ip-192.168.122.133" resource_agent="ocf:heartbeat:IPaddr2" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-          <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-          <resource id="httpd-bundle-docker-2" resource_agent="ocf:heartbeat:docker" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-          <resource id="httpd-bundle-2" resource_agent="ocf:pacemaker:remote" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+          <resource id="httpd-bundle-ip-192.168.122.133" resource_agent="ocf:heartbeat:IPaddr2" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+          <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+          <resource id="httpd-bundle-docker-2" resource_agent="ocf:heartbeat:docker" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+          <resource id="httpd-bundle-2" resource_agent="ocf:pacemaker:remote" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
         </replica>
       </bundle>
-      <group id="exim-group" number_resources="2" managed="true" disabled="false">
-        <resource id="Public-IP" resource_agent="ocf:heartbeat:IPaddr" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+      <group id="exim-group" number_resources="2" maintenance="false" managed="true" disabled="false">
+        <resource id="Public-IP" resource_agent="ocf:heartbeat:IPaddr" role="Started" active="true" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
           <node name="cluster02" id="2" cached="true"/>
         </resource>
-        <resource id="Email" resource_agent="lsb:exim" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <resource id="Email" resource_agent="lsb:exim" role="Started" active="true" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
           <node name="cluster02" id="2" cached="true"/>
         </resource>
       </group>
-      <clone id="mysql-clone-group" multi_state="false" unique="false" managed="true" disabled="false" failed="false" failure_ignored="false">
-        <group id="mysql-group:0" number_resources="1" managed="true" disabled="false">
-          <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+      <clone id="mysql-clone-group" multi_state="false" unique="false" maintenance="false" managed="true" disabled="false" failed="false" failure_ignored="false">
+        <group id="mysql-group:0" number_resources="1" maintenance="false" managed="true" disabled="false">
+          <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Started" active="true" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
             <node name="cluster02" id="2" cached="true"/>
           </resource>
         </group>
-        <group id="mysql-group:1" number_resources="1" managed="true" disabled="false">
-          <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <group id="mysql-group:1" number_resources="1" maintenance="false" managed="true" disabled="false">
+          <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Started" active="true" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
             <node name="cluster01" id="1" cached="true"/>
           </resource>
         </group>
-        <group id="mysql-group:2" number_resources="1" managed="true" disabled="false">
-          <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <group id="mysql-group:2" number_resources="1" maintenance="false" managed="true" disabled="false">
+          <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
         </group>
-        <group id="mysql-group:3" number_resources="1" managed="true" disabled="false">
-          <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <group id="mysql-group:3" number_resources="1" maintenance="false" managed="true" disabled="false">
+          <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
         </group>
-        <group id="mysql-group:4" number_resources="1" managed="true" disabled="false">
-          <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <group id="mysql-group:4" number_resources="1" maintenance="false" managed="true" disabled="false">
+          <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
         </group>
       </clone>
-      <clone id="promotable-clone" multi_state="true" unique="false" managed="true" disabled="false" failed="false" failure_ignored="false">
-        <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Promoted" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+      <clone id="promotable-clone" multi_state="true" unique="false" maintenance="false" managed="true" disabled="false" failed="false" failure_ignored="false">
+        <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Promoted" active="true" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
           <node name="cluster02" id="2" cached="true"/>
         </resource>
-        <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Unpromoted" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Unpromoted" active="true" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
           <node name="cluster01" id="1" cached="true"/>
         </resource>
-        <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </clone>
     </resources>
   </cluster_status>
