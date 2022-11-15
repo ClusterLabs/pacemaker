@@ -35,6 +35,21 @@ controld_election_init(const char *uname)
     fsa_election = election_init("DC", uname, 60000 /*60s*/, election_win_cb);
 }
 
+/*!
+ * \internal
+ * \brief Configure election options based on the CIB
+ *
+ * \param[in,out] options  Name/value pairs for configured options
+ */
+void
+controld_configure_election(GHashTable *options)
+{
+    const char *value = NULL;
+
+    value = g_hash_table_lookup(options, XML_CONFIG_ATTR_ELECTION_FAIL);
+    election_timeout_set_period(fsa_election, crm_parse_interval_spec(value));
+}
+
 void
 controld_remove_voter(const char *uname)
 {
@@ -53,12 +68,6 @@ controld_election_fini(void)
 {
     election_fini(fsa_election);
     fsa_election = NULL;
-}
-
-void
-controld_set_election_period(const char *value)
-{
-    election_timeout_set_period(fsa_election, crm_parse_interval_spec(value));
 }
 
 void

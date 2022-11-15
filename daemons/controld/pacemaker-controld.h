@@ -32,9 +32,9 @@ void do_cib_replaced(const char *event, xmlNode * msg);
 void crmd_metadata(void);
 void controld_trigger_config_as(const char *fn, int line);
 void controld_election_init(const char *uname);
+void controld_configure_election(GHashTable *options);
 void controld_remove_voter(const char *uname);
 void controld_election_fini(void);
-void controld_set_election_period(const char *value);
 void controld_stop_current_election_timeout(void);
 void controld_disconnect_cib_manager(void);
 

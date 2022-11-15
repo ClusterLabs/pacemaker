@@ -743,9 +743,6 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         controld_set_global_flags(controld_no_quorum_suicide);
     }
 
-    value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_ELECTION_FAIL);
-    controld_set_election_period(value);
-
     value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_SHUTDOWN_LOCK);
     if (crm_is_true(value)) {
         controld_set_global_flags(controld_shutdown_lock_enabled);
@@ -756,6 +753,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     value = g_hash_table_lookup(config_hash, "cluster-name");
     pcmk__str_update(&(controld_globals.cluster_name), value);
 
+    controld_configure_election(config_hash);
     controld_configure_fencing(config_hash);
     controld_configure_fsa_timers(config_hash);
 
