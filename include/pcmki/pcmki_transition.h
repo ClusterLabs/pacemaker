@@ -133,6 +133,9 @@ typedef struct {
 
     //! Failcount after one failed start action
     char *failed_start_offset;
+
+    //! Time (from epoch) by which the controller should re-run the scheduler
+    time_t recheck_by;
 } pcmk__graph_t;
 
 
