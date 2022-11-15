@@ -259,6 +259,45 @@ controld_init_fsa_timers(void)
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Configure timers based on the CIB
+ *
+ * \param[in,out] options  Name/value pairs for configured options
+ */
+void
+controld_configure_fsa_timers(GHashTable *options)
+{
+    const char *value = NULL;
+
+    // Election timer
+    value = g_hash_table_lookup(options, XML_CONFIG_ATTR_DC_DEADTIME);
+    election_timer->period_ms = crm_parse_interval_spec(value);
+
+    // Integration timer
+    value = g_hash_table_lookup(options, "join-integration-timeout");
+    integration_timer->period_ms = crm_parse_interval_spec(value);
+
+    // Finalization timer
+    value = g_hash_table_lookup(options, "join-finalization-timeout");
+    finalization_timer->period_ms = crm_parse_interval_spec(value);
+
+    // Shutdown escalation timer
+    value = g_hash_table_lookup(options, XML_CONFIG_ATTR_FORCE_QUIT);
+    shutdown_escalation_timer->period_ms = crm_parse_interval_spec(value);
+    crm_debug("Shutdown escalation occurs if DC has not responded to request "
+              "in %ums", shutdown_escalation_timer->period_ms);
+
+    // Transition timer
+    value = g_hash_table_lookup(options, "transition-delay");
+    transition_timer->period_ms = crm_parse_interval_spec(value);
+
+    // Recheck interval
+    value = g_hash_table_lookup(options, XML_CONFIG_ATTR_RECHECK);
+    recheck_interval_ms = crm_parse_interval_spec(value);
+    crm_debug("Re-run scheduler after %dms of inactivity", recheck_interval_ms);
+}
+
 void
 controld_free_fsa_timers(void)
 {

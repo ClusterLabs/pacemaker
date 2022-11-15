@@ -35,6 +35,7 @@ extern guint recheck_interval_ms;
 
 bool controld_init_fsa_timers(void);
 void controld_free_fsa_timers(void);
+void controld_configure_fsa_timers(GHashTable *options);
 gboolean controld_stop_timer(fsa_timer_t *timer);
 void controld_start_timer(fsa_timer_t *timer);
 void controld_start_recheck_timer(void);

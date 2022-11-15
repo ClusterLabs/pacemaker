@@ -730,9 +730,6 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     pcmk__validate_cluster_options(config_hash, controller_options,
                                    PCMK__NELEM(controller_options));
 
-    value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
-    election_timer->period_ms = crm_parse_interval_spec(value);
-
     value = g_hash_table_lookup(config_hash, "node-action-limit");
     throttle_update_job_max(value);
 
@@ -752,26 +749,8 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     value = g_hash_table_lookup(config_hash, "stonith-max-attempts");
     update_stonith_max_attempts(value);
 
-    value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_FORCE_QUIT);
-    shutdown_escalation_timer->period_ms = crm_parse_interval_spec(value);
-    crm_debug("Shutdown escalation occurs if DC has not responded to request in %ums",
-              shutdown_escalation_timer->period_ms);
-
     value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_ELECTION_FAIL);
     controld_set_election_period(value);
-
-    value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_RECHECK);
-    recheck_interval_ms = crm_parse_interval_spec(value);
-    crm_debug("Re-run scheduler after %dms of inactivity", recheck_interval_ms);
-
-    value = g_hash_table_lookup(config_hash, "transition-delay");
-    transition_timer->period_ms = crm_parse_interval_spec(value);
-
-    value = g_hash_table_lookup(config_hash, "join-integration-timeout");
-    integration_timer->period_ms = crm_parse_interval_spec(value);
-
-    value = g_hash_table_lookup(config_hash, "join-finalization-timeout");
-    finalization_timer->period_ms = crm_parse_interval_spec(value);
 
     value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_SHUTDOWN_LOCK);
     if (crm_is_true(value)) {
@@ -782,6 +761,8 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     value = g_hash_table_lookup(config_hash, "cluster-name");
     pcmk__str_update(&(controld_globals.cluster_name), value);
+
+    controld_configure_fsa_timers(config_hash);
 
     alerts = first_named_child(output, XML_CIB_TAG_ALERTS);
     crmd_unpack_alerts(alerts);
