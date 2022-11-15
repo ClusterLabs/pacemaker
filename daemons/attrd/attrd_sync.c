@@ -402,7 +402,13 @@ confirmation_timeout_cb(gpointer data)
 void
 attrd_do_not_expect_from_peer(const char *host)
 {
-    GList *keys = g_hash_table_get_keys(expected_confirmations);
+    GList *keys = NULL;
+
+    if (expected_confirmations == NULL) {
+        return;
+    }
+
+    keys = g_hash_table_get_keys(expected_confirmations);
 
     crm_trace("Removing peer %s from expected confirmations", host);
 
