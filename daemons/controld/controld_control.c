@@ -730,14 +730,6 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     pcmk__validate_cluster_options(config_hash, controller_options,
                                    PCMK__NELEM(controller_options));
 
-    value = g_hash_table_lookup(config_hash, "node-action-limit");
-    throttle_update_job_max(value);
-
-    value = g_hash_table_lookup(config_hash, "load-threshold");
-    if(value) {
-        throttle_set_load_target(strtof(value, NULL) / 100.0);
-    }
-
     value = g_hash_table_lookup(config_hash, "no-quorum-policy");
     if (pcmk__str_eq(value, "suicide", pcmk__str_casei) && pcmk__locate_sbd()) {
         controld_set_global_flags(controld_no_quorum_suicide);
@@ -753,9 +745,11 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     value = g_hash_table_lookup(config_hash, "cluster-name");
     pcmk__str_update(&(controld_globals.cluster_name), value);
 
+    // Let subcomponents initialize their own static variables
     controld_configure_election(config_hash);
     controld_configure_fencing(config_hash);
     controld_configure_fsa_timers(config_hash);
+    controld_configure_throttle(config_hash);
 
     alerts = first_named_child(output, XML_CIB_TAG_ALERTS);
     crmd_unpack_alerts(alerts);

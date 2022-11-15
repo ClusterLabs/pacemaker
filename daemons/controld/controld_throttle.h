@@ -9,9 +9,8 @@
 
 void throttle_init(void);
 void throttle_fini(void);
+void controld_configure_throttle(GHashTable *options);
 
-void throttle_set_load_target(float target);
 void throttle_update(xmlNode *xml);
-void throttle_update_job_max(const char *preference);
 int throttle_get_job_limit(const char *node);
 int throttle_get_total_job_limit(int l);
