@@ -743,12 +743,6 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         controld_set_global_flags(controld_no_quorum_suicide);
     }
 
-    value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_FENCE_REACTION);
-    set_fence_reaction(value);
-
-    value = g_hash_table_lookup(config_hash, "stonith-max-attempts");
-    update_stonith_max_attempts(value);
-
     value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_ELECTION_FAIL);
     controld_set_election_period(value);
 
@@ -762,6 +756,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     value = g_hash_table_lookup(config_hash, "cluster-name");
     pcmk__str_update(&(controld_globals.cluster_name), value);
 
+    controld_configure_fencing(config_hash);
     controld_configure_fsa_timers(config_hash);
 
     alerts = first_named_child(output, XML_CIB_TAG_ALERTS);

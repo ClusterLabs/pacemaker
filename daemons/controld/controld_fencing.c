@@ -31,11 +31,17 @@ struct st_fail_rec {
     int count;
 };
 
-static bool fence_reaction_panic = FALSE;
+static bool fence_reaction_panic = false;
 static unsigned long int stonith_max_attempts = 10;
 static GHashTable *stonith_failures = NULL;
 
-void
+/*!
+ * \internal
+ * \brief Update max fencing attempts before giving up
+ *
+ * \param[in] value  New max fencing attempts
+ */
+static void
 update_stonith_max_attempts(const char *value)
 {
     stonith_max_attempts = char2score(value);
@@ -44,19 +50,43 @@ update_stonith_max_attempts(const char *value)
     }
 }
 
-void
+/*!
+ * \internal
+ * \brief Configure reaction to notification of local node being fenced
+ *
+ * \param[in] reaction_s  Reaction type
+ */
+static void
 set_fence_reaction(const char *reaction_s)
 {
     if (pcmk__str_eq(reaction_s, "panic", pcmk__str_casei)) {
-        fence_reaction_panic = TRUE;
+        fence_reaction_panic = true;
 
     } else {
         if (!pcmk__str_eq(reaction_s, "stop", pcmk__str_casei)) {
             crm_warn("Invalid value '%s' for %s, using 'stop'",
                      reaction_s, XML_CONFIG_ATTR_FENCE_REACTION);
         }
-        fence_reaction_panic = FALSE;
+        fence_reaction_panic = false;
     }
+}
+
+/*!
+ * \internal
+ * \brief Configure fencing options based on the CIB
+ *
+ * \param[in,out] options  Name/value pairs for configured options
+ */
+void
+controld_configure_fencing(GHashTable *options)
+{
+    const char *value = NULL;
+
+    value = g_hash_table_lookup(options, XML_CONFIG_ATTR_FENCE_REACTION);
+    set_fence_reaction(value);
+
+    value = g_hash_table_lookup(options, "stonith-max-attempts");
+    update_stonith_max_attempts(value);
 }
 
 static gboolean
