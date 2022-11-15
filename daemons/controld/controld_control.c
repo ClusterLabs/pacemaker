@@ -806,6 +806,9 @@ do_read_config(long long action,
 void
 crm_shutdown(int nsig)
 {
+    const char *value = NULL;
+    guint default_period_ms = 0;
+
     if ((controld_globals.mainloop == NULL)
         || !g_main_loop_is_running(controld_globals.mainloop)) {
         crmd_exit(CRM_EX_OK);
@@ -821,16 +824,15 @@ crm_shutdown(int nsig)
     controld_set_fsa_input_flags(R_SHUTDOWN);
     register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
 
-    if (shutdown_escalation_timer->period_ms == 0) {
-        const char *value = NULL;
-
-        value = pcmk__cluster_option(NULL, controller_options,
-                                     PCMK__NELEM(controller_options),
-                                     XML_CONFIG_ATTR_FORCE_QUIT);
-        shutdown_escalation_timer->period_ms = crm_parse_interval_spec(value);
-    }
-
-    crm_notice("Initiating controller shutdown sequence " CRM_XS
-               " limit=%ums", shutdown_escalation_timer->period_ms);
-    controld_start_timer(shutdown_escalation_timer);
+    /* If shutdown timer doesn't have a period set, use the default
+     *
+     * @TODO: Evaluate whether this is still necessary. As long as
+     * config_query_callback() has been run at least once, it doesn't look like
+     * anything could have changed the timer period since then.
+     */
+    value = pcmk__cluster_option(NULL, controller_options,
+                                 PCMK__NELEM(controller_options),
+                                 XML_CONFIG_ATTR_FORCE_QUIT);
+    default_period_ms = crm_parse_interval_spec(value);
+    controld_shutdown_start_countdown(default_period_ms);
 }

@@ -469,3 +469,22 @@ controld_start_transition_timer(void)
 {
     controld_start_timer(transition_timer);
 }
+
+/*!
+ * \internal
+ * \brief Start the countdown sequence for a shutdown
+ *
+ * \param[in] default_period_ms  Period to use if the shutdown escalation
+ *                               timer's period is 0
+ */
+void
+controld_shutdown_start_countdown(guint default_period_ms)
+{
+    if (shutdown_escalation_timer->period_ms == 0) {
+        shutdown_escalation_timer->period_ms = default_period_ms;
+    }
+
+    crm_notice("Initiating controller shutdown sequence " CRM_XS " limit=%ums",
+               shutdown_escalation_timer->period_ms);
+    controld_start_timer(shutdown_escalation_timer);
+}
