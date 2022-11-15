@@ -333,7 +333,7 @@ try_local_executor_connect(long long action, fsa_data_t *msg_data,
                  "(%d max): %s", lrm_state->num_lrm_register_fails,
                  pcmk__plural_s(lrm_state->num_lrm_register_fails),
                  MAX_LRM_REG_FAILS, pcmk_rc_str(rc));
-        controld_start_timer(wait_timer);
+        controld_start_wait_timer();
         crmd_fsa_stall(FALSE);
         return;
     }

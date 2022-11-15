@@ -16,8 +16,8 @@
 #include <crm/msg_xml.h>
 #include <pacemaker-controld.h>
 
-// Wait before retrying a failed cib or executor connection
-fsa_timer_t *wait_timer = NULL;
+//! Wait before retrying a failed cib or executor connection
+static fsa_timer_t *wait_timer = NULL;
 
 // Periodically re-run scheduler (for date_spec evaluation and as a failsafe)
 fsa_timer_t *recheck_timer = NULL;
@@ -368,6 +368,16 @@ controld_start_recheck_timer(void)
         recheck_timer->period_ms = period_ms;
         controld_start_timer(recheck_timer);
     }
+}
+
+/*!
+ * \internal
+ * \brief Start the wait timer
+ */
+void
+controld_start_wait_timer(void)
+{
+    controld_start_timer(wait_timer);
 }
 
 gboolean

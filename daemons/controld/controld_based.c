@@ -167,7 +167,7 @@ do_cib_control(long long action,
         if (cib_retries < 30) {
             crm_warn("Couldn't complete CIB registration %d times... "
                      "pause and retry", cib_retries);
-            controld_start_timer(wait_timer);
+            controld_start_wait_timer();
             crmd_fsa_stall(FALSE);
 
         } else {
