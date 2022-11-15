@@ -31,8 +31,8 @@ static fsa_timer_t *transition_timer = NULL;
 //! join-integration-timeout
 static fsa_timer_t *integration_timer = NULL;
 
-// join-finalization-timeout
-fsa_timer_t *finalization_timer = NULL;
+//! join-finalization-timeout
+static fsa_timer_t *finalization_timer = NULL;
 
 // Wait for DC to stop all resources and give us the all-clear to shut down
 fsa_timer_t *shutdown_escalation_timer = NULL;
