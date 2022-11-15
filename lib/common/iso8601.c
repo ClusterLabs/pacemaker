@@ -17,6 +17,7 @@
 #include <crm/crm.h>
 #include <time.h>
 #include <ctype.h>
+#include <inttypes.h>
 #include <string.h>
 #include <stdbool.h>
 #include <crm/common/iso8601.h>
@@ -45,6 +46,22 @@
 
 #define HOUR_SECONDS    (60 * 60)
 #define DAY_SECONDS     (HOUR_SECONDS * 24)
+
+/*!
+ * \internal
+ * \brief Validate a seconds/microseconds tuple
+ *
+ * The microseconds value must be in the correct range, and if both are nonzero
+ * they must have the same sign.
+ *
+ * \param[in] sec   Seconds
+ * \param[in] usec  Microseconds
+ *
+ * \return true if the seconds/microseconds tuple is valid, or false otherwise
+ */
+#define valid_sec_usec(sec, usec)               \
+        ((QB_ABS(usec) < QB_TIME_US_IN_SEC)     \
+         && (((sec) == 0) || ((usec) == 0) || (((sec) < 0) == ((usec) < 0))))
 
 // A date/time or duration
 struct crm_time_s {
@@ -262,11 +279,7 @@ crm_time_get_sec(int sec, uint32_t *h, uint32_t *m, uint32_t *s)
 {
     uint32_t hours, minutes, seconds;
 
-    if (sec < 0) {
-        seconds = 0 - sec;
-    } else {
-        seconds = sec;
-    }
+    seconds = QB_ABS(sec);
 
     hours = seconds / HOUR_SECONDS;
     seconds -= HOUR_SECONDS * hours;
@@ -274,7 +287,8 @@ crm_time_get_sec(int sec, uint32_t *h, uint32_t *m, uint32_t *s)
     minutes = seconds / 60;
     seconds -= 60 * minutes;
 
-    crm_trace("%d == %.2d:%.2d:%.2d", sec, hours, minutes, seconds);
+    crm_trace("%d == %.2" PRIu32 ":%.2" PRIu32 ":%.2" PRIu32,
+              sec, hours, minutes, seconds);
 
     *h = hours;
     *m = minutes;
@@ -439,16 +453,47 @@ crm_time_get_isoweek(const crm_time_t *dt, uint32_t *y, uint32_t *w,
     }
 
     *y = year_num;
-    crm_trace("Converted %.4d-%.3d to %.4d-W%.2d-%d", dt->years, dt->days, *y, *w, *d);
+    crm_trace("Converted %.4d-%.3d to %.4" PRIu32 "-W%.2" PRIu32 "-%" PRIu32,
+              dt->years, dt->days, *y, *w, *d);
     return TRUE;
 }
 
 #define DATE_MAX 128
 
+/*!
+ * \internal
+ * \brief Print "<seconds>.<microseconds>" to a buffer
+ *
+ * \param[in]     sec     Seconds
+ * \param[in]     usec    Microseconds (must be of same sign as \p sec and of
+ *                        absolute value less than \p QB_TIME_US_IN_SEC)
+ * \param[in,out] buf     Result buffer
+ * \param[in,out] offset  Current offset within \p buf
+ */
+static inline void
+sec_usec_as_string(long long sec, int usec, char *buf, size_t *offset)
+{
+    *offset += snprintf(buf + *offset, DATE_MAX - *offset, "%s%lld.%06d",
+                        ((sec == 0) && (usec < 0))? "-" : "",
+                        sec, QB_ABS(usec));
+}
+
+/*!
+ * \internal
+ * \brief Get a string representation of a duration
+ *
+ * \param[in]  dt         Time object to interpret as a duration
+ * \param[in]  usec       Microseconds to add to \p dt
+ * \param[in]  show_usec  Whether to include microseconds in \p result
+ * \param[out] result     Where to store the result string
+ */
 static void
-crm_duration_as_string(const crm_time_t *dt, char *result)
+crm_duration_as_string(const crm_time_t *dt, int usec, bool show_usec,
+                       char *result)
 {
     size_t offset = 0;
+
+    CRM_ASSERT(valid_sec_usec(dt->seconds, usec));
 
     if (dt->years) {
         offset += snprintf(result + offset, DATE_MAX - offset, "%4d year%s ",
@@ -463,91 +508,135 @@ crm_duration_as_string(const crm_time_t *dt, char *result)
                            dt->days, pcmk__plural_s(dt->days));
     }
 
-    if (((offset == 0) || (dt->seconds != 0))
-        && (dt->seconds > -60) && (dt->seconds < 60)) {
-        offset += snprintf(result + offset, DATE_MAX - offset, "%d second%s",
-                           dt->seconds, pcmk__plural_s(dt->seconds));
-    } else if (dt->seconds) {
-        uint32_t h = 0, m = 0, s = 0;
+    // At least print seconds (and optionally usecs)
+    if ((offset == 0) || (dt->seconds != 0) || (show_usec && (usec != 0))) {
+        if (show_usec) {
+            sec_usec_as_string(dt->seconds, usec, result, &offset);
+        } else {
+            offset += snprintf(result + offset, DATE_MAX - offset, "%d",
+                               dt->seconds);
+        }
+        offset += snprintf(result + offset, DATE_MAX - offset, " second%s",
+                           pcmk__plural_s(dt->seconds));
+    }
 
-        offset += snprintf(result + offset, DATE_MAX - offset, "%d seconds (",
-                           dt->seconds);
+    // More than one minute, so provide a more readable breakdown into units
+    if (QB_ABS(dt->seconds) >= 60) {
+        uint32_t h = 0;
+        uint32_t m = 0;
+        uint32_t s = 0;
+        uint32_t u = QB_ABS(usec);
+        bool print_sec_component = false;
+
         crm_time_get_sec(dt->seconds, &h, &m, &s);
+        print_sec_component = ((s != 0) || (show_usec && (u != 0)));
+
+        offset += snprintf(result + offset, DATE_MAX - offset, " (");
+
         if (h) {
-            offset += snprintf(result + offset, DATE_MAX - offset, "%u hour%s%s",
-                               h, pcmk__plural_s(h), ((m || s)? " " : ""));
+            offset += snprintf(result + offset, DATE_MAX - offset,
+                               "%" PRIu32 " hour%s%s", h, pcmk__plural_s(h),
+                               ((m != 0) || print_sec_component)? " " : "");
         }
+
         if (m) {
-            offset += snprintf(result + offset, DATE_MAX - offset, "%u minute%s%s",
-                               m, pcmk__plural_s(m), (s? " " : ""));
+            offset += snprintf(result + offset, DATE_MAX - offset,
+                               "%" PRIu32 " minute%s%s", m, pcmk__plural_s(m),
+                               print_sec_component? " " : "");
         }
-        if (s) {
-            offset += snprintf(result + offset, DATE_MAX - offset, "%u second%s",
-                               s, pcmk__plural_s(s));
+
+        if (print_sec_component) {
+            if (show_usec) {
+                sec_usec_as_string(s, u, result, &offset);
+            } else {
+                offset += snprintf(result + offset, DATE_MAX - offset,
+                                   "%" PRIu32, s);
+            }
+            offset += snprintf(result + offset, DATE_MAX - offset, " second%s",
+                               pcmk__plural_s(dt->seconds));
         }
+
         offset += snprintf(result + offset, DATE_MAX - offset, ")");
     }
 }
 
-char *
-crm_time_as_string(const crm_time_t *date_time, int flags)
+/*!
+ * \internal
+ * \brief Get a string representation of a time object
+ *
+ * \param[in]  dt      Time to convert to string
+ * \param[in]  usec    Microseconds to add to \p dt
+ * \param[in]  flags   Group of \p crm_time_* string format options
+ * \param[out] result  Where to store the result string
+ *
+ * \note \p result must be of size \p DATE_MAX or larger.
+ */
+static void
+time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags,
+                      char *result)
 {
-    const crm_time_t *dt = NULL;
     crm_time_t *utc = NULL;
-    char result[DATE_MAX] = { '\0', };
-    char *result_copy = NULL;
     size_t offset = 0;
-
-    // Convert to UTC if local timezone was not requested
-    if (date_time && date_time->offset
-        && !pcmk_is_set(flags, crm_time_log_with_timezone)) {
-        crm_trace("UTC conversion");
-        utc = crm_get_utc_time(date_time);
-        dt = utc;
-    } else {
-        dt = date_time;
-    }
 
     if (!crm_time_is_defined(dt)) {
         strcpy(result, "<undefined time>");
-        goto done;
+        return;
     }
 
-    // Simple cases: as duration, seconds, or seconds since epoch
+    CRM_ASSERT(valid_sec_usec(dt->seconds, usec));
 
-    if (flags & crm_time_log_duration) {
-        crm_duration_as_string(date_time, result);
-        goto done;
+    /* Simple cases: as duration, seconds, or seconds since epoch.
+     * These never depend on time zone.
+     */
+
+    if (pcmk_is_set(flags, crm_time_log_duration)) {
+        crm_duration_as_string(dt, usec, pcmk_is_set(flags, crm_time_usecs),
+                               result);
+        return;
     }
 
-    if (flags & crm_time_seconds) {
-        snprintf(result, DATE_MAX, "%lld", crm_time_get_seconds(date_time));
-        goto done;
+    if (pcmk_any_flags_set(flags, crm_time_seconds|crm_time_epoch)) {
+        long long seconds = 0;
+
+        if (pcmk_is_set(flags, crm_time_seconds)) {
+            seconds = crm_time_get_seconds(dt);
+        } else {
+            seconds = crm_time_get_seconds_since_epoch(dt);
+        }
+
+        if (pcmk_is_set(flags, crm_time_usecs)) {
+            sec_usec_as_string(seconds, usec, result, &offset);
+        } else {
+            snprintf(result, DATE_MAX, "%lld", seconds);
+        }
+        return;
     }
 
-    if (flags & crm_time_epoch) {
-        snprintf(result, DATE_MAX, "%lld",
-                 crm_time_get_seconds_since_epoch(date_time));
-        goto done;
+    // Convert to UTC if local timezone was not requested
+    if ((dt->offset != 0) && !pcmk_is_set(flags, crm_time_log_with_timezone)) {
+        crm_trace("UTC conversion");
+        utc = crm_get_utc_time(dt);
+        dt = utc;
     }
 
     // As readable string
 
-    if (flags & crm_time_log_date) {
-        if (flags & crm_time_weeks) { // YYYY-WW-D
+    if (pcmk_is_set(flags, crm_time_log_date)) {
+        if (pcmk_is_set(flags, crm_time_weeks)) { // YYYY-WW-D
             uint32_t y, w, d;
 
             if (crm_time_get_isoweek(dt, &y, &w, &d)) {
                 offset += snprintf(result + offset, DATE_MAX - offset,
-                                   "%u-W%.2u-%u", y, w, d);
+                                   "%" PRIu32 "-W%.2" PRIu32 "-%" PRIu32,
+                                   y, w, d);
             }
 
-        } else if (flags & crm_time_ordinal) { // YYYY-DDD
+        } else if (pcmk_is_set(flags, crm_time_ordinal)) { // YYYY-DDD
             uint32_t y, d;
 
             if (crm_time_get_ordinal(dt, &y, &d)) {
                 offset += snprintf(result + offset, DATE_MAX - offset,
-                                   "%u-%.3u", y, d);
+                                   "%" PRIu32 "-%.3" PRIu32, y, d);
             }
 
         } else { // YYYY-MM-DD
@@ -555,12 +644,13 @@ crm_time_as_string(const crm_time_t *date_time, int flags)
 
             if (crm_time_get_gregorian(dt, &y, &m, &d)) {
                 offset += snprintf(result + offset, DATE_MAX - offset,
-                                   "%.4u-%.2u-%.2u", y, m, d);
+                                   "%.4" PRIu32 "-%.2" PRIu32 "-%.2" PRIu32,
+                                   y, m, d);
             }
         }
     }
 
-    if (flags & crm_time_log_timeofday) {
+    if (pcmk_is_set(flags, crm_time_log_timeofday)) {
         uint32_t h = 0, m = 0, s = 0;
 
         if (offset > 0) {
@@ -569,24 +659,46 @@ crm_time_as_string(const crm_time_t *date_time, int flags)
 
         if (crm_time_get_timeofday(dt, &h, &m, &s)) {
             offset += snprintf(result + offset, DATE_MAX - offset,
-                               "%.2u:%.2u:%.2u", h, m, s);
+                               "%.2" PRIu32 ":%.2" PRIu32 ":%.2" PRIu32,
+                               h, m, s);
+
+            if (pcmk_is_set(flags, crm_time_usecs)) {
+                offset += snprintf(result + offset, DATE_MAX - offset,
+                                   ".%06" PRIu32, QB_ABS(usec));
+            }
         }
 
-        if ((flags & crm_time_log_with_timezone) && (dt->offset != 0)) {
+        if (pcmk_is_set(flags, crm_time_log_with_timezone)
+            && (dt->offset != 0)) {
             crm_time_get_sec(dt->offset, &h, &m, &s);
             offset += snprintf(result + offset, DATE_MAX - offset,
-                               " %c%.2u:%.2u",
+                               " %c%.2" PRIu32 ":%.2" PRIu32,
                                ((dt->offset < 0)? '-' : '+'), h, m);
         } else {
             offset += snprintf(result + offset, DATE_MAX - offset, "Z");
         }
     }
 
-  done:
     crm_time_free(utc);
+}
 
-    result_copy = strdup(result);
-    CRM_ASSERT(result_copy != NULL);
+/*!
+ * \brief Get a string representation of a \p crm_time_t object
+ *
+ * \param[in]  dt      Time to convert to string
+ * \param[in]  flags   Group of \p crm_time_* string format options
+ *
+ * \note The caller is responsible for freeing the return value using \p free().
+ */
+char *
+crm_time_as_string(const crm_time_t *dt, int flags)
+{
+    char result[DATE_MAX] = { '\0', };
+    char *result_copy = NULL;
+
+    time_as_string_common(dt, 0, flags, result);
+
+    pcmk__str_update(&result_copy, result);
     return result_copy;
 }
 
@@ -612,9 +724,11 @@ crm_time_parse_sec(const char *time_str, int *result)
     *result = 0;
 
     // Must have at least hour, but minutes and seconds are optional
-    rc = sscanf(time_str, "%d:%d:%d", &hour, &minute, &second);
+    rc = sscanf(time_str, "%" SCNu32 ":%" SCNu32 ":%" SCNu32,
+                &hour, &minute, &second);
     if (rc == 1) {
-        rc = sscanf(time_str, "%2d%2d%2d", &hour, &minute, &second);
+        rc = sscanf(time_str, "%2" SCNu32 "%2" SCNu32 "%2" SCNu32,
+                    &hour, &minute, &second);
     }
     if (rc == 0) {
         crm_err("%s is not a valid ISO 8601 time specification", time_str);
@@ -622,25 +736,26 @@ crm_time_parse_sec(const char *time_str, int *result)
         return FALSE;
     }
 
-    crm_trace("Got valid time: %.2d:%.2d:%.2d", hour, minute, second);
+    crm_trace("Got valid time: %.2" PRIu32 ":%.2" PRIu32 ":%.2" PRIu32,
+              hour, minute, second);
 
     if ((hour == 24) && (minute == 0) && (second == 0)) {
         // Equivalent to 00:00:00 of next day, return number of seconds in day
     } else if (hour >= 24) {
         crm_err("%s is not a valid ISO 8601 time specification "
-                "because %d is not a valid hour", time_str, hour);
+                "because %" PRIu32 " is not a valid hour", time_str, hour);
         errno = EINVAL;
         return FALSE;
     }
     if (minute >= 60) {
         crm_err("%s is not a valid ISO 8601 time specification "
-                "because %d is not a valid minute", time_str, minute);
+                "because %" PRIu32 " is not a valid minute", time_str, minute);
         errno = EINVAL;
         return FALSE;
     }
     if (second >= 60) {
         crm_err("%s is not a valid ISO 8601 time specification "
-                "because %d is not a valid second", time_str, second);
+                "because %" PRIu32 " is not a valid second", time_str, second);
         errno = EINVAL;
         return FALSE;
     }
@@ -734,7 +849,8 @@ crm_time_parse(const char *time_str, crm_time_t *a_time)
         return FALSE;
     }
     crm_time_get_sec(a_time->offset, &h, &m, &s);
-    crm_trace("Got tz: %c%2.d:%.2d", ((a_time->offset < 0)? '-' : '+'), h, m);
+    crm_trace("Got tz: %c%2." PRIu32 ":%.2" PRIu32,
+              (a_time->offset < 0)? '-' : '+', h, m);
 
     if (a_time->seconds == DAY_SECONDS) {
         // 24:00:00 == 00:00:00 of next day
@@ -1480,7 +1596,8 @@ crm_time_add_months(crm_time_t * a_time, int extra)
     uint32_t y, m, d, dmax;
 
     crm_time_get_gregorian(a_time, &y, &m, &d);
-    crm_trace("Adding %d months to %.4d-%.2d-%.2d", extra, y, m, d);
+    crm_trace("Adding %d months to %.4" PRIu32 "-%.2" PRIu32 "-%.2" PRIu32,
+              extra, y, m, d);
 
     if (extra > 0) {
         for (lpc = extra; lpc > 0; lpc--) {
@@ -1506,13 +1623,13 @@ crm_time_add_months(crm_time_t * a_time, int extra)
         d = dmax;
     }
 
-    crm_trace("Calculated %.4d-%.2d-%.2d", y, m, d);
+    crm_trace("Calculated %.4" PRIu32 "-%.2" PRIu32 "-%.2" PRIu32, y, m, d);
 
     a_time->years = y;
     a_time->days = get_ordinal_days(y, m, d);
 
     crm_time_get_gregorian(a_time, &y, &m, &d);
-    crm_trace("Got %.4d-%.2d-%.2d", y, m, d);
+    crm_trace("Got %.4" PRIu32 "-%.2" PRIu32 "-%.2" PRIu32, y, m, d);
 }
 
 void
@@ -1730,7 +1847,7 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
  *
  * \param[in]  source  Pointer to epoch time value (or \p NULL for current time)
  * \param[in]  flags   Group of \p crm_time_* flags controlling display format
- *                     format (0 to use \p ctime() with newline removed)
+ *                     (0 to use \p ctime() with newline removed)
  *
  * \return String representation of \p source on success (may be empty depending
  *         on \p flags; guaranteed not to be \p NULL)
@@ -1757,6 +1874,41 @@ pcmk__epoch2str(const time_t *source, uint32_t flags)
         result = crm_time_as_string(&dt, flags);
     }
     return result;
+}
+
+/*!
+ * \internal
+ * \brief Return a human-friendly string corresponding to seconds-and-
+ *        nanoseconds value
+ *
+ * Time is shown with microsecond resolution if \p crm_time_usecs is in \p
+ * flags.
+ *
+ * \param[in]  ts     Time in seconds and nanoseconds (or \p NULL for current
+ *                    time)
+ * \param[in]  flags  Group of \p crm_time_* flags controlling display format
+ *
+ * \return String representation of \p ts on success (may be empty depending on
+ *         \p flags; guaranteed not to be \p NULL)
+ *
+ * \note The caller is responsible for freeing the return value using \p free().
+ */
+char *
+pcmk__timespec2str(const struct timespec *ts, uint32_t flags)
+{
+    struct timespec tmp_ts;
+    crm_time_t dt;
+    char result[DATE_MAX] = { 0 };
+    char *result_copy = NULL;
+
+    if (ts == NULL) {
+        qb_util_timespec_from_epoch_get(&tmp_ts);
+        ts = &tmp_ts;
+    }
+    crm_time_set_timet(&dt, &ts->tv_sec);
+    time_as_string_common(&dt, ts->tv_nsec / QB_TIME_NS_IN_USEC, flags, result);
+    pcmk__str_update(&result_copy, result);
+    return result_copy;
 }
 
 /*!
