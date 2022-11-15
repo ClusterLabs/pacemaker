@@ -634,9 +634,9 @@ crm_attribute: Error: pattern can only be used with query, or with till-reboot u
 crm_attribute: Error: must specify attribute name or pattern to delete
 =#=#=#= End test: crm_attribute given invalid delete usage - Incorrect usage (64) =#=#=#=
 * Passed: crm_attribute  - crm_attribute given invalid delete usage
-=#=#=#= Begin test: Digest calculation =#=#=#=
-Digest: =#=#=#= Current cib after: Digest calculation =#=#=#=
-<cib epoch="10" num_updates="6" admin_epoch="0">
+=#=#=#= Begin test: Set a utilization node attribute =#=#=#=
+=#=#=#= Current cib after: Set a utilization node attribute =#=#=#=
+<cib epoch="11" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -651,6 +651,48 @@ Digest: =#=#=#= Current cib after: Digest calculation =#=#=#=
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
+      </node>
+    </nodes>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <transient_attributes id="node1">
+        <instance_attributes id="status-node1"/>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>
+=#=#=#= End test: Set a utilization node attribute - OK (0) =#=#=#=
+* Passed: crm_attribute  - Set a utilization node attribute
+=#=#=#= Begin test: Query utilization node attribute =#=#=#=
+scope=nodes  name=cpu value=1
+=#=#=#= End test: Query utilization node attribute - OK (0) =#=#=#=
+* Passed: crm_attribute  - Query utilization node attribute
+=#=#=#= Begin test: Digest calculation =#=#=#=
+Digest: =#=#=#= Current cib after: Digest calculation =#=#=#=
+<cib epoch="11" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
     </nodes>
     <resources/>
@@ -669,7 +711,7 @@ Digest: =#=#=#= Current cib after: Digest calculation =#=#=#=
 =#=#=#= Begin test: Replace operation should fail =#=#=#=
 Call failed: Update was older than existing configuration
 =#=#=#= Current cib after: Replace operation should fail =#=#=#=
-<cib epoch="10" num_updates="6" admin_epoch="0">
+<cib epoch="11" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -684,6 +726,9 @@ Call failed: Update was older than existing configuration
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
     </nodes>
     <resources/>
@@ -702,7 +747,7 @@ Call failed: Update was older than existing configuration
 =#=#=#= Begin test: Default standby value =#=#=#=
 scope=status  name=standby value=off
 =#=#=#= Current cib after: Default standby value =#=#=#=
-<cib epoch="10" num_updates="6" admin_epoch="0">
+<cib epoch="11" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -717,6 +762,9 @@ scope=status  name=standby value=off
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
     </nodes>
     <resources/>
@@ -734,7 +782,7 @@ scope=status  name=standby value=off
 * Passed: crm_standby    - Default standby value
 =#=#=#= Begin test: Set standby status =#=#=#=
 =#=#=#= Current cib after: Set standby status =#=#=#=
-<cib epoch="11" num_updates="0" admin_epoch="0">
+<cib epoch="12" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -750,6 +798,9 @@ scope=status  name=standby value=off
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
           <nvpair id="nodes-node1-standby" name="standby" value="true"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
     </nodes>
     <resources/>
@@ -768,7 +819,7 @@ scope=status  name=standby value=off
 =#=#=#= Begin test: Query standby value =#=#=#=
 scope=nodes  name=standby value=true
 =#=#=#= Current cib after: Query standby value =#=#=#=
-<cib epoch="11" num_updates="0" admin_epoch="0">
+<cib epoch="12" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -784,6 +835,9 @@ scope=nodes  name=standby value=true
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
           <nvpair id="nodes-node1-standby" name="standby" value="true"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
     </nodes>
     <resources/>
@@ -802,7 +856,7 @@ scope=nodes  name=standby value=true
 =#=#=#= Begin test: Delete standby value =#=#=#=
 Deleted nodes attribute: id=nodes-node1-standby name=standby
 =#=#=#= Current cib after: Delete standby value =#=#=#=
-<cib epoch="12" num_updates="0" admin_epoch="0">
+<cib epoch="13" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -817,6 +871,9 @@ Deleted nodes attribute: id=nodes-node1-standby name=standby
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
     </nodes>
     <resources/>
@@ -834,7 +891,7 @@ Deleted nodes attribute: id=nodes-node1-standby name=standby
 * Passed: crm_standby    - Delete standby value
 =#=#=#= Begin test: Create a resource =#=#=#=
 =#=#=#= Current cib after: Create a resource =#=#=#=
-<cib epoch="13" num_updates="0" admin_epoch="0">
+<cib epoch="14" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -849,6 +906,9 @@ Deleted nodes attribute: id=nodes-node1-standby name=standby
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
     </nodes>
     <resources>
@@ -887,7 +947,7 @@ unpack_resources 	error: Either configure some or disable STONITH with the stoni
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Set 'dummy' option: id=dummy-meta_attributes-is-managed set=dummy-meta_attributes name=is-managed value=false
 =#=#=#= Current cib after: Create a resource meta attribute =#=#=#=
-<cib epoch="14" num_updates="0" admin_epoch="0">
+<cib epoch="15" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -902,6 +962,9 @@ Set 'dummy' option: id=dummy-meta_attributes-is-managed set=dummy-meta_attribute
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
     </nodes>
     <resources>
@@ -929,7 +992,7 @@ unpack_resources 	error: Either configure some or disable STONITH with the stoni
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 false
 =#=#=#= Current cib after: Query a resource meta attribute =#=#=#=
-<cib epoch="14" num_updates="0" admin_epoch="0">
+<cib epoch="15" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -944,6 +1007,9 @@ false
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
     </nodes>
     <resources>
@@ -971,7 +1037,7 @@ unpack_resources 	error: Either configure some or disable STONITH with the stoni
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Deleted 'dummy' option: id=dummy-meta_attributes-is-managed name=is-managed
 =#=#=#= Current cib after: Remove a resource meta attribute =#=#=#=
-<cib epoch="15" num_updates="0" admin_epoch="0">
+<cib epoch="16" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -986,6 +1052,9 @@ Deleted 'dummy' option: id=dummy-meta_attributes-is-managed name=is-managed
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
     </nodes>
     <resources>
@@ -1041,7 +1110,7 @@ unpack_resources 	error: Either configure some or disable STONITH with the stoni
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Set 'dummy' option: id=dummy-instance_attributes-delay set=dummy-instance_attributes name=delay value=10s
 =#=#=#= Current cib after: Create a resource attribute =#=#=#=
-<cib epoch="18" num_updates="0" admin_epoch="0">
+<cib epoch="19" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1056,6 +1125,9 @@ Set 'dummy' option: id=dummy-instance_attributes-delay set=dummy-instance_attrib
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
     </nodes>
     <resources>
@@ -1085,7 +1157,7 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 Full List of Resources:
   * dummy	(ocf:pacemaker:Dummy):	 Stopped
 =#=#=#= Current cib after: List the configured resources =#=#=#=
-<cib epoch="18" num_updates="0" admin_epoch="0">
+<cib epoch="19" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1100,6 +1172,9 @@ Full List of Resources:
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
     </nodes>
     <resources>
@@ -1189,7 +1264,7 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 crm_resource: Resource 'dummy' not moved: active in 0 locations.
 To prevent 'dummy' from running on a specific location, specify a node.
 =#=#=#= Current cib after: Require a destination when migrating a resource that is stopped =#=#=#=
-<cib epoch="18" num_updates="0" admin_epoch="0">
+<cib epoch="19" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1204,6 +1279,9 @@ To prevent 'dummy' from running on a specific location, specify a node.
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
     </nodes>
     <resources>
@@ -1233,7 +1311,7 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 crm_resource: Node 'i.do.not.exist' not found
 Error performing operation: No such object
 =#=#=#= Current cib after: Don't support migration to non-existent locations =#=#=#=
-<cib epoch="18" num_updates="0" admin_epoch="0">
+<cib epoch="19" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1248,6 +1326,9 @@ Error performing operation: No such object
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
     </nodes>
     <resources>
@@ -1272,7 +1353,7 @@ Error performing operation: No such object
 * Passed: crm_resource   - Don't support migration to non-existent locations
 =#=#=#= Begin test: Create a fencing resource =#=#=#=
 =#=#=#= Current cib after: Create a fencing resource =#=#=#=
-<cib epoch="19" num_updates="0" admin_epoch="0">
+<cib epoch="20" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1287,6 +1368,9 @@ Error performing operation: No such object
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
     </nodes>
     <resources>
@@ -1337,7 +1421,7 @@ Revised Cluster Status:
     * dummy	(ocf:pacemaker:Dummy):	 Started node1
     * Fence	(stonith:fence_true):	 Started node1
 =#=#=#= Current cib after: Bring resources online =#=#=#=
-<cib epoch="19" num_updates="4" admin_epoch="0">
+<cib epoch="20" num_updates="4" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1352,6 +1436,9 @@ Revised Cluster Status:
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
     </nodes>
     <resources>
@@ -1388,7 +1475,7 @@ Revised Cluster Status:
 =#=#=#= Begin test: Try to move a resource to its existing location =#=#=#=
 crm_resource: Error performing operation: Requested item already exists
 =#=#=#= Current cib after: Try to move a resource to its existing location =#=#=#=
-<cib epoch="19" num_updates="4" admin_epoch="0">
+<cib epoch="20" num_updates="4" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1403,6 +1490,9 @@ crm_resource: Error performing operation: Requested item already exists
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
     </nodes>
     <resources>
@@ -1446,7 +1536,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 	This will prevent dummy from running on node1 until the constraint is removed using the clear option or by editing the CIB with an appropriate tool
 	This will be the case even if node1 is the last node in the cluster
 =#=#=#= Current cib after: Move a resource from its existing location =#=#=#=
-<cib epoch="20" num_updates="0" admin_epoch="0">
+<cib epoch="21" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1461,6 +1551,9 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
     </nodes>
     <resources>
@@ -1499,7 +1592,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 =#=#=#= Begin test: Clear out constraints generated by --move =#=#=#=
 Removing constraint: cli-ban-dummy-on-node1
 =#=#=#= Current cib after: Clear out constraints generated by --move =#=#=#=
-<cib epoch="21" num_updates="0" admin_epoch="0">
+<cib epoch="22" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1514,6 +1607,9 @@ Removing constraint: cli-ban-dummy-on-node1
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
     </nodes>
     <resources>
@@ -1550,7 +1646,7 @@ Removing constraint: cli-ban-dummy-on-node1
 =#=#=#= Begin test: Default ticket granted state =#=#=#=
 false
 =#=#=#= Current cib after: Default ticket granted state =#=#=#=
-<cib epoch="21" num_updates="0" admin_epoch="0">
+<cib epoch="22" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1565,6 +1661,9 @@ false
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
     </nodes>
     <resources>
@@ -1600,7 +1699,7 @@ false
 * Passed: crm_ticket     - Default ticket granted state
 =#=#=#= Begin test: Set ticket granted state =#=#=#=
 =#=#=#= Current cib after: Set ticket granted state =#=#=#=
-<cib epoch="21" num_updates="1" admin_epoch="0">
+<cib epoch="22" num_updates="1" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1615,6 +1714,9 @@ false
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
     </nodes>
     <resources>
@@ -1654,7 +1756,7 @@ false
 =#=#=#= Begin test: Query ticket granted state =#=#=#=
 false
 =#=#=#= Current cib after: Query ticket granted state =#=#=#=
-<cib epoch="21" num_updates="1" admin_epoch="0">
+<cib epoch="22" num_updates="1" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1669,6 +1771,9 @@ false
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
     </nodes>
     <resources>
@@ -1707,7 +1812,7 @@ false
 * Passed: crm_ticket     - Query ticket granted state
 =#=#=#= Begin test: Delete ticket granted state =#=#=#=
 =#=#=#= Current cib after: Delete ticket granted state =#=#=#=
-<cib epoch="21" num_updates="2" admin_epoch="0">
+<cib epoch="22" num_updates="2" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1722,6 +1827,9 @@ false
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
     </nodes>
     <resources>
@@ -1760,7 +1868,7 @@ false
 * Passed: crm_ticket     - Delete ticket granted state
 =#=#=#= Begin test: Make a ticket standby =#=#=#=
 =#=#=#= Current cib after: Make a ticket standby =#=#=#=
-<cib epoch="21" num_updates="3" admin_epoch="0">
+<cib epoch="22" num_updates="3" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1775,6 +1883,9 @@ false
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
     </nodes>
     <resources>
@@ -1814,7 +1925,7 @@ false
 =#=#=#= Begin test: Query ticket standby state =#=#=#=
 true
 =#=#=#= Current cib after: Query ticket standby state =#=#=#=
-<cib epoch="21" num_updates="3" admin_epoch="0">
+<cib epoch="22" num_updates="3" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1829,6 +1940,9 @@ true
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
     </nodes>
     <resources>
@@ -1867,7 +1981,7 @@ true
 * Passed: crm_ticket     - Query ticket standby state
 =#=#=#= Begin test: Activate a ticket =#=#=#=
 =#=#=#= Current cib after: Activate a ticket =#=#=#=
-<cib epoch="21" num_updates="4" admin_epoch="0">
+<cib epoch="22" num_updates="4" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1882,6 +1996,9 @@ true
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
     </nodes>
     <resources>
@@ -1920,7 +2037,7 @@ true
 * Passed: crm_ticket     - Activate a ticket
 =#=#=#= Begin test: Delete ticket standby state =#=#=#=
 =#=#=#= Current cib after: Delete ticket standby state =#=#=#=
-<cib epoch="21" num_updates="5" admin_epoch="0">
+<cib epoch="22" num_updates="5" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1935,6 +2052,9 @@ true
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
     </nodes>
     <resources>
@@ -1975,7 +2095,7 @@ true
 crm_resource: Node 'host1' not found
 Error performing operation: No such object
 =#=#=#= Current cib after: Ban a resource on unknown node =#=#=#=
-<cib epoch="21" num_updates="5" admin_epoch="0">
+<cib epoch="22" num_updates="5" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1990,6 +2110,9 @@ Error performing operation: No such object
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
     </nodes>
     <resources>
@@ -2058,7 +2181,7 @@ Revised Cluster Status:
     * dummy	(ocf:pacemaker:Dummy):	 Started node1
     * Fence	(stonith:fence_true):	 Started node2
 =#=#=#= Current cib after: Create two more nodes and bring them online =#=#=#=
-<cib epoch="23" num_updates="8" admin_epoch="0">
+<cib epoch="24" num_updates="8" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2073,6 +2196,9 @@ Revised Cluster Status:
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
       <node id="node2" uname="node2"/>
       <node id="node3" uname="node3"/>
@@ -2140,7 +2266,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 	This will prevent dummy from running on node1 until the constraint is removed using the clear option or by editing the CIB with an appropriate tool
 	This will be the case even if node1 is the last node in the cluster
 =#=#=#= Current cib after: Ban dummy from node1 =#=#=#=
-<cib epoch="24" num_updates="0" admin_epoch="0">
+<cib epoch="25" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2155,6 +2281,9 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
       <node id="node2" uname="node2"/>
       <node id="node3" uname="node3"/>
@@ -2233,7 +2362,7 @@ Locations:
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= Current cib after: Ban dummy from node2 =#=#=#=
-<cib epoch="25" num_updates="0" admin_epoch="0">
+<cib epoch="26" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2248,6 +2377,9 @@ Locations:
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
       <node id="node2" uname="node2"/>
       <node id="node3" uname="node3"/>
@@ -2337,7 +2469,7 @@ Revised Cluster Status:
     * dummy	(ocf:pacemaker:Dummy):	 Started node3
     * Fence	(stonith:fence_true):	 Started node2
 =#=#=#= Current cib after: Relocate resources due to ban =#=#=#=
-<cib epoch="25" num_updates="2" admin_epoch="0">
+<cib epoch="26" num_updates="2" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2352,6 +2484,9 @@ Revised Cluster Status:
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
       <node id="node2" uname="node2"/>
       <node id="node3" uname="node3"/>
@@ -2422,7 +2557,7 @@ Revised Cluster Status:
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= Current cib after: Move dummy to node1 =#=#=#=
-<cib epoch="27" num_updates="0" admin_epoch="0">
+<cib epoch="28" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2437,6 +2572,9 @@ Revised Cluster Status:
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
       <node id="node2" uname="node2"/>
       <node id="node3" uname="node3"/>
@@ -2505,7 +2643,7 @@ Revised Cluster Status:
 =#=#=#= Begin test: Clear implicit constraints for dummy on node2 =#=#=#=
 Removing constraint: cli-ban-dummy-on-node2
 =#=#=#= Current cib after: Clear implicit constraints for dummy on node2 =#=#=#=
-<cib epoch="28" num_updates="0" admin_epoch="0">
+<cib epoch="29" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2520,6 +2658,9 @@ Removing constraint: cli-ban-dummy-on-node2
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
       <node id="node2" uname="node2"/>
       <node id="node3" uname="node3"/>
@@ -2594,7 +2735,7 @@ Removing constraint: cli-ban-dummy-on-node2
 Performing update of 'is-managed' on 'test-clone', the parent of 'test-primitive'
 Set 'test-clone' option: id=test-clone-meta_attributes-is-managed set=test-clone-meta_attributes name=is-managed value=false
 =#=#=#= Current cib after: Create a resource meta attribute =#=#=#=
-<cib epoch="30" num_updates="0" admin_epoch="0">
+<cib epoch="31" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2609,6 +2750,9 @@ Set 'test-clone' option: id=test-clone-meta_attributes-is-managed set=test-clone
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
       <node id="node2" uname="node2"/>
       <node id="node3" uname="node3"/>
@@ -2639,7 +2783,7 @@ Set 'test-clone' option: id=test-clone-meta_attributes-is-managed set=test-clone
 =#=#=#= Begin test: Create a resource meta attribute in the primitive =#=#=#=
 Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed set=test-primitive-meta_attributes name=is-managed value=false
 =#=#=#= Current cib after: Create a resource meta attribute in the primitive =#=#=#=
-<cib epoch="31" num_updates="0" admin_epoch="0">
+<cib epoch="32" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2654,6 +2798,9 @@ Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed set=te
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
       <node id="node2" uname="node2"/>
       <node id="node3" uname="node3"/>
@@ -2693,7 +2840,7 @@ Multiple attributes match name=is-managed
 A value for 'is-managed' already exists in child 'test-primitive', performing update on that instead of 'test-clone'
 Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=is-managed value=true
 =#=#=#= Current cib after: Update resource meta attribute with duplicates =#=#=#=
-<cib epoch="32" num_updates="0" admin_epoch="0">
+<cib epoch="33" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2708,6 +2855,9 @@ Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=i
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
       <node id="node2" uname="node2"/>
       <node id="node3" uname="node3"/>
@@ -2742,7 +2892,7 @@ Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=i
 =#=#=#= Begin test: Update resource meta attribute with duplicates (force clone) =#=#=#=
 Set 'test-clone' option: id=test-clone-meta_attributes-is-managed name=is-managed value=true
 =#=#=#= Current cib after: Update resource meta attribute with duplicates (force clone) =#=#=#=
-<cib epoch="33" num_updates="0" admin_epoch="0">
+<cib epoch="34" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2757,6 +2907,9 @@ Set 'test-clone' option: id=test-clone-meta_attributes-is-managed name=is-manage
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
       <node id="node2" uname="node2"/>
       <node id="node3" uname="node3"/>
@@ -2795,7 +2948,7 @@ Multiple attributes match name=is-managed
 
 Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=is-managed value=false
 =#=#=#= Current cib after: Update child resource meta attribute with duplicates =#=#=#=
-<cib epoch="34" num_updates="0" admin_epoch="0">
+<cib epoch="35" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2810,6 +2963,9 @@ Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=i
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
       <node id="node2" uname="node2"/>
       <node id="node3" uname="node3"/>
@@ -2849,7 +3005,7 @@ Multiple attributes match name=is-managed
 A value for 'is-managed' already exists in child 'test-primitive', performing delete on that instead of 'test-clone'
 Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=is-managed
 =#=#=#= Current cib after: Delete resource meta attribute with duplicates =#=#=#=
-<cib epoch="35" num_updates="0" admin_epoch="0">
+<cib epoch="36" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2864,6 +3020,9 @@ Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed na
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
       <node id="node2" uname="node2"/>
       <node id="node3" uname="node3"/>
@@ -2897,7 +3056,7 @@ Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed na
 Performing delete of 'is-managed' on 'test-clone', the parent of 'test-primitive'
 Deleted 'test-clone' option: id=test-clone-meta_attributes-is-managed name=is-managed
 =#=#=#= Current cib after: Delete resource meta attribute in parent =#=#=#=
-<cib epoch="36" num_updates="0" admin_epoch="0">
+<cib epoch="37" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2912,6 +3071,9 @@ Deleted 'test-clone' option: id=test-clone-meta_attributes-is-managed name=is-ma
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
       <node id="node2" uname="node2"/>
       <node id="node3" uname="node3"/>
@@ -2942,7 +3104,7 @@ Deleted 'test-clone' option: id=test-clone-meta_attributes-is-managed name=is-ma
 =#=#=#= Begin test: Create a resource meta attribute in the primitive =#=#=#=
 Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed set=test-primitive-meta_attributes name=is-managed value=false
 =#=#=#= Current cib after: Create a resource meta attribute in the primitive =#=#=#=
-<cib epoch="37" num_updates="0" admin_epoch="0">
+<cib epoch="38" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2957,6 +3119,9 @@ Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed set=te
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
       <node id="node2" uname="node2"/>
       <node id="node3" uname="node3"/>
@@ -2990,7 +3155,7 @@ Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed set=te
 A value for 'is-managed' already exists in child 'test-primitive', performing update on that instead of 'test-clone'
 Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=is-managed value=true
 =#=#=#= Current cib after: Update existing resource meta attribute =#=#=#=
-<cib epoch="38" num_updates="0" admin_epoch="0">
+<cib epoch="39" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3005,6 +3170,9 @@ Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=i
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
       <node id="node2" uname="node2"/>
       <node id="node3" uname="node3"/>
@@ -3037,7 +3205,7 @@ Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=i
 =#=#=#= Begin test: Create a resource meta attribute in the parent =#=#=#=
 Set 'test-clone' option: id=test-clone-meta_attributes-is-managed set=test-clone-meta_attributes name=is-managed value=true
 =#=#=#= Current cib after: Create a resource meta attribute in the parent =#=#=#=
-<cib epoch="39" num_updates="0" admin_epoch="0">
+<cib epoch="40" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3052,6 +3220,9 @@ Set 'test-clone' option: id=test-clone-meta_attributes-is-managed set=test-clone
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
       <node id="node2" uname="node2"/>
       <node id="node3" uname="node3"/>
@@ -3089,7 +3260,7 @@ Set 'test-clone' option: id=test-clone-meta_attributes-is-managed set=test-clone
 =#=#=#= Begin test: Delete resource parent meta attribute (force) =#=#=#=
 Deleted 'test-clone' option: id=test-clone-meta_attributes-is-managed name=is-managed
 =#=#=#= Current cib after: Delete resource parent meta attribute (force) =#=#=#=
-<cib epoch="40" num_updates="0" admin_epoch="0">
+<cib epoch="41" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3104,6 +3275,9 @@ Deleted 'test-clone' option: id=test-clone-meta_attributes-is-managed name=is-ma
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
       <node id="node2" uname="node2"/>
       <node id="node3" uname="node3"/>
@@ -3135,7 +3309,7 @@ Deleted 'test-clone' option: id=test-clone-meta_attributes-is-managed name=is-ma
 * Passed: crm_resource   - Delete resource parent meta attribute (force)
 =#=#=#= Begin test: Restore duplicates =#=#=#=
 =#=#=#= Current cib after: Restore duplicates =#=#=#=
-<cib epoch="41" num_updates="0" admin_epoch="0">
+<cib epoch="42" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3150,6 +3324,9 @@ Deleted 'test-clone' option: id=test-clone-meta_attributes-is-managed name=is-ma
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
       <node id="node2" uname="node2"/>
       <node id="node3" uname="node3"/>
@@ -3188,7 +3365,7 @@ Multiple attributes match name=is-managed
 
 Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=is-managed
 =#=#=#= Current cib after: Delete resource child meta attribute =#=#=#=
-<cib epoch="42" num_updates="0" admin_epoch="0">
+<cib epoch="43" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3203,6 +3380,9 @@ Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed na
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
       <node id="node2" uname="node2"/>
       <node id="node3" uname="node3"/>
@@ -3235,7 +3415,7 @@ Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed na
 =#=#=#= Begin test: Create a resource meta attribute in dummy1 =#=#=#=
 Set 'dummy1' option: id=dummy1-meta_attributes-is-managed set=dummy1-meta_attributes name=is-managed value=true
 =#=#=#= Current cib after: Create a resource meta attribute in dummy1 =#=#=#=
-<cib epoch="44" num_updates="0" admin_epoch="0">
+<cib epoch="45" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3250,6 +3430,9 @@ Set 'dummy1' option: id=dummy1-meta_attributes-is-managed set=dummy1-meta_attrib
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
       <node id="node2" uname="node2"/>
       <node id="node3" uname="node3"/>
@@ -3291,7 +3474,7 @@ Set 'dummy1' option: id=dummy1-meta_attributes-is-managed set=dummy1-meta_attrib
 Set 'dummy1' option: id=dummy1-meta_attributes-is-managed name=is-managed value=false
 Set 'dummy-group' option: id=dummy-group-meta_attributes-is-managed set=dummy-group-meta_attributes name=is-managed value=false
 =#=#=#= Current cib after: Create a resource meta attribute in dummy-group =#=#=#=
-<cib epoch="46" num_updates="0" admin_epoch="0">
+<cib epoch="47" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3306,6 +3489,9 @@ Set 'dummy-group' option: id=dummy-group-meta_attributes-is-managed set=dummy-gr
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
       <node id="node2" uname="node2"/>
       <node id="node3" uname="node3"/>
@@ -3349,7 +3535,7 @@ Set 'dummy-group' option: id=dummy-group-meta_attributes-is-managed set=dummy-gr
 =#=#=#= Begin test: Specify a lifetime when moving a resource =#=#=#=
 Migration will take effect until:
 =#=#=#= Current cib after: Specify a lifetime when moving a resource =#=#=#=
-<cib epoch="49" num_updates="0" admin_epoch="0">
+<cib epoch="50" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3364,6 +3550,9 @@ Migration will take effect until:
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
       <node id="node2" uname="node2"/>
       <node id="node3" uname="node3"/>
@@ -3400,7 +3589,7 @@ Migration will take effect until:
 * Passed: crm_resource   - Specify a lifetime when moving a resource
 =#=#=#= Begin test: Try to move a resource previously moved with a lifetime =#=#=#=
 =#=#=#= Current cib after: Try to move a resource previously moved with a lifetime =#=#=#=
-<cib epoch="51" num_updates="0" admin_epoch="0">
+<cib epoch="52" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3415,6 +3604,9 @@ Migration will take effect until:
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
       <node id="node2" uname="node2"/>
       <node id="node3" uname="node3"/>
@@ -3450,7 +3642,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 	This will prevent dummy from running on node1 until the constraint is removed using the clear option or by editing the CIB with an appropriate tool
 	This will be the case even if node1 is the last node in the cluster
 =#=#=#= Current cib after: Ban dummy from node1 for a short time =#=#=#=
-<cib epoch="52" num_updates="0" admin_epoch="0">
+<cib epoch="53" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3465,6 +3657,9 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
       <node id="node2" uname="node2"/>
       <node id="node3" uname="node3"/>
@@ -3503,7 +3698,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 =#=#=#= Begin test: Remove expired constraints =#=#=#=
 Removing constraint: cli-ban-dummy-on-node1
 =#=#=#= Current cib after: Remove expired constraints =#=#=#=
-<cib epoch="53" num_updates="0" admin_epoch="0">
+<cib epoch="54" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3518,6 +3713,9 @@ Removing constraint: cli-ban-dummy-on-node1
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
       <node id="node2" uname="node2"/>
       <node id="node3" uname="node3"/>
@@ -3550,7 +3748,7 @@ Removing constraint: cli-ban-dummy-on-node1
 =#=#=#= Begin test: Clear all implicit constraints for dummy =#=#=#=
 Removing constraint: cli-prefer-dummy
 =#=#=#= Current cib after: Clear all implicit constraints for dummy =#=#=#=
-<cib epoch="54" num_updates="0" admin_epoch="0">
+<cib epoch="55" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3565,6 +3763,9 @@ Removing constraint: cli-prefer-dummy
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
       <node id="node2" uname="node2"/>
       <node id="node3" uname="node3"/>
@@ -3594,7 +3795,7 @@ Removing constraint: cli-prefer-dummy
 * Passed: crm_resource   - Clear all implicit constraints for dummy
 =#=#=#= Begin test: Set a node health strategy =#=#=#=
 =#=#=#= Current cib after: Set a node health strategy =#=#=#=
-<cib epoch="55" num_updates="0" admin_epoch="0">
+<cib epoch="56" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3610,6 +3811,9 @@ Removing constraint: cli-prefer-dummy
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
       <node id="node2" uname="node2"/>
       <node id="node3" uname="node3"/>
@@ -3639,7 +3843,7 @@ Removing constraint: cli-prefer-dummy
 * Passed: crm_attribute  - Set a node health strategy
 =#=#=#= Begin test: Set a node health attribute =#=#=#=
 =#=#=#= Current cib after: Set a node health attribute =#=#=#=
-<cib epoch="56" num_updates="0" admin_epoch="0">
+<cib epoch="57" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3655,6 +3859,9 @@ Removing constraint: cli-prefer-dummy
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
       <node id="node2" uname="node2"/>
       <node id="node3" uname="node3">
@@ -3697,7 +3904,7 @@ Removing constraint: cli-prefer-dummy
 * Passed: crm_resource   - Show why a resource is not running on an unhealthy node
 =#=#=#= Begin test: Delete a resource =#=#=#=
 =#=#=#= Current cib after: Delete a resource =#=#=#=
-<cib epoch="57" num_updates="0" admin_epoch="0">
+<cib epoch="58" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3713,6 +3920,9 @@ Removing constraint: cli-prefer-dummy
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
         </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
       </node>
       <node id="node2" uname="node2"/>
       <node id="node3" uname="node3">
@@ -3801,21 +4011,12 @@ Removing constraint: cli-prefer-dummy
 =#=#=#= End test: Create an XML patchset - Error occurred (1) =#=#=#=
 * Passed: crm_diff       - Create an XML patchset
 =#=#=#= Begin test: Check locations and constraints for prim1 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 =#=#=#= End test: Check locations and constraints for prim1 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim1
 =#=#=#= Begin test: Recursively check locations and constraints for prim1 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 =#=#=#= End test: Recursively check locations and constraints for prim1 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim1
 =#=#=#= Begin test: Check locations and constraints for prim1 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -a -r prim1 --output-as=xml">
   <constraints/>
   <status code="0" message="OK"/>
@@ -3823,9 +4024,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Check locations and constraints for prim1 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim1 in XML
 =#=#=#= Begin test: Recursively check locations and constraints for prim1 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -A -r prim1 --output-as=xml">
   <constraints/>
   <status code="0" message="OK"/>
@@ -3833,9 +4031,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Recursively check locations and constraints for prim1 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim1 in XML
 =#=#=#= Begin test: Check locations and constraints for prim2 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Locations:
   * Node cluster01 (score=INFINITY, id=prim2-on-cluster1, rsc=prim2)
 Resources prim2 is colocated with:
@@ -3843,9 +4038,6 @@ Resources prim2 is colocated with:
 =#=#=#= End test: Check locations and constraints for prim2 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim2
 =#=#=#= Begin test: Recursively check locations and constraints for prim2 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Locations:
   * Node cluster01 (score=INFINITY, id=prim2-on-cluster1, rsc=prim2)
 Resources prim2 is colocated with:
@@ -3859,9 +4051,6 @@ Resources prim2 is colocated with:
 =#=#=#= End test: Recursively check locations and constraints for prim2 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim2
 =#=#=#= Begin test: Check locations and constraints for prim2 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -a -r prim2 --output-as=xml">
   <constraints>
     <rsc_location node="cluster01" rsc="prim2" id="prim2-on-cluster1" score="INFINITY"/>
@@ -3872,9 +4061,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Check locations and constraints for prim2 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim2 in XML
 =#=#=#= Begin test: Recursively check locations and constraints for prim2 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -A -r prim2 --output-as=xml">
   <constraints>
     <rsc_location node="cluster01" rsc="prim2" id="prim2-on-cluster1" score="INFINITY"/>
@@ -3888,9 +4074,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Recursively check locations and constraints for prim2 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim2 in XML
 =#=#=#= Begin test: Check locations and constraints for prim3 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources colocated with prim3:
   * prim2 (score=INFINITY, id=colocation-prim2-prim3-INFINITY)
     * Locations:
@@ -3902,9 +4085,6 @@ Resources prim3 is colocated with:
 =#=#=#= End test: Check locations and constraints for prim3 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim3
 =#=#=#= Begin test: Recursively check locations and constraints for prim3 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources colocated with prim3:
   * prim2 (score=INFINITY, id=colocation-prim2-prim3-INFINITY)
     * Locations:
@@ -3918,9 +4098,6 @@ Resources prim3 is colocated with:
 =#=#=#= End test: Recursively check locations and constraints for prim3 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim3
 =#=#=#= Begin test: Check locations and constraints for prim3 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -a -r prim3 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim2-prim3-INFINITY" rsc="prim2" with-rsc="prim3" score="INFINITY"/>
@@ -3933,9 +4110,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Check locations and constraints for prim3 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim3 in XML
 =#=#=#= Begin test: Recursively check locations and constraints for prim3 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -A -r prim3 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim2-prim3-INFINITY" rsc="prim2" with-rsc="prim3" score="INFINITY"/>
@@ -3949,9 +4123,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Recursively check locations and constraints for prim3 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim3 in XML
 =#=#=#= Begin test: Check locations and constraints for prim4 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Locations:
   * Node cluster02 (score=INFINITY, id=prim4-on-cluster2, rsc=prim4)
 Resources colocated with prim4:
@@ -3962,9 +4133,6 @@ Resources prim4 is colocated with:
 =#=#=#= End test: Check locations and constraints for prim4 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim4
 =#=#=#= Begin test: Recursively check locations and constraints for prim4 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Locations:
   * Node cluster02 (score=INFINITY, id=prim4-on-cluster2, rsc=prim4)
 Resources colocated with prim4:
@@ -3979,9 +4147,6 @@ Resources prim4 is colocated with:
 =#=#=#= End test: Recursively check locations and constraints for prim4 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim4
 =#=#=#= Begin test: Check locations and constraints for prim4 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -a -r prim4 --output-as=xml">
   <constraints>
     <rsc_location node="cluster02" rsc="prim4" id="prim4-on-cluster2" score="INFINITY"/>
@@ -3994,9 +4159,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Check locations and constraints for prim4 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim4 in XML
 =#=#=#= Begin test: Recursively check locations and constraints for prim4 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -A -r prim4 --output-as=xml">
   <constraints>
     <rsc_location node="cluster02" rsc="prim4" id="prim4-on-cluster2" score="INFINITY"/>
@@ -4011,9 +4173,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Recursively check locations and constraints for prim4 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim4 in XML
 =#=#=#= Begin test: Check locations and constraints for prim5 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources colocated with prim5:
   * prim4 (score=INFINITY, id=colocation-prim4-prim5-INFINITY)
     * Locations:
@@ -4021,9 +4180,6 @@ Resources colocated with prim5:
 =#=#=#= End test: Check locations and constraints for prim5 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim5
 =#=#=#= Begin test: Recursively check locations and constraints for prim5 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources colocated with prim5:
   * prim4 (score=INFINITY, id=colocation-prim4-prim5-INFINITY)
     * Locations:
@@ -4038,9 +4194,6 @@ Resources colocated with prim5:
 =#=#=#= End test: Recursively check locations and constraints for prim5 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim5
 =#=#=#= Begin test: Check locations and constraints for prim5 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -a -r prim5 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim4-prim5-INFINITY" rsc="prim4" with-rsc="prim5" score="INFINITY"/>
@@ -4051,9 +4204,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Check locations and constraints for prim5 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim5 in XML
 =#=#=#= Begin test: Recursively check locations and constraints for prim5 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -A -r prim5 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim4-prim5-INFINITY" rsc="prim4" with-rsc="prim5" score="INFINITY"/>
@@ -4068,25 +4218,16 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Recursively check locations and constraints for prim5 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim5 in XML
 =#=#=#= Begin test: Check locations and constraints for prim6 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Locations:
   * Node cluster02 (score=-INFINITY, id=prim6-not-on-cluster2, rsc=prim6)
 =#=#=#= End test: Check locations and constraints for prim6 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim6
 =#=#=#= Begin test: Recursively check locations and constraints for prim6 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Locations:
   * Node cluster02 (score=-INFINITY, id=prim6-not-on-cluster2, rsc=prim6)
 =#=#=#= End test: Recursively check locations and constraints for prim6 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim6
 =#=#=#= Begin test: Check locations and constraints for prim6 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -a -r prim6 --output-as=xml">
   <constraints>
     <rsc_location node="cluster02" rsc="prim6" id="prim6-not-on-cluster2" score="-INFINITY"/>
@@ -4096,9 +4237,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Check locations and constraints for prim6 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim6 in XML
 =#=#=#= Begin test: Recursively check locations and constraints for prim6 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -A -r prim6 --output-as=xml">
   <constraints>
     <rsc_location node="cluster02" rsc="prim6" id="prim6-not-on-cluster2" score="-INFINITY"/>
@@ -4108,25 +4246,16 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Recursively check locations and constraints for prim6 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim6 in XML
 =#=#=#= Begin test: Check locations and constraints for prim7 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources prim7 is colocated with:
   * group (score=INFINITY, id=colocation-prim7-group-INFINITY)
 =#=#=#= End test: Check locations and constraints for prim7 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim7
 =#=#=#= Begin test: Recursively check locations and constraints for prim7 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources prim7 is colocated with:
   * group (score=INFINITY, id=colocation-prim7-group-INFINITY)
 =#=#=#= End test: Recursively check locations and constraints for prim7 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim7
 =#=#=#= Begin test: Check locations and constraints for prim7 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -a -r prim7 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim7-group-INFINITY" rsc="prim7" with-rsc="group" score="INFINITY"/>
@@ -4136,9 +4265,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Check locations and constraints for prim7 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim7 in XML
 =#=#=#= Begin test: Recursively check locations and constraints for prim7 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -A -r prim7 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim7-group-INFINITY" rsc="prim7" with-rsc="group" score="INFINITY"/>
@@ -4148,25 +4274,16 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Recursively check locations and constraints for prim7 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim7 in XML
 =#=#=#= Begin test: Check locations and constraints for prim8 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources prim8 is colocated with:
   * gr2 (score=INFINITY, id=colocation-prim8-gr2-INFINITY)
 =#=#=#= End test: Check locations and constraints for prim8 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim8
 =#=#=#= Begin test: Recursively check locations and constraints for prim8 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources prim8 is colocated with:
   * gr2 (score=INFINITY, id=colocation-prim8-gr2-INFINITY)
 =#=#=#= End test: Recursively check locations and constraints for prim8 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim8
 =#=#=#= Begin test: Check locations and constraints for prim8 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -a -r prim8 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim8-gr2-INFINITY" rsc="prim8" with-rsc="gr2" score="INFINITY"/>
@@ -4176,9 +4293,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Check locations and constraints for prim8 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim8 in XML
 =#=#=#= Begin test: Recursively check locations and constraints for prim8 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -A -r prim8 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim8-gr2-INFINITY" rsc="prim8" with-rsc="gr2" score="INFINITY"/>
@@ -4188,25 +4302,16 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Recursively check locations and constraints for prim8 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim8 in XML
 =#=#=#= Begin test: Check locations and constraints for prim9 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources prim9 is colocated with:
   * clone (score=INFINITY, id=colocation-prim9-clone-INFINITY)
 =#=#=#= End test: Check locations and constraints for prim9 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim9
 =#=#=#= Begin test: Recursively check locations and constraints for prim9 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources prim9 is colocated with:
   * clone (score=INFINITY, id=colocation-prim9-clone-INFINITY)
 =#=#=#= End test: Recursively check locations and constraints for prim9 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim9
 =#=#=#= Begin test: Check locations and constraints for prim9 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -a -r prim9 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim9-clone-INFINITY" rsc="prim9" with-rsc="clone" score="INFINITY"/>
@@ -4216,9 +4321,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Check locations and constraints for prim9 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim9 in XML
 =#=#=#= Begin test: Recursively check locations and constraints for prim9 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -A -r prim9 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim9-clone-INFINITY" rsc="prim9" with-rsc="clone" score="INFINITY"/>
@@ -4228,9 +4330,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Recursively check locations and constraints for prim9 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim9 in XML
 =#=#=#= Begin test: Check locations and constraints for prim10 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources prim10 is colocated with:
   * prim4 (score=INFINITY, id=colocation-prim10-prim4-INFINITY)
     * Locations:
@@ -4238,9 +4337,6 @@ Resources prim10 is colocated with:
 =#=#=#= End test: Check locations and constraints for prim10 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim10
 =#=#=#= Begin test: Recursively check locations and constraints for prim10 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources prim10 is colocated with:
   * prim4 (score=INFINITY, id=colocation-prim10-prim4-INFINITY)
     * Locations:
@@ -4250,9 +4346,6 @@ Resources prim10 is colocated with:
 =#=#=#= End test: Recursively check locations and constraints for prim10 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim10
 =#=#=#= Begin test: Check locations and constraints for prim10 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -a -r prim10 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim10-prim4-INFINITY" rsc="prim10" with-rsc="prim4" score="INFINITY"/>
@@ -4263,9 +4356,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Check locations and constraints for prim10 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim10 in XML
 =#=#=#= Begin test: Recursively check locations and constraints for prim10 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -A -r prim10 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim10-prim4-INFINITY" rsc="prim10" with-rsc="prim4" score="INFINITY"/>
@@ -4277,9 +4367,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Recursively check locations and constraints for prim10 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim10 in XML
 =#=#=#= Begin test: Check locations and constraints for prim11 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources colocated with prim11:
   * prim13 (score=INFINITY, id=colocation-prim13-prim11-INFINITY)
 Resources prim11 is colocated with:
@@ -4287,9 +4374,6 @@ Resources prim11 is colocated with:
 =#=#=#= End test: Check locations and constraints for prim11 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim11
 =#=#=#= Begin test: Recursively check locations and constraints for prim11 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources colocated with prim11:
   * prim13 (score=INFINITY, id=colocation-prim13-prim11-INFINITY)
     * Resources colocated with prim13:
@@ -4305,9 +4389,6 @@ Resources prim11 is colocated with:
 =#=#=#= End test: Recursively check locations and constraints for prim11 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim11
 =#=#=#= Begin test: Check locations and constraints for prim11 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -a -r prim11 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim13-prim11-INFINITY" rsc="prim13" with-rsc="prim11" score="INFINITY"/>
@@ -4318,9 +4399,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Check locations and constraints for prim11 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim11 in XML
 =#=#=#= Begin test: Recursively check locations and constraints for prim11 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -A -r prim11 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim13-prim11-INFINITY" rsc="prim13" with-rsc="prim11" score="INFINITY"/>
@@ -4335,9 +4413,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Recursively check locations and constraints for prim11 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim11 in XML
 =#=#=#= Begin test: Check locations and constraints for prim12 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources colocated with prim12:
   * prim11 (score=INFINITY, id=colocation-prim11-prim12-INFINITY)
 Resources prim12 is colocated with:
@@ -4345,9 +4420,6 @@ Resources prim12 is colocated with:
 =#=#=#= End test: Check locations and constraints for prim12 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim12
 =#=#=#= Begin test: Recursively check locations and constraints for prim12 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources colocated with prim12:
   * prim11 (score=INFINITY, id=colocation-prim11-prim12-INFINITY)
     * Resources colocated with prim11:
@@ -4363,9 +4435,6 @@ Resources prim12 is colocated with:
 =#=#=#= End test: Recursively check locations and constraints for prim12 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim12
 =#=#=#= Begin test: Check locations and constraints for prim12 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -a -r prim12 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim11-prim12-INFINITY" rsc="prim11" with-rsc="prim12" score="INFINITY"/>
@@ -4376,9 +4445,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Check locations and constraints for prim12 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim12 in XML
 =#=#=#= Begin test: Recursively check locations and constraints for prim12 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -A -r prim12 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim11-prim12-INFINITY" rsc="prim11" with-rsc="prim12" score="INFINITY"/>
@@ -4393,9 +4459,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Recursively check locations and constraints for prim12 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim12 in XML
 =#=#=#= Begin test: Check locations and constraints for prim13 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources colocated with prim13:
   * prim12 (score=INFINITY, id=colocation-prim12-prim13-INFINITY)
 Resources prim13 is colocated with:
@@ -4403,9 +4466,6 @@ Resources prim13 is colocated with:
 =#=#=#= End test: Check locations and constraints for prim13 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim13
 =#=#=#= Begin test: Recursively check locations and constraints for prim13 =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources colocated with prim13:
   * prim12 (score=INFINITY, id=colocation-prim12-prim13-INFINITY)
     * Resources colocated with prim12:
@@ -4421,9 +4481,6 @@ Resources prim13 is colocated with:
 =#=#=#= End test: Recursively check locations and constraints for prim13 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim13
 =#=#=#= Begin test: Check locations and constraints for prim13 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -a -r prim13 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim12-prim13-INFINITY" rsc="prim12" with-rsc="prim13" score="INFINITY"/>
@@ -4434,9 +4491,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Check locations and constraints for prim13 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim13 in XML
 =#=#=#= Begin test: Recursively check locations and constraints for prim13 in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -A -r prim13 --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim12-prim13-INFINITY" rsc="prim12" with-rsc="prim13" score="INFINITY"/>
@@ -4451,25 +4505,16 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Recursively check locations and constraints for prim13 in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim13 in XML
 =#=#=#= Begin test: Check locations and constraints for group =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources colocated with group:
   * prim7 (score=INFINITY, id=colocation-prim7-group-INFINITY)
 =#=#=#= End test: Check locations and constraints for group - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for group
 =#=#=#= Begin test: Recursively check locations and constraints for group =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources colocated with group:
   * prim7 (score=INFINITY, id=colocation-prim7-group-INFINITY)
 =#=#=#= End test: Recursively check locations and constraints for group - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for group
 =#=#=#= Begin test: Check locations and constraints for group in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -a -r group --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim7-group-INFINITY" rsc="prim7" with-rsc="group" score="INFINITY"/>
@@ -4479,9 +4524,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Check locations and constraints for group in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for group in XML
 =#=#=#= Begin test: Recursively check locations and constraints for group in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -A -r group --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim7-group-INFINITY" rsc="prim7" with-rsc="group" score="INFINITY"/>
@@ -4491,25 +4533,16 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Recursively check locations and constraints for group in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for group in XML
 =#=#=#= Begin test: Check locations and constraints for clone =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources colocated with clone:
   * prim9 (score=INFINITY, id=colocation-prim9-clone-INFINITY)
 =#=#=#= End test: Check locations and constraints for clone - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for clone
 =#=#=#= Begin test: Recursively check locations and constraints for clone =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Resources colocated with clone:
   * prim9 (score=INFINITY, id=colocation-prim9-clone-INFINITY)
 =#=#=#= End test: Recursively check locations and constraints for clone - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for clone
 =#=#=#= Begin test: Check locations and constraints for clone in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -a -r clone --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim9-clone-INFINITY" rsc="prim9" with-rsc="clone" score="INFINITY"/>
@@ -4519,9 +4552,6 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Check locations and constraints for clone in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for clone in XML
 =#=#=#= Begin test: Recursively check locations and constraints for clone in XML =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -A -r clone --output-as=xml">
   <constraints>
     <rsc_colocation id="colocation-prim9-clone-INFINITY" rsc="prim9" with-rsc="clone" score="INFINITY"/>
@@ -4530,6 +4560,16 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 </pacemaker-result>
 =#=#=#= End test: Recursively check locations and constraints for clone in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for clone in XML
+=#=#=#= Begin test: Check locations and constraints for group member (referring to group) =#=#=#=
+Resources colocated with group:
+  * prim7 (score=INFINITY, id=colocation-prim7-group-INFINITY)
+=#=#=#= End test: Check locations and constraints for group member (referring to group) - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for group member (referring to group)
+=#=#=#= Begin test: Check locations and constraints for group member (without referring to group) =#=#=#=
+Resources colocated with gr2:
+  * prim8 (score=INFINITY, id=colocation-prim8-gr2-INFINITY)
+=#=#=#= End test: Check locations and constraints for group member (without referring to group) - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for group member (without referring to group)
 =#=#=#= Begin test: Show resource digests =#=#=#=
 <pacemaker-result api-version="X" request="crm_resource --digests -r rsc1 -N node1 --output-as=xml">
   <digests resource="rsc1" node="node1" task="start" interval="0ms">
@@ -4565,6 +4605,20 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Show resource digests with overrides - OK (0) =#=#=#=
 * Passed: crm_resource   - Show resource digests with overrides
 =#=#=#= Begin test: Show resource operations =#=#=#=
+rsc1	(ocf:pacemaker:Dummy):	 Started: rsc1_monitor_0 (node=node4, call=136, rc=7, exec=28ms): complete
+Fencing	(stonith:fence_xvm):	 Started: Fencing_monitor_0 (node=node4, call=5, rc=7, exec=2ms): complete
+rsc1	(ocf:pacemaker:Dummy):	 Started: rsc1_monitor_0 (node=node2, call=101, rc=7, exec=45ms): complete
+Fencing	(stonith:fence_xvm):	 Started: Fencing_monitor_0 (node=node2, call=5, rc=7, exec=4ms): complete
+Fencing	(stonith:fence_xvm):	 Started: Fencing_monitor_0 (node=node3, call=5, rc=7, exec=24ms): complete
+rsc1	(ocf:pacemaker:Dummy):	 Started: rsc1_monitor_0 (node=node5, call=99, rc=193, exec=27ms): pending
+Fencing	(stonith:fence_xvm):	 Started: Fencing_monitor_0 (node=node5, call=5, rc=7, exec=14ms): complete
+rsc1	(ocf:pacemaker:Dummy):	 Started: rsc1_start_0 (node=node1, call=104, rc=0, exec=22ms): complete
+rsc1	(ocf:pacemaker:Dummy):	 Started: rsc1_monitor_10000 (node=node1, call=106, rc=0, exec=20ms): complete
+Fencing	(stonith:fence_xvm):	 Started: Fencing_start_0 (node=node1, call=10, rc=0, exec=59ms): complete
+Fencing	(stonith:fence_xvm):	 Started: Fencing_monitor_120000 (node=node1, call=12, rc=0, exec=70ms): complete
+=#=#=#= End test: Show resource operations - OK (0) =#=#=#=
+* Passed: crm_resource   - Show resource operations
+=#=#=#= Begin test: Show resource operations (XML) =#=#=#=
 <pacemaker-result api-version="X" request="crm_resource --list-operations --output-as=xml">
   <operations>
     <operation op="rsc1_monitor_0" node="node4" call="136" rc="7" status="complete" rsc="rsc1" agent="ocf:pacemaker:Dummy" exec-time="28"/>
@@ -4581,8 +4635,8 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
   </operations>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: Show resource operations - OK (0) =#=#=#=
-* Passed: crm_resource   - Show resource operations
+=#=#=#= End test: Show resource operations (XML) - OK (0) =#=#=#=
+* Passed: crm_resource   - Show resource operations (XML)
 =#=#=#= Begin test: List all nodes =#=#=#=
 cluster node: overcloud-controller-0 (1)
 cluster node: overcloud-controller-1 (2)
@@ -5235,7 +5289,7 @@ Transition Summary:
   * Move       Public-IP                           ( cluster02 -> cluster01 )
   * Move       Email                               ( cluster02 -> cluster01 )
   * Stop       mysql-proxy:0                       (              cluster02 )  due to node availability
-  * Stop       promotable-rsc:0                    (     Promoted cluster02 )  due to node availability
+  * Stop       promotable-rsc:0                    (       Promoted cluster02 )  due to node availability
 
 Executing Cluster Transition:
   * Pseudo action:   httpd-bundle-1_stop_0

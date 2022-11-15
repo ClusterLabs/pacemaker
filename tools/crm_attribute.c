@@ -147,7 +147,7 @@ utilization_cb(const gchar *option_name, const gchar *optarg, gpointer data, GEr
     }
 
     options.type = g_strdup(XML_CIB_TAG_NODES);
-    pcmk__str_update(&options.attr_value, XML_TAG_UTILIZATION);
+    pcmk__str_update(&options.set_type, XML_TAG_UTILIZATION);
     return TRUE;
 }
 

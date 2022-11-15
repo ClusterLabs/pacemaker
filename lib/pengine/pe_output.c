@@ -1963,7 +1963,7 @@ node_and_op(pcmk__output_t *out, va_list args) {
 
     if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
                                 &last_change) == pcmk_ok) {
-        last_change_str = crm_strdup_printf(", %s=%s, exec=%sms",
+        last_change_str = crm_strdup_printf(", %s='%s', exec=%sms",
                                             XML_RSC_OP_LAST_CHANGE,
                                             pcmk__trim(ctime(&last_change)),
                                             crm_element_value(xml_op, XML_RSC_OP_T_EXEC));

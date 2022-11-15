@@ -168,6 +168,8 @@ pcmk__next_cli_option(int argc, char **argv, int *index, const char **longname)
                     crm_notice("Unhandled option --%s", long_opts[*index].name);
                     return flag;
                 }
+                break;
+
             case -1:           /* End of option processing */
                 break;
             case ':':

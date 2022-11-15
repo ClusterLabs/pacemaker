@@ -933,21 +933,13 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
     if(xml_resource) {
         int lpc = 0;
         GList *childIter = NULL;
-        pe_resource_t *new_rsc = NULL;
         pe__bundle_port_t *port = NULL;
-
         GString *buffer = NULL;
 
-        if (pe__unpack_resource(xml_resource, &new_rsc, rsc,
+        if (pe__unpack_resource(xml_resource, &(bundle_data->child), rsc,
                                 data_set) != pcmk_rc_ok) {
-            pe_err("Failed unpacking resource %s", ID(rsc->xml));
-            if (new_rsc != NULL && new_rsc->fns != NULL) {
-                new_rsc->fns->free(new_rsc);
-            }
             return FALSE;
         }
-
-        bundle_data->child = new_rsc;
 
         /* Currently, we always map the default authentication key location
          * into the same location inside the container.

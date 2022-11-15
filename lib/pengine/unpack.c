@@ -789,10 +789,8 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
         }
 
         crm_trace("Unpacking <%s id='%s'>", crm_element_name(xml_obj), id);
-        if ((pe__unpack_resource(xml_obj, &new_rsc, NULL,
-                                 data_set) == pcmk_rc_ok)
-            && (new_rsc != NULL)) {
-
+        if (pe__unpack_resource(xml_obj, &new_rsc, NULL,
+                                data_set) == pcmk_rc_ok) {
             data_set->resources = g_list_append(data_set->resources, new_rsc);
             pe_rsc_trace(new_rsc, "Added resource %s", new_rsc->id);
 
@@ -800,9 +798,6 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
             pcmk__config_err("Ignoring <%s> resource '%s' "
                              "because configuration is invalid",
                              crm_element_name(xml_obj), id);
-            if (new_rsc != NULL && new_rsc->fns != NULL) {
-                new_rsc->fns->free(new_rsc);
-            }
         }
     }
 

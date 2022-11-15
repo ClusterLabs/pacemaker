@@ -934,6 +934,14 @@ function test_tools() {
     cmd="crm_attribute -t nodes -N node1 -D"
     test_assert $CRM_EX_USAGE 0
 
+    desc="Set a utilization node attribute"
+    cmd="crm_attribute -n cpu -v 1 -N node1 -z"
+    test_assert $CRM_EX_OK
+
+    desc="Query utilization node attribute"
+    cmd="crm_attribute --query -n cpu -N node1 -z"
+    test_assert $CRM_EX_OK 0
+
     desc="Digest calculation"
     cmd="cibadmin -Q | cibadmin -5 -p 2>&1 > /dev/null"
     test_assert $CRM_EX_OK
@@ -1274,6 +1282,14 @@ function test_tools() {
         test_assert_validate $CRM_EX_OK 0
     done
 
+    desc="Check locations and constraints for group member (referring to group)"
+    cmd="crm_resource -a -r gr2"
+    test_assert $CRM_EX_OK 0
+
+    desc="Check locations and constraints for group member (without referring to group)"
+    cmd="crm_resource -a -r gr2 --force"
+    test_assert $CRM_EX_OK 0
+
     unset CIB_file
 
     export CIB_file="$test_home/cli/crm_resource_digests.xml"
@@ -1287,6 +1303,10 @@ function test_tools() {
     test_assert $CRM_EX_OK 0
 
     desc="Show resource operations"
+    cmd="crm_resource --list-operations"
+    test_assert $CRM_EX_OK 0
+
+    desc="Show resource operations (XML)"
     cmd="crm_resource --list-operations --output-as=xml"
     test_assert_validate $CRM_EX_OK 0
 

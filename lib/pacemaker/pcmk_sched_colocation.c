@@ -132,6 +132,34 @@ cmp_primary_priority(gconstpointer a, gconstpointer b)
 
 /*!
  * \internal
+ * \brief Add a "this with" colocation constraint to a resource
+ *
+ * \param[in,out] rsc         Resource to add colocation to
+ * \param[in]     colocation  Colocation constraint to add to \p rsc
+ */
+void
+pcmk__add_this_with(pe_resource_t *rsc, pcmk__colocation_t *colocation)
+{
+    rsc->rsc_cons = g_list_insert_sorted(rsc->rsc_cons, colocation,
+                                         cmp_primary_priority);
+}
+
+/*!
+ * \internal
+ * \brief Add a "with this" colocation constraint to a resource
+ *
+ * \param[in,out] rsc         Resource to add colocation to
+ * \param[in]     colocation  Colocation constraint to add to \p rsc
+ */
+void
+pcmk__add_with_this(pe_resource_t *rsc, pcmk__colocation_t *colocation)
+{
+    rsc->rsc_cons_lhs = g_list_insert_sorted(rsc->rsc_cons_lhs, colocation,
+                                             cmp_dependent_priority);
+}
+
+/*!
+ * \internal
  * \brief Add orderings necessary for an anti-colocation constraint
  */
 static void
@@ -242,11 +270,8 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
     pe_rsc_trace(dependent, "%s ==> %s (%s %d)",
                  dependent->id, primary->id, node_attr, score);
 
-    dependent->rsc_cons = g_list_insert_sorted(dependent->rsc_cons, new_con,
-                                               cmp_primary_priority);
-
-    primary->rsc_cons_lhs = g_list_insert_sorted(primary->rsc_cons_lhs, new_con,
-                                                 cmp_dependent_priority);
+    pcmk__add_this_with(dependent, new_con);
+    pcmk__add_with_this(primary, new_con);
 
     data_set->colocation_constraints = g_list_append(data_set->colocation_constraints,
                                                      new_con);
@@ -762,9 +787,17 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
     }
 }
 
+/*!
+ * \internal
+ * \brief Make actions of a given type unrunnable for a given resource
+ *
+ * \param[in,out] rsc     Resource whose actions should be blocked
+ * \param[in]     task    Name of action to block
+ * \param[in]     reason  Unrunnable start action causing the block
+ */
 static void
-mark_start_blocked(pe_resource_t *rsc, pe_resource_t *reason,
-                   pe_working_set_t *data_set)
+mark_action_blocked(pe_resource_t *rsc, const char *task,
+                    const pe_resource_t *reason)
 {
     char *reason_text = crm_strdup_printf("colocation with %s", reason->id);
 
@@ -772,63 +805,107 @@ mark_start_blocked(pe_resource_t *rsc, pe_resource_t *reason,
         pe_action_t *action = (pe_action_t *) gIter->data;
 
         if (pcmk_is_set(action->flags, pe_action_runnable)
-            && pcmk__str_eq(action->task, RSC_START, pcmk__str_casei)) {
+            && pcmk__str_eq(action->task, task, pcmk__str_casei)) {
 
             pe__clear_action_flags(action, pe_action_runnable);
             pe_action_set_reason(action, reason_text, false);
-            pcmk__block_colocated_starts(action, data_set);
-            pcmk__update_action_for_orderings(action, data_set);
+            pcmk__block_colocation_dependents(action, rsc->cluster);
+            pcmk__update_action_for_orderings(action, rsc->cluster);
         }
+    }
+
+    // If parent resource can't perform an action, neither can any children
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        mark_action_blocked((pe_resource_t *) (iter->data), task, reason);
     }
     free(reason_text);
 }
 
 /*!
  * \internal
- * \brief If a start action is unrunnable, block starts of colocated resources
+ * \brief If an action is unrunnable, block any relevant dependent actions
+ *
+ * If a given action is an unrunnable start or promote, block the start or
+ * promote actions of resources colocated with it, as appropriate to the
+ * colocations' configured roles.
  *
  * \param[in] action    Action to check
  * \param[in] data_set  Cluster working set
  */
 void
-pcmk__block_colocated_starts(pe_action_t *action, pe_working_set_t *data_set)
+pcmk__block_colocation_dependents(pe_action_t *action,
+                                  pe_working_set_t *data_set)
 {
     GList *gIter = NULL;
     pe_resource_t *rsc = NULL;
+    bool is_start = false;
 
-    if (!pcmk_is_set(action->flags, pe_action_runnable)
-        && pcmk__str_eq(action->task, RSC_START, pcmk__str_casei)) {
-
-        rsc = uber_parent(action->rsc);
-        if (rsc->parent) {
-            /* For bundles, uber_parent() returns the clone, not the bundle, so
-             * the existence of rsc->parent implies this is a bundle.
-             * In this case, we need the bundle resource, so that we can check
-             * if all containers are stopped/stopping.
-             */
-            rsc = rsc->parent;
-        }
+    if (pcmk_is_set(action->flags, pe_action_runnable)) {
+        return; // Only unrunnable actions block dependents
     }
 
-    if ((rsc == NULL) || (rsc->rsc_cons_lhs == NULL)) {
+    is_start = pcmk__str_eq(action->task, RSC_START, pcmk__str_none);
+    if (!is_start && !pcmk__str_eq(action->task, RSC_PROMOTE, pcmk__str_none)) {
+        return; // Only unrunnable starts and promotes block dependents
+    }
+
+    CRM_ASSERT(action->rsc != NULL); // Start and promote are resource actions
+
+    /* If this resource is part of a collective resource, dependents are blocked
+     * only if all instances of the collective are unrunnable, so check the
+     * collective resource.
+     */
+    rsc = uber_parent(action->rsc);
+    if (rsc->parent != NULL) {
+        rsc = rsc->parent; // Bundle
+    }
+
+    if (rsc->rsc_cons_lhs == NULL) {
         return;
     }
 
-    // Block colocated starts only if all children (if any) have unrunnable starts
+    // Colocation fails only if entire primary can't reach desired role
     for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child = (pe_resource_t *)gIter->data;
-        pe_action_t *start = find_first_action(child->actions, NULL, RSC_START, NULL);
+        pe_resource_t *child = (pe_resource_t *) gIter->data;
+        pe_action_t *child_action = find_first_action(child->actions, NULL,
+                                                      action->task, NULL);
 
-        if ((start == NULL) || pcmk_is_set(start->flags, pe_action_runnable)) {
-            return;
+        if ((child_action == NULL)
+            || pcmk_is_set(child_action->flags, pe_action_runnable)) {
+            crm_trace("Not blocking %s colocation dependents because "
+                      "at least %s has runnable %s",
+                      rsc->id, child->id, action->task);
+            return; // At least one child can reach desired role
         }
     }
 
-    for (gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
-        pcmk__colocation_t *colocate_with = (pcmk__colocation_t *) gIter->data;
+    crm_trace("Blocking %s colocation dependents due to unrunnable %s %s",
+              rsc->id, action->rsc->id, action->task);
 
-        if (colocate_with->score == INFINITY) {
-            mark_start_blocked(colocate_with->dependent, action->rsc, data_set);
+    // Check each colocation where this resource is primary
+    for (gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
+        pcmk__colocation_t *colocation = (pcmk__colocation_t *) gIter->data;
+
+        if (colocation->score < INFINITY) {
+            continue; // Only mandatory colocations block dependent
+        }
+
+        /* If the primary can't start, the dependent can't reach its colocated
+         * role, regardless of what the primary or dependent colocation role is.
+         *
+         * If the primary can't be promoted, the dependent can't reach its
+         * colocated role if the primary's colocation role is promoted.
+         */
+        if (!is_start && (colocation->primary_role != RSC_ROLE_PROMOTED)) {
+            continue;
+        }
+
+        // Block the dependent from reaching its colocated role
+        if (colocation->dependent_role == RSC_ROLE_PROMOTED) {
+            mark_action_blocked(colocation->dependent, RSC_PROMOTE,
+                                action->rsc);
+        } else {
+            mark_action_blocked(colocation->dependent, RSC_START, action->rsc);
         }
     }
 }
@@ -1220,10 +1297,97 @@ add_node_scores_matching_attr(GHashTable *nodes, const pe_resource_t *rsc,
     }
 }
 
-static inline bool
-is_nonempty_group(pe_resource_t *rsc)
+/*!
+ * \internal
+ * \brief Initialize colocated node table for a group resource
+ *
+ * \param[in] rsc     Group resource being colocated with another resource
+ * \param[in] log_id  Resource ID to use in log messages
+ * \param[in] nodes   Nodes to update
+ * \param[in] attr    Colocation attribute (NULL to use default)
+ * \param[in] factor  Incorporate scores multiplied by this factor
+ * \param[in] flags   Bitmask of enum pcmk__coloc_select values
+ *
+ * \return Table of node scores initialized for colocation, or NULL if resource
+ *         should be ignored for colocation purposes
+ * \note The caller is responsible for freeing a non-NULL return value using
+ *       g_hash_table_destroy().
+ */
+static GHashTable *
+init_group_colocated_nodes(const pe_resource_t *rsc, const char *log_id,
+                           GHashTable **nodes, const char *attr, float factor,
+                           uint32_t flags)
 {
-    return rsc && (rsc->variant == pe_group) && (rsc->children != NULL);
+    GHashTable *work = NULL;
+    pe_resource_t *member = NULL;
+
+    // Ignore empty groups (only possible with schema validation disabled)
+    if (rsc->children == NULL) {
+        return NULL;
+    }
+
+    if (*nodes == NULL) {
+        // Only cmp_resources() passes a NULL nodes table
+        member = pe__last_group_member(rsc);
+    } else {
+        /* The first member of the group will recursively incorporate any
+         * constraints involving other members (including the group internal
+         * colocation).
+         *
+         * @TODO The indirect colocations from the dependent group's other
+         *       members will be incorporated at full strength rather than by
+         *       factor, so the group's combined stickiness will be treated as
+         *       (factor + (#members - 1)) * stickiness. It is questionable what
+         *       the right approach should be.
+         */
+        member = rsc->children->data;
+    }
+
+    pe_rsc_trace(rsc, "%s: Merging scores from group %s using member %s "
+                 "(at %.6f)", log_id, rsc->id, member->id, factor);
+    work = pcmk__copy_node_table(*nodes);
+    pcmk__add_colocated_node_scores(member, log_id, &work, attr, factor, flags);
+    return work;
+}
+
+/*!
+ * \internal
+ * \brief Initialize colocated node table for a non-group resource
+ *
+ * \param[in] rsc     Non-group resource being colocated with another resource
+ * \param[in] log_id  Resource ID to use in log messages
+ * \param[in] nodes   Nodes to update
+ * \param[in] attr    Colocation attribute (NULL to use default)
+ * \param[in] factor  Incorporate scores multiplied by this factor
+ * \param[in] flags   Bitmask of enum pcmk__coloc_select values
+ *
+ * \return Table of node scores initialized for colocation, or NULL if resource
+ *         should be ignored for colocation purposes
+ * \note The caller is responsible for freeing a non-NULL return value using
+ *       g_hash_table_destroy().
+ */
+static GHashTable *
+init_nongroup_colocated_nodes(const pe_resource_t *rsc, const char *log_id,
+                              GHashTable **nodes, const char *attr,
+                              float factor, uint32_t flags)
+{
+    GHashTable *work = NULL;
+
+    if (*nodes == NULL) {
+        /* Only cmp_resources() passes a NULL nodes table, which indicates we
+         * should initialize it with the resource's allowed node scores.
+         */
+        work = pcmk__copy_node_table(rsc->allowed_nodes);
+
+    } else {
+        pe_rsc_trace(rsc, "%s: Merging scores from %s (at %.6f)",
+                     log_id, rsc->id, factor);
+        work = pcmk__copy_node_table(*nodes);
+        add_node_scores_matching_attr(work, rsc, attr, factor,
+                                      pcmk_is_set(flags,
+                                                  pcmk__coloc_select_nonnegative));
+    }
+    return work;
 }
 
 /*!
@@ -1264,50 +1428,16 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
     }
     pe__set_resource_flags(rsc, pe_rsc_merging);
 
-    if (*nodes == NULL) {
-        /* Only cmp_resources() passes a NULL nodes table, which indicates we
-         * should initialize it with the resource's allowed node scores.
-         */
-        if (is_nonempty_group(rsc)) {
-            GList *last = g_list_last(rsc->children);
-            pe_resource_t *last_rsc = last->data;
-
-            pe_rsc_trace(rsc, "%s: Merging scores from group %s "
-                         "using last member %s (at %.6f)",
-                         log_id, rsc->id, last_rsc->id, factor);
-            last_rsc->cmds->add_colocated_node_scores(last_rsc, log_id,
-                                                      &work, attr, factor,
-                                                      flags);
-        } else {
-            work = pcmk__copy_node_table(rsc->allowed_nodes);
-        }
-
-    } else if (is_nonempty_group(rsc)) {
-        pe_resource_t *member = rsc->children->data;
-
-        /* The first member of the group will recursively incorporate any
-         * constraints involving other members (including the group internal
-         * colocation).
-         *
-         * @TODO The indirect colocations from the dependent group's other
-         *       members will be incorporated at full strength rather than by
-         *       factor, so the group's combined stickiness will be treated as
-         *       (factor + (#members - 1)) * stickiness. It is questionable what
-         *       the right approach should be.
-         */
-        pe_rsc_trace(rsc, "%s: Merging scores from first member of group %s "
-                     "(at %.6f)", log_id, rsc->id, factor);
-        work = pcmk__copy_node_table(*nodes);
-        member->cmds->add_colocated_node_scores(member, log_id, &work, attr,
-                                                factor, flags);
-
+    if (rsc->variant == pe_group) {
+        work = init_group_colocated_nodes(rsc, log_id, nodes, attr, factor,
+                                          flags);
     } else {
-        pe_rsc_trace(rsc, "%s: Merging scores from %s (at %.6f)",
-                     log_id, rsc->id, factor);
-        work = pcmk__copy_node_table(*nodes);
-        add_node_scores_matching_attr(work, rsc, attr, factor,
-                                      pcmk_is_set(flags,
-                                                  pcmk__coloc_select_nonnegative));
+        work = init_nongroup_colocated_nodes(rsc, log_id, nodes, attr, factor,
+                                             flags);
+    }
+    if (work == NULL) {
+        pe__clear_resource_flags(rsc, pe_rsc_merging);
+        return;
     }
 
     if (pcmk__any_node_available(work)) {
@@ -1320,8 +1450,8 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
                          "Checking additional %d optional '%s with' constraints",
                          g_list_length(gIter), rsc->id);
 
-        } else if (is_nonempty_group(rsc)) {
-            pe_resource_t *last_rsc = g_list_last(rsc->children)->data;
+        } else if (rsc->variant == pe_group) {
+            pe_resource_t *last_rsc = pe__last_group_member(rsc);
 
             gIter = last_rsc->rsc_cons_lhs;
             pe_rsc_trace(rsc, "Checking additional %d optional 'with group %s' "

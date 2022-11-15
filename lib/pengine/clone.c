@@ -213,8 +213,6 @@ pe__create_clone_child(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     if (pe__unpack_resource(child_copy, &child_rsc, rsc,
                             data_set) != pcmk_rc_ok) {
-        pe_err("Failed unpacking resource %s", crm_element_value(child_copy, XML_ATTR_ID));
-        child_rsc = NULL;
         goto bail;
     }
 /*  child_rsc->globally_unique = rsc->globally_unique; */

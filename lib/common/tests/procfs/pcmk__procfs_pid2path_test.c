@@ -20,61 +20,70 @@
 static void
 no_exe_file(void **state)
 {
-    char path[PATH_MAX];
+    size_t len = PATH_MAX;
+    char *path = calloc(len, sizeof(char));
 
     // Set readlink() errno and link contents
     pcmk__mock_readlink = true;
 
     expect_string(__wrap_readlink, path, "/proc/1000/exe");
     expect_value(__wrap_readlink, buf, path);
-    expect_value(__wrap_readlink, bufsize, sizeof(path) - 1);
+    expect_value(__wrap_readlink, bufsize, len - 1);
     will_return(__wrap_readlink, ENOENT);
     will_return(__wrap_readlink, NULL);
 
-    assert_int_equal(pcmk__procfs_pid2path(1000, path, sizeof(path)), ENOENT);
+    assert_int_equal(pcmk__procfs_pid2path(1000, path, len), ENOENT);
 
     pcmk__mock_readlink = false;
+
+    free(path);
 }
 
 static void
 contents_too_long(void **state)
 {
-    char path[10];
+    size_t len = 10;
+    char *path = calloc(len, sizeof(char));
 
     // Set readlink() errno and link contents
     pcmk__mock_readlink = true;
 
     expect_string(__wrap_readlink, path, "/proc/1000/exe");
     expect_value(__wrap_readlink, buf, path);
-    expect_value(__wrap_readlink, bufsize, sizeof(path) - 1);
+    expect_value(__wrap_readlink, bufsize, len - 1);
     will_return(__wrap_readlink, 0);
     will_return(__wrap_readlink, "/more/than/10/characters");
 
-    assert_int_equal(pcmk__procfs_pid2path(1000, path, sizeof(path)),
+    assert_int_equal(pcmk__procfs_pid2path(1000, path, len),
                      ENAMETOOLONG);
 
     pcmk__mock_readlink = false;
+
+    free(path);
 }
 
 static void
 contents_ok(void **state)
 {
-    char path[PATH_MAX];
+    size_t len = PATH_MAX;
+    char *path = calloc(len, sizeof(char));
 
     // Set readlink() errno and link contents
     pcmk__mock_readlink = true;
 
     expect_string(__wrap_readlink, path, "/proc/1000/exe");
     expect_value(__wrap_readlink, buf, path);
-    expect_value(__wrap_readlink, bufsize, sizeof(path) - 1);
+    expect_value(__wrap_readlink, bufsize, len - 1);
     will_return(__wrap_readlink, 0);
     will_return(__wrap_readlink, "/ok");
 
-    assert_int_equal(pcmk__procfs_pid2path((pid_t) 1000, path, sizeof(path)),
+    assert_int_equal(pcmk__procfs_pid2path((pid_t) 1000, path, len),
                      pcmk_rc_ok);
     assert_string_equal(path, "/ok");
 
     pcmk__mock_readlink = false;
+
+    free(path);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,

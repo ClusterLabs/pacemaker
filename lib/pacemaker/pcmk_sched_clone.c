@@ -153,7 +153,7 @@ append_parent_colocation(pe_resource_t * rsc, pe_resource_t * child, gboolean al
         pcmk__colocation_t *cons = (pcmk__colocation_t *) gIter->data;
 
         if (all || cons->score < 0 || cons->score == INFINITY) {
-            child->rsc_cons = g_list_prepend(child->rsc_cons, cons);
+            pcmk__add_this_with(child, cons);
         }
     }
 
@@ -165,7 +165,7 @@ append_parent_colocation(pe_resource_t * rsc, pe_resource_t * child, gboolean al
            continue;
         }
         if (all || cons->score < 0) {
-            child->rsc_cons_lhs = g_list_prepend(child->rsc_cons_lhs, cons);
+            pcmk__add_with_this(child, cons);
         }
     }
 }
@@ -331,9 +331,9 @@ pcmk__clone_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
             const uint32_t flags = pcmk__coloc_select_active
                                    |pcmk__coloc_select_nonnegative;
 
-            dependent->cmds->add_colocated_node_scores(dependent, rsc->id,
-                                                       &rsc->allowed_nodes,
-                                                       attr, factor, flags);
+            pcmk__add_colocated_node_scores(dependent, rsc->id,
+                                            &rsc->allowed_nodes, attr, factor,
+                                            flags);
         }
     }
 
