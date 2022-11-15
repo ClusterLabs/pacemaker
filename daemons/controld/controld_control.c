@@ -264,9 +264,6 @@ crmd_exit(crm_exit_t exit_code)
     free(controld_globals.te_uuid);
     controld_globals.te_uuid = NULL;
 
-    free(failed_stop_offset); failed_stop_offset = NULL;
-    free(failed_start_offset); failed_start_offset = NULL;
-
     free_max_generation();
 
     mainloop_destroy_signal(SIGPIPE);

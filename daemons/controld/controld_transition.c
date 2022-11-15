@@ -133,14 +133,13 @@ do_te_invoke(long long action,
         }
 
     } else if (action & A_TE_INVOKE) {
-        const char *value = NULL;
-        xmlNode *graph_data = NULL;
         ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
+        xmlNode *graph_data = input->xml;
         const char *ref = crm_element_value(input->msg, XML_ATTR_REFERENCE);
         const char *graph_file = crm_element_value(input->msg, F_CRM_TGRAPH);
         const char *graph_input = crm_element_value(input->msg, F_CRM_TGRAPH_INPUT);
 
-        if (graph_file == NULL && input->xml == NULL) {
+        if (graph_file == NULL && graph_data == NULL) {
             crm_log_xml_err(input->msg, "Bad command");
             register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
             return;
@@ -162,8 +161,6 @@ do_te_invoke(long long action,
             abort_transition(INFINITY, pcmk__graph_restart,
                              "Transition Redundant", NULL);
         }
-
-        graph_data = input->xml;
 
         if (graph_data == NULL && graph_file != NULL) {
             graph_data = filename2xml(graph_file);
@@ -189,15 +186,6 @@ do_te_invoke(long long action,
                  controld_globals.transition_graph->id, ref, graph_input);
 
         te_reset_job_counts();
-        value = crm_element_value(graph_data, "failed-stop-offset");
-        if (value != NULL) {
-            pcmk__str_update(&failed_stop_offset, value);
-        }
-
-        value = crm_element_value(graph_data, "failed-start-offset");
-        if (value != NULL) {
-            pcmk__str_update(&failed_start_offset, value);
-        }
 
         if ((crm_element_value_epoch(graph_data, "recheck-by", &recheck_by)
             != pcmk_ok) || (recheck_by < 0)) {

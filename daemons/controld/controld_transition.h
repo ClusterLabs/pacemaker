@@ -53,9 +53,6 @@ void abort_transition_graph(int abort_priority,
 #  define abort_transition(pri, action, text, reason)			\
 	abort_transition_graph(pri, action, text, reason,__func__,__LINE__);
 
-extern char *failed_stop_offset;
-extern char *failed_start_offset;
-
 void te_action_confirmed(pcmk__graph_action_t *action, pcmk__graph_t *graph);
 void te_reset_job_counts(void);
 

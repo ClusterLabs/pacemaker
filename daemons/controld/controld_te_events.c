@@ -20,9 +20,6 @@
 #include <crm/common/attrd_internal.h>
 #include <crm/common/ipc_attrd_internal.h>
 
-char *failed_stop_offset = NULL;
-char *failed_start_offset = NULL;
-
 gboolean
 fail_incompletable_actions(pcmk__graph_t *graph, const char *down_node)
 {
@@ -141,23 +138,20 @@ update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
               crm_err("Couldn't parse: %s", ID(event)); goto bail);
 
     /* Decide whether update is necessary and what value to use */
-    if ((interval_ms > 0) || pcmk__str_eq(task, CRMD_ACTION_PROMOTE, pcmk__str_casei)
-        || pcmk__str_eq(task, CRMD_ACTION_DEMOTE, pcmk__str_casei)) {
+    if ((interval_ms > 0)
+        || pcmk__str_eq(task, CRMD_ACTION_PROMOTE, pcmk__str_none)
+        || pcmk__str_eq(task, CRMD_ACTION_DEMOTE, pcmk__str_none)) {
         do_update = TRUE;
 
-    } else if (pcmk__str_eq(task, CRMD_ACTION_START, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_START, pcmk__str_none)) {
         do_update = TRUE;
-        if (failed_start_offset == NULL) {
-            failed_start_offset = strdup(CRM_INFINITY_S);
-        }
-        value = failed_start_offset;
+        value = pcmk__s(controld_globals.transition_graph->failed_start_offset,
+                        CRM_INFINITY_S);
 
-    } else if (pcmk__str_eq(task, CRMD_ACTION_STOP, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_STOP, pcmk__str_none)) {
         do_update = TRUE;
-        if (failed_stop_offset == NULL) {
-            failed_stop_offset = strdup(CRM_INFINITY_S);
-        }
-        value = failed_stop_offset;
+        value = pcmk__s(controld_globals.transition_graph->failed_stop_offset,
+                        CRM_INFINITY_S);
     }
 
     /* Fail count will be either incremented or set to infinity */
