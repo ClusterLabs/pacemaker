@@ -129,8 +129,9 @@ enum crm_get_peer_flags {
     CRM_GET_PEER_ANY       = CRM_GET_PEER_CLUSTER|CRM_GET_PEER_REMOTE,
 };
 
-gboolean send_cluster_message(crm_node_t *node, enum crm_ais_msg_types service,
-                              xmlNode *data, gboolean ordered);
+gboolean send_cluster_message(const crm_node_t *node,
+                              enum crm_ais_msg_types service, xmlNode *data,
+                              gboolean ordered);
 
 int crm_remote_peer_cache_size(void);
 

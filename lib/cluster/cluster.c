@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -162,7 +162,7 @@ pcmk_cluster_free(crm_cluster_t *cluster)
  * \return TRUE on success, otherwise FALSE
  */
 gboolean
-send_cluster_message(crm_node_t *node, enum crm_ais_msg_types service,
+send_cluster_message(const crm_node_t *node, enum crm_ais_msg_types service,
                      xmlNode *data, gboolean ordered)
 {
     switch (get_cluster_type()) {
