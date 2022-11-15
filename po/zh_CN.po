@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 2\n"
 "Report-Msgid-Bugs-To: developers@clusterlabs.org\n"
-"POT-Creation-Date: 2022-11-11 03:36+0800\n"
+"POT-Creation-Date: 2022-11-17 18:22+0800\n"
 "PO-Revision-Date: 2021-11-08 11:04+0800\n"
 "Last-Translator: Vivi <developers@clusterlabs.org>\n"
 "Language-Team: CHINESE <wangluwei@uniontech.org>\n"
@@ -663,8 +663,7 @@ msgstr ""
 #: lib/pengine/common.c:95
 msgid ""
 "*** Advanced Use Only *** Whether nodes may be fenced as part of recovery"
-msgstr ""
-"*** Advanced Use Only *** 节点是否可以被 fence 以作为集群恢复的一部分"
+msgstr "*** Advanced Use Only *** 节点是否可以被 fence 以作为集群恢复的一部分"
 
 #: lib/pengine/common.c:97
 msgid ""
@@ -674,20 +673,17 @@ msgid ""
 "or service unavailability."
 msgstr ""
 "如果为false，则立即假定无响应的节点是无害的，并且可以在其他位置恢复在其上活动"
-"的资源。 这可能会导致 \"split-brain\" 情况，可能导致数据丢失和/或服务不"
-"可用。"
+"的资源。 这可能会导致 \"split-brain\" 情况，可能导致数据丢失和/或服务不可用。"
 
 #: lib/pengine/common.c:105
 msgid ""
 "Action to send to fence device when a node needs to be fenced (\"poweroff\" "
 "is a deprecated alias for \"off\")"
-msgstr ""
-"发送到 fence 设备的操作（ \"poweroff\" 是 \"off \"的别名,不建议使用)"
+msgstr "发送到 fence 设备的操作（ \"poweroff\" 是 \"off \"的别名,不建议使用)"
 
 #: lib/pengine/common.c:112
 msgid "*** Advanced Use Only *** Unused by Pacemaker"
-msgstr ""
-"*** Advanced Use Only *** pacemaker未使用"
+msgstr "*** Advanced Use Only *** pacemaker未使用"
 
 #: lib/pengine/common.c:113
 msgid ""
@@ -700,6 +696,77 @@ msgstr ""
 #: lib/pengine/common.c:119
 msgid "Whether watchdog integration is enabled"
 msgstr "是否启用watchdog集成设置"
+
+#: lib/pengine/common.c:120
+msgid ""
+"This is set automatically by the cluster according to whether SBD is "
+"detected to be in use. User-configured values are ignored. The value `true` "
+"is meaningful if diskless SBD is used and `stonith-watchdog-timeout` is "
+"nonzero. In that case, if fencing is required, watchdog-based self-fencing "
+"will be performed via SBD without requiring a fencing resource explicitly "
+"configured."
+msgstr ""
+"这是由集群检测是否正在使用 SBD 并自动设置。用户配置的值将被忽略。如果使用无"
+"盘 SBD 并且 stonith-watchdog-timeout 不为零时，此选项为 true 才有实际意义。在"
+"这种情况下，无需明确配置fence资源，如果需要fence时，基于watchdog的自我fence会"
+"通过SBD执行。"
+
+#: lib/pengine/common.c:130
+msgid "Allow performing fencing operations in parallel"
+msgstr "允许并行执行 fencing 操作"
+
+#: lib/pengine/common.c:136
+msgid "*** Advanced Use Only *** Whether to fence unseen nodes at start-up"
+msgstr "*** 仅高级使用 *** 是否在启动时fence不可见节点"
+
+#: lib/pengine/common.c:137
+msgid ""
+"Setting this to false may lead to a \"split-brain\" situation,potentially "
+"leading to data loss and/or service unavailability."
+msgstr ""
+"将此设置为 false 可能会导致 \"split-brain\" 的情况，可能导致数据丢失和/或服务"
+"不可用。"
+
+#: lib/pengine/common.c:143
+msgid ""
+"Apply fencing delay targeting the lost nodes with the highest total resource "
+"priority"
+msgstr "针对具有最高总资源优先级的丢失节点应用fencing延迟"
+
+#: lib/pengine/common.c:144
+msgid ""
+"Apply specified delay for the fencings that are targeting the lost nodes "
+"with the highest total resource priority in case we don't have the majority "
+"of the nodes in our cluster partition, so that the more significant nodes "
+"potentially win any fencing match, which is especially meaningful under "
+"split-brain of 2-node cluster. A promoted resource instance takes the base "
+"priority + 1 on calculation if the base priority is not 0. Any static/random "
+"delays that are introduced by `pcmk_delay_base/max` configured for the "
+"corresponding fencing resources will be added to this delay. This delay "
+"should be significantly greater than, safely twice, the maximum "
+"`pcmk_delay_base/max`. By default, priority fencing delay is disabled."
+msgstr ""
+"如果我们所在的集群分区并不拥有大多数集群节点，则针对丢失节点的fence操作应用指"
+"定的延迟，这样更重要的节点就能够赢得fence竞赛。这对于双节点集群在split-brain"
+"状况下尤其有意义。如果基本优先级不为0，在计算时主资源实例获得基本优先级+1。任"
+"何对于相应的 fence 资源由 pcmk_delay_base/max 配置所引入的静态/随机延迟会被添"
+"加到此延迟。为了安全, 这个延迟应该明显大于 pcmk_delay_base/max 的最大设置值，"
+"例如两倍。默认情况下，优先级fencing延迟已禁用。"
+
+#: lib/pengine/common.c:161
+msgid "Maximum time for node-to-node communication"
+msgstr "最大节点间通信时间"
+
+#: lib/pengine/common.c:162
+msgid ""
+"The node elected Designated Controller (DC) will consider an action failed "
+"if it does not get a response from the node executing the action within this "
+"time (after considering the action's own timeout). The \"correct\" value "
+"will depend on the speed and load of your network and cluster nodes."
+msgstr ""
+"如果一个操作未在该时间内（并且考虑操作本身的超时时长）从执行该操作的节点获得"
+"响应，则会被选为指定控制器（DC）的节点认定为失败。\"正确\" 值将取决于速度和您"
+"的网络和集群节点的负载。"
 
 #: lib/pengine/common.c:189
 #, fuzzy
