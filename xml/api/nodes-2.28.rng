@@ -48,7 +48,7 @@
                     <attribute name="id_as_resource"> <text/> </attribute>
                 </choice>
             </optional>
-            <externalRef href="resources-2.29.rng" />
+            <externalRef href="resources-2.28.rng" />
         </element>
     </define>
 </grammar>
