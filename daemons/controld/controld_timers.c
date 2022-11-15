@@ -37,8 +37,8 @@ fsa_timer_t *finalization_timer = NULL;
 // Wait for DC to stop all resources and give us the all-clear to shut down
 fsa_timer_t *shutdown_escalation_timer = NULL;
 
-// Cluster recheck interval (from configuration)
-guint recheck_interval_ms = 0;
+//! Cluster recheck interval (from configuration)
+static guint recheck_interval_ms = 0;
 
 /*	A_DC_TIMER_STOP, A_DC_TIMER_START,
  *	A_FINALIZE_TIMER_STOP, A_FINALIZE_TIMER_START
