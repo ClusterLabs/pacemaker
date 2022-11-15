@@ -685,13 +685,6 @@ crmd_metadata(void)
     g_free(s);
 }
 
-static const char *
-controller_option(GHashTable *options, const char *name)
-{
-    return pcmk__cluster_option(options, controller_options,
-                                PCMK__NELEM(controller_options), name);
-}
-
 static void
 config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
@@ -733,53 +726,54 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     pe_unpack_nvpairs(crmconfig, crmconfig, XML_CIB_TAG_PROPSET, NULL,
                       config_hash, CIB_OPTIONS_FIRST, FALSE, now, NULL);
 
+    // Validate all options, and use defaults if not already present in hash
     pcmk__validate_cluster_options(config_hash, controller_options,
                                    PCMK__NELEM(controller_options));
 
-    value = controller_option(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
+    value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
     election_timer->period_ms = crm_parse_interval_spec(value);
 
-    value = controller_option(config_hash, "node-action-limit");
+    value = g_hash_table_lookup(config_hash, "node-action-limit");
     throttle_update_job_max(value);
 
-    value = controller_option(config_hash, "load-threshold");
+    value = g_hash_table_lookup(config_hash, "load-threshold");
     if(value) {
         throttle_set_load_target(strtof(value, NULL) / 100.0);
     }
 
-    value = controller_option(config_hash, "no-quorum-policy");
+    value = g_hash_table_lookup(config_hash, "no-quorum-policy");
     if (pcmk__str_eq(value, "suicide", pcmk__str_casei) && pcmk__locate_sbd()) {
         controld_set_global_flags(controld_no_quorum_suicide);
     }
 
-    set_fence_reaction(controller_option(config_hash,
-                                         XML_CONFIG_ATTR_FENCE_REACTION));
+    value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_FENCE_REACTION);
+    set_fence_reaction(value);
 
-    value = controller_option(config_hash, "stonith-max-attempts");
+    value = g_hash_table_lookup(config_hash, "stonith-max-attempts");
     update_stonith_max_attempts(value);
 
-    value = controller_option(config_hash, XML_CONFIG_ATTR_FORCE_QUIT);
+    value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_FORCE_QUIT);
     shutdown_escalation_timer->period_ms = crm_parse_interval_spec(value);
     crm_debug("Shutdown escalation occurs if DC has not responded to request in %ums",
               shutdown_escalation_timer->period_ms);
 
-    value = controller_option(config_hash, XML_CONFIG_ATTR_ELECTION_FAIL);
+    value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_ELECTION_FAIL);
     controld_set_election_period(value);
 
-    value = controller_option(config_hash, XML_CONFIG_ATTR_RECHECK);
+    value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_RECHECK);
     recheck_interval_ms = crm_parse_interval_spec(value);
     crm_debug("Re-run scheduler after %dms of inactivity", recheck_interval_ms);
 
-    value = controller_option(config_hash, "transition-delay");
+    value = g_hash_table_lookup(config_hash, "transition-delay");
     transition_timer->period_ms = crm_parse_interval_spec(value);
 
-    value = controller_option(config_hash, "join-integration-timeout");
+    value = g_hash_table_lookup(config_hash, "join-integration-timeout");
     integration_timer->period_ms = crm_parse_interval_spec(value);
 
-    value = controller_option(config_hash, "join-finalization-timeout");
+    value = g_hash_table_lookup(config_hash, "join-finalization-timeout");
     finalization_timer->period_ms = crm_parse_interval_spec(value);
 
-    value = controller_option(config_hash, XML_CONFIG_ATTR_SHUTDOWN_LOCK);
+    value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_SHUTDOWN_LOCK);
     if (crm_is_true(value)) {
         controld_set_global_flags(controld_shutdown_lock_enabled);
     } else {
@@ -860,8 +854,11 @@ crm_shutdown(int nsig)
     register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
 
     if (shutdown_escalation_timer->period_ms == 0) {
-        const char *value = controller_option(NULL, XML_CONFIG_ATTR_FORCE_QUIT);
+        const char *value = NULL;
 
+        value = pcmk__cluster_option(NULL, controller_options,
+                                     PCMK__NELEM(controller_options),
+                                     XML_CONFIG_ATTR_FORCE_QUIT);
         shutdown_escalation_timer->period_ms = crm_parse_interval_spec(value);
     }
 
