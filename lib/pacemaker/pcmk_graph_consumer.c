@@ -667,8 +667,6 @@ pcmk__graph_t *
 pcmk__unpack_graph(xmlNode *xml_graph, const char *reference)
 {
     pcmk__graph_t *new_graph = NULL;
-    const char *t_id = NULL;
-    const char *time = NULL;
 
     new_graph = calloc(1, sizeof(pcmk__graph_t));
     if (new_graph == NULL) {
@@ -689,33 +687,39 @@ pcmk__unpack_graph(xmlNode *xml_graph, const char *reference)
 
     // Parse top-level attributes from <transition_graph>
     if (xml_graph != NULL) {
-        t_id = crm_element_value(xml_graph, "transition_id");
-        CRM_CHECK(t_id != NULL, free(new_graph);
-                                return NULL);
-        pcmk__scan_min_int(t_id, &(new_graph->id), -1);
+        const char *buf = crm_element_value(xml_graph, "transition_id");
 
-        time = crm_element_value(xml_graph, "cluster-delay");
-        CRM_CHECK(time != NULL, free(new_graph);
-                                return NULL);
-        new_graph->network_delay = crm_parse_interval_spec(time);
+        CRM_CHECK(buf != NULL, free(new_graph);
+                               return NULL);
+        pcmk__scan_min_int(buf, &(new_graph->id), -1);
 
-        time = crm_element_value(xml_graph, "stonith-timeout");
-        if (time == NULL) {
+        buf = crm_element_value(xml_graph, "cluster-delay");
+        CRM_CHECK(buf != NULL, free(new_graph);
+                               return NULL);
+        new_graph->network_delay = crm_parse_interval_spec(buf);
+
+        buf = crm_element_value(xml_graph, "stonith-timeout");
+        if (buf == NULL) {
             new_graph->stonith_timeout = new_graph->network_delay;
         } else {
-            new_graph->stonith_timeout = crm_parse_interval_spec(time);
+            new_graph->stonith_timeout = crm_parse_interval_spec(buf);
         }
 
         // Use 0 (dynamic limit) as default/invalid, -1 (no limit) as minimum
-        t_id = crm_element_value(xml_graph, "batch-limit");
-        if ((t_id == NULL)
-            || (pcmk__scan_min_int(t_id, &(new_graph->batch_limit),
+        buf = crm_element_value(xml_graph, "batch-limit");
+        if ((buf == NULL)
+            || (pcmk__scan_min_int(buf, &(new_graph->batch_limit),
                                    -1) != pcmk_rc_ok)) {
             new_graph->batch_limit = 0;
         }
 
-        t_id = crm_element_value(xml_graph, "migration-limit");
-        pcmk__scan_min_int(t_id, &(new_graph->migration_limit), -1);
+        buf = crm_element_value(xml_graph, "migration-limit");
+        pcmk__scan_min_int(buf, &(new_graph->migration_limit), -1);
+
+        pcmk__str_update(&(new_graph->failed_stop_offset),
+                         crm_element_value(xml_graph, "failed-stop-offset"));
+        pcmk__str_update(&(new_graph->failed_start_offset),
+                         crm_element_value(xml_graph, "failed-start-offset"));
     }
 
     // Unpack each child <synapse> element
@@ -793,6 +797,8 @@ pcmk__free_graph(pcmk__graph_t *graph)
     if (graph != NULL) {
         g_list_free_full(graph->synapses, free_graph_synapse);
         free(graph->source);
+        free(graph->failed_stop_offset);
+        free(graph->failed_start_offset);
         free(graph);
     }
 }

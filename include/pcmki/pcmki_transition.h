@@ -127,6 +127,12 @@ typedef struct {
     GList *synapses;          /* pcmk__graph_synapse_t* */
 
     int migration_limit;
+
+    //! Failcount after one failed stop action
+    char *failed_stop_offset;
+
+    //! Failcount after one failed start action
+    char *failed_start_offset;
 } pcmk__graph_t;
 
 
