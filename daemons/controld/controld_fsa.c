@@ -664,7 +664,7 @@ do_state_transition(enum crmd_fsa_state cur_state,
             break;
 
         case S_NOT_DC:
-            election_timer->counter = 0;
+            controld_reset_counter_election_timer();
             purge_stonith_cleanup();
 
             if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
@@ -700,7 +700,7 @@ do_state_transition(enum crmd_fsa_state cur_state,
             break;
 
         case S_POLICY_ENGINE:
-            election_timer->counter = 0;
+            controld_reset_counter_election_timer();
             CRM_LOG_ASSERT(AM_I_DC);
             if (cause == C_TIMER_POPPED) {
                 crm_info("Progressed to state %s after %s",

@@ -23,9 +23,7 @@ typedef struct fsa_timer_s {
     int counter;                            // For detecting loops
 } fsa_timer_t;
 
-extern fsa_timer_t *election_timer;
 extern fsa_timer_t *shutdown_escalation_timer;
-extern fsa_timer_t *transition_timer;
 extern fsa_timer_t *integration_timer;
 extern fsa_timer_t *finalization_timer;
 
@@ -35,11 +33,18 @@ void controld_configure_fsa_timers(GHashTable *options);
 
 bool controld_stop_timer(fsa_timer_t *timer);
 bool controld_stop_recheck_timer(void);
+bool controld_stop_transition_timer(void);
 
 void controld_start_timer(fsa_timer_t *timer);
 void controld_start_recheck_timer(void);
+void controld_start_transition_timer(void);
 void controld_start_wait_timer(void);
 
-gboolean is_timer_started(fsa_timer_t *timer);
+bool is_timer_started(fsa_timer_t *timer);
+bool controld_is_started_transition_timer(void);
+
+guint controld_get_period_transition_timer(void);
+
+void controld_reset_counter_election_timer(void);
 
 #endif

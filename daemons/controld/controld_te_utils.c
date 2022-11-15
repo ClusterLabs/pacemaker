@@ -354,9 +354,9 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
     }
 
     if (controld_globals.transition_graph->complete) {
-        if (transition_timer->period_ms > 0) {
-            controld_stop_timer(transition_timer);
-            controld_start_timer(transition_timer);
+        if (controld_get_period_transition_timer() > 0) {
+            controld_stop_transition_timer();
+            controld_start_transition_timer();
         } else {
             register_fsa_input(C_FSA_INTERNAL, I_PE_CALC, NULL);
         }

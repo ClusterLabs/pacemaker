@@ -166,7 +166,7 @@ do_te_invoke(long long action,
             graph_data = filename2xml(graph_file);
         }
 
-        if (is_timer_started(transition_timer)) {
+        if (controld_is_started_transition_timer()) {
             crm_debug("The transitioner wait for a transition timer");
             return;
         }

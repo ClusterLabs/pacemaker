@@ -22,11 +22,11 @@ static fsa_timer_t *wait_timer = NULL;
 //! Periodically re-run scheduler (for date_spec evaluation and as a failsafe)
 static fsa_timer_t *recheck_timer = NULL;
 
-// Wait at start-up, or after an election, for DC to make contact
-fsa_timer_t *election_timer = NULL;
+//! Wait at start-up, or after an election, for DC to make contact
+static fsa_timer_t *election_timer = NULL;
 
-// Delay start of new transition with expectation something else might happen
-fsa_timer_t *transition_timer = NULL;
+//! Delay start of new transition with expectation something else might happen
+static fsa_timer_t *transition_timer = NULL;
 
 // join-integration-timeout
 fsa_timer_t *integration_timer = NULL;
@@ -318,10 +318,21 @@ controld_free_fsa_timers(void)
     free(recheck_timer); recheck_timer = NULL;
 }
 
-gboolean
-is_timer_started(fsa_timer_t * timer)
+bool
+is_timer_started(fsa_timer_t *timer)
 {
     return (timer->period_ms > 0) && (timer->source_id != 0);
+}
+
+/*!
+ * \internal
+ * \brief Check whether the transition timer is started
+ * \return true if the transition timer is started, or false otherwise
+ */
+bool
+controld_is_started_transition_timer(void)
+{
+    return is_timer_started(transition_timer);
 }
 
 void
@@ -415,4 +426,46 @@ bool
 controld_stop_recheck_timer(void)
 {
     return controld_stop_timer(recheck_timer);
+}
+
+/*!
+ * \brief Get the transition timer's configured period
+ * \return The transition_timer's period
+ */
+guint
+controld_get_period_transition_timer(void)
+{
+    return transition_timer->period_ms;
+}
+
+/*!
+ * \internal
+ * \brief Reset the election timer's counter to 0
+ */
+void
+controld_reset_counter_election_timer(void)
+{
+    election_timer->counter = 0;
+}
+
+/*!
+ * \internal
+ * \brief Stop the transition timer
+ *
+ * \return true if the transition timer was running, or false otherwise
+ */
+bool
+controld_stop_transition_timer(void)
+{
+    return controld_stop_timer(transition_timer);
+}
+
+/*!
+ * \internal
+ * \brief Start the transition timer
+ */
+void
+controld_start_transition_timer(void)
+{
+    controld_start_timer(transition_timer);
 }
