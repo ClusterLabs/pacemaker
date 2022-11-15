@@ -543,15 +543,6 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
     const char *type = NULL;
     const char *score = NULL;
 
-    pe_rule_eval_data_t rule_data = {
-        .node_hash = NULL,
-        .role = RSC_ROLE_UNKNOWN,
-        .now = data_set->now,
-        .match_data = NULL,
-        .rsc_data = NULL,
-        .op_data = NULL
-    };
-
     for (xml_obj = pcmk__xe_first_child(xml_nodes); xml_obj != NULL;
          xml_obj = pcmk__xe_next(xml_obj)) {
 
@@ -578,9 +569,6 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
             handle_startup_fencing(data_set, new_node);
 
             add_node_attrs(xml_obj, new_node, FALSE, data_set);
-            pe__unpack_dataset_nvpairs(xml_obj, XML_TAG_UTILIZATION, &rule_data,
-                                       new_node->details->utilization, NULL,
-                                       FALSE, data_set);
 
             crm_trace("Done with node %s", crm_element_value(xml_obj, XML_ATTR_UNAME));
         }
@@ -4244,6 +4232,10 @@ add_node_attrs(xmlNode *xml_obj, pe_node_t *node, bool overwrite,
 
     pe__unpack_dataset_nvpairs(xml_obj, XML_TAG_ATTR_SETS, &rule_data,
                                node->details->attrs, NULL, overwrite, data_set);
+
+    pe__unpack_dataset_nvpairs(xml_obj, XML_TAG_UTILIZATION, &rule_data,
+                               node->details->utilization, NULL,
+                               FALSE, data_set);
 
     if (pe_node_attribute_raw(node, CRM_ATTR_SITE_NAME) == NULL) {
         const char *site_name = pe_node_attribute_raw(node, "site-name");
