@@ -447,10 +447,11 @@ cib_free_notify(cib_t *cib)
         cib->notify_list = NULL;
     }
 }
+
 /*!
  * \brief Free all callbacks for a CIB connection
  *
- * \param[in] cib  CIB connection to clean up
+ * \param[in,out] cib  CIB connection to clean up
  */
 void
 cib_free_callbacks(cib_t *cib)
@@ -463,7 +464,7 @@ cib_free_callbacks(cib_t *cib)
 /*!
  * \brief Free all memory used by CIB connection
  *
- * \param[in] cib  CIB connection to delete
+ * \param[in,out] cib  CIB connection to delete
  */
 void
 cib_delete(cib_t *cib)
