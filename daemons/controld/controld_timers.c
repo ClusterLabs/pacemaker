@@ -28,8 +28,8 @@ static fsa_timer_t *election_timer = NULL;
 //! Delay start of new transition with expectation something else might happen
 static fsa_timer_t *transition_timer = NULL;
 
-// join-integration-timeout
-fsa_timer_t *integration_timer = NULL;
+//! join-integration-timeout
+static fsa_timer_t *integration_timer = NULL;
 
 // join-finalization-timeout
 fsa_timer_t *finalization_timer = NULL;

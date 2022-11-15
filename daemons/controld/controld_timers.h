@@ -24,7 +24,6 @@ typedef struct fsa_timer_s {
 } fsa_timer_t;
 
 extern fsa_timer_t *shutdown_escalation_timer;
-extern fsa_timer_t *integration_timer;
 extern fsa_timer_t *finalization_timer;
 
 bool controld_init_fsa_timers(void);
