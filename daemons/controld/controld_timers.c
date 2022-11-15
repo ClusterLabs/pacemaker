@@ -19,8 +19,8 @@
 //! Wait before retrying a failed cib or executor connection
 static fsa_timer_t *wait_timer = NULL;
 
-// Periodically re-run scheduler (for date_spec evaluation and as a failsafe)
-fsa_timer_t *recheck_timer = NULL;
+//! Periodically re-run scheduler (for date_spec evaluation and as a failsafe)
+static fsa_timer_t *recheck_timer = NULL;
 
 // Wait at start-up, or after an election, for DC to make contact
 fsa_timer_t *election_timer = NULL;
@@ -340,6 +340,10 @@ controld_start_timer(fsa_timer_t *timer)
     }
 }
 
+/*!
+ * \internal
+ * \brief Start the recheck timer
+ */
 void
 controld_start_recheck_timer(void)
 {
@@ -380,10 +384,10 @@ controld_start_wait_timer(void)
     controld_start_timer(wait_timer);
 }
 
-gboolean
+bool
 controld_stop_timer(fsa_timer_t *timer)
 {
-    CRM_CHECK(timer != NULL, return FALSE);
+    CRM_CHECK(timer != NULL, return false);
 
     if (timer->source_id != 0) {
         crm_trace("Stopping %s (would inject %s if popped after %ums, src=%d)",
@@ -396,7 +400,19 @@ controld_stop_timer(fsa_timer_t *timer)
         crm_trace("%s already stopped (would inject %s if popped after %ums)",
                   get_timer_desc(timer), fsa_input2string(timer->fsa_input),
                   timer->period_ms);
-        return FALSE;
+        return false;
     }
-    return TRUE;
+    return true;
+}
+
+/*!
+ * \internal
+ * \brief Stop the recheck timer
+ *
+ * \return true if the recheck timer was running, or false otherwise
+ */
+bool
+controld_stop_recheck_timer(void)
+{
+    return controld_stop_timer(recheck_timer);
 }

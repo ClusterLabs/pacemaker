@@ -28,13 +28,13 @@ extern fsa_timer_t *shutdown_escalation_timer;
 extern fsa_timer_t *transition_timer;
 extern fsa_timer_t *integration_timer;
 extern fsa_timer_t *finalization_timer;
-extern fsa_timer_t *recheck_timer;
 
 bool controld_init_fsa_timers(void);
 void controld_free_fsa_timers(void);
 void controld_configure_fsa_timers(GHashTable *options);
 
-gboolean controld_stop_timer(fsa_timer_t *timer);
+bool controld_stop_timer(fsa_timer_t *timer);
+bool controld_stop_recheck_timer(void);
 
 void controld_start_timer(fsa_timer_t *timer);
 void controld_start_recheck_timer(void);

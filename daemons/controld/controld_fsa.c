@@ -643,7 +643,7 @@ do_state_transition(enum crmd_fsa_state cur_state,
         controld_set_fsa_action_flags(A_DC_TIMER_STOP);
     }
     if (next_state != S_IDLE) {
-        controld_stop_timer(recheck_timer);
+        controld_stop_recheck_timer();
     }
 
     if (cur_state == S_FINALIZE_JOIN && next_state == S_POLICY_ENGINE) {
