@@ -32,7 +32,6 @@ extern fsa_timer_t *wait_timer;
 extern fsa_timer_t *recheck_timer;
 
 extern guint recheck_interval_ms;
-extern time_t recheck_by;
 
 bool controld_init_fsa_timers(void);
 void controld_free_fsa_timers(void);

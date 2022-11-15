@@ -40,9 +40,6 @@ fsa_timer_t *shutdown_escalation_timer = NULL;
 // Cluster recheck interval (from configuration)
 guint recheck_interval_ms = 0;
 
-// When scheduler should be re-run (from most recent transition graph)
-time_t recheck_by = 0;
-
 /*	A_DC_TIMER_STOP, A_DC_TIMER_START,
  *	A_FINALIZE_TIMER_STOP, A_FINALIZE_TIMER_START
  *	A_INTEGRATE_TIMER_STOP, A_INTEGRATE_TIMER_START
@@ -311,8 +308,9 @@ controld_start_recheck_timer(void)
     guint period_ms = recheck_interval_ms;
 
     // If scheduler supplied a "recheck by" time, check whether that's sooner
-    if (recheck_by > 0) {
-        time_t diff_seconds = recheck_by - time(NULL);
+    if (controld_globals.transition_graph->recheck_by > 0) {
+        time_t diff_seconds = controld_globals.transition_graph->recheck_by
+                              - time(NULL);
 
         if (diff_seconds < 1) {
             // We're already past the desired time

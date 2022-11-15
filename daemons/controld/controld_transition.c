@@ -187,11 +187,6 @@ do_te_invoke(long long action,
 
         te_reset_job_counts();
 
-        if ((crm_element_value_epoch(graph_data, "recheck-by", &recheck_by)
-            != pcmk_ok) || (recheck_by < 0)) {
-            recheck_by = 0;
-        }
-
         trigger_graph();
         pcmk__log_graph(LOG_TRACE, controld_globals.transition_graph);
 
