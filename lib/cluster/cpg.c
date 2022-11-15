@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -914,7 +914,8 @@ pcmk__cpg_send_xml(xmlNode *msg, crm_node_t *node, enum crm_ais_msg_types dest)
  */
 gboolean
 send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
-                  gboolean local, crm_node_t *node, enum crm_ais_msg_types dest)
+                  gboolean local, const crm_node_t *node,
+                  enum crm_ais_msg_types dest)
 {
     static int msg_id = 0;
     static int local_pid = 0;
