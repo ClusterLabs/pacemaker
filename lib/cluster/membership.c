@@ -163,7 +163,7 @@ crm_remote_peer_cache_remove(const char *node_name)
  *       backward compatibility with older controllers that don't set it.
  */
 static const char *
-remote_state_from_cib(xmlNode *node_state)
+remote_state_from_cib(const xmlNode *node_state)
 {
     bool status = false;
 
@@ -190,7 +190,7 @@ struct refresh_data {
 static void
 remote_cache_refresh_helper(xmlNode *result, void *user_data)
 {
-    struct refresh_data *data = user_data;
+    const struct refresh_data *data = user_data;
     const char *remote = crm_element_value(result, data->field);
     const char *state = NULL;
     crm_node_t *node;
@@ -768,8 +768,8 @@ crm_get_peer(unsigned int id, const char *uname)
  * \internal
  * \brief Update a node's uname
  *
- * \param[in] node        Node object to update
- * \param[in] uname       New name to set
+ * \param[in,out] node   Node object to update
+ * \param[in]     uname  New name to set
  *
  * \note This function should not be called within a peer cache iteration,
  *       because in some cases it can remove conflicting cache entries,
@@ -856,10 +856,10 @@ proc2text(enum crm_proc_flag proc)
  * \internal
  * \brief Update a node's process information (and potentially state)
  *
- * \param[in] source      Caller's function name (for log messages)
- * \param[in] node        Node object to update
- * \param[in] flag        Bitmask of new process information
- * \param[in] status      node status (online, offline, etc.)
+ * \param[in]     source  Caller's function name (for log messages)
+ * \param[in,out] node    Node object to update
+ * \param[in]     flag    Bitmask of new process information
+ * \param[in]     status  node status (online, offline, etc.)
  *
  * \return NULL if any node was reaped from peer caches, value of node otherwise
  *
@@ -990,11 +990,11 @@ pcmk__update_peer_expected(const char *source, crm_node_t *node,
  * \internal
  * \brief Update a node's state and membership information
  *
- * \param[in] source      Caller's function name (for log messages)
- * \param[in] node        Node object to update
- * \param[in] state       Node's new state
- * \param[in] membership  Node's new membership ID
- * \param[in] iter        If not NULL, pointer to node's peer cache iterator
+ * \param[in]     source      Caller's function name (for log messages)
+ * \param[in,out] node        Node object to update
+ * \param[in]     state       Node's new state
+ * \param[in]     membership  Node's new membership ID
+ * \param[in,out] iter        If not NULL, pointer to node's peer cache iterator
  *
  * \return NULL if any node was reaped, value of node otherwise
  *
@@ -1059,10 +1059,10 @@ update_peer_state_iter(const char *source, crm_node_t *node, const char *state,
 /*!
  * \brief Update a node's state and membership information
  *
- * \param[in] source      Caller's function name (for log messages)
- * \param[in] node        Node object to update
- * \param[in] state       Node's new state
- * \param[in] membership  Node's new membership ID
+ * \param[in]     source      Caller's function name (for log messages)
+ * \param[in,out] node        Node object to update
+ * \param[in]     state       Node's new state
+ * \param[in]     membership  Node's new membership ID
  *
  * \return NULL if any node was reaped, value of node otherwise
  *
