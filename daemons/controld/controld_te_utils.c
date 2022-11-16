@@ -115,7 +115,7 @@ controld_destroy_transition_trigger(void)
 }
 
 void
-trigger_graph_processing(const char *fn, int line)
+controld_trigger_graph_as(const char *fn, int line)
 {
     crm_trace("%s:%d - Triggered graph processing", fn, line);
     mainloop_set_trigger(transition_trigger);

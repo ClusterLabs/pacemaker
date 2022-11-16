@@ -41,7 +41,7 @@ void te_update_diff(const char *event, xmlNode *msg);
 void controld_init_transition_trigger(void);
 void controld_destroy_transition_trigger(void);
 
-extern void trigger_graph_processing(const char *fn, int line);
+void controld_trigger_graph_as(const char *fn, int line);
 void abort_after_delay(int abort_priority, enum pcmk__graph_next abort_action,
                        const char *abort_text, guint delay_ms);
 void abort_transition_graph(int abort_priority,
@@ -49,7 +49,7 @@ void abort_transition_graph(int abort_priority,
                             const char *abort_text, const xmlNode *reason,
                             const char *fn, int line);
 
-#  define trigger_graph()	trigger_graph_processing(__func__, __LINE__)
+#  define trigger_graph()   controld_trigger_graph_as(__func__, __LINE__)
 #  define abort_transition(pri, action, text, reason)			\
 	abort_transition_graph(pri, action, text, reason,__func__,__LINE__);
 
