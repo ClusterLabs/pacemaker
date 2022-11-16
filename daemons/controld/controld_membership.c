@@ -399,6 +399,8 @@ cib_quorum_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output,
 void
 crm_update_quorum(gboolean quorum, gboolean force_update)
 {
+    bool has_quorum = pcmk_is_set(controld_globals.flags, controld_has_quorum);
+
     if (quorum) {
         controld_globals.flags |= controld_ever_had_quorum;
 
@@ -409,7 +411,7 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
     }
 
     if (AM_I_DC
-        && ((pcmk_is_set(controld_globals.flags, controld_has_quorum) != quorum)
+        && ((has_quorum && !quorum) || (!has_quorum && quorum)
             || force_update)) {
         int call_id = 0;
         xmlNode *update = NULL;
