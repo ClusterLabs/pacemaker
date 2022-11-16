@@ -754,7 +754,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     value = controller_option(config_hash, "no-quorum-policy");
     if (pcmk__str_eq(value, "suicide", pcmk__str_casei) && pcmk__locate_sbd()) {
-        controld_globals.flags |= controld_no_quorum_suicide;
+        controld_set_global_flags(controld_no_quorum_suicide);
     }
 
     set_fence_reaction(controller_option(config_hash,
@@ -786,9 +786,9 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     value = controller_option(config_hash, XML_CONFIG_ATTR_SHUTDOWN_LOCK);
     if (crm_is_true(value)) {
-        controld_globals.flags |= controld_shutdown_lock_enabled;
+        controld_set_global_flags(controld_shutdown_lock_enabled);
     } else {
-        controld_globals.flags &= ~controld_shutdown_lock_enabled;
+        controld_clear_global_flags(controld_shutdown_lock_enabled);
     }
 
     value = g_hash_table_lookup(config_hash, "cluster-name");

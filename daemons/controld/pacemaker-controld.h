@@ -90,6 +90,22 @@ enum controld_flags {
     controld_shutdown_lock_enabled  = (1 << 5),
 };
 
+#  define controld_set_global_flags(flags_to_set) do {                      \
+        controld_globals.flags = pcmk__set_flags_as(__func__, __LINE__,     \
+                                                    LOG_TRACE,              \
+                                                    "Global", "controller", \
+                                                    controld_globals.flags, \
+                                                    (flags_to_set),         \
+                                                    #flags_to_set);         \
+    } while (0)
+
+#  define controld_clear_global_flags(flags_to_clear) do {                  \
+        controld_globals.flags                                              \
+            = pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE, "Global", \
+                                   "controller", controld_globals.flags,    \
+                                   (flags_to_clear), #flags_to_clear);      \
+    } while (0)
+
 #  define controld_trigger_config()  \
     controld_trigger_config_as(__func__, __LINE__)
 

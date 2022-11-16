@@ -75,7 +75,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
     }
 
     if (input == I_WAIT_FOR_EVENT) {
-        controld_globals.flags |= controld_fsa_is_stalled;
+        controld_set_global_flags(controld_fsa_is_stalled);
         crm_debug("Stalling the FSA pending further input: source=%s cause=%s data=%p queue=%d",
                   raised_from, fsa_cause2string(cause), data, old_len);
 

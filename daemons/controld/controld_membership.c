@@ -402,7 +402,7 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
     bool has_quorum = pcmk_is_set(controld_globals.flags, controld_has_quorum);
 
     if (quorum) {
-        controld_globals.flags |= controld_ever_had_quorum;
+        controld_set_global_flags(controld_ever_had_quorum);
 
     } else if (pcmk_all_flags_set(controld_globals.flags,
                                   controld_ever_had_quorum
@@ -451,8 +451,8 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
     }
 
     if (quorum) {
-        controld_globals.flags |= controld_has_quorum;
+        controld_set_global_flags(controld_has_quorum);
     } else {
-        controld_globals.flags &= ~controld_has_quorum;
+        controld_clear_global_flags(controld_has_quorum);
     }
 }

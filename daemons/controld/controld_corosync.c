@@ -126,7 +126,7 @@ cpg_membership_callback(cpg_handle_t handle, const struct cpg_name *cpg_name,
         if (peer != NULL) {
             for (int i = 0; i < left_list_entries; ++i) {
                 if (left_list[i].nodeid == peer->id) {
-                    controld_globals.flags |= controld_dc_left;
+                    controld_set_global_flags(controld_dc_left);
                     break;
                 }
             }
@@ -138,7 +138,7 @@ cpg_membership_callback(cpg_handle_t handle, const struct cpg_name *cpg_name,
                         left_list, left_list_entries,
                         joined_list, joined_list_entries);
 
-    controld_globals.flags &= ~controld_dc_left;
+    controld_clear_global_flags(controld_dc_left);
 }
 
 extern gboolean crm_connect_corosync(crm_cluster_t * cluster);

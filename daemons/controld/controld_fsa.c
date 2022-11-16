@@ -155,7 +155,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 
     fsa_dump_actions(controld_globals.fsa_actions, "Initial");
 
-    controld_globals.flags &= ~controld_fsa_is_stalled;
+    controld_clear_global_flags(controld_fsa_is_stalled);
     if ((fsa_message_queue == NULL)
         && (controld_globals.fsa_actions != A_NOTHING)) {
         /* fake the first message so we can get into the loop */
