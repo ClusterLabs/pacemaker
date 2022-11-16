@@ -27,16 +27,13 @@ bool controld_init_fsa_timers(void);
 void controld_free_fsa_timers(void);
 void controld_configure_fsa_timers(GHashTable *options);
 
-bool controld_stop_timer(fsa_timer_t *timer);
 bool controld_stop_recheck_timer(void);
 bool controld_stop_transition_timer(void);
 
-void controld_start_timer(fsa_timer_t *timer);
 void controld_start_recheck_timer(void);
 void controld_start_transition_timer(void);
 void controld_start_wait_timer(void);
 
-bool is_timer_started(fsa_timer_t *timer);
 bool controld_is_started_transition_timer(void);
 
 guint controld_get_period_transition_timer(void);

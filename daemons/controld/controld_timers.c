@@ -40,6 +40,85 @@ fsa_timer_t *shutdown_escalation_timer = NULL;
 //! Cluster recheck interval (from configuration)
 static guint recheck_interval_ms = 0;
 
+static const char *
+get_timer_desc(fsa_timer_t * timer)
+{
+    if (timer == election_timer) {
+        return "Election Trigger";
+
+    } else if (timer == shutdown_escalation_timer) {
+        return "Shutdown Escalation";
+
+    } else if (timer == integration_timer) {
+        return "Integration Timer";
+
+    } else if (timer == finalization_timer) {
+        return "Finalization Timer";
+
+    } else if (timer == transition_timer) {
+        return "New Transition Timer";
+
+    } else if (timer == wait_timer) {
+        return "Wait Timer";
+
+    } else if (timer == recheck_timer) {
+        return "Cluster Recheck Timer";
+
+    }
+    return "Unknown Timer";
+}
+
+/*!
+ * \internal
+ * \brief Stop an FSA timer
+ *
+ * \param[in,out] timer  Timer to stop
+ *
+ * \return true if the timer was running, or false otherwise
+ */
+static bool
+controld_stop_timer(fsa_timer_t *timer)
+{
+    CRM_CHECK(timer != NULL, return false);
+
+    if (timer->source_id != 0) {
+        crm_trace("Stopping %s (would inject %s if popped after %ums, src=%d)",
+                  get_timer_desc(timer), fsa_input2string(timer->fsa_input),
+                  timer->period_ms, timer->source_id);
+        g_source_remove(timer->source_id);
+        timer->source_id = 0;
+
+    } else {
+        crm_trace("%s already stopped (would inject %s if popped after %ums)",
+                  get_timer_desc(timer), fsa_input2string(timer->fsa_input),
+                  timer->period_ms);
+        return false;
+    }
+    return true;
+}
+
+/*!
+ * \internal
+ * \brief Start an FSA timer
+ *
+ * \param[in,out] timer  Timer to start
+ */
+static void
+controld_start_timer(fsa_timer_t *timer)
+{
+    if (timer->source_id == 0 && timer->period_ms > 0) {
+        timer->source_id = g_timeout_add(timer->period_ms, timer->callback, (void *)timer);
+        CRM_ASSERT(timer->source_id != 0);
+        crm_debug("Started %s (inject %s if pops after %ums, source=%d)",
+                  get_timer_desc(timer), fsa_input2string(timer->fsa_input),
+                  timer->period_ms, timer->source_id);
+    } else {
+        crm_debug("%s already running (inject %s if pops after %ums, source=%d)",
+                  get_timer_desc(timer), fsa_input2string(timer->fsa_input),
+                  timer->period_ms, timer->source_id);
+    }
+}
+
 /*	A_DC_TIMER_STOP, A_DC_TIMER_START,
  *	A_FINALIZE_TIMER_STOP, A_FINALIZE_TIMER_START
  *	A_INTEGRATE_TIMER_STOP, A_INTEGRATE_TIMER_START
@@ -76,34 +155,6 @@ do_timer_control(long long action,
     } else if (action & A_INTEGRATE_TIMER_START) {
         controld_start_timer(integration_timer);
     }
-}
-
-static const char *
-get_timer_desc(fsa_timer_t * timer)
-{
-    if (timer == election_timer) {
-        return "Election Trigger";
-
-    } else if (timer == shutdown_escalation_timer) {
-        return "Shutdown Escalation";
-
-    } else if (timer == integration_timer) {
-        return "Integration Timer";
-
-    } else if (timer == finalization_timer) {
-        return "Finalization Timer";
-
-    } else if (timer == transition_timer) {
-        return "New Transition Timer";
-
-    } else if (timer == wait_timer) {
-        return "Wait Timer";
-
-    } else if (timer == recheck_timer) {
-        return "Cluster Recheck Timer";
-
-    }
-    return "Unknown Timer";
 }
 
 static gboolean
@@ -318,12 +369,6 @@ controld_free_fsa_timers(void)
     free(recheck_timer); recheck_timer = NULL;
 }
 
-bool
-is_timer_started(fsa_timer_t *timer)
-{
-    return (timer->period_ms > 0) && (timer->source_id != 0);
-}
-
 /*!
  * \internal
  * \brief Check whether the transition timer is started
@@ -332,23 +377,8 @@ is_timer_started(fsa_timer_t *timer)
 bool
 controld_is_started_transition_timer(void)
 {
-    return is_timer_started(transition_timer);
-}
-
-void
-controld_start_timer(fsa_timer_t *timer)
-{
-    if (timer->source_id == 0 && timer->period_ms > 0) {
-        timer->source_id = g_timeout_add(timer->period_ms, timer->callback, (void *)timer);
-        CRM_ASSERT(timer->source_id != 0);
-        crm_debug("Started %s (inject %s if pops after %ums, source=%d)",
-                  get_timer_desc(timer), fsa_input2string(timer->fsa_input),
-                  timer->period_ms, timer->source_id);
-    } else {
-        crm_debug("%s already running (inject %s if pops after %ums, source=%d)",
-                  get_timer_desc(timer), fsa_input2string(timer->fsa_input),
-                  timer->period_ms, timer->source_id);
-    }
+    return (transition_timer->period_ms > 0)
+           && (transition_timer->source_id != 0);
 }
 
 /*!
@@ -393,27 +423,6 @@ void
 controld_start_wait_timer(void)
 {
     controld_start_timer(wait_timer);
-}
-
-bool
-controld_stop_timer(fsa_timer_t *timer)
-{
-    CRM_CHECK(timer != NULL, return false);
-
-    if (timer->source_id != 0) {
-        crm_trace("Stopping %s (would inject %s if popped after %ums, src=%d)",
-                  get_timer_desc(timer), fsa_input2string(timer->fsa_input),
-                  timer->period_ms, timer->source_id);
-        g_source_remove(timer->source_id);
-        timer->source_id = 0;
-
-    } else {
-        crm_trace("%s already stopped (would inject %s if popped after %ums)",
-                  get_timer_desc(timer), fsa_input2string(timer->fsa_input),
-                  timer->period_ms);
-        return false;
-    }
-    return true;
 }
 
 /*!
