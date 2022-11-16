@@ -79,7 +79,7 @@ do_cl_join_announce(long long action,
         return;
     }
 
-    if (AM_I_OPERATIONAL) {
+    if (!pcmk_is_set(controld_globals.fsa_input_register, R_STARTING)) {
         /* send as a broadcast */
         xmlNode *req = create_request(CRM_OP_JOIN_ANNOUNCE, NULL, NULL,
                                       CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
