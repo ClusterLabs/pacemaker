@@ -33,8 +33,8 @@ extern unsigned long long crm_peer_seq;
 #define CRM_NODE_MEMBER    "member"
 
 enum crm_join_phase {
-    /* @COMPAT: crm_join_nack_quiet can be replaced by a new
-     *          crm_node_t:feature_set at a compatibility break.
+    /* @COMPAT: crm_join_nack_quiet can be replaced by crm_node_t:user_data
+     *          at a compatibility break.
      */
     //! Not allowed to join, but don't send a nack message
     crm_join_nack_quiet = -2,

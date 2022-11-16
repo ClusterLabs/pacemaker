@@ -386,9 +386,17 @@ do_dc_join_filter_offer(long long action,
                   join_id, join_from, ref);
     }
 
-    if (ack_nack_bool == FALSE) {
-        crm_update_peer_join(__func__, join_node, crm_join_nack);
+    if (!ack_nack_bool) {
+        if (compare_version(join_version, "3.17.0") < 0) {
+            /* Clients with CRM_FEATURE_SET < 3.17.0 may respawn infinitely
+             * after a nack message, don't send one
+             */
+            crm_update_peer_join(__func__, join_node, crm_join_nack_quiet);
+        } else {
+            crm_update_peer_join(__func__, join_node, crm_join_nack);
+        }
         pcmk__update_peer_expected(__func__, join_node, CRMD_JOINSTATE_NACK);
+
     } else {
         crm_update_peer_join(__func__, join_node, crm_join_integrated);
         pcmk__update_peer_expected(__func__, join_node, CRMD_JOINSTATE_MEMBER);
@@ -416,7 +424,9 @@ do_dc_join_finalize(long long action,
     char *sync_from = NULL;
     int rc = pcmk_ok;
     int count_welcomed = crmd_join_phase_count(crm_join_welcomed);
-    int count_integrated = crmd_join_phase_count(crm_join_integrated);
+    int count_finalizable = crmd_join_phase_count(crm_join_integrated)
+                            + crmd_join_phase_count(crm_join_nack)
+                            + crmd_join_phase_count(crm_join_nack_quiet);
 
     /* This we can do straight away and avoid clients timing us out
      *  while we compute the latest CIB
@@ -429,7 +439,7 @@ do_dc_join_finalize(long long action,
         /* crmd_fsa_stall(FALSE); Needed? */
         return;
 
-    } else if (count_integrated == 0) {
+    } else if (count_finalizable == 0) {
         crm_debug("Finalization not needed for join-%d at the current time",
                   current_join_id);
         crmd_join_phase_log(LOG_DEBUG);
@@ -457,16 +467,16 @@ do_dc_join_finalize(long long action,
         pcmk__str_update(&sync_from, max_generation_from);
         controld_set_fsa_input_flags(R_CIB_ASKED);
         crm_notice("Finalizing join-%d for %d node%s (sync'ing CIB from %s)",
-                   current_join_id, count_integrated,
-                   pcmk__plural_s(count_integrated), sync_from);
+                   current_join_id, count_finalizable,
+                   pcmk__plural_s(count_finalizable), sync_from);
         crm_log_xml_notice(max_generation_xml, "Requested CIB version");
 
     } else {
         /* Send _our_ CIB out to everyone */
         pcmk__str_update(&sync_from, controld_globals.our_nodename);
         crm_debug("Finalizing join-%d for %d node%s (sync'ing from local CIB)",
-                  current_join_id, count_integrated,
-                  pcmk__plural_s(count_integrated));
+                  current_join_id, count_finalizable,
+                  pcmk__plural_s(count_finalizable));
         crm_log_xml_debug(max_generation_xml, "Requested CIB version");
     }
     crmd_join_phase_log(LOG_DEBUG);
@@ -513,10 +523,14 @@ finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, voi
 
         /* make sure dc_uuid is re-set to us */
         if (!check_join_state(controld_globals.fsa_state, __func__)) {
-            int count_integrated = crmd_join_phase_count(crm_join_integrated);
+            int count_finalizable = 0;
+
+            count_finalizable = crmd_join_phase_count(crm_join_integrated)
+                                + crmd_join_phase_count(crm_join_nack);
+                                + crmd_join_phase_count(crm_join_nack_quiet);
 
             crm_debug("Notifying %d node%s of join-%d results",
-                      count_integrated, pcmk__plural_s(count_integrated),
+                      count_finalizable, pcmk__plural_s(count_finalizable),
                       current_join_id);
             g_hash_table_foreach(crm_peer_cache, finalize_join_for, NULL);
         }
@@ -638,12 +652,20 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
     xmlNode *tmp1 = NULL;
     crm_node_t *join_node = value;
     const char *join_to = join_node->uname;
+    bool integrated = false;
 
-    if(join_node->join != crm_join_integrated) {
-        crm_trace("Not updating non-integrated node %s (%s) for join-%d",
-                  join_to, crm_join_phase_str(join_node->join),
-                  current_join_id);
-        return;
+    switch (join_node->join) {
+        case crm_join_integrated:
+            integrated = true;
+            break;
+        case crm_join_nack:
+        case crm_join_nack_quiet:
+            break;
+        default:
+            crm_trace("Not updating non-integrated and non-nacked node %s (%s) "
+                      "for join-%d", join_to,
+                      crm_join_phase_str(join_node->join), current_join_id);
+            return;
     }
 
     crm_trace("Updating node state for %s", join_to);
@@ -653,8 +675,14 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
     fsa_cib_anon_update(XML_CIB_TAG_NODES, tmp1);
     free_xml(tmp1);
 
+    if (join_node->join == crm_join_nack_quiet) {
+        crm_trace("Not sending nack message to node %s with feature set older "
+                  "than 3.17.0", join_to);
+        return;
+    }
+
     join_node = crm_get_peer(0, join_to);
-    if (crm_is_peer_active(join_node) == FALSE) {
+    if (!crm_is_peer_active(join_node)) {
         /*
          * NACK'ing nodes that the membership layer doesn't know about yet
          * simply creates more churn
@@ -668,15 +696,18 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
         return;
     }
 
-    // Acknowledge node's join request
-    crm_debug("Acknowledging join-%d request from %s",
-              current_join_id, join_to);
+    // Acknowledge or nack node's join request
+    crm_debug("%sing join-%d request from %s",
+              integrated? "Acknowledg" : "Nack", current_join_id, join_to);
     acknak = create_dc_message(CRM_OP_JOIN_ACKNAK, join_to);
-    pcmk__xe_set_bool_attr(acknak, CRM_OP_JOIN_ACKNAK, true);
-    crm_update_peer_join(__func__, join_node, crm_join_finalized);
-    pcmk__update_peer_expected(__func__, join_node, CRMD_JOINSTATE_MEMBER);
+    pcmk__xe_set_bool_attr(acknak, CRM_OP_JOIN_ACKNAK, integrated);
 
-    send_cluster_message(crm_get_peer(0, join_to), crm_msg_crmd, acknak, TRUE);
+    if (integrated) {
+        // No change needed for a nacked node
+        crm_update_peer_join(__func__, join_node, crm_join_finalized);
+        pcmk__update_peer_expected(__func__, join_node, CRMD_JOINSTATE_MEMBER);
+    }
+    send_cluster_message(join_node, crm_msg_crmd, acknak, TRUE);
     free_xml(acknak);
     return;
 }
