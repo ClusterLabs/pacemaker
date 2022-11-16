@@ -137,7 +137,7 @@
 
     <define name="resource-config">
         <element name="resource_config">
-            <externalRef href="resources-2.29.rng" />
+            <externalRef href="resources-2.28.rng" />
             <element name="xml"> <text/> </element>
         </element>
     </define>
@@ -166,7 +166,7 @@
     <define name="resources-list">
         <element name="resources">
             <zeroOrMore>
-                <externalRef href="resources-2.29.rng" />
+                <externalRef href="resources-2.28.rng" />
             </zeroOrMore>
         </element>
     </define>
