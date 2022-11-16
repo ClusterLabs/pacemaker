@@ -6,6 +6,83 @@ some high-level descriptions of how individual components work.
 
 
 .. index::
+   single: controller
+   single: pacemaker-controld
+
+Controller
+##########
+
+``pacemaker-controld`` is the Pacemaker daemon that utilizes the other daemons
+to orchestrate actions that need to be taken in the cluster. It receives CIB
+change notifications from the CIB manager, passes the new CIB to the scheduler
+to determine whether anything needs to be done, uses the executor and fencer to
+execute any actions required, and sets failure counts (among other things) via
+the attribute manager.
+
+As might be expected, it has the most code of any of the daemons.
+
+.. index::
+   single: join
+
+Join sequence
+_____________
+
+Most daemons track their cluster peers using Corosync's membership and CPG
+only. The controller additionally requires peers to `join`, which ensures they
+are ready to be assigned tasks. Joining proceeds through a series of phases
+referred to as the `join sequence` or `join process`.
+
+A node's current join phase is tracked by the ``join`` member of ``crm_node_t``
+(used in the peer cache). It is an ``enum crm_join_phase`` that (ideally)
+progresses from the DC's point of view as follows:
+
+* The node initially starts at ``crm_join_none``
+
+* The DC sends the node a `join offer` (``CRM_OP_JOIN_OFFER``), and the node
+  proceeds to ``crm_join_welcomed``. This can happen in three ways:
+  
+  * The joining node will send a `join announce` (``CRM_OP_JOIN_ANNOUNCE``) at
+    its controller startup, and the DC will reply to that with a join offer.
+  * When the DC's peer status callback notices that the node has joined the
+    messaging layer, it registers ``I_NODE_JOIN`` (which leads to
+    ``A_DC_JOIN_OFFER_ONE`` -> ``do_dc_join_offer_one()`` ->
+    ``join_make_offer()``).
+  * After certain events (notably a new DC being elected), the DC will send all
+    nodes join offers (via A_DC_JOIN_OFFER_ALL -> ``do_dc_join_offer_all()``).
+
+  These can overlap. The DC can send a join offer and the node can send a join
+  announce at nearly the same time, so the node responds to the original join
+  offer while the DC responds to the join announce with a new join offer. The
+  situation resolves itself after looping a bit.
+
+* The node responds to join offers with a `join request`
+  (``CRM_OP_JOIN_REQUEST``, via ``do_cl_join_offer_respond()`` and
+  ``join_query_callback()``). When the DC receives the request, the
+  node proceeds to ``crm_join_integrated`` (via ``do_dc_join_filter_offer()``).
+
+* As each node is integrated, the current best CIB is sync'ed to each
+  integrated node via ``do_dc_join_finalize()``. As each integrated node's CIB
+  sync succeeds, the DC acks the node's join request (``CRM_OP_JOIN_ACKNAK``)
+  and the node proceeds to ``crm_join_finalized`` (via
+  ``finalize_sync_callback()`` + ``finalize_join_for()``).
+
+* Each node confirms the finalization ack (``CRM_OP_JOIN_CONFIRM`` via
+  ``do_cl_join_finalize_respond()``), including its current resource operation
+  history (via ``do_lrm_query()``). Once the DC receives this confirmation,
+  the node proceeds to ``crm_join_confirmed`` via ``do_dc_join_ack()``.
+
+Once all nodes are confirmed, the DC calls ``do_dc_join_final()``, which checks
+for quorum and responds appropriately.
+
+When peers are lost, their join phase is reset to none (in various places).
+
+``crm_update_peer_join()`` updates a node's join phase.
+
+The DC increments the global ``current_join_id`` for each joining round, and
+rejects any (older) replies that don't match.
+
+
+.. index::
    single: fencer
    single: pacemaker-fenced
 
