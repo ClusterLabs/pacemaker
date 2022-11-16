@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2021 the Pacemaker project contributors
+ * Copyright 2010-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -261,12 +261,12 @@ services__lsb_agent_exists(const char *agent)
  * \internal
  * \brief Prepare an LSB action
  *
- * \param[in] op  Action to prepare
+ * \param[in,out] op  Action to prepare
  *
  * \return Standard Pacemaker return code
  */
 int
-services__lsb_prepare(svc_action_t *op)
+services__lsb_prepare(const svc_action_t *op)
 {
     op->opaque->exec = pcmk__full_path(op->agent, PCMK__LSB_INIT_DIR);
     op->opaque->args[0] = strdup(op->opaque->exec);

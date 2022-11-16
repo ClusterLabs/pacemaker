@@ -106,7 +106,7 @@ init_recurring_actions(void)
  * \return TRUE if op is in-flight systemd or upstart op
  */
 static inline gboolean
-inflight_systemd_or_upstart(svc_action_t *op)
+inflight_systemd_or_upstart(const svc_action_t *op)
 {
     return pcmk__strcase_any_of(op->standard, PCMK_RESOURCE_CLASS_SYSTEMD,
                            PCMK_RESOURCE_CLASS_UPSTART, NULL) &&
@@ -429,7 +429,7 @@ services_alert_create(const char *id, const char *exec, int timeout,
 /*!
  * \brief Set the user and group that an action will execute as
  *
- * \param[in,out] action  Action to modify
+ * \param[in,out] op      Action to modify
  * \param[in]     user    Name of user to execute action as
  * \param[in]     group   Name of group to execute action as
  *
@@ -451,8 +451,8 @@ services_action_user(svc_action_t *op, const char *user)
 /*!
  * \brief Execute an alert agent action
  *
- * \param[in] action  Action to execute
- * \param[in] cb      Function to call when action completes
+ * \param[in,out] action  Action to execute
+ * \param[in]     cb      Function to call when action completes
  *
  * \return TRUE if the library will free action, FALSE otherwise
  *
@@ -760,12 +760,12 @@ services_action_kick(const char *name, const char *action, guint interval_ms)
  * \internal
  * \brief Add a new recurring operation, checking for duplicates
  *
- * \param[in] op               Operation to add
+ * \param[in,out] op  Operation to add
  *
  * \return TRUE if duplicate found (and reschedule), FALSE otherwise
  */
 static gboolean
-handle_duplicate_recurring(svc_action_t * op)
+handle_duplicate_recurring(svc_action_t *op)
 {
     svc_action_t * dup = NULL;
 
@@ -799,7 +799,7 @@ handle_duplicate_recurring(svc_action_t * op)
  * \internal
  * \brief Execute an action appropriately according to its standard
  *
- * \param[in] op  Action to execute
+ * \param[in,out] op  Action to execute
  *
  * \return Standard Pacemaker return code
  * \retval EBUSY          Recurring operation could not be initiated
@@ -853,7 +853,7 @@ services_add_inflight_op(svc_action_t * op)
  * \param[in] op  Operation to stop tracking
  */
 void
-services_untrack_op(svc_action_t *op)
+services_untrack_op(const svc_action_t *op)
 {
     /* Op is no longer in-flight or blocked */
     inflight_ops = g_list_remove(inflight_ops, op);
@@ -964,7 +964,7 @@ handle_blocked_ops(void)
  * \internal
  * \brief Execute a meta-data action appropriately to standard
  *
- * \param[in] op  Meta-data action to execute
+ * \param[in,out] op  Meta-data action to execute
  *
  * \return Standard Pacemaker return code
  */
@@ -1349,7 +1349,7 @@ services__set_cancelled(svc_action_t *action)
  * \return Readable name for the kind of \p action
  */
 const char *
-services__action_kind(svc_action_t *action)
+services__action_kind(const svc_action_t *action)
 {
     if ((action == NULL) || (action->standard == NULL)) {
         return "Process";
@@ -1373,7 +1373,7 @@ services__action_kind(svc_action_t *action)
  * \return Action's exit reason (or NULL if none)
  */
 const char *
-services__exit_reason(svc_action_t *action)
+services__exit_reason(const svc_action_t *action)
 {
     return action->opaque->exit_reason;
 }
@@ -1382,7 +1382,7 @@ services__exit_reason(svc_action_t *action)
  * \internal
  * \brief Steal stdout from an action
  *
- * \param[in] action  Action whose stdout is desired
+ * \param[in,out] action  Action whose stdout is desired
  *
  * \return Action's stdout (which may be NULL)
  * \note Upon return, \p action will no longer track the output, so it is the
@@ -1401,7 +1401,7 @@ services__grab_stdout(svc_action_t *action)
  * \internal
  * \brief Steal stderr from an action
  *
- * \param[in] action  Action whose stderr is desired
+ * \param[in,out] action  Action whose stderr is desired
  *
  * \return Action's stderr (which may be NULL)
  * \note Upon return, \p action will no longer track the output, so it is the
