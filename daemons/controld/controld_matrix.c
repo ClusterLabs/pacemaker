@@ -7,14 +7,17 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef XML_FSA_MATRIX__H
-#  define XML_FSA_MATRIX__H
+#include <crm_internal.h>
+
+#include <stdint.h>                 // uint64_t
+
+#include <pacemaker-controld.h>
 
 /*
  *	The state transition table.  The rows are inputs, and
  *	the columns are states.
  */
-static const enum crmd_fsa_state controld_fsa_next_state[MAXINPUT][MAXSTATE] = {
+static const enum crmd_fsa_state fsa_next_states[MAXINPUT][MAXSTATE] = {
 /* Got an I_NULL */
     {
      /* S_IDLE               ==> */ S_IDLE,
@@ -618,7 +621,7 @@ static const enum crmd_fsa_state controld_fsa_next_state[MAXINPUT][MAXSTATE] = {
 
 /* NOTE: In the fsa, the actions are extracted then state is updated. */
 
-static const uint64_t crmd_fsa_actions[MAXINPUT][MAXSTATE] = {
+static const uint64_t fsa_actions[MAXINPUT][MAXSTATE] = {
 
 /* Got an I_NULL */
     {
@@ -1218,4 +1221,25 @@ static const uint64_t crmd_fsa_actions[MAXINPUT][MAXSTATE] = {
      },
 };
 
-#endif
+/*!
+ * \internal
+ * \brief Get the next FSA state given an input and current state
+ * \return The next FSA state
+ */
+enum crmd_fsa_state
+controld_fsa_get_next_state(enum crmd_fsa_input input,
+                            enum crmd_fsa_state state)
+{
+    return fsa_next_states[input][state];
+}
+
+/*!
+ * \internal
+ * \brief Get the appropriate FSA action given an input and state
+ * \return The appropriate FSA action
+ */
+uint64_t
+controld_fsa_get_action(enum crmd_fsa_input input, enum crmd_fsa_state state)
+{
+    return fsa_actions[input][state];
+}

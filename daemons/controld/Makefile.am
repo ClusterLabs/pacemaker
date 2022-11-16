@@ -19,7 +19,6 @@ noinst_HEADERS	= controld_alerts.h		\
 		  controld_fencing.h		\
 		  controld_fsa.h		\
 		  controld_lrm.h		\
-		  controld_matrix.h		\
 		  controld_membership.h		\
 		  controld_messages.h		\
 		  controld_metadata.h		\
@@ -56,6 +55,7 @@ pacemaker_controld_SOURCES = pacemaker-controld.c	\
 			     controld_fsa.c		\
 			     controld_join_client.c	\
 			     controld_join_dc.c		\
+			     controld_matrix.c		\
 			     controld_membership.c	\
 			     controld_messages.c	\
 			     controld_metadata.c	\
