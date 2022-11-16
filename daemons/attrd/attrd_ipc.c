@@ -243,12 +243,23 @@ attrd_client_refresh(pcmk__request_t *request)
     return NULL;
 }
 
+static void
+handle_missing_host(xmlNode *xml)
+{
+    const char *host = crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME);
+
+    if (host == NULL) {
+        crm_trace("Inferring host");
+        pcmk__xe_add_node(xml, attrd_cluster->uname, attrd_cluster->nodeid);
+    }
+}
+
 xmlNode *
 attrd_client_update(pcmk__request_t *request)
 {
     xmlNode *xml = request->xml;
     attribute_t *a = NULL;
-    const char *attr, *value, *regex, *host;
+    const char *attr, *value, *regex;
 
     /* If the message has children, that means it is a message from a newer
      * client that supports sending multiple operations at a time.  There are
@@ -257,10 +268,18 @@ attrd_client_update(pcmk__request_t *request)
     if (xml_has_children(xml)) {
         if (minimum_protocol_version >= 4) {
             /* First, if all peers support a certain protocol version, we can
-             * just broadcast the big message and they'll handle it.
+             * just broadcast the big message and they'll handle it.  However,
+             * we also need to apply all the transformations in this function
+             * to the children since they don't happen anywhere else.
              */
+            for (xmlNode *child = first_named_child(xml, XML_ATTR_OP); child != NULL;
+                 child = crm_next_same_xml(child)) {
+                handle_missing_host(child);
+            }
+
             attrd_send_message(NULL, xml);
             pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+
         } else {
             /* Second, if they do not support that protocol version, split it
              * up into individual messages and call attrd_client_update on
@@ -279,7 +298,6 @@ attrd_client_update(pcmk__request_t *request)
         return NULL;
     }
 
-    host = crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME);
     attr = crm_element_value(xml, PCMK__XA_ATTR_NAME);
     value = crm_element_value(xml, PCMK__XA_ATTR_VALUE);
     regex = crm_element_value(xml, PCMK__XA_ATTR_PATTERN);
@@ -322,11 +340,7 @@ attrd_client_update(pcmk__request_t *request)
         return NULL;
     }
 
-    if (host == NULL) {
-        crm_trace("Inferring host");
-        host = strdup(attrd_cluster->uname);
-        pcmk__xe_add_node(xml, host, attrd_cluster->nodeid);
-    }
+    handle_missing_host(xml);
 
     a = g_hash_table_lookup(attributes, attr);
 
@@ -343,6 +357,7 @@ attrd_client_update(pcmk__request_t *request)
             attribute_value_t *v = NULL;
 
             if (a) {
+                const char *host = crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME);
                 v = g_hash_table_lookup(a->values, host);
             }
             int_value = attrd_expand_value(value, (v? v->current : NULL));
@@ -355,8 +370,8 @@ attrd_client_update(pcmk__request_t *request)
         }
     }
 
-    crm_debug("Broadcasting %s[%s]=%s%s", attr, host, value,
-              (attrd_election_won()? " (writer)" : ""));
+    crm_debug("Broadcasting %s[%s]=%s%s", attr, crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME),
+              value, (attrd_election_won()? " (writer)" : ""));
 
     attrd_send_message(NULL, xml); /* ends up at attrd_peer_message() */
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
