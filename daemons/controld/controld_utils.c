@@ -715,10 +715,9 @@ update_dc(xmlNode * msg)
         }
 
         if (invalid) {
-            CRM_CHECK(controld_globals.dc_name != NULL,
-                      crm_err("We have no DC"));
             if (AM_I_DC) {
-                crm_err("Not updating DC to %s (%s): we are also a DC", welcome_from, dc_version);
+                crm_err("Not updating DC to %s (%s): we are also a DC",
+                        welcome_from, dc_version);
             } else {
                 crm_warn("New DC %s is not %s",
                          welcome_from, controld_globals.dc_name);
