@@ -172,16 +172,16 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             appeared = pcmk_is_set(node->processes, crm_get_cluster_proc());
 
             {
-                const char *dc_s = "true";
+                const char *dc_s = controld_globals.dc_name;
 
-                if (!AM_I_DC) {
-                    dc_s = pcmk__s(controld_globals.dc_name, "<none>");
+                if ((dc_s == NULL) && AM_I_DC) {
+                    dc_s = "true";
                 }
 
                 crm_info("Node %s is %s a peer " CRM_XS
                          " DC=%s old=%#07x new=%#07x",
-                         node->uname, (appeared? "now" : "no longer"), dc_s,
-                         old, node->processes);
+                         node->uname, (appeared? "now" : "no longer"),
+                         pcmk__s(dc_s, "<none>"), old, node->processes);
             }
 
             if (!pcmk_is_set((node->processes ^ old), crm_get_cluster_proc())) {
