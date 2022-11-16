@@ -16,6 +16,16 @@
 #include <crm/msg_xml.h>
 #include <pacemaker-controld.h>
 
+//! FSA mainloop timer type
+typedef struct fsa_timer_s {
+    guint source_id;                        //!< Timer source ID
+    guint period_ms;                        //!< Timer period
+    enum crmd_fsa_input fsa_input;          //!< Input to register if timer pops
+    gboolean (*callback) (gpointer data);   //!< What do if timer pops
+    bool log_error;                         //!< Timer popping indicates error
+    int counter;                            //!< For detecting loops
+} fsa_timer_t;
+
 //! Wait before retrying a failed cib or executor connection
 static fsa_timer_t *wait_timer = NULL;
 
