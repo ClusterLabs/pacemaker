@@ -950,8 +950,8 @@ handle_shutdown_ack(xmlNode *stored_msg)
         return I_NULL;
     }
 
-    if ((controld_globals.dc_name == NULL)
-        || (strcasecmp(host_from, controld_globals.dc_name) == 0)) {
+    if (pcmk__str_eq(host_from, controld_globals.dc_name,
+                     pcmk__str_null_matches|pcmk__str_casei)) {
 
         if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
             crm_info("Shutting down controller after confirmation from %s",
