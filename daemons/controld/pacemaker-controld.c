@@ -32,9 +32,12 @@ _Noreturn void crmd_init(void);
 void crmd_hamsg_callback(const xmlNode * msg, void *private_data);
 extern void init_dotfile(void);
 
-GMainLoop *crmd_mainloop = NULL;
-
 pcmk__output_t *logger_out = NULL;
+
+controld_globals_t controld_globals = {
+    .fsa_state = S_STARTING,
+    .fsa_actions = A_NOTHING,
+};
 
 static pcmk__cli_option_t long_options[] = {
     // long option, argument type, storage, short option, description, flags
@@ -57,7 +60,7 @@ main(int argc, char **argv)
     int argerr = 0;
     crm_ipc_t *old_instance = NULL;
 
-    crmd_mainloop = g_main_loop_new(NULL, FALSE);
+    controld_globals.mainloop = g_main_loop_new(NULL, FALSE);
     crm_log_preinit(NULL, argc, argv);
     pcmk__set_cli_options(NULL, "[options]", long_options,
                           "daemon for coordinating a Pacemaker cluster's "
@@ -144,22 +147,11 @@ main(int argc, char **argv)
     return 0; // not reachable
 }
 
-static void
-log_deprecation_warnings(void)
-{
-    // Add deprecations here as needed
-}
-
 void
 crmd_init(void)
 {
     crm_exit_t exit_code = CRM_EX_OK;
     enum crmd_fsa_state state;
-
-    log_deprecation_warnings();
-
-    fsa_state = S_STARTING;
-    fsa_input_register = 0;     /* zero out the regester */
 
     init_dotfile();
     register_fsa_input(C_STARTUP, I_STARTUP, NULL);
@@ -170,8 +162,8 @@ crmd_init(void)
     if (state == S_PENDING || state == S_STARTING) {
         /* Create the mainloop and run it... */
         crm_trace("Starting %s's mainloop", crm_system_name);
-        g_main_loop_run(crmd_mainloop);
-        if (pcmk_is_set(fsa_input_register, R_STAYDOWN)) {
+        g_main_loop_run(controld_globals.mainloop);
+        if (pcmk_is_set(controld_globals.fsa_input_register, R_STAYDOWN)) {
             crm_info("Inhibiting automated respawn");
             exit_code = CRM_EX_FATAL;
         }

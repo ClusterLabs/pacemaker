@@ -20,11 +20,7 @@
 
 #include <pacemaker-controld.h>
 
-gboolean membership_flux_hack = FALSE;
 void post_cache_update(int instance);
-
-int last_peer_update = 0;
-guint highest_born_on = -1;
 
 extern gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
 
@@ -37,26 +33,28 @@ reap_dead_nodes(gpointer key, gpointer value, gpointer user_data)
         crm_update_peer_join(__func__, node, crm_join_none);
 
         if(node && node->uname) {
-            if (pcmk__str_eq(fsa_our_uname, node->uname, pcmk__str_casei)) {
+            if (pcmk__str_eq(controld_globals.our_nodename, node->uname,
+                             pcmk__str_casei)) {
                 crm_err("We're not part of the cluster anymore");
                 register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
 
-            } else if (AM_I_DC == FALSE && pcmk__str_eq(node->uname, fsa_our_dc, pcmk__str_casei)) {
+            } else if (!AM_I_DC
+                       && pcmk__str_eq(node->uname, controld_globals.dc_name,
+                                       pcmk__str_casei)) {
                 crm_warn("Our DC node (%s) left the cluster", node->uname);
                 register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
             }
         }
 
-        if (fsa_state == S_INTEGRATION || fsa_state == S_FINALIZE_JOIN) {
-            check_join_state(fsa_state, __func__);
+        if ((controld_globals.fsa_state == S_INTEGRATION)
+            || (controld_globals.fsa_state == S_FINALIZE_JOIN)) {
+            check_join_state(controld_globals.fsa_state, __func__);
         }
         if(node && node->uuid) {
             fail_incompletable_actions(transition_graph, node->uuid);
         }
     }
 }
-
-gboolean ever_had_quorum = FALSE;
 
 void
 post_cache_update(int instance)
@@ -94,8 +92,6 @@ static void
 crmd_node_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
     fsa_data_t *msg_data = NULL;
-
-    last_peer_update = 0;
 
     if (rc == pcmk_ok) {
         crm_trace("Node update %d complete", call_id);
@@ -380,7 +376,6 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
 
         fsa_cib_update(XML_CIB_TAG_STATUS, node_list, call_options, call_id, NULL);
         fsa_register_cib_callback(call_id, FALSE, NULL, crmd_node_update_complete);
-        last_peer_update = call_id;
 
         free_xml(node_list);
     }
@@ -404,20 +399,27 @@ cib_quorum_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output,
 void
 crm_update_quorum(gboolean quorum, gboolean force_update)
 {
-    ever_had_quorum |= quorum;
+    bool has_quorum = pcmk_is_set(controld_globals.flags, controld_has_quorum);
 
-    if(ever_had_quorum && quorum == FALSE && no_quorum_suicide_escalation) {
+    if (quorum) {
+        controld_set_global_flags(controld_ever_had_quorum);
+
+    } else if (pcmk_all_flags_set(controld_globals.flags,
+                                  controld_ever_had_quorum
+                                  |controld_no_quorum_suicide)) {
         pcmk__panic(__func__);
     }
 
-    if (AM_I_DC && (force_update || fsa_has_quorum != quorum)) {
+    if (AM_I_DC
+        && ((has_quorum && !quorum) || (!has_quorum && quorum)
+            || force_update)) {
         int call_id = 0;
         xmlNode *update = NULL;
         int call_options = cib_scope_local | cib_quorum_override;
 
         update = create_xml_node(NULL, XML_TAG_CIB);
         crm_xml_add_int(update, XML_ATTR_HAVE_QUORUM, quorum);
-        crm_xml_add(update, XML_ATTR_DC_UUID, fsa_our_uuid);
+        crm_xml_add(update, XML_ATTR_DC_UUID, controld_globals.our_uuid);
 
         fsa_cib_update(XML_TAG_CIB, update, call_options, call_id, NULL);
         crm_debug("Updating quorum status to %s (call=%d)",
@@ -447,5 +449,10 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
                              NULL);
         }
     }
-    fsa_has_quorum = quorum;
+
+    if (quorum) {
+        controld_set_global_flags(controld_has_quorum);
+    } else {
+        controld_clear_global_flags(controld_has_quorum);
+    }
 }

@@ -21,7 +21,7 @@
 #include <pacemaker-controld.h>
 
 char *te_uuid = NULL;
-GHashTable *te_targets = NULL;
+static GHashTable *te_targets = NULL;
 void send_rsc_command(pcmk__graph_action_t *action);
 static void te_update_job_count(pcmk__graph_action_t *action, int offset);
 
@@ -56,7 +56,8 @@ execute_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *pseudo)
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             xmlNode *cmd = NULL;
 
-            if (pcmk__str_eq(fsa_our_uname, node->uname, pcmk__str_casei)) {
+            if (pcmk__str_eq(controld_globals.our_nodename, node->uname,
+                             pcmk__str_casei)) {
                 continue;
             }
 
@@ -129,12 +130,13 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
             const char *mode = crm_element_value(action->xml, PCMK__XA_MODE);
 
             if (pcmk__str_eq(mode, XML_TAG_CIB, pcmk__str_none)) {
-                router_node = fsa_our_uname;
+                router_node = controld_globals.our_nodename;
             }
         }
     }
 
-    if (pcmk__str_eq(router_node, fsa_our_uname, pcmk__str_casei)) {
+    if (pcmk__str_eq(router_node, controld_globals.our_nodename,
+                     pcmk__str_casei)) {
         is_local = TRUE;
     }
 
@@ -376,7 +378,8 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
                                    get_target_rc(action), te_uuid);
     crm_xml_add(rsc_op, XML_ATTR_TRANSITION_KEY, counter);
 
-    if (pcmk__str_eq(router_node, fsa_our_uname, pcmk__str_casei)) {
+    if (pcmk__str_eq(router_node, controld_globals.our_nodename,
+                     pcmk__str_casei)) {
         is_local = TRUE;
     }
 
@@ -409,7 +412,8 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
             .origin = __func__,
         };
 
-        do_lrm_invoke(A_LRM_INVOKE, C_FSA_INTERNAL, fsa_state, I_NULL, &msg);
+        do_lrm_invoke(A_LRM_INVOKE, C_FSA_INTERNAL, controld_globals.fsa_state,
+                      I_NULL, &msg);
 
     } else {
         rc = send_cluster_message(crm_get_peer(0, router_node), crm_msg_lrmd, cmd, TRUE);
@@ -669,27 +673,28 @@ notify_crmd(pcmk__graph_t *graph)
     const char *type = "unknown";
     enum crmd_fsa_input event = I_NULL;
 
-    crm_debug("Processing transition completion in state %s", fsa_state2string(fsa_state));
+    crm_debug("Processing transition completion in state %s",
+              fsa_state2string(controld_globals.fsa_state));
 
     CRM_CHECK(graph->complete, graph->complete = true);
 
     switch (graph->completion_action) {
         case pcmk__graph_wait:
             type = "stop";
-            if (fsa_state == S_TRANSITION_ENGINE) {
+            if (controld_globals.fsa_state == S_TRANSITION_ENGINE) {
                 event = I_TE_SUCCESS;
             }
             break;
         case pcmk__graph_done:
             type = "done";
-            if (fsa_state == S_TRANSITION_ENGINE) {
+            if (controld_globals.fsa_state == S_TRANSITION_ENGINE) {
                 event = I_TE_SUCCESS;
             }
             break;
 
         case pcmk__graph_restart:
             type = "restart";
-            if (fsa_state == S_TRANSITION_ENGINE) {
+            if (controld_globals.fsa_state == S_TRANSITION_ENGINE) {
                 if (transition_timer->period_ms > 0) {
                     controld_stop_timer(transition_timer);
                     controld_start_timer(transition_timer);
@@ -697,7 +702,7 @@ notify_crmd(pcmk__graph_t *graph)
                     event = I_PE_CALC;
                 }
 
-            } else if (fsa_state == S_POLICY_ENGINE) {
+            } else if (controld_globals.fsa_state == S_POLICY_ENGINE) {
                 controld_set_fsa_action_flags(A_PE_INVOKE);
                 trigger_fsa();
             }
@@ -705,7 +710,7 @@ notify_crmd(pcmk__graph_t *graph)
 
         case pcmk__graph_shutdown:
             type = "shutdown";
-            if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
+            if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
                 event = I_STOP;
 
             } else {

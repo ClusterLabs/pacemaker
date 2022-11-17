@@ -22,20 +22,18 @@
 
 #include <pacemaker-controld.h>
 
-qb_ipcs_service_t *ipcs = NULL;
+static qb_ipcs_service_t *ipcs = NULL;
+
+static crm_trigger_t *config_read_trigger = NULL;
 
 #if SUPPORT_COROSYNC
 extern gboolean crm_connect_corosync(crm_cluster_t * cluster);
 #endif
 
 void crm_shutdown(int nsig);
-gboolean crm_read_options(gpointer user_data);
+static gboolean crm_read_options(gpointer user_data);
 
-gboolean fsa_has_quorum = FALSE;
 crm_trigger_t *fsa_source = NULL;
-crm_trigger_t *config_read = NULL;
-bool no_quorum_suicide_escalation = FALSE;
-bool controld_shutdown_lock_enabled = false;
 
 /*	 A_HA_CONNECT	*/
 void
@@ -68,17 +66,17 @@ do_ha_control(long long action,
 #endif
         }
 
-        if (registered == TRUE) {
+        if (registered) {
             controld_election_init(cluster->uname);
-            fsa_our_uname = cluster->uname;
-            fsa_our_uuid = cluster->uuid;
+            controld_globals.our_nodename = cluster->uname;
+            controld_globals.our_uuid = cluster->uuid;
             if(cluster->uuid == NULL) {
                 crm_err("Could not obtain local uuid");
                 registered = FALSE;
             }
         }
 
-        if (registered == FALSE) {
+        if (!registered) {
             controld_set_fsa_input_flags(R_HA_DISCONNECTED);
             register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
             return;
@@ -118,7 +116,7 @@ do_shutdown_req(long long action,
     controld_set_fsa_input_flags(R_SHUTDOWN);
     //controld_set_fsa_input_flags(R_STAYDOWN);
     crm_info("Sending shutdown request to all peers (DC is %s)",
-             (fsa_our_dc? fsa_our_dc : "not set"));
+             pcmk__s(controld_globals.dc_name, "not set"));
     msg = create_request(CRM_OP_SHUTDOWN_REQ, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
     if (send_cluster_message(NULL, crm_msg_crmd, msg, TRUE) == FALSE) {
@@ -127,22 +125,19 @@ do_shutdown_req(long long action,
     free_xml(msg);
 }
 
-extern char *max_generation_from;
-extern xmlNode *max_generation_xml;
-extern GHashTable *resource_history;
-extern GHashTable *voted;
 extern pcmk__output_t *logger_out;
 
 void
 crmd_fast_exit(crm_exit_t exit_code)
 {
-    if (pcmk_is_set(fsa_input_register, R_STAYDOWN)) {
+    if (pcmk_is_set(controld_globals.fsa_input_register, R_STAYDOWN)) {
         crm_warn("Inhibiting respawn "CRM_XS" remapping exit code %d to %d",
                  exit_code, CRM_EX_FATAL);
         exit_code = CRM_EX_FATAL;
 
     } else if ((exit_code == CRM_EX_OK)
-               && pcmk_is_set(fsa_input_register, R_IN_RECOVERY)) {
+               && pcmk_is_set(controld_globals.fsa_input_register,
+                              R_IN_RECOVERY)) {
         crm_err("Could not recover from internal error");
         exit_code = CRM_EX_ERROR;
     }
@@ -160,7 +155,7 @@ crm_exit_t
 crmd_exit(crm_exit_t exit_code)
 {
     GList *gIter = NULL;
-    GMainLoop *mloop = crmd_mainloop;
+    GMainLoop *mloop = controld_globals.mainloop;
 
     static bool in_progress = FALSE;
 
@@ -194,7 +189,7 @@ crmd_exit(crm_exit_t exit_code)
     controld_shutdown_schedulerd_ipc();
     controld_disconnect_fencer(TRUE);
 
-    if ((exit_code == CRM_EX_OK) && (crmd_mainloop == NULL)) {
+    if ((exit_code == CRM_EX_OK) && (controld_globals.mainloop == NULL)) {
         crm_debug("No mainloop detected");
         exit_code = CRM_EX_ERROR;
     }
@@ -219,7 +214,7 @@ crmd_exit(crm_exit_t exit_code)
 
         crm_info("Dropping %s: [ state=%s cause=%s origin=%s ]",
                  fsa_input2string(fsa_data->fsa_input),
-                 fsa_state2string(fsa_state),
+                 fsa_state2string(controld_globals.fsa_state),
                  fsa_cause2string(fsa_data->fsa_cause), fsa_data->origin);
         delete_fsa_input(fsa_data);
     }
@@ -235,15 +230,17 @@ crmd_exit(crm_exit_t exit_code)
 
     controld_disconnect_cib_manager();
 
-    verify_stopped(fsa_state, LOG_WARNING);
+    verify_stopped(controld_globals.fsa_state, LOG_WARNING);
     controld_clear_fsa_input_flags(R_LRM_CONNECTED);
     lrm_state_destroy_all();
 
     /* This basically will not work, since mainloop has a reference to it */
     mainloop_destroy_trigger(fsa_source); fsa_source = NULL;
 
-    mainloop_destroy_trigger(config_read); config_read = NULL;
-    mainloop_destroy_trigger(transition_trigger); transition_trigger = NULL;
+    mainloop_destroy_trigger(config_read_trigger);
+    config_read_trigger = NULL;
+
+    controld_destroy_transition_trigger();
 
     pcmk__client_cleanup();
     crm_peer_destroy();
@@ -252,19 +249,26 @@ crmd_exit(crm_exit_t exit_code)
     te_cleanup_stonith_history_sync(NULL, TRUE);
     controld_free_sched_timer();
 
-    free(fsa_our_dc_version); fsa_our_dc_version = NULL;
-    free(fsa_our_uname); fsa_our_uname = NULL;
-    free(fsa_our_uuid); fsa_our_uuid = NULL;
-    free(fsa_our_dc); fsa_our_dc = NULL;
+    free(controld_globals.our_nodename);
+    controld_globals.our_nodename = NULL;
 
-    free(fsa_cluster_name); fsa_cluster_name = NULL;
+    free(controld_globals.our_uuid);
+    controld_globals.our_uuid = NULL;
+
+    free(controld_globals.dc_name);
+    controld_globals.dc_name = NULL;
+
+    free(controld_globals.dc_version);
+    controld_globals.dc_version = NULL;
+
+    free(controld_globals.cluster_name);
+    controld_globals.cluster_name = NULL;
 
     free(te_uuid); te_uuid = NULL;
     free(failed_stop_offset); failed_stop_offset = NULL;
     free(failed_start_offset); failed_start_offset = NULL;
 
-    free(max_generation_from); max_generation_from = NULL;
-    free_xml(max_generation_xml); max_generation_xml = NULL;
+    free_max_generation();
 
     mainloop_destroy_signal(SIGPIPE);
     mainloop_destroy_signal(SIGUSR1);
@@ -273,10 +277,10 @@ crmd_exit(crm_exit_t exit_code)
     /* leave SIGCHLD engaged as we might still want to drain some service-actions */
 
     if (mloop) {
-        GMainContext *ctx = g_main_loop_get_context(crmd_mainloop);
+        GMainContext *ctx = g_main_loop_get_context(controld_globals.mainloop);
 
         /* Don't re-enter this block */
-        crmd_mainloop = NULL;
+        controld_globals.mainloop = NULL;
 
         /* no signals on final draining anymore */
         mainloop_destroy_signal(SIGCHLD);
@@ -349,9 +353,12 @@ do_startup(long long action,
     mainloop_add_signal(SIGTERM, crm_shutdown);
     mainloop_add_signal(SIGPIPE, sigpipe_ignore);
 
+    config_read_trigger = mainloop_add_trigger(G_PRIORITY_HIGH,
+                                               crm_read_options, NULL);
+
     fsa_source = mainloop_add_trigger(G_PRIORITY_HIGH, crm_fsa_trigger, NULL);
-    config_read = mainloop_add_trigger(G_PRIORITY_HIGH, crm_read_options, NULL);
-    transition_trigger = mainloop_add_trigger(G_PRIORITY_LOW, te_graph_trigger, NULL);
+
+    controld_init_transition_trigger();
 
     crm_debug("Creating CIB manager and executor objects");
     fsa_cib_conn = cib_new();
@@ -456,31 +463,35 @@ do_started(long long action,
         crm_err("Start cancelled... %s", fsa_state2string(cur_state));
         return;
 
-    } else if (!pcmk_is_set(fsa_input_register, R_MEMBERSHIP)) {
+    } else if (!pcmk_is_set(controld_globals.fsa_input_register,
+                            R_MEMBERSHIP)) {
         crm_info("Delaying start, no membership data (%.16llx)", R_MEMBERSHIP);
 
         crmd_fsa_stall(TRUE);
         return;
 
-    } else if (!pcmk_is_set(fsa_input_register, R_LRM_CONNECTED)) {
+    } else if (!pcmk_is_set(controld_globals.fsa_input_register,
+                            R_LRM_CONNECTED)) {
         crm_info("Delaying start, not connected to executor (%.16llx)", R_LRM_CONNECTED);
 
         crmd_fsa_stall(TRUE);
         return;
 
-    } else if (!pcmk_is_set(fsa_input_register, R_CIB_CONNECTED)) {
+    } else if (!pcmk_is_set(controld_globals.fsa_input_register,
+                            R_CIB_CONNECTED)) {
         crm_info("Delaying start, CIB not connected (%.16llx)", R_CIB_CONNECTED);
 
         crmd_fsa_stall(TRUE);
         return;
 
-    } else if (!pcmk_is_set(fsa_input_register, R_READ_CONFIG)) {
+    } else if (!pcmk_is_set(controld_globals.fsa_input_register,
+                            R_READ_CONFIG)) {
         crm_info("Delaying start, Config not read (%.16llx)", R_READ_CONFIG);
 
         crmd_fsa_stall(TRUE);
         return;
 
-    } else if (!pcmk_is_set(fsa_input_register, R_PEER_DATA)) {
+    } else if (!pcmk_is_set(controld_globals.fsa_input_register, R_PEER_DATA)) {
 
         crm_info("Delaying start, No peer data (%.16llx)", R_PEER_DATA);
         crmd_fsa_stall(TRUE);
@@ -731,7 +742,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
                                    PCMK__NELEM(controller_options));
 
     value = controller_option(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
-    election_trigger->period_ms = crm_parse_interval_spec(value);
+    election_timer->period_ms = crm_parse_interval_spec(value);
 
     value = controller_option(config_hash, "node-action-limit");
     throttle_update_job_max(value);
@@ -743,7 +754,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     value = controller_option(config_hash, "no-quorum-policy");
     if (pcmk__str_eq(value, "suicide", pcmk__str_casei) && pcmk__locate_sbd()) {
-        no_quorum_suicide_escalation = TRUE;
+        controld_set_global_flags(controld_no_quorum_suicide);
     }
 
     set_fence_reaction(controller_option(config_hash,
@@ -774,15 +785,14 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     finalization_timer->period_ms = crm_parse_interval_spec(value);
 
     value = controller_option(config_hash, XML_CONFIG_ATTR_SHUTDOWN_LOCK);
-    controld_shutdown_lock_enabled = crm_is_true(value);
-
-    free(fsa_cluster_name);
-    fsa_cluster_name = NULL;
+    if (crm_is_true(value)) {
+        controld_set_global_flags(controld_shutdown_lock_enabled);
+    } else {
+        controld_clear_global_flags(controld_shutdown_lock_enabled);
+    }
 
     value = g_hash_table_lookup(config_hash, "cluster-name");
-    if (value) {
-        fsa_cluster_name = strdup(value);
-    }
+    pcmk__str_update(&(controld_globals.cluster_name), value);
 
     alerts = first_named_child(output, XML_CIB_TAG_ALERTS);
     crmd_unpack_alerts(alerts);
@@ -794,6 +804,22 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     g_hash_table_destroy(config_hash);
   bail:
     crm_time_free(now);
+}
+
+/*!
+ * \internal
+ * \brief Trigger read and processing of the configuration
+ *
+ * \param[in] fn    Calling function name
+ * \param[in] line  Line number where call occurred
+ */
+void
+controld_trigger_config_as(const char *fn, int line)
+{
+    if (config_read_trigger != NULL) {
+        crm_trace("%s:%d - Triggered config processing", fn, line);
+        mainloop_set_trigger(config_read_trigger);
+    }
 }
 
 gboolean
@@ -817,18 +843,19 @@ do_read_config(long long action,
                enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     throttle_init();
-    mainloop_set_trigger(config_read);
+    controld_trigger_config();
 }
 
 void
 crm_shutdown(int nsig)
 {
-    if ((crmd_mainloop == NULL) || !g_main_loop_is_running(crmd_mainloop)) {
+    if ((controld_globals.mainloop == NULL)
+        || !g_main_loop_is_running(controld_globals.mainloop)) {
         crmd_exit(CRM_EX_OK);
         return;
     }
 
-    if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
+    if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
         crm_err("Escalating shutdown");
         register_fsa_input_before(C_SHUTDOWN, I_ERROR, NULL);
         return;

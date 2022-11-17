@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -78,7 +78,7 @@ crmd_quorum_callback(unsigned long long seq, gboolean quorate)
 static void
 crmd_cs_destroy(gpointer user_data)
 {
-    if (!pcmk_is_set(fsa_input_register, R_HA_DISCONNECTED)) {
+    if (!pcmk_is_set(controld_globals.fsa_input_register, R_HA_DISCONNECTED)) {
         crm_crit("Lost connection to cluster layer, shutting down");
         crmd_exit(CRM_EX_DISCONNECT);
 
@@ -86,8 +86,6 @@ crmd_cs_destroy(gpointer user_data)
         crm_info("Corosync connection closed");
     }
 }
-
-extern bool controld_dc_left;
 
 /*!
  * \brief Handle a Corosync notification of a CPG configuration change
@@ -121,13 +119,14 @@ cpg_membership_callback(cpg_handle_t handle, const struct cpg_name *cpg_name,
      * Here, we set a global boolean if the DC is among the nodes that left, for
      * use by the peer callback.
      */
-    if (fsa_our_dc != NULL) {
-        crm_node_t *peer = pcmk__search_cluster_node_cache(0, fsa_our_dc);
+    if (controld_globals.dc_name != NULL) {
+        crm_node_t *peer = NULL;
 
+        peer = pcmk__search_cluster_node_cache(0, controld_globals.dc_name);
         if (peer != NULL) {
             for (int i = 0; i < left_list_entries; ++i) {
                 if (left_list[i].nodeid == peer->id) {
-                    controld_dc_left = true;
+                    controld_set_global_flags(controld_dc_left);
                     break;
                 }
             }
@@ -139,7 +138,7 @@ cpg_membership_callback(cpg_handle_t handle, const struct cpg_name *cpg_name,
                         left_list, left_list_entries,
                         joined_list, joined_list_entries);
 
-    controld_dc_left = false;
+    controld_clear_global_flags(controld_dc_left);
 }
 
 extern gboolean crm_connect_corosync(crm_cluster_t * cluster);

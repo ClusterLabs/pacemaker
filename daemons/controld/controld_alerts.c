@@ -39,7 +39,7 @@ crmd_alert_node_event(crm_node_t *node)
         return;
     }
 
-    lrm_state = lrm_state_find(fsa_our_uname);
+    lrm_state = lrm_state_find(controld_globals.our_nodename);
     if (lrm_state == NULL) {
         return;
     }
@@ -58,7 +58,7 @@ crmd_alert_fencing_op(stonith_event_t * e)
         return;
     }
 
-    lrm_state = lrm_state_find(fsa_our_uname);
+    lrm_state = lrm_state_find(controld_globals.our_nodename);
     if (lrm_state == NULL) {
         return;
     }
@@ -78,7 +78,7 @@ crmd_alert_resource_op(const char *node, lrmd_event_data_t * op)
         return;
     }
 
-    lrm_state = lrm_state_find(fsa_our_uname);
+    lrm_state = lrm_state_find(controld_globals.our_nodename);
     if (lrm_state == NULL) {
         return;
     }

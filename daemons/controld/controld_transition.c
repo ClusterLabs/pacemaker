@@ -60,7 +60,8 @@ do_te_control(long long action,
     if ((action & A_TE_START) == 0) {
         return;
 
-    } else if (pcmk_is_set(fsa_input_register, R_TE_CONNECTED)) {
+    } else if (pcmk_is_set(controld_globals.fsa_input_register,
+                           R_TE_CONNECTED)) {
         crm_debug("The transitioner is already active");
         return;
 
@@ -117,9 +118,12 @@ do_te_invoke(long long action,
              enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
 
-    if (AM_I_DC == FALSE || (fsa_state != S_TRANSITION_ENGINE && (action & A_TE_INVOKE))) {
+    if (!AM_I_DC
+        || ((controld_globals.fsa_state != S_TRANSITION_ENGINE)
+            && pcmk_is_set(action, A_TE_INVOKE))) {
         crm_notice("No need to invoke the TE (%s) in state %s",
-                   fsa_action2string(action), fsa_state2string(fsa_state));
+                   fsa_action2string(action),
+                   fsa_state2string(controld_globals.fsa_state));
         return;
     }
 
@@ -192,15 +196,13 @@ do_te_invoke(long long action,
 
         te_reset_job_counts();
         value = crm_element_value(graph_data, "failed-stop-offset");
-        if (value) {
-            free(failed_stop_offset);
-            failed_stop_offset = strdup(value);
+        if (value != NULL) {
+            pcmk__str_update(&failed_stop_offset, value);
         }
 
         value = crm_element_value(graph_data, "failed-start-offset");
-        if (value) {
-            free(failed_start_offset);
-            failed_start_offset = strdup(value);
+        if (value != NULL) {
+            pcmk__str_update(&failed_start_offset, value);
         }
 
         if ((crm_element_value_epoch(graph_data, "recheck-by", &recheck_by)

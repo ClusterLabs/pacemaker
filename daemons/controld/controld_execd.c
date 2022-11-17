@@ -55,7 +55,7 @@ static int do_update_resource(const char *node_name, lrmd_rsc_info_t *rsc,
 static void
 lrm_connection_destroy(void)
 {
-    if (pcmk_is_set(fsa_input_register, R_LRM_CONNECTED)) {
+    if (pcmk_is_set(controld_globals.fsa_input_register, R_LRM_CONNECTED)) {
         crm_crit("Connection to executor failed");
         register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
         controld_clear_fsa_input_flags(R_LRM_CONNECTED);
@@ -282,7 +282,7 @@ send_task_ok_ack(const lrm_state_t *lrm_state, const ha_msg_input_t *input,
 static inline const char *
 op_node_name(lrmd_event_data_t *op)
 {
-    return op->remote_nodename? op->remote_nodename : fsa_our_uname;
+    return pcmk__s(op->remote_nodename, controld_globals.our_nodename);
 }
 
 void
@@ -362,10 +362,10 @@ do_lrm_control(long long action,
 
     lrm_state_t *lrm_state = NULL;
 
-    if(fsa_our_uname == NULL) {
+    if (controld_globals.our_nodename == NULL) {
         return; /* Nothing to do */
     }
-    lrm_state = lrm_state_find_or_create(fsa_our_uname);
+    lrm_state = lrm_state_find_or_create(controld_globals.our_nodename);
     if (lrm_state == NULL) {
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
         return;
@@ -414,7 +414,7 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
         log_level = LOG_ERR;
         when = "shutdown";
 
-    } else if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
+    } else if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
         when = "shutdown... waiting";
     }
 
@@ -444,7 +444,8 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
                    counter, pcmk__plural_s(counter), when);
 
         if ((cur_state == S_TERMINATE)
-            || !pcmk_is_set(fsa_input_register, R_SENT_RSC_STOP)) {
+            || !pcmk_is_set(controld_globals.fsa_input_register,
+                            R_SENT_RSC_STOP)) {
             g_hash_table_iter_init(&gIter, lrm_state->pending_ops);
             while (g_hash_table_iter_next(&gIter, (gpointer*)&key, (gpointer*)&pending)) {
                 do_crm_log(log_level, "Pending action: %s (%s)", key, pending->op_key);
@@ -460,7 +461,7 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
         return rc;
     }
 
-    if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
+    if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
         /* At this point we're not waiting, we're just shutting down */
         when = "shutdown";
     }
@@ -532,7 +533,7 @@ build_parameter_list(const lrmd_event_data_t *op,
      * what scheduler does with calculate_secure_digest().
      */
     if (param_type == ra_param_private
-        && compare_version(fsa_our_dc_version, "3.16.0") >= 0) {
+        && compare_version(controld_globals.dc_version, "3.16.0") >= 0) {
         g_hash_table_foreach(op->params, hash2field, *result);
         pcmk__filter_op_for_digest(*result);
     }
@@ -701,7 +702,7 @@ build_operation_update(xmlNode * parent, const lrmd_rsc_info_t *rsc,
     CRM_CHECK(caller_version != NULL, caller_version = CRM_FEATURE_SET);
 
     xml_op = pcmk__create_history_xml(parent, op, caller_version, target_rc,
-                                      fsa_our_uname, src);
+                                      controld_globals.our_nodename, src);
     if (xml_op == NULL) {
         return TRUE;
     }
@@ -818,10 +819,11 @@ controld_query_executor_state(void)
     xmlNode *xml_data = NULL;
     xmlNode *rsc_list = NULL;
     crm_node_t *peer = NULL;
-    lrm_state_t *lrm_state = lrm_state_find(fsa_our_uname);
+    lrm_state_t *lrm_state = lrm_state_find(controld_globals.our_nodename);
 
     if (!lrm_state) {
-        crm_err("Could not find executor state for node %s", fsa_our_uname);
+        crm_err("Could not find executor state for node %s",
+                controld_globals.our_nodename);
         return NULL;
     }
 
@@ -1487,7 +1489,7 @@ lrm_op_target(const xmlNode *xml)
         target = crm_element_value(xml, XML_LRM_ATTR_TARGET);
     }
     if (target == NULL) {
-        target = fsa_our_uname;
+        target = controld_globals.our_nodename;
     }
     return target;
 }
@@ -1558,7 +1560,7 @@ handle_reprobe_op(lrm_state_t *lrm_state, const char *from_sys,
 
         xmlNode *reply = create_request(CRM_OP_INVOKE_LRM, NULL, from_host,
                                         from_sys, CRM_SYSTEM_LRMD,
-                                        fsa_our_uuid);
+                                        controld_globals.our_uuid);
 
         crm_debug("ACK'ing re-probe from %s (%s)", from_sys, from_host);
 
@@ -1751,7 +1753,7 @@ do_lrm_invoke(long long action,
     bool crm_rsc_delete = FALSE;
 
     target_node = lrm_op_target(input->xml);
-    is_remote_node = !pcmk__str_eq(target_node, fsa_our_uname,
+    is_remote_node = !pcmk__str_eq(target_node, controld_globals.our_nodename,
                                    pcmk__str_casei);
 
     lrm_state = lrm_state_find(target_node);
@@ -2075,18 +2077,19 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
         to_sys = CRM_SYSTEM_TENGINE;
     }
 
-    peer = crm_get_peer(0, fsa_our_uname);
+    peer = crm_get_peer(0, controld_globals.our_nodename);
     update = create_node_state_update(peer, node_update_none, NULL,
                                       __func__);
 
     iter = create_xml_node(update, XML_CIB_TAG_LRM);
-    crm_xml_add(iter, XML_ATTR_ID, fsa_our_uuid);
+    crm_xml_add(iter, XML_ATTR_ID, controld_globals.our_uuid);
     iter = create_xml_node(iter, XML_LRM_TAG_RESOURCES);
     iter = create_xml_node(iter, XML_LRM_TAG_RESOURCE);
 
     crm_xml_add(iter, XML_ATTR_ID, op->rsc_id);
 
-    build_operation_update(iter, rsc, op, fsa_our_uname, __func__);
+    build_operation_update(iter, rsc, op, controld_globals.our_nodename,
+                            __func__);
     reply = create_request(CRM_OP_INVOKE_LRM, update, to_host, to_sys, CRM_SYSTEM_LRMD, NULL);
 
     crm_log_xml_trace(update, "[direct ACK]");
@@ -2290,23 +2293,34 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
                crm_action_str(op->op_type, op->interval_ms), rsc->id, lrm_state->node_name,
                pcmk__s(transition, ""), rsc->id, operation, op->interval_ms);
 
-    if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)
+    if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)
         && pcmk__str_eq(operation, RSC_START, pcmk__str_casei)) {
 
         register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
         nack_reason = "Not attempting start due to shutdown in progress";
 
-    } else if (fsa_state != S_NOT_DC
-               && fsa_state != S_POLICY_ENGINE /* Recalculating */
-               && fsa_state != S_TRANSITION_ENGINE
-               && !pcmk__str_eq(operation, CRMD_ACTION_STOP, pcmk__str_casei)) {
-        nack_reason = "Controller cannot attempt actions at this time";
+    } else {
+        switch (controld_globals.fsa_state) {
+            case S_NOT_DC:
+            case S_POLICY_ENGINE:   // Recalculating
+            case S_TRANSITION_ENGINE:
+                break;
+            default:
+                if (!pcmk__str_eq(operation, CRMD_ACTION_STOP,
+                                  pcmk__str_none)) {
+                    nack_reason = "Controller cannot attempt actions at this "
+                                  "time";
+                }
+                break;
+        }
     }
 
     if (nack_reason != NULL) {
-        crm_notice("Discarding attempt to perform action %s on %s in state %s (shutdown=%s)",
-                   operation, rsc->id, fsa_state2string(fsa_state),
-                   pcmk__btoa(pcmk_is_set(fsa_input_register, R_SHUTDOWN)));
+        crm_notice("Discarding attempt to perform action %s on %s in state %s "
+                   "(shutdown=%s)", operation, rsc->id,
+                   fsa_state2string(controld_globals.fsa_state),
+                   pcmk__btoa(pcmk_is_set(controld_globals.fsa_input_register,
+                                          R_SHUTDOWN)));
 
         lrmd__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_INVALID,
                          nack_reason);
@@ -2425,7 +2439,7 @@ cib_rsc_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *use
 static bool
 should_preserve_lock(lrmd_event_data_t *op)
 {
-    if (!controld_shutdown_lock_enabled) {
+    if (!pcmk_is_set(controld_globals.flags, controld_shutdown_lock_enabled)) {
         return false;
     }
     if (!strcmp(op->op_type, RSC_STOP) && (op->rc == PCMK_OCF_OK)) {
@@ -2460,8 +2474,9 @@ do_update_resource(const char *node_name, lrmd_rsc_info_t *rsc,
     update = iter;
     iter = create_xml_node(iter, XML_CIB_TAG_STATE);
 
-    if (pcmk__str_eq(node_name, fsa_our_uname, pcmk__str_casei)) {
-        uuid = fsa_our_uuid;
+    if (pcmk__str_eq(node_name, controld_globals.our_nodename,
+                     pcmk__str_casei)) {
+        uuid = controld_globals.our_uuid;
 
     } else {
         /* remote nodes uuid and uname are equal */
@@ -2706,7 +2721,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
     CRM_CHECK(op->rsc_id != NULL, return);
 
     // Remap new status codes for older DCs
-    if (compare_version(fsa_our_dc_version, "3.2.0") < 0) {
+    if (compare_version(controld_globals.dc_version, "3.2.0") < 0) {
         switch (op->op_status) {
             case PCMK_EXEC_NOT_CONNECTED:
                 lrmd__set_result(op, PCMK_OCF_CONNECTION_DIED,

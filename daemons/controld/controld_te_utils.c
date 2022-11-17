@@ -14,6 +14,9 @@
 
 #include <pacemaker-controld.h>
 
+//! Triggers transition graph processing
+static crm_trigger_t *transition_trigger = NULL;
+
 gboolean
 stop_te_timer(pcmk__graph_action_t *action)
 {
@@ -31,7 +34,7 @@ stop_te_timer(pcmk__graph_action_t *action)
     return TRUE;
 }
 
-gboolean
+static gboolean
 te_graph_trigger(gpointer user_data)
 {
     if (transition_graph == NULL) {
@@ -39,9 +42,10 @@ te_graph_trigger(gpointer user_data)
         return TRUE;
     }
 
-    crm_trace("Invoking graph %d in state %s", transition_graph->id, fsa_state2string(fsa_state));
+    crm_trace("Invoking graph %d in state %s", transition_graph->id,
+              fsa_state2string(controld_globals.fsa_state));
 
-    switch (fsa_state) {
+    switch (controld_globals.fsa_state) {
         case S_STARTING:
         case S_PENDING:
         case S_NOT_DC:
@@ -83,6 +87,28 @@ te_graph_trigger(gpointer user_data)
     notify_crmd(transition_graph);
 
     return TRUE;
+}
+
+/*!
+ * \internal
+ * \brief Initialize transition trigger
+ */
+void
+controld_init_transition_trigger(void)
+{
+    transition_trigger = mainloop_add_trigger(G_PRIORITY_LOW, te_graph_trigger,
+                                              NULL);
+}
+
+/*!
+ * \internal
+ * \brief Destroy transition trigger
+ */
+void
+controld_destroy_transition_trigger(void)
+{
+    mainloop_destroy_trigger(transition_trigger);
+    transition_trigger = NULL;
 }
 
 void
@@ -187,7 +213,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
 
     CRM_CHECK(transition_graph != NULL, return);
 
-    switch (fsa_state) {
+    switch (controld_globals.fsa_state) {
         case S_STARTING:
         case S_PENDING:
         case S_NOT_DC:
@@ -196,7 +222,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
         case S_STOPPING:
         case S_TERMINATE:
             crm_info("Abort %s suppressed: state=%s (%scomplete)",
-                     abort_text, fsa_state2string(fsa_state),
+                     abort_text, fsa_state2string(controld_globals.fsa_state),
                      (transition_graph->complete? "" : "in"));
             return;
         default:
@@ -331,5 +357,5 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
         return;
     }
 
-    mainloop_set_trigger(transition_trigger);
+    trigger_graph();
 }

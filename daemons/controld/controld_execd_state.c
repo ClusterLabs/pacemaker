@@ -21,7 +21,7 @@
 #include <pacemaker-internal.h>
 #include <pacemaker-controld.h>
 
-GHashTable *lrm_state_table = NULL;
+static GHashTable *lrm_state_table = NULL;
 extern GHashTable *proxy_table;
 int lrmd_internal_proxy_send(lrmd_t * lrmd, xmlNode *msg);
 void lrmd_internal_set_proxy_callback(lrmd_t * lrmd, void *userdata, void (*callback)(lrmd_t *lrmd, void *userdata, xmlNode *msg));
@@ -93,16 +93,9 @@ fail_pending_op(gpointer key, gpointer value, gpointer user_data)
 gboolean
 lrm_state_is_local(lrm_state_t *lrm_state)
 {
-    if (lrm_state == NULL || fsa_our_uname == NULL) {
-        return FALSE;
-    }
-
-    if (strcmp(lrm_state->node_name, fsa_our_uname) != 0) {
-        return FALSE;
-    }
-
-    return TRUE;
-
+    return (lrm_state != NULL)
+           && pcmk__str_eq(lrm_state->node_name, controld_globals.our_nodename,
+                           pcmk__str_casei);
 }
 
 lrm_state_t *
@@ -330,7 +323,7 @@ lrm_state_disconnect_only(lrm_state_t * lrm_state)
 
     ((lrmd_t *) lrm_state->conn)->cmds->disconnect(lrm_state->conn);
 
-    if (!pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
+    if (!pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
         removed = g_hash_table_foreach_remove(lrm_state->pending_ops, fail_pending_op, lrm_state);
         crm_trace("Synthesized %d operation failures for %s", removed, lrm_state->node_name);
     }

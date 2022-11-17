@@ -458,62 +458,47 @@ struct fsa_data_s {
     enum fsa_data_type data_type;
 };
 
-/* Global FSA stuff */
-extern gboolean do_fsa_stall;
-extern enum crmd_fsa_state fsa_state;
-extern uint64_t fsa_input_register;
-extern uint64_t fsa_actions;
-
-#define controld_set_fsa_input_flags(flags_to_set) do {                     \
-        fsa_input_register = pcmk__set_flags_as(__func__, __LINE__,         \
-                                                LOG_TRACE,                  \
-                                                "FSA input", "controller",  \
-                                                fsa_input_register,         \
-                                                (flags_to_set),             \
-                                                #flags_to_set);             \
+#define controld_set_fsa_input_flags(flags_to_set) do {                 \
+        controld_globals.fsa_input_register                             \
+            = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,         \
+                                 "FSA input", "controller",             \
+                                 controld_globals.fsa_input_register,   \
+                                 (flags_to_set), #flags_to_set);        \
     } while (0)
 
-#define controld_clear_fsa_input_flags(flags_to_clear) do {                 \
-        fsa_input_register = pcmk__clear_flags_as(__func__, __LINE__,       \
-                                                  LOG_TRACE,                \
-                                                  "FSA input", "controller",\
-                                                  fsa_input_register,       \
-                                                  (flags_to_clear),         \
-                                                  #flags_to_clear);         \
+#define controld_clear_fsa_input_flags(flags_to_clear) do {             \
+        controld_globals.fsa_input_register                             \
+            = pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE,       \
+                                   "FSA input", "controller",           \
+                                   controld_globals.fsa_input_register, \
+                                   (flags_to_clear),                    \
+                                   #flags_to_clear);                    \
     } while (0)
 
-#define controld_set_fsa_action_flags(flags_to_set) do {                    \
-        fsa_actions = pcmk__set_flags_as(__func__, __LINE__,                \
-                                         LOG_DEBUG,                         \
-                                         "FSA action", "controller",        \
-                                         fsa_actions, (flags_to_set),       \
-                                         #flags_to_set);                    \
+#define controld_set_fsa_action_flags(flags_to_set) do {            \
+        controld_globals.fsa_actions                                \
+            = pcmk__set_flags_as(__func__, __LINE__, LOG_DEBUG,     \
+                                 "FSA action", "controller",        \
+                                 controld_globals.fsa_actions,      \
+                                 (flags_to_set), #flags_to_set);    \
     } while (0)
 
-#define controld_clear_fsa_action_flags(flags_to_clear) do {                \
-        fsa_actions = pcmk__clear_flags_as(__func__, __LINE__,              \
-                                           LOG_DEBUG,                       \
-                                           "FSA action", "controller",      \
-                                           fsa_actions, (flags_to_clear),   \
-                                           #flags_to_clear);                \
+#define controld_clear_fsa_action_flags(flags_to_clear) do {            \
+        controld_globals.fsa_actions                                    \
+            = pcmk__clear_flags_as(__func__, __LINE__, LOG_DEBUG,       \
+                                   "FSA action", "controller",          \
+                                   controld_globals.fsa_actions,        \
+                                   (flags_to_clear), #flags_to_clear);  \
     } while (0)
 
 extern cib_t *fsa_cib_conn;
 
-extern char *fsa_our_uname;
-extern char *fsa_our_uuid;
 extern char *fsa_pe_ref;        // Last invocation of the scheduler
-extern char *fsa_our_dc;
-extern char *fsa_our_dc_version;
 extern GList *fsa_message_queue;
 
-extern char *fsa_cluster_name;
-
 extern crm_trigger_t *fsa_source;
-extern crm_trigger_t *config_read;
 
 extern unsigned long long saved_ccm_membership_id;
-extern gboolean ever_had_quorum;
 
 // These should be moved elsewhere
 void do_update_cib_nodes(gboolean overwrite, const char *caller);
@@ -527,8 +512,15 @@ const char *fsa_action2string(long long action);
 
 enum crmd_fsa_state s_crmd_fsa(enum crmd_fsa_cause cause);
 
-#  define AM_I_DC pcmk_is_set(fsa_input_register, R_THE_DC)
-#  define AM_I_OPERATIONAL !pcmk_is_set(fsa_input_register, R_STARTING)
+enum crmd_fsa_state controld_fsa_get_next_state(enum crmd_fsa_input input,
+                                                enum crmd_fsa_state state);
+
+uint64_t controld_fsa_get_action(enum crmd_fsa_input input,
+                                 enum crmd_fsa_state state);
+
+void free_max_generation(void);
+
+#  define AM_I_DC pcmk_is_set(controld_globals.fsa_input_register, R_THE_DC)
 #  define trigger_fsa() do {                    \
         if (fsa_source != NULL) {               \
             crm_trace("Triggering FSA");        \

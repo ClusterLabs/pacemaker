@@ -23,7 +23,7 @@ fsa_timer_t *wait_timer = NULL;
 fsa_timer_t *recheck_timer = NULL;
 
 // Wait at start-up, or after an election, for DC to make contact
-fsa_timer_t *election_trigger = NULL;
+fsa_timer_t *election_timer = NULL;
 
 // Delay start of new transition with expectation something else might happen
 fsa_timer_t *transition_timer = NULL;
@@ -56,7 +56,7 @@ do_timer_control(long long action,
     gboolean timer_op_ok = TRUE;
 
     if (action & A_DC_TIMER_STOP) {
-        timer_op_ok = controld_stop_timer(election_trigger);
+        timer_op_ok = controld_stop_timer(election_timer);
 
     } else if (action & A_FINALIZE_TIMER_STOP) {
         timer_op_ok = controld_stop_timer(finalization_timer);
@@ -67,7 +67,7 @@ do_timer_control(long long action,
 
     /* don't start a timer that wasn't already running */
     if (action & A_DC_TIMER_START && timer_op_ok) {
-        controld_start_timer(election_trigger);
+        controld_start_timer(election_timer);
         if (AM_I_DC) {
             /* there can be only one */
             register_fsa_input(cause, I_ELECTION, NULL);
@@ -81,10 +81,10 @@ do_timer_control(long long action,
     }
 }
 
-const char *
+static const char *
 get_timer_desc(fsa_timer_t * timer)
 {
-    if (timer == election_trigger) {
+    if (timer == election_timer) {
         return "Election Trigger";
 
     } else if (timer == shutdown_escalation_timer) {
@@ -116,7 +116,8 @@ crm_timer_popped(gpointer data)
 
     if (timer->log_error) {
         crm_err("%s just popped in state %s! " CRM_XS " input=%s time=%ums",
-                get_timer_desc(timer), fsa_state2string(fsa_state),
+                get_timer_desc(timer),
+                fsa_state2string(controld_globals.fsa_state),
                 fsa_input2string(timer->fsa_input), timer->period_ms);
     } else {
         crm_info("%s just popped " CRM_XS " input=%s time=%ums",
@@ -125,10 +126,10 @@ crm_timer_popped(gpointer data)
         timer->counter++;
     }
 
-    if (timer == election_trigger && election_trigger->counter > 5) {
+    if ((timer == election_timer) && (election_timer->counter > 5)) {
         crm_notice("We appear to be in an election loop, something may be wrong");
         crm_write_blackbox(0, NULL);
-        election_trigger->counter = 0;
+        election_timer->counter = 0;
     }
 
     controld_stop_timer(timer);  // Make timer _not_ go off again
@@ -146,13 +147,17 @@ crm_timer_popped(gpointer data)
             register_fsa_input_before(C_TIMER_POPPED, timer->fsa_input, NULL);
         }
 
-    } else if (timer == recheck_timer && fsa_state != S_IDLE) {
+    } else if ((timer == recheck_timer)
+               && (controld_globals.fsa_state != S_IDLE)) {
         crm_debug("Discarding %s event in state: %s",
-                  fsa_input2string(timer->fsa_input), fsa_state2string(fsa_state));
+                  fsa_input2string(timer->fsa_input),
+                  fsa_state2string(controld_globals.fsa_state));
 
-    } else if (timer == finalization_timer && fsa_state != S_FINALIZE_JOIN) {
+    } else if ((timer == finalization_timer)
+               && (controld_globals.fsa_state != S_FINALIZE_JOIN)) {
         crm_debug("Discarding %s event in state: %s",
-                  fsa_input2string(timer->fsa_input), fsa_state2string(fsa_state));
+                  fsa_input2string(timer->fsa_input),
+                  fsa_state2string(controld_globals.fsa_state));
 
     } else if (timer->fsa_input != I_NULL) {
         register_fsa_input(C_TIMER_POPPED, timer->fsa_input, NULL);
@@ -182,8 +187,8 @@ controld_init_fsa_timers(void)
         return FALSE;
     }
 
-    election_trigger = calloc(1, sizeof(fsa_timer_t));
-    if (election_trigger == NULL) {
+    election_timer = calloc(1, sizeof(fsa_timer_t));
+    if (election_timer == NULL) {
         return FALSE;
     }
 
@@ -202,11 +207,11 @@ controld_init_fsa_timers(void)
         return FALSE;
     }
 
-    election_trigger->source_id = 0;
-    election_trigger->period_ms = 0;
-    election_trigger->fsa_input = I_DC_TIMEOUT;
-    election_trigger->callback = crm_timer_popped;
-    election_trigger->log_error = FALSE;
+    election_timer->source_id = 0;
+    election_timer->period_ms = 0;
+    election_timer->fsa_input = I_DC_TIMEOUT;
+    election_timer->callback = crm_timer_popped;
+    election_timer->log_error = FALSE;
 
     transition_timer->source_id = 0;
     transition_timer->period_ms = 0;
@@ -264,7 +269,7 @@ controld_free_fsa_timers(void)
     controld_stop_timer(transition_timer);
     controld_stop_timer(integration_timer);
     controld_stop_timer(finalization_timer);
-    controld_stop_timer(election_trigger);
+    controld_stop_timer(election_timer);
     controld_stop_timer(shutdown_escalation_timer);
     controld_stop_timer(wait_timer);
     controld_stop_timer(recheck_timer);
@@ -272,7 +277,7 @@ controld_free_fsa_timers(void)
     free(transition_timer); transition_timer = NULL;
     free(integration_timer); integration_timer = NULL;
     free(finalization_timer); finalization_timer = NULL;
-    free(election_trigger); election_trigger = NULL;
+    free(election_timer); election_timer = NULL;
     free(shutdown_escalation_timer); shutdown_escalation_timer = NULL;
     free(wait_timer); wait_timer = NULL;
     free(recheck_timer); recheck_timer = NULL;

@@ -42,7 +42,7 @@ controld_remove_voter(const char *uname)
 {
     election_remove(fsa_election, uname);
 
-    if (pcmk__str_eq(uname, fsa_our_dc, pcmk__str_casei)) {
+    if (pcmk__str_eq(uname, controld_globals.dc_name, pcmk__str_casei)) {
         /* Clear any election dampening in effect. Otherwise, if the lost DC had
          * just won, an immediate new election could fizzle out with no new DC.
          */
@@ -64,7 +64,7 @@ controld_set_election_period(const char *value)
 }
 
 void
-controld_stop_election_timer(void)
+controld_stop_current_election_timeout(void)
 {
     election_timeout_stop(fsa_election);
 }
@@ -97,7 +97,7 @@ do_election_vote(long long action,
     }
 
     if (not_voting == FALSE) {
-        if (pcmk_is_set(fsa_input_register, R_STARTING)) {
+        if (pcmk_is_set(controld_globals.fsa_input_register, R_STARTING)) {
             not_voting = TRUE;
         }
     }
@@ -122,7 +122,7 @@ do_election_check(long long action,
                   enum crmd_fsa_state cur_state,
                   enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    if (fsa_state == S_ELECTION) {
+    if (controld_globals.fsa_state == S_ELECTION) {
         election_check(fsa_election);
     } else {
         crm_debug("Ignoring election check because we are not in an election");
@@ -140,7 +140,7 @@ do_election_count_vote(long long action,
     ha_msg_input_t *vote = fsa_typed_data(fsa_dt_ha_msg);
 
     if(crm_peer_cache == NULL) {
-        if (!pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
+        if (!pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
             crm_err("Internal error, no peer cache");
         }
         return;
@@ -156,7 +156,7 @@ do_election_count_vote(long long action,
         case election_lost:
             update_dc(NULL);
 
-            if (fsa_input_register & R_THE_DC) {
+            if (pcmk_is_set(controld_globals.fsa_input_register, R_THE_DC)) {
                 register_fsa_input(C_FSA_INTERNAL, I_RELEASE_DC, NULL);
                 fsa_cib_conn->cmds->set_secondary(fsa_cib_conn,
                                                   cib_scope_local);
@@ -222,7 +222,7 @@ do_dc_takeover(long long action,
                           cluster_type, NULL, NULL);
 
 #if SUPPORT_COROSYNC
-    if (fsa_cluster_name == NULL && is_corosync_cluster()) {
+    if ((controld_globals.cluster_name == NULL) && is_corosync_cluster()) {
         char *cluster_name = pcmk__corosync_cluster_name();
 
         if (cluster_name) {
@@ -234,7 +234,7 @@ do_dc_takeover(long long action,
     }
 #endif
 
-    mainloop_set_trigger(config_read);
+    controld_trigger_config();
     free_xml(cib);
 }
 
@@ -259,9 +259,9 @@ do_dc_release(long long action,
             result = I_SHUTDOWN;
         }
 #endif
-        if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
+        if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
             xmlNode *update = NULL;
-            crm_node_t *node = crm_get_peer(0, fsa_our_uname);
+            crm_node_t *node = crm_get_peer(0, controld_globals.our_nodename);
 
             pcmk__update_peer_expected(__func__, node, CRMD_JOINSTATE_DOWN);
             update = create_node_state_update(node, node_update_expected, NULL,

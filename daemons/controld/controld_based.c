@@ -18,13 +18,13 @@
 
 #include <pacemaker-controld.h>
 
-int cib_retries = 0;
+static int cib_retries = 0;
 
 void
 do_cib_updated(const char *event, xmlNode * msg)
 {
     if (pcmk__alert_in_patchset(msg, TRUE)) {
-        mainloop_set_trigger(config_read);
+        controld_trigger_config();
     }
 }
 
@@ -39,8 +39,9 @@ do_cib_replaced(const char *event, xmlNode * msg)
     if (AM_I_DC == FALSE) {
         return;
 
-    } else if ((fsa_state == S_FINALIZE_JOIN)
-               && pcmk_is_set(fsa_input_register, R_CIB_ASKED)) {
+    } else if ((controld_globals.fsa_state == S_FINALIZE_JOIN)
+               && pcmk_is_set(controld_globals.fsa_input_register,
+                              R_CIB_ASKED)) {
         /* no need to restart the join - we asked for this replace op */
         return;
     }
@@ -144,7 +145,8 @@ do_cib_control(long long action,
             cib_retries = 0;
         }
 
-        if (!pcmk_is_set(fsa_input_register, R_CIB_CONNECTED)) {
+        if (!pcmk_is_set(controld_globals.fsa_input_register,
+                         R_CIB_CONNECTED)) {
 
             cib_retries++;
             crm_warn("Couldn't complete CIB registration %d"
@@ -174,8 +176,10 @@ crmd_cib_smart_opt(void)
 {
     int call_opt = cib_quorum_override;
 
-    if (fsa_state == S_ELECTION || fsa_state == S_PENDING) {
-        crm_info("Sending update to local CIB in state: %s", fsa_state2string(fsa_state));
+    if ((controld_globals.fsa_state == S_ELECTION)
+        || (controld_globals.fsa_state == S_PENDING)) {
+        crm_info("Sending update to local CIB in state: %s",
+                 fsa_state2string(controld_globals.fsa_state));
         cib__set_call_options(call_opt, "update", cib_scope_local);
     }
     return call_opt;

@@ -30,7 +30,6 @@ const char *get_rsc_state(const char *task, enum pcmk_exec_status status);
 void process_te_message(xmlNode *msg, xmlNode *xml_data);
 
 extern pcmk__graph_t *transition_graph;
-extern crm_trigger_t *transition_trigger;
 
 extern char *te_uuid;
 
@@ -39,8 +38,10 @@ void notify_crmd(pcmk__graph_t * graph);
 void cib_action_updated(xmlNode *msg, int call_id, int rc, xmlNode *output,
                         void *user_data);
 gboolean action_timer_callback(gpointer data);
-gboolean te_graph_trigger(gpointer user_data);
 void te_update_diff(const char *event, xmlNode *msg);
+
+void controld_init_transition_trigger(void);
+void controld_destroy_transition_trigger(void);
 
 extern void trigger_graph_processing(const char *fn, int line);
 void abort_after_delay(int abort_priority, enum pcmk__graph_next abort_action,
@@ -53,8 +54,6 @@ void abort_transition_graph(int abort_priority,
 #  define trigger_graph()	trigger_graph_processing(__func__, __LINE__)
 #  define abort_transition(pri, action, text, reason)			\
 	abort_transition_graph(pri, action, text, reason,__func__,__LINE__);
-
-extern crm_trigger_t *transition_trigger;
 
 extern char *failed_stop_offset;
 extern char *failed_start_offset;

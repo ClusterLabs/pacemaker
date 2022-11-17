@@ -17,9 +17,8 @@
 
 #include <pacemaker-controld.h>
 
-char *max_epoch = NULL;
-char *max_generation_from = NULL;
-xmlNode *max_generation_xml = NULL;
+static char *max_generation_from = NULL;
+static xmlNodePtr max_generation_xml = NULL;
 
 void finalize_join_for(gpointer key, gpointer value, gpointer user_data);
 void finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data);
@@ -110,7 +109,8 @@ create_dc_message(const char *join_op, const char *host_to)
      * joining node from fencing the old DC if it becomes the new DC.
      */
     pcmk__xe_set_bool_attr(msg, F_CRM_DC_LEAVING,
-                           pcmk_is_set(fsa_input_register, R_SHUTDOWN));
+                           pcmk_is_set(controld_globals.fsa_input_register,
+                                       R_SHUTDOWN));
     return msg;
 }
 
@@ -247,8 +247,8 @@ do_dc_join_offer_one(long long action,
     /* If the offer isn't to the local node, make an offer to the local node as
      * well, to ensure the correct value for max_generation_from.
      */
-    if (strcmp(join_to, fsa_our_uname) != 0) {
-        member = crm_get_peer(0, fsa_our_uname);
+    if (strcasecmp(join_to, controld_globals.our_nodename) != 0) {
+        member = crm_get_peer(0, controld_globals.our_nodename);
         join_make_offer(NULL, member, NULL);
     }
 
@@ -366,7 +366,10 @@ do_dc_join_filter_offer(long long action,
         max_generation_xml = copy_xml(generation);
         max_generation_from = strdup(join_from);
 
-    } else if (cmp < 0 || (cmp == 0 && pcmk__str_eq(join_from, fsa_our_uname, pcmk__str_casei))) {
+    } else if ((cmp < 0)
+               || ((cmp == 0)
+                   && pcmk__str_eq(join_from, controld_globals.our_nodename,
+                                   pcmk__str_casei))) {
         crm_debug("Accepting join-%d request from %s (with better "
                   "CIB generation than current best from %s) " CRM_XS " ref=%s",
                   join_id, join_from, max_generation_from, ref);
@@ -430,16 +433,17 @@ do_dc_join_finalize(long long action,
         crm_debug("Finalization not needed for join-%d at the current time",
                   current_join_id);
         crmd_join_phase_log(LOG_DEBUG);
-        check_join_state(fsa_state, __func__);
+        check_join_state(controld_globals.fsa_state, __func__);
         return;
     }
 
     controld_clear_fsa_input_flags(R_HAVE_CIB);
-    if (pcmk__str_eq(max_generation_from, fsa_our_uname, pcmk__str_null_matches | pcmk__str_casei)) {
+    if (pcmk__str_eq(max_generation_from, controld_globals.our_nodename,
+                     pcmk__str_null_matches|pcmk__str_casei)) {
         controld_set_fsa_input_flags(R_HAVE_CIB);
     }
 
-    if (pcmk_is_set(fsa_input_register, R_IN_TRANSITION)) {
+    if (pcmk_is_set(controld_globals.fsa_input_register, R_IN_TRANSITION)) {
         crm_warn("Delaying join-%d finalization while transition in progress",
                  current_join_id);
         crmd_join_phase_log(LOG_DEBUG);
@@ -447,9 +451,10 @@ do_dc_join_finalize(long long action,
         return;
     }
 
-    if (max_generation_from && !pcmk_is_set(fsa_input_register, R_HAVE_CIB)) {
+    if ((max_generation_from != NULL)
+        && !pcmk_is_set(controld_globals.fsa_input_register, R_HAVE_CIB)) {
         /* ask for the agreed best CIB */
-        sync_from = strdup(max_generation_from);
+        pcmk__str_update(&sync_from, max_generation_from);
         controld_set_fsa_input_flags(R_CIB_ASKED);
         crm_notice("Finalizing join-%d for %d node%s (sync'ing CIB from %s)",
                    current_join_id, count_integrated,
@@ -458,7 +463,7 @@ do_dc_join_finalize(long long action,
 
     } else {
         /* Send _our_ CIB out to everyone */
-        sync_from = strdup(fsa_our_uname);
+        pcmk__str_update(&sync_from, controld_globals.our_nodename);
         crm_debug("Finalizing join-%d for %d node%s (sync'ing from local CIB)",
                   current_join_id, count_integrated,
                   pcmk__plural_s(count_integrated));
@@ -468,6 +473,16 @@ do_dc_join_finalize(long long action,
 
     rc = fsa_cib_conn->cmds->sync_from(fsa_cib_conn, sync_from, NULL, cib_quorum_override);
     fsa_register_cib_callback(rc, FALSE, sync_from, finalize_sync_callback);
+}
+
+void
+free_max_generation(void)
+{
+    free(max_generation_from);
+    max_generation_from = NULL;
+
+    free_xml(max_generation_xml);
+    max_generation_xml = NULL;
 }
 
 void
@@ -487,16 +502,17 @@ finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, voi
     } else if (!AM_I_DC) {
         crm_debug("Sync'ed CIB for join-%d but no longer DC", current_join_id);
 
-    } else if (fsa_state != S_FINALIZE_JOIN) {
-        crm_debug("Sync'ed CIB for join-%d but no longer in S_FINALIZE_JOIN (%s)",
-                  current_join_id, fsa_state2string(fsa_state));
+    } else if (controld_globals.fsa_state != S_FINALIZE_JOIN) {
+        crm_debug("Sync'ed CIB for join-%d but no longer in S_FINALIZE_JOIN "
+                  "(%s)", current_join_id,
+                  fsa_state2string(controld_globals.fsa_state));
 
     } else {
         controld_set_fsa_input_flags(R_HAVE_CIB);
         controld_clear_fsa_input_flags(R_CIB_ASKED);
 
         /* make sure dc_uuid is re-set to us */
-        if (check_join_state(fsa_state, __func__) == FALSE) {
+        if (!check_join_state(controld_globals.fsa_state, __func__)) {
             int count_integrated = crmd_join_phase_count(crm_join_integrated);
 
             crm_debug("Notifying %d node%s of join-%d results",
@@ -515,7 +531,7 @@ join_update_complete_callback(xmlNode * msg, int call_id, int rc, xmlNode * outp
     if (rc == pcmk_ok) {
         crm_debug("join-%d node history update (via CIB call %d) complete",
                   current_join_id, call_id);
-        check_join_state(fsa_state, __func__);
+        check_join_state(controld_globals.fsa_state, __func__);
 
     } else {
         crm_err("join-%d node history update (via CIB call %d) failed: %s "
@@ -586,11 +602,12 @@ do_dc_join_ack(long long action,
     /* Update CIB with node's current executor state. A new transition will be
      * triggered later, when the CIB notifies us of the change.
      */
-    if (controld_shutdown_lock_enabled) {
+    if (pcmk_is_set(controld_globals.flags, controld_shutdown_lock_enabled)) {
         section = controld_section_lrm_unlocked;
     }
     controld_delete_node_state(join_from, section, cib_scope_local);
-    if (pcmk__str_eq(join_from, fsa_our_uname, pcmk__str_casei)) {
+    if (pcmk__str_eq(join_from, controld_globals.our_nodename,
+                     pcmk__str_casei)) {
         xmlNode *now_dc_lrmd_state = controld_query_executor_state();
 
         if (now_dc_lrmd_state != NULL) {
@@ -693,7 +710,7 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
         }
 
     } else if (cur_state == S_FINALIZE_JOIN) {
-        if (!pcmk_is_set(fsa_input_register, R_HAVE_CIB)) {
+        if (!pcmk_is_set(controld_globals.fsa_input_register, R_HAVE_CIB)) {
             crm_debug("join-%d: Delaying finalization until we have CIB "
                       CRM_XS " state=%s for=%s",
                       current_join_id, fsa_state2string(cur_state), source);
