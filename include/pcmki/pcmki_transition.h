@@ -127,6 +127,15 @@ typedef struct {
     GList *synapses;          /* pcmk__graph_synapse_t* */
 
     int migration_limit;
+
+    //! Failcount after one failed stop action
+    char *failed_stop_offset;
+
+    //! Failcount after one failed start action
+    char *failed_start_offset;
+
+    //! Time (from epoch) by which the controller should re-run the scheduler
+    time_t recheck_by;
 } pcmk__graph_t;
 
 

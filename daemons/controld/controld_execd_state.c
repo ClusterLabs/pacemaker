@@ -434,7 +434,7 @@ crmd_proxy_dispatch(const char *session, xmlNode *msg)
     if (controld_authorize_ipc_message(msg, NULL, session)) {
         route_message(C_IPC_MESSAGE, msg);
     }
-    trigger_fsa();
+    controld_trigger_fsa();
 }
 
 static void
@@ -479,10 +479,16 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
         proxy = crmd_remote_proxy_new(lrmd, lrm_state->node_name, session, channel);
         if (!remote_ra_controlling_guest(lrm_state)) {
             if (proxy != NULL) {
+                cib_t *cib_conn = controld_globals.cib_conn;
+
                 /* Look up stonith-watchdog-timeout and send to the remote peer for validation */
-                int rc = fsa_cib_conn->cmds->query(fsa_cib_conn, XML_CIB_TAG_CRMCONFIG, NULL, cib_scope_local);
-                fsa_cib_conn->cmds->register_callback_full(fsa_cib_conn, rc, 10, FALSE, lrmd,
-                                                        "remote_config_check", remote_config_check, NULL);
+                int rc = cib_conn->cmds->query(cib_conn, XML_CIB_TAG_CRMCONFIG,
+                                               NULL, cib_scope_local);
+                cib_conn->cmds->register_callback_full(cib_conn, rc, 10, FALSE,
+                                                       lrmd,
+                                                       "remote_config_check",
+                                                       remote_config_check,
+                                                       NULL);
             }
         } else {
             crm_debug("Skipping remote_config_check for guest-nodes");

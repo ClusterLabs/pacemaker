@@ -22,7 +22,6 @@
 
 #include <pacemaker-controld.h>
 
-GList *fsa_message_queue = NULL;
 extern void crm_shutdown(int nsig);
 
 static enum crmd_fsa_input handle_message(xmlNode *msg,
@@ -61,7 +60,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
                        void *data, uint64_t with_actions,
                        gboolean prepend, const char *raised_from)
 {
-    unsigned old_len = g_list_length(fsa_message_queue);
+    unsigned old_len = g_list_length(controld_globals.fsa_message_queue);
     fsa_data_t *fsa_data = NULL;
 
     if (raised_from == NULL) {
@@ -151,23 +150,24 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
 
     /* make sure to free it properly later */
     if (prepend) {
-        fsa_message_queue = g_list_prepend(fsa_message_queue, fsa_data);
+        controld_globals.fsa_message_queue
+            = g_list_prepend(controld_globals.fsa_message_queue, fsa_data);
     } else {
-        fsa_message_queue = g_list_append(fsa_message_queue, fsa_data);
+        controld_globals.fsa_message_queue
+            = g_list_append(controld_globals.fsa_message_queue, fsa_data);
     }
 
     crm_trace("FSA message queue length is %d",
-              g_list_length(fsa_message_queue));
+              g_list_length(controld_globals.fsa_message_queue));
 
     /* fsa_dump_queue(LOG_TRACE); */
 
-    if (old_len == g_list_length(fsa_message_queue)) {
+    if (old_len == g_list_length(controld_globals.fsa_message_queue)) {
         crm_err("Couldn't add message to the queue");
     }
 
-    if (fsa_source && input != I_WAIT_FOR_EVENT) {
-        crm_trace("Triggering FSA");
-        mainloop_set_trigger(fsa_source);
+    if (input != I_WAIT_FOR_EVENT) {
+        controld_trigger_fsa();
     }
 }
 
@@ -175,10 +175,10 @@ void
 fsa_dump_queue(int log_level)
 {
     int offset = 0;
-    GList *lpc = NULL;
 
-    for (lpc = fsa_message_queue; lpc != NULL; lpc = lpc->next) {
-        fsa_data_t *data = (fsa_data_t *) lpc->data;
+    for (GList *iter = controld_globals.fsa_message_queue; iter != NULL;
+         iter = iter->next) {
+        fsa_data_t *data = (fsa_data_t *) iter->data;
 
         do_crm_log_unlikely(log_level,
                             "queue[%d.%d]: input %s raised by %s(%p.%d)\t(cause=%s)",
@@ -244,9 +244,11 @@ delete_fsa_input(fsa_data_t * fsa_data)
 fsa_data_t *
 get_message(void)
 {
-    fsa_data_t *message = g_list_nth_data(fsa_message_queue, 0);
+    fsa_data_t *message
+        = (fsa_data_t *) controld_globals.fsa_message_queue->data;
 
-    fsa_message_queue = g_list_remove(fsa_message_queue, message);
+    controld_globals.fsa_message_queue
+        = g_list_remove(controld_globals.fsa_message_queue, message);
     crm_trace("Processing input %d", message->id);
     return message;
 }
@@ -551,7 +553,7 @@ controld_authorize_ipc_message(const xmlNode *client_msg, pcmk__client_t *curr_c
     if (curr_client) {
         curr_client->userdata = strdup(client_name);
     }
-    mainloop_set_trigger(fsa_source);
+    controld_trigger_fsa();
     return false;
 
 rejected:
@@ -948,8 +950,8 @@ handle_shutdown_ack(xmlNode *stored_msg)
         return I_NULL;
     }
 
-    if ((controld_globals.dc_name == NULL)
-        || (strcasecmp(host_from, controld_globals.dc_name) == 0)) {
+    if (pcmk__str_eq(host_from, controld_globals.dc_name,
+                     pcmk__str_null_matches|pcmk__str_casei)) {
 
         if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
             crm_info("Shutting down controller after confirmation from %s",
@@ -1025,11 +1027,11 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
 
     } else if (strcmp(op, CRM_OP_THROTTLE) == 0) {
         throttle_update(stored_msg);
-        if (AM_I_DC && transition_graph != NULL) {
-            if (!transition_graph->complete) {
-                crm_debug("The throttle changed. Trigger a graph.");
-                trigger_graph();
-            }
+        if (AM_I_DC && (controld_globals.transition_graph != NULL)
+            && !controld_globals.transition_graph->complete) {
+
+            crm_debug("The throttle changed. Trigger a graph.");
+            trigger_graph();
         }
         return I_NULL;
 
@@ -1154,7 +1156,8 @@ handle_response(xmlNode *stored_msg)
         if (msg_ref == NULL) {
             crm_err("%s - Ignoring calculation with no reference", op);
 
-        } else if (pcmk__str_eq(msg_ref, fsa_pe_ref, pcmk__str_casei)) {
+        } else if (pcmk__str_eq(msg_ref, controld_globals.fsa_pe_ref,
+                                pcmk__str_none)) {
             ha_msg_input_t fsa_input;
 
             controld_stop_sched_timer();

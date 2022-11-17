@@ -20,8 +20,6 @@
 
 #include <pacemaker-controld.h>
 
-extern pcmk__output_t *logger_out;
-
 static election_t *fsa_election = NULL;
 
 static gboolean
@@ -35,6 +33,21 @@ void
 controld_election_init(const char *uname)
 {
     fsa_election = election_init("DC", uname, 60000 /*60s*/, election_win_cb);
+}
+
+/*!
+ * \internal
+ * \brief Configure election options based on the CIB
+ *
+ * \param[in,out] options  Name/value pairs for configured options
+ */
+void
+controld_configure_election(GHashTable *options)
+{
+    const char *value = NULL;
+
+    value = g_hash_table_lookup(options, XML_CONFIG_ATTR_ELECTION_FAIL);
+    election_timeout_set_period(fsa_election, crm_parse_interval_spec(value));
 }
 
 void
@@ -55,12 +68,6 @@ controld_election_fini(void)
 {
     election_fini(fsa_election);
     fsa_election = NULL;
-}
-
-void
-controld_set_election_period(const char *value)
-{
-    election_timeout_set_period(fsa_election, crm_parse_interval_spec(value));
 }
 
 void
@@ -157,9 +164,10 @@ do_election_count_vote(long long action,
             update_dc(NULL);
 
             if (pcmk_is_set(controld_globals.fsa_input_register, R_THE_DC)) {
+                cib_t *cib_conn = controld_globals.cib_conn;
+
                 register_fsa_input(C_FSA_INTERNAL, I_RELEASE_DC, NULL);
-                fsa_cib_conn->cmds->set_secondary(fsa_cib_conn,
-                                                  cib_scope_local);
+                cib_conn->cmds->set_secondary(cib_conn, cib_scope_local);
 
             } else if (cur_state != S_STARTING) {
                 register_fsa_input(C_FSA_INTERNAL, I_PENDING, NULL);
@@ -183,6 +191,20 @@ feature_update_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, vo
     }
 }
 
+/*!
+ * \internal
+ * \brief Update a node attribute in the CIB during a DC takeover
+ *
+ * \param[in] name   Name of attribute to update
+ * \param[in] value  New attribute value
+ */
+#define dc_takeover_update_attr(name, value) do {                           \
+       cib__update_node_attr(controld_globals.logger_out,                   \
+                             controld_globals.cib_conn, cib_none,           \
+                             XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL, \
+                             name, value, NULL, NULL);                      \
+    } while (0)
+
 /*	 A_DC_TAKEOVER	*/
 void
 do_dc_takeover(long long action,
@@ -202,33 +224,24 @@ do_dc_takeover(long long action,
     election_reset(fsa_election);
     controld_set_fsa_input_flags(R_JOIN_OK|R_INVOKE_PE);
 
-    fsa_cib_conn->cmds->set_primary(fsa_cib_conn, cib_scope_local);
+    controld_globals.cib_conn->cmds->set_primary(controld_globals.cib_conn,
+                                                 cib_scope_local);
 
     cib = create_xml_node(NULL, XML_TAG_CIB);
     crm_xml_add(cib, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
     fsa_cib_update(XML_TAG_CIB, cib, cib_quorum_override, rc, NULL);
     fsa_register_cib_callback(rc, FALSE, NULL, feature_update_callback);
 
-    cib__update_node_attr(logger_out, fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
-                          NULL, NULL, NULL, NULL, XML_ATTR_HAVE_WATCHDOG,
-                          pcmk__btoa(watchdog), NULL, NULL);
-
-    cib__update_node_attr(logger_out, fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
-                          NULL, NULL, NULL, NULL, "dc-version",
-                          PACEMAKER_VERSION "-" BUILD_VERSION, NULL, NULL);
-
-    cib__update_node_attr(logger_out, fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
-                          NULL, NULL, NULL, NULL, "cluster-infrastructure",
-                          cluster_type, NULL, NULL);
+    dc_takeover_update_attr(XML_ATTR_HAVE_WATCHDOG, pcmk__btoa(watchdog));
+    dc_takeover_update_attr("dc-version", PACEMAKER_VERSION "-" BUILD_VERSION);
+    dc_takeover_update_attr("cluster-infrastructure", cluster_type);
 
 #if SUPPORT_COROSYNC
     if ((controld_globals.cluster_name == NULL) && is_corosync_cluster()) {
         char *cluster_name = pcmk__corosync_cluster_name();
 
-        if (cluster_name) {
-            cib__update_node_attr(logger_out, fsa_cib_conn, cib_none,
-                                  XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
-                                  "cluster-name", cluster_name, NULL, NULL);
+        if (cluster_name != NULL) {
+            dc_takeover_update_attr("cluster-name", cluster_name);
         }
         free(cluster_name);
     }

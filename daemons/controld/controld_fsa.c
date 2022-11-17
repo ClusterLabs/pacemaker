@@ -25,7 +25,8 @@
 
 #include <pacemaker-controld.h>
 
-cib_t *fsa_cib_conn = NULL;
+//! Triggers an FSA invocation
+static crm_trigger_t *fsa_trigger = NULL;
 
 #define DOT_PREFIX "actions:trace: "
 #define do_dot_log(fmt, args...)     crm_trace( fmt, ##args)
@@ -140,6 +141,44 @@ do_log(long long action, enum crmd_fsa_cause cause,
     }
 }
 
+/*!
+ * \internal
+ * \brief Initialize the FSA trigger
+ */
+void
+controld_init_fsa_trigger(void)
+{
+    fsa_trigger = mainloop_add_trigger(G_PRIORITY_HIGH, crm_fsa_trigger, NULL);
+}
+
+/*!
+ * \internal
+ * \brief Destroy the FSA trigger
+ */
+void
+controld_destroy_fsa_trigger(void)
+{
+    // This basically will not work, since mainloop has a reference to it
+    mainloop_destroy_trigger(fsa_trigger);
+    fsa_trigger = NULL;
+}
+
+/*!
+ * \internal
+ * \brief Trigger an FSA invocation
+ *
+ * \param[in] fn    Calling function name
+ * \param[in] line  Line number where call occurred
+ */
+void
+controld_trigger_fsa_as(const char *fn, int line)
+{
+    if (fsa_trigger != NULL) {
+        crm_trace("%s:%d - Triggered FSA invocation", fn, line);
+        mainloop_set_trigger(fsa_trigger);
+    }
+}
+
 enum crmd_fsa_state
 s_crmd_fsa(enum crmd_fsa_cause cause)
 {
@@ -156,7 +195,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
     fsa_dump_actions(controld_globals.fsa_actions, "Initial");
 
     controld_clear_global_flags(controld_fsa_is_stalled);
-    if ((fsa_message_queue == NULL)
+    if ((controld_globals.fsa_message_queue == NULL)
         && (controld_globals.fsa_actions != A_NOTHING)) {
         /* fake the first message so we can get into the loop */
         fsa_data = calloc(1, sizeof(fsa_data_t));
@@ -164,12 +203,14 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
         fsa_data->fsa_cause = C_FSA_INTERNAL;
         fsa_data->origin = __func__;
         fsa_data->data_type = fsa_dt_none;
-        fsa_message_queue = g_list_append(fsa_message_queue, fsa_data);
+        controld_globals.fsa_message_queue
+            = g_list_append(controld_globals.fsa_message_queue, fsa_data);
         fsa_data = NULL;
     }
-    while ((fsa_message_queue != NULL)
+    while ((controld_globals.fsa_message_queue != NULL)
            && !pcmk_is_set(controld_globals.flags, controld_fsa_is_stalled)) {
-        crm_trace("Checking messages (%d remaining)", g_list_length(fsa_message_queue));
+        crm_trace("Checking messages (%d remaining)",
+                  g_list_length(controld_globals.fsa_message_queue));
 
         fsa_data = get_message();
         if(fsa_data == NULL) {
@@ -183,8 +224,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
         fsa_dump_actions(fsa_data->actions, "Restored actions");
 
         /* get the next batch of actions */
-        new_actions = controld_fsa_get_action(fsa_data->fsa_input,
-                                              globals->fsa_state);
+        new_actions = controld_fsa_get_action(fsa_data->fsa_input);
         controld_set_fsa_action_flags(new_actions);
         fsa_dump_actions(new_actions, "New actions");
 
@@ -208,8 +248,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 
         /* update state variables */
         last_state = globals->fsa_state;
-        globals->fsa_state = controld_fsa_get_next_state(fsa_data->fsa_input,
-                                                         globals->fsa_state);
+        globals->fsa_state = controld_fsa_get_next_state(fsa_data->fsa_input);
 
         /*
          * Remove certain actions during shutdown
@@ -239,11 +278,12 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
         fsa_data = NULL;
     }
 
-    if ((fsa_message_queue != NULL)
+    if ((controld_globals.fsa_message_queue != NULL)
         || (controld_globals.fsa_actions != A_NOTHING)
         || pcmk_is_set(controld_globals.flags, controld_fsa_is_stalled)) {
+
         crm_debug("Exiting the FSA: queue=%d, fsa_actions=%#llx, stalled=%s",
-                  g_list_length(fsa_message_queue),
+                  g_list_length(controld_globals.fsa_message_queue),
                   (unsigned long long) controld_globals.fsa_actions,
                   pcmk__btoa(pcmk_is_set(controld_globals.flags,
                                          controld_fsa_is_stalled)));
@@ -525,9 +565,9 @@ check_join_counts(fsa_data_t *msg_data)
                 "than are in membership (%d > %u)", count, npeers);
         register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
 
-    } else if (saved_ccm_membership_id != crm_peer_seq) {
+    } else if (controld_globals.membership_id != crm_peer_seq) {
         crm_info("New join needed because membership changed (%llu -> %llu)",
-                 saved_ccm_membership_id, crm_peer_seq);
+                 controld_globals.membership_id, crm_peer_seq);
         register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
 
     } else {
@@ -601,7 +641,7 @@ do_state_transition(enum crmd_fsa_state cur_state,
         controld_set_fsa_action_flags(A_DC_TIMER_STOP);
     }
     if (next_state != S_IDLE) {
-        controld_stop_timer(recheck_timer);
+        controld_stop_recheck_timer();
     }
 
     if (cur_state == S_FINALIZE_JOIN && next_state == S_POLICY_ENGINE) {
@@ -610,7 +650,10 @@ do_state_transition(enum crmd_fsa_state cur_state,
 
     switch (next_state) {
         case S_PENDING:
-            fsa_cib_conn->cmds->set_secondary(fsa_cib_conn, cib_scope_local);
+            {
+                cib_t *cib_conn = controld_globals.cib_conn;
+                cib_conn->cmds->set_secondary(cib_conn, cib_scope_local);
+            }
             update_dc(NULL);
             break;
 
@@ -619,7 +662,7 @@ do_state_transition(enum crmd_fsa_state cur_state,
             break;
 
         case S_NOT_DC:
-            election_timer->counter = 0;
+            controld_reset_counter_election_timer();
             purge_stonith_cleanup();
 
             if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
@@ -655,7 +698,7 @@ do_state_transition(enum crmd_fsa_state cur_state,
             break;
 
         case S_POLICY_ENGINE:
-            election_timer->counter = 0;
+            controld_reset_counter_election_timer();
             CRM_LOG_ASSERT(AM_I_DC);
             if (cause == C_TIMER_POPPED) {
                 crm_info("Progressed to state %s after %s",

@@ -13,12 +13,10 @@
 #include <stdbool.h>                // bool
 #include <pacemaker-internal.h>     // pcmk__graph_t, pcmk__graph_action_t
 
-// reaction to notification of local node being fenced
-void set_fence_reaction(const char *reaction_s);
+void controld_configure_fencing(GHashTable *options);
 
 // stonith fail counts
 void st_fail_count_reset(const char * target);
-void update_stonith_max_attempts(const char* value);
 
 // stonith API client
 void controld_trigger_fencer_connect(void);

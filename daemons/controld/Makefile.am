@@ -18,6 +18,7 @@ noinst_HEADERS	= controld_alerts.h		\
 		  controld_callbacks.h		\
 		  controld_fencing.h		\
 		  controld_fsa.h		\
+		  controld_globals.h		\
 		  controld_lrm.h		\
 		  controld_membership.h		\
 		  controld_messages.h		\

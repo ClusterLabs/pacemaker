@@ -103,7 +103,9 @@ handle_disconnect(void)
          * 5s is up, whichever comes first.
          *
          */
-        rc = fsa_cib_conn->cmds->query(fsa_cib_conn, NULL, NULL, cib_scope_local);
+        rc = controld_globals.cib_conn->cmds->query(controld_globals.cib_conn,
+                                                    NULL, NULL,
+                                                    cib_scope_local);
         fsa_register_cib_callback(rc, FALSE, uuid_str, save_cib_contents);
 
     } else {
@@ -111,7 +113,7 @@ handle_disconnect(void)
     }
 
     controld_clear_fsa_input_flags(R_PE_CONNECTED);
-    mainloop_set_trigger(fsa_source);
+    controld_trigger_fsa();
     return;
 }
 
@@ -129,7 +131,8 @@ handle_reply(pcmk_schedulerd_api_reply_t *reply)
     if (msg_ref == NULL) {
         crm_err("%s - Ignoring calculation with no reference", CRM_OP_PECALC);
 
-    } else if (pcmk__str_eq(msg_ref, fsa_pe_ref, pcmk__str_none)) {
+    } else if (pcmk__str_eq(msg_ref, controld_globals.fsa_pe_ref,
+                            pcmk__str_none)) {
         ha_msg_input_t fsa_input;
         xmlNode *crm_data_node;
 
@@ -235,7 +238,6 @@ do_pe_control(long long action,
 }
 
 static int fsa_pe_query = 0;
-char *fsa_pe_ref = NULL;
 static mainloop_timer_t *controld_sched_timer = NULL;
 
 // @TODO Make this a configurable cluster option if there's demand for it
@@ -270,8 +272,10 @@ controld_sched_timeout(gpointer user_data)
 void
 controld_stop_sched_timer(void)
 {
-    if (controld_sched_timer && fsa_pe_ref) {
-        crm_trace("Stopping timer for scheduler reply %s", fsa_pe_ref);
+    if ((controld_sched_timer != NULL)
+        && (controld_globals.fsa_pe_ref != NULL)) {
+        crm_trace("Stopping timer for scheduler reply %s",
+                  controld_globals.fsa_pe_ref);
     }
     mainloop_timer_stop(controld_sched_timer);
 }
@@ -298,8 +302,8 @@ controld_expect_sched_reply(char *ref)
     } else {
         controld_stop_sched_timer();
     }
-    free(fsa_pe_ref);
-    fsa_pe_ref = ref;
+    free(controld_globals.fsa_pe_ref);
+    controld_globals.fsa_pe_ref = ref;
 }
 
 /*!
@@ -322,6 +326,8 @@ do_pe_invoke(long long action,
              enum crmd_fsa_state cur_state,
              enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
+    cib_t *cib_conn = controld_globals.cib_conn;
+
     if (AM_I_DC == FALSE) {
         crm_err("Not invoking scheduler because not DC: %s",
                 fsa_action2string(action));
@@ -337,7 +343,7 @@ do_pe_invoke(long long action,
             crm_info("Waiting for the scheduler to connect");
             crmd_fsa_stall(FALSE);
             controld_set_fsa_action_flags(A_PE_START);
-            trigger_fsa();
+            controld_trigger_fsa();
         }
         return;
     }
@@ -355,7 +361,7 @@ do_pe_invoke(long long action,
         return;
     }
 
-    fsa_pe_query = fsa_cib_conn->cmds->query(fsa_cib_conn, NULL, NULL, cib_scope_local);
+    fsa_pe_query = cib_conn->cmds->query(cib_conn, NULL, NULL, cib_scope_local);
 
     crm_debug("Query %d: Requesting the current CIB: %s", fsa_pe_query,
               fsa_state2string(controld_globals.fsa_state));
@@ -461,7 +467,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
                   (num_cib_op_callbacks() - 1));
         sleep(1);
         controld_set_fsa_action_flags(A_PE_INVOKE);
-        trigger_fsa();
+        controld_trigger_fsa();
         return;
     }
 
@@ -493,8 +499,8 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         CRM_ASSERT(ref != NULL);
         controld_expect_sched_reply(ref);
         crm_debug("Invoking the scheduler: query=%d, ref=%s, seq=%llu, "
-                  "quorate=%s", fsa_pe_query, fsa_pe_ref, crm_peer_seq,
-                  pcmk__btoa(pcmk_is_set(controld_globals.flags,
-                                         controld_has_quorum)));
+                  "quorate=%s", fsa_pe_query, controld_globals.fsa_pe_ref,
+                  crm_peer_seq, pcmk__btoa(pcmk_is_set(controld_globals.flags,
+                                                       controld_has_quorum)));
     }
 }

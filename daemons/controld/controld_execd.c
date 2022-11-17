@@ -34,8 +34,6 @@ struct delete_event_s {
     lrm_state_t *lrm_state;
 };
 
-extern pcmk__output_t *logger_out;
-
 static gboolean is_rsc_active(lrm_state_t * lrm_state, const char *rsc_id);
 static gboolean build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list);
 static gboolean stop_recurring_actions(gpointer key, gpointer value, gpointer user_data);
@@ -335,7 +333,7 @@ try_local_executor_connect(long long action, fsa_data_t *msg_data,
                  "(%d max): %s", lrm_state->num_lrm_register_fails,
                  pcmk__plural_s(lrm_state->num_lrm_register_fails),
                  MAX_LRM_REG_FAILS, pcmk_rc_str(rc));
-        controld_start_timer(wait_timer);
+        controld_start_wait_timer();
         crmd_fsa_stall(FALSE);
         return;
     }
@@ -895,8 +893,10 @@ controld_trigger_delete_refresh(const char *from_sys, const char *rsc_id)
         char *now_s = crm_strdup_printf("%lld", (long long) time(NULL));
 
         crm_debug("Triggering a refresh after %s cleaned %s", from_sys, rsc_id);
-        cib__update_node_attr(logger_out, fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
-                              NULL, NULL, NULL, NULL, "last-lrm-refresh", now_s, NULL, NULL);
+        cib__update_node_attr(controld_globals.logger_out,
+                              controld_globals.cib_conn, cib_none,
+                              XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
+                              "last-lrm-refresh", now_s, NULL, NULL);
         free(now_s);
     }
 }
@@ -1005,8 +1005,9 @@ erase_lrm_history_by_op(const lrmd_event_data_t *op)
     crm_debug("Erasing resource operation history for " PCMK__OP_FMT " (call=%d)",
               op->rsc_id, op->op_type, op->interval_ms, op->call_id);
 
-    fsa_cib_conn->cmds->remove(fsa_cib_conn, XML_CIB_TAG_STATUS, xml_top,
-                               cib_quorum_override);
+    controld_globals.cib_conn->cmds->remove(controld_globals.cib_conn,
+                                            XML_CIB_TAG_STATUS, xml_top,
+                                            cib_quorum_override);
 
     crm_log_xml_trace(xml_top, "op:cancel");
     free_xml(xml_top);
@@ -1066,8 +1067,9 @@ erase_lrm_history_by_id(const lrm_state_t *lrm_state, const char *rsc_id,
 
     crm_debug("Erasing resource operation history for %s on %s (call=%d)",
               key, rsc_id, call_id);
-    fsa_cib_conn->cmds->remove(fsa_cib_conn, op_xpath, NULL,
-                               cib_quorum_override | cib_xpath);
+    controld_globals.cib_conn->cmds->remove(controld_globals.cib_conn, op_xpath,
+                                            NULL,
+                                            cib_quorum_override|cib_xpath);
     free(op_xpath);
 }
 
@@ -2411,8 +2413,6 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
     lrmd_free_event(op);
 }
 
-int last_resource_update = 0;
-
 static void
 cib_rsc_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
@@ -2426,9 +2426,9 @@ cib_rsc_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *use
             crm_warn("Resource update %d failed: (rc=%d) %s", call_id, rc, pcmk_strerror(rc));
     }
 
-    if (call_id == last_resource_update) {
-        last_resource_update = 0;
-        trigger_fsa();
+    if (call_id == controld_globals.resource_update) {
+        controld_globals.resource_update = 0;
+        controld_trigger_fsa();
     }
 }
 
@@ -2556,7 +2556,7 @@ do_update_resource(const char *node_name, lrmd_rsc_info_t *rsc,
     fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, rc, NULL);
 
     if (rc > 0) {
-        last_resource_update = rc;
+        controld_globals.resource_update = rc;
     }
   done:
     /* the return code is a call number, not an error code */
@@ -2925,7 +2925,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
     /* If a shutdown was escalated while operations were pending,
      * then the FSA will be stalled right now... allow it to continue
      */
-    mainloop_set_trigger(fsa_source);
+    controld_trigger_fsa();
     if (lrm_state && rsc) {
         update_history_cache(lrm_state, rsc, op);
     }

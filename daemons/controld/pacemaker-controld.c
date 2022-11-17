@@ -32,9 +32,8 @@ _Noreturn void crmd_init(void);
 void crmd_hamsg_callback(const xmlNode * msg, void *private_data);
 extern void init_dotfile(void);
 
-pcmk__output_t *logger_out = NULL;
-
 controld_globals_t controld_globals = {
+    // Automatic initialization to 0, false, or NULL is fine for most members
     .fsa_state = S_STARTING,
     .fsa_actions = A_NOTHING,
 };
@@ -137,11 +136,11 @@ main(int argc, char **argv)
         return CRM_EX_FATAL;
     }
 
-    if (pcmk__log_output_new(&logger_out) != pcmk_rc_ok) {
+    if (pcmk__log_output_new(&(controld_globals.logger_out)) != pcmk_rc_ok) {
         return CRM_EX_FATAL;
     }
 
-    pcmk__output_set_log_level(logger_out, LOG_TRACE);
+    pcmk__output_set_log_level(controld_globals.logger_out, LOG_TRACE);
 
     crmd_init();
     return 0; // not reachable

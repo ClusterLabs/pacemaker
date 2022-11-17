@@ -491,15 +491,6 @@ struct fsa_data_s {
                                    (flags_to_clear), #flags_to_clear);  \
     } while (0)
 
-extern cib_t *fsa_cib_conn;
-
-extern char *fsa_pe_ref;        // Last invocation of the scheduler
-extern GList *fsa_message_queue;
-
-extern crm_trigger_t *fsa_source;
-
-extern unsigned long long saved_ccm_membership_id;
-
 // These should be moved elsewhere
 void do_update_cib_nodes(gboolean overwrite, const char *caller);
 int crmd_cib_smart_opt(void);
@@ -512,21 +503,19 @@ const char *fsa_action2string(long long action);
 
 enum crmd_fsa_state s_crmd_fsa(enum crmd_fsa_cause cause);
 
-enum crmd_fsa_state controld_fsa_get_next_state(enum crmd_fsa_input input,
-                                                enum crmd_fsa_state state);
+enum crmd_fsa_state controld_fsa_get_next_state(enum crmd_fsa_input input);
 
-uint64_t controld_fsa_get_action(enum crmd_fsa_input input,
-                                 enum crmd_fsa_state state);
+uint64_t controld_fsa_get_action(enum crmd_fsa_input input);
+
+void controld_init_fsa_trigger(void);
+void controld_destroy_fsa_trigger(void);
 
 void free_max_generation(void);
 
 #  define AM_I_DC pcmk_is_set(controld_globals.fsa_input_register, R_THE_DC)
-#  define trigger_fsa() do {                    \
-        if (fsa_source != NULL) {               \
-            crm_trace("Triggering FSA");        \
-            mainloop_set_trigger(fsa_source);   \
-        }                                       \
-    } while(0)
+#  define controld_trigger_fsa() controld_trigger_fsa_as(__func__, __LINE__)
+
+void controld_trigger_fsa_as(const char *fn, int line);
 
 /* A_READCONFIG */
 void do_read_config(long long action, enum crmd_fsa_cause cause,

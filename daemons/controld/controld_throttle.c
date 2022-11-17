@@ -391,7 +391,7 @@ throttle_record_free(gpointer p)
     free(r);
 }
 
-void
+static void
 throttle_set_load_target(float target)
 {
     throttle_load_target = target;
@@ -403,7 +403,7 @@ throttle_set_load_target(float target)
  *
  * \param[in] preference  Cluster-wide node-action-limit from the CIB
  */
-void
+static void
 throttle_update_job_max(const char *preference)
 {
     long long max = 0LL;
@@ -433,6 +433,25 @@ throttle_init(void)
 
     throttle_update_job_max(NULL);
     mainloop_timer_start(throttle_timer);
+}
+
+/*!
+ * \internal
+ * \brief Configure throttle options based on the CIB
+ *
+ * \param[in,out] options  Name/value pairs for configured options
+ */
+void
+controld_configure_throttle(GHashTable *options)
+{
+    const char *value = g_hash_table_lookup(options, "load-threshold");
+
+    if (value != NULL) {
+        throttle_set_load_target(strtof(value, NULL) / 100.0);
+    }
+
+    value = g_hash_table_lookup(options, "node-action-limit");
+    throttle_update_job_max(value);
 }
 
 void

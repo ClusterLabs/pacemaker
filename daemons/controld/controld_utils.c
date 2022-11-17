@@ -724,7 +724,7 @@ update_dc(xmlNode * msg)
             }
 
             controld_set_fsa_action_flags(A_CL_JOIN_QUERY | A_DC_TIMER_START);
-            trigger_fsa();
+            controld_trigger_fsa();
             return FALSE;
         }
     }
@@ -787,8 +787,8 @@ cib_op_timeout(void)
     calculated_timeout = QB_MAX(calculated_timeout, env_timeout);
     crm_trace("Calculated timeout: %us", calculated_timeout);
 
-    if (fsa_cib_conn) {
-        fsa_cib_conn->call_timeout = calculated_timeout;
+    if (controld_globals.cib_conn) {
+        controld_globals.cib_conn->call_timeout = calculated_timeout;
     }
     return calculated_timeout;
 }

@@ -33,8 +33,6 @@ extern gboolean crm_connect_corosync(crm_cluster_t * cluster);
 void crm_shutdown(int nsig);
 static gboolean crm_read_options(gpointer user_data);
 
-crm_trigger_t *fsa_source = NULL;
-
 /*	 A_HA_CONNECT	*/
 void
 do_ha_control(long long action,
@@ -125,8 +123,6 @@ do_shutdown_req(long long action,
     free_xml(msg);
 }
 
-extern pcmk__output_t *logger_out;
-
 void
 crmd_fast_exit(crm_exit_t exit_code)
 {
@@ -142,10 +138,11 @@ crmd_fast_exit(crm_exit_t exit_code)
         exit_code = CRM_EX_ERROR;
     }
 
-    if (logger_out != NULL) {
-        logger_out->finish(logger_out, exit_code, true, NULL);
-        pcmk__output_free(logger_out);
-        logger_out = NULL;
+    if (controld_globals.logger_out != NULL) {
+        controld_globals.logger_out->finish(controld_globals.logger_out,
+                                            exit_code, true, NULL);
+        pcmk__output_free(controld_globals.logger_out);
+        controld_globals.logger_out = NULL;
     }
 
     crm_exit(exit_code);
@@ -154,7 +151,6 @@ crmd_fast_exit(crm_exit_t exit_code)
 crm_exit_t
 crmd_exit(crm_exit_t exit_code)
 {
-    GList *gIter = NULL;
     GMainLoop *mloop = controld_globals.mainloop;
 
     static bool in_progress = FALSE;
@@ -209,8 +205,9 @@ crmd_exit(crm_exit_t exit_code)
 
 /* Clean up as much memory as possible for valgrind */
 
-    for (gIter = fsa_message_queue; gIter != NULL; gIter = gIter->next) {
-        fsa_data_t *fsa_data = gIter->data;
+    for (GList *iter = controld_globals.fsa_message_queue; iter != NULL;
+         iter = iter->next) {
+        fsa_data_t *fsa_data = (fsa_data_t *) iter->data;
 
         crm_info("Dropping %s: [ state=%s cause=%s origin=%s ]",
                  fsa_input2string(fsa_data->fsa_input),
@@ -220,7 +217,9 @@ crmd_exit(crm_exit_t exit_code)
     }
 
     controld_clear_fsa_input_flags(R_MEMBERSHIP);
-    g_list_free(fsa_message_queue); fsa_message_queue = NULL;
+
+    g_list_free(controld_globals.fsa_message_queue);
+    controld_globals.fsa_message_queue = NULL;
 
     controld_election_fini();
 
@@ -234,12 +233,10 @@ crmd_exit(crm_exit_t exit_code)
     controld_clear_fsa_input_flags(R_LRM_CONNECTED);
     lrm_state_destroy_all();
 
-    /* This basically will not work, since mainloop has a reference to it */
-    mainloop_destroy_trigger(fsa_source); fsa_source = NULL;
-
     mainloop_destroy_trigger(config_read_trigger);
     config_read_trigger = NULL;
 
+    controld_destroy_fsa_trigger();
     controld_destroy_transition_trigger();
 
     pcmk__client_cleanup();
@@ -264,9 +261,8 @@ crmd_exit(crm_exit_t exit_code)
     free(controld_globals.cluster_name);
     controld_globals.cluster_name = NULL;
 
-    free(te_uuid); te_uuid = NULL;
-    free(failed_stop_offset); failed_stop_offset = NULL;
-    free(failed_start_offset); failed_start_offset = NULL;
+    free(controld_globals.te_uuid);
+    controld_globals.te_uuid = NULL;
 
     free_max_generation();
 
@@ -306,8 +302,8 @@ crmd_exit(crm_exit_t exit_code)
         mainloop_destroy_signal(SIGCHLD);
     }
 
-    cib_delete(fsa_cib_conn);
-    fsa_cib_conn = NULL;
+    cib_delete(controld_globals.cib_conn);
+    controld_globals.cib_conn = NULL;
 
     throttle_fini();
 
@@ -356,12 +352,11 @@ do_startup(long long action,
     config_read_trigger = mainloop_add_trigger(G_PRIORITY_HIGH,
                                                crm_read_options, NULL);
 
-    fsa_source = mainloop_add_trigger(G_PRIORITY_HIGH, crm_fsa_trigger, NULL);
-
+    controld_init_fsa_trigger();
     controld_init_transition_trigger();
 
     crm_debug("Creating CIB manager and executor objects");
-    fsa_cib_conn = cib_new();
+    controld_globals.cib_conn = cib_new();
 
     lrm_state_init_local();
     if (controld_init_fsa_timers() == FALSE) {
@@ -406,7 +401,7 @@ dispatch_controller_ipc(qb_ipcs_connection_t * c, void *data, size_t size)
         route_message(C_IPC_MESSAGE, msg);
     }
 
-    trigger_fsa();
+    controld_trigger_fsa();
     free_xml(msg);
     return 0;
 }
@@ -422,7 +417,7 @@ ipc_client_disconnected(qb_ipcs_connection_t *c)
                   c, client);
         free(client->userdata);
         pcmk__free_client(client);
-        trigger_fsa();
+        controld_trigger_fsa();
     }
     return 0;
 }
@@ -690,13 +685,6 @@ crmd_metadata(void)
     g_free(s);
 }
 
-static const char *
-controller_option(GHashTable *options, const char *name)
-{
-    return pcmk__cluster_option(options, controller_options,
-                                PCMK__NELEM(controller_options), name);
-}
-
 static void
 config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
@@ -738,53 +726,16 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     pe_unpack_nvpairs(crmconfig, crmconfig, XML_CIB_TAG_PROPSET, NULL,
                       config_hash, CIB_OPTIONS_FIRST, FALSE, now, NULL);
 
+    // Validate all options, and use defaults if not already present in hash
     pcmk__validate_cluster_options(config_hash, controller_options,
                                    PCMK__NELEM(controller_options));
 
-    value = controller_option(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
-    election_timer->period_ms = crm_parse_interval_spec(value);
-
-    value = controller_option(config_hash, "node-action-limit");
-    throttle_update_job_max(value);
-
-    value = controller_option(config_hash, "load-threshold");
-    if(value) {
-        throttle_set_load_target(strtof(value, NULL) / 100.0);
-    }
-
-    value = controller_option(config_hash, "no-quorum-policy");
+    value = g_hash_table_lookup(config_hash, "no-quorum-policy");
     if (pcmk__str_eq(value, "suicide", pcmk__str_casei) && pcmk__locate_sbd()) {
         controld_set_global_flags(controld_no_quorum_suicide);
     }
 
-    set_fence_reaction(controller_option(config_hash,
-                                         XML_CONFIG_ATTR_FENCE_REACTION));
-
-    value = controller_option(config_hash, "stonith-max-attempts");
-    update_stonith_max_attempts(value);
-
-    value = controller_option(config_hash, XML_CONFIG_ATTR_FORCE_QUIT);
-    shutdown_escalation_timer->period_ms = crm_parse_interval_spec(value);
-    crm_debug("Shutdown escalation occurs if DC has not responded to request in %ums",
-              shutdown_escalation_timer->period_ms);
-
-    value = controller_option(config_hash, XML_CONFIG_ATTR_ELECTION_FAIL);
-    controld_set_election_period(value);
-
-    value = controller_option(config_hash, XML_CONFIG_ATTR_RECHECK);
-    recheck_interval_ms = crm_parse_interval_spec(value);
-    crm_debug("Re-run scheduler after %dms of inactivity", recheck_interval_ms);
-
-    value = controller_option(config_hash, "transition-delay");
-    transition_timer->period_ms = crm_parse_interval_spec(value);
-
-    value = controller_option(config_hash, "join-integration-timeout");
-    integration_timer->period_ms = crm_parse_interval_spec(value);
-
-    value = controller_option(config_hash, "join-finalization-timeout");
-    finalization_timer->period_ms = crm_parse_interval_spec(value);
-
-    value = controller_option(config_hash, XML_CONFIG_ATTR_SHUTDOWN_LOCK);
+    value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_SHUTDOWN_LOCK);
     if (crm_is_true(value)) {
         controld_set_global_flags(controld_shutdown_lock_enabled);
     } else {
@@ -794,12 +745,17 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     value = g_hash_table_lookup(config_hash, "cluster-name");
     pcmk__str_update(&(controld_globals.cluster_name), value);
 
+    // Let subcomponents initialize their own static variables
+    controld_configure_election(config_hash);
+    controld_configure_fencing(config_hash);
+    controld_configure_fsa_timers(config_hash);
+    controld_configure_throttle(config_hash);
+
     alerts = first_named_child(output, XML_CIB_TAG_ALERTS);
     crmd_unpack_alerts(alerts);
 
     controld_set_fsa_input_flags(R_READ_CONFIG);
-    crm_trace("Triggering FSA: %s", __func__);
-    mainloop_set_trigger(fsa_source);
+    controld_trigger_fsa();
 
     g_hash_table_destroy(config_hash);
   bail:
@@ -825,10 +781,11 @@ controld_trigger_config_as(const char *fn, int line)
 gboolean
 crm_read_options(gpointer user_data)
 {
-    int call_id =
-        fsa_cib_conn->cmds->query(fsa_cib_conn,
-            "//" XML_CIB_TAG_CRMCONFIG " | //" XML_CIB_TAG_ALERTS,
-            NULL, cib_xpath | cib_scope_local);
+    cib_t *cib_conn = controld_globals.cib_conn;
+    int call_id = cib_conn->cmds->query(cib_conn,
+                                        "//" XML_CIB_TAG_CRMCONFIG
+                                        " | //" XML_CIB_TAG_ALERTS,
+                                        NULL, cib_xpath|cib_scope_local);
 
     fsa_register_cib_callback(call_id, FALSE, NULL, config_query_callback);
     crm_trace("Querying the CIB... call %d", call_id);
@@ -849,6 +806,9 @@ do_read_config(long long action,
 void
 crm_shutdown(int nsig)
 {
+    const char *value = NULL;
+    guint default_period_ms = 0;
+
     if ((controld_globals.mainloop == NULL)
         || !g_main_loop_is_running(controld_globals.mainloop)) {
         crmd_exit(CRM_EX_OK);
@@ -864,13 +824,15 @@ crm_shutdown(int nsig)
     controld_set_fsa_input_flags(R_SHUTDOWN);
     register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
 
-    if (shutdown_escalation_timer->period_ms == 0) {
-        const char *value = controller_option(NULL, XML_CONFIG_ATTR_FORCE_QUIT);
-
-        shutdown_escalation_timer->period_ms = crm_parse_interval_spec(value);
-    }
-
-    crm_notice("Initiating controller shutdown sequence " CRM_XS
-               " limit=%ums", shutdown_escalation_timer->period_ms);
-    controld_start_timer(shutdown_escalation_timer);
+    /* If shutdown timer doesn't have a period set, use the default
+     *
+     * @TODO: Evaluate whether this is still necessary. As long as
+     * config_query_callback() has been run at least once, it doesn't look like
+     * anything could have changed the timer period since then.
+     */
+    value = pcmk__cluster_option(NULL, controller_options,
+                                 PCMK__NELEM(controller_options),
+                                 XML_CONFIG_ATTR_FORCE_QUIT);
+    default_period_ms = crm_parse_interval_spec(value);
+    controld_shutdown_start_countdown(default_period_ms);
 }

@@ -64,7 +64,7 @@ crmd_ha_msg_filter(xmlNode * msg)
     route_message(C_HA_MESSAGE, msg);
 
   done:
-    trigger_fsa();
+    controld_trigger_fsa();
 }
 
 /*!
@@ -291,7 +291,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 } else {
                     crm_notice("%s of peer %s is complete " CRM_XS " action=%d",
                                task, node->uname, down->id);
-                    pcmk__update_graph(transition_graph, down);
+                    pcmk__update_graph(controld_globals.transition_graph, down);
                     trigger_graph();
                 }
 
@@ -304,7 +304,8 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             }
 
         } else if (appeared == FALSE) {
-            if (transition_graph == NULL || transition_graph->id == -1) {
+            if ((controld_globals.transition_graph == NULL)
+                || (controld_globals.transition_graph->id == -1)) {
                 crm_info("Stonith/shutdown of node %s is unknown to the "
                          "current DC", node->uname);
             } else {
@@ -317,7 +318,8 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             }
             abort_transition(INFINITY, pcmk__graph_restart, "Node failure",
                              NULL);
-            fail_incompletable_actions(transition_graph, node->uuid);
+            fail_incompletable_actions(controld_globals.transition_graph,
+                                       node->uuid);
 
         } else {
             crm_trace("Node %s came up, was not expected to be down",
@@ -347,17 +349,16 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
         free_xml(update);
     }
 
-    trigger_fsa();
+    controld_trigger_fsa();
 }
 
 void
 crmd_cib_connection_destroy(gpointer user_data)
 {
-    CRM_LOG_ASSERT(user_data == fsa_cib_conn);
+    CRM_LOG_ASSERT(user_data == controld_globals.cib_conn);
 
-    crm_trace("Invoked");
-    trigger_fsa();
-    fsa_cib_conn->state = cib_disconnected;
+    controld_trigger_fsa();
+    controld_globals.cib_conn->state = cib_disconnected;
 
     if (!pcmk_is_set(controld_globals.fsa_input_register, R_CIB_CONNECTED)) {
         crm_info("Connection to the CIB manager terminated");
@@ -375,8 +376,10 @@ crmd_cib_connection_destroy(gpointer user_data)
 gboolean
 crm_fsa_trigger(gpointer user_data)
 {
-    crm_trace("Invoked (queue len: %d)", g_list_length(fsa_message_queue));
+    crm_trace("Invoked (queue len: %d)",
+              g_list_length(controld_globals.fsa_message_queue));
     s_crmd_fsa(C_FSA_INTERNAL);
-    crm_trace("Exited  (queue len: %d)", g_list_length(fsa_message_queue));
+    crm_trace("Exited  (queue len: %d)",
+              g_list_length(controld_globals.fsa_message_queue));
     return TRUE;
 }

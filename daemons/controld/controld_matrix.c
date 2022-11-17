@@ -1223,23 +1223,28 @@ static const uint64_t fsa_actions[MAXINPUT][MAXSTATE] = {
 
 /*!
  * \internal
- * \brief Get the next FSA state given an input and current state
+ * \brief Get the next FSA state given an input and the current state
+ *
+ * \param[in] input  FSA input
+ *
  * \return The next FSA state
  */
 enum crmd_fsa_state
-controld_fsa_get_next_state(enum crmd_fsa_input input,
-                            enum crmd_fsa_state state)
+controld_fsa_get_next_state(enum crmd_fsa_input input)
 {
-    return fsa_next_states[input][state];
+    return fsa_next_states[input][controld_globals.fsa_state];
 }
 
 /*!
  * \internal
- * \brief Get the appropriate FSA action given an input and state
+ * \brief Get the appropriate FSA action given an input and the current state
+ *
+ * \param[in] input  FSA input
+ *
  * \return The appropriate FSA action
  */
 uint64_t
-controld_fsa_get_action(enum crmd_fsa_input input, enum crmd_fsa_state state)
+controld_fsa_get_action(enum crmd_fsa_input input)
 {
-    return fsa_actions[input][state];
+    return fsa_actions[input][controld_globals.fsa_state];
 }
