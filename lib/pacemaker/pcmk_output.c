@@ -364,18 +364,18 @@ rsc_is_colocated_with_list(pcmk__output_t *out, va_list args) {
 
     int rc = pcmk_rc_no_output;
 
-    if (pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_detect_loop)) {
         return rc;
     }
 
-    pe__set_resource_flags(rsc, pe_rsc_allocating);
+    pe__set_resource_flags(rsc, pe_rsc_detect_loop);
     for (GList *lpc = rsc->rsc_cons; lpc != NULL; lpc = lpc->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
         char *hdr = NULL;
 
         PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Resources %s is colocated with", rsc->id);
 
-        if (pcmk_is_set(cons->primary->flags, pe_rsc_allocating)) {
+        if (pcmk_is_set(cons->primary->flags, pe_rsc_detect_loop)) {
             out->list_item(out, NULL, "%s (id=%s - loop)",
                            cons->primary->id, cons->id);
             continue;
@@ -409,15 +409,15 @@ rsc_is_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
 
     int rc = pcmk_rc_no_output;
 
-    if (pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_detect_loop)) {
         return rc;
     }
 
-    pe__set_resource_flags(rsc, pe_rsc_allocating);
+    pe__set_resource_flags(rsc, pe_rsc_detect_loop);
     for (GList *lpc = rsc->rsc_cons; lpc != NULL; lpc = lpc->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
 
-        if (pcmk_is_set(cons->primary->flags, pe_rsc_allocating)) {
+        if (pcmk_is_set(cons->primary->flags, pe_rsc_detect_loop)) {
             colocations_xml_node(out, cons->primary, cons);
             continue;
         }
@@ -442,18 +442,18 @@ rscs_colocated_with_list(pcmk__output_t *out, va_list args) {
 
     int rc = pcmk_rc_no_output;
 
-    if (pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_detect_loop)) {
         return rc;
     }
 
-    pe__set_resource_flags(rsc, pe_rsc_allocating);
+    pe__set_resource_flags(rsc, pe_rsc_detect_loop);
     for (GList *lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
         char *hdr = NULL;
 
         PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Resources colocated with %s", rsc->id);
 
-        if (pcmk_is_set(cons->dependent->flags, pe_rsc_allocating)) {
+        if (pcmk_is_set(cons->dependent->flags, pe_rsc_detect_loop)) {
             out->list_item(out, NULL, "%s (id=%s - loop)",
                            cons->dependent->id, cons->id);
             continue;
@@ -487,15 +487,15 @@ rscs_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
 
     int rc = pcmk_rc_no_output;
 
-    if (pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_detect_loop)) {
         return rc;
     }
 
-    pe__set_resource_flags(rsc, pe_rsc_allocating);
+    pe__set_resource_flags(rsc, pe_rsc_detect_loop);
     for (GList *lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
 
-        if (pcmk_is_set(cons->dependent->flags, pe_rsc_allocating)) {
+        if (pcmk_is_set(cons->dependent->flags, pe_rsc_detect_loop)) {
             colocations_xml_node(out, cons->dependent, cons);
             continue;
         }
@@ -567,10 +567,10 @@ locations_and_colocations(pcmk__output_t *out, va_list args)
 
     out->message(out, "locations-list", rsc);
 
-    pe__clear_resource_flags_on_all(data_set, pe_rsc_allocating);
+    pe__clear_resource_flags_on_all(data_set, pe_rsc_detect_loop);
     out->message(out, "rscs-colocated-with-list", rsc, recursive);
 
-    pe__clear_resource_flags_on_all(data_set, pe_rsc_allocating);
+    pe__clear_resource_flags_on_all(data_set, pe_rsc_detect_loop);
     out->message(out, "rsc-is-colocated-with-list", rsc, recursive);
     return pcmk_rc_ok;
 }
@@ -595,10 +595,10 @@ locations_and_colocations_xml(pcmk__output_t *out, va_list args)
     pcmk__output_xml_create_parent(out, "constraints", NULL);
     do_locations_list_xml(out, rsc, false);
 
-    pe__clear_resource_flags_on_all(data_set, pe_rsc_allocating);
+    pe__clear_resource_flags_on_all(data_set, pe_rsc_detect_loop);
     out->message(out, "rscs-colocated-with-list", rsc, recursive);
 
-    pe__clear_resource_flags_on_all(data_set, pe_rsc_allocating);
+    pe__clear_resource_flags_on_all(data_set, pe_rsc_detect_loop);
     out->message(out, "rsc-is-colocated-with-list", rsc, recursive);
 
     pcmk__output_xml_pop_parent(out);
