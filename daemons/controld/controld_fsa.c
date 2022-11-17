@@ -224,8 +224,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
         fsa_dump_actions(fsa_data->actions, "Restored actions");
 
         /* get the next batch of actions */
-        new_actions = controld_fsa_get_action(fsa_data->fsa_input,
-                                              globals->fsa_state);
+        new_actions = controld_fsa_get_action(fsa_data->fsa_input);
         controld_set_fsa_action_flags(new_actions);
         fsa_dump_actions(new_actions, "New actions");
 
@@ -249,8 +248,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 
         /* update state variables */
         last_state = globals->fsa_state;
-        globals->fsa_state = controld_fsa_get_next_state(fsa_data->fsa_input,
-                                                         globals->fsa_state);
+        globals->fsa_state = controld_fsa_get_next_state(fsa_data->fsa_input);
 
         /*
          * Remove certain actions during shutdown

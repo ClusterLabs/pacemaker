@@ -503,11 +503,9 @@ const char *fsa_action2string(long long action);
 
 enum crmd_fsa_state s_crmd_fsa(enum crmd_fsa_cause cause);
 
-enum crmd_fsa_state controld_fsa_get_next_state(enum crmd_fsa_input input,
-                                                enum crmd_fsa_state state);
+enum crmd_fsa_state controld_fsa_get_next_state(enum crmd_fsa_input input);
 
-uint64_t controld_fsa_get_action(enum crmd_fsa_input input,
-                                 enum crmd_fsa_state state);
+uint64_t controld_fsa_get_action(enum crmd_fsa_input input);
 
 void controld_init_fsa_trigger(void);
 void controld_destroy_fsa_trigger(void);
