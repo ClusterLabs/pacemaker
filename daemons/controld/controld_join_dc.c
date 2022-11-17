@@ -668,7 +668,10 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
             return;
     }
 
-    crm_trace("Updating node state for %s", join_to);
+    /* Update the <node> element with the node's name and UUID, in case they
+     * weren't known before
+     */
+    crm_trace("Updating node name and UUID in CIB for %s", join_to);
     tmp1 = create_xml_node(NULL, XML_CIB_TAG_NODE);
     set_uuid(tmp1, XML_ATTR_UUID, join_node);
     crm_xml_add(tmp1, XML_ATTR_UNAME, join_to);
