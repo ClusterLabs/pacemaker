@@ -423,7 +423,7 @@ pcmk__filter_op_for_digest(xmlNode *param_set)
 }
 
 int
-rsc_op_expected_rc(lrmd_event_data_t * op)
+rsc_op_expected_rc(const lrmd_event_data_t *op)
 {
     int rc = 0;
 
