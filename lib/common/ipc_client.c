@@ -488,6 +488,7 @@ connect_without_main_loop(pcmk_ipc_api_t *api)
 int
 pcmk_connect_ipc(pcmk_ipc_api_t *api, enum pcmk_ipc_dispatch dispatch_type)
 {
+    const int n_attempts = 2;
     int rc = pcmk_rc_ok;
 
     if (api == NULL) {
@@ -510,16 +511,32 @@ pcmk_connect_ipc(pcmk_ipc_api_t *api, enum pcmk_ipc_dispatch dispatch_type)
     }
 
     api->dispatch_type = dispatch_type;
-    switch (dispatch_type) {
-        case pcmk_ipc_dispatch_main:
-            rc = connect_with_main_loop(api);
-            break;
 
-        case pcmk_ipc_dispatch_sync:
-        case pcmk_ipc_dispatch_poll:
-            rc = connect_without_main_loop(api);
+    for (int i = 0; i < n_attempts; i++) {
+        switch (dispatch_type) {
+            case pcmk_ipc_dispatch_main:
+                rc = connect_with_main_loop(api);
+                break;
+
+            case pcmk_ipc_dispatch_sync:
+            case pcmk_ipc_dispatch_poll:
+                rc = connect_without_main_loop(api);
+                break;
+        }
+
+        if (rc != EAGAIN) {
             break;
+        }
+
+        /* EAGAIN may occur due to interruption by a signal or due to some
+         * transient issue. Try one more time to be more resilient.
+         */
+        if (i < (n_attempts - 1)) {
+            crm_trace("Connection to %s IPC API failed with EAGAIN, retrying",
+                      pcmk_ipc_name(api, true));
+        }
     }
+
     if (rc != pcmk_rc_ok) {
         return rc;
     }
