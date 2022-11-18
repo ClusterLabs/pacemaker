@@ -180,7 +180,7 @@ lrmd_key_value_freeall(lrmd_key_value_t * head)
 }
 
 /*!
- * Create a new lrmd_event_data_t object
+ * \brief Create a new lrmd_event_data_t object
  *
  * \param[in] rsc_id       ID of resource involved in event
  * \param[in] task         Action name
@@ -237,7 +237,7 @@ lrmd_copy_event(lrmd_event_data_t * event)
 /*!
  * \brief Free an executor event
  *
- * \param[in]  Executor event object to free
+ * \param[in,out]  Executor event object to free
  */
 void
 lrmd_free_event(lrmd_event_data_t *event)
@@ -365,7 +365,7 @@ remote_executor_connected(lrmd_t * lrmd)
  * \internal
  * \brief TLS dispatch function (for both trigger and file descriptor sources)
  *
- * \param[in] userdata  API connection
+ * \param[in,out] userdata  API connection
  *
  * \return Always return a nonnegative value, which as a file descriptor
  *         dispatch function means keep the mainloop source, and as a
@@ -829,17 +829,17 @@ lrmd_api_is_connected(lrmd_t * lrmd)
  * \internal
  * \brief Send a prepared API command to the executor
  *
- * \param[in]  lrmd          Existing connection to the executor
- * \param[in]  op            Name of API command to send
- * \param[in]  data          Command data XML to add to the sent command
- * \param[out] output_data   If expecting a reply, it will be stored here
- * \param[in]  timeout       Timeout in milliseconds (if 0, defaults to
- *                           a sensible value per the type of connection,
- *                           standard vs. pacemaker remote);
- *                           also propagated to the command XML
- * \param[in]  call_options  Call options to pass to server when sending
- * \param[in]  expect_reply  If TRUE, wait for a reply from the server;
- *                           must be TRUE for IPC (as opposed to TLS) clients
+ * \param[in,out] lrmd          Existing connection to the executor
+ * \param[in]     op            Name of API command to send
+ * \param[in]     data          Command data XML to add to the sent command
+ * \param[out]    output_data   If expecting a reply, it will be stored here
+ * \param[in]     timeout       Timeout in milliseconds (if 0, defaults to
+ *                              a sensible value per the type of connection,
+ *                              standard vs. pacemaker remote);
+ *                              also propagated to the command XML
+ * \param[in]     call_options  Call options to pass to server when sending
+ * \param[in]     expect_reply  If TRUE, wait for a reply from the server;
+ *                              must be TRUE for IPC (as opposed to TLS) clients
  *
  * \return pcmk_ok on success, -errno on error
  */
@@ -1340,8 +1340,8 @@ lrmd__tls_client_handshake(pcmk__remote_t *remote)
  * \internal
  * \brief Add trigger and file descriptor mainloop sources for TLS
  *
- * \param[in] lrmd          API connection with established TLS session
- * \param[in] do_handshake  Whether to perform executor handshake
+ * \param[in,out] lrmd          API connection with established TLS session
+ * \param[in]     do_handshake  Whether to perform executor handshake
  *
  * \return Standard Pacemaker return code
  */
@@ -2353,7 +2353,7 @@ struct metadata_cb {
  * \internal
  * \brief Process asynchronous metadata completion
  *
- * \param[in] action  Metadata action that completed
+ * \param[in,out] action  Metadata action that completed
  */
 static void
 metadata_complete(svc_action_t *action)
@@ -2376,12 +2376,12 @@ metadata_complete(svc_action_t *action)
  * \internal
  * \brief Retrieve agent metadata asynchronously
  *
- * \param[in] rsc        Resource agent specification
- * \param[in] callback   Function to call with result (this will always be
- *                       called, whether by this function directly or later via
- *                       the main loop, and on success the metadata will be in
- *                       its result argument's action_stdout)
- * \param[in] user_data  User data to pass to callback
+ * \param[in]     rsc        Resource agent specification
+ * \param[in]     callback   Function to call with result (this will always be
+ *                           called, whether by this function directly or later
+ *                           via the main loop, and on success the metadata will
+ *                           be in its result argument's action_stdout)
+ * \param[in,out] user_data  User data to pass to callback
  *
  * \return Standard Pacemaker return code
  * \note This function is not a lrmd_api_operations_t method because it does not
@@ -2389,7 +2389,7 @@ metadata_complete(svc_action_t *action)
  *       executes the agent directly.
  */
 int
-lrmd__metadata_async(lrmd_rsc_info_t *rsc,
+lrmd__metadata_async(const lrmd_rsc_info_t *rsc,
                      void (*callback)(int pid,
                                       const pcmk__action_result_t *result,
                                       void *user_data),
@@ -2485,7 +2485,7 @@ lrmd__set_result(lrmd_event_data_t *event, enum ocf_exitcode rc, int op_status,
  * \internal
  * \brief Clear an executor event's exit reason, output, and error output
  *
- * \param[in] event  Executor event to reset
+ * \param[in,out] event  Executor event to reset
  */
 void
 lrmd__reset_result(lrmd_event_data_t *event)
