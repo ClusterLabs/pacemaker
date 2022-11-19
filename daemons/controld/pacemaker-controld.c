@@ -22,6 +22,7 @@
 #include <crm/crm.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/ipc.h>
+#include <crm/common/output_internal.h>
 #include <crm/common/xml.h>
 
 #include <pacemaker-controld.h>
@@ -38,42 +39,60 @@ controld_globals_t controld_globals = {
     .fsa_actions = A_NOTHING,
 };
 
+static pcmk__supported_format_t formats[] = {
+    PCMK__SUPPORTED_FORMAT_NONE,
+    PCMK__SUPPORTED_FORMAT_TEXT,
+    PCMK__SUPPORTED_FORMAT_XML,
+    { NULL, NULL, NULL }
+};
+
 static GOptionContext *
-build_arg_context(pcmk__common_args_t *args)
+build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
 {
-    return pcmk__build_arg_context(args, NULL, NULL, "[metadata]");
+    return pcmk__build_arg_context(args, "text (default), xml", group,
+                                   "[metadata]");
 }
 
 int
 main(int argc, char **argv)
 {
+    int rc = pcmk_rc_ok;
     crm_exit_t exit_code = CRM_EX_OK;
     bool initialize = true;
 
     crm_ipc_t *old_instance = NULL;
 
+    pcmk__output_t *out = NULL;
+
     GError *error = NULL;
 
+    GOptionGroup *output_group = NULL;
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
     gchar **processed_args = pcmk__cmdline_preproc(argv, NULL);
-    GOptionContext *context = build_arg_context(args);
+    GOptionContext *context = build_arg_context(args, &output_group);
 
     controld_globals.mainloop = g_main_loop_new(NULL, FALSE);
     crm_log_preinit(NULL, argc, argv);
 
+    pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
         goto done;
     }
 
-    if (args->version) {
-        g_strfreev(processed_args);
-        pcmk__free_arg_context(context);
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    if (rc != pcmk_rc_ok) {
+        exit_code = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Error creating output format %s: %s",
+                    args->output_ty, pcmk_rc_str(rc));
+        goto done;
+    }
 
-        /* FIXME: When pacemaker-attrd is converted to use formatted output,
-         * this can go.
-         */
-        pcmk__cli_help('v', CRM_EX_OK);
+    if (args->version) {
+        out->version(out, false);
+        initialize = false;
+        goto done;
     }
 
     if ((g_strv_length(processed_args) >= 2)
@@ -109,19 +128,19 @@ main(int argc, char **argv)
     }
 
     if (pcmk__daemon_can_write(PE_STATE_DIR, NULL) == FALSE) {
-        crm_err("Terminating due to bad permissions on " PE_STATE_DIR);
-        fprintf(stderr,
-                "ERROR: Bad permissions on " PE_STATE_DIR " (see logs for details)\n");
-        fflush(stderr);
         exit_code = CRM_EX_FATAL;
+        crm_err("Terminating due to bad permissions on " PE_STATE_DIR);
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Bad permissions on " PE_STATE_DIR
+                    " (see logs for details)");
         goto done;
 
     } else if (pcmk__daemon_can_write(CRM_CONFIG_DIR, NULL) == FALSE) {
-        crm_err("Terminating due to bad permissions on " CRM_CONFIG_DIR);
-        fprintf(stderr,
-                "ERROR: Bad permissions on " CRM_CONFIG_DIR " (see logs for details)\n");
-        fflush(stderr);
         exit_code = CRM_EX_FATAL;
+        crm_err("Terminating due to bad permissions on " CRM_CONFIG_DIR);
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Bad permissions on " CRM_CONFIG_DIR
+                    " (see logs for details)");
         goto done;
     }
 
@@ -136,7 +155,12 @@ done:
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
 
-    pcmk__output_and_clear_error(error, NULL);
+    pcmk__output_and_clear_error(error, out);
+
+    if (out != NULL) {
+        out->finish(out, exit_code, true, NULL);
+        pcmk__output_free(out);
+    }
 
     if ((exit_code == CRM_EX_OK) && initialize) {
         // Does not return
