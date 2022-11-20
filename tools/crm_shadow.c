@@ -285,16 +285,11 @@ main(int argc, char **argv)
             case 'w':
             case 'F':
                 command = flag;
-                free(shadow);
-                shadow = NULL;
-                {
-                    const char *env = getenv("CIB_shadow");
-                    if(env) {
-                        shadow = strdup(env);
-                    } else {
-                        fprintf(stderr, "No active shadow configuration defined\n");
-                        crm_exit(CRM_EX_NOSUCH);
-                    }
+                pcmk__str_update(&shadow, getenv("CIB_shadow"));
+                if (shadow == NULL) {
+                    fprintf(stderr, "No active shadow configuration defined\n");
+                    exit_code = CRM_EX_NOSUCH;
+                    goto done;
                 }
                 break;
             case 'v':
@@ -320,7 +315,7 @@ main(int argc, char **argv)
             case '$':
             case '?':
                 pcmk__cli_help(flag, CRM_EX_OK);
-                break;
+                goto done;
             case 'f':
                 cib__set_call_options(command_options, crm_system_name,
                                       cib_quorum_override);
@@ -348,30 +343,20 @@ main(int argc, char **argv)
         ++argerr;
     }
 
-    if (argerr) {
+    // '?' here means no command was set and "-?" was not passed explicitly
+    if ((argerr > 0) || (command == '?')) {
         pcmk__cli_help('?', CRM_EX_USAGE);
     }
 
-    if (command == 'w') {
-        /* which shadow instance is active? */
-        const char *local = getenv("CIB_shadow");
+    // If we reach this point, shadow is non-NULL
 
-        if (local == NULL) {
-            fprintf(stderr, "No shadow instance provided\n");
-            exit_code = CRM_EX_NOSUCH;
-        } else {
-            fprintf(stdout, "%s\n", local);
-        }
+    if (command == 'w') {
+        // Which shadow instance is active?
+        fprintf(stdout, "%s\n", shadow);
         goto done;
     }
 
-    if (shadow == NULL) {
-        fprintf(stderr, "No shadow instance provided\n");
-        fflush(stderr);
-        exit_code = CRM_EX_NOSUCH;
-        goto done;
-
-    } else if (command != 's' && command != 'c') {
+    if ((command != 's') && (command != 'c')) {
         const char *local = getenv("CIB_shadow");
 
         if (local != NULL && !pcmk__str_eq(local, shadow, pcmk__str_casei) && force_flag == FALSE) {
