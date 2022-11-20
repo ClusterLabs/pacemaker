@@ -16,18 +16,36 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/services.h>
-#include <crm/common/mainloop.h>
+#include <crm/common/cmdline_internal.h>
 #include <crm/common/ipc.h>
 #include <crm/common/ipc_internal.h>
+#include <crm/common/mainloop.h>
 #include <crm/common/remote_internal.h>
 #include <crm/lrmd_internal.h>
 
 #include "pacemaker-execd.h"
 
+#ifdef PCMK__COMPILE_REMOTE
+#  define EXECD_TYPE "remote"
+#  define EXECD_NAME "pacemaker-remoted"
+#  define SUMMARY "resource agent executor daemon for Pacemaker Remote nodes"
+#else
+#  define EXECD_TYPE "local"
+#  define EXECD_NAME "pacemaker-execd"
+#  define SUMMARY "resource agent executor daemon for Pacemaker cluster nodes"
+#endif
+
 static GMainLoop *mainloop = NULL;
 static qb_ipcs_service_t *ipcs = NULL;
 static stonith_t *stonith_api = NULL;
 int lrmd_call_id = 0;
+
+static struct {
+    gchar **log_files;
+#ifdef PCMK__COMPILE_REMOTE
+    gchar *port;
+#endif  // PCMK__COMPILE_REMOTE
+} options;
 
 #ifdef PCMK__COMPILE_REMOTE
 /* whether shutdown request has been sent */
@@ -397,50 +415,44 @@ handle_shutdown_nack(void)
     crm_debug("Ignoring unexpected shutdown nack");
 }
 
-static pcmk__cli_option_t long_options[] = {
-    // long option, argument type, storage, short option, description, flags
-    {
-        "help", no_argument, NULL, '?',
-        "\tThis text", pcmk__option_default
-    },
-    {
-        "version", no_argument, NULL, '$',
-        "\tVersion information", pcmk__option_default
-    },
-    {
-        "verbose", no_argument, NULL, 'V',
-        "\tIncrease debug output", pcmk__option_default
-    },
-    {
-        "logfile", required_argument, NULL, 'l',
-        "\tSend logs to the additional named logfile", pcmk__option_default
-    },
-#ifdef PCMK__COMPILE_REMOTE
-    {
-        "port", required_argument, NULL, 'p',
-        "\tPort to listen on", pcmk__option_default
-    },
-#endif
-    { 0, 0, 0, 0 }
-};
+static GOptionEntry entries[] = {
+    { "logfile", 'l', G_OPTION_FLAG_NONE, G_OPTION_ARG_FILENAME_ARRAY,
+      &options.log_files, "Send logs to the additional named logfile", NULL },
 
 #ifdef PCMK__COMPILE_REMOTE
-#  define EXECD_TYPE "remote"
-#  define EXECD_NAME "pacemaker-remoted"
-#  define EXECD_DESC "resource agent executor daemon for Pacemaker Remote nodes"
-#else
-#  define EXECD_TYPE "local"
-#  define EXECD_NAME "pacemaker-execd"
-#  define EXECD_DESC "resource agent executor daemon for Pacemaker cluster nodes"
-#endif
+    { "port", 'p', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.port,
+      "Port to listen on", NULL },
+#endif  // PCMK__COMPILE_REMOTE
+
+    { NULL }
+};
+
+static GOptionContext *
+build_arg_context(pcmk__common_args_t *args)
+{
+    GOptionContext *context = pcmk__build_arg_context(args, NULL, NULL, NULL);
+
+    pcmk__add_main_args(context, entries);
+    return context;
+}
 
 int
 main(int argc, char **argv, char **envp)
 {
-    int flag = 0;
-    int index = 0;
-    int bump_log_num = 0;
+    int rc = pcmk_rc_ok;
+    crm_exit_t exit_code = CRM_EX_OK;
+
     const char *option = NULL;
+
+    GError *error = NULL;
+
+    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
+#ifdef PCMK__COMPILE_REMOTE
+    gchar **processed_args = pcmk__cmdline_preproc(argv, "lp");
+#else
+    gchar **processed_args = pcmk__cmdline_preproc(argv, "l");
+#endif  // PCMK__COMPILE_REMOTE
+    GOptionContext *context = build_arg_context(args);
 
 #ifdef PCMK__COMPILE_REMOTE
     // If necessary, create PID 1 now before any file descriptors are opened
@@ -448,50 +460,35 @@ main(int argc, char **argv, char **envp)
 #endif
 
     crm_log_preinit(EXECD_NAME, argc, argv);
-    pcmk__set_cli_options(NULL, "[options]", long_options, EXECD_DESC);
+    if (!g_option_context_parse_strv(context, &processed_args, &error)) {
+        exit_code = CRM_EX_USAGE;
+        goto done;
+    }
 
-    while (1) {
-        flag = pcmk__next_cli_option(argc, argv, &index, NULL);
-        if (flag == -1) {
-            break;
-        }
+    if (args->version) {
+        g_strfreev(processed_args);
+        pcmk__free_arg_context(context);
 
-        switch (flag) {
-            case 'l':
-                {
-                    int rc = pcmk__add_logfile(optarg);
+        /* FIXME: When pacemaker-execd is converted to use formatted output,
+         * this can go.
+         */
+        pcmk__cli_help('v', CRM_EX_OK);
+    }
 
-                    if (rc != pcmk_rc_ok) {
-                        /* Logging has not yet been initialized, so stderr is
-                         * the only way to get information out
-                         */
-                        fprintf(stderr, "Logging to %s is disabled: %s\n",
-                                optarg, pcmk_rc_str(rc));
-                    }
-                }
-                break;
-            case 'p':
-                setenv("PCMK_remote_port", optarg, 1);
-                break;
-            case 'V':
-                bump_log_num++;
-                break;
-            case '?':
-            case '$':
-                pcmk__cli_help(flag, CRM_EX_OK);
-                break;
-            default:
-                pcmk__cli_help('?', CRM_EX_USAGE);
-                break;
+    // Open additional log files
+    if (options.log_files != NULL) {
+        for (gchar **fname = options.log_files; *fname != NULL; fname++) {
+            rc = pcmk__add_logfile(*fname);
+
+            if (rc != pcmk_rc_ok) {
+                fprintf(stderr, "Logging to %s is disabled: %s\n",
+                        *fname, pcmk_rc_str(rc));
+            }
         }
     }
 
+    pcmk__cli_init_logging(EXECD_NAME, args->verbosity);
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
-
-    while (bump_log_num > 0) {
-        crm_bump_log_level(argc, argv);
-        bump_log_num--;
-    }
 
     option = pcmk__env_option(PCMK__ENV_LOGFACILITY);
     if (!pcmk__str_eq(option, PCMK__VALUE_NONE,
@@ -509,6 +506,12 @@ main(int argc, char **argv, char **envp)
             setenv("HA_DEBUGLOG", option, 1); /* Used by the ocf_log/ha_debug OCF macro */
         }
     }
+
+#ifdef PCMK__COMPILE_REMOTE
+    if (options.port != NULL) {
+        setenv("PCMK_remote_port", options.port, 1);
+    }
+#endif  // PCMK__COMPILE_REMOTE
 
     crm_notice("Starting Pacemaker " EXECD_TYPE " executor");
 
@@ -532,13 +535,15 @@ main(int argc, char **argv, char **envp)
     ipcs = mainloop_add_ipc_server(CRM_SYSTEM_LRMD, QB_IPC_SHM, &lrmd_ipc_callbacks);
     if (ipcs == NULL) {
         crm_err("Failed to create IPC server: shutting down and inhibiting respawn");
-        crm_exit(CRM_EX_FATAL);
+        exit_code = CRM_EX_FATAL;
+        goto done;
     }
 
 #ifdef PCMK__COMPILE_REMOTE
     if (lrmd_init_remote_tls_server() < 0) {
         crm_err("Failed to create TLS listener: shutting down and staying down");
-        crm_exit(CRM_EX_FATAL);
+        exit_code = CRM_EX_FATAL;
+        goto done;
     }
     ipc_proxy_init();
 #endif
@@ -551,5 +556,16 @@ main(int argc, char **argv, char **envp)
 
     /* should never get here */
     lrmd_exit(NULL);
-    return CRM_EX_OK;
+
+done:
+    g_strfreev(options.log_files);
+#ifdef PCMK__COMPILE_REMOTE
+    g_free(options.port);
+#endif  // PCMK__COMPILE_REMOTE
+
+    g_strfreev(processed_args);
+    pcmk__free_arg_context(context);
+
+    pcmk__output_and_clear_error(error, NULL);
+    crm_exit(exit_code);
 }
