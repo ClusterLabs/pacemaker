@@ -32,6 +32,7 @@ EXTRA_DIST		= attrd_updater.8.inc \
 			  crm_node.8.inc \
 			  crm_resource.8.inc \
 			  crm_rule.8.inc \
+			  crm_shadow.8.inc \
 			  crm_simulate.8.inc \
 			  crm_ticket.8.inc \
 			  crm_verify.8.inc \

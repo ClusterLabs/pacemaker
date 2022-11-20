@@ -21,17 +21,69 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <crm/msg_xml.h>
-#include <crm/common/xml.h>
 
+#include <crm/common/cmdline_internal.h>
 #include <crm/common/ipc.h>
+#include <crm/common/xml.h>
 
 #include <crm/cib.h>
 #include <crm/cib/internal.h>
 
-static int command_options = cib_sync_call;
+#define SUMMARY "perform Pacemaker configuration changes in a sandbox\n\n"  \
+                "This command sets up an environment in which "             \
+                "configuration tools (cibadmin,\n"                          \
+                "crm_resource, etc.) work offline instead of against a "    \
+                "live cluster, allowing\n"                                  \
+                "changes to be previewed and tested for side effects."
+
+#define INDENT "                              "
+
+enum shadow_command {
+    shadow_cmd_none = 0,
+    shadow_cmd_which,
+    shadow_cmd_display,
+    shadow_cmd_diff,
+    shadow_cmd_file,
+    shadow_cmd_create,
+    shadow_cmd_create_empty,
+    shadow_cmd_commit,
+    shadow_cmd_delete,
+    shadow_cmd_edit,
+    shadow_cmd_reset,
+    shadow_cmd_switch,
+};
+
+static crm_exit_t exit_code = CRM_EX_OK;
+
 static cib_t *real_cib = NULL;
-static int force_flag = 0;
-static int batch_flag = 0;
+
+static struct {
+    enum shadow_command cmd;
+    int cmd_options;
+    char *shadow;
+    gboolean force;
+    gboolean batch;
+    gboolean full_upload;
+    gchar *validate_with;
+} options = {
+    .cmd_options = cib_sync_call,
+};
+
+#if 0
+// @COMPAT Possibly enable this at next backward compatibility break
+#define SET_COMMAND(command) do {                                       \
+        if (options.cmd != shadow_cmd_none) {                           \
+            g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_USAGE,         \
+                        "Only one command option may be specified");    \
+            return FALSE;                                               \
+        }                                                               \
+        options.cmd = (command);                                        \
+    } while (0)
+#else
+#define SET_COMMAND(command) do {   \
+        options.cmd = (command);    \
+    } while (0)
+#endif
 
 static char *
 get_shadow_prompt(const char *name)
@@ -52,7 +104,7 @@ shadow_setup(char *name, gboolean do_switch)
         /* nothing to do */
         goto done;
 
-    } else if (batch_flag == FALSE && shell != NULL) {
+    } else if (!options.batch && (shell != NULL)) {
         setenv("PS1", new_prompt, 1);
         setenv("CIB_shadow", name, 1);
         printf("Type Ctrl-D to exit the crm_shadow shell\n");
@@ -93,453 +145,526 @@ shadow_teardown(char *name)
     free(our_prompt);
 }
 
-static pcmk__cli_option_t long_options[] = {
-    // long option, argument type, storage, short option, description, flags
-    {
-        "help", no_argument, NULL, '?',
-        "\t\tThis text", pcmk__option_default
-    },
-    {
-        "version", no_argument, NULL, '$',
-        "\t\tVersion information", pcmk__option_default
-    },
-    {
-        "verbose", no_argument, NULL, 'V',
-        "\t\tIncrease debug output", pcmk__option_default
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\nQueries:", pcmk__option_default
-    },
-    {
-        "which", no_argument, NULL, 'w',
-        "\t\tIndicate the active shadow copy", pcmk__option_default
-    },
-    {
-        "display", no_argument, NULL, 'p',
-        "\t\tDisplay the contents of the active shadow copy",
-        pcmk__option_default
-    },
-    {
-        "edit", no_argument, NULL, 'E',
-        "\t\tEdit the contents of the active shadow copy with your "
-            "favorite $EDITOR",
-        pcmk__option_default
-    },
-    {
-        "diff", no_argument, NULL, 'd',
-        "\t\tDisplay the changes in the active shadow copy\n",
-        pcmk__option_default
-    },
-    {
-        "file", no_argument, NULL, 'F',
-        "\t\tDisplay the location of the active shadow copy file\n",
-        pcmk__option_default
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\nCommands:", pcmk__option_default
-    },
-    {
-        "create", required_argument, NULL, 'c',
-        "\tCreate the named shadow copy of the active cluster configuration",
-        pcmk__option_default
-    },
-    {
-        "create-empty", required_argument, NULL, 'e',
-        "Create the named shadow copy with an empty cluster configuration. "
-            "Optional: --validate-with",
-        pcmk__option_default
-    },
-    {
-        "commit", required_argument, NULL, 'C',
-        "\tUpload the contents of the named shadow copy to the cluster",
-        pcmk__option_default
-    },
-    {
-        "delete", required_argument, NULL, 'D',
-        "\tDelete the contents of the named shadow copy", pcmk__option_default
-    },
-    {
-        "reset", required_argument, NULL, 'r',
-        "\tRecreate named shadow copy from the active cluster configuration",
-        pcmk__option_default
-    },
-    {
-        "switch", required_argument, NULL, 's',
-        "\t(Advanced) Switch to the named shadow copy", pcmk__option_default
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\nAdditional Options:", pcmk__option_default
-    },
-    {
-        "force", no_argument, NULL, 'f',
-        "\t\t(Advanced) Force the action to be performed", pcmk__option_default
-    },
-    {
-        "batch", no_argument, NULL, 'b',
-        "\t\t(Advanced) Don't spawn a new shell", pcmk__option_default
-    },
-    {
-        "all", no_argument, NULL, 'a',
-        "\t\t(Advanced) Upload entire CIB, including status, with --commit",
-        pcmk__option_default
-    },
-    {
-        "validate-with", required_argument, NULL, 'v',
-        "(Advanced) Create an older configuration version", pcmk__option_default
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\nExamples:", pcmk__option_paragraph
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "Create a blank shadow configuration:", pcmk__option_paragraph
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        " crm_shadow --create-empty myShadow", pcmk__option_example
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "Create a shadow configuration from the running cluster:",
-        pcmk__option_paragraph
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        " crm_shadow --create myShadow", pcmk__option_example
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "Display the current shadow configuration:", pcmk__option_paragraph
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        " crm_shadow --display", pcmk__option_example
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "Discard the current shadow configuration (named myShadow):",
-        pcmk__option_paragraph
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        " crm_shadow --delete myShadow --force", pcmk__option_example
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "Upload current shadow configuration (named myShadow) "
-            "to running cluster:",
-        pcmk__option_paragraph
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        " crm_shadow --commit myShadow", pcmk__option_example
-    },
-    { 0, 0, 0, 0 }
+static bool
+cmd_is_dangerous(enum shadow_command cmd)
+{
+    switch (cmd) {
+        case shadow_cmd_commit:
+        case shadow_cmd_delete:
+            return true;
+        default:
+            return false;
+    }
+}
+
+static gboolean
+command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+           GError **error)
+{
+    if (pcmk__str_any_of(option_name, "-w", "--which", NULL)) {
+        SET_COMMAND(shadow_cmd_which);
+
+    } else if (pcmk__str_any_of(option_name, "-p", "--display", NULL)) {
+        SET_COMMAND(shadow_cmd_display);
+
+    } else if (pcmk__str_any_of(option_name, "-d", "--diff", NULL)) {
+        SET_COMMAND(shadow_cmd_diff);
+
+    } else if (pcmk__str_any_of(option_name, "-F", "--file", NULL)) {
+        SET_COMMAND(shadow_cmd_file);
+
+    } else if (pcmk__str_any_of(option_name, "-c", "--create", NULL)) {
+        SET_COMMAND(shadow_cmd_create);
+
+    } else if (pcmk__str_any_of(option_name, "-e", "--create-empty", NULL)) {
+        SET_COMMAND(shadow_cmd_create_empty);
+
+    } else if (pcmk__str_any_of(option_name, "-C", "--commit", NULL)) {
+        SET_COMMAND(shadow_cmd_commit);
+
+    } else if (pcmk__str_any_of(option_name, "-D", "--delete", NULL)) {
+        SET_COMMAND(shadow_cmd_delete);
+
+    } else if (pcmk__str_any_of(option_name, "-E", "--edit", NULL)) {
+        SET_COMMAND(shadow_cmd_edit);
+
+    } else if (pcmk__str_any_of(option_name, "-r", "--reset", NULL)) {
+        SET_COMMAND(shadow_cmd_reset);
+
+    } else if (pcmk__str_any_of(option_name, "-s", "--switch", NULL)) {
+        SET_COMMAND(shadow_cmd_switch);
+
+    } else {
+        // Should be impossible
+        return FALSE;
+    }
+
+    // optarg may be NULL and that's okay
+    pcmk__str_update(&options.shadow, optarg);
+    return TRUE;
+}
+
+static GOptionEntry query_entries[] = {
+    { "which", 'w', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
+      "Indicate the active shadow copy", NULL },
+
+    { "display", 'p', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
+      "Display the contents of the active shadow copy", NULL },
+
+    { "diff", 'd', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
+      "Display the changes in the active shadow copy", NULL },
+
+    { "file", 'F', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
+      "Display the location of the active shadow copy file", NULL },
+
+    { NULL }
 };
+
+static GOptionEntry command_entries[] = {
+    { "create", 'c', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, command_cb,
+      "Create the named shadow copy of the active cluster configuration",
+      "name" },
+
+    { "create-empty", 'e', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK,
+      command_cb,
+      "Create the named shadow copy with an empty cluster configuration.\n"
+      INDENT "Optional: --validate-with", "name" },
+
+    { "commit", 'C', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, command_cb,
+      "Upload the contents of the named shadow copy to the cluster", "name" },
+
+    { "delete", 'D', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, command_cb,
+      "Delete the contents of the named shadow copy", "name" },
+
+    { "edit", 'E', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
+      "Edit the contents of the active shadow copy with your favorite $EDITOR",
+      NULL },
+
+    { "reset", 'r', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, command_cb,
+      "Recreate named shadow copy from the active cluster configuration",
+      "name" },
+
+    { "switch", 's', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, command_cb,
+      "(Advanced) Switch to the named shadow copy", "name" },
+
+    { NULL }
+};
+
+static GOptionEntry addl_entries[] = {
+    { "force", 'f', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &options.force,
+      "(Advanced) Force the action to be performed", NULL },
+
+    { "batch", 'b', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &options.batch,
+      "(Advanced) Don't spawn a new shell", NULL },
+
+    { "all", 'a', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &options.full_upload,
+      "(Advanced) Upload entire CIB, including status, with --commit", NULL },
+
+    { "validate-with", 'v', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING,
+      &options.validate_with,
+      "(Advanced) Create an older configuration version", NULL },
+
+    { NULL }
+};
+
+static GOptionContext *
+build_arg_context(pcmk__common_args_t *args)
+{
+    const char *desc = NULL;
+    GOptionContext *context = NULL;
+
+    desc = "Examples:\n\n"
+           "Create a blank shadow configuration:\n\n"
+           "\t# crm_shadow --create-empty myShadow\n\n"
+           "Create a shadow configuration from the running cluster\n\n"
+           "\t# crm_shadow --create myShadow\n\n"
+           "Display the current shadow configuration:\n\n"
+           "\t# crm_shadow --display\n\n"
+           "Discard the current shadow configuration (named myShadow):\n\n"
+           "\t# crm_shadow --delete myShadow --force\n\n"
+           "Upload current shadow configuration (named myShadow) to running "
+           "cluster:\n\n"
+           "\t# crm_shadow --commit myShadow\n\n";
+
+    context = pcmk__build_arg_context(args, NULL, NULL, "<query>|<command>");
+    g_option_context_set_description(context, desc);
+
+    pcmk__add_arg_group(context, "queries", "Queries:",
+                        "Show query help", query_entries);
+    pcmk__add_arg_group(context, "commands", "Commands:",
+                        "Show command help", command_entries);
+    pcmk__add_arg_group(context, "additional", "Additional Options:",
+                        "Show additional options", addl_entries);
+    return context;
+}
 
 int
 main(int argc, char **argv)
 {
     int rc = pcmk_ok;
-    int flag;
-    int argerr = 0;
-    crm_exit_t exit_code = CRM_EX_OK;
-    static int command = '?';
-    const char *validation = NULL;
-    char *shadow = NULL;
     char *shadow_file = NULL;
-    gboolean full_upload = FALSE;
-    gboolean dangerous_cmd = FALSE;
+    bool needs_teardown = false;
     struct stat buf;
-    int option_index = 0;
 
-    pcmk__cli_init_logging("crm_shadow", 0);
-    pcmk__set_cli_options(NULL, "<query>|<command> [options]", long_options,
-                          "perform Pacemaker configuration changes in a sandbox"
-                          "\n\nThis command sets up an environment in which "
-                          "configuration tools (cibadmin,\ncrm_resource, "
-                          "etc.) work offline instead of against a live "
-                          "cluster, allowing\nchanges to be previewed and "
-                          "tested for side-effects.\n");
+    GError *error = NULL;
 
-    if (argc < 2) {
-        pcmk__cli_help('?', CRM_EX_USAGE);
-    }
+    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
+    gchar **processed_args = pcmk__cmdline_preproc(argv, "ceCDrsv");
+    GOptionContext *context = build_arg_context(args);
 
-    while (1) {
-        flag = pcmk__next_cli_option(argc, argv, &option_index, NULL);
-        if (flag == -1 || flag == 0)
-            break;
+    crm_log_preinit(NULL, argc, argv);
 
-        switch (flag) {
-            case 'a':
-                full_upload = TRUE;
-                break;
-            case 'd':
-            case 'E':
-            case 'p':
-            case 'w':
-            case 'F':
-                command = flag;
-                pcmk__str_update(&shadow, getenv("CIB_shadow"));
-                if (shadow == NULL) {
-                    fprintf(stderr, "No active shadow configuration defined\n");
-                    exit_code = CRM_EX_NOSUCH;
-                    goto done;
-                }
-                break;
-            case 'v':
-                validation = optarg;
-                break;
-            case 'e':
-            case 'c':
-            case 's':
-            case 'r':
-                command = flag;
-                pcmk__str_update(&shadow, optarg);
-                break;
-            case 'C':
-            case 'D':
-                command = flag;
-                dangerous_cmd = TRUE;
-                pcmk__str_update(&shadow, optarg);
-                break;
-            case 'V':
-                command_options = command_options | cib_verbose;
-                crm_bump_log_level(argc, argv);
-                break;
-            case '$':
-            case '?':
-                pcmk__cli_help(flag, CRM_EX_OK);
-                goto done;
-            case 'f':
-                cib__set_call_options(command_options, crm_system_name,
-                                      cib_quorum_override);
-                force_flag = 1;
-                break;
-            case 'b':
-                batch_flag = 1;
-                break;
-            default:
-                printf("Argument code 0%o (%c)" " is not (?yet?) supported\n", flag, flag);
-                ++argerr;
-                break;
-        }
-    }
-
-    if (optind < argc) {
-        printf("non-option ARGV-elements: ");
-        while (optind < argc)
-            printf("%s ", argv[optind++]);
-        printf("\n");
-        pcmk__cli_help('?', CRM_EX_USAGE);
-    }
-
-    if (optind > argc) {
-        ++argerr;
-    }
-
-    // '?' here means no command was set and "-?" was not passed explicitly
-    if ((argerr > 0) || (command == '?')) {
-        pcmk__cli_help('?', CRM_EX_USAGE);
-    }
-
-    // If we reach this point, shadow is non-NULL
-
-    if (command == 'w') {
-        // Which shadow instance is active?
-        fprintf(stdout, "%s\n", shadow);
-        goto done;
-    }
-
-    if ((command != 's') && (command != 'c')) {
-        const char *local = getenv("CIB_shadow");
-
-        if (local != NULL && !pcmk__str_eq(local, shadow, pcmk__str_casei) && force_flag == FALSE) {
-            fprintf(stderr,
-                    "The supplied shadow instance (%s) is not the same as the active one (%s).\n"
-                    "  To prevent accidental destruction of the cluster,"
-                    " the --force flag is required in order to proceed.\n", shadow, local);
-            fflush(stderr);
-            exit_code = CRM_EX_USAGE;
-            goto done;
-        }
-    }
-
-    if (dangerous_cmd && force_flag == FALSE) {
-        fprintf(stderr, "The supplied command is considered dangerous."
-                "  To prevent accidental destruction of the cluster,"
-                " the --force flag is required in order to proceed.\n");
-        fflush(stderr);
+    if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
         goto done;
     }
 
-    shadow_file = get_shadow_file(shadow);
-    if (command == 'D') {
-        /* delete the file */
+    if (g_strv_length(processed_args) > 1) {
+        gchar *help = g_option_context_get_help(context, TRUE, NULL);
+        GString *extra = g_string_sized_new(128);
+
+        for (int lpc = 1; processed_args[lpc] != NULL; lpc++) {
+            if (extra->len > 0) {
+                g_string_append_c(extra, ' ');
+            }
+            g_string_append(extra, processed_args[lpc]);
+        }
+
+        exit_code = CRM_EX_USAGE;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "non-option ARGV-elements: %s\n\n%s", extra->str, help);
+        g_free(help);
+        g_string_free(extra, TRUE);
+        goto done;
+    }
+
+    if (args->version) {
+        g_strfreev(processed_args);
+        pcmk__free_arg_context(context);
+
+        /* FIXME: When crm_shadow is converted to use formatted output,
+         * this can go.
+         */
+        pcmk__cli_help('v', CRM_EX_OK);
+    }
+
+    if (options.cmd == shadow_cmd_none) {
+        // @COMPAT: Create a default command if other tools have one
+        gchar *help = g_option_context_get_help(context, TRUE, NULL);
+
+        exit_code = CRM_EX_USAGE;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Must specify a query or command option\n\n%s", help);
+        g_free(help);
+        goto done;
+    }
+
+    pcmk__cli_init_logging("crm_shadow", args->verbosity);
+
+    if (args->verbosity > 0) {
+        cib__set_call_options(options.cmd_options, crm_system_name,
+                              cib_verbose);
+    }
+
+    if (options.force) {
+        cib__set_call_options(options.cmd_options, crm_system_name,
+                              cib_quorum_override);
+    }
+
+    // Some commands get options.shadow from the environment
+    switch (options.cmd) {
+        case shadow_cmd_which:
+        case shadow_cmd_display:
+        case shadow_cmd_diff:
+        case shadow_cmd_file:
+        case shadow_cmd_edit:
+            pcmk__str_update(&options.shadow, getenv("CIB_shadow"));
+            if (options.shadow == NULL) {
+                exit_code = CRM_EX_NOSUCH;
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                            "No active shadow configuration defined");
+                goto done;
+            }
+            break;
+        default:
+            // The rest already set options.shadow from their optarg
+            break;
+    }
+
+    if (options.cmd == shadow_cmd_which) {
+        // Show the active shadow instance
+        printf("%s\n", options.shadow);
+        goto done;
+    }
+
+    // Check for shadow instance mismatch
+    if ((options.cmd != shadow_cmd_switch)
+        && (options.cmd != shadow_cmd_create)) {
+
+        const char *local = getenv("CIB_shadow");
+
+        if ((local != NULL)
+            && !pcmk__str_eq(local, options.shadow, pcmk__str_none)
+            && !options.force) {
+            exit_code = CRM_EX_USAGE;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "The supplied shadow instance (%s) is not the same as "
+                        "the active one (%s).\n"
+                        "To prevent accidental destruction of the cluster, the "
+                        "--force flag is required in order to proceed.",
+                        options.shadow, local);
+            goto done;
+        }
+    }
+
+    // Check for dangerous commands
+    if (cmd_is_dangerous(options.cmd) && !options.force) {
+        exit_code = CRM_EX_USAGE;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "The supplied command is considered dangerous.\n"
+                    "To prevent accidental destruction of the cluster, the "
+                    "--force flag is required in order to proceed.");
+        goto done;
+    }
+
+    shadow_file = get_shadow_file(options.shadow);
+
+    if (options.cmd == shadow_cmd_delete) {
+        // Delete the shadow file
         if ((unlink(shadow_file) < 0) && (errno != ENOENT)) {
             exit_code = pcmk_rc2exitc(errno);
-            fprintf(stderr, "Could not remove shadow instance '%s': %s\n",
-                    shadow, strerror(errno));
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Could not remove shadow instance '%s': %s",
+                        options.shadow, strerror(errno));
         }
-        shadow_teardown(shadow);
+        needs_teardown = true;
         goto done;
+    }
 
-    } else if (command == 'F') {
+    if (options.cmd == shadow_cmd_file) {
+        // Show the shadow file path
         printf("%s\n", shadow_file);
         goto done;
     }
 
-    if (command == 'd' || command == 'r' || command == 'c' || command == 'C') {
-        real_cib = cib_new_no_shadow();
-        rc = real_cib->cmds->signon(real_cib, crm_system_name, cib_command);
-        if (rc != pcmk_ok) {
-            rc = pcmk_legacy2rc(rc);
-            fprintf(stderr, "Could not connect to CIB: %s\n", pcmk_rc_str(rc));
-            exit_code = pcmk_rc2exitc(rc);
-            goto done;
-        }
-    }
-
-    // File existence check
-    rc = stat(shadow_file, &buf);
-    if (command == 'e' || command == 'c') {
-        if (rc == 0 && force_flag == FALSE) {
-            fprintf(stderr, "A shadow instance '%s' already exists.\n"
-                    "  To prevent accidental destruction of the cluster,"
-                    " the --force flag is required in order to proceed.\n", shadow);
-            exit_code = CRM_EX_CANTCREAT;
-            goto done;
-        }
-    } else if (rc < 0) {
-        fprintf(stderr, "Could not access shadow instance '%s': %s\n", shadow, strerror(errno));
-        exit_code = CRM_EX_NOSUCH;
-        goto done;
-    }
-
-    if (command == 'c' || command == 'e' || command == 'r') {
-        xmlNode *output = NULL;
-
-        /* create a shadow instance based on the current cluster config */
-        if (command == 'c' || command == 'r') {
-            rc = real_cib->cmds->query(real_cib, NULL, &output, command_options);
+    // Connect to the CIB if necessary
+    switch (options.cmd) {
+        case shadow_cmd_commit:
+        case shadow_cmd_create:
+        case shadow_cmd_diff:
+        case shadow_cmd_reset:
+            real_cib = cib_new_no_shadow();
+            rc = real_cib->cmds->signon(real_cib, crm_system_name, cib_command);
             if (rc != pcmk_ok) {
                 rc = pcmk_legacy2rc(rc);
-                fprintf(stderr, "Could not connect to the CIB manager: %s\n",
-                        pcmk_rc_str(rc));
                 exit_code = pcmk_rc2exitc(rc);
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                            "Could not connect to CIB: %s", pcmk_rc_str(rc));
                 goto done;
             }
-
-        } else {
-            output = createEmptyCib(0);
-            if(validation) {
-                crm_xml_add(output, XML_ATTR_VALIDATION, validation);
-            }
-            printf("Created new %s configuration\n",
-                   crm_element_value(output, XML_ATTR_VALIDATION));
-        }
-
-        rc = write_xml_file(output, shadow_file, FALSE);
-        free_xml(output);
-
-        if (rc < 0) {
-            rc = pcmk_legacy2rc(rc);
-            fprintf(stderr, "Could not %s the shadow instance '%s': %s\n",
-                    command == 'r' ? "reset" : "create",
-                    shadow, pcmk_rc_str(rc));
-            exit_code = pcmk_rc2exitc(rc);
-            goto done;
-        }
-        shadow_setup(shadow, FALSE);
-
-    } else if (command == 'E') {
-        char *editor = getenv("EDITOR");
-
-        if (editor == NULL) {
-            fprintf(stderr, "No value for EDITOR defined\n");
-            exit_code = CRM_EX_NOT_CONFIGURED;
-            goto done;
-        }
-
-        execlp(editor, "--", shadow_file, NULL);
-        fprintf(stderr, "Could not invoke EDITOR (%s %s): %s\n",
-                editor, shadow_file, strerror(errno));
-        exit_code = CRM_EX_OSFILE;
-        goto done;
-
-    } else if (command == 's') {
-        shadow_setup(shadow, TRUE);
-        goto done;
-
-    } else if (command == 'p') {
-        /* display the current contents */
-        char *output_s = NULL;
-        xmlNode *output = filename2xml(shadow_file);
-
-        output_s = dump_xml_formatted(output);
-        printf("%s", output_s);
-
-        free(output_s);
-        free_xml(output);
-
-    } else if (command == 'd') {
-        /* diff against cluster */
-        xmlNode *diff = NULL;
-        xmlNode *old_config = NULL;
-        xmlNode *new_config = filename2xml(shadow_file);
-
-        rc = real_cib->cmds->query(real_cib, NULL, &old_config, command_options);
-
-        if (rc != pcmk_ok) {
-            rc = pcmk_legacy2rc(rc);
-            fprintf(stderr, "Could not query the CIB: %s\n", pcmk_rc_str(rc));
-            exit_code = pcmk_rc2exitc(rc);
-            goto done;
-        }
-
-        xml_track_changes(new_config, NULL, new_config, FALSE);
-        xml_calculate_changes(old_config, new_config);
-
-        diff = xml_create_patchset(0, old_config, new_config, NULL, FALSE);
-
-        xml_log_changes(LOG_INFO, __func__, new_config);
-        xml_accept_changes(new_config);
-
-        if (diff != NULL) {
-            xml_log_patchset(LOG_STDOUT, "  ", diff);
-            exit_code = CRM_EX_ERROR;
-        }
-        goto done;
-
-    } else if (command == 'C') {
-        /* commit to the cluster */
-        xmlNode *input = filename2xml(shadow_file);
-        xmlNode *section_xml = input;
-        const char *section = NULL;
-
-        if (!full_upload) {
-            section = XML_CIB_TAG_CONFIGURATION;
-            section_xml = first_named_child(input, section);
-        }
-        rc = real_cib->cmds->replace(real_cib, section, section_xml,
-                                     command_options);
-        if (rc != pcmk_ok) {
-            rc = pcmk_legacy2rc(rc);
-            fprintf(stderr, "Could not commit shadow instance '%s' to the CIB: %s\n",
-                    shadow, pcmk_rc_str(rc));
-            exit_code = pcmk_rc2exitc(rc);
-        }
-        shadow_teardown(shadow);
-        free_xml(input);
+            break;
+        default:
+            break;
     }
-  done:
+
+    // Check existence of the shadow file
+    rc = stat(shadow_file, &buf);
+    switch (options.cmd) {
+        case shadow_cmd_create:
+        case shadow_cmd_create_empty:
+            if ((rc == 0) && !options.force) {
+                exit_code = CRM_EX_CANTCREAT;
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                            "A shadow instance '%s' already exists.\n"
+                            "To prevent accidental destruction of the cluster, "
+                            "the --force flag is required in order to proceed.",
+                            options.shadow);
+                goto done;
+            }
+            break;
+        default:
+            if (rc < 0) {
+                exit_code = CRM_EX_NOSUCH;
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                            "Could not access shadow instance '%s': %s",
+                            options.shadow, strerror(errno));
+                goto done;
+            }
+            break;
+    }
+
+    // Run the command if we haven't already
+    switch (options.cmd) {
+        case shadow_cmd_create:
+        case shadow_cmd_create_empty:
+        case shadow_cmd_reset:
+            // Create or reset the shadow file
+            {
+                xmlNode *output = NULL;
+
+                if (options.cmd == shadow_cmd_create_empty) {
+                    output = createEmptyCib(0);
+                    crm_xml_add(output, XML_ATTR_VALIDATION,
+                                options.validate_with);
+                    printf("Created new %s configuration\n",
+                           crm_element_value(output, XML_ATTR_VALIDATION));
+
+                } else {
+                    // Create a shadow instance based on the current CIB
+                    rc = real_cib->cmds->query(real_cib, NULL, &output,
+                                               options.cmd_options);
+                    if (rc != pcmk_ok) {
+                        rc = pcmk_legacy2rc(rc);
+                        exit_code = pcmk_rc2exitc(rc);
+                        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                                    "Could not connect to the CIB manager: %s",
+                                    pcmk_rc_str(rc));
+                        goto done;
+                    }
+                }
+
+                rc = write_xml_file(output, shadow_file, FALSE);
+                free_xml(output);
+
+                if (rc < 0) {
+                    const char *action = "create";
+                    rc = pcmk_legacy2rc(rc);
+                    exit_code = pcmk_rc2exitc(rc);
+
+                    if (options.cmd == shadow_cmd_reset) {
+                        action = "reset";
+                    }
+
+                    g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                                "Could not %s the shadow instance '%s': %s",
+                                action, options.shadow, pcmk_rc_str(rc));
+                    goto done;
+                }
+                shadow_setup(options.shadow, FALSE);
+            }
+            break;
+
+        case shadow_cmd_edit:
+            // Open the shadow file in a text editor
+            {
+                const char *editor = getenv("EDITOR");
+
+                if (editor == NULL) {
+                    exit_code = CRM_EX_NOT_CONFIGURED;
+                    g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                                "No value for EDITOR defined");
+                    goto done;
+                }
+
+                execlp(editor, "--", shadow_file, NULL);
+                exit_code = CRM_EX_OSFILE;
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                            "Could not invoke EDITOR (%s %s): %s",
+                            editor, shadow_file, strerror(errno));
+                goto done;
+            }
+            break;
+
+        case shadow_cmd_switch:
+            // Switch to the named shadow instance
+            shadow_setup(options.shadow, TRUE);
+            break;
+
+        case shadow_cmd_display:
+            // Display the current shadow file contents
+            {
+                char *output_s = NULL;
+                xmlNode *output = filename2xml(shadow_file);
+
+                output_s = dump_xml_formatted(output);
+                printf("%s", output_s);
+
+                free(output_s);
+                free_xml(output);
+            }
+            break;
+
+        case shadow_cmd_diff:
+            // Diff the shadow file against the cluster
+            {
+                xmlNode *diff = NULL;
+                xmlNode *old_config = NULL;
+                xmlNode *new_config = filename2xml(shadow_file);
+
+                rc = real_cib->cmds->query(real_cib, NULL, &old_config,
+                                           options.cmd_options);
+                if (rc != pcmk_ok) {
+                    rc = pcmk_legacy2rc(rc);
+                    exit_code = pcmk_rc2exitc(rc);
+                    g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                                "Could not query the CIB: %s", pcmk_rc_str(rc));
+                    goto done;
+                }
+
+                xml_track_changes(new_config, NULL, new_config, false);
+                xml_calculate_changes(old_config, new_config);
+
+                diff = xml_create_patchset(0, old_config, new_config, NULL,
+                                           false);
+
+                xml_log_changes(LOG_INFO, __func__, new_config);
+                xml_accept_changes(new_config);
+                if (diff != NULL) {
+                    /* @COMPAT: Exit with CRM_EX_DIGEST? This is not really an
+                     * error; we just want to indicate that there are
+                     * differences (as the diff command does).
+                     */
+                    xml_log_patchset(LOG_STDOUT, "  ", diff);
+                    exit_code = CRM_EX_ERROR;
+                }
+            }
+            break;
+
+        case shadow_cmd_commit:
+            // Commit the shadow file to the cluster
+            {
+                xmlNode *input = filename2xml(shadow_file);
+                xmlNode *section_xml = input;
+                const char *section = NULL;
+
+                if (!options.full_upload) {
+                    section = XML_CIB_TAG_CONFIGURATION;
+                    section_xml = first_named_child(input, section);
+                }
+
+                rc = real_cib->cmds->replace(real_cib, section, section_xml,
+                                             options.cmd_options);
+                if (rc != pcmk_ok) {
+                    rc = pcmk_legacy2rc(rc);
+                    exit_code = pcmk_rc2exitc(rc);
+                    g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                                "Could not commit shadow instance '%s' to the "
+                                "CIB: %s",
+                                options.shadow, pcmk_rc_str(rc));
+                    goto done;
+                }
+                needs_teardown = true;
+                free_xml(input);
+            }
+            break;
+
+        default:
+            // Should never reach this point
+            break;
+    }
+
+done:
+    g_strfreev(processed_args);
+    pcmk__free_arg_context(context);
+
+    pcmk__output_and_clear_error(error, NULL);
+
+    if (needs_teardown) {
+        // Teardown message should be the last thing we output
+        shadow_teardown(options.shadow);
+    }
     free(shadow_file);
-    free(shadow);
+    free(options.shadow);
+    g_free(options.validate_with);
     crm_exit(exit_code);
 }
