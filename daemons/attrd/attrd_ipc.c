@@ -243,12 +243,52 @@ attrd_client_refresh(pcmk__request_t *request)
     return NULL;
 }
 
+static void
+handle_missing_host(xmlNode *xml)
+{
+    const char *host = crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME);
+
+    if (host == NULL) {
+        crm_trace("Inferring host");
+        pcmk__xe_add_node(xml, attrd_cluster->uname, attrd_cluster->nodeid);
+    }
+}
+
+static int
+handle_value_expansion(const char **value, xmlNode *xml, const char *op,
+                       const char *attr)
+{
+    attribute_t *a = g_hash_table_lookup(attributes, attr);
+
+    if (a == NULL && pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_DELAY, pcmk__str_none)) {
+        return EINVAL;
+    }
+
+    if (*value && attrd_value_needs_expansion(*value)) {
+        int int_value;
+        attribute_value_t *v = NULL;
+
+        if (a) {
+            const char *host = crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME);
+            v = g_hash_table_lookup(a->values, host);
+        }
+
+        int_value = attrd_expand_value(*value, (v? v->current : NULL));
+
+        crm_info("Expanded %s=%s to %d", attr, *value, int_value);
+        crm_xml_add_int(xml, PCMK__XA_ATTR_VALUE, int_value);
+
+        /* Replacing the value frees the previous memory, so re-query it */
+        *value = crm_element_value(xml, PCMK__XA_ATTR_VALUE);
+    }
+
+    return pcmk_rc_ok;
+}
+
 xmlNode *
 attrd_client_update(pcmk__request_t *request)
 {
     xmlNode *xml = request->xml;
-    attribute_t *a = NULL;
-    char *host;
     const char *attr, *value, *regex;
 
     /* If the message has children, that means it is a message from a newer
@@ -258,10 +298,27 @@ attrd_client_update(pcmk__request_t *request)
     if (xml_has_children(xml)) {
         if (minimum_protocol_version >= 4) {
             /* First, if all peers support a certain protocol version, we can
-             * just broadcast the big message and they'll handle it.
+             * just broadcast the big message and they'll handle it.  However,
+             * we also need to apply all the transformations in this function
+             * to the children since they don't happen anywhere else.
              */
+            for (xmlNode *child = first_named_child(xml, XML_ATTR_OP); child != NULL;
+                 child = crm_next_same_xml(child)) {
+                attr = crm_element_value(child, PCMK__XA_ATTR_NAME);
+                value = crm_element_value(child, PCMK__XA_ATTR_VALUE);
+
+                handle_missing_host(child);
+
+                if (handle_value_expansion(&value, child, request->op, attr) == EINVAL) {
+                    pcmk__format_result(&request->result, CRM_EX_NOSUCH, PCMK_EXEC_ERROR,
+                                        "Attribute %s does not exist", attr);
+                    return NULL;
+                }
+            }
+
             attrd_send_message(NULL, xml);
             pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+
         } else {
             /* Second, if they do not support that protocol version, split it
              * up into individual messages and call attrd_client_update on
@@ -280,7 +337,6 @@ attrd_client_update(pcmk__request_t *request)
         return NULL;
     }
 
-    host = crm_element_value_copy(xml, PCMK__XA_ATTR_NODE_NAME);
     attr = crm_element_value(xml, PCMK__XA_ATTR_NAME);
     value = crm_element_value(xml, PCMK__XA_ATTR_VALUE);
     regex = crm_element_value(xml, PCMK__XA_ATTR_PATTERN);
@@ -311,7 +367,6 @@ attrd_client_update(pcmk__request_t *request)
             pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
         }
 
-        free(host);
         regfree(r_patt);
         free(r_patt);
         return NULL;
@@ -321,48 +376,19 @@ attrd_client_update(pcmk__request_t *request)
         pcmk__format_result(&request->result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
                             "Client %s update request did not specify attribute or regular expression",
                             pcmk__client_name(request->ipc_client));
-        free(host);
         return NULL;
     }
 
-    if (host == NULL) {
-        crm_trace("Inferring host");
-        host = strdup(attrd_cluster->uname);
-        pcmk__xe_add_node(xml, host, attrd_cluster->nodeid);
-    }
+    handle_missing_host(xml);
 
-    a = g_hash_table_lookup(attributes, attr);
-
-    if (a == NULL && pcmk__str_eq(request->op, PCMK__ATTRD_CMD_UPDATE_DELAY, pcmk__str_none)) {
+    if (handle_value_expansion(&value, xml, request->op, attr) == EINVAL) {
         pcmk__format_result(&request->result, CRM_EX_NOSUCH, PCMK_EXEC_ERROR,
                             "Attribute %s does not exist", attr);
-        free(host);
         return NULL;
     }
 
-    /* If value was specified using ++ or += notation, expand to real value */
-    if (value) {
-        if (attrd_value_needs_expansion(value)) {
-            int int_value;
-            attribute_value_t *v = NULL;
-
-            if (a) {
-                v = g_hash_table_lookup(a->values, host);
-            }
-            int_value = attrd_expand_value(value, (v? v->current : NULL));
-
-            crm_info("Expanded %s=%s to %d", attr, value, int_value);
-            crm_xml_add_int(xml, PCMK__XA_ATTR_VALUE, int_value);
-
-            /* Replacing the value frees the previous memory, so re-query it */
-            value = crm_element_value(xml, PCMK__XA_ATTR_VALUE);
-        }
-    }
-
-    crm_debug("Broadcasting %s[%s]=%s%s", attr, host, value,
-              (attrd_election_won()? " (writer)" : ""));
-
-    free(host);
+    crm_debug("Broadcasting %s[%s]=%s%s", attr, crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME),
+              value, (attrd_election_won()? " (writer)" : ""));
 
     attrd_send_message(NULL, xml); /* ends up at attrd_peer_message() */
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
