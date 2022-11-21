@@ -71,7 +71,6 @@ main(int argc, char **argv)
     gchar **processed_args = pcmk__cmdline_preproc(argv, NULL);
     GOptionContext *context = build_arg_context(args, &output_group);
 
-    controld_globals.mainloop = g_main_loop_new(NULL, FALSE);
     crm_log_preinit(NULL, argc, argv);
 
     pcmk__register_formats(output_group, formats);
@@ -184,6 +183,7 @@ crmd_init(void)
     if (state == S_PENDING || state == S_STARTING) {
         /* Create the mainloop and run it... */
         crm_trace("Starting %s's mainloop", crm_system_name);
+        controld_globals.mainloop = g_main_loop_new(NULL, FALSE);
         g_main_loop_run(controld_globals.mainloop);
         if (pcmk_is_set(controld_globals.fsa_input_register, R_STAYDOWN)) {
             crm_info("Inhibiting automated respawn");
