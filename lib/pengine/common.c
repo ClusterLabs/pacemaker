@@ -117,31 +117,31 @@ static pcmk__cluster_option_t pe_opts[] = {
         XML_ATTR_HAVE_WATCHDOG, NULL, "boolean", NULL,
         "false", pcmk__valid_boolean,
         N_("Whether watchdog integration is enabled"),
-        "This is set automatically by the cluster according to whether SBD "
+        N_("This is set automatically by the cluster according to whether SBD "
             "is detected to be in use. User-configured values are ignored. "
             "The value `true` is meaningful if diskless SBD is used and "
             "`stonith-watchdog-timeout` is nonzero. In that case, if fencing "
             "is required, watchdog-based self-fencing will be performed via "
-            "SBD without requiring a fencing resource explicitly configured."
+            "SBD without requiring a fencing resource explicitly configured.")
     },
     {
         "concurrent-fencing", NULL, "boolean", NULL,
         PCMK__CONCURRENT_FENCING_DEFAULT, pcmk__valid_boolean,
-        "Allow performing fencing operations in parallel",
+        N_("Allow performing fencing operations in parallel"),
         NULL
     },
     {
         "startup-fencing", NULL, "boolean", NULL,
         "true", pcmk__valid_boolean,
-        "*** Advanced Use Only *** Whether to fence unseen nodes at start-up",
-        "Setting this to false may lead to a \"split-brain\" situation,"
-            "potentially leading to data loss and/or service unavailability."
+        N_("*** Advanced Use Only *** Whether to fence unseen nodes at start-up"),
+        N_("Setting this to false may lead to a \"split-brain\" situation,"
+            "potentially leading to data loss and/or service unavailability.")
     },
     {
         XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY, NULL, "time", NULL,
         "0", pcmk__valid_interval_spec,
-        "Apply fencing delay targeting the lost nodes with the highest total resource priority",
-        "Apply specified delay for the fencings that are targeting the lost "
+        N_("Apply fencing delay targeting the lost nodes with the highest total resource priority"),
+        N_("Apply specified delay for the fencings that are targeting the lost "
             "nodes with the highest total resource priority in case we don't "
             "have the majority of the nodes in our cluster partition, so that "
             "the more significant nodes potentially win any fencing match, "
@@ -152,18 +152,18 @@ static pcmk__cluster_option_t pe_opts[] = {
             "for the corresponding fencing resources will be added to this "
             "delay. This delay should be significantly greater than, safely "
             "twice, the maximum `pcmk_delay_base/max`. By default, priority "
-            "fencing delay is disabled."
+            "fencing delay is disabled.")
     },
 
     {
         "cluster-delay", NULL, "time", NULL,
         "60s", pcmk__valid_interval_spec,
-        "Maximum time for node-to-node communication",
-        "The node elected Designated Controller (DC) will consider an action "
+        N_("Maximum time for node-to-node communication"),
+        N_("The node elected Designated Controller (DC) will consider an action "
             "failed if it does not get a response from the node executing the "
             "action within this time (after considering the action's own "
             "timeout). The \"correct\" value will depend on the speed and "
-            "load of your network and cluster nodes."
+            "load of your network and cluster nodes.")
     },
     {
         "batch-limit", NULL, "integer", NULL,
