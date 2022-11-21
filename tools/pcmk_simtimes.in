@@ -2,7 +2,7 @@
 """ Timing comparisons for crm_simulate profiling output
 """
 
-__copyright__ = "Copyright 2019-2021 the Pacemaker project contributors"
+__copyright__ = "Copyright 2019-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import io
@@ -11,11 +11,12 @@ import sys
 import errno
 import argparse
 
-DESC = """Compare timings from crm_simulate profiling output"""
+if os.path.exists("@abs_top_builddir@/daemons/fenced/fence_legacy.in"):
+    sys.path.insert(0, "@abs_top_builddir@/python")
 
-# These values must be kept in sync with include/crm/crm.h
-class CrmExit(object):
-    OK                   =    0
+from pacemaker.exitstatus import ExitStatus
+
+DESC = """Compare timings from crm_simulate profiling output"""
 
 BEFORE_HELP = """Output of "crm_simulate --profile cts/scheduler --repeat <N>" from earlier Pacemaker build"""
 
@@ -146,6 +147,6 @@ if __name__ == "__main__":
         if e.errno != errno.EPIPE:
             raise
 
-    sys.exit(CrmExit.OK)
+    sys.exit(ExitStatus.OK)
 
 # vim: set filetype=python expandtab tabstop=4 softtabstop=4 shiftwidth=4 textwidth=120:

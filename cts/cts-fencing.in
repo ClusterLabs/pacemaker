@@ -2,7 +2,7 @@
 """ Regression tests for Pacemaker's fencer
 """
 
-__copyright__ = "Copyright 2012-2022 the Pacemaker project contributors"
+__copyright__ = "Copyright 2012-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import io
@@ -15,6 +15,8 @@ import shlex
 import time
 import tempfile
 import signal
+
+from pacemaker.exitstatus import ExitStatus
 
 # Where to find test binaries
 # Prefer the source tree if available
@@ -48,46 +50,6 @@ logging {
     logfile: %s
 }
 """
-
-# These values must be kept in sync with include/crm/crm.h
-class CrmExit(object):
-    OK                   =   0
-    ERROR                =   1
-    INVALID_PARAM        =   2
-    UNIMPLEMENT_FEATURE  =   3
-    INSUFFICIENT_PRIV    =   4
-    NOT_INSTALLED        =   5
-    NOT_CONFIGURED       =   6
-    NOT_RUNNING          =   7
-    USAGE                =  64
-    DATAERR              =  65
-    NOINPUT              =  66
-    NOUSER               =  67
-    NOHOST               =  68
-    UNAVAILABLE          =  69
-    SOFTWARE             =  70
-    OSERR                =  71
-    OSFILE               =  72
-    CANTCREAT            =  73
-    IOERR                =  74
-    TEMPFAIL             =  75
-    PROTOCOL             =  76
-    NOPERM               =  77
-    CONFIG               =  78
-    FATAL                = 100
-    PANIC                = 101
-    DISCONNECT           = 102
-    SOLO                 = 103
-    DIGEST               = 104
-    NOSUCH               = 105
-    QUORUM               = 106
-    UNSAFE               = 107
-    EXISTS               = 108
-    MULTIPLE             = 109
-    OLD                  = 110
-    TIMEOUT              = 124
-    MAX                  = 255
-
 
 def update_path():
     """ Set the PATH environment variable appropriately for the tests """
@@ -197,7 +159,7 @@ def exit_if_proc_running(process_name):
     if is_proc_running(process_name):
         print("Error: %s is already running!" % process_name)
         print("Run %s only when the cluster is stopped." % sys.argv[0])
-        sys.exit(CrmExit.ERROR)
+        sys.exit(ExitStatus.ERROR)
 
 
 class TestError(Exception):
@@ -260,7 +222,7 @@ class Test(object):
 
         self.result_txt = ""
         self.cmd_tool_output = ""
-        self.result_exitcode = CrmExit.OK
+        self.result_exitcode = ExitStatus.OK
 
         if with_cpg:
             self.stonith_options = "-c"
@@ -356,7 +318,7 @@ class Test(object):
                 }.get(-self.stonith_process.returncode, "RET=%d" % (self.stonith_process.returncode))
                 msg = "FAILURE - '%s' failed. pacemaker-fenced abnormally exited during test (%s)."
                 self.result_txt = msg % (self.name, return_code)
-                self.result_exitcode = CrmExit.ERROR
+                self.result_exitcode = ExitStatus.ERROR
 
         self.stonith_output = ""
         self.stonith_process = None
@@ -387,19 +349,19 @@ class Test(object):
     def add_cmd(self, cmd, args, validate=True, check_rng=True, check_stderr=True):
         """ Add a simple command to be executed as part of this test """
 
-        self.__new_cmd(cmd, args, CrmExit.OK, "", validate=validate, check_rng=check_rng, check_stderr=check_stderr)
+        self.__new_cmd(cmd, args, ExitStatus.OK, "", validate=validate, check_rng=check_rng, check_stderr=check_stderr)
 
     def add_cmd_no_wait(self, cmd, args):
         """ Add a simple command to be executed (without waiting) as part of this test """
 
-        self.__new_cmd(cmd, args, CrmExit.OK, "", 1)
+        self.__new_cmd(cmd, args, ExitStatus.OK, "", 1)
 
     def add_cmd_check_stdout(self, cmd, args, match, no_match=""):
         """ Add a simple command with expected output to be executed as part of this test """
 
-        self.__new_cmd(cmd, args, CrmExit.OK, match, 0, no_match)
+        self.__new_cmd(cmd, args, ExitStatus.OK, match, 0, no_match)
 
-    def add_expected_fail_cmd(self, cmd, args, exitcode=CrmExit.ERROR):
+    def add_expected_fail_cmd(self, cmd, args, exitcode=ExitStatus.ERROR):
         """ Add a command to be executed as part of this test and expected to fail """
 
         self.__new_cmd(cmd, args, exitcode, "")
@@ -432,7 +394,7 @@ class Test(object):
         if args['no_wait'] == 0:
             test.wait()
         else:
-            return CrmExit.OK
+            return ExitStatus.OK
 
         output = pipe_communicate(test, check_stderr=args['check_stderr'])
         if self.verbose:
@@ -512,14 +474,14 @@ class Test(object):
 
             msg = "FAILURE - '%s' failed. %d patterns out of %d not matched. %d negative matches."
             self.result_txt = msg % (self.name, len(pats), total_patterns, negative_matches)
-            self.result_exitcode = CrmExit.ERROR
+            self.result_exitcode = ExitStatus.ERROR
 
     def set_error(self, step, cmd):
         """ Record failure of this test """
 
         msg = "FAILURE - '%s' failed at step %d. Command: %s %s"
         self.result_txt = msg % (self.name, step, cmd['cmd'], cmd['args'])
-        self.result_exitcode = CrmExit.ERROR
+        self.result_exitcode = ExitStatus.ERROR
 
     def run(self):
         """ Execute this test. """
@@ -532,7 +494,7 @@ class Test(object):
             print("\n--- START TEST - %s" % self.name)
 
         self.result_txt = "SUCCESS - '%s'" % (self.name)
-        self.result_exitcode = CrmExit.OK
+        self.result_exitcode = ExitStatus.OK
         for cmd in self.cmds:
             try:
                 self.run_cmd(cmd)
@@ -557,7 +519,7 @@ class Test(object):
             i = i + 1
         self.clean_environment()
 
-        if self.result_exitcode == CrmExit.OK:
+        if self.result_exitcode == ExitStatus.OK:
             self.match_stonith_patterns()
 
         print(self.result_txt)
@@ -648,10 +610,10 @@ class Tests(object):
             if test.executed == 0:
                 continue
 
-            if test.get_exitcode() != CrmExit.OK:
-                sys.exit(CrmExit.ERROR)
+            if test.get_exitcode() != ExitStatus.OK:
+                sys.exit(ExitStatus.ERROR)
 
-        sys.exit(CrmExit.OK)
+        sys.exit(ExitStatus.OK)
 
     def print_results(self):
         """ Print summary of results of executed tests """
@@ -664,7 +626,7 @@ class Tests(object):
             if test.executed == 0:
                 continue
 
-            if test.get_exitcode() != CrmExit.OK:
+            if test.get_exitcode() != ExitStatus.OK:
                 failures = failures + 1
                 test.print_result("    ")
             else:
@@ -829,10 +791,10 @@ class Tests(object):
             test.add_cmd("stonith_admin",
                          "--output-as=xml -R false3 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\"")
             if test_type["use_cpg"] == 1:
-                test.add_expected_fail_cmd("stonith_admin", "--output-as=xml -F node3 -t 2", CrmExit.TIMEOUT)
+                test.add_expected_fail_cmd("stonith_admin", "--output-as=xml -F node3 -t 2", ExitStatus.TIMEOUT)
                 test.add_stonith_log_pattern("Total timeout set to 7")
             else:
-                test.add_expected_fail_cmd("stonith_admin", "--output-as=xml -F node3 -t 2", CrmExit.ERROR)
+                test.add_expected_fail_cmd("stonith_admin", "--output-as=xml -F node3 -t 2", ExitStatus.ERROR)
 
             test.add_stonith_log_pattern("targeting node3 using false1 returned ")
             test.add_stonith_log_pattern("targeting node3 using false2 returned ")
@@ -866,7 +828,7 @@ class Tests(object):
 
             test.add_expected_fail_cmd("stonith_admin",
                                        "--output-as=xml -F node3 -t 5",
-                                       CrmExit.NOSUCH)
+                                       ExitStatus.NOSUCH)
             test.add_cmd("stonith_admin", "--output-as=xml -F node2 -t 5")
 
         # simple topology test for one device
@@ -1078,7 +1040,7 @@ class Tests(object):
             test.add_cmd("stonith_admin", "--output-as=xml -Q false1")
             test.add_expected_fail_cmd("stonith_admin",
                                        "--output-as=xml -Q true2",
-                                       CrmExit.NOSUCH)
+                                       ExitStatus.NOSUCH)
 
         # Verify monitor occurs for duration of timeout period on failure
         for test_type in test_types:
@@ -1087,7 +1049,7 @@ class Tests(object):
                                  test_type["use_cpg"])
             test.add_cmd("stonith_admin",
                          '--output-as=xml -R true1 -a fence_dummy -o "mode=fail" -o "monitor_mode=fail" -o "pcmk_host_list=node3"')
-            test.add_expected_fail_cmd("stonith_admin", "--output-as=xml -Q true1 -t 5", CrmExit.ERROR)
+            test.add_expected_fail_cmd("stonith_admin", "--output-as=xml -Q true1 -t 5", ExitStatus.ERROR)
             test.add_stonith_log_pattern("Attempt 2 to execute")
 
         # Verify monitor occurs for duration of timeout period on failure, but stops at max retries
@@ -1097,7 +1059,7 @@ class Tests(object):
                                  test_type["use_cpg"])
             test.add_cmd("stonith_admin",
                          '--output-as=xml -R true1  -a fence_dummy -o "mode=fail" -o "monitor_mode=fail" -o "pcmk_host_list=node3"')
-            test.add_expected_fail_cmd("stonith_admin", "--output-as=xml -Q true1 -t 15", CrmExit.ERROR)
+            test.add_expected_fail_cmd("stonith_admin", "--output-as=xml -Q true1 -t 15", ExitStatus.ERROR)
             test.add_stonith_log_pattern("Attempted to execute agent fence_dummy (list) the maximum number of times")
 
         # simple register test
@@ -1113,7 +1075,7 @@ class Tests(object):
 
             test.add_expected_fail_cmd("stonith_admin",
                                        "--output-as=xml -Q true1",
-                                       CrmExit.NOSUCH)
+                                       ExitStatus.NOSUCH)
 
         # simple reboot test
         for test_type in test_types:
@@ -1128,7 +1090,7 @@ class Tests(object):
 
             test.add_expected_fail_cmd("stonith_admin",
                                        "--output-as=xml -Q true1",
-                                       CrmExit.NOSUCH)
+                                       ExitStatus.NOSUCH)
 
         # test fencing history.
         for test_type in test_types:
@@ -1290,7 +1252,7 @@ class Tests(object):
                      '--output-as=xml -R true1 -a fence_dummy_auto_unfence -o "mode=pass" -o "pcmk_host_list=%s"' % (our_uname))
         test.add_cmd('stonith_admin',
                      '--output-as=xml -R true2 -a fence_dummy_auto_unfence -o "mode=fail" -o "pcmk_host_list=%s"' % (our_uname))
-        test.add_expected_fail_cmd("stonith_admin", "--output-as=xml -U %s -t 6" % (our_uname), CrmExit.ERROR)
+        test.add_expected_fail_cmd("stonith_admin", "--output-as=xml -U %s -t 6" % (our_uname), ExitStatus.ERROR)
 
         ### verify unfencing using automatic devices with topology
         test = self.new_test("cpg_unfence_required_3",
@@ -1361,7 +1323,7 @@ class Tests(object):
                      "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=%s node_fake_1234\"" % (our_uname))
         test.add_expected_fail_cmd("stonith_admin",
                                    "--output-as=xml -U node_fake_1234 -t 3",
-                                   CrmExit.NOSUCH)
+                                   ExitStatus.NOSUCH)
         test.add_stonith_log_pattern("(on) to be executed on target")
 
         ### verify unfencing using on_target device with topology
@@ -1395,7 +1357,7 @@ class Tests(object):
 
         test.add_expected_fail_cmd("stonith_admin",
                                    "--output-as=xml -U node_fake -t 3",
-                                   CrmExit.NOSUCH)
+                                   ExitStatus.NOSUCH)
         test.add_stonith_log_pattern("(on) to be executed on target")
 
     def build_remap_tests(self):
@@ -1677,10 +1639,10 @@ def main(argv):
 
         if opts.options['list-tests']:
             tests.print_list()
-            sys.exit(CrmExit.OK)
+            sys.exit(ExitStatus.OK)
         elif opts.options['show-usage']:
             opts.show_usage()
-            sys.exit(CrmExit.OK)
+            sys.exit(ExitStatus.OK)
 
         print("Starting ...")
 

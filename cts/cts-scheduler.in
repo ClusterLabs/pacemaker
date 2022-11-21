@@ -2,7 +2,7 @@
 """ Regression tests for Pacemaker's scheduler
 """
 
-__copyright__ = "Copyright 2004-2022 the Pacemaker project contributors"
+__copyright__ = "Copyright 2004-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import io
@@ -16,6 +16,11 @@ import argparse
 import subprocess
 import platform
 import tempfile
+
+if os.path.exists("@abs_top_builddir@/daemons/fenced/fence_legacy.in"):
+    sys.path.insert(0, "@abs_top_builddir@/python")
+
+from pacemaker.exitstatus import ExitStatus
 
 DESC = """Regression tests for Pacemaker's scheduler"""
 
@@ -1051,15 +1056,6 @@ class BuildVars(object):
     CRM_SCHEMA_DIRECTORY = "@CRM_SCHEMA_DIRECTORY@"
 
 
-# These values must be kept in sync with crm_exit_t
-class CrmExit(object):
-    OK                   =    0
-    ERROR                =    1
-    NOT_INSTALLED        =    5
-    NOINPUT              =   66
-    CANTCREAT            =   73
-
-
 def is_executable(path):
     """ Check whether a file at a given path is executable. """
 
@@ -1217,7 +1213,7 @@ class CtsScheduler(object):
         if not is_executable(self.args.binary):
             # @TODO it would be more pythonic to raise an exception
             self._error("Test binary " + self.args.binary + " not found")
-            sys.exit(CrmExit.NOT_INSTALLED)
+            sys.exit(ExitStatus.NOT_INSTALLED)
 
         return [ self.args.binary ] + shlex.split(self.args.testcmd_options)
 
@@ -1296,7 +1292,7 @@ class CtsScheduler(object):
         # We don't want to create it with os.makedirs below
         if not os.path.isdir(self.args.out_dir):
             self._error("Output directory missing; can't create output files")
-            sys.exit(CrmExit.CANTCREAT)
+            sys.exit(ExitStatus.CANTCREAT)
 
         # Create output subdirectories if they don't exist
         try:
@@ -1316,7 +1312,7 @@ class CtsScheduler(object):
                 self.summary_out_dir,
                 self.stderr_out_dir,
             ])
-            sys.exit(CrmExit.CANTCREAT)
+            sys.exit(ExitStatus.CANTCREAT)
 
     def _compare_files(self, filename1, filename2):
         """ Add any file differences to failed results """
@@ -1376,10 +1372,10 @@ class CtsScheduler(object):
         if not os.path.isfile(input_filename):
             self._error("No input")
             self.num_failed = self.num_failed + 1
-            return CrmExit.NOINPUT
+            return ExitStatus.NOINPUT
         if not self.args.update and not os.path.isfile(expected_filename):
             self._error("no stored output")
-            return CrmExit.NOINPUT
+            return ExitStatus.NOINPUT
 
         # Run simulation to generate summary output
         if self.args.run: # Single test mode
@@ -1418,7 +1414,7 @@ class CtsScheduler(object):
             rc = subprocess.call(test_cmd_full, stdout=f_score, stderr=f_stderr, env=os.environ)
 
         # Check for test command failure
-        if rc != CrmExit.OK:
+        if rc != ExitStatus.OK:
             self._failed("Test returned: %d" % rc)
             did_fail = True
             print(" ".join(test_cmd_full))
@@ -1455,7 +1451,7 @@ class CtsScheduler(object):
             did_fail = True
             self.num_failed = self.num_failed + 1
             remove_files([ output_filename ])
-            return CrmExit.ERROR
+            return ExitStatus.ERROR
         normalize(output_filename)
 
         # Check whether dot output exists, and sort it
@@ -1465,7 +1461,7 @@ class CtsScheduler(object):
             did_fail = True
             self.num_failed = self.num_failed + 1
             remove_files([ dot_output_filename, output_filename ])
-            return CrmExit.ERROR
+            return ExitStatus.ERROR
         with io.open(dot_output_filename, "rt") as f:
             first_line = f.readline() # "digraph" line with opening brace
             lines = f.readlines()
@@ -1484,7 +1480,7 @@ class CtsScheduler(object):
             did_fail = True
             self.num_failed = self.num_failed + 1
             remove_files([ score_output_filename, output_filename ])
-            return CrmExit.ERROR
+            return ExitStatus.ERROR
         else:
             sort_file(score_output_filename)
 
@@ -1520,9 +1516,9 @@ class CtsScheduler(object):
 
         if did_fail:
             self.num_failed = self.num_failed + 1
-            return CrmExit.ERROR
+            return ExitStatus.ERROR
 
-        return CrmExit.OK
+        return ExitStatus.OK
 
     def run_all(self):
         """ Run all defined tests """
@@ -1553,7 +1549,7 @@ class CtsScheduler(object):
     def _test_results(self):
         if self.num_failed == 0:
             shutil.rmtree(self.failed_dir)
-            return CrmExit.OK
+            return ExitStatus.OK
 
         if os.path.isfile(self.failed_filename) and os.stat(self.failed_filename).st_size != 0:
             if self.args.verbose:
@@ -1569,7 +1565,7 @@ class CtsScheduler(object):
                 (self.num_failed, self.num_tests))
             if os.path.isfile(self.failed_filename):
                 shutil.rmtree(self.failed_dir)
-        return CrmExit.ERROR
+        return ExitStatus.ERROR
 
     def run(self):
         """ Run test(s) as specified """
