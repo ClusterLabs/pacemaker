@@ -248,8 +248,7 @@ attrd_client_update(pcmk__request_t *request)
 {
     xmlNode *xml = request->xml;
     attribute_t *a = NULL;
-    char *host;
-    const char *attr, *value, *regex;
+    const char *attr, *value, *regex, *host;
 
     /* If the message has children, that means it is a message from a newer
      * client that supports sending multiple operations at a time.  There are
@@ -280,7 +279,7 @@ attrd_client_update(pcmk__request_t *request)
         return NULL;
     }
 
-    host = crm_element_value_copy(xml, PCMK__XA_ATTR_NODE_NAME);
+    host = crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME);
     attr = crm_element_value(xml, PCMK__XA_ATTR_NAME);
     value = crm_element_value(xml, PCMK__XA_ATTR_VALUE);
     regex = crm_element_value(xml, PCMK__XA_ATTR_PATTERN);
@@ -311,7 +310,6 @@ attrd_client_update(pcmk__request_t *request)
             pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
         }
 
-        free(host);
         regfree(r_patt);
         free(r_patt);
         return NULL;
@@ -321,7 +319,6 @@ attrd_client_update(pcmk__request_t *request)
         pcmk__format_result(&request->result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
                             "Client %s update request did not specify attribute or regular expression",
                             pcmk__client_name(request->ipc_client));
-        free(host);
         return NULL;
     }
 
@@ -336,7 +333,6 @@ attrd_client_update(pcmk__request_t *request)
     if (a == NULL && pcmk__str_eq(request->op, PCMK__ATTRD_CMD_UPDATE_DELAY, pcmk__str_none)) {
         pcmk__format_result(&request->result, CRM_EX_NOSUCH, PCMK_EXEC_ERROR,
                             "Attribute %s does not exist", attr);
-        free(host);
         return NULL;
     }
 
@@ -361,8 +357,6 @@ attrd_client_update(pcmk__request_t *request)
 
     crm_debug("Broadcasting %s[%s]=%s%s", attr, host, value,
               (attrd_election_won()? " (writer)" : ""));
-
-    free(host);
 
     attrd_send_message(NULL, xml); /* ends up at attrd_peer_message() */
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
