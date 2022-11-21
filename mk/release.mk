@@ -1,5 +1,5 @@
 #
-# Copyright 2008-2021 the Pacemaker project contributors
+# Copyright 2008-2022 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -9,27 +9,56 @@
 
 # Define variables related to release version and such
 
-COMMIT  ?= HEAD
+COMMIT	?= HEAD
 
-# TAG defaults to DIST when not in a git checkout (e.g. from a distribution),
+# TAG defaults to DIST when in a source distribution instead of a git checkout,
 # the tag name if COMMIT is tagged, and the full commit ID otherwise.
-TAG     ?= $(shell T=$$(git describe --tags --exact-match '$(COMMIT)' 2>/dev/null); \
-	     test -n "$${T}" && echo "$${T}" \
-	       || git log --pretty=format:%H -n 1 '$(COMMIT)' 2>/dev/null || echo DIST)
+TAG	?= $(shell								\
+	     T=$$(git describe --tags --exact-match '$(COMMIT)' 2>/dev/null);	\
+	     [ -n "$${T}" ] && echo "$${T}" 					\
+	     || git log --pretty=format:%H -n 1 '$(COMMIT)' 2>/dev/null		\
+	     || echo DIST)
 
 # If DIRTY=anything is passed to make, generated versions will end in ".mod"
-# as long as there are uncommitted changes and COMMIT is not set.
-DIRTY_EXT	= $(shell if [ -n "$(DIRTY)" ] && [ "$(COMMIT)" == "HEAD" ]	\
-		             && ! git diff-index --quiet HEAD --; then		\
-		          echo .mod ; fi)
+# as long as there are uncommitted changes and COMMIT is not changed from the
+# default.
+DIRTY_EXT	= $(shell [ -n "$(DIRTY)" ]				\
+			&& [ "$(COMMIT)" == "HEAD" ] 			\
+			&& ! git diff-index --quiet HEAD -- 2>/dev/null	\
+			&& echo .mod)
 
+# These can be used in case statements to avoid make interpreting parentheses
 lparen = (
 rparen = )
 
-LAST_RC		?= $(shell git tag -l|sed -n -e 's/^\(Pacemaker-[0-9.]*-rc[0-9]*\)$$/\1/p'|sort -Vr|head -n 1)
-LAST_FINAL	?= $(shell git tag -l|sed -n -e 's/^\(Pacemaker-[0-9.]*\)$$/\1/p'|sort -Vr|head -n 1)
-LAST_RELEASE	?= $(shell test "Pacemaker-$(VERSION)" = "Pacemaker-" && echo "$(LAST_FINAL)" || echo "Pacemaker-$(VERSION)")
-NEXT_RELEASE	?= $(shell echo $(LAST_RELEASE) | awk -F. '/[0-9]+\./{$$3+=1;OFS=".";print $$1,$$2,$$3}')
+# git tag of highest-versioned release candidate (such as "Pacemaker-2.1.5-rc2")
+# or empty if not in git checkout
+LAST_RC		?= $(shell git tag -l 2>/dev/null				\
+		     | sed -n -e 's/^\(Pacemaker-[0-9.]*-rc[0-9]*\)$$/\1/p'	\
+		     | sort -Vr | head -n 1)
+
+# true if in a git checkout
+CHECKOUT	= $(shell git rev-parse --git-dir >/dev/null 2>/dev/null 	\
+		    && echo true)
+
+# VERSION is set by configure, but we allow some make targets to be run without
+# running configure first, so set a reasonable default in that case.
+VERSION		?= $(shell if [ -z "$(CHECKOUT)" ]; then			\
+			echo 0.0.0;						\
+		     else							\
+			git tag -l						\
+				| sed -n -e 's/^\(Pacemaker-[0-9.]*\)$$/\1/p'	\
+				| sort -Vr | head -n 1;				\
+		     fi)
+
+# What the git tag would be for configured VERSION (such as "Pacemaker-2.1.5")
+LAST_RELEASE	?= Pacemaker-$(VERSION)
+
+# What the git tag would be for configured VERSION with minor-minor version bump
+# (such as "Pacemaker-2.1.6"; this should be manually overriden when bumping
+# the major or minor version)
+NEXT_RELEASE	?= $(shell echo $(LAST_RELEASE) 			\
+		     | awk -F. '/[0-9]+\./{$$3+=1;OFS=".";print $$1,$$2,$$3}')
 
 # We have two make targets for creating distributions:
 #
@@ -43,9 +72,9 @@ NEXT_RELEASE	?= $(shell echo $(LAST_RELEASE) | awk -F. '/[0-9]+\./{$$3+=1;OFS=".
 # Both targets use the same name for the result, though they generate different
 # contents.
 #
-# The directory is named pacemaker-DIST when not in a git checkout (e.g.
-# from a distribution itself), pacemaker-<version_part_of_tag> for tagged
-# commits, and pacemaker-<short_commit> otherwise.
+# The directory is named pacemaker-DIST when in a source distribution instead
+# of a git checkout, pacemaker-<version_part_of_tag> for tagged commits, and
+# pacemaker-<short_commit> otherwise.
 top_distdir	= $(PACKAGE)-$(shell						\
 		  case $(TAG) in						\
 			DIST$(rparen)						\

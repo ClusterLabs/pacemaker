@@ -1,5 +1,5 @@
 #
-# Copyright 2003-2021 the Pacemaker project contributors
+# Copyright 2003-2022 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -238,12 +238,13 @@ mock-clean:
 
 # Make debugging makefile issues easier
 vars:
+	@echo "CHECKOUT=$(CHECKOUT)"
+	@echo "VERSION=$(VERSION)"
 	@echo "COMMIT=$(COMMIT)"
 	@echo "TAG=$(TAG)"
 	@echo "DIRTY=$(DIRTY)"
 	@echo "DIRTY_EXT=$(DIRTY_EXT)"
 	@echo "LAST_RC=$(LAST_RC)"
-	@echo "LAST_FINAL=$(LAST_FINAL)"
 	@echo "LAST_RELEASE=$(LAST_RELEASE)"
 	@echo "NEXT_RELEASE=$(NEXT_RELEASE)"
 	@echo "top_distdir=$(top_distdir)"
