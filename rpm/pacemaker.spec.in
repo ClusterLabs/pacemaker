@@ -117,12 +117,22 @@
                        echo 0.%{specversion}.${c: -3} ;;
                        *%{rparen} echo %{specversion} ;; esac)
 %else
+%if "%{commit}" == "DIST"
+%define archive_version %{pcmkversion}
+%define archive_github_url %{archive_version}#/%{name}-%{pcmkversion}.tar.gz
+%if %{with pre_release}
+%define pcmk_release 0.%{specversion}
+%else
+%define pcmk_release %{specversion}
+%endif
+%else
 %define archive_version %(c=%{commit}; echo ${c:0:%{commit_abbrev}})
 %define archive_github_url %{archive_version}#/%{name}-%{archive_version}.tar.gz
 %if %{with pre_release}
 %define pcmk_release 0.%{specversion}.%{archive_version}.git
 %else
 %define pcmk_release %{specversion}.%{archive_version}.git
+%endif
 %endif
 %endif
 
