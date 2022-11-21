@@ -1,3 +1,11 @@
+* Mon Nov 21 2022 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.5-rc3
+- Changesets: 10
+- Diff: 3 files changed, 87 insertions(+), 43 deletions(-)
+
+- Fixes since Pacemaker-2.1.5-rc2
+  + Increment fail counts properly (regression introduced in 2.1.5-rc1)
+  + Allow building RPMs from source distribution
+
 * Mon Nov 14 2022 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.5-rc2
 - Changesets: 39
 - Diff: 23 files changed, 388 insertions(+), 301 deletions(-)
