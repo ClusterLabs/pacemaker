@@ -45,7 +45,7 @@ AM_DISTCHECK_CONFIGURE_FLAGS	= --prefix="$$dc_install_base/usr"			\
 				  --with-systemdsystemunitdir="$$dc_install_base$(systemdsystemunitdir)"
 
 # Only these will get installed with a plain "make install"
-CORE_INSTALL	= replace include lib daemons tools xml po
+CORE_INSTALL	= replace include lib daemons tools xml po python
 
 # Only these will get built with a plain "make" or "make clean"
 CORE		= $(CORE_INSTALL) cts rpm
