@@ -72,13 +72,14 @@ NEXT_RELEASE	?= $(shell echo $(LAST_RELEASE) 			\
 # Both targets use the same name for the result, though they generate different
 # contents.
 #
-# The directory is named pacemaker-DIST when in a source distribution instead
-# of a git checkout, pacemaker-<version_part_of_tag> for tagged commits, and
-# pacemaker-<short_commit> otherwise.
+# The directory is named pacemaker-<version> when in a source distribution
+# instead of a git checkout, pacemaker-<version_part_of_tag> for tagged
+# commits, and pacemaker-<short_commit> otherwise.
 top_distdir	= $(PACKAGE)-$(shell						\
 		  case $(TAG) in						\
 			DIST$(rparen)						\
-				echo DIST;;					\
+				[ -n "$(VERSION)" ] && echo "$(VERSION)"	\
+					|| echo DIST;;				\
 			Pacemaker-*$(rparen)					\
 				echo '$(TAG)' | cut -c11-;;			\
 			*$(rparen)						\
