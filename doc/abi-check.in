@@ -1,5 +1,14 @@
 #!@BASH_PATH@
 #
+# Copyright 2011-2022 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
+#
+
+#
 # abi-check [-u] <package-name> <version> [...]
 #
 # Build ABI dumps for all listed versions. If exactly two are given,
@@ -112,6 +121,15 @@ extract_all() {
         extract_one "$T" "$V"
     done
 }
+
+die() {
+	echo "$@" 1>&2
+	exit 1
+}
+
+which git 2>/dev/null || die "abi-check: git must be installed"
+git rev-parse --git-dir >/dev/null 2>/dev/null	\
+	|| die "abi-check: must be run from git checkout"
 
 UPLOAD=0
 if [ "$1" = "-u" ]; then
