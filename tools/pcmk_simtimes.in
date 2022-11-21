@@ -2,7 +2,7 @@
 """ Timing comparisons for crm_simulate profiling output
 """
 
-__copyright__ = "Copyright 2019-2021 the Pacemaker project contributors"
+__copyright__ = "Copyright 2019-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import io
@@ -10,12 +10,20 @@ import re
 import sys
 import errno
 import argparse
+import os
+
+# These imports allow running from a source checkout after running `make`.
+# Note that while this doesn't necessarily mean it will successfully run tests,
+# but being able to see --help output can be useful.
+if os.path.exists("@abs_top_srcdir@/python"):
+    sys.path.insert(0, "@abs_top_srcdir@/python")
+
+if os.path.exists("@abs_top_builddir@/python") and "@abs_top_builddir@" != "@abs_top_srcdir@":
+    sys.path.insert(0, "@abs_top_builddir@/python")
+
+from pacemaker.exitstatus import ExitStatus
 
 DESC = """Compare timings from crm_simulate profiling output"""
-
-# These values must be kept in sync with include/crm/crm.h
-class CrmExit(object):
-    OK                   =    0
 
 BEFORE_HELP = """Output of "crm_simulate --profile cts/scheduler --repeat <N>" from earlier Pacemaker build"""
 
@@ -146,6 +154,6 @@ if __name__ == "__main__":
         if e.errno != errno.EPIPE:
             raise
 
-    sys.exit(CrmExit.OK)
+    sys.exit(ExitStatus.OK)
 
 # vim: set filetype=python expandtab tabstop=4 softtabstop=4 shiftwidth=4 textwidth=120:

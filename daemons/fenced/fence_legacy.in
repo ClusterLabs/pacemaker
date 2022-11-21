@@ -1,12 +1,23 @@
 #!@PYTHON@
 
-__copyright__ = "Copyright 2018-2021 the Pacemaker project contributors"
+__copyright__ = "Copyright 2018-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import os
 import sys
 import argparse
 import subprocess
+
+# These imports allow running from a source checkout after running `make`.
+# Note that while this doesn't necessarily mean it will successfully run tests,
+# but being able to see --help output can be useful.
+if os.path.exists("@abs_top_srcdir@/python"):
+    sys.path.insert(0, "@abs_top_srcdir@/python")
+
+if os.path.exists("@abs_top_builddir@/python") and "@abs_top_builddir@" != "@abs_top_srcdir@":
+    sys.path.insert(0, "@abs_top_builddir@/python")
+
+from pacemaker.exitstatus import ExitStatus
 
 VERSION = "1.1.0"
 
@@ -76,12 +87,6 @@ ACTIONS = [
     "poweron"
 ]
 
-# These values must be kept in sync with include/crm/crm.h
-class CrmExit(object):
-    OK                   =   0
-    ERROR                =   1
-    INVALID_PARAM        =   2
-
 
 def parse_cli_options():
     """ Return parsed command-line options (as argparse namespace) """
@@ -142,7 +147,7 @@ def parse_stdin_options(options):
         except ValueError:
             print("parse error: illegal name in option %d" % nlines,
                   file=sys.stderr)
-            sys.exit(CrmExit.INVALID_PARAM)
+            sys.exit(ExitStatus.INVALID_PARAM)
         value = value.lstrip()
 
         if name == "plugin":
@@ -191,7 +196,7 @@ def build_command(options):
         if options.node == "":
             if not options.quiet:
                 print("failed: no plug number")
-            sys.exit(CrmExit.ERROR)
+            sys.exit(ExitStatus.ERROR)
         extra_args = [ "-T", options.action, options.node ]
 
     return [ options.command, "-t", options.subagent, "-E" ] + extra_args
@@ -202,11 +207,11 @@ def handle_local_options(options):
 
     if options.help:
         print(USAGE)
-        sys.exit(CrmExit.OK)
+        sys.exit(ExitStatus.OK)
 
     if options.version:
         print(VERSION)
-        sys.exit(CrmExit.OK)
+        sys.exit(ExitStatus.OK)
 
 
 def remap_action(options):
@@ -216,7 +221,7 @@ def remap_action(options):
 
     if options.action == "metadata":
         print(META_DATA)
-        sys.exit(CrmExit.OK)
+        sys.exit(ExitStatus.OK)
 
     elif options.action in [ "hostlist", "list" ]:
         options.quiet = True
@@ -246,10 +251,10 @@ def handle_result(options, status):
 
     if status == 0:
         message = "success"
-        exitcode = CrmExit.OK
+        exitcode = ExitStatus.OK
     else:
         message = "failed"
-        exitcode = CrmExit.ERROR
+        exitcode = ExitStatus.ERROR
     if not options.quiet:
         print("%s: %s %d" % (message, options.node, status))
     sys.exit(exitcode)
