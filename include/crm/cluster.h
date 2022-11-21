@@ -33,6 +33,12 @@ extern unsigned long long crm_peer_seq;
 #define CRM_NODE_MEMBER    "member"
 
 enum crm_join_phase {
+    /* @COMPAT: crm_join_nack_quiet can be replaced by crm_node_t:user_data
+     *          at a compatibility break.
+     */
+    //! Not allowed to join, but don't send a nack message
+    crm_join_nack_quiet = -2,
+
     crm_join_nack       = -1,
     crm_join_none       = 0,
     crm_join_welcomed   = 1,
@@ -201,14 +207,15 @@ static inline const char *
 crm_join_phase_str(enum crm_join_phase phase)
 {
     switch (phase) {
+        case crm_join_nack_quiet:   return "nack_quiet";
         case crm_join_nack:         return "nack";
         case crm_join_none:         return "none";
         case crm_join_welcomed:     return "welcomed";
         case crm_join_integrated:   return "integrated";
         case crm_join_finalized:    return "finalized";
         case crm_join_confirmed:    return "confirmed";
+        default:                    return "invalid";
     }
-    return "invalid";
 }
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)

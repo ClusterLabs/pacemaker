@@ -257,6 +257,7 @@ do_cl_join_finalize_respond(long long action,
         crm_err("Shutting down because cluster join with leader %s failed "
                 CRM_XS" join-%d NACK'd", welcome_from, join_id);
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+        controld_set_fsa_input_flags(R_STAYDOWN);
         return;
     }
 
