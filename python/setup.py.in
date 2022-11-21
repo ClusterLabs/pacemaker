@@ -1,6 +1,6 @@
 #!@PYTHON@
 
-from distutils.core import setup
+from setuptools import setup
 
 setup(name='pacemaker',
       version='@PACKAGE_VERSION@',
