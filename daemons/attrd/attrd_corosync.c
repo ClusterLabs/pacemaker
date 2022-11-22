@@ -584,6 +584,27 @@ attrd_peer_sync(crm_node_t *peer, xmlNode *xml)
     free_xml(sync);
 }
 
+static void
+copy_attrs(xmlNode *src, xmlNode *dest)
+{
+    /* Copy attributes from the wrapper parent node into the child node.
+     * We can't just use copy_in_properties because we want to skip any
+     * attributes that are already set on the child.  For instance, if
+     * we were told to use a specific node, there will already be a node
+     * attribute on the child.  Copying the parent's node attribute over
+     * could result in the wrong value.
+     */
+    for (xmlAttrPtr a = pcmk__xe_first_attr(src); a != NULL; a = a->next) {
+        const char *p_name = (const char *) a->name;
+        const char *p_value = ((a == NULL) || (a->children == NULL)) ? NULL :
+                              (const char *) a->children->content;
+
+        if (crm_element_value(dest, p_name) == NULL) {
+            crm_xml_add(dest, p_name, p_value);
+        }
+    }
+}
+
 void
 attrd_peer_update(const crm_node_t *peer, xmlNode *xml, const char *host,
                   bool filter)
@@ -593,11 +614,7 @@ attrd_peer_update(const crm_node_t *peer, xmlNode *xml, const char *host,
     if (xml_has_children(xml)) {
         for (xmlNode *child = first_named_child(xml, XML_ATTR_OP); child != NULL;
              child = crm_next_same_xml(child)) {
-            /* Set the node name on the child message, assuming it isn't already. */
-            if (crm_element_value(child, PCMK__XA_ATTR_NODE_NAME) == NULL) {
-                pcmk__xe_add_node(child, host, 0);
-            }
-
+            copy_attrs(xml, child);
             attrd_peer_update_one(peer, child, filter);
 
             if (attrd_request_has_sync_point(child)) {

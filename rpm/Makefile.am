@@ -1,5 +1,5 @@
 #
-# Copyright 2003-2021 the Pacemaker project contributors
+# Copyright 2003-2022 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -113,9 +113,16 @@ MOCK_CFG	?= $(shell test -e /etc/fedora-release && echo fedora-$(F)-$(ARCH))
 distdir		= $(top_distdir)/rpm
 TARFILE		= $(abs_builddir)/../$(top_distdir).tar.gz
 
+# Create a source distribution based on a git archive. (If we aren't in a git
+# checkout, do a make dist instead.)
 export:
 	cd $(abs_srcdir)/..;							\
-	if [ -n "$(DIRTY_EXT)" ]; then						\
+	if [ -z "$(CHECKOUT)" ] && [ -f "$(TARFILE)" ]; then			\
+	    echo "`date`: Using existing tarball: $(TARFILE)";			\
+	elif [ -z "$(CHECKOUT)" ]; then						\
+	    $(MAKE) $(AM_MAKEFLAGS) dist;					\
+	    echo "`date`: Rebuilt tarball: $(TARFILE)";				\
+	elif [ -n "$(DIRTY_EXT)" ]; then					\
 	    git commit -m "DO-NOT-PUSH" -a;					\
 	    git archive --prefix=$(top_distdir)/ -o "$(TARFILE)" HEAD^{tree};	\
 	    git reset --mixed HEAD^;						\
@@ -188,7 +195,12 @@ release:
 
 .PHONY: rc
 rc:
-	$(MAKE) $(AM_MAKEFLAGS) TAG=$(LAST_RC) rpm
+	if [ -n "$(LAST_RC)" ]; then				\
+		@echo 'rc can only be used in git checkout';	\
+		false;						\
+	else							\
+		$(MAKE) $(AM_MAKEFLAGS) TAG=$(LAST_RC) rpm;	\
+	fi
 
 .PHONY: chroot
 chroot: mock-$(MOCK_CFG) mock-install-$(MOCK_CFG) mock-sh-$(MOCK_CFG)
@@ -238,12 +250,13 @@ mock-clean:
 
 # Make debugging makefile issues easier
 vars:
+	@echo "CHECKOUT=$(CHECKOUT)"
+	@echo "VERSION=$(VERSION)"
 	@echo "COMMIT=$(COMMIT)"
 	@echo "TAG=$(TAG)"
 	@echo "DIRTY=$(DIRTY)"
 	@echo "DIRTY_EXT=$(DIRTY_EXT)"
 	@echo "LAST_RC=$(LAST_RC)"
-	@echo "LAST_FINAL=$(LAST_FINAL)"
 	@echo "LAST_RELEASE=$(LAST_RELEASE)"
 	@echo "NEXT_RELEASE=$(NEXT_RELEASE)"
 	@echo "top_distdir=$(top_distdir)"
