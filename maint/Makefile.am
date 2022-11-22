@@ -32,9 +32,14 @@ require_last_release:
 
 .PHONY: summary
 summary: require_last_release
-	@printf "\n* `date +"%a %b %d %Y"` `git config user.name` <`git config user.email`> $(NEXT_RELEASE)"
-	@printf "\n- Changesets: `git log --pretty=oneline --no-merges $(LAST_RELEASE)..HEAD | wc -l`"
-	@printf "\n- Diff:`git diff $(LAST_RELEASE)..HEAD --shortstat $(CHANGELOG_DIRS)`\n"
+	@printf "* %s %s <%s> %s\n" "$$(date +'%a %b %d %Y')"		\
+		"$$(git config user.name)" "$$(git config user.email)"	\
+		"$(NEXT_RELEASE)"
+	@printf "\055 %d commits with%s\n"				\
+		"$$(git log --pretty=oneline --no-merges		\
+			$(LAST_RELEASE)..HEAD | wc -l)"			\
+		"$$(git diff $(LAST_RELEASE)..HEAD --shortstat		\
+			$(CHANGELOG_DIRS))"
 
 .PHONY: changes
 changes: summary
