@@ -31,12 +31,6 @@ DIRTY_EXT	= $(shell [ -n "$(DIRTY)" ]				\
 lparen = (
 rparen = )
 
-# git tag of highest-versioned release candidate (such as "Pacemaker-2.1.5-rc2")
-# or empty if not in git checkout
-LAST_RC		?= $(shell git tag -l 2>/dev/null				\
-		     | sed -n -e 's/^\(Pacemaker-[0-9.]*-rc[0-9]*\)$$/\1/p'	\
-		     | sort -Vr | head -n 1)
-
 # This will be empty if not in a git checkout
 CHECKOUT	= $(shell git rev-parse --git-dir 2>/dev/null)
 
