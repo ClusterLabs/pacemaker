@@ -37,9 +37,8 @@ LAST_RC		?= $(shell git tag -l 2>/dev/null				\
 		     | sed -n -e 's/^\(Pacemaker-[0-9.]*-rc[0-9]*\)$$/\1/p'	\
 		     | sort -Vr | head -n 1)
 
-# true if in a git checkout
-CHECKOUT	= $(shell git rev-parse --git-dir >/dev/null 2>/dev/null 	\
-		    && echo true)
+# This will be empty if not in a git checkout
+CHECKOUT	= $(shell git rev-parse --git-dir 2>/dev/null)
 
 # VERSION is set by configure, but we allow some make targets to be run without
 # running configure first, so set a reasonable default in that case.

@@ -20,8 +20,18 @@ EXTRA_DIST		= README
 # Count changes in these directories
 CHANGELOG_DIRS = ../include ../lib ../daemons ../tools ../xml
 
+.PHONY: require_last_release
+require_last_release:
+	@if [ -z "$(CHECKOUT)" ]; then					\
+		echo "This target must be run from a git checkout";	\
+		exit 1;							\
+	elif ! git rev-parse $(LAST_RELEASE) >/dev/null 2>&1; then	\
+		echo "LAST_RELEASE must be set to a valid git tag";	\
+		exit 1;							\
+	fi
+
 .PHONY: summary
-summary:
+summary: require_last_release
 	@printf "\n* `date +"%a %b %d %Y"` `git config user.name` <`git config user.email`> $(NEXT_RELEASE)"
 	@printf "\n- Changesets: `git log --pretty=oneline --no-merges $(LAST_RELEASE)..HEAD | wc -l`"
 	@printf "\n- Diff:`git diff $(LAST_RELEASE)..HEAD --shortstat $(CHANGELOG_DIRS)`\n"
@@ -49,11 +59,11 @@ rc-changes:
 	@$(MAKE) $(AM_MAKEFLAGS) NEXT_RELEASE=$(shell echo $(LAST_RC) | sed s:-rc.*::) LAST_RELEASE=$(LAST_RC) changes
 
 .PHONY: authors
-authors:
+authors: require_last_release
 	git log $(LAST_RELEASE)..$(COMMIT) --format='%an' | sort -u
 
 .PHONY: changelog
-changelog:
+changelog: require_last_release
 	@$(MAKE) $(AM_MAKEFLAGS) changes > ../ChangeLog
 	@printf "\n">> ../ChangeLog
 	git show $(LAST_RELEASE):ChangeLog >> ../ChangeLog
