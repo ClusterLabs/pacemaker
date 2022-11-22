@@ -49,6 +49,7 @@ reply_expected(pcmk_ipc_api_t *api, xmlNode *request)
     const char *command = crm_element_value(request, PCMK__XA_TASK);
 
     return pcmk__str_any_of(command,
+                            PCMK__ATTRD_CMD_CLEAR_FAILURE,
                             PCMK__ATTRD_CMD_QUERY,
                             PCMK__ATTRD_CMD_REFRESH,
                             PCMK__ATTRD_CMD_UPDATE,
