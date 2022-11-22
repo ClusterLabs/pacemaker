@@ -53,11 +53,18 @@ VERSION		?= $(shell if [ -z "$(CHECKOUT)" ]; then			\
 # What the git tag would be for configured VERSION (such as "Pacemaker-2.1.5")
 LAST_RELEASE	?= Pacemaker-$(VERSION)
 
-# What the git tag would be for configured VERSION with minor-minor version bump
-# (such as "Pacemaker-2.1.6"; this should be manually overriden when bumping
+# What the git tag would be for the release after the configured VERSION
+# (LAST_RELEASE stripped of its -rc* suffix if present, or with minor-minor
+# version bumped if not; this should be manually overriden when bumping
 # the major or minor version)
-NEXT_RELEASE	?= $(shell echo $(LAST_RELEASE) 			\
-		     | awk -F. '/[0-9]+\./{$$3+=1;OFS=".";print $$1,$$2,$$3}')
+NEXT_RELEASE	?= $(shell case "$(LAST_RELEASE)" in				\
+			*-rc*$(rparen)						\
+				echo $(LAST_RELEASE) | sed s:-rc.*:: ;;		\
+			*$(rparen)						\
+				echo $(LAST_RELEASE) | awk -F.			\
+				'/[0-9]+\./{$$3+=1;OFS=".";print $$1,$$2,$$3}'	\
+				;;						\
+		     esac)
 
 # We have two make targets for creating distributions:
 #
