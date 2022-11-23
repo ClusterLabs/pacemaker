@@ -46,6 +46,9 @@ static struct {
     gboolean force;
     gboolean get_node_path;
     gboolean local;
+
+    //! \deprecated
+    gboolean no_bcast;
 } options;
 
 int do_init(void);
@@ -453,7 +456,6 @@ main(int argc, char **argv)
     xmlNode *input = NULL;
     const char *acl_cred = NULL;
 
-    bool no_bcast = false;
     bool no_children = false;
     bool sync_call = false;
 
@@ -583,7 +585,7 @@ main(int argc, char **argv)
                 dangerous_cmd = TRUE;
                 break;
             case 'b':
-                no_bcast = true;
+                options.no_bcast = TRUE;
                 dangerous_cmd = TRUE;
                 break;
             case 's':
@@ -692,7 +694,7 @@ main(int argc, char **argv)
     }
 
     // @COMPAT: Deprecated option
-    if (no_bcast) {
+    if (options.no_bcast) {
         // Configure command to take effect only locally and not to broadcast
         cib__set_call_options(options.cmd_options, crm_system_name,
                               cib_inhibit_bcast|cib_scope_local);
