@@ -559,18 +559,15 @@ main(int argc, char **argv)
                 pcmk__cli_help(flag, CRM_EX_OK);
                 break;
             case 'o':
-                crm_trace("Option %c => %s", flag, optarg);
                 obj_type = optarg;
                 cib__clear_call_options(command_options, crm_system_name,
                                         cib_xpath);
                 break;
             case 'X':
-                crm_trace("Option %c => %s", flag, optarg);
                 admin_input_xml = optarg;
                 crm_log_args(argc, argv);
                 break;
             case 'x':
-                crm_trace("Option %c => %s", flag, optarg);
                 admin_input_file = optarg;
                 crm_log_args(argc, argv);
                 break;
