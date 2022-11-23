@@ -231,9 +231,12 @@ static pcmk__cli_option_t long_options[] = {
     },
     {
         "-spacer-", no_argument, NULL, '-',
-        "\tValid values: configuration, nodes, resources, constraints, "
-            "crm_config, rsc_defaults, op_defaults, acls, fencing-topology, "
-            "tags, alerts, status",
+        "\tValid values: " XML_CIB_TAG_CONFIGURATION ", " XML_CIB_TAG_NODES
+        ", " XML_CIB_TAG_RESOURCES ", " XML_CIB_TAG_CONSTRAINTS
+        ", " XML_CIB_TAG_CRMCONFIG ", " XML_CIB_TAG_RSCCONFIG
+        ", " XML_CIB_TAG_OPCONFIG ", " XML_CIB_TAG_ACLS
+        ", " XML_TAG_FENCING_TOPOLOGY ", " XML_CIB_TAG_TAGS
+        ", " XML_CIB_TAG_ALERTS ", " XML_CIB_TAG_STATUS,
         pcmk__option_default
     },
 
@@ -459,6 +462,34 @@ cib_action_is_dangerous(void)
                                NULL);
 }
 
+/*!
+ * \internal
+ * \brief Determine whether the given CIB scope is valid for \p cibadmin
+ *
+ * \param[in] scope  Scope to validate
+ *
+ * \return true if \p scope is valid, or false otherwise
+ * \note An invalid scope applies the operation to the entire CIB.
+ */
+static inline bool
+scope_is_valid(const char *scope)
+{
+    return pcmk__str_any_of(scope,
+                            XML_CIB_TAG_CONFIGURATION,
+                            XML_CIB_TAG_NODES,
+                            XML_CIB_TAG_RESOURCES,
+                            XML_CIB_TAG_CONSTRAINTS,
+                            XML_CIB_TAG_CRMCONFIG,
+                            XML_CIB_TAG_RSCCONFIG,
+                            XML_CIB_TAG_OPCONFIG,
+                            XML_CIB_TAG_ACLS,
+                            XML_TAG_FENCING_TOPOLOGY,
+                            XML_CIB_TAG_TAGS,
+                            XML_CIB_TAG_ALERTS,
+                            XML_CIB_TAG_STATUS,
+                            NULL);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -671,6 +702,14 @@ main(int argc, char **argv)
         // Enable getting section by XPath
         cib__set_call_options(options.cmd_options, crm_system_name,
                               cib_xpath);
+
+    } else if (options.section_type == cibadmin_section_scope) {
+        if (!scope_is_valid(options.cib_section)) {
+            // @COMPAT: Consider requiring --force to proceed
+            fprintf(stderr,
+                    "Invalid value '%s' for '--scope'. Operation will apply "
+                    "to the entire CIB.\n", options.cib_section);
+        }
     }
 
     if (options.allow_create) {
