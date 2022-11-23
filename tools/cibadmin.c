@@ -220,6 +220,12 @@ static pcmk__cli_option_t long_options[] = {
         "A valid XPath to use instead of --scope/-o", pcmk__option_default
     },
     {
+        "-spacer-", no_argument, NULL, '-',
+        "\n\tIf both --scope/-o and --xpath/-a are specified, the last one to "
+        "appear takes effect\n",
+        pcmk__option_default
+    },
+    {
         "node-path", no_argument, NULL, 'e',
         "When performing XPath queries, return path of any matches found",
         pcmk__option_default
@@ -555,6 +561,8 @@ main(int argc, char **argv)
             case 'o':
                 crm_trace("Option %c => %s", flag, optarg);
                 obj_type = optarg;
+                cib__clear_call_options(command_options, crm_system_name,
+                                        cib_xpath);
                 break;
             case 'X':
                 crm_trace("Option %c => %s", flag, optarg);
