@@ -1,0 +1,71 @@
+Current cluster status:
+  * Node List:
+    * Online: [ node1 node2 node3 node4 node5 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started node1
+    * Clone Set: rsc2-clone [rsc2]:
+      * Stopped: [ node1 node2 node3 node4 node5 ]
+    * rsc1	(ocf:pacemaker:Dummy):	 Stopped
+    * Resource Group: group1:
+      * group1rsc1	(ocf:pacemaker:Dummy):	 Stopped
+      * group1rsc2	(ocf:pacemaker:Dummy):	 Stopped
+
+Transition Summary:
+  * Start      rsc2:0         ( node2 )
+  * Start      rsc2:1         ( node3 )
+  * Start      rsc2:2         ( node4 )
+  * Start      rsc1           ( node2 )
+  * Start      group1rsc1     ( node2 )
+  * Start      group1rsc2     ( node2 )
+
+Executing Cluster Transition:
+  * Resource action: rsc2:0          monitor on node5
+  * Resource action: rsc2:0          monitor on node2
+  * Resource action: rsc2:0          monitor on node1
+  * Resource action: rsc2:1          monitor on node3
+  * Resource action: rsc2:2          monitor on node4
+  * Pseudo action:   rsc2-clone_start_0
+  * Resource action: rsc1            monitor on node5
+  * Resource action: rsc1            monitor on node4
+  * Resource action: rsc1            monitor on node3
+  * Resource action: rsc1            monitor on node2
+  * Resource action: rsc1            monitor on node1
+  * Pseudo action:   group1_start_0
+  * Resource action: group1rsc1      monitor on node5
+  * Resource action: group1rsc1      monitor on node4
+  * Resource action: group1rsc1      monitor on node3
+  * Resource action: group1rsc1      monitor on node2
+  * Resource action: group1rsc1      monitor on node1
+  * Resource action: group1rsc2      monitor on node5
+  * Resource action: group1rsc2      monitor on node4
+  * Resource action: group1rsc2      monitor on node3
+  * Resource action: group1rsc2      monitor on node2
+  * Resource action: group1rsc2      monitor on node1
+  * Resource action: rsc2:0          start on node2
+  * Resource action: rsc2:1          start on node3
+  * Resource action: rsc2:2          start on node4
+  * Pseudo action:   rsc2-clone_running_0
+  * Resource action: rsc1            start on node2
+  * Resource action: group1rsc1      start on node2
+  * Resource action: group1rsc2      start on node2
+  * Resource action: rsc2:0          monitor=10000 on node2
+  * Resource action: rsc2:1          monitor=10000 on node3
+  * Resource action: rsc2:2          monitor=10000 on node4
+  * Resource action: rsc1            monitor=10000 on node2
+  * Pseudo action:   group1_running_0
+  * Resource action: group1rsc1      monitor=10000 on node2
+  * Resource action: group1rsc2      monitor=10000 on node2
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 node2 node3 node4 node5 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started node1
+    * Clone Set: rsc2-clone [rsc2]:
+      * Started: [ node2 node3 node4 ]
+    * rsc1	(ocf:pacemaker:Dummy):	 Started node2
+    * Resource Group: group1:
+      * group1rsc1	(ocf:pacemaker:Dummy):	 Started node2
+      * group1rsc2	(ocf:pacemaker:Dummy):	 Started node2

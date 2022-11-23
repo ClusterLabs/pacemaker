@@ -258,6 +258,9 @@ TESTS = [
         [ "colocation-priority-group", "Apply group colocations in order of primary priority" ],
         [ "colocation-vs-stickiness", "Group stickiness outweighs anti-colocation score" ],
         [ "promoted-with-blocked", "Promoted role colocated with a resource with blocked start" ],
+        [ "primitive-with-group-with-clone",
+          "Consider group dependent when colocating with clone"
+        ],
     ],
     [
         [ "rsc-sets-seq-true", "Resource Sets - sequential=false" ],
