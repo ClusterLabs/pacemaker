@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 2\n"
 "Report-Msgid-Bugs-To: developers@clusterlabs.org\n"
-"POT-Creation-Date: 2022-11-17 18:22+0800\n"
+"POT-Creation-Date: 2022-11-22 16:46+0800\n"
 "PO-Revision-Date: 2021-11-08 11:04+0800\n"
 "Last-Translator: Vivi <developers@clusterlabs.org>\n"
 "Language-Team: CHINESE <wangluwei@uniontech.org>\n"
@@ -20,29 +20,29 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: daemons/controld/controld_control.c:524
+#: daemons/controld/controld_control.c:530
 msgid "Pacemaker version on cluster node elected Designated Controller (DC)"
 msgstr "集群选定的控制器节点(DC)的 Pacemaker 版本"
 
-#: daemons/controld/controld_control.c:525
+#: daemons/controld/controld_control.c:531
 msgid ""
 "Includes a hash which identifies the exact changeset the code was built "
 "from. Used for diagnostic purposes."
 msgstr "它包含一个标识所构建代码变更版本的哈希值，其可用于诊断。"
 
-#: daemons/controld/controld_control.c:530
+#: daemons/controld/controld_control.c:536
 msgid "The messaging stack on which Pacemaker is currently running"
 msgstr "Pacemaker 正在使用的消息传输引擎"
 
-#: daemons/controld/controld_control.c:531
+#: daemons/controld/controld_control.c:537
 msgid "Used for informational and diagnostic purposes."
 msgstr "用于提供信息和诊断。"
 
-#: daemons/controld/controld_control.c:535
+#: daemons/controld/controld_control.c:541
 msgid "An arbitrary name for the cluster"
 msgstr "任意的集群名称"
 
-#: daemons/controld/controld_control.c:536
+#: daemons/controld/controld_control.c:542
 msgid ""
 "This optional value is mostly for users' convenience as desired in "
 "administration, but may also be used in Pacemaker configuration rules via "
@@ -52,17 +52,17 @@ msgstr ""
 "该可选值主要是为了方便用户管理使用，也可以在pacemaker 配置规则中通过 "
 "#cluster-name 节点属性配置使用，也可以通过高级工具和资源代理使用。"
 
-#: daemons/controld/controld_control.c:544
+#: daemons/controld/controld_control.c:550
 msgid "How long to wait for a response from other nodes during start-up"
 msgstr "启动过程中等待其他节点响应的时间"
 
-#: daemons/controld/controld_control.c:545
+#: daemons/controld/controld_control.c:551
 msgid ""
 "The optimal value will depend on the speed and load of your network and the "
 "type of switches used."
 msgstr "其最佳值将取决于你的网络速度和负载以及所用交换机的类型。"
 
-#: daemons/controld/controld_control.c:550
+#: daemons/controld/controld_control.c:556
 msgid ""
 "Zero disables polling, while positive values are an interval in "
 "seconds(unless other units are specified, for example \"5min\")"
@@ -70,13 +70,13 @@ msgstr ""
 "设置为0将禁用轮询，设置为正数将是以秒为单位的时间间隔（除非使用了其他单位，比"
 "如\"5min\"表示5分钟）"
 
-#: daemons/controld/controld_control.c:553
+#: daemons/controld/controld_control.c:559
 msgid ""
 "Polling interval to recheck cluster state and evaluate rules with date "
 "specifications"
 msgstr "重新检查集群状态并且评估具有日期规格的配置规则的轮询间隔"
 
-#: daemons/controld/controld_control.c:555
+#: daemons/controld/controld_control.c:561
 msgid ""
 "Pacemaker is primarily event-driven, and looks ahead to know when to recheck "
 "cluster state for failure timeouts and most time-based rules. However, it "
@@ -89,26 +89,26 @@ msgstr ""
 "将重新检查集群，以评估具有日期规格的规则，并为某些类型的调度程序缺陷提供故障"
 "保护。"
 
-#: daemons/controld/controld_control.c:564
+#: daemons/controld/controld_control.c:570
 msgid "Maximum amount of system load that should be used by cluster nodes"
 msgstr "集群节点应该使用的最大系统负载量"
 
-#: daemons/controld/controld_control.c:565
+#: daemons/controld/controld_control.c:571
 msgid ""
 "The cluster will slow down its recovery process when the amount of system "
 "resources used (currently CPU) approaches this limit"
 msgstr "当使用的系统资源量（当前为CPU）接近此限制时，集群将减慢其恢复过程"
 
-#: daemons/controld/controld_control.c:571
+#: daemons/controld/controld_control.c:577
 msgid ""
 "Maximum number of jobs that can be scheduled per node (defaults to 2x cores)"
 msgstr "每个节点可以调度的最大作业数（默认为2x内核数）"
 
-#: daemons/controld/controld_control.c:575
+#: daemons/controld/controld_control.c:581
 msgid "How a cluster node should react if notified of its own fencing"
 msgstr "集群节点在收到针对自己的 fence 操作结果通知时应如何反应"
 
-#: daemons/controld/controld_control.c:576
+#: daemons/controld/controld_control.c:582
 msgid ""
 "A cluster node may receive notification of its own fencing if fencing is "
 "misconfigured, or if fabric fencing is in use that doesn't cut cluster "
@@ -121,7 +121,7 @@ msgstr ""
 "止 pacemaker 并保持停用状态,或者 \"panic\" 尝试立即重新启动本地节点，并在失败"
 "时返回执行stop。"
 
-#: daemons/controld/controld_control.c:586
+#: daemons/controld/controld_control.c:592
 msgid ""
 "Declare an election failed if it is not decided within this much time. If "
 "you need to adjust this value, it probably indicates the presence of a bug."
@@ -129,7 +129,7 @@ msgstr ""
 "如果集群在本项设置时间内没有作出决定则宣布选举失败。如果您需要调整该值，这可"
 "能代表存在某些缺陷。"
 
-#: daemons/controld/controld_control.c:594
+#: daemons/controld/controld_control.c:600
 msgid ""
 "Exit immediately if shutdown does not complete within this much time. If you "
 "need to adjust this value, it probably indicates the presence of a bug."
@@ -137,20 +137,20 @@ msgstr ""
 "如果在这段时间内关机仍未完成，则立即退出。如果您需要调整该值，这可能代表存在"
 "某些缺陷。"
 
-#: daemons/controld/controld_control.c:602
-#: daemons/controld/controld_control.c:609
+#: daemons/controld/controld_control.c:608
+#: daemons/controld/controld_control.c:615
 msgid ""
 "If you need to adjust this value, it probably indicates the presence of a "
 "bug."
 msgstr "如果您需要调整该值，这可能代表存在某些缺陷。"
 
-#: daemons/controld/controld_control.c:615
+#: daemons/controld/controld_control.c:621
 msgid ""
 "*** Advanced Use Only *** Enabling this option will slow down cluster "
 "recovery under all conditions"
 msgstr "*** Advanced Use Only *** 启用此选项将在所有情况下减慢集群恢复的速度"
 
-#: daemons/controld/controld_control.c:617
+#: daemons/controld/controld_control.c:623
 msgid ""
 "Delay cluster recovery for this much time to allow for additional events to "
 "occur. Useful if your configuration is sensitive to the order in which ping "
@@ -159,7 +159,7 @@ msgstr ""
 "集群恢复将被推迟指定的时间间隔，以等待更多事件发生。如果您的配置对 ping 更新"
 "到达的顺序很敏感，这就很有用"
 
-#: daemons/controld/controld_control.c:624
+#: daemons/controld/controld_control.c:630
 #, fuzzy
 msgid ""
 "How long before nodes can be assumed to be safely down when watchdog-based "
@@ -168,7 +168,7 @@ msgstr ""
 "当基于 watchdog 的自我 fence 机制通过SBD 被执行时，我们可以假设节点安全关闭之"
 "前需要等待多长时间"
 
-#: daemons/controld/controld_control.c:626
+#: daemons/controld/controld_control.c:632
 msgid ""
 "If this is set to a positive value, lost nodes are assumed to self-fence "
 "using watchdog-based SBD within this much time. This does not require a "
@@ -193,7 +193,7 @@ msgstr ""
 "Pacemaker将拒绝在任何节点上启动。如果设置为负值，则在使用SBD的所有节点上，"
 "`SBD_WATCHDOG_TIMEOUT`必须设置为相同的值，否则可能会发生数据损坏或丢失。"
 
-#: daemons/controld/controld_control.c:645
+#: daemons/controld/controld_control.c:651
 msgid ""
 "How many times fencing can fail before it will no longer be immediately re-"
 "attempted on a target"
@@ -592,9 +592,37 @@ msgstr ""
 "如果日志中有针对集群守护程序PID的消息“Evicting client”，（则建议将值设为集群"
 "中的资源数量乘以节点数量）"
 
-#: lib/common/options.c:630
+#: lib/common/options.c:633
 msgid "  Allowed values: "
 msgstr " 允许的值: "
+
+#: lib/common/cmdline.c:71
+msgid "Display software version and exit"
+msgstr "显示软件版本信息"
+
+#: lib/common/cmdline.c:74
+msgid "Increase debug output (may be specified multiple times)"
+msgstr "显示更多调试信息（可多次指定）"
+
+#: lib/common/cmdline.c:92
+msgid "FORMAT"
+msgstr "格式"
+
+#: lib/common/cmdline.c:94
+msgid "Specify file name for output (or \"-\" for stdout)"
+msgstr "指定输出的文件名 或指定'-' 表示标准输出"
+
+#: lib/common/cmdline.c:94
+msgid "DEST"
+msgstr "目标"
+
+#: lib/common/cmdline.c:100
+msgid "Output Options:"
+msgstr "输出选项"
+
+#: lib/common/cmdline.c:100
+msgid "Show output help"
+msgstr "显示输出帮助"
 
 #: lib/pengine/common.c:39
 msgid "What to do when the cluster does not have quorum"
@@ -786,12 +814,12 @@ msgid ""
 "*** Deprecated *** Whether to remove stopped resources from the executor"
 msgstr "***不推荐***是否从pacemaker-execd 守护进程中清除已停止的资源"
 
-#: tools/crm_resource.c:1408
+#: tools/crm_resource.c:1414
 #, fuzzy, c-format
 msgid "Metadata query for %s failed: %s"
 msgstr "，查询%s的元数据失败: %s\n"
 
-#: tools/crm_resource.c:1414
+#: tools/crm_resource.c:1420
 #, c-format
 msgid "'%s' is not a valid agent specification"
 msgstr "'%s' 是一个无效的代理"

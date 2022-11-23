@@ -68,10 +68,10 @@ pcmk__build_arg_context(pcmk__common_args_t *common_args, const char *fmts,
 
     GOptionEntry main_entries[3] = {
         { "version", '$', 0, G_OPTION_ARG_NONE, &(common_args->version),
-          "Display software version and exit",
+          N_("Display software version and exit"),
           NULL },
         { "verbose", 'V', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, bump_verbosity,
-          "Increase debug output (may be specified multiple times)",
+          N_("Increase debug output (may be specified multiple times)"),
           NULL },
 
         { NULL }
@@ -89,15 +89,15 @@ pcmk__build_arg_context(pcmk__common_args_t *common_args, const char *fmts,
         GOptionEntry output_entries[3] = {
             { "output-as", 0, 0, G_OPTION_ARG_STRING, &(common_args->output_ty),
               NULL,
-              "FORMAT" },
+              N_("FORMAT") },
             { "output-to", 0, 0, G_OPTION_ARG_STRING, &(common_args->output_dest),
-              "Specify file name for output (or \"-\" for stdout)", "DEST" },
+              N_( "Specify file name for output (or \"-\" for stdout)"), N_("DEST") },
 
             { NULL }
         };
 
         if (*output_group == NULL) {
-            *output_group = g_option_group_new("output", "Output Options:", "Show output help", NULL, NULL);
+            *output_group = g_option_group_new("output", N_("Output Options:"), N_("Show output help"), NULL, NULL);
         }
 
         common_args->output_as_descr = crm_strdup_printf("Specify output format as one of: %s", fmts);

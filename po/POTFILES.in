@@ -4,5 +4,6 @@ daemons/controld/controld_control.c
 daemons/fenced/pacemaker-fenced.c
 lib/cib/cib_utils.c
 lib/common/options.c
+lib/common/cmdline.c
 lib/pengine/common.c
 tools/crm_resource.c
