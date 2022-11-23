@@ -23,7 +23,6 @@ enum cibadmin_section_type {
     cibadmin_section_xpath,
 };
 
-static int message_timeout_sec = 0;
 static int command_options = 0;
 static int request_id = 0;
 static int bump_log_num = 0;
@@ -38,6 +37,10 @@ static const char *cib_section = NULL;
 static cib_t *the_cib = NULL;
 static GMainLoop *mainloop = NULL;
 static crm_exit_t exit_code = CRM_EX_OK;
+
+static struct {
+    gint message_timeout_sec;
+} options;
 
 int do_init(void);
 int do_work(xmlNode *input, int command_options, xmlNode **output);
@@ -472,7 +475,7 @@ main(int argc, char **argv)
 
         switch (flag) {
             case 't':
-                message_timeout_sec = atoi(optarg);
+                options.message_timeout_sec = (gint) atoi(optarg);
                 break;
             case 'A':
                 section_type = cibadmin_section_xpath;
@@ -645,9 +648,9 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (message_timeout_sec < 1) {
+    if (options.message_timeout_sec < 1) {
         // Set default timeout
-        message_timeout_sec = 30;
+        options.message_timeout_sec = 30;
     }
 
     if (section_type == cibadmin_section_xpath) {
@@ -826,8 +829,8 @@ main(int argc, char **argv)
         request_id = rc;
 
         the_cib->cmds->register_callback(the_cib, request_id,
-                                         message_timeout_sec, FALSE, NULL,
-                                         "cibadmin_op_callback",
+                                         options.message_timeout_sec, FALSE,
+                                         NULL, "cibadmin_op_callback",
                                          cibadmin_op_callback);
 
         mainloop = g_main_loop_new(NULL, FALSE);
@@ -913,7 +916,7 @@ int
 do_work(xmlNode * input, int call_options, xmlNode ** output)
 {
     /* construct the request */
-    the_cib->call_timeout = message_timeout_sec;
+    the_cib->call_timeout = options.message_timeout_sec;
     if ((strcmp(cib_action, PCMK__CIB_REQUEST_REPLACE) == 0)
         && pcmk__str_eq(crm_element_name(input), XML_TAG_CIB, pcmk__str_casei)) {
         xmlNode *status = pcmk_find_cib_element(input, XML_CIB_TAG_STATUS);
