@@ -41,6 +41,7 @@ static struct {
     int cmd_options;
     gint message_timeout_sec;
     enum pcmk__acl_render_how acl_render_mode;
+    bool delete_all;
     gboolean allow_create;
 } options;
 
@@ -449,7 +450,6 @@ main(int argc, char **argv)
     xmlNode *input = NULL;
     const char *acl_cred = NULL;
 
-    bool delete_all = false;
     bool force = false;
     bool get_node_path = false;
     bool local = false;
@@ -532,7 +532,7 @@ main(int argc, char **argv)
                 break;
             case 'D':
                 options.cib_action = PCMK__CIB_REQUEST_DELETE;
-                delete_all = false;
+                options.delete_all = false;
                 break;
             case '5':
                 options.cib_action = "md5-sum";
@@ -579,7 +579,7 @@ main(int argc, char **argv)
                 break;
             case 'd':
                 options.cib_action = PCMK__CIB_REQUEST_DELETE;
-                delete_all = true;
+                options.delete_all = true;
                 dangerous_cmd = TRUE;
                 break;
             case 'b':
@@ -633,10 +633,10 @@ main(int argc, char **argv)
         pcmk__cli_help('?', CRM_EX_USAGE);
     }
 
-    if (delete_all
+    if (options.delete_all
         && (strcmp(options.cib_action, PCMK__CIB_REQUEST_DELETE) != 0)) {
         // --delete-all was replaced by some other action besides --delete
-        delete_all = false;
+        options.delete_all = false;
     }
 
     if (dangerous_cmd && !force) {
@@ -665,7 +665,7 @@ main(int argc, char **argv)
                               cib_can_create);
     }
 
-    if (delete_all) {
+    if (options.delete_all) {
         // With cibadmin_section_xpath, remove all matching objects
         cib__set_call_options(options.cmd_options, crm_system_name,
                               cib_multiple);
