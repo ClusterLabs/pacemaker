@@ -26,7 +26,6 @@ enum cibadmin_section_type {
 static int request_id = 0;
 static int bump_log_num = 0;
 
-static char *host = NULL;
 static const char *cib_user = NULL;
 
 static enum cibadmin_section_type section_type = cibadmin_section_all;
@@ -41,6 +40,7 @@ static struct {
     int cmd_options;
     gint message_timeout_sec;
     enum pcmk__acl_render_how acl_render_mode;
+    gchar *dest_node;
     bool delete_all;
     gboolean allow_create;
     gboolean force;
@@ -573,7 +573,8 @@ main(int argc, char **argv)
                 break;
             case 'N':
             case 'h':
-                pcmk__str_update(&host, optarg);
+                g_free(options.dest_node);
+                options.dest_node = g_strdup(optarg);
                 break;
             case 'l':
                 options.local = TRUE;
@@ -903,7 +904,7 @@ main(int argc, char **argv)
     crm_trace("%s exiting normally", crm_system_name);
 
 done:
-    free(host);
+    g_free(options.dest_node);
     free_xml(input);
     free_xml(output);
 
@@ -930,8 +931,9 @@ do_work(xmlNode *input, xmlNode **output)
     }
 
     crm_trace("Passing \"%s\" to variant_op...", options.cib_action);
-    return cib_internal_op(the_cib, options.cib_action, host, cib_section,
-                           input, output, options.cmd_options, cib_user);
+    return cib_internal_op(the_cib, options.cib_action, options.dest_node,
+                           cib_section, input, output, options.cmd_options,
+                           cib_user);
 }
 
 int
