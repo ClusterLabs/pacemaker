@@ -444,6 +444,21 @@ report_schema_unchanged(void)
     exit_code = CRM_EX_OK;
 }
 
+/*!
+ * \internal
+ * \brief Check whether the current CIB action is dangerous
+ * \return true if \p options.cib_action is dangerous, or false otherwise
+ */
+static inline bool
+cib_action_is_dangerous(void)
+{
+    return options.no_bcast || options.delete_all
+           || pcmk__str_any_of(options.cib_action,
+                               PCMK__CIB_REQUEST_UPGRADE,
+                               PCMK__CIB_REQUEST_ERASE,
+                               NULL);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -451,7 +466,6 @@ main(int argc, char **argv)
     int rc = pcmk_ok;
     int flag;
     const char *source = NULL;
-    gboolean dangerous_cmd = FALSE;
     xmlNode *output = NULL;
     xmlNode *input = NULL;
     gchar *acl_cred = NULL;
@@ -485,11 +499,9 @@ main(int argc, char **argv)
                 break;
             case 'u':
                 options.cib_action = PCMK__CIB_REQUEST_UPGRADE;
-                dangerous_cmd = TRUE;
                 break;
             case 'E':
                 options.cib_action = PCMK__CIB_REQUEST_ERASE;
-                dangerous_cmd = TRUE;
                 break;
             case 'S':
                 if (pcmk__str_eq(optarg, "auto", pcmk__str_null_matches)) {
@@ -583,11 +595,9 @@ main(int argc, char **argv)
             case 'd':
                 options.cib_action = PCMK__CIB_REQUEST_DELETE;
                 options.delete_all = true;
-                dangerous_cmd = TRUE;
                 break;
             case 'b':
                 options.no_bcast = TRUE;
-                dangerous_cmd = TRUE;
                 break;
             case 's':
                 options.sync_call = TRUE;
@@ -643,7 +653,7 @@ main(int argc, char **argv)
         options.delete_all = false;
     }
 
-    if (dangerous_cmd && !options.force) {
+    if (cib_action_is_dangerous() && !options.force) {
         exit_code = CRM_EX_UNSAFE;
         fprintf(stderr, "The supplied command is considered dangerous."
                 "  To prevent accidental destruction of the cluster,"
