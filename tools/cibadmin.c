@@ -37,7 +37,6 @@ static const char *cib_section = NULL;
 
 static cib_t *the_cib = NULL;
 static GMainLoop *mainloop = NULL;
-static gboolean force_flag = FALSE;
 static crm_exit_t exit_code = CRM_EX_OK;
 
 int do_init(void);
@@ -447,6 +446,15 @@ main(int argc, char **argv)
     const char *acl_cred = NULL;
     enum pcmk__acl_render_how acl_render_mode = pcmk__acl_render_none;
 
+    bool allow_create = false;
+    bool delete_all = false;
+    bool force = false;
+    bool get_node_path = false;
+    bool local = false;
+    bool no_bcast = false;
+    bool no_children = false;
+    bool sync_call = false;
+
     int option_index = 0;
 
     pcmk__cli_init_logging("cibadmin", 0);
@@ -472,8 +480,7 @@ main(int argc, char **argv)
                 cib_section = optarg;
                 break;
             case 'e':
-                cib__set_call_options(command_options, crm_system_name,
-                                      cib_xpath_address);
+                get_node_path = true;
                 break;
             case 'u':
                 cib_action = PCMK__CIB_REQUEST_UPGRADE;
@@ -502,15 +509,6 @@ main(int argc, char **argv)
                             optarg);
                     ++argerr;
                 }
-
-                /* The ACL render modes work only with sync calls due to
-                 * differences in output handling. It shouldn't matter to the
-                 * user whether the call is sync or async; for a CIB query, we
-                 * have to wait for the result in order to display it in any
-                 * case.
-                 */
-                cib__set_call_options(command_options, crm_system_name,
-                                      cib_sync_call);
                 break;
             case 'Q':
                 cib_action = PCMK__CIB_REQUEST_QUERY;
@@ -532,6 +530,7 @@ main(int argc, char **argv)
                 break;
             case 'D':
                 cib_action = PCMK__CIB_REQUEST_DELETE;
+                delete_all = false;
                 break;
             case '5':
                 cib_action = "md5-sum";
@@ -540,19 +539,15 @@ main(int argc, char **argv)
                 cib_action = "md5-sum-versioned";
                 break;
             case 'c':
-                cib__set_call_options(command_options, crm_system_name,
-                                      cib_can_create);
+                allow_create = true;
                 break;
             case 'n':
-                cib__set_call_options(command_options, crm_system_name,
-                                      cib_no_children);
+                no_children = true;
                 break;
             case 'B':
                 cib_action = PCMK__CIB_REQUEST_BUMP;
                 break;
             case 'V':
-                cib__set_call_options(command_options, crm_system_name,
-                                      cib_verbose);
                 bump_log_num++;
                 break;
             case '?':
@@ -578,28 +573,22 @@ main(int argc, char **argv)
                 pcmk__str_update(&host, optarg);
                 break;
             case 'l':
-                cib__set_call_options(command_options, crm_system_name,
-                                      cib_scope_local);
+                local = true;
                 break;
             case 'd':
                 cib_action = PCMK__CIB_REQUEST_DELETE;
-                cib__set_call_options(command_options, crm_system_name,
-                                      cib_multiple);
+                delete_all = true;
                 dangerous_cmd = TRUE;
                 break;
             case 'b':
+                no_bcast = true;
                 dangerous_cmd = TRUE;
-                cib__set_call_options(command_options, crm_system_name,
-                                      cib_inhibit_bcast|cib_scope_local);
                 break;
             case 's':
-                cib__set_call_options(command_options, crm_system_name,
-                                      cib_sync_call);
+                sync_call = true;
                 break;
             case 'f':
-                force_flag = TRUE;
-                cib__set_call_options(command_options, crm_system_name,
-                                      cib_quorum_override);
+                force = true;
                 break;
             case 'a':
                 output = createEmptyCib(1);
@@ -615,6 +604,11 @@ main(int argc, char **argv)
                 ++argerr;
                 break;
         }
+    }
+
+    if (bump_log_num > 0) {
+        cib__set_call_options(command_options, crm_system_name,
+                              cib_verbose);
     }
 
     while (bump_log_num > 0) {
@@ -638,7 +632,13 @@ main(int argc, char **argv)
         pcmk__cli_help('?', CRM_EX_USAGE);
     }
 
-    if (dangerous_cmd && force_flag == FALSE) {
+    if (delete_all
+        && (strcmp(options.cib_action, PCMK__CIB_REQUEST_DELETE) != 0)) {
+        // --delete-all was replaced by some other action besides --delete
+        delete_all = false;
+    }
+
+    if (dangerous_cmd && !force) {
         fprintf(stderr, "The supplied command is considered dangerous."
                 "  To prevent accidental destruction of the cluster,"
                 " the --force flag is required in order to proceed.\n");
@@ -657,6 +657,63 @@ main(int argc, char **argv)
                               cib_xpath);
     }
 
+    if (allow_create) {
+        // Allow target of --modify/-M to be created if it does not exist
+        cib__set_call_options(command_options, crm_system_name,
+                              cib_can_create);
+    }
+
+    if (delete_all) {
+        // With cibadmin_section_xpath, remove all matching objects
+        cib__set_call_options(command_options, crm_system_name,
+                              cib_multiple);
+    }
+
+    if (force) {
+        // Perform the action even without quorum
+        cib__set_call_options(command_options, crm_system_name,
+                              cib_quorum_override);
+    }
+
+    if (get_node_path) {
+        /* Enable getting node path of XPath query matches.
+         * Meaningful only if section_type == cibadmin_section_xpath.
+         */
+        cib__set_call_options(command_options, crm_system_name,
+                              cib_xpath_address);
+    }
+
+    if (local) {
+        // Configure command to take effect only locally
+        cib__set_call_options(command_options, crm_system_name,
+                              cib_scope_local);
+    }
+
+    // @COMPAT: Deprecated option
+    if (no_bcast) {
+        // Configure command to take effect only locally and not to broadcast
+        cib__set_call_options(command_options, crm_system_name,
+                              cib_inhibit_bcast|cib_scope_local);
+    }
+
+    if (no_children) {
+        // When querying an object, don't include its children in the result
+        cib__set_call_options(command_options, crm_system_name,
+                              cib_no_children);
+    }
+
+    if (sync_call || (acl_render_mode != pcmk__acl_render_none)) {
+        /* Wait for call to complete before returning.
+         *
+         * The ACL render modes work only with sync calls due to differences in
+         * output handling between sync/async. It shouldn't matter to the user
+         * whether the call is synchronous; for a CIB query, we have to wait for
+         * the result in order to display it in any case.
+         */
+        cib__set_call_options(command_options, crm_system_name,
+                              cib_sync_call);
+    }
+
     if (admin_input_file != NULL) {
         input = filename2xml(admin_input_file);
         source = admin_input_file;
@@ -672,7 +729,7 @@ main(int argc, char **argv)
     } else if (acl_render_mode != pcmk__acl_render_none) {
         username = pcmk__uid2username(geteuid());
         if (pcmk_acl_required(username)) {
-            if (force_flag) {
+            if (force) {
                 fprintf(stderr, "The supplied command can provide skewed"
                                  " result since it is run under user that also"
                                  " gets guarded per ACLs on their own right."
