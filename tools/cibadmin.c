@@ -28,9 +28,6 @@ static int bump_log_num = 0;
 
 static const char *cib_user = NULL;
 
-static enum cibadmin_section_type section_type = cibadmin_section_all;
-static const char *cib_section = NULL;
-
 static cib_t *the_cib = NULL;
 static GMainLoop *mainloop = NULL;
 static crm_exit_t exit_code = CRM_EX_OK;
@@ -38,6 +35,8 @@ static crm_exit_t exit_code = CRM_EX_OK;
 static struct {
     const char *cib_action;
     int cmd_options;
+    enum cibadmin_section_type section_type;
+    char *cib_section;
     gint message_timeout_sec;
     enum pcmk__acl_render_how acl_render_mode;
     gchar *dest_node;
@@ -479,8 +478,8 @@ main(int argc, char **argv)
                 options.message_timeout_sec = (gint) atoi(optarg);
                 break;
             case 'A':
-                section_type = cibadmin_section_xpath;
-                cib_section = optarg;
+                options.section_type = cibadmin_section_xpath;
+                pcmk__str_update(&options.cib_section, optarg);
                 break;
             case 'e':
                 options.get_node_path = TRUE;
@@ -559,8 +558,8 @@ main(int argc, char **argv)
                 pcmk__cli_help(flag, CRM_EX_OK);
                 break;
             case 'o':
-                section_type = cibadmin_section_scope;
-                cib_section = optarg;
+                options.section_type = cibadmin_section_scope;
+                pcmk__str_update(&options.cib_section, optarg);
                 break;
             case 'X':
                 g_free(options.input_xml);
@@ -658,7 +657,7 @@ main(int argc, char **argv)
         options.message_timeout_sec = 30;
     }
 
-    if (section_type == cibadmin_section_xpath) {
+    if (options.section_type == cibadmin_section_xpath) {
         // Enable getting section by XPath
         cib__set_call_options(options.cmd_options, crm_system_name,
                               cib_xpath);
@@ -684,7 +683,7 @@ main(int argc, char **argv)
 
     if (options.get_node_path) {
         /* Enable getting node path of XPath query matches.
-         * Meaningful only if section_type == cibadmin_section_xpath.
+         * Meaningful only if options.section_type == cibadmin_section_xpath.
          */
         cib__set_call_options(options.cmd_options, crm_system_name,
                               cib_xpath_address);
@@ -910,6 +909,7 @@ done:
     g_free(options.dest_node);
     g_free(options.input_file);
     g_free(options.input_xml);
+    free(options.cib_section);
     free_xml(input);
     free_xml(output);
 
@@ -937,8 +937,8 @@ do_work(xmlNode *input, xmlNode **output)
 
     crm_trace("Passing \"%s\" to variant_op...", options.cib_action);
     return cib_internal_op(the_cib, options.cib_action, options.dest_node,
-                           cib_section, input, output, options.cmd_options,
-                           cib_user);
+                           options.cib_section, input, output,
+                           options.cmd_options, cib_user);
 }
 
 int
