@@ -46,6 +46,7 @@ static struct {
     gboolean force;
     gboolean get_node_path;
     gboolean local;
+    gboolean no_children;
 
     //! \deprecated
     gboolean no_bcast;
@@ -456,7 +457,6 @@ main(int argc, char **argv)
     xmlNode *input = NULL;
     const char *acl_cred = NULL;
 
-    bool no_children = false;
     bool sync_call = false;
 
     int option_index = 0;
@@ -546,7 +546,7 @@ main(int argc, char **argv)
                 options.allow_create = TRUE;
                 break;
             case 'n':
-                no_children = true;
+                options.no_children = TRUE;
                 break;
             case 'B':
                 options.cib_action = PCMK__CIB_REQUEST_BUMP;
@@ -700,7 +700,7 @@ main(int argc, char **argv)
                               cib_inhibit_bcast|cib_scope_local);
     }
 
-    if (no_children) {
+    if (options.no_children) {
         // When querying an object, don't include its children in the result
         cib__set_call_options(options.cmd_options, crm_system_name,
                               cib_no_children);
