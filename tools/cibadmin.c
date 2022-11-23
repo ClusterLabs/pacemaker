@@ -23,7 +23,6 @@ enum cibadmin_section_type {
     cibadmin_section_xpath,
 };
 
-static int command_options = 0;
 static int request_id = 0;
 static int bump_log_num = 0;
 
@@ -39,11 +38,12 @@ static GMainLoop *mainloop = NULL;
 static crm_exit_t exit_code = CRM_EX_OK;
 
 static struct {
+    int cmd_options;
     gint message_timeout_sec;
 } options;
 
 int do_init(void);
-int do_work(xmlNode *input, int command_options, xmlNode **output);
+static int do_work(xmlNode *input, xmlNode **output);
 void cibadmin_op_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
                           void *user_data);
 
@@ -400,7 +400,7 @@ print_xml_output(xmlNode * xml)
         return;
     }
 
-    if (command_options & cib_xpath_address) {
+    if (pcmk_is_set(options.cmd_options, cib_xpath_address)) {
         const char *id = crm_element_value(xml, XML_ATTR_ID);
 
         if (pcmk__str_eq((const char *)xml->name, "xpath-query", pcmk__str_casei)) {
@@ -608,7 +608,7 @@ main(int argc, char **argv)
     }
 
     if (bump_log_num > 0) {
-        cib__set_call_options(command_options, crm_system_name,
+        cib__set_call_options(options.cmd_options, crm_system_name,
                               cib_verbose);
     }
 
@@ -655,25 +655,25 @@ main(int argc, char **argv)
 
     if (section_type == cibadmin_section_xpath) {
         // Enable getting section by XPath
-        cib__set_call_options(command_options, crm_system_name,
+        cib__set_call_options(options.cmd_options, crm_system_name,
                               cib_xpath);
     }
 
     if (allow_create) {
         // Allow target of --modify/-M to be created if it does not exist
-        cib__set_call_options(command_options, crm_system_name,
+        cib__set_call_options(options.cmd_options, crm_system_name,
                               cib_can_create);
     }
 
     if (delete_all) {
         // With cibadmin_section_xpath, remove all matching objects
-        cib__set_call_options(command_options, crm_system_name,
+        cib__set_call_options(options.cmd_options, crm_system_name,
                               cib_multiple);
     }
 
     if (force) {
         // Perform the action even without quorum
-        cib__set_call_options(command_options, crm_system_name,
+        cib__set_call_options(options.cmd_options, crm_system_name,
                               cib_quorum_override);
     }
 
@@ -681,26 +681,26 @@ main(int argc, char **argv)
         /* Enable getting node path of XPath query matches.
          * Meaningful only if section_type == cibadmin_section_xpath.
          */
-        cib__set_call_options(command_options, crm_system_name,
+        cib__set_call_options(options.cmd_options, crm_system_name,
                               cib_xpath_address);
     }
 
     if (local) {
         // Configure command to take effect only locally
-        cib__set_call_options(command_options, crm_system_name,
+        cib__set_call_options(options.cmd_options, crm_system_name,
                               cib_scope_local);
     }
 
     // @COMPAT: Deprecated option
     if (no_bcast) {
         // Configure command to take effect only locally and not to broadcast
-        cib__set_call_options(command_options, crm_system_name,
+        cib__set_call_options(options.cmd_options, crm_system_name,
                               cib_inhibit_bcast|cib_scope_local);
     }
 
     if (no_children) {
         // When querying an object, don't include its children in the result
-        cib__set_call_options(command_options, crm_system_name,
+        cib__set_call_options(options.cmd_options, crm_system_name,
                               cib_no_children);
     }
 
@@ -712,7 +712,7 @@ main(int argc, char **argv)
          * whether the call is synchronous; for a CIB query, we have to wait for
          * the result in order to display it in any case.
          */
-        cib__set_call_options(command_options, crm_system_name,
+        cib__set_call_options(options.cmd_options, crm_system_name,
                               cib_sync_call);
     }
 
@@ -821,7 +821,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    rc = do_work(input, command_options, &output);
+    rc = do_work(input, &output);
     if (rc > 0) {
         /* wait for the reply by creating a mainloop and running it until
          * the callbacks are invoked...
@@ -857,7 +857,7 @@ main(int argc, char **argv)
                 int version = 0;
 
                 if (the_cib->cmds->query(the_cib, NULL, &obj,
-                                         command_options) == pcmk_ok) {
+                                         options.cmd_options) == pcmk_ok) {
                     update_validation(&obj, &version, 0, TRUE, FALSE);
                 }
 
@@ -912,8 +912,8 @@ done:
     crm_exit(exit_code);
 }
 
-int
-do_work(xmlNode * input, int call_options, xmlNode ** output)
+static int
+do_work(xmlNode *input, xmlNode **output)
 {
     /* construct the request */
     the_cib->call_timeout = options.message_timeout_sec;
@@ -929,7 +929,7 @@ do_work(xmlNode * input, int call_options, xmlNode ** output)
     if (cib_action != NULL) {
         crm_trace("Passing \"%s\" to variant_op...", cib_action);
         return cib_internal_op(the_cib, cib_action, host, cib_section, input,
-                               output, call_options, cib_user);
+                               output, options.cmd_options, cib_user);
 
     } else {
         crm_err("You must specify an operation");
