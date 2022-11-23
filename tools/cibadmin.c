@@ -28,7 +28,6 @@ static int bump_log_num = 0;
 
 static char *host = NULL;
 static const char *cib_user = NULL;
-static const char *cib_action = NULL;
 
 static enum cibadmin_section_type section_type = cibadmin_section_all;
 static const char *cib_section = NULL;
@@ -38,6 +37,7 @@ static GMainLoop *mainloop = NULL;
 static crm_exit_t exit_code = CRM_EX_OK;
 
 static struct {
+    const char *cib_action;
     int cmd_options;
     gint message_timeout_sec;
 } options;
@@ -485,11 +485,11 @@ main(int argc, char **argv)
                 get_node_path = true;
                 break;
             case 'u':
-                cib_action = PCMK__CIB_REQUEST_UPGRADE;
+                options.cib_action = PCMK__CIB_REQUEST_UPGRADE;
                 dangerous_cmd = TRUE;
                 break;
             case 'E':
-                cib_action = PCMK__CIB_REQUEST_ERASE;
+                options.cib_action = PCMK__CIB_REQUEST_ERASE;
                 dangerous_cmd = TRUE;
                 break;
             case 'S':
@@ -513,32 +513,32 @@ main(int argc, char **argv)
                 }
                 break;
             case 'Q':
-                cib_action = PCMK__CIB_REQUEST_QUERY;
+                options.cib_action = PCMK__CIB_REQUEST_QUERY;
                 break;
             case 'P':
-                cib_action = PCMK__CIB_REQUEST_APPLY_PATCH;
+                options.cib_action = PCMK__CIB_REQUEST_APPLY_PATCH;
                 break;
             case 'U':
                 cib_user = optarg;
                 break;
             case 'M':
-                cib_action = PCMK__CIB_REQUEST_MODIFY;
+                options.cib_action = PCMK__CIB_REQUEST_MODIFY;
                 break;
             case 'R':
-                cib_action = PCMK__CIB_REQUEST_REPLACE;
+                options.cib_action = PCMK__CIB_REQUEST_REPLACE;
                 break;
             case 'C':
-                cib_action = PCMK__CIB_REQUEST_CREATE;
+                options.cib_action = PCMK__CIB_REQUEST_CREATE;
                 break;
             case 'D':
-                cib_action = PCMK__CIB_REQUEST_DELETE;
+                options.cib_action = PCMK__CIB_REQUEST_DELETE;
                 delete_all = false;
                 break;
             case '5':
-                cib_action = "md5-sum";
+                options.cib_action = "md5-sum";
                 break;
             case '6':
-                cib_action = "md5-sum-versioned";
+                options.cib_action = "md5-sum-versioned";
                 break;
             case 'c':
                 allow_create = true;
@@ -547,7 +547,7 @@ main(int argc, char **argv)
                 no_children = true;
                 break;
             case 'B':
-                cib_action = PCMK__CIB_REQUEST_BUMP;
+                options.cib_action = PCMK__CIB_REQUEST_BUMP;
                 break;
             case 'V':
                 bump_log_num++;
@@ -578,7 +578,7 @@ main(int argc, char **argv)
                 local = true;
                 break;
             case 'd':
-                cib_action = PCMK__CIB_REQUEST_DELETE;
+                options.cib_action = PCMK__CIB_REQUEST_DELETE;
                 delete_all = true;
                 dangerous_cmd = TRUE;
                 break;
@@ -625,7 +625,7 @@ main(int argc, char **argv)
         pcmk__cli_help('?', CRM_EX_USAGE);
     }
 
-    if (optind > argc || cib_action == NULL) {
+    if ((optind > argc) || (options.cib_action == NULL)) {
         ++argerr;
     }
 
@@ -775,7 +775,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (pcmk__str_eq(cib_action, "md5-sum", pcmk__str_casei)) {
+    if (strcmp(options.cib_action, "md5-sum") == 0) {
         char *digest = NULL;
 
         if (input == NULL) {
@@ -790,7 +790,7 @@ main(int argc, char **argv)
         free(digest);
         goto done;
 
-    } else if (pcmk__str_eq(cib_action, "md5-sum-versioned", pcmk__str_casei)) {
+    } else if (strcmp(options.cib_action, "md5-sum-versioned") == 0) {
         char *digest = NULL;
         const char *version = NULL;
 
@@ -841,8 +841,8 @@ main(int argc, char **argv)
         g_main_loop_run(mainloop);
 
     } else if ((rc == -pcmk_err_schema_unchanged)
-               && pcmk__str_eq(cib_action, PCMK__CIB_REQUEST_UPGRADE,
-                               pcmk__str_none)) {
+               && (strcmp(options.cib_action,
+                          PCMK__CIB_REQUEST_UPGRADE) == 0)) {
         report_schema_unchanged();
 
     } else if (rc < 0) {
@@ -851,8 +851,7 @@ main(int argc, char **argv)
         fprintf(stderr, "Call failed: %s\n", pcmk_rc_str(rc));
 
         if (rc == pcmk_rc_schema_validation) {
-            if (pcmk__str_eq(cib_action, PCMK__CIB_REQUEST_UPGRADE,
-                             pcmk__str_none)) {
+            if (strcmp(options.cib_action, PCMK__CIB_REQUEST_UPGRADE) == 0) {
                 xmlNode *obj = NULL;
                 int version = 0;
 
@@ -917,7 +916,7 @@ do_work(xmlNode *input, xmlNode **output)
 {
     /* construct the request */
     the_cib->call_timeout = options.message_timeout_sec;
-    if ((strcmp(cib_action, PCMK__CIB_REQUEST_REPLACE) == 0)
+    if ((strcmp(options.cib_action, PCMK__CIB_REQUEST_REPLACE) == 0)
         && pcmk__str_eq(crm_element_name(input), XML_TAG_CIB, pcmk__str_casei)) {
         xmlNode *status = pcmk_find_cib_element(input, XML_CIB_TAG_STATUS);
 
@@ -926,15 +925,9 @@ do_work(xmlNode *input, xmlNode **output)
         }
     }
 
-    if (cib_action != NULL) {
-        crm_trace("Passing \"%s\" to variant_op...", cib_action);
-        return cib_internal_op(the_cib, cib_action, host, cib_section, input,
-                               output, options.cmd_options, cib_user);
-
-    } else {
-        crm_err("You must specify an operation");
-    }
-    return -EINVAL;
+    crm_trace("Passing \"%s\" to variant_op...", options.cib_action);
+    return cib_internal_op(the_cib, options.cib_action, host, cib_section,
+                           input, output, options.cmd_options, cib_user);
 }
 
 int
@@ -964,11 +957,12 @@ cibadmin_op_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void 
 
     } else if (rc != pcmk_rc_ok) {
         crm_warn("Call %s failed: %s " CRM_XS " rc=%d",
-                 cib_action, pcmk_rc_str(rc), rc);
-        fprintf(stderr, "Call %s failed: %s\n", cib_action, pcmk_rc_str(rc));
+                 options.cib_action, pcmk_rc_str(rc), rc);
+        fprintf(stderr, "Call %s failed: %s\n",
+                options.cib_action, pcmk_rc_str(rc));
         print_xml_output(output);
 
-    } else if (pcmk__str_eq(cib_action, PCMK__CIB_REQUEST_QUERY, pcmk__str_none)
+    } else if ((strcmp(options.cib_action, PCMK__CIB_REQUEST_QUERY) == 0)
                && (output == NULL)) {
         crm_err("Query returned no output");
         crm_log_xml_err(msg, "no output");
