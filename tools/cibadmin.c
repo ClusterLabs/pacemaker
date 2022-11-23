@@ -17,7 +17,7 @@
 
 #include <pacemaker-internal.h>
 
-static int message_timeout_ms = 30;
+static int message_timeout_sec = 0;
 static int command_options = 0;
 static int request_id = 0;
 static int bump_log_num = 0;
@@ -463,10 +463,7 @@ main(int argc, char **argv)
 
         switch (flag) {
             case 't':
-                message_timeout_ms = atoi(optarg);
-                if (message_timeout_ms < 1) {
-                    message_timeout_ms = 30;
-                }
+                message_timeout_sec = atoi(optarg);
                 break;
             case 'A':
                 obj_type = optarg;
@@ -644,6 +641,11 @@ main(int argc, char **argv)
         crm_exit(CRM_EX_UNSAFE);
     }
 
+    if (message_timeout_sec < 1) {
+        // Set default timeout
+        message_timeout_sec = 30;
+    }
+
     if (admin_input_file != NULL) {
         input = filename2xml(admin_input_file);
         source = admin_input_file;
@@ -746,8 +748,10 @@ main(int argc, char **argv)
          */
         request_id = rc;
 
-        the_cib->cmds->register_callback(the_cib, request_id, message_timeout_ms, FALSE, NULL,
-                                         "cibadmin_op_callback", cibadmin_op_callback);
+        the_cib->cmds->register_callback(the_cib, request_id,
+                                         message_timeout_sec, FALSE, NULL,
+                                         "cibadmin_op_callback",
+                                         cibadmin_op_callback);
 
         mainloop = g_main_loop_new(NULL, FALSE);
 
@@ -846,7 +850,7 @@ int
 do_work(xmlNode * input, int call_options, xmlNode ** output)
 {
     /* construct the request */
-    the_cib->call_timeout = message_timeout_ms;
+    the_cib->call_timeout = message_timeout_sec;
     if ((strcmp(cib_action, PCMK__CIB_REQUEST_REPLACE) == 0)
         && pcmk__str_eq(crm_element_name(input), XML_TAG_CIB, pcmk__str_casei)) {
         xmlNode *status = pcmk_find_cib_element(input, XML_CIB_TAG_STATUS);
