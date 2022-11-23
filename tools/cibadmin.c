@@ -41,6 +41,9 @@ static struct {
     gint message_timeout_sec;
     enum pcmk__acl_render_how acl_render_mode;
     gchar *dest_node;
+    gchar *input_file;
+    gchar *input_xml;
+    gboolean input_stdin;
     bool delete_all;
     gboolean allow_create;
     gboolean force;
@@ -450,10 +453,7 @@ main(int argc, char **argv)
     int rc = pcmk_ok;
     int flag;
     const char *source = NULL;
-    const char *admin_input_xml = NULL;
-    const char *admin_input_file = NULL;
     gboolean dangerous_cmd = FALSE;
-    gboolean admin_input_stdin = FALSE;
     xmlNode *output = NULL;
     xmlNode *input = NULL;
     const char *acl_cred = NULL;
@@ -563,13 +563,15 @@ main(int argc, char **argv)
                 cib_section = optarg;
                 break;
             case 'X':
-                admin_input_xml = optarg;
+                g_free(options.input_xml);
+                options.input_xml = g_strdup(optarg);
                 break;
             case 'x':
-                admin_input_file = optarg;
+                g_free(options.input_file);
+                options.input_file = g_strdup(optarg);
                 break;
             case 'p':
-                admin_input_stdin = TRUE;
+                options.input_stdin = TRUE;
                 break;
             case 'N':
             case 'h':
@@ -599,8 +601,9 @@ main(int argc, char **argv)
                 if (optind < argc) {
                     crm_xml_add(output, XML_ATTR_VALIDATION, argv[optind]);
                 }
-                admin_input_xml = dump_xml_formatted(output);
-                fprintf(stdout, "%s", pcmk__s(admin_input_xml, "<null>\n"));
+                g_free(options.input_xml);
+                options.input_xml = dump_xml_formatted(output);
+                fprintf(stdout, "%s", pcmk__s(options.input_xml, "<null>\n"));
                 goto done;
             default:
                 printf("Argument code 0%o (%c)" " is not (?yet?) supported\n", flag, flag);
@@ -719,15 +722,15 @@ main(int argc, char **argv)
                               cib_sync_call);
     }
 
-    if (admin_input_file != NULL) {
-        input = filename2xml(admin_input_file);
-        source = admin_input_file;
+    if (options.input_file != NULL) {
+        input = filename2xml(options.input_file);
+        source = options.input_file;
 
-    } else if (admin_input_xml != NULL) {
+    } else if (options.input_xml != NULL) {
+        input = string2xml(options.input_xml);
         source = "input string";
-        input = string2xml(admin_input_xml);
 
-    } else if (admin_input_stdin) {
+    } else if (options.input_stdin) {
         source = "STDIN";
         input = stdin2xml();
 
@@ -905,6 +908,8 @@ main(int argc, char **argv)
 
 done:
     g_free(options.dest_node);
+    g_free(options.input_file);
+    g_free(options.input_xml);
     free_xml(input);
     free_xml(output);
 
