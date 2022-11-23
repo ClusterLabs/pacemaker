@@ -47,6 +47,7 @@ static struct {
     gboolean get_node_path;
     gboolean local;
     gboolean no_children;
+    gboolean sync_call;
 
     //! \deprecated
     gboolean no_bcast;
@@ -457,8 +458,6 @@ main(int argc, char **argv)
     xmlNode *input = NULL;
     const char *acl_cred = NULL;
 
-    bool sync_call = false;
-
     int option_index = 0;
 
     pcmk__cli_init_logging("cibadmin", 0);
@@ -589,7 +588,7 @@ main(int argc, char **argv)
                 dangerous_cmd = TRUE;
                 break;
             case 's':
-                sync_call = true;
+                options.sync_call = TRUE;
                 break;
             case 'f':
                 options.force = TRUE;
@@ -706,7 +705,8 @@ main(int argc, char **argv)
                               cib_no_children);
     }
 
-    if (sync_call || (options.acl_render_mode != pcmk__acl_render_none)) {
+    if (options.sync_call
+        || (options.acl_render_mode != pcmk__acl_render_none)) {
         /* Wait for call to complete before returning.
          *
          * The ACL render modes work only with sync calls due to differences in
