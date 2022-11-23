@@ -26,8 +26,6 @@ enum cibadmin_section_type {
 static int request_id = 0;
 static int bump_log_num = 0;
 
-static const char *cib_user = NULL;
-
 static cib_t *the_cib = NULL;
 static GMainLoop *mainloop = NULL;
 static crm_exit_t exit_code = CRM_EX_OK;
@@ -39,6 +37,7 @@ static struct {
     char *cib_section;
     gint message_timeout_sec;
     enum pcmk__acl_render_how acl_render_mode;
+    gchar *cib_user;
     gchar *dest_node;
     gchar *input_file;
     gchar *input_xml;
@@ -455,7 +454,7 @@ main(int argc, char **argv)
     gboolean dangerous_cmd = FALSE;
     xmlNode *output = NULL;
     xmlNode *input = NULL;
-    const char *acl_cred = NULL;
+    gchar *acl_cred = NULL;
 
     int option_index = 0;
 
@@ -519,7 +518,8 @@ main(int argc, char **argv)
                 options.cib_action = PCMK__CIB_REQUEST_APPLY_PATCH;
                 break;
             case 'U':
-                cib_user = optarg;
+                g_free(options.cib_user);
+                options.cib_user = g_strdup(optarg);
                 break;
             case 'M':
                 options.cib_action = PCMK__CIB_REQUEST_MODIFY;
@@ -759,16 +759,23 @@ main(int argc, char **argv)
             }
         }
 
-        if (cib_user == NULL) {
+        if (options.cib_user == NULL) {
             exit_code = CRM_EX_USAGE;
             fprintf(stderr,
                     "The supplied command requires -U user specified.\n");
             goto done;
         }
 
-        /* we already stopped/warned ACL-controlled users about consequences */
-        acl_cred = cib_user;
-        cib_user = NULL;
+        /* We already stopped/warned ACL-controlled users about consequences.
+         *
+         * Note: acl_cred takes ownership of options.cib_user here.
+         * options.cib_user is set to NULL so that the CIB is obtained as the
+         * user running the cibadmin command. The CIB must be obtained as a user
+         * with full permissions in order to show the CIB correctly annotated
+         * for the options.cib_user's permissions.
+         */
+        acl_cred = options.cib_user;
+        options.cib_user = NULL;
     }
 
     if (input != NULL) {
@@ -906,10 +913,13 @@ main(int argc, char **argv)
     crm_trace("%s exiting normally", crm_system_name);
 
 done:
+    g_free(options.cib_user);
     g_free(options.dest_node);
     g_free(options.input_file);
     g_free(options.input_xml);
     free(options.cib_section);
+
+    g_free(acl_cred);
     free_xml(input);
     free_xml(output);
 
@@ -938,7 +948,7 @@ do_work(xmlNode *input, xmlNode **output)
     crm_trace("Passing \"%s\" to variant_op...", options.cib_action);
     return cib_internal_op(the_cib, options.cib_action, options.dest_node,
                            options.cib_section, input, output,
-                           options.cmd_options, cib_user);
+                           options.cmd_options, options.cib_user);
 }
 
 int
