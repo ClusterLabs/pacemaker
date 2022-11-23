@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,9 +18,13 @@ enum pcmk__acl_cred_type {
 };
 
 enum pcmk__acl_render_how {
-    pcmk__acl_render_namespace = 1,
+    pcmk__acl_render_none = 0,
+    pcmk__acl_render_namespace,
     pcmk__acl_render_text,
     pcmk__acl_render_color,
+
+    //! Context-dependent default render mode
+    pcmk__acl_render_default,
 };
 
 /*
