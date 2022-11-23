@@ -546,7 +546,6 @@ main(int argc, char **argv)
                 break;
             case 'B':
                 cib_action = PCMK__CIB_REQUEST_BUMP;
-                crm_log_args(argc, argv);
                 break;
             case 'V':
                 cib__set_call_options(command_options, crm_system_name,
@@ -565,15 +564,12 @@ main(int argc, char **argv)
                 break;
             case 'X':
                 admin_input_xml = optarg;
-                crm_log_args(argc, argv);
                 break;
             case 'x':
                 admin_input_file = optarg;
-                crm_log_args(argc, argv);
                 break;
             case 'p':
                 admin_input_stdin = TRUE;
-                crm_log_args(argc, argv);
                 break;
             case 'N':
             case 'h':
@@ -602,7 +598,6 @@ main(int argc, char **argv)
                 force_flag = TRUE;
                 cib__set_call_options(command_options, crm_system_name,
                                       cib_quorum_override);
-                crm_log_args(argc, argv);
                 break;
             case 'a':
                 output = createEmptyCib(1);
