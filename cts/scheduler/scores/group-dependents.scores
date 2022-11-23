@@ -1,6 +1,6 @@
 
 drbd:0 promotion score on asttest1: 1
-drbd:1 promotion score on asttest2: 9
+drbd:1 promotion score on asttest2: 7
 pcmk__clone_allocate: cl_route allocation score on asttest1: 0
 pcmk__clone_allocate: cl_route allocation score on asttest2: 0
 pcmk__clone_allocate: drbd:0 allocation score on asttest1: 6
@@ -12,7 +12,7 @@ pcmk__clone_allocate: ip_voip_route_default:0 allocation score on asttest2: 0
 pcmk__clone_allocate: ip_voip_route_default:1 allocation score on asttest1: 0
 pcmk__clone_allocate: ip_voip_route_default:1 allocation score on asttest2: 1
 pcmk__clone_allocate: ms_drbd allocation score on asttest1: 1
-pcmk__clone_allocate: ms_drbd allocation score on asttest2: 2
+pcmk__clone_allocate: ms_drbd allocation score on asttest2: 1
 pcmk__group_assign: asterisk allocation score on asttest1: 0
 pcmk__group_assign: asterisk allocation score on asttest2: 0
 pcmk__group_assign: dahdi allocation score on asttest1: 0
@@ -64,7 +64,7 @@ pcmk__primitive_assign: drbd:1 allocation score on asttest2: 6
 pcmk__primitive_assign: fonulator allocation score on asttest1: -INFINITY
 pcmk__primitive_assign: fonulator allocation score on asttest2: 0
 pcmk__primitive_assign: fs_drbd allocation score on asttest1: -INFINITY
-pcmk__primitive_assign: fs_drbd allocation score on asttest2: 8
+pcmk__primitive_assign: fs_drbd allocation score on asttest2: 7
 pcmk__primitive_assign: httpd allocation score on asttest1: -INFINITY
 pcmk__primitive_assign: httpd allocation score on asttest2: 0
 pcmk__primitive_assign: iax2_mon allocation score on asttest1: -INFINITY

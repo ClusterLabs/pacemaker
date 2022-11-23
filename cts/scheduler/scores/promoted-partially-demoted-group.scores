@@ -1,5 +1,5 @@
 
-cdev-pool-0-drbd:0 promotion score on sd01-1: 11200
+cdev-pool-0-drbd:0 promotion score on sd01-1: 10800
 cdev-pool-0-drbd:1 promotion score on sd01-0: INFINITY
 cdev-pool-0-iscsi-vips-fw:0 promotion score on sd01-1: -INFINITY
 cdev-pool-0-iscsi-vips-fw:1 promotion score on sd01-0: 2000
@@ -12,7 +12,7 @@ pcmk__clone_allocate: cdev-pool-0-iscsi-vips-fw:0 allocation score on sd01-1: 20
 pcmk__clone_allocate: cdev-pool-0-iscsi-vips-fw:1 allocation score on sd01-0: 2000
 pcmk__clone_allocate: cdev-pool-0-iscsi-vips-fw:1 allocation score on sd01-1: 0
 pcmk__clone_allocate: cl-ietd allocation score on sd01-0: INFINITY
-pcmk__clone_allocate: cl-ietd allocation score on sd01-1: 500
+pcmk__clone_allocate: cl-ietd allocation score on sd01-1: 300
 pcmk__clone_allocate: cl-vlan1-net allocation score on sd01-0: 0
 pcmk__clone_allocate: cl-vlan1-net allocation score on sd01-1: 0
 pcmk__clone_allocate: ietd:0 allocation score on sd01-0: 0
@@ -20,7 +20,7 @@ pcmk__clone_allocate: ietd:0 allocation score on sd01-1: 100
 pcmk__clone_allocate: ietd:1 allocation score on sd01-0: 100
 pcmk__clone_allocate: ietd:1 allocation score on sd01-1: 0
 pcmk__clone_allocate: ms-cdev-pool-0-drbd allocation score on sd01-0: INFINITY
-pcmk__clone_allocate: ms-cdev-pool-0-drbd allocation score on sd01-1: 600
+pcmk__clone_allocate: ms-cdev-pool-0-drbd allocation score on sd01-1: 400
 pcmk__clone_allocate: ms-cdev-pool-0-iscsi-vips-fw allocation score on sd01-0: 0
 pcmk__clone_allocate: ms-cdev-pool-0-iscsi-vips-fw allocation score on sd01-1: 0
 pcmk__clone_allocate: vip-164-fw:0 allocation score on sd01-0: 0
