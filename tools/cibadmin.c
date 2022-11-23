@@ -40,6 +40,7 @@ static struct {
     const char *cib_action;
     int cmd_options;
     gint message_timeout_sec;
+    enum pcmk__acl_render_how acl_render_mode;
 } options;
 
 int do_init(void);
@@ -446,7 +447,6 @@ main(int argc, char **argv)
     xmlNode *output = NULL;
     xmlNode *input = NULL;
     const char *acl_cred = NULL;
-    enum pcmk__acl_render_how acl_render_mode = pcmk__acl_render_none;
 
     bool allow_create = false;
     bool delete_all = false;
@@ -494,16 +494,16 @@ main(int argc, char **argv)
                 break;
             case 'S':
                 if (pcmk__str_eq(optarg, "auto", pcmk__str_null_matches)) {
-                    acl_render_mode = pcmk__acl_render_default;
+                    options.acl_render_mode = pcmk__acl_render_default;
 
                 } else if (strcmp(optarg, "namespace") == 0) {
-                    acl_render_mode = pcmk__acl_render_namespace;
+                    options.acl_render_mode = pcmk__acl_render_namespace;
 
                 } else if (strcmp(optarg, "text") == 0) {
-                    acl_render_mode = pcmk__acl_render_text;
+                    options.acl_render_mode = pcmk__acl_render_text;
 
                 } else if (strcmp(optarg, "color") == 0) {
-                    acl_render_mode = pcmk__acl_render_color;
+                    options.acl_render_mode = pcmk__acl_render_color;
 
                 } else {
                     fprintf(stderr,
@@ -704,7 +704,7 @@ main(int argc, char **argv)
                               cib_no_children);
     }
 
-    if (sync_call || (acl_render_mode != pcmk__acl_render_none)) {
+    if (sync_call || (options.acl_render_mode != pcmk__acl_render_none)) {
         /* Wait for call to complete before returning.
          *
          * The ACL render modes work only with sync calls due to differences in
@@ -728,7 +728,7 @@ main(int argc, char **argv)
         source = "STDIN";
         input = stdin2xml();
 
-    } else if (acl_render_mode != pcmk__acl_render_none) {
+    } else if (options.acl_render_mode != pcmk__acl_render_none) {
         char *username = pcmk__uid2username(geteuid());
         bool required = pcmk_acl_required(username);
 
@@ -867,14 +867,16 @@ main(int argc, char **argv)
         exit_code = pcmk_rc2exitc(rc);
     }
 
-    if ((output != NULL) && (acl_render_mode != pcmk__acl_render_none)) {
+    if ((output != NULL)
+        && (options.acl_render_mode != pcmk__acl_render_none)) {
+
         xmlDoc *acl_evaled_doc;
         rc = pcmk__acl_annotate_permissions(acl_cred, output->doc, &acl_evaled_doc);
         if (rc == pcmk_rc_ok) {
             xmlChar *rendered = NULL;
 
-            rc = pcmk__acl_evaled_render(acl_evaled_doc, acl_render_mode,
-                                         &rendered);
+            rc = pcmk__acl_evaled_render(acl_evaled_doc,
+                                         options.acl_render_mode, &rendered);
             if (rc != pcmk_rc_ok) {
                 exit_code = CRM_EX_CONFIG;
                 fprintf(stderr, "Could not render evaluated access: %s\n",
