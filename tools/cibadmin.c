@@ -442,7 +442,6 @@ main(int argc, char **argv)
     gboolean admin_input_stdin = FALSE;
     xmlNode *output = NULL;
     xmlNode *input = NULL;
-    char *username = NULL;
     const char *acl_cred = NULL;
     enum pcmk__acl_render_how acl_render_mode = pcmk__acl_render_none;
 
@@ -597,8 +596,7 @@ main(int argc, char **argv)
                 }
                 admin_input_xml = dump_xml_formatted(output);
                 fprintf(stdout, "%s", pcmk__s(admin_input_xml, "<null>\n"));
-                crm_exit(CRM_EX_OK);
-                break;
+                goto done;
             default:
                 printf("Argument code 0%o (%c)" " is not (?yet?) supported\n", flag, flag);
                 ++argerr;
@@ -639,11 +637,12 @@ main(int argc, char **argv)
     }
 
     if (dangerous_cmd && !force) {
+        exit_code = CRM_EX_UNSAFE;
         fprintf(stderr, "The supplied command is considered dangerous."
                 "  To prevent accidental destruction of the cluster,"
                 " the --force flag is required in order to proceed.\n");
         fflush(stderr);
-        crm_exit(CRM_EX_UNSAFE);
+        goto done;
     }
 
     if (message_timeout_sec < 1) {
@@ -727,8 +726,12 @@ main(int argc, char **argv)
         input = stdin2xml();
 
     } else if (acl_render_mode != pcmk__acl_render_none) {
-        username = pcmk__uid2username(geteuid());
-        if (pcmk_acl_required(username)) {
+        char *username = pcmk__uid2username(geteuid());
+        bool required = pcmk_acl_required(username);
+
+        free(username);
+
+        if (required) {
             if (force) {
                 fprintf(stderr, "The supplied command can provide skewed"
                                  " result since it is run under user that also"
@@ -737,22 +740,22 @@ main(int argc, char **argv)
                                  " provided.\n");
 
             } else {
+                exit_code = CRM_EX_UNSAFE;
                 fprintf(stderr, "The supplied command can provide skewed"
                                  " result since it is run under user that also"
                                  " gets guarded per ACLs in their own right."
                                  " To accept the risk of such a possible"
                                  " distortion (without even knowing it at this"
                                  " time), use the --force flag.\n");
-                crm_exit(CRM_EX_UNSAFE);
+                goto done;
             }
-
         }
-        free(username);
-        username = NULL;
 
         if (cib_user == NULL) {
-            fprintf(stderr, "The supplied command requires -U user specified.\n");
-            crm_exit(CRM_EX_USAGE);
+            exit_code = CRM_EX_USAGE;
+            fprintf(stderr,
+                    "The supplied command requires -U user specified.\n");
+            goto done;
         }
 
         /* we already stopped/warned ACL-controlled users about consequences */
@@ -763,33 +766,35 @@ main(int argc, char **argv)
     if (input != NULL) {
         crm_log_xml_debug(input, "[admin input]");
 
-    } else if (source) {
+    } else if (source != NULL) {
+        exit_code = CRM_EX_CONFIG;
         fprintf(stderr, "Couldn't parse input from %s.\n", source);
-        crm_exit(CRM_EX_CONFIG);
+        goto done;
     }
 
     if (pcmk__str_eq(cib_action, "md5-sum", pcmk__str_casei)) {
         char *digest = NULL;
 
         if (input == NULL) {
+            exit_code = CRM_EX_USAGE;
             fprintf(stderr, "Please supply XML to process with -X, -x or -p\n");
-            crm_exit(CRM_EX_USAGE);
+            goto done;
         }
 
         digest = calculate_on_disk_digest(input);
         fprintf(stderr, "Digest: ");
         fprintf(stdout, "%s\n", pcmk__s(digest, "<null>"));
         free(digest);
-        free_xml(input);
-        crm_exit(CRM_EX_OK);
+        goto done;
 
     } else if (pcmk__str_eq(cib_action, "md5-sum-versioned", pcmk__str_casei)) {
         char *digest = NULL;
         const char *version = NULL;
 
         if (input == NULL) {
+            exit_code = CRM_EX_USAGE;
             fprintf(stderr, "Please supply XML to process with -X, -x or -p\n");
-            crm_exit(CRM_EX_USAGE);
+            goto done;
         }
 
         version = crm_element_value(input, XML_ATTR_CRM_VERSION);
@@ -797,16 +802,20 @@ main(int argc, char **argv)
         fprintf(stderr, "Versioned (%s) digest: ", version);
         fprintf(stdout, "%s\n", pcmk__s(digest, "<null>"));
         free(digest);
-        free_xml(input);
-        crm_exit(CRM_EX_OK);
+        goto done;
     }
 
     rc = do_init();
     if (rc != pcmk_ok) {
-        crm_err("Init failed, could not perform requested operations");
-        fprintf(stderr, "Init failed, could not perform requested operations\n");
-        free_xml(input);
-        crm_exit(pcmk_rc2exitc(pcmk_legacy2rc(rc)));
+        rc = pcmk_legacy2rc(rc);
+        exit_code = pcmk_rc2exitc(rc);
+
+        crm_err("Init failed, could not perform requested operations: %s",
+                pcmk_rc_str(rc));
+        fprintf(stderr,
+                "Init failed, could not perform requested operations: %s\n",
+                pcmk_rc_str(rc));
+        goto done;
     }
 
     rc = do_work(input, command_options, &output);
@@ -861,39 +870,42 @@ main(int argc, char **argv)
         rc = pcmk__acl_annotate_permissions(acl_cred, output->doc, &acl_evaled_doc);
         if (rc == pcmk_rc_ok) {
             xmlChar *rendered = NULL;
-            free_xml(output);
-            output = NULL;
 
             rc = pcmk__acl_evaled_render(acl_evaled_doc, acl_render_mode,
                                          &rendered);
             if (rc != pcmk_rc_ok) {
+                exit_code = CRM_EX_CONFIG;
                 fprintf(stderr, "Could not render evaluated access: %s\n",
                         pcmk_rc_str(rc));
-                crm_exit(CRM_EX_CONFIG);
+                goto done;
             }
             printf("%s\n", (char *) rendered);
             free(rendered);
 
         } else {
-            fprintf(stderr, "Could not evaluate access per request (%s, error: %s)\n", acl_cred, pcmk_rc_str(rc));
-            crm_exit(CRM_EX_CONFIG);
+            exit_code = CRM_EX_CONFIG;
+            fprintf(stderr,
+                    "Could not evaluate access per request (%s, error: %s)\n",
+                    acl_cred, pcmk_rc_str(rc));
+            goto done;
         }
-    }
 
-    if (output != NULL) {
+    } else if (output != NULL) {
         print_xml_output(output);
-        free_xml(output);
     }
 
     crm_trace("%s exiting normally", crm_system_name);
 
+done:
+    free(host);
     free_xml(input);
+    free_xml(output);
+
     rc = cib__clean_up_connection(&the_cib);
     if (exit_code == CRM_EX_OK) {
         exit_code = pcmk_rc2exitc(rc);
     }
 
-    free(host);
     crm_exit(exit_code);
 }
 
