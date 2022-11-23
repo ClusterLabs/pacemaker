@@ -44,6 +44,7 @@ static struct {
     bool delete_all;
     gboolean allow_create;
     gboolean force;
+    gboolean get_node_path;
 } options;
 
 int do_init(void);
@@ -451,7 +452,6 @@ main(int argc, char **argv)
     xmlNode *input = NULL;
     const char *acl_cred = NULL;
 
-    bool get_node_path = false;
     bool local = false;
     bool no_bcast = false;
     bool no_children = false;
@@ -482,7 +482,7 @@ main(int argc, char **argv)
                 cib_section = optarg;
                 break;
             case 'e':
-                get_node_path = true;
+                options.get_node_path = TRUE;
                 break;
             case 'u':
                 options.cib_action = PCMK__CIB_REQUEST_UPGRADE;
@@ -677,7 +677,7 @@ main(int argc, char **argv)
                               cib_quorum_override);
     }
 
-    if (get_node_path) {
+    if (options.get_node_path) {
         /* Enable getting node path of XPath query matches.
          * Meaningful only if section_type == cibadmin_section_xpath.
          */
