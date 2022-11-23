@@ -22,10 +22,14 @@
 #include <crm/cib/internal.h>
 #include <crm/msg_xml.h>
 #include <crm/cluster/internal.h>
-#include <crm/common/xml.h>
+#include <crm/common/cmdline_internal.h>
 #include <crm/common/mainloop.h>
+#include <crm/common/output_internal.h>
+#include <crm/common/xml.h>
 
 #include <pacemaker-based.h>
+
+#define SUMMARY "daemon for managing the configuration of a Pacemaker cluster"
 
 extern int init_remote_listener(int port, gboolean encrypted);
 gboolean cib_shutdown_flag = FALSE;
@@ -34,7 +38,7 @@ int cib_status = pcmk_ok;
 crm_cluster_t crm_cluster;
 
 GMainLoop *mainloop = NULL;
-const char *cib_root = NULL;
+gchar *cib_root = NULL;
 char *cib_our_uname = NULL;
 static gboolean preserve_status = FALSE;
 
@@ -52,6 +56,8 @@ static bool startCib(const char *filename);
 extern int write_cib_contents(gpointer p);
 void cib_cleanup(void);
 
+static crm_exit_t exit_code = CRM_EX_OK;
+
 static void
 cib_enable_writes(int nsig)
 {
@@ -59,126 +65,160 @@ cib_enable_writes(int nsig)
     cib_writes_enabled = TRUE;
 }
 
-static pcmk__cli_option_t long_options[] = {
-    // long option, argument type, storage, short option, description, flags
-    {
-        "help", no_argument, 0, '?',
-        "\tThis text", pcmk__option_default
-    },
-    {
-        "verbose", no_argument, NULL, 'V',
-        "\tIncrease debug output", pcmk__option_default
-    },
-    {
-        "stand-alone", no_argument, NULL, 's',
-        "\tAdvanced use only", pcmk__option_default
-    },
-    {
-        "disk-writes", no_argument, NULL, 'w',
-        "\tAdvanced use only", pcmk__option_default
-    },
-    {
-        "cib-root", required_argument, NULL, 'r',
-        "\tAdvanced use only", pcmk__option_default
-    },
-    { 0, 0, 0, 0 }
+/*!
+ * \internal
+ * \brief Set up options, users, and groups for stand-alone mode
+ *
+ * \param[out] error  GLib error object
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+setup_stand_alone(GError **error)
+{
+    int rc = 0;
+    struct passwd *pwentry = NULL;
+
+    preserve_status = TRUE;
+    cib_writes_enabled = FALSE;
+
+    errno = 0;
+    pwentry = getpwnam(CRM_DAEMON_USER);
+    if (pwentry == NULL) {
+        exit_code = CRM_EX_FATAL;
+        if (errno != 0) {
+            g_set_error(error, PCMK__EXITC_ERROR, exit_code,
+                        "Error getting password DB entry for %s: %s",
+                        CRM_DAEMON_USER, strerror(errno));
+            return errno;
+        }
+        g_set_error(error, PCMK__EXITC_ERROR, exit_code,
+                    "Password DB entry for '%s' not found", CRM_DAEMON_USER);
+        return ENXIO;
+    }
+
+    rc = setgid(pwentry->pw_gid);
+    if (rc < 0) {
+        exit_code = CRM_EX_FATAL;
+        g_set_error(error, PCMK__EXITC_ERROR, exit_code,
+                    "Could not set group to %d: %s",
+                    pwentry->pw_gid, strerror(errno));
+        return errno;
+    }
+
+    rc = initgroups(CRM_DAEMON_USER, pwentry->pw_gid);
+    if (rc < 0) {
+        exit_code = CRM_EX_FATAL;
+        g_set_error(error, PCMK__EXITC_ERROR, exit_code,
+                    "Could not setup groups for user %d: %s",
+                    pwentry->pw_uid, strerror(errno));
+        return errno;
+    }
+
+    rc = setuid(pwentry->pw_uid);
+    if (rc < 0) {
+        exit_code = CRM_EX_FATAL;
+        g_set_error(error, PCMK__EXITC_ERROR, exit_code,
+                    "Could not set user to %d: %s",
+                    pwentry->pw_uid, strerror(errno));
+        return errno;
+    }
+    return pcmk_rc_ok;
+}
+
+static GOptionEntry entries[] = {
+    { "stand-alone", 's', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &stand_alone,
+      "(Advanced use only) Run in stand-alone mode", NULL },
+
+    { "disk-writes", 'w', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
+      &cib_writes_enabled,
+      "(Advanced use only) Enable disk writes (enabled by default unless in "
+      "stand-alone mode)", NULL },
+
+    { "cib-root", 'r', G_OPTION_FLAG_NONE, G_OPTION_ARG_FILENAME, &cib_root,
+      "(Advanced use only) Directory where the CIB XML file should be located "
+      "(default: " CRM_CONFIG_DIR ")", NULL },
+
+    { NULL }
 };
+
+static pcmk__supported_format_t formats[] = {
+    PCMK__SUPPORTED_FORMAT_NONE,
+    PCMK__SUPPORTED_FORMAT_TEXT,
+    PCMK__SUPPORTED_FORMAT_XML,
+    { NULL, NULL, NULL }
+};
+
+static GOptionContext *
+build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
+{
+    GOptionContext *context = NULL;
+
+    context = pcmk__build_arg_context(args, "text (default), xml", group,
+                                      "[metadata]");
+    pcmk__add_main_args(context, entries);
+    return context;
+}
 
 int
 main(int argc, char **argv)
 {
-    int flag;
-    int rc = 0;
-    int index = 0;
-    int argerr = 0;
-    struct passwd *pwentry = NULL;
+    int rc = pcmk_rc_ok;
     crm_ipc_t *old_instance = NULL;
 
+    pcmk__output_t *out = NULL;
+
+    GError *error = NULL;
+
+    GOptionGroup *output_group = NULL;
+    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
+    gchar **processed_args = pcmk__cmdline_preproc(argv, "r");
+    GOptionContext *context = build_arg_context(args, &output_group);
+
     crm_log_preinit(NULL, argc, argv);
-    pcmk__set_cli_options(NULL, "[options]", long_options,
-                          "daemon for managing the configuration "
-                          "of a Pacemaker cluster");
+
+    pcmk__register_formats(output_group, formats);
+    if (!g_option_context_parse_strv(context, &processed_args, &error)) {
+        exit_code = CRM_EX_USAGE;
+        goto done;
+    }
+
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    if (rc != pcmk_rc_ok) {
+        exit_code = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Error creating output format %s: %s",
+                    args->output_ty, pcmk_rc_str(rc));
+        goto done;
+    }
+
+    if (args->version) {
+        out->version(out, false);
+        goto done;
+    }
 
     mainloop_add_signal(SIGTERM, cib_shutdown);
     mainloop_add_signal(SIGPIPE, cib_enable_writes);
 
     cib_writer = mainloop_add_trigger(G_PRIORITY_LOW, write_cib_contents, NULL);
 
-    while (1) {
-        flag = pcmk__next_cli_option(argc, argv, &index, NULL);
-        if (flag == -1)
-            break;
-
-        switch (flag) {
-            case 'V':
-                crm_bump_log_level(argc, argv);
-                break;
-            case 's':
-                stand_alone = TRUE;
-                preserve_status = TRUE;
-                cib_writes_enabled = FALSE;
-
-                pwentry = getpwnam(CRM_DAEMON_USER);
-                CRM_CHECK(pwentry != NULL,
-                          crm_perror(LOG_ERR, "Invalid uid (%s) specified", CRM_DAEMON_USER);
-                          return CRM_EX_FATAL);
-
-                rc = setgid(pwentry->pw_gid);
-                if (rc < 0) {
-                    crm_perror(LOG_ERR, "Could not set group to %d", pwentry->pw_gid);
-                    return CRM_EX_FATAL;
-                }
-
-                rc = initgroups(CRM_DAEMON_USER, pwentry->pw_gid);
-                if (rc < 0) {
-                    crm_perror(LOG_ERR, "Could not setup groups for user %d", pwentry->pw_uid);
-                    return CRM_EX_FATAL;
-                }
-
-                rc = setuid(pwentry->pw_uid);
-                if (rc < 0) {
-                    crm_perror(LOG_ERR, "Could not set user to %d", pwentry->pw_uid);
-                    return CRM_EX_FATAL;
-                }
-                break;
-            case '?':          /* Help message */
-                pcmk__cli_help(flag, CRM_EX_OK);
-                break;
-            case 'w':
-                cib_writes_enabled = TRUE;
-                break;
-            case 'r':
-                cib_root = optarg;
-                break;
-            case 'm':
-                cib_metadata();
-                return CRM_EX_OK;
-            default:
-                ++argerr;
-                break;
-        }
-    }
-    if (argc - optind == 1 && pcmk__str_eq("metadata", argv[optind], pcmk__str_casei)) {
+    if ((g_strv_length(processed_args) >= 2)
+        && pcmk__str_eq(processed_args[1], "metadata", pcmk__str_none)) {
         cib_metadata();
-        return CRM_EX_OK;
+        goto done;
     }
 
-    if (optind > argc) {
-        ++argerr;
-    }
-
-    if (argerr) {
-        pcmk__cli_help('?', CRM_EX_USAGE);
-    }
-
+    pcmk__cli_init_logging("pacemaker-based", args->verbosity);
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
-
     crm_notice("Starting Pacemaker CIB manager");
 
     old_instance = crm_ipc_new(PCMK__SERVER_BASED_RO, 0);
     if (old_instance == NULL) {
-        /* crm_ipc_new will have already printed an error message with crm_err. */
-        return CRM_EX_FATAL;
+        /* crm_ipc_new() will have already logged an error message with
+         * crm_err()
+         */
+        exit_code = CRM_EX_FATAL;
+        goto done;
     }
 
     if (crm_ipc_connect(old_instance)) {
@@ -186,25 +226,32 @@ main(int argc, char **argv)
         crm_ipc_close(old_instance);
         crm_ipc_destroy(old_instance);
         crm_err("pacemaker-based is already active, aborting startup");
-        crm_exit(CRM_EX_OK);
+        goto done;
     } else {
         /* not up or not authentic, we'll proceed either way */
         crm_ipc_destroy(old_instance);
         old_instance = NULL;
     }
 
+    if (stand_alone) {
+        rc = setup_stand_alone(&error);
+        if (rc != pcmk_rc_ok) {
+            goto done;
+        }
+    }
+
     if (cib_root == NULL) {
-        cib_root = CRM_CONFIG_DIR;
+        cib_root = g_strdup(CRM_CONFIG_DIR);
     } else {
         crm_notice("Using custom config location: %s", cib_root);
     }
 
-    if (pcmk__daemon_can_write(cib_root, NULL) == FALSE) {
+    if (!pcmk__daemon_can_write(cib_root, NULL)) {
+        exit_code = CRM_EX_FATAL;
         crm_err("Terminating due to bad permissions on %s", cib_root);
-        fprintf(stderr, "ERROR: Bad permissions on %s (see logs for details)\n",
-                cib_root);
-        fflush(stderr);
-        return CRM_EX_FATAL;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Bad permissions on %s (see logs for details)", cib_root);
+        goto done;
     }
 
     crm_peer_init();
@@ -222,7 +269,20 @@ main(int argc, char **argv)
      */
     crm_cluster_disconnect(&crm_cluster);
     pcmk__stop_based_ipc(ipcs_ro, ipcs_rw, ipcs_shm);
-    crm_exit(CRM_EX_OK);
+
+done:
+    g_free(cib_root);
+
+    g_strfreev(processed_args);
+    pcmk__free_arg_context(context);
+
+    pcmk__output_and_clear_error(error, out);
+
+    if (out != NULL) {
+        out->finish(out, exit_code, true, NULL);
+        pcmk__output_free(out);
+    }
+    crm_exit(exit_code);
 }
 
 void
@@ -327,7 +387,7 @@ cib_init(void)
         crm_exit(CRM_EX_NOINPUT);
     }
 
-    if (stand_alone == FALSE) {
+    if (!stand_alone) {
         if (is_corosync_cluster()) {
             crm_set_status_callback(&cib_peer_update_callback);
         }
