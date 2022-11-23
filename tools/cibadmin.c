@@ -17,6 +17,12 @@
 
 #include <pacemaker-internal.h>
 
+enum cibadmin_section_type {
+    cibadmin_section_all = 0,
+    cibadmin_section_scope,
+    cibadmin_section_xpath,
+};
+
 static int message_timeout_sec = 0;
 static int command_options = 0;
 static int request_id = 0;
@@ -25,7 +31,9 @@ static int bump_log_num = 0;
 static char *host = NULL;
 static const char *cib_user = NULL;
 static const char *cib_action = NULL;
-static const char *obj_type = NULL;
+
+static enum cibadmin_section_type section_type = cibadmin_section_all;
+static const char *cib_section = NULL;
 
 static cib_t *the_cib = NULL;
 static GMainLoop *mainloop = NULL;
@@ -460,9 +468,8 @@ main(int argc, char **argv)
                 message_timeout_sec = atoi(optarg);
                 break;
             case 'A':
-                obj_type = optarg;
-                cib__set_call_options(command_options, crm_system_name,
-                                      cib_xpath);
+                section_type = cibadmin_section_xpath;
+                cib_section = optarg;
                 break;
             case 'e':
                 cib__set_call_options(command_options, crm_system_name,
@@ -554,9 +561,8 @@ main(int argc, char **argv)
                 pcmk__cli_help(flag, CRM_EX_OK);
                 break;
             case 'o':
-                obj_type = optarg;
-                cib__clear_call_options(command_options, crm_system_name,
-                                        cib_xpath);
+                section_type = cibadmin_section_scope;
+                cib_section = optarg;
                 break;
             case 'X':
                 admin_input_xml = optarg;
@@ -643,6 +649,12 @@ main(int argc, char **argv)
     if (message_timeout_sec < 1) {
         // Set default timeout
         message_timeout_sec = 30;
+    }
+
+    if (section_type == cibadmin_section_xpath) {
+        // Enable getting section by XPath
+        cib__set_call_options(command_options, crm_system_name,
+                              cib_xpath);
     }
 
     if (admin_input_file != NULL) {
@@ -844,7 +856,8 @@ do_work(xmlNode * input, int call_options, xmlNode ** output)
 
     if (cib_action != NULL) {
         crm_trace("Passing \"%s\" to variant_op...", cib_action);
-        return cib_internal_op(the_cib, cib_action, host, obj_type, input, output, call_options, cib_user);
+        return cib_internal_op(the_cib, cib_action, host, cib_section, input,
+                               output, call_options, cib_user);
 
     } else {
         crm_err("You must specify an operation");
