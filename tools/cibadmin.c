@@ -437,13 +437,7 @@ main(int argc, char **argv)
     xmlNode *input = NULL;
     char *username = NULL;
     const char *acl_cred = NULL;
-    enum acl_eval_how {
-        acl_eval_unused,
-        acl_eval_auto,
-        acl_eval_namespace,
-        acl_eval_text,
-        acl_eval_color,
-    } acl_eval_how = acl_eval_unused;
+    enum pcmk__acl_render_how acl_render_mode = pcmk__acl_render_none;
 
     int option_index = 0;
 
@@ -483,28 +477,33 @@ main(int argc, char **argv)
                 dangerous_cmd = TRUE;
                 break;
             case 'S':
-                if (optarg != NULL) {
-                    if (!strcmp(optarg, "auto")) {
-                        acl_eval_how = acl_eval_auto;
-                    } else if (!strcmp(optarg, "namespace")) {
-                        acl_eval_how = acl_eval_namespace;
-                    } else if (!strcmp(optarg, "text")) {
-                        acl_eval_how = acl_eval_text;
-                    } else if (!strcmp(optarg, "color")) {
-                        acl_eval_how = acl_eval_color;
-                    } else {
-                        fprintf(stderr, "Unrecognized value for --show-access: \"%s\"\n",
-                               optarg);
-                        ++argerr;
-                    }
+                if (pcmk__str_eq(optarg, "auto", pcmk__str_null_matches)) {
+                    acl_render_mode = pcmk__acl_render_default;
+
+                } else if (strcmp(optarg, "namespace") == 0) {
+                    acl_render_mode = pcmk__acl_render_namespace;
+
+                } else if (strcmp(optarg, "text") == 0) {
+                    acl_render_mode = pcmk__acl_render_text;
+
+                } else if (strcmp(optarg, "color") == 0) {
+                    acl_render_mode = pcmk__acl_render_color;
+
                 } else {
-                    acl_eval_how = acl_eval_auto;
+                    fprintf(stderr,
+                            "Unrecognized value for --show-access: '%s'\n",
+                            optarg);
+                    ++argerr;
                 }
-                /* XXX this is a workaround until we unify happy paths for
-                       both a/sync handling; the respective extra code is
-                       only in sync path now, but does it matter at all for
-                       query-like request wrt. what blackbox users observe? */
-                command_options |= cib_sync_call;
+
+                /* The ACL render modes work only with sync calls due to
+                 * differences in output handling. It shouldn't matter to the
+                 * user whether the call is sync or async; for a CIB query, we
+                 * have to wait for the result in order to display it in any
+                 * case.
+                 */
+                cib__set_call_options(command_options, crm_system_name,
+                                      cib_sync_call);
                 break;
             case 'Q':
                 cib_action = PCMK__CIB_REQUEST_QUERY;
@@ -658,7 +657,7 @@ main(int argc, char **argv)
         source = "STDIN";
         input = stdin2xml();
 
-    } else if (acl_eval_how != acl_eval_unused) {
+    } else if (acl_render_mode != pcmk__acl_render_none) {
         username = pcmk__uid2username(geteuid());
         if (pcmk_acl_required(username)) {
             if (force_flag) {
@@ -788,41 +787,24 @@ main(int argc, char **argv)
         exit_code = pcmk_rc2exitc(rc);
     }
 
-    if (output != NULL && acl_eval_how != acl_eval_unused) {
+    if ((output != NULL) && (acl_render_mode != pcmk__acl_render_none)) {
         xmlDoc *acl_evaled_doc;
         rc = pcmk__acl_annotate_permissions(acl_cred, output->doc, &acl_evaled_doc);
         if (rc == pcmk_rc_ok) {
-            enum pcmk__acl_render_how how;
             xmlChar *rendered = NULL;
             free_xml(output);
-            switch(acl_eval_how) {
-                case acl_eval_text:
-                    how = pcmk__acl_render_text;
-                    break;
-                case acl_eval_color:
-                    how = pcmk__acl_render_color;
-                    break;
-                case acl_eval_namespace:
-                    how = pcmk__acl_render_namespace;
-                    break;
-                default:
-                    if (/*acl_eval_auto*/ isatty(STDOUT_FILENO)) {
-                        how = pcmk__acl_render_color;
-                    } else {
-                        how = pcmk__acl_render_text;
-                    }
-                    break;
-            }
+            output = NULL;
 
-            if (!pcmk__acl_evaled_render(acl_evaled_doc, how,
-                                            &rendered)) {
-                printf("%s\n", (char *) rendered);
-                free(rendered);
-            } else {
-                fprintf(stderr, "Could not render evaluated access\n");
+            rc = pcmk__acl_evaled_render(acl_evaled_doc, acl_render_mode,
+                                         &rendered);
+            if (rc != pcmk_rc_ok) {
+                fprintf(stderr, "Could not render evaluated access: %s\n",
+                        pcmk_rc_str(rc));
                 crm_exit(CRM_EX_CONFIG);
             }
-            output = NULL;
+            printf("%s\n", (char *) rendered);
+            free(rendered);
+
         } else {
             fprintf(stderr, "Could not evaluate access per request (%s, error: %s)\n", acl_cred, pcmk_rc_str(rc));
             crm_exit(CRM_EX_CONFIG);
