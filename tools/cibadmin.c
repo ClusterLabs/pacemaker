@@ -41,6 +41,7 @@ static struct {
     int cmd_options;
     gint message_timeout_sec;
     enum pcmk__acl_render_how acl_render_mode;
+    gboolean allow_create;
 } options;
 
 int do_init(void);
@@ -448,7 +449,6 @@ main(int argc, char **argv)
     xmlNode *input = NULL;
     const char *acl_cred = NULL;
 
-    bool allow_create = false;
     bool delete_all = false;
     bool force = false;
     bool get_node_path = false;
@@ -541,7 +541,7 @@ main(int argc, char **argv)
                 options.cib_action = "md5-sum-versioned";
                 break;
             case 'c':
-                allow_create = true;
+                options.allow_create = TRUE;
                 break;
             case 'n':
                 no_children = true;
@@ -659,7 +659,7 @@ main(int argc, char **argv)
                               cib_xpath);
     }
 
-    if (allow_create) {
+    if (options.allow_create) {
         // Allow target of --modify/-M to be created if it does not exist
         cib__set_call_options(options.cmd_options, crm_system_name,
                               cib_can_create);
