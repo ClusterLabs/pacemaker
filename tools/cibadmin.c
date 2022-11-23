@@ -43,6 +43,7 @@ static struct {
     enum pcmk__acl_render_how acl_render_mode;
     bool delete_all;
     gboolean allow_create;
+    gboolean force;
 } options;
 
 int do_init(void);
@@ -450,7 +451,6 @@ main(int argc, char **argv)
     xmlNode *input = NULL;
     const char *acl_cred = NULL;
 
-    bool force = false;
     bool get_node_path = false;
     bool local = false;
     bool no_bcast = false;
@@ -590,7 +590,7 @@ main(int argc, char **argv)
                 sync_call = true;
                 break;
             case 'f':
-                force = true;
+                options.force = TRUE;
                 break;
             case 'a':
                 output = createEmptyCib(1);
@@ -639,7 +639,7 @@ main(int argc, char **argv)
         options.delete_all = false;
     }
 
-    if (dangerous_cmd && !force) {
+    if (dangerous_cmd && !options.force) {
         exit_code = CRM_EX_UNSAFE;
         fprintf(stderr, "The supplied command is considered dangerous."
                 "  To prevent accidental destruction of the cluster,"
@@ -671,7 +671,7 @@ main(int argc, char **argv)
                               cib_multiple);
     }
 
-    if (force) {
+    if (options.force) {
         // Perform the action even without quorum
         cib__set_call_options(options.cmd_options, crm_system_name,
                               cib_quorum_override);
@@ -735,7 +735,7 @@ main(int argc, char **argv)
         free(username);
 
         if (required) {
-            if (force) {
+            if (options.force) {
                 fprintf(stderr, "The supplied command can provide skewed"
                                  " result since it is run under user that also"
                                  " gets guarded per ACLs on their own right."
