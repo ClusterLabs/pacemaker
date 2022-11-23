@@ -45,6 +45,7 @@ static struct {
     gboolean allow_create;
     gboolean force;
     gboolean get_node_path;
+    gboolean local;
 } options;
 
 int do_init(void);
@@ -452,7 +453,6 @@ main(int argc, char **argv)
     xmlNode *input = NULL;
     const char *acl_cred = NULL;
 
-    bool local = false;
     bool no_bcast = false;
     bool no_children = false;
     bool sync_call = false;
@@ -575,7 +575,7 @@ main(int argc, char **argv)
                 pcmk__str_update(&host, optarg);
                 break;
             case 'l':
-                local = true;
+                options.local = TRUE;
                 break;
             case 'd':
                 options.cib_action = PCMK__CIB_REQUEST_DELETE;
@@ -685,7 +685,7 @@ main(int argc, char **argv)
                               cib_xpath_address);
     }
 
-    if (local) {
+    if (options.local) {
         // Configure command to take effect only locally
         cib__set_call_options(options.cmd_options, crm_system_name,
                               cib_scope_local);
