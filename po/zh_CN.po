@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 2\n"
 "Report-Msgid-Bugs-To: developers@clusterlabs.org\n"
-"POT-Creation-Date: 2022-11-24 14:13+0800\n"
+"POT-Creation-Date: 2022-11-24 17:50+0800\n"
 "PO-Revision-Date: 2021-11-08 11:04+0800\n"
 "Last-Translator: Vivi <developers@clusterlabs.org>\n"
 "Language-Team: CHINESE <wangluwei@uniontech.org>\n"
@@ -842,7 +842,7 @@ msgid ""
 "Resource '%s' not moved: active in %d locations.\n"
 "To prevent '%s' from running on a specific location, specify a node."
 msgstr ""
-"资源%s未移动，在%d个位置运行\n"
+"资源%s未移动:在%d个位置运行\n"
 "若要防止'%s'运行在特定位置，指定一个节点"
 
 #: tools/crm_resource.c:1078
@@ -862,7 +862,7 @@ msgstr "没有发现指定的'%s'标准代理"
 #: tools/crm_resource.c:1158
 #, fuzzy, c-format
 msgid "No agents found for standard '%s' and provider '%s'"
-msgstr "没有发现指定的'%s'标准代理"
+msgstr "没有发现指定的标准%s和提供者%S的资源代理"
 
 #: tools/crm_resource.c:1225
 #, c-format
