@@ -120,6 +120,38 @@ crm_cluster_disconnect(crm_cluster_t *cluster)
 }
 
 /*!
+ * \brief Allocate a new \p crm_cluster_t object
+ *
+ * \return A newly allocated \p crm_cluster_t object (guaranteed not \p NULL)
+ * \note The caller is responsible for freeing the return value using
+ *       \p pcmk_cluster_free().
+ */
+crm_cluster_t *
+pcmk_cluster_new(void)
+{
+    crm_cluster_t *cluster = calloc(1, sizeof(crm_cluster_t));
+
+    CRM_ASSERT(cluster != NULL);
+    return cluster;
+}
+
+/*!
+ * \brief Free a \p crm_cluster_t object and its dynamically allocated members
+ *
+ * \param[in,out] cluster  Cluster object to free
+ */
+void
+pcmk_cluster_free(crm_cluster_t *cluster)
+{
+    if (cluster == NULL) {
+        return;
+    }
+    free(cluster->uuid);
+    free(cluster->uname);
+    free(cluster);
+}
+
+/*!
  * \brief Send an XML message via the cluster messaging layer
  *
  * \param[in] node     Cluster node to send message to

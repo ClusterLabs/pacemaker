@@ -102,6 +102,9 @@ typedef struct crm_cluster_s {
 gboolean crm_cluster_connect(crm_cluster_t *cluster);
 void crm_cluster_disconnect(crm_cluster_t *cluster);
 
+crm_cluster_t *pcmk_cluster_new(void);
+void pcmk_cluster_free(crm_cluster_t *cluster);
+
 enum crm_ais_msg_class {
     crm_class_cluster = 0,
 };
