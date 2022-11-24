@@ -68,6 +68,8 @@ pcmk__supported_format_t formats[] = {
     { NULL, NULL, NULL }
 };
 
+static crm_exit_t exit_code = CRM_EX_OK;
+
 static void stonith_shutdown(int nsig);
 static void stonith_cleanup(void);
 
@@ -633,16 +635,17 @@ watchdog_device_update(void)
             rc = stonith_device_register(xml, TRUE);
             free_xml(xml);
             if (rc != pcmk_ok) {
-                crm_crit("Cannot register watchdog pseudo fence agent");
-                crm_exit(CRM_EX_FATAL);
+                rc = pcmk_legacy2rc(rc);
+                exit_code = CRM_EX_FATAL;
+                crm_crit("Cannot register watchdog pseudo fence agent: %s",
+                         pcmk_rc_str(rc));
+                stonith_shutdown(0);
             }
         }
 
-    } else {
+    } else if (g_hash_table_lookup(device_list, STONITH_WATCHDOG_ID) != NULL) {
         /* be silent if no device - todo parameter to stonith_device_remove */
-        if (g_hash_table_lookup(device_list, STONITH_WATCHDOG_ID)) {
-            stonith_device_remove(STONITH_WATCHDOG_ID, true);
-        }
+        stonith_device_remove(STONITH_WATCHDOG_ID, true);
     }
 }
 
@@ -1230,9 +1233,6 @@ stonith_shutdown(int nsig)
     stonith_shutdown_flag = TRUE;
     if (mainloop != NULL && g_main_loop_is_running(mainloop)) {
         g_main_loop_quit(mainloop);
-    } else {
-        stonith_cleanup();
-        crm_exit(CRM_EX_OK);
     }
 }
 
@@ -1640,10 +1640,12 @@ main(int argc, char **argv)
         }
     }
 
-    if (argc - optind == 1 && pcmk__str_eq("metadata", argv[optind], pcmk__str_casei)) {
-	fencer_metadata();
-        return CRM_EX_OK;
-    }    
+    if ((argc - optind == 1)
+        && pcmk__str_eq("metadata", argv[optind], pcmk__str_none)) {
+        fencer_metadata();
+        goto done;
+    }
+
     if (optind != argc) {
         ++argerr;
     }
@@ -1658,18 +1660,21 @@ main(int argc, char **argv)
 
     old_instance = crm_ipc_new("stonith-ng", 0);
     if (old_instance == NULL) {
-        /* crm_ipc_new will have already printed an error message with crm_err. */
-        return CRM_EX_FATAL;
+        /* crm_ipc_new() will have already logged an error message with
+         * crm_err()
+         */
+        exit_code = CRM_EX_FATAL;
+        goto done;
     }
 
     if (crm_ipc_connect(old_instance)) {
-        // IPC end-point already up 
+        // IPC endpoint already up
         crm_ipc_close(old_instance);
         crm_ipc_destroy(old_instance);
         crm_err("pacemaker-fenced is already active, aborting startup");
-        crm_exit(CRM_EX_OK);
+        goto done;
     } else {
-        // not up or not authentic, we'll proceed either way 
+        // Not up or not authentic, we'll proceed either way
         crm_ipc_destroy(old_instance);
         old_instance = NULL;
     }
@@ -1696,8 +1701,9 @@ main(int argc, char **argv)
         crm_set_status_callback(&st_peer_update_callback);
 
         if (crm_cluster_connect(cluster) == FALSE) {
+            exit_code = CRM_EX_FATAL;
             crm_crit("Cannot sign in to the cluster... terminating");
-            crm_exit(CRM_EX_FATAL);
+            goto done;
         }
         stonith_our_uname = strdup(cluster->uname);
 
@@ -1719,9 +1725,10 @@ main(int argc, char **argv)
     pcmk__register_formats(NULL, formats);
     rc = pcmk__output_new(&out, "log", NULL, argv);
     if ((rc != pcmk_rc_ok) || (out == NULL)) {
+        exit_code = CRM_EX_FATAL;
         crm_err("Can't log resource details due to internal error: %s\n",
                 pcmk_rc_str(rc));
-        crm_exit(CRM_EX_FATAL);
+        goto done;
     }
 
     pe__register_messages(out);
@@ -1730,18 +1737,21 @@ main(int argc, char **argv)
     pcmk__output_set_log_level(out, LOG_TRACE);
     fenced_data_set->priv = out;
 
-    // Create the mainloop and run it... 
+    // Create the mainloop and run it...
     mainloop = g_main_loop_new(NULL, FALSE);
     crm_notice("Pacemaker fencer successfully started and accepting connections");
     g_main_loop_run(mainloop);
 
+done:
     stonith_cleanup();
     pcmk_cluster_free(cluster);
     pe_free_working_set(fenced_data_set);
 
-    out->finish(out, CRM_EX_OK, true, NULL);
-    pcmk__output_free(out);
-    pcmk__unregister_formats();
+    if (out != NULL) {
+        out->finish(out, exit_code, true, NULL);
+        pcmk__output_free(out);
+    }
 
-    crm_exit(CRM_EX_OK);
+    pcmk__unregister_formats();
+    crm_exit(exit_code);
 }
