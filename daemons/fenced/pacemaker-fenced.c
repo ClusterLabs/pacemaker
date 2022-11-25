@@ -61,10 +61,9 @@ static const unsigned long long data_set_flags = pe_flag_quick_location
 
 static cib_t *cib_api = NULL;
 
-static pcmk__output_t *out = NULL;
+static pcmk__output_t *logger_out = NULL;
 
 pcmk__supported_format_t formats[] = {
-    PCMK__SUPPORTED_FORMAT_LOG,
     PCMK__SUPPORTED_FORMAT_NONE,
     PCMK__SUPPORTED_FORMAT_TEXT,
     { NULL, NULL, NULL }
@@ -1701,20 +1700,14 @@ main(int argc, char **argv)
 
     pcmk__serve_fenced_ipc(&ipcs, &ipc_callbacks);
 
-    pcmk__register_formats(NULL, formats);
-    rc = pcmk__output_new(&out, "log", NULL, argv);
-    if ((rc != pcmk_rc_ok) || (out == NULL)) {
+    if (pcmk__log_output_new(&logger_out) != pcmk_rc_ok) {
         exit_code = CRM_EX_FATAL;
-        crm_err("Can't log resource details due to internal error: %s\n",
-                pcmk_rc_str(rc));
         goto done;
     }
-
-    pe__register_messages(out);
-    pcmk__register_lib_messages(out);
-
-    pcmk__output_set_log_level(out, LOG_TRACE);
-    fenced_data_set->priv = out;
+    pe__register_messages(logger_out);
+    pcmk__register_lib_messages(logger_out);
+    pcmk__output_set_log_level(logger_out, LOG_TRACE);
+    fenced_data_set->priv = logger_out;
 
     // Create the mainloop and run it...
     mainloop = g_main_loop_new(NULL, FALSE);
@@ -1733,9 +1726,9 @@ done:
 
     pcmk__output_and_clear_error(error, NULL);
 
-    if (out != NULL) {
-        out->finish(out, exit_code, true, NULL);
-        pcmk__output_free(out);
+    if (logger_out != NULL) {
+        logger_out->finish(logger_out, exit_code, true, NULL);
+        pcmk__output_free(logger_out);
     }
 
     pcmk__unregister_formats();
