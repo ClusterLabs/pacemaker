@@ -867,10 +867,11 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
             if (strstr(xpath, XML_TAG_ATTR_SETS) ||
                 strstr(xpath, XML_TAG_META_SETS)) {
                 needs_update = TRUE;
-                reason = strdup("(meta) attribute deleted from resource");
+                pcmk__str_update(&reason,
+                                 "(meta) attribute deleted from resource");
                 break;
-            } 
-            mutable = strdup(xpath);
+            }
+            pcmk__str_update(&mutable, xpath);
             rsc_id = strstr(mutable, "primitive[@id=\'");
             if (rsc_id != NULL) {
                 rsc_id += strlen("primitive[@id=\'");
@@ -1693,14 +1694,14 @@ main(int argc, char **argv)
             crm_crit("Cannot sign in to the cluster... terminating");
             goto done;
         }
-        stonith_our_uname = strdup(cluster->uname);
+        pcmk__str_update(&stonith_our_uname, cluster->uname);
 
         if (!options.no_cib_connect) {
             setup_cib();
         }
 
     } else {
-        stonith_our_uname = strdup("localhost");
+        pcmk__str_update(&stonith_our_uname, "localhost");
         crm_warn("Stand-alone mode is deprecated and will be removed "
                  "in a future release");
     }
