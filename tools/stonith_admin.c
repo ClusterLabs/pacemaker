@@ -661,6 +661,7 @@ main(int argc, char **argv)
         out->finish(out, exit_code, true, NULL);
         pcmk__output_free(out);
     }
+    pcmk__unregister_formats();
     free(name);
     stonith_key_value_freeall(options.params, 1, 1);
 

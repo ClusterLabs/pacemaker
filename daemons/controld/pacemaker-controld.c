@@ -160,6 +160,7 @@ done:
         out->finish(out, exit_code, true, NULL);
         pcmk__output_free(out);
     }
+    pcmk__unregister_formats();
 
     if ((exit_code == CRM_EX_OK) && initialize) {
         // Does not return

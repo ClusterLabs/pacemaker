@@ -206,6 +206,7 @@ bye(crm_exit_t ec)
         out->finish(out, ec, true, NULL);
         pcmk__output_free(out);
     }
+    pcmk__unregister_formats();
 
     if (cib_conn != NULL) {
         cib_t *save_cib_conn = cib_conn;

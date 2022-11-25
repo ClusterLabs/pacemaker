@@ -315,5 +315,6 @@ main(int argc, char **argv)
         out->finish(out, attrd_exit_status, true, NULL);
         pcmk__output_free(out);
     }
+    pcmk__unregister_formats();
     crm_exit(attrd_exit_status);
 }
