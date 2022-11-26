@@ -1385,7 +1385,7 @@ fake_op_status(lrm_state_t *lrm_state, lrmd_event_data_t *op, int op_status,
 static void
 force_reprobe(lrm_state_t *lrm_state, const char *from_sys,
               const char *from_host, const char *user_name,
-              gboolean is_remote_node)
+              gboolean is_remote_node, bool reprobe_all_nodes)
 {
     GHashTableIter gIter;
     rsc_history_t *entry = NULL;
@@ -1399,13 +1399,19 @@ force_reprobe(lrm_state_t *lrm_state, const char *from_sys,
         gboolean unregister = TRUE;
 
         if (is_remote_lrmd_ra(NULL, NULL, entry->id)) {
-            lrm_state_t *remote_lrm_state = lrm_state_find(entry->id);
-            if (remote_lrm_state) {
-                /* when forcing a reprobe, make sure to clear remote node before
-                 * clearing the remote node's connection resource */ 
-                force_reprobe(remote_lrm_state, from_sys, from_host, user_name, TRUE);
-            }
             unregister = FALSE;
+
+            if (reprobe_all_nodes) {
+                lrm_state_t *remote_lrm_state = lrm_state_find(entry->id);
+
+                if (remote_lrm_state != NULL) {
+                    /* If reprobing all nodes, be sure to reprobe the remote
+                     * node before clearing its connection resource
+                     */
+                    force_reprobe(remote_lrm_state, from_sys, from_host,
+                                  user_name, TRUE, reprobe_all_nodes);
+                }
+            }
         }
 
         delete_resource(lrm_state, entry->id, &entry->rsc, &gIter, from_sys,
@@ -1476,7 +1482,8 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, const xmlNode *action,
 
 /*!
  * \internal
- * \brief Get target of an LRM operation
+ * \brief Get target of an LRM operation (replacing \p NULL with local node
+ *        name)
  *
  * \param[in] xml  LRM operation data XML
  *
@@ -1553,10 +1560,11 @@ fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
 static void
 handle_reprobe_op(lrm_state_t *lrm_state, const char *from_sys,
                   const char *from_host, const char *user_name,
-                  gboolean is_remote_node)
+                  gboolean is_remote_node, bool reprobe_all_nodes)
 {
     crm_notice("Forcing the status of all resources to be redetected");
-    force_reprobe(lrm_state, from_sys, from_host, user_name, is_remote_node);
+    force_reprobe(lrm_state, from_sys, from_host, user_name, is_remote_node,
+                  reprobe_all_nodes);
 
     if (!pcmk__strcase_any_of(from_sys, CRM_SYSTEM_PENGINE, CRM_SYSTEM_TENGINE, NULL)) {
 
@@ -1750,11 +1758,11 @@ do_lrm_invoke(long long action,
     const char *operation = NULL;
     ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
     const char *user_name = NULL;
-    const char *target_node = NULL;
+    const char *target_node = lrm_op_target(input->xml);
     gboolean is_remote_node = FALSE;
     bool crm_rsc_delete = FALSE;
 
-    target_node = lrm_op_target(input->xml);
+    // Message routed to the local node is targeting a specific, non-local node
     is_remote_node = !pcmk__str_eq(target_node, controld_globals.our_nodename,
                                    pcmk__str_casei);
 
@@ -1812,8 +1820,14 @@ do_lrm_invoke(long long action,
 
     } else if (pcmk__str_eq(crm_op, CRM_OP_REPROBE, pcmk__str_none)
                || pcmk__str_eq(operation, CRM_OP_REPROBE, pcmk__str_none)) {
+        const char *raw_target = NULL;
+
+        if (input->xml != NULL) {
+            // For CRM_OP_REPROBE, a NULL target means we're targeting all nodes
+            raw_target = crm_element_value(input->xml, XML_LRM_ATTR_TARGET);
+        }
         handle_reprobe_op(lrm_state, from_sys, from_host, user_name,
-                          is_remote_node);
+                          is_remote_node, (raw_target == NULL));
 
     } else if (operation != NULL) {
         lrmd_rsc_info_t *rsc = NULL;
