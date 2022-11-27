@@ -19,6 +19,9 @@ void post_cache_update(int instance);
 
 extern gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
 
+void controld_destroy_failed_sync_table(void);
+void controld_remove_failed_sync_node(const char *node_name);
+
 #ifdef __cplusplus
 }
 #endif

@@ -20,6 +20,18 @@
 static char *max_generation_from = NULL;
 static xmlNodePtr max_generation_xml = NULL;
 
+/*!
+ * \internal
+ * \brief Nodes from which a CIB sync has failed since the peer joined
+ *
+ * This table is of the form (<tt>node_name -> join_id</tt>). \p node_name is
+ * the name of a client node from which a CIB \p sync_from() call has failed in
+ * \p do_dc_join_finalize() since the client joined the cluster as a peer.
+ * \p join_id is the ID of the join round in which the \p sync_from() failed,
+ * and is intended for use in nack log messages.
+ */
+static GHashTable *failed_sync_nodes = NULL;
+
 void finalize_join_for(gpointer key, gpointer value, gpointer user_data);
 void finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data);
 gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
@@ -28,6 +40,81 @@ gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
  * appropriate, except we get and set it in XML as int)
  */
 static int current_join_id = 0;
+
+/*!
+ * \internal
+ * \brief Destroy the hash table containing failed sync nodes
+ */
+void
+controld_destroy_failed_sync_table(void)
+{
+    if (failed_sync_nodes != NULL) {
+        g_hash_table_destroy(failed_sync_nodes);
+        failed_sync_nodes = NULL;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Remove a node from the failed sync nodes table if present
+ *
+ * \param[in] node_name  Node name to remove
+ */
+void
+controld_remove_failed_sync_node(const char *node_name)
+{
+    if (failed_sync_nodes != NULL) {
+        g_hash_table_remove(failed_sync_nodes, (gchar *) node_name);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Add to a hash table a node whose CIB failed to sync
+ *
+ * \param[in] node_name  Name of node whose CIB failed to sync
+ * \param[in] join_id    Join round when the failure occurred
+ */
+static void
+record_failed_sync_node(const char *node_name, gint join_id)
+{
+    if (failed_sync_nodes == NULL) {
+        failed_sync_nodes = pcmk__strikey_table(g_free, NULL);
+    }
+
+    /* If the node is already in the table then we failed to nack it during the
+     * filter offer step
+     */
+    CRM_LOG_ASSERT(g_hash_table_insert(failed_sync_nodes, g_strdup(node_name),
+                                       GINT_TO_POINTER(join_id)));
+}
+
+/*!
+ * \internal
+ * \brief Look up a node name in the failed sync table
+ *
+ * \param[in]  node_name  Name of node to look up
+ * \param[out] join_id    Where to store the join ID of when the sync failed
+ *
+ * \return Standard Pacemaker return code. Specifically, \p pcmk_rc_ok if the
+ *         node name was found, or \p pcmk_rc_node_unknown otherwise.
+ * \note \p *join_id is set to -1 if the node is not found.
+ */
+static int
+lookup_failed_sync_node(const char *node_name, gint *join_id)
+{
+    *join_id = -1;
+
+    if (failed_sync_nodes != NULL) {
+        gpointer result = g_hash_table_lookup(failed_sync_nodes,
+                                              (gchar *) node_name);
+        if (result != NULL) {
+            *join_id = GPOINTER_TO_INT(result);
+            return pcmk_rc_ok;
+        }
+    }
+    return pcmk_rc_node_unknown;
+}
 
 void
 crm_update_peer_join(const char *source, crm_node_t * node, enum crm_join_phase phase)
@@ -296,6 +383,7 @@ do_dc_join_filter_offer(long long action,
     int cmp = 0;
     int join_id = -1;
     int count = 0;
+    gint value = 0;
     gboolean ack_nack_bool = TRUE;
     ha_msg_input_t *join_ack = fsa_typed_data(fsa_dt_ha_msg);
 
@@ -338,7 +426,13 @@ do_dc_join_filter_offer(long long action,
         ref = "none"; // for logging only
     }
 
-    if (!crm_is_peer_active(join_node)) {
+    if (lookup_failed_sync_node(join_from, &value) == pcmk_rc_ok) {
+        crm_err("Rejecting join-%d request from node %s because we failed to "
+                "sync its CIB in join-%d " CRM_XS " ref=%s",
+                join_id, join_from, value, ref);
+        ack_nack_bool = FALSE;
+
+    } else if (!crm_is_peer_active(join_node)) {
         if (match_down_event(join_from) != NULL) {
             /* The join request was received after the node was fenced or
              * otherwise shutdown in a way that we're aware of. No need to log
@@ -369,26 +463,49 @@ do_dc_join_filter_offer(long long action,
         ack_nack_bool = FALSE;
 
     } else if (max_generation_xml == NULL) {
-        crm_debug("Accepting join-%d request from %s "
-                  "(with first CIB generation) " CRM_XS " ref=%s",
-                  join_id, join_from, ref);
-        max_generation_xml = copy_xml(generation);
-        max_generation_from = strdup(join_from);
+        const char *validation = crm_element_value(generation,
+                                                   XML_ATTR_VALIDATION);
+
+        if (get_schema_version(validation) < 0) {
+            crm_err("Rejecting join-%d request from %s (with first CIB "
+                    "generation) due to unknown schema version %s "
+                    CRM_XS " ref=%s",
+                    join_id, join_from, validation, ref);
+            ack_nack_bool = FALSE;
+
+        } else {
+            crm_debug("Accepting join-%d request from %s (with first CIB "
+                      "generation) " CRM_XS " ref=%s",
+                      join_id, join_from, ref);
+            max_generation_xml = copy_xml(generation);
+            pcmk__str_update(&max_generation_from, join_from);
+        }
 
     } else if ((cmp < 0)
                || ((cmp == 0)
                    && pcmk__str_eq(join_from, controld_globals.our_nodename,
                                    pcmk__str_casei))) {
-        crm_debug("Accepting join-%d request from %s (with better "
-                  "CIB generation than current best from %s) " CRM_XS " ref=%s",
-                  join_id, join_from, max_generation_from, ref);
-        crm_log_xml_debug(max_generation_xml, "Old max generation");
-        crm_log_xml_debug(generation, "New max generation");
+        const char *validation = crm_element_value(generation,
+                                                   XML_ATTR_VALIDATION);
 
-        pcmk__str_update(&max_generation_from, join_from);
+        if (get_schema_version(validation) < 0) {
+            crm_err("Rejecting join-%d request from %s (with better CIB "
+                    "generation than current best from %s) due to unknown "
+                    "schema version %s " CRM_XS " ref=%s",
+                    join_id, join_from, max_generation_from, validation, ref);
+            ack_nack_bool = FALSE;
 
-        free_xml(max_generation_xml);
-        max_generation_xml = copy_xml(join_ack->xml);
+        } else {
+            crm_debug("Accepting join-%d request from %s (with better CIB "
+                      "generation than current best from %s) " CRM_XS " ref=%s",
+                      join_id, join_from, max_generation_from, ref);
+            crm_log_xml_debug(max_generation_xml, "Old max generation");
+            crm_log_xml_debug(generation, "New max generation");
+
+            free_xml(max_generation_xml);
+            max_generation_xml = copy_xml(join_ack->xml);
+            pcmk__str_update(&max_generation_from, join_from);
+        }
 
     } else {
         crm_debug("Accepting join-%d request from %s " CRM_XS " ref=%s",
@@ -512,9 +629,13 @@ finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, voi
     CRM_LOG_ASSERT(-EPERM != rc);
     controld_clear_fsa_input_flags(R_CIB_ASKED);
     if (rc != pcmk_ok) {
+        const char *sync_from = (const char *) user_data;
+
         do_crm_log(((rc == -pcmk_err_old_data)? LOG_WARNING : LOG_ERR),
                    "Could not sync CIB from %s in join-%d: %s",
-                   (char *) user_data, current_join_id, pcmk_strerror(rc));
+                   sync_from, current_join_id, pcmk_strerror(rc));
+
+        record_failed_sync_node(sync_from, current_join_id);
 
         /* restart the whole join process */
         register_fsa_error_adv(C_FSA_INTERNAL, I_ELECTION_DC, NULL, NULL,
