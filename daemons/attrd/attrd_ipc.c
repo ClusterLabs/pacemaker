@@ -283,6 +283,28 @@ handle_value_expansion(const char **value, xmlNode *xml, const char *op,
     return pcmk_rc_ok;
 }
 
+static void
+send_update_msg_to_cluster(pcmk__request_t *request, xmlNode *xml)
+{
+    if (pcmk__str_eq(attrd_request_sync_point(xml), PCMK__VALUE_CLUSTER, pcmk__str_none)) {
+        /* The client is waiting on the cluster-wide sync point.  In this case,
+         * the response ACK is not sent until this attrd broadcasts the update
+         * and receives its own confirmation back from all peers.
+         */
+        attrd_expect_confirmations(request, attrd_cluster_sync_point_update);
+        attrd_send_message(NULL, xml, true); /* ends up at attrd_peer_message() */
+
+    } else {
+        /* The client is either waiting on the local sync point or was not
+         * waiting on any sync point at all.  For the local sync point, the
+         * response ACK is sent in attrd_peer_update.  For clients not
+         * waiting on any sync point, the response ACK is sent in
+         * handle_update_request immediately before this function was called.
+         */
+        attrd_send_message(NULL, xml, false); /* ends up at attrd_peer_message() */
+    }
+}
+
 xmlNode *
 attrd_client_update(pcmk__request_t *request)
 {
@@ -314,7 +336,7 @@ attrd_client_update(pcmk__request_t *request)
                 }
             }
 
-            attrd_send_message(NULL, xml, false);
+            send_update_msg_to_cluster(request, xml);
             pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
 
         } else {
@@ -388,24 +410,7 @@ attrd_client_update(pcmk__request_t *request)
     crm_debug("Broadcasting %s[%s]=%s%s", attr, crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME),
               value, (attrd_election_won()? " (writer)" : ""));
 
-    if (pcmk__str_eq(attrd_request_sync_point(xml), PCMK__VALUE_CLUSTER, pcmk__str_none)) {
-        /* The client is waiting on the cluster-wide sync point.  In this case,
-         * the response ACK is not sent until this attrd broadcasts the update
-         * and receives its own confirmation back from all peers.
-         */
-        attrd_expect_confirmations(request, attrd_cluster_sync_point_update);
-        attrd_send_message(NULL, xml, true); /* ends up at attrd_peer_message() */
-
-    } else {
-        /* The client is either waiting on the local sync point or was not
-         * waiting on any sync point at all.  For the local sync point, the
-         * response ACK is sent in attrd_peer_update.  For clients not
-         * waiting on any sync point, the response ACK is sent in
-         * handle_update_request immediately before this function was called.
-         */
-        attrd_send_message(NULL, xml, false); /* ends up at attrd_peer_message() */
-    }
-
+    send_update_msg_to_cluster(request, xml);
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     return NULL;
 }
