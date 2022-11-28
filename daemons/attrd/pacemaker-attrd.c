@@ -301,6 +301,8 @@ main(int argc, char **argv)
         attrd_lrmd_disconnect();
         attrd_cib_disconnect();
         attrd_free_waitlist();
+
+        pcmk_cluster_free(attrd_cluster);
         g_hash_table_destroy(attributes);
     }
 

@@ -35,7 +35,7 @@ extern int init_remote_listener(int port, gboolean encrypted);
 gboolean cib_shutdown_flag = FALSE;
 int cib_status = pcmk_ok;
 
-crm_cluster_t crm_cluster;
+crm_cluster_t *crm_cluster = NULL;
 
 GMainLoop *mainloop = NULL;
 gchar *cib_root = NULL;
@@ -267,7 +267,7 @@ main(int argc, char **argv)
     /* If main loop returned, clean up and exit. We disconnect in case
      * terminate_cib() was called with fast=-1.
      */
-    crm_cluster_disconnect(&crm_cluster);
+    crm_cluster_disconnect(crm_cluster);
     pcmk__stop_based_ipc(ipcs_ro, ipcs_rw, ipcs_shm);
 
 done:
@@ -293,6 +293,7 @@ cib_cleanup(void)
         g_hash_table_destroy(local_notify_queue);
     }
     pcmk__client_cleanup();
+    pcmk_cluster_free(crm_cluster);
     g_hash_table_destroy(config_hash);
     free(cib_our_uname);
 }
@@ -372,11 +373,13 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
 static void
 cib_init(void)
 {
+    crm_cluster = pcmk_cluster_new();
+
     if (is_corosync_cluster()) {
 #if SUPPORT_COROSYNC
-        crm_cluster.destroy = cib_cs_destroy;
-        crm_cluster.cpg.cpg_deliver_fn = cib_cs_dispatch;
-        crm_cluster.cpg.cpg_confchg_fn = pcmk_cpg_membership;
+        crm_cluster->destroy = cib_cs_destroy;
+        crm_cluster->cpg.cpg_deliver_fn = cib_cs_dispatch;
+        crm_cluster->cpg.cpg_confchg_fn = pcmk_cpg_membership;
 #endif
     }
 
@@ -392,11 +395,11 @@ cib_init(void)
             crm_set_status_callback(&cib_peer_update_callback);
         }
 
-        if (crm_cluster_connect(&crm_cluster) == FALSE) {
+        if (!crm_cluster_connect(crm_cluster)) {
             crm_crit("Cannot sign in to the cluster... terminating");
             crm_exit(CRM_EX_FATAL);
         }
-        cib_our_uname = crm_cluster.uname;
+        cib_our_uname = crm_cluster->uname;
 
     } else {
         cib_our_uname = strdup("localhost");

@@ -62,7 +62,7 @@ extern crm_trigger_t *cib_writer;
 extern gboolean cib_writes_enabled;
 
 extern GMainLoop *mainloop;
-extern crm_cluster_t crm_cluster;
+extern crm_cluster_t *crm_cluster;
 extern GHashTable *local_notify_queue;
 extern gboolean legacy_mode;
 extern gboolean stand_alone;

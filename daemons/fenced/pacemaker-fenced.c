@@ -1680,8 +1680,7 @@ main(int argc, char **argv)
     fenced_data_set = pe_new_working_set();
     CRM_ASSERT(fenced_data_set != NULL);
 
-    cluster = calloc(1, sizeof(crm_cluster_t));
-    CRM_ASSERT(cluster != NULL);
+    cluster = pcmk_cluster_new();
 
     if (stand_alone == FALSE) {
 
@@ -1736,9 +1735,7 @@ main(int argc, char **argv)
     g_main_loop_run(mainloop);
 
     stonith_cleanup();
-    free(cluster->uuid);
-    free(cluster->uname);
-    free(cluster);
+    pcmk_cluster_free(cluster);
     pe_free_working_set(fenced_data_set);
 
     out->finish(out, CRM_EX_OK, true, NULL);

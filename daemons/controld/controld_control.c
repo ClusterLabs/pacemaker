@@ -44,7 +44,7 @@ do_ha_control(long long action,
     static crm_cluster_t *cluster = NULL;
 
     if (cluster == NULL) {
-        cluster = calloc(1, sizeof(crm_cluster_t));
+        cluster = pcmk_cluster_new();
     }
 
     if (action & A_HA_DISCONNECT) {
