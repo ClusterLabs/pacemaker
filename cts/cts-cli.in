@@ -2525,7 +2525,7 @@ done
 rm -rf "${shadow_dir}"
 rm -f "${test_assert_outfile}"
 rm -f "${test_assert_errfile}"
-rm -f "${xmllint_errfile}"
+rm -f "${xmllint_outfile}"
 
 failed=0
 
