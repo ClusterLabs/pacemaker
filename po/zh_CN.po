@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 2\n"
 "Report-Msgid-Bugs-To: developers@clusterlabs.org\n"
-"POT-Creation-Date: 2022-11-22 16:46+0800\n"
+"POT-Creation-Date: 2022-11-24 17:50+0800\n"
 "PO-Revision-Date: 2021-11-08 11:04+0800\n"
 "Last-Translator: Vivi <developers@clusterlabs.org>\n"
 "Language-Team: CHINESE <wangluwei@uniontech.org>\n"
@@ -814,6 +814,83 @@ msgid ""
 "*** Deprecated *** Whether to remove stopped resources from the executor"
 msgstr "***不推荐***是否从pacemaker-execd 守护进程中清除已停止的资源"
 
+#: tools/crm_resource.c:257
+#, c-format
+msgid "Aborting because no messages received in %d seconds"
+msgstr "中止，因为在%d秒内没有接收到消息"
+
+#: tools/crm_resource.c:908
+#, c-format
+msgid "Invalid check level setting: %s"
+msgstr "无效的检查级别设置：%s"
+
+#: tools/crm_resource.c:992
+#, c-format
+msgid ""
+"Resource '%s' not moved: active in %d locations (promoted in %d).\n"
+"To prevent '%s' from running on a specific location, specify a node.To "
+"prevent '%s' from being promoted at a specific location, specify a node and "
+"the --promoted option."
+msgstr ""
+"资源'%s'未移动：在%d个位置运行（其中在%d个位置为主实例）\n"
+"若要阻止'%s'在特定位置运行，请指定一个节点。若要防止'%s'在指定位置升级，指定"
+"一个节点并使用--promoted选项"
+
+#: tools/crm_resource.c:1003
+#, c-format
+msgid ""
+"Resource '%s' not moved: active in %d locations.\n"
+"To prevent '%s' from running on a specific location, specify a node."
+msgstr ""
+"资源%s未移动:在%d个位置运行\n"
+"若要防止'%s'运行在特定位置，指定一个节点"
+
+#: tools/crm_resource.c:1078
+#, c-format
+msgid "Could not get modified CIB: %s\n"
+msgstr "无法获得修改的CIB：%s\n"
+
+#: tools/crm_resource.c:1112
+msgid "You need to specify a resource type with -t"
+msgstr "需要使用-t指定资源类型"
+
+#: tools/crm_resource.c:1155
+#, c-format
+msgid "No agents found for standard '%s'"
+msgstr "没有发现指定的'%s'标准代理"
+
+#: tools/crm_resource.c:1158
+#, fuzzy, c-format
+msgid "No agents found for standard '%s' and provider '%s'"
+msgstr "没有发现指定的标准%s和提供者%S的资源代理"
+
+#: tools/crm_resource.c:1225
+#, c-format
+msgid "No %s found for %s"
+msgstr "没有发现%s符合%s"
+
+#: tools/crm_resource.c:1230
+#, c-format
+msgid "No %s found"
+msgstr "没有发现%s"
+
+#: tools/crm_resource.c:1290
+#, c-format
+msgid "No cluster connection to Pacemaker Remote node %s detected"
+msgstr "未检测到至pacemaker远程节点%s的集群连接"
+
+#: tools/crm_resource.c:1351
+msgid "Must specify -t with resource type"
+msgstr "需要使用-t指定资源类型"
+
+#: tools/crm_resource.c:1357
+msgid "Must supply -v with new value"
+msgstr "必须使用-v指定新值"
+
+#: tools/crm_resource.c:1389
+msgid "Could not create executor connection"
+msgstr "无法创建到pacemaker-execd守护进程的连接"
+
 #: tools/crm_resource.c:1414
 #, fuzzy, c-format
 msgid "Metadata query for %s failed: %s"
@@ -823,6 +900,95 @@ msgstr "，查询%s的元数据失败: %s\n"
 #, c-format
 msgid "'%s' is not a valid agent specification"
 msgstr "'%s' 是一个无效的代理"
+
+#: tools/crm_resource.c:1433
+msgid "--resource cannot be used with --class, --agent, and --provider"
+msgstr "--resource 不能与 --class, --agent, --provider一起使用"
+
+#: tools/crm_resource.c:1438
+msgid ""
+"--class, --agent, and --provider can only be used with --validate and --"
+"force-*"
+msgstr "--class, --agent和--provider只能被用于--validate和--force-*"
+
+#: tools/crm_resource.c:1447
+msgid "stonith does not support providers"
+msgstr "stonith 不支持提供者"
+
+#: tools/crm_resource.c:1451
+#, c-format
+msgid "%s is not a known stonith agent"
+msgstr "%s 不是一个已知stonith代理"
+
+#: tools/crm_resource.c:1456
+#, c-format
+msgid "%s:%s:%s is not a known resource"
+msgstr "%s:%s:%s 不是一个已知资源"
+
+#: tools/crm_resource.c:1570
+#, c-format
+msgid "Error creating output format %s: %s"
+msgstr "创建输出格式错误 %s:%s"
+
+#: tools/crm_resource.c:1597
+msgid "--expired requires --clear or -U"
+msgstr "--expired需要和--clear或-U一起使用"
+
+#: tools/crm_resource.c:1614
+#, c-format
+msgid "Error parsing '%s' as a name=value pair"
+msgstr "'%s'解析错误，格式为name=value"
+
+#: tools/crm_resource.c:1711
+msgid "Must supply a resource id with -r"
+msgstr "必须使用-r指定资源id"
+
+#: tools/crm_resource.c:1717
+msgid "Must supply a node name with -N"
+msgstr "必须使用-N指定节点名称"
+
+#: tools/crm_resource.c:1741
+msgid "Could not create CIB connection"
+msgstr "无法创建到CIB的连接"
+
+#: tools/crm_resource.c:1749
+#, c-format
+msgid "Could not connect to the CIB: %s"
+msgstr "不能连接到CIB：%s"
+
+#: tools/crm_resource.c:1770
+#, c-format
+msgid "Resource '%s' not found"
+msgstr "没有发现'%s'资源"
+
+#: tools/crm_resource.c:1782
+#, c-format
+msgid "Cannot operate on clone resource instance '%s'"
+msgstr "不能操作克隆资源实例'%s'"
+
+#: tools/crm_resource.c:1794
+#, c-format
+msgid "Node '%s' not found"
+msgstr "没有发现%s节点"
+
+#: tools/crm_resource.c:1805 tools/crm_resource.c:1814
+#, c-format
+msgid "Error connecting to the controller: %s"
+msgstr "连接到控制器错误：%s"
+
+#: tools/crm_resource.c:2050
+msgid "You need to supply a value with the -v option"
+msgstr "需要使用-v选项提供一个值"
+
+#: tools/crm_resource.c:2105
+#, c-format
+msgid "Unimplemented command: %d"
+msgstr "无效的命令：%d"
+
+#: tools/crm_resource.c:2139
+#, c-format
+msgid "Error performing operation: %s"
+msgstr "执行操作错误：%s"
 
 #~ msgid ""
 #~ "If nonzero, along with `have-watchdog=true` automatically set by the "
