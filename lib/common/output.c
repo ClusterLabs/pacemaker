@@ -120,7 +120,7 @@ pcmk__register_formats(GOptionGroup *group,
 }
 
 void
-pcmk__unregister_formats() {
+pcmk__unregister_formats(void) {
     if (formatters != NULL) {
         g_hash_table_destroy(formatters);
         formatters = NULL;

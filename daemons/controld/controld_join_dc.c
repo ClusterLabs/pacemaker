@@ -526,7 +526,7 @@ finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, voi
             int count_finalizable = 0;
 
             count_finalizable = crmd_join_phase_count(crm_join_integrated)
-                                + crmd_join_phase_count(crm_join_nack);
+                                + crmd_join_phase_count(crm_join_nack)
                                 + crmd_join_phase_count(crm_join_nack_quiet);
 
             crm_debug("Notifying %d node%s of join-%d results",

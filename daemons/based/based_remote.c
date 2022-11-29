@@ -581,6 +581,7 @@ construct_pam_passwd(int num_msg, const struct pam_message **msg,
             case PAM_PROMPT_ECHO_ON:
                 reply[count].resp_retcode = 0;
                 reply[count].resp = string;     /* We already made a copy */
+                break;
             case PAM_ERROR_MSG:
                 /* In theory we'd want to print this, but then
                  * we see the password prompt in the logs

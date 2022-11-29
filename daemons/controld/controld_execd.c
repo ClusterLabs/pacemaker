@@ -2665,6 +2665,21 @@ log_executor_event(const lrmd_event_data_t *op, const char *op_key,
 
         case PCMK_EXEC_CANCELLED:
             log_level = LOG_INFO;
+	    /* order of __attribute__ and Fall through comment is IMPORTANT!
+	     * do not change it without proper testing with both clang and gcc
+	     * in multiple versions.
+	     * the clang check allows to build with all versions of clang.
+	     * the has_c_attribute check is to workaround a bug in clang version
+	     * in rhel7. has_attribute would happily return "YES SIR WE GOT IT"
+	     * and fail the build the next line.
+	     */
+#ifdef __clang__
+#ifdef __has_c_attribute
+#if __has_attribute(fallthrough)
+	    __attribute__((fallthrough));
+#endif
+#endif
+#endif
             // Fall through
         default:
             pcmk__g_strcat(str, ": ", pcmk_exec_status_str(op->op_status),
