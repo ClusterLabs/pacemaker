@@ -54,7 +54,6 @@ static void cib_init(void);
 void cib_shutdown(int nsig);
 static bool startCib(const char *filename);
 extern int write_cib_contents(gpointer p);
-void cib_cleanup(void);
 
 static crm_exit_t exit_code = CRM_EX_OK;
 
@@ -271,10 +270,22 @@ main(int argc, char **argv)
     pcmk__stop_based_ipc(ipcs_ro, ipcs_rw, ipcs_shm);
 
 done:
-    g_free(cib_root);
-
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
+
+    crm_peer_destroy();
+
+    if (local_notify_queue != NULL) {
+        g_hash_table_destroy(local_notify_queue);
+    }
+
+    if (config_hash != NULL) {
+        g_hash_table_destroy(config_hash);
+    }
+    pcmk__client_cleanup();
+    pcmk_cluster_free(crm_cluster);
+    free(cib_our_uname);
+    g_free(cib_root);
 
     pcmk__output_and_clear_error(error, out);
 
@@ -283,19 +294,6 @@ done:
         pcmk__output_free(out);
     }
     crm_exit(exit_code);
-}
-
-void
-cib_cleanup(void)
-{
-    crm_peer_destroy();
-    if (local_notify_queue) {
-        g_hash_table_destroy(local_notify_queue);
-    }
-    pcmk__client_cleanup();
-    pcmk_cluster_free(crm_cluster);
-    g_hash_table_destroy(config_hash);
-    free(cib_our_uname);
 }
 
 #if SUPPORT_COROSYNC
