@@ -25,6 +25,7 @@ endif
 noinst_SCRIPTS		= pcmk_simtimes
 
 EXTRA_DIST		= attrd_updater.8.inc \
+			  cibadmin.8.inc \
 				  crm_attribute.8.inc \
 				  crm_diff.8.inc \
 				  crm_error.8.inc \

@@ -286,6 +286,17 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
     xmlChar *annotated_dump;
     int dump_size;
 
+    CRM_ASSERT(how != pcmk__acl_render_none);
+
+    // Color is the default render mode for terminals; text is default otherwise
+    if (how == pcmk__acl_render_default) {
+        if (isatty(STDOUT_FILENO)) {
+            how = pcmk__acl_render_color;
+        } else {
+            how = pcmk__acl_render_text;
+        }
+    }
+
     xmlDocDumpFormatMemory(annotated_doc, &annotated_dump, &dump_size, 1);
     res = xmlReadDoc(annotated_dump, "on-the-fly-access-render", NULL,
                      XML_PARSE_NONET);
@@ -315,12 +326,20 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
     xslt_ctxt = xsltNewTransformContext(xslt, annotated_doc);
     CRM_ASSERT(xslt_ctxt != NULL);
 
-    if (how == pcmk__acl_render_text) {
-        params = params_noansi;
-    } else if (how == pcmk__acl_render_namespace) {
-        params = params_namespace;
-    } else {
-        params = params_useansi;
+    switch (how) {
+        case pcmk__acl_render_namespace:
+            params = params_namespace;
+            break;
+        case pcmk__acl_render_text:
+            params = params_noansi;
+            break;
+        default:
+            /* pcmk__acl_render_color is the only remaining option.
+             * The compiler complains about params possibly uninitialized if we
+             * don't use default here.
+             */
+            params = params_useansi;
+            break;
     }
 
     xsltQuoteUserParams(xslt_ctxt, params);

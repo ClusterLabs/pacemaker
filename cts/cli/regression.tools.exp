@@ -46,7 +46,7 @@ crm_attribute: Error performing operation: No such device or address
 =#=#=#= End test: Configure something before erasing - OK (0) =#=#=#=
 * Passed: crm_attribute  - Configure something before erasing
 =#=#=#= Begin test: Require --force for CIB erasure =#=#=#=
-The supplied command is considered dangerous.  To prevent accidental destruction of the cluster, the --force flag is required in order to proceed.
+cibadmin: The supplied command is considered dangerous. To prevent accidental destruction of the cluster, the --force flag is required in order to proceed.
 =#=#=#= Current cib after: Require --force for CIB erasure =#=#=#=
 <cib epoch="2" num_updates="0" admin_epoch="0">
   <configuration>
@@ -5289,7 +5289,7 @@ Transition Summary:
   * Move       Public-IP                           ( cluster02 -> cluster01 )
   * Move       Email                               ( cluster02 -> cluster01 )
   * Stop       mysql-proxy:0                       (              cluster02 )  due to node availability
-  * Stop       promotable-rsc:0                    (       Promoted cluster02 )  due to node availability
+  * Stop       promotable-rsc:0                    (     Promoted cluster02 )  due to node availability
 
 Executing Cluster Transition:
   * Pseudo action:   httpd-bundle-1_stop_0
