@@ -946,8 +946,9 @@ lrm_remove_deleted_op(gpointer key, gpointer value, gpointer user_data)
 }
 
 static void
-delete_rsc_entry(lrm_state_t * lrm_state, ha_msg_input_t * input, const char *rsc_id,
-                 GHashTableIter * rsc_gIter, int rc, const char *user_name)
+delete_rsc_entry(lrm_state_t *lrm_state, ha_msg_input_t *input,
+                 const char *rsc_id, GHashTableIter *rsc_iter, int rc,
+                 const char *user_name, bool from_cib)
 {
     struct delete_event_s event;
 
@@ -956,13 +957,16 @@ delete_rsc_entry(lrm_state_t * lrm_state, ha_msg_input_t * input, const char *rs
     if (rc == pcmk_ok) {
         char *rsc_id_copy = strdup(rsc_id);
 
-        if (rsc_gIter) {
-            g_hash_table_iter_remove(rsc_gIter);
+        if (rsc_iter) {
+            g_hash_table_iter_remove(rsc_iter);
         } else {
             g_hash_table_remove(lrm_state->resource_history, rsc_id_copy);
         }
-        controld_delete_resource_history(rsc_id_copy, lrm_state->node_name,
-                                         user_name, crmd_cib_smart_opt());
+
+        if (from_cib) {
+            controld_delete_resource_history(rsc_id_copy, lrm_state->node_name,
+                                             user_name, crmd_cib_smart_opt());
+        }
         g_hash_table_foreach_remove(lrm_state->pending_ops, lrm_remove_deleted_op, rsc_id_copy);
         free(rsc_id_copy);
     }
@@ -1308,14 +1312,9 @@ get_lrm_resource(lrm_state_t *lrm_state, const xmlNode *rsc_xml,
 }
 
 static void
-delete_resource(lrm_state_t * lrm_state,
-                const char *id,
-                lrmd_rsc_info_t * rsc,
-                GHashTableIter * gIter,
-                const char *sys,
-                const char *user,
-                ha_msg_input_t * request,
-                gboolean unregister)
+delete_resource(lrm_state_t *lrm_state, const char *id, lrmd_rsc_info_t *rsc,
+                GHashTableIter *iter, const char *sys, const char *user,
+                ha_msg_input_t *request, bool unregister, bool from_cib)
 {
     int rc = pcmk_ok;
 
@@ -1346,7 +1345,7 @@ delete_resource(lrm_state_t * lrm_state,
                  (user? user : ""), pcmk_strerror(rc), rc);
     }
 
-    delete_rsc_entry(lrm_state, request, id, gIter, rc, user);
+    delete_rsc_entry(lrm_state, request, id, iter, rc, user, from_cib);
 }
 
 static int
@@ -1385,7 +1384,7 @@ fake_op_status(lrm_state_t *lrm_state, lrmd_event_data_t *op, int op_status,
 static void
 force_reprobe(lrm_state_t *lrm_state, const char *from_sys,
               const char *from_host, const char *user_name,
-              gboolean is_remote_node)
+              gboolean is_remote_node, bool reprobe_all_nodes)
 {
     GHashTableIter gIter;
     rsc_history_t *entry = NULL;
@@ -1396,20 +1395,29 @@ force_reprobe(lrm_state_t *lrm_state, const char *from_sys,
         /* only unregister the resource during a reprobe if it is not a remote connection
          * resource. otherwise unregistering the connection will terminate remote-node
          * membership */
-        gboolean unregister = TRUE;
+        bool unregister = true;
 
         if (is_remote_lrmd_ra(NULL, NULL, entry->id)) {
-            lrm_state_t *remote_lrm_state = lrm_state_find(entry->id);
-            if (remote_lrm_state) {
-                /* when forcing a reprobe, make sure to clear remote node before
-                 * clearing the remote node's connection resource */ 
-                force_reprobe(remote_lrm_state, from_sys, from_host, user_name, TRUE);
+            unregister = false;
+
+            if (reprobe_all_nodes) {
+                lrm_state_t *remote_lrm_state = lrm_state_find(entry->id);
+
+                if (remote_lrm_state != NULL) {
+                    /* If reprobing all nodes, be sure to reprobe the remote
+                     * node before clearing its connection resource
+                     */
+                    force_reprobe(remote_lrm_state, from_sys, from_host,
+                                  user_name, TRUE, reprobe_all_nodes);
+                }
             }
-            unregister = FALSE;
         }
 
+        /* Don't delete from the CIB, since we'll delete the whole node's LRM
+         * state from the CIB soon
+         */
         delete_resource(lrm_state, entry->id, &entry->rsc, &gIter, from_sys,
-                        user_name, NULL, unregister);
+                        user_name, NULL, unregister, false);
     }
 
     /* Now delete the copy in the CIB */
@@ -1476,7 +1484,8 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, const xmlNode *action,
 
 /*!
  * \internal
- * \brief Get target of an LRM operation
+ * \brief Get target of an LRM operation (replacing \p NULL with local node
+ *        name)
  *
  * \param[in] xml  LRM operation data XML
  *
@@ -1553,10 +1562,11 @@ fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
 static void
 handle_reprobe_op(lrm_state_t *lrm_state, const char *from_sys,
                   const char *from_host, const char *user_name,
-                  gboolean is_remote_node)
+                  gboolean is_remote_node, bool reprobe_all_nodes)
 {
     crm_notice("Forcing the status of all resources to be redetected");
-    force_reprobe(lrm_state, from_sys, from_host, user_name, is_remote_node);
+    force_reprobe(lrm_state, from_sys, from_host, user_name, is_remote_node,
+                  reprobe_all_nodes);
 
     if (!pcmk__strcase_any_of(from_sys, CRM_SYSTEM_PENGINE, CRM_SYSTEM_TENGINE, NULL)) {
 
@@ -1659,7 +1669,7 @@ do_lrm_delete(ha_msg_input_t *input, lrm_state_t *lrm_state,
               lrmd_rsc_info_t *rsc, const char *from_sys, const char *from_host,
               bool crm_rsc_delete, const char *user_name)
 {
-    gboolean unregister = TRUE;
+    bool unregister = true;
     int cib_rc = controld_delete_resource_history(rsc->id, lrm_state->node_name,
                                                   user_name,
                                                   cib_dryrun|cib_sync_call);
@@ -1679,11 +1689,11 @@ do_lrm_delete(ha_msg_input_t *input, lrm_state_t *lrm_state,
     }
 
     if (crm_rsc_delete && is_remote_lrmd_ra(NULL, NULL, rsc->id)) {
-        unregister = FALSE;
+        unregister = false;
     }
 
     delete_resource(lrm_state, rsc->id, rsc, NULL, from_sys,
-                    user_name, input, unregister);
+                    user_name, input, unregister, true);
 }
 
 // User data for asynchronous metadata execution
@@ -1750,11 +1760,11 @@ do_lrm_invoke(long long action,
     const char *operation = NULL;
     ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
     const char *user_name = NULL;
-    const char *target_node = NULL;
+    const char *target_node = lrm_op_target(input->xml);
     gboolean is_remote_node = FALSE;
     bool crm_rsc_delete = FALSE;
 
-    target_node = lrm_op_target(input->xml);
+    // Message routed to the local node is targeting a specific, non-local node
     is_remote_node = !pcmk__str_eq(target_node, controld_globals.our_nodename,
                                    pcmk__str_casei);
 
@@ -1812,8 +1822,14 @@ do_lrm_invoke(long long action,
 
     } else if (pcmk__str_eq(crm_op, CRM_OP_REPROBE, pcmk__str_none)
                || pcmk__str_eq(operation, CRM_OP_REPROBE, pcmk__str_none)) {
+        const char *raw_target = NULL;
+
+        if (input->xml != NULL) {
+            // For CRM_OP_REPROBE, a NULL target means we're targeting all nodes
+            raw_target = crm_element_value(input->xml, XML_LRM_ATTR_TARGET);
+        }
         handle_reprobe_op(lrm_state, from_sys, from_host, user_name,
-                          is_remote_node);
+                          is_remote_node, (raw_target == NULL));
 
     } else if (operation != NULL) {
         lrmd_rsc_info_t *rsc = NULL;
@@ -1842,7 +1858,7 @@ do_lrm_invoke(long long action,
                        ID(xml_rsc), operation,
                        rc, pcmk_strerror(rc), ID(input->xml));
             delete_rsc_entry(lrm_state, input, ID(xml_rsc), NULL, pcmk_ok,
-                             user_name);
+                             user_name, true);
             return;
 
         } else if (rc == -EINVAL) {
@@ -2933,7 +2949,8 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
     if (op->rsc_deleted) {
         crm_info("Deletion of resource '%s' complete after %s", op->rsc_id, op_key);
         if (lrm_state) {
-            delete_rsc_entry(lrm_state, NULL, op->rsc_id, NULL, pcmk_ok, NULL);
+            delete_rsc_entry(lrm_state, NULL, op->rsc_id, NULL, pcmk_ok, NULL,
+                             true);
         }
     }
 
