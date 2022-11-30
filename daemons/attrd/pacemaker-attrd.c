@@ -301,6 +301,8 @@ main(int argc, char **argv)
         attrd_lrmd_disconnect();
         attrd_cib_disconnect();
         attrd_free_waitlist();
+
+        pcmk_cluster_free(attrd_cluster);
         g_hash_table_destroy(attributes);
     }
 
@@ -313,5 +315,6 @@ main(int argc, char **argv)
         out->finish(out, attrd_exit_status, true, NULL);
         pcmk__output_free(out);
     }
+    pcmk__unregister_formats();
     crm_exit(attrd_exit_status);
 }

@@ -436,7 +436,7 @@ broadcast_unseen_local_values(void)
 int
 attrd_cluster_connect(void)
 {
-    attrd_cluster = calloc(1, sizeof(crm_cluster_t));
+    attrd_cluster = pcmk_cluster_new();
 
     attrd_cluster->destroy = attrd_cpg_destroy;
     attrd_cluster->cpg.cpg_deliver_fn = attrd_cpg_dispatch;

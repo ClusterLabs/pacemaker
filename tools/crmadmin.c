@@ -261,7 +261,6 @@ main(int argc, char **argv)
     }
 
 done:
-
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
 
@@ -271,6 +270,6 @@ done:
         out->finish(out, exit_code, true, NULL);
         pcmk__output_free(out);
     }
+    pcmk__unregister_formats();
     return crm_exit(exit_code);
-
 }
