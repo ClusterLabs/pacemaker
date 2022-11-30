@@ -1135,7 +1135,7 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
 {
     int rc = pcmk_ok;
     long timeout_ms_saved = stonith_watchdog_timeout_ms;
-    gboolean need_full_refresh = FALSE;
+    bool need_full_refresh = false;
 
     if(!have_cib_devices) {
         crm_trace("Skipping updates until we get a full dump");
@@ -1186,25 +1186,26 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
             return;
         }
         CRM_ASSERT(local_cib != NULL);
-        need_full_refresh = TRUE;
+        need_full_refresh = true;
     }
 
     pcmk__refresh_node_caches_from_cib(local_cib);
     update_stonith_watchdog_timeout_ms(local_cib);
 
     if (timeout_ms_saved != stonith_watchdog_timeout_ms) {
-            need_full_refresh = TRUE;
-    } else {
-            update_fencing_topology(event, msg);
-            update_cib_stonith_devices(event, msg);
-            watchdog_device_update();
+        need_full_refresh = true;
     }
 
     if (need_full_refresh) {
         fencing_topology_init();
         cib_devices_update();
-        watchdog_device_update();
+    } else {
+        // Partial refresh
+        update_fencing_topology(event, msg);
+        update_cib_stonith_devices(event, msg);
     }
+
+    watchdog_device_update();
 }
 
 static void
