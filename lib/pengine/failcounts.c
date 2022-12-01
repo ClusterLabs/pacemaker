@@ -235,7 +235,8 @@ generate_fail_regex(const char *prefix, const char *rsc_name,
  * \param[out] lastfailure_re  Storage for regular expression for last failure
  *
  * \return Standard Pacemaker return code
- * \note The caller is responsible for freeing the expressions with regfree().
+ * \note On success, the caller is responsible for freeing the expressions with
+ *       regfree().
  */
 static int
 generate_fail_regexes(pe_resource_t *rsc, pe_working_set_t *data_set,
@@ -244,22 +245,23 @@ generate_fail_regexes(pe_resource_t *rsc, pe_working_set_t *data_set,
     char *rsc_name = rsc_fail_name(rsc);
     const char *version = crm_element_value(data_set->input, XML_ATTR_CRM_VERSION);
     gboolean is_legacy = (compare_version(version, "3.0.13") < 0);
+    int rc = pcmk_rc_ok;
 
     if (generate_fail_regex(PCMK__FAIL_COUNT_PREFIX, rsc_name, is_legacy,
                             pcmk_is_set(rsc->flags, pe_rsc_unique),
                             failcount_re) != pcmk_rc_ok) {
-        return EINVAL;
-    }
+        rc = EINVAL;
 
-    if (generate_fail_regex(PCMK__LAST_FAILURE_PREFIX, rsc_name, is_legacy,
-                            pcmk_is_set(rsc->flags, pe_rsc_unique),
-                            lastfailure_re) != pcmk_rc_ok) {
+    } else if (generate_fail_regex(PCMK__LAST_FAILURE_PREFIX, rsc_name,
+                                   is_legacy,
+                                   pcmk_is_set(rsc->flags, pe_rsc_unique),
+                                   lastfailure_re) != pcmk_rc_ok) {
+        rc = EINVAL;
         regfree(failcount_re);
-        return EINVAL;
     }
 
     free(rsc_name);
-    return pcmk_rc_ok;
+    return rc;
 }
 
 int
