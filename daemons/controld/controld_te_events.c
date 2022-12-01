@@ -20,6 +20,51 @@
 #include <crm/common/attrd_internal.h>
 #include <crm/common/ipc_attrd_internal.h>
 
+/*!
+ * \internal
+ * \brief Action numbers of outside events processed in current update diff
+ *
+ * This table is to be used as a set. It should be empty when the transitioner
+ * begins processing a CIB update diff. It ensures that if there are multiple
+ * events (for example, "_last_0" and "_last_failure_0") for the same action,
+ * only one of them updates the failcount. Events that originate outside the
+ * cluster can't be confirmed, since they're not in the transition graph.
+ */
+static GHashTable *outside_events = NULL;
+
+/*!
+ * \internal
+ * \brief Destroy the hash table containing action numbers of outside events
+ */
+void
+controld_destroy_outside_event_table(void)
+{
+    if (outside_events != NULL) {
+        g_hash_table_destroy(outside_events);
+        outside_events = NULL;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Add an outside event's action number to a set
+ *
+ * \return Standard Pacemaker return code. Specifically, \p pcmk_rc_ok if the
+ *         event was not already in the set, or \p pcmk_rc_already otherwise.
+ */
+static int
+record_outside_event(gint action_num)
+{
+    if (outside_events == NULL) {
+        outside_events = g_hash_table_new(NULL, NULL);
+    }
+
+    if (g_hash_table_add(outside_events, GINT_TO_POINTER(action_num))) {
+        return pcmk_rc_ok;
+    }
+    return pcmk_rc_already;
+}
+
 gboolean
 fail_incompletable_actions(pcmk__graph_t *graph, const char *down_node)
 {
@@ -154,11 +199,6 @@ update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
                         CRM_INFINITY_S);
     }
 
-    /* Fail count will be either incremented or set to infinity */
-    if (!pcmk_str_is_infinity(value)) {
-        value = XML_NVPAIR_ATTR_VALUE "++";
-    }
-
     if (do_update) {
         pcmk__attrd_query_pair_t *fail_pair = NULL;
         pcmk__attrd_query_pair_t *last_pair = NULL;
@@ -169,6 +209,11 @@ update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
         uint32_t opts = pcmk__node_attr_none;
 
         char *now = pcmk__ttoa(time(NULL));
+
+        // Fail count will be either incremented or set to infinity
+        if (!pcmk_str_is_infinity(value)) {
+            value = XML_NVPAIR_ATTR_VALUE "++";
+        }
 
         if (g_hash_table_lookup(crm_remote_peer_cache, event_node_uuid)) {
             opts |= pcmk__node_attr_remote;
@@ -206,10 +251,8 @@ update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
 
         update_attrd_list(attrs, opts);
 
-        if (!ignore_failures) {
-            free(fail_name);
-            free(fail_pair);
-        }
+        free(fail_name);
+        free(fail_pair);
 
         free(last_name);
         free(last_pair);
@@ -407,6 +450,11 @@ process_graph_event(xmlNode *event, const char *event_node)
 
     if (transition_num == -1) {
         // E.g. crm_resource --fail
+        if (record_outside_event(action_num) != pcmk_rc_ok) {
+            crm_debug("Outside event with transition key '%s' has already been "
+                      "processed", magic);
+            goto bail;
+        }
         desc = "initiated outside of the cluster";
         abort_transition(INFINITY, pcmk__graph_restart, "Unexpected event",
                          event);

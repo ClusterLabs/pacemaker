@@ -19,6 +19,9 @@ pcmk__graph_action_t *get_cancel_action(const char *id, const char *node);
 bool confirm_cancel_action(const char *id, const char *node_id);
 
 void controld_record_action_timeout(pcmk__graph_action_t *action);
+
+void controld_destroy_outside_event_table(void);
+
 gboolean fail_incompletable_actions(pcmk__graph_t *graph, const char *down_node);
 void process_graph_event(xmlNode *event, const char *event_node);
 
