@@ -562,6 +562,7 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
     xmlNode *xml_obj = NULL;
     pe_node_t *new_node = NULL;
     const char *id = NULL;
+    const char *cluster_id = NULL;
     const char *uname = NULL;
     const char *type = NULL;
     const char *score = NULL;
@@ -573,17 +574,28 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
             new_node = NULL;
 
             id = crm_element_value(xml_obj, XML_ATTR_ID);
+            cluster_id = crm_element_value(xml_obj, PCMK_XA_CLUSTER_ID);
             uname = crm_element_value(xml_obj, XML_ATTR_UNAME);
             type = crm_element_value(xml_obj, XML_ATTR_TYPE);
             score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
-            crm_trace("Processing node %s/%s", uname, id);
+
+            crm_trace("Unpacking node %s with cluster ID %s and name %s",
+                      pcmk__s(id, "<none>"), pcmk__s(cluster_id, "same as id"),
+                      pcmk__s(uname, "same as id"));
 
             if (id == NULL) {
                 pcmk__config_err("Ignoring <" XML_CIB_TAG_NODE
                                  "> entry in configuration without id");
                 continue;
             }
-            new_node = pe_create_node(id, uname, type, score, data_set);
+
+            if (cluster_id == NULL) {
+                cluster_id = id;
+            }
+            if (uname == NULL) {
+                uname = id;
+            }
+            new_node = pe_create_node(cluster_id, uname, type, score, data_set);
 
             if (new_node == NULL) {
                 return FALSE;
