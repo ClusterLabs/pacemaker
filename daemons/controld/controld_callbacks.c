@@ -160,6 +160,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                     remove_stonith_cleanup(node->uname);
                 }
             } else {
+                controld_remove_failed_sync_node(node->uname);
                 controld_remove_voter(node->uname);
             }
 
@@ -195,6 +196,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             }
 
             if (!appeared) {
+                controld_remove_failed_sync_node(node->uname);
                 controld_remove_voter(node->uname);
             }
 
