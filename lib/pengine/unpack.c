@@ -556,6 +556,29 @@ handle_startup_fencing(pe_working_set_t *data_set, pe_node_t *new_node)
     new_node->details->unseen = TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Check whether a string is a valid XML ID
+ *
+ * \param[in] id  String to check
+ *
+ * \return true if \p id is a valid XML ID, or false otherwise
+ */
+static inline bool
+valid_xml_id(const char *id)
+{
+    /* xmlValidateAttributeValue() incorrectly validates an ID against the Name
+     * production. Per the XML 1.0 spec, it should validate against the NCName
+     * production (Name minus ':').
+     *
+     * See also:
+     * * https://www.w3.org/TR/xml-id/#processing
+     * * https://www.w3.org/TR/REC-xml/#NT-Name
+     */
+    return xmlValidateAttributeValue(XML_ATTRIBUTE_ID, (const xmlChar *) id)
+           && (strchr(id, ':') == NULL);
+}
+
 gboolean
 unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
 {
@@ -587,6 +610,14 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
                 pcmk__config_err("Ignoring <" XML_CIB_TAG_NODE
                                  "> entry in configuration without id");
                 continue;
+            }
+
+            if (!valid_xml_id(id)) {
+                pe_warn_once(pe_wo_node_xml_id,
+                             "The use of <" XML_CIB_TAG_NODE "> "
+                             XML_ATTR_ID " attribute values that are not valid "
+                             "XML IDs is deprecated. Use the "
+                             PCMK_XA_CLUSTER_ID " attribute instead.");
             }
 
             if (cluster_id == NULL) {

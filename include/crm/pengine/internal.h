@@ -173,6 +173,7 @@ enum pe_warn_once_e {
     pe_wo_upstart       = (1 << 13),
     pe_wo_nagios        = (1 << 14),
     pe_wo_set_ordering  = (1 << 15),
+    pe_wo_node_xml_id   = (1 << 16),
 };
 
 extern uint32_t pe_wo;

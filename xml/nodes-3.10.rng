@@ -9,6 +9,10 @@
     <element name="nodes">
       <zeroOrMore>
         <element name="node">
+          <!--
+           @COMPAT: Using non-XML-ID strings in the id field is deprecated.
+           Support will be removed in a future release.
+           -->
           <attribute name="id"><text/></attribute>
           <optional>
             <attribute name="cluster-id"><text/></attribute>
