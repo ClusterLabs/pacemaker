@@ -155,7 +155,6 @@ extern "C" {
 #  define XML_ATTR_RESPONSE		"response"
 
 #  define XML_ATTR_UNAME		"uname"
-#  define XML_ATTR_UUID			"id"
 #  define XML_ATTR_REFERENCE		"reference"
 
 #  define XML_CRM_TAG_PING		"ping_response"
