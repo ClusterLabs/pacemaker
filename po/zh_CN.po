@@ -11,6 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 2\n"
 "Report-Msgid-Bugs-To: developers@clusterlabs.org\n"
+"POT-Creation-Date: 2022-11-24 16:04+0800\n"
 "POT-Creation-Date: 2022-11-24 17:50+0800\n"
 "PO-Revision-Date: 2021-11-08 11:04+0800\n"
 "Last-Translator: Vivi <developers@clusterlabs.org>\n"
@@ -813,6 +814,49 @@ msgstr "是否取消配置已被删除的的重复操作"
 msgid ""
 "*** Deprecated *** Whether to remove stopped resources from the executor"
 msgstr "***不推荐***是否从pacemaker-execd 守护进程中清除已停止的资源"
+
+#: lib/pengine/common.c:240
+#, fuzzy
+msgid "How cluster should react to node health attributes"
+msgstr "集群节点对节点健康属性如何反应"
+
+#: lib/pengine/common.c:241
+msgid ""
+"Requires external entities to create node attributes (named with the prefix "
+"\"#health\") with values \"red\", \"yellow\", or \"green\"."
+msgstr ""
+"需要外部实体创建具有“red”,“yellow”或“green”值的节点属性(前缀为“#health”)"
+
+#: lib/pengine/common.c:248
+msgid "Base health score assigned to a node"
+msgstr "分配给节点的基本健康分数"
+
+#: lib/pengine/common.c:249
+msgid "Only used when \"node-health-strategy\" is set to \"progressive\"."
+msgstr "仅在“node-health-strategy”设置为“progressive”时使用。"
+
+#: lib/pengine/common.c:254
+msgid "The score to use for a node health attribute whose value is \"green\""
+msgstr "为节点健康属性值为“green”所使用的分数"
+
+#: lib/pengine/common.c:255 lib/pengine/common.c:261 lib/pengine/common.c:267
+msgid ""
+"Only used when \"node-health-strategy\" is set to \"custom\" or \"progressive"
+"\"."
+msgstr "仅在“node-health-strategy”设置为“custom”或“progressive”时使用。"
+
+#: lib/pengine/common.c:260
+msgid "The score to use for a node health attribute whose value is \"yellow\""
+msgstr "为节点健康属性值为“yellow”所使用的分数"
+
+#: lib/pengine/common.c:266
+msgid "The score to use for a node health attribute whose value is \"red\""
+msgstr "为节点健康属性值为“red”所使用的分数"
+
+#: lib/pengine/common.c:275
+#, fuzzy
+msgid "How the cluster should allocate resources to nodes"
+msgstr "群集应该如何分配资源到节点"
 
 #: tools/crm_resource.c:257
 #, c-format
