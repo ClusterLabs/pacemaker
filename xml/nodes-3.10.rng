@@ -10,7 +10,12 @@
       <zeroOrMore>
         <element name="node">
           <attribute name="id"><text/></attribute>
-          <attribute name="uname"><text/></attribute>
+          <optional>
+            <attribute name="cluster-id"><text/></attribute>
+          </optional>
+          <optional>
+            <attribute name="uname"><text/></attribute>
+          </optional>
           <optional>
             <attribute name="type">
               <choice>
