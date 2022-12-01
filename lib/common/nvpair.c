@@ -286,29 +286,6 @@ pcmk__format_nvpair(const char *name, const char *value, const char *units)
     return crm_strdup_printf("%s=\"%s%s\"", name, value, units ? units : "");
 }
 
-/*!
- * \internal
- * \brief Format a name/time pair.
- *
- * See pcmk__format_nvpair() for more details.
- *
- * \note The caller is responsible for freeing the return value after use.
- *
- * \param[in]     name       The name for the time.
- * \param[in]     epoch_time The time to format.
- *
- * \return Newly allocated string with name/value pair
- */
-char *
-pcmk__format_named_time(const char *name, time_t epoch_time)
-{
-    char *now_s = pcmk__epoch2str(&epoch_time, 0);
-    char *result = crm_strdup_printf("%s=\"%s\"", name, pcmk__s(now_s, ""));
-
-    free(now_s);
-    return result;
-}
-
 // XML attribute handling
 
 /*!
@@ -1004,7 +981,11 @@ pcmk_format_nvpair(const char *name, const char *value,
 char *
 pcmk_format_named_time(const char *name, time_t epoch_time)
 {
-    return pcmk__format_named_time(name, epoch_time);
+    char *now_s = pcmk__epoch2str(&epoch_time, 0);
+    char *result = crm_strdup_printf("%s=\"%s\"", name, pcmk__s(now_s, ""));
+
+    free(now_s);
+    return result;
 }
 
 // LCOV_EXCL_STOP

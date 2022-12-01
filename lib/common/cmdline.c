@@ -62,7 +62,6 @@ free_common_args(gpointer data) {
 GOptionContext *
 pcmk__build_arg_context(pcmk__common_args_t *common_args, const char *fmts,
                         GOptionGroup **output_group, const char *param_string) {
-    char *desc = crm_strdup_printf("Report bugs to %s\n", PACKAGE_BUGREPORT);
     GOptionContext *context;
     GOptionGroup *main_group;
 
@@ -82,7 +81,8 @@ pcmk__build_arg_context(pcmk__common_args_t *common_args, const char *fmts,
 
     context = g_option_context_new(param_string);
     g_option_context_set_summary(context, common_args->summary);
-    g_option_context_set_description(context, desc);
+    g_option_context_set_description(context,
+                                     "Report bugs to " PCMK__BUG_URL "\n");
     g_option_context_set_main_group(context, main_group);
 
     if (fmts != NULL) {
@@ -105,8 +105,6 @@ pcmk__build_arg_context(pcmk__common_args_t *common_args, const char *fmts,
         g_option_group_add_entries(*output_group, output_entries);
         g_option_context_add_group(context, *output_group);
     }
-
-    free(desc);
 
     // main_group is now owned by context, we don't free it here
     // cppcheck-suppress memleak

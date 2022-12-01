@@ -1121,13 +1121,11 @@ pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
             crm_err("Bad regex '%s' for update: %s", s2, strerror(regcomp_rc));
         } else {
             rc = regexec(&r_patt, s1, 0, NULL, 0);
-
+            regfree(&r_patt);
             if (rc != 0) {
                 rc = 1;
             }
         }
-
-        regfree(&r_patt);
         return rc;
     }
 

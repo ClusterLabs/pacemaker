@@ -144,7 +144,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
                               "The TIMESPEC in any command line option can be specified in many different\n"
                               "formats.  It can be just an integer number of seconds, a number plus units\n"
                               "(ms/msec/us/usec/s/sec/m/min/h/hr), or an ISO 8601 period specification.\n\n"
-                              "Report bugs to users@clusterlabs.org";
+                              "Report bugs to " PCMK__BUG_URL;
 
     GOptionEntry extra_prog_entries[] = {
         { "quiet", 'q', 0, G_OPTION_ARG_NONE, &(args->quiet),
