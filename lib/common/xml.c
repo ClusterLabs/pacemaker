@@ -544,7 +544,7 @@ pcmk__xe_match(const xmlNode *parent, const char *node_name,
 }
 
 void
-copy_in_properties(xmlNode * target, xmlNode * src)
+copy_in_properties(xmlNode *target, const xmlNode *src)
 {
     if (src == NULL) {
         crm_warn("No node to copy properties from");

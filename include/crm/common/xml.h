@@ -72,7 +72,7 @@ xmlDoc *getDocPtr(xmlNode * node);
  *       custom extensions like said ACLs and "atomic increment" (that landed
  *       later on, anyway).
  */
-void copy_in_properties(xmlNode *target, xmlNode *src);
+void copy_in_properties(xmlNode *target, const xmlNode *src);
 
 void expand_plus_plus(xmlNode * target, const char *name, const char *value);
 void fix_plus_plus_recursive(xmlNode * target);
