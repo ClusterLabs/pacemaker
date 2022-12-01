@@ -338,9 +338,20 @@ do_dc_join_filter_offer(long long action,
         ref = "none"; // for logging only
     }
 
-    if (crm_is_peer_active(join_node) == FALSE) {
-        crm_err("Rejecting join-%d request from inactive node %s "
-                CRM_XS " ref=%s", join_id, join_from, ref);
+    if (!crm_is_peer_active(join_node)) {
+        if (match_down_event(join_from) != NULL) {
+            /* The join request was received after the node was fenced or
+             * otherwise shutdown in a way that we're aware of. No need to log
+             * an error in this rare occurrence; we know the client was recently
+             * shut down, and receiving a lingering in-flight request is not
+             * cause for alarm.
+             */
+            crm_debug("Rejecting join-%d request from inactive node %s "
+                      CRM_XS " ref=%s", join_id, join_from, ref);
+        } else {
+            crm_err("Rejecting join-%d request from inactive node %s "
+                    CRM_XS " ref=%s", join_id, join_from, ref);
+        }
         ack_nack_bool = FALSE;
 
     } else if (generation == NULL) {
