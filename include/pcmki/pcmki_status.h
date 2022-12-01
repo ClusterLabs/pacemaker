@@ -14,6 +14,7 @@
 
 #include <crm/cib/cib_types.h>
 #include <crm/pengine/pe_types.h>
+#include <crm/common/ipc_pacemakerd.h>
 #include <crm/common/output_internal.h>
 #include <pcmki/pcmki_fence.h>
 
