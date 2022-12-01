@@ -39,7 +39,6 @@ crm_cluster_t *crm_cluster = NULL;
 
 GMainLoop *mainloop = NULL;
 gchar *cib_root = NULL;
-char *cib_our_uname = NULL;
 static gboolean preserve_status = FALSE;
 
 gboolean cib_writes_enabled = TRUE;
@@ -284,7 +283,6 @@ done:
     }
     pcmk__client_cleanup();
     pcmk_cluster_free(crm_cluster);
-    free(cib_our_uname);
     g_free(cib_root);
 
     pcmk__output_and_clear_error(error, out);
@@ -398,10 +396,6 @@ cib_init(void)
             crm_crit("Cannot sign in to the cluster... terminating");
             crm_exit(CRM_EX_FATAL);
         }
-        cib_our_uname = crm_cluster->uname;
-
-    } else {
-        cib_our_uname = strdup("localhost");
     }
 
     pcmk__serve_based_ipc(&ipcs_ro, &ipcs_rw, &ipcs_shm, &ipc_ro_callbacks,

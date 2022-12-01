@@ -68,7 +68,6 @@ extern gboolean legacy_mode;
 extern gboolean stand_alone;
 extern gboolean cib_shutdown_flag;
 extern gchar *cib_root;
-extern char *cib_our_uname;
 extern int cib_status;
 extern FILE *msg_cib_strm;
 

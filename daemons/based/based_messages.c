@@ -142,7 +142,8 @@ send_sync_request(const char *host)
 
     crm_xml_add(sync_me, F_TYPE, "cib");
     crm_xml_add(sync_me, F_CIB_OPERATION, PCMK__CIB_REQUEST_SYNC_TO_ONE);
-    crm_xml_add(sync_me, F_CIB_DELEGATED, cib_our_uname);
+    crm_xml_add(sync_me, F_CIB_DELEGATED,
+                stand_alone? "localhost" : crm_cluster->uname);
 
     send_cluster_message(host ? crm_get_peer(0, host) : NULL, crm_msg_cib, sync_me, FALSE);
     free_xml(sync_me);

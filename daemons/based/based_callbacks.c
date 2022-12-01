@@ -31,6 +31,7 @@
 #include <pacemaker-based.h>
 
 #define EXIT_ESCALATION_MS 10000
+#define OUR_NODENAME (stand_alone? "localhost" : crm_cluster->uname)
 
 static unsigned long cib_local_bcast_num = 0;
 
@@ -506,7 +507,7 @@ parse_local_options_v1(const pcmk__client_t *cib_client, int call_type,
                   op, pcmk__client_name(cib_client));
         *local_notify = TRUE;
 
-    } else if (pcmk__str_eq(host, cib_our_uname, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(host, OUR_NODENAME, pcmk__str_casei)) {
         crm_trace("Processing locally addressed %s op from client %s",
                   op, pcmk__client_name(cib_client));
         *local_notify = TRUE;
@@ -567,7 +568,7 @@ parse_local_options_v2(const pcmk__client_t *cib_client, int call_type,
         crm_trace("Processing unaddressed %s op from client %s",
                   op, pcmk__client_name(cib_client));
 
-    } else if (pcmk__str_eq(host, cib_our_uname, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(host, OUR_NODENAME, pcmk__str_casei)) {
         crm_trace("Processing locally addressed %s op from client %s",
                   op, pcmk__client_name(cib_client));
 
@@ -605,7 +606,7 @@ parse_peer_options_v1(int call_type, xmlNode * request,
     const char *originator = crm_element_value(request, F_ORIG);
     const char *reply_to = crm_element_value(request, F_CIB_ISREPLY);
 
-    gboolean is_reply = pcmk__str_eq(reply_to, cib_our_uname, pcmk__str_casei);
+    gboolean is_reply = pcmk__str_eq(reply_to, OUR_NODENAME, pcmk__str_casei);
 
     if (pcmk__xe_attr_is_true(request, F_CIB_GLOBAL_UPDATE)) {
         *needs_reply = FALSE;
@@ -647,7 +648,7 @@ parse_peer_options_v1(int call_type, xmlNode * request,
     }
 
     host = crm_element_value(request, F_CIB_HOST);
-    if (host != NULL && pcmk__str_eq(host, cib_our_uname, pcmk__str_casei)) {
+    if (pcmk__str_eq(host, OUR_NODENAME, pcmk__str_casei)) {
         crm_trace("Processing %s request sent to us from %s", op, originator);
         return TRUE;
 
@@ -703,7 +704,7 @@ parse_peer_options_v2(int call_type, xmlNode * request,
     const char *originator = crm_element_value(request, F_ORIG);
     const char *reply_to = crm_element_value(request, F_CIB_ISREPLY);
 
-    gboolean is_reply = pcmk__str_eq(reply_to, cib_our_uname, pcmk__str_casei);
+    gboolean is_reply = pcmk__str_eq(reply_to, OUR_NODENAME, pcmk__str_casei);
 
     if (pcmk__str_eq(op, PCMK__CIB_REQUEST_REPLACE, pcmk__str_none)) {
         /* sync_our_cib() sets F_CIB_ISREPLY */
@@ -788,14 +789,10 @@ parse_peer_options_v2(int call_type, xmlNode * request,
     *process = TRUE;
     *needs_reply = FALSE;
 
-    if(pcmk__str_eq(delegated, cib_our_uname, pcmk__str_casei)) {
-        *local_notify = TRUE;
-    } else {
-        *local_notify = FALSE;
-    }
+    *local_notify = pcmk__str_eq(delegated, OUR_NODENAME, pcmk__str_casei);
 
     host = crm_element_value(request, F_CIB_HOST);
-    if (host != NULL && pcmk__str_eq(host, cib_our_uname, pcmk__str_casei)) {
+    if (pcmk__str_eq(host, OUR_NODENAME, pcmk__str_casei)) {
         crm_trace("Processing %s request sent to us from %s", op, originator);
         *needs_reply = TRUE;
         return TRUE;
@@ -840,7 +837,7 @@ forward_request(xmlNode *request, int call_options)
     const char *op = crm_element_value(request, F_CIB_OPERATION);
     const char *host = crm_element_value(request, F_CIB_HOST);
 
-    crm_xml_add(request, F_CIB_DELEGATED, cib_our_uname);
+    crm_xml_add(request, F_CIB_DELEGATED, OUR_NODENAME);
 
     if (host != NULL) {
         crm_trace("Forwarding %s op to %s", op, host);
@@ -970,7 +967,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
         crm_trace("Processing peer %s operation from %s/%s on %s intended for %s (reply=%s)",
                   op, client_name, call_id, originator, target, reply_to);
     } else {
-        crm_xml_add(request, F_ORIG, cib_our_uname);
+        crm_xml_add(request, F_ORIG, OUR_NODENAME);
         crm_trace("Processing local %s operation from %s/%s intended for %s", op, client_name, call_id, target);
     }
 
@@ -1461,7 +1458,9 @@ cib_peer_callback(xmlNode * msg, void *private_data)
     const char *reason = NULL;
     const char *originator = crm_element_value(msg, F_ORIG);
 
-    if (cib_legacy_mode() && pcmk__str_eq(originator, cib_our_uname, pcmk__str_null_matches)) {
+    if (cib_legacy_mode()
+        && pcmk__str_eq(originator, OUR_NODENAME,
+                        pcmk__str_casei|pcmk__str_null_matches)) {
         /* message is from ourselves */
         int bcast_id = 0;
 
