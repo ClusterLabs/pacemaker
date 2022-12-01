@@ -48,7 +48,7 @@ add_node_to_xml_by_id(const char *id, xmlNode *xml)
     xmlNode *node_xml;
 
     node_xml = create_xml_node(xml, XML_CIB_TAG_NODE);
-    crm_xml_add(node_xml, XML_ATTR_UUID, id);
+    crm_xml_add(node_xml, XML_ATTR_ID, id);
 
     return node_xml;
 }

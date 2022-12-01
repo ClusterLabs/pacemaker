@@ -280,7 +280,7 @@ controld_record_action_event(pcmk__graph_action_t *action,
 
     state = create_xml_node(NULL, XML_CIB_TAG_STATE);
 
-    crm_xml_add(state, XML_ATTR_UUID, target_uuid);
+    crm_xml_add(state, XML_ATTR_ID, target_uuid);
     crm_xml_add(state, XML_ATTR_UNAME, target);
 
     rsc = create_xml_node(state, XML_CIB_TAG_LRM);

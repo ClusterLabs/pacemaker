@@ -251,7 +251,7 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
         }
 
         cib_object = create_xml_node(NULL, XML_CIB_TAG_STATE);
-        crm_xml_add(cib_object, XML_ATTR_UUID, found_uuid);
+        crm_xml_add(cib_object, XML_ATTR_ID, found_uuid);
         crm_xml_add(cib_object, XML_ATTR_UNAME, node);
         cib_conn->cmds->create(cib_conn, XML_CIB_TAG_STATUS, cib_object,
                                cib_sync_call|cib_scope_local);

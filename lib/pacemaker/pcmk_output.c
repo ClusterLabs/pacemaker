@@ -1314,7 +1314,7 @@ node_info_xml(pcmk__output_t *out, va_list args)
     pcmk__output_create_xml_node(out, "node-info",
                                  "nodeid", id_s,
                                  XML_ATTR_UNAME, node_name,
-                                 XML_ATTR_UUID, uuid,
+                                 XML_ATTR_ID, uuid,
                                  XML_NODE_IS_PEER, state,
                                  XML_ATTR_HAVE_QUORUM, pcmk__btoa(have_quorum),
                                  XML_NODE_IS_REMOTE, pcmk__btoa(is_remote),

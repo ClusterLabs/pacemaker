@@ -861,8 +861,7 @@ handle_node_info_request(const xmlNode *msg)
 
     node = pcmk__search_node_caches(node_id, value, CRM_GET_PEER_ANY);
     if (node) {
-        crm_xml_add_int(reply_data, XML_ATTR_ID, node->id);
-        crm_xml_add(reply_data, XML_ATTR_UUID, node->uuid);
+        crm_xml_add(reply_data, XML_ATTR_ID, node->uuid);
         crm_xml_add(reply_data, XML_ATTR_UNAME, node->uname);
         crm_xml_add(reply_data, XML_NODE_IS_PEER, node->state);
         pcmk__xe_set_bool_attr(reply_data, XML_NODE_IS_REMOTE,
