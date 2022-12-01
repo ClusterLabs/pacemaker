@@ -589,13 +589,13 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
  * \internal
  * \brief Make a STONITH_OP_EXEC request
  *
- * \param[in]  stonith       Fencer connection
- * \param[in]  call_options  Bitmask of \c stonith_call_options
- * \param[in]  id            Fence device ID that request is for
- * \param[in]  action        Agent action to request (list, status, or monitor)
- * \param[in]  target        Name of target node for requested action
- * \param[in]  timeout_sec   Error if not completed within this many seconds
- * \param[out] output        Where to set agent output
+ * \param[in,out] stonith       Fencer connection
+ * \param[in]     call_options  Bitmask of \c stonith_call_options
+ * \param[in]     id            Fence device ID that request is for
+ * \param[in]     action        Agent action to request (list, status, monitor)
+ * \param[in]     target        Name of target node for requested action
+ * \param[in]     timeout_sec   Error if not completed within this many seconds
+ * \param[out]    output        Where to set agent output
  */
 static int
 stonith_api_call(stonith_t *stonith, int call_options, const char *id,
@@ -884,12 +884,12 @@ stonith_api_del_callback(stonith_t * stonith, int call_id, bool all_callbacks)
  * \internal
  * \brief Invoke a (single) specified fence action callback
  *
- * \param[in] st        Fencer API connection
- * \param[in] call_id   If positive, call ID of completed fence action, otherwise
- *                      legacy return code for early action failure
- * \param[in] result    Full result for action
- * \param[in] userdata  User data to pass to callback
- * \param[in] callback  Fence action callback to invoke
+ * \param[in,out] st        Fencer API connection
+ * \param[in]     call_id   If positive, call ID of completed fence action,
+ *                          otherwise legacy return code for early failure
+ * \param[in,out] result    Full result for action
+ * \param[in,out] userdata  User data to pass to callback
+ * \param[in]     callback  Fence action callback to invoke
  */
 static void
 invoke_fence_action_callback(stonith_t *st, int call_id,
@@ -915,12 +915,12 @@ invoke_fence_action_callback(stonith_t *st, int call_id,
  * Given a fence action result from the fencer, invoke any callback registered
  * for that action, as well as any global callback registered.
  *
- * \param[in] st        Fencer API connection
- * \param[in] msg       If non-NULL, fencer reply
- * \param[in] call_id   If \p msg is NULL, call ID of action that timed out
+ * \param[in,out] stonith   Fencer API connection
+ * \param[in]     msg       If non-NULL, fencer reply
+ * \param[in]     call_id   If \p msg is NULL, call ID of action that timed out
  */
 static void
-invoke_registered_callbacks(stonith_t *stonith, xmlNode *msg, int call_id)
+invoke_registered_callbacks(stonith_t *stonith, const xmlNode *msg, int call_id)
 {
     stonith_private_t *private = NULL;
     stonith_callback_client_t *cb_info = NULL;
@@ -1518,12 +1518,12 @@ stonith_send_notification(gpointer data, gpointer user_data)
  * \internal
  * \brief Create and send an API request
  *
- * \param[in]  stonith       Stonith connection
- * \param[in]  op            API operation to request
- * \param[in]  data          Data to attach to request
- * \param[out] output_data   If not NULL, will be set to reply if synchronous
- * \param[in]  call_options  Bitmask of stonith_call_options to use
- * \param[in]  timeout       Error if not completed within this many seconds
+ * \param[in,out] stonith       Stonith connection
+ * \param[in]     op            API operation to request
+ * \param[in]     data          Data to attach to request
+ * \param[out]    output_data   If not NULL, will be set to reply if synchronous
+ * \param[in]     call_options  Bitmask of stonith_call_options to use
+ * \param[in]     timeout       Error if not completed within this many seconds
  *
  * \return pcmk_ok (for synchronous requests) or positive call ID
  *         (for asynchronous requests) on success, -errno otherwise
@@ -2246,11 +2246,13 @@ stonith__parse_targets(const char *target_spec)
  *         event exists, or NULL if no such event exists
  */
 const char *
-stonith__later_succeeded(stonith_history_t *event, stonith_history_t *top_history)
+stonith__later_succeeded(const stonith_history_t *event,
+                         const stonith_history_t *top_history)
 {
     const char *other = NULL;
 
-     for (stonith_history_t *prev_hp = top_history; prev_hp; prev_hp = prev_hp->next) {
+     for (const stonith_history_t *prev_hp = top_history;
+          prev_hp != NULL; prev_hp = prev_hp->next) {
         if (prev_hp == event) {
             break;
         }
@@ -2277,12 +2279,11 @@ stonith__later_succeeded(stonith_history_t *event, stonith_history_t *top_histor
 
 /*!
  * \internal
- * \brief Sort the stonith-history
- *        sort by competed most current on the top
- *        pending actions lacking a completed-stamp are gathered at the top
+ * \brief Sort fencing history, pending first then by most recently completed
  *
- * \param[in] history    List of stonith actions
+ * \param[in,out] history    List of stonith actions
  *
+ * \return New head of sorted \p history
  */
 stonith_history_t *
 stonith__sort_history(stonith_history_t *history)
@@ -2429,13 +2430,14 @@ stonith__device_parameter_flags(uint32_t *device_flags, const char *device_name,
  * \internal
  * \brief Retrieve fence agent meta-data asynchronously
  *
- * \param[in] agent        Agent to execute
- * \param[in] timeout_sec  Error if not complete within this time
- * \param[in] callback     Function to call with result (this will always be
- *                         called, whether by this function directly or later
- *                         via the main loop, and on success the metadata will
- *                         be in its result argument's action_stdout)
- * \param[in] user_data    User data to pass to callback
+ * \param[in]     agent        Agent to execute
+ * \param[in]     timeout_sec  Error if not complete within this time
+ * \param[in]     callback     Function to call with result (this will always be
+ *                             called, whether by this function directly or
+ *                             later via the main loop, and on success the
+ *                             metadata will be in its result argument's
+ *                             action_stdout)
+ * \param[in,out] user_data    User data to pass to callback
  *
  * \return Standard Pacemaker return code
  * \note The caller must use a main loop. This function is not a
@@ -2514,7 +2516,7 @@ stonith__metadata_async(const char *agent, int timeout_sec,
  * \return Exit status from callback data
  */
 int
-stonith__exit_status(stonith_callback_data_t *data)
+stonith__exit_status(const stonith_callback_data_t *data)
 {
     if ((data == NULL) || (data->opaque == NULL)) {
         return CRM_EX_ERROR;
@@ -2531,7 +2533,7 @@ stonith__exit_status(stonith_callback_data_t *data)
  * \return Execution status from callback data
  */
 int
-stonith__execution_status(stonith_callback_data_t *data)
+stonith__execution_status(const stonith_callback_data_t *data)
 {
     if ((data == NULL) || (data->opaque == NULL)) {
         return PCMK_EXEC_UNKNOWN;
@@ -2548,7 +2550,7 @@ stonith__execution_status(stonith_callback_data_t *data)
  * \return Exit reason from callback data
  */
 const char *
-stonith__exit_reason(stonith_callback_data_t *data)
+stonith__exit_reason(const stonith_callback_data_t *data)
 {
     if ((data == NULL) || (data->opaque == NULL)) {
         return NULL;
@@ -2565,7 +2567,7 @@ stonith__exit_reason(stonith_callback_data_t *data)
  * \return Exit status from event
  */
 int
-stonith__event_exit_status(stonith_event_t *event)
+stonith__event_exit_status(const stonith_event_t *event)
 {
     if ((event == NULL) || (event->opaque == NULL)) {
         return CRM_EX_ERROR;
@@ -2585,7 +2587,7 @@ stonith__event_exit_status(stonith_event_t *event)
  * \return Execution status from event
  */
 int
-stonith__event_execution_status(stonith_event_t *event)
+stonith__event_execution_status(const stonith_event_t *event)
 {
     if ((event == NULL) || (event->opaque == NULL)) {
         return PCMK_EXEC_UNKNOWN;
@@ -2605,7 +2607,7 @@ stonith__event_execution_status(stonith_event_t *event)
  * \return Exit reason from event
  */
 const char *
-stonith__event_exit_reason(stonith_event_t *event)
+stonith__event_exit_reason(const stonith_event_t *event)
 {
     if ((event == NULL) || (event->opaque == NULL)) {
         return NULL;
@@ -2627,7 +2629,7 @@ stonith__event_exit_reason(stonith_event_t *event)
  *       This function asserts on memory errors and never returns NULL.
  */
 char *
-stonith__event_description(stonith_event_t *event)
+stonith__event_description(const stonith_event_t *event)
 {
     // Use somewhat readable defaults
     const char *origin = pcmk__s(event->client_origin, "a client");
