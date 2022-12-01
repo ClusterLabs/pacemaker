@@ -169,6 +169,7 @@ extern "C" {
 #  define XML_ATTR_REQUEST		"request"
 #  define XML_ATTR_RESPONSE		"response"
 
+#  define PCMK_XA_CLUSTER_ID		"cluster-id"
 #  define XML_ATTR_UNAME		"uname"
 #  define XML_ATTR_REFERENCE		"reference"
 
