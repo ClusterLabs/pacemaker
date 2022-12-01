@@ -397,7 +397,8 @@ purge_xml_attributes(xmlNode *xml)
     xml_node_private_t *nodepriv = xml->_private;
 
     if (test_acl_mode(nodepriv->flags, pcmk__xf_acl_read)) {
-        crm_trace("%s[@id=%s] is readable", crm_element_name(xml), ID(xml));
+        crm_trace("%s[@" XML_ATTR_ID "=%s] is readable",
+                  crm_element_name(xml), ID(xml));
         return true;
     }
 
@@ -589,7 +590,7 @@ pcmk__apply_creation_acl(xmlNode *xml, bool check_top)
             return;
 
         } else {
-            crm_notice("ACLs would disallow creation of %s<%s> with id=\"%s\" ",
+            crm_notice("ACLs would disallow creation of %s<%s> with id=\"%s\"",
                        ((xml == xmlDocGetRootElement(xml->doc))? "root element " : ""),
                        crm_element_name(xml), display_id(xml));
         }

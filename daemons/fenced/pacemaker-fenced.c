@@ -872,9 +872,9 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
                 break;
             }
             pcmk__str_update(&mutable, xpath);
-            rsc_id = strstr(mutable, "primitive[@id=\'");
+            rsc_id = strstr(mutable, "primitive[@" XML_ATTR_ID "=\'");
             if (rsc_id != NULL) {
-                rsc_id += strlen("primitive[@id=\'");
+                rsc_id += strlen("primitive[@" XML_ATTR_ID "=\'");
                 search = strchr(rsc_id, '\'');
             }
             if (search != NULL) {

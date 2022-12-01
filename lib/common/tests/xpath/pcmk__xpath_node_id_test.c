@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <crm/msg_xml.h>
 #include <crm/common/unittest_internal.h>
 #include <crm/common/xml_internal.h>
 
@@ -23,24 +24,30 @@ empty_input(void **state) {
 
 static void
 no_quotes(void **state) {
-    pcmk__assert_asserts(pcmk__xpath_node_id("/some/xpath/lrm[@id=xyz]", "lrm"));
+    const char *xpath = "/some/xpath/lrm[@" XML_ATTR_ID "=xyz]";
+    pcmk__assert_asserts(pcmk__xpath_node_id(xpath, "lrm"));
 }
 
 static void
 not_present(void **state) {
-    assert_null(pcmk__xpath_node_id("/some/xpath/string[@id='xyz']", "lrm"));
-    assert_null(pcmk__xpath_node_id("/some/xpath/containing[@id='lrm']", "lrm"));
+    const char *xpath = "/some/xpath/string[@" XML_ATTR_ID "='xyz']";
+    assert_null(pcmk__xpath_node_id(xpath, "lrm"));
+
+    xpath = "/some/xpath/containing[@" XML_ATTR_ID "='lrm']";
+    assert_null(pcmk__xpath_node_id(xpath, "lrm"));
 }
 
 static void
 present(void **state) {
     char *s = NULL;
+    const char *xpath = "/some/xpath/containing/lrm[@" XML_ATTR_ID "='xyz']";
 
-    s = pcmk__xpath_node_id("/some/xpath/containing/lrm[@id='xyz']", "lrm");
+    s = pcmk__xpath_node_id(xpath, "lrm");
     assert_int_equal(strcmp(s, "xyz"), 0);
     free(s);
 
-    s = pcmk__xpath_node_id("/some/other/lrm[@id='xyz']/xpath", "lrm");
+    xpath = "/some/other/lrm[@" XML_ATTR_ID "='xyz']/xpath";
+    s = pcmk__xpath_node_id(xpath, "lrm");
     assert_int_equal(strcmp(s, "xyz"), 0);
     free(s);
 }

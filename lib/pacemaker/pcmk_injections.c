@@ -33,10 +33,10 @@
 
 bool pcmk__simulate_node_config = false;
 
-#define XPATH_NODE_CONFIG   "//" XML_CIB_TAG_NODE "[@uname='%s']"
-#define XPATH_NODE_STATE    "//" XML_CIB_TAG_STATE "[@uname='%s']"
-#define XPATH_RSC_HISTORY   XPATH_NODE_STATE "//" \
-                            XML_LRM_TAG_RESOURCE "[@id='%s']"
+#define XPATH_NODE_CONFIG   "//" XML_CIB_TAG_NODE "[@" XML_ATTR_UNAME "='%s']"
+#define XPATH_NODE_STATE    "//" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='%s']"
+#define XPATH_RSC_HISTORY   XPATH_NODE_STATE \
+                            "//" XML_LRM_TAG_RESOURCE "[@" XML_ATTR_ID "='%s']"
 
 
 /*!

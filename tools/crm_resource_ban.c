@@ -246,8 +246,16 @@ resource_clear_node_in_expr(const char *rsc_id, const char *host, cib_t * cib_co
     int rc = pcmk_rc_ok;
     char *xpath_string = NULL;
 
-    xpath_string = crm_strdup_printf("//rsc_location[@id='cli-prefer-%s'][rule[@id='cli-prefer-rule-%s']/expression[@attribute='#uname' and @value='%s']]",
-                                     rsc_id, rsc_id, host);
+#define XPATH_FMT                                                       \
+    "//" XML_CONS_TAG_RSC_LOCATION "[@" XML_ATTR_ID "='cli-prefer-%s']" \
+    "[" XML_TAG_RULE                                                    \
+        "[@" XML_ATTR_ID "='cli-prefer-rule-%s']"                       \
+        "/" XML_TAG_EXPRESSION                                          \
+        "[@" XML_EXPR_ATTR_ATTRIBUTE "='#uname' "                       \
+        "and @" XML_EXPR_ATTR_VALUE "='%s']"                            \
+    "]"
+
+    xpath_string = crm_strdup_printf(XPATH_FMT, rsc_id, rsc_id, host);
 
     rc = cib_conn->cmds->remove(cib_conn, xpath_string, NULL, cib_xpath | cib_options);
     if (rc == -ENXIO) {

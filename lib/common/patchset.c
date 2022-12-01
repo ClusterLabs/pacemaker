@@ -1050,7 +1050,7 @@ search_v2_xpath(const xmlNode *top, const char *key, int target_position)
         rc = sscanf(current, "/%[^/]%s", section, remainder);
         if (rc > 0) {
             // Separate FIRST_COMPONENT into TAG[@id='ID']
-            int f = sscanf(section, "%[^[][@id='%[^']", tag, id);
+            int f = sscanf(section, "%[^[][@" XML_ATTR_ID "='%[^']", tag, id);
             int current_position = -1;
 
             /* The target position is for the final component tag, so only use
@@ -1487,7 +1487,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
     if (right == NULL) {
         xmlNode *deleted = NULL;
 
-        crm_trace("Processing <%s id=%s> (complete copy)",
+        crm_trace("Processing <%s " XML_ATTR_ID "=%s> (complete copy)",
                   crm_element_name(left), id);
         deleted = add_node_copy(parent, left);
         crm_xml_add(deleted, XML_DIFF_MARKER, marker);
@@ -1601,8 +1601,9 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
                 if (full) {
                     xmlAttrPtr pIter = NULL;
 
-                    crm_trace("Changes detected to %s in <%s id=%s>", prop_name,
-                              crm_element_name(left), id);
+                    crm_trace("Changes detected to %s in "
+                              "<%s " XML_ATTR_ID "=%s>",
+                              prop_name, crm_element_name(left), id);
                     for (pIter = pcmk__xe_first_attr(left); pIter != NULL;
                          pIter = pIter->next) {
                         const char *p_name = (const char *) pIter->name;
@@ -1614,7 +1615,8 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
                     break;
 
                 } else {
-                    crm_trace("Changes detected to %s (%s -> %s) in <%s id=%s>",
+                    crm_trace("Changes detected to %s (%s -> %s) in "
+                              "<%s " XML_ATTR_ID "=%s>",
                               prop_name, left_value, right_val,
                               crm_element_name(left), id);
                     crm_xml_add(diff, prop_name, left_value);

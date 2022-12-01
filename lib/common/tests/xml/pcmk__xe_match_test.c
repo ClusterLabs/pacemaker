@@ -9,29 +9,30 @@
 
 #include <crm_internal.h>
 
+#include <crm/msg_xml.h>
 #include <crm/common/unittest_internal.h>
 #include <crm/common/xml_internal.h>
 
 const char *str1 =
     "<xml>\n"
     "  <!-- This is an A node -->\n"
-    "  <nodeA attrA=\"123\" id=\"1\">\n"
+    "  <nodeA attrA=\"123\" " XML_ATTR_ID "=\"1\">\n"
     "    content\n"
     "  </nodeA>\n"
     "  <!-- This is an A node -->\n"
-    "  <nodeA attrA=\"456\" id=\"2\">\n"
+    "  <nodeA attrA=\"456\" " XML_ATTR_ID "=\"2\">\n"
     "    content\n"
     "  </nodeA>\n"
     "  <!-- This is an A node -->\n"
-    "  <nodeA attrB=\"XYZ\" id=\"3\">\n"
+    "  <nodeA attrB=\"XYZ\" " XML_ATTR_ID "=\"3\">\n"
     "    content\n"
     "  </nodeA>\n"
     "  <!-- This is a B node -->\n"
-    "  <nodeB attrA=\"123\" id=\"4\">\n"
+    "  <nodeB attrA=\"123\" " XML_ATTR_ID "=\"4\">\n"
     "    content\n"
     "  </nodeA>\n"
     "  <!-- This is a B node -->\n"
-    "  <nodeB attrB=\"ABC\" id=\"5\">\n"
+    "  <nodeB attrB=\"ABC\" " XML_ATTR_ID "=\"5\">\n"
     "    content\n"
     "  </nodeA>\n"
     "</xml>";

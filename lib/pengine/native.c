@@ -456,7 +456,7 @@ native_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
 
     /* resource information. */
     status_print("%s<resource ", pre_text);
-    status_print("id=\"%s\" ", rsc_printable_id(rsc));
+    status_print(XML_ATTR_ID "=\"%s\" ", rsc_printable_id(rsc));
     status_print("resource_agent=\"%s%s%s:%s\" ", class,
                  ((prov == NULL)? "" : PROVIDER_SEP),
                  ((prov == NULL)? "" : prov),
@@ -497,9 +497,10 @@ native_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
         for (; gIter != NULL; gIter = gIter->next) {
             pe_node_t *node = (pe_node_t *) gIter->data;
 
-            status_print("%s    <node name=\"%s\" id=\"%s\" cached=\"%s\"/>\n", pre_text,
-                         pcmk__s(node->details->uname, ""), node->details->id,
-                         pcmk__btoa(node->details->online == FALSE));
+            status_print("%s    <node name=\"%s\" " XML_ATTR_ID "=\"%s\" "
+                         "cached=\"%s\"/>\n",
+                         pre_text, pcmk__s(node->details->uname, ""),
+                         node->details->id, pcmk__btoa(!node->details->online));
         }
         status_print("%s</resource>\n", pre_text);
     } else {

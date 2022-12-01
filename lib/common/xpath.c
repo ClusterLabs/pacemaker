@@ -323,7 +323,7 @@ pcmk__xpath_node_id(const char *xpath, const char *node)
         return retval;
     }
 
-    patt = crm_strdup_printf("/%s[@id=", node);
+    patt = crm_strdup_printf("/%s[@" XML_ATTR_ID "=", node);
     start = strstr(xpath, patt);
 
     if (!start) {

@@ -92,7 +92,10 @@ block_failure(pe_node_t *node, pe_resource_t *rsc, xmlNode *xml_op,
      * Ideally, we'd unpack the operation before this point, and pass in a
      * meta-attributes table that takes all that into consideration.
      */
-    char *xpath = crm_strdup_printf("//primitive[@id='%s']//op[@on-fail='block']",
+    char *xpath = crm_strdup_printf("//" XML_CIB_TAG_RESOURCE
+                                    "[@" XML_ATTR_ID "='%s']"
+                                    "//" XML_ATTR_OP
+                                    "[@" XML_OP_ATTR_ON_FAIL "='block']",
                                     xml_name);
 
     xmlXPathObject *xpathObj = xpath_search(rsc->xml, xpath);
@@ -125,11 +128,15 @@ block_failure(pe_node_t *node, pe_resource_t *rsc, xmlNode *xml_op,
                 conf_op_interval_spec = crm_element_value(pref, XML_LRM_ATTR_INTERVAL);
                 conf_op_interval_ms = crm_parse_interval_spec(conf_op_interval_spec);
 
-                lrm_op_xpath = crm_strdup_printf("//node_state[@uname='%s']"
-                                               "//lrm_resource[@id='%s']"
-                                               "/lrm_rsc_op[@operation='%s'][@interval='%u']",
-                                               node->details->uname, xml_name,
-                                               conf_op_name, conf_op_interval_ms);
+#define XPATH_FMT "//" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='%s']"       \
+                  "//" XML_LRM_TAG_RESOURCE "[@" XML_ATTR_ID "='%s']"       \
+                  "/" XML_LRM_TAG_RSC_OP "[@" XML_LRM_ATTR_TASK "='%s']"    \
+                  "[@" XML_LRM_ATTR_INTERVAL "='%u']"
+
+                lrm_op_xpath = crm_strdup_printf(XPATH_FMT,
+                                                 node->details->uname, xml_name,
+                                                 conf_op_name,
+                                                 conf_op_interval_ms);
                 lrm_op_xpathObj = xpath_search(data_set->input, lrm_op_xpath);
 
                 free(lrm_op_xpath);
