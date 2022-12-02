@@ -2100,10 +2100,8 @@ dump_xml_formatted_with_text(xmlNode * an_xml_node)
                    xml_log_option_formatted|xml_log_option_full_fledged,
                    g_buffer, 0);
 
-    if (g_buffer != NULL) {
-        buffer = strdup((const char *) g_buffer->str);
-        g_string_free(g_buffer, TRUE);
-    }
+    pcmk__str_update(&buffer, g_buffer->str);
+    g_string_free(g_buffer, TRUE);
     return buffer;
 }
 
@@ -2115,10 +2113,8 @@ dump_xml_formatted(xmlNode * an_xml_node)
 
     pcmk__xml2text(an_xml_node, xml_log_option_formatted, g_buffer, 0);
 
-    if (g_buffer != NULL) {
-        buffer = strdup((const char *) g_buffer->str);
-        g_string_free(g_buffer, TRUE);
-    }
+    pcmk__str_update(&buffer, g_buffer->str);
+    g_string_free(g_buffer, TRUE);
     return buffer;
 }
 
@@ -2130,10 +2126,8 @@ dump_xml_unformatted(xmlNode * an_xml_node)
 
     pcmk__xml2text(an_xml_node, 0, g_buffer, 0);
 
-    if (g_buffer != NULL) {
-        buffer = strdup((const char *) g_buffer->str);
-        g_string_free(g_buffer, TRUE);
-    }
+    pcmk__str_update(&buffer, g_buffer->str);
+    g_string_free(g_buffer, TRUE);
     return buffer;
 }
 
