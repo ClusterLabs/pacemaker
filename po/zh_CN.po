@@ -11,8 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 2\n"
 "Report-Msgid-Bugs-To: developers@clusterlabs.org\n"
-"POT-Creation-Date: 2022-11-24 16:04+0800\n"
-"POT-Creation-Date: 2022-11-24 17:50+0800\n"
+"POT-Creation-Date: 2022-12-02 10:26+0800\n"
 "PO-Revision-Date: 2021-11-08 11:04+0800\n"
 "Last-Translator: Vivi <developers@clusterlabs.org>\n"
 "Language-Team: CHINESE <wangluwei@uniontech.org>\n"
@@ -21,29 +20,29 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: daemons/controld/controld_control.c:530
+#: daemons/controld/controld_control.c:531
 msgid "Pacemaker version on cluster node elected Designated Controller (DC)"
 msgstr "集群选定的控制器节点(DC)的 Pacemaker 版本"
 
-#: daemons/controld/controld_control.c:531
+#: daemons/controld/controld_control.c:532
 msgid ""
 "Includes a hash which identifies the exact changeset the code was built "
 "from. Used for diagnostic purposes."
 msgstr "它包含一个标识所构建代码变更版本的哈希值，其可用于诊断。"
 
-#: daemons/controld/controld_control.c:536
+#: daemons/controld/controld_control.c:537
 msgid "The messaging stack on which Pacemaker is currently running"
 msgstr "Pacemaker 正在使用的消息传输引擎"
 
-#: daemons/controld/controld_control.c:537
+#: daemons/controld/controld_control.c:538
 msgid "Used for informational and diagnostic purposes."
 msgstr "用于提供信息和诊断。"
 
-#: daemons/controld/controld_control.c:541
+#: daemons/controld/controld_control.c:542
 msgid "An arbitrary name for the cluster"
 msgstr "任意的集群名称"
 
-#: daemons/controld/controld_control.c:542
+#: daemons/controld/controld_control.c:543
 msgid ""
 "This optional value is mostly for users' convenience as desired in "
 "administration, but may also be used in Pacemaker configuration rules via "
@@ -53,17 +52,17 @@ msgstr ""
 "该可选值主要是为了方便用户管理使用，也可以在pacemaker 配置规则中通过 "
 "#cluster-name 节点属性配置使用，也可以通过高级工具和资源代理使用。"
 
-#: daemons/controld/controld_control.c:550
+#: daemons/controld/controld_control.c:551
 msgid "How long to wait for a response from other nodes during start-up"
 msgstr "启动过程中等待其他节点响应的时间"
 
-#: daemons/controld/controld_control.c:551
+#: daemons/controld/controld_control.c:552
 msgid ""
 "The optimal value will depend on the speed and load of your network and the "
 "type of switches used."
 msgstr "其最佳值将取决于你的网络速度和负载以及所用交换机的类型。"
 
-#: daemons/controld/controld_control.c:556
+#: daemons/controld/controld_control.c:557
 msgid ""
 "Zero disables polling, while positive values are an interval in "
 "seconds(unless other units are specified, for example \"5min\")"
@@ -71,13 +70,13 @@ msgstr ""
 "设置为0将禁用轮询，设置为正数将是以秒为单位的时间间隔（除非使用了其他单位，比"
 "如\"5min\"表示5分钟）"
 
-#: daemons/controld/controld_control.c:559
+#: daemons/controld/controld_control.c:560
 msgid ""
 "Polling interval to recheck cluster state and evaluate rules with date "
 "specifications"
 msgstr "重新检查集群状态并且评估具有日期规格的配置规则的轮询间隔"
 
-#: daemons/controld/controld_control.c:561
+#: daemons/controld/controld_control.c:562
 msgid ""
 "Pacemaker is primarily event-driven, and looks ahead to know when to recheck "
 "cluster state for failure timeouts and most time-based rules. However, it "
@@ -90,26 +89,26 @@ msgstr ""
 "将重新检查集群，以评估具有日期规格的规则，并为某些类型的调度程序缺陷提供故障"
 "保护。"
 
-#: daemons/controld/controld_control.c:570
+#: daemons/controld/controld_control.c:571
 msgid "Maximum amount of system load that should be used by cluster nodes"
 msgstr "集群节点应该使用的最大系统负载量"
 
-#: daemons/controld/controld_control.c:571
+#: daemons/controld/controld_control.c:572
 msgid ""
 "The cluster will slow down its recovery process when the amount of system "
 "resources used (currently CPU) approaches this limit"
 msgstr "当使用的系统资源量（当前为CPU）接近此限制时，集群将减慢其恢复过程"
 
-#: daemons/controld/controld_control.c:577
+#: daemons/controld/controld_control.c:578
 msgid ""
 "Maximum number of jobs that can be scheduled per node (defaults to 2x cores)"
 msgstr "每个节点可以调度的最大作业数（默认为2x内核数）"
 
-#: daemons/controld/controld_control.c:581
+#: daemons/controld/controld_control.c:582
 msgid "How a cluster node should react if notified of its own fencing"
 msgstr "集群节点在收到针对自己的 fence 操作结果通知时应如何反应"
 
-#: daemons/controld/controld_control.c:582
+#: daemons/controld/controld_control.c:583
 msgid ""
 "A cluster node may receive notification of its own fencing if fencing is "
 "misconfigured, or if fabric fencing is in use that doesn't cut cluster "
@@ -122,7 +121,7 @@ msgstr ""
 "止 pacemaker 并保持停用状态,或者 \"panic\" 尝试立即重新启动本地节点，并在失败"
 "时返回执行stop。"
 
-#: daemons/controld/controld_control.c:592
+#: daemons/controld/controld_control.c:593
 msgid ""
 "Declare an election failed if it is not decided within this much time. If "
 "you need to adjust this value, it probably indicates the presence of a bug."
@@ -130,7 +129,7 @@ msgstr ""
 "如果集群在本项设置时间内没有作出决定则宣布选举失败。如果您需要调整该值，这可"
 "能代表存在某些缺陷。"
 
-#: daemons/controld/controld_control.c:600
+#: daemons/controld/controld_control.c:601
 msgid ""
 "Exit immediately if shutdown does not complete within this much time. If you "
 "need to adjust this value, it probably indicates the presence of a bug."
@@ -138,20 +137,20 @@ msgstr ""
 "如果在这段时间内关机仍未完成，则立即退出。如果您需要调整该值，这可能代表存在"
 "某些缺陷。"
 
-#: daemons/controld/controld_control.c:608
-#: daemons/controld/controld_control.c:615
+#: daemons/controld/controld_control.c:609
+#: daemons/controld/controld_control.c:616
 msgid ""
 "If you need to adjust this value, it probably indicates the presence of a "
 "bug."
 msgstr "如果您需要调整该值，这可能代表存在某些缺陷。"
 
-#: daemons/controld/controld_control.c:621
+#: daemons/controld/controld_control.c:622
 msgid ""
 "*** Advanced Use Only *** Enabling this option will slow down cluster "
 "recovery under all conditions"
 msgstr "*** Advanced Use Only *** 启用此选项将在所有情况下减慢集群恢复的速度"
 
-#: daemons/controld/controld_control.c:623
+#: daemons/controld/controld_control.c:624
 msgid ""
 "Delay cluster recovery for this much time to allow for additional events to "
 "occur. Useful if your configuration is sensitive to the order in which ping "
@@ -160,7 +159,7 @@ msgstr ""
 "集群恢复将被推迟指定的时间间隔，以等待更多事件发生。如果您的配置对 ping 更新"
 "到达的顺序很敏感，这就很有用"
 
-#: daemons/controld/controld_control.c:630
+#: daemons/controld/controld_control.c:631
 #, fuzzy
 msgid ""
 "How long before nodes can be assumed to be safely down when watchdog-based "
@@ -169,7 +168,7 @@ msgstr ""
 "当基于 watchdog 的自我 fence 机制通过SBD 被执行时，我们可以假设节点安全关闭之"
 "前需要等待多长时间"
 
-#: daemons/controld/controld_control.c:632
+#: daemons/controld/controld_control.c:633
 msgid ""
 "If this is set to a positive value, lost nodes are assumed to self-fence "
 "using watchdog-based SBD within this much time. This does not require a "
@@ -194,17 +193,17 @@ msgstr ""
 "Pacemaker将拒绝在任何节点上启动。如果设置为负值，则在使用SBD的所有节点上，"
 "`SBD_WATCHDOG_TIMEOUT`必须设置为相同的值，否则可能会发生数据损坏或丢失。"
 
-#: daemons/controld/controld_control.c:651
+#: daemons/controld/controld_control.c:652
 msgid ""
 "How many times fencing can fail before it will no longer be immediately re-"
 "attempted on a target"
 msgstr "fence操作失败多少次会停止立即尝试"
 
-#: daemons/fenced/pacemaker-fenced.c:1389
+#: daemons/fenced/pacemaker-fenced.c:1378
 msgid "Advanced use only: An alternate parameter to supply instead of 'port'"
 msgstr "仅高级使用：使用替代的参数名，而不是'port'"
 
-#: daemons/fenced/pacemaker-fenced.c:1390
+#: daemons/fenced/pacemaker-fenced.c:1379
 msgid ""
 "some devices do not support the standard 'port' parameter or may provide "
 "additional ones. Use this to specify an alternate, device-specific, "
@@ -215,34 +214,34 @@ msgstr ""
 "设备专用的参数名，该参数用于标识需要fence的机器。值none可以用于告诉集群不要提"
 "供任何其他的参数。"
 
-#: daemons/fenced/pacemaker-fenced.c:1399
+#: daemons/fenced/pacemaker-fenced.c:1388
 msgid ""
 "A mapping of host names to ports numbers for devices that do not support "
 "host names."
 msgstr "为不支持主机名的设备提供主机名到端口号的映射。"
 
-#: daemons/fenced/pacemaker-fenced.c:1400
+#: daemons/fenced/pacemaker-fenced.c:1389
 msgid ""
 "Eg. node1:1;node2:2,3 would tell the cluster to use port 1 for node1 and "
 "ports 2 and 3 for node2"
 msgstr ""
 "例如 node1:1;node2:2,3，将会告诉集群对node1使用端口1,对node2使用端口2和3 "
 
-#: daemons/fenced/pacemaker-fenced.c:1404
+#: daemons/fenced/pacemaker-fenced.c:1393
 msgid "Eg. node1,node2,node3"
 msgstr "例如 node1,node2,node3"
 
-#: daemons/fenced/pacemaker-fenced.c:1405
+#: daemons/fenced/pacemaker-fenced.c:1394
 msgid ""
 "A list of machines controlled by this device (Optional unless "
 "pcmk_host_list=static-list)"
 msgstr "该设备控制的机器列表(可选参数，除非 pcmk_host_list 设置为 static-list)"
 
-#: daemons/fenced/pacemaker-fenced.c:1410
+#: daemons/fenced/pacemaker-fenced.c:1399
 msgid "How to determine which machines are controlled by the device."
 msgstr "如何确定设备控制哪些机器。"
 
-#: daemons/fenced/pacemaker-fenced.c:1411
+#: daemons/fenced/pacemaker-fenced.c:1400
 msgid ""
 "Allowed values: dynamic-list (query the device via the 'list' command), "
 "static-list (check the pcmk_host_list attribute), status (query the device "
@@ -252,12 +251,12 @@ msgstr ""
 "pcmk_host_list属性），status（通过'status'命令查询设备），none（假设每个设备"
 "都可fence 每台机器 ）"
 
-#: daemons/fenced/pacemaker-fenced.c:1420
-#: daemons/fenced/pacemaker-fenced.c:1429
+#: daemons/fenced/pacemaker-fenced.c:1409
+#: daemons/fenced/pacemaker-fenced.c:1418
 msgid "Enable a base delay for fencing actions and specify base delay value."
 msgstr "在执行 fencing 操作前启用不超过指定时间的延迟。"
 
-#: daemons/fenced/pacemaker-fenced.c:1421
+#: daemons/fenced/pacemaker-fenced.c:1410
 msgid ""
 "Enable a delay of no more than the time specified before executing fencing "
 "actions. Pacemaker derives the overall delay by taking the value of "
@@ -268,7 +267,7 @@ msgstr ""
 "pcmk_delay_base的值并添加随机延迟值来得出总体延迟,从而使总和保持在此最大值以"
 "下。"
 
-#: daemons/fenced/pacemaker-fenced.c:1431
+#: daemons/fenced/pacemaker-fenced.c:1420
 msgid ""
 "This enables a static delay for fencing actions, which can help avoid "
 "\"death matches\" where two nodes try to fence each other at the same time. "
@@ -284,12 +283,12 @@ msgstr ""
 "目标分别配置了各自的设备的情况）， 或着设置为一个节点映射 （例如，\"node1:1s;"
 "node2:5\"）从而为每个目标设置不同值。"
 
-#: daemons/fenced/pacemaker-fenced.c:1443
+#: daemons/fenced/pacemaker-fenced.c:1432
 msgid ""
 "The maximum number of actions can be performed in parallel on this device"
 msgstr "可以在该设备上并发执行的最多操作数量"
 
-#: daemons/fenced/pacemaker-fenced.c:1444
+#: daemons/fenced/pacemaker-fenced.c:1433
 msgid ""
 "Cluster property concurrent-fencing=true needs to be configured first.Then "
 "use this to specify the maximum number of actions can be performed in "
@@ -298,11 +297,11 @@ msgstr ""
 "需要首先配置集群属性 concurrent-fencing=true 。然后使用此参数指定可以在该设备"
 "上并发执行的最多操作数量。 -1 代表没有限制"
 
-#: daemons/fenced/pacemaker-fenced.c:1449
+#: daemons/fenced/pacemaker-fenced.c:1438
 msgid "Advanced use only: An alternate command to run instead of 'reboot'"
 msgstr "仅高级使用：运行替代命令，而不是'reboot'"
 
-#: daemons/fenced/pacemaker-fenced.c:1450
+#: daemons/fenced/pacemaker-fenced.c:1439
 msgid ""
 "Some devices do not support the standard commands or may provide additional "
 "ones.\n"
@@ -312,13 +311,13 @@ msgstr ""
 "一些设备不支持标准命令或可能提供其他命令，使用此选项可以指定一个该设备特定的"
 "替代命令，用来实现'reboot'操作。"
 
-#: daemons/fenced/pacemaker-fenced.c:1455
+#: daemons/fenced/pacemaker-fenced.c:1444
 msgid ""
 "Advanced use only: Specify an alternate timeout to use for reboot actions "
 "instead of stonith-timeout"
 msgstr "仅高级使用：指定用于'reboot' 操作的替代超时，而不是stonith-timeout"
 
-#: daemons/fenced/pacemaker-fenced.c:1456
+#: daemons/fenced/pacemaker-fenced.c:1445
 msgid ""
 "Some devices need much more/less time to complete than normal.Use this to "
 "specify an alternate, device-specific, timeout for 'reboot' actions."
@@ -326,13 +325,13 @@ msgstr ""
 "一些设备需要比正常情况下更多或更少的时间来完成操作，使用此选项指定一个用"
 "于'reboot'操作的该设备特定的替代超时。"
 
-#: daemons/fenced/pacemaker-fenced.c:1461
+#: daemons/fenced/pacemaker-fenced.c:1450
 msgid ""
 "Advanced use only: The maximum number of times to retry the 'reboot' command "
 "within the timeout period"
 msgstr "仅高级使用：在超时前重试'reboot'命令的最大次数"
 
-#: daemons/fenced/pacemaker-fenced.c:1462
+#: daemons/fenced/pacemaker-fenced.c:1451
 msgid ""
 "Some devices do not support multiple connections. Operations may 'fail' if "
 "the device is busy with another task so Pacemaker will automatically retry "
@@ -343,11 +342,11 @@ msgstr ""
 "Pacemaker将自动重试（如果时间允许）。 使用此选项更改Pacemaker在放弃之前重"
 "试'reboot' 操作的次数."
 
-#: daemons/fenced/pacemaker-fenced.c:1468
+#: daemons/fenced/pacemaker-fenced.c:1457
 msgid "Advanced use only: An alternate command to run instead of 'off'"
 msgstr "仅高级使用：运行替代命令，而不是'off'"
 
-#: daemons/fenced/pacemaker-fenced.c:1469
+#: daemons/fenced/pacemaker-fenced.c:1458
 msgid ""
 "Some devices do not support the standard commands or may provide additional "
 "ones.Use this to specify an alternate, device-specific, command that "
@@ -356,13 +355,13 @@ msgstr ""
 "一些设备不支持标准命令或可能提供其他命令,使用此选项可指定一个该设备专用的替代"
 "命令，用来实现'off'操作。"
 
-#: daemons/fenced/pacemaker-fenced.c:1474
+#: daemons/fenced/pacemaker-fenced.c:1463
 msgid ""
 "Advanced use only: Specify an alternate timeout to use for off actions "
 "instead of stonith-timeout"
 msgstr "仅高级使用：指定用于off 操作的替代超时，而不是stonith-timeout"
 
-#: daemons/fenced/pacemaker-fenced.c:1475
+#: daemons/fenced/pacemaker-fenced.c:1464
 msgid ""
 "Some devices need much more/less time to complete than normal.Use this to "
 "specify an alternate, device-specific, timeout for 'off' actions."
@@ -370,13 +369,13 @@ msgstr ""
 "一些设备需要比正常情况下更多或更少的时间来完成操作，使用此选项指定一个用"
 "于'off'操作的该设备特定的替代超时。"
 
-#: daemons/fenced/pacemaker-fenced.c:1480
+#: daemons/fenced/pacemaker-fenced.c:1469
 msgid ""
 "Advanced use only: The maximum number of times to retry the 'off' command "
 "within the timeout period"
 msgstr "仅高级使用：在超时前重试'off'命令的最大次数"
 
-#: daemons/fenced/pacemaker-fenced.c:1481
+#: daemons/fenced/pacemaker-fenced.c:1470
 msgid ""
 "Some devices do not support multiple connections. Operations may 'fail' if "
 "the device is busy with another task so Pacemaker will automatically retry "
@@ -387,11 +386,11 @@ msgstr ""
 "Pacemaker将自动重试（如果时间允许）。 使用此选项更改Pacemaker在放弃之前重"
 "试'off' 操作的次数."
 
-#: daemons/fenced/pacemaker-fenced.c:1487
+#: daemons/fenced/pacemaker-fenced.c:1476
 msgid "Advanced use only: An alternate command to run instead of 'on'"
 msgstr "仅高级使用：运行替代命令，而不是'on'"
 
-#: daemons/fenced/pacemaker-fenced.c:1488
+#: daemons/fenced/pacemaker-fenced.c:1477
 msgid ""
 "Some devices do not support the standard commands or may provide additional "
 "ones.Use this to specify an alternate, device-specific, command that "
@@ -400,13 +399,13 @@ msgstr ""
 "一些设备不支持标准命令或可能提供其他命令，使用此选项可指定一个该设备特定的替"
 "代命令，用来实现'on'操作。"
 
-#: daemons/fenced/pacemaker-fenced.c:1493
+#: daemons/fenced/pacemaker-fenced.c:1482
 msgid ""
 "Advanced use only: Specify an alternate timeout to use for on actions "
 "instead of stonith-timeout"
 msgstr "仅高级使用：指定用于on 操作的替代超时，而不是stonith-timeout"
 
-#: daemons/fenced/pacemaker-fenced.c:1494
+#: daemons/fenced/pacemaker-fenced.c:1483
 msgid ""
 "Some devices need much more/less time to complete than normal.Use this to "
 "specify an alternate, device-specific, timeout for 'on' actions."
@@ -414,13 +413,13 @@ msgstr ""
 "一些设备需要比正常情况下更多或更少的时间来完成操作，使用此选项指定一个用"
 "于'on'操作的该设备特定的替代超时。"
 
-#: daemons/fenced/pacemaker-fenced.c:1499
+#: daemons/fenced/pacemaker-fenced.c:1488
 msgid ""
 "Advanced use only: The maximum number of times to retry the 'on' command "
 "within the timeout period"
 msgstr "仅高级使用：在超时前重试'on'命令的最大次数"
 
-#: daemons/fenced/pacemaker-fenced.c:1500
+#: daemons/fenced/pacemaker-fenced.c:1489
 msgid ""
 "Some devices do not support multiple connections. Operations may 'fail' if "
 "the device is busy with another task so Pacemaker will automatically retry "
@@ -431,11 +430,11 @@ msgstr ""
 "Pacemaker将自动重试（如果时间允许）。 使用此选项更改Pacemaker在放弃之前重"
 "试'on' 操作的次数."
 
-#: daemons/fenced/pacemaker-fenced.c:1506
+#: daemons/fenced/pacemaker-fenced.c:1495
 msgid "Advanced use only: An alternate command to run instead of 'list'"
 msgstr "仅高级使用：运行替代命令，而不是'list'"
 
-#: daemons/fenced/pacemaker-fenced.c:1507
+#: daemons/fenced/pacemaker-fenced.c:1496
 msgid ""
 "Some devices do not support the standard commands or may provide additional "
 "ones.Use this to specify an alternate, device-specific, command that "
@@ -444,13 +443,13 @@ msgstr ""
 "一些设备不支持标准命令或可能提供其他命令，使用此选项可指定一个该设备特定的替"
 "代命令，用来实现'list'操作。"
 
-#: daemons/fenced/pacemaker-fenced.c:1512
+#: daemons/fenced/pacemaker-fenced.c:1501
 msgid ""
 "Advanced use only: Specify an alternate timeout to use for list actions "
 "instead of stonith-timeout"
 msgstr "仅高级使用：指定用于list 操作的替代超时，而不是stonith-timeout"
 
-#: daemons/fenced/pacemaker-fenced.c:1513
+#: daemons/fenced/pacemaker-fenced.c:1502
 msgid ""
 "Some devices need much more/less time to complete than normal.Use this to "
 "specify an alternate, device-specific, timeout for 'list' actions."
@@ -458,13 +457,13 @@ msgstr ""
 "一些设备需要比正常情况下更多或更少的时间来完成操作，使用此选项指定一个用"
 "于'list'操作的该设备特定的替代超时。"
 
-#: daemons/fenced/pacemaker-fenced.c:1518
+#: daemons/fenced/pacemaker-fenced.c:1507
 msgid ""
 "Advanced use only: The maximum number of times to retry the 'list' command "
 "within the timeout period"
 msgstr "仅高级使用：在超时前重试'list'命令的最大次数"
 
-#: daemons/fenced/pacemaker-fenced.c:1519
+#: daemons/fenced/pacemaker-fenced.c:1508
 msgid ""
 "Some devices do not support multiple connections. Operations may 'fail' if "
 "the device is busy with another task so Pacemaker will automatically retry "
@@ -475,11 +474,11 @@ msgstr ""
 "Pacemaker将自动重试（如果时间允许）。 使用此选项更改Pacemaker在放弃之前重"
 "试'list' 操作的次数."
 
-#: daemons/fenced/pacemaker-fenced.c:1525
+#: daemons/fenced/pacemaker-fenced.c:1514
 msgid "Advanced use only: An alternate command to run instead of 'monitor'"
 msgstr "仅高级使用：运行替代命令，而不是'monitor'"
 
-#: daemons/fenced/pacemaker-fenced.c:1526
+#: daemons/fenced/pacemaker-fenced.c:1515
 msgid ""
 "Some devices do not support the standard commands or may provide additional "
 "ones.Use this to specify an alternate, device-specific, command that "
@@ -488,13 +487,13 @@ msgstr ""
 "一些设备不支持标准命令或可能提供其他命令，使用此选项可指定一个该设备特定的替"
 "代命令，用来实现'monitor'操作。"
 
-#: daemons/fenced/pacemaker-fenced.c:1531
+#: daemons/fenced/pacemaker-fenced.c:1520
 msgid ""
 "Advanced use only: Specify an alternate timeout to use for monitor actions "
 "instead of stonith-timeout"
 msgstr "仅高级使用：指定用于monitor 操作的替代超时，而不是stonith-timeout"
 
-#: daemons/fenced/pacemaker-fenced.c:1532
+#: daemons/fenced/pacemaker-fenced.c:1521
 msgid ""
 "Some devices need much more/less time to complete than normal.\n"
 "Use this to specify an alternate, device-specific, timeout for 'monitor' "
@@ -503,13 +502,13 @@ msgstr ""
 "一些设备需要比正常情况下更多或更少的时间来完成操作，使用此选项指定一个用"
 "于'monitor'操作的该设备特定的替代超时。"
 
-#: daemons/fenced/pacemaker-fenced.c:1537
+#: daemons/fenced/pacemaker-fenced.c:1526
 msgid ""
 "Advanced use only: The maximum number of times to retry the 'monitor' "
 "command within the timeout period"
 msgstr "仅高级使用：在超时前重试'monitor'命令的最大次数"
 
-#: daemons/fenced/pacemaker-fenced.c:1538
+#: daemons/fenced/pacemaker-fenced.c:1527
 msgid ""
 "Some devices do not support multiple connections. Operations may 'fail' if "
 "the device is busy with another task so Pacemaker will automatically retry "
@@ -520,11 +519,11 @@ msgstr ""
 "Pacemaker将自动重试（如果时间允许）。 使用此选项更改Pacemaker在放弃之前重"
 "试'monitor' 操作的次数."
 
-#: daemons/fenced/pacemaker-fenced.c:1544
+#: daemons/fenced/pacemaker-fenced.c:1533
 msgid "Advanced use only: An alternate command to run instead of 'status'"
 msgstr "仅高级使用：运行替代命令，而不是'status'"
 
-#: daemons/fenced/pacemaker-fenced.c:1545
+#: daemons/fenced/pacemaker-fenced.c:1534
 msgid ""
 "Some devices do not support the standard commands or may provide additional "
 "ones.Use this to specify an alternate, device-specific, command that "
@@ -533,13 +532,13 @@ msgstr ""
 "一些设备不支持标准命令或可能提供其他命令，使用此选项可指定一个该设备特定的替"
 "代命令，用来实现'status'操作。"
 
-#: daemons/fenced/pacemaker-fenced.c:1550
+#: daemons/fenced/pacemaker-fenced.c:1539
 msgid ""
 "Advanced use only: Specify an alternate timeout to use for status actions "
 "instead of stonith-timeout"
 msgstr "仅高级使用：指定用于status 操作的替代超时，而不是stonith-timeout"
 
-#: daemons/fenced/pacemaker-fenced.c:1551
+#: daemons/fenced/pacemaker-fenced.c:1540
 msgid ""
 "Some devices need much more/less time to complete than normal.Use this to "
 "specify an alternate, device-specific, timeout for 'status' actions."
@@ -547,13 +546,13 @@ msgstr ""
 "一些设备需要比正常情况下更多或更少的时间来完成操作，使用此选项指定一个用"
 "于'status'操作的该设备特定的替代超时"
 
-#: daemons/fenced/pacemaker-fenced.c:1556
+#: daemons/fenced/pacemaker-fenced.c:1545
 msgid ""
 "Advanced use only: The maximum number of times to retry the 'status' command "
 "within the timeout period"
 msgstr "仅高级使用：在超时前重试'status'命令的最大次数"
 
-#: daemons/fenced/pacemaker-fenced.c:1557
+#: daemons/fenced/pacemaker-fenced.c:1546
 msgid ""
 "Some devices do not support multiple connections. Operations may 'fail' if "
 "the device is busy with another task so Pacemaker will automatically retry "
@@ -564,11 +563,11 @@ msgstr ""
 "Pacemaker将自动重试（如果时间允许）。 使用此选项更改Pacemaker在放弃之前重"
 "试'status' 操作的次数."
 
-#: daemons/fenced/pacemaker-fenced.c:1566
+#: daemons/fenced/pacemaker-fenced.c:1555
 msgid "Instance attributes available for all \"stonith\"-class resources"
 msgstr " 可用于所有stonith类资源的实例属性"
 
-#: daemons/fenced/pacemaker-fenced.c:1568
+#: daemons/fenced/pacemaker-fenced.c:1557
 msgid ""
 "Instance attributes available for all \"stonith\"-class resources and used "
 "by Pacemaker's fence daemon, formerly known as stonithd"
@@ -597,11 +596,11 @@ msgstr ""
 msgid "  Allowed values: "
 msgstr " 允许的值: "
 
-#: lib/common/cmdline.c:71
+#: lib/common/cmdline.c:70
 msgid "Display software version and exit"
 msgstr "显示软件版本信息"
 
-#: lib/common/cmdline.c:74
+#: lib/common/cmdline.c:73
 msgid "Increase debug output (may be specified multiple times)"
 msgstr "显示更多调试信息（可多次指定）"
 
@@ -858,17 +857,17 @@ msgstr "为节点健康属性值为“red”所使用的分数"
 msgid "How the cluster should allocate resources to nodes"
 msgstr "群集应该如何分配资源到节点"
 
-#: tools/crm_resource.c:257
+#: tools/crm_resource.c:258
 #, c-format
 msgid "Aborting because no messages received in %d seconds"
 msgstr "中止，因为在%d秒内没有接收到消息"
 
-#: tools/crm_resource.c:908
+#: tools/crm_resource.c:909
 #, c-format
 msgid "Invalid check level setting: %s"
 msgstr "无效的检查级别设置：%s"
 
-#: tools/crm_resource.c:992
+#: tools/crm_resource.c:993
 #, c-format
 msgid ""
 "Resource '%s' not moved: active in %d locations (promoted in %d).\n"
@@ -880,7 +879,7 @@ msgstr ""
 "若要阻止'%s'在特定位置运行，请指定一个节点。若要防止'%s'在指定位置升级，指定"
 "一个节点并使用--promoted选项"
 
-#: tools/crm_resource.c:1003
+#: tools/crm_resource.c:1004
 #, c-format
 msgid ""
 "Resource '%s' not moved: active in %d locations.\n"
@@ -889,147 +888,147 @@ msgstr ""
 "资源%s未移动:在%d个位置运行\n"
 "若要防止'%s'运行在特定位置，指定一个节点"
 
-#: tools/crm_resource.c:1078
+#: tools/crm_resource.c:1079
 #, c-format
 msgid "Could not get modified CIB: %s\n"
 msgstr "无法获得修改的CIB：%s\n"
 
-#: tools/crm_resource.c:1112
+#: tools/crm_resource.c:1113
 msgid "You need to specify a resource type with -t"
 msgstr "需要使用-t指定资源类型"
 
-#: tools/crm_resource.c:1155
+#: tools/crm_resource.c:1156
 #, c-format
 msgid "No agents found for standard '%s'"
 msgstr "没有发现指定的'%s'标准代理"
 
-#: tools/crm_resource.c:1158
+#: tools/crm_resource.c:1159
 #, fuzzy, c-format
 msgid "No agents found for standard '%s' and provider '%s'"
 msgstr "没有发现指定的标准%s和提供者%S的资源代理"
 
-#: tools/crm_resource.c:1225
+#: tools/crm_resource.c:1226
 #, c-format
 msgid "No %s found for %s"
 msgstr "没有发现%s符合%s"
 
-#: tools/crm_resource.c:1230
+#: tools/crm_resource.c:1231
 #, c-format
 msgid "No %s found"
 msgstr "没有发现%s"
 
-#: tools/crm_resource.c:1290
+#: tools/crm_resource.c:1291
 #, c-format
 msgid "No cluster connection to Pacemaker Remote node %s detected"
 msgstr "未检测到至pacemaker远程节点%s的集群连接"
 
-#: tools/crm_resource.c:1351
+#: tools/crm_resource.c:1352
 msgid "Must specify -t with resource type"
 msgstr "需要使用-t指定资源类型"
 
-#: tools/crm_resource.c:1357
+#: tools/crm_resource.c:1358
 msgid "Must supply -v with new value"
 msgstr "必须使用-v指定新值"
 
-#: tools/crm_resource.c:1389
+#: tools/crm_resource.c:1390
 msgid "Could not create executor connection"
 msgstr "无法创建到pacemaker-execd守护进程的连接"
 
-#: tools/crm_resource.c:1414
+#: tools/crm_resource.c:1415
 #, fuzzy, c-format
 msgid "Metadata query for %s failed: %s"
 msgstr "，查询%s的元数据失败: %s\n"
 
-#: tools/crm_resource.c:1420
+#: tools/crm_resource.c:1421
 #, c-format
 msgid "'%s' is not a valid agent specification"
 msgstr "'%s' 是一个无效的代理"
 
-#: tools/crm_resource.c:1433
+#: tools/crm_resource.c:1434
 msgid "--resource cannot be used with --class, --agent, and --provider"
 msgstr "--resource 不能与 --class, --agent, --provider一起使用"
 
-#: tools/crm_resource.c:1438
+#: tools/crm_resource.c:1439
 msgid ""
 "--class, --agent, and --provider can only be used with --validate and --"
 "force-*"
 msgstr "--class, --agent和--provider只能被用于--validate和--force-*"
 
-#: tools/crm_resource.c:1447
+#: tools/crm_resource.c:1448
 msgid "stonith does not support providers"
 msgstr "stonith 不支持提供者"
 
-#: tools/crm_resource.c:1451
+#: tools/crm_resource.c:1452
 #, c-format
 msgid "%s is not a known stonith agent"
 msgstr "%s 不是一个已知stonith代理"
 
-#: tools/crm_resource.c:1456
+#: tools/crm_resource.c:1457
 #, c-format
 msgid "%s:%s:%s is not a known resource"
 msgstr "%s:%s:%s 不是一个已知资源"
 
-#: tools/crm_resource.c:1570
+#: tools/crm_resource.c:1571
 #, c-format
 msgid "Error creating output format %s: %s"
 msgstr "创建输出格式错误 %s:%s"
 
-#: tools/crm_resource.c:1597
+#: tools/crm_resource.c:1598
 msgid "--expired requires --clear or -U"
 msgstr "--expired需要和--clear或-U一起使用"
 
-#: tools/crm_resource.c:1614
+#: tools/crm_resource.c:1615
 #, c-format
 msgid "Error parsing '%s' as a name=value pair"
 msgstr "'%s'解析错误，格式为name=value"
 
-#: tools/crm_resource.c:1711
+#: tools/crm_resource.c:1712
 msgid "Must supply a resource id with -r"
 msgstr "必须使用-r指定资源id"
 
-#: tools/crm_resource.c:1717
+#: tools/crm_resource.c:1718
 msgid "Must supply a node name with -N"
 msgstr "必须使用-N指定节点名称"
 
-#: tools/crm_resource.c:1741
+#: tools/crm_resource.c:1742
 msgid "Could not create CIB connection"
 msgstr "无法创建到CIB的连接"
 
-#: tools/crm_resource.c:1749
+#: tools/crm_resource.c:1750
 #, c-format
 msgid "Could not connect to the CIB: %s"
 msgstr "不能连接到CIB：%s"
 
-#: tools/crm_resource.c:1770
+#: tools/crm_resource.c:1771
 #, c-format
 msgid "Resource '%s' not found"
 msgstr "没有发现'%s'资源"
 
-#: tools/crm_resource.c:1782
+#: tools/crm_resource.c:1783
 #, c-format
 msgid "Cannot operate on clone resource instance '%s'"
 msgstr "不能操作克隆资源实例'%s'"
 
-#: tools/crm_resource.c:1794
+#: tools/crm_resource.c:1795
 #, c-format
 msgid "Node '%s' not found"
 msgstr "没有发现%s节点"
 
-#: tools/crm_resource.c:1805 tools/crm_resource.c:1814
+#: tools/crm_resource.c:1806 tools/crm_resource.c:1815
 #, c-format
 msgid "Error connecting to the controller: %s"
 msgstr "连接到控制器错误：%s"
 
-#: tools/crm_resource.c:2050
+#: tools/crm_resource.c:2051
 msgid "You need to supply a value with the -v option"
 msgstr "需要使用-v选项提供一个值"
 
-#: tools/crm_resource.c:2105
+#: tools/crm_resource.c:2106
 #, c-format
 msgid "Unimplemented command: %d"
 msgstr "无效的命令：%d"
 
-#: tools/crm_resource.c:2139
+#: tools/crm_resource.c:2140
 #, c-format
 msgid "Error performing operation: %s"
 msgstr "执行操作错误：%s"
