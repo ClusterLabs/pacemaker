@@ -261,7 +261,7 @@ pcmk__probe_rsc_on_node(pe_resource_t *rsc, pe_node_t *node)
     }
 
     if (!pcmk_is_set(probe->flags, pe_action_runnable)
-        && (rsc->running_on == NULL)) {
+        && (top->running_on == NULL)) {
         /* Prevent the parent from starting if the resource can't, but don't
          * cause the parent to stop if already active.
          */
