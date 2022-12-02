@@ -1311,11 +1311,14 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         }
     }
 
-    /* Always write to disk for successful replace ops. This also negates the
-     * need to detect ordering changes.
+    /* Always write to disk for successful replace and upgrade ops. This also
+     * negates the need to detect ordering changes.
      */
     if ((rc == pcmk_ok)
-        && pcmk__str_eq(PCMK__CIB_REQUEST_REPLACE, op, pcmk__str_none)) {
+        && pcmk__str_any_of(op,
+                            PCMK__CIB_REQUEST_REPLACE,
+                            PCMK__CIB_REQUEST_UPGRADE,
+                            NULL)) {
         config_changed = TRUE;
     }
 
