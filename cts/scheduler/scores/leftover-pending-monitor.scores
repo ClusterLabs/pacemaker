@@ -1,0 +1,28 @@
+
+pcmk__clone_allocate: promotable-1 allocation score on node-1: 0
+pcmk__clone_allocate: promotable-1 allocation score on node-2: 0
+pcmk__clone_allocate: promotable-1 allocation score on node-3: 0
+pcmk__clone_allocate: stateful-1:0 allocation score on node-1: 0
+pcmk__clone_allocate: stateful-1:0 allocation score on node-2: 0
+pcmk__clone_allocate: stateful-1:0 allocation score on node-3: 0
+pcmk__clone_allocate: stateful-1:1 allocation score on node-1: 0
+pcmk__clone_allocate: stateful-1:1 allocation score on node-2: 0
+pcmk__clone_allocate: stateful-1:1 allocation score on node-3: 11
+pcmk__clone_allocate: stateful-1:2 allocation score on node-1: 0
+pcmk__clone_allocate: stateful-1:2 allocation score on node-2: 0
+pcmk__clone_allocate: stateful-1:2 allocation score on node-3: 10
+pcmk__primitive_assign: st-sbd allocation score on node-1: 1
+pcmk__primitive_assign: st-sbd allocation score on node-2: 0
+pcmk__primitive_assign: st-sbd allocation score on node-3: 0
+pcmk__primitive_assign: stateful-1:0 allocation score on node-1: -INFINITY
+pcmk__primitive_assign: stateful-1:0 allocation score on node-2: -INFINITY
+pcmk__primitive_assign: stateful-1:0 allocation score on node-3: -INFINITY
+pcmk__primitive_assign: stateful-1:1 allocation score on node-1: 0
+pcmk__primitive_assign: stateful-1:1 allocation score on node-2: -INFINITY
+pcmk__primitive_assign: stateful-1:1 allocation score on node-3: 11
+pcmk__primitive_assign: stateful-1:2 allocation score on node-1: 0
+pcmk__primitive_assign: stateful-1:2 allocation score on node-2: -INFINITY
+pcmk__primitive_assign: stateful-1:2 allocation score on node-3: -INFINITY
+stateful-1:0 promotion score on none: 0
+stateful-1:1 promotion score on node-3: INFINITY
+stateful-1:2 promotion score on node-1: -1

@@ -1,0 +1,81 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <rsc_op id="8" operation="stop" operation_key="stateful-1_stop_0" internal_operation_key="stateful-1:1_stop_0" on_node="node-3" on_node_uuid="3">
+        <primitive id="stateful-1" long-id="stateful-1:1" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="node-3" CRM_meta_on_node_uuid="3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="7" operation="demote" operation_key="stateful-1_demote_0" internal_operation_key="stateful-1:1_demote_0" on_node="node-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="14" operation="stop" operation_key="promotable-1_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="7" operation="demote" operation_key="stateful-1_demote_0" internal_operation_key="stateful-1:1_demote_0" on_node="node-3" on_node_uuid="3">
+        <primitive id="stateful-1" long-id="stateful-1:1" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="node-3" CRM_meta_on_node_uuid="3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="18" operation="demote" operation_key="promotable-1_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2" priority="1000000">
+    <action_set>
+      <pseudo_event id="19" operation="demoted" operation_key="promotable-1_demoted_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="7" operation="demote" operation_key="stateful-1_demote_0" internal_operation_key="stateful-1:1_demote_0" on_node="node-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="18" operation="demote" operation_key="promotable-1_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <pseudo_event id="18" operation="demote" operation_key="promotable-1_demote_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="4" priority="1000000">
+    <action_set>
+      <pseudo_event id="15" operation="stopped" operation_key="promotable-1_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="8" operation="stop" operation_key="stateful-1_stop_0" internal_operation_key="stateful-1:1_stop_0" on_node="node-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="14" operation="stop" operation_key="promotable-1_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <pseudo_event id="14" operation="stop" operation_key="promotable-1_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="19" operation="demoted" operation_key="promotable-1_demoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>
