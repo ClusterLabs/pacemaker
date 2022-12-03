@@ -236,7 +236,6 @@ xml_subprocess_output(pcmk__output_t *out, int exit_status,
         crm_xml_add(child_node, "source", "stderr");
     }
 
-    pcmk__output_xml_add_node(out, node);
     free(rc_as_str);
 }
 
