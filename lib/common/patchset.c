@@ -29,56 +29,9 @@
 static xmlNode *subtract_xml_comment(xmlNode *parent, xmlNode *left,
                                      xmlNode *right, gboolean *changed);
 
-/*
-<diff format="2.0">
-  <version>
-    <source admin_epoch="1" epoch="2" num_updates="3"/>
-    <target admin_epoch="1" epoch="3" num_updates="0"/>
-  </version>
-  <change operation="add" xpath="/cib/configuration/nodes">
-    <node id="node2" uname="node2" description="foo"/>
-  </change>
-  <change operation="add" xpath="/cib/configuration/nodes/node[node2]">
-    <instance_attributes id="nodes-node"><!-- NOTE: can be a full tree -->
-      <nvpair id="nodes-node2-ram" name="ram" value="1024M"/>
-    </instance_attributes>
-  </change>
-  <change operation="update" xpath="/cib/configuration/nodes[@id='node2']">
-    <change-list>
-      <change-attr operation="set" name="type" value="member"/>
-      <change-attr operation="unset" name="description"/>
-    </change-list>
-    <change-result>
-      <node id="node2" uname="node2" type="member"/><!-- NOTE: not recursive -->
-    </change-result>
-  </change>
-  <change operation="delete" xpath="/cib/configuration/nodes/node[@id='node3'] /">
-  <change operation="update" xpath="/cib/configuration/resources/group[@id='g1']">
-    <change-list>
-      <change-attr operation="set" name="description" value="some garbage here"/>
-    </change-list>
-    <change-result>
-      <group id="g1" description="some garbage here"/><!-- NOTE: not recursive -->
-    </change-result>
-  </change>
-  <change operation="update" xpath="/cib/status/node_state[@id='node2]/lrm[@id='node2']/lrm_resources/lrm_resource[@id='Fence']">
-    <change-list>
-      <change-attr operation="set" name="oper" value="member"/>
-      <change-attr operation="set" name="operation_key" value="Fence_start_0"/>
-      <change-attr operation="set" name="operation" value="start"/>
-      <change-attr operation="set" name="transition-key" value="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"/>
-      <change-attr operation="set" name="transition-magic" value="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"/>
-      <change-attr operation="set" name="call-id" value="2"/>
-      <change-attr operation="set" name="rc-code" value="0"/>
-    </change-list>
-    <change-result>
-      <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate"  transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-    </change-result>
-  </change>
-</diff>
+/* Add changes for specified XML to patchset.
+ * For patchset format, refer to diff schema.
  */
-
-// Add changes for specified XML to patchset
 static void
 add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
 {
