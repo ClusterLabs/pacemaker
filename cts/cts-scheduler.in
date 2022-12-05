@@ -1057,6 +1057,7 @@ class CrmExit(object):
     ERROR                =    1
     NOT_INSTALLED        =    5
     NOINPUT              =   66
+    OSFILE               =   72
     CANTCREAT            =   73
 
 
@@ -1573,6 +1574,11 @@ class CtsScheduler(object):
 
     def run(self):
         """ Run test(s) as specified """
+
+        # Check for pre-existing core so we don't think it's from us
+        if os.path.isfile("core"):
+            self._failed("Can't run with core file present in %s" % self.test_home)
+            return CrmExit.OSFILE
 
         self._print_summary()
 
