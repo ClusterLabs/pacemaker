@@ -3412,6 +3412,59 @@ Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed na
 </cib>
 =#=#=#= End test: Delete resource child meta attribute - OK (0) =#=#=#=
 * Passed: crm_resource   - Delete resource child meta attribute
+=#=#=#= Begin test: Create the dummy-group resource group =#=#=#=
+=#=#=#= Current cib after: Create the dummy-group resource group =#=#=#=
+<cib epoch="44" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
+      </node>
+      <node id="node2" uname="node2"/>
+      <node id="node3" uname="node3"/>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+      <primitive id="Fence" class="stonith" type="fence_true"/>
+      <clone id="test-clone">
+        <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
+          <meta_attributes id="test-primitive-meta_attributes"/>
+        </primitive>
+        <meta_attributes id="test-clone-meta_attributes">
+          <nvpair id="test-clone-meta_attributes-is-managed" name="is-managed" value="true"/>
+        </meta_attributes>
+      </clone>
+      <group id="dummy-group">
+        <primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>
+      </group>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Create the dummy-group resource group - OK (0) =#=#=#=
+* Passed: cibadmin       - Create the dummy-group resource group
 =#=#=#= Begin test: Create a resource meta attribute in dummy1 =#=#=#=
 Set 'dummy1' option: id=dummy1-meta_attributes-is-managed set=dummy1-meta_attributes name=is-managed value=true
 =#=#=#= Current cib after: Create a resource meta attribute in dummy1 =#=#=#=
@@ -3532,6 +3585,55 @@ Set 'dummy-group' option: id=dummy-group-meta_attributes-is-managed set=dummy-gr
 </cib>
 =#=#=#= End test: Create a resource meta attribute in dummy-group - OK (0) =#=#=#=
 * Passed: crm_resource   - Create a resource meta attribute in dummy-group
+=#=#=#= Begin test: Delete the dummy-group resource group =#=#=#=
+=#=#=#= Current cib after: Delete the dummy-group resource group =#=#=#=
+<cib epoch="48" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
+      </node>
+      <node id="node2" uname="node2"/>
+      <node id="node3" uname="node3"/>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+      <primitive id="Fence" class="stonith" type="fence_true"/>
+      <clone id="test-clone">
+        <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
+          <meta_attributes id="test-primitive-meta_attributes"/>
+        </primitive>
+        <meta_attributes id="test-clone-meta_attributes">
+          <nvpair id="test-clone-meta_attributes-is-managed" name="is-managed" value="true"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Delete the dummy-group resource group - OK (0) =#=#=#=
+* Passed: cibadmin       - Delete the dummy-group resource group
 =#=#=#= Begin test: Specify a lifetime when moving a resource =#=#=#=
 Migration will take effect until:
 =#=#=#= Current cib after: Specify a lifetime when moving a resource =#=#=#=
