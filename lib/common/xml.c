@@ -895,6 +895,7 @@ copy_xml(xmlNode * src)
     xmlDoc *doc = xmlNewDoc((pcmkXmlStr) "1.0");
     xmlNode *copy = xmlDocCopyNode(src, doc, 1);
 
+    CRM_ASSERT(copy != NULL);
     xmlDocSetRootElement(doc, copy);
     xmlSetTreeDoc(copy, doc);
     return copy;
