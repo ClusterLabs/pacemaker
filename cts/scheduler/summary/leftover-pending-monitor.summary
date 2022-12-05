@@ -12,16 +12,13 @@ Current cluster status:
       * Stopped: [ node-1 node-2 ]
 
 Transition Summary:
-  * Stop       stateful-1:1     ( Promoted node-3 )  due to unrunnable stateful-1:0 monitor
-  * Start      stateful-1:2     (          node-1 )  due to unrunnable stateful-1:0 monitor (blocked)
+  * Start      stateful-1:2     ( node-1 )
 
 Executing Cluster Transition:
-  * Pseudo action:   promotable-1_demote_0
-  * Resource action: stateful-1      demote on node-3
-  * Pseudo action:   promotable-1_demoted_0
-  * Pseudo action:   promotable-1_stop_0
-  * Resource action: stateful-1      stop on node-3
-  * Pseudo action:   promotable-1_stopped_0
+  * Pseudo action:   promotable-1_start_0
+  * Resource action: stateful-1      start on node-1
+  * Pseudo action:   promotable-1_running_0
+  * Resource action: stateful-1      monitor=5000 on node-1
 Using the original execution date of: 2022-12-02 17:04:52Z
 
 Revised Cluster Status:
@@ -32,4 +29,6 @@ Revised Cluster Status:
   * Full List of Resources:
     * st-sbd	(stonith:external/sbd):	 Started node-1
     * Clone Set: promotable-1 [stateful-1] (promotable):
-      * Stopped: [ node-1 node-2 node-3 ]
+      * Promoted: [ node-3 ]
+      * Unpromoted: [ node-1 ]
+      * Stopped: [ node-2 ]
