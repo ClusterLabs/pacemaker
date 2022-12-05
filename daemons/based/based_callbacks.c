@@ -1259,55 +1259,67 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
                   crm_log_xml_err(request, "bad op"));
     }
 
-    if (rc == pcmk_ok) {
-        ping_modified_since = TRUE;
-        if (call_options & cib_inhibit_bcast) {
-            /* skip */
-            crm_trace("Skipping update: inhibit broadcast");
-            manage_counters = FALSE;
-        }
+    ping_modified_since = TRUE;
+    if (pcmk_is_set(call_options, cib_inhibit_bcast)) {
+        crm_trace("Skipping update: inhibit broadcast");
+        manage_counters = FALSE;
+    }
 
-        if (!pcmk_is_set(call_options, cib_dryrun)
-            && pcmk__str_eq(section, XML_CIB_TAG_STATUS, pcmk__str_casei)) {
-            /* Copying large CIBs accounts for a huge percentage of our CIB usage */
-            cib__set_call_options(call_options, "call", cib_zero_copy);
-        } else {
-            cib__clear_call_options(call_options, "call", cib_zero_copy);
-        }
+    if (!pcmk_is_set(call_options, cib_dryrun)
+        && pcmk__str_eq(section, XML_CIB_TAG_STATUS, pcmk__str_casei)) {
+        // Copying large CIBs accounts for a huge percentage of our CIB usage
+        cib__set_call_options(call_options, "call", cib_zero_copy);
+    } else {
+        cib__clear_call_options(call_options, "call", cib_zero_copy);
+    }
 
-        /* Calculate the hash value of the section before the change. */
-        if (pcmk__str_eq(PCMK__CIB_REQUEST_REPLACE, op, pcmk__str_none)) {
-            current_nodes_digest = calculate_section_digest("//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_NODES, current_cib);
-            current_alerts_digest = calculate_section_digest("//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_ALERTS, current_cib);
-            current_status_digest = calculate_section_digest("//" XML_TAG_CIB "/" XML_CIB_TAG_STATUS, current_cib);
-            crm_trace("current-digest %s:%s:%s", current_nodes_digest, current_alerts_digest, current_status_digest);
-        }
+#define XPATH_CONFIG    "//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION
+#define XPATH_NODES     XPATH_CONFIG "/" XML_CIB_TAG_NODES
+#define XPATH_ALERTS    XPATH_CONFIG "/" XML_CIB_TAG_ALERTS
+#define XPATH_STATUS    "//" XML_TAG_CIB "/" XML_CIB_TAG_STATUS
 
-        /* result_cib must not be modified after cib_perform_op() returns */
-        rc = cib_perform_op(op, call_options, cib_op_func(call_type), FALSE,
-                            section, request, input, manage_counters, &config_changed,
-                            current_cib, &result_cib, cib_diff, &output);
+    // Calculate the hash value of the section before the change
+    if (pcmk__str_eq(PCMK__CIB_REQUEST_REPLACE, op, pcmk__str_none)) {
+        current_nodes_digest = calculate_section_digest(XPATH_NODES,
+                                                        current_cib);
+        current_alerts_digest = calculate_section_digest(XPATH_ALERTS,
+                                                         current_cib);
+        current_status_digest = calculate_section_digest(XPATH_STATUS,
+                                                         current_cib);
+        crm_trace("current-digest %s:%s:%s", current_nodes_digest,
+                  current_alerts_digest, current_status_digest);
+    }
 
-        if (manage_counters == FALSE) {
-            int format = 1;
-            /* Legacy code
-             * If the diff is NULL at this point, it's because nothing changed
-             */
-            if (*cib_diff) {
-                crm_element_value_int(*cib_diff, "format", &format);
-            }
+    // result_cib must not be modified after cib_perform_op() returns
+    rc = cib_perform_op(op, call_options, cib_op_func(call_type), FALSE,
+                        section, request, input, manage_counters,
+                        &config_changed, current_cib, &result_cib, cib_diff,
+                        &output);
 
-            if (format == 1) {
-                config_changed = cib_config_changed(NULL, NULL, cib_diff);
-            }
-        }
+    if (!manage_counters) {
+        int format = 1;
 
-        /* Always write to disk for replace ops,
-         * this also negates the need to detect ordering changes
+        /* Legacy code
+         * If the diff is NULL at this point, it's because nothing changed
          */
-        if (pcmk__str_eq(PCMK__CIB_REQUEST_REPLACE, op, pcmk__str_none)) {
-            config_changed = TRUE;
+        if (*cib_diff != NULL) {
+            crm_element_value_int(*cib_diff, "format", &format);
         }
+
+        if (format == 1) {
+            config_changed = cib_config_changed(NULL, NULL, cib_diff);
+        }
+    }
+
+    /* Always write to disk for successful replace and upgrade ops. This also
+     * negates the need to detect ordering changes.
+     */
+    if ((rc == pcmk_ok)
+        && pcmk__str_any_of(op,
+                            PCMK__CIB_REQUEST_REPLACE,
+                            PCMK__CIB_REQUEST_UPGRADE,
+                            NULL)) {
+        config_changed = TRUE;
     }
 
     if (rc == pcmk_ok && !pcmk_is_set(call_options, cib_dryrun)) {
@@ -1332,10 +1344,14 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
             char *result_status_digest = NULL;
 
             /* Calculate the hash value of the changed section. */
-            result_nodes_digest = calculate_section_digest("//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_NODES, result_cib);
-            result_alerts_digest = calculate_section_digest("//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_ALERTS, result_cib);
-            result_status_digest = calculate_section_digest("//" XML_TAG_CIB "/" XML_CIB_TAG_STATUS, result_cib);
-            crm_trace("result-digest %s:%s:%s", result_nodes_digest, result_alerts_digest, result_status_digest);
+            result_nodes_digest = calculate_section_digest(XPATH_NODES,
+                                                           result_cib);
+            result_alerts_digest = calculate_section_digest(XPATH_ALERTS,
+                                                            result_cib);
+            result_status_digest = calculate_section_digest(XPATH_STATUS,
+                                                            result_cib);
+            crm_trace("result-digest %s:%s:%s", result_nodes_digest,
+                      result_alerts_digest, result_status_digest);
 
             if (pcmk__str_eq(current_nodes_digest, result_nodes_digest,
                              pcmk__str_none)) {

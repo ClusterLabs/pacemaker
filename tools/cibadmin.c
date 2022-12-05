@@ -808,6 +808,7 @@ main(int argc, char **argv)
                                          options.cmd_options) == pcmk_ok) {
                     update_validation(&obj, &version, 0, TRUE, FALSE);
                 }
+                free_xml(obj);
 
             } else if (output) {
                 validate_xml_verbose(output);
