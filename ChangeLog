@@ -1,30 +1,5 @@
-* Mon Nov 21 2022 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.5-rc3
-- Changesets: 10
-- Diff: 3 files changed, 87 insertions(+), 43 deletions(-)
-
-- Fixes since Pacemaker-2.1.5-rc2
-  + Increment fail counts properly (regression introduced in 2.1.5-rc1)
-  + Allow building RPMs from source distribution
-
-* Mon Nov 14 2022 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.5-rc2
-- Changesets: 39
-- Diff: 23 files changed, 388 insertions(+), 301 deletions(-)
-
-- Features added since Pacemaker-2.1.5-rc1
-  + tools: crm_resource --constraints now accepts --recursive (equivalent to
-           --stack) and --force (to show constraints for a group member
-	   instead of the group)
-
-- Fixes since Pacemaker-2.1.5-rc1
-  + tools: fix setting utilization attributes with crm_attribute
-    (regression introduced in 2.1.3)
-  + scheduler: consider roles when blocking colocation dependents
-  + scheduler: prioritize group colocations properly
-  + scheduler: properly consider effect of "with group" colocations
-
-* Thu Oct 20 2022 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.5-rc1
-- Changesets: 1225
-- Diff: 447 files changed, 33257 insertions(+), 21374 deletions(-)
+* Wed Dec 7 2022 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.5
+- 1287 commits with 447 files changed, 33546 insertions(+), 21518 deletions(-)
 
 - Features added since Pacemaker-2.1.4
   + CIB: access control lists (ACLs) for groups are supported
@@ -38,6 +13,7 @@
          (true is default, and resource sets should be used instead of false)
   + build: support building with -D_TIME_BITS=64
   + build: support building with compilers that are strict about void
+  + build: allow building RPMs from source distribution
   + fencer: deprecate stand-alone mode
   + agents: ClusterMon, controld, HealthCPU, ifspeed, and SysInfo agents support
             OCF 1.1 standard
@@ -52,6 +28,9 @@
   + tools: crm_mon --show-detail displays the CRM feature set of each node
            and makes display of fencing actions more technical
   + tools: crm_resource --why checks node health
+  + tools: crm_resource --constraints now accepts --recursive (equivalent to
+           --stack) and --force (to show constraints for a group member
+	   instead of the group)
 
 - Fixes since Pacemaker-2.1.4
   + tools: crm_error does not print spurious output when given a negative
@@ -66,7 +45,7 @@
                 (regression introduced in 2.1.3)
   + fencing: allow fence devices to be registered if local node is not in CIB
              (regression introduced in 2.1.3)
-  + tools: crm_mon --one-shot succeeds even if pacemaker is shutting down
+  + tools: crm_mon --one-shot should succeed even if pacemaker is shutting down
            (regression introduced in 2.1.3)
   + tools: avoid memory leak in crm_mon (regression introduced in 2.1.3)
   + tools: crm_attribute --quiet outputs nothing instead of "(null)" if
@@ -82,6 +61,9 @@
   + fencing: ignore node that executed action when checking whether actions
              are equivalent
   + scheduler,controller: calculate secure digest consistently
+  + scheduler: consider roles when blocking colocation dependents
+  + scheduler: prioritize group colocations properly
+  + scheduler: properly consider effect of "with group" colocations
   + scheduler: handle corner cases in live migrations
   + scheduler: avoid perpetual moving of bundle containers in certain situations
   + scheduler: properly calculate resource parameter digests without history
