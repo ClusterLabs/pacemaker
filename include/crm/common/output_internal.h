@@ -769,14 +769,14 @@ G_GNUC_NULL_TERMINATED;
 
 /*!
  * \internal
- * \brief Add the given node as a child of the current list parent.  This is
- *        used when implementing custom message functions.
+ * \brief Add a copy of the given node as a child of the current list parent.
+ *        This is used when implementing custom message functions.
  *
  * \param[in,out] out  The output functions structure.
- * \param[in]     node An XML node to be added as a child.
+ * \param[in]     node An XML node to copy as a child.
  */
 void
-pcmk__output_xml_add_node(pcmk__output_t *out, xmlNodePtr node);
+pcmk__output_xml_add_node_copy(pcmk__output_t *out, xmlNodePtr node);
 
 /*!
  * \internal
