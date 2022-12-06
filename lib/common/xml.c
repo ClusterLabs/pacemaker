@@ -428,16 +428,15 @@ xml_log_changes(uint8_t log_level, const char *function, xmlNode * xml)
         pcmk__deleted_xml_t *deleted_obj = gIter->data;
 
         if (deleted_obj->position >= 0) {
-            do_crm_log_alias(log_level, __FILE__, function, __LINE__, "-- %s (%d)",
-                             deleted_obj->path, deleted_obj->position);
+            do_crm_log(log_level, "-- %s (%d)",
+                       deleted_obj->path, deleted_obj->position);
 
         } else {
-            do_crm_log_alias(log_level, __FILE__, function, __LINE__, "-- %s",
-                             deleted_obj->path);
+            do_crm_log(log_level, "-- %s", deleted_obj->path);
         }
     }
 
-    log_data_element(log_level, __FILE__, function, __LINE__, "+ ", xml, 0,
+    log_data_element(log_level, __FILE__, __func__, __LINE__, "+ ", xml, 0,
                      xml_log_option_formatted|xml_log_option_dirty_add);
 }
 
@@ -1521,8 +1520,7 @@ dump_xml_attr(const xmlAttr *attr, int options, GString *buffer)
 
 // Log an XML element or comment (and any children) in a formatted way
 static void
-log_xml_node_and_children(GString *buffer, int log_level, const char *file,
-                          const char *function, int line, const char *prefix,
+log_xml_node_and_children(GString *buffer, int log_level, const char *prefix,
                           const xmlNode *data, int depth, int options)
 {
     const char *name = NULL;
@@ -1592,8 +1590,7 @@ log_xml_node_and_children(GString *buffer, int log_level, const char *file,
             }
         }
 
-        do_crm_log_alias(log_level, file, function, line, "%s %s", prefix,
-                         (const char *) buffer->str);
+        do_crm_log(log_level, "%s %s", prefix, buffer->str);
     }
 
     if(data->type == XML_COMMENT_NODE) {
@@ -1606,10 +1603,11 @@ log_xml_node_and_children(GString *buffer, int log_level, const char *file,
         for (child = pcmk__xml_first_child(data); child != NULL;
              child = pcmk__xml_next(child)) {
 
-            log_xml_node_and_children(buffer, log_level, file, function, line,
-                                      prefix, child, depth + 1,
-                                      options|xml_log_option_open
-                                          |xml_log_option_close);
+            log_xml_node_and_children(buffer, log_level, prefix, child,
+                                      depth + 1,
+                                      options
+                                      |xml_log_option_open
+                                      |xml_log_option_close);
         }
     }
 
@@ -1619,31 +1617,29 @@ log_xml_node_and_children(GString *buffer, int log_level, const char *file,
         insert_prefix(options, buffer, depth);
         pcmk__g_strcat(buffer, "</", name, ">", NULL);
 
-        do_crm_log_alias(log_level, file, function, line, "%s %s", prefix,
-                         (const char *) buffer->str);
+        do_crm_log(log_level, "%s %s", prefix, buffer->str);
     }
 }
 
 // Log an XML element or comment (and any children) in a formatted way
 void
-pcmk__xml_log(int log_level, const char *file, const char *function, int line,
-              const char *prefix, const xmlNode *data, int depth, int options)
+pcmk__xml_log(int log_level, const char *prefix, const xmlNode *data, int depth,
+              int options)
 {
     /* Allocate a buffer once, for log_xml_node_and_children() to truncate and
      * reuse in recursive calls
      */
     GString *buffer = g_string_sized_new(1024);
 
-    log_xml_node_and_children(buffer, log_level, file, function, line, prefix,
-                              data, depth, options);
+    log_xml_node_and_children(buffer, log_level, prefix, data, depth, options);
 
     g_string_free(buffer, TRUE);
 }
 
 // Log XML portions that have been marked as changed
 static void
-log_xml_changes(int log_level, const char *file, const char *function, int line,
-                const char *prefix, const xmlNode *data, int depth, int options)
+log_xml_changes(int log_level, const char *prefix, const xmlNode *data,
+                int depth, int options)
 {
     xml_node_private_t *nodepriv;
     char *prefix_m = NULL;
@@ -1660,9 +1656,11 @@ log_xml_changes(int log_level, const char *file, const char *function, int line,
 
     if (pcmk_all_flags_set(nodepriv->flags, pcmk__xf_dirty|pcmk__xf_created)) {
         /* Continue and log full subtree */
-        pcmk__xml_log(log_level, file, function, line, prefix_m, data, depth,
-                      options|xml_log_option_open|xml_log_option_close
-                          |xml_log_option_children);
+        pcmk__xml_log(log_level, prefix_m, data, depth,
+                      options
+                      |xml_log_option_open
+                      |xml_log_option_close
+                      |xml_log_option_children);
 
     } else if (pcmk_is_set(nodepriv->flags, pcmk__xf_dirty)) {
         int spaces = 0;
@@ -1687,7 +1685,7 @@ log_xml_changes(int log_level, const char *file, const char *function, int line,
             flags = prefix;
         }
 
-        pcmk__xml_log(log_level, file, function, line, flags, data, depth,
+        pcmk__xml_log(log_level, flags, data, depth,
                       options|xml_log_option_open);
 
         for (xmlAttrPtr a = pcmk__xe_first_attr(data); a != NULL; a = a->next) {
@@ -1696,10 +1694,10 @@ log_xml_changes(int log_level, const char *file, const char *function, int line,
             nodepriv = a->_private;
             if (pcmk_is_set(nodepriv->flags, pcmk__xf_deleted)) {
                 const char *value = crm_element_value(data, aname);
+
                 flags = prefix_del;
-                do_crm_log_alias(log_level, file, function, line,
-                                 "%s %*s @%s=%s", flags, spaces, "", aname,
-                                 value);
+                do_crm_log(log_level, "%s %*s @%s=%s",
+                           flags, spaces, "", aname, value);
 
             } else if (pcmk_is_set(nodepriv->flags, pcmk__xf_dirty)) {
                 const char *value = crm_element_value(data, aname);
@@ -1716,9 +1714,8 @@ log_xml_changes(int log_level, const char *file, const char *function, int line,
                 } else {
                     flags = prefix;
                 }
-                do_crm_log_alias(log_level, file, function, line,
-                                 "%s %*s @%s=%s", flags, spaces, "", aname,
-                                 value);
+                do_crm_log(log_level, "%s %*s @%s=%s",
+                           flags, spaces, "", aname, value);
             }
         }
         free(prefix_moved);
@@ -1726,18 +1723,16 @@ log_xml_changes(int log_level, const char *file, const char *function, int line,
 
         for (child = pcmk__xml_first_child(data); child != NULL;
              child = pcmk__xml_next(child)) {
-            log_xml_changes(log_level, file, function, line, prefix, child,
-                            depth + 1, options);
+            log_xml_changes(log_level, prefix, child, depth + 1, options);
         }
 
-        pcmk__xml_log(log_level, file, function, line, prefix, data, depth,
+        pcmk__xml_log(log_level, prefix, data, depth,
                       options|xml_log_option_close);
 
     } else {
         for (child = pcmk__xml_first_child(data); child != NULL;
              child = pcmk__xml_next(child)) {
-            log_xml_changes(log_level, file, function, line, prefix, child,
-                            depth + 1, options);
+            log_xml_changes(log_level, prefix, child, depth + 1, options);
         }
     }
 
@@ -1762,16 +1757,13 @@ log_data_element(int log_level, const char *file, const char *function,
         prefix = "";
     }
 
-    /* Since we use the same file and line, to avoid confusing libqb, we need to use the same format strings */
     if (data == NULL) {
-        do_crm_log_alias(log_level, file, function, line, "%s: %s", prefix,
-                         "No data to dump as XML");
+        do_crm_log(log_level, "%s: %s", prefix, "No data to dump as XML");
         return;
     }
 
     if (pcmk_is_set(options, xml_log_option_dirty_add)) {
-        log_xml_changes(log_level, file, function, line, prefix, data, depth,
-                        options);
+        log_xml_changes(log_level, prefix, data, depth, options);
         return;
     }
 
@@ -1800,9 +1792,11 @@ log_data_element(int log_level, const char *file, const char *function,
             log_data_element(log_level, file, function, line, prefix, a_child, depth + 1, options);
         }
     } else {
-        pcmk__xml_log(log_level, file, function, line, prefix, data, depth,
-                      options|xml_log_option_open|xml_log_option_close
-                          |xml_log_option_children);
+        pcmk__xml_log(log_level, prefix, data, depth,
+                      options
+                      |xml_log_option_open
+                      |xml_log_option_close
+                      |xml_log_option_children);
     }
     free(prefix_m);
 }
