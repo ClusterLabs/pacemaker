@@ -635,7 +635,9 @@ finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, voi
                    "Could not sync CIB from %s in join-%d: %s",
                    sync_from, current_join_id, pcmk_strerror(rc));
 
-        record_failed_sync_node(sync_from, current_join_id);
+        if (rc != -pcmk_err_old_data) {
+            record_failed_sync_node(sync_from, current_join_id);
+        }
 
         /* restart the whole join process */
         register_fsa_error_adv(C_FSA_INTERNAL, I_ELECTION_DC, NULL, NULL,
