@@ -411,16 +411,29 @@ pe_find_resource_with_flags(GList *rsc_list, const char *id, enum pe_find flags)
     return NULL;
 }
 
+/*!
+ * \brief Find a node by name or ID in a list of nodes
+ *
+ * \param[in] nodes      List of nodes (as pe_node_t*)
+ * \param[in] id         If not NULL, ID of node to find
+ * \param[in] node_name  If not NULL, name of node to find
+ *
+ * \return Node from \p nodes that matches \p id if any,
+ *         otherwise node from \p nodes that matches \p uname if any,
+ *         otherwise NULL
+ */
 pe_node_t *
-pe_find_node_any(GList *nodes, const char *id, const char *uname)
+pe_find_node_any(const GList *nodes, const char *id, const char *uname)
 {
-    pe_node_t *match = pe_find_node_id(nodes, id);
+    pe_node_t *match = NULL;
 
-    if (match) {
-        return match;
+    if (id != NULL) {
+        match = pe_find_node_id(nodes, id);
     }
-    crm_trace("Looking up %s via its uname instead", uname);
-    return pe_find_node(nodes, uname);
+    if ((match == NULL) && (uname != NULL)) {
+        match = pe_find_node(nodes, uname);
+    }
+    return match;
 }
 
 /*!

@@ -39,7 +39,8 @@ pe_resource_t *pe_find_resource(GList *rsc_list, const char *id_rh);
 pe_resource_t *pe_find_resource_with_flags(GList *rsc_list, const char *id, enum pe_find flags);
 pe_node_t *pe_find_node(const GList *node_list, const char *node_name);
 pe_node_t *pe_find_node_id(const GList *node_list, const char *id);
-pe_node_t *pe_find_node_any(GList *node_list, const char *id, const char *uname);
+pe_node_t *pe_find_node_any(const GList *node_list, const char *id,
+                            const char *node_name);
 GList *find_operations(const char *rsc, const char *node, gboolean active_filter,
                          pe_working_set_t * data_set);
 int pe_bundle_replicas(const pe_resource_t *rsc);
