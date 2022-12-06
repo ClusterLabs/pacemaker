@@ -423,19 +423,28 @@ pe_find_node_any(GList *nodes, const char *id, const char *uname)
     return pe_find_node(nodes, uname);
 }
 
+/*!
+ * \brief Find a node by ID in a list of nodes
+ *
+ * \param[in] nodes  List of nodes (as pe_node_t*)
+ * \param[in] id     ID of node to find
+ *
+ * \return Node from \p nodes that matches \p id if any, otherwise NULL
+ */
 pe_node_t *
-pe_find_node_id(GList *nodes, const char *id)
+pe_find_node_id(const GList *nodes, const char *id)
 {
-    GList *gIter = nodes;
+    for (const GList *iter = nodes; iter != NULL; iter = iter->next) {
+        pe_node_t *node = (pe_node_t *) iter->data;
 
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *node = (pe_node_t *) gIter->data;
-
-        if (node && pcmk__str_eq(node->details->id, id, pcmk__str_casei)) {
+        /* @TODO Whether node IDs should be considered case-sensitive should
+         * probably depend on the node type, so functionizing the comparison
+         * would be worthwhile
+         */
+        if (pcmk__str_eq(node->details->id, id, pcmk__str_casei)) {
             return node;
         }
     }
-    /* error */
     return NULL;
 }
 
