@@ -266,7 +266,7 @@ services__lsb_agent_exists(const char *agent)
  * \return Standard Pacemaker return code
  */
 int
-services__lsb_prepare(const svc_action_t *op)
+services__lsb_prepare(svc_action_t *op)
 {
     op->opaque->exec = pcmk__full_path(op->agent, PCMK__LSB_INIT_DIR);
     op->opaque->args[0] = strdup(op->opaque->exec);

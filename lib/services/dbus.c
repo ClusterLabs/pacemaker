@@ -397,7 +397,7 @@ pcmk_dbus_find_error(const DBusPendingCall *pending, DBusMessage *reply,
  * \internal
  * \brief Send a DBus request and wait for the reply
  *
- * \param[in]     msg         DBus request to send
+ * \param[in,out] msg         DBus request to send
  * \param[in,out] connection  DBus connection to use
  * \param[out]    error       If non-NULL, will be set to error, if any
  * \param[in]     timeout     Timeout to use for request
@@ -680,7 +680,7 @@ async_query_result_cb(DBusPendingCall *pending, void *user_data)
  * \param[in]     name        Name of property to query
  * \param[in]     callback    If not NULL, perform query asynchronously and call
  *                            this function when query completes
- * \param[in]     userdata    Caller-provided data to provide to \p callback
+ * \param[in,out] userdata    Caller-provided data to provide to \p callback
  * \param[out]    pending     If \p callback is not NULL, this will be set to
  *                            handle for the reply (or NULL on error)
  * \param[in]     timeout     Abort query if it takes longer than this (ms)
