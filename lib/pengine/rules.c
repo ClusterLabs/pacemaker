@@ -553,8 +553,17 @@ pe_unpack_nvpairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
                     always_first, overwrite, next_change);
 }
 
+/*!
+ * \brief Expand any regular expression submatches (%0-%9) in a string
+ *
+ * \param[in] string      String possibly containing submatch variables
+ * \param[in] match_data  If not NULL, regular expression matches
+ *
+ * \return Newly allocated string identical to \p string with submatches
+ *         expanded, or NULL if there were no matches
+ */
 char *
-pe_expand_re_matches(const char *string, pe_re_match_data_t *match_data)
+pe_expand_re_matches(const char *string, const pe_re_match_data_t *match_data)
 {
     size_t len = 0;
     int i;
