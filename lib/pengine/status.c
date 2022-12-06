@@ -439,18 +439,23 @@ pe_find_node_id(GList *nodes, const char *id)
     return NULL;
 }
 
+/*!
+ * \brief Find a node by name in a list of nodes
+ *
+ * \param[in] nodes      List of nodes (as pe_node_t*)
+ * \param[in] node_name  Name of node to find
+ *
+ * \return Node from \p nodes that matches \p node_name if any, otherwise NULL
+ */
 pe_node_t *
-pe_find_node(GList *nodes, const char *uname)
+pe_find_node(const GList *nodes, const char *node_name)
 {
-    GList *gIter = nodes;
+    for (const GList *iter = nodes; iter != NULL; iter = iter->next) {
+        pe_node_t *node = (pe_node_t *) iter->data;
 
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *node = (pe_node_t *) gIter->data;
-
-        if (node && pcmk__str_eq(node->details->uname, uname, pcmk__str_casei)) {
+        if (pcmk__str_eq(node->details->uname, node_name, pcmk__str_casei)) {
             return node;
         }
     }
-    /* error */
     return NULL;
 }
