@@ -67,7 +67,7 @@ gboolean decode_transition_key(const char *key, char **uuid, int *transition_id,
 gboolean decode_transition_magic(const char *magic, char **uuid,
                                  int *transition_id, int *action_id,
                                  int *op_status, int *op_rc, int *target_rc);
-int rsc_op_expected_rc(lrmd_event_data_t *event);
+int rsc_op_expected_rc(const lrmd_event_data_t *event);
 gboolean did_rsc_op_fail(lrmd_event_data_t *event, int target_rc);
 bool crm_op_needs_metadata(const char *rsc_class, const char *op);
 xmlNode *crm_create_op_xml(xmlNode *parent, const char *prefix,

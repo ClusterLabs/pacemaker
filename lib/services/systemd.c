@@ -31,7 +31,7 @@ static void invoke_unit_by_path(svc_action_t *op, const char *unit);
  * \internal
  * \brief Prepare a systemd action
  *
- * \param[in] op  Action to prepare
+ * \param[in,out] op  Action to prepare
  *
  * \return Standard Pacemaker return code
  */
@@ -295,8 +295,8 @@ systemd_daemon_reload(int timeout)
  * \internal
  * \brief Set an action result based on a method error
  *
- * \param[in] op     Action to set result for
- * \param[in] error  Method error
+ * \param[in,out] op     Action to set result for
+ * \param[in]     error  Method error
  */
 static void
 set_result_from_method_error(svc_action_t *op, const DBusError *error)
@@ -331,8 +331,8 @@ set_result_from_method_error(svc_action_t *op, const DBusError *error)
  * \internal
  * \brief Extract unit path from LoadUnit reply, and execute action
  *
- * \param[in] reply  LoadUnit reply
- * \param[in] op     Action to execute (or NULL to just return path)
+ * \param[in]     reply  LoadUnit reply
+ * \param[in,out] op     Action to execute (or NULL to just return path)
  *
  * \return DBus object path for specified unit if successful (only valid for
  *         lifetime of \p reply), otherwise NULL
@@ -389,8 +389,8 @@ execute_after_loadunit(DBusMessage *reply, svc_action_t *op)
  * \internal
  * \brief Execute a systemd action after its LoadUnit completes
  *
- * \param[in] pending    If not NULL, DBus call associated with LoadUnit request
- * \param[in] user_data  Action to execute
+ * \param[in,out] pending    If not NULL, DBus call associated with LoadUnit
+ * \param[in,out] user_data  Action to execute
  */
 static void
 loadunit_completed(DBusPendingCall *pending, void *user_data)
@@ -420,10 +420,10 @@ loadunit_completed(DBusPendingCall *pending, void *user_data)
  * \internal
  * \brief Execute a systemd action, given the unit name
  *
- * \param[in]  arg_name  Unit name (possibly shortened, i.e. without ".service")
- * \param[in]  op        Action to execute (if NULL, just get the object path)
- * \param[out] path      If non-NULL and \p op is NULL or synchronous, where to
- *                       store DBus object path for specified unit
+ * \param[in]     arg_name  Unit name (possibly without ".service" extension)
+ * \param[in,out] op        Action to execute (if NULL, just get object path)
+ * \param[out]    path      If non-NULL and \p op is NULL or synchronous, where
+ *                          to store DBus object path for specified unit
  *
  * \return Standard Pacemaker return code (for NULL \p op, pcmk_rc_ok means unit
  *         was found; for synchronous actions, pcmk_rc_ok means unit was
@@ -709,8 +709,8 @@ systemd_unit_metadata(const char *name, int timeout)
  * \internal
  * \brief Determine result of method from reply
  *
- * \param[in] reply  Reply to start, stop, or restart request
- * \param[in] op     Action that was executed
+ * \param[in]     reply  Reply to start, stop, or restart request
+ * \param[in,out] op     Action that was executed
  */
 static void
 process_unit_method_reply(DBusMessage *reply, svc_action_t *op)
@@ -748,8 +748,8 @@ process_unit_method_reply(DBusMessage *reply, svc_action_t *op)
  * \internal
  * \brief Process the completion of an asynchronous unit start, stop, or restart
  *
- * \param[in] pending    If not NULL, DBus call associated with request
- * \param[in] user_data  Action that was executed
+ * \param[in,out] pending    If not NULL, DBus call associated with request
+ * \param[in,out] user_data  Action that was executed
  */
 static void
 unit_method_complete(DBusPendingCall *pending, void *user_data)
@@ -883,9 +883,9 @@ systemd_remove_override(const char *agent, int timeout)
  * Set a status action's exit status and execution status based on a DBus
  * property check result, and finalize the action if asynchronous.
  *
- * \param[in] name      DBus interface name for property that was checked
- * \param[in] state     Property value
- * \param[in] userdata  Status action that check was done for
+ * \param[in]     name      DBus interface name for property that was checked
+ * \param[in]     state     Property value
+ * \param[in,out] userdata  Status action that check was done for
  */
 static void
 parse_status_result(const char *name, const char *state, void *userdata)
@@ -922,8 +922,8 @@ parse_status_result(const char *name, const char *state, void *userdata)
  * \internal
  * \brief Invoke a systemd unit, given its DBus object path
  *
- * \param[in] op    Action to execute
- * \param[in] unit  DBus object path of systemd unit to invoke
+ * \param[in,out] op    Action to execute
+ * \param[in]     unit  DBus object path of systemd unit to invoke
  */
 static void
 invoke_unit_by_path(svc_action_t *op, const char *unit)
@@ -1039,7 +1039,7 @@ systemd_timeout_callback(gpointer p)
  * \internal
  * \brief Execute a systemd action
  *
- * \param[in] op  Action to execute
+ * \param[in,out] op  Action to execute
  *
  * \return Standard Pacemaker return code
  * \retval EBUSY          Recurring operation could not be initiated

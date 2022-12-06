@@ -72,24 +72,24 @@ find_library_function(void **handle, const char *lib, const char *fn)
 }
 
 /*!
- * \brief Determine namespace of a fence agent
+ * \internal
+ * \brief Check whether a given fence agent is an LHA agent
  *
  * \param[in] agent        Fence agent type
- * \param[in] namespace_s  Name of agent namespace as string, if known
  *
- * \return Namespace of specified agent, as enum value
+ * \return true if \p agent is an LHA agent, otherwise false
  */
 bool
 stonith__agent_is_lha(const char *agent)
 {
     Stonith *stonith_obj = NULL;
 
-    static gboolean need_init = TRUE;
+    static bool need_init = true;
     static Stonith *(*st_new_fn) (const char *) = NULL;
     static void (*st_del_fn) (Stonith *) = NULL;
 
     if (need_init) {
-        need_init = FALSE;
+        need_init = false;
         st_new_fn = find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY,
                                           "stonith_new");
         st_del_fn = find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY,
@@ -100,10 +100,10 @@ stonith__agent_is_lha(const char *agent)
         stonith_obj = (*st_new_fn) (agent);
         if (stonith_obj) {
             (*st_del_fn) (stonith_obj);
-            return TRUE;
+            return true;
         }
     }
-    return FALSE;
+    return false;
 }
 
 int

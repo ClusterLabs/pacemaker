@@ -294,6 +294,19 @@ cib_shadow_new(const char *shadow)
     return new_cib;
 }
 
+/*!
+ * \brief Create a new CIB connection object, ignoring any active shadow CIB
+ *
+ * Create a new live, file, or remote CIB connection object based on the values
+ * of CIB-related environment variables (CIB_file, CIB_port, CIB_server,
+ * CIB_user, and CIB_passwd). The CIB_shadow environment variable will be unset
+ * if set. The object will not be connected.
+ *
+ * \return Newly allocated CIB connection object
+ * \note The CIB API does not fully support opening multiple CIB connection
+ *       objects simultaneously, so the returned object should be treated as a
+ *       singleton.
+ */
 cib_t *
 cib_new_no_shadow(void)
 {
@@ -301,6 +314,22 @@ cib_new_no_shadow(void)
     return cib_new();
 }
 
+/*!
+ * \brief Create a new CIB connection object
+ *
+ * Create a new live, remote, file, or shadow file CIB connection object based
+ * on the values of CIB-related environment variables (CIB_shadow, CIB_file,
+ * CIB_port, CIB_server, CIB_user, and CIB_passwd). The object will not be
+ * connected.
+ *
+ * \return Newly allocated CIB connection object
+ * \note The CIB API does not fully support opening multiple CIB connection
+ *       objects simultaneously, so the returned object should be treated as a
+ *       singleton.
+ */
+/* @TODO Ensure all APIs support multiple simultaneous CIB connection objects
+ * (at least cib_free_callbacks() currently does not).
+ */
 cib_t *
 cib_new(void)
 {
@@ -447,10 +476,11 @@ cib_free_notify(cib_t *cib)
         cib->notify_list = NULL;
     }
 }
+
 /*!
  * \brief Free all callbacks for a CIB connection
  *
- * \param[in] cib  CIB connection to clean up
+ * \param[in,out] cib  CIB connection to clean up
  */
 void
 cib_free_callbacks(cib_t *cib)
@@ -463,7 +493,7 @@ cib_free_callbacks(cib_t *cib)
 /*!
  * \brief Free all memory used by CIB connection
  *
- * \param[in] cib  CIB connection to delete
+ * \param[in,out] cib  CIB connection to delete
  */
 void
 cib_delete(cib_t *cib)

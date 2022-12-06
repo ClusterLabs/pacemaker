@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2021 the Pacemaker project contributors
+ * Copyright 2015-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -37,9 +37,10 @@ remote_proxy_notify_destroy(lrmd_t *lrmd, const char *session_id)
 }
 
 /*!
- * \brief Send an acknowledgment of a remote proxy shutdown request.
+ * \internal
+ * \brief Acknowledge a remote proxy shutdown request
  *
- * \param[in] lrmd  Connection to proxy
+ * \param[in,out] lrmd  Connection to proxy
  */
 void
 remote_proxy_ack_shutdown(lrmd_t *lrmd)
@@ -51,10 +52,10 @@ remote_proxy_ack_shutdown(lrmd_t *lrmd)
 }
 
 /*!
- * \brief We're not going to shutdown as response to
- *        a remote proxy shutdown request.
+ * \internal
+ * \brief Reject a remote proxy shutdown request
  *
- * \param[in] lrmd  Connection to proxy
+ * \param[in,out] lrmd  Connection to proxy
  */
 void
 remote_proxy_nack_shutdown(lrmd_t *lrmd)

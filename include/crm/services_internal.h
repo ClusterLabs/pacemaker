@@ -43,7 +43,7 @@ svc_action_t *services__create_resource_action(const char *name,
                                                int timeout, GHashTable *params,
                                                enum svc_action_flags flags);
 
-const char *services__exit_reason(svc_action_t *action);
+const char *services__exit_reason(const svc_action_t *action);
 char *services__grab_stdout(svc_action_t *action);
 char *services__grab_stderr(svc_action_t *action);
 

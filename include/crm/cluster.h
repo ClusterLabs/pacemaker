@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -129,8 +129,9 @@ enum crm_get_peer_flags {
     CRM_GET_PEER_ANY       = CRM_GET_PEER_CLUSTER|CRM_GET_PEER_REMOTE,
 };
 
-gboolean send_cluster_message(crm_node_t *node, enum crm_ais_msg_types service,
-                              xmlNode *data, gboolean ordered);
+gboolean send_cluster_message(const crm_node_t *node,
+                              enum crm_ais_msg_types service, xmlNode *data,
+                              gboolean ordered);
 
 int crm_remote_peer_cache_size(void);
 
@@ -162,7 +163,7 @@ void pcmk_cpg_membership(cpg_handle_t handle,
                          const struct cpg_address *joined_list, size_t joined_list_entries);
 gboolean crm_is_corosync_peer_active(const crm_node_t * node);
 gboolean send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
-                           gboolean local, crm_node_t * node,
+                           gboolean local, const crm_node_t *node,
                            enum crm_ais_msg_types dest);
 char *pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void *msg,
                         uint32_t *kind, const char **from);

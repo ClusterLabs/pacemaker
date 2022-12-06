@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2020 the Pacemaker project contributors
+ * Copyright 2014-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -39,7 +39,7 @@ char *pcmk_dbus_get_property(
     DBusPendingCall **pending, int timeout);
 
 G_GNUC_INTERNAL
-bool pcmk_dbus_find_error(DBusPendingCall *pending, DBusMessage *reply,
+bool pcmk_dbus_find_error(const DBusPendingCall *pending, DBusMessage *reply,
                           DBusError *error);
 
 #endif  /* PCMK_DBUS__H */

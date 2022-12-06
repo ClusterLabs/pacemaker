@@ -90,8 +90,8 @@ cib_file_register_notification(cib_t * cib, const char *callback, int enabled)
  * \internal
  * \brief Compare the calculated digest of an XML tree against a signature file
  *
- * \param[in] root Root of XML tree to compare
- * \param[in] sigfile Name of signature file containing digest to compare
+ * \param[in] root     Root of XML tree to compare
+ * \param[in] sigfile  Name of signature file containing digest to compare
  *
  * \return TRUE if digests match or signature file does not exist, else FALSE
  */
@@ -126,9 +126,9 @@ cib_file_verify_digest(xmlNode *root, const char *sigfile)
  * \internal
  * \brief Read an XML tree from a file and verify its digest
  *
- * \param[in] filename Name of XML file to read
- * \param[in] sigfile Name of signature file containing digest to compare
- * \param[in] root If non-NULL, will be set to pointer to parsed XML tree
+ * \param[in]  filename  Name of XML file to read
+ * \param[in]  sigfile   Name of signature file containing digest to compare
+ * \param[out] root      If non-NULL, will be set to pointer to parsed XML tree
  *
  * \return 0 if file was successfully read, parsed and verified, otherwise:
  *         -errno on stat() failure,
@@ -323,7 +323,7 @@ cib_file_backup(const char *cib_dirname, const char *cib_filename)
  * Set num_updates to 0, set cib-last-written to the current timestamp,
  * and strip out the status section.
  *
- * \param[in] root Root of CIB XML tree
+ * \param[in,out] root  Root of CIB XML tree
  *
  * \return void
  */
@@ -349,9 +349,9 @@ cib_file_prepare_xml(xmlNode *root)
  * \internal
  * \brief Write CIB to disk, along with a signature file containing its digest
  *
- * \param[in] cib_root Root of XML tree to write
- * \param[in] cib_dirname Directory containing CIB and signature files
- * \param[in] cib_filename Name (relative to cib_dirname) of file to write
+ * \param[in,out] cib_root      Root of XML tree to write
+ * \param[in]     cib_dirname   Directory containing CIB and signature files
+ * \param[in]     cib_filename  Name (relative to cib_dirname) of file to write
  *
  * \return pcmk_ok on success,
  *         pcmk_err_cib_modified if existing cib_filename doesn't match digest,
@@ -616,7 +616,7 @@ cib_file_signon(cib_t * cib, const char *name, enum cib_conn_type type)
  * \internal
  * \brief Write out the in-memory CIB to a live CIB file
  *
- * param[in] path Full path to file to write
+ * param[in,out] path  Full path to file to write
  *
  * \return 0 on success, -1 on failure
  */
@@ -696,7 +696,7 @@ cib_file_write_live(char *path)
  * This will write the file to disk if needed, and free the in-memory CIB. If
  * the file is the live CIB, it will compute and write a signature as well.
  *
- * \param[in] cib CIB object to sign off
+ * \param[in,out] cib  CIB object to sign off
  *
  * \return pcmk_ok on success, pcmk_err_generic on failure
  * \todo This method should refuse to write the live CIB if the CIB manager is

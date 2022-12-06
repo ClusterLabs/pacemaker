@@ -533,7 +533,7 @@ delete_attr_delegate(cib_t *cib, int options, const char *section, const char *n
  * \return pcmk_ok if UUID was successfully parsed, -ENXIO otherwise
  */
 static int
-get_uuid_from_result(xmlNode *result, char **uuid, int *is_remote)
+get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
 {
     int rc = -ENXIO;
     const char *tag;

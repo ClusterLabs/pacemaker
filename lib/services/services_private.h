@@ -1,6 +1,6 @@
 /*
  * Copyright 2010-2011 Red Hat, Inc.
- * Later changes copyright 2012-2021 the Pacemaker project contributors
+ * Later changes copyright 2012-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -45,7 +45,7 @@ struct svc_action_private_s {
 };
 
 G_GNUC_INTERNAL
-const char *services__action_kind(svc_action_t *action);
+const char *services__action_kind(const svc_action_t *action);
 
 G_GNUC_INTERNAL
 GList *services_os_get_single_directory_list(const char *root, gboolean files,
@@ -67,16 +67,16 @@ G_GNUC_INTERNAL
 int services__finalize_async_op(svc_action_t *op);
 
 G_GNUC_INTERNAL
-int services__generic_error(svc_action_t *op);
+int services__generic_error(const svc_action_t *op);
 
 G_GNUC_INTERNAL
-int services__not_installed_error(svc_action_t *op);
+int services__not_installed_error(const svc_action_t *op);
 
 G_GNUC_INTERNAL
-int services__authorization_error(svc_action_t *op);
+int services__authorization_error(const svc_action_t *op);
 
 G_GNUC_INTERNAL
-int services__configuration_error(svc_action_t *op, bool is_fatal);
+int services__configuration_error(const svc_action_t *op, bool is_fatal);
 
 G_GNUC_INTERNAL
 void services__handle_exec_error(svc_action_t * op, int error);
@@ -88,7 +88,7 @@ G_GNUC_INTERNAL
 void services_add_inflight_op(svc_action_t *op);
 
 G_GNUC_INTERNAL
-void services_untrack_op(svc_action_t *op);
+void services_untrack_op(const svc_action_t *op);
 
 G_GNUC_INTERNAL
 gboolean is_op_blocked(const char *rsc);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -30,7 +30,7 @@ CRM_TRACE_INIT_DATA(cluster);
 /*!
  * \brief Get (and set if needed) a node's UUID
  *
- * \param[in] peer  Node to check
+ * \param[in,out] peer  Node to check
  *
  * \return Node UUID of \p peer, or NULL if unknown
  */
@@ -67,7 +67,7 @@ crm_peer_uuid(crm_node_t *peer)
 /*!
  * \brief Connect to the cluster layer
  *
- * \param[in] Initialized cluster object to connect
+ * \param[in,out] Initialized cluster object to connect
  *
  * \return TRUE on success, otherwise FALSE
  */
@@ -96,7 +96,7 @@ crm_cluster_connect(crm_cluster_t *cluster)
 /*!
  * \brief Disconnect from the cluster layer
  *
- * \param[in] cluster  Cluster object to disconnect
+ * \param[in,out] cluster  Cluster object to disconnect
  */
 void
 crm_cluster_disconnect(crm_cluster_t *cluster)
@@ -162,7 +162,7 @@ pcmk_cluster_free(crm_cluster_t *cluster)
  * \return TRUE on success, otherwise FALSE
  */
 gboolean
-send_cluster_message(crm_node_t *node, enum crm_ais_msg_types service,
+send_cluster_message(const crm_node_t *node, enum crm_ais_msg_types service,
                      xmlNode *data, gboolean ordered)
 {
     switch (get_cluster_type()) {
@@ -303,7 +303,7 @@ crm_peer_uname(const char *uuid)
  *
  * \param[in,out] xml   XML element to add UUID to
  * \param[in]     attr  XML attribute name to set
- * \param[in]     node  Node whose UUID should be used as attribute value
+ * \param[in,out] node  Node whose UUID should be used as attribute value
  */
 void
 set_uuid(xmlNode *xml, const char *attr, crm_node_t *node)

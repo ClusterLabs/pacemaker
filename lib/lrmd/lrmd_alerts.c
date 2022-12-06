@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2021 the Pacemaker project contributors
+ * Copyright 2015-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -74,7 +74,7 @@ set_ev_kv(gpointer key, gpointer value, gpointer user_data)
 }
 
 static lrmd_key_value_t *
-alert_envvar2params(lrmd_key_value_t *head, pcmk__alert_t *entry)
+alert_envvar2params(lrmd_key_value_t *head, const pcmk__alert_t *entry)
 {
     if (entry->envvars) {
         g_hash_table_foreach(entry->envvars, set_ev_kv, &head);
@@ -113,7 +113,7 @@ is_target_alert(char **list, const char *value)
  * \internal
  * \brief Execute alert agents for an event
  *
- * \param[in]     lrmd        Executor connection to use
+ * \param[in,out] lrmd        Executor connection to use
  * \param[in]     alert_list  Alerts to execute
  * \param[in]     kind        Type of event that is being alerted for
  * \param[in]     attr_name   If pcmk__alert_attribute, the attribute name
@@ -124,8 +124,9 @@ is_target_alert(char **list, const char *value)
  * \retval -2 if all alerts failed
  */
 static int
-exec_alert_list(lrmd_t *lrmd, GList *alert_list, enum pcmk__alert_flags kind,
-                const char *attr_name, lrmd_key_value_t *params)
+exec_alert_list(lrmd_t *lrmd, const GList *alert_list,
+                enum pcmk__alert_flags kind, const char *attr_name,
+                lrmd_key_value_t *params)
 {
     bool any_success = FALSE, any_failure = FALSE;
     const char *kind_s = pcmk__alert_flag2text(kind);
@@ -138,8 +139,9 @@ exec_alert_list(lrmd_t *lrmd, GList *alert_list, enum pcmk__alert_flags kind,
     params = alert_key2param(params, PCMK__alert_key_version,
                              PACEMAKER_VERSION);
 
-    for (GList *iter = g_list_first(alert_list); iter; iter = g_list_next(iter)) {
-        pcmk__alert_t *entry = (pcmk__alert_t *)(iter->data);
+    for (const GList *iter = alert_list;
+         iter != NULL; iter = g_list_next(iter)) {
+        const pcmk__alert_t *entry = (pcmk__alert_t *) (iter->data);
         lrmd_key_value_t *copy_params = NULL;
         lrmd_key_value_t *head = NULL;
         int rc;
@@ -220,19 +222,19 @@ exec_alert_list(lrmd_t *lrmd, GList *alert_list, enum pcmk__alert_flags kind,
  * \internal
  * \brief Send an alert for a node attribute change
  *
- * \param[in] lrmd        Executor connection to use
- * \param[in] alert_list  List of alert agents to execute
- * \param[in] node        Name of node with attribute change
- * \param[in] nodeid      Node ID of node with attribute change
- * \param[in] attr_name   Name of attribute that changed
- * \param[in] attr_value  New value of attribute that changed
+ * \param[in,out] lrmd        Executor connection to use
+ * \param[in]     alert_list  List of alert agents to execute
+ * \param[in]     node        Name of node with attribute change
+ * \param[in]     nodeid      Node ID of node with attribute change
+ * \param[in]     attr_name   Name of attribute that changed
+ * \param[in]     attr_value  New value of attribute that changed
  *
  * \retval pcmk_ok on success
  * \retval -1 if some alert agents failed
  * \retval -2 if all alert agents failed
  */
 int
-lrmd_send_attribute_alert(lrmd_t *lrmd, GList *alert_list,
+lrmd_send_attribute_alert(lrmd_t *lrmd, const GList *alert_list,
                           const char *node, uint32_t nodeid,
                           const char *attr_name, const char *attr_value)
 {
@@ -259,18 +261,18 @@ lrmd_send_attribute_alert(lrmd_t *lrmd, GList *alert_list,
  * \internal
  * \brief Send an alert for a node membership event
  *
- * \param[in] lrmd        Executor connection to use
- * \param[in] alert_list  List of alert agents to execute
- * \param[in] node        Name of node with change
- * \param[in] nodeid      Node ID of node with change
- * \param[in] state       New state of node with change
+ * \param[in,out] lrmd        Executor connection to use
+ * \param[in]     alert_list  List of alert agents to execute
+ * \param[in]     node        Name of node with change
+ * \param[in]     nodeid      Node ID of node with change
+ * \param[in]     state       New state of node with change
  *
  * \retval pcmk_ok on success
  * \retval -1 if some alert agents failed
  * \retval -2 if all alert agents failed
  */
 int
-lrmd_send_node_alert(lrmd_t *lrmd, GList *alert_list,
+lrmd_send_node_alert(lrmd_t *lrmd, const GList *alert_list,
                      const char *node, uint32_t nodeid, const char *state)
 {
     int rc = pcmk_ok;
@@ -293,19 +295,19 @@ lrmd_send_node_alert(lrmd_t *lrmd, GList *alert_list,
  * \internal
  * \brief Send an alert for a fencing event
  *
- * \param[in] lrmd        Executor connection to use
- * \param[in] alert_list  List of alert agents to execute
- * \param[in] target      Name of fence target node
- * \param[in] task        Type of fencing event that occurred
- * \param[in] desc        Readable description of event
- * \param[in] op_rc       Result of fence action
+ * \param[in,out] lrmd        Executor connection to use
+ * \param[in]     alert_list  List of alert agents to execute
+ * \param[in]     target      Name of fence target node
+ * \param[in]     task        Type of fencing event that occurred
+ * \param[in]     desc        Readable description of event
+ * \param[in]     op_rc       Result of fence action
  *
  * \retval pcmk_ok on success
  * \retval -1 if some alert agents failed
  * \retval -2 if all alert agents failed
  */
 int
-lrmd_send_fencing_alert(lrmd_t *lrmd, GList *alert_list,
+lrmd_send_fencing_alert(lrmd_t *lrmd, const GList *alert_list,
                         const char *target, const char *task, const char *desc,
                         int op_rc)
 {
@@ -330,18 +332,18 @@ lrmd_send_fencing_alert(lrmd_t *lrmd, GList *alert_list,
  * \internal
  * \brief Send an alert for a resource operation
  *
- * \param[in] lrmd        Executor connection to use
- * \param[in] alert_list  List of alert agents to execute
- * \param[in] node        Name of node that executed operation
- * \param[in] op          Resource operation
+ * \param[in,out] lrmd        Executor connection to use
+ * \param[in]     alert_list  List of alert agents to execute
+ * \param[in]     node        Name of node that executed operation
+ * \param[in]     op          Resource operation
  *
  * \retval pcmk_ok on success
  * \retval -1 if some alert agents failed
  * \retval -2 if all alert agents failed
  */
 int
-lrmd_send_resource_alert(lrmd_t *lrmd, GList *alert_list,
-                         const char *node, lrmd_event_data_t *op)
+lrmd_send_resource_alert(lrmd_t *lrmd, const GList *alert_list,
+                         const char *node, const lrmd_event_data_t *op)
 {
     int rc = pcmk_ok;
     int target_rc = pcmk_ok;

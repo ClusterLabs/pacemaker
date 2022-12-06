@@ -52,7 +52,7 @@ static gboolean (*quorum_app_callback)(unsigned long long seq,
  * \note It is the caller's responsibility to free the result with free().
  */
 char *
-pcmk__corosync_uuid(crm_node_t *node)
+pcmk__corosync_uuid(const crm_node_t *node)
 {
     if ((node != NULL) && is_corosync_cluster()) {
         if (node->id > 0) {
@@ -217,7 +217,7 @@ bail:
  * \internal
  * \brief Disconnect from Corosync cluster
  *
- * \param[in] cluster  Cluster connection to disconnect
+ * \param[in,out] cluster  Cluster connection to disconnect
  */
 void
 pcmk__corosync_disconnect(crm_cluster_t *cluster)
@@ -445,7 +445,7 @@ pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
  * \internal
  * \brief Connect to Corosync cluster layer
  *
- * \param[in] cluster   Initialized cluster object to connect
+ * \param[in,out] cluster   Initialized cluster object to connect
  */
 gboolean
 pcmk__corosync_connect(crm_cluster_t *cluster)
@@ -551,7 +551,7 @@ crm_is_corosync_peer_active(const crm_node_t *node)
  * \internal
  * \brief Load Corosync node list (via CMAP) into peer cache and optionally XML
  *
- * \param[in] xml_parent  If not NULL, add a <node> entry to this for each node
+ * \param[in,out] xml_parent  If not NULL, add <node> entry here for each node
  *
  * \return true if any nodes were found, false otherwise
  */

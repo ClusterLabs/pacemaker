@@ -62,7 +62,7 @@ void stonith__destroy_action(stonith_action_t *action);
 pcmk__action_result_t *stonith__action_result(stonith_action_t *action);
 int stonith__result2rc(const pcmk__action_result_t *result);
 void stonith__xe_set_result(xmlNode *xml, const pcmk__action_result_t *result);
-void stonith__xe_get_result(xmlNode *xml, pcmk__action_result_t *result);
+void stonith__xe_get_result(const xmlNode *xml, pcmk__action_result_t *result);
 xmlNode *stonith__find_xe_with_result(xmlNode *xml);
 
 int stonith__execute_async(stonith_action_t *action, void *userdata,
@@ -92,8 +92,8 @@ void stonith__register_messages(pcmk__output_t *out);
 
 GList *stonith__parse_targets(const char *hosts);
 
-const char *stonith__later_succeeded(stonith_history_t *event,
-                                     stonith_history_t *top_history);
+const char *stonith__later_succeeded(const stonith_history_t *event,
+                                     const stonith_history_t *top_history);
 stonith_history_t *stonith__sort_history(stonith_history_t *history);
 
 void stonith__device_parameter_flags(uint32_t *device_flags,
@@ -189,15 +189,16 @@ bool stonith__event_state_neq(stonith_history_t *history, void *user_data);
 
 int stonith__legacy2status(int rc);
 
-int stonith__exit_status(stonith_callback_data_t *data);
-int stonith__execution_status(stonith_callback_data_t *data);
-const char *stonith__exit_reason(stonith_callback_data_t *data);
+int stonith__exit_status(const stonith_callback_data_t *data);
+int stonith__execution_status(const stonith_callback_data_t *data);
+const char *stonith__exit_reason(const stonith_callback_data_t *data);
 
-int stonith__event_exit_status(stonith_event_t *event);
-int stonith__event_execution_status(stonith_event_t *event);
-const char *stonith__event_exit_reason(stonith_event_t *event);
-char *stonith__event_description(stonith_event_t *event);
-gchar *stonith__history_description(stonith_history_t *event, bool full_history,
+int stonith__event_exit_status(const stonith_event_t *event);
+int stonith__event_execution_status(const stonith_event_t *event);
+const char *stonith__event_exit_reason(const stonith_event_t *event);
+char *stonith__event_description(const stonith_event_t *event);
+gchar *stonith__history_description(const stonith_history_t *event,
+                                    bool full_history,
                                     const char *later_succeeded,
                                     uint32_t show_opts);
 

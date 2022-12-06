@@ -60,7 +60,7 @@ timespec_string(time_t sec, long nsec, bool show_usec) {
  *       for cluster status) instead of developer-oriented (for debug logs).
  */
 static const char *
-state_str(stonith_history_t *history)
+state_str(const stonith_history_t *history)
 {
     switch (history->state) {
         case st_failed: return "failed";
@@ -87,8 +87,9 @@ state_str(stonith_history_t *history)
  *       event notifications (stonith_event_t) in log messages.
  */
 gchar *
-stonith__history_description(stonith_history_t *history, bool full_history,
-                             const char *later_succeeded, uint32_t show_opts)
+stonith__history_description(const stonith_history_t *history,
+                             bool full_history, const char *later_succeeded,
+                             uint32_t show_opts)
 {
     GString *str = g_string_sized_new(256); // Generous starting size
     char *completed_time_s = NULL;

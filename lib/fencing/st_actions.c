@@ -57,8 +57,8 @@ static void log_action(stonith_action_t *action, pid_t pid);
  * \internal
  * \brief Set an action's result based on services library result
  *
- * \param[in] action      Fence action to set result for
- * \param[in] svc_action  Service action to get result from
+ * \param[in,out] action      Fence action to set result for
+ * \param[in,out] svc_action  Service action to get result from
  */
 static void
 set_result_from_svc_action(stonith_action_t *action, svc_action_t *svc_action)
@@ -427,8 +427,8 @@ stonith__legacy2status(int rc)
  * \internal
  * \brief Add a fencing result to an XML element as attributes
  *
- * \param[in] xml     XML element to add result to
- * \param[in] result  Fencing result to add (assume success if NULL)
+ * \param[in,out] xml     XML element to add result to
+ * \param[in]     result  Fencing result to add (assume success if NULL)
  */
 void
 stonith__xe_set_result(xmlNode *xml, const pcmk__action_result_t *result)
@@ -467,7 +467,7 @@ stonith__xe_set_result(xmlNode *xml, const pcmk__action_result_t *result)
  *
  * \param[in]  xml     XML element to search
  *
- * \return \p xml or descendent of it that contains a fencing result, else NULL
+ * \return \p xml or descendant of it that contains a fencing result, else NULL
  */
 xmlNode *
 stonith__find_xe_with_result(xmlNode *xml)
@@ -491,7 +491,7 @@ stonith__find_xe_with_result(xmlNode *xml)
  * \param[out] result  Where to store fencing result
  */
 void
-stonith__xe_get_result(xmlNode *xml, pcmk__action_result_t *result)
+stonith__xe_get_result(const xmlNode *xml, pcmk__action_result_t *result)
 {
     int exit_status = CRM_EX_OK;
     int execution_status = PCMK_EXEC_DONE;
