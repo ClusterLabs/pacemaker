@@ -57,11 +57,6 @@ typedef struct pcmk__cli_option_s {
     long flags;
 } pcmk__cli_option_t;
 
-void pcmk__set_cli_options(const char *short_options, const char *usage,
-                           const pcmk__cli_option_t *long_options,
-                           const char *app_desc);
-int pcmk__next_cli_option(int argc, char **argv, int *index,
-                          const char **longname);
 _Noreturn void pcmk__cli_help(char cmd, crm_exit_t exit_code);
 void pcmk__cli_option_cleanup(void);
 
