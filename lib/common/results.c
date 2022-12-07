@@ -867,8 +867,6 @@ crm_exit(crm_exit_t rc)
     mainloop_cleanup();
     crm_xml_cleanup();
 
-    pcmk__cli_option_cleanup();
-
     free(pcmk__our_nodename);
 
     if (crm_system_name) {
