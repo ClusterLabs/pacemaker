@@ -119,7 +119,7 @@ void attrd_xml_add_writer(xmlNode *xml);
 typedef struct attribute_s {
     char *uuid; /* TODO: Remove if at all possible */
     char *id;
-    char *set;
+    char *set_id;
     GHashTable *values;
     int update;
     int timeout_ms;

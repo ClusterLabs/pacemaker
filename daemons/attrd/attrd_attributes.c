@@ -30,7 +30,7 @@ attrd_create_attribute(xmlNode *xml)
     attribute_t *a = calloc(1, sizeof(attribute_t));
 
     a->id      = crm_element_value_copy(xml, PCMK__XA_ATTR_NAME);
-    a->set     = crm_element_value_copy(xml, PCMK__XA_ATTR_SET);
+    a->set_id  = crm_element_value_copy(xml, PCMK__XA_ATTR_SET);
     a->uuid    = crm_element_value_copy(xml, PCMK__XA_ATTR_UUID);
     a->values = pcmk__strikey_table(NULL, attrd_free_attribute_value);
 
@@ -116,7 +116,7 @@ attrd_add_value_xml(xmlNode *parent, const attribute_t *a,
     xmlNode *xml = create_xml_node(parent, __func__);
 
     crm_xml_add(xml, PCMK__XA_ATTR_NAME, a->id);
-    crm_xml_add(xml, PCMK__XA_ATTR_SET, a->set);
+    crm_xml_add(xml, PCMK__XA_ATTR_SET, a->set_id);
     crm_xml_add(xml, PCMK__XA_ATTR_UUID, a->uuid);
     crm_xml_add(xml, PCMK__XA_ATTR_USER, a->user);
     pcmk__xe_add_node(xml, v->nodename, v->nodeid);

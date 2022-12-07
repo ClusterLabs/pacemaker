@@ -134,8 +134,8 @@ build_update_element(xmlNode *parent, attribute_t *a, const char *nodeid, const 
     crm_xml_add(xml_obj, XML_ATTR_ID, nodeid);
 
     xml_obj = create_xml_node(xml_obj, XML_TAG_ATTR_SETS);
-    if (a->set) {
-        crm_xml_set_id(xml_obj, "%s", a->set);
+    if (a->set_id) {
+        crm_xml_set_id(xml_obj, "%s", a->set_id);
     } else {
         crm_xml_set_id(xml_obj, "%s-%s", XML_CIB_TAG_STATUS, nodeid);
     }
@@ -310,7 +310,7 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
     if (private_updates) {
         crm_info("Processed %d private change%s for %s, id=%s, set=%s",
                  private_updates, pcmk__plural_s(private_updates),
-                 a->id, pcmk__s(a->uuid, "n/a"), pcmk__s(a->set, "n/a"));
+                 a->id, pcmk__s(a->uuid, "n/a"), pcmk__s(a->set_id, "n/a"));
     }
     if (cib_updates) {
         crm_log_xml_trace(xml_top, __func__);
@@ -321,7 +321,7 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
 
         crm_info("Sent CIB request %d with %d change%s for %s (id %s, set %s)",
                  a->update, cib_updates, pcmk__plural_s(cib_updates),
-                 a->id, pcmk__s(a->uuid, "n/a"), pcmk__s(a->set, "n/a"));
+                 a->id, pcmk__s(a->uuid, "n/a"), pcmk__s(a->set_id, "n/a"));
 
         the_cib->cmds->register_callback_full(the_cib, a->update,
                                               CIB_OP_TIMEOUT_S, FALSE,
