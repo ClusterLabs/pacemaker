@@ -194,77 +194,17 @@ pcmk__next_cli_option(int argc, char **argv, int *index, const char **longname)
 void
 pcmk__cli_help(char cmd, crm_exit_t exit_code)
 {
-    int i = 0;
     FILE *stream = (exit_code ? stderr : stdout);
 
     if (cmd == 'v' || cmd == '$') {
         fprintf(stream, "Pacemaker %s\n", PACEMAKER_VERSION);
         fprintf(stream, "Written by Andrew Beekhof and "
                         "the Pacemaker project contributors\n");
-        goto out;
-    }
 
-    if (cmd == '!') {
+    } else if (cmd == '!') {
         fprintf(stream, "Pacemaker %s (Build: %s): %s\n", PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
-        goto out;
     }
 
-    fprintf(stream, "%s - %s\n", crm_system_name, crm_app_description);
-
-    if (crm_app_usage) {
-        fprintf(stream, "Usage: %s %s\n", crm_system_name, crm_app_usage);
-    }
-
-    if (crm_long_options) {
-        fprintf(stream, "Options:\n");
-        for (i = 0; crm_long_options[i].name != NULL; i++) {
-            if (crm_long_options[i].flags & pcmk__option_hidden) {
-
-            } else if (crm_long_options[i].flags & pcmk__option_paragraph) {
-                fprintf(stream, "%s\n\n", crm_long_options[i].desc);
-
-            } else if (crm_long_options[i].flags & pcmk__option_example) {
-                fprintf(stream, "\t#%s\n\n", crm_long_options[i].desc);
-
-            } else if (crm_long_options[i].val == '-' && crm_long_options[i].desc) {
-                fprintf(stream, "%s\n", crm_long_options[i].desc);
-
-            } else {
-                /* is val printable as char ? */
-                if (crm_long_options[i].val && crm_long_options[i].val <= UCHAR_MAX) {
-                    fprintf(stream, " -%c,", crm_long_options[i].val);
-                } else {
-                    fputs("    ", stream);
-                }
-                fprintf(stream, " --%s%s\t%s\n", crm_long_options[i].name,
-                        crm_long_options[i].has_arg == optional_argument ? "[=value]" :
-                        crm_long_options[i].has_arg == required_argument ? "=value" : "",
-                        crm_long_options[i].desc ? crm_long_options[i].desc : "");
-            }
-        }
-
-    } else if (crm_short_options) {
-        fprintf(stream, "Usage: %s - %s\n", crm_system_name, crm_app_description);
-        for (i = 0; crm_short_options[i] != 0; i++) {
-            int has_arg = no_argument /* 0 */;
-
-            if (crm_short_options[i + 1] == ':') {
-                if (crm_short_options[i + 2] == ':')
-                    has_arg = optional_argument /* 2 */;
-                else
-                    has_arg = required_argument /* 1 */;
-            }
-
-            fprintf(stream, " -%c %s\n", crm_short_options[i],
-                    has_arg == optional_argument ? "[value]" :
-                    has_arg == required_argument ? "{value}" : "");
-            i += has_arg;
-        }
-    }
-
-    fprintf(stream, "\nReport bugs to " PCMK__BUG_URL "\n");
-
-  out:
     crm_exit(exit_code);
     while(1); // above does not return
 }
