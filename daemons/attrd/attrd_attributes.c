@@ -31,6 +31,7 @@ attrd_create_attribute(xmlNode *xml)
 
     a->id      = crm_element_value_copy(xml, PCMK__XA_ATTR_NAME);
     a->set_id  = crm_element_value_copy(xml, PCMK__XA_ATTR_SET);
+    a->set_type = crm_element_value_copy(xml, PCMK__XA_ATTR_SET_TYPE);
     a->uuid    = crm_element_value_copy(xml, PCMK__XA_ATTR_UUID);
     a->values = pcmk__strikey_table(NULL, attrd_free_attribute_value);
 

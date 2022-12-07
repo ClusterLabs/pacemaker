@@ -133,7 +133,14 @@ build_update_element(xmlNode *parent, attribute_t *a, const char *nodeid, const 
     xml_obj = create_xml_node(xml_obj, XML_TAG_TRANSIENT_NODEATTRS);
     crm_xml_add(xml_obj, XML_ATTR_ID, nodeid);
 
-    xml_obj = create_xml_node(xml_obj, XML_TAG_ATTR_SETS);
+    if (pcmk__str_eq(a->set_type, XML_TAG_ATTR_SETS, pcmk__str_null_matches)) {
+        xml_obj = create_xml_node(xml_obj, XML_TAG_ATTR_SETS);
+    } else if (pcmk__str_eq(a->set_type, XML_TAG_UTILIZATION, pcmk__str_none)) {
+        xml_obj = create_xml_node(xml_obj, XML_TAG_UTILIZATION);
+    } else {
+        crm_err("Unknown set type attribute: %s", a->set_type);
+    }
+
     if (a->set_id) {
         crm_xml_set_id(xml_obj, "%s", a->set_id);
     } else {

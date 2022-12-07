@@ -274,6 +274,7 @@ attrd_free_attribute(gpointer data)
     if(a) {
         free(a->id);
         free(a->set_id);
+        free(a->set_type);
         free(a->uuid);
         free(a->user);
 
