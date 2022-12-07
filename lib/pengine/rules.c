@@ -522,18 +522,18 @@ pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
 /*!
  * \brief Extract nvpair blocks contained by an XML element into a hash table
  *
- * \param[in]  top           XML document root (used to expand id-ref's)
- * \param[in]  xml_obj       XML element containing blocks of nvpair elements
- * \param[in]  set_name      Element name to identify nvpair blocks
- * \param[in]  node_hash     Node attributes to use when evaluating rules
- * \param[out] hash          Where to store extracted name/value pairs
- * \param[in]  always_first  If not NULL, process block with this ID first
- * \param[in]  overwrite     Whether to replace existing values with same name
- * \param[in]  now           Time to use when evaluating rules
- * \param[out] next_change   If not NULL, set to when rule evaluation will change
+ * \param[in,out] top           XML document root (used to expand id-ref's)
+ * \param[in]     xml_obj       XML element containing blocks of nvpair elements
+ * \param[in]     set_name      Element name to identify nvpair blocks
+ * \param[in]     node_hash     Node attributes to use when evaluating rules
+ * \param[out]    hash          Where to store extracted name/value pairs
+ * \param[in]     always_first  If not NULL, process block with this ID first
+ * \param[in]     overwrite     Whether to replace existing values with same name
+ * \param[in]     now           Time to use when evaluating rules
+ * \param[out]    next_change   If not NULL, set to when evaluation will change
  */
 void
-pe_unpack_nvpairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
+pe_unpack_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
                   GHashTable *node_hash, GHashTable *hash,
                   const char *always_first, gboolean overwrite,
                   crm_time_t *now, crm_time_t *next_change)

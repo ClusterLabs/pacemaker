@@ -53,10 +53,11 @@ void pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
                      const char *always_first, gboolean overwrite,
                      crm_time_t *next_change);
 
-void pe_unpack_nvpairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
-                       GHashTable *node_hash, GHashTable *hash,
-                       const char *always_first, gboolean overwrite,
-                       crm_time_t *now, crm_time_t *next_change);
+void pe_unpack_nvpairs(xmlNode *top, const xmlNode *xml_obj,
+                       const char *set_name, GHashTable *node_hash,
+                       GHashTable *hash, const char *always_first,
+                       gboolean overwrite, crm_time_t *now,
+                       crm_time_t *next_change);
 
 char *pe_expand_re_matches(const char *string,
                            const pe_re_match_data_t *match_data);
