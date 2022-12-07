@@ -3610,9 +3610,8 @@ order_after_remote_fencing(pe_action_t *action, pe_resource_t *remote_conn,
 }
 
 static bool
-should_ignore_failure_timeout(pe_resource_t *rsc, xmlNode *xml_op,
-                              const char *task, guint interval_ms,
-                              bool is_last_failure, pe_working_set_t *data_set)
+should_ignore_failure_timeout(const pe_resource_t *rsc, const char *task,
+                              guint interval_ms, bool is_last_failure)
 {
     /* Clearing failures of recurring monitors has special concerns. The
      * executor reports only changes in the monitor result, so if the
@@ -3635,10 +3634,10 @@ should_ignore_failure_timeout(pe_resource_t *rsc, xmlNode *xml_op,
      * if the remote node hasn't been fenced.
      */
     if (rsc->remote_reconnect_ms
-        && pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)
+        && pcmk_is_set(rsc->cluster->flags, pe_flag_stonith_enabled)
         && (interval_ms != 0) && pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
 
-        pe_node_t *remote_node = pe_find_node(data_set->nodes, rsc->id);
+        pe_node_t *remote_node = pe_find_node(rsc->cluster->nodes, rsc->id);
 
         if (remote_node && !remote_node->details->remote_was_fenced) {
             if (is_last_failure) {
@@ -3698,8 +3697,8 @@ check_operation_expiry(pe_resource_t *rsc, pe_node_t *node, int rc,
 
         // Is this particular operation history older than the failure timeout?
         if ((now >= (last_run + rsc->failure_timeout))
-            && !should_ignore_failure_timeout(rsc, xml_op, task, interval_ms,
-                                              is_last_failure, data_set)) {
+            && !should_ignore_failure_timeout(rsc, task, interval_ms,
+                                              is_last_failure)) {
             expired = TRUE;
         }
 
