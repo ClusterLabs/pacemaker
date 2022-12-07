@@ -1758,27 +1758,33 @@ log_data_element(int log_level, const char *file, const char *function,
     }
 
     if (data == NULL) {
-        do_crm_log(log_level, "%s: %s", prefix, "No data to dump as XML");
+        do_crm_log(log_level, "%s: No data to dump as XML", prefix);
         return;
     }
 
     if (pcmk_is_set(options, xml_log_option_dirty_add)) {
+        // log_xml_changes() writes to index 1 of a copy of prefix
+        CRM_CHECK((prefix[0] != '\0') && (prefix[1] != '\0'), return);
         log_xml_changes(log_level, prefix, data, depth, options);
         return;
     }
 
     if (pcmk_is_set(options, xml_log_option_formatted)) {
         if (pcmk_is_set(options, xml_log_option_diff_plus)
-            && (data->children == NULL || crm_element_value(data, XML_DIFF_MARKER))) {
+            && ((data->children == NULL)
+                || (crm_element_value(data, XML_DIFF_MARKER) != NULL))) {
+            CRM_CHECK((prefix[0] != '\0') && (prefix[1] != '\0'), return);
             options |= xml_log_option_diff_all;
-            prefix_m = strdup(prefix);
+            pcmk__str_update(&prefix_m, prefix);
             prefix_m[1] = '+';
             prefix = prefix_m;
 
         } else if (pcmk_is_set(options, xml_log_option_diff_minus)
-                   && (data->children == NULL || crm_element_value(data, XML_DIFF_MARKER))) {
+                   && ((data->children == NULL)
+                       || (crm_element_value(data, XML_DIFF_MARKER) != NULL))) {
+            CRM_CHECK((prefix[0] != '\0') && (prefix[1] != '\0'), return);
             options |= xml_log_option_diff_all;
-            prefix_m = strdup(prefix);
+            pcmk__str_update(&prefix_m, prefix);
             prefix_m[1] = '-';
             prefix = prefix_m;
         }
