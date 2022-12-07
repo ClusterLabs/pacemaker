@@ -1745,8 +1745,6 @@ log_data_element(int log_level, const char *file, const char *function,
                  int line, const char *prefix, const xmlNode *data, int depth,
                  int options)
 {
-    xmlNode *a_child = NULL;
-
     char *prefix_m = NULL;
 
     if (log_level == LOG_NEVER) {
@@ -1793,9 +1791,10 @@ log_data_element(int log_level, const char *file, const char *function,
     if (pcmk_is_set(options, xml_log_option_diff_short)
                && !pcmk_is_set(options, xml_log_option_diff_all)) {
         /* Still searching for the actual change */
-        for (a_child = pcmk__xml_first_child(data); a_child != NULL;
-             a_child = pcmk__xml_next(a_child)) {
-            log_data_element(log_level, file, function, line, prefix, a_child, depth + 1, options);
+        for (const xmlNode *child = pcmk__xml_first_child(data); child != NULL;
+             child = pcmk__xml_next(child)) {
+            log_data_element(log_level, file, function, line, prefix, child,
+                             depth + 1, options);
         }
     } else {
         pcmk__xml_log(log_level, prefix, data, depth,
