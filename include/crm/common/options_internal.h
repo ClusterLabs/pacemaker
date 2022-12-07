@@ -18,7 +18,7 @@
 #  include <glib.h>     // GHashTable
 #  include <stdbool.h>  // bool
 
-_Noreturn void pcmk__cli_help(char cmd, crm_exit_t exit_code);
+_Noreturn void pcmk__cli_help(char cmd);
 
 
 /*

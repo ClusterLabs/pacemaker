@@ -159,7 +159,7 @@ main(int argc, char **argv)
         g_strfreev(processed_args);
         pcmk__free_arg_context(context);
         /* FIXME:  When iso8601 is converted to use formatted output, this can go. */
-        pcmk__cli_help('v', CRM_EX_OK);
+        pcmk__cli_help('v');
     }
 
     if (pcmk__str_eq("now", options.date_time_s, pcmk__str_casei)) {

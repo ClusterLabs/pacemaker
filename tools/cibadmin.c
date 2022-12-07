@@ -524,7 +524,7 @@ main(int argc, char **argv)
          * options.extended_version is deprecated and will be removed in a
          * future release.
          */
-        pcmk__cli_help(options.extended_version? '!' : 'v', CRM_EX_OK);
+        pcmk__cli_help(options.extended_version? '!' : 'v');
     }
 
     /* At LOG_ERR, stderr for CIB calls is rather verbose. Several lines like

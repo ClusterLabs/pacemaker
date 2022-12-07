@@ -22,20 +22,18 @@
 #include <crm/crm.h>
 
 void
-pcmk__cli_help(char cmd, crm_exit_t exit_code)
+pcmk__cli_help(char cmd)
 {
-    FILE *stream = (exit_code ? stderr : stdout);
-
     if (cmd == 'v' || cmd == '$') {
-        fprintf(stream, "Pacemaker %s\n", PACEMAKER_VERSION);
-        fprintf(stream, "Written by Andrew Beekhof and "
-                        "the Pacemaker project contributors\n");
+        printf("Pacemaker %s\n", PACEMAKER_VERSION);
+        printf("Written by Andrew Beekhof and "
+               "the Pacemaker project contributors\n");
 
     } else if (cmd == '!') {
-        fprintf(stream, "Pacemaker %s (Build: %s): %s\n", PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
+        printf("Pacemaker %s (Build: %s): %s\n", PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
     }
 
-    crm_exit(exit_code);
+    crm_exit(CRM_EX_OK);
     while(1); // above does not return
 }
 

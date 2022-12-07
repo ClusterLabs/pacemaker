@@ -345,7 +345,7 @@ main(int argc, char **argv)
         /* FIXME: When crm_shadow is converted to use formatted output,
          * this can go.
          */
-        pcmk__cli_help('v', CRM_EX_OK);
+        pcmk__cli_help('v');
     }
 
     if (options.cmd == shadow_cmd_none) {
