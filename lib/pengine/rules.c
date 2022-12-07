@@ -28,10 +28,10 @@ CRM_TRACE_INIT_DATA(pe_rules);
 /*!
  * \brief Evaluate any rules contained by given XML element
  *
- * \param[in]  xml          XML element to check for rules
- * \param[in]  node_hash    Node attributes to use when evaluating expressions
- * \param[in]  now          Time to use when evaluating expressions
- * \param[out] next_change  If not NULL, set to when evaluation will change
+ * \param[in,out] xml          XML element to check for rules
+ * \param[in]     node_hash    Node attributes to use to evaluate expressions
+ * \param[in]     now          Time to use when evaluating expressions
+ * \param[out]    next_change  If not NULL, set to when evaluation will change
  *
  * \return TRUE if no rules, or any of rules present is in effect, else FALSE
  */
@@ -75,12 +75,12 @@ pe_test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
  * date expression. Given any one of those, evaluate it and return whether it
  * passed.
  *
- * \param[in]  expr         Rule subelement XML
- * \param[in]  node_hash    Node attributes to use when evaluating expression
- * \param[in]  role         Resource role to use when evaluating expression
- * \param[in]  now          Time to use when evaluating expression
- * \param[out] next_change  If not NULL, set to when evaluation will change
- * \param[in]  match_data   If not NULL, resource back-references and params
+ * \param[in,out] expr         Rule subelement XML
+ * \param[in]     node_hash    Node attributes to use when evaluating expression
+ * \param[in]     role         Resource role to use when evaluating expression
+ * \param[in]     now          Time to use when evaluating expression
+ * \param[out]    next_change  If not NULL, set to when evaluation will change
+ * \param[in]     match_data   If not NULL, resource back-references and params
  *
  * \return TRUE if expression is in effect under given conditions, else FALSE
  */
@@ -153,7 +153,7 @@ find_expression_type(xmlNode * expr)
  */
 
 static int
-phase_of_the_moon(crm_time_t * now)
+phase_of_the_moon(const crm_time_t *now)
 {
     uint32_t epact, diy, goldn;
     uint32_t y;
@@ -169,7 +169,8 @@ phase_of_the_moon(crm_time_t * now)
 }
 
 static int
-check_one(xmlNode *cron_spec, const char *xml_field, uint32_t time_field) {
+check_one(const xmlNode *cron_spec, const char *xml_field, uint32_t time_field)
+{
     int rc = pcmk_rc_undetermined;
     const char *value = crm_element_value(cron_spec, xml_field);
     long long low, high;
@@ -235,7 +236,7 @@ check_passes(int rc) {
 } while (0)
 
 int
-pe_cron_range_satisfied(crm_time_t * now, xmlNode * cron_spec)
+pe_cron_range_satisfied(const crm_time_t *now, const xmlNode *cron_spec)
 {
     uint32_t h, m, s, y, d, w;
 
@@ -269,7 +270,7 @@ pe_cron_range_satisfied(crm_time_t * now, xmlNode * cron_spec)
 }
 
 static void
-update_field(crm_time_t *t, xmlNode *xml, const char *attr,
+update_field(crm_time_t *t, const xmlNode *xml, const char *attr,
             void (*time_fn)(crm_time_t *, int))
 {
     long long value;
@@ -280,8 +281,8 @@ update_field(crm_time_t *t, xmlNode *xml, const char *attr,
     }
 }
 
-crm_time_t *
-pe_parse_xml_duration(crm_time_t * start, xmlNode * duration_spec)
+static crm_time_t *
+parse_xml_duration(const crm_time_t *start, const xmlNode *duration_spec)
 {
     crm_time_t *end = pcmk_copy_time(start);
 
@@ -431,10 +432,10 @@ unpack_attr_set(gpointer data, gpointer user_data)
  * \internal
  * \brief Create a sorted list of nvpair blocks
  *
- * \param[in]  top           XML document root (used to expand id-ref's)
- * \param[in]  xml_obj       XML element containing blocks of nvpair elements
- * \param[in]  set_name      If not NULL, only get blocks of this element type
- * \param[in]  always_first  If not NULL, sort block with this ID as first
+ * \param[in,out] top           XML document root (used to expand id-ref's)
+ * \param[in]     xml_obj       XML element containing blocks of nvpair elements
+ * \param[in]     set_name      If not NULL, only get blocks of this element
+ * \param[in]     always_first  If not NULL, sort block with this ID as first
  *
  * \return List of sorted_set_t entries for nvpair blocks
  */
@@ -906,7 +907,7 @@ accept_attr_expr(const char *l_val, const char *r_val, const char *type,
  */
 static const char *
 expand_value_source(const char *value, const char *value_source,
-                    pe_match_data_t *match_data)
+                    const pe_match_data_t *match_data)
 {
     GHashTable *table = NULL;
 
@@ -940,7 +941,7 @@ expand_value_source(const char *value, const char *value_source,
  * \return TRUE if rule_data satisfies the expression, FALSE otherwise
  */
 gboolean
-pe__eval_attr_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
+pe__eval_attr_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
 {
     gboolean attr_allocated = FALSE;
     const char *h_val = NULL;
@@ -1004,7 +1005,8 @@ pe__eval_attr_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
  * \return Standard Pacemaker return code
  */
 int
-pe__eval_date_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data, crm_time_t *next_change)
+pe__eval_date_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data,
+                   crm_time_t *next_change)
 {
     crm_time_t *start = NULL;
     crm_time_t *end = NULL;
@@ -1032,7 +1034,7 @@ pe__eval_date_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data, crm_time_t *
     }
 
     if (start != NULL && end == NULL && duration_spec != NULL) {
-        end = pe_parse_xml_duration(start, duration_spec);
+        end = parse_xml_duration(start, duration_spec);
     }
 
     if (pcmk__str_eq(op, "in_range", pcmk__str_null_matches | pcmk__str_casei)) {
@@ -1086,7 +1088,8 @@ pe__eval_date_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data, crm_time_t *
 }
 
 gboolean
-pe__eval_op_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data) {
+pe__eval_op_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
+{
     const char *name = crm_element_value(expr, XML_NVPAIR_ATTR_NAME);
     const char *interval_s = crm_element_value(expr, XML_LRM_ATTR_INTERVAL);
     guint interval;
@@ -1127,7 +1130,7 @@ pe__eval_op_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data) {
  * \return TRUE if rule_data->role satisfies the expression, FALSE otherwise
  */
 gboolean
-pe__eval_role_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
+pe__eval_role_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
 {
     gboolean accept = FALSE;
     const char *op = NULL;
@@ -1170,7 +1173,7 @@ pe__eval_role_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
 }
 
 gboolean
-pe__eval_rsc_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
+pe__eval_rsc_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
 {
     const char *class = crm_element_value(expr, XML_AGENT_ATTR_CLASS);
     const char *provider = crm_element_value(expr, XML_AGENT_ATTR_PROVIDER);
