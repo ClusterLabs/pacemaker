@@ -18,44 +18,12 @@
 #  include <glib.h>     // GHashTable
 #  include <stdbool.h>  // bool
 
-/*
- * Command-line option handling
- *
- * This will all eventually go away as everything is converted to use GOption
- */
-
 #  ifdef HAVE_GETOPT_H
 #    include <getopt.h>
 #  else
 #    define no_argument 0
 #    define required_argument 1
 #  endif
-
-enum pcmk__cli_option_flags {
-    pcmk__option_default    = (1 << 0),
-    pcmk__option_hidden     = (1 << 1),
-    pcmk__option_paragraph  = (1 << 2),
-    pcmk__option_example    = (1 << 3),
-};
-
-typedef struct pcmk__cli_option_s {
-    /* Fields from 'struct option' in getopt.h */
-    /* name of long option */
-    const char *name;
-    /*
-     * one of no_argument, required_argument, and optional_argument:
-     * whether option takes an argument
-     */
-    int has_arg;
-    /* if not NULL, set *flag to val when option found */
-    int *flag;
-    /* if flag not NULL, value to set *flag to; else return value */
-    int val;
-
-    /* Custom fields */
-    const char *desc;
-    long flags;
-} pcmk__cli_option_t;
 
 _Noreturn void pcmk__cli_help(char cmd, crm_exit_t exit_code);
 
