@@ -448,6 +448,73 @@ add_probe_orderings_for_stops(pe_working_set_t *data_set)
 
 /*!
  * \internal
+ * \brief Add necessary orderings between probe and starts of clone instances
+ *
+ * , in additon to the ordering with the parent resource added upon creating
+ * the probe.
+ *
+ * \param[in,out] probe     Probe as 'first' action in an ordering
+ * \param[in,out] after     'then' action wrapper in the ordering
+ */
+static void
+add_start_orderings_for_probe(pe_action_t *probe, pe_action_wrapper_t *after)
+{
+    uint32_t flags = pe_order_optional|pe_order_runnable_left;
+
+    /* Although the ordering between the probe of the clone instance and the
+     * start of its parent has been added in pcmk__probe_rsc_on_node(), we
+     * avoided enforcing `pe_order_runnable_left` order type for that as long as
+     * any of the clone instances are running to prevent them from being
+     * unexpectedly stopped.
+     *
+     * On the other hand, we still need to prevent any inactive instances from
+     * starting unless the probe is runnable so that we don't risk starting too
+     * many instances before we know the state on all nodes.
+     */
+    if (after->action->rsc->variant <= pe_group
+        || pcmk_is_set(probe->flags, pe_action_runnable)
+        // The order type is already enforced for its parent.
+        || pcmk_is_set(after->type, pe_order_runnable_left)
+        || uber_parent(probe->rsc) != after->action->rsc
+        || !pcmk__str_eq(after->action->task, RSC_START, pcmk__str_none)) {
+        return;
+    }
+
+    crm_trace("Adding probe start orderings for '%s@%s (%s) "
+              "then instances of %s@%s'",
+              probe->uuid, pe__node_name(probe->node),
+              pcmk_is_set(probe->flags, pe_action_runnable)? "runnable" : "unrunnable",
+              after->action->uuid, pe__node_name(after->action->node));
+
+    for (GList *then_iter = after->action->actions_after; then_iter != NULL;
+         then_iter = then_iter->next) {
+
+        pe_action_wrapper_t *then = (pe_action_wrapper_t *) then_iter->data;
+
+        if (then->action->rsc->running_on
+            || uber_parent(then->action->rsc) != after->action->rsc
+            || !pcmk__str_eq(then->action->task, RSC_START, pcmk__str_none)) {
+            continue;
+        }
+
+        crm_trace("Adding probe start ordering for '%s@%s (%s) "
+                  "then %s@%s' (type=%#.6x)",
+                  probe->uuid, pe__node_name(probe->node),
+                  pcmk_is_set(probe->flags, pe_action_runnable)? "runnable" : "unrunnable",
+                  then->action->uuid, pe__node_name(then->action->node),
+                  flags);
+
+        /* Prevent the instance from starting if the instance can't, but don't
+         * cause any other intances to stop if already active.
+         */
+        order_actions(probe, then->action, flags);
+    }
+
+    return;
+}
+
+/*!
+ * \internal
  * \brief Order probes before restarts and re-promotes
  *
  * If a given ordering is a "probe then start" or "probe then promote" ordering,
@@ -602,20 +669,21 @@ clear_actions_tracking_flag(pe_working_set_t *data_set)
 
 /*!
  * \internal
- * \brief Add restart orderings for any scheduled probes for a given resource
+ * \brief Add start and restart orderings for any scheduled probes for a given resource
  *
  * \param[in] rsc       Resource whose probes should be ordered
  * \param[in] data_set  Cluster working set
  */
 static void
-add_restart_orderings_for_rsc(pe_resource_t *rsc, pe_working_set_t *data_set)
+add_start_restart_orderings_for_rsc(pe_resource_t *rsc,
+                                    pe_working_set_t *data_set)
 {
     GList *probes = NULL;
 
     // For collective resources, order each instance recursively
     if (rsc->variant != pe_native) {
-        g_list_foreach(rsc->children, (GFunc) add_restart_orderings_for_rsc,
-                       data_set);
+        g_list_foreach(rsc->children,
+                       (GFunc) add_start_restart_orderings_for_rsc, data_set);
         return;
     }
 
@@ -631,6 +699,7 @@ add_restart_orderings_for_rsc(pe_resource_t *rsc, pe_working_set_t *data_set)
 
             pe_action_wrapper_t *then = (pe_action_wrapper_t *) then_iter->data;
 
+            add_start_orderings_for_probe(probe, then);
             add_restart_orderings_for_probe(probe, then->action, data_set);
             clear_actions_tracking_flag(data_set);
         }
@@ -760,8 +829,8 @@ void
 pcmk__order_probes(pe_working_set_t *data_set)
 {
     // Add orderings for "probe then X"
-    g_list_foreach(data_set->resources, (GFunc) add_restart_orderings_for_rsc,
-                   data_set);
+    g_list_foreach(data_set->resources,
+                   (GFunc) add_start_restart_orderings_for_rsc, data_set);
     add_probe_orderings_for_stops(data_set);
 
     order_then_probes(data_set);
