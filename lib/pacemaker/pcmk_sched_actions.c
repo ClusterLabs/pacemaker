@@ -1821,7 +1821,7 @@ process_rsc_history(xmlNode *rsc_entry, pe_resource_t *rsc, pe_node_t *node)
              * has changed, clear any fail count so they can be retried fresh.
              */
 
-            if (pe__bundle_needs_remote_name(rsc, rsc->cluster)) {
+            if (pe__bundle_needs_remote_name(rsc)) {
                 /* We haven't allocated resources to nodes yet, so if the
                  * REMOTE_CONTAINER_HACK is used, we may calculate the digest
                  * based on the literal "#uname" value rather than the properly
