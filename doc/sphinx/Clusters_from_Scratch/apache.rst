@@ -25,7 +25,7 @@ server. We'll install ``httpd`` (Apache) and ``wget`` now.
 
 .. IMPORTANT::
 
-    Do **not** enable the ``httpd``` service. Services that are intended to
+    Do **not** enable the ``httpd`` service. Services that are intended to
     be managed via the cluster software should never be managed by the OS.
     It is often useful, however, to manually start the service, verify that
     it works, then stop it again, before adding it to the cluster. This
