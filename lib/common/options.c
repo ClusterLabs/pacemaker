@@ -19,10 +19,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#ifdef HAVE_GETOPT_H
-#  include <getopt.h>
-#endif
-
 #include <crm/crm.h>
 
 void

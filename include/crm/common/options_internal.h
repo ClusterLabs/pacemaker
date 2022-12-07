@@ -12,18 +12,11 @@
 
 #  ifndef PCMK__CONFIG_H
 #    define PCMK__CONFIG_H
-#    include <config.h>   // HAVE_GETOPT, _Noreturn
+#    include <config.h>   // _Noreturn
 #  endif
 
 #  include <glib.h>     // GHashTable
 #  include <stdbool.h>  // bool
-
-#  ifdef HAVE_GETOPT_H
-#    include <getopt.h>
-#  else
-#    define no_argument 0
-#    define required_argument 1
-#  endif
 
 _Noreturn void pcmk__cli_help(char cmd, crm_exit_t exit_code);
 
