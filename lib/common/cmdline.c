@@ -303,6 +303,11 @@ pcmk__cmdline_preproc(char *const *argv, const char *special) {
                      * arguments.  Take everything through the end as its value.
                      */
                     if (*(ch+1) != '\0') {
+                        fprintf(stderr, "Deprecated argument format '-%c%s' used.\n", *ch, ch+1);
+                        fprintf(stderr, "Please use '-%c %s' instead.  "
+                                        "Support will be removed in a future release.\n",
+                                *ch, ch+1);
+
                         g_ptr_array_add(arr, g_strdup_printf("-%c", *ch));
                         g_ptr_array_add(arr, g_strdup(ch+1));
                         break;
