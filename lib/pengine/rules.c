@@ -642,8 +642,18 @@ pe_eval_rules(xmlNode *ruleset, pe_rule_eval_data_t *rule_data, crm_time_t *next
     return ruleset_default;
 }
 
+/*!
+ * \brief Evaluate a rule's expressions
+ *
+ * \param[in,out] rule         XML containing a rule definition or its id-ref
+ * \param[in]     rule_data    Matching parameters to check against rule
+ * \param[out]    next_change  If not NULL, set to when evaluation will change
+ *
+ * \return TRUE if \p rule_data passes \p rule, otherwise FALSE
+ */
 gboolean
-pe_eval_expr(xmlNode *rule, pe_rule_eval_data_t *rule_data, crm_time_t *next_change)
+pe_eval_expr(xmlNode *rule, const pe_rule_eval_data_t *rule_data,
+             crm_time_t *next_change)
 {
     xmlNode *expr = NULL;
     gboolean test = TRUE;
@@ -684,8 +694,18 @@ pe_eval_expr(xmlNode *rule, pe_rule_eval_data_t *rule_data, crm_time_t *next_cha
     return passed;
 }
 
+/*!
+ * \brief Evaluate rules
+ *
+ * \param[in,out] expr         XML containing a rule expression
+ * \param[in]     rule_data    Matching parameters to check against expression
+ * \param[out]    next_change  If not NULL, set to when evaluation will change
+ *
+ * \return TRUE if \p rule_data passes \p expr, otherwise FALSE
+ */
 gboolean
-pe_eval_subexpr(xmlNode *expr, pe_rule_eval_data_t *rule_data, crm_time_t *next_change)
+pe_eval_subexpr(xmlNode *expr, const pe_rule_eval_data_t *rule_data,
+                crm_time_t *next_change)
 {
     gboolean accept = FALSE;
     const char *uname = NULL;
