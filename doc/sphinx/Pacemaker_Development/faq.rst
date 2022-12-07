@@ -106,9 +106,9 @@ Frequently Asked Questions
       made.
 
     * If the commit is associated with a task in the `ClusterLabs project
-      manager` <https://projects.clusterlabs.org/>`, you can say "Closes T\ *n*"
-      in the commit message to automatically close task T\ *n* when the pull
-      request is merged.
+      manager <https://projects.clusterlabs.org/>`_, you can say
+      "Fixes T\ *n*" in the commit message to automatically close task
+      T\ *n* when the pull request is merged.
 
 ----
 
