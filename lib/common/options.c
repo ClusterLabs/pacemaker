@@ -25,20 +25,6 @@
 
 #include <crm/crm.h>
 
-
-/*
- * Command-line option handling
- */
-
-static char *crm_short_options = NULL;
-
-void
-pcmk__cli_option_cleanup(void)
-{
-    free(crm_short_options);
-    crm_short_options = NULL;
-}
-
 void
 pcmk__cli_help(char cmd, crm_exit_t exit_code)
 {

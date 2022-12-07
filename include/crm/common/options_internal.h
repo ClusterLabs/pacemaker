@@ -58,7 +58,6 @@ typedef struct pcmk__cli_option_s {
 } pcmk__cli_option_t;
 
 _Noreturn void pcmk__cli_help(char cmd, crm_exit_t exit_code);
-void pcmk__cli_option_cleanup(void);
 
 
 /*
