@@ -904,6 +904,7 @@ void pcmk__output_and_clear_error(GError *error, pcmk__output_t *out);
 int pcmk__xml_output_new(pcmk__output_t **out, xmlNodePtr *xml);
 void pcmk__xml_output_finish(pcmk__output_t *out, xmlNodePtr *xml);
 int pcmk__log_output_new(pcmk__output_t **out);
+int pcmk__text_output_new(pcmk__output_t **out, const char *filename);
 
 #if defined(PCMK__UNIT_TESTING)
 /* If we are building libcrmcommon_test.a, add this accessor function so we can
