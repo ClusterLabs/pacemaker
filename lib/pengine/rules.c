@@ -618,8 +618,18 @@ pe_expand_re_matches(const char *string, const pe_re_match_data_t *match_data)
     return result;
 }
 
+/*!
+ * \brief Evaluate rules
+ *
+ * \param[in,out] ruleset      XML possibly containing rule sub-elements
+ * \param[in]     rule_data
+ * \param[out]    next_change  If not NULL, set to when evaluation will change
+ *
+ * \return TRUE if there are no rules or
+ */
 gboolean
-pe_eval_rules(xmlNode *ruleset, pe_rule_eval_data_t *rule_data, crm_time_t *next_change)
+pe_eval_rules(xmlNode *ruleset, const pe_rule_eval_data_t *rule_data,
+              crm_time_t *next_change)
 {
     // If there are no rules, pass by default
     gboolean ruleset_default = TRUE;
