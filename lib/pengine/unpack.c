@@ -3789,7 +3789,8 @@ check_operation_expiry(pe_resource_t *rsc, pe_node_t *node, int rc,
     return expired;
 }
 
-int pe__target_rc_from_xml(xmlNode *xml_op)
+int
+pe__target_rc_from_xml(const xmlNode *xml_op)
 {
     int target_rc = 0;
     const char *key = crm_element_value(xml_op, XML_ATTR_TRANSITION_KEY);

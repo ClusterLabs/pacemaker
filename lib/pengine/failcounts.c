@@ -18,8 +18,8 @@
 #include <crm/pengine/internal.h>
 
 static gboolean
-is_matched_failure(const char *rsc_id, xmlNode *conf_op_xml,
-                   xmlNode *lrm_op_xml)
+is_matched_failure(const char *rsc_id, const xmlNode *conf_op_xml,
+                   const xmlNode *lrm_op_xml)
 {
     gboolean matched = FALSE;
     const char *conf_op_name = NULL;
@@ -77,8 +77,7 @@ is_matched_failure(const char *rsc_id, xmlNode *conf_op_xml,
 }
 
 static gboolean
-block_failure(pe_node_t *node, pe_resource_t *rsc, xmlNode *xml_op,
-              pe_working_set_t *data_set)
+block_failure(const pe_node_t *node, pe_resource_t *rsc, const xmlNode *xml_op)
 {
     char *xml_name = clone_strip(rsc->id);
 
@@ -137,7 +136,7 @@ block_failure(pe_node_t *node, pe_resource_t *rsc, xmlNode *xml_op,
                                                  node->details->uname, xml_name,
                                                  conf_op_name,
                                                  conf_op_interval_ms);
-                lrm_op_xpathObj = xpath_search(data_set->input, lrm_op_xpath);
+                lrm_op_xpathObj = xpath_search(rsc->cluster->input, lrm_op_xpath);
 
                 free(lrm_op_xpath);
 
@@ -309,7 +308,7 @@ pe_get_failcount(pe_node_t *node, pe_resource_t *rsc, time_t *last_failure,
 
     /* If failure blocks the resource, disregard any failure timeout */
     if ((failcount > 0) && rsc->failure_timeout
-        && block_failure(node, rsc, xml_op, data_set)) {
+        && block_failure(node, rsc, xml_op)) {
 
         pe_warn("Ignoring failure timeout %d for %s because it conflicts with on-fail=block",
                 rsc->failure_timeout, rsc->id);
