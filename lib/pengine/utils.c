@@ -354,7 +354,8 @@ pe__cmp_rsc_priority(gconstpointer a, gconstpointer b)
 }
 
 static void
-resource_node_score(pe_resource_t * rsc, pe_node_t * node, int score, const char *tag)
+resource_node_score(pe_resource_t *rsc, const pe_node_t *node, int score,
+                    const char *tag)
 {
     pe_node_t *match = NULL;
 
@@ -387,8 +388,8 @@ resource_node_score(pe_resource_t * rsc, pe_node_t * node, int score, const char
 }
 
 void
-resource_location(pe_resource_t * rsc, pe_node_t * node, int score, const char *tag,
-                  pe_working_set_t * data_set)
+resource_location(pe_resource_t *rsc, const pe_node_t *node, int score,
+                  const char *tag, pe_working_set_t *data_set)
 {
     if (node != NULL) {
         resource_node_score(rsc, node, score, tag);
@@ -716,13 +717,21 @@ pe__update_recheck_time(time_t recheck, pe_working_set_t *data_set)
 
 /*!
  * \internal
- * \brief Wrapper for pe_unpack_nvpairs() using a cluster working set
+ * \brief Extract nvpair blocks contained by a CIB XML element into a hash table
+ *
+ * \param[in]     xml_obj       XML element containing blocks of nvpair elements
+ * \param[in]     set_name      If not NULL, only use blocks of this element
+ * \param[in]     rule_data     Matching parameters to use when unpacking
+ * \param[out]    hash          Where to store extracted name/value pairs
+ * \param[in]     always_first  If not NULL, process block with this ID first
+ * \param[in]     overwrite     Whether to replace existing values with same name
+ * \param[in,out] data_set      Cluster working set containing \p xml_obj
  */
 void
 pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
-                           pe_rule_eval_data_t *rule_data, GHashTable *hash,
-                           const char *always_first, gboolean overwrite,
-                           pe_working_set_t *data_set)
+                           const pe_rule_eval_data_t *rule_data,
+                           GHashTable *hash, const char *always_first,
+                           gboolean overwrite, pe_working_set_t *data_set)
 {
     crm_time_t *next_change = crm_time_new_undefined();
 

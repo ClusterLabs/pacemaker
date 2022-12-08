@@ -465,8 +465,8 @@ GList *pe__resource_actions(const pe_resource_t *rsc, const pe_node_t *node,
 
 extern void pe_free_action(pe_action_t * action);
 
-extern void resource_location(pe_resource_t * rsc, pe_node_t * node, int score, const char *tag,
-                              pe_working_set_t * data_set);
+void resource_location(pe_resource_t *rsc, const pe_node_t *node, int score,
+                       const char *tag, pe_working_set_t *data_set);
 
 extern int pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b,
                            bool same_node_default);
@@ -608,12 +608,13 @@ void pe__update_recheck_time(time_t recheck, pe_working_set_t *data_set);
 void pe__register_messages(pcmk__output_t *out);
 
 void pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
-                                pe_rule_eval_data_t *rule_data, GHashTable *hash,
-                                const char *always_first, gboolean overwrite,
-                                pe_working_set_t *data_set);
+                                const pe_rule_eval_data_t *rule_data,
+                                GHashTable *hash, const char *always_first,
+                                gboolean overwrite, pe_working_set_t *data_set);
 
 bool pe__resource_is_disabled(pe_resource_t *rsc);
-pe_action_t *pe__clear_resource_history(pe_resource_t *rsc, pe_node_t *node,
+pe_action_t *pe__clear_resource_history(pe_resource_t *rsc,
+                                        const pe_node_t *node,
                                         pe_working_set_t *data_set);
 
 GList *pe__rscs_with_tag(pe_working_set_t *data_set, const char *tag_name);

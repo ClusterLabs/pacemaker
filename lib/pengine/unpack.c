@@ -56,10 +56,11 @@ static void determine_remote_online_status(pe_working_set_t *data_set,
                                            pe_node_t *this_node);
 static void add_node_attrs(xmlNode *attrs, pe_node_t *node, bool overwrite,
                            pe_working_set_t *data_set);
-static void determine_online_status(xmlNode *node_state, pe_node_t *this_node,
+static void determine_online_status(const xmlNode *node_state,
+                                    pe_node_t *this_node,
                                     pe_working_set_t *data_set);
 
-static void unpack_node_lrm(pe_node_t *node, xmlNode *xml,
+static void unpack_node_lrm(pe_node_t *node, const xmlNode *xml,
                             pe_working_set_t *data_set);
 
 
@@ -746,7 +747,7 @@ destroy_tag(gpointer data)
  *       be used when pe__unpack_resource() calls resource_location()
  */
 gboolean
-unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
+unpack_resources(const xmlNode *xml_resources, pe_working_set_t * data_set)
 {
     xmlNode *xml_obj = NULL;
     GList *gIter = NULL;
@@ -1014,12 +1015,12 @@ unpack_handle_remote_attrs(pe_node_t *this_node, xmlNode *state, pe_working_set_
  * \internal
  * \brief Unpack a cluster node's transient attributes
  *
- * \param[in] state     CIB node state XML
- * \param[in] node      Cluster node whose attributes are being unpacked
- * \param[in] data_set  Cluster working set
+ * \param[in]     state     CIB node state XML
+ * \param[in,out] node      Cluster node whose attributes are being unpacked
+ * \param[in,out] data_set  Cluster working set
  */
 static void
-unpack_transient_attributes(xmlNode *state, pe_node_t *node,
+unpack_transient_attributes(const xmlNode *state, pe_node_t *node,
                             pe_working_set_t *data_set)
 {
     const char *discovery = NULL;
@@ -1054,11 +1055,11 @@ unpack_transient_attributes(xmlNode *state, pe_node_t *node,
  * resource history inside it. Multiple passes through the status are needed to
  * fully unpack everything.
  *
- * \param[in] state     CIB node state XML
- * \param[in] data_set  Cluster working set
+ * \param[in]     state     CIB node state XML
+ * \param[in,out] data_set  Cluster working set
  */
 static void
-unpack_node_state(xmlNode *state, pe_working_set_t *data_set)
+unpack_node_state(const xmlNode *state, pe_working_set_t *data_set)
 {
     const char *id = NULL;
     const char *uname = NULL;
@@ -1130,15 +1131,16 @@ unpack_node_state(xmlNode *state, pe_working_set_t *data_set)
  * in another node's history, so it might take multiple passes to unpack
  * everything.
  *
- * \param[in] status    CIB XML status section
- * \param[in] fence     If true, treat any not-yet-unpacked nodes as unseen
- * \param[in] data_set  Cluster working set
+ * \param[in]     status    CIB XML status section
+ * \param[in]     fence     If true, treat any not-yet-unpacked nodes as unseen
+ * \param[in,out] data_set  Cluster working set
  *
  * \return Standard Pacemaker return code (specifically pcmk_rc_ok if done,
  *         or EAGAIN if more unpacking remains to be done)
  */
 static int
-unpack_node_history(xmlNode *status, bool fence, pe_working_set_t *data_set)
+unpack_node_history(const xmlNode *status, bool fence,
+                    pe_working_set_t *data_set)
 {
     int rc = pcmk_rc_ok;
 
@@ -1308,8 +1310,9 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
 }
 
 static gboolean
-determine_online_status_no_fencing(pe_working_set_t * data_set, xmlNode * node_state,
-                                   pe_node_t * this_node)
+determine_online_status_no_fencing(pe_working_set_t *data_set,
+                                   const xmlNode *node_state,
+                                   pe_node_t *this_node)
 {
     gboolean online = FALSE;
     const char *join = crm_element_value(node_state, XML_NODE_JOIN_STATE);
@@ -1345,8 +1348,8 @@ determine_online_status_no_fencing(pe_working_set_t * data_set, xmlNode * node_s
 }
 
 static gboolean
-determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_state,
-                                pe_node_t * this_node)
+determine_online_status_fencing(pe_working_set_t *data_set,
+                                const xmlNode *node_state, pe_node_t *this_node)
 {
     gboolean online = FALSE;
     gboolean do_terminate = FALSE;
@@ -1519,7 +1522,8 @@ remote_online_done:
 }
 
 static void
-determine_online_status(xmlNode * node_state, pe_node_t * this_node, pe_working_set_t * data_set)
+determine_online_status(const xmlNode *node_state, pe_node_t *this_node,
+                        pe_working_set_t *data_set)
 {
     gboolean online = FALSE;
     const char *exp_state = crm_element_value(node_state, XML_NODE_EXPECTED);
@@ -1670,7 +1674,8 @@ clone_zero(const char *last_rsc_id)
 }
 
 static pe_resource_t *
-create_fake_resource(const char *rsc_id, xmlNode * rsc_entry, pe_working_set_t * data_set)
+create_fake_resource(const char *rsc_id, const xmlNode *rsc_entry,
+                     pe_working_set_t *data_set)
 {
     pe_resource_t *rsc = NULL;
     xmlNode *xml_rsc = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
@@ -1712,10 +1717,17 @@ create_fake_resource(const char *rsc_id, xmlNode * rsc_entry, pe_working_set_t *
 /*!
  * \internal
  * \brief Create orphan instance for anonymous clone resource history
+ *
+ * \param[in,out] parent    Clone resource that orphan will be added to
+ * \param[in]     rsc_id    Orphan's resource ID
+ * \param[in]     node      Where orphan is active (for logging only)
+ * \param[in,out] data_set  Cluster working set
+ *
+ * \return Newly added orphaned instance of \p parent
  */
 static pe_resource_t *
 create_anonymous_orphan(pe_resource_t *parent, const char *rsc_id,
-                        pe_node_t *node, pe_working_set_t *data_set)
+                        const pe_node_t *node, pe_working_set_t *data_set)
 {
     pe_resource_t *top = pe__create_clone_child(parent, data_set);
 
@@ -1736,14 +1748,14 @@ create_anonymous_orphan(pe_resource_t *parent, const char *rsc_id,
  * (2) an inactive instance (i.e. within the total of clone-max instances);
  * (3) a newly created orphan (i.e. clone-max instances are already active).
  *
- * \param[in] data_set  Cluster information
- * \param[in] node      Node on which to check for instance
- * \param[in] parent    Clone to check
- * \param[in] rsc_id    Name of cloned resource in history (without instance)
+ * \param[in,out] data_set  Cluster information
+ * \param[in]     node      Node on which to check for instance
+ * \param[in,out] parent    Clone to check
+ * \param[in]     rsc_id    Name of cloned resource in history (without instance)
  */
 static pe_resource_t *
-find_anonymous_clone(pe_working_set_t * data_set, pe_node_t * node, pe_resource_t * parent,
-                     const char *rsc_id)
+find_anonymous_clone(pe_working_set_t *data_set, const pe_node_t *node,
+                     pe_resource_t *parent, const char *rsc_id)
 {
     GList *rIter = NULL;
     pe_resource_t *rsc = NULL;
@@ -1866,8 +1878,8 @@ find_anonymous_clone(pe_working_set_t * data_set, pe_node_t * node, pe_resource_
 }
 
 static pe_resource_t *
-unpack_find_resource(pe_working_set_t * data_set, pe_node_t * node, const char *rsc_id,
-                     xmlNode * rsc_entry)
+unpack_find_resource(pe_working_set_t *data_set, const pe_node_t *node,
+                     const char *rsc_id)
 {
     pe_resource_t *rsc = NULL;
     pe_resource_t *parent = NULL;
@@ -1927,7 +1939,8 @@ unpack_find_resource(pe_working_set_t * data_set, pe_node_t * node, const char *
 }
 
 static pe_resource_t *
-process_orphan_resource(xmlNode * rsc_entry, pe_node_t * node, pe_working_set_t * data_set)
+process_orphan_resource(const xmlNode *rsc_entry, const pe_node_t *node,
+                        pe_working_set_t *data_set)
 {
     pe_resource_t *rsc = NULL;
     const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
@@ -2324,8 +2337,8 @@ calculate_active_ops(GList *sorted_op_list, int *start_index, int *stop_index)
 
 // If resource history entry has shutdown lock, remember lock node and time
 static void
-unpack_shutdown_lock(xmlNode *rsc_entry, pe_resource_t *rsc, pe_node_t *node,
-                     pe_working_set_t *data_set)
+unpack_shutdown_lock(const xmlNode *rsc_entry, pe_resource_t *rsc,
+                     const pe_node_t *node, pe_working_set_t *data_set)
 {
     time_t lock_time = 0;   // When lock started (i.e. node shutdown time)
 
@@ -2339,7 +2352,11 @@ unpack_shutdown_lock(xmlNode *rsc_entry, pe_resource_t *rsc, pe_node_t *node,
                         rsc->id, pe__node_name(node));
             pe__clear_resource_history(rsc, node, data_set);
         } else {
-            rsc->lock_node = node;
+            /* @COMPAT I don't like breaking const signatures, but
+             * rsc->lock_node should really be const -- we just can't change it
+             * until the next API compatibility break.
+             */
+            rsc->lock_node = (pe_node_t *) node;
             rsc->lock_time = lock_time;
         }
     }
@@ -2349,14 +2366,14 @@ unpack_shutdown_lock(xmlNode *rsc_entry, pe_resource_t *rsc, pe_node_t *node,
  * \internal
  * \brief Unpack one lrm_resource entry from a node's CIB status
  *
- * \param[in] node       Node whose status is being unpacked
- * \param[in] rsc_entry  lrm_resource XML being unpacked
- * \param[in] data_set   Cluster working set
+ * \param[in,out] node       Node whose status is being unpacked
+ * \param[in]     rsc_entry  lrm_resource XML being unpacked
+ * \param[in,out] data_set   Cluster working set
  *
  * \return Resource corresponding to the entry, or NULL if no operation history
  */
 static pe_resource_t *
-unpack_lrm_resource(pe_node_t *node, xmlNode *lrm_resource,
+unpack_lrm_resource(pe_node_t *node, const xmlNode *lrm_resource,
                     pe_working_set_t *data_set)
 {
     GList *gIter = NULL;
@@ -2401,7 +2418,7 @@ unpack_lrm_resource(pe_node_t *node, xmlNode *lrm_resource,
     }
 
     /* find the resource */
-    rsc = unpack_find_resource(data_set, node, rsc_id, lrm_resource);
+    rsc = unpack_find_resource(data_set, node, rsc_id);
     if (rsc == NULL) {
         if (op_list == NULL) {
             // If there are no operations, there is nothing to do
@@ -2461,7 +2478,8 @@ unpack_lrm_resource(pe_node_t *node, xmlNode *lrm_resource,
 }
 
 static void
-handle_orphaned_container_fillers(xmlNode * lrm_rsc_list, pe_working_set_t * data_set)
+handle_orphaned_container_fillers(const xmlNode *lrm_rsc_list,
+                                  pe_working_set_t *data_set)
 {
     xmlNode *rsc_entry = NULL;
     for (rsc_entry = pcmk__xe_first_child(lrm_rsc_list); rsc_entry != NULL;
@@ -2505,12 +2523,12 @@ handle_orphaned_container_fillers(xmlNode * lrm_rsc_list, pe_working_set_t * dat
  * \internal
  * \brief Unpack one node's lrm status section
  *
- * \param[in] node      Node whose status is being unpacked
- * \param[in] xml       CIB node state XML
- * \param[in] data_set  Cluster working set
+ * \param[in,out] node      Node whose status is being unpacked
+ * \param[in]     xml       CIB node state XML
+ * \param[in,out] data_set  Cluster working set
  */
 static void
-unpack_node_lrm(pe_node_t *node, xmlNode *xml, pe_working_set_t *data_set)
+unpack_node_lrm(pe_node_t *node, const xmlNode *xml, pe_working_set_t *data_set)
 {
     bool found_orphaned_container_filler = false;
 
@@ -2657,16 +2675,16 @@ unknown_on_node(const char *rsc_id, const char *node_name,
  * \brief Check whether a probe/monitor indicating the resource was not running
  * on a node happened after some event
  *
- * \param[in] rsc_id    Resource being checked
- * \param[in] node_name Node being checked
- * \param[in] xml_op    Event that monitor is being compared to
- * \param[in] data_set  Cluster working set
+ * \param[in]     rsc_id    Resource being checked
+ * \param[in]     node_name Node being checked
+ * \param[in]     xml_op    Event that monitor is being compared to
+ * \param[in,out] data_set  Cluster working set
  *
  * \return true if such a monitor happened after event, false otherwise
  */
 static bool
 monitor_not_running_after(const char *rsc_id, const char *node_name,
-                          xmlNode *xml_op, bool same_node,
+                          const xmlNode *xml_op, bool same_node,
                           pe_working_set_t *data_set)
 {
     /* Any probe/monitor operation on the node indicating it was not running
@@ -2682,17 +2700,18 @@ monitor_not_running_after(const char *rsc_id, const char *node_name,
  * \brief Check whether any non-monitor operation on a node happened after some
  * event
  *
- * \param[in] rsc_id    Resource being checked
- * \param[in] node_name Node being checked
- * \param[in] xml_op    Event that non-monitor is being compared to
- * \param[in] same_node Whether the operations are on the same node
- * \param[in] data_set  Cluster working set
+ * \param[in]     rsc_id    Resource being checked
+ * \param[in]     node_name Node being checked
+ * \param[in]     xml_op    Event that non-monitor is being compared to
+ * \param[in]     same_node Whether the operations are on the same node
+ * \param[in,out] data_set  Cluster working set
  *
  * \return true if such a operation happened after event, false otherwise
  */
 static bool
-non_monitor_after(const char *rsc_id, const char *node_name, xmlNode *xml_op,
-                  bool same_node, pe_working_set_t *data_set)
+non_monitor_after(const char *rsc_id, const char *node_name,
+                  const xmlNode *xml_op, bool same_node,
+                  pe_working_set_t *data_set)
 {
     xmlNode *lrm_resource = NULL;
 
@@ -2725,20 +2744,21 @@ non_monitor_after(const char *rsc_id, const char *node_name, xmlNode *xml_op,
  * \brief Check whether the resource has newer state on a node after a migration
  * attempt
  *
- * \param[in] rsc_id       Resource being checked
- * \param[in] node_name    Node being checked
- * \param[in] migrate_to   Any migrate_to event that is being compared to
- * \param[in] migrate_from Any migrate_from event that is being compared to
- * \param[in] data_set     Cluster working set
+ * \param[in]     rsc_id       Resource being checked
+ * \param[in]     node_name    Node being checked
+ * \param[in]     migrate_to   Any migrate_to event that is being compared to
+ * \param[in]     migrate_from Any migrate_from event that is being compared to
+ * \param[in,out] data_set     Cluster working set
  *
  * \return true if such a operation happened after event, false otherwise
  */
 static bool
 newer_state_after_migrate(const char *rsc_id, const char *node_name,
-                          xmlNode *migrate_to, xmlNode *migrate_from,
+                          const xmlNode *migrate_to,
+                          const xmlNode *migrate_from,
                           pe_working_set_t *data_set)
 {
-    xmlNode *xml_op = migrate_to;
+    const xmlNode *xml_op = migrate_to;
     const char *source = NULL;
     const char *target = NULL;
     bool same_node = false;
@@ -2782,8 +2802,8 @@ newer_state_after_migrate(const char *rsc_id, const char *node_name,
 }
 
 static void
-unpack_migrate_to_success(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
-                          pe_working_set_t *data_set)
+unpack_migrate_to_success(pe_resource_t *rsc, const pe_node_t *node,
+                          xmlNode *xml_op, pe_working_set_t *data_set)
 {
     /* A successful migration sequence is:
      *    migrate_to on source node
@@ -2885,7 +2905,8 @@ unpack_migrate_to_success(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
         pe_rsc_trace(rsc, "Detected dangling migration op: %s on %s", ID(xml_op),
                      source);
         rsc->role = RSC_ROLE_STOPPED;
-        rsc->dangling_migrations = g_list_prepend(rsc->dangling_migrations, node);
+        rsc->dangling_migrations = g_list_prepend(rsc->dangling_migrations,
+                                                  (gpointer) node);
 
     } else if (migrate_from && (from_status != PCMK_EXEC_PENDING)) { // Failed
         /* If the resource has newer state on the target, this migrate_to no
@@ -2939,8 +2960,8 @@ unpack_migrate_to_success(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 }
 
 static void
-unpack_migrate_to_failure(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
-                          pe_working_set_t *data_set)
+unpack_migrate_to_failure(pe_resource_t *rsc, const pe_node_t *node,
+                          xmlNode *xml_op, pe_working_set_t *data_set)
 {
     xmlNode *target_migrate_from = NULL;
     const char *source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
@@ -2986,12 +3007,13 @@ unpack_migrate_to_failure(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
          */
 
         // Mark node as having dangling migration so we can force a stop later
-        rsc->dangling_migrations = g_list_prepend(rsc->dangling_migrations, node);
+        rsc->dangling_migrations = g_list_prepend(rsc->dangling_migrations,
+                                                  (gpointer) node);
     }
 }
 
 static void
-unpack_migrate_from_failure(pe_resource_t *rsc, pe_node_t *node,
+unpack_migrate_from_failure(pe_resource_t *rsc, const pe_node_t *node,
                             xmlNode *xml_op, pe_working_set_t *data_set)
 {
     xmlNode *source_migrate_to = NULL;
@@ -3060,7 +3082,8 @@ record_failed_op(xmlNode *op, const pe_node_t *node,
     add_node_copy(data_set->failed, op);
 }
 
-static const char *get_op_key(xmlNode *xml_op)
+static const char *
+get_op_key(const xmlNode *xml_op)
 {
     const char *key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
     if(key == NULL) {
@@ -3187,8 +3210,10 @@ cmp_on_fail(enum action_fail_response first, enum action_fail_response second)
 }
 
 static void
-unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * xml_op, xmlNode ** last_failure,
-                      enum action_fail_response * on_fail, pe_working_set_t * data_set)
+unpack_rsc_op_failure(pe_resource_t *rsc, const pe_node_t *node, int rc,
+                      xmlNode *xml_op, xmlNode **last_failure,
+                      enum action_fail_response *on_fail,
+                      pe_working_set_t *data_set)
 {
     bool is_probe = false;
     pe_action_t *action = NULL;
@@ -3344,7 +3369,7 @@ unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * x
  * \param[in]     xml_op       XML of failed action result (for logging only)
  */
 static void
-check_recoverable(pe_resource_t *rsc, pe_node_t *node, const char *task,
+check_recoverable(pe_resource_t *rsc, const pe_node_t *node, const char *task,
                   int exit_status, const xmlNode *xml_op)
 {
     const char *exit_reason = NULL;
@@ -3384,10 +3409,10 @@ check_recoverable(pe_resource_t *rsc, pe_node_t *node, const char *task,
  * status for the purposes of responding to the action.  The status provided by the
  * executor is not directly usable since the executor does not know what was expected.
  *
- * \param[in]     xml_op     Operation history entry XML from CIB status
+ * \param[in,out] xml_op     Operation history entry XML from CIB status
  * \param[in,out] rsc        Resource that operation history entry is for
  * \param[in]     node       Node where operation was executed
- * \param[in]     data_set   Current cluster working set
+ * \param[in,out] data_set   Current cluster working set
  * \param[in,out] on_fail    What should be done about the result
  * \param[in]     target_rc  Expected return code of operation
  * \param[in,out] rc         Actual return code of operation
@@ -3400,7 +3425,7 @@ check_recoverable(pe_resource_t *rsc, pe_node_t *node, const char *task,
  * \note This may update the resource's current and next role.
  */
 static void
-remap_operation(xmlNode *xml_op, pe_resource_t *rsc, pe_node_t *node,
+remap_operation(xmlNode *xml_op, pe_resource_t *rsc, const pe_node_t *node,
                 pe_working_set_t *data_set, enum action_fail_response *on_fail,
                 int target_rc, int *rc, int *status) {
     bool is_probe = false;
@@ -3560,7 +3585,7 @@ remap_operation(xmlNode *xml_op, pe_resource_t *rsc, pe_node_t *node,
 
 // return TRUE if start or monitor last failure but parameters changed
 static bool
-should_clear_for_param_change(xmlNode *xml_op, const char *task,
+should_clear_for_param_change(const xmlNode *xml_op, const char *task,
                               pe_resource_t *rsc, pe_node_t *node)
 {
     if (!strcmp(task, "start") || !strcmp(task, "monitor")) {
@@ -3664,16 +3689,16 @@ should_ignore_failure_timeout(const pe_resource_t *rsc, const char *task,
  * or the operation is a last_failure for a start or monitor operation and the
  * resource's parameters have changed since the operation).
  *
- * \param[in] rsc       Resource that operation happened to
- * \param[in] node      Node that operation happened on
- * \param[in] rc        Actual result of operation
- * \param[in] xml_op    Operation history entry XML
+ * \param[in,out] rsc     Resource that operation happened to
+ * \param[in,out] node    Node that operation happened on
+ * \param[in]     rc      Actual result of operation
+ * \param[in]     xml_op  Operation history entry XML
  *
  * \return TRUE if operation history entry is expired, FALSE otherwise
  */
 static bool
 check_operation_expiry(pe_resource_t *rsc, pe_node_t *node, int rc,
-                       xmlNode *xml_op)
+                       const xmlNode *xml_op)
 {
     bool expired = FALSE;
     bool is_last_failure = pcmk__ends_with(ID(xml_op), "_last_failure_0");
@@ -3812,8 +3837,10 @@ get_action_on_fail(pe_resource_t *rsc, const char *key, const char *task, pe_wor
 }
 
 static void
-update_resource_state(pe_resource_t * rsc, pe_node_t * node, xmlNode * xml_op, const char * task, int rc,
-                      xmlNode * last_failure, enum action_fail_response * on_fail, pe_working_set_t * data_set)
+update_resource_state(pe_resource_t *rsc, const pe_node_t *node,
+                      xmlNode *xml_op, const char *task, int rc,
+                      xmlNode *last_failure, enum action_fail_response *on_fail,
+                      pe_working_set_t *data_set)
 {
     gboolean clear_past_failure = FALSE;
 
@@ -4074,7 +4101,12 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
             if (rsc->pending_task == NULL) {
                 if ((interval_ms != 0) || strcmp(task, CRMD_ACTION_STATUS)) {
                     rsc->pending_task = strdup(task);
-                    rsc->pending_node = node;
+
+                    /* @COMPAT I don't like breaking const signatures, but
+                     * rsc->pending_node should really be const -- we just can't
+                     * change it until the next API compatibilit break.
+                     */
+                    rsc->pending_node = (pe_node_t *) node;
                 } else {
                     /* Pending probes are not printed, even if pending
                      * operations are requested. If someone ever requests that
@@ -4083,7 +4115,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                      */
 #if 0
                     rsc->pending_task = strdup("probe");
-                    rsc->pending_node = node;
+                    rsc->pending_node = (pe_node_t *) node;
 #endif
                 }
             }

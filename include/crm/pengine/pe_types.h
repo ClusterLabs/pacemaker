@@ -388,8 +388,10 @@ struct pe_resource_s {
     pe_resource_t *container;
     GList *fillers;
 
+    // @COMPAT These should be made const at next API compatibility break
     pe_node_t *pending_node;    // Node on which pending_task is happening
     pe_node_t *lock_node;       // Resource is shutdown-locked to this node
+
     time_t lock_time;           // When shutdown lock started
 
     /* Resource parameters may have node-attribute-based rules, which means the

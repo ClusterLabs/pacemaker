@@ -1465,13 +1465,14 @@ void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrit
  * \internal
  * \brief Create an action to clear a resource's history from CIB
  *
- * \param[in] rsc   Resource to clear
- * \param[in] node  Node to clear history on
+ * \param[in,out] rsc       Resource to clear
+ * \param[in]     node      Node to clear history on
+ * \param[in,out] data_set  Cluster working set
  *
  * \return New action to clear resource history
  */
 pe_action_t *
-pe__clear_resource_history(pe_resource_t *rsc, pe_node_t *node,
+pe__clear_resource_history(pe_resource_t *rsc, const pe_node_t *node,
                            pe_working_set_t *data_set)
 {
     char *key = NULL;
