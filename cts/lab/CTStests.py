@@ -1259,28 +1259,15 @@ class ResourceRecover(CTSTest):
             self.logger.log("No active resources on %s" % node)
             return self.skipped()
 
-        self.rid = self.Env.RandomGen.choice(resourcelist)
-        self.rid_alt = self.rid
-
-        rsc = None
-        (rc, lines) = self.rsh(node, "crm_resource -c", None)
-        for line in lines:
-            if re.search("^Resource", line):
-                tmp = AuditResource(self.CM, line)
-                if tmp.id == self.rid:
-                    rsc = tmp
-                    # Handle anonymous clones that get renamed
-                    self.rid = rsc.clone_id
-                    break
-
-        if not rsc:
+        rsc = self.choose_resource(node, resourcelist)
+        if rsc is None:
             return self.failure("Could not find %s in the resource list" % self.rid)
 
         self.debug("Shooting %s aka. %s" % (rsc.clone_id, rsc.id))
 
+        # Log patterns to watch for
         pats = []
         pats.append(self.templates["Pat:CloneOpFail"] % (self.action, rsc.id, rsc.clone_id))
-
         if rsc.managed():
             pats.append(self.templates["Pat:RscOpOK"] % ("stop", self.rid))
             if rsc.unique():
@@ -1288,6 +1275,29 @@ class ResourceRecover(CTSTest):
             else:
                 # Anonymous clones may get restarted with a different clone number
                 pats.append(self.templates["Pat:RscOpOK"] % ("start", ".*"))
+
+        if self.fail_resource(rsc, node, pats) is None:
+            return None # self.failure() already called
+
+        return self.success()
+
+    def choose_resource(self, node, resourcelist):
+        """ Choose a random resource to target """
+
+        self.rid = self.Env.RandomGen.choice(resourcelist)
+        self.rid_alt = self.rid
+        (rc, lines) = self.rsh(node, "crm_resource -c", None)
+        for line in lines:
+            if re.search("^Resource", line):
+                rsc = AuditResource(self.CM, line)
+                if rsc.id == self.rid:
+                    # Handle anonymous clones that get renamed
+                    self.rid = rsc.clone_id
+                    return rsc
+        return None
+
+    def fail_resource(self, rsc, node, pats):
+        """ Fail the targeted resource, and verify as expected """
 
         watch = self.create_watch(pats, 60)
         watch.setwatch()
@@ -1313,7 +1323,7 @@ class ResourceRecover(CTSTest):
         elif rsc.managed():
             return self.failure("%s was not recovered and is inactive" % self.rid)
 
-        return self.success()
+        return 0 # Anything but None is success
 
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
