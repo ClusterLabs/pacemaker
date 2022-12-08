@@ -346,9 +346,9 @@ enum pe_fc_flags_e {
     pe_fc_fillers   = (1 << 2), // if container, include filler failures in count
 };
 
-int pe_get_failcount(pe_node_t *node, pe_resource_t *rsc, time_t *last_failure,
-                     uint32_t flags, xmlNode *xml_op,
-                     pe_working_set_t *data_set);
+int pe_get_failcount(const pe_node_t *node, pe_resource_t *rsc,
+                     time_t *last_failure, uint32_t flags,
+                     const xmlNode *xml_op);
 
 pe_action_t *pe__clear_failcount(pe_resource_t *rsc, pe_node_t *node,
                                  const char *reason,

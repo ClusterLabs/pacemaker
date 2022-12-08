@@ -1834,7 +1834,7 @@ process_rsc_history(xmlNode *rsc_entry, pe_resource_t *rsc, pe_node_t *node)
 
             } else if (pcmk__check_action_config(rsc, node, rsc_op)
                        && (pe_get_failcount(node, rsc, NULL, pe_fc_effective,
-                                            NULL, rsc->cluster) != 0)) {
+                                            NULL) != 0)) {
                 pe__clear_failcount(rsc, node, "action definition changed",
                                     rsc->cluster);
             }

@@ -271,8 +271,8 @@ generate_fail_regexes(pe_resource_t *rsc, pe_working_set_t *data_set,
 }
 
 int
-pe_get_failcount(pe_node_t *node, pe_resource_t *rsc, time_t *last_failure,
-                 uint32_t flags, xmlNode *xml_op, pe_working_set_t *data_set)
+pe_get_failcount(const pe_node_t *node, pe_resource_t *rsc,
+                 time_t *last_failure, uint32_t flags, const xmlNode *xml_op)
 {
     char *key = NULL;
     const char *value = NULL;
@@ -281,7 +281,7 @@ pe_get_failcount(pe_node_t *node, pe_resource_t *rsc, time_t *last_failure,
     time_t last = 0;
     GHashTableIter iter;
 
-    CRM_CHECK(generate_fail_regexes(rsc, data_set, &failcount_re,
+    CRM_CHECK(generate_fail_regexes(rsc, rsc->cluster, &failcount_re,
                                     &lastfailure_re) == pcmk_rc_ok,
               return 0);
 
@@ -319,7 +319,7 @@ pe_get_failcount(pe_node_t *node, pe_resource_t *rsc, time_t *last_failure,
     if (pcmk_is_set(flags, pe_fc_effective) && (failcount > 0) && (last > 0)
         && rsc->failure_timeout) {
 
-        time_t now = get_effective_time(data_set);
+        time_t now = get_effective_time(rsc->cluster);
 
         if (now > (last + rsc->failure_timeout)) {
             crm_debug("Failcount for %s on %s expired after %ds",
@@ -348,7 +348,7 @@ pe_get_failcount(pe_node_t *node, pe_resource_t *rsc, time_t *last_failure,
             time_t filler_last_failure = 0;
 
             failcount += pe_get_failcount(node, filler, &filler_last_failure,
-                                          flags, xml_op, data_set);
+                                          flags, xml_op);
 
             if (last_failure && filler_last_failure > *last_failure) {
                 *last_failure = filler_last_failure;

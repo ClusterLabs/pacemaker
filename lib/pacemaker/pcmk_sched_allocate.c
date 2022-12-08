@@ -49,8 +49,7 @@ check_params(pe_resource_t *rsc, pe_node_t *node, xmlNode *rsc_op,
     switch (check) {
         case pe_check_active:
             if (pcmk__check_action_config(rsc, node, rsc_op)
-                && pe_get_failcount(node, rsc, NULL, pe_fc_effective, NULL,
-                                    data_set)) {
+                && pe_get_failcount(node, rsc, NULL, pe_fc_effective, NULL)) {
                 reason = "action definition changed";
             }
             break;
@@ -363,8 +362,7 @@ clear_failcounts_if_orphaned(pe_resource_t *rsc, pe_working_set_t *data_set)
         if (!node->details->online) {
             continue;
         }
-        if (pe_get_failcount(node, rsc, NULL, pe_fc_effective, NULL,
-                             data_set) == 0) {
+        if (pe_get_failcount(node, rsc, NULL, pe_fc_effective, NULL) == 0) {
             continue;
         }
 

@@ -3705,8 +3705,7 @@ check_operation_expiry(pe_resource_t *rsc, pe_node_t *node, int rc,
 
         // Does the resource as a whole have an unexpired fail count?
         unexpired_fail_count = pe_get_failcount(node, rsc, &last_failure,
-                                                pe_fc_effective, xml_op,
-                                                data_set);
+                                                pe_fc_effective, xml_op);
 
         // Update scheduler recheck time according to *last* failure
         crm_trace("%s@%lld is %sexpired @%lld with unexpired_failures=%d timeout=%ds"
@@ -3721,7 +3720,7 @@ check_operation_expiry(pe_resource_t *rsc, pe_node_t *node, int rc,
     }
 
     if (expired) {
-        if (pe_get_failcount(node, rsc, NULL, pe_fc_default, xml_op, data_set)) {
+        if (pe_get_failcount(node, rsc, NULL, pe_fc_default, xml_op)) {
 
             // There is a fail count ignoring timeout
 
