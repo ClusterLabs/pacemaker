@@ -1501,8 +1501,9 @@ task_for_digest(const char *task, guint interval_ms)
  * \return true if only sanitized parameters changed, otherwise false
  */
 static bool
-only_sanitized_changed(xmlNode *xml_op, const op_digest_cache_t *digest_data,
-                       pe_working_set_t *data_set)
+only_sanitized_changed(const xmlNode *xml_op,
+                       const op_digest_cache_t *digest_data,
+                       const pe_working_set_t *data_set)
 {
     const char *digest_secure = NULL;
 
@@ -1529,7 +1530,7 @@ only_sanitized_changed(xmlNode *xml_op, const op_digest_cache_t *digest_data,
  */
 static void
 force_restart(pe_resource_t *rsc, const char *task, guint interval_ms,
-              pe_node_t *node)
+              const pe_node_t *node)
 {
     char *key = pcmk__op_key(rsc->id, task, interval_ms);
     pe_action_t *required = custom_action(rsc, key, task, NULL, FALSE, TRUE,
@@ -1548,13 +1549,13 @@ force_restart(pe_resource_t *rsc, const char *task, guint interval_ms,
  * \param[in] node  Where resource should be reloaded
  */
 static void
-schedule_reload(pe_resource_t *rsc, pe_node_t *node)
+schedule_reload(pe_resource_t *rsc, const pe_node_t *node)
 {
     pe_action_t *reload = NULL;
 
     // For collective resources, just call recursively for children
     if (rsc->variant > pe_native) {
-        g_list_foreach(rsc->children, (GFunc) schedule_reload, node);
+        g_list_foreach(rsc->children, (GFunc) schedule_reload, (gpointer) node);
         return;
     }
 
@@ -1604,14 +1605,15 @@ schedule_reload(pe_resource_t *rsc, pe_node_t *node)
  * changed since the action was done, schedule any actions needed (restart,
  * reload, unfencing, rescheduling recurring actions, etc.).
  *
- * \param[in] rsc     Resource that action is for
- * \param[in] node    Node that action was on
- * \param[in] xml_op  Action XML from resource history
+ * \param[in,out] rsc     Resource that action is for
+ * \param[in]     node    Node that action was on
+ * \param[in]     xml_op  Action XML from resource history
  *
  * \return true if action configuration changed, otherwise false
  */
 bool
-pcmk__check_action_config(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op)
+pcmk__check_action_config(pe_resource_t *rsc, const pe_node_t *node,
+                          const xmlNode *xml_op)
 {
     guint interval_ms = 0;
     const char *task = NULL;

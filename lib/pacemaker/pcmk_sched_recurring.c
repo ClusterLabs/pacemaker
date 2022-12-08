@@ -681,7 +681,7 @@ pcmk__schedule_cancel(pe_resource_t *rsc, const char *call_id, const char *task,
  */
 void
 pcmk__reschedule_recurring(pe_resource_t *rsc, const char *task,
-                           guint interval_ms, pe_node_t *node)
+                           guint interval_ms, const pe_node_t *node)
 {
     pe_action_t *op = NULL;
 

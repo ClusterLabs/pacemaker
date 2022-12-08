@@ -374,15 +374,15 @@ pe_get_failcount(const pe_node_t *node, pe_resource_t *rsc,
 /*!
  * \brief Schedule a controller operation to clear a fail count
  *
- * \param[in] rsc       Resource with failure
- * \param[in] node      Node failure occurred on
- * \param[in] reason    Readable description why needed (for logging)
- * \param[in] data_set  Working set for cluster
+ * \param[in,out] rsc       Resource with failure
+ * \param[in]     node      Node failure occurred on
+ * \param[in]     reason    Readable description why needed (for logging)
+ * \param[in,out] data_set  Working set for cluster
  *
  * \return Scheduled action
  */
 pe_action_t *
-pe__clear_failcount(pe_resource_t *rsc, pe_node_t *node,
+pe__clear_failcount(pe_resource_t *rsc, const pe_node_t *node,
                     const char *reason, pe_working_set_t *data_set)
 {
     char *key = NULL;

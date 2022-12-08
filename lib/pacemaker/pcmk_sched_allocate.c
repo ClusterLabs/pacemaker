@@ -33,15 +33,14 @@ CRM_TRACE_INIT_DATA(pacemaker);
  * parameter information, so instead they add a deferred check to a list. This
  * function processes one entry in that list.
  *
- * \param[in] rsc       Resource that action history is for
- * \param[in] node      Node that action history is for
- * \param[in] rsc_op    Action history entry
- * \param[in] check     Type of deferred check to do
- * \param[in] data_set  Working set for cluster
+ * \param[in,out] rsc     Resource that action history is for
+ * \param[in]     node    Node that action history is for
+ * \param[in]     rsc_op  Action history entry
+ * \param[in]     check   Type of deferred check to do
  */
 static void
-check_params(pe_resource_t *rsc, pe_node_t *node, xmlNode *rsc_op,
-             enum pe_check_parameters check, pe_working_set_t *data_set)
+check_params(pe_resource_t *rsc, const pe_node_t *node, const xmlNode *rsc_op,
+             enum pe_check_parameters check)
 {
     const char *reason = NULL;
     op_digest_cache_t *digest_data = NULL;
@@ -55,7 +54,8 @@ check_params(pe_resource_t *rsc, pe_node_t *node, xmlNode *rsc_op,
             break;
 
         case pe_check_last_failure:
-            digest_data = rsc_action_digest_cmp(rsc, rsc_op, node, data_set);
+            digest_data = rsc_action_digest_cmp(rsc, rsc_op, node,
+                                                rsc->cluster);
             switch (digest_data->rc) {
                 case RSC_DIGEST_UNKNOWN:
                     crm_trace("Resource %s history entry %s on %s has "
@@ -71,7 +71,7 @@ check_params(pe_resource_t *rsc, pe_node_t *node, xmlNode *rsc_op,
             break;
     }
     if (reason != NULL) {
-        pe__clear_failcount(rsc, node, reason, data_set);
+        pe__clear_failcount(rsc, node, reason, rsc->cluster);
     }
 }
 

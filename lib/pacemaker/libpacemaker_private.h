@@ -263,8 +263,8 @@ G_GNUC_INTERNAL
 void pcmk__output_actions(pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-bool pcmk__check_action_config(pe_resource_t *rsc, pe_node_t *node,
-                               xmlNode *xml_op);
+bool pcmk__check_action_config(pe_resource_t *rsc, const pe_node_t *node,
+                               const xmlNode *xml_op);
 
 G_GNUC_INTERNAL
 void pcmk__handle_rsc_config_changes(pe_working_set_t *data_set);
@@ -282,7 +282,7 @@ void pcmk__schedule_cancel(pe_resource_t *rsc, const char *call_id,
 
 G_GNUC_INTERNAL
 void pcmk__reschedule_recurring(pe_resource_t *rsc, const char *task,
-                                guint interval_ms, pe_node_t *node);
+                                guint interval_ms, const pe_node_t *node);
 
 G_GNUC_INTERNAL
 bool pcmk__action_is_recurring(const pe_action_t *action);
