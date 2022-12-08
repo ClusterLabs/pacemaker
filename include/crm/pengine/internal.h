@@ -295,7 +295,8 @@ notify_data_t *pe__clone_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
                                           pe_action_t *action,
                                           pe_action_t *complete);
 void pe__free_notification_data(notify_data_t *n_data);
-void pe__order_notifs_after_fencing(pe_action_t *action, pe_resource_t *rsc,
+void pe__order_notifs_after_fencing(const pe_action_t *action,
+                                    pe_resource_t *rsc,
                                     pe_action_t *stonith_op);
 
 
