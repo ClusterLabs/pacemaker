@@ -793,6 +793,10 @@ main(int argc, char **argv)
         attrd_opts = pcmk__node_attr_remote;
     }
 
+    if (pcmk__str_eq(options.set_type, XML_TAG_UTILIZATION, pcmk__str_none)) {
+        attrd_opts |= pcmk__node_attr_utilization;
+    }
+
     if (try_ipc_update() &&
         (send_attrd_update(options.command, options.dest_uname, options.attr_name,
                            options.attr_value, options.set_name, NULL, attrd_opts) == pcmk_rc_ok)) {
