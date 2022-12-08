@@ -180,7 +180,7 @@ block_failure(const pe_node_t *node, pe_resource_t *rsc, const xmlNode *xml_op)
  * \note The caller is responsible for freeing the result.
  */
 static inline char *
-rsc_fail_name(pe_resource_t *rsc)
+rsc_fail_name(const pe_resource_t *rsc)
 {
     const char *name = (rsc->clone_name? rsc->clone_name : rsc->id);
 
@@ -245,7 +245,8 @@ generate_fail_regex(const char *prefix, const char *rsc_name,
  *       regfree().
  */
 static int
-generate_fail_regexes(pe_resource_t *rsc, pe_working_set_t *data_set,
+generate_fail_regexes(const pe_resource_t *rsc,
+                      const pe_working_set_t *data_set,
                       regex_t *failcount_re, regex_t *lastfailure_re)
 {
     char *rsc_name = rsc_fail_name(rsc);

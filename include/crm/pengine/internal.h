@@ -29,7 +29,7 @@ enum pe__clone_flags {
     pe__clone_promotion_constrained = (1 << 2),
 };
 
-bool pe__clone_is_ordered(pe_resource_t *clone);
+bool pe__clone_is_ordered(const pe_resource_t *clone);
 int pe__set_clone_flag(pe_resource_t *clone, enum pe__clone_flags flag);
 
 
@@ -374,7 +374,7 @@ pe__current_node(const pe_resource_t *rsc)
 /* Binary like operators for lists of nodes */
 extern void node_list_exclude(GHashTable * list, GList *list2, gboolean merge_scores);
 
-GHashTable *pe__node_list2table(GList *list);
+GHashTable *pe__node_list2table(const GList *list);
 
 static inline gpointer
 pe_hash_table_lookup(GHashTable * hash, gconstpointer key)
@@ -547,7 +547,7 @@ void trigger_unfencing(pe_resource_t *rsc, pe_node_t *node,
                        const char *reason, pe_action_t *dependency,
                        pe_working_set_t *data_set);
 
-char *pe__action2reason(pe_action_t *action, enum pe_action_flags flag);
+char *pe__action2reason(const pe_action_t *action, enum pe_action_flags flag);
 void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrite);
 void pe__add_action_expected_result(pe_action_t *action, int expected_result);
 
@@ -585,8 +585,8 @@ const char *pe_node_attribute_calculated(const pe_node_t *node,
                                          const char *name,
                                          const pe_resource_t *rsc);
 const char *pe_node_attribute_raw(const pe_node_t *node, const char *name);
-bool pe__is_universal_clone(pe_resource_t *rsc,
-                            pe_working_set_t *data_set);
+bool pe__is_universal_clone(const pe_resource_t *rsc,
+                            const pe_working_set_t *data_set);
 void pe__add_param_check(const xmlNode *rsc_op, pe_resource_t *rsc,
                          pe_node_t *node, enum pe_check_parameters,
                          pe_working_set_t *data_set);
@@ -596,7 +596,7 @@ void pe__foreach_param_check(pe_working_set_t *data_set,
                                         enum pe_check_parameters));
 void pe__free_param_checks(pe_working_set_t *data_set);
 
-bool pe__shutdown_requested(pe_node_t *node);
+bool pe__shutdown_requested(const pe_node_t *node);
 void pe__update_recheck_time(time_t recheck, pe_working_set_t *data_set);
 
 /*!
@@ -639,7 +639,7 @@ xmlNode *pe__failed_probe_for_rsc(pe_resource_t *rsc, const char *name);
 const char *pe__clone_child_id(pe_resource_t *rsc);
 
 int pe__sum_node_health_scores(const pe_node_t *node, int base_health);
-int pe__node_health(pe_node_t *node);
+int pe__node_health(const pe_node_t *node);
 
 static inline enum pcmk__health_strategy
 pe__health_strategy(pe_working_set_t *data_set)

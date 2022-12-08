@@ -418,7 +418,7 @@ free_params_table(gpointer data)
  *
  * \param[in,out] rsc       Resource to query
  * \param[in]     node      Node for evaluating rules (NULL for defaults)
- * \param[in]     data_set  Cluster working set
+ * \param[in,out] data_set  Cluster working set
  *
  * \return Hash table containing resource parameter names and values
  *         (or NULL if \p rsc or \p data_set is NULL)
@@ -466,9 +466,9 @@ pe_rsc_params(pe_resource_t *rsc, const pe_node_t *node,
  * \internal
  * \brief Unpack a resource's "requires" meta-attribute
  *
- * \param[in] rsc         Resource being unpacked
- * \param[in] value       Value of "requires" meta-attribute
- * \param[in] is_default  Whether \p value was selected by default
+ * \param[in,out] rsc         Resource being unpacked
+ * \param[in]     value       Value of "requires" meta-attribute
+ * \param[in]     is_default  Whether \p value was selected by default
  */
 static void
 unpack_requires(pe_resource_t *rsc, const char *value, bool is_default)

@@ -148,12 +148,12 @@ node_list_exclude(GHashTable * hash, GList *list, gboolean merge_scores)
  * \return Hash table equivalent of node list
  */
 GHashTable *
-pe__node_list2table(GList *list)
+pe__node_list2table(const GList *list)
 {
     GHashTable *result = NULL;
 
     result = pcmk__strkey_table(NULL, free);
-    for (GList *gIter = list; gIter != NULL; gIter = gIter->next) {
+    for (const GList *gIter = list; gIter != NULL; gIter = gIter->next) {
         pe_node_t *new_node = pe__copy_node((pe_node_t *) gIter->data);
 
         g_hash_table_insert(result, (gpointer) new_node->details->id, new_node);
@@ -691,7 +691,7 @@ add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref)
  *       shutdown of remote nodes by virtue of their connection stopping.
  */
 bool
-pe__shutdown_requested(pe_node_t *node)
+pe__shutdown_requested(const pe_node_t *node)
 {
     const char *shutdown = pe_node_attribute_raw(node, XML_CIB_ATTR_SHUTDOWN);
 
