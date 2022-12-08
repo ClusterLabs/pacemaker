@@ -453,9 +453,7 @@ class StonithdTest(CTSTest):
 
         rc = self.rsh(origin, "stonith_admin --reboot %s -VVVVVV" % node)
 
-        if rc == 194:
-            # 194 - 256 = -62 = Timer expired
-            #
+        if rc == 124: # CRM_EX_TIMEOUT
             # Look for the patterns, usually this means the required
             # device was running on the node to be fenced - or that
             # the required devices were in the process of being loaded
