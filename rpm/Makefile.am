@@ -193,14 +193,16 @@ rpm-dep: $(RPM_SPEC_DIR)/$(PACKAGE).spec
 release:
 	$(MAKE) $(AM_MAKEFLAGS) TAG=$(LAST_RELEASE) rpm
 
+# Build the highest-versioned rc tag
 .PHONY: rc
 rc:
-	if [ -n "$(LAST_RC)" ]; then				\
-		@echo 'rc can only be used in git checkout';	\
-		false;						\
-	else							\
-		$(MAKE) $(AM_MAKEFLAGS) TAG=$(LAST_RC) rpm;	\
+	@if [ -z "$(CHECKOUT)" ]; then					\
+		echo 'This target must be run from a git checkout';	\
+		exit 1;							\
 	fi
+	$(MAKE) $(AM_MAKEFLAGS) TAG="$$(git tag -l 2>/dev/null		\
+		| sed -n -e 's/^\(Pacemaker-[0-9.]*-rc[0-9]*\)$$/\1/p'	\
+		| sort -Vr | head -n 1)" rpm
 
 .PHONY: chroot
 chroot: mock-$(MOCK_CFG) mock-install-$(MOCK_CFG) mock-sh-$(MOCK_CFG)
@@ -256,7 +258,6 @@ vars:
 	@echo "TAG=$(TAG)"
 	@echo "DIRTY=$(DIRTY)"
 	@echo "DIRTY_EXT=$(DIRTY_EXT)"
-	@echo "LAST_RC=$(LAST_RC)"
 	@echo "LAST_RELEASE=$(LAST_RELEASE)"
 	@echo "NEXT_RELEASE=$(NEXT_RELEASE)"
 	@echo "top_distdir=$(top_distdir)"

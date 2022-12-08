@@ -29,6 +29,8 @@ attrd_create_attribute(xmlNode *xml)
     const char *value = crm_element_value(xml, PCMK__XA_ATTR_DAMPENING);
     attribute_t *a = calloc(1, sizeof(attribute_t));
 
+    CRM_ASSERT(a != NULL);
+
     a->id      = crm_element_value_copy(xml, PCMK__XA_ATTR_NAME);
     a->set     = crm_element_value_copy(xml, PCMK__XA_ATTR_SET);
     a->uuid    = crm_element_value_copy(xml, PCMK__XA_ATTR_UUID);

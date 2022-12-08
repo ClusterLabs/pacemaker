@@ -77,8 +77,11 @@ pcmk__create_migration_actions(pe_resource_t *rsc, const pe_node_t *current)
 
         if (rsc->partial_migration_target == NULL) {
             pe__set_action_flags(migrate_from, pe_action_migrate_runnable);
-            pe__set_action_flags(migrate_to, pe_action_migrate_runnable);
-            migrate_to->needs = start->needs;
+
+            if (migrate_to != NULL) {
+                pe__set_action_flags(migrate_to, pe_action_migrate_runnable);
+                migrate_to->needs = start->needs;
+            }
 
             // Probe -> migrate_to -> migrate_from
             pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_STATUS, 0), NULL,

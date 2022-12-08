@@ -366,6 +366,8 @@ new_post_notify_action(pe_resource_t *rsc, pe_node_t *node,
 {
     pe_action_t *notify = NULL;
 
+    CRM_ASSERT(n_data != NULL);
+
     // Create the "post-" notify action for specified instance
     notify = new_notify_action(rsc, node, n_data->post, n_data->post_done,
                                n_data);
@@ -533,6 +535,10 @@ collect_resource_data(pe_resource_t *rsc, bool activity, notify_data_t *n_data)
     GList *iter = NULL;
     notify_entry_t *entry = NULL;
     pe_node_t *node = NULL;
+
+    if (n_data == NULL) {
+        return;
+    }
 
     if (n_data->allowed_nodes == NULL) {
         n_data->allowed_nodes = rsc->allowed_nodes;
@@ -975,9 +981,12 @@ pe__order_notifs_after_fencing(pe_action_t *stop, pe_resource_t *rsc,
 
     crm_info("Ordering notifications for implied %s after fencing", stop->uuid);
     n_data = pe__clone_notif_pseudo_ops(rsc, RSC_STOP, NULL, stonith_op);
-    collect_resource_data(rsc, false, n_data);
-    add_notify_env(n_data, "notify_stop_resource", rsc->id);
-    add_notify_env(n_data, "notify_stop_uname", stop->node->details->uname);
-    create_notify_actions(uber_parent(rsc), n_data);
-    pe__free_notification_data(n_data);
+
+    if (n_data != NULL) {
+        collect_resource_data(rsc, false, n_data);
+        add_notify_env(n_data, "notify_stop_resource", rsc->id);
+        add_notify_env(n_data, "notify_stop_uname", stop->node->details->uname);
+        create_notify_actions(uber_parent(rsc), n_data);
+        pe__free_notification_data(n_data);
+    }
 }
