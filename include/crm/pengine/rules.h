@@ -49,7 +49,7 @@ gboolean pe_test_expression(xmlNode *expr, GHashTable *node_hash,
                             pe_match_data_t *match_data);
 
 void pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
-                     pe_rule_eval_data_t *rule_data, GHashTable *hash,
+                     const pe_rule_eval_data_t *rule_data, GHashTable *hash,
                      const char *always_first, gboolean overwrite,
                      crm_time_t *next_change);
 

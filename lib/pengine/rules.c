@@ -407,7 +407,7 @@ typedef struct unpack_data_s {
     gboolean overwrite;
     void *hash;
     crm_time_t *next_change;
-    pe_rule_eval_data_t *rule_data;
+    const pe_rule_eval_data_t *rule_data;
     xmlNode *top;
 } unpack_data_t;
 
@@ -477,22 +477,22 @@ make_pairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
 }
 
 /*!
- * \internal
  * \brief Extract nvpair blocks contained by an XML element into a hash table
  *
  * \param[in,out] top           XML document root (used to expand id-ref's)
  * \param[in]     xml_obj       XML element containing blocks of nvpair elements
  * \param[in]     set_name      If not NULL, only use blocks of this element
+ * \param[in]     rule_data     Matching parameters to use when unpacking
  * \param[out]    hash          Where to store extracted name/value pairs
  * \param[in]     always_first  If not NULL, process block with this ID first
  * \param[in]     overwrite     Whether to replace existing values with same name
- * \param[in]     rule_data     Matching parameters to use when unpacking
  * \param[out]    next_change   If not NULL, set to when evaluation will change
  */
-static void
-unpack_nvpair_blocks(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
-                     void *hash, const char *always_first, gboolean overwrite,
-                     pe_rule_eval_data_t *rule_data, crm_time_t *next_change)
+void
+pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
+                const pe_rule_eval_data_t *rule_data, GHashTable *hash,
+                const char *always_first, gboolean overwrite,
+                crm_time_t *next_change)
 {
     GList *pairs = make_pairs(top, xml_obj, set_name, always_first);
 
@@ -508,16 +508,6 @@ unpack_nvpair_blocks(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
         g_list_foreach(pairs, unpack_attr_set, &data);
         g_list_free_full(pairs, free);
     }
-}
-
-void
-pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
-                pe_rule_eval_data_t *rule_data, GHashTable *hash,
-                const char *always_first, gboolean overwrite,
-                crm_time_t *next_change)
-{
-    unpack_nvpair_blocks(top, xml_obj, set_name, hash, always_first,
-                         overwrite, rule_data, next_change);
 }
 
 /*!
@@ -1313,8 +1303,8 @@ unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj, const char *set_name,
         .op_data = NULL
     };
 
-    unpack_nvpair_blocks(top, xml_obj, set_name, hash, always_first,
-                         overwrite, &rule_data, NULL);
+    pe_eval_nvpairs(top, xml_obj, set_name, &rule_data, hash, always_first,
+                    overwrite, NULL);
 }
 
 // LCOV_EXCL_STOP
