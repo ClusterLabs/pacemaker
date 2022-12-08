@@ -30,7 +30,7 @@
  * \brief Check whether a resource is active on multiple nodes
  */
 static bool
-is_multiply_active(pe_resource_t *rsc)
+is_multiply_active(const pe_resource_t *rsc)
 {
     unsigned int count = 0;
 
@@ -541,8 +541,9 @@ add_output_node(GString *s, const char *node, bool have_nodes)
  * \note Caller must free the result with g_free().
  */
 gchar *
-pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node,
-                           uint32_t show_opts, const char *target_role, bool show_nodes)
+pcmk__native_output_string(pe_resource_t *rsc, const char *name,
+                           const pe_node_t *node, uint32_t show_opts,
+                           const char *target_role, bool show_nodes)
 {
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     const char *provider = NULL;
@@ -687,8 +688,9 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
 }
 
 int
-pe__common_output_html(pcmk__output_t *out, pe_resource_t * rsc,
-                       const char *name, pe_node_t *node, uint32_t show_opts)
+pe__common_output_html(pcmk__output_t *out, pe_resource_t *rsc,
+                       const char *name, const pe_node_t *node,
+                       uint32_t show_opts)
 {
     const char *kind = crm_element_value(rsc->xml, XML_ATTR_TYPE);
     const char *target_role = NULL;
@@ -744,7 +746,8 @@ pe__common_output_html(pcmk__output_t *out, pe_resource_t * rsc,
 
 int
 pe__common_output_text(pcmk__output_t *out, pe_resource_t * rsc,
-                       const char *name, pe_node_t *node, uint32_t show_opts)
+                       const char *name, const pe_node_t *node,
+                       uint32_t show_opts)
 {
     const char *target_role = NULL;
 
@@ -779,7 +782,7 @@ pe__common_output_text(pcmk__output_t *out, pe_resource_t * rsc,
  */
 void
 common_print(pe_resource_t *rsc, const char *pre_text, const char *name,
-             pe_node_t *node, long options, void *print_data)
+             const pe_node_t *node, long options, void *print_data)
 {
     const char *target_role = NULL;
 
@@ -901,7 +904,7 @@ void
 native_print(pe_resource_t *rsc, const char *pre_text, long options,
              void *print_data)
 {
-    pe_node_t *node = NULL;
+    const pe_node_t *node = NULL;
 
     CRM_ASSERT(rsc->variant == pe_native);
     if (options & pe_print_xml) {
@@ -1006,7 +1009,7 @@ pe__resource_html(pcmk__output_t *out, va_list args)
     GList *only_node G_GNUC_UNUSED = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
-    pe_node_t *node = pe__current_node(rsc);
+    const pe_node_t *node = pe__current_node(rsc);
 
     if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
         return pcmk_rc_no_output;
@@ -1030,7 +1033,7 @@ pe__resource_text(pcmk__output_t *out, va_list args)
     GList *only_node G_GNUC_UNUSED = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
-    pe_node_t *node = pe__current_node(rsc);
+    const pe_node_t *node = pe__current_node(rsc);
 
     CRM_ASSERT(rsc->variant == pe_native);
 

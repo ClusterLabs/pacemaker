@@ -202,12 +202,13 @@ pe__cmp_node_name(gconstpointer a, gconstpointer b)
  * \internal
  * \brief Output node weights to stdout
  *
- * \param[in] rsc       Use allowed nodes for this resource
- * \param[in] comment   Text description to prefix lines with
- * \param[in] nodes     If rsc is not specified, use these nodes
+ * \param[in]     rsc       Use allowed nodes for this resource
+ * \param[in]     comment   Text description to prefix lines with
+ * \param[in]     nodes     If rsc is not specified, use these nodes
+ * \param[in,out] data_set  Cluster working set
  */
 static void
-pe__output_node_weights(pe_resource_t *rsc, const char *comment,
+pe__output_node_weights(const pe_resource_t *rsc, const char *comment,
                         GHashTable *nodes, pe_working_set_t *data_set)
 {
     pcmk__output_t *out = data_set->priv;
@@ -217,7 +218,7 @@ pe__output_node_weights(pe_resource_t *rsc, const char *comment,
                               pe__cmp_node_name);
 
     for (GList *gIter = list; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *node = (pe_node_t *) gIter->data;
+        const pe_node_t *node = (const pe_node_t *) gIter->data;
 
         out->message(out, "node-weight", rsc, comment, node->details->uname,
                      pcmk_readable_score(node->weight));
@@ -232,13 +233,14 @@ pe__output_node_weights(pe_resource_t *rsc, const char *comment,
  * \param[in] file      Caller's filename
  * \param[in] function  Caller's function name
  * \param[in] line      Caller's line number
- * \param[in] rsc       Use allowed nodes for this resource
+ * \param[in] rsc       If not NULL, include this resource's ID in logs
  * \param[in] comment   Text description to prefix lines with
- * \param[in] nodes     If rsc is not specified, use these nodes
+ * \param[in] nodes     Nodes whose scores should be logged
  */
 static void
 pe__log_node_weights(const char *file, const char *function, int line,
-                     pe_resource_t *rsc, const char *comment, GHashTable *nodes)
+                     const pe_resource_t *rsc, const char *comment,
+                     GHashTable *nodes)
 {
     GHashTableIter iter;
     pe_node_t *node = NULL;
@@ -268,18 +270,21 @@ pe__log_node_weights(const char *file, const char *function, int line,
  * \internal
  * \brief Log or output node weights
  *
- * \param[in] file      Caller's filename
- * \param[in] function  Caller's function name
- * \param[in] line      Caller's line number
- * \param[in] to_log    Log if true, otherwise output
- * \param[in] rsc       Use allowed nodes for this resource
- * \param[in] comment   Text description to prefix lines with
- * \param[in] nodes     Use these nodes
+ * \param[in]     file      Caller's filename
+ * \param[in]     function  Caller's function name
+ * \param[in]     line      Caller's line number
+ * \param[in]     to_log    Log if true, otherwise output
+ * \param[in]     rsc       If not NULL, use this resource's ID in logs,
+ *                          and show scores recursively for any children
+ * \param[in]     comment   Text description to prefix lines with
+ * \param[in]     nodes     Nodes whose scores should be shown
+ * \param[in,out] data_set  Cluster working set
  */
 void
 pe__show_node_weights_as(const char *file, const char *function, int line,
-                         bool to_log, pe_resource_t *rsc, const char *comment,
-                         GHashTable *nodes, pe_working_set_t *data_set)
+                         bool to_log, const pe_resource_t *rsc,
+                         const char *comment, GHashTable *nodes,
+                         pe_working_set_t *data_set)
 {
     if (rsc != NULL && pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
         // Don't show allocation scores for orphans
