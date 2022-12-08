@@ -3561,8 +3561,7 @@ remap_operation(xmlNode *xml_op, pe_resource_t *rsc, pe_node_t *node,
 // return TRUE if start or monitor last failure but parameters changed
 static bool
 should_clear_for_param_change(xmlNode *xml_op, const char *task,
-                              pe_resource_t *rsc, pe_node_t *node,
-                              pe_working_set_t *data_set)
+                              pe_resource_t *rsc, pe_node_t *node)
 {
     if (!strcmp(task, "start") || !strcmp(task, "monitor")) {
 
@@ -3572,12 +3571,13 @@ should_clear_for_param_change(xmlNode *xml_op, const char *task,
              * When that's needed, defer the check until later.
              */
             pe__add_param_check(xml_op, rsc, node, pe_check_last_failure,
-                                data_set);
+                                rsc->cluster);
 
         } else {
             op_digest_cache_t *digest_data = NULL;
 
-            digest_data = rsc_action_digest_cmp(rsc, xml_op, node, data_set);
+            digest_data = rsc_action_digest_cmp(rsc, xml_op, node,
+                                                rsc->cluster);
             switch (digest_data->rc) {
                 case RSC_DIGEST_UNKNOWN:
                     crm_trace("Resource %s history entry %s on %s"
@@ -3746,7 +3746,7 @@ check_operation_expiry(pe_resource_t *rsc, pe_node_t *node, int rc,
     }
 
     if (!expired && is_last_failure
-        && should_clear_for_param_change(xml_op, task, rsc, node, data_set)) {
+        && should_clear_for_param_change(xml_op, task, rsc, node)) {
         clear_reason = "resource parameters have changed";
     }
 
