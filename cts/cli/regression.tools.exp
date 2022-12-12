@@ -626,10 +626,6 @@ Deleted status attribute: id=status-node1-fail-count-bar name=fail-count-bar
 </cib>
 =#=#=#= End test: Delete node attributes by pattern - OK (0) =#=#=#=
 * Passed: crm_attribute  - Delete node attributes by pattern
-=#=#=#= Begin test: crm_attribute given invalid pattern usage =#=#=#=
-crm_attribute: Error: pattern can only be used with query, or with till-reboot update or delete
-=#=#=#= End test: crm_attribute given invalid pattern usage - Incorrect usage (64) =#=#=#=
-* Passed: crm_attribute  - crm_attribute given invalid pattern usage
 =#=#=#= Begin test: crm_attribute given invalid delete usage =#=#=#=
 crm_attribute: Error: must specify attribute name or pattern to delete
 =#=#=#= End test: crm_attribute given invalid delete usage - Incorrect usage (64) =#=#=#=
