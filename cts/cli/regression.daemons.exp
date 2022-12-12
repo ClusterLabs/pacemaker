@@ -406,22 +406,22 @@
       </content>
     </parameter>
     <parameter name="node-health-base">
-      <longdesc lang="en">Only used when node-health-strategy is set to progressive.</longdesc>
+      <longdesc lang="en">Only used when &quot;node-health-strategy&quot; is set to &quot;progressive&quot;.</longdesc>
       <shortdesc lang="en">Base health score assigned to a node</shortdesc>
       <content type="integer" default=""/>
     </parameter>
     <parameter name="node-health-green">
-      <longdesc lang="en">Only used when node-health-strategy is set to custom or progressive.</longdesc>
+      <longdesc lang="en">Only used when &quot;node-health-strategy&quot; is set to &quot;custom&quot; or &quot;progressive&quot;.</longdesc>
       <shortdesc lang="en">The score to use for a node health attribute whose value is &quot;green&quot;</shortdesc>
       <content type="integer" default=""/>
     </parameter>
     <parameter name="node-health-yellow">
-      <longdesc lang="en">Only used when node-health-strategy is set to custom or progressive.</longdesc>
+      <longdesc lang="en">Only used when &quot;node-health-strategy&quot; is set to &quot;custom&quot; or &quot;progressive&quot;.</longdesc>
       <shortdesc lang="en">The score to use for a node health attribute whose value is &quot;yellow&quot;</shortdesc>
       <content type="integer" default=""/>
     </parameter>
     <parameter name="node-health-red">
-      <longdesc lang="en">Only used when node-health-strategy is set to custom or progressive.</longdesc>
+      <longdesc lang="en">Only used when &quot;node-health-strategy&quot; is set to &quot;custom&quot; or &quot;progressive&quot;.</longdesc>
       <shortdesc lang="en">The score to use for a node health attribute whose value is &quot;red&quot;</shortdesc>
       <content type="integer" default=""/>
     </parameter>
