@@ -114,14 +114,15 @@ ___________________
    |                    |         | this constraint applies.  The syntax is the same as                                          |
    |                    |         | `POSIX <http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap09.html#tag_09_04>`_ |
    |                    |         | extended regular expressions, with the addition of an                                        |
-   |                    |         | initial *!* indicating that resources *not* matching                                         |
+   |                    |         | initial ``!`` indicating that resources *not* matching                                       |
    |                    |         | the pattern are selected. If the regular expression                                          |
    |                    |         | contains submatches, and the constraint is governed by                                       |
    |                    |         | a :ref:`rule <rules>`, the submatches can be                                                 |
-   |                    |         | referenced as **%1** through **%9** in the rule's                                            |
-   |                    |         | ``score-attribute`` or a rule expression's ``attribute``.                                    |
-   |                    |         | A location constraint must either have a ``rsc``, have a                                     |
-   |                    |         | ``rsc-pattern``, or contain at least one resource set.                                       |
+   |                    |         | referenced as ``%1`` through ``%9`` in the rule's                                            |
+   |                    |         | ``score-attribute`` or a rule expression's ``attribute``                                     |
+   |                    |         | (see :ref:`s-rsc-pattern-rules`). A location constraint                                      |
+   |                    |         | must either have a ``rsc``, have a ``rsc-pattern``, or                                       |
+   |                    |         | contain at least one resource set.                                                           |
    +--------------------+---------+----------------------------------------------------------------------------------------------+
    | node               |         | .. index::                                                                                   |
    |                    |         |    single: rsc_location; attribute, node                                                     |
@@ -277,9 +278,28 @@ uname and **Database** based on the desire to spread the resource load
 evenly across the cluster.  However other factors can also be involved
 in more complex configurations.
 
+.. _s-rsc-pattern:
+
+Specifying locations using pattern matching
+___________________________________________
+
+A location constraint can affect all resources whose IDs match a given pattern.
+The following example bans resources named **ip-httpd**, **ip-asterisk**,
+**ip-gateway**, etc., from **node1**.
+
+.. topic:: Location constraint banning all resources matching a pattern from one node
+
+   .. code-block:: xml
+
+      <constraints>
+          <rsc_location id="ban-ips-from-node1" rsc-pattern="ip-.*" node="node1" score="-INFINITY"/>
+      </constraints>
+
+
 .. index::
    single: constraint; ordering
    single: resource; start order
+
 
 .. _s-resource-ordering:
 
