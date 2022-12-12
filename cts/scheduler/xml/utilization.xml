@@ -16,7 +16,6 @@
       </node>
       <node id="host2" type="member" uname="host2">
         <utilization id="host2-utilization">
-          <nvpair id="host2-utilization-cpu" name="cpu" value="2"/>
           <nvpair id="host2-utilization-memory" name="memory" value="1024"/>
         </utilization>
       </node>
@@ -42,6 +41,12 @@
   </configuration>
   <status>
     <node_state id="host1" uname="host1" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0"/>
-    <node_state id="host2" uname="host2" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0"/>
+    <node_state id="host2" uname="host2" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <transient_attributes id="host2-1">
+        <utilization id="status-host2-1">
+          <nvpair id="host2-utilization-cpu" name="cpu" value="2"/>
+        </utilization>
+      </transient_attributes>
+    </node_state>
   </status>
 </cib>
