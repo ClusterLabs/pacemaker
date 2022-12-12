@@ -264,12 +264,12 @@ static char *extract_node_uuid(const char *xpath)
     char *search = NULL;
     char *match = NULL;
 
-    match = strstr(mutable_path, "node_state[@id=\'");
+    match = strstr(mutable_path, "node_state[@" XML_ATTR_ID "=\'");
     if (match == NULL) {
         free(mutable_path);
         return NULL;
     }
-    match += strlen("node_state[@id=\'");
+    match += strlen("node_state[@" XML_ATTR_ID "=\'");
 
     search = strchr(match, '\'');
     if (search == NULL) {

@@ -401,7 +401,8 @@ update_cib_object(xmlNode * parent, xmlNode * update)
 
     object_id = ID(update);
     crm_trace("Processing update for <%s%s%s%s>", object_name,
-              ((object_id == NULL)? "" : " id='"), pcmk__s(object_id, ""),
+              ((object_id == NULL)? "" : " " XML_ATTR_ID "='"),
+              pcmk__s(object_id, ""),
               ((object_id == NULL)? "" : "'"));
 
     if (object_id == NULL) {
@@ -417,7 +418,8 @@ update_cib_object(xmlNode * parent, xmlNode * update)
     }
 
     crm_trace("Found node <%s%s%s%s> to update", object_name,
-              ((object_id == NULL)? "" : " id='"), pcmk__s(object_id, ""),
+              ((object_id == NULL)? "" : " " XML_ATTR_ID "='"),
+              pcmk__s(object_id, ""),
               ((object_id == NULL)? "" : "'"));
 
     replace = crm_element_value(update, XML_CIB_ATTR_REPLACE);
@@ -457,12 +459,15 @@ update_cib_object(xmlNode * parent, xmlNode * update)
     copy_in_properties(target, update);
 
     if (xml_acl_denied(target)) {
-        crm_notice("Cannot update <%s id=%s>", pcmk__s(object_name, "<null>"), pcmk__s(object_id, "<null>"));
+        crm_notice("Cannot update <%s " XML_ATTR_ID "=%s>",
+                   pcmk__s(object_name, "<null>"),
+                   pcmk__s(object_id, "<null>"));
         return -EACCES;
     }
 
     crm_trace("Processing children of <%s%s%s%s>", object_name,
-              ((object_id == NULL)? "" : " id='"), pcmk__s(object_id, ""),
+              ((object_id == NULL)? "" : " " XML_ATTR_ID "='"),
+              pcmk__s(object_id, ""),
               ((object_id == NULL)? "" : "'"));
 
     for (a_child = pcmk__xml_first_child(update); a_child != NULL;
@@ -470,7 +475,7 @@ update_cib_object(xmlNode * parent, xmlNode * update)
         int tmp_result = 0;
 
         crm_trace("Updating child <%s%s%s%s>", crm_element_name(a_child),
-                  ((ID(a_child) == NULL)? "" : " id='"),
+                  ((ID(a_child) == NULL)? "" : " " XML_ATTR_ID "='"),
                   pcmk__s(ID(a_child), ""), ((ID(a_child) == NULL)? "" : "'"));
 
         tmp_result = update_cib_object(target, a_child);
@@ -479,7 +484,7 @@ update_cib_object(xmlNode * parent, xmlNode * update)
         if (tmp_result != pcmk_ok) {
             crm_err("Error updating child <%s%s%s%s>",
                     crm_element_name(a_child),
-                    ((ID(a_child) == NULL)? "" : " id='"),
+                    ((ID(a_child) == NULL)? "" : " " XML_ATTR_ID "='"),
                     pcmk__s(ID(a_child), ""),
                     ((ID(a_child) == NULL)? "" : "'"));
 
@@ -490,7 +495,8 @@ update_cib_object(xmlNode * parent, xmlNode * update)
     }
 
     crm_trace("Finished handling update for <%s%s%s%s>", object_name,
-              ((object_id == NULL)? "" : " id='"), pcmk__s(object_id, ""),
+              ((object_id == NULL)? "" : " " XML_ATTR_ID "='"),
+              pcmk__s(object_id, ""),
               ((object_id == NULL)? "" : "'"));
 
     return result;
@@ -515,7 +521,8 @@ add_cib_object(xmlNode * parent, xmlNode * new_obj)
     object_id = ID(new_obj);
 
     crm_trace("Processing creation of <%s%s%s%s>", object_name,
-              ((object_id == NULL)? "" : " id='"), pcmk__s(object_id, ""),
+              ((object_id == NULL)? "" : " " XML_ATTR_ID "='"),
+              pcmk__s(object_id, ""),
               ((object_id == NULL)? "" : "'"));
 
     if (object_id == NULL) {
@@ -786,12 +793,13 @@ cib_process_xpath(const char *op, int options, const char *section,
                     char *new_path = NULL;
 
                     if (id) {
-                        new_path = crm_strdup_printf("/%s[@id='%s']%s",
+                        new_path = crm_strdup_printf("/%s[@" XML_ATTR_ID "='%s']"
+                                                     "%s",
                                                      parent->name, id,
-                                                     (path? path : ""));
+                                                     pcmk__s(path, ""));
                     } else {
                         new_path = crm_strdup_printf("/%s%s", parent->name,
-                                                     (path? path : ""));
+                                                     pcmk__s(path, ""));
                     }
                     free(path);
                     path = new_path;

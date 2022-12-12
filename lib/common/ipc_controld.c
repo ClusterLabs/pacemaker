@@ -125,8 +125,15 @@ set_node_info_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
     }
     data->data.node_info.have_quorum = pcmk__xe_attr_is_true(msg_data, XML_ATTR_HAVE_QUORUM);
     data->data.node_info.is_remote = pcmk__xe_attr_is_true(msg_data, XML_NODE_IS_REMOTE);
+
+    /* Integer node_info.id is currently valid only for Corosync nodes.
+     *
+     * @TODO: Improve handling after crm_peer_t is refactored to handle layer-
+     * specific data better.
+     */
     crm_element_value_int(msg_data, XML_ATTR_ID, &(data->data.node_info.id));
-    data->data.node_info.uuid = crm_element_value(msg_data, XML_ATTR_UUID);
+
+    data->data.node_info.uuid = crm_element_value(msg_data, XML_ATTR_ID);
     data->data.node_info.uname = crm_element_value(msg_data, XML_ATTR_UNAME);
     data->data.node_info.state = crm_element_value(msg_data, XML_NODE_IS_PEER);
 }

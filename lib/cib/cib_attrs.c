@@ -615,7 +615,7 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
         "/" XML_CIB_TAG_RESOURCE "/" XML_TAG_META_SETS "/" XML_CIB_TAG_NVPAIR \
         "[@name='" XML_RSC_ATTR_REMOTE_NODE "'][translate(@value,'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']" \
     "|/" XML_TAG_CIB "/" XML_CIB_TAG_STATUS "/" XML_CIB_TAG_STATE \
-        "[@" XML_NODE_IS_REMOTE "='true'][translate(@" XML_ATTR_UUID ",'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']"
+        "[@" XML_NODE_IS_REMOTE "='true'][translate(@" XML_ATTR_ID ",'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']"
 
 int
 query_node_uuid(cib_t * the_cib, const char *uname, char **uuid, int *is_remote_node)

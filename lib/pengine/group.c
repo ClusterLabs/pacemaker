@@ -261,7 +261,7 @@ group_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
     GList *gIter = rsc->children;
     char *child_text = crm_strdup_printf("%s     ", pre_text);
 
-    status_print("%s<group id=\"%s\" ", pre_text, rsc->id);
+    status_print("%s<group " XML_ATTR_ID "=\"%s\" ", pre_text, rsc->id);
     status_print("number_resources=\"%d\" ", g_list_length(rsc->children));
     status_print(">\n");
 

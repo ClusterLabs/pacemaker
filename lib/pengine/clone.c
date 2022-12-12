@@ -472,7 +472,7 @@ clone_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
     GList *gIter = rsc->children;
 
     status_print("%s<clone ", pre_text);
-    status_print("id=\"%s\" ", rsc->id);
+    status_print(XML_ATTR_ID "=\"%s\" ", rsc->id);
     status_print("multi_state=\"%s\" ",
                  pe__rsc_bool_str(rsc, pe_rsc_promotable));
     status_print("unique=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_unique));

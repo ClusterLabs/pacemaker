@@ -2506,7 +2506,7 @@ do_update_resource(const char *node_name, lrmd_rsc_info_t *rsc,
         goto done;
     }
 
-    crm_xml_add(iter, XML_ATTR_UUID,  uuid);
+    crm_xml_add(iter, XML_ATTR_ID,  uuid);
     crm_xml_add(iter, XML_ATTR_UNAME, node_name);
     crm_xml_add(iter, XML_ATTR_ORIGIN, __func__);
 

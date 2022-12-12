@@ -349,7 +349,7 @@ confirm_cancel_action(const char *id, const char *node_id)
 
 /* downed nodes are listed like: <downed> <node id="UUID1" /> ... </downed> */
 #define XPATH_DOWNED "//" XML_GRAPH_TAG_DOWNED \
-                     "/" XML_CIB_TAG_NODE "[@" XML_ATTR_UUID "='%s']"
+                     "/" XML_CIB_TAG_NODE "[@" XML_ATTR_ID "='%s']"
 
 /*!
  * \brief Find a transition event that would have made a specified node down

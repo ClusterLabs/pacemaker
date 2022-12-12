@@ -3021,7 +3021,8 @@ expand_idref(xmlNode * input, xmlNode * top)
     ref = crm_element_value(result, XML_ATTR_IDREF);
 
     if (ref != NULL) {
-        char *xpath_string = crm_strdup_printf("//%s[@id='%s']", tag, ref);
+        char *xpath_string = crm_strdup_printf("//%s[@" XML_ATTR_ID "='%s']",
+                                               tag, ref);
 
         result = get_xpath_object(xpath_string, top, LOG_ERR);
         if (result == NULL) {

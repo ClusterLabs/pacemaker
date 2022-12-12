@@ -33,10 +33,10 @@
 
 bool pcmk__simulate_node_config = false;
 
-#define XPATH_NODE_CONFIG   "//" XML_CIB_TAG_NODE "[@uname='%s']"
-#define XPATH_NODE_STATE    "//" XML_CIB_TAG_STATE "[@uname='%s']"
-#define XPATH_RSC_HISTORY   XPATH_NODE_STATE "//" \
-                            XML_LRM_TAG_RESOURCE "[@id='%s']"
+#define XPATH_NODE_CONFIG   "//" XML_CIB_TAG_NODE "[@" XML_ATTR_UNAME "='%s']"
+#define XPATH_NODE_STATE    "//" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='%s']"
+#define XPATH_RSC_HISTORY   XPATH_NODE_STATE \
+                            "//" XML_LRM_TAG_RESOURCE "[@" XML_ATTR_ID "='%s']"
 
 
 /*!
@@ -251,7 +251,7 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
         }
 
         cib_object = create_xml_node(NULL, XML_CIB_TAG_STATE);
-        crm_xml_add(cib_object, XML_ATTR_UUID, found_uuid);
+        crm_xml_add(cib_object, XML_ATTR_ID, found_uuid);
         crm_xml_add(cib_object, XML_ATTR_UNAME, node);
         cib_conn->cmds->create(cib_conn, XML_CIB_TAG_STATUS, cib_object,
                                cib_sync_call|cib_scope_local);

@@ -1194,7 +1194,7 @@ bundle_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
     get_bundle_variant_data(bundle_data, rsc);
 
     status_print("%s<bundle ", pre_text);
-    status_print("id=\"%s\" ", rsc->id);
+    status_print(XML_ATTR_ID "=\"%s\" ", rsc->id);
     status_print("type=\"%s\" ", container_agent_str(bundle_data->agent_type));
     status_print("image=\"%s\" ", bundle_data->image);
     status_print("unique=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_unique));
@@ -1207,7 +1207,8 @@ bundle_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
         pe__bundle_replica_t *replica = gIter->data;
 
         CRM_ASSERT(replica);
-        status_print("%s    <replica id=\"%d\">\n", pre_text, replica->offset);
+        status_print("%s    <replica " XML_ATTR_ID "=\"%d\">\n",
+                     pre_text, replica->offset);
         print_rsc_in_list(replica->ip, child_text, options, print_data);
         print_rsc_in_list(replica->child, child_text, options, print_data);
         print_rsc_in_list(replica->container, child_text, options, print_data);
