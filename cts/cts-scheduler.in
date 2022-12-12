@@ -532,6 +532,7 @@ TESTS = [
         [ "on_fail_demote4", "Recovery with on-fail=\"demote\" on failed cluster, remote, guest, and bundle nodes" ],
         [ "no_quorum_demote", "Promotable demotion and primitive stop with no-quorum-policy=\"demote\"" ],
         [ "no-promote-on-unrunnable-guest", "Don't select bundle instance for promotion when container can't run" ],
+        [ "leftover-pending-monitor", "Prevent a leftover pending monitor from causing unexpected stop of other instances" ],
     ],
     [
         [ "history-1", "Correctly parse stateful-1 resource state" ],

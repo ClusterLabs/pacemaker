@@ -1181,6 +1181,10 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
         if (op->interval_ms == 0) {
             // Ensure 'last' gets updated, in case record-pending is true
             op_id_additional = pcmk__op_key(op->rsc_id, "last", 0);
+
+        } else {
+            // Ensure any pending recurring monitor gets updated if it fails
+            op_id_additional = strdup(key);
         }
         exit_reason = op->exit_reason;
 
