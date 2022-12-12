@@ -251,24 +251,24 @@ pcmk__probe_rsc_on_node(pe_resource_t *rsc, pe_node_t *node)
     // We've eliminated all cases where a probe is not needed, so now it is
     probe = probe_action(rsc, node);
 
-    /* Order the probe relative to the parent -- or the resource itself if
-     * cloned or a fence device when unfencing is used.
+    /* Below, we will order the probe relative to start or reload. If this is a
+     * clone instance, the start or reload is for the entire clone rather than
+     * just the instance. Otherwise, the start or reload is for the resource
+     * itself.
      */
-    if ((pcmk_is_set(rsc->flags, pe_rsc_fence_device)
-         && pcmk_is_set(rsc->cluster->flags, pe_flag_enable_unfencing))
-        || !pe_rsc_is_clone(top)) {
+    if (!pe_rsc_is_clone(top)) {
         top = rsc;
     }
 
+    /* Prevent a start if the resource can't be probed, but don't cause the
+     * resource or entire clone to stop if already active.
+     */
     if (!pcmk_is_set(probe->flags, pe_action_runnable)
         && (top->running_on == NULL)) {
-        /* Prevent the parent from starting if the resource can't, but don't
-         * cause the parent to stop if already active.
-         */
         pe__set_order_flags(flags, pe_order_runnable_left);
     }
 
-    // Start or reload the parent after probing the resource
+    // Start or reload after probing the resource
     pcmk__new_ordering(rsc, NULL, probe,
                        top, pcmk__op_key(top->id, RSC_START, 0), NULL,
                        flags, rsc->cluster);
