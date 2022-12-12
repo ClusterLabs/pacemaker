@@ -643,7 +643,7 @@ pe_eval_rules(xmlNode *ruleset, const pe_rule_eval_data_t *rule_data,
 }
 
 /*!
- * \brief Evaluate a rule's expressions
+ * \brief Evaluate all of a rule's expressions
  *
  * \param[in,out] rule         XML containing a rule definition or its id-ref
  * \param[in]     rule_data    Matching parameters to check against rule
@@ -695,7 +695,7 @@ pe_eval_expr(xmlNode *rule, const pe_rule_eval_data_t *rule_data,
 }
 
 /*!
- * \brief Evaluate rules
+ * \brief Evaluate a single rule expression, including any subexpressions
  *
  * \param[in,out] expr         XML containing a rule expression
  * \param[in]     rule_data    Matching parameters to check against expression
