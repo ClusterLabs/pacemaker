@@ -174,7 +174,7 @@ static GOptionEntry selecting_entries[] = {
 
     { "pattern", 'P', 0, G_OPTION_ARG_STRING, &options.attr_pattern,
       "Operate on all attributes matching this pattern\n"
-      INDENT "(with -G, or with -v/-D and -l reboot)",
+      INDENT "(with -v, -D, or -G)",
       "PATTERN"
     },
 
@@ -600,12 +600,9 @@ static bool
 pattern_used_correctly(void)
 {
     /* --pattern can only be used with:
-     * -G (query), or
-     * -v (update) or -D (delete), with till-reboot
+     * -G (query), -v (update), or -D (delete)
      */
-    return options.command == 'G' ||
-           ((options.command == 'u' || options.command == 'D') &&
-            pcmk__str_eq(options.type, XML_CIB_TAG_STATUS, pcmk__str_casei));
+    return options.command == 'G' || options.command == 'u' || options.command == 'D';
 }
 
 static bool
@@ -780,8 +777,7 @@ main(int argc, char **argv)
         if (!pattern_used_correctly()) {
             exit_code = CRM_EX_USAGE;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Error: pattern can only be used with query, or with "
-                        "till-reboot update or delete");
+                        "Error: pattern can only be used with delete, query, or update");
             goto done;
         }
 
