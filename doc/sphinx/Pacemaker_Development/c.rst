@@ -217,12 +217,18 @@ Simple example of an internal function with a Doxygen comment block:
    }
 
 Function arguments are marked as ``[in]`` for input only, ``[out]`` for output
-only, or ``[in,out]`` for both input and output. ``[in,out]`` should be used
-for struct pointer arguments if *any* data reachable by the pointer might
-change. For example, if the struct contains a ``GHashTable *`` member, a
-doxygen block for a function that inserts data into the hash table should mark
-the struct pointer argument as ``[in,out]`` even if the struct members
-themselves are not changed.
+only, or ``[in,out]`` for both input and output.
+
+``[in,out]`` should be used for struct pointer arguments if the function can
+change any data accessed via the pointer. For example, if the struct contains
+a ``GHashTable *`` member, the argument should be marked as ``[in,out]`` if the
+function inserts data into the table, even if the struct members themselves are
+not changed. However, an argument is not ``[in,out]`` if something reachable
+via the argument is modified via a separate argument. For example, both
+``pe_resource_t`` and ``pe_node_t`` contain pointers to their
+``pe_working_set_t`` and thus indirectly to each other, but if the function
+modifies the resource via the resource argument, the node argument does not
+have to be ``[in,out]``.
 
 
 Public API Deprecation
