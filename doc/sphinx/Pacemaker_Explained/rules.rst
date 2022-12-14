@@ -765,6 +765,60 @@ would have its preference to run the resource increased by ``1234`` whereas
 ``c001n02`` would have its preference increased by ``5678``.
 
 
+.. _s-rsc-pattern-rules:
+
+Specifying location scores using pattern submatches
+___________________________________________________
+
+Location constraints may use ``rsc-pattern`` to apply the constraint to all
+resources whose IDs match the given pattern (see :ref:`s-rsc-pattern`). The
+pattern may contain up to 9 submatches in parentheses, whose values may be used
+as ``%1`` through ``%9`` in a rule's ``score-attribute`` or a rule expression's
+``attribute``.
+
+As an example, the following configuration (only relevant parts are shown)
+gives the resources **server-httpd** and **ip-httpd** a preference of 100 on
+**node1** and 50 on **node2**, and **ip-gateway** a preference of -100 on
+**node1** and 200 on **node2**.
+
+.. topic:: Location constraint using submatches
+
+   .. code-block:: xml
+
+      <nodes>
+         <node id="1" uname="node1">
+            <instance_attributes id="node1-attrs">
+               <nvpair id="node1-prefer-httpd" name="prefer-httpd" value="100"/>
+               <nvpair id="node1-prefer-gateway" name="prefer-gateway" value="-100"/>
+            </instance_attributes>
+         </node>
+         <node id="2" uname="node2">
+            <instance_attributes id="node2-attrs">
+               <nvpair id="node2-prefer-httpd" name="prefer-httpd" value="50"/>
+               <nvpair id="node2-prefer-gateway" name="prefer-gateway" value="200"/>
+            </instance_attributes>
+         </node>
+      </nodes>
+      <resources>
+         <primitive id="server-httpd" class="ocf" provider="heartbeat" type="apache"/>
+         <primitive id="ip-httpd" class="ocf" provider="heartbeat" type="IPaddr2"/>
+         <primitive id="ip-gateway" class="ocf" provider="heartbeat" type="IPaddr2"/>
+      </resources>
+      <constraints>
+         <!-- The following constraint says that for any resource whose name
+              starts with "server-" or "ip-", that resource's preference for a
+              node is the value of the node attribute named "prefer-" followed
+              by the part of the resource name after "server-" or "ip-",
+              wherever such a node attribute is defined.
+           -->
+         <rsc_location id="location1" rsc-pattern="(server|ip)-(.*)">
+            <rule id="location1-rule1" score-attribute="prefer-%2">
+               <expression id="location1-rule1-expression1" attribute="prefer-%2" operation="defined"/>
+            </rule>
+         </rsc_location>
+      </constraints>
+
+
 .. index::
    pair: cluster option; rule
    pair: instance attribute; rule
