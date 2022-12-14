@@ -10,4 +10,5 @@
 MAINTAINERCLEANFILES    = Makefile.in
 
 pkgpython_PYTHON = __init__.py \
-				   errors.py
+				   errors.py \
+				   process.py
