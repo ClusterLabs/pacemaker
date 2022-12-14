@@ -32,6 +32,7 @@ if os.path.exists("@abs_top_builddir@/python") and "@abs_top_builddir@" != "@abs
 from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
 from pacemaker._cts.errors import ExitCodeError, OutputFoundError, OutputNotFoundError
+from pacemaker._cts.process import killall, exit_if_proc_running
 
 # File permissions for executable scripts we create
 EXECMODE = stat.S_IRUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH
@@ -67,45 +68,6 @@ def output_from_command(command):
     test.wait()
     output = test.communicate()[0].decode(sys.stdout.encoding)
     return output.split("\n")
-
-
-def killall(process_names=[], terminate=False):
-    """ Kill all instances of every process in a list """
-
-    if not process_names:
-        return
-
-    procs = []
-    for proc in psutil.process_iter(["name"]):
-        if proc.info["name"] in process_names:
-            procs.append(proc)
-
-    if terminate:
-        for proc in procs:
-            proc.terminate()
-        gone, alive = psutil.wait_procs(procs, timeout=3)
-        procs = alive
-
-    for proc in procs:
-        proc.kill()
-
-
-def is_proc_running(process_name):
-    """ Check whether a process with a given name is running """
-
-    for proc in psutil.process_iter(["name"]):
-        if proc.info["name"] == process_name:
-            return True
-    return False
-
-
-def exit_if_proc_running(process_name):
-    """ Exit with error if a given process is running """
-
-    if is_proc_running(process_name):
-        print("Error: %s is already running!" % process_name)
-        print("Run %s only when the cluster is stopped." % sys.argv[0])
-        sys.exit(ExitStatus.ERROR)
 
 
 class Test(object):
