@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 2\n"
 "Report-Msgid-Bugs-To: developers@clusterlabs.org\n"
-"POT-Creation-Date: 2022-12-02 10:26+0800\n"
+"POT-Creation-Date: 2022-12-14 15:58+0800\n"
 "PO-Revision-Date: 2021-11-08 11:04+0800\n"
 "Last-Translator: Vivi <developers@clusterlabs.org>\n"
 "Language-Team: CHINESE <wangluwei@uniontech.org>\n"
@@ -592,7 +592,7 @@ msgstr ""
 "如果日志中有针对集群守护程序PID的消息“Evicting client”，（则建议将值设为集群"
 "中的资源数量乘以节点数量）"
 
-#: lib/common/options.c:633
+#: lib/common/options.c:401
 msgid "  Allowed values: "
 msgstr " 允许的值: "
 
@@ -796,6 +796,27 @@ msgstr ""
 "响应，则会被选为指定控制器（DC）的节点认定为失败。\"正确\" 值将取决于速度和您"
 "的网络和集群节点的负载。"
 
+#: lib/pengine/common.c:171
+#, fuzzy
+msgid ""
+"Maximum number of jobs that the cluster may execute in parallel across all "
+"nodes"
+msgstr "每个节点可以调度的最大作业数（默认为2x内核数）"
+
+#: lib/pengine/common.c:173
+msgid ""
+"The \"correct\" value will depend on the speed and load of your network and "
+"cluster nodes. If set to 0, the cluster will impose a dynamically calculated "
+"limit when any node has a high load."
+msgstr "\"正确\" 值将取决于速度和您的网络与集群节点的负载。"
+"如果设置为0，当任何节点具有高负载时，集群将施加一个动态计算的限制。"
+
+#: lib/pengine/common.c:181
+msgid ""
+"The number of live migration actions that the cluster is allowed to execute "
+"in parallel on a node (-1 means no limit)"
+msgstr "允许集群在一个节点上并行执行的动态迁移操作的数量(-1表示没有限制)"
+
 #: lib/pengine/common.c:189
 #, fuzzy
 msgid "Whether the cluster should stop all active resources"
@@ -813,6 +834,13 @@ msgstr "是否取消配置已被删除的的重复操作"
 msgid ""
 "*** Deprecated *** Whether to remove stopped resources from the executor"
 msgstr "***不推荐***是否从pacemaker-execd 守护进程中清除已停止的资源"
+
+#: lib/pengine/common.c:209
+msgid ""
+"Values other than default are poorly tested and potentially dangerous. This "
+"option will be removed in a future release."
+msgstr "默认值以外的值测试结果很差，有潜在的风险。"
+"该选项将在未来的版本中删除。"
 
 #: lib/pengine/common.c:240
 #, fuzzy
