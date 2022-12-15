@@ -392,7 +392,6 @@ class Test(object):
     def run(self):
         """ Execute this test. """
 
-        res = 0
         i = 1
         self.start_environment()
 
@@ -433,7 +432,6 @@ class Test(object):
             print("--- END TEST - %s\n" % self.name)
 
         self.executed = 1
-        return res
 
 class Tests(object):
     """ Collection of all fencing regression tests """
