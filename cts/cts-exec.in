@@ -266,13 +266,12 @@ class Test(object):
     def run(self):
         """ Execute this test. """
 
-        res = 0
         i = 1
 
         if self.tls and self.name.count("stonith") != 0:
             self.result_txt = "SKIPPED - '%s' - disabled when testing pacemaker_remote" % (self.name)
             print(self.result_txt)
-            return res
+            return
 
         self.start_environment()
 
@@ -306,7 +305,6 @@ class Test(object):
             print("--- END TEST - %s\n" % self.name)
 
         self.executed = 1
-        return res
 
 class Tests(object):
     """ Collection of all pacemaker-execd regression tests """
