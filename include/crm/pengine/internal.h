@@ -535,13 +535,13 @@ void pe__free_digests(gpointer ptr);
 
 op_digest_cache_t *rsc_action_digest_cmp(pe_resource_t *rsc,
                                          const xmlNode *xml_op,
-                                         const pe_node_t *node,
+                                         pe_node_t *node,
                                          pe_working_set_t *data_set);
 
-pe_action_t *pe_fence_op(const pe_node_t *node, const char *op, bool optional,
+pe_action_t *pe_fence_op(pe_node_t *node, const char *op, bool optional,
                          const char *reason, bool priority_delay,
                          pe_working_set_t *data_set);
-void trigger_unfencing(pe_resource_t *rsc, const pe_node_t *node,
+void trigger_unfencing(pe_resource_t *rsc, pe_node_t *node,
                        const char *reason, pe_action_t *dependency,
                        pe_working_set_t *data_set);
 
@@ -582,10 +582,10 @@ const char *pe_node_attribute_raw(const pe_node_t *node, const char *name);
 bool pe__is_universal_clone(pe_resource_t *rsc,
                             pe_working_set_t *data_set);
 void pe__add_param_check(const xmlNode *rsc_op, pe_resource_t *rsc,
-                         const pe_node_t *node, enum pe_check_parameters,
+                         pe_node_t *node, enum pe_check_parameters,
                          pe_working_set_t *data_set);
 void pe__foreach_param_check(pe_working_set_t *data_set,
-                             void (*cb)(pe_resource_t*, const pe_node_t*,
+                             void (*cb)(pe_resource_t*, pe_node_t*,
                                         const xmlNode*,
                                         enum pe_check_parameters));
 void pe__free_param_checks(pe_working_set_t *data_set);

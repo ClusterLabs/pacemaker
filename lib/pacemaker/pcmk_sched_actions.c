@@ -1523,14 +1523,14 @@ only_sanitized_changed(const xmlNode *xml_op,
  * \internal
  * \brief Force a restart due to a configuration change
  *
- * \param[in] rsc          Resource that action is for
- * \param[in] task         Name of action whose configuration changed
- * \param[in] interval_ms  Action interval (in milliseconds)
- * \param[in] node         Node where resource should be restarted
+ * \param[in]     rsc          Resource that action is for
+ * \param[in]     task         Name of action whose configuration changed
+ * \param[in]     interval_ms  Action interval (in milliseconds)
+ * \param[in,out] node         Node where resource should be restarted
  */
 static void
 force_restart(pe_resource_t *rsc, const char *task, guint interval_ms,
-              const pe_node_t *node)
+              pe_node_t *node)
 {
     char *key = pcmk__op_key(rsc->id, task, interval_ms);
     pe_action_t *required = custom_action(rsc, key, task, NULL, FALSE, TRUE,
@@ -1612,7 +1612,7 @@ schedule_reload(pe_resource_t *rsc, const pe_node_t *node)
  * \return true if action configuration changed, otherwise false
  */
 bool
-pcmk__check_action_config(pe_resource_t *rsc, const pe_node_t *node,
+pcmk__check_action_config(pe_resource_t *rsc, pe_node_t *node,
                           const xmlNode *xml_op)
 {
     guint interval_ms = 0;

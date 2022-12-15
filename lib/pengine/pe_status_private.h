@@ -74,7 +74,7 @@ gboolean unpack_status(xmlNode *status, pe_working_set_t *data_set);
 G_GNUC_INTERNAL
 op_digest_cache_t *pe__compare_fencing_digest(pe_resource_t *rsc,
                                               const char *agent,
-                                              const pe_node_t *node,
+                                              pe_node_t *node,
                                               pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL

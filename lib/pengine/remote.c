@@ -212,13 +212,13 @@ pe_create_remote_xml(xmlNode *parent, const char *uname,
 struct check_op {
     const xmlNode *rsc_op; // History entry XML
     pe_resource_t *rsc;    // Known resource corresponding to history entry
-    const pe_node_t *node; // Known node corresponding to history entry
+    pe_node_t *node; // Known node corresponding to history entry
     enum pe_check_parameters check_type; // What needs checking
 };
 
 void
 pe__add_param_check(const xmlNode *rsc_op, pe_resource_t *rsc,
-                    const pe_node_t *node, enum pe_check_parameters flag,
+                    pe_node_t *node, enum pe_check_parameters flag,
                     pe_working_set_t *data_set)
 {
     struct check_op *check_op = NULL;
@@ -245,8 +245,8 @@ pe__add_param_check(const xmlNode *rsc_op, pe_resource_t *rsc,
  */
 void
 pe__foreach_param_check(pe_working_set_t *data_set,
-                       void (*cb)(pe_resource_t*, const pe_node_t*,
-                                  const xmlNode*, enum pe_check_parameters))
+                       void (*cb)(pe_resource_t*, pe_node_t*, const xmlNode*,
+                                  enum pe_check_parameters))
 {
     CRM_CHECK(data_set && cb, return);
 

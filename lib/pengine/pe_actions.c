@@ -1079,7 +1079,7 @@ node_priority_fencing_delay(const pe_node_t *node,
 }
 
 pe_action_t *
-pe_fence_op(const pe_node_t *node, const char *op, bool optional,
+pe_fence_op(pe_node_t *node, const char *op, bool optional,
             const char *reason, bool priority_delay, pe_working_set_t *data_set)
 {
     char *op_key = NULL;

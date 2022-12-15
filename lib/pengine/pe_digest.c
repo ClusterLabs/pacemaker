@@ -349,7 +349,7 @@ pe__calculate_digests(pe_resource_t *rsc, const char *task, guint *interval_ms,
  */
 static op_digest_cache_t *
 rsc_action_digest(pe_resource_t *rsc, const char *task, guint interval_ms,
-                  const pe_node_t *node, const xmlNode *xml_op,
+                  pe_node_t *node, const xmlNode *xml_op,
                   bool calc_secure, pe_working_set_t *data_set)
 {
     op_digest_cache_t *data = NULL;
@@ -379,7 +379,7 @@ rsc_action_digest(pe_resource_t *rsc, const char *task, guint interval_ms,
  */
 op_digest_cache_t *
 rsc_action_digest_cmp(pe_resource_t *rsc, const xmlNode *xml_op,
-                      const pe_node_t *node, pe_working_set_t *data_set)
+                      pe_node_t *node, pe_working_set_t *data_set)
 {
     op_digest_cache_t *data = NULL;
     guint interval_ms = 0;
@@ -531,7 +531,7 @@ unfencing_digest_matches(const char *rsc_id, const char *agent,
  */
 op_digest_cache_t *
 pe__compare_fencing_digest(pe_resource_t *rsc, const char *agent,
-                           const pe_node_t *node, pe_working_set_t *data_set)
+                           pe_node_t *node, pe_working_set_t *data_set)
 {
     const char *node_summary = NULL;
 

@@ -39,7 +39,7 @@ CRM_TRACE_INIT_DATA(pacemaker);
  * \param[in]     check   Type of deferred check to do
  */
 static void
-check_params(pe_resource_t *rsc, const pe_node_t *node, const xmlNode *rsc_op,
+check_params(pe_resource_t *rsc, pe_node_t *node, const xmlNode *rsc_op,
              enum pe_check_parameters check)
 {
     const char *reason = NULL;
