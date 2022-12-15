@@ -56,8 +56,8 @@ def update_path():
 class Test(object):
     """ Executor for a single pacemaker-execd regression test """
 
-    def __init__(self, name, description, verbose=0, tls=0, timeout=2,
-                 force_wait=0, logdir="/tmp"):
+    def __init__(self, name, description, verbose=False, tls=False, timeout=2,
+                 force_wait=False, logdir="/tmp"):
 
         self.name = name
         self.description = description
@@ -82,9 +82,9 @@ class Test(object):
         self.execd_process = None
         self.stonith_process = None
 
-        self.executed = 0
+        self.executed = False
 
-    def __new_cmd(self, cmd, args, exitcode, stdout_match="", no_wait=0, stdout_negative_match="", kill=None):
+    def __new_cmd(self, cmd, args, exitcode, stdout_match="", no_wait=False, stdout_negative_match="", kill=None):
         """ Add a command to be executed as part of this test """
 
         if self.verbose and cmd == self.test_tool_location:
@@ -121,7 +121,7 @@ class Test(object):
 
         additional_args = ""
 
-        if self.tls == 0:
+        if not self.tls:
             self.stonith_process = subprocess.Popen(shlex.split("pacemaker-fenced -s"))
 
         if self.verbose:
@@ -138,11 +138,11 @@ class Test(object):
         while True:
             time.sleep(0.1)
 
-            if self.force_wait == 0 and logfile == None \
+            if not self.force_wait and logfile == None \
                and os.path.exists(self.logpath):
                 logfile = io.open(self.logpath, 'rt', encoding = "ISO-8859-1")
 
-            if self.force_wait == 0 and logfile != None:
+            if not self.force_wait and logfile != None:
                 for line in logfile.readlines():
                     if "successfully started" in line:
                         return
@@ -150,7 +150,7 @@ class Test(object):
             now = time.time()
 
             if self.timeout > 0 and (now - init_time) >= self.timeout:
-                if self.force_wait == 0:
+                if not self.force_wait:
                     print("\tDaemon %s doesn't seem to have been initialized within %fs."
                           "\n\tConsider specifying a longer '--timeout' value."
                           %(self.daemon_location, self.timeout))
@@ -189,7 +189,7 @@ class Test(object):
     def add_cmd_check_stdout(self, args, match, no_match=""):
         """ Add a command with expected output to be executed as part of this test """
 
-        self.__new_cmd(self.test_tool_location, args, ExitStatus.OK, match, 0, no_match)
+        self.__new_cmd(self.test_tool_location, args, ExitStatus.OK, match, False, no_match)
 
     def add_cmd(self, args):
         """ Add a cts-exec-helper command to be executed as part of this test """
@@ -236,7 +236,7 @@ class Test(object):
             time.sleep(2)
             subprocess.Popen(shlex.split(args['kill']))
 
-        if args['no_wait'] == 0:
+        if not args['no_wait']:
             test.wait()
         else:
             return ExitStatus.OK
@@ -304,12 +304,12 @@ class Test(object):
         if self.verbose:
             print("--- END TEST - %s\n" % self.name)
 
-        self.executed = 1
+        self.executed = True
 
 class Tests(object):
     """ Collection of all pacemaker-execd regression tests """
 
-    def __init__(self, verbose=0, tls=0, timeout=2, force_wait=0,
+    def __init__(self, verbose=False, tls=False, timeout=2, force_wait=False,
                  logdir="/tmp"):
 
         self.tests = []
@@ -1043,7 +1043,7 @@ class Tests(object):
         """ Exit (with error status code if any test failed) """
 
         for test in self.tests:
-            if test.executed == 0:
+            if not test.executed:
                 continue
 
             if test.get_exitcode() != ExitStatus.OK:
@@ -1059,7 +1059,7 @@ class Tests(object):
         print("\n\n======= FINAL RESULTS ==========")
         print("\n--- FAILURE RESULTS:")
         for test in self.tests:
-            if test.executed == 0:
+            if not test.executed:
                 continue
 
             if test.get_exitcode() != ExitStatus.OK:
@@ -1079,48 +1079,48 @@ class TestOptions(object):
 
     def __init__(self):
         self.options = {}
-        self.options['list-tests'] = 0
-        self.options['run-all'] = 1
+        self.options['list-tests'] = False
+        self.options['run-all'] = True
         self.options['run-only'] = ""
         self.options['run-only-pattern'] = ""
-        self.options['verbose'] = 0
+        self.options['verbose'] = False
         self.options['timeout'] = 2
-        self.options['force-wait'] = 0
+        self.options['force-wait'] = False
         self.options['invalid-arg'] = ""
-        self.options['show-usage'] = 0
-        self.options['pacemaker-remote'] = 0
+        self.options['show-usage'] = False
+        self.options['pacemaker-remote'] = False
 
     def build_options(self, argv):
         """ Set options based on command-line arguments """
 
         args = argv[1:]
-        skip = 0
+        skip = False
         for i in range(0, len(args)):
             if skip:
-                skip = 0
+                skip = False
                 continue
             elif args[i] == "-h" or args[i] == "--help":
-                self.options['show-usage'] = 1
+                self.options['show-usage'] = True
             elif args[i] == "-l" or args[i] == "--list-tests":
-                self.options['list-tests'] = 1
+                self.options['list-tests'] = True
             elif args[i] == "-V" or args[i] == "--verbose":
-                self.options['verbose'] = 1
+                self.options['verbose'] = True
             elif args[i] == "-t" or args[i] == "--timeout":
                 self.options['timeout'] = float(args[i+1])
             elif args[i] == "-w" or args[i] == "--force-wait":
-                self.options['force-wait'] = 1
+                self.options['force-wait'] = True
             elif args[i] == "-R" or args[i] == "--pacemaker-remote":
                 if BuildOptions.REMOTE_ENABLED:
-                    self.options['pacemaker-remote'] = 1
+                    self.options['pacemaker-remote'] = True
                 else:
                     print("ERROR: This build does not support Pacemaker Remote")
                     sys.exit(ExitStatus.USAGE)
             elif args[i] == "-r" or args[i] == "--run-only":
                 self.options['run-only'] = args[i+1]
-                skip = 1
+                skip = True
             elif args[i] == "-p" or args[i] == "--run-only-pattern":
                 self.options['run-only-pattern'] = args[i+1]
-                skip = 1
+                skip = True
 
 def show_usage():
     """ Show command usage """
