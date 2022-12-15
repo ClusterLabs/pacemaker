@@ -34,7 +34,7 @@ CRM_TRACE_INIT_DATA(pacemaker);
  * function processes one entry in that list.
  *
  * \param[in,out] rsc     Resource that action history is for
- * \param[in]     node    Node that action history is for
+ * \param[in,out] node    Node that action history is for
  * \param[in]     rsc_op  Action history entry
  * \param[in]     check   Type of deferred check to do
  */

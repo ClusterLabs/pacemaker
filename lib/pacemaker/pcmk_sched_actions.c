@@ -1606,7 +1606,7 @@ schedule_reload(pe_resource_t *rsc, const pe_node_t *node)
  * reload, unfencing, rescheduling recurring actions, etc.).
  *
  * \param[in,out] rsc     Resource that action is for
- * \param[in]     node    Node that action was on
+ * \param[in,out] node    Node that action was on
  * \param[in]     xml_op  Action XML from resource history
  *
  * \return true if action configuration changed, otherwise false

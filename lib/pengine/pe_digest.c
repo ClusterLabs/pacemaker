@@ -340,7 +340,7 @@ pe__calculate_digests(pe_resource_t *rsc, const char *task, guint *interval_ms,
  * \param[in,out] rsc          Resource that action was for
  * \param[in]     task         Name of action performed
  * \param[in]     interval_ms  Action's interval
- * \param[in]     node         Node action was performed on
+ * \param[in,out] node         Node action was performed on
  * \param[in]     xml_op       XML of operation in CIB status (if available)
  * \param[in]     calc_secure  Whether to calculate secure digest
  * \param[in,out] data_set     Cluster working set
@@ -372,7 +372,7 @@ rsc_action_digest(pe_resource_t *rsc, const char *task, guint interval_ms,
  *
  * \param[in,out] rsc       Resource to check
  * \param[in]     xml_op    Resource history XML
- * \param[in]     node      Node to use for digest calculation
+ * \param[in,out] node      Node to use for digest calculation
  * \param[in,out] data_set  Cluster working set
  *
  * \return Pointer to node's digest cache entry, with comparison result set
@@ -524,7 +524,7 @@ unfencing_digest_matches(const char *rsc_id, const char *agent,
  *
  * \param[in,out] rsc       Fence device resource
  * \param[in]     agent     Fence device's agent type
- * \param[in]     node      Node with digest cache to use
+ * \param[in,out] node      Node with digest cache to use
  * \param[in,out] data_set  Cluster working set
  *
  * \return Node's digest cache entry
