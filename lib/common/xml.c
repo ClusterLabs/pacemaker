@@ -1756,7 +1756,7 @@ log_data_element(int log_level, const char *file, const char *function,
     }
 
     if (data == NULL) {
-        do_crm_log(log_level, "%s: No data to dump as XML", prefix);
+        do_crm_log(log_level, "%sNo data to dump as XML", prefix);
         return;
     }
 
