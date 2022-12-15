@@ -769,14 +769,14 @@ G_GNUC_NULL_TERMINATED;
 
 /*!
  * \internal
- * \brief Add the given node as a child of the current list parent.  This is
- *        used when implementing custom message functions.
+ * \brief Add a copy of the given node as a child of the current list parent.
+ *        This is used when implementing custom message functions.
  *
  * \param[in,out] out  The output functions structure.
- * \param[in]     node An XML node to be added as a child.
+ * \param[in]     node An XML node to copy as a child.
  */
 void
-pcmk__output_xml_add_node(pcmk__output_t *out, xmlNodePtr node);
+pcmk__output_xml_add_node_copy(pcmk__output_t *out, xmlNodePtr node);
 
 /*!
  * \internal
@@ -904,6 +904,7 @@ void pcmk__output_and_clear_error(GError *error, pcmk__output_t *out);
 int pcmk__xml_output_new(pcmk__output_t **out, xmlNodePtr *xml);
 void pcmk__xml_output_finish(pcmk__output_t *out, xmlNodePtr *xml);
 int pcmk__log_output_new(pcmk__output_t **out);
+int pcmk__text_output_new(pcmk__output_t **out, const char *filename);
 
 #if defined(PCMK__UNIT_TESTING)
 /* If we are building libcrmcommon_test.a, add this accessor function so we can

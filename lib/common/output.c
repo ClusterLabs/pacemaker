@@ -252,3 +252,32 @@ pcmk__log_output_new(pcmk__output_t **out)
     }
     return pcmk_rc_ok;
 }
+
+/*!
+ * \internal
+ * \brief Create a new output object using the "text" format
+ *
+ * \param[out] out       Where to store newly allocated output object
+ * \param[in]  filename  Name of output destination file
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__text_output_new(pcmk__output_t **out, const char *filename)
+{
+    int rc = pcmk_rc_ok;
+    const char* argv[] = { "", NULL };
+    pcmk__supported_format_t formats[] = {
+        PCMK__SUPPORTED_FORMAT_TEXT,
+        { NULL, NULL, NULL }
+    };
+
+    pcmk__register_formats(NULL, formats);
+    rc = pcmk__output_new(out, "text", filename, (char **) argv);
+    if ((rc != pcmk_rc_ok) || (*out == NULL)) {
+        crm_err("Can't create text output object to internal error: %s",
+                pcmk_rc_str(rc));
+        return rc;
+    }
+    return pcmk_rc_ok;
+}

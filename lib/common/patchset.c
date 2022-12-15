@@ -474,7 +474,7 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode *patchset)
         return;
     }
     if (patchset_cs == NULL) {
-        patchset_cs = qb_log_callsite_get(function, __FILE__, "xml-patchset",
+        patchset_cs = qb_log_callsite_get(__func__, __FILE__, "xml-patchset",
                                           log_level, __LINE__, 0);
     }
 
@@ -492,16 +492,14 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode *patchset)
     digest = crm_element_value(patchset, XML_ATTR_DIGEST);
 
     if ((add[2] != del[2]) || (add[1] != del[1]) || (add[0] != del[0])) {
-        do_crm_log_alias(log_level, __FILE__, function, __LINE__,
-                         "Diff: --- %d.%d.%d %s", del[0], del[1], del[2], fmt);
-        do_crm_log_alias(log_level, __FILE__, function, __LINE__,
-                         "Diff: +++ %d.%d.%d %s",
-                         add[0], add[1], add[2], digest);
+        do_crm_log(log_level, "Diff: --- %d.%d.%d %s",
+                   del[0], del[1], del[2], fmt);
+        do_crm_log(log_level, "Diff: +++ %d.%d.%d %s",
+                   add[0], add[1], add[2], digest);
 
     } else if ((patchset != NULL) && (add[0] || add[1] || add[2])) {
-        do_crm_log_alias(log_level, __FILE__, function, __LINE__,
-                         "%s: Local-only Change: %d.%d.%d",
-                         (function? function : ""), add[0], add[1], add[2]);
+        do_crm_log(log_level, "Local-only Change: %d.%d.%d",
+                   add[0], add[1], add[2]);
     }
 
     crm_element_value_int(patchset, "format", &format);
@@ -519,24 +517,22 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode *patchset)
                 char *prefix = crm_strdup_printf("++ %s: ", xpath);
 
                 max = strlen(prefix);
-                pcmk__xml_log(log_level, __FILE__, function, __LINE__, prefix,
-                              change->children, 0,
+                pcmk__xml_log(log_level, prefix, change->children, 0,
                               xml_log_option_formatted|xml_log_option_open);
 
                 for (lpc = 2; lpc < max; lpc++) {
                     prefix[lpc] = ' ';
                 }
 
-                pcmk__xml_log(log_level, __FILE__, function, __LINE__, prefix,
-                              change->children, 0,
-                              xml_log_option_formatted|xml_log_option_close
-                                  |xml_log_option_children);
+                pcmk__xml_log(log_level, prefix, change->children, 0,
+                              xml_log_option_formatted
+                              |xml_log_option_close
+                              |xml_log_option_children);
                 free(prefix);
 
             } else if (strcmp(op, "move") == 0) {
-                do_crm_log_alias(log_level, __FILE__, function, __LINE__,
-                                 "+~ %s moved to offset %s", xpath,
-                                 crm_element_value(change, XML_DIFF_POSITION));
+                do_crm_log(log_level, "+~ %s moved to offset %s",
+                           xpath, crm_element_value(change, XML_DIFF_POSITION));
 
             } else if (strcmp(op, "modify") == 0) {
                 xmlNode *clist = first_named_child(change, XML_DIFF_LIST);
@@ -565,15 +561,12 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode *patchset)
                 }
 
                 if (buffer_set != NULL) {
-                    do_crm_log_alias(log_level, __FILE__, function, __LINE__,
-                                     "+  %s:  %s", xpath,
-                                     (const char *) buffer_set->str);
+                    do_crm_log(log_level, "+  %s:  %s", xpath, buffer_set->str);
                     g_string_free(buffer_set, TRUE);
                 }
                 if (buffer_unset != NULL) {
-                    do_crm_log_alias(log_level, __FILE__, function, __LINE__,
-                                     "-- %s:  %s", xpath,
-                                     (const char *) buffer_unset->str);
+                    do_crm_log(log_level, "-- %s:  %s",
+                               xpath, buffer_unset->str);
                     g_string_free(buffer_unset, TRUE);
                 }
 
@@ -582,31 +575,28 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode *patchset)
 
                 crm_element_value_int(change, XML_DIFF_POSITION, &position);
                 if (position >= 0) {
-                    do_crm_log_alias(log_level, __FILE__, function, __LINE__,
-                                     "-- %s (%d)", xpath, position);
-
+                    do_crm_log(log_level, "-- %s (%d)", xpath, position);
                 } else {
-                    do_crm_log_alias(log_level, __FILE__, function, __LINE__,
-                                     "-- %s", xpath);
+                    do_crm_log(log_level, "-- %s", xpath);
                 }
             }
         }
         return;
     }
 
-    if ((log_level < LOG_DEBUG) || (function == NULL)) {
+    if (log_level < LOG_DEBUG) {
         options |= xml_log_option_diff_short;
     }
 
     removed = find_xml_node(patchset, "diff-removed", FALSE);
     for (child = pcmk__xml_first_child(removed); child != NULL;
          child = pcmk__xml_next(child)) {
-        log_data_element(log_level, __FILE__, function, __LINE__, "- ", child,
+        log_data_element(log_level, __FILE__, __func__, __LINE__, "- ", child,
                          0, options|xml_log_option_diff_minus);
         if (is_first) {
             is_first = FALSE;
         } else {
-            do_crm_log_alias(log_level, __FILE__, function, __LINE__, " --- ");
+            do_crm_log(log_level, " --- ");
         }
     }
 
@@ -614,12 +604,12 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode *patchset)
     added = find_xml_node(patchset, "diff-added", FALSE);
     for (child = pcmk__xml_first_child(added); child != NULL;
          child = pcmk__xml_next(child)) {
-        log_data_element(log_level, __FILE__, function, __LINE__, "+ ", child,
+        log_data_element(log_level, __FILE__, __func__, __LINE__, "+ ", child,
                          0, options|xml_log_option_diff_plus);
         if (is_first) {
             is_first = FALSE;
         } else {
-            do_crm_log_alias(log_level, __FILE__, function, __LINE__, " +++ ");
+            do_crm_log(log_level, " +++ ");
         }
     }
 }
