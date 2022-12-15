@@ -20,6 +20,45 @@ static void append_parent_colocation(pe_resource_t * rsc, pe_resource_t * child,
 
 /*!
  * \internal
+ * \brief Check whether a clone or bundle has instances for all available nodes
+ *
+ * \param[in] collective  Clone or bundle to check
+ *
+ * \return true if \p collective has enough instances for all of its available
+ *         allowed nodes, otherwise false
+ */
+bool
+pcmk__is_everywhere(const pe_resource_t *collective)
+{
+    GHashTableIter iter;
+    pe_node_t *node = NULL;
+    int available_nodes = 0;
+    int max_instances = 0;
+
+    // @TODO make into variant method
+    switch (collective->variant) {
+        case pe_clone:
+            max_instances = pe__clone_max(collective);
+            break;
+        case pe_container:
+            max_instances = pe__bundle_max(collective);
+            break;
+        default:
+            return false;
+    }
+
+    g_hash_table_iter_init(&iter, collective->allowed_nodes);
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+        if (pcmk__node_available(node, false, false)
+            && (max_instances < ++available_nodes)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/*!
+ * \internal
  * \brief Check whether a node is allowed to run an instance
  *
  * \param[in] instance      Clone instance or bundle container to check
