@@ -1278,6 +1278,10 @@ def main(argv):
     opts = TestOptions()
     opts.build_options(argv)
 
+    if opts.options['show-usage']:
+        opts.show_usage()
+        sys.exit(ExitStatus.OK)
+
     exit_if_proc_running("pacemaker-fenced")
 
     use_corosync = not opts.options['no-cpg']
@@ -1289,6 +1293,7 @@ def main(argv):
     with tempfile.TemporaryDirectory(prefix="cts-fencing-") as logdir:
         tests = Tests(opts.options['verbose'], opts.options['timeout'],
                       opts.options['force-wait'], logdir)
+
         tests.build_standalone_tests()
         tests.build_custom_timeout_tests()
         tests.build_api_sanity_tests()
@@ -1304,9 +1309,6 @@ def main(argv):
 
         if opts.options['list-tests']:
             tests.print_list()
-            sys.exit(ExitStatus.OK)
-        elif opts.options['show-usage']:
-            opts.show_usage()
             sys.exit(ExitStatus.OK)
 
         print("Starting ...")
@@ -1330,6 +1332,7 @@ def main(argv):
             tests.print_results()
 
         tests.cleanup_environment(use_corosync)
+
     tests.exit()
 
 
