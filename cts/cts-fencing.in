@@ -219,16 +219,6 @@ class FenceTests(Tests):
         self._tests.append(test)
         return test
 
-    def print_list(self):
-        """ List all registered tests """
-
-        print("\n==== %d TESTS FOUND ====" % (len(self._tests)))
-        print("%35s - %s" % ("TEST NAME", "TEST DESCRIPTION"))
-        print("%35s - %s" % ("--------------------", "--------------------"))
-        for test in self._tests:
-            print("%35s - %s" % (test.name, test.description))
-        print("==== END OF LIST ====\n")
-
     def start_corosync(self):
         """ Start the corosync process """
 
@@ -238,21 +228,6 @@ class FenceTests(Tests):
         test = subprocess.Popen("corosync", stdout=subprocess.PIPE)
         test.wait()
         time.sleep(10)
-
-    def run_single(self, name):
-        """ Run a single named test """
-
-        for test in self._tests:
-            if test.name == name:
-                test.run()
-                break
-
-    def run_tests_matching(self, pattern):
-        """ Run all tests whose name matches a pattern """
-
-        for test in self._tests:
-            if test.name.count(pattern) != 0:
-                test.run()
 
     def run_cpg_only(self):
         """ Run all corosync-enabled tests """
@@ -267,46 +242,6 @@ class FenceTests(Tests):
         for test in self._tests:
             if not test._enable_corosync:
                 test.run()
-
-    def run_tests(self):
-        """ Run all tests """
-
-        for test in self._tests:
-            test.run()
-
-    def exit(self):
-        """ Exit (with error status code if any test failed) """
-
-        for test in self._tests:
-            if not test.executed:
-                continue
-
-            if test.exitcode != ExitStatus.OK:
-                sys.exit(ExitStatus.ERROR)
-
-        sys.exit(ExitStatus.OK)
-
-    def print_results(self):
-        """ Print summary of results of executed tests """
-
-        failures = 0
-        success = 0
-        print("\n\n======= FINAL RESULTS ==========")
-        print("\n--- FAILURE RESULTS:")
-        for test in self._tests:
-            if not test.executed:
-                continue
-
-            if test.exitcode != ExitStatus.OK:
-                failures = failures + 1
-                test.print_result("    ")
-            else:
-                success = success + 1
-
-        if failures == 0:
-            print("    None")
-
-        print("\n--- TOTALS\n    Pass:%d\n    Fail:%d\n" % (success, failures))
 
     def build_api_sanity_tests(self):
         """ Register tests to verify basic API usage """
