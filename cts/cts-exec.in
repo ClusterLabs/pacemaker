@@ -157,10 +157,11 @@ class ExecTest(Test):
             self._execd_process.wait()
 
             if self.verbose:
-                print("Daemon output")
+                print("Daemon Output Start")
                 logfile = io.open(self.logpath, 'rt', errors='replace')
                 for line in logfile:
                     print(line.strip().encode('utf-8', 'replace'))
+                print("Daemon Output End")
 
         if self._stonith_process:
             self._stonith_process.terminate()
