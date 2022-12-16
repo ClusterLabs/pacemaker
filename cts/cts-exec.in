@@ -299,12 +299,12 @@ class Tests(object):
         self.tests.append(test)
         return test
 
-    def setup_test_environment(self):
+    def setup_environment(self):
         """ Prepare the host before executing any tests """
 
         if BuildOptions.REMOTE_ENABLED:
             os.system("service pacemaker_remote stop")
-        self.cleanup_test_environment()
+        self.cleanup_environment()
 
         if self.tls and not os.path.isfile("/etc/pacemaker/authkey"):
             print("Installing /etc/pacemaker/authkey ...")
@@ -330,7 +330,7 @@ class Tests(object):
 
         subprocess.call(["cts-support", "install"])
 
-    def cleanup_test_environment(self):
+    def cleanup_environment(self):
         """ Clean up the host after executing desired tests """
 
         for installed_file in self.installed_files:
@@ -988,28 +988,28 @@ class TestOptions(object):
                 self.options['run-only-pattern'] = args[i+1]
                 skip = True
 
-def show_usage():
-    """ Show command usage """
+    def show_usage(self):
+        """ Show command usage """
 
-    print("usage: " + sys.argv[0] + " [options]")
-    print("If no options are provided, all tests will run")
-    print("Options:")
-    print("\t [--help | -h]                        Show usage")
-    print("\t [--list-tests | -l]                  Print out all registered tests.")
-    print("\t [--run-only | -r 'testname']         Run a specific test")
-    print("\t [--verbose | -V]                     Verbose output")
-    print("\t [--timeout | -t 'floating point number']"
-            "\n\t\tUp to how many seconds each test case waits for the daemon to be initialized."
-            "\n\t\tDefaults to 2. The value 0 means no limit.")
-    print("\t [--force-wait | -w]"
-            "\n\t\tEach test case waits the default/specified --timeout for the daemon without tracking the log.")
-    if BuildOptions.REMOTE_ENABLED:
-        print("\t [--pacemaker-remote | -R             Test pacemaker-remoted binary instead of pacemaker-execd")
-    print("\t [--run-only-pattern | -p 'string']   Run only tests containing the string value")
-    print("\n\tExample: Run only the test 'start_stop'")
-    print("\t\t " + sys.argv[0] + " --run-only start_stop")
-    print("\n\tExample: Run only the tests with the string 'systemd' present in them")
-    print("\t\t " + sys.argv[0] + " --run-only-pattern systemd")
+        print("usage: " + sys.argv[0] + " [options]")
+        print("If no options are provided, all tests will run")
+        print("Options:")
+        print("\t [--help | -h]                        Show usage")
+        print("\t [--list-tests | -l]                  Print out all registered tests.")
+        print("\t [--run-only | -r 'testname']         Run a specific test")
+        print("\t [--verbose | -V]                     Verbose output")
+        print("\t [--timeout | -t 'floating point number']"
+                "\n\t\tUp to how many seconds each test case waits for the daemon to be initialized."
+                "\n\t\tDefaults to 2. The value 0 means no limit.")
+        print("\t [--force-wait | -w]"
+                "\n\t\tEach test case waits the default/specified --timeout for the daemon without tracking the log.")
+        if BuildOptions.REMOTE_ENABLED:
+            print("\t [--pacemaker-remote | -R             Test pacemaker-remoted binary instead of pacemaker-execd")
+        print("\t [--run-only-pattern | -p 'string']   Run only tests containing the string value")
+        print("\n\tExample: Run only the test 'start_stop'")
+        print("\t\t " + sys.argv[0] + " --run-only start_stop")
+        print("\n\tExample: Run only the tests with the string 'systemd' present in them")
+        print("\t\t " + sys.argv[0] + " --run-only-pattern systemd")
 
 
 def main(argv):
@@ -1024,7 +1024,7 @@ def main(argv):
     opts.build_options(argv)
 
     if opts.options['show-usage']:
-        show_usage()
+        opts.show_usage()
         sys.exit(ExitStatus.OK)
 
     if opts.options['pacemaker-remote']:
@@ -1051,9 +1051,9 @@ def main(argv):
             tests.print_list()
             sys.exit(ExitStatus.OK)
 
-        tests.setup_test_environment()
-
         print("Starting ...")
+
+        tests.setup_environment()
 
         if opts.options['run-only-pattern'] != "":
             tests.run_tests_matching(opts.options['run-only-pattern'])
@@ -1065,8 +1065,9 @@ def main(argv):
             tests.run_tests()
             tests.print_results()
 
-        tests.cleanup_test_environment()
-        tests.exit()
+        tests.cleanup_environment()
+
+    tests.exit()
 
 
 if __name__ == "__main__":
