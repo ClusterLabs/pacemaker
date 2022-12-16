@@ -188,6 +188,10 @@ class Test(object):
 
         self._new_cmd(cmd, args, ExitStatus.OK, no_wait=True)
 
+    def clean_environment(self):
+        """ Clean up the host after executing a test """
+        raise NotImplementedError("clean_environment not provided by subclass")
+
     def print_result(self, filler):
         """ Print the result of the last test execution """
 
