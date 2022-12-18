@@ -656,7 +656,8 @@ xml_log_patchset_v2(uint8_t log_level, const xmlNode *patchset)
  * \param[in] patchset   XML patchset to log
  */
 void
-xml_log_patchset(uint8_t log_level, const char *function, xmlNode *patchset)
+xml_log_patchset(uint8_t log_level, const char *function,
+                 const xmlNode *patchset)
 {
     int format = 1;
 
