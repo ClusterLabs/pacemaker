@@ -1518,15 +1518,30 @@ dump_xml_attr(const xmlAttr *attr, int options, GString *buffer)
     free(p_value);
 }
 
-// Log an XML element or comment (and any children) in a formatted way
+/*!
+ * \internal
+ * \brief Log an XML element or comment in a formatted way
+ *
+ * Depending on the value of \p log_level, the output may be written to
+ * \p stdout or to a log file.
+ *
+ * \param[in,out] buffer     Where to build output strings
+ * \param[in]     log_level  Priority at which to log the messages
+ * \param[in]     prefix     String to prepend to every line of output
+ * \param[in]     data       XML node to log
+ * \param[in]     depth      Current indentation level
+ * \param[in]     options    Group of \p xml_log_options flags
+ *
+ * \note This is a recursive helper function for \p pcmk__xml_log().
+ * \note \p buffer may be overwritten many times. The caller is responsible for
+ *       freeing it using \p g_string_free() but should not rely on its
+ *       contents.
+ */
 static void
-log_xml_node_and_children(GString *buffer, int log_level, const char *prefix,
-                          const xmlNode *data, int depth, int options)
+log_xml_node(GString *buffer, int log_level, const char *prefix,
+             const xmlNode *data, int depth, int options)
 {
-    const char *name = NULL;
-    const char *hidden = NULL;
-
-    xmlNode *child = NULL;
+    const char *name = crm_element_name(data);
 
     CRM_ASSERT(buffer != NULL);
 
@@ -1536,39 +1551,40 @@ log_xml_node_and_children(GString *buffer, int log_level, const char *prefix,
         return;
     }
 
-    name = crm_element_name(data);
-
-    g_string_truncate(buffer, 0);
-
     if (pcmk_is_set(options, xml_log_option_open)) {
+        g_string_truncate(buffer, 0);
         insert_prefix(options, buffer, depth);
 
         if (data->type == XML_COMMENT_NODE) {
             pcmk__g_strcat(buffer, "<!--", (const char *) data->content, "-->",
                            NULL);
 
-        } else {
+        } else {    // data->type == XML_ELEMENT_NODE
+            const char *hidden = crm_element_value(data, "hidden");
+
             pcmk__g_strcat(buffer, "<", name, NULL);
 
-            hidden = crm_element_value(data, "hidden");
-            for (xmlAttrPtr a = pcmk__xe_first_attr(data); a != NULL;
-                 a = a->next) {
-
-                xml_node_private_t *nodepriv = a->_private;
-                const char *p_name = (const char *) a->name;
-                const char *p_value = pcmk__xml_attr_value(a);
+            for (const xmlAttr *attr = pcmk__xe_first_attr(data); attr != NULL;
+                 attr = attr->next) {
+                xml_node_private_t *nodepriv = attr->_private;
+                const char *p_name = (const char *) attr->name;
+                const char *p_value = pcmk__xml_attr_value(attr);
                 char *p_copy = NULL;
 
                 if (pcmk_is_set(nodepriv->flags, pcmk__xf_deleted)) {
                     continue;
-                } else if (pcmk_any_flags_set(options,
-                                              xml_log_option_diff_plus
-                                              |xml_log_option_diff_minus)
-                           && (strcmp(XML_DIFF_MARKER, p_name) == 0)) {
-                    continue;
+                }
 
-                } else if (hidden != NULL && p_name[0] != 0 && strstr(hidden, p_name) != NULL) {
-                    p_copy = strdup("*****");
+                if (pcmk_any_flags_set(options,
+                                       xml_log_option_diff_plus
+                                       |xml_log_option_diff_minus)
+                    && (strcmp(XML_DIFF_MARKER, p_name) == 0)) {
+                    continue;
+                }
+
+                if ((hidden != NULL) && (p_name[0] != '\0')
+                    && (strstr(hidden, p_name) != NULL)) {
+                    pcmk__str_update(&p_copy, "*****");
 
                 } else {
                     p_copy = crm_xml_escape(p_value);
@@ -1579,10 +1595,8 @@ log_xml_node_and_children(GString *buffer, int log_level, const char *prefix,
                 free(p_copy);
             }
 
-            if(xml_has_children(data) == FALSE) {
-                g_string_append(buffer, "/>");
-
-            } else if (pcmk_is_set(options, xml_log_option_children)) {
+            if (xml_has_children(data)
+                && pcmk_is_set(options, xml_log_option_children)) {
                 g_string_append_c(buffer, '>');
 
             } else {
@@ -1593,21 +1607,16 @@ log_xml_node_and_children(GString *buffer, int log_level, const char *prefix,
         do_crm_log(log_level, "%s %s", prefix, buffer->str);
     }
 
-    if(data->type == XML_COMMENT_NODE) {
+    if ((data->type == XML_COMMENT_NODE) || !xml_has_children(data)) {
         return;
+    }
 
-    } else if(xml_has_children(data) == FALSE) {
-        return;
-
-    } else if (pcmk_is_set(options, xml_log_option_children)) {
-        for (child = pcmk__xml_first_child(data); child != NULL;
+    if (pcmk_is_set(options, xml_log_option_children)) {
+        for (const xmlNode *child = pcmk__xml_first_child(data); child != NULL;
              child = pcmk__xml_next(child)) {
 
-            log_xml_node_and_children(buffer, log_level, prefix, child,
-                                      depth + 1,
-                                      options
-                                      |xml_log_option_open
-                                      |xml_log_option_close);
+            log_xml_node(buffer, log_level, prefix, child, depth + 1,
+                         options|xml_log_option_open|xml_log_option_close);
         }
     }
 
@@ -1616,23 +1625,33 @@ log_xml_node_and_children(GString *buffer, int log_level, const char *prefix,
 
         insert_prefix(options, buffer, depth);
         pcmk__g_strcat(buffer, "</", name, ">", NULL);
-
         do_crm_log(log_level, "%s %s", prefix, buffer->str);
     }
 }
 
-// Log an XML element or comment (and any children) in a formatted way
+/*!
+ * \internal
+ * \brief Log an XML element or comment in a formatted way
+ *
+ * Depending on the value of \p log_level, the output may be written to
+ * \p stdout or to a log file.
+ *
+ * \param[in] log_level  Priority at which to log the messages
+ * \param[in] prefix     String to prepend to every line of output
+ * \param[in] data       XML node to log
+ * \param[in] depth      Current indentation level
+ * \param[in] options    Group of \p xml_log_options flags
+ */
 void
 pcmk__xml_log(int log_level, const char *prefix, const xmlNode *data, int depth,
               int options)
 {
-    /* Allocate a buffer once, for log_xml_node_and_children() to truncate and
-     * reuse in recursive calls
+    /* Allocate a buffer once, for log_xml_node() to truncate and reuse in
+     * recursive calls
      */
     GString *buffer = g_string_sized_new(1024);
 
-    log_xml_node_and_children(buffer, log_level, prefix, data, depth, options);
-
+    log_xml_node(buffer, log_level, prefix, data, depth, options);
     g_string_free(buffer, TRUE);
 }
 
