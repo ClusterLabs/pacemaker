@@ -453,13 +453,157 @@ patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
 }
 
 /*!
- * \brief Output a user-friendly form of an XML patchset
+ * \internal
+ * \brief Log a user-friendly form of an XML patchset (format 1)
  *
  * This function parses an XML patchset (an \p XML_ATTR_DIFF element and its
  * children) into a user-friendly combined diff output. Depending on the value
  * of \p log_level, the output may be written to \p stdout or to a log file.
  *
- * \param[in] log_level  Priority at which to log the message
+ * \param[in] log_level  Priority at which to log the messages
+ * \param[in] patchset   XML patchset to log
+ */
+static void
+xml_log_patchset_v1(uint8_t log_level, const xmlNode *patchset)
+{
+    int options = xml_log_option_formatted;
+    const xmlNode *removed = NULL;
+    const xmlNode *added = NULL;
+    const xmlNode *child = NULL;
+    bool is_first = true;
+
+    if (log_level < LOG_DEBUG) {
+        options |= xml_log_option_diff_short;
+    }
+
+    removed = find_xml_node(patchset, "diff-removed", FALSE);
+    for (child = pcmk__xml_first_child(removed); child != NULL;
+         child = pcmk__xml_next(child)) {
+        log_data_element(log_level, __FILE__, __func__, __LINE__, "- ",
+                         child, 0, options|xml_log_option_diff_minus);
+        if (is_first) {
+            is_first = false;
+        } else {
+            do_crm_log(log_level, " --- ");
+        }
+    }
+
+    is_first = true;
+    added = find_xml_node(patchset, "diff-added", FALSE);
+    for (child = pcmk__xml_first_child(added); child != NULL;
+         child = pcmk__xml_next(child)) {
+        log_data_element(log_level, __FILE__, __func__, __LINE__, "+ ",
+                         child, 0, options|xml_log_option_diff_plus);
+        if (is_first) {
+            is_first = false;
+        } else {
+            do_crm_log(log_level, " +++ ");
+        }
+    }
+}
+
+/*!
+ * \internal
+ * \brief Log a user-friendly form of an XML patchset (format 2)
+ *
+ * This function parses an XML patchset (an \p XML_ATTR_DIFF element and its
+ * children) into a user-friendly combined diff output. Depending on the value
+ * of \p log_level, the output may be written to \p stdout or to a log file.
+ *
+ * \param[in] log_level  Priority at which to log the messages
+ * \param[in] patchset   XML patchset to log
+ */
+static void
+xml_log_patchset_v2(uint8_t log_level, const xmlNode *patchset)
+{
+    for (const xmlNode *change = pcmk__xml_first_child(patchset);
+         change != NULL; change = pcmk__xml_next(change)) {
+        const char *op = crm_element_value(change, XML_DIFF_OP);
+        const char *xpath = crm_element_value(change, XML_DIFF_PATH);
+
+        if (op == NULL) {
+            continue;
+        }
+
+        if (strcmp(op, "create") == 0) {
+            char *prefix = crm_strdup_printf("++ %s: ", xpath);
+
+            pcmk__xml_log(log_level, prefix, change->children, 0,
+                          xml_log_option_formatted|xml_log_option_open);
+
+            // Overwrite all except the first two characters with spaces
+            for (char *ch = prefix + 2; *ch != '\0'; ch++) {
+                *ch = ' ';
+            }
+
+            pcmk__xml_log(log_level, prefix, change->children, 0,
+                          xml_log_option_formatted
+                          |xml_log_option_close
+                          |xml_log_option_children);
+            free(prefix);
+
+        } else if (strcmp(op, "move") == 0) {
+            const char *position = crm_element_value(change, XML_DIFF_POSITION);
+
+            do_crm_log(log_level, "+~ %s moved to offset %s", xpath, position);
+
+        } else if (strcmp(op, "modify") == 0) {
+            xmlNode *clist = first_named_child(change, XML_DIFF_LIST);
+            GString *buffer_set = NULL;
+            GString *buffer_unset = NULL;
+
+            for (const xmlNode *child = pcmk__xml_first_child(clist);
+                 child != NULL; child = pcmk__xml_next(child)) {
+                const char *name = crm_element_value(child, "name");
+
+                op = crm_element_value(child, XML_DIFF_OP);
+                if (op == NULL) {
+                    continue;
+                }
+
+                if (strcmp(op, "set") == 0) {
+                    const char *value = crm_element_value(child, "value");
+
+                    pcmk__add_separated_word(&buffer_set, 256, "@", ", ");
+                    pcmk__g_strcat(buffer_set, name, "=", value, NULL);
+
+                } else if (strcmp(op, "unset") == 0) {
+                    pcmk__add_separated_word(&buffer_unset, 256, "@", ", ");
+                    g_string_append(buffer_unset, name);
+                }
+            }
+
+            if (buffer_set != NULL) {
+                do_crm_log(log_level, "+  %s:  %s", xpath, buffer_set->str);
+                g_string_free(buffer_set, TRUE);
+            }
+
+            if (buffer_unset != NULL) {
+                do_crm_log(log_level, "-- %s:  %s", xpath, buffer_unset->str);
+                g_string_free(buffer_unset, TRUE);
+            }
+
+        } else if (strcmp(op, "delete") == 0) {
+            int position = -1;
+
+            crm_element_value_int(change, XML_DIFF_POSITION, &position);
+            if (position >= 0) {
+                do_crm_log(log_level, "-- %s (%d)", xpath, position);
+            } else {
+                do_crm_log(log_level, "-- %s", xpath);
+            }
+        }
+    }
+}
+
+/*!
+ * \brief Log a user-friendly form of an XML patchset
+ *
+ * This function parses an XML patchset (an \p XML_ATTR_DIFF element and its
+ * children) into a user-friendly combined diff output. Depending on the value
+ * of \p log_level, the output may be written to \p stdout or to a log file.
+ *
+ * \param[in] log_level  Priority at which to log the messages
  * \param[in] function   Ignored
  * \param[in] patchset   XML patchset to log
  */
@@ -467,8 +611,6 @@ void
 xml_log_patchset(uint8_t log_level, const char *function, xmlNode *patchset)
 {
     int format = 1;
-    const xmlNode *child = NULL;
-
     int add[] = { 0, 0, 0 };
     int del[] = { 0, 0, 0 };
 
@@ -513,119 +655,9 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode *patchset)
 
     crm_element_value_int(patchset, "format", &format);
     if (format == 2) {
-        for (const xmlNode *change = pcmk__xml_first_child(patchset);
-             change != NULL; change = pcmk__xml_next(change)) {
-            const char *op = crm_element_value(change, XML_DIFF_OP);
-            const char *xpath = crm_element_value(change, XML_DIFF_PATH);
-
-            if (op == NULL) {
-                continue;
-            }
-
-            if (strcmp(op, "create") == 0) {
-                char *prefix = crm_strdup_printf("++ %s: ", xpath);
-
-                pcmk__xml_log(log_level, prefix, change->children, 0,
-                              xml_log_option_formatted|xml_log_option_open);
-
-                // Overwrite all except the first two characters with spaces
-                for (char *ch = prefix + 2; *ch != '\0'; ch++) {
-                    *ch = ' ';
-                }
-
-                pcmk__xml_log(log_level, prefix, change->children, 0,
-                              xml_log_option_formatted
-                              |xml_log_option_close
-                              |xml_log_option_children);
-                free(prefix);
-
-            } else if (strcmp(op, "move") == 0) {
-                const char *pos = crm_element_value(change, XML_DIFF_POSITION);
-
-                do_crm_log(log_level, "+~ %s moved to offset %s", xpath, pos);
-
-            } else if (strcmp(op, "modify") == 0) {
-                xmlNode *clist = first_named_child(change, XML_DIFF_LIST);
-                GString *buffer_set = NULL;
-                GString *buffer_unset = NULL;
-
-                for (child = pcmk__xml_first_child(clist); child != NULL;
-                     child = pcmk__xml_next(child)) {
-                    const char *name = crm_element_value(child, "name");
-
-                    op = crm_element_value(child, XML_DIFF_OP);
-                    if (op == NULL) {
-                        continue;
-                    }
-
-                    if (strcmp(op, "set") == 0) {
-                        const char *value = crm_element_value(child, "value");
-
-                        pcmk__add_separated_word(&buffer_set, 256, "@", ", ");
-                        pcmk__g_strcat(buffer_set, name, "=", value, NULL);
-
-                    } else if (strcmp(op, "unset") == 0) {
-                        pcmk__add_separated_word(&buffer_unset, 256, "@", ", ");
-                        g_string_append(buffer_unset, name);
-                    }
-                }
-
-                if (buffer_set != NULL) {
-                    do_crm_log(log_level, "+  %s:  %s", xpath, buffer_set->str);
-                    g_string_free(buffer_set, TRUE);
-                }
-                if (buffer_unset != NULL) {
-                    do_crm_log(log_level, "-- %s:  %s",
-                               xpath, buffer_unset->str);
-                    g_string_free(buffer_unset, TRUE);
-                }
-
-            } else if (strcmp(op, "delete") == 0) {
-                int position = -1;
-
-                crm_element_value_int(change, XML_DIFF_POSITION, &position);
-                if (position >= 0) {
-                    do_crm_log(log_level, "-- %s (%d)", xpath, position);
-                } else {
-                    do_crm_log(log_level, "-- %s", xpath);
-                }
-            }
-        }
-
+        xml_log_patchset_v2(log_level, patchset);
     } else {
-        int options = xml_log_option_formatted;
-        const xmlNode *removed = NULL;
-        const xmlNode *added = NULL;
-        bool is_first = true;
-
-        if (log_level < LOG_DEBUG) {
-            options |= xml_log_option_diff_short;
-        }
-
-        removed = find_xml_node(patchset, "diff-removed", FALSE);
-        for (child = pcmk__xml_first_child(removed); child != NULL;
-             child = pcmk__xml_next(child)) {
-            log_data_element(log_level, __FILE__, __func__, __LINE__, "- ",
-                             child, 0, options|xml_log_option_diff_minus);
-            if (is_first) {
-                is_first = false;
-            } else {
-                do_crm_log(log_level, " --- ");
-            }
-        }
-
-        is_first = true;
-        added = find_xml_node(patchset, "diff-added", FALSE);
-        for (child = pcmk__xml_first_child(added); child != NULL;
-             child = pcmk__xml_next(child)) {
-            log_data_element(log_level, __FILE__, __func__, __LINE__, "+ ",
-                             child, 0, options|xml_log_option_diff_plus);
-            if (is_first) {
-                is_first = false;
-            } else {
-                do_crm_log(log_level, " +++ ");
-            }
-        }
+        xml_log_patchset_v1(log_level, patchset);
     }
 }
 
