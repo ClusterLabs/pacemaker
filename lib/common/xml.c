@@ -1708,14 +1708,23 @@ pcmk__xml_log(int log_level, const char *prefix, const xmlNode *data, int depth,
     g_string_free(buffer, TRUE);
 }
 
-// Log XML portions that have been marked as changed
+/*!
+ * \internal
+ * \brief Log XML portions that have been marked as changed
+ *
+ * \param[in] log_level  Priority at which to log the messages
+ * \param[in] data       XML node to log
+ * \param[in] depth      Current indentation level
+ * \param[in] options    Group of \p xml_log_options flags
+ */
 static void
-log_xml_changes(int log_level, const char *prefix, const xmlNode *data,
-                int depth, int options)
+log_xml_changes(int log_level, const xmlNode *data, int depth, int options)
 {
-    xml_node_private_t *nodepriv;
-    char *prefix_m = NULL;
-    xmlNode *child = NULL;
+    const char *prefix_created = "++";
+    const char *prefix_deleted = "--";
+    const char *prefix_modified = "+ ";
+    const char *prefix_moved = "+~";
+    xml_node_private_t *nodepriv = NULL;
 
     if ((data == NULL) || (log_level == LOG_NEVER)) {
         return;
@@ -1723,93 +1732,84 @@ log_xml_changes(int log_level, const char *prefix, const xmlNode *data,
 
     nodepriv = data->_private;
 
-    prefix_m = strdup(prefix);
-    prefix_m[1] = '+';
-
     if (pcmk_all_flags_set(nodepriv->flags, pcmk__xf_dirty|pcmk__xf_created)) {
-        /* Continue and log full subtree */
-        pcmk__xml_log(log_level, prefix_m, data, depth,
+        // Newly created
+        pcmk__xml_log(log_level, prefix_created, data, depth,
                       options
                       |xml_log_option_open
                       |xml_log_option_close
                       |xml_log_option_children);
+        return;
+    }
 
-    } else if (pcmk_is_set(nodepriv->flags, pcmk__xf_dirty)) {
+    if (pcmk_is_set(nodepriv->flags, pcmk__xf_dirty)) {
+        // Modified or moved
         int spaces = 0;
-        char *prefix_del = NULL;
-        char *prefix_moved = NULL;
-        const char *flags = prefix;
+        const char *prefix = prefix_modified;
 
         if (pcmk_is_set(options, xml_log_option_formatted)) {
             CRM_CHECK(depth >= 0, depth = 0);
             spaces = 2 * depth;
         }
 
-        prefix_del = strdup(prefix);
-        prefix_del[0] = '-';
-        prefix_del[1] = '-';
-        prefix_moved = strdup(prefix);
-        prefix_moved[1] = '~';
-
         if (pcmk_is_set(nodepriv->flags, pcmk__xf_moved)) {
-            flags = prefix_moved;
-        } else {
-            flags = prefix;
+            prefix = prefix_moved;
         }
 
-        pcmk__xml_log(log_level, flags, data, depth,
+        // Log opening tag
+        pcmk__xml_log(log_level, prefix, data, depth,
                       options|xml_log_option_open);
 
-        for (xmlAttrPtr a = pcmk__xe_first_attr(data); a != NULL; a = a->next) {
-            const char *aname = (const char*) a->name;
+        // Log changes to attributes
+        for (const xmlAttr *attr = pcmk__xe_first_attr(data); attr != NULL;
+             attr = attr->next) {
+            const char *name = (const char *) attr->name;
 
-            nodepriv = a->_private;
+            nodepriv = attr->_private;
+
             if (pcmk_is_set(nodepriv->flags, pcmk__xf_deleted)) {
-                const char *value = crm_element_value(data, aname);
+                const char *value = crm_element_value(data, name);
 
-                flags = prefix_del;
                 do_crm_log(log_level, "%s %*s @%s=%s",
-                           flags, spaces, "", aname, value);
+                           prefix_deleted, spaces, "", name, value);
 
             } else if (pcmk_is_set(nodepriv->flags, pcmk__xf_dirty)) {
-                const char *value = crm_element_value(data, aname);
+                const char *value = crm_element_value(data, name);
 
                 if (pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
-                    flags = prefix_m;
+                    prefix = prefix_created;
 
                 } else if (pcmk_is_set(nodepriv->flags, pcmk__xf_modified)) {
-                    flags = prefix;
+                    prefix = prefix_modified;
 
                 } else if (pcmk_is_set(nodepriv->flags, pcmk__xf_moved)) {
-                    flags = prefix_moved;
+                    prefix = prefix_moved;
 
                 } else {
-                    flags = prefix;
+                    prefix = prefix_modified;
                 }
                 do_crm_log(log_level, "%s %*s @%s=%s",
-                           flags, spaces, "", aname, value);
+                           prefix, spaces, "", name, value);
             }
         }
-        free(prefix_moved);
-        free(prefix_del);
 
-        for (child = pcmk__xml_first_child(data); child != NULL;
+        // Log changes to children
+        for (const xmlNode *child = pcmk__xml_first_child(data); child != NULL;
              child = pcmk__xml_next(child)) {
-            log_xml_changes(log_level, prefix, child, depth + 1, options);
+            log_xml_changes(log_level, child, depth + 1, options);
         }
 
-        pcmk__xml_log(log_level, prefix, data, depth,
+        // Log closing tag
+        pcmk__xml_log(log_level, prefix_modified, data, depth,
                       options|xml_log_option_close);
 
     } else {
-        for (child = pcmk__xml_first_child(data); child != NULL;
+        // This node hasn't changed, but check its children
+        for (const xmlNode *child = pcmk__xml_first_child(data); child != NULL;
              child = pcmk__xml_next(child)) {
-            log_xml_changes(log_level, prefix, child, depth + 1, options);
+            log_xml_changes(log_level, child, depth + 1, options);
         }
     }
-
-    free(prefix_m);
-
 }
 
 void
@@ -1833,9 +1833,7 @@ log_data_element(int log_level, const char *file, const char *function,
     }
 
     if (pcmk_is_set(options, xml_log_option_dirty_add)) {
-        // log_xml_changes() writes to index 1 of a copy of prefix
-        CRM_CHECK((prefix[0] != '\0') && (prefix[1] != '\0'), return);
-        log_xml_changes(log_level, prefix, data, depth, options);
+        log_xml_changes(log_level, data, depth, options);
         return;
     }
 
