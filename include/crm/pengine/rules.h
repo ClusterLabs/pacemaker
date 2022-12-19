@@ -49,22 +49,24 @@ gboolean pe_test_expression(xmlNode *expr, GHashTable *node_hash,
                             pe_match_data_t *match_data);
 
 void pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
-                     pe_rule_eval_data_t *rule_data, GHashTable *hash,
+                     const pe_rule_eval_data_t *rule_data, GHashTable *hash,
                      const char *always_first, gboolean overwrite,
                      crm_time_t *next_change);
 
-void pe_unpack_nvpairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
-                       GHashTable *node_hash, GHashTable *hash,
-                       const char *always_first, gboolean overwrite,
-                       crm_time_t *now, crm_time_t *next_change);
-
-char *pe_expand_re_matches(const char *string, pe_re_match_data_t * match_data);
-
-gboolean pe_eval_rules(xmlNode *ruleset, pe_rule_eval_data_t *rule_data,
+void pe_unpack_nvpairs(xmlNode *top, const xmlNode *xml_obj,
+                       const char *set_name, GHashTable *node_hash,
+                       GHashTable *hash, const char *always_first,
+                       gboolean overwrite, crm_time_t *now,
                        crm_time_t *next_change);
-gboolean pe_eval_expr(xmlNode *rule, pe_rule_eval_data_t *rule_data,
+
+char *pe_expand_re_matches(const char *string,
+                           const pe_re_match_data_t *match_data);
+
+gboolean pe_eval_rules(xmlNode *ruleset, const pe_rule_eval_data_t *rule_data,
+                       crm_time_t *next_change);
+gboolean pe_eval_expr(xmlNode *rule, const pe_rule_eval_data_t *rule_data,
                       crm_time_t *next_change);
-gboolean pe_eval_subexpr(xmlNode *expr, pe_rule_eval_data_t *rule_data,
+gboolean pe_eval_subexpr(xmlNode *expr, const pe_rule_eval_data_t *rule_data,
                          crm_time_t *next_change);
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)

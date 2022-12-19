@@ -898,6 +898,22 @@ function test_tools() {
     cmd="cibadmin -Q -o nodes | grep node1-ram"
     test_assert $CRM_EX_OK
 
+    desc="Create second node attribute"
+    cmd="crm_attribute -n rattr -v XYZ -N node1 -t nodes"
+    test_assert $CRM_EX_OK
+
+    desc="Query node attributes by pattern"
+    cmd="crm_attribute -t nodes -P 'ra.*' -N node1 --query"
+    test_assert $CRM_EX_OK 0
+
+    desc="Update node attributes by pattern"
+    cmd="crm_attribute -t nodes -P 'rat.*' -N node1 -v 10"
+    test_assert $CRM_EX_OK
+
+    desc="Delete node attributes by pattern"
+    cmd="crm_attribute -t nodes -P 'rat.*' -N node1 -D"
+    test_assert $CRM_EX_OK
+
     desc="Set a transient (fail-count) node attribute"
     cmd="crm_attribute -n fail-count-foo -v 3 -N node1 -t status"
     test_assert $CRM_EX_OK
@@ -914,21 +930,17 @@ function test_tools() {
     cmd="crm_attribute -n fail-count-bar -v 5 -N node1 -t status"
     test_assert $CRM_EX_OK
 
-    desc="Query node attributes by pattern"
+    desc="Query transient node attributes by pattern"
     cmd="crm_attribute -t status -P fail-count -N node1 --query"
     test_assert $CRM_EX_OK 0
 
-    desc="Update node attributes by pattern"
+    desc="Update transient node attributes by pattern"
     cmd="crm_attribute -t status -P fail-count -N node1 -v 10"
     test_assert $CRM_EX_OK
 
-    desc="Delete node attributes by pattern"
+    desc="Delete transient node attributes by pattern"
     cmd="crm_attribute -t status -P fail-count -N node1 -D"
     test_assert $CRM_EX_OK
-
-    desc="crm_attribute given invalid pattern usage"
-    cmd="crm_attribute -t nodes -P fail-count -N node1 -D"
-    test_assert $CRM_EX_USAGE 0
 
     desc="crm_attribute given invalid delete usage"
     cmd="crm_attribute -t nodes -N node1 -D"
