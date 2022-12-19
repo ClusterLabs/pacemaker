@@ -131,10 +131,6 @@ void crm_enable_stderr(int enable);
 
 gboolean crm_is_callsite_active(struct qb_log_callsite *cs, uint8_t level, uint32_t tags);
 
-void log_data_element(int log_level, const char *file, const char *function,
-                      int line, const char *prefix, const xmlNode *data,
-                      int depth, gboolean formatted);
-
 /* returns the old value */
 unsigned int set_crm_log_level(unsigned int level);
 
