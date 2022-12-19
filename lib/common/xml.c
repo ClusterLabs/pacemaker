@@ -413,33 +413,40 @@ pcmk__xml_match(const xmlNode *haystack, const xmlNode *needle, bool exact)
     }
 }
 
+/*!
+ * \brief Log changes to an XML node
+ *
+ * \param[in] log_level  Priority at which to log the message
+ * \param[in] function   Ignored
+ * \param[in] xml        XML node to log
+ */
 void
 xml_log_changes(uint8_t log_level, const char *function, const xmlNode *xml)
 {
-    GList *gIter = NULL;
     xml_doc_private_t *docpriv = NULL;
 
     if (log_level == LOG_NEVER) {
         return;
     }
 
-    CRM_ASSERT(xml);
-    CRM_ASSERT(xml->doc);
+    CRM_ASSERT(xml != NULL);
+    CRM_ASSERT(xml->doc != NULL);
 
     docpriv = xml->doc->_private;
     if (!pcmk_is_set(docpriv->flags, pcmk__xf_dirty)) {
         return;
     }
 
-    for(gIter = docpriv->deleted_objs; gIter; gIter = gIter->next) {
-        pcmk__deleted_xml_t *deleted_obj = gIter->data;
+    for (const GList *iter = docpriv->deleted_objs; iter != NULL;
+         iter = iter->next) {
+        const pcmk__deleted_xml_t *deleted_obj = iter->data;
 
         if (deleted_obj->position >= 0) {
-            do_crm_log(log_level, "-- %s (%d)",
+            do_crm_log(log_level, PREFIX_DELETED " %s (%d)",
                        deleted_obj->path, deleted_obj->position);
 
         } else {
-            do_crm_log(log_level, "-- %s", deleted_obj->path);
+            do_crm_log(log_level, PREFIX_DELETED " %s", deleted_obj->path);
         }
     }
 
