@@ -522,6 +522,10 @@ xml_log_patchset_v1(uint8_t log_level, const xmlNode *patchset)
 
     xml_log_patchset_header(log_level, patchset);
 
+    /* It's not clear whether "- " or "+ " ever does *not* get overridden by
+     * "--" or "++" in practice. However, v1 patchsets can only exist during
+     * rolling upgrades from Pacemaker 1.1.11, so not worth worrying about.
+     */
     removed = find_xml_node(patchset, "diff-removed", FALSE);
     for (child = pcmk__xml_first_child(removed); child != NULL;
          child = pcmk__xml_next(child)) {
