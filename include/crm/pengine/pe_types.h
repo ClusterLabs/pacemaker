@@ -274,6 +274,7 @@ struct pe_node_s {
 #  define pe_rsc_critical                   0x00008000ULL
 
 #  define pe_rsc_failed                     0x00010000ULL
+#  define pe_rsc_detect_loop                0x00020000ULL
 #  define pe_rsc_runnable                   0x00040000ULL
 #  define pe_rsc_start_pending              0x00080000ULL
 
