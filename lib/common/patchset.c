@@ -498,6 +498,50 @@ xml_log_patchset_header(uint8_t log_level, const xmlNode *patchset)
 
 /*!
  * \internal
+ * \brief Log a user-friendly form of XML additions or removals
+ *
+ * \param[in] log_level  Priority at which to log the messages
+ * \param[in] prefix     String to prepend to every line of output
+ * \param[in] data       XML node to log
+ * \param[in] depth      Current indentation level
+ * \param[in] options    Group of \p xml_log_options flags
+ */
+static void
+xml_log_patchset_v1_recursive(uint8_t log_level, const char *prefix,
+                              const xmlNode *data, int depth, int options)
+{
+    if (!xml_has_children(data)
+        || (crm_element_value(data, XML_DIFF_MARKER) != NULL)) {
+
+        options |= xml_log_option_diff_all;
+
+        if (pcmk_is_set(options, xml_log_option_diff_plus)) {
+            prefix = PCMK__XML_PREFIX_CREATED;
+        } else {    // pcmk_is_set(options, xml_log_option_diff_minus)
+            prefix = PCMK__XML_PREFIX_DELETED;
+        }
+    }
+
+    if (pcmk_is_set(options, xml_log_option_diff_short)
+        && !pcmk_is_set(options, xml_log_option_diff_all)) {
+        // Keep looking for the actual change
+        for (const xmlNode *child = pcmk__xml_first_child(data); child != NULL;
+             child = pcmk__xml_next(child)) {
+            xml_log_patchset_v1_recursive(log_level, prefix, data, depth + 1,
+                                          options);
+        }
+
+    } else {
+        pcmk__xml_log(log_level, prefix, data, depth,
+                      options
+                      |xml_log_option_open
+                      |xml_log_option_close
+                      |xml_log_option_children);
+    }
+}
+
+/*!
+ * \internal
  * \brief Log a user-friendly form of an XML patchset (format 1)
  *
  * This function parses an XML patchset (an \p XML_ATTR_DIFF element and its
@@ -523,14 +567,15 @@ xml_log_patchset_v1(uint8_t log_level, const xmlNode *patchset)
     xml_log_patchset_header(log_level, patchset);
 
     /* It's not clear whether "- " or "+ " ever does *not* get overridden by
-     * "--" or "++" in practice. However, v1 patchsets can only exist during
-     * rolling upgrades from Pacemaker 1.1.11, so not worth worrying about.
+     * PCMK__XML_PREFIX_DELETED or PCMK__XML_PREFIX_CREATED in practice.
+     * However, v1 patchsets can only exist during rolling upgrades from
+     * Pacemaker 1.1.11, so not worth worrying about.
      */
     removed = find_xml_node(patchset, "diff-removed", FALSE);
     for (child = pcmk__xml_first_child(removed); child != NULL;
          child = pcmk__xml_next(child)) {
-        log_data_element(log_level, __FILE__, __func__, __LINE__, "- ",
-                         child, 0, options|xml_log_option_diff_minus);
+        xml_log_patchset_v1_recursive(log_level, "- ", child, 0,
+                                      options|xml_log_option_diff_minus);
         if (is_first) {
             is_first = false;
         } else {
@@ -542,8 +587,8 @@ xml_log_patchset_v1(uint8_t log_level, const xmlNode *patchset)
     added = find_xml_node(patchset, "diff-added", FALSE);
     for (child = pcmk__xml_first_child(added); child != NULL;
          child = pcmk__xml_next(child)) {
-        log_data_element(log_level, __FILE__, __func__, __LINE__, "+ ",
-                         child, 0, options|xml_log_option_diff_plus);
+        xml_log_patchset_v1_recursive(log_level, "+ ", child, 0,
+                                      options|xml_log_option_diff_plus);
         if (is_first) {
             is_first = false;
         } else {
@@ -597,7 +642,9 @@ xml_log_patchset_v2(uint8_t log_level, const xmlNode *patchset)
         } else if (strcmp(op, "move") == 0) {
             const char *position = crm_element_value(change, XML_DIFF_POSITION);
 
-            do_crm_log(log_level, "+~ %s moved to offset %s", xpath, position);
+            do_crm_log(log_level,
+                       PCMK__XML_PREFIX_MOVED " %s moved to offset %s",
+                       xpath, position);
 
         } else if (strcmp(op, "modify") == 0) {
             xmlNode *clist = first_named_child(change, XML_DIFF_LIST);

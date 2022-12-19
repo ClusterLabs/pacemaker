@@ -123,6 +123,9 @@ do {                                                                            
     }                                                                           \
 } while (0)
 
+void pcmk__xml_log(int log_level, const char *prefix, const xmlNode *data,
+                   int depth, int options);
+
 /* XML search strings for guest, remote and pacemaker_remote nodes */
 
 /* search string to find CIB resources entries for cluster nodes */

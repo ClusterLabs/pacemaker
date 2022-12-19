@@ -80,10 +80,6 @@ xmlNode *pcmk__xml_match(const xmlNode *haystack, const xmlNode *needle,
                          bool exact);
 
 G_GNUC_INTERNAL
-void pcmk__xml_log(int log_level, const char *prefix, const xmlNode *data,
-                   int depth, int options);
-
-G_GNUC_INTERNAL
 void pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
                       bool as_diff);
 
@@ -250,6 +246,18 @@ pcmk__ipc_methods_t *pcmk__schedulerd_api_methods(void);
 /*
  * Logging
  */
+
+//! XML is newly created
+#define PCMK__XML_PREFIX_CREATED "++"
+
+//! XML has been deleted
+#define PCMK__XML_PREFIX_DELETED "--"
+
+//! XML has been modified
+#define PCMK__XML_PREFIX_MODIFIED "+ "
+
+//! XML has been moved
+#define PCMK__XML_PREFIX_MOVED "+~"
 
 /*!
  * \brief Check the authenticity of the IPC socket peer process

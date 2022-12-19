@@ -33,11 +33,8 @@
 #define XML_PARSER_DEBUG 0
 #endif
 
-#define PREFIX_CREATED "++"
-#define PREFIX_DELETED "--"
-#define PREFIX_MODIFIED "+ "
-#define PREFIX_MOVED "+~"
-
+static void log_xml_changes(int log_level, const xmlNode *data, int depth,
+                            int options);
 static void log_xml_node(GString *buffer, int log_level, const char *prefix,
                          const xmlNode *data, int depth, int options);
 
@@ -442,16 +439,17 @@ xml_log_changes(uint8_t log_level, const char *function, const xmlNode *xml)
         const pcmk__deleted_xml_t *deleted_obj = iter->data;
 
         if (deleted_obj->position >= 0) {
-            do_crm_log(log_level, PREFIX_DELETED " %s (%d)",
+            do_crm_log(log_level, PCMK__XML_PREFIX_DELETED " %s (%d)",
                        deleted_obj->path, deleted_obj->position);
 
         } else {
-            do_crm_log(log_level, PREFIX_DELETED " %s", deleted_obj->path);
+            do_crm_log(log_level, PCMK__XML_PREFIX_DELETED " %s",
+                       deleted_obj->path);
         }
     }
 
-    log_data_element(log_level, __FILE__, __func__, __LINE__, NULL, xml, 0,
-                     xml_log_option_formatted|xml_log_option_dirty_add);
+    log_xml_changes(log_level, xml, 0,
+                    xml_log_option_formatted|xml_log_option_dirty_add);
 }
 
 void
@@ -1746,7 +1744,7 @@ log_xml_changes(int log_level, const xmlNode *data, int depth, int options)
 
     if (pcmk_all_flags_set(nodepriv->flags, pcmk__xf_dirty|pcmk__xf_created)) {
         // Newly created
-        pcmk__xml_log(log_level, PREFIX_CREATED, data, depth,
+        pcmk__xml_log(log_level, PCMK__XML_PREFIX_CREATED, data, depth,
                       options
                       |xml_log_option_open
                       |xml_log_option_close
@@ -1757,7 +1755,7 @@ log_xml_changes(int log_level, const xmlNode *data, int depth, int options)
     if (pcmk_is_set(nodepriv->flags, pcmk__xf_dirty)) {
         // Modified or moved
         int spaces = 0;
-        const char *prefix = PREFIX_MODIFIED;
+        const char *prefix = PCMK__XML_PREFIX_MODIFIED;
 
         if (pcmk_is_set(options, xml_log_option_formatted)) {
             CRM_CHECK(depth >= 0, depth = 0);
@@ -1765,7 +1763,7 @@ log_xml_changes(int log_level, const xmlNode *data, int depth, int options)
         }
 
         if (pcmk_is_set(nodepriv->flags, pcmk__xf_moved)) {
-            prefix = PREFIX_MOVED;
+            prefix = PCMK__XML_PREFIX_MOVED;
         }
 
         // Log opening tag
@@ -1783,22 +1781,22 @@ log_xml_changes(int log_level, const xmlNode *data, int depth, int options)
                 const char *value = crm_element_value(data, name);
 
                 do_crm_log(log_level, "%s %*s @%s=%s",
-                           PREFIX_DELETED, spaces, "", name, value);
+                           PCMK__XML_PREFIX_DELETED, spaces, "", name, value);
 
             } else if (pcmk_is_set(nodepriv->flags, pcmk__xf_dirty)) {
                 const char *value = crm_element_value(data, name);
 
                 if (pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
-                    prefix = PREFIX_CREATED;
+                    prefix = PCMK__XML_PREFIX_CREATED;
 
                 } else if (pcmk_is_set(nodepriv->flags, pcmk__xf_modified)) {
-                    prefix = PREFIX_MODIFIED;
+                    prefix = PCMK__XML_PREFIX_MODIFIED;
 
                 } else if (pcmk_is_set(nodepriv->flags, pcmk__xf_moved)) {
-                    prefix = PREFIX_MOVED;
+                    prefix = PCMK__XML_PREFIX_MOVED;
 
                 } else {
-                    prefix = PREFIX_MODIFIED;
+                    prefix = PCMK__XML_PREFIX_MODIFIED;
                 }
                 do_crm_log(log_level, "%s %*s @%s=%s",
                            prefix, spaces, "", name, value);
@@ -1812,7 +1810,7 @@ log_xml_changes(int log_level, const xmlNode *data, int depth, int options)
         }
 
         // Log closing tag
-        pcmk__xml_log(log_level, PREFIX_MODIFIED, data, depth,
+        pcmk__xml_log(log_level, PCMK__XML_PREFIX_MODIFIED, data, depth,
                       options|xml_log_option_close);
 
     } else {
@@ -1845,10 +1843,6 @@ log_data_element(int log_level, const char *file, const char *function,
         return;
     }
 
-    if (prefix == NULL) {
-        prefix = "";
-    }
-
     if (data == NULL) {
         do_crm_log(log_level, "%s%sNo data to dump as XML",
                    pcmk__s(prefix, ""), pcmk__str_empty(prefix)? "" : " ");
@@ -1866,11 +1860,11 @@ log_data_element(int log_level, const char *file, const char *function,
 
         if (pcmk_is_set(options, xml_log_option_diff_plus)) {
             options |= xml_log_option_diff_all;
-            prefix = PREFIX_CREATED;
+            prefix = PCMK__XML_PREFIX_CREATED;
 
         } else if (pcmk_is_set(options, xml_log_option_diff_minus)) {
             options |= xml_log_option_diff_all;
-            prefix = PREFIX_DELETED;
+            prefix = PCMK__XML_PREFIX_DELETED;
         }
     }
 
