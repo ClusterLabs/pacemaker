@@ -1632,7 +1632,9 @@ log_xml_element(GString *buffer, int log_level, const char *prefix,
             g_string_append(buffer, "/>");
         }
 
-        do_crm_log(log_level, "%s %s", prefix, buffer->str);
+        do_crm_log(log_level, "%s%s%s",
+                   pcmk__s(prefix, ""), pcmk__str_empty(prefix)? "" : " ",
+                   buffer->str);
     }
 
     if (!xml_has_children(data)) {
@@ -1651,7 +1653,9 @@ log_xml_element(GString *buffer, int log_level, const char *prefix,
     if (pcmk_is_set(options, xml_log_option_close)) {
         g_string_truncate(buffer, 0);
         insert_prefix(options, buffer, depth);
-        do_crm_log(log_level, "%s %s</%s>", prefix, buffer->str, name);
+        do_crm_log(log_level, "%s%s%s</%s>",
+                   pcmk__s(prefix, ""), pcmk__str_empty(prefix)? "" : " ",
+                   buffer->str, name);
     }
 }
 
@@ -1846,7 +1850,8 @@ log_data_element(int log_level, const char *file, const char *function,
     }
 
     if (data == NULL) {
-        do_crm_log(log_level, "%sNo data to dump as XML", prefix);
+        do_crm_log(log_level, "%s%sNo data to dump as XML",
+                   pcmk__s(prefix, ""), pcmk__str_empty(prefix)? "" : " ");
         return;
     }
 
