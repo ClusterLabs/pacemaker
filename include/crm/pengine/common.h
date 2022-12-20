@@ -191,12 +191,12 @@ typedef struct pe_op_eval_data {
 } pe_op_eval_data_t;
 
 typedef struct pe_rule_eval_data {
-    GHashTable *node_hash;
+    GHashTable *node_hash;          // Only used with g_hash_table_lookup()
     enum rsc_role_e role;
-    crm_time_t *now;
-    pe_match_data_t *match_data;
-    pe_rsc_eval_data_t *rsc_data;
-    pe_op_eval_data_t *op_data;
+    crm_time_t *now;                // @COMPAT could be const
+    pe_match_data_t *match_data;    // @COMPAT could be const
+    pe_rsc_eval_data_t *rsc_data;   // @COMPAT could be const
+    pe_op_eval_data_t *op_data;     // @COMPAT could be const
 } pe_rule_eval_data_t;
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
