@@ -1253,19 +1253,22 @@ class ResourceRecover(CTSTest):
         if not ret:
             return self.failure("Setup failed")
 
+        # List all resources active on the node (skip test if none)
         resourcelist = self.CM.active_resources(node)
-        # if there are no resourcelist, return directly
         if len(resourcelist) == 0:
             self.logger.log("No active resources on %s" % node)
             return self.skipped()
 
+        # Choose one resource at random
         rsc = self.choose_resource(node, resourcelist)
         if rsc is None:
-            return self.failure("Could not find %s in the resource list" % self.rid)
+            return self.failure("Could not get details of resource '%s'" % self.rid)
+        if rsc.id == rsc.clone_id:
+            self.debug("Failing " + rsc.id)
+        else:
+            self.debug("Failing " + rsc.id + " (also known as " + rsc.clone_id + ")")
 
-        self.debug("Shooting %s aka. %s" % (rsc.clone_id, rsc.id))
-
-        # Log patterns to watch for
+        # Log patterns to watch for (failure, plus restart if managed)
         pats = []
         pats.append(self.templates["Pat:CloneOpFail"] % (self.action, rsc.id, rsc.clone_id))
         if rsc.managed():
@@ -1288,7 +1291,7 @@ class ResourceRecover(CTSTest):
         self.rid_alt = self.rid
         (rc, lines) = self.rsh(node, "crm_resource -c", None)
         for line in lines:
-            if re.search("^Resource", line):
+            if line.startswith("Resource: "):
                 rsc = AuditResource(self.CM, line)
                 if rsc.id == self.rid:
                     # Handle anonymous clones that get renamed
