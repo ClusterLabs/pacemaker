@@ -1279,6 +1279,10 @@ class ResourceRecover(CTSTest):
                 # Anonymous clones may get restarted with a different clone number
                 pats.append(self.templates["Pat:RscOpOK"] % ("start", ".*"))
 
+        # Fail resource. (Ideally, we'd fail it twice, to ensure the fail count
+        # is incrementing properly, but it might restart on a different node.
+        # We'd have to temporarily ban it from all other nodes and ensure the
+        # migration-threshold hasn't been reached.)
         if self.fail_resource(rsc, node, pats) is None:
             return None # self.failure() already called
 
@@ -1299,8 +1303,30 @@ class ResourceRecover(CTSTest):
                     return rsc
         return None
 
+    def get_failcount(self, node):
+        """ Check the fail count of targeted resource on given node """
+
+        (rc, lines) = self.rsh(node,
+                               "crm_failcount --quiet --query --resource %s "
+                               "--operation %s --interval %d "
+                               "--node %s" % (self.rid, self.action,
+                               self.interval, node), None)
+        if rc != 0 or len(lines) != 1:
+            self.logger.log("crm_failcount on %s failed (%d): %s" % (node, rc,
+                            ' '.join(lines)))
+            return -1
+        try:
+            failcount = int(lines[0])
+        except (IndexError, ValueError):
+            self.logger.log("crm_failcount output on %s unparseable: %s" % (node,
+                            ' '.join(lines)))
+            return -1
+        return failcount
+
     def fail_resource(self, rsc, node, pats):
         """ Fail the targeted resource, and verify as expected """
+
+        orig_failcount = self.get_failcount(node)
 
         watch = self.create_watch(pats, 60)
         watch.setwatch()
@@ -1325,6 +1351,11 @@ class ResourceRecover(CTSTest):
 
         elif rsc.managed():
             return self.failure("%s was not recovered and is inactive" % self.rid)
+
+        new_failcount = self.get_failcount(node)
+        if new_failcount != (orig_failcount + 1):
+            return self.failure("%s fail count is %d not %d" % (self.rid,
+                                new_failcount, orig_failcount + 1))
 
         return 0 # Anything but None is success
 
