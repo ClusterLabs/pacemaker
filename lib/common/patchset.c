@@ -623,7 +623,8 @@ xml_log_patchset_v2(uint8_t log_level, const xmlNode *patchset)
         }
 
         if (strcmp(op, "create") == 0) {
-            char *prefix = crm_strdup_printf("++ %s: ", xpath);
+            char *prefix = crm_strdup_printf(PCMK__XML_PREFIX_CREATED " %s: ",
+                                             xpath);
 
             pcmk__xml_log(log_level, prefix, change->children, 0,
                           xml_log_option_formatted|xml_log_option_open);
