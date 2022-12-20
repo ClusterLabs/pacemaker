@@ -454,6 +454,50 @@ patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
 
 /*!
  * \internal
+ * \brief Log an XML patchset header
+ *
+ * This function parses a header from an XML patchset (an \p XML_ATTR_DIFF
+ * element and its children). Depending on the value of \p log_level, the output
+ * may be written to \p stdout or to a log file.
+ *
+ * All header lines contain three integers separated by dots, of the form
+ * <tt>{0}.{1}.{2}</tt>:
+ * * \p {0}: \p XML_ATTR_GENERATION_ADMIN
+ * * \p {1}: \p XML_ATTR_GENERATION
+ * * \p {2}: \p XML_ATTR_NUMUPDATES
+ *
+ * Lines containing \p "---" describe removals and end with the patch format
+ * number. Lines containing \p "+++" describe additions and end with the patch
+ * digest.
+ *
+ * \param[in] log_level  Priority at which to log the messages
+ * \param[in] patchset   XML patchset to log
+ */
+static void
+xml_log_patchset_header(uint8_t log_level, const xmlNode *patchset)
+{
+    int add[] = { 0, 0, 0 };
+    int del[] = { 0, 0, 0 };
+
+    xml_patch_versions(patchset, add, del);
+
+    if ((add[0] != del[0]) || (add[1] != del[1]) || (add[2] != del[2])) {
+        const char *fmt = crm_element_value(patchset, "format");
+        const char *digest = crm_element_value(patchset, XML_ATTR_DIGEST);
+
+        do_crm_log(log_level, "Diff: --- %d.%d.%d %s",
+                   del[0], del[1], del[2], fmt);
+        do_crm_log(log_level, "Diff: +++ %d.%d.%d %s",
+                   add[0], add[1], add[2], digest);
+
+    } else if ((add[0] != 0) || (add[1] != 0) || (add[2] != 0)) {
+        do_crm_log(log_level, "Local-only Change: %d.%d.%d",
+                   add[0], add[1], add[2]);
+    }
+}
+
+/*!
+ * \internal
  * \brief Log a user-friendly form of an XML patchset (format 1)
  *
  * This function parses an XML patchset (an \p XML_ATTR_DIFF element and its
@@ -475,6 +519,8 @@ xml_log_patchset_v1(uint8_t log_level, const xmlNode *patchset)
     if (log_level < LOG_DEBUG) {
         options |= xml_log_option_diff_short;
     }
+
+    xml_log_patchset_header(log_level, patchset);
 
     removed = find_xml_node(patchset, "diff-removed", FALSE);
     for (child = pcmk__xml_first_child(removed); child != NULL;
@@ -516,6 +562,8 @@ xml_log_patchset_v1(uint8_t log_level, const xmlNode *patchset)
 static void
 xml_log_patchset_v2(uint8_t log_level, const xmlNode *patchset)
 {
+    xml_log_patchset_header(log_level, patchset);
+
     for (const xmlNode *change = pcmk__xml_first_child(patchset);
          change != NULL; change = pcmk__xml_next(change)) {
         const char *op = crm_element_value(change, XML_DIFF_OP);
@@ -611,8 +659,6 @@ void
 xml_log_patchset(uint8_t log_level, const char *function, xmlNode *patchset)
 {
     int format = 1;
-    int add[] = { 0, 0, 0 };
-    int del[] = { 0, 0, 0 };
 
     if (log_level == LOG_NEVER) {
         return;
@@ -637,27 +683,17 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode *patchset)
         }
     }
 
-    xml_patch_versions(patchset, add, del);
-
-    if ((add[0] != del[0]) || (add[1] != del[1]) || (add[2] != del[2])) {
-        const char *fmt = crm_element_value(patchset, "format");
-        const char *digest = crm_element_value(patchset, XML_ATTR_DIGEST);
-
-        do_crm_log(log_level, "Diff: --- %d.%d.%d %s",
-                   del[0], del[1], del[2], fmt);
-        do_crm_log(log_level, "Diff: +++ %d.%d.%d %s",
-                   add[0], add[1], add[2], digest);
-
-    } else if ((add[0] != 0) || (add[1] != 0) || (add[2] != 0)) {
-        do_crm_log(log_level, "Local-only Change: %d.%d.%d",
-                   add[0], add[1], add[2]);
-    }
-
     crm_element_value_int(patchset, "format", &format);
-    if (format == 2) {
-        xml_log_patchset_v2(log_level, patchset);
-    } else {
-        xml_log_patchset_v1(log_level, patchset);
+    switch (format) {
+        case 1:
+            xml_log_patchset_v1(log_level, patchset);
+            break;
+        case 2:
+            xml_log_patchset_v2(log_level, patchset);
+            break;
+        default:
+            crm_err("Unknown patch format: %d", format);
+            break;
     }
 }
 
