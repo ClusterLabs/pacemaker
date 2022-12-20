@@ -264,7 +264,7 @@ void pcmk__output_actions(pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
 bool pcmk__check_action_config(pe_resource_t *rsc, pe_node_t *node,
-                               xmlNode *xml_op);
+                               const xmlNode *xml_op);
 
 G_GNUC_INTERNAL
 void pcmk__handle_rsc_config_changes(pe_working_set_t *data_set);

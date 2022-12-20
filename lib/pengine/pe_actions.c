@@ -1011,7 +1011,8 @@ find_unfencing_devices(GList *candidates, GList *matches)
 }
 
 static int
-node_priority_fencing_delay(pe_node_t * node, pe_working_set_t * data_set)
+node_priority_fencing_delay(const pe_node_t *node,
+                            const pe_working_set_t *data_set)
 {
     int member_count = 0;
     int online_count = 0;
@@ -1078,8 +1079,8 @@ node_priority_fencing_delay(pe_node_t * node, pe_working_set_t * data_set)
 }
 
 pe_action_t *
-pe_fence_op(pe_node_t * node, const char *op, bool optional, const char *reason,
-            bool priority_delay, pe_working_set_t * data_set)
+pe_fence_op(pe_node_t *node, const char *op, bool optional,
+            const char *reason, bool priority_delay, pe_working_set_t *data_set)
 {
     char *op_key = NULL;
     pe_action_t *stonith_op = NULL;

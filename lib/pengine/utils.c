@@ -33,7 +33,7 @@ gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
  * \return true if node can be fenced, false otherwise
  */
 bool
-pe_can_fence(pe_working_set_t *data_set, pe_node_t *node)
+pe_can_fence(const pe_working_set_t *data_set, const pe_node_t *node)
 {
     if (pe__is_guest_node(node)) {
         /* Guest nodes are fenced by stopping their container resource. We can
@@ -601,8 +601,8 @@ pe__set_resource_flags_recursive(pe_resource_t *rsc, uint64_t flags)
 }
 
 void
-trigger_unfencing(
-    pe_resource_t * rsc, pe_node_t *node, const char *reason, pe_action_t *dependency, pe_working_set_t * data_set) 
+trigger_unfencing(pe_resource_t *rsc, pe_node_t *node, const char *reason,
+                  pe_action_t *dependency, pe_working_set_t *data_set)
 {
     if (!pcmk_is_set(data_set->flags, pe_flag_enable_unfencing)) {
         /* No resources require it */

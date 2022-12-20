@@ -25,7 +25,7 @@ extern bool pcmk__is_daemon;
  * \internal
  * \brief Free an operation digest cache entry
  *
- * \param[in] ptr  Pointer to cache entry to free
+ * \param[in,out] ptr  Pointer to cache entry to free
  *
  * \note The argument is a gpointer so this can be used as a hash table
  *       free function.
@@ -85,21 +85,21 @@ attr_in_string(xmlAttrPtr a, void *user_data)
  * \brief Add digest of all parameters to a digest cache entry
  *
  * \param[out]    data         Digest cache entry to modify
- * \param[in]     rsc          Resource that action was for
+ * \param[in,out] rsc          Resource that action was for
  * \param[in]     node         Node action was performed on
  * \param[in]     params       Resource parameters evaluated for node
  * \param[in]     task         Name of action performed
  * \param[in,out] interval_ms  Action's interval (will be reset if in overrides)
- * \param[in]     xml_op       XML of operation in CIB status (if available)
+ * \param[in]     xml_op       Unused
  * \param[in]     op_version   CRM feature set to use for digest calculation
  * \param[in]     overrides    Key/value table to override resource parameters
- * \param[in]     data_set     Cluster working set
+ * \param[in,out] data_set     Cluster working set
  */
 static void
 calculate_main_digest(op_digest_cache_t *data, pe_resource_t *rsc,
-                      pe_node_t *node, GHashTable *params,
+                      const pe_node_t *node, GHashTable *params,
                       const char *task, guint *interval_ms,
-                      xmlNode *xml_op, const char *op_version,
+                      const xmlNode *xml_op, const char *op_version,
                       GHashTable *overrides, pe_working_set_t *data_set)
 {
     pe_action_t *action = NULL;
@@ -177,8 +177,8 @@ is_fence_param(xmlAttrPtr attr, void *user_data)
  * \param[in]  overrides   Key/value hash table to override resource parameters
  */
 static void
-calculate_secure_digest(op_digest_cache_t *data, pe_resource_t *rsc,
-                        GHashTable *params, xmlNode *xml_op,
+calculate_secure_digest(op_digest_cache_t *data, const pe_resource_t *rsc,
+                        GHashTable *params, const xmlNode *xml_op,
                         const char *op_version, GHashTable *overrides)
 {
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
@@ -247,7 +247,7 @@ calculate_secure_digest(op_digest_cache_t *data, pe_resource_t *rsc,
  *       data->params_all, which already has overrides applied.
  */
 static void
-calculate_restart_digest(op_digest_cache_t *data, xmlNode *xml_op,
+calculate_restart_digest(op_digest_cache_t *data, const xmlNode *xml_op,
                          const char *op_version)
 {
     const char *value = NULL;
@@ -281,14 +281,14 @@ calculate_restart_digest(op_digest_cache_t *data, xmlNode *xml_op,
  * \internal
  * \brief Create a new digest cache entry with calculated digests
  *
- * \param[in]     rsc          Resource that action was for
+ * \param[in,out] rsc          Resource that action was for
  * \param[in]     task         Name of action performed
  * \param[in,out] interval_ms  Action's interval (will be reset if in overrides)
  * \param[in]     node         Node action was performed on
  * \param[in]     xml_op       XML of operation in CIB status (if available)
  * \param[in]     overrides    Key/value table to override resource parameters
  * \param[in]     calc_secure  Whether to calculate secure digest
- * \param[in]     data_set     Cluster working set
+ * \param[in,out] data_set     Cluster working set
  *
  * \return Pointer to new digest cache entry (or NULL on memory error)
  * \note It is the caller's responsibility to free the result using
@@ -296,8 +296,9 @@ calculate_restart_digest(op_digest_cache_t *data, xmlNode *xml_op,
  */
 op_digest_cache_t *
 pe__calculate_digests(pe_resource_t *rsc, const char *task, guint *interval_ms,
-                      pe_node_t *node, xmlNode *xml_op, GHashTable *overrides,
-                      bool calc_secure, pe_working_set_t *data_set)
+                      const pe_node_t *node, const xmlNode *xml_op,
+                      GHashTable *overrides, bool calc_secure,
+                      pe_working_set_t *data_set)
 {
     op_digest_cache_t *data = calloc(1, sizeof(op_digest_cache_t));
     const char *op_version = NULL;
@@ -336,20 +337,20 @@ pe__calculate_digests(pe_resource_t *rsc, const char *task, guint *interval_ms,
  * \internal
  * \brief Calculate action digests and store in node's digest cache
  *
- * \param[in] rsc          Resource that action was for
- * \param[in] task         Name of action performed
- * \param[in] interval_ms  Action's interval
- * \param[in] node         Node action was performed on
- * \param[in] xml_op       XML of operation in CIB status (if available)
- * \param[in] calc_secure  Whether to calculate secure digest
- * \param[in] data_set     Cluster working set
+ * \param[in,out] rsc          Resource that action was for
+ * \param[in]     task         Name of action performed
+ * \param[in]     interval_ms  Action's interval
+ * \param[in,out] node         Node action was performed on
+ * \param[in]     xml_op       XML of operation in CIB status (if available)
+ * \param[in]     calc_secure  Whether to calculate secure digest
+ * \param[in,out] data_set     Cluster working set
  *
  * \return Pointer to node's digest cache entry
  */
 static op_digest_cache_t *
 rsc_action_digest(pe_resource_t *rsc, const char *task, guint interval_ms,
-                  pe_node_t *node, xmlNode *xml_op, bool calc_secure,
-                  pe_working_set_t *data_set)
+                  pe_node_t *node, const xmlNode *xml_op,
+                  bool calc_secure, pe_working_set_t *data_set)
 {
     op_digest_cache_t *data = NULL;
     char *key = pcmk__op_key(rsc->id, task, interval_ms);
@@ -369,16 +370,16 @@ rsc_action_digest(pe_resource_t *rsc, const char *task, guint interval_ms,
  * \internal
  * \brief Calculate operation digests and compare against an XML history entry
  *
- * \param[in] rsc       Resource to check
- * \param[in] xml_op    Resource history XML
- * \param[in] node      Node to use for digest calculation
- * \param[in] data_set  Cluster working set
+ * \param[in,out] rsc       Resource to check
+ * \param[in]     xml_op    Resource history XML
+ * \param[in,out] node      Node to use for digest calculation
+ * \param[in,out] data_set  Cluster working set
  *
  * \return Pointer to node's digest cache entry, with comparison result set
  */
 op_digest_cache_t *
-rsc_action_digest_cmp(pe_resource_t * rsc, xmlNode * xml_op, pe_node_t * node,
-                      pe_working_set_t * data_set)
+rsc_action_digest_cmp(pe_resource_t *rsc, const xmlNode *xml_op,
+                      pe_node_t *node, pe_working_set_t *data_set)
 {
     op_digest_cache_t *data = NULL;
     guint interval_ms = 0;
@@ -521,10 +522,10 @@ unfencing_digest_matches(const char *rsc_id, const char *agent,
  * \internal
  * \brief Calculate fence device digests and digest comparison result
  *
- * \param[in] rsc       Fence device resource
- * \param[in] agent     Fence device's agent type
- * \param[in] node      Node with digest cache to use
- * \param[in] data_set  Cluster working set
+ * \param[in,out] rsc       Fence device resource
+ * \param[in]     agent     Fence device's agent type
+ * \param[in,out] node      Node with digest cache to use
+ * \param[in,out] data_set  Cluster working set
  *
  * \return Node's digest cache entry
  */

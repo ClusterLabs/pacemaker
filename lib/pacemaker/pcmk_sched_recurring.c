@@ -677,7 +677,7 @@ pcmk__schedule_cancel(pe_resource_t *rsc, const char *call_id, const char *task,
  * \param[in,out] rsc          Resource that action is for
  * \param[in]     task         Name of action being rescheduled
  * \param[in]     interval_ms  Action interval (in milliseconds)
- * \param[in]     node         Node where action should be rescheduled
+ * \param[in,out] node         Node where action should be rescheduled
  */
 void
 pcmk__reschedule_recurring(pe_resource_t *rsc, const char *task,

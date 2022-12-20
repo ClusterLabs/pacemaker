@@ -943,7 +943,7 @@ pcmk__bundle_expand(pe_resource_t *rsc)
 
         CRM_ASSERT(replica);
         if (replica->remote && replica->container
-            && pe__bundle_needs_remote_name(replica->remote, rsc->cluster)) {
+            && pe__bundle_needs_remote_name(replica->remote)) {
 
             /* REMOTE_CONTAINER_HACK: Allow remote nodes to run containers that
              * run pacemaker-remoted inside, without needing a separate IP for

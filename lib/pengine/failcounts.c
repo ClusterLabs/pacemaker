@@ -18,8 +18,8 @@
 #include <crm/pengine/internal.h>
 
 static gboolean
-is_matched_failure(const char *rsc_id, xmlNode *conf_op_xml,
-                   xmlNode *lrm_op_xml)
+is_matched_failure(const char *rsc_id, const xmlNode *conf_op_xml,
+                   const xmlNode *lrm_op_xml)
 {
     gboolean matched = FALSE;
     const char *conf_op_name = NULL;
@@ -77,8 +77,7 @@ is_matched_failure(const char *rsc_id, xmlNode *conf_op_xml,
 }
 
 static gboolean
-block_failure(pe_node_t *node, pe_resource_t *rsc, xmlNode *xml_op,
-              pe_working_set_t *data_set)
+block_failure(const pe_node_t *node, pe_resource_t *rsc, const xmlNode *xml_op)
 {
     char *xml_name = clone_strip(rsc->id);
 
@@ -137,7 +136,7 @@ block_failure(pe_node_t *node, pe_resource_t *rsc, xmlNode *xml_op,
                                                  node->details->uname, xml_name,
                                                  conf_op_name,
                                                  conf_op_interval_ms);
-                lrm_op_xpathObj = xpath_search(data_set->input, lrm_op_xpath);
+                lrm_op_xpathObj = xpath_search(rsc->cluster->input, lrm_op_xpath);
 
                 free(lrm_op_xpath);
 
@@ -272,8 +271,8 @@ generate_fail_regexes(pe_resource_t *rsc, pe_working_set_t *data_set,
 }
 
 int
-pe_get_failcount(pe_node_t *node, pe_resource_t *rsc, time_t *last_failure,
-                 uint32_t flags, xmlNode *xml_op, pe_working_set_t *data_set)
+pe_get_failcount(const pe_node_t *node, pe_resource_t *rsc,
+                 time_t *last_failure, uint32_t flags, const xmlNode *xml_op)
 {
     char *key = NULL;
     const char *value = NULL;
@@ -282,7 +281,7 @@ pe_get_failcount(pe_node_t *node, pe_resource_t *rsc, time_t *last_failure,
     time_t last = 0;
     GHashTableIter iter;
 
-    CRM_CHECK(generate_fail_regexes(rsc, data_set, &failcount_re,
+    CRM_CHECK(generate_fail_regexes(rsc, rsc->cluster, &failcount_re,
                                     &lastfailure_re) == pcmk_rc_ok,
               return 0);
 
@@ -309,7 +308,7 @@ pe_get_failcount(pe_node_t *node, pe_resource_t *rsc, time_t *last_failure,
 
     /* If failure blocks the resource, disregard any failure timeout */
     if ((failcount > 0) && rsc->failure_timeout
-        && block_failure(node, rsc, xml_op, data_set)) {
+        && block_failure(node, rsc, xml_op)) {
 
         pe_warn("Ignoring failure timeout %d for %s because it conflicts with on-fail=block",
                 rsc->failure_timeout, rsc->id);
@@ -320,7 +319,7 @@ pe_get_failcount(pe_node_t *node, pe_resource_t *rsc, time_t *last_failure,
     if (pcmk_is_set(flags, pe_fc_effective) && (failcount > 0) && (last > 0)
         && rsc->failure_timeout) {
 
-        time_t now = get_effective_time(data_set);
+        time_t now = get_effective_time(rsc->cluster);
 
         if (now > (last + rsc->failure_timeout)) {
             crm_debug("Failcount for %s on %s expired after %ds",
@@ -349,7 +348,7 @@ pe_get_failcount(pe_node_t *node, pe_resource_t *rsc, time_t *last_failure,
             time_t filler_last_failure = 0;
 
             failcount += pe_get_failcount(node, filler, &filler_last_failure,
-                                          flags, xml_op, data_set);
+                                          flags, xml_op);
 
             if (last_failure && filler_last_failure > *last_failure) {
                 *last_failure = filler_last_failure;
@@ -375,15 +374,15 @@ pe_get_failcount(pe_node_t *node, pe_resource_t *rsc, time_t *last_failure,
 /*!
  * \brief Schedule a controller operation to clear a fail count
  *
- * \param[in] rsc       Resource with failure
- * \param[in] node      Node failure occurred on
- * \param[in] reason    Readable description why needed (for logging)
- * \param[in] data_set  Working set for cluster
+ * \param[in,out] rsc       Resource with failure
+ * \param[in]     node      Node failure occurred on
+ * \param[in]     reason    Readable description why needed (for logging)
+ * \param[in,out] data_set  Working set for cluster
  *
  * \return Scheduled action
  */
 pe_action_t *
-pe__clear_failcount(pe_resource_t *rsc, pe_node_t *node,
+pe__clear_failcount(pe_resource_t *rsc, const pe_node_t *node,
                     const char *reason, pe_working_set_t *data_set)
 {
     char *key = NULL;

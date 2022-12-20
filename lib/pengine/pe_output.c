@@ -2203,7 +2203,7 @@ node_history_list(pcmk__output_t *out, va_list args) {
         if (!pcmk_is_set(section_opts, pcmk_section_operations)) {
             time_t last_failure = 0;
             int failcount = pe_get_failcount(node, rsc, &last_failure, pe_fc_default,
-                                             NULL, data_set);
+                                             NULL);
 
             if (failcount <= 0) {
                 continue;
@@ -2811,7 +2811,7 @@ PCMK__OUTPUT_ARGS("resource-operation-list", "pe_working_set_t *", "pe_resource_
 static int
 resource_operation_list(pcmk__output_t *out, va_list args)
 {
-    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    pe_working_set_t *data_set G_GNUC_UNUSED = va_arg(args, pe_working_set_t *);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     pe_node_t *node = va_arg(args, pe_node_t *);
     GList *op_list = va_arg(args, GList *);
@@ -2841,7 +2841,7 @@ resource_operation_list(pcmk__output_t *out, va_list args)
         if (rc == pcmk_rc_no_output) {
             time_t last_failure = 0;
             int failcount = pe_get_failcount(node, rsc, &last_failure, pe_fc_default,
-                                             NULL, data_set);
+                                             NULL);
 
             out->message(out, "resource-history", rsc, rsc_printable_id(rsc), true,
                          failcount, last_failure, true);

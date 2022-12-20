@@ -1501,8 +1501,9 @@ task_for_digest(const char *task, guint interval_ms)
  * \return true if only sanitized parameters changed, otherwise false
  */
 static bool
-only_sanitized_changed(xmlNode *xml_op, const op_digest_cache_t *digest_data,
-                       pe_working_set_t *data_set)
+only_sanitized_changed(const xmlNode *xml_op,
+                       const op_digest_cache_t *digest_data,
+                       const pe_working_set_t *data_set)
 {
     const char *digest_secure = NULL;
 
@@ -1522,10 +1523,10 @@ only_sanitized_changed(xmlNode *xml_op, const op_digest_cache_t *digest_data,
  * \internal
  * \brief Force a restart due to a configuration change
  *
- * \param[in] rsc          Resource that action is for
- * \param[in] task         Name of action whose configuration changed
- * \param[in] interval_ms  Action interval (in milliseconds)
- * \param[in] node         Node where resource should be restarted
+ * \param[in]     rsc          Resource that action is for
+ * \param[in]     task         Name of action whose configuration changed
+ * \param[in]     interval_ms  Action interval (in milliseconds)
+ * \param[in,out] node         Node where resource should be restarted
  */
 static void
 force_restart(pe_resource_t *rsc, const char *task, guint interval_ms,
@@ -1548,13 +1549,13 @@ force_restart(pe_resource_t *rsc, const char *task, guint interval_ms,
  * \param[in] node  Where resource should be reloaded
  */
 static void
-schedule_reload(pe_resource_t *rsc, pe_node_t *node)
+schedule_reload(pe_resource_t *rsc, const pe_node_t *node)
 {
     pe_action_t *reload = NULL;
 
     // For collective resources, just call recursively for children
     if (rsc->variant > pe_native) {
-        g_list_foreach(rsc->children, (GFunc) schedule_reload, node);
+        g_list_foreach(rsc->children, (GFunc) schedule_reload, (gpointer) node);
         return;
     }
 
@@ -1604,14 +1605,15 @@ schedule_reload(pe_resource_t *rsc, pe_node_t *node)
  * changed since the action was done, schedule any actions needed (restart,
  * reload, unfencing, rescheduling recurring actions, etc.).
  *
- * \param[in] rsc     Resource that action is for
- * \param[in] node    Node that action was on
- * \param[in] xml_op  Action XML from resource history
+ * \param[in,out] rsc     Resource that action is for
+ * \param[in,out] node    Node that action was on
+ * \param[in]     xml_op  Action XML from resource history
  *
  * \return true if action configuration changed, otherwise false
  */
 bool
-pcmk__check_action_config(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op)
+pcmk__check_action_config(pe_resource_t *rsc, pe_node_t *node,
+                          const xmlNode *xml_op)
 {
     guint interval_ms = 0;
     const char *task = NULL;
@@ -1821,7 +1823,7 @@ process_rsc_history(xmlNode *rsc_entry, pe_resource_t *rsc, pe_node_t *node)
              * has changed, clear any fail count so they can be retried fresh.
              */
 
-            if (pe__bundle_needs_remote_name(rsc, rsc->cluster)) {
+            if (pe__bundle_needs_remote_name(rsc)) {
                 /* We haven't allocated resources to nodes yet, so if the
                  * REMOTE_CONTAINER_HACK is used, we may calculate the digest
                  * based on the literal "#uname" value rather than the properly
@@ -1834,7 +1836,7 @@ process_rsc_history(xmlNode *rsc_entry, pe_resource_t *rsc, pe_node_t *node)
 
             } else if (pcmk__check_action_config(rsc, node, rsc_op)
                        && (pe_get_failcount(node, rsc, NULL, pe_fc_effective,
-                                            NULL, rsc->cluster) != 0)) {
+                                            NULL) != 0)) {
                 pe__clear_failcount(rsc, node, "action definition changed",
                                     rsc->cluster);
             }

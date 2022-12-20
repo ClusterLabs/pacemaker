@@ -3561,23 +3561,23 @@ remap_operation(xmlNode *xml_op, pe_resource_t *rsc, pe_node_t *node,
 // return TRUE if start or monitor last failure but parameters changed
 static bool
 should_clear_for_param_change(xmlNode *xml_op, const char *task,
-                              pe_resource_t *rsc, pe_node_t *node,
-                              pe_working_set_t *data_set)
+                              pe_resource_t *rsc, pe_node_t *node)
 {
     if (!strcmp(task, "start") || !strcmp(task, "monitor")) {
 
-        if (pe__bundle_needs_remote_name(rsc, data_set)) {
+        if (pe__bundle_needs_remote_name(rsc)) {
             /* We haven't allocated resources yet, so we can't reliably
              * substitute addr parameters for the REMOTE_CONTAINER_HACK.
              * When that's needed, defer the check until later.
              */
             pe__add_param_check(xml_op, rsc, node, pe_check_last_failure,
-                                data_set);
+                                rsc->cluster);
 
         } else {
             op_digest_cache_t *digest_data = NULL;
 
-            digest_data = rsc_action_digest_cmp(rsc, xml_op, node, data_set);
+            digest_data = rsc_action_digest_cmp(rsc, xml_op, node,
+                                                rsc->cluster);
             switch (digest_data->rc) {
                 case RSC_DIGEST_UNKNOWN:
                     crm_trace("Resource %s history entry %s on %s"
@@ -3610,9 +3610,8 @@ order_after_remote_fencing(pe_action_t *action, pe_resource_t *remote_conn,
 }
 
 static bool
-should_ignore_failure_timeout(pe_resource_t *rsc, xmlNode *xml_op,
-                              const char *task, guint interval_ms,
-                              bool is_last_failure, pe_working_set_t *data_set)
+should_ignore_failure_timeout(const pe_resource_t *rsc, const char *task,
+                              guint interval_ms, bool is_last_failure)
 {
     /* Clearing failures of recurring monitors has special concerns. The
      * executor reports only changes in the monitor result, so if the
@@ -3635,10 +3634,10 @@ should_ignore_failure_timeout(pe_resource_t *rsc, xmlNode *xml_op,
      * if the remote node hasn't been fenced.
      */
     if (rsc->remote_reconnect_ms
-        && pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)
+        && pcmk_is_set(rsc->cluster->flags, pe_flag_stonith_enabled)
         && (interval_ms != 0) && pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
 
-        pe_node_t *remote_node = pe_find_node(data_set->nodes, rsc->id);
+        pe_node_t *remote_node = pe_find_node(rsc->cluster->nodes, rsc->id);
 
         if (remote_node && !remote_node->details->remote_was_fenced) {
             if (is_last_failure) {
@@ -3669,13 +3668,12 @@ should_ignore_failure_timeout(pe_resource_t *rsc, xmlNode *xml_op,
  * \param[in] node      Node that operation happened on
  * \param[in] rc        Actual result of operation
  * \param[in] xml_op    Operation history entry XML
- * \param[in] data_set  Current working set
  *
  * \return TRUE if operation history entry is expired, FALSE otherwise
  */
 static bool
 check_operation_expiry(pe_resource_t *rsc, pe_node_t *node, int rc,
-                       xmlNode *xml_op, pe_working_set_t *data_set)
+                       xmlNode *xml_op)
 {
     bool expired = FALSE;
     bool is_last_failure = pcmk__ends_with(ID(xml_op), "_last_failure_0");
@@ -3693,20 +3691,19 @@ check_operation_expiry(pe_resource_t *rsc, pe_node_t *node, int rc,
 
         // Resource has a failure-timeout, and history entry has a timestamp
 
-        time_t now = get_effective_time(data_set);
+        time_t now = get_effective_time(rsc->cluster);
         time_t last_failure = 0;
 
         // Is this particular operation history older than the failure timeout?
         if ((now >= (last_run + rsc->failure_timeout))
-            && !should_ignore_failure_timeout(rsc, xml_op, task, interval_ms,
-                                              is_last_failure, data_set)) {
+            && !should_ignore_failure_timeout(rsc, task, interval_ms,
+                                              is_last_failure)) {
             expired = TRUE;
         }
 
         // Does the resource as a whole have an unexpired fail count?
         unexpired_fail_count = pe_get_failcount(node, rsc, &last_failure,
-                                                pe_fc_effective, xml_op,
-                                                data_set);
+                                                pe_fc_effective, xml_op);
 
         // Update scheduler recheck time according to *last* failure
         crm_trace("%s@%lld is %sexpired @%lld with unexpired_failures=%d timeout=%ds"
@@ -3716,12 +3713,12 @@ check_operation_expiry(pe_resource_t *rsc, pe_node_t *node, int rc,
                   (long long) last_failure);
         last_failure += rsc->failure_timeout + 1;
         if (unexpired_fail_count && (now < last_failure)) {
-            pe__update_recheck_time(last_failure, data_set);
+            pe__update_recheck_time(last_failure, rsc->cluster);
         }
     }
 
     if (expired) {
-        if (pe_get_failcount(node, rsc, NULL, pe_fc_default, xml_op, data_set)) {
+        if (pe_get_failcount(node, rsc, NULL, pe_fc_default, xml_op)) {
 
             // There is a fail count ignoring timeout
 
@@ -3748,16 +3745,16 @@ check_operation_expiry(pe_resource_t *rsc, pe_node_t *node, int rc,
     }
 
     if (!expired && is_last_failure
-        && should_clear_for_param_change(xml_op, task, rsc, node, data_set)) {
+        && should_clear_for_param_change(xml_op, task, rsc, node)) {
         clear_reason = "resource parameters have changed";
     }
 
     if (clear_reason != NULL) {
         // Schedule clearing of the fail count
         pe_action_t *clear_op = pe__clear_failcount(rsc, node, clear_reason,
-                                                    data_set);
+                                                    rsc->cluster);
 
-        if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)
+        if (pcmk_is_set(rsc->cluster->flags, pe_flag_stonith_enabled)
             && rsc->remote_reconnect_ms) {
             /* If we're clearing a remote connection due to a reconnect
              * interval, we want to wait until any scheduled fencing
@@ -3769,7 +3766,7 @@ check_operation_expiry(pe_resource_t *rsc, pe_node_t *node, int rc,
              */
             crm_info("Clearing %s failure will wait until any scheduled "
                      "fencing of %s completes", task, rsc->id);
-            order_after_remote_fencing(clear_op, rsc, data_set);
+            order_after_remote_fencing(clear_op, rsc, rsc->cluster);
         }
     }
 
@@ -3789,7 +3786,8 @@ check_operation_expiry(pe_resource_t *rsc, pe_node_t *node, int rc,
     return expired;
 }
 
-int pe__target_rc_from_xml(xmlNode *xml_op)
+int
+pe__target_rc_from_xml(const xmlNode *xml_op)
 {
     int target_rc = 0;
     const char *key = crm_element_value(xml_op, XML_ATTR_TRANSITION_KEY);
@@ -3984,7 +3982,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
      */
 
     if ((status != PCMK_EXEC_NOT_INSTALLED)
-        && check_operation_expiry(rsc, node, rc, xml_op, data_set)) {
+        && check_operation_expiry(rsc, node, rc, xml_op)) {
         expired = true;
     }
 
