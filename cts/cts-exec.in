@@ -8,6 +8,7 @@ __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT AN
 import io
 import os
 import psutil
+import re
 import stat
 import sys
 import subprocess
@@ -19,7 +20,7 @@ import time
 from pacemaker.exitstatus import ExitStatus
 from pacemaker.buildoptions import BuildOptions
 from pacemaker._cts.errors import *
-from pacemaker._cts.process import killall, exit_if_proc_running, stdout_from_command
+from pacemaker._cts.process import *
 
 # Where to find test binaries
 # Prefer the source tree if available
@@ -101,7 +102,6 @@ class Test(object):
                 "stdout_match" : stdout_match,
                 "stdout_negative_match" : stdout_negative_match,
                 "no_wait" : no_wait,
-                "cmd_output" : "",
             }
         )
 
@@ -221,9 +221,10 @@ class Test(object):
 
         cmd = shlex.split(args['args'])
         cmd.insert(0, args['cmd'])
+
         if self.verbose:
             print("\n\nRunning: "+" ".join(cmd))
-        test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        test = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         if args['kill']:
             if self.verbose:
@@ -240,16 +241,19 @@ class Test(object):
         else:
             return ExitStatus.OK
 
-        output = test.communicate()[0].decode(sys.stdout.encoding)
-        args['cmd_output'] = output
+        output = pipe_communicate(test)
+        if self.verbose:
+            print(output)
 
         if test.returncode != args['expected_exitcode']:
             raise ExitCodeError(test.returncode)
 
-        if args['stdout_match'] != "" and output.count(args['stdout_match']) == 0:
+        if (args['stdout_match'] != "" and
+            re.search(args['stdout_match'], output) is None):
             raise OutputNotFoundError(output)
 
-        if args['stdout_negative_match'] != "" and output.count(args['stdout_negative_match']) != 0:
+        if (args['stdout_negative_match'] != "" and
+            re.search(args['stdout_negative_match'], output) is not None):
             raise OutputFoundError(output)
 
     def set_error(self, step, cmd):
@@ -281,7 +285,6 @@ class Test(object):
             try:
                 self.run_cmd(cmd)
             except ExitCodeError as e:
-                print(cmd['cmd_output'])
                 print("Step %d FAILED - command returned %s, expected %d" % (i, e, cmd['expected_exitcode']))
                 self.set_error(i, cmd);
                 break
@@ -294,7 +297,6 @@ class Test(object):
                 self.set_error(i, cmd);
                 break
             if self.verbose:
-                print(cmd['cmd_output'].strip())
                 print("Step %d SUCCESS" % (i))
             i = i + 1
         self.clean_environment()
