@@ -20,6 +20,7 @@ from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
 from pacemaker._cts.errors import *
 from pacemaker._cts.process import *
+from pacemaker._cts.test import Test
 
 TEST_DIR = sys.path[0]
 
@@ -99,41 +100,28 @@ def localname():
     return our_uname
 
 
-class Test(object):
+class FenceTest(Test):
     """ Executor for a single test """
 
-    def __init__(self, name, description, verbose=False, with_cpg=False, timeout=2,
-                 force_wait=False, logdir="/tmp"):
-        self.name = name
-        self.description = description
-        self.cmds = []
-        self.verbose = verbose
-        self.timeout = timeout
-        self.force_wait = force_wait
-        self.logpath = os.path.join(logdir, "pacemaker-fenced.log")
+    def __init__(self, name, description, **kwargs):
+        Test.__init__(self, name, description, **kwargs)
 
-        self.result_txt = ""
-        self.cmd_tool_output = ""
-        self.result_exitcode = ExitStatus.OK
-
-        if with_cpg:
-            self.stonith_options = "-c"
-            self.enable_corosync = True
+        if kwargs.get("with_cpg", False):
+            self._enable_corosync = True
+            self._stonith_options = ["-c"]
         else:
-            self.stonith_options = "-s"
-            self.enable_corosync = False
+            self._enable_corosync = False
+            self._stonith_options = ["-s"]
 
-        self.stonith_process = None
-        self.stonith_output = ""
-        self.stonith_patterns = []
-        self.negative_stonith_patterns = []
-
-        self.executed = 0
+        self._daemon_location = "pacemaker-fenced"
+        self._negative_stonith_patterns = []
+        self._stonith_output = ""
+        self._stonith_patterns = []
 
     def __new_cmd(self, cmd, args, exitcode, stdout_match="", no_wait=False, stdout_negative_match="", kill=None, validate=True, check_rng=True, check_stderr=True):
         """ Add a command to be executed as part of this test """
 
-        self.cmds.append(
+        self._cmds.append(
             {
                 "cmd" : cmd,
                 "kill" : kill,
@@ -155,14 +143,14 @@ class Test(object):
         killall(["pacemakerd", "pacemaker-fenced"])
 
         if self.verbose:
-            self.stonith_options = self.stonith_options + " -V"
-            print("Starting pacemaker-fenced with %s" % self.stonith_options)
+            self._stonith_options += ["-V"]
+            print("Starting pacemaker-fenced with %s" % self._stonith_options)
 
         if os.path.exists(self.logpath):
             os.remove(self.logpath)
 
-        cmd = "pacemaker-fenced %s -l %s" % (self.stonith_options, self.logpath)
-        self.stonith_process = subprocess.Popen(shlex.split(cmd))
+        cmd = ["pacemaker-fenced", "-l", self.logpath] + self._stonith_options
+        self._stonith_process = subprocess.Popen(cmd)
 
         logfile = None
 
@@ -198,10 +186,10 @@ class Test(object):
     def clean_environment(self):
         """ Clean up the host after executing a test """
 
-        if self.stonith_process:
-            if self.stonith_process.poll() == None:
-                self.stonith_process.terminate()
-                self.stonith_process.wait()
+        if self._stonith_process:
+            if self._stonith_process.poll() == None:
+                self._stonith_process.terminate()
+                self._stonith_process.wait()
             else:
                 return_code = {
                     getattr(signal, _signame): _signame
@@ -209,11 +197,11 @@ class Test(object):
                         if _signame.startswith('SIG') and not _signame.startswith("SIG_")
                 }.get(-self.stonith_process.returncode, "RET=%d" % (self.stonith_process.returncode))
                 msg = "FAILURE - '%s' failed. pacemaker-fenced abnormally exited during test (%s)."
-                self.result_txt = msg % (self.name, return_code)
-                self.result_exitcode = ExitStatus.ERROR
+                self._result_txt = msg % (self.name, return_code)
+                self.exitcode = ExitStatus.ERROR
 
-        self.stonith_output = ""
-        self.stonith_process = None
+        self._stonith_output = ""
+        self._stonith_process = None
 
         # the default for utf-8 encoding would error out if e.g. memory corruption
         # makes fenced output any kind of 8 bit value - while still interesting
@@ -221,22 +209,22 @@ class Test(object):
         # full set of test-cases
         logfile = io.open(self.logpath, 'rt', encoding = "ISO-8859-1")
         for line in logfile.readlines():
-            self.stonith_output = self.stonith_output + line
+            self._stonith_output += line
 
         if self.verbose:
             print("Daemon Output Start")
-            print(self.stonith_output)
+            print(self._stonith_output)
             print("Daemon Output End")
 
     def add_stonith_log_pattern(self, pattern):
         """ Add a log pattern to expect from this test """
 
-        self.stonith_patterns.append(pattern)
+        self._stonith_patterns.append(pattern)
 
     def add_stonith_neg_log_pattern(self, pattern):
         """ Add a log pattern that should not occur with this test """
 
-        self.negative_stonith_patterns.append(pattern)
+        self._negative_stonith_patterns.append(pattern)
 
     def add_cmd(self, cmd, args, validate=True, check_rng=True, check_stderr=True):
         """ Add a simple command to be executed as part of this test """
@@ -258,15 +246,10 @@ class Test(object):
 
         self.__new_cmd(cmd, args, exitcode, "")
 
-    def get_exitcode(self):
-        """ Return the exit status of the last test execution """
-
-        return self.result_exitcode
-
     def print_result(self, filler):
         """ Print the result of the last test execution """
 
-        print("%s%s" % (filler, self.result_txt))
+        print("%s%s" % (filler, self._result_txt))
 
     def run_cmd(self, args):
         """ Execute a command as part of this test """
@@ -335,7 +318,7 @@ class Test(object):
         """ Return 1 if a line matches patterns that shouldn't have occurred """
 
         count = 0
-        for line in self.negative_stonith_patterns:
+        for line in self._negative_stonith_patterns:
             if outline.count(line):
                 count = 1
                 if self.verbose:
@@ -347,14 +330,14 @@ class Test(object):
 
         negative_matches = 0
         cur = 0
-        pats = self.stonith_patterns
-        total_patterns = len(self.stonith_patterns)
+        pats = self._stonith_patterns
+        total_patterns = len(self._stonith_patterns)
 
-        if len(self.stonith_patterns) == 0 and len(self.negative_stonith_patterns) == 0:
+        if len(self._stonith_patterns) == 0 and len(self._negative_stonith_patterns) == 0:
             return
 
-        for line in self.stonith_output.split("\n"):
-            negative_matches = negative_matches + self.count_negative_matches(line)
+        for line in self._stonith_output.split("\n"):
+            negative_matches = negative_matches + self._count_negative_matches(line)
             if len(pats) == 0:
                 continue
             cur = -1
@@ -370,15 +353,15 @@ class Test(object):
                     print("Pattern Not Matched = '%s'" % pat)
 
             msg = "FAILURE - '%s' failed. %d patterns out of %d not matched. %d negative matches."
-            self.result_txt = msg % (self.name, len(pats), total_patterns, negative_matches)
-            self.result_exitcode = ExitStatus.ERROR
+            self._result_txt = msg % (self.name, len(pats), total_patterns, negative_matches)
+            self.exitcode = ExitStatus.ERROR
 
     def set_error(self, step, cmd):
         """ Record failure of this test """
 
         msg = "FAILURE - '%s' failed at step %d. Command: %s %s"
-        self.result_txt = msg % (self.name, step, cmd['cmd'], cmd['args'])
-        self.result_exitcode = ExitStatus.ERROR
+        self._result_txt = msg % (self.name, step, cmd['cmd'], cmd['args'])
+        self.exitcode = ExitStatus.ERROR
 
     def run(self):
         """ Execute this test. """
@@ -389,9 +372,9 @@ class Test(object):
         if self.verbose:
             print("\n--- START TEST - %s" % self.name)
 
-        self.result_txt = "SUCCESS - '%s'" % (self.name)
-        self.result_exitcode = ExitStatus.OK
-        for cmd in self.cmds:
+        self._result_txt = "SUCCESS - '%s'" % (self.name)
+        self.exitcode = ExitStatus.OK
+        for cmd in self._cmds:
             try:
                 self.run_cmd(cmd)
             except ExitCodeError as e:
@@ -415,10 +398,10 @@ class Test(object):
             i = i + 1
         self.clean_environment()
 
-        if self.result_exitcode == ExitStatus.OK:
+        if self.exitcode == ExitStatus.OK:
             self.match_stonith_patterns()
 
-        print(self.result_txt)
+        print(self._result_txt)
         if self.verbose:
             print("--- END TEST - %s\n" % self.name)
 
@@ -438,8 +421,9 @@ class Tests(object):
     def new_test(self, name, description, with_cpg=False):
         """ Create a named test """
 
-        test = Test(name, description, self.verbose, with_cpg, self.timeout,
-                    self.force_wait, self.logdir)
+        test = FenceTest(name, description, verbose=self.verbose, with_cpg=with_cpg,
+                         timeout=self.timeout, force_wait=self.force_wait,
+                         logdir=self.logdir)
         self.tests.append(test)
         return test
 
@@ -482,14 +466,14 @@ class Tests(object):
         """ Run all corosync-enabled tests """
 
         for test in self.tests:
-            if test.enable_corosync:
+            if test._enable_corosync:
                 test.run()
 
     def run_no_cpg(self):
         """ Run all standalone tests """
 
         for test in self.tests:
-            if not test.enable_corosync:
+            if not test._enable_corosync:
                 test.run()
 
     def run_tests(self):
@@ -505,7 +489,7 @@ class Tests(object):
             if not test.executed:
                 continue
 
-            if test.get_exitcode() != ExitStatus.OK:
+            if test.exitcode != ExitStatus.OK:
                 sys.exit(ExitStatus.ERROR)
 
         sys.exit(ExitStatus.OK)
@@ -521,7 +505,7 @@ class Tests(object):
             if not test.executed:
                 continue
 
-            if test.get_exitcode() != ExitStatus.OK:
+            if test.exitcode != ExitStatus.OK:
                 failures = failures + 1
                 test.print_result("    ")
             else:
