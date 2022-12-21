@@ -7,6 +7,7 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
+CLEANFILES = buildoptions.py
 MAINTAINERCLEANFILES    = Makefile.in
 
 pkgpython_PYTHON = __init__.py \

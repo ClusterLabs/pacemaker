@@ -1,0 +1,53 @@
+# Copyright 2023 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
+#
+# This source code is licensed under the GNU Lesser General Public License
+# version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
+
+__all__ = ["BuildOptions"]
+
+class BuildOptions(object):
+    # Path to the bash shell
+    BASH_PATH = "@BASH_PATH@"
+
+    # Top-level build directory
+    # NOTE: This is not especially useful on installed systems, but is useful for
+    # running various programs from a source checkout
+    BUILD_DIR = "@abs_top_builddir@"
+
+    # Where CIB files are stored
+    CIB_DIR = "@CRM_CONFIG_DIR@"
+
+    # Path to the corosync config file
+    COROSYNC_CONFIG_FILE = "@PCMK__COROSYNC_CONF@"
+
+    # Where Pacemaker daemons are installed
+    DAEMON_DIR = "@CRM_DAEMON_DIR@"
+
+    # User to run Pacemaker daemons as
+    DAEMON_USER = "@CRM_DAEMON_USER@"
+
+    # Where miscellaneous temporary state files are stored
+    LOCAL_STATE_DIR = "@localstatedir@"
+
+    # Where Pacemaker log files are stored
+    LOG_DIR = "@CRM_LOG_DIR@"
+
+    # Where resource agents are installed
+    OCF_RA_INSTALL_DIR = "@OCF_RA_INSTALL_DIR@"
+
+    # Root directory for OCF resource agents and libraries
+    OCF_ROOT_DIR = "@OCF_ROOT_DIR@"
+
+    # Where resource agents should keep state files
+    RSC_TMP_DIR = "@CRM_RSCTMP_DIR@"
+
+    # Was Pacemaker Remote support built?
+    REMOTE_ENABLED = "@PC_NAME_GNUTLS@" != ""
+
+    # Where administrative programs are installed
+    SBIN_DIR = "@sbindir@"
+
+    # Where Relax-NG schema files are stored
+    SCHEMA_DIR = "@CRM_SCHEMA_DIRECTORY@"
