@@ -1980,7 +1980,6 @@ dnl Other files we output
 AC_CONFIG_FILES(Makefile                                            \
                 cts/Makefile                                        \
                 cts/benchmark/Makefile                              \
-                cts/lab/CTSvars.py                                  \
                 cts/lab/Makefile                                    \
                 cts/scheduler/Makefile                              \
                 cts/scheduler/dot/Makefile                          \

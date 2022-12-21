@@ -1,10 +1,9 @@
 """ Corosync-specific class for Pacemaker's Cluster Test Suite (CTS)
 """
 
-__copyright__ = "Copyright 2007-2021 the Pacemaker project contributors"
+__copyright__ = "Copyright 2007-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
-from cts.CTSvars import *
 from cts.ClusterManager import ClusterManager
 from cts.CTS     import Process
 from cts.patterns    import PatternSelector

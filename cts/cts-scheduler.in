@@ -20,6 +20,7 @@ import tempfile
 if os.path.exists("@abs_top_builddir@/daemons/fenced/fence_legacy.in"):
     sys.path.insert(0, "@abs_top_builddir@/python")
 
+from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
 
 DESC = """Regression tests for Pacemaker's scheduler"""
@@ -1049,12 +1050,6 @@ TESTS_64BIT = [
     ],
 ]
 
-# Constants substituted in the build process
-class BuildVars(object):
-    SBINDIR = "@sbindir@"
-    BUILDDIR = "@abs_top_builddir@"
-    CRM_SCHEMA_DIRECTORY = "@CRM_SCHEMA_DIRECTORY@"
-
 
 def is_executable(path):
     """ Check whether a file at a given path is executable. """
@@ -1206,9 +1201,9 @@ class CtsScheduler(object):
         """ Locate the simulation binary """
 
         if self.args.binary is None:
-            self.args.binary = BuildVars.BUILDDIR + "/tools/crm_simulate"
+            self.args.binary = BuildOptions.BUILD_DIR + "/tools/crm_simulate"
             if not is_executable(self.args.binary):
-                self.args.binary = BuildVars.SBINDIR + "/crm_simulate"
+                self.args.binary = BuildOptions.SBIN_DIR + "/crm_simulate"
 
         if not is_executable(self.args.binary):
             # @TODO it would be more pythonic to raise an exception
@@ -1223,8 +1218,8 @@ class CtsScheduler(object):
         try:
             return os.environ['PCMK_schema_directory']
         except KeyError:
-            for d in [ os.path.join(BuildVars.BUILDDIR, "xml"),
-                       BuildVars.CRM_SCHEMA_DIRECTORY ]:
+            for d in [ os.path.join(BuildOptions.BUILD_DIR, "xml"),
+                       BuildOptions.SCHEMA_DIR ]:
                 if os.path.isdir(d):
                     os.environ['PCMK_schema_directory'] = d
                     return d

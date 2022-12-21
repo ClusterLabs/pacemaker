@@ -1,12 +1,13 @@
 """ Auditing classes for Pacemaker's Cluster Test Suite (CTS)
 """
 
-__copyright__ = "Copyright 2000-2021 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import time, re, uuid
 from cts.watcher import LogWatcher
-from cts.CTSvars import *
+
+from pacemaker.buildoptions import BuildOptions
 
 class ClusterAudit(object):
 
@@ -144,7 +145,7 @@ class DiskAudit(ClusterAudit):
     def __call__(self):
         result = 1
         # @TODO Use directory of PCMK_logfile if set on host
-        dfcmd = "df -BM " + CTSvars.CRM_LOG_DIR + " | tail -1 | awk '{print $(NF-1)\" \"$(NF-2)}' | tr -d 'M%'"
+        dfcmd = "df -BM " + BuildOptions.LOG_DIR + " | tail -1 | awk '{print $(NF-1)\" \"$(NF-2)}' | tr -d 'M%'"
 
         self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
         for node in self.CM.Env["nodes"]:

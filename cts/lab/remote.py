@@ -1,7 +1,7 @@
 """ Remote command runner for Pacemaker's Cluster Test Suite (CTS)
 """
 
-__copyright__ = "Copyright 2014-2020 the Pacemaker project contributors"
+__copyright__ = "Copyright 2014-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import re
@@ -14,7 +14,6 @@ from threading import Thread
 pdir=os.path.dirname(sys.path[0])
 sys.path.insert(0, pdir) # So that things work from the source directory
 
-from cts.CTSvars import *
 from cts.logging import *
 
 trace_rsh=None
