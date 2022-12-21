@@ -1,12 +1,12 @@
 """ Pattern-holding classes for Pacemaker's Cluster Test Suite (CTS)
 """
 
-__copyright__ = "Copyright 2008-2022 the Pacemaker project contributors"
+__copyright__ = "Copyright 2008-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import sys, os
 
-from cts.CTSvars import *
+from pacemaker.buildoptions import BuildOptions
 
 patternvariants = {}
 class BasePatterns(object):
@@ -31,8 +31,8 @@ class BasePatterns(object):
             "CibAddXml"      : "cibadmin --modify -c --xml-text %s",
             "CibDelXpath"    : "cibadmin --delete --xpath %s",
             # 300,000 == 5 minutes
-            "RscRunning"     : CTSvars.CRM_DAEMON_DIR + "/cts-exec-helper -R -r %s",
-            "CIBfile"        : "%s:"+CTSvars.CRM_CONFIG_DIR+"/cib.xml",
+            "RscRunning"     : BuildOptions.DAEMON_DIR + "/cts-exec-helper -R -r %s",
+            "CIBfile"        : "%s:" + BuildOptions.CONFIG_DIR + "/cib.xml",
             "TmpDir"         : "/tmp",
 
             "BreakCommCmd"   : "iptables -A INPUT -s %s -j DROP >/dev/null 2>&1",

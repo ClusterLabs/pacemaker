@@ -1,7 +1,7 @@
 """ ClusterManager class for Pacemaker's Cluster Test Suite (CTS)
 """
 
-__copyright__ = """Copyright 2000-2022 the Pacemaker project contributors.
+__copyright__ = """Copyright 2000-2023 the Pacemaker project contributors.
 Certain portions by Huang Zhen <zhenhltc@cn.ibm.com> are copyright 2004
 International Business Machines. The version control history for this file
 may have further details."""
@@ -13,7 +13,6 @@ import time
 
 from collections import UserDict
 
-from cts.CTSvars     import *
 from cts.CIB         import ConfigFactory
 from cts.CTS         import NodeStatus, Process
 from cts.CTStests    import AuditResource
@@ -23,8 +22,10 @@ from cts.remote      import RemoteFactory
 from cts.environment import EnvFactory
 from cts.patterns    import PatternSelector
 
+from pacemaker.buildoptions import BuildOptions
+
 has_log_stats = {}
-log_stats_bin = CTSvars.CRM_DAEMON_DIR + "/cts_log_stats.sh"
+log_stats_bin = BuildOptions.DAEMON_DIR + "/cts_log_stats.sh"
 log_stats = """
 #!%s
 # Tool for generating system load reports while CTS runs
@@ -98,7 +99,7 @@ case $action in
         echo "Unknown action: $action."
         ;;
 esac
-""" % (CTSvars.BASH_PATH)
+""" % (BuildOptions.BASH_PATH)
 
 class ClusterManager(UserDict):
     '''The Cluster Manager class.
@@ -198,7 +199,7 @@ class ClusterManager(UserDict):
 
     def install_support(self, command="install"):
         for node in self.Env["nodes"]:
-            self.rsh(node, CTSvars.CRM_DAEMON_DIR + "/cts-support " + command)
+            self.rsh(node, BuildOptions.DAEMON_DIR + "/cts-support " + command)
 
     def prepare_fencing_watcher(self, name):
         # If we don't have quorum now but get it as a result of starting this node,
@@ -611,7 +612,7 @@ class ClusterManager(UserDict):
             return
 
         for host in self.Env["nodes"]:
-            log_stats_file = "%s/cts-stats.csv" % CTSvars.CRM_DAEMON_DIR
+            log_stats_file = "%s/cts-stats.csv" % BuildOptions.DAEMON_DIR
             if host in has_log_stats:
                 self.rsh(host, '''bash %s %s stop''' % (log_stats_bin, log_stats_file))
                 (rc, lines) = self.rsh(host, '''cat %s''' % log_stats_file, stdout=2)
@@ -631,7 +632,7 @@ class ClusterManager(UserDict):
             return
 
         for host in self.Env["nodes"]:
-            log_stats_file = "%s/cts-stats.csv" % CTSvars.CRM_DAEMON_DIR
+            log_stats_file = "%s/cts-stats.csv" % BuildOptions.DAEMON_DIR
             if not host in has_log_stats:
 
                 global log_stats
@@ -664,7 +665,7 @@ class ClusterManager(UserDict):
 
         if not node in self.CIBsync and self.Env["ClobberCIB"] == 1:
             self.CIBsync[node] = 1
-            self.rsh(node, "rm -f "+CTSvars.CRM_CONFIG_DIR+"/cib*")
+            self.rsh(node, "rm -f " + BuildOptions.CIB_DIR + "/cib*")
 
             # Only install the CIB on the first node, all the other ones will pick it up from there
             if self.cib_installed == 1:
@@ -680,7 +681,7 @@ class ClusterManager(UserDict):
                 if 0 != self.rsh.cp(self.Env["CIBfilename"], "root@" + (self.templates["CIBfile"] % node)):
                     raise ValueError("Can not scp file to %s %d"%(node))
 
-            self.rsh(node, "chown "+CTSvars.CRM_DAEMON_USER+" "+CTSvars.CRM_CONFIG_DIR+"/cib.xml")
+            self.rsh(node, "chown " + BuildOptions.DAEMON_USER + " " + BuildOptions.CIB_DIR + "/cib.xml")
 
     def prepare(self):
         '''Finish the Initialization process. Prepare to test...'''

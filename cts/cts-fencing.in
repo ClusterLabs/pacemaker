@@ -25,13 +25,9 @@ if os.path.exists("@abs_top_srcdir@/python"):
 if os.path.exists("@abs_top_builddir@/python") and "@abs_top_builddir@" != "@abs_top_srcdir@":
     sys.path.insert(0, "@abs_top_builddir@/python")
 
+from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
 
-# Where to find test binaries
-# Prefer the source tree if available
-BUILD_DIR = "@abs_top_builddir@"
-SCHEMA_DIR = "@CRM_SCHEMA_DIRECTORY@"
-COROSYNC_CONF = "@PCMK__COROSYNC_CONF@"
 TEST_DIR = sys.path[0]
 
 AUTOGEN_COROSYNC_TEMPLATE = """
@@ -65,16 +61,16 @@ def update_path():
 
     new_path = os.environ['PATH']
     if os.path.exists("%s/cts-fencing.in" % TEST_DIR):
-        print("Running tests from the source tree: %s (%s)" % (BUILD_DIR, TEST_DIR))
+        print("Running tests from the source tree: %s (%s)" % (BuildOptions._BUILD_DIR, TEST_DIR))
         # For pacemaker-fenced and cts-fence-helper
-        new_path = "%s/daemons/fenced:%s" % (BUILD_DIR, new_path)
-        new_path = "%s/tools:%s" % (BUILD_DIR, new_path) # For stonith_admin
-        new_path = "%s/cts/support:%s" % (BUILD_DIR, new_path) # For cts-support
+        new_path = "%s/daemons/fenced:%s" % (BuildOptions._BUILD_DIR, new_path)
+        new_path = "%s/tools:%s" % (BuildOptions._BUILD_DIR, new_path) # For stonith_admin
+        new_path = "%s/cts/support:%s" % (BuildOptions._BUILD_DIR, new_path) # For cts-support
 
     else:
-        print("Running tests from the install tree: @CRM_DAEMON_DIR@ (not %s)" % TEST_DIR)
+        print("Running tests from the install tree: %s (not %s)" % (BuildOptions.DAEMON_DIR, TEST_DIR))
         # For pacemaker-fenced, cts-fence-helper, and cts-support
-        new_path = "@CRM_DAEMON_DIR@:%s" % (new_path)
+        new_path = "%s:%s" % (BuildOptions.DAEMON_DIR, new_path)
 
     print('Using PATH="{}"'.format(new_path))
     os.environ['PATH'] = new_path
@@ -96,7 +92,7 @@ def rng_directory():
     elif os.path.exists("%s/cts-fencing.in" % TEST_DIR):
         return "xml"
     else:
-        return SCHEMA_DIR
+        return BuildOptions.SCHEMA_DIR
 
 
 def pipe_communicate(pipes, check_stderr=False, stdin=None):
@@ -547,7 +543,7 @@ class Tests(object):
         self.timeout = timeout
         self.force_wait = force_wait
         self.logdir = logdir
-        self.autogen_corosync_cfg = not os.path.exists(COROSYNC_CONF)
+        self.autogen_corosync_cfg = not os.path.exists(BuildOptions.COROSYNC_CONFIG_FILE)
 
     def new_test(self, name, description, with_cpg=0):
         """ Create a named test """
@@ -1513,7 +1509,7 @@ class Tests(object):
         if use_corosync:
             if self.autogen_corosync_cfg:
                 logname = os.path.join(self.logdir, "corosync.log")
-                corosync_cfg = io.open(COROSYNC_CONF, "w")
+                corosync_cfg = io.open(BuildOptions.COROSYNC_CONFIG_FILE, "w")
                 corosync_cfg.write(AUTOGEN_COROSYNC_TEMPLATE % (localname(), logname))
                 corosync_cfg.close()
 
@@ -1536,7 +1532,7 @@ class Tests(object):
                     for line in logfile.readlines():
                         print(line.strip())
                     logfile.close()
-                os.remove(COROSYNC_CONF)
+                os.remove(BuildOptions.COROSYNC_CONFIG_FILE)
 
         subprocess.call(["cts-support", "uninstall"])
 
