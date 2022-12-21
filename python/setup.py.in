@@ -16,5 +16,5 @@ setup(name='pacemaker',
       license='LGPLv2.1+',
       url='https://clusterlabs.org/pacemaker/',
       description='Python libraries for Pacemaker',
-      packages=['pacemaker'],
+      packages=['pacemaker', 'pacemaker._cts'],
      )
