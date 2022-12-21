@@ -118,24 +118,6 @@ class FenceTest(Test):
         self._stonith_output = ""
         self._stonith_patterns = []
 
-    def _new_cmd(self, cmd, args, exitcode, stdout_match="", no_wait=False, stdout_negative_match="", kill=None, validate=True, check_rng=True, check_stderr=True):
-        """ Add a command to be executed as part of this test """
-
-        self._cmds.append(
-            {
-                "cmd" : cmd,
-                "kill" : kill,
-                "args" : args,
-                "expected_exitcode" : exitcode,
-                "stdout_match" : stdout_match,
-                "stdout_negative_match" : stdout_negative_match,
-                "no_wait" : no_wait,
-                "validate" : validate,
-                "check_rng" : check_rng,
-                "check_stderr" : check_stderr,
-            }
-        )
-
     def start_environment(self):
         """ Prepare the host for executing a test """
 
@@ -229,22 +211,24 @@ class FenceTest(Test):
     def add_cmd(self, cmd, args, validate=True, check_rng=True, check_stderr=True):
         """ Add a simple command to be executed as part of this test """
 
-        self._new_cmd(cmd, args, ExitStatus.OK, "", validate=validate, check_rng=check_rng, check_stderr=check_stderr)
+        self._new_cmd(cmd, args, ExitStatus.OK, validate=validate, check_rng=check_rng,
+                       check_stderr=check_stderr)
 
     def add_cmd_no_wait(self, cmd, args):
         """ Add a simple command to be executed (without waiting) as part of this test """
 
-        self._new_cmd(cmd, args, ExitStatus.OK, "", True)
+        self._new_cmd(cmd, args, ExitStatus.OK, no_wait=True)
 
     def add_cmd_check_stdout(self, cmd, args, match, no_match=""):
         """ Add a simple command with expected output to be executed as part of this test """
 
-        self._new_cmd(cmd, args, ExitStatus.OK, match, False, no_match)
+        self._new_cmd(cmd, args, ExitStatus.OK, stdout_match=match,
+                      stdout_negative_match=no_match)
 
     def add_expected_fail_cmd(self, cmd, args, exitcode=ExitStatus.ERROR):
         """ Add a command to be executed as part of this test and expected to fail """
 
-        self._new_cmd(cmd, args, exitcode, "")
+        self._new_cmd(cmd, args, exitcode)
 
     def print_result(self, filler):
         """ Print the result of the last test execution """
