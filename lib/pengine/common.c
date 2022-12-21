@@ -168,18 +168,18 @@ static pcmk__cluster_option_t pe_opts[] = {
     {
         "batch-limit", NULL, "integer", NULL,
         "0", pcmk__valid_number,
-        "Maximum number of jobs that the cluster may execute in parallel "
-            "across all nodes",
-        "The \"correct\" value will depend on the speed and load of your "
+        N_("Maximum number of jobs that the cluster may execute in parallel "
+            "across all nodes"),
+        N_("The \"correct\" value will depend on the speed and load of your "
             "network and cluster nodes. If set to 0, the cluster will "
             "impose a dynamically calculated limit when any node has a "
-            "high load."
+            "high load.")
     },
     {
         "migration-limit", NULL, "integer", NULL,
         "-1", pcmk__valid_number,
-        "The number of live migration actions that the cluster is allowed "
-            "to execute in parallel on a node (-1 means no limit)"
+        N_("The number of live migration actions that the cluster is allowed "
+            "to execute in parallel on a node (-1 means no limit)")
     },
 
     /* Orphans and stopping */
@@ -206,8 +206,8 @@ static pcmk__cluster_option_t pe_opts[] = {
         "false", pcmk__valid_boolean,
         N_("*** Deprecated *** Whether to remove stopped resources from "
             "the executor"),
-        "Values other than default are poorly tested and potentially dangerous."
-            " This option will be removed in a future release."
+        N_("Values other than default are poorly tested and potentially dangerous."
+            " This option will be removed in a future release.")
     },
 
     /* Storing inputs */
