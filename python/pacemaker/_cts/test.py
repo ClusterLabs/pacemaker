@@ -129,3 +129,34 @@ class Test:
                 "validate": kwargs.get("validate", True),
             }
         )
+
+    ###
+    ### PUBLIC METHODS
+    ###
+
+    def add_cmd(self, cmd, args, validate=True, check_rng=True, check_stderr=True):
+        """ Add a simple command to be executed as part of this test """
+
+        self._new_cmd(cmd, args, ExitStatus.OK, validate=validate, check_rng=check_rng,
+                      check_stderr=check_stderr)
+
+    def add_cmd_and_kill(self, cmd, args, kill_proc):
+        """ Add a command and system command to be executed as part of this test """
+
+        self._new_cmd(cmd, args, ExitStatus.OK, kill=kill_proc)
+
+    def add_cmd_check_stdout(self, cmd, args, match, no_match=None):
+        """ Add a simple command with expected output to be executed as part of this test """
+
+        self._new_cmd(cmd, args, ExitStatus.OK, stdout_match=match,
+                      stdout_negative_match=no_match)
+
+    def add_cmd_expected_fail(self, cmd, args, exitcode=ExitStatus.ERROR):
+        """ Add a command that is expected to fail to be executed as part of this test """
+
+        self._new_cmd(cmd, args, exitcode)
+
+    def add_cmd_no_wait(self, cmd, args):
+        """ Add a simple command to be executed (without waiting) as part of this test """
+
+        self._new_cmd(cmd, args, ExitStatus.OK, no_wait=True)
