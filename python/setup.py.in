@@ -5,5 +5,5 @@ from distutils.core import setup
 setup(name='pacemaker',
       version='@PACKAGE_VERSION@',
       description='Python libraries for Pacemaker',
-      packages=['pacemaker'],
+      packages=['pacemaker', 'pacemaker._cts'],
      )
