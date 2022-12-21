@@ -27,6 +27,7 @@ if os.path.exists("@abs_top_builddir@/python") and "@abs_top_builddir@" != "@abs
 
 from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
+from pacemaker._cts.errors import ExitCodeError, OutputFoundError, OutputNotFoundError, XmlValidationError
 
 TEST_DIR = sys.path[0]
 
@@ -165,51 +166,6 @@ def exit_if_proc_running(process_name):
         print("Error: %s is already running!" % process_name)
         print("Run %s only when the cluster is stopped." % sys.argv[0])
         sys.exit(ExitStatus.ERROR)
-
-
-class TestError(Exception):
-    """ Base class for exceptions in this module """
-    pass
-
-
-class ExitCodeError(TestError):
-    """ Exception raised when command exit status is unexpected """
-
-    def __init__(self, exit_code):
-        self.exit_code = exit_code
-
-    def __str__(self):
-        return repr(self.exit_code)
-
-
-class OutputNotFoundError(TestError):
-    """ Exception raised when command output does not contain wanted string """
-
-    def __init__(self, output):
-        self.output = output
-
-    def __str__(self):
-        return repr(self.output)
-
-
-class OutputFoundError(TestError):
-    """ Exception raised when command output contains unwanted string """
-
-    def __init__(self, output):
-        self.output = output
-
-    def __str__(self):
-        return repr(self.output)
-
-
-class XmlValidationError(TestError):
-    """ Exception raised when xmllint fails """
-
-    def __init__(self, output):
-        self.output = output
-
-    def __str__(self):
-        return repr(self.output)
 
 
 class Test(object):
