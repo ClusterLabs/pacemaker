@@ -75,7 +75,7 @@ pcmk__tracking_xml_changes(xmlNode *xml, bool lazy)
  * \param[in]     depth    Current indentation level
  */
 static inline void
-insert_prefix(int options, GString *buffer, int depth)
+insert_spaces(int options, GString *buffer, int depth)
 {
     int spaces = 0;
 
@@ -1553,7 +1553,7 @@ log_xml_comment(GString *buffer, int log_level, const xmlNode *data,
     if (pcmk_is_set(options, xml_log_option_open)) {
         g_string_truncate(buffer, 0);
 
-        insert_prefix(options, buffer, depth);
+        insert_spaces(options, buffer, depth);
         do_crm_log(log_level, "%s<!--%s-->",
                    buffer->str, (const char *) data->content);
     }
@@ -1588,7 +1588,7 @@ log_xml_element(GString *buffer, int log_level, const char *prefix,
         const char *hidden = crm_element_value(data, "hidden");
 
         g_string_truncate(buffer, 0);
-        insert_prefix(options, buffer, depth);
+        insert_spaces(options, buffer, depth);
         pcmk__g_strcat(buffer, "<", name, NULL);
 
         for (const xmlAttr *attr = pcmk__xe_first_attr(data); attr != NULL;
@@ -1650,7 +1650,7 @@ log_xml_element(GString *buffer, int log_level, const char *prefix,
 
     if (pcmk_is_set(options, xml_log_option_close)) {
         g_string_truncate(buffer, 0);
-        insert_prefix(options, buffer, depth);
+        insert_spaces(options, buffer, depth);
         do_crm_log(log_level, "%s%s%s</%s>",
                    pcmk__s(prefix, ""), pcmk__str_empty(prefix)? "" : " ",
                    buffer->str, name);
@@ -1866,7 +1866,7 @@ dump_xml_element(const xmlNode *data, int options, GString *buffer, int depth)
     name = crm_element_name(data);
     CRM_ASSERT(name != NULL);
 
-    insert_prefix(options, buffer, depth);
+    insert_spaces(options, buffer, depth);
     pcmk__g_strcat(buffer, "<", name, NULL);
 
     if (options & xml_log_option_filtered) {
@@ -1897,7 +1897,7 @@ dump_xml_element(const xmlNode *data, int options, GString *buffer, int depth)
             pcmk__xml2text(xChild, options, buffer, depth + 1);
         }
 
-        insert_prefix(options, buffer, depth);
+        insert_spaces(options, buffer, depth);
         pcmk__g_strcat(buffer, "</", name, ">", NULL);
 
         if (pcmk_is_set(options, xml_log_option_formatted)) {
@@ -1925,7 +1925,7 @@ dump_xml_text(const xmlNode *data, int options, GString *buffer, int depth)
         return;
     }
 
-    insert_prefix(options, buffer, depth);
+    insert_spaces(options, buffer, depth);
     g_string_append(buffer, (const gchar *) data->content);
 
     if (pcmk_is_set(options, xml_log_option_formatted)) {
@@ -1952,7 +1952,7 @@ dump_xml_cdata(const xmlNode *data, int options, GString *buffer, int depth)
         return;
     }
 
-    insert_prefix(options, buffer, depth);
+    insert_spaces(options, buffer, depth);
     pcmk__g_strcat(buffer, "<![CDATA[", (const char *) data->content, "]]>",
                    NULL);
 
@@ -1980,7 +1980,7 @@ dump_xml_comment(const xmlNode *data, int options, GString *buffer, int depth)
         return;
     }
 
-    insert_prefix(options, buffer, depth);
+    insert_spaces(options, buffer, depth);
     pcmk__g_strcat(buffer, "<!--", (const char *) data->content, "-->", NULL);
 
     if (pcmk_is_set(options, xml_log_option_formatted)) {
