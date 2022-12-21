@@ -290,6 +290,11 @@ class Test(object):
         if args['kill']:
             if self.verbose:
                 print("Also running: "+args['kill'])
+            ### Typically, the kill argument is used to detect some sort of
+            ### failure. Without yielding for a few seconds here, the process
+            ### launched earlier that is listening for the failure may not have
+            ### time to connect to pacemaker-execd.
+            time.sleep(2)
             subprocess.Popen(shlex.split(args['kill']))
 
         if args['no_wait'] == 0:
