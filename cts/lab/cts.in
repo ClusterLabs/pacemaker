@@ -1,6 +1,6 @@
 #!@BASH_PATH@
 #
-# Copyright 2012-2022 the Pacemaker project contributors
+# Copyright 2012-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -11,13 +11,7 @@
 # e.g. /etc/sysconfig or /etc/default
 CONFIG_DIR=@CONFIGDIR@
 
-if [ -e $PWD/cts/CTSlab.py ]; then
-    cts_root=$PWD/cts
-elif [ -e $PWD/CTSlab.py ]; then
-    cts_root=$PWD
-else
-    cts_root=`dirname $0`
-fi
+cts_root=`dirname $0`
 
 logfile=0
 summary=0
@@ -42,7 +36,7 @@ patterns="-e CTS:"
 
 
 helpmsg=$(cat <<EOF
-Usage: %s [options] {[{init|local-init|setup} [TARGET]] | [OTHER-CMDS]}
+Usage: %s [options] {[{setup} [TARGET]] | [OTHER-CMDS]}
 
 [--]help, -h            show help screen and exit
 -x                      turn on debugging
@@ -69,54 +63,9 @@ trace-add, tadd FUNC    add a function to the list of traced ones
 trace-rm, trm FUNC      remove a function from the list of traced ones
 trace-set, tset FUNC    set function(s) as the only to be traced
 (f|fedora|r|rhel).*     specify target distro
-init, local-init        [local] initialize CTS environment
---wget                  [local] download up-to-date CTS helpers
 --                      delimits tests that follow
 EOF
 )
-
-# Modify an uninstalled source checkout to allow running CTS there
-local_init() {
-    local_root="$(dirname "$cts_root")"
-    if [ ! -r "$cts_root/CTSvars.py.in" ]; then
-        echo "$local_root does not appear to be a source code directory"
-        exit 1
-    elif [ ! -r "$cts_root/CTSvars.py" ]; then
-        echo "You must run configure and make first"
-        exit 1
-    fi
-
-    # Update CTS_home and Fencing_Home in CTSvars.py
-    sed -e "s:@datadir@/@PACKAGE@/tests/cts:$local_root/cts:" \
-        "$cts_root/CTSvars.py" > "$cts_root/CTSvars.py.$$"
-    mv -- "$cts_root/CTSvars.py.$$" "$cts_root/CTSvars.py"
-
-    files="extra/cluster-init extra/cluster-helper extra/cluster-clean"
-    for f in $files; do
-        cp "$local_root/$f" "$cts_root/"
-    done
-
-    # Update report_data in a local copy of crm_report
-    sed -e "s:@datadir@/@PACKAGE@:$local_root/tools:" \
-        "$local_root/tools/crm_report" > "$cts_root/crm_report"
-    chmod +x "$cts_root/crm_report"
-
-    # Install the necessary helpers to system locations (must be done as root)
-    cts_support="$cts_root/cts-support" # if running from install
-    if [ ! -x "$cts_support" ]; then
-        cts_support="$cts_root/support/cts-support" # if running from source
-    fi
-    if [ -x "$cts_support" ]; then
-        "$cts_support" install
-    else
-        echo "warning: couldn't find cts-support (helpers may be unavailable)"
-    fi
-
-    echo "Make sure you add $cts_root to your PATH and set a value for \$cluster_name in .bashrc"
-    exit 0
-}
-
-REPO="https://raw.github.com/ClusterLabs/pacemaker/main/extra/"
 
 while true; do
     case $1 in
@@ -152,17 +101,6 @@ while true; do
 	r*)
 		target="rhel-`echo $1 | sed -e s/rhel// -e s/-// -e s/r//`"
 		shift;;
-        init|local-init) local_init ;;
-	--wget)
-	    files="cluster-helper cluster-init cluster-clean"
-	    for f in $files; do
-		rm -f $cts_root/$f
-		echo "Downloading helper script $f from GitHub"
-		wget -O "$cts_root/$f" "${REPO}/$f"
-		chmod +x $cts_root/$f
-	    done
-	    shift
-	    ;;
 	--) shift; tests="$tests $*"; break;;
 	"") break;;
 	*) echo "Unknown argument: $1"; exit 1;;
@@ -174,14 +112,12 @@ export PATH="$PATH:$cts_root"
 which cluster-helper &>/dev/null
 if [ $? != 0 ]; then
     echo $0 needs the cluster-helper script to be in your path
-    echo "You can obtain it from: ${REPO}/cluster-helper"
     exit 1
 fi
 
 which cluster-clean &>/dev/null
 if [ $? != 0 ]; then
     echo $0 needs the cluster-clean script to be in your path
-    echo "You can obtain it from: ${REPO}/cluster-clean"
     exit 1
 fi
 
