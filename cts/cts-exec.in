@@ -34,6 +34,7 @@ from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
 from pacemaker._cts.errors import ExitCodeError, OutputFoundError, OutputNotFoundError
 from pacemaker._cts.process import killall, exit_if_proc_running, pipe_communicate, stdout_from_command
+from pacemaker._cts.test import Test
 
 # File permissions for executable scripts we create
 EXECMODE = stat.S_IRUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH
@@ -62,47 +63,32 @@ def update_path():
     os.environ['PATH'] = new_path
 
 
-class Test(object):
+class ExecTest(Test):
     """ Executor for a single pacemaker-execd regression test """
 
-    def __init__(self, name, description, verbose=False, tls=False, timeout=2,
-                 force_wait=False, logdir="/tmp"):
+    def __init__(self, name, description, **kwargs):
+        Test.__init__(self, name, description, **kwargs)
 
-        self.name = name
-        self.description = description
-        self.cmds = []
+        self.tls = kwargs.get("tls", False)
 
-        if tls:
-            self.daemon_location = "pacemaker-remoted"
+        if self.tls:
+            self._daemon_location = "pacemaker-remoted"
         else:
-            self.daemon_location = "pacemaker-execd"
+            self._daemon_location = "pacemaker-execd"
 
-        self.logpath = os.path.join(logdir, self.daemon_location + ".log")
-        self.test_tool_location = "cts-exec-helper"
-        self.verbose = verbose
-        self.tls = tls
-        self.timeout = timeout
-        self.force_wait = force_wait
-
-        self.result_txt = ""
-        self.cmd_tool_output = ""
-        self.result_exitcode = ExitStatus.OK
-
-        self.execd_process = None
-        self.stonith_process = None
-
-        self.executed = False
+        self._execd_process = None
+        self._test_tool_location = "cts-exec-helper"
 
     def __new_cmd(self, cmd, args, exitcode, stdout_match="", no_wait=False, stdout_negative_match="", kill=None):
         """ Add a command to be executed as part of this test """
 
-        if self.verbose and cmd == self.test_tool_location:
+        if self.verbose and cmd == self._test_tool_location:
             args = args + " -V "
 
-        if (cmd == self.test_tool_location) and self.tls:
+        if (cmd == self._test_tool_location) and self.tls:
             args = args + " -S "
 
-        self.cmds.append(
+        self._cmds.append(
             {
                 "cmd" : cmd,
                 "kill" : kill,
@@ -131,13 +117,13 @@ class Test(object):
         additional_args = ""
 
         if not self.tls:
-            self.stonith_process = subprocess.Popen(shlex.split("pacemaker-fenced -s"))
+            self._stonith_process = subprocess.Popen(shlex.split("pacemaker-fenced -s"))
 
         if self.verbose:
             additional_args = additional_args + " -V"
 
-        self.execd_process = subprocess.Popen(shlex.split("%s %s -l %s"
-                                                         % (self.daemon_location, additional_args, self.logpath)))
+        self._execd_process = subprocess.Popen(shlex.split("%s %s -l %s"
+                                                           % (self._daemon_location, additional_args, self.logpath)))
 
         logfile = None
 
@@ -162,20 +148,20 @@ class Test(object):
                 if not self.force_wait:
                     print("\tDaemon %s doesn't seem to have been initialized within %fs."
                           "\n\tConsider specifying a longer '--timeout' value."
-                          %(self.daemon_location, self.timeout))
+                          %(self._daemon_location, self.timeout))
                 return
 
             if self.verbose and (now - update_time) >= 5:
                 print("Waiting for %s to be initialized: %fs ..."
-                      %(self.daemon_location, now - init_time))
+                      %(self._daemon_location, now - init_time))
                 update_time = now
 
     def clean_environment(self):
         """ Clean up the host after running a test """
 
-        if self.execd_process:
-            self.execd_process.terminate()
-            self.execd_process.wait()
+        if self._execd_process:
+            self._execd_process.terminate()
+            self._execd_process.wait()
 
             if self.verbose:
                 print("Daemon output")
@@ -183,12 +169,12 @@ class Test(object):
                 for line in logfile:
                     print(line.strip().encode('utf-8', 'replace'))
 
-        if self.stonith_process:
-            self.stonith_process.terminate()
-            self.stonith_process.wait()
+        if self._stonith_process:
+            self._stonith_process.terminate()
+            self._stonith_process.wait()
 
-        self.execd_process = None
-        self.stonith_process = None
+        self._execd_process = None
+        self._stonith_process = None
 
     def add_sys_cmd(self, cmd, args):
         """ Add a simple command to be executed as part of this test """
@@ -198,32 +184,27 @@ class Test(object):
     def add_cmd_check_stdout(self, args, match, no_match=""):
         """ Add a command with expected output to be executed as part of this test """
 
-        self.__new_cmd(self.test_tool_location, args, ExitStatus.OK, match, False, no_match)
+        self.__new_cmd(self._test_tool_location, args, ExitStatus.OK, match, False, no_match)
 
     def add_cmd(self, args):
         """ Add a cts-exec-helper command to be executed as part of this test """
 
-        self.__new_cmd(self.test_tool_location, args, ExitStatus.OK, "")
+        self.__new_cmd(self._test_tool_location, args, ExitStatus.OK, "")
 
     def add_cmd_and_kill(self, kill_proc, args):
         """ Add a cts-exec-helper command and system command to be executed as part of this test """
 
-        self.__new_cmd(self.test_tool_location, args, ExitStatus.OK, "", kill=kill_proc)
+        self.__new_cmd(self._test_tool_location, args, ExitStatus.OK, "", kill=kill_proc)
 
     def add_expected_fail_cmd(self, args, exitcode=ExitStatus.ERROR):
         """ Add a cts-exec-helper command to be executed as part of this test and expected to fail """
 
-        self.__new_cmd(self.test_tool_location, args, exitcode, "")
-
-    def get_exitcode(self):
-        """ Return the exit status of the last test execution """
-
-        return self.result_exitcode
+        self.__new_cmd(self._test_tool_location, args, exitcode, "")
 
     def print_result(self, filler):
         """ Print the result of the last test execution """
 
-        print("%s%s" % (filler, self.result_txt))
+        print("%s%s" % (filler, self._result_txt))
 
     def run_cmd(self, args):
         """ Execute a command as part of this test """
@@ -269,8 +250,8 @@ class Test(object):
         """ Record failure of this test """
 
         msg = "FAILURE - '%s' failed at step %d. Command: %s %s"
-        self.result_txt = msg % (self.name, step, cmd['cmd'], cmd['args'])
-        self.result_exitcode = ExitStatus.ERROR
+        self._result_txt = msg % (self.name, step, cmd['cmd'], cmd['args'])
+        self.exitcode = ExitStatus.ERROR
 
     def run(self):
         """ Execute this test. """
@@ -278,8 +259,8 @@ class Test(object):
         i = 1
 
         if self.tls and self.name.count("stonith") != 0:
-            self.result_txt = "SKIPPED - '%s' - disabled when testing pacemaker_remote" % (self.name)
-            print(self.result_txt)
+            self._result_txt = "SKIPPED - '%s' - disabled when testing pacemaker_remote" % (self.name)
+            print(self._result_txt)
             return
 
         self.start_environment()
@@ -287,8 +268,8 @@ class Test(object):
         if self.verbose:
             print("\n--- START TEST - %s" % self.name)
 
-        self.result_txt = "SUCCESS - '%s'" % (self.name)
-        self.result_exitcode = ExitStatus.OK
+        self._result_txt = "SUCCESS - '%s'" % (self.name)
+        self.exitcode = ExitStatus.OK
         for cmd in self.cmds:
             try:
                 self.run_cmd(cmd)
@@ -309,7 +290,7 @@ class Test(object):
             i = i + 1
         self.clean_environment()
 
-        print(self.result_txt)
+        print(self._result_txt)
         if self.verbose:
             print("--- END TEST - %s\n" % self.name)
 
@@ -438,8 +419,9 @@ class Tests(object):
     def new_test(self, name, description):
         """ Create a named test """
 
-        test = Test(name, description, self.verbose, self.tls, self.timeout,
-                    self.force_wait, self.logdir)
+        test = ExecTest(name, description, verbose=self.verbose, tls=self.tls,
+                        timeout=self.timeout, force_wait=self.force_wait,
+                        logdir=self.logdir)
         self.tests.append(test)
         return test
 
@@ -1055,7 +1037,7 @@ class Tests(object):
             if not test.executed:
                 continue
 
-            if test.get_exitcode() != ExitStatus.OK:
+            if test.exitcode != ExitStatus.OK:
                 sys.exit(ExitStatus.ERROR)
 
         sys.exit(ExitStatus.OK)
@@ -1071,7 +1053,7 @@ class Tests(object):
             if not test.executed:
                 continue
 
-            if test.get_exitcode() != ExitStatus.OK:
+            if test.exitcode != ExitStatus.OK:
                 failures = failures + 1
                 test.print_result("    ")
             else:
