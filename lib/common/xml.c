@@ -1537,25 +1537,20 @@ dump_xml_attr(const xmlAttr *attr, int options, GString *buffer)
  * Depending on the value of \p log_level, the output may be written to
  * \p stdout or to a log file.
  *
- * \param[in,out] buffer     Where to build an output string
  * \param[in]     log_level  Priority at which to log the message
  * \param[in]     data       XML node to log
  * \param[in]     depth      Current indentation level
  * \param[in]     options    Group of \p xml_log_options flags
- *
- * \note The caller is responsible for freeing \p buffer using
- *       \p g_string_free() but should not rely on its contents.
  */
 static void
-log_xml_comment(GString *buffer, int log_level, const xmlNode *data,
-                int depth, int options)
+log_xml_comment(int log_level, const xmlNode *data, int depth, int options)
 {
     if (pcmk_is_set(options, xml_log_option_open)) {
-        g_string_truncate(buffer, 0);
+        bool formatted = pcmk_is_set(options, xml_log_option_formatted);
+        int spaces = formatted? (2 * depth) : 0;
 
-        insert_spaces(options, buffer, depth);
-        do_crm_log(log_level, "%s<!--%s-->",
-                   buffer->str, (const char *) data->content);
+        do_crm_log(log_level, "%*s<!--%s-->",
+                   spaces, "", (const char *) data->content);
     }
 }
 
@@ -1649,11 +1644,12 @@ log_xml_element(GString *buffer, int log_level, const char *prefix,
     }
 
     if (pcmk_is_set(options, xml_log_option_close)) {
-        g_string_truncate(buffer, 0);
-        insert_spaces(options, buffer, depth);
-        do_crm_log(log_level, "%s%s%s</%s>",
+        bool formatted = pcmk_is_set(options, xml_log_option_formatted);
+        int spaces = formatted? (2 * depth) : 0;
+
+        do_crm_log(log_level, "%s%s%*s</%s>",
                    pcmk__s(prefix, ""), pcmk__str_empty(prefix)? "" : " ",
-                   buffer->str, name);
+                   spaces, "", name);
     }
 }
 
@@ -1686,7 +1682,7 @@ log_xml_node(GString *buffer, int log_level, const char *prefix,
 
     switch (data->type) {
         case XML_COMMENT_NODE:
-            log_xml_comment(buffer, log_level, data, depth, options);
+            log_xml_comment(log_level, data, depth, options);
             break;
         case XML_ELEMENT_NODE:
             log_xml_element(buffer, log_level, prefix, data, depth, options);
@@ -1717,6 +1713,8 @@ pcmk__xml_log(int log_level, const char *prefix, const xmlNode *data, int depth,
      * recursive calls
      */
     GString *buffer = g_string_sized_new(1024);
+
+    CRM_CHECK(depth >= 0, depth = 0);
 
     log_xml_node(buffer, log_level, prefix, data, depth, options);
     g_string_free(buffer, TRUE);
