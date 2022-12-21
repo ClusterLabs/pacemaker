@@ -70,7 +70,7 @@ class ExecTest(Test):
         self._execd_process = None
         self._test_tool_location = "cts-exec-helper"
 
-    def __new_cmd(self, cmd, args, exitcode, stdout_match="", no_wait=False, stdout_negative_match="", kill=None):
+    def _new_cmd(self, cmd, args, exitcode, stdout_match="", no_wait=False, stdout_negative_match="", kill=None):
         """ Add a command to be executed as part of this test """
 
         if self.verbose and cmd == self._test_tool_location:
@@ -170,27 +170,27 @@ class ExecTest(Test):
     def add_sys_cmd(self, cmd, args):
         """ Add a simple command to be executed as part of this test """
 
-        self.__new_cmd(cmd, args, ExitStatus.OK, "")
+        self._new_cmd(cmd, args, ExitStatus.OK, "")
 
     def add_cmd_check_stdout(self, args, match, no_match=""):
         """ Add a command with expected output to be executed as part of this test """
 
-        self.__new_cmd(self._test_tool_location, args, ExitStatus.OK, match, False, no_match)
+        self._new_cmd(self._test_tool_location, args, ExitStatus.OK, match, False, no_match)
 
     def add_cmd(self, args):
         """ Add a cts-exec-helper command to be executed as part of this test """
 
-        self.__new_cmd(self._test_tool_location, args, ExitStatus.OK, "")
+        self._new_cmd(self._test_tool_location, args, ExitStatus.OK, "")
 
     def add_cmd_and_kill(self, kill_proc, args):
         """ Add a cts-exec-helper command and system command to be executed as part of this test """
 
-        self.__new_cmd(self._test_tool_location, args, ExitStatus.OK, "", kill=kill_proc)
+        self._new_cmd(self._test_tool_location, args, ExitStatus.OK, "", kill=kill_proc)
 
     def add_expected_fail_cmd(self, args, exitcode=ExitStatus.ERROR):
         """ Add a cts-exec-helper command to be executed as part of this test and expected to fail """
 
-        self.__new_cmd(self._test_tool_location, args, exitcode, "")
+        self._new_cmd(self._test_tool_location, args, exitcode, "")
 
     def print_result(self, filler):
         """ Print the result of the last test execution """
