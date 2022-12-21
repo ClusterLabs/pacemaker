@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2022 the Pacemaker project contributors
+ * Copyright 2018-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -110,6 +110,10 @@ void pcmk__mark_xml_attr_dirty(xmlAttr *a);
 
 G_GNUC_INTERNAL
 bool pcmk__xa_filterable(const char *name);
+
+G_GNUC_INTERNAL
+void pcmk__log_xmllib_err(void *ctx, const char *fmt, ...)
+G_GNUC_PRINTF(2, 3);
 
 static inline const char *
 pcmk__xml_attr_value(const xmlAttr *attr)

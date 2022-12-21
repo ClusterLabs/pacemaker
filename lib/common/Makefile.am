@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2022 the Pacemaker project contributors
+# Copyright 2004-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -94,6 +94,7 @@ libcrmcommon_la_SOURCES	+= strings.c
 libcrmcommon_la_SOURCES	+= utils.c
 libcrmcommon_la_SOURCES	+= watchdog.c
 libcrmcommon_la_SOURCES	+= xml.c
+libcrmcommon_la_SOURCES	+= xml_display.c
 libcrmcommon_la_SOURCES	+= xpath.c
 
 #
