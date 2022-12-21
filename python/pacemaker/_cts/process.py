@@ -1,9 +1,10 @@
 """ A module for managing and communicating with external processes """
 
-__all__ = ["killall", "exit_if_proc_running"]
+__all__ = ["killall", "exit_if_proc_running", "pipe_communicate", "stdout_from_command"]
 __copyright__ = "Copyright 2009-2023 the Pacemaker project contributors"
 __license__ = "LGPLv2.1+"
 
+import subprocess
 import sys
 
 import psutil
@@ -49,3 +50,26 @@ def exit_if_proc_running(process_name):
         print("Error: %s is already running!" % process_name)
         print("Run %s only when the cluster is stopped." % sys.argv[0])
         sys.exit(ExitStatus.ERROR)
+
+
+def pipe_communicate(pipes, check_stderr=False, stdin=None):
+    """ Get text output from pipes """
+
+    if stdin is not None:
+        pipe_outputs = pipes.communicate(input=stdin.encode())
+    else:
+        pipe_outputs = pipes.communicate()
+
+    output = pipe_outputs[0].decode(sys.stdout.encoding)
+    if check_stderr:
+        output = output + pipe_outputs[1].decode(sys.stderr.encoding)
+
+    return output
+
+
+def stdout_from_command(args):
+    """ Execute command and return its standard output """
+
+    p = subprocess.Popen(args, stdout=subprocess.PIPE)
+    p.wait()
+    return pipe_communicate(p).split("\n")

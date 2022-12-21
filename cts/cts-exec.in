@@ -32,7 +32,7 @@ if os.path.exists("@abs_top_builddir@/python") and "@abs_top_builddir@" != "@abs
 from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
 from pacemaker._cts.errors import ExitCodeError, OutputFoundError, OutputNotFoundError
-from pacemaker._cts.process import killall, exit_if_proc_running
+from pacemaker._cts.process import killall, exit_if_proc_running, stdout_from_command
 
 # File permissions for executable scripts we create
 EXECMODE = stat.S_IRUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH
@@ -59,15 +59,6 @@ def update_path():
 
     print('Using PATH="{}"'.format(new_path))
     os.environ['PATH'] = new_path
-
-
-def output_from_command(command):
-    """ Run a command, and return its standard output. """
-
-    test = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
-    test.wait()
-    output = test.communicate()[0].decode(sys.stdout.encoding)
-    return output.split("\n")
 
 
 class Test(object):
@@ -336,7 +327,7 @@ class Tests(object):
         self.timeout = timeout
         self.force_wait = force_wait
         self.logdir = logdir
-        self.rsc_classes = output_from_command("crm_resource --list-standards")
+        self.rsc_classes = stdout_from_command(["crm_resource, "--list-standards"])
         self.rsc_classes = self.rsc_classes[:-1] # Strip trailing empty line
         self.installed_files = []
         self.action_timeout = " -t 9000 "

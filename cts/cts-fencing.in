@@ -28,7 +28,7 @@ if os.path.exists("@abs_top_builddir@/python") and "@abs_top_builddir@" != "@abs
 from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
 from pacemaker._cts.errors import ExitCodeError, OutputFoundError, OutputNotFoundError, XmlValidationError
-from pacemaker._cts.process import killall, exit_if_proc_running
+from pacemaker._cts.process import killall, exit_if_proc_running, stdout_from_command
 
 TEST_DIR = sys.path[0]
 
@@ -97,32 +97,10 @@ def rng_directory():
         return BuildOptions.SCHEMA_DIR
 
 
-def pipe_communicate(pipes, check_stderr=False, stdin=None):
-    """ Get text output from pipes """
-
-    if stdin is not None:
-        pipe_outputs = pipes.communicate(input=stdin.encode())
-    else:
-        pipe_outputs = pipes.communicate()
-
-    output = pipe_outputs[0].decode(sys.stdout.encoding)
-    if check_stderr:
-        output = output + pipe_outputs[1].decode(sys.stderr.encoding)
-    return output
-
-
-def output_from_command(command):
-    """ Execute command and return its standard output """
-
-    test = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
-    test.wait()
-    return pipe_communicate(test).split("\n")
-
-
 def localname():
     """ Return the uname of the local host """
 
-    our_uname = output_from_command("uname -n")
+    our_uname = stdout_from_command(["uname", "-n"])
     if our_uname:
         our_uname = our_uname[0]
     else:
