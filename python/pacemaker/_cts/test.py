@@ -190,6 +190,11 @@ class Test:
 
         self._new_cmd(cmd, args, ExitStatus.OK, no_wait=True)
 
+    def print_result(self, filler):
+        """ Print the result of the last test execution """
+
+        print("%s%s" % (filler, self._result_txt))
+
     def run_cmd(self, args):
         """ Execute a command as part of this test """
 
@@ -254,3 +259,10 @@ class Test:
 
             if validator.returncode != 0:
                 raise XmlValidationError(output)
+
+    def set_error(self, step, cmd):
+        """ Record failure of this test """
+
+        msg = "FAILURE - '%s' failed at step %d. Command: %s %s"
+        self._result_txt = msg % (self.name, step, cmd['cmd'], cmd['args'])
+        self.exitcode = ExitStatus.ERROR
