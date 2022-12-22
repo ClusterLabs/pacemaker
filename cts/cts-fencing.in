@@ -188,11 +188,6 @@ class FenceTest(Test):
 
         self._negative_stonith_patterns.append(pattern)
 
-    def print_result(self, filler):
-        """ Print the result of the last test execution """
-
-        print("%s%s" % (filler, self._result_txt))
-
 
     def count_negative_matches(self, outline):
         """ Return 1 if a line matches patterns that shouldn't have occurred """
@@ -235,13 +230,6 @@ class FenceTest(Test):
             msg = "FAILURE - '%s' failed. %d patterns out of %d not matched. %d negative matches."
             self._result_txt = msg % (self.name, len(pats), total_patterns, negative_matches)
             self.exitcode = ExitStatus.ERROR
-
-    def set_error(self, step, cmd):
-        """ Record failure of this test """
-
-        msg = "FAILURE - '%s' failed at step %d. Command: %s %s"
-        self._result_txt = msg % (self.name, step, cmd['cmd'], cmd['args'])
-        self.exitcode = ExitStatus.ERROR
 
     def run(self):
         """ Execute this test. """

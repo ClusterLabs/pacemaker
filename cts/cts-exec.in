@@ -186,18 +186,6 @@ class ExecTest(Test):
 
         self._new_cmd(cmd, args, ExitStatus.OK)
 
-    def print_result(self, filler):
-        """ Print the result of the last test execution """
-
-        print("%s%s" % (filler, self._result_txt))
-
-    def set_error(self, step, cmd):
-        """ Record failure of this test """
-
-        msg = "FAILURE - '%s' failed at step %d. Command: %s %s"
-        self._result_txt = msg % (self.name, step, cmd['cmd'], cmd['args'])
-        self.exitcode = ExitStatus.ERROR
-
     def run(self):
         """ Execute this test. """
 
