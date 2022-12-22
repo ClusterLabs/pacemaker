@@ -18,7 +18,7 @@ from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
 from pacemaker._cts.errors import *
 from pacemaker._cts.process import *
-from pacemaker._cts.test import Test
+from pacemaker._cts.test import Test, Tests
 
 TEST_DIR = sys.path[0]
 
@@ -193,16 +193,13 @@ class FenceTest(Test):
 
         self._negative_stonith_patterns.append(pattern)
 
-class Tests(object):
+class FenceTests(Tests):
     """ Collection of all fencing regression tests """
 
-    def __init__(self, verbose=False, timeout=2, force_wait=False, logdir="/tmp"):
-        self.tests = []
-        self.verbose = verbose
-        self.timeout = timeout
-        self.force_wait = force_wait
-        self.logdir = logdir
-        self.autogen_corosync_cfg = not os.path.exists(BuildOptions.COROSYNC_CONFIG_FILE)
+    def __init__(self, **kwargs):
+        Tests.__init__(self,  **kwargs)
+
+        self._autogen_corosync_cfg = not os.path.exists(BuildOptions.COROSYNC_CONFIG_FILE)
 
     def new_test(self, name, description, with_cpg=False):
         """ Create a named test """
@@ -210,16 +207,16 @@ class Tests(object):
         test = FenceTest(name, description, verbose=self.verbose, with_cpg=with_cpg,
                          timeout=self.timeout, force_wait=self.force_wait,
                          logdir=self.logdir)
-        self.tests.append(test)
+        self._tests.append(test)
         return test
 
     def print_list(self):
         """ List all registered tests """
 
-        print("\n==== %d TESTS FOUND ====" % (len(self.tests)))
+        print("\n==== %d TESTS FOUND ====" % (len(self._tests)))
         print("%35s - %s" % ("TEST NAME", "TEST DESCRIPTION"))
         print("%35s - %s" % ("--------------------", "--------------------"))
-        for test in self.tests:
+        for test in self._tests:
             print("%35s - %s" % (test.name, test.description))
         print("==== END OF LIST ====\n")
 
@@ -236,7 +233,7 @@ class Tests(object):
     def run_single(self, name):
         """ Run a single named test """
 
-        for test in self.tests:
+        for test in self._tests:
             if test.name == name:
                 test.run()
                 break
@@ -244,34 +241,34 @@ class Tests(object):
     def run_tests_matching(self, pattern):
         """ Run all tests whose name matches a pattern """
 
-        for test in self.tests:
+        for test in self._tests:
             if test.name.count(pattern) != 0:
                 test.run()
 
     def run_cpg_only(self):
         """ Run all corosync-enabled tests """
 
-        for test in self.tests:
+        for test in self._tests:
             if test._enable_corosync:
                 test.run()
 
     def run_no_cpg(self):
         """ Run all standalone tests """
 
-        for test in self.tests:
+        for test in self._tests:
             if not test._enable_corosync:
                 test.run()
 
     def run_tests(self):
         """ Run all tests """
 
-        for test in self.tests:
+        for test in self._tests:
             test.run()
 
     def exit(self):
         """ Exit (with error status code if any test failed) """
 
-        for test in self.tests:
+        for test in self._tests:
             if not test.executed:
                 continue
 
@@ -287,7 +284,7 @@ class Tests(object):
         success = 0
         print("\n\n======= FINAL RESULTS ==========")
         print("\n--- FAILURE RESULTS:")
-        for test in self.tests:
+        for test in self._tests:
             if not test.executed:
                 continue
 
@@ -1167,7 +1164,7 @@ class Tests(object):
         """ Prepare the host before executing any tests """
 
         if use_corosync:
-            if self.autogen_corosync_cfg:
+            if self._autogen_corosync_cfg:
                 logname = os.path.join(self.logdir, "corosync.log")
                 corosync_cfg = io.open(BuildOptions.COROSYNC_CONFIG_FILE, "w")
                 corosync_cfg.write(AUTOGEN_COROSYNC_TEMPLATE % (localname(), logname))
@@ -1185,7 +1182,7 @@ class Tests(object):
         if use_corosync:
             killall(["corosync"])
 
-            if self.autogen_corosync_cfg:
+            if self._autogen_corosync_cfg:
                 if self.verbose:
                     print("Corosync output")
                     logfile = io.open(os.path.join(self.logdir, "corosync.log"), 'rt')
@@ -1291,8 +1288,8 @@ def main(argv):
     # Create a temporary directory for log files (the directory and its
     # contents will automatically be erased when done)
     with tempfile.TemporaryDirectory(prefix="cts-fencing-") as logdir:
-        tests = Tests(opts.options['verbose'], opts.options['timeout'],
-                      opts.options['force-wait'], logdir)
+        tests = FenceTests(verbose=opts.options['verbose'], timeout=opts.options['timeout'],
+                           force_wait=opts.options['force-wait'], logdir=logdir)
 
         tests.build_standalone_tests()
         tests.build_custom_timeout_tests()

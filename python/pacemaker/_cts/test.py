@@ -5,7 +5,7 @@
 # This source code is licensed under the GNU Lesser General Public License
 # version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
 
-__all__ = ["Test"]
+__all__ = ["Test", "Tests"]
 
 import io
 import os
@@ -373,3 +373,28 @@ class Test(object):
                 print("Waiting for %s to be initialized: %fs ..."
                       %(self._daemon_location, now - init_time))
                 update_time = now
+
+
+class Tests(object):
+    """ The base class for a collection of regression tests """
+
+    def __init__(self, **kwargs):
+        """ Create a new Tests instance.  This method must be provided by all
+            subclasses, which must call Tests.__init__ first.
+
+            Keywork arguments:
+
+            force_wait  --
+            logdir      -- The base directory under which to create a directory
+                           to store output and temporary data.
+            timeout     -- How long to wait for the test to complete.
+            verbose     -- Whether to print additional information, including
+                           verbose command output and daemon log files.
+        """
+
+        self.force_wait = kwargs.get("force_wait", False)
+        self.logdir = kwargs.get("logdir", "/tmp")
+        self.timeout = kwargs.get("timeout", 2)
+        self.verbose = kwargs.get("verbose", False)
+
+        self._tests = []
