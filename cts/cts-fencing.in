@@ -106,8 +106,50 @@ class FenceTest(Test):
         self._stonith_output = ""
         self._stonith_patterns = []
 
+    def _count_negative_matches(self, outline):
+        """ Return 1 if a line matches patterns that shouldn't have occurred """
+
+        count = 0
+        for line in self._negative_stonith_patterns:
+            if outline.count(line):
+                count = 1
+                if self.verbose:
+                    print("This pattern should not have matched = '%s" % (line))
+        return count
+
     def _kill_daemons(self):
         killall(["pacemakerd", "pacemaker-fenced"])
+
+    def _match_patterns(self):
+        """ Check test output for expected patterns """
+
+        negative_matches = 0
+        cur = 0
+        pats = self._stonith_patterns
+        total_patterns = len(self._stonith_patterns)
+
+        if len(self._stonith_patterns) == 0 and len(self._negative_stonith_patterns) == 0:
+            return
+
+        for line in self._stonith_output.split("\n"):
+            negative_matches = negative_matches + self._count_negative_matches(line)
+            if len(pats) == 0:
+                continue
+            cur = -1
+            for pat in pats:
+                cur = cur + 1
+                if line.count(pats[cur]):
+                    del pats[cur]
+                    break
+
+        if len(pats) > 0 or negative_matches:
+            if self.verbose:
+                for pat in pats:
+                    print("Pattern Not Matched = '%s'" % pat)
+
+            msg = "FAILURE - '%s' failed. %d patterns out of %d not matched. %d negative matches."
+            self._result_txt = msg % (self.name, len(pats), total_patterns, negative_matches)
+            self.exitcode = ExitStatus.ERROR
 
     def _start_daemons(self):
         if self.verbose:
@@ -159,92 +201,6 @@ class FenceTest(Test):
         """ Add a log pattern that should not occur with this test """
 
         self._negative_stonith_patterns.append(pattern)
-
-    def count_negative_matches(self, outline):
-        """ Return 1 if a line matches patterns that shouldn't have occurred """
-
-        count = 0
-        for line in self._negative_stonith_patterns:
-            if outline.count(line):
-                count = 1
-                if self.verbose:
-                    print("This pattern should not have matched = '%s" % (line))
-        return count
-
-    def match_stonith_patterns(self):
-        """ Check test output for expected patterns """
-
-        negative_matches = 0
-        cur = 0
-        pats = self._stonith_patterns
-        total_patterns = len(self._stonith_patterns)
-
-        if len(self._stonith_patterns) == 0 and len(self._negative_stonith_patterns) == 0:
-            return
-
-        for line in self._stonith_output.split("\n"):
-            negative_matches = negative_matches + self.count_negative_matches(line)
-            if len(pats) == 0:
-                continue
-            cur = -1
-            for pat in pats:
-                cur = cur + 1
-                if line.count(pats[cur]):
-                    del pats[cur]
-                    break
-
-        if len(pats) > 0 or negative_matches:
-            if self.verbose:
-                for pat in pats:
-                    print("Pattern Not Matched = '%s'" % pat)
-
-            msg = "FAILURE - '%s' failed. %d patterns out of %d not matched. %d negative matches."
-            self._result_txt = msg % (self.name, len(pats), total_patterns, negative_matches)
-            self.exitcode = ExitStatus.ERROR
-
-    def run(self):
-        """ Execute this test. """
-
-        i = 1
-        self.start_environment()
-
-        if self.verbose:
-            print("\n--- START TEST - %s" % self.name)
-
-        self._result_txt = "SUCCESS - '%s'" % (self.name)
-        self.exitcode = ExitStatus.OK
-        for cmd in self._cmds:
-            try:
-                self.run_cmd(cmd)
-            except ExitCodeError as e:
-                print("Step %d FAILED - command returned %s, expected %d" % (i, e, cmd['expected_exitcode']))
-                self.set_error(i, cmd);
-                break
-            except OutputNotFoundError as e:
-                print("Step %d FAILED - '%s' was not found in command output: %s" % (i, cmd['stdout_match'], e))
-                self.set_error(i, cmd);
-                break
-            except OutputFoundError as e:
-                print("Step %d FAILED - '%s' was found in command output: %s" % (i, cmd['stdout_negative_match'], e))
-                self.set_error(i, cmd);
-                break
-            except XmlValidationError as e:
-                print("Step %d FAILED - xmllint failed: %s" % (i, e))
-                self.set_error(i, cmd);
-                break
-            if self.verbose:
-                print("Step %d SUCCESS" % (i))
-            i = i + 1
-        self.clean_environment()
-
-        if self.exitcode == ExitStatus.OK:
-            self.match_stonith_patterns()
-
-        print(self._result_txt)
-        if self.verbose:
-            print("--- END TEST - %s\n" % self.name)
-
-        self.executed = True
 
 class Tests(object):
     """ Collection of all fencing regression tests """

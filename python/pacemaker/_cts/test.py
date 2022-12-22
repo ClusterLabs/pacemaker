@@ -116,6 +116,13 @@ class Test:
         """ Kill any running daemons in preparation for executing the test """
         raise NotImplementedError("_kill_daemons not provided by subclass")
 
+    def _match_patterns(self):
+        """ Check test output for expected patterns, setting self.exitcode and
+            self._result_txt as appropriate.  Not all subclass will need to do
+            this.
+        """
+        pass
+
     def _new_cmd(self, cmd, args, exitcode, **kwargs):
         """ Add a command to be executed as part of this test.
 
@@ -207,6 +214,55 @@ class Test:
         """ Print the result of the last test execution """
 
         print("%s%s" % (filler, self._result_txt))
+
+    def run(self):
+        """ Execute this test """
+
+        i = 1
+
+        self.start_environment()
+
+        if self.verbose:
+            print("\n--- START TEST - %s" % self.name)
+
+        self._result_txt = "SUCCESS - '%s'" % (self.name)
+        self.exitcode = ExitStatus.OK
+
+        for cmd in self._cmds:
+            try:
+                self.run_cmd(cmd)
+            except ExitCodeError as e:
+                print("Step %d FAILED - command returned %s, expected %d" % (i, e, cmd['expected_exitcode']))
+                self.set_error(i, cmd);
+                break
+            except OutputNotFoundError as e:
+                print("Step %d FAILED - '%s' was not found in command output: %s" % (i, cmd['stdout_match'], e))
+                self.set_error(i, cmd);
+                break
+            except OutputFoundError as e:
+                print("Step %d FAILED - '%s' was found in command output: %s" % (i, cmd['stdout_negative_match'], e))
+                self.set_error(i, cmd);
+                break
+            except XmlValidationError as e:
+                print("Step %d FAILED - xmllint failed: %s" % (i, e))
+                self.set_error(i, cmd);
+                break
+
+            if self.verbose:
+                print("Step %d SUCCESS" % (i))
+
+            i = i + 1
+
+        self.clean_environment()
+
+        if self.exitcode == ExitStatus.OK:
+            self._match_patterns()
+
+        print(self._result_txt)
+        if self.verbose:
+            print("--- END TEST - %s\n" % self.name)
+
+        self.executed = True
 
     def run_cmd(self, args):
         """ Execute a command as part of this test """
