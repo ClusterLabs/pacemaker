@@ -7,6 +7,7 @@
 
 __all__ = ["Test"]
 
+import io
 import os
 import re
 import shlex
@@ -109,6 +110,10 @@ class Test(object):
     ### PRIVATE METHODS
     ###
 
+    def _kill_daemons(self):
+        """ Kill any running daemons in preparation for executing the test """
+        raise NotImplementedError("_kill_daemons not provided by subclass")
+
     def _new_cmd(self, cmd, args, exitcode, **kwargs):
         """ Add a command to be executed as part of this test.
 
@@ -156,6 +161,10 @@ class Test(object):
                 "validate": kwargs.get("validate", True),
             }
         )
+
+    def _start_daemons(self):
+        """ Start any necessary daemons in preparation for executing the test """
+        raise NotImplementedError("_start_daemons not provided by subclass")
 
     ###
     ### PUBLIC METHODS
@@ -268,3 +277,43 @@ class Test(object):
         msg = "FAILURE - '%s' failed at step %d. Command: %s %s"
         self._result_txt = msg % (self.name, step, cmd['cmd'], cmd['args'])
         self.exitcode = ExitStatus.ERROR
+
+    def start_environment(self):
+        """ Prepare the host for executing a test """
+
+        if os.path.exists(self.logpath):
+            os.remove(self.logpath)
+
+        self._kill_daemons()
+        self._start_daemons()
+
+        logfile = None
+
+        init_time = time.time()
+        update_time = init_time
+
+        while True:
+            time.sleep(0.1)
+
+            if not self.force_wait and logfile == None \
+               and os.path.exists(self.logpath):
+                logfile = io.open(self.logpath, 'rt', encoding = "ISO-8859-1")
+
+            if not self.force_wait and logfile != None:
+                for line in logfile.readlines():
+                    if "successfully started" in line:
+                        return
+
+            now = time.time()
+
+            if self.timeout > 0 and (now - init_time) >= self.timeout:
+                if not self.force_wait:
+                    print("\tDaemon %s doesn't seem to have been initialized within %fs."
+                          "\n\tConsider specifying a longer '--timeout' value."
+                          %(self._daemon_location, self.timeout))
+                return
+
+            if self.verbose and (now - update_time) >= 5:
+                print("Waiting for %s to be initialized: %fs ..."
+                      %(self._daemon_location, now - init_time))
+                update_time = now
