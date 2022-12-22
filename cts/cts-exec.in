@@ -154,45 +154,12 @@ class ExecTest(Test):
     def run(self):
         """ Execute this test. """
 
-        i = 1
-
         if self.tls and self.name.count("stonith") != 0:
             self._result_txt = "SKIPPED - '%s' - disabled when testing pacemaker_remote" % (self.name)
             print(self._result_txt)
             return
 
-        self.start_environment()
-
-        if self.verbose:
-            print("\n--- START TEST - %s" % self.name)
-
-        self._result_txt = "SUCCESS - '%s'" % (self.name)
-        self.exitcode = ExitStatus.OK
-        for cmd in self.cmds:
-            try:
-                self.run_cmd(cmd)
-            except ExitCodeError as e:
-                print("Step %d FAILED - command returned %s, expected %d" % (i, e, cmd['expected_exitcode']))
-                self.set_error(i, cmd);
-                break
-            except OutputNotFoundError as e:
-                print("Step %d FAILED - '%s' was not found in command output: %s" % (i, cmd['stdout_match'], e))
-                self.set_error(i, cmd);
-                break
-            except OutputFoundError as e:
-                print("Step %d FAILED - '%s' was found in command output: %s" % (i, cmd['stdout_negative_match'], e))
-                self.set_error(i, cmd);
-                break
-            if self.verbose:
-                print("Step %d SUCCESS" % (i))
-            i = i + 1
-        self.clean_environment()
-
-        print(self._result_txt)
-        if self.verbose:
-            print("--- END TEST - %s\n" % self.name)
-
-        self.executed = True
+        Test.run(self)
 
 class Tests(object):
     """ Collection of all pacemaker-execd regression tests """
