@@ -11,7 +11,6 @@ import psutil
 import stat
 import sys
 import subprocess
-import shlex
 import shutil
 import tempfile
 import time
@@ -93,10 +92,7 @@ class ExecTest(Test):
 
         Test._new_cmd(self, cmd, args, exitcode, **kwargs)
 
-    def start_environment(self):
-        """ Prepare the host for running a test """
-
-        ### make sure we are in full control here ###
+    def _kill_daemons(self):
         killall([
             "pacemaker-fenced",
             "lt-pacemaker-fenced",
@@ -107,47 +103,15 @@ class ExecTest(Test):
             "pacemaker-remoted",
         ])
 
-        additional_args = ""
-
+    def _start_daemons(self):
         if not self.tls:
-            self._stonith_process = subprocess.Popen(shlex.split("pacemaker-fenced -s"))
+            self._stonith_process = subprocess.Popen(["pacemaker-fenced", "-s"])
 
+        cmd = [self._daemon_location, "-l", self.logpath]
         if self.verbose:
-            additional_args = additional_args + " -V"
+            cmd += ["-V"]
 
-        self._execd_process = subprocess.Popen(shlex.split("%s %s -l %s"
-                                                           % (self._daemon_location, additional_args, self.logpath)))
-
-        logfile = None
-
-        init_time = time.time()
-        update_time = init_time
-
-        while True:
-            time.sleep(0.1)
-
-            if not self.force_wait and logfile == None \
-               and os.path.exists(self.logpath):
-                logfile = io.open(self.logpath, 'rt', encoding = "ISO-8859-1")
-
-            if not self.force_wait and logfile != None:
-                for line in logfile.readlines():
-                    if "successfully started" in line:
-                        return
-
-            now = time.time()
-
-            if self.timeout > 0 and (now - init_time) >= self.timeout:
-                if not self.force_wait:
-                    print("\tDaemon %s doesn't seem to have been initialized within %fs."
-                          "\n\tConsider specifying a longer '--timeout' value."
-                          %(self._daemon_location, self.timeout))
-                return
-
-            if self.verbose and (now - update_time) >= 5:
-                print("Waiting for %s to be initialized: %fs ..."
-                      %(self._daemon_location, now - init_time))
-                update_time = now
+        self._execd_process = subprocess.Popen(cmd)
 
     def clean_environment(self):
         """ Clean up the host after running a test """
