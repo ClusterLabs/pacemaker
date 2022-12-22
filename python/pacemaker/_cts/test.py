@@ -7,9 +7,38 @@
 __copyright__ = "Copyright 2009-2023 the Pacemaker project contributors"
 __license__ = "LGPLv2.1+"
 
-import os
+__all__ = ["Test"]
 
+import os
+import re
+import shlex
+import subprocess
+import sys
+import time
+
+from pacemaker._cts.errors import ExitCodeError, OutputFoundError, OutputNotFoundError, XmlValidationError
+from pacemaker._cts.process import pipe_communicate
+from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
+
+def find_validator(rng_file):
+    if os.access("/usr/bin/xmllint", os.X_OK):
+        if rng_file == None:
+            return ["xmllint", "-"]
+        else:
+            return ["xmllint", "--relaxng", rng_file, "-"]
+    else:
+        return None
+
+
+def rng_directory():
+    if "PCMK_schema_directory" in os.environ:
+        return os.environ["PCMK_schema_directory"]
+    elif os.path.exists("%s/cts-fencing.in" % sys.path[0]):
+        return "xml"
+    else:
+        return BuildOptions.SCHEMA_DIR
+
 
 class Test:
     """ The base class for a single regression test.  A single regression test
@@ -160,3 +189,68 @@ class Test:
         """ Add a simple command to be executed (without waiting) as part of this test """
 
         self._new_cmd(cmd, args, ExitStatus.OK, no_wait=True)
+
+    def run_cmd(self, args):
+        """ Execute a command as part of this test """
+
+        cmd = shlex.split(args['args'])
+        cmd.insert(0, args['cmd'])
+
+        if self.verbose:
+            print("\n\nRunning: %s" % " ".join(cmd))
+
+        test = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        if args['kill']:
+            if self.verbose:
+                print("Also running: %s" % args['kill'])
+
+            ### Typically, the kill argument is used to detect some sort of
+            ### failure. Without yielding for a few seconds here, the process
+            ### launched earlier that is listening for the failure may not have
+            ### time to connect to pacemaker-execd.
+            time.sleep(2)
+            subprocess.Popen(shlex.split(args['kill']))
+
+        if not args['no_wait']:
+            test.wait()
+        else:
+            return ExitStatus.OK
+
+        output = pipe_communicate(test, check_stderr=args['check_stderr'])
+
+        if self.verbose:
+            print(output)
+
+        if test.returncode != args['expected_exitcode']:
+            raise ExitCodeError(test.returncode)
+
+        if args['stdout_match'] is not None and \
+           re.search(args['stdout_match'], output) is None:
+            raise OutputNotFoundError(output)
+
+        if args['stdout_negative_match'] is not None and \
+           re.search(args['stdout_negative_match'], output) is not None:
+            raise OutputFoundError(output)
+
+        if args['validate']:
+            if args['check_rng']:
+                rng_file = rng_directory() + "/api/api-result.rng"
+            else:
+                rng_file = None
+
+            cmd = find_validator(rng_file)
+            if not cmd:
+                return
+
+            if self.verbose:
+                print("\nRunning: %s" % " ".join(cmd))
+
+            validator = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            output = pipe_communicate(validator, check_stderr=True, stdin=output)
+
+            if self.verbose:
+                print(output)
+
+            if validator.returncode != 0:
+                raise XmlValidationError(output)

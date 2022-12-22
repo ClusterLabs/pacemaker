@@ -8,7 +8,6 @@ __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT AN
 import io
 import os
 import psutil
-import re
 import stat
 import sys
 import subprocess
@@ -200,46 +199,6 @@ class ExecTest(Test):
         """ Print the result of the last test execution """
 
         print("%s%s" % (filler, self._result_txt))
-
-    def run_cmd(self, args):
-        """ Execute a command as part of this test """
-
-        cmd = shlex.split(args['args'])
-        cmd.insert(0, args['cmd'])
-
-        if self.verbose:
-            print("\n\nRunning: "+" ".join(cmd))
-        test = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-        if args['kill']:
-            if self.verbose:
-                print("Also running: "+args['kill'])
-            ### Typically, the kill argument is used to detect some sort of
-            ### failure. Without yielding for a few seconds here, the process
-            ### launched earlier that is listening for the failure may not have
-            ### time to connect to pacemaker-execd.
-            time.sleep(2)
-            subprocess.Popen(shlex.split(args['kill']))
-
-        if not args['no_wait']:
-            test.wait()
-        else:
-            return ExitStatus.OK
-
-        output = pipe_communicate(test)
-        if self.verbose:
-            print(output)
-
-        if test.returncode != args['expected_exitcode']:
-            raise ExitCodeError(test.returncode)
-
-        if (args['stdout_match'] != "" and
-            re.search(args['stdout_match'], output) is None):
-            raise OutputNotFoundError(output)
-
-        if (args['stdout_negative_match'] != "" and
-            re.search(args['stdout_negative_match'], output) is not None):
-            raise OutputFoundError(output)
 
     def set_error(self, step, cmd):
         """ Record failure of this test """
