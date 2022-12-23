@@ -136,7 +136,7 @@ log_xml_element(GString *buffer, int log_level, const char *prefix,
         }
 
         if (xml_has_children(data)
-            && pcmk_is_set(options, xml_log_option_children)) {
+            && pcmk_is_set(options, pcmk__xml_fmt_children)) {
             g_string_append_c(buffer, '>');
 
         } else {
@@ -152,7 +152,7 @@ log_xml_element(GString *buffer, int log_level, const char *prefix,
         return;
     }
 
-    if (pcmk_is_set(options, xml_log_option_children)) {
+    if (pcmk_is_set(options, pcmk__xml_fmt_children)) {
         for (const xmlNode *child = pcmk__xml_first_child(data); child != NULL;
              child = pcmk__xml_next(child)) {
 
@@ -265,7 +265,7 @@ log_xml_changes_recursive(int log_level, const xmlNode *data, int depth,
                       options
                       |pcmk__xml_fmt_open
                       |xml_log_option_close
-                      |xml_log_option_children);
+                      |pcmk__xml_fmt_children);
         return;
     }
 
@@ -440,7 +440,7 @@ log_data_element(int log_level, const char *file, const char *function,
                       options
                       |pcmk__xml_fmt_open
                       |xml_log_option_close
-                      |xml_log_option_children);
+                      |pcmk__xml_fmt_children);
     }
 }
 

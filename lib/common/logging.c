@@ -1132,7 +1132,7 @@ do_crm_log_xml(uint8_t level, const char *text, const xmlNode *xml)
                     pcmk__xml_log(level, text, xml, 1,
                                   pcmk__xml_fmt_pretty
                                   |pcmk__xml_fmt_open
-                                  |xml_log_option_children
+                                  |pcmk__xml_fmt_children
                                   |xml_log_option_close);
                 }
             }
