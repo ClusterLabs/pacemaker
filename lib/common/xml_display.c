@@ -384,23 +384,11 @@ pcmk__xml_log_changes(uint8_t log_level, const xmlNode *xml)
                               |xml_log_option_dirty_add);
 }
 
-/*!
- * \brief Log changes to an XML node
- *
- * \param[in] log_level  Priority at which to log the message
- * \param[in] function   Ignored
- * \param[in] xml        XML node to log
- */
-void
-xml_log_changes(uint8_t log_level, const char *function, const xmlNode *xml)
-{
-    pcmk__xml_log_changes(log_level, xml);
-}
-
 // Deprecated functions kept only for backward API compatibility
 // LCOV_EXCL_START
 
 #include <crm/common/logging_compat.h>
+#include <crm/common/xml_compat.h>
 
 void
 log_data_element(int log_level, const char *file, const char *function,
@@ -460,6 +448,12 @@ log_data_element(int log_level, const char *file, const char *function,
                       |xml_log_option_close
                       |xml_log_option_children);
     }
+}
+
+void
+xml_log_changes(uint8_t log_level, const char *function, const xmlNode *xml)
+{
+    pcmk__xml_log_changes(log_level, xml);
 }
 
 // LCOV_EXCL_STOP
