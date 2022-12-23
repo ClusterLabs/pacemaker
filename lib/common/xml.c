@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1578,12 +1578,17 @@ log_xml_element(GString *buffer, int log_level, const char *prefix,
                 const xmlNode *data, int depth, int options)
 {
     const char *name = crm_element_name(data);
+    bool formatted = pcmk_is_set(options, xml_log_option_formatted);
+    int spaces = formatted? (2 * depth) : 0;
 
     if (pcmk_is_set(options, xml_log_option_open)) {
         const char *hidden = crm_element_value(data, "hidden");
 
         g_string_truncate(buffer, 0);
-        insert_spaces(options, buffer, depth);
+
+        for (int lpc = 0; lpc < spaces; lpc++) {
+            g_string_append_c(buffer, ' ');
+        }
         pcmk__g_strcat(buffer, "<", name, NULL);
 
         for (const xmlAttr *attr = pcmk__xe_first_attr(data); attr != NULL;
@@ -1644,9 +1649,6 @@ log_xml_element(GString *buffer, int log_level, const char *prefix,
     }
 
     if (pcmk_is_set(options, xml_log_option_close)) {
-        bool formatted = pcmk_is_set(options, xml_log_option_formatted);
-        int spaces = formatted? (2 * depth) : 0;
-
         do_crm_log(log_level, "%s%s%*s</%s>",
                    pcmk__s(prefix, ""), pcmk__str_empty(prefix)? "" : " ",
                    spaces, "", name);
