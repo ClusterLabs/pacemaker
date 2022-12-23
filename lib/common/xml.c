@@ -1457,26 +1457,6 @@ dump_xml_attr(const xmlAttr *attr, int options, GString *buffer)
 
 /*!
  * \internal
- * \brief Append filtered XML attributes to a buffer
- *
- * \param[in]     data     XML element whose attributes to append
- * \param[in]     options  Group of \p xml_log_options flags
- * \param[in,out] buffer   Where to append the content (must not be \p NULL)
- */
-static void
-dump_filtered_xml(const xmlNode *data, int options, GString *buffer)
-{
-    CRM_ASSERT(buffer != NULL);
-
-    for (const xmlAttr *a = pcmk__xe_first_attr(data); a != NULL; a = a->next) {
-        if (!pcmk__xa_filterable((const char *) (a->name))) {
-            dump_xml_attr(a, options, buffer);
-        }
-    }
-}
-
-/*!
- * \internal
  * \brief Append a string representation of an XML element to a buffer
  *
  * \param[in]     data     XML whose representation to append
@@ -1488,6 +1468,7 @@ static void
 dump_xml_element(const xmlNode *data, int options, GString *buffer, int depth)
 {
     const char *name = NULL;
+    bool filtered = pcmk_is_set(options, pcmk__xml_fmt_filtered);
 
     CRM_ASSERT(buffer != NULL);
 
@@ -1502,14 +1483,11 @@ dump_xml_element(const xmlNode *data, int options, GString *buffer, int depth)
     insert_spaces(options, buffer, depth);
     pcmk__g_strcat(buffer, "<", name, NULL);
 
-    if (options & xml_log_option_filtered) {
-        dump_filtered_xml(data, options, buffer);
+    for (const xmlAttr *attr = pcmk__xe_first_attr(data); attr != NULL;
+         attr = attr->next) {
 
-    } else {
-        for (const xmlAttr *a = pcmk__xe_first_attr(data); a != NULL;
-             a = a->next) {
-
-            dump_xml_attr(a, options, buffer);
+        if (!filtered || !pcmk__xa_filterable((const char *) (attr->name))) {
+            dump_xml_attr(attr, options, buffer);
         }
     }
 
@@ -1641,7 +1619,7 @@ pcmk__xml2text(xmlNodePtr data, int options, GString *buffer, int depth)
         return;
     }
 
-    if (!pcmk_is_set(options, xml_log_option_filtered)
+    if (!pcmk_is_set(options, pcmk__xml_fmt_filtered)
         && pcmk_is_set(options, xml_log_option_full_fledged)) {
         /* libxml's serialization reuse is a good idea, sadly we cannot
            apply it for the filtered cases (preceding filtering pass
