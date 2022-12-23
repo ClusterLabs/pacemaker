@@ -1529,6 +1529,9 @@ dump_xml_element(const xmlNode *data, int options, GString *buffer, int depth)
 static void
 dump_xml_text(const xmlNode *data, int options, GString *buffer, int depth)
 {
+    /* @COMPAT: Remove when log_data_element() is removed. There are no internal
+     * code paths to this, except through the deprecated log_data_element().
+     */
     CRM_ASSERT(buffer != NULL);
 
     if (data == NULL) {
@@ -1679,8 +1682,12 @@ pcmk__xml2text(xmlNodePtr data, int options, GString *buffer, int depth)
             dump_xml_element(data, options, buffer, depth);
             break;
         case XML_TEXT_NODE:
-            /* if option xml_log_option_text is enabled, then dump XML_TEXT_NODE */
-            if (options & xml_log_option_text) {
+            if (pcmk_is_set(options, pcmk__xml_fmt_text)) {
+                /* @COMPAT: Remove when log_data_element() is removed. There are
+                 * no other internal code paths that set pcmk__xml_fmt_text.
+                 * Keep an empty case handler so that we don't log an unhandled
+                 * type warning.
+                 */
                 dump_xml_text(data, options, buffer, depth);
             }
             break;
