@@ -60,7 +60,7 @@ pcmk__log_xmllib_err(void *ctx, const char *fmt, ...)
 static void
 log_xml_comment(int log_level, const xmlNode *data, int depth, int options)
 {
-    if (pcmk_is_set(options, xml_log_option_open)) {
+    if (pcmk_is_set(options, pcmk__xml_fmt_open)) {
         do_crm_log(log_level, "%*s<!--%s-->",
                    pcmk_is_set(options, pcmk__xml_fmt_pretty)? (2 * depth) : 0,
                    "", (const char *) data->content);
@@ -93,7 +93,7 @@ log_xml_element(GString *buffer, int log_level, const char *prefix,
     const char *name = crm_element_name(data);
     int spaces = pcmk_is_set(options, pcmk__xml_fmt_pretty)? (2 * depth) : 0;
 
-    if (pcmk_is_set(options, xml_log_option_open)) {
+    if (pcmk_is_set(options, pcmk__xml_fmt_open)) {
         const char *hidden = crm_element_value(data, "hidden");
 
         g_string_truncate(buffer, 0);
@@ -157,7 +157,7 @@ log_xml_element(GString *buffer, int log_level, const char *prefix,
              child = pcmk__xml_next(child)) {
 
             log_xml_node(buffer, log_level, prefix, child, depth + 1,
-                         options|xml_log_option_open|xml_log_option_close);
+                         options|pcmk__xml_fmt_open|xml_log_option_close);
         }
     }
 
@@ -263,7 +263,7 @@ log_xml_changes_recursive(int log_level, const xmlNode *data, int depth,
         // Newly created
         pcmk__xml_log(log_level, PCMK__XML_PREFIX_CREATED, data, depth,
                       options
-                      |xml_log_option_open
+                      |pcmk__xml_fmt_open
                       |xml_log_option_close
                       |xml_log_option_children);
         return;
@@ -281,7 +281,7 @@ log_xml_changes_recursive(int log_level, const xmlNode *data, int depth,
 
         // Log opening tag
         pcmk__xml_log(log_level, prefix, data, depth,
-                      options|xml_log_option_open);
+                      options|pcmk__xml_fmt_open);
 
         // Log changes to attributes
         for (const xmlAttr *attr = pcmk__xe_first_attr(data); attr != NULL;
@@ -438,7 +438,7 @@ log_data_element(int log_level, const char *file, const char *function,
     } else {
         pcmk__xml_log(log_level, prefix, data, depth,
                       options
-                      |xml_log_option_open
+                      |pcmk__xml_fmt_open
                       |xml_log_option_close
                       |xml_log_option_children);
     }
