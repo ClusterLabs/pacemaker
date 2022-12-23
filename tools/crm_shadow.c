@@ -614,7 +614,7 @@ main(int argc, char **argv)
                      * error; we just want to indicate that there are
                      * differences (as the diff command does).
                      */
-                    xml_log_patchset(LOG_STDOUT, "  ", diff);
+                    pcmk__xml_log_patchset(LOG_STDOUT, diff);
                     exit_code = CRM_EX_ERROR;
                 }
             }

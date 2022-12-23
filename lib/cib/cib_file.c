@@ -1,6 +1,6 @@
 /*
  * Original copyright 2004 International Business Machines
- * Later changes copyright 2008-2022 the Pacemaker project contributors
+ * Later changes copyright 2008-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -869,7 +869,7 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
         free_xml(result_cib);
 
     } else if (query == FALSE) {
-        xml_log_patchset(LOG_DEBUG, "cib:diff", cib_diff);
+        pcmk__xml_log_patchset(LOG_DEBUG, cib_diff);
         free_xml(in_mem_cib);
         in_mem_cib = result_cib;
         cib_set_file_flags(private, cib_file_flag_dirty);

@@ -330,7 +330,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     if(local_diff) {
         patchset_process_digest(local_diff, current_cib, scratch, with_digest);
 
-        xml_log_patchset(LOG_INFO, __func__, local_diff);
+        pcmk__xml_log_patchset(LOG_INFO, local_diff);
         crm_log_xml_trace(local_diff, "raw patch");
     }
 
@@ -692,7 +692,7 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
     }
 
     if (level > LOG_CRIT) {
-        xml_log_patchset(level, "Config update", diff);
+        pcmk__xml_log_patchset(level, diff);
     }
 
     if (input != NULL) {

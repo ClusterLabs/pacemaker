@@ -252,7 +252,7 @@ generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
         strip_patch_cib_version(output, vfields, PCMK__NELEM(vfields));
     }
 
-    xml_log_patchset(LOG_NOTICE, __func__, output);
+    pcmk__xml_log_patchset(LOG_NOTICE, output);
     print_patch(output);
     free_xml(output);
     return pcmk_rc_error;

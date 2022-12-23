@@ -1428,7 +1428,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         cib_replace_notify(origin, the_cib, rc, *cib_diff, change_section);
     }
 
-    xml_log_patchset(LOG_TRACE, "cib:diff", *cib_diff);
+    pcmk__xml_log_patchset(LOG_TRACE, *cib_diff);
   done:
     if (!pcmk_is_set(call_options, cib_discard_reply) || cib_legacy_mode()) {
         const char *caller = crm_element_value(request, F_CIB_CLIENTID);

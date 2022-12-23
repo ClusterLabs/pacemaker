@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -697,6 +697,7 @@ xml_log_patchset_v2(uint8_t log_level, const xmlNode *patchset)
 }
 
 /*!
+ * \internal
  * \brief Log a user-friendly form of an XML patchset
  *
  * This function parses an XML patchset (an \p XML_ATTR_DIFF element and its
@@ -704,12 +705,10 @@ xml_log_patchset_v2(uint8_t log_level, const xmlNode *patchset)
  * of \p log_level, the output may be written to \p stdout or to a log file.
  *
  * \param[in] log_level  Priority at which to log the messages
- * \param[in] function   Ignored
  * \param[in] patchset   XML patchset to log
  */
 void
-xml_log_patchset(uint8_t log_level, const char *function,
-                 const xmlNode *patchset)
+pcmk__xml_log_patchset(uint8_t log_level, const xmlNode *patchset)
 {
     int format = 1;
 
@@ -748,6 +747,24 @@ xml_log_patchset(uint8_t log_level, const char *function,
             crm_err("Unknown patch format: %d", format);
             break;
     }
+}
+
+/*!
+ * \brief Log a user-friendly form of an XML patchset
+ *
+ * This function parses an XML patchset (an \p XML_ATTR_DIFF element and its
+ * children) into a user-friendly combined diff output. Depending on the value
+ * of \p log_level, the output may be written to \p stdout or to a log file.
+ *
+ * \param[in] log_level  Priority at which to log the messages
+ * \param[in] function   Ignored
+ * \param[in] patchset   XML patchset to log
+ */
+void
+xml_log_patchset(uint8_t log_level, const char *function,
+                 const xmlNode *patchset)
+{
+    pcmk__xml_log_patchset(log_level, patchset);
 }
 
 // Return true if attribute name is not "id"
@@ -1451,7 +1468,7 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
         return rc;
     }
 
-    xml_log_patchset(LOG_TRACE, __func__, patchset);
+    pcmk__xml_log_patchset(LOG_TRACE, patchset);
 
     crm_element_value_int(patchset, "format", &format);
     if (check_version) {

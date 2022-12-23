@@ -126,6 +126,7 @@ do {                                                                            
 void pcmk__xml_log(int log_level, const char *prefix, const xmlNode *data,
                    int depth, int options);
 void pcmk__xml_log_changes(uint8_t log_level, const xmlNode *xml);
+void pcmk__xml_log_patchset(uint8_t log_level, const xmlNode *patchset);
 
 /* XML search strings for guest, remote and pacemaker_remote nodes */
 

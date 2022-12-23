@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -44,7 +44,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
 
     CRM_CHECK(diff != NULL, return);
 
-    xml_log_patchset(LOG_TRACE, __func__, diff);
+    pcmk__xml_log_patchset(LOG_TRACE, diff);
     if (cib_config_changed(NULL, NULL, &diff)) {
         abort_transition(INFINITY, pcmk__graph_restart, "Non-status change",
                          diff);
