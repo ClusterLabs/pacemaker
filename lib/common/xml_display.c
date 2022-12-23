@@ -157,11 +157,11 @@ log_xml_element(GString *buffer, int log_level, const char *prefix,
              child = pcmk__xml_next(child)) {
 
             log_xml_node(buffer, log_level, prefix, child, depth + 1,
-                         options|pcmk__xml_fmt_open|xml_log_option_close);
+                         options|pcmk__xml_fmt_open|pcmk__xml_fmt_close);
         }
     }
 
-    if (pcmk_is_set(options, xml_log_option_close)) {
+    if (pcmk_is_set(options, pcmk__xml_fmt_close)) {
         do_crm_log(log_level, "%s%s%*s</%s>",
                    pcmk__s(prefix, ""), pcmk__str_empty(prefix)? "" : " ",
                    spaces, "", name);
@@ -264,8 +264,8 @@ log_xml_changes_recursive(int log_level, const xmlNode *data, int depth,
         pcmk__xml_log(log_level, PCMK__XML_PREFIX_CREATED, data, depth,
                       options
                       |pcmk__xml_fmt_open
-                      |xml_log_option_close
-                      |pcmk__xml_fmt_children);
+                      |pcmk__xml_fmt_children
+                      |pcmk__xml_fmt_close);
         return;
     }
 
@@ -324,7 +324,7 @@ log_xml_changes_recursive(int log_level, const xmlNode *data, int depth,
 
         // Log closing tag
         pcmk__xml_log(log_level, PCMK__XML_PREFIX_MODIFIED, data, depth,
-                      options|xml_log_option_close);
+                      options|pcmk__xml_fmt_close);
 
     } else {
         // This node hasn't changed, but check its children
@@ -439,8 +439,8 @@ log_data_element(int log_level, const char *file, const char *function,
         pcmk__xml_log(log_level, prefix, data, depth,
                       options
                       |pcmk__xml_fmt_open
-                      |xml_log_option_close
-                      |pcmk__xml_fmt_children);
+                      |pcmk__xml_fmt_children
+                      |pcmk__xml_fmt_close);
     }
 }
 

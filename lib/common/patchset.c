@@ -535,8 +535,8 @@ xml_log_patchset_v1_recursive(uint8_t log_level, const char *prefix,
         pcmk__xml_log(log_level, prefix, data, depth,
                       options
                       |pcmk__xml_fmt_open
-                      |xml_log_option_close
-                      |pcmk__xml_fmt_children);
+                      |pcmk__xml_fmt_children
+                      |pcmk__xml_fmt_close);
     }
 }
 
@@ -636,8 +636,8 @@ xml_log_patchset_v2(uint8_t log_level, const xmlNode *patchset)
 
             pcmk__xml_log(log_level, prefix, change->children, 0,
                           pcmk__xml_fmt_pretty
-                          |xml_log_option_close
-                          |pcmk__xml_fmt_children);
+                          |pcmk__xml_fmt_children
+                          |pcmk__xml_fmt_close);
             free(prefix);
 
         } else if (strcmp(op, "move") == 0) {
