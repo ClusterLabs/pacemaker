@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -357,7 +357,7 @@ process_ping_reply(xmlNode *reply)
             if(remote_cib && remote_cib->children) {
                 /* Additional debug */
                 xml_calculate_changes(the_cib, remote_cib);
-                xml_log_changes(LOG_INFO, __func__, remote_cib);
+                pcmk__xml_log_changes(LOG_INFO, remote_cib);
                 crm_trace("End of differences");
             }
 

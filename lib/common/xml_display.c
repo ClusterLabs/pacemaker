@@ -245,9 +245,13 @@ pcmk__xml_log(int log_level, const char *prefix, const xmlNode *data, int depth,
  * \param[in] data       XML node to log
  * \param[in] depth      Current indentation level
  * \param[in] options    Group of \p xml_log_options flags
+ *
+ * \note This is a recursive helper for \p pcmk__xml_log_changes(), logging
+ *       changes to \p data and its children.
  */
 static void
-log_xml_changes(int log_level, const xmlNode *data, int depth, int options)
+log_xml_changes_recursive(int log_level, const xmlNode *data, int depth,
+                          int options)
 {
     xml_node_private_t *nodepriv = NULL;
 
@@ -321,7 +325,7 @@ log_xml_changes(int log_level, const xmlNode *data, int depth, int options)
         // Log changes to children
         for (const xmlNode *child = pcmk__xml_first_child(data); child != NULL;
              child = pcmk__xml_next(child)) {
-            log_xml_changes(log_level, child, depth + 1, options);
+            log_xml_changes_recursive(log_level, child, depth + 1, options);
         }
 
         // Log closing tag
@@ -332,20 +336,20 @@ log_xml_changes(int log_level, const xmlNode *data, int depth, int options)
         // This node hasn't changed, but check its children
         for (const xmlNode *child = pcmk__xml_first_child(data); child != NULL;
              child = pcmk__xml_next(child)) {
-            log_xml_changes(log_level, child, depth + 1, options);
+            log_xml_changes_recursive(log_level, child, depth + 1, options);
         }
     }
 }
 
 /*!
- * \brief Log changes to an XML node
+ * \internal
+ * \brief Log changes to an XML node and any children
  *
  * \param[in] log_level  Priority at which to log the message
- * \param[in] function   Ignored
  * \param[in] xml        XML node to log
  */
 void
-xml_log_changes(uint8_t log_level, const char *function, const xmlNode *xml)
+pcmk__xml_log_changes(uint8_t log_level, const xmlNode *xml)
 {
     xml_doc_private_t *docpriv = NULL;
 
@@ -375,8 +379,22 @@ xml_log_changes(uint8_t log_level, const char *function, const xmlNode *xml)
         }
     }
 
-    log_xml_changes(log_level, xml, 0,
-                    xml_log_option_formatted|xml_log_option_dirty_add);
+    log_xml_changes_recursive(log_level, xml, 0,
+                              xml_log_option_formatted
+                              |xml_log_option_dirty_add);
+}
+
+/*!
+ * \brief Log changes to an XML node
+ *
+ * \param[in] log_level  Priority at which to log the message
+ * \param[in] function   Ignored
+ * \param[in] xml        XML node to log
+ */
+void
+xml_log_changes(uint8_t log_level, const char *function, const xmlNode *xml)
+{
+    pcmk__xml_log_changes(log_level, xml);
 }
 
 // Deprecated functions kept only for backward API compatibility
@@ -400,7 +418,7 @@ log_data_element(int log_level, const char *file, const char *function,
     }
 
     if (pcmk_is_set(options, xml_log_option_dirty_add)) {
-        log_xml_changes(log_level, data, depth, options);
+        log_xml_changes_recursive(log_level, data, depth, options);
         return;
     }
 

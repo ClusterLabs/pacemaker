@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2021 the Pacemaker project contributors
+ * Copyright 2017-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -125,6 +125,7 @@ do {                                                                            
 
 void pcmk__xml_log(int log_level, const char *prefix, const xmlNode *data,
                    int depth, int options);
+void pcmk__xml_log_changes(uint8_t log_level, const xmlNode *xml);
 
 /* XML search strings for guest, remote and pacemaker_remote nodes */
 

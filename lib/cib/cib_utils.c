@@ -1,6 +1,6 @@
 /*
  * Original copyright 2004 International Business Machines
- * Later changes copyright 2008-2022 the Pacemaker project contributors
+ * Later changes copyright 2008-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -320,7 +320,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         local_diff = xml_create_patchset(0, current_cib, scratch, (bool*)config_changed, manage_counters);
     }
 
-    xml_log_changes(LOG_TRACE, __func__, scratch);
+    pcmk__xml_log_changes(LOG_TRACE, scratch);
     xml_accept_changes(scratch);
 
     if (diff_cs == NULL) {
