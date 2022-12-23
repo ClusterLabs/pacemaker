@@ -123,6 +123,46 @@ do {                                                                            
     }                                                                           \
 } while (0)
 
+/*
+ * \enum pcmk__xml_fmt_options
+ * \brief Bit flags to control format in XML logs and dumps
+ */
+enum pcmk__xml_fmt_options {
+    //! Exclude certain XML attributes (for calculating digests)
+    pcmk__xml_fmt_filtered   = (1 << 0),
+
+    //! Include indentation and newlines
+    pcmk__xml_fmt_pretty     = (1 << 1),
+
+    //! Include full XML subtree (with any text), using libxml serialization
+    pcmk__xml_fmt_full       = (1 << 2),
+
+    //! Include the opening tag of an XML element, and include XML comments
+    pcmk__xml_fmt_open       = (1 << 3),
+
+    //! Include the children of an XML element
+    pcmk__xml_fmt_children   = (1 << 4),
+
+    //! Include the closing tag of an XML element
+    pcmk__xml_fmt_close      = (1 << 5),
+
+    // @COMPAT Remove when log_data_element() is removed
+    //! Include XML text nodes
+    pcmk__xml_fmt_text       = (1 << 6),
+
+    // @COMPAT Remove when v1 patchsets are removed
+    //! Log a created XML subtree
+    pcmk__xml_fmt_diff_plus  = (1 << 7),
+
+    // @COMPAT Remove when v1 patchsets are removed
+    //! Log a removed XML subtree
+    pcmk__xml_fmt_diff_minus = (1 << 8),
+
+    // @COMPAT Remove when v1 patchsets are removed
+    //! Log a minimal version of an XML diff (only showing the changes)
+    pcmk__xml_fmt_diff_short = (1 << 9),
+};
+
 void pcmk__xml_log(int log_level, const char *prefix, const xmlNode *data,
                    int depth, int options);
 void pcmk__xml_log_changes(uint8_t log_level, const xmlNode *xml);

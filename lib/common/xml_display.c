@@ -117,6 +117,7 @@ log_xml_element(GString *buffer, int log_level, const char *prefix,
                 continue;
             }
 
+            // @COMPAT Remove when v1 patchsets are removed
             if (pcmk_any_flags_set(options,
                                    xml_log_option_diff_plus
                                    |xml_log_option_diff_minus)
