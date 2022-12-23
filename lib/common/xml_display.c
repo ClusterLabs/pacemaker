@@ -61,11 +61,9 @@ static void
 log_xml_comment(int log_level, const xmlNode *data, int depth, int options)
 {
     if (pcmk_is_set(options, xml_log_option_open)) {
-        bool formatted = pcmk_is_set(options, xml_log_option_formatted);
-        int spaces = formatted? (2 * depth) : 0;
-
         do_crm_log(log_level, "%*s<!--%s-->",
-                   spaces, "", (const char *) data->content);
+                   pcmk_is_set(options, pcmk__xml_fmt_pretty)? (2 * depth) : 0,
+                   "", (const char *) data->content);
     }
 }
 
@@ -93,8 +91,7 @@ log_xml_element(GString *buffer, int log_level, const char *prefix,
                 const xmlNode *data, int depth, int options)
 {
     const char *name = crm_element_name(data);
-    bool formatted = pcmk_is_set(options, xml_log_option_formatted);
-    int spaces = formatted? (2 * depth) : 0;
+    int spaces = pcmk_is_set(options, pcmk__xml_fmt_pretty)? (2 * depth) : 0;
 
     if (pcmk_is_set(options, xml_log_option_open)) {
         const char *hidden = crm_element_value(data, "hidden");
@@ -274,13 +271,9 @@ log_xml_changes_recursive(int log_level, const xmlNode *data, int depth,
 
     if (pcmk_is_set(nodepriv->flags, pcmk__xf_dirty)) {
         // Modified or moved
-        int spaces = 0;
+        bool pretty = pcmk_is_set(options, pcmk__xml_fmt_pretty);
+        int spaces = pretty? (2 * depth) : 0;
         const char *prefix = PCMK__XML_PREFIX_MODIFIED;
-
-        if (pcmk_is_set(options, xml_log_option_formatted)) {
-            CRM_CHECK(depth >= 0, depth = 0);
-            spaces = 2 * depth;
-        }
 
         if (pcmk_is_set(nodepriv->flags, pcmk__xf_moved)) {
             prefix = PCMK__XML_PREFIX_MOVED;
@@ -381,8 +374,7 @@ pcmk__xml_log_changes(uint8_t log_level, const xmlNode *xml)
     }
 
     log_xml_changes_recursive(log_level, xml, 0,
-                              xml_log_option_formatted
-                              |xml_log_option_dirty_add);
+                              pcmk__xml_fmt_pretty|xml_log_option_dirty_add);
 }
 
 // Deprecated functions kept only for backward API compatibility
@@ -407,11 +399,12 @@ log_data_element(int log_level, const char *file, const char *function,
     }
 
     if (pcmk_is_set(options, xml_log_option_dirty_add)) {
+        CRM_CHECK(depth >= 0, depth = 0);
         log_xml_changes_recursive(log_level, data, depth, options);
         return;
     }
 
-    if (pcmk_is_set(options, xml_log_option_formatted)
+    if (pcmk_is_set(options, pcmk__xml_fmt_pretty)
         && (!xml_has_children(data)
             || (crm_element_value(data, XML_DIFF_MARKER) != NULL))) {
 

@@ -554,7 +554,7 @@ xml_log_patchset_v1_recursive(uint8_t log_level, const char *prefix,
 static void
 xml_log_patchset_v1(uint8_t log_level, const xmlNode *patchset)
 {
-    int options = xml_log_option_formatted;
+    int options = pcmk__xml_fmt_pretty;
     const xmlNode *removed = NULL;
     const xmlNode *added = NULL;
     const xmlNode *child = NULL;
@@ -627,7 +627,7 @@ xml_log_patchset_v2(uint8_t log_level, const xmlNode *patchset)
                                              xpath);
 
             pcmk__xml_log(log_level, prefix, change->children, 0,
-                          xml_log_option_formatted|xml_log_option_open);
+                          pcmk__xml_fmt_pretty|xml_log_option_open);
 
             // Overwrite all except the first two characters with spaces
             for (char *ch = prefix + 2; *ch != '\0'; ch++) {
@@ -635,7 +635,7 @@ xml_log_patchset_v2(uint8_t log_level, const xmlNode *patchset)
             }
 
             pcmk__xml_log(log_level, prefix, change->children, 0,
-                          xml_log_option_formatted
+                          pcmk__xml_fmt_pretty
                           |xml_log_option_close
                           |xml_log_option_children);
             free(prefix);

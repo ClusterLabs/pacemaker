@@ -63,7 +63,7 @@ pcmk__tracking_xml_changes(xmlNode *xml, bool lazy)
  * \internal
  * \brief Append spaces to a buffer
  *
- * Spaces are appended only if the \p xml_log_option_formatted flag is set.
+ * Spaces are appended only if the \p pcmk__xml_fmt_pretty flag is set.
  *
  * \param[in]     options  Group of \p xml_log_options flags
  * \param[in,out] buffer   Where to append the spaces (must not be \p NULL)
@@ -74,7 +74,7 @@ insert_spaces(int options, GString *buffer, int depth)
 {
     int spaces = 0;
 
-    if (!pcmk_is_set(options, xml_log_option_formatted)) {
+    if (!pcmk_is_set(options, pcmk__xml_fmt_pretty)) {
         return;
     }
     CRM_ASSERT(buffer != NULL);
@@ -1498,7 +1498,7 @@ dump_xml_element(const xmlNode *data, int options, GString *buffer, int depth)
         g_string_append_c(buffer, '>');
     }
 
-    if (pcmk_is_set(options, xml_log_option_formatted)) {
+    if (pcmk_is_set(options, pcmk__xml_fmt_pretty)) {
         g_string_append_c(buffer, '\n');
     }
 
@@ -1511,7 +1511,7 @@ dump_xml_element(const xmlNode *data, int options, GString *buffer, int depth)
         insert_spaces(options, buffer, depth);
         pcmk__g_strcat(buffer, "</", name, ">", NULL);
 
-        if (pcmk_is_set(options, xml_log_option_formatted)) {
+        if (pcmk_is_set(options, pcmk__xml_fmt_pretty)) {
             g_string_append_c(buffer, '\n');
         }
     }
@@ -1539,7 +1539,7 @@ dump_xml_text(const xmlNode *data, int options, GString *buffer, int depth)
     insert_spaces(options, buffer, depth);
     g_string_append(buffer, (const gchar *) data->content);
 
-    if (pcmk_is_set(options, xml_log_option_formatted)) {
+    if (pcmk_is_set(options, pcmk__xml_fmt_pretty)) {
         g_string_append_c(buffer, '\n');
     }
 }
@@ -1567,7 +1567,7 @@ dump_xml_cdata(const xmlNode *data, int options, GString *buffer, int depth)
     pcmk__g_strcat(buffer, "<![CDATA[", (const char *) data->content, "]]>",
                    NULL);
 
-    if (pcmk_is_set(options, xml_log_option_formatted)) {
+    if (pcmk_is_set(options, pcmk__xml_fmt_pretty)) {
         g_string_append_c(buffer, '\n');
     }
 }
@@ -1594,7 +1594,7 @@ dump_xml_comment(const xmlNode *data, int options, GString *buffer, int depth)
     insert_spaces(options, buffer, depth);
     pcmk__g_strcat(buffer, "<!--", (const char *) data->content, "-->", NULL);
 
-    if (pcmk_is_set(options, xml_log_option_formatted)) {
+    if (pcmk_is_set(options, pcmk__xml_fmt_pretty)) {
         g_string_append_c(buffer, '\n');
     }
 }
@@ -1652,7 +1652,7 @@ pcmk__xml2text(xmlNodePtr data, int options, GString *buffer, int depth)
                opposed to libxml's raw functions) */
 
         xmlNodeDumpOutput(xml_buffer, doc, data, 0,
-                          (options & xml_log_option_formatted), NULL);
+                          pcmk_is_set(options, pcmk__xml_fmt_pretty), NULL);
         /* attempt adding final NL - failing shouldn't be fatal here */
         (void) xmlOutputBufferWrite(xml_buffer, sizeof("\n") - 1, "\n");
         if (xml_buffer->buffer != NULL) {
@@ -1724,8 +1724,8 @@ dump_xml_formatted_with_text(xmlNode * an_xml_node)
     GString *g_buffer = g_string_sized_new(1024);
 
     pcmk__xml2text(an_xml_node,
-                   xml_log_option_formatted|xml_log_option_full_fledged,
-                   g_buffer, 0);
+                   pcmk__xml_fmt_pretty|xml_log_option_full_fledged, g_buffer,
+                   0);
 
     pcmk__str_update(&buffer, g_buffer->str);
     g_string_free(g_buffer, TRUE);
@@ -1738,7 +1738,7 @@ dump_xml_formatted(xmlNode * an_xml_node)
     char *buffer = NULL;
     GString *g_buffer = g_string_sized_new(1024);
 
-    pcmk__xml2text(an_xml_node, xml_log_option_formatted, g_buffer, 0);
+    pcmk__xml2text(an_xml_node, pcmk__xml_fmt_pretty, g_buffer, 0);
 
     pcmk__str_update(&buffer, g_buffer->str);
     g_string_free(g_buffer, TRUE);
