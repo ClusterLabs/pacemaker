@@ -116,8 +116,8 @@ log_xml_element(GString *buffer, int log_level, const char *prefix,
 
             // @COMPAT Remove when v1 patchsets are removed
             if (pcmk_any_flags_set(options,
-                                   xml_log_option_diff_plus
-                                   |xml_log_option_diff_minus)
+                                   pcmk__xml_fmt_diff_plus
+                                   |pcmk__xml_fmt_diff_minus)
                 && (strcmp(XML_DIFF_MARKER, p_name) == 0)) {
                 continue;
             }
@@ -408,22 +408,22 @@ log_data_element(int log_level, const char *file, const char *function,
         && (!xml_has_children(data)
             || (crm_element_value(data, XML_DIFF_MARKER) != NULL))) {
 
-        if (pcmk_is_set(options, xml_log_option_diff_plus)) {
+        if (pcmk_is_set(options, pcmk__xml_fmt_diff_plus)) {
             options |= xml_log_option_diff_all;
             prefix = PCMK__XML_PREFIX_CREATED;
 
-        } else if (pcmk_is_set(options, xml_log_option_diff_minus)) {
+        } else if (pcmk_is_set(options, pcmk__xml_fmt_diff_minus)) {
             options |= xml_log_option_diff_all;
             prefix = PCMK__XML_PREFIX_DELETED;
         }
     }
 
-    if (pcmk_is_set(options, xml_log_option_diff_short)
+    if (pcmk_is_set(options, pcmk__xml_fmt_diff_short)
         && !pcmk_is_set(options, xml_log_option_diff_all)) {
 
         if (!pcmk_any_flags_set(options,
-                                xml_log_option_diff_plus
-                                |xml_log_option_diff_minus)) {
+                                pcmk__xml_fmt_diff_plus
+                                |pcmk__xml_fmt_diff_minus)) {
             // Nothing will ever be logged
             return;
         }

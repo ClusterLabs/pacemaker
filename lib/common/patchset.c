@@ -513,17 +513,17 @@ xml_log_patchset_v1_recursive(uint8_t log_level, const char *prefix,
     if (!xml_has_children(data)
         || (crm_element_value(data, XML_DIFF_MARKER) != NULL)) {
 
-        options |= xml_log_option_diff_all;
+        // Found a change; clear the pcmk__xml_fmt_diff_short option if set
+        options &= ~pcmk__xml_fmt_diff_short;
 
-        if (pcmk_is_set(options, xml_log_option_diff_plus)) {
+        if (pcmk_is_set(options, pcmk__xml_fmt_diff_plus)) {
             prefix = PCMK__XML_PREFIX_CREATED;
-        } else {    // pcmk_is_set(options, xml_log_option_diff_minus)
+        } else {    // pcmk_is_set(options, pcmk__xml_fmt_diff_minus)
             prefix = PCMK__XML_PREFIX_DELETED;
         }
     }
 
-    if (pcmk_is_set(options, xml_log_option_diff_short)
-        && !pcmk_is_set(options, xml_log_option_diff_all)) {
+    if (pcmk_is_set(options, pcmk__xml_fmt_diff_short)) {
         // Keep looking for the actual change
         for (const xmlNode *child = pcmk__xml_first_child(data); child != NULL;
              child = pcmk__xml_next(child)) {
@@ -561,7 +561,7 @@ xml_log_patchset_v1(uint8_t log_level, const xmlNode *patchset)
     bool is_first = true;
 
     if (log_level < LOG_DEBUG) {
-        options |= xml_log_option_diff_short;
+        options |= pcmk__xml_fmt_diff_short;
     }
 
     xml_log_patchset_header(log_level, patchset);
@@ -575,7 +575,7 @@ xml_log_patchset_v1(uint8_t log_level, const xmlNode *patchset)
     for (child = pcmk__xml_first_child(removed); child != NULL;
          child = pcmk__xml_next(child)) {
         xml_log_patchset_v1_recursive(log_level, "- ", child, 0,
-                                      options|xml_log_option_diff_minus);
+                                      options|pcmk__xml_fmt_diff_minus);
         if (is_first) {
             is_first = false;
         } else {
@@ -588,7 +588,7 @@ xml_log_patchset_v1(uint8_t log_level, const xmlNode *patchset)
     for (child = pcmk__xml_first_child(added); child != NULL;
          child = pcmk__xml_next(child)) {
         xml_log_patchset_v1_recursive(log_level, "+ ", child, 0,
-                                      options|xml_log_option_diff_plus);
+                                      options|pcmk__xml_fmt_diff_plus);
         if (is_first) {
             is_first = false;
         } else {
