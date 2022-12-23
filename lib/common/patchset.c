@@ -749,24 +749,6 @@ pcmk__xml_log_patchset(uint8_t log_level, const xmlNode *patchset)
     }
 }
 
-/*!
- * \brief Log a user-friendly form of an XML patchset
- *
- * This function parses an XML patchset (an \p XML_ATTR_DIFF element and its
- * children) into a user-friendly combined diff output. Depending on the value
- * of \p log_level, the output may be written to \p stdout or to a log file.
- *
- * \param[in] log_level  Priority at which to log the messages
- * \param[in] function   Ignored
- * \param[in] patchset   XML patchset to log
- */
-void
-xml_log_patchset(uint8_t log_level, const char *function,
-                 const xmlNode *patchset)
-{
-    pcmk__xml_log_patchset(log_level, patchset);
-}
-
 // Return true if attribute name is not "id"
 static bool
 not_id(xmlAttrPtr attr, void *user_data)
@@ -1872,6 +1854,13 @@ apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml)
     }
 
     return result;
+}
+
+void
+xml_log_patchset(uint8_t log_level, const char *function,
+                 const xmlNode *patchset)
+{
+    pcmk__xml_log_patchset(log_level, patchset);
 }
 
 // LCOV_EXCL_STOP
