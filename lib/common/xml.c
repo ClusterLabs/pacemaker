@@ -1619,8 +1619,7 @@ pcmk__xml2text(xmlNodePtr data, int options, GString *buffer, int depth)
         return;
     }
 
-    if (!pcmk_is_set(options, pcmk__xml_fmt_filtered)
-        && pcmk_is_set(options, xml_log_option_full_fledged)) {
+    if (pcmk_is_set(options, pcmk__xml_fmt_full)) {
         /* libxml's serialization reuse is a good idea, sadly we cannot
            apply it for the filtered cases (preceding filtering pass
            would preclude further reuse of such in-situ modified XML
@@ -1723,9 +1722,8 @@ dump_xml_formatted_with_text(xmlNode * an_xml_node)
     char *buffer = NULL;
     GString *g_buffer = g_string_sized_new(1024);
 
-    pcmk__xml2text(an_xml_node,
-                   pcmk__xml_fmt_pretty|xml_log_option_full_fledged, g_buffer,
-                   0);
+    pcmk__xml2text(an_xml_node, pcmk__xml_fmt_pretty|pcmk__xml_fmt_full,
+                   g_buffer, 0);
 
     pcmk__str_update(&buffer, g_buffer->str);
     g_string_free(g_buffer, TRUE);
