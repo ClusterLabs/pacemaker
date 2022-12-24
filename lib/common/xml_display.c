@@ -55,7 +55,7 @@ pcmk__log_xmllib_err(void *ctx, const char *fmt, ...)
  * \param[in]     log_level  Priority at which to log the message
  * \param[in]     data       XML node to log
  * \param[in]     depth      Current indentation level
- * \param[in]     options    Group of \p xml_log_options flags
+ * \param[in]     options    Group of \p pcmk__xml_fmt_options flags
  */
 static void
 log_xml_comment(int log_level, const xmlNode *data, int depth, int options)
@@ -79,7 +79,7 @@ log_xml_comment(int log_level, const xmlNode *data, int depth, int options)
  * \param[in]     prefix     String to prepend to every line of output
  * \param[in]     data       XML node to log
  * \param[in]     depth      Current indentation level
- * \param[in]     options    Group of \p xml_log_options flags
+ * \param[in]     options    Group of \p pcmk__xml_fmt_options flags
  *
  * \note This is a recursive helper function for \p log_xml_node().
  * \note \p buffer may be overwritten many times. The caller is responsible for
@@ -180,7 +180,7 @@ log_xml_element(GString *buffer, int log_level, const char *prefix,
  * \param[in]     prefix     String to prepend to every line of output
  * \param[in]     data       XML node to log
  * \param[in]     depth      Current indentation level
- * \param[in]     options    Group of \p xml_log_options flags
+ * \param[in]     options    Group of \p pcmk__xml_fmt_options flags
  *
  * \note This is a recursive helper function for \p pcmk__xml_log().
  * \note \p buffer may be overwritten many times. The caller is responsible for
@@ -218,7 +218,7 @@ log_xml_node(GString *buffer, int log_level, const char *prefix,
  * \param[in] prefix     String to prepend to every line of output
  * \param[in] data       XML node to log
  * \param[in] depth      Current indentation level
- * \param[in] options    Group of \p xml_log_options flags
+ * \param[in] options    Group of \p pcmk__xml_fmt_options flags
  */
 void
 pcmk__xml_log(int log_level, const char *prefix, const xmlNode *data, int depth,
@@ -242,7 +242,7 @@ pcmk__xml_log(int log_level, const char *prefix, const xmlNode *data, int depth,
  * \param[in] log_level  Priority at which to log the messages
  * \param[in] data       XML node to log
  * \param[in] depth      Current indentation level
- * \param[in] options    Group of \p xml_log_options flags
+ * \param[in] options    Group of \p pcmk__xml_fmt_options flags
  *
  * \note This is a recursive helper for \p pcmk__xml_log_changes(), logging
  *       changes to \p data and its children.
@@ -388,8 +388,10 @@ pcmk__xml_log_changes(uint8_t log_level, const xmlNode *xml)
 void
 log_data_element(int log_level, const char *file, const char *function,
                  int line, const char *prefix, const xmlNode *data, int depth,
-                 int options)
+                 int legacy_options)
 {
+    int options = 0;
+
     if (log_level == LOG_NEVER) {
         return;
     }
@@ -400,7 +402,44 @@ log_data_element(int log_level, const char *file, const char *function,
         return;
     }
 
-    if (pcmk_is_set(options, xml_log_option_dirty_add)) {
+    /* Map xml_log_options to pcmk__xml_fmt_options so that we can go ahead and
+     * start using the pcmk__xml_fmt_options in all the internal functions.
+     *
+     * xml_log_option_dirty_add and xml_log_option_diff_all are ignored by
+     * internal code and only used here, so they don't need to be addressed.
+     */
+    if (pcmk_is_set(legacy_options, xml_log_option_filtered)) {
+        options |= pcmk__xml_fmt_filtered;
+    }
+    if (pcmk_is_set(legacy_options, xml_log_option_formatted)) {
+        options |= pcmk__xml_fmt_pretty;
+    }
+    if (pcmk_is_set(legacy_options, xml_log_option_full_fledged)) {
+        options |= pcmk__xml_fmt_full;
+    }
+    if (pcmk_is_set(legacy_options, xml_log_option_open)) {
+        options |= pcmk__xml_fmt_open;
+    }
+    if (pcmk_is_set(legacy_options, xml_log_option_children)) {
+        options |= pcmk__xml_fmt_children;
+    }
+    if (pcmk_is_set(legacy_options, xml_log_option_close)) {
+        options |= pcmk__xml_fmt_close;
+    }
+    if (pcmk_is_set(legacy_options, xml_log_option_text)) {
+        options |= pcmk__xml_fmt_text;
+    }
+    if (pcmk_is_set(legacy_options, xml_log_option_diff_plus)) {
+        options |= pcmk__xml_fmt_diff_plus;
+    }
+    if (pcmk_is_set(legacy_options, xml_log_option_diff_minus)) {
+        options |= pcmk__xml_fmt_diff_minus;
+    }
+    if (pcmk_is_set(legacy_options, xml_log_option_diff_short)) {
+        options |= pcmk__xml_fmt_diff_short;
+    }
+
+    if (pcmk_is_set(legacy_options, xml_log_option_dirty_add)) {
         CRM_CHECK(depth >= 0, depth = 0);
         log_xml_changes_recursive(log_level, data, depth, options);
         return;
@@ -411,17 +450,17 @@ log_data_element(int log_level, const char *file, const char *function,
             || (crm_element_value(data, XML_DIFF_MARKER) != NULL))) {
 
         if (pcmk_is_set(options, pcmk__xml_fmt_diff_plus)) {
-            options |= xml_log_option_diff_all;
+            legacy_options |= xml_log_option_diff_all;
             prefix = PCMK__XML_PREFIX_CREATED;
 
         } else if (pcmk_is_set(options, pcmk__xml_fmt_diff_minus)) {
-            options |= xml_log_option_diff_all;
+            legacy_options |= xml_log_option_diff_all;
             prefix = PCMK__XML_PREFIX_DELETED;
         }
     }
 
     if (pcmk_is_set(options, pcmk__xml_fmt_diff_short)
-        && !pcmk_is_set(options, xml_log_option_diff_all)) {
+        && !pcmk_is_set(legacy_options, xml_log_option_diff_all)) {
 
         if (!pcmk_any_flags_set(options,
                                 pcmk__xml_fmt_diff_plus

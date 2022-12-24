@@ -65,7 +65,7 @@ pcmk__tracking_xml_changes(xmlNode *xml, bool lazy)
  *
  * Spaces are appended only if the \p pcmk__xml_fmt_pretty flag is set.
  *
- * \param[in]     options  Group of \p xml_log_options flags
+ * \param[in]     options  Group of \p pcmk__xml_fmt_options flags
  * \param[in,out] buffer   Where to append the spaces (must not be \p NULL)
  * \param[in]     depth    Current indentation level
  */
@@ -1427,7 +1427,7 @@ crm_xml_escape(const char *text)
  * \brief Append an XML attribute to a buffer
  *
  * \param[in]     attr     Attribute to append
- * \param[in]     options  Group of \p xml_log_options flags
+ * \param[in]     options  Group of \p pcmk__xml_fmt_options flags
  * \param[in,out] buffer   Where to append the content (must not be \p NULL)
  */
 static inline void
@@ -1460,7 +1460,7 @@ dump_xml_attr(const xmlAttr *attr, int options, GString *buffer)
  * \brief Append a string representation of an XML element to a buffer
  *
  * \param[in]     data     XML whose representation to append
- * \param[in]     options  Group of \p xml_log_options flags
+ * \param[in]     options  Group of \p pcmk__xml_fmt_options flags
  * \param[in,out] buffer   Where to append the content (must not be \p NULL)
  * \param[in]     depth    Current indentation level
  */
@@ -1552,7 +1552,7 @@ dump_xml_text(const xmlNode *data, int options, GString *buffer, int depth)
  * \brief Append XML CDATA content to a buffer
  *
  * \param[in]     data     XML whose content to append
- * \param[in]     options  Group of \p xml_log_options flags
+ * \param[in]     options  Group of \p pcmk__xml_fmt_options flags
  * \param[in,out] buffer   Where to append the content (must not be \p NULL)
  * \param[in]     depth    Current indentation level
  */
@@ -1580,7 +1580,7 @@ dump_xml_cdata(const xmlNode *data, int options, GString *buffer, int depth)
  * \brief Append an XML comment to a buffer
  *
  * \param[in]     data     XML whose content to append
- * \param[in]     options  Group of \p xml_log_options flags
+ * \param[in]     options  Group of \p pcmk__xml_fmt_options flags
  * \param[in,out] buffer   Where to append the content (must not be \p NULL)
  * \param[in]     depth    Current indentation level
  */
@@ -1609,7 +1609,7 @@ dump_xml_comment(const xmlNode *data, int options, GString *buffer, int depth)
  * \brief Create a text representation of an XML object
  *
  * \param[in]     data     XML to convert
- * \param[in]     options  Group of \p xml_log_options flags
+ * \param[in]     options  Group of \p pcmk__xml_fmt_options flags
  * \param[in,out] buffer   Where to store the text (must not be \p NULL)
  * \param[in]     depth    Current indentation level
  */

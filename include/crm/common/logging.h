@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -81,22 +81,6 @@ extern gboolean crm_config_error;
  *              from the public C API in a future release.
  */
 extern gboolean crm_config_warning;
-
-enum xml_log_options
-{
-    xml_log_option_filtered   = 0x0001,
-    xml_log_option_formatted  = 0x0002,
-    xml_log_option_text       = 0x0004, /* add this option to dump text into xml */
-    xml_log_option_full_fledged = 0x0008, // Use libxml when converting XML to text
-    xml_log_option_diff_plus  = 0x0010,
-    xml_log_option_diff_minus = 0x0020,
-    xml_log_option_diff_short = 0x0040,
-    xml_log_option_diff_all   = 0x0100,
-    xml_log_option_dirty_add  = 0x1000,
-    xml_log_option_open       = 0x2000,
-    xml_log_option_children   = 0x4000,
-    xml_log_option_close      = 0x8000,
-};
 
 void crm_enable_blackbox(int nsig);
 void crm_disable_blackbox(int nsig);

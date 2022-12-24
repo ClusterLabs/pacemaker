@@ -504,7 +504,7 @@ xml_log_patchset_header(uint8_t log_level, const xmlNode *patchset)
  * \param[in] prefix     String to prepend to every line of output
  * \param[in] data       XML node to log
  * \param[in] depth      Current indentation level
- * \param[in] options    Group of \p xml_log_options flags
+ * \param[in] options    Group of \p pcmk__xml_fmt_options flags
  */
 static void
 xml_log_patchset_v1_recursive(uint8_t log_level, const char *prefix,
