@@ -251,6 +251,9 @@ static void
 log_xml_changes_recursive(int log_level, const xmlNode *data, int depth,
                           int options)
 {
+    /* @COMPAT: When log_data_element() is removed, we can remove the options
+     * argument here and instead hard-code pcmk__xml_log_pretty.
+     */
     xml_node_private_t *nodepriv = NULL;
 
     if ((data == NULL) || (log_level == LOG_NEVER)) {
@@ -373,8 +376,7 @@ pcmk__xml_log_changes(uint8_t log_level, const xmlNode *xml)
         }
     }
 
-    log_xml_changes_recursive(log_level, xml, 0,
-                              pcmk__xml_fmt_pretty|xml_log_option_dirty_add);
+    log_xml_changes_recursive(log_level, xml, 0, pcmk__xml_fmt_pretty);
 }
 
 // Deprecated functions kept only for backward API compatibility
