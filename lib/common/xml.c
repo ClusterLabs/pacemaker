@@ -1402,7 +1402,6 @@ dump_xml_attr(const xmlAttr *attr, GString *buffer)
     const char *p_name = NULL;
     xml_node_private_t *nodepriv = NULL;
 
-    CRM_ASSERT(buffer != NULL);
     if (attr == NULL || attr->children == NULL) {
         return;
     }
@@ -1433,19 +1432,11 @@ static void
 dump_xml_element(const xmlNode *data, uint32_t options, GString *buffer,
                  int depth)
 {
-    const char *name = NULL;
+    const char *name = crm_element_name(data);
     bool pretty = pcmk_is_set(options, pcmk__xml_fmt_pretty);
     bool filtered = pcmk_is_set(options, pcmk__xml_fmt_filtered);
     int spaces = pretty? (2 * depth) : 0;
 
-    CRM_ASSERT(buffer != NULL);
-
-    if (data == NULL) {
-        crm_trace("Nothing to dump");
-        return;
-    }
-
-    name = crm_element_name(data);
     CRM_ASSERT(name != NULL);
 
     for (int lpc = 0; lpc < spaces; lpc++) {
@@ -1510,13 +1501,6 @@ dump_xml_text(const xmlNode *data, uint32_t options, GString *buffer,
     bool pretty = pcmk_is_set(options, pcmk__xml_fmt_pretty);
     int spaces = pretty? (2 * depth) : 0;
 
-    CRM_ASSERT(buffer != NULL);
-
-    if (data == NULL) {
-        crm_trace("Nothing to dump");
-        return;
-    }
-
     for (int lpc = 0; lpc < spaces; lpc++) {
         g_string_append_c(buffer, ' ');
     }
@@ -1543,13 +1527,6 @@ dump_xml_cdata(const xmlNode *data, uint32_t options, GString *buffer,
 {
     bool pretty = pcmk_is_set(options, pcmk__xml_fmt_pretty);
     int spaces = pretty? (2 * depth) : 0;
-
-    CRM_ASSERT(buffer != NULL);
-
-    if (data == NULL) {
-        crm_trace("Nothing to dump");
-        return;
-    }
 
     for (int lpc = 0; lpc < spaces; lpc++) {
         g_string_append_c(buffer, ' ');
@@ -1579,13 +1556,6 @@ dump_xml_comment(const xmlNode *data, uint32_t options, GString *buffer,
     bool pretty = pcmk_is_set(options, pcmk__xml_fmt_pretty);
     int spaces = pretty? (2 * depth) : 0;
 
-    CRM_ASSERT(buffer != NULL);
-
-    if (data == NULL) {
-        crm_trace("Nothing to dump");
-        return;
-    }
-
     for (int lpc = 0; lpc < spaces; lpc++) {
         g_string_append_c(buffer, ' ');
     }
@@ -1611,12 +1581,12 @@ dump_xml_comment(const xmlNode *data, uint32_t options, GString *buffer,
 void
 pcmk__xml2text(xmlNodePtr data, uint32_t options, GString *buffer, int depth)
 {
-    CRM_ASSERT(buffer != NULL);
-
     if (data == NULL) {
+        crm_trace("Nothing to dump");
         return;
     }
 
+    CRM_ASSERT(buffer != NULL);
     CRM_CHECK(depth >= 0, depth = 0);
 
     if (pcmk_is_set(options, pcmk__xml_fmt_full)) {
