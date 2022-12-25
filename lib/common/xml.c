@@ -1388,10 +1388,6 @@ crm_xml_escape(const char *text)
     return copy;
 }
 
-/* Keep this inline. De-inlining resulted in a 0.6% average slowdown in
- * crm_simulate on cts/scheduler/xml during testing.
- */
-
 /*!
  * \internal
  * \brief Append an XML attribute to a buffer
@@ -1399,7 +1395,7 @@ crm_xml_escape(const char *text)
  * \param[in]     attr     Attribute to append
  * \param[in,out] buffer   Where to append the content (must not be \p NULL)
  */
-static inline void
+static void
 dump_xml_attr(const xmlAttr *attr, GString *buffer)
 {
     char *p_value = NULL;
