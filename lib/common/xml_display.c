@@ -18,7 +18,7 @@
 #include "crmcommon_private.h"
 
 static void log_xml_node(GString *buffer, int log_level, const char *prefix,
-                         const xmlNode *data, int depth, int options);
+                         const xmlNode *data, int depth, uint32_t options);
 
 // Log an XML library error
 void
@@ -58,7 +58,7 @@ pcmk__log_xmllib_err(void *ctx, const char *fmt, ...)
  * \param[in]     options    Group of \p pcmk__xml_fmt_options flags
  */
 static void
-log_xml_comment(int log_level, const xmlNode *data, int depth, int options)
+log_xml_comment(int log_level, const xmlNode *data, int depth, uint32_t options)
 {
     if (pcmk_is_set(options, pcmk__xml_fmt_open)) {
         do_crm_log(log_level, "%*s<!--%s-->",
@@ -88,7 +88,7 @@ log_xml_comment(int log_level, const xmlNode *data, int depth, int options)
  */
 static void
 log_xml_element(GString *buffer, int log_level, const char *prefix,
-                const xmlNode *data, int depth, int options)
+                const xmlNode *data, int depth, uint32_t options)
 {
     const char *name = crm_element_name(data);
     int spaces = pcmk_is_set(options, pcmk__xml_fmt_pretty)? (2 * depth) : 0;
@@ -189,7 +189,7 @@ log_xml_element(GString *buffer, int log_level, const char *prefix,
  */
 static void
 log_xml_node(GString *buffer, int log_level, const char *prefix,
-             const xmlNode *data, int depth, int options)
+             const xmlNode *data, int depth, uint32_t options)
 {
     if ((data == NULL) || (log_level == LOG_NEVER)) {
         return;
@@ -222,7 +222,7 @@ log_xml_node(GString *buffer, int log_level, const char *prefix,
  */
 void
 pcmk__xml_log(int log_level, const char *prefix, const xmlNode *data, int depth,
-              int options)
+              uint32_t options)
 {
     /* Allocate a buffer once, for log_xml_node() to truncate and reuse in
      * recursive calls
@@ -249,7 +249,7 @@ pcmk__xml_log(int log_level, const char *prefix, const xmlNode *data, int depth,
  */
 static void
 log_xml_changes_recursive(int log_level, const xmlNode *data, int depth,
-                          int options)
+                          uint32_t options)
 {
     /* @COMPAT: When log_data_element() is removed, we can remove the options
      * argument here and instead hard-code pcmk__xml_log_pretty.
@@ -390,7 +390,7 @@ log_data_element(int log_level, const char *file, const char *function,
                  int line, const char *prefix, const xmlNode *data, int depth,
                  int legacy_options)
 {
-    int options = 0;
+    uint32_t options = 0;
 
     if (log_level == LOG_NEVER) {
         return;

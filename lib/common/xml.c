@@ -70,7 +70,7 @@ pcmk__tracking_xml_changes(xmlNode *xml, bool lazy)
  * \param[in]     depth    Current indentation level
  */
 static inline void
-insert_spaces(int options, GString *buffer, int depth)
+insert_spaces(uint32_t options, GString *buffer, int depth)
 {
     int spaces = 0;
 
@@ -1427,11 +1427,10 @@ crm_xml_escape(const char *text)
  * \brief Append an XML attribute to a buffer
  *
  * \param[in]     attr     Attribute to append
- * \param[in]     options  Group of \p pcmk__xml_fmt_options flags
  * \param[in,out] buffer   Where to append the content (must not be \p NULL)
  */
 static inline void
-dump_xml_attr(const xmlAttr *attr, int options, GString *buffer)
+dump_xml_attr(const xmlAttr *attr, GString *buffer)
 {
     char *p_value = NULL;
     const char *p_name = NULL;
@@ -1465,7 +1464,8 @@ dump_xml_attr(const xmlAttr *attr, int options, GString *buffer)
  * \param[in]     depth    Current indentation level
  */
 static void
-dump_xml_element(const xmlNode *data, int options, GString *buffer, int depth)
+dump_xml_element(const xmlNode *data, uint32_t options, GString *buffer,
+                 int depth)
 {
     const char *name = NULL;
     bool filtered = pcmk_is_set(options, pcmk__xml_fmt_filtered);
@@ -1487,7 +1487,7 @@ dump_xml_element(const xmlNode *data, int options, GString *buffer, int depth)
          attr = attr->next) {
 
         if (!filtered || !pcmk__xa_filterable((const char *) (attr->name))) {
-            dump_xml_attr(attr, options, buffer);
+            dump_xml_attr(attr, buffer);
         }
     }
 
@@ -1527,7 +1527,8 @@ dump_xml_element(const xmlNode *data, int options, GString *buffer, int depth)
  * \param[in]     depth    Current indentation level
  */
 static void
-dump_xml_text(const xmlNode *data, int options, GString *buffer, int depth)
+dump_xml_text(const xmlNode *data, uint32_t options, GString *buffer,
+              int depth)
 {
     /* @COMPAT: Remove when log_data_element() is removed. There are no internal
      * code paths to this, except through the deprecated log_data_element().
@@ -1557,7 +1558,8 @@ dump_xml_text(const xmlNode *data, int options, GString *buffer, int depth)
  * \param[in]     depth    Current indentation level
  */
 static void
-dump_xml_cdata(const xmlNode *data, int options, GString *buffer, int depth)
+dump_xml_cdata(const xmlNode *data, uint32_t options, GString *buffer,
+               int depth)
 {
     CRM_ASSERT(buffer != NULL);
 
@@ -1585,7 +1587,8 @@ dump_xml_cdata(const xmlNode *data, int options, GString *buffer, int depth)
  * \param[in]     depth    Current indentation level
  */
 static void
-dump_xml_comment(const xmlNode *data, int options, GString *buffer, int depth)
+dump_xml_comment(const xmlNode *data, uint32_t options, GString *buffer,
+                 int depth)
 {
     CRM_ASSERT(buffer != NULL);
 
@@ -1614,7 +1617,7 @@ dump_xml_comment(const xmlNode *data, int options, GString *buffer, int depth)
  * \param[in]     depth    Current indentation level
  */
 void
-pcmk__xml2text(xmlNodePtr data, int options, GString *buffer, int depth)
+pcmk__xml2text(xmlNodePtr data, uint32_t options, GString *buffer, int depth)
 {
     CRM_ASSERT(buffer != NULL);
 

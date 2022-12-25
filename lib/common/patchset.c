@@ -508,7 +508,7 @@ xml_log_patchset_header(uint8_t log_level, const xmlNode *patchset)
  */
 static void
 xml_log_patchset_v1_recursive(uint8_t log_level, const char *prefix,
-                              const xmlNode *data, int depth, int options)
+                              const xmlNode *data, int depth, uint32_t options)
 {
     if (!xml_has_children(data)
         || (crm_element_value(data, XML_DIFF_MARKER) != NULL)) {
@@ -554,7 +554,7 @@ xml_log_patchset_v1_recursive(uint8_t log_level, const char *prefix,
 static void
 xml_log_patchset_v1(uint8_t log_level, const xmlNode *patchset)
 {
-    int options = pcmk__xml_fmt_pretty;
+    uint32_t options = pcmk__xml_fmt_pretty;
     const xmlNode *removed = NULL;
     const xmlNode *added = NULL;
     const xmlNode *child = NULL;
