@@ -59,36 +59,6 @@ pcmk__tracking_xml_changes(xmlNode *xml, bool lazy)
     return TRUE;
 }
 
-/*!
- * \internal
- * \brief Append spaces to a buffer
- *
- * Spaces are appended only if the \p pcmk__xml_fmt_pretty flag is set.
- *
- * \param[in]     options  Group of \p pcmk__xml_fmt_options flags
- * \param[in,out] buffer   Where to append the spaces (must not be \p NULL)
- * \param[in]     depth    Current indentation level
- */
-static inline void
-insert_spaces(uint32_t options, GString *buffer, int depth)
-{
-    int spaces = 0;
-
-    if (!pcmk_is_set(options, pcmk__xml_fmt_pretty)) {
-        return;
-    }
-    CRM_ASSERT(buffer != NULL);
-    CRM_CHECK(depth >= 0, depth = 0);
-
-    /* With -O2, this loop is faster than one g_string_append_printf() call with
-     * width == 2 * depth
-     */
-    spaces = 2 * depth;
-    for (int lpc = 0; lpc < spaces; lpc++) {
-        g_string_append_c(buffer, ' ');
-    }
-}
-
 static inline void
 set_parent_flag(xmlNode *xml, long flag) 
 {
@@ -1468,7 +1438,9 @@ dump_xml_element(const xmlNode *data, uint32_t options, GString *buffer,
                  int depth)
 {
     const char *name = NULL;
+    bool pretty = pcmk_is_set(options, pcmk__xml_fmt_pretty);
     bool filtered = pcmk_is_set(options, pcmk__xml_fmt_filtered);
+    int spaces = pretty? (2 * depth) : 0;
 
     CRM_ASSERT(buffer != NULL);
 
@@ -1480,7 +1452,10 @@ dump_xml_element(const xmlNode *data, uint32_t options, GString *buffer,
     name = crm_element_name(data);
     CRM_ASSERT(name != NULL);
 
-    insert_spaces(options, buffer, depth);
+    for (int lpc = 0; lpc < spaces; lpc++) {
+        g_string_append_c(buffer, ' ');
+    }
+
     pcmk__g_strcat(buffer, "<", name, NULL);
 
     for (const xmlAttr *attr = pcmk__xe_first_attr(data); attr != NULL;
@@ -1498,7 +1473,7 @@ dump_xml_element(const xmlNode *data, uint32_t options, GString *buffer,
         g_string_append_c(buffer, '>');
     }
 
-    if (pcmk_is_set(options, pcmk__xml_fmt_pretty)) {
+    if (pretty) {
         g_string_append_c(buffer, '\n');
     }
 
@@ -1508,10 +1483,13 @@ dump_xml_element(const xmlNode *data, uint32_t options, GString *buffer,
             pcmk__xml2text(xChild, options, buffer, depth + 1);
         }
 
-        insert_spaces(options, buffer, depth);
+        for (int lpc = 0; lpc < spaces; lpc++) {
+            g_string_append_c(buffer, ' ');
+        }
+
         pcmk__g_strcat(buffer, "</", name, ">", NULL);
 
-        if (pcmk_is_set(options, pcmk__xml_fmt_pretty)) {
+        if (pretty) {
             g_string_append_c(buffer, '\n');
         }
     }
@@ -1533,6 +1511,9 @@ dump_xml_text(const xmlNode *data, uint32_t options, GString *buffer,
     /* @COMPAT: Remove when log_data_element() is removed. There are no internal
      * code paths to this, except through the deprecated log_data_element().
      */
+    bool pretty = pcmk_is_set(options, pcmk__xml_fmt_pretty);
+    int spaces = pretty? (2 * depth) : 0;
+
     CRM_ASSERT(buffer != NULL);
 
     if (data == NULL) {
@@ -1540,10 +1521,13 @@ dump_xml_text(const xmlNode *data, uint32_t options, GString *buffer,
         return;
     }
 
-    insert_spaces(options, buffer, depth);
+    for (int lpc = 0; lpc < spaces; lpc++) {
+        g_string_append_c(buffer, ' ');
+    }
+
     g_string_append(buffer, (const gchar *) data->content);
 
-    if (pcmk_is_set(options, pcmk__xml_fmt_pretty)) {
+    if (pretty) {
         g_string_append_c(buffer, '\n');
     }
 }
@@ -1561,6 +1545,9 @@ static void
 dump_xml_cdata(const xmlNode *data, uint32_t options, GString *buffer,
                int depth)
 {
+    bool pretty = pcmk_is_set(options, pcmk__xml_fmt_pretty);
+    int spaces = pretty? (2 * depth) : 0;
+
     CRM_ASSERT(buffer != NULL);
 
     if (data == NULL) {
@@ -1568,11 +1555,14 @@ dump_xml_cdata(const xmlNode *data, uint32_t options, GString *buffer,
         return;
     }
 
-    insert_spaces(options, buffer, depth);
+    for (int lpc = 0; lpc < spaces; lpc++) {
+        g_string_append_c(buffer, ' ');
+    }
+
     pcmk__g_strcat(buffer, "<![CDATA[", (const char *) data->content, "]]>",
                    NULL);
 
-    if (pcmk_is_set(options, pcmk__xml_fmt_pretty)) {
+    if (pretty) {
         g_string_append_c(buffer, '\n');
     }
 }
@@ -1590,6 +1580,9 @@ static void
 dump_xml_comment(const xmlNode *data, uint32_t options, GString *buffer,
                  int depth)
 {
+    bool pretty = pcmk_is_set(options, pcmk__xml_fmt_pretty);
+    int spaces = pretty? (2 * depth) : 0;
+
     CRM_ASSERT(buffer != NULL);
 
     if (data == NULL) {
@@ -1597,10 +1590,13 @@ dump_xml_comment(const xmlNode *data, uint32_t options, GString *buffer,
         return;
     }
 
-    insert_spaces(options, buffer, depth);
+    for (int lpc = 0; lpc < spaces; lpc++) {
+        g_string_append_c(buffer, ' ');
+    }
+
     pcmk__g_strcat(buffer, "<!--", (const char *) data->content, "-->", NULL);
 
-    if (pcmk_is_set(options, pcmk__xml_fmt_pretty)) {
+    if (pretty) {
         g_string_append_c(buffer, '\n');
     }
 }
@@ -1624,6 +1620,8 @@ pcmk__xml2text(xmlNodePtr data, uint32_t options, GString *buffer, int depth)
     if (data == NULL) {
         return;
     }
+
+    CRM_CHECK(depth >= 0, depth = 0);
 
     if (pcmk_is_set(options, pcmk__xml_fmt_full)) {
         /* libxml's serialization reuse is a good idea, sadly we cannot
