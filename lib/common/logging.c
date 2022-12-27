@@ -1117,11 +1117,11 @@ pcmk_log_xml_impl(uint8_t level, const char *text, const xmlNode *xml)
         do_crm_log(level, "%s%sNo data to dump as XML",
                    pcmk__s(text, ""), pcmk__str_empty(text)? "" : " ");
     } else {
-        pcmk__xml_log(level, text, xml, 1,
-                      pcmk__xml_fmt_pretty
-                      |pcmk__xml_fmt_open
-                      |pcmk__xml_fmt_children
-                      |pcmk__xml_fmt_close);
+        pcmk__xml_show(NULL, level, text, xml, 1,
+                       pcmk__xml_fmt_pretty
+                       |pcmk__xml_fmt_open
+                       |pcmk__xml_fmt_children
+                       |pcmk__xml_fmt_close);
     }
 }
 
