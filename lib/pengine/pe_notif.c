@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -256,8 +256,8 @@ copy_meta_to_notify(gpointer key, gpointer value, gpointer user_data)
 static void
 add_notify_data_to_action_meta(const notify_data_t *n_data, pe_action_t *action)
 {
-    for (GSList *item = n_data->keys; item; item = item->next) {
-        pcmk_nvpair_t *nvpair = item->data;
+    for (const GSList *item = n_data->keys; item; item = item->next) {
+        const pcmk_nvpair_t *nvpair = (const pcmk_nvpair_t *) item->data;
 
         add_hash_param(action->meta, nvpair->name, nvpair->value);
     }
@@ -363,7 +363,7 @@ new_notify_action(pe_resource_t *rsc, const pe_node_t *node, pe_action_t *op,
  */
 static void
 new_post_notify_action(pe_resource_t *rsc, const pe_node_t *node,
-                       const notify_data_t *n_data)
+                       notify_data_t *n_data)
 {
     pe_action_t *notify = NULL;
 
@@ -534,7 +534,7 @@ static void
 collect_resource_data(const pe_resource_t *rsc, bool activity,
                       notify_data_t *n_data)
 {
-    GList *iter = NULL;
+    const GList *iter = NULL;
     notify_entry_t *entry = NULL;
     pe_node_t *node = NULL;
 
@@ -549,7 +549,7 @@ collect_resource_data(const pe_resource_t *rsc, bool activity,
     // If this is a clone, call recursively for each instance
     if (rsc->children != NULL) {
         for (iter = rsc->children; iter != NULL; iter = iter->next) {
-            pe_resource_t *child = (pe_resource_t *) iter->data;
+            const pe_resource_t *child = (const pe_resource_t *) iter->data;
 
             collect_resource_data(child, activity, n_data);
         }

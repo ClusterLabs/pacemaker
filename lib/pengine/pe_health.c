@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -109,7 +109,7 @@ pe__sum_node_health_scores(const pe_node_t *node, int base_health)
  *          otherwise 0 if any attribute is yellow, otherwise a positive value.
  */
 int
-pe__node_health(const pe_node_t *node)
+pe__node_health(pe_node_t *node)
 {
     GHashTableIter iter;
     const char *name = NULL;

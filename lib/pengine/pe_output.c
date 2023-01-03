@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2022 the Pacemaker project contributors
+ * Copyright 2019-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -2461,11 +2461,12 @@ node_summary(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("node-weight", "pe_resource_t *", "const char *", "const char *", "const char *")
+PCMK__OUTPUT_ARGS("node-weight", "const pe_resource_t *", "const char *",
+                  "const char *", "const char *")
 static int
 node_weight(pcmk__output_t *out, va_list args)
 {
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    const pe_resource_t *rsc = va_arg(args, const pe_resource_t *);
     const char *prefix = va_arg(args, const char *);
     const char *uname = va_arg(args, const char *);
     const char *score = va_arg(args, const char *);
@@ -2480,11 +2481,12 @@ node_weight(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("node-weight", "pe_resource_t *", "const char *", "const char *", "const char *")
+PCMK__OUTPUT_ARGS("node-weight", "const pe_resource_t *", "const char *",
+                  "const char *", "const char *")
 static int
 node_weight_xml(pcmk__output_t *out, va_list args)
 {
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    const pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     const char *prefix = va_arg(args, const char *);
     const char *uname = va_arg(args, const char *);
     const char *score = va_arg(args, const char *);

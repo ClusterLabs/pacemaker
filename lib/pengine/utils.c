@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -154,7 +154,7 @@ pe__node_list2table(const GList *list)
 
     result = pcmk__strkey_table(NULL, free);
     for (const GList *gIter = list; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *new_node = pe__copy_node((pe_node_t *) gIter->data);
+        pe_node_t *new_node = pe__copy_node((const pe_node_t *) gIter->data);
 
         g_hash_table_insert(result, (gpointer) new_node->details->id, new_node);
     }
@@ -217,7 +217,7 @@ pe__output_node_weights(const pe_resource_t *rsc, const char *comment,
     GList *list = g_list_sort(g_hash_table_get_values(nodes),
                               pe__cmp_node_name);
 
-    for (GList *gIter = list; gIter != NULL; gIter = gIter->next) {
+    for (const GList *gIter = list; gIter != NULL; gIter = gIter->next) {
         const pe_node_t *node = (const pe_node_t *) gIter->data;
 
         out->message(out, "node-weight", rsc, comment, node->details->uname,

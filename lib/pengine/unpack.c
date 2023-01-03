@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -54,8 +54,8 @@ static void unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                           pe_working_set_t *data_set);
 static void determine_remote_online_status(pe_working_set_t *data_set,
                                            pe_node_t *this_node);
-static void add_node_attrs(xmlNode *attrs, pe_node_t *node, bool overwrite,
-                           pe_working_set_t *data_set);
+static void add_node_attrs(const xmlNode *attrs, pe_node_t *node,
+                           bool overwrite, pe_working_set_t *data_set);
 static void determine_online_status(const xmlNode *node_state,
                                     pe_node_t *this_node,
                                     pe_working_set_t *data_set);
@@ -948,10 +948,11 @@ unpack_tickets_state(xmlNode * xml_tickets, pe_working_set_t * data_set)
 }
 
 static void
-unpack_handle_remote_attrs(pe_node_t *this_node, xmlNode *state, pe_working_set_t * data_set) 
+unpack_handle_remote_attrs(pe_node_t *this_node, const xmlNode *state,
+                           pe_working_set_t *data_set)
 {
     const char *resource_discovery_enabled = NULL;
-    xmlNode *attrs = NULL;
+    const xmlNode *attrs = NULL;
     pe_resource_t *rsc = NULL;
 
     if (!pcmk__str_eq((const char *)state->name, XML_CIB_TAG_STATE, pcmk__str_none)) {
@@ -1024,7 +1025,8 @@ unpack_transient_attributes(const xmlNode *state, pe_node_t *node,
                             pe_working_set_t *data_set)
 {
     const char *discovery = NULL;
-    xmlNode *attrs = find_xml_node(state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
+    const xmlNode *attrs = find_xml_node(state, XML_TAG_TRANSIENT_NODEATTRS,
+                                         FALSE);
 
     add_node_attrs(attrs, node, TRUE, data_set);
 
@@ -1145,7 +1147,7 @@ unpack_node_history(const xmlNode *status, bool fence,
     int rc = pcmk_rc_ok;
 
     // Loop through all node_state entries in CIB status
-    for (xmlNode *state = first_named_child(status, XML_CIB_TAG_STATE);
+    for (const xmlNode *state = first_named_child(status, XML_CIB_TAG_STATE);
          state != NULL; state = crm_next_same_xml(state)) {
 
         const char *id = ID(state);
@@ -2481,9 +2483,8 @@ static void
 handle_orphaned_container_fillers(const xmlNode *lrm_rsc_list,
                                   pe_working_set_t *data_set)
 {
-    xmlNode *rsc_entry = NULL;
-    for (rsc_entry = pcmk__xe_first_child(lrm_rsc_list); rsc_entry != NULL;
-         rsc_entry = pcmk__xe_next(rsc_entry)) {
+    for (const xmlNode *rsc_entry = pcmk__xe_first_child(lrm_rsc_list);
+         rsc_entry != NULL; rsc_entry = pcmk__xe_next(rsc_entry)) {
 
         pe_resource_t *rsc;
         pe_resource_t *container;
@@ -2543,7 +2544,7 @@ unpack_node_lrm(pe_node_t *node, const xmlNode *xml, pe_working_set_t *data_set)
     }
 
     // Unpack each lrm_resource entry
-    for (xmlNode *rsc_entry = first_named_child(xml, XML_LRM_TAG_RESOURCE);
+    for (const xmlNode *rsc_entry = first_named_child(xml, XML_LRM_TAG_RESOURCE);
          rsc_entry != NULL; rsc_entry = crm_next_same_xml(rsc_entry)) {
 
         pe_resource_t *rsc = unpack_lrm_resource(node, rsc_entry, data_set);
@@ -2675,10 +2676,11 @@ unknown_on_node(const char *rsc_id, const char *node_name,
  * \brief Check whether a probe/monitor indicating the resource was not running
  * on a node happened after some event
  *
- * \param[in]     rsc_id    Resource being checked
- * \param[in]     node_name Node being checked
- * \param[in]     xml_op    Event that monitor is being compared to
- * \param[in,out] data_set  Cluster working set
+ * \param[in]     rsc_id     Resource being checked
+ * \param[in]     node_name  Node being checked
+ * \param[in]     xml_op     Event that monitor is being compared to
+ * \param[in]     same_node  Whether the operations are on the same node
+ * \param[in,out] data_set   Cluster working set
  *
  * \return true if such a monitor happened after event, false otherwise
  */
@@ -2803,7 +2805,7 @@ newer_state_after_migrate(const char *rsc_id, const char *node_name,
 
 static void
 unpack_migrate_to_success(pe_resource_t *rsc, const pe_node_t *node,
-                          xmlNode *xml_op, pe_working_set_t *data_set)
+                          const xmlNode *xml_op, pe_working_set_t *data_set)
 {
     /* A successful migration sequence is:
      *    migrate_to on source node
@@ -2961,7 +2963,7 @@ unpack_migrate_to_success(pe_resource_t *rsc, const pe_node_t *node,
 
 static void
 unpack_migrate_to_failure(pe_resource_t *rsc, const pe_node_t *node,
-                          xmlNode *xml_op, pe_working_set_t *data_set)
+                          const xmlNode *xml_op, pe_working_set_t *data_set)
 {
     xmlNode *target_migrate_from = NULL;
     const char *source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
@@ -3014,7 +3016,7 @@ unpack_migrate_to_failure(pe_resource_t *rsc, const pe_node_t *node,
 
 static void
 unpack_migrate_from_failure(pe_resource_t *rsc, const pe_node_t *node,
-                            xmlNode *xml_op, pe_working_set_t *data_set)
+                            const xmlNode *xml_op, pe_working_set_t *data_set)
 {
     xmlNode *source_migrate_to = NULL;
     const char *source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
@@ -3838,7 +3840,7 @@ get_action_on_fail(pe_resource_t *rsc, const char *key, const char *task, pe_wor
 
 static void
 update_resource_state(pe_resource_t *rsc, const pe_node_t *node,
-                      xmlNode *xml_op, const char *task, int rc,
+                      const xmlNode *xml_op, const char *task, int rc,
                       xmlNode *last_failure, enum action_fail_response *on_fail,
                       pe_working_set_t *data_set)
 {
@@ -4226,7 +4228,7 @@ done:
 }
 
 static void
-add_node_attrs(xmlNode *xml_obj, pe_node_t *node, bool overwrite,
+add_node_attrs(const xmlNode *xml_obj, pe_node_t *node, bool overwrite,
                pe_working_set_t *data_set)
 {
     const char *cluster_name = NULL;

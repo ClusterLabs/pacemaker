@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -639,7 +639,7 @@ xmlNode *pe__failed_probe_for_rsc(pe_resource_t *rsc, const char *name);
 const char *pe__clone_child_id(pe_resource_t *rsc);
 
 int pe__sum_node_health_scores(const pe_node_t *node, int base_health);
-int pe__node_health(const pe_node_t *node);
+int pe__node_health(pe_node_t *node);
 
 static inline enum pcmk__health_strategy
 pe__health_strategy(pe_working_set_t *data_set)
