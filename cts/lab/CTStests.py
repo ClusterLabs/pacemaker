@@ -1,7 +1,7 @@
 """ Test-specific classes for Pacemaker's Cluster Test Suite (CTS)
 """
 
-__copyright__ = "Copyright 2000-2022 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 #
@@ -1313,7 +1313,7 @@ class ResourceRecover(CTSTest):
                                self.interval, node), None)
         if rc != 0 or len(lines) != 1:
             self.logger.log("crm_failcount on %s failed (%d): %s" % (node, rc,
-                            ' '.join(lines)))
+                            " // ".join(map(str.strip, lines))))
             return -1
         try:
             failcount = int(lines[0])
