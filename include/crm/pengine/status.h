@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -43,6 +43,8 @@ pe_node_t *pe_find_node_any(const GList *node_list, const char *id,
                             const char *node_name);
 GList *find_operations(const char *rsc, const char *node, gboolean active_filter,
                          pe_working_set_t * data_set);
+void calculate_active_ops(const GList *sorted_op_list, int *start_index,
+                          int *stop_index);
 int pe_bundle_replicas(const pe_resource_t *rsc);
 
 /*!

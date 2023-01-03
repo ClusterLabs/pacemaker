@@ -2290,20 +2290,20 @@ process_recurring(pe_node_t * node, pe_resource_t * rsc,
 }
 
 void
-calculate_active_ops(GList *sorted_op_list, int *start_index, int *stop_index)
+calculate_active_ops(const GList *sorted_op_list, int *start_index,
+                     int *stop_index)
 {
     int counter = -1;
     int implied_monitor_start = -1;
     int implied_clone_start = -1;
     const char *task = NULL;
     const char *status = NULL;
-    GList *gIter = sorted_op_list;
 
     *stop_index = -1;
     *start_index = -1;
 
-    for (; gIter != NULL; gIter = gIter->next) {
-        xmlNode *rsc_op = (xmlNode *) gIter->data;
+    for (const GList *iter = sorted_op_list; iter != NULL; iter = iter->next) {
+        const xmlNode *rsc_op = (const xmlNode *) iter->data;
 
         counter++;
 
