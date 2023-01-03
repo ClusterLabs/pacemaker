@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -548,7 +548,7 @@ pcmk_is_probe(const char *task, guint interval)
 }
 
 bool
-pcmk_xe_is_probe(xmlNode *xml_op)
+pcmk_xe_is_probe(const xmlNode *xml_op)
 {
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
     const char *interval_ms_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL_MS);
@@ -559,7 +559,7 @@ pcmk_xe_is_probe(xmlNode *xml_op)
 }
 
 bool
-pcmk_xe_mask_probe_failure(xmlNode *xml_op)
+pcmk_xe_mask_probe_failure(const xmlNode *xml_op)
 {
     int status = PCMK_EXEC_UNKNOWN;
     int rc = PCMK_OCF_OK;

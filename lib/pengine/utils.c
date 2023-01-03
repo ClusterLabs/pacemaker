@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -148,13 +148,13 @@ node_list_exclude(GHashTable * hash, GList *list, gboolean merge_scores)
  * \return Hash table equivalent of node list
  */
 GHashTable *
-pe__node_list2table(GList *list)
+pe__node_list2table(const GList *list)
 {
     GHashTable *result = NULL;
 
     result = pcmk__strkey_table(NULL, free);
-    for (GList *gIter = list; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *new_node = pe__copy_node((pe_node_t *) gIter->data);
+    for (const GList *gIter = list; gIter != NULL; gIter = gIter->next) {
+        pe_node_t *new_node = pe__copy_node((const pe_node_t *) gIter->data);
 
         g_hash_table_insert(result, (gpointer) new_node->details->id, new_node);
     }
@@ -202,12 +202,13 @@ pe__cmp_node_name(gconstpointer a, gconstpointer b)
  * \internal
  * \brief Output node weights to stdout
  *
- * \param[in] rsc       Use allowed nodes for this resource
- * \param[in] comment   Text description to prefix lines with
- * \param[in] nodes     If rsc is not specified, use these nodes
+ * \param[in]     rsc       Use allowed nodes for this resource
+ * \param[in]     comment   Text description to prefix lines with
+ * \param[in]     nodes     If rsc is not specified, use these nodes
+ * \param[in,out] data_set  Cluster working set
  */
 static void
-pe__output_node_weights(pe_resource_t *rsc, const char *comment,
+pe__output_node_weights(const pe_resource_t *rsc, const char *comment,
                         GHashTable *nodes, pe_working_set_t *data_set)
 {
     pcmk__output_t *out = data_set->priv;
@@ -216,8 +217,8 @@ pe__output_node_weights(pe_resource_t *rsc, const char *comment,
     GList *list = g_list_sort(g_hash_table_get_values(nodes),
                               pe__cmp_node_name);
 
-    for (GList *gIter = list; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *node = (pe_node_t *) gIter->data;
+    for (const GList *gIter = list; gIter != NULL; gIter = gIter->next) {
+        const pe_node_t *node = (const pe_node_t *) gIter->data;
 
         out->message(out, "node-weight", rsc, comment, node->details->uname,
                      pcmk_readable_score(node->weight));
@@ -232,13 +233,14 @@ pe__output_node_weights(pe_resource_t *rsc, const char *comment,
  * \param[in] file      Caller's filename
  * \param[in] function  Caller's function name
  * \param[in] line      Caller's line number
- * \param[in] rsc       Use allowed nodes for this resource
+ * \param[in] rsc       If not NULL, include this resource's ID in logs
  * \param[in] comment   Text description to prefix lines with
- * \param[in] nodes     If rsc is not specified, use these nodes
+ * \param[in] nodes     Nodes whose scores should be logged
  */
 static void
 pe__log_node_weights(const char *file, const char *function, int line,
-                     pe_resource_t *rsc, const char *comment, GHashTable *nodes)
+                     const pe_resource_t *rsc, const char *comment,
+                     GHashTable *nodes)
 {
     GHashTableIter iter;
     pe_node_t *node = NULL;
@@ -268,18 +270,21 @@ pe__log_node_weights(const char *file, const char *function, int line,
  * \internal
  * \brief Log or output node weights
  *
- * \param[in] file      Caller's filename
- * \param[in] function  Caller's function name
- * \param[in] line      Caller's line number
- * \param[in] to_log    Log if true, otherwise output
- * \param[in] rsc       Use allowed nodes for this resource
- * \param[in] comment   Text description to prefix lines with
- * \param[in] nodes     Use these nodes
+ * \param[in]     file      Caller's filename
+ * \param[in]     function  Caller's function name
+ * \param[in]     line      Caller's line number
+ * \param[in]     to_log    Log if true, otherwise output
+ * \param[in]     rsc       If not NULL, use this resource's ID in logs,
+ *                          and show scores recursively for any children
+ * \param[in]     comment   Text description to prefix lines with
+ * \param[in]     nodes     Nodes whose scores should be shown
+ * \param[in,out] data_set  Cluster working set
  */
 void
 pe__show_node_weights_as(const char *file, const char *function, int line,
-                         bool to_log, pe_resource_t *rsc, const char *comment,
-                         GHashTable *nodes, pe_working_set_t *data_set)
+                         bool to_log, const pe_resource_t *rsc,
+                         const char *comment, GHashTable *nodes,
+                         pe_working_set_t *data_set)
 {
     if (rsc != NULL && pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
         // Don't show allocation scores for orphans
@@ -349,7 +354,8 @@ pe__cmp_rsc_priority(gconstpointer a, gconstpointer b)
 }
 
 static void
-resource_node_score(pe_resource_t * rsc, pe_node_t * node, int score, const char *tag)
+resource_node_score(pe_resource_t *rsc, const pe_node_t *node, int score,
+                    const char *tag)
 {
     pe_node_t *match = NULL;
 
@@ -382,8 +388,8 @@ resource_node_score(pe_resource_t * rsc, pe_node_t * node, int score, const char
 }
 
 void
-resource_location(pe_resource_t * rsc, pe_node_t * node, int score, const char *tag,
-                  pe_working_set_t * data_set)
+resource_location(pe_resource_t *rsc, const pe_node_t *node, int score,
+                  const char *tag, pe_working_set_t *data_set)
 {
     if (node != NULL) {
         resource_node_score(rsc, node, score, tag);
@@ -685,7 +691,7 @@ add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref)
  *       shutdown of remote nodes by virtue of their connection stopping.
  */
 bool
-pe__shutdown_requested(pe_node_t *node)
+pe__shutdown_requested(const pe_node_t *node)
 {
     const char *shutdown = pe_node_attribute_raw(node, XML_CIB_ATTR_SHUTDOWN);
 
@@ -711,13 +717,21 @@ pe__update_recheck_time(time_t recheck, pe_working_set_t *data_set)
 
 /*!
  * \internal
- * \brief Wrapper for pe_unpack_nvpairs() using a cluster working set
+ * \brief Extract nvpair blocks contained by a CIB XML element into a hash table
+ *
+ * \param[in]     xml_obj       XML element containing blocks of nvpair elements
+ * \param[in]     set_name      If not NULL, only use blocks of this element
+ * \param[in]     rule_data     Matching parameters to use when unpacking
+ * \param[out]    hash          Where to store extracted name/value pairs
+ * \param[in]     always_first  If not NULL, process block with this ID first
+ * \param[in]     overwrite     Whether to replace existing values with same name
+ * \param[in,out] data_set      Cluster working set containing \p xml_obj
  */
 void
 pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
-                           pe_rule_eval_data_t *rule_data, GHashTable *hash,
-                           const char *always_first, gboolean overwrite,
-                           pe_working_set_t *data_set)
+                           const pe_rule_eval_data_t *rule_data,
+                           GHashTable *hash, const char *always_first,
+                           gboolean overwrite, pe_working_set_t *data_set)
 {
     crm_time_t *next_change = crm_time_new_undefined();
 

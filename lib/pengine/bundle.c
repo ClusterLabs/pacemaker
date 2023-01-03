@@ -107,7 +107,7 @@ create_resource(const char *name, const char *provider, const char *kind)
  * \internal
  * \brief Check whether cluster can manage resource inside container
  *
- * \param[in] data  Container variant data
+ * \param[in,out] data  Container variant data
  *
  * \return TRUE if networking configuration is acceptable, FALSE otherwise
  *

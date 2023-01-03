@@ -143,14 +143,16 @@ pe_foreach_guest_node(const pe_working_set_t *data_set, const pe_node_t *host,
  * \internal
  * \brief Create CIB XML for an implicit remote connection
  *
- * \param[in] parent           If not NULL, use as parent XML element
- * \param[in] uname            Name of Pacemaker Remote node
- * \param[in] container        If not NULL, use this as connection container
- * \param[in] migrateable      If not NULL, use as allow-migrate value
- * \param[in] is_managed       If not NULL, use as is-managed value
- * \param[in] start_timeout    If not NULL, use as remote connect timeout
- * \param[in] server           If not NULL, use as remote server value
- * \param[in] port             If not NULL, use as remote port value
+ * \param[in,out] parent           If not NULL, use as parent XML element
+ * \param[in]     uname            Name of Pacemaker Remote node
+ * \param[in]     container        If not NULL, use this as connection container
+ * \param[in]     migrateable      If not NULL, use as allow-migrate value
+ * \param[in]     is_managed       If not NULL, use as is-managed value
+ * \param[in]     start_timeout    If not NULL, use as remote connect timeout
+ * \param[in]     server           If not NULL, use as remote server value
+ * \param[in]     port             If not NULL, use as remote port value
+ *
+ * \return Newly created XML
  */
 xmlNode *
 pe_create_remote_xml(xmlNode *parent, const char *uname,

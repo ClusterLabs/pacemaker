@@ -1159,8 +1159,8 @@ clone_resource_state(const pe_resource_t * rsc, gboolean current)
  * \param[in] data_set  Cluster state
  */
 bool
-pe__is_universal_clone(pe_resource_t *rsc,
-                       pe_working_set_t *data_set)
+pe__is_universal_clone(const pe_resource_t *rsc,
+                       const pe_working_set_t *data_set)
 {
     if (pe_rsc_is_clone(rsc)) {
         clone_variant_data_t *clone_data = NULL;
@@ -1217,7 +1217,7 @@ pe__clone_child_id(pe_resource_t *rsc)
  * \return true if clone is ordered, otherwise false
  */
 bool
-pe__clone_is_ordered(pe_resource_t *clone)
+pe__clone_is_ordered(const pe_resource_t *clone)
 {
     clone_variant_data_t *clone_data = NULL;
 
@@ -1229,8 +1229,8 @@ pe__clone_is_ordered(pe_resource_t *clone)
  * \internal
  * \brief Set a clone flag
  *
- * \param[in] clone  Clone resource to set flag for
- * \param[in] flag   Clone flag to set
+ * \param[in,out] clone  Clone resource to set flag for
+ * \param[in]     flag   Clone flag to set
  *
  * \return Standard Pacemaker return code (either pcmk_rc_ok if flag was not
  *         already set or pcmk_rc_already if it was)
@@ -1254,9 +1254,9 @@ pe__set_clone_flag(pe_resource_t *clone, enum pe__clone_flags flag)
  * \internal
  * \brief Create pseudo-actions needed for promotable clones
  *
- * \param[in] clone          Promotable clone to create actions for
- * \param[in] any_promoting  Whether any instances will be promoted
- * \param[in] any_demoting   Whether any instance will be demoted
+ * \param[in,out] clone          Promotable clone to create actions for
+ * \param[in]     any_promoting  Whether any instances will be promoted
+ * \param[in]     any_demoting   Whether any instance will be demoted
  */
 void
 pe__create_promotable_pseudo_ops(pe_resource_t *clone, bool any_promoting,

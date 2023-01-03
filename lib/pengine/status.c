@@ -44,7 +44,7 @@ pe_new_working_set(void)
 /*!
  * \brief Free a working set
  *
- * \param[in] data_set  Working set to free
+ * \param[in,out] data_set  Working set to free
  */
 void
 pe_free_working_set(pe_working_set_t *data_set)
@@ -152,7 +152,7 @@ cluster_status(pe_working_set_t * data_set)
  * \internal
  * \brief Free a list of pe_resource_t
  *
- * \param[in] resources  List to free
+ * \param[in,out] resources  List to free
  *
  * \note When a working set's resource list is freed, that includes the original
  *       storage for the uname and id of any Pacemaker Remote nodes in the

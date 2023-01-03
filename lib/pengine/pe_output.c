@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2022 the Pacemaker project contributors
+ * Copyright 2019-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -33,10 +33,11 @@ compare_attribute(gconstpointer a, gconstpointer b)
  * \internal
  * \brief Determine whether extended information about an attribute should be added.
  *
- * \param[in]  node           Node that ran this resource.
- * \param[in]  rsc_list       The list of resources for this node.
- * \param[in]  attrname       The attribute to find.
- * \param[out] expected_score The expected value for this attribute.
+ * \param[in]     node            Node that ran this resource
+ * \param[in,out] rsc_list        List of resources for this node
+ * \param[in,out] data_set        Cluster working set
+ * \param[in]     attrname        Attribute to find
+ * \param[out]    expected_score  Expected value for this attribute
  *
  * \return true if extended information should be printed, false otherwise
  * \note Currently, extended information is only supported for ping/pingd
@@ -44,7 +45,7 @@ compare_attribute(gconstpointer a, gconstpointer b)
  *       or degraded.
  */
 static bool
-add_extra_info(pe_node_t *node, GList *rsc_list, pe_working_set_t *data_set,
+add_extra_info(const pe_node_t *node, GList *rsc_list, pe_working_set_t *data_set,
                const char *attrname, int *expected_score)
 {
     GList *gIter = NULL;
@@ -1234,9 +1235,18 @@ cluster_times_text(pcmk__output_t *out, va_list args) {
 /*!
  * \internal
  * \brief Display a failed action in less-technical natural language
+ *
+ * \param[in,out] out          Output object to use for display
+ * \param[in]     xml_op       XML containing failed action
+ * \param[in]     op_key       Operation key of failed action
+ * \param[in]     node_name    Where failed action occurred
+ * \param[in]     rc           OCF exit code of failed action
+ * \param[in]     status       Execution status of failed action
+ * \param[in]     exit_reason  Exit reason given for failed action
+ * \param[in]     exec_time    String containing execution time in milliseconds
  */
 static void
-failed_action_friendly(pcmk__output_t *out, xmlNodePtr xml_op,
+failed_action_friendly(pcmk__output_t *out, const xmlNode *xml_op,
                        const char *op_key, const char *node_name, int rc,
                        int status, const char *exit_reason,
                        const char *exec_time)
@@ -1310,9 +1320,18 @@ failed_action_friendly(pcmk__output_t *out, xmlNodePtr xml_op,
 /*!
  * \internal
  * \brief Display a failed action with technical details
+ *
+ * \param[in,out] out          Output object to use for display
+ * \param[in]     xml_op       XML containing failed action
+ * \param[in]     op_key       Operation key of failed action
+ * \param[in]     node_name    Where failed action occurred
+ * \param[in]     rc           OCF exit code of failed action
+ * \param[in]     status       Execution status of failed action
+ * \param[in]     exit_reason  Exit reason given for failed action
+ * \param[in]     exec_time    String containing execution time in milliseconds
  */
 static void
-failed_action_technical(pcmk__output_t *out, xmlNodePtr xml_op,
+failed_action_technical(pcmk__output_t *out, const xmlNode *xml_op,
                         const char *op_key, const char *node_name, int rc,
                         int status, const char *exit_reason,
                         const char *exec_time)
@@ -1648,7 +1667,7 @@ node_html(pcmk__output_t *out, va_list args) {
  * \return String representation of node's status
  */
 static const char *
-node_text_status(pe_node_t *node)
+node_text_status(const pe_node_t *node)
 {
     if (node->details->unclean) {
         if (node->details->online) {
@@ -1949,7 +1968,7 @@ node_and_op(pcmk__output_t *out, va_list args) {
     rsc = pe_find_resource(data_set->resources, op_rsc);
 
     if (rsc) {
-        pe_node_t *node = pe__current_node(rsc);
+        const pe_node_t *node = pe__current_node(rsc);
         const char *target_role = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
         uint32_t show_opts = pcmk_show_rsc_only | pcmk_show_pending;
 
@@ -2442,11 +2461,12 @@ node_summary(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("node-weight", "pe_resource_t *", "const char *", "const char *", "const char *")
+PCMK__OUTPUT_ARGS("node-weight", "const pe_resource_t *", "const char *",
+                  "const char *", "const char *")
 static int
 node_weight(pcmk__output_t *out, va_list args)
 {
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    const pe_resource_t *rsc = va_arg(args, const pe_resource_t *);
     const char *prefix = va_arg(args, const char *);
     const char *uname = va_arg(args, const char *);
     const char *score = va_arg(args, const char *);
@@ -2461,11 +2481,12 @@ node_weight(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("node-weight", "pe_resource_t *", "const char *", "const char *", "const char *")
+PCMK__OUTPUT_ARGS("node-weight", "const pe_resource_t *", "const char *",
+                  "const char *", "const char *")
 static int
 node_weight_xml(pcmk__output_t *out, va_list args)
 {
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    const pe_resource_t *rsc = va_arg(args, const pe_resource_t *);
     const char *prefix = va_arg(args, const char *);
     const char *uname = va_arg(args, const char *);
     const char *score = va_arg(args, const char *);

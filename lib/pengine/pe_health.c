@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,7 +17,7 @@
  * \internal
  * \brief Set the node health values to use for "red", "yellow", and "green"
  *
- * \param[in] data_set  Cluster working set
+ * \param[in,out] data_set  Cluster working set
  */
 void
 pe__unpack_node_health_scores(pe_working_set_t *data_set)
@@ -65,10 +65,10 @@ pe__unpack_node_health_scores(pe_working_set_t *data_set)
  * \internal
  * \brief Add node attribute value to an integer, if it is a health attribute
  *
- * \param[in] key        Name of node attribute
- * \param[in] value      String value of node attribute
- * \param[in] user_data  Address of integer to which \p value should be added
- *                       if \p key is a node health attribute
+ * \param[in]     key        Name of node attribute
+ * \param[in]     value      String value of node attribute
+ * \param[in,out] user_data  Address of integer to which \p value should be
+ *                           added if \p key is a node health attribute
  */
 static void
 add_node_health_value(gpointer key, gpointer value, gpointer user_data)
@@ -103,7 +103,7 @@ pe__sum_node_health_scores(const pe_node_t *node, int base_health)
  * \internal
  * \brief Check the general health status for a node
  *
- * \param[in] node      Node to check
+ * \param[in,out] node  Node to check
  *
  * \return  A negative value if any health attribute for \p node is red,
  *          otherwise 0 if any attribute is yellow, otherwise a positive value.

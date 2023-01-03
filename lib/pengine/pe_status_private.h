@@ -57,7 +57,8 @@ G_GNUC_INTERNAL
 gboolean unpack_remote_nodes(xmlNode *xml_resources, pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-gboolean unpack_resources(xmlNode *xml_resources, pe_working_set_t *data_set);
+gboolean unpack_resources(const xmlNode *xml_resources,
+                          pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
 gboolean unpack_config(xmlNode *config, pe_working_set_t *data_set);

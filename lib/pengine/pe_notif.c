@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,8 +12,8 @@
 #include <pacemaker-internal.h>
 
 typedef struct notify_entry_s {
-    pe_resource_t *rsc;
-    pe_node_t *node;
+    const pe_resource_t *rsc;
+    const pe_node_t *node;
 } notify_entry_t;
 
 /*!
@@ -89,7 +89,7 @@ compare_notify_entries(gconstpointer a, gconstpointer b)
  * \note It is the caller's responsibility to free the return value.
  */
 static notify_entry_t *
-dup_notify_entry(notify_entry_t *entry)
+dup_notify_entry(const notify_entry_t *entry)
 {
     notify_entry_t *dup = calloc(1, sizeof(notify_entry_t));
 
@@ -113,7 +113,8 @@ dup_notify_entry(notify_entry_t *entry)
  *       \p g_string_free().
  */
 static void
-get_node_names(GList *list, GString **all_node_names, GString **host_node_names)
+get_node_names(const GList *list, GString **all_node_names,
+               GString **host_node_names)
 {
     if (all_node_names != NULL) {
         *all_node_names = NULL;
@@ -122,8 +123,8 @@ get_node_names(GList *list, GString **all_node_names, GString **host_node_names)
         *host_node_names = NULL;
     }
 
-    for (GList *iter = list; iter != NULL; iter = iter->next) {
-        pe_node_t *node = (pe_node_t *) iter->data;
+    for (const GList *iter = list; iter != NULL; iter = iter->next) {
+        const pe_node_t *node = (const pe_node_t *) iter->data;
 
         if (node->details->uname == NULL) {
             continue;
@@ -232,9 +233,9 @@ notify_entries_to_strings(GList *list, GString **rsc_names,
  * \internal
  * \brief Copy a meta-attribute into a notify action
  *
- * \param[in] key        Name of meta-attribute to copy
- * \param[in] value      Value of meta-attribute to copy
- * \param[in] user_data  Notify action to copy into
+ * \param[in]     key        Name of meta-attribute to copy
+ * \param[in]     value      Value of meta-attribute to copy
+ * \param[in,out] user_data  Notify action to copy into
  */
 static void
 copy_meta_to_notify(gpointer key, gpointer value, gpointer user_data)
@@ -253,10 +254,10 @@ copy_meta_to_notify(gpointer key, gpointer value, gpointer user_data)
 }
 
 static void
-add_notify_data_to_action_meta(notify_data_t *n_data, pe_action_t *action)
+add_notify_data_to_action_meta(const notify_data_t *n_data, pe_action_t *action)
 {
-    for (GSList *item = n_data->keys; item; item = item->next) {
-        pcmk_nvpair_t *nvpair = item->data;
+    for (const GSList *item = n_data->keys; item; item = item->next) {
+        const pcmk_nvpair_t *nvpair = (const pcmk_nvpair_t *) item->data;
 
         add_hash_param(action->meta, nvpair->name, nvpair->value);
     }
@@ -266,10 +267,10 @@ add_notify_data_to_action_meta(notify_data_t *n_data, pe_action_t *action)
  * \internal
  * \brief Create a new notify pseudo-action for a clone resource
  *
- * \param[in] rsc           Clone resource that notification is for
- * \param[in] action        Action to use in notify action key
- * \param[in] notif_action  RSC_NOTIFY or RSC_NOTIFIED
- * \param[in] notif_type    "pre", "post", "confirmed-pre", or "confirmed-post"
+ * \param[in,out] rsc           Clone resource that notification is for
+ * \param[in]     action        Action to use in notify action key
+ * \param[in]     notif_action  RSC_NOTIFY or RSC_NOTIFIED
+ * \param[in]     notif_type    "pre", "post", "confirmed-pre", "confirmed-post"
  *
  * \return Newly created notify pseudo-action
  */
@@ -294,17 +295,17 @@ new_notify_pseudo_action(pe_resource_t *rsc, const pe_action_t *action,
  * \internal
  * \brief Create a new notify action for a clone instance
  *
- * \param[in] rsc           Clone instance that notification is for
- * \param[in] node          Node that notification is for
- * \param[in] op            Action that notification is for
- * \param[in] notify_done   Parent pseudo-action for notifications complete
- * \param[in] n_data        Notification values to add to action meta-data
+ * \param[in,out] rsc          Clone instance that notification is for
+ * \param[in]     node         Node that notification is for
+ * \param[in,out] op           Action that notification is for
+ * \param[in,out] notify_done  Parent pseudo-action for notifications complete
+ * \param[in]     n_data       Notification values to add to action meta-data
  *
  * \return Newly created notify action
  */
 static pe_action_t *
-new_notify_action(pe_resource_t *rsc, pe_node_t *node, pe_action_t *op,
-                  pe_action_t *notify_done, notify_data_t *n_data)
+new_notify_action(pe_resource_t *rsc, const pe_node_t *node, pe_action_t *op,
+                  pe_action_t *notify_done, const notify_data_t *n_data)
 {
     char *key = NULL;
     pe_action_t *notify_action = NULL;
@@ -356,12 +357,12 @@ new_notify_action(pe_resource_t *rsc, pe_node_t *node, pe_action_t *op,
  * \internal
  * \brief Create a new "post-" notify action for a clone instance
  *
- * \param[in] rsc           Clone instance that notification is for
- * \param[in] node          Node that notification is for
- * \param[in] n_data        Notification values to add to action meta-data
+ * \param[in,out] rsc     Clone instance that notification is for
+ * \param[in]     node    Node that notification is for
+ * \param[in,out] n_data  Notification values to add to action meta-data
  */
 static void
-new_post_notify_action(pe_resource_t *rsc, pe_node_t *node,
+new_post_notify_action(pe_resource_t *rsc, const pe_node_t *node,
                        notify_data_t *n_data)
 {
     pe_action_t *notify = NULL;
@@ -413,14 +414,14 @@ new_post_notify_action(pe_resource_t *rsc, pe_node_t *node,
  *     -> "post-" notify actions for each clone instance
  *     -> "post-" notifications complete pseudo-action for clone
  *
- * \param[in] rsc       Clone that notifications are for
- * \param[in] task      Name of action that notifications are for
- * \param[in] action    If not NULL, create a "pre-" pseudo-action ordered
- *                      before a "pre-" complete pseudo-action, ordered before
- *                      this action
- * \param[in] complete  If not NULL, create a "post-" pseudo-action ordered
- *                      after this action, and a "post-" complete pseudo-action
- *                      ordered after that
+ * \param[in,out] rsc       Clone that notifications are for
+ * \param[in]     task      Name of action that notifications are for
+ * \param[in,out] action    If not NULL, create a "pre-" pseudo-action ordered
+ *                          before a "pre-" complete pseudo-action, ordered
+ *                          before this action
+ * \param[in,out] complete  If not NULL, create a "post-" pseudo-action ordered
+ *                          after this action, and a "post-" complete
+ *                          pseudo-action ordered after that
  *
  * \return Newly created notification data
  */
@@ -511,7 +512,7 @@ pe__clone_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
  * \note The caller is responsible for freeing the return value.
  */
 static notify_entry_t *
-new_notify_entry(pe_resource_t *rsc, pe_node_t *node)
+new_notify_entry(const pe_resource_t *rsc, const pe_node_t *node)
 {
     notify_entry_t *entry = calloc(1, sizeof(notify_entry_t));
 
@@ -525,16 +526,17 @@ new_notify_entry(pe_resource_t *rsc, pe_node_t *node)
  * \internal
  * \brief Add notification data for resource state and optionally actions
  *
- * \param[in] rsc        Clone or clone instance being notified
- * \param[in] activity   Whether to add notification entries for actions
- * \param[in] n_data     Notification data for clone
+ * \param[in]     rsc       Clone or clone instance being notified
+ * \param[in]     activity  Whether to add notification entries for actions
+ * \param[in,out] n_data    Notification data for clone
  */
 static void
-collect_resource_data(pe_resource_t *rsc, bool activity, notify_data_t *n_data)
+collect_resource_data(const pe_resource_t *rsc, bool activity,
+                      notify_data_t *n_data)
 {
-    GList *iter = NULL;
+    const GList *iter = NULL;
     notify_entry_t *entry = NULL;
-    pe_node_t *node = NULL;
+    const pe_node_t *node = NULL;
 
     if (n_data == NULL) {
         return;
@@ -547,7 +549,7 @@ collect_resource_data(pe_resource_t *rsc, bool activity, notify_data_t *n_data)
     // If this is a clone, call recursively for each instance
     if (rsc->children != NULL) {
         for (iter = rsc->children; iter != NULL; iter = iter->next) {
-            pe_resource_t *child = (pe_resource_t *) iter->data;
+            const pe_resource_t *child = (const pe_resource_t *) iter->data;
 
             collect_resource_data(child, activity, n_data);
         }
@@ -597,7 +599,7 @@ collect_resource_data(pe_resource_t *rsc, bool activity, notify_data_t *n_data)
 
     // Add notification entries for each of the resource's actions
     for (iter = rsc->actions; iter != NULL; iter = iter->next) {
-        pe_action_t *op = (pe_action_t *) iter->data;
+        const pe_action_t *op = (const pe_action_t *) iter->data;
 
         if (!pcmk_is_set(op->flags, pe_action_optional) && (op->node != NULL)) {
             enum action_tasks task = text2task(op->task);
@@ -657,7 +659,7 @@ collect_resource_data(pe_resource_t *rsc, bool activity, notify_data_t *n_data)
  * \param[in,out] n_data    Notification data
  */
 static void
-add_notif_keys(pe_resource_t *rsc, notify_data_t *n_data)
+add_notif_keys(const pe_resource_t *rsc, notify_data_t *n_data)
 {
     bool required = false; // Whether to make notify actions required
     GString *rsc_list = NULL;
@@ -787,8 +789,8 @@ find_remote_start(pe_action_t *action)
  * \internal
  * \brief Create notify actions, and add notify data to original actions
  *
- * \param[in] rsc       Clone or clone instance that notification is for
- * \param[in] n_data    Clone notification data for some action
+ * \param[in,out] rsc     Clone or clone instance that notification is for
+ * \param[in,out] n_data  Clone notification data for some action
  */
 static void
 create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
@@ -921,8 +923,8 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
  * \internal
  * \brief Create notification data and actions for a clone
  *
- * \param[in] rsc     Clone resource that notification is for
- * \param[in] n_data  Clone notification data for some action
+ * \param[in,out] rsc     Clone resource that notification is for
+ * \param[in,out] n_data  Clone notification data for some action
  */
 void
 pe__create_notifications(pe_resource_t *rsc, notify_data_t *n_data)
@@ -939,7 +941,7 @@ pe__create_notifications(pe_resource_t *rsc, notify_data_t *n_data)
  * \internal
  * \brief Free notification data
  *
- * \param[in] n_data  Notification data to free
+ * \param[in,out] n_data  Notification data to free
  */
 void
 pe__free_notification_data(notify_data_t *n_data)
@@ -969,12 +971,12 @@ pe__free_notification_data(notify_data_t *n_data)
  * clone is ordered after it. This function creates new notification
  * pseudo-actions relative to the fencing to ensure everything works properly.
  *
- * \param[in] stop        Stop action implied by fencing
- * \param[in] rsc         Clone resource that notification is for
- * \param[in] stonith_op  Fencing action that implies \p stop
+ * \param[in]     stop        Stop action implied by fencing
+ * \param[in,out] rsc         Clone resource that notification is for
+ * \param[in,out] stonith_op  Fencing action that implies \p stop
  */
 void
-pe__order_notifs_after_fencing(pe_action_t *stop, pe_resource_t *rsc,
+pe__order_notifs_after_fencing(const pe_action_t *stop, pe_resource_t *rsc,
                                pe_action_t *stonith_op)
 {
     notify_data_t *n_data;

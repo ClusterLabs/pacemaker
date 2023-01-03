@@ -17,8 +17,8 @@
 #include <crm/pengine/internal.h>
 #include "pe_status_private.h"
 
-static void unpack_operation(pe_action_t *action, xmlNode *xml_obj,
-                             pe_resource_t *container,
+static void unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
+                             const pe_resource_t *container,
                              pe_working_set_t *data_set, guint interval_ms);
 
 static void
@@ -51,8 +51,8 @@ lookup_singleton(pe_working_set_t *data_set, const char *action_uuid)
  * \return Existing action that matches arguments (or NULL if none)
  */
 static pe_action_t *
-find_existing_action(const char *key, pe_resource_t *rsc, const pe_node_t *node,
-                     pe_working_set_t *data_set)
+find_existing_action(const char *key, const pe_resource_t *rsc,
+                     const pe_node_t *node, const pe_working_set_t *data_set)
 {
     GList *matches = NULL;
     pe_action_t *action = NULL;
@@ -151,13 +151,13 @@ find_rsc_op_entry(const pe_resource_t *rsc, const char *key)
  * \internal
  * \brief Create a new action object
  *
- * \param[in] key        Action key
- * \param[in] task       Action name
- * \param[in] rsc        Resource that action is for (if any)
- * \param[in] node       Node that action is on (if any)
- * \param[in] optional   Whether action should be considered optional
- * \param[in] for_graph  Whether action should be recorded in transition graph
- * \param[in] data_set   Cluster working set
+ * \param[in]     key        Action key
+ * \param[in]     task       Action name
+ * \param[in,out] rsc        Resource that action is for (if any)
+ * \param[in]     node       Node that action is on (if any)
+ * \param[in]     optional   Whether action should be considered optional
+ * \param[in]     for_graph  Whether action should be recorded in transition graph
+ * \param[in,out] data_set   Cluster working set
  *
  * \return Newly allocated action
  * \note This function takes ownership of \p key. It is the caller's
@@ -225,8 +225,8 @@ new_action(char *key, const char *task, pe_resource_t *rsc,
  * \internal
  * \brief Evaluate node attribute values for an action
  *
- * \param[in] action    Action to unpack attributes for
- * \param[in] data_set  Cluster working set
+ * \param[in,out] action    Action to unpack attributes for
+ * \param[in,out] data_set  Cluster working set
  */
 static void
 unpack_action_node_attributes(pe_action_t *action, pe_working_set_t *data_set)
@@ -254,8 +254,8 @@ unpack_action_node_attributes(pe_action_t *action, pe_working_set_t *data_set)
  * \internal
  * \brief Update an action's optional flag
  *
- * \param[in] action    Action to update
- * \param[in] optional  Requested optional status
+ * \param[in,out] action    Action to update
+ * \param[in]     optional  Requested optional status
  */
 static void
 update_action_optional(pe_action_t *action, gboolean optional)
@@ -308,9 +308,9 @@ effective_quorum_policy(pe_resource_t *rsc, pe_working_set_t *data_set)
  * \internal
  * \brief Update a resource action's runnable flag
  *
- * \param[in] action     Action to update
- * \param[in] for_graph  Whether action should be recorded in transition graph
- * \param[in] data_set   Cluster working set
+ * \param[in,out] action     Action to update
+ * \param[in]     for_graph  Whether action should be recorded in transition graph
+ * \param[in,out] data_set   Cluster working set
  *
  * \note This may also schedule fencing if a stop is unrunnable.
  */
@@ -401,11 +401,11 @@ update_resource_action_runnable(pe_action_t *action, bool for_graph,
  * \internal
  * \brief Update a resource object's flags for a new action on it
  *
- * \param[in] rsc        Resource that action is for (if any)
- * \param[in] action     New action
+ * \param[in,out] rsc     Resource that action is for (if any)
+ * \param[in]     action  New action
  */
 static void
-update_resource_flags_for_action(pe_resource_t *rsc, pe_action_t *action)
+update_resource_flags_for_action(pe_resource_t *rsc, const pe_action_t *action)
 {
     /* @COMPAT pe_rsc_starting and pe_rsc_stopping are not actually used
      * within Pacemaker, and should be deprecated and eventually removed
@@ -517,8 +517,9 @@ unpack_timeout(const char *value)
 
 // true if value contains valid, non-NULL interval origin for recurring op
 static bool
-unpack_interval_origin(const char *value, xmlNode *xml_obj, guint interval_ms,
-                       crm_time_t *now, long long *start_delay)
+unpack_interval_origin(const char *value, const xmlNode *xml_obj,
+                       guint interval_ms, const crm_time_t *now,
+                       long long *start_delay)
 {
     long long result = 0;
     guint interval_sec = interval_ms / 1000;
@@ -625,15 +626,16 @@ find_min_interval_mon(pe_resource_t * rsc, gboolean include_disabled)
  * and start delay values as integer milliseconds), requirements, and
  * failure policy.
  *
- * \param[in,out] action      Action to unpack into
- * \param[in]     xml_obj     Operation XML (or NULL if all defaults)
- * \param[in]     container   Resource that contains affected resource, if any
- * \param[in]     data_set    Cluster state
- * \param[in]     interval_ms How frequently to perform the operation
+ * \param[in,out] action       Action to unpack into
+ * \param[in]     xml_obj      Operation XML (or NULL if all defaults)
+ * \param[in]     container    Resource that contains affected resource, if any
+ * \param[in,out] data_set     Cluster state
+ * \param[in]     interval_ms  How frequently to perform the operation
  */
 static void
-unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * container,
-                 pe_working_set_t * data_set, guint interval_ms)
+unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
+                 const pe_resource_t *container,
+                 pe_working_set_t *data_set, guint interval_ms)
 {
     int timeout_ms = 0;
     const char *value = NULL;
@@ -922,13 +924,13 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
 /*!
  * \brief Create or update an action object
  *
- * \param[in] rsc          Resource that action is for (if any)
- * \param[in] key          Action key (must be non-NULL)
- * \param[in] task         Action name (must be non-NULL)
- * \param[in] on_node      Node that action is on (if any)
- * \param[in] optional     Whether action should be considered optional
- * \param[in] save_action  Whether action should be recorded in transition graph
- * \param[in] data_set     Cluster working set
+ * \param[in,out] rsc          Resource that action is for (if any)
+ * \param[in,out] key          Action key (must be non-NULL)
+ * \param[in]     task         Action name (must be non-NULL)
+ * \param[in]     on_node      Node that action is on (if any)
+ * \param[in]     optional     Whether action should be considered optional
+ * \param[in]     save_action  Whether action should be recorded in transition graph
+ * \param[in,out] data_set     Cluster working set
  *
  * \return Action object corresponding to arguments
  * \note This function takes ownership of (and might free) \p key. If
@@ -1422,7 +1424,7 @@ pe__resource_actions(const pe_resource_t *rsc, const pe_node_t *node,
  * \note It is the caller's responsibility to free() the result.
  */
 char *
-pe__action2reason(pe_action_t *action, enum pe_action_flags flag)
+pe__action2reason(const pe_action_t *action, enum pe_action_flags flag)
 {
     const char *change = NULL;
 
@@ -1465,13 +1467,14 @@ void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrit
  * \internal
  * \brief Create an action to clear a resource's history from CIB
  *
- * \param[in] rsc   Resource to clear
- * \param[in] node  Node to clear history on
+ * \param[in,out] rsc       Resource to clear
+ * \param[in]     node      Node to clear history on
+ * \param[in,out] data_set  Cluster working set
  *
  * \return New action to clear resource history
  */
 pe_action_t *
-pe__clear_resource_history(pe_resource_t *rsc, pe_node_t *node,
+pe__clear_resource_history(pe_resource_t *rsc, const pe_node_t *node,
                            pe_working_set_t *data_set)
 {
     char *key = NULL;
@@ -1637,10 +1640,10 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
  * \internal
  * \brief Create a new pseudo-action for a resource
  *
- * \param[in] rsc   Resource to create action for
- * \param[in] task  Action name
- * \param[in] optional  Whether action should be considered optional
- * \param[in] runnable  Whethe action should be considered runnable
+ * \param[in,out] rsc       Resource to create action for
+ * \param[in]     task      Action name
+ * \param[in]     optional  Whether action should be considered optional
+ * \param[in]     runnable  Whethe action should be considered runnable
  *
  * \return New action object corresponding to arguments
  */
@@ -1665,8 +1668,8 @@ pe__new_rsc_pseudo_action(pe_resource_t *rsc, const char *task, bool optional,
  * \internal
  * \brief Add the expected result to an action
  *
- * \param[in] action           Action to add expected result to
- * \param[in] expected_result  Expected result to add
+ * \param[in,out] action           Action to add expected result to
+ * \param[in]     expected_result  Expected result to add
  *
  * \note This is more efficient than calling add_hash_param().
  */
