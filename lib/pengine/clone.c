@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1201,7 +1201,7 @@ pe__clone_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent
 }
 
 const char *
-pe__clone_child_id(pe_resource_t *rsc)
+pe__clone_child_id(const pe_resource_t *rsc)
 {
     clone_variant_data_t *clone_data = NULL;
     get_clone_variant_data(clone_data, rsc);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -365,7 +365,7 @@ struct print_data_s {
 };
 
 static const char *
-native_pending_state(pe_resource_t * rsc)
+native_pending_state(const pe_resource_t *rsc)
 {
     const char *pending_state = NULL;
 
@@ -393,7 +393,7 @@ native_pending_state(pe_resource_t * rsc)
 }
 
 static const char *
-native_pending_task(pe_resource_t * rsc)
+native_pending_task(const pe_resource_t *rsc)
 {
     const char *pending_task = NULL;
 

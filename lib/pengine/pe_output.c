@@ -2142,11 +2142,11 @@ node_attribute_list(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("node-capacity", "pe_node_t *", "const char *")
+PCMK__OUTPUT_ARGS("node-capacity", "const pe_node_t *", "const char *")
 static int
 node_capacity(pcmk__output_t *out, va_list args)
 {
-    pe_node_t *node = va_arg(args, pe_node_t *);
+    const pe_node_t *node = va_arg(args, pe_node_t *);
     const char *comment = va_arg(args, const char *);
 
     char *dump_text = crm_strdup_printf("%s: %s capacity:",
@@ -2159,11 +2159,11 @@ node_capacity(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("node-capacity", "pe_node_t *", "const char *")
+PCMK__OUTPUT_ARGS("node-capacity", "const pe_node_t *", "const char *")
 static int
 node_capacity_xml(pcmk__output_t *out, va_list args)
 {
-    pe_node_t *node = va_arg(args, pe_node_t *);
+    const pe_node_t *node = va_arg(args, pe_node_t *);
     const char *comment = va_arg(args, const char *);
 
     xmlNodePtr xml_node = pcmk__output_create_xml_node(out, "capacity",

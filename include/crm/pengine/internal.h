@@ -487,7 +487,7 @@ char *clone_strip(const char *last_rsc_id);
 char *clone_zero(const char *last_rsc_id);
 
 static inline bool
-pe_base_name_eq(pe_resource_t *rsc, const char *id)
+pe_base_name_eq(const pe_resource_t *rsc, const char *id)
 {
     if (id && rsc && rsc->id) {
         // Number of characters in rsc->id before any clone suffix
@@ -636,7 +636,7 @@ gboolean pe__native_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean ch
 
 xmlNode *pe__failed_probe_for_rsc(pe_resource_t *rsc, const char *name);
 
-const char *pe__clone_child_id(pe_resource_t *rsc);
+const char *pe__clone_child_id(const pe_resource_t *rsc);
 
 int pe__sum_node_health_scores(const pe_node_t *node, int base_health);
 int pe__node_health(pe_node_t *node);
