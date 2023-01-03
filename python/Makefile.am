@@ -9,4 +9,9 @@
 
 MAINTAINERCLEANFILES    = Makefile.in
 
+EXTRA_DIST = pylintrc
+
 SUBDIRS	= pacemaker
+
+pylint:
+	pylint $(SUBDIRS)
