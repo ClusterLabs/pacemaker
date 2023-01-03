@@ -2,7 +2,7 @@
 """ Regression tests for Pacemaker's scheduler
 """
 
-__copyright__ = "Copyright 2004-2022 the Pacemaker project contributors"
+__copyright__ = "Copyright 2004-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import io
@@ -1576,8 +1576,8 @@ class CtsScheduler(object):
         """ Run test(s) as specified """
 
         # Check for pre-existing core so we don't think it's from us
-        if os.path.isfile("core"):
-            self._failed("Can't run with core file present in %s" % self.test_home)
+        if os.path.exists("core"):
+            self._failed("Can't run with core already present in " + self.test_home)
             return CrmExit.OSFILE
 
         self._print_summary()
