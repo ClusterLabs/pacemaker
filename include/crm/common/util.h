@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -76,7 +76,7 @@ xmlNode *crm_create_op_xml(xmlNode *parent, const char *prefix,
 #define CRM_DEFAULT_OP_TIMEOUT_S "20s"
 
 bool pcmk_is_probe(const char *task, guint interval);
-bool pcmk_xe_is_probe(xmlNode *xml_op);
+bool pcmk_xe_is_probe(const xmlNode *xml_op);
 bool pcmk_xe_mask_probe_failure(xmlNode *xml_op);
 
 int compare_version(const char *version1, const char *version2);
