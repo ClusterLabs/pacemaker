@@ -77,7 +77,7 @@ xmlNode *crm_create_op_xml(xmlNode *parent, const char *prefix,
 
 bool pcmk_is_probe(const char *task, guint interval);
 bool pcmk_xe_is_probe(const xmlNode *xml_op);
-bool pcmk_xe_mask_probe_failure(xmlNode *xml_op);
+bool pcmk_xe_mask_probe_failure(const xmlNode *xml_op);
 
 int compare_version(const char *version1, const char *version2);
 

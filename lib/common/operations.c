@@ -559,7 +559,7 @@ pcmk_xe_is_probe(const xmlNode *xml_op)
 }
 
 bool
-pcmk_xe_mask_probe_failure(xmlNode *xml_op)
+pcmk_xe_mask_probe_failure(const xmlNode *xml_op)
 {
     int status = PCMK_EXEC_UNKNOWN;
     int rc = PCMK_OCF_OK;
