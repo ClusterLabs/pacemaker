@@ -2486,7 +2486,7 @@ PCMK__OUTPUT_ARGS("node-weight", "const pe_resource_t *", "const char *",
 static int
 node_weight_xml(pcmk__output_t *out, va_list args)
 {
-    const pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    const pe_resource_t *rsc = va_arg(args, const pe_resource_t *);
     const char *prefix = va_arg(args, const char *);
     const char *uname = va_arg(args, const char *);
     const char *score = va_arg(args, const char *);

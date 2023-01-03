@@ -54,7 +54,7 @@ static void unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                           pe_working_set_t *data_set);
 static void determine_remote_online_status(pe_working_set_t *data_set,
                                            pe_node_t *this_node);
-static void add_node_attrs(const xmlNode *attrs, pe_node_t *node,
+static void add_node_attrs(const xmlNode *xml_obj, pe_node_t *node,
                            bool overwrite, pe_working_set_t *data_set);
 static void determine_online_status(const xmlNode *node_state,
                                     pe_node_t *this_node,

@@ -536,7 +536,7 @@ collect_resource_data(const pe_resource_t *rsc, bool activity,
 {
     const GList *iter = NULL;
     notify_entry_t *entry = NULL;
-    pe_node_t *node = NULL;
+    const pe_node_t *node = NULL;
 
     if (n_data == NULL) {
         return;
