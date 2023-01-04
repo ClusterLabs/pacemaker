@@ -439,7 +439,7 @@ get_effective_time(pe_working_set_t * data_set)
 }
 
 gboolean
-get_target_role(pe_resource_t * rsc, enum rsc_role_e * role)
+get_target_role(const pe_resource_t *rsc, enum rsc_role_e *role)
 {
     enum rsc_role_e local_role = RSC_ROLE_UNKNOWN;
     const char *value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
@@ -458,7 +458,8 @@ get_target_role(pe_resource_t * rsc, enum rsc_role_e * role)
         return FALSE;
 
     } else if (local_role > RSC_ROLE_STARTED) {
-        if (pcmk_is_set(uber_parent(rsc)->flags, pe_rsc_promotable)) {
+        if (pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
+                        pe_rsc_promotable)) {
             if (local_role > RSC_ROLE_UNPROMOTED) {
                 /* This is what we'd do anyway, just leave the default to avoid messing up the placement algorithm */
                 return FALSE;
@@ -744,7 +745,7 @@ pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
 }
 
 bool
-pe__resource_is_disabled(pe_resource_t *rsc)
+pe__resource_is_disabled(const pe_resource_t *rsc)
 {
     const char *target_role = NULL;
 
@@ -755,7 +756,8 @@ pe__resource_is_disabled(pe_resource_t *rsc)
 
         if ((target_role_e == RSC_ROLE_STOPPED)
             || ((target_role_e == RSC_ROLE_UNPROMOTED)
-                && pcmk_is_set(uber_parent(rsc)->flags, pe_rsc_promotable))) {
+                && pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
+                               pe_rsc_promotable))) {
             return true;
         }
     }
@@ -868,14 +870,12 @@ pe__build_rsc_list(pe_working_set_t *data_set, const char *s) {
 }
 
 xmlNode *
-pe__failed_probe_for_rsc(pe_resource_t *rsc, const char *name)
+pe__failed_probe_for_rsc(const pe_resource_t *rsc, const char *name)
 {
-    pe_resource_t *parent = uber_parent(rsc);
+    const pe_resource_t *parent = pe__const_top_resource(rsc, false);
     const char *rsc_id = rsc->id;
 
-    if (rsc->variant == pe_clone) {
-        rsc_id = pe__clone_child_id(rsc);
-    } else if (parent->variant == pe_clone) {
+    if (parent->variant == pe_clone) {
         rsc_id = pe__clone_child_id(parent);
     }
 

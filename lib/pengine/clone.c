@@ -39,11 +39,11 @@
  * \return Maximum promoted instances for \p clone
  */
 int
-pe__clone_promoted_max(pe_resource_t *clone)
+pe__clone_promoted_max(const pe_resource_t *clone)
 {
     clone_variant_data_t *clone_data = NULL;
 
-    get_clone_variant_data(clone_data, uber_parent(clone));
+    get_clone_variant_data(clone_data, pe__const_top_resource(clone, false));
     return clone_data->promoted_max;
 }
 
@@ -56,11 +56,11 @@ pe__clone_promoted_max(pe_resource_t *clone)
  * \return Maximum promoted instances for \p clone
  */
 int
-pe__clone_promoted_node_max(pe_resource_t *clone)
+pe__clone_promoted_node_max(const pe_resource_t *clone)
 {
     clone_variant_data_t *clone_data = NULL;
 
-    get_clone_variant_data(clone_data, uber_parent(clone));
+    get_clone_variant_data(clone_data, pe__const_top_resource(clone, false));
     return clone_data->promoted_node_max;
 }
 
@@ -113,7 +113,8 @@ node_list_to_str(const GList *list)
 }
 
 static void
-clone_header(pcmk__output_t *out, int *rc, pe_resource_t *rsc, clone_variant_data_t *clone_data)
+clone_header(pcmk__output_t *out, int *rc, const pe_resource_t *rsc,
+             clone_variant_data_t *clone_data)
 {
     GString *attrs = NULL;
 

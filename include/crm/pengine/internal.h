@@ -231,8 +231,8 @@ typedef struct notify_data_s {
 const pe_resource_t *pe__const_top_resource(const pe_resource_t *rsc,
                                             bool include_bundle);
 
-int pe__clone_promoted_max(pe_resource_t *clone);
-int pe__clone_promoted_node_max(pe_resource_t *clone);
+int pe__clone_promoted_max(const pe_resource_t *clone);
+int pe__clone_promoted_node_max(const pe_resource_t *clone);
 
 pe_action_t *pe__new_rsc_pseudo_action(pe_resource_t *rsc, const char *task,
                                        bool optional, bool runnable);
@@ -283,7 +283,7 @@ void clone_print(pe_resource_t *rsc, const char *pre_text, long options,
 void pe__print_bundle(pe_resource_t *rsc, const char *pre_text, long options,
                       void *print_data);
 
-gchar *pcmk__native_output_string(pe_resource_t *rsc, const char *name,
+gchar *pcmk__native_output_string(const pe_resource_t *rsc, const char *name,
                                   const pe_node_t *node, uint32_t show_opts,
                                   const char *target_role, bool show_nodes);
 
@@ -474,7 +474,7 @@ void resource_location(pe_resource_t *rsc, const pe_node_t *node, int score,
 extern int pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b,
                            bool same_node_default);
 extern gint sort_op_by_callid(gconstpointer a, gconstpointer b);
-extern gboolean get_target_role(pe_resource_t * rsc, enum rsc_role_e *role);
+gboolean get_target_role(const pe_resource_t *rsc, enum rsc_role_e *role);
 void pe__set_next_role(pe_resource_t *rsc, enum rsc_role_e role,
                        const char *why);
 
@@ -572,10 +572,10 @@ pe_node_t *pe_create_node(const char *id, const char *uname, const char *type,
 //! \deprecated This function will be removed in a future release
 void common_print(pe_resource_t *rsc, const char *pre_text, const char *name,
                   const pe_node_t *node, long options, void *print_data);
-int pe__common_output_text(pcmk__output_t *out, pe_resource_t *rsc,
+int pe__common_output_text(pcmk__output_t *out, const pe_resource_t *rsc,
                            const char *name, const pe_node_t *node,
                            unsigned int options);
-int pe__common_output_html(pcmk__output_t *out, pe_resource_t *rsc,
+int pe__common_output_html(pcmk__output_t *out, const pe_resource_t *rsc,
                            const char *name, const pe_node_t *node,
                            unsigned int options);
 pe_resource_t *pe__find_bundle_replica(const pe_resource_t *bundle,
@@ -615,7 +615,7 @@ void pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
                                 GHashTable *hash, const char *always_first,
                                 gboolean overwrite, pe_working_set_t *data_set);
 
-bool pe__resource_is_disabled(pe_resource_t *rsc);
+bool pe__resource_is_disabled(const pe_resource_t *rsc);
 pe_action_t *pe__clear_resource_history(pe_resource_t *rsc,
                                         const pe_node_t *node,
                                         pe_working_set_t *data_set);
@@ -641,7 +641,7 @@ gboolean pe__group_is_filtered(const pe_resource_t *rsc, GList *only_rsc,
 gboolean pe__native_is_filtered(const pe_resource_t *rsc, GList *only_rsc,
                                 gboolean check_parent);
 
-xmlNode *pe__failed_probe_for_rsc(pe_resource_t *rsc, const char *name);
+xmlNode *pe__failed_probe_for_rsc(const pe_resource_t *rsc, const char *name);
 
 const char *pe__clone_child_id(const pe_resource_t *rsc);
 

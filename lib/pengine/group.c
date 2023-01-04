@@ -113,7 +113,8 @@ inactive_resources(pe_resource_t *rsc)
 }
 
 static void
-group_header(pcmk__output_t *out, int *rc, pe_resource_t *rsc, int n_inactive, bool show_inactive)
+group_header(pcmk__output_t *out, int *rc, const pe_resource_t *rsc,
+             int n_inactive, bool show_inactive)
 {
     GString *attrs = NULL;
 

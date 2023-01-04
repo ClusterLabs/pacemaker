@@ -2566,7 +2566,7 @@ unpack_node_lrm(pe_node_t *node, const xmlNode *xml, pe_working_set_t *data_set)
 static void
 set_active(pe_resource_t * rsc)
 {
-    pe_resource_t *top = uber_parent(rsc);
+    const pe_resource_t *top = pe__const_top_resource(rsc, false);
 
     if (top && pcmk_is_set(top->flags, pe_rsc_promotable)) {
         rsc->role = RSC_ROLE_UNPROMOTED;

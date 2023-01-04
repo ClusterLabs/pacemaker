@@ -1469,7 +1469,7 @@ static void
 pe__bundle_replica_output_text(pcmk__output_t *out, pe__bundle_replica_t *replica,
                                pe_node_t *node, uint32_t show_opts)
 {
-    pe_resource_t *rsc = replica->child;
+    const pe_resource_t *rsc = replica->child;
 
     int offset = 0;
     char buffer[LINE_MAX];
