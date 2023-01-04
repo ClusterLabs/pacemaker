@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -477,19 +477,25 @@ group_resource_state(const pe_resource_t * rsc, gboolean current)
 }
 
 gboolean
-pe__group_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent)
+pe__group_is_filtered(const pe_resource_t *rsc, GList *only_rsc,
+                      gboolean check_parent)
 {
     gboolean passes = FALSE;
 
-    if (check_parent && pcmk__str_in_list(rsc_printable_id(uber_parent(rsc)), only_rsc, pcmk__str_star_matches)) {
+    if (check_parent
+        && pcmk__str_in_list(rsc_printable_id(pe__const_top_resource(rsc,
+                                                                     false)),
+                             only_rsc, pcmk__str_star_matches)) {
         passes = TRUE;
     } else if (pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches)) {
         passes = TRUE;
     } else if (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches)) {
         passes = TRUE;
     } else {
-        for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
+        for (const GList *iter = rsc->children;
+             iter != NULL; iter = iter->next) {
+
+            const pe_resource_t *child_rsc = (const pe_resource_t *) iter->data;
 
             if (!child_rsc->fns->is_filtered(child_rsc, only_rsc, FALSE)) {
                 passes = TRUE;

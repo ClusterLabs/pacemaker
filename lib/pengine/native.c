@@ -1387,19 +1387,16 @@ pe__rscs_brief_output(pcmk__output_t *out, GList *rsc_list, uint32_t show_opts)
 }
 
 gboolean
-pe__native_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent)
+pe__native_is_filtered(const pe_resource_t *rsc, GList *only_rsc,
+                       gboolean check_parent)
 {
     if (pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches) ||
         pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches)) {
         return FALSE;
     } else if (check_parent && rsc->parent) {
-        pe_resource_t *up = uber_parent(rsc);
+        const pe_resource_t *up = pe__const_top_resource(rsc, true);
 
-        if (pe_rsc_is_bundled(rsc)) {
-            return up->parent->fns->is_filtered(up->parent, only_rsc, FALSE);
-        } else {
-            return up->fns->is_filtered(up, only_rsc, FALSE);
-        }
+        return up->fns->is_filtered(up, only_rsc, FALSE);
     }
 
     return TRUE;

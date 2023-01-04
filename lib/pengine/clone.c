@@ -1174,7 +1174,8 @@ pe__is_universal_clone(const pe_resource_t *rsc,
 }
 
 gboolean
-pe__clone_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent)
+pe__clone_is_filtered(const pe_resource_t *rsc, GList *only_rsc,
+                      gboolean check_parent)
 {
     gboolean passes = FALSE;
     clone_variant_data_t *clone_data = NULL;
@@ -1186,9 +1187,12 @@ pe__clone_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent
         passes = pcmk__str_in_list(ID(clone_data->xml_obj_child), only_rsc, pcmk__str_star_matches);
 
         if (!passes) {
-            for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-                pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
+            for (const GList *iter = rsc->children;
+                 iter != NULL; iter = iter->next) {
 
+                const pe_resource_t *child_rsc = NULL;
+
+                child_rsc = (const pe_resource_t *) iter->data;
                 if (!child_rsc->fns->is_filtered(child_rsc, only_rsc, FALSE)) {
                     passes = TRUE;
                     break;
@@ -1196,7 +1200,6 @@ pe__clone_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent
             }
         }
     }
-
     return !passes;
 }
 

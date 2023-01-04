@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -55,7 +55,7 @@ typedef struct resource_object_functions_s {
     pe_node_t *(*location) (const pe_resource_t*, GList**, int);
     void (*free) (pe_resource_t*);
     void (*count) (pe_resource_t*);
-    gboolean (*is_filtered) (pe_resource_t*, GList *, gboolean);
+    gboolean (*is_filtered) (const pe_resource_t*, GList *, gboolean);
 } resource_object_functions_t;
 
 typedef struct resource_alloc_functions_s resource_alloc_functions_t;
