@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -259,7 +259,7 @@ get_ordering_resource(xmlNode *xml, const char *resource_attr,
                              ID(xml), rsc_id, instance_id);
             return NULL;
         }
-        rsc = find_clone_instance(rsc, instance_id, data_set);
+        rsc = find_clone_instance(rsc, instance_id);
         if (rsc == NULL) {
             pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
                              "does not have an instance '%s'",

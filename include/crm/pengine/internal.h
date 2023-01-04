@@ -475,8 +475,8 @@ extern gboolean get_target_role(pe_resource_t * rsc, enum rsc_role_e *role);
 void pe__set_next_role(pe_resource_t *rsc, enum rsc_role_e role,
                        const char *why);
 
-extern pe_resource_t *find_clone_instance(pe_resource_t * rsc, const char *sub_id,
-                                          pe_working_set_t * data_set);
+pe_resource_t *find_clone_instance(const pe_resource_t *rsc,
+                                   const char *sub_id);
 
 extern void destroy_ticket(gpointer data);
 extern pe_ticket_t *ticket_new(const char *ticket_id, pe_working_set_t * data_set);

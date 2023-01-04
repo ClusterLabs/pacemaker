@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -345,7 +345,7 @@ unpack_simple_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
     }
 
     if (instance != NULL) {
-        rsc = find_clone_instance(rsc, instance, data_set);
+        rsc = find_clone_instance(rsc, instance);
         if (rsc == NULL) {
             pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
                               "does not have an instance '%s'",

@@ -167,7 +167,7 @@ pe__force_anon(const char *standard, pe_resource_t *rsc, const char *rid,
 }
 
 pe_resource_t *
-find_clone_instance(pe_resource_t * rsc, const char *sub_id, pe_working_set_t * data_set)
+find_clone_instance(const pe_resource_t *rsc, const char *sub_id)
 {
     char *child_id = NULL;
     pe_resource_t *child = NULL;
