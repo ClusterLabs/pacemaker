@@ -131,14 +131,12 @@ void crm_enable_stderr(int enable);
 
 gboolean crm_is_callsite_active(struct qb_log_callsite *cs, uint8_t level, uint32_t tags);
 
-void log_data_element(int log_level, const char *file, const char *function,
-                      int line, const char *prefix, const xmlNode *data,
-                      int depth, gboolean formatted);
-
 /* returns the old value */
 unsigned int set_crm_log_level(unsigned int level);
 
 unsigned int get_crm_log_level(void);
+
+void do_crm_log_xml(uint8_t level, const char *text, const xmlNode *xml);
 
 /*
  * Throughout the macros below, note the leading, pre-comma, space in the
@@ -236,35 +234,6 @@ unsigned int get_crm_log_level(void);
 		        (core_cs? core_cs->targets: FALSE), TRUE);              \
 	        failure_action;						                        \
 	    }								                                \
-    } while(0)
-
-/*!
- * \brief Log XML line-by-line in a formatted fashion
- *
- * \param[in] level  Priority at which to log the messages
- * \param[in] text   Prefix for each line
- * \param[in] xml    XML to log
- *
- * \note This is a macro, and \p level may be evaluated more than once.
- *       This does nothing when level is LOG_STDOUT.
- */
-#  define do_crm_log_xml(level, text, xml) do {                             \
-        switch (level) {                                                    \
-            case LOG_STDOUT: case LOG_NEVER:                                \
-                break;                                                      \
-            default: {                                                      \
-                static struct qb_log_callsite *xml_cs = NULL;               \
-                if (xml_cs == NULL) {                                       \
-                    xml_cs = qb_log_callsite_get(__func__, __FILE__,        \
-                                        "xml-blob", (level), __LINE__, 0);  \
-                }                                                           \
-                if (crm_is_callsite_active(xml_cs, (level), 0)) {           \
-                    log_data_element((level), __FILE__, __func__,           \
-                         __LINE__, text, xml, 1, xml_log_option_formatted); \
-                }                                                           \
-            }                                                               \
-            break;                                                          \
-        }                                                                   \
     } while(0)
 
 /*!

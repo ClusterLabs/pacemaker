@@ -1099,6 +1099,47 @@ pcmk__cli_init_logging(const char *name, unsigned int verbosity)
     }
 }
 
+/*!
+ * \brief Log XML line-by-line in a formatted fashion
+ *
+ * \param[in] level  Priority at which to log the messages
+ * \param[in] text   Prefix for each line
+ * \param[in] xml    XML to log
+ *
+ * \note This does nothing when \p level is \p LOG_STDOUT.
+ */
+void
+do_crm_log_xml(uint8_t level, const char *text, const xmlNode *xml)
+{
+    static struct qb_log_callsite *xml_cs = NULL;
+
+    switch (level) {
+        case LOG_STDOUT:
+        case LOG_NEVER:
+            break;
+        default:
+            if (xml_cs == NULL) {
+                xml_cs = qb_log_callsite_get(__func__, __FILE__, "xml-blob",
+                                             level, __LINE__, 0);
+            }
+
+            if (crm_is_callsite_active(xml_cs, level, 0)) {
+                if (xml == NULL) {
+                    do_crm_log(level, "%s%sNo data to dump as XML",
+                               pcmk__s(text, ""),
+                               pcmk__str_empty(text)? "" : " ");
+                } else {
+                    pcmk__xml_log(level, text, xml, 1,
+                                  xml_log_option_formatted
+                                  |xml_log_option_open
+                                  |xml_log_option_children
+                                  |xml_log_option_close);
+                }
+            }
+            break;
+    }
+}
+
 // Deprecated functions kept only for backward API compatibility
 // LCOV_EXCL_START
 
