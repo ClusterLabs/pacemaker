@@ -228,6 +228,9 @@ typedef struct notify_data_s {
 
 } notify_data_t;
 
+const pe_resource_t *pe__const_top_resource(const pe_resource_t *rsc,
+                                            bool include_bundle);
+
 int pe__clone_promoted_max(pe_resource_t *clone);
 int pe__clone_promoted_node_max(pe_resource_t *clone);
 
