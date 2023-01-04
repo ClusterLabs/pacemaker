@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -844,7 +844,6 @@ allowed_nodes_as_list(const pe_resource_t *rsc)
 void
 pcmk__primitive_internal_constraints(pe_resource_t *rsc)
 {
-    pe_resource_t *top = NULL;
     GList *allowed_nodes = NULL;
     bool check_unfencing = false;
     bool check_utilization = false;
@@ -857,8 +856,6 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
                      rsc->id);
         return;
     }
-
-    top = uber_parent(rsc);
 
     // Whether resource requires unfencing
     check_unfencing = !pcmk_is_set(rsc->flags, pe_rsc_fence_device)
@@ -877,7 +874,8 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
                        rsc->cluster);
 
     // Promotable ordering: demote before stop, start before promote
-    if (pcmk_is_set(top->flags, pe_rsc_promotable)
+    if (pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
+                    pe_rsc_promotable)
         || (rsc->role > RSC_ROLE_UNPROMOTED)) {
 
         pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_DEMOTE, 0), NULL,

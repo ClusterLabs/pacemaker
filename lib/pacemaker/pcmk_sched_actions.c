@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1757,7 +1757,7 @@ process_rsc_history(xmlNode *rsc_entry, pe_resource_t *rsc, pe_node_t *node)
     GList *sorted_op_list = NULL;
 
     if (pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
-        if (pe_rsc_is_anon_clone(uber_parent(rsc))) {
+        if (pe_rsc_is_anon_clone(pe__const_top_resource(rsc, false))) {
             pe_rsc_trace(rsc,
                          "Skipping configuration check "
                          "for orphaned clone instance %s",

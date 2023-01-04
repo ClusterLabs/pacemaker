@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -151,7 +151,8 @@ check_failure_threshold(pe_resource_t *rsc, pe_node_t *node)
 static void
 apply_exclusive_discovery(pe_resource_t *rsc, pe_node_t *node)
 {
-    if (rsc->exclusive_discover || uber_parent(rsc)->exclusive_discover) {
+    if (rsc->exclusive_discover
+        || pe__const_top_resource(rsc, false)->exclusive_discover) {
         pe_node_t *match = NULL;
 
         // If this is a collective resource, apply recursively to children

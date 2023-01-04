@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -475,7 +475,7 @@ add_start_orderings_for_probe(pe_action_t *probe, pe_action_wrapper_t *after)
         || pcmk_is_set(probe->flags, pe_action_runnable)
         // The order type is already enforced for its parent.
         || pcmk_is_set(after->type, pe_order_runnable_left)
-        || uber_parent(probe->rsc) != after->action->rsc
+        || (pe__const_top_resource(probe->rsc, false) != after->action->rsc)
         || !pcmk__str_eq(after->action->task, RSC_START, pcmk__str_none)) {
         return;
     }
@@ -492,7 +492,8 @@ add_start_orderings_for_probe(pe_action_t *probe, pe_action_wrapper_t *after)
         pe_action_wrapper_t *then = (pe_action_wrapper_t *) then_iter->data;
 
         if (then->action->rsc->running_on
-            || uber_parent(then->action->rsc) != after->action->rsc
+            || (pe__const_top_resource(then->action->rsc, false)
+                != after->action->rsc)
             || !pcmk__str_eq(then->action->task, RSC_START, pcmk__str_none)) {
             continue;
         }
@@ -800,17 +801,19 @@ order_then_probes(pe_working_set_t *data_set)
             if (first_rsc == NULL) {
                 continue;
 
-            } else if (uber_parent(first_rsc) == uber_parent(start->rsc)) {
+            } else if (pe__const_top_resource(first_rsc, false)
+                       == pe__const_top_resource(start->rsc, false)) {
                 crm_trace("Same parent %s for %s", first_rsc->id, start->uuid);
                 continue;
 
-            } else if (!pe_rsc_is_clone(uber_parent(first_rsc))) {
+            } else if (!pe_rsc_is_clone(pe__const_top_resource(first_rsc,
+                                                               false))) {
                 crm_trace("Not a clone %s for %s", first_rsc->id, start->uuid);
                 continue;
             }
 
             crm_err("Applying %s before %s %d", first->uuid, start->uuid,
-                    uber_parent(first_rsc)->variant);
+                    pe__const_top_resource(first_rsc, false)->variant);
 
             for (GList *probe_iter = probes; probe_iter != NULL;
                  probe_iter = probe_iter->next) {
