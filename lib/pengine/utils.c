@@ -571,12 +571,10 @@ ticket_new(const char *ticket_id, pe_working_set_t * data_set)
     return ticket;
 }
 
-const char *rsc_printable_id(pe_resource_t *rsc)
+const char *
+rsc_printable_id(const pe_resource_t *rsc)
 {
-    if (!pcmk_is_set(rsc->flags, pe_rsc_unique)) {
-        return ID(rsc->xml);
-    }
-    return rsc->id;
+    return pcmk_is_set(rsc->flags, pe_rsc_unique)? rsc->id : ID(rsc->xml);
 }
 
 void

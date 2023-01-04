@@ -28,7 +28,7 @@ extern "C" {
  * \ingroup pengine
  */
 
-const char *rsc_printable_id(pe_resource_t *rsc);
+const char *rsc_printable_id(const pe_resource_t *rsc);
 gboolean cluster_status(pe_working_set_t * data_set);
 pe_working_set_t *pe_new_working_set(void);
 void pe_free_working_set(pe_working_set_t *data_set);
