@@ -204,6 +204,7 @@ TAGS
 /doc/crm_fencing.html
 /doc/sphinx/*/_build
 /doc/sphinx/*/conf.py
+/doc/sphinx/*/generated
 /doc/sphinx/build-2.1.txt
 /doc/sphinx/shared/images/*.png
 
