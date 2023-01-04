@@ -1,7 +1,7 @@
 """ Test-specific classes for Pacemaker's Cluster Test Suite (CTS)
 """
 
-__copyright__ = "Copyright 2000-2022 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 #
@@ -453,9 +453,7 @@ class StonithdTest(CTSTest):
 
         rc = self.rsh(origin, "stonith_admin --reboot %s -VVVVVV" % node)
 
-        if rc == 194:
-            # 194 - 256 = -62 = Timer expired
-            #
+        if rc == 124: # CRM_EX_TIMEOUT
             # Look for the patterns, usually this means the required
             # device was running on the node to be fenced - or that
             # the required devices were in the process of being loaded
@@ -1255,34 +1253,24 @@ class ResourceRecover(CTSTest):
         if not ret:
             return self.failure("Setup failed")
 
+        # List all resources active on the node (skip test if none)
         resourcelist = self.CM.active_resources(node)
-        # if there are no resourcelist, return directly
         if len(resourcelist) == 0:
             self.logger.log("No active resources on %s" % node)
             return self.skipped()
 
-        self.rid = self.Env.RandomGen.choice(resourcelist)
-        self.rid_alt = self.rid
+        # Choose one resource at random
+        rsc = self.choose_resource(node, resourcelist)
+        if rsc is None:
+            return self.failure("Could not get details of resource '%s'" % self.rid)
+        if rsc.id == rsc.clone_id:
+            self.debug("Failing " + rsc.id)
+        else:
+            self.debug("Failing " + rsc.id + " (also known as " + rsc.clone_id + ")")
 
-        rsc = None
-        (rc, lines) = self.rsh(node, "crm_resource -c", None)
-        for line in lines:
-            if re.search("^Resource", line):
-                tmp = AuditResource(self.CM, line)
-                if tmp.id == self.rid:
-                    rsc = tmp
-                    # Handle anonymous clones that get renamed
-                    self.rid = rsc.clone_id
-                    break
-
-        if not rsc:
-            return self.failure("Could not find %s in the resource list" % self.rid)
-
-        self.debug("Shooting %s aka. %s" % (rsc.clone_id, rsc.id))
-
+        # Log patterns to watch for (failure, plus restart if managed)
         pats = []
         pats.append(self.templates["Pat:CloneOpFail"] % (self.action, rsc.id, rsc.clone_id))
-
         if rsc.managed():
             pats.append(self.templates["Pat:RscOpOK"] % ("stop", self.rid))
             if rsc.unique():
@@ -1290,6 +1278,55 @@ class ResourceRecover(CTSTest):
             else:
                 # Anonymous clones may get restarted with a different clone number
                 pats.append(self.templates["Pat:RscOpOK"] % ("start", ".*"))
+
+        # Fail resource. (Ideally, we'd fail it twice, to ensure the fail count
+        # is incrementing properly, but it might restart on a different node.
+        # We'd have to temporarily ban it from all other nodes and ensure the
+        # migration-threshold hasn't been reached.)
+        if self.fail_resource(rsc, node, pats) is None:
+            return None # self.failure() already called
+
+        return self.success()
+
+    def choose_resource(self, node, resourcelist):
+        """ Choose a random resource to target """
+
+        self.rid = self.Env.RandomGen.choice(resourcelist)
+        self.rid_alt = self.rid
+        (rc, lines) = self.rsh(node, "crm_resource -c", None)
+        for line in lines:
+            if line.startswith("Resource: "):
+                rsc = AuditResource(self.CM, line)
+                if rsc.id == self.rid:
+                    # Handle anonymous clones that get renamed
+                    self.rid = rsc.clone_id
+                    return rsc
+        return None
+
+    def get_failcount(self, node):
+        """ Check the fail count of targeted resource on given node """
+
+        (rc, lines) = self.rsh(node,
+                               "crm_failcount --quiet --query --resource %s "
+                               "--operation %s --interval %d "
+                               "--node %s" % (self.rid, self.action,
+                               self.interval, node), None)
+        if rc != 0 or len(lines) != 1:
+            self.logger.log("crm_failcount on %s failed (%d): %s" % (node, rc,
+                            " // ".join(map(str.strip, lines))))
+            return -1
+        try:
+            failcount = int(lines[0])
+        except (IndexError, ValueError):
+            self.logger.log("crm_failcount output on %s unparseable: %s" % (node,
+                            ' '.join(lines)))
+            return -1
+        return failcount
+
+    def fail_resource(self, rsc, node, pats):
+        """ Fail the targeted resource, and verify as expected """
+
+        orig_failcount = self.get_failcount(node)
 
         watch = self.create_watch(pats, 60)
         watch.setwatch()
@@ -1315,7 +1352,12 @@ class ResourceRecover(CTSTest):
         elif rsc.managed():
             return self.failure("%s was not recovered and is inactive" % self.rid)
 
-        return self.success()
+        new_failcount = self.get_failcount(node)
+        if new_failcount != (orig_failcount + 1):
+            return self.failure("%s fail count is %d not %d" % (self.rid,
+                                new_failcount, orig_failcount + 1))
+
+        return 0 # Anything but None is success
 
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''

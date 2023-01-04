@@ -122,11 +122,12 @@ create_shadow_cib() {
     local VALIDATE_WITH
     local SHADOW_CMD
 
-    VALIDATE_WITH="$1"
+    CREATE_ARG="$1"
+    VALIDATE_WITH="$2"
 
     export CIB_shadow_dir="${shadow_dir}"
 
-    SHADOW_CMD="$VALGRIND_CMD crm_shadow --batch --force --create-empty"
+    SHADOW_CMD="$VALGRIND_CMD crm_shadow --batch --force $CREATE_ARG"
     if [ -z "$VALIDATE_WITH" ]; then
         $SHADOW_CMD "$shadow" 2>&1
     else
@@ -804,7 +805,7 @@ function test_tools() {
     TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.tools.xml.XXXXXXXXXX)
     TMPORIG=$(mktemp ${TMPDIR:-/tmp}/cts-cli.tools.existing.xml.XXXXXXXXXX)
 
-    create_shadow_cib
+    create_shadow_cib --create-empty
 
     desc="Validate CIB"
     cmd="cibadmin -Q"
@@ -1308,7 +1309,24 @@ function test_tools() {
     cmd="crm_resource -a -r gr2 --force"
     test_assert $CRM_EX_OK 0
 
+    # Create a shadow CIB based on constraints.xml
+    create_shadow_cib --create
     unset CIB_file
+
+    desc="Set a meta-attribute for primitive and resources colocated with it"
+    cmd="crm_resource -r prim5 --meta --set-parameter=target-role -v Stopped --recursive"
+    test_assert $CRM_EX_OK 0
+
+    desc="Set a meta-attribute for group and resource colocated with it"
+    cmd="crm_resource -r group --meta --set-parameter=target-role -v Stopped --recursive"
+    test_assert $CRM_EX_OK 0
+
+    desc="Set a meta-attribute for clone and resource colocated with it"
+    cmd="crm_resource -r clone --meta --set-parameter=target-role -v Stopped --recursive"
+    test_assert $CRM_EX_OK 0
+
+    unset CIB_shadow
+    unset CIB_shadow_dir
 
     export CIB_file="$test_home/cli/crm_resource_digests.xml"
 
@@ -1900,7 +1918,7 @@ function test_acls() {
 
     TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.acls.xml.XXXXXXXXXX)
 
-    create_shadow_cib pacemaker-1.3
+    create_shadow_cib --create-empty pacemaker-1.3
 
     cat <<EOF > "$TMPXML"
     <acls>
@@ -1994,7 +2012,7 @@ function test_validity() {
     TMPGOOD=$(mktemp ${TMPDIR:-/tmp}/cts-cli.validity.good.xml.XXXXXXXXXX)
     TMPBAD=$(mktemp ${TMPDIR:-/tmp}/cts-cli.validity.bad.xml.XXXXXXXXXX)
 
-    create_shadow_cib pacemaker-1.2
+    create_shadow_cib --create-empty pacemaker-1.2
     orig_trace_fns="$PCMK_trace_functions"
     export PCMK_trace_functions=apply_upgrade,update_validation
 
@@ -2067,7 +2085,7 @@ test_upgrade() {
 
     TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.tools.xml.XXXXXXXXXX)
 
-    create_shadow_cib pacemaker-2.10
+    create_shadow_cib --create-empty pacemaker-2.10
     orig_trace_fns="$PCMK_trace_functions"
     export PCMK_trace_functions=apply_upgrade,update_validation
 
@@ -2120,7 +2138,7 @@ EOF
 test_rules() {
     local TMPXML
 
-    create_shadow_cib
+    create_shadow_cib --create-empty
 
     cibadmin -C -o crm_config --xml-text '<cluster_property_set id="cib-bootstrap-options"><nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/></cluster_property_set>'
     cibadmin -C -o resources --xml-text '<primitive class="ocf" id="dummy" provider="heartbeat" type="Dummy" />'
@@ -2398,7 +2416,7 @@ EOF
 }
 
 function test_feature_set() {
-    create_shadow_cib
+    create_shadow_cib --create-empty
 
     # Import the initial test CIB with non-mixed versions
     desc="Import the test CIB"
