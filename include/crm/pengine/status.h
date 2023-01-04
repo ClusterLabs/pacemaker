@@ -94,9 +94,15 @@ pe_rsc_is_anon_clone(const pe_resource_t *rsc)
  * \return true if resource is part of a bundle, false otherwise
  */
 static inline bool
-pe_rsc_is_bundled(pe_resource_t *rsc)
+pe_rsc_is_bundled(const pe_resource_t *rsc)
 {
-    return uber_parent(rsc)->parent != NULL;
+    if (rsc == NULL) {
+        return false;
+    }
+    while (rsc->parent != NULL) {
+        rsc = rsc->parent;
+    }
+    return rsc->variant == pe_container;
 }
 
 #ifdef __cplusplus
