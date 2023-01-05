@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,16 +16,19 @@
 #include <crm/services_internal.h>
 
 static GList *
-build_node_info_list(pe_resource_t *rsc)
+build_node_info_list(const pe_resource_t *rsc)
 {
     GList *retval = NULL;
 
-    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
-        pe_resource_t *child = (pe_resource_t *) iter->data;
+    for (const GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        const pe_resource_t *child = (const pe_resource_t *) iter->data;
 
-        for (GList *iter2 = child->running_on; iter2 != NULL; iter2 = iter2->next) {
-            pe_node_t *node = (pe_node_t *) iter2->data;
+        for (const GList *iter2 = child->running_on;
+             iter2 != NULL; iter2 = iter2->next) {
+
+            const pe_node_t *node = (const pe_node_t *) iter2->data;
             node_info_t *ni = calloc(1, sizeof(node_info_t));
+
             ni->node_name = node->details->uname;
             ni->promoted = pcmk_is_set(rsc->flags, pe_rsc_promotable) &&
                            child->fns->state(child, TRUE) == RSC_ROLE_PROMOTED;
@@ -42,7 +45,7 @@ cli_resource_search(pe_resource_t *rsc, const char *requested_name,
                     pe_working_set_t *data_set)
 {
     GList *retval = NULL;
-    pe_resource_t *parent = uber_parent(rsc);
+    const pe_resource_t *parent = pe__const_top_resource(rsc, false);
 
     if (pe_rsc_is_clone(rsc)) {
         retval = build_node_info_list(rsc);
@@ -268,18 +271,21 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
     const char *common_attr_id = attr_id;
 
     if (attr_id == NULL && force == FALSE) {
-        find_resource_attr (out, cib, XML_ATTR_ID, uber_parent(rsc)->id, NULL,
+        find_resource_attr (out, cib, XML_ATTR_ID,
+                            pe__const_top_resource(rsc, false)->id, NULL,
                             NULL, NULL, attr_name, NULL);
     }
 
     if (pcmk__str_eq(attr_set_type, XML_TAG_ATTR_SETS, pcmk__str_casei)) {
         if (force == FALSE) {
-            rc = find_resource_attr(out, cib, XML_ATTR_ID, uber_parent(rsc)->id,
+            rc = find_resource_attr(out, cib, XML_ATTR_ID,
+                                    pe__const_top_resource(rsc, false)->id,
                                     XML_TAG_META_SETS, attr_set, attr_id,
                                     attr_name, &local_attr_id);
             if (rc == pcmk_rc_ok && !out->is_quiet(out)) {
                 out->err(out, "WARNING: There is already a meta attribute for '%s' called '%s' (id=%s)",
-                         uber_parent(rsc)->id, attr_name, local_attr_id);
+                         pe__const_top_resource(rsc, false)->id, attr_name,
+                         local_attr_id);
                 out->err(out, "         Delete '%s' first or use the force option to override",
                          local_attr_id);
             }
@@ -412,7 +418,8 @@ cli_resource_delete_attribute(pe_resource_t *rsc, const char *requested_name,
     GList/*<pe_resource_t*>*/ *resources = NULL;
 
     if (attr_id == NULL && force == FALSE) {
-        find_resource_attr(out, cib, XML_ATTR_ID, uber_parent(rsc)->id, NULL,
+        find_resource_attr(out, cib, XML_ATTR_ID,
+                           pe__const_top_resource(rsc, false)->id, NULL,
                            NULL, NULL, attr_name, NULL);
     }
 
@@ -556,7 +563,7 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
  * \note The caller is responsible for freeing the result.
  */
 static inline char *
-rsc_fail_name(pe_resource_t *rsc)
+rsc_fail_name(const pe_resource_t *rsc)
 {
     const char *name = (rsc->clone_name? rsc->clone_name : rsc->id);
 
@@ -672,8 +679,8 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
 
 // \return Standard Pacemaker return code
 static int
-clear_rsc_fail_attrs(pe_resource_t *rsc, const char *operation,
-                     const char *interval_spec, pe_node_t *node)
+clear_rsc_fail_attrs(const pe_resource_t *rsc, const char *operation,
+                     const char *interval_spec, const pe_node_t *node)
 {
     int rc = pcmk_rc_ok;
     int attr_options = pcmk__node_attr_none;
@@ -693,7 +700,7 @@ clear_rsc_fail_attrs(pe_resource_t *rsc, const char *operation,
 // \return Standard Pacemaker return code
 int
 cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
-                    pe_resource_t *rsc, const char *operation,
+                    const pe_resource_t *rsc, const char *operation,
                     const char *interval_spec, bool just_failures,
                     pe_working_set_t *data_set, gboolean force)
 {
@@ -705,10 +712,9 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
         return ENXIO;
 
     } else if (rsc->children) {
-        GList *lpc = NULL;
 
-        for (lpc = rsc->children; lpc != NULL; lpc = lpc->next) {
-            pe_resource_t *child = (pe_resource_t *) lpc->data;
+        for (const GList *lpc = rsc->children; lpc != NULL; lpc = lpc->next) {
+            const pe_resource_t *child = (const pe_resource_t *) lpc->data;
 
             rc = cli_resource_delete(controld_api, host_uname, child, operation,
                                      interval_spec, just_failures, data_set, force);
@@ -878,7 +884,7 @@ check_role(resource_checks_t *checks)
             break;
 
         case RSC_ROLE_UNPROMOTED:
-            if (pcmk_is_set(uber_parent(checks->rsc)->flags,
+            if (pcmk_is_set(pe__const_top_resource(checks->rsc, false)->flags,
                             pe_rsc_promotable)) {
                 checks->flags |= rsc_unpromotable;
             }
@@ -1991,10 +1997,10 @@ cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
 
 // \return Standard Pacemaker return code
 int
-cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
-                  const char *move_lifetime, cib_t *cib, int cib_options,
-                  pe_working_set_t *data_set, gboolean promoted_role_only,
-                  gboolean force)
+cli_resource_move(const pe_resource_t *rsc, const char *rsc_id,
+                  const char *host_name, const char *move_lifetime, cib_t *cib,
+                  int cib_options, pe_working_set_t *data_set,
+                  gboolean promoted_role_only, gboolean force)
 {
     pcmk__output_t *out = data_set->priv;
     int rc = pcmk_rc_ok;
@@ -2008,7 +2014,7 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
     }
 
     if (promoted_role_only && !pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
-        pe_resource_t *p = uber_parent(rsc);
+        const pe_resource_t *p = pe__const_top_resource(rsc, false);
 
         if (pcmk_is_set(p->flags, pe_rsc_promotable)) {
             out->info(out, "Using parent '%s' for move instead of '%s'.", rsc->id, rsc_id);
@@ -2025,12 +2031,11 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
     current = pe__find_active_requires(rsc, &count);
 
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
-        GList *iter = NULL;
         unsigned int promoted_count = 0;
         pe_node_t *promoted_node = NULL;
 
-        for(iter = rsc->children; iter; iter = iter->next) {
-            pe_resource_t *child = (pe_resource_t *)iter->data;
+        for (const GList *iter = rsc->children; iter; iter = iter->next) {
+            const pe_resource_t *child = (const pe_resource_t *) iter->data;
             enum rsc_role_e child_role = child->fns->state(child, TRUE);
 
             if (child_role == RSC_ROLE_PROMOTED) {
