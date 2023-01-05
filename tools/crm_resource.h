@@ -82,9 +82,10 @@ int cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
 int cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
                     const char *operation, const char *interval_spec,
                     pe_working_set_t *data_set);
-int cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, pe_node_t *node,
-                         const char *move_lifetime, int timeout_ms, cib_t *cib,
-                         int cib_options, gboolean promoted_role_only, gboolean force);
+int cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc,
+                         const pe_node_t *node, const char *move_lifetime,
+                         int timeout_ms, cib_t *cib, int cib_options,
+                         gboolean promoted_role_only, gboolean force);
 int cli_resource_move(const pe_resource_t *rsc, const char *rsc_id,
                       const char *host_name, const char *move_lifetime,
                       cib_t *cib, int cib_options, pe_working_set_t *data_set,

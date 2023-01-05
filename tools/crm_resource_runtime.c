@@ -1120,8 +1120,8 @@ static void display_list(pcmk__output_t *out, GList *items, const char *tag)
  *
  * This also updates the working set timestamp to the current time.
  *
- * \param[in] data_set   Working set instance to update
- * \param[in] xml        XML to use as input
+ * \param[in,out] data_set  Working set instance to update
+ * \param[in]     xml       XML to use as input
  *
  * \return Standard Pacemaker return code
  * \note On success, caller is responsible for freeing memory allocated for
@@ -1316,20 +1316,22 @@ max_delay_in(pe_working_set_t * data_set, GList *resources)
  * \internal
  * \brief Restart a resource (on a particular host if requested).
  *
- * \param[in] rsc        The resource to restart
- * \param[in] host       The host to restart the resource on (or NULL for all)
- * \param[in] timeout_ms Consider failed if actions do not complete in this time
- *                       (specified in milliseconds, but a two-second
- *                       granularity is actually used; if 0, a timeout will be
- *                       calculated based on the resource timeout)
- * \param[in] cib        Connection to the CIB manager
+ * \param[in,out] out         Output object
+ * \param[in,out] rsc         The resource to restart
+ * \param[in]     node        Node to restart the resource on (or NULL for all)
+ * \param[in]     timeout_ms  Consider failed if actions do not complete in
+ *                            this time (specified in milliseconds, but a
+ *                            two-second granularity is actually used; if 0,
+ *                            will be calculated based on the resource timeout)
+ * \param[in,out] cib         Connection to the CIB manager
  *
  * \return Standard Pacemaker return code (exits on certain failures)
  */
 int
-cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, pe_node_t *node,
-                     const char *move_lifetime, int timeout_ms, cib_t *cib,
-                     int cib_options, gboolean promoted_role_only, gboolean force)
+cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc,
+                     const pe_node_t *node, const char *move_lifetime,
+                     int timeout_ms, cib_t *cib, int cib_options,
+                     gboolean promoted_role_only, gboolean force)
 {
     int rc = pcmk_rc_ok;
     int lpc = 0;
@@ -1642,7 +1644,8 @@ done:
     return rc;
 }
 
-static inline bool action_is_pending(pe_action_t *action)
+static inline bool
+action_is_pending(const pe_action_t *action)
 {
     if (pcmk_any_flags_set(action->flags, pe_action_optional|pe_action_pseudo)
         || !pcmk_is_set(action->flags, pe_action_runnable)
@@ -1654,19 +1657,18 @@ static inline bool action_is_pending(pe_action_t *action)
 
 /*!
  * \internal
- * \brief Return TRUE if any actions in a list are pending
+ * \brief Check whether any actions in a list are pending
  *
  * \param[in] actions   List of actions to check
  *
- * \return TRUE if any actions in the list are pending, FALSE otherwise
+ * \return true if any actions in the list are pending, otherwise false
  */
 static bool
-actions_are_pending(GList *actions)
+actions_are_pending(const GList *actions)
 {
-    GList *action;
+    for (const GList *action = actions; action != NULL; action = action->next) {
+        const pe_action_t *a = (const pe_action_t *) action->data;
 
-    for (action = actions; action != NULL; action = action->next) {
-        pe_action_t *a = (pe_action_t *)action->data;
         if (action_is_pending(a)) {
             crm_notice("Waiting for %s (flags=%#.8x)", a->uuid, a->flags);
             return true;
@@ -1710,10 +1712,12 @@ print_pending_actions(pcmk__output_t *out, GList *actions)
  * This waits until either the CIB's transition graph is idle or a timeout is
  * reached.
  *
- * \param[in] timeout_ms Consider failed if actions do not complete in this time
- *                       (specified in milliseconds, but one-second granularity
- *                       is actually used; if 0, a default will be used)
- * \param[in] cib        Connection to the CIB manager
+ * \param[in,out] out          Output object
+ * \param[in]     timeout_ms   Consider failed if actions do not complete in
+ *                             this time (specified in milliseconds, but
+ *                             one-second granularity is actually used; if 0, a
+ *                             default will be used)
+ * \param[in,out] cib          Connection to the CIB manager
  *
  * \return Standard Pacemaker return code
  */
@@ -1810,10 +1814,10 @@ get_action(const char *rsc_action) {
  * resource agents. Add the essential ones that many resource agents expect, so
  * the behavior is the same for command-line execution.
  *
- * \param[in] params       Resource parameters that will be passed to agent
- * \param[in] timeout_ms   Action timeout (in milliseconds)
- * \param[in] check_level  OCF check level
- * \param[in] verbosity    Verbosity level
+ * \param[in,out] params       Resource parameters that will be passed to agent
+ * \param[in]     timeout_ms   Action timeout (in milliseconds)
+ * \param[in]     check_level  OCF check level
+ * \param[in]     verbosity    Verbosity level
  */
 static void
 set_agent_environment(GHashTable *params, int timeout_ms, int check_level,
@@ -1848,8 +1852,8 @@ set_agent_environment(GHashTable *params, int timeout_ms, int check_level,
  * \internal
  * \brief Apply command-line overrides to resource parameters
  *
- * \param[in] params     Parameters to be passed to agent
- * \param[in] overrides  Parameters to override (or NULL if none)
+ * \param[in,out] params     Parameters to be passed to agent
+ * \param[in]     overrides  Parameters to override (or NULL if none)
  */
 static void
 apply_overrides(GHashTable *params, GHashTable *overrides)

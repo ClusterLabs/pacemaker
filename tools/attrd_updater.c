@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -347,16 +347,16 @@ done:
 /*!
  * \brief Print the attribute values in a pacemaker-attrd XML query reply
  *
- * \param[in] reply     List of attribute name/value pairs
- * \param[in] attr_name Name of attribute that was queried
+ * \param[in,out] out    Output object
+ * \param[in]     reply  List of attribute name/value pairs
  *
  * \return true if any values were printed
  */
 static void
-print_attrd_values(pcmk__output_t *out, GList *reply)
+print_attrd_values(pcmk__output_t *out, const GList *reply)
 {
-    for (GList *iter = reply; iter != NULL; iter = iter->next) {
-        pcmk__attrd_query_pair_t *pair = (pcmk__attrd_query_pair_t *) iter->data;
+    for (const GList *iter = reply; iter != NULL; iter = iter->next) {
+        const pcmk__attrd_query_pair_t *pair = iter->data;
 
         out->message(out, "attribute", NULL, NULL, pair->name, pair->value,
                      pair->node);
@@ -384,14 +384,16 @@ attrd_event_cb(pcmk_ipc_api_t *attrd_api, enum pcmk_ipc_event event_type,
 /*!
  * \brief Submit a query to pacemaker-attrd and print reply
  *
- * \param[in] attr_name  Name of attribute to be affected by request
- * \param[in] attr_node  Name of host to query for (or NULL for localhost)
- * \param[in] query_all  If TRUE, ignore attr_node and query all nodes instead
+ * \param[in,out] out  Output object
+ * \param[in]     attr_name  Name of attribute to be affected by request
+ * \param[in]     attr_node  Name of host to query for (or NULL for localhost)
+ * \param[in]     query_all  If TRUE, ignore attr_node and query all nodes
  *
  * \return Standard Pacemaker return code
  */
 static int
-send_attrd_query(pcmk__output_t *out, const char *attr_name, const char *attr_node, gboolean query_all)
+send_attrd_query(pcmk__output_t *out, const char *attr_name,
+                 const char *attr_node, gboolean query_all)
 {
     pcmk_ipc_api_t *attrd_api = NULL;
     int rc = pcmk_rc_ok;
