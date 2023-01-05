@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2022 the Pacemaker project contributors
+ * Copyright 2019-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -199,16 +199,16 @@ int pcmk_pacemakerd_status(xmlNodePtr *xml, const char *ipc_name,
 /*!
  * \brief Calculate and output resource operation digests
  *
- * \param[out] xml        Where to store XML with result
- * \param[in]  rsc        Resource to calculate digests for
- * \param[in]  node       Node whose operation history should be used
- * \param[in]  overrides  Hash table of configuration parameters to override
- * \param[in]  data_set   Cluster working set (with status)
+ * \param[out]    xml        Where to store XML with result
+ * \param[in,out] rsc        Resource to calculate digests for
+ * \param[in]     node       Node whose operation history should be used
+ * \param[in]     overrides  Hash table of configuration parameters to override
+ * \param[in]     data_set   Cluster working set (with status)
  *
  * \return Standard Pacemaker return code
  */
 int pcmk_resource_digests(xmlNodePtr *xml, pe_resource_t *rsc,
-                          pe_node_t *node, GHashTable *overrides,
+                          const pe_node_t *node, GHashTable *overrides,
                           pe_working_set_t *data_set);
 
 /**

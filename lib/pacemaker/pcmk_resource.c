@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2022 the Pacemaker project contributors
+ * Copyright 2021-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -28,7 +28,8 @@
                          "/" XML_LRM_TAG_RESOURCE "[@" XML_ATTR_ID "='%s']"
 
 static xmlNode *
-best_op(pe_resource_t *rsc, pe_node_t *node, pe_working_set_t *data_set)
+best_op(const pe_resource_t *rsc, const pe_node_t *node,
+        pe_working_set_t *data_set)
 {
     char *xpath = NULL;
     xmlNode *history = NULL;
@@ -106,16 +107,16 @@ is_best:
  * \internal
  * \brief Calculate and output resource operation digests
  *
- * \param[in]  out        Output object
- * \param[in]  rsc        Resource to calculate digests for
- * \param[in]  node       Node whose operation history should be used
- * \param[in]  overrides  Hash table of configuration parameters to override
+ * \param[in,out] out        Output object
+ * \param[in,out] rsc        Resource to calculate digests for
+ * \param[in]     node       Node whose operation history should be used
+ * \param[in]     overrides  Hash table of configuration parameters to override
  *
  * \return Standard Pacemaker return code
  */
 int
 pcmk__resource_digests(pcmk__output_t *out, pe_resource_t *rsc,
-                       pe_node_t *node, GHashTable *overrides)
+                       const pe_node_t *node, GHashTable *overrides)
 {
     const char *task = NULL;
     xmlNode *xml_op = NULL;
@@ -155,7 +156,7 @@ pcmk__resource_digests(pcmk__output_t *out, pe_resource_t *rsc,
 
 int
 pcmk_resource_digests(xmlNodePtr *xml, pe_resource_t *rsc,
-                      pe_node_t *node, GHashTable *overrides,
+                      const pe_node_t *node, GHashTable *overrides,
                       pe_working_set_t *data_set)
 {
     pcmk__output_t *out = NULL;
