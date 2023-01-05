@@ -811,7 +811,7 @@ int pcmk__compare_node_capacities(const pe_node_t *node1,
 
 G_GNUC_INTERNAL
 void pcmk__consume_node_capacity(GHashTable *current_utilization,
-                                 pe_resource_t *rsc);
+                                 const pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
 void pcmk__release_node_capacity(GHashTable *current_utilization,
@@ -822,7 +822,7 @@ const pe_node_t *pcmk__ban_insufficient_capacity(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
 void pcmk__create_utilization_constraints(pe_resource_t *rsc,
-                                          GList *allowed_nodes);
+                                          const GList *allowed_nodes);
 
 G_GNUC_INTERNAL
 void pcmk__show_node_capacities(const char *desc, pe_working_set_t *data_set);
