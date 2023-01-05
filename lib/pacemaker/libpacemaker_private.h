@@ -323,7 +323,7 @@ void pcmk__order_restart_vs_unfence(gpointer data, gpointer user_data);
 // Injected scheduler inputs (pcmk_sched_injections.c)
 
 void pcmk__inject_scheduler_input(pe_working_set_t *data_set, cib_t *cib,
-                                  pcmk_injections_t *injections);
+                                  const pcmk_injections_t *injections);
 
 
 // Constraints of any type (pcmk_sched_constraints.c)
