@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -185,8 +185,8 @@ pcmk__acl_annotate_permissions_recursive(xmlNode *xml_modify)
 }
 
 int
-pcmk__acl_annotate_permissions(const char *cred, xmlDoc *cib_doc,
-                              xmlDoc **acl_evaled_doc)
+pcmk__acl_annotate_permissions(const char *cred, const xmlDoc *cib_doc,
+                               xmlDoc **acl_evaled_doc)
 {
     int ret, version;
     xmlNode *target, *comment;
@@ -206,14 +206,16 @@ pcmk__acl_annotate_permissions(const char *cred, xmlDoc *cib_doc,
         return pcmk_rc_already;
     }
 
-    validation = crm_element_value(xmlDocGetRootElement(cib_doc),
+    // @COMPAT xmlDocGetRootElement() requires non-const in libxml2 < 2.9.2
+
+    validation = crm_element_value(xmlDocGetRootElement((xmlDoc *) cib_doc),
                                    XML_ATTR_VALIDATION);
     version = get_schema_version(validation);
     if (get_schema_version(PCMK__COMPAT_ACL_2_MIN_INCL) > version) {
         return pcmk_rc_schema_validation;
     }
 
-    target = copy_xml(xmlDocGetRootElement(cib_doc));
+    target = copy_xml(xmlDocGetRootElement((xmlDoc *) cib_doc));
     if (target == NULL) {
         return EINVAL;
     }

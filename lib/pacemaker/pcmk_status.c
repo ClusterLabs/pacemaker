@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -290,7 +290,8 @@ done:
  * It should only ever be called from crm_mon.
  */
 int
-pcmk__output_simple_status(pcmk__output_t *out, pe_working_set_t *data_set)
+pcmk__output_simple_status(pcmk__output_t *out,
+                           const pe_working_set_t *data_set)
 {
     int nodes_online = 0;
     int nodes_standby = 0;

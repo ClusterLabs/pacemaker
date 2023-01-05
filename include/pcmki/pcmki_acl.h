@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -39,11 +39,9 @@ enum pcmk__acl_render_how {
 /*!
  * \brief Mark CIB with namespace-encoded result of ACLs eval'd per credential
  *
- * \param[in] cred_type        credential type that \p cred represents
- * \param[in] cred             credential whose ACL perspective to switch to
- * \param[in] cib_doc          XML document representing CIB
- * \param[out] acl_evaled_doc  XML document representing CIB, with said
- *                             namespace-based annotations throughout
+ * \param[in]  cred            Credential whose ACL perspective to switch to
+ * \param[in]  cib_doc         CIB XML to annotate
+ * \param[out] acl_evaled_doc  Where to store annotated CIB XML
  *
  * \return  A standard Pacemaker return code
  *          Namely:
@@ -56,21 +54,24 @@ enum pcmk__acl_render_how {
  * \note Only supported schemas are those following acls-2.0.rng, that is,
  *       those validated with pacemaker-2.0.rng and newer.
  */
-int pcmk__acl_annotate_permissions(const char *cred, xmlDoc *cib_doc,
-                                  xmlDoc **acl_evaled_doc);
+int pcmk__acl_annotate_permissions(const char *cred, const xmlDoc *cib_doc,
+                                   xmlDoc **acl_evaled_doc);
 
 /*!
  * \internal
  * \brief Serialize-render already pcmk__acl_annotate_permissions annotated XML
  *
- * \param[in] annotated_doc pcmk__acl_annotate_permissions annotated XML
- * \param[in] how           render kind, see #pcmk__acl_render_how enumeration
- * \param[out] doc_txt_ptr  where to put the final outcome string
+ * \param[in,out] annotated_doc  XML annotated by pcmk__acl_annotate_permissions
+ * \param[in]     how            Desired rendering (#pcmk__acl_render_how value)
+ * \param[out]    doc_txt_ptr    Where to put the final outcome string
+ *
  * \return A standard Pacemaker return code
  *
  * \note Currently, the function did not receive enough of testing regarding
  *       leak of resources, hence it is not recommended for anything other
  *       than short-lived processes at this time.
+ * \note This function will free \p annotated_doc, which should not be used
+ *       after calling this function.
  */
 int pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how,
                             xmlChar **doc_txt_ptr);
