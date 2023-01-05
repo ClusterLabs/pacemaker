@@ -138,9 +138,9 @@ cmp_primary_priority(gconstpointer a, gconstpointer b)
  * \param[in]     colocation  Colocation constraint to add to \p rsc
  */
 void
-pcmk__add_this_with(pe_resource_t *rsc, pcmk__colocation_t *colocation)
+pcmk__add_this_with(pe_resource_t *rsc, const pcmk__colocation_t *colocation)
 {
-    rsc->rsc_cons = g_list_insert_sorted(rsc->rsc_cons, colocation,
+    rsc->rsc_cons = g_list_insert_sorted(rsc->rsc_cons, (gpointer) colocation,
                                          cmp_primary_priority);
 }
 
@@ -152,20 +152,25 @@ pcmk__add_this_with(pe_resource_t *rsc, pcmk__colocation_t *colocation)
  * \param[in]     colocation  Colocation constraint to add to \p rsc
  */
 void
-pcmk__add_with_this(pe_resource_t *rsc, pcmk__colocation_t *colocation)
+pcmk__add_with_this(pe_resource_t *rsc, const pcmk__colocation_t *colocation)
 {
-    rsc->rsc_cons_lhs = g_list_insert_sorted(rsc->rsc_cons_lhs, colocation,
+    rsc->rsc_cons_lhs = g_list_insert_sorted(rsc->rsc_cons_lhs,
+                                             (gpointer) colocation,
                                              cmp_dependent_priority);
 }
 
 /*!
  * \internal
  * \brief Add orderings necessary for an anti-colocation constraint
+ *
+ * \param[in,out] first_rsc   One resource in an anti-colocation
+ * \param[in]     first_role  Anti-colocation role of \p first_rsc
+ * \param[in]     then_rsc    Other resource in the anti-colocation
+ * \param[in]     then_role   Anti-colocation role of \p then_rsc
  */
 static void
 anti_colocation_order(pe_resource_t *first_rsc, int first_role,
-                      pe_resource_t *then_rsc, int then_role,
-                      pe_working_set_t *data_set)
+                      pe_resource_t *then_rsc, int then_role)
 {
     const char *first_tasks[] = { NULL, NULL };
     const char *then_tasks[] = { NULL, NULL };
@@ -211,15 +216,15 @@ anti_colocation_order(pe_resource_t *first_rsc, int first_role,
  * \internal
  * \brief Add a new colocation constraint to a cluster working set
  *
- * \param[in] id              XML ID for this constraint
- * \param[in] node_attr       Colocate by this attribute (or NULL for #uname)
- * \param[in] score           Constraint score
- * \param[in] dependent       Resource to be colocated
- * \param[in] primary         Resource to colocate \p dependent with
- * \param[in] dependent_role  Current role of \p dependent
- * \param[in] primary_role    Current role of \p primary
- * \param[in] influence       Whether colocation constraint has influence
- * \param[in] data_set        Cluster working set to add constraint to
+ * \param[in]     id              XML ID for this constraint
+ * \param[in]     node_attr       Colocate by this attribute (NULL for #uname)
+ * \param[in]     score           Constraint score
+ * \param[in,out] dependent       Resource to be colocated
+ * \param[in,out] primary         Resource to colocate \p dependent with
+ * \param[in]     dependent_role  Current role of \p dependent
+ * \param[in]     primary_role    Current role of \p primary
+ * \param[in]     influence       Whether colocation constraint has influence
+ * \param[in,out] data_set        Cluster working set to add constraint to
  */
 void
 pcmk__new_colocation(const char *id, const char *node_attr, int score,
@@ -278,9 +283,9 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
 
     if (score <= -INFINITY) {
         anti_colocation_order(dependent, new_con->dependent_role, primary,
-                              new_con->primary_role, data_set);
+                              new_con->primary_role);
         anti_colocation_order(primary, new_con->primary_role, dependent,
-                              new_con->dependent_role, data_set);
+                              new_con->dependent_role);
     }
 }
 
@@ -727,8 +732,8 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
  * \internal
  * \brief Parse a colocation constraint from XML into a cluster working set
  *
- * \param[in] xml_obj   Colocation constraint XML to unpack
- * \param[in] data_set  Cluster working set to add constraint to
+ * \param[in,out] xml_obj   Colocation constraint XML to unpack
+ * \param[in,out] data_set  Cluster working set to add constraint to
  */
 void
 pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
@@ -829,8 +834,8 @@ mark_action_blocked(pe_resource_t *rsc, const char *task,
  * promote actions of resources colocated with it, as appropriate to the
  * colocations' configured roles.
  *
- * \param[in] action    Action to check
- * \param[in] data_set  Cluster working set
+ * \param[in,out] action    Action to check
+ * \param[in]     data_set  Cluster working set (ignored)
  */
 void
 pcmk__block_colocation_dependents(pe_action_t *action,

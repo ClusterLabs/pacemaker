@@ -335,15 +335,16 @@ pe_resource_t *pcmk__find_constraint_resource(GList *rsc_list, const char *id);
 
 G_GNUC_INTERNAL
 xmlNode *pcmk__expand_tags_in_sets(xmlNode *xml_obj,
-                                   pe_working_set_t *data_set);
+                                   const pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-bool pcmk__valid_resource_or_tag(pe_working_set_t *data_set, const char *id,
-                                 pe_resource_t **rsc, pe_tag_t **tag);
+bool pcmk__valid_resource_or_tag(const pe_working_set_t *data_set,
+                                 const char *id, pe_resource_t **rsc,
+                                 pe_tag_t **tag);
 
 G_GNUC_INTERNAL
 bool pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
-                      bool convert_rsc, pe_working_set_t *data_set);
+                      bool convert_rsc, const pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
 void pcmk__create_internal_constraints(pe_working_set_t *data_set);
@@ -400,10 +401,12 @@ G_GNUC_INTERNAL
 void pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-void pcmk__add_this_with(pe_resource_t *rsc, pcmk__colocation_t *colocation);
+void pcmk__add_this_with(pe_resource_t *rsc,
+                         const pcmk__colocation_t *colocation);
 
 G_GNUC_INTERNAL
-void pcmk__add_with_this(pe_resource_t *rsc, pcmk__colocation_t *colocation);
+void pcmk__add_with_this(pe_resource_t *rsc,
+                         const pcmk__colocation_t *colocation);
 
 G_GNUC_INTERNAL
 void pcmk__new_colocation(const char *id, const char *node_attr, int score,
@@ -489,12 +492,11 @@ void pcmk__order_after_each(pe_action_t *after, GList *list);
  * \internal
  * \brief Create a new ordering between two resource actions
  *
- * \param[in] first_rsc   Resource for 'first' action
- * \param[in] then_rsc    Resource for 'then' action
- * \param[in] first_task  Action key for 'first' action
- * \param[in] then_task   Action key for 'then' action
- * \param[in] flags       Bitmask of enum pe_ordering flags
- * \param[in] data_set    Cluster working set to add ordering to
+ * \param[in,out] first_rsc   Resource for 'first' action
+ * \param[in,out] first_task  Action key for 'first' action
+ * \param[in]     then_rsc    Resource for 'then' action
+ * \param[in,out] then_task   Action key for 'then' action
+ * \param[in]     flags       Bitmask of enum pe_ordering flags
  */
 #define pcmk__order_resource_actions(first_rsc, first_task,                 \
                                      then_rsc, then_task, flags)            \
