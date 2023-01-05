@@ -827,7 +827,8 @@ remote_node_print_helper(xmlNode *result, void *user_data)
 
 // \return Standard Pacemaker return code
 int
-pcmk__list_nodes(pcmk__output_t *out, char *node_types, gboolean bash_export)
+pcmk__list_nodes(pcmk__output_t *out, const char *node_types,
+                 gboolean bash_export)
 {
     xmlNode *xml_node = NULL;
     int rc;
@@ -881,7 +882,7 @@ pcmk__list_nodes(pcmk__output_t *out, char *node_types, gboolean bash_export)
 }
 
 int
-pcmk_list_nodes(xmlNodePtr *xml, char *node_types)
+pcmk_list_nodes(xmlNodePtr *xml, const char *node_types)
 {
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;

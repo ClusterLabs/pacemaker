@@ -253,7 +253,7 @@ int pcmk_simulate(xmlNodePtr *xml, pe_working_set_t *data_set,
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_list_nodes(xmlNodePtr *xml, char *node_types);
+int pcmk_list_nodes(xmlNodePtr *xml, const char *node_types);
 
 /*!
  * \brief Output the current status of the cluster, formatted in the same way
