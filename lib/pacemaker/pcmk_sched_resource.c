@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2022 the Pacemaker project contributors
+ * Copyright 2014-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -208,10 +208,10 @@ pcmk__set_allocation_methods(pe_working_set_t *data_set)
 
 // Shared implementation of resource_alloc_functions_t:colocated_resources()
 GList *
-pcmk__colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
+pcmk__colocated_resources(const pe_resource_t *rsc, const pe_resource_t *orig_rsc,
                           GList *colocated_rscs)
 {
-    GList *gIter = NULL;
+    const GList *iter = NULL;
 
     if (orig_rsc == NULL) {
         orig_rsc = rsc;
@@ -223,12 +223,12 @@ pcmk__colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
 
     pe_rsc_trace(orig_rsc, "%s is in colocation chain with %s",
                  rsc->id, orig_rsc->id);
-    colocated_rscs = g_list_append(colocated_rscs, rsc);
+    colocated_rscs = g_list_append(colocated_rscs, (gpointer) rsc);
 
     // Follow colocations where this resource is the dependent resource
-    for (gIter = rsc->rsc_cons; gIter != NULL; gIter = gIter->next) {
-        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
-        pe_resource_t *primary = constraint->primary;
+    for (iter = rsc->rsc_cons; iter != NULL; iter = iter->next) {
+        const pcmk__colocation_t *constraint = iter->data;
+        const pe_resource_t *primary = constraint->primary;
 
         if (primary == orig_rsc) {
             continue; // Break colocation loop
@@ -245,9 +245,9 @@ pcmk__colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
     }
 
     // Follow colocations where this resource is the primary resource
-    for (gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
-        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
-        pe_resource_t *dependent = constraint->dependent;
+    for (iter = rsc->rsc_cons_lhs; iter != NULL; iter = iter->next) {
+        const pcmk__colocation_t *constraint = iter->data;
+        const pe_resource_t *dependent = constraint->dependent;
 
         if (dependent == orig_rsc) {
             continue; // Break colocation loop
@@ -272,7 +272,7 @@ pcmk__colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
 
 // No-op function for variants that don't need to implement add_graph_meta()
 void
-pcmk__noop_add_graph_meta(pe_resource_t *rsc, xmlNode *xml)
+pcmk__noop_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml)
 {
 }
 

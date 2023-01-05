@@ -1347,7 +1347,7 @@ pcmk__schedule_cleanup(pe_resource_t *rsc, const pe_node_t *node, bool optional)
  * \param[in,out] xml  Transition graph action attributes XML to add to
  */
 void
-pcmk__primitive_add_graph_meta(pe_resource_t *rsc, xmlNode *xml)
+pcmk__primitive_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml)
 {
     char *name = NULL;
     char *value = NULL;

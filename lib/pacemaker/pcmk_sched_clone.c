@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1095,7 +1095,7 @@ clone_create_probe(pe_resource_t *rsc, pe_node_t *node)
 }
 
 void
-clone_append_meta(pe_resource_t * rsc, xmlNode * xml)
+clone_append_meta(const pe_resource_t *rsc, xmlNode *xml)
 {
     char *name = NULL;
     clone_variant_data_t *clone_data = NULL;
