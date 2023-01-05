@@ -2290,20 +2290,20 @@ process_recurring(pe_node_t * node, pe_resource_t * rsc,
 }
 
 void
-calculate_active_ops(GList *sorted_op_list, int *start_index, int *stop_index)
+calculate_active_ops(const GList *sorted_op_list, int *start_index,
+                     int *stop_index)
 {
     int counter = -1;
     int implied_monitor_start = -1;
     int implied_clone_start = -1;
     const char *task = NULL;
     const char *status = NULL;
-    GList *gIter = sorted_op_list;
 
     *stop_index = -1;
     *start_index = -1;
 
-    for (; gIter != NULL; gIter = gIter->next) {
-        xmlNode *rsc_op = (xmlNode *) gIter->data;
+    for (const GList *iter = sorted_op_list; iter != NULL; iter = iter->next) {
+        const xmlNode *rsc_op = (const xmlNode *) iter->data;
 
         counter++;
 
@@ -2566,7 +2566,7 @@ unpack_node_lrm(pe_node_t *node, const xmlNode *xml, pe_working_set_t *data_set)
 static void
 set_active(pe_resource_t * rsc)
 {
-    pe_resource_t *top = uber_parent(rsc);
+    const pe_resource_t *top = pe__const_top_resource(rsc, false);
 
     if (top && pcmk_is_set(top->flags, pe_rsc_promotable)) {
         rsc->role = RSC_ROLE_UNPROMOTED;

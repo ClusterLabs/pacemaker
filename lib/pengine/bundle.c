@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1469,7 +1469,7 @@ static void
 pe__bundle_replica_output_text(pcmk__output_t *out, pe__bundle_replica_t *replica,
                                pe_node_t *node, uint32_t show_opts)
 {
-    pe_resource_t *rsc = replica->child;
+    const pe_resource_t *rsc = replica->child;
 
     int offset = 0;
     char buffer[LINE_MAX];
@@ -1819,7 +1819,8 @@ pe__count_bundle(pe_resource_t *rsc)
 }
 
 gboolean
-pe__bundle_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent)
+pe__bundle_is_filtered(const pe_resource_t *rsc, GList *only_rsc,
+                       gboolean check_parent)
 {
     gboolean passes = FALSE;
     pe__bundle_variant_data_t *bundle_data = NULL;

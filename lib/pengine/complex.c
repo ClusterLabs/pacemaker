@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -722,7 +722,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
         pe__set_resource_flags(*rsc, pe_rsc_maintenance);
     }
 
-    if (pe_rsc_is_clone(uber_parent(*rsc))) {
+    if (pe_rsc_is_clone(pe__const_top_resource(*rsc, false))) {
         value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_UNIQUE);
         if (crm_is_true(value)) {
             pe__set_resource_flags(*rsc, pe_rsc_unique);
@@ -917,6 +917,34 @@ uber_parent(pe_resource_t * rsc)
         return NULL;
     }
     while (parent->parent != NULL && parent->parent->variant != pe_container) {
+        parent = parent->parent;
+    }
+    return parent;
+}
+
+/*!
+ * \internal
+ * \brief Get the topmost parent of a resource as a const pointer
+ *
+ * \param[in] rsc             Resource to check
+ * \param[in] include_bundle  If true, go all the way to bundle
+ *
+ * \return \p NULL if \p rsc is NULL, \p rsc if \p rsc has no parent,
+ *         the bundle if \p rsc is bundled and \p include_bundle is true,
+ *         otherwise the topmost parent of \p rsc up to a clone
+ */
+const pe_resource_t *
+pe__const_top_resource(const pe_resource_t *rsc, bool include_bundle)
+{
+    const pe_resource_t *parent = rsc;
+
+    if (parent == NULL) {
+        return NULL;
+    }
+    while (parent->parent != NULL) {
+        if (!include_bundle && (parent->parent->variant == pe_container)) {
+            break;
+        }
         parent = parent->parent;
     }
     return parent;

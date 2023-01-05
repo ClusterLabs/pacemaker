@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -39,11 +39,11 @@
  * \return Maximum promoted instances for \p clone
  */
 int
-pe__clone_promoted_max(pe_resource_t *clone)
+pe__clone_promoted_max(const pe_resource_t *clone)
 {
     clone_variant_data_t *clone_data = NULL;
 
-    get_clone_variant_data(clone_data, uber_parent(clone));
+    get_clone_variant_data(clone_data, pe__const_top_resource(clone, false));
     return clone_data->promoted_max;
 }
 
@@ -56,11 +56,11 @@ pe__clone_promoted_max(pe_resource_t *clone)
  * \return Maximum promoted instances for \p clone
  */
 int
-pe__clone_promoted_node_max(pe_resource_t *clone)
+pe__clone_promoted_node_max(const pe_resource_t *clone)
 {
     clone_variant_data_t *clone_data = NULL;
 
-    get_clone_variant_data(clone_data, uber_parent(clone));
+    get_clone_variant_data(clone_data, pe__const_top_resource(clone, false));
     return clone_data->promoted_node_max;
 }
 
@@ -113,7 +113,8 @@ node_list_to_str(const GList *list)
 }
 
 static void
-clone_header(pcmk__output_t *out, int *rc, pe_resource_t *rsc, clone_variant_data_t *clone_data)
+clone_header(pcmk__output_t *out, int *rc, const pe_resource_t *rsc,
+             clone_variant_data_t *clone_data)
 {
     GString *attrs = NULL;
 
@@ -167,7 +168,7 @@ pe__force_anon(const char *standard, pe_resource_t *rsc, const char *rid,
 }
 
 pe_resource_t *
-find_clone_instance(pe_resource_t * rsc, const char *sub_id, pe_working_set_t * data_set)
+find_clone_instance(const pe_resource_t *rsc, const char *sub_id)
 {
     char *child_id = NULL;
     pe_resource_t *child = NULL;
@@ -1174,7 +1175,8 @@ pe__is_universal_clone(const pe_resource_t *rsc,
 }
 
 gboolean
-pe__clone_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent)
+pe__clone_is_filtered(const pe_resource_t *rsc, GList *only_rsc,
+                      gboolean check_parent)
 {
     gboolean passes = FALSE;
     clone_variant_data_t *clone_data = NULL;
@@ -1186,9 +1188,12 @@ pe__clone_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent
         passes = pcmk__str_in_list(ID(clone_data->xml_obj_child), only_rsc, pcmk__str_star_matches);
 
         if (!passes) {
-            for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-                pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
+            for (const GList *iter = rsc->children;
+                 iter != NULL; iter = iter->next) {
 
+                const pe_resource_t *child_rsc = NULL;
+
+                child_rsc = (const pe_resource_t *) iter->data;
                 if (!child_rsc->fns->is_filtered(child_rsc, only_rsc, FALSE)) {
                     passes = TRUE;
                     break;
@@ -1196,12 +1201,11 @@ pe__clone_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent
             }
         }
     }
-
     return !passes;
 }
 
 const char *
-pe__clone_child_id(pe_resource_t *rsc)
+pe__clone_child_id(const pe_resource_t *rsc)
 {
     clone_variant_data_t *clone_data = NULL;
     get_clone_variant_data(clone_data, rsc);

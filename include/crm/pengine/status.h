@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -28,7 +28,7 @@ extern "C" {
  * \ingroup pengine
  */
 
-const char *rsc_printable_id(pe_resource_t *rsc);
+const char *rsc_printable_id(const pe_resource_t *rsc);
 gboolean cluster_status(pe_working_set_t * data_set);
 pe_working_set_t *pe_new_working_set(void);
 void pe_free_working_set(pe_working_set_t *data_set);
@@ -43,6 +43,8 @@ pe_node_t *pe_find_node_any(const GList *node_list, const char *id,
                             const char *node_name);
 GList *find_operations(const char *rsc, const char *node, gboolean active_filter,
                          pe_working_set_t * data_set);
+void calculate_active_ops(const GList *sorted_op_list, int *start_index,
+                          int *stop_index);
 int pe_bundle_replicas(const pe_resource_t *rsc);
 
 /*!
@@ -92,9 +94,15 @@ pe_rsc_is_anon_clone(const pe_resource_t *rsc)
  * \return true if resource is part of a bundle, false otherwise
  */
 static inline bool
-pe_rsc_is_bundled(pe_resource_t *rsc)
+pe_rsc_is_bundled(const pe_resource_t *rsc)
 {
-    return uber_parent(rsc)->parent != NULL;
+    if (rsc == NULL) {
+        return false;
+    }
+    while (rsc->parent != NULL) {
+        rsc = rsc->parent;
+    }
+    return rsc->variant == pe_container;
 }
 
 #ifdef __cplusplus

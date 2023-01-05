@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -569,7 +569,7 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
     }
 
     if (dependent_instance != NULL) {
-        dependent = find_clone_instance(dependent, dependent_instance, data_set);
+        dependent = find_clone_instance(dependent, dependent_instance);
         if (dependent == NULL) {
             pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
                               "does not have an instance '%s'",
@@ -579,7 +579,7 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
     }
 
     if (primary_instance != NULL) {
-        primary = find_clone_instance(primary, primary_instance, data_set);
+        primary = find_clone_instance(primary, primary_instance);
         if (primary == NULL) {
             pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
                               "does not have an instance '%s'",

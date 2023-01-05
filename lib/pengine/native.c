@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -273,7 +273,7 @@ native_find_rsc(pe_resource_t * rsc, const char *id, const pe_node_t *on_node,
     if (flags & pe_find_clone) {
         const char *rid = ID(rsc->xml);
 
-        if (!pe_rsc_is_clone(uber_parent(rsc))) {
+        if (!pe_rsc_is_clone(pe__const_top_resource(rsc, false))) {
             match = false;
 
         } else if (!strcmp(id, rsc->id) || pcmk__str_eq(id, rid, pcmk__str_none)) {
@@ -365,7 +365,7 @@ struct print_data_s {
 };
 
 static const char *
-native_pending_state(pe_resource_t * rsc)
+native_pending_state(const pe_resource_t *rsc)
 {
     const char *pending_state = NULL;
 
@@ -393,7 +393,7 @@ native_pending_state(pe_resource_t * rsc)
 }
 
 static const char *
-native_pending_task(pe_resource_t * rsc)
+native_pending_task(const pe_resource_t *rsc)
 {
     const char *pending_task = NULL;
 
@@ -415,12 +415,13 @@ native_pending_task(pe_resource_t * rsc)
 }
 
 static enum rsc_role_e
-native_displayable_role(pe_resource_t *rsc)
+native_displayable_role(const pe_resource_t *rsc)
 {
     enum rsc_role_e role = rsc->role;
 
     if ((role == RSC_ROLE_STARTED)
-        && pcmk_is_set(uber_parent(rsc)->flags, pe_rsc_promotable)) {
+        && pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
+                       pe_rsc_promotable)) {
 
         role = RSC_ROLE_UNPROMOTED;
     }
@@ -428,7 +429,7 @@ native_displayable_role(pe_resource_t *rsc)
 }
 
 static const char *
-native_displayable_state(pe_resource_t *rsc, bool print_pending)
+native_displayable_state(const pe_resource_t *rsc, bool print_pending)
 {
     const char *rsc_state = NULL;
 
@@ -541,7 +542,7 @@ add_output_node(GString *s, const char *node, bool have_nodes)
  * \note Caller must free the result with g_free().
  */
 gchar *
-pcmk__native_output_string(pe_resource_t *rsc, const char *name,
+pcmk__native_output_string(const pe_resource_t *rsc, const char *name,
                            const pe_node_t *node, uint32_t show_opts,
                            const char *target_role, bool show_nodes)
 {
@@ -634,7 +635,8 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name,
         if (target_role_e == RSC_ROLE_STOPPED) {
             have_flags = add_output_flag(outstr, "disabled", have_flags);
 
-        } else if (pcmk_is_set(uber_parent(rsc)->flags, pe_rsc_promotable)
+        } else if (pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
+                               pe_rsc_promotable)
                    && target_role_e == RSC_ROLE_UNPROMOTED) {
             have_flags = add_output_flag(outstr, "target-role:", have_flags);
             g_string_append(outstr, target_role);
@@ -688,7 +690,7 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name,
 }
 
 int
-pe__common_output_html(pcmk__output_t *out, pe_resource_t *rsc,
+pe__common_output_html(pcmk__output_t *out, const pe_resource_t *rsc,
                        const char *name, const pe_node_t *node,
                        uint32_t show_opts)
 {
@@ -745,7 +747,7 @@ pe__common_output_html(pcmk__output_t *out, pe_resource_t *rsc,
 }
 
 int
-pe__common_output_text(pcmk__output_t *out, pe_resource_t * rsc,
+pe__common_output_text(pcmk__output_t *out, const pe_resource_t *rsc,
                        const char *name, const pe_node_t *node,
                        uint32_t show_opts)
 {
@@ -1387,19 +1389,16 @@ pe__rscs_brief_output(pcmk__output_t *out, GList *rsc_list, uint32_t show_opts)
 }
 
 gboolean
-pe__native_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent)
+pe__native_is_filtered(const pe_resource_t *rsc, GList *only_rsc,
+                       gboolean check_parent)
 {
     if (pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches) ||
         pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches)) {
         return FALSE;
     } else if (check_parent && rsc->parent) {
-        pe_resource_t *up = uber_parent(rsc);
+        const pe_resource_t *up = pe__const_top_resource(rsc, true);
 
-        if (pe_rsc_is_bundled(rsc)) {
-            return up->parent->fns->is_filtered(up->parent, only_rsc, FALSE);
-        } else {
-            return up->fns->is_filtered(up, only_rsc, FALSE);
-        }
+        return up->fns->is_filtered(up, only_rsc, FALSE);
     }
 
     return TRUE;

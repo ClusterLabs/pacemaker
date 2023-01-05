@@ -678,13 +678,16 @@ ban_list(pcmk__output_t *out, va_list args) {
     /* Print each ban */
     for (gIter = data_set->placement_constraints; gIter != NULL; gIter = gIter->next) {
         pe__location_t *location = gIter->data;
+        const pe_resource_t *rsc = location->rsc_lh;
 
         if (prefix != NULL && !g_str_has_prefix(location->id, prefix)) {
             continue;
         }
 
-        if (!pcmk__str_in_list(rsc_printable_id(location->rsc_lh), only_rsc, pcmk__str_star_matches) &&
-            !pcmk__str_in_list(rsc_printable_id(uber_parent(location->rsc_lh)), only_rsc, pcmk__str_star_matches)) {
+        if (!pcmk__str_in_list(rsc_printable_id(rsc), only_rsc,
+                               pcmk__str_star_matches)
+            && !pcmk__str_in_list(rsc_printable_id(pe__const_top_resource(rsc, false)),
+                                  only_rsc, pcmk__str_star_matches)) {
             continue;
         }
 
@@ -2142,11 +2145,11 @@ node_attribute_list(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("node-capacity", "pe_node_t *", "const char *")
+PCMK__OUTPUT_ARGS("node-capacity", "const pe_node_t *", "const char *")
 static int
 node_capacity(pcmk__output_t *out, va_list args)
 {
-    pe_node_t *node = va_arg(args, pe_node_t *);
+    const pe_node_t *node = va_arg(args, pe_node_t *);
     const char *comment = va_arg(args, const char *);
 
     char *dump_text = crm_strdup_printf("%s: %s capacity:",
@@ -2159,11 +2162,11 @@ node_capacity(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("node-capacity", "pe_node_t *", "const char *")
+PCMK__OUTPUT_ARGS("node-capacity", "const pe_node_t *", "const char *")
 static int
 node_capacity_xml(pcmk__output_t *out, va_list args)
 {
-    pe_node_t *node = va_arg(args, pe_node_t *);
+    const pe_node_t *node = va_arg(args, pe_node_t *);
     const char *comment = va_arg(args, const char *);
 
     xmlNodePtr xml_node = pcmk__output_create_xml_node(out, "capacity",
@@ -2199,6 +2202,7 @@ node_history_list(pcmk__output_t *out, va_list args) {
          rsc_entry != NULL; rsc_entry = crm_next_same_xml(rsc_entry)) {
         const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
         pe_resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
+        const pe_resource_t *parent = pe__const_top_resource(rsc, false);
 
         /* We can't use is_filtered here to filter group resources.  For is_filtered,
          * we have to decide whether to check the parent or not.  If we check the
@@ -2208,9 +2212,11 @@ node_history_list(pcmk__output_t *out, va_list args) {
          *
          * For other resource types, is_filtered is okay.
          */
-        if (uber_parent(rsc)->variant == pe_group) {
-            if (!pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches) &&
-                !pcmk__str_in_list(rsc_printable_id(uber_parent(rsc)), only_rsc, pcmk__str_star_matches)) {
+        if (parent->variant == pe_group) {
+            if (!pcmk__str_in_list(rsc_printable_id(rsc), only_rsc,
+                                   pcmk__str_star_matches)
+                && !pcmk__str_in_list(rsc_printable_id(parent), only_rsc,
+                                      pcmk__str_star_matches)) {
                 continue;
             }
         } else {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -299,7 +299,7 @@ pcmk__scan_double(const char *text, double *result, const char *default_text,
  * \internal
  * \brief Parse a guint from a string stored in a hash table
  *
- * \param[in,out] table        Hash table to search
+ * \param[in]     table        Hash table to search
  * \param[in]     key          Hash table key to use to retrieve string
  * \param[in]     default_val  What to use if key has no entry in table
  * \param[out]    result       If not NULL, where to store parsed integer
