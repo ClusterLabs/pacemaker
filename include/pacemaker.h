@@ -107,7 +107,6 @@ int pcmk_controller_status(xmlNodePtr *xml, const char *node_name,
  *
  * \return Standard Pacemaker return code
  */
-
 int pcmk_designated_controller(xmlNodePtr *xml,
                                unsigned int message_timeout_ms);
 
@@ -248,18 +247,17 @@ int pcmk_simulate(xmlNodePtr *xml, pe_working_set_t *data_set,
 /*!
  * \brief Get nodes list
  *
- * \param[in,out] xml                The destination for the result, as an XML tree.
- * \param[in]     node_types         Node type(s) to return (default: all)
+ * \param[in,out] xml         The destination for the result, as an XML tree
+ * \param[in]     node_types  Node type(s) to return (default: all)
  *
  * \return Standard Pacemaker return code
  */
 int pcmk_list_nodes(xmlNodePtr *xml, const char *node_types);
 
 /*!
- * \brief Output the current status of the cluster, formatted in the same way
- *        that `crm_mon --output-as=xml` would.
+ * \brief Output cluster status formatted like `crm_mon --output-as=xml`
  *
- * \param[in,out] xml The destination for the result, as an XML tree.
+ * \param[in,out] xml  The destination for the result, as an XML tree
  *
  * \return Standard Pacemaker return code
  */
@@ -299,7 +297,7 @@ pcmk_check_rule(xmlNodePtr *xml, xmlNodePtr input, const crm_time_t *date,
     return pcmk_check_rules(xml, input, date, rule_ids);
 }
 
-/*
+/*!
  * \enum pcmk_rc_disp_flags
  * \brief Bit flags to control which fields of result code info are displayed
  */
@@ -310,7 +308,7 @@ enum pcmk_rc_disp_flags {
     pcmk_rc_disp_desc = (1 << 2),   //!< Display result code description
 };
 
-/*
+/*!
  * \brief Display the name and/or description of a result code
  *
  * \param[in,out] xml    The destination for the result, as an XML tree
