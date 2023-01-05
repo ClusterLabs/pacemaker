@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2022 the Pacemaker project contributors
+ * Copyright 2021-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -292,7 +292,8 @@ bool pcmk__action_is_recurring(const pe_action_t *action);
 // Producing transition graphs (pcmk_graph_producer.c)
 
 G_GNUC_INTERNAL
-bool pcmk__graph_has_loop(pe_action_t *init_action, pe_action_t *action,
+bool pcmk__graph_has_loop(const pe_action_t *init_action,
+                          const pe_action_t *action,
                           pe_action_wrapper_t *input);
 
 G_GNUC_INTERNAL
