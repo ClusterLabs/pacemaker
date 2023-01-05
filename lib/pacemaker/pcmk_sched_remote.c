@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -82,10 +82,10 @@ order_action_then_stop(pe_action_t *first_action, pe_resource_t *then_rsc,
 }
 
 static enum remote_connection_state
-get_remote_node_state(pe_node_t *node)
+get_remote_node_state(const pe_node_t *node)
 {
-    pe_resource_t *remote_rsc = NULL;
-    pe_node_t *cluster_node = NULL;
+    const pe_resource_t *remote_rsc = NULL;
+    const pe_node_t *cluster_node = NULL;
 
     CRM_ASSERT(node != NULL);
 
@@ -160,9 +160,11 @@ get_remote_node_state(pe_node_t *node)
 /*!
  * \internal
  * \brief Order actions on remote node relative to actions for the connection
+ *
+ * \param[in,out] action    An action scheduled on a Pacemaker Remote node
  */
 static void
-apply_remote_ordering(pe_action_t *action, pe_working_set_t *data_set)
+apply_remote_ordering(pe_action_t *action)
 {
     pe_resource_t *remote_rsc = NULL;
     enum action_tasks task = text2task(action->task);
@@ -203,13 +205,15 @@ apply_remote_ordering(pe_action_t *action, pe_working_set_t *data_set)
             }
 
             /* Ensure connection is up before running this action */
-            order_start_then_action(remote_rsc, action, order_opts, data_set);
+            order_start_then_action(remote_rsc, action, order_opts,
+                                    remote_rsc->cluster);
             break;
 
         case stop_rsc:
             if (state == remote_state_alive) {
                 order_action_then_stop(action, remote_rsc,
-                                       pe_order_implies_first, data_set);
+                                       pe_order_implies_first,
+                                       remote_rsc->cluster);
 
             } else if (state == remote_state_failed) {
                 /* The resource is active on the node, but since we don't have a
@@ -218,7 +222,7 @@ apply_remote_ordering(pe_action_t *action, pe_working_set_t *data_set)
                  * to the remote connection, since the stop will become implied
                  * by the fencing.
                  */
-                pe_fence_node(data_set, action->node,
+                pe_fence_node(remote_rsc->cluster, action->node,
                               "resources are active but connection is unrecoverable",
                               FALSE);
 
@@ -228,14 +232,15 @@ apply_remote_ordering(pe_action_t *action, pe_working_set_t *data_set)
                  * transition, stop this resource first.
                  */
                 order_action_then_stop(action, remote_rsc,
-                                       pe_order_implies_first, data_set);
+                                       pe_order_implies_first,
+                                       remote_rsc->cluster);
 
             } else {
                 /* The connection is going to be started somewhere else, so
                  * stop this resource after that completes.
                  */
                 order_start_then_action(remote_rsc, action, pe_order_none,
-                                        data_set);
+                                        remote_rsc->cluster);
             }
             break;
 
@@ -248,7 +253,7 @@ apply_remote_ordering(pe_action_t *action, pe_working_set_t *data_set)
                 || (state == remote_state_unknown)) {
 
                 order_start_then_action(remote_rsc, action, pe_order_none,
-                                        data_set);
+                                        remote_rsc->cluster);
             } /* Otherwise we can rely on the stop ordering */
             break;
 
@@ -260,7 +265,8 @@ apply_remote_ordering(pe_action_t *action, pe_working_set_t *data_set)
                  * the connection was re-established
                  */
                 order_start_then_action(remote_rsc, action,
-                                        pe_order_implies_then, data_set);
+                                        pe_order_implies_then,
+                                        remote_rsc->cluster);
 
             } else {
                 pe_node_t *cluster_node = pe__current_node(remote_rsc);
@@ -270,7 +276,7 @@ apply_remote_ordering(pe_action_t *action, pe_working_set_t *data_set)
                      * resource on the remote node. Since we have no way to find
                      * out, it is necessary to fence the node.
                      */
-                    pe_fence_node(data_set, action->node,
+                    pe_fence_node(remote_rsc->cluster, action->node,
                                   "resources are in unknown state "
                                   "and connection is unrecoverable", FALSE);
                 }
@@ -281,11 +287,12 @@ apply_remote_ordering(pe_action_t *action, pe_working_set_t *data_set)
                      * stopped _before_ we let the connection get closed.
                      */
                     order_action_then_stop(action, remote_rsc,
-                                           pe_order_runnable_left, data_set);
+                                           pe_order_runnable_left,
+                                           remote_rsc->cluster);
 
                 } else {
                     order_start_then_action(remote_rsc, action, pe_order_none,
-                                            data_set);
+                                            remote_rsc->cluster);
                 }
             }
             break;
@@ -393,7 +400,7 @@ apply_container_ordering(pe_action_t *action, pe_working_set_t *data_set)
  * \internal
  * \brief Order all relevant actions relative to remote connection actions
  *
- * \param[in] data_set  Cluster working set
+ * \param[in,out] data_set  Cluster working set
  */
 void
 pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
@@ -486,7 +493,7 @@ pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
 
         } else {
             crm_trace("Remote ordering for %s", action->uuid);
-            apply_remote_ordering(action, data_set);
+            apply_remote_ordering(action);
         }
     }
 }
@@ -500,7 +507,7 @@ pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
  * \return true if \p node is a failed remote node, false otherwise
  */
 bool
-pcmk__is_failed_remote_node(pe_node_t *node)
+pcmk__is_failed_remote_node(const pe_node_t *node)
 {
     return pe__is_remote_node(node) && (node->details->remote_rsc != NULL)
            && (get_remote_node_state(node) == remote_state_failed);
@@ -517,7 +524,7 @@ pcmk__is_failed_remote_node(pe_node_t *node)
  *         resource, otherwise false
  */
 bool
-pcmk__rsc_corresponds_to_guest(pe_resource_t *rsc, pe_node_t *node)
+pcmk__rsc_corresponds_to_guest(const pe_resource_t *rsc, const pe_node_t *node)
 {
     return (rsc != NULL) && (rsc->fillers != NULL) && (node != NULL)
             && (node->details->remote_rsc != NULL)
@@ -539,7 +546,7 @@ pcmk__rsc_corresponds_to_guest(pe_resource_t *rsc, pe_node_t *node)
  *         otherwise NULL
  */
 pe_node_t *
-pcmk__connection_host_for_action(pe_action_t *action)
+pcmk__connection_host_for_action(const pe_action_t *action)
 {
     pe_node_t *began_on = NULL;
     pe_node_t *ended_on = NULL;
@@ -642,8 +649,8 @@ pcmk__connection_host_for_action(pe_action_t *action)
  * parameters evaluated without a node (which was put there earlier in
  * pcmk__create_graph() when the bundle's expand() method was called).
  *
- * \param[in] rsc       Resource to check
- * \param[in] params    Resource parameters evaluated per node
+ * \param[in,out] rsc     Resource to check
+ * \param[in,out] params  Resource parameters evaluated per node
  */
 void
 pcmk__substitute_remote_addr(pe_resource_t *rsc, GHashTable *params)
@@ -670,13 +677,13 @@ pcmk__substitute_remote_addr(pe_resource_t *rsc, GHashTable *params)
  * environment variable "physical_host" as XML attributes (using meta-attribute
  * naming).
  *
- * \param[in] args_xml   XML to add attributes to
- * \param[in] action     Action to check
+ * \param[in,out] args_xml  XML to add attributes to
+ * \param[in]     action    Action to check
  */
 void
-pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, pe_action_t *action)
+pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pe_action_t *action)
 {
-    pe_node_t *host = NULL;
+    const pe_node_t *host = NULL;
     enum action_tasks task;
 
     if (!pe__is_guest_node(action->node)) {

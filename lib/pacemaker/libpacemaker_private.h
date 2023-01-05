@@ -552,22 +552,23 @@ void pcmk__update_promotable_dependent_priority(const pe_resource_t *primary,
 // Pacemaker Remote nodes (pcmk_sched_remote.c)
 
 G_GNUC_INTERNAL
-bool pcmk__is_failed_remote_node(pe_node_t *node);
+bool pcmk__is_failed_remote_node(const pe_node_t *node);
 
 G_GNUC_INTERNAL
 void pcmk__order_remote_connection_actions(pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-bool pcmk__rsc_corresponds_to_guest(pe_resource_t *rsc, pe_node_t *node);
+bool pcmk__rsc_corresponds_to_guest(const pe_resource_t *rsc,
+                                    const pe_node_t *node);
 
 G_GNUC_INTERNAL
-pe_node_t *pcmk__connection_host_for_action(pe_action_t *action);
+pe_node_t *pcmk__connection_host_for_action(const pe_action_t *action);
 
 G_GNUC_INTERNAL
 void pcmk__substitute_remote_addr(pe_resource_t *rsc, GHashTable *params);
 
 G_GNUC_INTERNAL
-void pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, pe_action_t *action);
+void pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pe_action_t *action);
 
 
 // Primitives (pcmk_sched_primitive.c)
