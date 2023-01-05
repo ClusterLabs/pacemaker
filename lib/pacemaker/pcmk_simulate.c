@@ -975,9 +975,10 @@ simulate_done:
 
 int
 pcmk_simulate(xmlNodePtr *xml, pe_working_set_t *data_set,
-              pcmk_injections_t *injections, unsigned int flags,
-              unsigned int section_opts, char *use_date, char *input_file,
-              char *graph_file, char *dot_file)
+              const pcmk_injections_t *injections, unsigned int flags,
+              unsigned int section_opts, const char *use_date,
+              const char *input_file, const char *graph_file,
+              const char *dot_file)
 {
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
