@@ -20,12 +20,13 @@
  * \internal
  * \brief Add the expected result to a newly created probe
  *
- * \param[in] probe  Probe action to add expected result to
- * \param[in] rsc    Resource that probe is for
- * \param[in] node   Node that probe will run on
+ * \param[in,out] probe  Probe action to add expected result to
+ * \param[in]     rsc    Resource that probe is for
+ * \param[in]     node   Node that probe will run on
  */
 static void
-add_expected_result(pe_action_t *probe, pe_resource_t *rsc, pe_node_t *node)
+add_expected_result(pe_action_t *probe, const pe_resource_t *rsc,
+                    const pe_node_t *node)
 {
     // Check whether resource is currently active on node
     pe_node_t *running = pe_find_node_id(rsc->running_on, node->details->id);
@@ -43,8 +44,8 @@ add_expected_result(pe_action_t *probe, pe_resource_t *rsc, pe_node_t *node)
  * \internal
  * \brief Create any needed robes on a node for a list of resources
  *
- * \param[in] rscs  List of resources to create probes for
- * \param[in] node  Node to create probes on
+ * \param[in,out] rscs  List of resources to create probes for
+ * \param[in,out] node  Node to create probes on
  *
  * \return true if any probe was created, otherwise false
  */
@@ -67,8 +68,8 @@ pcmk__probe_resource_list(GList *rscs, pe_node_t *node)
  * \internal
  * \brief Order one resource's start after another's start-up probe
  *
- * \param[in] rsc1  Resource that might get start-up probe
- * \param[in] rsc2  Resource that might be started
+ * \param[in,out] rsc1  Resource that might get start-up probe
+ * \param[in]     rsc2  Resource that might be started
  */
 static void
 probe_then_start(pe_resource_t *rsc1, pe_resource_t *rsc2)
@@ -92,9 +93,9 @@ probe_then_start(pe_resource_t *rsc1, pe_resource_t *rsc2)
  * \return true if guest resource will likely stop, otherwise false
  */
 static bool
-guest_resource_will_stop(pe_node_t *node)
+guest_resource_will_stop(const pe_node_t *node)
 {
-    pe_resource_t *guest_rsc = node->details->remote_rsc->container;
+    const pe_resource_t *guest_rsc = node->details->remote_rsc->container;
 
     /* Ideally, we'd check whether the guest has a required stop, but that
      * information doesn't exist yet, so approximate it ...
@@ -115,8 +116,8 @@ guest_resource_will_stop(pe_node_t *node)
  * \internal
  * \brief Create a probe action for a resource on a node
  *
- * \param[in] rsc   Resource to create probe for
- * \param[in[ node  Node to create probe on
+ * \param[in,out] rsc   Resource to create probe for
+ * \param[in,out] node  Node to create probe on
  *
  * \return Newly created probe action
  */
@@ -144,8 +145,8 @@ probe_action(pe_resource_t *rsc, pe_node_t *node)
  *
  * \brief Schedule any probes needed for a resource on a node
  *
- * \param[in] rsc   Resource to create probe for
- * \param[in] node  Node to create probe on
+ * \param[in,out] rsc   Resource to create probe for
+ * \param[in,out] node  Node to create probe on
  *
  * \return true if any probe was created, otherwise false
  */
@@ -294,7 +295,7 @@ no_probe:
  * \return true if \p probe should be ordered before \p then, otherwise false
  */
 static bool
-probe_needed_before_action(pe_action_t *probe, pe_action_t *then)
+probe_needed_before_action(const pe_action_t *probe, const pe_action_t *then)
 {
     // Probes on a node are performed after unfencing it, not before
     if (pcmk__str_eq(then->task, CRM_OP_FENCE, pcmk__str_casei)
@@ -329,7 +330,7 @@ probe_needed_before_action(pe_action_t *probe, pe_action_t *then)
  * resource", add implicit "probe this resource then do something" equivalents
  * so the relation is upheld until we know whether a stop is needed.
  *
- * \param[in] data_set  Cluster working set
+ * \param[in,out] data_set  Cluster working set
  */
 static void
 add_probe_orderings_for_stops(pe_working_set_t *data_set)
@@ -523,9 +524,9 @@ add_start_orderings_for_probe(pe_action_t *probe, pe_action_wrapper_t *after)
  * of a restart/re-promote, and do the same recursively for all actions ordered
  * after the "then" action.
  *
- * \param[in] probe     Probe as 'first' action in an ordering
- * \param[in] after     'then' action in the ordering
- * \param[in] data_set  Cluster working set
+ * \param[in,out] probe     Probe as 'first' action in an ordering
+ * \param[in,out] after     'then' action in the ordering
+ * \param[in,out] data_set  Cluster working set
  */
 static void
 add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after,
@@ -654,7 +655,7 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after,
  * \internal
  * \brief Clear the tracking flag on all scheduled actions
  *
- * \param[in] data_set  Cluster working set
+ * \param[in,out] data_set  Cluster working set
  */
 static void
 clear_actions_tracking_flag(pe_working_set_t *data_set)
@@ -670,10 +671,10 @@ clear_actions_tracking_flag(pe_working_set_t *data_set)
 
 /*!
  * \internal
- * \brief Add start and restart orderings for any scheduled probes for a given resource
+ * \brief Add start and restart orderings for probes scheduled for a resource
  *
- * \param[in] rsc       Resource whose probes should be ordered
- * \param[in] data_set  Cluster working set
+ * \param[in,out] rsc       Resource whose probes should be ordered
+ * \param[in,out] data_set  Cluster working set
  */
 static void
 add_start_restart_orderings_for_rsc(pe_resource_t *rsc,
@@ -713,7 +714,7 @@ add_start_restart_orderings_for_rsc(pe_resource_t *rsc,
  * \internal
  * \brief Add "A then probe B" orderings for "A then B" orderings
  *
- * \param[in] data_set  Cluster working set
+ * \param[in,out] data_set  Cluster working set
  *
  * \note This function is currently disabled (see next comment).
  */
@@ -843,7 +844,7 @@ pcmk__order_probes(pe_working_set_t *data_set)
  * \internal
  * \brief Schedule any probes needed
  *
- * \param[in] data_set  Cluster working set
+ * \param[in,out] data_set  Cluster working set
  *
  * \note This may also schedule fencing of failed remote nodes.
  */

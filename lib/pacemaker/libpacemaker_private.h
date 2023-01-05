@@ -244,7 +244,8 @@ uint32_t pcmk__update_ordered_actions(pe_action_t *first, pe_action_t *then,
                                       pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-void pcmk__log_action(const char *pre_text, pe_action_t *action, bool details);
+void pcmk__log_action(const char *pre_text, const pe_action_t *action,
+                      bool details);
 
 G_GNUC_INTERNAL
 pe_action_t *pcmk__new_cancel_action(pe_resource_t *rsc, const char *name,
