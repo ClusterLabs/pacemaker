@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2022 the Pacemaker project contributors
+ * Copyright 2019-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -928,16 +928,16 @@ crmadmin_node_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("digests", "pe_resource_t *", "pe_node_t *", "const char *",
-                  "guint", "op_digest_cache_t *")
+PCMK__OUTPUT_ARGS("digests", "const pe_resource_t *", "const pe_node_t *",
+                  "const char *", "guint", "const op_digest_cache_t *")
 static int
 digests_text(pcmk__output_t *out, va_list args)
 {
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    pe_node_t *node = va_arg(args, pe_node_t *);
+    const pe_resource_t *rsc = va_arg(args, const pe_resource_t *);
+    const pe_node_t *node = va_arg(args, const pe_node_t *);
     const char *task = va_arg(args, const char *);
     guint interval_ms = va_arg(args, guint);
-    op_digest_cache_t *digests = va_arg(args, op_digest_cache_t *);
+    const op_digest_cache_t *digests = va_arg(args, const op_digest_cache_t *);
 
     char *action_desc = NULL;
     const char *rsc_desc = "unknown resource";
@@ -998,16 +998,16 @@ add_digest_xml(xmlNode *parent, const char *type, const char *digest,
     }
 }
 
-PCMK__OUTPUT_ARGS("digests", "pe_resource_t *", "pe_node_t *", "const char *",
-                  "guint", "op_digest_cache_t *")
+PCMK__OUTPUT_ARGS("digests", "const pe_resource_t *", "const pe_node_t *",
+                  "const char *", "guint", "const op_digest_cache_t *")
 static int
 digests_xml(pcmk__output_t *out, va_list args)
 {
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    pe_node_t *node = va_arg(args, pe_node_t *);
+    const pe_resource_t *rsc = va_arg(args, const pe_resource_t *);
+    const pe_node_t *node = va_arg(args, const pe_node_t *);
     const char *task = va_arg(args, const char *);
     guint interval_ms = va_arg(args, guint);
-    op_digest_cache_t *digests = va_arg(args, op_digest_cache_t *);
+    const op_digest_cache_t *digests = va_arg(args, const op_digest_cache_t *);
 
     char *interval_s = crm_strdup_printf("%ums", interval_ms);
     xmlNode *xml = NULL;

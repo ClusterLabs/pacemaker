@@ -310,14 +310,14 @@ G_GNUC_INTERNAL
 void pcmk__order_vs_fence(pe_action_t *stonith_op, pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-void pcmk__order_vs_unfence(pe_resource_t *rsc, pe_node_t *node,
+void pcmk__order_vs_unfence(const pe_resource_t *rsc, pe_node_t *node,
                             pe_action_t *action, enum pe_ordering order);
 
 G_GNUC_INTERNAL
 void pcmk__fence_guest(pe_node_t *node);
 
 G_GNUC_INTERNAL
-bool pcmk__node_unfenced(pe_node_t *node);
+bool pcmk__node_unfenced(const pe_node_t *node);
 
 G_GNUC_INTERNAL
 void pcmk__order_restart_vs_unfence(gpointer data, gpointer user_data);
@@ -739,7 +739,7 @@ bool pcmk__rsc_agent_changed(pe_resource_t *rsc, pe_node_t *node,
                              const xmlNode *rsc_entry, bool active_on_node);
 
 G_GNUC_INTERNAL
-GList *pcmk__rscs_matching_id(const char *id, pe_working_set_t *data_set);
+GList *pcmk__rscs_matching_id(const char *id, const pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
 GList *pcmk__colocated_resources(const pe_resource_t *rsc,
@@ -763,7 +763,7 @@ G_GNUC_INTERNAL
 void pcmk__unassign_resource(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
-bool pcmk__threshold_reached(pe_resource_t *rsc, pe_node_t *node,
+bool pcmk__threshold_reached(pe_resource_t *rsc, const pe_node_t *node,
                              pe_resource_t **failed);
 
 G_GNUC_INTERNAL

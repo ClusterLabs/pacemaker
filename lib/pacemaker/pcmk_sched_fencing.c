@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -26,7 +26,7 @@
  * \return TRUE if resource (or parent if an anonymous clone) is known
  */
 static bool
-rsc_is_known_on(pe_resource_t *rsc, const pe_node_t *node)
+rsc_is_known_on(const pe_resource_t *rsc, const pe_node_t *node)
 {
    if (pe_hash_table_lookup(rsc->known_on, node->details->id)) {
        return TRUE;
@@ -47,13 +47,11 @@ rsc_is_known_on(pe_resource_t *rsc, const pe_node_t *node)
  * \internal
  * \brief Order a resource's start and promote actions relative to fencing
  *
- * \param[in] rsc         Resource to be ordered
- * \param[in] stonith_op  Fence action
- * \param[in] data_set    Cluster working set
+ * \param[in,out] rsc         Resource to be ordered
+ * \param[in,out] stonith_op  Fence action
  */
 static void
-order_start_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op,
-                       pe_working_set_t *data_set)
+order_start_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
 {
     pe_node_t *target;
     GList *gIter = NULL;
@@ -101,13 +99,11 @@ order_start_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op,
  * \internal
  * \brief Order a resource's stop and demote actions relative to fencing
  *
- * \param[in] rsc         Resource to be ordered
- * \param[in] stonith_op  Fence action
- * \param[in] data_set    Cluster working set
+ * \param[in,out] rsc         Resource to be ordered
+ * \param[in,out] stonith_op  Fence action
  */
 static void
-order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op,
-                      pe_working_set_t *data_set)
+order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
 {
     GList *gIter = NULL;
     GList *action_list = NULL;
@@ -203,7 +199,7 @@ order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op,
                   rsc->id, pe__node_name(node));
          pcmk__new_ordering(rsc, stop_key(rsc), NULL, NULL,
                             strdup(CRM_OP_FENCE), stonith_op,
-                            pe_order_optional, data_set);
+                            pe_order_optional, rsc->cluster);
 #endif
     }
 
@@ -248,13 +244,11 @@ order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op,
  * \internal
  * \brief Order resource actions properly relative to fencing
  *
- * \param[in] rsc         Resource whose actions should be ordered
- * \param[in] stonith_op  Fencing operation to be ordered against
- * \param[in] data_set    Cluster working set
+ * \param[in,out] rsc         Resource whose actions should be ordered
+ * \param[in,out] stonith_op  Fencing operation to be ordered against
  */
 static void
-rsc_stonith_ordering(pe_resource_t *rsc, pe_action_t *stonith_op,
-                     pe_working_set_t *data_set)
+rsc_stonith_ordering(pe_resource_t *rsc, pe_action_t *stonith_op)
 {
     if (rsc->children) {
         GList *gIter = NULL;
@@ -262,7 +256,7 @@ rsc_stonith_ordering(pe_resource_t *rsc, pe_action_t *stonith_op,
         for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-            rsc_stonith_ordering(child_rsc, stonith_op, data_set);
+            rsc_stonith_ordering(child_rsc, stonith_op);
         }
 
     } else if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
@@ -271,8 +265,8 @@ rsc_stonith_ordering(pe_resource_t *rsc, pe_action_t *stonith_op,
                      rsc->id);
 
     } else {
-        order_start_vs_fencing(rsc, stonith_op, data_set);
-        order_stop_vs_fencing(rsc, stonith_op, data_set);
+        order_start_vs_fencing(rsc, stonith_op);
+        order_stop_vs_fencing(rsc, stonith_op);
     }
 }
 
@@ -284,7 +278,7 @@ rsc_stonith_ordering(pe_resource_t *rsc, pe_action_t *stonith_op,
  * imply stop and demote operations of affected resources by marking them as
  * pseudo-actions, etc.
  *
- * \param[in]     stonith_op  Fencing operation
+ * \param[in,out] stonith_op  Fencing operation
  * \param[in,out] data_set    Working set of cluster
  */
 void
@@ -292,7 +286,7 @@ pcmk__order_vs_fence(pe_action_t *stonith_op, pe_working_set_t *data_set)
 {
     CRM_CHECK(stonith_op && data_set, return);
     for (GList *r = data_set->resources; r != NULL; r = r->next) {
-        rsc_stonith_ordering((pe_resource_t *) r->data, stonith_op, data_set);
+        rsc_stonith_ordering((pe_resource_t *) r->data, stonith_op);
     }
 }
 
@@ -300,14 +294,14 @@ pcmk__order_vs_fence(pe_action_t *stonith_op, pe_working_set_t *data_set)
  * \internal
  * \brief Order an action after unfencing
  *
- * \param[in] rsc       Resource that action is for
- * \param[in] node      Node that action is on
- * \param[in] action    Action to be ordered after unfencing
- * \param[in] order     Ordering flags
+ * \param[in]     rsc       Resource that action is for
+ * \param[in,out] node      Node that action is on
+ * \param[in,out] action    Action to be ordered after unfencing
+ * \param[in]     order     Ordering flags
  */
 void
-pcmk__order_vs_unfence(pe_resource_t *rsc, pe_node_t *node, pe_action_t *action,
-                       enum pe_ordering order)
+pcmk__order_vs_unfence(const pe_resource_t *rsc, pe_node_t *node,
+                       pe_action_t *action, enum pe_ordering order)
 {
     /* When unfencing is in use, we order unfence actions before any probe or
      * start of resources that require unfencing, and also of fence devices.
@@ -325,7 +319,7 @@ pcmk__order_vs_unfence(pe_resource_t *rsc, pe_node_t *node, pe_action_t *action,
          * whenever a new resource is added -- which would be highly suboptimal.
          */
         pe_action_t *unfence = pe_fence_op(node, "on", TRUE, NULL, FALSE,
-                                           rsc->cluster);
+                                           node->details->data_set);
 
         order_actions(unfence, action, order);
 
@@ -334,7 +328,8 @@ pcmk__order_vs_unfence(pe_resource_t *rsc, pe_node_t *node, pe_action_t *action,
             char *reason = crm_strdup_printf("required by %s %s",
                                              rsc->id, action->task);
 
-            trigger_unfencing(NULL, node, reason, NULL, rsc->cluster);
+            trigger_unfencing(NULL, node, reason, NULL,
+                              node->details->data_set);
             free(reason);
         }
     }
@@ -344,7 +339,7 @@ pcmk__order_vs_unfence(pe_resource_t *rsc, pe_node_t *node, pe_action_t *action,
  * \internal
  * \brief Create pseudo-op for guest node fence, and order relative to it
  *
- * \param[in] node      Guest node to fence
+ * \param[in,out] node  Guest node to fence
  */
 void
 pcmk__fence_guest(pe_node_t *node)
@@ -445,7 +440,7 @@ pcmk__fence_guest(pe_node_t *node)
  *         otherwise false
  */
 bool
-pcmk__node_unfenced(pe_node_t *node)
+pcmk__node_unfenced(const pe_node_t *node)
 {
     const char *unfenced = pe_node_attribute_raw(node, CRM_ATTR_UNFENCED);
 
@@ -456,7 +451,7 @@ pcmk__node_unfenced(pe_node_t *node)
  * \internal
  * \brief Order a resource's start and stop relative to unfencing of a node
  *
- * \param[in]     data       Node that could be unfenced
+ * \param[in,out] data       Node that could be unfenced
  * \param[in,out] user_data  Resource to order
  */
 void

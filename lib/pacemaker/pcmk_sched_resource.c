@@ -88,10 +88,10 @@ static resource_alloc_functions_t allocation_methods[] = {
  * \internal
  * \brief Check whether a resource's agent standard, provider, or type changed
  *
- * \param[in] rsc             Resource to check
- * \param[in] node            Node needing unfencing/restart if agent changed
- * \param[in] rsc_entry       XML with previously known agent information
- * \param[in] active_on_node  Whether \p rsc is active on \p node
+ * \param[in,out] rsc             Resource to check
+ * \param[in,out] node            Node needing unfencing if agent changed
+ * \param[in]     rsc_entry       XML with previously known agent information
+ * \param[in]     active_on_node  Whether \p rsc is active on \p node
  *
  * \return true if agent for \p rsc changed, otherwise false
  */
@@ -168,7 +168,7 @@ add_rsc_if_matching(GList *result, pe_resource_t *rsc, const char *id)
  *       g_list_free().
  */
 GList *
-pcmk__rscs_matching_id(const char *id, pe_working_set_t *data_set)
+pcmk__rscs_matching_id(const char *id, const pe_working_set_t *data_set)
 {
     GList *result = NULL;
 
@@ -183,8 +183,8 @@ pcmk__rscs_matching_id(const char *id, pe_working_set_t *data_set)
  * \internal
  * \brief Set the variant-appropriate allocation methods for a resource
  *
- * \param[in] rsc      Resource to set allocation methods for
- * \param[in] ignored  Only here so function can be used with g_list_foreach()
+ * \param[in,out] rsc      Resource to set allocation methods for
+ * \param[in]     ignored  Here so function can be used with g_list_foreach()
  */
 static void
 set_allocation_methods_for_rsc(pe_resource_t *rsc, void *ignored)
@@ -197,7 +197,7 @@ set_allocation_methods_for_rsc(pe_resource_t *rsc, void *ignored)
  * \internal
  * \brief Set the variant-appropriate allocation methods for all resources
  *
- * \param[in] data_set  Cluster working set
+ * \param[in,out] data_set  Cluster working set
  */
 void
 pcmk__set_allocation_methods(pe_working_set_t *data_set)
@@ -323,9 +323,9 @@ pcmk__output_resource_actions(pe_resource_t *rsc)
  * and update any existing actions scheduled for it. This is not done
  * recursively for children, so it should be called only for primitives.
  *
- * \param[in] rsc     Resource to assign
- * \param[in] chosen  Node to assign \p rsc to
- * \param[in] force   If true, assign to \p chosen even if unavailable
+ * \param[in,out] rsc     Resource to assign
+ * \param[in,out] chosen  Node to assign \p rsc to
+ * \param[in]     force   If true, assign to \p chosen even if unavailable
  *
  * \return true if \p rsc could be assigned, otherwise false
  *
@@ -421,9 +421,9 @@ pcmk__finalize_assignment(pe_resource_t *rsc, pe_node_t *chosen, bool force)
  * (or \p chosen is NULL), unassign any previous assignments, set next role to
  * stopped, and update any existing actions scheduled for them.
  *
- * \param[in] rsc     Resource to assign
- * \param[in] chosen  Node to assign \p rsc to
- * \param[in] force   If true, assign to \p chosen even if unavailable
+ * \param[in,out] rsc     Resource to assign
+ * \param[in,out] chosen  Node to assign \p rsc to
+ * \param[in]     force   If true, assign to \p chosen even if unavailable
  *
  * \return true if \p rsc could be assigned, otherwise false
  *
@@ -460,7 +460,7 @@ pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force)
  * and mark the resource as provisional again. This is not done recursively for
  * children, so it should be called only for primitives.
  *
- * \param[in] rsc  Resource to unassign
+ * \param[in,out] rsc  Resource to unassign
  */
 void
 pcmk__unassign_resource(pe_resource_t *rsc)
@@ -489,15 +489,15 @@ pcmk__unassign_resource(pe_resource_t *rsc)
  * \internal
  * \brief Check whether a resource has reached its migration threshold on a node
  *
- * \param[in]  rsc       Resource to check
- * \param[in]  node      Node to check
- * \param[out] failed    If the threshold has been reached, this will be set to
- *                       the resource that failed (possibly a parent of \p rsc)
+ * \param[in,out] rsc       Resource to check
+ * \param[in]     node      Node to check
+ * \param[out]    failed    If threshold has been reached, this will be set to
+ *                          resource that failed (possibly a parent of \p rsc)
  *
  * \return true if the migration threshold has been reached, false otherwise
  */
 bool
-pcmk__threshold_reached(pe_resource_t *rsc, pe_node_t *node,
+pcmk__threshold_reached(pe_resource_t *rsc, const pe_node_t *node,
                         pe_resource_t **failed)
 {
     int fail_count, remaining_tries;
@@ -564,7 +564,7 @@ convert_const_pointer(const void *ptr)
  * \return Node's weight, or -INFINITY if not found
  */
 static int
-get_node_weight(pe_node_t *node, GHashTable *nodes)
+get_node_weight(const pe_node_t *node, GHashTable *nodes)
 {
     pe_node_t *weighted_node = NULL;
 
@@ -590,7 +590,7 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
 {
     const pe_resource_t *resource1 = a;
     const pe_resource_t *resource2 = b;
-    GList *nodes = (GList *) data;
+    const GList *nodes = (const GList *) data;
 
     int rc = 0;
     int r1_weight = -INFINITY;
@@ -653,8 +653,8 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
 
     // Otherwise a higher weight on any node will do
     reason = "score";
-    for (GList *iter = nodes; iter != NULL; iter = iter->next) {
-        pe_node_t *node = (pe_node_t *) iter->data;
+    for (const GList *iter = nodes; iter != NULL; iter = iter->next) {
+        const pe_node_t *node = (const pe_node_t *) iter->data;
 
         r1_weight = get_node_weight(node, r1_nodes);
         r2_weight = get_node_weight(node, r2_nodes);
@@ -691,7 +691,7 @@ done:
  * \internal
  * \brief Sort resources in the order they should be allocated to nodes
  *
- * \param[in] data_set  Cluster working set
+ * \param[in,out] data_set  Cluster working set
  */
 void
 pcmk__sort_resources(pe_working_set_t *data_set)
@@ -827,13 +827,13 @@ cmp_instance_by_colocation(const pe_resource_t *instance1,
  * \return true if \p rsc or any of its children are failed, otherwise false
  */
 static bool
-did_fail(const pe_resource_t * rsc)
+did_fail(const pe_resource_t *rsc)
 {
     if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
         return true;
     }
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
-        if (did_fail((pe_resource_t *) iter->data)) {
+        if (did_fail((const pe_resource_t *) iter->data)) {
             return true;
         }
     }

@@ -86,7 +86,7 @@ check_params(pe_resource_t *rsc, pe_node_t *node, const xmlNode *rsc_op,
  *         otherwise false
  */
 static bool
-failcount_clear_action_exists(pe_node_t *node, pe_resource_t *rsc)
+failcount_clear_action_exists(const pe_node_t *node, const pe_resource_t *rsc)
 {
     GList *list = pe__resource_actions(rsc, node, CRM_OP_CLEAR_FAILCOUNT, TRUE);
 
@@ -101,16 +101,16 @@ failcount_clear_action_exists(pe_node_t *node, pe_resource_t *rsc)
  * \internal
  * \brief Ban a resource from a node if it reached its failure threshold there
  *
- * \param[in] rsc       Resource to check failure threshold for
- * \param[in] node      Node to check \p rsc on
+ * \param[in,out] rsc   Resource to check failure threshold for
+ * \param[in]     node  Node to check \p rsc on
  */
 static void
-check_failure_threshold(pe_resource_t *rsc, pe_node_t *node)
+check_failure_threshold(pe_resource_t *rsc, const pe_node_t *node)
 {
     // If this is a collective resource, apply recursively to children instead
     if (rsc->children != NULL) {
         g_list_foreach(rsc->children, (GFunc) check_failure_threshold,
-                       node);
+                       (gpointer) node);
         return;
 
     } else if (failcount_clear_action_exists(node, rsc)) {
@@ -145,18 +145,19 @@ check_failure_threshold(pe_resource_t *rsc, pe_node_t *node)
  * exclusive, probes will only be done on nodes listed in exclusive constraints.
  * This function bans the resource from the node if the node is not listed.
  *
- * \param[in] rsc   Resource to check
- * \param[in] node  Node to check \p rsc on
+ * \param[in,out] rsc   Resource to check
+ * \param[in]     node  Node to check \p rsc on
  */
 static void
-apply_exclusive_discovery(pe_resource_t *rsc, pe_node_t *node)
+apply_exclusive_discovery(pe_resource_t *rsc, const pe_node_t *node)
 {
     if (rsc->exclusive_discover
         || pe__const_top_resource(rsc, false)->exclusive_discover) {
         pe_node_t *match = NULL;
 
         // If this is a collective resource, apply recursively to children
-        g_list_foreach(rsc->children, (GFunc) apply_exclusive_discovery, node);
+        g_list_foreach(rsc->children, (GFunc) apply_exclusive_discovery,
+                       (gpointer) node);
 
         match = g_hash_table_lookup(rsc->allowed_nodes, node->details->id);
         if ((match != NULL)
@@ -170,8 +171,8 @@ apply_exclusive_discovery(pe_resource_t *rsc, pe_node_t *node)
  * \internal
  * \brief Apply stickiness to a resource if appropriate
  *
- * \param[in] rsc       Resource to check for stickiness
- * \param[in] data_set  Cluster working set
+ * \param[in,out] rsc       Resource to check for stickiness
+ * \param[in,out] data_set  Cluster working set
  */
 static void
 apply_stickiness(pe_resource_t *rsc, pe_working_set_t *data_set)
@@ -211,15 +212,14 @@ apply_stickiness(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     pe_rsc_debug(rsc, "Resource %s has %d stickiness on %s",
                  rsc->id, rsc->stickiness, pe__node_name(node));
-    resource_location(rsc, node, rsc->stickiness, "stickiness",
-                      rsc->cluster);
+    resource_location(rsc, node, rsc->stickiness, "stickiness", data_set);
 }
 
 /*!
  * \internal
  * \brief Apply shutdown locks for all resources as appropriate
  *
- * \param[in] data_set  Cluster working set
+ * \param[in,out] data_set  Cluster working set
  */
 static void
 apply_shutdown_locks(pe_working_set_t *data_set)
@@ -238,7 +238,7 @@ apply_shutdown_locks(pe_working_set_t *data_set)
  * \internal
  * \brief Calculate the number of available nodes in the cluster
  *
- * \param[in] data_set  Cluster working set
+ * \param[in,out] data_set  Cluster working set
  */
 static void
 count_available_nodes(pe_working_set_t *data_set)
@@ -293,7 +293,7 @@ apply_node_criteria(pe_working_set_t *data_set)
  * \internal
  * \brief Allocate resources to nodes
  *
- * \param[in] data_set  Cluster working set
+ * \param[in,out] data_set  Cluster working set
  */
 static void
 allocate_resources(pe_working_set_t *data_set)
@@ -341,8 +341,8 @@ allocate_resources(pe_working_set_t *data_set)
  * \internal
  * \brief Schedule fail count clearing on online nodes if resource is orphaned
  *
- * \param[in] rsc       Resource to check
- * \param[in] data_set  Cluster working set
+ * \param[in,out] rsc       Resource to check
+ * \param[in,out] data_set  Cluster working set
  */
 static void
 clear_failcounts_if_orphaned(pe_resource_t *rsc, pe_working_set_t *data_set)
@@ -381,7 +381,7 @@ clear_failcounts_if_orphaned(pe_resource_t *rsc, pe_working_set_t *data_set)
  * \internal
  * \brief Schedule any resource actions needed
  *
- * \param[in] data_set  Cluster working set
+ * \param[in,out] data_set  Cluster working set
  */
 static void
 schedule_resource_actions(pe_working_set_t *data_set)
@@ -439,10 +439,11 @@ is_managed(const pe_resource_t *rsc)
  * \return true if any resource is managed, otherwise false
  */
 static bool
-any_managed_resources(pe_working_set_t *data_set)
+any_managed_resources(const pe_working_set_t *data_set)
 {
-    for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
-        if (is_managed((pe_resource_t *) iter->data)) {
+    for (const GList *iter = data_set->resources;
+         iter != NULL; iter = iter->next) {
+        if (is_managed((const pe_resource_t *) iter->data)) {
             return true;
         }
     }
@@ -460,7 +461,8 @@ any_managed_resources(pe_working_set_t *data_set)
  * \return true if \p node should be fenced, otherwise false
  */
 static bool
-needs_fencing(pe_node_t *node, bool have_managed, pe_working_set_t *data_set)
+needs_fencing(const pe_node_t *node, bool have_managed,
+              const pe_working_set_t *data_set)
 {
     return have_managed && node->details->unclean
            && pe_can_fence(data_set, node);
@@ -475,7 +477,7 @@ needs_fencing(pe_node_t *node, bool have_managed, pe_working_set_t *data_set)
  * \return true if \p node should be shut down, otherwise false
  */
 static bool
-needs_shutdown(pe_node_t *node)
+needs_shutdown(const pe_node_t *node)
 {
     if (pe__is_guest_or_remote_node(node)) {
        /* Do not send shutdown actions for Pacemaker Remote nodes.
@@ -490,13 +492,15 @@ needs_shutdown(pe_node_t *node)
  * \internal
  * \brief Track and order non-DC fencing
  *
- * \param[in] list    List of existing non-DC fencing actions
- * \param[in] action  Fencing action to prepend to \p list
+ * \param[in,out] list      List of existing non-DC fencing actions
+ * \param[in,out] action    Fencing action to prepend to \p list
+ * \param[in]     data_set  Cluster working set
  *
  * \return (Possibly new) head of \p list
  */
 static GList *
-add_nondc_fencing(GList *list, pe_action_t *action, pe_working_set_t *data_set)
+add_nondc_fencing(GList *list, pe_action_t *action,
+                  const pe_working_set_t *data_set)
 {
     if (!pcmk_is_set(data_set->flags, pe_flag_concurrent_fencing)
         && (list != NULL)) {
@@ -514,8 +518,8 @@ add_nondc_fencing(GList *list, pe_action_t *action, pe_working_set_t *data_set)
  * \internal
  * \brief Schedule a node for fencing
  *
- * \param[in] node      Node that requires fencing
- * \param[in] data_set  Cluster working set
+ * \param[in,out] node      Node that requires fencing
+ * \param[in,out] data_set  Cluster working set
  */
 static pe_action_t *
 schedule_fencing(pe_node_t *node, pe_working_set_t *data_set)
@@ -532,7 +536,7 @@ schedule_fencing(pe_node_t *node, pe_working_set_t *data_set)
  * \internal
  * \brief Create and order node fencing and shutdown actions
  *
- * \param[in] data_set  Cluster working set
+ * \param[in,out] data_set  Cluster working set
  */
 static void
 schedule_fencing_and_shutdowns(pe_working_set_t *data_set)
@@ -697,13 +701,15 @@ log_all_actions(pe_working_set_t *data_set)
  * \param[in] data_set  Cluster working set
  */
 static void
-log_unrunnable_actions(pe_working_set_t *data_set)
+log_unrunnable_actions(const pe_working_set_t *data_set)
 {
     const uint64_t flags = pe_action_optional|pe_action_runnable|pe_action_pseudo;
 
     crm_trace("Required but unrunnable actions:");
-    for (GList *iter = data_set->actions; iter != NULL; iter = iter->next) {
-        pe_action_t *action = (pe_action_t *) iter->data;
+    for (const GList *iter = data_set->actions;
+         iter != NULL; iter = iter->next) {
+
+        const pe_action_t *action = (const pe_action_t *) iter->data;
 
         if (!pcmk_any_flags_set(action->flags, flags)) {
             pcmk__log_action("\t", action, true);
@@ -715,9 +721,9 @@ log_unrunnable_actions(pe_working_set_t *data_set)
  * \internal
  * \brief Unpack the CIB for scheduling
  *
- * \param[in] cib       CIB XML to unpack (may be NULL if previously unpacked)
- * \param[in] flags     Working set flags to set in addition to defaults
- * \param[in] data_set  Cluster working set
+ * \param[in,out] cib       CIB XML to unpack (may be NULL if already unpacked)
+ * \param[in]     flags     Working set flags to set in addition to defaults
+ * \param[in,out] data_set  Cluster working set
  */
 static void
 unpack_cib(xmlNode *cib, unsigned long long flags, pe_working_set_t *data_set)
@@ -757,7 +763,7 @@ unpack_cib(xmlNode *cib, unsigned long long flags, pe_working_set_t *data_set)
  * \internal
  * \brief Run the scheduler for a given CIB
  *
- * \param[in]     cib       CIB XML to use as scheduler input
+ * \param[in,out] cib       CIB XML to use as scheduler input
  * \param[in]     flags     Working set flags to set in addition to defaults
  * \param[in,out] data_set  Cluster working set
  */

@@ -934,7 +934,7 @@ clone_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
  * \internal
  * \brief Add a resource's actions to the transition graph
  *
- * \param[in] rsc  Resource whose actions should be added
+ * \param[in,out] rsc  Resource whose actions should be added
  */
 void
 clone_expand(pe_resource_t *rsc)
@@ -1054,8 +1054,8 @@ probe_anonymous_clone(pe_resource_t *rsc, pe_node_t *node,
  *
  * \brief Schedule any probes needed for a resource on a node
  *
- * \param[in] rsc   Resource to create probe for
- * \param[in] node  Node to create probe on
+ * \param[in,out] rsc   Resource to create probe for
+ * \param[in,out] node  Node to create probe on
  *
  * \return true if any probe was created, otherwise false
  */
