@@ -7,13 +7,13 @@ __license__ = "LGPLv2.1+"
 
 class TestError(Exception):
     """ Base class for exceptions in this module """
-    pass
 
 
 class ExitCodeError(TestError):
     """ Exception raised when command exit status is unexpected """
 
     def __init__(self, exit_code):
+        TestError.__init__(self)
         self.exit_code = exit_code
 
     def __str__(self):
@@ -24,6 +24,7 @@ class OutputNotFoundError(TestError):
     """ Exception raised when command output does not contain wanted string """
 
     def __init__(self, output):
+        TestError.__init__(self)
         self.output = output
 
     def __str__(self):
@@ -34,6 +35,7 @@ class OutputFoundError(TestError):
     """ Exception raised when command output contains unwanted string """
 
     def __init__(self, output):
+        TestError.__init__(self)
         self.output = output
 
     def __str__(self):
@@ -44,6 +46,7 @@ class XmlValidationError(TestError):
     """ Exception raised when xmllint fails """
 
     def __init__(self, output):
+        TestError.__init__(self)
         self.output = output
 
     def __str__(self):

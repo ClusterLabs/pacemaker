@@ -23,22 +23,29 @@ from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
 
 def find_validator(rng_file):
+    """ Return the command line used to validate XML output, or None if the validator
+        is not installed.
+    """
+
     if os.access("/usr/bin/xmllint", os.X_OK):
-        if rng_file == None:
+        if rng_file is None:
             return ["xmllint", "-"]
-        else:
-            return ["xmllint", "--relaxng", rng_file, "-"]
-    else:
-        return None
+
+        return ["xmllint", "--relaxng", rng_file, "-"]
+
+    return None
 
 
 def rng_directory():
+    """ Which directory contains the RNG schema files? """
+
     if "PCMK_schema_directory" in os.environ:
         return os.environ["PCMK_schema_directory"]
-    elif os.path.exists("%s/cts-fencing.in" % sys.path[0]):
+
+    if os.path.exists("%s/cts-fencing.in" % sys.path[0]):
         return "xml"
-    else:
-        return BuildOptions.SCHEMA_DIR
+
+    return BuildOptions.SCHEMA_DIR
 
 
 class Test:
@@ -121,7 +128,8 @@ class Test:
             self._result_txt as appropriate.  Not all subclass will need to do
             this.
         """
-        pass
+        # pylint: disable=no-self-use
+        return
 
     def _new_cmd(self, cmd, args, exitcode, **kwargs):
         """ Add a command to be executed as part of this test.
@@ -233,19 +241,19 @@ class Test:
                 self.run_cmd(cmd)
             except ExitCodeError as e:
                 print("Step %d FAILED - command returned %s, expected %d" % (i, e, cmd['expected_exitcode']))
-                self.set_error(i, cmd);
+                self.set_error(i, cmd)
                 break
             except OutputNotFoundError as e:
                 print("Step %d FAILED - '%s' was not found in command output: %s" % (i, cmd['stdout_match'], e))
-                self.set_error(i, cmd);
+                self.set_error(i, cmd)
                 break
             except OutputFoundError as e:
                 print("Step %d FAILED - '%s' was found in command output: %s" % (i, cmd['stdout_negative_match'], e))
-                self.set_error(i, cmd);
+                self.set_error(i, cmd)
                 break
             except XmlValidationError as e:
                 print("Step %d FAILED - xmllint failed: %s" % (i, e))
-                self.set_error(i, cmd);
+                self.set_error(i, cmd)
                 break
 
             if self.verbose:
@@ -273,6 +281,8 @@ class Test:
         if self.verbose:
             print("\n\nRunning: %s" % " ".join(cmd))
 
+        # FIXME: Using "with" here breaks fencing merge tests.
+        # pylint: disable=consider-using-with
         test = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         if args['kill']:
@@ -315,19 +325,21 @@ class Test:
 
             cmd = find_validator(rng_file)
             if not cmd:
-                return
+                raise XmlValidationError("Could not find validator for %s" % rng_file)
 
             if self.verbose:
                 print("\nRunning: %s" % " ".join(cmd))
 
-            validator = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            output = pipe_communicate(validator, check_stderr=True, stdin=output)
+            with subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as validator:
+                output = pipe_communicate(validator, check_stderr=True, stdin=output)
 
-            if self.verbose:
-                print(output)
+                if self.verbose:
+                    print(output)
 
-            if validator.returncode != 0:
-                raise XmlValidationError(output)
+                if validator.returncode != 0:
+                    raise XmlValidationError(output)
+
+        return ExitStatus.OK
 
     def set_error(self, step, cmd):
         """ Record failure of this test """
@@ -351,13 +363,16 @@ class Test:
         update_time = init_time
 
         while True:
+            # FIXME: Eventually use 'with' here, which seems complicated given
+            # everything happens in a loop.
+            # pylint: disable=consider-using-with
             time.sleep(0.1)
 
-            if not self.force_wait and logfile == None \
+            if not self.force_wait and logfile is None \
                and os.path.exists(self.logpath):
                 logfile = io.open(self.logpath, 'rt', encoding = "ISO-8859-1")
 
-            if not self.force_wait and logfile != None:
+            if not self.force_wait and logfile is not None:
                 for line in logfile.readlines():
                     if "successfully started" in line:
                         return

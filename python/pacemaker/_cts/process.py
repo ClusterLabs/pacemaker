@@ -16,7 +16,8 @@ def killall(process_names, terminate=False):
 
     if not process_names:
         return
-    elif not isinstance(process_names, list):
+
+    if not isinstance(process_names, list):
         process_names = [process_names]
 
     procs = []
@@ -27,7 +28,7 @@ def killall(process_names, terminate=False):
     if terminate:
         for proc in procs:
             proc.terminate()
-        gone, alive = psutil.wait_procs(procs, timeout=3)
+        _, alive = psutil.wait_procs(procs, timeout=3)
         procs = alive
 
     for proc in procs:
@@ -70,6 +71,6 @@ def pipe_communicate(pipes, check_stderr=False, stdin=None):
 def stdout_from_command(args):
     """ Execute command and return its standard output """
 
-    p = subprocess.Popen(args, stdout=subprocess.PIPE)
-    p.wait()
-    return pipe_communicate(p).split("\n")
+    with subprocess.Popen(args, stdout=subprocess.PIPE) as p:
+        p.wait()
+        return pipe_communicate(p).split("\n")
