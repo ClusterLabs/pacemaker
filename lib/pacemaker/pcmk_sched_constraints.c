@@ -132,7 +132,6 @@ free_table(struct set *array) {
             free_item(item);
             item = tmp;
         }
-
     }
     free(array);
 }
@@ -212,7 +211,6 @@ pcmk__unpack_constraints(pe_working_set_t *data_set)
         pe_resource_t *parent = rIter->data;
         insert(parent->id, parent, hashTable);
 	insert_children(parent, hashTable);
-
     }
 
     for (xmlNode *xml_obj = pcmk__xe_first_child(xml_constraints);
