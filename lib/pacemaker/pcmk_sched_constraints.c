@@ -26,7 +26,6 @@
 #include <crm/pengine/rules.h>
 #include <pacemaker-internal.h>
 #include "libpacemaker_private.h"
-#include <stdio.h>
 
 typedef struct Node {
     pe_resource_t* value;
@@ -40,10 +39,10 @@ struct set
 };
 
 int capacity = 200;
-struct set *hashTable = NULL;
+static struct set *hashTable = NULL;
 
 pe_resource_t *
-compareKey(const char* key, struct set *array);
+find(const char* key, struct set *array);
 
 int
 getHash(const char *S);
@@ -154,12 +153,12 @@ insert(char* key, pe_resource_t* data, struct set *array)
 }
 
 pe_resource_t *
-compareKey(const char* key, struct set *array)
+find(const char* key, struct set *array)
 {
     int index = getHash(key);
     if (array[index].head == 0)
     {
-        printf("\n Key do not exists \n");
+        return NULL;
     }
     else
     {
@@ -175,8 +174,6 @@ compareKey(const char* key, struct set *array)
 
         return NULL;
     }
-
-    return NULL;
 }
 
 void
@@ -261,7 +258,7 @@ pcmk__unpack_constraints(pe_working_set_t *data_set)
 pe_resource_t *
 pcmk__find_constraint_resource(GList *rsc_list, const char *id)
 {
-   pe_resource_t *match = compareKey(id, hashTable);
+   pe_resource_t *match = find(id, hashTable);
 
     if(!pcmk__str_eq(match->id, id, pcmk__str_casei)) {
     /*  We found an instance of a clone instead */
