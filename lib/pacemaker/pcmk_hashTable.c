@@ -41,6 +41,12 @@ free_item(Node *item) {
     free(item);
 }
 
+/*!
+ * \internal
+ * \brief Initializes a hash table
+ *
+ * \param[out] array    The hash table array to be initialized
+ */
 void
 init_array(struct set **array)
 {
@@ -53,6 +59,12 @@ init_array(struct set **array)
     (*array) = tmp;
 }
 
+/*!
+ * \internal
+ * \brief Freeing hash table memory
+ *
+ * \param[out] array    Hashtable array to be freed
+ */
 void
 free_table(struct set *array) {
     for (int i=0; i <capacity; i++) {
@@ -66,6 +78,14 @@ free_table(struct set *array) {
     free(array);
 }
 
+/*!
+ * \internal
+ * \brief Filling a hashtable with an element
+ *
+ * \param[in] key       Hash table key
+ * \param[in] data      Store resource to be placed in the hash table
+ * \param[out] array    The hash table in which the element is placed
+ */
 void
 insert(char* key, pe_resource_t* data, struct set *array)
 {
@@ -83,6 +103,15 @@ insert(char* key, pe_resource_t* data, struct set *array)
     }
 }
 
+/*!
+ * \internal
+ * \brief Finding an element in a hash table by key
+ *
+ * \param[in] key       Hash table key
+ * \param[in] array     The hash table in which to look for an element
+ *
+ * \return Store resource if id refers to a resource
+ */
 pe_resource_t *
 find(const char* key, struct set *array)
 {
