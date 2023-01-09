@@ -305,6 +305,19 @@ send_update_msg_to_cluster(pcmk__request_t *request, xmlNode *xml)
     }
 }
 
+static int
+send_child_update(xmlNode *child, void *data)
+{
+    pcmk__request_t *request = (pcmk__request_t *) data;
+
+    /* Calling pcmk__set_result is handled by one of these calls to
+     * attrd_client_update, so no need to do it again here.
+     */
+    request->xml = child;
+    attrd_client_update(request);
+    return pcmk_rc_ok;
+}
+
 xmlNode *
 attrd_client_update(pcmk__request_t *request)
 {
@@ -349,15 +362,7 @@ attrd_client_update(pcmk__request_t *request)
              * up into individual messages and call attrd_client_update on
              * each one.
              */
-            for (xmlNode *child = first_named_child(xml, XML_ATTR_OP); child != NULL;
-                 child = crm_next_same_xml(child)) {
-                request->xml = child;
-                /* Calling pcmk__set_result is handled by one of these calls to
-                 * attrd_client_update, so no need to do it again here.
-                 */
-                attrd_client_update(request);
-            }
-
+            pcmk__xe_foreach_child(xml, XML_ATTR_OP, send_child_update, request);
             request->xml = orig_xml;
         }
 
