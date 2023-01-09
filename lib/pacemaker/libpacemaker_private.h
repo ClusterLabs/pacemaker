@@ -231,6 +231,8 @@ struct resource_alloc_functions_s {
     void (*shutdown_lock)(pe_resource_t *rsc);
 };
 
+// HashTable
+
 typedef struct Node {
     pe_resource_t* value;
     struct Node *next;

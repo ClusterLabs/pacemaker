@@ -12,16 +12,7 @@
 
 const int capacity = 200;
 
-int
-getHash(const char *S);
-
-void
-push(Node **head, pe_resource_t* data);
-
-void
-free_item(Node *item);
-
-void
+static void
 push(Node **head, pe_resource_t* data) {
     Node *tmp = (Node *) malloc(sizeof(Node));
     tmp->value = data;
@@ -29,7 +20,7 @@ push(Node **head, pe_resource_t* data) {
     (*head) = tmp;
 }
 
-int
+static int
 getHash(const char *S)
 {
     int i = 0;
@@ -45,6 +36,11 @@ getHash(const char *S)
     return r % capacity;
 }
 
+static void
+free_item(Node *item) {
+    free(item);
+}
+
 void
 init_array(struct set **array)
 {
@@ -55,11 +51,6 @@ init_array(struct set **array)
         tmp[i].head = NULL;
     }
     (*array) = tmp;
-}
-
-void
-free_item(Node *item) {
-    free(item);
 }
 
 void
@@ -115,4 +106,3 @@ find(const char* key, struct set *array)
         return NULL;
     }
 }
-
