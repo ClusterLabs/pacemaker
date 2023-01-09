@@ -18,7 +18,7 @@ lib_LTLIBRARIES	= libpacemaker.la
 
 ## SOURCES
 
-libpacemaker_la_LDFLAGS	= -version-info 6:0:5
+libpacemaker_la_LDFLAGS	= -version-info 5:0:4
 
 libpacemaker_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpacemaker_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
@@ -39,11 +39,10 @@ libpacemaker_la_SOURCES += pcmk_fence.c
 libpacemaker_la_SOURCES += pcmk_graph_consumer.c
 libpacemaker_la_SOURCES += pcmk_graph_logging.c
 libpacemaker_la_SOURCES += pcmk_graph_producer.c
+libpacemaker_la_SOURCES += pcmk_hashTable.c
 libpacemaker_la_SOURCES += pcmk_injections.c
 libpacemaker_la_SOURCES += pcmk_output.c
 libpacemaker_la_SOURCES += pcmk_resource.c
-libpacemaker_la_SOURCES += pcmk_result_code.c
-libpacemaker_la_SOURCES += pcmk_rule.c
 libpacemaker_la_SOURCES	+= pcmk_sched_actions.c
 libpacemaker_la_SOURCES	+= pcmk_sched_allocate.c
 libpacemaker_la_SOURCES += pcmk_sched_bundle.c
@@ -53,13 +52,11 @@ libpacemaker_la_SOURCES += pcmk_sched_constraints.c
 libpacemaker_la_SOURCES += pcmk_sched_fencing.c
 libpacemaker_la_SOURCES += pcmk_sched_group.c
 libpacemaker_la_SOURCES += pcmk_sched_location.c
-libpacemaker_la_SOURCES += pcmk_sched_migration.c
+libpacemaker_la_SOURCES += pcmk_sched_native.c
 libpacemaker_la_SOURCES += pcmk_sched_nodes.c
 libpacemaker_la_SOURCES += pcmk_sched_ordering.c
-libpacemaker_la_SOURCES += pcmk_sched_primitive.c
 libpacemaker_la_SOURCES += pcmk_sched_probes.c
 libpacemaker_la_SOURCES += pcmk_sched_promotable.c
-libpacemaker_la_SOURCES += pcmk_sched_recurring.c
 libpacemaker_la_SOURCES += pcmk_sched_remote.c
 libpacemaker_la_SOURCES += pcmk_sched_resource.c
 libpacemaker_la_SOURCES += pcmk_sched_tickets.c
