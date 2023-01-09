@@ -340,6 +340,11 @@ attrd_client_update(pcmk__request_t *request)
             pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
 
         } else {
+            /* Save the original xml node pointer so it can be restored after iterating
+             * over all the children.
+             */
+            xmlNode *orig_xml = request->xml;
+
             /* Second, if they do not support that protocol version, split it
              * up into individual messages and call attrd_client_update on
              * each one.
@@ -352,6 +357,8 @@ attrd_client_update(pcmk__request_t *request)
                  */
                 attrd_client_update(request);
             }
+
+            request->xml = orig_xml;
         }
 
         return NULL;
