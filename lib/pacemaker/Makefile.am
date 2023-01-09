@@ -9,16 +9,16 @@
 
 include $(top_srcdir)/mk/common.mk
 
-        AM_CPPFLAGS	+= -I$(top_builddir) -I$(top_srcdir)
+AM_CPPFLAGS	+= -I$(top_builddir) -I$(top_srcdir)
 
 noinst_HEADERS  = libpacemaker_private.h
 
 ## libraries
-        lib_LTLIBRARIES	= libpacemaker.la
+lib_LTLIBRARIES	= libpacemaker.la
 
 ## SOURCES
 
-        libpacemaker_la_LDFLAGS	= -version-info 6:0:5
+libpacemaker_la_LDFLAGS	= -version-info 6:0:5
 
 libpacemaker_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpacemaker_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
@@ -32,8 +32,8 @@ libpacemaker_la_LIBADD	= $(top_builddir)/lib/pengine/libpe_status.la \
 
 # -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version
 # Use += rather than backlashed continuation lines for parsing by bumplibs
-        libpacemaker_la_SOURCES	=
-        libpacemaker_la_SOURCES += pcmk_acl.c
+libpacemaker_la_SOURCES	=
+libpacemaker_la_SOURCES += pcmk_acl.c
 libpacemaker_la_SOURCES += pcmk_cluster_queries.c
 libpacemaker_la_SOURCES += pcmk_fence.c
 libpacemaker_la_SOURCES += pcmk_graph_consumer.c
