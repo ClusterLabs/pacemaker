@@ -47,7 +47,11 @@
 # "rpmbuild --without <feature>" can enable and disable specific features
 
 ## Add option to enable support for stonith/external fencing agents
+%if 0%{?suse_version} > 0
+%bcond_without stonithd
+%else
 %bcond_with stonithd
+%endif
 
 ## Add option for whether to support storing sensitive information outside CIB
 %if (0%{?fedora} && 0%{?fedora} <= 33) || (0%{?rhel} && 0%{?rhel} <= 8)
@@ -760,7 +764,9 @@ exit 0
 %{_libexecdir}/pacemaker/*
 
 %{_sbindir}/crm_master
+%if %{with stonithd}
 %{_sbindir}/fence_legacy
+%endif
 %{_sbindir}/fence_watchdog
 
 %doc %{_mandir}/man7/pacemaker-controld.*
@@ -770,7 +776,9 @@ exit 0
 %doc %{_mandir}/man7/ocf_pacemaker_o2cb.*
 %doc %{_mandir}/man7/ocf_pacemaker_remote.*
 %doc %{_mandir}/man8/crm_master.*
+%if %{with stonithd}
 %doc %{_mandir}/man8/fence_legacy.*
+%endif
 %doc %{_mandir}/man8/fence_watchdog.*
 %doc %{_mandir}/man8/pacemakerd.*
 
@@ -849,7 +857,9 @@ exit 0
 %exclude %{_mandir}/man7/ocf_pacemaker_remote.*
 %doc %{_mandir}/man8/*
 %exclude %{_mandir}/man8/crm_master.*
+%if %{with stonithd}
 %exclude %{_mandir}/man8/fence_legacy.*
+%endif
 %exclude %{_mandir}/man8/fence_watchdog.*
 %exclude %{_mandir}/man8/pacemakerd.*
 %exclude %{_mandir}/man8/pacemaker-remoted.*
