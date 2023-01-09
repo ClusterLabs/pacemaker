@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -357,7 +357,7 @@ cib_server_process_diff(const char *op, int options, const char *section, xmlNod
     } else if ((rc != pcmk_ok) && !based_is_primary && cib_legacy_mode()) {
         crm_warn("Requesting full CIB refresh because update failed: %s"
                  CRM_XS " rc=%d", pcmk_strerror(rc), rc);
-        xml_log_patchset(LOG_INFO, __func__, input);
+        pcmk__xml_log_patchset(LOG_INFO, input);
         free_xml(*result_cib);
         *result_cib = NULL;
         send_sync_request(NULL);

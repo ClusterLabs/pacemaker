@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -504,26 +504,26 @@ xml_log_patchset_header(uint8_t log_level, const xmlNode *patchset)
  * \param[in] prefix     String to prepend to every line of output
  * \param[in] data       XML node to log
  * \param[in] depth      Current indentation level
- * \param[in] options    Group of \p xml_log_options flags
+ * \param[in] options    Group of \p pcmk__xml_fmt_options flags
  */
 static void
 xml_log_patchset_v1_recursive(uint8_t log_level, const char *prefix,
-                              const xmlNode *data, int depth, int options)
+                              const xmlNode *data, int depth, uint32_t options)
 {
     if (!xml_has_children(data)
         || (crm_element_value(data, XML_DIFF_MARKER) != NULL)) {
 
-        options |= xml_log_option_diff_all;
+        // Found a change; clear the pcmk__xml_fmt_diff_short option if set
+        options &= ~pcmk__xml_fmt_diff_short;
 
-        if (pcmk_is_set(options, xml_log_option_diff_plus)) {
+        if (pcmk_is_set(options, pcmk__xml_fmt_diff_plus)) {
             prefix = PCMK__XML_PREFIX_CREATED;
-        } else {    // pcmk_is_set(options, xml_log_option_diff_minus)
+        } else {    // pcmk_is_set(options, pcmk__xml_fmt_diff_minus)
             prefix = PCMK__XML_PREFIX_DELETED;
         }
     }
 
-    if (pcmk_is_set(options, xml_log_option_diff_short)
-        && !pcmk_is_set(options, xml_log_option_diff_all)) {
+    if (pcmk_is_set(options, pcmk__xml_fmt_diff_short)) {
         // Keep looking for the actual change
         for (const xmlNode *child = pcmk__xml_first_child(data); child != NULL;
              child = pcmk__xml_next(child)) {
@@ -534,9 +534,9 @@ xml_log_patchset_v1_recursive(uint8_t log_level, const char *prefix,
     } else {
         pcmk__xml_log(log_level, prefix, data, depth,
                       options
-                      |xml_log_option_open
-                      |xml_log_option_close
-                      |xml_log_option_children);
+                      |pcmk__xml_fmt_open
+                      |pcmk__xml_fmt_children
+                      |pcmk__xml_fmt_close);
     }
 }
 
@@ -554,14 +554,14 @@ xml_log_patchset_v1_recursive(uint8_t log_level, const char *prefix,
 static void
 xml_log_patchset_v1(uint8_t log_level, const xmlNode *patchset)
 {
-    int options = xml_log_option_formatted;
+    uint32_t options = pcmk__xml_fmt_pretty;
     const xmlNode *removed = NULL;
     const xmlNode *added = NULL;
     const xmlNode *child = NULL;
     bool is_first = true;
 
     if (log_level < LOG_DEBUG) {
-        options |= xml_log_option_diff_short;
+        options |= pcmk__xml_fmt_diff_short;
     }
 
     xml_log_patchset_header(log_level, patchset);
@@ -575,7 +575,7 @@ xml_log_patchset_v1(uint8_t log_level, const xmlNode *patchset)
     for (child = pcmk__xml_first_child(removed); child != NULL;
          child = pcmk__xml_next(child)) {
         xml_log_patchset_v1_recursive(log_level, "- ", child, 0,
-                                      options|xml_log_option_diff_minus);
+                                      options|pcmk__xml_fmt_diff_minus);
         if (is_first) {
             is_first = false;
         } else {
@@ -588,7 +588,7 @@ xml_log_patchset_v1(uint8_t log_level, const xmlNode *patchset)
     for (child = pcmk__xml_first_child(added); child != NULL;
          child = pcmk__xml_next(child)) {
         xml_log_patchset_v1_recursive(log_level, "+ ", child, 0,
-                                      options|xml_log_option_diff_plus);
+                                      options|pcmk__xml_fmt_diff_plus);
         if (is_first) {
             is_first = false;
         } else {
@@ -627,7 +627,7 @@ xml_log_patchset_v2(uint8_t log_level, const xmlNode *patchset)
                                              xpath);
 
             pcmk__xml_log(log_level, prefix, change->children, 0,
-                          xml_log_option_formatted|xml_log_option_open);
+                          pcmk__xml_fmt_pretty|pcmk__xml_fmt_open);
 
             // Overwrite all except the first two characters with spaces
             for (char *ch = prefix + 2; *ch != '\0'; ch++) {
@@ -635,9 +635,9 @@ xml_log_patchset_v2(uint8_t log_level, const xmlNode *patchset)
             }
 
             pcmk__xml_log(log_level, prefix, change->children, 0,
-                          xml_log_option_formatted
-                          |xml_log_option_close
-                          |xml_log_option_children);
+                          pcmk__xml_fmt_pretty
+                          |pcmk__xml_fmt_children
+                          |pcmk__xml_fmt_close);
             free(prefix);
 
         } else if (strcmp(op, "move") == 0) {
@@ -697,6 +697,7 @@ xml_log_patchset_v2(uint8_t log_level, const xmlNode *patchset)
 }
 
 /*!
+ * \internal
  * \brief Log a user-friendly form of an XML patchset
  *
  * This function parses an XML patchset (an \p XML_ATTR_DIFF element and its
@@ -704,12 +705,10 @@ xml_log_patchset_v2(uint8_t log_level, const xmlNode *patchset)
  * of \p log_level, the output may be written to \p stdout or to a log file.
  *
  * \param[in] log_level  Priority at which to log the messages
- * \param[in] function   Ignored
  * \param[in] patchset   XML patchset to log
  */
 void
-xml_log_patchset(uint8_t log_level, const char *function,
-                 const xmlNode *patchset)
+pcmk__xml_log_patchset(uint8_t log_level, const xmlNode *patchset)
 {
     int format = 1;
 
@@ -1451,7 +1450,7 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
         return rc;
     }
 
-    xml_log_patchset(LOG_TRACE, __func__, patchset);
+    pcmk__xml_log_patchset(LOG_TRACE, patchset);
 
     crm_element_value_int(patchset, "format", &format);
     if (check_version) {
@@ -1855,6 +1854,13 @@ apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml)
     }
 
     return result;
+}
+
+void
+xml_log_patchset(uint8_t log_level, const char *function,
+                 const xmlNode *patchset)
+{
+    pcmk__xml_log_patchset(log_level, patchset);
 }
 
 // LCOV_EXCL_STOP

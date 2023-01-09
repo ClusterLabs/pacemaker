@@ -1,6 +1,6 @@
 /*
  * Original copyright 2004 International Business Machines
- * Later changes copyright 2008-2022 the Pacemaker project contributors
+ * Later changes copyright 2008-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -320,7 +320,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         local_diff = xml_create_patchset(0, current_cib, scratch, (bool*)config_changed, manage_counters);
     }
 
-    xml_log_changes(LOG_TRACE, __func__, scratch);
+    pcmk__xml_log_changes(LOG_TRACE, scratch);
     xml_accept_changes(scratch);
 
     if (diff_cs == NULL) {
@@ -330,7 +330,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     if(local_diff) {
         patchset_process_digest(local_diff, current_cib, scratch, with_digest);
 
-        xml_log_patchset(LOG_INFO, __func__, local_diff);
+        pcmk__xml_log_patchset(LOG_INFO, local_diff);
         crm_log_xml_trace(local_diff, "raw patch");
     }
 
@@ -692,7 +692,7 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
     }
 
     if (level > LOG_CRIT) {
-        xml_log_patchset(level, "Config update", diff);
+        pcmk__xml_log_patchset(level, diff);
     }
 
     if (input != NULL) {

@@ -1130,10 +1130,10 @@ do_crm_log_xml(uint8_t level, const char *text, const xmlNode *xml)
                                pcmk__str_empty(text)? "" : " ");
                 } else {
                     pcmk__xml_log(level, text, xml, 1,
-                                  xml_log_option_formatted
-                                  |xml_log_option_open
-                                  |xml_log_option_children
-                                  |xml_log_option_close);
+                                  pcmk__xml_fmt_pretty
+                                  |pcmk__xml_fmt_open
+                                  |pcmk__xml_fmt_children
+                                  |pcmk__xml_fmt_close);
                 }
             }
             break;

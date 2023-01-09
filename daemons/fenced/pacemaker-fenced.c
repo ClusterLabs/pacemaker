@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the Pacemaker project contributors
+ * Copyright 2009-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1172,7 +1172,7 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
         }
 
         patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
-        xml_log_patchset(LOG_TRACE, "Config update", patchset);
+        pcmk__xml_log_patchset(LOG_TRACE, patchset);
         rc = xml_apply_patchset(local_cib, patchset, TRUE);
         switch (rc) {
             case pcmk_ok:

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -607,14 +607,14 @@ main(int argc, char **argv)
                 diff = xml_create_patchset(0, old_config, new_config, NULL,
                                            false);
 
-                xml_log_changes(LOG_INFO, __func__, new_config);
+                pcmk__xml_log_changes(LOG_INFO, new_config);
                 xml_accept_changes(new_config);
                 if (diff != NULL) {
                     /* @COMPAT: Exit with CRM_EX_DIGEST? This is not really an
                      * error; we just want to indicate that there are
                      * differences (as the diff command does).
                      */
-                    xml_log_patchset(LOG_STDOUT, "  ", diff);
+                    pcmk__xml_log_patchset(LOG_STDOUT, diff);
                     exit_code = CRM_EX_ERROR;
                 }
             }

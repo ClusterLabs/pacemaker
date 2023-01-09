@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -35,6 +35,12 @@ xmlNode *find_entity(xmlNode *parent, const char *node_name, const char *id);
 
 //! \deprecated This function will be removed in a future release
 char *xml_get_path(const xmlNode *xml);
+
+//! \deprecated This function will be removed in a future release
+void xml_log_changes(uint8_t level, const char *function, const xmlNode *xml);
+
+//! \deprecated This function will be removed in a future release
+void xml_log_patchset(uint8_t level, const char *function, const xmlNode *xml);
 
 //!  \deprecated Use xml_apply_patchset() instead
 gboolean apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml);

@@ -97,7 +97,7 @@ calculate_xml_digest_v2(xmlNode *source, gboolean do_filter)
     static struct qb_log_callsite *digest_cs = NULL;
 
     crm_trace("Begin digest %s", do_filter?"filtered":"");
-    pcmk__xml2text(source, (do_filter? xml_log_option_filtered : 0), buffer, 0);
+    pcmk__xml2text(source, (do_filter? pcmk__xml_fmt_filtered : 0), buffer, 0);
 
     CRM_ASSERT(buffer != NULL);
     digest = crm_md5sum((const char *) buffer->str);
