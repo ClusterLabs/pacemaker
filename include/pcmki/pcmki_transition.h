@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -155,9 +155,11 @@ enum pcmk__graph_status {
 };
 
 void pcmk__set_graph_functions(pcmk__graph_functions_t *fns);
-pcmk__graph_t *pcmk__unpack_graph(xmlNode *xml_graph, const char *reference);
+pcmk__graph_t *pcmk__unpack_graph(const xmlNode *xml_graph,
+                                  const char *reference);
 enum pcmk__graph_status pcmk__execute_graph(pcmk__graph_t *graph);
-void pcmk__update_graph(pcmk__graph_t *graph, pcmk__graph_action_t *action);
+void pcmk__update_graph(pcmk__graph_t *graph,
+                        const pcmk__graph_action_t *action);
 void pcmk__free_graph(pcmk__graph_t *graph);
 const char *pcmk__graph_status2text(enum pcmk__graph_status state);
 void pcmk__log_graph(unsigned int log_level, pcmk__graph_t *graph);

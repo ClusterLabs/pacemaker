@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -155,7 +155,7 @@ node_to_be_promoted_on(pe_resource_t *rsc)
 {
     pe_node_t *node = NULL;
     pe_node_t *local_node = NULL;
-    pe_resource_t *parent = uber_parent(rsc);
+    const pe_resource_t *parent = NULL;
 
     // If this is a cloned group, bail if any group member can't be promoted
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
@@ -198,6 +198,7 @@ node_to_be_promoted_on(pe_resource_t *rsc)
         return NULL;
     }
 
+    parent = pe__const_top_resource(rsc, false);
     local_node = pe_hash_table_lookup(parent->allowed_nodes, node->details->id);
 
     if (local_node == NULL) {
@@ -853,7 +854,7 @@ show_promotion_score(pe_resource_t *instance)
         out->message(out, "promotion-score", instance, chosen,
                      pcmk_readable_score(instance->sort_index));
     } else {
-        pe_rsc_debug(uber_parent(instance),
+        pe_rsc_debug(pe__const_top_resource(instance, false),
                      "%s promotion score on %s: sort=%s priority=%s",
                      instance->id,
                      ((chosen == NULL)? "none" : pe__node_name(chosen)),
@@ -966,7 +967,7 @@ set_instance_role(gpointer data, gpointer user_data)
     pe_resource_t *instance = (pe_resource_t *) data;
     int *count = (int *) user_data;
 
-    pe_resource_t *clone = uber_parent(instance);
+    const pe_resource_t *clone = pe__const_top_resource(instance, false);
     pe_node_t *chosen = NULL;
 
     show_promotion_score(instance);

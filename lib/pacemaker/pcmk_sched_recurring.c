@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -176,10 +176,10 @@ is_recurring_history(const pe_resource_t *rsc, const xmlNode *xml,
  * \internal
  * \brief Check whether a recurring action for an active role should be optional
  *
- * \param[in] rsc    Resource that recurring action is for
- * \param[in] node   Node that \p rsc will be active on (if any)
- * \param[in] key    Operation key for recurring action to check
- * \param[in] start  Start action for \p rsc
+ * \param[in]     rsc    Resource that recurring action is for
+ * \param[in]     node   Node that \p rsc will be active on (if any)
+ * \param[in]     key    Operation key for recurring action to check
+ * \param[in,out] start  Start action for \p rsc
  *
  * \return true if recurring action should be optional, otherwise false
  */
@@ -210,8 +210,10 @@ active_recurring_should_be_optional(const pe_resource_t *rsc,
         return false;
     }
 
-    for (GList *iter = possible_matches; iter != NULL; iter = iter->next) {
-        pe_action_t *op = (pe_action_t *) iter->data;
+    for (const GList *iter = possible_matches;
+         iter != NULL; iter = iter->next) {
+
+        const pe_action_t *op = (const pe_action_t *) iter->data;
 
         if (pcmk_is_set(op->flags, pe_action_reschedule)) {
             pe_rsc_trace(rsc,
@@ -231,7 +233,7 @@ active_recurring_should_be_optional(const pe_resource_t *rsc,
  * \brief Create recurring action from resource history entry for an active role
  *
  * \param[in,out] rsc    Resource that resource history is for
- * \param[in]     start  Start action for \p rsc on \p node
+ * \param[in,out] start  Start action for \p rsc on \p node
  * \param[in]     node   Node that resource will be active on (if any)
  * \param[in]     op     Resource history entry
  */

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -33,8 +33,8 @@
  * synapse, and if so, mark the input as confirmed, and mark the synapse as
  * ready if appropriate.
  *
- * \param[in] synapse    Transition graph synapse to update
- * \param[in] action_id  ID of an action that completed
+ * \param[in,out] synapse    Transition graph synapse to update
+ * \param[in]     action_id  ID of an action that completed
  *
  * \note The only substantial effect here is confirming synapse inputs.
  *       should_fire_synapse() will recalculate pcmk__synapse_ready, so the only
@@ -71,8 +71,8 @@ update_synapse_ready(pcmk__graph_synapse_t *synapse, int action_id)
  * \internal
  * \brief Update action and synapse confirmation after action completion
  *
- * \param[in] synapse    Transition graph synapse that action belongs to
- * \param[in] action_id  ID of action that completed
+ * \param[in,out] synapse    Transition graph synapse that action belongs to
+ * \param[in]     action_id  ID of action that completed
  */
 static void
 update_synapse_confirmed(pcmk__graph_synapse_t *synapse, int action_id)
@@ -108,7 +108,7 @@ update_synapse_confirmed(pcmk__graph_synapse_t *synapse, int action_id)
  * \param[in]     action  Action that completed
  */
 void
-pcmk__update_graph(pcmk__graph_t *graph, pcmk__graph_action_t *action)
+pcmk__update_graph(pcmk__graph_t *graph, const pcmk__graph_action_t *action)
 {
     for (GList *lpc = graph->synapses; lpc != NULL; lpc = lpc->next) {
         pcmk__graph_synapse_t *synapse = (pcmk__graph_synapse_t *) lpc->data;
@@ -159,8 +159,8 @@ pcmk__set_graph_functions(pcmk__graph_functions_t *fns)
  * \internal
  * \brief Check whether a graph synapse is ready to be executed
  *
- * \param[in] graph    Transition graph that synapse is part of
- * \param[in] synapse  Synapse to check
+ * \param[in,out] graph    Transition graph that synapse is part of
+ * \param[in,out] synapse  Synapse to check
  *
  * \return true if synapse is ready, false otherwise
  */
@@ -218,8 +218,8 @@ should_fire_synapse(pcmk__graph_t *graph, pcmk__graph_synapse_t *synapse)
  * \internal
  * \brief Initiate an action from a transition graph
  *
- * \param[in] graph   Transition graph containing action
- * \param[in] action  Action to execute
+ * \param[in,out] graph   Transition graph containing action
+ * \param[in,out] action  Action to execute
  *
  * \return Standard Pacemaker return code
  */
@@ -264,8 +264,8 @@ initiate_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
  * \internal
  * \brief Execute a graph synapse
  *
- * \param[in] graph    Transition graph with synapse to execute
- * \param[in] synapse  Synapse to execute
+ * \param[in,out] graph    Transition graph with synapse to execute
+ * \param[in,out] synapse  Synapse to execute
  *
  * \return Standard Pacemaker return value
  */
@@ -296,15 +296,15 @@ fire_synapse(pcmk__graph_t *graph, pcmk__graph_synapse_t *synapse)
  * \internal
  * \brief Dummy graph method that can be used with simulations
  *
- * \param[in] graph   Transition graph containing action
- * \param[in] action  Graph action to be initiated
+ * \param[in,out] graph   Transition graph containing action
+ * \param[in,out] action  Graph action to be initiated
  *
  * \return Standard Pacemaker return code
  * \note If the PE_fail environment variable is set to the action ID,
  *       then the graph action will be marked as failed.
  */
 static int
-pseudo_action_dummy(pcmk__graph_t * graph, pcmk__graph_action_t *action)
+pseudo_action_dummy(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
     static int fail = -1;
 
@@ -342,7 +342,7 @@ static pcmk__graph_functions_t default_fns = {
  * \internal
  * \brief Execute all actions in a transition graph
  *
- * \param[in] graph  Transition graph to execute
+ * \param[in,out] graph  Transition graph to execute
  *
  * \return Status of transition after execution
  */
@@ -557,13 +557,13 @@ unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
  * \internal
  * \brief Unpack transition graph synapse from XML
  *
- * \param[in] new_graph    Transition graph that synapse is part of
- * \param[in] xml_synapse  Synapse XML
+ * \param[in,out] new_graph    Transition graph that synapse is part of
+ * \param[in]     xml_synapse  Synapse XML
  *
  * \return Newly allocated synapse on success, or NULL otherwise
  */
 static pcmk__graph_synapse_t *
-unpack_synapse(pcmk__graph_t *new_graph, xmlNode *xml_synapse)
+unpack_synapse(pcmk__graph_t *new_graph, const xmlNode *xml_synapse)
 {
     const char *value = NULL;
     xmlNode *action_set = NULL;
@@ -666,7 +666,7 @@ unpack_synapse(pcmk__graph_t *new_graph, xmlNode *xml_synapse)
          </transition_graph>
  */
 pcmk__graph_t *
-pcmk__unpack_graph(xmlNode *xml_graph, const char *reference)
+pcmk__unpack_graph(const xmlNode *xml_graph, const char *reference)
 {
     pcmk__graph_t *new_graph = NULL;
 
@@ -730,7 +730,7 @@ pcmk__unpack_graph(xmlNode *xml_graph, const char *reference)
     }
 
     // Unpack each child <synapse> element
-    for (xmlNode *synapse_xml = first_named_child(xml_graph, "synapse");
+    for (const xmlNode *synapse_xml = first_named_child(xml_graph, "synapse");
          synapse_xml != NULL; synapse_xml = crm_next_same_xml(synapse_xml)) {
 
         pcmk__graph_synapse_t *new_synapse = unpack_synapse(new_graph,
@@ -758,7 +758,7 @@ pcmk__unpack_graph(xmlNode *xml_graph, const char *reference)
  * \internal
  * \brief Free a transition graph action object
  *
- * \param[in] user_data  Action to free
+ * \param[in,out] user_data  Action to free
  */
 static void
 free_graph_action(gpointer user_data)
@@ -780,7 +780,7 @@ free_graph_action(gpointer user_data)
  * \internal
  * \brief Free a transition graph synapse object
  *
- * \param[in] user_data  Synapse to free
+ * \param[in,out] user_data  Synapse to free
  */
 static void
 free_graph_synapse(gpointer user_data)
@@ -796,7 +796,7 @@ free_graph_synapse(gpointer user_data)
  * \internal
  * \brief Free a transition graph object
  *
- * \param[in] graph  Transition graph to free
+ * \param[in,out] graph  Transition graph to free
  */
 void
 pcmk__free_graph(pcmk__graph_t *graph)

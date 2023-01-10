@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -352,7 +352,8 @@ pcmk__group_internal_constraints(pe_resource_t *rsc)
 
     member_data.ordered = pe__group_flag_is_set(rsc, pe__group_ordered);
     member_data.colocated = pe__group_flag_is_set(rsc, pe__group_colocated);
-    member_data.promotable = pcmk_is_set(uber_parent(rsc)->flags, pe_rsc_promotable);
+    member_data.promotable = pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
+                                         pe_rsc_promotable);
     g_list_foreach(rsc->children, member_internal_constraints, &member_data);
 }
 

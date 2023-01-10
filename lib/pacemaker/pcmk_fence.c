@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the Pacemaker project contributors
+ * Copyright 2009-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -36,11 +36,12 @@ static struct {
 } async_fence_data = { NULL, };
 
 static int
-handle_level(stonith_t *st, char *target, int fence_level,
-             stonith_key_value_t *devices, bool added) {
-    char *node = NULL;
-    char *pattern = NULL;
-    char *name = NULL;
+handle_level(stonith_t *st, const char *target, int fence_level,
+             const stonith_key_value_t *devices, bool added)
+{
+    const char *node = NULL;
+    const char *pattern = NULL;
+    const char *name = NULL;
     char *value = NULL;
     int rc = pcmk_rc_ok;
 
@@ -226,9 +227,10 @@ pcmk_request_fencing(stonith_t *st, const char *target, const char *action,
 #endif
 
 int
-pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
+pcmk__fence_history(pcmk__output_t *out, stonith_t *st, const char *target,
                     unsigned int timeout, int verbose, bool broadcast,
-                    bool cleanup) {
+                    bool cleanup)
+{
     stonith_history_t *history = NULL, *hp, *latest = NULL;
     int rc = pcmk_rc_ok;
     int opts = 0;
@@ -295,8 +297,10 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
 
 #ifdef BUILD_PUBLIC_LIBPACEMAKER
 int
-pcmk_fence_history(xmlNodePtr *xml, stonith_t *st, char *target, unsigned int timeout,
-                   bool quiet, int verbose, bool broadcast, bool cleanup) {
+pcmk_fence_history(xmlNodePtr *xml, stonith_t *st, const char *target,
+                   unsigned int timeout, bool quiet, int verbose,
+                   bool broadcast, bool cleanup)
+{
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
 
@@ -316,7 +320,8 @@ pcmk_fence_history(xmlNodePtr *xml, stonith_t *st, char *target, unsigned int ti
 #endif
 
 int
-pcmk__fence_installed(pcmk__output_t *out, stonith_t *st, unsigned int timeout) {
+pcmk__fence_installed(pcmk__output_t *out, stonith_t *st, unsigned int timeout)
+{
     stonith_key_value_t *devices = NULL;
     int rc = pcmk_rc_ok;
 
@@ -338,7 +343,8 @@ pcmk__fence_installed(pcmk__output_t *out, stonith_t *st, unsigned int timeout) 
 
 #ifdef BUILD_PUBLIC_LIBPACEMAKER
 int
-pcmk_fence_installed(xmlNodePtr *xml, stonith_t *st, unsigned int timeout) {
+pcmk_fence_installed(xmlNodePtr *xml, stonith_t *st, unsigned int timeout)
+{
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
 
@@ -356,7 +362,8 @@ pcmk_fence_installed(xmlNodePtr *xml, stonith_t *st, unsigned int timeout) {
 #endif
 
 int
-pcmk__fence_last(pcmk__output_t *out, const char *target, bool as_nodeid) {
+pcmk__fence_last(pcmk__output_t *out, const char *target, bool as_nodeid)
+{
     time_t when = 0;
 
     if (target == NULL) {
@@ -374,7 +381,8 @@ pcmk__fence_last(pcmk__output_t *out, const char *target, bool as_nodeid) {
 
 #ifdef BUILD_PUBLIC_LIBPACEMAKER
 int
-pcmk_fence_last(xmlNodePtr *xml, const char *target, bool as_nodeid) {
+pcmk_fence_last(xmlNodePtr *xml, const char *target, bool as_nodeid)
+{
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
 
@@ -393,7 +401,8 @@ pcmk_fence_last(xmlNodePtr *xml, const char *target, bool as_nodeid) {
 
 int
 pcmk__fence_list_targets(pcmk__output_t *out, stonith_t *st,
-                         const char *device_id, unsigned int timeout) {
+                         const char *device_id, unsigned int timeout)
+{
     GList *targets = NULL;
     char *lists = NULL;
     int rc = pcmk_rc_ok;
@@ -419,7 +428,8 @@ pcmk__fence_list_targets(pcmk__output_t *out, stonith_t *st,
 #ifdef BUILD_PUBLIC_LIBPACEMAKER
 int
 pcmk_fence_list_targets(xmlNodePtr *xml, stonith_t *st, const char *device_id,
-                        unsigned int timeout) {
+                        unsigned int timeout)
+{
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
 
@@ -437,8 +447,9 @@ pcmk_fence_list_targets(xmlNodePtr *xml, stonith_t *st, const char *device_id,
 #endif
 
 int
-pcmk__fence_metadata(pcmk__output_t *out, stonith_t *st, char *agent,
-                     unsigned int timeout) {
+pcmk__fence_metadata(pcmk__output_t *out, stonith_t *st, const char *agent,
+                     unsigned int timeout)
+{
     char *buffer = NULL;
     int rc = st->cmds->metadata(st, st_opt_sync_call, agent, NULL, &buffer,
                                 timeout/1000);
@@ -454,8 +465,9 @@ pcmk__fence_metadata(pcmk__output_t *out, stonith_t *st, char *agent,
 
 #ifdef BUILD_PUBLIC_LIBPACEMAKER
 int
-pcmk_fence_metadata(xmlNodePtr *xml, stonith_t *st, char *agent,
-                    unsigned int timeout) {
+pcmk_fence_metadata(xmlNodePtr *xml, stonith_t *st, const char *agent,
+                    unsigned int timeout)
+{
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
 
@@ -473,8 +485,9 @@ pcmk_fence_metadata(xmlNodePtr *xml, stonith_t *st, char *agent,
 #endif
 
 int
-pcmk__fence_registered(pcmk__output_t *out, stonith_t *st, char *target,
-                       unsigned int timeout) {
+pcmk__fence_registered(pcmk__output_t *out, stonith_t *st, const char *target,
+                       unsigned int timeout)
+{
     stonith_key_value_t *devices = NULL;
     int rc = pcmk_rc_ok;
 
@@ -500,8 +513,9 @@ pcmk__fence_registered(pcmk__output_t *out, stonith_t *st, char *target,
 
 #ifdef BUILD_PUBLIC_LIBPACEMAKER
 int
-pcmk_fence_registered(xmlNodePtr *xml, stonith_t *st, char *target,
-                      unsigned int timeout) {
+pcmk_fence_registered(xmlNodePtr *xml, stonith_t *st, const char *target,
+                      unsigned int timeout)
+{
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
 
@@ -519,35 +533,40 @@ pcmk_fence_registered(xmlNodePtr *xml, stonith_t *st, char *target,
 #endif
 
 int
-pcmk__fence_register_level(stonith_t *st, char *target, int fence_level,
-                           stonith_key_value_t *devices) {
+pcmk__fence_register_level(stonith_t *st, const char *target, int fence_level,
+                           const stonith_key_value_t *devices)
+{
     return handle_level(st, target, fence_level, devices, true);
 }
 
 #ifdef BUILD_PUBLIC_LIBPACEMAKER
 int
-pcmk_fence_register_level(stonith_t *st, char *target, int fence_level,
-                            stonith_key_value_t *devices) {
+pcmk_fence_register_level(stonith_t *st, const char *target, int fence_level,
+                          const stonith_key_value_t *devices)
+{
     return pcmk__fence_register_level(st, target, fence_level, devices);
 }
 #endif
 
 int
-pcmk__fence_unregister_level(stonith_t *st, char *target, int fence_level) {
+pcmk__fence_unregister_level(stonith_t *st, const char *target, int fence_level)
+{
     return handle_level(st, target, fence_level, NULL, false);
 }
 
 #ifdef BUILD_PUBLIC_LIBPACEMAKER
 int
-pcmk_fence_unregister_level(stonith_t *st, char *target, int fence_level) {
+pcmk_fence_unregister_level(stonith_t *st, const char *target, int fence_level)
+{
     return pcmk__fence_unregister_level(st, target, fence_level);
 }
 #endif
 
 int
 pcmk__fence_validate(pcmk__output_t *out, stonith_t *st, const char *agent,
-                     const char *id, stonith_key_value_t *params,
-                     unsigned int timeout) {
+                     const char *id, const stonith_key_value_t *params,
+                     unsigned int timeout)
+{
     char *output = NULL;
     char *error_output = NULL;
     int rc;
@@ -561,8 +580,9 @@ pcmk__fence_validate(pcmk__output_t *out, stonith_t *st, const char *agent,
 #ifdef BUILD_PUBLIC_LIBPACEMAKER
 int
 pcmk_fence_validate(xmlNodePtr *xml, stonith_t *st, const char *agent,
-                    const char *id, stonith_key_value_t *params,
-                    unsigned int timeout) {
+                    const char *id, const stonith_key_value_t *params,
+                    unsigned int timeout)
+{
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
 

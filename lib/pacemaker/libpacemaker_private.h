@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2022 the Pacemaker project contributors
+ * Copyright 2021-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -244,7 +244,8 @@ uint32_t pcmk__update_ordered_actions(pe_action_t *first, pe_action_t *then,
                                       pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-void pcmk__log_action(const char *pre_text, pe_action_t *action, bool details);
+void pcmk__log_action(const char *pre_text, const pe_action_t *action,
+                      bool details);
 
 G_GNUC_INTERNAL
 pe_action_t *pcmk__new_cancel_action(pe_resource_t *rsc, const char *name,
@@ -291,7 +292,8 @@ bool pcmk__action_is_recurring(const pe_action_t *action);
 // Producing transition graphs (pcmk_graph_producer.c)
 
 G_GNUC_INTERNAL
-bool pcmk__graph_has_loop(pe_action_t *init_action, pe_action_t *action,
+bool pcmk__graph_has_loop(const pe_action_t *init_action,
+                          const pe_action_t *action,
                           pe_action_wrapper_t *input);
 
 G_GNUC_INTERNAL
@@ -323,7 +325,7 @@ void pcmk__order_restart_vs_unfence(gpointer data, gpointer user_data);
 // Injected scheduler inputs (pcmk_sched_injections.c)
 
 void pcmk__inject_scheduler_input(pe_working_set_t *data_set, cib_t *cib,
-                                  pcmk_injections_t *injections);
+                                  const pcmk_injections_t *injections);
 
 
 // Constraints of any type (pcmk_sched_constraints.c)
@@ -552,22 +554,23 @@ void pcmk__update_promotable_dependent_priority(const pe_resource_t *primary,
 // Pacemaker Remote nodes (pcmk_sched_remote.c)
 
 G_GNUC_INTERNAL
-bool pcmk__is_failed_remote_node(pe_node_t *node);
+bool pcmk__is_failed_remote_node(const pe_node_t *node);
 
 G_GNUC_INTERNAL
 void pcmk__order_remote_connection_actions(pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-bool pcmk__rsc_corresponds_to_guest(pe_resource_t *rsc, pe_node_t *node);
+bool pcmk__rsc_corresponds_to_guest(const pe_resource_t *rsc,
+                                    const pe_node_t *node);
 
 G_GNUC_INTERNAL
-pe_node_t *pcmk__connection_host_for_action(pe_action_t *action);
+pe_node_t *pcmk__connection_host_for_action(const pe_action_t *action);
 
 G_GNUC_INTERNAL
 void pcmk__substitute_remote_addr(pe_resource_t *rsc, GHashTable *params);
 
 G_GNUC_INTERNAL
-void pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, pe_action_t *action);
+void pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pe_action_t *action);
 
 
 // Primitives (pcmk_sched_primitive.c)

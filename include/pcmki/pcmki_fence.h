@@ -27,19 +27,19 @@ enum pcmk__fence_history {
  * \note This is the internal version of pcmk_request_fencing(). External users
  *       of the pacemaker API should use that function instead.
  *
- * \param[in] st        A connection to the fencer API
- * \param[in] target    The node that should be fenced
- * \param[in] action    The fencing action (on, off, reboot) to perform
- * \param[in] name      Who requested the fence action?
- * \param[in] timeout   How long to wait for the operation to complete (in ms)
- * \param[in] tolerance If a successful action for \p target happened within
- *                      this many milliseconds, return success without
- *                      performing the action again
- * \param[in] delay     Apply this delay (in milliseconds) before initiating the
- *                      fencing action (a value of -1 applies no delay and also
- *                      disables any fencing delay from pcmk_delay_base and
- *                      pcmk_delay_max)
- * \param[out] reason   If not NULL, where to put descriptive failure reason
+ * \param[in,out] st        A connection to the fencer API
+ * \param[in]     target    The node that should be fenced
+ * \param[in]     action    The fencing action (on, off, reboot) to perform
+ * \param[in]     name      Who requested the fence action?
+ * \param[in]     timeout   How long to wait for operation to complete (in ms)
+ * \param[in]     tolerance If a successful action for \p target happened within
+ *                          this many milliseconds, return success without
+ *                          performing the action again
+ * \param[in]     delay     Apply this delay (in milliseconds) before initiating
+ *                          fencing action (a value of -1 applies no delay and
+ *                          disables any fencing delay from pcmk_delay_base and
+ *                          pcmk_delay_max)
+ * \param[out]     reason   If not NULL, where to put descriptive failure reason
  *
  * \return Standard Pacemaker return code
  * \note If \p reason is not NULL, the caller is responsible for freeing its
@@ -51,7 +51,7 @@ int pcmk__request_fencing(stonith_t *st, const char *target, const char *action,
                           unsigned int tolerance, int delay, char **reason);
 
 /*!
- * \brief List the fencing operations that have occurred for a specific node.
+ * \brief List the fencing operations that have occurred for a specific node
  *
  * \note This is the internal version of pcmk_fence_history().  External users
  *       of the pacemaker API should use that function instead.
@@ -60,22 +60,22 @@ int pcmk__request_fencing(stonith_t *st, const char *target, const char *action,
  *       function and destroyed with out->finish and pcmk__output_free() before
  *       reusing it with any other functions in this library.
  *
- * \param[in,out] out       The output functions structure.
- * \param[in]     st        A connection to the STONITH API.
- * \param[in]     target    The node to get history for.
- * \param[in]     timeout   How long to wait for the operation to complete (in ms).
- * \param[in]     verbose   Include additional output.
- * \param[in]     broadcast Gather fencing history from all nodes.
- * \param[in]     cleanup   Clean up fencing history after listing.
+ * \param[in,out] out       The output functions structure
+ * \param[in,out] st        A connection to the fencer API
+ * \param[in]     target    The node to get history for
+ * \param[in]     timeout   How long to wait for operation to complete (in ms)
+ * \param[in]     verbose   Include additional output
+ * \param[in]     broadcast Gather fencing history from all nodes
+ * \param[in]     cleanup   Clean up fencing history after listing
  *
  * \return Standard Pacemaker return code
  */
-int pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
+int pcmk__fence_history(pcmk__output_t *out, stonith_t *st, const char *target,
                         unsigned int timeout, int verbose, bool broadcast,
                         bool cleanup);
 
-/**
- * \brief List all installed STONITH agents.
+/*!
+ * \brief List all installed fence agents
  *
  * \note This is the internal version of pcmk_fence_installed().  External users
  *       of the pacemaker API should use that function instead.
@@ -84,9 +84,9 @@ int pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
  *       function and destroyed with out->finish and pcmk__output_free() before
  *       reusing it with any other functions in this library.
  *
- * \param[in,out] out     The output functions structure.
- * \param[in]     st      A connection to the STONITH API.
- * \param[in]     timeout How long to wait for the operation to complete (in ms).
+ * \param[in,out] out     The output functions structure
+ * \param[in,out] st      A connection to the fencer API
+ * \param[in]     timeout How long to wait for the operation to complete (in ms)
  *
  * \return Standard Pacemaker return code
  */
@@ -111,7 +111,7 @@ int pcmk__fence_installed(pcmk__output_t *out, stonith_t *st, unsigned int timeo
 int pcmk__fence_last(pcmk__output_t *out, const char *target, bool as_nodeid);
 
 /*!
- * \brief List nodes that can be fenced.
+ * \brief List nodes that can be fenced
  *
  * \note This is the internal version of pcmk_fence_list_targets().  External users
  *       of the pacemaker API should use that function instead.
@@ -121,9 +121,9 @@ int pcmk__fence_last(pcmk__output_t *out, const char *target, bool as_nodeid);
  *       reusing it with any other functions in this library.
  *
  * \param[in,out] out        The output functions structure
- * \param[in]     st         A connection to the STONITH API
+ * \param[in,out] st         A connection to the fencer API
  * \param[in]     device_id  Resource ID of fence device to check
- * \param[in]     timeout    How long to wait for the operation to complete (in ms)
+ * \param[in]     timeout    How long to wait for operation to complete (in ms)
  *
  * \return Standard Pacemaker return code
  */
@@ -131,7 +131,7 @@ int pcmk__fence_list_targets(pcmk__output_t *out, stonith_t *st,
                              const char *device_id, unsigned int timeout);
 
 /*!
- * \brief Get metadata for a resource.
+ * \brief Get metadata for a fence agent
  *
  * \note This is the internal version of pcmk_fence_metadata().  External users
  *       of the pacemaker API should use that function instead.
@@ -140,18 +140,18 @@ int pcmk__fence_list_targets(pcmk__output_t *out, stonith_t *st,
  *       function and destroyed with out->finish and pcmk__output_free() before
  *       reusing it with any other functions in this library.
  *
- * \param[in,out] out     The output functions structure.
- * \param[in]     st      A connection to the STONITH API.
- * \param[in]     agent   The fence agent to get metadata for.
- * \param[in]     timeout How long to wait for the operation to complete (in ms).
+ * \param[in,out] out     The output functions structure
+ * \param[in,out] st      A connection to the fencer API
+ * \param[in]     agent   The fence agent to get metadata for
+ * \param[in]     timeout How long to wait for the operation to complete (in ms)
  *
  * \return Standard Pacemaker return code
  */
-int pcmk__fence_metadata(pcmk__output_t *out, stonith_t *st, char *agent,
+int pcmk__fence_metadata(pcmk__output_t *out, stonith_t *st, const char *agent,
                          unsigned int timeout);
 
 /*!
- * \brief List registered fence devices.
+ * \brief List registered fence devices
  *
  * \note This is the internal version of pcmk_fence_metadata().  External users
  *       of the pacemaker API should use that function instead.
@@ -160,19 +160,18 @@ int pcmk__fence_metadata(pcmk__output_t *out, stonith_t *st, char *agent,
  *       function and destroyed with out->finish and pcmk__output_free() before
  *       reusing it with any other functions in this library.
  *
- * \param[in,out] out     The output functions structure.
- * \param[in]     st      A connection to the STONITH API.
- * \param[in]     target  If not NULL, only return devices that can fence
- *                        this node.
- * \param[in]     timeout How long to wait for the operation to complete (in ms).
+ * \param[in,out] out     The output functions structure
+ * \param[in,out] st      A connection to the fencer API
+ * \param[in]     target  If not NULL, return only devices that can fence this
+ * \param[in]     timeout How long to wait for the operation to complete (in ms)
  *
  * \return Standard Pacemaker return code
  */
-int pcmk__fence_registered(pcmk__output_t *out, stonith_t *st, char *target,
-                           unsigned int timeout);
+int pcmk__fence_registered(pcmk__output_t *out, stonith_t *st,
+                           const char *target, unsigned int timeout);
 
 /*!
- * \brief Register a fencing level for a specific node, node regex, or attribute.
+ * \brief Register a fencing level for a specific node, node regex, or attribute
  *
  * \note This is the internal version of pcmk_fence_register_level().  External users
  *       of the pacemaker API should use that function instead.
@@ -182,18 +181,19 @@ int pcmk__fence_registered(pcmk__output_t *out, stonith_t *st, char *target,
  *   - @pattern, in which case \p target is a node regex.
  *   - Otherwise, \p target is a node name.
  *
- * \param[in] st          A connection to the STONITH API.
- * \param[in] target      The object to register a fencing level for.
- * \param[in] fence_level Index number of level to add.
- * \param[in] devices     Devices to use in level.
+ * \param[in,out] st          A connection to the fencer API
+ * \param[in]     target      The object to register a fencing level for
+ * \param[in]     fence_level Index number of level to add
+ * \param[in]     devices     Devices to use in level
  *
  * \return Standard Pacemaker return code
  */
-int pcmk__fence_register_level(stonith_t *st, char *target, int fence_level,
-                              stonith_key_value_t *devices);
+int pcmk__fence_register_level(stonith_t *st, const char *target,
+                               int fence_level,
+                               const stonith_key_value_t *devices);
 
 /*!
- * \brief Unregister a fencing level for a specific node, node regex, or attribute.
+ * \brief Unregister a fencing level for specific node, node regex, or attribute
  *
  * \note This is the internal version of pcmk_fence_unregister_level().  External users
  *       of the pacemaker API should use that function instead.
@@ -203,16 +203,17 @@ int pcmk__fence_register_level(stonith_t *st, char *target, int fence_level,
  *   - @pattern, in which case \p target is a node regex.
  *   - Otherwise, \p target is a node name.
  *
- * \param[in] st          A connection to the STONITH API.
- * \param[in] target      The object to unregister a fencing level for.
- * \param[in] fence_level Index number of level to remove.
+ * \param[in,out] st          A connection to the fencer API
+ * \param[in]     target      The object to unregister a fencing level for
+ * \param[in]     fence_level Index number of level to remove
  *
  * \return Standard Pacemaker return code
  */
-int pcmk__fence_unregister_level(stonith_t *st, char *target, int fence_level);
+int pcmk__fence_unregister_level(stonith_t *st, const char *target,
+                                 int fence_level);
 
-/**
- * \brief Validate a STONITH device configuration.
+/*!
+ * \brief Validate a fence device configuration
  *
  * \note This is the internal version of pcmk_stonith_validate().  External users
  *       of the pacemaker API should use that function instead.
@@ -221,25 +222,25 @@ int pcmk__fence_unregister_level(stonith_t *st, char *target, int fence_level);
  *       function and destroyed with out->finish and pcmk__output_free() before
  *       reusing it with any other functions in this library.
  *
- * \param[in,out] out     The output functions structure.
- * \param[in]     st      A connection to the STONITH API.
- * \param[in]     agent   The agent to validate (for example, "fence_xvm").
- * \param[in]     id      STONITH device ID (may be NULL).
- * \param[in]     params  STONITH device configuration parameters.
- * \param[in]     timeout How long to wait for the operation to complete (in ms).
+ * \param[in,out] out     The output functions structure
+ * \param[in,out] st      A connection to the fencer API
+ * \param[in]     agent   The agent to validate (for example, "fence_xvm")
+ * \param[in]     id      Fence device ID (may be NULL)
+ * \param[in]     params  Fence device configuration parameters
+ * \param[in]     timeout How long to wait for the operation to complete (in ms)
  *
  * \return Standard Pacemaker return code
  */
 int pcmk__fence_validate(pcmk__output_t *out, stonith_t *st, const char *agent,
-                         const char *id, stonith_key_value_t *params,
+                         const char *id, const stonith_key_value_t *params,
                          unsigned int timeout);
 
-/**
- * \brief Fetch STONITH history, optionally reducing it.
+/*!
+ * \brief Fetch fencing history, optionally reducing it
  *
- * \param[in]  st              The STONITH API object
- * \param[out] stonith_history Destination for storing the history
- * \param[in]  fence_history   How much of the fencing history to display?
+ * \param[in,out] st               A connection to the fencer API
+ * \param[out]    stonith_history  Destination for storing the history
+ * \param[in]     fence_history    How much of the fencing history to display
  *
  * \return Standard Pacemaker return code
  */

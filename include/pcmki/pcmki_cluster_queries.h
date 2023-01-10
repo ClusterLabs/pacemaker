@@ -18,7 +18,8 @@
 #include <crm/common/ipc_pacemakerd.h>
 
 // CIB queries
-int pcmk__list_nodes(pcmk__output_t *out, char *node_types, gboolean bash_export);
+int pcmk__list_nodes(pcmk__output_t *out, const char *node_types,
+                     gboolean bash_export);
 
 // Controller queries
 int pcmk__controller_status(pcmk__output_t *out, const char *node_name,
