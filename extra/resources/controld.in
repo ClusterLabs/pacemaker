@@ -2,7 +2,7 @@
 #
 # ocf:pacemaker:controld resource agent
 #
-# Copyright 2008-2022 the Pacemaker project contributors
+# Copyright 2008-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -101,7 +101,7 @@ This option is advanced use only.
 <action name="stop"         timeout="100s" />
 <action name="monitor"      timeout="20s" interval="10s" depth="0" start-delay="0s" />
 <action name="meta-data"    timeout="5s" />
-<action name="validate-all"   timeout="30s" />
+<action name="validate-all"   timeout="30s" depth="0" />
 </actions>
 </resource-agent>
 END

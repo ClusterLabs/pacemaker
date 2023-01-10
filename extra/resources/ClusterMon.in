@@ -3,7 +3,7 @@
 # ocf:pacemaker:ClusterMon resource agent
 #
 # Original copyright 2004 SUSE LINUX AG, Lars Marowsky-Br<E9>e
-# Later changes copyright 2008-2021 the Pacemaker project contributors
+# Later changes copyright 2008-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -91,7 +91,7 @@ Location to write HTML output to.
 <action name="stop"    timeout="20s" />
 <action name="monitor" depth="0"  timeout="20s" interval="10s" />
 <action name="meta-data"  timeout="5s" />
-<action name="validate-all"  timeout="30s" />
+<action name="validate-all"  timeout="30s" depth="0" />
 </actions>
 </resource-agent>
 END
@@ -194,10 +194,10 @@ fi
 }
 
 ClusterMon_validate() {
-# Host-specific checks
-if [ "$OCF_CHECK_LEVEL" = "10" ]; then
+    # Host-specific checks
+    if [ "$OCF_CHECK_LEVEL" = "10" ]; then
 
-    # Existence of the user
+        # Existence of the user
         if [ -n "$OCF_RESKEY_user" ]; then
             getent passwd "$OCF_RESKEY_user" >/dev/null
             if [ $? -eq 0 ]; then
@@ -207,16 +207,15 @@ if [ "$OCF_CHECK_LEVEL" = "10" ]; then
                 exit $OCF_ERR_ARGS
             fi
         fi
+    fi
 
-fi
-
-# Pidfile better be an absolute path
+    # Pidfile should be an absolute path
     case "$OCF_RESKEY_pidfile" in
         /*) ;;
-        *) ocf_log warn "You should have pidfile($OCF_RESKEY_pidfile) of absolute path!" ;;
+        *) ocf_log warn "pidfile ($OCF_RESKEY_pidfile) is not an absolute path" ;;
     esac
 
-# Check the update interval
+    # Check the update interval
     if ocf_is_decimal "$OCF_RESKEY_update" && [ $OCF_RESKEY_update -gt 0 ]; then
         :
     else
@@ -231,10 +230,10 @@ fi
         exit $OCF_ERR_ARGS
     fi
 
-# Htmlfile better be an absolute path
+    # Htmlfile should be an absolute path
     case "$OCF_RESKEY_htmlfile" in
         /*) ;;
-        *) ocf_log warn "You should have htmlfile($OCF_RESKEY_htmlfile) of absolute path!" ;;
+        *) ocf_log warn "htmlfile ($OCF_RESKEY_htmlfile) is not an absolute path" ;;
     esac
 
     echo "Validate OK"

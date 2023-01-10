@@ -3,7 +3,7 @@
 # ocf:pacemaker:Dummy resource agent
 #
 # Original copyright 2004 SUSE LINUX AG, Lars Marowsky-Br<E9>e
-# Later changes copyright 2008-2021 the Pacemaker project contributors
+# Later changes copyright 2008-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -131,7 +131,7 @@ If this is set, the environment will be dumped to this file for every call.
 <action name="reload-agent" timeout="20s" />
 <action name="migrate_to"   timeout="20s" />
 <action name="migrate_from" timeout="20s" />
-<action name="validate-all" timeout="20s" />
+<action name="validate-all" timeout="20s" depth="0" />
 <action name="meta-data"    timeout="5s" />
 </actions>
 </resource-agent>

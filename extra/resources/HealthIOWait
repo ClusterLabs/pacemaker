@@ -2,7 +2,7 @@
 #
 # ocf:pacemaker:HealthIOWait resource agent
 #
-# Copyright 2004-2021 the Pacemaker project contributors
+# Copyright 2004-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -67,7 +67,7 @@ the #health-iowait will go red if the %iowait of the CPU get higher than 15%.
 <action name="stop"         timeout="10s" />
 <action name="monitor"      timeout="10s" interval="10s" start-delay="0s" />
 <action name="meta-data"    timeout="5s" />
-<action name="validate-all" timeout="10s" />
+<action name="validate-all" timeout="10s" depth="0" />
 </actions>
 </resource-agent>
 END

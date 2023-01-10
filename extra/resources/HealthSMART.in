@@ -2,7 +2,7 @@
 #
 # ocf:pacemaker:HealthSMART resource agent
 #
-# Copyright 2009-2022 the Pacemaker project contributors
+# Copyright 2009-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -126,7 +126,7 @@ The time to wait (dampening) for further changes to occur
 <action name="stop"         timeout="10s" />
 <action name="monitor"      timeout="10s" interval="10s" start-delay="0s" />
 <action name="meta-data"    timeout="5s" />
-<action name="validate-all"   timeout="10s" />
+<action name="validate-all"   timeout="10s" depth="0" />
 <action name="reload-agent"   timeout="20s" />
 </actions>
 </resource-agent>
