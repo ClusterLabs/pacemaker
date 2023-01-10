@@ -2073,6 +2073,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 python/pacemaker/Makefile                           \
                 python/pacemaker/_cts/Makefile                      \
                 python/pacemaker/buildoptions.py                    \
+                python/tests/Makefile                               \
                 replace/Makefile                                    \
                 rpm/Makefile                                        \
                 tests/Makefile                                      \

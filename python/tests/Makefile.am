@@ -9,12 +9,4 @@
 
 MAINTAINERCLEANFILES    = Makefile.in
 
-EXTRA_DIST = pylintrc
-
-SUBDIRS	= pacemaker tests
-
-check-local:
-	$(PYTHON) -m unittest discover -v -s tests
-
-pylint:
-	pylint $(SUBDIRS)
+EXTRA_DIST = $(wildcard test_*)
