@@ -2205,37 +2205,48 @@ stop_recurring_actions(gpointer key, gpointer value, gpointer user_data)
     return remove;
 }
 
-static void
-record_pending_op(const char *node_name, lrmd_rsc_info_t *rsc, lrmd_event_data_t *op)
+/*!
+ * \internal
+ * \brief Record an action as pending in the CIB, if appropriate
+ *
+ * \param[in]     node_name  Node where the action is pending
+ * \param[in]     rsc        Resource that action is for
+ * \param[in,out] op         Pending action
+ *
+ * \return true if action was recorded in CIB, otherwise false
+ */
+static bool
+controld_record_pending_op(const char *node_name, const lrmd_rsc_info_t *rsc,
+                           lrmd_event_data_t *op)
 {
     const char *record_pending = NULL;
 
-    CRM_CHECK(node_name != NULL, return);
-    CRM_CHECK(rsc != NULL, return);
-    CRM_CHECK(op != NULL, return);
+    CRM_CHECK((node_name != NULL) && (rsc != NULL) && (op != NULL),
+              return false);
 
     // Never record certain operation types as pending
     if ((op->op_type == NULL) || (op->params == NULL)
         || !controld_action_is_recordable(op->op_type)) {
-        return;
+        return false;
     }
 
-    // defaults to true
+    // Check action's record-pending meta-attribute (defaults to true)
     record_pending = crm_meta_value(op->params, XML_OP_ATTR_PENDING);
-    if (record_pending && !crm_is_true(record_pending)) {
-        return;
+    if ((record_pending != NULL) && !crm_is_true(record_pending)) {
+        return false;
     }
 
     op->call_id = -1;
-    lrmd__set_result(op, PCMK_OCF_UNKNOWN, PCMK_EXEC_PENDING, NULL);
-
     op->t_run = time(NULL);
     op->t_rcchange = op->t_run;
 
-    /* write a "pending" entry to the CIB, inhibit notification */
-    crm_debug("Recording pending op " PCMK__OP_FMT " on %s in the CIB",
-              op->rsc_id, op->op_type, op->interval_ms, node_name);
+    lrmd__set_result(op, PCMK_OCF_UNKNOWN, PCMK_EXEC_PENDING, NULL);
+
+    crm_debug("Recording pending %s-interval %s for %s on %s in the CIB",
+              pcmk__readable_interval(op->interval_ms), op->op_type, op->rsc_id,
+              node_name);
     controld_update_resource_history(node_name, rsc, op, 0);
+    return true;
 }
 
 static void
@@ -2370,7 +2381,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
         return;
     }
 
-    record_pending_op(lrm_state->node_name, rsc, op);
+    controld_record_pending_op(lrm_state->node_name, rsc, op);
 
     op_id = pcmk__op_key(rsc->id, op->op_type, op->interval_ms);
 
