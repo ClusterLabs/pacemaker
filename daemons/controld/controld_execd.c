@@ -1972,6 +1972,39 @@ should_cancel_recurring(const char *rsc_id, const char *action, guint interval_m
                                  NULL);
 }
 
+/*!
+ * \internal
+ * \brief Check whether an action should not be performed at this time
+ *
+ * \param[in] operation  Action to be performed
+ *
+ * \return Readable description of why action should not be performed,
+ *         or NULL if it should be performed
+ */
+static const char *
+should_nack_action(const char *action)
+{
+    if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)
+        && pcmk__str_eq(action, RSC_START, pcmk__str_none)) {
+
+        register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
+        return "Not attempting start due to shutdown in progress";
+    }
+
+    switch (controld_globals.fsa_state) {
+        case S_NOT_DC:
+        case S_POLICY_ENGINE:   // Recalculating
+        case S_TRANSITION_ENGINE:
+            break;
+        default:
+            if (!pcmk__str_eq(action, CRMD_ACTION_STOP, pcmk__str_none)) {
+                return "Controller cannot attempt actions at this time";
+            }
+            break;
+    }
+    return NULL;
+}
+
 static void
 do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
               struct ra_metadata_s *md)
@@ -2048,28 +2081,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
                crm_action_str(op->op_type, op->interval_ms), rsc->id, lrm_state->node_name,
                pcmk__s(transition, ""), rsc->id, operation, op->interval_ms);
 
-    if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)
-        && pcmk__str_eq(operation, RSC_START, pcmk__str_casei)) {
-
-        register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
-        nack_reason = "Not attempting start due to shutdown in progress";
-
-    } else {
-        switch (controld_globals.fsa_state) {
-            case S_NOT_DC:
-            case S_POLICY_ENGINE:   // Recalculating
-            case S_TRANSITION_ENGINE:
-                break;
-            default:
-                if (!pcmk__str_eq(operation, CRMD_ACTION_STOP,
-                                  pcmk__str_none)) {
-                    nack_reason = "Controller cannot attempt actions at this "
-                                  "time";
-                }
-                break;
-        }
-    }
-
+    nack_reason = should_nack_action(operation);
     if (nack_reason != NULL) {
         crm_notice("Discarding attempt to perform action %s on %s in state %s "
                    "(shutdown=%s)", operation, rsc->id,
