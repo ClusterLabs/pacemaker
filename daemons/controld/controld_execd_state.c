@@ -691,27 +691,39 @@ lrm_state_get_rsc_info(lrm_state_t * lrm_state, const char *rsc_id, enum lrmd_ca
  * \param[in]     interval_ms     Action interval (in milliseconds)
  * \param[in]     timeout_ms      Action timeout (in milliseconds)
  * \param[in]     start_delay_ms  Delay (in ms) before initiating action
- * \param[in,out] params          Resource parameters
+ * \param[in]     parameters      Hash table of resource parameters
  * \param[out]    call_id         Where to store call ID on success
  *
  * \return Standard Pacemaker return code
- * \note This takes ownership of \p params, which should not be used or freed
- *       after calling this function.
  */
 int
 controld_execute_resource_agent(lrm_state_t *lrm_state, const char *rsc_id,
                                 const char *action, const char *userdata,
                                 guint interval_ms, int timeout_ms,
-                                int start_delay_ms, lrmd_key_value_t *params,
+                                int start_delay_ms, GHashTable *parameters,
                                 int *call_id)
 {
     int rc = pcmk_rc_ok;
+    lrmd_key_value_t *params = NULL;
 
     if (lrm_state->conn == NULL) {
-        lrmd_key_value_freeall(params);
-        rc = ENOTCONN;
+        return ENOTCONN;
+    }
 
-    } else if (is_remote_lrmd_ra(NULL, NULL, rsc_id)) {
+    // Convert parameters from hash table to list
+    if (parameters != NULL) {
+        char *key = NULL;
+        char *value = NULL;
+        GHashTableIter iter;
+
+        g_hash_table_iter_init(&iter, parameters);
+        while (g_hash_table_iter_next(&iter, (gpointer *) &key,
+                                      (gpointer *) &value)) {
+            params = lrmd_key_value_add(params, key, value);
+        }
+    }
+
+    if (is_remote_lrmd_ra(NULL, NULL, rsc_id)) {
         rc = controld_execute_remote_agent(lrm_state, rsc_id, action,
                                            userdata, interval_ms, timeout_ms,
                                            start_delay_ms, params, call_id);

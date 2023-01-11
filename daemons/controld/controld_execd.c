@@ -2013,7 +2013,6 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
     int call_id = 0;
     char *op_id = NULL;
     lrmd_event_data_t *op = NULL;
-    lrmd_key_value_t *params = NULL;
     fsa_data_t *msg_data = NULL;
     const char *transition = NULL;
     const char *operation = NULL;
@@ -2106,21 +2105,10 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
         cancel_op_key(lrm_state, rsc, op_id, FALSE);
     }
 
-    if (op->params) {
-        char *key = NULL;
-        char *value = NULL;
-        GHashTableIter iter;
-
-        g_hash_table_iter_init(&iter, op->params);
-        while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
-            params = lrmd_key_value_add(params, key, value);
-        }
-    }
-
     rc = controld_execute_resource_agent(lrm_state, rsc->id, op->op_type,
                                          op->user_data, op->interval_ms,
-                                         op->timeout, op->start_delay, params,
-                                         &call_id);
+                                         op->timeout, op->start_delay,
+                                         op->params, &call_id);
     if (rc == pcmk_rc_ok) {
         /* record all operations so we can wait
          * for them to complete during shutdown

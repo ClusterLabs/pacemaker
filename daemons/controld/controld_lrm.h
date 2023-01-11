@@ -153,7 +153,7 @@ int controld_execute_resource_agent(lrm_state_t *lrm_state, const char *rsc_id,
                                     const char *action, const char *userdata,
                                     guint interval_ms, int timeout_ms,
                                     int start_delay_ms,
-                                    lrmd_key_value_t *params, int *call_id);
+                                    GHashTable *parameters, int *call_id);
 lrmd_rsc_info_t *lrm_state_get_rsc_info(lrm_state_t * lrm_state,
                                         const char *rsc_id, enum lrmd_call_options options);
 int lrm_state_register_rsc(lrm_state_t * lrm_state,
