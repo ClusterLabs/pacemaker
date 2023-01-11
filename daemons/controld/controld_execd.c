@@ -680,10 +680,21 @@ append_secure_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
     free(digest);
 }
 
-static gboolean
-build_operation_update(xmlNode * parent, const lrmd_rsc_info_t *rsc,
-                       lrmd_event_data_t *op, const char *node_name,
-                       const char *src)
+/*!
+ * \internal
+ * \brief Create XML for a resource history entry
+ *
+ * \param[in]     func       Function name of caller
+ * \param[in,out] parent     XML to add entry to
+ * \param[in]     rsc        Affected resource
+ * \param[in,out] op         Action to add an entry for (or NULL to do nothing)
+ * \param[in]     node_name  Node where action occurred
+ */
+static void
+controld_add_resource_history_xml_as(const char *func, xmlNode *parent,
+                                     const lrmd_rsc_info_t *rsc,
+                                     lrmd_event_data_t *op,
+                                     const char *node_name)
 {
     int target_rc = 0;
     xmlNode *xml_op = NULL;
@@ -692,7 +703,7 @@ build_operation_update(xmlNode * parent, const lrmd_rsc_info_t *rsc,
     lrm_state_t *lrm_state = NULL;
 
     if (op == NULL) {
-        return FALSE;
+        return;
     }
 
     target_rc = rsc_op_expected_rc(op);
@@ -701,9 +712,9 @@ build_operation_update(xmlNode * parent, const lrmd_rsc_info_t *rsc,
     CRM_CHECK(caller_version != NULL, caller_version = CRM_FEATURE_SET);
 
     xml_op = pcmk__create_history_xml(parent, op, caller_version, target_rc,
-                                      controld_globals.our_nodename, src);
+                                      controld_globals.our_nodename, func);
     if (xml_op == NULL) {
-        return TRUE;
+        return;
     }
 
     if ((rsc == NULL) || (op->params == NULL)
@@ -711,7 +722,7 @@ build_operation_update(xmlNode * parent, const lrmd_rsc_info_t *rsc,
 
         crm_trace("No digests needed for %s action on %s (params=%p rsc=%p)",
                   op->op_type, op->rsc_id, op->params, rsc);
-        return TRUE;
+        return;
     }
 
     lrm_state = lrm_state_find(node_name);
@@ -719,7 +730,7 @@ build_operation_update(xmlNode * parent, const lrmd_rsc_info_t *rsc,
         crm_warn("Cannot calculate digests for operation " PCMK__OP_FMT
                  " because we have no connection to executor for %s",
                  op->rsc_id, op->op_type, op->interval_ms, node_name);
-        return TRUE;
+        return;
     }
 
     /* Ideally the metadata is cached, and the agent is just a fallback.
@@ -731,7 +742,7 @@ build_operation_update(xmlNode * parent, const lrmd_rsc_info_t *rsc,
                                          controld_metadata_from_agent
                                          |controld_metadata_from_cache);
     if (metadata == NULL) {
-        return TRUE;
+        return;
     }
 
     crm_trace("Including additional digests for %s:%s:%s",
@@ -739,8 +750,12 @@ build_operation_update(xmlNode * parent, const lrmd_rsc_info_t *rsc,
     append_restart_list(op, metadata, xml_op, caller_version);
     append_secure_list(op, metadata, xml_op, caller_version);
 
-    return TRUE;
+    return;
 }
+
+#define controld_add_resource_history_xml(parent, rsc, op, node_name)   \
+    controld_add_resource_history_xml_as(__func__, (parent), (rsc),     \
+                                         (op), (node_name))
 
 static gboolean
 is_rsc_active(lrm_state_t * lrm_state, const char *rsc_id)
@@ -798,13 +813,13 @@ build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list)
                 crm_xml_add(xml_rsc, XML_RSC_ATTR_CONTAINER, container);
             }
         }
-        build_operation_update(xml_rsc, &(entry->rsc), entry->failed, lrm_state->node_name,
-                               __func__);
-        build_operation_update(xml_rsc, &(entry->rsc), entry->last, lrm_state->node_name,
-                               __func__);
+        controld_add_resource_history_xml(xml_rsc, &(entry->rsc), entry->failed,
+                                          lrm_state->node_name);
+        controld_add_resource_history_xml(xml_rsc, &(entry->rsc), entry->last,
+                                          lrm_state->node_name);
         for (gIter = entry->recurring_op_list; gIter != NULL; gIter = gIter->next) {
-            build_operation_update(xml_rsc, &(entry->rsc), gIter->data, lrm_state->node_name,
-                                   __func__);
+            controld_add_resource_history_xml(xml_rsc, &(entry->rsc), gIter->data,
+                                              lrm_state->node_name);
         }
     }
 
@@ -2111,8 +2126,8 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
 
     crm_xml_add(iter, XML_ATTR_ID, op->rsc_id);
 
-    build_operation_update(iter, rsc, op, controld_globals.our_nodename,
-                            __func__);
+    controld_add_resource_history_xml(iter, rsc, op,
+                                      controld_globals.our_nodename);
     reply = create_request(CRM_OP_INVOKE_LRM, update, to_host, to_sys, CRM_SYSTEM_LRMD, NULL);
 
     crm_log_xml_trace(update, "[direct ACK]");
@@ -2523,7 +2538,7 @@ do_update_resource(const char *node_name, lrmd_rsc_info_t *rsc,
     iter = create_xml_node(iter, XML_LRM_TAG_RESOURCE);
     crm_xml_add(iter, XML_ATTR_ID, op->rsc_id);
 
-    build_operation_update(iter, rsc, op, node_name, __func__);
+    controld_add_resource_history_xml(iter, rsc, op, node_name);
 
     if (rsc) {
         const char *container = NULL;
