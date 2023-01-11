@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -71,7 +71,7 @@ typedef struct lrm_state_s {
     void *remote_ra_data;       // Reserved for controld_remote_ra.c usage
 
     GHashTable *resource_history;
-    GHashTable *pending_ops;
+    GHashTable *active_ops;     // Pending and recurring actions
     GHashTable *deletion_ops;
     GHashTable *rsc_info_cache;
     GHashTable *metadata_cache; // key = class[:provider]:agent, value = ra_metadata_s

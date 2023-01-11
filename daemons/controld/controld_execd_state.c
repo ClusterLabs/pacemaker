@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 the Pacemaker project contributors
+ * Copyright 2012-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -116,7 +116,7 @@ lrm_state_create(const char *node_name)
     state->node_name = strdup(node_name);
     state->rsc_info_cache = pcmk__strkey_table(NULL, free_rsc_info);
     state->deletion_ops = pcmk__strkey_table(free, free_deletion_op);
-    state->pending_ops = pcmk__strkey_table(free, free_recurring_op);
+    state->active_ops = pcmk__strkey_table(free, free_recurring_op);
     state->resource_history = pcmk__strkey_table(NULL, history_free);
     state->metadata_cache = metadata_cache_new();
 
@@ -169,9 +169,10 @@ internal_lrm_state_destroy(gpointer data)
         crm_trace("Destroying deletion op cache with %d members", g_hash_table_size(lrm_state->deletion_ops));
         g_hash_table_destroy(lrm_state->deletion_ops);
     }
-    if (lrm_state->pending_ops) {
-        crm_trace("Destroying pending op cache with %d members", g_hash_table_size(lrm_state->pending_ops));
-        g_hash_table_destroy(lrm_state->pending_ops);
+    if (lrm_state->active_ops != NULL) {
+        crm_trace("Destroying pending op cache with %d members",
+                  g_hash_table_size(lrm_state->active_ops));
+        g_hash_table_destroy(lrm_state->active_ops);
     }
     metadata_cache_free(lrm_state->metadata_cache);
 
@@ -192,10 +193,10 @@ lrm_state_reset_tables(lrm_state_t * lrm_state, gboolean reset_metadata)
                   g_hash_table_size(lrm_state->deletion_ops));
         g_hash_table_remove_all(lrm_state->deletion_ops);
     }
-    if (lrm_state->pending_ops) {
+    if (lrm_state->active_ops != NULL) {
         crm_trace("Re-setting pending op cache with %d members",
-                  g_hash_table_size(lrm_state->pending_ops));
-        g_hash_table_remove_all(lrm_state->pending_ops);
+                  g_hash_table_size(lrm_state->active_ops));
+        g_hash_table_remove_all(lrm_state->active_ops);
     }
     if (lrm_state->rsc_info_cache) {
         crm_trace("Re-setting rsc info cache with %d members",
@@ -324,7 +325,8 @@ lrm_state_disconnect_only(lrm_state_t * lrm_state)
     ((lrmd_t *) lrm_state->conn)->cmds->disconnect(lrm_state->conn);
 
     if (!pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
-        removed = g_hash_table_foreach_remove(lrm_state->pending_ops, fail_pending_op, lrm_state);
+        removed = g_hash_table_foreach_remove(lrm_state->active_ops,
+                                              fail_pending_op, lrm_state);
         crm_trace("Synthesized %d operation failures for %s", removed, lrm_state->node_name);
     }
 }

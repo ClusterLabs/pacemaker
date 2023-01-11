@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2022 the Pacemaker project contributors
+ * Copyright 2013-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -711,7 +711,7 @@ handle_remote_ra_stop(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd)
 
     if (ra_data->migrate_status != takeover_complete) {
         /* delete pending ops when ever the remote connection is intentionally stopped */
-        g_hash_table_remove_all(lrm_state->pending_ops);
+        g_hash_table_remove_all(lrm_state->active_ops);
     } else {
         /* we no longer hold the history if this connection has been migrated,
          * however, we keep metadata cache for future use */
