@@ -47,8 +47,10 @@ static void do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
 
 static gboolean lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
                                          int log_level);
-static int do_update_resource(const char *node_name, lrmd_rsc_info_t *rsc,
-                              lrmd_event_data_t *op, time_t lock_time);
+static void controld_update_resource_history(const char *node_name,
+                                             const lrmd_rsc_info_t *rsc,
+                                             lrmd_event_data_t *op,
+                                             time_t lock_time);
 
 static void
 lrm_connection_destroy(void)
@@ -2233,8 +2235,7 @@ record_pending_op(const char *node_name, lrmd_rsc_info_t *rsc, lrmd_event_data_t
     /* write a "pending" entry to the CIB, inhibit notification */
     crm_debug("Recording pending op " PCMK__OP_FMT " on %s in the CIB",
               op->rsc_id, op->op_type, op->interval_ms, node_name);
-
-    do_update_resource(node_name, rsc, op, 0);
+    controld_update_resource_history(node_name, rsc, op, 0);
 }
 
 static void
@@ -2463,7 +2464,7 @@ cib_rsc_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *use
             crm_warn("Resource update %d failed: (rc=%d) %s", call_id, rc, pcmk_strerror(rc));
     }
 
-    if (call_id == controld_globals.resource_update) {
+    if (call_id == controld_globals.resource_update) { // Most recent CIB call
         controld_globals.resource_update = 0;
         controld_trigger_fsa();
     }
@@ -2488,122 +2489,105 @@ should_preserve_lock(lrmd_event_data_t *op)
     return false;
 }
 
-static int
-do_update_resource(const char *node_name, lrmd_rsc_info_t *rsc,
-                   lrmd_event_data_t *op, time_t lock_time)
+/*!
+ * \internal
+ * \brief Update resource history entry in CIB
+ *
+ * \param[in]     node_name  Node where action occurred
+ * \param[in]     rsc        Resource that action is for
+ * \param[in,out] op         Action to record
+ * \param[in]     lock_time  If nonzero, when resource was locked to node
+ *
+ * \note On success, the CIB update's call ID will be stored in
+ *       controld_globals.resource_update.
+ */
+static void
+controld_update_resource_history(const char *node_name,
+                                 const lrmd_rsc_info_t *rsc,
+                                 lrmd_event_data_t *op, time_t lock_time)
 {
-/*
-  <status>
-  <nodes_status id=uname>
-  <lrm>
-  <lrm_resources>
-  <lrm_resource id=...>
-  </...>
-*/
-    int rc = pcmk_ok;
-    xmlNode *update, *iter = NULL;
+    int cib_rc = pcmk_ok;
+    xmlNode *update = NULL;
+    xmlNode *xml = NULL;
     int call_opt = crmd_cib_smart_opt();
-    const char *uuid = NULL;
+    const char *node_id = NULL;
+    const char *container = NULL;
 
-    CRM_CHECK(op != NULL, return 0);
+    CRM_CHECK((node_name != NULL) && (op != NULL), return);
 
-    iter = create_xml_node(iter, XML_CIB_TAG_STATUS);
-    update = iter;
-    iter = create_xml_node(iter, XML_CIB_TAG_STATE);
-
-    if (pcmk__str_eq(node_name, controld_globals.our_nodename,
-                     pcmk__str_casei)) {
-        uuid = controld_globals.our_uuid;
-
-    } else {
-        /* remote nodes uuid and uname are equal */
-        uuid = node_name;
-        pcmk__xe_set_bool_attr(iter, XML_NODE_IS_REMOTE, true);
-    }
-
-    CRM_LOG_ASSERT(uuid != NULL);
-    if(uuid == NULL) {
-        rc = -EINVAL;
-        goto done;
-    }
-
-    crm_xml_add(iter, XML_ATTR_ID,  uuid);
-    crm_xml_add(iter, XML_ATTR_UNAME, node_name);
-    crm_xml_add(iter, XML_ATTR_ORIGIN, __func__);
-
-    iter = create_xml_node(iter, XML_CIB_TAG_LRM);
-    crm_xml_add(iter, XML_ATTR_ID, uuid);
-
-    iter = create_xml_node(iter, XML_LRM_TAG_RESOURCES);
-    iter = create_xml_node(iter, XML_LRM_TAG_RESOURCE);
-    crm_xml_add(iter, XML_ATTR_ID, op->rsc_id);
-
-    controld_add_resource_history_xml(iter, rsc, op, node_name);
-
-    if (rsc) {
-        const char *container = NULL;
-
-        crm_xml_add(iter, XML_ATTR_TYPE, rsc->type);
-        crm_xml_add(iter, XML_AGENT_ATTR_CLASS, rsc->standard);
-        crm_xml_add(iter, XML_AGENT_ATTR_PROVIDER, rsc->provider);
-        if (lock_time != 0) {
-            /* Actions on a locked resource should either preserve the lock by
-             * recording it with the action result, or clear it.
-             */
-            if (!should_preserve_lock(op)) {
-                lock_time = 0;
-            }
-            crm_xml_add_ll(iter, XML_CONFIG_ATTR_SHUTDOWN_LOCK,
-                           (long long) lock_time);
-        }
-
-        if (op->params) {
-            container = g_hash_table_lookup(op->params, CRM_META"_"XML_RSC_ATTR_CONTAINER);
-        }
-        if (container) {
-            crm_trace("Resource %s is a part of container resource %s", op->rsc_id, container);
-            crm_xml_add(iter, XML_RSC_ATTR_CONTAINER, container);
-        }
-
-    } else {
+    if (rsc == NULL) {
         crm_warn("Resource %s no longer exists in the executor", op->rsc_id);
         controld_ack_event_directly(NULL, NULL, rsc, op, op->rsc_id);
-        goto cleanup;
+        return;
     }
 
-    crm_log_xml_trace(update, __func__);
+    // <status>
+    update = create_xml_node(NULL, XML_CIB_TAG_STATUS);
 
-    /* make it an asynchronous call and be done with it
-     *
-     * Best case:
-     *   the resource state will be discovered during
-     *   the next signup or election.
-     *
-     * Bad case:
-     *   we are shutting down and there is no DC at the time,
-     *   but then why were we shutting down then anyway?
-     *   (probably because of an internal error)
-     *
-     * Worst case:
-     *   we get shot for having resources "running" that really weren't
-     *
-     * the alternative however means blocking here for too long, which
-     * isn't acceptable
+    //   <node_state ...>
+    xml = create_xml_node(update, XML_CIB_TAG_STATE);
+    if (pcmk__str_eq(node_name, controld_globals.our_nodename,
+                     pcmk__str_casei)) {
+        node_id = controld_globals.our_uuid;
+    } else {
+        node_id = node_name;
+        pcmk__xe_set_bool_attr(xml, XML_NODE_IS_REMOTE, true);
+    }
+    crm_xml_add(xml, XML_ATTR_ID, node_id);
+    crm_xml_add(xml, XML_ATTR_UNAME, node_name);
+    crm_xml_add(xml, XML_ATTR_ORIGIN, __func__);
+
+    //     <lrm ...>
+    xml = create_xml_node(xml, XML_CIB_TAG_LRM);
+    crm_xml_add(xml, XML_ATTR_ID, node_id);
+
+    //       <lrm_resources>
+    xml = create_xml_node(xml, XML_LRM_TAG_RESOURCES);
+
+    //         <lrm_resource ...>
+    xml = create_xml_node(xml, XML_LRM_TAG_RESOURCE);
+    crm_xml_add(xml, XML_ATTR_ID, op->rsc_id);
+    crm_xml_add(xml, XML_AGENT_ATTR_CLASS, rsc->standard);
+    crm_xml_add(xml, XML_AGENT_ATTR_PROVIDER, rsc->provider);
+    crm_xml_add(xml, XML_ATTR_TYPE, rsc->type);
+    if (lock_time != 0) {
+        /* Actions on a locked resource should either preserve the lock by
+         * recording it with the action result, or clear it.
+         */
+        if (!should_preserve_lock(op)) {
+            lock_time = 0;
+        }
+        crm_xml_add_ll(xml, XML_CONFIG_ATTR_SHUTDOWN_LOCK,
+                       (long long) lock_time);
+    }
+    if (op->params != NULL) {
+        container = g_hash_table_lookup(op->params,
+                                        CRM_META "_" XML_RSC_ATTR_CONTAINER);
+        if (container != NULL) {
+            crm_trace("Resource %s is a part of container resource %s",
+                      op->rsc_id, container);
+            crm_xml_add(xml, XML_RSC_ATTR_CONTAINER, container);
+        }
+    }
+
+    //           <lrm_resource_op ...> (possibly more than one)
+    controld_add_resource_history_xml(xml, rsc, op, node_name);
+
+    /* Update CIB asynchronously. Even if it fails, the resource state should be
+     * discovered during the next election. Worst case, the node is wrongly
+     * fenced for running a resource it isn't.
      */
-    fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, rc, NULL);
-
-    if (rc > 0) {
-        controld_globals.resource_update = rc;
+    crm_log_xml_trace(update, __func__);
+    fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, cib_rc, NULL);
+    if (cib_rc > 0) {
+        crm_trace("Requested resource history update for "
+                  "%s-interval %s for %s on %s (call ID %d)",
+                  pcmk__readable_interval(op->interval_ms), op->op_type,
+                  op->rsc_id, node_name, cib_rc);
+        controld_globals.resource_update = cib_rc; // CIB call ID
     }
-  done:
-    /* the return code is a call number, not an error code */
-    crm_trace("Sent resource state update message: %d for %s=%u on %s",
-              rc, op->op_type, op->interval_ms, op->rsc_id);
-    fsa_register_cib_callback(rc, FALSE, NULL, cib_rsc_callback);
-
-  cleanup:
+    fsa_register_cib_callback(cib_rc, FALSE, NULL, cib_rsc_callback);
     free_xml(update);
-    return rc;
 }
 
 void
@@ -2670,12 +2654,11 @@ did_lrm_rsc_op_fail(lrm_state_t *lrm_state, const char * rsc_id,
  * \param[in] op         Executor action to log result for
  * \param[in] op_key     Operation key for action
  * \param[in] node_name  Name of node action was performed on, if known
- * \param[in] update_id  Call ID for CIB update (or 0 if none)
  * \param[in] confirmed  Whether to log that graph action was confirmed
  */
 static void
 log_executor_event(const lrmd_event_data_t *op, const char *op_key,
-                   const char *node_name, int update_id, gboolean confirmed)
+                   const char *node_name, gboolean confirmed)
 {
     int log_level = LOG_ERR;
     GString *str = g_string_sized_new(100); // reasonable starting size
@@ -2730,9 +2713,6 @@ log_executor_event(const lrmd_event_data_t *op, const char *op_key,
     }
 
     g_string_append(str, " " CRM_XS);
-    if (update_id != 0) {
-        g_string_append_printf(str, " CIB update %d,", update_id);
-    }
     g_string_append_printf(str, " graph action %sconfirmed; call=%d key=%s",
                            (confirmed? "" : "un"), op->call_id, op_key);
     if (op->op_status == PCMK_EXEC_DONE) {
@@ -2762,7 +2742,6 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
     char *op_id = NULL;
     char *op_key = NULL;
 
-    int update_id = 0;
     gboolean remove = FALSE;
     gboolean removed = FALSE;
     bool need_direct_ack = FALSE;
@@ -2852,8 +2831,9 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
         if (controld_action_is_recordable(op->op_type)) {
             if (node_name && rsc) {
                 // We should record the result, and happily, we can
-                update_id = do_update_resource(node_name, rsc, op,
-                                               pending? pending->lock_time : 0);
+                time_t lock_time = (pending == NULL)? 0 : pending->lock_time;
+
+                controld_update_resource_history(node_name, rsc, op, lock_time);
                 need_direct_ack = FALSE;
 
             } else if (op->rsc_deleted) {
@@ -2954,7 +2934,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
         }
     }
 
-    log_executor_event(op, op_key, node_name, update_id, removed);
+    log_executor_event(op, op_key, node_name, removed);
 
     if (lrm_state) {
         if (!pcmk__str_eq(op->op_type, RSC_METADATA, pcmk__str_casei)) {
