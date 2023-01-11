@@ -1,5 +1,5 @@
 #
-# Copyright 2018-2021 the Pacemaker project contributors
+# Copyright 2018-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -46,7 +46,7 @@ pacemaker_controld_SOURCES = pacemaker-controld.c	\
 			     controld_alerts.c		\
 			     controld_attrd.c		\
 			     controld_callbacks.c	\
-			     controld_based.c		\
+			     controld_cib.c		\
 			     controld_control.c		\
 			     controld_corosync.c	\
 			     controld_election.c	\
