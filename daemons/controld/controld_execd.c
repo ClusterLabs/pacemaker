@@ -1944,6 +1944,34 @@ stop_recurring_actions(gpointer key, gpointer value, gpointer user_data)
     return remove;
 }
 
+/*!
+ * \internal
+ * \brief Check whether recurring actions should be cancelled before an action
+ *
+ * \param[in] rsc_id       Resource that action is for
+ * \param[in] action       Action being performed
+ * \param[in] interval_ms  Operation interval of \p action (in milliseconds)
+ *
+ * \return true if recurring actions should be cancelled, otherwise false
+ */
+static bool
+should_cancel_recurring(const char *rsc_id, const char *action, guint interval_ms)
+{
+    if (is_remote_lrmd_ra(NULL, NULL, rsc_id) && (interval_ms == 0)
+        && (strcmp(action, CRMD_ACTION_MIGRATE) == 0)) {
+        /* Don't stop monitoring a migrating Pacemaker Remote connection
+         * resource until the entire migration has completed. We must detect if
+         * the connection is unexpectedly severed, even during a migration.
+         */
+        return false;
+    }
+
+    // Cancel recurring actions before changing resource state
+    return (interval_ms == 0)
+            && !pcmk__str_any_of(action, CRMD_ACTION_STATUS, CRMD_ACTION_NOTIFY,
+                                 NULL);
+}
+
 static void
 do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
               struct ra_metadata_s *md)
@@ -1956,7 +1984,6 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
     fsa_data_t *msg_data = NULL;
     const char *transition = NULL;
     const char *operation = NULL;
-    gboolean stop_recurring = FALSE;
     const char *nack_reason = NULL;
 
     CRM_CHECK((rsc != NULL) && (msg != NULL), return);
@@ -1998,25 +2025,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
     op = construct_op(lrm_state, msg, rsc->id, operation);
     CRM_CHECK(op != NULL, return);
 
-    if (is_remote_lrmd_ra(NULL, NULL, rsc->id)
-        && (op->interval_ms == 0)
-        && strcmp(operation, CRMD_ACTION_MIGRATE) == 0) {
-
-        /* pcmk remote connections are a special use case.
-         * We never ever want to stop monitoring a connection resource until
-         * the entire migration has completed. If the connection is unexpectedly
-         * severed, even during a migration, this is an event we must detect.*/
-        stop_recurring = FALSE;
-
-    } else if ((op->interval_ms == 0)
-        && strcmp(operation, CRMD_ACTION_STATUS) != 0
-        && strcmp(operation, CRMD_ACTION_NOTIFY) != 0) {
-
-        /* stop any previous monitor operations before changing the resource state */
-        stop_recurring = TRUE;
-    }
-
-    if (stop_recurring == TRUE) {
+    if (should_cancel_recurring(rsc->id, operation, op->interval_ms)) {
         guint removed = 0;
         struct stop_recurring_action_s data;
 
