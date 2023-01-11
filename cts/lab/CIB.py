@@ -1,14 +1,14 @@
 """ CIB generator for Pacemaker's Cluster Test Suite (CTS)
 """
 
-__copyright__ = "Copyright 2008-2021 the Pacemaker project contributors"
+__copyright__ = "Copyright 2008-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import os
 import warnings
 import tempfile
 
-from cts.CTSvars import *
+from pacemaker.buildoptions import BuildOptions
 
 
 class CibBase(object):
@@ -128,7 +128,7 @@ class CIB12(ConfigBase):
             r"""awk -v RS="}" """
             r"""'/^(\s*nodelist\s*{)?\s*node\s*{.*(ring0_addr|name):\s*%s(\s+|$)/"""
             r"""{gsub(/.*nodeid:\s*/,"");gsub(/\s+.*$/,"");print}' %s"""
-            % (node_name, CTSvars.COROSYNC_CONF), None)
+            % (node_name, BuildOptions.COROSYNC_CONFIG_FILE), None)
 
         if rc == 0 and len(output) == 1:
             try:
@@ -144,9 +144,9 @@ class CIB12(ConfigBase):
         # Force a rebuild
         self.cts_cib = None
 
-        self.Factory.tmpfile = CTSvars.CRM_CONFIG_DIR+"/cib.xml"
+        self.Factory.tmpfile = BuildOptions.CIB_DIR + "/cib.xml"
         self.contents(target)
-        self.Factory.rsh(self.Factory.target, "chown "+CTSvars.CRM_DAEMON_USER+" "+self.Factory.tmpfile)
+        self.Factory.rsh(self.Factory.target, "chown " + BuildOptions.DAEMON_USER + " " + self.Factory.tmpfile)
 
         self.Factory.tmpfile = old
 
@@ -328,7 +328,7 @@ class CIB12(ConfigBase):
         # generate cib
         self.cts_cib = self._show()
 
-        if self.Factory.tmpfile != CTSvars.CRM_CONFIG_DIR+"/cib.xml":
+        if self.Factory.tmpfile != BuildOptions.CIB_DIR + "/cib.xml":
             self.Factory.rsh(self.Factory.target, "rm -f "+self.Factory.tmpfile)
 
         return self.cts_cib

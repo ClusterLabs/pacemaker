@@ -47,7 +47,11 @@
 # "rpmbuild --without <feature>" can enable and disable specific features
 
 ## Add option to enable support for stonith/external fencing agents
+%if 0%{?suse_version} > 0
+%bcond_without stonithd
+%else
 %bcond_with stonithd
+%endif
 
 ## Add option for whether to support storing sensitive information outside CIB
 %if (0%{?fedora} && 0%{?fedora} <= 33) || (0%{?rhel} && 0%{?rhel} <= 8)
@@ -274,6 +278,9 @@ Requires:      resource-agents
 Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cluster-libs%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
+%if %{with stonithd}
+Requires:      %{python_name}-%{name} = %{version}-%{release}
+%endif
 %if !%{defined _unitdir}
 Requires:      %{pkgname_procps}
 Requires:      psmisc
@@ -282,6 +289,7 @@ Requires:      psmisc
 
 Requires:      %{python_path}
 BuildRequires: %{python_name}-devel
+BuildRequires: %{python_name}-setuptools
 
 # Pacemaker requires a minimum libqb functionality
 Requires:      libqb >= 0.17.0
@@ -415,6 +423,20 @@ manager.
 The %{name}-cluster-libs package contains cluster-aware shared
 libraries needed for nodes that will form part of the cluster nodes.
 
+%package -n %{python_name}-%{name}
+License:       LGPLv2+
+Summary:       Python libraries for Pacemaker
+Requires:      %{python_path}
+Requires:      %{pkgname_pcmk_libs} = %{version}-%{release}
+BuildArch:     noarch
+
+%description -n %{python_name}-%{name}
+Pacemaker is an advanced, scalable High-Availability cluster resource
+manager.
+
+The %{python_name}-%{name} package contains a Python library that can be used
+to interface with Pacemaker.
+
 %package remote
 %if %{defined _unitdir}
 License:       GPLv2+ and LGPLv2+
@@ -471,6 +493,7 @@ Summary:       Test framework for cluster-related technologies like Pacemaker
 Requires:      %{python_path}
 Requires:      %{pkgname_pcmk_libs} = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
+Requires:      %{python_name}-%{name} = %{version}-%{release}
 Requires:      %{pkgname_procps}
 Requires:      psmisc
 Requires:      %{python_name}-psutil
@@ -557,6 +580,10 @@ sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
 
 make %{_smp_mflags} V=1
 
+pushd python
+%py3_build
+popd
+
 %check
 make %{_smp_mflags} check
 { cts/cts-scheduler --run load-stopped-loop \
@@ -574,6 +601,10 @@ exit $?  # TODO remove when rpm<4.14 compatibility irrelevant
 make install \
   DESTDIR=%{buildroot} V=1 docdir=%{pcmk_docdir} \
   %{?_python_bytecompile_extra:%{?py_byte_compile:am__py_compile=true}}
+
+pushd python
+%py3_install
+popd
 
 %if %{with upstart_job}
 mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/init
@@ -733,7 +764,9 @@ exit 0
 %{_libexecdir}/pacemaker/*
 
 %{_sbindir}/crm_master
+%if %{with stonithd}
 %{_sbindir}/fence_legacy
+%endif
 %{_sbindir}/fence_watchdog
 
 %doc %{_mandir}/man7/pacemaker-controld.*
@@ -743,7 +776,9 @@ exit 0
 %doc %{_mandir}/man7/ocf_pacemaker_o2cb.*
 %doc %{_mandir}/man7/ocf_pacemaker_remote.*
 %doc %{_mandir}/man8/crm_master.*
+%if %{with stonithd}
 %doc %{_mandir}/man8/fence_legacy.*
+%endif
 %doc %{_mandir}/man8/fence_watchdog.*
 %doc %{_mandir}/man8/pacemakerd.*
 
@@ -822,7 +857,9 @@ exit 0
 %exclude %{_mandir}/man7/ocf_pacemaker_remote.*
 %doc %{_mandir}/man8/*
 %exclude %{_mandir}/man8/crm_master.*
+%if %{with stonithd}
 %exclude %{_mandir}/man8/fence_legacy.*
+%endif
 %exclude %{_mandir}/man8/fence_watchdog.*
 %exclude %{_mandir}/man8/pacemakerd.*
 %exclude %{_mandir}/man8/pacemaker-remoted.*
@@ -856,6 +893,14 @@ exit 0
 %doc COPYING
 %doc ChangeLog
 
+%files -n %{python_name}-%{name}
+%{python3_sitelib}/pacemaker/
+%{python3_sitelib}/pacemaker-*.egg-info
+%exclude %{python3_sitelib}/pacemaker/_cts/
+%license licenses/LGPLv2.1
+%doc COPYING
+%doc ChangeLog
+
 %files remote
 %config(noreplace) %{_sysconfdir}/sysconfig/pacemaker
 %if %{defined _unitdir}
@@ -881,6 +926,7 @@ exit 0
 
 %files cts
 %{python_site}/cts
+%{python3_sitelib}/pacemaker/_cts/
 %{_datadir}/pacemaker/tests
 
 %{_libexecdir}/pacemaker/cts-log-watcher

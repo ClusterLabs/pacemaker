@@ -1,12 +1,11 @@
 """ CIB XML generator for Pacemaker's Cluster Test Suite (CTS)
 """
 
-__copyright__ = "Copyright 2008-2020 the Pacemaker project contributors"
+__copyright__ = "Copyright 2008-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import sys
 
-from cts.CTSvars import *
 from cts.CIB     import CibBase
 
 

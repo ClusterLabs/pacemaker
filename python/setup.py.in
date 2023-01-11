@@ -1,0 +1,20 @@
+#!@PYTHON@
+
+import re
+from setuptools import setup
+
+# This will match things like "2.1.3" and "2.1.3-100", but not things like
+# "2.1.3-100.deadbeef".  Any other formats (or lack of a match) will result
+# in an exception during package building, which is probably okay.  That's an
+# error on our part and is something we should fix.
+ver = re.match("[0-9.]+[0-9-]*", "@PACKAGE_VERSION@")[0]
+
+setup(name='pacemaker',
+      version=ver,
+      author='The Pacemaker project contributors',
+      author_email='@PACKAGE_BUGREPORT@',
+      license='LGPLv2.1+',
+      url='https://clusterlabs.org/pacemaker/',
+      description='Python libraries for Pacemaker',
+      packages=['pacemaker', 'pacemaker._cts'],
+     )

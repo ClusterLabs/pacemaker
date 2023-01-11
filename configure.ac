@@ -1,7 +1,7 @@
 dnl
 dnl autoconf for Pacemaker
 dnl
-dnl Copyright 2009-2022 the Pacemaker project contributors
+dnl Copyright 2009-2023 the Pacemaker project contributors
 dnl
 dnl The version control history for this file may have further details.
 dnl
@@ -1980,7 +1980,6 @@ dnl Other files we output
 AC_CONFIG_FILES(Makefile                                            \
                 cts/Makefile                                        \
                 cts/benchmark/Makefile                              \
-                cts/lab/CTSvars.py                                  \
                 cts/lab/Makefile                                    \
                 cts/scheduler/Makefile                              \
                 cts/scheduler/dot/Makefile                          \
@@ -2069,6 +2068,12 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/services/Makefile                               \
                 maint/Makefile                                      \
                 po/Makefile.in                                      \
+                python/Makefile                                     \
+                python/setup.py                                     \
+                python/pacemaker/Makefile                           \
+                python/pacemaker/_cts/Makefile                      \
+                python/pacemaker/buildoptions.py                    \
+                python/tests/Makefile                               \
                 replace/Makefile                                    \
                 rpm/Makefile                                        \
                 tests/Makefile                                      \

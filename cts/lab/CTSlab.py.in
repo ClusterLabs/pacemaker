@@ -2,7 +2,7 @@
 """ Command-line interface to Pacemaker's Cluster Test Suite (CTS)
 """
 
-__copyright__ = "Copyright 2001-2021 the Pacemaker project contributors"
+__copyright__ = "Copyright 2001-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import sys, signal, os
@@ -12,7 +12,6 @@ sys.path.insert(0, pdir) # So that things work from the source directory
 
 try:
     from cts.CTS          import *
-    from cts.CTSvars      import *
     from cts.CM_corosync  import *
     from cts.CTSaudits    import AuditList
     from cts.CTStests     import TestList

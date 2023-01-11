@@ -1,7 +1,7 @@
 """ Log searching classes for Pacemaker's Cluster Test Suite (CTS)
 """
 
-__copyright__ = "Copyright 2014-2020 the Pacemaker project contributors"
+__copyright__ = "Copyright 2014-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import re
@@ -12,7 +12,9 @@ import threading
 from cts.remote import *
 from cts.logging import *
 
-log_watcher_bin = CTSvars.CRM_DAEMON_DIR + "/cts-log-watcher"
+from pacemaker.buildoptions import BuildOptions
+
+log_watcher_bin = BuildOptions.DAEMON_DIR + "/cts-log-watcher"
 
 class SearchObj(object):
     def __init__(self, filename, host=None, name=None):

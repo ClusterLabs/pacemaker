@@ -2,7 +2,7 @@
 """ Regression tests for Pacemaker's pacemaker-execd
 """
 
-__copyright__ = "Copyright 2012-2022 the Pacemaker project contributors"
+__copyright__ = "Copyright 2012-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import io
@@ -18,76 +18,42 @@ import time
 
 # Where to find test binaries
 # Prefer the source tree if available
-BUILD_DIR = "@abs_top_builddir@"
 TEST_DIR = sys.path[0]
 
-SBIN_DIR = "@sbindir@"
+# These imports allow running from a source checkout after running `make`.
+# Note that while this doesn't necessarily mean it will successfully run tests,
+# but being able to see --help output can be useful.
+if os.path.exists("@abs_top_srcdir@/python"):
+    sys.path.insert(0, "@abs_top_srcdir@/python")
 
-# Check whether Pacemaker Remote support was built
-REMOTE_ENABLED = "@PC_NAME_GNUTLS@" != ""
+if os.path.exists("@abs_top_builddir@/python") and "@abs_top_builddir@" != "@abs_top_srcdir@":
+    sys.path.insert(0, "@abs_top_builddir@/python")
+
+from pacemaker.buildoptions import BuildOptions
+from pacemaker.exitstatus import ExitStatus
 
 # File permissions for executable scripts we create
 EXECMODE = stat.S_IRUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH
-
-# These values must be kept in sync with include/crm/crm.h
-class CrmExit(object):
-    OK                   =   0
-    ERROR                =   1
-    INVALID_PARAM        =   2
-    UNIMPLEMENT_FEATURE  =   3
-    INSUFFICIENT_PRIV    =   4
-    NOT_INSTALLED        =   5
-    NOT_CONFIGURED       =   6
-    NOT_RUNNING          =   7
-    USAGE                =  64
-    DATAERR              =  65
-    NOINPUT              =  66
-    NOUSER               =  67
-    NOHOST               =  68
-    UNAVAILABLE          =  69
-    SOFTWARE             =  70
-    OSERR                =  71
-    OSFILE               =  72
-    CANTCREAT            =  73
-    IOERR                =  74
-    TEMPFAIL             =  75
-    PROTOCOL             =  76
-    NOPERM               =  77
-    CONFIG               =  78
-    FATAL                = 100
-    PANIC                = 101
-    DISCONNECT           = 102
-    SOLO                 = 103
-    DIGEST               = 104
-    NOSUCH               = 105
-    QUORUM               = 106
-    UNSAFE               = 107
-    EXISTS               = 108
-    MULTIPLE             = 109
-    OLD                  = 110
-    TIMEOUT              = 124
-    MAX                  = 255
-
 
 def update_path():
     """ Set the PATH environment variable appropriately for the tests """
 
     new_path = os.environ['PATH']
     if os.path.exists("%s/cts-exec.in" % TEST_DIR):
-        print("Running tests from the source tree: %s (%s)" % (BUILD_DIR, TEST_DIR))
+        print("Running tests from the source tree: %s (%s)" % (BuildOptions._BUILD_DIR, TEST_DIR))
         # For pacemaker-execd, cts-exec-helper, and pacemaker-remoted
-        new_path = "%s/daemons/execd:%s" % (BUILD_DIR, new_path)
-        new_path = "%s/tools:%s" % (BUILD_DIR, new_path)   # For crm_resource
+        new_path = "%s/daemons/execd:%s" % (BuildOptions._BUILD_DIR, new_path)
+        new_path = "%s/tools:%s" % (BuildOptions._BUILD_DIR, new_path)   # For crm_resource
         # For pacemaker-fenced
-        new_path = "%s/daemons/fenced:%s" % (BUILD_DIR, new_path)
+        new_path = "%s/daemons/fenced:%s" % (BuildOptions._BUILD_DIR, new_path)
         # For cts-support
-        new_path = "%s/cts/support:%s" % (BUILD_DIR, new_path)
+        new_path = "%s/cts/support:%s" % (BuildOptions._BUILD_DIR, new_path)
 
     else:
-        print("Running tests from the install tree: @CRM_DAEMON_DIR@ (not %s)" % TEST_DIR)
+        print("Running tests from the install tree: %s (not %s)" % (BuildOptions.DAEMON_DIR, TEST_DIR))
         # For cts-exec-helper, cts-support, pacemaker-execd, pacemaker-fenced,
         # and pacemaker-remoted
-        new_path = "@CRM_DAEMON_DIR@:%s" % (new_path)
+        new_path = "%s:%s" % (BuildOptions.DAEMON_DIR, new_path)
 
     print('Using PATH="{}"'.format(new_path))
     os.environ['PATH'] = new_path
@@ -138,7 +104,7 @@ def exit_if_proc_running(process_name):
     if is_proc_running(process_name):
         print("Error: %s is already running!" % process_name)
         print("Run %s only when the cluster is stopped." % sys.argv[0])
-        sys.exit(CrmExit.ERROR)
+        sys.exit(ExitStatus.ERROR)
 
 
 class TestError(Exception):
@@ -200,7 +166,7 @@ class Test(object):
 
         self.result_txt = ""
         self.cmd_tool_output = ""
-        self.result_exitcode = CrmExit.OK
+        self.result_exitcode = ExitStatus.OK
 
         self.execd_process = None
         self.stonith_process = None
@@ -308,24 +274,24 @@ class Test(object):
     def add_sys_cmd(self, cmd, args):
         """ Add a simple command to be executed as part of this test """
 
-        self.__new_cmd(cmd, args, CrmExit.OK, "")
+        self.__new_cmd(cmd, args, ExitStatus.OK, "")
 
     def add_cmd_check_stdout(self, args, match, no_match=""):
         """ Add a command with expected output to be executed as part of this test """
 
-        self.__new_cmd(self.test_tool_location, args, CrmExit.OK, match, 0, no_match)
+        self.__new_cmd(self.test_tool_location, args, ExitStatus.OK, match, 0, no_match)
 
     def add_cmd(self, args):
         """ Add a cts-exec-helper command to be executed as part of this test """
 
-        self.__new_cmd(self.test_tool_location, args, CrmExit.OK, "")
+        self.__new_cmd(self.test_tool_location, args, ExitStatus.OK, "")
 
     def add_cmd_and_kill(self, kill_proc, args):
         """ Add a cts-exec-helper command and system command to be executed as part of this test """
 
-        self.__new_cmd(self.test_tool_location, args, CrmExit.OK, "", kill=kill_proc)
+        self.__new_cmd(self.test_tool_location, args, ExitStatus.OK, "", kill=kill_proc)
 
-    def add_expected_fail_cmd(self, args, exitcode=CrmExit.ERROR):
+    def add_expected_fail_cmd(self, args, exitcode=ExitStatus.ERROR):
         """ Add a cts-exec-helper command to be executed as part of this test and expected to fail """
 
         self.__new_cmd(self.test_tool_location, args, exitcode, "")
@@ -362,7 +328,7 @@ class Test(object):
         if args['no_wait'] == 0:
             test.wait()
         else:
-            return CrmExit.OK
+            return ExitStatus.OK
 
         output = test.communicate()[0].decode(sys.stdout.encoding)
         args['cmd_output'] = output
@@ -381,7 +347,7 @@ class Test(object):
 
         msg = "FAILURE - '%s' failed at step %d. Command: %s %s"
         self.result_txt = msg % (self.name, step, cmd['cmd'], cmd['args'])
-        self.result_exitcode = CrmExit.ERROR
+        self.result_exitcode = ExitStatus.ERROR
 
     def run(self):
         """ Execute this test. """
@@ -400,7 +366,7 @@ class Test(object):
             print("\n--- START TEST - %s" % self.name)
 
         self.result_txt = "SUCCESS - '%s'" % (self.name)
-        self.result_exitcode = CrmExit.OK
+        self.result_exitcode = ExitStatus.OK
         for cmd in self.cmds:
             try:
                 self.run_cmd(cmd)
@@ -561,7 +527,7 @@ class Tests(object):
     def setup_test_environment(self):
         """ Prepare the host before executing any tests """
 
-        if REMOTE_ENABLED:
+        if BuildOptions.REMOTE_ENABLED:
             os.system("service pacemaker_remote stop")
         self.cleanup_test_environment()
 
@@ -572,15 +538,15 @@ class Tests(object):
             self.installed_files.append("/etc/pacemaker/authkey")
 
         # If we're in build directory, install agents if not already installed
-        if os.path.exists("%s/cts/cts-exec.in" % BUILD_DIR):
+        if os.path.exists("%s/cts/cts-exec.in" % BuildOptions._BUILD_DIR):
 
-            if not os.path.exists("@OCF_RA_INSTALL_DIR@/pacemaker"):
+            if not os.path.exists("%s/pacemaker" % BuildOptions.OCF_RA_INSTALL_DIR):
                 # @TODO remember which components were created and remove them
-                os.makedirs("@OCF_RA_INSTALL_DIR@/pacemaker", 0o755)
+                os.makedirs("%s/pacemaker" % BuildOptions.OCF_RA_INSTALL_DIR, 0o755)
 
             for agent in ["Dummy", "Stateful", "ping"]:
-                agent_source = "%s/extra/resources/%s" % (BUILD_DIR, agent)
-                agent_dest = "@OCF_RA_INSTALL_DIR@/pacemaker/%s" % (agent)
+                agent_source = "%s/extra/resources/%s" % (BuildOptions._BUILD_DIR, agent)
+                agent_dest = "%s/pacemaker/%s" % (BuildOptions.OCF_RA_INSTALL_DIR, agent)
                 if not os.path.exists(agent_dest):
                     print("Installing %s ..." % (agent_dest))
                     shutil.copyfile(agent_source, agent_dest)
@@ -631,9 +597,9 @@ class Tests(object):
             test.add_cmd(common_cmds["%s_monitor_event" % (rsc)])
             test.add_cmd(common_cmds["%s_cancel_line" % (rsc)] + " " + common_cmds["%s_cancel_event" % (rsc)])
             ### If this happens the monitor did not actually cancel correctly. ###
-            test.add_expected_fail_cmd(common_cmds["%s_monitor_event" % (rsc)], CrmExit.TIMEOUT)
+            test.add_expected_fail_cmd(common_cmds["%s_monitor_event" % (rsc)], ExitStatus.TIMEOUT)
             ### If this happens the monitor did not actually cancel correctly. ###
-            test.add_expected_fail_cmd(common_cmds["%s_monitor_event" % (rsc)], CrmExit.TIMEOUT)
+            test.add_expected_fail_cmd(common_cmds["%s_monitor_event" % (rsc)], ExitStatus.TIMEOUT)
             test.add_cmd(common_cmds["%s_stop_line" % (rsc)]  + " " + common_cmds["%s_stop_event" % (rsc)])
             test.add_cmd(common_cmds["%s_unreg_line" % (rsc)] + " " + common_cmds["%s_unreg_event" % (rsc)])
 
@@ -661,9 +627,9 @@ class Tests(object):
             # cancel the monitor, if the duplicate merged with the original, we should no longer see monitor updates
             test.add_cmd(common_cmds["%s_cancel_line" % (rsc)] + " " + common_cmds["%s_cancel_event" % (rsc)])
             ### If this happens the monitor did not actually cancel correctly. ###
-            test.add_expected_fail_cmd(common_cmds["%s_monitor_event" % (rsc)], CrmExit.TIMEOUT)
+            test.add_expected_fail_cmd(common_cmds["%s_monitor_event" % (rsc)], ExitStatus.TIMEOUT)
             ### If this happens the monitor did not actually cancel correctly. ###
-            test.add_expected_fail_cmd(common_cmds["%s_monitor_event" % (rsc)], CrmExit.TIMEOUT)
+            test.add_expected_fail_cmd(common_cmds["%s_monitor_event" % (rsc)], ExitStatus.TIMEOUT)
             test.add_cmd(common_cmds["%s_stop_line" % (rsc)]  + " " + common_cmds["%s_stop_event" % (rsc)])
             test.add_cmd(common_cmds["%s_unreg_line" % (rsc)] + " " + common_cmds["%s_unreg_event" % (rsc)])
 
@@ -680,9 +646,9 @@ class Tests(object):
             test.add_cmd(common_cmds["%s_monitor_event" % (rsc)])
             test.add_cmd(common_cmds["%s_stop_line" % (rsc)]  + " " + common_cmds["%s_stop_event" % (rsc)])
             ### If this happens the monitor did not actually cancel correctly. ###
-            test.add_expected_fail_cmd(common_cmds["%s_monitor_event" % (rsc)], CrmExit.TIMEOUT)
+            test.add_expected_fail_cmd(common_cmds["%s_monitor_event" % (rsc)], ExitStatus.TIMEOUT)
             ### If this happens the monitor did not actually cancel correctly. ###
-            test.add_expected_fail_cmd(common_cmds["%s_monitor_event" % (rsc)], CrmExit.TIMEOUT)
+            test.add_expected_fail_cmd(common_cmds["%s_monitor_event" % (rsc)], ExitStatus.TIMEOUT)
             test.add_cmd(common_cmds["%s_unreg_line" % (rsc)] + " " + common_cmds["%s_unreg_event" % (rsc)])
 
 
@@ -774,14 +740,14 @@ class Tests(object):
                      + self.action_timeout)
         test.add_cmd('-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete"'
                      + self.action_timeout)
-        test.add_cmd_and_kill("rm -f @localstatedir@/run/Dummy-test_rsc.state",
+        test.add_cmd_and_kill("rm -f %s/run/Dummy-test_rsc.state" % BuildOptions.LOCAL_STATE_DIR,
                               '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete" ' + self.action_timeout)
         test.add_cmd('-c cancel -r test_rsc -a monitor -i 1s ' + self.action_timeout +
                      "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:Cancelled\" ")
         test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" "
-                                   + self.action_timeout, CrmExit.TIMEOUT)
+                                   + self.action_timeout, ExitStatus.TIMEOUT)
         test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" "
-                                   + self.action_timeout, CrmExit.TIMEOUT)
+                                   + self.action_timeout, ExitStatus.TIMEOUT)
         test.add_cmd("-c unregister_rsc -r \"test_rsc\" "
                      + self.action_timeout +
                      "-l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
@@ -795,13 +761,14 @@ class Tests(object):
         test.add_cmd('-c exec -r test_rsc -a monitor -i 1s '
                      + self.action_timeout +
                      ' -o -l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete" ')
-        test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" "+self.action_timeout, CrmExit.TIMEOUT)
-        test.add_cmd_and_kill('rm -f @localstatedir@/run/Dummy-test_rsc.state', '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete"' + self.action_timeout)
+        test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" "+self.action_timeout, ExitStatus.TIMEOUT)
+        test.add_cmd_and_kill('rm -f %s/run/Dummy-test_rsc.state' % BuildOptions.LOCAL_STATE_DIR,
+                              '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete"' + self.action_timeout)
         test.add_cmd('-c cancel -r test_rsc -a monitor -i 1s'
                      + self.action_timeout +
                      "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:Cancelled\" ")
-        test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" "+self.action_timeout, CrmExit.TIMEOUT)
-        test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" "+self.action_timeout, CrmExit.TIMEOUT)
+        test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" "+self.action_timeout, ExitStatus.TIMEOUT)
+        test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" "+self.action_timeout, ExitStatus.TIMEOUT)
         test.add_cmd('-c unregister_rsc -r "test_rsc" ' + self.action_timeout +
                      '-l "NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete"')
 
@@ -824,8 +791,8 @@ class Tests(object):
                                   '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete"' + self.action_timeout)
             test.add_cmd('-c cancel -r test_rsc -a monitor -i 1s' + self.action_timeout +
                          "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:Cancelled\" ")
-            test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" "+self.action_timeout, CrmExit.TIMEOUT)
-            test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" "+self.action_timeout, CrmExit.TIMEOUT)
+            test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" "+self.action_timeout, ExitStatus.TIMEOUT)
+            test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" "+self.action_timeout, ExitStatus.TIMEOUT)
             test.add_cmd("-c unregister_rsc -r \"test_rsc\" "+self.action_timeout+
                          "-l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
 
@@ -846,8 +813,8 @@ class Tests(object):
             test.add_cmd('-c cancel -r test_rsc -a monitor -i 1s'
                          + self.action_timeout +
                          "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:Cancelled\" ")
-            test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" "+self.action_timeout, CrmExit.TIMEOUT)
-            test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" "+self.action_timeout, CrmExit.TIMEOUT)
+            test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" "+self.action_timeout, ExitStatus.TIMEOUT)
+            test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" "+self.action_timeout, ExitStatus.TIMEOUT)
             test.add_cmd("-c unregister_rsc -r \"test_rsc\" "+self.action_timeout+
                          "-l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
 
@@ -981,12 +948,12 @@ class Tests(object):
 
         ### verify resource temporary folder is created and used by OCF agents.  ###
         test = self.new_test("rsc_tmp_dir", "Verify creation and use of rsc temporary state directory")
-        test.add_sys_cmd("ls", "-al @CRM_RSCTMP_DIR@")
+        test.add_sys_cmd("ls", "-al %s" % BuildOptions.RSC_TMP_DIR)
         test.add_cmd("-c register_rsc -r test_rsc -P heartbeat -C ocf -T Dummy "
                      "-l \"NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete\" "+self.action_timeout)
         test.add_cmd("-c exec -r test_rsc -a start -t 4000")
-        test.add_sys_cmd("ls", "-al @CRM_RSCTMP_DIR@")
-        test.add_sys_cmd("ls", "@CRM_RSCTMP_DIR@/Dummy-test_rsc.state")
+        test.add_sys_cmd("ls", "-al %s" % BuildOptions.RSC_TMP_DIR)
+        test.add_sys_cmd("ls", "%s/Dummy-test_rsc.state" % BuildOptions.RSC_TMP_DIR)
         test.add_cmd("-c exec -r test_rsc -a stop -t 4000")
         test.add_cmd("-c unregister_rsc -r test_rsc "+self.action_timeout+
                      "-l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
@@ -996,7 +963,7 @@ class Tests(object):
         test.add_cmd("-c register_rsc -r test_rsc -P pacemaker -C ocf -T Dummy "
                      "-l \"NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete\" "+self.action_timeout)
         test.add_cmd("-c exec -r test_rsc -s 6000 -a start -w -t 6000")
-        test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:complete\" -t 2000", CrmExit.TIMEOUT)
+        test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:complete\" -t 2000", ExitStatus.TIMEOUT)
         test.add_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:complete\" -t 6000")
         test.add_cmd("-c exec -r test_rsc -a stop " + self.action_timeout +
                      "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:stop rc:ok op_status:complete\" ")
@@ -1010,7 +977,7 @@ class Tests(object):
         test.add_cmd("-c exec -r test_rsc -s 5000 -a start -w -t 4000")
         test.add_cmd("-c cancel -r test_rsc -a start " + self.action_timeout +
                      "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:Cancelled\" ")
-        test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:complete\" -t 5000", CrmExit.TIMEOUT)
+        test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:complete\" -t 5000", ExitStatus.TIMEOUT)
         test.add_cmd("-c unregister_rsc -r test_rsc " + self.action_timeout +
                      "-l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
 
@@ -1054,7 +1021,7 @@ class Tests(object):
                      + self.action_timeout + ' -n '
                      '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete"')
         # this will fail because the monitor notifications should only go to the original caller, which no longer exists.
-        test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" "+self.action_timeout, CrmExit.TIMEOUT)
+        test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" "+self.action_timeout, ExitStatus.TIMEOUT)
         test.add_cmd('-c cancel -r test_rsc -a monitor -i 1s -t 6000 ')
         test.add_cmd("-c unregister_rsc -r \"test_rsc\" "+self.action_timeout+
                      "-l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
@@ -1169,10 +1136,10 @@ class Tests(object):
             if test.executed == 0:
                 continue
 
-            if test.get_exitcode() != CrmExit.OK:
-                sys.exit(CrmExit.ERROR)
+            if test.get_exitcode() != ExitStatus.OK:
+                sys.exit(ExitStatus.ERROR)
 
-        sys.exit(CrmExit.OK)
+        sys.exit(ExitStatus.OK)
 
     def print_results(self):
         """ Print summary of results of executed tests """
@@ -1185,7 +1152,7 @@ class Tests(object):
             if test.executed == 0:
                 continue
 
-            if test.get_exitcode() != CrmExit.OK:
+            if test.get_exitcode() != ExitStatus.OK:
                 failures = failures + 1
                 test.print_result("    ")
             else:
@@ -1233,11 +1200,11 @@ class TestOptions(object):
             elif args[i] == "-w" or args[i] == "--force-wait":
                 self.options['force-wait'] = 1
             elif args[i] == "-R" or args[i] == "--pacemaker-remote":
-                if REMOTE_ENABLED:
+                if BuildOptions.REMOTE_ENABLED:
                     self.options['pacemaker-remote'] = 1
                 else:
                     print("ERROR: This build does not support Pacemaker Remote")
-                    sys.exit(CrmExit.USAGE)
+                    sys.exit(ExitStatus.USAGE)
             elif args[i] == "-r" or args[i] == "--run-only":
                 self.options['run-only'] = args[i+1]
                 skip = 1
@@ -1260,7 +1227,7 @@ def show_usage():
             "\n\t\tDefaults to 2. The value 0 means no limit.")
     print("\t [--force-wait | -w]"
             "\n\t\tEach test case waits the default/specified --timeout for the daemon without tracking the log.")
-    if REMOTE_ENABLED:
+    if BuildOptions.REMOTE_ENABLED:
         print("\t [--pacemaker-remote | -R             Test pacemaker-remoted binary instead of pacemaker-execd")
     print("\t [--run-only-pattern | -p 'string']   Run only tests containing the string value")
     print("\n\tExample: Run only the test 'start_stop'")
@@ -1282,7 +1249,7 @@ def main(argv):
 
     if opts.options['show-usage']:
         show_usage()
-        sys.exit(CrmExit.OK)
+        sys.exit(ExitStatus.OK)
 
     if opts.options['pacemaker-remote']:
         daemon_name = "pacemaker-remoted"
@@ -1306,7 +1273,7 @@ def main(argv):
 
         if opts.options['list-tests']:
             tests.print_list()
-            sys.exit(CrmExit.OK)
+            sys.exit(ExitStatus.OK)
 
         tests.setup_test_environment()
 

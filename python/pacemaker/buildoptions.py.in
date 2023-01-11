@@ -1,0 +1,57 @@
+""" A module providing information on build-time configuration of pacemaker """
+
+__all__ = ["BuildOptions"]
+__copyright__ = "Copyright 2023 the Pacemaker project contributors"
+__license__ = "LGPLv2.1+"
+
+class BuildOptions:
+    """ Variables generated as part of the ./configure && make process.  These
+        affect how pacemaker was configured and where its various parts get
+        installed.
+    """
+
+    BASH_PATH = "@BASH_PATH@"
+    """ Path to the bash shell """
+
+    _BUILD_DIR = "@abs_top_builddir@"
+    """ Top-level build directory
+        NOTE: This is not especially useful on installed systems, but is useful for
+        running various programs from a source checkout
+    """
+
+    CIB_DIR = "@CRM_CONFIG_DIR@"
+    """ Where CIB files are stored """
+
+    COROSYNC_CONFIG_FILE = "@PCMK__COROSYNC_CONF@"
+    """ Path to the corosync config file """
+
+    DAEMON_DIR = "@CRM_DAEMON_DIR@"
+    """ Where Pacemaker daemons are installed """
+
+    DAEMON_USER = "@CRM_DAEMON_USER@"
+    """ User to run Pacemaker daemons as """
+
+    LOCAL_STATE_DIR = "@localstatedir@"
+    """ Where miscellaneous temporary state files are stored """
+
+    LOG_DIR = "@CRM_LOG_DIR@"
+    """ Where Pacemaker log files are stored """
+
+    OCF_RA_INSTALL_DIR = "@OCF_RA_INSTALL_DIR@"
+    """ Where resource agents are installed """
+
+    OCF_ROOT_DIR = "@OCF_ROOT_DIR@"
+    """ Root directory for OCF resource agents and libraries """
+
+    RSC_TMP_DIR = "@CRM_RSCTMP_DIR@"
+    """ Where resource agents should keep state files """
+
+    # pylint: disable=comparison-of-constants
+    REMOTE_ENABLED = "@PC_NAME_GNUTLS@" != ""
+    """ Was Pacemaker Remote support built? """
+
+    SBIN_DIR = "@sbindir@"
+    """ Where administrative programs are installed """
+
+    SCHEMA_DIR = "@CRM_SCHEMA_DIRECTORY@"
+    """ Where Relax-NG schema files are stored """

@@ -2,7 +2,7 @@
 # Original Author: Sun Jiang Dong <sunjd@cn.ibm.com>
 # Copyright 2004 International Business Machines
 #
-# with later changes copyright 2004-2021 the Pacemaker project contributors.
+# with later changes copyright 2004-2023 the Pacemaker project contributors.
 # The version control history for this file may have further details.
 #
 # This source code is licensed under the GNU General Public License version 2
@@ -16,7 +16,11 @@ halibdir	= $(CRM_DAEMON_DIR)
 
 halib_PROGRAMS	= pacemaker-fenced cts-fence-helper
 
-sbin_SCRIPTS	= fence_legacy fence_watchdog
+sbin_SCRIPTS	= fence_watchdog
+
+if BUILD_LHA_SUPPORT
+sbin_SCRIPTS 	+= fence_legacy
+endif
 
 noinst_HEADERS	= pacemaker-fenced.h
 
