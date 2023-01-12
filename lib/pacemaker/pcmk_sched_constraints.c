@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -137,7 +137,8 @@ pcmk__find_constraint_resource(GList *rsc_list, const char *id)
  *         otherwise false
  */
 static bool
-find_constraint_tag(pe_working_set_t *data_set, const char *id, pe_tag_t **tag)
+find_constraint_tag(const pe_working_set_t *data_set, const char *id,
+                    pe_tag_t **tag)
 {
     *tag = NULL;
 
@@ -179,7 +180,7 @@ find_constraint_tag(pe_working_set_t *data_set, const char *id, pe_tag_t **tag)
  * \return true if id refers to a resource (possibly indirectly via a tag)
  */
 bool
-pcmk__valid_resource_or_tag(pe_working_set_t *data_set, const char *id,
+pcmk__valid_resource_or_tag(const pe_working_set_t *data_set, const char *id,
                             pe_resource_t **rsc, pe_tag_t **tag)
 {
     if (rsc != NULL) {
@@ -204,14 +205,14 @@ pcmk__valid_resource_or_tag(pe_working_set_t *data_set, const char *id,
  * entries that list tags rather than resource IDs, and replace any found with
  * resource_ref entries for the corresponding resource IDs.
  *
- * \param[in]  xml_obj       Constraint XML
- * \param[in]  data_set      Cluster working set
+ * \param[in,out] xml_obj   Constraint XML
+ * \param[in]     data_set  Cluster working set
  *
  * \return Equivalent XML with resource tags replaced (or NULL if none)
  * \note It is the caller's responsibility to free the result with free_xml().
  */
 xmlNode *
-pcmk__expand_tags_in_sets(xmlNode *xml_obj, pe_working_set_t *data_set)
+pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pe_working_set_t *data_set)
 {
     xmlNode *new_xml = NULL;
     bool any_refs = false;
@@ -322,15 +323,15 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, pe_working_set_t *data_set)
  * \internal
  * \brief Convert a tag into a resource set of tagged resources
  *
- * \param[in]  xml_obj      Constraint XML
- * \param[out] rsc_set      Where to store resource set XML created based on tag
- * \param[in]  attr         Name of XML attribute containing resource or tag ID
- * \param[in]  convert_rsc  Convert to set even if \p attr references a resource
- * \param[in]  data_set     Cluster working set
+ * \param[in,out] xml_obj      Constraint XML
+ * \param[out]    rsc_set      Where to store resource set XML created based on tag
+ * \param[in]     attr         Name of XML attribute containing resource or tag ID
+ * \param[in]     convert_rsc  Convert to set even if \p attr references a resource
+ * \param[in]     data_set     Cluster working set
  */
 bool
 pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
-                 bool convert_rsc, pe_working_set_t *data_set)
+                 bool convert_rsc, const pe_working_set_t *data_set)
 {
     const char *cons_id = NULL;
     const char *id = NULL;

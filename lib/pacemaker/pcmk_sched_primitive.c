@@ -71,7 +71,7 @@ static enum rsc_role_e rsc_state_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
  * \brief Function to schedule actions needed for a role change
  *
  * \param[in,out] rsc       Resource whose role is changing
- * \param[in]     node      Node where resource will be in its next role
+ * \param[in,out] node      Node where resource will be in its next role
  * \param[in]     optional  Whether scheduled actions should be optional
  */
 typedef void (*rsc_transition_fn)(pe_resource_t *rsc, pe_node_t *node,
@@ -494,7 +494,7 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer)
  * \brief Schedule actions to bring resource down and back to current role
  *
  * \param[in,out] rsc           Resource to restart
- * \param[in]     current       Node that resource should be brought down on
+ * \param[in,out] current       Node that resource should be brought down on
  * \param[in]     need_stop     Whether the resource must be stopped
  * \param[in]     need_promote  Whether the resource must be promoted
  *
@@ -1169,7 +1169,7 @@ stop_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
  * \brief Schedule actions needed to start a resource on a node
  *
  * \param[in,out] rsc       Resource being started
- * \param[in]     node      Node where resource should be started
+ * \param[in,out] node      Node where resource should be started
  * \param[in]     optional  Whether actions should be optional
  */
 static void
@@ -1347,7 +1347,7 @@ pcmk__schedule_cleanup(pe_resource_t *rsc, const pe_node_t *node, bool optional)
  * \param[in,out] xml  Transition graph action attributes XML to add to
  */
 void
-pcmk__primitive_add_graph_meta(pe_resource_t *rsc, xmlNode *xml)
+pcmk__primitive_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml)
 {
     char *name = NULL;
     char *value = NULL;
@@ -1414,13 +1414,12 @@ pcmk__primitive_add_utilization(const pe_resource_t *rsc,
  * \internal
  * \brief Get epoch time of node's shutdown attribute (or now if none)
  *
- * \param[in] node      Node to check
- * \param[in] data_set  Cluster working set
+ * \param[in,out] node  Node to check
  *
  * \return Epoch time corresponding to shutdown attribute if set or now if not
  */
 static time_t
-shutdown_time(const pe_node_t *node)
+shutdown_time(pe_node_t *node)
 {
     const char *shutdown = pe_node_attribute_raw(node, XML_CIB_ATTR_SHUTDOWN);
     time_t result = 0;
@@ -1439,13 +1438,13 @@ shutdown_time(const pe_node_t *node)
  * \internal
  * \brief Ban a resource from a node if it's not locked to the node
  *
- * \param[in] data  Node to check
- * \param[in] user_data  Resource to check
+ * \param[in]     data       Node to check
+ * \param[in,out] user_data  Resource to check
  */
 static void
 ban_if_not_locked(gpointer data, gpointer user_data)
 {
-    pe_node_t *node = (pe_node_t *) data;
+    const pe_node_t *node = (const pe_node_t *) data;
     pe_resource_t *rsc = (pe_resource_t *) user_data;
 
     if (strcmp(node->details->uname, rsc->lock_node->details->uname) != 0) {

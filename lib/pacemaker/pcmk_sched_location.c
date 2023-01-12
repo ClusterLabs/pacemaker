@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -523,12 +523,12 @@ pcmk__unpack_location(xmlNode *xml_obj, pe_working_set_t *data_set)
  * \internal
  * \brief Add a new location constraint to a cluster working set
  *
- * \param[in] id             XML ID of location constraint
- * \param[in] rsc            Resource in location constraint
- * \param[in] node_weight    Constraint score
- * \param[in] discover_mode  Resource discovery option for constraint
- * \param[in] node           Node in location constraint (or NULL if rule-based)
- * \param[in] data_set       Cluster working set to add constraint to
+ * \param[in]     id             XML ID of location constraint
+ * \param[in,out] rsc            Resource in location constraint
+ * \param[in]     node_weight    Constraint score
+ * \param[in]     discover_mode  Resource discovery option for constraint
+ * \param[in]     node           Node in constraint (or NULL if rule-based)
+ * \param[in,out] data_set       Cluster working set to add constraint to
  *
  * \return Newly allocated location constraint
  * \note The result will be added to \p data_set and should not be freed
@@ -595,7 +595,7 @@ pcmk__new_location(const char *id, pe_resource_t *rsc,
  * \internal
  * \brief Apply all location constraints
  *
- * \param[in] data_set       Cluster working set
+ * \param[in,out] data_set       Cluster working set
  */
 void
 pcmk__apply_locations(pe_working_set_t *data_set)

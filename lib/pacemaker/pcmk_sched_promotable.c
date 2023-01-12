@@ -18,9 +18,9 @@
  * \internal
  * \brief Add implicit promotion ordering for a promotable instance
  *
- * \param[in] clone  Clone resource
- * \param[in] child  Instance of \p clone being ordered
- * \param[in] last   Previous instance ordered (NULL if \p child is first)
+ * \param[in,out] clone  Clone resource
+ * \param[in,out] child  Instance of \p clone being ordered
+ * \param[in,out] last   Previous instance ordered (NULL if \p child is first)
  */
 static void
 order_instance_promotion(pe_resource_t *clone, pe_resource_t *child,
@@ -43,9 +43,9 @@ order_instance_promotion(pe_resource_t *clone, pe_resource_t *child,
  * \internal
  * \brief Add implicit demotion ordering for a promotable instance
  *
- * \param[in] clone  Clone resource
- * \param[in] child  Instance of \p clone being ordered
- * \param[in] last   Previous instance ordered (NULL if \p child is first)
+ * \param[in,out] clone  Clone resource
+ * \param[in,out] child  Instance of \p clone being ordered
+ * \param[in]     last   Previous instance ordered (NULL if \p child is first)
  */
 static void
 order_instance_demotion(pe_resource_t *clone, pe_resource_t *child,
@@ -68,26 +68,26 @@ order_instance_demotion(pe_resource_t *clone, pe_resource_t *child,
  * \internal
  * \brief Check whether an instance will be promoted or demoted
  *
- * \param[in] rsc        Instance to check
- * \param[in] demoting   If \p rsc will be demoted, this will be set to true
- * \param[in] promoting  If \p rsc will be promoted, this will be set to true
+ * \param[in]  rsc        Instance to check
+ * \param[out] demoting   If \p rsc will be demoted, this will be set to true
+ * \param[out] promoting  If \p rsc will be promoted, this will be set to true
  */
 static void
-check_for_role_change(pe_resource_t *rsc, bool *demoting, bool *promoting)
+check_for_role_change(const pe_resource_t *rsc, bool *demoting, bool *promoting)
 {
-    GList *iter = NULL;
+    const GList *iter = NULL;
 
     // If this is a cloned group, check group members recursively
     if (rsc->children != NULL) {
         for (iter = rsc->children; iter != NULL; iter = iter->next) {
-            check_for_role_change((pe_resource_t *) iter->data,
+            check_for_role_change((const pe_resource_t *) iter->data,
                                   demoting, promoting);
         }
         return;
     }
 
     for (iter = rsc->actions; iter != NULL; iter = iter->next) {
-        pe_action_t *action = (pe_action_t *) iter->data;
+        const pe_action_t *action = (const pe_action_t *) iter->data;
 
         if (*promoting && *demoting) {
             return;
@@ -112,16 +112,17 @@ check_for_role_change(pe_resource_t *rsc, bool *demoting, bool *promoting)
  * location constraints in a list that are both limited to the promoted role and
  * for the node where the instance will be placed.
  *
- * \param[in] child                 Promotable clone instance
- * \param[in] location_constraints  List of location constraints to apply
- * \param[in] chosen                Node where \p child will be placed
+ * \param[in,out] child                 Promotable clone instance
+ * \param[in]     location_constraints  List of location constraints to apply
+ * \param[in]     chosen                Node where \p child will be placed
  */
 static void
-apply_promoted_locations(pe_resource_t *child, GList *location_constraints,
-                         pe_node_t *chosen)
+apply_promoted_locations(pe_resource_t *child,
+                         const GList *location_constraints,
+                         const pe_node_t *chosen)
 {
-    for (GList *iter = location_constraints; iter; iter = iter->next) {
-        pe__location_t *location = iter->data;
+    for (const GList *iter = location_constraints; iter; iter = iter->next) {
+        const pe__location_t *location = iter->data;
         pe_node_t *weighted_node = NULL;
 
         if (location->role_filter == RSC_ROLE_PROMOTED) {
@@ -151,7 +152,7 @@ apply_promoted_locations(pe_resource_t *child, GList *location_constraints,
  * \return Node that \p rsc will be promoted on, or NULL if none
  */
 static pe_node_t *
-node_to_be_promoted_on(pe_resource_t *rsc)
+node_to_be_promoted_on(const pe_resource_t *rsc)
 {
     pe_node_t *node = NULL;
     pe_node_t *local_node = NULL;
@@ -291,17 +292,17 @@ cmp_promotable_instance(gconstpointer a, gconstpointer b)
  * preferences and scores of relevant location constraints for the promoted
  * role) to the node weight of the instance's allocated node.
  *
- * \param[in] data       Promotable clone instance
- * \param[in] user_data  Clone parent of \p data
+ * \param[in]     data       Promotable clone instance
+ * \param[in,out] user_data  Clone parent of \p data
  */
 static void
 add_sort_index_to_node_weight(gpointer data, gpointer user_data)
 {
-    pe_resource_t *child = (pe_resource_t *) data;
+    const pe_resource_t *child = (const pe_resource_t *) data;
     pe_resource_t *clone = (pe_resource_t *) user_data;
 
     pe_node_t *node = NULL;
-    pe_node_t *chosen = NULL;
+    const pe_node_t *chosen = NULL;
 
     if (child->sort_index < 0) {
         pe_rsc_trace(clone, "Not adding sort index of %s: negative", child->id);
@@ -328,8 +329,8 @@ add_sort_index_to_node_weight(gpointer data, gpointer user_data)
  * \internal
  * \brief Apply colocation to dependent's node weights if for promoted role
  *
- * \param[in] data       Colocation constraint to apply
- * \param[in] user_data  Promotable clone that is constraint's dependent
+ * \param[in,out] data       Colocation constraint to apply
+ * \param[in,out] user_data  Promotable clone that is constraint's dependent
  */
 static void
 apply_coloc_to_dependent(gpointer data, gpointer user_data)
@@ -358,8 +359,8 @@ apply_coloc_to_dependent(gpointer data, gpointer user_data)
  * \internal
  * \brief Apply colocation to primary's node weights if for promoted role
  *
- * \param[in] data       Colocation constraint to apply
- * \param[in] user_data  Promotable clone that is constraint's primary
+ * \param[in,out] data       Colocation constraint to apply
+ * \param[in,out] user_data  Promotable clone that is constraint's primary
  */
 static void
 apply_coloc_to_primary(gpointer data, gpointer user_data)
@@ -388,14 +389,14 @@ apply_coloc_to_primary(gpointer data, gpointer user_data)
  * \internal
  * \brief Set clone instance's sort index to its node's weight
  *
- * \param[in] data       Promotable clone instance
- * \param[in] user_data  Parent clone of \p data
+ * \param[in,out] data       Promotable clone instance
+ * \param[in]     user_data  Parent clone of \p data
  */
 static void
 set_sort_index_to_node_weight(gpointer data, gpointer user_data)
 {
     pe_resource_t *child = (pe_resource_t *) data;
-    pe_resource_t *clone = (pe_resource_t *) user_data;
+    const pe_resource_t *clone = (const pe_resource_t *) user_data;
 
     pe_node_t *chosen = child->fns->location(child, NULL, FALSE);
 
@@ -412,10 +413,9 @@ set_sort_index_to_node_weight(gpointer data, gpointer user_data)
                      child->id, child->sort_index);
 
     } else {
-        pe_node_t *node = NULL;
+        const pe_node_t *node = NULL;
 
-        node = (pe_node_t *) pe_hash_table_lookup(clone->allowed_nodes,
-                                                  chosen->details->id);
+        node = pe_hash_table_lookup(clone->allowed_nodes, chosen->details->id);
         CRM_ASSERT(node != NULL);
 
         child->sort_index = node->weight;
@@ -429,7 +429,7 @@ set_sort_index_to_node_weight(gpointer data, gpointer user_data)
  * \internal
  * \brief Sort a promotable clone's instances by descending promotion priority
  *
- * \param[in] clone  Promotable clone to sort
+ * \param[in,out] clone  Promotable clone to sort
  */
 static void
 sort_promotable_instances(pe_resource_t *clone)
@@ -479,7 +479,7 @@ sort_promotable_instances(pe_resource_t *clone)
  * \return
  */
 static pe_resource_t *
-find_active_anon_instance(pe_resource_t *clone, const char *id,
+find_active_anon_instance(const pe_resource_t *clone, const char *id,
                           const pe_node_t *node)
 {
     for (GList *iter = clone->children; iter; iter = iter->next) {
@@ -555,10 +555,10 @@ is_allowed(const pe_resource_t *rsc, const pe_node_t *node)
  *         otherwise false
  */
 static bool
-promotion_score_applies(pe_resource_t *rsc, const pe_node_t *node)
+promotion_score_applies(const pe_resource_t *rsc, const pe_node_t *node)
 {
     char *id = clone_strip(rsc->id);
-    pe_resource_t *parent = uber_parent(rsc);
+    const pe_resource_t *parent = pe__const_top_resource(rsc, false);
     pe_resource_t *active = NULL;
     const char *reason = "allowed";
 
@@ -629,7 +629,7 @@ check_allowed:
  * \return Value of promotion score node attribute for \p rsc on \p node
  */
 static const char *
-promotion_attr_value(pe_resource_t *rsc, const pe_node_t *node,
+promotion_attr_value(const pe_resource_t *rsc, const pe_node_t *node,
                      const char *name)
 {
     char *attr_name = NULL;
@@ -654,7 +654,8 @@ promotion_attr_value(pe_resource_t *rsc, const pe_node_t *node,
  * \return Promotion score for \p rsc on \p node (or 0 if none)
  */
 static int
-promotion_score(pe_resource_t *rsc, const pe_node_t *node, bool *is_default)
+promotion_score(const pe_resource_t *rsc, const pe_node_t *node,
+                bool *is_default)
 {
     char *name = NULL;
     const char *attr_value = NULL;
@@ -671,8 +672,10 @@ promotion_score(pe_resource_t *rsc, const pe_node_t *node, bool *is_default)
     if (rsc->children != NULL) {
         int score = 0;
 
-        for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
-            pe_resource_t *child = (pe_resource_t *) iter->data;
+        for (const GList *iter = rsc->children;
+             iter != NULL; iter = iter->next) {
+
+            const pe_resource_t *child = (const pe_resource_t *) iter->data;
             bool child_default = false;
             int child_score = promotion_score(child, node, &child_default);
 
@@ -727,7 +730,7 @@ promotion_score(pe_resource_t *rsc, const pe_node_t *node, bool *is_default)
  * \internal
  * \brief Include promotion scores in instances' node weights and priorities
  *
- * \param[in] rsc  Promotable clone resource to update
+ * \param[in,out] rsc  Promotable clone resource to update
  */
 void
 pcmk__add_promotion_scores(pe_resource_t *rsc)
@@ -779,8 +782,8 @@ pcmk__add_promotion_scores(pe_resource_t *rsc)
  * \internal
  * \brief If a resource's current role is started, change it to unpromoted
  *
- * \param[in] data       Resource to update
- * \param[in] user_data  Ignored
+ * \param[in,out] data       Resource to update
+ * \param[in]     user_data  Ignored
  */
 static void
 set_current_role_unpromoted(void *data, void *user_data)
@@ -798,8 +801,8 @@ set_current_role_unpromoted(void *data, void *user_data)
  * \internal
  * \brief Set a resource's next role to unpromoted (or stopped if unassigned)
  *
- * \param[in] data       Resource to update
- * \param[in] user_data  Ignored
+ * \param[in,out] data       Resource to update
+ * \param[in]     user_data  Ignored
  */
 static void
 set_next_role_unpromoted(void *data, void *user_data)
@@ -821,8 +824,8 @@ set_next_role_unpromoted(void *data, void *user_data)
  * \internal
  * \brief Set a resource's next role to promoted if not already set
  *
- * \param[in] data       Resource to update
- * \param[in] user_data  Ignored
+ * \param[in,out] data       Resource to update
+ * \param[in]     user_data  Ignored
  */
 static void
 set_next_role_promoted(void *data, gpointer user_data)
@@ -839,7 +842,7 @@ set_next_role_promoted(void *data, gpointer user_data)
  * \internal
  * \brief Show instance's promotion score on node where it will be active
  *
- * \param[in] instance  Promotable clone instance to show
+ * \param[in,out] instance  Promotable clone instance to show
  */
 static void
 show_promotion_score(pe_resource_t *instance)
@@ -867,15 +870,15 @@ show_promotion_score(pe_resource_t *instance)
  * \internal
  * \brief Set a clone instance's promotion priority
  *
- * \param[in] data       Promotable clone instance to update
- * \param[in] user_data  Instance's parent clone
+ * \param[in,out] data       Promotable clone instance to update
+ * \param[in]     user_data  Instance's parent clone
  */
 static void
 set_instance_priority(gpointer data, gpointer user_data)
 {
     pe_resource_t *instance = (pe_resource_t *) data;
-    pe_resource_t *clone = (pe_resource_t *) user_data;
-    pe_node_t *chosen = NULL;
+    const pe_resource_t *clone = (const pe_resource_t *) user_data;
+    const pe_node_t *chosen = NULL;
     enum rsc_role_e next_role = RSC_ROLE_UNKNOWN;
     GList *list = NULL;
 
@@ -958,8 +961,8 @@ set_instance_priority(gpointer data, gpointer user_data)
  * \internal
  * \brief Set a promotable clone instance's role
  *
- * \param[in] data       Promotable clone instance to update
- * \param[in] user_data  Pointer to count of instances chosen for promotion
+ * \param[in,out] data       Promotable clone instance to update
+ * \param[in,out] user_data  Pointer to count of instances chosen for promotion
  */
 static void
 set_instance_role(gpointer data, gpointer user_data)
@@ -1007,7 +1010,7 @@ set_instance_role(gpointer data, gpointer user_data)
  * \internal
  * \brief Set roles for all instances of a promotable clone
  *
- * \param[in] clone  Promotable clone resource to update
+ * \param[in,out] rsc  Promotable clone resource to update
  */
 void
 pcmk__set_instance_roles(pe_resource_t *rsc)
@@ -1037,9 +1040,9 @@ pcmk__set_instance_roles(pe_resource_t *rsc)
  * \internal
  * \brief Create actions for promotable clone instances
  *
- * \param[in]  clone          Promotable clone to create actions for
- * \param[out] any_promoting  Will be set true if any instance is promoting
- * \param[out] any_demoting   Will be set true if any instance is demoting
+ * \param[in,out] clone          Promotable clone to create actions for
+ * \param[out]    any_promoting  Will be set true if any instance is promoting
+ * \param[out]    any_demoting   Will be set true if any instance is demoting
  */
 static void
 create_promotable_instance_actions(pe_resource_t *clone,
@@ -1061,7 +1064,7 @@ create_promotable_instance_actions(pe_resource_t *clone,
  * priority (after promotion actions are scheduled, when instance priorities
  * were repurposed as promotion scores).
  *
- * \param[in] clone  Promotable clone to reset
+ * \param[in,out] clone  Promotable clone to reset
  */
 static void
 reset_instance_priorities(pe_resource_t *clone)
@@ -1077,7 +1080,7 @@ reset_instance_priorities(pe_resource_t *clone)
  * \internal
  * \brief Create actions specific to promotable clones
  *
- * \param[in] clone  Promotable clone to create actions for
+ * \param[in,out] clone  Promotable clone to create actions for
  */
 void
 pcmk__create_promotable_actions(pe_resource_t *clone)
@@ -1099,7 +1102,7 @@ pcmk__create_promotable_actions(pe_resource_t *clone)
  * \internal
  * \brief Create internal orderings for a promotable clone's instances
  *
- * \param[in] clone  Promotable clone instance to order
+ * \param[in,out] clone  Promotable clone instance to order
  */
 void
 pcmk__order_promotable_instances(pe_resource_t *clone)

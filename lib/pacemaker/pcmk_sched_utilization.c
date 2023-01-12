@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2022 the Pacemaker project contributors
+ * Copyright 2014-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -60,9 +60,9 @@ struct compare_data {
  * the first node has greater capacity, and decrementing it if the second node
  * has greater capacity.
  *
- * \param[in] key        Utilization attribute name to compare
- * \param[in] value      Utilization attribute value to compare
- * \param[in] user_data  Comparison data (as struct compare_data*)
+ * \param[in]     key        Utilization attribute name to compare
+ * \param[in]     value      Utilization attribute value to compare
+ * \param[in,out] user_data  Comparison data (as struct compare_data*)
  */
 static void
 compare_utilization_value(gpointer key, gpointer value, gpointer user_data)
@@ -137,9 +137,9 @@ struct calculate_data {
  * \internal
  * \brief Update a single utilization attribute with a new value
  *
- * \param[in] key        Name of utilization attribute to update
- * \param[in] value      Value to add or substract
- * \param[in] user_data  Calculation data (as struct calculate_data *)
+ * \param[in]     key        Name of utilization attribute to update
+ * \param[in]     value      Value to add or substract
+ * \param[in,out] user_data  Calculation data (as struct calculate_data *)
  */
 static void
 update_utilization_value(gpointer key, gpointer value, gpointer user_data)
@@ -162,11 +162,12 @@ update_utilization_value(gpointer key, gpointer value, gpointer user_data)
  * \internal
  * \brief Subtract a resource's utilization from node capacity
  *
- * \param[in] current_utilization  Current node utilization attributes
- * \param[in] rsc                  Resource with utilization to subtract
+ * \param[in,out] current_utilization  Current node utilization attributes
+ * \param[in]     rsc                  Resource with utilization to subtract
  */
 void
-pcmk__consume_node_capacity(GHashTable *current_utilization, pe_resource_t *rsc)
+pcmk__consume_node_capacity(GHashTable *current_utilization,
+                            const pe_resource_t *rsc)
 {
     struct calculate_data data = {
         .current_utilization = current_utilization,
@@ -180,8 +181,8 @@ pcmk__consume_node_capacity(GHashTable *current_utilization, pe_resource_t *rsc)
  * \internal
  * \brief Add a resource's utilization to node capacity
  *
- * \param[in] current_utilization  Current node utilization attributes
- * \param[in] rsc                  Resource with utilization to add
+ * \param[in,out] current_utilization  Current node utilization attributes
+ * \param[in]     rsc                  Resource with utilization to add
  */
 void
 pcmk__release_node_capacity(GHashTable *current_utilization,
@@ -201,7 +202,7 @@ pcmk__release_node_capacity(GHashTable *current_utilization,
  */
 
 struct capacity_data {
-    pe_node_t *node;
+    const pe_node_t *node;
     const char *rsc_id;
     bool is_enough;
 };
@@ -210,9 +211,9 @@ struct capacity_data {
  * \internal
  * \brief Check whether a single utilization attribute has sufficient capacity
  *
- * \param[in] key        Name of utilization attribute to check
- * \param[in] value      Amount of utilization required
- * \param[in] user_data  Capacity data (as struct capacity_data *)
+ * \param[in]     key        Name of utilization attribute to check
+ * \param[in]     value      Amount of utilization required
+ * \param[in,out] user_data  Capacity data (as struct capacity_data *)
  */
 static void
 check_capacity(gpointer key, gpointer value, gpointer user_data)
@@ -247,7 +248,7 @@ check_capacity(gpointer key, gpointer value, gpointer user_data)
  * \return true if node has sufficient capacity for resource, otherwise false
  */
 static bool
-have_enough_capacity(pe_node_t *node, const char *rsc_id,
+have_enough_capacity(const pe_node_t *node, const char *rsc_id,
                      GHashTable *utilization)
 {
     struct capacity_data data = {
@@ -272,7 +273,7 @@ have_enough_capacity(pe_node_t *node, const char *rsc_id,
  *       g_hash_table_destroy().
  */
 static GHashTable *
-sum_resource_utilization(pe_resource_t *orig_rsc, GList *rscs)
+sum_resource_utilization(const pe_resource_t *orig_rsc, GList *rscs)
 {
     GHashTable *utilization = pcmk__strkey_table(free, free);
 
@@ -288,7 +289,7 @@ sum_resource_utilization(pe_resource_t *orig_rsc, GList *rscs)
  * \internal
  * \brief Ban resource from nodes with insufficient utilization capacity
  *
- * \param[in] rsc  Resource to check
+ * \param[in,out] rsc  Resource to check
  *
  * \return Allowed node for \p rsc with most spare capacity, if there are no
  *         nodes with enough capacity for \p rsc and all its colocated resources
@@ -388,8 +389,8 @@ pcmk__ban_insufficient_capacity(pe_resource_t *rsc)
  * \internal
  * \brief Create a new load_stopped pseudo-op for a node
  *
- * \param[in] node      Node to create op for
- * \param[in] data_set  Cluster working set
+ * \param[in]     node      Node to create op for
+ * \param[in,out] data_set  Cluster working set
  *
  * \return Newly created load_stopped op
  */
@@ -412,14 +413,15 @@ new_load_stopped_op(const pe_node_t *node, pe_working_set_t *data_set)
  * \internal
  * \brief Create utilization-related internal constraints for a resource
  *
- * \param[in] rsc            Resource to create constraints for
- * \param[in] allowed_nodes  List of allowed next nodes for \p rsc
+ * \param[in,out] rsc            Resource to create constraints for
+ * \param[in]     allowed_nodes  List of allowed next nodes for \p rsc
  */
 void
-pcmk__create_utilization_constraints(pe_resource_t *rsc, GList *allowed_nodes)
+pcmk__create_utilization_constraints(pe_resource_t *rsc,
+                                     const GList *allowed_nodes)
 {
-    GList *iter = NULL;
-    pe_node_t *node = NULL;
+    const GList *iter = NULL;
+    const pe_node_t *node = NULL;
     pe_action_t *load_stopped = NULL;
 
     pe_rsc_trace(rsc, "Creating utilization constraints for %s - strategy: %s",
@@ -427,15 +429,15 @@ pcmk__create_utilization_constraints(pe_resource_t *rsc, GList *allowed_nodes)
 
     // "stop rsc then load_stopped" constraints for current nodes
     for (iter = rsc->running_on; iter != NULL; iter = iter->next) {
-        node = (pe_node_t *) iter->data;
+        node = (const pe_node_t *) iter->data;
         load_stopped = new_load_stopped_op(node, rsc->cluster);
         pcmk__new_ordering(rsc, stop_key(rsc), NULL, NULL, NULL, load_stopped,
                            pe_order_load, rsc->cluster);
     }
 
     // "load_stopped then start/migrate_to rsc" constraints for allowed nodes
-    for (GList *iter = allowed_nodes; iter; iter = iter->next) {
-        node = (pe_node_t *) iter->data;
+    for (iter = allowed_nodes; iter; iter = iter->next) {
+        node = (const pe_node_t *) iter->data;
         load_stopped = new_load_stopped_op(node, rsc->cluster);
         pcmk__new_ordering(NULL, NULL, load_stopped, rsc, start_key(rsc), NULL,
                            pe_order_load, rsc->cluster);
@@ -449,8 +451,8 @@ pcmk__create_utilization_constraints(pe_resource_t *rsc, GList *allowed_nodes)
  * \internal
  * \brief Output node capacities if enabled
  *
- * \param[in] desc      Prefix for output
- * \param[in] data_set  Cluster working set
+ * \param[in]     desc      Prefix for output
+ * \param[in,out] data_set  Cluster working set
  */
 void
 pcmk__show_node_capacities(const char *desc, pe_working_set_t *data_set)
@@ -458,8 +460,8 @@ pcmk__show_node_capacities(const char *desc, pe_working_set_t *data_set)
     if (!pcmk_is_set(data_set->flags, pe_flag_show_utilization)) {
         return;
     }
-    for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
-        pe_node_t *node = (pe_node_t *) iter->data;
+    for (const GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
+        const pe_node_t *node = (const pe_node_t *) iter->data;
         pcmk__output_t *out = data_set->priv;
 
         out->message(out, "node-capacity", node, desc);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -40,7 +40,7 @@ enum pe_action_flags clone_action_flags(pe_action_t *action,
                                         const pe_node_t *node);
 void clone_expand(pe_resource_t *rsc);
 bool clone_create_probe(pe_resource_t *rsc, pe_node_t *node);
-extern void clone_append_meta(pe_resource_t * rsc, xmlNode * xml);
+void clone_append_meta(const pe_resource_t *rsc, xmlNode *xml);
 void pcmk__clone_add_utilization(const pe_resource_t *rsc,
                                  const pe_resource_t *orig_rsc,
                                  GList *all_rscs, GHashTable *utilization);

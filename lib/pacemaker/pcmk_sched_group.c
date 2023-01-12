@@ -671,10 +671,11 @@ pcmk__group_apply_location(pe_resource_t *rsc, pe__location_t *location)
 
 // Group implementation of resource_alloc_functions_t:colocated_resources()
 GList *
-pcmk__group_colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
+pcmk__group_colocated_resources(const pe_resource_t *rsc,
+                                const pe_resource_t *orig_rsc,
                                 GList *colocated_rscs)
 {
-    pe_resource_t *member = NULL;
+    const pe_resource_t *member = NULL;
 
     CRM_ASSERT(rsc != NULL);
 
@@ -687,8 +688,10 @@ pcmk__group_colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
         /* This group has colocated members and/or is cloned -- either way,
          * add every child's colocated resources to the list.
          */
-        for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
-            member = (pe_resource_t *) iter->data;
+        for (const GList *iter = rsc->children;
+             iter != NULL; iter = iter->next) {
+
+            member = (const pe_resource_t *) iter->data;
             colocated_rscs = member->cmds->colocated_resources(member, orig_rsc,
                                                                colocated_rscs);
         }
@@ -697,7 +700,7 @@ pcmk__group_colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
         /* This group's members are not colocated, and the group is not cloned,
          * so just add the first child's colocations to the list.
          */
-        member = (pe_resource_t *) rsc->children->data;
+        member = (const pe_resource_t *) rsc->children->data;
         colocated_rscs = member->cmds->colocated_resources(member, orig_rsc,
                                                            colocated_rscs);
     }

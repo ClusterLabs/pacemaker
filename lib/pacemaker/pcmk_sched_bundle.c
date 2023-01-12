@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -922,7 +922,7 @@ pcmk__bundle_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
  * \internal
  * \brief Add a resource's actions to the transition graph
  *
- * \param[in] rsc  Resource whose actions should be added
+ * \param[in,out] rsc  Resource whose actions should be added
  */
 void
 pcmk__bundle_expand(pe_resource_t *rsc)
@@ -1001,8 +1001,8 @@ pcmk__bundle_expand(pe_resource_t *rsc)
  *
  * \brief Schedule any probes needed for a resource on a node
  *
- * \param[in] rsc   Resource to create probe for
- * \param[in] node  Node to create probe on
+ * \param[in,out] rsc   Resource to create probe for
+ * \param[in,out] node  Node to create probe on
  *
  * \return true if any probe was created, otherwise false
  */

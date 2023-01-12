@@ -77,8 +77,8 @@ struct resource_alloc_functions_s {
      * \internal
      * \brief Schedule any probes needed for a resource on a node
      *
-     * \param[in] rsc   Resource to create probe for
-     * \param[in] node  Node to create probe on
+     * \param[in,out] rsc   Resource to create probe for
+     * \param[in,out] node  Node to create probe on
      *
      * \return true if any probe was created, otherwise false
      */
@@ -117,9 +117,9 @@ struct resource_alloc_functions_s {
      * Given a resource, create a list of all resources involved in mandatory
      * colocations with it, whether directly or indirectly via chained colocations.
      *
-     * \param[in] rsc             Resource to add to colocated list
-     * \param[in] orig_rsc        Resource originally requested
-     * \param[in] colocated_rscs  Existing list
+     * \param[in]     rsc             Resource to add to colocated list
+     * \param[in]     orig_rsc        Resource originally requested
+     * \param[in,out] colocated_rscs  Existing list
      *
      * \return List of given resource and all resources involved in colocations
      *
@@ -127,7 +127,8 @@ struct resource_alloc_functions_s {
      *       \p colocated_rscs and \p orig_rsc, and the desired resource as
      *       \p rsc. The recursive calls will use other values.
      */
-    GList *(*colocated_resources)(pe_resource_t *rsc, pe_resource_t *orig_rsc,
+    GList *(*colocated_resources)(const pe_resource_t *rsc,
+                                  const pe_resource_t *orig_rsc,
                                   GList *colocated_rscs);
 
     /*!
@@ -187,7 +188,7 @@ struct resource_alloc_functions_s {
      * \internal
      * \brief Add a resource's actions to the transition graph
      *
-     * \param[in] rsc  Resource whose actions should be added
+     * \param[in,out] rsc  Resource whose actions should be added
      */
     void (*add_actions_to_graph)(pe_resource_t *rsc);
 
@@ -201,7 +202,7 @@ struct resource_alloc_functions_s {
      * \param[in]     rsc  Resource whose meta-attributes should be added
      * \param[in,out] xml  Transition graph action attributes XML to add to
      */
-    void (*add_graph_meta)(pe_resource_t *rsc, xmlNode *xml);
+    void (*add_graph_meta)(const pe_resource_t *rsc, xmlNode *xml);
 
     /*!
      * \internal
@@ -226,7 +227,7 @@ struct resource_alloc_functions_s {
      * \internal
      * \brief Apply a shutdown lock for a resource, if appropriate
      *
-     * \param[in] rsc       Resource to check for shutdown lock
+     * \param[in,out] rsc       Resource to check for shutdown lock
      */
     void (*shutdown_lock)(pe_resource_t *rsc);
 };
@@ -309,14 +310,14 @@ G_GNUC_INTERNAL
 void pcmk__order_vs_fence(pe_action_t *stonith_op, pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-void pcmk__order_vs_unfence(pe_resource_t *rsc, pe_node_t *node,
+void pcmk__order_vs_unfence(const pe_resource_t *rsc, pe_node_t *node,
                             pe_action_t *action, enum pe_ordering order);
 
 G_GNUC_INTERNAL
 void pcmk__fence_guest(pe_node_t *node);
 
 G_GNUC_INTERNAL
-bool pcmk__node_unfenced(pe_node_t *node);
+bool pcmk__node_unfenced(const pe_node_t *node);
 
 G_GNUC_INTERNAL
 void pcmk__order_restart_vs_unfence(gpointer data, gpointer user_data);
@@ -335,15 +336,16 @@ pe_resource_t *pcmk__find_constraint_resource(GList *rsc_list, const char *id);
 
 G_GNUC_INTERNAL
 xmlNode *pcmk__expand_tags_in_sets(xmlNode *xml_obj,
-                                   pe_working_set_t *data_set);
+                                   const pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-bool pcmk__valid_resource_or_tag(pe_working_set_t *data_set, const char *id,
-                                 pe_resource_t **rsc, pe_tag_t **tag);
+bool pcmk__valid_resource_or_tag(const pe_working_set_t *data_set,
+                                 const char *id, pe_resource_t **rsc,
+                                 pe_tag_t **tag);
 
 G_GNUC_INTERNAL
 bool pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
-                      bool convert_rsc, pe_working_set_t *data_set);
+                      bool convert_rsc, const pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
 void pcmk__create_internal_constraints(pe_working_set_t *data_set);
@@ -400,10 +402,12 @@ G_GNUC_INTERNAL
 void pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-void pcmk__add_this_with(pe_resource_t *rsc, pcmk__colocation_t *colocation);
+void pcmk__add_this_with(pe_resource_t *rsc,
+                         const pcmk__colocation_t *colocation);
 
 G_GNUC_INTERNAL
-void pcmk__add_with_this(pe_resource_t *rsc, pcmk__colocation_t *colocation);
+void pcmk__add_with_this(pe_resource_t *rsc,
+                         const pcmk__colocation_t *colocation);
 
 G_GNUC_INTERNAL
 void pcmk__new_colocation(const char *id, const char *node_attr, int score,
@@ -489,12 +493,11 @@ void pcmk__order_after_each(pe_action_t *after, GList *list);
  * \internal
  * \brief Create a new ordering between two resource actions
  *
- * \param[in] first_rsc   Resource for 'first' action
- * \param[in] then_rsc    Resource for 'then' action
- * \param[in] first_task  Action key for 'first' action
- * \param[in] then_task   Action key for 'then' action
- * \param[in] flags       Bitmask of enum pe_ordering flags
- * \param[in] data_set    Cluster working set to add ordering to
+ * \param[in,out] first_rsc   Resource for 'first' action
+ * \param[in,out] first_task  Action key for 'first' action
+ * \param[in]     then_rsc    Resource for 'then' action
+ * \param[in,out] then_task   Action key for 'then' action
+ * \param[in]     flags       Bitmask of enum pe_ordering flags
  */
 #define pcmk__order_resource_actions(first_rsc, first_task,                 \
                                      then_rsc, then_task, flags)            \
@@ -599,7 +602,7 @@ void pcmk__schedule_cleanup(pe_resource_t *rsc, const pe_node_t *node,
                             bool optional);
 
 G_GNUC_INTERNAL
-void pcmk__primitive_add_graph_meta(pe_resource_t *rsc, xmlNode *xml);
+void pcmk__primitive_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml);
 
 G_GNUC_INTERNAL
 void pcmk__primitive_add_utilization(const pe_resource_t *rsc,
@@ -643,8 +646,8 @@ uint32_t pcmk__group_update_ordered_actions(pe_action_t *first,
                                             pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-GList *pcmk__group_colocated_resources(pe_resource_t *rsc,
-                                       pe_resource_t *orig_rsc,
+GList *pcmk__group_colocated_resources(const pe_resource_t *rsc,
+                                       const pe_resource_t *orig_rsc,
                                        GList *colocated_rscs);
 
 G_GNUC_INTERNAL
@@ -736,14 +739,15 @@ bool pcmk__rsc_agent_changed(pe_resource_t *rsc, pe_node_t *node,
                              const xmlNode *rsc_entry, bool active_on_node);
 
 G_GNUC_INTERNAL
-GList *pcmk__rscs_matching_id(const char *id, pe_working_set_t *data_set);
+GList *pcmk__rscs_matching_id(const char *id, const pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-GList *pcmk__colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
+GList *pcmk__colocated_resources(const pe_resource_t *rsc,
+                                 const pe_resource_t *orig_rsc,
                                  GList *colocated_rscs);
 
 G_GNUC_INTERNAL
-void pcmk__noop_add_graph_meta(pe_resource_t *rsc, xmlNode *xml);
+void pcmk__noop_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml);
 
 G_GNUC_INTERNAL
 void pcmk__output_resource_actions(pe_resource_t *rsc);
@@ -759,7 +763,7 @@ G_GNUC_INTERNAL
 void pcmk__unassign_resource(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
-bool pcmk__threshold_reached(pe_resource_t *rsc, pe_node_t *node,
+bool pcmk__threshold_reached(pe_resource_t *rsc, const pe_node_t *node,
                              pe_resource_t **failed);
 
 G_GNUC_INTERNAL
@@ -807,7 +811,7 @@ int pcmk__compare_node_capacities(const pe_node_t *node1,
 
 G_GNUC_INTERNAL
 void pcmk__consume_node_capacity(GHashTable *current_utilization,
-                                 pe_resource_t *rsc);
+                                 const pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
 void pcmk__release_node_capacity(GHashTable *current_utilization,
@@ -818,7 +822,7 @@ const pe_node_t *pcmk__ban_insufficient_capacity(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
 void pcmk__create_utilization_constraints(pe_resource_t *rsc,
-                                          GList *allowed_nodes);
+                                          const GList *allowed_nodes);
 
 G_GNUC_INTERNAL
 void pcmk__show_node_capacities(const char *desc, pe_working_set_t *data_set);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -26,7 +26,7 @@
  * \return Standard Pacemaker return code
  */
 static int
-eval_date_expression(xmlNodePtr expr, crm_time_t *now)
+eval_date_expression(const xmlNode *expr, crm_time_t *now)
 {
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
