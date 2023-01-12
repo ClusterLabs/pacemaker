@@ -268,26 +268,27 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
     char *local_attr_set = NULL;
 
     GList/*<pe_resource_t*>*/ *resources = NULL;
+    const pe_resource_t *top = pe__const_top_resource(rsc, false);
     const char *common_attr_id = attr_id;
 
-    if (attr_id == NULL && force == FALSE) {
-        find_resource_attr (out, cib, XML_ATTR_ID,
-                            pe__const_top_resource(rsc, false)->id, NULL,
-                            NULL, NULL, attr_name, NULL);
+    if ((attr_id == NULL) && !force) {
+        find_resource_attr(out, cib, XML_ATTR_ID, top->id, NULL, NULL, NULL,
+                           attr_name, NULL);
     }
 
     if (pcmk__str_eq(attr_set_type, XML_TAG_ATTR_SETS, pcmk__str_casei)) {
-        if (force == FALSE) {
-            rc = find_resource_attr(out, cib, XML_ATTR_ID,
-                                    pe__const_top_resource(rsc, false)->id,
+        if (!force) {
+            rc = find_resource_attr(out, cib, XML_ATTR_ID, top->id,
                                     XML_TAG_META_SETS, attr_set, attr_id,
                                     attr_name, &local_attr_id);
             if (rc == pcmk_rc_ok && !out->is_quiet(out)) {
-                out->err(out, "WARNING: There is already a meta attribute for '%s' called '%s' (id=%s)",
-                         pe__const_top_resource(rsc, false)->id, attr_name,
-                         local_attr_id);
-                out->err(out, "         Delete '%s' first or use the force option to override",
-                         local_attr_id);
+                out->err(out,
+                         "WARNING: There is already a meta attribute "
+                         "for '%s' called '%s' (id=%s)",
+                         top->id, attr_name, local_attr_id);
+                out->err(out,
+                         "         Delete '%s' first or use the force option "
+                         "to override", local_attr_id);
             }
             free(local_attr_id);
             if (rc == pcmk_rc_ok) {
