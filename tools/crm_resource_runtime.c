@@ -1122,7 +1122,7 @@ static void display_list(pcmk__output_t *out, GList *items, const char *tag)
  * This also updates the working set timestamp to the current time.
  *
  * \param[in,out] data_set  Working set instance to update
- * \param[in]     xml       XML to use as input
+ * \param[in,out] xml       XML to use as input
  *
  * \return Standard Pacemaker return code
  * \note On success, caller is responsible for freeing memory allocated for
@@ -1317,14 +1317,22 @@ max_delay_in(pe_working_set_t * data_set, GList *resources)
  * \internal
  * \brief Restart a resource (on a particular host if requested).
  *
- * \param[in,out] out         Output object
- * \param[in,out] rsc         The resource to restart
- * \param[in]     node        Node to restart the resource on (or NULL for all)
- * \param[in]     timeout_ms  Consider failed if actions do not complete in
- *                            this time (specified in milliseconds, but a
- *                            two-second granularity is actually used; if 0,
- *                            will be calculated based on the resource timeout)
- * \param[in,out] cib         Connection to the CIB manager
+ * \param[in,out] out                 Output object
+ * \param[in,out] rsc                 The resource to restart
+ * \param[in]     node                Node to restart resource on (NULL for all)
+ * \param[in]     move_lifetime       If not NULL, how long constraint should
+ *                                    remain in effect (as ISO 8601 string)
+ * \param[in]     timeout_ms          Consider failed if actions do not complete
+ *                                    in this time (specified in milliseconds,
+ *                                    but a two-second granularity is actually
+ *                                    used; if 0, it will be calculated based on
+ *                                    the resource timeout)
+ * \param[in,out] cib                 Connection to the CIB manager
+ * \param[in]     cib_options         Group of enum cib_call_options flags to
+ *                                    use with CIB calls
+ * \param[in]     promoted_role_only  If true, limit to promoted instances
+ * \param[in]     force               If true, apply only to requested instance
+ *                                    if part of a collective resource
  *
  * \return Standard Pacemaker return code (exits on certain failures)
  */
