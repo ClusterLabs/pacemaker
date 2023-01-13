@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -76,19 +76,20 @@ int cli_resource_fail(pcmk_ipc_api_t *controld_api, const char *host_uname,
 GList *cli_resource_search(pe_resource_t *rsc, const char *requested_name,
                              pe_working_set_t *data_set);
 int cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
-                        pe_resource_t *rsc, const char *operation,
+                        const pe_resource_t *rsc, const char *operation,
                         const char *interval_spec, bool just_failures,
                         pe_working_set_t *data_set, gboolean force);
 int cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
                     const char *operation, const char *interval_spec,
                     pe_working_set_t *data_set);
-int cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, pe_node_t *node,
-                         const char *move_lifetime, int timeout_ms, cib_t *cib,
-                         int cib_options, gboolean promoted_role_only, gboolean force);
-int cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
-                      const char *move_lifetime, cib_t *cib, int cib_options,
-                      pe_working_set_t *data_set, gboolean promoted_role_only,
-                      gboolean force);
+int cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc,
+                         const pe_node_t *node, const char *move_lifetime,
+                         int timeout_ms, cib_t *cib, int cib_options,
+                         gboolean promoted_role_only, gboolean force);
+int cli_resource_move(const pe_resource_t *rsc, const char *rsc_id,
+                      const char *host_name, const char *move_lifetime,
+                      cib_t *cib, int cib_options, pe_working_set_t *data_set,
+                      gboolean promoted_role_only, gboolean force);
 crm_exit_t cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
                                             const char *rsc_class, const char *rsc_prov,
                                             const char *rsc_type, const char *rsc_action,

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -452,7 +452,7 @@ static int
 resource_check_list_default(pcmk__output_t *out, va_list args) {
     resource_checks_t *checks = va_arg(args, resource_checks_t *);
 
-    pe_resource_t *parent = uber_parent(checks->rsc);
+    const pe_resource_t *parent = pe__const_top_resource(checks->rsc, false);
 
     if (checks->flags == 0) {
         return pcmk_rc_no_output;
@@ -498,7 +498,7 @@ static int
 resource_check_list_xml(pcmk__output_t *out, va_list args) {
     resource_checks_t *checks = va_arg(args, resource_checks_t *);
 
-    pe_resource_t *parent = uber_parent(checks->rsc);
+    const pe_resource_t *parent = pe__const_top_resource(checks->rsc, false);
 
     xmlNodePtr node = pcmk__output_create_xml_node(out, "check",
                                                    "id", parent->id,

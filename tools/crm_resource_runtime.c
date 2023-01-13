@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,16 +16,19 @@
 #include <crm/services_internal.h>
 
 static GList *
-build_node_info_list(pe_resource_t *rsc)
+build_node_info_list(const pe_resource_t *rsc)
 {
     GList *retval = NULL;
 
-    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
-        pe_resource_t *child = (pe_resource_t *) iter->data;
+    for (const GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        const pe_resource_t *child = (const pe_resource_t *) iter->data;
 
-        for (GList *iter2 = child->running_on; iter2 != NULL; iter2 = iter2->next) {
-            pe_node_t *node = (pe_node_t *) iter2->data;
+        for (const GList *iter2 = child->running_on;
+             iter2 != NULL; iter2 = iter2->next) {
+
+            const pe_node_t *node = (const pe_node_t *) iter2->data;
             node_info_t *ni = calloc(1, sizeof(node_info_t));
+
             ni->node_name = node->details->uname;
             ni->promoted = pcmk_is_set(rsc->flags, pe_rsc_promotable) &&
                            child->fns->state(child, TRUE) == RSC_ROLE_PROMOTED;
@@ -42,7 +45,7 @@ cli_resource_search(pe_resource_t *rsc, const char *requested_name,
                     pe_working_set_t *data_set)
 {
     GList *retval = NULL;
-    pe_resource_t *parent = uber_parent(rsc);
+    const pe_resource_t *parent = pe__const_top_resource(rsc, false);
 
     if (pe_rsc_is_clone(rsc)) {
         retval = build_node_info_list(rsc);
@@ -265,23 +268,27 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
     char *local_attr_set = NULL;
 
     GList/*<pe_resource_t*>*/ *resources = NULL;
+    const pe_resource_t *top = pe__const_top_resource(rsc, false);
     const char *common_attr_id = attr_id;
 
-    if (attr_id == NULL && force == FALSE) {
-        find_resource_attr (out, cib, XML_ATTR_ID, uber_parent(rsc)->id, NULL,
-                            NULL, NULL, attr_name, NULL);
+    if ((attr_id == NULL) && !force) {
+        find_resource_attr(out, cib, XML_ATTR_ID, top->id, NULL, NULL, NULL,
+                           attr_name, NULL);
     }
 
     if (pcmk__str_eq(attr_set_type, XML_TAG_ATTR_SETS, pcmk__str_casei)) {
-        if (force == FALSE) {
-            rc = find_resource_attr(out, cib, XML_ATTR_ID, uber_parent(rsc)->id,
+        if (!force) {
+            rc = find_resource_attr(out, cib, XML_ATTR_ID, top->id,
                                     XML_TAG_META_SETS, attr_set, attr_id,
                                     attr_name, &local_attr_id);
             if (rc == pcmk_rc_ok && !out->is_quiet(out)) {
-                out->err(out, "WARNING: There is already a meta attribute for '%s' called '%s' (id=%s)",
-                         uber_parent(rsc)->id, attr_name, local_attr_id);
-                out->err(out, "         Delete '%s' first or use the force option to override",
-                         local_attr_id);
+                out->err(out,
+                         "WARNING: There is already a meta attribute "
+                         "for '%s' called '%s' (id=%s)",
+                         top->id, attr_name, local_attr_id);
+                out->err(out,
+                         "         Delete '%s' first or use the force option "
+                         "to override", local_attr_id);
             }
             free(local_attr_id);
             if (rc == pcmk_rc_ok) {
@@ -412,7 +419,8 @@ cli_resource_delete_attribute(pe_resource_t *rsc, const char *requested_name,
     GList/*<pe_resource_t*>*/ *resources = NULL;
 
     if (attr_id == NULL && force == FALSE) {
-        find_resource_attr(out, cib, XML_ATTR_ID, uber_parent(rsc)->id, NULL,
+        find_resource_attr(out, cib, XML_ATTR_ID,
+                           pe__const_top_resource(rsc, false)->id, NULL,
                            NULL, NULL, attr_name, NULL);
     }
 
@@ -556,7 +564,7 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
  * \note The caller is responsible for freeing the result.
  */
 static inline char *
-rsc_fail_name(pe_resource_t *rsc)
+rsc_fail_name(const pe_resource_t *rsc)
 {
     const char *name = (rsc->clone_name? rsc->clone_name : rsc->id);
 
@@ -672,8 +680,8 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
 
 // \return Standard Pacemaker return code
 static int
-clear_rsc_fail_attrs(pe_resource_t *rsc, const char *operation,
-                     const char *interval_spec, pe_node_t *node)
+clear_rsc_fail_attrs(const pe_resource_t *rsc, const char *operation,
+                     const char *interval_spec, const pe_node_t *node)
 {
     int rc = pcmk_rc_ok;
     int attr_options = pcmk__node_attr_none;
@@ -693,7 +701,7 @@ clear_rsc_fail_attrs(pe_resource_t *rsc, const char *operation,
 // \return Standard Pacemaker return code
 int
 cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
-                    pe_resource_t *rsc, const char *operation,
+                    const pe_resource_t *rsc, const char *operation,
                     const char *interval_spec, bool just_failures,
                     pe_working_set_t *data_set, gboolean force)
 {
@@ -705,10 +713,9 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
         return ENXIO;
 
     } else if (rsc->children) {
-        GList *lpc = NULL;
 
-        for (lpc = rsc->children; lpc != NULL; lpc = lpc->next) {
-            pe_resource_t *child = (pe_resource_t *) lpc->data;
+        for (const GList *lpc = rsc->children; lpc != NULL; lpc = lpc->next) {
+            const pe_resource_t *child = (const pe_resource_t *) lpc->data;
 
             rc = cli_resource_delete(controld_api, host_uname, child, operation,
                                      interval_spec, just_failures, data_set, force);
@@ -878,7 +885,7 @@ check_role(resource_checks_t *checks)
             break;
 
         case RSC_ROLE_UNPROMOTED:
-            if (pcmk_is_set(uber_parent(checks->rsc)->flags,
+            if (pcmk_is_set(pe__const_top_resource(checks->rsc, false)->flags,
                             pe_rsc_promotable)) {
                 checks->flags |= rsc_unpromotable;
             }
@@ -1114,8 +1121,8 @@ static void display_list(pcmk__output_t *out, GList *items, const char *tag)
  *
  * This also updates the working set timestamp to the current time.
  *
- * \param[in] data_set   Working set instance to update
- * \param[in] xml        XML to use as input
+ * \param[in,out] data_set  Working set instance to update
+ * \param[in,out] xml       XML to use as input
  *
  * \return Standard Pacemaker return code
  * \note On success, caller is responsible for freeing memory allocated for
@@ -1310,20 +1317,30 @@ max_delay_in(pe_working_set_t * data_set, GList *resources)
  * \internal
  * \brief Restart a resource (on a particular host if requested).
  *
- * \param[in] rsc        The resource to restart
- * \param[in] host       The host to restart the resource on (or NULL for all)
- * \param[in] timeout_ms Consider failed if actions do not complete in this time
- *                       (specified in milliseconds, but a two-second
- *                       granularity is actually used; if 0, a timeout will be
- *                       calculated based on the resource timeout)
- * \param[in] cib        Connection to the CIB manager
+ * \param[in,out] out                 Output object
+ * \param[in,out] rsc                 The resource to restart
+ * \param[in]     node                Node to restart resource on (NULL for all)
+ * \param[in]     move_lifetime       If not NULL, how long constraint should
+ *                                    remain in effect (as ISO 8601 string)
+ * \param[in]     timeout_ms          Consider failed if actions do not complete
+ *                                    in this time (specified in milliseconds,
+ *                                    but a two-second granularity is actually
+ *                                    used; if 0, it will be calculated based on
+ *                                    the resource timeout)
+ * \param[in,out] cib                 Connection to the CIB manager
+ * \param[in]     cib_options         Group of enum cib_call_options flags to
+ *                                    use with CIB calls
+ * \param[in]     promoted_role_only  If true, limit to promoted instances
+ * \param[in]     force               If true, apply only to requested instance
+ *                                    if part of a collective resource
  *
  * \return Standard Pacemaker return code (exits on certain failures)
  */
 int
-cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, pe_node_t *node,
-                     const char *move_lifetime, int timeout_ms, cib_t *cib,
-                     int cib_options, gboolean promoted_role_only, gboolean force)
+cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc,
+                     const pe_node_t *node, const char *move_lifetime,
+                     int timeout_ms, cib_t *cib, int cib_options,
+                     gboolean promoted_role_only, gboolean force)
 {
     int rc = pcmk_rc_ok;
     int lpc = 0;
@@ -1636,7 +1653,8 @@ done:
     return rc;
 }
 
-static inline bool action_is_pending(pe_action_t *action)
+static inline bool
+action_is_pending(const pe_action_t *action)
 {
     if (pcmk_any_flags_set(action->flags, pe_action_optional|pe_action_pseudo)
         || !pcmk_is_set(action->flags, pe_action_runnable)
@@ -1648,19 +1666,18 @@ static inline bool action_is_pending(pe_action_t *action)
 
 /*!
  * \internal
- * \brief Return TRUE if any actions in a list are pending
+ * \brief Check whether any actions in a list are pending
  *
  * \param[in] actions   List of actions to check
  *
- * \return TRUE if any actions in the list are pending, FALSE otherwise
+ * \return true if any actions in the list are pending, otherwise false
  */
 static bool
-actions_are_pending(GList *actions)
+actions_are_pending(const GList *actions)
 {
-    GList *action;
+    for (const GList *action = actions; action != NULL; action = action->next) {
+        const pe_action_t *a = (const pe_action_t *) action->data;
 
-    for (action = actions; action != NULL; action = action->next) {
-        pe_action_t *a = (pe_action_t *)action->data;
         if (action_is_pending(a)) {
             crm_notice("Waiting for %s (flags=%#.8x)", a->uuid, a->flags);
             return true;
@@ -1704,10 +1721,12 @@ print_pending_actions(pcmk__output_t *out, GList *actions)
  * This waits until either the CIB's transition graph is idle or a timeout is
  * reached.
  *
- * \param[in] timeout_ms Consider failed if actions do not complete in this time
- *                       (specified in milliseconds, but one-second granularity
- *                       is actually used; if 0, a default will be used)
- * \param[in] cib        Connection to the CIB manager
+ * \param[in,out] out          Output object
+ * \param[in]     timeout_ms   Consider failed if actions do not complete in
+ *                             this time (specified in milliseconds, but
+ *                             one-second granularity is actually used; if 0, a
+ *                             default will be used)
+ * \param[in,out] cib          Connection to the CIB manager
  *
  * \return Standard Pacemaker return code
  */
@@ -1804,10 +1823,10 @@ get_action(const char *rsc_action) {
  * resource agents. Add the essential ones that many resource agents expect, so
  * the behavior is the same for command-line execution.
  *
- * \param[in] params       Resource parameters that will be passed to agent
- * \param[in] timeout_ms   Action timeout (in milliseconds)
- * \param[in] check_level  OCF check level
- * \param[in] verbosity    Verbosity level
+ * \param[in,out] params       Resource parameters that will be passed to agent
+ * \param[in]     timeout_ms   Action timeout (in milliseconds)
+ * \param[in]     check_level  OCF check level
+ * \param[in]     verbosity    Verbosity level
  */
 static void
 set_agent_environment(GHashTable *params, int timeout_ms, int check_level,
@@ -1842,8 +1861,8 @@ set_agent_environment(GHashTable *params, int timeout_ms, int check_level,
  * \internal
  * \brief Apply command-line overrides to resource parameters
  *
- * \param[in] params     Parameters to be passed to agent
- * \param[in] overrides  Parameters to override (or NULL if none)
+ * \param[in,out] params     Parameters to be passed to agent
+ * \param[in]     overrides  Parameters to override (or NULL if none)
  */
 static void
 apply_overrides(GHashTable *params, GHashTable *overrides)
@@ -1991,10 +2010,10 @@ cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
 
 // \return Standard Pacemaker return code
 int
-cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
-                  const char *move_lifetime, cib_t *cib, int cib_options,
-                  pe_working_set_t *data_set, gboolean promoted_role_only,
-                  gboolean force)
+cli_resource_move(const pe_resource_t *rsc, const char *rsc_id,
+                  const char *host_name, const char *move_lifetime, cib_t *cib,
+                  int cib_options, pe_working_set_t *data_set,
+                  gboolean promoted_role_only, gboolean force)
 {
     pcmk__output_t *out = data_set->priv;
     int rc = pcmk_rc_ok;
@@ -2008,7 +2027,7 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
     }
 
     if (promoted_role_only && !pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
-        pe_resource_t *p = uber_parent(rsc);
+        const pe_resource_t *p = pe__const_top_resource(rsc, false);
 
         if (pcmk_is_set(p->flags, pe_rsc_promotable)) {
             out->info(out, "Using parent '%s' for move instead of '%s'.", rsc->id, rsc_id);
@@ -2025,12 +2044,11 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
     current = pe__find_active_requires(rsc, &count);
 
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
-        GList *iter = NULL;
         unsigned int promoted_count = 0;
         pe_node_t *promoted_node = NULL;
 
-        for(iter = rsc->children; iter; iter = iter->next) {
-            pe_resource_t *child = (pe_resource_t *)iter->data;
+        for (const GList *iter = rsc->children; iter; iter = iter->next) {
+            const pe_resource_t *child = (const pe_resource_t *) iter->data;
             enum rsc_role_e child_role = child->fns->state(child, TRUE);
 
             if (child_role == RSC_ROLE_PROMOTED) {
