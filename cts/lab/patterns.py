@@ -32,7 +32,7 @@ class BasePatterns(object):
             "CibDelXpath"    : "cibadmin --delete --xpath %s",
             # 300,000 == 5 minutes
             "RscRunning"     : BuildOptions.DAEMON_DIR + "/cts-exec-helper -R -r %s",
-            "CIBfile"        : "%s:" + BuildOptions.CONFIG_DIR + "/cib.xml",
+            "CIBfile"        : "%s:" + BuildOptions.CIB_DIR + "/cib.xml",
             "TmpDir"         : "/tmp",
 
             "BreakCommCmd"   : "iptables -A INPUT -s %s -j DROP >/dev/null 2>&1",

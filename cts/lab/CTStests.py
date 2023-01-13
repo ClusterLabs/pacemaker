@@ -25,12 +25,13 @@ import tempfile
 from stat import *
 from cts import CTS
 from cts.CTSaudits import *
-from cts.CTSvars   import *
 from cts.patterns  import PatternSelector
 from cts.logging   import LogFactory
 from cts.remote    import RemoteFactory
 from cts.watcher   import LogWatcher
 from cts.environment import EnvFactory
+
+from pacemaker import BuildOptions
 
 AllTestClasses = [ ]
 
@@ -1832,7 +1833,7 @@ class SpecialTest1(CTSTest):
             return self.failure("Could not stop all nodes")
 
         # Test config recovery when the other nodes come up
-        self.rsh(node, "rm -f "+CTSvars.CRM_CONFIG_DIR+"/cib*")
+        self.rsh(node, "rm -f " + BuildOptions.CIB_DIR + "/cib*")
 
         #        Start the selected node
         ret = self.restart1(node)
