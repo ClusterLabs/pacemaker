@@ -209,7 +209,7 @@ append_parent_colocation(pe_resource_t * rsc, pe_resource_t * child, gboolean al
         pcmk__colocation_t *cons = (pcmk__colocation_t *) gIter->data;
 
         if (all || cons->score < 0 || cons->score == INFINITY) {
-            pcmk__add_this_with(child, cons);
+            pcmk__add_this_with(&(child->rsc_cons), cons);
         }
     }
 
@@ -221,7 +221,7 @@ append_parent_colocation(pe_resource_t * rsc, pe_resource_t * child, gboolean al
            continue;
         }
         if (all || cons->score < 0) {
-            pcmk__add_with_this(child, cons);
+            pcmk__add_with_this(&(child->rsc_cons_lhs), cons);
         }
     }
 }

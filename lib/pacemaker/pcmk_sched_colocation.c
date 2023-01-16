@@ -132,31 +132,44 @@ cmp_primary_priority(gconstpointer a, gconstpointer b)
 
 /*!
  * \internal
- * \brief Add a "this with" colocation constraint to a resource
+ * \brief Add a "this with" colocation constraint to a sorted list
  *
- * \param[in,out] rsc         Resource to add colocation to
- * \param[in]     colocation  Colocation constraint to add to \p rsc
+ * \param[in,out] list        List of constraints to add \p colocation to
+ * \param[in]     colocation  Colocation constraint to add to \p list
  */
 void
-pcmk__add_this_with(pe_resource_t *rsc, const pcmk__colocation_t *colocation)
+pcmk__add_this_with(GList **list, const pcmk__colocation_t *colocation)
 {
-    rsc->rsc_cons = g_list_insert_sorted(rsc->rsc_cons, (gpointer) colocation,
-                                         cmp_primary_priority);
+    crm_trace("Adding colocation %s (%s with %s%s%s @%d) "
+              "to 'this with' list",
+              colocation->id, colocation->dependent->id,
+              colocation->primary->id,
+              (colocation->node_attribute == NULL)? "" : " using ",
+              pcmk__s(colocation->node_attribute, ""),
+              colocation->score);
+    *list = g_list_insert_sorted(*list, (gpointer) colocation,
+                                 cmp_primary_priority);
 }
 
 /*!
  * \internal
- * \brief Add a "with this" colocation constraint to a resource
+ * \brief Add a "with this" colocation constraint to a sorted list
  *
- * \param[in,out] rsc         Resource to add colocation to
- * \param[in]     colocation  Colocation constraint to add to \p rsc
+ * \param[in,out] list        List of constraints to add \p colocation to
+ * \param[in]     colocation  Colocation constraint to add to \p list
  */
 void
-pcmk__add_with_this(pe_resource_t *rsc, const pcmk__colocation_t *colocation)
+pcmk__add_with_this(GList **list, const pcmk__colocation_t *colocation)
 {
-    rsc->rsc_cons_lhs = g_list_insert_sorted(rsc->rsc_cons_lhs,
-                                             (gpointer) colocation,
-                                             cmp_dependent_priority);
+    crm_trace("Adding colocation %s (%s with %s%s%s @%d) "
+              "to 'with this' list",
+              colocation->id, colocation->dependent->id,
+              colocation->primary->id,
+              (colocation->node_attribute == NULL)? "" : " using ",
+              pcmk__s(colocation->node_attribute, ""),
+              colocation->score);
+    *list = g_list_insert_sorted(*list, (gpointer) colocation,
+                                 cmp_dependent_priority);
 }
 
 /*!
@@ -275,8 +288,8 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
     pe_rsc_trace(dependent, "%s ==> %s (%s %d)",
                  dependent->id, primary->id, node_attr, score);
 
-    pcmk__add_this_with(dependent, new_con);
-    pcmk__add_with_this(primary, new_con);
+    pcmk__add_this_with(&(dependent->rsc_cons), new_con);
+    pcmk__add_with_this(&(primary->rsc_cons_lhs), new_con);
 
     data_set->colocation_constraints = g_list_append(data_set->colocation_constraints,
                                                      new_con);

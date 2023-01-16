@@ -36,7 +36,8 @@ expand_group_colocations(pe_resource_t *rsc)
     // Treat "group with R" colocations as "first member with R"
     member = (pe_resource_t *) rsc->children->data;
     for (item = rsc->rsc_cons; item != NULL; item = item->next) {
-        pcmk__add_this_with(member, (pcmk__colocation_t *) (item->data));
+        pcmk__add_this_with(&(member->rsc_cons),
+                            (const pcmk__colocation_t *) (item->data));
     }
 
 
@@ -64,7 +65,7 @@ expand_group_colocations(pe_resource_t *rsc)
                 pcmk__colocation_t *constraint = (pcmk__colocation_t *) cons_iter->data;
 
                 if (constraint->score == INFINITY) {
-                    pcmk__add_this_with(member, constraint);
+                    pcmk__add_this_with(&(member->rsc_cons), constraint);
                 }
             }
         } else if (!pcmk_is_set(member->flags, pe_rsc_managed)) {
@@ -78,7 +79,8 @@ expand_group_colocations(pe_resource_t *rsc)
     // Treat "R with group" colocations as "R with last member"
     member = pe__last_group_member(rsc);
     for (item = rsc->rsc_cons_lhs; item != NULL; item = item->next) {
-        pcmk__add_with_this(member, (pcmk__colocation_t *) (item->data));
+        pcmk__add_with_this(&(member->rsc_cons_lhs),
+                            (const pcmk__colocation_t *) (item->data));
     }
     g_list_free(rsc->rsc_cons_lhs);
     rsc->rsc_cons_lhs = NULL;
