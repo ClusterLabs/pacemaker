@@ -32,9 +32,6 @@ is_bundle_node(pe__bundle_variant_data_t *data, pe_node_t *node)
     return FALSE;
 }
 
-void distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
-                         int max, int per_host_max, pe_working_set_t * data_set);
-
 static GList *
 get_container_list(const pe_resource_t *rsc)
 {

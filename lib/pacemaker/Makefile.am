@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2022 the Pacemaker project contributors
+# Copyright 2004-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -51,6 +51,7 @@ libpacemaker_la_SOURCES += pcmk_sched_colocation.c
 libpacemaker_la_SOURCES += pcmk_sched_constraints.c
 libpacemaker_la_SOURCES += pcmk_sched_fencing.c
 libpacemaker_la_SOURCES += pcmk_sched_group.c
+libpacemaker_la_SOURCES += pcmk_sched_instances.c
 libpacemaker_la_SOURCES += pcmk_sched_location.c
 libpacemaker_la_SOURCES += pcmk_sched_migration.c
 libpacemaker_la_SOURCES += pcmk_sched_nodes.c
