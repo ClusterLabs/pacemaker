@@ -120,11 +120,6 @@ allocate_instance(pe_resource_t *rsc, pe_node_t *prefer, gboolean all_coloc,
         return NULL;
     }
 
-    /* Only include positive colocation preferences of dependent resources
-     * if not every node will get a copy of the clone
-     */
-    append_parent_colocation(rsc->parent, rsc, all_coloc);
-
     if (prefer) {
         pe_node_t *local_prefer = g_hash_table_lookup(rsc->allowed_nodes, prefer->details->id);
 
@@ -216,7 +211,10 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
         }
     }
 
-    all_coloc = (max < available_nodes) ? true : false;
+    /* Include positive colocation preferences of dependent resources
+     * only if not every node will get a copy of the clone.
+     */
+    all_coloc = (max < available_nodes);
 
     if(available_nodes) {
         loop_max = max / available_nodes;
@@ -233,6 +231,8 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
         pe_resource_t *child = (pe_resource_t *) gIter->data;
         pe_node_t *child_node = NULL;
         pe_node_t *local_node = NULL;
+
+        append_parent_colocation(child->parent, child, all_coloc);
 
         if ((child->running_on == NULL)
             || !pcmk_is_set(child->flags, pe_rsc_provisional)
