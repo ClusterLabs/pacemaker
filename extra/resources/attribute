@@ -2,7 +2,7 @@
 #
 # ocf:pacemaker:attribute resource agent
 #
-# Copyright 2016-2022 the Pacemaker project contributors
+# Copyright 2016-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -108,7 +108,7 @@ Value to use for node attribute when resource becomes inactive
     <action name="reload"       timeout="20s" />
     <action name="migrate_to"   timeout="20s" />
     <action name="migrate_from" timeout="20s" />
-    <action name="validate-all" timeout="20s" />
+    <action name="validate-all" timeout="20s" depth="0" />
     <action name="meta-data"    timeout="5s" />
   </actions>
 </resource-agent>

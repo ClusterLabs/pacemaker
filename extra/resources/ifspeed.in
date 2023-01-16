@@ -2,7 +2,7 @@
 #
 # ocf:pacemaker:ifspeed resource agent
 #
-# Copyright 2011-2022 the Pacemaker project contributors
+# Copyright 2011-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -146,7 +146,7 @@ Log more verbosely.
 <action name="stop"    timeout="30s" />
 <action name="monitor" depth="0"  timeout="30s" interval="10s"/>
 <action name="meta-data"  timeout="5s" />
-<action name="validate-all"  timeout="30s" />
+<action name="validate-all"  timeout="30s" depth="0" />
 </actions>
 </resource-agent>
 END
@@ -218,6 +218,8 @@ validate() {
             fi
         fi
     fi
+
+    # Host-specific checks
     if [ "$1" = "10" ]; then
         if [ "$(uname)" != "Linux" ] ; then
             ocf_log err "This resource agent works only on Linux"

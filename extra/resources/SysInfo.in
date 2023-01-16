@@ -3,7 +3,7 @@
 # ocf:pacemaker:SysInfo resource agent
 #
 # Original copyright 2004 SUSE LINUX AG, Lars Marowsky-Br<E9>e
-# Later changes copyright 2008-2021 the Pacemaker project contributors
+# Later changes copyright 2008-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -147,7 +147,7 @@ If the unit is not specified, it defaults to disk_unit.
 <action name="monitor" timeout="20s" interval="60s"/>
 <action name="reload-agent" timeout="20s" />
 <action name="meta-data"  timeout="5s" />
-<action name="validate-all"  timeout="30s" />
+<action name="validate-all"  timeout="30s" depth="0" />
 </actions>
 </resource-agent>
 END

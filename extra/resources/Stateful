@@ -2,7 +2,7 @@
 #
 # ocf:pacemaker:Stateful resource agent
 #
-# Copyright 2006-2021 the Pacemaker project contributors
+# Copyright 2006-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -86,7 +86,7 @@ to simulate a long-running notify.
 <action name="notify"  timeout="5s" />
 <action name="meta-data"  timeout="5s" />
 <action name="reload-agent"  timeout="10s" />
-<action name="validate-all"  timeout="30s" />
+<action name="validate-all"  timeout="30s" depth="0" />
 </actions>
 </resource-agent>
 END
