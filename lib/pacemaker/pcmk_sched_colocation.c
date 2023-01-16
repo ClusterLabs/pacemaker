@@ -153,6 +153,30 @@ pcmk__add_this_with(GList **list, const pcmk__colocation_t *colocation)
 
 /*!
  * \internal
+ * \brief Add a list of "this with" colocation constraints to a list
+ *
+ * \param[in,out] list      List of constraints to add \p addition to
+ * \param[in]     addition  List of colocation constraints to add to \p list
+ */
+void
+pcmk__add_this_with_list(GList **list, GList *addition)
+{
+    CRM_CHECK((list != NULL), return);
+
+    if (*list == NULL) { // Trivial case for efficiency
+        crm_trace("Copying %u 'this with' colocations to new list",
+                  g_list_length(addition));
+        *list = g_list_copy(addition);
+    } else {
+        while (addition != NULL) {
+            pcmk__add_this_with(list, addition->data);
+            addition = addition->next;
+        }
+    }
+}
+
+/*!
+ * \internal
  * \brief Add a "with this" colocation constraint to a sorted list
  *
  * \param[in,out] list        List of constraints to add \p colocation to
@@ -170,6 +194,30 @@ pcmk__add_with_this(GList **list, const pcmk__colocation_t *colocation)
               colocation->score);
     *list = g_list_insert_sorted(*list, (gpointer) colocation,
                                  cmp_dependent_priority);
+}
+
+/*!
+ * \internal
+ * \brief Add a list of "with this" colocation constraints to a list
+ *
+ * \param[in,out] list      List of constraints to add \p addition to
+ * \param[in]     addition  List of colocation constraints to add to \p list
+ */
+void
+pcmk__add_with_this_list(GList **list, GList *addition)
+{
+    CRM_CHECK((list != NULL), return);
+
+    if (*list == NULL) { // Trivial case for efficiency
+        crm_trace("Copying %u 'with this' colocations to new list",
+                  g_list_length(addition));
+        *list = g_list_copy(addition);
+    } else {
+        while (addition != NULL) {
+            pcmk__add_with_this(list, addition->data);
+            addition = addition->next;
+        }
+    }
 }
 
 /*!

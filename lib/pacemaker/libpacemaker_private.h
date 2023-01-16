@@ -406,7 +406,13 @@ G_GNUC_INTERNAL
 void pcmk__add_this_with(GList **list, const pcmk__colocation_t *colocation);
 
 G_GNUC_INTERNAL
+void pcmk__add_this_with_list(GList **list, GList *addition);
+
+G_GNUC_INTERNAL
 void pcmk__add_with_this(GList **list, const pcmk__colocation_t *colocation);
+
+G_GNUC_INTERNAL
+void pcmk__add_with_this_list(GList **list, GList *addition);
 
 G_GNUC_INTERNAL
 void pcmk__new_colocation(const char *id, const char *node_attr, int score,

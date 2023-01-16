@@ -35,11 +35,7 @@ expand_group_colocations(pe_resource_t *rsc)
 
     // Treat "group with R" colocations as "first member with R"
     member = (pe_resource_t *) rsc->children->data;
-    for (item = rsc->rsc_cons; item != NULL; item = item->next) {
-        pcmk__add_this_with(&(member->rsc_cons),
-                            (const pcmk__colocation_t *) (item->data));
-    }
-
+    pcmk__add_this_with_list(&(member->rsc_cons), rsc->rsc_cons);
 
     /* The above works for the whole group because each group member is
      * colocated with the previous one.
@@ -78,10 +74,7 @@ expand_group_colocations(pe_resource_t *rsc)
 
     // Treat "R with group" colocations as "R with last member"
     member = pe__last_group_member(rsc);
-    for (item = rsc->rsc_cons_lhs; item != NULL; item = item->next) {
-        pcmk__add_with_this(&(member->rsc_cons_lhs),
-                            (const pcmk__colocation_t *) (item->data));
-    }
+    pcmk__add_with_this_list(&(member->rsc_cons_lhs), rsc->rsc_cons_lhs);
     g_list_free(rsc->rsc_cons_lhs);
     rsc->rsc_cons_lhs = NULL;
 }
