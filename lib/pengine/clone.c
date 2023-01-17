@@ -32,6 +32,23 @@
 
 /*!
  * \internal
+ * \brief Return the maximum number of clone instances allowed to be run
+ *
+ * \param[in] clone  Clone or clone instance to check
+ *
+ * \return Maximum instances for \p clone
+ */
+int
+pe__clone_max(const pe_resource_t *clone)
+{
+    const clone_variant_data_t *clone_data = NULL;
+
+    get_clone_variant_data(clone_data, pe__const_top_resource(clone, false));
+    return clone_data->clone_max;
+}
+
+/*!
+ * \internal
  * \brief Return the maximum number of clone instances allowed to be promoted
  *
  * \param[in] clone  Promotable clone or clone instance to check

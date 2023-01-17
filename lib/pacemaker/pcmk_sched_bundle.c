@@ -32,9 +32,6 @@ is_bundle_node(pe__bundle_variant_data_t *data, pe_node_t *node)
     return FALSE;
 }
 
-void distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
-                         int max, int per_host_max, pe_working_set_t * data_set);
-
 static GList *
 get_container_list(const pe_resource_t *rsc)
 {
@@ -74,7 +71,6 @@ pe_node_t *
 pcmk__bundle_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
 {
     GList *containers = NULL;
-    GList *nodes = NULL;
     pe__bundle_variant_data_t *bundle_data = NULL;
 
     CRM_CHECK(rsc != NULL, return NULL);
@@ -87,12 +83,9 @@ pcmk__bundle_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
     pe__show_node_weights(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
                           rsc, __func__, rsc->allowed_nodes, rsc->cluster);
 
-    nodes = g_hash_table_get_values(rsc->allowed_nodes);
-    nodes = pcmk__sort_nodes(nodes, NULL);
     containers = g_list_sort(containers, pcmk__cmp_instance);
-    distribute_children(rsc, containers, nodes, bundle_data->nreplicas,
+    distribute_children(rsc, containers, bundle_data->nreplicas,
                         bundle_data->nreplicas_per_host, rsc->cluster);
-    g_list_free(nodes);
     g_list_free(containers);
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
