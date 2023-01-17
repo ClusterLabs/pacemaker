@@ -261,12 +261,12 @@ reset_allowed_node_counts(pe_resource_t *rsc)
  *
  * \return Instance's current node if still available, otherwise NULL
  */
-static pe_node_t *
+static const pe_node_t *
 preferred_node(const pe_resource_t *rsc, const pe_resource_t *instance,
                int optimal_per_node)
 {
-    pe_node_t *node = NULL;
-    pe_node_t *parent_node = NULL;
+    const pe_node_t *node = NULL;
+    const pe_node_t *parent_node = NULL;
 
     // Check whether instance is active, healthy, and not yet assigned
     if ((instance->running_on == NULL)
@@ -326,7 +326,7 @@ distribute_children(pe_resource_t *rsc, GList *children, int max,
     /* Pre-allocate as many instances as we can to their current location */
     for (GList *gIter = children; gIter != NULL && allocated < max; gIter = gIter->next) {
         pe_resource_t *child = (pe_resource_t *) gIter->data;
-        pe_node_t *child_node = NULL;
+        const pe_node_t *child_node = NULL;
 
         append_parent_colocation(child->parent, child, all_coloc);
 
