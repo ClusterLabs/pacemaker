@@ -35,14 +35,14 @@ can_run_instance(const pe_resource_t *instance, const pe_node_t *node,
     pe_node_t *allowed_node = NULL;
 
     if (pcmk_is_set(instance->flags, pe_rsc_orphan)) {
-        pe_rsc_trace(instance, "%s cannot run on %s because it is an orphan",
+        pe_rsc_trace(instance, "%s cannot run on %s: orphaned",
                      instance->id, pe__node_name(node));
         return false;
     }
 
     if (!pcmk__node_available(node, false, false)) {
         pe_rsc_trace(instance,
-                     "%s cannot run on %s because it cannot run resources",
+                     "%s cannot run on %s: node cannot run resources",
                      instance->id, pe__node_name(node));
         return false;
     }
@@ -63,7 +63,7 @@ can_run_instance(const pe_resource_t *instance, const pe_node_t *node,
 
     if (allowed_node->count >= max_per_node) {
         pe_rsc_trace(instance,
-                     "%s cannot run on %s because it already has %d instance%s",
+                     "%s cannot run on %s: node already has %d instance%s",
                      instance->id, pe__node_name(node), max_per_node,
                      pcmk__plural_s(max_per_node));
         return false;
@@ -76,9 +76,9 @@ can_run_instance(const pe_resource_t *instance, const pe_node_t *node,
 
 /*!
  * \internal
- * \brief Ban a clone instance from its allowed nodes that are unavailable
+ * \brief Ban a clone instance or bundle replica from unavailable allowed nodes
  *
- * \param[in,out] rsc           Clone instance
+ * \param[in,out] instance      Clone instance or bundle replica to ban
  * \param[in]     max_per_node  Maximum instances allowed to run on a node
  */
 static void
@@ -86,11 +86,10 @@ ban_unavailable_allowed_nodes(pe_resource_t *instance, int max_per_node)
 {
     if (instance->allowed_nodes != NULL) {
         GHashTableIter iter;
-        pe_node_t *allowed_node = NULL;
+        const pe_node_t *allowed_node = NULL;
 
         g_hash_table_iter_init(&iter, instance->allowed_nodes);
-        while (g_hash_table_iter_next(&iter, NULL,
-                                      (void **) &allowed_node)) {
+        while (g_hash_table_iter_next(&iter, NULL, (void **) &allowed_node)) {
             if (!can_run_instance(instance, allowed_node, max_per_node)) {
                 // Ban instance (and all its children) from node
                 common_update_score(instance, allowed_node->details->id,
@@ -105,7 +104,9 @@ ban_unavailable_allowed_nodes(pe_resource_t *instance, int max_per_node)
  * \brief Choose a node for an instance
  *
  * \param[in,out] instance      Clone instance or bundle replica container
- * \param[in]     prefer        If not NULL, node to prefer for early assignment
+ * \param[in]     prefer        If not NULL, attempt early assignment to this
+ *                              node, if still the best choice; otherwise,
+ *                              perform final assignment
  * \param[in]     all_coloc     If true (indicating that there are more
  *                              available nodes than instances), add all parent
  *                              colocations to instance, otherwise add only
@@ -133,10 +134,11 @@ assign_instance(pe_resource_t *instance, const pe_node_t *prefer,
     if (!pcmk_is_set(instance->flags, pe_rsc_provisional)) {
         // Instance is already assigned
         return instance->fns->location(instance, NULL, FALSE) != NULL;
+    }
 
-    } else if (pcmk_is_set(instance->flags, pe_rsc_allocating)) {
+    if (pcmk_is_set(instance->flags, pe_rsc_allocating)) {
         pe_rsc_debug(instance,
-                     "Dependency assignment loop detected involving %s",
+                     "Assignment loop detected involving %s colocations",
                      instance->id);
         return false;
     }
@@ -301,14 +303,13 @@ distribute_children(pe_resource_t *rsc, GList *children, int max,
     // Reuse node count to track number of assigned instances
     unsigned int available_nodes = reset_allowed_node_counts(rsc);
 
+    /* Include finite positive preferences of the collective's
+     * colocation dependents only if not every node will get an instance.
+     */
+    bool all_coloc = (max < available_nodes);
+
     int loop_max = 0;
     int allocated = 0;
-    bool all_coloc = false;
-
-    /* Include positive colocation preferences of dependent resources
-     * only if not every node will get a copy of the clone.
-     */
-    all_coloc = (max < available_nodes);
 
     if(available_nodes) {
         loop_max = max / available_nodes;
