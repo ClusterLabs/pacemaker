@@ -456,6 +456,7 @@ create_container_resource(pe_resource_t *parent,
                             parent->cluster) != pcmk_rc_ok) {
         return pcmk_rc_unpack_error;
     }
+    pe__set_resource_flags(replica->container, pe_rsc_replica_container);
     parent->children = g_list_append(parent->children, replica->container);
 
     return pcmk_rc_ok;
