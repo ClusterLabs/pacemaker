@@ -718,8 +718,8 @@ controld_execute_resource_agent(lrm_state_t *lrm_state, const char *rsc_id,
 
     // Convert parameters from hash table to list
     if (parameters != NULL) {
-        char *key = NULL;
-        char *value = NULL;
+        const char *key = NULL;
+        const char *value = NULL;
         GHashTableIter iter;
 
         g_hash_table_iter_init(&iter, parameters);
