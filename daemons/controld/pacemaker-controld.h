@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -29,6 +29,24 @@
 
 void do_cib_updated(const char *event, xmlNode * msg);
 void do_cib_replaced(const char *event, xmlNode * msg);
+
+void controld_add_resource_history_xml_as(const char *func, xmlNode *parent,
+                                          const lrmd_rsc_info_t *rsc,
+                                          lrmd_event_data_t *op,
+                                          const char *node_name);
+
+#define controld_add_resource_history_xml(parent, rsc, op, node_name)   \
+    controld_add_resource_history_xml_as(__func__, (parent), (rsc),     \
+                                         (op), (node_name))
+
+bool controld_record_pending_op(const char *node_name,
+                                const lrmd_rsc_info_t *rsc,
+                                lrmd_event_data_t *op);
+
+void controld_update_resource_history(const char *node_name,
+                                      const lrmd_rsc_info_t *rsc,
+                                      lrmd_event_data_t *op, time_t lock_time);
+
 void crmd_metadata(void);
 void controld_trigger_config_as(const char *fn, int line);
 void controld_election_init(const char *uname);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 the Pacemaker project contributors
+ * Copyright 2012-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -116,7 +116,7 @@ lrm_state_create(const char *node_name)
     state->node_name = strdup(node_name);
     state->rsc_info_cache = pcmk__strkey_table(NULL, free_rsc_info);
     state->deletion_ops = pcmk__strkey_table(free, free_deletion_op);
-    state->pending_ops = pcmk__strkey_table(free, free_recurring_op);
+    state->active_ops = pcmk__strkey_table(free, free_recurring_op);
     state->resource_history = pcmk__strkey_table(NULL, history_free);
     state->metadata_cache = metadata_cache_new();
 
@@ -152,26 +152,31 @@ internal_lrm_state_destroy(gpointer data)
         return;
     }
 
-    crm_trace("Destroying proxy table %s with %d members", lrm_state->node_name, g_hash_table_size(proxy_table));
+    crm_trace("Destroying proxy table %s with %u members",
+              lrm_state->node_name, g_hash_table_size(proxy_table));
     g_hash_table_foreach_remove(proxy_table, remote_proxy_remove_by_node, (char *) lrm_state->node_name);
     remote_ra_cleanup(lrm_state);
     lrmd_api_delete(lrm_state->conn);
 
     if (lrm_state->rsc_info_cache) {
-        crm_trace("Destroying rsc info cache with %d members", g_hash_table_size(lrm_state->rsc_info_cache));
+        crm_trace("Destroying rsc info cache with %u members",
+                  g_hash_table_size(lrm_state->rsc_info_cache));
         g_hash_table_destroy(lrm_state->rsc_info_cache);
     }
     if (lrm_state->resource_history) {
-        crm_trace("Destroying history op cache with %d members", g_hash_table_size(lrm_state->resource_history));
+        crm_trace("Destroying history op cache with %u members",
+                  g_hash_table_size(lrm_state->resource_history));
         g_hash_table_destroy(lrm_state->resource_history);
     }
     if (lrm_state->deletion_ops) {
-        crm_trace("Destroying deletion op cache with %d members", g_hash_table_size(lrm_state->deletion_ops));
+        crm_trace("Destroying deletion op cache with %u members",
+                  g_hash_table_size(lrm_state->deletion_ops));
         g_hash_table_destroy(lrm_state->deletion_ops);
     }
-    if (lrm_state->pending_ops) {
-        crm_trace("Destroying pending op cache with %d members", g_hash_table_size(lrm_state->pending_ops));
-        g_hash_table_destroy(lrm_state->pending_ops);
+    if (lrm_state->active_ops != NULL) {
+        crm_trace("Destroying pending op cache with %u members",
+                  g_hash_table_size(lrm_state->active_ops));
+        g_hash_table_destroy(lrm_state->active_ops);
     }
     metadata_cache_free(lrm_state->metadata_cache);
 
@@ -183,22 +188,22 @@ void
 lrm_state_reset_tables(lrm_state_t * lrm_state, gboolean reset_metadata)
 {
     if (lrm_state->resource_history) {
-        crm_trace("Re-setting history op cache with %d members",
+        crm_trace("Resetting resource history cache with %u members",
                   g_hash_table_size(lrm_state->resource_history));
         g_hash_table_remove_all(lrm_state->resource_history);
     }
     if (lrm_state->deletion_ops) {
-        crm_trace("Re-setting deletion op cache with %d members",
+        crm_trace("Resetting deletion operations cache with %u members",
                   g_hash_table_size(lrm_state->deletion_ops));
         g_hash_table_remove_all(lrm_state->deletion_ops);
     }
-    if (lrm_state->pending_ops) {
-        crm_trace("Re-setting pending op cache with %d members",
-                  g_hash_table_size(lrm_state->pending_ops));
-        g_hash_table_remove_all(lrm_state->pending_ops);
+    if (lrm_state->active_ops != NULL) {
+        crm_trace("Resetting active operations cache with %u members",
+                  g_hash_table_size(lrm_state->active_ops));
+        g_hash_table_remove_all(lrm_state->active_ops);
     }
     if (lrm_state->rsc_info_cache) {
-        crm_trace("Re-setting rsc info cache with %d members",
+        crm_trace("Resetting resource information cache with %u members",
                   g_hash_table_size(lrm_state->rsc_info_cache));
         g_hash_table_remove_all(lrm_state->rsc_info_cache);
     }
@@ -233,11 +238,13 @@ void
 lrm_state_destroy_all(void)
 {
     if (lrm_state_table) {
-        crm_trace("Destroying state table with %d members", g_hash_table_size(lrm_state_table));
+        crm_trace("Destroying state table with %u members",
+                  g_hash_table_size(lrm_state_table));
         g_hash_table_destroy(lrm_state_table); lrm_state_table = NULL;
     }
     if(proxy_table) {
-        crm_trace("Destroying proxy table with %d members", g_hash_table_size(proxy_table));
+        crm_trace("Destroying proxy table with %u members",
+                  g_hash_table_size(proxy_table));
         g_hash_table_destroy(proxy_table); proxy_table = NULL;
     }
 }
@@ -324,7 +331,8 @@ lrm_state_disconnect_only(lrm_state_t * lrm_state)
     ((lrmd_t *) lrm_state->conn)->cmds->disconnect(lrm_state->conn);
 
     if (!pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
-        removed = g_hash_table_foreach_remove(lrm_state->pending_ops, fail_pending_op, lrm_state);
+        removed = g_hash_table_foreach_remove(lrm_state->active_ops,
+                                              fail_pending_op, lrm_state);
         crm_trace("Synthesized %d operation failures for %s", removed, lrm_state->node_name);
     }
 }
@@ -689,27 +697,39 @@ lrm_state_get_rsc_info(lrm_state_t * lrm_state, const char *rsc_id, enum lrmd_ca
  * \param[in]     interval_ms     Action interval (in milliseconds)
  * \param[in]     timeout_ms      Action timeout (in milliseconds)
  * \param[in]     start_delay_ms  Delay (in ms) before initiating action
- * \param[in,out] params          Resource parameters
+ * \param[in]     parameters      Hash table of resource parameters
  * \param[out]    call_id         Where to store call ID on success
  *
  * \return Standard Pacemaker return code
- * \note This takes ownership of \p params, which should not be used or freed
- *       after calling this function.
  */
 int
 controld_execute_resource_agent(lrm_state_t *lrm_state, const char *rsc_id,
                                 const char *action, const char *userdata,
                                 guint interval_ms, int timeout_ms,
-                                int start_delay_ms, lrmd_key_value_t *params,
+                                int start_delay_ms, GHashTable *parameters,
                                 int *call_id)
 {
     int rc = pcmk_rc_ok;
+    lrmd_key_value_t *params = NULL;
 
     if (lrm_state->conn == NULL) {
-        lrmd_key_value_freeall(params);
-        rc = ENOTCONN;
+        return ENOTCONN;
+    }
 
-    } else if (is_remote_lrmd_ra(NULL, NULL, rsc_id)) {
+    // Convert parameters from hash table to list
+    if (parameters != NULL) {
+        const char *key = NULL;
+        const char *value = NULL;
+        GHashTableIter iter;
+
+        g_hash_table_iter_init(&iter, parameters);
+        while (g_hash_table_iter_next(&iter, (gpointer *) &key,
+                                      (gpointer *) &value)) {
+            params = lrmd_key_value_add(params, key, value);
+        }
+    }
+
+    if (is_remote_lrmd_ra(NULL, NULL, rsc_id)) {
         rc = controld_execute_remote_agent(lrm_state, rsc_id, action,
                                            userdata, interval_ms, timeout_ms,
                                            start_delay_ms, params, call_id);
