@@ -152,25 +152,29 @@ internal_lrm_state_destroy(gpointer data)
         return;
     }
 
-    crm_trace("Destroying proxy table %s with %d members", lrm_state->node_name, g_hash_table_size(proxy_table));
+    crm_trace("Destroying proxy table %s with %u members",
+              lrm_state->node_name, g_hash_table_size(proxy_table));
     g_hash_table_foreach_remove(proxy_table, remote_proxy_remove_by_node, (char *) lrm_state->node_name);
     remote_ra_cleanup(lrm_state);
     lrmd_api_delete(lrm_state->conn);
 
     if (lrm_state->rsc_info_cache) {
-        crm_trace("Destroying rsc info cache with %d members", g_hash_table_size(lrm_state->rsc_info_cache));
+        crm_trace("Destroying rsc info cache with %u members",
+                  g_hash_table_size(lrm_state->rsc_info_cache));
         g_hash_table_destroy(lrm_state->rsc_info_cache);
     }
     if (lrm_state->resource_history) {
-        crm_trace("Destroying history op cache with %d members", g_hash_table_size(lrm_state->resource_history));
+        crm_trace("Destroying history op cache with %u members",
+                  g_hash_table_size(lrm_state->resource_history));
         g_hash_table_destroy(lrm_state->resource_history);
     }
     if (lrm_state->deletion_ops) {
-        crm_trace("Destroying deletion op cache with %d members", g_hash_table_size(lrm_state->deletion_ops));
+        crm_trace("Destroying deletion op cache with %u members",
+                  g_hash_table_size(lrm_state->deletion_ops));
         g_hash_table_destroy(lrm_state->deletion_ops);
     }
     if (lrm_state->active_ops != NULL) {
-        crm_trace("Destroying pending op cache with %d members",
+        crm_trace("Destroying pending op cache with %u members",
                   g_hash_table_size(lrm_state->active_ops));
         g_hash_table_destroy(lrm_state->active_ops);
     }
@@ -184,22 +188,22 @@ void
 lrm_state_reset_tables(lrm_state_t * lrm_state, gboolean reset_metadata)
 {
     if (lrm_state->resource_history) {
-        crm_trace("Re-setting history op cache with %d members",
+        crm_trace("Resetting resource history cache with %u members",
                   g_hash_table_size(lrm_state->resource_history));
         g_hash_table_remove_all(lrm_state->resource_history);
     }
     if (lrm_state->deletion_ops) {
-        crm_trace("Re-setting deletion op cache with %d members",
+        crm_trace("Resetting deletion operations cache with %u members",
                   g_hash_table_size(lrm_state->deletion_ops));
         g_hash_table_remove_all(lrm_state->deletion_ops);
     }
     if (lrm_state->active_ops != NULL) {
-        crm_trace("Re-setting pending op cache with %d members",
+        crm_trace("Resetting active operations cache with %u members",
                   g_hash_table_size(lrm_state->active_ops));
         g_hash_table_remove_all(lrm_state->active_ops);
     }
     if (lrm_state->rsc_info_cache) {
-        crm_trace("Re-setting rsc info cache with %d members",
+        crm_trace("Resetting resource information cache with %u members",
                   g_hash_table_size(lrm_state->rsc_info_cache));
         g_hash_table_remove_all(lrm_state->rsc_info_cache);
     }
@@ -234,11 +238,13 @@ void
 lrm_state_destroy_all(void)
 {
     if (lrm_state_table) {
-        crm_trace("Destroying state table with %d members", g_hash_table_size(lrm_state_table));
+        crm_trace("Destroying state table with %u members",
+                  g_hash_table_size(lrm_state_table));
         g_hash_table_destroy(lrm_state_table); lrm_state_table = NULL;
     }
     if(proxy_table) {
-        crm_trace("Destroying proxy table with %d members", g_hash_table_size(proxy_table));
+        crm_trace("Destroying proxy table with %u members",
+                  g_hash_table_size(proxy_table));
         g_hash_table_destroy(proxy_table); proxy_table = NULL;
     }
 }
