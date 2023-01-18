@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the Pacemaker project contributors
+ * Copyright 2009-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1603,7 +1603,7 @@ stonith_level_key(const xmlNode *level, enum fenced_target_by mode)
  *
  * \return How to identify target of \p level
  */
-static int
+static enum fenced_target_by
 unpack_level_kind(const xmlNode *level)
 {
     if (crm_element_value(level, XML_ATTR_STONITH_TARGET) != NULL) {
