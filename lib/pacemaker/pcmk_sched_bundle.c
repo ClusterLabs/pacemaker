@@ -32,30 +32,29 @@ is_bundle_node(pe__bundle_variant_data_t *data, pe_node_t *node)
     return FALSE;
 }
 
-static GList *
-get_container_list(const pe_resource_t *rsc)
+/*!
+ * \internal
+ * \brief Get a list of a bundle's containers
+ *
+ * \param[in] bundle  Bundle resource
+ *
+ * \return Newly created list of \p bundle's containers
+ * \note It is the caller's responsibility to free the result with
+ *       g_list_free().
+ */
+GList *
+pcmk__bundle_containers(const pe_resource_t *bundle)
 {
     GList *containers = NULL;
+    const pe__bundle_variant_data_t *data = NULL;
 
-    if (rsc->variant == pe_container) {
-        pe__bundle_variant_data_t *data = NULL;
+    get_bundle_variant_data(data, bundle);
+    for (GList *iter = data->replicas; iter != NULL; iter = iter->next) {
+        pe__bundle_replica_t *replica = iter->data;
 
-        get_bundle_variant_data(data, rsc);
-        for (GList *gIter = data->replicas; gIter != NULL;
-             gIter = gIter->next) {
-            pe__bundle_replica_t *replica = gIter->data;
-
-            containers = g_list_append(containers, replica->container);
-        }
+        containers = g_list_append(containers, replica->container);
     }
     return containers;
-}
-
-static inline GList *
-get_containers_or_children(const pe_resource_t *rsc)
-{
-    return (rsc->variant == pe_container)?
-           get_container_list(rsc) : rsc->children;
 }
 
 /*!
@@ -78,14 +77,14 @@ pcmk__bundle_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
     get_bundle_variant_data(bundle_data, rsc);
 
     pe__set_resource_flags(rsc, pe_rsc_allocating);
-    containers = get_container_list(rsc);
+    containers = pcmk__bundle_containers(rsc);
 
     pe__show_node_weights(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
                           rsc, __func__, rsc->allowed_nodes, rsc->cluster);
 
     containers = g_list_sort(containers, pcmk__cmp_instance);
-    distribute_children(rsc, containers, bundle_data->nreplicas,
-                        bundle_data->nreplicas_per_host, rsc->cluster);
+    pcmk__assign_instances(rsc, containers, bundle_data->nreplicas,
+                           bundle_data->nreplicas_per_host);
     g_list_free(containers);
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
@@ -172,7 +171,7 @@ pcmk__bundle_create_actions(pe_resource_t *rsc)
 
     CRM_CHECK(rsc != NULL, return);
 
-    containers = get_container_list(rsc);
+    containers = pcmk__bundle_containers(rsc);
     get_bundle_variant_data(bundle_data, rsc);
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
@@ -190,7 +189,7 @@ pcmk__bundle_create_actions(pe_resource_t *rsc)
         }
     }
 
-    clone_create_pseudo_actions(rsc, containers, NULL, NULL);
+    pcmk__create_instance_actions(rsc, containers, NULL, NULL);
 
     if (bundle_data->child) {
         bundle_data->child->cmds->create_actions(bundle_data->child);
@@ -558,326 +557,42 @@ pcmk__bundle_action_flags(pe_action_t *action, const pe_node_t *node)
         }
     }
 
-    containers = get_container_list(action->rsc);
+    containers = pcmk__bundle_containers(action->rsc);
     flags = summary_action_flags(action, containers, node);
     g_list_free(containers);
     return flags;
 }
 
-pe_resource_t *
-find_compatible_child_by_node(const pe_resource_t *local_child,
-                              const pe_node_t *local_node,
-                              const pe_resource_t *rsc, enum rsc_role_e filter,
-                              gboolean current)
-{
-    GList *gIter = NULL;
-    GList *children = NULL;
-
-    if (local_node == NULL) {
-        crm_err("Can't colocate unrunnable child %s with %s", local_child->id, rsc->id);
-        return NULL;
-    }
-
-    crm_trace("Looking for compatible child from %s for %s on %s",
-              local_child->id, rsc->id, pe__node_name(local_node));
-
-    children = get_containers_or_children(rsc);
-    for (gIter = children; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-        if(is_child_compatible(child_rsc, local_node, filter, current)) {
-            crm_trace("Pairing %s with %s on %s",
-                      local_child->id, child_rsc->id, pe__node_name(local_node));
-            return child_rsc;
-        }
-    }
-
-    crm_trace("Can't pair %s with %s", local_child->id, rsc->id);
-    if(children != rsc->children) {
-        g_list_free(children);
-    }
-    return NULL;
-}
-
-static pe__bundle_replica_t *
-replica_for_container(const pe_resource_t *rsc, const pe_resource_t *container,
-                      const pe_node_t *node)
-{
-    if (rsc->variant == pe_container) {
-        const pe__bundle_variant_data_t *data = NULL;
-
-        get_bundle_variant_data(data, rsc);
-        for (GList *gIter = data->replicas; gIter != NULL;
-             gIter = gIter->next) {
-            pe__bundle_replica_t *replica = gIter->data;
-
-            if (replica->child
-                && (container == replica->container)
-                && pe__same_node(node, replica->node)) {
-                return replica;
-            }
-        }
-    }
-    return NULL;
-}
-
-static uint32_t
-multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
-                                const pe_node_t *node, uint32_t filter,
-                                uint32_t type, pe_working_set_t *data_set)
-{
-    GList *gIter = NULL;
-    GList *children = NULL;
-    gboolean current = FALSE;
-    uint32_t changed = pcmk__updated_none;
-
-    /* Fix this - lazy */
-    if (pcmk__ends_with(first->uuid, "_stopped_0")
-        || pcmk__ends_with(first->uuid, "_demoted_0")) {
-        current = TRUE;
-    }
-
-    children = get_containers_or_children(then->rsc);
-    for (gIter = children; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *then_child = gIter->data;
-        pe_resource_t *first_child = find_compatible_child(then_child,
-                                                           first->rsc,
-                                                           RSC_ROLE_UNKNOWN,
-                                                           current);
-        if (first_child == NULL && current) {
-            crm_trace("Ignore");
-
-        } else if (first_child == NULL) {
-            crm_debug("No match found for %s (%d / %s / %s)", then_child->id, current, first->uuid, then->uuid);
-
-            /* Me no like this hack - but what else can we do?
-             *
-             * If there is no-one active or about to be active
-             *   on the same node as then_child, then they must
-             *   not be allowed to start
-             */
-            if (pcmk_any_flags_set(type, pe_order_runnable_left|pe_order_implies_then) /* Mandatory */ ) {
-                pe_rsc_info(then->rsc, "Inhibiting %s from being active", then_child->id);
-                if (pcmk__assign_resource(then_child, NULL, true)) {
-                    pcmk__set_updated_flags(changed, first, pcmk__updated_then);
-                }
-            }
-
-        } else {
-            pe_action_t *first_action = NULL;
-            pe_action_t *then_action = NULL;
-
-            enum action_tasks task = clone_child_action(first);
-            const char *first_task = task2text(task);
-
-            pe__bundle_replica_t *first_replica = NULL;
-            pe__bundle_replica_t *then_replica = NULL;
-
-            first_replica = replica_for_container(first->rsc, first_child,
-                                                  node);
-            if (strstr(first->task, "stop") && first_replica && first_replica->child) {
-                /* Except for 'stopped' we should be looking at the
-                 * in-container resource, actions for the child will
-                 * happen later and are therefor more likely to align
-                 * with the user's intent.
-                 */
-                first_action = find_first_action(first_replica->child->actions,
-                                                 NULL, task2text(task), node);
-            } else {
-                first_action = find_first_action(first_child->actions, NULL, task2text(task), node);
-            }
-
-            then_replica = replica_for_container(then->rsc, then_child, node);
-            if (strstr(then->task, "mote")
-                && then_replica && then_replica->child) {
-                /* Promote/demote actions will never be found for the
-                 * container resource, look in the child instead
-                 *
-                 * Alternatively treat:
-                 *  'XXXX then promote YYYY' as 'XXXX then start container for YYYY', and
-                 *  'demote XXXX then stop YYYY' as 'stop container for XXXX then stop YYYY'
-                 */
-                then_action = find_first_action(then_replica->child->actions,
-                                                NULL, then->task, node);
-            } else {
-                then_action = find_first_action(then_child->actions, NULL, then->task, node);
-            }
-
-            if (first_action == NULL) {
-                if (!pcmk_is_set(first_child->flags, pe_rsc_orphan)
-                    && !pcmk__str_any_of(first_task, RSC_STOP, RSC_DEMOTE, NULL)) {
-                    crm_err("Internal error: No action found for %s in %s (first)",
-                            first_task, first_child->id);
-
-                } else {
-                    crm_trace("No action found for %s in %s%s (first)",
-                              first_task, first_child->id,
-                              pcmk_is_set(first_child->flags, pe_rsc_orphan)? " (ORPHAN)" : "");
-                }
-                continue;
-            }
-
-            /* We're only interested if 'then' is neither stopping nor being demoted */ 
-            if (then_action == NULL) {
-                if (!pcmk_is_set(then_child->flags, pe_rsc_orphan)
-                    && !pcmk__str_any_of(then->task, RSC_STOP, RSC_DEMOTE, NULL)) {
-                    crm_err("Internal error: No action found for %s in %s (then)",
-                            then->task, then_child->id);
-
-                } else {
-                    crm_trace("No action found for %s in %s%s (then)",
-                              then->task, then_child->id,
-                              pcmk_is_set(then_child->flags, pe_rsc_orphan)? " (ORPHAN)" : "");
-                }
-                continue;
-            }
-
-            if (order_actions(first_action, then_action, type)) {
-                crm_debug("Created constraint for %s (%d) -> %s (%d) %.6x",
-                          first_action->uuid,
-                          pcmk_is_set(first_action->flags, pe_action_optional),
-                          then_action->uuid,
-                          pcmk_is_set(then_action->flags, pe_action_optional),
-                          type);
-                pcmk__set_updated_flags(changed, first,
-                                        pcmk__updated_first|pcmk__updated_then);
-            }
-            if(first_action && then_action) {
-                changed |= then_child->cmds->update_ordered_actions(first_action,
-                                                                    then_action,
-                                                                    node,
-                                                                    first_child->cmds->action_flags(first_action, node),
-                                                                    filter,
-                                                                    type,
-                                                                    data_set);
-            } else {
-                crm_err("Nothing found either for %s (%p) or %s (%p) %s",
-                        first_child->id, first_action,
-                        then_child->id, then_action, task2text(task));
-            }
-        }
-    }
-
-    if(children != then->rsc->children) {
-        g_list_free(children);
-    }
-    return changed;
-}
-
-static bool
-can_interleave_actions(pe_action_t *first, pe_action_t *then)
-{
-    bool interleave = FALSE;
-    pe_resource_t *rsc = NULL;
-    const char *interleave_s = NULL;
-
-    if(first->rsc == NULL || then->rsc == NULL) {
-        crm_trace("Not interleaving %s with %s (both must be resources)", first->uuid, then->uuid);
-        return FALSE;
-    } else if(first->rsc == then->rsc) {
-        crm_trace("Not interleaving %s with %s (must belong to different resources)", first->uuid, then->uuid);
-        return FALSE;
-    } else if(first->rsc->variant < pe_clone || then->rsc->variant < pe_clone) {
-        crm_trace("Not interleaving %s with %s (both sides must be clones or bundles)", first->uuid, then->uuid);
-        return FALSE;
-    }
-
-    if (pcmk__ends_with(then->uuid, "_stop_0")
-        || pcmk__ends_with(then->uuid, "_demote_0")) {
-        rsc = first->rsc;
-    } else {
-        rsc = then->rsc;
-    }
-
-    interleave_s = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INTERLEAVE);
-    interleave = crm_is_true(interleave_s);
-    crm_trace("Interleave %s -> %s: %s (based on %s)",
-              first->uuid, then->uuid, interleave ? "yes" : "no", rsc->id);
-
-    return interleave;
-}
-
 /*!
  * \internal
- * \brief Update two actions according to an ordering between them
+ * \brief Get containerized resource corresponding to a given bundle container
  *
- * Given information about an ordering of two actions, update the actions'
- * flags (and runnable_before members if appropriate) as appropriate for the
- * ordering. In some cases, the ordering could be disabled as well.
+ * \param[in] instance  Collective instance that might be a bundle container
+ * \param[in] node      Node that \p instance might be running on
  *
- * \param[in,out] first     'First' action in an ordering
- * \param[in,out] then      'Then' action in an ordering
- * \param[in]     node      If not NULL, limit scope of ordering to this node
- *                          (only used when interleaving instances)
- * \param[in]     flags     Action flags for \p first for ordering purposes
- * \param[in]     filter    Action flags to limit scope of certain updates (may
- *                          include pe_action_optional to affect only mandatory
- *                          actions, and pe_action_runnable to affect only
- *                          runnable actions)
- * \param[in]     type      Group of enum pe_ordering flags to apply
- * \param[in,out] data_set  Cluster working set
- *
- * \return Group of enum pcmk__updated flags indicating what was updated
+ * \return Bundled resource instance inside \p instance if it is a bundle
+ *         container instance running on \p node, otherwise NULL
  */
-uint32_t
-pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
-                           const pe_node_t *node, uint32_t flags,
-                           uint32_t filter, uint32_t type,
-                           pe_working_set_t *data_set)
+const pe_resource_t *
+pcmk__get_rsc_in_container(const pe_resource_t *instance, const pe_node_t *node)
 {
-    uint32_t changed = pcmk__updated_none;
+    const pe__bundle_variant_data_t *data = NULL;
+    const pe_resource_t *top = pe__const_top_resource(instance, true);
 
-    crm_trace("%s -> %s", first->uuid, then->uuid);
+    if ((node == NULL) || (top == NULL) || (top->variant != pe_container)) {
+        return NULL;
+    }
+    get_bundle_variant_data(data, top);
 
-    if(can_interleave_actions(first, then)) {
-        changed = multi_update_interleave_actions(first, then, node, filter,
-                                                  type, data_set);
+    for (const GList *iter = data->replicas; iter != NULL; iter = iter->next) {
+        const pe__bundle_replica_t *replica = iter->data;
 
-    } else if(then->rsc) {
-        GList *gIter = NULL;
-        GList *children = NULL;
-
-        // Handle the 'primitive' ordering case
-        changed |= pcmk__update_ordered_actions(first, then, node, flags,
-                                                filter, type, data_set);
-
-        // Now any children (or containers in the case of a bundle)
-        children = get_containers_or_children(then->rsc);
-        for (gIter = children; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *then_child = (pe_resource_t *) gIter->data;
-            uint32_t then_child_changed = pcmk__updated_none;
-            pe_action_t *then_child_action = find_first_action(then_child->actions, NULL, then->task, node);
-
-            if (then_child_action) {
-                uint32_t then_child_flags = then_child->cmds->action_flags(then_child_action,
-                                                                           node);
-
-                if (pcmk_is_set(then_child_flags, pe_action_runnable)) {
-                    then_child_changed |= then_child->cmds->update_ordered_actions(first,
-                                                                                   then_child_action,
-                                                                                   node,
-                                                                                   flags,
-                                                                                   filter,
-                                                                                   type,
-                                                                                   data_set);
-                }
-                changed |= then_child_changed;
-                if (pcmk_is_set(then_child_changed, pcmk__updated_then)) {
-                    for (GList *lpc = then_child_action->actions_after; lpc != NULL; lpc = lpc->next) {
-                        pe_action_wrapper_t *next = (pe_action_wrapper_t *) lpc->data;
-
-                        pcmk__update_action_for_orderings(next->action,
-                                                          data_set);
-                    }
-                }
-            }
-        }
-
-        if(children != then->rsc->children) {
-            g_list_free(children);
+        if ((instance == replica->container)
+            && pe__same_node(node, replica->node)) {
+            return replica->child;
         }
     }
-    return changed;
+    return NULL;
 }
 
 void

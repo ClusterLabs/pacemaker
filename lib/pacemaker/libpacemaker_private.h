@@ -670,6 +670,13 @@ void pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
 // Bundles (pcmk_sched_bundle.c)
 
 G_GNUC_INTERNAL
+GList *pcmk__bundle_containers(const pe_resource_t *bundle);
+
+G_GNUC_INTERNAL
+const pe_resource_t *pcmk__get_rsc_in_container(const pe_resource_t *instance,
+                                                const pe_node_t *node);
+
+G_GNUC_INTERNAL
 void pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
                                     const pe_resource_t *primary,
                                     const pcmk__colocation_t *colocation,
@@ -682,8 +689,13 @@ void pcmk__output_bundle_actions(pe_resource_t *rsc);
 // Clone instances or bundle replica containers (pcmk_sched_instances.c)
 
 G_GNUC_INTERNAL
-void distribute_children(pe_resource_t *rsc, GList *children, int max,
-                         int per_host_max, pe_working_set_t *data_set);
+void pcmk__assign_instances(pe_resource_t *collective, GList *instances,
+                            int max_total, int max_per_node);
+
+G_GNUC_INTERNAL
+void pcmk__create_instance_actions(pe_resource_t *rsc, GList *instances,
+                                   notify_data_t **start_notify,
+                                   notify_data_t **stop_notify);
 
 
 // Injections (pcmk_injections.c)
