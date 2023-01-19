@@ -725,31 +725,32 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
             const pe_resource_t *then_rsc = NULL;
 
             first_rsc = pcmk__get_rsc_in_container(first_child, node);
-            if ((first_rsc != NULL) && strstr(first->task, "stop")) {
-                /* Except for 'stopped' we should be looking at the
-                 * in-container resource, actions for the child will
-                 * happen later and are therefor more likely to align
-                 * with the user's intent.
+            if ((first_rsc != NULL)
+                && pcmk__str_any_of(first->task, CRMD_ACTION_STOP,
+                                    CRMD_ACTION_STOPPED, NULL)) {
+                /* Use the containerized resource since its actions will happen
+                 * later and are more likely to align with the user's intent.
                  */
                 first_action = find_first_action(first_rsc->actions, NULL,
-                                                 task2text(task), node);
+                                                 first_task, node);
             } else {
-                first_action = find_first_action(first_child->actions, NULL, task2text(task), node);
+                first_action = find_first_action(first_child->actions, NULL,
+                                                 first_task, node);
             }
 
             then_rsc = pcmk__get_rsc_in_container(then_child, node);
-            if ((then_rsc != NULL) && strstr(then->task, "mote")) {
-                /* Promote/demote actions will never be found for the
-                 * container resource, look in the child instead
-                 *
-                 * Alternatively treat:
-                 *  'XXXX then promote YYYY' as 'XXXX then start container for YYYY', and
-                 *  'demote XXXX then stop YYYY' as 'stop container for XXXX then stop YYYY'
+            if ((then_rsc != NULL)
+                && pcmk__str_any_of(then->task, CRMD_ACTION_PROMOTE,
+                                    CRMD_ACTION_PROMOTED, CRMD_ACTION_DEMOTE,
+                                    CRMD_ACTION_DEMOTED, NULL)) {
+                /* Role actions apply only to the containerized resource, not
+                 * the container itself.
                  */
                 then_action = find_first_action(then_rsc->actions, NULL,
                                                 then->task, node);
             } else {
-                then_action = find_first_action(then_child->actions, NULL, then->task, node);
+                then_action = find_first_action(then_child->actions, NULL,
+                                                then->task, node);
             }
 
             if (first_action == NULL) {
