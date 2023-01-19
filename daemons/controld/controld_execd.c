@@ -829,26 +829,12 @@ void
 lrm_clear_last_failure(const char *rsc_id, const char *node_name,
                        const char *operation, guint interval_ms)
 {
-    char *op_key = NULL;
-    char *orig_op_key = NULL;
-    lrm_state_t *lrm_state = NULL;
+    lrm_state_t *lrm_state = lrm_state_find(node_name);
 
-    lrm_state = lrm_state_find(node_name);
     if (lrm_state == NULL) {
         return;
     }
-
-    /* Erase from CIB */
-    op_key = pcmk__op_key(rsc_id, "last_failure", 0);
-    if (operation) {
-        orig_op_key = pcmk__op_key(rsc_id, operation, interval_ms);
-    }
-    erase_lrm_history_by_id(lrm_state, rsc_id, op_key, orig_op_key, 0);
-    free(op_key);
-    free(orig_op_key);
-
-    /* Remove from memory */
-    if (lrm_state->resource_history) {
+    if (lrm_state->resource_history != NULL) {
         rsc_history_t *entry = g_hash_table_lookup(lrm_state->resource_history,
                                                    rsc_id);
 

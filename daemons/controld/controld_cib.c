@@ -855,3 +855,57 @@ controld_delete_action_history(const lrmd_event_data_t *op)
     crm_log_xml_trace(xml_top, "op:cancel");
     free_xml(xml_top);
 }
+
+/* Define xpath to find LRM resource history entry by node and resource */
+#define XPATH_HISTORY                                   \
+    "/" XML_TAG_CIB "/" XML_CIB_TAG_STATUS              \
+    "/" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='%s']"  \
+    "/" XML_CIB_TAG_LRM "/" XML_LRM_TAG_RESOURCES       \
+    "/" XML_LRM_TAG_RESOURCE "[@" XML_ATTR_ID "='%s']"  \
+    "/" XML_LRM_TAG_RSC_OP
+
+/* ... and also by operation key */
+#define XPATH_HISTORY_ID XPATH_HISTORY \
+    "[@" XML_ATTR_ID "='%s']"
+
+/* ... and also by operation key and original operation key */
+#define XPATH_HISTORY_ORIG XPATH_HISTORY \
+    "[@" XML_ATTR_ID "='%s' and @" XML_LRM_ATTR_TASK_KEY "='%s']"
+
+/*!
+ * \internal
+ * \brief Delete a last_failure resource history entry from the CIB
+ *
+ * \param[in] rsc_id       Name of resource to clear history for
+ * \param[in] node         Name of node to clear history for
+ * \param[in] action       If specified, delete only if this was failed action
+ * \param[in] interval_ms  If \p action is specified, it has this interval
+ */
+void
+controld_cib_delete_last_failure(const char *rsc_id, const char *node,
+                                 const char *action, guint interval_ms)
+{
+    char *xpath = NULL;
+    char *last_failure_key = NULL;
+
+    CRM_CHECK((rsc_id != NULL) && (node != NULL), return);
+
+    // Generate XPath to match desired entry
+    last_failure_key = pcmk__op_key(rsc_id, "last_failure", 0);
+    if (action == NULL) {
+        xpath = crm_strdup_printf(XPATH_HISTORY_ID, node, rsc_id,
+                                  last_failure_key);
+    } else {
+        char *action_key = pcmk__op_key(rsc_id, action, interval_ms);
+
+        xpath = crm_strdup_printf(XPATH_HISTORY_ORIG, node, rsc_id,
+                                  last_failure_key, action_key);
+        free(action_key);
+    }
+    free(last_failure_key);
+
+    controld_globals.cib_conn->cmds->remove(controld_globals.cib_conn, xpath,
+                                            NULL,
+                                            cib_quorum_override|cib_xpath);
+    free(xpath);
+}
