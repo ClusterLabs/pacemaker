@@ -587,7 +587,7 @@ pcmk__get_rsc_in_container(const pe_resource_t *instance, const pe_node_t *node)
     for (const GList *iter = data->replicas; iter != NULL; iter = iter->next) {
         const pe__bundle_replica_t *replica = iter->data;
 
-        if ((replica->child != NULL) && (instance == replica->container)
+        if ((instance == replica->container)
             && pe__same_node(node, replica->node)) {
             return replica->child;
         }
