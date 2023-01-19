@@ -331,7 +331,7 @@ pcmk__assign_instances(pe_resource_t *collective, GList *instances,
     }
 
     pe_rsc_debug(collective,
-                 "Assigning up to %d %s instance%s to up to %d node%s "
+                 "Assigning up to %d %s instance%s to up to %u node%s "
                  "(at most %d per host, %d optimal)",
                  max_total, collective->id, pcmk__plural_s(max_total),
                  available_nodes, pcmk__plural_s(available_nodes),
@@ -422,6 +422,8 @@ check_instance_state(const pe_resource_t *instance, uint32_t *state)
         return;
     }
 
+    // If we get here, instance is a primitive
+
     if (instance->running_on != NULL) {
         instance_state |= instance_active;
     }
@@ -434,31 +436,34 @@ check_instance_state(const pe_resource_t *instance, uint32_t *state)
          iter = iter->next) {
 
         const pe_action_t *action = (const pe_action_t *) iter->data;
+        const bool optional = pcmk_is_set(action->flags, pe_action_optional);
 
         if (pcmk__str_eq(RSC_START, action->task, pcmk__str_none)) {
-            if (!pcmk_is_set(action->flags, pe_action_optional)
-                && pcmk_is_set(action->flags, pe_action_runnable)) {
+            if (!optional && pcmk_is_set(action->flags, pe_action_runnable)) {
                 pe_rsc_trace(instance, "Instance is starting due to %s",
                              action->uuid);
                 instance_state |= instance_starting;
             } else {
-                pe_rsc_trace(instance,
-                             "%s doesn't affect %s state (unrunnable)",
-                             action->uuid, instance->id);
+                pe_rsc_trace(instance, "%s doesn't affect %s state (%s)",
+                             action->uuid, instance->id,
+                             (optional? "optional" : "unrunnable"));
             }
 
         } else if (pcmk__str_eq(RSC_STOP, action->task, pcmk__str_none)) {
-            if (!pcmk_is_set(action->flags, pe_action_optional)
+            /* Only stop actions can be pseudo-actions for primitives. That
+             * indicates that the node they are on is being fenced, so the stop
+             * is implied rather than actually executed.
+             */
+            if (!optional
                 && pcmk_any_flags_set(action->flags,
-                                      // Pseudo-stops are implied by fencing
                                       pe_action_pseudo|pe_action_runnable)) {
                 pe_rsc_trace(instance, "Instance is stopping due to %s",
                              action->uuid);
                 instance_state |= instance_stopping;
             } else {
-                pe_rsc_trace(instance,
-                             "%s doesn't affect %s state (unrunnable)",
-                             action->uuid, instance->id);
+                pe_rsc_trace(instance, "%s doesn't affect %s state (%s)",
+                             action->uuid, instance->id,
+                             (optional? "optional" : "unrunnable"));
             }
         }
     }
@@ -476,8 +481,8 @@ check_instance_state(const pe_resource_t *instance, uint32_t *state)
  *
  * \param[in,out] collective    Clone or bundle resource to create actions for
  * \param[in,out] instances     List of clone instances or bundle containers
- * \param[out]    start_notify  If not NULL, create start notification actions
- * \param[out]    stop_notify   If not NULL, create stop notification actions
+ * \param[in,out] start_notify  If not NULL, create start notification actions
+ * \param[in,out] stop_notify   If not NULL, create stop notification actions
  */
 void
 pcmk__create_instance_actions(pe_resource_t *collective, GList *instances,
