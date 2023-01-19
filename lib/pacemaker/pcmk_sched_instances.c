@@ -397,8 +397,18 @@ pcmk__assign_instances(pe_resource_t *collective, GList *instances,
 enum instance_state {
     instance_starting   = (1 << 0),
     instance_stopping   = (1 << 1),
+
+    /* This indicates that some instance is restarting. It's not the same as
+     * instance_starting|instance_stopping, which would indicate that some
+     * instance is starting, and some instance (not necessarily the same one) is
+     * stopping.
+     */
     instance_restarting = (1 << 2),
+
     instance_active     = (1 << 3),
+
+    instance_all        = instance_starting|instance_stopping
+                          |instance_restarting|instance_active,
 };
 
 /*!
@@ -414,9 +424,16 @@ check_instance_state(const pe_resource_t *instance, uint32_t *state)
     const GList *iter = NULL;
     uint32_t instance_state = 0; // State of just this instance
 
-    // If the instance has its own children (a cloned group), check each one
-    if (instance->children != NULL) {
-        for (iter = instance->children; iter != NULL; iter = iter->next) {
+    // No need to check further if all conditions have already been detected
+    if (pcmk_all_flags_set(*state, instance_all)) {
+        return;
+    }
+
+    // If instance is a collective (a cloned group), check its children instead
+    if (instance->variant > pe_native) {
+        for (iter = instance->children;
+             (iter != NULL) && !pcmk_all_flags_set(*state, instance_all);
+             iter = iter->next) {
             check_instance_state((const pe_resource_t *) iter->data, state);
         }
         return;
