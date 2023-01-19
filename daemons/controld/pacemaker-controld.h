@@ -52,6 +52,9 @@ void controld_delete_action_history(const lrmd_event_data_t *op);
 void controld_cib_delete_last_failure(const char *rsc_id, const char *node,
                                       const char *action, guint interval_ms);
 
+void controld_delete_action_history_by_key(const char *rsc_id, const char *node,
+                                           const char *key, int call_id);
+
 void crmd_metadata(void);
 void controld_trigger_config_as(const char *fn, int line);
 void controld_election_init(const char *uname);
