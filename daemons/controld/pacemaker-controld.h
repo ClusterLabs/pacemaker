@@ -47,6 +47,8 @@ void controld_update_resource_history(const char *node_name,
                                       const lrmd_rsc_info_t *rsc,
                                       lrmd_event_data_t *op, time_t lock_time);
 
+void controld_delete_action_history(const lrmd_event_data_t *op);
+
 void crmd_metadata(void);
 void controld_trigger_config_as(const char *fn, int line);
 void controld_election_init(const char *uname);

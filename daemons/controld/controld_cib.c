@@ -819,3 +819,39 @@ controld_update_resource_history(const char *node_name,
     fsa_register_cib_callback(cib_rc, FALSE, NULL, cib_rsc_callback);
     free_xml(update);
 }
+
+/*!
+ * \internal
+ * \brief Erase an LRM history entry from the CIB, given the operation data
+ *
+ * \param[in] op         Operation whose history should be deleted
+ */
+void
+controld_delete_action_history(const lrmd_event_data_t *op)
+{
+    xmlNode *xml_top = NULL;
+
+    CRM_CHECK(op != NULL, return);
+
+    xml_top = create_xml_node(NULL, XML_LRM_TAG_RSC_OP);
+    crm_xml_add_int(xml_top, XML_LRM_ATTR_CALLID, op->call_id);
+    crm_xml_add(xml_top, XML_ATTR_TRANSITION_KEY, op->user_data);
+
+    if (op->interval_ms > 0) {
+        char *op_id = pcmk__op_key(op->rsc_id, op->op_type, op->interval_ms);
+
+        /* Avoid deleting last_failure too (if it was a result of this recurring op failing) */
+        crm_xml_add(xml_top, XML_ATTR_ID, op_id);
+        free(op_id);
+    }
+
+    crm_debug("Erasing resource operation history for " PCMK__OP_FMT " (call=%d)",
+              op->rsc_id, op->op_type, op->interval_ms, op->call_id);
+
+    controld_globals.cib_conn->cmds->remove(controld_globals.cib_conn,
+                                            XML_CIB_TAG_STATUS, xml_top,
+                                            cib_quorum_override);
+
+    crm_log_xml_trace(xml_top, "op:cancel");
+    free_xml(xml_top);
+}
