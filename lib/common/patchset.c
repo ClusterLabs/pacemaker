@@ -527,7 +527,7 @@ xml_log_patchset_v1_recursive(uint8_t log_level, const char *prefix,
         // Keep looking for the actual change
         for (const xmlNode *child = pcmk__xml_first_child(data); child != NULL;
              child = pcmk__xml_next(child)) {
-            xml_log_patchset_v1_recursive(log_level, prefix, data, depth + 1,
+            xml_log_patchset_v1_recursive(log_level, prefix, child, depth + 1,
                                           options);
         }
 
