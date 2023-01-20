@@ -698,9 +698,9 @@ void pcmk__create_instance_actions(pe_resource_t *rsc, GList *instances,
                                    notify_data_t **stop_notify);
 
 G_GNUC_INTERNAL
-bool pcmk__instance_is_compatible(const pe_resource_t *instance,
-                                  const pe_node_t *node, enum rsc_role_e role,
-                                  bool current);
+bool pcmk__instance_matches(const pe_resource_t *instance,
+                            const pe_node_t *node, enum rsc_role_e role,
+                            bool current);
 
 G_GNUC_INTERNAL
 pe_resource_t *pcmk__find_compatible_instance(const pe_resource_t *match_rsc,

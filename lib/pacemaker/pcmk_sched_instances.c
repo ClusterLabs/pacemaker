@@ -590,8 +590,8 @@ get_instance_list(const pe_resource_t *rsc)
  * \internal
  * \brief Free any memory created by get_instance_list()
  *
- * \param[in] rsc   Clone or bundle resource passed to get_instance_list()
- * \param[in] list  Return value of get_instance_list() for \p rsc
+ * \param[in]     rsc   Clone or bundle resource passed to get_instance_list()
+ * \param[in,out] list  Return value of get_instance_list() for \p rsc
  */
 static inline void
 free_instance_list(const pe_resource_t *rsc, GList *list)
@@ -615,9 +615,8 @@ free_instance_list(const pe_resource_t *rsc, GList *list)
  *         otherwise false
  */
 bool
-pcmk__instance_is_compatible(const pe_resource_t *instance,
-                             const pe_node_t *node, enum rsc_role_e role,
-                             bool current)
+pcmk__instance_matches(const pe_resource_t *instance, const pe_node_t *node,
+                       enum rsc_role_e role, bool current)
 {
     pe_node_t *instance_node = NULL;
 
@@ -679,9 +678,9 @@ find_compatible_instance_on_node(const pe_resource_t *match_rsc,
     for (GList *iter = instances; iter != NULL; iter = iter->next) {
         pe_resource_t *instance = (pe_resource_t *) iter->data;
 
-        if (pcmk__instance_is_compatible(instance, node, role, current)) {
-            pe_rsc_trace(match_rsc,
-                         "Found %s instance %s compatible with %s on %s",
+        if (pcmk__instance_matches(instance, node, role, current)) {
+            pe_rsc_trace(match_rsc, "Found %s %s instance %s compatible with %s on %s",
+                         role == RSC_ROLE_UNKNOWN? "matching" : role2text(role),
                          rsc->id, instance->id, match_rsc->id,
                          pe__node_name(node));
             return instance;
@@ -689,8 +688,8 @@ find_compatible_instance_on_node(const pe_resource_t *match_rsc,
     }
     free_instance_list(rsc, instances);
 
-    pe_rsc_trace(match_rsc,
-                 "No %s instance found compatible with %s on %s",
+    pe_rsc_trace(match_rsc, "No %s %s instance found compatible with %s on %s",
+                 ((role == RSC_ROLE_UNKNOWN)? "matching" : role2text(role)),
                  rsc->id, match_rsc->id, pe__node_name(node));
     return NULL;
 }
@@ -705,7 +704,8 @@ find_compatible_instance_on_node(const pe_resource_t *match_rsc,
  * \param[in] current    If true, compare instance's original node and role,
  *                       otherwise compare assigned next node and role
  *
- * \return \p rsc instance matching \p node and \p role if any, otherwise NULL
+ * \return Compatible (by \p role and \p match_rsc location) instance of \p rsc
+ *         if any, otherwise NULL
  */
 pe_resource_t *
 pcmk__find_compatible_instance(const pe_resource_t *match_rsc,
@@ -714,7 +714,7 @@ pcmk__find_compatible_instance(const pe_resource_t *match_rsc,
 {
     pe_resource_t *instance = NULL;
     GList *nodes = NULL;
-    pe_node_t *node = match_rsc->fns->location(match_rsc, NULL, current);
+    const pe_node_t *node = match_rsc->fns->location(match_rsc, NULL, current);
 
     // If match_rsc has a node, check only that node
     if (node != NULL) {

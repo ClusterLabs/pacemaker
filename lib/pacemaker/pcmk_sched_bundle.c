@@ -344,8 +344,8 @@ compatible_replica_for_node(const pe_resource_t *rsc_lh,
          gIter = gIter->next) {
         pe__bundle_replica_t *replica = gIter->data;
 
-        if (pcmk__instance_is_compatible(replica->container, candidate, filter,
-                                         current)) {
+        if (pcmk__instance_matches(replica->container, candidate, filter,
+                                   current)) {
             crm_trace("Pairing %s with %s on %s",
                       rsc_lh->id, replica->container->id,
                       pe__node_name(candidate));
