@@ -683,6 +683,7 @@ find_compatible_instance_on_node(const pe_resource_t *match_rsc,
                          role == RSC_ROLE_UNKNOWN? "matching" : role2text(role),
                          rsc->id, instance->id, match_rsc->id,
                          pe__node_name(node));
+            free_instance_list(rsc, instances); // Only frees list, not contents
             return instance;
         }
     }
