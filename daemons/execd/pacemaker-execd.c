@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 the Pacemaker project contributors
+ * Copyright 2012-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -303,23 +303,6 @@ lrmd_exit(gpointer data)
 
     crm_exit(CRM_EX_OK);
     return FALSE;
-}
-
-/*!
- * \internal
- * \brief Clean up and exit if shutdown has started
- *
- * \return Doesn't return
- */
-void
-execd_exit_if_shutting_down(void)
-{
-#ifdef PCMK__COMPILE_REMOTE
-    if (shutting_down) {
-        crm_warn("exit because TLS connection was closed and 'shutting_down' set");
-        lrmd_exit(NULL);
-    }
-#endif
 }
 
 /*!
