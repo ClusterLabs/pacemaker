@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -620,11 +620,17 @@ handle_failcount_op(xmlNode * stored_msg)
         is_remote_node = TRUE;
     }
 
+    crm_debug("Clearing failures for %s-interval %s on %s "
+              "from attribute manager, CIB, and executor state",
+              pcmk__readable_interval(interval_ms), rsc, uname);
+
     if (interval_ms) {
         interval_spec = crm_strdup_printf("%ums", interval_ms);
     }
     update_attrd_clear_failures(uname, rsc, op, interval_spec, is_remote_node);
     free(interval_spec);
+
+    controld_cib_delete_last_failure(rsc, uname, op, interval_ms);
 
     lrm_clear_last_failure(rsc, uname, op, interval_ms);
 

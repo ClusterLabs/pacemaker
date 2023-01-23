@@ -819,3 +819,126 @@ controld_update_resource_history(const char *node_name,
     fsa_register_cib_callback(cib_rc, FALSE, NULL, cib_rsc_callback);
     free_xml(update);
 }
+
+/*!
+ * \internal
+ * \brief Erase an LRM history entry from the CIB, given the operation data
+ *
+ * \param[in] op         Operation whose history should be deleted
+ */
+void
+controld_delete_action_history(const lrmd_event_data_t *op)
+{
+    xmlNode *xml_top = NULL;
+
+    CRM_CHECK(op != NULL, return);
+
+    xml_top = create_xml_node(NULL, XML_LRM_TAG_RSC_OP);
+    crm_xml_add_int(xml_top, XML_LRM_ATTR_CALLID, op->call_id);
+    crm_xml_add(xml_top, XML_ATTR_TRANSITION_KEY, op->user_data);
+
+    if (op->interval_ms > 0) {
+        char *op_id = pcmk__op_key(op->rsc_id, op->op_type, op->interval_ms);
+
+        /* Avoid deleting last_failure too (if it was a result of this recurring op failing) */
+        crm_xml_add(xml_top, XML_ATTR_ID, op_id);
+        free(op_id);
+    }
+
+    crm_debug("Erasing resource operation history for " PCMK__OP_FMT " (call=%d)",
+              op->rsc_id, op->op_type, op->interval_ms, op->call_id);
+
+    controld_globals.cib_conn->cmds->remove(controld_globals.cib_conn,
+                                            XML_CIB_TAG_STATUS, xml_top,
+                                            cib_quorum_override);
+
+    crm_log_xml_trace(xml_top, "op:cancel");
+    free_xml(xml_top);
+}
+
+/* Define xpath to find LRM resource history entry by node and resource */
+#define XPATH_HISTORY                                   \
+    "/" XML_TAG_CIB "/" XML_CIB_TAG_STATUS              \
+    "/" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='%s']"  \
+    "/" XML_CIB_TAG_LRM "/" XML_LRM_TAG_RESOURCES       \
+    "/" XML_LRM_TAG_RESOURCE "[@" XML_ATTR_ID "='%s']"  \
+    "/" XML_LRM_TAG_RSC_OP
+
+/* ... and also by operation key */
+#define XPATH_HISTORY_ID XPATH_HISTORY \
+    "[@" XML_ATTR_ID "='%s']"
+
+/* ... and also by operation key and operation call ID */
+#define XPATH_HISTORY_CALL XPATH_HISTORY \
+    "[@" XML_ATTR_ID "='%s' and @" XML_LRM_ATTR_CALLID "='%d']"
+
+/* ... and also by operation key and original operation key */
+#define XPATH_HISTORY_ORIG XPATH_HISTORY \
+    "[@" XML_ATTR_ID "='%s' and @" XML_LRM_ATTR_TASK_KEY "='%s']"
+
+/*!
+ * \internal
+ * \brief Delete a last_failure resource history entry from the CIB
+ *
+ * \param[in] rsc_id       Name of resource to clear history for
+ * \param[in] node         Name of node to clear history for
+ * \param[in] action       If specified, delete only if this was failed action
+ * \param[in] interval_ms  If \p action is specified, it has this interval
+ */
+void
+controld_cib_delete_last_failure(const char *rsc_id, const char *node,
+                                 const char *action, guint interval_ms)
+{
+    char *xpath = NULL;
+    char *last_failure_key = NULL;
+
+    CRM_CHECK((rsc_id != NULL) && (node != NULL), return);
+
+    // Generate XPath to match desired entry
+    last_failure_key = pcmk__op_key(rsc_id, "last_failure", 0);
+    if (action == NULL) {
+        xpath = crm_strdup_printf(XPATH_HISTORY_ID, node, rsc_id,
+                                  last_failure_key);
+    } else {
+        char *action_key = pcmk__op_key(rsc_id, action, interval_ms);
+
+        xpath = crm_strdup_printf(XPATH_HISTORY_ORIG, node, rsc_id,
+                                  last_failure_key, action_key);
+        free(action_key);
+    }
+    free(last_failure_key);
+
+    controld_globals.cib_conn->cmds->remove(controld_globals.cib_conn, xpath,
+                                            NULL,
+                                            cib_quorum_override|cib_xpath);
+    free(xpath);
+}
+
+/*!
+ * \internal
+ * \brief Delete resource history entry from the CIB, given operation key
+ *
+ * \param[in] rsc_id     Name of resource to clear history for
+ * \param[in] node       Name of node to clear history for
+ * \param[in] key        Operation key of operation to clear history for
+ * \param[in] call_id    If specified, delete entry only if it has this call ID
+ */
+void
+controld_delete_action_history_by_key(const char *rsc_id, const char *node,
+                                      const char *key, int call_id)
+{
+    char *xpath = NULL;
+
+    CRM_CHECK((rsc_id != NULL) && (node != NULL) && (key != NULL), return);
+
+    if (call_id > 0) {
+        xpath = crm_strdup_printf(XPATH_HISTORY_CALL, node, rsc_id, key,
+                                  call_id);
+    } else {
+        xpath = crm_strdup_printf(XPATH_HISTORY_ID, node, rsc_id, key);
+    }
+    controld_globals.cib_conn->cmds->remove(controld_globals.cib_conn, xpath,
+                                            NULL,
+                                            cib_quorum_override|cib_xpath);
+    free(xpath);
+}

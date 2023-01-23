@@ -739,102 +739,6 @@ delete_rsc_entry(lrm_state_t *lrm_state, ha_msg_input_t *input,
     g_hash_table_foreach_remove(lrm_state->deletion_ops, lrm_remove_deleted_rsc, &event);
 }
 
-/*!
- * \internal
- * \brief Erase an LRM history entry from the CIB, given the operation data
- *
- * \param[in] op         Operation whose history should be deleted
- */
-static void
-erase_lrm_history_by_op(const lrmd_event_data_t *op)
-{
-    xmlNode *xml_top = NULL;
-
-    CRM_CHECK(op != NULL, return);
-
-    xml_top = create_xml_node(NULL, XML_LRM_TAG_RSC_OP);
-    crm_xml_add_int(xml_top, XML_LRM_ATTR_CALLID, op->call_id);
-    crm_xml_add(xml_top, XML_ATTR_TRANSITION_KEY, op->user_data);
-
-    if (op->interval_ms > 0) {
-        char *op_id = pcmk__op_key(op->rsc_id, op->op_type, op->interval_ms);
-
-        /* Avoid deleting last_failure too (if it was a result of this recurring op failing) */
-        crm_xml_add(xml_top, XML_ATTR_ID, op_id);
-        free(op_id);
-    }
-
-    crm_debug("Erasing resource operation history for " PCMK__OP_FMT " (call=%d)",
-              op->rsc_id, op->op_type, op->interval_ms, op->call_id);
-
-    controld_globals.cib_conn->cmds->remove(controld_globals.cib_conn,
-                                            XML_CIB_TAG_STATUS, xml_top,
-                                            cib_quorum_override);
-
-    crm_log_xml_trace(xml_top, "op:cancel");
-    free_xml(xml_top);
-}
-
-/* Define xpath to find LRM resource history entry by node and resource */
-#define XPATH_HISTORY                                   \
-    "/" XML_TAG_CIB "/" XML_CIB_TAG_STATUS              \
-    "/" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='%s']"  \
-    "/" XML_CIB_TAG_LRM "/" XML_LRM_TAG_RESOURCES       \
-    "/" XML_LRM_TAG_RESOURCE "[@" XML_ATTR_ID "='%s']"  \
-    "/" XML_LRM_TAG_RSC_OP
-
-/* ... and also by operation key */
-#define XPATH_HISTORY_ID XPATH_HISTORY \
-    "[@" XML_ATTR_ID "='%s']"
-
-/* ... and also by operation key and operation call ID */
-#define XPATH_HISTORY_CALL XPATH_HISTORY \
-    "[@" XML_ATTR_ID "='%s' and @" XML_LRM_ATTR_CALLID "='%d']"
-
-/* ... and also by operation key and original operation key */
-#define XPATH_HISTORY_ORIG XPATH_HISTORY \
-    "[@" XML_ATTR_ID "='%s' and @" XML_LRM_ATTR_TASK_KEY "='%s']"
-
-/*!
- * \internal
- * \brief Erase an LRM history entry from the CIB, given operation identifiers
- *
- * \param[in] lrm_state  LRM state of the node to clear history for
- * \param[in] rsc_id     Name of resource to clear history for
- * \param[in] key        Operation key of operation to clear history for
- * \param[in] orig_op    If specified, delete only if it has this original op
- * \param[in] call_id    If specified, delete entry only if it has this call ID
- */
-static void
-erase_lrm_history_by_id(const lrm_state_t *lrm_state, const char *rsc_id,
-                        const char *key, const char *orig_op, int call_id)
-{
-    char *op_xpath = NULL;
-
-    CRM_CHECK((rsc_id != NULL) && (key != NULL), return);
-
-    if (call_id > 0) {
-        op_xpath = crm_strdup_printf(XPATH_HISTORY_CALL,
-                                     lrm_state->node_name, rsc_id, key,
-                                     call_id);
-
-    } else if (orig_op) {
-        op_xpath = crm_strdup_printf(XPATH_HISTORY_ORIG,
-                                     lrm_state->node_name, rsc_id, key,
-                                     orig_op);
-    } else {
-        op_xpath = crm_strdup_printf(XPATH_HISTORY_ID,
-                                     lrm_state->node_name, rsc_id, key);
-    }
-
-    crm_debug("Erasing resource operation history for %s on %s (call=%d)",
-              key, rsc_id, call_id);
-    controld_globals.cib_conn->cmds->remove(controld_globals.cib_conn, op_xpath,
-                                            NULL,
-                                            cib_quorum_override|cib_xpath);
-    free(op_xpath);
-}
-
 static inline gboolean
 last_failed_matches_op(rsc_history_t *entry, const char *op, guint interval_ms)
 {
@@ -865,26 +769,12 @@ void
 lrm_clear_last_failure(const char *rsc_id, const char *node_name,
                        const char *operation, guint interval_ms)
 {
-    char *op_key = NULL;
-    char *orig_op_key = NULL;
-    lrm_state_t *lrm_state = NULL;
+    lrm_state_t *lrm_state = lrm_state_find(node_name);
 
-    lrm_state = lrm_state_find(node_name);
     if (lrm_state == NULL) {
         return;
     }
-
-    /* Erase from CIB */
-    op_key = pcmk__op_key(rsc_id, "last_failure", 0);
-    if (operation) {
-        orig_op_key = pcmk__op_key(rsc_id, operation, interval_ms);
-    }
-    erase_lrm_history_by_id(lrm_state, rsc_id, op_key, orig_op_key, 0);
-    free(op_key);
-    free(orig_op_key);
-
-    /* Remove from memory */
-    if (lrm_state->resource_history) {
+    if (lrm_state->resource_history != NULL) {
         rsc_history_t *entry = g_hash_table_lookup(lrm_state->resource_history,
                                                    rsc_id);
 
@@ -1393,7 +1283,8 @@ static bool do_lrm_cancel(ha_msg_input_t *input, lrm_state_t *lrm_state,
         if (is_remote_lrmd_ra(NULL, NULL, rsc->id) == FALSE) {
             crm_info("Nothing known about operation %d for %s", call, op_key);
         }
-        erase_lrm_history_by_id(lrm_state, rsc->id, op_key, NULL, call);
+        controld_delete_action_history_by_key(rsc->id, lrm_state->node_name,
+                                              op_key, call);
         send_task_ok_ack(lrm_state, input, rsc->id, rsc, op_task,
                          from_host, from_sys);
 
@@ -2454,17 +2345,14 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
          * have been waiting for it to finish.
          */
         if (lrm_state) {
-            erase_lrm_history_by_op(op);
+            controld_delete_action_history(op);
         }
 
-        /* If the recurring operation had failed, the lrm_rsc_op is recorded as
-         * "last_failure" which won't get erased from the cib given the logic on
-         * purpose in erase_lrm_history_by_op(). So that the cancel action won't
-         * have a chance to get confirmed by DC with process_op_deletion().
-         * Cluster transition would get stuck waiting for the remaining action
-         * timer to time out.
-         *
-         * Directly acknowledge the cancel operation in this case.
+        /* Directly acknowledge failed recurring actions here. The above call to
+         * controld_delete_action_history() will not erase any corresponding
+         * last_failure entry, which means that the DC won't confirm the
+         * cancellation via process_op_deletion(), and the transition would
+         * otherwise wait for the action timer to pop.
          */
         if (did_lrm_rsc_op_fail(lrm_state, pending->rsc_id,
                                 pending->op_type, pending->interval_ms)) {
