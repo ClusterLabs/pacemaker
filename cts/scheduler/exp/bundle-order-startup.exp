@@ -554,6 +554,9 @@
       <trigger>
         <pseudo_event id="64" operation="start" operation_key="redis-bundle_start_0"/>
       </trigger>
+      <trigger>
+        <rsc_op id="111" operation="start" operation_key="haproxy-bundle-docker-0_start_0" on_node="undercloud" on_node_uuid="1"/>
+      </trigger>
     </inputs>
   </synapse>
   <synapse id="38">
@@ -1002,7 +1005,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="65" operation="running" operation_key="redis-bundle_running_0"/>
+        <pseudo_event id="64" operation="start" operation_key="redis-bundle_start_0"/>
       </trigger>
     </inputs>
   </synapse>
