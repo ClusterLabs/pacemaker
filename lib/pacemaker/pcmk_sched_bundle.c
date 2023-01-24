@@ -569,18 +569,17 @@ pcmk__bundle_action_flags(pe_action_t *action, const pe_node_t *node)
  * \brief Get containerized resource corresponding to a given bundle container
  *
  * \param[in] instance  Collective instance that might be a bundle container
- * \param[in] node      Node that \p instance might be running on
  *
  * \return Bundled resource instance inside \p instance if it is a bundle
- *         container instance running on \p node, otherwise NULL
+ *         container instance, otherwise NULL
  */
 const pe_resource_t *
-pcmk__get_rsc_in_container(const pe_resource_t *instance, const pe_node_t *node)
+pcmk__get_rsc_in_container(const pe_resource_t *instance)
 {
     const pe__bundle_variant_data_t *data = NULL;
     const pe_resource_t *top = pe__const_top_resource(instance, true);
 
-    if ((node == NULL) || (top == NULL) || (top->variant != pe_container)) {
+    if ((top == NULL) || (top->variant != pe_container)) {
         return NULL;
     }
     get_bundle_variant_data(data, top);
@@ -588,8 +587,7 @@ pcmk__get_rsc_in_container(const pe_resource_t *instance, const pe_node_t *node)
     for (const GList *iter = data->replicas; iter != NULL; iter = iter->next) {
         const pe__bundle_replica_t *replica = iter->data;
 
-        if ((instance == replica->container)
-            && pe__same_node(node, replica->node)) {
+        if (instance == replica->container) {
             return replica->child;
         }
     }

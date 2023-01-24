@@ -816,7 +816,7 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
             const pe_resource_t *first_rsc = NULL;
             const pe_resource_t *then_rsc = NULL;
 
-            first_rsc = pcmk__get_rsc_in_container(first_child, node);
+            first_rsc = pcmk__get_rsc_in_container(first_child);
             if ((first_rsc != NULL)
                 && pcmk__str_any_of(first->task, CRMD_ACTION_STOP,
                                     CRMD_ACTION_STOPPED, NULL)) {
@@ -824,13 +824,13 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
                  * later and are more likely to align with the user's intent.
                  */
                 first_action = find_first_action(first_rsc->actions, NULL,
-                                                 first_task, node);
+                                                 first_task, NULL);
             } else {
                 first_action = find_first_action(first_child->actions, NULL,
                                                  first_task, node);
             }
 
-            then_rsc = pcmk__get_rsc_in_container(then_child, node);
+            then_rsc = pcmk__get_rsc_in_container(then_child);
             if ((then_rsc != NULL)
                 && pcmk__str_any_of(then->task, CRMD_ACTION_PROMOTE,
                                     CRMD_ACTION_PROMOTED, CRMD_ACTION_DEMOTE,
@@ -839,7 +839,7 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
                  * the container itself.
                  */
                 then_action = find_first_action(then_rsc->actions, NULL,
-                                                then->task, node);
+                                                then->task, NULL);
             } else {
                 then_action = find_first_action(then_child->actions, NULL,
                                                 then->task, node);
