@@ -23,6 +23,7 @@
 "base-bundle_promoted_0" -> "app-bundle_promote_0" [ style = bold]
 "base-bundle_promoted_0" [ style=bold color="green" fontcolor="orange"]
 "base_monitor_15000 base-bundle-2" [ style=bold color="green" fontcolor="black"]
+"base_promote_0 base-bundle-2" -> "app_promote_0 app-bundle-2" [ style = bold]
 "base_promote_0 base-bundle-2" -> "base-bundle-clone_promoted_0" [ style = bold]
 "base_promote_0 base-bundle-2" -> "base_monitor_15000 base-bundle-2" [ style = bold]
 "base_promote_0 base-bundle-2" [ style=bold color="green" fontcolor="black"]

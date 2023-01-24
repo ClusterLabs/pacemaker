@@ -86,6 +86,9 @@
         <rsc_op id="19" operation="cancel" operation_key="app_monitor_16000" internal_operation_key="app:2_monitor_16000" on_node="app-bundle-2" on_node_uuid="app-bundle-2" router_node="node4"/>
       </trigger>
       <trigger>
+        <rsc_op id="40" operation="promote" operation_key="base_promote_0" internal_operation_key="base:2_promote_0" on_node="base-bundle-2" on_node_uuid="base-bundle-2" router_node="node4"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="86" operation="promote" operation_key="app-bundle-clone_promote_0"/>
       </trigger>
     </inputs>

@@ -1014,7 +1014,7 @@
         <rsc_op id="56" operation="monitor" operation_key="app-bundle-podman-0_monitor_0" on_node="node5" on_node_uuid="5"/>
       </trigger>
       <trigger>
-        <rsc_op id="64" operation="start" operation_key="base-bundle-podman-0_start_0" on_node="node2" on_node_uuid="2"/>
+        <rsc_op id="80" operation="start" operation_key="base:0_start_0" on_node="base-bundle-0" on_node_uuid="base-bundle-0" router_node="node2"/>
       </trigger>
       <trigger>
         <pseudo_event id="110" operation="start" operation_key="app-bundle_start_0"/>
@@ -1215,7 +1215,7 @@
         <rsc_op id="58" operation="monitor" operation_key="app-bundle-podman-1_monitor_0" on_node="node5" on_node_uuid="5"/>
       </trigger>
       <trigger>
-        <rsc_op id="68" operation="start" operation_key="base-bundle-podman-1_start_0" on_node="node3" on_node_uuid="3"/>
+        <rsc_op id="82" operation="start" operation_key="base:1_start_0" on_node="base-bundle-1" on_node_uuid="base-bundle-1" router_node="node3"/>
       </trigger>
       <trigger>
         <pseudo_event id="110" operation="start" operation_key="app-bundle_start_0"/>
@@ -1416,7 +1416,7 @@
         <rsc_op id="60" operation="monitor" operation_key="app-bundle-podman-2_monitor_0" on_node="node5" on_node_uuid="5"/>
       </trigger>
       <trigger>
-        <rsc_op id="72" operation="start" operation_key="base-bundle-podman-2_start_0" on_node="node4" on_node_uuid="4"/>
+        <rsc_op id="84" operation="start" operation_key="base:2_start_0" on_node="base-bundle-2" on_node_uuid="base-bundle-2" router_node="node4"/>
       </trigger>
       <trigger>
         <pseudo_event id="110" operation="start" operation_key="app-bundle_start_0"/>
