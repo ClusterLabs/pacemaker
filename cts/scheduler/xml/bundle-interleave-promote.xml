@@ -1,0 +1,418 @@
+<cib crm_feature_set="3.16.1" validate-with="pacemaker-3.7" epoch="259" num_updates="130" admin_epoch="0" cib-last-written="Tue Oct 25 14:29:45 2022" update-origin="node2" update-client="cibadmin" update-user="root" have-quorum="1" dc-uuid="4">
+  <!-- This is a test for interleaving bundle actions.
+
+       There are 5 nodes and 2 promotable bundles, each with 3 replicas and
+       interleave=true. The "app" bundle is colocated with the "base" bundle,
+       and its promoted role is colocated with base's. App's starts and
+       promotes are ordered after base's.
+
+       In this test, both bundles are started and must be promoted.
+    -->
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="2.1.5"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="test"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="node1"/>
+      <node id="2" uname="node2"/>
+      <node id="3" uname="node3"/>
+      <node id="4" uname="node4"/>
+      <node id="5" uname="node5"/>
+    </nodes>
+    <resources>
+      <primitive class="stonith" id="Fencing" type="fence_xvm">
+        <meta_attributes id="Fencing-meta">
+          <nvpair id="Fencing-migration-threshold" name="migration-threshold" value="5"/>
+        </meta_attributes>
+        <instance_attributes id="Fencing-params">
+          <nvpair id="Fencing-key_file" name="key_file" value="/etc/pacemaker/fence_xvm.key"/>
+          <nvpair id="Fencing-multicast_address" name="multicast_address" value="239.255.100.100"/>
+          <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="node1 node2 node3 node4 node5"/>
+        </instance_attributes>
+        <operations>
+          <op id="Fencing-monitor-120s" interval="120s" name="monitor" timeout="120s"/>
+        </operations>
+      </primitive>
+      <bundle id="base-bundle">
+        <meta_attributes id="base-bundle-meta_attributes">
+          <nvpair id="base-bundle-meta_attributes-interleave" name="interleave" value="true"/>
+          <nvpair id="base-bundle-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="base-bundle-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
+        </meta_attributes>
+        <podman image="localhost/pcmktest:base" replicas="3"/>
+        <network control-port="3121"/>
+        <primitive id="base" class="ocf" provider="pacemaker" type="Stateful">
+          <operations>
+            <op id="base-monitor-15s" interval="15s" name="monitor" timeout="15s" role="Promoted"/>
+            <op id="base-monitor-16s" interval="16s" name="monitor" timeout="16s" role="Unpromoted"/>
+          </operations>
+        </primitive>
+      </bundle>
+      <bundle id="app-bundle">
+        <meta_attributes id="app-bundle-meta_attributes">
+          <nvpair id="app-bundle-meta_attributes-interleave" name="interleave" value="true"/>
+          <nvpair id="app-bundle-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="app-budle-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
+        </meta_attributes>
+        <podman image="localhost/pcmktest:app" replicas="3"/>
+        <network control-port="3121"/>
+        <primitive id="app" class="ocf" provider="pacemaker" type="Stateful">
+          <operations>
+            <op id="app-monitor-15s" interval="15s" name="monitor" timeout="15s" role="Promoted"/>
+            <op id="app-monitor-16s" interval="16s" name="monitor" timeout="16s" role="Unpromoted"/>
+          </operations>
+        </primitive>
+      </bundle>
+    </resources>
+    <constraints>
+      <rsc_colocation id="app-with-base" rsc="app-bundle" with-rsc="base-bundle" score="INFINITY"/>
+      <rsc_colocation id="promoted-app-with-promoted-base" rsc-role="Promoted" rsc="app-bundle" with-rsc-role="Promoted" with-rsc="base-bundle" score="INFINITY"/>
+      <rsc_order id="base-then-app" first-action="start" first="base-bundle" then-action="start" then="app-bundle"/>
+      <rsc_order id="promote-base-then-app" first-action="promote" first="base-bundle" then-action="promote" then="app-bundle"/>
+    </constraints>
+    <fencing-topology/>
+    <op_defaults/>
+    <alerts/>
+    <rsc_defaults/>
+  </configuration>
+  <status>
+    <node_state id="1" uname="node1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-.feature-set" name="#feature-set" value="3.16.1"/>
+          <nvpair id="status-1-promotion-base" name="master-base" value="11"/>
+          <nvpair id="status-1-promotion-app" name="master-app" value="11"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="Fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.16.1" transition-key="9:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;9:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="9" rc-code="0" op-status="0" interval="0" last-rc-change="1666726336" exec-time="0" queue-time="0" op-digest="52e34745a77d95a636428d3b550eb867"/>
+            <lrm_rsc_op id="Fencing_monitor_120000" operation_key="Fencing_monitor_120000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.16.1" transition-key="10:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;10:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="10" rc-code="0" op-status="0" interval="120000" last-rc-change="1666726336" exec-time="0" queue-time="0" op-digest="acc6dd2c58c637db4d12a6fe35626617"/>
+          </lrm_resource>
+          <lrm_resource id="base-bundle-podman-0" class="ocf" provider="heartbeat" type="podman">
+            <lrm_rsc_op id="base-bundle-podman-0_last_0" operation_key="base-bundle-podman-0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="dddc92622f7672afa46bc4f0a1b8b03b"/>
+          </lrm_resource>
+          <lrm_resource id="base-bundle-podman-1" class="ocf" provider="heartbeat" type="podman">
+            <lrm_rsc_op id="base-bundle-podman-1_last_0" operation_key="base-bundle-podman-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="5732d4b0f52e73c94629f9161003e281"/>
+          </lrm_resource>
+          <lrm_resource id="base-bundle-podman-2" class="ocf" provider="heartbeat" type="podman">
+            <lrm_rsc_op id="base-bundle-podman-2_last_0" operation_key="base-bundle-podman-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="3e66cd6e80c873989ec1fc5738cd8d77"/>
+          </lrm_resource>
+          <lrm_resource id="app-bundle-podman-0" class="ocf" provider="heartbeat" type="podman">
+            <lrm_rsc_op id="app-bundle-podman-0_last_0" operation_key="app-bundle-podman-0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="12f51abf6d3e26a6b4b8e00b83506050"/>
+          </lrm_resource>
+          <lrm_resource id="app-bundle-podman-1" class="ocf" provider="heartbeat" type="podman">
+            <lrm_rsc_op id="app-bundle-podman-1_last_0" operation_key="app-bundle-podman-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="c8dc85b8a6f4ec0ff2e94323c97d1441"/>
+          </lrm_resource>
+          <lrm_resource id="app-bundle-podman-2" class="ocf" provider="heartbeat" type="podman">
+            <lrm_rsc_op id="app-bundle-podman-2_last_0" operation_key="app-bundle-podman-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="e5d3ebabdfac86fc2936549416af8ba9"/>
+          </lrm_resource>
+          <lrm_resource id="base-bundle-0" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="base-bundle-0_last_0" operation_key="base-bundle-0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="137e2067e195bc8e29ef8680e392a9e7"/>
+          </lrm_resource>
+          <lrm_resource id="base-bundle-1" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="base-bundle-1_last_0" operation_key="base-bundle-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="b1f9a03e78ae75f94cc0c36e6c0cc527"/>
+          </lrm_resource>
+          <lrm_resource id="base-bundle-2" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="base-bundle-2_last_0" operation_key="base-bundle-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="6fd487b764d647b3fb588ad7644ede50"/>
+          </lrm_resource>
+          <lrm_resource id="app-bundle-0" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="app-bundle-0_last_0" operation_key="app-bundle-0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="137e2067e195bc8e29ef8680e392a9e7"/>
+          </lrm_resource>
+          <lrm_resource id="app-bundle-1" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="app-bundle-1_last_0" operation_key="app-bundle-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="b1f9a03e78ae75f94cc0c36e6c0cc527"/>
+          </lrm_resource>
+          <lrm_resource id="app-bundle-2" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="app-bundle-2_last_0" operation_key="app-bundle-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="6fd487b764d647b3fb588ad7644ede50"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="5" uname="node5" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="5">
+        <instance_attributes id="status-5">
+          <nvpair id="status-5-.feature-set" name="#feature-set" value="3.16.1"/>
+          <nvpair id="status-5-promotion-base" name="master-base" value="15"/>
+          <nvpair id="status-5-promotion-app" name="master-app" value="15"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="5">
+        <lrm_resources>
+          <lrm_resource id="Fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.16.1" transition-key="5:0:7:72f87069-7296-4421-b2b0-ab12fa9068ef" transition-magic="0:7;5:0:7:72f87069-7296-4421-b2b0-ab12fa9068ef" exit-reason="" on_node="node5" call-id="5" rc-code="7" op-status="0" interval="0" last-rc-change="1666726234" exec-time="1" queue-time="0" op-digest="ac94f147daea19463126aacea2f8cd39"/>
+          </lrm_resource>
+          <lrm_resource id="base-bundle-podman-0" class="ocf" provider="heartbeat" type="podman">
+            <lrm_rsc_op id="base-bundle-podman-0_last_0" operation_key="base-bundle-podman-0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="dddc92622f7672afa46bc4f0a1b8b03b"/>
+          </lrm_resource>
+          <lrm_resource id="base-bundle-podman-1" class="ocf" provider="heartbeat" type="podman">
+            <lrm_rsc_op id="base-bundle-podman-1_last_0" operation_key="base-bundle-podman-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="5732d4b0f52e73c94629f9161003e281"/>
+          </lrm_resource>
+          <lrm_resource id="base-bundle-podman-2" class="ocf" provider="heartbeat" type="podman">
+            <lrm_rsc_op id="base-bundle-podman-2_last_0" operation_key="base-bundle-podman-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="3e66cd6e80c873989ec1fc5738cd8d77"/>
+          </lrm_resource>
+          <lrm_resource id="app-bundle-podman-0" class="ocf" provider="heartbeat" type="podman">
+            <lrm_rsc_op id="app-bundle-podman-0_last_0" operation_key="app-bundle-podman-0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="12f51abf6d3e26a6b4b8e00b83506050"/>
+          </lrm_resource>
+          <lrm_resource id="app-bundle-podman-1" class="ocf" provider="heartbeat" type="podman">
+            <lrm_rsc_op id="app-bundle-podman-1_last_0" operation_key="app-bundle-podman-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="c8dc85b8a6f4ec0ff2e94323c97d1441"/>
+          </lrm_resource>
+          <lrm_resource id="app-bundle-podman-2" class="ocf" provider="heartbeat" type="podman">
+            <lrm_rsc_op id="app-bundle-podman-2_last_0" operation_key="app-bundle-podman-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="e5d3ebabdfac86fc2936549416af8ba9"/>
+          </lrm_resource>
+          <lrm_resource id="base-bundle-0" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="base-bundle-0_last_0" operation_key="base-bundle-0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="137e2067e195bc8e29ef8680e392a9e7"/>
+          </lrm_resource>
+          <lrm_resource id="base-bundle-1" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="base-bundle-1_last_0" operation_key="base-bundle-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="b1f9a03e78ae75f94cc0c36e6c0cc527"/>
+          </lrm_resource>
+          <lrm_resource id="base-bundle-2" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="base-bundle-2_last_0" operation_key="base-bundle-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="6fd487b764d647b3fb588ad7644ede50"/>
+          </lrm_resource>
+          <lrm_resource id="app-bundle-0" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="app-bundle-0_last_0" operation_key="app-bundle-0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="137e2067e195bc8e29ef8680e392a9e7"/>
+          </lrm_resource>
+          <lrm_resource id="app-bundle-1" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="app-bundle-1_last_0" operation_key="app-bundle-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="b1f9a03e78ae75f94cc0c36e6c0cc527"/>
+          </lrm_resource>
+          <lrm_resource id="app-bundle-2" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="app-bundle-2_last_0" operation_key="app-bundle-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="6fd487b764d647b3fb588ad7644ede50"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="3" uname="node3" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="3">
+        <instance_attributes id="status-3">
+          <nvpair id="status-3-.feature-set" name="#feature-set" value="3.16.1"/>
+          <nvpair id="status-5-promotion-base" name="master-base" value="13"/>
+          <nvpair id="status-5-promotion-top" name="master-app" value="13"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="3">
+        <lrm_resources>
+          <lrm_resource id="Fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.16.1" transition-key="3:0:7:72f87069-7296-4421-b2b0-ab12fa9068ef" transition-magic="0:7;3:0:7:72f87069-7296-4421-b2b0-ab12fa9068ef" exit-reason="" on_node="node3" call-id="5" rc-code="7" op-status="0" interval="0" last-rc-change="1666726234" exec-time="1" queue-time="0" op-digest="ac94f147daea19463126aacea2f8cd39"/>
+          </lrm_resource>
+          <lrm_resource id="base-bundle-podman-0" class="ocf" provider="heartbeat" type="podman">
+            <lrm_rsc_op id="base-bundle-podman-0_last_0" operation_key="base-bundle-podman-0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="dddc92622f7672afa46bc4f0a1b8b03b"/>
+          </lrm_resource>
+          <lrm_resource id="base-bundle-podman-1" class="ocf" provider="heartbeat" type="podman">
+            <lrm_rsc_op id="base-bundle-podman-1_last_0" operation_key="base-bundle-podman-1_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="5732d4b0f52e73c94629f9161003e281"/>
+            <lrm_rsc_op id="base-bundle-podman-1_monitor_60000" operation_key="base-bundle-podman-1_monitor_60000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="60000" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="926c5516f09ec3df50d60e75cd09de31"/>
+          </lrm_resource>
+          <lrm_resource id="base-bundle-podman-2" class="ocf" provider="heartbeat" type="podman">
+            <lrm_rsc_op id="base-bundle-podman-2_last_0" operation_key="base-bundle-podman-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="3e66cd6e80c873989ec1fc5738cd8d77"/>
+          </lrm_resource>
+          <lrm_resource id="app-bundle-podman-0" class="ocf" provider="heartbeat" type="podman">
+            <lrm_rsc_op id="app-bundle-podman-0_last_0" operation_key="app-bundle-podman-0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="12f51abf6d3e26a6b4b8e00b83506050"/>
+          </lrm_resource>
+          <lrm_resource id="app-bundle-podman-1" class="ocf" provider="heartbeat" type="podman">
+            <lrm_rsc_op id="app-bundle-podman-1_last_0" operation_key="app-bundle-podman-1_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="c8dc85b8a6f4ec0ff2e94323c97d1441"/>
+            <lrm_rsc_op id="app-bundle-podman-1_monitor_60000" operation_key="app-bundle-podman-1_monitor_60000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="60000" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="b33fead2bd81863aad07803c5aef6eb4"/>
+          </lrm_resource>
+          <lrm_resource id="app-bundle-podman-2" class="ocf" provider="heartbeat" type="podman">
+            <lrm_rsc_op id="app-bundle-podman-2_last_0" operation_key="app-bundle-podman-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="e5d3ebabdfac86fc2936549416af8ba9"/>
+          </lrm_resource>
+          <lrm_resource id="base-bundle-0" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="base-bundle-0_last_0" operation_key="base-bundle-0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="137e2067e195bc8e29ef8680e392a9e7"/>
+          </lrm_resource>
+          <lrm_resource id="base-bundle-1" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="base-bundle-1_last_0" operation_key="base-bundle-1_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="b1f9a03e78ae75f94cc0c36e6c0cc527"/>
+            <lrm_rsc_op id="base-bundle-1_monitor_30000" operation_key="base-bundle-1_monitor_30000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="30000" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="354b9acaa7ea1113d708dc11a1d6bbfa"/>
+          </lrm_resource>
+          <lrm_resource id="base-bundle-2" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="base-bundle-2_last_0" operation_key="base-bundle-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="6fd487b764d647b3fb588ad7644ede50"/>
+          </lrm_resource>
+          <lrm_resource id="app-bundle-0" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="app-bundle-0_last_0" operation_key="app-bundle-0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="137e2067e195bc8e29ef8680e392a9e7"/>
+          </lrm_resource>
+          <lrm_resource id="app-bundle-1" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="app-bundle-1_last_0" operation_key="app-bundle-1_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="b1f9a03e78ae75f94cc0c36e6c0cc527"/>
+            <lrm_rsc_op id="app-bundle-1_monitor_30000" operation_key="app-bundle-1_monitor_30000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="30000" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="354b9acaa7ea1113d708dc11a1d6bbfa"/>
+          </lrm_resource>
+          <lrm_resource id="app-bundle-2" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="app-bundle-2_last_0" operation_key="app-bundle-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="6fd487b764d647b3fb588ad7644ede50"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="4" uname="node4" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="4">
+        <instance_attributes id="status-4">
+          <nvpair id="status-4-.feature-set" name="#feature-set" value="3.16.1"/>
+          <nvpair id="status-5-promotion-base" name="master-base" value="14"/>
+          <nvpair id="status-5-promotion-app" name="master-app" value="14"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="4">
+        <lrm_resources>
+          <lrm_resource id="Fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.16.1" transition-key="4:0:7:72f87069-7296-4421-b2b0-ab12fa9068ef" transition-magic="0:7;4:0:7:72f87069-7296-4421-b2b0-ab12fa9068ef" exit-reason="" on_node="node4" call-id="5" rc-code="7" op-status="0" interval="0" last-rc-change="1666726234" exec-time="1" queue-time="0" op-digest="ac94f147daea19463126aacea2f8cd39"/>
+          </lrm_resource>
+          <lrm_resource id="base-bundle-podman-0" class="ocf" provider="heartbeat" type="podman">
+            <lrm_rsc_op id="base-bundle-podman-0_last_0" operation_key="base-bundle-podman-0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="dddc92622f7672afa46bc4f0a1b8b03b"/>
+          </lrm_resource>
+          <lrm_resource id="base-bundle-podman-1" class="ocf" provider="heartbeat" type="podman">
+            <lrm_rsc_op id="base-bundle-podman-1_last_0" operation_key="base-bundle-podman-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="5732d4b0f52e73c94629f9161003e281"/>
+          </lrm_resource>
+          <lrm_resource id="base-bundle-podman-2" class="ocf" provider="heartbeat" type="podman">
+            <lrm_rsc_op id="base-bundle-podman-2_last_0" operation_key="base-bundle-podman-2_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="3e66cd6e80c873989ec1fc5738cd8d77"/>
+            <lrm_rsc_op id="base-bundle-podman-2_monitor_60000" operation_key="base-bundle-podman-2_monitor_60000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="60000" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="731bea45f9462b6b39c4001ba71dbc5a"/>
+          </lrm_resource>
+          <lrm_resource id="app-bundle-podman-0" class="ocf" provider="heartbeat" type="podman">
+            <lrm_rsc_op id="app-bundle-podman-0_last_0" operation_key="app-bundle-podman-0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="12f51abf6d3e26a6b4b8e00b83506050"/>
+          </lrm_resource>
+          <lrm_resource id="app-bundle-podman-1" class="ocf" provider="heartbeat" type="podman">
+            <lrm_rsc_op id="app-bundle-podman-1_last_0" operation_key="app-bundle-podman-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="c8dc85b8a6f4ec0ff2e94323c97d1441"/>
+          </lrm_resource>
+          <lrm_resource id="app-bundle-podman-2" class="ocf" provider="heartbeat" type="podman">
+            <lrm_rsc_op id="app-bundle-podman-2_last_0" operation_key="app-bundle-podman-2_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="e5d3ebabdfac86fc2936549416af8ba9"/>
+            <lrm_rsc_op id="app-bundle-podman-2_monitor_60000" operation_key="app-bundle-podman-2_monitor_60000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="60000" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="b1f3ba2f045fa18db3efea97e7bcf5db"/>
+          </lrm_resource>
+          <lrm_resource id="base-bundle-0" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="base-bundle-0_last_0" operation_key="base-bundle-0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="137e2067e195bc8e29ef8680e392a9e7"/>
+          </lrm_resource>
+          <lrm_resource id="base-bundle-1" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="base-bundle-1_last_0" operation_key="base-bundle-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="b1f9a03e78ae75f94cc0c36e6c0cc527"/>
+          </lrm_resource>
+          <lrm_resource id="base-bundle-2" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="base-bundle-2_last_0" operation_key="base-bundle-2_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="6fd487b764d647b3fb588ad7644ede50"/>
+            <lrm_rsc_op id="base-bundle-2_monitor_30000" operation_key="base-bundle-2_monitor_30000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="30000" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="5425fafd7ea7bbc652cefc05f0aafdcb"/>
+          </lrm_resource>
+          <lrm_resource id="app-bundle-0" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="app-bundle-0_last_0" operation_key="app-bundle-0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="137e2067e195bc8e29ef8680e392a9e7"/>
+          </lrm_resource>
+          <lrm_resource id="app-bundle-1" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="app-bundle-1_last_0" operation_key="app-bundle-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="b1f9a03e78ae75f94cc0c36e6c0cc527"/>
+          </lrm_resource>
+          <lrm_resource id="app-bundle-2" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="app-bundle-2_last_0" operation_key="app-bundle-2_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="6fd487b764d647b3fb588ad7644ede50"/>
+            <lrm_rsc_op id="app-bundle-2_monitor_30000" operation_key="app-bundle-2_monitor_30000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="30000" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="5425fafd7ea7bbc652cefc05f0aafdcb"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="2" uname="node2" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-.feature-set" name="#feature-set" value="3.16.1"/>
+          <nvpair id="status-5-promotion-base" name="master-base" value="12"/>
+          <nvpair id="status-5-promotion-app" name="master-app" value="12"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="Fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.16.1" transition-key="2:0:7:72f87069-7296-4421-b2b0-ab12fa9068ef" transition-magic="0:7;2:0:7:72f87069-7296-4421-b2b0-ab12fa9068ef" exit-reason="" on_node="node2" call-id="5" rc-code="7" op-status="0" interval="0" last-rc-change="1666726234" exec-time="2" queue-time="0" op-digest="ac94f147daea19463126aacea2f8cd39"/>
+          </lrm_resource>
+          <lrm_resource id="base-bundle-podman-0" class="ocf" provider="heartbeat" type="podman">
+            <lrm_rsc_op id="base-bundle-podman-0_last_0" operation_key="base-bundle-podman-0_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="dddc92622f7672afa46bc4f0a1b8b03b"/>
+            <lrm_rsc_op id="base-bundle-podman-0_monitor_60000" operation_key="base-bundle-podman-0_monitor_60000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="60000" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="42b0ce2964f8a35186fb7a89edb51b23"/>
+          </lrm_resource>
+          <lrm_resource id="base-bundle-podman-1" class="ocf" provider="heartbeat" type="podman">
+            <lrm_rsc_op id="base-bundle-podman-1_last_0" operation_key="base-bundle-podman-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="5732d4b0f52e73c94629f9161003e281"/>
+          </lrm_resource>
+          <lrm_resource id="base-bundle-podman-2" class="ocf" provider="heartbeat" type="podman">
+            <lrm_rsc_op id="base-bundle-podman-2_last_0" operation_key="base-bundle-podman-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="3e66cd6e80c873989ec1fc5738cd8d77"/>
+          </lrm_resource>
+          <lrm_resource id="app-bundle-podman-0" class="ocf" provider="heartbeat" type="podman">
+            <lrm_rsc_op id="app-bundle-podman-0_last_0" operation_key="app-bundle-podman-0_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="12f51abf6d3e26a6b4b8e00b83506050"/>
+            <lrm_rsc_op id="app-bundle-podman-0_monitor_60000" operation_key="app-bundle-podman-0_monitor_60000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="60000" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="7894044d8dd4a66c8cf66356d887c1ed"/>
+          </lrm_resource>
+          <lrm_resource id="app-bundle-podman-1" class="ocf" provider="heartbeat" type="podman">
+            <lrm_rsc_op id="app-bundle-podman-1_last_0" operation_key="app-bundle-podman-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="c8dc85b8a6f4ec0ff2e94323c97d1441"/>
+          </lrm_resource>
+          <lrm_resource id="app-bundle-podman-2" class="ocf" provider="heartbeat" type="podman">
+            <lrm_rsc_op id="app-bundle-podman-2_last_0" operation_key="app-bundle-podman-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="e5d3ebabdfac86fc2936549416af8ba9"/>
+          </lrm_resource>
+          <lrm_resource id="base-bundle-0" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="base-bundle-0_last_0" operation_key="base-bundle-0_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="137e2067e195bc8e29ef8680e392a9e7"/>
+            <lrm_rsc_op id="base-bundle-0_monitor_30000" operation_key="base-bundle-0_monitor_30000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="30000" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="3929eec440004bca31f813a8e6097506"/>
+          </lrm_resource>
+          <lrm_resource id="base-bundle-1" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="base-bundle-1_last_0" operation_key="base-bundle-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="b1f9a03e78ae75f94cc0c36e6c0cc527"/>
+          </lrm_resource>
+          <lrm_resource id="base-bundle-2" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="base-bundle-2_last_0" operation_key="base-bundle-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="6fd487b764d647b3fb588ad7644ede50"/>
+          </lrm_resource>
+          <lrm_resource id="app-bundle-0" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="app-bundle-0_last_0" operation_key="app-bundle-0_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="137e2067e195bc8e29ef8680e392a9e7"/>
+            <lrm_rsc_op id="app-bundle-0_monitor_30000" operation_key="app-bundle-0_monitor_30000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="30000" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="3929eec440004bca31f813a8e6097506"/>
+          </lrm_resource>
+          <lrm_resource id="app-bundle-1" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="app-bundle-1_last_0" operation_key="app-bundle-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="b1f9a03e78ae75f94cc0c36e6c0cc527"/>
+          </lrm_resource>
+          <lrm_resource id="app-bundle-2" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="app-bundle-2_last_0" operation_key="app-bundle-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="6fd487b764d647b3fb588ad7644ede50"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="base-bundle-0" uname="base-bundle-0">
+      <lrm id="base-bundle-0">
+        <lrm_resources>
+          <lrm_resource id="base" class="ocf" provider="pacemaker" type="Stateful">
+            <lrm_rsc_op id="base_last_0" operation_key="base_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="0" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="base_monitor_16000" operation_key="base_monitor_16000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="16000" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="e62ad827732488b88ef8722ff6a484b3"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="base-bundle-1" uname="base-bundle-1">
+      <lrm id="base-bundle-1">
+        <lrm_resources>
+          <lrm_resource id="base" class="ocf" provider="pacemaker" type="Stateful">
+            <lrm_rsc_op id="base_last_0" operation_key="base_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="0" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="base_monitor_16000" operation_key="base_monitor_16000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="16000" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="e62ad827732488b88ef8722ff6a484b3"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="base-bundle-2" uname="base-bundle-2">
+      <lrm id="base-bundle-2">
+        <lrm_resources>
+          <lrm_resource id="base" class="ocf" provider="pacemaker" type="Stateful">
+            <lrm_rsc_op id="base_last_0" operation_key="base_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="0" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="base_monitor_16000" operation_key="base_monitor_16000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="16000" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="e62ad827732488b88ef8722ff6a484b3"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="app-bundle-0" uname="app-bundle-0">
+      <lrm id="app-bundle-0">
+        <lrm_resources>
+          <lrm_resource id="app" class="ocf" provider="pacemaker" type="Stateful">
+            <lrm_rsc_op id="app_last_0" operation_key="app_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="0" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="app_monitor_16000" operation_key="app_monitor_16000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="16000" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="e62ad827732488b88ef8722ff6a484b3"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="app-bundle-1" uname="app-bundle-1">
+      <lrm id="app-bundle-1">
+        <lrm_resources>
+          <lrm_resource id="app" class="ocf" provider="pacemaker" type="Stateful">
+            <lrm_rsc_op id="app_last_0" operation_key="app_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="0" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="app_monitor_16000" operation_key="app_monitor_16000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="16000" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="e62ad827732488b88ef8722ff6a484b3"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="app-bundle-2" uname="app-bundle-2">
+      <lrm id="app-bundle-2">
+        <lrm_resources>
+          <lrm_resource id="app" class="ocf" provider="pacemaker" type="Stateful">
+            <lrm_rsc_op id="app_last_0" operation_key="app_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="0" op-status="0" interval="0" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="app_monitor_16000" operation_key="app_monitor_16000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.3" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="16000" last-rc-change="1674603150" exec-time="0" queue-time="0" op-digest="e62ad827732488b88ef8722ff6a484b3"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>
