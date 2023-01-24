@@ -565,111 +565,217 @@ pcmk__create_instance_actions(pe_resource_t *collective, GList *instances,
     }
 }
 
+/*!
+ * \internal
+ * \brief Get a list of clone instances or bundle replica containers
+ *
+ * \param[in] rsc  Clone or bundle resource
+ *
+ * \return Clone instances if \p rsc is a clone, or a newly created list of
+ *         \p rsc's replica containers if \p rsc is a bundle
+ * \note The caller must call free_instance_list() on the result when the list
+ *       is no longer needed.
+ */
 static inline GList *
-get_containers_or_children(const pe_resource_t *rsc)
+get_instance_list(const pe_resource_t *rsc)
 {
-    return (rsc->variant == pe_container)?
-           pcmk__bundle_containers(rsc) : rsc->children;
-}
-
-gboolean
-is_child_compatible(const pe_resource_t *child_rsc, const pe_node_t *local_node,
-                    enum rsc_role_e filter, gboolean current)
-{
-    pe_node_t *node = NULL;
-    enum rsc_role_e next_role = child_rsc->fns->state(child_rsc, current);
-
-    CRM_CHECK(child_rsc && local_node, return FALSE);
-    if (is_set_recursive(child_rsc, pe_rsc_block, TRUE) == FALSE) {
-        /* We only want instances that haven't failed */
-        node = child_rsc->fns->location(child_rsc, NULL, current);
-    }
-
-    if (filter != RSC_ROLE_UNKNOWN && next_role != filter) {
-        crm_trace("Filtered %s", child_rsc->id);
-        return FALSE;
-    }
-
-    if (node && (node->details == local_node->details)) {
-        return TRUE;
-
-    } else if (node) {
-        crm_trace("%s - %s vs %s", child_rsc->id, pe__node_name(node),
-                  pe__node_name(local_node));
-
+    if (rsc->variant == pe_container) {
+        return pcmk__bundle_containers(rsc);
     } else {
-        crm_trace("%s - not allocated %d", child_rsc->id, current);
+        return rsc->children;
     }
-    return FALSE;
 }
 
-static pe_resource_t *
-find_compatible_child_by_node(const pe_resource_t *local_child,
-                              const pe_node_t *local_node,
-                              const pe_resource_t *rsc, enum rsc_role_e filter,
-                              gboolean current)
+/*!
+ * \internal
+ * \brief Free any memory created by get_instance_list()
+ *
+ * \param[in]     rsc   Clone or bundle resource passed to get_instance_list()
+ * \param[in,out] list  Return value of get_instance_list() for \p rsc
+ */
+static inline void
+free_instance_list(const pe_resource_t *rsc, GList *list)
 {
-    GList *gIter = NULL;
-    GList *children = NULL;
+    if (list != rsc->children) {
+        g_list_free(list);
+    }
+}
 
-    if (local_node == NULL) {
-        crm_err("Can't colocate unrunnable child %s with %s", local_child->id, rsc->id);
-        return NULL;
+/*!
+ * \internal
+ * \brief Check whether an instance is compatible with a role and node
+ *
+ * \param[in] instance  Clone instance or bundle replica container
+ * \param[in] node      Instance must match this node
+ * \param[in] role      If not RSC_ROLE_UNKNOWN, instance must match this role
+ * \param[in] current   If true, compare instance's original node and role,
+ *                      otherwise compare assigned next node and role
+ *
+ * \return true if \p instance is compatible with \p node and \p role,
+ *         otherwise false
+ */
+bool
+pcmk__instance_matches(const pe_resource_t *instance, const pe_node_t *node,
+                       enum rsc_role_e role, bool current)
+{
+    pe_node_t *instance_node = NULL;
+
+    CRM_CHECK((instance != NULL) && (node != NULL), return false);
+
+    if ((role != RSC_ROLE_UNKNOWN)
+        && (role != instance->fns->state(instance, current))) {
+        pe_rsc_trace(instance,
+                     "%s is not a compatible instance (role is not %s)",
+                     instance->id, role2text(role));
+        return false;
     }
 
-    crm_trace("Looking for compatible child from %s for %s on %s",
-              local_child->id, rsc->id, pe__node_name(local_node));
+    if (!is_set_recursive(instance, pe_rsc_block, true)) {
+        // We only want instances that haven't failed
+        instance_node = instance->fns->location(instance, NULL, current);
+    }
 
-    children = get_containers_or_children(rsc);
-    for (gIter = children; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
+    if (instance_node == NULL) {
+        pe_rsc_trace(instance,
+                     "%s is not a compatible instance (not assigned to a node)",
+                     instance->id);
+        return false;
+    }
 
-        if(is_child_compatible(child_rsc, local_node, filter, current)) {
-            crm_trace("Pairing %s with %s on %s",
-                      local_child->id, child_rsc->id, pe__node_name(local_node));
-            return child_rsc;
+    if (instance_node->details != node->details) {
+        pe_rsc_trace(instance,
+                     "%s is not a compatible instance (assigned to %s not %s)",
+                     instance->id, pe__node_name(instance_node),
+                     pe__node_name(node));
+        return false;
+    }
+
+    return true;
+}
+
+/*!
+ * \internal
+ * \brief Find an instance that matches a given resource by node and role
+ *
+ * \param[in] match_rsc  Resource that instance must match (for logging only)
+ * \param[in] rsc        Clone or bundle resource to check for matching instance
+ * \param[in] node       Instance must match this node
+ * \param[in] role       If not RSC_ROLE_UNKNOWN, instance must match this role
+ * \param[in] current    If true, compare instance's original node and role,
+ *                       otherwise compare assigned next node and role
+ *
+ * \return \p rsc instance matching \p node and \p role if any, otherwise NULL
+ */
+static pe_resource_t *
+find_compatible_instance_on_node(const pe_resource_t *match_rsc,
+                                 const pe_resource_t *rsc,
+                                 const pe_node_t *node, enum rsc_role_e role,
+                                 bool current)
+{
+    GList *instances = NULL;
+
+    instances = get_instance_list(rsc);
+    for (GList *iter = instances; iter != NULL; iter = iter->next) {
+        pe_resource_t *instance = (pe_resource_t *) iter->data;
+
+        if (pcmk__instance_matches(instance, node, role, current)) {
+            pe_rsc_trace(match_rsc, "Found %s %s instance %s compatible with %s on %s",
+                         role == RSC_ROLE_UNKNOWN? "matching" : role2text(role),
+                         rsc->id, instance->id, match_rsc->id,
+                         pe__node_name(node));
+            free_instance_list(rsc, instances); // Only frees list, not contents
+            return instance;
         }
     }
+    free_instance_list(rsc, instances);
 
-    crm_trace("Can't pair %s with %s", local_child->id, rsc->id);
-    if(children != rsc->children) {
-        g_list_free(children);
-    }
+    pe_rsc_trace(match_rsc, "No %s %s instance found compatible with %s on %s",
+                 ((role == RSC_ROLE_UNKNOWN)? "matching" : role2text(role)),
+                 rsc->id, match_rsc->id, pe__node_name(node));
     return NULL;
 }
 
+/*!
+ * \internal
+ * \brief Find a clone instance or bundle container compatible with a resource
+ *
+ * \param[in] match_rsc  Resource that instance must match
+ * \param[in] rsc        Clone or bundle resource to check for matching instance
+ * \param[in] role       If not RSC_ROLE_UNKNOWN, instance must match this role
+ * \param[in] current    If true, compare instance's original node and role,
+ *                       otherwise compare assigned next node and role
+ *
+ * \return Compatible (by \p role and \p match_rsc location) instance of \p rsc
+ *         if any, otherwise NULL
+ */
 pe_resource_t *
-find_compatible_child(const pe_resource_t *local_child,
-                      const pe_resource_t *rsc, enum rsc_role_e filter,
-                      gboolean current)
+pcmk__find_compatible_instance(const pe_resource_t *match_rsc,
+                               const pe_resource_t *rsc, enum rsc_role_e role,
+                               bool current)
 {
-    pe_resource_t *pair = NULL;
-    GList *gIter = NULL;
-    GList *scratch = NULL;
-    pe_node_t *local_node = NULL;
+    pe_resource_t *instance = NULL;
+    GList *nodes = NULL;
+    const pe_node_t *node = match_rsc->fns->location(match_rsc, NULL, current);
 
-    local_node = local_child->fns->location(local_child, NULL, current);
-    if (local_node) {
-        return find_compatible_child_by_node(local_child, local_node, rsc, filter, current);
+    // If match_rsc has a node, check only that node
+    if (node != NULL) {
+        return find_compatible_instance_on_node(match_rsc, rsc, node, role,
+                                                current);
     }
 
-    scratch = g_hash_table_get_values(local_child->allowed_nodes);
-    scratch = pcmk__sort_nodes(scratch, NULL);
-
-    gIter = scratch;
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *node = (pe_node_t *) gIter->data;
-
-        pair = find_compatible_child_by_node(local_child, node, rsc, filter, current);
-        if (pair) {
-            goto done;
-        }
+    // Otherwise check for an instance matching any of match_rsc's allowed nodes
+    nodes = pcmk__sort_nodes(g_hash_table_get_values(match_rsc->allowed_nodes),
+                             NULL);
+    for (GList *iter = nodes; (iter != NULL) && (instance == NULL);
+         iter = iter->next) {
+        instance = find_compatible_instance_on_node(match_rsc, rsc,
+                                                    (pe_node_t *) iter->data,
+                                                    role, current);
     }
 
-    pe_rsc_debug(rsc, "Can't pair %s with %s", local_child->id, rsc->id);
-  done:
-    g_list_free(scratch);
-    return pair;
+    if (instance == NULL) {
+        pe_rsc_debug(rsc, "No %s instance found compatible with %s",
+                     rsc->id, match_rsc->id);
+    }
+    g_list_free(nodes);
+    return instance;
+}
+
+/*!
+ * \internal
+ * \brief Unassign an instance if ordering without interleave match is mandatory
+ *
+ * \param[in] first          'First' action in an ordering
+ * \param[in] then           'Then' action in an ordering
+ * \param[in] then_instance  'Then' instance that has no interleave match
+ * \param[in] type           Group of enum pe_ordering flags to apply
+ * \param[in] current        If true, "then" action is stopped or demoted
+ *
+ * \return true if \p then_instance was unassigned, otherwise false
+ */
+static bool
+unassign_if_mandatory(pe_action_t *first, pe_action_t *then,
+                      pe_resource_t *then_instance, uint32_t type, bool current)
+{
+    // Allow "then" instance to go down even without an interleave match
+    if (current) {
+        pe_rsc_trace(then->rsc,
+                     "%s has no instance to order before stopping "
+                     "or demoting %s",
+                     first->rsc->id, then_instance->id);
+
+    /* If the "first" action must be runnable, but there is no "first"
+     * instance, the "then" instance must not be allowed to come up.
+     */
+    } else if (pcmk_any_flags_set(type, pe_order_runnable_left
+                                        |pe_order_implies_then)) {
+        pe_rsc_info(then->rsc,
+                    "Inhibiting %s from being active "
+                    "because there is no %s instance to interleave",
+                    then_instance->id, first->rsc->id);
+        return pcmk__assign_resource(then_instance, NULL, true);
+    }
+    return false;
 }
 
 static uint32_t
@@ -688,30 +794,16 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
         current = TRUE;
     }
 
-    children = get_containers_or_children(then->rsc);
+    children = get_instance_list(then->rsc);
     for (gIter = children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *then_child = gIter->data;
-        pe_resource_t *first_child = find_compatible_child(then_child,
-                                                           first->rsc,
-                                                           RSC_ROLE_UNKNOWN,
-                                                           current);
-        if (first_child == NULL && current) {
-            crm_trace("Ignore");
+        pe_resource_t *first_child = NULL;
 
-        } else if (first_child == NULL) {
-            crm_debug("No match found for %s (%d / %s / %s)", then_child->id, current, first->uuid, then->uuid);
-
-            /* Me no like this hack - but what else can we do?
-             *
-             * If there is no-one active or about to be active
-             *   on the same node as then_child, then they must
-             *   not be allowed to start
-             */
-            if (pcmk_any_flags_set(type, pe_order_runnable_left|pe_order_implies_then) /* Mandatory */ ) {
-                pe_rsc_info(then->rsc, "Inhibiting %s from being active", then_child->id);
-                if (pcmk__assign_resource(then_child, NULL, true)) {
-                    pcmk__set_updated_flags(changed, first, pcmk__updated_then);
-                }
+        first_child = pcmk__find_compatible_instance(then_child, first->rsc,
+                                                     RSC_ROLE_UNKNOWN, current);
+        if (first_child == NULL) { // No instance can be interleaved
+            if (unassign_if_mandatory(first, then, then_child, type, current)) {
+                pcmk__set_updated_flags(changed, first, pcmk__updated_then);
             }
 
         } else {
@@ -807,10 +899,7 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
             }
         }
     }
-
-    if(children != then->rsc->children) {
-        g_list_free(children);
-    }
+    free_instance_list(then->rsc, children);
     return changed;
 }
 
@@ -892,7 +981,7 @@ pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
                                                 filter, type, data_set);
 
         // Now any children (or containers in the case of a bundle)
-        children = get_containers_or_children(then->rsc);
+        children = get_instance_list(then->rsc);
         for (gIter = children; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *then_child = (pe_resource_t *) gIter->data;
             uint32_t then_child_changed = pcmk__updated_none;
@@ -922,10 +1011,7 @@ pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
                 }
             }
         }
-
-        if(children != then->rsc->children) {
-            g_list_free(children);
-        }
+        free_instance_list(then->rsc, children);
     }
     return changed;
 }
