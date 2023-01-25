@@ -224,6 +224,7 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
     int rc = pcmk_ok;
     xmlNode *cib_object = NULL;
     char *xpath = crm_strdup_printf(XPATH_NODE_STATE, node);
+    bool duplicate = false;
 
     if (pcmk__simulate_node_config) {
         create_node_entry(cib_conn, node);
@@ -235,10 +236,8 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
     if ((cib_object != NULL) && (ID(cib_object) == NULL)) {
         crm_err("Detected multiple node_state entries for xpath=%s, bailing",
                 xpath);
-        crm_log_xml_warn(cib_object, "Duplicates");
-        free(xpath);
-        crm_exit(CRM_EX_SOFTWARE);
-        return NULL; // not reached, but makes static analysis happy
+        duplicate = true;
+        goto done;
     }
 
     if (rc == -ENXIO) {
@@ -263,7 +262,15 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
         crm_trace("Injecting node state for %s (rc=%d)", node, rc);
     }
 
+done:
     free(xpath);
+
+    if (duplicate) {
+        crm_log_xml_warn(cib_object, "Duplicates");
+        crm_exit(CRM_EX_SOFTWARE);
+        return NULL; // not reached, but makes static analysis happy
+    }
+
     CRM_ASSERT(rc == pcmk_ok);
     return cib_object;
 }
