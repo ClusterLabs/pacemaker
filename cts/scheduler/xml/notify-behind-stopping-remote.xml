@@ -20,6 +20,11 @@
     </nodes>
     <resources>
       <bundle id="redis-bundle">
+        <meta_attributes id="redis-bundle-meta_attributes">
+          <nvpair id="redis-bundle-meta_attributes-container-attribute-target"
+                  name="container-attribute-target" value="host"/>
+          <nvpair id="redis-bundle-meta_attributes-notify" name="notify" value="true"/>
+        </meta_attributes>
         <docker promoted-max="1" network="host" replicas="3" image="docker.io/tripleoqueens/centos-binary-redis:current-tripleo-rdo" run-command="/usr/sbin/pacemaker_remoted" options="--user=root --log-driver=journald"/>
         <network control-port="3123"/>
         <storage>
@@ -38,10 +43,6 @@
           <instance_attributes id="redis-instance_attributes">
             <nvpair id="redis-instance_attributes-wait_last_known_promoted" name="wait_last_known_master" value="true"/>
           </instance_attributes>
-          <meta_attributes id="redis-meta_attributes">
-            <nvpair id="redis-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
-            <nvpair id="redis-meta_attributes-notify" name="notify" value="true"/>
-          </meta_attributes>
           <operations>
             <op id="redis-demote-interval-0s" interval="0s" name="demote" timeout="120s"/>
             <op id="redis-monitor-interval-45s" interval="45s" name="monitor" timeout="60s"/>

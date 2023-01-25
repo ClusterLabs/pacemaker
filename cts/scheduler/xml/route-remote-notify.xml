@@ -37,6 +37,11 @@
     </nodes>
     <resources>
       <bundle id="rabbitmq-bundle">
+        <meta_attributes id="rabbitmq-bundle-meta_attributes">
+          <nvpair id="rabbitmq-bundle-meta_attributes-container-attribute-target"
+                  name="container-attribute-target" value="host"/>
+          <nvpair id="rabbitmq-bundle-meta_attributes-notify" name="notify" value="true"/>
+        </meta_attributes>
         <docker image="192.168.24.1:8787/rhosp13/openstack-rabbitmq:pcmklatest" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
         <network control-port="3122"/>
         <storage>
@@ -56,10 +61,6 @@
           <instance_attributes id="rabbitmq-instance_attributes">
             <nvpair id="rabbitmq-instance_attributes-set_policy" name="set_policy" value="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
           </instance_attributes>
-          <meta_attributes id="rabbitmq-meta_attributes">
-            <nvpair id="rabbitmq-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
-            <nvpair id="rabbitmq-meta_attributes-notify" name="notify" value="true"/>
-          </meta_attributes>
           <operations>
             <op id="rabbitmq-monitor-interval-10s" interval="10s" name="monitor" timeout="40s"/>
             <op id="rabbitmq-start-interval-0s" interval="0s" name="start" timeout="200s"/>

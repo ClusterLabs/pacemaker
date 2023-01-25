@@ -35,6 +35,11 @@
     </nodes>
     <resources>
       <bundle id="rabbitmq-bundle">
+        <meta_attributes id="rabbitmq-bundle-meta_attributes">
+          <nvpair id="rabbitmq-bundle-meta_attributes-container-attribute-target"
+                  name="container-attribute-target" value="host"/>
+          <nvpair id="rabbitmq-bundle-meta_attributes-notify" name="notify" value="true"/>
+        </meta_attributes>
         <docker image="192.168.122.139:8787/rhosp13/openstack-rabbitmq:pcmklatest" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
         <network control-port="3122"/>
         <storage>
@@ -54,10 +59,6 @@
           <instance_attributes id="rabbitmq-instance_attributes">
             <nvpair id="rabbitmq-instance_attributes-set_policy" name="set_policy" value="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
           </instance_attributes>
-          <meta_attributes id="rabbitmq-meta_attributes">
-            <nvpair id="rabbitmq-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
-            <nvpair id="rabbitmq-meta_attributes-notify" name="notify" value="true"/>
-          </meta_attributes>
           <operations>
             <op id="rabbitmq-monitor-interval-10s" interval="10s" name="monitor" timeout="40s"/>
             <op id="rabbitmq-start-interval-0s" interval="0s" name="start" timeout="200s"/>
@@ -67,6 +68,12 @@
         <meta_attributes id="rabbitmq-bundle-meta_attributes"/>
       </bundle>
       <bundle id="galera-bundle">
+        <meta_attributes id="galera-bundle-meta_attributes">
+          <nvpair id="galera-bundle-meta_attributes-container-attribute-target"
+                  name="container-attribute-target" value="host"/>
+          <nvpair id="galera-bundle-meta_attributes-promoted-max" name="promoted-max" value="3"/>
+          <nvpair id="galera-bundle-meta_attributes-ordered" name="ordered" value="true"/>
+        </meta_attributes>
         <docker image="192.168.122.139:8787/rhosp13/openstack-mariadb:pcmklatest" promoted-max="3" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
         <network control-port="3123"/>
         <storage>
@@ -87,11 +94,6 @@
             <nvpair id="galera-instance_attributes-log" name="log" value="/var/log/mysql/mysqld.log"/>
             <nvpair id="galera-instance_attributes-wsrep_cluster_address" name="wsrep_cluster_address" value="gcomm://node1.internalapi.localdomain,node2.internalapi.localdomain,node3.internalapi.localdomain"/>
           </instance_attributes>
-          <meta_attributes id="galera-meta_attributes">
-            <nvpair id="galera-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
-            <nvpair id="galera-meta_attributes-promoted-max" name="promoted-max" value="3"/>
-            <nvpair id="galera-meta_attributes-ordered" name="ordered" value="true"/>
-          </meta_attributes>
           <operations>
             <op id="galera-demote-interval-0s" interval="0s" name="demote" timeout="120s"/>
             <op id="galera-monitor-interval-20s" interval="20s" name="monitor" timeout="30s"/>
