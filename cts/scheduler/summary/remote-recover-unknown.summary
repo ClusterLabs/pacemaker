@@ -57,9 +57,13 @@ Executing Cluster Transition:
   * Pseudo action:   messaging-1_stop_0
   * Pseudo action:   galera-0_stop_0
   * Pseudo action:   galera-2_stop_0
+  * Pseudo action:   rabbitmq-clone_pre_notify_stop_0
   * Pseudo action:   redis-master_pre_notify_stop_0
   * Pseudo action:   stonith-fence_ipmilan-5254005bdbb5_stop_0
   * Fencing controller-1 (reboot)
+  * Resource action: rabbitmq        notify on messaging-2
+  * Resource action: rabbitmq        notify on messaging-0
+  * Pseudo action:   rabbitmq-clone_confirmed-pre_notify_stop_0
   * Pseudo action:   redis_post_notify_stop_0
   * Resource action: redis           notify on controller-0
   * Resource action: redis           notify on controller-2
@@ -78,9 +82,6 @@ Executing Cluster Transition:
   * Pseudo action:   haproxy-clone_stopped_0
   * Resource action: stonith-fence_ipmilan-5254005bdbb5 start on controller-2
   * Resource action: galera-0        monitor=20000 on controller-2
-  * Resource action: rabbitmq        notify on messaging-2
-  * Resource action: rabbitmq        notify on messaging-0
-  * Pseudo action:   rabbitmq_notified_0
   * Pseudo action:   rabbitmq_stop_0
   * Pseudo action:   rabbitmq-clone_stopped_0
   * Pseudo action:   redis-master_post_notify_stopped_0
@@ -88,12 +89,17 @@ Executing Cluster Transition:
   * Pseudo action:   ip-172.17.1.17_stop_0
   * Pseudo action:   ip-172.17.4.11_stop_0
   * Resource action: stonith-fence_ipmilan-5254005bdbb5 monitor=60000 on controller-2
+  * Pseudo action:   rabbitmq-clone_post_notify_stopped_0
   * Resource action: redis           notify on controller-0
   * Resource action: redis           notify on controller-2
   * Pseudo action:   redis-master_confirmed-post_notify_stopped_0
   * Resource action: ip-172.17.1.14  start on controller-2
   * Resource action: ip-172.17.1.17  start on controller-2
   * Resource action: ip-172.17.4.11  start on controller-2
+  * Resource action: rabbitmq        notify on messaging-2
+  * Resource action: rabbitmq        notify on messaging-0
+  * Pseudo action:   rabbitmq_notified_0
+  * Pseudo action:   rabbitmq-clone_confirmed-post_notify_stopped_0
   * Pseudo action:   redis_notified_0
   * Resource action: ip-172.17.1.14  monitor=10000 on controller-2
   * Resource action: ip-172.17.1.17  monitor=10000 on controller-2
