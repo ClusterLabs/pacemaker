@@ -225,6 +225,7 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
     xmlNode *cib_object = NULL;
     char *xpath = crm_strdup_printf(XPATH_NODE_STATE, node);
     bool duplicate = false;
+    char *found_uuid = NULL;
 
     if (pcmk__simulate_node_config) {
         create_node_entry(cib_conn, node);
@@ -241,21 +242,45 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
     }
 
     if (rc == -ENXIO) {
-        char *found_uuid = NULL;
-
         if (uuid == NULL) {
             query_node_uuid(cib_conn, node, &found_uuid, NULL);
         } else {
             found_uuid = strdup(uuid);
         }
 
+        if (found_uuid) {
+            char *xpath_by_uuid = crm_strdup_printf("//" XML_CIB_TAG_STATE "[@" XML_ATTR_ID "='%s']",
+                                                    found_uuid);
+
+            // It's possible that a node_state entry doesn't have an uname yet.
+            rc = cib_conn->cmds->query(cib_conn, xpath_by_uuid, &cib_object,
+                                       cib_xpath|cib_sync_call|cib_scope_local);
+
+            if ((cib_object != NULL) && (ID(cib_object) == NULL)) {
+                crm_err("Detected multiple node_state entries for xpath=%s, bailing",
+                        xpath_by_uuid);
+                duplicate = true;
+                free(xpath_by_uuid);
+                goto done;
+
+            } else if (cib_object != NULL) {
+                crm_xml_add(cib_object, XML_ATTR_UNAME, node);
+
+                rc = cib_conn->cmds->modify(cib_conn, XML_CIB_TAG_STATUS, cib_object,
+                                            cib_sync_call|cib_scope_local);
+            }
+
+            free(xpath_by_uuid);
+        }
+    }
+
+    if (rc == -ENXIO) {
         cib_object = create_xml_node(NULL, XML_CIB_TAG_STATE);
         crm_xml_add(cib_object, XML_ATTR_ID, found_uuid);
         crm_xml_add(cib_object, XML_ATTR_UNAME, node);
         cib_conn->cmds->create(cib_conn, XML_CIB_TAG_STATUS, cib_object,
                                cib_sync_call|cib_scope_local);
         free_xml(cib_object);
-        free(found_uuid);
 
         rc = cib_conn->cmds->query(cib_conn, xpath, &cib_object,
                                    cib_xpath|cib_sync_call|cib_scope_local);
@@ -263,6 +288,7 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
     }
 
 done:
+    free(found_uuid);
     free(xpath);
 
     if (duplicate) {
