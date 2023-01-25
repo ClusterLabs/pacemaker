@@ -1,31 +1,31 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0" priority="1000000">
     <action_set>
-      <pseudo_event id="209" operation="notified" operation_key="rabbitmq_notified_0" internal_operation_key="rabbitmq:0_confirmed-post_notify_stonith_0">
+      <pseudo_event id="217" operation="notified" operation_key="rabbitmq_notified_0" internal_operation_key="rabbitmq:0_confirmed-post_notify_stonith_0">
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_timeout="20000"  set_policy="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="208" operation="notify" operation_key="rabbitmq_post_notify_stop_0" internal_operation_key="rabbitmq:0_post_notify_stonith_0"/>
+        <pseudo_event id="216" operation="notify" operation_key="rabbitmq_post_notify_stop_0" internal_operation_key="rabbitmq:0_post_notify_stonith_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="210" operation="notify" operation_key="rabbitmq_post_notify_stop_0" internal_operation_key="rabbitmq:1_post_notify_stop_0" on_node="rabbitmq-bundle-1" on_node_uuid="rabbitmq-bundle-1" router_node="controller-1"/>
+        <rsc_op id="218" operation="notify" operation_key="rabbitmq_post_notify_stop_0" internal_operation_key="rabbitmq:1_post_notify_stop_0" on_node="rabbitmq-bundle-1" on_node_uuid="rabbitmq-bundle-1" router_node="controller-1"/>
       </trigger>
       <trigger>
-        <rsc_op id="211" operation="notify" operation_key="rabbitmq_post_notify_stop_0" internal_operation_key="rabbitmq:2_post_notify_stop_0" on_node="rabbitmq-bundle-2" on_node_uuid="rabbitmq-bundle-2" router_node="controller-2"/>
+        <rsc_op id="219" operation="notify" operation_key="rabbitmq_post_notify_stop_0" internal_operation_key="rabbitmq:2_post_notify_stop_0" on_node="rabbitmq-bundle-2" on_node_uuid="rabbitmq-bundle-2" router_node="controller-2"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="1" priority="1000000">
     <action_set>
-      <pseudo_event id="208" operation="notify" operation_key="rabbitmq_post_notify_stop_0" internal_operation_key="rabbitmq:0_post_notify_stonith_0">
+      <pseudo_event id="216" operation="notify" operation_key="rabbitmq_post_notify_stop_0" internal_operation_key="rabbitmq:0_post_notify_stonith_0">
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_timeout="20000"  set_policy="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="207" operation="stonith" operation_key="stonith-rabbitmq-bundle-0-off" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0"/>
+        <pseudo_event id="215" operation="stonith" operation_key="stonith-rabbitmq-bundle-0-off" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -46,7 +46,7 @@
   </synapse>
   <synapse id="3">
     <action_set>
-      <rsc_op id="233" operation="notify" operation_key="rabbitmq_pre_notify_stop_0" internal_operation_key="rabbitmq:1_pre_notify_stop_0" on_node="rabbitmq-bundle-1" on_node_uuid="rabbitmq-bundle-1" router_node="controller-1">
+      <rsc_op id="241" operation="notify" operation_key="rabbitmq_pre_notify_stop_0" internal_operation_key="rabbitmq:1_pre_notify_stop_0" on_node="rabbitmq-bundle-1" on_node_uuid="rabbitmq-bundle-1" router_node="controller-1">
         <primitive id="rabbitmq" long-id="rabbitmq:1" class="ocf" provider="heartbeat" type="rabbitmq-cluster"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_active_resource="rabbitmq:0 rabbitmq:1 rabbitmq:2" CRM_meta_notify_active_uname="rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2" CRM_meta_notify_all_hosts="controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2" CRM_meta_notify_all_uname="controller-0 controller-1 controller-2 galera-bundle-0 galera-bundle-1 galera-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="controller-0 controller-1 controller-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_promoted_resource=" " CRM_meta_notify_promoted_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="rabbitmq:0" CRM_meta_notify_stop_uname="rabbitmq-bundle-0" CRM_meta_notify_type="pre" CRM_meta_notify_unpromoted_resource=" " CRM_meta_notify_unpromoted_uname=" " CRM_meta_on_node="rabbitmq-bundle-1" CRM_meta_on_node_uuid="rabbitmq-bundle-1" CRM_meta_physical_host="controller-1" CRM_meta_timeout="20000"  set_policy="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
       </rsc_op>
@@ -59,7 +59,7 @@
   </synapse>
   <synapse id="4" priority="1000000">
     <action_set>
-      <rsc_op id="210" operation="notify" operation_key="rabbitmq_post_notify_stop_0" internal_operation_key="rabbitmq:1_post_notify_stop_0" on_node="rabbitmq-bundle-1" on_node_uuid="rabbitmq-bundle-1" router_node="controller-1">
+      <rsc_op id="218" operation="notify" operation_key="rabbitmq_post_notify_stop_0" internal_operation_key="rabbitmq:1_post_notify_stop_0" on_node="rabbitmq-bundle-1" on_node_uuid="rabbitmq-bundle-1" router_node="controller-1">
         <primitive id="rabbitmq" long-id="rabbitmq:1" class="ocf" provider="heartbeat" type="rabbitmq-cluster"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_active_resource="rabbitmq:0 rabbitmq:1 rabbitmq:2" CRM_meta_notify_active_uname="rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2" CRM_meta_notify_all_hosts="controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2" CRM_meta_notify_all_uname="controller-0 controller-1 controller-2 galera-bundle-0 galera-bundle-1 galera-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="controller-0 controller-1 controller-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_promoted_resource=" " CRM_meta_notify_promoted_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="rabbitmq:0" CRM_meta_notify_stop_uname="rabbitmq-bundle-0" CRM_meta_notify_type="post" CRM_meta_notify_unpromoted_resource=" " CRM_meta_notify_unpromoted_uname=" " CRM_meta_on_node="rabbitmq-bundle-1" CRM_meta_on_node_uuid="rabbitmq-bundle-1" CRM_meta_physical_host="controller-1" CRM_meta_timeout="20000"  set_policy="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
       </rsc_op>
@@ -69,13 +69,13 @@
         <pseudo_event id="74" operation="notify" operation_key="rabbitmq-bundle-clone_post_notify_stopped_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="208" operation="notify" operation_key="rabbitmq_post_notify_stop_0" internal_operation_key="rabbitmq:0_post_notify_stonith_0"/>
+        <pseudo_event id="216" operation="notify" operation_key="rabbitmq_post_notify_stop_0" internal_operation_key="rabbitmq:0_post_notify_stonith_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="5">
     <action_set>
-      <rsc_op id="234" operation="notify" operation_key="rabbitmq_pre_notify_stop_0" internal_operation_key="rabbitmq:2_pre_notify_stop_0" on_node="rabbitmq-bundle-2" on_node_uuid="rabbitmq-bundle-2" router_node="controller-2">
+      <rsc_op id="242" operation="notify" operation_key="rabbitmq_pre_notify_stop_0" internal_operation_key="rabbitmq:2_pre_notify_stop_0" on_node="rabbitmq-bundle-2" on_node_uuid="rabbitmq-bundle-2" router_node="controller-2">
         <primitive id="rabbitmq" long-id="rabbitmq:2" class="ocf" provider="heartbeat" type="rabbitmq-cluster"/>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_active_resource="rabbitmq:0 rabbitmq:1 rabbitmq:2" CRM_meta_notify_active_uname="rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2" CRM_meta_notify_all_hosts="controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2" CRM_meta_notify_all_uname="controller-0 controller-1 controller-2 galera-bundle-0 galera-bundle-1 galera-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="controller-0 controller-1 controller-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_promoted_resource=" " CRM_meta_notify_promoted_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="rabbitmq:0" CRM_meta_notify_stop_uname="rabbitmq-bundle-0" CRM_meta_notify_type="pre" CRM_meta_notify_unpromoted_resource=" " CRM_meta_notify_unpromoted_uname=" " CRM_meta_on_node="rabbitmq-bundle-2" CRM_meta_on_node_uuid="rabbitmq-bundle-2" CRM_meta_physical_host="controller-2" CRM_meta_timeout="20000"  set_policy="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
       </rsc_op>
@@ -88,7 +88,7 @@
   </synapse>
   <synapse id="6" priority="1000000">
     <action_set>
-      <rsc_op id="211" operation="notify" operation_key="rabbitmq_post_notify_stop_0" internal_operation_key="rabbitmq:2_post_notify_stop_0" on_node="rabbitmq-bundle-2" on_node_uuid="rabbitmq-bundle-2" router_node="controller-2">
+      <rsc_op id="219" operation="notify" operation_key="rabbitmq_post_notify_stop_0" internal_operation_key="rabbitmq:2_post_notify_stop_0" on_node="rabbitmq-bundle-2" on_node_uuid="rabbitmq-bundle-2" router_node="controller-2">
         <primitive id="rabbitmq" long-id="rabbitmq:2" class="ocf" provider="heartbeat" type="rabbitmq-cluster"/>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_active_resource="rabbitmq:0 rabbitmq:1 rabbitmq:2" CRM_meta_notify_active_uname="rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2" CRM_meta_notify_all_hosts="controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2" CRM_meta_notify_all_uname="controller-0 controller-1 controller-2 galera-bundle-0 galera-bundle-1 galera-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="controller-0 controller-1 controller-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_promoted_resource=" " CRM_meta_notify_promoted_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="rabbitmq:0" CRM_meta_notify_stop_uname="rabbitmq-bundle-0" CRM_meta_notify_type="post" CRM_meta_notify_unpromoted_resource=" " CRM_meta_notify_unpromoted_uname=" " CRM_meta_on_node="rabbitmq-bundle-2" CRM_meta_on_node_uuid="rabbitmq-bundle-2" CRM_meta_physical_host="controller-2" CRM_meta_timeout="20000"  set_policy="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
       </rsc_op>
@@ -98,7 +98,7 @@
         <pseudo_event id="74" operation="notify" operation_key="rabbitmq-bundle-clone_post_notify_stopped_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="208" operation="notify" operation_key="rabbitmq_post_notify_stop_0" internal_operation_key="rabbitmq:0_post_notify_stonith_0"/>
+        <pseudo_event id="216" operation="notify" operation_key="rabbitmq_post_notify_stop_0" internal_operation_key="rabbitmq:0_post_notify_stonith_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -113,10 +113,10 @@
         <pseudo_event id="74" operation="notify" operation_key="rabbitmq-bundle-clone_post_notify_stopped_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="210" operation="notify" operation_key="rabbitmq_post_notify_stop_0" internal_operation_key="rabbitmq:1_post_notify_stop_0" on_node="rabbitmq-bundle-1" on_node_uuid="rabbitmq-bundle-1" router_node="controller-1"/>
+        <rsc_op id="218" operation="notify" operation_key="rabbitmq_post_notify_stop_0" internal_operation_key="rabbitmq:1_post_notify_stop_0" on_node="rabbitmq-bundle-1" on_node_uuid="rabbitmq-bundle-1" router_node="controller-1"/>
       </trigger>
       <trigger>
-        <rsc_op id="211" operation="notify" operation_key="rabbitmq_post_notify_stop_0" internal_operation_key="rabbitmq:2_post_notify_stop_0" on_node="rabbitmq-bundle-2" on_node_uuid="rabbitmq-bundle-2" router_node="controller-2"/>
+        <rsc_op id="219" operation="notify" operation_key="rabbitmq_post_notify_stop_0" internal_operation_key="rabbitmq:2_post_notify_stop_0" on_node="rabbitmq-bundle-2" on_node_uuid="rabbitmq-bundle-2" router_node="controller-2"/>
       </trigger>
     </inputs>
   </synapse>
@@ -146,10 +146,10 @@
         <pseudo_event id="72" operation="notify" operation_key="rabbitmq-bundle-clone_pre_notify_stop_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="233" operation="notify" operation_key="rabbitmq_pre_notify_stop_0" internal_operation_key="rabbitmq:1_pre_notify_stop_0" on_node="rabbitmq-bundle-1" on_node_uuid="rabbitmq-bundle-1" router_node="controller-1"/>
+        <rsc_op id="241" operation="notify" operation_key="rabbitmq_pre_notify_stop_0" internal_operation_key="rabbitmq:1_pre_notify_stop_0" on_node="rabbitmq-bundle-1" on_node_uuid="rabbitmq-bundle-1" router_node="controller-1"/>
       </trigger>
       <trigger>
-        <rsc_op id="234" operation="notify" operation_key="rabbitmq_pre_notify_stop_0" internal_operation_key="rabbitmq:2_pre_notify_stop_0" on_node="rabbitmq-bundle-2" on_node_uuid="rabbitmq-bundle-2" router_node="controller-2"/>
+        <rsc_op id="242" operation="notify" operation_key="rabbitmq_pre_notify_stop_0" internal_operation_key="rabbitmq:2_pre_notify_stop_0" on_node="rabbitmq-bundle-2" on_node_uuid="rabbitmq-bundle-2" router_node="controller-2"/>
       </trigger>
     </inputs>
   </synapse>
@@ -190,7 +190,7 @@
         <pseudo_event id="73" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="207" operation="stonith" operation_key="stonith-rabbitmq-bundle-0-off" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0"/>
+        <pseudo_event id="215" operation="stonith" operation_key="stonith-rabbitmq-bundle-0-off" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -275,10 +275,34 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="19">
+  <synapse id="19" priority="1000000">
+    <action_set>
+      <pseudo_event id="207" operation="notified" operation_key="rabbitmq-bundle-docker-0_confirmed-post_notify_stonith_0">
+        <attributes CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/rhosp12/openstack-rabbitmq-docker:pcmklatest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/rabbitmq-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3122 -v /var/lib/kolla/config_files/rabbitmq.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/puppet-generated/rabbitmq/:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/rabbitmq:/var/lib/rabbitmq:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/rabbitmq-bundle-0:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="206" operation="notify" operation_key="rabbitmq-bundle-docker-0_post_notify_stonith_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="20" priority="1000000">
+    <action_set>
+      <pseudo_event id="206" operation="notify" operation_key="rabbitmq-bundle-docker-0_post_notify_stonith_0">
+        <attributes CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/rhosp12/openstack-rabbitmq-docker:pcmklatest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/rabbitmq-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3122 -v /var/lib/kolla/config_files/rabbitmq.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/puppet-generated/rabbitmq/:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/rabbitmq:/var/lib/rabbitmq:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/rabbitmq-bundle-0:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-controller-0-reboot" on_node="controller-0" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="21">
     <action_set>
       <pseudo_event id="41" operation="stop" operation_key="rabbitmq-bundle-docker-0_stop_0">
-        <attributes CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/rhosp12/openstack-rabbitmq-docker:pcmklatest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/rabbitmq-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3122 -v /var/lib/kolla/config_files/rabbitmq.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/puppet-generated/rabbitmq/:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/rabbitmq:/var/lib/rabbitmq:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/rabbitmq-bundle-0:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+        <attributes CRM_meta_notify_stop_resource="rabbitmq-bundle-docker-0" CRM_meta_notify_stop_uname="controller-0" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/rhosp12/openstack-rabbitmq-docker:pcmklatest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/rabbitmq-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3122 -v /var/lib/kolla/config_files/rabbitmq.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/puppet-generated/rabbitmq/:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/rabbitmq:/var/lib/rabbitmq:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/rabbitmq-bundle-0:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -293,15 +317,39 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="20">
+  <synapse id="22" priority="1000000">
+    <action_set>
+      <pseudo_event id="209" operation="notified" operation_key="rabbitmq-bundle-0_confirmed-post_notify_stonith_0">
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_timeout="20000" addr="controller-0"  port="3122"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="208" operation="notify" operation_key="rabbitmq-bundle-0_post_notify_stonith_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="23" priority="1000000">
+    <action_set>
+      <pseudo_event id="208" operation="notify" operation_key="rabbitmq-bundle-0_post_notify_stonith_0">
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_timeout="20000" addr="controller-0"  port="3122"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-controller-0-reboot" on_node="controller-0" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="24">
     <action_set>
       <pseudo_event id="42" operation="stop" operation_key="rabbitmq-bundle-0_stop_0">
-        <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_timeout="20000" addr="controller-0"  port="3122"/>
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_notify_stop_resource="rabbitmq-bundle-0" CRM_meta_notify_stop_uname="controller-0" CRM_meta_timeout="20000" addr="controller-0"  port="3122"/>
       </pseudo_event>
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="21">
+  <synapse id="25">
     <action_set>
       <rsc_op id="35" operation="monitor" operation_key="rabbitmq-bundle-0_monitor_0" on_node="controller-2" on_node_uuid="3">
         <primitive id="rabbitmq-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
@@ -310,7 +358,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="22">
+  <synapse id="26">
     <action_set>
       <rsc_op id="29" operation="monitor" operation_key="rabbitmq-bundle-0_monitor_0" on_node="controller-1" on_node_uuid="2">
         <primitive id="rabbitmq-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
@@ -319,7 +367,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="23">
+  <synapse id="27">
     <action_set>
       <rsc_op id="36" operation="monitor" operation_key="rabbitmq-bundle-1_monitor_0" on_node="controller-2" on_node_uuid="3">
         <primitive id="rabbitmq-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
@@ -328,7 +376,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="24">
+  <synapse id="28">
     <action_set>
       <rsc_op id="30" operation="monitor" operation_key="rabbitmq-bundle-2_monitor_0" on_node="controller-1" on_node_uuid="2">
         <primitive id="rabbitmq-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
@@ -337,7 +385,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="25">
+  <synapse id="29">
     <action_set>
       <pseudo_event id="101" operation="stop" operation_key="galera_stop_0" internal_operation_key="galera:0_stop_0">
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_physical_host="controller-0" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" additional_parameters="--open-files-limit=16384" cluster_host_map="controller-0:controller-0.internalapi.localdomain;controller-1:controller-1.internalapi.localdomain;controller-2:controller-2.internalapi.localdomain"  enable_creation="true" wsrep_cluster_address="gcomm://controller-0.internalapi.localdomain,controller-1.internalapi.localdomain,controller-2.internalapi.localdomain"/>
@@ -355,7 +403,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="26">
+  <synapse id="30">
     <action_set>
       <pseudo_event id="100" operation="demote" operation_key="galera_demote_0" internal_operation_key="galera:0_demote_0">
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="demote" CRM_meta_notify="false" CRM_meta_physical_host="controller-0" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" additional_parameters="--open-files-limit=16384" cluster_host_map="controller-0:controller-0.internalapi.localdomain;controller-1:controller-1.internalapi.localdomain;controller-2:controller-2.internalapi.localdomain"  enable_creation="true" wsrep_cluster_address="gcomm://controller-0.internalapi.localdomain,controller-1.internalapi.localdomain,controller-2.internalapi.localdomain"/>
@@ -367,7 +415,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="27" priority="1000000">
+  <synapse id="31" priority="1000000">
     <action_set>
       <pseudo_event id="112" operation="demoted" operation_key="galera-bundle-master_demoted_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -382,7 +430,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="28">
+  <synapse id="32">
     <action_set>
       <pseudo_event id="111" operation="demote" operation_key="galera-bundle-master_demote_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -394,7 +442,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="29" priority="1000000">
+  <synapse id="33" priority="1000000">
     <action_set>
       <pseudo_event id="108" operation="stopped" operation_key="galera-bundle-master_stopped_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -409,7 +457,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="30">
+  <synapse id="34">
     <action_set>
       <pseudo_event id="107" operation="stop" operation_key="galera-bundle-master_stop_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -423,11 +471,11 @@
         <pseudo_event id="112" operation="demoted" operation_key="galera-bundle-master_demoted_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="206" operation="stonith" operation_key="stonith-galera-bundle-0-off" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0"/>
+        <pseudo_event id="214" operation="stonith" operation_key="stonith-galera-bundle-0-off" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="31" priority="1000000">
+  <synapse id="35" priority="1000000">
     <action_set>
       <pseudo_event id="106" operation="running" operation_key="galera-bundle-master_running_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -439,7 +487,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="32">
+  <synapse id="36">
     <action_set>
       <pseudo_event id="105" operation="start" operation_key="galera-bundle-master_start_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -454,7 +502,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="33">
+  <synapse id="37">
     <action_set>
       <pseudo_event id="76" operation="stop" operation_key="galera-bundle-docker-0_stop_0">
         <attributes CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/rhosp12/openstack-mariadb-docker:pcmklatest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3123 -v /var/lib/kolla/config_files/mysql.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/puppet-generated/mysql/:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /var/log/mariadb:/var/log/mariadb:rw -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-0:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
@@ -472,7 +520,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="34">
+  <synapse id="38">
     <action_set>
       <pseudo_event id="77" operation="stop" operation_key="galera-bundle-0_stop_0">
         <attributes CRM_meta_container="galera-bundle-docker-0" CRM_meta_timeout="20000" addr="controller-0"  port="3123"/>
@@ -480,7 +528,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="35">
+  <synapse id="39">
     <action_set>
       <rsc_op id="37" operation="monitor" operation_key="galera-bundle-0_monitor_0" on_node="controller-2" on_node_uuid="3">
         <primitive id="galera-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
@@ -489,7 +537,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="36">
+  <synapse id="40">
     <action_set>
       <rsc_op id="31" operation="monitor" operation_key="galera-bundle-0_monitor_0" on_node="controller-1" on_node_uuid="2">
         <primitive id="galera-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
@@ -498,7 +546,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="37">
+  <synapse id="41">
     <action_set>
       <rsc_op id="38" operation="monitor" operation_key="galera-bundle-1_monitor_0" on_node="controller-2" on_node_uuid="3">
         <primitive id="galera-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
@@ -507,7 +555,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="38">
+  <synapse id="42">
     <action_set>
       <rsc_op id="32" operation="monitor" operation_key="galera-bundle-2_monitor_0" on_node="controller-1" on_node_uuid="2">
         <primitive id="galera-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
@@ -516,37 +564,37 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="39" priority="1000000">
+  <synapse id="43" priority="1000000">
     <action_set>
-      <pseudo_event id="214" operation="notified" operation_key="redis_notified_0" internal_operation_key="redis:0_confirmed-post_notify_stonith_0">
+      <pseudo_event id="222" operation="notified" operation_key="redis_notified_0" internal_operation_key="redis:0_confirmed-post_notify_stonith_0">
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="213" operation="notify" operation_key="redis_post_notify_stop_0" internal_operation_key="redis:0_post_notify_stonith_0"/>
+        <pseudo_event id="221" operation="notify" operation_key="redis_post_notify_stop_0" internal_operation_key="redis:0_post_notify_stonith_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="215" operation="notify" operation_key="redis_post_notify_stop_0" internal_operation_key="redis:1_post_notify_stop_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="controller-1"/>
+        <rsc_op id="223" operation="notify" operation_key="redis_post_notify_stop_0" internal_operation_key="redis:1_post_notify_stop_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="controller-1"/>
       </trigger>
       <trigger>
-        <rsc_op id="216" operation="notify" operation_key="redis_post_notify_stop_0" internal_operation_key="redis:2_post_notify_stop_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="controller-2"/>
+        <rsc_op id="224" operation="notify" operation_key="redis_post_notify_stop_0" internal_operation_key="redis:2_post_notify_stop_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="controller-2"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="40" priority="1000000">
+  <synapse id="44" priority="1000000">
     <action_set>
-      <pseudo_event id="213" operation="notify" operation_key="redis_post_notify_stop_0" internal_operation_key="redis:0_post_notify_stonith_0">
+      <pseudo_event id="221" operation="notify" operation_key="redis_post_notify_stop_0" internal_operation_key="redis:0_post_notify_stonith_0">
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="212" operation="stonith" operation_key="stonith-redis-bundle-0-off" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0"/>
+        <pseudo_event id="220" operation="stonith" operation_key="stonith-redis-bundle-0-off" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="41">
+  <synapse id="45">
     <action_set>
       <pseudo_event id="140" operation="stop" operation_key="redis_stop_0" internal_operation_key="redis:0_stop_0">
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="stop" CRM_meta_notify="true" CRM_meta_notify_active_resource="redis:0 redis:1 redis:2" CRM_meta_notify_active_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_all_hosts="controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2" CRM_meta_notify_all_uname="controller-0 controller-1 controller-2 galera-bundle-0 galera-bundle-1 galera-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="controller-0 controller-1 controller-2 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_demote_resource="redis:0" CRM_meta_notify_demote_uname="redis-bundle-0" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource="redis:0" CRM_meta_notify_master_uname="redis-bundle-0" CRM_meta_notify_promote_resource="redis:1" CRM_meta_notify_promote_uname="redis-bundle-1" CRM_meta_notify_promoted_resource="redis:0" CRM_meta_notify_promoted_uname="redis-bundle-0" CRM_meta_notify_slave_resource="redis:1 redis:2" CRM_meta_notify_slave_uname="redis-bundle-1 redis-bundle-2" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="redis:0" CRM_meta_notify_stop_uname="redis-bundle-0" CRM_meta_notify_unpromoted_resource="redis:1 redis:2" CRM_meta_notify_unpromoted_uname="redis-bundle-1 redis-bundle-2" CRM_meta_physical_host="controller-0" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="200000"  wait_last_known_master="true"/>
@@ -564,7 +612,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="42">
+  <synapse id="46">
     <action_set>
       <pseudo_event id="139" operation="demote" operation_key="redis_demote_0" internal_operation_key="redis:0_demote_0">
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="demote" CRM_meta_notify="true" CRM_meta_notify_active_resource="redis:0 redis:1 redis:2" CRM_meta_notify_active_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_all_hosts="controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2" CRM_meta_notify_all_uname="controller-0 controller-1 controller-2 galera-bundle-0 galera-bundle-1 galera-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="controller-0 controller-1 controller-2 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_demote_resource="redis:0" CRM_meta_notify_demote_uname="redis-bundle-0" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource="redis:0" CRM_meta_notify_master_uname="redis-bundle-0" CRM_meta_notify_promote_resource="redis:1" CRM_meta_notify_promote_uname="redis-bundle-1" CRM_meta_notify_promoted_resource="redis:0" CRM_meta_notify_promoted_uname="redis-bundle-0" CRM_meta_notify_slave_resource="redis:1 redis:2" CRM_meta_notify_slave_uname="redis-bundle-1 redis-bundle-2" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="redis:0" CRM_meta_notify_stop_uname="redis-bundle-0" CRM_meta_notify_unpromoted_resource="redis:1 redis:2" CRM_meta_notify_unpromoted_uname="redis-bundle-1 redis-bundle-2" CRM_meta_physical_host="controller-0" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000"  wait_last_known_master="true"/>
@@ -576,9 +624,9 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="43" priority="1000000">
+  <synapse id="47" priority="1000000">
     <action_set>
-      <rsc_op id="242" operation="notify" operation_key="redis_post_notify_demote_0" internal_operation_key="redis:1_post_notify_demote_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="controller-1">
+      <rsc_op id="250" operation="notify" operation_key="redis_post_notify_demote_0" internal_operation_key="redis:1_post_notify_demote_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="controller-1">
         <primitive id="redis" long-id="redis:1" class="ocf" provider="heartbeat" type="redis"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="redis:0 redis:1 redis:2" CRM_meta_notify_active_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_all_hosts="controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2" CRM_meta_notify_all_uname="controller-0 controller-1 controller-2 galera-bundle-0 galera-bundle-1 galera-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="controller-0 controller-1 controller-2 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_demote_resource="redis:0" CRM_meta_notify_demote_uname="redis-bundle-0" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="redis:0" CRM_meta_notify_master_uname="redis-bundle-0" CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="redis:1" CRM_meta_notify_promote_uname="redis-bundle-1" CRM_meta_notify_promoted_resource="redis:0" CRM_meta_notify_promoted_uname="redis-bundle-0" CRM_meta_notify_slave_resource="redis:1 redis:2" CRM_meta_notify_slave_uname="redis-bundle-1 redis-bundle-2" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="redis:0" CRM_meta_notify_stop_uname="redis-bundle-0" CRM_meta_notify_type="post" CRM_meta_notify_unpromoted_resource="redis:1 redis:2" CRM_meta_notify_unpromoted_uname="redis-bundle-1 redis-bundle-2" CRM_meta_on_node="redis-bundle-1" CRM_meta_on_node_uuid="redis-bundle-1" CRM_meta_physical_host="controller-1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
       </rsc_op>
@@ -589,9 +637,9 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="44">
+  <synapse id="48">
     <action_set>
-      <rsc_op id="241" operation="notify" operation_key="redis_pre_notify_demote_0" internal_operation_key="redis:1_pre_notify_demote_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="controller-1">
+      <rsc_op id="249" operation="notify" operation_key="redis_pre_notify_demote_0" internal_operation_key="redis:1_pre_notify_demote_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="controller-1">
         <primitive id="redis" long-id="redis:1" class="ocf" provider="heartbeat" type="redis"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="redis:0 redis:1 redis:2" CRM_meta_notify_active_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_all_hosts="controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2" CRM_meta_notify_all_uname="controller-0 controller-1 controller-2 galera-bundle-0 galera-bundle-1 galera-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="controller-0 controller-1 controller-2 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_demote_resource="redis:0" CRM_meta_notify_demote_uname="redis-bundle-0" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="redis:0" CRM_meta_notify_master_uname="redis-bundle-0" CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="redis:1" CRM_meta_notify_promote_uname="redis-bundle-1" CRM_meta_notify_promoted_resource="redis:0" CRM_meta_notify_promoted_uname="redis-bundle-0" CRM_meta_notify_slave_resource="redis:1 redis:2" CRM_meta_notify_slave_uname="redis-bundle-1 redis-bundle-2" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="redis:0" CRM_meta_notify_stop_uname="redis-bundle-0" CRM_meta_notify_type="pre" CRM_meta_notify_unpromoted_resource="redis:1 redis:2" CRM_meta_notify_unpromoted_uname="redis-bundle-1 redis-bundle-2" CRM_meta_on_node="redis-bundle-1" CRM_meta_on_node_uuid="redis-bundle-1" CRM_meta_physical_host="controller-1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
       </rsc_op>
@@ -602,9 +650,9 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="45" priority="1000000">
+  <synapse id="49" priority="1000000">
     <action_set>
-      <rsc_op id="238" operation="notify" operation_key="redis_post_notify_promote_0" internal_operation_key="redis:1_post_notify_promote_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="controller-1">
+      <rsc_op id="246" operation="notify" operation_key="redis_post_notify_promote_0" internal_operation_key="redis:1_post_notify_promote_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="controller-1">
         <primitive id="redis" long-id="redis:1" class="ocf" provider="heartbeat" type="redis"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="redis:0 redis:1 redis:2" CRM_meta_notify_active_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_all_hosts="controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2" CRM_meta_notify_all_uname="controller-0 controller-1 controller-2 galera-bundle-0 galera-bundle-1 galera-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="controller-0 controller-1 controller-2 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_demote_resource="redis:0" CRM_meta_notify_demote_uname="redis-bundle-0" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="redis:0" CRM_meta_notify_master_uname="redis-bundle-0" CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="redis:1" CRM_meta_notify_promote_uname="redis-bundle-1" CRM_meta_notify_promoted_resource="redis:0" CRM_meta_notify_promoted_uname="redis-bundle-0" CRM_meta_notify_slave_resource="redis:1 redis:2" CRM_meta_notify_slave_uname="redis-bundle-1 redis-bundle-2" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="redis:0" CRM_meta_notify_stop_uname="redis-bundle-0" CRM_meta_notify_type="post" CRM_meta_notify_unpromoted_resource="redis:1 redis:2" CRM_meta_notify_unpromoted_uname="redis-bundle-1 redis-bundle-2" CRM_meta_on_node="redis-bundle-1" CRM_meta_on_node_uuid="redis-bundle-1" CRM_meta_physical_host="controller-1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
       </rsc_op>
@@ -615,9 +663,9 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="46">
+  <synapse id="50">
     <action_set>
-      <rsc_op id="237" operation="notify" operation_key="redis_pre_notify_promote_0" internal_operation_key="redis:1_pre_notify_promote_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="controller-1">
+      <rsc_op id="245" operation="notify" operation_key="redis_pre_notify_promote_0" internal_operation_key="redis:1_pre_notify_promote_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="controller-1">
         <primitive id="redis" long-id="redis:1" class="ocf" provider="heartbeat" type="redis"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="redis:0 redis:1 redis:2" CRM_meta_notify_active_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_all_hosts="controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2" CRM_meta_notify_all_uname="controller-0 controller-1 controller-2 galera-bundle-0 galera-bundle-1 galera-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="controller-0 controller-1 controller-2 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_demote_resource="redis:0" CRM_meta_notify_demote_uname="redis-bundle-0" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="redis:0" CRM_meta_notify_master_uname="redis-bundle-0" CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="redis:1" CRM_meta_notify_promote_uname="redis-bundle-1" CRM_meta_notify_promoted_resource="redis:0" CRM_meta_notify_promoted_uname="redis-bundle-0" CRM_meta_notify_slave_resource="redis:1 redis:2" CRM_meta_notify_slave_uname="redis-bundle-1 redis-bundle-2" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="redis:0" CRM_meta_notify_stop_uname="redis-bundle-0" CRM_meta_notify_type="pre" CRM_meta_notify_unpromoted_resource="redis:1 redis:2" CRM_meta_notify_unpromoted_uname="redis-bundle-1 redis-bundle-2" CRM_meta_on_node="redis-bundle-1" CRM_meta_on_node_uuid="redis-bundle-1" CRM_meta_physical_host="controller-1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
       </rsc_op>
@@ -628,9 +676,9 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="47">
+  <synapse id="51">
     <action_set>
-      <rsc_op id="235" operation="notify" operation_key="redis_pre_notify_stop_0" internal_operation_key="redis:1_pre_notify_stop_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="controller-1">
+      <rsc_op id="243" operation="notify" operation_key="redis_pre_notify_stop_0" internal_operation_key="redis:1_pre_notify_stop_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="controller-1">
         <primitive id="redis" long-id="redis:1" class="ocf" provider="heartbeat" type="redis"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="redis:0 redis:1 redis:2" CRM_meta_notify_active_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_all_hosts="controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2" CRM_meta_notify_all_uname="controller-0 controller-1 controller-2 galera-bundle-0 galera-bundle-1 galera-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="controller-0 controller-1 controller-2 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_demote_resource="redis:0" CRM_meta_notify_demote_uname="redis-bundle-0" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="redis:0" CRM_meta_notify_master_uname="redis-bundle-0" CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource="redis:1" CRM_meta_notify_promote_uname="redis-bundle-1" CRM_meta_notify_promoted_resource="redis:0" CRM_meta_notify_promoted_uname="redis-bundle-0" CRM_meta_notify_slave_resource="redis:1 redis:2" CRM_meta_notify_slave_uname="redis-bundle-1 redis-bundle-2" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="redis:0" CRM_meta_notify_stop_uname="redis-bundle-0" CRM_meta_notify_type="pre" CRM_meta_notify_unpromoted_resource="redis:1 redis:2" CRM_meta_notify_unpromoted_uname="redis-bundle-1 redis-bundle-2" CRM_meta_on_node="redis-bundle-1" CRM_meta_on_node_uuid="redis-bundle-1" CRM_meta_physical_host="controller-1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
       </rsc_op>
@@ -641,9 +689,9 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="48" priority="1000000">
+  <synapse id="52" priority="1000000">
     <action_set>
-      <rsc_op id="215" operation="notify" operation_key="redis_post_notify_stop_0" internal_operation_key="redis:1_post_notify_stop_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="controller-1">
+      <rsc_op id="223" operation="notify" operation_key="redis_post_notify_stop_0" internal_operation_key="redis:1_post_notify_stop_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="controller-1">
         <primitive id="redis" long-id="redis:1" class="ocf" provider="heartbeat" type="redis"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="redis:0 redis:1 redis:2" CRM_meta_notify_active_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_all_hosts="controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2" CRM_meta_notify_all_uname="controller-0 controller-1 controller-2 galera-bundle-0 galera-bundle-1 galera-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="controller-0 controller-1 controller-2 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_demote_resource="redis:0" CRM_meta_notify_demote_uname="redis-bundle-0" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="redis:0" CRM_meta_notify_master_uname="redis-bundle-0" CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource="redis:1" CRM_meta_notify_promote_uname="redis-bundle-1" CRM_meta_notify_promoted_resource="redis:0" CRM_meta_notify_promoted_uname="redis-bundle-0" CRM_meta_notify_slave_resource="redis:1 redis:2" CRM_meta_notify_slave_uname="redis-bundle-1 redis-bundle-2" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="redis:0" CRM_meta_notify_stop_uname="redis-bundle-0" CRM_meta_notify_type="post" CRM_meta_notify_unpromoted_resource="redis:1 redis:2" CRM_meta_notify_unpromoted_uname="redis-bundle-1 redis-bundle-2" CRM_meta_on_node="redis-bundle-1" CRM_meta_on_node_uuid="redis-bundle-1" CRM_meta_physical_host="controller-1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
       </rsc_op>
@@ -653,11 +701,11 @@
         <pseudo_event id="154" operation="notify" operation_key="redis-bundle-master_post_notify_stopped_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="213" operation="notify" operation_key="redis_post_notify_stop_0" internal_operation_key="redis:0_post_notify_stonith_0"/>
+        <pseudo_event id="221" operation="notify" operation_key="redis_post_notify_stop_0" internal_operation_key="redis:0_post_notify_stonith_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="49">
+  <synapse id="53">
     <action_set>
       <rsc_op id="136" operation="monitor" operation_key="redis_monitor_20000" internal_operation_key="redis:1_monitor_20000" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="controller-1">
         <primitive id="redis" long-id="redis:1" class="ocf" provider="heartbeat" type="redis"/>
@@ -678,11 +726,11 @@
         <pseudo_event id="167" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_demoted_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="214" operation="notified" operation_key="redis_notified_0" internal_operation_key="redis:0_confirmed-post_notify_stonith_0"/>
+        <pseudo_event id="222" operation="notified" operation_key="redis_notified_0" internal_operation_key="redis:0_confirmed-post_notify_stonith_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="50">
+  <synapse id="54">
     <action_set>
       <rsc_op id="135" operation="promote" operation_key="redis_promote_0" internal_operation_key="redis:1_promote_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="controller-1">
         <primitive id="redis" long-id="redis:1" class="ocf" provider="heartbeat" type="redis"/>
@@ -703,17 +751,17 @@
         <pseudo_event id="156" operation="promote" operation_key="redis-bundle-master_promote_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="206" operation="stonith" operation_key="stonith-galera-bundle-0-off" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0"/>
+        <pseudo_event id="214" operation="stonith" operation_key="stonith-galera-bundle-0-off" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="207" operation="stonith" operation_key="stonith-rabbitmq-bundle-0-off" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0"/>
+        <pseudo_event id="215" operation="stonith" operation_key="stonith-rabbitmq-bundle-0-off" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="212" operation="stonith" operation_key="stonith-redis-bundle-0-off" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0"/>
+        <pseudo_event id="220" operation="stonith" operation_key="stonith-redis-bundle-0-off" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="51">
+  <synapse id="55">
     <action_set>
       <rsc_op id="28" operation="cancel" operation_key="redis_monitor_45000" internal_operation_key="redis:1_monitor_45000" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="controller-1">
         <primitive id="redis" long-id="redis:1" class="ocf" provider="heartbeat" type="redis"/>
@@ -722,7 +770,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="52">
+  <synapse id="56">
     <action_set>
       <rsc_op id="27" operation="cancel" operation_key="redis_monitor_60000" internal_operation_key="redis:1_monitor_60000" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="controller-1">
         <primitive id="redis" long-id="redis:1" class="ocf" provider="heartbeat" type="redis"/>
@@ -731,9 +779,9 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="53" priority="1000000">
+  <synapse id="57" priority="1000000">
     <action_set>
-      <rsc_op id="244" operation="notify" operation_key="redis_post_notify_demote_0" internal_operation_key="redis:2_post_notify_demote_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="controller-2">
+      <rsc_op id="252" operation="notify" operation_key="redis_post_notify_demote_0" internal_operation_key="redis:2_post_notify_demote_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="controller-2">
         <primitive id="redis" long-id="redis:2" class="ocf" provider="heartbeat" type="redis"/>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="redis:0 redis:1 redis:2" CRM_meta_notify_active_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_all_hosts="controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2" CRM_meta_notify_all_uname="controller-0 controller-1 controller-2 galera-bundle-0 galera-bundle-1 galera-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="controller-0 controller-1 controller-2 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_demote_resource="redis:0" CRM_meta_notify_demote_uname="redis-bundle-0" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="redis:0" CRM_meta_notify_master_uname="redis-bundle-0" CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="redis:1" CRM_meta_notify_promote_uname="redis-bundle-1" CRM_meta_notify_promoted_resource="redis:0" CRM_meta_notify_promoted_uname="redis-bundle-0" CRM_meta_notify_slave_resource="redis:1 redis:2" CRM_meta_notify_slave_uname="redis-bundle-1 redis-bundle-2" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="redis:0" CRM_meta_notify_stop_uname="redis-bundle-0" CRM_meta_notify_type="post" CRM_meta_notify_unpromoted_resource="redis:1 redis:2" CRM_meta_notify_unpromoted_uname="redis-bundle-1 redis-bundle-2" CRM_meta_on_node="redis-bundle-2" CRM_meta_on_node_uuid="redis-bundle-2" CRM_meta_physical_host="controller-2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
       </rsc_op>
@@ -744,9 +792,9 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="54">
+  <synapse id="58">
     <action_set>
-      <rsc_op id="243" operation="notify" operation_key="redis_pre_notify_demote_0" internal_operation_key="redis:2_pre_notify_demote_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="controller-2">
+      <rsc_op id="251" operation="notify" operation_key="redis_pre_notify_demote_0" internal_operation_key="redis:2_pre_notify_demote_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="controller-2">
         <primitive id="redis" long-id="redis:2" class="ocf" provider="heartbeat" type="redis"/>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="redis:0 redis:1 redis:2" CRM_meta_notify_active_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_all_hosts="controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2" CRM_meta_notify_all_uname="controller-0 controller-1 controller-2 galera-bundle-0 galera-bundle-1 galera-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="controller-0 controller-1 controller-2 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_demote_resource="redis:0" CRM_meta_notify_demote_uname="redis-bundle-0" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="redis:0" CRM_meta_notify_master_uname="redis-bundle-0" CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="redis:1" CRM_meta_notify_promote_uname="redis-bundle-1" CRM_meta_notify_promoted_resource="redis:0" CRM_meta_notify_promoted_uname="redis-bundle-0" CRM_meta_notify_slave_resource="redis:1 redis:2" CRM_meta_notify_slave_uname="redis-bundle-1 redis-bundle-2" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="redis:0" CRM_meta_notify_stop_uname="redis-bundle-0" CRM_meta_notify_type="pre" CRM_meta_notify_unpromoted_resource="redis:1 redis:2" CRM_meta_notify_unpromoted_uname="redis-bundle-1 redis-bundle-2" CRM_meta_on_node="redis-bundle-2" CRM_meta_on_node_uuid="redis-bundle-2" CRM_meta_physical_host="controller-2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
       </rsc_op>
@@ -757,9 +805,9 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="55" priority="1000000">
+  <synapse id="59" priority="1000000">
     <action_set>
-      <rsc_op id="240" operation="notify" operation_key="redis_post_notify_promote_0" internal_operation_key="redis:2_post_notify_promote_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="controller-2">
+      <rsc_op id="248" operation="notify" operation_key="redis_post_notify_promote_0" internal_operation_key="redis:2_post_notify_promote_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="controller-2">
         <primitive id="redis" long-id="redis:2" class="ocf" provider="heartbeat" type="redis"/>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="redis:0 redis:1 redis:2" CRM_meta_notify_active_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_all_hosts="controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2" CRM_meta_notify_all_uname="controller-0 controller-1 controller-2 galera-bundle-0 galera-bundle-1 galera-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="controller-0 controller-1 controller-2 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_demote_resource="redis:0" CRM_meta_notify_demote_uname="redis-bundle-0" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="redis:0" CRM_meta_notify_master_uname="redis-bundle-0" CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="redis:1" CRM_meta_notify_promote_uname="redis-bundle-1" CRM_meta_notify_promoted_resource="redis:0" CRM_meta_notify_promoted_uname="redis-bundle-0" CRM_meta_notify_slave_resource="redis:1 redis:2" CRM_meta_notify_slave_uname="redis-bundle-1 redis-bundle-2" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="redis:0" CRM_meta_notify_stop_uname="redis-bundle-0" CRM_meta_notify_type="post" CRM_meta_notify_unpromoted_resource="redis:1 redis:2" CRM_meta_notify_unpromoted_uname="redis-bundle-1 redis-bundle-2" CRM_meta_on_node="redis-bundle-2" CRM_meta_on_node_uuid="redis-bundle-2" CRM_meta_physical_host="controller-2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
       </rsc_op>
@@ -770,9 +818,9 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="56">
+  <synapse id="60">
     <action_set>
-      <rsc_op id="239" operation="notify" operation_key="redis_pre_notify_promote_0" internal_operation_key="redis:2_pre_notify_promote_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="controller-2">
+      <rsc_op id="247" operation="notify" operation_key="redis_pre_notify_promote_0" internal_operation_key="redis:2_pre_notify_promote_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="controller-2">
         <primitive id="redis" long-id="redis:2" class="ocf" provider="heartbeat" type="redis"/>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="redis:0 redis:1 redis:2" CRM_meta_notify_active_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_all_hosts="controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2" CRM_meta_notify_all_uname="controller-0 controller-1 controller-2 galera-bundle-0 galera-bundle-1 galera-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="controller-0 controller-1 controller-2 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_demote_resource="redis:0" CRM_meta_notify_demote_uname="redis-bundle-0" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="redis:0" CRM_meta_notify_master_uname="redis-bundle-0" CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="redis:1" CRM_meta_notify_promote_uname="redis-bundle-1" CRM_meta_notify_promoted_resource="redis:0" CRM_meta_notify_promoted_uname="redis-bundle-0" CRM_meta_notify_slave_resource="redis:1 redis:2" CRM_meta_notify_slave_uname="redis-bundle-1 redis-bundle-2" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="redis:0" CRM_meta_notify_stop_uname="redis-bundle-0" CRM_meta_notify_type="pre" CRM_meta_notify_unpromoted_resource="redis:1 redis:2" CRM_meta_notify_unpromoted_uname="redis-bundle-1 redis-bundle-2" CRM_meta_on_node="redis-bundle-2" CRM_meta_on_node_uuid="redis-bundle-2" CRM_meta_physical_host="controller-2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
       </rsc_op>
@@ -783,9 +831,9 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="57">
+  <synapse id="61">
     <action_set>
-      <rsc_op id="236" operation="notify" operation_key="redis_pre_notify_stop_0" internal_operation_key="redis:2_pre_notify_stop_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="controller-2">
+      <rsc_op id="244" operation="notify" operation_key="redis_pre_notify_stop_0" internal_operation_key="redis:2_pre_notify_stop_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="controller-2">
         <primitive id="redis" long-id="redis:2" class="ocf" provider="heartbeat" type="redis"/>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="redis:0 redis:1 redis:2" CRM_meta_notify_active_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_all_hosts="controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2" CRM_meta_notify_all_uname="controller-0 controller-1 controller-2 galera-bundle-0 galera-bundle-1 galera-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="controller-0 controller-1 controller-2 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_demote_resource="redis:0" CRM_meta_notify_demote_uname="redis-bundle-0" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="redis:0" CRM_meta_notify_master_uname="redis-bundle-0" CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource="redis:1" CRM_meta_notify_promote_uname="redis-bundle-1" CRM_meta_notify_promoted_resource="redis:0" CRM_meta_notify_promoted_uname="redis-bundle-0" CRM_meta_notify_slave_resource="redis:1 redis:2" CRM_meta_notify_slave_uname="redis-bundle-1 redis-bundle-2" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="redis:0" CRM_meta_notify_stop_uname="redis-bundle-0" CRM_meta_notify_type="pre" CRM_meta_notify_unpromoted_resource="redis:1 redis:2" CRM_meta_notify_unpromoted_uname="redis-bundle-1 redis-bundle-2" CRM_meta_on_node="redis-bundle-2" CRM_meta_on_node_uuid="redis-bundle-2" CRM_meta_physical_host="controller-2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
       </rsc_op>
@@ -796,9 +844,9 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="58" priority="1000000">
+  <synapse id="62" priority="1000000">
     <action_set>
-      <rsc_op id="216" operation="notify" operation_key="redis_post_notify_stop_0" internal_operation_key="redis:2_post_notify_stop_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="controller-2">
+      <rsc_op id="224" operation="notify" operation_key="redis_post_notify_stop_0" internal_operation_key="redis:2_post_notify_stop_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="controller-2">
         <primitive id="redis" long-id="redis:2" class="ocf" provider="heartbeat" type="redis"/>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="redis:0 redis:1 redis:2" CRM_meta_notify_active_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_all_hosts="controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2 controller-0 controller-1 controller-2" CRM_meta_notify_all_uname="controller-0 controller-1 controller-2 galera-bundle-0 galera-bundle-1 galera-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="controller-0 controller-1 controller-2 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_demote_resource="redis:0" CRM_meta_notify_demote_uname="redis-bundle-0" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="redis:0" CRM_meta_notify_master_uname="redis-bundle-0" CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource="redis:1" CRM_meta_notify_promote_uname="redis-bundle-1" CRM_meta_notify_promoted_resource="redis:0" CRM_meta_notify_promoted_uname="redis-bundle-0" CRM_meta_notify_slave_resource="redis:1 redis:2" CRM_meta_notify_slave_uname="redis-bundle-1 redis-bundle-2" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="redis:0" CRM_meta_notify_stop_uname="redis-bundle-0" CRM_meta_notify_type="post" CRM_meta_notify_unpromoted_resource="redis:1 redis:2" CRM_meta_notify_unpromoted_uname="redis-bundle-1 redis-bundle-2" CRM_meta_on_node="redis-bundle-2" CRM_meta_on_node_uuid="redis-bundle-2" CRM_meta_physical_host="controller-2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
       </rsc_op>
@@ -808,11 +856,11 @@
         <pseudo_event id="154" operation="notify" operation_key="redis-bundle-master_post_notify_stopped_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="213" operation="notify" operation_key="redis_post_notify_stop_0" internal_operation_key="redis:0_post_notify_stonith_0"/>
+        <pseudo_event id="221" operation="notify" operation_key="redis_post_notify_stop_0" internal_operation_key="redis:0_post_notify_stonith_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="59" priority="1000000">
+  <synapse id="63" priority="1000000">
     <action_set>
       <pseudo_event id="167" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_demoted_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="demote" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -823,14 +871,14 @@
         <pseudo_event id="166" operation="notify" operation_key="redis-bundle-master_post_notify_demoted_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="242" operation="notify" operation_key="redis_post_notify_demote_0" internal_operation_key="redis:1_post_notify_demote_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="controller-1"/>
+        <rsc_op id="250" operation="notify" operation_key="redis_post_notify_demote_0" internal_operation_key="redis:1_post_notify_demote_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="controller-1"/>
       </trigger>
       <trigger>
-        <rsc_op id="244" operation="notify" operation_key="redis_post_notify_demote_0" internal_operation_key="redis:2_post_notify_demote_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="controller-2"/>
+        <rsc_op id="252" operation="notify" operation_key="redis_post_notify_demote_0" internal_operation_key="redis:2_post_notify_demote_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="controller-2"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="60" priority="1000000">
+  <synapse id="64" priority="1000000">
     <action_set>
       <pseudo_event id="166" operation="notify" operation_key="redis-bundle-master_post_notify_demoted_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="demote" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -845,7 +893,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="61">
+  <synapse id="65">
     <action_set>
       <pseudo_event id="165" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_demote_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="demote" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -856,14 +904,14 @@
         <pseudo_event id="164" operation="notify" operation_key="redis-bundle-master_pre_notify_demote_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="241" operation="notify" operation_key="redis_pre_notify_demote_0" internal_operation_key="redis:1_pre_notify_demote_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="controller-1"/>
+        <rsc_op id="249" operation="notify" operation_key="redis_pre_notify_demote_0" internal_operation_key="redis:1_pre_notify_demote_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="controller-1"/>
       </trigger>
       <trigger>
-        <rsc_op id="243" operation="notify" operation_key="redis_pre_notify_demote_0" internal_operation_key="redis:2_pre_notify_demote_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="controller-2"/>
+        <rsc_op id="251" operation="notify" operation_key="redis_pre_notify_demote_0" internal_operation_key="redis:2_pre_notify_demote_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="controller-2"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="62">
+  <synapse id="66">
     <action_set>
       <pseudo_event id="164" operation="notify" operation_key="redis-bundle-master_pre_notify_demote_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="demote" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -871,7 +919,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="63" priority="1000000">
+  <synapse id="67" priority="1000000">
     <action_set>
       <pseudo_event id="163" operation="demoted" operation_key="redis-bundle-master_demoted_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -886,7 +934,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="64">
+  <synapse id="68">
     <action_set>
       <pseudo_event id="162" operation="demote" operation_key="redis-bundle-master_demote_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -901,7 +949,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="65" priority="1000000">
+  <synapse id="69" priority="1000000">
     <action_set>
       <pseudo_event id="161" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_promoted_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="promote" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -912,14 +960,14 @@
         <pseudo_event id="160" operation="notify" operation_key="redis-bundle-master_post_notify_promoted_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="238" operation="notify" operation_key="redis_post_notify_promote_0" internal_operation_key="redis:1_post_notify_promote_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="controller-1"/>
+        <rsc_op id="246" operation="notify" operation_key="redis_post_notify_promote_0" internal_operation_key="redis:1_post_notify_promote_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="controller-1"/>
       </trigger>
       <trigger>
-        <rsc_op id="240" operation="notify" operation_key="redis_post_notify_promote_0" internal_operation_key="redis:2_post_notify_promote_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="controller-2"/>
+        <rsc_op id="248" operation="notify" operation_key="redis_post_notify_promote_0" internal_operation_key="redis:2_post_notify_promote_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="controller-2"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="66" priority="1000000">
+  <synapse id="70" priority="1000000">
     <action_set>
       <pseudo_event id="160" operation="notify" operation_key="redis-bundle-master_post_notify_promoted_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="promote" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -934,7 +982,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="67">
+  <synapse id="71">
     <action_set>
       <pseudo_event id="159" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_promote_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -945,14 +993,14 @@
         <pseudo_event id="158" operation="notify" operation_key="redis-bundle-master_pre_notify_promote_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="237" operation="notify" operation_key="redis_pre_notify_promote_0" internal_operation_key="redis:1_pre_notify_promote_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="controller-1"/>
+        <rsc_op id="245" operation="notify" operation_key="redis_pre_notify_promote_0" internal_operation_key="redis:1_pre_notify_promote_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="controller-1"/>
       </trigger>
       <trigger>
-        <rsc_op id="239" operation="notify" operation_key="redis_pre_notify_promote_0" internal_operation_key="redis:2_pre_notify_promote_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="controller-2"/>
+        <rsc_op id="247" operation="notify" operation_key="redis_pre_notify_promote_0" internal_operation_key="redis:2_pre_notify_promote_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="controller-2"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="68">
+  <synapse id="72">
     <action_set>
       <pseudo_event id="158" operation="notify" operation_key="redis-bundle-master_pre_notify_promote_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -970,7 +1018,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="69" priority="1000000">
+  <synapse id="73" priority="1000000">
     <action_set>
       <pseudo_event id="157" operation="promoted" operation_key="redis-bundle-master_promoted_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -982,7 +1030,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="70">
+  <synapse id="74">
     <action_set>
       <pseudo_event id="156" operation="promote" operation_key="redis-bundle-master_promote_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -1006,7 +1054,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="71" priority="1000000">
+  <synapse id="75" priority="1000000">
     <action_set>
       <pseudo_event id="155" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_stopped_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stopped" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -1017,14 +1065,14 @@
         <pseudo_event id="154" operation="notify" operation_key="redis-bundle-master_post_notify_stopped_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="215" operation="notify" operation_key="redis_post_notify_stop_0" internal_operation_key="redis:1_post_notify_stop_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="controller-1"/>
+        <rsc_op id="223" operation="notify" operation_key="redis_post_notify_stop_0" internal_operation_key="redis:1_post_notify_stop_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="controller-1"/>
       </trigger>
       <trigger>
-        <rsc_op id="216" operation="notify" operation_key="redis_post_notify_stop_0" internal_operation_key="redis:2_post_notify_stop_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="controller-2"/>
+        <rsc_op id="224" operation="notify" operation_key="redis_post_notify_stop_0" internal_operation_key="redis:2_post_notify_stop_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="controller-2"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="72" priority="1000000">
+  <synapse id="76" priority="1000000">
     <action_set>
       <pseudo_event id="154" operation="notify" operation_key="redis-bundle-master_post_notify_stopped_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stopped" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -1039,7 +1087,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="73">
+  <synapse id="77">
     <action_set>
       <pseudo_event id="153" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_stop_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="stop" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -1050,14 +1098,14 @@
         <pseudo_event id="152" operation="notify" operation_key="redis-bundle-master_pre_notify_stop_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="235" operation="notify" operation_key="redis_pre_notify_stop_0" internal_operation_key="redis:1_pre_notify_stop_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="controller-1"/>
+        <rsc_op id="243" operation="notify" operation_key="redis_pre_notify_stop_0" internal_operation_key="redis:1_pre_notify_stop_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="controller-1"/>
       </trigger>
       <trigger>
-        <rsc_op id="236" operation="notify" operation_key="redis_pre_notify_stop_0" internal_operation_key="redis:2_pre_notify_stop_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="controller-2"/>
+        <rsc_op id="244" operation="notify" operation_key="redis_pre_notify_stop_0" internal_operation_key="redis:2_pre_notify_stop_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="controller-2"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="74">
+  <synapse id="78">
     <action_set>
       <pseudo_event id="152" operation="notify" operation_key="redis-bundle-master_pre_notify_stop_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="stop" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -1069,7 +1117,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="75" priority="1000000">
+  <synapse id="79" priority="1000000">
     <action_set>
       <pseudo_event id="151" operation="stopped" operation_key="redis-bundle-master_stopped_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -1084,7 +1132,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="76">
+  <synapse id="80">
     <action_set>
       <pseudo_event id="150" operation="stop" operation_key="redis-bundle-master_stop_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -1101,11 +1149,11 @@
         <pseudo_event id="163" operation="demoted" operation_key="redis-bundle-master_demoted_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="212" operation="stonith" operation_key="stonith-redis-bundle-0-off" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0"/>
+        <pseudo_event id="220" operation="stonith" operation_key="stonith-redis-bundle-0-off" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="77" priority="1000000">
+  <synapse id="81" priority="1000000">
     <action_set>
       <pseudo_event id="149" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -1117,7 +1165,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="78" priority="1000000">
+  <synapse id="82" priority="1000000">
     <action_set>
       <pseudo_event id="148" operation="notify" operation_key="redis-bundle-master_post_notify_running_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -1132,7 +1180,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="79">
+  <synapse id="83">
     <action_set>
       <pseudo_event id="147" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_start_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -1144,7 +1192,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="80">
+  <synapse id="84">
     <action_set>
       <pseudo_event id="146" operation="notify" operation_key="redis-bundle-master_pre_notify_start_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -1159,7 +1207,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="81" priority="1000000">
+  <synapse id="85" priority="1000000">
     <action_set>
       <pseudo_event id="145" operation="running" operation_key="redis-bundle-master_running_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -1171,7 +1219,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="82">
+  <synapse id="86">
     <action_set>
       <pseudo_event id="144" operation="start" operation_key="redis-bundle-master_start_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -1189,10 +1237,34 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="83">
+  <synapse id="87" priority="1000000">
+    <action_set>
+      <pseudo_event id="211" operation="notified" operation_key="redis-bundle-docker-0_confirmed-post_notify_stonith_0">
+        <attributes CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/rhosp12/openstack-redis-docker:pcmklatest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/redis-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3124 -v /var/lib/kolla/config_files/redis.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/puppet-generated/redis/:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/redis:/var/lib/redis:rw -v /var/log/redis:/var/log/redis:rw -v /var/run/redis:/var/run/redis:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/redis-bundle-0:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="210" operation="notify" operation_key="redis-bundle-docker-0_post_notify_stonith_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="88" priority="1000000">
+    <action_set>
+      <pseudo_event id="210" operation="notify" operation_key="redis-bundle-docker-0_post_notify_stonith_0">
+        <attributes CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/rhosp12/openstack-redis-docker:pcmklatest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/redis-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3124 -v /var/lib/kolla/config_files/redis.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/puppet-generated/redis/:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/redis:/var/lib/redis:rw -v /var/log/redis:/var/log/redis:rw -v /var/run/redis:/var/run/redis:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/redis-bundle-0:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-controller-0-reboot" on_node="controller-0" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="89">
     <action_set>
       <pseudo_event id="117" operation="stop" operation_key="redis-bundle-docker-0_stop_0">
-        <attributes CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/rhosp12/openstack-redis-docker:pcmklatest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/redis-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3124 -v /var/lib/kolla/config_files/redis.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/puppet-generated/redis/:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/redis:/var/lib/redis:rw -v /var/log/redis:/var/log/redis:rw -v /var/run/redis:/var/run/redis:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/redis-bundle-0:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+        <attributes CRM_meta_notify_stop_resource="redis-bundle-docker-0" CRM_meta_notify_stop_uname="controller-0" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/rhosp12/openstack-redis-docker:pcmklatest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/redis-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3124 -v /var/lib/kolla/config_files/redis.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/puppet-generated/redis/:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/redis:/var/lib/redis:rw -v /var/log/redis:/var/log/redis:rw -v /var/run/redis:/var/run/redis:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/redis-bundle-0:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -1207,15 +1279,39 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="84">
+  <synapse id="90" priority="1000000">
+    <action_set>
+      <pseudo_event id="213" operation="notified" operation_key="redis-bundle-0_confirmed-post_notify_stonith_0">
+        <attributes CRM_meta_container="redis-bundle-docker-0" CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_timeout="20000" addr="controller-0"  port="3124"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="212" operation="notify" operation_key="redis-bundle-0_post_notify_stonith_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="91" priority="1000000">
+    <action_set>
+      <pseudo_event id="212" operation="notify" operation_key="redis-bundle-0_post_notify_stonith_0">
+        <attributes CRM_meta_container="redis-bundle-docker-0" CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_timeout="20000" addr="controller-0"  port="3124"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-controller-0-reboot" on_node="controller-0" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="92">
     <action_set>
       <pseudo_event id="118" operation="stop" operation_key="redis-bundle-0_stop_0">
-        <attributes CRM_meta_container="redis-bundle-docker-0" CRM_meta_timeout="20000" addr="controller-0"  port="3124"/>
+        <attributes CRM_meta_container="redis-bundle-docker-0" CRM_meta_notify_stop_resource="redis-bundle-0" CRM_meta_notify_stop_uname="controller-0" CRM_meta_timeout="20000" addr="controller-0"  port="3124"/>
       </pseudo_event>
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="85">
+  <synapse id="93">
     <action_set>
       <rsc_op id="39" operation="monitor" operation_key="redis-bundle-0_monitor_0" on_node="controller-2" on_node_uuid="3">
         <primitive id="redis-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
@@ -1224,7 +1320,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="86">
+  <synapse id="94">
     <action_set>
       <rsc_op id="33" operation="monitor" operation_key="redis-bundle-0_monitor_0" on_node="controller-1" on_node_uuid="2">
         <primitive id="redis-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
@@ -1233,7 +1329,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="87">
+  <synapse id="95">
     <action_set>
       <rsc_op id="40" operation="monitor" operation_key="redis-bundle-1_monitor_0" on_node="controller-2" on_node_uuid="3">
         <primitive id="redis-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
@@ -1242,7 +1338,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="88">
+  <synapse id="96">
     <action_set>
       <rsc_op id="34" operation="monitor" operation_key="redis-bundle-2_monitor_0" on_node="controller-1" on_node_uuid="2">
         <primitive id="redis-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
@@ -1251,7 +1347,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="89">
+  <synapse id="97">
     <action_set>
       <rsc_op id="174" operation="monitor" operation_key="ip-192.168.24.7_monitor_10000" on_node="controller-2" on_node_uuid="3">
         <primitive id="ip-192.168.24.7" class="ocf" provider="heartbeat" type="IPaddr2"/>
@@ -1264,7 +1360,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="90">
+  <synapse id="98">
     <action_set>
       <rsc_op id="173" operation="start" operation_key="ip-192.168.24.7_start_0" on_node="controller-2" on_node_uuid="3">
         <primitive id="ip-192.168.24.7" class="ocf" provider="heartbeat" type="IPaddr2"/>
@@ -1279,17 +1375,17 @@
         <pseudo_event id="172" operation="stop" operation_key="ip-192.168.24.7_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="206" operation="stonith" operation_key="stonith-galera-bundle-0-off" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0"/>
+        <pseudo_event id="214" operation="stonith" operation_key="stonith-galera-bundle-0-off" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="207" operation="stonith" operation_key="stonith-rabbitmq-bundle-0-off" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0"/>
+        <pseudo_event id="215" operation="stonith" operation_key="stonith-rabbitmq-bundle-0-off" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="212" operation="stonith" operation_key="stonith-redis-bundle-0-off" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0"/>
+        <pseudo_event id="220" operation="stonith" operation_key="stonith-redis-bundle-0-off" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="91">
+  <synapse id="99">
     <action_set>
       <pseudo_event id="172" operation="stop" operation_key="ip-192.168.24.7_stop_0">
         <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" cidr_netmask="32"  ip="192.168.24.7"/>
@@ -1304,7 +1400,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="92">
+  <synapse id="100">
     <action_set>
       <rsc_op id="177" operation="monitor" operation_key="ip-10.0.0.109_monitor_10000" on_node="controller-1" on_node_uuid="2">
         <primitive id="ip-10.0.0.109" class="ocf" provider="heartbeat" type="IPaddr2"/>
@@ -1317,7 +1413,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="93">
+  <synapse id="101">
     <action_set>
       <rsc_op id="176" operation="start" operation_key="ip-10.0.0.109_start_0" on_node="controller-1" on_node_uuid="2">
         <primitive id="ip-10.0.0.109" class="ocf" provider="heartbeat" type="IPaddr2"/>
@@ -1332,17 +1428,17 @@
         <pseudo_event id="175" operation="stop" operation_key="ip-10.0.0.109_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="206" operation="stonith" operation_key="stonith-galera-bundle-0-off" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0"/>
+        <pseudo_event id="214" operation="stonith" operation_key="stonith-galera-bundle-0-off" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="207" operation="stonith" operation_key="stonith-rabbitmq-bundle-0-off" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0"/>
+        <pseudo_event id="215" operation="stonith" operation_key="stonith-rabbitmq-bundle-0-off" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="212" operation="stonith" operation_key="stonith-redis-bundle-0-off" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0"/>
+        <pseudo_event id="220" operation="stonith" operation_key="stonith-redis-bundle-0-off" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="94">
+  <synapse id="102">
     <action_set>
       <pseudo_event id="175" operation="stop" operation_key="ip-10.0.0.109_stop_0">
         <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" cidr_netmask="32"  ip="10.0.0.109"/>
@@ -1357,7 +1453,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="95">
+  <synapse id="103">
     <action_set>
       <rsc_op id="186" operation="monitor" operation_key="ip-172.17.4.11_monitor_10000" on_node="controller-1" on_node_uuid="2">
         <primitive id="ip-172.17.4.11" class="ocf" provider="heartbeat" type="IPaddr2"/>
@@ -1370,7 +1466,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="96">
+  <synapse id="104">
     <action_set>
       <rsc_op id="185" operation="start" operation_key="ip-172.17.4.11_start_0" on_node="controller-1" on_node_uuid="2">
         <primitive id="ip-172.17.4.11" class="ocf" provider="heartbeat" type="IPaddr2"/>
@@ -1385,17 +1481,17 @@
         <pseudo_event id="184" operation="stop" operation_key="ip-172.17.4.11_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="206" operation="stonith" operation_key="stonith-galera-bundle-0-off" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0"/>
+        <pseudo_event id="214" operation="stonith" operation_key="stonith-galera-bundle-0-off" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="207" operation="stonith" operation_key="stonith-rabbitmq-bundle-0-off" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0"/>
+        <pseudo_event id="215" operation="stonith" operation_key="stonith-rabbitmq-bundle-0-off" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="212" operation="stonith" operation_key="stonith-redis-bundle-0-off" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0"/>
+        <pseudo_event id="220" operation="stonith" operation_key="stonith-redis-bundle-0-off" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="97">
+  <synapse id="105">
     <action_set>
       <pseudo_event id="184" operation="stop" operation_key="ip-172.17.4.11_stop_0">
         <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" cidr_netmask="32"  ip="172.17.4.11"/>
@@ -1410,7 +1506,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="98">
+  <synapse id="106">
     <action_set>
       <pseudo_event id="187" operation="stop" operation_key="haproxy-bundle-docker-0_stop_0">
         <attributes CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/rhosp12/openstack-haproxy-docker:pcmklatest" monitor_cmd="/bin/true" mount_points="" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/haproxy.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/puppet-generated/haproxy/:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
@@ -1425,7 +1521,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="99">
+  <synapse id="107">
     <action_set>
       <rsc_op id="202" operation="monitor" operation_key="stonith-fence_ipmilan-5254003e8e97_monitor_60000" on_node="controller-1" on_node_uuid="2">
         <primitive id="stonith-fence_ipmilan-5254003e8e97" class="stonith" type="fence_ipmilan"/>
@@ -1438,7 +1534,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="100">
+  <synapse id="108">
     <action_set>
       <rsc_op id="201" operation="start" operation_key="stonith-fence_ipmilan-5254003e8e97_start_0" on_node="controller-1" on_node_uuid="2">
         <primitive id="stonith-fence_ipmilan-5254003e8e97" class="stonith" type="fence_ipmilan"/>
@@ -1451,7 +1547,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="101">
+  <synapse id="109">
     <action_set>
       <pseudo_event id="200" operation="stop" operation_key="stonith-fence_ipmilan-5254003e8e97_stop_0">
         <attributes CRM_meta_timeout="20000" action="reboot"  ipaddr="172.16.0.1" ipport="6231" lanplus="true" login="admin" passwd="password" pcmk_host_list="controller-2" privlvl="administrator"/>
@@ -1459,7 +1555,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="102">
+  <synapse id="110">
     <action_set>
       <rsc_op id="205" operation="monitor" operation_key="stonith-fence_ipmilan-5254000dcb3f_monitor_60000" on_node="controller-2" on_node_uuid="3">
         <primitive id="stonith-fence_ipmilan-5254000dcb3f" class="stonith" type="fence_ipmilan"/>
@@ -1472,7 +1568,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="103">
+  <synapse id="111">
     <action_set>
       <rsc_op id="204" operation="start" operation_key="stonith-fence_ipmilan-5254000dcb3f_start_0" on_node="controller-2" on_node_uuid="3">
         <primitive id="stonith-fence_ipmilan-5254000dcb3f" class="stonith" type="fence_ipmilan"/>
@@ -1485,7 +1581,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="104">
+  <synapse id="112">
     <action_set>
       <pseudo_event id="203" operation="stop" operation_key="stonith-fence_ipmilan-5254000dcb3f_stop_0">
         <attributes CRM_meta_timeout="20000" action="reboot"  ipaddr="172.16.0.1" ipport="6230" lanplus="true" login="admin" passwd="password" pcmk_host_list="controller-1" privlvl="administrator"/>
@@ -1493,9 +1589,9 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="105">
+  <synapse id="113">
     <action_set>
-      <pseudo_event id="212" operation="stonith" operation_key="stonith-redis-bundle-0-off" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0">
+      <pseudo_event id="220" operation="stonith" operation_key="stonith-redis-bundle-0-off" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0">
         <attributes CRM_meta_master_redis="1" CRM_meta_on_node="redis-bundle-0" CRM_meta_on_node_uuid="redis-bundle-0" CRM_meta_stonith_action="off" />
         <downed>
           <node id="redis-bundle-0"/>
@@ -1508,9 +1604,9 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="106">
+  <synapse id="114">
     <action_set>
-      <pseudo_event id="207" operation="stonith" operation_key="stonith-rabbitmq-bundle-0-off" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0">
+      <pseudo_event id="215" operation="stonith" operation_key="stonith-rabbitmq-bundle-0-off" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0">
         <attributes CRM_meta_on_node="rabbitmq-bundle-0" CRM_meta_on_node_uuid="rabbitmq-bundle-0" CRM_meta_rmq_node_attr_last_known_rabbitmq="rabbit@controller-0" CRM_meta_stonith_action="off" />
         <downed>
           <node id="rabbitmq-bundle-0"/>
@@ -1523,9 +1619,9 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="107">
+  <synapse id="115">
     <action_set>
-      <pseudo_event id="206" operation="stonith" operation_key="stonith-galera-bundle-0-off" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0">
+      <pseudo_event id="214" operation="stonith" operation_key="stonith-galera-bundle-0-off" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0">
         <attributes CRM_meta_on_node="galera-bundle-0" CRM_meta_on_node_uuid="galera-bundle-0" CRM_meta_stonith_action="off" />
         <downed>
           <node id="galera-bundle-0"/>
@@ -1538,7 +1634,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="108" priority="1000000">
+  <synapse id="116" priority="1000000">
     <action_set>
       <pseudo_event id="195" operation="stopped" operation_key="haproxy-bundle_stopped_0">
         <attributes CRM_meta_timeout="20000" />
@@ -1550,7 +1646,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="109">
+  <synapse id="117">
     <action_set>
       <pseudo_event id="194" operation="stop" operation_key="haproxy-bundle_stop_0">
         <attributes CRM_meta_timeout="20000" />
@@ -1558,7 +1654,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="110" priority="1000000">
+  <synapse id="118" priority="1000000">
     <action_set>
       <pseudo_event id="171" operation="demoted" operation_key="redis-bundle_demoted_0">
         <attributes CRM_meta_timeout="20000" />
@@ -1573,7 +1669,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="111">
+  <synapse id="119">
     <action_set>
       <pseudo_event id="170" operation="demote" operation_key="redis-bundle_demote_0">
         <attributes CRM_meta_timeout="20000" />
@@ -1581,7 +1677,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="112" priority="1000000">
+  <synapse id="120" priority="1000000">
     <action_set>
       <pseudo_event id="169" operation="promoted" operation_key="redis-bundle_promoted_0">
         <attributes CRM_meta_timeout="20000" />
@@ -1593,7 +1689,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="113">
+  <synapse id="121">
     <action_set>
       <pseudo_event id="168" operation="promote" operation_key="redis-bundle_promote_0">
         <attributes CRM_meta_timeout="20000" />
@@ -1611,7 +1707,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="114" priority="1000000">
+  <synapse id="122" priority="1000000">
     <action_set>
       <pseudo_event id="132" operation="stopped" operation_key="redis-bundle_stopped_0">
         <attributes CRM_meta_timeout="20000" />
@@ -1626,7 +1722,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="115">
+  <synapse id="123">
     <action_set>
       <pseudo_event id="131" operation="stop" operation_key="redis-bundle_stop_0">
         <attributes CRM_meta_timeout="20000" />
@@ -1638,7 +1734,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="116" priority="1000000">
+  <synapse id="124" priority="1000000">
     <action_set>
       <pseudo_event id="130" operation="running" operation_key="redis-bundle_running_0">
         <attributes CRM_meta_timeout="20000" />
@@ -1650,7 +1746,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="117" priority="1000000">
+  <synapse id="125" priority="1000000">
     <action_set>
       <pseudo_event id="116" operation="demoted" operation_key="galera-bundle_demoted_0">
         <attributes CRM_meta_timeout="20000" />
@@ -1665,7 +1761,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="118">
+  <synapse id="126">
     <action_set>
       <pseudo_event id="115" operation="demote" operation_key="galera-bundle_demote_0">
         <attributes CRM_meta_timeout="20000" />
@@ -1673,7 +1769,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="119" priority="1000000">
+  <synapse id="127" priority="1000000">
     <action_set>
       <pseudo_event id="91" operation="stopped" operation_key="galera-bundle_stopped_0">
         <attributes CRM_meta_timeout="20000" />
@@ -1688,7 +1784,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="120">
+  <synapse id="128">
     <action_set>
       <pseudo_event id="90" operation="stop" operation_key="galera-bundle_stop_0">
         <attributes CRM_meta_timeout="20000" />
@@ -1700,7 +1796,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="121" priority="1000000">
+  <synapse id="129" priority="1000000">
     <action_set>
       <pseudo_event id="89" operation="running" operation_key="galera-bundle_running_0">
         <attributes CRM_meta_timeout="20000" />
@@ -1712,7 +1808,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="122" priority="1000000">
+  <synapse id="130" priority="1000000">
     <action_set>
       <pseudo_event id="56" operation="stopped" operation_key="rabbitmq-bundle_stopped_0">
         <attributes CRM_meta_timeout="20000" />
@@ -1727,7 +1823,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="123">
+  <synapse id="131">
     <action_set>
       <pseudo_event id="55" operation="stop" operation_key="rabbitmq-bundle_stop_0">
         <attributes CRM_meta_timeout="20000" />
@@ -1735,7 +1831,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="124" priority="1000000">
+  <synapse id="132" priority="1000000">
     <action_set>
       <pseudo_event id="54" operation="running" operation_key="rabbitmq-bundle_running_0">
         <attributes CRM_meta_timeout="20000" />
@@ -1747,7 +1843,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="125">
+  <synapse id="133">
     <action_set>
       <pseudo_event id="53" operation="start" operation_key="rabbitmq-bundle_start_0">
         <attributes CRM_meta_timeout="20000" />
@@ -1755,7 +1851,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="126">
+  <synapse id="134">
     <action_set>
       <crm_event id="1" operation="stonith" operation_key="stonith-controller-0-reboot" on_node="controller-0" on_node_uuid="1">
         <attributes CRM_meta_cinder_volume_role="true" CRM_meta_galera_role="true" CRM_meta_haproxy_role="true" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_rabbitmq_role="true" CRM_meta_redis_role="true" CRM_meta_rmq_node_attr_last_known_rabbitmq="rabbit@controller-0" CRM_meta_stonith_action="reboot" />

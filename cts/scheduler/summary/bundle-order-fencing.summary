@@ -86,12 +86,16 @@ Executing Cluster Transition:
   * Resource action: rabbitmq        notify on rabbitmq-bundle-1
   * Resource action: rabbitmq        notify on rabbitmq-bundle-2
   * Pseudo action:   rabbitmq-bundle-clone_confirmed-pre_notify_stop_0
+  * Pseudo action:   rabbitmq-bundle-docker-0_post_notify_stonith_0
   * Pseudo action:   rabbitmq-bundle-docker-0_stop_0
+  * Pseudo action:   rabbitmq-bundle-0_post_notify_stonith_0
   * Pseudo action:   galera-bundle-master_demote_0
   * Resource action: redis           notify on redis-bundle-1
   * Resource action: redis           notify on redis-bundle-2
   * Pseudo action:   redis-bundle-master_confirmed-pre_notify_demote_0
   * Pseudo action:   redis-bundle-master_demote_0
+  * Pseudo action:   redis-bundle-docker-0_post_notify_stonith_0
+  * Pseudo action:   redis-bundle-0_post_notify_stonith_0
   * Pseudo action:   haproxy-bundle-docker-0_stop_0
   * Resource action: stonith-fence_ipmilan-5254003e8e97 start on controller-1
   * Resource action: stonith-fence_ipmilan-5254000dcb3f start on controller-2
@@ -101,11 +105,15 @@ Executing Cluster Transition:
   * Pseudo action:   haproxy-bundle_stopped_0
   * Pseudo action:   rabbitmq_post_notify_stop_0
   * Pseudo action:   rabbitmq-bundle-clone_stop_0
+  * Pseudo action:   rabbitmq-bundle-docker-0_confirmed-post_notify_stonith_0
+  * Pseudo action:   rabbitmq-bundle-0_confirmed-post_notify_stonith_0
   * Pseudo action:   galera_demote_0
   * Pseudo action:   galera-bundle-master_demoted_0
   * Pseudo action:   redis_post_notify_stop_0
   * Pseudo action:   redis_demote_0
   * Pseudo action:   redis-bundle-master_demoted_0
+  * Pseudo action:   redis-bundle-docker-0_confirmed-post_notify_stonith_0
+  * Pseudo action:   redis-bundle-0_confirmed-post_notify_stonith_0
   * Pseudo action:   ip-192.168.24.7_stop_0
   * Pseudo action:   ip-10.0.0.109_stop_0
   * Pseudo action:   ip-172.17.4.11_stop_0

@@ -530,10 +530,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="21" operation="running" operation_key="rabbitmq-bundle_running_0"/>
+        <pseudo_event id="20" operation="start" operation_key="rabbitmq-bundle_start_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="98" operation="promoted" operation_key="redis-bundle_promoted_0"/>
+        <pseudo_event id="97" operation="promote" operation_key="redis-bundle_promote_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="116" operation="running" operation_key="haproxy-bundle_running_0"/>

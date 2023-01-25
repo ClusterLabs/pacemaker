@@ -46,6 +46,7 @@ Executing Cluster Transition:
   * Resource action: redis           cancel=20000 on redis-bundle-0
   * Pseudo action:   redis-bundle-master_pre_notify_demote_0
   * Pseudo action:   openstack-cinder-volume_stop_0
+  * Pseudo action:   haproxy-bundle_stop_0
   * Pseudo action:   redis-bundle_demote_0
   * Pseudo action:   galera-bundle_demote_0
   * Pseudo action:   rabbitmq-bundle_stop_0
@@ -56,8 +57,10 @@ Executing Cluster Transition:
   * Resource action: redis           notify on redis-bundle-0
   * Pseudo action:   redis-bundle-master_confirmed-pre_notify_demote_0
   * Pseudo action:   redis-bundle-master_demote_0
+  * Resource action: haproxy-bundle-docker-0 stop on undercloud
   * Resource action: openstack-cinder-volume-docker-0 stop on undercloud
   * Pseudo action:   openstack-cinder-volume_stopped_0
+  * Pseudo action:   haproxy-bundle_stopped_0
   * Resource action: rabbitmq        stop on rabbitmq-bundle-0
   * Pseudo action:   rabbitmq-bundle-clone_stopped_0
   * Resource action: rabbitmq-bundle-0 stop on undercloud
@@ -65,6 +68,12 @@ Executing Cluster Transition:
   * Pseudo action:   galera-bundle-master_demoted_0
   * Resource action: redis           demote on redis-bundle-0
   * Pseudo action:   redis-bundle-master_demoted_0
+  * Resource action: ip-192.168.122.254 stop on undercloud
+  * Resource action: ip-192.168.122.250 stop on undercloud
+  * Resource action: ip-192.168.122.249 stop on undercloud
+  * Resource action: ip-192.168.122.253 stop on undercloud
+  * Resource action: ip-192.168.122.247 stop on undercloud
+  * Resource action: ip-192.168.122.248 stop on undercloud
   * Pseudo action:   galera-bundle_demoted_0
   * Pseudo action:   galera-bundle_stop_0
   * Pseudo action:   rabbitmq-bundle-clone_post_notify_stopped_0
@@ -91,18 +100,9 @@ Executing Cluster Transition:
   * Resource action: redis-bundle-0  stop on undercloud
   * Pseudo action:   redis-bundle-master_post_notify_stopped_0
   * Resource action: redis-bundle-docker-0 stop on undercloud
+  * Cluster action:  do_shutdown on undercloud
   * Pseudo action:   redis-bundle-master_confirmed-post_notify_stopped_0
   * Pseudo action:   redis-bundle_stopped_0
-  * Pseudo action:   haproxy-bundle_stop_0
-  * Resource action: haproxy-bundle-docker-0 stop on undercloud
-  * Pseudo action:   haproxy-bundle_stopped_0
-  * Resource action: ip-192.168.122.254 stop on undercloud
-  * Resource action: ip-192.168.122.250 stop on undercloud
-  * Resource action: ip-192.168.122.249 stop on undercloud
-  * Resource action: ip-192.168.122.253 stop on undercloud
-  * Resource action: ip-192.168.122.247 stop on undercloud
-  * Resource action: ip-192.168.122.248 stop on undercloud
-  * Cluster action:  do_shutdown on undercloud
 
 Revised Cluster Status:
   * Node List:

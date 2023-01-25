@@ -123,34 +123,31 @@ Executing Cluster Transition:
   * Pseudo action:   redis-bundle_running_0
   * Pseudo action:   redis-bundle-master_pre_notify_promote_0
   * Pseudo action:   redis-bundle_promote_0
+  * Pseudo action:   storage-clone_start_0
   * Resource action: redis:0         notify on redis-bundle-0
   * Resource action: redis:1         notify on redis-bundle-1
   * Resource action: redis:2         notify on redis-bundle-2
   * Pseudo action:   redis-bundle-master_confirmed-pre_notify_promote_0
   * Pseudo action:   redis-bundle-master_promote_0
+  * Resource action: storage:0       start on metal-1
+  * Resource action: storage:1       start on metal-2
+  * Resource action: storage:2       start on metal-3
+  * Pseudo action:   storage-clone_running_0
   * Resource action: redis:0         promote on redis-bundle-0
   * Resource action: redis:1         promote on redis-bundle-1
   * Resource action: redis:2         promote on redis-bundle-2
   * Pseudo action:   redis-bundle-master_promoted_0
+  * Pseudo action:   storage-clone_post_notify_running_0
   * Pseudo action:   redis-bundle-master_post_notify_promoted_0
+  * Resource action: storage:0       notify on metal-1
+  * Resource action: storage:1       notify on metal-2
+  * Resource action: storage:2       notify on metal-3
+  * Pseudo action:   storage-clone_confirmed-post_notify_running_0
   * Resource action: redis:0         notify on redis-bundle-0
   * Resource action: redis:1         notify on redis-bundle-1
   * Resource action: redis:2         notify on redis-bundle-2
   * Pseudo action:   redis-bundle-master_confirmed-post_notify_promoted_0
   * Pseudo action:   redis-bundle_promoted_0
-  * Pseudo action:   storage-clone_start_0
-  * Resource action: redis:0         monitor=20000 on redis-bundle-0
-  * Resource action: redis:1         monitor=20000 on redis-bundle-1
-  * Resource action: redis:2         monitor=20000 on redis-bundle-2
-  * Resource action: storage:0       start on metal-1
-  * Resource action: storage:1       start on metal-2
-  * Resource action: storage:2       start on metal-3
-  * Pseudo action:   storage-clone_running_0
-  * Pseudo action:   storage-clone_post_notify_running_0
-  * Resource action: storage:0       notify on metal-1
-  * Resource action: storage:1       notify on metal-2
-  * Resource action: storage:2       notify on metal-3
-  * Pseudo action:   storage-clone_confirmed-post_notify_running_0
   * Pseudo action:   galera-bundle_start_0
   * Resource action: storage:0       monitor=30000 on metal-1
   * Resource action: storage:1       monitor=30000 on metal-2
@@ -168,6 +165,9 @@ Executing Cluster Transition:
   * Resource action: galera-bundle-2 monitor on metal-3
   * Resource action: galera-bundle-2 monitor on metal-2
   * Resource action: galera-bundle-2 monitor on metal-1
+  * Resource action: redis:0         monitor=20000 on redis-bundle-0
+  * Resource action: redis:1         monitor=20000 on redis-bundle-1
+  * Resource action: redis:2         monitor=20000 on redis-bundle-2
   * Resource action: galera-bundle-docker-0 monitor=60000 on metal-1
   * Resource action: galera-bundle-0 start on metal-1
   * Resource action: galera-bundle-docker-1 monitor=60000 on metal-2

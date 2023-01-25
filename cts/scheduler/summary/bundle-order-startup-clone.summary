@@ -14,9 +14,9 @@ Current cluster status:
       * redis-bundle-0	(ocf:heartbeat:redis):	 Stopped
 
 Transition Summary:
-  * Start      storage:0                  (         metal-1 )  due to unrunnable redis-bundle promoted (blocked)
-  * Start      storage:1                  (         metal-2 )  due to unrunnable redis-bundle promoted (blocked)
-  * Start      storage:2                  (         metal-3 )  due to unrunnable redis-bundle promoted (blocked)
+  * Start      storage:0                  (         metal-1 )  due to unrunnable redis-bundle promote (blocked)
+  * Start      storage:1                  (         metal-2 )  due to unrunnable redis-bundle promote (blocked)
+  * Start      storage:2                  (         metal-3 )  due to unrunnable redis-bundle promote (blocked)
   * Start      galera-bundle-docker-0     (         metal-1 )  due to unrunnable storage-clone notified (blocked)
   * Start      galera-bundle-0            (         metal-1 )  due to unrunnable galera-bundle-docker-0 start (blocked)
   * Start      galera:0                   ( galera-bundle-0 )  due to unrunnable galera-bundle-docker-0 start (blocked)
