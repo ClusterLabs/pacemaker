@@ -789,9 +789,9 @@ unassign_if_mandatory(pe_action_t *first, pe_action_t *then,
  * \param[in] for_first    If true, \p instance is the 'first' resource in the
  *                         ordering, otherwise it is the 'then' resource
  *
- * \return First action for \p instance (or its containerized resource if a
- *         bundle container) that matches \p action_name and \p node if any,
- *         otherwise NULL
+ * \return First action for \p instance (or in some cases if \p instance is a
+ *         bundle container, its containerized resource) that matches
+ *         \p action_name and \p node if any, otherwise NULL
  */
 static pe_action_t *
 find_instance_action(const pe_action_t *action, const pe_resource_t *instance,
@@ -813,7 +813,8 @@ find_instance_action(const pe_action_t *action, const pe_resource_t *instance,
      *
      * Essentially, for 'first', we should use the containerized resource for
      * everything except stop, and for 'then', we should use the container for
-     * everything except promote and demote.
+     * everything except promote and demote (which can only be performed on the
+     * containerized resource).
      */
     if ((for_first && !pcmk__str_any_of(action->task, CRMD_ACTION_STOP,
                                         CRMD_ACTION_STOPPED, NULL))
