@@ -13,7 +13,6 @@
 #  define _GNU_SOURCE
 #endif
 
-#include <regex.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -26,8 +25,6 @@
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include <crm/common/util.h>
-
-static regex_t *notify_migrate_re = NULL;
 
 /*!
  * \brief Generate an operation key (RESOURCE_ACTION_INTERVAL)
@@ -65,164 +62,119 @@ convert_interval(const char *s, guint *interval_ms)
     return TRUE;
 }
 
-static gboolean
-try_fast_match(const char *key, const char *underbar1, const char *underbar2,
-               char **rsc_id, char **op_type, guint *interval_ms)
+/*!
+ * \internal
+ * \brief Check for underbar-separated substring match
+ *
+ * \param[in] key       Overall string being checked
+ * \param[in] position  Match before underbar at this \p key index
+ * \param[in] matches   Substrings to match (may contain underbars)
+ *
+ * \return \p key index of underbar before any matching substring,
+ *         or 0 if none
+ */
+static size_t
+match_before(const char *key, size_t position, const char **matches)
 {
-    if (interval_ms) {
-        if (!convert_interval(underbar2+1, interval_ms)) {
-            return FALSE;
-        }
-    }
+    for (int i = 0; matches[i] != NULL; ++i) {
+        const size_t match_len = strlen(matches[i]);
 
-    if (rsc_id) {
-        *rsc_id = strndup(key, underbar1-key);
-    }
+        // Must have at least X_MATCH before position
+        if (position > (match_len + 1)) {
+            const size_t possible = position - match_len - 1;
 
-    if (op_type) {
-        *op_type = strndup(underbar1+1, underbar2-underbar1-1);
-    }
-
-    return TRUE;
-}
-
-static gboolean
-try_basic_match(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
-{
-    char *interval_sep = NULL;
-    char *type_sep = NULL;
-
-    // Parse interval at end of string
-    interval_sep = strrchr(key, '_');
-    if (interval_sep == NULL) {
-        return FALSE;
-    }
-
-    if (interval_ms) {
-        if (!convert_interval(interval_sep+1, interval_ms)) {
-            return FALSE;
-        }
-    }
-
-    type_sep = interval_sep-1;
-
-    while (1) {
-        if (*type_sep == '_') {
-            break;
-        } else if (type_sep == key) {
-            if (interval_ms) {
-                *interval_ms = 0;
+            if ((key[possible] == '_')
+                && (strncmp(key + possible + 1, matches[i], match_len) == 0)) {
+                return possible;
             }
-
-            return FALSE;
-        }
-
-        type_sep--;
-    }
-
-    if (op_type) {
-        // Add one here to skip the leading underscore we landed on in the
-        // while loop.
-        *op_type = strndup(type_sep+1, interval_sep-type_sep-1);
-    }
-
-    // Everything else is the name of the resource.
-    if (rsc_id) {
-        *rsc_id = strndup(key, type_sep-key);
-    }
-
-    return TRUE;
-}
-
-static gboolean
-try_migrate_notify_match(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
-{
-    int rc = 0;
-    size_t nmatch = 8;
-    regmatch_t pmatch[nmatch];
-
-    if (notify_migrate_re == NULL) {
-        // cppcheck-suppress memleak
-        notify_migrate_re = calloc(1, sizeof(regex_t));
-        rc = regcomp(notify_migrate_re, "^(.*)_(migrate_(from|to)|(pre|post)_notify_([a-z]+|migrate_(from|to)))_([0-9]+)$",
-                     REG_EXTENDED);
-        CRM_ASSERT(rc == 0);
-    }
-
-    rc = regexec(notify_migrate_re, key, nmatch, pmatch, 0);
-    if (rc == REG_NOMATCH) {
-        return FALSE;
-    }
-
-    if (rsc_id) {
-        *rsc_id = strndup(key+pmatch[1].rm_so, pmatch[1].rm_eo-pmatch[1].rm_so);
-    }
-
-    if (op_type) {
-        *op_type = strndup(key+pmatch[2].rm_so, pmatch[2].rm_eo-pmatch[2].rm_so);
-    }
-
-    if (interval_ms) {
-        if (!convert_interval(key+pmatch[7].rm_so, interval_ms)) {
-            if (rsc_id) {
-                free(*rsc_id);
-                *rsc_id = NULL;
-            }
-
-            if (op_type) {
-                free(*op_type);
-                *op_type = NULL;
-            }
-
-            return FALSE;
         }
     }
-
-    return TRUE;
+    return 0;
 }
 
 gboolean
 parse_op_key(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
 {
-    char *underbar1 = NULL;
-    char *underbar2 = NULL;
-    char *underbar3 = NULL;
+    guint local_interval_ms = 0;
+    const size_t key_len = (key == NULL)? 0 : strlen(key);
+
+    // Operation keys must be formatted as RSC_ACTION_INTERVAL
+    size_t action_underbar = 0;   // Index in key of underbar before ACTION
+    size_t interval_underbar = 0; // Index in key of underbar before INTERVAL
+    size_t possible = 0;
+
+    /* Underbar was a poor choice of separator since both RSC and ACTION can
+     * contain underbars. Here, list action names and name prefixes that can.
+     */
+    const char *actions_with_underbars[] = {
+        "migrate_from",
+        "migrate_to",
+        NULL
+    };
+    const char *action_prefixes_with_underbars[] = {
+        "pre_notify",
+        "post_notify",
+        NULL,
+    };
 
     // Initialize output variables in case of early return
     if (rsc_id) {
         *rsc_id = NULL;
     }
-
     if (op_type) {
         *op_type = NULL;
     }
-
     if (interval_ms) {
         *interval_ms = 0;
     }
 
-    CRM_CHECK(key && *key, return FALSE);
-
-    underbar1 = strchr(key, '_');
-    if (!underbar1) {
+    // RSC_ACTION_INTERVAL implies a minimum of 5 characters
+    if (key_len < 5) {
         return FALSE;
     }
 
-    underbar2 = strchr(underbar1+1, '_');
-    if (!underbar2) {
+    // Find, parse, and validate interval
+    interval_underbar = key_len - 2;
+    while ((interval_underbar > 2) && (key[interval_underbar] != '_')) {
+        --interval_underbar;
+    }
+    if ((interval_underbar == 2)
+        || !convert_interval(key + interval_underbar + 1, &local_interval_ms)) {
         return FALSE;
     }
 
-    underbar3 = strchr(underbar2+1, '_');
-
-    if (!underbar3) {
-        return try_fast_match(key, underbar1, underbar2,
-                              rsc_id, op_type, interval_ms);
-    } else if (try_migrate_notify_match(key, rsc_id, op_type, interval_ms)) {
-        return TRUE;
-    } else {
-        return try_basic_match(key, rsc_id, op_type, interval_ms);
+    // Find the base (OCF) action name, disregarding prefixes
+    action_underbar = match_before(key, interval_underbar,
+                                   actions_with_underbars);
+    if (action_underbar == 0) {
+        action_underbar = interval_underbar - 2;
+        while ((action_underbar > 0) && (key[action_underbar] != '_')) {
+            --action_underbar;
+        }
+        if (action_underbar == 0) {
+            return FALSE;
+        }
     }
+    possible = match_before(key, action_underbar,
+                            action_prefixes_with_underbars);
+    if (possible != 0) {
+        action_underbar = possible;
+    }
+
+    // Set output variables
+    if (rsc_id != NULL) {
+        *rsc_id = strndup(key, action_underbar);
+        CRM_ASSERT(*rsc_id != NULL);
+    }
+    if (op_type != NULL) {
+        *op_type = strndup(key + action_underbar + 1,
+                           interval_underbar - action_underbar - 1);
+        CRM_ASSERT(*op_type != NULL);
+    }
+    if (interval_ms != NULL) {
+        *interval_ms = local_interval_ms;
+    }
+    return TRUE;
 }
 
 char *
