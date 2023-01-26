@@ -137,9 +137,6 @@
           <instance_attributes id="rabbitmq-instance_attributes">
             <nvpair id="rabbitmq-instance_attributes-set_policy" name="set_policy" value="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;exactly&quot;,&quot;ha-params&quot;:2}"/>
           </instance_attributes>
-          <meta_attributes id="rabbitmq-meta_attributes">
-            <nvpair id="rabbitmq-meta_attributes-notify" name="notify" value="true"/>
-          </meta_attributes>
           <operations>
             <op id="rabbitmq-monitor-interval-10" interval="10" name="monitor" timeout="40"/>
             <op id="rabbitmq-start-interval-0s" interval="0s" name="start" timeout="200s"/>
@@ -147,6 +144,7 @@
           </operations>
         </primitive>
         <meta_attributes id="rabbitmq-clone-meta_attributes">
+          <nvpair id="rabbitmq-clone-meta_attributes-notify" name="notify" value="true"/>
           <nvpair id="rabbitmq-clone-meta_attributes-interleave" name="interleave" value="true"/>
           <nvpair id="rabbitmq-clone-meta_attributes-ordered" name="ordered" value="true"/>
         </meta_attributes>

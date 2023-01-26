@@ -959,6 +959,8 @@ TESTS = [
         [ "bundle-order-startup-clone", "Prevent startup because bundle isn't promoted" ],
         [ "bundle-order-startup-clone-2", "Bundle startup with clones" ],
         [ "bundle-order-stop-clone", "Stop bundle because clone is stopping" ],
+        [ "bundle-interleave-start", "Interleave bundle starts" ],
+        [ "bundle-interleave-promote", "Interleave bundle promotes" ],
         [ "bundle-nested-colocation", "Colocation of nested connection resources" ],
         [ "bundle-order-fencing",
           "Order pseudo bundle fencing after parent node fencing if both are happening" ],

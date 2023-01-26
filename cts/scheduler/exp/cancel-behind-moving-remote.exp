@@ -861,7 +861,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="275" operation="promoted" operation_key="ovn-dbs-bundle_promoted_0"/>
+        <pseudo_event id="274" operation="promote" operation_key="ovn-dbs-bundle_promote_0"/>
       </trigger>
     </inputs>
   </synapse>

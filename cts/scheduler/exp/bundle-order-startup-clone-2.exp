@@ -252,7 +252,7 @@
         <pseudo_event id="111" operation="running" operation_key="haproxy-bundle_running_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="164" operation="promoted" operation_key="redis-bundle_promoted_0"/>
+        <pseudo_event id="163" operation="promote" operation_key="redis-bundle_promote_0"/>
       </trigger>
     </inputs>
   </synapse>

@@ -760,11 +760,7 @@
         <attributes CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="66" operation="stopped" operation_key="redis-bundle_stopped_0"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="52" priority="1000000">
     <action_set>

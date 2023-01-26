@@ -778,6 +778,78 @@ unassign_if_mandatory(pe_action_t *first, pe_action_t *then,
     return false;
 }
 
+/*!
+ * \internal
+ * \brief Find first matching action for a clone instance or bundle container
+ *
+ * \param[in] action       Action in an interleaved ordering
+ * \param[in] instance     Clone instance or bundle container being interleaved
+ * \param[in] action_name  Action to look for
+ * \param[in] node         If not NULL, require action to be on this node
+ * \param[in] for_first    If true, \p instance is the 'first' resource in the
+ *                         ordering, otherwise it is the 'then' resource
+ *
+ * \return First action for \p instance (or in some cases if \p instance is a
+ *         bundle container, its containerized resource) that matches
+ *         \p action_name and \p node if any, otherwise NULL
+ */
+static pe_action_t *
+find_instance_action(const pe_action_t *action, const pe_resource_t *instance,
+                     const char *action_name, const pe_node_t *node,
+                     bool for_first)
+{
+    const pe_resource_t *rsc = NULL;
+    pe_action_t *matching_action = NULL;
+
+    /* If instance is a bundle container, sometimes we should interleave the
+     * action for the container itself, and sometimes for the containerized
+     * resource.
+     *
+     * For example, given "start bundle A then bundle B", B likely requires the
+     * service inside A's container to be active, rather than just the
+     * container, so we should interleave the action for A's containerized
+     * resource. On the other hand, it's possible B's container itself requires
+     * something from A, so we should interleave the action for B's container.
+     *
+     * Essentially, for 'first', we should use the containerized resource for
+     * everything except stop, and for 'then', we should use the container for
+     * everything except promote and demote (which can only be performed on the
+     * containerized resource).
+     */
+    if ((for_first && !pcmk__str_any_of(action->task, CRMD_ACTION_STOP,
+                                        CRMD_ACTION_STOPPED, NULL))
+
+        || (!for_first && pcmk__str_any_of(action->task, CRMD_ACTION_PROMOTE,
+                                           CRMD_ACTION_PROMOTED,
+                                           CRMD_ACTION_DEMOTE,
+                                           CRMD_ACTION_DEMOTED, NULL))) {
+
+        rsc = pcmk__get_rsc_in_container(instance);
+    }
+    if (rsc == NULL) {
+        rsc = instance; // No containerized resource, use instance itself
+    } else {
+        node = NULL; // Containerized actions are on bundle-created guest
+    }
+
+    matching_action = find_first_action(rsc->actions, NULL, action_name, node);
+    if (matching_action != NULL) {
+        return matching_action;
+    }
+
+    if (pcmk_is_set(instance->flags, pe_rsc_orphan)
+        || pcmk__str_any_of(action_name, RSC_STOP, RSC_DEMOTE, NULL)) {
+        crm_trace("No %s action found for %s%s",
+                  action_name,
+                  pcmk_is_set(instance->flags, pe_rsc_orphan)? "orphan " : "",
+                  instance->id);
+    } else {
+        crm_err("No %s action found for %s to interleave (bug?)",
+                action_name, instance->id);
+    }
+    return NULL;
+}
+
 static uint32_t
 multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
                                 const pe_node_t *node, uint32_t filter,
@@ -813,64 +885,15 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
             enum action_tasks task = clone_child_action(first);
             const char *first_task = task2text(task);
 
-            const pe_resource_t *first_rsc = NULL;
-            const pe_resource_t *then_rsc = NULL;
-
-            first_rsc = pcmk__get_rsc_in_container(first_child, node);
-            if ((first_rsc != NULL)
-                && pcmk__str_any_of(first->task, CRMD_ACTION_STOP,
-                                    CRMD_ACTION_STOPPED, NULL)) {
-                /* Use the containerized resource since its actions will happen
-                 * later and are more likely to align with the user's intent.
-                 */
-                first_action = find_first_action(first_rsc->actions, NULL,
-                                                 first_task, node);
-            } else {
-                first_action = find_first_action(first_child->actions, NULL,
-                                                 first_task, node);
-            }
-
-            then_rsc = pcmk__get_rsc_in_container(then_child, node);
-            if ((then_rsc != NULL)
-                && pcmk__str_any_of(then->task, CRMD_ACTION_PROMOTE,
-                                    CRMD_ACTION_PROMOTED, CRMD_ACTION_DEMOTE,
-                                    CRMD_ACTION_DEMOTED, NULL)) {
-                /* Role actions apply only to the containerized resource, not
-                 * the container itself.
-                 */
-                then_action = find_first_action(then_rsc->actions, NULL,
-                                                then->task, node);
-            } else {
-                then_action = find_first_action(then_child->actions, NULL,
-                                                then->task, node);
-            }
-
+            first_action = find_instance_action(first, first_child,
+                                                first_task, node, true);
             if (first_action == NULL) {
-                if (!pcmk_is_set(first_child->flags, pe_rsc_orphan)
-                    && !pcmk__str_any_of(first_task, RSC_STOP, RSC_DEMOTE, NULL)) {
-                    crm_err("Internal error: No action found for %s in %s (first)",
-                            first_task, first_child->id);
-
-                } else {
-                    crm_trace("No action found for %s in %s%s (first)",
-                              first_task, first_child->id,
-                              pcmk_is_set(first_child->flags, pe_rsc_orphan)? " (ORPHAN)" : "");
-                }
                 continue;
             }
 
-            /* We're only interested if 'then' is neither stopping nor being demoted */ 
+            then_action = find_instance_action(then, then_child, then->task,
+                                               node, false);
             if (then_action == NULL) {
-                if (!pcmk_is_set(then_child->flags, pe_rsc_orphan)
-                    && !pcmk__str_any_of(then->task, RSC_STOP, RSC_DEMOTE, NULL)) {
-                    crm_err("Internal error: No action found for %s in %s (then)",
-                            then->task, then_child->id);
-
-                } else {
-                    crm_trace("No action found for %s in %s%s (then)",
-                              then->task, then_child->id,
-                              pcmk_is_set(then_child->flags, pe_rsc_orphan)? " (ORPHAN)" : "");
-                }
                 continue;
             }
 
