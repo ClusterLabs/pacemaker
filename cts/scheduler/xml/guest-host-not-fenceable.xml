@@ -65,7 +65,6 @@
             <op id="rabbitmq-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
           </operations>
         </primitive>
-        <meta_attributes id="rabbitmq-bundle-meta_attributes"/>
       </bundle>
       <bundle id="galera-bundle">
         <meta_attributes id="galera-bundle-meta_attributes">
