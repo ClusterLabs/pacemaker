@@ -49,6 +49,7 @@ char *pcmk__our_nodename = NULL;
 
 static unsigned int crm_log_priority = LOG_NOTICE;
 static GLogFunc glib_log_default = NULL;
+static pcmk__output_t *logger_out = NULL;
 
 static gboolean crm_tracing_enabled(void);
 
@@ -1116,12 +1117,32 @@ pcmk_log_xml_impl(uint8_t level, const char *text, const xmlNode *xml)
     if (xml == NULL) {
         do_crm_log(level, "%s%sNo data to dump as XML",
                    pcmk__s(text, ""), pcmk__str_empty(text)? "" : " ");
+
     } else {
-        pcmk__xml_show(NULL, level, text, xml, 1,
+        if (logger_out == NULL) {
+            CRM_CHECK(pcmk__log_output_new(&logger_out) == pcmk_rc_ok, return);
+        }
+
+        pcmk__output_set_log_level(logger_out, level);
+        pcmk__xml_show(logger_out, 0, text, xml, 1,
                        pcmk__xml_fmt_pretty
                        |pcmk__xml_fmt_open
                        |pcmk__xml_fmt_children
                        |pcmk__xml_fmt_close);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Free the logging library's internal log output object
+ */
+void
+pcmk__free_common_logger(void)
+{
+    if (logger_out != NULL) {
+        logger_out->finish(logger_out, CRM_EX_OK, true, NULL);
+        pcmk__output_free(logger_out);
+        logger_out = NULL;
     }
 }
 

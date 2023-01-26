@@ -81,6 +81,8 @@ void pcmk__cli_init_logging(const char *name, unsigned int verbosity);
 
 int pcmk__add_logfile(const char *filename);
 
+void pcmk__free_common_logger(void);
+
 #ifdef __cplusplus
 }
 #endif
