@@ -743,18 +743,18 @@ pcmk__find_compatible_instance(const pe_resource_t *match_rsc,
 
 /*!
  * \internal
- * \brief Unassign an instance if ordering without interleave match is mandatory
+ * \brief Unassign an instance if mandatory ordering has no interleave match
  *
- * \param[in] first          'First' action in an ordering
- * \param[in] then           'Then' action in an ordering
- * \param[in] then_instance  'Then' instance that has no interleave match
- * \param[in] type           Group of enum pe_ordering flags to apply
- * \param[in] current        If true, "then" action is stopped or demoted
+ * \param[in]     first          'First' action in an ordering
+ * \param[in]     then           'Then' action in an ordering
+ * \param[in,out] then_instance  'Then' instance that has no interleave match
+ * \param[in]     type           Group of enum pe_ordering flags to apply
+ * \param[in]     current        If true, "then" action is stopped or demoted
  *
  * \return true if \p then_instance was unassigned, otherwise false
  */
 static bool
-unassign_if_mandatory(pe_action_t *first, pe_action_t *then,
+unassign_if_mandatory(const pe_action_t *first, const pe_action_t *then,
                       pe_resource_t *then_instance, uint32_t type, bool current)
 {
     // Allow "then" instance to go down even without an interleave match
