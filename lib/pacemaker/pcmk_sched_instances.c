@@ -850,15 +850,29 @@ find_instance_action(const pe_action_t *action, const pe_resource_t *instance,
     return NULL;
 }
 
+/*!
+ * \internal
+ * \brief Get the original action name of a bundle or clone action
+ *
+ * Given an action for a bundle or clone, get the original action name,
+ * mapping notify to the action being notified, and if the instances are
+ * primitives, mapping completion actions to the action that was completed
+ * (for example, stopped to stop).
+ *
+ * \param[in] action  Clone or bundle action to check
+ *
+ * \return Original action name for \p action
+ */
 static const char *
-clone_child_action(pe_action_t * action)
+orig_action_name(const pe_action_t *action)
 {
-    enum action_tasks result = no_action;
-    pe_resource_t *child = (pe_resource_t *) action->rsc->children->data;
+    const pe_resource_t *instance = action->rsc->children->data; // Any instance
     char *action_type = NULL;
     const char *action_name = action->task;
+    enum action_tasks orig_task = no_action;
 
-    if (pcmk__strcase_any_of(action->task, "notify", "notified", NULL)) {
+    if (pcmk__strcase_any_of(action->task, CRMD_ACTION_NOTIFY,
+                             CRMD_ACTION_NOTIFIED, NULL)) {
         // action->uuid is RSC_(confirmed-){pre,post}_notify_ACTION_INTERVAL
         CRM_CHECK(parse_op_key(action->uuid, NULL, &action_type, NULL),
                   return task2text(no_action));
@@ -866,9 +880,9 @@ clone_child_action(pe_action_t * action)
         CRM_CHECK(action_name != NULL, return task2text(no_action));
         action_name += strlen("_notify_");
     }
-    result = get_complex_task(child, action_name);
+    orig_task = get_complex_task(instance, action_name);
     free(action_type);
-    return task2text(result);
+    return task2text(orig_task);
 }
 
 static uint32_t
@@ -903,7 +917,7 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
             pe_action_t *first_action = NULL;
             pe_action_t *then_action = NULL;
 
-            const char *first_task = clone_child_action(first);
+            const char *first_task = orig_action_name(first);
 
             first_action = find_instance_action(first, first_child,
                                                 first_task, node, true);
@@ -1065,7 +1079,7 @@ summary_action_flags(pe_action_t *action, GList *children,
     gboolean any_runnable = FALSE;
     gboolean check_runnable = TRUE;
     enum pe_action_flags flags = (pe_action_optional | pe_action_runnable | pe_action_pseudo);
-    const char *task_s = clone_child_action(action);
+    const char *task_s = orig_action_name(action);
 
     for (gIter = children; gIter != NULL; gIter = gIter->next) {
         pe_action_t *child_action = NULL;
