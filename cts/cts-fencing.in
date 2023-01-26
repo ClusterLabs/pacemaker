@@ -8,10 +8,8 @@ __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT AN
 import io
 import os
 import psutil
-import re
 import sys
 import subprocess
-import shlex
 import time
 import tempfile
 import signal
@@ -27,6 +25,9 @@ if os.path.exists("@abs_top_builddir@/python") and "@abs_top_builddir@" != "@abs
 
 from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
+from pacemaker._cts.errors import ExitCodeError, OutputFoundError, OutputNotFoundError, XmlValidationError
+from pacemaker._cts.process import killall, exit_if_proc_running, stdout_from_command
+from pacemaker._cts.test import Test, Tests
 
 TEST_DIR = sys.path[0]
 
@@ -76,51 +77,10 @@ def update_path():
     os.environ['PATH'] = new_path
 
 
-def find_validator(rng_file):
-    if os.access("/usr/bin/xmllint", os.X_OK):
-        if rng_file == None:
-            return ["xmllint", "-"]
-        else:
-            return ["xmllint", "--relaxng", rng_file, "-"]
-    else:
-        return None
-
-
-def rng_directory():
-    if "PCMK_schema_directory" in os.environ:
-        return os.environ["PCMK_schema_directory"]
-    elif os.path.exists("%s/cts-fencing.in" % TEST_DIR):
-        return "xml"
-    else:
-        return BuildOptions.SCHEMA_DIR
-
-
-def pipe_communicate(pipes, check_stderr=False, stdin=None):
-    """ Get text output from pipes """
-
-    if stdin is not None:
-        pipe_outputs = pipes.communicate(input=stdin.encode())
-    else:
-        pipe_outputs = pipes.communicate()
-
-    output = pipe_outputs[0].decode(sys.stdout.encoding)
-    if check_stderr:
-        output = output + pipe_outputs[1].decode(sys.stderr.encoding)
-    return output
-
-
-def output_from_command(command):
-    """ Execute command and return its standard output """
-
-    test = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
-    test.wait()
-    return pipe_communicate(test).split("\n")
-
-
 def localname():
     """ Return the uname of the local host """
 
-    our_uname = output_from_command("uname -n")
+    our_uname = stdout_from_command(["uname", "-n"])
     if our_uname:
         our_uname = our_uname[0]
     else:
@@ -128,341 +88,51 @@ def localname():
     return our_uname
 
 
-def killall(process_names=[], terminate=False):
-    """ Kill all instances of every process in a list """
-
-    if not process_names:
-        return
-
-    procs = []
-    for proc in psutil.process_iter(["name"]):
-        if proc.info["name"] in process_names:
-            procs.append(proc)
-
-    if terminate:
-        for proc in procs:
-            proc.terminate()
-        gone, alive = psutil.wait_procs(procs, timeout=3)
-        procs = alive
-
-    for proc in procs:
-        proc.kill()
-
-
-def is_proc_running(process_name):
-    """ Check whether a process with a given name is running """
-
-    for proc in psutil.process_iter(["name"]):
-        if proc.info["name"] == process_name:
-            return True
-    return False
-
-
-def exit_if_proc_running(process_name):
-    """ Exit with error if a given process is running """
-
-    if is_proc_running(process_name):
-        print("Error: %s is already running!" % process_name)
-        print("Run %s only when the cluster is stopped." % sys.argv[0])
-        sys.exit(ExitStatus.ERROR)
-
-
-class TestError(Exception):
-    """ Base class for exceptions in this module """
-    pass
-
-
-class ExitCodeError(TestError):
-    """ Exception raised when command exit status is unexpected """
-
-    def __init__(self, exit_code):
-        self.exit_code = exit_code
-
-    def __str__(self):
-        return repr(self.exit_code)
-
-
-class OutputNotFoundError(TestError):
-    """ Exception raised when command output does not contain wanted string """
-
-    def __init__(self, output):
-        self.output = output
-
-    def __str__(self):
-        return repr(self.output)
-
-
-class OutputFoundError(TestError):
-    """ Exception raised when command output contains unwanted string """
-
-    def __init__(self, output):
-        self.output = output
-
-    def __str__(self):
-        return repr(self.output)
-
-
-class XmlValidationError(TestError):
-    """ Exception raised when xmllint fails """
-
-    def __init__(self, output):
-        self.output = output
-
-    def __str__(self):
-        return repr(self.output)
-
-
-class Test(object):
+class FenceTest(Test):
     """ Executor for a single test """
 
-    def __init__(self, name, description, verbose=0, with_cpg=0, timeout=2,
-                 force_wait=0, logdir="/tmp"):
-        self.name = name
-        self.description = description
-        self.cmds = []
-        self.verbose = verbose
-        self.timeout = timeout
-        self.force_wait = force_wait
-        self.logpath = os.path.join(logdir, "pacemaker-fenced.log")
+    def __init__(self, name, description, **kwargs):
+        Test.__init__(self, name, description, **kwargs)
 
-        self.result_txt = ""
-        self.cmd_tool_output = ""
-        self.result_exitcode = ExitStatus.OK
-
-        if with_cpg:
-            self.stonith_options = "-c"
-            self.enable_corosync = 1
+        if kwargs.get("with_cpg", False):
+            self._enable_corosync = True
+            self._stonith_options = ["-c"]
         else:
-            self.stonith_options = "-s"
-            self.enable_corosync = 0
+            self._enable_corosync = False
+            self._stonith_options = ["-s"]
 
-        self.stonith_process = None
-        self.stonith_output = ""
-        self.stonith_patterns = []
-        self.negative_stonith_patterns = []
+        self._daemon_location = "pacemaker-fenced"
+        self._negative_stonith_patterns = []
+        self._stonith_output = ""
+        self._stonith_patterns = []
 
-        self.executed = 0
-
-    def __new_cmd(self, cmd, args, exitcode, stdout_match="", no_wait=0, stdout_negative_match="", kill=None, validate=True, check_rng=True, check_stderr=True):
-        """ Add a command to be executed as part of this test """
-
-        self.cmds.append(
-            {
-                "cmd" : cmd,
-                "kill" : kill,
-                "args" : args,
-                "expected_exitcode" : exitcode,
-                "stdout_match" : stdout_match,
-                "stdout_negative_match" : stdout_negative_match,
-                "no_wait" : no_wait,
-                "validate" : validate,
-                "check_rng" : check_rng,
-                "check_stderr" : check_stderr,
-            }
-        )
-
-    def start_environment(self):
-        """ Prepare the host for executing a test """
-
-        # Make sure we are in full control
-        killall(["pacemakerd", "pacemaker-fenced"])
-
-        if self.verbose:
-            self.stonith_options = self.stonith_options + " -V"
-            print("Starting pacemaker-fenced with %s" % self.stonith_options)
-
-        if os.path.exists(self.logpath):
-            os.remove(self.logpath)
-
-        cmd = "pacemaker-fenced %s -l %s" % (self.stonith_options, self.logpath)
-        self.stonith_process = subprocess.Popen(shlex.split(cmd))
-
-        logfile = None
-
-        init_time = time.time()
-        update_time = init_time
-
-        while True:
-            time.sleep(0.1)
-
-            if self.force_wait == 0 and logfile == None \
-               and os.path.exists(self.logpath):
-                logfile = io.open(self.logpath, 'rt', encoding = "ISO-8859-1")
-
-            if self.force_wait == 0 and logfile != None:
-                for line in logfile.readlines():
-                    if "successfully started" in line:
-                        return
-
-            now = time.time()
-
-            if self.timeout > 0 and (now - init_time) >= self.timeout:
-                if self.force_wait == 0:
-                    print("\tDaemon pacemaker-fenced doesn't seem to have been initialized within %fs."
-                          "\n\tConsider specifying a longer '--timeout' value."
-                          %(self.timeout))
-                return
-
-            if self.verbose and (now - update_time) >= 5:
-                print("Waiting for pacemaker-fenced to be initialized: %fs ..."
-                      %(now - init_time))
-                update_time = now
-
-    def clean_environment(self):
-        """ Clean up the host after executing a test """
-
-        if self.stonith_process:
-            if self.stonith_process.poll() == None:
-                self.stonith_process.terminate()
-                self.stonith_process.wait()
-            else:
-                return_code = {
-                    getattr(signal, _signame): _signame
-                        for _signame in dir(signal)
-                        if _signame.startswith('SIG') and not _signame.startswith("SIG_")
-                }.get(-self.stonith_process.returncode, "RET=%d" % (self.stonith_process.returncode))
-                msg = "FAILURE - '%s' failed. pacemaker-fenced abnormally exited during test (%s)."
-                self.result_txt = msg % (self.name, return_code)
-                self.result_exitcode = ExitStatus.ERROR
-
-        self.stonith_output = ""
-        self.stonith_process = None
-
-        # the default for utf-8 encoding would error out if e.g. memory corruption
-        # makes fenced output any kind of 8 bit value - while still interesting
-        # for debugging and we'd still like the regression-test to go over the
-        # full set of test-cases
-        logfile = io.open(self.logpath, 'rt', encoding = "ISO-8859-1")
-        for line in logfile.readlines():
-            self.stonith_output = self.stonith_output + line
-
-        if self.verbose:
-            print("Daemon Output Start")
-            print(self.stonith_output)
-            print("Daemon Output End")
-
-    def add_stonith_log_pattern(self, pattern):
-        """ Add a log pattern to expect from this test """
-
-        self.stonith_patterns.append(pattern)
-
-    def add_stonith_neg_log_pattern(self, pattern):
-        """ Add a log pattern that should not occur with this test """
-
-        self.negative_stonith_patterns.append(pattern)
-
-    def add_cmd(self, cmd, args, validate=True, check_rng=True, check_stderr=True):
-        """ Add a simple command to be executed as part of this test """
-
-        self.__new_cmd(cmd, args, ExitStatus.OK, "", validate=validate, check_rng=check_rng, check_stderr=check_stderr)
-
-    def add_cmd_no_wait(self, cmd, args):
-        """ Add a simple command to be executed (without waiting) as part of this test """
-
-        self.__new_cmd(cmd, args, ExitStatus.OK, "", 1)
-
-    def add_cmd_check_stdout(self, cmd, args, match, no_match=""):
-        """ Add a simple command with expected output to be executed as part of this test """
-
-        self.__new_cmd(cmd, args, ExitStatus.OK, match, 0, no_match)
-
-    def add_expected_fail_cmd(self, cmd, args, exitcode=ExitStatus.ERROR):
-        """ Add a command to be executed as part of this test and expected to fail """
-
-        self.__new_cmd(cmd, args, exitcode, "")
-
-    def get_exitcode(self):
-        """ Return the exit status of the last test execution """
-
-        return self.result_exitcode
-
-    def print_result(self, filler):
-        """ Print the result of the last test execution """
-
-        print("%s%s" % (filler, self.result_txt))
-
-    def run_cmd(self, args):
-        """ Execute a command as part of this test """
-
-        cmd = shlex.split(args['args'])
-        cmd.insert(0, args['cmd'])
-
-        if self.verbose:
-            print("\n\nRunning: "+" ".join(cmd))
-        test = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-        if args['kill']:
-            if self.verbose:
-                print("Also running: "+args['kill'])
-            subprocess.Popen(shlex.split(args['kill']))
-
-        if args['no_wait'] == 0:
-            test.wait()
-        else:
-            return ExitStatus.OK
-
-        output = pipe_communicate(test, check_stderr=args['check_stderr'])
-        if self.verbose:
-            print(output)
-
-        if test.returncode != args['expected_exitcode']:
-            raise ExitCodeError(test.returncode)
-
-        if (args['stdout_match'] != "" and
-            re.search(args['stdout_match'], output) is None):
-            raise OutputNotFoundError(output)
-
-        if (args['stdout_negative_match'] != "" and
-            re.search(args['stdout_negative_match'], output) is not None):
-            raise OutputFoundError(output)
-
-        if args['validate']:
-            if args['check_rng']:
-                rng_file = rng_directory() + "/api/api-result.rng"
-            else:
-                rng_file = None
-
-            cmd = find_validator(rng_file)
-            if not cmd:
-                return
-
-            if self.verbose:
-                print("\nRunning: "+" ".join(cmd))
-
-            validator = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            output = pipe_communicate(validator, check_stderr=True, stdin=output)
-
-            if self.verbose:
-                print(output)
-
-            if validator.returncode != 0:
-                raise XmlValidationError(output)
-
-
-    def count_negative_matches(self, outline):
+    def _count_negative_matches(self, outline):
         """ Return 1 if a line matches patterns that shouldn't have occurred """
 
         count = 0
-        for line in self.negative_stonith_patterns:
+        for line in self._negative_stonith_patterns:
             if outline.count(line):
                 count = 1
                 if self.verbose:
                     print("This pattern should not have matched = '%s" % (line))
         return count
 
-    def match_stonith_patterns(self):
+    def _kill_daemons(self):
+        killall(["pacemakerd", "pacemaker-fenced"])
+
+    def _match_patterns(self):
         """ Check test output for expected patterns """
 
         negative_matches = 0
         cur = 0
-        pats = self.stonith_patterns
-        total_patterns = len(self.stonith_patterns)
+        pats = self._stonith_patterns
+        total_patterns = len(self._stonith_patterns)
 
-        if len(self.stonith_patterns) == 0 and len(self.negative_stonith_patterns) == 0:
+        if len(self._stonith_patterns) == 0 and len(self._negative_stonith_patterns) == 0:
             return
 
-        for line in self.stonith_output.split("\n"):
-            negative_matches = negative_matches + self.count_negative_matches(line)
+        for line in self._stonith_output.split("\n"):
+            negative_matches = negative_matches + self._count_negative_matches(line)
             if len(pats) == 0:
                 continue
             cur = -1
@@ -478,90 +148,76 @@ class Test(object):
                     print("Pattern Not Matched = '%s'" % pat)
 
             msg = "FAILURE - '%s' failed. %d patterns out of %d not matched. %d negative matches."
-            self.result_txt = msg % (self.name, len(pats), total_patterns, negative_matches)
-            self.result_exitcode = ExitStatus.ERROR
+            self._result_txt = msg % (self.name, len(pats), total_patterns, negative_matches)
+            self.exitcode = ExitStatus.ERROR
 
-    def set_error(self, step, cmd):
-        """ Record failure of this test """
+    def _start_daemons(self):
+        if self.verbose:
+            self._stonith_options += ["-V"]
+            print("Starting %s with %s" % (self._daemon_location, self._stonith_options))
 
-        msg = "FAILURE - '%s' failed at step %d. Command: %s %s"
-        self.result_txt = msg % (self.name, step, cmd['cmd'], cmd['args'])
-        self.result_exitcode = ExitStatus.ERROR
+        cmd = ["pacemaker-fenced", "-l", self.logpath] + self._stonith_options
+        self._stonith_process = subprocess.Popen(cmd)
 
-    def run(self):
-        """ Execute this test. """
+    def clean_environment(self):
+        """ Clean up the host after executing a test """
 
-        res = 0
-        i = 1
-        self.start_environment()
+        if self._stonith_process:
+            if self._stonith_process.poll() == None:
+                self._stonith_process.terminate()
+                self._stonith_process.wait()
+            else:
+                return_code = {
+                    getattr(signal, _signame): _signame
+                        for _signame in dir(signal)
+                        if _signame.startswith('SIG') and not _signame.startswith("SIG_")
+                }.get(-self._stonith_process.returncode, "RET=%d" % (self._stonith_process.returncode))
+                msg = "FAILURE - '%s' failed. pacemaker-fenced abnormally exited during test (%s)."
+                self._result_txt = msg % (self.name, return_code)
+                self.exitcode = ExitStatus.ERROR
+
+        self._stonith_output = ""
+        self._stonith_process = None
+
+        # the default for utf-8 encoding would error out if e.g. memory corruption
+        # makes fenced output any kind of 8 bit value - while still interesting
+        # for debugging and we'd still like the regression-test to go over the
+        # full set of test-cases
+        logfile = io.open(self.logpath, 'rt', encoding = "ISO-8859-1")
+        for line in logfile.readlines():
+            self._stonith_output += line
 
         if self.verbose:
-            print("\n--- START TEST - %s" % self.name)
+            print("Daemon Output Start")
+            print(self._stonith_output)
+            print("Daemon Output End")
 
-        self.result_txt = "SUCCESS - '%s'" % (self.name)
-        self.result_exitcode = ExitStatus.OK
-        for cmd in self.cmds:
-            try:
-                self.run_cmd(cmd)
-            except ExitCodeError as e:
-                print("Step %d FAILED - command returned %s, expected %d" % (i, e, cmd['expected_exitcode']))
-                self.set_error(i, cmd);
-                break
-            except OutputNotFoundError as e:
-                print("Step %d FAILED - '%s' was not found in command output: %s" % (i, cmd['stdout_match'], e))
-                self.set_error(i, cmd);
-                break
-            except OutputFoundError as e:
-                print("Step %d FAILED - '%s' was found in command output: %s" % (i, cmd['stdout_negative_match'], e))
-                self.set_error(i, cmd);
-                break
-            except XmlValidationError as e:
-                print("Step %d FAILED - xmllint failed: %s" % (i, e))
-                self.set_error(i, cmd);
-                break
-            if self.verbose:
-                print("Step %d SUCCESS" % (i))
-            i = i + 1
-        self.clean_environment()
+    def add_stonith_log_pattern(self, pattern):
+        """ Add a log pattern to expect from this test """
 
-        if self.result_exitcode == ExitStatus.OK:
-            self.match_stonith_patterns()
+        self._stonith_patterns.append(pattern)
 
-        print(self.result_txt)
-        if self.verbose:
-            print("--- END TEST - %s\n" % self.name)
+    def add_stonith_neg_log_pattern(self, pattern):
+        """ Add a log pattern that should not occur with this test """
 
-        self.executed = 1
-        return res
+        self._negative_stonith_patterns.append(pattern)
 
-class Tests(object):
+class FenceTests(Tests):
     """ Collection of all fencing regression tests """
 
-    def __init__(self, verbose=0, timeout=2, force_wait=0, logdir="/tmp"):
-        self.tests = []
-        self.verbose = verbose
-        self.timeout = timeout
-        self.force_wait = force_wait
-        self.logdir = logdir
-        self.autogen_corosync_cfg = not os.path.exists(BuildOptions.COROSYNC_CONFIG_FILE)
+    def __init__(self, **kwargs):
+        Tests.__init__(self,  **kwargs)
 
-    def new_test(self, name, description, with_cpg=0):
+        self._autogen_corosync_cfg = not os.path.exists(BuildOptions.COROSYNC_CONFIG_FILE)
+
+    def new_test(self, name, description, with_cpg=False):
         """ Create a named test """
 
-        test = Test(name, description, self.verbose, with_cpg, self.timeout,
-                    self.force_wait, self.logdir)
-        self.tests.append(test)
+        test = FenceTest(name, description, verbose=self.verbose, with_cpg=with_cpg,
+                         timeout=self.timeout, force_wait=self.force_wait,
+                         logdir=self.logdir)
+        self._tests.append(test)
         return test
-
-    def print_list(self):
-        """ List all registered tests """
-
-        print("\n==== %d TESTS FOUND ====" % (len(self.tests)))
-        print("%35s - %s" % ("TEST NAME", "TEST DESCRIPTION"))
-        print("%35s - %s" % ("--------------------", "--------------------"))
-        for test in self.tests:
-            print("%35s - %s" % (test.name, test.description))
-        print("==== END OF LIST ====\n")
 
     def start_corosync(self):
         """ Start the corosync process """
@@ -573,74 +229,19 @@ class Tests(object):
         test.wait()
         time.sleep(10)
 
-    def run_single(self, name):
-        """ Run a single named test """
-
-        for test in self.tests:
-            if test.name == name:
-                test.run()
-                break
-
-    def run_tests_matching(self, pattern):
-        """ Run all tests whose name matches a pattern """
-
-        for test in self.tests:
-            if test.name.count(pattern) != 0:
-                test.run()
-
     def run_cpg_only(self):
         """ Run all corosync-enabled tests """
 
-        for test in self.tests:
-            if test.enable_corosync:
+        for test in self._tests:
+            if test._enable_corosync:
                 test.run()
 
     def run_no_cpg(self):
         """ Run all standalone tests """
 
-        for test in self.tests:
-            if not test.enable_corosync:
+        for test in self._tests:
+            if not test._enable_corosync:
                 test.run()
-
-    def run_tests(self):
-        """ Run all tests """
-
-        for test in self.tests:
-            test.run()
-
-    def exit(self):
-        """ Exit (with error status code if any test failed) """
-
-        for test in self.tests:
-            if test.executed == 0:
-                continue
-
-            if test.get_exitcode() != ExitStatus.OK:
-                sys.exit(ExitStatus.ERROR)
-
-        sys.exit(ExitStatus.OK)
-
-    def print_results(self):
-        """ Print summary of results of executed tests """
-
-        failures = 0
-        success = 0
-        print("\n\n======= FINAL RESULTS ==========")
-        print("\n--- FAILURE RESULTS:")
-        for test in self.tests:
-            if test.executed == 0:
-                continue
-
-            if test.get_exitcode() != ExitStatus.OK:
-                failures = failures + 1
-                test.print_result("    ")
-            else:
-                success = success + 1
-
-        if failures == 0:
-            print("    None")
-
-        print("\n--- TOTALS\n    Pass:%d\n    Fail:%d\n" % (success, failures))
 
     def build_api_sanity_tests(self):
         """ Register tests to verify basic API usage """
@@ -652,7 +253,7 @@ class Tests(object):
         test = self.new_test("standalone_low_level_api_test", "Sanity test client api in standalone mode.")
         test.add_cmd("cts-fence-helper", "-t %s" % (verbose_arg), validate=False)
 
-        test = self.new_test("cpg_low_level_api_test", "Sanity test client api using mainloop and cpg.", 1)
+        test = self.new_test("cpg_low_level_api_test", "Sanity test client api using mainloop and cpg.", True)
         test.add_cmd("cts-fence-helper", "-m %s" % (verbose_arg), validate=False)
 
     def build_custom_timeout_tests(self):
@@ -660,7 +261,7 @@ class Tests(object):
 
         # custom timeout without topology
         test = self.new_test("cpg_custom_timeout_1",
-                             "Verify per device timeouts work as expected without using topology.", 1)
+                             "Verify per device timeouts work as expected without using topology.", True)
         test.add_cmd('stonith_admin',
                      '--output-as=xml -R false1 -a fence_dummy -o "mode=fail" -o "pcmk_host_list=node1 node2 node3"')
         test.add_cmd('stonith_admin',
@@ -673,7 +274,7 @@ class Tests(object):
 
         # custom timeout _WITH_ topology
         test = self.new_test("cpg_custom_timeout_2",
-                             "Verify per device timeouts work as expected _WITH_ topology.", 1)
+                             "Verify per device timeouts work as expected _WITH_ topology.", True)
         test.add_cmd('stonith_admin',
                      '--output-as=xml -R false1 -a fence_dummy -o "mode=fail" -o "pcmk_host_list=node1 node2 node3"')
         test.add_cmd('stonith_admin',
@@ -692,7 +293,7 @@ class Tests(object):
 
         ### Simple test that overlapping fencing operations get merged
         test = self.new_test("cpg_custom_merge_single",
-                             "Verify overlapping identical fencing operations are merged, no fencing levels used.", 1)
+                             "Verify overlapping identical fencing operations are merged, no fencing levels used.", True)
         test.add_cmd("stonith_admin", "--output-as=xml -R false1 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node3\"")
         test.add_cmd("stonith_admin", "--output-as=xml -R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node3\" ")
         test.add_cmd("stonith_admin", "--output-as=xml -R false2 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node3\"")
@@ -706,7 +307,7 @@ class Tests(object):
 
         ### Test that multiple mergers occur
         test = self.new_test("cpg_custom_merge_multiple",
-                             "Verify multiple overlapping identical fencing operations are merged", 1)
+                             "Verify multiple overlapping identical fencing operations are merged", True)
         test.add_cmd("stonith_admin", "--output-as=xml -R false1 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node3\"")
         test.add_cmd("stonith_admin",
                      "--output-as=xml -R true1  -a fence_dummy -o \"mode=pass\" -o \"delay=2\" -o \"pcmk_host_list=node3\" ")
@@ -731,7 +332,7 @@ class Tests(object):
         ### Test that multiple mergers occur with topologies used
         test = self.new_test("cpg_custom_merge_with_topology",
                              "Verify multiple overlapping identical fencing operations are merged with fencing levels.",
-                             1)
+                             True)
         test.add_cmd("stonith_admin", "--output-as=xml -R false1 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node3\"")
         test.add_cmd("stonith_admin", "--output-as=xml -R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node3\" ")
         test.add_cmd("stonith_admin", "--output-as=xml -R false2 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node3\"")
@@ -759,7 +360,7 @@ class Tests(object):
         """ Register tests to verify when fence operations should not be merged """
 
         test = self.new_test("cpg_custom_no_merge",
-                             "Verify differing fencing operations are not merged", 1)
+                             "Verify differing fencing operations are not merged", True)
         test.add_cmd("stonith_admin", "--output-as=xml -R false1 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node3 node2\"")
         test.add_cmd("stonith_admin", "--output-as=xml -R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node3 node2\" ")
         test.add_cmd("stonith_admin", "--output-as=xml -R false2 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node3 node2\"")
@@ -776,11 +377,11 @@ class Tests(object):
         test_types = [
             {
                 "prefix" : "standalone",
-                "use_cpg" : 0,
+                "use_cpg" : False,
             },
             {
                 "prefix" : "cpg",
-                "use_cpg" : 1,
+                "use_cpg" : True,
             },
         ]
 
@@ -795,11 +396,11 @@ class Tests(object):
                          "--output-as=xml -R false2  -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\"")
             test.add_cmd("stonith_admin",
                          "--output-as=xml -R false3 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\"")
-            if test_type["use_cpg"] == 1:
-                test.add_expected_fail_cmd("stonith_admin", "--output-as=xml -F node3 -t 2", ExitStatus.TIMEOUT)
+            if test_type["use_cpg"]:
+                test.add_cmd_expected_fail("stonith_admin", "--output-as=xml -F node3 -t 2", ExitStatus.TIMEOUT)
                 test.add_stonith_log_pattern("Total timeout set to 7")
             else:
-                test.add_expected_fail_cmd("stonith_admin", "--output-as=xml -F node3 -t 2", ExitStatus.ERROR)
+                test.add_cmd_expected_fail("stonith_admin", "--output-as=xml -F node3 -t 2", ExitStatus.ERROR)
 
             test.add_stonith_log_pattern("targeting node3 using false1 returned ")
             test.add_stonith_log_pattern("targeting node3 using false2 returned ")
@@ -818,7 +419,7 @@ class Tests(object):
                          "--output-as=xml -R false2 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\"")
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 5")
 
-            if test_type["use_cpg"] == 1:
+            if test_type["use_cpg"]:
                 test.add_stonith_log_pattern("Total timeout set to 18")
 
         # test what happens when we try to use a missing fence-agent.
@@ -831,14 +432,14 @@ class Tests(object):
             test.add_cmd("stonith_admin",
                          "--output-as=xml -R true2 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node2\"")
 
-            test.add_expected_fail_cmd("stonith_admin",
+            test.add_cmd_expected_fail("stonith_admin",
                                        "--output-as=xml -F node3 -t 5",
                                        ExitStatus.NOSUCH)
             test.add_cmd("stonith_admin", "--output-as=xml -F node2 -t 5")
 
         # simple topology test for one device
         for test_type in test_types:
-            if test_type["use_cpg"] == 0:
+            if not test_type["use_cpg"]:
                 continue
 
             test = self.new_test("%s_topology_simple" % test_type["prefix"],
@@ -854,7 +455,7 @@ class Tests(object):
 
         # add topology, delete topology, verify fencing still works
         for test_type in test_types:
-            if test_type["use_cpg"] == 0:
+            if not test_type["use_cpg"]:
                 continue
 
             test = self.new_test("%s_topology_add_remove" % test_type["prefix"],
@@ -871,7 +472,7 @@ class Tests(object):
 
         # test what happens when the first fencing level has multiple devices.
         for test_type in test_types:
-            if test_type["use_cpg"] == 0:
+            if not test_type["use_cpg"]:
                 continue
 
             test = self.new_test("%s_topology_device_fails" % test_type["prefix"],
@@ -891,7 +492,7 @@ class Tests(object):
 
         # test what happens when the first fencing level fails.
         for test_type in test_types:
-            if test_type["use_cpg"] == 0:
+            if not test_type["use_cpg"]:
                 continue
 
             test = self.new_test("%s_topology_multi_level_fails" % test_type["prefix"],
@@ -928,7 +529,7 @@ class Tests(object):
 
         # test what happens when the first fencing level had devices that no one has registered
         for test_type in test_types:
-            if test_type["use_cpg"] == 0:
+            if not test_type["use_cpg"]:
                 continue
 
             test = self.new_test("%s_topology_missing_devices" % test_type["prefix"],
@@ -954,7 +555,7 @@ class Tests(object):
 
         # Test what happens if multiple fencing levels are defined, and then the first one is removed.
         for test_type in test_types:
-            if test_type["use_cpg"] == 0:
+            if not test_type["use_cpg"]:
                 continue
 
             test = self.new_test("%s_topology_level_removal" % test_type["prefix"],
@@ -994,7 +595,7 @@ class Tests(object):
 
         # Test targeting a topology level by node name pattern.
         for test_type in test_types:
-            if test_type["use_cpg"] == 0:
+            if not test_type["use_cpg"]:
                 continue
 
             test = self.new_test("%s_topology_level_pattern" % test_type["prefix"],
@@ -1043,7 +644,7 @@ class Tests(object):
 
             test.add_cmd("stonith_admin", "--output-as=xml -Q true1")
             test.add_cmd("stonith_admin", "--output-as=xml -Q false1")
-            test.add_expected_fail_cmd("stonith_admin",
+            test.add_cmd_expected_fail("stonith_admin",
                                        "--output-as=xml -Q true2",
                                        ExitStatus.NOSUCH)
 
@@ -1054,7 +655,7 @@ class Tests(object):
                                  test_type["use_cpg"])
             test.add_cmd("stonith_admin",
                          '--output-as=xml -R true1 -a fence_dummy -o "mode=fail" -o "monitor_mode=fail" -o "pcmk_host_list=node3"')
-            test.add_expected_fail_cmd("stonith_admin", "--output-as=xml -Q true1 -t 5", ExitStatus.ERROR)
+            test.add_cmd_expected_fail("stonith_admin", "--output-as=xml -Q true1 -t 5", ExitStatus.ERROR)
             test.add_stonith_log_pattern("Attempt 2 to execute")
 
         # Verify monitor occurs for duration of timeout period on failure, but stops at max retries
@@ -1064,7 +665,7 @@ class Tests(object):
                                  test_type["use_cpg"])
             test.add_cmd("stonith_admin",
                          '--output-as=xml -R true1  -a fence_dummy -o "mode=fail" -o "monitor_mode=fail" -o "pcmk_host_list=node3"')
-            test.add_expected_fail_cmd("stonith_admin", "--output-as=xml -Q true1 -t 15", ExitStatus.ERROR)
+            test.add_cmd_expected_fail("stonith_admin", "--output-as=xml -Q true1 -t 15", ExitStatus.ERROR)
             test.add_stonith_log_pattern("Attempted to execute agent fence_dummy (list) the maximum number of times")
 
         # simple register test
@@ -1078,7 +679,7 @@ class Tests(object):
 
             test.add_cmd("stonith_admin", "--output-as=xml -D true1")
 
-            test.add_expected_fail_cmd("stonith_admin",
+            test.add_cmd_expected_fail("stonith_admin",
                                        "--output-as=xml -Q true1",
                                        ExitStatus.NOSUCH)
 
@@ -1093,13 +694,13 @@ class Tests(object):
 
             test.add_cmd("stonith_admin", "--output-as=xml -D true1")
 
-            test.add_expected_fail_cmd("stonith_admin",
+            test.add_cmd_expected_fail("stonith_admin",
                                        "--output-as=xml -Q true1",
                                        ExitStatus.NOSUCH)
 
         # test fencing history.
         for test_type in test_types:
-            if test_type["use_cpg"] == 0:
+            if not test_type["use_cpg"]:
                 continue
             test = self.new_test("%s_fence_history" % test_type["prefix"],
                                  "Verify last fencing operation is returned.",
@@ -1169,7 +770,7 @@ class Tests(object):
         # make sure requested fencing delay is applied only for the first device in the first level
         # make sure static delay from pcmk_delay_base is added
         for test_type in test_types:
-            if test_type["use_cpg"] == 0:
+            if not test_type["use_cpg"]:
                 continue
 
             test = self.new_test("%s_topology_delay" % test_type["prefix"],
@@ -1203,7 +804,7 @@ class Tests(object):
 
         ### verify nodeid is supplied when nodeid is in the metadata parameters
         test = self.new_test("cpg_supply_nodeid",
-                             "Verify nodeid is given when fence agent has nodeid as parameter", 1)
+                             "Verify nodeid is given when fence agent has nodeid as parameter", True)
 
         test.add_cmd("stonith_admin",
                      "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=%s\"" % (our_uname))
@@ -1213,7 +814,7 @@ class Tests(object):
         ### verify nodeid is _NOT_ supplied when nodeid is not in the metadata parameters
         test = self.new_test("cpg_do_not_supply_nodeid",
                              "Verify nodeid is _NOT_ given when fence agent does not have nodeid as parameter",
-                             1)
+                             True)
 
         # use a host name that won't be in corosync.conf
         test.add_cmd("stonith_admin",
@@ -1224,7 +825,7 @@ class Tests(object):
         ### verify nodeid use doesn't explode standalone mode
         test = self.new_test("standalone_do_not_supply_nodeid",
                              "Verify nodeid in metadata parameter list doesn't kill standalone mode",
-                             0)
+                             False)
 
         test.add_cmd("stonith_admin",
                      "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=%s\"" % (our_uname))
@@ -1239,7 +840,7 @@ class Tests(object):
         ### verify unfencing using automatic unfencing
         test = self.new_test("cpg_unfence_required_1",
                              "Verify require unfencing on all devices when automatic=true in agent's metadata",
-                             1)
+                             True)
         test.add_cmd('stonith_admin',
                      '--output-as=xml -R true1 -a fence_dummy_auto_unfence -o "mode=pass" -o "pcmk_host_list=%s"' % (our_uname))
         test.add_cmd('stonith_admin',
@@ -1252,17 +853,17 @@ class Tests(object):
         ### verify unfencing using automatic unfencing fails if any of the required agents fail
         test = self.new_test("cpg_unfence_required_2",
                              "Verify require unfencing on all devices when automatic=true in agent's metadata",
-                             1)
+                             True)
         test.add_cmd('stonith_admin',
                      '--output-as=xml -R true1 -a fence_dummy_auto_unfence -o "mode=pass" -o "pcmk_host_list=%s"' % (our_uname))
         test.add_cmd('stonith_admin',
                      '--output-as=xml -R true2 -a fence_dummy_auto_unfence -o "mode=fail" -o "pcmk_host_list=%s"' % (our_uname))
-        test.add_expected_fail_cmd("stonith_admin", "--output-as=xml -U %s -t 6" % (our_uname), ExitStatus.ERROR)
+        test.add_cmd_expected_fail("stonith_admin", "--output-as=xml -U %s -t 6" % (our_uname), ExitStatus.ERROR)
 
         ### verify unfencing using automatic devices with topology
         test = self.new_test("cpg_unfence_required_3",
                              "Verify require unfencing on all devices even when at different topology levels",
-                             1)
+                             True)
         test.add_cmd('stonith_admin',
                      '--output-as=xml -R true1 -a fence_dummy_auto_unfence -o "mode=pass" -o "pcmk_host_list=%s node3"' % (our_uname))
         test.add_cmd('stonith_admin',
@@ -1276,7 +877,7 @@ class Tests(object):
         ### verify unfencing using automatic devices with topology
         test = self.new_test("cpg_unfence_required_4",
                              "Verify all required devices are executed even with topology levels fail.",
-                             1)
+                             True)
         test.add_cmd('stonith_admin',
                      '--output-as=xml -R true1 -a fence_dummy_auto_unfence -o "mode=pass" -o "pcmk_host_list=%s node3"' % (our_uname))
         test.add_cmd('stonith_admin',
@@ -1314,7 +915,7 @@ class Tests(object):
 
         ### verify unfencing using on_target device
         test = self.new_test("cpg_unfence_on_target_1",
-                             "Verify unfencing with on_target = true", 1)
+                             "Verify unfencing with on_target = true", True)
         test.add_cmd("stonith_admin",
                      "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=%s\"" % (our_uname))
         test.add_cmd("stonith_admin", "--output-as=xml -U %s -t 3" % (our_uname))
@@ -1323,10 +924,10 @@ class Tests(object):
         ### verify failure of unfencing using on_target device
         test = self.new_test("cpg_unfence_on_target_2",
                              "Verify failure unfencing with on_target = true",
-                             1)
+                             True)
         test.add_cmd("stonith_admin",
                      "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=%s node_fake_1234\"" % (our_uname))
-        test.add_expected_fail_cmd("stonith_admin",
+        test.add_cmd_expected_fail("stonith_admin",
                                    "--output-as=xml -U node_fake_1234 -t 3",
                                    ExitStatus.NOSUCH)
         test.add_stonith_log_pattern("(on) to be executed on target")
@@ -1334,7 +935,7 @@ class Tests(object):
         ### verify unfencing using on_target device with topology
         test = self.new_test("cpg_unfence_on_target_3",
                              "Verify unfencing with on_target = true using topology",
-                             1)
+                             True)
 
         test.add_cmd("stonith_admin",
                      "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=%s node3\"" % (our_uname))
@@ -1350,7 +951,7 @@ class Tests(object):
         ### verify unfencing using on_target device with topology fails when target node doesn't exist
         test = self.new_test("cpg_unfence_on_target_4",
                              "Verify unfencing failure with on_target = true using topology",
-                             1)
+                             True)
 
         test.add_cmd("stonith_admin",
                      "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=%s node_fake\"" % (our_uname))
@@ -1360,7 +961,7 @@ class Tests(object):
         test.add_cmd("stonith_admin", "--output-as=xml -r node_fake -i 1 -v true1")
         test.add_cmd("stonith_admin", "--output-as=xml -r node_fake -i 2 -v true2")
 
-        test.add_expected_fail_cmd("stonith_admin",
+        test.add_cmd_expected_fail("stonith_admin",
                                    "--output-as=xml -U node_fake -t 3",
                                    ExitStatus.NOSUCH)
         test.add_stonith_log_pattern("(on) to be executed on target")
@@ -1369,7 +970,7 @@ class Tests(object):
         """ Register tests that verify remapping of reboots to off-on """
 
         test = self.new_test("cpg_remap_simple",
-                             "Verify sequential topology reboot is remapped to all-off-then-all-on", 1)
+                             "Verify sequential topology reboot is remapped to all-off-then-all-on", True)
         test.add_cmd("stonith_admin",
                      """--output-as=xml -R true1 -a fence_dummy -o "mode=pass" -o "pcmk_host_list=node_fake" """
                      """-o "pcmk_off_timeout=1" -o "pcmk_reboot_timeout=10" """)
@@ -1392,7 +993,7 @@ class Tests(object):
         test = self.new_test("cpg_remap_simple_off",
                              "Verify sequential topology reboot skips 'on' if "
                              "pcmk_reboot_action=off or agent doesn't support "
-                             "'on'", 1)
+                             "'on'", True)
         test.add_cmd("stonith_admin",
                      "--output-as=xml -R true1 -a fence_dummy -o mode=pass "
                      "-o pcmk_host_list=node_fake -o pcmk_off_timeout=1 "
@@ -1419,7 +1020,7 @@ class Tests(object):
         test.add_stonith_log_pattern("Undoing remap of reboot targeting node_fake")
 
         test = self.new_test("cpg_remap_automatic",
-                             "Verify remapped topology reboot skips automatic 'on'", 1)
+                             "Verify remapped topology reboot skips automatic 'on'", True)
         test.add_cmd("stonith_admin",
                      """--output-as=xml -R true1 -a fence_dummy_auto_unfence """
                      """-o "mode=pass" -o "pcmk_host_list=node_fake" """)
@@ -1438,7 +1039,7 @@ class Tests(object):
 
         test = self.new_test("cpg_remap_complex_1",
                              "Verify remapped topology reboot in second level works if non-remapped first level fails",
-                             1)
+                             True)
         test.add_cmd("stonith_admin", """--output-as=xml -R false1 -a fence_dummy -o "mode=fail" -o "pcmk_host_list=node_fake" """)
         test.add_cmd("stonith_admin", """--output-as=xml -R true1 -a fence_dummy -o "mode=pass" -o "pcmk_host_list=node_fake" """)
         test.add_cmd("stonith_admin", """--output-as=xml -R true2 -a fence_dummy -o "mode=pass" -o "pcmk_host_list=node_fake" """)
@@ -1456,7 +1057,7 @@ class Tests(object):
 
         test = self.new_test("cpg_remap_complex_2",
                              "Verify remapped topology reboot failure in second level proceeds to third level",
-                             1)
+                             True)
         test.add_cmd("stonith_admin", """--output-as=xml -R false1 -a fence_dummy -o "mode=fail" -o "pcmk_host_list=node_fake" """)
         test.add_cmd("stonith_admin", """--output-as=xml -R false2 -a fence_dummy -o "mode=fail" -o "pcmk_host_list=node_fake" """)
         test.add_cmd("stonith_admin", """--output-as=xml -R true1 -a fence_dummy -o "mode=pass" -o "pcmk_host_list=node_fake" """)
@@ -1479,35 +1080,35 @@ class Tests(object):
         """ run stonith_admin --metadata for the fence_dummy agent and check command output """
 
         test = self.new_test("get_metadata",
-                             "Run stonith_admin --metadata for the fence_dummy agent", 1)
+                             "Run stonith_admin --metadata for the fence_dummy agent", True)
         test.add_cmd_check_stdout("stonith_admin", "--output-as=xml -a fence_dummy --metadata", '<shortdesc lang')
 
     def build_metadata_tests(self):
         """ run fence-agents coming with pacemaker with -o metadata and check for valid xml """
 
         test = self.new_test("check_metadata_dummy",
-                             "Run fence_dummy -o metadata and check for valid xml", 0)
+                             "Run fence_dummy -o metadata and check for valid xml", False)
         test.add_cmd("fence_dummy", "-o metadata", check_rng=False, check_stderr=False)
         # fence_dummy prints on stderr to check that tools just listen on stdout
 
         test = self.new_test("check_metadata_watchdog",
-                             "Run fence_watchdog -o metadata and check for valid xml", 0)
+                             "Run fence_watchdog -o metadata and check for valid xml", False)
         test.add_cmd("fence_watchdog", "-o metadata", check_rng=False)
 
     def build_validate_tests(self):
         """ run stonith_admin --validate for the fence_dummy agent and check command output """
 
         test = self.new_test("validate_dummy",
-                             "Run stonith_admin --validate-all and check output", 0)
-        test.add_expected_fail_cmd("stonith_admin", "-a fence_dummy --validate --output-as=xml")
+                             "Run stonith_admin --validate-all and check output", False)
+        test.add_cmd_expected_fail("stonith_admin", "-a fence_dummy --validate --output-as=xml")
         test.add_cmd("stonith_admin", """-a fence_dummy --validate -o "delay=5" --output-as=xml""", check_rng=False)
-        test.add_expected_fail_cmd("stonith_admin", """-a fence_dummy --validate -o "delay=15" --output-as=xml""")
+        test.add_cmd_expected_fail("stonith_admin", """-a fence_dummy --validate -o "delay=15" --output-as=xml""")
 
     def setup_environment(self, use_corosync):
         """ Prepare the host before executing any tests """
 
         if use_corosync:
-            if self.autogen_corosync_cfg:
+            if self._autogen_corosync_cfg:
                 logname = os.path.join(self.logdir, "corosync.log")
                 corosync_cfg = io.open(BuildOptions.COROSYNC_CONFIG_FILE, "w")
                 corosync_cfg.write(AUTOGEN_COROSYNC_TEMPLATE % (localname(), logname))
@@ -1525,7 +1126,7 @@ class Tests(object):
         if use_corosync:
             killall(["corosync"])
 
-            if self.autogen_corosync_cfg:
+            if self._autogen_corosync_cfg:
                 if self.verbose:
                     print("Corosync output")
                     logfile = io.open(os.path.join(self.logdir, "corosync.log"), 'rt')
@@ -1541,47 +1142,47 @@ class TestOptions(object):
 
     def __init__(self):
         self.options = {}
-        self.options['list-tests'] = 0
-        self.options['run-all'] = 1
+        self.options['list-tests'] = False
+        self.options['run-all'] = True
         self.options['run-only'] = ""
         self.options['run-only-pattern'] = ""
-        self.options['verbose'] = 0
+        self.options['verbose'] = False
         self.options['timeout'] = 2
-        self.options['force-wait'] = 0
+        self.options['force-wait'] = False
         self.options['invalid-arg'] = ""
-        self.options['cpg-only'] = 0
-        self.options['no-cpg'] = 0
-        self.options['show-usage'] = 0
+        self.options['cpg-only'] = False
+        self.options['no-cpg'] = False
+        self.options['show-usage'] = False
 
     def build_options(self, argv):
         """ Set options based on command-line arguments """
 
         args = argv[1:]
-        skip = 0
+        skip = False
         for i in range(0, len(args)):
             if skip:
-                skip = 0
+                skip = False
                 continue
             elif args[i] == "-h" or args[i] == "--help":
-                self.options['show-usage'] = 1
+                self.options['show-usage'] = True
             elif args[i] == "-l" or args[i] == "--list-tests":
-                self.options['list-tests'] = 1
+                self.options['list-tests'] = True
             elif args[i] == "-V" or args[i] == "--verbose":
-                self.options['verbose'] = 1
+                self.options['verbose'] = True
             elif args[i] == "-t" or args[i] == "--timeout":
                 self.options['timeout'] = float(args[i+1])
             elif args[i] == "-w" or args[i] == "--force-wait":
-                self.options['force-wait'] = 1
+                self.options['force-wait'] = True
             elif args[i] == "-n" or args[i] == "--no-cpg":
-                self.options['no-cpg'] = 1
+                self.options['no-cpg'] = True
             elif args[i] == "-c" or args[i] == "--cpg-only":
-                self.options['cpg-only'] = 1
+                self.options['cpg-only'] = True
             elif args[i] == "-r" or args[i] == "--run-only":
                 self.options['run-only'] = args[i+1]
-                skip = 1
+                skip = True
             elif args[i] == "-p" or args[i] == "--run-only-pattern":
                 self.options['run-only-pattern'] = args[i+1]
-                skip = 1
+                skip = True
 
     def show_usage(self):
         """ Show command usage """
@@ -1618,6 +1219,10 @@ def main(argv):
     opts = TestOptions()
     opts.build_options(argv)
 
+    if opts.options['show-usage']:
+        opts.show_usage()
+        sys.exit(ExitStatus.OK)
+
     exit_if_proc_running("pacemaker-fenced")
 
     use_corosync = not opts.options['no-cpg']
@@ -1627,8 +1232,9 @@ def main(argv):
     # Create a temporary directory for log files (the directory and its
     # contents will automatically be erased when done)
     with tempfile.TemporaryDirectory(prefix="cts-fencing-") as logdir:
-        tests = Tests(opts.options['verbose'], opts.options['timeout'],
-                      opts.options['force-wait'], logdir)
+        tests = FenceTests(verbose=opts.options['verbose'], timeout=opts.options['timeout'],
+                           force_wait=opts.options['force-wait'], logdir=logdir)
+
         tests.build_standalone_tests()
         tests.build_custom_timeout_tests()
         tests.build_api_sanity_tests()
@@ -1644,9 +1250,6 @@ def main(argv):
 
         if opts.options['list-tests']:
             tests.print_list()
-            sys.exit(ExitStatus.OK)
-        elif opts.options['show-usage']:
-            opts.show_usage()
             sys.exit(ExitStatus.OK)
 
         print("Starting ...")
@@ -1670,6 +1273,7 @@ def main(argv):
             tests.print_results()
 
         tests.cleanup_environment(use_corosync)
+
     tests.exit()
 
 
