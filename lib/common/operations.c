@@ -114,6 +114,8 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
     const char *action_prefixes_with_underbars[] = {
         "pre_notify",
         "post_notify",
+        "confirmed-pre_notify",
+        "confirmed-post_notify",
         NULL,
     };
 
