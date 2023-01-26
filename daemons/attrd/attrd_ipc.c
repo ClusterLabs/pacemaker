@@ -259,6 +259,7 @@ static int
 expand_regexes(xmlNode *xml, const char *attr, const char *value, const char *regex)
 {
     if (attr == NULL && regex) {
+        bool matched = false;
         GHashTableIter aIter;
         regex_t r_patt;
 
@@ -275,6 +276,7 @@ expand_regexes(xmlNode *xml, const char *attr, const char *value, const char *re
                 xmlNode *child = create_xml_node(xml, XML_ATTR_OP);
 
                 crm_trace("Matched %s with %s", attr, regex);
+                matched = true;
 
                 /* Copy all the attributes from the parent over, but remove the
                  * regex and replace it with the name.
@@ -286,6 +288,13 @@ expand_regexes(xmlNode *xml, const char *attr, const char *value, const char *re
         }
 
         regfree(&r_patt);
+
+        /* If we never matched anything, return REG_NOMATCH.  This should not be
+         * treated as an error by handle_regexes.
+         */
+        if (!matched) {
+            return REG_NOMATCH;
+        }
 
     } else if (attr == NULL) {
         return pcmk_rc_bad_nvpair;
@@ -446,9 +455,11 @@ attrd_client_update(pcmk__request_t *request)
         /* Error handling was already dealt with in handle_regexes, so just return. */
         return NULL;
     } else if (regex) {
-        pcmk__xe_foreach_child(xml, XML_ATTR_OP, send_child_update, request);
-        pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
-        return NULL;
+        /* Recursively call attrd_client_update on the new message with regexes
+         * expanded.  If supported by the attribute daemon, this means that all
+         * matches can also be handled atomically.
+         */
+        return attrd_client_update(request);
     }
 
     handle_missing_host(xml);
