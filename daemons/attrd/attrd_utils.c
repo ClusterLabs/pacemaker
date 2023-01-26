@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -336,6 +336,27 @@ attrd_update_minimum_protocol_ver(const char *host, const char *value)
             minimum_protocol_version = ver;
             crm_trace("Set minimum attrd protocol version to %d",
                       minimum_protocol_version);
+        }
+    }
+}
+
+void
+attrd_copy_xml_attributes(xmlNode *src, xmlNode *dest)
+{
+    /* Copy attributes from the wrapper parent node into the child node.
+     * We can't just use copy_in_properties because we want to skip any
+     * attributes that are already set on the child.  For instance, if
+     * we were told to use a specific node, there will already be a node
+     * attribute on the child.  Copying the parent's node attribute over
+     * could result in the wrong value.
+     */
+    for (xmlAttrPtr a = pcmk__xe_first_attr(src); a != NULL; a = a->next) {
+        const char *p_name = (const char *) a->name;
+        const char *p_value = ((a == NULL) || (a->children == NULL)) ? NULL :
+                              (const char *) a->children->content;
+
+        if (crm_element_value(dest, p_name) == NULL) {
+            crm_xml_add(dest, p_name, p_value);
         }
     }
 }
