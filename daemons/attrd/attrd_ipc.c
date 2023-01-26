@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -252,6 +252,75 @@ handle_missing_host(xmlNode *xml)
     }
 }
 
+/* Convert a single IPC message with a regex into one with multiple children, one
+ * for each regex match.
+ */
+static int
+expand_regexes(xmlNode *xml, const char *attr, const char *value, const char *regex)
+{
+    if (attr == NULL && regex) {
+        GHashTableIter aIter;
+        regex_t r_patt;
+
+        crm_debug("Setting %s to %s", regex, value);
+        if (regcomp(&r_patt, regex, REG_EXTENDED|REG_NOSUB)) {
+            return EINVAL;
+        }
+
+        g_hash_table_iter_init(&aIter, attributes);
+        while (g_hash_table_iter_next(&aIter, (gpointer *) & attr, NULL)) {
+            int status = regexec(&r_patt, attr, 0, NULL, 0);
+
+            if (status == 0) {
+                xmlNode *child = create_xml_node(xml, XML_ATTR_OP);
+
+                crm_trace("Matched %s with %s", attr, regex);
+
+                /* Copy all the attributes from the parent over, but remove the
+                 * regex and replace it with the name.
+                 */
+                attrd_copy_xml_attributes(xml, child);
+                crm_xml_replace(child, PCMK__XA_ATTR_PATTERN, NULL);
+                crm_xml_add(child, PCMK__XA_ATTR_NAME, attr);
+            }
+        }
+
+        regfree(&r_patt);
+
+    } else if (attr == NULL) {
+        return pcmk_rc_bad_nvpair;
+    }
+
+    return pcmk_rc_ok;
+}
+
+static int
+handle_regexes(pcmk__request_t *request)
+{
+    xmlNode *xml = request->xml;
+    int rc = pcmk_rc_ok;
+
+    const char *attr = crm_element_value(xml, PCMK__XA_ATTR_NAME);
+    const char *value = crm_element_value(xml, PCMK__XA_ATTR_VALUE);
+    const char *regex = crm_element_value(xml, PCMK__XA_ATTR_PATTERN);
+
+    rc = expand_regexes(xml, attr, value, regex);
+
+    if (rc == EINVAL) {
+        pcmk__format_result(&request->result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
+                            "Bad regex '%s' for update from client %s", regex,
+                            pcmk__client_name(request->ipc_client));
+
+    } else if (rc == pcmk_rc_bad_nvpair) {
+        crm_err("Update request did not specify attribute or regular expression");
+        pcmk__format_result(&request->result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
+                            "Client %s update request did not specify attribute or regular expression",
+                            pcmk__client_name(request->ipc_client));
+    }
+
+    return rc;
+}
+
 static int
 handle_value_expansion(const char **value, xmlNode *xml, const char *op,
                        const char *attr)
@@ -373,41 +442,12 @@ attrd_client_update(pcmk__request_t *request)
     value = crm_element_value(xml, PCMK__XA_ATTR_VALUE);
     regex = crm_element_value(xml, PCMK__XA_ATTR_PATTERN);
 
-    /* If a regex was specified, broadcast a message for each match */
-    if ((attr == NULL) && regex) {
-        GHashTableIter aIter;
-        regex_t *r_patt = calloc(1, sizeof(regex_t));
-
-        crm_debug("Setting %s to %s", regex, value);
-        if (regcomp(r_patt, regex, REG_EXTENDED|REG_NOSUB)) {
-            pcmk__format_result(&request->result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
-                                "Bad regex '%s' for update from client %s", regex,
-                                pcmk__client_name(request->ipc_client));
-
-        } else {
-            g_hash_table_iter_init(&aIter, attributes);
-            while (g_hash_table_iter_next(&aIter, (gpointer *) & attr, NULL)) {
-                int status = regexec(r_patt, attr, 0, NULL, 0);
-
-                if (status == 0) {
-                    crm_trace("Matched %s with %s", attr, regex);
-                    crm_xml_add(xml, PCMK__XA_ATTR_NAME, attr);
-                    attrd_send_message(NULL, xml, false);
-                }
-            }
-
-            pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
-        }
-
-        regfree(r_patt);
-        free(r_patt);
+    if (handle_regexes(request) != pcmk_rc_ok) {
+        /* Error handling was already dealt with in handle_regexes, so just return. */
         return NULL;
-
-    } else if (attr == NULL) {
-        crm_err("Update request did not specify attribute or regular expression");
-        pcmk__format_result(&request->result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
-                            "Client %s update request did not specify attribute or regular expression",
-                            pcmk__client_name(request->ipc_client));
+    } else if (regex) {
+        pcmk__xe_foreach_child(xml, XML_ATTR_OP, send_child_update, request);
+        pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
         return NULL;
     }
 
