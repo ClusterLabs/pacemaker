@@ -855,36 +855,19 @@ clone_child_action(pe_action_t * action)
 {
     enum action_tasks result = no_action;
     pe_resource_t *child = (pe_resource_t *) action->rsc->children->data;
+    char *action_type = NULL;
+    const char *action_name = action->task;
 
     if (pcmk__strcase_any_of(action->task, "notify", "notified", NULL)) {
-
-        /* Find the action we're notifying about instead */
-
-        int stop = 0;
-        char *key = action->uuid;
-        int lpc = strlen(key);
-
-        for (; lpc > 0; lpc--) {
-            if (key[lpc] == '_' && stop == 0) {
-                stop = lpc;
-
-            } else if (key[lpc] == '_') {
-                char *task_mutable = NULL;
-
-                lpc++;
-                task_mutable = strdup(key + lpc);
-                task_mutable[stop - lpc] = 0;
-
-                crm_trace("Extracted action '%s' from '%s'", task_mutable, key);
-                result = get_complex_task(child, task_mutable);
-                free(task_mutable);
-                break;
-            }
-        }
-
-    } else {
-        result = get_complex_task(child, action->task);
+        // action->uuid is RSC_(confirmed-){pre,post}_notify_ACTION_INTERVAL
+        CRM_CHECK(parse_op_key(action->uuid, NULL, &action_type, NULL),
+                  return task2text(no_action));
+        action_name = strstr(action_type, "_notify_");
+        CRM_CHECK(action_name != NULL, return task2text(no_action));
+        action_name += strlen("_notify_");
     }
+    result = get_complex_task(child, action_name);
+    free(action_type);
     return task2text(result);
 }
 
