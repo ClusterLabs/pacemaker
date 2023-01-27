@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -159,6 +159,26 @@ value_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **
     return TRUE;
 }
 
+static gboolean
+wait_cb (const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+    if (pcmk__str_eq(optarg, "no", pcmk__str_none)) {
+        pcmk__clear_node_attr_flags(options.attr_options, pcmk__node_attr_sync_local | pcmk__node_attr_sync_cluster);
+        return TRUE;
+    } else if (pcmk__str_eq(optarg, PCMK__VALUE_LOCAL, pcmk__str_none)) {
+        pcmk__clear_node_attr_flags(options.attr_options, pcmk__node_attr_sync_local | pcmk__node_attr_sync_cluster);
+        pcmk__set_node_attr_flags(options.attr_options, pcmk__node_attr_sync_local);
+        return TRUE;
+    } else if (pcmk__str_eq(optarg, PCMK__VALUE_CLUSTER, pcmk__str_none)) {
+        pcmk__clear_node_attr_flags(options.attr_options, pcmk__node_attr_sync_local | pcmk__node_attr_sync_cluster);
+        pcmk__set_node_attr_flags(options.attr_options, pcmk__node_attr_sync_cluster);
+        return TRUE;
+    } else {
+        g_set_error(err, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                    "--wait= must be one of 'no', 'local', 'cluster'");
+        return FALSE;
+    }
+}
+
 static GOptionEntry selecting_entries[] = {
     { "id", 'i', 0, G_OPTION_ARG_STRING, &options.attr_id,
       "(Advanced) Operate on instance of specified attribute with this\n"
@@ -239,6 +259,17 @@ static GOptionEntry addl_entries[] = {
       INDENT "Valid values: crm_config, rsc_defaults, op_defaults, tickets",
       "SECTION"
     },
+
+    { "wait", 'W', 0, G_OPTION_ARG_CALLBACK, wait_cb,
+      "Wait for some event to occur before returning.  Values are 'no' (wait\n"
+      INDENT "only for the attribute daemon to acknowledge the request),\n"
+      INDENT "'local' (wait until the change has propagated to where a local\n"
+      INDENT "query will return the request value, or the value set by a\n"
+      INDENT "later request), or 'cluster' (wait until the change has propagated\n"
+      INDENT "to where a query anywhere on the cluster will return the requested\n"
+      INDENT "value, or the value set by a later request).  Default is 'no'.\n"
+      INDENT "(with -N, and one of -D or -u)",
+      "UNTIL" },
 
     { "utilization", 'z', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, utilization_cb,
       "Set an utilization attribute for the node.",
