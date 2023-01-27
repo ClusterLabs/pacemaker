@@ -289,11 +289,13 @@ expand_regexes(xmlNode *xml, const char *attr, const char *value, const char *re
 
         regfree(&r_patt);
 
-        /* If we never matched anything, return REG_NOMATCH.  This should not be
-         * treated as an error by handle_regexes.
+        /* Return a code if we never matched anything.  This should not be treated
+         * as an error.  It indicates there was a regex, and it was a valid regex,
+         * but simply did not match anything and the caller should not continue
+         * doing any regex-related processing.
          */
         if (!matched) {
-            return REG_NOMATCH;
+            return pcmk_rc_op_unsatisfied;
         }
 
     } else if (attr == NULL) {

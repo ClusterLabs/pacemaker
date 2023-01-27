@@ -44,6 +44,7 @@ struct {
     char command;
     gchar *attr_dampen;
     gchar *attr_name;
+    gchar *attr_pattern;
     gchar *attr_node;
     gchar *attr_set;
     char *attr_value;
@@ -132,6 +133,12 @@ static GOptionEntry required_entries[] = {
     { "name", 'n', 0, G_OPTION_ARG_STRING, &options.attr_name,
       "The attribute's name",
       "NAME" },
+
+    { "pattern", 'P', 0, G_OPTION_ARG_STRING, &options.attr_pattern,
+      "Operate on all attributes matching this pattern\n"
+      INDENT "(with -B, -D, -U, or -Y)",
+      "PATTERN"
+    },
 
     { NULL }
 };
@@ -246,6 +253,15 @@ static int send_attrd_update(char command, const char *attr_node, const char *at
                              const char *attr_value, const char *attr_set,
                              const char *attr_dampen, uint32_t attr_options);
 
+static bool
+pattern_used_correctly(void)
+{
+    /* --pattern can only be used with:
+     * -B (update-both), -D (delete), -U (update), or -Y (update-delay)
+     */
+    return options.command == 'B' || options.command == 'D' || options.command == 'U' || options.command == 'Y';
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -298,9 +314,22 @@ main(int argc, char **argv)
         goto done;
     }
 
+    if (options.attr_pattern) {
+        if (!pattern_used_correctly()) {
+            exit_code = CRM_EX_USAGE;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Error: pattern can only be used with delete or update");
+            goto done;
+        }
+
+        g_free(options.attr_name);
+        options.attr_name = options.attr_pattern;
+        options.attr_options |= pcmk__node_attr_pattern;
+    }
+
     if (options.command != 'R' && options.attr_name == NULL) {
         exit_code = CRM_EX_USAGE;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Command requires --name argument");
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Command requires --name or --pattern argument");
         goto done;
     } else if ((options.command == 'B'|| options.command == 'Y') && options.attr_dampen == NULL) {
         out->info(out, "Warning: '%c' command given without required --delay", options.command);
