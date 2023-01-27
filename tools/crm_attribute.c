@@ -89,6 +89,7 @@ struct {
     gchar *attr_default;
     gchar *attr_id;
     gchar *attr_name;
+    uint32_t attr_options;
     gchar *attr_pattern;
     char *attr_value;
     char *dest_node;
@@ -301,10 +302,6 @@ send_attrd_update(char command, const char *attr_node, const char *attr_name,
 {
     int rc = pcmk_rc_ok;
     uint32_t opts = attr_options;
-
-    if (options.attr_pattern) {
-        opts |= pcmk__node_attr_pattern;
-    }
 
     switch (command) {
         case 'D':
@@ -662,7 +659,6 @@ main(int argc, char **argv)
 {
     cib_t *the_cib = NULL;
     int is_remote_node = 0;
-    int attrd_opts = pcmk__node_attr_none;
 
     int rc = pcmk_rc_ok;
 
@@ -783,19 +779,20 @@ main(int argc, char **argv)
 
         g_free(options.attr_name);
         options.attr_name = options.attr_pattern;
+        options.attr_options |= pcmk__node_attr_pattern;
     }
 
     if (is_remote_node) {
-        attrd_opts = pcmk__node_attr_remote;
+        options.attr_options |= pcmk__node_attr_remote;
     }
 
     if (pcmk__str_eq(options.set_type, XML_TAG_UTILIZATION, pcmk__str_none)) {
-        attrd_opts |= pcmk__node_attr_utilization;
+        options.attr_options |= pcmk__node_attr_utilization;
     }
 
     if (try_ipc_update() &&
         (send_attrd_update(options.command, options.dest_uname, options.attr_name,
-                           options.attr_value, options.set_name, NULL, attrd_opts) == pcmk_rc_ok)) {
+                           options.attr_value, options.set_name, NULL, options.attr_options) == pcmk_rc_ok)) {
         crm_info("Update %s=%s sent via pacemaker-attrd",
                  options.attr_name, ((options.command == 'D')? "<none>" : options.attr_value));
 
