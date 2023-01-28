@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 2\n"
 "Report-Msgid-Bugs-To: developers@clusterlabs.org\n"
-"POT-Creation-Date: 2022-12-14 15:58+0800\n"
+"POT-Creation-Date: 2023-01-28 10:28+0800\n"
 "PO-Revision-Date: 2021-11-08 11:04+0800\n"
 "Last-Translator: Vivi <developers@clusterlabs.org>\n"
 "Language-Team: CHINESE <wangluwei@uniontech.org>\n"
@@ -808,8 +808,9 @@ msgid ""
 "The \"correct\" value will depend on the speed and load of your network and "
 "cluster nodes. If set to 0, the cluster will impose a dynamically calculated "
 "limit when any node has a high load."
-msgstr "\"正确\" 值将取决于速度和您的网络与集群节点的负载。"
-"如果设置为0，当任何节点具有高负载时，集群将施加一个动态计算的限制。"
+msgstr ""
+"\"正确\" 值将取决于速度和您的网络与集群节点的负载。如果设置为0，当任何节点具"
+"有高负载时，集群将施加一个动态计算的限制。"
 
 #: lib/pengine/common.c:181
 msgid ""
@@ -839,8 +840,23 @@ msgstr "***不推荐***是否从pacemaker-execd 守护进程中清除已停止�
 msgid ""
 "Values other than default are poorly tested and potentially dangerous. This "
 "option will be removed in a future release."
-msgstr "非默认值未经过充分的测试，有潜在的风险。"
-"该选项将在未来的版本中删除。"
+msgstr "非默认值未经过充分的测试，有潜在的风险。该选项将在未来的版本中删除。"
+
+#: lib/pengine/common.c:217
+msgid "The number of scheduler inputs resulting in errors to save"
+msgstr "保存导致错误的调度程序输入的数量""
+
+#: lib/pengine/common.c:218 lib/pengine/common.c:224 lib/pengine/common.c:230
+msgid "Zero to disable, -1 to store unlimited."
+msgstr "零表示禁用，-1表示存储不受限制。"
+
+#: lib/pengine/common.c:223
+msgid "The number of scheduler inputs resulting in warnings to save"
+msgstr "保存导致警告的调度程序输入的数量"
+
+#: lib/pengine/common.c:229
+msgid "The number of scheduler inputs without errors or warnings to save"
+msgstr "保存没有错误或警告的调度程序输入的数量"
 
 #: lib/pengine/common.c:240
 #, fuzzy
