@@ -120,7 +120,7 @@ unsigned int set_crm_log_level(unsigned int level);
 
 unsigned int get_crm_log_level(void);
 
-void do_crm_log_xml(uint8_t level, const char *text, const xmlNode *xml);
+void pcmk_log_xml_impl(uint8_t level, const char *text, const xmlNode *xml);
 
 /*
  * Throughout the macros below, note the leading, pre-comma, space in the
@@ -218,6 +218,36 @@ void do_crm_log_xml(uint8_t level, const char *text, const xmlNode *xml);
 		        (core_cs? core_cs->targets: FALSE), TRUE);              \
 	        failure_action;						                        \
 	    }								                                \
+    } while(0)
+
+/*!
+ * \brief Log XML line-by-line in a formatted fashion
+ *
+ * \param[in] level  Priority at which to log the messages
+ * \param[in] text   Prefix for each line
+ * \param[in] xml    XML to log
+ *
+ * \note This is a macro, and \p level may be evaluated more than once. This
+ *       does nothing when \p level is \p LOG_STDOUT.
+ */
+#  define do_crm_log_xml(level, text, xml) do {                         \
+        static struct qb_log_callsite *xml_cs = NULL;                   \
+                                                                        \
+        switch (level) {                                                \
+            case LOG_STDOUT:                                            \
+            case LOG_NEVER:                                             \
+                break;                                                  \
+            default:                                                    \
+                if (xml_cs == NULL) {                                   \
+                    xml_cs = qb_log_callsite_get(__func__, __FILE__,    \
+                                                 "xml-blob", level,     \
+                                                 __LINE__, 0);          \
+                }                                                       \
+                if (crm_is_callsite_active(xml_cs, level, 0)) {         \
+                    pcmk_log_xml_impl(level, text, xml);                \
+                }                                                       \
+                break;                                                  \
+        }                                                               \
     } while(0)
 
 /*!

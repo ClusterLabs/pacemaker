@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1107,36 +1107,21 @@ pcmk__cli_init_logging(const char *name, unsigned int verbosity)
  * \param[in] xml    XML to log
  *
  * \note This does nothing when \p level is \p LOG_STDOUT.
+ * \note Do not call this function directly. It should be called only from the
+ *       \p do_crm_log_xml() macro.
  */
 void
-do_crm_log_xml(uint8_t level, const char *text, const xmlNode *xml)
+pcmk_log_xml_impl(uint8_t level, const char *text, const xmlNode *xml)
 {
-    static struct qb_log_callsite *xml_cs = NULL;
-
-    switch (level) {
-        case LOG_STDOUT:
-        case LOG_NEVER:
-            break;
-        default:
-            if (xml_cs == NULL) {
-                xml_cs = qb_log_callsite_get(__func__, __FILE__, "xml-blob",
-                                             level, __LINE__, 0);
-            }
-
-            if (crm_is_callsite_active(xml_cs, level, 0)) {
-                if (xml == NULL) {
-                    do_crm_log(level, "%s%sNo data to dump as XML",
-                               pcmk__s(text, ""),
-                               pcmk__str_empty(text)? "" : " ");
-                } else {
-                    pcmk__xml_log(level, text, xml, 1,
-                                  pcmk__xml_fmt_pretty
-                                  |pcmk__xml_fmt_open
-                                  |pcmk__xml_fmt_children
-                                  |pcmk__xml_fmt_close);
-                }
-            }
-            break;
+    if (xml == NULL) {
+        do_crm_log(level, "%s%sNo data to dump as XML",
+                   pcmk__s(text, ""), pcmk__str_empty(text)? "" : " ");
+    } else {
+        pcmk__xml_log(level, text, xml, 1,
+                      pcmk__xml_fmt_pretty
+                      |pcmk__xml_fmt_open
+                      |pcmk__xml_fmt_children
+                      |pcmk__xml_fmt_close);
     }
 }
 
