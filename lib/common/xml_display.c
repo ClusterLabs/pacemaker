@@ -257,34 +257,28 @@ pcmk__xml_show(pcmk__output_t *out, int log_level, const char *prefix,
 
 /*!
  * \internal
- * \brief Log XML portions that have been marked as changed
+ * \brief Output XML portions that have been marked as changed
  *
- * \param[in] log_level  Priority at which to log the messages
- * \param[in] data       XML node to log
- * \param[in] depth      Current indentation level
- * \param[in] options    Group of \p pcmk__xml_fmt_options flags
+ * \param[in,out] out      Output object
+ * \param[in]     data     XML node to output
+ * \param[in]     depth    Current indentation level
+ * \param[in]     options  Group of \p pcmk__xml_fmt_options flags
  *
- * \note This is a recursive helper for \p pcmk__xml_log_changes(), logging
+ * \note This is a recursive helper for \p pcmk__xml_log_changes(), showing
  *       changes to \p data and its children.
  */
 static void
-log_xml_changes_recursive(int log_level, const xmlNode *data, int depth,
-                          uint32_t options)
+show_xml_changes_recursive(pcmk__output_t *out, const xmlNode *data, int depth,
+                           uint32_t options)
 {
     /* @COMPAT: When log_data_element() is removed, we can remove the options
      * argument here and instead hard-code pcmk__xml_log_pretty.
      */
-    xml_node_private_t *nodepriv = NULL;
-
-    if ((data == NULL) || (log_level == LOG_NEVER)) {
-        return;
-    }
-
-    nodepriv = data->_private;
+    xml_node_private_t *nodepriv = (xml_node_private_t *) data->_private;
 
     if (pcmk_all_flags_set(nodepriv->flags, pcmk__xf_dirty|pcmk__xf_created)) {
         // Newly created
-        pcmk__xml_show(NULL, log_level, PCMK__XML_PREFIX_CREATED, data, depth,
+        pcmk__xml_show(out, 0, PCMK__XML_PREFIX_CREATED, data, depth,
                        options
                        |pcmk__xml_fmt_open
                        |pcmk__xml_fmt_children
@@ -303,8 +297,7 @@ log_xml_changes_recursive(int log_level, const xmlNode *data, int depth,
         }
 
         // Log opening tag
-        pcmk__xml_show(NULL, log_level, prefix, data, depth,
-                       options|pcmk__xml_fmt_open);
+        pcmk__xml_show(out, 0, prefix, data, depth, options|pcmk__xml_fmt_open);
 
         // Log changes to attributes
         for (const xmlAttr *attr = pcmk__xe_first_attr(data); attr != NULL;
@@ -316,8 +309,8 @@ log_xml_changes_recursive(int log_level, const xmlNode *data, int depth,
             if (pcmk_is_set(nodepriv->flags, pcmk__xf_deleted)) {
                 const char *value = crm_element_value(data, name);
 
-                do_crm_log(log_level, "%s %*s @%s=%s",
-                           PCMK__XML_PREFIX_DELETED, spaces, "", name, value);
+                out->info(out, "%s %*s @%s=%s",
+                          PCMK__XML_PREFIX_DELETED, spaces, "", name, value);
 
             } else if (pcmk_is_set(nodepriv->flags, pcmk__xf_dirty)) {
                 const char *value = crm_element_value(data, name);
@@ -334,26 +327,26 @@ log_xml_changes_recursive(int log_level, const xmlNode *data, int depth,
                 } else {
                     prefix = PCMK__XML_PREFIX_MODIFIED;
                 }
-                do_crm_log(log_level, "%s %*s @%s=%s",
-                           prefix, spaces, "", name, value);
+                out->info(out, "%s %*s @%s=%s",
+                          prefix, spaces, "", name, value);
             }
         }
 
         // Log changes to children
         for (const xmlNode *child = pcmk__xml_first_child(data); child != NULL;
              child = pcmk__xml_next(child)) {
-            log_xml_changes_recursive(log_level, child, depth + 1, options);
+            show_xml_changes_recursive(out, child, depth + 1, options);
         }
 
         // Log closing tag
-        pcmk__xml_show(NULL, log_level, PCMK__XML_PREFIX_MODIFIED, data, depth,
+        pcmk__xml_show(out, 0, PCMK__XML_PREFIX_MODIFIED, data, depth,
                        options|pcmk__xml_fmt_close);
 
     } else {
         // This node hasn't changed, but check its children
         for (const xmlNode *child = pcmk__xml_first_child(data); child != NULL;
              child = pcmk__xml_next(child)) {
-            log_xml_changes_recursive(log_level, child, depth + 1, options);
+            show_xml_changes_recursive(out, child, depth + 1, options);
         }
     }
 }
@@ -369,10 +362,7 @@ void
 pcmk__xml_log_changes(uint8_t log_level, const xmlNode *xml)
 {
     xml_doc_private_t *docpriv = NULL;
-
-    if (log_level == LOG_NEVER) {
-        return;
-    }
+    pcmk__output_t *out = NULL;
 
     CRM_ASSERT(xml != NULL);
     CRM_ASSERT(xml->doc != NULL);
@@ -380,6 +370,18 @@ pcmk__xml_log_changes(uint8_t log_level, const xmlNode *xml)
     docpriv = xml->doc->_private;
     if (!pcmk_is_set(docpriv->flags, pcmk__xf_dirty)) {
         return;
+    }
+
+    switch (log_level) {
+        case LOG_NEVER:
+            return;
+        case LOG_STDOUT:
+            CRM_CHECK(pcmk__text_output_new(&out, NULL) == pcmk_rc_ok, return);
+            break;
+        default:
+            CRM_CHECK(pcmk__log_output_new(&out) == pcmk_rc_ok, return);
+            pcmk__output_set_log_level(out, log_level);
+            break;
     }
 
     for (const GList *iter = docpriv->deleted_objs; iter != NULL;
@@ -396,7 +398,9 @@ pcmk__xml_log_changes(uint8_t log_level, const xmlNode *xml)
         }
     }
 
-    log_xml_changes_recursive(log_level, xml, 0, pcmk__xml_fmt_pretty);
+    show_xml_changes_recursive(out, xml, 0, pcmk__xml_fmt_pretty);
+    out->finish(out, CRM_EX_OK, true, NULL);
+    pcmk__output_free(out);
 }
 
 // Deprecated functions kept only for backward API compatibility
@@ -411,15 +415,24 @@ log_data_element(int log_level, const char *file, const char *function,
                  int legacy_options)
 {
     uint32_t options = 0;
-
-    if (log_level == LOG_NEVER) {
-        return;
-    }
+    pcmk__output_t *out = NULL;
 
     if (data == NULL) {
         do_crm_log(log_level, "%s%sNo data to dump as XML",
                    pcmk__s(prefix, ""), pcmk__str_empty(prefix)? "" : " ");
         return;
+    }
+
+    switch (log_level) {
+        case LOG_NEVER:
+            return;
+        case LOG_STDOUT:
+            CRM_CHECK(pcmk__text_output_new(&out, NULL) == pcmk_rc_ok, return);
+            break;
+        default:
+            CRM_CHECK(pcmk__log_output_new(&out) == pcmk_rc_ok, return);
+            pcmk__output_set_log_level(out, log_level);
+            break;
     }
 
     /* Map xml_log_options to pcmk__xml_fmt_options so that we can go ahead and
@@ -459,10 +472,11 @@ log_data_element(int log_level, const char *file, const char *function,
         options |= pcmk__xml_fmt_diff_short;
     }
 
+    // Log element based on options
     if (pcmk_is_set(legacy_options, xml_log_option_dirty_add)) {
         CRM_CHECK(depth >= 0, depth = 0);
-        log_xml_changes_recursive(log_level, data, depth, options);
-        return;
+        show_xml_changes_recursive(out, data, depth, options);
+        goto done;
     }
 
     if (pcmk_is_set(options, pcmk__xml_fmt_pretty)
@@ -486,7 +500,7 @@ log_data_element(int log_level, const char *file, const char *function,
                                 pcmk__xml_fmt_diff_plus
                                 |pcmk__xml_fmt_diff_minus)) {
             // Nothing will ever be logged
-            return;
+            goto done;
         }
 
         // Keep looking for the actual change
@@ -497,12 +511,16 @@ log_data_element(int log_level, const char *file, const char *function,
         }
 
     } else {
-        pcmk__xml_show(NULL, log_level, prefix, data, depth,
+        pcmk__xml_show(out, 0, prefix, data, depth,
                        options
                        |pcmk__xml_fmt_open
                        |pcmk__xml_fmt_children
                        |pcmk__xml_fmt_close);
     }
+
+done:
+    out->finish(out, CRM_EX_OK, true, NULL);
+    pcmk__output_free(out);
 }
 
 void
