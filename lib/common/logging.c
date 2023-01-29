@@ -1124,7 +1124,7 @@ pcmk_log_xml_impl(uint8_t level, const char *text, const xmlNode *xml)
         }
 
         pcmk__output_set_log_level(logger_out, level);
-        pcmk__xml_show(logger_out, 0, text, xml, 1,
+        pcmk__xml_show(logger_out, text, xml, 1,
                        pcmk__xml_fmt_pretty
                        |pcmk__xml_fmt_open
                        |pcmk__xml_fmt_children

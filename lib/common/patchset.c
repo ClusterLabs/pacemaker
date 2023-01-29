@@ -528,7 +528,7 @@ xml_show_patchset_v1_recursive(pcmk__output_t *out, const char *prefix,
         }
 
     } else {
-        pcmk__xml_show(out, 0, prefix, data, depth,
+        pcmk__xml_show(out, prefix, data, depth,
                        options
                        |pcmk__xml_fmt_open
                        |pcmk__xml_fmt_children
@@ -622,7 +622,7 @@ xml_show_patchset_v2(pcmk__output_t *out, const xmlNode *patchset)
             char *prefix = crm_strdup_printf(PCMK__XML_PREFIX_CREATED " %s: ",
                                              xpath);
 
-            pcmk__xml_show(out, 0, prefix, change->children, 0,
+            pcmk__xml_show(out, prefix, change->children, 0,
                            pcmk__xml_fmt_pretty|pcmk__xml_fmt_open);
 
             // Overwrite all except the first two characters with spaces
@@ -630,7 +630,7 @@ xml_show_patchset_v2(pcmk__output_t *out, const xmlNode *patchset)
                 *ch = ' ';
             }
 
-            pcmk__xml_show(out, 0, prefix, change->children, 0,
+            pcmk__xml_show(out, prefix, change->children, 0,
                            pcmk__xml_fmt_pretty
                            |pcmk__xml_fmt_children
                            |pcmk__xml_fmt_close);
