@@ -107,15 +107,15 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
      * contain underbars. Here, list action names and name prefixes that can.
      */
     const char *actions_with_underbars[] = {
-        "migrate_from",
-        "migrate_to",
+        CRMD_ACTION_MIGRATED,
+        CRMD_ACTION_MIGRATE,
         NULL
     };
     const char *action_prefixes_with_underbars[] = {
-        "pre_notify",
-        "post_notify",
-        "confirmed-pre_notify",
-        "confirmed-post_notify",
+        "pre_" CRMD_ACTION_NOTIFY,
+        "post_" CRMD_ACTION_NOTIFY,
+        "confirmed-pre_" CRMD_ACTION_NOTIFY,
+        "confirmed-post_" CRMD_ACTION_NOTIFY,
         NULL,
     };
 
