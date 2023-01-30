@@ -523,7 +523,7 @@ pcmk__group_action_flags(pe_action_t *action, const pe_node_t *node)
         pe_resource_t *member = (pe_resource_t *) iter->data;
 
         // Check whether member has the same action
-        enum action_tasks task = get_complex_task(member, action->task, TRUE);
+        enum action_tasks task = get_complex_task(member, action->task);
         const char *task_s = task2text(task);
         pe_action_t *member_action = find_first_action(member->actions, NULL,
                                                        task_s, node);

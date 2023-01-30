@@ -1262,21 +1262,19 @@ pe_get_configured_timeout(pe_resource_t *rsc, const char *action, pe_working_set
 }
 
 enum action_tasks
-get_complex_task(pe_resource_t * rsc, const char *name, gboolean allow_non_atomic)
+get_complex_task(const pe_resource_t *rsc, const char *name)
 {
     enum action_tasks task = text2task(name);
 
-    if (rsc == NULL) {
-        return task;
-
-    } else if (allow_non_atomic == FALSE || rsc->variant == pe_native) {
+    if ((rsc != NULL) && (rsc->variant == pe_native)) {
         switch (task) {
             case stopped_rsc:
             case started_rsc:
             case action_demoted:
             case action_promoted:
-                crm_trace("Folding %s back into its atomic counterpart for %s", name, rsc->id);
-                return task - 1;
+                crm_trace("Folding %s back into its atomic counterpart for %s",
+                          name, rsc->id);
+                --task;
             default:
                 break;
         }
