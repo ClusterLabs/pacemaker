@@ -1966,8 +1966,7 @@ process_orphan_resource(const xmlNode *rsc_entry, const pe_node_t *node,
 
 static void
 process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
-                  enum action_fail_response on_fail,
-                  xmlNode * migrate_op, pe_working_set_t * data_set)
+                  enum action_fail_response on_fail)
 {
     pe_node_t *tmpnode = NULL;
     char *reason = NULL;
@@ -2019,7 +2018,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
             should_fence = TRUE;
 
-        } else if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
+        } else if (pcmk_is_set(rsc->cluster->flags, pe_flag_stonith_enabled)) {
             if (pe__is_remote_node(node) && node->details->remote_rsc
                 && !pcmk_is_set(node->details->remote_rsc->flags, pe_rsc_failed)) {
 
@@ -2042,7 +2041,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             if (reason == NULL) {
                reason = crm_strdup_printf("%s is thought to be active there", rsc->id);
             }
-            pe_fence_node(data_set, node, reason, FALSE);
+            pe_fence_node(rsc->cluster, node, reason, FALSE);
         }
         free(reason);
     }
@@ -2072,7 +2071,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
              * but also mark the node as unclean
              */
             reason = crm_strdup_printf("%s failed there", rsc->id);
-            pe_fence_node(data_set, node, reason, FALSE);
+            pe_fence_node(rsc->cluster, node, reason, FALSE);
             free(reason);
             break;
 
@@ -2093,7 +2092,8 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             /* make sure it comes up somewhere else
              * or not at all
              */
-            resource_location(rsc, node, -INFINITY, "__action_migration_auto__", data_set);
+            resource_location(rsc, node, -INFINITY, "__action_migration_auto__",
+                              rsc->cluster);
             break;
 
         case action_fail_stop:
@@ -2115,8 +2115,8 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
                  * container is running yet, so remember it and add a stop
                  * action for it later.
                  */
-                data_set->stop_needed = g_list_prepend(data_set->stop_needed,
-                                                       rsc->container);
+                rsc->cluster->stop_needed =
+                    g_list_prepend(rsc->cluster->stop_needed, rsc->container);
             } else if (rsc->container) {
                 stop_action(rsc->container, node, FALSE);
             } else if (rsc->role != RSC_ROLE_STOPPED && rsc->role != RSC_ROLE_UNKNOWN) {
@@ -2126,10 +2126,10 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
 
         case action_fail_reset_remote:
             pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
-            if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
+            if (pcmk_is_set(rsc->cluster->flags, pe_flag_stonith_enabled)) {
                 tmpnode = NULL;
                 if (rsc->is_remote_node) {
-                    tmpnode = pe_find_node(data_set->nodes, rsc->id);
+                    tmpnode = pe_find_node(rsc->cluster->nodes, rsc->id);
                 }
                 if (tmpnode &&
                     pe__is_remote_node(tmpnode) &&
@@ -2138,7 +2138,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
                     /* The remote connection resource failed in a way that
                      * should result in fencing the remote node.
                      */
-                    pe_fence_node(data_set, tmpnode,
+                    pe_fence_node(rsc->cluster, tmpnode,
                                   "remote connection is unrecoverable", FALSE);
                 }
             }
@@ -2161,7 +2161,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
      * result in a fencing operation regardless if we're going to attempt to 
      * reconnect to the remote-node in this transition or not. */
     if (pcmk_is_set(rsc->flags, pe_rsc_failed) && rsc->is_remote_node) {
-        tmpnode = pe_find_node(data_set->nodes, rsc->id);
+        tmpnode = pe_find_node(rsc->cluster->nodes, rsc->id);
         if (tmpnode && tmpnode->details->unclean) {
             tmpnode->details->unseen = FALSE;
         }
@@ -2180,7 +2180,8 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             }
         }
 
-        native_add_running(rsc, node, data_set, (save_on_fail != action_fail_ignore));
+        native_add_running(rsc, node, rsc->cluster,
+                           (save_on_fail != action_fail_ignore));
         switch (on_fail) {
             case action_fail_ignore:
                 break;
@@ -2383,14 +2384,12 @@ unpack_lrm_resource(pe_node_t *node, const xmlNode *lrm_resource,
     int start_index = -1;
     enum rsc_role_e req_role = RSC_ROLE_UNKNOWN;
 
-    const char *task = NULL;
     const char *rsc_id = ID(lrm_resource);
 
     pe_resource_t *rsc = NULL;
     GList *op_list = NULL;
     GList *sorted_op_list = NULL;
 
-    xmlNode *migrate_op = NULL;
     xmlNode *rsc_op = NULL;
     xmlNode *last_failure = NULL;
 
@@ -2444,11 +2443,6 @@ unpack_lrm_resource(pe_node_t *node, const xmlNode *lrm_resource,
     for (gIter = sorted_op_list; gIter != NULL; gIter = gIter->next) {
         xmlNode *rsc_op = (xmlNode *) gIter->data;
 
-        task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
-        if (pcmk__str_eq(task, CRMD_ACTION_MIGRATED, pcmk__str_casei)) {
-            migrate_op = rsc_op;
-        }
-
         unpack_rsc_op(rsc, node, rsc_op, &last_failure, &on_fail, data_set);
     }
 
@@ -2459,7 +2453,7 @@ unpack_lrm_resource(pe_node_t *node, const xmlNode *lrm_resource,
     /* no need to free the contents */
     g_list_free(sorted_op_list);
 
-    process_rsc_state(rsc, node, on_fail, migrate_op, data_set);
+    process_rsc_state(rsc, node, on_fail);
 
     if (get_target_role(rsc, &req_role)) {
         if (rsc->next_role == RSC_ROLE_UNKNOWN || req_role < rsc->next_role) {
