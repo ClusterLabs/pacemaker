@@ -217,7 +217,7 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
     }
 
     /* If this attribute will be written to the CIB ... */
-    if (!a->is_private) {
+    if (!stand_alone && !a->is_private) {
 
         /* Defer the write if now's not a good time */
         CRM_CHECK(the_cib != NULL, return);
@@ -277,7 +277,7 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
         }
 
         /* If this is a private attribute, no update needs to be sent */
-        if (a->is_private) {
+        if (stand_alone || a->is_private) {
             private_updates++;
             continue;
         }
