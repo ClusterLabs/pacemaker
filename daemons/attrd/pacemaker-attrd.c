@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2022 the Pacemaker project contributors
+ * Copyright 2013-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -35,6 +35,15 @@
 #include "pacemaker-attrd.h"
 
 #define SUMMARY "daemon for managing Pacemaker node attributes"
+
+gboolean stand_alone = FALSE;
+
+static GOptionEntry entries[] = {
+    { "stand-alone", 's', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &stand_alone,
+      "(Advanced use only) Run in stand-alone mode", NULL },
+
+    { NULL }
+};
 
 static pcmk__output_t *out = NULL;
 
@@ -209,7 +218,11 @@ ipc_already_running(void)
 
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
-    return pcmk__build_arg_context(args, "text (default), xml", group, NULL);
+    GOptionContext *context = NULL;
+
+    context = pcmk__build_arg_context(args, "text (default), xml", group, NULL);
+    pcmk__add_main_args(context, entries);
+    return context;
 }
 
 int
@@ -252,7 +265,8 @@ main(int argc, char **argv)
     initialized = true;
 
     crm_log_init(T_ATTRD, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
-    crm_notice("Starting Pacemaker node attribute manager");
+    crm_notice("Starting Pacemaker node attribute manager%s",
+               stand_alone ? " in standalone mode" : "");
 
     if (ipc_already_running()) {
         crm_err("pacemaker-attrd is already active, aborting startup");
