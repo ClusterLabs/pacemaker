@@ -262,16 +262,20 @@ main(int argc, char **argv)
         goto done;
     }
 
-    initialized = true;
-
     crm_log_init(T_ATTRD, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     crm_notice("Starting Pacemaker node attribute manager%s",
                stand_alone ? " in standalone mode" : "");
 
     if (ipc_already_running()) {
-        crm_err("pacemaker-attrd is already active, aborting startup");
-        crm_exit(CRM_EX_OK);
+        const char *msg = "pacemaker-attrd is already active, aborting startup";
+
+        attrd_exit_status = CRM_EX_OK;
+        g_set_error(&error, PCMK__EXITC_ERROR, attrd_exit_status, "%s", msg);
+        crm_err(msg);
+        goto done;
     }
+
+    initialized = true;
 
     attributes = pcmk__strkey_table(NULL, attrd_free_attribute);
 
@@ -281,12 +285,16 @@ main(int argc, char **argv)
      */
     if (attrd_cib_connect(30) != pcmk_ok) {
         attrd_exit_status = CRM_EX_FATAL;
+        g_set_error(&error, PCMK__EXITC_ERROR, attrd_exit_status,
+                    "Could not connect to the CIB");
         goto done;
     }
     crm_info("CIB connection active");
 
     if (attrd_cluster_connect() != pcmk_ok) {
         attrd_exit_status = CRM_EX_FATAL;
+        g_set_error(&error, PCMK__EXITC_ERROR, attrd_exit_status,
+                    "Could not connect to the cluster");
         goto done;
     }
     crm_info("Cluster connection active");
