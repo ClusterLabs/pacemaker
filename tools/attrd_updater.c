@@ -315,6 +315,13 @@ main(int argc, char **argv)
     }
 
     if (options.attr_pattern) {
+        if (options.attr_name) {
+            exit_code = CRM_EX_USAGE;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Error: --name and --pattern cannot be used at the same time");
+            goto done;
+        }
+
         if (!pattern_used_correctly()) {
             exit_code = CRM_EX_USAGE;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
