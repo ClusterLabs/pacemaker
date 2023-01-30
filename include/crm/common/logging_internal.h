@@ -14,6 +14,8 @@ extern "C" {
 #ifndef PCMK__LOGGING_INTERNAL_H
 #  define PCMK__LOGGING_INTERNAL_H
 
+#  include <crm/common/logging.h>
+
 /*!
  * \internal
  * \brief Log a configuration error
