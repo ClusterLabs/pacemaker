@@ -607,7 +607,19 @@ main(int argc, char **argv)
                 diff = xml_create_patchset(0, old_config, new_config, NULL,
                                            false);
 
-                pcmk__xml_log_changes(LOG_INFO, new_config);
+                {
+                    pcmk__output_t *logger_out = NULL;
+                    int rc = pcmk__log_output_new(&logger_out);
+
+                    CRM_LOG_ASSERT(rc == pcmk_rc_ok);
+                    if (rc == pcmk_rc_ok) {
+                        pcmk__output_set_log_level(logger_out, LOG_INFO);
+                        pcmk__xml_show_changes(logger_out, new_config);
+                        logger_out->finish(logger_out, CRM_EX_OK, true, NULL);
+                        pcmk__output_free(logger_out);
+                    }
+                }
+
                 xml_accept_changes(new_config);
                 if (diff != NULL) {
                     /* @COMPAT: Exit with CRM_EX_DIGEST? This is not really an
