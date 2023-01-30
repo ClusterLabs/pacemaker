@@ -283,13 +283,15 @@ main(int argc, char **argv)
      * This allows us to assume the CIB is connected whenever we process a
      * cluster or IPC message (which also avoids start-up race conditions).
      */
-    if (attrd_cib_connect(30) != pcmk_ok) {
-        attrd_exit_status = CRM_EX_FATAL;
-        g_set_error(&error, PCMK__EXITC_ERROR, attrd_exit_status,
-                    "Could not connect to the CIB");
-        goto done;
+    if (!stand_alone) {
+        if (attrd_cib_connect(30) != pcmk_ok) {
+            attrd_exit_status = CRM_EX_FATAL;
+            g_set_error(&error, PCMK__EXITC_ERROR, attrd_exit_status,
+                        "Could not connect to the CIB");
+            goto done;
+        }
+        crm_info("CIB connection active");
     }
-    crm_info("CIB connection active");
 
     if (attrd_cluster_connect() != pcmk_ok) {
         attrd_exit_status = CRM_EX_FATAL;
@@ -301,7 +303,10 @@ main(int argc, char **argv)
 
     // Initialization that requires the cluster to be connected
     attrd_election_init();
-    attrd_cib_init();
+
+    if (!stand_alone) {
+        attrd_cib_init();
+    }
 
     /* Set a private attribute for ourselves with the protocol version we
      * support. This lets all nodes determine the minimum supported version
@@ -321,9 +326,12 @@ main(int argc, char **argv)
         attrd_election_fini();
         attrd_ipc_fini();
         attrd_lrmd_disconnect();
-        attrd_cib_disconnect();
-        attrd_free_waitlist();
 
+        if (!stand_alone) {
+            attrd_cib_disconnect();
+        }
+
+        attrd_free_waitlist();
         pcmk_cluster_free(attrd_cluster);
         g_hash_table_destroy(attributes);
     }
