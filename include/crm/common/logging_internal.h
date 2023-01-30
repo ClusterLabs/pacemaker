@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2021 the Pacemaker project contributors
+ * Copyright 2015-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -40,29 +40,31 @@ extern "C" {
 
 /*!
  * \internal
- * \brief Execute code depending on whether message would be logged
+ * \brief Execute code depending on whether trace logging is enabled
  *
- * This is similar to do_crm_log_unlikely() except instead of logging, it either
- * continues past this statement or executes else_action depending on whether a
- * message of the given severity would be logged or not. This allows whole
- * blocks of code to be skipped if tracing or debugging is turned off.
+ * This is similar to \p do_crm_log_unlikely() except instead of logging, it
+ * selects one of two code blocks to execute.
  *
- * \param[in] level        Severity at which to continue past this statement
- * \param[in] else_action  Code block to execute if severity would not be logged
+ * \param[in] if_action    Code block to execute if trace logging is enabled
+ * \param[in] else_action  Code block to execute if trace logging is not enabled
  *
- * \note else_action must not contain a break or continue statement
+ * \note Neither \p if_action nor \p else_action can contain a \p break or
+ *       \p continue statement.
  */
-#  define pcmk__log_else(level, else_action) do {                           \
-        static struct qb_log_callsite *trace_cs = NULL;                     \
-                                                                            \
-        if (trace_cs == NULL) {                                             \
-            trace_cs = qb_log_callsite_get(__func__, __FILE__, "log_else",  \
-                                           level, __LINE__, 0);             \
-        }                                                                   \
-        if (!crm_is_callsite_active(trace_cs, level, 0)) {                  \
-            else_action;                                                    \
-        }                                                                   \
-    } while(0)
+#  define pcmk__if_tracing(if_action, else_action) do {                 \
+        static struct qb_log_callsite *trace_cs = NULL;                 \
+                                                                        \
+        if (trace_cs == NULL) {                                         \
+            trace_cs = qb_log_callsite_get(__func__, __FILE__,          \
+                                           "if_tracing", LOG_TRACE,     \
+                                           __LINE__, crm_trace_nonlog); \
+        }                                                               \
+        if (crm_is_callsite_active(trace_cs, LOG_TRACE, 0)) {           \
+            if_action;                                                  \
+        } else {                                                        \
+            else_action;                                                \
+        }                                                               \
+    } while (0)
 
 /*!
  * \internal

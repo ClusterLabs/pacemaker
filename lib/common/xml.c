@@ -767,7 +767,7 @@ free_xml_with_position(xmlNode * child, int position)
         } else if (pcmk__check_acl(child, NULL, pcmk__xf_acl_write) == FALSE) {
             GString *xpath = NULL;
 
-            pcmk__log_else(LOG_TRACE, return);
+            pcmk__if_tracing({}, return);
             xpath = pcmk__element_xpath(child);
             qb_log_from_external_source(__func__, __FILE__,
                                         "Cannot remove %s %x", LOG_TRACE,

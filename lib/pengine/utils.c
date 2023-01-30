@@ -246,7 +246,7 @@ pe__log_node_weights(const char *file, const char *function, int line,
     pe_node_t *node = NULL;
 
     // Don't waste time if we're not tracing at this point
-    pcmk__log_else(LOG_TRACE, return);
+    pcmk__if_tracing({}, return);
 
     g_hash_table_iter_init(&iter, nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
