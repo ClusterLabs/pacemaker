@@ -1480,32 +1480,22 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
     }
 
     if ((rc == pcmk_ok) && (digest != NULL)) {
-        static struct qb_log_callsite *digest_cs = NULL;
-
         char *new_digest = NULL;
         char *version = crm_element_value_copy(xml, XML_ATTR_CRM_VERSION);
-
-        if (digest_cs == NULL) {
-            digest_cs = qb_log_callsite_get(__func__, __FILE__, "diff-digest",
-                                            LOG_TRACE, __LINE__,
-                                            crm_trace_nonlog);
-        }
 
         new_digest = calculate_xml_versioned_digest(xml, FALSE, TRUE, version);
         if (!pcmk__str_eq(new_digest, digest, pcmk__str_casei)) {
             crm_info("v%d digest mis-match: expected %s, calculated %s",
                      format, digest, new_digest);
             rc = -pcmk_err_diff_failed;
-
-            if ((digest_cs != NULL) && digest_cs->targets) {
-                save_xml_to_file(old,      "PatchDigest:input",  NULL);
-                save_xml_to_file(xml,      "PatchDigest:result", NULL);
-                save_xml_to_file(patchset, "PatchDigest:diff",   NULL);
-
-            } else {
-                crm_trace("%p %.6x", digest_cs,
-                          ((digest_cs != NULL)? digest_cs->targets : 0));
-            }
+            pcmk__if_tracing(
+                {
+                    save_xml_to_file(old, "PatchDigest:input", NULL);
+                    save_xml_to_file(xml, "PatchDigest:result", NULL);
+                    save_xml_to_file(patchset, "PatchDigest:diff", NULL);
+                },
+                {}
+            );
 
         } else {
             crm_trace("v%d digest matched: expected %s, calculated %s",

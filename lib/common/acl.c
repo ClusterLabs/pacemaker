@@ -242,27 +242,21 @@ pcmk__apply_acl(xmlNode *xml)
         max = numXpathResults(xpathObj);
 
         for (lpc = 0; lpc < max; lpc++) {
-            static struct qb_log_callsite *trace_cs = NULL;
             xmlNode *match = getXpathResult(xpathObj, lpc);
 
             nodepriv = match->_private;
             pcmk__set_xml_flags(nodepriv, acl->mode);
 
-            /* Build a GString only if tracing is enabled.
-             * Can't use pcmk__log_else() because the else_action would be
-             * continue.
-             */
-            if (trace_cs == NULL) {
-                trace_cs = qb_log_callsite_get(__func__, __FILE__, "apply_acl",
-                                               LOG_TRACE, __LINE__, 0);
-            }
-            if (crm_is_callsite_active(trace_cs, LOG_TRACE, 0)) {
-                GString *path = pcmk__element_xpath(match);
-                crm_trace("Applying %s ACL to %s matched by %s",
-                          acl_to_text(acl->mode), (const char *) path->str,
-                          acl->xpath);
-                g_string_free(path, TRUE);
-            }
+            // Build a GString only if tracing is enabled
+            pcmk__if_tracing(
+                {
+                    GString *path = pcmk__element_xpath(match);
+                    crm_trace("Applying %s ACL to %s matched by %s",
+                              acl_to_text(acl->mode), path->str, acl->xpath);
+                    g_string_free(path, TRUE);
+                },
+                {}
+            );
         }
         crm_trace("Applied %s ACL %s (%d match%s)",
                   acl_to_text(acl->mode), acl->xpath, max,
