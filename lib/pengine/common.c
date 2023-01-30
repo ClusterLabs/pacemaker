@@ -214,20 +214,20 @@ static pcmk__cluster_option_t pe_opts[] = {
     {
         "pe-error-series-max", NULL, "integer", NULL,
         "-1", pcmk__valid_number,
-        "The number of scheduler inputs resulting in errors to save",
-        "Zero to disable, -1 to store unlimited."
+        N_("The number of scheduler inputs resulting in errors to save"),
+        N_("Zero to disable, -1 to store unlimited.")
     },
     {
         "pe-warn-series-max",  NULL, "integer", NULL,
         "5000", pcmk__valid_number,
-        "The number of scheduler inputs resulting in warnings to save",
-        "Zero to disable, -1 to store unlimited."
+        N_("The number of scheduler inputs resulting in warnings to save"),
+        N_("Zero to disable, -1 to store unlimited.")
     },
     {
         "pe-input-series-max", NULL, "integer", NULL,
         "4000", pcmk__valid_number,
-        "The number of scheduler inputs without errors or warnings to save",
-        "Zero to disable, -1 to store unlimited."
+        N_("The number of scheduler inputs without errors or warnings to save"),
+        N_("Zero to disable, -1 to store unlimited.")
     },
 
     /* Node health */
