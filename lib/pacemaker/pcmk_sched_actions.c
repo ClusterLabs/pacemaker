@@ -813,9 +813,9 @@ handle_restart_ordering(pe_action_t *first, pe_action_t *then, uint32_t filter)
  * \internal
  * \brief Update two actions according to an ordering between them
  *
- * Given information about an ordering of two actions, update the actions'
- * flags (and runnable_before members if appropriate) as appropriate for the
- * ordering. In some cases, the ordering could be disabled as well.
+ * Given information about an ordering of two actions, update the actions' flags
+ * (and runnable_before members if appropriate) as appropriate for the ordering.
+ * Effects may cascade to other orderings involving the actions as well.
  *
  * \param[in,out] first     'First' action in an ordering
  * \param[in,out] then      'Then' action in an ordering

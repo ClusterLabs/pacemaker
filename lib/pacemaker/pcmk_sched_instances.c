@@ -886,16 +886,17 @@ orig_action_name(const pe_action_t *action)
 }
 
 /*!
+ * \internal
  * \brief Update two interleaved actions according to an ordering between them
  *
  * Given information about an ordering of two interleaved actions, update the
- * actions' flags (and runnable_before members if appropriate) as appropriate.
- * In some cases, the ordering could be disabled.
+ * actions' flags (and runnable_before members if appropriate) as appropriate
+ * for the ordering. Effects may cascade to other orderings involving the
+ * actions as well.
  *
  * \param[in,out] first     'First' action in an ordering
  * \param[in,out] then      'Then' action in an ordering
  * \param[in]     node      If not NULL, limit scope of ordering to this node
- * \param[in]     flags     Action flags for \p first for ordering purposes
  * \param[in]     filter    Action flags to limit scope of certain updates (may
  *                          include pe_action_optional to affect only mandatory
  *                          actions, and pe_action_runnable to affect only
@@ -1018,8 +1019,9 @@ can_interleave_actions(const pe_action_t *first, const pe_action_t *then)
  * \brief Update non-interleaved instance actions according to an ordering
  *
  * Given information about an ordering of two non-interleaved actions, update
- * the action flags and runnable_before members as appropriate for a given clone
- * instance or bundle container. In some cases, the ordering could be disabled.
+ * the actions' flags (and runnable_before members if appropriate) as
+ * appropriate for the ordering. Effects may cascade to other orderings
+ * involving the actions as well.
  *
  * \param[in,out] instance  Clone instance or bundle container
  * \param[in,out] first     "First" action in ordering
@@ -1078,9 +1080,10 @@ update_noninterleaved_actions(pe_resource_t *instance, pe_action_t *first,
  * \internal
  * \brief Update two actions according to an ordering between them
  *
- * Given information about an ordering of two actions, update the actions'
- * flags (and runnable_before members if appropriate) as appropriate for the
- * ordering. In some cases, the ordering could be disabled as well.
+ * Given information about an ordering of two clone or bundle actions, update
+ * the actions' flags (and runnable_before members if appropriate) as
+ * appropriate for the ordering. Effects may cascade to other orderings
+ * involving the actions as well.
  *
  * \param[in,out] first     'First' action in an ordering
  * \param[in,out] then      'Then' action in an ordering
