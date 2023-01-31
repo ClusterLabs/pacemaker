@@ -2851,6 +2851,28 @@ get_migration_node_names(const xmlNode *entry, const pe_node_t *source_node,
     return pcmk_rc_ok;
 }
 
+/*
+ * \internal
+ * \brief Add a migration source to a resource's list of dangling migrations
+ *
+ * If the migrate_to and migrate_from actions in a live migration both
+ * succeeded, but there is no stop on the source, the migration is considered
+ * "dangling." Add the source to the resource's dangling migration list, which
+ * will be used to schedule a stop on the source without affecting the target.
+ *
+ * \param[in,out] rsc   Resource involved in migration
+ * \param[in]     node  Migration source
+ */
+static void
+add_dangling_migration(pe_resource_t *rsc, const pe_node_t *node)
+{
+    pe_rsc_trace(rsc, "Dangling migration of %s requires stop on %s",
+                 rsc->id, pe__node_name(node));
+    rsc->role = RSC_ROLE_STOPPED;
+    rsc->dangling_migrations = g_list_prepend(rsc->dangling_migrations,
+                                              (gpointer) node);
+}
+
 static void
 unpack_migrate_to_success(pe_resource_t *rsc, const pe_node_t *node,
                           const xmlNode *xml_op, pe_working_set_t *data_set)
@@ -2951,15 +2973,7 @@ unpack_migrate_to_success(pe_resource_t *rsc, const pe_node_t *node,
 
     if (migrate_from && from_rc == PCMK_OCF_OK
         && (from_status == PCMK_EXEC_DONE)) {
-        /* The migrate_to and migrate_from both succeeded, so mark the migration
-         * as "dangling". This will be used to schedule a stop action on the
-         * source without affecting the target.
-         */
-        pe_rsc_trace(rsc, "Detected dangling migration op: %s on %s", ID(xml_op),
-                     source);
-        rsc->role = RSC_ROLE_STOPPED;
-        rsc->dangling_migrations = g_list_prepend(rsc->dangling_migrations,
-                                                  (gpointer) node);
+        add_dangling_migration(rsc, node);
 
     } else if (migrate_from && (from_status != PCMK_EXEC_PENDING)) { // Failed
         /* If the resource has newer state on the target, this migrate_to no
