@@ -13,6 +13,7 @@ import io
 import os
 import re
 import shlex
+import signal
 import subprocess
 import sys
 import time
@@ -219,7 +220,36 @@ class Test:
 
     def clean_environment(self):
         """ Clean up the host after executing a test """
-        raise NotImplementedError("clean_environment not provided by subclass")
+
+        if self._daemon_process:
+            if self._daemon_process.poll() is None:
+                self._daemon_process.terminate()
+                self._daemon_process.wait()
+            else:
+                return_code = {
+                    getattr(signal, _signame): _signame
+                        for _signame in dir(signal)
+                        if _signame.startswith('SIG') and not _signame.startswith("SIG_")
+                }.get(-self._daemon_process.returncode, "RET=%d" % (self._daemon_process.returncode))
+                msg = "FAILURE - '%s' failed. %s abnormally exited during test (%s)."
+                self._result_txt = msg % (self.name, self._daemon_location, return_code)
+                self.exitcode = ExitStatus.ERROR
+
+        self._daemon_process = None
+        self._daemon_output = ""
+
+        # the default for utf-8 encoding would error out if e.g. memory corruption
+        # makes fenced output any kind of 8 bit value - while still interesting
+        # for debugging and we'd still like the regression-test to go over the
+        # full set of test-cases
+        with open(self.logpath, 'rt', encoding = "ISO-8859-1") as logfile:
+            for line in logfile.readlines():
+                self._daemon_output += line
+
+        if self.verbose:
+            print("Daemon Output Start")
+            print(self._daemon_output)
+            print("Daemon Output End")
 
     def print_result(self, filler):
         """ Print the result of the last test execution """

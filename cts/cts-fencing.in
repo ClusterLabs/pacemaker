@@ -5,13 +5,10 @@
 __copyright__ = "Copyright 2012-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
-import io
 import os
-import psutil
 import sys
 import subprocess
 import tempfile
-import signal
 
 # These imports allow running from a source checkout after running `make`.
 # Note that while this doesn't necessarily mean it will successfully run tests,
@@ -120,39 +117,6 @@ class FenceTest(Test):
 
         cmd = ["pacemaker-fenced", "-l", self.logpath] + self._daemon_options
         self._daemon_process = subprocess.Popen(cmd)
-
-    def clean_environment(self):
-        """ Clean up the host after executing a test """
-
-        if self._daemon_process:
-            if self._daemon_process.poll() == None:
-                self._daemon_process.terminate()
-                self._daemon_process.wait()
-            else:
-                return_code = {
-                    getattr(signal, _signame): _signame
-                        for _signame in dir(signal)
-                        if _signame.startswith('SIG') and not _signame.startswith("SIG_")
-                }.get(-self._daemon_process.returncode, "RET=%d" % (self._daemon_process.returncode))
-                msg = "FAILURE - '%s' failed. pacemaker-fenced abnormally exited during test (%s)."
-                self._result_txt = msg % (self.name, return_code)
-                self.exitcode = ExitStatus.ERROR
-
-        self._daemon_output = ""
-        self._daemon_process = None
-
-        # the default for utf-8 encoding would error out if e.g. memory corruption
-        # makes fenced output any kind of 8 bit value - while still interesting
-        # for debugging and we'd still like the regression-test to go over the
-        # full set of test-cases
-        logfile = io.open(self.logpath, 'rt', encoding = "ISO-8859-1")
-        for line in logfile.readlines():
-            self._daemon_output += line
-
-        if self.verbose:
-            print("Daemon Output Start")
-            print(self._daemon_output)
-            print("Daemon Output End")
 
     def add_stonith_log_pattern(self, pattern):
         """ Add a log pattern to expect from this test """
