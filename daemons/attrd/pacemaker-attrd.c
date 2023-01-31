@@ -37,10 +37,14 @@
 #define SUMMARY "daemon for managing Pacemaker node attributes"
 
 gboolean stand_alone = FALSE;
+gchar **log_files = NULL;
 
 static GOptionEntry entries[] = {
     { "stand-alone", 's', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &stand_alone,
       "(Advanced use only) Run in stand-alone mode", NULL },
+
+    { "logfile", 'l', G_OPTION_FLAG_NONE, G_OPTION_ARG_FILENAME_ARRAY,
+      &log_files, "Send logs to the additional named logfile", NULL },
 
     { NULL }
 };
@@ -262,6 +266,18 @@ main(int argc, char **argv)
         goto done;
     }
 
+    // Open additional log files
+    if (log_files != NULL) {
+        for (gchar **fname = log_files; *fname != NULL; fname++) {
+            rc = pcmk__add_logfile(*fname);
+
+            if (rc != pcmk_rc_ok) {
+                out->err(out, "Logging to %s is disabled: %s",
+                         *fname, pcmk_rc_str(rc));
+            }
+        }
+    }
+
     crm_log_init(T_ATTRD, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     crm_notice("Starting Pacemaker node attribute manager%s",
                stand_alone ? " in standalone mode" : "");
@@ -338,6 +354,8 @@ main(int argc, char **argv)
 
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
+
+    g_strfreev(log_files);
 
     pcmk__output_and_clear_error(error, out);
 
