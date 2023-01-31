@@ -915,8 +915,9 @@ update_interleaved_actions(pe_action_t *first, pe_action_t *then,
     const char *orig_first_task = orig_action_name(first);
 
     // Stops and demotes must be interleaved with instance on current node
-    bool current = pcmk__ends_with(first->uuid, "_stopped_0")
-                   || pcmk__ends_with(first->uuid, "_demoted_0");
+    bool current = pcmk__ends_with(first->uuid, "_" CRMD_ACTION_STOPPED "_0")
+                   || pcmk__ends_with(first->uuid,
+                                      "_" CRMD_ACTION_DEMOTED "_0");
 
     // Update the specified actions for each "then" instance individually
     instances = get_instance_list(then->rsc);
@@ -1121,8 +1122,9 @@ pcmk__instance_update_ordered_actions(pe_action_t *first, pe_action_t *then,
 
         // Update the 'then' clone instances or bundle containers individually
         for (GList *iter = instances; iter != NULL; iter = iter->next) {
-            changed |= update_noninterleaved_actions((pe_resource_t *)
-                                                     iter->data, first, then,
+            pe_resource_t *instance = iter->data;
+
+            changed |= update_noninterleaved_actions(instance, first, then,
                                                      node, flags, filter, type);
         }
         free_instance_list(then->rsc, instances);
@@ -1170,13 +1172,15 @@ pcmk__collective_action_flags(pe_action_t *action, const GList *instances,
 
         instance_action = find_first_action(instance->actions, NULL,
                                             action_name, instance_node);
-        pe_rsc_trace(action->rsc, "%s has %s for %s on %s",
-                     instance->id,
-                     (instance_action == NULL)? "no action" : instance_action->uuid,
-                     action_name, pe__node_name(node));
         if (instance_action == NULL) {
+            pe_rsc_trace(action->rsc, "%s has no %s action on %s",
+                         instance->id, action_name, pe__node_name(node));
             continue;
         }
+
+        pe_rsc_trace(action->rsc, "%s has %s for %s on %s",
+                     instance->id, instance_action->uuid, action_name,
+                     pe__node_name(node));
 
         instance_flags = instance->cmds->action_flags(instance_action, node);
 
