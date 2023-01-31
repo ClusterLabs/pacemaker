@@ -2915,8 +2915,8 @@ unpack_migrate_to_success(pe_resource_t *rsc, const pe_node_t *node,
      * migration is considered to be "dangling". Schedule a stop on the source
      * in this case.
      */
-    int from_rc = 0;
-    int from_status = 0;
+    int from_rc = PCMK_OCF_OK;
+    int from_status = PCMK_EXEC_PENDING;
     pe_node_t *target_node = NULL;
     pe_node_t *source_node = NULL;
     xmlNode *migrate_from = NULL;
@@ -2940,12 +2940,17 @@ unpack_migrate_to_success(pe_resource_t *rsc, const pe_node_t *node,
     // Check whether there was a migrate_from action on the target
     migrate_from = find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, target,
                                source, -1, data_set);
-
-    /* Even if there's a newer non-monitor operation on the source, we still
-     * need to check how this migrate_to might matter for the target.
-     */
-    if (source_newer_op && migrate_from) {
-        return;
+    if (migrate_from != NULL) {
+        if (source_newer_op) {
+            /* There's a newer non-monitor operation on the source and a
+             * migrate_from on the target, so this migrate_to is irrelevant to
+             * the resource's state.
+             */
+            return;
+        }
+        crm_element_value_int(migrate_from, XML_LRM_ATTR_RC, &from_rc);
+        crm_element_value_int(migrate_from, XML_LRM_ATTR_OPSTATUS,
+                              &from_status);
     }
 
     /* If the resource has newer state on the target after the migration
@@ -2958,24 +2963,24 @@ unpack_migrate_to_success(pe_resource_t *rsc, const pe_node_t *node,
         return;
     }
 
-    // Clones are not allowed to migrate, so role can't be promoted
+    /* Check for dangling migration (migrate_from succeeded but stop not done).
+     * We know there's no stop because we already returned if the target has a
+     * migrate_from and the source has any newer non-monitor operation.
+     */
+    if ((from_rc == PCMK_OCF_OK) && (from_status == PCMK_EXEC_DONE)) {
+        add_dangling_migration(rsc, node);
+        return;
+    }
+
+    /* Without newer state, this migrate_to implies the resource is active.
+     * (Clones are not allowed to migrate, so role can't be promoted.)
+     */
     rsc->role = RSC_ROLE_STARTED;
 
     target_node = pe_find_node(data_set->nodes, target);
     source_node = pe_find_node(data_set->nodes, source);
 
-    if (migrate_from) {
-        crm_element_value_int(migrate_from, XML_LRM_ATTR_RC, &from_rc);
-        crm_element_value_int(migrate_from, XML_LRM_ATTR_OPSTATUS, &from_status);
-        pe_rsc_trace(rsc, "%s op on %s exited with status=%d, rc=%d",
-                     ID(migrate_from), target, from_status, from_rc);
-    }
-
-    if (migrate_from && from_rc == PCMK_OCF_OK
-        && (from_status == PCMK_EXEC_DONE)) {
-        add_dangling_migration(rsc, node);
-
-    } else if (migrate_from && (from_status != PCMK_EXEC_PENDING)) { // Failed
+    if (from_status != PCMK_EXEC_PENDING) { // migrate_from failed on target
         /* If the resource has newer state on the target, this migrate_to no
          * longer matters for the target.
          */
