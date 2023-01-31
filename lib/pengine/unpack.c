@@ -2877,48 +2877,40 @@ static void
 unpack_migrate_to_success(pe_resource_t *rsc, const pe_node_t *node,
                           const xmlNode *xml_op, pe_working_set_t *data_set)
 {
-    /* A successful migration sequence is:
-     *    migrate_to on source node
-     *    migrate_from on target node
-     *    stop on source node
-     *
-     * But there could be scenarios like (It's easier to produce with cluster
-     * property batch-limit=1):
-     *
-     * - rscA is live-migrating from node1 to node2.
-     *
-     * - Before migrate_to on node1 returns, put node2 into standby.
-     *
-     * - Transition aborts upon return of successful migrate_to on node1. New
-     *   transition is going to stop the rscA on both nodes and start it on
-     *   node1.
-     *
-     * - While it is stopping on node1, run something that is going to make
-     *   the transition abort again like:
-     *   crm_resource  --resource rscA --ban --node node2
-     *
-     * - Transition aborts upon return of stop on node1.
-     *
-     * Now although there's a stop on node1, it's still a partial migration and
-     * rscA is still potentially active on node2.
-     *
-     * So even if a migrate_to is followed by a stop, we still need to check
-     * whether there's a corresponding migrate_from or any newer operation on
-     * the target.
+    /* A complete migration sequence is:
+     * 1. migrate_to on source node (which succeeded if we get to this function)
+     * 2. migrate_from on target node
+     * 3. stop on source node
      *
      * If no migrate_from has happened, the migration is considered to be
-     * "partial". If the migrate_from failed, make sure the resource gets
-     * stopped on both source and target (if up).
+     * "partial". If the migrate_from succeeded but no stop has happened, the
+     * migration is considered to be "dangling".
      *
-     * If the migrate_to and migrate_from both succeeded (which also implies the
-     * resource is no longer running on the source), but there is no stop, the
-     * migration is considered to be "dangling". Schedule a stop on the source
-     * in this case.
+     * If a successful migrate_to and stop have happened on the source node, we
+     * still need to check for a partial migration, due to scenarios (easier to
+     * produce with batch-limit=1) like:
+     *
+     * - A resource is migrating from node1 to node2, and a migrate_to is
+     *   initiated for it on node1.
+     *
+     * - node2 goes into standby mode while the migrate_to is pending, which
+     *   aborts the transition.
+     *
+     * - Upon completion of the migrate_to, a new transition schedules a stop
+     *   on both nodes and a start on node1.
+     *
+     * - If the new transition is aborted for any reason while the resource is
+     *   stopping on node1, the transition after that stop completes will see
+     *   the migrate_from and stop on the source, but it's still a partial
+     *   migration, and the resource must be stopped on node2 because it is
+     *   potentially active there due to the migrate_to.
+     *
+     *   We also need to take into account that either node's history may be
+     *   cleared at any point in the migration process.
      */
     int from_rc = PCMK_OCF_OK;
     int from_status = PCMK_EXEC_PENDING;
     pe_node_t *target_node = NULL;
-    pe_node_t *source_node = NULL;
     xmlNode *migrate_from = NULL;
     const char *source = NULL;
     const char *target = NULL;
@@ -2932,13 +2924,11 @@ unpack_migrate_to_success(pe_resource_t *rsc, const pe_node_t *node,
         return;
     }
 
-    /* If there's any newer non-monitor operation on the source, this migrate_to
-     * potentially no longer matters for the source.
-     */
+    // Check for newer state on the source
     source_newer_op = non_monitor_after(rsc->id, source, xml_op, true,
                                         data_set);
 
-    // Check whether there was a migrate_from action on the target
+    // Check for a migrate_from action from this source on the target
     migrate_from = find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, target,
                                source, -1, data_set);
     if (migrate_from != NULL) {
@@ -2954,12 +2944,11 @@ unpack_migrate_to_success(pe_resource_t *rsc, const pe_node_t *node,
                               &from_status);
     }
 
-    /* If the resource has newer state on the target after the migration
-     * events, this migrate_to no longer matters for the target.
+    /* If the resource has newer state on both the source and target after the
+     * migration events, this migrate_to is irrelevant to the resource's state.
      */
     target_newer_state = newer_state_after_migrate(rsc->id, target, xml_op,
                                                    migrate_from, data_set);
-
     if (source_newer_op && target_newer_state) {
         return;
     }
@@ -2979,7 +2968,6 @@ unpack_migrate_to_success(pe_resource_t *rsc, const pe_node_t *node,
     rsc->role = RSC_ROLE_STARTED;
 
     target_node = pe_find_node(data_set->nodes, target);
-    source_node = pe_find_node(data_set->nodes, source);
     active_on_target = !target_newer_state && (target_node != NULL)
                        && target_node->details->online;
 
@@ -2991,31 +2979,30 @@ unpack_migrate_to_success(pe_resource_t *rsc, const pe_node_t *node,
             pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
             pe__clear_resource_flags(rsc, pe_rsc_allow_migrate);
         }
+        return;
+    }
 
-    } else { // Pending, or complete but erased
-        /* If the resource has newer state on the target, this migrate_to no
-         * longer matters for the target.
-         */
-        if (active_on_target) {
-            native_add_running(rsc, target_node, data_set, FALSE);
-            if (source_node && source_node->details->online) {
-                /* This is a partial migration: the migrate_to completed
-                 * successfully on the source, but the migrate_from has not
-                 * completed. Remember the source and target; if the newly
-                 * chosen target remains the same when we schedule actions
-                 * later, we may continue with the migration.
-                 */
-                rsc->partial_migration_target = target_node;
-                rsc->partial_migration_source = source_node;
-            }
-        } else if (!source_newer_op) {
-            /* This migrate_to matters for the source only if it's the last
-             * non-monitor operation here.
-             * Consider it failed here - forces a restart, prevents migration
+    // The migrate_from is pending, complete but erased, or to be scheduled
+
+    if (active_on_target) {
+        pe_node_t *source_node = pe_find_node(data_set->nodes, source);
+
+        native_add_running(rsc, target_node, data_set, FALSE);
+        if ((source_node != NULL) && source_node->details->online) {
+            /* This is a partial migration: the migrate_to completed
+             * successfully on the source, but the migrate_from has not
+             * completed. Remember the source and target; if the newly
+             * chosen target remains the same when we schedule actions
+             * later, we may continue with the migration.
              */
-            pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
-            pe__clear_resource_flags(rsc, pe_rsc_allow_migrate);
+            rsc->partial_migration_target = target_node;
+            rsc->partial_migration_source = source_node;
         }
+
+    } else if (!source_newer_op) {
+        // Mark resource as failed, require recovery, and prevent migration
+        pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
+        pe__clear_resource_flags(rsc, pe_rsc_allow_migrate);
     }
 }
 
