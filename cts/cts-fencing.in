@@ -96,14 +96,13 @@ class FenceTest(Test):
 
         if kwargs.get("with_cpg", False):
             self._enable_corosync = True
-            self._stonith_options = ["-c"]
+            self._daemon_options = ["-c"]
         else:
             self._enable_corosync = False
-            self._stonith_options = ["-s"]
+            self._daemon_options = ["-s"]
 
         self._daemon_location = "pacemaker-fenced"
         self._negative_stonith_patterns = []
-        self._stonith_output = ""
         self._stonith_patterns = []
 
     def _count_negative_matches(self, outline):
@@ -131,7 +130,7 @@ class FenceTest(Test):
         if len(self._stonith_patterns) == 0 and len(self._negative_stonith_patterns) == 0:
             return
 
-        for line in self._stonith_output.split("\n"):
+        for line in self._daemon_output.split("\n"):
             negative_matches = negative_matches + self._count_negative_matches(line)
             if len(pats) == 0:
                 continue
@@ -153,31 +152,31 @@ class FenceTest(Test):
 
     def _start_daemons(self):
         if self.verbose:
-            self._stonith_options += ["-V"]
-            print("Starting %s with %s" % (self._daemon_location, self._stonith_options))
+            self._daemon_options += ["-V"]
+            print("Starting %s with %s" % (self._daemon_location, self._daemon_options))
 
-        cmd = ["pacemaker-fenced", "-l", self.logpath] + self._stonith_options
-        self._stonith_process = subprocess.Popen(cmd)
+        cmd = ["pacemaker-fenced", "-l", self.logpath] + self._daemon_options
+        self._daemon_process = subprocess.Popen(cmd)
 
     def clean_environment(self):
         """ Clean up the host after executing a test """
 
-        if self._stonith_process:
-            if self._stonith_process.poll() == None:
-                self._stonith_process.terminate()
-                self._stonith_process.wait()
+        if self._daemon_process:
+            if self._daemon_process.poll() == None:
+                self._daemon_process.terminate()
+                self._daemon_process.wait()
             else:
                 return_code = {
                     getattr(signal, _signame): _signame
                         for _signame in dir(signal)
                         if _signame.startswith('SIG') and not _signame.startswith("SIG_")
-                }.get(-self._stonith_process.returncode, "RET=%d" % (self._stonith_process.returncode))
+                }.get(-self._daemon_process.returncode, "RET=%d" % (self._daemon_process.returncode))
                 msg = "FAILURE - '%s' failed. pacemaker-fenced abnormally exited during test (%s)."
                 self._result_txt = msg % (self.name, return_code)
                 self.exitcode = ExitStatus.ERROR
 
-        self._stonith_output = ""
-        self._stonith_process = None
+        self._daemon_output = ""
+        self._daemon_process = None
 
         # the default for utf-8 encoding would error out if e.g. memory corruption
         # makes fenced output any kind of 8 bit value - while still interesting
@@ -185,11 +184,11 @@ class FenceTest(Test):
         # full set of test-cases
         logfile = io.open(self.logpath, 'rt', encoding = "ISO-8859-1")
         for line in logfile.readlines():
-            self._stonith_output += line
+            self._daemon_output += line
 
         if self.verbose:
             print("Daemon Output Start")
-            print(self._stonith_output)
+            print(self._daemon_output)
             print("Daemon Output End")
 
     def add_stonith_log_pattern(self, pattern):

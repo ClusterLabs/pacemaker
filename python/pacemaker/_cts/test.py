@@ -86,10 +86,13 @@ class Test:
         self.verbose = kwargs.get("verbose", False)
 
         self._cmds = []
+
         self._daemon_location = None
+        self._daemon_output = ""
+        self._daemon_process = None
+
         self._result_exitcode = ExitStatus.OK
         self._result_txt = ""
-        self._stonith_process = None
 
     ###
     ### PROPERTIES

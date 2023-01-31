@@ -74,8 +74,10 @@ class ExecTest(Test):
         else:
             self._daemon_location = "pacemaker-execd"
 
-        self._execd_process = None
         self._test_tool_location = "cts-exec-helper"
+
+        # We additionally need to keep track of a stonith process.
+        self._stonith_process = None
 
     def _new_cmd(self, cmd, args, exitcode, **kwargs):
         """ Add a command to be executed as part of this test """
@@ -111,14 +113,14 @@ class ExecTest(Test):
         if self.verbose:
             cmd += ["-V"]
 
-        self._execd_process = subprocess.Popen(cmd)
+        self._daemon_process = subprocess.Popen(cmd)
 
     def clean_environment(self):
         """ Clean up the host after running a test """
 
-        if self._execd_process:
-            self._execd_process.terminate()
-            self._execd_process.wait()
+        if self._daemon_process:
+            self._daemon_process.terminate()
+            self._daemon_process.wait()
 
             if self.verbose:
                 print("Daemon Output Start")
@@ -131,7 +133,7 @@ class ExecTest(Test):
             self._stonith_process.terminate()
             self._stonith_process.wait()
 
-        self._execd_process = None
+        self._daemon_process = None
         self._stonith_process = None
 
     def add_cmd(self, args):
