@@ -362,7 +362,7 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
 enum pe_action_flags
 clone_action_flags(pe_action_t *action, const pe_node_t *node)
 {
-    return summary_action_flags(action, action->rsc->children, node);
+    return pcmk__collective_action_flags(action, action->rsc->children, node);
 }
 
 void

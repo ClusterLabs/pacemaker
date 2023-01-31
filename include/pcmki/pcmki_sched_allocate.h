@@ -46,12 +46,6 @@ void pcmk__clone_add_utilization(const pe_resource_t *rsc,
                                  GList *all_rscs, GHashTable *utilization);
 void pcmk__clone_shutdown_lock(pe_resource_t *rsc);
 
-uint32_t pcmk__multi_update_actions(pe_action_t *first,
-                                    pe_action_t *then,
-                                    const pe_node_t *node, uint32_t flags,
-                                    uint32_t filter, uint32_t type,
-                                    pe_working_set_t *data_set);
-
 void pcmk__log_transition_summary(const char *filename);
 
 #endif

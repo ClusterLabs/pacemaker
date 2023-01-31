@@ -161,7 +161,8 @@ struct resource_alloc_functions_s {
      *
      * Given information about an ordering of two actions, update the actions'
      * flags (and runnable_before members if appropriate) as appropriate for the
-     * ordering. In some cases, the ordering could be disabled as well.
+     * ordering. Effects may cascade to other orderings involving the actions as
+     * well.
      *
      * \param[in,out] first     'First' action in an ordering
      * \param[in,out] then      'Then' action in an ordering
@@ -706,6 +707,19 @@ pe_resource_t *pcmk__find_compatible_instance(const pe_resource_t *match_rsc,
                                               const pe_resource_t *rsc,
                                               enum rsc_role_e role,
                                               bool current);
+
+G_GNUC_INTERNAL
+uint32_t pcmk__instance_update_ordered_actions(pe_action_t *first,
+                                               pe_action_t *then,
+                                               const pe_node_t *node,
+                                               uint32_t flags, uint32_t filter,
+                                               uint32_t type,
+                                               pe_working_set_t *data_set);
+
+G_GNUC_INTERNAL
+enum pe_action_flags pcmk__collective_action_flags(pe_action_t *action,
+                                                   const GList *instances,
+                                                   const pe_node_t *node);
 
 
 // Injections (pcmk_injections.c)

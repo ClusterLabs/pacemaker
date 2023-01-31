@@ -743,18 +743,18 @@ pcmk__find_compatible_instance(const pe_resource_t *match_rsc,
 
 /*!
  * \internal
- * \brief Unassign an instance if ordering without interleave match is mandatory
+ * \brief Unassign an instance if mandatory ordering has no interleave match
  *
- * \param[in] first          'First' action in an ordering
- * \param[in] then           'Then' action in an ordering
- * \param[in] then_instance  'Then' instance that has no interleave match
- * \param[in] type           Group of enum pe_ordering flags to apply
- * \param[in] current        If true, "then" action is stopped or demoted
+ * \param[in]     first          'First' action in an ordering
+ * \param[in]     then           'Then' action in an ordering
+ * \param[in,out] then_instance  'Then' instance that has no interleave match
+ * \param[in]     type           Group of enum pe_ordering flags to apply
+ * \param[in]     current        If true, "then" action is stopped or demoted
  *
  * \return true if \p then_instance was unassigned, otherwise false
  */
 static bool
-unassign_if_mandatory(pe_action_t *first, pe_action_t *then,
+unassign_if_mandatory(const pe_action_t *first, const pe_action_t *then,
                       pe_resource_t *then_instance, uint32_t type, bool current)
 {
     // Allow "then" instance to go down even without an interleave match
@@ -850,98 +850,155 @@ find_instance_action(const pe_action_t *action, const pe_resource_t *instance,
     return NULL;
 }
 
-static uint32_t
-multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
-                                const pe_node_t *node, uint32_t filter,
-                                uint32_t type, pe_working_set_t *data_set)
+/*!
+ * \internal
+ * \brief Get the original action name of a bundle or clone action
+ *
+ * Given an action for a bundle or clone, get the original action name,
+ * mapping notify to the action being notified, and if the instances are
+ * primitives, mapping completion actions to the action that was completed
+ * (for example, stopped to stop).
+ *
+ * \param[in] action  Clone or bundle action to check
+ *
+ * \return Original action name for \p action
+ */
+static const char *
+orig_action_name(const pe_action_t *action)
 {
-    GList *gIter = NULL;
-    GList *children = NULL;
-    gboolean current = FALSE;
-    uint32_t changed = pcmk__updated_none;
+    const pe_resource_t *instance = action->rsc->children->data; // Any instance
+    char *action_type = NULL;
+    const char *action_name = action->task;
+    enum action_tasks orig_task = no_action;
 
-    /* Fix this - lazy */
-    if (pcmk__ends_with(first->uuid, "_stopped_0")
-        || pcmk__ends_with(first->uuid, "_demoted_0")) {
-        current = TRUE;
+    if (pcmk__strcase_any_of(action->task, CRMD_ACTION_NOTIFY,
+                             CRMD_ACTION_NOTIFIED, NULL)) {
+        // action->uuid is RSC_(confirmed-){pre,post}_notify_ACTION_INTERVAL
+        CRM_CHECK(parse_op_key(action->uuid, NULL, &action_type, NULL),
+                  return task2text(no_action));
+        action_name = strstr(action_type, "_notify_");
+        CRM_CHECK(action_name != NULL, return task2text(no_action));
+        action_name += strlen("_notify_");
     }
+    orig_task = get_complex_task(instance, action_name);
+    free(action_type);
+    return task2text(orig_task);
+}
 
-    children = get_instance_list(then->rsc);
-    for (gIter = children; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *then_child = gIter->data;
-        pe_resource_t *first_child = NULL;
+/*!
+ * \internal
+ * \brief Update two interleaved actions according to an ordering between them
+ *
+ * Given information about an ordering of two interleaved actions, update the
+ * actions' flags (and runnable_before members if appropriate) as appropriate
+ * for the ordering. Effects may cascade to other orderings involving the
+ * actions as well.
+ *
+ * \param[in,out] first     'First' action in an ordering
+ * \param[in,out] then      'Then' action in an ordering
+ * \param[in]     node      If not NULL, limit scope of ordering to this node
+ * \param[in]     filter    Action flags to limit scope of certain updates (may
+ *                          include pe_action_optional to affect only mandatory
+ *                          actions, and pe_action_runnable to affect only
+ *                          runnable actions)
+ * \param[in]     type      Group of enum pe_ordering flags to apply
+ *
+ * \return Group of enum pcmk__updated flags indicating what was updated
+ */
+static uint32_t
+update_interleaved_actions(pe_action_t *first, pe_action_t *then,
+                           const pe_node_t *node, uint32_t filter,
+                           uint32_t type)
+{
+    GList *instances = NULL;
+    uint32_t changed = pcmk__updated_none;
+    const char *orig_first_task = orig_action_name(first);
 
-        first_child = pcmk__find_compatible_instance(then_child, first->rsc,
-                                                     RSC_ROLE_UNKNOWN, current);
-        if (first_child == NULL) { // No instance can be interleaved
-            if (unassign_if_mandatory(first, then, then_child, type, current)) {
+    // Stops and demotes must be interleaved with instance on current node
+    bool current = pcmk__ends_with(first->uuid, "_" CRMD_ACTION_STOPPED "_0")
+                   || pcmk__ends_with(first->uuid,
+                                      "_" CRMD_ACTION_DEMOTED "_0");
+
+    // Update the specified actions for each "then" instance individually
+    instances = get_instance_list(then->rsc);
+    for (GList *iter = instances; iter != NULL; iter = iter->next) {
+        pe_resource_t *first_instance = NULL;
+        pe_resource_t *then_instance = iter->data;
+
+        pe_action_t *first_action = NULL;
+        pe_action_t *then_action = NULL;
+
+        // Find a "first" instance to interleave with this "then" instance
+        first_instance = pcmk__find_compatible_instance(then_instance,
+                                                        first->rsc,
+                                                        RSC_ROLE_UNKNOWN,
+                                                        current);
+
+        if (first_instance == NULL) { // No instance can be interleaved
+            if (unassign_if_mandatory(first, then, then_instance, type,
+                                      current)) {
                 pcmk__set_updated_flags(changed, first, pcmk__updated_then);
             }
-
-        } else {
-            pe_action_t *first_action = NULL;
-            pe_action_t *then_action = NULL;
-
-            enum action_tasks task = clone_child_action(first);
-            const char *first_task = task2text(task);
-
-            first_action = find_instance_action(first, first_child,
-                                                first_task, node, true);
-            if (first_action == NULL) {
-                continue;
-            }
-
-            then_action = find_instance_action(then, then_child, then->task,
-                                               node, false);
-            if (then_action == NULL) {
-                continue;
-            }
-
-            if (order_actions(first_action, then_action, type)) {
-                crm_debug("Created constraint for %s (%d) -> %s (%d) %.6x",
-                          first_action->uuid,
-                          pcmk_is_set(first_action->flags, pe_action_optional),
-                          then_action->uuid,
-                          pcmk_is_set(then_action->flags, pe_action_optional),
-                          type);
-                pcmk__set_updated_flags(changed, first,
-                                        pcmk__updated_first|pcmk__updated_then);
-            }
-            if(first_action && then_action) {
-                changed |= then_child->cmds->update_ordered_actions(first_action,
-                                                                    then_action,
-                                                                    node,
-                                                                    first_child->cmds->action_flags(first_action, node),
-                                                                    filter,
-                                                                    type,
-                                                                    data_set);
-            } else {
-                crm_err("Nothing found either for %s (%p) or %s (%p) %s",
-                        first_child->id, first_action,
-                        then_child->id, then_action, task2text(task));
-            }
+            continue;
         }
+
+        first_action = find_instance_action(first, first_instance,
+                                            orig_first_task, node, true);
+        if (first_action == NULL) {
+            continue;
+        }
+
+        then_action = find_instance_action(then, then_instance, then->task,
+                                           node, false);
+        if (then_action == NULL) {
+            continue;
+        }
+
+        if (order_actions(first_action, then_action, type)) {
+            pcmk__set_updated_flags(changed, first,
+                                    pcmk__updated_first|pcmk__updated_then);
+        }
+
+        changed |= then_instance->cmds->update_ordered_actions(
+            first_action, then_action, node,
+            first_instance->cmds->action_flags(first_action, node), filter,
+            type, then->rsc->cluster);
     }
-    free_instance_list(then->rsc, children);
+    free_instance_list(then->rsc, instances);
     return changed;
 }
 
+/*!
+ * \internal
+ * \brief Check whether two actions in an ordering can be interleaved
+ *
+ * \param[in] first  'First' action in the ordering
+ * \param[in] then   'Then' action in the ordering
+ *
+ * \return true if \p first and \p then can be interleaved, otherwise false
+ */
 static bool
-can_interleave_actions(pe_action_t *first, pe_action_t *then)
+can_interleave_actions(const pe_action_t *first, const pe_action_t *then)
 {
-    bool interleave = FALSE;
+    bool interleave = false;
     pe_resource_t *rsc = NULL;
-    const char *interleave_s = NULL;
 
-    if(first->rsc == NULL || then->rsc == NULL) {
-        crm_trace("Not interleaving %s with %s (both must be resources)", first->uuid, then->uuid);
-        return FALSE;
-    } else if(first->rsc == then->rsc) {
-        crm_trace("Not interleaving %s with %s (must belong to different resources)", first->uuid, then->uuid);
-        return FALSE;
-    } else if(first->rsc->variant < pe_clone || then->rsc->variant < pe_clone) {
-        crm_trace("Not interleaving %s with %s (both sides must be clones or bundles)", first->uuid, then->uuid);
-        return FALSE;
+    if ((first->rsc == NULL) || (then->rsc == NULL)) {
+        crm_trace("Not interleaving %s with %s: not resource actions",
+                  first->uuid, then->uuid);
+        return false;
+    }
+
+    if (first->rsc == then->rsc) {
+        crm_trace("Not interleaving %s with %s: same resource",
+                  first->uuid, then->uuid);
+        return false;
+    }
+
+    if ((first->rsc->variant < pe_clone) || (then->rsc->variant < pe_clone)) {
+        crm_trace("Not interleaving %s with %s: not clones or bundles",
+                  first->uuid, then->uuid);
+        return false;
     }
 
     if (pcmk__ends_with(then->uuid, "_stop_0")
@@ -951,21 +1008,83 @@ can_interleave_actions(pe_action_t *first, pe_action_t *then)
         rsc = then->rsc;
     }
 
-    interleave_s = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INTERLEAVE);
-    interleave = crm_is_true(interleave_s);
-    crm_trace("Interleave %s -> %s: %s (based on %s)",
-              first->uuid, then->uuid, interleave ? "yes" : "no", rsc->id);
-
+    interleave = crm_is_true(g_hash_table_lookup(rsc->meta,
+                                                 XML_RSC_ATTR_INTERLEAVE));
+    pe_rsc_trace(rsc, "'%s then %s' will %sbe interleaved (based on %s)",
+                 first->uuid, then->uuid, (interleave? "" : "not "), rsc->id);
     return interleave;
+}
+
+/*!
+ * \internal
+ * \brief Update non-interleaved instance actions according to an ordering
+ *
+ * Given information about an ordering of two non-interleaved actions, update
+ * the actions' flags (and runnable_before members if appropriate) as
+ * appropriate for the ordering. Effects may cascade to other orderings
+ * involving the actions as well.
+ *
+ * \param[in,out] instance  Clone instance or bundle container
+ * \param[in,out] first     "First" action in ordering
+ * \param[in]     then      "Then" action in ordering (for \p instance's parent)
+ * \param[in]     node      If not NULL, limit scope of ordering to this node
+ * \param[in]     flags     Action flags for \p first for ordering purposes
+ * \param[in]     filter    Action flags to limit scope of certain updates (may
+ *                          include pe_action_optional to affect only mandatory
+ *                          actions, and pe_action_runnable to affect only
+ *                          runnable actions)
+ * \param[in]     type      Group of enum pe_ordering flags to apply
+ *
+ * \return Group of enum pcmk__updated flags indicating what was updated
+ */
+static uint32_t
+update_noninterleaved_actions(pe_resource_t *instance, pe_action_t *first,
+                              const pe_action_t *then, const pe_node_t *node,
+                              uint32_t flags, uint32_t filter, uint32_t type)
+{
+    pe_action_t *instance_action = NULL;
+    uint32_t instance_flags = 0;
+    uint32_t changed = pcmk__updated_none;
+
+    // Check whether instance has an equivalent of "then" action
+    instance_action = find_first_action(instance->actions, NULL, then->task,
+                                        node);
+    if (instance_action == NULL) {
+        return changed;
+    }
+
+    // Check whether action is runnable
+    instance_flags = instance->cmds->action_flags(instance_action, node);
+    if (!pcmk_is_set(instance_flags, pe_action_runnable)) {
+        return changed;
+    }
+
+    // If so, update actions for the instance
+    changed = instance->cmds->update_ordered_actions(first, instance_action,
+                                                     node, flags, filter, type,
+                                                     instance->cluster);
+
+    // Propagate any changes to later actions
+    if (pcmk_is_set(changed, pcmk__updated_then)) {
+        for (GList *after_iter = instance_action->actions_after;
+             after_iter != NULL; after_iter = after_iter->next) {
+            pe_action_wrapper_t *after = after_iter->data;
+
+            pcmk__update_action_for_orderings(after->action, instance->cluster);
+        }
+    }
+
+    return changed;
 }
 
 /*!
  * \internal
  * \brief Update two actions according to an ordering between them
  *
- * Given information about an ordering of two actions, update the actions'
- * flags (and runnable_before members if appropriate) as appropriate for the
- * ordering. In some cases, the ordering could be disabled as well.
+ * Given information about an ordering of two clone or bundle actions, update
+ * the actions' flags (and runnable_before members if appropriate) as
+ * appropriate for the ordering. Effects may cascade to other orderings
+ * involving the actions as well.
  *
  * \param[in,out] first     'First' action in an ordering
  * \param[in,out] then      'Then' action in an ordering
@@ -982,99 +1101,35 @@ can_interleave_actions(pe_action_t *first, pe_action_t *then)
  * \return Group of enum pcmk__updated flags indicating what was updated
  */
 uint32_t
-pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
-                           const pe_node_t *node, uint32_t flags,
-                           uint32_t filter, uint32_t type,
-                           pe_working_set_t *data_set)
+pcmk__instance_update_ordered_actions(pe_action_t *first, pe_action_t *then,
+                                      const pe_node_t *node, uint32_t flags,
+                                      uint32_t filter, uint32_t type,
+                                      pe_working_set_t *data_set)
 {
-    uint32_t changed = pcmk__updated_none;
+    if (then->rsc == NULL) {
+        return pcmk__updated_none;
 
-    crm_trace("%s -> %s", first->uuid, then->uuid);
+    } else if (can_interleave_actions(first, then)) {
+        return update_interleaved_actions(first, then, node, filter, type);
 
-    if(can_interleave_actions(first, then)) {
-        changed = multi_update_interleave_actions(first, then, node, filter,
-                                                  type, data_set);
+    } else {
+        uint32_t changed = pcmk__updated_none;
+        GList *instances = get_instance_list(then->rsc);
 
-    } else if(then->rsc) {
-        GList *gIter = NULL;
-        GList *children = NULL;
-
-        // Handle the 'primitive' ordering case
+        // Update actions for the clone or bundle resource itself
         changed |= pcmk__update_ordered_actions(first, then, node, flags,
                                                 filter, type, data_set);
 
-        // Now any children (or containers in the case of a bundle)
-        children = get_instance_list(then->rsc);
-        for (gIter = children; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *then_child = (pe_resource_t *) gIter->data;
-            uint32_t then_child_changed = pcmk__updated_none;
-            pe_action_t *then_child_action = find_first_action(then_child->actions, NULL, then->task, node);
+        // Update the 'then' clone instances or bundle containers individually
+        for (GList *iter = instances; iter != NULL; iter = iter->next) {
+            pe_resource_t *instance = iter->data;
 
-            if (then_child_action) {
-                uint32_t then_child_flags = then_child->cmds->action_flags(then_child_action,
-                                                                           node);
-
-                if (pcmk_is_set(then_child_flags, pe_action_runnable)) {
-                    then_child_changed |= then_child->cmds->update_ordered_actions(first,
-                                                                                   then_child_action,
-                                                                                   node,
-                                                                                   flags,
-                                                                                   filter,
-                                                                                   type,
-                                                                                   data_set);
-                }
-                changed |= then_child_changed;
-                if (pcmk_is_set(then_child_changed, pcmk__updated_then)) {
-                    for (GList *lpc = then_child_action->actions_after; lpc != NULL; lpc = lpc->next) {
-                        pe_action_wrapper_t *next = (pe_action_wrapper_t *) lpc->data;
-
-                        pcmk__update_action_for_orderings(next->action,
-                                                          data_set);
-                    }
-                }
-            }
+            changed |= update_noninterleaved_actions(instance, first, then,
+                                                     node, flags, filter, type);
         }
-        free_instance_list(then->rsc, children);
+        free_instance_list(then->rsc, instances);
+        return changed;
     }
-    return changed;
-}
-
-enum action_tasks
-clone_child_action(pe_action_t * action)
-{
-    enum action_tasks result = no_action;
-    pe_resource_t *child = (pe_resource_t *) action->rsc->children->data;
-
-    if (pcmk__strcase_any_of(action->task, "notify", "notified", NULL)) {
-
-        /* Find the action we're notifying about instead */
-
-        int stop = 0;
-        char *key = action->uuid;
-        int lpc = strlen(key);
-
-        for (; lpc > 0; lpc--) {
-            if (key[lpc] == '_' && stop == 0) {
-                stop = lpc;
-
-            } else if (key[lpc] == '_') {
-                char *task_mutable = NULL;
-
-                lpc++;
-                task_mutable = strdup(key + lpc);
-                task_mutable[stop - lpc] = 0;
-
-                crm_trace("Extracted action '%s' from '%s'", task_mutable, key);
-                result = get_complex_task(child, task_mutable);
-                free(task_mutable);
-                break;
-            }
-        }
-
-    } else {
-        result = get_complex_task(child, action->task);
-    }
-    return result;
 }
 
 #define pe__clear_action_summary_flags(flags, action, flag) do {        \
@@ -1083,42 +1138,71 @@ clone_child_action(pe_action_t * action)
                                      flags, flag, #flag);               \
     } while (0)
 
+/*!
+ * \internal
+ * \brief Return action flags for a given clone or bundle action
+ *
+ * \param[in,out] action     Action for a clone or bundle
+ * \param[in]     instances  Clone instances or bundle containers
+ * \param[in]     node       If not NULL, limit effects to this node
+ *
+ * \return Flags appropriate to \p action on \p node
+ */
 enum pe_action_flags
-summary_action_flags(pe_action_t *action, GList *children,
-                     const pe_node_t *node)
+pcmk__collective_action_flags(pe_action_t *action, const GList *instances,
+                              const pe_node_t *node)
 {
-    GList *gIter = NULL;
-    gboolean any_runnable = FALSE;
-    gboolean check_runnable = TRUE;
-    enum action_tasks task = clone_child_action(action);
-    enum pe_action_flags flags = (pe_action_optional | pe_action_runnable | pe_action_pseudo);
-    const char *task_s = task2text(task);
+    bool any_runnable = false;
+    enum pe_action_flags flags;
+    const char *action_name = orig_action_name(action);
 
-    for (gIter = children; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *child_action = NULL;
-        pe_resource_t *child = (pe_resource_t *) gIter->data;
+    // Set original assumptions (optional and runnable may be cleared below)
+    flags = pe_action_optional|pe_action_runnable|pe_action_pseudo;
 
-        child_action = find_first_action(child->actions, NULL, task_s, child->children ? NULL : node);
-        pe_rsc_trace(action->rsc, "Checking for %s in %s on %s (%s)", task_s, child->id,
-                     pe__node_name(node), child_action?child_action->uuid:"NA");
-        if (child_action) {
-            enum pe_action_flags child_flags = child->cmds->action_flags(child_action, node);
+    for (const GList *iter = instances; iter != NULL; iter = iter->next) {
+        const pe_resource_t *instance = iter->data;
+        const pe_node_t *instance_node = NULL;
+        pe_action_t *instance_action = NULL;
+        enum pe_action_flags instance_flags;
 
-            if (pcmk_is_set(flags, pe_action_optional)
-                && !pcmk_is_set(child_flags, pe_action_optional)) {
-                pe_rsc_trace(child, "%s is mandatory because of %s", action->uuid,
-                             child_action->uuid);
-                pe__clear_action_summary_flags(flags, action, pe_action_optional);
-                pe__clear_action_flags(action, pe_action_optional);
-            }
-            if (pcmk_is_set(child_flags, pe_action_runnable)) {
-                any_runnable = TRUE;
-            }
+        // Node is relevant only to primitive instances
+        if (instance->variant == pe_native) {
+            instance_node = node;
+        }
+
+        instance_action = find_first_action(instance->actions, NULL,
+                                            action_name, instance_node);
+        if (instance_action == NULL) {
+            pe_rsc_trace(action->rsc, "%s has no %s action on %s",
+                         instance->id, action_name, pe__node_name(node));
+            continue;
+        }
+
+        pe_rsc_trace(action->rsc, "%s has %s for %s on %s",
+                     instance->id, instance_action->uuid, action_name,
+                     pe__node_name(node));
+
+        instance_flags = instance->cmds->action_flags(instance_action, node);
+
+        // If any instance action is mandatory, so is the collective action
+        if (pcmk_is_set(flags, pe_action_optional)
+            && !pcmk_is_set(instance_flags, pe_action_optional)) {
+            pe_rsc_trace(instance, "%s is mandatory because %s is",
+                         action->uuid, instance_action->uuid);
+            pe__clear_action_summary_flags(flags, action, pe_action_optional);
+            pe__clear_action_flags(action, pe_action_optional);
+        }
+
+        // If any instance action is runnable, so is the collective action
+        if (pcmk_is_set(instance_flags, pe_action_runnable)) {
+            any_runnable = true;
         }
     }
 
-    if (check_runnable && any_runnable == FALSE) {
-        pe_rsc_trace(action->rsc, "%s is not runnable because no children are", action->uuid);
+    if (!any_runnable) {
+        pe_rsc_trace(action->rsc,
+                     "%s is not runnable because no instance can run %s",
+                     action->uuid, action_name);
         pe__clear_action_summary_flags(flags, action, pe_action_runnable);
         if (node == NULL) {
             pe__clear_action_flags(action, pe_action_runnable);
