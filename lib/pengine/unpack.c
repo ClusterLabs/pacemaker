@@ -2924,6 +2924,7 @@ unpack_migrate_to_success(pe_resource_t *rsc, const pe_node_t *node,
     const char *target = NULL;
     bool source_newer_op = false;
     bool target_newer_state = false;
+    bool active_on_target = false;
 
     // Get source and target node names from XML
     if (get_migration_node_names(xml_op, node, NULL, &source,
@@ -2979,23 +2980,14 @@ unpack_migrate_to_success(pe_resource_t *rsc, const pe_node_t *node,
 
     target_node = pe_find_node(data_set->nodes, target);
     source_node = pe_find_node(data_set->nodes, source);
+    active_on_target = !target_newer_state && (target_node != NULL)
+                       && target_node->details->online;
 
     if (from_status != PCMK_EXEC_PENDING) { // migrate_from failed on target
-        /* If the resource has newer state on the target, this migrate_to no
-         * longer matters for the target.
-         */
-        if (!target_newer_state
-            && target_node && target_node->details->online) {
-            pe_rsc_trace(rsc, "Marking active on %s %p %d", target, target_node,
-                         target_node->details->online);
+        if (active_on_target) {
             native_add_running(rsc, target_node, data_set, TRUE);
-
         } else {
-            /* With the earlier bail logic, migrate_from != NULL here implies
-             * source_newer_op is false, meaning this migrate_to still matters
-             * for the source.
-             * Consider it failed here - forces a restart, prevents migration
-             */
+            // Mark resource as failed, require recovery, and prevent migration
             pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
             pe__clear_resource_flags(rsc, pe_rsc_allow_migrate);
         }
@@ -3004,11 +2996,7 @@ unpack_migrate_to_success(pe_resource_t *rsc, const pe_node_t *node,
         /* If the resource has newer state on the target, this migrate_to no
          * longer matters for the target.
          */
-        if (!target_newer_state
-            && target_node && target_node->details->online) {
-            pe_rsc_trace(rsc, "Marking active on %s %p %d", target, target_node,
-                         target_node->details->online);
-
+        if (active_on_target) {
             native_add_running(rsc, target_node, data_set, FALSE);
             if (source_node && source_node->details->online) {
                 /* This is a partial migration: the migrate_to completed
