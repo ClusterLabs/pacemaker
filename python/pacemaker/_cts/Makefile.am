@@ -12,6 +12,7 @@ MAINTAINERCLEANFILES    = Makefile.in
 pkgpythondir = $(pythondir)/$(PACKAGE)/_cts
 
 pkgpython_PYTHON = __init__.py \
+				   corosync.py \
 				   errors.py \
 				   process.py \
 				   test.py

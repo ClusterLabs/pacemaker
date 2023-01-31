@@ -10,7 +10,6 @@ import os
 import psutil
 import sys
 import subprocess
-import time
 import tempfile
 import signal
 
@@ -25,37 +24,12 @@ if os.path.exists("@abs_top_builddir@/python") and "@abs_top_builddir@" != "@abs
 
 from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
+from pacemaker._cts.corosync import Corosync, localname
 from pacemaker._cts.errors import ExitCodeError, OutputFoundError, OutputNotFoundError, XmlValidationError
-from pacemaker._cts.process import killall, exit_if_proc_running, stdout_from_command
+from pacemaker._cts.process import killall, exit_if_proc_running
 from pacemaker._cts.test import Test, Tests
 
 TEST_DIR = sys.path[0]
-
-AUTOGEN_COROSYNC_TEMPLATE = """
-totem {
-    version: 2
-    cluster_name: cts-fencing
-    crypto_cipher: none
-    crypto_hash: none
-    transport: udp
-}
-
-nodelist {
-    node {
-        nodeid: 1
-        name: %s
-        ring0_addr: 127.0.0.1
-    }
-}
-
-logging {
-    debug: off
-    to_syslog: no
-    to_stderr: no
-    to_logfile: yes
-    logfile: %s
-}
-"""
 
 def update_path():
     """ Set the PATH environment variable appropriately for the tests """
@@ -75,17 +49,6 @@ def update_path():
 
     print('Using PATH="{}"'.format(new_path))
     os.environ['PATH'] = new_path
-
-
-def localname():
-    """ Return the uname of the local host """
-
-    our_uname = stdout_from_command(["uname", "-n"])
-    if our_uname:
-        our_uname = our_uname[0]
-    else:
-        our_uname = "localhost"
-    return our_uname
 
 
 class FenceTest(Test):
@@ -205,9 +168,9 @@ class FenceTests(Tests):
     """ Collection of all fencing regression tests """
 
     def __init__(self, **kwargs):
-        Tests.__init__(self,  **kwargs)
+        Tests.__init__(self, **kwargs)
 
-        self._autogen_corosync_cfg = not os.path.exists(BuildOptions.COROSYNC_CONFIG_FILE)
+        self._corosync = Corosync(self.verbose, self.logdir, "cts-fencing")
 
     def new_test(self, name, description, with_cpg=False):
         """ Create a named test """
@@ -217,16 +180,6 @@ class FenceTests(Tests):
                          logdir=self.logdir)
         self._tests.append(test)
         return test
-
-    def start_corosync(self):
-        """ Start the corosync process """
-
-        if self.verbose:
-            print("Starting corosync")
-
-        test = subprocess.Popen("corosync", stdout=subprocess.PIPE)
-        test.wait()
-        time.sleep(10)
 
     def run_cpg_only(self):
         """ Run all corosync-enabled tests """
@@ -1107,15 +1060,7 @@ class FenceTests(Tests):
         """ Prepare the host before executing any tests """
 
         if use_corosync:
-            if self._autogen_corosync_cfg:
-                logname = os.path.join(self.logdir, "corosync.log")
-                corosync_cfg = io.open(BuildOptions.COROSYNC_CONFIG_FILE, "w")
-                corosync_cfg.write(AUTOGEN_COROSYNC_TEMPLATE % (localname(), logname))
-                corosync_cfg.close()
-
-            ### make sure we are in control ###
-            killall(["corosync"])
-            self.start_corosync()
+            self._corosync.start(kill_first=True)
 
         subprocess.call(["cts-support", "install"])
 
@@ -1123,16 +1068,7 @@ class FenceTests(Tests):
         """ Clean up the host after executing desired tests """
 
         if use_corosync:
-            killall(["corosync"])
-
-            if self._autogen_corosync_cfg:
-                if self.verbose:
-                    print("Corosync output")
-                    logfile = io.open(os.path.join(self.logdir, "corosync.log"), 'rt')
-                    for line in logfile.readlines():
-                        print(line.strip())
-                    logfile.close()
-                os.remove(BuildOptions.COROSYNC_CONFIG_FILE)
+            self._corosync.stop()
 
         subprocess.call(["cts-support", "uninstall"])
 
@@ -1253,7 +1189,11 @@ def main(argv):
 
         print("Starting ...")
 
-        tests.setup_environment(use_corosync)
+        try:
+            tests.setup_environment(use_corosync)
+        except TimeoutError:
+            print("corosync did not start in time, exiting")
+            sys.exit(ExitStatus.TIMEOUT)
 
         if opts.options['run-only-pattern'] != "":
             tests.run_tests_matching(opts.options['run-only-pattern'])
