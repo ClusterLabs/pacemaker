@@ -1767,7 +1767,6 @@ apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml)
 {
     gboolean result = TRUE;
     int root_nodes_seen = 0;
-    static struct qb_log_callsite *digest_cs = NULL;
     const char *digest = crm_element_value(diff, XML_ATTR_DIGEST);
     const char *version = crm_element_value(diff, XML_ATTR_CRM_VERSION);
 
@@ -1776,10 +1775,6 @@ apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml)
     xmlNode *removed = find_xml_node(diff, "diff-removed", FALSE);
 
     CRM_CHECK(new_xml != NULL, return FALSE);
-    if (digest_cs == NULL) {
-        digest_cs = qb_log_callsite_get(__func__, __FILE__, "diff-digest",
-                                        LOG_TRACE, __LINE__, crm_trace_nonlog);
-    }
 
     crm_trace("Subtraction Phase");
     for (child_diff = pcmk__xml_first_child(removed); child_diff != NULL;
@@ -1832,12 +1827,14 @@ apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml)
                      digest, new_digest);
             result = FALSE;
 
-            crm_trace("%p %.6x", digest_cs, digest_cs ? digest_cs->targets : 0);
-            if ((digest_cs != NULL) && digest_cs->targets) {
-                save_xml_to_file(old_xml, "diff:original", NULL);
-                save_xml_to_file(diff, "diff:input", NULL);
-                save_xml_to_file(*new_xml, "diff:new", NULL);
-            }
+            pcmk__if_tracing(
+                {
+                    save_xml_to_file(old_xml, "diff:original", NULL);
+                    save_xml_to_file(diff, "diff:input", NULL);
+                    save_xml_to_file(*new_xml, "diff:new", NULL);
+                },
+                {}
+            );
 
         } else {
             crm_trace("Digest matched: expected %s, calculated %s",

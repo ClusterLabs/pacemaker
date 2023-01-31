@@ -66,12 +66,11 @@ crm_glib_handler(const gchar * log_domain, GLogLevelFlags flags, const gchar * m
                                       LOG_DEBUG, __LINE__, crm_trace_nonlog);
     }
 
-
     switch (msg_level) {
         case G_LOG_LEVEL_CRITICAL:
             log_level = LOG_CRIT;
 
-            if (crm_is_callsite_active(glib_cs, LOG_DEBUG, 0) == FALSE) {
+            if (!crm_is_callsite_active(glib_cs, LOG_DEBUG, crm_trace_nonlog)) {
                 /* log and record how we got here */
                 crm_abort(__FILE__, __func__, __LINE__, message, TRUE, TRUE);
             }

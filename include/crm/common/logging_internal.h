@@ -61,7 +61,8 @@ extern "C" {
                                            "if_tracing", LOG_TRACE,     \
                                            __LINE__, crm_trace_nonlog); \
         }                                                               \
-        if (crm_is_callsite_active(trace_cs, LOG_TRACE, 0)) {           \
+        if (crm_is_callsite_active(trace_cs, LOG_TRACE,                 \
+                                   crm_trace_nonlog)) {                 \
             if_action;                                                  \
         } else {                                                        \
             else_action;                                                \
