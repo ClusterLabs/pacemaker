@@ -5,6 +5,7 @@
 __copyright__ = "Copyright 2012-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
+import argparse
 import os
 import sys
 import subprocess
@@ -1036,78 +1037,38 @@ class FenceTests(Tests):
 
         subprocess.call(["cts-support", "uninstall"])
 
-class TestOptions(object):
-    """ Option handler """
 
-    def __init__(self):
-        self.options = {}
-        self.options['list-tests'] = False
-        self.options['run-all'] = True
-        self.options['run-only'] = ""
-        self.options['run-only-pattern'] = ""
-        self.options['verbose'] = False
-        self.options['timeout'] = 2
-        self.options['force-wait'] = False
-        self.options['invalid-arg'] = ""
-        self.options['cpg-only'] = False
-        self.options['no-cpg'] = False
-        self.options['show-usage'] = False
+def build_options():
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
+                                     description="Run pacemaker-fenced regression tests",
+                                     epilog="Example: Run only the test 'start_stop'\n"
+                                            "\t " + sys.argv[0] + " --run-only start_stop\n\n"
+                                            "Example: Run only the tests with the string 'systemd' present in them\n"
+                                            "\t " + sys.argv[0] + " --run-only-pattern systemd")
+    parser.add_argument("-c", "--cpg-only", action="store_true",
+                        help="Only run tests that require corosync")
+    parser.add_argument("-l", "--list-tests", action="store_true",
+                        help="Print out all registered tests")
+    parser.add_argument("-n", "--no-cpg", action="store_true",
+                        help="Only run tests that do not require corosync")
+    parser.add_argument("-p", "--run-only-pattern", metavar='PATTERN',
+                        help="Run only tests matching the given pattern")
+    parser.add_argument("-r", "--run-only", metavar='TEST',
+                        help="Run a specific test")
+    parser.add_argument("-t", "--timeout", type=float, default=2,
+                        help="Up to how many seconds each test case waits for the daemon to "
+                             "be initialized.  Defaults to 2.  The value 0 means no limit.")
+    parser.add_argument("-w", "--force-wait", action="store_true",
+                        help="Each test case waits the default/specified --timeout for the "
+                             "daemon without tracking the log")
+    parser.add_argument("-V", "--verbose", action="store_true",
+                        help="Verbose output")
 
-    def build_options(self, argv):
-        """ Set options based on command-line arguments """
-
-        args = argv[1:]
-        skip = False
-        for i in range(0, len(args)):
-            if skip:
-                skip = False
-                continue
-            elif args[i] == "-h" or args[i] == "--help":
-                self.options['show-usage'] = True
-            elif args[i] == "-l" or args[i] == "--list-tests":
-                self.options['list-tests'] = True
-            elif args[i] == "-V" or args[i] == "--verbose":
-                self.options['verbose'] = True
-            elif args[i] == "-t" or args[i] == "--timeout":
-                self.options['timeout'] = float(args[i+1])
-            elif args[i] == "-w" or args[i] == "--force-wait":
-                self.options['force-wait'] = True
-            elif args[i] == "-n" or args[i] == "--no-cpg":
-                self.options['no-cpg'] = True
-            elif args[i] == "-c" or args[i] == "--cpg-only":
-                self.options['cpg-only'] = True
-            elif args[i] == "-r" or args[i] == "--run-only":
-                self.options['run-only'] = args[i+1]
-                skip = True
-            elif args[i] == "-p" or args[i] == "--run-only-pattern":
-                self.options['run-only-pattern'] = args[i+1]
-                skip = True
-
-    def show_usage(self):
-        """ Show command usage """
-
-        print("usage: " + sys.argv[0] + " [options]")
-        print("If no options are provided, all tests will run")
-        print("Options:")
-        print("\t [--help | -h]                        Show usage")
-        print("\t [--list-tests | -l]                  Print out all registered tests.")
-        print("\t [--cpg-only | -c]                    Only run tests that require corosync.")
-        print("\t [--no-cpg | -n]                      Only run tests that do not require corosync")
-        print("\t [--run-only | -r 'testname']         Run a specific test")
-        print("\t [--verbose | -V]                     Verbose output")
-        print("\t [--timeout | -t 'floating point number']"
-              "\n\t\tUp to how many seconds each test case waits for the daemon to be initialized."
-              "\n\t\tDefaults to 2. The value 0 means no limit.")
-        print("\t [--force-wait | -w]"
-              "\n\t\tEach test case waits the default/specified --timeout for the daemon without tracking the log.")
-        print("\t [--run-only-pattern | -p 'string']   Run only tests containing the string value")
-        print("\n\tExample: Run only the test 'start_stop'")
-        print("\t\t " + sys.argv[0] + " --run-only start_stop")
-        print("\n\tExample: Run only the tests with the string 'systemd' present in them")
-        print("\t\t " + sys.argv[0] + " --run-only-pattern systemd")
+    args = parser.parse_args()
+    return args
 
 
-def main(argv):
+def main():
     """ Run fencing regression tests as specified by arguments """
 
     update_path()
@@ -1115,24 +1076,19 @@ def main(argv):
     # Ensure all command output is in portable locale for comparison
     os.environ['LC_ALL'] = "C"
 
-    opts = TestOptions()
-    opts.build_options(argv)
-
-    if opts.options['show-usage']:
-        opts.show_usage()
-        sys.exit(ExitStatus.OK)
+    opts = build_options()
 
     exit_if_proc_running("pacemaker-fenced")
 
-    use_corosync = not opts.options['no-cpg']
+    use_corosync = not opts.no_cpg
     if use_corosync:
         exit_if_proc_running("corosync")
 
     # Create a temporary directory for log files (the directory and its
     # contents will automatically be erased when done)
     with tempfile.TemporaryDirectory(prefix="cts-fencing-") as logdir:
-        tests = FenceTests(verbose=opts.options['verbose'], timeout=opts.options['timeout'],
-                           force_wait=opts.options['force-wait'], logdir=logdir)
+        tests = FenceTests(verbose=opts.verbose, timeout=opts.timeout,
+                           force_wait=opts.force_wait, logdir=logdir)
 
         tests.build_standalone_tests()
         tests.build_custom_timeout_tests()
@@ -1147,7 +1103,7 @@ def main(argv):
         tests.build_metadata_tests()
         tests.build_validate_tests()
 
-        if opts.options['list-tests']:
+        if opts.list_tests:
             tests.print_list()
             sys.exit(ExitStatus.OK)
 
@@ -1159,16 +1115,16 @@ def main(argv):
             print("corosync did not start in time, exiting")
             sys.exit(ExitStatus.TIMEOUT)
 
-        if opts.options['run-only-pattern'] != "":
-            tests.run_tests_matching(opts.options['run-only-pattern'])
+        if opts.run_only_pattern:
+            tests.run_tests_matching(opts.run_only_pattern)
             tests.print_results()
-        elif opts.options['run-only'] != "":
-            tests.run_single(opts.options['run-only'])
+        elif opts.run_only:
+            tests.run_single(opts.run_only)
             tests.print_results()
-        elif opts.options['no-cpg']:
+        elif opts.no_cpg:
             tests.run_no_cpg()
             tests.print_results()
-        elif opts.options['cpg-only']:
+        elif opts.cpg_only:
             tests.run_cpg_only()
             tests.print_results()
         else:
@@ -1181,4 +1137,4 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    main(sys.argv)
+    main()
