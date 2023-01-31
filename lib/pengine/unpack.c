@@ -2875,7 +2875,7 @@ add_dangling_migration(pe_resource_t *rsc, const pe_node_t *node)
 
 static void
 unpack_migrate_to_success(pe_resource_t *rsc, const pe_node_t *node,
-                          const xmlNode *xml_op, pe_working_set_t *data_set)
+                          const xmlNode *xml_op)
 {
     /* A complete migration sequence is:
      * 1. migrate_to on source node (which succeeded if we get to this function)
@@ -2926,11 +2926,11 @@ unpack_migrate_to_success(pe_resource_t *rsc, const pe_node_t *node,
 
     // Check for newer state on the source
     source_newer_op = non_monitor_after(rsc->id, source, xml_op, true,
-                                        data_set);
+                                        rsc->cluster);
 
     // Check for a migrate_from action from this source on the target
     migrate_from = find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, target,
-                               source, -1, data_set);
+                               source, -1, rsc->cluster);
     if (migrate_from != NULL) {
         if (source_newer_op) {
             /* There's a newer non-monitor operation on the source and a
@@ -2948,7 +2948,7 @@ unpack_migrate_to_success(pe_resource_t *rsc, const pe_node_t *node,
      * migration events, this migrate_to is irrelevant to the resource's state.
      */
     target_newer_state = newer_state_after_migrate(rsc->id, target, xml_op,
-                                                   migrate_from, data_set);
+                                                   migrate_from, rsc->cluster);
     if (source_newer_op && target_newer_state) {
         return;
     }
@@ -2967,13 +2967,13 @@ unpack_migrate_to_success(pe_resource_t *rsc, const pe_node_t *node,
      */
     rsc->role = RSC_ROLE_STARTED;
 
-    target_node = pe_find_node(data_set->nodes, target);
+    target_node = pe_find_node(rsc->cluster->nodes, target);
     active_on_target = !target_newer_state && (target_node != NULL)
                        && target_node->details->online;
 
     if (from_status != PCMK_EXEC_PENDING) { // migrate_from failed on target
         if (active_on_target) {
-            native_add_running(rsc, target_node, data_set, TRUE);
+            native_add_running(rsc, target_node, rsc->cluster, TRUE);
         } else {
             // Mark resource as failed, require recovery, and prevent migration
             pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
@@ -2985,9 +2985,9 @@ unpack_migrate_to_success(pe_resource_t *rsc, const pe_node_t *node,
     // The migrate_from is pending, complete but erased, or to be scheduled
 
     if (active_on_target) {
-        pe_node_t *source_node = pe_find_node(data_set->nodes, source);
+        pe_node_t *source_node = pe_find_node(rsc->cluster->nodes, source);
 
-        native_add_running(rsc, target_node, data_set, FALSE);
+        native_add_running(rsc, target_node, rsc->cluster, FALSE);
         if ((source_node != NULL) && source_node->details->online) {
             /* This is a partial migration: the migrate_to completed
              * successfully on the source, but the migrate_from has not
@@ -3978,7 +3978,7 @@ update_resource_state(pe_resource_t *rsc, const pe_node_t *node,
         clear_past_failure = TRUE;
 
     } else if (pcmk__str_eq(task, CRMD_ACTION_MIGRATE, pcmk__str_casei)) {
-        unpack_migrate_to_success(rsc, node, xml_op, data_set);
+        unpack_migrate_to_success(rsc, node, xml_op);
 
     } else if (rsc->role < RSC_ROLE_STARTED) {
         pe_rsc_trace(rsc, "%s active on %s", rsc->id, pe__node_name(node));
