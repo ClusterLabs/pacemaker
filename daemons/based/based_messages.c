@@ -157,8 +157,6 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
     const char *seq = crm_element_value(req, F_CIB_PING_ID);
     char *digest = calculate_xml_versioned_digest(the_cib, FALSE, TRUE, CRM_FEATURE_SET);
 
-    static struct qb_log_callsite *cs = NULL;
-
     crm_trace("Processing \"%s\" event %s from %s", op, seq, host);
     *answer = create_xml_node(NULL, XML_CRM_TAG_PING);
 
@@ -166,31 +164,27 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
     crm_xml_add(*answer, XML_ATTR_DIGEST, digest);
     crm_xml_add(*answer, F_CIB_PING_ID, seq);
 
-    if (cs == NULL) {
-        cs = qb_log_callsite_get(__func__, __FILE__, __func__, LOG_TRACE,
-                                 __LINE__, crm_trace_nonlog);
-    }
-    if (cs && cs->targets) {
-        /* Append additional detail so the reciever can log the differences */
-        add_message_xml(*answer, F_CIB_CALLDATA, the_cib);
+    pcmk__if_tracing(
+        {
+            // Append additional detail so the receiver can log the differences
+            add_message_xml(*answer, F_CIB_CALLDATA, the_cib);
+        },
+        {
+            // Always include at least the version details
+            const char *tag = TYPE(the_cib);
+            xmlNode *shallow = create_xml_node(NULL, tag);
 
-    } else {
-        /* Always include at least the version details */
-        const char *tag = TYPE(the_cib);
-        xmlNode *shallow = create_xml_node(NULL, tag);
+            copy_in_properties(shallow, the_cib);
+            add_message_xml(*answer, F_CIB_CALLDATA, shallow);
+            free_xml(shallow);
+        }
+    );
 
-        copy_in_properties(shallow, the_cib);
-        add_message_xml(*answer, F_CIB_CALLDATA, shallow);
-        free_xml(shallow);
-    }
-
-    crm_info("Reporting our current digest to %s: %s for %s.%s.%s (%p %d)",
+    crm_info("Reporting our current digest to %s: %s for %s.%s.%s",
              host, digest,
              crm_element_value(existing_cib, XML_ATTR_GENERATION_ADMIN),
              crm_element_value(existing_cib, XML_ATTR_GENERATION),
-             crm_element_value(existing_cib, XML_ATTR_NUMUPDATES),
-             existing_cib,
-             cs && cs->targets);
+             crm_element_value(existing_cib, XML_ATTR_NUMUPDATES));
 
     free(digest);
 

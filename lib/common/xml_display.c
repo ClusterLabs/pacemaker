@@ -25,23 +25,20 @@ void
 pcmk__log_xmllib_err(void *ctx, const char *fmt, ...)
 {
     va_list ap;
-    static struct qb_log_callsite *xml_error_cs = NULL;
-
-    if (xml_error_cs == NULL) {
-        xml_error_cs = qb_log_callsite_get(__func__, __FILE__,
-                                           "xml library error", LOG_TRACE,
-                                           __LINE__, crm_trace_nonlog);
-    }
 
     va_start(ap, fmt);
-    if ((xml_error_cs != NULL) && (xml_error_cs->targets != 0)) {
-        PCMK__XML_LOG_BASE(LOG_ERR, TRUE,
-                           crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__,
-                                     "xml library error", TRUE, TRUE),
-                           "XML Error: ", fmt, ap);
-    } else {
-        PCMK__XML_LOG_BASE(LOG_ERR, TRUE, 0, "XML Error: ", fmt, ap);
-    }
+    pcmk__if_tracing(
+        {
+            PCMK__XML_LOG_BASE(LOG_ERR, TRUE,
+                               crm_abort(__FILE__, __PRETTY_FUNCTION__,
+                                         __LINE__, "xml library error", TRUE,
+                                         TRUE),
+                               "XML Error: ", fmt, ap);
+        },
+        {
+            PCMK__XML_LOG_BASE(LOG_ERR, TRUE, 0, "XML Error: ", fmt, ap);
+        }
+    );
     va_end(ap);
 }
 

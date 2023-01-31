@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -242,27 +242,21 @@ pcmk__apply_acl(xmlNode *xml)
         max = numXpathResults(xpathObj);
 
         for (lpc = 0; lpc < max; lpc++) {
-            static struct qb_log_callsite *trace_cs = NULL;
             xmlNode *match = getXpathResult(xpathObj, lpc);
 
             nodepriv = match->_private;
             pcmk__set_xml_flags(nodepriv, acl->mode);
 
-            /* Build a GString only if tracing is enabled.
-             * Can't use pcmk__log_else() because the else_action would be
-             * continue.
-             */
-            if (trace_cs == NULL) {
-                trace_cs = qb_log_callsite_get(__func__, __FILE__, "apply_acl",
-                                               LOG_TRACE, __LINE__, 0);
-            }
-            if (crm_is_callsite_active(trace_cs, LOG_TRACE, 0)) {
-                GString *path = pcmk__element_xpath(match);
-                crm_trace("Applying %s ACL to %s matched by %s",
-                          acl_to_text(acl->mode), (const char *) path->str,
-                          acl->xpath);
-                g_string_free(path, TRUE);
-            }
+            // Build a GString only if tracing is enabled
+            pcmk__if_tracing(
+                {
+                    GString *path = pcmk__element_xpath(match);
+                    crm_trace("Applying %s ACL to %s matched by %s",
+                              acl_to_text(acl->mode), path->str, acl->xpath);
+                    g_string_free(path, TRUE);
+                },
+                {}
+            );
         }
         crm_trace("Applied %s ACL %s (%d match%s)",
                   acl_to_text(acl->mode), acl->xpath, max,
@@ -667,7 +661,7 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
         if (docpriv->acls == NULL) {
             pcmk__set_xml_doc_flag(xml, pcmk__xf_acl_denied);
 
-            pcmk__log_else(LOG_TRACE, return false);
+            pcmk__if_tracing({}, return false);
             xpath = pcmk__element_xpath(xml);
             if (name != NULL) {
                 pcmk__g_strcat(xpath, "[@", name, "]", NULL);
@@ -703,7 +697,7 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
             } else if (pcmk_is_set(nodepriv->flags, pcmk__xf_acl_deny)) {
                 pcmk__set_xml_doc_flag(xml, pcmk__xf_acl_denied);
 
-                pcmk__log_else(LOG_TRACE, return false);
+                pcmk__if_tracing({}, return false);
                 xpath = pcmk__element_xpath(xml);
                 if (name != NULL) {
                     pcmk__g_strcat(xpath, "[@", name, "]", NULL);
@@ -723,7 +717,7 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
 
         pcmk__set_xml_doc_flag(xml, pcmk__xf_acl_denied);
 
-        pcmk__log_else(LOG_TRACE, return false);
+        pcmk__if_tracing({}, return false);
         xpath = pcmk__element_xpath(xml);
         if (name != NULL) {
             pcmk__g_strcat(xpath, "[@", name, "]", NULL);
