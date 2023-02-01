@@ -609,15 +609,14 @@ main(int argc, char **argv)
 
                 {
                     pcmk__output_t *logger_out = NULL;
-                    int rc = pcmk__log_output_new(&logger_out);
+                    rc = pcmk_rc2legacy(pcmk__log_output_new(&logger_out));
 
-                    CRM_LOG_ASSERT(rc == pcmk_rc_ok);
-                    if (rc == pcmk_rc_ok) {
-                        pcmk__output_set_log_level(logger_out, LOG_INFO);
-                        pcmk__xml_show_changes(logger_out, new_config);
-                        logger_out->finish(logger_out, CRM_EX_OK, true, NULL);
-                        pcmk__output_free(logger_out);
-                    }
+                    CRM_CHECK(rc == pcmk_ok, goto done);
+
+                    pcmk__output_set_log_level(logger_out, LOG_INFO);
+                    pcmk__xml_show_changes(logger_out, new_config);
+                    logger_out->finish(logger_out, CRM_EX_OK, true, NULL);
+                    pcmk__output_free(logger_out);
                 }
 
                 xml_accept_changes(new_config);

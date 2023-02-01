@@ -240,13 +240,12 @@ generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
         pcmk__output_t *logger_out = NULL;
         int rc = pcmk__log_output_new(&logger_out);
 
-        CRM_LOG_ASSERT(rc == pcmk_rc_ok);
-        if (rc == pcmk_rc_ok) {
-            pcmk__output_set_log_level(logger_out, LOG_INFO);
-            pcmk__xml_show_changes(logger_out, object_2);
-            logger_out->finish(logger_out, CRM_EX_OK, true, NULL);
-            pcmk__output_free(logger_out);
-        }
+        CRM_CHECK(rc == pcmk_rc_ok, {free_xml(output); return rc;});
+
+        pcmk__output_set_log_level(logger_out, LOG_INFO);
+        pcmk__xml_show_changes(logger_out, object_2);
+        logger_out->finish(logger_out, CRM_EX_OK, true, NULL);
+        pcmk__output_free(logger_out);
     }
 
     xml_accept_changes(object_2);

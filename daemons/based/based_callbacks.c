@@ -357,23 +357,14 @@ process_ping_reply(xmlNode *reply)
 
             if(remote_cib && remote_cib->children) {
                 // Additional debug
-                int rc = pcmk_rc_ok;
-
-                /* Unclear whether this is needed for its side effects (it may
-                 * mark the_cib with pcmk__xf_skip) if we can't log the changes
-                 */
-                xml_calculate_changes(the_cib, remote_cib);
-
                 if (logger_out == NULL) {
-                    rc = pcmk__log_output_new(&logger_out);
-                    CRM_LOG_ASSERT(rc == pcmk_rc_ok);
+                    CRM_CHECK(pcmk__log_output_new(&logger_out) == pcmk_rc_ok,
+                              {free_xml(remote_cib); return;});
                 }
-
-                if (rc == pcmk_rc_ok) {
-                    pcmk__output_set_log_level(logger_out, LOG_INFO);
-                    pcmk__xml_show_changes(logger_out, remote_cib);
-                    crm_trace("End of differences");
-                }
+                pcmk__output_set_log_level(logger_out, LOG_INFO);
+                xml_calculate_changes(the_cib, remote_cib);
+                pcmk__xml_show_changes(logger_out, remote_cib);
+                crm_trace("End of differences");
             }
 
             free_xml(remote_cib);

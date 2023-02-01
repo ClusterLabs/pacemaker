@@ -323,15 +323,14 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     pcmk__if_tracing(
         {
             pcmk__output_t *out = NULL;
-            int rc = pcmk__log_output_new(&out);
+            rc = pcmk_rc2legacy(pcmk__log_output_new(&out));
 
-            CRM_LOG_ASSERT(rc == pcmk_rc_ok);
-            if (rc == pcmk_rc_ok) {
-                pcmk__output_set_log_level(out, LOG_TRACE);
-                pcmk__xml_show_changes(out, scratch);
-                out->finish(out, CRM_EX_OK, true, NULL);
-                pcmk__output_free(out);
-            }
+            CRM_CHECK(rc == pcmk_ok, goto done);
+
+            pcmk__output_set_log_level(out, LOG_TRACE);
+            pcmk__xml_show_changes(out, scratch);
+            out->finish(out, CRM_EX_OK, true, NULL);
+            pcmk__output_free(out);
         },
         {}
     );
