@@ -2797,6 +2797,60 @@ newer_state_after_migrate(const char *rsc_id, const char *node_name,
                                         data_set);
 }
 
+/*!
+ * \internal
+ * \brief Parse migration source and target node names from history entry
+ *
+ * \param[in] entry         Resource history entry for a migration action
+ * \param[in] source_node   If not NULL, source must match this node
+ * \param[in] target_node   If not NULL, target must match this node
+ * \param[out] source_name  Where to store migration source node name
+ * \param[out] target_name  Where to store migration target node name
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+get_migration_node_names(const xmlNode *entry, const pe_node_t *source_node,
+                         const pe_node_t *target_node,
+                         const char **source_name, const char **target_name)
+{
+    const char *id = ID(entry);
+
+    if (id == NULL) {
+        crm_err("Ignoring resource history entry without ID");
+        return pcmk_rc_unpack_error;
+    }
+
+    *source_name = crm_element_value(entry, XML_LRM_ATTR_MIGRATE_SOURCE);
+    *target_name = crm_element_value(entry, XML_LRM_ATTR_MIGRATE_TARGET);
+    if ((*source_name == NULL) || (*target_name == NULL)) {
+        crm_err("Ignoring resource history entry %s without "
+                XML_LRM_ATTR_MIGRATE_SOURCE " and " XML_LRM_ATTR_MIGRATE_TARGET,
+                id);
+        return pcmk_rc_unpack_error;
+    }
+
+    if ((source_node != NULL)
+        && !pcmk__str_eq(*source_name, source_node->details->uname,
+                         pcmk__str_casei|pcmk__str_null_matches)) {
+        crm_err("Ignoring resource history entry %s because "
+                XML_LRM_ATTR_MIGRATE_SOURCE "='%s' does not match %s",
+                id, pcmk__s(*source_name, ""), pe__node_name(source_node));
+        return pcmk_rc_unpack_error;
+    }
+
+    if ((target_node != NULL)
+        && !pcmk__str_eq(*target_name, target_node->details->uname,
+                         pcmk__str_casei|pcmk__str_null_matches)) {
+        crm_err("Ignoring resource history entry %s because "
+                XML_LRM_ATTR_MIGRATE_TARGET "='%s' does not match %s",
+                id, pcmk__s(*target_name, ""), pe__node_name(target_node));
+        return pcmk_rc_unpack_error;
+    }
+
+    return pcmk_rc_ok;
+}
+
 static void
 unpack_migrate_to_success(pe_resource_t *rsc, const pe_node_t *node,
                           const xmlNode *xml_op, pe_working_set_t *data_set)
@@ -2844,13 +2898,16 @@ unpack_migrate_to_success(pe_resource_t *rsc, const pe_node_t *node,
     pe_node_t *target_node = NULL;
     pe_node_t *source_node = NULL;
     xmlNode *migrate_from = NULL;
-    const char *source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
-    const char *target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
+    const char *source = NULL;
+    const char *target = NULL;
     bool source_newer_op = false;
     bool target_newer_state = false;
 
-    // Sanity check
-    CRM_CHECK(source && target && !strcmp(source, node->details->uname), return);
+    // Get source and target node names from XML
+    if (get_migration_node_names(xml_op, node, NULL, &source,
+                                 &target) != pcmk_rc_ok) {
+        return;
+    }
 
     /* If there's any newer non-monitor operation on the source, this migrate_to
      * potentially no longer matters for the source.
@@ -2960,11 +3017,14 @@ unpack_migrate_to_failure(pe_resource_t *rsc, const pe_node_t *node,
                           const xmlNode *xml_op, pe_working_set_t *data_set)
 {
     xmlNode *target_migrate_from = NULL;
-    const char *source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
-    const char *target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
+    const char *source = NULL;
+    const char *target = NULL;
 
-    // Sanity check
-    CRM_CHECK(source && target && !strcmp(source, node->details->uname), return);
+    // Get source and target node names from XML
+    if (get_migration_node_names(xml_op, node, NULL, &source,
+                                 &target) != pcmk_rc_ok) {
+        return;
+    }
 
     /* If a migration failed, we have to assume the resource is active. Clones
      * are not allowed to migrate, so role can't be promoted.
@@ -3013,11 +3073,14 @@ unpack_migrate_from_failure(pe_resource_t *rsc, const pe_node_t *node,
                             const xmlNode *xml_op, pe_working_set_t *data_set)
 {
     xmlNode *source_migrate_to = NULL;
-    const char *source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
-    const char *target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
+    const char *source = NULL;
+    const char *target = NULL;
 
-    // Sanity check
-    CRM_CHECK(source && target && !strcmp(target, node->details->uname), return);
+    // Get source and target node names from XML
+    if (get_migration_node_names(xml_op, NULL, node, &source,
+                                 &target) != pcmk_rc_ok) {
+        return;
+    }
 
     /* If a migration failed, we have to assume the resource is active. Clones
      * are not allowed to migrate, so role can't be promoted.
