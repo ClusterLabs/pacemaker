@@ -3001,6 +3001,15 @@ unpack_migrate_to_success(pe_resource_t *rsc, const pe_node_t *node,
 
     // The migrate_from is pending, complete but erased, or to be scheduled
 
+    /* If there is no history at all for the resource on an online target, then
+     * it was likely cleaned. Just return, and we'll schedule a probe. Once we
+     * have the probe result, it will be reflected in target_newer_state.
+     */
+    if ((target_node != NULL) && target_node->details->online
+        && unknown_on_node(rsc, target)) {
+        return;
+    }
+
     if (active_on_target) {
         pe_node_t *source_node = pe_find_node(rsc->cluster->nodes, source);
 
