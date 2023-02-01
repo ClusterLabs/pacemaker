@@ -609,9 +609,10 @@ main(int argc, char **argv)
 
                 {
                     pcmk__output_t *logger_out = NULL;
-                    rc = pcmk_rc2legacy(pcmk__log_output_new(&logger_out));
+                    rc = pcmk__log_output_new(&logger_out);
 
-                    CRM_CHECK(rc == pcmk_ok, goto done);
+                    CRM_CHECK(rc == pcmk_rc_ok,
+                              exit_code = pcmk_rc2exitc(rc); goto done;);
 
                     pcmk__output_set_log_level(logger_out, LOG_INFO);
                     pcmk__xml_show_changes(logger_out, new_config);
