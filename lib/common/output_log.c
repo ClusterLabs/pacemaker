@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2022 the Pacemaker project contributors
+ * Copyright 2019-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -327,6 +327,18 @@ pcmk__mk_log_output(char **argv) {
     retval->prompt = log_prompt;
 
     return retval;
+}
+
+int
+pcmk__output_get_log_level(const pcmk__output_t *out)
+{
+    private_data_t *priv = NULL;
+
+    CRM_ASSERT((out != NULL) && (out->priv != NULL));
+    CRM_CHECK(pcmk__str_eq(out->fmt_name, "log", pcmk__str_none), return 0);
+
+    priv = out->priv;
+    return priv->log_level;
 }
 
 void

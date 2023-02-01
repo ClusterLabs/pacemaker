@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -49,6 +49,7 @@ char *pcmk__our_nodename = NULL;
 
 static unsigned int crm_log_priority = LOG_NOTICE;
 static GLogFunc glib_log_default = NULL;
+static pcmk__output_t *logger_out = NULL;
 
 static gboolean crm_tracing_enabled(void);
 
@@ -65,12 +66,11 @@ crm_glib_handler(const gchar * log_domain, GLogLevelFlags flags, const gchar * m
                                       LOG_DEBUG, __LINE__, crm_trace_nonlog);
     }
 
-
     switch (msg_level) {
         case G_LOG_LEVEL_CRITICAL:
             log_level = LOG_CRIT;
 
-            if (crm_is_callsite_active(glib_cs, LOG_DEBUG, 0) == FALSE) {
+            if (!crm_is_callsite_active(glib_cs, LOG_DEBUG, crm_trace_nonlog)) {
                 /* log and record how we got here */
                 crm_abort(__FILE__, __func__, __LINE__, message, TRUE, TRUE);
             }
@@ -1107,36 +1107,41 @@ pcmk__cli_init_logging(const char *name, unsigned int verbosity)
  * \param[in] xml    XML to log
  *
  * \note This does nothing when \p level is \p LOG_STDOUT.
+ * \note Do not call this function directly. It should be called only from the
+ *       \p do_crm_log_xml() macro.
  */
 void
-do_crm_log_xml(uint8_t level, const char *text, const xmlNode *xml)
+pcmk_log_xml_impl(uint8_t level, const char *text, const xmlNode *xml)
 {
-    static struct qb_log_callsite *xml_cs = NULL;
+    if (xml == NULL) {
+        do_crm_log(level, "%s%sNo data to dump as XML",
+                   pcmk__s(text, ""), pcmk__str_empty(text)? "" : " ");
 
-    switch (level) {
-        case LOG_STDOUT:
-        case LOG_NEVER:
-            break;
-        default:
-            if (xml_cs == NULL) {
-                xml_cs = qb_log_callsite_get(__func__, __FILE__, "xml-blob",
-                                             level, __LINE__, 0);
-            }
+    } else {
+        if (logger_out == NULL) {
+            CRM_CHECK(pcmk__log_output_new(&logger_out) == pcmk_rc_ok, return);
+        }
 
-            if (crm_is_callsite_active(xml_cs, level, 0)) {
-                if (xml == NULL) {
-                    do_crm_log(level, "%s%sNo data to dump as XML",
-                               pcmk__s(text, ""),
-                               pcmk__str_empty(text)? "" : " ");
-                } else {
-                    pcmk__xml_log(level, text, xml, 1,
-                                  pcmk__xml_fmt_pretty
-                                  |pcmk__xml_fmt_open
-                                  |pcmk__xml_fmt_children
-                                  |pcmk__xml_fmt_close);
-                }
-            }
-            break;
+        pcmk__output_set_log_level(logger_out, level);
+        pcmk__xml_show(logger_out, text, xml, 1,
+                       pcmk__xml_fmt_pretty
+                       |pcmk__xml_fmt_open
+                       |pcmk__xml_fmt_children
+                       |pcmk__xml_fmt_close);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Free the logging library's internal log output object
+ */
+void
+pcmk__free_common_logger(void)
+{
+    if (logger_out != NULL) {
+        logger_out->finish(logger_out, CRM_EX_OK, true, NULL);
+        pcmk__output_free(logger_out);
+        logger_out = NULL;
     }
 }
 

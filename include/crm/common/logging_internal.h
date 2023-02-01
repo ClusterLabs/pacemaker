@@ -14,6 +14,8 @@ extern "C" {
 #ifndef PCMK__LOGGING_INTERNAL_H
 #  define PCMK__LOGGING_INTERNAL_H
 
+#  include <crm/common/logging.h>
+
 /*!
  * \internal
  * \brief Log a configuration error
@@ -59,7 +61,8 @@ extern "C" {
                                            "if_tracing", LOG_TRACE,     \
                                            __LINE__, crm_trace_nonlog); \
         }                                                               \
-        if (crm_is_callsite_active(trace_cs, LOG_TRACE, 0)) {           \
+        if (crm_is_callsite_active(trace_cs, LOG_TRACE,                 \
+                                   crm_trace_nonlog)) {                 \
             if_action;                                                  \
         } else {                                                        \
             else_action;                                                \
@@ -78,6 +81,8 @@ extern "C" {
 void pcmk__cli_init_logging(const char *name, unsigned int verbosity);
 
 int pcmk__add_logfile(const char *filename);
+
+void pcmk__free_common_logger(void);
 
 #ifdef __cplusplus
 }

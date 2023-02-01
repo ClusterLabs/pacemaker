@@ -34,6 +34,7 @@
 #define OUR_NODENAME (stand_alone? "localhost" : crm_cluster->uname)
 
 static unsigned long cib_local_bcast_num = 0;
+static pcmk__output_t *logger_out = NULL;
 
 typedef struct cib_local_notify_s {
     xmlNode *notify_src;
@@ -355,9 +356,14 @@ process_ping_reply(xmlNode *reply)
                        digest, remote_cib);
 
             if(remote_cib && remote_cib->children) {
-                /* Additional debug */
+                // Additional debug
+                if (logger_out == NULL) {
+                    CRM_CHECK(pcmk__log_output_new(&logger_out) == pcmk_rc_ok,
+                              {free_xml(remote_cib); return;});
+                }
+                pcmk__output_set_log_level(logger_out, LOG_INFO);
                 xml_calculate_changes(the_cib, remote_cib);
-                pcmk__xml_log_changes(LOG_INFO, remote_cib);
+                pcmk__xml_show_changes(logger_out, remote_cib);
                 crm_trace("End of differences");
             }
 
@@ -1640,6 +1646,12 @@ terminate_cib(const char *caller, int fast)
     }
 
     uninitializeCib();
+
+    if (logger_out != NULL) {
+        logger_out->finish(logger_out, CRM_EX_OK, true, NULL);
+        pcmk__output_free(logger_out);
+        logger_out = NULL;
+    }
 
     if (fast > 0) {
         /* Quit fast on error */

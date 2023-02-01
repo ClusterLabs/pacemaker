@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2022 the Pacemaker project contributors
+ * Copyright 2019-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -736,6 +736,17 @@ pcmk__formatted_vprintf(pcmk__output_t *out, const char *format, va_list args) G
  */
 void
 pcmk__text_prompt(const char *prompt, bool echo, char **dest);
+
+/*!
+ * \internal
+ * \brief Get the log level used by the formatted output logger
+ *
+ * \param[in] out  Output object
+ *
+ * \return Log level used by \p out
+ */
+int
+pcmk__output_get_log_level(const pcmk__output_t *out);
 
 /*!
  * \internal

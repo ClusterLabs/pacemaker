@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -875,6 +875,7 @@ crm_exit(crm_exit_t rc)
     } else {
         crm_trace("Exiting with status %d", rc);
     }
+    pcmk__free_common_logger();
     qb_log_fini(); // Don't log anything after this point
 
     exit(rc);
