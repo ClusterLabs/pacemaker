@@ -530,6 +530,12 @@ print_detail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GE
 }
 
 static gboolean
+print_description_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+    show_opts |= pcmk_show_description;
+    return TRUE;
+}
+
+static gboolean
 print_timing_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     show_opts |= pcmk_show_timing;
     return user_include_exclude_cb("--include", "operations", data, err);
@@ -694,6 +700,10 @@ static GOptionEntry display_entries[] = {
 
     { "show-detail", 'R', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, print_detail_cb,
       "Show more details (node IDs, individual clone instances)",
+      NULL },
+
+    { "show-description", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, print_description_cb,
+      "Show resource descriptions",
       NULL },
 
     { "brief", 'b', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, print_brief_cb,

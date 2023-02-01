@@ -640,11 +640,11 @@ Active Resources:
     * Resource Group: mysql-group:1:
       * mysql-proxy	(lsb:mysql-proxy):	 Started cluster01
   * Clone Set: promotable-clone [promotable-rsc] (promotable):
-    * promotable-rsc	(ocf:pacemaker:Stateful):	 Promoted cluster02
-    * promotable-rsc	(ocf:pacemaker:Stateful):	 Unpromoted cluster01
-    * promotable-rsc	(ocf:pacemaker:Stateful):	 Stopped
-    * promotable-rsc	(ocf:pacemaker:Stateful):	 Stopped
-    * promotable-rsc	(ocf:pacemaker:Stateful):	 Stopped
+    * promotable-rsc	(ocf:pacemaker:Stateful):	 Promoted cluster02 (test_description)
+    * promotable-rsc	(ocf:pacemaker:Stateful):	 Unpromoted cluster01 (test_description)
+    * promotable-rsc	(ocf:pacemaker:Stateful):	 Stopped (test_description)
+    * promotable-rsc	(ocf:pacemaker:Stateful):	 Stopped (test_description)
+    * promotable-rsc	(ocf:pacemaker:Stateful):	 Stopped (test_description)
 
 Node Attributes:
   * Node: cluster01 (1):
@@ -834,7 +834,7 @@ Node List:
       * ping	(ocf:pacemaker:ping):	 Started
       * Fencing	(stonith:fence_xvm):	 Started
       * mysql-proxy	(lsb:mysql-proxy):	 Started
-      * promotable-rsc	(ocf:pacemaker:Stateful):	 Unpromoted
+      * promotable-rsc	(ocf:pacemaker:Stateful):	 Unpromoted (test_description)
       * httpd-bundle-ip-192.168.122.131	(ocf:heartbeat:IPaddr2):	 Started
       * httpd-bundle-docker-0	(ocf:heartbeat:docker):	 Started
   * Node cluster02: online:
@@ -844,7 +844,7 @@ Node List:
       * Public-IP	(ocf:heartbeat:IPaddr):	 Started
       * Email	(lsb:exim):	 Started
       * mysql-proxy	(lsb:mysql-proxy):	 Started
-      * promotable-rsc	(ocf:pacemaker:Stateful):	 Promoted
+      * promotable-rsc	(ocf:pacemaker:Stateful):	 Promoted (test_description)
       * httpd-bundle-ip-192.168.122.132	(ocf:heartbeat:IPaddr2):	 Started
       * httpd-bundle-docker-1	(ocf:heartbeat:docker):	 Started
   * GuestNode httpd-bundle-0: online:
@@ -1057,7 +1057,7 @@ Negative Location Constraints:
       <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Started" active="true" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster01" id="1" cached="true"/>
       </resource>
-      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Unpromoted" active="true" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Unpromoted" active="true" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1" description="test_description">
         <node name="cluster01" id="1" cached="true"/>
       </resource>
       <resource id="httpd-bundle-ip-192.168.122.131" resource_agent="ocf:heartbeat:IPaddr2" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
@@ -1086,7 +1086,7 @@ Negative Location Constraints:
       <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Started" active="true" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster02" id="2" cached="true"/>
       </resource>
-      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Promoted" active="true" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Promoted" active="true" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1" description="test_description">
         <node name="cluster02" id="2" cached="true"/>
       </resource>
       <resource id="httpd-bundle-ip-192.168.122.132" resource_agent="ocf:heartbeat:IPaddr2" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">

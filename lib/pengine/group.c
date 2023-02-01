@@ -114,7 +114,7 @@ inactive_resources(pe_resource_t *rsc)
 
 static void
 group_header(pcmk__output_t *out, int *rc, const pe_resource_t *rsc,
-             int n_inactive, bool show_inactive)
+             int n_inactive, bool show_inactive, const char *desc)
 {
     GString *attrs = NULL;
 
@@ -136,11 +136,16 @@ group_header(pcmk__output_t *out, int *rc, const pe_resource_t *rsc,
     }
 
     if (attrs != NULL) {
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, *rc, "Resource Group: %s (%s)",
-                                 rsc->id, (const char *) attrs->str);
+        PCMK__OUTPUT_LIST_HEADER(out, FALSE, *rc, "Resource Group: %s (%s)%s%s%s",
+                                 rsc->id,
+                                 (const char *) attrs->str, desc ? " (" : "",
+                                 desc ? desc : "", desc ? ")" : "");
         g_string_free(attrs, TRUE);
     } else {
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, *rc, "Resource Group: %s", rsc->id);
+        PCMK__OUTPUT_LIST_HEADER(out, FALSE, *rc, "Resource Group: %s%s%s%s",
+                                 rsc->id,
+                                 desc ? " (" : "", desc ? desc : "",
+                                 desc ? ")" : "");
     }
 }
 
@@ -338,13 +343,16 @@ pe__group_xml(pcmk__output_t *out, va_list args)
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
-
+    
+    const char *desc = NULL;
     GList *gIter = rsc->children;
 
     int rc = pcmk_rc_no_output;
 
     gboolean parent_passes = pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches) ||
                              (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches));
+
+    desc = pe__resource_description(rsc, show_opts);
 
     if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
         return rc;
@@ -368,13 +376,14 @@ pe__group_xml(pcmk__output_t *out, va_list args)
                                           "number_resources", count,
                                           "maintenance", maint_s,
                                           "managed", managed_s,
-                                          "disabled", disabled_s);
+                                          "disabled", disabled_s,
+                                          "description", desc);
             free(count);
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
 
         out->message(out, crm_map_element_name(child_rsc->xml), show_opts, child_rsc,
-					 only_node, only_rsc);
+                     only_node, only_rsc);
     }
 
     if (rc == pcmk_rc_ok) {
@@ -393,6 +402,7 @@ pe__group_default(pcmk__output_t *out, va_list args)
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
+    const char *desc = NULL;
     int rc = pcmk_rc_no_output;
 
     gboolean parent_passes = pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches) ||
@@ -400,6 +410,8 @@ pe__group_default(pcmk__output_t *out, va_list args)
 
     gboolean active = rsc->fns->active(rsc, TRUE);
     gboolean partially_active = rsc->fns->active(rsc, FALSE);
+
+    desc = pe__resource_description(rsc, show_opts);
 
     if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
         return rc;
@@ -410,7 +422,7 @@ pe__group_default(pcmk__output_t *out, va_list args)
 
         if (rscs != NULL) {
             group_header(out, &rc, rsc, !active && partially_active ? inactive_resources(rsc) : 0,
-                         pcmk_is_set(show_opts, pcmk_show_inactive_rscs));
+                         pcmk_is_set(show_opts, pcmk_show_inactive_rscs), desc);
             pe__rscs_brief_output(out, rscs, show_opts | pcmk_show_inactive_rscs);
 
             rc = pcmk_rc_ok;
@@ -426,7 +438,7 @@ pe__group_default(pcmk__output_t *out, va_list args)
             }
 
             group_header(out, &rc, rsc, !active && partially_active ? inactive_resources(rsc) : 0,
-                         pcmk_is_set(show_opts, pcmk_show_inactive_rscs));
+                         pcmk_is_set(show_opts, pcmk_show_inactive_rscs), desc);
             out->message(out, crm_map_element_name(child_rsc->xml), show_opts,
                          child_rsc, only_node, only_rsc);
         }

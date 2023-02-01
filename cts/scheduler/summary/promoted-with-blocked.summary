@@ -12,11 +12,11 @@ Current cluster status:
     * rsc3	(ocf:pacemaker:Dummy):	 Stopped (disabled)
 
 Transition Summary:
-  * Start      rsc1       (                   node2 )  due to unrunnable rsc3 start (blocked)
-  * Start      rsc2:0     (                   node3 )
-  * Start      rsc2:1     (                   node4 )
-  * Start      rsc2:2     (                   node5 )
-  * Start      rsc2:3     (                   node1 )
+  * Start      rsc1       (                     node2 )  due to unrunnable rsc3 start (blocked)
+  * Start      rsc2:0     (                     node3 )
+  * Start      rsc2:1     (                     node4 )
+  * Start      rsc2:2     (                     node5 )
+  * Start      rsc2:3     (                     node1 )
   * Promote    rsc2:4     ( Stopped -> Promoted node2 )  due to colocation with rsc1 (blocked)
 
 Executing Cluster Transition:

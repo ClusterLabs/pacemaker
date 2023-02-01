@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 the Pacemaker project contributors
+ * Copyright 2021-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -66,13 +66,15 @@ typedef enum {
     pcmk_show_rsc_only      = 1 << 8,
     pcmk_show_failed_detail = 1 << 9,
     pcmk_show_feature_set   = 1 << 10,
+    pcmk_show_description   = 1 << 11,
 } pcmk_show_opt_e;
 
-#define pcmk_show_details   (pcmk_show_clone_detail     \
-                             | pcmk_show_node_id        \
-                             | pcmk_show_implicit_rscs  \
-                             | pcmk_show_failed_detail  \
-                             | pcmk_show_feature_set)
+#define pcmk_show_details   ((pcmk_show_clone_detail)     \
+                             | (pcmk_show_node_id)        \
+                             | (pcmk_show_implicit_rscs)  \
+                             | (pcmk_show_failed_detail)  \
+                             | (pcmk_show_feature_set)    \
+                             | (pcmk_show_description))
 
 #ifdef __cplusplus
 }

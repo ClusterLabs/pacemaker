@@ -131,7 +131,7 @@ node_list_to_str(const GList *list)
 
 static void
 clone_header(pcmk__output_t *out, int *rc, const pe_resource_t *rsc,
-             clone_variant_data_t *clone_data)
+             clone_variant_data_t *clone_data, const char *desc)
 {
     GString *attrs = NULL;
 
@@ -155,13 +155,16 @@ clone_header(pcmk__output_t *out, int *rc, const pe_resource_t *rsc,
     }
 
     if (attrs != NULL) {
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, *rc, "Clone Set: %s [%s] (%s)",
+        PCMK__OUTPUT_LIST_HEADER(out, FALSE, *rc, "Clone Set: %s [%s] (%s)%s%s%s",
                                  rsc->id, ID(clone_data->xml_obj_child),
-                                 (const char *) attrs->str);
+                                 (const char *) attrs->str, desc ? " (" : "",
+                                 desc ? desc : "", desc ? ")" : "");
         g_string_free(attrs, TRUE);
     } else {
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, *rc, "Clone Set: %s [%s]",
-                                 rsc->id, ID(clone_data->xml_obj_child))
+        PCMK__OUTPUT_LIST_HEADER(out, FALSE, *rc, "Clone Set: %s [%s]%s%s%s",
+                                 rsc->id, ID(clone_data->xml_obj_child),
+                                 desc ? " (" : "", desc ? desc : "",
+                                 desc ? ")" : "");
     }
 }
 
@@ -780,11 +783,15 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
+
+    const char *desc = NULL;
     GList *gIter = rsc->children;
     GList *all = NULL;
     int rc = pcmk_rc_no_output;
     gboolean printed_header = FALSE;
     gboolean print_everything = TRUE;
+
+    
 
     if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
         return rc;
@@ -809,7 +816,9 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
         if (!printed_header) {
             printed_header = TRUE;
 
-            rc = pe__name_and_nvpairs_xml(out, true, "clone", 9,
+            desc = pe__resource_description(rsc, show_opts);
+            
+            rc = pe__name_and_nvpairs_xml(out, true, "clone", 10,
                     "id", rsc->id,
                     "multi_state", pe__rsc_bool_str(rsc, pe_rsc_promotable),
                     "unique", pe__rsc_bool_str(rsc, pe_rsc_unique),
@@ -818,7 +827,8 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
                     "disabled", pcmk__btoa(pe__resource_is_disabled(rsc)),
                     "failed", pe__rsc_bool_str(rsc, pe_rsc_failed),
                     "failure_ignored", pe__rsc_bool_str(rsc, pe_rsc_failure_ignored),
-                    "target_role", configured_role_str(rsc));
+                    "target_role", configured_role_str(rsc),
+                    "description", desc);
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
 
@@ -851,10 +861,14 @@ pe__clone_default(pcmk__output_t *out, va_list args)
     GList *started_list = NULL;
     GList *gIter = rsc->children;
 
+    const char *desc = NULL;
+
     clone_variant_data_t *clone_data = NULL;
     int active_instances = 0;
     int rc = pcmk_rc_no_output;
     gboolean print_everything = TRUE;
+
+    desc = pe__resource_description(rsc, show_opts);
 
     get_clone_variant_data(clone_data, rsc);
 
@@ -947,7 +961,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
         if (print_full) {
             GList *all = NULL;
 
-            clone_header(out, &rc, rsc, clone_data);
+            clone_header(out, &rc, rsc, clone_data, desc);
 
             /* Print every resource that's a child of this clone. */
             all = g_list_prepend(all, (gpointer) "*");
@@ -978,7 +992,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
     g_list_free(promoted_list);
 
     if ((list_text != NULL) && (list_text->len > 0)) {
-        clone_header(out, &rc, rsc, clone_data);
+        clone_header(out, &rc, rsc, clone_data, desc);
 
         out->list_item(out, NULL, PROMOTED_INSTANCES ": [ %s ]",
                        (const char *) list_text->str);
@@ -1001,7 +1015,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
     g_list_free(started_list);
 
     if ((list_text != NULL) && (list_text->len > 0)) {
-        clone_header(out, &rc, rsc, clone_data);
+        clone_header(out, &rc, rsc, clone_data, desc);
 
         if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
             enum rsc_role_e role = configured_role(rsc);
@@ -1080,7 +1094,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
         if (stopped != NULL) {
             GList *list = sorted_hash_table_values(stopped);
 
-            clone_header(out, &rc, rsc, clone_data);
+            clone_header(out, &rc, rsc, clone_data, desc);
 
             for (GList *status_iter = list; status_iter != NULL; status_iter = status_iter->next) {
                 const char *status = status_iter->data;
@@ -1106,7 +1120,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
          * come up in PCS testing.
          */
         } else if (active_instances == 0) {
-            clone_header(out, &rc, rsc, clone_data);
+            clone_header(out, &rc, rsc, clone_data, desc);
             PCMK__OUTPUT_LIST_FOOTER(out, rc);
             return rc;
         }
