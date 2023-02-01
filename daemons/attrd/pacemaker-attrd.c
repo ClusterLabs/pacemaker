@@ -267,16 +267,7 @@ main(int argc, char **argv)
     }
 
     // Open additional log files
-    if (log_files != NULL) {
-        for (gchar **fname = log_files; *fname != NULL; fname++) {
-            rc = pcmk__add_logfile(*fname);
-
-            if (rc != pcmk_rc_ok) {
-                out->err(out, "Logging to %s is disabled: %s",
-                         *fname, pcmk_rc_str(rc));
-            }
-        }
-    }
+    pcmk__add_logfiles(log_files, out);
 
     crm_log_init(T_ATTRD, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     crm_notice("Starting Pacemaker node attribute manager%s",

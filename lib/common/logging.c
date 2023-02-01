@@ -384,6 +384,31 @@ pcmk__add_logfile(const char *filename)
     return pcmk_rc_ok;
 }
 
+/*!
+ * \brief Add multiple additional log files
+ *
+ * \param[in] log_files  Array of log files to add
+ * \param[in] out        Output object to use for error reporting
+ *
+ * \return Standard Pacemaker return code
+ */
+void
+pcmk__add_logfiles(gchar **log_files, pcmk__output_t *out)
+{
+    if (log_files == NULL) {
+        return;
+    }
+
+    for (gchar **fname = log_files; *fname != NULL; fname++) {
+        int rc = pcmk__add_logfile(*fname);
+
+        if (rc != pcmk_rc_ok) {
+            out->err(out, "Logging to %s is disabled: %s",
+                     *fname, pcmk_rc_str(rc));
+        }
+    }
+}
+
 static int blackbox_trigger = 0;
 static volatile char *blackbox_file_prefix = NULL;
 

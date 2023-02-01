@@ -14,7 +14,10 @@ extern "C" {
 #ifndef PCMK__LOGGING_INTERNAL_H
 #  define PCMK__LOGGING_INTERNAL_H
 
+#  include <glib.h>
+
 #  include <crm/common/logging.h>
+#  include <crm/common/output_internal.h>
 
 /*!
  * \internal
@@ -81,6 +84,7 @@ extern "C" {
 void pcmk__cli_init_logging(const char *name, unsigned int verbosity);
 
 int pcmk__add_logfile(const char *filename);
+void pcmk__add_logfiles(gchar **log_files, pcmk__output_t *out);
 
 void pcmk__free_common_logger(void);
 
