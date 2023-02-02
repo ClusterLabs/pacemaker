@@ -2801,9 +2801,9 @@ newer_state_after_migrate(const char *rsc_id, const char *node_name,
  * \internal
  * \brief Parse migration source and target node names from history entry
  *
- * \param[in] entry         Resource history entry for a migration action
- * \param[in] source_node   If not NULL, source must match this node
- * \param[in] target_node   If not NULL, target must match this node
+ * \param[in]  entry        Resource history entry for a migration action
+ * \param[in]  source_node  If not NULL, source must match this node
+ * \param[in]  target_node  If not NULL, target must match this node
  * \param[out] source_name  Where to store migration source node name
  * \param[out] target_name  Where to store migration target node name
  *
@@ -2835,7 +2835,7 @@ get_migration_node_names(const xmlNode *entry, const pe_node_t *source_node,
                          pcmk__str_casei|pcmk__str_null_matches)) {
         crm_err("Ignoring resource history entry %s because "
                 XML_LRM_ATTR_MIGRATE_SOURCE "='%s' does not match %s",
-                id, pcmk__s(*source_name, ""), pe__node_name(source_node));
+                id, *source_name, pe__node_name(source_node));
         return pcmk_rc_unpack_error;
     }
 
@@ -2844,7 +2844,7 @@ get_migration_node_names(const xmlNode *entry, const pe_node_t *source_node,
                          pcmk__str_casei|pcmk__str_null_matches)) {
         crm_err("Ignoring resource history entry %s because "
                 XML_LRM_ATTR_MIGRATE_TARGET "='%s' does not match %s",
-                id, pcmk__s(*target_name, ""), pe__node_name(target_node));
+                id, *target_name, pe__node_name(target_node));
         return pcmk_rc_unpack_error;
     }
 
@@ -2901,7 +2901,7 @@ unpack_migrate_to_success(pe_resource_t *rsc, const pe_node_t *node,
      *
      * - If the new transition is aborted for any reason while the resource is
      *   stopping on node1, the transition after that stop completes will see
-     *   the migrate_from and stop on the source, but it's still a partial
+     *   the migrate_to and stop on the source, but it's still a partial
      *   migration, and the resource must be stopped on node2 because it is
      *   potentially active there due to the migrate_to.
      *
@@ -3455,9 +3455,9 @@ check_recoverable(pe_resource_t *rsc, const pe_node_t *node, const char *task,
  * \brief Update an integer value and why
  *
  * \param[in,out] i       Pointer to integer to update
- * \param[in,out] why     Where to store reason for update
+ * \param[out]    why     Where to store reason for update
  * \param[in]     value   New value
- * \param[in,out] reason  Description of why value was changed
+ * \param[in]     reason  Description of why value was changed
  */
 static inline void
 remap_because(int *i, const char **why, int value, const char *reason)
@@ -3486,7 +3486,7 @@ remap_because(int *i, const char **why, int value, const char *reason)
  * \param[in,out] data_set   Current cluster working set
  * \param[in,out] on_fail    What should be done about the result
  * \param[in]     target_rc  Expected return code of operation
- * \param[in,out] rc         Actual return code of operation
+ * \param[in,out] rc         Actual return code of operation (treated as OCF)
  * \param[in,out] status     Operation execution status
  *
  * \note If the result is remapped and the node is not shutting down or failed,
@@ -3581,7 +3581,7 @@ remap_operation(xmlNode *xml_op, pe_resource_t *rsc, const pe_node_t *node,
     switch (*rc) {
         case PCMK_OCF_OK:
             if (is_probe && (target_rc == PCMK_OCF_NOT_RUNNING)) {
-                remap_because(status, &why,PCMK_EXEC_DONE, "probe");
+                remap_because(status, &why, PCMK_EXEC_DONE, "probe");
                 pe_rsc_info(rsc, "Probe found %s active on %s at %s",
                             rsc->id, pe__node_name(node), last_change_s);
             }
