@@ -1966,8 +1966,7 @@ process_orphan_resource(const xmlNode *rsc_entry, const pe_node_t *node,
 
 static void
 process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
-                  enum action_fail_response on_fail,
-                  xmlNode * migrate_op, pe_working_set_t * data_set)
+                  enum action_fail_response on_fail)
 {
     pe_node_t *tmpnode = NULL;
     char *reason = NULL;
@@ -2019,7 +2018,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
             should_fence = TRUE;
 
-        } else if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
+        } else if (pcmk_is_set(rsc->cluster->flags, pe_flag_stonith_enabled)) {
             if (pe__is_remote_node(node) && node->details->remote_rsc
                 && !pcmk_is_set(node->details->remote_rsc->flags, pe_rsc_failed)) {
 
@@ -2042,7 +2041,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             if (reason == NULL) {
                reason = crm_strdup_printf("%s is thought to be active there", rsc->id);
             }
-            pe_fence_node(data_set, node, reason, FALSE);
+            pe_fence_node(rsc->cluster, node, reason, FALSE);
         }
         free(reason);
     }
@@ -2072,7 +2071,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
              * but also mark the node as unclean
              */
             reason = crm_strdup_printf("%s failed there", rsc->id);
-            pe_fence_node(data_set, node, reason, FALSE);
+            pe_fence_node(rsc->cluster, node, reason, FALSE);
             free(reason);
             break;
 
@@ -2093,7 +2092,8 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             /* make sure it comes up somewhere else
              * or not at all
              */
-            resource_location(rsc, node, -INFINITY, "__action_migration_auto__", data_set);
+            resource_location(rsc, node, -INFINITY, "__action_migration_auto__",
+                              rsc->cluster);
             break;
 
         case action_fail_stop:
@@ -2115,8 +2115,8 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
                  * container is running yet, so remember it and add a stop
                  * action for it later.
                  */
-                data_set->stop_needed = g_list_prepend(data_set->stop_needed,
-                                                       rsc->container);
+                rsc->cluster->stop_needed =
+                    g_list_prepend(rsc->cluster->stop_needed, rsc->container);
             } else if (rsc->container) {
                 stop_action(rsc->container, node, FALSE);
             } else if (rsc->role != RSC_ROLE_STOPPED && rsc->role != RSC_ROLE_UNKNOWN) {
@@ -2126,10 +2126,10 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
 
         case action_fail_reset_remote:
             pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
-            if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
+            if (pcmk_is_set(rsc->cluster->flags, pe_flag_stonith_enabled)) {
                 tmpnode = NULL;
                 if (rsc->is_remote_node) {
-                    tmpnode = pe_find_node(data_set->nodes, rsc->id);
+                    tmpnode = pe_find_node(rsc->cluster->nodes, rsc->id);
                 }
                 if (tmpnode &&
                     pe__is_remote_node(tmpnode) &&
@@ -2138,7 +2138,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
                     /* The remote connection resource failed in a way that
                      * should result in fencing the remote node.
                      */
-                    pe_fence_node(data_set, tmpnode,
+                    pe_fence_node(rsc->cluster, tmpnode,
                                   "remote connection is unrecoverable", FALSE);
                 }
             }
@@ -2161,7 +2161,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
      * result in a fencing operation regardless if we're going to attempt to 
      * reconnect to the remote-node in this transition or not. */
     if (pcmk_is_set(rsc->flags, pe_rsc_failed) && rsc->is_remote_node) {
-        tmpnode = pe_find_node(data_set->nodes, rsc->id);
+        tmpnode = pe_find_node(rsc->cluster->nodes, rsc->id);
         if (tmpnode && tmpnode->details->unclean) {
             tmpnode->details->unseen = FALSE;
         }
@@ -2180,7 +2180,8 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             }
         }
 
-        native_add_running(rsc, node, data_set, (save_on_fail != action_fail_ignore));
+        native_add_running(rsc, node, rsc->cluster,
+                           (save_on_fail != action_fail_ignore));
         switch (on_fail) {
             case action_fail_ignore:
                 break;
@@ -2383,14 +2384,12 @@ unpack_lrm_resource(pe_node_t *node, const xmlNode *lrm_resource,
     int start_index = -1;
     enum rsc_role_e req_role = RSC_ROLE_UNKNOWN;
 
-    const char *task = NULL;
     const char *rsc_id = ID(lrm_resource);
 
     pe_resource_t *rsc = NULL;
     GList *op_list = NULL;
     GList *sorted_op_list = NULL;
 
-    xmlNode *migrate_op = NULL;
     xmlNode *rsc_op = NULL;
     xmlNode *last_failure = NULL;
 
@@ -2444,11 +2443,6 @@ unpack_lrm_resource(pe_node_t *node, const xmlNode *lrm_resource,
     for (gIter = sorted_op_list; gIter != NULL; gIter = gIter->next) {
         xmlNode *rsc_op = (xmlNode *) gIter->data;
 
-        task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
-        if (pcmk__str_eq(task, CRMD_ACTION_MIGRATED, pcmk__str_casei)) {
-            migrate_op = rsc_op;
-        }
-
         unpack_rsc_op(rsc, node, rsc_op, &last_failure, &on_fail, data_set);
     }
 
@@ -2459,7 +2453,7 @@ unpack_lrm_resource(pe_node_t *node, const xmlNode *lrm_resource,
     /* no need to free the contents */
     g_list_free(sorted_op_list);
 
-    process_rsc_state(rsc, node, on_fail, migrate_op, data_set);
+    process_rsc_state(rsc, node, on_fail);
 
     if (get_target_role(rsc, &req_role)) {
         if (rsc->next_role == RSC_ROLE_UNKNOWN || req_role < rsc->next_role) {
@@ -2803,161 +2797,212 @@ newer_state_after_migrate(const char *rsc_id, const char *node_name,
                                         data_set);
 }
 
+/*!
+ * \internal
+ * \brief Parse migration source and target node names from history entry
+ *
+ * \param[in]  entry        Resource history entry for a migration action
+ * \param[in]  source_node  If not NULL, source must match this node
+ * \param[in]  target_node  If not NULL, target must match this node
+ * \param[out] source_name  Where to store migration source node name
+ * \param[out] target_name  Where to store migration target node name
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+get_migration_node_names(const xmlNode *entry, const pe_node_t *source_node,
+                         const pe_node_t *target_node,
+                         const char **source_name, const char **target_name)
+{
+    const char *id = ID(entry);
+
+    if (id == NULL) {
+        crm_err("Ignoring resource history entry without ID");
+        return pcmk_rc_unpack_error;
+    }
+
+    *source_name = crm_element_value(entry, XML_LRM_ATTR_MIGRATE_SOURCE);
+    *target_name = crm_element_value(entry, XML_LRM_ATTR_MIGRATE_TARGET);
+    if ((*source_name == NULL) || (*target_name == NULL)) {
+        crm_err("Ignoring resource history entry %s without "
+                XML_LRM_ATTR_MIGRATE_SOURCE " and " XML_LRM_ATTR_MIGRATE_TARGET,
+                id);
+        return pcmk_rc_unpack_error;
+    }
+
+    if ((source_node != NULL)
+        && !pcmk__str_eq(*source_name, source_node->details->uname,
+                         pcmk__str_casei|pcmk__str_null_matches)) {
+        crm_err("Ignoring resource history entry %s because "
+                XML_LRM_ATTR_MIGRATE_SOURCE "='%s' does not match %s",
+                id, *source_name, pe__node_name(source_node));
+        return pcmk_rc_unpack_error;
+    }
+
+    if ((target_node != NULL)
+        && !pcmk__str_eq(*target_name, target_node->details->uname,
+                         pcmk__str_casei|pcmk__str_null_matches)) {
+        crm_err("Ignoring resource history entry %s because "
+                XML_LRM_ATTR_MIGRATE_TARGET "='%s' does not match %s",
+                id, *target_name, pe__node_name(target_node));
+        return pcmk_rc_unpack_error;
+    }
+
+    return pcmk_rc_ok;
+}
+
+/*
+ * \internal
+ * \brief Add a migration source to a resource's list of dangling migrations
+ *
+ * If the migrate_to and migrate_from actions in a live migration both
+ * succeeded, but there is no stop on the source, the migration is considered
+ * "dangling." Add the source to the resource's dangling migration list, which
+ * will be used to schedule a stop on the source without affecting the target.
+ *
+ * \param[in,out] rsc   Resource involved in migration
+ * \param[in]     node  Migration source
+ */
+static void
+add_dangling_migration(pe_resource_t *rsc, const pe_node_t *node)
+{
+    pe_rsc_trace(rsc, "Dangling migration of %s requires stop on %s",
+                 rsc->id, pe__node_name(node));
+    rsc->role = RSC_ROLE_STOPPED;
+    rsc->dangling_migrations = g_list_prepend(rsc->dangling_migrations,
+                                              (gpointer) node);
+}
+
 static void
 unpack_migrate_to_success(pe_resource_t *rsc, const pe_node_t *node,
-                          const xmlNode *xml_op, pe_working_set_t *data_set)
+                          const xmlNode *xml_op)
 {
-    /* A successful migration sequence is:
-     *    migrate_to on source node
-     *    migrate_from on target node
-     *    stop on source node
-     *
-     * But there could be scenarios like (It's easier to produce with cluster
-     * property batch-limit=1):
-     *
-     * - rscA is live-migrating from node1 to node2.
-     *
-     * - Before migrate_to on node1 returns, put node2 into standby.
-     *
-     * - Transition aborts upon return of successful migrate_to on node1. New
-     *   transition is going to stop the rscA on both nodes and start it on
-     *   node1.
-     *
-     * - While it is stopping on node1, run something that is going to make
-     *   the transition abort again like:
-     *   crm_resource  --resource rscA --ban --node node2
-     *
-     * - Transition aborts upon return of stop on node1.
-     *
-     * Now although there's a stop on node1, it's still a partial migration and
-     * rscA is still potentially active on node2.
-     *
-     * So even if a migrate_to is followed by a stop, we still need to check
-     * whether there's a corresponding migrate_from or any newer operation on
-     * the target.
+    /* A complete migration sequence is:
+     * 1. migrate_to on source node (which succeeded if we get to this function)
+     * 2. migrate_from on target node
+     * 3. stop on source node
      *
      * If no migrate_from has happened, the migration is considered to be
-     * "partial". If the migrate_from failed, make sure the resource gets
-     * stopped on both source and target (if up).
+     * "partial". If the migrate_from succeeded but no stop has happened, the
+     * migration is considered to be "dangling".
      *
-     * If the migrate_to and migrate_from both succeeded (which also implies the
-     * resource is no longer running on the source), but there is no stop, the
-     * migration is considered to be "dangling". Schedule a stop on the source
-     * in this case.
+     * If a successful migrate_to and stop have happened on the source node, we
+     * still need to check for a partial migration, due to scenarios (easier to
+     * produce with batch-limit=1) like:
+     *
+     * - A resource is migrating from node1 to node2, and a migrate_to is
+     *   initiated for it on node1.
+     *
+     * - node2 goes into standby mode while the migrate_to is pending, which
+     *   aborts the transition.
+     *
+     * - Upon completion of the migrate_to, a new transition schedules a stop
+     *   on both nodes and a start on node1.
+     *
+     * - If the new transition is aborted for any reason while the resource is
+     *   stopping on node1, the transition after that stop completes will see
+     *   the migrate_to and stop on the source, but it's still a partial
+     *   migration, and the resource must be stopped on node2 because it is
+     *   potentially active there due to the migrate_to.
+     *
+     *   We also need to take into account that either node's history may be
+     *   cleared at any point in the migration process.
      */
-    int from_rc = 0;
-    int from_status = 0;
+    int from_rc = PCMK_OCF_OK;
+    int from_status = PCMK_EXEC_PENDING;
     pe_node_t *target_node = NULL;
-    pe_node_t *source_node = NULL;
     xmlNode *migrate_from = NULL;
-    const char *source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
-    const char *target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
+    const char *source = NULL;
+    const char *target = NULL;
     bool source_newer_op = false;
     bool target_newer_state = false;
+    bool active_on_target = false;
 
-    // Sanity check
-    CRM_CHECK(source && target && !strcmp(source, node->details->uname), return);
-
-    /* If there's any newer non-monitor operation on the source, this migrate_to
-     * potentially no longer matters for the source.
-     */
-    source_newer_op = non_monitor_after(rsc->id, source, xml_op, true,
-                                        data_set);
-
-    // Check whether there was a migrate_from action on the target
-    migrate_from = find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, target,
-                               source, -1, data_set);
-
-    /* Even if there's a newer non-monitor operation on the source, we still
-     * need to check how this migrate_to might matter for the target.
-     */
-    if (source_newer_op && migrate_from) {
+    // Get source and target node names from XML
+    if (get_migration_node_names(xml_op, node, NULL, &source,
+                                 &target) != pcmk_rc_ok) {
         return;
     }
 
-    /* If the resource has newer state on the target after the migration
-     * events, this migrate_to no longer matters for the target.
+    // Check for newer state on the source
+    source_newer_op = non_monitor_after(rsc->id, source, xml_op, true,
+                                        rsc->cluster);
+
+    // Check for a migrate_from action from this source on the target
+    migrate_from = find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, target,
+                               source, -1, rsc->cluster);
+    if (migrate_from != NULL) {
+        if (source_newer_op) {
+            /* There's a newer non-monitor operation on the source and a
+             * migrate_from on the target, so this migrate_to is irrelevant to
+             * the resource's state.
+             */
+            return;
+        }
+        crm_element_value_int(migrate_from, XML_LRM_ATTR_RC, &from_rc);
+        crm_element_value_int(migrate_from, XML_LRM_ATTR_OPSTATUS,
+                              &from_status);
+    }
+
+    /* If the resource has newer state on both the source and target after the
+     * migration events, this migrate_to is irrelevant to the resource's state.
      */
     target_newer_state = newer_state_after_migrate(rsc->id, target, xml_op,
-                                                   migrate_from, data_set);
-
+                                                   migrate_from, rsc->cluster);
     if (source_newer_op && target_newer_state) {
         return;
     }
 
-    // Clones are not allowed to migrate, so role can't be promoted
-    rsc->role = RSC_ROLE_STARTED;
-
-    target_node = pe_find_node(data_set->nodes, target);
-    source_node = pe_find_node(data_set->nodes, source);
-
-    if (migrate_from) {
-        crm_element_value_int(migrate_from, XML_LRM_ATTR_RC, &from_rc);
-        crm_element_value_int(migrate_from, XML_LRM_ATTR_OPSTATUS, &from_status);
-        pe_rsc_trace(rsc, "%s op on %s exited with status=%d, rc=%d",
-                     ID(migrate_from), target, from_status, from_rc);
+    /* Check for dangling migration (migrate_from succeeded but stop not done).
+     * We know there's no stop because we already returned if the target has a
+     * migrate_from and the source has any newer non-monitor operation.
+     */
+    if ((from_rc == PCMK_OCF_OK) && (from_status == PCMK_EXEC_DONE)) {
+        add_dangling_migration(rsc, node);
+        return;
     }
 
-    if (migrate_from && from_rc == PCMK_OCF_OK
-        && (from_status == PCMK_EXEC_DONE)) {
-        /* The migrate_to and migrate_from both succeeded, so mark the migration
-         * as "dangling". This will be used to schedule a stop action on the
-         * source without affecting the target.
-         */
-        pe_rsc_trace(rsc, "Detected dangling migration op: %s on %s", ID(xml_op),
-                     source);
-        rsc->role = RSC_ROLE_STOPPED;
-        rsc->dangling_migrations = g_list_prepend(rsc->dangling_migrations,
-                                                  (gpointer) node);
+    /* Without newer state, this migrate_to implies the resource is active.
+     * (Clones are not allowed to migrate, so role can't be promoted.)
+     */
+    rsc->role = RSC_ROLE_STARTED;
 
-    } else if (migrate_from && (from_status != PCMK_EXEC_PENDING)) { // Failed
-        /* If the resource has newer state on the target, this migrate_to no
-         * longer matters for the target.
-         */
-        if (!target_newer_state
-            && target_node && target_node->details->online) {
-            pe_rsc_trace(rsc, "Marking active on %s %p %d", target, target_node,
-                         target_node->details->online);
-            native_add_running(rsc, target_node, data_set, TRUE);
+    target_node = pe_find_node(rsc->cluster->nodes, target);
+    active_on_target = !target_newer_state && (target_node != NULL)
+                       && target_node->details->online;
 
+    if (from_status != PCMK_EXEC_PENDING) { // migrate_from failed on target
+        if (active_on_target) {
+            native_add_running(rsc, target_node, rsc->cluster, TRUE);
         } else {
-            /* With the earlier bail logic, migrate_from != NULL here implies
-             * source_newer_op is false, meaning this migrate_to still matters
-             * for the source.
-             * Consider it failed here - forces a restart, prevents migration
-             */
+            // Mark resource as failed, require recovery, and prevent migration
             pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
             pe__clear_resource_flags(rsc, pe_rsc_allow_migrate);
         }
+        return;
+    }
 
-    } else { // Pending, or complete but erased
-        /* If the resource has newer state on the target, this migrate_to no
-         * longer matters for the target.
-         */
-        if (!target_newer_state
-            && target_node && target_node->details->online) {
-            pe_rsc_trace(rsc, "Marking active on %s %p %d", target, target_node,
-                         target_node->details->online);
+    // The migrate_from is pending, complete but erased, or to be scheduled
 
-            native_add_running(rsc, target_node, data_set, FALSE);
-            if (source_node && source_node->details->online) {
-                /* This is a partial migration: the migrate_to completed
-                 * successfully on the source, but the migrate_from has not
-                 * completed. Remember the source and target; if the newly
-                 * chosen target remains the same when we schedule actions
-                 * later, we may continue with the migration.
-                 */
-                rsc->partial_migration_target = target_node;
-                rsc->partial_migration_source = source_node;
-            }
-        } else if (!source_newer_op) {
-            /* This migrate_to matters for the source only if it's the last
-             * non-monitor operation here.
-             * Consider it failed here - forces a restart, prevents migration
+    if (active_on_target) {
+        pe_node_t *source_node = pe_find_node(rsc->cluster->nodes, source);
+
+        native_add_running(rsc, target_node, rsc->cluster, FALSE);
+        if ((source_node != NULL) && source_node->details->online) {
+            /* This is a partial migration: the migrate_to completed
+             * successfully on the source, but the migrate_from has not
+             * completed. Remember the source and target; if the newly
+             * chosen target remains the same when we schedule actions
+             * later, we may continue with the migration.
              */
-            pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
-            pe__clear_resource_flags(rsc, pe_rsc_allow_migrate);
+            rsc->partial_migration_target = target_node;
+            rsc->partial_migration_source = source_node;
         }
+
+    } else if (!source_newer_op) {
+        // Mark resource as failed, require recovery, and prevent migration
+        pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
+        pe__clear_resource_flags(rsc, pe_rsc_allow_migrate);
     }
 }
 
@@ -2966,11 +3011,14 @@ unpack_migrate_to_failure(pe_resource_t *rsc, const pe_node_t *node,
                           const xmlNode *xml_op, pe_working_set_t *data_set)
 {
     xmlNode *target_migrate_from = NULL;
-    const char *source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
-    const char *target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
+    const char *source = NULL;
+    const char *target = NULL;
 
-    // Sanity check
-    CRM_CHECK(source && target && !strcmp(source, node->details->uname), return);
+    // Get source and target node names from XML
+    if (get_migration_node_names(xml_op, node, NULL, &source,
+                                 &target) != pcmk_rc_ok) {
+        return;
+    }
 
     /* If a migration failed, we have to assume the resource is active. Clones
      * are not allowed to migrate, so role can't be promoted.
@@ -3019,11 +3067,14 @@ unpack_migrate_from_failure(pe_resource_t *rsc, const pe_node_t *node,
                             const xmlNode *xml_op, pe_working_set_t *data_set)
 {
     xmlNode *source_migrate_to = NULL;
-    const char *source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
-    const char *target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
+    const char *source = NULL;
+    const char *target = NULL;
 
-    // Sanity check
-    CRM_CHECK(source && target && !strcmp(target, node->details->uname), return);
+    // Get source and target node names from XML
+    if (get_migration_node_names(xml_op, NULL, node, &source,
+                                 &target) != pcmk_rc_ok) {
+        return;
+    }
 
     /* If a migration failed, we have to assume the resource is active. Clones
      * are not allowed to migrate, so role can't be promoted.
@@ -3401,6 +3452,24 @@ check_recoverable(pe_resource_t *rsc, const pe_node_t *node, const char *task,
 
 /*!
  * \internal
+ * \brief Update an integer value and why
+ *
+ * \param[in,out] i       Pointer to integer to update
+ * \param[out]    why     Where to store reason for update
+ * \param[in]     value   New value
+ * \param[in]     reason  Description of why value was changed
+ */
+static inline void
+remap_because(int *i, const char **why, int value, const char *reason)
+{
+    if (*i != value) {
+        *i = value;
+        *why = reason;
+    }
+}
+
+/*!
+ * \internal
  * \brief Remap informational monitor results and operation status
  *
  * For the monitor results, certain OCF codes are for providing extended information
@@ -3417,7 +3486,7 @@ check_recoverable(pe_resource_t *rsc, const pe_node_t *node, const char *task,
  * \param[in,out] data_set   Current cluster working set
  * \param[in,out] on_fail    What should be done about the result
  * \param[in]     target_rc  Expected return code of operation
- * \param[in,out] rc         Actual return code of operation
+ * \param[in,out] rc         Actual return code of operation (treated as OCF)
  * \param[in,out] status     Operation execution status
  *
  * \note If the result is remapped and the node is not shutting down or failed,
@@ -3429,8 +3498,12 @@ check_recoverable(pe_resource_t *rsc, const pe_node_t *node, const char *task,
 static void
 remap_operation(xmlNode *xml_op, pe_resource_t *rsc, const pe_node_t *node,
                 pe_working_set_t *data_set, enum action_fail_response *on_fail,
-                int target_rc, int *rc, int *status) {
+                int target_rc, int *rc, int *status)
+{
     bool is_probe = false;
+    int orig_exit_status = *rc;
+    int orig_exec_status = *status;
+    const char *why = NULL;
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
     const char *key = get_op_key(xml_op);
     const char *exit_reason = crm_element_value(xml_op,
@@ -3438,21 +3511,22 @@ remap_operation(xmlNode *xml_op, pe_resource_t *rsc, const pe_node_t *node,
     char *last_change_s = NULL;
 
     if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_none)) {
-        int remapped_rc = pcmk__effective_rc(*rc);
-
-        if (*rc != remapped_rc) {
-            crm_trace("Remapping monitor result %d to %d", *rc, remapped_rc);
+        // Remap degraded results to their usual counterparts
+        *rc = pcmk__effective_rc(*rc);
+        if (*rc != orig_exit_status) {
+            why = "degraded monitor result";
             if (!node->details->shutdown || node->details->online) {
                 record_failed_op(xml_op, node, rsc, data_set);
             }
-
-            *rc = remapped_rc;
         }
     }
 
     if (!pe_rsc_is_bundled(rsc) && pcmk_xe_mask_probe_failure(xml_op)) {
-        *status = PCMK_EXEC_DONE;
-        *rc = PCMK_OCF_NOT_RUNNING;
+        if ((*status != PCMK_EXEC_DONE) || (*rc != PCMK_OCF_NOT_RUNNING)) {
+            *status = PCMK_EXEC_DONE;
+            *rc = PCMK_OCF_NOT_RUNNING;
+            why = "irrelevant probe result";
+        }
     }
 
     /* If the executor reported an operation status of anything but done or
@@ -3460,22 +3534,19 @@ remap_operation(xmlNode *xml_op, pe_resource_t *rsc, const pe_node_t *node,
      * it should be treated as a failure or not, because we know the expected
      * result.
      */
-    if (*status != PCMK_EXEC_DONE && *status != PCMK_EXEC_ERROR) {
-        return;
+    switch (*status) {
+        case PCMK_EXEC_DONE:
+        case PCMK_EXEC_ERROR:
+            break;
+        default:
+            goto remap_done;
     }
-
-    CRM_ASSERT(rsc);
-    CRM_CHECK(task != NULL,
-              *status = PCMK_EXEC_ERROR; return);
-
-    *status = PCMK_EXEC_DONE;
 
     if (exit_reason == NULL) {
         exit_reason = "";
     }
 
     is_probe = pcmk_xe_is_probe(xml_op);
-
     if (is_probe) {
         task = "probe";
     }
@@ -3489,12 +3560,15 @@ remap_operation(xmlNode *xml_op, pe_resource_t *rsc, const pe_node_t *node,
          * those versions or processing of saved CIB files from those versions,
          * so we do not need to care much about this case.
          */
-        *status = PCMK_EXEC_ERROR;
+        remap_because(status, &why, PCMK_EXEC_ERROR, "obsolete history format");
         crm_warn("Expected result not found for %s on %s (corrupt or obsolete CIB?)",
                  key, pe__node_name(node));
 
-    } else if (target_rc != *rc) {
-        *status = PCMK_EXEC_ERROR;
+    } else if (*rc == target_rc) {
+        remap_because(status, &why, PCMK_EXEC_DONE, "expected result");
+
+    } else {
+        remap_because(status, &why, PCMK_EXEC_ERROR, "unexpected result");
         pe_rsc_debug(rsc, "%s on %s: expected %d (%s), got %d (%s%s%s)",
                      key, pe__node_name(node),
                      target_rc, services_ocf_exitcode_str(target_rc),
@@ -3507,7 +3581,7 @@ remap_operation(xmlNode *xml_op, pe_resource_t *rsc, const pe_node_t *node,
     switch (*rc) {
         case PCMK_OCF_OK:
             if (is_probe && (target_rc == PCMK_OCF_NOT_RUNNING)) {
-                *status = PCMK_EXEC_DONE;
+                remap_because(status, &why, PCMK_EXEC_DONE, "probe");
                 pe_rsc_info(rsc, "Probe found %s active on %s at %s",
                             rsc->id, pe__node_name(node), last_change_s);
             }
@@ -3517,7 +3591,7 @@ remap_operation(xmlNode *xml_op, pe_resource_t *rsc, const pe_node_t *node,
             if (is_probe || (target_rc == *rc)
                 || !pcmk_is_set(rsc->flags, pe_rsc_managed)) {
 
-                *status = PCMK_EXEC_DONE;
+                remap_because(status, &why, PCMK_EXEC_DONE, "exit status");
                 rsc->role = RSC_ROLE_STOPPED;
 
                 /* clear any previous failure actions */
@@ -3528,7 +3602,7 @@ remap_operation(xmlNode *xml_op, pe_resource_t *rsc, const pe_node_t *node,
 
         case PCMK_OCF_RUNNING_PROMOTED:
             if (is_probe && (*rc != target_rc)) {
-                *status = PCMK_EXEC_DONE;
+                remap_because(status, &why, PCMK_EXEC_DONE, "probe");
                 pe_rsc_info(rsc,
                             "Probe found %s active and promoted on %s at %s",
                             rsc->id, pe__node_name(node), last_change_s);
@@ -3539,11 +3613,11 @@ remap_operation(xmlNode *xml_op, pe_resource_t *rsc, const pe_node_t *node,
         case PCMK_OCF_DEGRADED_PROMOTED:
         case PCMK_OCF_FAILED_PROMOTED:
             rsc->role = RSC_ROLE_PROMOTED;
-            *status = PCMK_EXEC_ERROR;
+            remap_because(status, &why, PCMK_EXEC_ERROR, "exit status");
             break;
 
         case PCMK_OCF_NOT_CONFIGURED:
-            *status = PCMK_EXEC_ERROR_FATAL;
+            remap_because(status, &why, PCMK_EXEC_ERROR_FATAL, "exit status");
             break;
 
         case PCMK_OCF_UNIMPLEMENT_FEATURE:
@@ -3554,9 +3628,11 @@ remap_operation(xmlNode *xml_op, pe_resource_t *rsc, const pe_node_t *node,
 
                 if (interval_ms == 0) {
                     check_recoverable(rsc, node, task, *rc, xml_op);
-                    *status = PCMK_EXEC_ERROR_HARD;
+                    remap_because(status, &why, PCMK_EXEC_ERROR_HARD,
+                                  "exit status");
                 } else {
-                    *status = PCMK_EXEC_NOT_SUPPORTED;
+                    remap_because(status, &why, PCMK_EXEC_NOT_SUPPORTED,
+                                  "exit status");
                 }
             }
             break;
@@ -3565,7 +3641,7 @@ remap_operation(xmlNode *xml_op, pe_resource_t *rsc, const pe_node_t *node,
         case PCMK_OCF_INVALID_PARAM:
         case PCMK_OCF_INSUFFICIENT_PRIV:
             check_recoverable(rsc, node, task, *rc, xml_op);
-            *status = PCMK_EXEC_ERROR_HARD;
+            remap_because(status, &why, PCMK_EXEC_ERROR_HARD, "exit status");
             break;
 
         default:
@@ -3574,15 +3650,23 @@ remap_operation(xmlNode *xml_op, pe_resource_t *rsc, const pe_node_t *node,
                          "on %s at %s as failure",
                          *rc, task, rsc->id, pe__node_name(node),
                          last_change_s);
-                *status = PCMK_EXEC_ERROR;
+                remap_because(status, &why, PCMK_EXEC_ERROR,
+                              "unknown exit status");
             }
             break;
     }
 
     free(last_change_s);
 
-    pe_rsc_trace(rsc, "Remapped %s status to '%s'",
-                 key, pcmk_exec_status_str(*status));
+remap_done:
+    if (why != NULL) {
+        pe_rsc_trace(rsc,
+                     "Remapped %s result from [%s: %s] to [%s: %s] "
+                     "because of %s",
+                     key, pcmk_exec_status_str(orig_exec_status),
+                     crm_exit_str(orig_exit_status),
+                     pcmk_exec_status_str(*status), crm_exit_str(*rc), why);
+    }
 }
 
 // return TRUE if start or monitor last failure but parameters changed
@@ -3894,7 +3978,7 @@ update_resource_state(pe_resource_t *rsc, const pe_node_t *node,
         clear_past_failure = TRUE;
 
     } else if (pcmk__str_eq(task, CRMD_ACTION_MIGRATE, pcmk__str_casei)) {
-        unpack_migrate_to_success(rsc, node, xml_op, data_set);
+        unpack_migrate_to_success(rsc, node, xml_op);
 
     } else if (rsc->role < RSC_ROLE_STARTED) {
         pe_rsc_trace(rsc, "%s active on %s", rsc->id, pe__node_name(node));
@@ -3987,9 +4071,9 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
         parent = uber_parent(rsc);
     }
 
-    pe_rsc_trace(rsc, "Unpacking task %s/%s (call_id=%d, status=%d, rc=%d) on %s (role=%s)",
-                 task_key, task, task_id, status, rc, pe__node_name(node),
-                 role2text(rsc->role));
+    pe_rsc_trace(rsc, "Unpacking %s (%s call %d on %s): %s (%s)",
+                 ID(xml_op), task, task_id, pe__node_name(node),
+                 pcmk_exec_status_str(status), crm_exit_str(rc));
 
     if (node->details->unclean) {
         pe_rsc_trace(rsc,
@@ -4124,9 +4208,6 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
             goto done;
 
         case PCMK_EXEC_DONE:
-            pe_rsc_trace(rsc, "%s of %s on %s completed at %s " CRM_XS " id=%s",
-                         task, rsc->id, pe__node_name(node),
-                         last_change_s, ID(xml_op));
             update_resource_state(rsc, node, xml_op, task, rc, *last_failure, on_fail, data_set);
             goto done;
 
@@ -4222,9 +4303,9 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 
 done:
     free(last_change_s);
-    pe_rsc_trace(rsc, "Resource %s after %s: role=%s, next=%s",
-                 rsc->id, task, role2text(rsc->role),
-                 role2text(rsc->next_role));
+    pe_rsc_trace(rsc, "%s role on %s after %s is %s (next %s)",
+                 rsc->id, pe__node_name(node), ID(xml_op),
+                 role2text(rsc->role), role2text(rsc->next_role));
 }
 
 static void
