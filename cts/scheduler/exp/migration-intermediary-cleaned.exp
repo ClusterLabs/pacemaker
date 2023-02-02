@@ -149,90 +149,40 @@
   </synapse>
   <synapse id="14">
     <action_set>
-      <rsc_op id="53" operation="start" operation_key="migrator_start_0" on_node="rhel8-5" on_node_uuid="5">
+      <rsc_op id="26" operation="monitor" operation_key="migrator_monitor_0" on_node="rhel8-2" on_node_uuid="2">
         <primitive id="migrator" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_on_node="rhel8-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="90000"  passwd="whatever"/>
+        <attributes CRM_meta_on_node="rhel8-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="90000"  passwd="whatever"/>
       </rsc_op>
     </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="26" operation="monitor" operation_key="migrator_monitor_0" on_node="rhel8-2" on_node_uuid="2"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="51" operation="stop" operation_key="migrator_stop_0" on_node="rhel8-5" on_node_uuid="5"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="52" operation="stop" operation_key="migrator_stop_0" on_node="rhel8-2" on_node_uuid="2"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="15">
     <action_set>
-      <rsc_op id="52" operation="stop" operation_key="migrator_stop_0" on_node="rhel8-2" on_node_uuid="2">
-        <primitive id="migrator" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_on_node="rhel8-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="90000"  passwd="whatever"/>
-      </rsc_op>
-    </action_set>
-    <inputs/>
-  </synapse>
-  <synapse id="16">
-    <action_set>
-      <rsc_op id="51" operation="stop" operation_key="migrator_stop_0" on_node="rhel8-5" on_node_uuid="5">
-        <primitive id="migrator" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_on_node="rhel8-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="90000"  passwd="whatever"/>
-      </rsc_op>
-    </action_set>
-    <inputs/>
-  </synapse>
-  <synapse id="17">
-    <action_set>
-      <rsc_op id="26" operation="monitor" operation_key="migrator_monitor_0" on_node="rhel8-2" on_node_uuid="2">
-        <primitive id="migrator" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_on_node="rhel8-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="90000"  passwd="whatever"/>
-      </rsc_op>
-    </action_set>
-    <inputs/>
-  </synapse>
-  <synapse id="18">
-    <action_set>
-      <rsc_op id="17" operation="monitor" operation_key="migrator_monitor_10000" on_node="rhel8-5" on_node_uuid="5">
-        <primitive id="migrator" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="rhel8-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="90000"  passwd="whatever"/>
-      </rsc_op>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="53" operation="start" operation_key="migrator_start_0" on_node="rhel8-5" on_node_uuid="5"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="19">
-    <action_set>
-      <rsc_op id="61" operation="monitor" operation_key="ping-1_monitor_60000" internal_operation_key="ping-1:3_monitor_60000" on_node="rhel8-2" on_node_uuid="2">
+      <rsc_op id="60" operation="monitor" operation_key="ping-1_monitor_60000" internal_operation_key="ping-1:3_monitor_60000" on_node="rhel8-2" on_node_uuid="2">
         <primitive id="ping-1" long-id="ping-1:3" class="ocf" provider="pacemaker" type="ping"/>
         <attributes CRM_meta_clone="3" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rhel8-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="90000"  debug="true" host_list="192.168.122.80" name="connected"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="60" operation="start" operation_key="ping-1_start_0" internal_operation_key="ping-1:3_start_0" on_node="rhel8-2" on_node_uuid="2"/>
+        <rsc_op id="59" operation="start" operation_key="ping-1_start_0" internal_operation_key="ping-1:3_start_0" on_node="rhel8-2" on_node_uuid="2"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="20">
+  <synapse id="16">
     <action_set>
-      <rsc_op id="60" operation="start" operation_key="ping-1_start_0" internal_operation_key="ping-1:3_start_0" on_node="rhel8-2" on_node_uuid="2">
+      <rsc_op id="59" operation="start" operation_key="ping-1_start_0" internal_operation_key="ping-1:3_start_0" on_node="rhel8-2" on_node_uuid="2">
         <primitive id="ping-1" long-id="ping-1:3" class="ocf" provider="pacemaker" type="ping"/>
         <attributes CRM_meta_clone="3" CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="rhel8-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="90000"  debug="true" host_list="192.168.122.80" name="connected"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="62" operation="start" operation_key="Connectivity_start_0"/>
+        <pseudo_event id="61" operation="start" operation_key="Connectivity_start_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="21">
+  <synapse id="17">
     <action_set>
       <rsc_op id="27" operation="monitor" operation_key="ping-1_monitor_0" internal_operation_key="ping-1:3_monitor_0" on_node="rhel8-2" on_node_uuid="2">
         <primitive id="ping-1" long-id="ping-1:3" class="ocf" provider="pacemaker" type="ping"/>
@@ -241,24 +191,24 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="22" priority="1000000">
+  <synapse id="18" priority="1000000">
     <action_set>
-      <pseudo_event id="63" operation="running" operation_key="Connectivity_running_0">
+      <pseudo_event id="62" operation="running" operation_key="Connectivity_running_0">
         <attributes CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="90000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="60" operation="start" operation_key="ping-1_start_0" internal_operation_key="ping-1:3_start_0" on_node="rhel8-2" on_node_uuid="2"/>
+        <rsc_op id="59" operation="start" operation_key="ping-1_start_0" internal_operation_key="ping-1:3_start_0" on_node="rhel8-2" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="62" operation="start" operation_key="Connectivity_start_0"/>
+        <pseudo_event id="61" operation="start" operation_key="Connectivity_start_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="23">
+  <synapse id="19">
     <action_set>
-      <pseudo_event id="62" operation="start" operation_key="Connectivity_start_0">
+      <pseudo_event id="61" operation="start" operation_key="Connectivity_start_0">
         <attributes CRM_meta_clone_max="5" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="90000" />
       </pseudo_event>
     </action_set>
@@ -268,7 +218,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="24">
+  <synapse id="20">
     <action_set>
       <rsc_op id="28" operation="monitor" operation_key="stateful-1_monitor_0" internal_operation_key="stateful-1:0_monitor_0" on_node="rhel8-2" on_node_uuid="2">
         <primitive id="stateful-1" long-id="stateful-1:0" class="ocf" provider="pacemaker" type="Stateful"/>
@@ -277,7 +227,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="25">
+  <synapse id="21">
     <action_set>
       <rsc_op id="29" operation="monitor" operation_key="r192.168.122.207_monitor_0" on_node="rhel8-2" on_node_uuid="2">
         <primitive id="r192.168.122.207" class="ocf" provider="heartbeat" type="IPaddr2"/>
@@ -286,7 +236,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="26">
+  <synapse id="22">
     <action_set>
       <rsc_op id="30" operation="monitor" operation_key="petulant_monitor_0" on_node="rhel8-2" on_node_uuid="2">
         <primitive id="petulant" class="service" type="pacemaker-cts-dummyd@10"/>
@@ -295,7 +245,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="27">
+  <synapse id="23">
     <action_set>
       <rsc_op id="31" operation="monitor" operation_key="r192.168.122.208_monitor_0" on_node="rhel8-2" on_node_uuid="2">
         <primitive id="r192.168.122.208" class="ocf" provider="heartbeat" type="IPaddr2"/>
@@ -304,7 +254,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="28">
+  <synapse id="24">
     <action_set>
       <rsc_op id="32" operation="monitor" operation_key="lsb-dummy_monitor_0" on_node="rhel8-2" on_node_uuid="2">
         <primitive id="lsb-dummy" class="lsb" type="LSBDummy"/>

@@ -13,7 +13,7 @@ Current cluster status:
     * rsc_rhel8-3	(ocf:heartbeat:IPaddr2):	 Started rhel8-3
     * rsc_rhel8-4	(ocf:heartbeat:IPaddr2):	 Started rhel8-4
     * rsc_rhel8-5	(ocf:heartbeat:IPaddr2):	 Started rhel8-5
-    * migrator	(ocf:pacemaker:Dummy):	 Started [ rhel8-5 rhel8-2 ]
+    * migrator	(ocf:pacemaker:Dummy):	 Started rhel8-5
     * Clone Set: Connectivity [ping-1]:
       * Started: [ rhel8-3 rhel8-4 rhel8-5 ]
       * Stopped: [ rhel8-1 rhel8-2 ]
@@ -30,7 +30,6 @@ Current cluster status:
 Transition Summary:
   * Move       rsc_rhel8-1     ( rhel8-3 -> rhel8-2 )
   * Move       rsc_rhel8-2     ( rhel8-4 -> rhel8-2 )
-  * Restart    migrator        (            rhel8-5 )
   * Start      ping-1:3        (            rhel8-2 )
 
 Executing Cluster Transition:
@@ -44,8 +43,6 @@ Executing Cluster Transition:
   * Resource action: rsc_rhel8-3     monitor on rhel8-2
   * Resource action: rsc_rhel8-4     monitor on rhel8-2
   * Resource action: rsc_rhel8-5     monitor on rhel8-2
-  * Resource action: migrator        stop on rhel8-2
-  * Resource action: migrator        stop on rhel8-5
   * Resource action: migrator        monitor on rhel8-2
   * Resource action: ping-1          monitor on rhel8-2
   * Pseudo action:   Connectivity_start_0
@@ -56,8 +53,6 @@ Executing Cluster Transition:
   * Resource action: lsb-dummy       monitor on rhel8-2
   * Resource action: rsc_rhel8-1     start on rhel8-2
   * Resource action: rsc_rhel8-2     start on rhel8-2
-  * Resource action: migrator        start on rhel8-5
-  * Resource action: migrator        monitor=10000 on rhel8-5
   * Resource action: ping-1          start on rhel8-2
   * Pseudo action:   Connectivity_running_0
   * Resource action: rsc_rhel8-1     monitor=5000 on rhel8-2
@@ -79,7 +74,7 @@ Revised Cluster Status:
     * rsc_rhel8-3	(ocf:heartbeat:IPaddr2):	 Started rhel8-3
     * rsc_rhel8-4	(ocf:heartbeat:IPaddr2):	 Started rhel8-4
     * rsc_rhel8-5	(ocf:heartbeat:IPaddr2):	 Started rhel8-5
-    * migrator	(ocf:pacemaker:Dummy):	 Started [ rhel8-2 rhel8-5 ]
+    * migrator	(ocf:pacemaker:Dummy):	 Started rhel8-5
     * Clone Set: Connectivity [ping-1]:
       * Started: [ rhel8-2 rhel8-3 rhel8-4 rhel8-5 ]
       * Stopped: [ rhel8-1 ]

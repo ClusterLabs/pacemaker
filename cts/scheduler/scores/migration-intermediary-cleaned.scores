@@ -103,7 +103,7 @@ pcmk__primitive_assign: migrator allocation score on rhel8-1: 0
 pcmk__primitive_assign: migrator allocation score on rhel8-2: 0
 pcmk__primitive_assign: migrator allocation score on rhel8-3: 0
 pcmk__primitive_assign: migrator allocation score on rhel8-4: 0
-pcmk__primitive_assign: migrator allocation score on rhel8-5: 0
+pcmk__primitive_assign: migrator allocation score on rhel8-5: 1
 pcmk__primitive_assign: petulant allocation score on rhel8-1: -INFINITY
 pcmk__primitive_assign: petulant allocation score on rhel8-2: -INFINITY
 pcmk__primitive_assign: petulant allocation score on rhel8-3: 0
