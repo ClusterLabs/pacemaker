@@ -22,7 +22,7 @@ GOptionEntry pcmk__log_output_entries[] = {
 typedef struct private_data_s {
     /* gathered in log_begin_list */
     GQueue/*<char*>*/ *prefixes;
-    int log_level;
+    uint8_t log_level;
 } private_data_t;
 
 static void
@@ -329,7 +329,7 @@ pcmk__mk_log_output(char **argv) {
     return retval;
 }
 
-int
+uint8_t
 pcmk__output_get_log_level(const pcmk__output_t *out)
 {
     private_data_t *priv = NULL;
@@ -342,7 +342,7 @@ pcmk__output_get_log_level(const pcmk__output_t *out)
 }
 
 void
-pcmk__output_set_log_level(pcmk__output_t *out, int log_level) {
+pcmk__output_set_log_level(pcmk__output_t *out, uint8_t log_level) {
     private_data_t *priv = NULL;
 
     CRM_ASSERT(out != NULL && out->priv != NULL);
