@@ -2578,6 +2578,13 @@ set_node_score(gpointer key, gpointer value, gpointer user_data)
     node->weight = *score;
 }
 
+#define XPATH_NODE_STATE "/" XML_TAG_CIB "/" XML_CIB_TAG_STATUS     \
+                         "/" XML_CIB_TAG_STATE
+#define SUB_XPATH_LRM_RESOURCE "/" XML_CIB_TAG_LRM              \
+                               "/" XML_LRM_TAG_RESOURCES        \
+                               "/" XML_LRM_TAG_RESOURCE
+#define SUB_XPATH_LRM_RSC_OP "/" XML_LRM_TAG_RSC_OP
+
 static xmlNode *
 find_lrm_op(const char *resource, const char *op, const char *node, const char *source,
             int target_rc, pe_working_set_t *data_set)
@@ -2590,10 +2597,9 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
 
     xpath = g_string_sized_new(256);
     pcmk__g_strcat(xpath,
-                   "//" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='", node, "']"
-                   "//" XML_LRM_TAG_RESOURCE
-                   "[@" XML_ATTR_ID "='", resource, "']"
-                   "/" XML_LRM_TAG_RSC_OP "[@" XML_LRM_ATTR_TASK "='", op, "'",
+                   XPATH_NODE_STATE "[@" XML_ATTR_UNAME "='", node, "']"
+                   SUB_XPATH_LRM_RESOURCE "[@" XML_ATTR_ID "='", resource, "']"
+                   SUB_XPATH_LRM_RSC_OP "[@" XML_LRM_ATTR_TASK "='", op, "'",
                    NULL);
 
     /* Need to check against transition_magic too? */
@@ -2638,10 +2644,8 @@ find_lrm_resource(const char *rsc_id, const char *node_name,
 
     xpath = g_string_sized_new(256);
     pcmk__g_strcat(xpath,
-                   "//" XML_CIB_TAG_STATE
-                   "[@" XML_ATTR_UNAME "='", node_name, "']"
-                   "//" XML_LRM_TAG_RESOURCE
-                   "[@" XML_ATTR_ID "='", rsc_id, "']",
+                   XPATH_NODE_STATE "[@" XML_ATTR_UNAME "='", node_name, "']"
+                   SUB_XPATH_LRM_RESOURCE "[@" XML_ATTR_ID "='", rsc_id, "']",
                    NULL);
 
     xml = get_xpath_object((const char *) xpath->str, data_set->input,
