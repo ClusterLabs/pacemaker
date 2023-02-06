@@ -23,7 +23,7 @@ Current cluster status:
 
 Transition Summary:
   * Start      rabbitmq:0                 (                     rabbitmq-bundle-0 )
-  * Restart    galera-bundle-docker-0     (                     undercloud )  due to required redis-bundle promote
+  * Restart    galera-bundle-docker-0     (                            undercloud )  due to required redis-bundle promote
   * Restart    galera-bundle-0            (                            undercloud )  due to required galera-bundle-docker-0 start
   * Start      galera:0                   (                       galera-bundle-0 )
   * Promote    redis:0                    ( Unpromoted -> Promoted redis-bundle-0 )

@@ -131,26 +131,21 @@ cli_resource_print(pe_resource_t *rsc, pe_working_set_t *data_set, bool expanded
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("attribute-list", "pe_resource_t *", "char *", "GHashTable *")
+PCMK__OUTPUT_ARGS("attribute-list", "pe_resource_t *", "char *", "const char *")
 static int
 attribute_list_default(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     char *attr = va_arg(args, char *);
-    GHashTable *params = va_arg(args, GHashTable *);
+    const char *value = va_arg(args, const char *);
 
-    const char *value = NULL;
-
-    if (params != NULL) {
-        value = g_hash_table_lookup(params, attr);
-    }
     if (value != NULL) {
         out->begin_list(out, NULL, NULL, "Attributes");
         out->list_item(out, attr, "%s", value);
         out->end_list(out);
+        return pcmk_rc_ok;
     } else {
         out->err(out, "Attribute '%s' not found for '%s'", attr, rsc->id);
     }
-
     return pcmk_rc_ok;
 }
 
@@ -229,27 +224,21 @@ agent_status_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("attribute-list", "pe_resource_t *", "char *", "GHashTable *")
+PCMK__OUTPUT_ARGS("attribute-list", "pe_resource_t *", "char *", "const char *")
 static int
 attribute_list_text(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     char *attr = va_arg(args, char *);
-    GHashTable *params = va_arg(args, GHashTable *);
+    const char *value = va_arg(args, const char *);
 
-    const char *value = NULL;
-
-    if (params != NULL) {
-        value = g_hash_table_lookup(params, attr);
-    }
     if (value != NULL) {
         pcmk__formatted_printf(out, "%s\n", value);
+        return pcmk_rc_ok;
     } else {
         out->err(out, "Attribute '%s' not found for '%s'", attr, rsc->id);
     }
-
     return pcmk_rc_ok;
 }
-
 PCMK__OUTPUT_ARGS("override", "const char *", "const char *", "const char *")
 static int
 override_default(pcmk__output_t *out, va_list args) {
