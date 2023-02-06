@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -89,6 +89,7 @@ struct {
     gchar *attr_default;
     gchar *attr_id;
     gchar *attr_name;
+    uint32_t attr_options;
     gchar *attr_pattern;
     char *attr_value;
     char *dest_node;
@@ -156,6 +157,26 @@ value_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **
     options.command = 'G';
     pcmk__str_update(&options.attr_value, NULL);
     return TRUE;
+}
+
+static gboolean
+wait_cb (const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+    if (pcmk__str_eq(optarg, "no", pcmk__str_none)) {
+        pcmk__clear_node_attr_flags(options.attr_options, pcmk__node_attr_sync_local | pcmk__node_attr_sync_cluster);
+        return TRUE;
+    } else if (pcmk__str_eq(optarg, PCMK__VALUE_LOCAL, pcmk__str_none)) {
+        pcmk__clear_node_attr_flags(options.attr_options, pcmk__node_attr_sync_local | pcmk__node_attr_sync_cluster);
+        pcmk__set_node_attr_flags(options.attr_options, pcmk__node_attr_sync_local);
+        return TRUE;
+    } else if (pcmk__str_eq(optarg, PCMK__VALUE_CLUSTER, pcmk__str_none)) {
+        pcmk__clear_node_attr_flags(options.attr_options, pcmk__node_attr_sync_local | pcmk__node_attr_sync_cluster);
+        pcmk__set_node_attr_flags(options.attr_options, pcmk__node_attr_sync_cluster);
+        return TRUE;
+    } else {
+        g_set_error(err, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                    "--wait= must be one of 'no', 'local', 'cluster'");
+        return FALSE;
+    }
 }
 
 static GOptionEntry selecting_entries[] = {
@@ -239,6 +260,17 @@ static GOptionEntry addl_entries[] = {
       "SECTION"
     },
 
+    { "wait", 'W', 0, G_OPTION_ARG_CALLBACK, wait_cb,
+      "Wait for some event to occur before returning.  Values are 'no' (wait\n"
+      INDENT "only for the attribute daemon to acknowledge the request),\n"
+      INDENT "'local' (wait until the change has propagated to where a local\n"
+      INDENT "query will return the request value, or the value set by a\n"
+      INDENT "later request), or 'cluster' (wait until the change has propagated\n"
+      INDENT "to where a query anywhere on the cluster will return the requested\n"
+      INDENT "value, or the value set by a later request).  Default is 'no'.\n"
+      INDENT "(with -N, and one of -D or -u)",
+      "UNTIL" },
+
     { "utilization", 'z', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, utilization_cb,
       "Set an utilization attribute for the node.",
       NULL
@@ -301,10 +333,6 @@ send_attrd_update(char command, const char *attr_node, const char *attr_name,
 {
     int rc = pcmk_rc_ok;
     uint32_t opts = attr_options;
-
-    if (options.attr_pattern) {
-        opts |= pcmk__node_attr_pattern;
-    }
 
     switch (command) {
         case 'D':
@@ -662,7 +690,6 @@ main(int argc, char **argv)
 {
     cib_t *the_cib = NULL;
     int is_remote_node = 0;
-    int attrd_opts = pcmk__node_attr_none;
 
     int rc = pcmk_rc_ok;
 
@@ -774,6 +801,13 @@ main(int argc, char **argv)
     }
 
     if (options.attr_pattern) {
+        if (options.attr_name) {
+            exit_code = CRM_EX_USAGE;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Error: --name and --pattern cannot be used at the same time");
+            goto done;
+        }
+
         if (!pattern_used_correctly()) {
             exit_code = CRM_EX_USAGE;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
@@ -783,19 +817,20 @@ main(int argc, char **argv)
 
         g_free(options.attr_name);
         options.attr_name = options.attr_pattern;
+        options.attr_options |= pcmk__node_attr_pattern;
     }
 
     if (is_remote_node) {
-        attrd_opts = pcmk__node_attr_remote;
+        options.attr_options |= pcmk__node_attr_remote;
     }
 
     if (pcmk__str_eq(options.set_type, XML_TAG_UTILIZATION, pcmk__str_none)) {
-        attrd_opts |= pcmk__node_attr_utilization;
+        options.attr_options |= pcmk__node_attr_utilization;
     }
 
     if (try_ipc_update() &&
         (send_attrd_update(options.command, options.dest_uname, options.attr_name,
-                           options.attr_value, options.set_name, NULL, attrd_opts) == pcmk_rc_ok)) {
+                           options.attr_value, options.set_name, NULL, options.attr_options) == pcmk_rc_ok)) {
         crm_info("Update %s=%s sent via pacemaker-attrd",
                  options.attr_name, ((options.command == 'D')? "<none>" : options.attr_value));
 

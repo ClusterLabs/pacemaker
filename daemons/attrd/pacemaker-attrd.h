@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2022 the Pacemaker project contributors
+ * Copyright 2013-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -208,5 +208,7 @@ void attrd_handle_confirmation(int callid, const char *host);
 void attrd_remove_client_from_waitlist(pcmk__client_t *client);
 const char *attrd_request_sync_point(xmlNode *xml);
 bool attrd_request_has_sync_point(xmlNode *xml);
+
+void attrd_copy_xml_attributes(xmlNode *src, xmlNode *dest);
 
 #endif /* PACEMAKER_ATTRD__H */
