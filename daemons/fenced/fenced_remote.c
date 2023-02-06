@@ -1825,6 +1825,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
         op->state = st_exec;
         if (op->op_timer_one) {
             g_source_remove(op->op_timer_one);
+            op->op_timer_one = 0;
         }
 
         if (!((stonith_watchdog_timeout_ms > 0)
