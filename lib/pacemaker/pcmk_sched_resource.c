@@ -942,8 +942,8 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
 
     CRM_ASSERT((instance1 != NULL) && (instance2 != NULL));
 
-    node1 = pe__find_active_on(instance1, &nnodes1, NULL);
-    node2 = pe__find_active_on(instance2, &nnodes2, NULL);
+    node1 = instance1->fns->active_node(instance1, &nnodes1, NULL);
+    node2 = instance2->fns->active_node(instance2, &nnodes2, NULL);
 
     /* If both instances are running and at least one is multiply
      * active, prefer instance that's running on fewer nodes.

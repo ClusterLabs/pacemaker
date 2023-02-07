@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -2011,7 +2011,7 @@ main(int argc, char **argv)
         case cmd_get_param: {
             unsigned int count = 0;
             GHashTable *params = NULL;
-            pe_node_t *current = pe__find_active_on(rsc, &count, NULL);
+            pe_node_t *current = rsc->fns->active_node(rsc, &count, NULL);
             bool free_params = true;
 
             if (count > 1) {

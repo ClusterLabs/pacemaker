@@ -18,6 +18,9 @@
 
 void populate_hash(xmlNode * nvpair_list, GHashTable * hash, const char **attrs, int attrs_length);
 
+static pe_node_t *active_node(const pe_resource_t *rsc, unsigned int *count_all,
+                              unsigned int *count_clean);
+
 resource_object_functions_t resource_class_functions[] = {
     {
          native_unpack,
@@ -30,6 +33,7 @@ resource_object_functions_t resource_class_functions[] = {
          native_free,
          pe__count_common,
          pe__native_is_filtered,
+         active_node,
     },
     {
          group_unpack,
@@ -42,6 +46,7 @@ resource_object_functions_t resource_class_functions[] = {
          group_free,
          pe__count_common,
          pe__group_is_filtered,
+         active_node,
     },
     {
          clone_unpack,
@@ -54,6 +59,7 @@ resource_object_functions_t resource_class_functions[] = {
          clone_free,
          pe__count_common,
          pe__clone_is_filtered,
+         active_node,
     },
     {
          pe__unpack_bundle,
@@ -66,6 +72,7 @@ resource_object_functions_t resource_class_functions[] = {
          pe__free_bundle,
          pe__count_bundle,
          pe__bundle_is_filtered,
+         active_node,
     }
 };
 
@@ -1012,24 +1019,10 @@ common_free(pe_resource_t * rsc)
     free(rsc);
 }
 
-/*!
- * \brief
- * \internal Find a node (and optionally count all) where resource is active
- *
- * \param[in]  rsc          Resource to check
- * \param[out] count_all    If not NULL, will be set to count of active nodes
- * \param[out] count_clean  If not NULL, will be set to count of clean nodes
- *
- * \return An active node (or NULL if resource is not active anywhere)
- *
- * \note The order of preference is: an active node that is the resource's
- *       partial migration source; if the resource's "requires" is "quorum" or
- *       "nothing", the first active node in the list that is clean and online;
- *       the first active node in the list.
- */
-pe_node_t *
-pe__find_active_on(const pe_resource_t *rsc, unsigned int *count_all,
-                   unsigned int *count_clean)
+// Shared implementation of resource_object_functions_t:active_node()
+static pe_node_t *
+active_node(const pe_resource_t *rsc, unsigned int *count_all,
+            unsigned int *count_clean)
 {
     pe_node_t *active = NULL;
     pe_node_t *node = NULL;
@@ -1103,17 +1096,25 @@ pe__find_active_on(const pe_resource_t *rsc, unsigned int *count_all,
  *
  * \return An active node (or NULL if resource is not active anywhere)
  *
- * \note This is a convenience wrapper for pe__find_active_on() where the count
- *       of all active nodes or only clean active nodes is desired according to
- *       the "requires" meta-attribute.
+ * \note This is a convenience wrapper for active_node() where the count of all
+ *       active nodes or only clean active nodes is desired according to the
+ *       "requires" meta-attribute.
  */
 pe_node_t *
 pe__find_active_requires(const pe_resource_t *rsc, unsigned int *count)
 {
-    if (rsc && !pcmk_is_set(rsc->flags, pe_rsc_needs_fencing)) {
-        return pe__find_active_on(rsc, NULL, count);
+    if (rsc == NULL) {
+        if (count != NULL) {
+            *count = 0;
+        }
+        return NULL;
+
+    } else if (pcmk_is_set(rsc->flags, pe_rsc_needs_fencing)) {
+        return rsc->fns->active_node(rsc, count, NULL);
+
+    } else {
+        return rsc->fns->active_node(rsc, NULL, count);
     }
-    return pe__find_active_on(rsc, count, NULL);
 }
 
 void
