@@ -1019,6 +1019,58 @@ common_free(pe_resource_t * rsc)
     free(rsc);
 }
 
+/*!
+ * \internal
+ * \brief Add an active node to a count
+ *
+ * \param[in]     rsc          An active resource
+ * \param[in]     node         A node that \p rsc is active on
+ * \param[in,out] active       This will be set to \p node if \p node is more
+ *                             preferred than the current value
+ * \param[out]    count_all    If not NULL, this will be incremented
+ * \param[out]    count_clean  If not NULL, this will be incremented if \p node
+ *                             is online and clean
+ *
+ * \return true if the count should continue, or false if sufficiently known
+ */
+bool
+pe__count_active_node(const pe_resource_t *rsc, pe_node_t *node,
+                      pe_node_t **active, unsigned int *count_all,
+                      unsigned int *count_clean)
+{
+    bool keep_looking = false;
+    bool is_happy = node->details->online && !node->details->unclean;
+
+    if (count_all != NULL) {
+        ++*count_all;
+    }
+    if ((count_clean != NULL) && is_happy) {
+        ++*count_clean;
+    }
+    if ((count_all != NULL) || (count_clean != NULL)) {
+        keep_looking = true; // We're counting, so go through entire list
+    }
+
+    if (rsc->partial_migration_source != NULL) {
+        if (node->details == rsc->partial_migration_source->details) {
+            *active = node; // This is the migration source
+        } else {
+            keep_looking = true;
+        }
+    } else if (!pcmk_is_set(rsc->flags, pe_rsc_needs_fencing)) {
+        if (is_happy && ((*active == NULL) || !(*active)->details->online
+                         || (*active)->details->unclean)) {
+            *active = node; // This is the first clean node
+        } else {
+            keep_looking = true;
+        }
+    }
+    if (*active == NULL) {
+        *active = node; // This is the first node checked
+    }
+    return keep_looking;
+}
+
 // Shared implementation of resource_object_functions_t:active_node()
 static pe_node_t *
 active_node(const pe_resource_t *rsc, unsigned int *count_all,
@@ -1036,41 +1088,8 @@ active_node(const pe_resource_t *rsc, unsigned int *count_all,
         return NULL;
     }
     for (GList *iter = rsc->running_on; iter != NULL; iter = iter->next) {
-        pe_node_t *node = iter->data;
-        bool keep_looking = false;
-        bool is_happy = node->details->online && !node->details->unclean;
-
-        if (count_all != NULL) {
-            ++*count_all;
-        }
-        if ((count_clean != NULL) && is_happy) {
-            ++*count_clean;
-        }
-        if ((count_all != NULL) || (count_clean != NULL)) {
-            keep_looking = true; // We're counting, so go through entire list
-        }
-
-        if (rsc->partial_migration_source != NULL) {
-            if (node->details == rsc->partial_migration_source->details) {
-                // This is the migration source
-                active = node;
-            } else {
-                keep_looking = true;
-            }
-        } else if (!pcmk_is_set(rsc->flags, pe_rsc_needs_fencing)) {
-            if (is_happy && (!active || !active->details->online
-                             || active->details->unclean)) {
-                // This is the first clean node
-                active = node;
-            } else {
-                keep_looking = true;
-            }
-        }
-        if (active == NULL) { // This is first node in list
-            active = node;
-        }
-
-        if (!keep_looking) {
+        if (!pe__count_active_node(rsc, (pe_node_t *) iter->data, &active,
+                                   count_all, count_clean)) {
             break; // Don't waste time iterating if we don't have to
         }
     }

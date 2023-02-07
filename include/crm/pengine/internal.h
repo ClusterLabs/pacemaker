@@ -364,6 +364,10 @@ pe_action_t *pe__clear_failcount(pe_resource_t *rsc, const pe_node_t *node,
 
 /* Functions for finding/counting a resource's active nodes */
 
+bool pe__count_active_node(const pe_resource_t *rsc, pe_node_t *node,
+                           pe_node_t **active, unsigned int *count_all,
+                           unsigned int *count_clean);
+
 pe_node_t *pe__find_active_requires(const pe_resource_t *rsc,
                                     unsigned int *count);
 
