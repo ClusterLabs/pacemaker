@@ -232,7 +232,8 @@ class FenceTests(Tests):
         test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 2 -v true1")
         test.add_cmd_no_wait("stonith_admin", "--output-as=xml -F node2 -t 10")
         test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 10")
-        test.add_negative_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
+        test.add_log_pattern("Merging fencing action 'off' targeting node3 originating from client",
+                             negative=True)
 
     def build_standalone_tests(self):
         """ Register a grab bag of tests that can be executed in standalone or corosync mode """
@@ -452,7 +453,8 @@ class FenceTests(Tests):
 
             test.add_log_pattern("Total timeout set to 96")
             test.add_log_pattern("targeting node3 using false1 returned 1")
-            test.add_negative_log_pattern("targeting node3 using false2 returned ")
+            test.add_log_pattern("targeting node3 using false2 returned ",
+                                 negative=True)
             test.add_log_pattern("targeting node3 using true3 returned 0")
             test.add_log_pattern("targeting node3 using true4 returned 0")
 
@@ -627,7 +629,8 @@ class FenceTests(Tests):
             test.add_cmd("stonith_admin",
                          "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
             test.add_cmd("stonith_admin", "--output-as=xml -B node1 -t 5 -V")
-            test.add_negative_log_pattern("does not advertise support for 'reboot', performing 'off'")
+            test.add_log_pattern("does not advertise support for 'reboot', performing 'off'",
+                                 negative=True)
             test.add_log_pattern("using true1 returned 0")
 
         # make sure requested fencing delay is applied only for the first device in the first level
@@ -657,8 +660,10 @@ class FenceTests(Tests):
 
             test.add_log_pattern("Delaying 'off' action targeting node3 using true1 for 2s | timeout=120s requested_delay=1s base=1s max=1s")
             test.add_log_pattern("Delaying 'off' action targeting node3 using false1 for 1s | timeout=120s requested_delay=0s base=1s max=1s")
-            test.add_negative_log_pattern("Delaying 'off' action targeting node3 using true2")
-            test.add_negative_log_pattern("Delaying 'off' action targeting node3 using true3")
+            test.add_log_pattern("Delaying 'off' action targeting node3 using true2",
+                                 negative=True)
+            test.add_log_pattern("Delaying 'off' action targeting node3 using true3",
+                                 negative=True)
 
     def build_nodeid_tests(self):
         """ Register tests that use a corosync node id """
@@ -683,7 +688,8 @@ class FenceTests(Tests):
         test.add_cmd("stonith_admin",
                      "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=regr-test\"")
         test.add_cmd("stonith_admin", "--output-as=xml -F regr-test -t 3")
-        test.add_negative_log_pattern("as nodeid with fence action 'off' targeting regr-test")
+        test.add_log_pattern("as nodeid with fence action 'off' targeting regr-test",
+                             negative=True)
 
         ### verify nodeid use doesn't explode standalone mode
         test = self.new_test("standalone_do_not_supply_nodeid",
@@ -693,7 +699,8 @@ class FenceTests(Tests):
         test.add_cmd("stonith_admin",
                      "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=%s\"" % (our_uname))
         test.add_cmd("stonith_admin", "--output-as=xml -F %s -t 3" % (our_uname))
-        test.add_negative_log_pattern("as nodeid with fence action 'off' targeting %s" % (our_uname))
+        test.add_log_pattern("as nodeid with fence action 'off' targeting %s" % our_uname,
+                             negative=True)
 
     def build_unfence_tests(self):
         """ Register tests that verify unfencing """
@@ -897,8 +904,10 @@ class FenceTests(Tests):
         test.add_log_pattern("perform 'off' action targeting node_fake using true2")
         test.add_log_pattern("Remapped 'off' targeting node_fake complete, remapping to 'on'")
         test.add_log_pattern("Undoing remap of reboot targeting node_fake")
-        test.add_negative_log_pattern("perform 'on' action targeting node_fake using")
-        test.add_negative_log_pattern("'on' failure")
+        test.add_log_pattern("perform 'on' action targeting node_fake using",
+                             negative=True)
+        test.add_log_pattern("'on' failure",
+                             negative=True)
 
         test = self.new_test("cpg_remap_complex_1",
                              "Verify remapped topology reboot in second level works if non-remapped first level fails",
@@ -937,7 +946,8 @@ class FenceTests(Tests):
         test.add_log_pattern("Attempted to execute agent fence_dummy (off) the maximum number of times")
         test.add_log_pattern("Undoing remap of reboot targeting node_fake")
         test.add_log_pattern("perform 'reboot' action targeting node_fake using true2")
-        test.add_negative_log_pattern("node_fake with true3")
+        test.add_log_pattern("node_fake with true3",
+                             negative=True)
 
     def build_query_tests(self):
         """ run stonith_admin --metadata for the fence_dummy agent and check command output """

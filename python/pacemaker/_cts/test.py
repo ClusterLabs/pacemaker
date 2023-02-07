@@ -260,15 +260,13 @@ class Test:
 
         self._new_cmd(cmd, args, ExitStatus.OK, no_wait=True)
 
-    def add_log_pattern(self, pattern):
+    def add_log_pattern(self, pattern, negative=False):
         """ Add a pattern that should appear in the test's logs """
 
-        self._log_patterns.append(pattern)
-
-    def add_negative_log_pattern(self, pattern):
-        """ Add a pattern that should not occur in the test's logs """
-
-        self._negative_log_patterns.append(pattern)
+        if negative:
+            self._negative_log_patterns.append(pattern)
+        else:
+            self._log_patterns.append(pattern)
 
     def clean_environment(self):
         """ Clean up the host after executing a test """
