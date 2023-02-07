@@ -380,6 +380,9 @@ log_data_element(int log_level, const char *file, const char *function,
     uint32_t options = 0;
     pcmk__output_t *out = NULL;
 
+    // Confine log_level to uint8_t range
+    log_level = pcmk__clip_log_level(log_level);
+
     if (data == NULL) {
         do_crm_log(log_level, "%s%sNo data to dump as XML",
                    pcmk__s(prefix, ""), pcmk__str_empty(prefix)? "" : " ");

@@ -11,6 +11,7 @@
 #  define PCMK__OUTPUT_INTERNAL__H
 
 #  include <stdbool.h>
+#  include <stdint.h>
 #  include <stdio.h>
 #  include <libxml/tree.h>
 #  include <libxml/HTMLtree.h>
@@ -745,7 +746,7 @@ pcmk__text_prompt(const char *prompt, bool echo, char **dest);
  *
  * \return Log level used by \p out
  */
-int
+uint8_t
 pcmk__output_get_log_level(const pcmk__output_t *out);
 
 /*!
@@ -761,7 +762,7 @@ pcmk__output_get_log_level(const pcmk__output_t *out);
  *       However, out->err will always log at LOG_ERR.
  */
 void
-pcmk__output_set_log_level(pcmk__output_t *out, int log_level);
+pcmk__output_set_log_level(pcmk__output_t *out, uint8_t log_level);
 
 /*!
  * \internal
