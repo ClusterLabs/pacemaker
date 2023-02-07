@@ -72,7 +72,7 @@ resource_object_functions_t resource_class_functions[] = {
          pe__free_bundle,
          pe__count_bundle,
          pe__bundle_is_filtered,
-         active_node,
+         pe__bundle_active_node,
     }
 };
 

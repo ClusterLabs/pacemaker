@@ -1891,3 +1891,81 @@ pe__bundle_containers(const pe_resource_t *bundle)
     }
     return containers;
 }
+
+// Bundle implementation of resource_object_functions_t:active_node()
+pe_node_t *
+pe__bundle_active_node(const pe_resource_t *rsc, unsigned int *count_all,
+                       unsigned int *count_clean)
+{
+    pe_node_t *active = NULL;
+    pe_node_t *node = NULL;
+    pe_resource_t *container = NULL;
+    GList *containers = NULL;
+    GList *iter = NULL;
+    GHashTable *nodes = NULL;
+    GHashTableIter table_iter;
+    const pe__bundle_variant_data_t *data = NULL;
+
+    if (count_all != NULL) {
+        *count_all = 0;
+    }
+    if (count_clean != NULL) {
+        *count_clean = 0;
+    }
+    if (rsc == NULL) {
+        return NULL;
+    }
+
+    /* For the purposes of this method, we only care about where the bundle's
+     * containers are active, so build a list of active containers.
+     */
+    get_bundle_variant_data(data, rsc);
+    for (iter = data->replicas; iter != NULL; iter = iter->next) {
+        pe__bundle_replica_t *replica = iter->data;
+
+        if (replica->container->running_on != NULL) {
+            containers = g_list_append(containers, replica->container);
+        }
+    }
+    if (containers == NULL) {
+        return NULL;
+    }
+
+    /* If the bundle has only a single active container, just use that
+     * container's method. That allows us to prefer the migration source when
+     * there is only one container and it is migrating.
+     */
+    if (pcmk__list_of_1(containers)) {
+        container = containers->data;
+        node = container->fns->active_node(container, count_all, count_clean);
+        g_list_free(containers);
+        return node;
+    }
+
+    // Add all containers' active nodes to a hash table (for uniqueness)
+    nodes = g_hash_table_new(NULL, NULL);
+    for (iter = containers; iter != NULL; iter = iter->next) {
+        container = iter->data;
+
+        for (GList *node_iter = container->running_on; node_iter != NULL;
+             node_iter = node_iter->next) {
+            pe_node_t *node = node_iter->data;
+
+            g_hash_table_insert(nodes, (gpointer) node->details->uname,
+                                (gpointer) node);
+        }
+    }
+    g_list_free(containers);
+
+    // Count each node
+    g_hash_table_iter_init(&table_iter, nodes);
+    while (g_hash_table_iter_next(&table_iter, NULL, (gpointer *) &node)) {
+        if (!pe__count_active_node(rsc, node, &active, count_all,
+                                   count_clean)) {
+            break; // Don't waste time iterating if we don't have to
+        }
+    }
+    g_hash_table_destroy(nodes);
+
+    return active;
+}

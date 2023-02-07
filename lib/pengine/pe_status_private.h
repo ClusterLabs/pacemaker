@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2022 the Pacemaker project contributors
+ * Copyright 2018-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -80,5 +80,10 @@ op_digest_cache_t *pe__compare_fencing_digest(pe_resource_t *rsc,
 
 G_GNUC_INTERNAL
 void pe__unpack_node_health_scores(pe_working_set_t *data_set);
+
+G_GNUC_INTERNAL
+pe_node_t *pe__bundle_active_node(const pe_resource_t *rsc,
+                                  unsigned int *count_all,
+                                  unsigned int *count_clean);
 
 #endif  // PE_STATUS_PRIVATE__H
