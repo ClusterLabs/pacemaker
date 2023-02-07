@@ -671,9 +671,6 @@ void pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
 // Bundles (pcmk_sched_bundle.c)
 
 G_GNUC_INTERNAL
-GList *pcmk__bundle_containers(const pe_resource_t *bundle);
-
-G_GNUC_INTERNAL
 const pe_resource_t *pcmk__get_rsc_in_container(const pe_resource_t *instance);
 
 G_GNUC_INTERNAL

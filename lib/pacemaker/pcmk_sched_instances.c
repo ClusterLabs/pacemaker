@@ -580,7 +580,7 @@ static inline GList *
 get_instance_list(const pe_resource_t *rsc)
 {
     if (rsc->variant == pe_container) {
-        return pcmk__bundle_containers(rsc);
+        return pe__bundle_containers(rsc);
     } else {
         return rsc->children;
     }

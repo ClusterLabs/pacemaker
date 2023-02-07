@@ -581,6 +581,9 @@ int pe__common_output_text(pcmk__output_t *out, const pe_resource_t *rsc,
 int pe__common_output_html(pcmk__output_t *out, const pe_resource_t *rsc,
                            const char *name, const pe_node_t *node,
                            unsigned int options);
+
+GList *pe__bundle_containers(const pe_resource_t *bundle);
+
 pe_resource_t *pe__find_bundle_replica(const pe_resource_t *bundle,
                                        const pe_node_t *node);
 bool pe__bundle_needs_remote_name(pe_resource_t *rsc);

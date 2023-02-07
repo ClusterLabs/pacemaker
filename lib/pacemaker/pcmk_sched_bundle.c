@@ -34,31 +34,6 @@ is_bundle_node(pe__bundle_variant_data_t *data, pe_node_t *node)
 
 /*!
  * \internal
- * \brief Get a list of a bundle's containers
- *
- * \param[in] bundle  Bundle resource
- *
- * \return Newly created list of \p bundle's containers
- * \note It is the caller's responsibility to free the result with
- *       g_list_free().
- */
-GList *
-pcmk__bundle_containers(const pe_resource_t *bundle)
-{
-    GList *containers = NULL;
-    const pe__bundle_variant_data_t *data = NULL;
-
-    get_bundle_variant_data(data, bundle);
-    for (GList *iter = data->replicas; iter != NULL; iter = iter->next) {
-        pe__bundle_replica_t *replica = iter->data;
-
-        containers = g_list_append(containers, replica->container);
-    }
-    return containers;
-}
-
-/*!
- * \internal
  * \brief Assign a bundle resource to a node
  *
  * \param[in,out] rsc     Resource to assign to a node
@@ -77,7 +52,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
     get_bundle_variant_data(bundle_data, rsc);
 
     pe__set_resource_flags(rsc, pe_rsc_allocating);
-    containers = pcmk__bundle_containers(rsc);
+    containers = pe__bundle_containers(rsc);
 
     pe__show_node_weights(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
                           rsc, __func__, rsc->allowed_nodes, rsc->cluster);
@@ -171,7 +146,7 @@ pcmk__bundle_create_actions(pe_resource_t *rsc)
 
     CRM_CHECK(rsc != NULL, return);
 
-    containers = pcmk__bundle_containers(rsc);
+    containers = pe__bundle_containers(rsc);
     get_bundle_variant_data(bundle_data, rsc);
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
@@ -560,7 +535,7 @@ pcmk__bundle_action_flags(pe_action_t *action, const pe_node_t *node)
         }
     }
 
-    containers = pcmk__bundle_containers(action->rsc);
+    containers = pe__bundle_containers(action->rsc);
     flags = pcmk__collective_action_flags(action, containers, node);
     g_list_free(containers);
     return flags;

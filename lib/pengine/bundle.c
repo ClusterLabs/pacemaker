@@ -1866,3 +1866,28 @@ pe__bundle_is_filtered(const pe_resource_t *rsc, GList *only_rsc,
 
     return !passes;
 }
+
+/*!
+ * \internal
+ * \brief Get a list of a bundle's containers
+ *
+ * \param[in] bundle  Bundle resource
+ *
+ * \return Newly created list of \p bundle's containers
+ * \note It is the caller's responsibility to free the result with
+ *       g_list_free().
+ */
+GList *
+pe__bundle_containers(const pe_resource_t *bundle)
+{
+    GList *containers = NULL;
+    const pe__bundle_variant_data_t *data = NULL;
+
+    get_bundle_variant_data(data, bundle);
+    for (GList *iter = data->replicas; iter != NULL; iter = iter->next) {
+        pe__bundle_replica_t *replica = iter->data;
+
+        containers = g_list_append(containers, replica->container);
+    }
+    return containers;
+}
