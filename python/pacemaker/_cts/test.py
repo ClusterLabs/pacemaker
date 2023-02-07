@@ -49,6 +49,35 @@ def rng_directory():
     return BuildOptions.SCHEMA_DIR
 
 
+class Pattern:
+    """ A class for checking log files for a given pattern """
+
+    def __init__(self, pat, negative=False, regex=False):
+        """ Create a new Pattern instance
+
+            Arguments:
+
+            pat      -- The string to search for
+            negative -- If True, pat must not be found in any input
+            regex    -- If True, pat is a regex and not a substring
+        """
+
+        self._pat = pat
+        self.negative = negative
+        self.regex = regex
+
+    def __str__(self):
+        return self._pat
+
+    def match(self, line):
+        """ Is this pattern found in the given line? """
+
+        if self.regex:
+            return re.search(self._pat, line) is not None
+
+        return self._pat in line
+
+
 class Test:
     """ The base class for a single regression test.  A single regression test
         may still run multiple commands as part of its execution.
@@ -87,13 +116,11 @@ class Test:
         self.verbose = kwargs.get("verbose", False)
 
         self._cmds = []
+        self._patterns = []
 
         self._daemon_location = None
         self._daemon_output = ""
         self._daemon_process = None
-
-        self._log_patterns = []
-        self._negative_log_patterns = []
 
         self._result_exitcode = ExitStatus.OK
         self._result_txt = ""
@@ -126,18 +153,6 @@ class Test:
     ### PRIVATE METHODS
     ###
 
-    def _count_negative_matches(self, outline):
-        """ Return 1 if a line matches patterns that shouldn't have occurred """
-
-        count = 0
-        for line in self._negative_log_patterns:
-            if outline.count(line):
-                count = 1
-                if self.verbose:
-                    print("This pattern should not have matched = '%s" % line)
-
-        return count
-
     def _kill_daemons(self):
         """ Kill any running daemons in preparation for executing the test """
         raise NotImplementedError("_kill_daemons not provided by subclass")
@@ -147,35 +162,39 @@ class Test:
             self._result_txt as appropriate.  Not all subclass will need to do
             this.
         """
-        if len(self._log_patterns) == 0 and len(self._negative_log_patterns) == 0:
+        if len(self._patterns) == 0:
             return
 
-        negative_matches = 0
-        cur = 0
-        pats = self._log_patterns
-        total_patterns = len(self._log_patterns)
+        n_failed_matches = 0
+        n_negative_matches = 0
 
-        for line in self._daemon_output.split("\n"):
-            negative_matches += self._count_negative_matches(line)
+        output = self._daemon_output.split("\n")
 
-            if len(pats) == 0:
-                continue
+        for pat in self._patterns:
+            positive_match = False
 
-            cur = -1
-            for pat in pats:
-                cur += 1
-                if line.count(pats[cur]):
-                    del pats[cur]
+            for line in output:
+                if pat.match(line):
+                    if pat.negative:
+                        n_negative_matches += 1
+
+                        if self.verbose:
+                            print("This pattern should not have matched = '%s" % pat)
+
+                        break
+
+                    positive_match = True
                     break
 
-        if len(pats) > 0 or negative_matches:
-            if self.verbose:
-                for pat in pats:
-                    print("Pattern Not Matched = '%s'" % pat)
+            if not pat.negative and not positive_match:
+                n_failed_matches += 1
+                print("Pattern Not Matched = '%s'" % pat)
 
+        if n_failed_matches > 0 or n_negative_matches > 0:
             msg = "FAILURE - '%s' failed. %d patterns out of %d not matched. %d negative matches."
-            self._result_txt = msg % (self.name, len(pats), total_patterns, negative_matches)
+            self._result_txt = msg % (self.name, n_failed_matches, len(self._patterns), n_negative_matches)
             self.exitcode = ExitStatus.ERROR
+
 
     def _new_cmd(self, cmd, args, exitcode, **kwargs):
         """ Add a command to be executed as part of this test.
@@ -260,13 +279,10 @@ class Test:
 
         self._new_cmd(cmd, args, ExitStatus.OK, no_wait=True)
 
-    def add_log_pattern(self, pattern, negative=False):
+    def add_log_pattern(self, pattern, negative=False, regex=False):
         """ Add a pattern that should appear in the test's logs """
 
-        if negative:
-            self._negative_log_patterns.append(pattern)
-        else:
-            self._log_patterns.append(pattern)
+        self._patterns.append(Pattern(pattern, negative=negative, regex=regex))
 
     def clean_environment(self):
         """ Clean up the host after executing a test """
