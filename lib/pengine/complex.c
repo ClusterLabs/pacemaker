@@ -1025,37 +1025,29 @@ active_node(const pe_resource_t *rsc, unsigned int *count_all,
             unsigned int *count_clean)
 {
     pe_node_t *active = NULL;
-    pe_node_t *node = NULL;
-    bool keep_looking = FALSE;
-    bool is_happy = FALSE;
 
-    if (count_all) {
+    if (count_all != NULL) {
         *count_all = 0;
     }
-    if (count_clean) {
+    if (count_clean != NULL) {
         *count_clean = 0;
     }
     if (rsc == NULL) {
         return NULL;
     }
+    for (GList *iter = rsc->running_on; iter != NULL; iter = iter->next) {
+        pe_node_t *node = iter->data;
+        bool keep_looking = false;
+        bool is_happy = node->details->online && !node->details->unclean;
 
-    for (GList *node_iter = rsc->running_on; node_iter != NULL;
-         node_iter = node_iter->next) {
-
-        node = node_iter->data;
-        keep_looking = FALSE;
-
-        is_happy = node->details->online && !node->details->unclean;
-
-        if (count_all) {
+        if (count_all != NULL) {
             ++*count_all;
         }
-        if (count_clean && is_happy) {
+        if ((count_clean != NULL) && is_happy) {
             ++*count_clean;
         }
-        if (count_all || count_clean) {
-            // If we're counting, we need to go through entire list
-            keep_looking = TRUE;
+        if ((count_all != NULL) || (count_clean != NULL)) {
+            keep_looking = true; // We're counting, so go through entire list
         }
 
         if (rsc->partial_migration_source != NULL) {
@@ -1063,7 +1055,7 @@ active_node(const pe_resource_t *rsc, unsigned int *count_all,
                 // This is the migration source
                 active = node;
             } else {
-                keep_looking = TRUE;
+                keep_looking = true;
             }
         } else if (!pcmk_is_set(rsc->flags, pe_rsc_needs_fencing)) {
             if (is_happy && (!active || !active->details->online
@@ -1071,17 +1063,15 @@ active_node(const pe_resource_t *rsc, unsigned int *count_all,
                 // This is the first clean node
                 active = node;
             } else {
-                keep_looking = TRUE;
+                keep_looking = true;
             }
         }
-        if (active == NULL) {
-            // This is first node in list
+        if (active == NULL) { // This is first node in list
             active = node;
         }
 
-        if (keep_looking == FALSE) {
-            // Don't waste time iterating if we don't have to
-            break;
+        if (!keep_looking) {
+            break; // Don't waste time iterating if we don't have to
         }
     }
     return active;
