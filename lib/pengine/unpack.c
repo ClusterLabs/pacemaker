@@ -4213,12 +4213,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
             if (rsc->pending_task == NULL) {
                 if ((interval_ms != 0) || strcmp(task, CRMD_ACTION_STATUS)) {
                     rsc->pending_task = strdup(task);
-
-                    /* @COMPAT I don't like breaking const signatures, but
-                     * rsc->pending_node should really be const -- we just can't
-                     * change it until the next API compatibilit break.
-                     */
-                    rsc->pending_node = (pe_node_t *) node;
+                    rsc->pending_node = node;
                 } else {
                     /* Pending probes are not printed, even if pending
                      * operations are requested. If someone ever requests that
@@ -4227,7 +4222,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                      */
 #if 0
                     rsc->pending_task = strdup("probe");
-                    rsc->pending_node = (pe_node_t *) node;
+                    rsc->pending_node = node;
 #endif
                 }
             }
