@@ -2578,6 +2578,13 @@ set_node_score(gpointer key, gpointer value, gpointer user_data)
     node->weight = *score;
 }
 
+#define XPATH_NODE_STATE "/" XML_TAG_CIB "/" XML_CIB_TAG_STATUS     \
+                         "/" XML_CIB_TAG_STATE
+#define SUB_XPATH_LRM_RESOURCE "/" XML_CIB_TAG_LRM              \
+                               "/" XML_LRM_TAG_RESOURCES        \
+                               "/" XML_LRM_TAG_RESOURCE
+#define SUB_XPATH_LRM_RSC_OP "/" XML_LRM_TAG_RSC_OP
+
 static xmlNode *
 find_lrm_op(const char *resource, const char *op, const char *node, const char *source,
             int target_rc, pe_working_set_t *data_set)
@@ -2590,10 +2597,9 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
 
     xpath = g_string_sized_new(256);
     pcmk__g_strcat(xpath,
-                   "//" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='", node, "']"
-                   "//" XML_LRM_TAG_RESOURCE
-                   "[@" XML_ATTR_ID "='", resource, "']"
-                   "/" XML_LRM_TAG_RSC_OP "[@" XML_LRM_ATTR_TASK "='", op, "'",
+                   XPATH_NODE_STATE "[@" XML_ATTR_UNAME "='", node, "']"
+                   SUB_XPATH_LRM_RESOURCE "[@" XML_ATTR_ID "='", resource, "']"
+                   SUB_XPATH_LRM_RSC_OP "[@" XML_LRM_ATTR_TASK "='", op, "'",
                    NULL);
 
     /* Need to check against transition_magic too? */
@@ -2638,10 +2644,8 @@ find_lrm_resource(const char *rsc_id, const char *node_name,
 
     xpath = g_string_sized_new(256);
     pcmk__g_strcat(xpath,
-                   "//" XML_CIB_TAG_STATE
-                   "[@" XML_ATTR_UNAME "='", node_name, "']"
-                   "//" XML_LRM_TAG_RESOURCE
-                   "[@" XML_ATTR_ID "='", rsc_id, "']",
+                   XPATH_NODE_STATE "[@" XML_ATTR_UNAME "='", node_name, "']"
+                   SUB_XPATH_LRM_RESOURCE "[@" XML_ATTR_ID "='", rsc_id, "']",
                    NULL);
 
     xml = get_xpath_object((const char *) xpath->str, data_set->input,
@@ -2651,19 +2655,32 @@ find_lrm_resource(const char *rsc_id, const char *node_name,
     return xml;
 }
 
+/*!
+ * \internal
+ * \brief Check whether a resource has no completed action history on a node
+ *
+ * \param[in,out] rsc        Resource to check
+ * \param[in]     node_name  Node to check
+ *
+ * \return true if \p rsc_id is unknown on \p node_name, otherwise false
+ */
 static bool
-unknown_on_node(const char *rsc_id, const char *node_name,
-                pe_working_set_t *data_set)
+unknown_on_node(pe_resource_t *rsc, const char *node_name)
 {
-    xmlNode *lrm_resource = NULL;
+    bool result = false;
+    xmlXPathObjectPtr search;
+    GString *xpath = g_string_sized_new(256);
 
-    lrm_resource = find_lrm_resource(rsc_id, node_name, data_set);
-
-    /* If the resource has no lrm_rsc_op history on the node, that means its
-     * state is unknown there.
-     */
-    return (lrm_resource == NULL
-            || first_named_child(lrm_resource, XML_LRM_TAG_RSC_OP) == NULL);
+    pcmk__g_strcat(xpath,
+                   XPATH_NODE_STATE "[@" XML_ATTR_UNAME "='", node_name, "']"
+                   SUB_XPATH_LRM_RESOURCE "[@" XML_ATTR_ID "='", rsc->id, "']"
+                   SUB_XPATH_LRM_RSC_OP "[@" XML_LRM_ATTR_RC "!='193']",
+                   NULL);
+    search = xpath_search(rsc->cluster->input, (const char *) xpath->str);
+    result = (numXpathResults(search) == 0);
+    freeXpathObject(search);
+    g_string_free(xpath, TRUE);
+    return result;
 }
 
 /*!
@@ -2984,6 +3001,15 @@ unpack_migrate_to_success(pe_resource_t *rsc, const pe_node_t *node,
 
     // The migrate_from is pending, complete but erased, or to be scheduled
 
+    /* If there is no history at all for the resource on an online target, then
+     * it was likely cleaned. Just return, and we'll schedule a probe. Once we
+     * have the probe result, it will be reflected in target_newer_state.
+     */
+    if ((target_node != NULL) && target_node->details->online
+        && unknown_on_node(rsc, target)) {
+        return;
+    }
+
     if (active_on_target) {
         pe_node_t *source_node = pe_find_node(rsc->cluster->nodes, source);
 
@@ -3034,7 +3060,7 @@ unpack_migrate_to_failure(pe_resource_t *rsc, const pe_node_t *node,
          * Don't just consider it running there. We will get back here anyway in
          * case the probe detects it's running there.
          */
-        !unknown_on_node(rsc->id, target, data_set)
+        !unknown_on_node(rsc, target)
         /* If the resource has newer state on the target after the migration
          * events, this migrate_to no longer matters for the target.
          */
@@ -3090,7 +3116,7 @@ unpack_migrate_from_failure(pe_resource_t *rsc, const pe_node_t *node,
          * Don't just consider it running there. We will get back here anyway in
          * case the probe detects it's running there.
          */
-        !unknown_on_node(rsc->id, source, data_set)
+        !unknown_on_node(rsc, source)
         /* If the resource has newer state on the source after the migration
          * events, this migrate_from no longer matters for the source.
          */

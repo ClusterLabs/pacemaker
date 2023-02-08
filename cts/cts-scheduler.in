@@ -399,6 +399,9 @@ TESTS = [
         [ "probe-target-of-failed-migrate_to-1", "Failed migrate_to, target rejoins" ],
         [ "probe-target-of-failed-migrate_to-2", "Failed migrate_to, target rejoined and probed" ],
         [ "partial-live-migration-multiple-active", "Prevent running on multiple nodes due to partial live migration" ],
+        [ "migration-intermediary-cleaned",
+          "Probe live-migration intermediary with no history"
+        ],
         [ "bug-lf-2422", "Dependency on partially active group - stop ocfs:*" ],
     ],
     [
