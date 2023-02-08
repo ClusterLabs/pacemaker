@@ -45,7 +45,7 @@ def update_path():
         # For pacemaker-fenced, cts-fence-helper, and cts-support
         new_path = "%s:%s" % (BuildOptions.DAEMON_DIR, new_path)
 
-    print('Using PATH="{}"'.format(new_path))
+    print('Using PATH="%s"' % new_path)
     os.environ['PATH'] = new_path
 
 

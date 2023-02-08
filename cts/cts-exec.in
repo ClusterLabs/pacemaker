@@ -58,7 +58,7 @@ def update_path():
         # and pacemaker-remoted
         new_path = "%s:%s" % (BuildOptions.DAEMON_DIR, new_path)
 
-    print('Using PATH="{}"'.format(new_path))
+    print('Using PATH="%s"' % new_path)
     os.environ['PATH'] = new_path
 
 
