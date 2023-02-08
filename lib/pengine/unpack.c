@@ -50,8 +50,7 @@ CRM_TRACE_INIT_DATA(pe_status);
 
 static void unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                           xmlNode **last_failure,
-                          enum action_fail_response *failed,
-                          pe_working_set_t *data_set);
+                          enum action_fail_response *failed);
 static void determine_remote_online_status(pe_working_set_t *data_set,
                                            pe_node_t *this_node);
 static void add_node_attrs(const xmlNode *xml_obj, pe_node_t *node,
@@ -2443,7 +2442,7 @@ unpack_lrm_resource(pe_node_t *node, const xmlNode *lrm_resource,
     for (gIter = sorted_op_list; gIter != NULL; gIter = gIter->next) {
         xmlNode *rsc_op = (xmlNode *) gIter->data;
 
-        unpack_rsc_op(rsc, node, rsc_op, &last_failure, &on_fail, data_set);
+        unpack_rsc_op(rsc, node, rsc_op, &last_failure, &on_fail);
     }
 
     /* create active recurring operations as optional */
@@ -4049,8 +4048,7 @@ update_resource_state(pe_resource_t *rsc, const pe_node_t *node,
 
 static void
 unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
-              xmlNode **last_failure, enum action_fail_response *on_fail,
-              pe_working_set_t *data_set)
+              xmlNode **last_failure, enum action_fail_response *on_fail)
 {
     int rc = 0;
     int old_rc = 0;
@@ -4128,7 +4126,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     old_rc = rc;
     old_target_rc = target_rc;
 
-    remap_operation(xml_op, rsc, node, data_set, on_fail, target_rc,
+    remap_operation(xml_op, rsc, node, rsc->cluster, on_fail, target_rc,
                     &rc, &status);
 
     maskable_probe_failure = !pe_rsc_is_bundled(rsc) && pcmk_xe_mask_probe_failure(xml_op);
@@ -4175,11 +4173,12 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                    services_ocf_exitcode_str(old_rc), rsc->id,
                    pe__node_name(node));
         update_resource_state(rsc, node, xml_op, task, target_rc, *last_failure,
-                              on_fail, data_set);
+                              on_fail, rsc->cluster);
         crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
 
-        record_failed_op(xml_op, node, rsc, data_set);
-        resource_location(parent, node, -INFINITY, "masked-probe-failure", data_set);
+        record_failed_op(xml_op, node, rsc, rsc->cluster);
+        resource_location(parent, node, -INFINITY, "masked-probe-failure",
+                          rsc->cluster);
         goto done;
     }
 
@@ -4204,7 +4203,8 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                 /* If a pending migrate_to action is out on a unclean node,
                  * we have to force the stop action on the target. */
                 const char *migrate_target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
-                pe_node_t *target = pe_find_node(data_set->nodes, migrate_target);
+                pe_node_t *target = pe_find_node(rsc->cluster->nodes,
+                                                 migrate_target);
                 if (target) {
                     stop_action(rsc, target, FALSE);
                 }
@@ -4234,11 +4234,13 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
             goto done;
 
         case PCMK_EXEC_DONE:
-            update_resource_state(rsc, node, xml_op, task, rc, *last_failure, on_fail, data_set);
+            update_resource_state(rsc, node, xml_op, task, rc, *last_failure,
+                                  on_fail, rsc->cluster);
             goto done;
 
         case PCMK_EXEC_NOT_INSTALLED:
-            failure_strategy = get_action_on_fail(rsc, task_key, task, data_set);
+            failure_strategy = get_action_on_fail(rsc, task_key, task,
+                                                  rsc->cluster);
             if (failure_strategy == action_fail_ignore) {
                 crm_warn("Cannot ignore failed %s of %s on %s: "
                          "Resource agent doesn't exist "
@@ -4248,8 +4250,10 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                 /* Also for printing it as "FAILED" by marking it as pe_rsc_failed later */
                 *on_fail = action_fail_migrate;
             }
-            resource_location(parent, node, -INFINITY, "hard-error", data_set);
-            unpack_rsc_op_failure(rsc, node, rc, xml_op, last_failure, on_fail, data_set);
+            resource_location(parent, node, -INFINITY, "hard-error",
+                              rsc->cluster);
+            unpack_rsc_op_failure(rsc, node, rc, xml_op, last_failure,
+                                  on_fail, rsc->cluster);
             goto done;
 
         case PCMK_EXEC_NOT_CONNECTED:
@@ -4280,7 +4284,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
             break; // Not done, do error handling
     }
 
-    failure_strategy = get_action_on_fail(rsc, task_key, task, data_set);
+    failure_strategy = get_action_on_fail(rsc, task_key, task, rsc->cluster);
     if ((failure_strategy == action_fail_ignore)
         || (failure_strategy == action_fail_restart_container
             && !strcmp(task, CRMD_ACTION_STOP))) {
@@ -4292,11 +4296,11 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                  pe__node_name(node), last_change_s, rc, ID(xml_op));
 
         update_resource_state(rsc, node, xml_op, task, target_rc, *last_failure,
-                              on_fail, data_set);
+                              on_fail, rsc->cluster);
         crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
         pe__set_resource_flags(rsc, pe_rsc_failure_ignored);
 
-        record_failed_op(xml_op, node, rsc, data_set);
+        record_failed_op(xml_op, node, rsc, rsc->cluster);
 
         if ((failure_strategy == action_fail_restart_container)
             && cmp_on_fail(*on_fail, action_fail_recover) <= 0) {
@@ -4305,7 +4309,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 
     } else {
         unpack_rsc_op_failure(rsc, node, rc, xml_op, last_failure, on_fail,
-                              data_set);
+                              rsc->cluster);
 
         if (status == PCMK_EXEC_ERROR_HARD) {
             do_crm_log(rc != PCMK_OCF_NOT_INSTALLED?LOG_ERR:LOG_NOTICE,
@@ -4315,7 +4319,8 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                        services_ocf_exitcode_str(rc),
                        (*exit_reason? ": " : ""), exit_reason,
                        rc, ID(xml_op));
-            resource_location(parent, node, -INFINITY, "hard-error", data_set);
+            resource_location(parent, node, -INFINITY, "hard-error",
+                              rsc->cluster);
 
         } else if (status == PCMK_EXEC_ERROR_FATAL) {
             crm_err("Preventing %s from restarting anywhere because "
@@ -4323,7 +4328,8 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                     parent->id, services_ocf_exitcode_str(rc),
                     (*exit_reason? ": " : ""), exit_reason,
                     rc, ID(xml_op));
-            resource_location(parent, NULL, -INFINITY, "fatal-error", data_set);
+            resource_location(parent, NULL, -INFINITY, "fatal-error",
+                              rsc->cluster);
         }
     }
 
