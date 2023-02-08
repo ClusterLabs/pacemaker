@@ -2848,19 +2848,12 @@ get_migration_node_names(const xmlNode *entry, const pe_node_t *source_node,
                          const pe_node_t *target_node,
                          const char **source_name, const char **target_name)
 {
-    const char *id = ID(entry);
-
-    if (id == NULL) {
-        crm_err("Ignoring resource history entry without ID");
-        return pcmk_rc_unpack_error;
-    }
-
     *source_name = crm_element_value(entry, XML_LRM_ATTR_MIGRATE_SOURCE);
     *target_name = crm_element_value(entry, XML_LRM_ATTR_MIGRATE_TARGET);
     if ((*source_name == NULL) || (*target_name == NULL)) {
         crm_err("Ignoring resource history entry %s without "
                 XML_LRM_ATTR_MIGRATE_SOURCE " and " XML_LRM_ATTR_MIGRATE_TARGET,
-                id);
+                ID(entry));
         return pcmk_rc_unpack_error;
     }
 
@@ -2869,7 +2862,7 @@ get_migration_node_names(const xmlNode *entry, const pe_node_t *source_node,
                          pcmk__str_casei|pcmk__str_null_matches)) {
         crm_err("Ignoring resource history entry %s because "
                 XML_LRM_ATTR_MIGRATE_SOURCE "='%s' does not match %s",
-                id, *source_name, pe__node_name(source_node));
+                ID(entry), *source_name, pe__node_name(source_node));
         return pcmk_rc_unpack_error;
     }
 
@@ -2878,7 +2871,7 @@ get_migration_node_names(const xmlNode *entry, const pe_node_t *source_node,
                          pcmk__str_casei|pcmk__str_null_matches)) {
         crm_err("Ignoring resource history entry %s because "
                 XML_LRM_ATTR_MIGRATE_TARGET "='%s' does not match %s",
-                id, *target_name, pe__node_name(target_node));
+                ID(entry), *target_name, pe__node_name(target_node));
         return pcmk_rc_unpack_error;
     }
 
@@ -4085,6 +4078,12 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     CRM_CHECK(rsc && node && xml_op, return);
 
     history.id = ID(xml_op);
+    if (history.id == NULL) {
+        crm_err("Ignoring resource history entry for %s on %s without ID",
+                rsc->id, pe__node_name(node));
+        return;
+    }
+
     history.expected_exit_status = pe__target_rc_from_xml(xml_op);
     history.key = get_op_key(xml_op);
     history.task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
