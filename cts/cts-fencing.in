@@ -5,14 +5,11 @@
 __copyright__ = "Copyright 2012-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
-import io
+import argparse
 import os
-import psutil
 import sys
 import subprocess
-import time
 import tempfile
-import signal
 
 # These imports allow running from a source checkout after running `make`.
 # Note that while this doesn't necessarily mean it will successfully run tests,
@@ -25,37 +22,12 @@ if os.path.exists("@abs_top_builddir@/python") and "@abs_top_builddir@" != "@abs
 
 from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
+from pacemaker._cts.corosync import Corosync, localname
 from pacemaker._cts.errors import ExitCodeError, OutputFoundError, OutputNotFoundError, XmlValidationError
-from pacemaker._cts.process import killall, exit_if_proc_running, stdout_from_command
+from pacemaker._cts.process import killall, exit_if_proc_running
 from pacemaker._cts.test import Test, Tests
 
 TEST_DIR = sys.path[0]
-
-AUTOGEN_COROSYNC_TEMPLATE = """
-totem {
-    version: 2
-    cluster_name: cts-fencing
-    crypto_cipher: none
-    crypto_hash: none
-    transport: udp
-}
-
-nodelist {
-    node {
-        nodeid: 1
-        name: %s
-        ring0_addr: 127.0.0.1
-    }
-}
-
-logging {
-    debug: off
-    to_syslog: no
-    to_stderr: no
-    to_logfile: yes
-    logfile: %s
-}
-"""
 
 def update_path():
     """ Set the PATH environment variable appropriately for the tests """
@@ -73,19 +45,8 @@ def update_path():
         # For pacemaker-fenced, cts-fence-helper, and cts-support
         new_path = "%s:%s" % (BuildOptions.DAEMON_DIR, new_path)
 
-    print('Using PATH="{}"'.format(new_path))
+    print('Using PATH="%s"' % new_path)
     os.environ['PATH'] = new_path
-
-
-def localname():
-    """ Return the uname of the local host """
-
-    our_uname = stdout_from_command(["uname", "-n"])
-    if our_uname:
-        our_uname = our_uname[0]
-    else:
-        our_uname = "localhost"
-    return our_uname
 
 
 class FenceTest(Test):
@@ -96,119 +57,31 @@ class FenceTest(Test):
 
         if kwargs.get("with_cpg", False):
             self._enable_corosync = True
-            self._stonith_options = ["-c"]
+            self._daemon_options = ["-c"]
         else:
             self._enable_corosync = False
-            self._stonith_options = ["-s"]
+            self._daemon_options = ["-s"]
 
         self._daemon_location = "pacemaker-fenced"
-        self._negative_stonith_patterns = []
-        self._stonith_output = ""
-        self._stonith_patterns = []
-
-    def _count_negative_matches(self, outline):
-        """ Return 1 if a line matches patterns that shouldn't have occurred """
-
-        count = 0
-        for line in self._negative_stonith_patterns:
-            if outline.count(line):
-                count = 1
-                if self.verbose:
-                    print("This pattern should not have matched = '%s" % (line))
-        return count
 
     def _kill_daemons(self):
         killall(["pacemakerd", "pacemaker-fenced"])
 
-    def _match_patterns(self):
-        """ Check test output for expected patterns """
-
-        negative_matches = 0
-        cur = 0
-        pats = self._stonith_patterns
-        total_patterns = len(self._stonith_patterns)
-
-        if len(self._stonith_patterns) == 0 and len(self._negative_stonith_patterns) == 0:
-            return
-
-        for line in self._stonith_output.split("\n"):
-            negative_matches = negative_matches + self._count_negative_matches(line)
-            if len(pats) == 0:
-                continue
-            cur = -1
-            for pat in pats:
-                cur = cur + 1
-                if line.count(pats[cur]):
-                    del pats[cur]
-                    break
-
-        if len(pats) > 0 or negative_matches:
-            if self.verbose:
-                for pat in pats:
-                    print("Pattern Not Matched = '%s'" % pat)
-
-            msg = "FAILURE - '%s' failed. %d patterns out of %d not matched. %d negative matches."
-            self._result_txt = msg % (self.name, len(pats), total_patterns, negative_matches)
-            self.exitcode = ExitStatus.ERROR
-
     def _start_daemons(self):
         if self.verbose:
-            self._stonith_options += ["-V"]
-            print("Starting %s with %s" % (self._daemon_location, self._stonith_options))
+            self._daemon_options += ["-V"]
+            print("Starting %s with %s" % (self._daemon_location, self._daemon_options))
 
-        cmd = ["pacemaker-fenced", "-l", self.logpath] + self._stonith_options
-        self._stonith_process = subprocess.Popen(cmd)
-
-    def clean_environment(self):
-        """ Clean up the host after executing a test """
-
-        if self._stonith_process:
-            if self._stonith_process.poll() == None:
-                self._stonith_process.terminate()
-                self._stonith_process.wait()
-            else:
-                return_code = {
-                    getattr(signal, _signame): _signame
-                        for _signame in dir(signal)
-                        if _signame.startswith('SIG') and not _signame.startswith("SIG_")
-                }.get(-self._stonith_process.returncode, "RET=%d" % (self._stonith_process.returncode))
-                msg = "FAILURE - '%s' failed. pacemaker-fenced abnormally exited during test (%s)."
-                self._result_txt = msg % (self.name, return_code)
-                self.exitcode = ExitStatus.ERROR
-
-        self._stonith_output = ""
-        self._stonith_process = None
-
-        # the default for utf-8 encoding would error out if e.g. memory corruption
-        # makes fenced output any kind of 8 bit value - while still interesting
-        # for debugging and we'd still like the regression-test to go over the
-        # full set of test-cases
-        logfile = io.open(self.logpath, 'rt', encoding = "ISO-8859-1")
-        for line in logfile.readlines():
-            self._stonith_output += line
-
-        if self.verbose:
-            print("Daemon Output Start")
-            print(self._stonith_output)
-            print("Daemon Output End")
-
-    def add_stonith_log_pattern(self, pattern):
-        """ Add a log pattern to expect from this test """
-
-        self._stonith_patterns.append(pattern)
-
-    def add_stonith_neg_log_pattern(self, pattern):
-        """ Add a log pattern that should not occur with this test """
-
-        self._negative_stonith_patterns.append(pattern)
+        cmd = ["pacemaker-fenced", "-l", self.logpath] + self._daemon_options
+        self._daemon_process = subprocess.Popen(cmd)
 
 class FenceTests(Tests):
     """ Collection of all fencing regression tests """
 
     def __init__(self, **kwargs):
-        Tests.__init__(self,  **kwargs)
+        Tests.__init__(self, **kwargs)
 
-        self._autogen_corosync_cfg = not os.path.exists(BuildOptions.COROSYNC_CONFIG_FILE)
+        self._corosync = Corosync(self.verbose, self.logdir, "cts-fencing")
 
     def new_test(self, name, description, with_cpg=False):
         """ Create a named test """
@@ -218,16 +91,6 @@ class FenceTests(Tests):
                          logdir=self.logdir)
         self._tests.append(test)
         return test
-
-    def start_corosync(self):
-        """ Start the corosync process """
-
-        if self.verbose:
-            print("Starting corosync")
-
-        test = subprocess.Popen("corosync", stdout=subprocess.PIPE)
-        test.wait()
-        time.sleep(10)
 
     def run_cpg_only(self):
         """ Run all corosync-enabled tests """
@@ -270,7 +133,7 @@ class FenceTests(Tests):
                      '--output-as=xml -R false2 -a fence_dummy -o "mode=fail" -o "pcmk_host_list=node3" -o "pcmk_off_timeout=4"')
         test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 5")
         # timeout is 5+1+4 = 10
-        test.add_stonith_log_pattern("Total timeout set to 12")
+        test.add_log_pattern("Total timeout set to 12")
 
         # custom timeout _WITH_ topology
         test = self.new_test("cpg_custom_timeout_2",
@@ -286,7 +149,7 @@ class FenceTests(Tests):
         test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 3 -v false2")
         test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 5")
         # timeout is 5+1+4000 = 4006
-        test.add_stonith_log_pattern("Total timeout set to 4807")
+        test.add_log_pattern("Total timeout set to 4807")
 
     def build_fence_merge_tests(self):
         """ Register tests to verify when fence operations should be merged """
@@ -300,10 +163,10 @@ class FenceTests(Tests):
         test.add_cmd_no_wait("stonith_admin", "--output-as=xml -F node3 -t 10")
         test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 10")
         ### one merger will happen
-        test.add_stonith_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
+        test.add_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
         ### the pattern below signifies that both the original and duplicate operation completed
-        test.add_stonith_log_pattern("Operation 'off' targeting node3 by ")
-        test.add_stonith_log_pattern("Operation 'off' targeting node3 by ")
+        test.add_log_pattern("Operation 'off' targeting node3 by ")
+        test.add_log_pattern("Operation 'off' targeting node3 by ")
 
         ### Test that multiple mergers occur
         test = self.new_test("cpg_custom_merge_multiple",
@@ -318,16 +181,16 @@ class FenceTests(Tests):
         test.add_cmd_no_wait("stonith_admin", "--output-as=xml -F node3 -t 10")
         test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 10")
         ### 4 mergers should occur
-        test.add_stonith_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
-        test.add_stonith_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
-        test.add_stonith_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
-        test.add_stonith_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
+        test.add_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
+        test.add_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
+        test.add_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
+        test.add_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
         ### the pattern below signifies that both the original and duplicate operation completed
-        test.add_stonith_log_pattern("Operation 'off' targeting node3 by ")
-        test.add_stonith_log_pattern("Operation 'off' targeting node3 by ")
-        test.add_stonith_log_pattern("Operation 'off' targeting node3 by ")
-        test.add_stonith_log_pattern("Operation 'off' targeting node3 by ")
-        test.add_stonith_log_pattern("Operation 'off' targeting node3 by ")
+        test.add_log_pattern("Operation 'off' targeting node3 by ")
+        test.add_log_pattern("Operation 'off' targeting node3 by ")
+        test.add_log_pattern("Operation 'off' targeting node3 by ")
+        test.add_log_pattern("Operation 'off' targeting node3 by ")
+        test.add_log_pattern("Operation 'off' targeting node3 by ")
 
         ### Test that multiple mergers occur with topologies used
         test = self.new_test("cpg_custom_merge_with_topology",
@@ -345,16 +208,16 @@ class FenceTests(Tests):
         test.add_cmd_no_wait("stonith_admin", "--output-as=xml -F node3 -t 10")
         test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 10")
         ### 4 mergers should occur
-        test.add_stonith_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
-        test.add_stonith_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
-        test.add_stonith_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
-        test.add_stonith_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
+        test.add_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
+        test.add_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
+        test.add_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
+        test.add_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
         ### the pattern below signifies that both the original and duplicate operation completed
-        test.add_stonith_log_pattern("Operation 'off' targeting node3 by ")
-        test.add_stonith_log_pattern("Operation 'off' targeting node3 by ")
-        test.add_stonith_log_pattern("Operation 'off' targeting node3 by ")
-        test.add_stonith_log_pattern("Operation 'off' targeting node3 by ")
-        test.add_stonith_log_pattern("Operation 'off' targeting node3 by ")
+        test.add_log_pattern("Operation 'off' targeting node3 by ")
+        test.add_log_pattern("Operation 'off' targeting node3 by ")
+        test.add_log_pattern("Operation 'off' targeting node3 by ")
+        test.add_log_pattern("Operation 'off' targeting node3 by ")
+        test.add_log_pattern("Operation 'off' targeting node3 by ")
 
     def build_fence_no_merge_tests(self):
         """ Register tests to verify when fence operations should not be merged """
@@ -369,7 +232,8 @@ class FenceTests(Tests):
         test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 2 -v true1")
         test.add_cmd_no_wait("stonith_admin", "--output-as=xml -F node2 -t 10")
         test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 10")
-        test.add_stonith_neg_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
+        test.add_log_pattern("Merging fencing action 'off' targeting node3 originating from client",
+                             negative=True)
 
     def build_standalone_tests(self):
         """ Register a grab bag of tests that can be executed in standalone or corosync mode """
@@ -398,13 +262,13 @@ class FenceTests(Tests):
                          "--output-as=xml -R false3 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\"")
             if test_type["use_cpg"]:
                 test.add_cmd_expected_fail("stonith_admin", "--output-as=xml -F node3 -t 2", ExitStatus.TIMEOUT)
-                test.add_stonith_log_pattern("Total timeout set to 7")
+                test.add_log_pattern("Total timeout set to 7")
             else:
                 test.add_cmd_expected_fail("stonith_admin", "--output-as=xml -F node3 -t 2", ExitStatus.ERROR)
 
-            test.add_stonith_log_pattern("targeting node3 using false1 returned ")
-            test.add_stonith_log_pattern("targeting node3 using false2 returned ")
-            test.add_stonith_log_pattern("targeting node3 using false3 returned ")
+            test.add_log_pattern("targeting node3 using false1 returned ")
+            test.add_log_pattern("targeting node3 using false2 returned ")
+            test.add_log_pattern("targeting node3 using false3 returned ")
 
         # test what happens when multiple devices can fence a node, but the first device fails.
         for test_type in test_types:
@@ -420,7 +284,7 @@ class FenceTests(Tests):
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 5")
 
             if test_type["use_cpg"]:
-                test.add_stonith_log_pattern("Total timeout set to 18")
+                test.add_log_pattern("Total timeout set to 18")
 
         # test what happens when we try to use a missing fence-agent.
         for test_type in test_types:
@@ -449,8 +313,8 @@ class FenceTests(Tests):
             test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 1 -v true")
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 5")
 
-            test.add_stonith_log_pattern("Total timeout set to 6")
-            test.add_stonith_log_pattern("targeting node3 using true returned 0")
+            test.add_log_pattern("Total timeout set to 6")
+            test.add_log_pattern("targeting node3 using true returned 0")
 
 
         # add topology, delete topology, verify fencing still works
@@ -467,8 +331,8 @@ class FenceTests(Tests):
             test.add_cmd("stonith_admin", "--output-as=xml -d node3 -i 1")
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 5")
 
-            test.add_stonith_log_pattern("Total timeout set to 6")
-            test.add_stonith_log_pattern("targeting node3 using true returned 0")
+            test.add_log_pattern("Total timeout set to 6")
+            test.add_log_pattern("targeting node3 using true returned 0")
 
         # test what happens when the first fencing level has multiple devices.
         for test_type in test_types:
@@ -486,9 +350,9 @@ class FenceTests(Tests):
             test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 2 -v true")
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 20")
 
-            test.add_stonith_log_pattern("Total timeout set to 48")
-            test.add_stonith_log_pattern("targeting node3 using false returned 1")
-            test.add_stonith_log_pattern("targeting node3 using true returned 0")
+            test.add_log_pattern("Total timeout set to 48")
+            test.add_log_pattern("targeting node3 using false returned 1")
+            test.add_log_pattern("targeting node3 using true returned 0")
 
         # test what happens when the first fencing level fails.
         for test_type in test_types:
@@ -520,11 +384,11 @@ class FenceTests(Tests):
 
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 3")
 
-            test.add_stonith_log_pattern("Total timeout set to 21")
-            test.add_stonith_log_pattern("targeting node3 using false1 returned 1")
-            test.add_stonith_log_pattern("targeting node3 using false2 returned 1")
-            test.add_stonith_log_pattern("targeting node3 using true3 returned 0")
-            test.add_stonith_log_pattern("targeting node3 using true4 returned 0")
+            test.add_log_pattern("Total timeout set to 21")
+            test.add_log_pattern("targeting node3 using false1 returned 1")
+            test.add_log_pattern("targeting node3 using false2 returned 1")
+            test.add_log_pattern("targeting node3 using true3 returned 0")
+            test.add_log_pattern("targeting node3 using true4 returned 0")
 
 
         # test what happens when the first fencing level had devices that no one has registered
@@ -587,11 +451,12 @@ class FenceTests(Tests):
 
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 20")
 
-            test.add_stonith_log_pattern("Total timeout set to 96")
-            test.add_stonith_log_pattern("targeting node3 using false1 returned 1")
-            test.add_stonith_neg_log_pattern("targeting node3 using false2 returned ")
-            test.add_stonith_log_pattern("targeting node3 using true3 returned 0")
-            test.add_stonith_log_pattern("targeting node3 using true4 returned 0")
+            test.add_log_pattern("Total timeout set to 96")
+            test.add_log_pattern("targeting node3 using false1 returned 1")
+            test.add_log_pattern("targeting node3 using false2 returned ",
+                                 negative=True)
+            test.add_log_pattern("targeting node3 using true3 returned 0")
+            test.add_log_pattern("targeting node3 using true4 returned 0")
 
         # Test targeting a topology level by node name pattern.
         for test_type in test_types:
@@ -605,7 +470,7 @@ class FenceTests(Tests):
                          """--output-as=xml -R true -a fence_dummy -o "mode=pass" -o "pcmk_host_list=node1 node2 node3" """)
             test.add_cmd("stonith_admin", """--output-as=xml -r '@node.*' -i 1 -v true""")
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 5")
-            test.add_stonith_log_pattern("targeting node3 using true returned 0")
+            test.add_log_pattern("targeting node3 using true returned 0")
 
         # test allowing commas and semicolons as delimiters in pcmk_host_list
         for test_type in test_types:
@@ -618,8 +483,8 @@ class FenceTests(Tests):
                          """--output-as=xml -R true2 -a fence_dummy -o "mode=pass" -o "pcmk_host_list=pcmk1;pcmk2;pcmk3" """)
             test.add_cmd("stonith_admin", "stonith_admin --output-as=xml -F node2 -t 5")
             test.add_cmd("stonith_admin", "stonith_admin --output-as=xml -F pcmk3 -t 5")
-            test.add_stonith_log_pattern("targeting node2 using true1 returned 0")
-            test.add_stonith_log_pattern("targeting pcmk3 using true2 returned 0")
+            test.add_log_pattern("targeting node2 using true1 returned 0")
+            test.add_log_pattern("targeting pcmk3 using true2 returned 0")
 
         # test the stonith builds the correct list of devices that can fence a node.
         for test_type in test_types:
@@ -656,7 +521,7 @@ class FenceTests(Tests):
             test.add_cmd("stonith_admin",
                          '--output-as=xml -R true1 -a fence_dummy -o "mode=fail" -o "monitor_mode=fail" -o "pcmk_host_list=node3"')
             test.add_cmd_expected_fail("stonith_admin", "--output-as=xml -Q true1 -t 5", ExitStatus.ERROR)
-            test.add_stonith_log_pattern("Attempt 2 to execute")
+            test.add_log_pattern("Attempt 2 to execute")
 
         # Verify monitor occurs for duration of timeout period on failure, but stops at max retries
         for test_type in test_types:
@@ -666,7 +531,7 @@ class FenceTests(Tests):
             test.add_cmd("stonith_admin",
                          '--output-as=xml -R true1  -a fence_dummy -o "mode=fail" -o "monitor_mode=fail" -o "pcmk_host_list=node3"')
             test.add_cmd_expected_fail("stonith_admin", "--output-as=xml -Q true1 -t 15", ExitStatus.ERROR)
-            test.add_stonith_log_pattern("Attempted to execute agent fence_dummy (list) the maximum number of times")
+            test.add_log_pattern("Attempted to execute agent fence_dummy (list) the maximum number of times")
 
         # simple register test
         for test_type in test_types:
@@ -753,8 +618,8 @@ class FenceTests(Tests):
             test.add_cmd("stonith_admin",
                          "--output-as=xml -R true1 -a fence_dummy_no_reboot -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
             test.add_cmd("stonith_admin", "--output-as=xml -B node1 -t 5 -V")
-            test.add_stonith_log_pattern("does not support reboot")
-            test.add_stonith_log_pattern("using true1 returned 0")
+            test.add_log_pattern("does not support reboot")
+            test.add_log_pattern("using true1 returned 0")
 
         # make sure reboot is used when reboot action is advertised
         for test_type in test_types:
@@ -764,8 +629,9 @@ class FenceTests(Tests):
             test.add_cmd("stonith_admin",
                          "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
             test.add_cmd("stonith_admin", "--output-as=xml -B node1 -t 5 -V")
-            test.add_stonith_neg_log_pattern("does not advertise support for 'reboot', performing 'off'")
-            test.add_stonith_log_pattern("using true1 returned 0")
+            test.add_log_pattern("does not advertise support for 'reboot', performing 'off'",
+                                 negative=True)
+            test.add_log_pattern("using true1 returned 0")
 
         # make sure requested fencing delay is applied only for the first device in the first level
         # make sure static delay from pcmk_delay_base is added
@@ -792,10 +658,12 @@ class FenceTests(Tests):
 
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 --delay 1")
 
-            test.add_stonith_log_pattern("Delaying 'off' action targeting node3 using true1 for 2s | timeout=120s requested_delay=1s base=1s max=1s")
-            test.add_stonith_log_pattern("Delaying 'off' action targeting node3 using false1 for 1s | timeout=120s requested_delay=0s base=1s max=1s")
-            test.add_stonith_neg_log_pattern("Delaying 'off' action targeting node3 using true2")
-            test.add_stonith_neg_log_pattern("Delaying 'off' action targeting node3 using true3")
+            test.add_log_pattern("Delaying 'off' action targeting node3 using true1 for 2s | timeout=120s requested_delay=1s base=1s max=1s")
+            test.add_log_pattern("Delaying 'off' action targeting node3 using false1 for 1s | timeout=120s requested_delay=0s base=1s max=1s")
+            test.add_log_pattern("Delaying 'off' action targeting node3 using true2",
+                                 negative=True)
+            test.add_log_pattern("Delaying 'off' action targeting node3 using true3",
+                                 negative=True)
 
     def build_nodeid_tests(self):
         """ Register tests that use a corosync node id """
@@ -809,7 +677,7 @@ class FenceTests(Tests):
         test.add_cmd("stonith_admin",
                      "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=%s\"" % (our_uname))
         test.add_cmd("stonith_admin", "--output-as=xml -F %s -t 3" % (our_uname))
-        test.add_stonith_log_pattern("as nodeid with fence action 'off' targeting %s" % (our_uname))
+        test.add_log_pattern("as nodeid with fence action 'off' targeting %s" % (our_uname))
 
         ### verify nodeid is _NOT_ supplied when nodeid is not in the metadata parameters
         test = self.new_test("cpg_do_not_supply_nodeid",
@@ -820,7 +688,8 @@ class FenceTests(Tests):
         test.add_cmd("stonith_admin",
                      "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=regr-test\"")
         test.add_cmd("stonith_admin", "--output-as=xml -F regr-test -t 3")
-        test.add_stonith_neg_log_pattern("as nodeid with fence action 'off' targeting regr-test")
+        test.add_log_pattern("as nodeid with fence action 'off' targeting regr-test",
+                             negative=True)
 
         ### verify nodeid use doesn't explode standalone mode
         test = self.new_test("standalone_do_not_supply_nodeid",
@@ -830,7 +699,8 @@ class FenceTests(Tests):
         test.add_cmd("stonith_admin",
                      "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=%s\"" % (our_uname))
         test.add_cmd("stonith_admin", "--output-as=xml -F %s -t 3" % (our_uname))
-        test.add_stonith_neg_log_pattern("as nodeid with fence action 'off' targeting %s" % (our_uname))
+        test.add_log_pattern("as nodeid with fence action 'off' targeting %s" % our_uname,
+                             negative=True)
 
     def build_unfence_tests(self):
         """ Register tests that verify unfencing """
@@ -847,8 +717,8 @@ class FenceTests(Tests):
                      '--output-as=xml -R true2 -a fence_dummy_auto_unfence -o "mode=pass" -o "pcmk_host_list=%s"' % (our_uname))
         test.add_cmd("stonith_admin", "--output-as=xml -U %s -t 3" % (our_uname))
         # both devices should be executed
-        test.add_stonith_log_pattern("using true1 returned 0")
-        test.add_stonith_log_pattern("using true2 returned 0")
+        test.add_log_pattern("using true1 returned 0")
+        test.add_log_pattern("using true2 returned 0")
 
         ### verify unfencing using automatic unfencing fails if any of the required agents fail
         test = self.new_test("cpg_unfence_required_2",
@@ -871,8 +741,8 @@ class FenceTests(Tests):
         test.add_cmd("stonith_admin", "--output-as=xml -r %s -i 1 -v true1" % (our_uname))
         test.add_cmd("stonith_admin", "--output-as=xml -r %s -i 2 -v true2" % (our_uname))
         test.add_cmd("stonith_admin", "--output-as=xml -U %s -t 3" % (our_uname))
-        test.add_stonith_log_pattern("using true1 returned 0")
-        test.add_stonith_log_pattern("using true2 returned 0")
+        test.add_log_pattern("using true1 returned 0")
+        test.add_log_pattern("using true2 returned 0")
 
         ### verify unfencing using automatic devices with topology
         test = self.new_test("cpg_unfence_required_4",
@@ -903,10 +773,10 @@ class FenceTests(Tests):
         test.add_cmd("stonith_admin", "--output-as=xml -r %s -i 3 -v false4" % (our_uname))
         test.add_cmd("stonith_admin", "--output-as=xml -r %s -i 4 -v true4" % (our_uname))
         test.add_cmd("stonith_admin", "--output-as=xml -U %s -t 3" % (our_uname))
-        test.add_stonith_log_pattern("using true1 returned 0")
-        test.add_stonith_log_pattern("using true2 returned 0")
-        test.add_stonith_log_pattern("using true3 returned 0")
-        test.add_stonith_log_pattern("using true4 returned 0")
+        test.add_log_pattern("using true1 returned 0")
+        test.add_log_pattern("using true2 returned 0")
+        test.add_log_pattern("using true3 returned 0")
+        test.add_log_pattern("using true4 returned 0")
 
     def build_unfence_on_target_tests(self):
         """ Register tests that verify unfencing that runs on the target """
@@ -919,7 +789,7 @@ class FenceTests(Tests):
         test.add_cmd("stonith_admin",
                      "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=%s\"" % (our_uname))
         test.add_cmd("stonith_admin", "--output-as=xml -U %s -t 3" % (our_uname))
-        test.add_stonith_log_pattern("(on) to be executed on target")
+        test.add_log_pattern("(on) to be executed on target")
 
         ### verify failure of unfencing using on_target device
         test = self.new_test("cpg_unfence_on_target_2",
@@ -930,7 +800,7 @@ class FenceTests(Tests):
         test.add_cmd_expected_fail("stonith_admin",
                                    "--output-as=xml -U node_fake_1234 -t 3",
                                    ExitStatus.NOSUCH)
-        test.add_stonith_log_pattern("(on) to be executed on target")
+        test.add_log_pattern("(on) to be executed on target")
 
         ### verify unfencing using on_target device with topology
         test = self.new_test("cpg_unfence_on_target_3",
@@ -946,7 +816,7 @@ class FenceTests(Tests):
         test.add_cmd("stonith_admin", "--output-as=xml -r %s -i 2 -v true2" % (our_uname))
 
         test.add_cmd("stonith_admin", "--output-as=xml -U %s -t 3" % (our_uname))
-        test.add_stonith_log_pattern("(on) to be executed on target")
+        test.add_log_pattern("(on) to be executed on target")
 
         ### verify unfencing using on_target device with topology fails when target node doesn't exist
         test = self.new_test("cpg_unfence_on_target_4",
@@ -964,7 +834,7 @@ class FenceTests(Tests):
         test.add_cmd_expected_fail("stonith_admin",
                                    "--output-as=xml -U node_fake -t 3",
                                    ExitStatus.NOSUCH)
-        test.add_stonith_log_pattern("(on) to be executed on target")
+        test.add_log_pattern("(on) to be executed on target")
 
     def build_remap_tests(self):
         """ Register tests that verify remapping of reboots to off-on """
@@ -979,16 +849,16 @@ class FenceTests(Tests):
                      """-o "pcmk_off_timeout=2" -o "pcmk_reboot_timeout=20" """)
         test.add_cmd("stonith_admin", "--output-as=xml -r node_fake -i 1 -v true1 -v true2")
         test.add_cmd("stonith_admin", "--output-as=xml -B node_fake -t 5")
-        test.add_stonith_log_pattern("Remapping multiple-device reboot targeting node_fake")
+        test.add_log_pattern("Remapping multiple-device reboot targeting node_fake")
         # timeout should be sum of off timeouts (1+2=3), not reboot timeouts (10+20=30)
-        test.add_stonith_log_pattern("Total timeout set to 3 for peer's fencing targeting node_fake")
-        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using true1")
-        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using true2")
-        test.add_stonith_log_pattern("Remapped 'off' targeting node_fake complete, remapping to 'on'")
+        test.add_log_pattern("Total timeout set to 3 for peer's fencing targeting node_fake")
+        test.add_log_pattern("perform 'off' action targeting node_fake using true1")
+        test.add_log_pattern("perform 'off' action targeting node_fake using true2")
+        test.add_log_pattern("Remapped 'off' targeting node_fake complete, remapping to 'on'")
         # fence_dummy sets "on" as an on_target action
-        test.add_stonith_log_pattern("Ignoring true1 'on' failure (no capable peers) targeting node_fake")
-        test.add_stonith_log_pattern("Ignoring true2 'on' failure (no capable peers) targeting node_fake")
-        test.add_stonith_log_pattern("Undoing remap of reboot targeting node_fake")
+        test.add_log_pattern("Ignoring true1 'on' failure (no capable peers) targeting node_fake")
+        test.add_log_pattern("Ignoring true2 'on' failure (no capable peers) targeting node_fake")
+        test.add_log_pattern("Undoing remap of reboot targeting node_fake")
 
         test = self.new_test("cpg_remap_simple_off",
                              "Verify sequential topology reboot skips 'on' if "
@@ -1005,19 +875,19 @@ class FenceTests(Tests):
         test.add_cmd("stonith_admin",
                      "--output-as=xml -r node_fake -i 1 -v true1 -v true2")
         test.add_cmd("stonith_admin", "--output-as=xml -B node_fake -t 5")
-        test.add_stonith_log_pattern("Remapping multiple-device reboot targeting node_fake")
+        test.add_log_pattern("Remapping multiple-device reboot targeting node_fake")
         # timeout should be sum of off timeouts (1+2=3), not reboot timeouts (10+20=30)
-        test.add_stonith_log_pattern("Total timeout set to 3 for peer's fencing targeting node_fake")
-        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using true1")
-        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using true2")
-        test.add_stonith_log_pattern("Remapped 'off' targeting node_fake complete, remapping to 'on'")
+        test.add_log_pattern("Total timeout set to 3 for peer's fencing targeting node_fake")
+        test.add_log_pattern("perform 'off' action targeting node_fake using true1")
+        test.add_log_pattern("perform 'off' action targeting node_fake using true2")
+        test.add_log_pattern("Remapped 'off' targeting node_fake complete, remapping to 'on'")
         # "on" should be skipped
-        test.add_stonith_log_pattern("Not turning node_fake back on using "
-                                     "true1 because the device is configured "
-                                     "to stay off")
-        test.add_stonith_log_pattern("Not turning node_fake back on using true2"
-                                     " because the agent doesn't support 'on'")
-        test.add_stonith_log_pattern("Undoing remap of reboot targeting node_fake")
+        test.add_log_pattern("Not turning node_fake back on using "
+                         "true1 because the device is configured "
+                         "to stay off")
+        test.add_log_pattern("Not turning node_fake back on using true2"
+                         " because the agent doesn't support 'on'")
+        test.add_log_pattern("Undoing remap of reboot targeting node_fake")
 
         test = self.new_test("cpg_remap_automatic",
                              "Verify remapped topology reboot skips automatic 'on'", True)
@@ -1029,13 +899,15 @@ class FenceTests(Tests):
                      """-o "mode=pass" -o "pcmk_host_list=node_fake" """)
         test.add_cmd("stonith_admin", "--output-as=xml -r node_fake -i 1 -v true1 -v true2")
         test.add_cmd("stonith_admin", "--output-as=xml -B node_fake -t 5")
-        test.add_stonith_log_pattern("Remapping multiple-device reboot targeting node_fake")
-        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using true1")
-        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using true2")
-        test.add_stonith_log_pattern("Remapped 'off' targeting node_fake complete, remapping to 'on'")
-        test.add_stonith_log_pattern("Undoing remap of reboot targeting node_fake")
-        test.add_stonith_neg_log_pattern("perform 'on' action targeting node_fake using")
-        test.add_stonith_neg_log_pattern("'on' failure")
+        test.add_log_pattern("Remapping multiple-device reboot targeting node_fake")
+        test.add_log_pattern("perform 'off' action targeting node_fake using true1")
+        test.add_log_pattern("perform 'off' action targeting node_fake using true2")
+        test.add_log_pattern("Remapped 'off' targeting node_fake complete, remapping to 'on'")
+        test.add_log_pattern("Undoing remap of reboot targeting node_fake")
+        test.add_log_pattern("perform 'on' action targeting node_fake using",
+                             negative=True)
+        test.add_log_pattern("'on' failure",
+                             negative=True)
 
         test = self.new_test("cpg_remap_complex_1",
                              "Verify remapped topology reboot in second level works if non-remapped first level fails",
@@ -1046,14 +918,14 @@ class FenceTests(Tests):
         test.add_cmd("stonith_admin", "--output-as=xml -r node_fake -i 1 -v false1")
         test.add_cmd("stonith_admin", "--output-as=xml -r node_fake -i 2 -v true1 -v true2")
         test.add_cmd("stonith_admin", "--output-as=xml -B node_fake -t 5")
-        test.add_stonith_log_pattern("perform 'reboot' action targeting node_fake using false1")
-        test.add_stonith_log_pattern("Remapping multiple-device reboot targeting node_fake")
-        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using true1")
-        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using true2")
-        test.add_stonith_log_pattern("Remapped 'off' targeting node_fake complete, remapping to 'on'")
-        test.add_stonith_log_pattern("Ignoring true1 'on' failure (no capable peers) targeting node_fake")
-        test.add_stonith_log_pattern("Ignoring true2 'on' failure (no capable peers) targeting node_fake")
-        test.add_stonith_log_pattern("Undoing remap of reboot targeting node_fake")
+        test.add_log_pattern("perform 'reboot' action targeting node_fake using false1")
+        test.add_log_pattern("Remapping multiple-device reboot targeting node_fake")
+        test.add_log_pattern("perform 'off' action targeting node_fake using true1")
+        test.add_log_pattern("perform 'off' action targeting node_fake using true2")
+        test.add_log_pattern("Remapped 'off' targeting node_fake complete, remapping to 'on'")
+        test.add_log_pattern("Ignoring true1 'on' failure (no capable peers) targeting node_fake")
+        test.add_log_pattern("Ignoring true2 'on' failure (no capable peers) targeting node_fake")
+        test.add_log_pattern("Undoing remap of reboot targeting node_fake")
 
         test = self.new_test("cpg_remap_complex_2",
                              "Verify remapped topology reboot failure in second level proceeds to third level",
@@ -1067,14 +939,15 @@ class FenceTests(Tests):
         test.add_cmd("stonith_admin", "--output-as=xml -r node_fake -i 2 -v true1 -v false2 -v true3")
         test.add_cmd("stonith_admin", "--output-as=xml -r node_fake -i 3 -v true2")
         test.add_cmd("stonith_admin", "--output-as=xml -B node_fake -t 5")
-        test.add_stonith_log_pattern("perform 'reboot' action targeting node_fake using false1")
-        test.add_stonith_log_pattern("Remapping multiple-device reboot targeting node_fake")
-        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using true1")
-        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using false2")
-        test.add_stonith_log_pattern("Attempted to execute agent fence_dummy (off) the maximum number of times")
-        test.add_stonith_log_pattern("Undoing remap of reboot targeting node_fake")
-        test.add_stonith_log_pattern("perform 'reboot' action targeting node_fake using true2")
-        test.add_stonith_neg_log_pattern("node_fake with true3")
+        test.add_log_pattern("perform 'reboot' action targeting node_fake using false1")
+        test.add_log_pattern("Remapping multiple-device reboot targeting node_fake")
+        test.add_log_pattern("perform 'off' action targeting node_fake using true1")
+        test.add_log_pattern("perform 'off' action targeting node_fake using false2")
+        test.add_log_pattern("Attempted to execute agent fence_dummy (off) the maximum number of times")
+        test.add_log_pattern("Undoing remap of reboot targeting node_fake")
+        test.add_log_pattern("perform 'reboot' action targeting node_fake using true2")
+        test.add_log_pattern("node_fake with true3",
+                             negative=True)
 
     def build_query_tests(self):
         """ run stonith_admin --metadata for the fence_dummy agent and check command output """
@@ -1108,15 +981,7 @@ class FenceTests(Tests):
         """ Prepare the host before executing any tests """
 
         if use_corosync:
-            if self._autogen_corosync_cfg:
-                logname = os.path.join(self.logdir, "corosync.log")
-                corosync_cfg = io.open(BuildOptions.COROSYNC_CONFIG_FILE, "w")
-                corosync_cfg.write(AUTOGEN_COROSYNC_TEMPLATE % (localname(), logname))
-                corosync_cfg.close()
-
-            ### make sure we are in control ###
-            killall(["corosync"])
-            self.start_corosync()
+            self._corosync.start(kill_first=True)
 
         subprocess.call(["cts-support", "install"])
 
@@ -1124,91 +989,42 @@ class FenceTests(Tests):
         """ Clean up the host after executing desired tests """
 
         if use_corosync:
-            killall(["corosync"])
-
-            if self._autogen_corosync_cfg:
-                if self.verbose:
-                    print("Corosync output")
-                    logfile = io.open(os.path.join(self.logdir, "corosync.log"), 'rt')
-                    for line in logfile.readlines():
-                        print(line.strip())
-                    logfile.close()
-                os.remove(BuildOptions.COROSYNC_CONFIG_FILE)
+            self._corosync.stop()
 
         subprocess.call(["cts-support", "uninstall"])
 
-class TestOptions(object):
-    """ Option handler """
 
-    def __init__(self):
-        self.options = {}
-        self.options['list-tests'] = False
-        self.options['run-all'] = True
-        self.options['run-only'] = ""
-        self.options['run-only-pattern'] = ""
-        self.options['verbose'] = False
-        self.options['timeout'] = 2
-        self.options['force-wait'] = False
-        self.options['invalid-arg'] = ""
-        self.options['cpg-only'] = False
-        self.options['no-cpg'] = False
-        self.options['show-usage'] = False
+def build_options():
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
+                                     description="Run pacemaker-fenced regression tests",
+                                     epilog="Example: Run only the test 'start_stop'\n"
+                                            "\t " + sys.argv[0] + " --run-only start_stop\n\n"
+                                            "Example: Run only the tests with the string 'systemd' present in them\n"
+                                            "\t " + sys.argv[0] + " --run-only-pattern systemd")
+    parser.add_argument("-c", "--cpg-only", action="store_true",
+                        help="Only run tests that require corosync")
+    parser.add_argument("-l", "--list-tests", action="store_true",
+                        help="Print out all registered tests")
+    parser.add_argument("-n", "--no-cpg", action="store_true",
+                        help="Only run tests that do not require corosync")
+    parser.add_argument("-p", "--run-only-pattern", metavar='PATTERN',
+                        help="Run only tests matching the given pattern")
+    parser.add_argument("-r", "--run-only", metavar='TEST',
+                        help="Run a specific test")
+    parser.add_argument("-t", "--timeout", type=float, default=2,
+                        help="Up to how many seconds each test case waits for the daemon to "
+                             "be initialized.  Defaults to 2.  The value 0 means no limit.")
+    parser.add_argument("-w", "--force-wait", action="store_true",
+                        help="Each test case waits the default/specified --timeout for the "
+                             "daemon without tracking the log")
+    parser.add_argument("-V", "--verbose", action="store_true",
+                        help="Verbose output")
 
-    def build_options(self, argv):
-        """ Set options based on command-line arguments """
-
-        args = argv[1:]
-        skip = False
-        for i in range(0, len(args)):
-            if skip:
-                skip = False
-                continue
-            elif args[i] == "-h" or args[i] == "--help":
-                self.options['show-usage'] = True
-            elif args[i] == "-l" or args[i] == "--list-tests":
-                self.options['list-tests'] = True
-            elif args[i] == "-V" or args[i] == "--verbose":
-                self.options['verbose'] = True
-            elif args[i] == "-t" or args[i] == "--timeout":
-                self.options['timeout'] = float(args[i+1])
-            elif args[i] == "-w" or args[i] == "--force-wait":
-                self.options['force-wait'] = True
-            elif args[i] == "-n" or args[i] == "--no-cpg":
-                self.options['no-cpg'] = True
-            elif args[i] == "-c" or args[i] == "--cpg-only":
-                self.options['cpg-only'] = True
-            elif args[i] == "-r" or args[i] == "--run-only":
-                self.options['run-only'] = args[i+1]
-                skip = True
-            elif args[i] == "-p" or args[i] == "--run-only-pattern":
-                self.options['run-only-pattern'] = args[i+1]
-                skip = True
-
-    def show_usage(self):
-        """ Show command usage """
-
-        print("usage: " + sys.argv[0] + " [options]")
-        print("If no options are provided, all tests will run")
-        print("Options:")
-        print("\t [--help | -h]                        Show usage")
-        print("\t [--list-tests | -l]                  Print out all registered tests.")
-        print("\t [--cpg-only | -c]                    Only run tests that require corosync.")
-        print("\t [--no-cpg | -n]                      Only run tests that do not require corosync")
-        print("\t [--run-only | -r 'testname']         Run a specific test")
-        print("\t [--verbose | -V]                     Verbose output")
-        print("\t [--timeout | -t 'floating point number']"
-              "\n\t\tUp to how many seconds each test case waits for the daemon to be initialized."
-              "\n\t\tDefaults to 2. The value 0 means no limit.")
-        print("\t [--force-wait | -w]"
-              "\n\t\tEach test case waits the default/specified --timeout for the daemon without tracking the log.")
-        print("\t [--run-only-pattern | -p 'string']   Run only tests containing the string value")
-        print("\n\tExample: Run only the test 'start_stop'")
-        print("\t\t " + sys.argv[0] + " --run-only start_stop")
-        print("\n\tExample: Run only the tests with the string 'systemd' present in them")
-        print("\t\t " + sys.argv[0] + " --run-only-pattern systemd")
+    args = parser.parse_args()
+    return args
 
 
-def main(argv):
+def main():
     """ Run fencing regression tests as specified by arguments """
 
     update_path()
@@ -1216,24 +1032,19 @@ def main(argv):
     # Ensure all command output is in portable locale for comparison
     os.environ['LC_ALL'] = "C"
 
-    opts = TestOptions()
-    opts.build_options(argv)
-
-    if opts.options['show-usage']:
-        opts.show_usage()
-        sys.exit(ExitStatus.OK)
+    opts = build_options()
 
     exit_if_proc_running("pacemaker-fenced")
 
-    use_corosync = not opts.options['no-cpg']
+    use_corosync = not opts.no_cpg
     if use_corosync:
         exit_if_proc_running("corosync")
 
     # Create a temporary directory for log files (the directory and its
     # contents will automatically be erased when done)
     with tempfile.TemporaryDirectory(prefix="cts-fencing-") as logdir:
-        tests = FenceTests(verbose=opts.options['verbose'], timeout=opts.options['timeout'],
-                           force_wait=opts.options['force-wait'], logdir=logdir)
+        tests = FenceTests(verbose=opts.verbose, timeout=opts.timeout,
+                           force_wait=opts.force_wait, logdir=logdir)
 
         tests.build_standalone_tests()
         tests.build_custom_timeout_tests()
@@ -1248,24 +1059,28 @@ def main(argv):
         tests.build_metadata_tests()
         tests.build_validate_tests()
 
-        if opts.options['list-tests']:
+        if opts.list_tests:
             tests.print_list()
             sys.exit(ExitStatus.OK)
 
         print("Starting ...")
 
-        tests.setup_environment(use_corosync)
+        try:
+            tests.setup_environment(use_corosync)
+        except TimeoutError:
+            print("corosync did not start in time, exiting")
+            sys.exit(ExitStatus.TIMEOUT)
 
-        if opts.options['run-only-pattern'] != "":
-            tests.run_tests_matching(opts.options['run-only-pattern'])
+        if opts.run_only_pattern:
+            tests.run_tests_matching(opts.run_only_pattern)
             tests.print_results()
-        elif opts.options['run-only'] != "":
-            tests.run_single(opts.options['run-only'])
+        elif opts.run_only:
+            tests.run_single(opts.run_only)
             tests.print_results()
-        elif opts.options['no-cpg']:
+        elif opts.no_cpg:
             tests.run_no_cpg()
             tests.print_results()
-        elif opts.options['cpg-only']:
+        elif opts.cpg_only:
             tests.run_cpg_only()
             tests.print_results()
         else:
@@ -1278,4 +1093,4 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    main(sys.argv)
+    main()

@@ -13,6 +13,7 @@ import io
 import os
 import re
 import shlex
+import signal
 import subprocess
 import sys
 import time
@@ -46,6 +47,35 @@ def rng_directory():
         return "xml"
 
     return BuildOptions.SCHEMA_DIR
+
+
+class Pattern:
+    """ A class for checking log files for a given pattern """
+
+    def __init__(self, pat, negative=False, regex=False):
+        """ Create a new Pattern instance
+
+            Arguments:
+
+            pat      -- The string to search for
+            negative -- If True, pat must not be found in any input
+            regex    -- If True, pat is a regex and not a substring
+        """
+
+        self._pat = pat
+        self.negative = negative
+        self.regex = regex
+
+    def __str__(self):
+        return self._pat
+
+    def match(self, line):
+        """ Is this pattern found in the given line? """
+
+        if self.regex:
+            return re.search(self._pat, line) is not None
+
+        return self._pat in line
 
 
 class Test:
@@ -86,10 +116,14 @@ class Test:
         self.verbose = kwargs.get("verbose", False)
 
         self._cmds = []
+        self._patterns = []
+
         self._daemon_location = None
+        self._daemon_output = ""
+        self._daemon_process = None
+
         self._result_exitcode = ExitStatus.OK
         self._result_txt = ""
-        self._stonith_process = None
 
     ###
     ### PROPERTIES
@@ -123,13 +157,44 @@ class Test:
         """ Kill any running daemons in preparation for executing the test """
         raise NotImplementedError("_kill_daemons not provided by subclass")
 
-    def _match_patterns(self):
+    def _match_log_patterns(self):
         """ Check test output for expected patterns, setting self.exitcode and
             self._result_txt as appropriate.  Not all subclass will need to do
             this.
         """
-        # pylint: disable=no-self-use
-        return
+        if len(self._patterns) == 0:
+            return
+
+        n_failed_matches = 0
+        n_negative_matches = 0
+
+        output = self._daemon_output.split("\n")
+
+        for pat in self._patterns:
+            positive_match = False
+
+            for line in output:
+                if pat.match(line):
+                    if pat.negative:
+                        n_negative_matches += 1
+
+                        if self.verbose:
+                            print("This pattern should not have matched = '%s" % pat)
+
+                        break
+
+                    positive_match = True
+                    break
+
+            if not pat.negative and not positive_match:
+                n_failed_matches += 1
+                print("Pattern Not Matched = '%s'" % pat)
+
+        if n_failed_matches > 0 or n_negative_matches > 0:
+            msg = "FAILURE - '%s' failed. %d patterns out of %d not matched. %d negative matches."
+            self._result_txt = msg % (self.name, n_failed_matches, len(self._patterns), n_negative_matches)
+            self.exitcode = ExitStatus.ERROR
+
 
     def _new_cmd(self, cmd, args, exitcode, **kwargs):
         """ Add a command to be executed as part of this test.
@@ -214,9 +279,43 @@ class Test:
 
         self._new_cmd(cmd, args, ExitStatus.OK, no_wait=True)
 
+    def add_log_pattern(self, pattern, negative=False, regex=False):
+        """ Add a pattern that should appear in the test's logs """
+
+        self._patterns.append(Pattern(pattern, negative=negative, regex=regex))
+
     def clean_environment(self):
         """ Clean up the host after executing a test """
-        raise NotImplementedError("clean_environment not provided by subclass")
+
+        if self._daemon_process:
+            if self._daemon_process.poll() is None:
+                self._daemon_process.terminate()
+                self._daemon_process.wait()
+            else:
+                return_code = {
+                    getattr(signal, _signame): _signame
+                        for _signame in dir(signal)
+                        if _signame.startswith('SIG') and not _signame.startswith("SIG_")
+                }.get(-self._daemon_process.returncode, "RET=%d" % (self._daemon_process.returncode))
+                msg = "FAILURE - '%s' failed. %s abnormally exited during test (%s)."
+                self._result_txt = msg % (self.name, self._daemon_location, return_code)
+                self.exitcode = ExitStatus.ERROR
+
+        self._daemon_process = None
+        self._daemon_output = ""
+
+        # the default for utf-8 encoding would error out if e.g. memory corruption
+        # makes fenced output any kind of 8 bit value - while still interesting
+        # for debugging and we'd still like the regression-test to go over the
+        # full set of test-cases
+        with open(self.logpath, 'rt', encoding = "ISO-8859-1") as logfile:
+            for line in logfile.readlines():
+                self._daemon_output += line
+
+        if self.verbose:
+            print("Daemon Output Start")
+            print(self._daemon_output)
+            print("Daemon Output End")
 
     def print_result(self, filler):
         """ Print the result of the last test execution """
@@ -264,7 +363,7 @@ class Test:
         self.clean_environment()
 
         if self.exitcode == ExitStatus.OK:
-            self._match_patterns()
+            self._match_log_patterns()
 
         print(self._result_txt)
         if self.verbose:

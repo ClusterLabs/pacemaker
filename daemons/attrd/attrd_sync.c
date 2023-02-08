@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -259,8 +259,8 @@ attrd_ack_waitlist_clients(enum attrd_sync_point sync_point, const xmlNode *xml)
             return;
         }
 
-        crm_trace("Alerting client %s for reached %s sync point",
-                  wl->client_id, sync_point_str(wl->sync_point));
+        crm_notice("Alerting client %s for reached %s sync point",
+                   wl->client_id, sync_point_str(wl->sync_point));
 
         client = pcmk__find_client_by_id(wl->client_id);
         if (client == NULL) {

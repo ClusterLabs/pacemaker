@@ -306,9 +306,10 @@ update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
         v = broadcast_local_value(a);
 
     } else if (!pcmk__str_eq(v->current, value, pcmk__str_casei)) {
-        crm_notice("Setting %s[%s]: %s -> %s "
+        crm_notice("Setting %s[%s]%s%s: %s -> %s "
                    CRM_XS " from %s with %s write delay",
-                   attr, host, pcmk__s(v->current, "(unset)"),
+                   attr, host, a->set_type ? " in " : "",
+                   pcmk__s(a->set_type, ""), pcmk__s(v->current, "(unset)"),
                    pcmk__s(value, "(unset)"), peer->uname,
                    (a->timeout_ms == 0)? "no" : pcmk__readable_interval(a->timeout_ms));
         pcmk__str_update(&v->current, value);

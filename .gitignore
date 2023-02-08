@@ -98,6 +98,7 @@ configure
 
 # configure targets
 /cts/benchmark/clubench
+/cts/cts-attrd
 /cts/cts-cli
 /cts/cts-coverage
 /cts/cts-exec

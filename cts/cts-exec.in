@@ -5,6 +5,7 @@
 __copyright__ = "Copyright 2012-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
+import argparse
 import io
 import os
 import psutil
@@ -57,7 +58,7 @@ def update_path():
         # and pacemaker-remoted
         new_path = "%s:%s" % (BuildOptions.DAEMON_DIR, new_path)
 
-    print('Using PATH="{}"'.format(new_path))
+    print('Using PATH="%s"' % new_path)
     os.environ['PATH'] = new_path
 
 
@@ -74,8 +75,10 @@ class ExecTest(Test):
         else:
             self._daemon_location = "pacemaker-execd"
 
-        self._execd_process = None
         self._test_tool_location = "cts-exec-helper"
+
+        # We additionally need to keep track of a stonith process.
+        self._stonith_process = None
 
     def _new_cmd(self, cmd, args, exitcode, **kwargs):
         """ Add a command to be executed as part of this test """
@@ -111,14 +114,14 @@ class ExecTest(Test):
         if self.verbose:
             cmd += ["-V"]
 
-        self._execd_process = subprocess.Popen(cmd)
+        self._daemon_process = subprocess.Popen(cmd)
 
     def clean_environment(self):
         """ Clean up the host after running a test """
 
-        if self._execd_process:
-            self._execd_process.terminate()
-            self._execd_process.wait()
+        if self._daemon_process:
+            self._daemon_process.terminate()
+            self._daemon_process.wait()
 
             if self.verbose:
                 print("Daemon Output Start")
@@ -131,7 +134,7 @@ class ExecTest(Test):
             self._stonith_process.terminate()
             self._stonith_process.wait()
 
-        self._execd_process = None
+        self._daemon_process = None
         self._stonith_process = None
 
     def add_cmd(self, args):
@@ -874,79 +877,36 @@ class ExecTests(Tests):
             test.add_cmd_check_stdout("-c list_agents -C stonith", "", "Stateful")            ### should not exist
             test.add_cmd_check_stdout("-c list_agents ", "fence_dummy")
 
-class TestOptions(object):
-    """ Option handler """
+def build_options():
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
+                                     description="Run pacemaker-execd regression tests",
+                                     epilog="Example: Run only the test 'start_stop'\n"
+                                            "\t " + sys.argv[0] + " --run-only start_stop\n\n"
+                                            "Example: Run only the tests with the string 'systemd' present in them\n"
+                                            "\t " + sys.argv[0] + " --run-only-pattern systemd")
+    parser.add_argument("-l", "--list-tests", action="store_true",
+                        help="Print out all registered tests")
+    parser.add_argument("-p", "--run-only-pattern", metavar='PATTERN',
+                        help="Run only tests matching the given pattern")
+    parser.add_argument("-r", "--run-only", metavar='TEST',
+                        help="Run a specific test")
+    parser.add_argument("-t", "--timeout", type=float, default=2,
+                        help="Up to how many seconds each test case waits for the daemon to "
+                             "be initialized.  Defaults to 2.  The value 0 means no limit.")
+    parser.add_argument("-w", "--force-wait", action="store_true",
+                        help="Each test case waits the default/specified --timeout for the "
+                             "daemon without tracking the log")
+    if BuildOptions.REMOTE_ENABLED:
+        parser.add_argument("-R", "--pacemaker-remote", action="store_true",
+                            help="Test pacemaker-remoted binary instead of pacemaker-execd")
+    parser.add_argument("-V", "--verbose", action="store_true",
+                        help="Verbose output")
 
-    def __init__(self):
-        self.options = {}
-        self.options['list-tests'] = False
-        self.options['run-all'] = True
-        self.options['run-only'] = ""
-        self.options['run-only-pattern'] = ""
-        self.options['verbose'] = False
-        self.options['timeout'] = 2
-        self.options['force-wait'] = False
-        self.options['invalid-arg'] = ""
-        self.options['show-usage'] = False
-        self.options['pacemaker-remote'] = False
-
-    def build_options(self, argv):
-        """ Set options based on command-line arguments """
-
-        args = argv[1:]
-        skip = False
-        for i in range(0, len(args)):
-            if skip:
-                skip = False
-                continue
-            elif args[i] == "-h" or args[i] == "--help":
-                self.options['show-usage'] = True
-            elif args[i] == "-l" or args[i] == "--list-tests":
-                self.options['list-tests'] = True
-            elif args[i] == "-V" or args[i] == "--verbose":
-                self.options['verbose'] = True
-            elif args[i] == "-t" or args[i] == "--timeout":
-                self.options['timeout'] = float(args[i+1])
-            elif args[i] == "-w" or args[i] == "--force-wait":
-                self.options['force-wait'] = True
-            elif args[i] == "-R" or args[i] == "--pacemaker-remote":
-                if BuildOptions.REMOTE_ENABLED:
-                    self.options['pacemaker-remote'] = True
-                else:
-                    print("ERROR: This build does not support Pacemaker Remote")
-                    sys.exit(ExitStatus.USAGE)
-            elif args[i] == "-r" or args[i] == "--run-only":
-                self.options['run-only'] = args[i+1]
-                skip = True
-            elif args[i] == "-p" or args[i] == "--run-only-pattern":
-                self.options['run-only-pattern'] = args[i+1]
-                skip = True
-
-    def show_usage(self):
-        """ Show command usage """
-
-        print("usage: " + sys.argv[0] + " [options]")
-        print("If no options are provided, all tests will run")
-        print("Options:")
-        print("\t [--help | -h]                        Show usage")
-        print("\t [--list-tests | -l]                  Print out all registered tests.")
-        print("\t [--run-only | -r 'testname']         Run a specific test")
-        print("\t [--verbose | -V]                     Verbose output")
-        print("\t [--timeout | -t 'floating point number']"
-                "\n\t\tUp to how many seconds each test case waits for the daemon to be initialized."
-                "\n\t\tDefaults to 2. The value 0 means no limit.")
-        print("\t [--force-wait | -w]"
-                "\n\t\tEach test case waits the default/specified --timeout for the daemon without tracking the log.")
-        if BuildOptions.REMOTE_ENABLED:
-            print("\t [--pacemaker-remote | -R             Test pacemaker-remoted binary instead of pacemaker-execd")
-        print("\t [--run-only-pattern | -p 'string']   Run only tests containing the string value")
-        print("\n\tExample: Run only the test 'start_stop'")
-        print("\t\t " + sys.argv[0] + " --run-only start_stop")
-        print("\n\tExample: Run only the tests with the string 'systemd' present in them")
-        print("\t\t " + sys.argv[0] + " --run-only-pattern systemd")
+    args = parser.parse_args()
+    return args
 
 
-def main(argv):
+def main():
     """ Run pacemaker-execd regression tests as specified by arguments """
 
     update_path()
@@ -954,14 +914,9 @@ def main(argv):
     # Ensure all command output is in portable locale for comparison
     os.environ['LC_ALL'] = "C"
 
-    opts = TestOptions()
-    opts.build_options(argv)
+    opts = build_options()
 
-    if opts.options['show-usage']:
-        opts.show_usage()
-        sys.exit(ExitStatus.OK)
-
-    if opts.options['pacemaker-remote']:
+    if opts.pacemaker_remote:
         daemon_name = "pacemaker-remoted"
     else:
         daemon_name = "pacemaker-execd"
@@ -971,8 +926,8 @@ def main(argv):
     # Create a temporary directory for log files (the directory will
     # automatically be erased when done)
     with tempfile.TemporaryDirectory(prefix="cts-exec-") as logdir:
-        tests = ExecTests(verbose=opts.options['verbose'], tls=opts.options['pacemaker-remote'],
-                          timeout=opts.options['timeout'], force_wait=opts.options['force-wait'],
+        tests = ExecTests(verbose=opts.verbose, tls=opts.pacemaker_remote,
+                          timeout=opts.timeout, force_wait=opts.force_wait,
                           logdir=logdir)
 
         tests.build_generic_tests()
@@ -981,7 +936,7 @@ def main(argv):
         tests.build_custom_tests()
         tests.build_stress_tests()
 
-        if opts.options['list-tests']:
+        if opts.list_tests:
             tests.print_list()
             sys.exit(ExitStatus.OK)
 
@@ -989,11 +944,11 @@ def main(argv):
 
         tests.setup_environment()
 
-        if opts.options['run-only-pattern'] != "":
-            tests.run_tests_matching(opts.options['run-only-pattern'])
+        if opts.run_only_pattern:
+            tests.run_tests_matching(opts.run_only_pattern)
             tests.print_results()
-        elif opts.options['run-only'] != "":
-            tests.run_single(opts.options['run-only'])
+        elif opts.run_only:
+            tests.run_single(opts.run_only)
             tests.print_results()
         else:
             tests.run_tests()
@@ -1005,4 +960,4 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    main(sys.argv)
+    main()

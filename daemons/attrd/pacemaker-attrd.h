@@ -211,4 +211,6 @@ bool attrd_request_has_sync_point(xmlNode *xml);
 
 void attrd_copy_xml_attributes(xmlNode *src, xmlNode *dest);
 
+extern gboolean stand_alone;
+
 #endif /* PACEMAKER_ATTRD__H */

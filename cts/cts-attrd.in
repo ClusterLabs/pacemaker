@@ -1,0 +1,324 @@
+#!@PYTHON@
+""" Regression tests for Pacemaker's attribute daemon
+"""
+
+# pylint doesn't like the module name "cts-attrd" which is an invalid complaint for this file
+# but probably something we want to continue warning about elsewhere
+# pylint: disable=invalid-name
+# pacemaker imports need to come after we modify sys.path, which pylint will complain about.
+# pylint: disable=wrong-import-position
+
+__copyright__ = "Copyright 2023 the Pacemaker project contributors"
+__license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
+
+import argparse
+import os
+import subprocess
+import sys
+import tempfile
+
+# These imports allow running from a source checkout after running `make`.
+# Note that while this doesn't necessarily mean it will successfully run tests,
+# but being able to see --help output can be useful.
+if os.path.exists("@abs_top_srcdir@/python"):
+    sys.path.insert(0, "@abs_top_srcdir@/python")
+
+# pylint: disable=comparison-of-constants,comparison-with-itself,condition-evals-to-constant
+if os.path.exists("@abs_top_builddir@/python") and "@abs_top_builddir@" != "@abs_top_srcdir@":
+    sys.path.insert(0, "@abs_top_builddir@/python")
+
+from pacemaker.buildoptions import BuildOptions
+from pacemaker.exitstatus import ExitStatus
+from pacemaker._cts.corosync import Corosync
+from pacemaker._cts.process import killall, exit_if_proc_running
+from pacemaker._cts.test import Test, Tests
+
+TEST_DIR = sys.path[0]
+
+def update_path():
+    """ Set the PATH environment variable appropriately for the tests """
+
+    new_path = os.environ['PATH']
+    if os.path.exists("%s/cts-attrd.in" % TEST_DIR):
+        # pylint: disable=protected-access
+        print("Running tests from the source tree: %s (%s)" % (BuildOptions._BUILD_DIR, TEST_DIR))
+        # For pacemaker-attrd
+        new_path = "%s/daemons/attrd:%s" % (BuildOptions._BUILD_DIR, new_path)
+
+    else:
+        print("Running tests from the install tree: %s (not %s)" % (BuildOptions.DAEMON_DIR, TEST_DIR))
+        # For pacemaker-attrd
+        new_path = "%s:%s" % (BuildOptions.DAEMON_DIR, new_path)
+
+    print('Using PATH="%s"' % new_path)
+    os.environ['PATH'] = new_path
+
+
+class AttributeTest(Test):
+    """ Executor for a single test """
+
+    def __init__(self, name, description, **kwargs):
+        Test.__init__(self, name, description, **kwargs)
+
+        self._daemon_location = "pacemaker-attrd"
+        self._enable_corosync = True
+
+    def _kill_daemons(self):
+        killall([self._daemon_location])
+
+    def _start_daemons(self):
+        if self.verbose:
+            print("Starting %s" % self._daemon_location)
+
+        cmd = [self._daemon_location, "-s", "-l", self.logpath]
+        # pylint: disable=consider-using-with
+        self._daemon_process = subprocess.Popen(cmd)
+
+
+class AttributeTests(Tests):
+    """ Collection of all attribute regression tests """
+
+    def __init__(self, **kwargs):
+        Tests.__init__(self, **kwargs)
+
+        self._corosync = Corosync(self.verbose, self.logdir, "cts-attrd")
+
+    def new_test(self, name, description):
+        """ Create a named test """
+
+        test = AttributeTest(name, description, verbose=self.verbose, logdir=self.logdir)
+        self._tests.append(test)
+        return test
+
+    def setup_environment(self, use_corosync):
+        """ Prepare the host before executing any tests """
+
+        if use_corosync:
+            self._corosync.start(kill_first=True)
+
+    def cleanup_environment(self, use_corosync):
+        """ Clean up the host after executing desired tests """
+
+        if use_corosync:
+            self._corosync.stop()
+
+    def build_basic_tests(self):
+        """ Add basic tests - setting, querying, updating, and deleting attributes """
+
+        test = self.new_test("set_attr_1",
+                             "Set and query an attribute")
+        test.add_cmd("attrd_updater", "--name AAA -U 111 --output-as=xml")
+        test.add_cmd_check_stdout("attrd_updater", "--name AAA -Q --output-as=xml",
+                                  "name=\"AAA\" value=\"111\"")
+        test.add_log_pattern(r"Setting AAA\[.*\] in instance_attributes: \(unset\) -> 111",
+                             regex=True)
+
+        # Setting the delay on an attribute that doesn't exist fails, but the failure is
+        # not passed back to attrd_updater.
+        test = self.new_test("set_attr_2",
+                             "Set an attribute's delay")
+        test.add_cmd("attrd_updater", "--name AAA -Y -d 5 --output-as=xml")
+        test.add_log_pattern(r"Processed update-delay request from client .*: Error \(Attribute AAA does not exist\)",
+                             regex=True)
+
+        test = self.new_test("set_attr_3",
+                             "Set and query an attribute's delay and value")
+        test.add_cmd("attrd_updater", "--name AAA -B 111 -d 5 --output-as=xml")
+        test.add_cmd_check_stdout("attrd_updater", "--name AAA -Q --output-as=xml",
+                                  "name=\"AAA\" value=\"111\"")
+        test.add_log_pattern(r"Setting AAA\[.*\] in instance_attributes: \(unset\) -> 111 | from .* with 5s write delay",
+                             regex=True)
+
+        test = self.new_test("update_attr_1",
+                             "Update an attribute that already exists")
+        test.add_cmd("attrd_updater", "--name BBB -U 222 --output-as=xml")
+        test.add_cmd("attrd_updater", "--name BBB -U 333 --output-as=xml")
+        test.add_cmd_check_stdout("attrd_updater", "--name BBB -Q --output-as=xml",
+                                  "name=\"BBB\" value=\"333\"")
+        test.add_log_pattern(r"Setting BBB\[.*\] in instance_attributes: \(unset\) -> 222",
+                             regex=True)
+        test.add_log_pattern(r"Setting BBB\[.*\] in instance_attributes: 222 -> 333",
+                             regex=True)
+
+        test = self.new_test("update_attr_delay_1",
+                             "Update the delay of an attribute that already exists")
+        test.add_cmd("attrd_updater", "--name BBB -U 222 --output-as=xml")
+        test.add_cmd("attrd_updater", "--name BBB -Y -d 5 --output-as=xml")
+        test.add_log_pattern(r"Setting BBB\[.*\] in instance_attributes: \(unset\) -> 222",
+                             regex=True)
+        test.add_log_pattern("Update attribute BBB delay to 5000ms (5)")
+
+        test = self.new_test("update_attr_delay_2",
+                             "Update the delay and value of an attribute that already exists")
+        test.add_cmd("attrd_updater", "--name BBB -U 222 --output-as=xml")
+        test.add_cmd("attrd_updater", "--name BBB -B 333 -d 5 --output-as=xml")
+        test.add_log_pattern(r"Setting BBB\[.*\] in instance_attributes: \(unset\) -> 222",
+                             regex=True)
+        test.add_log_pattern("Update attribute BBB delay to 5000ms (5)")
+        test.add_log_pattern(r"Setting BBB\[.*\] in instance_attributes: 222 -> 333",
+                             regex=True)
+
+        test = self.new_test("missing_attr_1",
+                             "Query an attribute that does not exist")
+        test.add_cmd_expected_fail("attrd_updater", "--name NOSUCH --output-as=xml",
+                                   ExitStatus.CONFIG)
+
+        test = self.new_test("delete_attr_1",
+                             "Delete an existing attribute")
+        test.add_cmd("attrd_updater", "--name CCC -U 444 --output-as=xml")
+        test.add_cmd("attrd_updater", "--name CCC -D --output-as=xml")
+        test.add_log_pattern(r"Setting CCC\[.*\] in instance_attributes: \(unset\) -> 444",
+                             regex=True)
+        test.add_log_pattern(r"Setting CCC\[.*\] in instance_attributes: 444 -> \(unset\)",
+                             regex=True)
+
+        test = self.new_test("missing_attr_2",
+                             "Delete an attribute that does not exist")
+        test.add_cmd("attrd_updater", "--name NOSUCH2 -D --output-as=xml")
+
+        test = self.new_test("attr_in_set_1",
+                             "Set and query an attribute in a specific set")
+        test.add_cmd("attrd_updater", "--name DDD -U 555 --set=foo --output-as=xml")
+        test.add_cmd_check_stdout("attrd_updater", "--name DDD -Q --output-as=xml",
+                                  "name=\"DDD\" value=\"555\"")
+        test.add_log_pattern("Processed 1 private change for DDD, id=n/a, set=foo")
+
+    def build_regex_tests(self):
+        """ Add tests that use regexes """
+
+        test = self.new_test("regex_update_1",
+                             "Update attributes using a regex")
+        test.add_cmd("attrd_updater", "--name AAA -U 111 --output-as=xml")
+        test.add_cmd("attrd_updater", "--name ABB -U 222 --output-as=xml")
+        test.add_cmd("attrd_updater", "-P 'A.*' -U 333 --output-as=xml")
+        test.add_cmd_check_stdout("attrd_updater", "--name AAA -Q --output-as=xml",
+                                  "name=\"AAA\" value=\"333\"")
+        test.add_cmd_check_stdout("attrd_updater", "--name ABB -Q --output-as=xml",
+                                  "name=\"ABB\" value=\"333\"")
+        test.add_log_pattern(r"Setting AAA\[.*\] in instance_attributes: \(unset\) -> 111",
+                             regex=True)
+        test.add_log_pattern(r"Setting ABB\[.*\] in instance_attributes: \(unset\) -> 222",
+                             regex=True)
+        test.add_log_pattern(r"Setting ABB\[.*\] in instance_attributes: 222 -> 333",
+                             regex=True)
+        test.add_log_pattern(r"Setting AAA\[.*\] in instance_attributes: 111 -> 333",
+                             regex=True)
+
+        test = self.new_test("regex_delete_1",
+                             "Delete attributes using a regex")
+        test.add_cmd("attrd_updater", "--name XAX -U 444 --output-as=xml")
+        test.add_cmd("attrd_updater", "--name XBX -U 555 --output-as=xml")
+        test.add_cmd("attrd_updater", "-P 'X[A|B]X' -D --output-as=xml")
+        test.add_log_pattern(r"Setting XAX\[.*\] in instance_attributes: \(unset\) -> 444",
+                             regex=True)
+        test.add_log_pattern(r"Setting XBX\[.*\] in instance_attributes: \(unset\) -> 555",
+                             regex=True)
+        test.add_log_pattern(r"Setting XBX\[.*\] in instance_attributes: 555 -> \(unset\)",
+                             regex=True)
+        test.add_log_pattern(r"Setting XAX\[.*\] in instance_attributes: 444 -> \(unset\)",
+                             regex=True)
+
+    def build_utilization_tests(self):
+        """ Add tests that involve utilization attributes """
+
+        test = self.new_test("utilization_1",
+                             "Set and query a utilization attribute")
+        test.add_cmd("attrd_updater", "--name AAA -U ABC -z --output-as=xml")
+        test.add_cmd_check_stdout("attrd_updater", "--name AAA -Q --output-as=xml",
+                                  "name=\"AAA\" value=\"ABC\"")
+        test.add_log_pattern(r"Setting AAA\[.*\] in utilization: \(unset\) -> ABC",
+                             regex=True)
+
+    def build_sync_point_tests(self):
+        """ Add tests that involve sync points """
+
+        test = self.new_test("local_sync_point",
+                             "Wait for a local sync point")
+        test.add_cmd("attrd_updater", "--name AAA -U 123 --wait=local --output-as=xml")
+        test.add_cmd_check_stdout("attrd_updater", "--name AAA -Q --output-as=xml",
+                                  "name=\"AAA\" value=\"123\"")
+        test.add_log_pattern(r"Alerting client .* for reached local sync point",
+                             regex=True)
+
+        test = self.new_test("cluster_sync_point",
+                             "Wait for a cluster-wide sync point")
+        test.add_cmd("attrd_updater", "--name BBB -U 456 --wait=cluster --output-as=xml")
+        test.add_cmd_check_stdout("attrd_updater", "--name BBB -Q --output-as=xml",
+                                  "name=\"BBB\" value=\"456\"")
+        test.add_log_pattern(r"Alerting client .* for reached cluster sync point",
+                             regex=True)
+
+
+def build_options():
+    """ Handle command line arguments """
+
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
+                                     description="Run pacemaker-attrd regression tests",
+                                     epilog="Example: Run only the test 'start_stop'\n"
+                                            "\t " + sys.argv[0] + " --run-only start_stop\n\n"
+                                            "Example: Run only the tests with the string 'systemd' present in them\n"
+                                            "\t " + sys.argv[0] + " --run-only-pattern systemd")
+    parser.add_argument("-l", "--list-tests", action="store_true",
+                        help="Print out all registered tests")
+    parser.add_argument("-p", "--run-only-pattern", metavar='PATTERN',
+                        help="Run only tests matching the given pattern")
+    parser.add_argument("-r", "--run-only", metavar='TEST',
+                        help="Run a specific test")
+    parser.add_argument("-V", "--verbose", action="store_true",
+                        help="Verbose output")
+
+    args = parser.parse_args()
+    return args
+
+
+def main():
+    """ Run attrd regression tests as specified by arguments """
+
+    update_path()
+
+    # Ensure all command output is in portable locale for comparison
+    os.environ['LC_ALL'] = "C"
+
+    opts = build_options()
+
+    exit_if_proc_running("pacemaker-attrd")
+
+    # Create a temporary directory for log files (the directory and its
+    # contents will automatically be erased when done)
+    with tempfile.TemporaryDirectory(prefix="cts-attrd-") as logdir:
+        tests = AttributeTests(verbose=opts.verbose, logdir=logdir)
+
+        tests.build_basic_tests()
+        tests.build_regex_tests()
+        tests.build_utilization_tests()
+        tests.build_sync_point_tests()
+
+        if opts.list_tests:
+            tests.print_list()
+            sys.exit(ExitStatus.OK)
+
+        print("Starting ...")
+
+        try:
+            tests.setup_environment(True)
+        except TimeoutError:
+            print("corosync did not start in time, exiting")
+            sys.exit(ExitStatus.TIMEOUT)
+
+        if opts.run_only_pattern:
+            tests.run_tests_matching(opts.run_only_pattern)
+            tests.print_results()
+        elif opts.run_only:
+            tests.run_single(opts.run_only)
+            tests.print_results()
+        else:
+            tests.run_tests()
+            tests.print_results()
+
+        tests.cleanup_environment(True)
+
+    tests.exit()
+
+
+if __name__ == "__main__":
+    main()

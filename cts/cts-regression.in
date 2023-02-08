@@ -127,7 +127,7 @@ class ComponentsArgAction(argparse.Action):
     """
 
     def __call__(self, parser, namespace, values, option_string=None):
-        all_components = ['cli', 'exec', 'fencing', 'scheduler']
+        all_components = ['attrd', 'cli', 'exec', 'fencing', 'scheduler']
         default_components = ['cli', 'scheduler']
 
         if not values:
@@ -205,6 +205,13 @@ def main():
 
     # Available components
     components = {
+        'attrd': Component(
+            'attrd',
+            'Attribute manager',
+            test_home,
+            requires_root=True,
+            supports_valgrind=False,
+        ),
         'cli': Component(
             'cli',
             'Command-line tools',
