@@ -9,10 +9,15 @@ import sys, os
 from pacemaker.buildoptions import BuildOptions
 
 patternvariants = {}
+
 class BasePatterns(object):
     def __init__(self, name):
+        self.BadNews = []
+        self.components = {}
         self.name = name
+
         patternvariants[name] = self
+
         self.ignore = [
             "avoid confusing Valgrind",
 
@@ -23,14 +28,12 @@ class BasePatterns(object):
             # tests (and we will catch it in pacemaker logs when not OK)
             r"pcs.daemon:No response from: .* request: get_configs, error:",
         ]
-        self.BadNews = []
-        self.components = {}
+
         self.commands = {
             "StatusCmd"      : "crmadmin -t 60 -S %s 2>/dev/null",
             "CibQuery"       : "cibadmin -Ql",
             "CibAddXml"      : "cibadmin --modify -c --xml-text %s",
             "CibDelXpath"    : "cibadmin --delete --xpath %s",
-            # 300,000 == 5 minutes
             "RscRunning"     : BuildOptions.DAEMON_DIR + "/cts-exec-helper -R -r %s",
             "CIBfile"        : "%s:" + BuildOptions.CIB_DIR + "/cib.xml",
             "TmpDir"         : "/tmp",
@@ -38,10 +41,6 @@ class BasePatterns(object):
             "BreakCommCmd"   : "iptables -A INPUT -s %s -j DROP >/dev/null 2>&1",
             "FixCommCmd"     : "iptables -D INPUT -s %s -j DROP >/dev/null 2>&1",
 
-# tc qdisc add dev lo root handle 1: cbq avpkt 1000 bandwidth 1000mbit
-# tc class add dev lo parent 1: classid 1:1 cbq rate "$RATE"kbps allot 17000 prio 5 bounded isolated
-# tc filter add dev lo parent 1: protocol ip prio 16 u32 match ip dst 127.0.0.1 match ip sport $PORT 0xFFFF flowid 1:1
-# tc qdisc add dev lo parent 1: netem delay "$LATENCY"msec "$(($LATENCY/4))"msec 10% 2> /dev/null > /dev/null
             "ReduceCommCmd"  : "",
             "RestoreCommCmd" : "tc qdisc del dev lo root",
 
@@ -51,17 +50,18 @@ class BasePatterns(object):
             "StandbyCmd"      : "crm_attribute -Vq  -U %s -n standby -l forever -v %s 2>/dev/null",
             "StandbyQueryCmd" : "crm_attribute -qG -U %s -n standby -l forever -d off 2>/dev/null",
         }
+
         self.search = {
-            "Pat:DC_IDLE"      : "pacemaker-controld.*State transition.*-> S_IDLE",
-            
+            "Pat:DC_IDLE"      : r"pacemaker-controld.*State transition.*-> S_IDLE",
+
             # This won't work if we have multiple partitions
-            "Pat:Local_started" : "%s\W.*controller successfully started",
+            "Pat:Local_started" : r"%s\W.*controller successfully started",
             "Pat:NonDC_started" : r"%s\W.*State transition.*-> S_NOT_DC",
             "Pat:DC_started"    : r"%s\W.*State transition.*-> S_IDLE",
-            "Pat:We_stopped"    : "%s\W.*OVERRIDE THIS PATTERN",
-            "Pat:They_stopped"  : "%s\W.*LOST:.* %s ",
-            "Pat:They_dead"     : "node %s.*: is dead",
-            "Pat:They_up"       : "%s %s\W.*OVERRIDE THIS PATTERN",
+            "Pat:We_stopped"    : r"%s\W.*OVERRIDE THIS PATTERN",
+            "Pat:They_stopped"  : r"%s\W.*LOST:.* %s ",
+            "Pat:They_dead"     : r"node %s.*: is dead",
+            "Pat:They_up"       : r"%s %s\W.*OVERRIDE THIS PATTERN",
             "Pat:TransitionComplete" : "Transition status: Complete: complete",
 
             "Pat:Fencing_start"   : r"Requesting peer fencing .* targeting %s",
@@ -80,6 +80,7 @@ class BasePatterns(object):
     def get_component(self, key):
         if key in self.components:
             return self.components[key]
+
         print("Unknown component '%s' for %s" % (key, self.name))
         return []
 
@@ -119,29 +120,29 @@ class crm_corosync(BasePatterns):
             "StartCmd"       : "service corosync start && service pacemaker start",
             "StopCmd"        : "service pacemaker stop; [ ! -e /usr/sbin/pacemaker-remoted ] || service pacemaker_remote stop; service corosync stop",
 
-            "EpochCmd"      : "crm_node -e",
+            "EpochCmd"       : "crm_node -e",
             "QuorumCmd"      : "crm_node -q",
-            "PartitionCmd"    : "crm_node -p",
+            "PartitionCmd"   : "crm_node -p",
         })
 
         self.search.update({
             # Close enough ... "Corosync Cluster Engine exiting normally" isn't
             # printed reliably.
-            "Pat:We_stopped"   : "%s\W.*Unloading all Corosync service engines",
-            "Pat:They_stopped" : "%s\W.*pacemaker-controld.*Node %s(\[|\s).*state is now lost",
-            "Pat:They_dead"    : "pacemaker-controld.*Node %s(\[|\s).*state is now lost",
-            "Pat:They_up"      : "\W%s\W.*pacemaker-controld.*Node %s state is now member",
+            "Pat:We_stopped"   : r"%s\W.*Unloading all Corosync service engines",
+            "Pat:They_stopped" : r"%s\W.*pacemaker-controld.*Node %s(\[|\s).*state is now lost",
+            "Pat:They_dead"    : r"pacemaker-controld.*Node %s(\[|\s).*state is now lost",
+            "Pat:They_up"      : r"\W%s\W.*pacemaker-controld.*Node %s state is now member",
 
             "Pat:ChildExit"    : r"\[[0-9]+\] exited with status [0-9]+ \(",
             # "with signal 9" == pcmk_child_exit(), "$" == check_active_before_startup_processes()
             "Pat:ChildKilled"  : r"%s\W.*pacemakerd.*%s\[[0-9]+\] terminated( with signal 9|$)",
-            "Pat:ChildRespawn" : "%s\W.*pacemakerd.*Respawning %s subdaemon after unexpected exit",
+            "Pat:ChildRespawn" : r"%s\W.*pacemakerd.*Respawning %s subdaemon after unexpected exit",
 
-            "Pat:InfraUp"      : "%s\W.*corosync.*Initializing transport",
-            "Pat:PacemakerUp"  : "%s\W.*pacemakerd.*Starting Pacemaker",
+            "Pat:InfraUp"      : r"%s\W.*corosync.*Initializing transport",
+            "Pat:PacemakerUp"  : r"%s\W.*pacemakerd.*Starting Pacemaker",
         })
 
-        self.ignore = self.ignore + [
+        self.ignore += [
             r"crm_mon:",
             r"crmadmin:",
             r"update_trace_data",
@@ -190,18 +191,10 @@ class crm_corosync(BasePatterns):
             r"share the same cluster nodeid",
             r"share the same name",
 
-            #r"crm_ipc_send:.*Request .* failed",
-            #r"crm_ipc_send:.*Sending to .* is disabled until pending reply is received",
-
-                # Not inherently bad, but worth tracking
-            #r"No need to invoke the TE",
-            #r"ping.*: DEBUG: Updated connected = 0",
-            #r"Digest mis-match:",
             r"pacemaker-controld:.*Transition failed: terminated",
             r"Local CIB .* differs from .*:",
             r"warn.*:\s*Continuing but .* will NOT be used",
             r"warn.*:\s*Cluster configuration file .* is corrupt",
-            #r"Executing .* fencing operation",
             r"Election storm",
             r"stalled the FSA with pending inputs",
         ]
@@ -216,7 +209,7 @@ class crm_corosync(BasePatterns):
             r".*:\s*Requesting fencing \([^)]+\) of node ",
             r"(Blackbox dump requested|Problem detected)",
         ]
-        
+
         self.components["corosync-ignore"] = [
             r"Could not connect to Corosync CFG: CS_ERR_LIBRARY",
             r"error:.*Connection to the CPG API failed: Library error",
@@ -268,6 +261,7 @@ class crm_corosync(BasePatterns):
             r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
             r"pacemaker-controld.*Could not recover from internal error",
         ]
+
         self.components["pacemaker-based-ignore"] = [
             r"pacemaker-execd.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
             r"pacemaker-controld.*:\s+Result of .* operation for Fencing.*Error \(Lost connection to fencer\)",
@@ -290,6 +284,7 @@ class crm_corosync(BasePatterns):
             r"pacemakerd.* Respawning pacemaker-execd subdaemon after unexpected exit",
             r"pacemakerd.* Respawning pacemaker-controld subdaemon after unexpected exit",
         ]
+
         self.components["pacemaker-execd-ignore"] = [
             r"pacemaker-(attrd|controld).*Connection to lrmd.* (failed|closed)",
             r"pacemaker-(attrd|controld).*Could not execute alert",
@@ -298,20 +293,21 @@ class crm_corosync(BasePatterns):
         self.components["pacemaker-controld"] = [
             r"State transition .* -> S_IDLE",
         ]
-        self.components["pacemaker-controld-ignore"] = []
 
+        self.components["pacemaker-controld-ignore"] = []
         self.components["pacemaker-attrd"] = []
         self.components["pacemaker-attrd-ignore"] = []
 
         self.components["pacemaker-schedulerd"] = [
-                    "State transition .* S_RECOVERY",
-                    r"pacemakerd.* Respawning pacemaker-controld subdaemon after unexpected exit",
-                    r"pacemaker-controld\[[0-9]+\] exited with status 1 \(",
-                    r"Connection to the scheduler failed",
-                    "pacemaker-controld.*I_ERROR.*save_cib_contents",
-                    r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
-                    "pacemaker-controld.*Could not recover from internal error",
-                    ]
+            r"State transition .* S_RECOVERY",
+            r"pacemakerd.* Respawning pacemaker-controld subdaemon after unexpected exit",
+            r"pacemaker-controld\[[0-9]+\] exited with status 1 \(",
+            r"Connection to the scheduler failed",
+            r"pacemaker-controld.*I_ERROR.*save_cib_contents",
+            r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
+            r"pacemaker-controld.*Could not recover from internal error",
+        ]
+
         self.components["pacemaker-schedulerd-ignore"] = [
             r"Connection to pengine.* (failed|closed)",
         ]
@@ -321,6 +317,7 @@ class crm_corosync(BasePatterns):
             r"Fencing daemon connection failed",
             r"pacemaker-controld.*Fencer successfully connected",
         ]
+
         self.components["pacemaker-fenced-ignore"] = [
             r"(error|warning):.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
             r"crit:.*Fencing daemon connection failed",
@@ -333,11 +330,11 @@ class crm_corosync(BasePatterns):
             # message, which is the usual practice.
             r"pacemaker-schedulerd.* Calculated transition .*/pe-error",
         ]
+
         self.components["pacemaker-fenced-ignore"].extend(self.components["common-ignore"])
 
 
 class PatternSelector(object):
-
     def __init__(self, name=None):
         self.name = name
         self.base = BasePatterns("crm-base")
@@ -350,6 +347,7 @@ class PatternSelector(object):
     def get_variant(self, variant):
         if variant in patternvariants:
             return patternvariants[variant]
+
         print("defaulting to crm-base for %s" % variant)
         return self.base
 
@@ -366,32 +364,31 @@ class PatternSelector(object):
     def __getitem__(self, key):
         return self.get_template(self.name, key)
 
-# python cts/CTSpatt.py -k crm-corosync -t StartCmd
-if __name__ == '__main__':
 
-    pdir=os.path.dirname(sys.path[0])
+# PYTHONPATH=python python python/pacemaker/_cts/patterns.py -k crm-corosync -t StartCmd
+if __name__ == '__main__':
+    pdir = os.path.dirname(sys.path[0])
     sys.path.insert(0, pdir) # So that things work from the source directory
 
-    kind=None
-    template=None
+    kind = None
+    template = None
 
-    skipthis=None
-    args=sys.argv[1:]
+    skipthis = None
+    args = sys.argv[1:]
     for i in range(0, len(args)):
-       if skipthis:
-           skipthis=None
-           continue
+        if skipthis:
+            skipthis = None
+            continue
 
-       elif args[i] == "-k" or args[i] == "--kind":
-           skipthis=1
-           kind = args[i+1]
+        elif args[i] == "-k" or args[i] == "--kind":
+            skipthis = 1
+            kind = args[i+1]
 
-       elif args[i] == "-t" or args[i] == "--template":
-           skipthis=1
-           template = args[i+1]
+        elif args[i] == "-t" or args[i] == "--template":
+            skipthis = 1
+            template = args[i+1]
 
-       else:
-           print("Illegal argument " + args[i])
-
+        else:
+            print("Illegal argument " + args[i])
 
     print(PatternSelector(kind)[template])
