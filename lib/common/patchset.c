@@ -18,9 +18,7 @@
 #include <stdarg.h>
 #include <bzlib.h>
 
-#include <libxml/parser.h>
 #include <libxml/tree.h>
-#include <libxml/xmlIO.h>  /* xmlAllocOutputBuffer */
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
