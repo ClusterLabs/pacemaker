@@ -4086,6 +4086,51 @@ can_affect_state(struct action_history *history)
 #endif
 }
 
+/*!
+ * \internal
+ * \brief Unpack execution/exit status and exit reason from a history entry
+ *
+ * \param[in,out] history  Action history entry to unpack
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+unpack_action_result(struct action_history *history)
+{
+    if ((crm_element_value_int(history->xml, XML_LRM_ATTR_OPSTATUS,
+                               &(history->execution_status)) < 0)
+        || (history->execution_status < PCMK_EXEC_PENDING)
+        || (history->execution_status > PCMK_EXEC_MAX)) {
+        crm_err("Ignoring resource history entry %s for %s on %s "
+                "with invalid " XML_LRM_ATTR_OPSTATUS " '%s'",
+                history->id, history->rsc->id, pe__node_name(history->node),
+                pcmk__s(crm_element_value(history->xml, XML_LRM_ATTR_OPSTATUS),
+                        ""));
+        return pcmk_rc_unpack_error;
+    }
+    if ((crm_element_value_int(history->xml, XML_LRM_ATTR_RC,
+                               &(history->exit_status)) < 0)
+        || (history->exit_status < 0) || (history->exit_status > CRM_EX_MAX)) {
+#if 0
+        /* @COMPAT We should ignore malformed entries, but since that would
+         * change behavior, it should be done at a major or minor series
+         * release.
+         */
+        crm_err("Ignoring resource history entry %s for %s on %s "
+                "with invalid " XML_LRM_ATTR_RC " '%s'",
+                history->id, history->rsc->id, pe__node_name(history->node),
+                pcmk__s(crm_element_value(history->xml, XML_LRM_ATTR_RC),
+                        ""));
+        return pcmk_rc_unpack_error;
+#else
+        history->exit_status = CRM_EX_ERROR;
+#endif
+    }
+    history->exit_reason = crm_element_value(history->xml,
+                                             XML_LRM_ATTR_EXIT_REASON);
+    return pcmk_rc_ok;
+}
+
 static void
 unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
               xmlNode **last_failure, enum action_fail_response *on_fail)
@@ -4113,9 +4158,6 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
         return;
     }
 
-    history.expected_exit_status = pe__target_rc_from_xml(xml_op);
-    history.key = get_op_key(xml_op);
-
     // Task and interval
     history.task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
     if (history.task == NULL) {
@@ -4133,18 +4175,13 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
         return;
     }
 
-    history.exit_reason = crm_element_value(xml_op, XML_LRM_ATTR_EXIT_REASON);
-    if (history.exit_reason == NULL) {
-        history.exit_reason = "";
+    if (unpack_action_result(&history) != pcmk_rc_ok) {
+        return; // Error already logged
     }
 
-    crm_element_value_int(xml_op, XML_LRM_ATTR_RC, &(history.exit_status));
+    history.expected_exit_status = pe__target_rc_from_xml(xml_op);
+    history.key = get_op_key(xml_op);
     crm_element_value_int(xml_op, XML_LRM_ATTR_CALLID, &(history.call_id));
-    crm_element_value_int(xml_op, XML_LRM_ATTR_OPSTATUS,
-                          &(history.execution_status));
-    CRM_CHECK((history.execution_status >= PCMK_EXEC_PENDING)
-              && (history.execution_status <= PCMK_EXEC_MAX),
-              return);
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_unique)) {
         parent = uber_parent(rsc);
@@ -4351,12 +4388,12 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
         || (failure_strategy == action_fail_restart_container
             && (strcmp(history.task, CRMD_ACTION_STOP) == 0))) {
 
-        crm_warn("Pretending failed %s (%s%s%s) of %s on %s at %s "
-                 "succeeded " CRM_XS " rc=%d id=%s",
+        crm_warn("Pretending failed %s (%s%s%s) of %s on %s at %s succeeded "
+                 CRM_XS " %s",
                  history.task, services_ocf_exitcode_str(history.exit_status),
-                 (*(history.exit_reason)? ": " : ""), history.exit_reason,
-                 rsc->id, pe__node_name(node), last_change_s,
-                 history.exit_status, history.id);
+                 (pcmk__str_empty(history.exit_reason)? "" : ": "),
+                 pcmk__s(history.exit_reason, ""), rsc->id, pe__node_name(node),
+                 last_change_s, history.id);
 
         update_resource_state(rsc, node, xml_op, history.task,
                               history.expected_exit_status, *last_failure,
@@ -4383,20 +4420,20 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
             }
             do_crm_log(log_level,
                        "Preventing %s from restarting on %s because "
-                       "of hard failure (%s%s%s)" CRM_XS " rc=%d id=%s",
+                       "of hard failure (%s%s%s) " CRM_XS " %s",
                        parent->id, pe__node_name(node),
                        services_ocf_exitcode_str(history.exit_status),
-                       (*(history.exit_reason)? ": " : ""), history.exit_reason,
-                       history.exit_status, history.id);
+                       (pcmk__str_empty(history.exit_reason)? "" : ": "),
+                       pcmk__s(history.exit_reason, ""), history.id);
             resource_location(parent, node, -INFINITY, "hard-error",
                               rsc->cluster);
 
         } else if (history.execution_status == PCMK_EXEC_ERROR_FATAL) {
             crm_err("Preventing %s from restarting anywhere because "
-                    "of fatal failure (%s%s%s) " CRM_XS " rc=%d id=%s",
+                    "of fatal failure (%s%s%s) " CRM_XS " %s",
                     parent->id, services_ocf_exitcode_str(history.exit_status),
-                    (*(history.exit_reason)? ": " : ""), history.exit_reason,
-                    history.exit_status, history.id);
+                    (pcmk__str_empty(history.exit_reason)? "" : ": "),
+                    pcmk__s(history.exit_reason, ""), history.id);
             resource_location(parent, NULL, -INFINITY, "fatal-error",
                               rsc->cluster);
         }
