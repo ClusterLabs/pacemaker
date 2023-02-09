@@ -84,25 +84,28 @@ class BasePatterns:
     def get_patterns(self, key):
         if key == "BadNews":
             return self._bad_news
-        elif key == "BadNewsIgnore":
+        if key == "BadNewsIgnore":
             return self._ignore
-        elif key == "Commands":
+        if key == "Commands":
             return self._commands
-        elif key == "Search":
+        if key == "Search":
             return self._search
-        elif key == "Components":
+        if key == "Components":
             return self._components
+
+        print("Unknown pattern '%s' for %s" % (key, self._name))
+        return None
 
     def __getitem__(self, key):
         if key == "Name":
             return self._name
-        elif key in self._commands:
+        if key in self._commands:
             return self._commands[key]
-        elif key in self._search:
+        if key in self._search:
             return self._search[key]
-        else:
-            print("Unknown template '%s' for %s" % (key, self._name))
-            return None
+
+        print("Unknown template '%s' for %s" % (key, self._name))
+        return None
 
 
 class Corosync2Patterns(BasePatterns):
