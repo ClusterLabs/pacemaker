@@ -316,6 +316,21 @@ done:
     pcmk__output_free(out);
 }
 
+static pcmk__message_entry_t fmt_functions[] = {
+    { NULL, NULL, NULL }
+};
+
+/*!
+ * \internal
+ * \brief Register the formatting functions for XML patchsets
+ *
+ * \param[in,out] out  Output object
+ */
+void
+pcmk__register_patchset_messages(pcmk__output_t *out) {
+    pcmk__register_messages(out, fmt_functions);
+}
+
 // Deprecated functions kept only for backward API compatibility
 // LCOV_EXCL_START
 

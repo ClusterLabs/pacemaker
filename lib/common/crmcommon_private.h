@@ -306,6 +306,17 @@ int pcmk__crm_ipc_is_authentic_process(qb_ipcc_connection_t *qb_ipc, int sock,
 
 
 /*
+ * Output
+ */
+G_GNUC_INTERNAL
+int pcmk__bare_output_new(pcmk__output_t **out, const char *fmt_name,
+                          const char *filename, char **argv);
+
+G_GNUC_INTERNAL
+void pcmk__register_patchset_messages(pcmk__output_t *out);
+
+
+/*
  * Utils
  */
 #define PCMK__PW_BUFFER_LEN 500

@@ -570,6 +570,8 @@ void pcmk__output_free(pcmk__output_t *out);
  * \internal
  * \brief Create a new ::pcmk__output_t structure.
  *
+ * This also registers message functions from libcrmcommon.
+ *
  * \param[in,out] out      The destination of the new ::pcmk__output_t.
  * \param[in]     fmt_name How should output be formatted?
  * \param[in]     filename Where should formatted output be written to?  This

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2022 the Pacemaker project contributors
+ * Copyright 2019-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,6 +12,8 @@
 #include <crm/common/util.h>
 #include <crm/common/xml.h>
 #include <libxml/tree.h>
+
+#include "crmcommon_private.h"
 
 static GHashTable *formatters = NULL;
 
@@ -38,9 +40,27 @@ pcmk__output_free(pcmk__output_t *out) {
     free(out);
 }
 
+/*!
+ * \internal
+ * \brief Create a new \p pcmk__output_t structure
+ *
+ * This function does not register any message functions with the newly created
+ * object.
+ *
+ * \param[in,out] out       Where to store the new output object
+ * \param[in]     fmt_name  How to format output
+ * \param[in]     filename  Where to write formatted output. This can be a
+ *                          filename (the file will be overwritten if it already
+ *                          exists), or \p NULL or \p "-" for stdout. For no
+ *                          output, pass a filename of \p "/dev/null".
+ * \param[in]     argv      List of command line arguments
+ *
+ * \return Standard Pacemaker return code
+ */
 int
-pcmk__output_new(pcmk__output_t **out, const char *fmt_name, const char *filename,
-                 char **argv) {
+pcmk__bare_output_new(pcmk__output_t **out, const char *fmt_name,
+                      const char *filename, char **argv)
+{
     pcmk__output_factory_t create = NULL;
 
     CRM_ASSERT(formatters != NULL && out != NULL);
@@ -85,6 +105,21 @@ pcmk__output_new(pcmk__output_t **out, const char *fmt_name, const char *filenam
     setenv("OCF_OUTPUT_FORMAT", (*out)->fmt_name, 1);
 
     return pcmk_rc_ok;
+}
+
+int
+pcmk__output_new(pcmk__output_t **out, const char *fmt_name,
+                 const char *filename, char **argv)
+{
+    int rc = pcmk__bare_output_new(out, fmt_name, filename, argv);
+
+    if (rc == pcmk_rc_ok) {
+        /* Register libcrmcommon messages (currently they exist only for
+         * patchset)
+         */
+        pcmk__register_patchset_messages(*out);
+    }
+    return rc;
 }
 
 int
