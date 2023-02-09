@@ -3488,18 +3488,19 @@ check_recoverable(pe_resource_t *rsc, const pe_node_t *node, const char *task,
 
 /*!
  * \internal
- * \brief Update an integer value and why
+ * \brief Update action history's execution status and why
  *
- * \param[in,out] i       Pointer to integer to update
- * \param[out]    why     Where to store reason for update
- * \param[in]     value   New value
- * \param[in]     reason  Description of why value was changed
+ * \param[in,out] history  Parsed action history entry
+ * \param[out]    why      Where to store reason for update
+ * \param[in]     value    New value
+ * \param[in]     reason   Description of why value was changed
  */
 static inline void
-remap_because(int *i, const char **why, int value, const char *reason)
+remap_because(struct action_history *history, const char **why, int value,
+              const char *reason)
 {
-    if (*i != value) {
-        *i = value;
+    if (history->execution_status != value) {
+        history->execution_status = value;
         *why = reason;
     }
 }
@@ -3516,14 +3517,8 @@ remap_because(int *i, const char **why, int value, const char *reason)
  * status for the purposes of responding to the action.  The status provided by the
  * executor is not directly usable since the executor does not know what was expected.
  *
- * \param[in,out] xml_op     Operation history entry XML from CIB status
- * \param[in,out] rsc        Resource that operation history entry is for
- * \param[in]     node       Node where operation was executed
- * \param[in,out] data_set   Current cluster working set
- * \param[in,out] on_fail    What should be done about the result
- * \param[in]     target_rc  Expected return code of operation
- * \param[in,out] rc         Actual return code of operation (treated as OCF)
- * \param[in,out] status     Operation execution status
+ * \param[in,out] history  Parsed action history entry
+ * \param[in,out] on_fail  What should be done about the result
  *
  * \note If the result is remapped and the node is not shutting down or failed,
  *       the operation will be recorded in the data set's list of failed operations
@@ -3532,45 +3527,44 @@ remap_because(int *i, const char **why, int value, const char *reason)
  * \note This may update the resource's current and next role.
  */
 static void
-remap_operation(xmlNode *xml_op, pe_resource_t *rsc, const pe_node_t *node,
-                pe_working_set_t *data_set, enum action_fail_response *on_fail,
-                int target_rc, int *rc, int *status)
+remap_operation(struct action_history *history,
+                enum action_fail_response *on_fail)
 {
     bool is_probe = false;
-    int orig_exit_status = *rc;
-    int orig_exec_status = *status;
+    int orig_exit_status = history->exit_status;
+    int orig_exec_status = history->execution_status;
     const char *why = NULL;
-    const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
-    const char *key = get_op_key(xml_op);
-    const char *exit_reason = crm_element_value(xml_op,
-                                                XML_LRM_ATTR_EXIT_REASON);
+    const char *task = history->task;
     char *last_change_s = NULL;
 
     if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_none)) {
         // Remap degraded results to their usual counterparts
-        *rc = pcmk__effective_rc(*rc);
-        if (*rc != orig_exit_status) {
+        history->exit_status = pcmk__effective_rc(history->exit_status);
+        if (history->exit_status != orig_exit_status) {
             why = "degraded monitor result";
-            if (!node->details->shutdown || node->details->online) {
-                record_failed_op(xml_op, node, rsc, data_set);
+            if (!history->node->details->shutdown
+                || history->node->details->online) {
+                record_failed_op(history->xml, history->node, history->rsc,
+                                 history->rsc->cluster);
             }
         }
     }
 
-    if (!pe_rsc_is_bundled(rsc) && pcmk_xe_mask_probe_failure(xml_op)) {
-        if ((*status != PCMK_EXEC_DONE) || (*rc != PCMK_OCF_NOT_RUNNING)) {
-            *status = PCMK_EXEC_DONE;
-            *rc = PCMK_OCF_NOT_RUNNING;
-            why = "irrelevant probe result";
-        }
+    if (!pe_rsc_is_bundled(history->rsc)
+        && pcmk_xe_mask_probe_failure(history->xml)
+        && ((history->execution_status != PCMK_EXEC_DONE)
+            || (history->exit_status != PCMK_OCF_NOT_RUNNING))) {
+        history->execution_status = PCMK_EXEC_DONE;
+        history->exit_status = PCMK_OCF_NOT_RUNNING;
+        why = "irrelevant probe result";
     }
 
-    /* If the executor reported an operation status of anything but done or
+    /* If the executor reported an execution status of anything but done or
      * error, consider that final. But for done or error, we know better whether
      * it should be treated as a failure or not, because we know the expected
      * result.
      */
-    switch (*status) {
+    switch (history->execution_status) {
         case PCMK_EXEC_DONE:
         case PCMK_EXEC_ERROR:
             break;
@@ -3578,96 +3572,105 @@ remap_operation(xmlNode *xml_op, pe_resource_t *rsc, const pe_node_t *node,
             goto remap_done;
     }
 
-    if (exit_reason == NULL) {
-        exit_reason = "";
-    }
-
-    is_probe = pcmk_xe_is_probe(xml_op);
+    is_probe = pcmk_xe_is_probe(history->xml);
     if (is_probe) {
         task = "probe";
     }
 
-    if (target_rc < 0) {
+    if (history->expected_exit_status < 0) {
         /* Pre-1.0 Pacemaker versions, and Pacemaker 1.1.6 or earlier with
          * Heartbeat 2.0.7 or earlier as the cluster layer, did not include the
-         * target_rc in the transition key, which (along with the similar case
-         * of a corrupted transition key in the CIB) will be reported to this
-         * function as -1. Pacemaker 2.0+ does not support rolling upgrades from
-         * those versions or processing of saved CIB files from those versions,
-         * so we do not need to care much about this case.
+         * expected exit status in the transition key, which (along with the
+         * similar case of a corrupted transition key in the CIB) will be
+         * reported to this function as -1. Pacemaker 2.0+ does not support
+         * rolling upgrades from those versions or processing of saved CIB files
+         * from those versions, so we do not need to care much about this case.
          */
-        remap_because(status, &why, PCMK_EXEC_ERROR, "obsolete history format");
-        crm_warn("Expected result not found for %s on %s (corrupt or obsolete CIB?)",
-                 key, pe__node_name(node));
+        remap_because(history, &why, PCMK_EXEC_ERROR,
+                      "obsolete history format");
+        crm_warn("Expected result not found for %s on %s "
+                 "(corrupt or obsolete CIB?)",
+                 history->key, pe__node_name(history->node));
 
-    } else if (*rc == target_rc) {
-        remap_because(status, &why, PCMK_EXEC_DONE, "expected result");
+    } else if (history->exit_status == history->expected_exit_status) {
+        remap_because(history, &why, PCMK_EXEC_DONE, "expected result");
 
     } else {
-        remap_because(status, &why, PCMK_EXEC_ERROR, "unexpected result");
-        pe_rsc_debug(rsc, "%s on %s: expected %d (%s), got %d (%s%s%s)",
-                     key, pe__node_name(node),
-                     target_rc, services_ocf_exitcode_str(target_rc),
-                     *rc, services_ocf_exitcode_str(*rc),
-                     (*exit_reason? ": " : ""), exit_reason);
+        remap_because(history, &why, PCMK_EXEC_ERROR, "unexpected result");
+        pe_rsc_debug(history->rsc,
+                     "%s on %s: expected %d (%s), got %d (%s%s%s)",
+                     history->key, pe__node_name(history->node),
+                     history->expected_exit_status,
+                     services_ocf_exitcode_str(history->expected_exit_status),
+                     history->exit_status,
+                     services_ocf_exitcode_str(history->exit_status),
+                     (pcmk__str_empty(history->exit_reason)? "" : ": "),
+                     pcmk__s(history->exit_reason, ""));
     }
 
-    last_change_s = last_change_str(xml_op);
+    last_change_s = last_change_str(history->xml);
 
-    switch (*rc) {
+    switch (history->exit_status) {
         case PCMK_OCF_OK:
-            if (is_probe && (target_rc == PCMK_OCF_NOT_RUNNING)) {
-                remap_because(status, &why, PCMK_EXEC_DONE, "probe");
-                pe_rsc_info(rsc, "Probe found %s active on %s at %s",
-                            rsc->id, pe__node_name(node), last_change_s);
+            if (is_probe
+                && (history->expected_exit_status == PCMK_OCF_NOT_RUNNING)) {
+                remap_because(history, &why, PCMK_EXEC_DONE, "probe");
+                pe_rsc_info(history->rsc, "Probe found %s active on %s at %s",
+                            history->rsc->id, pe__node_name(history->node),
+                            last_change_s);
             }
             break;
 
         case PCMK_OCF_NOT_RUNNING:
-            if (is_probe || (target_rc == *rc)
-                || !pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+            if (is_probe
+                || (history->expected_exit_status == history->exit_status)
+                || !pcmk_is_set(history->rsc->flags, pe_rsc_managed)) {
 
-                remap_because(status, &why, PCMK_EXEC_DONE, "exit status");
-                rsc->role = RSC_ROLE_STOPPED;
+                remap_because(history, &why, PCMK_EXEC_DONE, "exit status");
+                history->rsc->role = RSC_ROLE_STOPPED;
 
                 /* clear any previous failure actions */
                 *on_fail = action_fail_ignore;
-                pe__set_next_role(rsc, RSC_ROLE_UNKNOWN, "not running");
+                pe__set_next_role(history->rsc, RSC_ROLE_UNKNOWN,
+                                  "not running");
             }
             break;
 
         case PCMK_OCF_RUNNING_PROMOTED:
-            if (is_probe && (*rc != target_rc)) {
-                remap_because(status, &why, PCMK_EXEC_DONE, "probe");
-                pe_rsc_info(rsc,
+            if (is_probe
+                && (history->exit_status != history->expected_exit_status)) {
+                remap_because(history, &why, PCMK_EXEC_DONE, "probe");
+                pe_rsc_info(history->rsc,
                             "Probe found %s active and promoted on %s at %s",
-                            rsc->id, pe__node_name(node), last_change_s);
+                            history->rsc->id, pe__node_name(history->node),
+                            last_change_s);
             }
-            rsc->role = RSC_ROLE_PROMOTED;
+            history->rsc->role = RSC_ROLE_PROMOTED;
             break;
 
         case PCMK_OCF_DEGRADED_PROMOTED:
         case PCMK_OCF_FAILED_PROMOTED:
-            rsc->role = RSC_ROLE_PROMOTED;
-            remap_because(status, &why, PCMK_EXEC_ERROR, "exit status");
+            history->rsc->role = RSC_ROLE_PROMOTED;
+            remap_because(history, &why, PCMK_EXEC_ERROR, "exit status");
             break;
 
         case PCMK_OCF_NOT_CONFIGURED:
-            remap_because(status, &why, PCMK_EXEC_ERROR_FATAL, "exit status");
+            remap_because(history, &why, PCMK_EXEC_ERROR_FATAL, "exit status");
             break;
 
         case PCMK_OCF_UNIMPLEMENT_FEATURE:
             {
                 guint interval_ms = 0;
-                crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS,
+                crm_element_value_ms(history->xml, XML_LRM_ATTR_INTERVAL_MS,
                                      &interval_ms);
 
                 if (interval_ms == 0) {
-                    check_recoverable(rsc, node, task, *rc, xml_op);
-                    remap_because(status, &why, PCMK_EXEC_ERROR_HARD,
+                    check_recoverable(history->rsc, history->node, task,
+                                      history->exit_status, history->xml);
+                    remap_because(history, &why, PCMK_EXEC_ERROR_HARD,
                                   "exit status");
                 } else {
-                    remap_because(status, &why, PCMK_EXEC_NOT_SUPPORTED,
+                    remap_because(history, &why, PCMK_EXEC_NOT_SUPPORTED,
                                   "exit status");
                 }
             }
@@ -3676,17 +3679,18 @@ remap_operation(xmlNode *xml_op, pe_resource_t *rsc, const pe_node_t *node,
         case PCMK_OCF_NOT_INSTALLED:
         case PCMK_OCF_INVALID_PARAM:
         case PCMK_OCF_INSUFFICIENT_PRIV:
-            check_recoverable(rsc, node, task, *rc, xml_op);
-            remap_because(status, &why, PCMK_EXEC_ERROR_HARD, "exit status");
+            check_recoverable(history->rsc, history->node, task,
+                              history->exit_status, history->xml);
+            remap_because(history, &why, PCMK_EXEC_ERROR_HARD, "exit status");
             break;
 
         default:
-            if (*status == PCMK_EXEC_DONE) {
+            if (history->execution_status == PCMK_EXEC_DONE) {
                 crm_info("Treating unknown exit status %d from %s of %s "
                          "on %s at %s as failure",
-                         *rc, task, rsc->id, pe__node_name(node),
-                         last_change_s);
-                remap_because(status, &why, PCMK_EXEC_ERROR,
+                         history->exit_status, task, history->rsc->id,
+                         pe__node_name(history->node), last_change_s);
+                remap_because(history, &why, PCMK_EXEC_ERROR,
                               "unknown exit status");
             }
             break;
@@ -3696,12 +3700,13 @@ remap_operation(xmlNode *xml_op, pe_resource_t *rsc, const pe_node_t *node,
 
 remap_done:
     if (why != NULL) {
-        pe_rsc_trace(rsc,
+        pe_rsc_trace(history->rsc,
                      "Remapped %s result from [%s: %s] to [%s: %s] "
                      "because of %s",
-                     key, pcmk_exec_status_str(orig_exec_status),
+                     history->key, pcmk_exec_status_str(orig_exec_status),
                      crm_exit_str(orig_exit_status),
-                     pcmk_exec_status_str(*status), crm_exit_str(*rc), why);
+                     pcmk_exec_status_str(history->execution_status),
+                     crm_exit_str(history->exit_status), why);
     }
 }
 
@@ -4310,9 +4315,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 
     old_rc = history.exit_status;
 
-    remap_operation(xml_op, rsc, node, rsc->cluster, on_fail,
-                    history.expected_exit_status,
-                    &(history.exit_status), &(history.execution_status));
+    remap_operation(&history, on_fail);
 
     last_change_s = last_change_str(xml_op);
 
