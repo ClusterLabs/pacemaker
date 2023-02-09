@@ -3961,7 +3961,8 @@ get_action_on_fail(pe_resource_t *rsc, const char *key, const char *task, pe_wor
 static void
 update_resource_state(pe_resource_t *rsc, const pe_node_t *node,
                       const xmlNode *xml_op, const char *task, int rc,
-                      xmlNode *last_failure, enum action_fail_response *on_fail,
+                      const xmlNode *last_failure,
+                      enum action_fail_response *on_fail,
                       pe_working_set_t *data_set)
 {
     gboolean clear_past_failure = FALSE;
@@ -4193,6 +4194,40 @@ process_expired_result(struct action_history *history, int orig_exit_status)
     return pcmk_rc_undetermined;
 }
 
+/*!
+ * \internal
+ * \brief Process a masked probe failure
+ *
+ * \param[in,out] history           Parsed action history entry
+ * \param[in]     orig_exit_status  Action exit status before remapping
+ * \param[in]     last_failure      Resource's last_failure entry, if known
+ * \param[in,out] on_fail           Resource's current failure handling
+ */
+static void
+mask_probe_failure(struct action_history *history, int orig_exit_status,
+                   const xmlNode *last_failure,
+                   enum action_fail_response *on_fail)
+{
+    pe_resource_t *ban_rsc = history->rsc;
+
+    if (!pcmk_is_set(history->rsc->flags, pe_rsc_unique)) {
+        ban_rsc = uber_parent(history->rsc);
+    }
+
+    crm_notice("Treating probe result '%s' for %s on %s as 'not running'",
+               services_ocf_exitcode_str(orig_exit_status), history->rsc->id,
+               pe__node_name(history->node));
+    update_resource_state(history->rsc, history->node, history->xml,
+                          history->task, history->expected_exit_status,
+                          last_failure, on_fail, history->rsc->cluster);
+    crm_xml_add(history->xml, XML_ATTR_UNAME, history->node->details->uname);
+
+    record_failed_op(history->xml, history->node, history->rsc,
+                     history->rsc->cluster);
+    resource_location(ban_rsc, history->node, -INFINITY, "masked-probe-failure",
+                      history->rsc->cluster);
+}
+
 static void
 unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
               xmlNode **last_failure, enum action_fail_response *on_fail)
@@ -4244,10 +4279,6 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     history.key = get_op_key(xml_op);
     crm_element_value_int(xml_op, XML_LRM_ATTR_CALLID, &(history.call_id));
 
-    if (!pcmk_is_set(rsc->flags, pe_rsc_unique)) {
-        parent = uber_parent(rsc);
-    }
-
     pe_rsc_trace(rsc, "Unpacking %s (%s call %d on %s): %s (%s)",
                  history.id, history.task, history.call_id, pe__node_name(node),
                  pcmk_exec_status_str(history.execution_status),
@@ -4290,18 +4321,12 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     }
 
     if (!pe_rsc_is_bundled(rsc) && pcmk_xe_mask_probe_failure(xml_op)) {
-        crm_notice("Treating probe result '%s' for %s on %s as 'not running'",
-                   services_ocf_exitcode_str(old_rc), rsc->id,
-                   pe__node_name(node));
-        update_resource_state(rsc, node, xml_op, history.task,
-                              history.expected_exit_status, *last_failure,
-                              on_fail, rsc->cluster);
-        crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
-
-        record_failed_op(xml_op, node, rsc, rsc->cluster);
-        resource_location(parent, node, -INFINITY, "masked-probe-failure",
-                          rsc->cluster);
+        mask_probe_failure(&history, old_rc, *last_failure, on_fail);
         goto done;
+    }
+
+    if (!pcmk_is_set(rsc->flags, pe_rsc_unique)) {
+        parent = uber_parent(rsc);
     }
 
     switch (history.execution_status) {
