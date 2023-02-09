@@ -3963,103 +3963,114 @@ get_action_on_fail(pe_resource_t *rsc, const char *key, const char *task, pe_wor
     return result;
 }
 
+/*!
+ * \internal
+ * \brief Update a resource's state for an action result
+ *
+ * \param[in,out] history       Parsed action history entry
+ * \param[in]     exit_status   Exit status to base new state on
+ * \param[in]     last_failure  Resource's last_failure entry, if known
+ * \param[in,out] on_fail       Resource's current failure handling
+ */
 static void
-update_resource_state(pe_resource_t *rsc, const pe_node_t *node,
-                      const xmlNode *xml_op, const char *task, int rc,
+update_resource_state(struct action_history *history, int exit_status,
                       const xmlNode *last_failure,
-                      enum action_fail_response *on_fail,
-                      pe_working_set_t *data_set)
+                      enum action_fail_response *on_fail)
 {
-    gboolean clear_past_failure = FALSE;
+    bool clear_past_failure = false;
 
-    CRM_ASSERT(rsc);
-    CRM_ASSERT(xml_op);
+    if ((exit_status == PCMK_OCF_NOT_INSTALLED)
+        || (!pe_rsc_is_bundled(history->rsc)
+            && pcmk_xe_mask_probe_failure(history->xml))) {
+        history->rsc->role = RSC_ROLE_STOPPED;
 
-    if (rc == PCMK_OCF_NOT_INSTALLED || (!pe_rsc_is_bundled(rsc) && pcmk_xe_mask_probe_failure(xml_op))) {
-        rsc->role = RSC_ROLE_STOPPED;
+    } else if (exit_status == PCMK_OCF_NOT_RUNNING) {
+        clear_past_failure = true;
 
-    } else if (rc == PCMK_OCF_NOT_RUNNING) {
-        clear_past_failure = TRUE;
-
-    } else if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
-        if (last_failure) {
-            const char *op_key = get_op_key(xml_op);
-            const char *last_failure_key = get_op_key(last_failure);
-
-            if (pcmk__str_eq(op_key, last_failure_key, pcmk__str_casei)) {
-                clear_past_failure = TRUE;
-            }
+    } else if (pcmk__str_eq(history->task, CRMD_ACTION_STATUS,
+                            pcmk__str_none)) {
+        if ((last_failure != NULL)
+            && pcmk__str_eq(history->key, get_op_key(last_failure),
+                            pcmk__str_none)) {
+            clear_past_failure = true;
+        }
+        if (history->rsc->role < RSC_ROLE_STARTED) {
+            set_active(history->rsc);
         }
 
-        if (rsc->role < RSC_ROLE_STARTED) {
-            set_active(rsc);
-        }
+    } else if (pcmk__str_eq(history->task, CRMD_ACTION_START, pcmk__str_none)) {
+        history->rsc->role = RSC_ROLE_STARTED;
+        clear_past_failure = true;
 
-    } else if (pcmk__str_eq(task, CRMD_ACTION_START, pcmk__str_casei)) {
-        rsc->role = RSC_ROLE_STARTED;
-        clear_past_failure = TRUE;
+    } else if (pcmk__str_eq(history->task, CRMD_ACTION_STOP, pcmk__str_none)) {
+        history->rsc->role = RSC_ROLE_STOPPED;
+        clear_past_failure = true;
 
-    } else if (pcmk__str_eq(task, CRMD_ACTION_STOP, pcmk__str_casei)) {
-        rsc->role = RSC_ROLE_STOPPED;
-        clear_past_failure = TRUE;
+    } else if (pcmk__str_eq(history->task, CRMD_ACTION_PROMOTE,
+                            pcmk__str_none)) {
+        history->rsc->role = RSC_ROLE_PROMOTED;
+        clear_past_failure = true;
 
-    } else if (pcmk__str_eq(task, CRMD_ACTION_PROMOTE, pcmk__str_casei)) {
-        rsc->role = RSC_ROLE_PROMOTED;
-        clear_past_failure = TRUE;
-
-    } else if (pcmk__str_eq(task, CRMD_ACTION_DEMOTE, pcmk__str_casei)) {
-
+    } else if (pcmk__str_eq(history->task, CRMD_ACTION_DEMOTE,
+                            pcmk__str_none)) {
         if (*on_fail == action_fail_demote) {
             // Demote clears an error only if on-fail=demote
-            clear_past_failure = TRUE;
+            clear_past_failure = true;
         }
-        rsc->role = RSC_ROLE_UNPROMOTED;
+        history->rsc->role = RSC_ROLE_UNPROMOTED;
 
-    } else if (pcmk__str_eq(task, CRMD_ACTION_MIGRATED, pcmk__str_casei)) {
-        rsc->role = RSC_ROLE_STARTED;
-        clear_past_failure = TRUE;
+    } else if (pcmk__str_eq(history->task, CRMD_ACTION_MIGRATED,
+                            pcmk__str_none)) {
+        history->rsc->role = RSC_ROLE_STARTED;
+        clear_past_failure = true;
 
-    } else if (pcmk__str_eq(task, CRMD_ACTION_MIGRATE, pcmk__str_casei)) {
-        unpack_migrate_to_success(rsc, node, xml_op);
+    } else if (pcmk__str_eq(history->task, CRMD_ACTION_MIGRATE,
+                            pcmk__str_none)) {
+        unpack_migrate_to_success(history->rsc, history->node, history->xml);
 
-    } else if (rsc->role < RSC_ROLE_STARTED) {
-        pe_rsc_trace(rsc, "%s active on %s", rsc->id, pe__node_name(node));
-        set_active(rsc);
+    } else if (history->rsc->role < RSC_ROLE_STARTED) {
+        pe_rsc_trace(history->rsc, "%s active on %s",
+                     history->rsc->id, pe__node_name(history->node));
+        set_active(history->rsc);
     }
 
-    /* clear any previous failure actions */
-    if (clear_past_failure) {
-        switch (*on_fail) {
-            case action_fail_stop:
-            case action_fail_fence:
-            case action_fail_migrate:
-            case action_fail_standby:
-                pe_rsc_trace(rsc, "%s.%s is not cleared by a completed stop",
-                             rsc->id, fail2text(*on_fail));
-                break;
+    if (!clear_past_failure) {
+        return;
+    }
 
-            case action_fail_block:
-            case action_fail_ignore:
-            case action_fail_demote:
-            case action_fail_recover:
-            case action_fail_restart_container:
+    switch (*on_fail) {
+        case action_fail_stop:
+        case action_fail_fence:
+        case action_fail_migrate:
+        case action_fail_standby:
+            pe_rsc_trace(history->rsc,
+                         "%s (%s) is not cleared by a completed %s",
+                         history->rsc->id, fail2text(*on_fail), history->task);
+            break;
+
+        case action_fail_block:
+        case action_fail_ignore:
+        case action_fail_demote:
+        case action_fail_recover:
+        case action_fail_restart_container:
+            *on_fail = action_fail_ignore;
+            pe__set_next_role(history->rsc, RSC_ROLE_UNKNOWN,
+                              "clear past failures");
+            break;
+
+        case action_fail_reset_remote:
+            if (history->rsc->remote_reconnect_ms == 0) {
+                /* With no reconnect interval, the connection is allowed to
+                 * start again after the remote node is fenced and
+                 * completely stopped. (With a reconnect interval, we wait
+                 * for the failure to be cleared entirely before attempting
+                 * to reconnect.)
+                 */
                 *on_fail = action_fail_ignore;
-                pe__set_next_role(rsc, RSC_ROLE_UNKNOWN, "clear past failures");
-                break;
-            case action_fail_reset_remote:
-                if (rsc->remote_reconnect_ms == 0) {
-                    /* With no reconnect interval, the connection is allowed to
-                     * start again after the remote node is fenced and
-                     * completely stopped. (With a reconnect interval, we wait
-                     * for the failure to be cleared entirely before attempting
-                     * to reconnect.)
-                     */
-                    *on_fail = action_fail_ignore;
-                    pe__set_next_role(rsc, RSC_ROLE_UNKNOWN,
-                                      "clear past failures and reset remote");
-                }
-                break;
-        }
+                pe__set_next_role(history->rsc, RSC_ROLE_UNKNOWN,
+                                  "clear past failures and reset remote");
+            }
+            break;
     }
 }
 
@@ -4222,9 +4233,8 @@ mask_probe_failure(struct action_history *history, int orig_exit_status,
     crm_notice("Treating probe result '%s' for %s on %s as 'not running'",
                services_ocf_exitcode_str(orig_exit_status), history->rsc->id,
                pe__node_name(history->node));
-    update_resource_state(history->rsc, history->node, history->xml,
-                          history->task, history->expected_exit_status,
-                          last_failure, on_fail, history->rsc->cluster);
+    update_resource_state(history, history->expected_exit_status, last_failure,
+                          on_fail);
     crm_xml_add(history->xml, XML_ATTR_UNAME, history->node->details->uname);
 
     record_failed_op(history->xml, history->node, history->rsc,
@@ -4381,9 +4391,8 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
             goto done;
 
         case PCMK_EXEC_DONE:
-            update_resource_state(rsc, node, xml_op, history.task,
-                                  history.exit_status, *last_failure, on_fail,
-                                  rsc->cluster);
+            update_resource_state(&history, history.exit_status, *last_failure,
+                                  on_fail);
             goto done;
 
         case PCMK_EXEC_NOT_INSTALLED:
@@ -4446,9 +4455,8 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                  pcmk__s(history.exit_reason, ""), rsc->id, pe__node_name(node),
                  last_change_s, history.id);
 
-        update_resource_state(rsc, node, xml_op, history.task,
-                              history.expected_exit_status, *last_failure,
-                              on_fail, rsc->cluster);
+        update_resource_state(&history, history.expected_exit_status,
+                              *last_failure, on_fail);
         crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
         pe__set_resource_flags(rsc, pe_rsc_failure_ignored);
 
