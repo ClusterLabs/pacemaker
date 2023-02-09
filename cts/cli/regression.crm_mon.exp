@@ -3485,8 +3485,8 @@ Operations:
 =#=#=#= End test: XML output, filtered by exact primitive instance name in cloned group - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output, filtered by exact primitive instance name in cloned group
 =#=#=#= Begin test: Text output of partially active resources =#=#=#=
-unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature)| rc=3 id=dummy-2_last_failure_0
-unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter)| rc=2 id=httpd_last_failure_0
+unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature) | dummy-2_last_failure_0
+unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter) | httpd_last_failure_0
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (2) (version) - partition with quorum
@@ -3526,8 +3526,8 @@ Failed Resource Actions:
 =#=#=#= End test: Text output of partially active resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of partially active resources
 =#=#=#= Begin test: XML output of partially active resources =#=#=#=
-unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature)| rc=3 id=dummy-2_last_failure_0
-unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter)| rc=2 id=httpd_last_failure_0
+unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature) | dummy-2_last_failure_0
+unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter) | httpd_last_failure_0
 <pacemaker-result api-version="X" request="crm_mon -1 --output-as=xml">
   <summary>
     <stack type="corosync"/>
@@ -3675,8 +3675,8 @@ unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bun
 =#=#=#= End test: XML output of partially active resources - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output of partially active resources
 =#=#=#= Begin test: Text output of partially active resources, with inactive resources =#=#=#=
-unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature)| rc=3 id=dummy-2_last_failure_0
-unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter)| rc=2 id=httpd_last_failure_0
+unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature) | dummy-2_last_failure_0
+unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter) | httpd_last_failure_0
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (2) (version) - partition with quorum
@@ -3719,8 +3719,8 @@ Failed Resource Actions:
 =#=#=#= End test: Text output of partially active resources, with inactive resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of partially active resources, with inactive resources
 =#=#=#= Begin test: Complete brief text output, with inactive resources =#=#=#=
-unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature)| rc=3 id=dummy-2_last_failure_0
-unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter)| rc=2 id=httpd_last_failure_0
+unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature) | dummy-2_last_failure_0
+unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter) | httpd_last_failure_0
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (2) (version) - partition with quorum
@@ -3810,8 +3810,8 @@ Failed Resource Actions:
 =#=#=#= End test: Complete brief text output, with inactive resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete brief text output, with inactive resources
 =#=#=#= Begin test: Text output of partially active group =#=#=#=
-unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature)| rc=3 id=dummy-2_last_failure_0
-unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter)| rc=2 id=httpd_last_failure_0
+unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature) | dummy-2_last_failure_0
+unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter) | httpd_last_failure_0
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (version) - partition with quorum
@@ -3831,8 +3831,8 @@ Active Resources:
 =#=#=#= End test: Text output of partially active group - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of partially active group
 =#=#=#= Begin test: Text output of partially active group, with inactive resources =#=#=#=
-unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature)| rc=3 id=dummy-2_last_failure_0
-unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter)| rc=2 id=httpd_last_failure_0
+unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature) | dummy-2_last_failure_0
+unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter) | httpd_last_failure_0
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (version) - partition with quorum
@@ -3854,8 +3854,8 @@ Full List of Resources:
 =#=#=#= End test: Text output of partially active group, with inactive resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of partially active group, with inactive resources
 =#=#=#= Begin test: Text output of active member of partially active group =#=#=#=
-unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature)| rc=3 id=dummy-2_last_failure_0
-unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter)| rc=2 id=httpd_last_failure_0
+unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature) | dummy-2_last_failure_0
+unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter) | httpd_last_failure_0
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (version) - partition with quorum
@@ -3874,8 +3874,8 @@ Active Resources:
 =#=#=#= End test: Text output of active member of partially active group - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of active member of partially active group
 =#=#=#= Begin test: Text output of inactive member of partially active group =#=#=#=
-unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature)| rc=3 id=dummy-2_last_failure_0
-unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter)| rc=2 id=httpd_last_failure_0
+unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature) | dummy-2_last_failure_0
+unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter) | httpd_last_failure_0
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (2) (version) - partition with quorum
@@ -3899,8 +3899,8 @@ Failed Resource Actions:
 =#=#=#= End test: Text output of inactive member of partially active group - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of inactive member of partially active group
 =#=#=#= Begin test: Complete brief text output grouped by node, with inactive resources =#=#=#=
-unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature)| rc=3 id=dummy-2_last_failure_0
-unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter)| rc=2 id=httpd_last_failure_0
+unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature) | dummy-2_last_failure_0
+unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter) | httpd_last_failure_0
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (2) (version) - partition with quorum
@@ -3993,8 +3993,8 @@ Failed Resource Actions:
 =#=#=#= End test: Complete brief text output grouped by node, with inactive resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete brief text output grouped by node, with inactive resources
 =#=#=#= Begin test: Text output of partially active resources, with inactive resources, filtered by node =#=#=#=
-unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature)| rc=3 id=dummy-2_last_failure_0
-unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter)| rc=2 id=httpd_last_failure_0
+unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature) | dummy-2_last_failure_0
+unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter) | httpd_last_failure_0
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (version) - partition with quorum
@@ -4016,8 +4016,8 @@ Full List of Resources:
 =#=#=#= End test: Text output of partially active resources, with inactive resources, filtered by node - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of partially active resources, with inactive resources, filtered by node
 =#=#=#= Begin test: Text output of partially active resources, filtered by node =#=#=#=
-unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature)| rc=3 id=dummy-2_last_failure_0
-unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter)| rc=2 id=httpd_last_failure_0
+unpack_rsc_op 	error: Preventing dummy-2 from restarting on cluster02 because of hard failure (unimplemented feature) | dummy-2_last_failure_0
+unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bundle-1 because of hard failure (invalid parameter) | httpd_last_failure_0
 <pacemaker-result api-version="X" request="crm_mon -1 --output-as=xml --node=cluster01">
   <summary>
     <stack type="corosync"/>
