@@ -166,7 +166,7 @@ class ClusterManager(UserDict):
         if key in self.data:
             return self.data[key]
 
-        return self.templates.get_patterns(self.Env["Name"], key)
+        return self.templates.get_patterns(key)
 
     def __setitem__(self, key, value):
         print("FIXME: Setting %s=%s on %s" % (key, value, repr(self)))
@@ -656,7 +656,7 @@ class ClusterManager(UserDict):
         # At some point implement a more elegant solution that
         #   also produces a report at the end
         """ Return a list of known error messages that should be ignored """
-        return PatternSelector().get_patterns(self.name, "BadNewsIgnore")
+        return self.templates.get_patterns("BadNewsIgnore")
 
     def install_config(self, node):
         if not self.ns.WaitForNodeToComeUp(node):

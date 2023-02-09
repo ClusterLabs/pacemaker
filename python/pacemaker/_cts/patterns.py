@@ -1,6 +1,7 @@
 """ Pattern-holding classes for Pacemaker's Cluster Test Suite (CTS)
 """
 
+__all__ = ["PatternSelector"]
 __copyright__ = "Copyright 2008-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
@@ -8,15 +9,11 @@ import sys, os
 
 from pacemaker.buildoptions import BuildOptions
 
-patternvariants = {}
-
-class BasePatterns(object):
-    def __init__(self, name):
+class BasePatterns:
+    def __init__(self):
         self.BadNews = []
         self.components = {}
-        self.name = name
-
-        patternvariants[name] = self
+        self._name = "crm-base"
 
         self.ignore = [
             "avoid confusing Valgrind",
@@ -81,7 +78,7 @@ class BasePatterns(object):
         if key in self.components:
             return self.components[key]
 
-        print("Unknown component '%s' for %s" % (key, self.name))
+        print("Unknown component '%s' for %s" % (key, self._name))
         return []
 
     def get_patterns(self, key):
@@ -98,23 +95,24 @@ class BasePatterns(object):
 
     def __getitem__(self, key):
         if key == "Name":
-            return self.name
+            return self._name
         elif key in self.commands:
             return self.commands[key]
         elif key in self.search:
             return self.search[key]
         else:
-            print("Unknown template '%s' for %s" % (key, self.name))
+            print("Unknown template '%s' for %s" % (key, self._name))
             return None
 
 
-class crm_corosync(BasePatterns):
+class Corosync2Patterns(BasePatterns):
     '''
     Patterns for Corosync version 2 cluster manager class
     '''
 
-    def __init__(self, name):
-        BasePatterns.__init__(self, name)
+    def __init__(self):
+        BasePatterns.__init__(self)
+        self._name = "crm-corosync"
 
         self.commands.update({
             "StartCmd"       : "service corosync start && service pacemaker start",
@@ -334,35 +332,34 @@ class crm_corosync(BasePatterns):
         self.components["pacemaker-fenced-ignore"].extend(self.components["common-ignore"])
 
 
-class PatternSelector(object):
-    def __init__(self, name=None):
-        self.name = name
-        self.base = BasePatterns("crm-base")
+patternVariants = {
+    "crm-base": BasePatterns,
+    "crm-corosync": Corosync2Patterns
+}
 
+
+class PatternSelector:
+    def __init__(self, name="crm-corosync"):
+        self._name = name
+
+        # If no name was given, use the default.  Otherwise, look up the appropriate
+        # class in patternVariants, instantiate it, and use that.
         if not name:
-            crm_corosync("crm-corosync")
-        elif name == "crm-corosync":
-            crm_corosync(name)
+            self._base = Corosync2Patterns()
+        else:
+            self._base = patternVariants[name]()
 
-    def get_variant(self, variant):
-        if variant in patternvariants:
-            return patternvariants[variant]
+    def get_patterns(self, kind):
+        return self._base.get_patterns(kind)
 
-        print("defaulting to crm-base for %s" % variant)
-        return self.base
+    def get_template(self, key):
+        return self._base[key]
 
-    def get_patterns(self, variant, kind):
-        return self.get_variant(variant).get_patterns(kind)
-
-    def get_template(self, variant, key):
-        v = self.get_variant(variant)
-        return v[key]
-
-    def get_component(self, variant, kind):
-        return self.get_variant(variant).get_component(kind)
+    def get_component(self, kind):
+        return self._base.get_component(kind)
 
     def __getitem__(self, key):
-        return self.get_template(self.name, key)
+        return self.get_template(key)
 
 
 # PYTHONPATH=python python python/pacemaker/_cts/patterns.py -k crm-corosync -t StartCmd
