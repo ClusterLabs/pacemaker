@@ -4131,6 +4131,68 @@ unpack_action_result(struct action_history *history)
     return pcmk_rc_ok;
 }
 
+/*!
+ * \internal
+ * \brief Process an action history entry whose result expired
+ *
+ * \param[in,out] history           Parsed action history entry
+ * \param[in]     orig_exit_status  Action exit status before remapping
+ *
+ * \return Standard Pacemaker return code (in particular, pcmk_rc_ok means the
+ *         entry needs no further processing)
+ */
+static int
+process_expired_result(struct action_history *history, int orig_exit_status)
+{
+    if (!pe_rsc_is_bundled(history->rsc)
+        && pcmk_xe_mask_probe_failure(history->xml)
+        && (orig_exit_status != history->expected_exit_status)) {
+
+        if (history->rsc->role <= RSC_ROLE_STOPPED) {
+            history->rsc->role = RSC_ROLE_UNKNOWN;
+        }
+        crm_trace("Ignoring resource history entry %s for probe of %s on %s: "
+                  "Masked failure expired",
+                  history->id, history->rsc->id,
+                  pe__node_name(history->node));
+        return pcmk_rc_ok;
+    }
+
+    if (history->exit_status == history->expected_exit_status) {
+        return pcmk_rc_undetermined; // Only failures expire
+    }
+
+    if (history->interval_ms == 0) {
+        crm_notice("Ignoring resource history entry %s for %s of %s on %s: "
+                   "Expired failure",
+                   history->id, history->task, history->rsc->id,
+                   pe__node_name(history->node));
+        return pcmk_rc_ok;
+    }
+
+    if (history->node->details->online && !history->node->details->unclean) {
+        /* Reschedule the recurring action. schedule_cancel() won't work at
+         * this stage, so as a hacky workaround, forcibly change the restart
+         * digest so pcmk__check_action_config() does what we want later.
+         *
+         * @TODO We should skip this if there is a newer successful monitor.
+         *       Also, this causes rescheduling only if the history entry
+         *       has an op-digest (which the expire-non-blocked-failure
+         *       scheduler regression test doesn't, but that may not be a
+         *       realistic scenario in production).
+         */
+        crm_notice("Rescheduling %s-interval %s of %s on %s "
+                   "after failure expired",
+                   pcmk__readable_interval(history->interval_ms), history->task,
+                   history->rsc->id, pe__node_name(history->node));
+        crm_xml_add(history->xml, XML_LRM_ATTR_RESTART_DIGEST,
+                    "calculated-failure-timeout");
+        return pcmk_rc_ok;
+    }
+
+    return pcmk_rc_undetermined;
+}
+
 static void
 unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
               xmlNode **last_failure, enum action_fail_response *on_fail)
@@ -4139,7 +4201,6 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     bool expired = false;
     pe_resource_t *parent = rsc;
     enum action_fail_response failure_strategy = action_fail_recover;
-    bool maskable_probe_failure = false;
     char *last_change_s = NULL;
 
     struct action_history history = {
@@ -4222,51 +4283,13 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                     history.expected_exit_status,
                     &(history.exit_status), &(history.execution_status));
 
-    maskable_probe_failure = !pe_rsc_is_bundled(rsc) && pcmk_xe_mask_probe_failure(xml_op);
-
     last_change_s = last_change_str(xml_op);
 
-    if (expired && maskable_probe_failure
-        && (old_rc != history.expected_exit_status)) {
-
-        if (rsc->role <= RSC_ROLE_STOPPED) {
-            rsc->role = RSC_ROLE_UNKNOWN;
-        }
-
+    if (expired && (process_expired_result(&history, old_rc) == pcmk_rc_ok)) {
         goto done;
-
-    } else if (expired
-               && (history.exit_status != history.expected_exit_status)) {
-        const char *magic = crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC);
-
-        if (history.interval_ms == 0) {
-            crm_notice("Ignoring expired %s failure on %s "
-                       CRM_XS " actual=%d expected=%d magic=%s",
-                       history.key, pe__node_name(node), history.exit_status,
-                       history.expected_exit_status, magic);
-            goto done;
-
-        } else if(node->details->online && node->details->unclean == FALSE) {
-            /* Reschedule the recurring monitor. schedule_cancel() won't work at
-             * this stage, so as a hacky workaround, forcibly change the restart
-             * digest so pcmk__check_action_config() does what we want later.
-             *
-             * @TODO We should skip this if there is a newer successful monitor.
-             *       Also, this causes rescheduling only if the history entry
-             *       has an op-digest (which the expire-non-blocked-failure
-             *       scheduler regression test doesn't, but that may not be a
-             *       realistic scenario in production).
-             */
-            crm_notice("Rescheduling %s after failure expired on %s "
-                       CRM_XS " actual=%d expected=%d magic=%s",
-                       history.key, pe__node_name(node), history.exit_status,
-                       history.expected_exit_status, magic);
-            crm_xml_add(xml_op, XML_LRM_ATTR_RESTART_DIGEST, "calculated-failure-timeout");
-            goto done;
-        }
     }
 
-    if (maskable_probe_failure) {
+    if (!pe_rsc_is_bundled(rsc) && pcmk_xe_mask_probe_failure(xml_op)) {
         crm_notice("Treating probe result '%s' for %s on %s as 'not running'",
                    services_ocf_exitcode_str(old_rc), rsc->id,
                    pe__node_name(node));
