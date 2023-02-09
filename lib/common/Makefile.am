@@ -84,6 +84,7 @@ libcrmcommon_la_SOURCES	+= output_none.c
 libcrmcommon_la_SOURCES	+= output_text.c
 libcrmcommon_la_SOURCES	+= output_xml.c
 libcrmcommon_la_SOURCES	+= patchset.c
+libcrmcommon_la_SOURCES	+= patchset_display.c
 libcrmcommon_la_SOURCES	+= pid.c
 libcrmcommon_la_SOURCES	+= procfs.c
 libcrmcommon_la_SOURCES	+= remote.c
