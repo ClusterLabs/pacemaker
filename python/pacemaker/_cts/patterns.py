@@ -11,11 +11,11 @@ from pacemaker.buildoptions import BuildOptions
 
 class BasePatterns:
     def __init__(self):
-        self.BadNews = []
-        self.components = {}
+        self._bad_news = []
+        self._components = {}
         self._name = "crm-base"
 
-        self.ignore = [
+        self._ignore = [
             "avoid confusing Valgrind",
 
             # Logging bug in some versions of libvirtd
@@ -26,7 +26,7 @@ class BasePatterns:
             r"pcs.daemon:No response from: .* request: get_configs, error:",
         ]
 
-        self.commands = {
+        self._commands = {
             "StatusCmd"      : "crmadmin -t 60 -S %s 2>/dev/null",
             "CibQuery"       : "cibadmin -Ql",
             "CibAddXml"      : "cibadmin --modify -c --xml-text %s",
@@ -48,7 +48,7 @@ class BasePatterns:
             "StandbyQueryCmd" : "crm_attribute -qG -U %s -n standby -l forever -d off 2>/dev/null",
         }
 
-        self.search = {
+        self._search = {
             "Pat:DC_IDLE"      : r"pacemaker-controld.*State transition.*-> S_IDLE",
 
             # This won't work if we have multiple partitions
@@ -75,31 +75,31 @@ class BasePatterns:
         }
 
     def get_component(self, key):
-        if key in self.components:
-            return self.components[key]
+        if key in self._components:
+            return self._components[key]
 
         print("Unknown component '%s' for %s" % (key, self._name))
         return []
 
     def get_patterns(self, key):
         if key == "BadNews":
-            return self.BadNews
+            return self._bad_news
         elif key == "BadNewsIgnore":
-            return self.ignore
+            return self._ignore
         elif key == "Commands":
-            return self.commands
+            return self._commands
         elif key == "Search":
-            return self.search
+            return self._search
         elif key == "Components":
-            return self.components
+            return self._components
 
     def __getitem__(self, key):
         if key == "Name":
             return self._name
-        elif key in self.commands:
-            return self.commands[key]
-        elif key in self.search:
-            return self.search[key]
+        elif key in self._commands:
+            return self._commands[key]
+        elif key in self._search:
+            return self._search[key]
         else:
             print("Unknown template '%s' for %s" % (key, self._name))
             return None
@@ -114,7 +114,7 @@ class Corosync2Patterns(BasePatterns):
         BasePatterns.__init__(self)
         self._name = "crm-corosync"
 
-        self.commands.update({
+        self._commands.update({
             "StartCmd"       : "service corosync start && service pacemaker start",
             "StopCmd"        : "service pacemaker stop; [ ! -e /usr/sbin/pacemaker-remoted ] || service pacemaker_remote stop; service corosync stop",
 
@@ -123,7 +123,7 @@ class Corosync2Patterns(BasePatterns):
             "PartitionCmd"   : "crm_node -p",
         })
 
-        self.search.update({
+        self._search.update({
             # Close enough ... "Corosync Cluster Engine exiting normally" isn't
             # printed reliably.
             "Pat:We_stopped"   : r"%s\W.*Unloading all Corosync service engines",
@@ -140,7 +140,7 @@ class Corosync2Patterns(BasePatterns):
             "Pat:PacemakerUp"  : r"%s\W.*pacemakerd.*Starting Pacemaker",
         })
 
-        self.ignore += [
+        self._ignore += [
             r"crm_mon:",
             r"crmadmin:",
             r"update_trace_data",
@@ -152,7 +152,7 @@ class Corosync2Patterns(BasePatterns):
             r"sbd.* pcmk:\s*error:.*Connection to cib_ro.* (failed|closed)",
         ]
 
-        self.BadNews = [
+        self._bad_news = [
             r"[^(]error:",
             r"crit:",
             r"ERROR:",
@@ -197,7 +197,7 @@ class Corosync2Patterns(BasePatterns):
             r"stalled the FSA with pending inputs",
         ]
 
-        self.components["common-ignore"] = [
+        self._components["common-ignore"] = [
             r"Pending action:",
             r"resource( was|s were) active at shutdown",
             r"pending LRM operations at shutdown",
@@ -208,7 +208,7 @@ class Corosync2Patterns(BasePatterns):
             r"(Blackbox dump requested|Problem detected)",
         ]
 
-        self.components["corosync-ignore"] = [
+        self._components["corosync-ignore"] = [
             r"Could not connect to Corosync CFG: CS_ERR_LIBRARY",
             r"error:.*Connection to the CPG API failed: Library error",
             r"\[[0-9]+\] exited with status [0-9]+ \(",
@@ -230,7 +230,7 @@ class Corosync2Patterns(BasePatterns):
             r"pacemaker-schedulerd.* Calculated transition .*/pe-error",
             ]
 
-        self.components["corosync"] = [
+        self._components["corosync"] = [
             # We expect each daemon to lose its cluster connection.
             # However, if the CIB manager loses its connection first,
             # it's possible for another daemon to lose that connection and
@@ -244,7 +244,7 @@ class Corosync2Patterns(BasePatterns):
             r"pacemaker-controld.*:\s*Peer .* was terminated \(.*\) by .* on behalf of .*:\s*OK",
         ]
 
-        self.components["pacemaker-based"] = [
+        self._components["pacemaker-based"] = [
             r"pacemakerd.* pacemaker-attrd\[[0-9]+\] exited with status 102",
             r"pacemakerd.* pacemaker-controld\[[0-9]+\] exited with status 1",
             r"pacemakerd.* Respawning pacemaker-attrd subdaemon after unexpected exit",
@@ -260,7 +260,7 @@ class Corosync2Patterns(BasePatterns):
             r"pacemaker-controld.*Could not recover from internal error",
         ]
 
-        self.components["pacemaker-based-ignore"] = [
+        self._components["pacemaker-based-ignore"] = [
             r"pacemaker-execd.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
             r"pacemaker-controld.*:\s+Result of .* operation for Fencing.*Error \(Lost connection to fencer\)",
             r"pacemaker-controld.*:Could not connect to attrd: Connection refused",
@@ -272,7 +272,7 @@ class Corosync2Patterns(BasePatterns):
             r"pacemaker-schedulerd.* Calculated transition .*/pe-error",
         ]
 
-        self.components["pacemaker-execd"] = [
+        self._components["pacemaker-execd"] = [
             r"pacemaker-controld.*Connection to executor failed",
             r"pacemaker-controld.*I_ERROR.*lrm_connection_destroy",
             r"pacemaker-controld.*State transition .* S_RECOVERY",
@@ -283,20 +283,20 @@ class Corosync2Patterns(BasePatterns):
             r"pacemakerd.* Respawning pacemaker-controld subdaemon after unexpected exit",
         ]
 
-        self.components["pacemaker-execd-ignore"] = [
+        self._components["pacemaker-execd-ignore"] = [
             r"pacemaker-(attrd|controld).*Connection to lrmd.* (failed|closed)",
             r"pacemaker-(attrd|controld).*Could not execute alert",
         ]
 
-        self.components["pacemaker-controld"] = [
+        self._components["pacemaker-controld"] = [
             r"State transition .* -> S_IDLE",
         ]
 
-        self.components["pacemaker-controld-ignore"] = []
-        self.components["pacemaker-attrd"] = []
-        self.components["pacemaker-attrd-ignore"] = []
+        self._components["pacemaker-controld-ignore"] = []
+        self._components["pacemaker-attrd"] = []
+        self._components["pacemaker-attrd-ignore"] = []
 
-        self.components["pacemaker-schedulerd"] = [
+        self._components["pacemaker-schedulerd"] = [
             r"State transition .* S_RECOVERY",
             r"pacemakerd.* Respawning pacemaker-controld subdaemon after unexpected exit",
             r"pacemaker-controld\[[0-9]+\] exited with status 1 \(",
@@ -306,17 +306,17 @@ class Corosync2Patterns(BasePatterns):
             r"pacemaker-controld.*Could not recover from internal error",
         ]
 
-        self.components["pacemaker-schedulerd-ignore"] = [
+        self._components["pacemaker-schedulerd-ignore"] = [
             r"Connection to pengine.* (failed|closed)",
         ]
 
-        self.components["pacemaker-fenced"] = [
+        self._components["pacemaker-fenced"] = [
             r"error:.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
             r"Fencing daemon connection failed",
             r"pacemaker-controld.*Fencer successfully connected",
         ]
 
-        self.components["pacemaker-fenced-ignore"] = [
+        self._components["pacemaker-fenced-ignore"] = [
             r"(error|warning):.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
             r"crit:.*Fencing daemon connection failed",
             r"error:.*Fencer connection failed \(will retry\)",
@@ -329,7 +329,7 @@ class Corosync2Patterns(BasePatterns):
             r"pacemaker-schedulerd.* Calculated transition .*/pe-error",
         ]
 
-        self.components["pacemaker-fenced-ignore"].extend(self.components["common-ignore"])
+        self._components["pacemaker-fenced-ignore"].extend(self._components["common-ignore"])
 
 
 patternVariants = {
