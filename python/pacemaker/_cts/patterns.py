@@ -1,5 +1,4 @@
-""" Pattern-holding classes for Pacemaker's Cluster Test Suite (CTS)
-"""
+""" Pattern-holding classes for Pacemaker's Cluster Test Suite (CTS) """
 
 __all__ = ["PatternSelector"]
 __copyright__ = "Copyright 2008-2023 the Pacemaker project contributors"
@@ -10,7 +9,16 @@ import argparse
 from pacemaker.buildoptions import BuildOptions
 
 class BasePatterns:
+    """ The base class for holding a stack-specific set of command and log
+        file/stdout patterns.  Stack-specific classes need to be built on top
+        of this one.
+    """
+
     def __init__(self):
+        """ Create a new BasePatterns instance which holds a very minimal set of
+            basic patterns.
+        """
+
         self._bad_news = []
         self._components = {}
         self._name = "crm-base"
@@ -75,6 +83,12 @@ class BasePatterns:
         }
 
     def get_component(self, key):
+        """ Return the patterns for a single component as a list, given by key.
+            This is typically the name of some subprogram (pacemaker-based,
+            pacemaker-fenced, etc.) or various special purpose keys.  If key is
+            unknown, return an empty list.
+        """
+
         if key in self._components:
             return self._components[key]
 
@@ -82,6 +96,11 @@ class BasePatterns:
         return []
 
     def get_patterns(self, key):
+        """ Return various patterns supported by this object, given by key.
+            Depending on the key, this could either be a list or a hash.  If key
+            is unknown, return None.
+        """
+
         if key == "BadNews":
             return self._bad_news
         if key == "BadNewsIgnore":
@@ -109,9 +128,7 @@ class BasePatterns:
 
 
 class Corosync2Patterns(BasePatterns):
-    '''
-    Patterns for Corosync version 2 cluster manager class
-    '''
+    """ Patterns for Corosync version 2 cluster manager class """
 
     def __init__(self):
         BasePatterns.__init__(self)
@@ -342,7 +359,17 @@ patternVariants = {
 
 
 class PatternSelector:
+    """ A class for choosing one of several Pattern objects and then extracting
+        various pieces of information from that object
+    """
+
     def __init__(self, name="crm-corosync"):
+        """ Create a new PatternSelector object by instantiating whatever class
+            is given by name.  Defaults to Corosync2Patterns for "crm-corosync" or
+            None.  While other objects could be supported in the future, only this
+            and the base object are supported at this time.
+        """
+
         self._name = name
 
         # If no name was given, use the default.  Otherwise, look up the appropriate
@@ -353,12 +380,20 @@ class PatternSelector:
             self._base = patternVariants[name]()
 
     def get_patterns(self, kind):
+        """ Call get_patterns on the previously instantiated pattern object """
+
         return self._base.get_patterns(kind)
 
     def get_template(self, key):
+        """ Return a single pattern from the previously instantiated pattern
+            object as a string, or None if no pattern exists for the given key.
+        """
+
         return self._base[key]
 
     def get_component(self, kind):
+        """ Call get_component on the previously instantiated pattern object """
+
         return self._base.get_component(kind)
 
     def __getitem__(self, key):
