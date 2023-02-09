@@ -104,7 +104,6 @@ xml_show_patchset_v1_recursive(pcmk__output_t *out, const char *prefix,
             rc = pcmk__output_select_rc(rc, temp_rc);
         }
         return rc;
-
     }
 
     return pcmk__xml_show(out, prefix, data, depth,
@@ -295,29 +294,180 @@ xml_show_patchset_v2(pcmk__output_t *out, const xmlNode *patchset)
  * \brief Output a user-friendly form of an XML patchset
  *
  * This function parses an XML patchset (an \p XML_ATTR_DIFF element and its
- * children) into a user-friendly combined diff output. Depending on the value
- * of \p log_level, the output may be written to \p stdout or to a log file.
+ * children) into a user-friendly combined diff output.
  *
- * \param[in] log_level  Priority at which to log the messages
- * \param[in] patchset   XML patchset to log
+ * \param[in,out] out   Output object
+ * \param[in]     args  Message-specific arguments
  *
  * \return Standard Pacemaker return code
+ *
+ * \note \p args should contain only the XML patchset
  */
-int
-pcmk__xml_log_patchset(uint8_t log_level, const xmlNode *patchset)
+PCMK__OUTPUT_ARGS("xml-patchset", "xmlNodePtr")
+static int
+xml_patchset_default(pcmk__output_t *out, va_list args)
 {
+    xmlNodePtr patchset = va_arg(args, xmlNodePtr);
+
+    int format = 1;
+
+    if (patchset == NULL) {
+        crm_trace("Empty patch");
+        return pcmk_rc_no_output;
+    }
+
+    crm_element_value_int(patchset, "format", &format);
+    switch (format) {
+        case 1:
+            return xml_show_patchset_v1(out, patchset, pcmk__xml_fmt_pretty);
+        case 2:
+            return xml_show_patchset_v2(out, patchset);
+        default:
+            crm_err("Unknown patch format: %d", format);
+            return pcmk_rc_unknown_format;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Output a user-friendly form of an XML patchset
+ *
+ * This function parses an XML patchset (an \p XML_ATTR_DIFF element and its
+ * children) into a user-friendly combined diff output.
+ *
+ * \param[in,out] out   Output object
+ * \param[in]     args  Message-specific arguments
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note \p args should contain only the XML patchset
+ */
+PCMK__OUTPUT_ARGS("xml-patchset", "xmlNodePtr")
+static int
+xml_patchset_log(pcmk__output_t *out, va_list args)
+{
+    static struct qb_log_callsite *patchset_cs = NULL;
+
+    xmlNodePtr patchset = va_arg(args, xmlNodePtr);
+
+    uint8_t log_level = pcmk__output_get_log_level(out);
+    int format = 1;
+
+    if (log_level == LOG_NEVER) {
+        return pcmk_rc_no_output;
+    }
+
+    if (patchset == NULL) {
+        crm_trace("Empty patch");
+        return pcmk_rc_no_output;
+    }
+
+    if (patchset_cs == NULL) {
+        patchset_cs = qb_log_callsite_get(__func__, __FILE__, "xml-patchset",
+                                          log_level, __LINE__,
+                                          crm_trace_nonlog);
+    }
+
+    if (!crm_is_callsite_active(patchset_cs, log_level, crm_trace_nonlog)) {
+        // Nothing would be logged, so skip all the work
+        return pcmk_rc_no_output;
+    }
+
+    crm_element_value_int(patchset, "format", &format);
+    switch (format) {
+        case 1:
+            if (log_level < LOG_DEBUG) {
+                return xml_show_patchset_v1(out, patchset,
+                                            pcmk__xml_fmt_pretty
+                                            |pcmk__xml_fmt_diff_short);
+            }
+            return xml_show_patchset_v1(out, patchset, pcmk__xml_fmt_pretty);
+        case 2:
+            return xml_show_patchset_v2(out, patchset);
+        default:
+            crm_err("Unknown patch format: %d", format);
+            return pcmk_rc_unknown_format;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Output an XML patchset
+ *
+ * This function outputs an XML patchset (an \p XML_ATTR_DIFF element and its
+ * children) without modification, as a CDATA block.
+ *
+ * \param[in,out] out   Output object
+ * \param[in]     args  Message-specific arguments
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note \p args should contain only the XML patchset
+ */
+PCMK__OUTPUT_ARGS("xml-patchset", "xmlNodePtr")
+static int
+xml_patchset_xml(pcmk__output_t *out, va_list args)
+{
+    xmlNodePtr patchset = va_arg(args, xmlNodePtr);
+
+    if (patchset != NULL) {
+        char *buf = dump_xml_formatted_with_text(patchset);
+
+        out->output_xml(out, "xml-patchset", buf);
+        free(buf);
+        return pcmk_rc_ok;
+    }
+    crm_trace("Empty patch");
+    return pcmk_rc_no_output;
+}
+
+static pcmk__message_entry_t fmt_functions[] = {
+    { "xml-patchset", "default", xml_patchset_default },
+    { "xml-patchset", "log", xml_patchset_log },
+    { "xml-patchset", "xml", xml_patchset_xml },
+
+    { NULL, NULL, NULL }
+};
+
+/*!
+ * \internal
+ * \brief Register the formatting functions for XML patchsets
+ *
+ * \param[in,out] out  Output object
+ */
+void
+pcmk__register_patchset_messages(pcmk__output_t *out) {
+    pcmk__register_messages(out, fmt_functions);
+}
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/xml_compat.h>
+
+void
+xml_log_patchset(uint8_t log_level, const char *function,
+                 const xmlNode *patchset)
+{
+    /* This function has some duplication relative to the message functions.
+     * This way, we can maintain the const xmlNode * in the signature. The
+     * message functions must be non-const. They have to support XML output
+     * objects, which must make a copy of a the patchset, requiring a non-const
+     * function call.
+     *
+     * In contrast, this legacy function doesn't need to support XML output.
+     */
+    static struct qb_log_callsite *patchset_cs = NULL;
+
     pcmk__output_t *out = NULL;
     int format = 1;
-    int rc = pcmk_rc_ok;
-
-    static struct qb_log_callsite *patchset_cs = NULL;
+    int rc = pcmk_rc_no_output;
 
     switch (log_level) {
         case LOG_NEVER:
-            return pcmk_rc_no_output;
+            return;
         case LOG_STDOUT:
-            rc = pcmk__text_output_new(&out, NULL);
-            CRM_CHECK(rc == pcmk_rc_ok, return rc);
+            CRM_CHECK(pcmk__text_output_new(&out, NULL) == pcmk_rc_ok, return);
             break;
         default:
             if (patchset_cs == NULL) {
@@ -327,12 +477,9 @@ pcmk__xml_log_patchset(uint8_t log_level, const xmlNode *patchset)
             }
             if (!crm_is_callsite_active(patchset_cs, log_level,
                                         crm_trace_nonlog)) {
-                return pcmk_rc_no_output;
+                return;
             }
-
-            rc = pcmk__log_output_new(&out);
-            CRM_CHECK(rc == pcmk_rc_ok, return rc);
-
+            CRM_CHECK(pcmk__log_output_new(&out) == pcmk_rc_ok, return);
             pcmk__output_set_log_level(out, log_level);
             break;
     }
@@ -366,34 +513,6 @@ pcmk__xml_log_patchset(uint8_t log_level, const xmlNode *patchset)
 done:
     out->finish(out, pcmk_rc2exitc(rc), true, NULL);
     pcmk__output_free(out);
-    return rc;
-}
-
-static pcmk__message_entry_t fmt_functions[] = {
-    { NULL, NULL, NULL }
-};
-
-/*!
- * \internal
- * \brief Register the formatting functions for XML patchsets
- *
- * \param[in,out] out  Output object
- */
-void
-pcmk__register_patchset_messages(pcmk__output_t *out) {
-    pcmk__register_messages(out, fmt_functions);
-}
-
-// Deprecated functions kept only for backward API compatibility
-// LCOV_EXCL_START
-
-#include <crm/common/xml_compat.h>
-
-void
-xml_log_patchset(uint8_t log_level, const char *function,
-                 const xmlNode *patchset)
-{
-    pcmk__xml_log_patchset(log_level, patchset);
 }
 
 // LCOV_EXCL_STOP

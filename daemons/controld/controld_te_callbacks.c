@@ -44,7 +44,10 @@ te_update_diff_v1(const char *event, xmlNode *diff)
 
     CRM_CHECK(diff != NULL, return);
 
-    pcmk__xml_log_patchset(LOG_TRACE, diff);
+    pcmk__output_set_log_level(controld_globals.logger_out, LOG_TRACE);
+    controld_globals.logger_out->message(controld_globals.logger_out,
+                                         "xml-patchset", diff);
+
     if (cib_config_changed(NULL, NULL, &diff)) {
         abort_transition(INFINITY, pcmk__graph_restart, "Non-status change",
                          diff);

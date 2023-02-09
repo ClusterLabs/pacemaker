@@ -609,25 +609,34 @@ main(int argc, char **argv)
 
                 {
                     pcmk__output_t *logger_out = NULL;
-                    rc = pcmk__log_output_new(&logger_out);
 
+                    rc = pcmk__log_output_new(&logger_out);
                     CRM_CHECK(rc == pcmk_rc_ok,
-                              exit_code = pcmk_rc2exitc(rc); goto done;);
+                              exit_code = pcmk_rc2exitc(rc); goto done);
 
                     pcmk__output_set_log_level(logger_out, LOG_INFO);
                     rc = pcmk__xml_show_changes(logger_out, new_config);
-                    logger_out->finish(logger_out, pcmk_rc2exitc(rc), true, NULL);
+                    logger_out->finish(logger_out, pcmk_rc2exitc(rc), true,
+                                       NULL);
                     pcmk__output_free(logger_out);
-                    rc = pcmk_rc_ok;
                 }
 
                 xml_accept_changes(new_config);
                 if (diff != NULL) {
+                    pcmk__output_t *out = NULL;
+
+                    rc = pcmk__text_output_new(&out, NULL);
+                    CRM_CHECK(rc == pcmk_rc_ok,
+                              exit_code = pcmk_rc2exitc(rc); goto done);
+
+                    rc = out->message(out, "xml-patchset", diff);
+                    out->finish(out, pcmk_rc2exitc(rc), true, NULL);
+                    pcmk__output_free(out);
+
                     /* @COMPAT: Exit with CRM_EX_DIGEST? This is not really an
                      * error; we just want to indicate that there are
                      * differences (as the diff command does).
                      */
-                    pcmk__xml_log_patchset(LOG_STDOUT, diff);
                     exit_code = CRM_EX_ERROR;
                 }
             }
