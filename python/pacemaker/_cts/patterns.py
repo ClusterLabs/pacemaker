@@ -364,9 +364,6 @@ class PatternSelector:
 
 # PYTHONPATH=python python python/pacemaker/_cts/patterns.py -k crm-corosync -t StartCmd
 if __name__ == '__main__':
-    pdir = os.path.dirname(sys.path[0])
-    sys.path.insert(0, pdir) # So that things work from the source directory
-
     kind = None
     template = None
 
