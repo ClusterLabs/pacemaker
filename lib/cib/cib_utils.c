@@ -328,9 +328,10 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
             CRM_CHECK(rc == pcmk_ok, goto done);
 
             pcmk__output_set_log_level(out, LOG_TRACE);
-            pcmk__xml_show_changes(out, scratch);
-            out->finish(out, CRM_EX_OK, true, NULL);
+            rc = pcmk__xml_show_changes(out, scratch);
+            out->finish(out, pcmk_rc2exitc(rc), true, NULL);
             pcmk__output_free(out);
+            rc = pcmk_ok;
         },
         {}
     );

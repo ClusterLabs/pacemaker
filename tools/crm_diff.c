@@ -243,8 +243,8 @@ generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
         CRM_CHECK(rc == pcmk_rc_ok, {free_xml(output); return rc;});
 
         pcmk__output_set_log_level(logger_out, LOG_INFO);
-        pcmk__xml_show_changes(logger_out, object_2);
-        logger_out->finish(logger_out, CRM_EX_OK, true, NULL);
+        rc = pcmk__xml_show_changes(logger_out, object_2);
+        logger_out->finish(logger_out, pcmk_rc2exitc(rc), true, NULL);
         pcmk__output_free(logger_out);
     }
 

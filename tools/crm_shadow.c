@@ -615,9 +615,10 @@ main(int argc, char **argv)
                               exit_code = pcmk_rc2exitc(rc); goto done;);
 
                     pcmk__output_set_log_level(logger_out, LOG_INFO);
-                    pcmk__xml_show_changes(logger_out, new_config);
-                    logger_out->finish(logger_out, CRM_EX_OK, true, NULL);
+                    rc = pcmk__xml_show_changes(logger_out, new_config);
+                    logger_out->finish(logger_out, pcmk_rc2exitc(rc), true, NULL);
                     pcmk__output_free(logger_out);
+                    rc = pcmk_rc_ok;
                 }
 
                 xml_accept_changes(new_config);
