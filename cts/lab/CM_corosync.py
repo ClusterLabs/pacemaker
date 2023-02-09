@@ -6,7 +6,8 @@ __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT AN
 
 from cts.ClusterManager import ClusterManager
 from cts.CTS     import Process
-from cts.patterns    import PatternSelector
+
+from pacemaker._cts.patterns import PatternSelector
 
 class crm_corosync(ClusterManager):
     '''

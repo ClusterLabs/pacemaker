@@ -20,9 +20,9 @@ from cts.logging     import LogFactory
 from cts.watcher     import LogWatcher
 from cts.remote      import RemoteFactory
 from cts.environment import EnvFactory
-from cts.patterns    import PatternSelector
 
 from pacemaker.buildoptions import BuildOptions
+from pacemaker._cts.patterns import PatternSelector
 
 has_log_stats = {}
 log_stats_bin = BuildOptions.DAEMON_DIR + "/cts_log_stats.sh"
