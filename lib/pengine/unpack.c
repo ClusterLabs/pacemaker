@@ -3951,15 +3951,24 @@ pe__target_rc_from_xml(const xmlNode *xml_op)
     return target_rc;
 }
 
+/*!
+ * \internal
+ * \brief Get the failure handling for an action
+ *
+ * \param[in,out] history  Parsed action history entry
+ *
+ * \return Failure handling appropriate to action
+ */
 static enum action_fail_response
-get_action_on_fail(pe_resource_t *rsc, const char *key, const char *task, pe_working_set_t * data_set) 
+get_action_on_fail(struct action_history *history)
 {
     enum action_fail_response result = action_fail_recover;
-    pe_action_t *action = custom_action(rsc, strdup(key), task, NULL, TRUE, FALSE, data_set);
+    pe_action_t *action = custom_action(history->rsc, strdup(history->key),
+                                        history->task, NULL, TRUE, FALSE,
+                                        history->rsc->cluster);
 
     result = action->on_fail;
     pe_free_action(action);
-
     return result;
 }
 
@@ -4396,8 +4405,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
             goto done;
 
         case PCMK_EXEC_NOT_INSTALLED:
-            failure_strategy = get_action_on_fail(rsc, history.key,
-                                                  history.task, rsc->cluster);
+            failure_strategy = get_action_on_fail(&history);
             if (failure_strategy == action_fail_ignore) {
                 crm_warn("Cannot ignore failed %s of %s on %s: "
                          "Resource agent doesn't exist "
@@ -4442,8 +4450,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
             break; // Not done, do error handling
     }
 
-    failure_strategy = get_action_on_fail(rsc, history.key, history.task,
-                                          rsc->cluster);
+    failure_strategy = get_action_on_fail(&history);
     if ((failure_strategy == action_fail_ignore)
         || (failure_strategy == action_fail_restart_container
             && (strcmp(history.task, CRMD_ACTION_STOP) == 0))) {
