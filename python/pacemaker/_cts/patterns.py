@@ -5,7 +5,7 @@ __all__ = ["PatternSelector"]
 __copyright__ = "Copyright 2008-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
-import sys, os
+import argparse
 
 from pacemaker.buildoptions import BuildOptions
 
@@ -364,25 +364,10 @@ class PatternSelector:
 
 # PYTHONPATH=python python python/pacemaker/_cts/patterns.py -k crm-corosync -t StartCmd
 if __name__ == '__main__':
-    kind = None
-    template = None
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-k", "--kind", metavar="KIND")
+    parser.add_argument("-t", "--template", metavar="TEMPLATE")
 
-    skipthis = None
-    args = sys.argv[1:]
-    for i in range(0, len(args)):
-        if skipthis:
-            skipthis = None
-            continue
+    args = parser.parse_args()
 
-        elif args[i] == "-k" or args[i] == "--kind":
-            skipthis = 1
-            kind = args[i+1]
-
-        elif args[i] == "-t" or args[i] == "--template":
-            skipthis = 1
-            template = args[i+1]
-
-        else:
-            print("Illegal argument " + args[i])
-
-    print(PatternSelector(kind)[template])
+    print(PatternSelector(args.kind)[args.template])
