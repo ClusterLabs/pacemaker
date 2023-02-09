@@ -4057,6 +4057,35 @@ update_resource_state(pe_resource_t *rsc, const pe_node_t *node,
     }
 }
 
+/*!
+ * \internal
+ * \brief Check whether a given history entry matters for resource state
+ *
+ * \param[in] history  Parsed action history entry
+ *
+ * \return true if action can affect resource state, otherwise false
+ */
+static inline bool
+can_affect_state(struct action_history *history)
+{
+#if 0
+    /* @COMPAT It might be better to parse only actions we know we're interested
+     * in, rather than exclude a couple we don't. However that would be a
+     * behavioral change that should be done at a major or minor series release.
+     * Currently, unknown operations can affect whether a resource is considered
+     * active and/or failed.
+     */
+     return pcmk__str_any_of(history->task, CRMD_ACTION_STATUS,
+                             CRMD_ACTION_START, CRMD_ACTION_STOP,
+                             CRMD_ACTION_PROMOTE, CRMD_ACTION_DEMOTE,
+                             CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED,
+                             "asyncmon", NULL);
+#else
+     return !pcmk__str_any_of(history->task, CRMD_ACTION_NOTIFY,
+                              CRMD_ACTION_METADATA, NULL);
+#endif
+}
+
 static void
 unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
               xmlNode **last_failure, enum action_fail_response *on_fail)
@@ -4086,7 +4115,24 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 
     history.expected_exit_status = pe__target_rc_from_xml(xml_op);
     history.key = get_op_key(xml_op);
+
+    // Task and interval
     history.task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+    if (history.task == NULL) {
+        crm_err("Ignoring resource history entry %s for %s on %s without "
+                XML_LRM_ATTR_TASK, history.id, rsc->id, pe__node_name(node));
+        return;
+    }
+    crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS,
+                         &(history.interval_ms));
+    if (!can_affect_state(&history)) {
+        pe_rsc_trace(rsc,
+                     "Ignoring resource history entry %s for %s on %s "
+                     "with irrelevant action '%s'",
+                     history.id, rsc->id, pe__node_name(node), history.task);
+        return;
+    }
+
     history.exit_reason = crm_element_value(xml_op, XML_LRM_ATTR_EXIT_REASON);
     if (history.exit_reason == NULL) {
         history.exit_reason = "";
@@ -4096,19 +4142,9 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     crm_element_value_int(xml_op, XML_LRM_ATTR_CALLID, &(history.call_id));
     crm_element_value_int(xml_op, XML_LRM_ATTR_OPSTATUS,
                           &(history.execution_status));
-    crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS,
-                         &(history.interval_ms));
-
-    CRM_CHECK(history.task != NULL, return);
     CRM_CHECK((history.execution_status >= PCMK_EXEC_PENDING)
               && (history.execution_status <= PCMK_EXEC_MAX),
               return);
-
-    if ((strcmp(history.task, CRMD_ACTION_NOTIFY) == 0)
-        || (strcmp(history.task, CRMD_ACTION_METADATA) == 0)) {
-        /* safe to ignore these */
-        return;
-    }
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_unique)) {
         parent = uber_parent(rsc);
