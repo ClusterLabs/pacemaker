@@ -1903,7 +1903,6 @@ pe__bundle_active_node(const pe_resource_t *rsc, unsigned int *count_all,
     GList *containers = NULL;
     GList *iter = NULL;
     GHashTable *nodes = NULL;
-    GHashTableIter table_iter;
     const pe__bundle_variant_data_t *data = NULL;
 
     if (count_all != NULL) {
@@ -1932,8 +1931,10 @@ pe__bundle_active_node(const pe_resource_t *rsc, unsigned int *count_all,
     }
 
     /* If the bundle has only a single active container, just use that
-     * container's method. That allows us to prefer the migration source when
-     * there is only one container and it is migrating.
+     * container's method. If live migration is ever supported for bundle
+     * containers, this will allow us to prefer the migration source when there
+     * is only one container and it is migrating. For now, this just lets us
+     * avoid creating the nodes table.
      */
     if (pcmk__list_of_1(containers)) {
         container = containers->data;
@@ -1949,23 +1950,20 @@ pe__bundle_active_node(const pe_resource_t *rsc, unsigned int *count_all,
 
         for (GList *node_iter = container->running_on; node_iter != NULL;
              node_iter = node_iter->next) {
-            pe_node_t *node = node_iter->data;
+            node = node_iter->data;
 
-            g_hash_table_insert(nodes, (gpointer) node->details->uname,
-                                (gpointer) node);
+            // If insert returns true, we haven't counted this node yet
+            if (g_hash_table_insert(nodes, (gpointer) node->details,
+                                    (gpointer) node)
+                && !pe__count_active_node(rsc, node, &active, count_all,
+                                          count_clean)) {
+                goto done;
+            }
         }
     }
+
+done:
     g_list_free(containers);
-
-    // Count each node
-    g_hash_table_iter_init(&table_iter, nodes);
-    while (g_hash_table_iter_next(&table_iter, NULL, (gpointer *) &node)) {
-        if (!pe__count_active_node(rsc, node, &active, count_all,
-                                   count_clean)) {
-            break; // Don't waste time iterating if we don't have to
-        }
-    }
     g_hash_table_destroy(nodes);
-
     return active;
 }
