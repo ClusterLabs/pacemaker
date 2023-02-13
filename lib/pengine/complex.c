@@ -1021,14 +1021,14 @@ common_free(pe_resource_t * rsc)
 
 /*!
  * \internal
- * \brief Add an active node to a count
+ * \brief Count a node and update most preferred to it as appropriate
  *
  * \param[in]     rsc          An active resource
  * \param[in]     node         A node that \p rsc is active on
  * \param[in,out] active       This will be set to \p node if \p node is more
  *                             preferred than the current value
- * \param[out]    count_all    If not NULL, this will be incremented
- * \param[out]    count_clean  If not NULL, this will be incremented if \p node
+ * \param[in,out] count_all    If not NULL, this will be incremented
+ * \param[in,out] count_clean  If not NULL, this will be incremented if \p node
  *                             is online and clean
  *
  * \return true if the count should continue, or false if sufficiently known
@@ -1039,7 +1039,12 @@ pe__count_active_node(const pe_resource_t *rsc, pe_node_t *node,
                       unsigned int *count_clean)
 {
     bool keep_looking = false;
-    bool is_happy = node->details->online && !node->details->unclean;
+    bool is_happy = false;
+
+    CRM_CHECK((rsc != NULL) && (node != NULL) && (active != NULL),
+              return false);
+
+    is_happy = node->details->online && !node->details->unclean;
 
     if (count_all != NULL) {
         ++*count_all;
