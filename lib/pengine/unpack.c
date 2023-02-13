@@ -4126,7 +4126,8 @@ unpack_action_result(struct action_history *history)
     if ((crm_element_value_int(history->xml, XML_LRM_ATTR_OPSTATUS,
                                &(history->execution_status)) < 0)
         || (history->execution_status < PCMK_EXEC_PENDING)
-        || (history->execution_status > PCMK_EXEC_MAX)) {
+        || (history->execution_status > PCMK_EXEC_MAX)
+        || (history->execution_status == PCMK_EXEC_CANCELLED)) {
         crm_err("Ignoring resource history entry %s for %s on %s "
                 "with invalid " XML_LRM_ATTR_OPSTATUS " '%s'",
                 history->id, history->rsc->id, pe__node_name(history->node),
@@ -4260,7 +4261,6 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     bool expired = false;
     pe_resource_t *parent = rsc;
     enum action_fail_response failure_strategy = action_fail_recover;
-    char *last_change_s = NULL;
 
     struct action_history history = {
         .rsc = rsc,
@@ -4336,8 +4336,6 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 
     remap_operation(&history, on_fail);
 
-    last_change_s = last_change_str(xml_op);
-
     if (expired && (process_expired_result(&history, old_rc) == pcmk_rc_ok)) {
         goto done;
     }
@@ -4352,14 +4350,6 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     }
 
     switch (history.execution_status) {
-        case PCMK_EXEC_CANCELLED:
-            // Should never happen
-            pe_err("Resource history contains cancellation '%s' "
-                   "(%s of %s on %s at %s)",
-                   history.id, history.task, rsc->id, pe__node_name(node),
-                   last_change_s);
-            goto done;
-
         case PCMK_EXEC_PENDING:
             if (strcmp(history.task, CRMD_ACTION_START) == 0) {
                 pe__set_resource_flags(rsc, pe_rsc_start_pending);
@@ -4448,6 +4438,9 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
         case PCMK_EXEC_NO_SECRETS:
             history.execution_status = PCMK_EXEC_ERROR_HARD;
             break; // Not done, do error handling
+
+        default: // No other value should be possible at this point
+            break;
     }
 
     failure_strategy = get_action_on_fail(&history);
@@ -4455,12 +4448,15 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
         || (failure_strategy == action_fail_restart_container
             && (strcmp(history.task, CRMD_ACTION_STOP) == 0))) {
 
+        char *last_change_s = last_change_str(xml_op);
+
         crm_warn("Pretending failed %s (%s%s%s) of %s on %s at %s succeeded "
                  CRM_XS " %s",
                  history.task, services_ocf_exitcode_str(history.exit_status),
                  (pcmk__str_empty(history.exit_reason)? "" : ": "),
                  pcmk__s(history.exit_reason, ""), rsc->id, pe__node_name(node),
                  last_change_s, history.id);
+        free(last_change_s);
 
         update_resource_state(&history, history.expected_exit_status,
                               *last_failure, on_fail);
@@ -4506,7 +4502,6 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     }
 
 done:
-    free(last_change_s);
     pe_rsc_trace(rsc, "%s role on %s after %s is %s (next %s)",
                  rsc->id, pe__node_name(node), history.id,
                  role2text(rsc->role), role2text(rsc->next_role));
