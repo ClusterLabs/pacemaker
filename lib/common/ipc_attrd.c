@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2022 the Pacemaker project contributors
+ * Copyright 2011-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -332,10 +332,14 @@ pcmk__attrd_api_query(pcmk_ipc_api_t *api, const char *node, const char *name,
         return EINVAL;
     }
 
-    target = pcmk__node_attr_target(node);
+    if (pcmk_is_set(options, pcmk__node_attr_query_all)) {
+        node = NULL;
+    } else {
+        target = pcmk__node_attr_target(node);
 
-    if (target != NULL) {
-        node = target;
+        if (target != NULL) {
+            node = target;
+        }
     }
 
     request = create_attrd_op(NULL);

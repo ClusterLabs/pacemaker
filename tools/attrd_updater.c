@@ -431,6 +431,7 @@ static int
 send_attrd_query(pcmk__output_t *out, const char *attr_name,
                  const char *attr_node, gboolean query_all)
 {
+    uint32_t options = pcmk__node_attr_none;
     pcmk_ipc_api_t *attrd_api = NULL;
     int rc = pcmk_rc_ok;
 
@@ -455,10 +456,10 @@ send_attrd_query(pcmk__output_t *out, const char *attr_name,
 
     /* Decide which node(s) to query */
     if (query_all == TRUE) {
-        attr_node = NULL;
+        options |= pcmk__node_attr_query_all;
     }
 
-    rc = pcmk__attrd_api_query(attrd_api, attr_node, attr_name, 0);
+    rc = pcmk__attrd_api_query(attrd_api, attr_node, attr_name, options);
 
     if (rc != pcmk_rc_ok) {
         g_set_error(&error, PCMK__RC_ERROR, rc, "Could not query value of %s: %s (%d)",
