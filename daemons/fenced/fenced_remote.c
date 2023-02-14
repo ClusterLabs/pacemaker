@@ -969,8 +969,9 @@ advance_topology_level(remote_fencing_op_t *op, bool empty_ok)
         return pcmk_rc_ok;
     }
 
-    crm_info("All fencing options targeting %s for client %s@%s failed "
+    crm_info("All %sfencing options targeting %s for client %s@%s failed "
              CRM_XS " id=%.8s",
+             (stonith_watchdog_timeout_ms > 0)?"non-watchdog ":"",
              op->target, op->client_name, op->originator, op->id);
     return ENODEV;
 }
@@ -1434,8 +1435,17 @@ stonith_choose_peer(remote_fencing_op_t * op)
              && pcmk_is_set(op->call_options, st_opt_topology)
              && (advance_topology_level(op, false) == pcmk_rc_ok));
 
-    crm_notice("Couldn't find anyone to fence (%s) %s using %s",
-               op->action, op->target, (device? device : "any device"));
+    if ((stonith_watchdog_timeout_ms > 0)
+        && pcmk__is_fencing_action(op->action)
+        && pcmk__str_eq(device, STONITH_WATCHDOG_ID, pcmk__str_none)
+        && node_does_watchdog_fencing(op->target)) {
+        crm_info("Couldn't contact watchdog-fencing target-node (%s)",
+                 op->target);
+        /* check_watchdog_fencing_and_wait will log additional info */
+    } else {
+        crm_notice("Couldn't find anyone to fence (%s) %s using %s",
+                   op->action, op->target, (device? device : "any device"));
+    }
     return NULL;
 }
 
@@ -1531,6 +1541,18 @@ get_op_total_timeout(const remote_fencing_op_t *op,
                 continue;
             }
             for (device_list = tp->levels[i]; device_list; device_list = device_list->next) {
+                /* in case of watchdog-device we add the timeout to the budget
+                   regardless of if we got a reply or not
+                 */
+                if ((stonith_watchdog_timeout_ms > 0)
+                    && pcmk__is_fencing_action(op->action)
+                    && pcmk__str_eq(device_list->data, STONITH_WATCHDOG_ID,
+                                    pcmk__str_none)
+                    && node_does_watchdog_fencing(op->target)) {
+                    total_timeout += stonith_watchdog_timeout_ms / 1000;
+                    continue;
+                }
+
                 for (iter = op->query_results; iter != NULL; iter = iter->next) {
                     const peer_device_info_t *peer = iter->data;
 
