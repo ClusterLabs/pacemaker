@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the Pacemaker project contributors
+ * Copyright 2009-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1702,6 +1702,10 @@ check_watchdog_fencing_and_wait(remote_fencing_op_t * op)
                    "client %s " CRM_XS " id=%.8s",
                    (stonith_watchdog_timeout_ms / 1000),
                    op->target, op->action, op->client_name, op->id);
+
+        if (op->op_timer_one) {
+            g_source_remove(op->op_timer_one);
+        }
         op->op_timer_one = g_timeout_add(stonith_watchdog_timeout_ms,
                                          remote_op_watchdog_done, op);
         return TRUE;
