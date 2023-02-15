@@ -49,6 +49,8 @@ int remote_tls_fd = 0;
 GHashTable *config_hash = NULL;
 GHashTable *local_notify_queue = NULL;
 
+pcmk__output_t *logger_out = NULL;
+
 static void cib_init(void);
 void cib_shutdown(int nsig);
 static bool startCib(const char *filename);
@@ -194,6 +196,15 @@ main(int argc, char **argv)
         out->version(out, false);
         goto done;
     }
+
+    rc = pcmk__log_output_new(&logger_out);
+    if (rc != pcmk_rc_ok) {
+        exit_code = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Error creating output format log: %s", pcmk_rc_str(rc));
+        goto done;
+    }
+    pcmk__output_set_log_level(logger_out, LOG_TRACE);
 
     mainloop_add_signal(SIGTERM, cib_shutdown);
     mainloop_add_signal(SIGPIPE, cib_enable_writes);
