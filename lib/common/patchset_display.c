@@ -32,10 +32,15 @@
  *
  * \param[in,out] out       Output object
  * \param[in]     patchset  XML patchset to output
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note This function produces output only for text-like formats.
  */
-static void
+static int
 xml_show_patchset_header(pcmk__output_t *out, const xmlNode *patchset)
 {
+    int rc = pcmk_rc_no_output;
     int add[] = { 0, 0, 0 };
     int del[] = { 0, 0, 0 };
 
@@ -46,11 +51,15 @@ xml_show_patchset_header(pcmk__output_t *out, const xmlNode *patchset)
         const char *digest = crm_element_value(patchset, XML_ATTR_DIGEST);
 
         out->info(out, "Diff: --- %d.%d.%d %s", del[0], del[1], del[2], fmt);
-        out->info(out, "Diff: +++ %d.%d.%d %s", add[0], add[1], add[2], digest);
+        rc = out->info(out, "Diff: +++ %d.%d.%d %s",
+                       add[0], add[1], add[2], digest);
 
     } else if ((add[0] != 0) || (add[1] != 0) || (add[2] != 0)) {
-        out->info(out, "Local-only Change: %d.%d.%d", add[0], add[1], add[2]);
+        rc = out->info(out, "Local-only Change: %d.%d.%d",
+                       add[0], add[1], add[2]);
     }
+
+    return rc;
 }
 
 /*!
@@ -62,8 +71,12 @@ xml_show_patchset_header(pcmk__output_t *out, const xmlNode *patchset)
  * \param[in]     data     XML node to output
  * \param[in]     depth    Current indentation level
  * \param[in]     options  Group of \p pcmk__xml_fmt_options flags
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note This function produces output only for text-like formats.
  */
-static void
+static int
 xml_show_patchset_v1_recursive(pcmk__output_t *out, const char *prefix,
                                const xmlNode *data, int depth, uint32_t options)
 {
@@ -81,20 +94,24 @@ xml_show_patchset_v1_recursive(pcmk__output_t *out, const char *prefix,
     }
 
     if (pcmk_is_set(options, pcmk__xml_fmt_diff_short)) {
+        int rc = pcmk_rc_no_output;
+
         // Keep looking for the actual change
         for (const xmlNode *child = pcmk__xml_first_child(data); child != NULL;
              child = pcmk__xml_next(child)) {
-            xml_show_patchset_v1_recursive(out, prefix, child, depth + 1,
-                                           options);
+            int temp_rc = xml_show_patchset_v1_recursive(out, prefix, child,
+                                                         depth + 1, options);
+            rc = pcmk__output_select_rc(rc, temp_rc);
         }
+        return rc;
 
-    } else {
-        pcmk__xml_show(out, prefix, data, depth,
-                       options
-                       |pcmk__xml_fmt_open
-                       |pcmk__xml_fmt_children
-                       |pcmk__xml_fmt_close);
     }
+
+    return pcmk__xml_show(out, prefix, data, depth,
+                          options
+                          |pcmk__xml_fmt_open
+                          |pcmk__xml_fmt_children
+                          |pcmk__xml_fmt_close);
 }
 
 /*!
@@ -106,23 +123,21 @@ xml_show_patchset_v1_recursive(pcmk__output_t *out, const char *prefix,
  *
  * \param[in,out] out       Output object
  * \param[in]     patchset  XML patchset to output
+ * \param[in]     options   Group of \p pcmk__xml_fmt_options flags
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note This function produces output only for text-like formats.
  */
-static void
-xml_show_patchset_v1(pcmk__output_t *out, const xmlNode *patchset)
+static int
+xml_show_patchset_v1(pcmk__output_t *out, const xmlNode *patchset,
+                     uint32_t options)
 {
-    uint32_t options = pcmk__xml_fmt_pretty;
     const xmlNode *removed = NULL;
     const xmlNode *added = NULL;
     const xmlNode *child = NULL;
     bool is_first = true;
-
-    // @FIXME: Use message functions to get rid of explicit fmt_name check
-    if (pcmk__str_eq(out->fmt_name, "log", pcmk__str_none)
-        && (pcmk__output_get_log_level(out) < LOG_DEBUG)) {
-        options |= pcmk__xml_fmt_diff_short;
-    }
-
-    xml_show_patchset_header(out, patchset);
+    int rc = xml_show_patchset_header(out, patchset);
 
     /* It's not clear whether "- " or "+ " ever does *not* get overridden by
      * PCMK__XML_PREFIX_DELETED or PCMK__XML_PREFIX_CREATED in practice.
@@ -132,12 +147,15 @@ xml_show_patchset_v1(pcmk__output_t *out, const xmlNode *patchset)
     removed = find_xml_node(patchset, "diff-removed", FALSE);
     for (child = pcmk__xml_first_child(removed); child != NULL;
          child = pcmk__xml_next(child)) {
-        xml_show_patchset_v1_recursive(out, "- ", child, 0,
-                                       options|pcmk__xml_fmt_diff_minus);
+        int temp_rc = xml_show_patchset_v1_recursive(out, "- ", child, 0,
+                                                     options
+                                                     |pcmk__xml_fmt_diff_minus);
+        rc = pcmk__output_select_rc(rc, temp_rc);
+
         if (is_first) {
             is_first = false;
         } else {
-            out->info(out, " --- ");
+            rc = pcmk__output_select_rc(rc, out->info(out, " --- "));
         }
     }
 
@@ -145,14 +163,19 @@ xml_show_patchset_v1(pcmk__output_t *out, const xmlNode *patchset)
     added = find_xml_node(patchset, "diff-added", FALSE);
     for (child = pcmk__xml_first_child(added); child != NULL;
          child = pcmk__xml_next(child)) {
-        xml_show_patchset_v1_recursive(out, "+ ", child, 0,
-                                       options|pcmk__xml_fmt_diff_plus);
+        int temp_rc = xml_show_patchset_v1_recursive(out, "+ ", child, 0,
+                                                     options
+                                                     |pcmk__xml_fmt_diff_plus);
+        rc = pcmk__output_select_rc(rc, temp_rc);
+
         if (is_first) {
             is_first = false;
         } else {
-            out->info(out, " +++ ");
+            rc = pcmk__output_select_rc(rc, out->info(out, " +++ "));
         }
     }
+
+    return rc;
 }
 
 /*!
@@ -164,11 +187,16 @@ xml_show_patchset_v1(pcmk__output_t *out, const xmlNode *patchset)
  *
  * \param[in,out] out       Output object
  * \param[in]     patchset  XML patchset to output
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note This function produces output only for text-like formats.
  */
-static void
+static int
 xml_show_patchset_v2(pcmk__output_t *out, const xmlNode *patchset)
 {
-    xml_show_patchset_header(out, patchset);
+    int rc = xml_show_patchset_header(out, patchset);
+    int temp_rc = pcmk_rc_no_output;
 
     for (const xmlNode *change = pcmk__xml_first_child(patchset);
          change != NULL; change = pcmk__xml_next(change)) {
@@ -183,25 +211,29 @@ xml_show_patchset_v2(pcmk__output_t *out, const xmlNode *patchset)
             char *prefix = crm_strdup_printf(PCMK__XML_PREFIX_CREATED " %s: ",
                                              xpath);
 
-            pcmk__xml_show(out, prefix, change->children, 0,
-                           pcmk__xml_fmt_pretty|pcmk__xml_fmt_open);
+            temp_rc = pcmk__xml_show(out, prefix, change->children, 0,
+                                     pcmk__xml_fmt_pretty|pcmk__xml_fmt_open);
+            rc = pcmk__output_select_rc(rc, temp_rc);
 
             // Overwrite all except the first two characters with spaces
             for (char *ch = prefix + 2; *ch != '\0'; ch++) {
                 *ch = ' ';
             }
 
-            pcmk__xml_show(out, prefix, change->children, 0,
-                           pcmk__xml_fmt_pretty
-                           |pcmk__xml_fmt_children
-                           |pcmk__xml_fmt_close);
+            temp_rc = pcmk__xml_show(out, prefix, change->children, 0,
+                                     pcmk__xml_fmt_pretty
+                                     |pcmk__xml_fmt_children
+                                     |pcmk__xml_fmt_close);
+            rc = pcmk__output_select_rc(rc, temp_rc);
             free(prefix);
 
         } else if (strcmp(op, "move") == 0) {
             const char *position = crm_element_value(change, XML_DIFF_POSITION);
 
-            out->info(out, PCMK__XML_PREFIX_MOVED " %s moved to offset %s",
-                      xpath, position);
+            temp_rc = out->info(out,
+                                PCMK__XML_PREFIX_MOVED " %s moved to offset %s",
+                                xpath, position);
+            rc = pcmk__output_select_rc(rc, temp_rc);
 
         } else if (strcmp(op, "modify") == 0) {
             xmlNode *clist = first_named_child(change, XML_DIFF_LIST);
@@ -230,12 +262,15 @@ xml_show_patchset_v2(pcmk__output_t *out, const xmlNode *patchset)
             }
 
             if (buffer_set != NULL) {
-                out->info(out, "+  %s:  %s", xpath, buffer_set->str);
+                temp_rc = out->info(out, "+  %s:  %s", xpath, buffer_set->str);
+                rc = pcmk__output_select_rc(rc, temp_rc);
                 g_string_free(buffer_set, TRUE);
             }
 
             if (buffer_unset != NULL) {
-                out->info(out, "-- %s:  %s", xpath, buffer_unset->str);
+                temp_rc = out->info(out, "-- %s:  %s",
+                                    xpath, buffer_unset->str);
+                rc = pcmk__output_select_rc(rc, temp_rc);
                 g_string_free(buffer_unset, TRUE);
             }
 
@@ -244,17 +279,20 @@ xml_show_patchset_v2(pcmk__output_t *out, const xmlNode *patchset)
 
             crm_element_value_int(change, XML_DIFF_POSITION, &position);
             if (position >= 0) {
-                out->info(out, "-- %s (%d)", xpath, position);
+                temp_rc = out->info(out, "-- %s (%d)", xpath, position);
             } else {
-                out->info(out, "-- %s", xpath);
+                temp_rc = out->info(out, "-- %s", xpath);
             }
+            rc = pcmk__output_select_rc(rc, temp_rc);
         }
     }
+
+    return rc;
 }
 
 /*!
  * \internal
- * \brief Log a user-friendly form of an XML patchset
+ * \brief Output a user-friendly form of an XML patchset
  *
  * This function parses an XML patchset (an \p XML_ATTR_DIFF element and its
  * children) into a user-friendly combined diff output. Depending on the value
@@ -262,20 +300,24 @@ xml_show_patchset_v2(pcmk__output_t *out, const xmlNode *patchset)
  *
  * \param[in] log_level  Priority at which to log the messages
  * \param[in] patchset   XML patchset to log
+ *
+ * \return Standard Pacemaker return code
  */
-void
+int
 pcmk__xml_log_patchset(uint8_t log_level, const xmlNode *patchset)
 {
-    int format = 1;
     pcmk__output_t *out = NULL;
+    int format = 1;
+    int rc = pcmk_rc_ok;
 
     static struct qb_log_callsite *patchset_cs = NULL;
 
     switch (log_level) {
         case LOG_NEVER:
-            return;
+            return pcmk_rc_no_output;
         case LOG_STDOUT:
-            CRM_CHECK(pcmk__text_output_new(&out, NULL) == pcmk_rc_ok, return);
+            rc = pcmk__text_output_new(&out, NULL);
+            CRM_CHECK(rc == pcmk_rc_ok, return rc);
             break;
         default:
             if (patchset_cs == NULL) {
@@ -285,9 +327,12 @@ pcmk__xml_log_patchset(uint8_t log_level, const xmlNode *patchset)
             }
             if (!crm_is_callsite_active(patchset_cs, log_level,
                                         crm_trace_nonlog)) {
-                return;
+                return pcmk_rc_no_output;
             }
-            CRM_CHECK(pcmk__log_output_new(&out) == pcmk_rc_ok, return);
+
+            rc = pcmk__log_output_new(&out);
+            CRM_CHECK(rc == pcmk_rc_ok, return rc);
+
             pcmk__output_set_log_level(out, log_level);
             break;
     }
@@ -301,19 +346,27 @@ pcmk__xml_log_patchset(uint8_t log_level, const xmlNode *patchset)
     crm_element_value_int(patchset, "format", &format);
     switch (format) {
         case 1:
-            xml_show_patchset_v1(out, patchset);
+            if (log_level < LOG_DEBUG) {
+                rc = xml_show_patchset_v1(out, patchset,
+                                          pcmk__xml_fmt_pretty
+                                          |pcmk__xml_fmt_diff_short);
+            } else {    // Note: LOG_STDOUT > LOG_DEBUG
+                rc = xml_show_patchset_v1(out, patchset, pcmk__xml_fmt_pretty);
+            }
             break;
         case 2:
-            xml_show_patchset_v2(out, patchset);
+            rc = xml_show_patchset_v2(out, patchset);
             break;
         default:
             crm_err("Unknown patch format: %d", format);
+            rc = pcmk_rc_unknown_format;
             break;
     }
 
 done:
-    out->finish(out, CRM_EX_OK, true, NULL);
+    out->finish(out, pcmk_rc2exitc(rc), true, NULL);
     pcmk__output_free(out);
+    return rc;
 }
 
 static pcmk__message_entry_t fmt_functions[] = {
