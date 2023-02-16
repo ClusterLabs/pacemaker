@@ -718,6 +718,8 @@ remote_op_timeout(gpointer userdata)
 {
     remote_fencing_op_t *op = userdata;
 
+    op->op_timer_total = 0;
+
     if (op->state == st_done) {
         crm_debug("Action '%s' targeting %s for client %s already completed "
                   CRM_XS " id=%.8s",
