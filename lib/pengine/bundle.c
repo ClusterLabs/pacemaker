@@ -1866,3 +1866,104 @@ pe__bundle_is_filtered(const pe_resource_t *rsc, GList *only_rsc,
 
     return !passes;
 }
+
+/*!
+ * \internal
+ * \brief Get a list of a bundle's containers
+ *
+ * \param[in] bundle  Bundle resource
+ *
+ * \return Newly created list of \p bundle's containers
+ * \note It is the caller's responsibility to free the result with
+ *       g_list_free().
+ */
+GList *
+pe__bundle_containers(const pe_resource_t *bundle)
+{
+    GList *containers = NULL;
+    const pe__bundle_variant_data_t *data = NULL;
+
+    get_bundle_variant_data(data, bundle);
+    for (GList *iter = data->replicas; iter != NULL; iter = iter->next) {
+        pe__bundle_replica_t *replica = iter->data;
+
+        containers = g_list_append(containers, replica->container);
+    }
+    return containers;
+}
+
+// Bundle implementation of resource_object_functions_t:active_node()
+pe_node_t *
+pe__bundle_active_node(const pe_resource_t *rsc, unsigned int *count_all,
+                       unsigned int *count_clean)
+{
+    pe_node_t *active = NULL;
+    pe_node_t *node = NULL;
+    pe_resource_t *container = NULL;
+    GList *containers = NULL;
+    GList *iter = NULL;
+    GHashTable *nodes = NULL;
+    const pe__bundle_variant_data_t *data = NULL;
+
+    if (count_all != NULL) {
+        *count_all = 0;
+    }
+    if (count_clean != NULL) {
+        *count_clean = 0;
+    }
+    if (rsc == NULL) {
+        return NULL;
+    }
+
+    /* For the purposes of this method, we only care about where the bundle's
+     * containers are active, so build a list of active containers.
+     */
+    get_bundle_variant_data(data, rsc);
+    for (iter = data->replicas; iter != NULL; iter = iter->next) {
+        pe__bundle_replica_t *replica = iter->data;
+
+        if (replica->container->running_on != NULL) {
+            containers = g_list_append(containers, replica->container);
+        }
+    }
+    if (containers == NULL) {
+        return NULL;
+    }
+
+    /* If the bundle has only a single active container, just use that
+     * container's method. If live migration is ever supported for bundle
+     * containers, this will allow us to prefer the migration source when there
+     * is only one container and it is migrating. For now, this just lets us
+     * avoid creating the nodes table.
+     */
+    if (pcmk__list_of_1(containers)) {
+        container = containers->data;
+        node = container->fns->active_node(container, count_all, count_clean);
+        g_list_free(containers);
+        return node;
+    }
+
+    // Add all containers' active nodes to a hash table (for uniqueness)
+    nodes = g_hash_table_new(NULL, NULL);
+    for (iter = containers; iter != NULL; iter = iter->next) {
+        container = iter->data;
+
+        for (GList *node_iter = container->running_on; node_iter != NULL;
+             node_iter = node_iter->next) {
+            node = node_iter->data;
+
+            // If insert returns true, we haven't counted this node yet
+            if (g_hash_table_insert(nodes, (gpointer) node->details,
+                                    (gpointer) node)
+                && !pe__count_active_node(rsc, node, &active, count_all,
+                                          count_clean)) {
+                goto done;
+            }
+        }
+    }
+
+done:
+    g_list_free(containers);
+    g_hash_table_destroy(nodes);
+    return active;
+}

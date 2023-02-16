@@ -56,6 +56,22 @@ typedef struct resource_object_functions_s {
     void (*free) (pe_resource_t*);
     void (*count) (pe_resource_t*);
     gboolean (*is_filtered) (const pe_resource_t*, GList *, gboolean);
+
+    /*!
+     * \brief
+     * \internal Find a node (and optionally count all) where resource is active
+     *
+     * \param[in]  rsc          Resource to check
+     * \param[out] count_all    If not NULL, set this to count of active nodes
+     * \param[out] count_clean  If not NULL, set this to count of clean nodes
+     *
+     * \return A node where the resource is active, preferring the source node
+     *         if the resource is involved in a partial migration or a clean,
+     *         online node if the resource's "requires" is "quorum" or
+     *         "nothing", or NULL if the resource is inactive.
+     */
+    pe_node_t *(*active_node)(const pe_resource_t *rsc, unsigned int *count_all,
+                              unsigned int *count_clean);
 } resource_object_functions_t;
 
 typedef struct resource_alloc_functions_s resource_alloc_functions_t;

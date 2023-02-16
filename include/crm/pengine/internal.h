@@ -364,16 +364,17 @@ pe_action_t *pe__clear_failcount(pe_resource_t *rsc, const pe_node_t *node,
 
 /* Functions for finding/counting a resource's active nodes */
 
-pe_node_t *pe__find_active_on(const pe_resource_t *rsc,
-                              unsigned int *count_all,
-                              unsigned int *count_clean);
+bool pe__count_active_node(const pe_resource_t *rsc, pe_node_t *node,
+                           pe_node_t **active, unsigned int *count_all,
+                           unsigned int *count_clean);
+
 pe_node_t *pe__find_active_requires(const pe_resource_t *rsc,
                                     unsigned int *count);
 
 static inline pe_node_t *
 pe__current_node(const pe_resource_t *rsc)
 {
-    return pe__find_active_on(rsc, NULL, NULL);
+    return (rsc == NULL)? NULL : rsc->fns->active_node(rsc, NULL, NULL);
 }
 
 
@@ -581,6 +582,9 @@ int pe__common_output_text(pcmk__output_t *out, const pe_resource_t *rsc,
 int pe__common_output_html(pcmk__output_t *out, const pe_resource_t *rsc,
                            const char *name, const pe_node_t *node,
                            unsigned int options);
+
+GList *pe__bundle_containers(const pe_resource_t *bundle);
+
 pe_resource_t *pe__find_bundle_replica(const pe_resource_t *bundle,
                                        const pe_node_t *node);
 bool pe__bundle_needs_remote_name(pe_resource_t *rsc);
