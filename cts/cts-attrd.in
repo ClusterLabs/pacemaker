@@ -183,6 +183,33 @@ class AttributeTests(Tests):
                                   "name=\"DDD\" value=\"555\"")
         test.add_log_pattern("Processed 1 private change for DDD, id=n/a, set=foo")
 
+    def build_multiple_query_tests(self):
+        """ Add tests that set and query an attribute across multiple nodes """
+
+        # NOTE:  These tests make use of the fact that nothing in attrd actually
+        # cares about whether a node exists when you set or query an attribute.
+        # It just keeps creating new hash tables for each node you ask it about.
+
+        test = self.new_test("multi_query_1",
+                             "Query an attribute set across multiple nodes")
+        test.add_cmd("attrd_updater", "--name AAA -U 111 --node cluster1 --output-as=xml")
+        test.add_cmd("attrd_updater", "--name AAA -U 222 --node cluster2 --output-as=xml")
+        test.add_cmd_check_stdout("attrd_updater", "--name AAA -QA --output-as=xml",
+                                  r"""<attribute name="AAA" value="111" host="cluster1"/>\n.*<attribute name="AAA" value="222" host="cluster2"/>""")
+        test.add_cmd_check_stdout("attrd_updater", "--name AAA -Q --node=cluster1 --output-as=xml",
+                                  """<attribute name="AAA" value="111" host="cluster1"/>""")
+        test.add_cmd_check_stdout("attrd_updater", "--name AAA -Q --node=cluster2 --output-as=xml",
+                                  """<attribute name="AAA" value="222" host="cluster2"/>""")
+        test.add_cmd_check_stdout("attrd_updater", "--name AAA -QA --output-as=xml",
+                                  r"""<attribute name="AAA" value="111" host="cluster1"/>\n.*<attribute name="AAA" value="222" host="cluster2"/>""",
+                                  env={"OCF_RESKEY_CRM_meta_on_node": "cluster1"})
+        test.add_cmd_check_stdout("attrd_updater", "--name AAA -Q --output-as=xml",
+                                  """<attribute name="AAA" value="111" host="cluster1"/>""",
+                                  env={"OCF_RESKEY_CRM_meta_on_node": "cluster1"})
+        test.add_cmd_check_stdout("attrd_updater", "--name AAA -Q --node=cluster2 --output-as=xml",
+                                  """<attribute name="AAA" value="222" host="cluster2"/>""",
+                                  env={"OCF_RESKEY_CRM_meta_on_node": "cluster1"})
+
     def build_regex_tests(self):
         """ Add tests that use regexes """
 
@@ -289,6 +316,7 @@ def main():
         tests = AttributeTests(verbose=opts.verbose, logdir=logdir)
 
         tests.build_basic_tests()
+        tests.build_multiple_query_tests()
         tests.build_regex_tests()
         tests.build_utilization_tests()
         tests.build_sync_point_tests()
