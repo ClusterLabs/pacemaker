@@ -227,6 +227,7 @@ class Test:
                                      api-result.rng file.
             check_stderr          -- If True, the stderr of cmd will be included in
                                      output.
+            env                   -- If not None, variables to set in the environment
         """
 
         self._cmds.append(
@@ -241,6 +242,7 @@ class Test:
                 "stdout_match": kwargs.get("stdout_match", None),
                 "stdout_negative_match": kwargs.get("stdout_negative_match", None),
                 "validate": kwargs.get("validate", True),
+                "env": kwargs.get("env", None),
             }
         )
 
@@ -252,22 +254,23 @@ class Test:
     ### PUBLIC METHODS
     ###
 
-    def add_cmd(self, cmd, args, validate=True, check_rng=True, check_stderr=True):
+    def add_cmd(self, cmd, args, validate=True, check_rng=True, check_stderr=True,
+                env=None):
         """ Add a simple command to be executed as part of this test """
 
         self._new_cmd(cmd, args, ExitStatus.OK, validate=validate, check_rng=check_rng,
-                      check_stderr=check_stderr)
+                      check_stderr=check_stderr, env=env)
 
     def add_cmd_and_kill(self, cmd, args, kill_proc):
         """ Add a command and system command to be executed as part of this test """
 
         self._new_cmd(cmd, args, ExitStatus.OK, kill=kill_proc)
 
-    def add_cmd_check_stdout(self, cmd, args, match, no_match=None):
+    def add_cmd_check_stdout(self, cmd, args, match, no_match=None, env=None):
         """ Add a simple command with expected output to be executed as part of this test """
 
         self._new_cmd(cmd, args, ExitStatus.OK, stdout_match=match,
-                      stdout_negative_match=no_match)
+                      stdout_negative_match=no_match, env=env)
 
     def add_cmd_expected_fail(self, cmd, args, exitcode=ExitStatus.ERROR):
         """ Add a command that is expected to fail to be executed as part of this test """
@@ -382,7 +385,13 @@ class Test:
 
         # FIXME: Using "with" here breaks fencing merge tests.
         # pylint: disable=consider-using-with
-        test = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if args['env']:
+            new_env = os.environ.copy()
+            new_env.update(args['env'])
+            test = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                    env=new_env)
+        else:
+            test = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         if args['kill']:
             if self.verbose:
