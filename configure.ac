@@ -415,7 +415,8 @@ yes_no_try "$with_corosync" "try"
 with_corosync=$?
 
 dnl Get default from corosync if possible.
-PKG_CHECK_VAR([PCMK__COROSYNC_CONF], [corosync], [corosysconfdir], [],
+PKG_CHECK_VAR([PCMK__COROSYNC_CONF], [corosync], [corosysconfdir],
+              [PCMK__COROSYNC_CONF="$PCMK__COROSYNC_CONF/corosync.conf"],
               [PCMK__COROSYNC_CONF="${sysconfdir}/corosync/corosync.conf"])
 AC_ARG_WITH([corosync-conf],
     [AS_HELP_STRING([--with-corosync-conf], m4_normalize([

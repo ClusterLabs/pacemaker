@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -26,6 +26,7 @@ enum pcmk__node_attr_opts {
     pcmk__node_attr_sync_local     = (1 << 6),
     pcmk__node_attr_sync_cluster   = (1 << 7),
     pcmk__node_attr_utilization    = (1 << 8),
+    pcmk__node_attr_query_all      = (1 << 9),
 };
 
 #define pcmk__set_node_attr_flags(node_attr_flags, flags_to_set) do {   \
