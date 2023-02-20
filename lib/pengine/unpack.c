@@ -3143,32 +3143,40 @@ unpack_migrate_from_failure(pe_resource_t *rsc, const pe_node_t *node,
     }
 }
 
+/*!
+ * \internal
+ * \brief Add an action to cluster's list of failed actions
+ *
+ * \param[in,out] history  Parsed action result history
+ */
 static void
-record_failed_op(xmlNode *op, const pe_node_t *node,
-                 const pe_resource_t *rsc, pe_working_set_t *data_set)
+record_failed_op(struct action_history *history)
 {
-    xmlNode *xIter = NULL;
-    const char *op_key = crm_element_value(op, XML_LRM_ATTR_TASK_KEY);
+    const char *op_key = crm_element_value(history->xml, XML_LRM_ATTR_TASK_KEY);
 
-    if (node->details->online == FALSE) {
+    if (!(history->node->details->online)) {
         return;
     }
 
-    for (xIter = data_set->failed->children; xIter; xIter = xIter->next) {
+    for (const xmlNode *xIter = history->rsc->cluster->failed->children;
+         xIter != NULL; xIter = xIter->next) {
+
         const char *key = crm_element_value(xIter, XML_LRM_ATTR_TASK_KEY);
         const char *uname = crm_element_value(xIter, XML_ATTR_UNAME);
 
-        if(pcmk__str_eq(op_key, key, pcmk__str_casei) && pcmk__str_eq(uname, node->details->uname, pcmk__str_casei)) {
+        if (pcmk__str_eq(op_key, key, pcmk__str_casei)
+            && pcmk__str_eq(uname, history->node->details->uname,
+                            pcmk__str_casei)) {
             crm_trace("Skipping duplicate entry %s on %s",
-                      op_key, pe__node_name(node));
+                      op_key, pe__node_name(history->node));
             return;
         }
     }
 
-    crm_trace("Adding entry %s on %s", op_key, pe__node_name(node));
-    crm_xml_add(op, XML_ATTR_UNAME, node->details->uname);
-    crm_xml_add(op, XML_LRM_ATTR_RSCID, rsc->id);
-    add_node_copy(data_set->failed, op);
+    crm_trace("Adding entry %s on %s", op_key, pe__node_name(history->node));
+    crm_xml_add(history->xml, XML_ATTR_UNAME, history->node->details->uname);
+    crm_xml_add(history->xml, XML_LRM_ATTR_RSCID, history->rsc->id);
+    add_node_copy(history->rsc->cluster->failed, history->xml);
 }
 
 static const char *
@@ -3351,8 +3359,7 @@ unpack_rsc_op_failure(struct action_history *history, xmlNode **last_failure,
                        history->rsc->id, pe__node_name(history->node));
         }
 
-        record_failed_op(history->xml, history->node, history->rsc,
-                         history->rsc->cluster);
+        record_failed_op(history);
     }
 
     free(last_change_s);
@@ -3550,8 +3557,7 @@ remap_operation(struct action_history *history,
             why = "degraded monitor result";
             if (!history->node->details->shutdown
                 || history->node->details->online) {
-                record_failed_op(history->xml, history->node, history->rsc,
-                                 history->rsc->cluster);
+                record_failed_op(history);
             }
         }
     }
@@ -4261,8 +4267,7 @@ mask_probe_failure(struct action_history *history, int orig_exit_status,
                           on_fail);
     crm_xml_add(history->xml, XML_ATTR_UNAME, history->node->details->uname);
 
-    record_failed_op(history->xml, history->node, history->rsc,
-                     history->rsc->cluster);
+    record_failed_op(history);
     resource_location(ban_rsc, history->node, -INFINITY, "masked-probe-failure",
                       history->rsc->cluster);
 }
@@ -4471,7 +4476,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
         crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
         pe__set_resource_flags(rsc, pe_rsc_failure_ignored);
 
-        record_failed_op(xml_op, node, rsc, rsc->cluster);
+        record_failed_op(&history);
 
         if ((failure_strategy == action_fail_restart_container)
             && cmp_on_fail(*on_fail, action_fail_recover) <= 0) {
