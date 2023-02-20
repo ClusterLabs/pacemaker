@@ -2900,9 +2900,14 @@ add_dangling_migration(pe_resource_t *rsc, const pe_node_t *node)
                                               (gpointer) node);
 }
 
+/*!
+ * \internal
+ * \brief Update resource role etc. after a successful migrate_to action
+ *
+ * \param[in,out] history  Parsed action result history
+ */
 static void
-unpack_migrate_to_success(pe_resource_t *rsc, const pe_node_t *node,
-                          const xmlNode *xml_op)
+unpack_migrate_to_success(struct action_history *history)
 {
     /* A complete migration sequence is:
      * 1. migrate_to on source node (which succeeded if we get to this function)
@@ -2946,18 +2951,18 @@ unpack_migrate_to_success(pe_resource_t *rsc, const pe_node_t *node,
     bool active_on_target = false;
 
     // Get source and target node names from XML
-    if (get_migration_node_names(xml_op, node, NULL, &source,
+    if (get_migration_node_names(history->xml, history->node, NULL, &source,
                                  &target) != pcmk_rc_ok) {
         return;
     }
 
     // Check for newer state on the source
-    source_newer_op = non_monitor_after(rsc->id, source, xml_op, true,
-                                        rsc->cluster);
+    source_newer_op = non_monitor_after(history->rsc->id, source, history->xml,
+                                        true, history->rsc->cluster);
 
     // Check for a migrate_from action from this source on the target
-    migrate_from = find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, target,
-                               source, -1, rsc->cluster);
+    migrate_from = find_lrm_op(history->rsc->id, CRMD_ACTION_MIGRATED, target,
+                               source, -1, history->rsc->cluster);
     if (migrate_from != NULL) {
         if (source_newer_op) {
             /* There's a newer non-monitor operation on the source and a
@@ -2974,8 +2979,9 @@ unpack_migrate_to_success(pe_resource_t *rsc, const pe_node_t *node,
     /* If the resource has newer state on both the source and target after the
      * migration events, this migrate_to is irrelevant to the resource's state.
      */
-    target_newer_state = newer_state_after_migrate(rsc->id, target, xml_op,
-                                                   migrate_from, rsc->cluster);
+    target_newer_state = newer_state_after_migrate(history->rsc->id, target,
+                                                   history->xml, migrate_from,
+                                                   history->rsc->cluster);
     if (source_newer_op && target_newer_state) {
         return;
     }
@@ -2985,26 +2991,27 @@ unpack_migrate_to_success(pe_resource_t *rsc, const pe_node_t *node,
      * migrate_from and the source has any newer non-monitor operation.
      */
     if ((from_rc == PCMK_OCF_OK) && (from_status == PCMK_EXEC_DONE)) {
-        add_dangling_migration(rsc, node);
+        add_dangling_migration(history->rsc, history->node);
         return;
     }
 
     /* Without newer state, this migrate_to implies the resource is active.
      * (Clones are not allowed to migrate, so role can't be promoted.)
      */
-    rsc->role = RSC_ROLE_STARTED;
+    history->rsc->role = RSC_ROLE_STARTED;
 
-    target_node = pe_find_node(rsc->cluster->nodes, target);
+    target_node = pe_find_node(history->rsc->cluster->nodes, target);
     active_on_target = !target_newer_state && (target_node != NULL)
                        && target_node->details->online;
 
     if (from_status != PCMK_EXEC_PENDING) { // migrate_from failed on target
         if (active_on_target) {
-            native_add_running(rsc, target_node, rsc->cluster, TRUE);
+            native_add_running(history->rsc, target_node, history->rsc->cluster,
+                               TRUE);
         } else {
             // Mark resource as failed, require recovery, and prevent migration
-            pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
-            pe__clear_resource_flags(rsc, pe_rsc_allow_migrate);
+            pe__set_resource_flags(history->rsc, pe_rsc_failed|pe_rsc_stop);
+            pe__clear_resource_flags(history->rsc, pe_rsc_allow_migrate);
         }
         return;
     }
@@ -3016,14 +3023,16 @@ unpack_migrate_to_success(pe_resource_t *rsc, const pe_node_t *node,
      * have the probe result, it will be reflected in target_newer_state.
      */
     if ((target_node != NULL) && target_node->details->online
-        && unknown_on_node(rsc, target)) {
+        && unknown_on_node(history->rsc, target)) {
         return;
     }
 
     if (active_on_target) {
-        pe_node_t *source_node = pe_find_node(rsc->cluster->nodes, source);
+        pe_node_t *source_node = pe_find_node(history->rsc->cluster->nodes,
+                                              source);
 
-        native_add_running(rsc, target_node, rsc->cluster, FALSE);
+        native_add_running(history->rsc, target_node, history->rsc->cluster,
+                           FALSE);
         if ((source_node != NULL) && source_node->details->online) {
             /* This is a partial migration: the migrate_to completed
              * successfully on the source, but the migrate_from has not
@@ -3031,14 +3040,14 @@ unpack_migrate_to_success(pe_resource_t *rsc, const pe_node_t *node,
              * chosen target remains the same when we schedule actions
              * later, we may continue with the migration.
              */
-            rsc->partial_migration_target = target_node;
-            rsc->partial_migration_source = source_node;
+            history->rsc->partial_migration_target = target_node;
+            history->rsc->partial_migration_source = source_node;
         }
 
     } else if (!source_newer_op) {
         // Mark resource as failed, require recovery, and prevent migration
-        pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
-        pe__clear_resource_flags(rsc, pe_rsc_allow_migrate);
+        pe__set_resource_flags(history->rsc, pe_rsc_failed|pe_rsc_stop);
+        pe__clear_resource_flags(history->rsc, pe_rsc_allow_migrate);
     }
 }
 
@@ -4073,7 +4082,7 @@ update_resource_state(struct action_history *history, int exit_status,
 
     } else if (pcmk__str_eq(history->task, CRMD_ACTION_MIGRATE,
                             pcmk__str_none)) {
-        unpack_migrate_to_success(history->rsc, history->node, history->xml);
+        unpack_migrate_to_success(history);
 
     } else if (history->rsc->role < RSC_ROLE_STARTED) {
         pe_rsc_trace(history->rsc, "%s active on %s",
