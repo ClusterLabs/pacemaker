@@ -1405,7 +1405,7 @@ failed_action_default(pcmk__output_t *out, va_list args)
     xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
     uint32_t show_opts = va_arg(args, uint32_t);
 
-    const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
+    const char *op_key = pe__xe_history_key(xml_op);
     const char *node_name = crm_element_value(xml_op, XML_ATTR_UNAME);
     const char *exit_reason = crm_element_value(xml_op,
                                                 XML_LRM_ATTR_EXIT_REASON);
@@ -1419,9 +1419,6 @@ failed_action_default(pcmk__output_t *out, va_list args)
     pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS),
                        &status, 0);
 
-    if (pcmk__str_empty(op_key)) {
-        op_key = ID(xml_op);
-    }
     if (pcmk__str_empty(node_name)) {
         node_name = "unknown node";
     }
@@ -1442,7 +1439,8 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
     uint32_t show_opts G_GNUC_UNUSED = va_arg(args, uint32_t);
 
-    const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
+    const char *op_key = pe__xe_history_key(xml_op);
+    const char *op_key_name = "op_key";
     int rc;
     int status;
     const char *exit_reason = crm_element_value(xml_op, XML_LRM_ATTR_EXIT_REASON);
@@ -1457,9 +1455,11 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
                        &status, 0);
 
     rc_s = pcmk__itoa(rc);
+    if (crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY) == NULL) {
+        op_key_name = "id";
+    }
     node = pcmk__output_create_xml_node(out, "failure",
-                                        (op_key == NULL)? "id" : "op_key",
-                                        (op_key == NULL)? ID(xml_op) : op_key,
+                                        op_key_name, op_key,
                                         "node", crm_element_value(xml_op, XML_ATTR_UNAME),
                                         "exitstatus", services_ocf_exitcode_str(rc),
                                         "exitreason", pcmk__s(reason_s, ""),
@@ -1509,8 +1509,6 @@ failed_action_list(pcmk__output_t *out, va_list args) {
     xmlNode *xml_op = NULL;
     int rc = pcmk_rc_no_output;
 
-    const char *id = NULL;
-
     if (xmlChildElementCount(data_set->failed) == 0) {
         return rc;
     }
@@ -1528,8 +1526,7 @@ failed_action_list(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        id = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
-        if (!parse_op_key(id ? id : ID(xml_op), &rsc, NULL, NULL)) {
+        if (!parse_op_key(pe__xe_history_key(xml_op), &rsc, NULL, NULL)) {
             continue;
         }
 
@@ -1973,7 +1970,6 @@ node_and_op(pcmk__output_t *out, va_list args) {
     char *last_change_str = NULL;
 
     const char *op_rsc = crm_element_value(xml_op, "resource");
-    const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
     int status;
     time_t last_change = 0;
 
@@ -2006,7 +2002,7 @@ node_and_op(pcmk__output_t *out, va_list args) {
     }
 
     out->list_item(out, NULL, "%s: %s (node=%s, call=%s, rc=%s%s): %s",
-                   node_str, op_key ? op_key : ID(xml_op),
+                   node_str, pe__xe_history_key(xml_op),
                    crm_element_value(xml_op, XML_ATTR_UNAME),
                    crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
                    crm_element_value(xml_op, XML_LRM_ATTR_RC),
@@ -2026,7 +2022,6 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
 
     pe_resource_t *rsc = NULL;
     const char *op_rsc = crm_element_value(xml_op, "resource");
-    const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
     int status;
     time_t last_change = 0;
     xmlNode *node = NULL;
@@ -2034,7 +2029,7 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
     pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS),
                        &status, PCMK_EXEC_UNKNOWN);
     node = pcmk__output_create_xml_node(out, "operation",
-                                        "op", op_key ? op_key : ID(xml_op),
+                                        "op", pe__xe_history_key(xml_op),
                                         "node", crm_element_value(xml_op, XML_ATTR_UNAME),
                                         "call", crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
                                         "rc", crm_element_value(xml_op, XML_LRM_ATTR_RC),

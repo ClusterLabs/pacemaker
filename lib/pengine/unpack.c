@@ -3179,16 +3179,6 @@ record_failed_op(struct action_history *history)
     add_node_copy(history->rsc->cluster->failed, history->xml);
 }
 
-static const char *
-get_op_key(const xmlNode *xml_op)
-{
-    const char *key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
-    if(key == NULL) {
-        key = ID(xml_op);
-    }
-    return key;
-}
-
 static char *
 last_change_str(const xmlNode *xml_op)
 {
@@ -3754,7 +3744,8 @@ should_clear_for_param_change(const xmlNode *xml_op, const char *task,
                 case RSC_DIGEST_UNKNOWN:
                     crm_trace("Resource %s history entry %s on %s"
                               " has no digest to compare",
-                              rsc->id, get_op_key(xml_op), node->details->id);
+                              rsc->id, pe__xe_history_key(xml_op),
+                              node->details->id);
                     break;
                 case RSC_DIGEST_MATCH:
                     break;
@@ -4019,7 +4010,7 @@ update_resource_state(struct action_history *history, int exit_status,
     } else if (pcmk__str_eq(history->task, CRMD_ACTION_STATUS,
                             pcmk__str_none)) {
         if ((last_failure != NULL)
-            && pcmk__str_eq(history->key, get_op_key(last_failure),
+            && pcmk__str_eq(history->key, pe__xe_history_key(last_failure),
                             pcmk__str_none)) {
             clear_past_failure = true;
         }
@@ -4319,7 +4310,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     }
 
     history.expected_exit_status = pe__target_rc_from_xml(xml_op);
-    history.key = get_op_key(xml_op);
+    history.key = pe__xe_history_key(xml_op);
     crm_element_value_int(xml_op, XML_LRM_ATTR_CALLID, &(history.call_id));
 
     pe_rsc_trace(rsc, "Unpacking %s (%s call %d on %s): %s (%s)",
