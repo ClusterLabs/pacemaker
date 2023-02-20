@@ -3568,6 +3568,14 @@ remap_operation(struct action_history *history,
         case PCMK_EXEC_DONE:
         case PCMK_EXEC_ERROR:
             break;
+
+        // These should be treated as node-fatal
+        case PCMK_EXEC_NO_FENCE_DEVICE:
+        case PCMK_EXEC_NO_SECRETS:
+            history->execution_status = PCMK_EXEC_ERROR_HARD;
+            why = "node-fatal error";
+            goto remap_done;
+
         default:
             goto remap_done;
     }
@@ -4432,11 +4440,6 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
         case PCMK_EXEC_TIMEOUT:
         case PCMK_EXEC_NOT_SUPPORTED:
         case PCMK_EXEC_INVALID:
-            break; // Not done, do error handling
-
-        case PCMK_EXEC_NO_FENCE_DEVICE:
-        case PCMK_EXEC_NO_SECRETS:
-            history.execution_status = PCMK_EXEC_ERROR_HARD;
             break; // Not done, do error handling
 
         default: // No other value should be possible at this point
