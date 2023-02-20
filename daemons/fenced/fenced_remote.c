@@ -544,6 +544,9 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup)
 
     CRM_CHECK((op != NULL), return);
 
+    // This is a no-op if timers have already been cleared
+    clear_remote_op_timers(op);
+
     if (op->notify_sent) {
         // Most likely, this is a timed-out action that eventually completed
         crm_notice("Operation '%s'%s%s by %s for %s@%s%s: "
@@ -558,7 +561,6 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup)
     }
 
     set_fencing_completed(op);
-    clear_remote_op_timers(op);
     undo_op_remap(op);
 
     if (data == NULL) {
@@ -672,7 +674,7 @@ remote_op_timeout_one(gpointer userdata)
 
     // Try another device, if appropriate
     request_peer_fencing(op, NULL);
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 /*!
@@ -685,8 +687,6 @@ remote_op_timeout_one(gpointer userdata)
 static void
 finalize_timed_out_op(remote_fencing_op_t *op, const char *reason)
 {
-    op->op_timer_total = 0;
-
     crm_debug("Action '%s' targeting %s for client %s timed out "
               CRM_XS " id=%.8s",
               op->action, op->target, op->client_name, op->id);
@@ -718,6 +718,8 @@ remote_op_timeout(gpointer userdata)
 {
     remote_fencing_op_t *op = userdata;
 
+    op->op_timer_total = 0;
+
     if (op->state == st_done) {
         crm_debug("Action '%s' targeting %s for client %s already completed "
                   CRM_XS " id=%.8s",
@@ -737,6 +739,7 @@ remote_op_query_timeout(gpointer data)
     remote_fencing_op_t *op = data;
 
     op->query_timer = 0;
+
     if (op->state == st_done) {
         crm_debug("Operation %.8s targeting %s already completed",
                   op->id, op->target);
@@ -751,15 +754,11 @@ remote_op_query_timeout(gpointer data)
     } else {
         crm_debug("Query %.8s targeting %s timed out (state=%s)",
                   op->id, op->target, stonith_op_state_str(op->state));
-        if (op->op_timer_total) {
-            g_source_remove(op->op_timer_total);
-            op->op_timer_total = 0;
-        }
         finalize_timed_out_op(op, "No capable peers replied to device query "
                                   "within timeout");
     }
 
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 static gboolean
