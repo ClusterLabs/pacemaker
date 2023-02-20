@@ -3109,16 +3109,21 @@ unpack_migrate_to_failure(struct action_history *history)
     }
 }
 
+/*!
+ * \internal
+ * \brief Update resource role etc. after a failed migrate_from action
+ *
+ * \param[in,out] history  Parsed action result history
+ */
 static void
-unpack_migrate_from_failure(pe_resource_t *rsc, const pe_node_t *node,
-                            const xmlNode *xml_op, pe_working_set_t *data_set)
+unpack_migrate_from_failure(struct action_history *history)
 {
     xmlNode *source_migrate_to = NULL;
     const char *source = NULL;
     const char *target = NULL;
 
     // Get source and target node names from XML
-    if (get_migration_node_names(xml_op, NULL, node, &source,
+    if (get_migration_node_names(history->xml, NULL, history->node, &source,
                                  &target) != pcmk_rc_ok) {
         return;
     }
@@ -3126,30 +3131,34 @@ unpack_migrate_from_failure(pe_resource_t *rsc, const pe_node_t *node,
     /* If a migration failed, we have to assume the resource is active. Clones
      * are not allowed to migrate, so role can't be promoted.
      */
-    rsc->role = RSC_ROLE_STARTED;
+    history->rsc->role = RSC_ROLE_STARTED;
 
     // Check for a migrate_to on the source
-    source_migrate_to = find_lrm_op(rsc->id, CRMD_ACTION_MIGRATE,
-                                    source, target, PCMK_OCF_OK, data_set);
+    source_migrate_to = find_lrm_op(history->rsc->id, CRMD_ACTION_MIGRATE,
+                                    source, target, PCMK_OCF_OK,
+                                    history->rsc->cluster);
 
     if (/* If the resource state is unknown on the source, it will likely be
          * probed there.
          * Don't just consider it running there. We will get back here anyway in
          * case the probe detects it's running there.
          */
-        !unknown_on_node(rsc, source)
+        !unknown_on_node(history->rsc, source)
         /* If the resource has newer state on the source after the migration
          * events, this migrate_from no longer matters for the source.
          */
-        && !newer_state_after_migrate(rsc->id, source, source_migrate_to, xml_op,
-                                      data_set)) {
+        && !newer_state_after_migrate(history->rsc->id, source,
+                                      source_migrate_to, history->xml,
+                                      history->rsc->cluster)) {
         /* The resource has no newer state on the source, so assume it's still
          * active there (if it is up).
          */
-        pe_node_t *source_node = pe_find_node(data_set->nodes, source);
+        pe_node_t *source_node = pe_find_node(history->rsc->cluster->nodes,
+                                              source);
 
         if (source_node && source_node->details->online) {
-            native_add_running(rsc, source_node, data_set, TRUE);
+            native_add_running(history->rsc, source_node, history->rsc->cluster,
+                               TRUE);
         }
     }
 }
@@ -3381,8 +3390,7 @@ unpack_rsc_op_failure(struct action_history *history, xmlNode **last_failure,
         unpack_migrate_to_failure(history);
 
     } else if (strcmp(history->task, CRMD_ACTION_MIGRATED) == 0) {
-        unpack_migrate_from_failure(history->rsc, history->node, history->xml,
-                                    history->rsc->cluster);
+        unpack_migrate_from_failure(history);
 
     } else if (strcmp(history->task, CRMD_ACTION_PROMOTE) == 0) {
         history->rsc->role = RSC_ROLE_PROMOTED;
