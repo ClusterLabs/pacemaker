@@ -669,7 +669,7 @@ done:
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
 
-    pcmk__output_and_clear_error(error, NULL);
+    pcmk__output_and_clear_error(&error, NULL);
 
     if (needs_teardown) {
         // Teardown message should be the last thing we output

@@ -1726,7 +1726,7 @@ done:
     pcmk_cluster_free(cluster);
     pe_free_working_set(fenced_data_set);
 
-    pcmk__output_and_clear_error(error, out);
+    pcmk__output_and_clear_error(&error, out);
 
     if (logger_out != NULL) {
         logger_out->finish(logger_out, exit_code, true, NULL);

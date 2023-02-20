@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -72,10 +72,10 @@ standard_usage(void **state) {
                 "some error message");
 
     expect_function_call(fake_text_err);
-    pcmk__output_and_clear_error(error, out);
+    pcmk__output_and_clear_error(&error, out);
 
     pcmk__output_free(out);
-    assert_null(error->message);
+    assert_null(error);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,

@@ -381,6 +381,6 @@ done:
     free_xml(object_1);
     free_xml(object_2);
 
-    pcmk__output_and_clear_error(error, NULL);
+    pcmk__output_and_clear_error(&error, NULL);
     crm_exit(exit_code);
 }
