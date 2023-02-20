@@ -348,7 +348,7 @@ main(int argc, char **argv)
 
     g_strfreev(log_files);
 
-    pcmk__output_and_clear_error(error, out);
+    pcmk__output_and_clear_error(&error, out);
 
     if (out != NULL) {
         out->finish(out, attrd_exit_status, true, NULL);

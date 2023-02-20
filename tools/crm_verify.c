@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -273,7 +273,7 @@ main(int argc, char **argv)
         exit_code = pcmk_rc2exitc(rc);
     }
 
-    pcmk__output_and_clear_error(error, NULL);
+    pcmk__output_and_clear_error(&error, NULL);
 
     if (out != NULL) {
         out->finish(out, exit_code, true, NULL);

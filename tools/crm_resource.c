@@ -200,7 +200,7 @@ static pcmk__supported_format_t formats[] = {
 static crm_exit_t
 bye(crm_exit_t ec)
 {
-    pcmk__output_and_clear_error(error, out);
+    pcmk__output_and_clear_error(&error, out);
 
     if (out != NULL) {
         out->finish(out, ec, true, NULL);

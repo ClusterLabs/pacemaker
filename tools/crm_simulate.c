@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the Pacemaker project contributors
+ * Copyright 2009-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -547,7 +547,7 @@ main(int argc, char **argv)
                         options.dot_file);
 
   done:
-    pcmk__output_and_clear_error(error, NULL);
+    pcmk__output_and_clear_error(&error, NULL);
 
     /* There sure is a lot to free in options. */
     free(options.dot_file);

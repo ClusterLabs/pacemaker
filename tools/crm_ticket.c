@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 the Pacemaker project contributors
+ * Copyright 2012-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1005,7 +1005,7 @@ main(int argc, char **argv)
     g_free(options.ticket_id);
     g_free(options.xml_file);
 
-    pcmk__output_and_clear_error(error, NULL);
+    pcmk__output_and_clear_error(&error, NULL);
 
     crm_exit(exit_code);
 }
