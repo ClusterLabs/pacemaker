@@ -3317,6 +3317,38 @@ cmp_on_fail(enum action_fail_response first, enum action_fail_response second)
 
 /*!
  * \internal
+ * \brief Ban a resource (or its clone if an anonymous instance) from all nodes
+ *
+ * \param[in,out] rsc  Resource to ban
+ */
+static void
+ban_from_all_nodes(pe_resource_t *rsc)
+{
+    int score = -INFINITY;
+    pe_resource_t *fail_rsc = rsc;
+
+    if (fail_rsc->parent != NULL) {
+        pe_resource_t *parent = uber_parent(fail_rsc);
+
+        if (pe_rsc_is_anon_clone(parent)) {
+            /* For anonymous clones, if an operation with on-fail=stop fails for
+             * any instance, the entire clone must stop.
+             */
+            fail_rsc = parent;
+        }
+    }
+
+    // Ban the resource from all nodes
+    crm_notice("%s will not be started under current conditions", fail_rsc->id);
+    if (fail_rsc->allowed_nodes != NULL) {
+        g_hash_table_destroy(fail_rsc->allowed_nodes);
+    }
+    fail_rsc->allowed_nodes = pe__node_list2table(rsc->cluster->nodes);
+    g_hash_table_foreach(fail_rsc->allowed_nodes, set_node_score, &score);
+}
+
+/*!
+ * \internal
  * \brief Update resource role, failure handling, etc., after a failed action
  *
  * \param[in,out] history       Parsed action result history
@@ -3436,29 +3468,7 @@ unpack_rsc_op_failure(struct action_history *history, xmlNode **last_failure,
     }
 
     if (action->fail_role == RSC_ROLE_STOPPED) {
-        int score = -INFINITY;
-
-        pe_resource_t *fail_rsc = history->rsc;
-
-        if (fail_rsc->parent) {
-            pe_resource_t *parent = uber_parent(fail_rsc);
-
-            if (pe_rsc_is_clone(parent)
-                && !pcmk_is_set(parent->flags, pe_rsc_unique)) {
-                /* For clone resources, if a child fails on an operation
-                 * with on-fail = stop, all the resources fail.  Do this by preventing
-                 * the parent from coming up again. */
-                fail_rsc = parent;
-            }
-        }
-        crm_notice("%s will not be started under current conditions",
-                   fail_rsc->id);
-        /* make sure it doesn't come up again */
-        if (fail_rsc->allowed_nodes != NULL) {
-            g_hash_table_destroy(fail_rsc->allowed_nodes);
-        }
-        fail_rsc->allowed_nodes = pe__node_list2table(history->rsc->cluster->nodes);
-        g_hash_table_foreach(fail_rsc->allowed_nodes, set_node_score, &score);
+        ban_from_all_nodes(history->rsc);
     }
 
     pe_free_action(action);
