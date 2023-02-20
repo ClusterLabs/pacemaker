@@ -3152,8 +3152,6 @@ unpack_migrate_from_failure(pe_resource_t *rsc, const pe_node_t *node,
 static void
 record_failed_op(struct action_history *history)
 {
-    const char *op_key = crm_element_value(history->xml, XML_LRM_ATTR_TASK_KEY);
-
     if (!(history->node->details->online)) {
         return;
     }
@@ -3161,19 +3159,20 @@ record_failed_op(struct action_history *history)
     for (const xmlNode *xIter = history->rsc->cluster->failed->children;
          xIter != NULL; xIter = xIter->next) {
 
-        const char *key = crm_element_value(xIter, XML_LRM_ATTR_TASK_KEY);
+        const char *key = pe__xe_history_key(xIter);
         const char *uname = crm_element_value(xIter, XML_ATTR_UNAME);
 
-        if (pcmk__str_eq(op_key, key, pcmk__str_casei)
+        if (pcmk__str_eq(history->key, key, pcmk__str_none)
             && pcmk__str_eq(uname, history->node->details->uname,
                             pcmk__str_casei)) {
             crm_trace("Skipping duplicate entry %s on %s",
-                      op_key, pe__node_name(history->node));
+                      history->key, pe__node_name(history->node));
             return;
         }
     }
 
-    crm_trace("Adding entry %s on %s", op_key, pe__node_name(history->node));
+    crm_trace("Adding entry for %s on %s to failed action list",
+              history->key, pe__node_name(history->node));
     crm_xml_add(history->xml, XML_ATTR_UNAME, history->node->details->uname);
     crm_xml_add(history->xml, XML_LRM_ATTR_RSCID, history->rsc->id);
     add_node_copy(history->rsc->cluster->failed, history->xml);
