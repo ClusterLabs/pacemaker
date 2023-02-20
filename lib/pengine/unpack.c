@@ -3485,44 +3485,39 @@ unpack_rsc_op_failure(struct action_history *history, xmlNode **last_failure,
 
 /*!
  * \internal
- * \brief Check whether a resource with a failed action can be recovered
+ * \brief Block a resource with a failed action if it cannot be recovered
  *
  * If resource action is a failed stop and fencing is not possible, mark the
  * resource as unmanaged and blocked, since recovery cannot be done.
  *
- * \param[in,out] rsc          Resource with failed action
- * \param[in]     node         Node where action failed
- * \param[in]     task         Name of action that failed
- * \param[in]     exit_status  Exit status of failed action (for logging only)
- * \param[in]     xml_op       XML of failed action result (for logging only)
+ * \param[in,out] history  Parsed action history entry
  */
 static void
-check_recoverable(pe_resource_t *rsc, const pe_node_t *node, const char *task,
-                  int exit_status, const xmlNode *xml_op)
+block_if_unrecoverable(struct action_history *history)
 {
-    const char *exit_reason = NULL;
     char *last_change_s = NULL;
 
-    if (strcmp(task, CRMD_ACTION_STOP) != 0) {
+    if (strcmp(history->task, CRMD_ACTION_STOP) != 0) {
         return; // All actions besides stop are always recoverable
     }
-    if (pe_can_fence(node->details->data_set, node)) {
+    if (pe_can_fence(history->node->details->data_set, history->node)) {
         return; // Failed stops are recoverable via fencing
     }
 
-    exit_reason = crm_element_value(xml_op, XML_LRM_ATTR_EXIT_REASON);
-    last_change_s = last_change_str(xml_op);
+    last_change_s = last_change_str(history->xml);
     pe_proc_err("No further recovery can be attempted for %s "
                 "because %s on %s failed (%s%s%s) at %s "
-                CRM_XS " rc=%d id=%s", rsc->id, task, pe__node_name(node),
-                services_ocf_exitcode_str(exit_status),
-                ((exit_reason == NULL)? "" : ": "), pcmk__s(exit_reason, ""),
-                last_change_s, exit_status, ID(xml_op));
+                CRM_XS " rc=%d id=%s",
+                history->rsc->id, history->task, pe__node_name(history->node),
+                services_ocf_exitcode_str(history->exit_status),
+                (pcmk__str_empty(history->exit_reason)? "" : ": "),
+                pcmk__s(history->exit_reason, ""),
+                last_change_s, history->exit_status, history->id);
 
     free(last_change_s);
 
-    pe__clear_resource_flags(rsc, pe_rsc_managed);
-    pe__set_resource_flags(rsc, pe_rsc_block);
+    pe__clear_resource_flags(history->rsc, pe_rsc_managed);
+    pe__set_resource_flags(history->rsc, pe_rsc_block);
 }
 
 /*!
@@ -3711,8 +3706,7 @@ remap_operation(struct action_history *history,
                                      &interval_ms);
 
                 if (interval_ms == 0) {
-                    check_recoverable(history->rsc, history->node, task,
-                                      history->exit_status, history->xml);
+                    block_if_unrecoverable(history);
                     remap_because(history, &why, PCMK_EXEC_ERROR_HARD,
                                   "exit status");
                 } else {
@@ -3725,8 +3719,7 @@ remap_operation(struct action_history *history,
         case PCMK_OCF_NOT_INSTALLED:
         case PCMK_OCF_INVALID_PARAM:
         case PCMK_OCF_INSUFFICIENT_PRIV:
-            check_recoverable(history->rsc, history->node, task,
-                              history->exit_status, history->xml);
+            block_if_unrecoverable(history);
             remap_because(history, &why, PCMK_EXEC_ERROR_HARD, "exit status");
             break;
 
