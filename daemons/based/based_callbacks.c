@@ -34,7 +34,6 @@
 #define OUR_NODENAME (stand_alone? "localhost" : crm_cluster->uname)
 
 static unsigned long cib_local_bcast_num = 0;
-static pcmk__output_t *logger_out = NULL;
 
 typedef struct cib_local_notify_s {
     xmlNode *notify_src;
@@ -357,12 +356,9 @@ process_ping_reply(xmlNode *reply)
 
             if(remote_cib && remote_cib->children) {
                 // Additional debug
-                if (logger_out == NULL) {
-                    CRM_CHECK(pcmk__log_output_new(&logger_out) == pcmk_rc_ok,
-                              {free_xml(remote_cib); return;});
-                }
-                pcmk__output_set_log_level(logger_out, LOG_INFO);
                 xml_calculate_changes(the_cib, remote_cib);
+
+                pcmk__output_set_log_level(logger_out, LOG_INFO);
                 pcmk__xml_show_changes(logger_out, remote_cib);
                 crm_trace("End of differences");
             }
@@ -1434,7 +1430,9 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         cib_replace_notify(origin, the_cib, rc, *cib_diff, change_section);
     }
 
-    pcmk__xml_log_patchset(LOG_TRACE, *cib_diff);
+    pcmk__output_set_log_level(logger_out, LOG_TRACE);
+    logger_out->message(logger_out, "xml-patchset", *cib_diff);
+
   done:
     if (!pcmk_is_set(call_options, cib_discard_reply) || cib_legacy_mode()) {
         const char *caller = crm_element_value(request, F_CIB_CLIENTID);

@@ -570,6 +570,8 @@ void pcmk__output_free(pcmk__output_t *out);
  * \internal
  * \brief Create a new ::pcmk__output_t structure.
  *
+ * This also registers message functions from libcrmcommon.
+ *
  * \param[in,out] out      The destination of the new ::pcmk__output_t.
  * \param[in]     fmt_name How should output be formatted?
  * \param[in]     filename Where should formatted output be written to?  This
@@ -917,6 +919,47 @@ int pcmk__xml_output_new(pcmk__output_t **out, xmlNodePtr *xml);
 void pcmk__xml_output_finish(pcmk__output_t *out, xmlNodePtr *xml);
 int pcmk__log_output_new(pcmk__output_t **out);
 int pcmk__text_output_new(pcmk__output_t **out, const char *filename);
+
+/*!
+ * \internal
+ * \brief Select an updated return code for an operation on a \p pcmk__output_t
+ *
+ * This function helps to keep an up-to-date record of the most relevant return
+ * code from a series of operations on a \p pcmk__output_t object. For example,
+ * suppose the object has already produced some output, and we've saved a
+ * \p pcmk_rc_ok return code. A new operation did not produce any output and
+ * returned \p pcmk_rc_no_output. We can ignore the new \p pcmk_rc_no_output
+ * return code and keep the previous \p pcmk_rc_ok return code.
+ *
+ * It prioritizes return codes as follows (from highest to lowest priority):
+ * 1. Other return codes (unexpected errors)
+ * 2. \p pcmk_rc_ok
+ * 3. \p pcmk_rc_no_output
+ *
+ * \param[in] old_rc  Saved return code from \p pcmk__output_t operations
+ * \param[in] new_rc  New return code from a \p pcmk__output_t operation
+ *
+ * \retval \p old_rc  \p new_rc is \p pcmk_rc_no_output, or \p new_rc is
+ *                    \p pcmk_rc_ok and \p old_rc is not \p pcmk_rc_no_output
+ * \retval \p new_rc  Otherwise
+ */
+static inline int
+pcmk__output_select_rc(int old_rc, int new_rc)
+{
+    switch (new_rc) {
+        case pcmk_rc_no_output:
+            return old_rc;
+        case pcmk_rc_ok:
+            switch (old_rc) {
+                case pcmk_rc_no_output:
+                    return new_rc;
+                default:
+                    return old_rc;
+            }
+        default:
+            return new_rc;
+    }
+}
 
 #if defined(PCMK__UNIT_TESTING)
 /* If we are building libcrmcommon_test.a, add this accessor function so we can

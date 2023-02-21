@@ -351,7 +351,9 @@ cib_server_process_diff(const char *op, int options, const char *section, xmlNod
     } else if ((rc != pcmk_ok) && !based_is_primary && cib_legacy_mode()) {
         crm_warn("Requesting full CIB refresh because update failed: %s"
                  CRM_XS " rc=%d", pcmk_strerror(rc), rc);
-        pcmk__xml_log_patchset(LOG_INFO, input);
+
+        pcmk__output_set_log_level(logger_out, LOG_INFO);
+        logger_out->message(logger_out, "xml-patchset", input);
         free_xml(*result_cib);
         *result_cib = NULL;
         send_sync_request(NULL);

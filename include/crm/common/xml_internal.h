@@ -164,10 +164,9 @@ enum pcmk__xml_fmt_options {
     pcmk__xml_fmt_diff_short = (1 << 9),
 };
 
-void pcmk__xml_show(pcmk__output_t *out, const char *prefix,
-                    const xmlNode *data, int depth, uint32_t options);
-void pcmk__xml_show_changes(pcmk__output_t *out, const xmlNode *xml);
-void pcmk__xml_log_patchset(uint8_t log_level, const xmlNode *patchset);
+int pcmk__xml_show(pcmk__output_t *out, const char *prefix, const xmlNode *data,
+                   int depth, uint32_t options);
+int pcmk__xml_show_changes(pcmk__output_t *out, const xmlNode *xml);
 
 /* XML search strings for guest, remote and pacemaker_remote nodes */
 

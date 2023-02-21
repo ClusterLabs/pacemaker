@@ -678,6 +678,7 @@ pcmk_rc2exitc(int rc)
 {
     switch (rc) {
         case pcmk_rc_ok:
+        case pcmk_rc_no_output: // quiet mode, or nothing to output
             return CRM_EX_OK;
 
         case pcmk_rc_no_quorum:
@@ -729,7 +730,6 @@ pcmk_rc2exitc(int rc)
             return CRM_EX_EXISTS;
 
         case EIO:
-        case pcmk_rc_no_output:
         case pcmk_rc_dot_error:
         case pcmk_rc_graph_error:
             return CRM_EX_IOERR;

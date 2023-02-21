@@ -1172,7 +1172,8 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
         }
 
         patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
-        pcmk__xml_log_patchset(LOG_TRACE, patchset);
+        pcmk__output_set_log_level(logger_out, LOG_TRACE);
+        out->message(out, "xml-patchset", patchset);
         rc = xml_apply_patchset(local_cib, patchset, TRUE);
         switch (rc) {
             case pcmk_ok:
@@ -1669,6 +1670,22 @@ main(int argc, char **argv)
 
     cluster = pcmk_cluster_new();
 
+    /* Initialize the logger prior to setup_cib(). update_cib_cache_cb() may
+     * call the "xml-patchset" message function, which needs the logger, after
+     * setup_cib() has run.
+     */
+    rc = pcmk__log_output_new(&logger_out) != pcmk_rc_ok;
+    if (rc != pcmk_rc_ok) {
+        exit_code = CRM_EX_FATAL;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Error creating output format log: %s", pcmk_rc_str(rc));
+        goto done;
+    }
+    pe__register_messages(logger_out);
+    pcmk__register_lib_messages(logger_out);
+    pcmk__output_set_log_level(logger_out, LOG_TRACE);
+    fenced_data_set->priv = logger_out;
+
     if (!stand_alone) {
         if (is_corosync_cluster()) {
 #if SUPPORT_COROSYNC
@@ -1701,15 +1718,6 @@ main(int argc, char **argv)
     init_topology_list();
 
     pcmk__serve_fenced_ipc(&ipcs, &ipc_callbacks);
-
-    if (pcmk__log_output_new(&logger_out) != pcmk_rc_ok) {
-        exit_code = CRM_EX_FATAL;
-        goto done;
-    }
-    pe__register_messages(logger_out);
-    pcmk__register_lib_messages(logger_out);
-    pcmk__output_set_log_level(logger_out, LOG_TRACE);
-    fenced_data_set->priv = logger_out;
 
     // Create the mainloop and run it...
     mainloop = g_main_loop_new(NULL, FALSE);

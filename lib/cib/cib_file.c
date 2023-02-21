@@ -869,29 +869,39 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
         free_xml(result_cib);
 
     } else if (query == FALSE) {
-        pcmk__xml_log_patchset(LOG_DEBUG, cib_diff);
+        pcmk__output_t *out = NULL;
+
+        rc = pcmk_rc2legacy(pcmk__log_output_new(&out));
+        CRM_CHECK(rc == pcmk_ok, goto done);
+
+        pcmk__output_set_log_level(out, LOG_DEBUG);
+        rc = out->message(out, "xml-patchset", cib_diff);
+        out->finish(out, pcmk_rc2exitc(rc), true, NULL);
+        pcmk__output_free(out);
+        rc = pcmk_ok;
+
         free_xml(in_mem_cib);
         in_mem_cib = result_cib;
         cib_set_file_flags(private, cib_file_flag_dirty);
     }
 
-    free_xml(cib_diff);
-
     if (cib->op_callback != NULL) {
         cib->op_callback(NULL, cib->call_id, rc, output);
     }
 
-    if (output_data && output) {
-        if(output == in_mem_cib) {
-            *output_data = copy_xml(output);
-        } else {
-            *output_data = output;
-        }
-
-    } else if(output != in_mem_cib) {
-        free_xml(output);
+    if ((output_data != NULL) && (output != NULL)) {
+        *output_data = (output == in_mem_cib)? copy_xml(output) : output;
     }
 
+done:
+    free_xml(cib_diff);
+
+    if ((output_data == NULL) && (output != in_mem_cib)) {
+        /* Don't free output if we're still using it. (output_data != NULL)
+         * means we may have assigned *output_data = output above.
+         */
+        free_xml(output);
+    }
     free(effective_user);
     return rc;
 }

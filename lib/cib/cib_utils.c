@@ -157,6 +157,9 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     const char *user = crm_element_value(req, F_CIB_USER);
     bool with_digest = FALSE;
 
+    pcmk__output_t *out = NULL;
+    int out_rc = pcmk_rc_no_output;
+
     crm_trace("Begin %s%s%s op",
               (pcmk_is_set(call_options, cib_dryrun)? "dry run of " : ""),
               (is_query? "read-only " : ""), op);
@@ -322,25 +325,36 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     // Create a log output object only if we're going to use it
     pcmk__if_tracing(
         {
-            pcmk__output_t *out = NULL;
             rc = pcmk_rc2legacy(pcmk__log_output_new(&out));
-
             CRM_CHECK(rc == pcmk_ok, goto done);
 
             pcmk__output_set_log_level(out, LOG_TRACE);
-            pcmk__xml_show_changes(out, scratch);
-            out->finish(out, CRM_EX_OK, true, NULL);
-            pcmk__output_free(out);
+            out_rc = pcmk__xml_show_changes(out, scratch);
         },
         {}
     );
     xml_accept_changes(scratch);
 
     if(local_diff) {
+        int temp_rc = pcmk_rc_no_output;
+
         patchset_process_digest(local_diff, current_cib, scratch, with_digest);
 
-        pcmk__xml_log_patchset(LOG_INFO, local_diff);
+        if (out == NULL) {
+            rc = pcmk_rc2legacy(pcmk__log_output_new(&out));
+            CRM_CHECK(rc == pcmk_ok, goto done);
+        }
+        pcmk__output_set_log_level(out, LOG_INFO);
+        temp_rc = out->message(out, "xml-patchset", local_diff);
+        out_rc = pcmk__output_select_rc(rc, temp_rc);
+
         crm_log_xml_trace(local_diff, "raw patch");
+    }
+
+    if (out != NULL) {
+        out->finish(out, pcmk_rc2exitc(out_rc), true, NULL);
+        pcmk__output_free(out);
+        out = NULL;
     }
 
     if (!pcmk_is_set(call_options, cib_zero_copy) && (local_diff != NULL)) {
@@ -709,7 +723,16 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
     }
 
     if (level > LOG_CRIT) {
-        pcmk__xml_log_patchset(level, diff);
+        pcmk__output_t *out = NULL;
+
+        rc = pcmk_rc2legacy(pcmk__log_output_new(&out));
+        CRM_CHECK(rc == pcmk_ok, return rc);
+
+        pcmk__output_set_log_level(out, level);
+        rc = out->message(out, "xml-patchset", diff);
+        out->finish(out, pcmk_rc2exitc(rc), true, NULL);
+        pcmk__output_free(out);
+        rc = pcmk_ok;
     }
 
     if (input != NULL) {
