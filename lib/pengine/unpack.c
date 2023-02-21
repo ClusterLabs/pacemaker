@@ -1093,15 +1093,21 @@ unpack_node_state(const xmlNode *state, pe_working_set_t *data_set)
 
     uname = crm_element_value(state, XML_ATTR_UNAME);
     if (uname == NULL) {
-        crm_warn("Ignoring malformed " XML_CIB_TAG_STATE " entry without "
-                 XML_ATTR_UNAME);
-        return;
+        /* If a joining peer makes the cluster acquire the quorum from corosync
+         * meanwhile it has not joined CPG membership of pacemaker-controld yet,
+         * it's possible that the created node_state entry doesn't have an uname
+         * yet. We should recognize the node as `pending` and wait for it to
+         * join CPG.
+         */
+        crm_trace("Handling " XML_CIB_TAG_STATE " entry with id=\"%s\" without "
+                  XML_ATTR_UNAME, id);
     }
 
     this_node = pe_find_node_any(data_set->nodes, id, uname);
     if (this_node == NULL) {
-        pcmk__config_warn("Ignoring recorded node state for '%s' because "
-                          "it is no longer in the configuration", uname);
+        pcmk__config_warn("Ignoring recorded node state for id=\"%s\" (%s) "
+                          "because it is no longer in the configuration",
+                          id, pcmk__s(uname, "uname unknown"));
         return;
     }
 
