@@ -69,22 +69,6 @@ static struct {
     .cmd_options = cib_sync_call,
 };
 
-#if 0
-// @COMPAT Possibly enable this at next backward compatibility break
-#define SET_COMMAND(command) do {                                       \
-        if (options.cmd != shadow_cmd_none) {                           \
-            g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_USAGE,         \
-                        "Only one command option may be specified");    \
-            return FALSE;                                               \
-        }                                                               \
-        options.cmd = (command);                                        \
-    } while (0)
-#else
-#define SET_COMMAND(command) do {   \
-        options.cmd = (command);    \
-    } while (0)
-#endif
-
 static char *
 get_shadow_prompt(const char *name)
 {
@@ -162,37 +146,37 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
            GError **error)
 {
     if (pcmk__str_any_of(option_name, "-w", "--which", NULL)) {
-        SET_COMMAND(shadow_cmd_which);
+        options.cmd = shadow_cmd_which;
 
     } else if (pcmk__str_any_of(option_name, "-p", "--display", NULL)) {
-        SET_COMMAND(shadow_cmd_display);
+        options.cmd = shadow_cmd_display;
 
     } else if (pcmk__str_any_of(option_name, "-d", "--diff", NULL)) {
-        SET_COMMAND(shadow_cmd_diff);
+        options.cmd = shadow_cmd_diff;
 
     } else if (pcmk__str_any_of(option_name, "-F", "--file", NULL)) {
-        SET_COMMAND(shadow_cmd_file);
+        options.cmd = shadow_cmd_file;
 
     } else if (pcmk__str_any_of(option_name, "-c", "--create", NULL)) {
-        SET_COMMAND(shadow_cmd_create);
+        options.cmd = shadow_cmd_create;
 
     } else if (pcmk__str_any_of(option_name, "-e", "--create-empty", NULL)) {
-        SET_COMMAND(shadow_cmd_create_empty);
+        options.cmd = shadow_cmd_create_empty;
 
     } else if (pcmk__str_any_of(option_name, "-C", "--commit", NULL)) {
-        SET_COMMAND(shadow_cmd_commit);
+        options.cmd = shadow_cmd_commit;
 
     } else if (pcmk__str_any_of(option_name, "-D", "--delete", NULL)) {
-        SET_COMMAND(shadow_cmd_delete);
+        options.cmd = shadow_cmd_delete;
 
     } else if (pcmk__str_any_of(option_name, "-E", "--edit", NULL)) {
-        SET_COMMAND(shadow_cmd_edit);
+        options.cmd = shadow_cmd_edit;
 
     } else if (pcmk__str_any_of(option_name, "-r", "--reset", NULL)) {
-        SET_COMMAND(shadow_cmd_reset);
+        options.cmd = shadow_cmd_reset;
 
     } else if (pcmk__str_any_of(option_name, "-s", "--switch", NULL)) {
-        SET_COMMAND(shadow_cmd_switch);
+        options.cmd = shadow_cmd_switch;
 
     } else {
         // Should be impossible
