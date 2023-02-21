@@ -69,6 +69,55 @@ static struct {
     .cmd_options = cib_sync_call,
 };
 
+/*!
+ * \internal
+ * \brief Display an instruction to the user
+ *
+ * \param[in,out] out  Output object
+ * \param[in]     ...  Message arguments
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note The variadic message arguments are of the following format:
+ *       -# Instructional message
+ */
+PCMK__OUTPUT_ARGS("instruction", "const char *")
+static int
+instruction_default(pcmk__output_t *out, va_list args)
+{
+    const char *msg = va_arg(args, const char *);
+
+    if (msg == NULL) {
+        return pcmk_rc_no_output;
+    }
+    return out->info(out, "%s", msg);
+}
+
+/*!
+ * \internal
+ * \brief Display an instruction to the user
+ *
+ * \param[in,out] out  Output object
+ * \param[in]     ...  Message arguments
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note The variadic message arguments are of the following format:
+ *       -# Instructional message
+ */
+PCMK__OUTPUT_ARGS("instruction", "const char *")
+static int
+instruction_xml(pcmk__output_t *out, va_list args)
+{
+    const char *msg = va_arg(args, const char *);
+
+    if (msg == NULL) {
+        return pcmk_rc_no_output;
+    }
+    pcmk__output_create_xml_text_node(out, "instruction", msg);
+    return pcmk_rc_ok;
+}
+
 static const pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_NONE,
     PCMK__SUPPORTED_FORMAT_TEXT,
@@ -77,6 +126,9 @@ static const pcmk__supported_format_t formats[] = {
 };
 
 static const pcmk__message_entry_t fmt_functions[] = {
+    { "instruction", "default", instruction_default },
+    { "instruction", "xml", instruction_xml },
+
     { NULL, NULL, NULL }
 };
 
