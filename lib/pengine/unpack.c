@@ -4292,6 +4292,61 @@ mask_probe_failure(struct action_history *history, int orig_exit_status,
                       history->rsc->cluster);
 }
 
+/*!
+ * \internal
+ * \brief Update a resource's role etc. for a pending action
+ *
+ * \param[in,out] history  Parsed history entry for pending action
+ */
+static void
+process_pending_action(struct action_history *history)
+{
+    if (strcmp(history->task, CRMD_ACTION_START) == 0) {
+        pe__set_resource_flags(history->rsc, pe_rsc_start_pending);
+        set_active(history->rsc);
+
+    } else if (strcmp(history->task, CRMD_ACTION_PROMOTE) == 0) {
+        history->rsc->role = RSC_ROLE_PROMOTED;
+
+    } else if ((strcmp(history->task, CRMD_ACTION_MIGRATE) == 0)
+               && history->node->details->unclean) {
+        /* A migrate_to action is pending on a unclean source, so force a stop
+         * on the target.
+         */
+        const char *migrate_target = NULL;
+        pe_node_t *target = NULL;
+
+        migrate_target = crm_element_value(history->xml,
+                                           XML_LRM_ATTR_MIGRATE_TARGET);
+        target = pe_find_node(history->rsc->cluster->nodes, migrate_target);
+        if (target != NULL) {
+            stop_action(history->rsc, target, FALSE);
+        }
+    }
+
+    if (history->rsc->pending_task != NULL) {
+        /* There should never be multiple pending actions, but as a failsafe,
+         * just remember the first one processed for display purposes.
+         */
+        return;
+    }
+
+    if (pcmk_is_probe(history->task, history->interval_ms)) {
+        /* Pending probes are currently never displayed, even if pending
+         * operations are requested. If we ever want to change that,
+         * enable the below and the corresponding part of
+         * native.c:native_pending_task().
+         */
+#if 0
+        history->rsc->pending_task = strdup("probe");
+        history->rsc->pending_node = history->node;
+#endif
+    } else {
+        history->rsc->pending_task = strdup(history->task);
+        history->rsc->pending_node = history->node;
+    }
+}
+
 static void
 unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
               xmlNode **last_failure, enum action_fail_response *on_fail)
@@ -4390,42 +4445,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 
     switch (history.execution_status) {
         case PCMK_EXEC_PENDING:
-            if (strcmp(history.task, CRMD_ACTION_START) == 0) {
-                pe__set_resource_flags(rsc, pe_rsc_start_pending);
-                set_active(rsc);
-
-            } else if (strcmp(history.task, CRMD_ACTION_PROMOTE) == 0) {
-                rsc->role = RSC_ROLE_PROMOTED;
-
-            } else if ((strcmp(history.task, CRMD_ACTION_MIGRATE) == 0)
-                       && node->details->unclean) {
-                /* If a pending migrate_to action is out on a unclean node,
-                 * we have to force the stop action on the target. */
-                const char *migrate_target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
-                pe_node_t *target = pe_find_node(rsc->cluster->nodes,
-                                                 migrate_target);
-                if (target) {
-                    stop_action(rsc, target, FALSE);
-                }
-            }
-
-            if (rsc->pending_task == NULL) {
-                if ((history.interval_ms != 0)
-                    || (strcmp(history.task, CRMD_ACTION_STATUS) != 0)) {
-                    rsc->pending_task = strdup(history.task);
-                    rsc->pending_node = node;
-                } else {
-                    /* Pending probes are not printed, even if pending
-                     * operations are requested. If someone ever requests that
-                     * behavior, enable the below and the corresponding part of
-                     * native.c:native_pending_task().
-                     */
-#if 0
-                    rsc->pending_task = strdup("probe");
-                    rsc->pending_node = node;
-#endif
-                }
-            }
+            process_pending_action(&history);
             goto done;
 
         case PCMK_EXEC_DONE:
