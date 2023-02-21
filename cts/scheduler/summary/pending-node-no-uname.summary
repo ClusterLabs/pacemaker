@@ -1,26 +1,23 @@
 Using the original execution date of: 2023-02-21 12:19:57Z
 Current cluster status:
   * Node List:
-    * Node node-2: UNCLEAN (offline)
+    * Node node-2: pending
     * Online: [ node-1 ]
 
   * Full List of Resources:
     * st-sbd	(stonith:external/sbd):	 Stopped
 
 Transition Summary:
-  * Fence (reboot) node-2 'node is unclean'
-  * Start      st-sbd     ( node-1 )
+  * Start      st-sbd     ( node-1 )  blocked
 
 Executing Cluster Transition:
   * Resource action: st-sbd          monitor on node-1
-  * Fencing node-2 (reboot)
-  * Resource action: st-sbd          start on node-1
 Using the original execution date of: 2023-02-21 12:19:57Z
 
 Revised Cluster Status:
   * Node List:
+    * Node node-2: pending
     * Online: [ node-1 ]
-    * OFFLINE: [ node-2 ]
 
   * Full List of Resources:
-    * st-sbd	(stonith:external/sbd):	 Started node-1
+    * st-sbd	(stonith:external/sbd):	 Stopped
