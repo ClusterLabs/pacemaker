@@ -203,6 +203,36 @@ cmd_is_dangerous(enum shadow_command cmd)
 
 /*!
  * \internal
+ * \brief Show the contents of the active shadow instance
+ *
+ * \param[out] error  Where to store error
+ */
+static void
+show_shadow_contents(GError **error)
+{
+    char *filename = NULL;
+
+    if (get_instance_from_env(error) != pcmk_rc_ok) {
+        return;
+    }
+
+    filename = get_shadow_file(options.instance);
+
+    if (check_file_exists(filename, true, error) == pcmk_rc_ok) {
+        char *output_s = NULL;
+        xmlNode *output = filename2xml(filename);
+
+        output_s = dump_xml_formatted(output);
+        printf("%s", output_s);
+
+        free(output_s);
+        free_xml(output);
+    }
+    free(filename);
+}
+
+/*!
+ * \internal
  * \brief Show the absolute path of the active shadow instance
  *
  * \param[out] error  Where to store error
@@ -449,6 +479,9 @@ main(int argc, char **argv)
      * @TODO: Finish adding all commands here
      */
     switch (options.cmd) {
+        case shadow_cmd_display:
+            show_shadow_contents(&error);
+            goto done;
         case shadow_cmd_file:
             show_shadow_filename(&error);
             goto done;
@@ -461,7 +494,6 @@ main(int argc, char **argv)
 
     // Some commands get options.instance from the environment
     switch (options.cmd) {
-        case shadow_cmd_display:
         case shadow_cmd_diff:
         case shadow_cmd_edit:
             if (get_instance_from_env(&error) != pcmk_rc_ok) {
@@ -628,20 +660,6 @@ main(int argc, char **argv)
         case shadow_cmd_switch:
             // Switch to the named shadow instance
             shadow_setup(options.instance, TRUE);
-            break;
-
-        case shadow_cmd_display:
-            // Display the current shadow file contents
-            {
-                char *output_s = NULL;
-                xmlNode *output = filename2xml(shadow_file);
-
-                output_s = dump_xml_formatted(output);
-                printf("%s", output_s);
-
-                free(output_s);
-                free_xml(output);
-            }
             break;
 
         case shadow_cmd_diff:
