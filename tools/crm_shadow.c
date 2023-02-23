@@ -166,6 +166,23 @@ cmd_is_dangerous(enum shadow_command cmd)
 
 /*!
  * \internal
+ * \brief Show the absolute path of the active shadow instance
+ *
+ * \param[out] error  Where to store error
+ */
+static void
+show_shadow_filename(GError **error)
+{
+    if (get_instance_from_env(error) == pcmk_rc_ok) {
+        char *filename = get_shadow_file(options.instance);
+
+        printf("%s\n", filename);
+        free(filename);
+    }
+}
+
+/*!
+ * \internal
  * \brief Show the active shadow instance
  *
  * \param[out] error  Where to store error
@@ -396,6 +413,9 @@ main(int argc, char **argv)
      * @TODO: Finish adding all commands here
      */
     switch (options.cmd) {
+        case shadow_cmd_file:
+            show_shadow_filename(&error);
+            goto done;
         case shadow_cmd_which:
             show_shadow_instance(&error);
             goto done;
@@ -407,7 +427,6 @@ main(int argc, char **argv)
     switch (options.cmd) {
         case shadow_cmd_display:
         case shadow_cmd_diff:
-        case shadow_cmd_file:
         case shadow_cmd_edit:
             if (get_instance_from_env(&error) != pcmk_rc_ok) {
                 goto done;
@@ -458,12 +477,6 @@ main(int argc, char **argv)
                         options.instance, strerror(errno));
         }
         needs_teardown = true;
-        goto done;
-    }
-
-    if (options.cmd == shadow_cmd_file) {
-        // Show the shadow file path
-        printf("%s\n", shadow_file);
         goto done;
     }
 
