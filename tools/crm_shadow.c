@@ -75,6 +75,29 @@ get_shadow_prompt(const char *name)
     return crm_strdup_printf("shadow[%.40s] # ", name);
 }
 
+/*!
+ * \internal
+ * \brief Get the active shadow instance from the environment
+ *
+ * This sets \p options.instance to the value of the \p CIB_shadow env variable.
+ *
+ * \param[out] error  Where to store error
+ */
+static int
+get_instance_from_env(GError **error)
+{
+    int rc = pcmk_rc_ok;
+
+    pcmk__str_update(&options.instance, getenv("CIB_shadow"));
+    if (options.instance == NULL) {
+        rc = ENXIO;
+        exit_code = pcmk_rc2exitc(rc);
+        g_set_error(error, PCMK__EXITC_ERROR, exit_code,
+                    "No active shadow configuration defined");
+    }
+    return rc;
+}
+
 static void
 shadow_setup(char *name, gboolean do_switch)
 {
@@ -362,11 +385,7 @@ main(int argc, char **argv)
         case shadow_cmd_diff:
         case shadow_cmd_file:
         case shadow_cmd_edit:
-            pcmk__str_update(&options.instance, getenv("CIB_shadow"));
-            if (options.instance == NULL) {
-                exit_code = CRM_EX_NOSUCH;
-                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                            "No active shadow configuration defined");
+            if (get_instance_from_env(&error) != pcmk_rc_ok) {
                 goto done;
             }
             break;
