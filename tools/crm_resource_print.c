@@ -131,11 +131,11 @@ cli_resource_print(pe_resource_t *rsc, pe_working_set_t *data_set, bool expanded
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("attribute-list", "pe_resource_t *", "char *", "const char *")
+PCMK__OUTPUT_ARGS("attribute-list", "pe_resource_t *", "const char *", "const char *")
 static int
 attribute_list_default(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    char *attr = va_arg(args, char *);
+    const char *attr = va_arg(args, char *);
     const char *value = va_arg(args, const char *);
 
     if (value != NULL) {
@@ -224,11 +224,11 @@ agent_status_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("attribute-list", "pe_resource_t *", "char *", "const char *")
+PCMK__OUTPUT_ARGS("attribute-list", "pe_resource_t *", "const char *", "const char *")
 static int
 attribute_list_text(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    char *attr = va_arg(args, char *);
+    const char *attr = va_arg(args, char *);
     const char *value = va_arg(args, const char *);
 
     if (value != NULL) {
@@ -276,11 +276,11 @@ override_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("property-list", "pe_resource_t *", "char *")
+PCMK__OUTPUT_ARGS("property-list", "pe_resource_t *", "const char *")
 static int
 property_list_default(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    char *attr = va_arg(args, char *);
+    const char *attr = va_arg(args, char *);
 
     const char *value = crm_element_value(rsc->xml, attr);
 
