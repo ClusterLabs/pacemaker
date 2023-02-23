@@ -54,6 +54,20 @@ enum shadow_command {
     shadow_cmd_switch,
 };
 
+/*!
+ * \internal
+ * \enum shadow_disp_flags
+ * \brief Bit flags to control which fields of shadow CIB info are displayed
+ *
+ * \note Ignored for XML output.
+ */
+enum shadow_disp_flags {
+    shadow_disp_instance = (1 << 0),
+    shadow_disp_file     = (1 << 1),
+    shadow_disp_content  = (1 << 2),
+    shadow_disp_diff     = (1 << 3),
+};
+
 static bool needs_teardown = false;
 static crm_exit_t exit_code = CRM_EX_OK;
 
@@ -118,6 +132,178 @@ instruction_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
+/*!
+ * \internal
+ * \brief Display information about a shadow CIB instance
+ *
+ * \param[in,out] out  Output object
+ * \param[in]     ...  Message arguments
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note The variadic message arguments are of the following format:
+ *       -# Instance name (can be \p NULL)
+ *       -# Shadow file name (can be \p NULL)
+ *       -# Shadow file content (can be \p NULL)
+ *       -# Patchset containing the changes in the shadow CIB (can be \p NULL)
+ *       -# Group of \p shadow_disp_flags indicating which fields to display
+ */
+PCMK__OUTPUT_ARGS("shadow", "const char *", "const char *", "xmlNodePtr",
+                  "xmlNodePtr", "enum shadow_disp_flags")
+static int
+shadow_default(pcmk__output_t *out, va_list args)
+{
+    const char *instance = va_arg(args, const char *);
+    const char *filename = va_arg(args, const char *);
+    xmlNodePtr content = va_arg(args, xmlNodePtr);
+    xmlNodePtr diff = va_arg(args, xmlNodePtr);
+    enum shadow_disp_flags flags = (enum shadow_disp_flags) va_arg(args, int);
+
+    int rc = pcmk_rc_no_output;
+
+    if (pcmk_is_set(flags, shadow_disp_instance)) {
+        rc = out->info(out, "Instance: %s", pcmk__s(instance, "<unknown>"));
+    }
+    if (pcmk_is_set(flags, shadow_disp_file)) {
+        rc = out->info(out, "File name: %s", pcmk__s(filename, "<unknown>"));
+    }
+    if (pcmk_is_set(flags, shadow_disp_content)) {
+        rc = out->info(out, "Content:");
+
+        if (content != NULL) {
+            char *buf = pcmk__trim(dump_xml_formatted_with_text(content));
+
+            if (!pcmk__str_empty(buf)) {
+                out->info(out, "%s", buf);
+            }
+            free(buf);
+
+        } else {
+            out->info(out, "<unknown>");
+        }
+    }
+    if (pcmk_is_set(flags, shadow_disp_diff)) {
+        rc = out->info(out, "Diff:");
+
+        if (diff != NULL) {
+            out->message(out, "xml-patchset", diff);
+        } else {
+            out->info(out, "<empty>");
+        }
+    }
+
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Display information about a shadow CIB instance
+ *
+ * \param[in,out] out  Output object
+ * \param[in]     ...  Message arguments
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note The variadic message arguments are of the following format:
+ *       -# Instance name (can be \p NULL)
+ *       -# Shadow file name (can be \p NULL)
+ *       -# Shadow file content (can be \p NULL)
+ *       -# Patchset containing the changes in the shadow CIB (can be \p NULL)
+ *       -# Group of \p shadow_disp_flags indicating which fields to display
+ */
+PCMK__OUTPUT_ARGS("shadow", "const char *", "const char *", "xmlNodePtr",
+                  "xmlNodePtr", "enum shadow_disp_flags")
+static int
+shadow_text(pcmk__output_t *out, va_list args)
+{
+    if (!out->is_quiet(out)) {
+        return shadow_default(out, args);
+
+    } else {
+        const char *instance = va_arg(args, const char *);
+        const char *filename = va_arg(args, const char *);
+        xmlNodePtr content = va_arg(args, xmlNodePtr);
+        xmlNodePtr diff = va_arg(args, xmlNodePtr);
+        enum shadow_disp_flags flags = (enum shadow_disp_flags) va_arg(args, int);
+
+        int rc = pcmk_rc_no_output;
+        bool quiet_orig = out->quiet;
+
+        /* We have to disable quiet mode for the "xml-patchset" message if we
+         * call it, so we might as well do so for this whole section.
+         */
+        out->quiet = false;
+
+        if (pcmk_is_set(flags, shadow_disp_instance) && (instance != NULL)) {
+            rc = out->info(out, "%s", instance);
+        }
+        if (pcmk_is_set(flags, shadow_disp_file) && (filename != NULL)) {
+            rc = out->info(out, "%s", filename);
+        }
+        if (pcmk_is_set(flags, shadow_disp_content) && (content != NULL)) {
+            char *buf = pcmk__trim(dump_xml_formatted_with_text(content));
+
+            rc = out->info(out, "%s", pcmk__trim(buf));
+            free(buf);
+        }
+        if (pcmk_is_set(flags, shadow_disp_diff) && (diff != NULL)) {
+            rc = out->message(out, "xml-patchset", diff);
+        }
+
+        out->quiet = quiet_orig;
+        return rc;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Display information about a shadow CIB instance
+ *
+ * \param[in,out] out  Output object
+ * \param[in]     ...  Message arguments
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note The variadic message arguments are of the following format:
+ *       -# Instance name (can be \p NULL)
+ *       -# Shadow file name (can be \p NULL)
+ *       -# Shadow file content (can be \p NULL)
+ *       -# Patchset containing the changes in the shadow CIB (can be \p NULL)
+ *       -# Group of \p shadow_disp_flags indicating which fields to display
+ *          (ignored)
+ */
+PCMK__OUTPUT_ARGS("shadow", "const char *", "const char *", "xmlNodePtr",
+                  "xmlNodePtr", "enum shadow_disp_flags")
+static int
+shadow_xml(pcmk__output_t *out, va_list args)
+{
+    const char *instance = va_arg(args, const char *);
+    const char *filename = va_arg(args, const char *);
+    xmlNodePtr content = va_arg(args, xmlNodePtr);
+    xmlNodePtr diff = va_arg(args, xmlNodePtr);
+    enum shadow_disp_flags flags G_GNUC_UNUSED =
+        (enum shadow_disp_flags) va_arg(args, int);
+
+    pcmk__output_xml_create_parent(out, "shadow",
+                                   "instance", instance,
+                                   "file", filename,
+                                   NULL);
+
+    if (content != NULL) {
+        char *buf = dump_xml_formatted_with_text(content);
+
+        out->output_xml(out, "content", buf);
+        free(buf);
+    }
+
+    if (diff != NULL) {
+        out->message(out, "xml-patchset", diff);
+    }
+
+    pcmk__output_xml_pop_parent(out);
+    return pcmk_rc_ok;
+}
+
 static const pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_NONE,
     PCMK__SUPPORTED_FORMAT_TEXT,
@@ -128,6 +314,9 @@ static const pcmk__supported_format_t formats[] = {
 static const pcmk__message_entry_t fmt_functions[] = {
     { "instruction", "default", instruction_default },
     { "instruction", "xml", instruction_xml },
+    { "shadow", "default", shadow_default },
+    { "shadow", "text", shadow_text },
+    { "shadow", "xml", shadow_xml },
 
     { NULL, NULL, NULL }
 };
