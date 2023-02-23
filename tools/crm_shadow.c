@@ -98,6 +98,43 @@ get_instance_from_env(GError **error)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Validate that the shadow file does or does not exist, as appropriate
+ *
+ * \param[in]  filename      Absolute path of shadow file
+ * \param[in]  should_exist  Whether the shadow file is expected to exist
+ * \param[out] error         Where to store error
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+check_file_exists(const char *filename, bool should_exist, GError **error)
+{
+    struct stat buf;
+
+    if (!should_exist && (stat(filename, &buf) == 0)) {
+        exit_code = CRM_EX_CANTCREAT;
+        g_set_error(error, PCMK__EXITC_ERROR, exit_code,
+                    "A shadow instance '%s' already exists.\n"
+                    "To prevent accidental destruction of the shadow file, "
+                    "the --force flag is required in order to proceed.",
+                    options.instance);
+        return EEXIST;
+    }
+
+    if (should_exist && (stat(filename, &buf) < 0)) {
+        // @COMPAT: Use pcmk_rc2exitc(errno)?
+        exit_code = CRM_EX_NOSUCH;
+        g_set_error(error, PCMK__EXITC_ERROR, exit_code,
+                    "Could not access shadow instance '%s': %s",
+                    options.instance, strerror(errno));
+        return errno;
+    }
+
+    return pcmk_rc_ok;
+}
+
 static void
 shadow_setup(char *name, gboolean do_switch)
 {
@@ -342,7 +379,6 @@ main(int argc, char **argv)
     int rc = pcmk_ok;
     char *shadow_file = NULL;
     bool needs_teardown = false;
-    struct stat buf;
 
     GError *error = NULL;
 
@@ -501,26 +537,17 @@ main(int argc, char **argv)
     }
 
     // Check existence of the shadow file
-    rc = stat(shadow_file, &buf);
     switch (options.cmd) {
         case shadow_cmd_create:
         case shadow_cmd_create_empty:
-            if ((rc == 0) && !options.force) {
-                exit_code = CRM_EX_CANTCREAT;
-                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                            "A shadow instance '%s' already exists.\n"
-                            "To prevent accidental destruction of the cluster, "
-                            "the --force flag is required in order to proceed.",
-                            options.instance);
+            if (!options.force
+                && (check_file_exists(shadow_file, false,
+                                      &error) != pcmk_rc_ok)) {
                 goto done;
             }
             break;
         default:
-            if (rc < 0) {
-                exit_code = CRM_EX_NOSUCH;
-                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                            "Could not access shadow instance '%s': %s",
-                            options.instance, strerror(errno));
+            if (check_file_exists(shadow_file, true, &error) != pcmk_rc_ok) {
                 goto done;
             }
             break;

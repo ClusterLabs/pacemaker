@@ -6413,7 +6413,7 @@ A new shadow instance was created.  To begin using it paste the following into y
 * Passed: crm_shadow     - Create copied shadow instance (mismatch) (force)
 =#=#=#= Begin test: Create copied shadow instance (file already exists) =#=#=#=
 crm_shadow: A shadow instance 'cts-cli' already exists.
-To prevent accidental destruction of the cluster, the --force flag is required in order to proceed.
+To prevent accidental destruction of the shadow file, the --force flag is required in order to proceed.
 =#=#=#= End test: Create copied shadow instance (file already exists) - Cannot create output file (73) =#=#=#=
 * Passed: crm_shadow     - Create copied shadow instance (file already exists)
 =#=#=#= Begin test: Create copied shadow instance (file already exists) (force) =#=#=#=
@@ -6461,7 +6461,7 @@ A new shadow instance was created.  To begin using it paste the following into y
 * Passed: crm_shadow     - Create empty shadow instance (nonexistent CIB file)
 =#=#=#= Begin test: Create empty shadow instance (file already exists) =#=#=#=
 crm_shadow: A shadow instance 'cts-cli' already exists.
-To prevent accidental destruction of the cluster, the --force flag is required in order to proceed.
+To prevent accidental destruction of the shadow file, the --force flag is required in order to proceed.
 =#=#=#= End test: Create empty shadow instance (file already exists) - Cannot create output file (73) =#=#=#=
 * Passed: crm_shadow     - Create empty shadow instance (file already exists)
 =#=#=#= Begin test: Create empty shadow instance (file already exists) (force) =#=#=#=
