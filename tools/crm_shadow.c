@@ -60,7 +60,7 @@ static cib_t *real_cib = NULL;
 static struct {
     enum shadow_command cmd;
     int cmd_options;
-    char *shadow;
+    char *instance;
     gboolean force;
     gboolean batch;
     gboolean full_upload;
@@ -184,7 +184,7 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
     }
 
     // optarg may be NULL and that's okay
-    pcmk__str_update(&options.shadow, optarg);
+    pcmk__str_update(&options.instance, optarg);
     return TRUE;
 }
 
@@ -355,15 +355,15 @@ main(int argc, char **argv)
                               cib_quorum_override);
     }
 
-    // Some commands get options.shadow from the environment
+    // Some commands get options.instance from the environment
     switch (options.cmd) {
         case shadow_cmd_which:
         case shadow_cmd_display:
         case shadow_cmd_diff:
         case shadow_cmd_file:
         case shadow_cmd_edit:
-            pcmk__str_update(&options.shadow, getenv("CIB_shadow"));
-            if (options.shadow == NULL) {
+            pcmk__str_update(&options.instance, getenv("CIB_shadow"));
+            if (options.instance == NULL) {
                 exit_code = CRM_EX_NOSUCH;
                 g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                             "No active shadow configuration defined");
@@ -371,13 +371,13 @@ main(int argc, char **argv)
             }
             break;
         default:
-            // The rest already set options.shadow from their optarg
+            // The rest already set options.instance from their optarg
             break;
     }
 
     if (options.cmd == shadow_cmd_which) {
         // Show the active shadow instance
-        printf("%s\n", options.shadow);
+        printf("%s\n", options.instance);
         goto done;
     }
 
@@ -388,14 +388,14 @@ main(int argc, char **argv)
         const char *local = getenv("CIB_shadow");
 
         if (!options.force
-            && !pcmk__str_eq(local, options.shadow, pcmk__str_null_matches)) {
+            && !pcmk__str_eq(local, options.instance, pcmk__str_null_matches)) {
             exit_code = CRM_EX_USAGE;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                         "The supplied shadow instance (%s) is not the same as "
                         "the active one (%s).\n"
                         "To prevent accidental destruction of the cluster, the "
                         "--force flag is required in order to proceed.",
-                        options.shadow, local);
+                        options.instance, local);
             goto done;
         }
     }
@@ -410,7 +410,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    shadow_file = get_shadow_file(options.shadow);
+    shadow_file = get_shadow_file(options.instance);
 
     if (options.cmd == shadow_cmd_delete) {
         // Delete the shadow file
@@ -418,7 +418,7 @@ main(int argc, char **argv)
             exit_code = pcmk_rc2exitc(errno);
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                         "Could not remove shadow instance '%s': %s",
-                        options.shadow, strerror(errno));
+                        options.instance, strerror(errno));
         }
         needs_teardown = true;
         goto done;
@@ -461,7 +461,7 @@ main(int argc, char **argv)
                             "A shadow instance '%s' already exists.\n"
                             "To prevent accidental destruction of the cluster, "
                             "the --force flag is required in order to proceed.",
-                            options.shadow);
+                            options.instance);
                 goto done;
             }
             break;
@@ -470,7 +470,7 @@ main(int argc, char **argv)
                 exit_code = CRM_EX_NOSUCH;
                 g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                             "Could not access shadow instance '%s': %s",
-                            options.shadow, strerror(errno));
+                            options.instance, strerror(errno));
                 goto done;
             }
             break;
@@ -520,10 +520,10 @@ main(int argc, char **argv)
 
                     g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                                 "Could not %s the shadow instance '%s': %s",
-                                action, options.shadow, pcmk_rc_str(rc));
+                                action, options.instance, pcmk_rc_str(rc));
                     goto done;
                 }
-                shadow_setup(options.shadow, FALSE);
+                shadow_setup(options.instance, FALSE);
             }
             break;
 
@@ -550,7 +550,7 @@ main(int argc, char **argv)
 
         case shadow_cmd_switch:
             // Switch to the named shadow instance
-            shadow_setup(options.shadow, TRUE);
+            shadow_setup(options.instance, TRUE);
             break;
 
         case shadow_cmd_display:
@@ -645,7 +645,7 @@ main(int argc, char **argv)
                     g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                                 "Could not commit shadow instance '%s' to the "
                                 "CIB: %s",
-                                options.shadow, pcmk_rc_str(rc));
+                                options.instance, pcmk_rc_str(rc));
                     goto done;
                 }
                 needs_teardown = true;
@@ -666,12 +666,12 @@ done:
 
     if (needs_teardown) {
         // Teardown message should be the last thing we output
-        shadow_teardown(options.shadow);
+        shadow_teardown(options.instance);
     }
     free(shadow_file);
     cib_delete(real_cib);
 
-    free(options.shadow);
+    free(options.instance);
     g_free(options.validate_with);
     crm_exit(exit_code);
 }
