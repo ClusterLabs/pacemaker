@@ -387,9 +387,8 @@ main(int argc, char **argv)
 
         const char *local = getenv("CIB_shadow");
 
-        if ((local != NULL)
-            && !pcmk__str_eq(local, options.shadow, pcmk__str_none)
-            && !options.force) {
+        if (!options.force
+            && !pcmk__str_eq(local, options.shadow, pcmk__str_null_matches)) {
             exit_code = CRM_EX_USAGE;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                         "The supplied shadow instance (%s) is not the same as "
