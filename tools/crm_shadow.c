@@ -164,6 +164,20 @@ cmd_is_dangerous(enum shadow_command cmd)
     }
 }
 
+/*!
+ * \internal
+ * \brief Show the active shadow instance
+ *
+ * \param[out] error  Where to store error
+ */
+static void
+show_shadow_instance(GError **error)
+{
+    if (get_instance_from_env(error) == pcmk_rc_ok) {
+        printf("%s\n", options.instance);
+    }
+}
+
 static gboolean
 command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
            GError **error)
@@ -378,9 +392,19 @@ main(int argc, char **argv)
                               cib_quorum_override);
     }
 
-    // Some commands get options.instance from the environment
+    /* Run the command
+     * @TODO: Finish adding all commands here
+     */
     switch (options.cmd) {
         case shadow_cmd_which:
+            show_shadow_instance(&error);
+            goto done;
+        default:
+            break;
+    }
+
+    // Some commands get options.instance from the environment
+    switch (options.cmd) {
         case shadow_cmd_display:
         case shadow_cmd_diff:
         case shadow_cmd_file:
@@ -392,12 +416,6 @@ main(int argc, char **argv)
         default:
             // The rest already set options.instance from their optarg
             break;
-    }
-
-    if (options.cmd == shadow_cmd_which) {
-        // Show the active shadow instance
-        printf("%s\n", options.instance);
-        goto done;
     }
 
     // Check for shadow instance mismatch
