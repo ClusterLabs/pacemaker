@@ -55,8 +55,6 @@ enum shadow_command {
 
 static crm_exit_t exit_code = CRM_EX_OK;
 
-static cib_t *real_cib = NULL;
-
 static struct {
     enum shadow_command cmd;
     int cmd_options;
@@ -133,6 +131,39 @@ check_file_exists(const char *filename, bool should_exist, GError **error)
     }
 
     return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
+ * \brief Connect to the "real" (non-shadow) CIB
+ *
+ * \param[out] real_cib  Where to store CIB connection
+ * \param[out] error     Where to store error
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+connect_real_cib(cib_t **real_cib, GError **error)
+{
+    int rc = pcmk_rc_ok;
+
+    *real_cib = cib_new_no_shadow();
+    if (*real_cib == NULL) {
+        rc = ENOMEM;
+        exit_code = pcmk_rc2exitc(rc);
+        g_set_error(error, PCMK__EXITC_ERROR, exit_code,
+                    "Could not create a CIB connection object");
+        return rc;
+    }
+
+    rc = (*real_cib)->cmds->signon(*real_cib, crm_system_name, cib_command);
+    rc = pcmk_legacy2rc(rc);
+    if (rc != pcmk_rc_ok) {
+        exit_code = pcmk_rc2exitc(rc);
+        g_set_error(error, PCMK__EXITC_ERROR, exit_code,
+                    "Could not connect to CIB: %s", pcmk_rc_str(rc));
+    }
+    return rc;
 }
 
 static void
@@ -410,6 +441,8 @@ main(int argc, char **argv)
     char *shadow_file = NULL;
     bool needs_teardown = false;
 
+    cib_t *real_cib = NULL;
+
     GError *error = NULL;
 
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
@@ -554,13 +587,7 @@ main(int argc, char **argv)
         case shadow_cmd_create:
         case shadow_cmd_diff:
         case shadow_cmd_reset:
-            real_cib = cib_new_no_shadow();
-            rc = real_cib->cmds->signon(real_cib, crm_system_name, cib_command);
-            if (rc != pcmk_ok) {
-                rc = pcmk_legacy2rc(rc);
-                exit_code = pcmk_rc2exitc(rc);
-                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                            "Could not connect to CIB: %s", pcmk_rc_str(rc));
+            if (connect_real_cib(&real_cib, &error) != pcmk_rc_ok) {
                 goto done;
             }
             break;
