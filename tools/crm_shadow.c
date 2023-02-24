@@ -266,6 +266,47 @@ cmd_is_dangerous(enum shadow_command cmd)
 
 /*!
  * \internal
+ * \brief Open the shadow file in a text editor
+ *
+ * \param[out] error  Where to store error
+ *
+ * \note The \p EDITOR environment variable must be set.
+ */
+static void
+edit_shadow_file(GError **error)
+{
+    char *filename = NULL;
+    const char *editor = NULL;
+
+    if (get_instance_from_env(error) != pcmk_rc_ok) {
+        return;
+    }
+
+    filename = get_shadow_file(options.instance);
+    if (check_file_exists(filename, true, error) != pcmk_rc_ok) {
+        goto done;
+    }
+
+    editor = getenv("EDITOR");
+    if (editor == NULL) {
+        exit_code = CRM_EX_NOT_CONFIGURED;
+        g_set_error(error, PCMK__EXITC_ERROR, exit_code,
+                    "No value for EDITOR defined");
+        goto done;
+    }
+
+    execlp(editor, "--", filename, NULL);
+    exit_code = CRM_EX_OSFILE;
+    g_set_error(error, PCMK__EXITC_ERROR, exit_code,
+                "Could not invoke EDITOR (%s %s): %s",
+                editor, filename, strerror(errno));
+
+done:
+    free(filename);
+}
+
+/*!
+ * \internal
  * \brief Show the contents of the active shadow instance
  *
  * \param[out] error  Where to store error
@@ -626,6 +667,9 @@ main(int argc, char **argv)
         case shadow_cmd_display:
             show_shadow_contents(&error);
             goto done;
+        case shadow_cmd_edit:
+            edit_shadow_file(&error);
+            goto done;
         case shadow_cmd_file:
             show_shadow_filename(&error);
             goto done;
@@ -633,18 +677,6 @@ main(int argc, char **argv)
             show_shadow_instance(&error);
             goto done;
         default:
-            break;
-    }
-
-    // Some commands get options.instance from the environment
-    switch (options.cmd) {
-        case shadow_cmd_edit:
-            if (get_instance_from_env(&error) != pcmk_rc_ok) {
-                goto done;
-            }
-            break;
-        default:
-            // The rest already set options.instance from their optarg
             break;
     }
 
@@ -749,27 +781,6 @@ main(int argc, char **argv)
                     goto done;
                 }
                 shadow_setup(options.instance, FALSE);
-            }
-            break;
-
-        case shadow_cmd_edit:
-            // Open the shadow file in a text editor
-            {
-                const char *editor = getenv("EDITOR");
-
-                if (editor == NULL) {
-                    exit_code = CRM_EX_NOT_CONFIGURED;
-                    g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                                "No value for EDITOR defined");
-                    goto done;
-                }
-
-                execlp(editor, "--", shadow_file, NULL);
-                exit_code = CRM_EX_OSFILE;
-                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                            "Could not invoke EDITOR (%s %s): %s",
-                            editor, shadow_file, strerror(errno));
-                goto done;
             }
             break;
 
