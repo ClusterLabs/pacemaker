@@ -166,6 +166,38 @@ connect_real_cib(cib_t **real_cib, GError **error)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Query the "real" (non-shadow) CIB and store the result
+ *
+ * \param[out]    output    Where to store query output
+ * \param[out]    error     Where to store error
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+query_real_cib(xmlNode **output, GError **error)
+{
+    cib_t *real_cib = NULL;
+    int rc = connect_real_cib(&real_cib, error);
+
+    if (rc != pcmk_rc_ok) {
+        goto done;
+    }
+
+    rc = real_cib->cmds->query(real_cib, NULL, output, options.cmd_options);
+    rc = pcmk_legacy2rc(rc);
+    if (rc != pcmk_rc_ok) {
+        exit_code = pcmk_rc2exitc(rc);
+        g_set_error(error, PCMK__EXITC_ERROR, exit_code,
+                    "Could not query the non-shadow CIB: %s", pcmk_rc_str(rc));
+    }
+
+done:
+    cib_delete(real_cib);
+    return rc;
+}
+
 static void
 shadow_setup(char *name, gboolean do_switch)
 {
@@ -581,20 +613,6 @@ main(int argc, char **argv)
         goto done;
     }
 
-    // Connect to the CIB if necessary
-    switch (options.cmd) {
-        case shadow_cmd_commit:
-        case shadow_cmd_create:
-        case shadow_cmd_diff:
-        case shadow_cmd_reset:
-            if (connect_real_cib(&real_cib, &error) != pcmk_rc_ok) {
-                goto done;
-            }
-            break;
-        default:
-            break;
-    }
-
     // Check existence of the shadow file
     switch (options.cmd) {
         case shadow_cmd_create:
@@ -630,14 +648,7 @@ main(int argc, char **argv)
 
                 } else {
                     // Create a shadow instance based on the current CIB
-                    rc = real_cib->cmds->query(real_cib, NULL, &output,
-                                               options.cmd_options);
-                    if (rc != pcmk_ok) {
-                        rc = pcmk_legacy2rc(rc);
-                        exit_code = pcmk_rc2exitc(rc);
-                        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                                    "Could not connect to the CIB manager: %s",
-                                    pcmk_rc_str(rc));
+                    if (query_real_cib(&output, &error) != pcmk_rc_ok) {
                         goto done;
                     }
                 }
@@ -696,13 +707,7 @@ main(int argc, char **argv)
                 xmlNode *old_config = NULL;
                 xmlNode *new_config = filename2xml(shadow_file);
 
-                rc = real_cib->cmds->query(real_cib, NULL, &old_config,
-                                           options.cmd_options);
-                if (rc != pcmk_ok) {
-                    rc = pcmk_legacy2rc(rc);
-                    exit_code = pcmk_rc2exitc(rc);
-                    g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                                "Could not query the CIB: %s", pcmk_rc_str(rc));
+                if (query_real_cib(&old_config, &error) != pcmk_rc_ok) {
                     goto done;
                 }
 
@@ -754,6 +759,10 @@ main(int argc, char **argv)
                 xmlNode *section_xml = input;
                 const char *section = NULL;
 
+                if (connect_real_cib(&real_cib, &error) != pcmk_rc_ok) {
+                    goto done;
+                }
+
                 if (!options.full_upload) {
                     section = XML_CIB_TAG_CONFIGURATION;
                     section_xml = first_named_child(input, section);
@@ -790,6 +799,7 @@ done:
         // Teardown message should be the last thing we output
         shadow_teardown(options.instance);
     }
+
     free(shadow_file);
     cib_delete(real_cib);
 
