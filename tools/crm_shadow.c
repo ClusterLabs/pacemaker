@@ -296,6 +296,82 @@ show_shadow_contents(GError **error)
 
 /*!
  * \internal
+ * \brief Show the changes in the active shadow instance
+ *
+ * \param[out] error  Where to store error
+ */
+static void
+show_shadow_diff(GError **error)
+{
+    char *filename = NULL;
+    xmlNodePtr old_config = NULL;
+    xmlNodePtr new_config = NULL;
+    xmlNodePtr diff = NULL;
+    pcmk__output_t *logger_out = NULL;
+    int rc = pcmk_rc_ok;
+
+    if (get_instance_from_env(error) != pcmk_rc_ok) {
+        return;
+    }
+
+    filename = get_shadow_file(options.instance);
+    if (check_file_exists(filename, true, error) != pcmk_rc_ok) {
+        goto done;
+    }
+
+    if (query_real_cib(&old_config, error) != pcmk_rc_ok) {
+        goto done;
+    }
+
+    new_config = filename2xml(filename);
+    xml_track_changes(new_config, NULL, new_config, false);
+    xml_calculate_changes(old_config, new_config);
+    diff = xml_create_patchset(0, old_config, new_config, NULL, false);
+
+    rc = pcmk__log_output_new(&logger_out);
+    if (rc != pcmk_rc_ok) {
+        exit_code = pcmk_rc2exitc(rc);
+        g_set_error(error, PCMK__EXITC_ERROR, exit_code,
+                    "Could not create logger object: %s", pcmk_rc_str(rc));
+        goto done;
+    }
+    pcmk__output_set_log_level(logger_out, LOG_INFO);
+    rc = pcmk__xml_show_changes(logger_out, new_config);
+    logger_out->finish(logger_out, pcmk_rc2exitc(rc), true, NULL);
+    pcmk__output_free(logger_out);
+
+    xml_accept_changes(new_config);
+
+    if (diff != NULL) {
+        pcmk__output_t *out = NULL;
+
+        rc = pcmk__text_output_new(&out, NULL);
+        if (rc != pcmk_rc_ok) {
+            exit_code = pcmk_rc2exitc(rc);
+            g_set_error(error, PCMK__EXITC_ERROR, exit_code,
+                        "Could not create output object: %s", pcmk_rc_str(rc));
+            goto done;
+        }
+        rc = out->message(out, "xml-patchset", diff);
+        out->finish(out, pcmk_rc2exitc(rc), true, NULL);
+        pcmk__output_free(out);
+
+        /* @COMPAT: Exit with CRM_EX_DIGEST? This is not really an error; we
+         * just want to indicate that there are differences (as the diff command
+         * does).
+         */
+        exit_code = CRM_EX_ERROR;
+    }
+
+done:
+    free(filename);
+    free_xml(old_config);
+    free_xml(new_config);
+    free_xml(diff);
+}
+
+/*!
+ * \internal
  * \brief Show the absolute path of the active shadow instance
  *
  * \param[out] error  Where to store error
@@ -544,6 +620,9 @@ main(int argc, char **argv)
      * @TODO: Finish adding all commands here
      */
     switch (options.cmd) {
+        case shadow_cmd_diff:
+            show_shadow_diff(&error);
+            goto done;
         case shadow_cmd_display:
             show_shadow_contents(&error);
             goto done;
@@ -559,7 +638,6 @@ main(int argc, char **argv)
 
     // Some commands get options.instance from the environment
     switch (options.cmd) {
-        case shadow_cmd_diff:
         case shadow_cmd_edit:
             if (get_instance_from_env(&error) != pcmk_rc_ok) {
                 goto done;
@@ -698,58 +776,6 @@ main(int argc, char **argv)
         case shadow_cmd_switch:
             // Switch to the named shadow instance
             shadow_setup(options.instance, TRUE);
-            break;
-
-        case shadow_cmd_diff:
-            // Diff the shadow file against the cluster
-            {
-                xmlNode *diff = NULL;
-                xmlNode *old_config = NULL;
-                xmlNode *new_config = filename2xml(shadow_file);
-
-                if (query_real_cib(&old_config, &error) != pcmk_rc_ok) {
-                    goto done;
-                }
-
-                xml_track_changes(new_config, NULL, new_config, false);
-                xml_calculate_changes(old_config, new_config);
-
-                diff = xml_create_patchset(0, old_config, new_config, NULL,
-                                           false);
-
-                {
-                    pcmk__output_t *logger_out = NULL;
-
-                    rc = pcmk__log_output_new(&logger_out);
-                    CRM_CHECK(rc == pcmk_rc_ok,
-                              exit_code = pcmk_rc2exitc(rc); goto done);
-
-                    pcmk__output_set_log_level(logger_out, LOG_INFO);
-                    rc = pcmk__xml_show_changes(logger_out, new_config);
-                    logger_out->finish(logger_out, pcmk_rc2exitc(rc), true,
-                                       NULL);
-                    pcmk__output_free(logger_out);
-                }
-
-                xml_accept_changes(new_config);
-                if (diff != NULL) {
-                    pcmk__output_t *out = NULL;
-
-                    rc = pcmk__text_output_new(&out, NULL);
-                    CRM_CHECK(rc == pcmk_rc_ok,
-                              exit_code = pcmk_rc2exitc(rc); goto done);
-
-                    rc = out->message(out, "xml-patchset", diff);
-                    out->finish(out, pcmk_rc2exitc(rc), true, NULL);
-                    pcmk__output_free(out);
-
-                    /* @COMPAT: Exit with CRM_EX_DIGEST? This is not really an
-                     * error; we just want to indicate that there are
-                     * differences (as the diff command does).
-                     */
-                    exit_code = CRM_EX_ERROR;
-                }
-            }
             break;
 
         case shadow_cmd_commit:
