@@ -442,6 +442,24 @@ show_shadow_instance(GError **error)
     }
 }
 
+/*!
+ * \internal
+ * \brief Switch to the given shadow instance
+ *
+ * \param[out] error  Where to store error
+ */
+static void
+switch_shadow_instance(GError **error)
+{
+    char *filename = NULL;
+
+    filename = get_shadow_file(options.instance);
+    if (check_file_exists(filename, true, error) == pcmk_rc_ok) {
+        shadow_setup(options.instance, TRUE);
+    }
+    free(filename);
+}
+
 static gboolean
 command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
            GError **error)
@@ -673,6 +691,9 @@ main(int argc, char **argv)
         case shadow_cmd_file:
             show_shadow_filename(&error);
             goto done;
+        case shadow_cmd_switch:
+            switch_shadow_instance(&error);
+            goto done;
         case shadow_cmd_which:
             show_shadow_instance(&error);
             goto done;
@@ -681,9 +702,7 @@ main(int argc, char **argv)
     }
 
     // Check for shadow instance mismatch
-    if ((options.cmd != shadow_cmd_switch)
-        && (options.cmd != shadow_cmd_create)) {
-
+    if (options.cmd != shadow_cmd_create) {
         const char *local = getenv("CIB_shadow");
 
         if (!options.force
@@ -782,11 +801,6 @@ main(int argc, char **argv)
                 }
                 shadow_setup(options.instance, FALSE);
             }
-            break;
-
-        case shadow_cmd_switch:
-            // Switch to the named shadow instance
-            shadow_setup(options.instance, TRUE);
             break;
 
         case shadow_cmd_commit:
