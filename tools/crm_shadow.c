@@ -53,6 +53,7 @@ enum shadow_command {
     shadow_cmd_switch,
 };
 
+static bool needs_teardown = false;
 static crm_exit_t exit_code = CRM_EX_OK;
 
 static struct {
@@ -288,6 +289,38 @@ shadow_teardown(char *name)
         printf("  unset CIB_shadow\n");
     }
     free(our_prompt);
+}
+
+/*!
+ * \internal
+ * \brief Delete the shadow file
+ *
+ * \param[out] error  Where to store error
+ */
+static void
+delete_shadow_file(GError **error)
+{
+    char *filename = NULL;
+
+    if (!options.force) {
+        const char *reason = "The delete command removes the specified shadow "
+                             "file";
+
+        exit_code = CRM_EX_USAGE;
+        set_danger_error(reason, true, true, error);
+        return;
+    }
+
+    filename = get_shadow_file(options.instance);
+
+    if ((unlink(filename) < 0) && (errno != ENOENT)) {
+        exit_code = pcmk_rc2exitc(errno);
+        g_set_error(error, PCMK__EXITC_ERROR, exit_code,
+                    "Could not remove shadow instance '%s': %s",
+                    options.instance, strerror(errno));
+    }
+    needs_teardown = true;
+    free(filename);
 }
 
 /*!
@@ -632,7 +665,6 @@ main(int argc, char **argv)
 {
     int rc = pcmk_ok;
     char *shadow_file = NULL;
-    bool needs_teardown = false;
 
     cib_t *real_cib = NULL;
 
@@ -705,6 +737,9 @@ main(int argc, char **argv)
      * @TODO: Finish adding all commands here
      */
     switch (options.cmd) {
+        case shadow_cmd_delete:
+            delete_shadow_file(&error);
+            goto done;
         case shadow_cmd_diff:
             show_shadow_diff(&error);
             goto done;
@@ -738,10 +773,6 @@ main(int argc, char **argv)
                 for_shadow = false;
                 reason = "The commit command overwrites the active cluster "
                          "configuration";
-                break;
-            case shadow_cmd_delete:
-                for_shadow = true;
-                reason = "The delete command removes the specified shadow file";
                 break;
             case shadow_cmd_reset:
                 /* @COMPAT: Reset is dangerous to the shadow file, but to
@@ -781,18 +812,6 @@ main(int argc, char **argv)
     }
 
     shadow_file = get_shadow_file(options.instance);
-
-    if (options.cmd == shadow_cmd_delete) {
-        // Delete the shadow file
-        if ((unlink(shadow_file) < 0) && (errno != ENOENT)) {
-            exit_code = pcmk_rc2exitc(errno);
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Could not remove shadow instance '%s': %s",
-                        options.instance, strerror(errno));
-        }
-        needs_teardown = true;
-        goto done;
-    }
 
     // Check existence of the shadow file
     switch (options.cmd) {
