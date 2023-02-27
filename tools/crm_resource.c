@@ -33,6 +33,7 @@
 #include <crm/cib/internal.h>
 
 #define SUMMARY "crm_resource - perform tasks related to Pacemaker cluster resources"
+#define ATTR_SET_ELEMENT "attr_set_element"
 
 enum rsc_command {
     cmd_none = 0,           // No command option given (yet)
@@ -92,7 +93,7 @@ struct {
     gchar *interval_spec;         // Value of --interval
     gchar *move_lifetime;         // Value of --lifetime
     gchar *operation;             // Value of --operation
-    const char *attr_set_type;    // Instance, meta, or utilization attribute
+    const char *attr_set_type;    // Instance, meta, utilization, or element attribute
     gchar *prop_id;               // --nvpair (attribute XML ID)
     char *prop_name;              // Attribute name
     gchar *prop_set;              // --set-name (attribute block XML ID)
@@ -387,7 +388,7 @@ static GOptionEntry query_entries[] = {
       NULL },
     { "get-parameter", 'g', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, get_param_prop_cb,
       "Display named parameter for resource (use instance attribute\n"
-      INDENT "unless --meta or --utilization is specified)",
+      INDENT "unless --meta, --utilization or --element is specified)",
       "PARAM" },
     { "get-property", 'G', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, get_param_prop_cb,
       "Display named property of resource ('class', 'type', or 'provider') "
@@ -592,6 +593,10 @@ static GOptionEntry addl_entries[] = {
       "Use resource utilization attribute instead of instance attribute\n"
       INDENT "(with -p, -g, -d)",
       NULL },
+    { "element", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, attr_set_type_cb,
+      "Use resource element attribute instead of instance attribute\n"
+      INDENT "(with -g)",
+      NULL },
     { "operation", 'n', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.operation,
       "Operation to clear instead of all (with -C -r)",
       "OPERATION" },
@@ -671,8 +676,9 @@ attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
         options.attr_set_type = XML_TAG_META_SETS;
     } else if (pcmk__str_any_of(option_name, "-z", "--utilization", NULL)) {
         options.attr_set_type = XML_TAG_UTILIZATION;
+    } else if (pcmk__str_eq(option_name, "--element", pcmk__str_casei)) {
+        options.attr_set_type = ATTR_SET_ELEMENT;
     }
-
     return TRUE;
 }
 
@@ -2013,6 +2019,7 @@ main(int argc, char **argv)
             GHashTable *params = NULL;
             pe_node_t *current = rsc->fns->active_node(rsc, &count, NULL);
             bool free_params = true;
+            const char* value = NULL;
 
             if (count > 1) {
                 out->err(out, "%s is active on more than one node,"
@@ -2023,24 +2030,36 @@ main(int argc, char **argv)
 
             crm_debug("Looking up %s in %s", options.prop_name, rsc->id);
 
-            if (pcmk__str_eq(options.attr_set_type, XML_TAG_ATTR_SETS, pcmk__str_casei)) {
+            if (pcmk__str_eq(options.attr_set_type, XML_TAG_ATTR_SETS, pcmk__str_none)) {
                 params = pe_rsc_params(rsc, current, data_set);
                 free_params = false;
 
-            } else if (pcmk__str_eq(options.attr_set_type, XML_TAG_META_SETS, pcmk__str_casei)) {
+                value = g_hash_table_lookup(params, options.prop_name);
+
+            } else if (pcmk__str_eq(options.attr_set_type, XML_TAG_META_SETS, pcmk__str_none)) {
                 params = pcmk__strkey_table(free, free);
                 get_meta_attributes(params, rsc, current, data_set);
+
+                value = g_hash_table_lookup(params, options.prop_name);
+
+            } else if (pcmk__str_eq(options.attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
+
+                value = crm_element_value(rsc->xml, options.prop_name);
+                free_params = false;
 
             } else {
                 params = pcmk__strkey_table(free, free);
                 pe__unpack_dataset_nvpairs(rsc->xml, XML_TAG_UTILIZATION, NULL, params,
                                            NULL, FALSE, data_set);
+
+                value = g_hash_table_lookup(params, options.prop_name);
             }
 
-            rc = out->message(out, "attribute-list", rsc, options.prop_name, params);
+            rc = out->message(out, "attribute-list", rsc, options.prop_name, value);
             if (free_params) {
                 g_hash_table_destroy(params);
             }
+
             break;
         }
 

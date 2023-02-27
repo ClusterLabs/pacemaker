@@ -1020,6 +1020,22 @@ function test_tools() {
     cmd="crm_resource -r dummy --meta -d target-role --output-as=xml"
     test_assert_validate $CRM_EX_OK 0
 
+    desc="Get a non-existent attribute from a resource element with output-as=xml"
+    cmd="crm_resource -r dummy --get-parameter nonexistent --element --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Get a non-existent attribute from a resource element without output-as=xml"
+    cmd="crm_resource -r dummy --get-parameter nonexistent --element"
+    test_assert $CRM_EX_OK
+
+    desc="Get an existent attribute from a resource element with output-as=xml"
+    cmd="crm_resource -r dummy --get-parameter class --element --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Get an existent attribute from a resource element without output-as=xml"
+    cmd="crm_resource -r dummy --get-parameter class --element"
+    test_assert $CRM_EX_OK
+
     desc="Create a resource attribute"
     cmd="crm_resource -r dummy -p delay -v 10s"
     test_assert $CRM_EX_OK
