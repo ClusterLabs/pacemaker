@@ -33,7 +33,6 @@
 #include <crm/cib/internal.h>
 
 #define SUMMARY "crm_resource - perform tasks related to Pacemaker cluster resources"
-#define ATTR_SET_ELEMENT "attr_set_element"
 
 enum rsc_command {
     cmd_none = 0,           // No command option given (yet)

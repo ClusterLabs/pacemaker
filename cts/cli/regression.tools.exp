@@ -1303,13 +1303,365 @@ ocf
 </cib>
 =#=#=#= End test: Get an existent attribute from a resource element without output-as=xml - OK (0) =#=#=#=
 * Passed: crm_resource   - Get an existent attribute from a resource element without output-as=xml
+=#=#=#= Begin test: Set a non-existent attribute for a resource element with output-as=xml =#=#=#=
+unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
+unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+<pacemaker-result api-version="X" request="crm_resource -r dummy --set-parameter=description -v test_description --element --output-as=xml">
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= Current cib after: Set a non-existent attribute for a resource element with output-as=xml =#=#=#=
+<cib epoch="22" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy" description="test_description">
+        <meta_attributes id="dummy-meta_attributes"/>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <transient_attributes id="node1">
+        <instance_attributes id="status-node1"/>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>
+=#=#=#= End test: Set a non-existent attribute for a resource element with output-as=xml - OK (0) =#=#=#=
+* Passed: crm_resource   - Set a non-existent attribute for a resource element with output-as=xml
+=#=#=#= Begin test: Set an existent attribute for a resource element with output-as=xml =#=#=#=
+unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
+unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+<pacemaker-result api-version="X" request="crm_resource -r dummy --set-parameter=description -v test_description --element --output-as=xml">
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= Current cib after: Set an existent attribute for a resource element with output-as=xml =#=#=#=
+<cib epoch="22" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy" description="test_description">
+        <meta_attributes id="dummy-meta_attributes"/>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <transient_attributes id="node1">
+        <instance_attributes id="status-node1"/>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>
+=#=#=#= End test: Set an existent attribute for a resource element with output-as=xml - OK (0) =#=#=#=
+* Passed: crm_resource   - Set an existent attribute for a resource element with output-as=xml
+=#=#=#= Begin test: Delete an existent attribute for a resource element with output-as=xml =#=#=#=
+unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
+unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+<pacemaker-result api-version="X" request="crm_resource -r dummy -d description --element --output-as=xml">
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= Current cib after: Delete an existent attribute for a resource element with output-as=xml =#=#=#=
+<cib epoch="23" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <transient_attributes id="node1">
+        <instance_attributes id="status-node1"/>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>
+=#=#=#= End test: Delete an existent attribute for a resource element with output-as=xml - OK (0) =#=#=#=
+* Passed: crm_resource   - Delete an existent attribute for a resource element with output-as=xml
+=#=#=#= Begin test: Delete a non-existent attribute for a resource element with output-as=xml =#=#=#=
+unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
+unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+<pacemaker-result api-version="X" request="crm_resource -r dummy -d description --element --output-as=xml">
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= Current cib after: Delete a non-existent attribute for a resource element with output-as=xml =#=#=#=
+<cib epoch="23" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <transient_attributes id="node1">
+        <instance_attributes id="status-node1"/>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>
+=#=#=#= End test: Delete a non-existent attribute for a resource element with output-as=xml - OK (0) =#=#=#=
+* Passed: crm_resource   - Delete a non-existent attribute for a resource element with output-as=xml
+=#=#=#= Begin test: Set a non-existent attribute for a resource element without output-as=xml =#=#=#=
+unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
+unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+Set attribute: name=description value=test_description
+=#=#=#= Current cib after: Set a non-existent attribute for a resource element without output-as=xml =#=#=#=
+<cib epoch="24" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy" description="test_description">
+        <meta_attributes id="dummy-meta_attributes"/>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <transient_attributes id="node1">
+        <instance_attributes id="status-node1"/>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>
+=#=#=#= End test: Set a non-existent attribute for a resource element without output-as=xml - OK (0) =#=#=#=
+* Passed: crm_resource   - Set a non-existent attribute for a resource element without output-as=xml
+=#=#=#= Begin test: Set an existent attribute for a resource element without output-as=xml =#=#=#=
+unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
+unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+Set attribute: name=description value=test_description
+=#=#=#= Current cib after: Set an existent attribute for a resource element without output-as=xml =#=#=#=
+<cib epoch="24" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy" description="test_description">
+        <meta_attributes id="dummy-meta_attributes"/>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <transient_attributes id="node1">
+        <instance_attributes id="status-node1"/>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>
+=#=#=#= End test: Set an existent attribute for a resource element without output-as=xml - OK (0) =#=#=#=
+* Passed: crm_resource   - Set an existent attribute for a resource element without output-as=xml
+=#=#=#= Begin test: Delete an existent attribute for a resource element without output-as=xml =#=#=#=
+unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
+unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+Deleted attribute: description
+=#=#=#= Current cib after: Delete an existent attribute for a resource element without output-as=xml =#=#=#=
+<cib epoch="25" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <transient_attributes id="node1">
+        <instance_attributes id="status-node1"/>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>
+=#=#=#= End test: Delete an existent attribute for a resource element without output-as=xml - OK (0) =#=#=#=
+* Passed: crm_resource   - Delete an existent attribute for a resource element without output-as=xml
+=#=#=#= Begin test: Delete a non-existent attribute for a resource element without output-as=xml =#=#=#=
+unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
+unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+Deleted attribute: description
+=#=#=#= Current cib after: Delete a non-existent attribute for a resource element without output-as=xml =#=#=#=
+<cib epoch="25" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <transient_attributes id="node1">
+        <instance_attributes id="status-node1"/>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>
+=#=#=#= End test: Delete a non-existent attribute for a resource element without output-as=xml - OK (0) =#=#=#=
+* Passed: crm_resource   - Delete a non-existent attribute for a resource element without output-as=xml
 =#=#=#= Begin test: Create a resource attribute =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Set 'dummy' option: id=dummy-instance_attributes-delay set=dummy-instance_attributes name=delay value=10s
 =#=#=#= Current cib after: Create a resource attribute =#=#=#=
-<cib epoch="22" num_updates="0" admin_epoch="0">
+<cib epoch="26" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1356,7 +1708,7 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 Full List of Resources:
   * dummy	(ocf:pacemaker:Dummy):	 Stopped
 =#=#=#= Current cib after: List the configured resources =#=#=#=
-<cib epoch="22" num_updates="0" admin_epoch="0">
+<cib epoch="26" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1463,7 +1815,7 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 crm_resource: Resource 'dummy' not moved: active in 0 locations.
 To prevent 'dummy' from running on a specific location, specify a node.
 =#=#=#= Current cib after: Require a destination when migrating a resource that is stopped =#=#=#=
-<cib epoch="22" num_updates="0" admin_epoch="0">
+<cib epoch="26" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1510,7 +1862,7 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 crm_resource: Node 'i.do.not.exist' not found
 Error performing operation: No such object
 =#=#=#= Current cib after: Don't support migration to non-existent locations =#=#=#=
-<cib epoch="22" num_updates="0" admin_epoch="0">
+<cib epoch="26" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1552,7 +1904,7 @@ Error performing operation: No such object
 * Passed: crm_resource   - Don't support migration to non-existent locations
 =#=#=#= Begin test: Create a fencing resource =#=#=#=
 =#=#=#= Current cib after: Create a fencing resource =#=#=#=
-<cib epoch="23" num_updates="0" admin_epoch="0">
+<cib epoch="27" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1620,7 +1972,7 @@ Revised Cluster Status:
     * dummy	(ocf:pacemaker:Dummy):	 Started node1
     * Fence	(stonith:fence_true):	 Started node1
 =#=#=#= Current cib after: Bring resources online =#=#=#=
-<cib epoch="23" num_updates="4" admin_epoch="0">
+<cib epoch="27" num_updates="4" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1674,7 +2026,7 @@ Revised Cluster Status:
 =#=#=#= Begin test: Try to move a resource to its existing location =#=#=#=
 crm_resource: Error performing operation: Requested item already exists
 =#=#=#= Current cib after: Try to move a resource to its existing location =#=#=#=
-<cib epoch="23" num_updates="4" admin_epoch="0">
+<cib epoch="27" num_updates="4" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1735,7 +2087,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 	This will prevent dummy from running on node1 until the constraint is removed using the clear option or by editing the CIB with an appropriate tool
 	This will be the case even if node1 is the last node in the cluster
 =#=#=#= Current cib after: Move a resource from its existing location =#=#=#=
-<cib epoch="24" num_updates="0" admin_epoch="0">
+<cib epoch="28" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1791,7 +2143,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 =#=#=#= Begin test: Clear out constraints generated by --move =#=#=#=
 Removing constraint: cli-ban-dummy-on-node1
 =#=#=#= Current cib after: Clear out constraints generated by --move =#=#=#=
-<cib epoch="25" num_updates="0" admin_epoch="0">
+<cib epoch="29" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1845,7 +2197,7 @@ Removing constraint: cli-ban-dummy-on-node1
 =#=#=#= Begin test: Default ticket granted state =#=#=#=
 false
 =#=#=#= Current cib after: Default ticket granted state =#=#=#=
-<cib epoch="25" num_updates="0" admin_epoch="0">
+<cib epoch="29" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1898,7 +2250,7 @@ false
 * Passed: crm_ticket     - Default ticket granted state
 =#=#=#= Begin test: Set ticket granted state =#=#=#=
 =#=#=#= Current cib after: Set ticket granted state =#=#=#=
-<cib epoch="25" num_updates="1" admin_epoch="0">
+<cib epoch="29" num_updates="1" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1955,7 +2307,7 @@ false
 =#=#=#= Begin test: Query ticket granted state =#=#=#=
 false
 =#=#=#= Current cib after: Query ticket granted state =#=#=#=
-<cib epoch="25" num_updates="1" admin_epoch="0">
+<cib epoch="29" num_updates="1" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2011,7 +2363,7 @@ false
 * Passed: crm_ticket     - Query ticket granted state
 =#=#=#= Begin test: Delete ticket granted state =#=#=#=
 =#=#=#= Current cib after: Delete ticket granted state =#=#=#=
-<cib epoch="25" num_updates="2" admin_epoch="0">
+<cib epoch="29" num_updates="2" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2067,7 +2419,7 @@ false
 * Passed: crm_ticket     - Delete ticket granted state
 =#=#=#= Begin test: Make a ticket standby =#=#=#=
 =#=#=#= Current cib after: Make a ticket standby =#=#=#=
-<cib epoch="25" num_updates="3" admin_epoch="0">
+<cib epoch="29" num_updates="3" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2124,7 +2476,7 @@ false
 =#=#=#= Begin test: Query ticket standby state =#=#=#=
 true
 =#=#=#= Current cib after: Query ticket standby state =#=#=#=
-<cib epoch="25" num_updates="3" admin_epoch="0">
+<cib epoch="29" num_updates="3" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2180,7 +2532,7 @@ true
 * Passed: crm_ticket     - Query ticket standby state
 =#=#=#= Begin test: Activate a ticket =#=#=#=
 =#=#=#= Current cib after: Activate a ticket =#=#=#=
-<cib epoch="25" num_updates="4" admin_epoch="0">
+<cib epoch="29" num_updates="4" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2236,7 +2588,7 @@ true
 * Passed: crm_ticket     - Activate a ticket
 =#=#=#= Begin test: Delete ticket standby state =#=#=#=
 =#=#=#= Current cib after: Delete ticket standby state =#=#=#=
-<cib epoch="25" num_updates="5" admin_epoch="0">
+<cib epoch="29" num_updates="5" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2294,7 +2646,7 @@ true
 crm_resource: Node 'host1' not found
 Error performing operation: No such object
 =#=#=#= Current cib after: Ban a resource on unknown node =#=#=#=
-<cib epoch="25" num_updates="5" admin_epoch="0">
+<cib epoch="29" num_updates="5" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2380,7 +2732,7 @@ Revised Cluster Status:
     * dummy	(ocf:pacemaker:Dummy):	 Started node1
     * Fence	(stonith:fence_true):	 Started node2
 =#=#=#= Current cib after: Create two more nodes and bring them online =#=#=#=
-<cib epoch="27" num_updates="8" admin_epoch="0">
+<cib epoch="31" num_updates="8" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2465,7 +2817,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 	This will prevent dummy from running on node1 until the constraint is removed using the clear option or by editing the CIB with an appropriate tool
 	This will be the case even if node1 is the last node in the cluster
 =#=#=#= Current cib after: Ban dummy from node1 =#=#=#=
-<cib epoch="28" num_updates="0" admin_epoch="0">
+<cib epoch="32" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2561,7 +2913,7 @@ Locations:
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= Current cib after: Ban dummy from node2 =#=#=#=
-<cib epoch="29" num_updates="0" admin_epoch="0">
+<cib epoch="33" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2668,7 +3020,7 @@ Revised Cluster Status:
     * dummy	(ocf:pacemaker:Dummy):	 Started node3
     * Fence	(stonith:fence_true):	 Started node2
 =#=#=#= Current cib after: Relocate resources due to ban =#=#=#=
-<cib epoch="29" num_updates="2" admin_epoch="0">
+<cib epoch="33" num_updates="2" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2756,7 +3108,7 @@ Revised Cluster Status:
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= Current cib after: Move dummy to node1 =#=#=#=
-<cib epoch="31" num_updates="0" admin_epoch="0">
+<cib epoch="35" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2842,7 +3194,7 @@ Revised Cluster Status:
 =#=#=#= Begin test: Clear implicit constraints for dummy on node2 =#=#=#=
 Removing constraint: cli-ban-dummy-on-node2
 =#=#=#= Current cib after: Clear implicit constraints for dummy on node2 =#=#=#=
-<cib epoch="32" num_updates="0" admin_epoch="0">
+<cib epoch="36" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2934,7 +3286,7 @@ Removing constraint: cli-ban-dummy-on-node2
 Performing update of 'is-managed' on 'test-clone', the parent of 'test-primitive'
 Set 'test-clone' option: id=test-clone-meta_attributes-is-managed set=test-clone-meta_attributes name=is-managed value=false
 =#=#=#= Current cib after: Create a resource meta attribute =#=#=#=
-<cib epoch="34" num_updates="0" admin_epoch="0">
+<cib epoch="38" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2982,7 +3334,7 @@ Set 'test-clone' option: id=test-clone-meta_attributes-is-managed set=test-clone
 =#=#=#= Begin test: Create a resource meta attribute in the primitive =#=#=#=
 Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed set=test-primitive-meta_attributes name=is-managed value=false
 =#=#=#= Current cib after: Create a resource meta attribute in the primitive =#=#=#=
-<cib epoch="35" num_updates="0" admin_epoch="0">
+<cib epoch="39" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3039,7 +3391,7 @@ Multiple attributes match name=is-managed
 A value for 'is-managed' already exists in child 'test-primitive', performing update on that instead of 'test-clone'
 Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=is-managed value=true
 =#=#=#= Current cib after: Update resource meta attribute with duplicates =#=#=#=
-<cib epoch="36" num_updates="0" admin_epoch="0">
+<cib epoch="40" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3091,7 +3443,7 @@ Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=i
 =#=#=#= Begin test: Update resource meta attribute with duplicates (force clone) =#=#=#=
 Set 'test-clone' option: id=test-clone-meta_attributes-is-managed name=is-managed value=true
 =#=#=#= Current cib after: Update resource meta attribute with duplicates (force clone) =#=#=#=
-<cib epoch="37" num_updates="0" admin_epoch="0">
+<cib epoch="41" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3147,7 +3499,7 @@ Multiple attributes match name=is-managed
 
 Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=is-managed value=false
 =#=#=#= Current cib after: Update child resource meta attribute with duplicates =#=#=#=
-<cib epoch="38" num_updates="0" admin_epoch="0">
+<cib epoch="42" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3204,7 +3556,7 @@ Multiple attributes match name=is-managed
 A value for 'is-managed' already exists in child 'test-primitive', performing delete on that instead of 'test-clone'
 Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=is-managed
 =#=#=#= Current cib after: Delete resource meta attribute with duplicates =#=#=#=
-<cib epoch="39" num_updates="0" admin_epoch="0">
+<cib epoch="43" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3255,7 +3607,7 @@ Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed na
 Performing delete of 'is-managed' on 'test-clone', the parent of 'test-primitive'
 Deleted 'test-clone' option: id=test-clone-meta_attributes-is-managed name=is-managed
 =#=#=#= Current cib after: Delete resource meta attribute in parent =#=#=#=
-<cib epoch="40" num_updates="0" admin_epoch="0">
+<cib epoch="44" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3303,7 +3655,7 @@ Deleted 'test-clone' option: id=test-clone-meta_attributes-is-managed name=is-ma
 =#=#=#= Begin test: Create a resource meta attribute in the primitive =#=#=#=
 Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed set=test-primitive-meta_attributes name=is-managed value=false
 =#=#=#= Current cib after: Create a resource meta attribute in the primitive =#=#=#=
-<cib epoch="41" num_updates="0" admin_epoch="0">
+<cib epoch="45" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3354,7 +3706,7 @@ Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed set=te
 A value for 'is-managed' already exists in child 'test-primitive', performing update on that instead of 'test-clone'
 Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=is-managed value=true
 =#=#=#= Current cib after: Update existing resource meta attribute =#=#=#=
-<cib epoch="42" num_updates="0" admin_epoch="0">
+<cib epoch="46" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3404,7 +3756,7 @@ Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=i
 =#=#=#= Begin test: Create a resource meta attribute in the parent =#=#=#=
 Set 'test-clone' option: id=test-clone-meta_attributes-is-managed set=test-clone-meta_attributes name=is-managed value=true
 =#=#=#= Current cib after: Create a resource meta attribute in the parent =#=#=#=
-<cib epoch="43" num_updates="0" admin_epoch="0">
+<cib epoch="47" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3459,7 +3811,7 @@ Set 'test-clone' option: id=test-clone-meta_attributes-is-managed set=test-clone
 =#=#=#= Begin test: Delete resource parent meta attribute (force) =#=#=#=
 Deleted 'test-clone' option: id=test-clone-meta_attributes-is-managed name=is-managed
 =#=#=#= Current cib after: Delete resource parent meta attribute (force) =#=#=#=
-<cib epoch="44" num_updates="0" admin_epoch="0">
+<cib epoch="48" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3508,7 +3860,7 @@ Deleted 'test-clone' option: id=test-clone-meta_attributes-is-managed name=is-ma
 * Passed: crm_resource   - Delete resource parent meta attribute (force)
 =#=#=#= Begin test: Restore duplicates =#=#=#=
 =#=#=#= Current cib after: Restore duplicates =#=#=#=
-<cib epoch="45" num_updates="0" admin_epoch="0">
+<cib epoch="49" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3564,7 +3916,7 @@ Multiple attributes match name=is-managed
 
 Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=is-managed
 =#=#=#= Current cib after: Delete resource child meta attribute =#=#=#=
-<cib epoch="46" num_updates="0" admin_epoch="0">
+<cib epoch="50" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3613,7 +3965,7 @@ Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed na
 * Passed: crm_resource   - Delete resource child meta attribute
 =#=#=#= Begin test: Create the dummy-group resource group =#=#=#=
 =#=#=#= Current cib after: Create the dummy-group resource group =#=#=#=
-<cib epoch="47" num_updates="0" admin_epoch="0">
+<cib epoch="51" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3667,7 +4019,7 @@ Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed na
 =#=#=#= Begin test: Create a resource meta attribute in dummy1 =#=#=#=
 Set 'dummy1' option: id=dummy1-meta_attributes-is-managed set=dummy1-meta_attributes name=is-managed value=true
 =#=#=#= Current cib after: Create a resource meta attribute in dummy1 =#=#=#=
-<cib epoch="48" num_updates="0" admin_epoch="0">
+<cib epoch="52" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3726,7 +4078,7 @@ Set 'dummy1' option: id=dummy1-meta_attributes-is-managed set=dummy1-meta_attrib
 Set 'dummy1' option: id=dummy1-meta_attributes-is-managed name=is-managed value=false
 Set 'dummy-group' option: id=dummy-group-meta_attributes-is-managed set=dummy-group-meta_attributes name=is-managed value=false
 =#=#=#= Current cib after: Create a resource meta attribute in dummy-group =#=#=#=
-<cib epoch="50" num_updates="0" admin_epoch="0">
+<cib epoch="54" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3786,7 +4138,7 @@ Set 'dummy-group' option: id=dummy-group-meta_attributes-is-managed set=dummy-gr
 * Passed: crm_resource   - Create a resource meta attribute in dummy-group
 =#=#=#= Begin test: Delete the dummy-group resource group =#=#=#=
 =#=#=#= Current cib after: Delete the dummy-group resource group =#=#=#=
-<cib epoch="51" num_updates="0" admin_epoch="0">
+<cib epoch="55" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3836,7 +4188,7 @@ Set 'dummy-group' option: id=dummy-group-meta_attributes-is-managed set=dummy-gr
 =#=#=#= Begin test: Specify a lifetime when moving a resource =#=#=#=
 Migration will take effect until:
 =#=#=#= Current cib after: Specify a lifetime when moving a resource =#=#=#=
-<cib epoch="53" num_updates="0" admin_epoch="0">
+<cib epoch="57" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3890,7 +4242,7 @@ Migration will take effect until:
 * Passed: crm_resource   - Specify a lifetime when moving a resource
 =#=#=#= Begin test: Try to move a resource previously moved with a lifetime =#=#=#=
 =#=#=#= Current cib after: Try to move a resource previously moved with a lifetime =#=#=#=
-<cib epoch="55" num_updates="0" admin_epoch="0">
+<cib epoch="59" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3943,7 +4295,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 	This will prevent dummy from running on node1 until the constraint is removed using the clear option or by editing the CIB with an appropriate tool
 	This will be the case even if node1 is the last node in the cluster
 =#=#=#= Current cib after: Ban dummy from node1 for a short time =#=#=#=
-<cib epoch="56" num_updates="0" admin_epoch="0">
+<cib epoch="60" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3999,7 +4351,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 =#=#=#= Begin test: Remove expired constraints =#=#=#=
 Removing constraint: cli-ban-dummy-on-node1
 =#=#=#= Current cib after: Remove expired constraints =#=#=#=
-<cib epoch="57" num_updates="0" admin_epoch="0">
+<cib epoch="61" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -4049,7 +4401,7 @@ Removing constraint: cli-ban-dummy-on-node1
 =#=#=#= Begin test: Clear all implicit constraints for dummy =#=#=#=
 Removing constraint: cli-prefer-dummy
 =#=#=#= Current cib after: Clear all implicit constraints for dummy =#=#=#=
-<cib epoch="58" num_updates="0" admin_epoch="0">
+<cib epoch="62" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -4096,7 +4448,7 @@ Removing constraint: cli-prefer-dummy
 * Passed: crm_resource   - Clear all implicit constraints for dummy
 =#=#=#= Begin test: Set a node health strategy =#=#=#=
 =#=#=#= Current cib after: Set a node health strategy =#=#=#=
-<cib epoch="59" num_updates="0" admin_epoch="0">
+<cib epoch="63" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -4144,7 +4496,7 @@ Removing constraint: cli-prefer-dummy
 * Passed: crm_attribute  - Set a node health strategy
 =#=#=#= Begin test: Set a node health attribute =#=#=#=
 =#=#=#= Current cib after: Set a node health attribute =#=#=#=
-<cib epoch="60" num_updates="0" admin_epoch="0">
+<cib epoch="64" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -4205,7 +4557,7 @@ Removing constraint: cli-prefer-dummy
 * Passed: crm_resource   - Show why a resource is not running on an unhealthy node
 =#=#=#= Begin test: Delete a resource =#=#=#=
 =#=#=#= Current cib after: Delete a resource =#=#=#=
-<cib epoch="61" num_updates="0" admin_epoch="0">
+<cib epoch="65" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">

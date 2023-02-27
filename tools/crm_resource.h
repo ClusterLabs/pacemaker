@@ -27,6 +27,8 @@
 #include <crm/pengine/internal.h>
 #include <pacemaker-internal.h>
 
+#define ATTR_SET_ELEMENT "attr_set_element"
+
 typedef struct node_info_s {
     const char *node_name;
     bool promoted;

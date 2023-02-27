@@ -1036,6 +1036,38 @@ function test_tools() {
     cmd="crm_resource -r dummy --get-parameter class --element"
     test_assert $CRM_EX_OK
 
+    desc="Set a non-existent attribute for a resource element with output-as=xml"
+    cmd="crm_resource -r dummy --set-parameter=description -v test_description --element --output-as=xml"
+    test_assert $CRM_EX_OK
+
+    desc="Set an existent attribute for a resource element with output-as=xml"
+    cmd="crm_resource -r dummy --set-parameter=description -v test_description --element --output-as=xml"
+    test_assert $CRM_EX_OK
+
+    desc="Delete an existent attribute for a resource element with output-as=xml"
+    cmd="crm_resource -r dummy -d description --element --output-as=xml"
+    test_assert $CRM_EX_OK
+
+    desc="Delete a non-existent attribute for a resource element with output-as=xml"
+    cmd="crm_resource -r dummy -d description --element --output-as=xml"
+    test_assert $CRM_EX_OK
+
+    desc="Set a non-existent attribute for a resource element without output-as=xml"
+    cmd="crm_resource -r dummy --set-parameter=description -v test_description --element"
+    test_assert $CRM_EX_OK
+
+    desc="Set an existent attribute for a resource element without output-as=xml"
+    cmd="crm_resource -r dummy --set-parameter=description -v test_description --element"
+    test_assert $CRM_EX_OK
+
+    desc="Delete an existent attribute for a resource element without output-as=xml"
+    cmd="crm_resource -r dummy -d description --element"
+    test_assert $CRM_EX_OK
+
+    desc="Delete a non-existent attribute for a resource element without output-as=xml"
+    cmd="crm_resource -r dummy -d description --element"
+    test_assert $CRM_EX_OK
+
     desc="Create a resource attribute"
     cmd="crm_resource -r dummy -p delay -v 10s"
     test_assert $CRM_EX_OK
