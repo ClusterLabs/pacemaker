@@ -67,6 +67,44 @@ static struct {
     .cmd_options = cib_sync_call,
 };
 
+/*!
+ * \internal
+ * \brief Set the error when \p --force is not passed with a dangerous command
+ *
+ * \param[in]  reason         Why command is dangerous
+ * \param[in]  for_shadow     If true, command is dangerous to the shadow file.
+ *                            Otherwise, command is dangerous to the active
+ *                            cluster.
+ * \param[in]  show_mismatch  If true and the supplied shadow instance is not
+ *                            the same as the active shadow instance, report
+ *                            this
+ * \param[out] error          Where to store error
+ */
+static inline void
+set_danger_error(const char *reason, bool for_shadow, bool show_mismatch,
+                 GError **error)
+{
+    const char *active = getenv("CIB_shadow");
+    char *full = NULL;
+
+    if (show_mismatch
+        && !pcmk__str_eq(active, options.instance, pcmk__str_null_matches)) {
+
+        full = crm_strdup_printf("%s.\nAdditionally, the supplied shadow "
+                                 "instance (%s) is not the same as the active "
+                                 "one (%s)",
+                                reason, options.instance, active);
+        reason = full;
+    }
+
+    g_set_error(error, PCMK__EXITC_ERROR, exit_code,
+                "%s%sTo prevent accidental destruction of the %s, the --force "
+                "flag is required in order to proceed.",
+                pcmk__s(reason, ""), ((reason != NULL)? ".\n" : ""),
+                (for_shadow? "shadow file" : "cluster"));
+    free(full);
+}
+
 static char *
 get_shadow_prompt(const char *name)
 {
@@ -112,12 +150,12 @@ check_file_exists(const char *filename, bool should_exist, GError **error)
     struct stat buf;
 
     if (!should_exist && (stat(filename, &buf) == 0)) {
+        char *reason = crm_strdup_printf("A shadow instance '%s' already "
+                                         "exists", options.instance);
+
         exit_code = CRM_EX_CANTCREAT;
-        g_set_error(error, PCMK__EXITC_ERROR, exit_code,
-                    "A shadow instance '%s' already exists.\n"
-                    "To prevent accidental destruction of the shadow file, "
-                    "the --force flag is required in order to proceed.",
-                    options.instance);
+        set_danger_error(reason, true, false, error);
+        free(reason);
         return EEXIST;
     }
 
@@ -689,40 +727,56 @@ main(int argc, char **argv)
             break;
     }
 
-    // Check for shadow instance mismatch
-    if (!options.force
-        && ((options.cmd == shadow_cmd_commit)
-            || (options.cmd == shadow_cmd_delete)
-            || (options.cmd == shadow_cmd_reset))) {
-
-        const char *local = getenv("CIB_shadow");
-
-        if (!pcmk__str_eq(local, options.instance, pcmk__str_null_matches)) {
-            exit_code = CRM_EX_USAGE;
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "The supplied shadow instance (%s) is not the same as "
-                        "the active one (%s).\n"
-                        "To prevent accidental destruction of the cluster, the "
-                        "--force flag is required in order to proceed.",
-                        options.instance, local);
-            goto done;
-        }
-    }
-
-    // Check for dangerous commands
+    // Require --force for dangerous commands
     if (!options.force) {
+        bool danger = true;
+        bool for_shadow = false;
+        const char *reason = NULL;
+
         switch (options.cmd) {
             case shadow_cmd_commit:
-            case shadow_cmd_delete:
-                exit_code = CRM_EX_USAGE;
-                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                            "The supplied command is considered dangerous.\n"
-                            "To prevent accidental destruction of the cluster, "
-                            "the --force flag is required in order to "
-                            "proceed.");
-                goto done;
-            default:
+                for_shadow = false;
+                reason = "The commit command overwrites the active cluster "
+                         "configuration";
                 break;
+            case shadow_cmd_delete:
+                for_shadow = true;
+                reason = "The delete command removes the specified shadow file";
+                break;
+            case shadow_cmd_reset:
+                /* @COMPAT: Reset is dangerous to the shadow file, but to
+                 * preserve compatibility we can't require --force unless
+                 * there's a mismatch. At a compatibility break, call
+                 * set_danger_error() with for_shadow and show_mismatch set to
+                 * true.
+                 */
+                danger = false;
+                {
+                    const char *local = getenv("CIB_shadow");
+
+                    if (!pcmk__str_eq(local, options.instance,
+                                      pcmk__str_null_matches)) {
+                        exit_code = CRM_EX_USAGE;
+                        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                                    "The supplied shadow instance (%s) is not "
+                                    "the same as the active one (%s).\n"
+                                    "To prevent accidental destruction of the "
+                                    "shadow file, the --force flag is required "
+                                    "in order to proceed.",
+                                    options.instance, local);
+                        goto done;
+                    }
+                }
+                break;
+            default:
+                danger = false;
+                break;
+        }
+
+        if (danger) {
+            exit_code = CRM_EX_USAGE;
+            set_danger_error(reason, for_shadow, true, &error);
+            goto done;
         }
     }
 
