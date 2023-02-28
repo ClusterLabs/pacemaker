@@ -293,6 +293,68 @@ shadow_teardown(char *name)
 
 /*!
  * \internal
+ * \brief Commit the shadow file contents to the active cluster
+ *
+ * \param[out] error  Where to store error
+ */
+static void
+commit_shadow_file(GError **error)
+{
+    char *filename = NULL;
+    cib_t *real_cib = NULL;
+
+    xmlNodePtr input = NULL;
+    xmlNodePtr section_xml = NULL;
+    const char *section = NULL;
+
+    int rc = pcmk_rc_ok;
+
+    if (!options.force) {
+        const char *reason = "The commit command overwrites the active cluster "
+                             "configuration";
+
+        exit_code = CRM_EX_USAGE;
+        set_danger_error(reason, false, true, error);
+        return;
+    }
+
+    filename = get_shadow_file(options.instance);
+    if (check_file_exists(filename, true, error) != pcmk_rc_ok) {
+        goto done;
+    }
+
+    if (connect_real_cib(&real_cib, error) != pcmk_rc_ok) {
+        goto done;
+    }
+
+    input = filename2xml(filename);
+    section_xml = input;
+
+    if (!options.full_upload) {
+        section = XML_CIB_TAG_CONFIGURATION;
+        section_xml = first_named_child(input, section);
+    }
+
+    rc = real_cib->cmds->replace(real_cib, section, section_xml,
+                                 options.cmd_options);
+    rc = pcmk_legacy2rc(rc);
+
+    if (rc != pcmk_rc_ok) {
+        exit_code = pcmk_rc2exitc(rc);
+        g_set_error(error, PCMK__EXITC_ERROR, exit_code,
+                    "Could not commit shadow instance '%s' to the CIB: %s",
+                    options.instance, pcmk_rc_str(rc));
+    }
+    needs_teardown = true;
+
+done:
+    free(filename);
+    cib_delete(real_cib);
+    free_xml(input);
+}
+
+/*!
+ * \internal
  * \brief Delete the shadow file
  *
  * \param[out] error  Where to store error
@@ -666,8 +728,6 @@ main(int argc, char **argv)
     int rc = pcmk_ok;
     char *shadow_file = NULL;
 
-    cib_t *real_cib = NULL;
-
     GError *error = NULL;
 
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
@@ -737,6 +797,9 @@ main(int argc, char **argv)
      * @TODO: Finish adding all commands here
      */
     switch (options.cmd) {
+        case shadow_cmd_commit:
+            commit_shadow_file(&error);
+            goto done;
         case shadow_cmd_delete:
             delete_shadow_file(&error);
             goto done;
@@ -763,50 +826,22 @@ main(int argc, char **argv)
     }
 
     // Require --force for dangerous commands
-    if (!options.force) {
-        bool danger = true;
-        bool for_shadow = false;
-        const char *reason = NULL;
+    if (!options.force && (options.cmd == shadow_cmd_reset)) {
+        /* @COMPAT: Reset is dangerous to the shadow file, but to preserve
+         * compatibility we can't require --force unless there's a mismatch. At
+         * a compatibility break, call set_danger_error() with for_shadow and
+         * show_mismatch set to true.
+         */
+        const char *local = getenv("CIB_shadow");
 
-        switch (options.cmd) {
-            case shadow_cmd_commit:
-                for_shadow = false;
-                reason = "The commit command overwrites the active cluster "
-                         "configuration";
-                break;
-            case shadow_cmd_reset:
-                /* @COMPAT: Reset is dangerous to the shadow file, but to
-                 * preserve compatibility we can't require --force unless
-                 * there's a mismatch. At a compatibility break, call
-                 * set_danger_error() with for_shadow and show_mismatch set to
-                 * true.
-                 */
-                danger = false;
-                {
-                    const char *local = getenv("CIB_shadow");
-
-                    if (!pcmk__str_eq(local, options.instance,
-                                      pcmk__str_null_matches)) {
-                        exit_code = CRM_EX_USAGE;
-                        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                                    "The supplied shadow instance (%s) is not "
-                                    "the same as the active one (%s).\n"
-                                    "To prevent accidental destruction of the "
-                                    "shadow file, the --force flag is required "
-                                    "in order to proceed.",
-                                    options.instance, local);
-                        goto done;
-                    }
-                }
-                break;
-            default:
-                danger = false;
-                break;
-        }
-
-        if (danger) {
+        if (!pcmk__str_eq(local, options.instance, pcmk__str_null_matches)) {
             exit_code = CRM_EX_USAGE;
-            set_danger_error(reason, for_shadow, true, &error);
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "The supplied shadow instance (%s) is not the same as "
+                        "the active one (%s).\n"
+                        "To prevent accidental destruction of the shadow file, "
+                        "the --force flag is required in order to proceed.",
+                        options.instance, local);
             goto done;
         }
     }
@@ -874,38 +909,6 @@ main(int argc, char **argv)
             }
             break;
 
-        case shadow_cmd_commit:
-            // Commit the shadow file to the cluster
-            {
-                xmlNode *input = filename2xml(shadow_file);
-                xmlNode *section_xml = input;
-                const char *section = NULL;
-
-                if (connect_real_cib(&real_cib, &error) != pcmk_rc_ok) {
-                    goto done;
-                }
-
-                if (!options.full_upload) {
-                    section = XML_CIB_TAG_CONFIGURATION;
-                    section_xml = first_named_child(input, section);
-                }
-
-                rc = real_cib->cmds->replace(real_cib, section, section_xml,
-                                             options.cmd_options);
-                if (rc != pcmk_ok) {
-                    rc = pcmk_legacy2rc(rc);
-                    exit_code = pcmk_rc2exitc(rc);
-                    g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                                "Could not commit shadow instance '%s' to the "
-                                "CIB: %s",
-                                options.instance, pcmk_rc_str(rc));
-                    goto done;
-                }
-                needs_teardown = true;
-                free_xml(input);
-            }
-            break;
-
         default:
             // Should never reach this point
             break;
@@ -921,10 +924,7 @@ done:
         // Teardown message should be the last thing we output
         shadow_teardown(options.instance);
     }
-
     free(shadow_file);
-    cib_delete(real_cib);
-
     free(options.instance);
     g_free(options.validate_with);
     crm_exit(exit_code);
