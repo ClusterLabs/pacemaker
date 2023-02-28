@@ -3881,6 +3881,10 @@ check_operation_expiry(struct action_history *history)
     const char *clear_reason = NULL;
 
     if (history->execution_status == PCMK_EXEC_NOT_INSTALLED) {
+        pe_rsc_trace(history->rsc,
+                     "Resource history entry %s on %s is not expired: "
+                     "Not Installed does not expire",
+                     history->id, pe__node_name(history->node));
         return false; // "Not installed" must always be cleared manually
     }
 
@@ -3934,6 +3938,10 @@ check_operation_expiry(struct action_history *history)
                  * fail count should be expired too), so this is really just a
                  * failsafe.
                  */
+                pe_rsc_trace(history->rsc,
+                             "Resource history entry %s on %s is not expired: "
+                             "Unexpired fail count",
+                             history->id, pe__node_name(history->node));
                 expired = false;
             }
 
@@ -3985,6 +3993,10 @@ check_operation_expiry(struct action_history *history)
             case PCMK_OCF_DEGRADED:
             case PCMK_OCF_DEGRADED_PROMOTED:
                 // Don't expire probes that return these values
+                pe_rsc_trace(history->rsc,
+                             "Resource history entry %s on %s is not expired: "
+                             "Probe result",
+                             history->id, pe__node_name(history->node));
                 expired = false;
                 break;
         }
