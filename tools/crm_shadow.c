@@ -237,6 +237,33 @@ done:
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Write the shadow XML to a file
+ *
+ * \param[in,out] xml       Shadow XML
+ * \param[in]     filename  Name of destination file
+ * \param[in]     reset     Whether the write is a reset (for logging only)
+ * \param[out]    error     Where to store error
+ */
+static int
+write_shadow_file(xmlNode *xml, const char *filename, bool reset,
+                  GError **error)
+{
+    int rc = write_xml_file(xml, filename, FALSE);
+
+    if (rc < 0) {
+        rc = pcmk_legacy2rc(rc);
+        exit_code = pcmk_rc2exitc(rc);
+        g_set_error(error, PCMK__EXITC_ERROR, exit_code,
+                    "Could not %s the shadow instance '%s': %s",
+                    reset? "reset" : "create", options.instance,
+                    pcmk_rc_str(rc));
+        return rc;
+    }
+    return pcmk_rc_ok;
+}
+
 static void
 shadow_setup(char *name, gboolean do_switch)
 {
@@ -351,6 +378,100 @@ done:
     free(filename);
     cib_delete(real_cib);
     free_xml(input);
+}
+
+/*!
+ * \internal
+ * \brief Create a new empty shadow instance
+ *
+ * \param[out] error  Where to store error
+ *
+ * \note If \p --force is given, we try to write the file regardless of whether
+ *       it already exists.
+ */
+static void
+create_shadow_empty(GError **error)
+{
+    char *filename = get_shadow_file(options.instance);
+    xmlNode *output = NULL;
+
+    if (!options.force
+        && (check_file_exists(filename, false, error) != pcmk_rc_ok)) {
+        goto done;
+    }
+
+    output = createEmptyCib(0);
+    crm_xml_add(output, XML_ATTR_VALIDATION, options.validate_with);
+    printf("Created new %s configuration\n",
+           crm_element_value(output, XML_ATTR_VALIDATION));
+
+    if (write_shadow_file(output, filename, false, error) != pcmk_rc_ok) {
+        goto done;
+    }
+    shadow_setup(options.instance, FALSE);
+
+done:
+    free(filename);
+    free_xml(output);
+}
+
+/*!
+ * \internal
+ * \brief Create a shadow instance based on the active CIB
+ *
+ * \param[in]  reset  If true, overwrite the given existing shadow instance.
+ *                    Otherwise, create a new shadow instance with the given
+ *                    name.
+ * \param[out] error  Where to store error
+ *
+ * \note If \p --force is given, we try to write the file regardless of whether
+ *       it already exists.
+ */
+static void
+create_shadow_from_cib(bool reset, GError **error)
+{
+    char *filename = get_shadow_file(options.instance);
+    xmlNode *output = NULL;
+
+    if (!options.force) {
+        if (reset) {
+            /* @COMPAT: Reset is dangerous to the shadow file, but to preserve
+             * compatibility we can't require --force unless there's a mismatch.
+             * At a compatibility break, call set_danger_error() with for_shadow
+             * and show_mismatch set to true.
+             */
+            const char *local = getenv("CIB_shadow");
+
+            if (!pcmk__str_eq(local, options.instance, pcmk__str_null_matches)) {
+                exit_code = CRM_EX_USAGE;
+                g_set_error(error, PCMK__EXITC_ERROR, exit_code,
+                            "The supplied shadow instance (%s) is not the same "
+                            "as the active one (%s).\n"
+                            "To prevent accidental destruction of the shadow "
+                            "file, the --force flag is required in order to "
+                            "proceed.",
+                            options.instance, local);
+                goto done;
+            }
+        }
+
+        if (check_file_exists(filename, reset, error) != pcmk_rc_ok) {
+            goto done;
+        }
+    }
+
+    if (query_real_cib(&output, error) != pcmk_rc_ok) {
+        goto done;
+    }
+
+    if (write_shadow_file(output, filename, reset, error) != pcmk_rc_ok) {
+        goto done;
+    }
+    shadow_setup(options.instance, FALSE);
+
+done:
+    free(filename);
+    free_xml(output);
 }
 
 /*!
@@ -725,9 +846,6 @@ build_arg_context(pcmk__common_args_t *args)
 int
 main(int argc, char **argv)
 {
-    int rc = pcmk_ok;
-    char *shadow_file = NULL;
-
     GError *error = NULL;
 
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
@@ -793,122 +911,41 @@ main(int argc, char **argv)
                               cib_quorum_override);
     }
 
-    /* Run the command
-     * @TODO: Finish adding all commands here
-     */
+    // Run the command
     switch (options.cmd) {
         case shadow_cmd_commit:
             commit_shadow_file(&error);
-            goto done;
+            break;
+        case shadow_cmd_create:
+            create_shadow_from_cib(false, &error);
+            break;
+        case shadow_cmd_create_empty:
+            create_shadow_empty(&error);
+            break;
+        case shadow_cmd_reset:
+            create_shadow_from_cib(true, &error);
+            break;
         case shadow_cmd_delete:
             delete_shadow_file(&error);
-            goto done;
+            break;
         case shadow_cmd_diff:
             show_shadow_diff(&error);
-            goto done;
+            break;
         case shadow_cmd_display:
             show_shadow_contents(&error);
-            goto done;
+            break;
         case shadow_cmd_edit:
             edit_shadow_file(&error);
-            goto done;
+            break;
         case shadow_cmd_file:
             show_shadow_filename(&error);
-            goto done;
+            break;
         case shadow_cmd_switch:
             switch_shadow_instance(&error);
-            goto done;
+            break;
         case shadow_cmd_which:
             show_shadow_instance(&error);
-            goto done;
-        default:
             break;
-    }
-
-    // Require --force for dangerous commands
-    if (!options.force && (options.cmd == shadow_cmd_reset)) {
-        /* @COMPAT: Reset is dangerous to the shadow file, but to preserve
-         * compatibility we can't require --force unless there's a mismatch. At
-         * a compatibility break, call set_danger_error() with for_shadow and
-         * show_mismatch set to true.
-         */
-        const char *local = getenv("CIB_shadow");
-
-        if (!pcmk__str_eq(local, options.instance, pcmk__str_null_matches)) {
-            exit_code = CRM_EX_USAGE;
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "The supplied shadow instance (%s) is not the same as "
-                        "the active one (%s).\n"
-                        "To prevent accidental destruction of the shadow file, "
-                        "the --force flag is required in order to proceed.",
-                        options.instance, local);
-            goto done;
-        }
-    }
-
-    shadow_file = get_shadow_file(options.instance);
-
-    // Check existence of the shadow file
-    switch (options.cmd) {
-        case shadow_cmd_create:
-        case shadow_cmd_create_empty:
-            if (!options.force
-                && (check_file_exists(shadow_file, false,
-                                      &error) != pcmk_rc_ok)) {
-                goto done;
-            }
-            break;
-        default:
-            if (check_file_exists(shadow_file, true, &error) != pcmk_rc_ok) {
-                goto done;
-            }
-            break;
-    }
-
-    // Run the command if we haven't already
-    switch (options.cmd) {
-        case shadow_cmd_create:
-        case shadow_cmd_create_empty:
-        case shadow_cmd_reset:
-            // Create or reset the shadow file
-            {
-                xmlNode *output = NULL;
-
-                if (options.cmd == shadow_cmd_create_empty) {
-                    output = createEmptyCib(0);
-                    crm_xml_add(output, XML_ATTR_VALIDATION,
-                                options.validate_with);
-                    printf("Created new %s configuration\n",
-                           crm_element_value(output, XML_ATTR_VALIDATION));
-
-                } else {
-                    // Create a shadow instance based on the current CIB
-                    if (query_real_cib(&output, &error) != pcmk_rc_ok) {
-                        goto done;
-                    }
-                }
-
-                rc = write_xml_file(output, shadow_file, FALSE);
-                free_xml(output);
-
-                if (rc < 0) {
-                    const char *action = "create";
-                    rc = pcmk_legacy2rc(rc);
-                    exit_code = pcmk_rc2exitc(rc);
-
-                    if (options.cmd == shadow_cmd_reset) {
-                        action = "reset";
-                    }
-
-                    g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                                "Could not %s the shadow instance '%s': %s",
-                                action, options.instance, pcmk_rc_str(rc));
-                    goto done;
-                }
-                shadow_setup(options.instance, FALSE);
-            }
-            break;
-
         default:
             // Should never reach this point
             break;
@@ -924,7 +961,6 @@ done:
         // Teardown message should be the last thing we output
         shadow_teardown(options.instance);
     }
-    free(shadow_file);
     free(options.instance);
     g_free(options.validate_with);
     crm_exit(exit_code);

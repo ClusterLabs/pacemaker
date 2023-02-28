@@ -1928,7 +1928,7 @@ function test_tools() {
 
     desc="Reset shadow instance (nonexistent shadow file) (force)"
     cmd="crm_shadow --reset $CIB_shadow --batch --force"
-    test_assert $CRM_EX_NOSUCH 0
+    test_assert $CRM_EX_OK 0
 
     # Switch shadow instances
     # In batch mode, this only displays a message

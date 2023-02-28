@@ -6550,8 +6550,10 @@ crm_shadow: Could not access shadow instance 'cts-cli': No such file or director
 =#=#=#= End test: Reset shadow instance (nonexistent shadow file) - No such object (105) =#=#=#=
 * Passed: crm_shadow     - Reset shadow instance (nonexistent shadow file)
 =#=#=#= Begin test: Reset shadow instance (nonexistent shadow file) (force) =#=#=#=
-crm_shadow: Could not access shadow instance 'cts-cli': No such file or directory
-=#=#=#= End test: Reset shadow instance (nonexistent shadow file) (force) - No such object (105) =#=#=#=
+Setting up shadow instance
+A new shadow instance was created.  To begin using it paste the following into your shell:
+  CIB_shadow=cts-cli ; export CIB_shadow
+=#=#=#= End test: Reset shadow instance (nonexistent shadow file) (force) - OK (0) =#=#=#=
 * Passed: crm_shadow     - Reset shadow instance (nonexistent shadow file) (force)
 Created new pacemaker configuration
 Setting up shadow instance
