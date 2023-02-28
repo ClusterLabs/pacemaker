@@ -3553,6 +3553,7 @@ remap_because(struct action_history *history, const char **why, int value,
  *
  * \param[in,out] history  Parsed action history entry
  * \param[in,out] on_fail  What should be done about the result
+ * \param[in]     expired  Whether result is expired
  *
  * \note If the result is remapped and the node is not shutting down or failed,
  *       the operation will be recorded in the data set's list of failed operations
@@ -3562,7 +3563,7 @@ remap_because(struct action_history *history, const char **why, int value,
  */
 static void
 remap_operation(struct action_history *history,
-                enum action_fail_response *on_fail)
+                enum action_fail_response *on_fail, bool expired)
 {
     bool is_probe = false;
     int orig_exit_status = history->exit_status;
@@ -3575,8 +3576,8 @@ remap_operation(struct action_history *history,
     history->exit_status = pcmk__effective_rc(history->exit_status);
     if (history->exit_status != orig_exit_status) {
         why = "degraded result";
-        if (!history->node->details->shutdown
-            || history->node->details->online) {
+        if (!expired && (!history->node->details->shutdown
+            || history->node->details->online)) {
             record_failed_op(history);
         }
     }
@@ -3587,7 +3588,7 @@ remap_operation(struct action_history *history,
             || (history->exit_status != PCMK_OCF_NOT_RUNNING))) {
         history->execution_status = PCMK_EXEC_DONE;
         history->exit_status = PCMK_OCF_NOT_RUNNING;
-        why = "irrelevant probe result";
+        why = "equivalent probe result";
     }
 
     /* If the executor reported an execution status of anything but done or
@@ -3665,10 +3666,12 @@ remap_operation(struct action_history *history,
                 || (history->expected_exit_status == history->exit_status)
                 || !pcmk_is_set(history->rsc->flags, pe_rsc_managed)) {
 
+                /* For probes, recurring monitors for the Stopped role, and
+                 * unmanaged resources, "not running" is not considered a
+                 * failure.
+                 */
                 remap_because(history, &why, PCMK_EXEC_DONE, "exit status");
                 history->rsc->role = RSC_ROLE_STOPPED;
-
-                /* clear any previous failure actions */
                 *on_fail = action_fail_ignore;
                 pe__set_next_role(history->rsc, RSC_ROLE_UNKNOWN,
                                   "not running");
@@ -3686,11 +3689,16 @@ remap_operation(struct action_history *history,
                             last_change_s);
                 free(last_change_s);
             }
-            history->rsc->role = RSC_ROLE_PROMOTED;
+            if (!expired
+                || (history->exit_status == history->expected_exit_status)) {
+                history->rsc->role = RSC_ROLE_PROMOTED;
+            }
             break;
 
         case PCMK_OCF_FAILED_PROMOTED:
-            history->rsc->role = RSC_ROLE_PROMOTED;
+            if (!expired) {
+                history->rsc->role = RSC_ROLE_PROMOTED;
+            }
             remap_because(history, &why, PCMK_EXEC_ERROR, "exit status");
             break;
 
@@ -3705,7 +3713,9 @@ remap_operation(struct action_history *history,
                                      &interval_ms);
 
                 if (interval_ms == 0) {
-                    block_if_unrecoverable(history);
+                    if (!expired) {
+                        block_if_unrecoverable(history);
+                    }
                     remap_because(history, &why, PCMK_EXEC_ERROR_HARD,
                                   "exit status");
                 } else {
@@ -3718,7 +3728,9 @@ remap_operation(struct action_history *history,
         case PCMK_OCF_NOT_INSTALLED:
         case PCMK_OCF_INVALID_PARAM:
         case PCMK_OCF_INSUFFICIENT_PRIV:
-            block_if_unrecoverable(history);
+            if (!expired) {
+                block_if_unrecoverable(history);
+            }
             remap_because(history, &why, PCMK_EXEC_ERROR_HARD, "exit status");
             break;
 
@@ -4412,22 +4424,10 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                      rsc->id, pe__node_name(node));
     }
 
-    /* It should be possible to call remap_operation() first then call
-     * check_operation_expiry() only if exit_status != expected_exit_status,
-     * because there should never be a fail count without at least one
-     * unexpected result in the resource history. That would be more efficient
-     * by avoiding having to call check_operation_expiry() for expected results.
-     *
-     * However, we do have such configurations in the scheduler regression
-     * tests, even if it shouldn't be possible with the current code. It's
-     * probably a good idea anyway, but that would require updating the test
-     * inputs to something currently possible.
-     */
-
     expired = check_operation_expiry(&history);
     old_rc = history.exit_status;
 
-    remap_operation(&history, on_fail);
+    remap_operation(&history, on_fail, expired);
 
     if (expired && (process_expired_result(&history, old_rc) == pcmk_rc_ok)) {
         goto done;
