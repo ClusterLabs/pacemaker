@@ -131,7 +131,7 @@ automatically by setting the ``failure-timeout`` resource meta-attribute.
    A successful operation does not clear past failures. If a recurring monitor
    operation fails once, succeeds many times, then fails again days later, its
    fail count is 2. Fail counts are cleared only by manual intervention or
-   falure timeout.
+   failure timeout.
 
 For example, setting ``migration-threshold`` to 2 and ``failure-timeout`` to
 ``60s`` would cause the resource to move to a new node after 2 failures, and
