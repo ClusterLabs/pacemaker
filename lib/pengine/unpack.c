@@ -3603,8 +3603,8 @@ remap_operation(struct action_history *history,
         // These should be treated as node-fatal
         case PCMK_EXEC_NO_FENCE_DEVICE:
         case PCMK_EXEC_NO_SECRETS:
-            history->execution_status = PCMK_EXEC_ERROR_HARD;
-            why = "node-fatal error";
+            remap_because(history, &why, PCMK_EXEC_ERROR_HARD,
+                          "node-fatal error");
             goto remap_done;
 
         default:
