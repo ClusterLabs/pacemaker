@@ -3647,16 +3647,16 @@ remap_operation(struct action_history *history,
                      pcmk__s(history->exit_reason, ""));
     }
 
-    last_change_s = last_change_str(history->xml);
-
     switch (history->exit_status) {
         case PCMK_OCF_OK:
             if (is_probe
                 && (history->expected_exit_status == PCMK_OCF_NOT_RUNNING)) {
                 remap_because(history, &why, PCMK_EXEC_DONE, "probe");
+                last_change_s = last_change_str(history->xml);
                 pe_rsc_info(history->rsc, "Probe found %s active on %s at %s",
                             history->rsc->id, pe__node_name(history->node),
                             last_change_s);
+                free(last_change_s);
             }
             break;
 
@@ -3679,10 +3679,12 @@ remap_operation(struct action_history *history,
             if (is_probe
                 && (history->exit_status != history->expected_exit_status)) {
                 remap_because(history, &why, PCMK_EXEC_DONE, "probe");
+                last_change_s = last_change_str(history->xml);
                 pe_rsc_info(history->rsc,
                             "Probe found %s active and promoted on %s at %s",
                             history->rsc->id, pe__node_name(history->node),
                             last_change_s);
+                free(last_change_s);
             }
             history->rsc->role = RSC_ROLE_PROMOTED;
             break;
@@ -3722,17 +3724,17 @@ remap_operation(struct action_history *history,
 
         default:
             if (history->execution_status == PCMK_EXEC_DONE) {
+                last_change_s = last_change_str(history->xml);
                 crm_info("Treating unknown exit status %d from %s of %s "
                          "on %s at %s as failure",
                          history->exit_status, task, history->rsc->id,
                          pe__node_name(history->node), last_change_s);
                 remap_because(history, &why, PCMK_EXEC_ERROR,
                               "unknown exit status");
+                free(last_change_s);
             }
             break;
     }
-
-    free(last_change_s);
 
 remap_done:
     if (why != NULL) {
