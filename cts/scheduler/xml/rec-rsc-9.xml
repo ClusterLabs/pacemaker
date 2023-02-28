@@ -51,7 +51,7 @@
           </lrm_resource>
           <lrm_resource id="rsc3" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc3_start_0" operation="start" interval="0" op-status="0" rc-code="0" call-id="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition-key="0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"/>
-            <lrm_rsc_op id="rsc3_fail_0" operation="fail" interval="0" op-status="4" rc-code="60" call-id="2" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition-key="0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"/>
+            <lrm_rsc_op id="rsc3_fail_0" operation="asyncmon" interval="0" op-status="4" rc-code="60" call-id="2" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition-key="0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"/>
           </lrm_resource>
           <lrm_resource id="rsc2" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc2_start_0" operation="start" interval="0" op-status="0" rc-code="0" call-id="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition-key="0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"/>

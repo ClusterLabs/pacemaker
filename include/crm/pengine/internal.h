@@ -12,6 +12,7 @@
 
 #  include <stdint.h>
 #  include <string.h>
+#  include <crm/msg_xml.h>
 #  include <crm/pengine/status.h>
 #  include <crm/pengine/remote_internal.h>
 #  include <crm/common/internal.h>
@@ -710,4 +711,29 @@ pe__same_node(const pe_node_t *node1, const pe_node_t *node2)
     return (node1 != NULL) && (node2 != NULL)
            && (node1->details == node2->details);
 }
+
+/*!
+ * \internal
+ * \brief Get the operation key from an action history entry
+ *
+ * \param[in] xml  Action history entry
+ *
+ * \return Entry's operation key
+ */
+static inline const char *
+pe__xe_history_key(const xmlNode *xml)
+{
+    if (xml == NULL) {
+        return NULL;
+    } else {
+        /* @COMPAT Pacemaker <= 1.1.5 did not add the key, and used the ID
+         * instead. Checking for that allows us to process old saved CIBs,
+         * including some regression tests.
+         */
+        const char *key = crm_element_value(xml, XML_LRM_ATTR_TASK_KEY);
+
+        return pcmk__str_empty(key)? ID(xml) : key;
+    }
+}
+
 #endif

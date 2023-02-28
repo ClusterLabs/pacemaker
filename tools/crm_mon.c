@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1721,11 +1721,7 @@ handle_rsc_op(xmlNode *xml, void *userdata)
         return pcmk_rc_ok;
     }
 
-    id = crm_element_value(rsc_op, XML_LRM_ATTR_TASK_KEY);
-    if (id == NULL) {
-        /* Compatibility with <= 1.1.5 */
-        id = ID(rsc_op);
-    }
+    id = pe__xe_history_key(rsc_op);
 
     magic = crm_element_value(rsc_op, XML_ATTR_TRANSITION_MAGIC);
     if (magic == NULL) {
