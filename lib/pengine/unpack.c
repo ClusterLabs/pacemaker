@@ -3868,6 +3868,10 @@ check_operation_expiry(struct action_history *history)
     int unexpired_fail_count = 0;
     const char *clear_reason = NULL;
 
+    if (history->execution_status == PCMK_EXEC_NOT_INSTALLED) {
+        return false; // "Not installed" must always be cleared manually
+    }
+
     if ((history->rsc->failure_timeout > 0)
         && (crm_element_value_epoch(history->xml, XML_RSC_OP_LAST_CHANGE,
                                     &last_run) == 0)) {
@@ -4420,11 +4424,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
      * inputs to something currently possible.
      */
 
-    if ((history.execution_status != PCMK_EXEC_NOT_INSTALLED)
-        && check_operation_expiry(&history)) {
-        expired = true;
-    }
-
+    expired = check_operation_expiry(&history);
     old_rc = history.exit_status;
 
     remap_operation(&history, on_fail);
