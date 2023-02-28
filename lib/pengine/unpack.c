@@ -3571,15 +3571,13 @@ remap_operation(struct action_history *history,
     const char *task = history->task;
     char *last_change_s = NULL;
 
-    if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_none)) {
-        // Remap degraded results to their usual counterparts
-        history->exit_status = pcmk__effective_rc(history->exit_status);
-        if (history->exit_status != orig_exit_status) {
-            why = "degraded monitor result";
-            if (!history->node->details->shutdown
-                || history->node->details->online) {
-                record_failed_op(history);
-            }
+    // Remap degraded results to their successful counterparts
+    history->exit_status = pcmk__effective_rc(history->exit_status);
+    if (history->exit_status != orig_exit_status) {
+        why = "degraded result";
+        if (!history->node->details->shutdown
+            || history->node->details->online) {
+            record_failed_op(history);
         }
     }
 
@@ -3689,7 +3687,6 @@ remap_operation(struct action_history *history,
             history->rsc->role = RSC_ROLE_PROMOTED;
             break;
 
-        case PCMK_OCF_DEGRADED_PROMOTED:
         case PCMK_OCF_FAILED_PROMOTED:
             history->rsc->role = RSC_ROLE_PROMOTED;
             remap_because(history, &why, PCMK_EXEC_ERROR, "exit status");
