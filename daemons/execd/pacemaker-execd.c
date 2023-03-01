@@ -404,8 +404,9 @@ static GOptionEntry entries[] = {
       &options.log_files, "Send logs to the additional named logfile", NULL },
 
 #ifdef PCMK__COMPILE_REMOTE
+
     { "port", 'p', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.port,
-      "Port to listen on", NULL },
+      "Port to listen on (defaults to " G_STRINGIFY(DEFAULT_REMOTE_PORT) ")", NULL },
 #endif  // PCMK__COMPILE_REMOTE
 
     { NULL }
