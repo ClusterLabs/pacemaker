@@ -677,6 +677,7 @@ TESTS = [
         [ "asymmetrical-order-restart", "Respect asymmetrical ordering when restarting dependent resource" ],
         [ "start-then-stop-with-unfence", "Avoid graph loop with start-then-stop constraint plus unfencing" ],
         [ "order-expired-failure", "Order failcount cleanup after remote fencing" ],
+        [ "expired-stop-1", "Expired stop failure should not block resource" ],
     
         [ "ignore_stonith_rsc_order1",
           "cl#5056- Ignore order constraint between stonith and non-stonith rsc" ],
