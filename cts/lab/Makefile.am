@@ -28,7 +28,6 @@ ctslib_PYTHON		= __init__.py		\
 			  CTStests.py		\
 			  environment.py	\
 			  logging.py		\
-			  patterns.py		\
 			  remote.py		\
 			  watcher.py
 
