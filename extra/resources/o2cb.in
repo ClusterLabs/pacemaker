@@ -3,7 +3,7 @@
 # ocf:pacemaker:o2cb resource agent
 #
 # Original copyright 2005-2008 Oracle
-# Later changes copyright 2008-2021 the Pacemaker project contributors
+# Later changes copyright 2008-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -363,7 +363,7 @@ o2cb_validate() {
 meta_data() {
         cat <<END
 <?xml version="1.0"?>
-<resource-agent name="o2cb" version="1.0">
+<resource-agent name="o2cb" version="@VERSION@">
   <version>1.0</version>
   <longdesc lang="en">
 This Resource Agent controls the userspace daemon needed by OCFS2.

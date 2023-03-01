@@ -35,7 +35,7 @@
 meta_data() {
     cat <<END
 <?xml version="1.0"?>
-<resource-agent name="SysInfo" version="1.0">
+<resource-agent name="SysInfo" version="@VERSION@">
 <version>1.1</version>
 
 <longdesc lang="en">

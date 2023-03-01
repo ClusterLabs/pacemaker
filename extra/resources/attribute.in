@@ -57,7 +57,7 @@ END
 meta_data() {
     cat <<END
 <?xml version="1.0"?>
-<resource-agent name="attribute" version="1.2">
+<resource-agent name="attribute" version="@VERSION@">
   <version>1.1</version>
   <longdesc lang="en">
 This resource agent controls a node attribute for the node it's running on.
