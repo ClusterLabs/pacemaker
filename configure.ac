@@ -319,6 +319,18 @@ VERSION_ARG(VERSION_NUMBER)
 PACKAGE_VERSION=$PACEMAKER_VERSION
 VERSION=$PACEMAKER_VERSION
 
+# Detect highest API schema version (use git if available to list managed RNGs,
+# in case there are leftover schema files from an earlier build of a different
+# version, otherwise check all RNGs)
+API_VERSION=$({ git ls-files xml/api/*.rng 2>/dev/null || ls -1 xml/api/*.rng ; } dnl
+              | sed -n -e 's/^.*-\([[0-9]][[0-9.]]*\).rng$/\1/p' | sort -V | tail -1)
+AC_DEFINE_UNQUOTED([PCMK__API_VERSION], ["$API_VERSION"],
+                   [Highest API schema version])
+
+# Re-run configure at next make if any RNG changes, to re-detect highest
+AC_SUBST([CONFIG_STATUS_DEPENDENCIES],
+         [$(echo '$(wildcard $(top_srcdir)/xml/api/*.rng)')])
+
 CRM_DAEMON_USER=""
 AC_ARG_WITH([daemon-user],
     [AS_HELP_STRING([--with-daemon-user=USER],
