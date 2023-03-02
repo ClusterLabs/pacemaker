@@ -3570,14 +3570,13 @@ remap_operation(struct action_history *history,
     int orig_exec_status = history->execution_status;
     const char *why = NULL;
     const char *task = history->task;
-    char *last_change_s = NULL;
 
     // Remap degraded results to their successful counterparts
     history->exit_status = pcmk__effective_rc(history->exit_status);
     if (history->exit_status != orig_exit_status) {
         why = "degraded result";
         if (!expired && (!history->node->details->shutdown
-            || history->node->details->online)) {
+                         || history->node->details->online)) {
             record_failed_op(history);
         }
     }
@@ -3652,8 +3651,9 @@ remap_operation(struct action_history *history,
         case PCMK_OCF_OK:
             if (is_probe
                 && (history->expected_exit_status == PCMK_OCF_NOT_RUNNING)) {
+                char *last_change_s = last_change_str(history->xml);
+
                 remap_because(history, &why, PCMK_EXEC_DONE, "probe");
-                last_change_s = last_change_str(history->xml);
                 pe_rsc_info(history->rsc, "Probe found %s active on %s at %s",
                             history->rsc->id, pe__node_name(history->node),
                             last_change_s);
@@ -3681,8 +3681,9 @@ remap_operation(struct action_history *history,
         case PCMK_OCF_RUNNING_PROMOTED:
             if (is_probe
                 && (history->exit_status != history->expected_exit_status)) {
+                char *last_change_s = last_change_str(history->xml);
+
                 remap_because(history, &why, PCMK_EXEC_DONE, "probe");
-                last_change_s = last_change_str(history->xml);
                 pe_rsc_info(history->rsc,
                             "Probe found %s active and promoted on %s at %s",
                             history->rsc->id, pe__node_name(history->node),
@@ -3736,7 +3737,8 @@ remap_operation(struct action_history *history,
 
         default:
             if (history->execution_status == PCMK_EXEC_DONE) {
-                last_change_s = last_change_str(history->xml);
+                char *last_change_s = last_change_str(history->xml);
+
                 crm_info("Treating unknown exit status %d from %s of %s "
                          "on %s at %s as failure",
                          history->exit_status, task, history->rsc->id,
