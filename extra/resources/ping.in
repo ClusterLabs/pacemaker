@@ -2,7 +2,7 @@
 #
 # ocf:pacemaker:ping resource agent
 #
-# Copyright 2009-2021 the Pacemaker project contributors
+# Copyright 2009-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -36,7 +36,7 @@
 meta_data() {
      cat <<END
 <?xml version="1.0"?>
-<resource-agent name="ping" version="1.2">
+<resource-agent name="ping" version="@VERSION@">
 <version>1.1</version>
 
 <longdesc lang="en">

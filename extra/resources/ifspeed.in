@@ -47,7 +47,7 @@ OCF_RESKEY_dampen_default=5
 meta_data() {
         cat <<END
 <?xml version="1.0"?>
-<resource-agent name="ifspeed" version="1.1">
+<resource-agent name="ifspeed" version="@VERSION@">
 <version>1.1</version>
 
 <longdesc lang="en">
