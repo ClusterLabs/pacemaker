@@ -6271,12 +6271,9 @@ Please remember to unset the CIB_shadow variable by pasting the following into y
 =#=#=#= End test: Commit shadow instance (force) - OK (0) =#=#=#=
 * Passed: crm_shadow     - Commit shadow instance (force)
 =#=#=#= Begin test: Get active shadow instance's diff (after commit) =#=#=#=
-Diff: --- 1.1.173 2
+Diff: --- 1.2.0 2
 Diff: +++ 1.4.1 (null)
--- /cib/configuration/op_defaults
 +  /cib:  @epoch=4, @num_updates=1
-+  /cib/configuration/resources/primitive[@id='dummy']:  @description=desc
-++ /cib/configuration/resources:  <primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy"/>
 ++ /cib/status:  <node_state id="3" uname="cluster03" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member"/>
 =#=#=#= End test: Get active shadow instance's diff (after commit) - Error occurred (1) =#=#=#=
 * Passed: crm_shadow     - Get active shadow instance's diff (after commit)
@@ -6286,13 +6283,9 @@ Please remember to unset the CIB_shadow variable by pasting the following into y
 =#=#=#= End test: Commit shadow instance (force) (all) - OK (0) =#=#=#=
 * Passed: crm_shadow     - Commit shadow instance (force) (all)
 =#=#=#= Begin test: Get active shadow instance's diff (after commit all) =#=#=#=
-Diff: --- 1.1.173 2
+Diff: --- 1.4.2 2
 Diff: +++ 1.4.1 (null)
--- /cib/configuration/op_defaults
-+  /cib:  @epoch=4, @num_updates=1
-+  /cib/configuration/resources/primitive[@id='dummy']:  @description=desc
-++ /cib/configuration/resources:  <primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy"/>
-++ /cib/status:  <node_state id="3" uname="cluster03" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member"/>
++  /cib:  @num_updates=1
 =#=#=#= End test: Get active shadow instance's diff (after commit all) - Error occurred (1) =#=#=#=
 * Passed: crm_shadow     - Get active shadow instance's diff (after commit all)
 =#=#=#= Begin test: Commit shadow instance (no active instance) =#=#=#=

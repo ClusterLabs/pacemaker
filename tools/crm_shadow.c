@@ -686,6 +686,8 @@ done:
         shadow_teardown(options.shadow);
     }
     free(shadow_file);
+    cib_delete(real_cib);
+
     free(options.shadow);
     g_free(options.validate_with);
     crm_exit(exit_code);
