@@ -1,0 +1,6 @@
+
+pcmk__primitive_assign: rsc1 allocation score on node1: -INFINITY
+pcmk__primitive_assign: rsc1 allocation score on node2: -INFINITY
+pcmk__primitive_assign: rsc1 allocation score on node3: -INFINITY
+pcmk__primitive_assign: rsc1 allocation score on node4: -INFINITY
+pcmk__primitive_assign: rsc1 allocation score on node5: -INFINITY

@@ -1,0 +1,4 @@
+ digraph "g" {
+"rsc1_clear_failcount_0 node2" [ style=bold color="green" fontcolor="black"]
+"rsc1_stop_0 node2" [ style=bold color="green" fontcolor="black"]
+}
