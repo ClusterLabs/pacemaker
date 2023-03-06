@@ -690,11 +690,14 @@ main(int argc, char **argv)
     }
 
     // Check for shadow instance mismatch
-    if (options.cmd != shadow_cmd_create) {
+    if (!options.force
+        && ((options.cmd == shadow_cmd_commit)
+            || (options.cmd == shadow_cmd_delete)
+            || (options.cmd == shadow_cmd_reset))) {
+
         const char *local = getenv("CIB_shadow");
 
-        if (!options.force
-            && !pcmk__str_eq(local, options.instance, pcmk__str_null_matches)) {
+        if (!pcmk__str_eq(local, options.instance, pcmk__str_null_matches)) {
             exit_code = CRM_EX_USAGE;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                         "The supplied shadow instance (%s) is not the same as "

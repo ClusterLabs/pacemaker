@@ -1836,10 +1836,6 @@ function test_tools() {
 
     desc="Create empty shadow instance (mismatch)"
     cmd="crm_shadow --create-empty $shadow --batch"
-    test_assert $CRM_EX_USAGE 0
-
-    desc="Create empty shadow instance (mismatch) (force)"
-    cmd="crm_shadow --create-empty $shadow --batch --force"
     test_assert $CRM_EX_OK 0
 
     # CIB_shadow needs to be set for delete_shadow_resource_defaults()
