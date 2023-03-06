@@ -252,18 +252,6 @@ shadow_teardown(char *name)
     free(our_prompt);
 }
 
-static bool
-cmd_is_dangerous(enum shadow_command cmd)
-{
-    switch (cmd) {
-        case shadow_cmd_commit:
-        case shadow_cmd_delete:
-            return true;
-        default:
-            return false;
-    }
-}
-
 /*!
  * \internal
  * \brief Open the shadow file in a text editor
@@ -719,13 +707,20 @@ main(int argc, char **argv)
     }
 
     // Check for dangerous commands
-    if (cmd_is_dangerous(options.cmd) && !options.force) {
-        exit_code = CRM_EX_USAGE;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "The supplied command is considered dangerous.\n"
-                    "To prevent accidental destruction of the cluster, the "
-                    "--force flag is required in order to proceed.");
-        goto done;
+    if (!options.force) {
+        switch (options.cmd) {
+            case shadow_cmd_commit:
+            case shadow_cmd_delete:
+                exit_code = CRM_EX_USAGE;
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                            "The supplied command is considered dangerous.\n"
+                            "To prevent accidental destruction of the cluster, "
+                            "the --force flag is required in order to "
+                            "proceed.");
+                goto done;
+            default:
+                break;
+        }
     }
 
     shadow_file = get_shadow_file(options.instance);
