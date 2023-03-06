@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -356,7 +356,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
 
     crm_trace("Populating <nodes> section from %s", from_hashtable ? "hashtable" : "cluster");
 
-    fsa_cib_update(XML_CIB_TAG_NODES, node_list, call_options, call_id, NULL);
+    fsa_cib_update(XML_CIB_TAG_NODES, node_list, call_options, call_id);
     fsa_register_cib_callback(call_id, FALSE, NULL, node_list_update_callback);
 
     free_xml(node_list);
@@ -383,7 +383,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
             }
         }
 
-        fsa_cib_update(XML_CIB_TAG_STATUS, node_list, call_options, call_id, NULL);
+        fsa_cib_update(XML_CIB_TAG_STATUS, node_list, call_options, call_id);
         fsa_register_cib_callback(call_id, FALSE, NULL, crmd_node_update_complete);
 
         free_xml(node_list);
@@ -430,7 +430,7 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
         crm_xml_add_int(update, XML_ATTR_HAVE_QUORUM, quorum);
         crm_xml_add(update, XML_ATTR_DC_UUID, controld_globals.our_uuid);
 
-        fsa_cib_update(XML_TAG_CIB, update, call_options, call_id, NULL);
+        fsa_cib_update(XML_TAG_CIB, update, call_options, call_id);
         crm_debug("Updating quorum status to %s (call=%d)",
                   pcmk__btoa(quorum), call_id);
         fsa_register_cib_callback(call_id, FALSE, NULL, cib_quorum_update_complete);

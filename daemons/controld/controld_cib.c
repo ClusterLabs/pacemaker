@@ -808,7 +808,7 @@ controld_update_resource_history(const char *node_name,
      * fenced for running a resource it isn't.
      */
     crm_log_xml_trace(update, __func__);
-    fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, cib_rc, NULL);
+    fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, cib_rc);
     if (cib_rc > 0) {
         crm_trace("Requested resource history update for "
                   "%s-interval %s for %s on %s (call ID %d)",

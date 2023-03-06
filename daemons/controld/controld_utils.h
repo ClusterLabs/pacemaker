@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,11 +19,11 @@
 #  define FAKE_TE_ID	"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
 
-#  define fsa_cib_update(section, data, options, call_id, user_name)        \
+#  define fsa_cib_update(section, data, options, call_id)                   \
     if (controld_globals.cib_conn != NULL) {                                \
         call_id = cib_internal_op(controld_globals.cib_conn,                \
                                   PCMK__CIB_REQUEST_MODIFY, NULL, section,  \
-                                  data, NULL, options, user_name);          \
+                                  data, NULL, options, NULL);               \
                                                                             \
     } else {                                                                \
         crm_err("No CIB manager connection available");                     \

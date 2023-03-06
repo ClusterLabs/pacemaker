@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -229,7 +229,7 @@ do_dc_takeover(long long action,
 
     cib = create_xml_node(NULL, XML_TAG_CIB);
     crm_xml_add(cib, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
-    fsa_cib_update(XML_TAG_CIB, cib, cib_quorum_override, rc, NULL);
+    fsa_cib_update(XML_TAG_CIB, cib, cib_quorum_override, rc);
     fsa_register_cib_callback(rc, FALSE, NULL, feature_update_callback);
 
     dc_takeover_update_attr(XML_ATTR_HAVE_WATCHDOG, pcmk__btoa(watchdog));

@@ -233,7 +233,7 @@ remote_node_up(const char *node_name)
      * actual fencing or allow recurring monitor failures to be cleared too
      * soon. Ideally, we wouldn't rely on the CIB for the fenced status.
      */
-    fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, call_id, NULL);
+    fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, call_id);
     if (call_id < 0) {
         crm_perror(LOG_WARNING, "%s CIB node state setup", node_name);
     }
@@ -285,7 +285,7 @@ remote_node_down(const char *node_name, const enum down_opts opts)
     /* Update CIB node state */
     update = create_xml_node(NULL, XML_CIB_TAG_STATUS);
     create_node_state_update(node, node_update_cluster, update, __func__);
-    fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, call_id, NULL);
+    fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, call_id);
     if (call_id < 0) {
         crm_perror(LOG_ERR, "%s CIB node state update", node_name);
     }
@@ -1285,7 +1285,7 @@ remote_ra_maintenance(lrm_state_t * lrm_state, gboolean maintenance)
     state = create_node_state_update(node, node_update_none, update,
                                      __func__);
     crm_xml_add(state, XML_NODE_IS_MAINTENANCE, maintenance?"1":"0");
-    fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, call_id, NULL);
+    fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, call_id);
     if (call_id < 0) {
         crm_perror(LOG_WARNING, "%s CIB node state update failed", lrm_state->node_name);
     } else {

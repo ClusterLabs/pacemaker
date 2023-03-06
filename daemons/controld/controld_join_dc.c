@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -760,19 +760,22 @@ do_dc_join_ack(long long action,
 
         if (now_dc_lrmd_state != NULL) {
             fsa_cib_update(XML_CIB_TAG_STATUS, now_dc_lrmd_state,
-                cib_scope_local | cib_quorum_override | cib_can_create, call_id, NULL);
+                           cib_scope_local|cib_quorum_override|cib_can_create,
+                           call_id);
             free_xml(now_dc_lrmd_state);
             crm_debug("Updating local node history for join-%d "
                       "from query result (via CIB call %d)", join_id, call_id);
         } else {
             fsa_cib_update(XML_CIB_TAG_STATUS, join_ack->xml,
-                cib_scope_local | cib_quorum_override | cib_can_create, call_id, NULL);
+                           cib_scope_local|cib_quorum_override|cib_can_create,
+                           call_id);
             crm_warn("Updating local node history from join-%d confirmation "
                      "because query failed (via CIB call %d)", join_id, call_id);
         }
     } else {
         fsa_cib_update(XML_CIB_TAG_STATUS, join_ack->xml,
-           cib_scope_local | cib_quorum_override | cib_can_create, call_id, NULL);
+                       cib_scope_local|cib_quorum_override|cib_can_create,
+                       call_id);
         crm_debug("Updating node history for %s from join-%d confirmation "
                   "(via CIB call %d)", join_from, join_id, call_id);
     }
