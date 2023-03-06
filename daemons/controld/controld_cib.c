@@ -306,7 +306,7 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
         call_id = cib_conn->cmds->remove(cib_conn, xpath, NULL, options);
         crm_info("Deleting %s (via CIB call %d) " CRM_XS " xpath=%s",
                  desc, call_id, xpath);
-        fsa_register_cib_callback(call_id, FALSE, desc, cib_delete_callback);
+        fsa_register_cib_callback(call_id, desc, cib_delete_callback);
         // CIB library handles freeing desc
     }
     free(xpath);
@@ -376,7 +376,7 @@ controld_delete_resource_history(const char *rsc_id, const char *node,
     } else {
         crm_info("Clearing %s (via CIB call %d) " CRM_XS " xpath=%s",
                  desc, rc, xpath);
-        fsa_register_cib_callback(rc, FALSE, desc, cib_delete_callback);
+        fsa_register_cib_callback(rc, desc, cib_delete_callback);
         // CIB library handles freeing desc
     }
 
@@ -816,7 +816,7 @@ controld_update_resource_history(const char *node_name,
                   op->rsc_id, node_name, cib_rc);
         controld_globals.resource_update = cib_rc; // CIB call ID
     }
-    fsa_register_cib_callback(cib_rc, FALSE, NULL, cib_rsc_callback);
+    fsa_register_cib_callback(cib_rc, NULL, cib_rsc_callback);
     free_xml(update);
 }
 

@@ -118,12 +118,12 @@ const char *get_node_id(xmlNode *lrm_rsc_op);
 /* Convenience macro for registering a CIB callback
  * (assumes that data can be freed with free())
  */
-#  define fsa_register_cib_callback(id, flag, data, fn) do {                \
+#  define fsa_register_cib_callback(id, data, fn) do {                      \
     cib_t *cib_conn = controld_globals.cib_conn;                            \
                                                                             \
     CRM_ASSERT(cib_conn != NULL);                                           \
     cib_conn->cmds->register_callback_full(cib_conn, id, cib_op_timeout(),  \
-                                           flag, data, #fn, fn, free);      \
+                                           FALSE, data, #fn, fn, free);     \
     } while(0)
 
 #endif

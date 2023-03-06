@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -143,7 +143,8 @@ do_cl_join_offer_respond(long long action,
 
     query_call_id = cib_conn->cmds->query(cib_conn, NULL, NULL,
                                           cib_scope_local|cib_no_children);
-    fsa_register_cib_callback(query_call_id, FALSE, strdup(join_id), join_query_callback);
+    fsa_register_cib_callback(query_call_id, strdup(join_id),
+                              join_query_callback);
     crm_trace("Registered join query callback: %d", query_call_id);
 
     controld_set_fsa_action_flags(A_DC_TIMER_STOP);

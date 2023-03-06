@@ -259,7 +259,7 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
                                                     node_xml,
                                                     cib_scope_local
                                                     |cib_quorum_override);
-            fsa_register_cib_callback(delete_call_id, FALSE, strdup(node_uuid),
+            fsa_register_cib_callback(delete_call_id, strdup(node_uuid),
                                       remove_conflicting_node_callback);
 
             node_state_xml = create_xml_node(NULL, XML_CIB_TAG_STATE);
@@ -271,7 +271,7 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
                                                     node_state_xml,
                                                     cib_scope_local
                                                     |cib_quorum_override);
-            fsa_register_cib_callback(delete_call_id, FALSE, strdup(node_uuid),
+            fsa_register_cib_callback(delete_call_id, strdup(node_uuid),
                                       remove_conflicting_node_callback);
             free_xml(node_state_xml);
         }
@@ -344,7 +344,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
                                                 (const char *) xpath->str,
                                                 NULL,
                                                 cib_scope_local|cib_xpath);
-                fsa_register_cib_callback(call_id, FALSE, strdup(node->uuid),
+                fsa_register_cib_callback(call_id, strdup(node->uuid),
                                           search_conflicting_node_callback);
             }
         }
@@ -357,7 +357,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
     crm_trace("Populating <nodes> section from %s", from_hashtable ? "hashtable" : "cluster");
 
     fsa_cib_update(XML_CIB_TAG_NODES, node_list, call_options, call_id);
-    fsa_register_cib_callback(call_id, FALSE, NULL, node_list_update_callback);
+    fsa_register_cib_callback(call_id, NULL, node_list_update_callback);
 
     free_xml(node_list);
 
@@ -384,7 +384,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
         }
 
         fsa_cib_update(XML_CIB_TAG_STATUS, node_list, call_options, call_id);
-        fsa_register_cib_callback(call_id, FALSE, NULL, crmd_node_update_complete);
+        fsa_register_cib_callback(call_id, NULL, crmd_node_update_complete);
 
         free_xml(node_list);
     }
@@ -433,7 +433,7 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
         fsa_cib_update(XML_TAG_CIB, update, call_options, call_id);
         crm_debug("Updating quorum status to %s (call=%d)",
                   pcmk__btoa(quorum), call_id);
-        fsa_register_cib_callback(call_id, FALSE, NULL, cib_quorum_update_complete);
+        fsa_register_cib_callback(call_id, NULL, cib_quorum_update_complete);
         free_xml(update);
 
         /* Quorum changes usually cause a new transition via other activity:

@@ -610,7 +610,7 @@ do_dc_join_finalize(long long action,
     rc = controld_globals.cib_conn->cmds->sync_from(controld_globals.cib_conn,
                                                     sync_from, NULL,
                                                     cib_quorum_override);
-    fsa_register_cib_callback(rc, FALSE, sync_from, finalize_sync_callback);
+    fsa_register_cib_callback(rc, sync_from, finalize_sync_callback);
 }
 
 void
@@ -779,7 +779,7 @@ do_dc_join_ack(long long action,
         crm_debug("Updating node history for %s from join-%d confirmation "
                   "(via CIB call %d)", join_from, join_id, call_id);
     }
-    fsa_register_cib_callback(call_id, FALSE, NULL, join_update_complete_callback);
+    fsa_register_cib_callback(call_id, NULL, join_update_complete_callback);
 }
 
 void

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -106,7 +106,7 @@ handle_disconnect(void)
         rc = controld_globals.cib_conn->cmds->query(controld_globals.cib_conn,
                                                     NULL, NULL,
                                                     cib_scope_local);
-        fsa_register_cib_callback(rc, FALSE, uuid_str, save_cib_contents);
+        fsa_register_cib_callback(rc, uuid_str, save_cib_contents);
 
     } else {
         crm_info("Connection to the scheduler released");
@@ -367,7 +367,7 @@ do_pe_invoke(long long action,
               fsa_state2string(controld_globals.fsa_state));
 
     controld_expect_sched_reply(NULL);
-    fsa_register_cib_callback(fsa_pe_query, FALSE, NULL, do_pe_invoke_callback);
+    fsa_register_cib_callback(fsa_pe_query, NULL, do_pe_invoke_callback);
 }
 
 static void
