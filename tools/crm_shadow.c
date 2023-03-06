@@ -239,6 +239,31 @@ done:
 
 /*!
  * \internal
+ * \brief Read XML from the given file
+ *
+ * \param[in]  filename  Path of input file
+ * \param[out] output    Where to store XML read from \p filename
+ * \param[out] error     Where to store error
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+read_xml(const char *filename, xmlNode **output, GError **error)
+{
+    int rc = pcmk_rc_ok;
+
+    *output = filename2xml(filename);
+    if (*output == NULL) {
+        rc = pcmk_rc_no_input;
+        exit_code = pcmk_rc2exitc(rc);
+        g_set_error(error, PCMK__EXITC_ERROR, exit_code,
+                    "Could not parse XML from input file '%s'", filename);
+    }
+    return rc;
+}
+
+/*!
+ * \internal
  * \brief Write the shadow XML to a file
  *
  * \param[in,out] xml       Shadow XML
@@ -354,7 +379,10 @@ commit_shadow_file(GError **error)
         goto done;
     }
 
-    input = filename2xml(filename);
+    if (read_xml(filename, &input, error) != pcmk_rc_ok) {
+        goto done;
+    }
+
     section_xml = input;
 
     if (!options.full_upload) {
@@ -566,7 +594,11 @@ show_shadow_contents(GError **error)
 
     if (check_file_exists(filename, true, error) == pcmk_rc_ok) {
         char *output_s = NULL;
-        xmlNode *output = filename2xml(filename);
+        xmlNode *output = NULL;
+
+        if (read_xml(filename, &output, error) != pcmk_rc_ok) {
+            goto done;
+        }
 
         output_s = dump_xml_formatted(output);
         printf("%s", output_s);
@@ -574,6 +606,8 @@ show_shadow_contents(GError **error)
         free(output_s);
         free_xml(output);
     }
+
+done:
     free(filename);
 }
 
@@ -606,7 +640,9 @@ show_shadow_diff(GError **error)
         goto done;
     }
 
-    new_config = filename2xml(filename);
+    if (read_xml(filename, &new_config, error) != pcmk_rc_ok) {
+        goto done;
+    }
     xml_track_changes(new_config, NULL, new_config, false);
     xml_calculate_changes(old_config, new_config);
     diff = xml_create_patchset(0, old_config, new_config, NULL, false);
