@@ -257,6 +257,14 @@ pcmk__cmdline_preproc(char *const *argv, const char *special) {
             continue;
         }
 
+        /* "-INFINITY" is almost certainly meant as a string, not as an option
+         * list
+         */
+        if (strcmp(argv[i], "-INFINITY") == 0) {
+            g_ptr_array_add(arr, g_strdup(argv[i]));
+            continue;
+        }
+
         /* This is a short argument, or perhaps several.  Iterate over it
          * and explode them out into individual arguments.
          */
