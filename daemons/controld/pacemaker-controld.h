@@ -27,9 +27,6 @@
 #  define controld_trigger_config()  \
     controld_trigger_config_as(__func__, __LINE__)
 
-void do_cib_updated(const char *event, xmlNode * msg);
-void do_cib_replaced(const char *event, xmlNode * msg);
-
 void controld_add_resource_history_xml_as(const char *func, xmlNode *parent,
                                           const lrmd_rsc_info_t *rsc,
                                           lrmd_event_data_t *op,

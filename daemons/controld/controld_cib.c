@@ -21,7 +21,7 @@
 
 static int cib_retries = 0;
 
-void
+static void
 do_cib_updated(const char *event, xmlNode * msg)
 {
     if (pcmk__alert_in_patchset(msg, TRUE)) {
@@ -29,7 +29,7 @@ do_cib_updated(const char *event, xmlNode * msg)
     }
 }
 
-void
+static void
 do_cib_replaced(const char *event, xmlNode * msg)
 {
     uint32_t change_section = cib_change_section_nodes
