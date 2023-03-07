@@ -204,6 +204,45 @@ do_cib_control(long long action,
     }
 }
 
+#define MIN_CIB_OP_TIMEOUT (30)
+
+/*!
+ * \internal
+ * \brief Get the timeout (in seconds) that should be used with CIB operations
+ *
+ * \return The maximum of 30 seconds, the value of the PCMK_cib_timeout
+ *         environment variable, or 10 seconds times one more than the number of
+ *         nodes in the cluster.
+ */
+unsigned int
+cib_op_timeout(void)
+{
+    static int env_timeout = -1;
+    unsigned int calculated_timeout = 0;
+
+    if (env_timeout == -1) {
+        const char *env = getenv("PCMK_cib_timeout");
+
+        pcmk__scan_min_int(env, &env_timeout, MIN_CIB_OP_TIMEOUT);
+        crm_trace("Minimum CIB op timeout: %ds (environment: %s)",
+                  env_timeout, (env? env : "none"));
+    }
+
+    calculated_timeout = 1 + crm_active_peers();
+    if (crm_remote_peer_cache) {
+        calculated_timeout += g_hash_table_size(crm_remote_peer_cache);
+    }
+    calculated_timeout *= 10;
+
+    calculated_timeout = QB_MAX(calculated_timeout, env_timeout);
+    crm_trace("Calculated timeout: %us", calculated_timeout);
+
+    if (controld_globals.cib_conn) {
+        controld_globals.cib_conn->call_timeout = calculated_timeout;
+    }
+    return calculated_timeout;
+}
+
 /*!
  * \internal
  * \brief Get CIB call options to use local scope if primary is unavailable
