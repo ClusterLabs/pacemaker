@@ -21,6 +21,31 @@
 
 static int cib_retries = 0;
 
+/*!
+ * \internal
+ * \brief Respond to a dropped CIB connection
+ *
+ * \param[in] user_data  CIB connection that dropped
+ */
+static void
+handle_cib_disconnect(gpointer user_data)
+{
+    CRM_LOG_ASSERT(user_data == controld_globals.cib_conn);
+
+    controld_trigger_fsa();
+    controld_globals.cib_conn->state = cib_disconnected;
+
+    if (pcmk_is_set(controld_globals.fsa_input_register, R_CIB_CONNECTED)) {
+        // @TODO This should trigger a reconnect, not a shutdown
+        crm_crit("Lost connection to the CIB manager, shutting down");
+        register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
+        controld_clear_fsa_input_flags(R_CIB_CONNECTED);
+
+    } else { // Expected
+        crm_info("Connection to the CIB manager terminated");
+    }
+}
+
 static void
 do_cib_updated(const char *event, xmlNode * msg)
 {
@@ -100,7 +125,7 @@ do_cib_control(long long action,
 {
     cib_t *cib_conn = controld_globals.cib_conn;
 
-    void (*dnotify_fn) (gpointer user_data) = crmd_cib_connection_destroy;
+    void (*dnotify_fn) (gpointer user_data) = handle_cib_disconnect;
     void (*replace_cb) (const char *event, xmlNodePtr msg) = do_cib_replaced;
     void (*update_cb) (const char *event, xmlNodePtr msg) = do_cib_updated;
 
