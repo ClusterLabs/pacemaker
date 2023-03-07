@@ -273,7 +273,6 @@ do_dc_join_offer_all(long long action,
      */
     current_join_id++;
     start_join_round();
-    // do_update_cib_nodes(TRUE, __func__);
 
     update_dc(NULL);
     if (cause == C_HA_MESSAGE && current_input == I_NODE_JOIN) {

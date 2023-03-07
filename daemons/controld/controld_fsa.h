@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -492,7 +492,6 @@ struct fsa_data_s {
     } while (0)
 
 // These should be moved elsewhere
-void do_update_cib_nodes(gboolean overwrite, const char *caller);
 int crmd_cib_smart_opt(void);
 xmlNode *controld_query_executor_state(void);
 
