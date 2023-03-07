@@ -5846,6 +5846,38 @@ crm_attribute: Error performing operation: No such device or address
 </pacemaker-result>
 =#=#=#= End test: Query after deleting an existing promotable score attribute (XML) - No such object (105) =#=#=#=
 * Passed: crm_attribute  - Query after deleting an existing promotable score attribute (XML)
+=#=#=#= Begin test: Update a promotable score attribute to -INFINITY =#=#=#=
+Deprecated argument format '-NFINITY' used.
+Please use '-N FINITY' instead.  Support will be removed in a future release.
+crm_attribute: Could not map name=FINITY to a UUID
+=#=#=#= End test: Update a promotable score attribute to -INFINITY - No such object (105) =#=#=#=
+* Passed: crm_attribute  - Update a promotable score attribute to -INFINITY
+=#=#=#= Begin test: Update a promotable score attribute to -INFINITY (XML) =#=#=#=
+Deprecated argument format '-NFINITY' used.
+Please use '-N FINITY' instead.  Support will be removed in a future release.
+<pacemaker-result api-version="X" request="crm_attribute -N cluster01 -p -v -INFINITY --output-as=xml">
+  <status code="105" message="No such object">
+    <errors>
+      <error>crm_attribute: Could not map name=FINITY to a UUID</error>
+    </errors>
+  </status>
+</pacemaker-result>
+=#=#=#= End test: Update a promotable score attribute to -INFINITY (XML) - No such object (105) =#=#=#=
+* Passed: crm_attribute  - Update a promotable score attribute to -INFINITY (XML)
+=#=#=#= Begin test: Query after updating a promotable score attribute to -INFINITY =#=#=#=
+crm_attribute: Error performing operation: No such device or address
+=#=#=#= End test: Query after updating a promotable score attribute to -INFINITY - No such object (105) =#=#=#=
+* Passed: crm_attribute  - Query after updating a promotable score attribute to -INFINITY
+=#=#=#= Begin test: Query after updating a promotable score attribute to -INFINITY (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_attribute -N cluster01 -p -G --output-as=xml">
+  <status code="105" message="No such object">
+    <errors>
+      <error>crm_attribute: Error performing operation: No such device or address</error>
+    </errors>
+  </status>
+</pacemaker-result>
+=#=#=#= End test: Query after updating a promotable score attribute to -INFINITY (XML) - No such object (105) =#=#=#=
+* Passed: crm_attribute  - Query after updating a promotable score attribute to -INFINITY (XML)
 =#=#=#= Begin test: Check that CIB_file="-" works - crm_mon =#=#=#=
 Cluster Summary:
   * Stack: corosync

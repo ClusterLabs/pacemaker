@@ -1537,7 +1537,28 @@ function test_tools() {
     cmd="crm_attribute -N cluster01 -p promotable-rsc -G --output-as=xml"
     test_assert_validate $CRM_EX_NOSUCH 0
 
+    # Test for an issue with legacy command line parsing when the resource is
+    # specified in the environment (CLBZ#5509)
+    export OCF_RESOURCE_INSTANCE=promotable-rsc
+
+    desc="Update a promotable score attribute to -INFINITY"
+    cmd="crm_attribute -N cluster01 -p -v -INFINITY"
+    test_assert $CRM_EX_NOSUCH 0
+
+    desc="Update a promotable score attribute to -INFINITY (XML)"
+    cmd="crm_attribute -N cluster01 -p -v -INFINITY --output-as=xml"
+    test_assert $CRM_EX_NOSUCH 0
+
+    desc="Query after updating a promotable score attribute to -INFINITY"
+    cmd="crm_attribute -N cluster01 -p -G"
+    test_assert $CRM_EX_NOSUCH 0
+
+    desc="Query after updating a promotable score attribute to -INFINITY (XML)"
+    cmd="crm_attribute -N cluster01 -p -G --output-as=xml"
+    test_assert $CRM_EX_NOSUCH 0
+
     unset CIB_file
+    unset OCF_RESOURCE_INSTANCE
 
     export CIB_file="-"
 
