@@ -1543,19 +1543,19 @@ function test_tools() {
 
     desc="Update a promotable score attribute to -INFINITY"
     cmd="crm_attribute -N cluster01 -p -v -INFINITY"
-    test_assert $CRM_EX_NOSUCH 0
+    test_assert $CRM_EX_OK 0
 
     desc="Update a promotable score attribute to -INFINITY (XML)"
     cmd="crm_attribute -N cluster01 -p -v -INFINITY --output-as=xml"
-    test_assert $CRM_EX_NOSUCH 0
+    test_assert $CRM_EX_OK 0
 
     desc="Query after updating a promotable score attribute to -INFINITY"
     cmd="crm_attribute -N cluster01 -p -G"
-    test_assert $CRM_EX_NOSUCH 0
+    test_assert $CRM_EX_OK 0
 
     desc="Query after updating a promotable score attribute to -INFINITY (XML)"
     cmd="crm_attribute -N cluster01 -p -G --output-as=xml"
-    test_assert $CRM_EX_NOSUCH 0
+    test_assert $CRM_EX_OK 0
 
     unset CIB_file
     unset OCF_RESOURCE_INSTANCE
