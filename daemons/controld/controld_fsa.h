@@ -491,8 +491,7 @@ struct fsa_data_s {
                                    (flags_to_clear), #flags_to_clear);  \
     } while (0)
 
-// These should be moved elsewhere
-int crmd_cib_smart_opt(void);
+// This should be moved elsewhere
 xmlNode *controld_query_executor_state(void);
 
 const char *fsa_input2string(enum crmd_fsa_input input);

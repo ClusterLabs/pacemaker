@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,14 @@
 
 #ifndef CONTROLD_GLOBALS__H
 #  define CONTROLD_GLOBALS__H
+
+#include <crm_internal.h>       // pcmk__output_t, etc.
+
+#include <stdint.h>             // uint32_t, uint64_t
+#include <glib.h>               // GList, GMainLoop
+#include <crm/cib.h>            // cib_t
+#include <pacemaker-internal.h> // pcmk__graph_t
+#include <controld_fsa.h>       // enum crmd_fsa_state
 
 typedef struct {
     // Booleans
