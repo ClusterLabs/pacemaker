@@ -5846,6 +5846,26 @@ crm_attribute: Error performing operation: No such device or address
 </pacemaker-result>
 =#=#=#= End test: Query after deleting an existing promotable score attribute (XML) - No such object (105) =#=#=#=
 * Passed: crm_attribute  - Query after deleting an existing promotable score attribute (XML)
+=#=#=#= Begin test: Update a promotable score attribute to -INFINITY =#=#=#=
+=#=#=#= End test: Update a promotable score attribute to -INFINITY - OK (0) =#=#=#=
+* Passed: crm_attribute  - Update a promotable score attribute to -INFINITY
+=#=#=#= Begin test: Update a promotable score attribute to -INFINITY (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_attribute -N cluster01 -p -v -INFINITY --output-as=xml">
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Update a promotable score attribute to -INFINITY (XML) - OK (0) =#=#=#=
+* Passed: crm_attribute  - Update a promotable score attribute to -INFINITY (XML)
+=#=#=#= Begin test: Query after updating a promotable score attribute to -INFINITY =#=#=#=
+scope=status  name=master-promotable-rsc value=-INFINITY
+=#=#=#= End test: Query after updating a promotable score attribute to -INFINITY - OK (0) =#=#=#=
+* Passed: crm_attribute  - Query after updating a promotable score attribute to -INFINITY
+=#=#=#= Begin test: Query after updating a promotable score attribute to -INFINITY (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_attribute -N cluster01 -p -G --output-as=xml">
+  <attribute name="master-promotable-rsc" value="-INFINITY" scope="status"/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Query after updating a promotable score attribute to -INFINITY (XML) - OK (0) =#=#=#=
+* Passed: crm_attribute  - Query after updating a promotable score attribute to -INFINITY (XML)
 =#=#=#= Begin test: Check that CIB_file="-" works - crm_mon =#=#=#=
 Cluster Summary:
   * Stack: corosync
