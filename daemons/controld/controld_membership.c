@@ -356,12 +356,9 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
 
     crm_trace("Populating <nodes> section from %s", from_hashtable ? "hashtable" : "cluster");
 
-    fsa_cib_update(XML_CIB_TAG_NODES, node_list, call_options, call_id);
-    fsa_register_cib_callback(call_id, NULL, node_list_update_callback);
-
-    free_xml(node_list);
-
-    if (call_id >= pcmk_ok && crm_peer_cache != NULL && AM_I_DC) {
+    if ((controld_update_cib(XML_CIB_TAG_NODES, node_list, call_options,
+                             node_list_update_callback) == pcmk_rc_ok)
+         && (crm_peer_cache != NULL) && AM_I_DC) {
         /*
          * There is no need to update the local CIB with our values if
          * we've not seen valid membership data
@@ -369,6 +366,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
         GHashTableIter iter;
         crm_node_t *node = NULL;
 
+        free_xml(node_list);
         node_list = create_xml_node(NULL, XML_CIB_TAG_STATUS);
 
         g_hash_table_iter_init(&iter, crm_peer_cache);
@@ -383,11 +381,10 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
             }
         }
 
-        fsa_cib_update(XML_CIB_TAG_STATUS, node_list, call_options, call_id);
-        fsa_register_cib_callback(call_id, NULL, crmd_node_update_complete);
-
-        free_xml(node_list);
+        controld_update_cib(XML_CIB_TAG_STATUS, node_list, call_options,
+                            crmd_node_update_complete);
     }
+    free_xml(node_list);
 }
 
 static void
@@ -422,7 +419,6 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
     if (AM_I_DC
         && ((has_quorum && !quorum) || (!has_quorum && quorum)
             || force_update)) {
-        int call_id = 0;
         xmlNode *update = NULL;
         int call_options = cib_scope_local | cib_quorum_override;
 
@@ -430,10 +426,9 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
         crm_xml_add_int(update, XML_ATTR_HAVE_QUORUM, quorum);
         crm_xml_add(update, XML_ATTR_DC_UUID, controld_globals.our_uuid);
 
-        fsa_cib_update(XML_TAG_CIB, update, call_options, call_id);
-        crm_debug("Updating quorum status to %s (call=%d)",
-                  pcmk__btoa(quorum), call_id);
-        fsa_register_cib_callback(call_id, NULL, cib_quorum_update_complete);
+        crm_debug("Updating quorum status to %s", pcmk__btoa(quorum));
+        controld_update_cib(XML_TAG_CIB, update, call_options,
+                            cib_quorum_update_complete);
         free_xml(update);
 
         /* Quorum changes usually cause a new transition via other activity:

@@ -785,6 +785,55 @@ should_preserve_lock(lrmd_event_data_t *op)
 
 /*!
  * \internal
+ * \brief Request a CIB update
+ *
+ * \param[in]     section   Section of CIB to update
+ * \param[in,out] data      New XML of CIB section to update
+ * \param[in]     options   CIB call options
+ * \param[in]     callback  If not NULL, set this as the operation callback
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+controld_update_cib(const char *section, xmlNode *data, int options,
+                    void (*callback)(xmlNode *, int, int, xmlNode *, void *))
+{
+    int cib_rc = -ENOTCONN;
+
+    CRM_ASSERT(data != NULL);
+
+    if (controld_globals.cib_conn != NULL) {
+        cib_rc = cib_internal_op(controld_globals.cib_conn,
+                                 PCMK__CIB_REQUEST_MODIFY, NULL, section,
+                                 data, NULL, options, NULL);
+        if (cib_rc >= 0) {
+            crm_debug("Submitted CIB update %d for %s section",
+                      cib_rc, section);
+        }
+    }
+
+    if (callback == NULL) {
+        if (cib_rc < 0) {
+            crm_err("Failed to update CIB %s section: %s",
+                    section, pcmk_rc_str(pcmk_legacy2rc(cib_rc)));
+        }
+
+    } else {
+        if ((cib_rc >= 0) && (callback == cib_rsc_callback)) {
+            /* Checking for a particular callback is a little hacky, but it
+             * didn't seem worth adding an output argument for cib_rc for just
+             * one use case.
+             */
+            controld_globals.resource_update = cib_rc;
+        }
+        fsa_register_cib_callback(cib_rc, NULL, callback);
+    }
+
+    return (cib_rc >= 0)? pcmk_rc_ok : pcmk_legacy2rc(cib_rc);
+}
+
+/*!
+ * \internal
  * \brief Update resource history entry in CIB
  *
  * \param[in]     node_name  Node where action occurred
@@ -800,7 +849,6 @@ controld_update_resource_history(const char *node_name,
                                  const lrmd_rsc_info_t *rsc,
                                  lrmd_event_data_t *op, time_t lock_time)
 {
-    int cib_rc = pcmk_ok;
     xmlNode *update = NULL;
     xmlNode *xml = NULL;
     int call_opt = crmd_cib_smart_opt();
@@ -872,15 +920,7 @@ controld_update_resource_history(const char *node_name,
      * fenced for running a resource it isn't.
      */
     crm_log_xml_trace(update, __func__);
-    fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, cib_rc);
-    if (cib_rc > 0) {
-        crm_trace("Requested resource history update for "
-                  "%s-interval %s for %s on %s (call ID %d)",
-                  pcmk__readable_interval(op->interval_ms), op->op_type,
-                  op->rsc_id, node_name, cib_rc);
-        controld_globals.resource_update = cib_rc; // CIB call ID
-    }
-    fsa_register_cib_callback(cib_rc, NULL, cib_rsc_callback);
+    controld_update_cib(XML_CIB_TAG_STATUS, update, call_opt, cib_rsc_callback);
     free_xml(update);
 }
 

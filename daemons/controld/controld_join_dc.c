@@ -697,9 +697,9 @@ do_dc_join_ack(long long action,
                enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     int join_id = -1;
-    int call_id = 0;
     ha_msg_input_t *join_ack = fsa_typed_data(fsa_dt_ha_msg);
     enum controld_section_e section = controld_section_lrm;
+    const int cib_opts = cib_scope_local|cib_quorum_override|cib_can_create;
 
     const char *op = crm_element_value(join_ack->msg, F_CRM_TASK);
     const char *join_from = crm_element_value(join_ack->msg, F_CRM_HOST_FROM);
@@ -758,27 +758,23 @@ do_dc_join_ack(long long action,
         xmlNode *now_dc_lrmd_state = controld_query_executor_state();
 
         if (now_dc_lrmd_state != NULL) {
-            fsa_cib_update(XML_CIB_TAG_STATUS, now_dc_lrmd_state,
-                           cib_scope_local|cib_quorum_override|cib_can_create,
-                           call_id);
-            free_xml(now_dc_lrmd_state);
             crm_debug("Updating local node history for join-%d "
-                      "from query result (via CIB call %d)", join_id, call_id);
+                      "from query result", join_id);
+            controld_update_cib(XML_CIB_TAG_STATUS, now_dc_lrmd_state, cib_opts,
+                                join_update_complete_callback);
+            free_xml(now_dc_lrmd_state);
         } else {
-            fsa_cib_update(XML_CIB_TAG_STATUS, join_ack->xml,
-                           cib_scope_local|cib_quorum_override|cib_can_create,
-                           call_id);
             crm_warn("Updating local node history from join-%d confirmation "
-                     "because query failed (via CIB call %d)", join_id, call_id);
+                     "because query failed", join_id);
+            controld_update_cib(XML_CIB_TAG_STATUS, join_ack->xml, cib_opts,
+                                join_update_complete_callback);
         }
     } else {
-        fsa_cib_update(XML_CIB_TAG_STATUS, join_ack->xml,
-                       cib_scope_local|cib_quorum_override|cib_can_create,
-                       call_id);
-        crm_debug("Updating node history for %s from join-%d confirmation "
-                  "(via CIB call %d)", join_from, join_id, call_id);
+        crm_debug("Updating node history for %s from join-%d confirmation",
+                  join_from, join_id);
+        controld_update_cib(XML_CIB_TAG_STATUS, join_ack->xml, cib_opts,
+                            join_update_complete_callback);
     }
-    fsa_register_cib_callback(call_id, NULL, join_update_complete_callback);
 }
 
 void

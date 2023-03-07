@@ -15,16 +15,6 @@
 #include <crm/cib/internal.h>   // PCMK__CIB_REQUEST_MODIFY
 #include <controld_globals.h>   // controld_globals.cib_conn
 
-#define fsa_cib_update(section, data, options, call_id)                     \
-    if (controld_globals.cib_conn != NULL) {                                \
-        call_id = cib_internal_op(controld_globals.cib_conn,                \
-                                  PCMK__CIB_REQUEST_MODIFY, NULL, section,  \
-                                  data, NULL, options, NULL);               \
-                                                                            \
-    } else {                                                                \
-        crm_err("No CIB manager connection available");                     \
-    }
-
 static inline void
 fsa_cib_anon_update(const char *section, xmlNode *data) {
     if (controld_globals.cib_conn == NULL) {
@@ -52,6 +42,9 @@ fsa_cib_anon_update_discard_reply(const char *section, xmlNode *data) {
     }
 }
 
+int controld_update_cib(const char *section, xmlNode *data, int options,
+                        void (*callback)(xmlNode *, int, int, xmlNode *,
+                                         void *));
 unsigned int cib_op_timeout(void);
 bool controld_action_is_recordable(const char *action);
 
