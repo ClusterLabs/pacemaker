@@ -263,21 +263,6 @@ crmd_cib_smart_opt(void)
     return call_opt;
 }
 
-/*!
- * \internal
- * \brief Check whether an action type should be recorded in the CIB
- *
- * \param[in] action  Action type
- *
- * \return TRUE if action should be recorded, FALSE otherwise
- */
-bool
-controld_action_is_recordable(const char *action)
-{
-    return !pcmk__strcase_any_of(action, CRMD_ACTION_CANCEL, CRMD_ACTION_DELETE,
-                            CRMD_ACTION_NOTIFY, CRMD_ACTION_METADATA, NULL);
-}
-
 static void
 cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
                     void *user_data)

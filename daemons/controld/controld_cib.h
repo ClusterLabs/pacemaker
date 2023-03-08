@@ -46,7 +46,6 @@ int controld_update_cib(const char *section, xmlNode *data, int options,
                         void (*callback)(xmlNode *, int, int, xmlNode *,
                                          void *));
 unsigned int cib_op_timeout(void);
-bool controld_action_is_recordable(const char *action);
 
 // Subsections of node_state
 enum controld_section_e {
@@ -101,5 +100,20 @@ void controld_delete_action_history_by_key(const char *rsc_id, const char *node,
 void controld_disconnect_cib_manager(void);
 
 int crmd_cib_smart_opt(void);
+
+/*!
+ * \internal
+ * \brief Check whether an action type should be recorded in the CIB
+ *
+ * \param[in] action  Action type
+ *
+ * \return true if action should be recorded, false otherwise
+ */
+static inline bool
+controld_action_is_recordable(const char *action)
+{
+    return !pcmk__str_any_of(action, CRMD_ACTION_CANCEL, CRMD_ACTION_DELETE,
+                             CRMD_ACTION_NOTIFY, CRMD_ACTION_METADATA, NULL);
+}
 
 #endif // PCMK__CONTROLD_CIB__H
