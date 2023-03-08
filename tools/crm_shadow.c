@@ -81,7 +81,7 @@ static struct {
  *                            this
  * \param[out] error          Where to store error
  */
-static inline void
+static void
 set_danger_error(const char *reason, bool for_shadow, bool show_mismatch,
                  GError **error)
 {
