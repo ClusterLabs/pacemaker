@@ -106,12 +106,6 @@ set_danger_error(const char *reason, bool for_shadow, bool show_mismatch,
     free(full);
 }
 
-static char *
-get_shadow_prompt(const char *name)
-{
-    return crm_strdup_printf("shadow[%.40s] # ", name);
-}
-
 /*!
  * \internal
  * \brief Get the active shadow instance from the environment
@@ -291,6 +285,20 @@ write_shadow_file(xmlNode *xml, const char *filename, bool reset,
 
 /*!
  * \internal
+ * \brief Create a shell prompt based on the given shadow instance name
+ *
+ * \return Newly created prompt
+ *
+ * \note The caller is responsible for freeing the return value using \p free().
+ */
+static inline char *
+get_shadow_prompt(void)
+{
+    return crm_strdup_printf("shadow[%.40s] # ", options.instance);
+}
+
+/*!
+ * \internal
  * \brief Set up environment variables for a shadow instance
  *
  * \param[in]  do_switch  If true, switch to an existing instance (logging only)
@@ -302,7 +310,7 @@ shadow_setup(bool do_switch, GError **error)
     const char *active = getenv("CIB_shadow");
     const char *prompt = getenv("PS1");
     const char *shell = getenv("SHELL");
-    char *new_prompt = get_shadow_prompt(options.instance);
+    char *new_prompt = get_shadow_prompt();
 
     if (pcmk__str_eq(active, options.instance, pcmk__str_none)
         && pcmk__str_eq(new_prompt, prompt, pcmk__str_none)) {
@@ -353,7 +361,7 @@ shadow_teardown(void)
     const char *prompt = getenv("PS1");
 
     if (pcmk__str_eq(active, options.instance, pcmk__str_none)) {
-        char *our_prompt = get_shadow_prompt(options.instance);
+        char *our_prompt = get_shadow_prompt();
 
         if (pcmk__str_eq(prompt, our_prompt, pcmk__str_none)) {
             printf("Now type Ctrl-D to exit the crm_shadow shell\n");
