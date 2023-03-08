@@ -342,21 +342,29 @@ done:
     free(new_prompt);
 }
 
+/*!
+ * \internal
+ * \brief Remind the user to clean up the shadow environment
+ */
 static void
-shadow_teardown(char *name)
+shadow_teardown(void)
 {
+    const char *active = getenv("CIB_shadow");
     const char *prompt = getenv("PS1");
-    char *our_prompt = get_shadow_prompt(name);
 
-    if (prompt != NULL && strstr(prompt, our_prompt)) {
-        printf("Now type Ctrl-D to exit the crm_shadow shell\n");
+    if (pcmk__str_eq(active, options.instance, pcmk__str_none)) {
+        char *our_prompt = get_shadow_prompt(options.instance);
 
-    } else {
-        printf
-            ("Please remember to unset the CIB_shadow variable by pasting the following into your shell:\n");
-        printf("  unset CIB_shadow\n");
+        if (pcmk__str_eq(prompt, our_prompt, pcmk__str_none)) {
+            printf("Now type Ctrl-D to exit the crm_shadow shell\n");
+
+        } else {
+            printf("Please remember to unset the CIB_shadow variable by "
+                   "pasting the following into your shell:\n"
+                   "\tunset CIB_shadow\n");
+        }
+        free(our_prompt);
     }
-    free(our_prompt);
 }
 
 /*!
@@ -1011,7 +1019,7 @@ done:
 
     if (needs_teardown) {
         // Teardown message should be the last thing we output
-        shadow_teardown(options.instance);
+        shadow_teardown();
     }
     free(options.instance);
     g_free(options.validate_with);
