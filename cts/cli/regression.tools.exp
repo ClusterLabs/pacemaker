@@ -6284,7 +6284,7 @@ To prevent accidental destruction of the cluster, the --force flag is required i
 * Passed: crm_shadow     - Commit shadow instance
 =#=#=#= Begin test: Commit shadow instance (force) =#=#=#=
 Please remember to unset the CIB_shadow variable by pasting the following into your shell:
-  unset CIB_shadow
+	unset CIB_shadow
 =#=#=#= End test: Commit shadow instance (force) - OK (0) =#=#=#=
 * Passed: crm_shadow     - Commit shadow instance (force)
 =#=#=#= Begin test: Get active shadow instance's diff (after commit) =#=#=#=
@@ -6296,7 +6296,7 @@ Diff: +++ 1.4.1 (null)
 * Passed: crm_shadow     - Get active shadow instance's diff (after commit)
 =#=#=#= Begin test: Commit shadow instance (force) (all) =#=#=#=
 Please remember to unset the CIB_shadow variable by pasting the following into your shell:
-  unset CIB_shadow
+	unset CIB_shadow
 =#=#=#= End test: Commit shadow instance (force) (all) - OK (0) =#=#=#=
 * Passed: crm_shadow     - Commit shadow instance (force) (all)
 =#=#=#= Begin test: Get active shadow instance's diff (after commit all) =#=#=#=
@@ -6311,8 +6311,6 @@ To prevent accidental destruction of the cluster, the --force flag is required i
 =#=#=#= End test: Commit shadow instance (no active instance) - Incorrect usage (64) =#=#=#=
 * Passed: crm_shadow     - Commit shadow instance (no active instance)
 =#=#=#= Begin test: Commit shadow instance (no active instance) (force) =#=#=#=
-Please remember to unset the CIB_shadow variable by pasting the following into your shell:
-  unset CIB_shadow
 =#=#=#= End test: Commit shadow instance (no active instance) (force) - OK (0) =#=#=#=
 * Passed: crm_shadow     - Commit shadow instance (no active instance) (force)
 =#=#=#= Begin test: Commit shadow instance (mismatch) =#=#=#=
@@ -6322,8 +6320,6 @@ To prevent accidental destruction of the cluster, the --force flag is required i
 =#=#=#= End test: Commit shadow instance (mismatch) - Incorrect usage (64) =#=#=#=
 * Passed: crm_shadow     - Commit shadow instance (mismatch)
 =#=#=#= Begin test: Commit shadow instance (mismatch) (force) =#=#=#=
-Please remember to unset the CIB_shadow variable by pasting the following into your shell:
-  unset CIB_shadow
 =#=#=#= End test: Commit shadow instance (mismatch) (force) - OK (0) =#=#=#=
 * Passed: crm_shadow     - Commit shadow instance (mismatch) (force)
 =#=#=#= Begin test: Commit shadow instance (nonexistent shadow file) =#=#=#=
@@ -6359,7 +6355,7 @@ To prevent accidental destruction of the shadow file, the --force flag is requir
 * Passed: crm_shadow     - Delete shadow instance
 =#=#=#= Begin test: Delete shadow instance (force) =#=#=#=
 Please remember to unset the CIB_shadow variable by pasting the following into your shell:
-  unset CIB_shadow
+	unset CIB_shadow
 =#=#=#= End test: Delete shadow instance (force) - OK (0) =#=#=#=
 * Passed: crm_shadow     - Delete shadow instance (force)
 A new shadow instance was created. To begin using it, paste the following into your shell:
@@ -6370,8 +6366,6 @@ To prevent accidental destruction of the shadow file, the --force flag is requir
 =#=#=#= End test: Delete shadow instance (no active instance) - Incorrect usage (64) =#=#=#=
 * Passed: crm_shadow     - Delete shadow instance (no active instance)
 =#=#=#= Begin test: Delete shadow instance (no active instance) (force) =#=#=#=
-Please remember to unset the CIB_shadow variable by pasting the following into your shell:
-  unset CIB_shadow
 =#=#=#= End test: Delete shadow instance (no active instance) (force) - OK (0) =#=#=#=
 * Passed: crm_shadow     - Delete shadow instance (no active instance) (force)
 A new shadow instance was created. To begin using it, paste the following into your shell:
@@ -6383,8 +6377,6 @@ To prevent accidental destruction of the shadow file, the --force flag is requir
 =#=#=#= End test: Delete shadow instance (mismatch) - Incorrect usage (64) =#=#=#=
 * Passed: crm_shadow     - Delete shadow instance (mismatch)
 =#=#=#= Begin test: Delete shadow instance (mismatch) (force) =#=#=#=
-Please remember to unset the CIB_shadow variable by pasting the following into your shell:
-  unset CIB_shadow
 =#=#=#= End test: Delete shadow instance (mismatch) (force) - OK (0) =#=#=#=
 * Passed: crm_shadow     - Delete shadow instance (mismatch) (force)
 =#=#=#= Begin test: Delete shadow instance (nonexistent shadow file) =#=#=#=
@@ -6394,7 +6386,7 @@ To prevent accidental destruction of the shadow file, the --force flag is requir
 * Passed: crm_shadow     - Delete shadow instance (nonexistent shadow file)
 =#=#=#= Begin test: Delete shadow instance (nonexistent shadow file) (force) =#=#=#=
 Please remember to unset the CIB_shadow variable by pasting the following into your shell:
-  unset CIB_shadow
+	unset CIB_shadow
 =#=#=#= End test: Delete shadow instance (nonexistent shadow file) (force) - OK (0) =#=#=#=
 * Passed: crm_shadow     - Delete shadow instance (nonexistent shadow file) (force)
 A new shadow instance was created. To begin using it, paste the following into your shell:
@@ -6406,7 +6398,7 @@ To prevent accidental destruction of the shadow file, the --force flag is requir
 * Passed: crm_shadow     - Delete shadow instance (nonexistent CIB file)
 =#=#=#= Begin test: Delete shadow instance (nonexistent CIB file) (force) =#=#=#=
 Please remember to unset the CIB_shadow variable by pasting the following into your shell:
-  unset CIB_shadow
+	unset CIB_shadow
 =#=#=#= End test: Delete shadow instance (nonexistent CIB file) (force) - OK (0) =#=#=#=
 * Passed: crm_shadow     - Delete shadow instance (nonexistent CIB file) (force)
 =#=#=#= Begin test: Create copied shadow instance (no active instance) =#=#=#=
