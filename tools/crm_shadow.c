@@ -289,40 +289,56 @@ write_shadow_file(xmlNode *xml, const char *filename, bool reset,
     return pcmk_rc_ok;
 }
 
+/*!
+ * \internal
+ * \brief Set up environment variables for a shadow instance
+ *
+ * \param[in]  do_switch  If true, switch to an existing instance (logging only)
+ * \param[out] error      Where to store error
+ */
 static void
-shadow_setup(char *name, gboolean do_switch)
+shadow_setup(bool do_switch, GError **error)
 {
+    const char *active = getenv("CIB_shadow");
     const char *prompt = getenv("PS1");
     const char *shell = getenv("SHELL");
-    char *new_prompt = get_shadow_prompt(name);
+    char *new_prompt = get_shadow_prompt(options.instance);
 
-    printf("Setting up shadow instance\n");
-
-    if (pcmk__str_eq(new_prompt, prompt, pcmk__str_casei)) {
-        /* nothing to do */
+    if (pcmk__str_eq(active, options.instance, pcmk__str_none)
+        && pcmk__str_eq(new_prompt, prompt, pcmk__str_none)) {
+        // CIB_shadow and prompt environment variables are already set up
         goto done;
+    }
 
-    } else if (!options.batch && (shell != NULL)) {
+    if (!options.batch && (shell != NULL)) {
+        printf("Setting up shadow instance\n");
         setenv("PS1", new_prompt, 1);
-        setenv("CIB_shadow", name, 1);
+        setenv("CIB_shadow", options.instance, 1);
         printf("Type Ctrl-D to exit the crm_shadow shell\n");
 
-        if (strstr(shell, "bash")) {
+        if (pcmk__str_eq(shell, "(^|/)bash$", pcmk__str_regex)) {
             execl(shell, shell, "--norc", "--noprofile", NULL);
         } else {
             execl(shell, shell, NULL);
         }
 
-    } else if (do_switch) {
-        printf("To switch to the named shadow instance, paste the following into your shell:\n");
-
-    } else {
-        printf
-            ("A new shadow instance was created.  To begin using it paste the following into your shell:\n");
+        exit_code = pcmk_rc2exitc(errno);
+        g_set_error(error, PCMK__EXITC_ERROR, exit_code,
+                    "Failed to launch shell '%s': %s",
+                    shell, pcmk_rc_str(errno));
+        goto done;
     }
-    printf("  CIB_shadow=%s ; export CIB_shadow\n", name);
 
-  done:
+    if (do_switch) {
+        printf("To switch to the named shadow instance, paste the following "
+               "into your shell:\n");
+    } else {
+        printf("A new shadow instance was created. To begin using it, paste "
+               "the following into your shell:\n");
+    }
+    printf("\texport CIB_shadow=%s\n", options.instance);
+
+done:
     free(new_prompt);
 }
 
@@ -436,7 +452,7 @@ create_shadow_empty(GError **error)
     if (write_shadow_file(output, filename, false, error) != pcmk_rc_ok) {
         goto done;
     }
-    shadow_setup(options.instance, FALSE);
+    shadow_setup(false, error);
 
 done:
     free(filename);
@@ -495,7 +511,7 @@ create_shadow_from_cib(bool reset, GError **error)
     if (write_shadow_file(output, filename, reset, error) != pcmk_rc_ok) {
         goto done;
     }
-    shadow_setup(options.instance, FALSE);
+    shadow_setup(false, error);
 
 done:
     free(filename);
@@ -733,7 +749,7 @@ switch_shadow_instance(GError **error)
 
     filename = get_shadow_file(options.instance);
     if (check_file_exists(filename, true, error) == pcmk_rc_ok) {
-        shadow_setup(options.instance, TRUE);
+        shadow_setup(true, error);
     }
     free(filename);
 }
