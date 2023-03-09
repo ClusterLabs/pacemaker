@@ -4322,14 +4322,76 @@ mask_probe_failure(struct action_history *history, int orig_exit_status,
 }
 
 /*!
+ * \internal Check whether a given failure is for a given pending action
+ *
+ * \param[in] history       Parsed history entry for pending action
+ * \param[in] last_failure  Resource's last_failure entry, if known
+ *
+ * \return true if \p last_failure is failure of pending action in \p history,
+ *         otherwise false
+ * \note Both \p history and \p last_failure must come from the same
+ *       lrm_resource block, as node and resource are assumed to be the same.
+ */
+static bool
+failure_is_newer(const struct action_history *history,
+                 const xmlNode *last_failure)
+{
+    guint failure_interval_ms = 0U;
+    long long failure_change = 0LL;
+    long long this_change = 0LL;
+
+    if (last_failure == NULL) {
+        return false; // Resource has no last_failure entry
+    }
+
+    if (!pcmk__str_eq(history->task,
+                      crm_element_value(last_failure, XML_LRM_ATTR_TASK),
+                      pcmk__str_none)) {
+        return false; // last_failure is for different action
+    }
+
+    if ((crm_element_value_ms(last_failure, XML_LRM_ATTR_INTERVAL_MS,
+                              &failure_interval_ms) != pcmk_ok)
+        || (history->interval_ms != failure_interval_ms)) {
+        return false; // last_failure is for action with different interval
+    }
+
+    if ((pcmk__scan_ll(crm_element_value(history->xml, XML_RSC_OP_LAST_CHANGE),
+                       &this_change, 0LL) != pcmk_rc_ok)
+        || (pcmk__scan_ll(crm_element_value(last_failure,
+                                            XML_RSC_OP_LAST_CHANGE),
+                          &failure_change, 0LL) != pcmk_rc_ok)
+        || (failure_change < this_change)) {
+        return false; // Failure is not known to be newer
+    }
+
+    return true;
+}
+
+/*!
  * \internal
  * \brief Update a resource's role etc. for a pending action
  *
- * \param[in,out] history  Parsed history entry for pending action
+ * \param[in,out] history       Parsed history entry for pending action
+ * \param[in]     last_failure  Resource's last_failure entry, if known
  */
 static void
-process_pending_action(struct action_history *history)
+process_pending_action(struct action_history *history,
+                       const xmlNode *last_failure)
 {
+    /* For recurring monitors, a failure is recorded only in RSC_last_failure_0,
+     * and there might be a RSC_monitor_INTERVAL entry with the last successful
+     * or pending result.
+     *
+     * If last_failure contains the failure of the pending recurring monitor
+     * we're processing here, and is newer, the action is no longer pending.
+     * (Pending results have call ID -1, which sorts last, so the last failure
+     * if any should be known.)
+     */
+    if (failure_is_newer(history, last_failure)) {
+        return;
+    }
+
     if (strcmp(history->task, CRMD_ACTION_START) == 0) {
         pe__set_resource_flags(history->rsc, pe_rsc_start_pending);
         set_active(history->rsc);
@@ -4458,7 +4520,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 
     switch (history.execution_status) {
         case PCMK_EXEC_PENDING:
-            process_pending_action(&history);
+            process_pending_action(&history, *last_failure);
             goto done;
 
         case PCMK_EXEC_DONE:
