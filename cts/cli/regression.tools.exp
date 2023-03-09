@@ -6283,8 +6283,6 @@ To prevent accidental destruction of the cluster, the --force flag is required i
 =#=#=#= End test: Commit shadow instance - Incorrect usage (64) =#=#=#=
 * Passed: crm_shadow     - Commit shadow instance
 =#=#=#= Begin test: Commit shadow instance (force) =#=#=#=
-Please remember to unset the CIB_shadow variable by pasting the following into your shell:
-	unset CIB_shadow
 =#=#=#= End test: Commit shadow instance (force) - OK (0) =#=#=#=
 * Passed: crm_shadow     - Commit shadow instance (force)
 =#=#=#= Begin test: Get active shadow instance's diff (after commit) =#=#=#=
@@ -6295,8 +6293,6 @@ Diff: +++ 1.4.1 (null)
 =#=#=#= End test: Get active shadow instance's diff (after commit) - Error occurred (1) =#=#=#=
 * Passed: crm_shadow     - Get active shadow instance's diff (after commit)
 =#=#=#= Begin test: Commit shadow instance (force) (all) =#=#=#=
-Please remember to unset the CIB_shadow variable by pasting the following into your shell:
-	unset CIB_shadow
 =#=#=#= End test: Commit shadow instance (force) (all) - OK (0) =#=#=#=
 * Passed: crm_shadow     - Commit shadow instance (force) (all)
 =#=#=#= Begin test: Get active shadow instance's diff (after commit all) =#=#=#=
