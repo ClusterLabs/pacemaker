@@ -7,12 +7,11 @@ Current cluster status:
   * Full List of Resources:
     * st-sbd	(stonith:external/sbd):	 Started node-1
     * Clone Set: promotable-1 [stateful-1] (promotable):
-      * stateful-1	(ocf:pacemaker:Stateful):	 Stopped node-1 (Monitoring)
       * Promoted: [ node-3 ]
       * Stopped: [ node-1 node-2 ]
 
 Transition Summary:
-  * Start      stateful-1:2     ( node-1 )  due to unrunnable stateful-1:0 monitor (blocked)
+  * Start      stateful-1:1     ( node-1 )  due to unrunnable stateful-1:0 monitor (blocked)
 
 Executing Cluster Transition:
   * Pseudo action:   promotable-1_start_0
