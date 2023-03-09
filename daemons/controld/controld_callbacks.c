@@ -354,27 +354,6 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
     controld_trigger_fsa();
 }
 
-void
-crmd_cib_connection_destroy(gpointer user_data)
-{
-    CRM_LOG_ASSERT(user_data == controld_globals.cib_conn);
-
-    controld_trigger_fsa();
-    controld_globals.cib_conn->state = cib_disconnected;
-
-    if (!pcmk_is_set(controld_globals.fsa_input_register, R_CIB_CONNECTED)) {
-        crm_info("Connection to the CIB manager terminated");
-        return;
-    }
-
-    // @TODO This should trigger a reconnect, not a shutdown
-    crm_crit("Lost connection to the CIB manager, shutting down");
-    register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
-    controld_clear_fsa_input_flags(R_CIB_CONNECTED);
-
-    return;
-}
-
 gboolean
 crm_fsa_trigger(gpointer user_data)
 {

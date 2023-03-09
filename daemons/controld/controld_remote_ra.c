@@ -173,7 +173,7 @@ start_delay_helper(gpointer data)
 static void
 remote_node_up(const char *node_name)
 {
-    int call_opt, call_id = 0;
+    int call_opt;
     xmlNode *update, *state;
     crm_node_t *node;
     enum controld_section_e section = controld_section_all;
@@ -233,10 +233,7 @@ remote_node_up(const char *node_name)
      * actual fencing or allow recurring monitor failures to be cleared too
      * soon. Ideally, we wouldn't rely on the CIB for the fenced status.
      */
-    fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, call_id, NULL);
-    if (call_id < 0) {
-        crm_perror(LOG_WARNING, "%s CIB node state setup", node_name);
-    }
+    controld_update_cib(XML_CIB_TAG_STATUS, update, call_opt, NULL);
     free_xml(update);
 }
 
@@ -256,7 +253,6 @@ static void
 remote_node_down(const char *node_name, const enum down_opts opts)
 {
     xmlNode *update;
-    int call_id = 0;
     int call_opt = crmd_cib_smart_opt();
     crm_node_t *node;
 
@@ -285,10 +281,7 @@ remote_node_down(const char *node_name, const enum down_opts opts)
     /* Update CIB node state */
     update = create_xml_node(NULL, XML_CIB_TAG_STATUS);
     create_node_state_update(node, node_update_cluster, update, __func__);
-    fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, call_id, NULL);
-    if (call_id < 0) {
-        crm_perror(LOG_ERR, "%s CIB node state update", node_name);
-    }
+    controld_update_cib(XML_CIB_TAG_STATUS, update, call_opt, NULL);
     free_xml(update);
 }
 
@@ -1275,7 +1268,7 @@ remote_ra_maintenance(lrm_state_t * lrm_state, gboolean maintenance)
 {
     remote_ra_data_t *ra_data = lrm_state->remote_ra_data;
     xmlNode *update, *state;
-    int call_opt, call_id = 0;
+    int call_opt;
     crm_node_t *node;
 
     call_opt = crmd_cib_smart_opt();
@@ -1285,10 +1278,8 @@ remote_ra_maintenance(lrm_state_t * lrm_state, gboolean maintenance)
     state = create_node_state_update(node, node_update_none, update,
                                      __func__);
     crm_xml_add(state, XML_NODE_IS_MAINTENANCE, maintenance?"1":"0");
-    fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, call_id, NULL);
-    if (call_id < 0) {
-        crm_perror(LOG_WARNING, "%s CIB node state update failed", lrm_state->node_name);
-    } else {
+    if (controld_update_cib(XML_CIB_TAG_STATUS, update, call_opt,
+                            NULL) == pcmk_rc_ok) {
         /* TODO: still not 100% sure that async update will succeed ... */
         ra_data->is_maintenance = maintenance;
     }

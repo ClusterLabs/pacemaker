@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -300,7 +300,7 @@ controld_record_action_event(pcmk__graph_action_t *action,
 
     rc = cib_conn->cmds->update(cib_conn, XML_CIB_TAG_STATUS, state,
                                 call_options);
-    fsa_register_cib_callback(rc, FALSE, NULL, cib_action_updated);
+    fsa_register_cib_callback(rc, NULL, cib_action_updated);
     free_xml(state);
 
     crm_trace("Sent CIB update (call ID %d) for synthesized event of action %d (%s on %s)",

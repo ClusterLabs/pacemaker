@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -788,7 +788,7 @@ crm_read_options(gpointer user_data)
                                         " | //" XML_CIB_TAG_ALERTS,
                                         NULL, cib_xpath|cib_scope_local);
 
-    fsa_register_cib_callback(call_id, FALSE, NULL, config_query_callback);
+    fsa_register_cib_callback(call_id, NULL, config_query_callback);
     crm_trace("Querying the CIB... call %d", call_id);
     return TRUE;
 }

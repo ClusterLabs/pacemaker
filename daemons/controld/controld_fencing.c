@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -260,7 +260,7 @@ send_stonith_update(pcmk__graph_action_t *action, const char *target,
 
     /* Delay processing the trigger until the update completes */
     crm_debug("Sending fencing update %d for %s", rc, target);
-    fsa_register_cib_callback(rc, FALSE, strdup(target), cib_fencing_updated);
+    fsa_register_cib_callback(rc, strdup(target), cib_fencing_updated);
 
     // Make sure it sticks
     /* controld_globals.cib_conn->cmds->bump_epoch(controld_globals.cib_conn,

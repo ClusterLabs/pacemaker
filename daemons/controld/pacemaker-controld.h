@@ -12,6 +12,7 @@
 
 #include <controld_alerts.h>
 #include <controld_callbacks.h>
+#include <controld_cib.h>
 #include <controld_fencing.h>
 #include <controld_fsa.h>
 #include <controld_globals.h>
@@ -27,34 +28,6 @@
 #  define controld_trigger_config()  \
     controld_trigger_config_as(__func__, __LINE__)
 
-void do_cib_updated(const char *event, xmlNode * msg);
-void do_cib_replaced(const char *event, xmlNode * msg);
-
-void controld_add_resource_history_xml_as(const char *func, xmlNode *parent,
-                                          const lrmd_rsc_info_t *rsc,
-                                          lrmd_event_data_t *op,
-                                          const char *node_name);
-
-#define controld_add_resource_history_xml(parent, rsc, op, node_name)   \
-    controld_add_resource_history_xml_as(__func__, (parent), (rsc),     \
-                                         (op), (node_name))
-
-bool controld_record_pending_op(const char *node_name,
-                                const lrmd_rsc_info_t *rsc,
-                                lrmd_event_data_t *op);
-
-void controld_update_resource_history(const char *node_name,
-                                      const lrmd_rsc_info_t *rsc,
-                                      lrmd_event_data_t *op, time_t lock_time);
-
-void controld_delete_action_history(const lrmd_event_data_t *op);
-
-void controld_cib_delete_last_failure(const char *rsc_id, const char *node,
-                                      const char *action, guint interval_ms);
-
-void controld_delete_action_history_by_key(const char *rsc_id, const char *node,
-                                           const char *key, int call_id);
-
 void crmd_metadata(void);
 void controld_trigger_config_as(const char *fn, int line);
 void controld_election_init(const char *uname);
@@ -62,6 +35,5 @@ void controld_configure_election(GHashTable *options);
 void controld_remove_voter(const char *uname);
 void controld_election_fini(void);
 void controld_stop_current_election_timeout(void);
-void controld_disconnect_cib_manager(void);
 
 #endif

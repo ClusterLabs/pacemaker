@@ -21,7 +21,32 @@
 
 static int cib_retries = 0;
 
-void
+/*!
+ * \internal
+ * \brief Respond to a dropped CIB connection
+ *
+ * \param[in] user_data  CIB connection that dropped
+ */
+static void
+handle_cib_disconnect(gpointer user_data)
+{
+    CRM_LOG_ASSERT(user_data == controld_globals.cib_conn);
+
+    controld_trigger_fsa();
+    controld_globals.cib_conn->state = cib_disconnected;
+
+    if (pcmk_is_set(controld_globals.fsa_input_register, R_CIB_CONNECTED)) {
+        // @TODO This should trigger a reconnect, not a shutdown
+        crm_crit("Lost connection to the CIB manager, shutting down");
+        register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
+        controld_clear_fsa_input_flags(R_CIB_CONNECTED);
+
+    } else { // Expected
+        crm_info("Connection to the CIB manager terminated");
+    }
+}
+
+static void
 do_cib_updated(const char *event, xmlNode * msg)
 {
     if (pcmk__alert_in_patchset(msg, TRUE)) {
@@ -29,7 +54,7 @@ do_cib_updated(const char *event, xmlNode * msg)
     }
 }
 
-void
+static void
 do_cib_replaced(const char *event, xmlNode * msg)
 {
     uint32_t change_section = cib_change_section_nodes
@@ -100,7 +125,7 @@ do_cib_control(long long action,
 {
     cib_t *cib_conn = controld_globals.cib_conn;
 
-    void (*dnotify_fn) (gpointer user_data) = crmd_cib_connection_destroy;
+    void (*dnotify_fn) (gpointer user_data) = handle_cib_disconnect;
     void (*replace_cb) (const char *event, xmlNodePtr msg) = do_cib_replaced;
     void (*update_cb) (const char *event, xmlNodePtr msg) = do_cib_updated;
 
@@ -179,6 +204,45 @@ do_cib_control(long long action,
     }
 }
 
+#define MIN_CIB_OP_TIMEOUT (30)
+
+/*!
+ * \internal
+ * \brief Get the timeout (in seconds) that should be used with CIB operations
+ *
+ * \return The maximum of 30 seconds, the value of the PCMK_cib_timeout
+ *         environment variable, or 10 seconds times one more than the number of
+ *         nodes in the cluster.
+ */
+unsigned int
+cib_op_timeout(void)
+{
+    static int env_timeout = -1;
+    unsigned int calculated_timeout = 0;
+
+    if (env_timeout == -1) {
+        const char *env = getenv("PCMK_cib_timeout");
+
+        pcmk__scan_min_int(env, &env_timeout, MIN_CIB_OP_TIMEOUT);
+        crm_trace("Minimum CIB op timeout: %ds (environment: %s)",
+                  env_timeout, (env? env : "none"));
+    }
+
+    calculated_timeout = 1 + crm_active_peers();
+    if (crm_remote_peer_cache) {
+        calculated_timeout += g_hash_table_size(crm_remote_peer_cache);
+    }
+    calculated_timeout *= 10;
+
+    calculated_timeout = QB_MAX(calculated_timeout, env_timeout);
+    crm_trace("Calculated timeout: %us", calculated_timeout);
+
+    if (controld_globals.cib_conn) {
+        controld_globals.cib_conn->call_timeout = calculated_timeout;
+    }
+    return calculated_timeout;
+}
+
 /*!
  * \internal
  * \brief Get CIB call options to use local scope if primary is unavailable
@@ -197,21 +261,6 @@ crmd_cib_smart_opt(void)
         cib__set_call_options(call_opt, "update", cib_scope_local);
     }
     return call_opt;
-}
-
-/*!
- * \internal
- * \brief Check whether an action type should be recorded in the CIB
- *
- * \param[in] action  Action type
- *
- * \return TRUE if action should be recorded, FALSE otherwise
- */
-bool
-controld_action_is_recordable(const char *action)
-{
-    return !pcmk__strcase_any_of(action, CRMD_ACTION_CANCEL, CRMD_ACTION_DELETE,
-                            CRMD_ACTION_NOTIFY, CRMD_ACTION_METADATA, NULL);
 }
 
 static void
@@ -306,7 +355,7 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
         call_id = cib_conn->cmds->remove(cib_conn, xpath, NULL, options);
         crm_info("Deleting %s (via CIB call %d) " CRM_XS " xpath=%s",
                  desc, call_id, xpath);
-        fsa_register_cib_callback(call_id, FALSE, desc, cib_delete_callback);
+        fsa_register_cib_callback(call_id, desc, cib_delete_callback);
         // CIB library handles freeing desc
     }
     free(xpath);
@@ -376,7 +425,7 @@ controld_delete_resource_history(const char *rsc_id, const char *node,
     } else {
         crm_info("Clearing %s (via CIB call %d) " CRM_XS " xpath=%s",
                  desc, rc, xpath);
-        fsa_register_cib_callback(rc, FALSE, desc, cib_delete_callback);
+        fsa_register_cib_callback(rc, desc, cib_delete_callback);
         // CIB library handles freeing desc
     }
 
@@ -721,6 +770,55 @@ should_preserve_lock(lrmd_event_data_t *op)
 
 /*!
  * \internal
+ * \brief Request a CIB update
+ *
+ * \param[in]     section   Section of CIB to update
+ * \param[in,out] data      New XML of CIB section to update
+ * \param[in]     options   CIB call options
+ * \param[in]     callback  If not NULL, set this as the operation callback
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+controld_update_cib(const char *section, xmlNode *data, int options,
+                    void (*callback)(xmlNode *, int, int, xmlNode *, void *))
+{
+    int cib_rc = -ENOTCONN;
+
+    CRM_ASSERT(data != NULL);
+
+    if (controld_globals.cib_conn != NULL) {
+        cib_rc = cib_internal_op(controld_globals.cib_conn,
+                                 PCMK__CIB_REQUEST_MODIFY, NULL, section,
+                                 data, NULL, options, NULL);
+        if (cib_rc >= 0) {
+            crm_debug("Submitted CIB update %d for %s section",
+                      cib_rc, section);
+        }
+    }
+
+    if (callback == NULL) {
+        if (cib_rc < 0) {
+            crm_err("Failed to update CIB %s section: %s",
+                    section, pcmk_rc_str(pcmk_legacy2rc(cib_rc)));
+        }
+
+    } else {
+        if ((cib_rc >= 0) && (callback == cib_rsc_callback)) {
+            /* Checking for a particular callback is a little hacky, but it
+             * didn't seem worth adding an output argument for cib_rc for just
+             * one use case.
+             */
+            controld_globals.resource_update = cib_rc;
+        }
+        fsa_register_cib_callback(cib_rc, NULL, callback);
+    }
+
+    return (cib_rc >= 0)? pcmk_rc_ok : pcmk_legacy2rc(cib_rc);
+}
+
+/*!
+ * \internal
  * \brief Update resource history entry in CIB
  *
  * \param[in]     node_name  Node where action occurred
@@ -736,7 +834,6 @@ controld_update_resource_history(const char *node_name,
                                  const lrmd_rsc_info_t *rsc,
                                  lrmd_event_data_t *op, time_t lock_time)
 {
-    int cib_rc = pcmk_ok;
     xmlNode *update = NULL;
     xmlNode *xml = NULL;
     int call_opt = crmd_cib_smart_opt();
@@ -808,15 +905,7 @@ controld_update_resource_history(const char *node_name,
      * fenced for running a resource it isn't.
      */
     crm_log_xml_trace(update, __func__);
-    fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, cib_rc, NULL);
-    if (cib_rc > 0) {
-        crm_trace("Requested resource history update for "
-                  "%s-interval %s for %s on %s (call ID %d)",
-                  pcmk__readable_interval(op->interval_ms), op->op_type,
-                  op->rsc_id, node_name, cib_rc);
-        controld_globals.resource_update = cib_rc; // CIB call ID
-    }
-    fsa_register_cib_callback(cib_rc, FALSE, NULL, cib_rsc_callback);
+    controld_update_cib(XML_CIB_TAG_STATUS, update, call_opt, cib_rsc_callback);
     free_xml(update);
 }
 

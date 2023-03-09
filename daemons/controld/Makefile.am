@@ -16,6 +16,7 @@ halib_PROGRAMS	= pacemaker-controld
 
 noinst_HEADERS	= controld_alerts.h		\
 		  controld_callbacks.h		\
+		  controld_cib.h		\
 		  controld_fencing.h		\
 		  controld_fsa.h		\
 		  controld_globals.h		\
