@@ -432,7 +432,6 @@ commit_shadow_file(GError **error)
                     "Could not commit shadow instance '%s' to the CIB: %s",
                     options.instance, pcmk_rc_str(rc));
     }
-    needs_teardown = true;
 
 done:
     free(filename);
