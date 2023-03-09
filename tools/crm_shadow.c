@@ -560,8 +560,9 @@ delete_shadow_file(GError **error)
         g_set_error(error, PCMK__EXITC_ERROR, exit_code,
                     "Could not remove shadow instance '%s': %s",
                     options.instance, strerror(errno));
+    } else {
+        needs_teardown = true;
     }
-    needs_teardown = true;
     free(filename);
 }
 
