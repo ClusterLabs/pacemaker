@@ -81,7 +81,7 @@ static struct {
  *                            this
  * \param[out] error          Where to store error
  */
-static inline void
+static void
 set_danger_error(const char *reason, bool for_shadow, bool show_mismatch,
                  GError **error)
 {
@@ -104,12 +104,6 @@ set_danger_error(const char *reason, bool for_shadow, bool show_mismatch,
                 pcmk__s(reason, ""), ((reason != NULL)? ".\n" : ""),
                 (for_shadow? "shadow file" : "cluster"));
     free(full);
-}
-
-static char *
-get_shadow_prompt(const char *name)
-{
-    return crm_strdup_printf("shadow[%.40s] # ", name);
 }
 
 /*!
@@ -289,58 +283,96 @@ write_shadow_file(xmlNode *xml, const char *filename, bool reset,
     return pcmk_rc_ok;
 }
 
-static void
-shadow_setup(char *name, gboolean do_switch)
+/*!
+ * \internal
+ * \brief Create a shell prompt based on the given shadow instance name
+ *
+ * \return Newly created prompt
+ *
+ * \note The caller is responsible for freeing the return value using \p free().
+ */
+static inline char *
+get_shadow_prompt(void)
 {
+    return crm_strdup_printf("shadow[%.40s] # ", options.instance);
+}
+
+/*!
+ * \internal
+ * \brief Set up environment variables for a shadow instance
+ *
+ * \param[in]  do_switch  If true, switch to an existing instance (logging only)
+ * \param[out] error      Where to store error
+ */
+static void
+shadow_setup(bool do_switch, GError **error)
+{
+    const char *active = getenv("CIB_shadow");
     const char *prompt = getenv("PS1");
     const char *shell = getenv("SHELL");
-    char *new_prompt = get_shadow_prompt(name);
+    char *new_prompt = get_shadow_prompt();
 
-    printf("Setting up shadow instance\n");
-
-    if (pcmk__str_eq(new_prompt, prompt, pcmk__str_casei)) {
-        /* nothing to do */
+    if (pcmk__str_eq(active, options.instance, pcmk__str_none)
+        && pcmk__str_eq(new_prompt, prompt, pcmk__str_none)) {
+        // CIB_shadow and prompt environment variables are already set up
         goto done;
+    }
 
-    } else if (!options.batch && (shell != NULL)) {
+    if (!options.batch && (shell != NULL)) {
+        printf("Setting up shadow instance\n");
         setenv("PS1", new_prompt, 1);
-        setenv("CIB_shadow", name, 1);
+        setenv("CIB_shadow", options.instance, 1);
         printf("Type Ctrl-D to exit the crm_shadow shell\n");
 
-        if (strstr(shell, "bash")) {
+        if (pcmk__str_eq(shell, "(^|/)bash$", pcmk__str_regex)) {
             execl(shell, shell, "--norc", "--noprofile", NULL);
         } else {
             execl(shell, shell, NULL);
         }
 
-    } else if (do_switch) {
-        printf("To switch to the named shadow instance, paste the following into your shell:\n");
-
-    } else {
-        printf
-            ("A new shadow instance was created.  To begin using it paste the following into your shell:\n");
+        exit_code = pcmk_rc2exitc(errno);
+        g_set_error(error, PCMK__EXITC_ERROR, exit_code,
+                    "Failed to launch shell '%s': %s",
+                    shell, pcmk_rc_str(errno));
+        goto done;
     }
-    printf("  CIB_shadow=%s ; export CIB_shadow\n", name);
 
-  done:
+    if (do_switch) {
+        printf("To switch to the named shadow instance, paste the following "
+               "into your shell:\n");
+    } else {
+        printf("A new shadow instance was created. To begin using it, paste "
+               "the following into your shell:\n");
+    }
+    printf("\texport CIB_shadow=%s\n", options.instance);
+
+done:
     free(new_prompt);
 }
 
+/*!
+ * \internal
+ * \brief Remind the user to clean up the shadow environment
+ */
 static void
-shadow_teardown(char *name)
+shadow_teardown(void)
 {
+    const char *active = getenv("CIB_shadow");
     const char *prompt = getenv("PS1");
-    char *our_prompt = get_shadow_prompt(name);
 
-    if (prompt != NULL && strstr(prompt, our_prompt)) {
-        printf("Now type Ctrl-D to exit the crm_shadow shell\n");
+    if (pcmk__str_eq(active, options.instance, pcmk__str_none)) {
+        char *our_prompt = get_shadow_prompt();
 
-    } else {
-        printf
-            ("Please remember to unset the CIB_shadow variable by pasting the following into your shell:\n");
-        printf("  unset CIB_shadow\n");
+        if (pcmk__str_eq(prompt, our_prompt, pcmk__str_none)) {
+            printf("Now type Ctrl-D to exit the crm_shadow shell\n");
+
+        } else {
+            printf("Please remember to unset the CIB_shadow variable by "
+                   "pasting the following into your shell:\n"
+                   "\tunset CIB_shadow\n");
+        }
+        free(our_prompt);
     }
-    free(our_prompt);
 }
 
 /*!
@@ -400,7 +432,6 @@ commit_shadow_file(GError **error)
                     "Could not commit shadow instance '%s' to the CIB: %s",
                     options.instance, pcmk_rc_str(rc));
     }
-    needs_teardown = true;
 
 done:
     free(filename);
@@ -436,7 +467,7 @@ create_shadow_empty(GError **error)
     if (write_shadow_file(output, filename, false, error) != pcmk_rc_ok) {
         goto done;
     }
-    shadow_setup(options.instance, FALSE);
+    shadow_setup(false, error);
 
 done:
     free(filename);
@@ -495,7 +526,7 @@ create_shadow_from_cib(bool reset, GError **error)
     if (write_shadow_file(output, filename, reset, error) != pcmk_rc_ok) {
         goto done;
     }
-    shadow_setup(options.instance, FALSE);
+    shadow_setup(false, error);
 
 done:
     free(filename);
@@ -529,8 +560,9 @@ delete_shadow_file(GError **error)
         g_set_error(error, PCMK__EXITC_ERROR, exit_code,
                     "Could not remove shadow instance '%s': %s",
                     options.instance, strerror(errno));
+    } else {
+        needs_teardown = true;
     }
-    needs_teardown = true;
     free(filename);
 }
 
@@ -733,7 +765,7 @@ switch_shadow_instance(GError **error)
 
     filename = get_shadow_file(options.instance);
     if (check_file_exists(filename, true, error) == pcmk_rc_ok) {
-        shadow_setup(options.instance, TRUE);
+        shadow_setup(true, error);
     }
     free(filename);
 }
@@ -995,7 +1027,7 @@ done:
 
     if (needs_teardown) {
         // Teardown message should be the last thing we output
-        shadow_teardown(options.instance);
+        shadow_teardown();
     }
     free(options.instance);
     g_free(options.validate_with);

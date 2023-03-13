@@ -299,8 +299,7 @@ cib_shadow_new(const char *shadow)
  *
  * Create a new live, file, or remote CIB connection object based on the values
  * of CIB-related environment variables (CIB_file, CIB_port, CIB_server,
- * CIB_user, and CIB_passwd). The CIB_shadow environment variable will be unset
- * if set. The object will not be connected.
+ * CIB_user, and CIB_passwd). The object will not be connected.
  *
  * \return Newly allocated CIB connection object
  * \note The CIB API does not fully support opening multiple CIB connection
@@ -310,8 +309,16 @@ cib_shadow_new(const char *shadow)
 cib_t *
 cib_new_no_shadow(void)
 {
+    const char *shadow = getenv("CIB_shadow");
+    cib_t *cib = NULL;
+
     unsetenv("CIB_shadow");
-    return cib_new();
+    cib = cib_new();
+
+    if (shadow != NULL) {
+        setenv("CIB_shadow", shadow, 1);
+    }
+    return cib;
 }
 
 /*!

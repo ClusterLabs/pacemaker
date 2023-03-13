@@ -1805,10 +1805,6 @@ function test_tools() {
     cmd="crm_shadow --create $shadow --batch"
     test_assert $CRM_EX_OK 0
 
-    desc="Create copied shadow instance (mismatch) (force)"
-    cmd="crm_shadow --create $shadow --batch --force"
-    test_assert $CRM_EX_OK 0
-
     # Create new shadow instance based on CIB (shadow file already exists)
     export CIB_file="$test_home/cli/crm_mon.xml"
 
@@ -1837,8 +1833,6 @@ function test_tools() {
     cmd="crm_shadow --create-empty $shadow --batch"
     test_assert $CRM_EX_OK 0
 
-    delete_shadow_resource_defaults
-
     # Create empty shadow instance with no active instance
     crm_shadow --delete "$shadow" --force >/dev/null 2>&1
     unset CIB_shadow
@@ -1846,10 +1840,6 @@ function test_tools() {
     desc="Create empty shadow instance (no active instance)"
     cmd="crm_shadow --create-empty $shadow --batch"
     test_assert $CRM_EX_OK 0
-
-    # CIB_shadow needs to be set for delete_shadow_resource_defaults()
-    export CIB_shadow="$shadow"
-    delete_shadow_resource_defaults
 
     # Create empty shadow instance with other instance active
     crm_shadow --delete "$shadow" --force >/dev/null 2>&1
@@ -1859,19 +1849,14 @@ function test_tools() {
     cmd="crm_shadow --create-empty $shadow --batch"
     test_assert $CRM_EX_OK 0
 
-    # CIB_shadow needs to be set for delete_shadow_resource_defaults()
-    export CIB_shadow="$shadow"
-    delete_shadow_resource_defaults
-
     # Create empty shadow instance when the CIB file is missing
     crm_shadow --delete "$shadow" --force >/dev/null 2>&1
     export CIB_file="$test_home/cli/nonexistent_cib.xml"
+    export CIB_shadow="$shadow"
 
     desc="Create empty shadow instance (nonexistent CIB file)"
-    cmd="crm_shadow --create-empty $shadow --batch --force"
+    cmd="crm_shadow --create-empty $shadow --batch"
     test_assert $CRM_EX_OK 0
-
-    delete_shadow_resource_defaults
 
     # Create empty shadow instance (shadow file already exists)
     export CIB_file="$test_home/cli/crm_mon.xml"
@@ -1884,10 +1869,10 @@ function test_tools() {
     cmd="crm_shadow --create-empty $shadow --batch --force"
     test_assert $CRM_EX_OK 0
 
-    delete_shadow_resource_defaults
-
     # Query shadow instance with an empty CIB.
     # --which and --file queries were done earlier.
+    delete_shadow_resource_defaults
+
     desc="Get active shadow instance's contents (empty CIB)"
     cmd="crm_shadow --display"
     test_assert $CRM_EX_OK 0
