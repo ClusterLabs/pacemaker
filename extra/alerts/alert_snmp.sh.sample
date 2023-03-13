@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # Copyright 2013 Florian CROUZAT <gentoo@floriancrouzat.net>
-# Later changes copyright 2013-2021 the Pacemaker project contributors
+# Later changes copyright 2013-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -85,6 +85,12 @@ if [ -z "$CRM_alert_version" ]; then
     exit 0
 fi
 
+# SNMP v3 and above do not use community, which must be empty
+case "$trap_version" in
+	1|2c) ;;
+	*) trap_community="" ;;
+esac
+
 if [ -z "$CRM_alert_recipient" ]; then
     echo "$0 requires a recipient configured with the SNMP server IP address"
     exit 0
@@ -121,7 +127,8 @@ send_pacemaker_trap() {
     PREFIX="PACEMAKER-MIB::pacemakerNotification"
 
     OUTPUT=$("${trap_binary}" -v "${trap_version}" ${trap_options} \
-        -c "${trap_community}" "${CRM_alert_recipient}" "" \
+        ${trap_community:+-c "${trap_community}"} \
+        "${CRM_alert_recipient}" "" \
         "${PREFIX}Trap" \
         "${PREFIX}Node"             s "${CRM_alert_node}" \
         "${PREFIX}Resource"         s "${CRM_alert_rsc}" \

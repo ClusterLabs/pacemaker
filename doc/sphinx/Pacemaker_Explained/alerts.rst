@@ -256,7 +256,7 @@ While these sample scripts may be copied and used as-is, they are provided
 mainly as templates to be edited to suit your purposes. See their source code
 for the full set of instance attributes they support.
    
-.. topic:: Sending cluster events as SNMP traps
+.. topic:: Sending cluster events as SNMP v2c traps
 
    .. code-block:: xml
 
@@ -275,7 +275,53 @@ for the full set of instance attributes they support.
             </alert>
          </alerts>
       </configuration>
-   
+
+.. note:: **SNMP alert agent attributes**
+
+   The ``timestamp-format`` meta-attribute should always be set to
+   ``%Y-%m-%d,%H:%M:%S.%01N`` when using the SNMP agent, to match the SNMP
+   standard.
+
+   The SNMP agent provides a number of instance attributes in addition to the
+   one used in the example above. The most useful are ``trap_version``, which
+   defaults to ``2c``, and ``trap_community``, which defaults to ``public``.
+   See the source code for more details.
+
+.. topic:: Sending cluster events as SNMP v3 traps
+
+   .. code-block:: xml
+
+      <configuration>
+         <alerts>
+            <alert id="snmp_alert" path="/path/to/alert_snmp.sh">
+               <instance_attributes id="config_for_alert_snmp">
+                  <nvpair id="trap_node_states" name="trap_node_states"
+                          value="all"/>
+                  <nvpair id="trap_version" name="trap_version" value="3"/>
+                  <nvpair id="trap_community" name="trap_community" value=""/>
+                  <nvpair id="trap_options" name="trap_options"
+                          value="-l authNoPriv -a MD5 -u testuser -A secret1"/>
+               </instance_attributes>
+               <meta_attributes id="config_for_timestamp">
+                  <nvpair id="ts_fmt" name="timestamp-format"
+                          value="%Y-%m-%d,%H:%M:%S.%01N"/>
+               </meta_attributes>
+               <recipient id="snmp_destination" value="192.168.1.2"/>
+            </alert>
+         </alerts>
+      </configuration>
+
+.. note:: **SNMP v3 trap configuration**
+
+   To use SNMP v3, ``trap_version`` must be set to ``3``. ``trap_community``
+   will be ignored.
+
+   The example above uses the ``trap_options`` instance attribute to override
+   the security level, authentication protocol, authentication user, and
+   authentication password from snmp.conf. These will be passed to the snmptrap
+   command. Passing the password on the command line is considered insecure;
+   specify authentication and privacy options suitable for your environment.
+
 .. topic:: Sending cluster events as e-mails
 
    .. code-block:: xml
