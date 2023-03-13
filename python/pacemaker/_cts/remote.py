@@ -220,13 +220,14 @@ class RemoteExec:
 
         return rc
 
-    def exists_on_all(self, filename, hosts, test="r"):
+    def exists_on_all(self, filename, hosts):
         """ Return True if specified file exists on all specified hosts. """
 
         for host in hosts:
-            rc = self(host, "test -%s %s" % (test, filename))
+            rc = self(host, "test -r %s" % filename)
             if rc != 0:
                 return False
+
         return True
 
 
