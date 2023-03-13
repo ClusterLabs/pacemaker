@@ -2,7 +2,7 @@
 
 __all__ = ["killall", "exit_if_proc_running", "pipe_communicate", "stdout_from_command"]
 __copyright__ = "Copyright 2009-2023 the Pacemaker project contributors"
-__license__ = "LGPLv2.1+"
+__license__ = "GNU General Public License version 2 or later (GPLv2+)"
 
 import subprocess
 import sys

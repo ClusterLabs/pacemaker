@@ -2,7 +2,7 @@
 
 __all__ = ["PatternSelector"]
 __copyright__ = "Copyright 2008-2023 the Pacemaker project contributors"
-__license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
+__license__ = "GNU General Public License version 2 or later (GPLv2+)"
 
 import argparse
 
