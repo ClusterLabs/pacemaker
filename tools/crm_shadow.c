@@ -554,11 +554,13 @@ get_shadow_prompt(void)
  * \internal
  * \brief Set up environment variables for a shadow instance
  *
- * \param[in]  do_switch  If true, switch to an existing instance (logging only)
- * \param[out] error      Where to store error
+ * \param[in,out] out      Output object
+ * \param[in]     do_switch  If true, switch to an existing instance (logging
+ *                           only)
+ * \param[out]    error      Where to store error
  */
 static void
-shadow_setup(bool do_switch, GError **error)
+shadow_setup(pcmk__output_t *out, bool do_switch, GError **error)
 {
     const char *active = getenv("CIB_shadow");
     const char *prompt = getenv("PS1");
@@ -572,10 +574,12 @@ shadow_setup(bool do_switch, GError **error)
     }
 
     if (!options.batch && (shell != NULL)) {
-        printf("Setting up shadow instance\n");
+        out->info(out, "Setting up shadow instance");
         setenv("PS1", new_prompt, 1);
         setenv("CIB_shadow", options.instance, 1);
-        printf("Type Ctrl-D to exit the crm_shadow shell\n");
+
+        out->message(out, "instruction",
+                     "Press Ctrl+D to exit the crm_shadow shell");
 
         if (pcmk__str_eq(shell, "(^|/)bash$", pcmk__str_regex)) {
             execl(shell, shell, "--norc", "--noprofile", NULL);
@@ -587,17 +591,22 @@ shadow_setup(bool do_switch, GError **error)
         g_set_error(error, PCMK__EXITC_ERROR, exit_code,
                     "Failed to launch shell '%s': %s",
                     shell, pcmk_rc_str(errno));
-        goto done;
-    }
 
-    if (do_switch) {
-        printf("To switch to the named shadow instance, paste the following "
-               "into your shell:\n");
     } else {
-        printf("A new shadow instance was created. To begin using it, paste "
-               "the following into your shell:\n");
+        char *msg = NULL;
+        const char *prefix = "A new shadow instance was created. To begin "
+                             "using it";
+
+        if (do_switch) {
+            prefix = "To switch to the named shadow instance";
+        }
+
+        msg = crm_strdup_printf("%s, enter the following into your shell:\n"
+                                "\texport CIB_shadow=%s",
+                                prefix, options.instance);
+        out->message(out, "instruction", msg);
+        free(msg);
     }
-    printf("\texport CIB_shadow=%s\n", options.instance);
 
 done:
     free(new_prompt);
@@ -606,9 +615,11 @@ done:
 /*!
  * \internal
  * \brief Remind the user to clean up the shadow environment
+ *
+ * \param[in,out] out  Output object
  */
 static void
-shadow_teardown(void)
+shadow_teardown(pcmk__output_t *out)
 {
     const char *active = getenv("CIB_shadow");
     const char *prompt = getenv("PS1");
@@ -617,12 +628,14 @@ shadow_teardown(void)
         char *our_prompt = get_shadow_prompt();
 
         if (pcmk__str_eq(prompt, our_prompt, pcmk__str_none)) {
-            printf("Now type Ctrl-D to exit the crm_shadow shell\n");
+            out->message(out, "instruction",
+                         "Press Ctrl+D to exit the crm_shadow shell");
 
         } else {
-            printf("Please remember to unset the CIB_shadow variable by "
-                   "pasting the following into your shell:\n"
-                   "\tunset CIB_shadow\n");
+            out->message(out, "instruction",
+                         "Remember to unset the CIB_shadow variable by "
+                         "entering the following into your shell:\n"
+                         "\tunset CIB_shadow");
         }
         free(our_prompt);
     }
@@ -696,13 +709,14 @@ done:
  * \internal
  * \brief Create a new empty shadow instance
  *
- * \param[out] error  Where to store error
+ * \param[in,out] out    Output object
+ * \param[out]    error  Where to store error
  *
  * \note If \p --force is given, we try to write the file regardless of whether
  *       it already exists.
  */
 static void
-create_shadow_empty(GError **error)
+create_shadow_empty(pcmk__output_t *out, GError **error)
 {
     char *filename = get_shadow_file(options.instance);
     xmlNode *output = NULL;
@@ -714,13 +728,13 @@ create_shadow_empty(GError **error)
 
     output = createEmptyCib(0);
     crm_xml_add(output, XML_ATTR_VALIDATION, options.validate_with);
-    printf("Created new %s configuration\n",
-           crm_element_value(output, XML_ATTR_VALIDATION));
+    out->info(out, "Created new %s configuration",
+              crm_element_value(output, XML_ATTR_VALIDATION));
 
     if (write_shadow_file(output, filename, false, error) != pcmk_rc_ok) {
         goto done;
     }
-    shadow_setup(false, error);
+    shadow_setup(out, false, error);
 
 done:
     free(filename);
@@ -731,16 +745,17 @@ done:
  * \internal
  * \brief Create a shadow instance based on the active CIB
  *
- * \param[in]  reset  If true, overwrite the given existing shadow instance.
- *                    Otherwise, create a new shadow instance with the given
- *                    name.
- * \param[out] error  Where to store error
+ * \param[in,out] out    Output object
+ * \param[in]     reset  If true, overwrite the given existing shadow instance.
+ *                       Otherwise, create a new shadow instance with the given
+ *                       name.
+ * \param[out]    error  Where to store error
  *
  * \note If \p --force is given, we try to write the file regardless of whether
  *       it already exists.
  */
 static void
-create_shadow_from_cib(bool reset, GError **error)
+create_shadow_from_cib(pcmk__output_t *out, bool reset, GError **error)
 {
     char *filename = get_shadow_file(options.instance);
     xmlNode *output = NULL;
@@ -779,7 +794,7 @@ create_shadow_from_cib(bool reset, GError **error)
     if (write_shadow_file(output, filename, reset, error) != pcmk_rc_ok) {
         goto done;
     }
-    shadow_setup(false, error);
+    shadow_setup(out, false, error);
 
 done:
     free(filename);
@@ -864,10 +879,11 @@ done:
  * \internal
  * \brief Show the contents of the active shadow instance
  *
- * \param[out] error  Where to store error
+ * \param[in,out] out    Output object
+ * \param[out]    error  Where to store error
  */
 static void
-show_shadow_contents(GError **error)
+show_shadow_contents(pcmk__output_t *out, GError **error)
 {
     char *filename = NULL;
 
@@ -878,17 +894,18 @@ show_shadow_contents(GError **error)
     filename = get_shadow_file(options.instance);
 
     if (check_file_exists(filename, true, error) == pcmk_rc_ok) {
-        char *output_s = NULL;
         xmlNode *output = NULL;
+        bool quiet_orig = out->quiet;
 
         if (read_xml(filename, &output, error) != pcmk_rc_ok) {
             goto done;
         }
 
-        output_s = dump_xml_formatted(output);
-        printf("%s", output_s);
+        out->quiet = true;
+        out->message(out, "shadow",
+                     options.instance, NULL, output, NULL, shadow_disp_content);
+        out->quiet = quiet_orig;
 
-        free(output_s);
         free_xml(output);
     }
 
@@ -900,16 +917,18 @@ done:
  * \internal
  * \brief Show the changes in the active shadow instance
  *
- * \param[out] error  Where to store error
+ * \param[in,out] out    Output object
+ * \param[out]    error  Where to store error
  */
 static void
-show_shadow_diff(GError **error)
+show_shadow_diff(pcmk__output_t *out, GError **error)
 {
     char *filename = NULL;
     xmlNodePtr old_config = NULL;
     xmlNodePtr new_config = NULL;
     xmlNodePtr diff = NULL;
     pcmk__output_t *logger_out = NULL;
+    bool quiet_orig = out->quiet;
     int rc = pcmk_rc_ok;
 
     if (get_instance_from_env(error) != pcmk_rc_ok) {
@@ -946,20 +965,12 @@ show_shadow_diff(GError **error)
 
     xml_accept_changes(new_config);
 
+    out->quiet = true;
+    out->message(out, "shadow",
+                 options.instance, NULL, NULL, diff, shadow_disp_diff);
+    out->quiet = quiet_orig;
+
     if (diff != NULL) {
-        pcmk__output_t *out = NULL;
-
-        rc = pcmk__text_output_new(&out, NULL);
-        if (rc != pcmk_rc_ok) {
-            exit_code = pcmk_rc2exitc(rc);
-            g_set_error(error, PCMK__EXITC_ERROR, exit_code,
-                        "Could not create output object: %s", pcmk_rc_str(rc));
-            goto done;
-        }
-        rc = out->message(out, "xml-patchset", diff);
-        out->finish(out, pcmk_rc2exitc(rc), true, NULL);
-        pcmk__output_free(out);
-
         /* @COMPAT: Exit with CRM_EX_DIGEST? This is not really an error; we
          * just want to indicate that there are differences (as the diff command
          * does).
@@ -978,15 +989,21 @@ done:
  * \internal
  * \brief Show the absolute path of the active shadow instance
  *
- * \param[out] error  Where to store error
+ * \param[in,out] out    Output object
+ * \param[out]    error  Where to store error
  */
 static void
-show_shadow_filename(GError **error)
+show_shadow_filename(pcmk__output_t *out, GError **error)
 {
     if (get_instance_from_env(error) == pcmk_rc_ok) {
         char *filename = get_shadow_file(options.instance);
+        bool quiet_orig = out->quiet;
 
-        printf("%s\n", filename);
+        out->quiet = true;
+        out->message(out, "shadow",
+                     options.instance, filename, NULL, NULL, shadow_disp_file);
+        out->quiet = quiet_orig;
+
         free(filename);
     }
 }
@@ -995,13 +1012,19 @@ show_shadow_filename(GError **error)
  * \internal
  * \brief Show the active shadow instance
  *
- * \param[out] error  Where to store error
+ * \param[in,out] out    Output object
+ * \param[out]    error  Where to store error
  */
 static void
-show_shadow_instance(GError **error)
+show_shadow_instance(pcmk__output_t *out, GError **error)
 {
     if (get_instance_from_env(error) == pcmk_rc_ok) {
-        printf("%s\n", options.instance);
+        bool quiet_orig = out->quiet;
+
+        out->quiet = true;
+        out->message(out, "shadow",
+                     options.instance, NULL, NULL, NULL, shadow_disp_instance);
+        out->quiet = quiet_orig;
     }
 }
 
@@ -1009,16 +1032,17 @@ show_shadow_instance(GError **error)
  * \internal
  * \brief Switch to the given shadow instance
  *
- * \param[out] error  Where to store error
+ * \param[in,out] out    Output object
+ * \param[out]    error  Where to store error
  */
 static void
-switch_shadow_instance(GError **error)
+switch_shadow_instance(pcmk__output_t *out, GError **error)
 {
     char *filename = NULL;
 
     filename = get_shadow_file(options.instance);
     if (check_file_exists(filename, true, error) == pcmk_rc_ok) {
-        shadow_setup(true, error);
+        shadow_setup(out, true, error);
     }
     free(filename);
 }
@@ -1216,13 +1240,8 @@ main(int argc, char **argv)
     }
 
     if (args->version) {
-        g_strfreev(processed_args);
-        pcmk__free_arg_context(context);
-
-        /* FIXME: When crm_shadow is converted to use formatted output,
-         * this can go.
-         */
-        pcmk__cli_help('v');
+        out->version(out, false);
+        goto done;
     }
 
     pcmk__register_messages(out, fmt_functions);
@@ -1256,34 +1275,34 @@ main(int argc, char **argv)
             commit_shadow_file(&error);
             break;
         case shadow_cmd_create:
-            create_shadow_from_cib(false, &error);
+            create_shadow_from_cib(out, false, &error);
             break;
         case shadow_cmd_create_empty:
-            create_shadow_empty(&error);
+            create_shadow_empty(out, &error);
             break;
         case shadow_cmd_reset:
-            create_shadow_from_cib(true, &error);
+            create_shadow_from_cib(out, true, &error);
             break;
         case shadow_cmd_delete:
             delete_shadow_file(&error);
             break;
         case shadow_cmd_diff:
-            show_shadow_diff(&error);
+            show_shadow_diff(out, &error);
             break;
         case shadow_cmd_display:
-            show_shadow_contents(&error);
+            show_shadow_contents(out, &error);
             break;
         case shadow_cmd_edit:
             edit_shadow_file(&error);
             break;
         case shadow_cmd_file:
-            show_shadow_filename(&error);
+            show_shadow_filename(out, &error);
             break;
         case shadow_cmd_switch:
-            switch_shadow_instance(&error);
+            switch_shadow_instance(out, &error);
             break;
         case shadow_cmd_which:
-            show_shadow_instance(&error);
+            show_shadow_instance(out, &error);
             break;
         default:
             // Should never reach this point
@@ -1298,7 +1317,7 @@ done:
 
     if (needs_teardown) {
         // Teardown message should be the last thing we output
-        shadow_teardown();
+        shadow_teardown(out);
     }
     free(options.instance);
     g_free(options.validate_with);
