@@ -9,10 +9,9 @@ import os
 import time
 import threading
 
-from cts.remote import *
-
 from pacemaker.buildoptions import BuildOptions
 from pacemaker._cts.logging import LogFactory
+from pacemaker._cts.remote import RemoteExec, RemoteFactory, trace_lw
 
 log_watcher_bin = BuildOptions.DAEMON_DIR + "/cts-log-watcher"
 

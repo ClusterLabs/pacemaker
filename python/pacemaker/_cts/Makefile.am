@@ -17,4 +17,5 @@ pkgpython_PYTHON = __init__.py \
 				   logging.py \
 				   patterns.py \
 				   process.py \
+				   remote.py \
 				   test.py

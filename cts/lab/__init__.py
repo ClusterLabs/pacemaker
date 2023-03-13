@@ -12,6 +12,5 @@ CTSscenarios
 CTStests
 environment
 patterns
-remote
 watcher
 """

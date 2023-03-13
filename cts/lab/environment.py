@@ -6,7 +6,7 @@ __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT AN
 
 import sys, time, os, socket, random
 
-from cts.remote import *
+from pacemaker._cts.remote import RemoteFactory
 
 class Environment(object):
 

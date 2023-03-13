@@ -8,10 +8,10 @@ import sys
 import time
 import traceback
 
-from cts.remote      import RemoteFactory
 from cts.environment import EnvFactory
 
 from pacemaker._cts.logging import LogFactory
+from pacemaker._cts.remote import RemoteFactory
 
 class CtsLab(object):
     '''This class defines the Lab Environment for the Cluster Test System.

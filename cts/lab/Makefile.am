@@ -27,7 +27,6 @@ ctslib_PYTHON		= __init__.py		\
 			  CTSscenarios.py	\
 			  CTStests.py		\
 			  environment.py	\
-			  remote.py		\
 			  watcher.py
 
 ctsdir			= $(datadir)/$(PACKAGE)/tests/cts
