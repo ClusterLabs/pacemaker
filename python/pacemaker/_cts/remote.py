@@ -11,9 +11,6 @@ import sys
 from subprocess import Popen,PIPE
 from threading import Thread
 
-pdir=os.path.dirname(sys.path[0])
-sys.path.insert(0, pdir) # So that things work from the source directory
-
 from pacemaker._cts.logging import LogFactory
 
 trace_rsh=None
