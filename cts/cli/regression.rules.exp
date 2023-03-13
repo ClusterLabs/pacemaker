@@ -1,5 +1,5 @@
 Created new pacemaker configuration
-A new shadow instance was created. To begin using it, paste the following into your shell:
+A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli
 =#=#=#= Begin test: crm_rule given no arguments =#=#=#=
 crm_rule: No mode operation given

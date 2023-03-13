@@ -1,5 +1,5 @@
 Created new pacemaker configuration
-A new shadow instance was created. To begin using it, paste the following into your shell:
+A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli
 =#=#=#= Begin test: Validate CIB =#=#=#=
 <cib epoch="1" num_updates="0" admin_epoch="0">
@@ -4870,7 +4870,7 @@ Resources colocated with gr2:
   * prim8 (score=INFINITY, id=colocation-prim8-gr2-INFINITY)
 =#=#=#= End test: Check locations and constraints for group member (without referring to group) - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for group member (without referring to group)
-A new shadow instance was created. To begin using it, paste the following into your shell:
+A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli
 =#=#=#= Begin test: Set a meta-attribute for primitive and resources colocated with it =#=#=#=
 Set 'prim5' option: id=prim5-meta_attributes-target-role set=prim5-meta_attributes name=target-role value=Stopped
@@ -5934,7 +5934,7 @@ crm_shadow: No active shadow configuration defined
 =#=#=#= End test: Get active shadow instance's diff (no active instance) - No such object (105) =#=#=#=
 * Passed: crm_shadow     - Get active shadow instance's diff (no active instance)
 =#=#=#= Begin test: Create copied shadow instance =#=#=#=
-A new shadow instance was created. To begin using it, paste the following into your shell:
+A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli
 =#=#=#= End test: Create copied shadow instance - OK (0) =#=#=#=
 * Passed: crm_shadow     - Create copied shadow instance
@@ -6350,11 +6350,11 @@ To prevent accidental destruction of the shadow file, the --force flag is requir
 =#=#=#= End test: Delete shadow instance - Incorrect usage (64) =#=#=#=
 * Passed: crm_shadow     - Delete shadow instance
 =#=#=#= Begin test: Delete shadow instance (force) =#=#=#=
-Please remember to unset the CIB_shadow variable by pasting the following into your shell:
+Remember to unset the CIB_shadow variable by entering the following into your shell:
 	unset CIB_shadow
 =#=#=#= End test: Delete shadow instance (force) - OK (0) =#=#=#=
 * Passed: crm_shadow     - Delete shadow instance (force)
-A new shadow instance was created. To begin using it, paste the following into your shell:
+A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli
 =#=#=#= Begin test: Delete shadow instance (no active instance) =#=#=#=
 crm_shadow: The delete command removes the specified shadow file.
@@ -6364,7 +6364,7 @@ To prevent accidental destruction of the shadow file, the --force flag is requir
 =#=#=#= Begin test: Delete shadow instance (no active instance) (force) =#=#=#=
 =#=#=#= End test: Delete shadow instance (no active instance) (force) - OK (0) =#=#=#=
 * Passed: crm_shadow     - Delete shadow instance (no active instance) (force)
-A new shadow instance was created. To begin using it, paste the following into your shell:
+A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli
 =#=#=#= Begin test: Delete shadow instance (mismatch) =#=#=#=
 crm_shadow: The delete command removes the specified shadow file.
@@ -6381,11 +6381,11 @@ To prevent accidental destruction of the shadow file, the --force flag is requir
 =#=#=#= End test: Delete shadow instance (nonexistent shadow file) - Incorrect usage (64) =#=#=#=
 * Passed: crm_shadow     - Delete shadow instance (nonexistent shadow file)
 =#=#=#= Begin test: Delete shadow instance (nonexistent shadow file) (force) =#=#=#=
-Please remember to unset the CIB_shadow variable by pasting the following into your shell:
+Remember to unset the CIB_shadow variable by entering the following into your shell:
 	unset CIB_shadow
 =#=#=#= End test: Delete shadow instance (nonexistent shadow file) (force) - OK (0) =#=#=#=
 * Passed: crm_shadow     - Delete shadow instance (nonexistent shadow file) (force)
-A new shadow instance was created. To begin using it, paste the following into your shell:
+A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli
 =#=#=#= Begin test: Delete shadow instance (nonexistent CIB file) =#=#=#=
 crm_shadow: The delete command removes the specified shadow file.
@@ -6393,17 +6393,17 @@ To prevent accidental destruction of the shadow file, the --force flag is requir
 =#=#=#= End test: Delete shadow instance (nonexistent CIB file) - Incorrect usage (64) =#=#=#=
 * Passed: crm_shadow     - Delete shadow instance (nonexistent CIB file)
 =#=#=#= Begin test: Delete shadow instance (nonexistent CIB file) (force) =#=#=#=
-Please remember to unset the CIB_shadow variable by pasting the following into your shell:
+Remember to unset the CIB_shadow variable by entering the following into your shell:
 	unset CIB_shadow
 =#=#=#= End test: Delete shadow instance (nonexistent CIB file) (force) - OK (0) =#=#=#=
 * Passed: crm_shadow     - Delete shadow instance (nonexistent CIB file) (force)
 =#=#=#= Begin test: Create copied shadow instance (no active instance) =#=#=#=
-A new shadow instance was created. To begin using it, paste the following into your shell:
+A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli
 =#=#=#= End test: Create copied shadow instance (no active instance) - OK (0) =#=#=#=
 * Passed: crm_shadow     - Create copied shadow instance (no active instance)
 =#=#=#= Begin test: Create copied shadow instance (mismatch) =#=#=#=
-A new shadow instance was created. To begin using it, paste the following into your shell:
+A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli
 =#=#=#= End test: Create copied shadow instance (mismatch) - OK (0) =#=#=#=
 * Passed: crm_shadow     - Create copied shadow instance (mismatch)
@@ -6413,7 +6413,7 @@ To prevent accidental destruction of the shadow file, the --force flag is requir
 =#=#=#= End test: Create copied shadow instance (file already exists) - Cannot create output file (73) =#=#=#=
 * Passed: crm_shadow     - Create copied shadow instance (file already exists)
 =#=#=#= Begin test: Create copied shadow instance (file already exists) (force) =#=#=#=
-A new shadow instance was created. To begin using it, paste the following into your shell:
+A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli
 =#=#=#= End test: Create copied shadow instance (file already exists) (force) - OK (0) =#=#=#=
 * Passed: crm_shadow     - Create copied shadow instance (file already exists) (force)
@@ -6423,25 +6423,25 @@ crm_shadow: Could not connect to CIB: No such device or address
 * Passed: crm_shadow     - Create copied shadow instance (nonexistent CIB file) (force)
 =#=#=#= Begin test: Create empty shadow instance =#=#=#=
 Created new pacemaker configuration
-A new shadow instance was created. To begin using it, paste the following into your shell:
+A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli
 =#=#=#= End test: Create empty shadow instance - OK (0) =#=#=#=
 * Passed: crm_shadow     - Create empty shadow instance
 =#=#=#= Begin test: Create empty shadow instance (no active instance) =#=#=#=
 Created new pacemaker configuration
-A new shadow instance was created. To begin using it, paste the following into your shell:
+A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli
 =#=#=#= End test: Create empty shadow instance (no active instance) - OK (0) =#=#=#=
 * Passed: crm_shadow     - Create empty shadow instance (no active instance)
 =#=#=#= Begin test: Create empty shadow instance (mismatch) =#=#=#=
 Created new pacemaker configuration
-A new shadow instance was created. To begin using it, paste the following into your shell:
+A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli
 =#=#=#= End test: Create empty shadow instance (mismatch) - OK (0) =#=#=#=
 * Passed: crm_shadow     - Create empty shadow instance (mismatch)
 =#=#=#= Begin test: Create empty shadow instance (nonexistent CIB file) =#=#=#=
 Created new pacemaker configuration
-A new shadow instance was created. To begin using it, paste the following into your shell:
+A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli
 =#=#=#= End test: Create empty shadow instance (nonexistent CIB file) - OK (0) =#=#=#=
 * Passed: crm_shadow     - Create empty shadow instance (nonexistent CIB file)
@@ -6452,7 +6452,7 @@ To prevent accidental destruction of the shadow file, the --force flag is requir
 * Passed: crm_shadow     - Create empty shadow instance (file already exists)
 =#=#=#= Begin test: Create empty shadow instance (file already exists) (force) =#=#=#=
 Created new pacemaker configuration
-A new shadow instance was created. To begin using it, paste the following into your shell:
+A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli
 =#=#=#= End test: Create empty shadow instance (file already exists) (force) - OK (0) =#=#=#=
 * Passed: crm_shadow     - Create empty shadow instance (file already exists) (force)
@@ -6496,7 +6496,7 @@ Diff: +++ 0.1.0 (null)
 =#=#=#= End test: Get active shadow instance's diff (empty CIB) - Error occurred (1) =#=#=#=
 * Passed: crm_shadow     - Get active shadow instance's diff (empty CIB)
 =#=#=#= Begin test: Reset shadow instance =#=#=#=
-A new shadow instance was created. To begin using it, paste the following into your shell:
+A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli
 =#=#=#= End test: Reset shadow instance - OK (0) =#=#=#=
 * Passed: crm_shadow     - Reset shadow instance
@@ -6504,7 +6504,7 @@ A new shadow instance was created. To begin using it, paste the following into y
 =#=#=#= End test: Get active shadow instance's diff (after reset) - OK (0) =#=#=#=
 * Passed: crm_shadow     - Get active shadow instance's diff (after reset)
 =#=#=#= Begin test: Reset shadow instance (no active instance) =#=#=#=
-A new shadow instance was created. To begin using it, paste the following into your shell:
+A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli
 =#=#=#= End test: Reset shadow instance (no active instance) - OK (0) =#=#=#=
 * Passed: crm_shadow     - Reset shadow instance (no active instance)
@@ -6514,12 +6514,12 @@ To prevent accidental destruction of the shadow file, the --force flag is requir
 =#=#=#= End test: Reset shadow instance (mismatch) - Incorrect usage (64) =#=#=#=
 * Passed: crm_shadow     - Reset shadow instance (mismatch)
 =#=#=#= Begin test: Reset shadow instance (mismatch) (force) =#=#=#=
-A new shadow instance was created. To begin using it, paste the following into your shell:
+A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli
 =#=#=#= End test: Reset shadow instance (mismatch) (force) - OK (0) =#=#=#=
 * Passed: crm_shadow     - Reset shadow instance (mismatch) (force)
 Created new pacemaker configuration
-A new shadow instance was created. To begin using it, paste the following into your shell:
+A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli
 =#=#=#= Begin test: Reset shadow instance (nonexistent CIB file) =#=#=#=
 crm_shadow: Could not connect to CIB: No such device or address
@@ -6534,15 +6534,15 @@ crm_shadow: Could not access shadow instance 'cts-cli': No such file or director
 =#=#=#= End test: Reset shadow instance (nonexistent shadow file) - No such object (105) =#=#=#=
 * Passed: crm_shadow     - Reset shadow instance (nonexistent shadow file)
 =#=#=#= Begin test: Reset shadow instance (nonexistent shadow file) (force) =#=#=#=
-A new shadow instance was created. To begin using it, paste the following into your shell:
+A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli
 =#=#=#= End test: Reset shadow instance (nonexistent shadow file) (force) - OK (0) =#=#=#=
 * Passed: crm_shadow     - Reset shadow instance (nonexistent shadow file) (force)
 Created new pacemaker configuration
-A new shadow instance was created. To begin using it, paste the following into your shell:
+A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli
 =#=#=#= Begin test: Switch to new shadow instance =#=#=#=
-To switch to the named shadow instance, paste the following into your shell:
+To switch to the named shadow instance, enter the following into your shell:
 	export CIB_shadow=cts-cli
 =#=#=#= End test: Switch to new shadow instance - OK (0) =#=#=#=
 * Passed: crm_shadow     - Switch to new shadow instance
