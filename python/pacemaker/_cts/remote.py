@@ -62,9 +62,6 @@ class AsyncWaitProc(Thread):
 
             outLines = convert2string(outLines)
 
-#            for line in outLines:
-#                self.logger.debug("cmd: stdout[%d]: %s" % (self.proc.pid, line))
-
         if self.delegate:
             self.delegate.async_complete(self.proc.pid, self.proc.returncode, outLines, errLines)
 
@@ -98,9 +95,6 @@ class AsyncRemoteCmd(Thread):
             outLines = self.proc.stdout.readlines()
             self.proc.stdout.close()
             outLines = convert2string(outLines)
- 
-#            for line in outLines:
-#                self.logger.log("cmd: stdout[%d]: %s" % (self.proc.pid, line))
 
         if self.delegate:
             self.delegate.async_complete(self.proc.pid, self.proc.returncode, outLines, errLines)
@@ -135,12 +129,11 @@ class RemoteExec(object):
         sysname = args[0]
         command = args[1]
 
-        #print("sysname: %s, us: %s" % (sysname, self.OurNode))
         if sysname == None or sysname.lower() == self.OurNode or sysname == "localhost":
             ret = command
         else:
             ret = self.command + " " + sysname + " '" + self._fixcmd(command) + "'"
-        #print ("About to run %s\n" % ret)
+
         return ret
 
     def log(self, args):
@@ -152,7 +145,6 @@ class RemoteExec(object):
             self.logger.debug(args)
 
     def call_async(self, node, command, completionDelegate=None):
-        #if completionDelegate: print("Waiting for %d on %s: %s" % (proc.pid, node, command))
         aproc = AsyncRemoteCmd(node, self._cmd([node, command]), completionDelegate=completionDelegate)
         aproc.start()
         return aproc
@@ -174,15 +166,10 @@ class RemoteExec(object):
         proc = Popen(self._cmd([node, command]),
                      stdout = PIPE, stderr = PIPE, close_fds = True, shell = True)
 
-        #if completionDelegate: print("Waiting for %d on %s: %s" % (proc.pid, node, command))
         if not synchronous and proc.pid > 0 and not self.silent:
             aproc = AsyncWaitProc(proc, node, command, completionDelegate=completionDelegate)
             aproc.start()
             return 0
-
-        #if not blocking:
-        #    import fcntl
-        #    fcntl.fcntl(proc.stdout.fileno(), fcntl.F_SETFL, os.O_NONBLOCK)
 
         if proc.stdout:
             if stdout == 1:
