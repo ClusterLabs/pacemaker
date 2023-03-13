@@ -285,7 +285,8 @@ def main():
 
     # Run the tests
     selected = [components[x] for x in args.components]
-    run_components(selected, args.verbose, args.valgrind)
+    rc = run_components(selected, args.verbose, args.valgrind)
+    sys.exit(rc)
 
 
 if __name__ == '__main__':
