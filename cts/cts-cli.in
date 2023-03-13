@@ -1589,17 +1589,33 @@ function test_tools() {
     cmd="crm_shadow --which"
     test_assert $CRM_EX_NOSUCH 0
 
+    desc="Get active shadow instance (no active instance) (XML)"
+    cmd="crm_shadow --which --output-as=xml"
+    test_assert_validate $CRM_EX_NOSUCH 0
+
     desc="Get active shadow instance's file name (no active instance)"
     cmd="crm_shadow --file"
     test_assert $CRM_EX_NOSUCH 0
+
+    desc="Get active shadow instance's file name (no active instance) (XML)"
+    cmd="crm_shadow --file --output-as=xml"
+    test_assert_validate $CRM_EX_NOSUCH 0
 
     desc="Get active shadow instance's contents (no active instance)"
     cmd="crm_shadow --display"
     test_assert $CRM_EX_NOSUCH 0
 
+    desc="Get active shadow instance's contents (no active instance) (XML)"
+    cmd="crm_shadow --display --output-as=xml"
+    test_assert_validate $CRM_EX_NOSUCH 0
+
     desc="Get active shadow instance's diff (no active instance)"
     cmd="crm_shadow --diff"
     test_assert $CRM_EX_NOSUCH 0
+
+    desc="Get active shadow instance's diff (no active instance) (XML)"
+    cmd="crm_shadow --diff --output-as=xml"
+    test_assert_validate $CRM_EX_NOSUCH 0
 
     # Create new shadow instance based on active CIB
     # Don't use create_shadow_cib() here; test explicitly
@@ -1614,22 +1630,44 @@ function test_tools() {
     cmd="crm_shadow --create $shadow --batch"
     test_assert $CRM_EX_OK 0
 
+    crm_shadow --delete "$shadow" --force >/dev/null 2>&1
+
+    desc="Create copied shadow instance (XML)"
+    cmd="crm_shadow --create $shadow --batch --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
     # Query shadow instance based on active CIB
     desc="Get active shadow instance (copied)"
     cmd="crm_shadow --which"
     test_assert $CRM_EX_OK 0
 
+    desc="Get active shadow instance (copied) (XML)"
+    cmd="crm_shadow --which --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
     desc="Get active shadow instance's file name (copied)"
     cmd="crm_shadow --file"
     test_assert $CRM_EX_OK 0
+
+    desc="Get active shadow instance's file name (copied) (XML)"
+    cmd="crm_shadow --file --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Get active shadow instance's contents (copied)"
     cmd="crm_shadow --display"
     test_assert $CRM_EX_OK 0
 
+    desc="Get active shadow instance's contents (copied) (XML)"
+    cmd="crm_shadow --display --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
     desc="Get active shadow instance's diff (copied)"
     cmd="crm_shadow --diff"
     test_assert $CRM_EX_OK 0
+
+    desc="Get active shadow instance's diff (copied) (XML)"
+    cmd="crm_shadow --diff --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
 
     # Make some changes to the shadow file
     export CIB_file="$(crm_shadow --file)"
@@ -1652,8 +1690,12 @@ function test_tools() {
     cmd="crm_shadow --diff"
     test_assert $CRM_EX_ERROR 0
 
+    desc="Get active shadow instance's diff (after changes) (XML)"
+    cmd="crm_shadow --diff --output-as=xml"
+    test_assert_validate $CRM_EX_ERROR 0
+
     # Commit the modified shadow CIB to a temp active CIB file
-    cp "$CIB_file" "$TMPXML"
+    cp "$test_home/cli/crm_mon.xml" "$TMPXML"
     export CIB_file="$TMPXML"
 
     desc="Commit shadow instance"
@@ -1676,6 +1718,30 @@ function test_tools() {
     cmd="crm_shadow --diff"
     test_assert $CRM_EX_ERROR 0
 
+    # Repeat sequence with XML output
+    cp "$test_home/cli/crm_mon.xml" "$TMPXML"
+    export CIB_file="$TMPXML"
+
+    desc="Commit shadow instance (XML)"
+    cmd="crm_shadow --commit $shadow --output-as=xml"
+    test_assert_validate $CRM_EX_USAGE 0
+
+    desc="Commit shadow instance (force) (XML)"
+    cmd="crm_shadow --commit $shadow --force --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Get active shadow instance's diff (after commit) (XML)"
+    cmd="crm_shadow --diff --output-as=xml"
+    test_assert_validate $CRM_EX_ERROR 0
+
+    desc="Commit shadow instance (force) (all) (XML)"
+    cmd="crm_shadow --commit $shadow --force --all --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Get active shadow instance's diff (after commit all) (XML)"
+    cmd="crm_shadow --diff --output-as=xml"
+    test_assert_validate $CRM_EX_ERROR 0
+
     # Commit an inactive shadow instance with no active instance
     unset CIB_shadow
 
@@ -1687,6 +1753,14 @@ function test_tools() {
     cmd="crm_shadow --commit $shadow --force"
     test_assert $CRM_EX_OK 0
 
+    desc="Commit shadow instance (no active instance) (XML)"
+    cmd="crm_shadow --commit $shadow --output-as=xml"
+    test_assert_validate $CRM_EX_USAGE 0
+
+    desc="Commit shadow instance (no active instance) (force) (XML)"
+    cmd="crm_shadow --commit $shadow --force --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
     # Commit an inactive shadow instance with an active instance
     export CIB_shadow="nonexistent_shadow"
 
@@ -1697,6 +1771,14 @@ function test_tools() {
     desc="Commit shadow instance (mismatch) (force)"
     cmd="crm_shadow --commit $shadow --force"
     test_assert $CRM_EX_OK 0
+
+    desc="Commit shadow instance (mismatch) (XML)"
+    cmd="crm_shadow --commit $shadow --output-as=xml"
+    test_assert_validate $CRM_EX_USAGE 0
+
+    desc="Commit shadow instance (mismatch) (force) (XML)"
+    cmd="crm_shadow --commit $shadow --force --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
 
     # Commit an active shadow instance whose shadow file is missing
     desc="Commit shadow instance (nonexistent shadow file)"
@@ -1710,6 +1792,18 @@ function test_tools() {
     desc="Get active shadow instance's diff (nonexistent shadow file)"
     cmd="crm_shadow --diff"
     test_assert $CRM_EX_NOSUCH 0
+
+    desc="Commit shadow instance (nonexistent shadow file) (XML)"
+    cmd="crm_shadow --commit $CIB_shadow --output-as=xml"
+    test_assert_validate $CRM_EX_USAGE 0
+
+    desc="Commit shadow instance (nonexistent shadow file) (force) (XML)"
+    cmd="crm_shadow --commit $CIB_shadow --force --output-as=xml"
+    test_assert_validate $CRM_EX_NOSUCH 0
+
+    desc="Get active shadow instance's diff (nonexistent shadow file) (XML)"
+    cmd="crm_shadow --diff --output-as=xml"
+    test_assert_validate $CRM_EX_NOSUCH 0
 
     # Commit an active shadow instance when the CIB file is missing
     export CIB_file="$test_home/cli/nonexistent_cib.xml"
@@ -1727,6 +1821,18 @@ function test_tools() {
     cmd="crm_shadow --diff"
     test_assert $CRM_EX_NOSUCH 0
 
+    desc="Commit shadow instance (nonexistent CIB file) (XML)"
+    cmd="crm_shadow --commit $shadow --output-as=xml"
+    test_assert_validate $CRM_EX_USAGE 0
+
+    desc="Commit shadow instance (nonexistent CIB file) (force) (XML)"
+    cmd="crm_shadow --commit $shadow --force --output-as=xml"
+    test_assert_validate $CRM_EX_NOSUCH 0
+
+    desc="Get active shadow instance's diff (nonexistent CIB file) (XML)"
+    cmd="crm_shadow --diff --output-as=xml"
+    test_assert_validate $CRM_EX_NOSUCH 0
+
     rm -f "$TMPXML"
 
     # Delete an active shadow instance
@@ -1741,6 +1847,16 @@ function test_tools() {
     cmd="crm_shadow --delete $shadow --force"
     test_assert $CRM_EX_OK 0
 
+    create_shadow_cib --create
+
+    desc="Delete shadow instance (XML)"
+    cmd="crm_shadow --delete $shadow --output-as=xml"
+    test_assert_validate $CRM_EX_USAGE 0
+
+    desc="Delete shadow instance (force) (XML)"
+    cmd="crm_shadow --delete $shadow --force --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
     # Delete an inactive shadow instance with no active instance
     create_shadow_cib --create
     unset CIB_shadow
@@ -1752,6 +1868,17 @@ function test_tools() {
     desc="Delete shadow instance (no active instance) (force)"
     cmd="crm_shadow --delete $shadow --force"
     test_assert $CRM_EX_OK 0
+
+    create_shadow_cib --create
+    unset CIB_shadow
+
+    desc="Delete shadow instance (no active instance) (XML)"
+    cmd="crm_shadow --delete $shadow --output-as=xml"
+    test_assert_validate $CRM_EX_USAGE 0
+
+    desc="Delete shadow instance (no active instance) (force) (XML)"
+    cmd="crm_shadow --delete $shadow --force --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
 
     # Delete an inactive shadow instance with an active instance
     create_shadow_cib --create
@@ -1765,6 +1892,17 @@ function test_tools() {
     cmd="crm_shadow --delete $shadow --force"
     test_assert $CRM_EX_OK 0
 
+    create_shadow_cib --create
+    export CIB_shadow="nonexistent_shadow"
+
+    desc="Delete shadow instance (mismatch) (XML)"
+    cmd="crm_shadow --delete $shadow --output-as=xml"
+    test_assert_validate $CRM_EX_USAGE 0
+
+    desc="Delete shadow instance (mismatch) (force) (XML)"
+    cmd="crm_shadow --delete $shadow --force --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
     # Delete an active shadow instance whose shadow file is missing
     desc="Delete shadow instance (nonexistent shadow file)"
     cmd="crm_shadow --delete $CIB_shadow"
@@ -1773,6 +1911,14 @@ function test_tools() {
     desc="Delete shadow instance (nonexistent shadow file) (force)"
     cmd="crm_shadow --delete $CIB_shadow --force"
     test_assert $CRM_EX_OK 0
+
+    desc="Delete shadow instance (nonexistent shadow file) (XML)"
+    cmd="crm_shadow --delete $CIB_shadow --output-as=xml"
+    test_assert_validate $CRM_EX_USAGE 0
+
+    desc="Delete shadow instance (nonexistent shadow file) (force) (XML)"
+    cmd="crm_shadow --delete $CIB_shadow --force --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
 
     # Delete an active shadow instance when the CIB file is missing
     export CIB_file="$test_home/cli/crm_mon.xml"
@@ -1787,23 +1933,50 @@ function test_tools() {
     cmd="crm_shadow --delete $shadow --force"
     test_assert $CRM_EX_OK 0
 
-    # Create new shadow instance based on active CIB with no instance active
-    crm_shadow --delete "$shadow" --force >/dev/null 2>&1
     export CIB_file="$test_home/cli/crm_mon.xml"
+    create_shadow_cib --create
+    export CIB_file="$test_home/cli/nonexistent_cib.xml"
+
+    desc="Delete shadow instance (nonexistent CIB file) (XML)"
+    cmd="crm_shadow --delete $shadow --output-as=xml"
+    test_assert_validate $CRM_EX_USAGE 0
+
+    desc="Delete shadow instance (nonexistent CIB file) (force) (XML)"
+    cmd="crm_shadow --delete $shadow --force --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    # Create new shadow instance based on active CIB with no instance active
+    export CIB_file="$test_home/cli/crm_mon.xml"
+
+    crm_shadow --delete "$shadow" --force >/dev/null 2>&1
     unset CIB_shadow
 
     desc="Create copied shadow instance (no active instance)"
     cmd="crm_shadow --create $shadow --batch"
     test_assert $CRM_EX_OK 0
 
-    # Create new shadow instance based on active CIB with other instance active
     crm_shadow --delete "$shadow" --force >/dev/null 2>&1
+    unset CIB_shadow
+
+    desc="Create copied shadow instance (no active instance) (XML)"
+    cmd="crm_shadow --create $shadow --batch --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    # Create new shadow instance based on active CIB with other instance active
     export CIB_file="$test_home/cli/crm_mon.xml"
     export CIB_shadow="nonexistent_shadow"
+
+    crm_shadow --delete "$shadow" --force >/dev/null 2>&1
 
     desc="Create copied shadow instance (mismatch)"
     cmd="crm_shadow --create $shadow --batch"
     test_assert $CRM_EX_OK 0
+
+    crm_shadow --delete "$shadow" --force >/dev/null 2>&1
+
+    desc="Create copied shadow instance (mismatch) (XML)"
+    cmd="crm_shadow --create $shadow --batch --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
 
     # Create new shadow instance based on CIB (shadow file already exists)
     export CIB_file="$test_home/cli/crm_mon.xml"
@@ -1816,47 +1989,88 @@ function test_tools() {
     cmd="crm_shadow --create $shadow --batch --force"
     test_assert $CRM_EX_OK 0
 
+    desc="Create copied shadow instance (file already exists) (XML)"
+    cmd="crm_shadow --create $shadow --batch --output-as=xml"
+    test_assert_validate $CRM_EX_CANTCREAT 0
+
+    desc="Create copied shadow instance (file already exists) (force) (XML)"
+    cmd="crm_shadow --create $shadow --batch --force --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
     # Create new shadow instance based on active CIB when the CIB file is missing
-    crm_shadow --delete "$shadow" --force >/dev/null 2>&1
     export CIB_file="$test_home/cli/nonexistent_cib.xml"
     export CIB_shadow="$shadow"
+
+    crm_shadow --delete "$shadow" --force >/dev/null 2>&1
 
     desc="Create copied shadow instance (nonexistent CIB file) (force)"
     cmd="crm_shadow --create $shadow --batch --force"
     test_assert $CRM_EX_NOSUCH 0
 
+    desc="Create copied shadow instance (nonexistent CIB file) (force) (XML)"
+    cmd="crm_shadow --create $shadow --batch --force --output-as=xml"
+    test_assert_validate $CRM_EX_NOSUCH 0
+
     # Create new empty shadow instance
-    crm_shadow --delete "$shadow" --force >/dev/null 2>&1
     export CIB_shadow="$shadow"
+
+    crm_shadow --delete "$shadow" --force >/dev/null 2>&1
 
     desc="Create empty shadow instance"
     cmd="crm_shadow --create-empty $shadow --batch"
     test_assert $CRM_EX_OK 0
 
-    # Create empty shadow instance with no active instance
     crm_shadow --delete "$shadow" --force >/dev/null 2>&1
+
+    desc="Create empty shadow instance (XML)"
+    cmd="crm_shadow --create-empty $shadow --batch --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    # Create empty shadow instance with no active instance
     unset CIB_shadow
+
+    crm_shadow --delete "$shadow" --force >/dev/null 2>&1
 
     desc="Create empty shadow instance (no active instance)"
     cmd="crm_shadow --create-empty $shadow --batch"
     test_assert $CRM_EX_OK 0
 
-    # Create empty shadow instance with other instance active
     crm_shadow --delete "$shadow" --force >/dev/null 2>&1
+
+    desc="Create empty shadow instance (no active instance) (XML)"
+    cmd="crm_shadow --create-empty $shadow --batch --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    # Create empty shadow instance with other instance active
     export CIB_shadow="nonexistent_shadow"
+
+    crm_shadow --delete "$shadow" --force >/dev/null 2>&1
 
     desc="Create empty shadow instance (mismatch)"
     cmd="crm_shadow --create-empty $shadow --batch"
     test_assert $CRM_EX_OK 0
 
-    # Create empty shadow instance when the CIB file is missing
     crm_shadow --delete "$shadow" --force >/dev/null 2>&1
+
+    desc="Create empty shadow instance (mismatch) (XML)"
+    cmd="crm_shadow --create-empty $shadow --batch --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    # Create empty shadow instance when the CIB file is missing
     export CIB_file="$test_home/cli/nonexistent_cib.xml"
     export CIB_shadow="$shadow"
+
+    crm_shadow --delete "$shadow" --force >/dev/null 2>&1
 
     desc="Create empty shadow instance (nonexistent CIB file)"
     cmd="crm_shadow --create-empty $shadow --batch"
     test_assert $CRM_EX_OK 0
+
+    crm_shadow --delete "$shadow" --force >/dev/null 2>&1
+
+    desc="Create empty shadow instance (nonexistent CIB file) (XML)"
+    cmd="crm_shadow --create-empty $shadow --batch --force --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
 
     # Create empty shadow instance (shadow file already exists)
     export CIB_file="$test_home/cli/crm_mon.xml"
@@ -1869,6 +2083,14 @@ function test_tools() {
     cmd="crm_shadow --create-empty $shadow --batch --force"
     test_assert $CRM_EX_OK 0
 
+    desc="Create empty shadow instance (file already exists) (XML)"
+    cmd="crm_shadow --create-empty $shadow --batch --output-as=xml"
+    test_assert_validate $CRM_EX_CANTCREAT 0
+
+    desc="Create empty shadow instance (file already exists) (force) (XML)"
+    cmd="crm_shadow --create-empty $shadow --batch --force --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
     # Query shadow instance with an empty CIB.
     # --which and --file queries were done earlier.
     delete_shadow_resource_defaults
@@ -1877,9 +2099,17 @@ function test_tools() {
     cmd="crm_shadow --display"
     test_assert $CRM_EX_OK 0
 
+    desc="Get active shadow instance's contents (empty CIB) (XML)"
+    cmd="crm_shadow --display --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
     desc="Get active shadow instance's diff (empty CIB)"
     cmd="crm_shadow --diff"
     test_assert $CRM_EX_ERROR 0
+
+    desc="Get active shadow instance's diff (empty CIB) (XML)"
+    cmd="crm_shadow --diff --output-as=xml"
+    test_assert_validate $CRM_EX_ERROR 0
 
     # Reset shadow instance (overwrite existing shadow file based on active CIB)
     export CIB_file="$test_home/cli/crm_mon.xml"
@@ -1893,12 +2123,29 @@ function test_tools() {
     cmd="crm_shadow --diff"
     test_assert $CRM_EX_OK 0
 
+    create_shadow_cib --create-empty
+
+    desc="Reset shadow instance (XML)"
+    cmd="crm_shadow --reset $shadow --batch --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Get active shadow instance's diff (after reset) (XML)"
+    cmd="crm_shadow --diff --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
     # Reset an inactive shadow instance with no active instance
     unset CIB_shadow
 
     desc="Reset shadow instance (no active instance)"
     cmd="crm_shadow --reset $shadow --batch"
     test_assert $CRM_EX_OK 0
+
+    create_shadow_cib --create-empty
+    unset CIB_shadow
+
+    desc="Reset shadow instance (no active instance) (XML)"
+    cmd="crm_shadow --reset $shadow --batch --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
 
     # Reset an inactive shadow instance with an active instance
     export CIB_shadow="nonexistent_shadow"
@@ -1911,6 +2158,17 @@ function test_tools() {
     cmd="crm_shadow --reset $shadow --batch --force"
     test_assert $CRM_EX_OK 0
 
+    create_shadow_cib --create-empty
+    export CIB_shadow="nonexistent_shadow"
+
+    desc="Reset shadow instance (mismatch) (XML)"
+    cmd="crm_shadow --reset $shadow --batch --output-as=xml"
+    test_assert_validate $CRM_EX_USAGE 0
+
+    desc="Reset shadow instance (mismatch) (force) (XML)"
+    cmd="crm_shadow --reset $shadow --batch --force --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
     # Reset an active shadow instance when the CIB file is missing
     create_shadow_cib --create-empty
     export CIB_file="$test_home/cli/nonexistent_cib.xml"
@@ -1919,14 +2177,23 @@ function test_tools() {
     cmd="crm_shadow --reset $CIB_shadow --batch"
     test_assert $CRM_EX_NOSUCH 0
 
+    desc="Reset shadow instance (nonexistent CIB file) (XML)"
+    cmd="crm_shadow --reset $CIB_shadow --batch --output-as=xml"
+    test_assert_validate $CRM_EX_NOSUCH 0
+
     desc="Reset shadow instance (nonexistent CIB file) (force)"
     cmd="crm_shadow --reset $CIB_shadow --batch --force"
     test_assert $CRM_EX_NOSUCH 0
 
+    desc="Reset shadow instance (nonexistent CIB file) (force) (XML)"
+    cmd="crm_shadow --reset $CIB_shadow --batch --force --output-as=xml"
+    test_assert_validate $CRM_EX_NOSUCH 0
+
     # Reset an active shadow instance whose shadow file is missing
-    crm_shadow --delete "$shadow" --force >/dev/null 2>&1
     export CIB_file="$test_home/cli/crm_mon.xml"
     export CIB_shadow="$shadow"
+
+    crm_shadow --delete "$shadow" --force >/dev/null 2>&1
 
     desc="Reset shadow instance (nonexistent shadow file)"
     cmd="crm_shadow --reset $CIB_shadow --batch"
@@ -1936,23 +2203,50 @@ function test_tools() {
     cmd="crm_shadow --reset $CIB_shadow --batch --force"
     test_assert $CRM_EX_OK 0
 
+    crm_shadow --delete "$shadow" --force >/dev/null 2>&1
+
+    desc="Reset shadow instance (nonexistent shadow file) (XML)"
+    cmd="crm_shadow --reset $CIB_shadow --batch --output-as=xml"
+    test_assert_validate $CRM_EX_NOSUCH 0
+
+    desc="Reset shadow instance (nonexistent shadow file) (force) (XML)"
+    cmd="crm_shadow --reset $CIB_shadow --batch --force --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
     # Switch shadow instances
     # In batch mode, this only displays a message
     create_shadow_cib --create-empty
 
+    # Makes no difference now, just future-proofing
+    CIB_shadow="nonexistent_shadow"
+
     desc="Switch to new shadow instance"
-    cmd="crm_shadow --switch $CIB_shadow --batch"
+    cmd="crm_shadow --switch $shadow --batch"
     test_assert $CRM_EX_OK 0
+
+    CIB_shadow="nonexistent_shadow"
+
+    desc="Switch to new shadow instance (XML)"
+    cmd="crm_shadow --switch $shadow --batch --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
 
     crm_shadow --delete "$shadow" --force >/dev/null 2>&1
 
     desc="Switch to nonexistent shadow instance"
-    cmd="crm_shadow --switch $CIB_shadow --batch"
+    cmd="crm_shadow --switch $shadow --batch"
     test_assert $CRM_EX_NOSUCH 0
 
     desc="Switch to nonexistent shadow instance (force)"
-    cmd="crm_shadow --switch $CIB_shadow --batch --force"
+    cmd="crm_shadow --switch $shadow --batch --force"
     test_assert $CRM_EX_NOSUCH 0
+
+    desc="Switch to nonexistent shadow instance (XML)"
+    cmd="crm_shadow --switch $shadow --batch --output-as=xml"
+    test_assert_validate $CRM_EX_NOSUCH 0
+
+    desc="Switch to nonexistent shadow instance (force) (XML)"
+    cmd="crm_shadow --switch $shadow --batch --force --output-as=xml"
+    test_assert_validate $CRM_EX_NOSUCH 0
 
     unset CIB_file
     unset CIB_shadow
