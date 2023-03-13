@@ -1,5 +1,5 @@
 [synopsis]
-crm_mon mode [options]
+crm_mon [options]
 
 /number of different formats/
 .SH OPTIONS
