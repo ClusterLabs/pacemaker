@@ -14,6 +14,7 @@ pkgpythondir = $(pythondir)/$(PACKAGE)/_cts
 pkgpython_PYTHON = __init__.py \
 				   corosync.py \
 				   errors.py \
+				   logging.py \
 				   patterns.py \
 				   process.py \
 				   test.py

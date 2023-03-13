@@ -25,12 +25,12 @@ import tempfile
 from stat import *
 from cts import CTS
 from cts.CTSaudits import *
-from cts.logging   import LogFactory
 from cts.remote    import RemoteFactory
 from cts.watcher   import LogWatcher
 from cts.environment import EnvFactory
 
 from pacemaker import BuildOptions
+from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.patterns import PatternSelector
 
 AllTestClasses = [ ]

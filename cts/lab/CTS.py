@@ -1,16 +1,17 @@
 """ Main classes for Pacemaker's Cluster Test Suite (CTS)
 """
 
-__copyright__ = "Copyright 2000-2021 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import sys
 import time
 import traceback
 
-from cts.logging     import LogFactory
 from cts.remote      import RemoteFactory
 from cts.environment import EnvFactory
+
+from pacemaker._cts.logging import LogFactory
 
 class CtsLab(object):
     '''This class defines the Lab Environment for the Cluster Test System.
