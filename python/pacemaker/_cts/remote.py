@@ -37,7 +37,7 @@ class AsyncWaitProc(Thread):
         self.node = node
         self.command = command
         self.logger = LogFactory()
-        self.delegate = completionDelegate;
+        self.delegate = completionDelegate
         Thread.__init__(self)
 
     def run(self):
@@ -71,7 +71,7 @@ class AsyncRemoteCmd(Thread):
         self.node = node
         self.command = command
         self.logger = LogFactory()
-        self.delegate = completionDelegate;
+        self.delegate = completionDelegate
         Thread.__init__(self)
 
     def run(self):
@@ -99,7 +99,7 @@ class AsyncRemoteCmd(Thread):
         if self.delegate:
             self.delegate.async_complete(self.proc.pid, self.proc.returncode, outLines, errLines)
 
-class RemoteExec(object):
+class RemoteExec:
     '''This is an abstract remote execution class.  It runs a command on another
        machine - somehow.  The somehow is up to us.  This particular
        class uses ssh.
@@ -182,7 +182,8 @@ class RemoteExec(object):
 
         rc = proc.wait()
 
-        if not silent: self.debug("cmd: target=%s, rc=%d: %s" % (node, rc, command))
+        if not silent:
+            self.debug("cmd: target=%s, rc=%d: %s" % (node, rc, command))
 
         result = convert2string(result)
 
@@ -214,7 +215,8 @@ class RemoteExec(object):
         rc = os.system(cpstring)
         if trace_rsh:
             silent = False
-        if not silent: self.debug("cmd: rc=%d: %s" % (rc, cpstring))
+        if not silent:
+            self.debug("cmd: rc=%d: %s" % (rc, cpstring))
 
         return rc
 
@@ -222,13 +224,13 @@ class RemoteExec(object):
         """ Return True if specified file exists on all specified hosts. """
 
         for host in hosts:
-            rc = self(host, "test -%s %s" % (test, filename)) 
+            rc = self(host, "test -%s %s" % (test, filename))
             if rc != 0:
                 return False
         return True
 
 
-class RemoteFactory(object):
+class RemoteFactory:
     # Class variables
 
     # -n: no stdin, -x: no X11,
