@@ -1,23 +1,29 @@
-""" Logging classes for Pacemaker's Cluster Test Suite (CTS)
-"""
+""" Logging classes for Pacemaker's Cluster Test Suite (CTS) """
 
-__copyright__ = "Copyright 2014-2020 the Pacemaker project contributors"
+__all__ = ["LogFactory"]
+__copyright__ = "Copyright 2014-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
-import io
 import os
 import sys
 import time
 
 
-class Logger(object):
+class Logger:
     """ Abstract class to use as parent for CTS logging classes """
 
     TimeFormat = "%b %d %H:%M:%S\t"
 
-    def __init__(self):
+    def __init__(self, filename=None, tag=None):
         # Whether this logger should print debug messages
-        self.debug_target = True
+        self._debug_target = True
+
+        self._logfile = filename
+
+        if tag:
+            self._source = tag + ": "
+        else:
+            self._source = ""
 
     def __call__(self, lines):
         """ Log specified messages """
@@ -34,20 +40,20 @@ class Logger(object):
 
         for line in lines:
             self.write(line)
-        return 1
 
+    @property
     def is_debug_target(self):
         """ Return True if this logger should receive debug messages """
 
-        return self.debug_target
+        return self._debug_target
 
 
 class StdErrLog(Logger):
     """ Class to log to standard error """
 
     def __init__(self, filename, tag):
-        Logger.__init__(self)
-        self.debug_target = False
+        Logger.__init__(self, filename, tag)
+        self._debug_target = False
 
     def __call__(self, lines):
         """ Log specified lines to stderr """
@@ -56,8 +62,10 @@ class StdErrLog(Logger):
                                   time.localtime(time.time()))
         if isinstance(lines, str):
             lines = [lines]
+
         for line in lines:
             print("%s%s" % (timestamp, line), file=sys.__stderr__)
+
         sys.__stderr__.flush()
 
 
@@ -65,29 +73,25 @@ class FileLog(Logger):
     """ Class to log to a file """
 
     def __init__(self, filename, tag):
-        Logger.__init__(self)
-        self.logfile = filename
-        self.hostname = os.uname()[1]
-        if tag:
-            self.source = tag + ": "
-        else:
-            self.source = ""
+        Logger.__init__(self, filename, tag)
+        self._hostname = os.uname()[1]
 
     def __call__(self, lines):
         """ Log specified lines to the file """
 
-        logf = io.open(self.logfile, "at")
-        timestamp = time.strftime(Logger.TimeFormat,
-                                  time.localtime(time.time()))
-        if isinstance(lines, str):
-            lines = [lines]
-        for line in lines:
-            print("%s%s %s%s" % (timestamp, self.hostname, self.source, line),
-                  file=logf)
-        logf.close()
+        with open(self._logfile, "at", encoding="utf-8") as logf:
+            timestamp = time.strftime(Logger.TimeFormat,
+                                      time.localtime(time.time()))
+
+            if isinstance(lines, str):
+                lines = [lines]
+
+            for line in lines:
+                print("%s%s %s%s" % (timestamp, self._hostname, self._source, line),
+                      file=logf)
 
 
-class LogFactory(object):
+class LogFactory:
     """ Singleton to log messages to various destinations """
 
     log_methods = []
@@ -116,7 +120,7 @@ class LogFactory(object):
         """ Log a debug message (to all configured log destinations) """
 
         for logfn in LogFactory.log_methods:
-            if logfn.is_debug_target():
+            if logfn.is_debug_target:
                 logfn("debug: %s" % args.strip())
 
     def traceback(self, traceback):
