@@ -3007,8 +3007,7 @@ for t in $tests; do
         -e 's/^Migration will take effect until: .*/Migration will take effect until:/' \
         -e 's/ end=\"[0-9][-+: 0-9]*Z*\"/ end=\"\"/' \
         -e 's/ start=\"[0-9][-+: 0-9]*Z*\"/ start=\"\"/' \
-        -e 's/^Error checking rule: Device not configured/Error checking rule: No such device or address/' \
-        -e 's/Error performing operation: Device not configured/Error performing operation: No such device or address/' \
+        -e 's/Device not configured/No such device or address/' \
         -e 's/\(Injecting attribute last-failure-ping#monitor_10000=\)[0-9]*/\1/' \
         -e 's/^lt-//' \
         -e 's/ocf::/ocf:/' \
