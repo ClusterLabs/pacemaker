@@ -287,12 +287,14 @@ apply_this_with(gpointer data, gpointer user_data)
         archive = pcmk__copy_node_table(rsc->allowed_nodes);
     }
 
-    pe_rsc_trace(rsc,
-                 "%s: Assigning colocation %s primary %s first"
-                 "(score=%d role=%s)",
-                 rsc->id, colocation->id, other->id,
-                 colocation->score, role2text(colocation->dependent_role));
-    other->cmds->assign(other, NULL);
+    if (pcmk_is_set(other->flags, pe_rsc_provisional)) {
+        pe_rsc_trace(rsc,
+                     "%s: Assigning colocation %s primary %s first"
+                     "(score=%d role=%s)",
+                     rsc->id, colocation->id, other->id,
+                     colocation->score, role2text(colocation->dependent_role));
+        other->cmds->assign(other, NULL);
+    }
 
     // Apply the colocation score to this resource's allowed node scores
     rsc->cmds->apply_coloc_score(rsc, other, colocation, true);
