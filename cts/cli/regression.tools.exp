@@ -6407,11 +6407,6 @@ A new shadow instance was created. To begin using it, paste the following into y
 	export CIB_shadow=cts-cli
 =#=#=#= End test: Create copied shadow instance (mismatch) - OK (0) =#=#=#=
 * Passed: crm_shadow     - Create copied shadow instance (mismatch)
-=#=#=#= Begin test: Create copied shadow instance (mismatch) (force) =#=#=#=
-A new shadow instance was created. To begin using it, paste the following into your shell:
-	export CIB_shadow=cts-cli
-=#=#=#= End test: Create copied shadow instance (mismatch) (force) - OK (0) =#=#=#=
-* Passed: crm_shadow     - Create copied shadow instance (mismatch) (force)
 =#=#=#= Begin test: Create copied shadow instance (file already exists) =#=#=#=
 crm_shadow: A shadow instance 'cts-cli' already exists.
 To prevent accidental destruction of the shadow file, the --force flag is required in order to proceed.

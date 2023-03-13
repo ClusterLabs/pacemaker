@@ -1805,10 +1805,6 @@ function test_tools() {
     cmd="crm_shadow --create $shadow --batch"
     test_assert $CRM_EX_OK 0
 
-    desc="Create copied shadow instance (mismatch) (force)"
-    cmd="crm_shadow --create $shadow --batch --force"
-    test_assert $CRM_EX_OK 0
-
     # Create new shadow instance based on CIB (shadow file already exists)
     export CIB_file="$test_home/cli/crm_mon.xml"
 
@@ -1868,7 +1864,7 @@ function test_tools() {
     export CIB_file="$test_home/cli/nonexistent_cib.xml"
 
     desc="Create empty shadow instance (nonexistent CIB file)"
-    cmd="crm_shadow --create-empty $shadow --batch --force"
+    cmd="crm_shadow --create-empty $shadow --batch"
     test_assert $CRM_EX_OK 0
 
     delete_shadow_resource_defaults
