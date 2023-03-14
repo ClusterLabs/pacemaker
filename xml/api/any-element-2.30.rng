@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <!--
+     Generic element (from https://relaxng.org/tutorial-20011203.html#IDAFLZR)
+     -->
+    <start>
+        <ref name="element-any" />
+    </start>
+
+    <define name="element-any">
+        <element>
+            <anyName/>
+            <zeroOrMore>
+                <choice>
+                    <attribute> <anyName/> <text/> </attribute>
+                    <text/>
+                    <ref name="element-any" />
+                </choice>
+            </zeroOrMore>
+        </element>
+    </define>
+
+</grammar>

@@ -73,6 +73,7 @@ CIB_cfg_base		= options nodes resources constraints fencing acls tags alerts
 
 # Names of all schemas (including top level and those included by others)
 API_base		= $(API_request_base)	\
+			  any-element		\
 			  failure		\
 			  fence-event 		\
 			  generic-list		\
@@ -81,6 +82,7 @@ API_base		= $(API_request_base)	\
 			  node-attrs		\
 			  node-history		\
 			  nodes			\
+			  patchset		\
 			  resources		\
 			  status		\
 			  subprocess-output
