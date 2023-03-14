@@ -24,6 +24,7 @@
 
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/ipc.h>
+#include <crm/common/output_internal.h>
 #include <crm/common/xml.h>
 
 #include <crm/cib.h>
@@ -53,7 +54,20 @@ enum shadow_command {
     shadow_cmd_switch,
 };
 
-static bool needs_teardown = false;
+/*!
+ * \internal
+ * \enum shadow_disp_flags
+ * \brief Bit flags to control which fields of shadow CIB info are displayed
+ *
+ * \note Ignored for XML output.
+ */
+enum shadow_disp_flags {
+    shadow_disp_instance = (1 << 0),
+    shadow_disp_file     = (1 << 1),
+    shadow_disp_content  = (1 << 2),
+    shadow_disp_diff     = (1 << 3),
+};
+
 static crm_exit_t exit_code = CRM_EX_OK;
 
 static struct {
@@ -66,6 +80,244 @@ static struct {
     gchar *validate_with;
 } options = {
     .cmd_options = cib_sync_call,
+};
+
+/*!
+ * \internal
+ * \brief Display an instruction to the user
+ *
+ * \param[in,out] out  Output object
+ * \param[in]     ...  Message arguments
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note The variadic message arguments are of the following format:
+ *       -# Instructional message
+ */
+PCMK__OUTPUT_ARGS("instruction", "const char *")
+static int
+instruction_default(pcmk__output_t *out, va_list args)
+{
+    const char *msg = va_arg(args, const char *);
+
+    if (msg == NULL) {
+        return pcmk_rc_no_output;
+    }
+    return out->info(out, "%s", msg);
+}
+
+/*!
+ * \internal
+ * \brief Display an instruction to the user
+ *
+ * \param[in,out] out  Output object
+ * \param[in]     ...  Message arguments
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note The variadic message arguments are of the following format:
+ *       -# Instructional message
+ */
+PCMK__OUTPUT_ARGS("instruction", "const char *")
+static int
+instruction_xml(pcmk__output_t *out, va_list args)
+{
+    const char *msg = va_arg(args, const char *);
+
+    if (msg == NULL) {
+        return pcmk_rc_no_output;
+    }
+    pcmk__output_create_xml_text_node(out, "instruction", msg);
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
+ * \brief Display information about a shadow CIB instance
+ *
+ * \param[in,out] out  Output object
+ * \param[in]     ...  Message arguments
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note The variadic message arguments are of the following format:
+ *       -# Instance name (can be \p NULL)
+ *       -# Shadow file name (can be \p NULL)
+ *       -# Shadow file content (can be \p NULL)
+ *       -# Patchset containing the changes in the shadow CIB (can be \p NULL)
+ *       -# Group of \p shadow_disp_flags indicating which fields to display
+ */
+PCMK__OUTPUT_ARGS("shadow", "const char *", "const char *", "xmlNodePtr",
+                  "xmlNodePtr", "enum shadow_disp_flags")
+static int
+shadow_default(pcmk__output_t *out, va_list args)
+{
+    const char *instance = va_arg(args, const char *);
+    const char *filename = va_arg(args, const char *);
+    xmlNodePtr content = va_arg(args, xmlNodePtr);
+    xmlNodePtr diff = va_arg(args, xmlNodePtr);
+    enum shadow_disp_flags flags = (enum shadow_disp_flags) va_arg(args, int);
+
+    int rc = pcmk_rc_no_output;
+
+    if (pcmk_is_set(flags, shadow_disp_instance)) {
+        rc = out->info(out, "Instance: %s", pcmk__s(instance, "<unknown>"));
+    }
+    if (pcmk_is_set(flags, shadow_disp_file)) {
+        rc = out->info(out, "File name: %s", pcmk__s(filename, "<unknown>"));
+    }
+    if (pcmk_is_set(flags, shadow_disp_content)) {
+        rc = out->info(out, "Content:");
+
+        if (content != NULL) {
+            char *buf = pcmk__trim(dump_xml_formatted_with_text(content));
+
+            if (!pcmk__str_empty(buf)) {
+                out->info(out, "%s", buf);
+            }
+            free(buf);
+
+        } else {
+            out->info(out, "<unknown>");
+        }
+    }
+    if (pcmk_is_set(flags, shadow_disp_diff)) {
+        rc = out->info(out, "Diff:");
+
+        if (diff != NULL) {
+            out->message(out, "xml-patchset", diff);
+        } else {
+            out->info(out, "<empty>");
+        }
+    }
+
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Display information about a shadow CIB instance
+ *
+ * \param[in,out] out  Output object
+ * \param[in]     ...  Message arguments
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note The variadic message arguments are of the following format:
+ *       -# Instance name (can be \p NULL)
+ *       -# Shadow file name (can be \p NULL)
+ *       -# Shadow file content (can be \p NULL)
+ *       -# Patchset containing the changes in the shadow CIB (can be \p NULL)
+ *       -# Group of \p shadow_disp_flags indicating which fields to display
+ */
+PCMK__OUTPUT_ARGS("shadow", "const char *", "const char *", "xmlNodePtr",
+                  "xmlNodePtr", "enum shadow_disp_flags")
+static int
+shadow_text(pcmk__output_t *out, va_list args)
+{
+    if (!out->is_quiet(out)) {
+        return shadow_default(out, args);
+
+    } else {
+        const char *instance = va_arg(args, const char *);
+        const char *filename = va_arg(args, const char *);
+        xmlNodePtr content = va_arg(args, xmlNodePtr);
+        xmlNodePtr diff = va_arg(args, xmlNodePtr);
+        enum shadow_disp_flags flags = (enum shadow_disp_flags) va_arg(args, int);
+
+        int rc = pcmk_rc_no_output;
+        bool quiet_orig = out->quiet;
+
+        /* We have to disable quiet mode for the "xml-patchset" message if we
+         * call it, so we might as well do so for this whole section.
+         */
+        out->quiet = false;
+
+        if (pcmk_is_set(flags, shadow_disp_instance) && (instance != NULL)) {
+            rc = out->info(out, "%s", instance);
+        }
+        if (pcmk_is_set(flags, shadow_disp_file) && (filename != NULL)) {
+            rc = out->info(out, "%s", filename);
+        }
+        if (pcmk_is_set(flags, shadow_disp_content) && (content != NULL)) {
+            char *buf = pcmk__trim(dump_xml_formatted_with_text(content));
+
+            rc = out->info(out, "%s", pcmk__trim(buf));
+            free(buf);
+        }
+        if (pcmk_is_set(flags, shadow_disp_diff) && (diff != NULL)) {
+            rc = out->message(out, "xml-patchset", diff);
+        }
+
+        out->quiet = quiet_orig;
+        return rc;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Display information about a shadow CIB instance
+ *
+ * \param[in,out] out  Output object
+ * \param[in]     ...  Message arguments
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note The variadic message arguments are of the following format:
+ *       -# Instance name (can be \p NULL)
+ *       -# Shadow file name (can be \p NULL)
+ *       -# Shadow file content (can be \p NULL)
+ *       -# Patchset containing the changes in the shadow CIB (can be \p NULL)
+ *       -# Group of \p shadow_disp_flags indicating which fields to display
+ *          (ignored)
+ */
+PCMK__OUTPUT_ARGS("shadow", "const char *", "const char *", "xmlNodePtr",
+                  "xmlNodePtr", "enum shadow_disp_flags")
+static int
+shadow_xml(pcmk__output_t *out, va_list args)
+{
+    const char *instance = va_arg(args, const char *);
+    const char *filename = va_arg(args, const char *);
+    xmlNodePtr content = va_arg(args, xmlNodePtr);
+    xmlNodePtr diff = va_arg(args, xmlNodePtr);
+    enum shadow_disp_flags flags G_GNUC_UNUSED =
+        (enum shadow_disp_flags) va_arg(args, int);
+
+    pcmk__output_xml_create_parent(out, "shadow",
+                                   "instance", instance,
+                                   "file", filename,
+                                   NULL);
+
+    if (content != NULL) {
+        char *buf = dump_xml_formatted_with_text(content);
+
+        out->output_xml(out, "content", buf);
+        free(buf);
+    }
+
+    if (diff != NULL) {
+        out->message(out, "xml-patchset", diff);
+    }
+
+    pcmk__output_xml_pop_parent(out);
+    return pcmk_rc_ok;
+}
+
+static const pcmk__supported_format_t formats[] = {
+    PCMK__SUPPORTED_FORMAT_NONE,
+    PCMK__SUPPORTED_FORMAT_TEXT,
+    PCMK__SUPPORTED_FORMAT_XML,
+    { NULL, NULL, NULL }
+};
+
+static const pcmk__message_entry_t fmt_functions[] = {
+    { "instruction", "default", instruction_default },
+    { "instruction", "xml", instruction_xml },
+    { "shadow", "default", shadow_default },
+    { "shadow", "text", shadow_text },
+    { "shadow", "xml", shadow_xml },
+
+    { NULL, NULL, NULL }
 };
 
 /*!
@@ -301,11 +553,13 @@ get_shadow_prompt(void)
  * \internal
  * \brief Set up environment variables for a shadow instance
  *
- * \param[in]  do_switch  If true, switch to an existing instance (logging only)
- * \param[out] error      Where to store error
+ * \param[in,out] out      Output object
+ * \param[in]     do_switch  If true, switch to an existing instance (logging
+ *                           only)
+ * \param[out]    error      Where to store error
  */
 static void
-shadow_setup(bool do_switch, GError **error)
+shadow_setup(pcmk__output_t *out, bool do_switch, GError **error)
 {
     const char *active = getenv("CIB_shadow");
     const char *prompt = getenv("PS1");
@@ -319,10 +573,12 @@ shadow_setup(bool do_switch, GError **error)
     }
 
     if (!options.batch && (shell != NULL)) {
-        printf("Setting up shadow instance\n");
+        out->info(out, "Setting up shadow instance");
         setenv("PS1", new_prompt, 1);
         setenv("CIB_shadow", options.instance, 1);
-        printf("Type Ctrl-D to exit the crm_shadow shell\n");
+
+        out->message(out, "instruction",
+                     "Press Ctrl+D to exit the crm_shadow shell");
 
         if (pcmk__str_eq(shell, "(^|/)bash$", pcmk__str_regex)) {
             execl(shell, shell, "--norc", "--noprofile", NULL);
@@ -334,17 +590,22 @@ shadow_setup(bool do_switch, GError **error)
         g_set_error(error, PCMK__EXITC_ERROR, exit_code,
                     "Failed to launch shell '%s': %s",
                     shell, pcmk_rc_str(errno));
-        goto done;
-    }
 
-    if (do_switch) {
-        printf("To switch to the named shadow instance, paste the following "
-               "into your shell:\n");
     } else {
-        printf("A new shadow instance was created. To begin using it, paste "
-               "the following into your shell:\n");
+        char *msg = NULL;
+        const char *prefix = "A new shadow instance was created. To begin "
+                             "using it";
+
+        if (do_switch) {
+            prefix = "To switch to the named shadow instance";
+        }
+
+        msg = crm_strdup_printf("%s, enter the following into your shell:\n"
+                                "\texport CIB_shadow=%s",
+                                prefix, options.instance);
+        out->message(out, "instruction", msg);
+        free(msg);
     }
-    printf("\texport CIB_shadow=%s\n", options.instance);
 
 done:
     free(new_prompt);
@@ -353,9 +614,11 @@ done:
 /*!
  * \internal
  * \brief Remind the user to clean up the shadow environment
+ *
+ * \param[in,out] out  Output object
  */
 static void
-shadow_teardown(void)
+shadow_teardown(pcmk__output_t *out)
 {
     const char *active = getenv("CIB_shadow");
     const char *prompt = getenv("PS1");
@@ -364,12 +627,14 @@ shadow_teardown(void)
         char *our_prompt = get_shadow_prompt();
 
         if (pcmk__str_eq(prompt, our_prompt, pcmk__str_none)) {
-            printf("Now type Ctrl-D to exit the crm_shadow shell\n");
+            out->message(out, "instruction",
+                         "Press Ctrl+D to exit the crm_shadow shell");
 
         } else {
-            printf("Please remember to unset the CIB_shadow variable by "
-                   "pasting the following into your shell:\n"
-                   "\tunset CIB_shadow\n");
+            out->message(out, "instruction",
+                         "Remember to unset the CIB_shadow variable by "
+                         "entering the following into your shell:\n"
+                         "\tunset CIB_shadow");
         }
         free(our_prompt);
     }
@@ -443,13 +708,14 @@ done:
  * \internal
  * \brief Create a new empty shadow instance
  *
- * \param[out] error  Where to store error
+ * \param[in,out] out    Output object
+ * \param[out]    error  Where to store error
  *
  * \note If \p --force is given, we try to write the file regardless of whether
  *       it already exists.
  */
 static void
-create_shadow_empty(GError **error)
+create_shadow_empty(pcmk__output_t *out, GError **error)
 {
     char *filename = get_shadow_file(options.instance);
     xmlNode *output = NULL;
@@ -461,13 +727,13 @@ create_shadow_empty(GError **error)
 
     output = createEmptyCib(0);
     crm_xml_add(output, XML_ATTR_VALIDATION, options.validate_with);
-    printf("Created new %s configuration\n",
-           crm_element_value(output, XML_ATTR_VALIDATION));
+    out->info(out, "Created new %s configuration",
+              crm_element_value(output, XML_ATTR_VALIDATION));
 
     if (write_shadow_file(output, filename, false, error) != pcmk_rc_ok) {
         goto done;
     }
-    shadow_setup(false, error);
+    shadow_setup(out, false, error);
 
 done:
     free(filename);
@@ -478,16 +744,17 @@ done:
  * \internal
  * \brief Create a shadow instance based on the active CIB
  *
- * \param[in]  reset  If true, overwrite the given existing shadow instance.
- *                    Otherwise, create a new shadow instance with the given
- *                    name.
- * \param[out] error  Where to store error
+ * \param[in,out] out    Output object
+ * \param[in]     reset  If true, overwrite the given existing shadow instance.
+ *                       Otherwise, create a new shadow instance with the given
+ *                       name.
+ * \param[out]    error  Where to store error
  *
  * \note If \p --force is given, we try to write the file regardless of whether
  *       it already exists.
  */
 static void
-create_shadow_from_cib(bool reset, GError **error)
+create_shadow_from_cib(pcmk__output_t *out, bool reset, GError **error)
 {
     char *filename = get_shadow_file(options.instance);
     xmlNode *output = NULL;
@@ -526,7 +793,7 @@ create_shadow_from_cib(bool reset, GError **error)
     if (write_shadow_file(output, filename, reset, error) != pcmk_rc_ok) {
         goto done;
     }
-    shadow_setup(false, error);
+    shadow_setup(out, false, error);
 
 done:
     free(filename);
@@ -537,10 +804,11 @@ done:
  * \internal
  * \brief Delete the shadow file
  *
- * \param[out] error  Where to store error
+ * \param[in,out] out  Output object
+ * \param[out]    error  Where to store error
  */
 static void
-delete_shadow_file(GError **error)
+delete_shadow_file(pcmk__output_t *out, GError **error)
 {
     char *filename = NULL;
 
@@ -561,7 +829,7 @@ delete_shadow_file(GError **error)
                     "Could not remove shadow instance '%s': %s",
                     options.instance, strerror(errno));
     } else {
-        needs_teardown = true;
+        shadow_teardown(out);
     }
     free(filename);
 }
@@ -611,10 +879,11 @@ done:
  * \internal
  * \brief Show the contents of the active shadow instance
  *
- * \param[out] error  Where to store error
+ * \param[in,out] out    Output object
+ * \param[out]    error  Where to store error
  */
 static void
-show_shadow_contents(GError **error)
+show_shadow_contents(pcmk__output_t *out, GError **error)
 {
     char *filename = NULL;
 
@@ -625,17 +894,18 @@ show_shadow_contents(GError **error)
     filename = get_shadow_file(options.instance);
 
     if (check_file_exists(filename, true, error) == pcmk_rc_ok) {
-        char *output_s = NULL;
         xmlNode *output = NULL;
+        bool quiet_orig = out->quiet;
 
         if (read_xml(filename, &output, error) != pcmk_rc_ok) {
             goto done;
         }
 
-        output_s = dump_xml_formatted(output);
-        printf("%s", output_s);
+        out->quiet = true;
+        out->message(out, "shadow",
+                     options.instance, NULL, output, NULL, shadow_disp_content);
+        out->quiet = quiet_orig;
 
-        free(output_s);
         free_xml(output);
     }
 
@@ -647,16 +917,18 @@ done:
  * \internal
  * \brief Show the changes in the active shadow instance
  *
- * \param[out] error  Where to store error
+ * \param[in,out] out    Output object
+ * \param[out]    error  Where to store error
  */
 static void
-show_shadow_diff(GError **error)
+show_shadow_diff(pcmk__output_t *out, GError **error)
 {
     char *filename = NULL;
     xmlNodePtr old_config = NULL;
     xmlNodePtr new_config = NULL;
     xmlNodePtr diff = NULL;
     pcmk__output_t *logger_out = NULL;
+    bool quiet_orig = out->quiet;
     int rc = pcmk_rc_ok;
 
     if (get_instance_from_env(error) != pcmk_rc_ok) {
@@ -693,20 +965,12 @@ show_shadow_diff(GError **error)
 
     xml_accept_changes(new_config);
 
+    out->quiet = true;
+    out->message(out, "shadow",
+                 options.instance, NULL, NULL, diff, shadow_disp_diff);
+    out->quiet = quiet_orig;
+
     if (diff != NULL) {
-        pcmk__output_t *out = NULL;
-
-        rc = pcmk__text_output_new(&out, NULL);
-        if (rc != pcmk_rc_ok) {
-            exit_code = pcmk_rc2exitc(rc);
-            g_set_error(error, PCMK__EXITC_ERROR, exit_code,
-                        "Could not create output object: %s", pcmk_rc_str(rc));
-            goto done;
-        }
-        rc = out->message(out, "xml-patchset", diff);
-        out->finish(out, pcmk_rc2exitc(rc), true, NULL);
-        pcmk__output_free(out);
-
         /* @COMPAT: Exit with CRM_EX_DIGEST? This is not really an error; we
          * just want to indicate that there are differences (as the diff command
          * does).
@@ -725,15 +989,21 @@ done:
  * \internal
  * \brief Show the absolute path of the active shadow instance
  *
- * \param[out] error  Where to store error
+ * \param[in,out] out    Output object
+ * \param[out]    error  Where to store error
  */
 static void
-show_shadow_filename(GError **error)
+show_shadow_filename(pcmk__output_t *out, GError **error)
 {
     if (get_instance_from_env(error) == pcmk_rc_ok) {
         char *filename = get_shadow_file(options.instance);
+        bool quiet_orig = out->quiet;
 
-        printf("%s\n", filename);
+        out->quiet = true;
+        out->message(out, "shadow",
+                     options.instance, filename, NULL, NULL, shadow_disp_file);
+        out->quiet = quiet_orig;
+
         free(filename);
     }
 }
@@ -742,13 +1012,19 @@ show_shadow_filename(GError **error)
  * \internal
  * \brief Show the active shadow instance
  *
- * \param[out] error  Where to store error
+ * \param[in,out] out    Output object
+ * \param[out]    error  Where to store error
  */
 static void
-show_shadow_instance(GError **error)
+show_shadow_instance(pcmk__output_t *out, GError **error)
 {
     if (get_instance_from_env(error) == pcmk_rc_ok) {
-        printf("%s\n", options.instance);
+        bool quiet_orig = out->quiet;
+
+        out->quiet = true;
+        out->message(out, "shadow",
+                     options.instance, NULL, NULL, NULL, shadow_disp_instance);
+        out->quiet = quiet_orig;
     }
 }
 
@@ -756,16 +1032,17 @@ show_shadow_instance(GError **error)
  * \internal
  * \brief Switch to the given shadow instance
  *
- * \param[out] error  Where to store error
+ * \param[in,out] out    Output object
+ * \param[out]    error  Where to store error
  */
 static void
-switch_shadow_instance(GError **error)
+switch_shadow_instance(pcmk__output_t *out, GError **error)
 {
     char *filename = NULL;
 
     filename = get_shadow_file(options.instance);
     if (check_file_exists(filename, true, error) == pcmk_rc_ok) {
-        shadow_setup(true, error);
+        shadow_setup(out, true, error);
     }
     free(filename);
 }
@@ -881,7 +1158,7 @@ static GOptionEntry addl_entries[] = {
 };
 
 static GOptionContext *
-build_arg_context(pcmk__common_args_t *args)
+build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
 {
     const char *desc = NULL;
     GOptionContext *context = NULL;
@@ -899,7 +1176,8 @@ build_arg_context(pcmk__common_args_t *args)
            "cluster:\n\n"
            "\t# crm_shadow --commit myShadow\n\n";
 
-    context = pcmk__build_arg_context(args, NULL, NULL, "<query>|<command>");
+    context = pcmk__build_arg_context(args, "text (default), xml", group,
+                                      "<query>|<command>");
     g_option_context_set_description(context, desc);
 
     pcmk__add_arg_group(context, "queries", "Queries:",
@@ -914,16 +1192,31 @@ build_arg_context(pcmk__common_args_t *args)
 int
 main(int argc, char **argv)
 {
+    int rc = pcmk_rc_ok;
+    pcmk__output_t *out = NULL;
+
     GError *error = NULL;
 
+    GOptionGroup *output_group = NULL;
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
-    gchar **processed_args = pcmk__cmdline_preproc(argv, "ceCDrsv");
-    GOptionContext *context = build_arg_context(args);
+    gchar **processed_args = pcmk__cmdline_preproc(argv, "CDcersv");
+    GOptionContext *context = build_arg_context(args, &output_group);
 
     crm_log_preinit(NULL, argc, argv);
 
+    pcmk__register_formats(output_group, formats);
+
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
+        goto done;
+    }
+
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    if (rc != pcmk_rc_ok) {
+        exit_code = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Error creating output format %s: %s", args->output_ty,
+                    pcmk_rc_str(rc));
         goto done;
     }
 
@@ -947,14 +1240,11 @@ main(int argc, char **argv)
     }
 
     if (args->version) {
-        g_strfreev(processed_args);
-        pcmk__free_arg_context(context);
-
-        /* FIXME: When crm_shadow is converted to use formatted output,
-         * this can go.
-         */
-        pcmk__cli_help('v');
+        out->version(out, false);
+        goto done;
     }
+
+    pcmk__register_messages(out, fmt_functions);
 
     if (options.cmd == shadow_cmd_none) {
         // @COMPAT: Create a default command if other tools have one
@@ -985,34 +1275,34 @@ main(int argc, char **argv)
             commit_shadow_file(&error);
             break;
         case shadow_cmd_create:
-            create_shadow_from_cib(false, &error);
+            create_shadow_from_cib(out, false, &error);
             break;
         case shadow_cmd_create_empty:
-            create_shadow_empty(&error);
+            create_shadow_empty(out, &error);
             break;
         case shadow_cmd_reset:
-            create_shadow_from_cib(true, &error);
+            create_shadow_from_cib(out, true, &error);
             break;
         case shadow_cmd_delete:
-            delete_shadow_file(&error);
+            delete_shadow_file(out, &error);
             break;
         case shadow_cmd_diff:
-            show_shadow_diff(&error);
+            show_shadow_diff(out, &error);
             break;
         case shadow_cmd_display:
-            show_shadow_contents(&error);
+            show_shadow_contents(out, &error);
             break;
         case shadow_cmd_edit:
             edit_shadow_file(&error);
             break;
         case shadow_cmd_file:
-            show_shadow_filename(&error);
+            show_shadow_filename(out, &error);
             break;
         case shadow_cmd_switch:
-            switch_shadow_instance(&error);
+            switch_shadow_instance(out, &error);
             break;
         case shadow_cmd_which:
-            show_shadow_instance(&error);
+            show_shadow_instance(out, &error);
             break;
         default:
             // Should never reach this point
@@ -1023,13 +1313,15 @@ done:
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
 
-    pcmk__output_and_clear_error(&error, NULL);
+    pcmk__output_and_clear_error(&error, out);
 
-    if (needs_teardown) {
-        // Teardown message should be the last thing we output
-        shadow_teardown();
-    }
     free(options.instance);
     g_free(options.validate_with);
+
+    if (out != NULL) {
+        out->finish(out, exit_code, true, NULL);
+        pcmk__output_free(out);
+    }
+
     crm_exit(exit_code);
 }
