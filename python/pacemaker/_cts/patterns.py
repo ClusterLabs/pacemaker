@@ -274,7 +274,7 @@ class Corosync2Patterns(BasePatterns):
             r"pacemaker-.* Connection to cib_.* (failed|closed)",
             r"pacemaker-attrd.*:.*Lost connection to the CIB manager",
             r"pacemaker-controld.*:.*Lost connection to the CIB manager",
-            r"pacemaker-controld.*I_ERROR.*crmd_cib_connection_destroy",
+            r"pacemaker-controld.*I_ERROR.*handle_cib_disconnect",
             r"pacemaker-controld.* State transition .* S_RECOVERY",
             r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
             r"pacemaker-controld.*Could not recover from internal error",
