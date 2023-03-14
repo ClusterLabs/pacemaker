@@ -60,6 +60,7 @@ API_request_base	= command-output	\
 			  crm_mon		\
 			  crm_resource		\
 			  crm_rule \
+			  crm_shadow		\
 			  crm_simulate		\
 			  crmadmin		\
 			  digests		\
@@ -75,6 +76,7 @@ API_base		= $(API_request_base)	\
 			  failure		\
 			  fence-event 		\
 			  generic-list		\
+			  instruction		\
 			  item			\
 			  node-attrs		\
 			  node-history		\
