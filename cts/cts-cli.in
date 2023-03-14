@@ -2962,7 +2962,8 @@ for t in $tests; do
     # test we also need to compare against the XML output of the crm_mon
     # program. There, these are shown as human readable strings (like the
     # output of the `date` command).
-    sed -e 's/cib-last-written.*>/>/'\
+    sed -e 's|\(<cib.*\) cib-last-written[^/]*/>|\1/>|' \
+        -e 's|\(<cib.*\) cib-last-written[^/]*>|\1>|' \
         -e 's/Last updated: .*/Last updated:/' \
         -e 's/Last change: .*/Last change:/' \
         -e 's/(version .*)/(version)/' \
@@ -2985,7 +2986,8 @@ for t in $tests; do
         -e 's/.*\(update_validation\)@.*\.c:[0-9][0-9]*)/\1/g' \
         -e 's/.*\(apply_upgrade\)@.*\.c:[0-9][0-9]*)/\1/g' \
         -e "s/ last-rc-change=['\"][-+A-Za-z0-9: ]*['\"],\{0,1\}//" \
-        -e 's|^/tmp/cts-cli\.shadow\.[^/]*/|cts-cli.shadow/|' \
+        -e 's|^/tmp/cts-cli\.shadow\.[^/]*/|/tmp/cts-cli.shadow/|' \
+        -e 's|"/tmp/cts-cli\.shadow\.[^/]*/|"/tmp/cts-cli.shadow/|' \
         -e 's|^/tmp/cts-cli\.validity\.bad.xml\.[^:]*:|validity.bad.xml:|'\
         -e 's/^Entity: line [0-9][0-9]*: //'\
         -e 's/\(validation ([0-9][0-9]* of \)[0-9][0-9]*\().*\)/\1X\2/' \

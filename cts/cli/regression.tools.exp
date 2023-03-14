@@ -5943,11 +5943,11 @@ cts-cli
 =#=#=#= End test: Get active shadow instance (copied) - OK (0) =#=#=#=
 * Passed: crm_shadow     - Get active shadow instance (copied)
 =#=#=#= Begin test: Get active shadow instance's file name (copied) =#=#=#=
-cts-cli.shadow/shadow.cts-cli
+/tmp/cts-cli.shadow/shadow.cts-cli
 =#=#=#= End test: Get active shadow instance's file name (copied) - OK (0) =#=#=#=
 * Passed: crm_shadow     - Get active shadow instance's file name (copied)
 =#=#=#= Begin test: Get active shadow instance's contents (copied) =#=#=#=
-<cib epoch="1" num_updates="173" admin_epoch="1" >
+<cib epoch="1" num_updates="173" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
