@@ -68,7 +68,6 @@ enum shadow_disp_flags {
     shadow_disp_diff     = (1 << 3),
 };
 
-static bool needs_teardown = false;
 static crm_exit_t exit_code = CRM_EX_OK;
 
 static struct {
@@ -805,10 +804,11 @@ done:
  * \internal
  * \brief Delete the shadow file
  *
- * \param[out] error  Where to store error
+ * \param[in,out] out  Output object
+ * \param[out]    error  Where to store error
  */
 static void
-delete_shadow_file(GError **error)
+delete_shadow_file(pcmk__output_t *out, GError **error)
 {
     char *filename = NULL;
 
@@ -829,7 +829,7 @@ delete_shadow_file(GError **error)
                     "Could not remove shadow instance '%s': %s",
                     options.instance, strerror(errno));
     } else {
-        needs_teardown = true;
+        shadow_teardown(out);
     }
     free(filename);
 }
@@ -1284,7 +1284,7 @@ main(int argc, char **argv)
             create_shadow_from_cib(out, true, &error);
             break;
         case shadow_cmd_delete:
-            delete_shadow_file(&error);
+            delete_shadow_file(out, &error);
             break;
         case shadow_cmd_diff:
             show_shadow_diff(out, &error);
@@ -1315,10 +1315,6 @@ done:
 
     pcmk__output_and_clear_error(&error, out);
 
-    if (needs_teardown) {
-        // Teardown message should be the last thing we output
-        shadow_teardown(out);
-    }
     free(options.instance);
     g_free(options.validate_with);
 
