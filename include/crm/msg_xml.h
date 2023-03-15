@@ -24,9 +24,9 @@ extern "C" {
  * attribute names).
  *
  * For consistency, new constants should start with "PCMK_", followed by "XE"
- * for XML element names and "XA" for XML attribute names. Old names that don't
- * follow this policy should eventually be deprecated and replaced with names
- * that do.
+ * for XML element names, "XA" for XML attribute names, and "META" for meta
+ * attribute names. Old names that don't follow this policy should eventually be
+ * deprecated and replaced with names that do.
  */
 
 /*
@@ -48,6 +48,14 @@ extern "C" {
  */
 #define PCMK_XA_PROMOTED_MAX_LEGACY         "master-max"
 #define PCMK_XA_PROMOTED_NODE_MAX_LEGACY    "master-node-max"
+
+
+/*
+ * Meta attributes
+ */
+
+#  define PCMK_META_ENABLED                 "enabled"
+
 
 /*
  * Older constants that don't follow current naming
