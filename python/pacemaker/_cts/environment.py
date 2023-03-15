@@ -23,13 +23,13 @@ class Environment(object):
         self["DoFencing"] = True
         self["XmitLoss"] = "0.0"
         self["RecvLoss"] = "0.0"
-        self["ClobberCIB"] = 0
+        self["ClobberCIB"] = False
         self["CIBfilename"] = None
-        self["CIBResource"] = 0
+        self["CIBResource"] = False
         self["DoBSC"]    = 0
         self["oprofile"] = []
-        self["warn-inactive"] = 0
-        self["ListTests"] = 0
+        self["warn-inactive"] = False
+        self["ListTests"] = False
         self["benchmark"] = 0
         self["LogWatcher"] = "any"
         self["SyslogFacility"] = "daemon"
@@ -42,14 +42,14 @@ class Environment(object):
         self["notification-recipient"] = "/var/lib/pacemaker/notify.log"
         self["loop-minutes"] = 60
         self["valgrind-procs"] = "pacemaker-attrd pacemaker-based pacemaker-controld pacemaker-execd pacemaker-fenced pacemaker-schedulerd"
-        self["experimental-tests"] = 0
-        self["container-tests"] = 0
-        self["valgrind-tests"] = 0
-        self["unsafe-tests"] = 1
-        self["loop-tests"] = 1
+        self["experimental-tests"] = False
+        self["container-tests"] = False
+        self["valgrind-tests"] = False
+        self["unsafe-tests"] = True
+        self["loop-tests"] = True
         self["scenario"] = "random"
-        self["stats"] = 0
-        self["continue"] = 0
+        self["stats"] = False
+        self["continue"] = False
 
         self.RandomGen = random.Random()
         self.logger = LogFactory()
@@ -60,7 +60,7 @@ class Environment(object):
         self.target = "localhost"
 
         self.parse_args(args)
-        if self["ListTests"] == 0:
+        if not self["ListTests"]:
             self.validate()
             self.discover()
 
@@ -285,8 +285,8 @@ class Environment(object):
                 self["node-limit"] = int(args[i+1])
 
             elif args[i] == "-r" or args[i] == "--populate-resources":
-                self["CIBResource"] = 1
-                self["ClobberCIB"] = 1
+                self["CIBResource"] = True
+                self["ClobberCIB"] = True
 
             elif args[i] == "--outputfile":
                 skipthis=1
@@ -302,8 +302,8 @@ class Environment(object):
             elif args[i] == "--ip" or args[i] == "--test-ip-base":
                 skipthis=1
                 self["IPBase"] = args[i+1]
-                self["CIBResource"] = 1
-                self["ClobberCIB"] = 1
+                self["CIBResource"] = True
+                self["ClobberCIB"] = True
 
             elif args[i] == "--oprofile":
                 skipthis=1
@@ -313,7 +313,7 @@ class Environment(object):
                 self["TruncateLog"]=1
 
             elif args[i] == "--list-tests" or args[i] == "--list" :
-                self["ListTests"]=1
+                self["ListTests"] = True
 
             elif args[i] == "--benchmark":
                 self["benchmark"]=1
@@ -326,7 +326,7 @@ class Environment(object):
                 RemoteFactory().enable_qarsh()
 
             elif args[i] == "--yes" or args[i] == "-y":
-                self["continue"] = 1
+                self["continue"] = True
             elif args[i] == "--stonith" or args[i] == "--fencing":
                 skipthis=1
                 if args[i+1] == "1" or args[i+1] == "yes":
@@ -396,7 +396,7 @@ class Environment(object):
                 skipthis=1
 
             elif args[i] == "--clobber-cib" or args[i] == "-c":
-                self["ClobberCIB"] = 1
+                self["ClobberCIB"] = True
                 
             elif args[i] == "--cib-filename":
                 skipthis=1
@@ -490,7 +490,7 @@ class Environment(object):
                 self.SeedRandom(args[i+1])
 
             elif args[i] == "--warn-inactive":
-                self["warn-inactive"] = 1
+                self["warn-inactive"] = True
 
             elif args[i] == "--schema":
                 skipthis=1
@@ -529,14 +529,14 @@ class Environment(object):
                 skipthis = 1
 
             elif args[i] == "--valgrind-tests":
-                self["valgrind-tests"] = 1
+                self["valgrind-tests"] = True
 
             elif args[i] == "--valgrind-procs":
                 self["valgrind-procs"] = args[i+1]
                 skipthis = 1
 
             elif args[i] == "--no-loop-tests":
-                self["loop-tests"] = 0
+                self["loop-tests"] = False
 
             elif args[i] == "--loop-minutes":
                 skipthis=1
@@ -546,13 +546,13 @@ class Environment(object):
                     self.usage(args[i])
 
             elif args[i] == "--no-unsafe-tests":
-                self["unsafe-tests"] = 0
+                self["unsafe-tests"] = False
 
             elif args[i] == "--experimental-tests":
-                self["experimental-tests"] = 1
+                self["experimental-tests"] = True
 
             elif args[i] == "--container-tests":
-                self["container-tests"] = 1
+                self["container-tests"] = True
 
             elif args[i] == "--set":
                 skipthis=1

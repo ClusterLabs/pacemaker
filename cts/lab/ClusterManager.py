@@ -665,7 +665,7 @@ class ClusterManager(UserDict):
             self.log("Node %s is not up." % node)
             return None
 
-        if not node in self.CIBsync and self.Env["ClobberCIB"] == 1:
+        if not node in self.CIBsync and self.Env["ClobberCIB"]:
             self.CIBsync[node] = 1
             self.rsh(node, "rm -f " + BuildOptions.CIB_DIR + "/cib*")
 

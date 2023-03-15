@@ -77,7 +77,7 @@ if __name__ == '__main__':
 
     Audits = AuditList(cm)
 
-    if Environment["ListTests"] == 1:
+    if Environment["ListTests"]:
         Tests = TestList(cm, Audits)
         LogFactory().log("Total %d tests"%len(Tests))
         for test in Tests :

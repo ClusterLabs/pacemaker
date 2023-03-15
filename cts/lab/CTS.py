@@ -135,7 +135,7 @@ class NodeStatus(object):
             timeout = timeout - 1
 
         LogFactory().log("%s did not come up within %d tries" % (node, Timeout))
-        if self.Env["continue"] == 1:
+        if self.Env["continue"]:
             answer = "Y"
         else:
             try:

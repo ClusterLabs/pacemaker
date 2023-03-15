@@ -1635,7 +1635,7 @@ class SplitBrainTest(CTSTest):
         # trying to continue with in a messed up state
         if not self.CM.cluster_stable(1200):
             self.failure("Reformed cluster not stable")
-            if self.Env["continue"] == 1:
+            if self.Env["continue"]:
                 answer = "Y"
             else:
                 try:

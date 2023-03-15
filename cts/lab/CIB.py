@@ -310,7 +310,7 @@ class CIB12(ConfigBase):
             alerts.commit()
 
         # Add resources?
-        if self.CM.Env["CIBResource"] == 1:
+        if self.CM.Env["CIBResource"]:
             self.add_resources()
 
         if self.CM.cluster_monitor == 1:
@@ -438,7 +438,7 @@ class ConfigFactory(object):
         self.register("pacemaker20", CIB20, CM, self)
         self.register("pacemaker30", CIB30, CM, self)
 #        self.register("hae", HASI, CM, self)
-        if self.CM.Env["ListTests"] == 0:
+        if not self.CM.Env["ListTests"]:
             self.target = self.CM.Env["nodes"][0]
         self.tmpfile = None
 

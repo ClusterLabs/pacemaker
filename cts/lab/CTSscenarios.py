@@ -176,7 +176,7 @@ A partially set up scenario is torn down if it fails during setup.
 
         if not test.teardown(nodechoice):
             self.ClusterManager.log("Teardown failed")
-            if self.ClusterManager.Env["continue"] == 1:
+            if self.ClusterManager.Env["continue"]:
                 answer = "Y"
             else:
                 try:
@@ -271,7 +271,7 @@ A partially set up scenario is torn down if it fails during setup.
             else:
                 break
         else:
-            if self.ClusterManager.Env["continue"] == 1:
+            if self.ClusterManager.Env["continue"]:
                 answer = "Y"
             else:
                 try:
