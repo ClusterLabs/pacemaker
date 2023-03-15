@@ -37,7 +37,7 @@ class Environment:
         self["scenario"] = "random"
 
         self.random_gen = random.Random()
-        self.logger = LogFactory()
+        self._logger = LogFactory()
 
         self._seed_random()
         self.rsh = RemoteFactory().getInstance()
@@ -63,7 +63,7 @@ class Environment:
 
         keys.sort()
         for key in keys:
-            self.logger.debug("Environment["+key+"]:\t"+str(self[key]))
+            self._logger.debug("Environment["+key+"]:\t"+str(self[key]))
 
     def keys(self):
         return list(self.data.keys())
@@ -108,7 +108,7 @@ class Environment:
                     socket.gethostbyname_ex(n)
                     self._nodes.append(n)
                 except:
-                    self.logger.log(node+" not found in DNS... aborting")
+                    self._logger.log(node+" not found in DNS... aborting")
                     raise
 
             self.filter_nodes()
@@ -207,19 +207,19 @@ class Environment:
 
             if not self["IPBase"]:
                 self["IPBase"] = " fe80::1234:56:7890:1000"
-                self.logger.log("Could not determine an offset for IPaddr resources.  Perhaps nmap is not installed on the nodes.")
-                self.logger.log("Defaulting to '%s', use --test-ip-base to override" % self["IPBase"])
+                self._logger.log("Could not determine an offset for IPaddr resources.  Perhaps nmap is not installed on the nodes.")
+                self._logger.log("Defaulting to '%s', use --test-ip-base to override" % self["IPBase"])
 
             elif int(self["IPBase"].split('.')[3]) >= 240:
-                self.logger.log("Could not determine an offset for IPaddr resources. Upper bound is too high: %s %s"
+                self._logger.log("Could not determine an offset for IPaddr resources. Upper bound is too high: %s %s"
                                 % (self["IPBase"], self["IPBase"].split('.')[3]))
                 self["IPBase"] = " fe80::1234:56:7890:1000"
-                self.logger.log("Defaulting to '%s', use --test-ip-base to override" % self["IPBase"])
+                self._logger.log("Defaulting to '%s', use --test-ip-base to override" % self["IPBase"])
 
     def filter_nodes(self):
         if self["node-limit"] > 0:
             if len(self["nodes"]) > self["node-limit"]:
-                self.logger.log("Limiting the number of nodes configured=%d (max=%d)"
+                self._logger.log("Limiting the number of nodes configured=%d (max=%d)"
                                 %(len(self["nodes"]), self["node-limit"]))
 
                 while len(self["nodes"]) > self["node-limit"]:
