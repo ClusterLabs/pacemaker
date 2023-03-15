@@ -1,16 +1,20 @@
 """ Test environment classes for Pacemaker's Cluster Test Suite (CTS)
 """
 
+__all__ = ["EnvFactory"]
 __copyright__ = "Copyright 2014-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
-import sys, time, os, socket, random
+import os
+import random
+import socket
+import sys
+import time
 
 from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.remote import RemoteFactory
 
-class Environment(object):
-
+class Environment:
     def __init__(self, args):
         self.data = {}
         self.Nodes = []
@@ -96,14 +100,13 @@ class Environment(object):
         if key == "nodes":
             return self.Nodes
 
-        elif key == "Name":
+        if key == "Name":
             return self.get_stack_short()
 
-        elif key in self.data:
+        if key in self.data:
             return self.data[key]
 
-        else:
-            return None
+        return None
 
     def __setitem__(self, key, value):
         if key == "Stack":
@@ -122,7 +125,7 @@ class Environment(object):
                 try:
                     n = node.strip()
                     socket.gethostbyname_ex(n)
-                    self.Nodes.append(n) 
+                    self.Nodes.append(n)
                 except:
                     self.logger.log(node+" not found in DNS... aborting")
                     raise
@@ -138,7 +141,7 @@ class Environment(object):
 
     def set_stack(self, name):
         # Normalize stack names
-        if name == "corosync" or name == "cs" or name == "mcp":
+        if name in ["corosync", "cs", "mcp"]:
             self.data["Stack"] = "corosync 2+"
 
         else:
@@ -146,19 +149,18 @@ class Environment(object):
 
     def get_stack_short(self):
         # Create the Cluster Manager object
-        if not "Stack" in self.data:
+        if "Stack" not in self.data:
             return "unknown"
 
-        elif self.data["Stack"] == "corosync 2+":
+        if self.data["Stack"] == "corosync 2+":
             return "crm-corosync"
 
-        else:
-            LogFactory().log("Unknown stack: "+self["stack"])
-            raise ValueError("Unknown stack: "+self["stack"])
+        LogFactory().log("Unknown stack: "+self["stack"])
+        raise ValueError("Unknown stack: "+self["stack"])
 
     def detect_syslog(self):
         # Detect syslog variant
-        if not "syslogd" in self.data:
+        if "syslogd" not in self.data:
             if self["have_systemd"]:
                 # Systemd
                 (_, lines) = self.rsh(self.target, "systemctl list-units | grep syslog.*\.service.*active.*running | sed 's:.service.*::'", verbose=1)
@@ -168,7 +170,7 @@ class Environment(object):
                 (_, lines) = self.rsh(self.target, "chkconfig --list | grep syslog.*on | awk '{print $1}' | head -n 1", verbose=1)
                 self["syslogd"] = lines[0].strip()
 
-            if not "syslogd" in self.data or not self["syslogd"]:
+            if "syslogd" not in self.data or not self["syslogd"]:
                 # default
                 self["syslogd"] = "rsyslog"
 
@@ -178,10 +180,9 @@ class Environment(object):
             (rc, _) = self.rsh(node, "systemctl disable %s" % service)
             return rc
 
-        else:
-            # SYS-V
-            (rc, _) = self.rsh(node, "chkconfig %s off" % service)
-            return rc
+        # SYS-V
+        (rc, _) = self.rsh(node, "chkconfig %s off" % service)
+        return rc
 
     def enable_service(self, node, service):
         if self["have_systemd"]:
@@ -189,10 +190,9 @@ class Environment(object):
             (rc, _) = self.rsh(node, "systemctl enable %s" % service)
             return rc
 
-        else:
-            # SYS-V
-            (rc, _) = self.rsh(node, "chkconfig %s on" % service)
-            return rc
+        # SYS-V
+        (rc, _) = self.rsh(node, "chkconfig %s on" % service)
+        return rc
 
     def service_is_enabled(self, node, service):
         if self["have_systemd"]:
@@ -205,20 +205,19 @@ class Environment(object):
             (rc, _) = self.rsh(node, "systemctl is-enabled %s | grep enabled" % service)
             return rc == 0
 
-        else:
-            # SYS-V
-            (rc, _) = self.rsh(node, "chkconfig --list | grep -e %s.*on" % service)
-            return rc == 0
+        # SYS-V
+        (rc, _) = self.rsh(node, "chkconfig --list | grep -e %s.*on" % service)
+        return rc == 0
 
     def detect_at_boot(self):
         # Detect if the cluster starts at boot
-        if not "at-boot" in self.data:
+        if "at-boot" not in self.data:
             self["at-boot"] = self.service_is_enabled(self.target, "corosync") \
                               or self.service_is_enabled(self.target, "pacemaker")
 
     def detect_ip_offset(self):
         # Try to determine an offset for IPaddr resources
-        if self["CIBResource"] and not "IPBase" in self.data:
+        if self["CIBResource"] and "IPBase" not in self.data:
             (_, lines) = self.rsh(self.target, "ip addr | grep inet | grep -v -e link -e inet6 -e '/32' -e ' lo' | awk '{print $2}'", verbose=0)
             network = lines[0].strip()
 
@@ -241,11 +240,12 @@ class Environment(object):
             if len(self["nodes"]) > self["node-limit"]:
                 self.logger.log("Limiting the number of nodes configured=%d (max=%d)"
                                 %(len(self["nodes"]), self["node-limit"]))
+
                 while len(self["nodes"]) > self["node-limit"]:
                     self["nodes"].pop(len(self["nodes"])-1)
 
     def validate(self):
-        if len(self["nodes"]) < 1:
+        if not self["nodes"]:
             print("No nodes specified!")
             sys.exit(1)
 
@@ -258,10 +258,11 @@ class Environment(object):
         for ip in socket.gethostbyname_ex(exerciser)[2]:
             if ip != "127.0.0.1":
                 exerciser = ip
-                break;
+                break
+
         self["cts-exerciser"] = exerciser
 
-        if not "have_systemd" in self.data:
+        if "have_systemd" not in self.data:
             (rc, _) = self.rsh(self.target, "systemctl list-units", verbose=0)
             self["have_systemd"] = rc == 0
 
@@ -327,42 +328,53 @@ class Environment(object):
 
             elif args[i] == "--yes" or args[i] == "-y":
                 self["continue"] = True
+
             elif args[i] == "--stonith" or args[i] == "--fencing":
                 skipthis=1
+
                 if args[i+1] == "1" or args[i+1] == "yes":
                     self["DoFencing"] = True
+
                 elif args[i+1] == "0" or args[i+1] == "no":
                     self["DoFencing"] = False
+
                 elif args[i+1] == "rhcs" or args[i+1] == "xvm" or args[i+1] == "virt":
                     self["DoStonith"]=1
                     self["stonith-type"] = "fence_xvm"
+
                 elif args[i+1] == "scsi":
                     self["DoStonith"]=1
                     self["stonith-type"] = "fence_scsi"
+
                 elif args[i+1] == "ssh" or args[i+1] == "lha":
                     self["DoStonith"]=1
                     self["stonith-type"] = "external/ssh"
                     self["stonith-params"] = "hostlist=all,livedangerously=yes"
+
                 elif args[i+1] == "north":
                     self["DoStonith"]=1
                     self["stonith-type"] = "fence_apc"
                     self["stonith-params"] = "ipaddr=north-apc,login=apc,passwd=apc,pcmk_host_map=north-01:2;north-02:3;north-03:4;north-04:5;north-05:6;north-06:7;north-07:9;north-08:10;north-09:11;north-10:12;north-11:13;north-12:14;north-13:15;north-14:18;north-15:17;north-16:19;"
+
                 elif args[i+1] == "south":
                     self["DoStonith"]=1
                     self["stonith-type"] = "fence_apc"
                     self["stonith-params"] = "ipaddr=south-apc,login=apc,passwd=apc,pcmk_host_map=south-01:2;south-02:3;south-03:4;south-04:5;south-05:6;south-06:7;south-07:9;south-08:10;south-09:11;south-10:12;south-11:13;south-12:14;south-13:15;south-14:18;south-15:17;south-16:19;"
+
                 elif args[i+1] == "east":
                     self["DoStonith"]=1
                     self["stonith-type"] = "fence_apc"
                     self["stonith-params"] = "ipaddr=east-apc,login=apc,passwd=apc,pcmk_host_map=east-01:2;east-02:3;east-03:4;east-04:5;east-05:6;east-06:7;east-07:9;east-08:10;east-09:11;east-10:12;east-11:13;east-12:14;east-13:15;east-14:18;east-15:17;east-16:19;"
+
                 elif args[i+1] == "west":
                     self["DoStonith"]=1
                     self["stonith-type"] = "fence_apc"
                     self["stonith-params"] = "ipaddr=west-apc,login=apc,passwd=apc,pcmk_host_map=west-01:2;west-02:3;west-03:4;west-04:5;west-05:6;west-06:7;west-07:9;west-08:10;west-09:11;west-10:12;west-11:13;west-12:14;west-13:15;west-14:18;west-15:17;west-16:19;"
+
                 elif args[i+1] == "openstack":
                     self["DoStonith"]=1
                     self["stonith-type"] = "fence_openstack"
-                    
+
                     print("Obtaining OpenStack credentials from the current environment")
                     self["stonith-params"] = "region=%s,tenant=%s,auth=%s,user=%s,password=%s" % (
                         os.environ['OS_REGION_NAME'],
@@ -371,11 +383,11 @@ class Environment(object):
                         os.environ['OS_USERNAME'],
                         os.environ['OS_PASSWORD']
                     )
-                    
+
                 elif args[i+1] == "rhevm":
                     self["DoStonith"]=1
                     self["stonith-type"] = "fence_rhevm"
-                    
+
                     print("Obtaining RHEV-M credentials from the current environment")
                     self["stonith-params"] = "login=%s,passwd=%s,ipaddr=%s,ipport=%s,ssl=1,shell_timeout=10" % (
                         os.environ['RHEVM_USERNAME'],
@@ -383,7 +395,7 @@ class Environment(object):
                         os.environ['RHEVM_SERVER'],
                         os.environ['RHEVM_PORT'],
                     )
-                    
+
                 else:
                     self.usage(args[i+1])
 
@@ -397,7 +409,7 @@ class Environment(object):
 
             elif args[i] == "--clobber-cib" or args[i] == "-c":
                 self["ClobberCIB"] = True
-                
+
             elif args[i] == "--cib-filename":
                 skipthis=1
                 self["CIBfilename"] = args[i+1]
@@ -408,6 +420,7 @@ class Environment(object):
                 except ValueError:
                     print("--xmit-loss parameter should be float")
                     self.usage(args[i+1])
+
                 skipthis=1
                 self["XmitLoss"] = args[i+1]
 
@@ -417,6 +430,7 @@ class Environment(object):
                 except ValueError:
                     print("--recv-loss parameter should be float")
                     self.usage(args[i+1])
+
                 skipthis=1
                 self["RecvLoss"] = args[i+1]
 
@@ -465,17 +479,19 @@ class Environment(object):
                         os.environ['RHEVM_USERNAME'],
                         os.environ['RHEVM_PASSWORD'],
                         os.environ['RHEVM_SERVER'],
-                        os.environ['RHEVM_PORT'],
-                   )
+                        os.environ['RHEVM_PORT'])
+
                     self["IPBase"] = " fe80::1234:56:7890:3000"
 
                 if os.path.isfile(dsh_file):
                     self["nodes"] = []
                     f = open(dsh_file, 'r')
+
                     for line in f:
                         l = line.strip().rstrip()
                         if not l.startswith('#'):
                             self["nodes"].append(l)
+
                     f.close()
 
                 else:
@@ -484,7 +500,7 @@ class Environment(object):
             elif args[i] == "--syslog-facility" or args[i] == "--facility":
                 skipthis=1
                 self["SyslogFacility"] = args[i+1]
-                
+
             elif args[i] == "--seed":
                 skipthis=1
                 self.SeedRandom(args[i+1])
@@ -498,6 +514,7 @@ class Environment(object):
 
             elif args[i] == "--at-boot" or args[i] == "--cluster-starts-at-boot":
                 skipthis=1
+
                 if args[i+1] == "1" or args[i+1] == "yes":
                     self["at-boot"] = 1
                 elif args[i+1] == "0" or args[i+1] == "no":
@@ -512,6 +529,7 @@ class Environment(object):
                     self["Stack"] = "corosync"
                 else:
                     self["Stack"] = args[i+1]
+
                 skipthis=1
 
             elif args[i] == "--once":
@@ -540,6 +558,7 @@ class Environment(object):
 
             elif args[i] == "--loop-minutes":
                 skipthis=1
+
                 try:
                     self["loop-minutes"]=int(args[i+1])
                 except ValueError:
@@ -559,7 +578,7 @@ class Environment(object):
                 (name, value) = args[i+1].split('=')
                 self[name] = value
                 print("Setting %s = %s" % (name, value))
-                
+
             elif args[i] == "--help":
                 self.usage(args[i], 0)
 
@@ -627,12 +646,11 @@ Example:
 
         sys.exit(status)
 
-class EnvFactory(object):
+class EnvFactory:
     instance = None
-    def __init__(self):
-        pass
 
     def getInstance(self, args=None):
         if not EnvFactory.instance:
             EnvFactory.instance = Environment(args)
+
         return EnvFactory.instance
