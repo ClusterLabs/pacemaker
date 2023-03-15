@@ -35,7 +35,6 @@ class Environment:
         self["LogWatcher"] = "any"
         self["node-limit"] = 0
         self["scenario"] = "random"
-        self["stats"] = False
 
         self.random_gen = random.Random()
         self.logger = LogFactory()

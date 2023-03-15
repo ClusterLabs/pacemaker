@@ -91,7 +91,6 @@ A partially set up scenario is torn down if it fails during setup.
 
         self.ClusterManager.prepare()
         self.audit() # Also detects remote/local log config
-        self.ClusterManager.StatsMark(0)
         self.ClusterManager.ns.WaitForAllNodesToComeUp(self.ClusterManager.Env["nodes"])
 
         self.audit()
@@ -129,7 +128,6 @@ A partially set up scenario is torn down if it fails during setup.
             j = j - 1
 
         self.audit()
-        self.ClusterManager.StatsExtract()
         self.ClusterManager.install_support("uninstall")
 
     def incr(self, name):
@@ -157,7 +155,6 @@ A partially set up scenario is torn down if it fails during setup.
         where = ""
         did_run = 0
 
-        self.ClusterManager.StatsMark(testcount)
         self.ClusterManager.instance_errorstoignore_clear()
         self.ClusterManager.log(("Running test %s" % test.name).ljust(35) + (" (%s) " % nodechoice).ljust(15) + "[" + ("%d" % testcount).rjust(3) + "]")
 
