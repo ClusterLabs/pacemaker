@@ -151,7 +151,7 @@ A partially set up scenario is torn down if it fails during setup.
         raise ValueError("Abstract Class member (run_loop)")
 
     def run_test(self, test, testcount):
-        nodechoice = self.ClusterManager.Env.RandomNode()
+        nodechoice = self.ClusterManager.Env.random_node()
 
         ret = 1
         where = ""
@@ -303,7 +303,7 @@ class RandomTests(Scenario):
     def run_loop(self, Iterations):
         testcount = 1
         while testcount <= Iterations:
-            test = self.ClusterManager.Env.RandomGen.choice(self.Tests)
+            test = self.ClusterManager.Env.random_gen.choice(self.Tests)
             self.run_test(test, testcount)
             testcount += 1
 
@@ -313,7 +313,7 @@ class BasicSanity(Scenario):
     def run_loop(self, Iterations):
         testcount = 1
         while testcount <= Iterations:
-            test = self.Environment.RandomGen.choice(self.Tests)
+            test = self.Environment.random_gen.choice(self.Tests)
             self.run_test(test, testcount)
             testcount += 1
 

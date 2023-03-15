@@ -217,13 +217,13 @@ class CIB12(ConfigBase):
                     remote_node = "remote-" + node
 
                     # Randomly assign node to a fencing method
-                    ftype = self.CM.Env.RandomGen.choice(["levels-and", "levels-or ", "broadcast "])
+                    ftype = self.CM.Env.random_gen.choice(["levels-and", "levels-or ", "broadcast "])
 
                     # For levels-and, randomly choose targeting by node name or attribute
                     by = ""
                     if ftype == "levels-and":
                         node_id = self.get_node_id(node)
-                        if node_id == 0 or self.CM.Env.RandomGen.choice([True, False]):
+                        if node_id == 0 or self.CM.Env.random_gen.choice([True, False]):
                             by = " (by name)"
                         else:
                             attr_nodes[node] = node_id

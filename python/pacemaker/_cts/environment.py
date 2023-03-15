@@ -17,7 +17,7 @@ from pacemaker._cts.remote import RemoteFactory
 class Environment:
     def __init__(self, args):
         self.data = {}
-        self.Nodes = []
+        self._nodes = []
 
         self["DeadTime"] = 300
         self["StartTime"] = 300
@@ -56,10 +56,10 @@ class Environment:
         self["continue"] = False
         self["TruncateLog"] = False
 
-        self.RandomGen = random.Random()
+        self.random_gen = random.Random()
         self.logger = LogFactory()
 
-        self.SeedRandom()
+        self._seed_random()
         self.rsh = RemoteFactory().getInstance()
 
         self.target = "localhost"
@@ -69,12 +69,12 @@ class Environment:
             self.validate()
             self.discover()
 
-    def SeedRandom(self, seed=None):
+    def _seed_random(self, seed=None):
         if not seed:
             seed = int(time.time())
 
         self["RandSeed"] = seed
-        self.RandomGen.seed(str(seed))
+        self.random_gen.seed(str(seed))
 
     def dump(self):
         keys = []
@@ -99,7 +99,7 @@ class Environment:
             raise ValueError("Bad call to 'foo in X', should reference 'foo in X.keys()' instead")
 
         if key == "nodes":
-            return self.Nodes
+            return self._nodes
 
         if key == "Name":
             return self.get_stack_short()
@@ -118,7 +118,7 @@ class Environment:
             self.filter_nodes()
 
         elif key == "nodes":
-            self.Nodes = []
+            self._nodes = []
             for node in value:
                 # I don't think I need the IP address, etc. but this validates
                 # the node name against /etc/hosts and/or DNS, so it's a
@@ -126,7 +126,7 @@ class Environment:
                 try:
                     n = node.strip()
                     socket.gethostbyname_ex(n)
-                    self.Nodes.append(n)
+                    self._nodes.append(n)
                 except:
                     self.logger.log(node+" not found in DNS... aborting")
                     raise
@@ -136,9 +136,9 @@ class Environment:
         else:
             self.data[key] = value
 
-    def RandomNode(self):
-        '''Choose a random node from the cluster'''
-        return self.RandomGen.choice(self["nodes"])
+    def random_node(self):
+        """ Choose a random node from the cluster """
+        return self.random_gen.choice(self["nodes"])
 
     def set_stack(self, name):
         # Normalize stack names
@@ -504,7 +504,7 @@ class Environment:
 
             elif args[i] == "--seed":
                 skipthis=1
-                self.SeedRandom(args[i+1])
+                self._seed_random(args[i+1])
 
             elif args[i] == "--warn-inactive":
                 self["warn-inactive"] = True

@@ -450,7 +450,7 @@ class StonithdTest(CTSTest):
         watch = self.create_watch(watchpats, 30 + self.Env["DeadTime"] + self.Env["StableTime"] + self.Env["StartTime"])
         watch.setwatch()
 
-        origin = self.Env.RandomGen.choice(self.Env["nodes"])
+        origin = self.Env.random_gen.choice(self.Env["nodes"])
 
         (rc, _) = self.rsh(origin, "stonith_admin --reboot %s -VVVVVV" % node)
 
@@ -1292,7 +1292,7 @@ class ResourceRecover(CTSTest):
     def choose_resource(self, node, resourcelist):
         """ Choose a random resource to target """
 
-        self.rid = self.Env.RandomGen.choice(resourcelist)
+        self.rid = self.Env.random_gen.choice(resourcelist)
         self.rid_alt = self.rid
         (_, lines) = self.rsh(node, "crm_resource -c", verbose=1)
         for line in lines:
@@ -1400,9 +1400,9 @@ class ComponentFail(CTSTest):
         node_is_dc = self.CM.is_node_dc(node, None)
 
         # select a component to kill
-        chosen = self.Env.RandomGen.choice(self.complist)
+        chosen = self.Env.random_gen.choice(self.complist)
         while chosen.dc_only == 1 and node_is_dc == 0:
-            chosen = self.Env.RandomGen.choice(self.complist)
+            chosen = self.Env.random_gen.choice(self.complist)
 
         self.debug("...component %s (dc=%d,boot=%d)" % (chosen.name, node_is_dc,chosen.triggersreboot))
         self.incr(chosen.name)
@@ -1561,7 +1561,7 @@ class SplitBrainTest(CTSTest):
             partitions = {}
             p_max = len(self.Env["nodes"])
             for node in self.Env["nodes"]:
-                p = self.Env.RandomGen.randint(1, p_max)
+                p = self.Env.random_gen.randint(1, p_max)
                 if not p in partitions:
                     partitions[p] = []
                 partitions[p].append(node)
@@ -2068,8 +2068,8 @@ class NearQuorumPointTest(CTSTest):
         stonith = self.CM.prepare_fencing_watcher("NearQuorumPoint")
         #decide what to do with each node
         for node in self.Env["nodes"]:
-            action = self.Env.RandomGen.choice(["start","stop"])
-            #action = self.Env.RandomGen.choice(["start","stop","no change"])
+            action = self.Env.random_gen.choice(["start","stop"])
+            #action = self.Env.random_gen.choice(["start","stop","no change"])
             if action == "start" :
                 startset.append(node)
             elif action == "stop" :
@@ -2629,7 +2629,7 @@ class RemoteDriver(CTSTest):
         self.fail_string = ""
         self.remote_node_added = 0
         self.remote_rsc_added = 0
-        self.remote_use_reconnect_interval = self.Env.RandomGen.choice([True,False])
+        self.remote_use_reconnect_interval = self.Env.random_gen.choice([True,False])
 
     def fail(self, msg):
         """ Mark test as failed. """
