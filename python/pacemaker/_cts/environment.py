@@ -44,10 +44,10 @@ class Environment:
 
         self.target = "localhost"
 
-        self.parse_args(args)
+        self._parse_args(args)
         if not self["ListTests"]:
-            self.validate()
-            self.discover()
+            self._validate()
+            self._discover()
 
     def _seed_random(self, seed=None):
         if not seed:
@@ -82,7 +82,7 @@ class Environment:
             return self._nodes
 
         if key == "Name":
-            return self.get_stack_short()
+            return self._get_stack_short()
 
         if key in self.data:
             return self.data[key]
@@ -91,11 +91,11 @@ class Environment:
 
     def __setitem__(self, key, value):
         if key == "Stack":
-            self.set_stack(value)
+            self._set_stack(value)
 
         elif key == "node-limit":
             self.data[key] = value
-            self.filter_nodes()
+            self._filter_nodes()
 
         elif key == "nodes":
             self._nodes = []
@@ -111,7 +111,7 @@ class Environment:
                     self._logger.log(node+" not found in DNS... aborting")
                     raise
 
-            self.filter_nodes()
+            self._filter_nodes()
 
         else:
             self.data[key] = value
@@ -120,7 +120,7 @@ class Environment:
         """ Choose a random node from the cluster """
         return self.random_gen.choice(self["nodes"])
 
-    def set_stack(self, name):
+    def _set_stack(self, name):
         # Normalize stack names
         if name in ["corosync", "cs", "mcp"]:
             self.data["Stack"] = "corosync 2+"
@@ -128,7 +128,7 @@ class Environment:
         else:
             raise ValueError("Unknown stack: "+name)
 
-    def get_stack_short(self):
+    def _get_stack_short(self):
         # Create the Cluster Manager object
         if "Stack" not in self.data:
             return "unknown"
@@ -139,7 +139,7 @@ class Environment:
         LogFactory().log("Unknown stack: "+self["stack"])
         raise ValueError("Unknown stack: "+self["stack"])
 
-    def detect_syslog(self):
+    def _detect_syslog(self):
         # Detect syslog variant
         if "syslogd" not in self.data:
             if self["have_systemd"]:
@@ -190,13 +190,13 @@ class Environment:
         (rc, _) = self.rsh(node, "chkconfig --list | grep -e %s.*on" % service)
         return rc == 0
 
-    def detect_at_boot(self):
+    def _detect_at_boot(self):
         # Detect if the cluster starts at boot
         if "at-boot" not in self.data:
             self["at-boot"] = self.service_is_enabled(self.target, "corosync") \
                               or self.service_is_enabled(self.target, "pacemaker")
 
-    def detect_ip_offset(self):
+    def _detect_ip_offset(self):
         # Try to determine an offset for IPaddr resources
         if self["CIBResource"] and "IPBase" not in self.data:
             (_, lines) = self.rsh(self.target, "ip addr | grep inet | grep -v -e link -e inet6 -e '/32' -e ' lo' | awk '{print $2}'", verbose=0)
@@ -216,7 +216,7 @@ class Environment:
                 self["IPBase"] = " fe80::1234:56:7890:1000"
                 self._logger.log("Defaulting to '%s', use --test-ip-base to override" % self["IPBase"])
 
-    def filter_nodes(self):
+    def _filter_nodes(self):
         if self["node-limit"] > 0:
             if len(self["nodes"]) > self["node-limit"]:
                 self._logger.log("Limiting the number of nodes configured=%d (max=%d)"
@@ -225,12 +225,12 @@ class Environment:
                 while len(self["nodes"]) > self["node-limit"]:
                     self["nodes"].pop(len(self["nodes"])-1)
 
-    def validate(self):
+    def _validate(self):
         if not self["nodes"]:
             print("No nodes specified!")
             sys.exit(1)
 
-    def discover(self):
+    def _discover(self):
         self.target = random.Random().choice(self["nodes"])
 
         exerciser = socket.gethostname()
@@ -247,11 +247,11 @@ class Environment:
             (rc, _) = self.rsh(self.target, "systemctl list-units", verbose=0)
             self["have_systemd"] = rc == 0
 
-        self.detect_syslog()
-        self.detect_at_boot()
-        self.detect_ip_offset()
+        self._detect_syslog()
+        self._detect_at_boot()
+        self._detect_ip_offset()
 
-    def parse_args(self, argv):
+    def _parse_args(self, argv):
         if not argv:
             argv = sys.argv[1:]
 
