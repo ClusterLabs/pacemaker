@@ -340,40 +340,40 @@ class Environment:
                     self["DoFencing"] = False
 
                 elif args[i+1] == "rhcs" or args[i+1] == "xvm" or args[i+1] == "virt":
-                    self["DoStonith"]=1
+                    self["DoFencing"] = True
                     self["stonith-type"] = "fence_xvm"
 
                 elif args[i+1] == "scsi":
-                    self["DoStonith"]=1
+                    self["DoFencing"] = True
                     self["stonith-type"] = "fence_scsi"
 
                 elif args[i+1] == "ssh" or args[i+1] == "lha":
-                    self["DoStonith"]=1
+                    self["DoFencing"] = True
                     self["stonith-type"] = "external/ssh"
                     self["stonith-params"] = "hostlist=all,livedangerously=yes"
 
                 elif args[i+1] == "north":
-                    self["DoStonith"]=1
+                    self["DoFencing"] = True
                     self["stonith-type"] = "fence_apc"
                     self["stonith-params"] = "ipaddr=north-apc,login=apc,passwd=apc,pcmk_host_map=north-01:2;north-02:3;north-03:4;north-04:5;north-05:6;north-06:7;north-07:9;north-08:10;north-09:11;north-10:12;north-11:13;north-12:14;north-13:15;north-14:18;north-15:17;north-16:19;"
 
                 elif args[i+1] == "south":
-                    self["DoStonith"]=1
+                    self["DoFencing"] = True
                     self["stonith-type"] = "fence_apc"
                     self["stonith-params"] = "ipaddr=south-apc,login=apc,passwd=apc,pcmk_host_map=south-01:2;south-02:3;south-03:4;south-04:5;south-05:6;south-06:7;south-07:9;south-08:10;south-09:11;south-10:12;south-11:13;south-12:14;south-13:15;south-14:18;south-15:17;south-16:19;"
 
                 elif args[i+1] == "east":
-                    self["DoStonith"]=1
+                    self["DoFencing"] = True
                     self["stonith-type"] = "fence_apc"
                     self["stonith-params"] = "ipaddr=east-apc,login=apc,passwd=apc,pcmk_host_map=east-01:2;east-02:3;east-03:4;east-04:5;east-05:6;east-06:7;east-07:9;east-08:10;east-09:11;east-10:12;east-11:13;east-12:14;east-13:15;east-14:18;east-15:17;east-16:19;"
 
                 elif args[i+1] == "west":
-                    self["DoStonith"]=1
+                    self["DoFencing"] = True
                     self["stonith-type"] = "fence_apc"
                     self["stonith-params"] = "ipaddr=west-apc,login=apc,passwd=apc,pcmk_host_map=west-01:2;west-02:3;west-03:4;west-04:5;west-05:6;west-06:7;west-07:9;west-08:10;west-09:11;west-10:12;west-11:13;west-12:14;west-13:15;west-14:18;west-15:17;west-16:19;"
 
                 elif args[i+1] == "openstack":
-                    self["DoStonith"]=1
+                    self["DoFencing"] = True
                     self["stonith-type"] = "fence_openstack"
 
                     print("Obtaining OpenStack credentials from the current environment")
@@ -386,7 +386,7 @@ class Environment:
                     )
 
                 elif args[i+1] == "rhevm":
-                    self["DoStonith"]=1
+                    self["DoFencing"] = True
                     self["stonith-type"] = "fence_rhevm"
 
                     print("Obtaining RHEV-M credentials from the current environment")
@@ -454,14 +454,14 @@ class Environment:
                 # Hacks to make my life easier
                 if args[i+1] == "virt1":
                     self["Stack"] = "corosync"
-                    self["DoStonith"]=1
+                    self["DoFencing"] = True
                     self["stonith-type"] = "fence_xvm"
                     self["stonith-params"] = "delay=0"
                     self["IPBase"] = " fe80::1234:56:7890:1000"
 
                 elif args[i+1] == "east16" or args[i+1] == "nsew":
                     self["Stack"] = "corosync"
-                    self["DoStonith"]=1
+                    self["DoFencing"] = True
                     self["stonith-type"] = "fence_apc"
                     self["stonith-params"] = "ipaddr=east-apc,login=apc,passwd=apc,pcmk_host_map=east-01:2;east-02:3;east-03:4;east-04:5;east-05:6;east-06:7;east-07:9;east-08:10;east-09:11;east-10:12;east-11:13;east-12:14;east-13:15;east-14:18;east-15:17;east-16:19;"
                     self["IPBase"] = " fe80::1234:56:7890:2000"
@@ -472,7 +472,7 @@ class Environment:
 
                 elif args[i+1] == "corosync8":
                     self["Stack"] = "corosync"
-                    self["DoStonith"]=1
+                    self["DoFencing"] = True
                     self["stonith-type"] = "fence_rhevm"
 
                     print("Obtaining RHEV-M credentials from the current environment")
