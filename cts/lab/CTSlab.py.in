@@ -67,7 +67,7 @@ if __name__ == '__main__':
         LogFactory().log("Unknown stack: "+Environment["stack"])
         sys.exit(1)
 
-    if Environment["TruncateLog"] == 1:
+    if Environment["TruncateLog"]:
         if Environment["OutputFile"] is None:
             LogFactory().log("Ignoring truncate request because no output file specified")
         else:

@@ -54,6 +54,7 @@ class Environment:
         self["scenario"] = "random"
         self["stats"] = False
         self["continue"] = False
+        self["TruncateLog"] = False
 
         self.RandomGen = random.Random()
         self.logger = LogFactory()
@@ -311,7 +312,7 @@ class Environment:
                 self["oprofile"] = args[i+1].split(' ')
 
             elif args[i] == "--trunc":
-                self["TruncateLog"]=1
+                self["TruncateLog"] = True
 
             elif args[i] == "--list-tests" or args[i] == "--list" :
                 self["ListTests"] = True
