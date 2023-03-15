@@ -19,7 +19,7 @@ class ScenarioComponent(object):
         self.Env = Env
 
     def IsApplicable(self):
-        '''Return TRUE if the current ScenarioComponent is applicable
+        '''Return True if the current ScenarioComponent is applicable
         in the given LabEnvironment given to the constructor.
         '''
 
@@ -84,7 +84,7 @@ A partially set up scenario is torn down if it fails during setup.
         for comp in self.Components:
             if not comp.IsApplicable():
                 return None
-        return 1
+        return True
 
     def SetUp(self):
         '''Set up the Scenario. Return TRUE on success.'''
@@ -346,7 +346,7 @@ as they might have been rebooted or crashed for some reason beforehand.
 
     def IsApplicable(self):
         '''BootCluster is so generic it is always Applicable'''
-        return 1
+        return True
 
     def SetUp(self, CM):
         '''Basic Cluster Manager startup.  Start everything'''
@@ -403,7 +403,7 @@ According to the manual page for ping:
         '''PingFests are always applicable ;-)
         '''
 
-        return 1
+        return True
 
     def SetUp(self, CM):
         '''Start the PingFest!'''
@@ -461,7 +461,7 @@ amount of packet loss present.
 
     def IsApplicable(self):
         '''always Applicable'''
-        return 1
+        return True
 
     def SetUp(self, CM):
         '''Reduce the reliability of communications'''
@@ -552,7 +552,7 @@ Test a rolling upgrade between two versions of the stack
         if not self.Env["previous-version"]:
             return None
 
-        return 1
+        return True
 
     def install(self, node, version):
 

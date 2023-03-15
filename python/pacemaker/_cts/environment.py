@@ -26,11 +26,11 @@ class Environment(object):
         self["ClobberCIB"] = False
         self["CIBfilename"] = None
         self["CIBResource"] = False
-        self["DoBSC"]    = 0
+        self["DoBSC"] = False
         self["oprofile"] = []
         self["warn-inactive"] = False
         self["ListTests"] = False
-        self["benchmark"] = 0
+        self["benchmark"] = False
         self["LogWatcher"] = "any"
         self["SyslogFacility"] = "daemon"
         self["LogFileName"] = "/var/log/messages"
@@ -316,10 +316,10 @@ class Environment(object):
                 self["ListTests"] = True
 
             elif args[i] == "--benchmark":
-                self["benchmark"]=1
+                self["benchmark"] = True
 
             elif args[i] == "--bsc":
-                self["DoBSC"] = 1
+                self["DoBSC"] = True
                 self["scenario"] = "basic-sanity"
 
             elif args[i] == "--qarsh":
