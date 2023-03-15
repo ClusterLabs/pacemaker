@@ -182,7 +182,7 @@ SysInfoStats() {
             cpu_type=$(system_profiler SPHardwareDataType | awk -F': ' '/^CPU Type/ {print $2; exit}')
             cpu_speed=$(system_profiler SPHardwareDataType | awk -F': ' '/^CPU Speed/ {print $2; exit}')
             cpu_cores=$(system_profiler SPHardwareDataType | awk -F': ' '/^Number Of/ {print $2; exit}')
-            cpu_load=$(uptime | awk '{ print $10 }')
+            cpu_load=$(uptime | awk -F 'load average: ' '{ print $2 }' | awk -F ', ' '{ print $2 }')
         ;;
         "FreeBSD")
             cpu_type=$(sysctl -in hw.model)
@@ -203,7 +203,7 @@ SysInfoStats() {
                 cpu_speed=$(awk -F': ' '/bogomips/ {print $2; exit}' /proc/cpuinfo)
                 cpu_cores=$(grep "^processor" /proc/cpuinfo | wc -l)
             fi
-            cpu_load=$(uptime | awk '{ print $10 }')
+            cpu_load=$(uptime | awk -F 'load average: ' '{ print $2 }' | awk -F ', ' '{ print $2 }')
 
             if [ -f /proc/meminfo ]; then
                 # meminfo results are in kB
