@@ -82,8 +82,8 @@ an e-mail address, a file name, whatever the particular agent supports.
 Alert Meta-Attributes
 #####################
    
-As with resource agents, meta-attributes can be configured for alert agents
-to affect how Pacemaker calls them.
+As with resources, meta-attributes can be configured for alerts to change
+whether and how Pacemaker calls them.
    
 .. table:: **Meta-Attributes of an Alert**
    :class: longtable
@@ -92,6 +92,16 @@ to affect how Pacemaker calls them.
    +------------------+---------------+-----------------------------------------------------+
    | Meta-Attribute   | Default       | Description                                         |
    +==================+===============+=====================================================+
+   | enabled          | true          | .. index::                                          |
+   |                  |               |    single: alert; meta-attribute, enabled           |
+   |                  |               |    single: meta-attribute; enabled (alert)          |
+   |                  |               |    single: enabled; alert meta-attribute            |
+   |                  |               |                                                     |
+   |                  |               | If false for an alert, the alert will not be used.  |
+   |                  |               | If true for an alert and false for a particular     |
+   |                  |               | recipient of that alert, that recipient will not be |
+   |                  |               | used.                                               |
+   +------------------+---------------+-----------------------------------------------------+
    | timestamp-format | %H:%M:%S.%06N | .. index::                                          |
    |                  |               |    single: alert; meta-attribute, timestamp-format  |
    |                  |               |    single: meta-attribute; timestamp-format (alert) |
@@ -110,7 +120,7 @@ to affect how Pacemaker calls them.
    |                  |               | amount of time, it will be terminated.              |
    +------------------+---------------+-----------------------------------------------------+
    
-Meta-attributes can be configured per alert agent and/or per recipient.
+Meta-attributes can be configured per alert and/or per recipient.
    
 .. topic:: Alert configuration with meta-attributes
 
