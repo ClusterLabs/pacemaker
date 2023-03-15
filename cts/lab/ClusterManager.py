@@ -16,12 +16,12 @@ from collections import UserDict
 from cts.CIB         import ConfigFactory
 from cts.CTS         import NodeStatus, Process
 from cts.CTStests    import AuditResource
-from cts.logging     import LogFactory
 from cts.watcher     import LogWatcher
 from cts.remote      import RemoteFactory
 from cts.environment import EnvFactory
 
 from pacemaker.buildoptions import BuildOptions
+from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.patterns import PatternSelector
 
 has_log_stats = {}

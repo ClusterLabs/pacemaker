@@ -5,7 +5,7 @@
 """
 
 __copyright__ = "Copyright 2009-2023 the Pacemaker project contributors"
-__license__ = "LGPLv2.1+"
+__license__ = "GNU General Public License version 2 or later (GPLv2+)"
 
 __all__ = ["Test", "Tests"]
 

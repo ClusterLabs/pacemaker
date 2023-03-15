@@ -11,7 +11,6 @@ CTS
 CTSscenarios
 CTStests
 environment
-logging
 patterns
 remote
 watcher
