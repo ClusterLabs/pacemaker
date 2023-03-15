@@ -20,7 +20,6 @@ class Environment(object):
         self["StableTime"] = 30
         self["tests"] = []
         self["IPagent"] = "IPaddr2"
-        self["DoStandby"] = 1
         self["DoFencing"] = 1
         self["XmitLoss"] = "0.0"
         self["RecvLoss"] = "0.0"
@@ -396,15 +395,6 @@ class Environment(object):
                 self["stonith-params"] = args[i+1]
                 skipthis=1
 
-            elif args[i] == "--standby":
-                skipthis=1
-                if args[i+1] == "1" or args[i+1] == "yes":
-                    self["DoStandby"] = 1
-                elif args[i+1] == "0" or args[i+1] == "no":
-                    self["DoStandby"] = 0
-                else:
-                    self.usage(args[i+1])
-
             elif args[i] == "--clobber-cib" or args[i] == "-c":
                 self["ClobberCIB"] = 1
                 
@@ -615,7 +605,6 @@ Additional (less common) options:
 \t [--trunc]                    truncate logfile before starting
 \t [--xmit-loss lost-rate(0.0-1.0)]
 \t [--recv-loss lost-rate(0.0-1.0)]
-\t [--standby (1 | 0 | yes | no)]
 \t [--fencing (1 | 0 | yes | no | rhcs | lha | openstack )]
 \t [--stonith-type type]
 \t [--stonith-args name=value]
