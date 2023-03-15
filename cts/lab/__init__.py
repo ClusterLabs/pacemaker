@@ -10,7 +10,6 @@ CTSaudits
 CTS
 CTSscenarios
 CTStests
-environment
 patterns
 watcher
 """

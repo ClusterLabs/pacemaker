@@ -8,8 +8,7 @@ import sys
 import time
 import traceback
 
-from cts.environment import EnvFactory
-
+from pacemaker._cts.environment import EnvFactory
 from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.remote import RemoteFactory
 
