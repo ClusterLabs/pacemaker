@@ -586,54 +586,55 @@ class Environment(object):
     def usage(self, arg, status=1):
         if status:
             print("Illegal argument %s" % arg)
-        print("usage: " + sys.argv[0] +" [options] number-of-iterations")
-        print("\nCommon options: ")
-        print("\t [--nodes 'node list']        list of cluster nodes separated by whitespace")
-        print("\t [--group | -g 'name']        use the nodes listed in the named DSH group (~/.dsh/groups/$name)")
-        print("\t [--limit-nodes max]          only use the first 'max' cluster nodes supplied with --nodes")
-        print("\t [--stack corosync]           which cluster stack is installed")
-        print("\t [--list-tests]               list the valid tests")
-        print("\t [--benchmark]                add the timing information")
-        print("\t ")
-        print("Options that CTS will usually auto-detect correctly: ")
-        print("\t [--logfile path]             where should the test software look for logs from cluster nodes")
-        print("\t [--syslog-facility name]     which syslog facility should the test software log to")
-        print("\t [--at-boot (1|0)]            does the cluster software start at boot time")
-        print("\t [--test-ip-base ip]          offset for generated IP address resources")
-        print("\t ")
-        print("Options for release testing: ")
-        print("\t [--populate-resources | -r]  generate a sample configuration")
-        print("\t [--choose name]              run only the named test")
-        print("\t [--stonith (1 | 0 | yes | no | rhcs | ssh)]")
-        print("\t [--once]                     run all valid tests once")
-        print("\t ")
-        print("Additional (less common) options: ")
-        print("\t [--clobber-cib | -c ]        erase any existing configuration")
-        print("\t [--outputfile path]          optional location for the test software to write logs to")
-        print("\t [--trunc]                    truncate logfile before starting")
-        print("\t [--xmit-loss lost-rate(0.0-1.0)]")
-        print("\t [--recv-loss lost-rate(0.0-1.0)]")
-        print("\t [--standby (1 | 0 | yes | no)]")
-        print("\t [--fencing (1 | 0 | yes | no | rhcs | lha | openstack )]")
-        print("\t [--stonith-type type]")
-        print("\t [--stonith-args name=value]")
-        print("\t [--bsc]")
-        print("\t [--notification-agent path]  script to configure for Pacemaker alerts")
-        print("\t [--notification-recipient r] recipient to pass to alert script")
-        print("\t [--no-loop-tests]            don't run looping/time-based tests")
-        print("\t [--no-unsafe-tests]          don't run tests that are unsafe for use with ocfs2/drbd")
-        print("\t [--valgrind-tests]           include tests using valgrind")
-        print("\t [--experimental-tests]       include experimental tests")
-        print("\t [--container-tests]          include pacemaker_remote tests that run in lxc container resources")
-        print("\t [--oprofile 'node list']     list of cluster nodes to run oprofile on]")
-        print("\t [--qarsh]                    use the QARSH backdoor to access nodes instead of SSH")
-        print("\t [--seed random_seed]")
-        print("\t [--set option=value]")
-        print("\t [--yes | -y]                 continue to run cts when there is an interaction whether to continue running pacemaker-cts")
-        print("\t ")
-        print("\t Example: ")
-        # @PYTHON@ would be better here but not worth making file this a .in
-        print("\t    python sys.argv[0] -g virt1 -r --stonith ssh --schema pacemaker-2.0 500")
+
+        print("""usage: %s [options] number-of-iterations
+
+Common options:
+\t [--nodes 'node list']        list of cluster nodes separated by whitespace
+\t [--group | -g 'name']        use the nodes listed in the named DSH group (~/.dsh/groups/$name)
+\t [--limit-nodes max]          only use the first 'max' cluster nodes supplied with --nodes
+\t [--stack corosync]           which cluster stack is installed
+\t [--list-tests]               list the valid tests
+\t [--benchmark]                add the timing information
+
+Options that CTS will usually auto-detect correctly:
+\t [--logfile path]             where should the test software look for logs from cluster nodes
+\t [--syslog-facility name]     which syslog facility should the test software log to
+\t [--at-boot (1|0)]            does the cluster software start at boot time
+\t [--test-ip-base ip]          offset for generated IP address resources
+
+Options for release testing:
+\t [--populate-resources | -r]  generate a sample configuration
+\t [--choose name]              run only the named test
+\t [--stonith (1 | 0 | yes | no | rhcs | ssh)]
+\t [--once]                     run all valid tests once
+
+Additional (less common) options:
+\t [--clobber-cib | -c ]        erase any existing configuration
+\t [--outputfile path]          optional location for the test software to write logs to
+\t [--trunc]                    truncate logfile before starting
+\t [--xmit-loss lost-rate(0.0-1.0)]
+\t [--recv-loss lost-rate(0.0-1.0)]
+\t [--standby (1 | 0 | yes | no)]
+\t [--fencing (1 | 0 | yes | no | rhcs | lha | openstack )]
+\t [--stonith-type type]
+\t [--stonith-args name=value]
+\t [--bsc]
+\t [--notification-agent path]  script to configure for Pacemaker alerts
+\t [--notification-recipient r] recipient to pass to alert script
+\t [--no-loop-tests]            don't run looping/time-based tests
+\t [--no-unsafe-tests]          don't run tests that are unsafe for use with ocfs2/drbd
+\t [--valgrind-tests]           include tests using valgrind
+\t [--experimental-tests]       include experimental tests
+\t [--container-tests]          include pacemaker_remote tests that run in lxc container resources
+\t [--oprofile 'node list']     list of cluster nodes to run oprofile on]
+\t [--qarsh]                    use the QARSH backdoor to access nodes instead of SSH
+\t [--seed random_seed]
+\t [--set option=value]
+\t [--yes | -y]                 continue to run cts when there is an interaction whether to continue running pacemaker-cts
+
+Example:
+\t python %s -g virt1 -r --stonith ssh --schema pacemaker-2.0 500""" % (sys.argv[0], sys.argv[0]))
 
         sys.exit(status)
 
