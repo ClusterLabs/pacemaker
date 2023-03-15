@@ -1015,7 +1015,7 @@ class ClusterManager(UserDict):
                     r"pacemaker-controld.*exited with status 2",
                     ], badnews_ignore = common_ignore, dc_only=1)
 
-        if self.Env["DoFencing"] == 1 :
+        if self.Env["DoFencing"]:
             complist.append(Process(self, "stoniths", triggersreboot=self.fastfail, dc_pats = [
                         r"pacemaker-controld.*CRIT.*: Fencing daemon connection failed",
                         "Attempting connection to fencing daemon",

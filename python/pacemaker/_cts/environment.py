@@ -20,7 +20,7 @@ class Environment(object):
         self["StableTime"] = 30
         self["tests"] = []
         self["IPagent"] = "IPaddr2"
-        self["DoFencing"] = 1
+        self["DoFencing"] = True
         self["XmitLoss"] = "0.0"
         self["RecvLoss"] = "0.0"
         self["ClobberCIB"] = 0
@@ -330,9 +330,9 @@ class Environment(object):
             elif args[i] == "--stonith" or args[i] == "--fencing":
                 skipthis=1
                 if args[i+1] == "1" or args[i+1] == "yes":
-                    self["DoFencing"]=1
+                    self["DoFencing"] = True
                 elif args[i+1] == "0" or args[i+1] == "no":
-                    self["DoFencing"]=0
+                    self["DoFencing"] = False
                 elif args[i+1] == "rhcs" or args[i+1] == "xvm" or args[i+1] == "virt":
                     self["DoStonith"]=1
                     self["stonith-type"] = "fence_xvm"

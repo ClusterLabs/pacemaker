@@ -202,23 +202,23 @@ class CTSTest(object):
         return self.is_applicable_common()
 
     def is_applicable_common(self):
-        '''Return TRUE if we are applicable in the current test configuration'''
+        '''Return True if we are applicable in the current test configuration'''
         #raise ValueError("Abstract Class member (is_applicable)")
 
         if self.is_loop and not self.Env["loop-tests"]:
-            return 0
+            return False
         elif self.is_unsafe and not self.Env["unsafe-tests"]:
-            return 0
+            return False
         elif self.is_valgrind and not self.Env["valgrind-tests"]:
-            return 0
+            return False
         elif self.is_experimental and not self.Env["experimental-tests"]:
-            return 0
+            return False
         elif self.is_container and not self.Env["container-tests"]:
-            return 0
+            return False
         elif self.Env["benchmark"] and self.benchmark == 0:
-            return 0
+            return False
 
-        return 1
+        return True
 
     def find_ocfs2_resources(self, node):
         self.r_o2cb = None
@@ -513,12 +513,12 @@ class StonithdTest(CTSTest):
 
     def is_applicable(self):
         if not self.is_applicable_common():
-            return 0
+            return False
 
         if "DoFencing" in list(self.Env.keys()):
             return self.Env["DoFencing"]
 
-        return 1
+        return True
 
 AllTestClasses.append(StonithdTest)
 
@@ -1045,7 +1045,7 @@ class BandwidthTest(CTSTest):
 
     def is_applicable(self):
         '''BandwidthTest never applicable'''
-        return 0
+        return False
 
 AllTestClasses.append(BandwidthTest)
 
@@ -1666,7 +1666,7 @@ class SplitBrainTest(CTSTest):
 
     def is_applicable(self):
         if not self.is_applicable_common():
-            return 0
+            return False
         return len(self.Env["nodes"]) > 2
 
 AllTestClasses.append(SplitBrainTest)
@@ -1809,7 +1809,7 @@ class Reattach(CTSTest):
         ]
 
     def is_applicable(self):
-        return 1
+        return True
 
 AllTestClasses.append(Reattach)
 
@@ -1941,9 +1941,9 @@ class HAETest(CTSTest):
 
     def is_applicable(self):
         if not self.is_applicable_common():
-            return 0
+            return False
         if self.Env["Schema"] == "hae":
-            return 1
+            return True
         return None
 
 
@@ -2150,7 +2150,7 @@ class NearQuorumPointTest(CTSTest):
         return self.failure()
 
     def is_applicable(self):
-        return 1
+        return True
 
 AllTestClasses.append(NearQuorumPointTest)
 
@@ -2334,7 +2334,7 @@ class BSC_AddResource(CTSTest):
 
     def is_applicable(self):
         if self.Env["DoBSC"]:
-            return 1
+            return True
         return None
 
 AllTestClasses.append(BSC_AddResource)
@@ -2395,7 +2395,7 @@ class SimulStopLite(CTSTest):
 
     def is_applicable(self):
         '''SimulStopLite is a setup test and never applicable'''
-        return 0
+        return False
 
 
 class SimulStartLite(CTSTest):
@@ -2494,7 +2494,7 @@ class SimulStartLite(CTSTest):
 
     def is_applicable(self):
         '''SimulStartLite is a setup test and never applicable'''
-        return 0
+        return False
 
 
 def TestList(cm, audits):
