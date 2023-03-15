@@ -471,13 +471,7 @@ class Environment:
                     self.usage(args[i+1])
 
             elif args[i] == "--stack":
-                if args[i+1] == "fedora" or args[i+1] == "fedora-17" or args[i+1] == "fedora-18":
-                    self["Stack"] = "corosync"
-                elif args[i+1] == "rhel-7":
-                    self["Stack"] = "corosync"
-                else:
-                    self["Stack"] = args[i+1]
-
+                self["Stack"] = args[i+1]
                 skipthis=1
 
             elif args[i] == "--once":
