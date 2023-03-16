@@ -84,12 +84,11 @@ class RemoteExec:
     def _fixcmd(self, cmd):
         return re.sub("\'", "'\\''", cmd)
 
-    def _cmd(self, *args):
+    def _cmd(self, args):
 
         '''Compute the string that will run the given command on the
         given remote system'''
 
-        args= args[0]
         sysname = args[0]
         command = args[1]
 
