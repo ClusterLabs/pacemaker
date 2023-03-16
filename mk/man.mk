@@ -29,11 +29,8 @@ HELP2MAN_ARGS = -N --section 8 --name "Part of the Pacemaker cluster resource ma
 # help. Putting the real tool in MAN8DEPS helps detect when the wrapped help
 # needs updating.
 #
-# If a ".inc" file exists, the tool has been converted to use glib for
-# argument parsing, otherwise it still uses the libcrmcommon functions.
-#
-# @TODO Drop MAN8DEPS once we've converted all tools to libpacemaker API calls
-#       and all wrappers to C code.
+# @TODO Drop MAN8DEPS once we've moved all tool functionality to libpacemaker,
+#       and all wrappers are converted from shell scripts to C code.
 %.8:	% $(MAN8DEPS)
 	$(AM_V_at)chmod a+x $(abs_builddir)/$<
 	PATH=$(abs_builddir):$$PATH $(abs_builddir)/$< --version >/dev/null

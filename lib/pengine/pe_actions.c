@@ -1121,14 +1121,14 @@ pe_fence_op(pe_node_t *node, const char *op, bool optional,
                 data = pe__compare_fencing_digest(match, agent, node, data_set);
                 if(data->rc == RSC_DIGEST_ALL) {
                     optional = FALSE;
-                    crm_notice("Unfencing Pacemaker Remote node %s "
-                               "because the definition of %s changed",
-                               pe__node_name(node), match->id);
+                    crm_notice("Unfencing node %s because the definition of "
+                               "%s changed", pe__node_name(node), match->id);
                     if (!pcmk__is_daemon && data_set->priv != NULL) {
                         pcmk__output_t *out = data_set->priv;
+
                         out->info(out,
-                                  "notice: Unfencing Pacemaker Remote node %s "
-                                  "because the definition of %s changed",
+                                  "notice: Unfencing node %s because the "
+                                  "definition of %s changed",
                                   pe__node_name(node), match->id);
                     }
                 }
@@ -1145,7 +1145,7 @@ pe_fence_op(pe_node_t *node, const char *op, bool optional,
             CRM_ASSERT((key != NULL) && (value != NULL));
             g_hash_table_insert(stonith_op->meta, key, value);
             g_string_free(digests_all, TRUE);
-            
+
             key = strdup(XML_OP_ATTR_DIGESTS_SECURE);
             value = strdup((const char *) digests_secure->str);
             CRM_ASSERT((key != NULL) && (value != NULL));
