@@ -75,12 +75,11 @@ class RemoteExec:
     '''
 
     def __init__(self, command, cp_command, silent=False):
-        self.command = command
-        self.cp_command = cp_command
-        self.silent = silent
-        self.logger = LogFactory()
-
-        self.OurNode=os.uname()[1].lower()
+        self._command = command
+        self._cp_command = cp_command
+        self._logger = LogFactory()
+        self._silent = silent
+        self._our_node = os.uname()[1].lower()
 
     def _fixcmd(self, cmd):
         return re.sub("\'", "'\\''", cmd)
@@ -94,20 +93,20 @@ class RemoteExec:
         sysname = args[0]
         command = args[1]
 
-        if sysname == None or sysname.lower() == self.OurNode or sysname == "localhost":
+        if sysname == None or sysname.lower() == self._our_node or sysname == "localhost":
             ret = command
         else:
-            ret = self.command + " " + sysname + " '" + self._fixcmd(command) + "'"
+            ret = self._command + " " + sysname + " '" + self._fixcmd(command) + "'"
 
         return ret
 
-    def log(self, args):
-        if not self.silent:
-            self.logger.log(args)
+    def _log(self, args):
+        if not self._silent:
+            self._logger.log(args)
 
-    def debug(self, args):
-        if not self.silent:
-            self.logger.debug(args)
+    def _debug(self, args):
+        if not self._silent:
+            self._logger.debug(args)
 
     def call_async(self, node, command, delegate=None):
         aproc = AsyncCmd(node, self._cmd([node, command]), delegate=delegate)
@@ -128,7 +127,7 @@ class RemoteExec:
         proc = Popen(self._cmd([node, command]),
                      stdout = PIPE, stderr = PIPE, close_fds = True, shell = True)
 
-        if not synchronous and proc.pid > 0 and not self.silent:
+        if not synchronous and proc.pid > 0 and not self._silent:
             aproc = AsyncCmd(node, command, proc=proc, delegate=delegate)
             aproc.start()
             return 0
@@ -140,12 +139,12 @@ class RemoteExec:
                 result = proc.stdout.readlines()
             proc.stdout.close()
         else:
-            self.log("No stdout stream")
+            self._log("No stdout stream")
 
         rc = proc.wait()
 
         if not silent:
-            self.debug("cmd: target=%s, rc=%d: %s" % (node, rc, command))
+            self._debug("cmd: target=%s, rc=%d: %s" % (node, rc, command))
 
         result = convert2string(result)
 
@@ -161,22 +160,22 @@ class RemoteExec:
 
         if not silent:
             for err in errors:
-                self.debug("cmd: stderr: %s" % err)
+                self._debug("cmd: stderr: %s" % err)
 
         if stdout == 0:
             if not silent and result:
                 for line in result:
-                    self.debug("cmd: stdout: %s" % line)
+                    self._debug("cmd: stdout: %s" % line)
             return rc
 
         return (rc, result)
 
     def cp(self, source, target, silent=False):
         '''Perform a remote copy'''
-        cpstring = self.cp_command  + " \'" + source + "\'"  + " \'" + target + "\'"
+        cpstring = self._cp_command  + " \'" + source + "\'"  + " \'" + target + "\'"
         rc = os.system(cpstring)
         if not silent:
-            self.debug("cmd: rc=%d: %s" % (rc, cpstring))
+            self._debug("cmd: rc=%d: %s" % (rc, cpstring))
 
         return rc
 
