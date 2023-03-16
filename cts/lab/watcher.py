@@ -11,7 +11,7 @@ import threading
 
 from pacemaker.buildoptions import BuildOptions
 from pacemaker._cts.logging import LogFactory
-from pacemaker._cts.remote import RemoteExec, RemoteFactory, trace_lw
+from pacemaker._cts.remote import RemoteExec, RemoteFactory
 
 log_watcher_bin = BuildOptions.DAEMON_DIR + "/cts-log-watcher"
 
@@ -237,10 +237,6 @@ class LogWatcher(RemoteExec):
             raise
             #self.hosts = self.Env["nodes"]
 
-        if trace_lw:
-            self.debug_level = 3
-            silent = False
-
         if not silent:
             for regex in self.regexes:
                 self.debug("Looking for regex: "+regex)
@@ -322,9 +318,6 @@ class LogWatcher(RemoteExec):
         '''
         if timeout == None: timeout = self.Timeout
 
-        if trace_lw:
-            silent = False
-
         lines=0
         needlines=True
         begin=time.time()
@@ -395,9 +388,6 @@ class LogWatcher(RemoteExec):
         if timeout == None: timeout = self.Timeout
         save_regexes = self.regexes
         returnresult = []
-
-        if trace_lw:
-            silent = False
 
         if not silent:
             self.debug("starting search: timeout=%d" % timeout)

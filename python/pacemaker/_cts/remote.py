@@ -13,9 +13,6 @@ from threading import Thread
 
 from pacemaker._cts.logging import LogFactory
 
-trace_rsh=None
-trace_lw=None
-
 def convert2string(lines):
     if isinstance(lines, bytes):
         return lines.decode("utf-8")
@@ -83,9 +80,6 @@ class RemoteExec:
         self.silent = silent
         self.logger = LogFactory()
 
-        if trace_rsh:
-            self.silent = False
-
         self.OurNode=os.uname()[1].lower()
 
     def _fixcmd(self, cmd):
@@ -128,9 +122,6 @@ class RemoteExec:
         on the remote machine.  The first argument is name of the machine to
         run it on.
         '''
-
-        if trace_rsh:
-            silent = False
 
         rc = 0
         result = None
@@ -184,8 +175,6 @@ class RemoteExec:
         '''Perform a remote copy'''
         cpstring = self.cp_command  + " \'" + source + "\'"  + " \'" + target + "\'"
         rc = os.system(cpstring)
-        if trace_rsh:
-            silent = False
         if not silent:
             self.debug("cmd: rc=%d: %s" % (rc, cpstring))
 
