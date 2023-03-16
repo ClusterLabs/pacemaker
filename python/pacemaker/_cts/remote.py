@@ -1,12 +1,12 @@
 """ Remote command runner for Pacemaker's Cluster Test Suite (CTS)
 """
 
+__all__ = ["RemoteExec", "RemoteFactory"]
 __copyright__ = "Copyright 2014-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import re
 import os
-import sys
 
 from subprocess import Popen,PIPE
 from threading import Thread
@@ -16,13 +16,17 @@ from pacemaker._cts.logging import LogFactory
 def convert2string(lines):
     if isinstance(lines, bytes):
         return lines.decode("utf-8")
-    elif isinstance(lines, list):
-        aList = []
+
+    if isinstance(lines, list):
+        lst = []
         for line in lines:
             if isinstance(line, bytes):
                 line = line.decode("utf-8")
-            aList.append(line)
-        return aList
+
+            lst.append(line)
+
+        return lst
+
     return lines
 
 class AsyncCmd(Thread):
@@ -92,10 +96,10 @@ class RemoteExec:
         sysname = args[0]
         command = args[1]
 
-        if sysname == None or sysname.lower() == self._our_node or sysname == "localhost":
+        if sysname is None or sysname.lower() == self._our_node or sysname == "localhost":
             ret = command
         else:
-            ret = self._command + " " + sysname + " '" + self._fixcmd(command) + "'"
+            ret = "%s %s '%s'" % (self._command, sysname, self._fixcmd(command))
 
         return ret
 
@@ -111,7 +115,6 @@ class RemoteExec:
         aproc = AsyncCmd(node, self._cmd([node, command]), delegate=delegate)
         aproc.start()
         return aproc
-
 
     def __call__(self, node, command, stdout=0, synchronous=1, silent=False, blocking=True, delegate=None):
         '''Run the given command on the given remote system
@@ -165,16 +168,18 @@ class RemoteExec:
             if not silent and result:
                 for line in result:
                     self._debug("cmd: stdout: %s" % line)
+
             return rc
 
         return (rc, result)
 
     def cp(self, source, target, silent=False):
         '''Perform a remote copy'''
-        cpstring = self._cp_command  + " \'" + source + "\'"  + " \'" + target + "\'"
-        rc = os.system(cpstring)
+        cmd = "%s '%s' '%s'" % (self._cp_command, source, target)
+        rc = os.system(cmd)
+
         if not silent:
-            self._debug("cmd: rc=%d: %s" % (rc, cpstring))
+            self._debug("cmd: rc=%d: %s" % (rc, cmd))
 
         return rc
 
