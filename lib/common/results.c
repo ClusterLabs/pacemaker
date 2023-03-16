@@ -293,6 +293,10 @@ static const struct pcmk__rc_info {
       "Two or more XML elements have the same ID",
       -pcmk_err_generic,
     },
+    { "pcmk_rc_disabled",
+      "Disabled",
+      -pcmk_err_generic,
+    },
 };
 
 /*!
