@@ -33,10 +33,15 @@ extern "C" {
  * XML elements
  */
 
+#define PCMK_XE_DATE_EXPRESSION             "date_expression"
+#define PCMK_XE_OP_EXPRESSION               "op_expression"
+
 /* This has been deprecated as a CIB element (an alias for <clone> with
  * "promotable" set to "true") since 2.0.0.
  */
 #define PCMK_XE_PROMOTABLE_LEGACY           "master"
+
+#define PCMK_XE_RSC_EXPRESSION              "rsc_expression"
 
 
 /*
@@ -54,7 +59,7 @@ extern "C" {
  * Meta attributes
  */
 
-#  define PCMK_META_ENABLED                 "enabled"
+#define PCMK_META_ENABLED                   "enabled"
 
 
 /*
@@ -347,9 +352,6 @@ extern "C" {
 #  define XML_RULE_ATTR_BOOLEAN_OP	"boolean-op"
 
 #  define XML_TAG_EXPRESSION		"expression"
-#  define PCMK_XE_DATE_EXPRESSION	"date_expression"
-#  define PCMK_XE_OP_EXPRESSION		"op_expression"
-#  define PCMK_XE_RSC_EXPRESSION	"rsc_expression"
 #  define XML_EXPR_ATTR_ATTRIBUTE	"attribute"
 #  define XML_EXPR_ATTR_OPERATION	"operation"
 #  define XML_EXPR_ATTR_VALUE		"value"
