@@ -40,7 +40,7 @@ class XmlBase(CibBase):
         self.Factory.debug("Writing out %s" % label)
         fixed  = "HOME=/root CIB_file="+self.Factory.tmpfile
         fixed += " cibadmin --%s --scope %s %s --xml-text '%s'" % (operation, section, options, xml)
-        rc = self.Factory.rsh(self.Factory.target, fixed)
+        (rc, _) = self.Factory.rsh(self.Factory.target, fixed)
         if rc != 0:
             self.Factory.log("Configure call failed: "+fixed)
             sys.exit(1)

@@ -344,7 +344,8 @@ class ClusterManager(UserDict):
         stonith = self.prepare_fencing_watcher(node)
         watch.setwatch()
 
-        if self.rsh(node, self.templates["StartCmd"]) != 0:
+        (rc, _) = self.rsh(node, self.templates["StartCmd"])
+        if rc != 0:
             self.logger.log ("Warn: Start command failed on node %s" % (node))
             self.fencing_cleanup(node, stonith)
             return None
@@ -376,7 +377,7 @@ class ClusterManager(UserDict):
         else: self.debug("Starting %s on node %s" % (self["Name"], node))
 
         self.install_config(node)
-        self.rsh(node, self.templates["StartCmd"], synchronous=0)
+        self.rsh(node, self.templates["StartCmd"], synchronous=False)
         self.ShouldBeStatus[node] = "up"
         return 1
 
@@ -390,7 +391,8 @@ class ClusterManager(UserDict):
         if self.ShouldBeStatus[node] != "up" and force == False:
             return 1
 
-        if self.rsh(node, self.templates["StopCmd"]) == 0:
+        (rc, _) = self.rsh(node, self.templates["StopCmd"])
+        if rc == 0:
             # Make sure we can continue even if corosync leaks
             # fdata-* is the old name
             #self.rsh(node, "rm -rf /dev/shm/qb-* /dev/shm/fdata-*")
@@ -408,7 +410,7 @@ class ClusterManager(UserDict):
 
         self.debug("Stopping %s on node %s" % (self["Name"], node))
 
-        self.rsh(node, self.templates["StopCmd"], synchronous=0)
+        self.rsh(node, self.templates["StopCmd"], synchronous=False)
         self.ShouldBeStatus[node] = "down"
         return 1
 
@@ -417,7 +419,7 @@ class ClusterManager(UserDict):
         '''Force the cluster manager on a given node to reread its config
            This may be a no-op on certain cluster managers.
         '''
-        rc=self.rsh(node, self.templates["RereadCmd"])
+        (rc, _) = self.rsh(node, self.templates["RereadCmd"])
         if rc == 0:
             return 1
         else:
@@ -545,13 +547,13 @@ class ClusterManager(UserDict):
 
                 # Limit the amount of time we have asynchronous connectivity for
                 # Restore both sides as simultaneously as possible
-                self.rsh(target, self.templates["FixCommCmd"] % self.key_for_node(node), synchronous=0)
-                self.rsh(node, self.templates["FixCommCmd"] % self.key_for_node(target), synchronous=0)
+                self.rsh(target, self.templates["FixCommCmd"] % self.key_for_node(node), synchronous=False)
+                self.rsh(node, self.templates["FixCommCmd"] % self.key_for_node(target), synchronous=False)
                 self.debug("Communication restored between %s and %s" % (target, node))
 
     def reducecomm_node(self,node):
         '''reduce the communication between the nodes'''
-        rc = self.rsh(node, self.templates["ReduceCommCmd"]%(self.Env["XmitLoss"],self.Env["RecvLoss"]))
+        (rc, _) = self.rsh(node, self.templates["ReduceCommCmd"]%(self.Env["XmitLoss"],self.Env["RecvLoss"]))
         if rc == 0:
             return 1
         else:
@@ -562,7 +564,7 @@ class ClusterManager(UserDict):
         '''restore the saved communication between the nodes'''
         rc = 0
         if float(self.Env["XmitLoss"]) != 0 or float(self.Env["RecvLoss"]) != 0 :
-            rc = self.rsh(node, self.templates["RestoreCommCmd"]);
+            (rc, _) = self.rsh(node, self.templates["RestoreCommCmd"])
         if rc == 0:
             return 1
         else:
@@ -615,7 +617,7 @@ class ClusterManager(UserDict):
             log_stats_file = "%s/cts-stats.csv" % BuildOptions.DAEMON_DIR
             if host in has_log_stats:
                 self.rsh(host, '''bash %s %s stop''' % (log_stats_bin, log_stats_file))
-                (rc, lines) = self.rsh(host, '''cat %s''' % log_stats_file, stdout=2)
+                (_, lines) = self.rsh(host, '''cat %s''' % log_stats_file, verbose=1)
                 self.rsh(host, '''bash %s %s delete''' % (log_stats_bin, log_stats_file))
 
                 fname = "cts-stats-%d-nodes-%s.csv" % (len(self.Env["nodes"]), host)
@@ -645,12 +647,12 @@ class ClusterManager(UserDict):
                 script = re.sub("\$", "\\\$", script)
 
                 self.debug("Installing %s on %s" % (log_stats_bin, host))
-                self.rsh(host, '''echo "%s" > %s''' % (script, log_stats_bin), silent=True)
+                self.rsh(host, '''echo "%s" > %s''' % (script, log_stats_bin), verbose=0)
                 self.rsh(host, '''bash %s %s delete''' % (log_stats_bin, log_stats_file))
                 has_log_stats[host] = 1
 
             # Now mark it
-            self.rsh(host, '''bash %s %s mark %s''' % (log_stats_bin, log_stats_file, testnum), synchronous=0)
+            self.rsh(host, '''bash %s %s mark %s''' % (log_stats_bin, log_stats_file, testnum), synchronous=False)
 
     def errorstoignore(self):
         # At some point implement a more elegant solution that
@@ -703,10 +705,16 @@ class ClusterManager(UserDict):
         idle_watch = LogWatcher(self.Env["LogFileName"], watchpats, "ClusterIdle", hosts=[node], kind=self.Env["LogWatcher"])
         idle_watch.setwatch()
 
-        out = self.rsh(node, self.templates["StatusCmd"]%node, 1)
+        (_, out) = self.rsh(node, self.templates["StatusCmd"]%node, verbose=1)
+
+        if not out:
+            out = ""
+        else:
+            out = out[0].strip()
+
         self.debug("Node %s status: '%s'" %(node, out))
 
-        if not out or (out.find('ok') < 0):
+        if out.find('ok') < 0:
             if self.ShouldBeStatus[node] == "up":
                 self.log(
                     "Node status for %s is %s but we think it should be %s"
@@ -773,7 +781,7 @@ class ClusterManager(UserDict):
 
         for node in nodes.split():
             # have each node dump its current state
-            self.rsh(node, self.templates["StatusCmd"] % node, 1)
+            self.rsh(node, self.templates["StatusCmd"] % node, verbose=1)
 
         ret = idle_watch.look()
         while ret:
@@ -808,7 +816,10 @@ class ClusterManager(UserDict):
         rc = 0
 
         if not status_line:
-            status_line = self.rsh(node, self.templates["StatusCmd"]%node, 1)
+            (_, out) = self.rsh(node, self.templates["StatusCmd"]%node, verbose=1)
+
+            if out:
+                status_line = out[0].strip()
 
         if not status_line:
             rc = 0
@@ -826,7 +837,7 @@ class ClusterManager(UserDict):
         return rc
 
     def active_resources(self, node):
-        (rc, output) = self.rsh(node, """crm_resource -c""", None)
+        (_, output) = self.rsh(node, "crm_resource -c", verbose=1)
         resources = []
         for line in output:
             if re.search("^Resource", line):
@@ -841,7 +852,7 @@ class ClusterManager(UserDict):
             if self.ShouldBeStatus[node] == "up":
 
                 cmd = self.templates["RscRunning"] % (rid)
-                (rc, lines) = self.rsh(node, cmd, None)
+                (rc, lines) = self.rsh(node, cmd)
 
                 if rc == 127:
                     self.log("Command '%s' failed. Binary or pacemaker-cts package not installed?" % cmd)
@@ -857,11 +868,15 @@ class ClusterManager(UserDict):
 
         for node in self.Env["nodes"]:
             if self.ShouldBeStatus[node] == "up":
-                partition = self.rsh(node, self.templates["PartitionCmd"], 1)
+                (_, out) = self.rsh(node, self.templates["PartitionCmd"], verbose=1)
 
-                if not partition:
+                if not out:
                     self.log("no partition details for %s" % node)
-                elif len(partition) > 2:
+                    continue
+
+                partition = out[0].strip()
+
+                if len(partition) > 2:
                     nodes = partition.split()
                     nodes.sort()
                     partition = ' '.join(nodes)
@@ -894,7 +909,9 @@ class ClusterManager(UserDict):
 
         for node in node_list:
             if self.ShouldBeStatus[node] == "up":
-                quorum = self.rsh(node, self.templates["QuorumCmd"], 1)
+                (_, quorum) = self.rsh(node, self.templates["QuorumCmd"], verbose=1)
+                quorum = quorum[0].strip()
+
                 if quorum.find("1") != -1:
                     return 1
                 elif quorum.find("0") != -1:
@@ -1029,10 +1046,10 @@ class ClusterManager(UserDict):
         return complist
 
     def StandbyStatus(self, node):
-        out=self.rsh(node, self.templates["StandbyQueryCmd"] % node, 1)
+        (_, out) = self.rsh(node, self.templates["StandbyQueryCmd"] % node, verbose=1)
         if not out:
             return "off"
-        out = out[:-1]
+        out = out[0].strip()
         self.debug("Standby result: "+out)
         return out
 
@@ -1041,7 +1058,7 @@ class ClusterManager(UserDict):
     def SetStandbyMode(self, node, status):
         current_status = self.StandbyStatus(node)
         cmd = self.templates["StandbyCmd"] % (node, status)
-        ret = self.rsh(node, cmd)
+        self.rsh(node, cmd)
         return True
 
     def AddDummyRsc(self, node, rid):

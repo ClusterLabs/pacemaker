@@ -224,7 +224,7 @@ class CTSTest(object):
         self.r_o2cb = None
         self.r_ocfs2 = []
 
-        (rc, lines) = self.rsh(node, "crm_resource -c", None)
+        (_, lines) = self.rsh(node, "crm_resource -c", verbose=1)
         for line in lines:
             if re.search("^Resource", line):
                 r = AuditResource(self.CM, line)
@@ -288,11 +288,11 @@ class StopTest(CTSTest):
         failreason = None
         UnmatchedList = "||"
         if watch.unmatched:
-            (rc, output) = self.rsh(node, "/bin/ps axf", None)
+            (_, output) = self.rsh(node, "/bin/ps axf", verbose=1)
             for line in output:
                 self.debug(line)
 
-            (rc, output) = self.rsh(node, "/usr/sbin/dlm_tool dump 2>/dev/null", None)
+            (_, output) = self.rsh(node, "/usr/sbin/dlm_tool dump 2>/dev/null", verbose=1)
             for line in output:
                 self.debug(line)
 
@@ -452,7 +452,7 @@ class StonithdTest(CTSTest):
 
         origin = self.Env.RandomGen.choice(self.Env["nodes"])
 
-        rc = self.rsh(origin, "stonith_admin --reboot %s -VVVVVV" % node)
+        (rc, _) = self.rsh(origin, "stonith_admin --reboot %s -VVVVVV" % node)
 
         if rc == 124: # CRM_EX_TIMEOUT
             # Look for the patterns, usually this means the required
@@ -862,18 +862,18 @@ class ValgrindTest(CTSTest):
             if not rc:
                 self.failure("Couldn't shut down %s" % node)
 
-            rc = self.rsh(node, "grep -e indirectly.*lost:.*[1-9] -e definitely.*lost:.*[1-9] -e (ERROR|error).*SUMMARY:.*[1-9].*errors %s" % self.logger.logPat, 0)
+            (rc, _) = self.rsh(node, "grep -e indirectly.*lost:.*[1-9] -e definitely.*lost:.*[1-9] -e (ERROR|error).*SUMMARY:.*[1-9].*errors %s" % self.logger.logPat)
             if rc != 1:
                 leaked.append(node)
                 self.failure("Valgrind errors detected on %s" % node)
-                (rc, output) = self.rsh(node, "grep -e lost: -e SUMMARY: %s" % self.logger.logPat, None)
+                (_, output) = self.rsh(node, "grep -e lost: -e SUMMARY: %s" % self.logger.logPat, verbose=1)
                 for line in output:
                     self.logger.log(line)
-                (rc, output) = self.rsh(node, "cat %s" % self.logger.logPat, None)
+                (_, output) = self.rsh(node, "cat %s" % self.logger.logPat, verbose=1)
                 for line in output:
                     self.debug(line)
 
-        self.rsh(node, "rm -f %s" % self.logger.logPat, None)
+        self.rsh(node, "rm -f %s" % self.logger.logPat, verbose=1)
         return leaked
 
     def __call__(self, node):
@@ -968,7 +968,7 @@ class BandwidthTest(CTSTest):
         dumpcmd = "tcpdump -p -n -c 102 -i any udp port %d > %s 2>&1" \
         %                (port, fstmpfile)
 
-        rc = self.rsh(node, dumpcmd)
+        (rc, _) = self.rsh(node, dumpcmd)
         if rc == 0:
             farfile = "root@%s:%s" % (node, fstmpfile)
             self.rsh.cp(farfile, self.tempfile)
@@ -1131,7 +1131,7 @@ class MaintenanceMode(CTSTest):
 
     def managedRscList(self, node):
         rscList = []
-        (rc, lines) = self.rsh(node, "crm_resource -c", None)
+        (_, lines) = self.rsh(node, "crm_resource -c", verbose=1)
         for line in lines:
             if re.search("^Resource", line):
                 tmp = AuditResource(self.CM, line)
@@ -1146,7 +1146,7 @@ class MaintenanceMode(CTSTest):
         if not managed:
             managed_str = "unmanaged"
 
-        (rc, lines) = self.rsh(node, "crm_resource -c", None)
+        (_, lines) = self.rsh(node, "crm_resource -c", verbose=1)
         for line in lines:
             if re.search("^Resource", line):
                 tmp = AuditResource(self.CM, line)
@@ -1294,7 +1294,7 @@ class ResourceRecover(CTSTest):
 
         self.rid = self.Env.RandomGen.choice(resourcelist)
         self.rid_alt = self.rid
-        (rc, lines) = self.rsh(node, "crm_resource -c", None)
+        (_, lines) = self.rsh(node, "crm_resource -c", verbose=1)
         for line in lines:
             if line.startswith("Resource: "):
                 rsc = AuditResource(self.CM, line)
@@ -1311,7 +1311,7 @@ class ResourceRecover(CTSTest):
                                "crm_failcount --quiet --query --resource %s "
                                "--operation %s --interval %d "
                                "--node %s" % (self.rid, self.action,
-                               self.interval, node), None)
+                               self.interval, node), verbose=1)
         if rc != 0 or len(lines) != 1:
             self.logger.log("crm_failcount on %s failed (%d): %s" % (node, rc,
                             " // ".join(map(str.strip, lines))))
@@ -1420,7 +1420,7 @@ class ComponentFail(CTSTest):
             # Ignore actions for fence devices if fencer will respawn
             # (their registration will be lost, and probes will fail)
             self.okerrpatterns = [ self.templates["Pat:Fencing_active"] ]
-            (rc, lines) = self.rsh(node, "crm_resource -c", None)
+            (_, lines) = self.rsh(node, "crm_resource -c", verbose=1)
             for line in lines:
                 if re.search("^Resource", line):
                     r = AuditResource(self.CM, line)
@@ -1682,8 +1682,8 @@ class Reattach(CTSTest):
         self.is_unsafe = 0 # Handled by canrunnow()
 
     def _is_managed(self, node):
-        is_managed = self.rsh(node, "crm_attribute -t rsc_defaults -n is-managed -q -G -d true", 1)
-        is_managed = is_managed[:-1] # Strip off the newline
+        (_, is_managed) = self.rsh(node, "crm_attribute -t rsc_defaults -n is-managed -q -G -d true", verbose=1)
+        is_managed = is_managed[0].strip()
         return is_managed == "true"
 
     def _set_unmanaged(self, node):
@@ -1788,7 +1788,7 @@ class Reattach(CTSTest):
 
         # Ignore actions for STONITH resources
         ignore = []
-        (rc, lines) = self.rsh(node, "crm_resource -c", None)
+        (_, lines) = self.rsh(node, "crm_resource -c", verbose=1)
         for line in lines:
             if re.search("^Resource", line):
                 r = AuditResource(self.CM, line)
@@ -1886,7 +1886,7 @@ class HAETest(CTSTest):
     def wait_on_state(self, node, resource, expected_clones, attempts=240):
         while attempts > 0:
             active = 0
-            (rc, lines) = self.rsh(node, "crm_resource -r %s -W -Q" % resource, stdout=None)
+            (rc, lines) = self.rsh(node, "crm_resource -r %s -W -Q" % resource, verbose=1)
 
             # Hack until crm_resource does the right thing
             if rc == 0 and lines:
@@ -1921,7 +1921,7 @@ class HAETest(CTSTest):
     def find_dlm(self, node):
         self.r_dlm = None
 
-        (rc, lines) = self.rsh(node, "crm_resource -c", None)
+        (_, lines) = self.rsh(node, "crm_resource -c", verbose=1)
         for line in lines:
             if re.search("^Resource", line):
                 r = AuditResource(self.CM, line)
@@ -1954,7 +1954,7 @@ class HAERoleTest(HAETest):
         self.name = "HAERoleTest"
 
     def change_state(self, node, resource, target):
-        rc = self.rsh(node, "crm_resource -V -r %s -p target-role -v %s  --meta" % (resource, target))
+        (rc, _) = self.rsh(node, "crm_resource -V -r %s -p target-role -v %s  --meta" % (resource, target))
         return rc
 
     def __call__(self, node):
@@ -2002,7 +2002,7 @@ class HAEStandbyTest(HAETest):
         self.name = "HAEStandbyTest"
 
     def change_state(self, node, resource, target):
-        rc = self.rsh(node, "crm_standby -V -l reboot -v %s" % (target))
+        (rc, _) = self.rsh(node, "crm_standby -V -l reboot -v %s" % (target))
         return rc
 
     def __call__(self, node):
@@ -2201,13 +2201,13 @@ class RollingUpgradeTest(CTSTest):
         if not self.stop(node):
             return self.failure("stop failure: "+node)
 
-        rc = self.rsh(node, "mkdir -p %s" % target_dir)
-        rc = self.rsh(node, "rm -f %s/*.rpm" % target_dir)
-        (rc, lines) = self.rsh(node, "ls -1 %s/*.rpm" % src_dir, None)
+        self.rsh(node, "mkdir -p %s" % target_dir)
+        self.rsh(node, "rm -f %s/*.rpm" % target_dir)
+        (_, lines) = self.rsh(node, "ls -1 %s/*.rpm" % src_dir, verbose=1)
         for line in lines:
             line = line[:-1]
             rc = self.rsh.cp("%s" % (line), "%s:%s/" % (node, target_dir))
-        rc = self.rsh(node, "rpm -Uvh %s %s/*.rpm" % (flags, target_dir))
+        self.rsh(node, "rpm -Uvh %s %s/*.rpm" % (flags, target_dir))
 
         if start and not self.start(node):
             return self.failure("start failure: "+node)
@@ -2320,12 +2320,12 @@ class BSC_AddResource(CTSTest):
       </rsc_location>""" % (id, id, id, id, node)
 
         rc = 0
-        (rc, lines) = self.rsh(node, self.cib_cmd % ("constraints", node_constraint), None)
+        (rc, _) = self.rsh(node, self.cib_cmd % ("constraints", node_constraint), verbose=1)
         if rc != 0:
             self.logger.log("Constraint creation failed: %d" % rc)
             return None
 
-        (rc, lines) = self.rsh(node, self.cib_cmd % ("resources", rsc_xml), None)
+        (rc, _) = self.rsh(node, self.cib_cmd % ("resources", rsc_xml), verbose=1)
         if rc != 0:
             self.logger.log("Resource creation failed: %d" % rc)
             return None
@@ -2576,7 +2576,7 @@ class RemoteLXC(CTSTest):
         if not ret:
             return self.failure("Setup failed, start all nodes failed.")
 
-        rc = self.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -v &>/dev/null")
+        (rc, _) = self.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -v &>/dev/null")
         if rc == 1:
             self.log("Environment test for lxc support failed.")
             return self.skipped()
@@ -2654,13 +2654,13 @@ class RemoteDriver(CTSTest):
 
     def del_rsc(self, node, rsc):
         othernode = self.get_othernode(node)
-        rc = self.rsh(othernode, "crm_resource -D -r %s -t primitive" % (rsc))
+        (rc, _) = self.rsh(othernode, "crm_resource -D -r %s -t primitive" % (rsc))
         if rc != 0:
             self.fail("Removal of resource '%s' failed" % rsc)
 
     def add_rsc(self, node, rsc_xml):
         othernode = self.get_othernode(node)
-        rc = self.rsh(othernode, self.cib_cmd % ("resources", rsc_xml))
+        (rc, _) = self.rsh(othernode, self.cib_cmd % ("resources", rsc_xml))
         if rc != 0:
             self.fail("resource creation failed")
 
@@ -2721,7 +2721,7 @@ class RemoteDriver(CTSTest):
     def stop_pcmk_remote(self, node):
         # disable pcmk remote
         for i in range(10):
-            rc = self.rsh(node, "service pacemaker_remote stop")
+            (rc, _) = self.rsh(node, "service pacemaker_remote stop")
             if rc != 0:
                 time.sleep(6)
             else:
@@ -2729,7 +2729,7 @@ class RemoteDriver(CTSTest):
 
     def start_pcmk_remote(self, node):
         for i in range(10):
-            rc = self.rsh(node, "service pacemaker_remote start")
+            (rc, _) = self.rsh(node, "service pacemaker_remote start")
             if rc != 0:
                 time.sleep(6)
             else:
@@ -2798,7 +2798,7 @@ class RemoteDriver(CTSTest):
         watch = self.create_watch(pats, 120)
         watch.setwatch()
 
-        (rc, lines) = self.rsh(node, "crm_resource -M -r %s" % (self.remote_node), None)
+        (rc, _) = self.rsh(node, "crm_resource -M -r %s" % (self.remote_node), verbose=1)
         if rc != 0:
             self.fail("failed to move remote node connection resource")
             return
@@ -2825,7 +2825,7 @@ class RemoteDriver(CTSTest):
 
         self.debug("causing dummy rsc to fail.")
 
-        rc = self.rsh(node, "rm -f /var/run/resource-agents/Dummy*")
+        self.rsh(node, "rm -f /var/run/resource-agents/Dummy*")
 
         self.set_timer("remoteRscFail")
         watch.lookforall()
@@ -2895,7 +2895,7 @@ class RemoteDriver(CTSTest):
         self.add_primitive_rsc(node)
 
         # force that rsc to prefer the remote node. 
-        (rc, line) = self.CM.rsh(node, "crm_resource -M -r %s -N %s -f" % (self.remote_rsc, self.remote_node), None)
+        (rc, _) = self.CM.rsh(node, "crm_resource -M -r %s -N %s -f" % (self.remote_rsc, self.remote_node), verbose=1)
         if rc != 0:
             self.fail("Failed to place remote resource on remote node.")
             return
@@ -2912,17 +2912,17 @@ class RemoteDriver(CTSTest):
 
         # This verifies permanent attributes can be set on a remote-node. It also
         # verifies the remote-node can edit its own cib node section remotely.
-        (rc, line) = self.CM.rsh(node, "crm_attribute -l forever -n testattr -v testval -N %s" % (self.remote_node), None)
+        (rc, line) = self.CM.rsh(node, "crm_attribute -l forever -n testattr -v testval -N %s" % (self.remote_node), verbose=1)
         if rc != 0:
             self.fail("Failed to set remote-node attribute. rc:%s output:%s" % (rc, line))
             return
 
-        (rc, line) = self.CM.rsh(node, "crm_attribute -l forever -n testattr -q -N %s" % (self.remote_node), None)
+        (rc, _) = self.CM.rsh(node, "crm_attribute -l forever -n testattr -q -N %s" % (self.remote_node), verbose=1)
         if rc != 0:
             self.fail("Failed to get remote-node attribute")
             return
 
-        (rc, line) = self.CM.rsh(node, "crm_attribute -l forever -n testattr -D -N %s" % (self.remote_node), None)
+        (rc, _) = self.CM.rsh(node, "crm_attribute -l forever -n testattr -D -N %s" % (self.remote_node), verbose=1)
         if rc != 0:
             self.fail("Failed to delete remote-node attribute")
             return
@@ -3006,7 +3006,7 @@ class RemoteDriver(CTSTest):
             return False
 
         for node in self.Env["nodes"]:
-            rc = self.rsh(node, "which pacemaker-remoted >/dev/null 2>&1")
+            (rc, _) = self.rsh(node, "which pacemaker-remoted >/dev/null 2>&1")
             if rc != 0:
                 return False
         return True

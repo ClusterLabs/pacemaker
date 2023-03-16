@@ -116,13 +116,24 @@ class RemoteExec:
         aproc.start()
         return aproc
 
-    def __call__(self, node, command, stdout=0, synchronous=1, silent=False, blocking=True, delegate=None):
-        '''Run the given command on the given remote system
-        If you call this class like a function, this is the function that gets
-        called.  It just runs it roughly as though it were a system() call
-        on the remote machine.  The first argument is name of the machine to
-        run it on.
-        '''
+    def __call__(self, node, command, synchronous=True, verbose=2):
+        """ Run the given command on the given remote system.  If you call this class
+            like a function, this is what gets called.  It's approximately the same
+            as a system() call on the remote machine.
+
+            Arguments:
+
+            node        -- The remote machine to run on
+            command     -- The command to run, as a string
+            synchronous -- Should we wait for the command to complete?
+            verbose     -- If 0, do not lo:g anything.  If 1, log the command and its
+                           return code but not its output.  If 2, additionally log
+                           command output.
+
+            Returns:
+
+            A tuple of (return code, command output)
+        """
 
         rc = 0
         result = None
@@ -130,22 +141,19 @@ class RemoteExec:
                      stdout = PIPE, stderr = PIPE, close_fds = True, shell = True)
 
         if not synchronous and proc.pid > 0 and not self._silent:
-            aproc = AsyncCmd(node, command, proc=proc, delegate=delegate)
+            aproc = AsyncCmd(node, command, proc=proc)
             aproc.start()
-            return 0
+            return (rc, result)
 
         if proc.stdout:
-            if stdout == 1:
-                result = proc.stdout.readline()
-            else:
-                result = proc.stdout.readlines()
+            result = proc.stdout.readlines()
             proc.stdout.close()
         else:
             self._log("No stdout stream")
 
         rc = proc.wait()
 
-        if not silent:
+        if verbose > 0:
             self._debug("cmd: target=%s, rc=%d: %s" % (node, rc, command))
 
         result = convert2string(result)
@@ -154,22 +162,12 @@ class RemoteExec:
             errors = proc.stderr.readlines()
             proc.stderr.close()
 
-        if stdout == 1:
-            return result
-
-        if delegate:
-            delegate.async_complete(proc.pid, proc.returncode, result, errors)
-
-        if not silent:
             for err in errors:
                 self._debug("cmd: stderr: %s" % err)
 
-        if stdout == 0:
-            if not silent and result:
-                for line in result:
-                    self._debug("cmd: stdout: %s" % line)
-
-            return rc
+        if verbose == 2:
+            for line in result:
+                self._debug("cmd: stdout: %s" % line)
 
         return (rc, result)
 

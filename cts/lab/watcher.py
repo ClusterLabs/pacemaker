@@ -99,9 +99,9 @@ class FileObj(SearchObj):
             return
 
         global log_watcher_bin
-        (rc, lines) = self.rsh(self.host,
-                               "%s -t %s -p CTSwatcher: -l 2 -f %s -o %s" % (log_watcher_bin, self.name, self.filename, "EOF"),
-                 None, silent=True)
+        (_, lines) = self.rsh(self.host,
+                              "%s -t %s -p CTSwatcher: -l 2 -f %s -o %s" % (log_watcher_bin, self.name, self.filename, "EOF"),
+                              verbose=0)
 
         for line in lines:
             match = re.search("^CTSwatcher:Last read: (\d+)", line)
@@ -134,7 +134,7 @@ class JournalObj(SearchObj):
             self.debug("Got %d lines but no cursor: %s" % (len(outLines), self.offset))
             
             # Get the current cursor
-            (rc, outLines) = self.rsh(self.host, "journalctl -q -n 0 --show-cursor", stdout=None, silent=True, synchronous=True)
+            (_, outLines) = self.rsh(self.host, "journalctl -q -n 0 --show-cursor", verbose=0)
             for line in outLines:
                 match = re.search("^-- cursor: ([^.]+)", line)
                 if match:
@@ -170,7 +170,7 @@ class JournalObj(SearchObj):
             return
 
         self.hitLimit = False
-        (rc, lines) = self.rsh(self.host, "date +'%Y-%m-%d %H:%M:%S'", stdout=None, silent=True)
+        (rc, lines) = self.rsh(self.host, "date +'%Y-%m-%d %H:%M:%S'", verbose=0)
 
         if (rc == 0) and (len(lines) == 1):
             self.limit = lines[0].strip()

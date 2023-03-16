@@ -109,10 +109,11 @@ class NodeStatus(object):
 
     def IsNodeBooted(self, node):
         '''Return TRUE if the given node is booted (responds to pings)'''
-        return RemoteFactory().getInstance()("localhost", "ping -nq -c1 -w1 %s" % node, silent=True) == 0
+        (rc, _) = RemoteFactory().getInstance()("localhost", "ping -nq -c1 -w1 %s" % node, verbose=0)
+        return rc == 0
 
     def IsSshdUp(self, node):
-        rc = RemoteFactory().getInstance()(node, "true", silent=True)
+        (rc, _) = RemoteFactory().getInstance()(node, "true", verbose=0)
         return rc == 0
 
     def WaitForNodeToComeUp(self, node, Timeout=300):
@@ -177,7 +178,8 @@ class Process(Component):
         self.KillCmd = "killall -9 " + self.proc
 
     def kill(self, node):
-        if self.CM.rsh(node, self.KillCmd) != 0:
+        (rc, _) = self.CM.rsh(node, self.KillCmd)
+        if rc != 0:
             self.CM.log ("ERROR: Kill %s failed on node %s" % (self.name,node))
             return None
         return 1

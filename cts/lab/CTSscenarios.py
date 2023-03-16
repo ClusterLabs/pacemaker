@@ -559,9 +559,9 @@ Test a rolling upgrade between two versions of the stack
         target_dir = "/tmp/rpm-%s" % version
         src_dir = "%s/%s" % (self.CM.Env["rpm-dir"], version)
 
-        rc = self.CM.rsh(node, "mkdir -p %s" % target_dir)
+        self.CM.rsh(node, "mkdir -p %s" % target_dir)
         rc = self.CM.cp("%s/*.rpm %s:%s" % (src_dir, node, target_dir))
-        rc = self.CM.rsh(node, "rpm -Uvh --force %s/*.rpm" % (target_dir))
+        self.CM.rsh(node, "rpm -Uvh --force %s/*.rpm" % (target_dir))
 
         return self.success()
 
