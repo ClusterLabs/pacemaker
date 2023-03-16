@@ -28,73 +28,47 @@ def convert2string(lines):
         return aList
     return lines
 
-class AsyncWaitProc(Thread):
-    def __init__(self, proc, node, command, completionDelegate=None):
-        self.proc = proc
-        self.node = node
-        self.command = command
-        self.logger = LogFactory()
-        self.delegate = completionDelegate
+class AsyncCmd(Thread):
+    def __init__(self, node, command, proc=None, delegate=None):
+        self._command = command
+        self._delegate = delegate
+        self._logger = LogFactory()
+        self._node = node
+        self._proc = proc
+
         Thread.__init__(self)
 
     def run(self):
-        outLines = None
-        errLines = None
-        self.logger.debug("cmd: async: target=%s, pid=%d: %s" % (self.node, self.proc.pid, self.command))
+        out = None
+        err = None
 
-        self.proc.wait()
-        self.logger.debug("cmd: pid %d returned %d" % (self.proc.pid, self.proc.returncode))
+        if not self._proc:
+            self._proc = Popen(self._command, stdout=PIPE, stderr=PIPE, close_fds=True, shell=True)
 
-        if self.proc.stderr:
-            errLines = self.proc.stderr.readlines()
-            self.proc.stderr.close()
-            for line in errLines:
-                self.logger.debug("cmd: stderr[%d]: %s" % (self.proc.pid, line))
+        self._logger.debug("cmd: async: target=%s, pid=%d: %s" % (self._node, self._proc.pid, self._command))
+        self._proc.wait()
 
-            errLines = convert2string(errLines)
+        if self._delegate:
+            self._logger.debug("cmd: pid %d returned %d to %s" % (self._proc.pid, self._proc.returncode, repr(self._delegate)))
+        else:
+            self._logger.debug("cmd: pid %d returned %d" % (self._proc.pid, self._proc.returncode))
 
-        if self.proc.stdout:
-            outLines = self.proc.stdout.readlines()
-            self.proc.stdout.close()
+        if self._proc.stderr:
+            err = self._proc.stderr.readlines()
+            self._proc.stderr.close()
 
-            outLines = convert2string(outLines)
+            for line in err:
+                self._logger.debug("cmd: stderr[%d]: %s" % (self._proc.pid, line))
 
-        if self.delegate:
-            self.delegate.async_complete(self.proc.pid, self.proc.returncode, outLines, errLines)
+            err = convert2string(err)
 
-class AsyncRemoteCmd(Thread):
-    def __init__(self, node, command, completionDelegate=None):
-        self.proc = None
-        self.node = node
-        self.command = command
-        self.logger = LogFactory()
-        self.delegate = completionDelegate
-        Thread.__init__(self)
+        if self._proc.stdout:
+            out = self._proc.stdout.readlines()
+            self._proc.stdout.close()
+            out = convert2string(out)
 
-    def run(self):
-        outLines = None
-        errLines = None
-
-        self.proc = Popen(self.command, stdout = PIPE, stderr = PIPE, close_fds = True, shell = True)
-
-        self.logger.debug("cmd: async: target=%s, pid=%d: %s" % (self.node, self.proc.pid, self.command))
-        self.proc.wait()
-        self.logger.debug("cmd: pid %d returned %d to %s" % (self.proc.pid, self.proc.returncode, repr(self.delegate)))
-
-        if self.proc.stderr:
-            errLines = self.proc.stderr.readlines()
-            self.proc.stderr.close()
-            for line in errLines:
-                self.logger.debug("cmd: stderr[%d]: %s" % (self.proc.pid, line))
-            errLines = convert2string(errLines)
-
-        if self.proc.stdout:
-            outLines = self.proc.stdout.readlines()
-            self.proc.stdout.close()
-            outLines = convert2string(outLines)
-
-        if self.delegate:
-            self.delegate.async_complete(self.proc.pid, self.proc.returncode, outLines, errLines)
+        if self._delegate:
+            self._delegate.async_complete(self._proc.pid, self._proc.returncode, out, err)
 
 class RemoteExec:
     '''This is an abstract remote execution class.  It runs a command on another
@@ -141,13 +115,13 @@ class RemoteExec:
         if not self.silent:
             self.logger.debug(args)
 
-    def call_async(self, node, command, completionDelegate=None):
-        aproc = AsyncRemoteCmd(node, self._cmd([node, command]), completionDelegate=completionDelegate)
+    def call_async(self, node, command, delegate=None):
+        aproc = AsyncCmd(node, self._cmd([node, command]), delegate=delegate)
         aproc.start()
         return aproc
 
 
-    def __call__(self, node, command, stdout=0, synchronous=1, silent=False, blocking=True, completionDelegate=None):
+    def __call__(self, node, command, stdout=0, synchronous=1, silent=False, blocking=True, delegate=None):
         '''Run the given command on the given remote system
         If you call this class like a function, this is the function that gets
         called.  It just runs it roughly as though it were a system() call
@@ -164,7 +138,7 @@ class RemoteExec:
                      stdout = PIPE, stderr = PIPE, close_fds = True, shell = True)
 
         if not synchronous and proc.pid > 0 and not self.silent:
-            aproc = AsyncWaitProc(proc, node, command, completionDelegate=completionDelegate)
+            aproc = AsyncCmd(node, command, proc=proc, delegate=delegate)
             aproc.start()
             return 0
 
@@ -191,8 +165,8 @@ class RemoteExec:
         if stdout == 1:
             return result
 
-        if completionDelegate:
-            completionDelegate.async_complete(proc.pid, proc.returncode, result, errors)
+        if delegate:
+            delegate.async_complete(proc.pid, proc.returncode, result, errors)
 
         if not silent:
             for err in errors:

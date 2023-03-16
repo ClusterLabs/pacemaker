@@ -92,7 +92,7 @@ class FileObj(SearchObj):
         global log_watcher_bin
         return self.rsh.call_async(self.host,
                                    "%s -t %s -p CTSwatcher: -l 200 -f %s -o %s" % (log_watcher_bin, self.name, self.filename, self.offset),
-                completionDelegate=self)
+                                   delegate=self)
 
     def setend(self):
         if self.limit: 
@@ -163,7 +163,7 @@ class JournalObj(SearchObj):
         if self.offset == "EOF":
             command = "journalctl -q -n 0 --show-cursor"
 
-        return self.rsh.call_async(self.host, command, completionDelegate=self)
+        return self.rsh.call_async(self.host, command, delegate=self)
 
     def setend(self):
         if self.limit: 
