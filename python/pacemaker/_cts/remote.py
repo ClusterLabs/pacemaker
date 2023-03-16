@@ -214,10 +214,6 @@ class RemoteFactory:
                                                 False)
         return RemoteFactory.instance
 
-    def new(self, silent=False):
-        return RemoteExec(RemoteFactory.command, RemoteFactory.cp_command,
-                          silent)
-
     def enable_qarsh(self):
         # http://nstraz.wordpress.com/2008/12/03/introducing-qarsh/
         print("Using QARSH for connections to cluster nodes")
