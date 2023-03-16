@@ -64,6 +64,7 @@ class AsyncCmd(Thread):
         err = None
 
         if not self._proc:
+            # pylint: disable=consider-using-with
             self._proc = Popen(self._command, stdout=PIPE, stderr=PIPE, close_fds=True, shell=True)
 
         self._logger.debug("cmd: async: target=%s, pid=%d: %s" % (self._node, self._proc.pid, self._command))
@@ -185,6 +186,7 @@ class RemoteExec:
 
         rc = 0
         result = None
+        # pylint: disable=consider-using-with
         proc = Popen(self._cmd([node, command]),
                      stdout = PIPE, stderr = PIPE, close_fds = True, shell = True)
 
