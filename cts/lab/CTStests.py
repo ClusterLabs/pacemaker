@@ -971,7 +971,7 @@ class BandwidthTest(CTSTest):
         (rc, _) = self.rsh(node, dumpcmd)
         if rc == 0:
             farfile = "root@%s:%s" % (node, fstmpfile)
-            self.rsh.cp(farfile, self.tempfile)
+            self.rsh.copy(farfile, self.tempfile)
             Bandwidth = self.countbandwidth(self.tempfile)
             if not Bandwidth:
                 self.logger.log("Could not compute bandwidth.")
@@ -2206,7 +2206,7 @@ class RollingUpgradeTest(CTSTest):
         (_, lines) = self.rsh(node, "ls -1 %s/*.rpm" % src_dir, verbose=1)
         for line in lines:
             line = line[:-1]
-            rc = self.rsh.cp("%s" % (line), "%s:%s/" % (node, target_dir))
+            rc = self.rsh.copy("%s" % (line), "%s:%s/" % (node, target_dir))
         self.rsh(node, "rpm -Uvh %s %s/*.rpm" % (flags, target_dir))
 
         if start and not self.start(node):
@@ -2996,7 +2996,7 @@ class RemoteDriver(CTSTest):
         # sync key throughout the cluster
         for node in self.Env["nodes"]:
             self.rsh(node, "mkdir -p --mode=0750 /etc/pacemaker")
-            self.rsh.cp(keyfile, "root@%s:/etc/pacemaker/authkey" % node)
+            self.rsh.copy(keyfile, "root@%s:/etc/pacemaker/authkey" % node)
             self.rsh(node, "chgrp haclient /etc/pacemaker /etc/pacemaker/authkey")
             self.rsh(node, "chmod 0640 /etc/pacemaker/authkey")
         os.unlink(keyfile)

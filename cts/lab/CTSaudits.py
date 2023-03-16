@@ -690,7 +690,7 @@ class CIBAudit(ClusterAudit):
         for line in lines:
             self.CM.rsh("localhost", "echo \'%s\' >> %s" % (line[:-1], filename), verbose=0)
 
-        if self.CM.rsh.cp(filename, "root@%s:%s" % (target, filename), silent=True) != 0:
+        if self.CM.rsh.copy(filename, "root@%s:%s" % (target, filename), silent=True) != 0:
             self.CM.log("Could not store configuration")
             return None
         return filename

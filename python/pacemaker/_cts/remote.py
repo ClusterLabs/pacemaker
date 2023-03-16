@@ -171,7 +171,7 @@ class RemoteExec:
 
         return (rc, result)
 
-    def cp(self, source, target, silent=False):
+    def copy(self, source, target, silent=False):
         '''Perform a remote copy'''
         cmd = "%s '%s' '%s'" % (self._cp_command, source, target)
         rc = os.system(cmd)
