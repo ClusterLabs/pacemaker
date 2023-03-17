@@ -81,12 +81,11 @@ crm_cluster_connect(crm_cluster_t *cluster)
     switch (type) {
         case pcmk_cluster_corosync:
 #if SUPPORT_COROSYNC
-            if (is_corosync_cluster()) {
-                crm_peer_init();
-                return pcmk__corosync_connect(cluster);
-            }
-#endif
+            crm_peer_init();
+            return pcmk__corosync_connect(cluster);
+#else
             break;
+#endif // SUPPORT_COROSYNC
         default:
             break;
     }
@@ -108,12 +107,11 @@ crm_cluster_disconnect(crm_cluster_t *cluster)
     switch (type) {
         case pcmk_cluster_corosync:
 #if SUPPORT_COROSYNC
-            if (is_corosync_cluster()) {
-                crm_peer_destroy();
-                pcmk__corosync_disconnect(cluster);
-            }
-#endif
+            crm_peer_destroy();
+            pcmk__corosync_disconnect(cluster);
+#else
             break;
+#endif // SUPPORT_COROSYNC
         default:
             break;
     }

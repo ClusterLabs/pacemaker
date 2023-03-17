@@ -58,11 +58,11 @@ do_ha_control(long long action,
         crm_set_status_callback(&peer_update_callback);
         crm_set_autoreap(FALSE);
 
-        if (is_corosync_cluster()) {
 #if SUPPORT_COROSYNC
+        if (is_corosync_cluster()) {
             registered = crm_connect_corosync(cluster);
-#endif
         }
+#endif // SUPPORT_COROSYNC
 
         if (registered) {
             controld_election_init(cluster->uname);
