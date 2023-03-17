@@ -68,8 +68,9 @@ progresses from the DC's point of view as follows:
 
 * Each node confirms the finalization ack (``CRM_OP_JOIN_CONFIRM`` via
   ``do_cl_join_finalize_respond()``), including its current resource operation
-  history (via ``do_lrm_query()``). Once the DC receives this confirmation,
-  the node proceeds to ``crm_join_confirmed`` via ``do_dc_join_ack()``.
+  history (via ``controld_query_executor_state()``). Once the DC receives this
+  confirmation, the node proceeds to ``crm_join_confirmed`` via
+  ``do_dc_join_ack()``.
 
 Once all nodes are confirmed, the DC calls ``do_dc_join_final()``, which checks
 for quorum and responds appropriately.
