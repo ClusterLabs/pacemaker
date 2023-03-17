@@ -121,8 +121,6 @@ xmlNode *copy_xml(xmlNode * src_node);
  */
 xmlNode *add_node_copy(xmlNode * new_parent, xmlNode * xml_node);
 
-int add_node_nocopy(xmlNode * parent, const char *name, xmlNode * child);
-
 /*
  * XML I/O Functions
  *
