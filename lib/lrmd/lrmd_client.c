@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 the Pacemaker project contributors
+ * Copyright 2012-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -980,8 +980,17 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
         const char *version = crm_element_value(reply, F_LRMD_PROTOCOL_VERSION);
         const char *msg_type = crm_element_value(reply, F_LRMD_OPERATION);
         const char *tmp_ticket = crm_element_value(reply, F_LRMD_CLIENTID);
+        long long uptime = -1;
 
         crm_element_value_int(reply, F_LRMD_RC, &rc);
+
+        /* The remote executor may add its uptime to the XML reply, which is
+         * useful in handling transient attributes when the connection to the
+         * remote node unexpectedly drops.  If no parameter is given, just
+         * default to -1.
+         */
+        crm_element_value_ll(reply, PCMK__XA_UPTIME, &uptime);
+        native->remote->uptime = uptime;
 
         if (rc == -EPROTO) {
             crm_err("Executor protocol version mismatch between client (%s) and server (%s)",
