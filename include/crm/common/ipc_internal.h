@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2022 the Pacemaker project contributors
+ * Copyright 2013-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -111,6 +111,7 @@ struct pcmk__remote_s {
     int auth_timeout;
     int tcp_socket;
     mainloop_io_t *source;
+    time_t uptime;
 
     /* CIB-only */
     char *token;
