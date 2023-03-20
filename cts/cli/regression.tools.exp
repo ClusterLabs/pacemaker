@@ -5864,6 +5864,14 @@ scope=status  name=master-promotable-rsc value=-INFINITY
 </pacemaker-result>
 =#=#=#= End test: Query after updating a promotable score attribute to -INFINITY (XML) - OK (0) =#=#=#=
 * Passed: crm_attribute  - Query after updating a promotable score attribute to -INFINITY (XML)
+=#=#=#= Begin test: Try OCF_RESOURCE_INSTANCE if -p is specified with an empty string =#=#=#=
+scope=status  name=master-promotable-rsc value=-INFINITY
+=#=#=#= End test: Try OCF_RESOURCE_INSTANCE if -p is specified with an empty string - OK (0) =#=#=#=
+* Passed: crm_attribute  - Try OCF_RESOURCE_INSTANCE if -p is specified with an empty string
+=#=#=#= Begin test: Return usage error if both -p and OCF_RESOURCE_INSTANCE are empty strings =#=#=#=
+crm_attribute: -p/--promotion must be called from an OCF resource agent or with a resource ID specified
+=#=#=#= End test: Return usage error if both -p and OCF_RESOURCE_INSTANCE are empty strings - Incorrect usage (64) =#=#=#=
+* Passed: crm_attribute  - Return usage error if both -p and OCF_RESOURCE_INSTANCE are empty strings
 =#=#=#= Begin test: Check that CIB_file="-" works - crm_mon =#=#=#=
 Cluster Summary:
   * Stack: corosync
