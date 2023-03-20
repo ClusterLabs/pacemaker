@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2022 the Pacemaker project contributors
+ * Copyright 2015-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -45,6 +45,8 @@ void lrmd__set_result(lrmd_event_data_t *event, enum ocf_exitcode rc,
                       int op_status, const char *exit_reason);
 
 void lrmd__reset_result(lrmd_event_data_t *event);
+
+time_t lrmd__uptime(lrmd_t *lrmd);
 
 /* Shared functions for IPC proxy back end */
 

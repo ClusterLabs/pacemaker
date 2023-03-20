@@ -2509,3 +2509,25 @@ lrmd__reset_result(lrmd_event_data_t *event)
     free((void *) event->output);
     event->output = NULL;
 }
+
+/*!
+ * \internal
+ * \brief Get the uptime of a remote resource connection
+ *
+ * When the cluster connects to a remote resource, part of that resource's
+ * handshake includes the uptime of the remote resource's connection.  This
+ * uptime is stored in the lrmd_t object.
+ *
+ * \return The connection's uptime, or -1 if unknown
+ */
+time_t
+lrmd__uptime(lrmd_t *lrmd)
+{
+    lrmd_private_t *native = lrmd->lrmd_private;
+
+    if (native->remote == NULL) {
+        return -1;
+    } else {
+        return native->remote->uptime;
+    }
+}
