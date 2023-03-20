@@ -1560,13 +1560,13 @@ function test_tools() {
 
     desc="Try OCF_RESOURCE_INSTANCE if -p is specified with an empty string"
     cmd="crm_attribute -N cluster01 -p '' -G"
-    test_assert $CRM_EX_NOSUCH 0
+    test_assert $CRM_EX_OK 0
 
     export OCF_RESOURCE_INSTANCE=""
 
     desc="Return usage error if both -p and OCF_RESOURCE_INSTANCE are empty strings"
     cmd="crm_attribute -N cluster01 -p '' -G"
-    test_assert $CRM_EX_NOSUCH 0
+    test_assert $CRM_EX_USAGE 0
 
     unset CIB_file
     unset OCF_RESOURCE_INSTANCE
