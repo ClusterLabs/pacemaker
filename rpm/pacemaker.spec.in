@@ -857,21 +857,20 @@ exit 0
 %dir %{ocf_root}/resource.d
 %{ocf_root}/resource.d/pacemaker
 
-%doc %{_mandir}/man7/*
+%doc %{_mandir}/man7/*pacemaker*
 %exclude %{_mandir}/man7/pacemaker-controld.*
 %exclude %{_mandir}/man7/pacemaker-schedulerd.*
 %exclude %{_mandir}/man7/pacemaker-fenced.*
 %exclude %{_mandir}/man7/ocf_pacemaker_controld.*
 %exclude %{_mandir}/man7/ocf_pacemaker_o2cb.*
 %exclude %{_mandir}/man7/ocf_pacemaker_remote.*
-%doc %{_mandir}/man8/*
+%doc %{_mandir}/man8/crm*.8.gz
 %exclude %{_mandir}/man8/crm_master.*
-%if %{with stonithd}
-%exclude %{_mandir}/man8/fence_legacy.*
-%endif
-%exclude %{_mandir}/man8/fence_watchdog.*
-%exclude %{_mandir}/man8/pacemakerd.*
-%exclude %{_mandir}/man8/pacemaker-remoted.*
+%doc %{_mandir}/man8/attrd_updater.*
+%doc %{_mandir}/man8/cibadmin.*
+%doc %{_mandir}/man8/cibsecret.*
+%doc %{_mandir}/man8/iso8601.*
+%doc %{_mandir}/man8/stonith_admin.*
 
 %license licenses/GPLv2
 %doc COPYING
@@ -947,8 +946,16 @@ exit 0
 
 %files -n %{pkgname_pcmk_libs}-devel
 %{_includedir}/pacemaker
-%{_libdir}/*.so
-%{_libdir}/pkgconfig/*.pc
+%{_libdir}/libcib.so
+%{_libdir}/liblrmd.so
+%{_libdir}/libcrmservice.so
+%{_libdir}/libcrmcommon.so
+%{_libdir}/libpe_status.so
+%{_libdir}/libpe_rules.so
+%{_libdir}/libpacemaker.so
+%{_libdir}/libstonithd.so
+%{_libdir}/libcrmcluster.so
+%{_libdir}/pkgconfig/*pacemaker*.pc
 %license licenses/LGPLv2.1
 %doc COPYING
 %doc ChangeLog
