@@ -16,6 +16,14 @@ from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.remote import RemoteFactory
 
 class Environment:
+    # pylint doesn't understand that self._rsh is callable (it stores the
+    # singleton instance of RemoteExec, as returned by the getInstance method
+    # of RemoteFactory).  It's possible we could fix this with type annotations,
+    # but those were introduced with python 3.5 and we only support python 3.4.
+    # I think we could also fix this by getting rid of the getInstance methods,
+    # but that's a project for another day.  For now, just disable the warning.
+    # pylint: disable=not-callable
+
     def __init__(self, args):
         self.data = {}
         self._nodes = []
