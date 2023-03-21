@@ -75,7 +75,7 @@ class CIB12(ConfigBase):
 
     def _show(self, command=""):
         output = ""
-        (rc, result) = self.Factory.rsh(self.Factory.target, "HOME=/root CIB_file="+self.Factory.tmpfile+" cibadmin -Ql "+command, None, )
+        (_, result) = self.Factory.rsh(self.Factory.target, "HOME=/root CIB_file="+self.Factory.tmpfile+" cibadmin -Ql "+command, verbose=1)
         for line in result:
             output += line
             self.Factory.debug("Generated Config: "+line)
@@ -128,7 +128,7 @@ class CIB12(ConfigBase):
             r"""awk -v RS="}" """
             r"""'/^(\s*nodelist\s*{)?\s*node\s*{.*(ring0_addr|name):\s*%s(\s+|$)/"""
             r"""{gsub(/.*nodeid:\s*/,"");gsub(/\s+.*$/,"");print}' %s"""
-            % (node_name, BuildOptions.COROSYNC_CONFIG_FILE), None)
+            % (node_name, BuildOptions.COROSYNC_CONFIG_FILE), verbose=1)
 
         if rc == 0 and len(output) == 1:
             try:

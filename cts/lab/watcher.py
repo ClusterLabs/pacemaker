@@ -9,10 +9,9 @@ import os
 import time
 import threading
 
-from cts.remote import *
-
 from pacemaker.buildoptions import BuildOptions
 from pacemaker._cts.logging import LogFactory
+from pacemaker._cts.remote import RemoteExec, RemoteFactory
 
 log_watcher_bin = BuildOptions.DAEMON_DIR + "/cts-log-watcher"
 
@@ -93,16 +92,16 @@ class FileObj(SearchObj):
         global log_watcher_bin
         return self.rsh.call_async(self.host,
                                    "%s -t %s -p CTSwatcher: -l 200 -f %s -o %s" % (log_watcher_bin, self.name, self.filename, self.offset),
-                completionDelegate=self)
+                                   delegate=self)
 
     def setend(self):
         if self.limit: 
             return
 
         global log_watcher_bin
-        (rc, lines) = self.rsh(self.host,
-                               "%s -t %s -p CTSwatcher: -l 2 -f %s -o %s" % (log_watcher_bin, self.name, self.filename, "EOF"),
-                 None, silent=True)
+        (_, lines) = self.rsh(self.host,
+                              "%s -t %s -p CTSwatcher: -l 2 -f %s -o %s" % (log_watcher_bin, self.name, self.filename, "EOF"),
+                              verbose=0)
 
         for line in lines:
             match = re.search("^CTSwatcher:Last read: (\d+)", line)
@@ -135,7 +134,7 @@ class JournalObj(SearchObj):
             self.debug("Got %d lines but no cursor: %s" % (len(outLines), self.offset))
             
             # Get the current cursor
-            (rc, outLines) = self.rsh(self.host, "journalctl -q -n 0 --show-cursor", stdout=None, silent=True, synchronous=True)
+            (_, outLines) = self.rsh(self.host, "journalctl -q -n 0 --show-cursor", verbose=0)
             for line in outLines:
                 match = re.search("^-- cursor: ([^.]+)", line)
                 if match:
@@ -164,14 +163,14 @@ class JournalObj(SearchObj):
         if self.offset == "EOF":
             command = "journalctl -q -n 0 --show-cursor"
 
-        return self.rsh.call_async(self.host, command, completionDelegate=self)
+        return self.rsh.call_async(self.host, command, delegate=self)
 
     def setend(self):
         if self.limit: 
             return
 
         self.hitLimit = False
-        (rc, lines) = self.rsh(self.host, "date +'%Y-%m-%d %H:%M:%S'", stdout=None, silent=True)
+        (rc, lines) = self.rsh(self.host, "date +'%Y-%m-%d %H:%M:%S'", verbose=0)
 
         if (rc == 0) and (len(lines) == 1):
             self.limit = lines[0].strip()
@@ -237,10 +236,6 @@ class LogWatcher(RemoteExec):
         else:
             raise
             #self.hosts = self.Env["nodes"]
-
-        if trace_lw:
-            self.debug_level = 3
-            silent = False
 
         if not silent:
             for regex in self.regexes:
@@ -323,9 +318,6 @@ class LogWatcher(RemoteExec):
         '''
         if timeout == None: timeout = self.Timeout
 
-        if trace_lw:
-            silent = False
-
         lines=0
         needlines=True
         begin=time.time()
@@ -396,9 +388,6 @@ class LogWatcher(RemoteExec):
         if timeout == None: timeout = self.Timeout
         save_regexes = self.regexes
         returnresult = []
-
-        if trace_lw:
-            silent = False
 
         if not silent:
             self.debug("starting search: timeout=%d" % timeout)
