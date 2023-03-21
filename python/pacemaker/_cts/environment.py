@@ -5,6 +5,7 @@ __all__ = ["EnvFactory"]
 __copyright__ = "Copyright 2014-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
+import argparse
 import os
 import random
 import socket
@@ -19,42 +20,22 @@ class Environment:
         self.data = {}
         self._nodes = []
 
+        # Set some defaults before processing command line arguments.  These are
+        # either not set by any command line parameter, or they need a default
+        # that can't be set in add_argument.
         self["DeadTime"] = 300
         self["StartTime"] = 300
         self["StableTime"] = 30
         self["tests"] = []
         self["IPagent"] = "IPaddr2"
         self["DoFencing"] = True
-        self["XmitLoss"] = "0.0"
-        self["RecvLoss"] = "0.0"
         self["ClobberCIB"] = False
         self["CIBfilename"] = None
         self["CIBResource"] = False
-        self["DoBSC"] = False
-        self["oprofile"] = []
-        self["warn-inactive"] = False
-        self["ListTests"] = False
-        self["benchmark"] = False
         self["LogWatcher"] = "any"
-        self["SyslogFacility"] = "daemon"
-        self["LogFileName"] = "/var/log/messages"
-        self["Schema"] = "pacemaker-3.0"
-        self["Stack"] = "corosync"
-        self["stonith-type"] = "external/ssh"
-        self["stonith-params"] = "hostlist=all,livedangerously=yes"
-        self["notification-agent"] = "/var/lib/pacemaker/notify.sh"
-        self["notification-recipient"] = "/var/lib/pacemaker/notify.log"
-        self["loop-minutes"] = 60
-        self["valgrind-procs"] = "pacemaker-attrd pacemaker-based pacemaker-controld pacemaker-execd pacemaker-fenced pacemaker-schedulerd"
-        self["experimental-tests"] = False
-        self["container-tests"] = False
-        self["valgrind-tests"] = False
-        self["unsafe-tests"] = True
-        self["loop-tests"] = True
+        self["node-limit"] = 0
         self["scenario"] = "random"
         self["stats"] = False
-        self["continue"] = False
-        self["TruncateLog"] = False
 
         self.random_gen = random.Random()
         self.logger = LogFactory()
@@ -237,7 +218,7 @@ class Environment:
                 self.logger.log("Defaulting to '%s', use --test-ip-base to override" % self["IPBase"])
 
     def filter_nodes(self):
-        if self['node-limit'] is not None and self["node-limit"] > 0:
+        if self["node-limit"] > 0:
             if len(self["nodes"]) > self["node-limit"]:
                 self.logger.log("Limiting the number of nodes configured=%d (max=%d)"
                                 %(len(self["nodes"]), self["node-limit"]))
@@ -271,89 +252,255 @@ class Environment:
         self.detect_at_boot()
         self.detect_ip_offset()
 
-    def parse_args(self, args):
-        skipthis=None
+    def parse_args(self, argv):
+        if not argv:
+            argv = sys.argv[1:]
 
-        if not args:
-            args=sys.argv[1:]
+        parser = argparse.ArgumentParser(epilog="%s -g virt1 -r --stonith ssh --schema pacemaker-2.0 500" % sys.argv[0])
 
-        for i in range(0, len(args)):
-            if skipthis:
-                skipthis=None
-                continue
+        grp1 = parser.add_argument_group("Common options")
+        grp1.add_argument("-g", "--dsh-group", "--group",
+                          metavar="GROUP", dest="group",
+                          help="Use the nodes listed in the named DSH group (~/.dsh/groups/$name)")
+        grp1.add_argument("-l", "--limit-nodes",
+                          type=int, default=0,
+                          metavar="MAX",
+                          help="Only use the first MAX cluster nodes supplied with --nodes")
+        grp1.add_argument("--benchmark",
+                          action="store_true",
+                          help="Add timing information")
+        grp1.add_argument("--list", "--list-tests",
+                          action="store_true", dest="list_tests",
+                          help="List the valid tests")
+        grp1.add_argument("--nodes",
+                          metavar="NODES",
+                          help="List of cluster nodes separated by whitespace")
+        grp1.add_argument("--stack",
+                          default="corosync",
+                          metavar="STACK",
+                          help="Which cluster stack is installed")
 
-            elif args[i] == "-l" or args[i] == "--limit-nodes":
-                skipthis=1
-                self["node-limit"] = int(args[i+1])
+        grp2 = parser.add_argument_group("Options that CTS will usually auto-detect correctly")
+        grp2.add_argument("-L", "--logfile",
+                          metavar="PATH",
+                          help="Where to look for logs from cluster nodes")
+        grp2.add_argument("--at-boot", "--cluster-starts-at-boot",
+                          choices=["1", "0", "yes", "no"],
+                          help="Does the cluster software start at boot time?")
+        grp2.add_argument("--facility", "--syslog-facility",
+                          default="daemon",
+                          metavar="NAME",
+                          help="Which syslog facility to log to")
+        grp2.add_argument("--ip", "--test-ip-base",
+                          metavar="IP",
+                          help="Offset for generated IP address resources")
 
-            elif args[i] == "-r" or args[i] == "--populate-resources":
-                self["CIBResource"] = True
-                self["ClobberCIB"] = True
+        grp3 = parser.add_argument_group("Options for release testing")
+        grp3.add_argument("-r", "--populate-resources",
+                          action="store_true",
+                          help="Generate a sample configuration")
+        grp3.add_argument("--choose",
+                          metavar="NAME",
+                          help="Run only the named test")
+        grp3.add_argument("--fencing", "--stonith",
+                          choices=["1", "0", "yes", "no", "lha", "openstack", "rhcs", "rhevm", "scsi", "ssh", "virt", "xvm"],
+                          default="1",
+                          help="What fencing agent to use")
+        grp3.add_argument("--once",
+                          action="store_true",
+                          help="Run all valid tests once")
 
-            elif args[i] == "--outputfile":
-                skipthis=1
-                self["OutputFile"] = args[i+1]
-                LogFactory().add_file(self["OutputFile"])
+        grp4 = parser.add_argument_group("Additional (less common) options")
+        grp4.add_argument("-c", "--clobber-cib",
+                          action="store_true",
+                          help="Erase any existing configuration")
+        grp4.add_argument("-y", "--yes",
+                          action="store_true", dest="always_continue",
+                          help="Continue to run whenever prompted")
+        grp4.add_argument("--boot",
+                          action="store_true",
+                          help="")
+        grp4.add_argument("--bsc",
+                          action="store_true",
+                          help="")
+        grp4.add_argument("--cib-filename",
+                          metavar="PATH",
+                          help="Install the given CIB file to the cluster")
+        grp4.add_argument("--container-tests",
+                          action="store_true",
+                          help="Include pacemaker_remote tests that run in lxc container resources")
+        grp4.add_argument("--experimental-tests",
+                          action="store_true",
+                          help="Include experimental tests")
+        grp4.add_argument("--loop-minutes",
+                          type=int, default=60,
+                          help="")
+        grp4.add_argument("--no-loop-tests",
+                          action="store_true",
+                          help="Don't run looping/time-based tests")
+        grp4.add_argument("--no-unsafe-tests",
+                          action="store_true",
+                          help="Don't run tests that are unsafe for use with ocfs2/drbd")
+        grp4.add_argument("--notification-agent",
+                          metavar="PATH",
+                          default="/var/lib/pacemaker/notify.sh",
+                          help="Script to configure for Pacemaker alerts")
+        grp4.add_argument("--notification-recipient",
+                          metavar="R",
+                          default="/var/lib/pacemaker/notify.log",
+                          help="Recipient to pass to alert script")
+        grp4.add_argument("--oprofile",
+                          metavar="NODES",
+                          help="List of cluster nodes to run oprofile on")
+        grp4.add_argument("--outputfile",
+                          metavar="PATH",
+                          help="Location to write logs to")
+        grp4.add_argument("--qarsh",
+                          action="store_true",
+                          help="Use QARSH to access nodes instead of SSH")
+        grp4.add_argument("--recv-loss",
+                          type=float, default=0.0,
+                          metavar="RATE",
+                          help="")
+        grp4.add_argument("--schema",
+                          metavar="SCHEMA",
+                          default="pacemaker-3.0",
+                          help="Create a CIB conforming to the given schema")
+        grp4.add_argument("--seed",
+                          metavar="SEED",
+                          help="Use the given string as the random number seed")
+        grp4.add_argument("--set",
+                          action="append",
+                          metavar="ARG",
+                          default=[],
+                          help="Set key=value pairs (can be specified multiple times)")
+        grp4.add_argument("--stonith-args",
+                          metavar="ARGS",
+                          default="hostlist=all,livedangerously=yes",
+                          help="")
+        grp4.add_argument("--stonith-type",
+                          metavar="TYPE",
+                          default="external/ssh",
+                          help="")
+        grp4.add_argument("--trunc",
+                          action="store_true", dest="truncate",
+                          help="Truncate log file before starting")
+        grp4.add_argument("--valgrind-procs",
+                          metavar="PROCS",
+                          default="pacemaker-attrd pacemaker-based pacemaker-controld pacemaker-execd pacemaker-fenced pacemaker-schedulerd",
+                          help="Run valgrind against the given space-separated list of processes")
+        grp4.add_argument("--valgrind-tests",
+                          action="store_true",
+                          help="Include tests using valgrind")
+        grp4.add_argument("--warn-inactive",
+                          action="store_true",
+                          help="Warn if a resource is assigned to an inactive node")
+        grp4.add_argument("--xmit-loss",
+                          type=float, default=0.0,
+                          metavar="RATE",
+                          help="")
 
-            elif args[i] == "-L" or args[i] == "--logfile":
-                skipthis=1
-                self["LogWatcher"] = "remote"
-                self["LogAuditDisabled"] = 1
-                self["LogFileName"] = args[i+1]
+        parser.add_argument("iterations",
+                            type=int,
+                            help="Number of tests to run")
 
-            elif args[i] == "--ip" or args[i] == "--test-ip-base":
-                skipthis=1
-                self["IPBase"] = args[i+1]
-                self["CIBResource"] = True
-                self["ClobberCIB"] = True
+        args = parser.parse_args(args=argv)
 
-            elif args[i] == "--oprofile":
-                skipthis=1
-                self["oprofile"] = args[i+1].split(' ')
+        # Set values on this object based on what happened with command line
+        # processing.  This has to be done in several blocks.
 
-            elif args[i] == "--trunc":
-                self["TruncateLog"] = True
+        # These values can always be set.  They get a default from the add_argument
+        # calls, only do one thing, and they do not have any side effects.
+        self["ClobberCIB"] = args.clobber_cib
+        self["ListTests"] = args.list_tests
+        self["Schema"] = args.schema
+        self["Stack"] = args.stack
+        self["SyslogFacility"] = args.facility
+        self["TruncateLog"] = args.truncate
+        self["at-boot"] = args.at_boot in ["1", "yes"]
+        self["benchmark"] = args.benchmark
+        self["continue"] = args.always_continue
+        self["container-tests"] = args.container_tests
+        self["experimental-tests"] = args.experimental_tests
+        self["iterations"] = args.iterations
+        self["loop-minutes"] = args.loop_minutes
+        self["loop-tests"] = not args.no_loop_tests
+        self["notification-agent"] = args.notification_agent
+        self["notification-recipient"] = args.notification_recipient
+        self["node-limit"] = args.limit_nodes
+        self["stonith-params"] = args.stonith_args
+        self["stonith-type"] = args.stonith_type
+        self["unsafe-tests"] = not args.no_unsafe_tests
+        self["valgrind-procs"] = args.valgrind_procs
+        self["valgrind-tests"] = args.valgrind_tests
+        self["warn-inactive"] = args.warn_inactive
 
-            elif args[i] == "--list-tests" or args[i] == "--list" :
-                self["ListTests"] = True
+        # Nodes and groups are mutually exclusive, so their defaults cannot be
+        # set in their add_argument calls.  Additionally, groups does more than
+        # just set a value.  Here, set nodes first and then if a group is
+        # specified, override the previous nodes value.
+        if args.nodes:
+            self["nodes"] = args.nodes.split(" ")
+        else:
+            self["nodes"] = []
 
-            elif args[i] == "--benchmark":
-                self["benchmark"] = True
+        if args.group:
+            self["OutputFile"] = "%s/cluster-%s.log" % (os.environ['HOME'], args.dsh_group)
+            LogFactory().add_file(self["OutputFile"], "CTS")
 
-            elif args[i] == "--bsc":
-                self["DoBSC"] = True
-                self["scenario"] = "basic-sanity"
+            dsh_file = "%s/.dsh/group/%s" % (os.environ['HOME'], args.dsh_group)
 
-            elif args[i] == "--qarsh":
-                RemoteFactory().enable_qarsh()
+            if os.path.isfile(dsh_file):
+                self["nodes"] = []
 
-            elif args[i] == "--yes" or args[i] == "-y":
-                self["continue"] = True
+                with open(dsh_file, "r") as f:
+                    for line in f:
+                        l = line.strip().rstrip()
 
-            elif args[i] == "--stonith" or args[i] == "--fencing":
-                skipthis=1
+                        if not l.startswith('#'):
+                            self["nodes"].append(l)
+            else:
+                print("Unknown DSH group: %s" % args.dsh_group)
 
-                if args[i+1] == "1" or args[i+1] == "yes":
-                    self["DoFencing"] = True
+        # Everything else either can't have a default set in an add_argument
+        # call (likely because we don't want to always have a value set for it)
+        # or it does something fancier than just set a single value.  However,
+        # order does not matter for these as long as the user doesn't provide
+        # conflicting arguments on the command line.  So just do Everything
+        # alphabetically.
+        if args.boot:
+            self["scenario"] = "boot"
 
-                elif args[i+1] == "0" or args[i+1] == "no":
-                    self["DoFencing"] = False
+        if args.bsc:
+            self["DoBSC"] = True
+            self["scenario"] = "basic-sanity"
 
-                elif args[i+1] == "rhcs" or args[i+1] == "xvm" or args[i+1] == "virt":
-                    self["DoFencing"] = True
+        if args.cib_filename:
+            self["CIBfilename"] = args.cib_filename
+        else:
+            self["CIBfilename"] = None
+
+        if args.choose:
+            self["scenario"] = "sequence"
+            self["tests"].append(args.choose)
+
+        if args.fencing:
+            if args.fencing in ["0", "no"]:
+                self["DoFencing"] = False
+            else:
+                self["DoFencing"] = True
+
+                if args.fencing in ["rhcs", "virt", "xvm"]:
                     self["stonith-type"] = "fence_xvm"
 
-                elif args[i+1] == "scsi":
-                    self["DoFencing"] = True
+                elif args.fencing == "scsi":
                     self["stonith-type"] = "fence_scsi"
 
-                elif args[i+1] == "ssh" or args[i+1] == "lha":
-                    self["DoFencing"] = True
-                    self["stonith-type"] = "external/ssh"
+                elif args.fencing in ["lha", "ssh"]:
                     self["stonith-params"] = "hostlist=all,livedangerously=yes"
+                    self["stonith-type"] = "external/ssh"
 
-                elif args[i+1] == "openstack":
-                    self["DoFencing"] = True
+                elif args.fencing == "openstack":
                     self["stonith-type"] = "fence_openstack"
 
                     print("Obtaining OpenStack credentials from the current environment")
@@ -365,8 +512,7 @@ class Environment:
                         os.environ['OS_PASSWORD']
                     )
 
-                elif args[i+1] == "rhevm":
-                    self["DoFencing"] = True
+                elif args.fencing == "rhevm":
                     self["stonith-type"] = "fence_rhevm"
 
                     print("Obtaining RHEV-M credentials from the current environment")
@@ -377,216 +523,45 @@ class Environment:
                         os.environ['RHEVM_PORT'],
                     )
 
-                else:
-                    self.usage(args[i+1])
+        if args.ip:
+            self["CIBResource"] = True
+            self["ClobberCIB"] = True
+            self["IPBase"] = args.ip
 
-            elif args[i] == "--stonith-type":
-                self["stonith-type"] = args[i+1]
-                skipthis=1
+        if args.logfile:
+            self["LogAuditDisabled"] = True
+            self["LogFileName"] = args.logfile
+            self["LogWatcher"] = "remote"
+        else:
+            # We can't set this as the default on the parser.add_argument call
+            # for this option because then args.logfile will be set, which means
+            # the above branch will be taken and those other values will also be
+            # set.
+            self["LogFileName"] = "/var/log/messages"
 
-            elif args[i] == "--stonith-args":
-                self["stonith-params"] = args[i+1]
-                skipthis=1
+        if args.once:
+            self["scenario"] = "all-once"
 
-            elif args[i] == "--clobber-cib" or args[i] == "-c":
-                self["ClobberCIB"] = True
+        if args.oprofile:
+            self["oprofile"] = args.oprofile.split(" ")
+        else:
+            self["oprofile"] = []
 
-            elif args[i] == "--cib-filename":
-                skipthis=1
-                self["CIBfilename"] = args[i+1]
+        if args.outputfile:
+            self["OutputFile"] = args.outputfile
+            LogFactory().add_file(self["OutputFile"])
 
-            elif args[i] == "--xmit-loss":
-                try:
-                    float(args[i+1])
-                except ValueError:
-                    print("--xmit-loss parameter should be float")
-                    self.usage(args[i+1])
+        if args.populate_resources:
+            self["CIBResource"] = True
+            self["ClobberCIB"] = True
 
-                skipthis=1
-                self["XmitLoss"] = args[i+1]
+        if args.qarsh:
+            self.rsh.enable_qarsh()
 
-            elif args[i] == "--recv-loss":
-                try:
-                    float(args[i+1])
-                except ValueError:
-                    print("--recv-loss parameter should be float")
-                    self.usage(args[i+1])
-
-                skipthis=1
-                self["RecvLoss"] = args[i+1]
-
-            elif args[i] == "--choose":
-                skipthis=1
-                self["tests"].append(args[i+1])
-                self["scenario"] = "sequence"
-
-            elif args[i] == "--nodes":
-                skipthis=1
-                self["nodes"] = args[i+1].split(' ')
-
-            elif args[i] == "-g" or args[i] == "--group" or args[i] == "--dsh-group":
-                skipthis=1
-                self["OutputFile"] = "%s/cluster-%s.log" % (os.environ['HOME'], args[i+1])
-                LogFactory().add_file(self["OutputFile"], "CTS")
-
-                dsh_file = "%s/.dsh/group/%s" % (os.environ['HOME'], args[i+1])
-
-                if os.path.isfile(dsh_file):
-                    self["nodes"] = []
-                    f = open(dsh_file, 'r')
-
-                    for line in f:
-                        l = line.strip().rstrip()
-                        if not l.startswith('#'):
-                            self["nodes"].append(l)
-
-                    f.close()
-
-                else:
-                    print("Unknown DSH group: %s" % args[i+1])
-
-            elif args[i] == "--syslog-facility" or args[i] == "--facility":
-                skipthis=1
-                self["SyslogFacility"] = args[i+1]
-
-            elif args[i] == "--seed":
-                skipthis=1
-                self._seed_random(args[i+1])
-
-            elif args[i] == "--warn-inactive":
-                self["warn-inactive"] = True
-
-            elif args[i] == "--schema":
-                skipthis=1
-                self["Schema"] = args[i+1]
-
-            elif args[i] == "--at-boot" or args[i] == "--cluster-starts-at-boot":
-                skipthis=1
-
-                if args[i+1] == "1" or args[i+1] == "yes":
-                    self["at-boot"] = 1
-                elif args[i+1] == "0" or args[i+1] == "no":
-                    self["at-boot"] = 0
-                else:
-                    self.usage(args[i+1])
-
-            elif args[i] == "--stack":
-                self["Stack"] = args[i+1]
-                skipthis=1
-
-            elif args[i] == "--once":
-                self["scenario"] = "all-once"
-
-            elif args[i] == "--boot":
-                self["scenario"] = "boot"
-
-            elif args[i] == "--notification-agent":
-                self["notification-agent"] = args[i+1]
-                skipthis = 1
-
-            elif args[i] == "--notification-recipient":
-                self["notification-recipient"] = args[i+1]
-                skipthis = 1
-
-            elif args[i] == "--valgrind-tests":
-                self["valgrind-tests"] = True
-
-            elif args[i] == "--valgrind-procs":
-                self["valgrind-procs"] = args[i+1]
-                skipthis = 1
-
-            elif args[i] == "--no-loop-tests":
-                self["loop-tests"] = False
-
-            elif args[i] == "--loop-minutes":
-                skipthis=1
-
-                try:
-                    self["loop-minutes"]=int(args[i+1])
-                except ValueError:
-                    self.usage(args[i])
-
-            elif args[i] == "--no-unsafe-tests":
-                self["unsafe-tests"] = False
-
-            elif args[i] == "--experimental-tests":
-                self["experimental-tests"] = True
-
-            elif args[i] == "--container-tests":
-                self["container-tests"] = True
-
-            elif args[i] == "--set":
-                skipthis=1
-                (name, value) = args[i+1].split('=')
-                self[name] = value
-                print("Setting %s = %s" % (name, value))
-
-            elif args[i] == "--help":
-                self.usage(args[i], 0)
-
-            elif args[i] == "--":
-                break
-
-            else:
-                try:
-                    NumIter=int(args[i])
-                    self["iterations"] = NumIter
-                except ValueError:
-                    self.usage(args[i])
-
-    def usage(self, arg, status=1):
-        if status:
-            print("Illegal argument %s" % arg)
-
-        print("""usage: %s [options] number-of-iterations
-
-Common options:
-\t [--nodes 'node list']        list of cluster nodes separated by whitespace
-\t [--group | -g 'name']        use the nodes listed in the named DSH group (~/.dsh/groups/$name)
-\t [--limit-nodes max]          only use the first 'max' cluster nodes supplied with --nodes
-\t [--stack corosync]           which cluster stack is installed
-\t [--list-tests]               list the valid tests
-\t [--benchmark]                add the timing information
-
-Options that CTS will usually auto-detect correctly:
-\t [--logfile path]             where should the test software look for logs from cluster nodes
-\t [--syslog-facility name]     which syslog facility should the test software log to
-\t [--at-boot (1|0)]            does the cluster software start at boot time
-\t [--test-ip-base ip]          offset for generated IP address resources
-
-Options for release testing:
-\t [--populate-resources | -r]  generate a sample configuration
-\t [--choose name]              run only the named test
-\t [--stonith (1 | 0 | yes | no | rhcs | ssh)]
-\t [--once]                     run all valid tests once
-
-Additional (less common) options:
-\t [--clobber-cib | -c ]        erase any existing configuration
-\t [--outputfile path]          optional location for the test software to write logs to
-\t [--trunc]                    truncate logfile before starting
-\t [--xmit-loss lost-rate(0.0-1.0)]
-\t [--recv-loss lost-rate(0.0-1.0)]
-\t [--fencing (1 | 0 | yes | no | rhcs | lha | openstack )]
-\t [--stonith-type type]
-\t [--stonith-args name=value]
-\t [--bsc]
-\t [--notification-agent path]  script to configure for Pacemaker alerts
-\t [--notification-recipient r] recipient to pass to alert script
-\t [--no-loop-tests]            don't run looping/time-based tests
-\t [--no-unsafe-tests]          don't run tests that are unsafe for use with ocfs2/drbd
-\t [--valgrind-tests]           include tests using valgrind
-\t [--experimental-tests]       include experimental tests
-\t [--container-tests]          include pacemaker_remote tests that run in lxc container resources
-\t [--oprofile 'node list']     list of cluster nodes to run oprofile on]
-\t [--qarsh]                    use the QARSH backdoor to access nodes instead of SSH
-\t [--seed random_seed]
-\t [--set option=value]
-\t [--yes | -y]                 continue to run cts when there is an interaction whether to continue running pacemaker-cts
-
-Example:
-\t python %s -g virt1 -r --stonith ssh --schema pacemaker-2.0 500""" % (sys.argv[0], sys.argv[0]))
-
-        sys.exit(status)
+        for kv in args.set:
+            (name, value) = kv.split("=")
+            self[name] = value
+            print("Setting %s = %s" % (name, value))
 
 class EnvFactory:
     instance = None

@@ -439,7 +439,7 @@ class StonithdTest(CTSTest):
         watchpats.append(self.templates["Pat:Fencing_ok"] % node)
         watchpats.append(self.templates["Pat:NodeFenced"] % node)
 
-        if self.Env["at-boot"] == 0:
+        if not self.Env["at-boot"]:
             self.debug("Expecting %s to stay down" % node)
             self.CM.ShouldBeStatus[node] = "down"
         else:
@@ -1462,7 +1462,7 @@ class ComponentFail(CTSTest):
             self.debug("Found: " + repr(shot))
             self.okerrpatterns.append(self.templates["Pat:Fencing_start"] % node)
 
-            if self.Env["at-boot"] == 0:
+            if not self.Env["at-boot"]:
                 self.CM.ShouldBeStatus[node] = "down"
 
             # If fencing occurred, chances are many (if not all) the expected logs
