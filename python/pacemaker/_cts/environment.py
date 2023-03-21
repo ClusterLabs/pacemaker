@@ -227,8 +227,7 @@ class Environment:
 
     def _validate(self):
         if not self["nodes"]:
-            print("No nodes specified!")
-            sys.exit(1)
+            raise ValueError("No nodes specified!")
 
     def _discover(self):
         self.target = random.Random().choice(self["nodes"])
