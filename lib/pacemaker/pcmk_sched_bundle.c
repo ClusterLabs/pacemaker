@@ -518,13 +518,6 @@ pcmk__with_bundle_colocations(const pe_resource_t *rsc,
               && (orig_rsc != NULL) && (list != NULL),
               return);
 
-    // @COMPAT with previous (incorrect) behavior
-    if ((rsc != orig_rsc)
-        && pcmk_is_set(rsc->flags, pe_rsc_provisional)
-        && !pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
-        return; // Containers have not yet received bundle colocations
-    }
-
     if (rsc == orig_rsc) { // Colocations are wanted for bundle itself
         pcmk__add_with_this_list(list, rsc->rsc_cons_lhs);
 
@@ -542,13 +535,6 @@ pcmk__bundle_with_colocations(const pe_resource_t *rsc,
     CRM_CHECK((rsc != NULL) && (rsc->variant == pe_container)
               && (orig_rsc != NULL) && (list != NULL),
               return);
-
-    // @COMPAT with previous (incorrect) behavior
-    if ((rsc != orig_rsc)
-        && pcmk_is_set(rsc->flags, pe_rsc_provisional)
-        && !pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
-        return; // Containers have not yet received bundle colocations
-    }
 
     if (rsc == orig_rsc) { // Colocations are wanted for bundle itself
         pcmk__add_this_with_list(list, rsc->rsc_cons);

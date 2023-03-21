@@ -371,13 +371,6 @@ pcmk__with_clone_colocations(const pe_resource_t *rsc,
 {
     CRM_CHECK((rsc != NULL) && (orig_rsc != NULL) && (list != NULL), return);
 
-    // @COMPAT with previous (incorrect) behavior
-    if ((rsc != orig_rsc)
-        && pcmk_is_set(rsc->flags, pe_rsc_provisional)
-        && !pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
-        return; // Instances have not yet received clone colocations
-    }
-
     if (rsc == orig_rsc) { // Colocations are wanted for clone itself
         pcmk__add_with_this_list(list, rsc->rsc_cons_lhs);
     } else {
@@ -391,13 +384,6 @@ pcmk__clone_with_colocations(const pe_resource_t *rsc,
                              const pe_resource_t *orig_rsc, GList **list)
 {
     CRM_CHECK((rsc != NULL) && (orig_rsc != NULL) && (list != NULL), return);
-
-    // @COMPAT with previous (incorrect) behavior
-    if ((rsc != orig_rsc)
-        && pcmk_is_set(rsc->flags, pe_rsc_provisional)
-        && !pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
-        return; // Instances have not yet received clone colocations
-    }
 
     if (rsc == orig_rsc) { // Colocations are wanted for clone itself
         pcmk__add_this_with_list(list, rsc->rsc_cons);
