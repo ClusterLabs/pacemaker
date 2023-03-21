@@ -297,6 +297,18 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
         }
         resources = g_list_append(resources, rsc);
 
+    }   else if (pcmk__str_eq(attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
+        crm_xml_add(rsc->xml, attr_name, attr_value);
+        CRM_ASSERT(cib);
+        rc = cib->cmds->replace(cib, XML_CIB_TAG_RESOURCES, rsc->xml, cib_options);
+        rc = pcmk_legacy2rc(rc);
+
+        if (rc == pcmk_rc_ok) {
+            out->info(out, "Set attribute: name=%s value=%s", attr_name, attr_value);
+        }
+
+        return rc;
+
     } else {
         resources = find_matching_attr_resources(out, rsc, requested_name, attr_set, attr_set_type,
                                                  attr_id, attr_name, cib, "update", force);
@@ -427,6 +439,17 @@ cli_resource_delete_attribute(pe_resource_t *rsc, const char *requested_name,
     if(pcmk__str_eq(attr_set_type, XML_TAG_META_SETS, pcmk__str_casei)) {
         resources = find_matching_attr_resources(out, rsc, requested_name, attr_set, attr_set_type,
                                                  attr_id, attr_name, cib, "delete", force);
+    } else if (pcmk__str_eq(attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
+        xml_remove_prop(rsc->xml, attr_name);
+        CRM_ASSERT(cib);
+        rc = cib->cmds->replace(cib, XML_CIB_TAG_RESOURCES, rsc->xml, cib_options);
+        rc = pcmk_legacy2rc(rc);
+
+        if (rc == pcmk_rc_ok) {
+            out->info(out, "Deleted attribute: %s", attr_name);
+        }
+
+        return rc;
     } else {
         resources = g_list_append(resources, rsc);
     }
