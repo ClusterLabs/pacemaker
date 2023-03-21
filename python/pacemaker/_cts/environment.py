@@ -564,6 +564,7 @@ class Environment:
 class EnvFactory:
     instance = None
 
+    # pylint: disable=invalid-name
     def getInstance(self, args=None):
         if not EnvFactory.instance:
             EnvFactory.instance = Environment(args)
