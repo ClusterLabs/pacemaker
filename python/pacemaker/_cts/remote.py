@@ -266,6 +266,7 @@ class RemoteFactory:
 
     instance = None
 
+    # pylint: disable=invalid-name
     def getInstance(self):
         """ Returns the previously created instance of RemoteExec, or creates a
             new instance if one does not already exist.
