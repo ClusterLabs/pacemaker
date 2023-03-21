@@ -37,10 +37,10 @@ class Environment:
         self["scenario"] = "random"
 
         self.random_gen = random.Random()
-        self._logger = LogFactory()
 
+        self._logger = LogFactory()
+        self._rsh = RemoteFactory().getInstance()
         self._seed_random()
-        self.rsh = RemoteFactory().getInstance()
 
         self.target = "localhost"
 
@@ -144,11 +144,11 @@ class Environment:
         if "syslogd" not in self.data:
             if self["have_systemd"]:
                 # Systemd
-                (_, lines) = self.rsh(self.target, "systemctl list-units | grep syslog.*\.service.*active.*running | sed 's:.service.*::'", verbose=1)
+                (_, lines) = self._rsh(self.target, "systemctl list-units | grep syslog.*\.service.*active.*running | sed 's:.service.*::'", verbose=1)
                 self["syslogd"] = lines[0].strip()
             else:
                 # SYS-V
-                (_, lines) = self.rsh(self.target, "chkconfig --list | grep syslog.*on | awk '{print $1}' | head -n 1", verbose=1)
+                (_, lines) = self._rsh(self.target, "chkconfig --list | grep syslog.*on | awk '{print $1}' | head -n 1", verbose=1)
                 self["syslogd"] = lines[0].strip()
 
             if "syslogd" not in self.data or not self["syslogd"]:
@@ -158,21 +158,21 @@ class Environment:
     def disable_service(self, node, service):
         if self["have_systemd"]:
             # Systemd
-            (rc, _) = self.rsh(node, "systemctl disable %s" % service)
+            (rc, _) = self._rsh(node, "systemctl disable %s" % service)
             return rc
 
         # SYS-V
-        (rc, _) = self.rsh(node, "chkconfig %s off" % service)
+        (rc, _) = self._rsh(node, "chkconfig %s off" % service)
         return rc
 
     def enable_service(self, node, service):
         if self["have_systemd"]:
             # Systemd
-            (rc, _) = self.rsh(node, "systemctl enable %s" % service)
+            (rc, _) = self._rsh(node, "systemctl enable %s" % service)
             return rc
 
         # SYS-V
-        (rc, _) = self.rsh(node, "chkconfig %s on" % service)
+        (rc, _) = self._rsh(node, "chkconfig %s on" % service)
         return rc
 
     def service_is_enabled(self, node, service):
@@ -183,11 +183,11 @@ class Environment:
             # explicitly "enabled" instead of the return code. For example it returns
             # 0 if the service is "static" or "indirect", but they don't really count
             # as "enabled".
-            (rc, _) = self.rsh(node, "systemctl is-enabled %s | grep enabled" % service)
+            (rc, _) = self._rsh(node, "systemctl is-enabled %s | grep enabled" % service)
             return rc == 0
 
         # SYS-V
-        (rc, _) = self.rsh(node, "chkconfig --list | grep -e %s.*on" % service)
+        (rc, _) = self._rsh(node, "chkconfig --list | grep -e %s.*on" % service)
         return rc == 0
 
     def _detect_at_boot(self):
@@ -199,10 +199,10 @@ class Environment:
     def _detect_ip_offset(self):
         # Try to determine an offset for IPaddr resources
         if self["CIBResource"] and "IPBase" not in self.data:
-            (_, lines) = self.rsh(self.target, "ip addr | grep inet | grep -v -e link -e inet6 -e '/32' -e ' lo' | awk '{print $2}'", verbose=0)
+            (_, lines) = self._rsh(self.target, "ip addr | grep inet | grep -v -e link -e inet6 -e '/32' -e ' lo' | awk '{print $2}'", verbose=0)
             network = lines[0].strip()
 
-            (_, lines) = self.rsh(self.target, "nmap -sn -n %s | grep 'scan report' | awk '{print $NF}' | sed 's:(::' | sed 's:)::' | sort -V | tail -n 1" % network, verbose=0)
+            (_, lines) = self._rsh(self.target, "nmap -sn -n %s | grep 'scan report' | awk '{print $NF}' | sed 's:(::' | sed 's:)::' | sort -V | tail -n 1" % network, verbose=0)
             self["IPBase"] = lines[0].strip()
 
             if not self["IPBase"]:
@@ -243,7 +243,7 @@ class Environment:
         self["cts-exerciser"] = exerciser
 
         if "have_systemd" not in self.data:
-            (rc, _) = self.rsh(self.target, "systemctl list-units", verbose=0)
+            (rc, _) = self._rsh(self.target, "systemctl list-units", verbose=0)
             self["have_systemd"] = rc == 0
 
         self._detect_syslog()
@@ -554,7 +554,7 @@ class Environment:
             self["ClobberCIB"] = True
 
         if args.qarsh:
-            self.rsh.enable_qarsh()
+            self._rsh.enable_qarsh()
 
         for kv in args.set:
             (name, value) = kv.split("=")
