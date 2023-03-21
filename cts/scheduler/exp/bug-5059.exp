@@ -88,7 +88,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="43" operation="notify" operation_key="ms_stateful_post_notify_running_0"/>
+        <pseudo_event id="45" operation="notify" operation_key="ms_stateful_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -101,7 +101,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="41" operation="notify" operation_key="ms_stateful_pre_notify_start_0"/>
+        <pseudo_event id="43" operation="notify" operation_key="ms_stateful_pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -153,7 +153,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="43" operation="notify" operation_key="ms_stateful_post_notify_running_0"/>
+        <pseudo_event id="45" operation="notify" operation_key="ms_stateful_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -251,7 +251,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="43" operation="notify" operation_key="ms_stateful_post_notify_running_0"/>
+        <pseudo_event id="45" operation="notify" operation_key="ms_stateful_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -264,7 +264,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="41" operation="notify" operation_key="ms_stateful_pre_notify_start_0"/>
+        <pseudo_event id="43" operation="notify" operation_key="ms_stateful_pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -277,7 +277,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="44" operation="notified" operation_key="ms_stateful_confirmed-post_notify_running_0"/>
+        <pseudo_event id="46" operation="notified" operation_key="ms_stateful_confirmed-post_notify_running_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="56" operation="notified" operation_key="ms_stateful_confirmed-post_notify_promoted_0"/>
@@ -319,7 +319,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="43" operation="notify" operation_key="ms_stateful_post_notify_running_0"/>
+        <pseudo_event id="45" operation="notify" operation_key="ms_stateful_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -335,7 +335,7 @@
         <rsc_op id="21" operation="start" operation_key="p_stateful2:1_start_0" on_node="gluster02.h" on_node_uuid="gluster02.h"/>
       </trigger>
       <trigger>
-        <pseudo_event id="44" operation="notified" operation_key="ms_stateful_confirmed-post_notify_running_0"/>
+        <pseudo_event id="46" operation="notified" operation_key="ms_stateful_confirmed-post_notify_running_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="56" operation="notified" operation_key="ms_stateful_confirmed-post_notify_promoted_0"/>
@@ -426,7 +426,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="44" operation="notified" operation_key="ms_stateful_confirmed-post_notify_running_0"/>
+        <pseudo_event id="46" operation="notified" operation_key="ms_stateful_confirmed-post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -459,13 +459,13 @@
   </synapse>
   <synapse id="32" priority="1000000">
     <action_set>
-      <pseudo_event id="44" operation="notified" operation_key="ms_stateful_confirmed-post_notify_running_0">
+      <pseudo_event id="46" operation="notified" operation_key="ms_stateful_confirmed-post_notify_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="43" operation="notify" operation_key="ms_stateful_post_notify_running_0"/>
+        <pseudo_event id="45" operation="notify" operation_key="ms_stateful_post_notify_running_0"/>
       </trigger>
       <trigger>
         <rsc_op id="83" operation="notify" operation_key="p_stateful1:0_post_notify_start_0" on_node="gluster01.h" on_node_uuid="gluster01.h"/>
@@ -483,7 +483,7 @@
   </synapse>
   <synapse id="33" priority="1000000">
     <action_set>
-      <pseudo_event id="43" operation="notify" operation_key="ms_stateful_post_notify_running_0">
+      <pseudo_event id="45" operation="notify" operation_key="ms_stateful_post_notify_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -492,19 +492,19 @@
         <pseudo_event id="40" operation="running" operation_key="ms_stateful_running_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="42" operation="notified" operation_key="ms_stateful_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="44" operation="notified" operation_key="ms_stateful_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="34">
     <action_set>
-      <pseudo_event id="42" operation="notified" operation_key="ms_stateful_confirmed-pre_notify_start_0">
+      <pseudo_event id="44" operation="notified" operation_key="ms_stateful_confirmed-pre_notify_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="41" operation="notify" operation_key="ms_stateful_pre_notify_start_0"/>
+        <pseudo_event id="43" operation="notify" operation_key="ms_stateful_pre_notify_start_0"/>
       </trigger>
       <trigger>
         <rsc_op id="82" operation="notify" operation_key="p_stateful1:0_pre_notify_start_0" on_node="gluster01.h" on_node_uuid="gluster01.h"/>
@@ -516,7 +516,7 @@
   </synapse>
   <synapse id="35">
     <action_set>
-      <pseudo_event id="41" operation="notify" operation_key="ms_stateful_pre_notify_start_0">
+      <pseudo_event id="43" operation="notify" operation_key="ms_stateful_pre_notify_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -548,7 +548,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="42" operation="notified" operation_key="ms_stateful_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="44" operation="notified" operation_key="ms_stateful_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>

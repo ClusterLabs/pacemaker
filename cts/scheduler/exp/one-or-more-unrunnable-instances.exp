@@ -4307,7 +4307,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="584" operation="notify" operation_key="nova-compute-clone_post_notify_running_0"/>
+        <pseudo_event id="586" operation="notify" operation_key="nova-compute-clone_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -4323,7 +4323,7 @@
         <rsc_op id="574" operation="start" operation_key="nova-compute_start_0" internal_operation_key="nova-compute:0_start_0" on_node="mrg-07" on_node_uuid="mrg-07" router_node="rdo7-node1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="585" operation="notified" operation_key="nova-compute-clone_confirmed-post_notify_running_0"/>
+        <pseudo_event id="587" operation="notified" operation_key="nova-compute-clone_confirmed-post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -4352,7 +4352,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="584" operation="notify" operation_key="nova-compute-clone_post_notify_running_0"/>
+        <pseudo_event id="586" operation="notify" operation_key="nova-compute-clone_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -4368,7 +4368,7 @@
         <rsc_op id="576" operation="start" operation_key="nova-compute:1_start_0" on_node="mrg-08" on_node_uuid="mrg-08" router_node="rdo7-node2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="585" operation="notified" operation_key="nova-compute-clone_confirmed-post_notify_running_0"/>
+        <pseudo_event id="587" operation="notified" operation_key="nova-compute-clone_confirmed-post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -4397,7 +4397,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="584" operation="notify" operation_key="nova-compute-clone_post_notify_running_0"/>
+        <pseudo_event id="586" operation="notify" operation_key="nova-compute-clone_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -4413,7 +4413,7 @@
         <rsc_op id="578" operation="start" operation_key="nova-compute:2_start_0" on_node="mrg-09" on_node_uuid="mrg-09" router_node="rdo7-node3"/>
       </trigger>
       <trigger>
-        <pseudo_event id="585" operation="notified" operation_key="nova-compute-clone_confirmed-post_notify_running_0"/>
+        <pseudo_event id="587" operation="notified" operation_key="nova-compute-clone_confirmed-post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -4435,13 +4435,13 @@
   </synapse>
   <synapse id="302" priority="1000000">
     <action_set>
-      <pseudo_event id="585" operation="notified" operation_key="nova-compute-clone_confirmed-post_notify_running_0">
+      <pseudo_event id="587" operation="notified" operation_key="nova-compute-clone_confirmed-post_notify_running_0">
         <attributes CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="584" operation="notify" operation_key="nova-compute-clone_post_notify_running_0"/>
+        <pseudo_event id="586" operation="notify" operation_key="nova-compute-clone_post_notify_running_0"/>
       </trigger>
       <trigger>
         <rsc_op id="757" operation="notify" operation_key="nova-compute_post_notify_start_0" internal_operation_key="nova-compute:0_post_notify_start_0" on_node="mrg-07" on_node_uuid="mrg-07" router_node="rdo7-node1"/>
@@ -4456,7 +4456,7 @@
   </synapse>
   <synapse id="303" priority="1000000">
     <action_set>
-      <pseudo_event id="584" operation="notify" operation_key="nova-compute-clone_post_notify_running_0">
+      <pseudo_event id="586" operation="notify" operation_key="nova-compute-clone_post_notify_running_0">
         <attributes CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -4465,25 +4465,25 @@
         <pseudo_event id="581" operation="running" operation_key="nova-compute-clone_running_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="583" operation="notified" operation_key="nova-compute-clone_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="585" operation="notified" operation_key="nova-compute-clone_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="304">
     <action_set>
-      <pseudo_event id="583" operation="notified" operation_key="nova-compute-clone_confirmed-pre_notify_start_0">
+      <pseudo_event id="585" operation="notified" operation_key="nova-compute-clone_confirmed-pre_notify_start_0">
         <attributes CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="582" operation="notify" operation_key="nova-compute-clone_pre_notify_start_0"/>
+        <pseudo_event id="584" operation="notify" operation_key="nova-compute-clone_pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="305">
     <action_set>
-      <pseudo_event id="582" operation="notify" operation_key="nova-compute-clone_pre_notify_start_0">
+      <pseudo_event id="584" operation="notify" operation_key="nova-compute-clone_pre_notify_start_0">
         <attributes CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -4524,7 +4524,7 @@
         <pseudo_event id="571" operation="running" operation_key="ceilometer-compute-clone_running_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="583" operation="notified" operation_key="nova-compute-clone_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="585" operation="notified" operation_key="nova-compute-clone_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>

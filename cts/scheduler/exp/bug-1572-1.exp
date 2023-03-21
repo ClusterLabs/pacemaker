@@ -47,7 +47,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="14" operation="stop" operation_key="ms_drbd_7788_stop_0"/>
+        <pseudo_event id="10" operation="stop" operation_key="ms_drbd_7788_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -125,7 +125,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="12" operation="notify" operation_key="ms_drbd_7788_post_notify_running_0"/>
+        <pseudo_event id="14" operation="notify" operation_key="ms_drbd_7788_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -160,7 +160,7 @@
         <rsc_op id="5" operation="demote" operation_key="rsc_drbd_7788:1_demote_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26"/>
       </trigger>
       <trigger>
-        <pseudo_event id="14" operation="stop" operation_key="ms_drbd_7788_stop_0"/>
+        <pseudo_event id="10" operation="stop" operation_key="ms_drbd_7788_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -335,7 +335,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="13" operation="notified" operation_key="ms_drbd_7788_confirmed-post_notify_running_0"/>
+        <pseudo_event id="15" operation="notified" operation_key="ms_drbd_7788_confirmed-post_notify_running_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="19" operation="notified" operation_key="ms_drbd_7788_confirmed-post_notify_stopped_0"/>
@@ -368,7 +368,7 @@
         <pseudo_event id="9" operation="running" operation_key="ms_drbd_7788_running_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="15" operation="stopped" operation_key="ms_drbd_7788_stopped_0"/>
+        <pseudo_event id="11" operation="stopped" operation_key="ms_drbd_7788_stopped_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="23" operation="notified" operation_key="ms_drbd_7788_confirmed-pre_notify_promote_0"/>
@@ -398,7 +398,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="15" operation="stopped" operation_key="ms_drbd_7788_stopped_0"/>
+        <pseudo_event id="11" operation="stopped" operation_key="ms_drbd_7788_stopped_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="17" operation="notified" operation_key="ms_drbd_7788_confirmed-pre_notify_stop_0"/>
@@ -437,7 +437,64 @@
   </synapse>
   <synapse id="30" priority="1000000">
     <action_set>
-      <pseudo_event id="15" operation="stopped" operation_key="ms_drbd_7788_stopped_0">
+      <pseudo_event id="15" operation="notified" operation_key="ms_drbd_7788_confirmed-post_notify_running_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="14" operation="notify" operation_key="ms_drbd_7788_post_notify_running_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="48" operation="notify" operation_key="rsc_drbd_7788:1_post_notify_start_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="31" priority="1000000">
+    <action_set>
+      <pseudo_event id="14" operation="notify" operation_key="ms_drbd_7788_post_notify_running_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="9" operation="running" operation_key="ms_drbd_7788_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="13" operation="notified" operation_key="ms_drbd_7788_confirmed-pre_notify_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="32">
+    <action_set>
+      <pseudo_event id="13" operation="notified" operation_key="ms_drbd_7788_confirmed-pre_notify_start_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="12" operation="notify" operation_key="ms_drbd_7788_pre_notify_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="33">
+    <action_set>
+      <pseudo_event id="12" operation="notify" operation_key="ms_drbd_7788_pre_notify_start_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="19" operation="notified" operation_key="ms_drbd_7788_confirmed-post_notify_stopped_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="31" operation="notified" operation_key="ms_drbd_7788_confirmed-post_notify_demoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="34" priority="1000000">
+    <action_set>
+      <pseudo_event id="11" operation="stopped" operation_key="ms_drbd_7788_stopped_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" />
       </pseudo_event>
     </action_set>
@@ -449,13 +506,13 @@
         <rsc_op id="6" operation="stop" operation_key="rsc_drbd_7788:1_stop_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26"/>
       </trigger>
       <trigger>
-        <pseudo_event id="14" operation="stop" operation_key="ms_drbd_7788_stop_0"/>
+        <pseudo_event id="10" operation="stop" operation_key="ms_drbd_7788_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="31">
+  <synapse id="35">
     <action_set>
-      <pseudo_event id="14" operation="stop" operation_key="ms_drbd_7788_stop_0">
+      <pseudo_event id="10" operation="stop" operation_key="ms_drbd_7788_stop_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" />
       </pseudo_event>
     </action_set>
@@ -465,63 +522,6 @@
       </trigger>
       <trigger>
         <pseudo_event id="27" operation="demoted" operation_key="ms_drbd_7788_demoted_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="32" priority="1000000">
-    <action_set>
-      <pseudo_event id="13" operation="notified" operation_key="ms_drbd_7788_confirmed-post_notify_running_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="12" operation="notify" operation_key="ms_drbd_7788_post_notify_running_0"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="48" operation="notify" operation_key="rsc_drbd_7788:1_post_notify_start_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="33" priority="1000000">
-    <action_set>
-      <pseudo_event id="12" operation="notify" operation_key="ms_drbd_7788_post_notify_running_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="9" operation="running" operation_key="ms_drbd_7788_running_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="11" operation="notified" operation_key="ms_drbd_7788_confirmed-pre_notify_start_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="34">
-    <action_set>
-      <pseudo_event id="11" operation="notified" operation_key="ms_drbd_7788_confirmed-pre_notify_start_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="10" operation="notify" operation_key="ms_drbd_7788_pre_notify_start_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="35">
-    <action_set>
-      <pseudo_event id="10" operation="notify" operation_key="ms_drbd_7788_pre_notify_start_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="19" operation="notified" operation_key="ms_drbd_7788_confirmed-post_notify_stopped_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="31" operation="notified" operation_key="ms_drbd_7788_confirmed-post_notify_demoted_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -548,10 +548,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="11" operation="notified" operation_key="ms_drbd_7788_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="11" operation="stopped" operation_key="ms_drbd_7788_stopped_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="15" operation="stopped" operation_key="ms_drbd_7788_stopped_0"/>
+        <pseudo_event id="13" operation="notified" operation_key="ms_drbd_7788_confirmed-pre_notify_start_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="27" operation="demoted" operation_key="ms_drbd_7788_demoted_0"/>

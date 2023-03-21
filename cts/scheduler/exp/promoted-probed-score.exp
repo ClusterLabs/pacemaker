@@ -34,7 +34,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="50" operation="notify" operation_key="AdminClone_post_notify_running_0"/>
+        <pseudo_event id="52" operation="notify" operation_key="AdminClone_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -53,7 +53,7 @@
         <rsc_op id="41" operation="promote" operation_key="AdminDrbd:0_promote_0" on_node="hypatia-corosync.nevis.columbia.edu" on_node_uuid="hypatia-corosync.nevis.columbia.edu"/>
       </trigger>
       <trigger>
-        <pseudo_event id="51" operation="notified" operation_key="AdminClone_confirmed-post_notify_running_0"/>
+        <pseudo_event id="53" operation="notified" operation_key="AdminClone_confirmed-post_notify_running_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="63" operation="notified" operation_key="AdminClone_confirmed-post_notify_promoted_0"/>
@@ -124,7 +124,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="50" operation="notify" operation_key="AdminClone_post_notify_running_0"/>
+        <pseudo_event id="52" operation="notify" operation_key="AdminClone_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -143,7 +143,7 @@
         <rsc_op id="44" operation="promote" operation_key="AdminDrbd:1_promote_0" on_node="orestes-corosync.nevis.columbia.edu" on_node_uuid="orestes-corosync.nevis.columbia.edu"/>
       </trigger>
       <trigger>
-        <pseudo_event id="51" operation="notified" operation_key="AdminClone_confirmed-post_notify_running_0"/>
+        <pseudo_event id="53" operation="notified" operation_key="AdminClone_confirmed-post_notify_running_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="63" operation="notified" operation_key="AdminClone_confirmed-post_notify_promoted_0"/>
@@ -238,7 +238,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="51" operation="notified" operation_key="AdminClone_confirmed-post_notify_running_0"/>
+        <pseudo_event id="53" operation="notified" operation_key="AdminClone_confirmed-post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -274,13 +274,13 @@
   </synapse>
   <synapse id="18" priority="1000000">
     <action_set>
-      <pseudo_event id="51" operation="notified" operation_key="AdminClone_confirmed-post_notify_running_0">
+      <pseudo_event id="53" operation="notified" operation_key="AdminClone_confirmed-post_notify_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="2" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="2" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="50" operation="notify" operation_key="AdminClone_post_notify_running_0"/>
+        <pseudo_event id="52" operation="notify" operation_key="AdminClone_post_notify_running_0"/>
       </trigger>
       <trigger>
         <rsc_op id="240" operation="notify" operation_key="AdminDrbd:0_post_notify_start_0" on_node="hypatia-corosync.nevis.columbia.edu" on_node_uuid="hypatia-corosync.nevis.columbia.edu"/>
@@ -292,7 +292,7 @@
   </synapse>
   <synapse id="19" priority="1000000">
     <action_set>
-      <pseudo_event id="50" operation="notify" operation_key="AdminClone_post_notify_running_0">
+      <pseudo_event id="52" operation="notify" operation_key="AdminClone_post_notify_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="2" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="2" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -301,25 +301,25 @@
         <pseudo_event id="47" operation="running" operation_key="AdminClone_running_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="49" operation="notified" operation_key="AdminClone_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="51" operation="notified" operation_key="AdminClone_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="20">
     <action_set>
-      <pseudo_event id="49" operation="notified" operation_key="AdminClone_confirmed-pre_notify_start_0">
+      <pseudo_event id="51" operation="notified" operation_key="AdminClone_confirmed-pre_notify_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="2" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="2" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="48" operation="notify" operation_key="AdminClone_pre_notify_start_0"/>
+        <pseudo_event id="50" operation="notify" operation_key="AdminClone_pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="21">
     <action_set>
-      <pseudo_event id="48" operation="notify" operation_key="AdminClone_pre_notify_start_0">
+      <pseudo_event id="50" operation="notify" operation_key="AdminClone_pre_notify_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="2" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="2" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -351,7 +351,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="49" operation="notified" operation_key="AdminClone_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="51" operation="notified" operation_key="AdminClone_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>

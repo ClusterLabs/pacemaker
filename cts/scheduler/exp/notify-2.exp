@@ -8,7 +8,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="10" operation="notify" operation_key="rsc1_post_notify_running_0"/>
+        <pseudo_event id="12" operation="notify" operation_key="rsc1_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -21,7 +21,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="8" operation="notify" operation_key="rsc1_pre_notify_start_0"/>
+        <pseudo_event id="10" operation="notify" operation_key="rsc1_pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -34,7 +34,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="10" operation="notify" operation_key="rsc1_post_notify_running_0"/>
+        <pseudo_event id="12" operation="notify" operation_key="rsc1_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -62,13 +62,13 @@
   </synapse>
   <synapse id="5" priority="1000000">
     <action_set>
-      <pseudo_event id="11" operation="notified" operation_key="rsc1_confirmed-post_notify_running_0">
+      <pseudo_event id="13" operation="notified" operation_key="rsc1_confirmed-post_notify_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="10" operation="notify" operation_key="rsc1_post_notify_running_0"/>
+        <pseudo_event id="12" operation="notify" operation_key="rsc1_post_notify_running_0"/>
       </trigger>
       <trigger>
         <rsc_op id="34" operation="notify" operation_key="child_rsc1:0_post_notify_start_0" on_node="node1" on_node_uuid="uuid1"/>
@@ -80,7 +80,7 @@
   </synapse>
   <synapse id="6" priority="1000000">
     <action_set>
-      <pseudo_event id="10" operation="notify" operation_key="rsc1_post_notify_running_0">
+      <pseudo_event id="12" operation="notify" operation_key="rsc1_post_notify_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -89,19 +89,19 @@
         <pseudo_event id="7" operation="running" operation_key="rsc1_running_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="9" operation="notified" operation_key="rsc1_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="11" operation="notified" operation_key="rsc1_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="7">
     <action_set>
-      <pseudo_event id="9" operation="notified" operation_key="rsc1_confirmed-pre_notify_start_0">
+      <pseudo_event id="11" operation="notified" operation_key="rsc1_confirmed-pre_notify_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="8" operation="notify" operation_key="rsc1_pre_notify_start_0"/>
+        <pseudo_event id="10" operation="notify" operation_key="rsc1_pre_notify_start_0"/>
       </trigger>
       <trigger>
         <rsc_op id="33" operation="notify" operation_key="child_rsc1:0_pre_notify_start_0" on_node="node1" on_node_uuid="uuid1"/>
@@ -110,7 +110,7 @@
   </synapse>
   <synapse id="8">
     <action_set>
-      <pseudo_event id="8" operation="notify" operation_key="rsc1_pre_notify_start_0">
+      <pseudo_event id="10" operation="notify" operation_key="rsc1_pre_notify_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -142,7 +142,7 @@
         <rsc_op id="1" operation="monitor" operation_key="child_rsc1:1_monitor_0" on_node="node1" on_node_uuid="uuid1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="9" operation="notified" operation_key="rsc1_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="11" operation="notified" operation_key="rsc1_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -168,7 +168,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="25" operation="stop" operation_key="rsc2_stop_0"/>
+        <pseudo_event id="21" operation="stop" operation_key="rsc2_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -201,7 +201,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="26" operation="stopped" operation_key="rsc2_stopped_0"/>
+        <pseudo_event id="22" operation="stopped" operation_key="rsc2_stopped_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="28" operation="notified" operation_key="rsc2_confirmed-pre_notify_stop_0"/>
@@ -233,7 +233,7 @@
   </synapse>
   <synapse id="18" priority="1000000">
     <action_set>
-      <pseudo_event id="26" operation="stopped" operation_key="rsc2_stopped_0">
+      <pseudo_event id="22" operation="stopped" operation_key="rsc2_stopped_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_notify="true" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -245,13 +245,13 @@
         <rsc_op id="18" operation="stop" operation_key="child_rsc2:0_stop_0" on_node="node1" on_node_uuid="uuid1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="25" operation="stop" operation_key="rsc2_stop_0"/>
+        <pseudo_event id="21" operation="stop" operation_key="rsc2_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="19">
     <action_set>
-      <pseudo_event id="25" operation="stop" operation_key="rsc2_stop_0">
+      <pseudo_event id="21" operation="stop" operation_key="rsc2_stop_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_notify="true" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>

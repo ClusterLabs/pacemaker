@@ -124,7 +124,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="81" operation="notify" operation_key="redis-bundle-master_post_notify_running_0"/>
+        <pseudo_event id="83" operation="notify" operation_key="redis-bundle-master_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -143,7 +143,7 @@
         <rsc_op id="74" operation="start" operation_key="redis:0_start_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="82" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0"/>
+        <pseudo_event id="84" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -162,7 +162,7 @@
         <rsc_op id="74" operation="start" operation_key="redis:0_start_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="82" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0"/>
+        <pseudo_event id="84" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -187,13 +187,13 @@
   </synapse>
   <synapse id="15" priority="1000000">
     <action_set>
-      <pseudo_event id="82" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0">
+      <pseudo_event id="84" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0">
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="81" operation="notify" operation_key="redis-bundle-master_post_notify_running_0"/>
+        <pseudo_event id="83" operation="notify" operation_key="redis-bundle-master_post_notify_running_0"/>
       </trigger>
       <trigger>
         <rsc_op id="110" operation="notify" operation_key="redis:0_post_notify_start_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-2"/>
@@ -202,7 +202,7 @@
   </synapse>
   <synapse id="16" priority="1000000">
     <action_set>
-      <pseudo_event id="81" operation="notify" operation_key="redis-bundle-master_post_notify_running_0">
+      <pseudo_event id="83" operation="notify" operation_key="redis-bundle-master_post_notify_running_0">
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -211,25 +211,25 @@
         <pseudo_event id="78" operation="running" operation_key="redis-bundle-master_running_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="80" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="82" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="17">
     <action_set>
-      <pseudo_event id="80" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_start_0">
+      <pseudo_event id="82" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_start_0">
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="79" operation="notify" operation_key="redis-bundle-master_pre_notify_start_0"/>
+        <pseudo_event id="81" operation="notify" operation_key="redis-bundle-master_pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="18">
     <action_set>
-      <pseudo_event id="79" operation="notify" operation_key="redis-bundle-master_pre_notify_start_0">
+      <pseudo_event id="81" operation="notify" operation_key="redis-bundle-master_pre_notify_start_0">
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -270,7 +270,7 @@
         <pseudo_event id="70" operation="start" operation_key="redis-bundle_start_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="80" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="82" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -421,7 +421,7 @@
         <rsc_op id="66" operation="start" operation_key="redis-bundle-docker-0_start_0" on_node="metal-2" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="82" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0"/>
+        <pseudo_event id="84" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>

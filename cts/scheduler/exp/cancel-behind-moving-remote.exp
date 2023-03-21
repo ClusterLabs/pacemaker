@@ -1,19 +1,19 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0" priority="1000000">
     <action_set>
-      <pseudo_event id="144" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-post_notify_running_0">
+      <pseudo_event id="146" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-post_notify_running_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="120000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="143" operation="notify" operation_key="rabbitmq-bundle-clone_post_notify_running_0"/>
+        <pseudo_event id="145" operation="notify" operation_key="rabbitmq-bundle-clone_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="1" priority="1000000">
     <action_set>
-      <pseudo_event id="143" operation="notify" operation_key="rabbitmq-bundle-clone_post_notify_running_0">
+      <pseudo_event id="145" operation="notify" operation_key="rabbitmq-bundle-clone_post_notify_running_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="120000" />
       </pseudo_event>
     </action_set>
@@ -22,25 +22,25 @@
         <pseudo_event id="140" operation="running" operation_key="rabbitmq-bundle-clone_running_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="142" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="144" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="2">
     <action_set>
-      <pseudo_event id="142" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_start_0">
+      <pseudo_event id="144" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_start_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="120000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="141" operation="notify" operation_key="rabbitmq-bundle-clone_pre_notify_start_0"/>
+        <pseudo_event id="143" operation="notify" operation_key="rabbitmq-bundle-clone_pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="3">
     <action_set>
-      <pseudo_event id="141" operation="notify" operation_key="rabbitmq-bundle-clone_pre_notify_start_0">
+      <pseudo_event id="143" operation="notify" operation_key="rabbitmq-bundle-clone_pre_notify_start_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="120000" />
       </pseudo_event>
     </action_set>
@@ -69,7 +69,7 @@
         <pseudo_event id="129" operation="start" operation_key="rabbitmq-bundle_start_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="142" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="144" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -108,7 +108,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="254" operation="notify" operation_key="ovn-dbs-bundle-master_post_notify_running_0"/>
+        <pseudo_event id="256" operation="notify" operation_key="ovn-dbs-bundle-master_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -127,7 +127,7 @@
         <rsc_op id="248" operation="start" operation_key="ovndb_servers:0_start_0" on_node="ovn-dbs-bundle-0" on_node_uuid="ovn-dbs-bundle-0" router_node="controller-2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="255" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-post_notify_running_0"/>
+        <pseudo_event id="257" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-post_notify_running_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="267" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-post_notify_promoted_0"/>
@@ -201,7 +201,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="254" operation="notify" operation_key="ovn-dbs-bundle-master_post_notify_running_0"/>
+        <pseudo_event id="256" operation="notify" operation_key="ovn-dbs-bundle-master_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -223,7 +223,7 @@
         <rsc_op id="244" operation="promote" operation_key="ovndb_servers_promote_0" internal_operation_key="ovndb_servers:1_promote_0" on_node="ovn-dbs-bundle-1" on_node_uuid="ovn-dbs-bundle-1" router_node="controller-0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="255" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-post_notify_running_0"/>
+        <pseudo_event id="257" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-post_notify_running_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="267" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-post_notify_promoted_0"/>
@@ -267,7 +267,7 @@
         <pseudo_event id="240" operation="stop" operation_key="ovn-dbs-bundle_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="256" operation="stop" operation_key="ovn-dbs-bundle-master_stop_0"/>
+        <pseudo_event id="252" operation="stop" operation_key="ovn-dbs-bundle-master_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -366,7 +366,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="254" operation="notify" operation_key="ovn-dbs-bundle-master_post_notify_running_0"/>
+        <pseudo_event id="256" operation="notify" operation_key="ovn-dbs-bundle-master_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -379,7 +379,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="252" operation="notify" operation_key="ovn-dbs-bundle-master_pre_notify_start_0"/>
+        <pseudo_event id="254" operation="notify" operation_key="ovn-dbs-bundle-master_pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -448,7 +448,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="255" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-post_notify_running_0"/>
+        <pseudo_event id="257" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-post_notify_running_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="261" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-post_notify_stopped_0"/>
@@ -478,7 +478,7 @@
         <pseudo_event id="251" operation="running" operation_key="ovn-dbs-bundle-master_running_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="257" operation="stopped" operation_key="ovn-dbs-bundle-master_stopped_0"/>
+        <pseudo_event id="253" operation="stopped" operation_key="ovn-dbs-bundle-master_stopped_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="265" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-pre_notify_promote_0"/>
@@ -511,7 +511,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="257" operation="stopped" operation_key="ovn-dbs-bundle-master_stopped_0"/>
+        <pseudo_event id="253" operation="stopped" operation_key="ovn-dbs-bundle-master_stopped_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="259" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-pre_notify_stop_0"/>
@@ -546,43 +546,13 @@
   </synapse>
   <synapse id="36" priority="1000000">
     <action_set>
-      <pseudo_event id="257" operation="stopped" operation_key="ovn-dbs-bundle-master_stopped_0">
-        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="243" operation="stop" operation_key="ovndb_servers_stop_0" internal_operation_key="ovndb_servers:1_stop_0" on_node="ovn-dbs-bundle-1" on_node_uuid="ovn-dbs-bundle-1" router_node="controller-2"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="256" operation="stop" operation_key="ovn-dbs-bundle-master_stop_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="37">
-    <action_set>
-      <pseudo_event id="256" operation="stop" operation_key="ovn-dbs-bundle-master_stop_0">
-        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="240" operation="stop" operation_key="ovn-dbs-bundle_stop_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="259" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-pre_notify_stop_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="38" priority="1000000">
-    <action_set>
-      <pseudo_event id="255" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-post_notify_running_0">
+      <pseudo_event id="257" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-post_notify_running_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="254" operation="notify" operation_key="ovn-dbs-bundle-master_post_notify_running_0"/>
+        <pseudo_event id="256" operation="notify" operation_key="ovn-dbs-bundle-master_post_notify_running_0"/>
       </trigger>
       <trigger>
         <rsc_op id="376" operation="notify" operation_key="ovndb_servers:0_post_notify_start_0" on_node="ovn-dbs-bundle-0" on_node_uuid="ovn-dbs-bundle-0" router_node="controller-2"/>
@@ -595,9 +565,9 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="39" priority="1000000">
+  <synapse id="37" priority="1000000">
     <action_set>
-      <pseudo_event id="254" operation="notify" operation_key="ovn-dbs-bundle-master_post_notify_running_0">
+      <pseudo_event id="256" operation="notify" operation_key="ovn-dbs-bundle-master_post_notify_running_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" />
       </pseudo_event>
     </action_set>
@@ -606,34 +576,64 @@
         <pseudo_event id="251" operation="running" operation_key="ovn-dbs-bundle-master_running_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="253" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="255" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="40">
+  <synapse id="38">
     <action_set>
-      <pseudo_event id="253" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-pre_notify_start_0">
+      <pseudo_event id="255" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-pre_notify_start_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="252" operation="notify" operation_key="ovn-dbs-bundle-master_pre_notify_start_0"/>
+        <pseudo_event id="254" operation="notify" operation_key="ovn-dbs-bundle-master_pre_notify_start_0"/>
       </trigger>
       <trigger>
         <rsc_op id="378" operation="notify" operation_key="ovndb_servers_pre_notify_start_0" internal_operation_key="ovndb_servers:2_pre_notify_start_0" on_node="ovn-dbs-bundle-2" on_node_uuid="ovn-dbs-bundle-2" router_node="controller-1"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="41">
+  <synapse id="39">
     <action_set>
-      <pseudo_event id="252" operation="notify" operation_key="ovn-dbs-bundle-master_pre_notify_start_0">
+      <pseudo_event id="254" operation="notify" operation_key="ovn-dbs-bundle-master_pre_notify_start_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
         <pseudo_event id="261" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-post_notify_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="40" priority="1000000">
+    <action_set>
+      <pseudo_event id="253" operation="stopped" operation_key="ovn-dbs-bundle-master_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="243" operation="stop" operation_key="ovndb_servers_stop_0" internal_operation_key="ovndb_servers:1_stop_0" on_node="ovn-dbs-bundle-1" on_node_uuid="ovn-dbs-bundle-1" router_node="controller-2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="252" operation="stop" operation_key="ovn-dbs-bundle-master_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="41">
+    <action_set>
+      <pseudo_event id="252" operation="stop" operation_key="ovn-dbs-bundle-master_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="240" operation="stop" operation_key="ovn-dbs-bundle_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="259" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-pre_notify_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -666,10 +666,10 @@
         <pseudo_event id="238" operation="start" operation_key="ovn-dbs-bundle_start_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="253" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="253" operation="stopped" operation_key="ovn-dbs-bundle-master_stopped_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="257" operation="stopped" operation_key="ovn-dbs-bundle-master_stopped_0"/>
+        <pseudo_event id="255" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -1098,7 +1098,7 @@
         <rsc_op id="230" operation="start" operation_key="ovn-dbs-bundle-podman-1_start_0" on_node="controller-0" on_node_uuid="1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="255" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-post_notify_running_0"/>
+        <pseudo_event id="257" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -1122,7 +1122,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="144" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-post_notify_running_0"/>
+        <pseudo_event id="146" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>

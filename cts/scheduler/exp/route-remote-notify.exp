@@ -24,7 +24,7 @@
         <pseudo_event id="34" operation="stop" operation_key="rabbitmq-bundle_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="48" operation="stop" operation_key="rabbitmq-bundle-clone_stop_0"/>
+        <pseudo_event id="44" operation="stop" operation_key="rabbitmq-bundle-clone_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -106,7 +106,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="49" operation="stopped" operation_key="rabbitmq-bundle-clone_stopped_0"/>
+        <pseudo_event id="45" operation="stopped" operation_key="rabbitmq-bundle-clone_stopped_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="51" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_stop_0"/>
@@ -144,7 +144,58 @@
   </synapse>
   <synapse id="10" priority="1000000">
     <action_set>
-      <pseudo_event id="49" operation="stopped" operation_key="rabbitmq-bundle-clone_stopped_0">
+      <pseudo_event id="49" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-post_notify_running_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="48" operation="notify" operation_key="rabbitmq-bundle-clone_post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="11" priority="1000000">
+    <action_set>
+      <pseudo_event id="48" operation="notify" operation_key="rabbitmq-bundle-clone_post_notify_running_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="43" operation="running" operation_key="rabbitmq-bundle-clone_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="47" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="12">
+    <action_set>
+      <pseudo_event id="47" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_start_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="46" operation="notify" operation_key="rabbitmq-bundle-clone_pre_notify_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="13">
+    <action_set>
+      <pseudo_event id="46" operation="notify" operation_key="rabbitmq-bundle-clone_pre_notify_start_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="53" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-post_notify_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="14" priority="1000000">
+    <action_set>
+      <pseudo_event id="45" operation="stopped" operation_key="rabbitmq-bundle-clone_stopped_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -153,13 +204,13 @@
         <rsc_op id="36" operation="stop" operation_key="rabbitmq_stop_0" internal_operation_key="rabbitmq:0_stop_0" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0" router_node="controller-0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="48" operation="stop" operation_key="rabbitmq-bundle-clone_stop_0"/>
+        <pseudo_event id="44" operation="stop" operation_key="rabbitmq-bundle-clone_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="11">
+  <synapse id="15">
     <action_set>
-      <pseudo_event id="48" operation="stop" operation_key="rabbitmq-bundle-clone_stop_0">
+      <pseudo_event id="44" operation="stop" operation_key="rabbitmq-bundle-clone_stop_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -169,57 +220,6 @@
       </trigger>
       <trigger>
         <pseudo_event id="51" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_stop_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="12" priority="1000000">
-    <action_set>
-      <pseudo_event id="47" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-post_notify_running_0">
-        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="46" operation="notify" operation_key="rabbitmq-bundle-clone_post_notify_running_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="13" priority="1000000">
-    <action_set>
-      <pseudo_event id="46" operation="notify" operation_key="rabbitmq-bundle-clone_post_notify_running_0">
-        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="43" operation="running" operation_key="rabbitmq-bundle-clone_running_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="45" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_start_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="14">
-    <action_set>
-      <pseudo_event id="45" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_start_0">
-        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="44" operation="notify" operation_key="rabbitmq-bundle-clone_pre_notify_start_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="15">
-    <action_set>
-      <pseudo_event id="44" operation="notify" operation_key="rabbitmq-bundle-clone_pre_notify_start_0">
-        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="53" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-post_notify_stopped_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -243,10 +243,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="45" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="45" operation="stopped" operation_key="rabbitmq-bundle-clone_stopped_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="49" operation="stopped" operation_key="rabbitmq-bundle-clone_stopped_0"/>
+        <pseudo_event id="47" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -536,7 +536,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="47" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-post_notify_running_0"/>
+        <pseudo_event id="49" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>

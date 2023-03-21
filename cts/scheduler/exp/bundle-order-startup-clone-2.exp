@@ -8,7 +8,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="59" operation="notify" operation_key="storage-clone_post_notify_running_0"/>
+        <pseudo_event id="61" operation="notify" operation_key="storage-clone_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -24,7 +24,7 @@
         <rsc_op id="49" operation="start" operation_key="storage:0_start_0" on_node="metal-1" on_node_uuid="1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="60" operation="notified" operation_key="storage-clone_confirmed-post_notify_running_0"/>
+        <pseudo_event id="62" operation="notified" operation_key="storage-clone_confirmed-post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -59,7 +59,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="59" operation="notify" operation_key="storage-clone_post_notify_running_0"/>
+        <pseudo_event id="61" operation="notify" operation_key="storage-clone_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -75,7 +75,7 @@
         <rsc_op id="51" operation="start" operation_key="storage:1_start_0" on_node="metal-2" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="60" operation="notified" operation_key="storage-clone_confirmed-post_notify_running_0"/>
+        <pseudo_event id="62" operation="notified" operation_key="storage-clone_confirmed-post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -110,7 +110,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="59" operation="notify" operation_key="storage-clone_post_notify_running_0"/>
+        <pseudo_event id="61" operation="notify" operation_key="storage-clone_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -126,7 +126,7 @@
         <rsc_op id="53" operation="start" operation_key="storage:2_start_0" on_node="metal-3" on_node_uuid="3"/>
       </trigger>
       <trigger>
-        <pseudo_event id="60" operation="notified" operation_key="storage-clone_confirmed-post_notify_running_0"/>
+        <pseudo_event id="62" operation="notified" operation_key="storage-clone_confirmed-post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -154,13 +154,13 @@
   </synapse>
   <synapse id="12" priority="1000000">
     <action_set>
-      <pseudo_event id="60" operation="notified" operation_key="storage-clone_confirmed-post_notify_running_0">
+      <pseudo_event id="62" operation="notified" operation_key="storage-clone_confirmed-post_notify_running_0">
         <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="59" operation="notify" operation_key="storage-clone_post_notify_running_0"/>
+        <pseudo_event id="61" operation="notify" operation_key="storage-clone_post_notify_running_0"/>
       </trigger>
       <trigger>
         <rsc_op id="177" operation="notify" operation_key="storage:0_post_notify_start_0" on_node="metal-1" on_node_uuid="1"/>
@@ -175,7 +175,7 @@
   </synapse>
   <synapse id="13" priority="1000000">
     <action_set>
-      <pseudo_event id="59" operation="notify" operation_key="storage-clone_post_notify_running_0">
+      <pseudo_event id="61" operation="notify" operation_key="storage-clone_post_notify_running_0">
         <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -184,25 +184,25 @@
         <pseudo_event id="56" operation="running" operation_key="storage-clone_running_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="58" operation="notified" operation_key="storage-clone_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="60" operation="notified" operation_key="storage-clone_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="14">
     <action_set>
-      <pseudo_event id="58" operation="notified" operation_key="storage-clone_confirmed-pre_notify_start_0">
+      <pseudo_event id="60" operation="notified" operation_key="storage-clone_confirmed-pre_notify_start_0">
         <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="57" operation="notify" operation_key="storage-clone_pre_notify_start_0"/>
+        <pseudo_event id="59" operation="notify" operation_key="storage-clone_pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="15">
     <action_set>
-      <pseudo_event id="57" operation="notify" operation_key="storage-clone_pre_notify_start_0">
+      <pseudo_event id="59" operation="notify" operation_key="storage-clone_pre_notify_start_0">
         <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -246,7 +246,7 @@
         <rsc_op id="33" operation="monitor" operation_key="storage:2_monitor_0" on_node="metal-3" on_node_uuid="3"/>
       </trigger>
       <trigger>
-        <pseudo_event id="58" operation="notified" operation_key="storage-clone_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="60" operation="notified" operation_key="storage-clone_confirmed-pre_notify_start_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="111" operation="running" operation_key="haproxy-bundle_running_0"/>
@@ -1140,7 +1140,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="143" operation="notify" operation_key="redis-bundle-master_post_notify_running_0"/>
+        <pseudo_event id="145" operation="notify" operation_key="redis-bundle-master_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -1162,7 +1162,7 @@
         <rsc_op id="131" operation="promote" operation_key="redis:0_promote_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="144" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0"/>
+        <pseudo_event id="146" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="156" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_promoted_0"/>
@@ -1245,7 +1245,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="143" operation="notify" operation_key="redis-bundle-master_post_notify_running_0"/>
+        <pseudo_event id="145" operation="notify" operation_key="redis-bundle-master_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -1267,7 +1267,7 @@
         <rsc_op id="134" operation="promote" operation_key="redis:1_promote_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="metal-2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="144" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0"/>
+        <pseudo_event id="146" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="156" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_promoted_0"/>
@@ -1356,7 +1356,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="143" operation="notify" operation_key="redis-bundle-master_post_notify_running_0"/>
+        <pseudo_event id="145" operation="notify" operation_key="redis-bundle-master_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -1378,7 +1378,7 @@
         <rsc_op id="137" operation="promote" operation_key="redis:2_promote_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="metal-3"/>
       </trigger>
       <trigger>
-        <pseudo_event id="144" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0"/>
+        <pseudo_event id="146" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="156" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_promoted_0"/>
@@ -1497,7 +1497,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="144" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0"/>
+        <pseudo_event id="146" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -1539,13 +1539,13 @@
   </synapse>
   <synapse id="98" priority="1000000">
     <action_set>
-      <pseudo_event id="144" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0">
+      <pseudo_event id="146" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="143" operation="notify" operation_key="redis-bundle-master_post_notify_running_0"/>
+        <pseudo_event id="145" operation="notify" operation_key="redis-bundle-master_post_notify_running_0"/>
       </trigger>
       <trigger>
         <rsc_op id="180" operation="notify" operation_key="redis:0_post_notify_start_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-1"/>
@@ -1560,7 +1560,7 @@
   </synapse>
   <synapse id="99" priority="1000000">
     <action_set>
-      <pseudo_event id="143" operation="notify" operation_key="redis-bundle-master_post_notify_running_0">
+      <pseudo_event id="145" operation="notify" operation_key="redis-bundle-master_post_notify_running_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -1569,25 +1569,25 @@
         <pseudo_event id="140" operation="running" operation_key="redis-bundle-master_running_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="142" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="144" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="100">
     <action_set>
-      <pseudo_event id="142" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_start_0">
+      <pseudo_event id="144" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_start_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="141" operation="notify" operation_key="redis-bundle-master_pre_notify_start_0"/>
+        <pseudo_event id="143" operation="notify" operation_key="redis-bundle-master_pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="101">
     <action_set>
-      <pseudo_event id="141" operation="notify" operation_key="redis-bundle-master_pre_notify_start_0">
+      <pseudo_event id="143" operation="notify" operation_key="redis-bundle-master_pre_notify_start_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -1652,7 +1652,7 @@
         <pseudo_event id="126" operation="start" operation_key="redis-bundle_start_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="142" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="144" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -2123,7 +2123,7 @@
         <rsc_op id="122" operation="start" operation_key="redis-bundle-docker-2_start_0" on_node="metal-3" on_node_uuid="3"/>
       </trigger>
       <trigger>
-        <pseudo_event id="144" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0"/>
+        <pseudo_event id="146" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -2190,7 +2190,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="60" operation="notified" operation_key="storage-clone_confirmed-post_notify_running_0"/>
+        <pseudo_event id="62" operation="notified" operation_key="storage-clone_confirmed-post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>

@@ -181,7 +181,7 @@
         <crm_event id="1" operation="stonith" operation_key="stonith-controller-1-reboot" on_node="controller-1" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="88" operation="stop" operation_key="redis-master_stop_0"/>
+        <pseudo_event id="84" operation="stop" operation_key="redis-master_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -269,7 +269,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="89" operation="stopped" operation_key="redis-master_stopped_0"/>
+        <pseudo_event id="85" operation="stopped" operation_key="redis-master_stopped_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="91" operation="notified" operation_key="redis-master_confirmed-pre_notify_stop_0"/>
@@ -304,7 +304,7 @@
   </synapse>
   <synapse id="23" priority="1000000">
     <action_set>
-      <pseudo_event id="89" operation="stopped" operation_key="redis-master_stopped_0">
+      <pseudo_event id="85" operation="stopped" operation_key="redis-master_stopped_0">
         <attributes CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -313,13 +313,13 @@
         <pseudo_event id="75" operation="stop" operation_key="redis_stop_0" internal_operation_key="redis:0_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="88" operation="stop" operation_key="redis-master_stop_0"/>
+        <pseudo_event id="84" operation="stop" operation_key="redis-master_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="24">
     <action_set>
-      <pseudo_event id="88" operation="stop" operation_key="redis-master_stop_0">
+      <pseudo_event id="84" operation="stop" operation_key="redis-master_stop_0">
         <attributes CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>

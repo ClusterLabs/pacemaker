@@ -166,7 +166,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="31" operation="notify" operation_key="ms_drbd_www_post_notify_running_0"/>
+        <pseudo_event id="33" operation="notify" operation_key="ms_drbd_www_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -194,13 +194,13 @@
   </synapse>
   <synapse id="17" priority="1000000">
     <action_set>
-      <pseudo_event id="32" operation="notified" operation_key="ms_drbd_www_confirmed-post_notify_running_0">
+      <pseudo_event id="34" operation="notified" operation_key="ms_drbd_www_confirmed-post_notify_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="2" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="2" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="31" operation="notify" operation_key="ms_drbd_www_post_notify_running_0"/>
+        <pseudo_event id="33" operation="notify" operation_key="ms_drbd_www_post_notify_running_0"/>
       </trigger>
       <trigger>
         <rsc_op id="110" operation="notify" operation_key="drbd_www:0_post_notify_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
@@ -209,7 +209,7 @@
   </synapse>
   <synapse id="18" priority="1000000">
     <action_set>
-      <pseudo_event id="31" operation="notify" operation_key="ms_drbd_www_post_notify_running_0">
+      <pseudo_event id="33" operation="notify" operation_key="ms_drbd_www_post_notify_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="2" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="2" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -218,25 +218,25 @@
         <pseudo_event id="28" operation="running" operation_key="ms_drbd_www_running_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="30" operation="notified" operation_key="ms_drbd_www_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="32" operation="notified" operation_key="ms_drbd_www_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="19">
     <action_set>
-      <pseudo_event id="30" operation="notified" operation_key="ms_drbd_www_confirmed-pre_notify_start_0">
+      <pseudo_event id="32" operation="notified" operation_key="ms_drbd_www_confirmed-pre_notify_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="2" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="2" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="29" operation="notify" operation_key="ms_drbd_www_pre_notify_start_0"/>
+        <pseudo_event id="31" operation="notify" operation_key="ms_drbd_www_pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="20">
     <action_set>
-      <pseudo_event id="29" operation="notify" operation_key="ms_drbd_www_pre_notify_start_0">
+      <pseudo_event id="31" operation="notify" operation_key="ms_drbd_www_pre_notify_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="2" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="2" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -274,7 +274,7 @@
         <rsc_op id="24" operation="start" operation_key="intip_2_slave_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
       </trigger>
       <trigger>
-        <pseudo_event id="30" operation="notified" operation_key="ms_drbd_www_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="32" operation="notified" operation_key="ms_drbd_www_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -323,7 +323,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="72" operation="notify" operation_key="ms_drbd_mysql_post_notify_running_0"/>
+        <pseudo_event id="74" operation="notify" operation_key="ms_drbd_mysql_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -351,13 +351,13 @@
   </synapse>
   <synapse id="30" priority="1000000">
     <action_set>
-      <pseudo_event id="73" operation="notified" operation_key="ms_drbd_mysql_confirmed-post_notify_running_0">
+      <pseudo_event id="75" operation="notified" operation_key="ms_drbd_mysql_confirmed-post_notify_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="72" operation="notify" operation_key="ms_drbd_mysql_post_notify_running_0"/>
+        <pseudo_event id="74" operation="notify" operation_key="ms_drbd_mysql_post_notify_running_0"/>
       </trigger>
       <trigger>
         <rsc_op id="111" operation="notify" operation_key="drbd_mysql:0_post_notify_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
@@ -366,7 +366,7 @@
   </synapse>
   <synapse id="31" priority="1000000">
     <action_set>
-      <pseudo_event id="72" operation="notify" operation_key="ms_drbd_mysql_post_notify_running_0">
+      <pseudo_event id="74" operation="notify" operation_key="ms_drbd_mysql_post_notify_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -375,25 +375,25 @@
         <pseudo_event id="69" operation="running" operation_key="ms_drbd_mysql_running_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="71" operation="notified" operation_key="ms_drbd_mysql_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="73" operation="notified" operation_key="ms_drbd_mysql_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="32">
     <action_set>
-      <pseudo_event id="71" operation="notified" operation_key="ms_drbd_mysql_confirmed-pre_notify_start_0">
+      <pseudo_event id="73" operation="notified" operation_key="ms_drbd_mysql_confirmed-pre_notify_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="70" operation="notify" operation_key="ms_drbd_mysql_pre_notify_start_0"/>
+        <pseudo_event id="72" operation="notify" operation_key="ms_drbd_mysql_pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="33">
     <action_set>
-      <pseudo_event id="70" operation="notify" operation_key="ms_drbd_mysql_pre_notify_start_0">
+      <pseudo_event id="72" operation="notify" operation_key="ms_drbd_mysql_pre_notify_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -431,7 +431,7 @@
         <rsc_op id="24" operation="start" operation_key="intip_2_slave_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
       </trigger>
       <trigger>
-        <pseudo_event id="71" operation="notified" operation_key="ms_drbd_mysql_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="73" operation="notified" operation_key="ms_drbd_mysql_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
