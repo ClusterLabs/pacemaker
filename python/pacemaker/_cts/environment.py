@@ -453,7 +453,7 @@ class Environment:
 
                 with open(dsh_file, "r") as f:
                     for line in f:
-                        l = line.strip().rstrip()
+                        l = line.strip()
 
                         if not l.startswith('#'):
                             self["nodes"].append(l)
