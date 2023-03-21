@@ -40,11 +40,11 @@ class Environment:
 
         self._logger = LogFactory()
         self._rsh = RemoteFactory().getInstance()
+        self._target = "localhost"
+
         self._seed_random()
-
-        self.target = "localhost"
-
         self._parse_args(args)
+
         if not self["ListTests"]:
             self._validate()
             self._discover()
@@ -144,11 +144,11 @@ class Environment:
         if "syslogd" not in self.data:
             if self["have_systemd"]:
                 # Systemd
-                (_, lines) = self._rsh(self.target, "systemctl list-units | grep syslog.*\.service.*active.*running | sed 's:.service.*::'", verbose=1)
+                (_, lines) = self._rsh(self._target, "systemctl list-units | grep syslog.*\.service.*active.*running | sed 's:.service.*::'", verbose=1)
                 self["syslogd"] = lines[0].strip()
             else:
                 # SYS-V
-                (_, lines) = self._rsh(self.target, "chkconfig --list | grep syslog.*on | awk '{print $1}' | head -n 1", verbose=1)
+                (_, lines) = self._rsh(self._target, "chkconfig --list | grep syslog.*on | awk '{print $1}' | head -n 1", verbose=1)
                 self["syslogd"] = lines[0].strip()
 
             if "syslogd" not in self.data or not self["syslogd"]:
@@ -193,16 +193,16 @@ class Environment:
     def _detect_at_boot(self):
         # Detect if the cluster starts at boot
         if "at-boot" not in self.data:
-            self["at-boot"] = self.service_is_enabled(self.target, "corosync") \
-                              or self.service_is_enabled(self.target, "pacemaker")
+            self["at-boot"] = self.service_is_enabled(self._target, "corosync") \
+                              or self.service_is_enabled(self._target, "pacemaker")
 
     def _detect_ip_offset(self):
         # Try to determine an offset for IPaddr resources
         if self["CIBResource"] and "IPBase" not in self.data:
-            (_, lines) = self._rsh(self.target, "ip addr | grep inet | grep -v -e link -e inet6 -e '/32' -e ' lo' | awk '{print $2}'", verbose=0)
+            (_, lines) = self._rsh(self._target, "ip addr | grep inet | grep -v -e link -e inet6 -e '/32' -e ' lo' | awk '{print $2}'", verbose=0)
             network = lines[0].strip()
 
-            (_, lines) = self._rsh(self.target, "nmap -sn -n %s | grep 'scan report' | awk '{print $NF}' | sed 's:(::' | sed 's:)::' | sort -V | tail -n 1" % network, verbose=0)
+            (_, lines) = self._rsh(self._target, "nmap -sn -n %s | grep 'scan report' | awk '{print $NF}' | sed 's:(::' | sed 's:)::' | sort -V | tail -n 1" % network, verbose=0)
             self["IPBase"] = lines[0].strip()
 
             if not self["IPBase"]:
@@ -230,7 +230,7 @@ class Environment:
             raise ValueError("No nodes specified!")
 
     def _discover(self):
-        self.target = random.Random().choice(self["nodes"])
+        self._target = random.Random().choice(self["nodes"])
 
         exerciser = socket.gethostname()
 
@@ -243,7 +243,7 @@ class Environment:
         self["cts-exerciser"] = exerciser
 
         if "have_systemd" not in self.data:
-            (rc, _) = self._rsh(self.target, "systemctl list-units", verbose=0)
+            (rc, _) = self._rsh(self._target, "systemctl list-units", verbose=0)
             self["have_systemd"] = rc == 0
 
         self._detect_syslog()
