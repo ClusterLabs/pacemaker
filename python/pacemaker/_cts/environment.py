@@ -63,7 +63,7 @@ class Environment:
 
         keys.sort()
         for key in keys:
-            self._logger.debug("Environment["+key+"]:\t"+str(self[key]))
+            self._logger.debug("Environment[%s]:\t%s" % (key, str(self[key])))
 
     def keys(self):
         return list(self.data.keys())
@@ -108,7 +108,7 @@ class Environment:
                     socket.gethostbyname_ex(n)
                     self._nodes.append(n)
                 except:
-                    self._logger.log(node+" not found in DNS... aborting")
+                    self._logger.log("%s not found in DNS... aborting" % node)
                     raise
 
             self._filter_nodes()
@@ -126,7 +126,7 @@ class Environment:
             self.data["Stack"] = "corosync 2+"
 
         else:
-            raise ValueError("Unknown stack: "+name)
+            raise ValueError("Unknown stack: %s" % name)
 
     def _get_stack_short(self):
         # Create the Cluster Manager object
@@ -136,15 +136,15 @@ class Environment:
         if self.data["Stack"] == "corosync 2+":
             return "crm-corosync"
 
-        LogFactory().log("Unknown stack: "+self["stack"])
-        raise ValueError("Unknown stack: "+self["stack"])
+        LogFactory().log("Unknown stack: %s" % self["stack"])
+        raise ValueError("Unknown stack: %s" % self["stack"])
 
     def _detect_syslog(self):
         # Detect syslog variant
         if "syslogd" not in self.data:
             if self["have_systemd"]:
                 # Systemd
-                (_, lines) = self._rsh(self._target, "systemctl list-units | grep syslog.*\.service.*active.*running | sed 's:.service.*::'", verbose=1)
+                (_, lines) = self._rsh(self._target, r"systemctl list-units | grep syslog.*\.service.*active.*running | sed 's:.service.*::'", verbose=1)
                 self["syslogd"] = lines[0].strip()
             else:
                 # SYS-V
