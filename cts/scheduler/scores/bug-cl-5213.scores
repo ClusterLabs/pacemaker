@@ -1,10 +1,10 @@
 
-pcmk__clone_allocate: msPostgresql allocation score on srv01: 0
-pcmk__clone_allocate: msPostgresql allocation score on srv02: 0
-pcmk__clone_allocate: pgsql:0 allocation score on srv01: 0
-pcmk__clone_allocate: pgsql:0 allocation score on srv02: INFINITY
-pcmk__clone_allocate: pgsql:1 allocation score on srv01: INFINITY
-pcmk__clone_allocate: pgsql:1 allocation score on srv02: 0
+pcmk__clone_assign: msPostgresql allocation score on srv01: 0
+pcmk__clone_assign: msPostgresql allocation score on srv02: 0
+pcmk__clone_assign: pgsql:0 allocation score on srv01: 0
+pcmk__clone_assign: pgsql:0 allocation score on srv02: INFINITY
+pcmk__clone_assign: pgsql:1 allocation score on srv01: INFINITY
+pcmk__clone_assign: pgsql:1 allocation score on srv02: 0
 pcmk__primitive_assign: A-master allocation score on srv01: 0
 pcmk__primitive_assign: A-master allocation score on srv02: INFINITY
 pcmk__primitive_assign: pgsql:0 allocation score on srv01: 0

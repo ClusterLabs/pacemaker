@@ -1,10 +1,10 @@
 
-pcmk__clone_allocate: cl_res_Dummy1 allocation score on xenserver1: 0
-pcmk__clone_allocate: cl_res_Dummy1 allocation score on xenserver2: 0
-pcmk__clone_allocate: res_Dummy1:0 allocation score on xenserver1: 200
-pcmk__clone_allocate: res_Dummy1:0 allocation score on xenserver2: 0
-pcmk__clone_allocate: res_Dummy1:1 allocation score on xenserver1: 0
-pcmk__clone_allocate: res_Dummy1:1 allocation score on xenserver2: 200
+pcmk__clone_assign: cl_res_Dummy1 allocation score on xenserver1: 0
+pcmk__clone_assign: cl_res_Dummy1 allocation score on xenserver2: 0
+pcmk__clone_assign: res_Dummy1:0 allocation score on xenserver1: 200
+pcmk__clone_assign: res_Dummy1:0 allocation score on xenserver2: 0
+pcmk__clone_assign: res_Dummy1:1 allocation score on xenserver1: 0
+pcmk__clone_assign: res_Dummy1:1 allocation score on xenserver2: 200
 pcmk__group_assign: gr_Dummy allocation score on xenserver1: 0
 pcmk__group_assign: gr_Dummy allocation score on xenserver2: 0
 pcmk__group_assign: res_Dummy2 allocation score on xenserver1: 200

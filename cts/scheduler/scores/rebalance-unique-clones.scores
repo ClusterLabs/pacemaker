@@ -1,10 +1,10 @@
 
-pcmk__clone_allocate: C allocation score on node1: 100
-pcmk__clone_allocate: C allocation score on node2: 100
-pcmk__clone_allocate: P:0 allocation score on node1: 100
-pcmk__clone_allocate: P:0 allocation score on node2: 100
-pcmk__clone_allocate: P:1 allocation score on node1: 100
-pcmk__clone_allocate: P:1 allocation score on node2: 100
+pcmk__clone_assign: C allocation score on node1: 100
+pcmk__clone_assign: C allocation score on node2: 100
+pcmk__clone_assign: P:0 allocation score on node1: 100
+pcmk__clone_assign: P:0 allocation score on node2: 100
+pcmk__clone_assign: P:1 allocation score on node1: 100
+pcmk__clone_assign: P:1 allocation score on node2: 100
 pcmk__primitive_assign: P:0 allocation score on node1: 100
 pcmk__primitive_assign: P:0 allocation score on node2: 100
 pcmk__primitive_assign: P:1 allocation score on node1: 100

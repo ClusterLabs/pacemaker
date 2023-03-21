@@ -1,10 +1,10 @@
 
-pcmk__clone_allocate: drbd0:0 allocation score on mysql-01: 0
-pcmk__clone_allocate: drbd0:0 allocation score on mysql-02: 0
-pcmk__clone_allocate: drbd0:1 allocation score on mysql-01: 0
-pcmk__clone_allocate: drbd0:1 allocation score on mysql-02: 0
-pcmk__clone_allocate: ms-drbd0 allocation score on mysql-01: 0
-pcmk__clone_allocate: ms-drbd0 allocation score on mysql-02: 0
+pcmk__clone_assign: drbd0:0 allocation score on mysql-01: 0
+pcmk__clone_assign: drbd0:0 allocation score on mysql-02: 0
+pcmk__clone_assign: drbd0:1 allocation score on mysql-01: 0
+pcmk__clone_assign: drbd0:1 allocation score on mysql-02: 0
+pcmk__clone_assign: ms-drbd0 allocation score on mysql-01: 0
+pcmk__clone_assign: ms-drbd0 allocation score on mysql-02: 0
 pcmk__primitive_assign: drbd0:0 allocation score on mysql-01: 0
 pcmk__primitive_assign: drbd0:0 allocation score on mysql-02: 0
 pcmk__primitive_assign: drbd0:1 allocation score on mysql-01: -INFINITY

@@ -1,14 +1,14 @@
 
-pcmk__clone_allocate: DoFencing allocation score on c001n02: 0
-pcmk__clone_allocate: DoFencing allocation score on c001n03: 0
-pcmk__clone_allocate: child_DoFencing:0 allocation score on c001n02: 0
-pcmk__clone_allocate: child_DoFencing:0 allocation score on c001n03: 1
-pcmk__clone_allocate: child_DoFencing:1 allocation score on c001n02: 1
-pcmk__clone_allocate: child_DoFencing:1 allocation score on c001n03: 0
-pcmk__clone_allocate: child_DoFencing:2 allocation score on c001n02: 0
-pcmk__clone_allocate: child_DoFencing:2 allocation score on c001n03: 0
-pcmk__clone_allocate: child_DoFencing:3 allocation score on c001n02: 0
-pcmk__clone_allocate: child_DoFencing:3 allocation score on c001n03: 0
+pcmk__clone_assign: DoFencing allocation score on c001n02: 0
+pcmk__clone_assign: DoFencing allocation score on c001n03: 0
+pcmk__clone_assign: child_DoFencing:0 allocation score on c001n02: 0
+pcmk__clone_assign: child_DoFencing:0 allocation score on c001n03: 1
+pcmk__clone_assign: child_DoFencing:1 allocation score on c001n02: 1
+pcmk__clone_assign: child_DoFencing:1 allocation score on c001n03: 0
+pcmk__clone_assign: child_DoFencing:2 allocation score on c001n02: 0
+pcmk__clone_assign: child_DoFencing:2 allocation score on c001n03: 0
+pcmk__clone_assign: child_DoFencing:3 allocation score on c001n02: 0
+pcmk__clone_assign: child_DoFencing:3 allocation score on c001n03: 0
 pcmk__group_assign: child_192.168.100.181 allocation score on c001n02: 0
 pcmk__group_assign: child_192.168.100.181 allocation score on c001n03: 0
 pcmk__group_assign: child_192.168.100.182 allocation score on c001n02: 0

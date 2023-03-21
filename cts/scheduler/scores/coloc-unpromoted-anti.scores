@@ -2,18 +2,18 @@
 drbd-r0:0 promotion score on pollux: 425
 drbd-r0:1 promotion score on sirius: 375
 drbd-r0:2 promotion score on none: 0
-pcmk__clone_allocate: drbd-msr allocation score on pollux: 0
-pcmk__clone_allocate: drbd-msr allocation score on sirius: 0
-pcmk__clone_allocate: drbd-r0:0 allocation score on pollux: 275
-pcmk__clone_allocate: drbd-r0:0 allocation score on sirius: 0
-pcmk__clone_allocate: drbd-r0:1 allocation score on pollux: 0
-pcmk__clone_allocate: drbd-r0:1 allocation score on sirius: 275
-pcmk__clone_allocate: pingd-1:0 allocation score on pollux: 200
-pcmk__clone_allocate: pingd-1:0 allocation score on sirius: 0
-pcmk__clone_allocate: pingd-1:1 allocation score on pollux: 0
-pcmk__clone_allocate: pingd-1:1 allocation score on sirius: 200
-pcmk__clone_allocate: pingd-clone allocation score on pollux: 0
-pcmk__clone_allocate: pingd-clone allocation score on sirius: 0
+pcmk__clone_assign: drbd-msr allocation score on pollux: 0
+pcmk__clone_assign: drbd-msr allocation score on sirius: 0
+pcmk__clone_assign: drbd-r0:0 allocation score on pollux: 275
+pcmk__clone_assign: drbd-r0:0 allocation score on sirius: 0
+pcmk__clone_assign: drbd-r0:1 allocation score on pollux: 0
+pcmk__clone_assign: drbd-r0:1 allocation score on sirius: 275
+pcmk__clone_assign: pingd-1:0 allocation score on pollux: 200
+pcmk__clone_assign: pingd-1:0 allocation score on sirius: 0
+pcmk__clone_assign: pingd-1:1 allocation score on pollux: 0
+pcmk__clone_assign: pingd-1:1 allocation score on sirius: 200
+pcmk__clone_assign: pingd-clone allocation score on pollux: 0
+pcmk__clone_assign: pingd-clone allocation score on sirius: 0
 pcmk__group_assign: apache allocation score on pollux: 0
 pcmk__group_assign: apache allocation score on sirius: 0
 pcmk__group_assign: fs-1 allocation score on pollux: 0

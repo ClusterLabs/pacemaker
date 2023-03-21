@@ -1,12 +1,12 @@
 
 drbd0:0 promotion score on xen-1: -1
 drbd0:1 promotion score on xen-2: -1
-pcmk__clone_allocate: drbd0:0 allocation score on xen-1: 0
-pcmk__clone_allocate: drbd0:0 allocation score on xen-2: 0
-pcmk__clone_allocate: drbd0:1 allocation score on xen-1: 0
-pcmk__clone_allocate: drbd0:1 allocation score on xen-2: 0
-pcmk__clone_allocate: ms-drbd0 allocation score on xen-1: 0
-pcmk__clone_allocate: ms-drbd0 allocation score on xen-2: 0
+pcmk__clone_assign: drbd0:0 allocation score on xen-1: 0
+pcmk__clone_assign: drbd0:0 allocation score on xen-2: 0
+pcmk__clone_assign: drbd0:1 allocation score on xen-1: 0
+pcmk__clone_assign: drbd0:1 allocation score on xen-2: 0
+pcmk__clone_assign: ms-drbd0 allocation score on xen-1: 0
+pcmk__clone_assign: ms-drbd0 allocation score on xen-2: 0
 pcmk__primitive_assign: drbd0:0 allocation score on xen-1: 0
 pcmk__primitive_assign: drbd0:0 allocation score on xen-2: 0
 pcmk__primitive_assign: drbd0:1 allocation score on xen-1: -INFINITY

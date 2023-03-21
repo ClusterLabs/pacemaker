@@ -1,20 +1,20 @@
 
 ms-sf_group:0 promotion score on process2b: -INFINITY
 ms-sf_group:1 promotion score on none: 0
-pcmk__clone_allocate: ms-sf allocation score on process1a: 0
-pcmk__clone_allocate: ms-sf allocation score on process2b: 0
-pcmk__clone_allocate: ms-sf_group:0 allocation score on process1a: 0
-pcmk__clone_allocate: ms-sf_group:0 allocation score on process2b: 0
-pcmk__clone_allocate: ms-sf_group:1 allocation score on process1a: 0
-pcmk__clone_allocate: ms-sf_group:1 allocation score on process2b: 0
-pcmk__clone_allocate: promotable_Stateful:0 allocation score on process1a: 0
-pcmk__clone_allocate: promotable_Stateful:0 allocation score on process2b: INFINITY
-pcmk__clone_allocate: promotable_Stateful:1 allocation score on process1a: INFINITY
-pcmk__clone_allocate: promotable_Stateful:1 allocation score on process2b: 0
-pcmk__clone_allocate: promotable_procdctl:0 allocation score on process1a: -INFINITY
-pcmk__clone_allocate: promotable_procdctl:0 allocation score on process2b: -INFINITY
-pcmk__clone_allocate: promotable_procdctl:1 allocation score on process1a: INFINITY
-pcmk__clone_allocate: promotable_procdctl:1 allocation score on process2b: -INFINITY
+pcmk__clone_assign: ms-sf allocation score on process1a: 0
+pcmk__clone_assign: ms-sf allocation score on process2b: 0
+pcmk__clone_assign: ms-sf_group:0 allocation score on process1a: 0
+pcmk__clone_assign: ms-sf_group:0 allocation score on process2b: 0
+pcmk__clone_assign: ms-sf_group:1 allocation score on process1a: 0
+pcmk__clone_assign: ms-sf_group:1 allocation score on process2b: 0
+pcmk__clone_assign: promotable_Stateful:0 allocation score on process1a: 0
+pcmk__clone_assign: promotable_Stateful:0 allocation score on process2b: INFINITY
+pcmk__clone_assign: promotable_Stateful:1 allocation score on process1a: INFINITY
+pcmk__clone_assign: promotable_Stateful:1 allocation score on process2b: 0
+pcmk__clone_assign: promotable_procdctl:0 allocation score on process1a: -INFINITY
+pcmk__clone_assign: promotable_procdctl:0 allocation score on process2b: -INFINITY
+pcmk__clone_assign: promotable_procdctl:1 allocation score on process1a: INFINITY
+pcmk__clone_assign: promotable_procdctl:1 allocation score on process2b: -INFINITY
 pcmk__group_assign: ms-sf_group:0 allocation score on process1a: -INFINITY
 pcmk__group_assign: ms-sf_group:0 allocation score on process2b: 0
 pcmk__group_assign: ms-sf_group:1 allocation score on process1a: -INFINITY
