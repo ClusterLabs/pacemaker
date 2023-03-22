@@ -217,7 +217,6 @@ int cib_process_xpath(const char *op, int options, const char *section,
 
 bool cib__config_changed_v1(xmlNode *last, xmlNode *next, xmlNode **diff);
 gboolean update_results(xmlNode * failed, xmlNode * target, const char *operation, int return_code);
-int cib_update_counter(xmlNode * xml_obj, const char *field, gboolean reset);
 
 int cib_internal_op(cib_t * cib, const char *op, const char *host,
                     const char *section, xmlNode * data,

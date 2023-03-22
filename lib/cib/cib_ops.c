@@ -72,6 +72,34 @@ cib_process_query(const char *op, int options, const char *section, xmlNode * re
     return result;
 }
 
+static int
+update_counter(xmlNode *xml_obj, const char *field, bool reset)
+{
+    char *new_value = NULL;
+    char *old_value = NULL;
+    int int_value = -1;
+
+    if (!reset && crm_element_value(xml_obj, field) != NULL) {
+        old_value = crm_element_value_copy(xml_obj, field);
+    }
+    if (old_value != NULL) {
+        int_value = atoi(old_value);
+        new_value = pcmk__itoa(++int_value);
+    } else {
+        new_value = strdup("1");
+        CRM_ASSERT(new_value != NULL);
+    }
+
+    crm_trace("Update %s from %s to %s",
+              field, pcmk__s(old_value, "unset"), new_value);
+    crm_xml_add(xml_obj, field, new_value);
+
+    free(new_value);
+    free(old_value);
+
+    return pcmk_ok;
+}
+
 int
 cib_process_erase(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                   xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
@@ -84,7 +112,7 @@ cib_process_erase(const char *op, int options, const char *section, xmlNode * re
     *result_cib = createEmptyCib(0);
 
     copy_in_properties(*result_cib, existing_cib);
-    cib_update_counter(*result_cib, XML_ATTR_GENERATION_ADMIN, FALSE);
+    update_counter(*result_cib, XML_ATTR_GENERATION_ADMIN, false);
 
     return result;
 }
@@ -115,9 +143,9 @@ cib_process_upgrade(const char *op, int options, const char *section, xmlNode * 
     rc = update_validation(result_cib, &new_version, max_version, TRUE,
                            !(options & cib_verbose));
     if (new_version > current_version) {
-        cib_update_counter(*result_cib, XML_ATTR_GENERATION_ADMIN, FALSE);
-        cib_update_counter(*result_cib, XML_ATTR_GENERATION, TRUE);
-        cib_update_counter(*result_cib, XML_ATTR_NUMUPDATES, TRUE);
+        update_counter(*result_cib, XML_ATTR_GENERATION_ADMIN, false);
+        update_counter(*result_cib, XML_ATTR_GENERATION, true);
+        update_counter(*result_cib, XML_ATTR_NUMUPDATES, true);
         return pcmk_ok;
     }
 
@@ -134,37 +162,9 @@ cib_process_bump(const char *op, int options, const char *section, xmlNode * req
               pcmk__s(crm_element_value(existing_cib, XML_ATTR_GENERATION), ""));
 
     *answer = NULL;
-    cib_update_counter(*result_cib, XML_ATTR_GENERATION, FALSE);
+    update_counter(*result_cib, XML_ATTR_GENERATION, false);
 
     return result;
-}
-
-int
-cib_update_counter(xmlNode * xml_obj, const char *field, gboolean reset)
-{
-    char *new_value = NULL;
-    char *old_value = NULL;
-    int int_value = -1;
-
-    if (reset == FALSE && crm_element_value(xml_obj, field) != NULL) {
-        old_value = crm_element_value_copy(xml_obj, field);
-    }
-    if (old_value != NULL) {
-        int_value = atoi(old_value);
-        new_value = pcmk__itoa(++int_value);
-    } else {
-        new_value = strdup("1");
-        CRM_ASSERT(new_value != NULL);
-    }
-
-    crm_trace("Update %s from %s to %s",
-              field, pcmk__s(old_value, "unset"), new_value);
-    crm_xml_add(xml_obj, field, new_value);
-
-    free(new_value);
-    free(old_value);
-
-    return pcmk_ok;
 }
 
 int
