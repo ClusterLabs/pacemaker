@@ -538,6 +538,33 @@ add_cib_object(xmlNode * parent, xmlNode * new_obj)
     return update_cib_object(parent, new_obj);
 }
 
+static bool
+update_results(xmlNode *failed, xmlNode *target, const char *operation,
+               int return_code)
+{
+    xmlNode *xml_node = NULL;
+    bool was_error = false;
+    const char *error_msg = NULL;
+
+    if (return_code != pcmk_ok) {
+        error_msg = pcmk_strerror(return_code);
+
+        was_error = true;
+        xml_node = create_xml_node(failed, XML_FAIL_TAG_CIB);
+        add_node_copy(xml_node, target);
+
+        crm_xml_add(xml_node, XML_FAILCIB_ATTR_ID, ID(target));
+        crm_xml_add(xml_node, XML_FAILCIB_ATTR_OBJTYPE, TYPE(target));
+        crm_xml_add(xml_node, XML_FAILCIB_ATTR_OP, operation);
+        crm_xml_add(xml_node, XML_FAILCIB_ATTR_REASON, error_msg);
+
+        crm_warn("Action %s failed: %s (cde=%d)",
+                 operation, error_msg, return_code);
+    }
+
+    return was_error;
+}
+
 int
 cib_process_create(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                    xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
@@ -838,30 +865,4 @@ cib_process_xpath(const char *op, int options, const char *section,
 
     freeXpathObject(xpathObj);
     return rc;
-}
-
-/* remove this function */
-gboolean
-update_results(xmlNode * failed, xmlNode * target, const char *operation, int return_code)
-{
-    xmlNode *xml_node = NULL;
-    gboolean was_error = FALSE;
-    const char *error_msg = NULL;
-
-    if (return_code != pcmk_ok) {
-        error_msg = pcmk_strerror(return_code);
-
-        was_error = TRUE;
-        xml_node = create_xml_node(failed, XML_FAIL_TAG_CIB);
-        add_node_copy(xml_node, target);
-
-        crm_xml_add(xml_node, XML_FAILCIB_ATTR_ID, ID(target));
-        crm_xml_add(xml_node, XML_FAILCIB_ATTR_OBJTYPE, TYPE(target));
-        crm_xml_add(xml_node, XML_FAILCIB_ATTR_OP, operation);
-        crm_xml_add(xml_node, XML_FAILCIB_ATTR_REASON, error_msg);
-
-        crm_warn("Action %s failed: %s (cde=%d)", operation, error_msg, return_code);
-    }
-
-    return was_error;
 }
