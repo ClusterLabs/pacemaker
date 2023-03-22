@@ -738,7 +738,6 @@ notify_crmd(pcmk__graph_t *graph)
 
     graph->abort_reason = NULL;
     graph->completion_action = pcmk__graph_done;
-    controld_clear_fsa_input_flags(R_IN_TRANSITION);
 
     if (event != I_NULL) {
         register_fsa_input(C_FSA_INTERNAL, event, NULL);

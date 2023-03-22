@@ -418,8 +418,6 @@ enum crmd_fsa_input {
                                            response? if so perhaps we shouldn't
                                            stop yet */
 
-#  define R_IN_TRANSITION   0x10000000ULL
-                                        /*  */
 #  define R_SENT_RSC_STOP   0x20000000ULL /* Have we sent a stop action to all
                                          * resources in preparation for
                                          * shutting down */
