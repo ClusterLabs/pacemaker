@@ -614,7 +614,7 @@ cib_metadata(void)
     g_free(s);
 }
 
-void
+static void
 verify_cib_options(GHashTable * options)
 {
     pcmk__validate_cluster_options(options, cib_opts, PCMK__NELEM(cib_opts));

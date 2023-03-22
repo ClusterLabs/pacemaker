@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -88,7 +88,6 @@ gboolean cib_diff_version_details(xmlNode * diff, int *admin_epoch, int *epoch, 
                                   int *_admin_epoch, int *_epoch, int *_updates);
 
 gboolean cib_read_config(GHashTable * options, xmlNode * current_cib);
-void verify_cib_options(GHashTable * options);
 gboolean cib_internal_config_changed(xmlNode * diff);
 
 typedef struct cib_notify_client_s {
