@@ -46,6 +46,68 @@ gint ciblib_GCompareFunc(gconstpointer a, gconstpointer b);
         }                                                               \
     } while(0)
 
+static gboolean
+cib_async_timeout_handler(gpointer data)
+{
+    struct timer_rec_s *timer = data;
+
+    crm_debug("Async call %d timed out after %ds",
+              timer->call_id, timer->timeout);
+    cib_native_callback(timer->cib, NULL, timer->call_id, -ETIME);
+
+    // We remove the handler in remove_cib_op_callback()
+    return G_SOURCE_CONTINUE;
+}
+
+static gboolean
+cib_client_register_callback_full(cib_t *cib, int call_id, int timeout,
+                                  gboolean only_success, void *user_data,
+                                  const char *callback_name,
+                                  void (*callback)(xmlNode *, int, int,
+                                                   xmlNode *, void *),
+                                  void (*free_func)(void *))
+{
+    cib_callback_client_t *blob = NULL;
+
+    if (call_id < 0) {
+        if (only_success == FALSE) {
+            callback(NULL, call_id, call_id, NULL, user_data);
+        } else {
+            crm_warn("CIB call failed: %s", pcmk_strerror(call_id));
+        }
+        if (user_data && free_func) {
+            free_func(user_data);
+        }
+        return FALSE;
+    }
+
+    blob = calloc(1, sizeof(cib_callback_client_t));
+    blob->id = callback_name;
+    blob->only_success = only_success;
+    blob->user_data = user_data;
+    blob->callback = callback;
+    blob->free_func = free_func;
+
+    if (timeout > 0) {
+        struct timer_rec_s *async_timer = NULL;
+
+        async_timer = calloc(1, sizeof(struct timer_rec_s));
+        blob->timer = async_timer;
+
+        async_timer->cib = cib;
+        async_timer->call_id = call_id;
+        async_timer->timeout = timeout * 1000;
+        async_timer->ref = g_timeout_add(async_timer->timeout,
+                                         cib_async_timeout_handler,
+                                         async_timer);
+    }
+
+    crm_trace("Adding callback %s for call %d", callback_name, call_id);
+    pcmk__intkey_table_insert(cib_op_callback_table, call_id, blob);
+
+    return TRUE;
+}
+
 static int
 cib_client_noop(cib_t * cib, int call_options)
 {
@@ -645,20 +707,6 @@ ciblib_GCompareFunc(gconstpointer a, gconstpointer b)
     return rc;
 }
 
-static gboolean
-cib_async_timeout_handler(gpointer data)
-{
-    struct timer_rec_s *timer = data;
-
-    crm_debug("Async call %d timed out after %ds", timer->call_id, timer->timeout);
-    cib_native_callback(timer->cib, NULL, timer->call_id, -ETIME);
-
-    /* Always return TRUE, never remove the handler
-     * We do that in remove_cib_op_callback()
-     */
-    return TRUE;
-}
-
 gboolean
 cib_client_register_callback(cib_t * cib, int call_id, int timeout, gboolean only_success,
                              void *user_data, const char *callback_name,
@@ -667,54 +715,6 @@ cib_client_register_callback(cib_t * cib, int call_id, int timeout, gboolean onl
     return cib_client_register_callback_full(cib, call_id, timeout,
                                              only_success, user_data,
                                              callback_name, callback, NULL);
-}
-
-gboolean
-cib_client_register_callback_full(cib_t *cib, int call_id, int timeout,
-                                  gboolean only_success, void *user_data,
-                                  const char *callback_name,
-                                  void (*callback)(xmlNode *, int, int,
-                                                   xmlNode *, void *),
-                                  void (*free_func)(void *))
-{
-    cib_callback_client_t *blob = NULL;
-
-    if (call_id < 0) {
-        if (only_success == FALSE) {
-            callback(NULL, call_id, call_id, NULL, user_data);
-        } else {
-            crm_warn("CIB call failed: %s", pcmk_strerror(call_id));
-        }
-        if (user_data && free_func) {
-            free_func(user_data);
-        }
-        return FALSE;
-    }
-
-    blob = calloc(1, sizeof(cib_callback_client_t));
-    blob->id = callback_name;
-    blob->only_success = only_success;
-    blob->user_data = user_data;
-    blob->callback = callback;
-    blob->free_func = free_func;
-
-    if (timeout > 0) {
-        struct timer_rec_s *async_timer = NULL;
-
-        async_timer = calloc(1, sizeof(struct timer_rec_s));
-        blob->timer = async_timer;
-
-        async_timer->cib = cib;
-        async_timer->call_id = call_id;
-        async_timer->timeout = timeout * 1000;
-        async_timer->ref =
-            g_timeout_add(async_timer->timeout, cib_async_timeout_handler, async_timer);
-    }
-
-    crm_trace("Adding callback %s for call %d", callback_name, call_id);
-    pcmk__intkey_table_insert(cib_op_callback_table, call_id, blob);
-
-    return TRUE;
 }
 
 void
