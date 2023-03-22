@@ -22,8 +22,6 @@ inaddr_any="no"
 INSTALL=
 cs_conf=
 fence_conf=
-rpm_repo=
-distro=
 
 dsh_group=0
 if [ ! -z $cluster_name ]; then
@@ -77,9 +75,6 @@ function helptext() {
     echo "-u, --unicast       configure point-to-point communication instead of multicast"
     echo ""
     echo "-I, --install       Install packages"
-    echo "-R, --repo name     Setup and update/install Pacemaker from the named clusterlabs.org repo"
-    echo "                    Known values: rpm, rpm-test, rpm-next, rpm-test-next, rpm-test-rhel"
-    echo "-D, --distro        The distro within the --repo.  Defaults to fedora-15"
     echo ""
     echo "-d, --debug         Enable debug logging for the cluster"
     echo "--hosts             Copy the local /etc/hosts file to all nodes"
@@ -103,10 +98,8 @@ while true; do
 	    shift; shift;;
 	-r|--raw-ip) do_raw=1;       shift;;
 
-	-D) distro=$2; shift; shift;;
 	-d|--debug) do_debug=on; shift;;
 
-	-R|--repo) rpm_repo=$2; shift; shift;;
 	-I|--install) INSTALL=Yes; shift;;
 	--hosts) ETCHOSTS=1; shift;;
 
@@ -114,12 +107,11 @@ while true; do
 	-C|--nodelist) CTYPE=corosync; nodelist=1; shift;;
 	-u|--unicast) nodelist=1; transport=udpu; inaddr_any="yes"; shift;;
 	-e|--extra) pkgs="$pkgs $2"; shift; shift;;
-	-t|--test)  rpm_repo=rpm-test-next; pkgs="$pkgs valgrind"; shift;;
+	-t|--test)  pkgs="$pkgs valgrind"; shift;;
 	-l|--limit) limit=$2; shift; shift;;
 
 	r*[0-9])
 	    rhel=`echo $1 | sed -e s/rhel// -e s/-// -e s/r//`
-	    distro="rhel-$rhel";
 	    pkgs="$pkgs qarsh-server";
 	    case $rhel in
 		7) CTYPE=corosync;;
@@ -128,7 +120,6 @@ while true; do
 	    ;;
 
 	f*[0-9][0-9])
-	    distro="fedora-`echo $1 | sed -e s/fedora// -e s/-// -e s/f//`";
 	    CTYPE=corosync;
 	    shift
 	    ;;
@@ -237,23 +228,6 @@ if [ $accept_defaults = 0 ]; then
     echo ""
     read -p "Shall I install/update the relevant packages? [$INSTALL] "  -t 60 INSTALL
 
-    case $INSTALL in
-	[Yy][Ee][Ss]|[Yy]|"")
-	    if [ -z $rpm_repo ]; then
-		echo ""
-		read -p "Would you like to install packages from ClusterLabs.org? [No] (rpm, rpm-next, rpm-test-next) "  -t 60 rpm_repo
-	    fi
-
-	    if [ ! -z $rpm_repo ]; then
-		if [ -z $distro ]; then
-		    distro=fedora-18
-		    echo ""
-		    read -p "Which distro are you installing for? [$distro] (eg. fedora-17, rhel-6) "  -t 60 distro
-		fi
-	    fi
-	    ;;
-    esac
-
     echo ""
     read -p "Shall I sync the date/time? [$DATE] "  -t 60 DATE
 fi
@@ -298,11 +272,6 @@ case $DATE in
 	done
 	;;
 esac
-
-REPO=
-if [ ! -z $rpm_repo ]; then
-    REPO=$rpm_repo/$distro
-fi
 
 init=`mktemp`
 cat<<-END>$init
@@ -365,15 +334,6 @@ esac
 
 case $INSTALL in
     [Yy][Ee][Ss]|[Yy]|"")
-
-	if [ ! -z $REPO ]; then
-	    info Configuring Clusterlabs repo: $REPO
-	    yum install -y wget
-	    rm -f /etc/yum.repos.d/clusterlabs.repo
-            wget -O /etc/yum.repos.d/clusterlabs.repo https://www.clusterlabs.org/$REPO/clusterlabs.repo &>/dev/null
-	    yum clean all
-	fi
-
 	info Installing cluster software
 	yum install -y $pkgs pacemaker
 	;;
