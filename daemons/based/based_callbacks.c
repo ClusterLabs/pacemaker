@@ -1178,6 +1178,28 @@ calculate_section_digest(const char *xpath, xmlNode * xml_obj)
 
 }
 
+// v1 and v2 patch formats
+#define XPATH_CONFIG_CHANGE             \
+    "//" XML_CIB_TAG_CRMCONFIG " | "    \
+    "//" XML_DIFF_CHANGE                \
+    "[contains(@" XML_DIFF_PATH ",'/" XML_CIB_TAG_CRMCONFIG "/')]"
+
+static bool
+contains_config_change(xmlNode *diff)
+{
+    bool changed = false;
+
+    if (diff) {
+        xmlXPathObject *xpathObj = xpath_search(diff, XPATH_CONFIG_CHANGE);
+
+        if (numXpathResults(xpathObj) > 0) {
+            changed = true;
+        }
+        freeXpathObject(xpathObj);
+    }
+    return changed;
+}
+
 static int
 cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gboolean privileged)
 {
@@ -1333,7 +1355,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
                       crm_element_value(current_cib, XML_ATTR_NUMUPDATES), rc);
         }
 
-        if (rc == pcmk_ok && cib_internal_config_changed(*cib_diff)) {
+        if ((rc == pcmk_ok) && contains_config_change(*cib_diff)) {
             cib_read_config(config_hash, result_cib);
         }
 

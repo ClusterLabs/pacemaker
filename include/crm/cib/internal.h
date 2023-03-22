@@ -88,7 +88,6 @@ gboolean cib_diff_version_details(xmlNode * diff, int *admin_epoch, int *epoch, 
                                   int *_admin_epoch, int *_epoch, int *_updates);
 
 gboolean cib_read_config(GHashTable * options, xmlNode * current_cib);
-gboolean cib_internal_config_changed(xmlNode * diff);
 
 typedef struct cib_notify_client_s {
     const char *event;
