@@ -142,7 +142,6 @@ xmlNode *cib_create_op(int call_id, const char *token, const char *op, const cha
 
 void cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc);
 void cib_native_notify(gpointer data, gpointer user_data);
-int cib_native_register_notification(cib_t * cib, const char *callback, int enabled);
 gboolean cib_client_register_callback(cib_t * cib, int call_id, int timeout, gboolean only_success,
                                       void *user_data, const char *callback_name,
                                       void (*callback) (xmlNode *, int, int, xmlNode *, void *));
