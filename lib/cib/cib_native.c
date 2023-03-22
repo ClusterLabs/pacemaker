@@ -35,11 +35,7 @@ typedef struct cib_native_opaque_s {
     crm_ipc_t *ipc;
     void (*dnotify_fn) (gpointer user_data);
     mainloop_io_t *source;
-
 } cib_native_opaque_t;
-
-int cib_native_perform_op(cib_t * cib, const char *op, const char *host, const char *section,
-                          xmlNode * data, xmlNode ** output_data, int call_options);
 
 int cib_native_perform_op_delegate(cib_t * cib, const char *op, const char *host,
                                    const char *section, xmlNode * data, xmlNode ** output_data,
@@ -325,14 +321,6 @@ cib_native_free(cib_t * cib)
     }
 
     return rc;
-}
-
-int
-cib_native_perform_op(cib_t * cib, const char *op, const char *host, const char *section,
-                      xmlNode * data, xmlNode ** output_data, int call_options)
-{
-    return cib_native_perform_op_delegate(cib, op, host, section,
-                                          data, output_data, call_options, NULL);
 }
 
 int

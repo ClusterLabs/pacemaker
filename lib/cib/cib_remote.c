@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2022 the Pacemaker project contributors
+ * Copyright 2008-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -37,19 +37,11 @@
 static gnutls_anon_client_credentials_t anon_cred_c;
 static gboolean remote_gnutls_credentials_init = FALSE;
 
-#else
-
-typedef void gnutls_session_t;
-
 #endif // HAVE_GNUTLS_GNUTLS_H
 
 #include <arpa/inet.h>
 
-#define DH_BITS 1024
-
 typedef struct cib_remote_opaque_s {
-    int flags;
-    int socket;
     int port;
     char *server;
     char *user;
@@ -58,7 +50,6 @@ typedef struct cib_remote_opaque_s {
     pcmk__remote_t command;
     pcmk__remote_t callback;
     pcmk__output_t *out;
-
 } cib_remote_opaque_t;
 
 void cib_remote_connection_destroy(gpointer user_data);
@@ -425,8 +416,6 @@ int
 cib_remote_signoff(cib_t * cib)
 {
     int rc = pcmk_ok;
-
-    /* cib_remote_opaque_t *private = cib->variant_opaque; */
 
     crm_debug("Disconnecting from the CIB manager");
 #ifdef HAVE_GNUTLS_GNUTLS_H
