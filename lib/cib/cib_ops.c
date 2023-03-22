@@ -623,11 +623,12 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
     return xml_apply_patchset(*result_cib, input, TRUE);
 }
 
-gboolean
-cib_config_changed(xmlNode * last, xmlNode * next, xmlNode ** diff)
+// @COMPAT: v1-only
+bool
+cib__config_changed_v1(xmlNode *last, xmlNode *next, xmlNode **diff)
 {
     int lpc = 0, max = 0;
-    gboolean config_changes = FALSE;
+    bool config_changes = false;
     xmlXPathObject *xpathObj = NULL;
     int format = 1;
 
@@ -642,12 +643,11 @@ cib_config_changed(xmlNode * last, xmlNode * next, xmlNode ** diff)
     }
 
     crm_element_value_int(*diff, "format", &format);
-    /* This function only applies to v1 diffs. */
     CRM_LOG_ASSERT(format == 1);
 
     xpathObj = xpath_search(*diff, "//" XML_CIB_TAG_CONFIGURATION);
     if (numXpathResults(xpathObj) > 0) {
-        config_changes = TRUE;
+        config_changes = true;
         goto done;
     }
     freeXpathObject(xpathObj);
@@ -664,28 +664,28 @@ cib_config_changed(xmlNode * last, xmlNode * next, xmlNode ** diff)
         xmlNode *top = getXpathResult(xpathObj, lpc);
 
         if (crm_element_value(top, XML_ATTR_GENERATION) != NULL) {
-            config_changes = TRUE;
+            config_changes = true;
             goto done;
         }
         if (crm_element_value(top, XML_ATTR_GENERATION_ADMIN) != NULL) {
-            config_changes = TRUE;
+            config_changes = true;
             goto done;
         }
 
         if (crm_element_value(top, XML_ATTR_VALIDATION) != NULL) {
-            config_changes = TRUE;
+            config_changes = true;
             goto done;
         }
         if (crm_element_value(top, XML_ATTR_CRM_VERSION) != NULL) {
-            config_changes = TRUE;
+            config_changes = true;
             goto done;
         }
         if (crm_element_value(top, "remote-clear-port") != NULL) {
-            config_changes = TRUE;
+            config_changes = true;
             goto done;
         }
         if (crm_element_value(top, "remote-tls-port") != NULL) {
-            config_changes = TRUE;
+            config_changes = true;
             goto done;
         }
     }

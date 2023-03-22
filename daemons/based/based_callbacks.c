@@ -1328,7 +1328,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         }
 
         if (format == 1) {
-            config_changed = cib_config_changed(NULL, NULL, cib_diff);
+            config_changed = cib__config_changed_v1(NULL, NULL, cib_diff);
         }
     }
 
