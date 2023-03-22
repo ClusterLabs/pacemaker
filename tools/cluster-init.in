@@ -1,6 +1,6 @@
-#!/bin/bash
+#!@BASH_PATH@
 #
-# Copyright 2011-2021 the Pacemaker project contributors
+# Copyright 2011-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -198,7 +198,7 @@ if [ -z $CTYPE ]; then
 fi
 
 case $CTYPE in
-    corosync) cs_conf=/etc/corosync/corosync.conf;;
+    corosync) cs_conf="@PCMK__COROSYNC_CONF@" ;;
 esac
 
 function get_defaults()
