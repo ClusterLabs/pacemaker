@@ -387,7 +387,7 @@ static GOptionEntry query_entries[] = {
       NULL },
     { "get-parameter", 'g', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, get_param_prop_cb,
       "Display named parameter for resource (use instance attribute\n"
-      INDENT "unless --meta, --utilization or --element is specified)",
+      INDENT "unless --element, --meta, or --utilization is specified)",
       "PARAM" },
     { "get-property", 'G', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, get_param_prop_cb,
       "Display named property of resource ('class', 'type', or 'provider') "
@@ -444,11 +444,12 @@ static GOptionEntry command_entries[] = {
       NULL },
     { "set-parameter", 'p', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, set_delete_param_cb,
       "Set named parameter for resource (requires -v). Use instance\n"
-      INDENT "attribute unless --meta or --utilization is specified.",
+      INDENT "attribute unless --element, --meta, or --utilization is "
+      "specified.",
       "PARAM" },
     { "delete-parameter", 'd', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, set_delete_param_cb,
       "Delete named parameter for resource. Use instance attribute\n"
-      INDENT "unless --meta or --utilization is specified.",
+      INDENT "unless --element, --meta or, --utilization is specified.",
       "PARAM" },
     { "set-property", 'S', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, set_prop_cb,
       "Set named property of resource ('class', 'type', or 'provider') "
@@ -594,7 +595,7 @@ static GOptionEntry addl_entries[] = {
       NULL },
     { "element", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, attr_set_type_cb,
       "Use resource element attribute instead of instance attribute\n"
-      INDENT "(with -g)",
+      INDENT "(with -p, -g, -d)",
       NULL },
     { "operation", 'n', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.operation,
       "Operation to clear instead of all (with -C -r)",
