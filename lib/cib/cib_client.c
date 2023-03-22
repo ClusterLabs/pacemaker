@@ -108,6 +108,18 @@ cib_client_register_callback_full(cib_t *cib, int call_id, int timeout,
     return TRUE;
 }
 
+static gboolean
+cib_client_register_callback(cib_t *cib, int call_id, int timeout,
+                             gboolean only_success, void *user_data,
+                             const char *callback_name,
+                             void (*callback) (xmlNode *, int, int, xmlNode *,
+                                               void *))
+{
+    return cib_client_register_callback_full(cib, call_id, timeout,
+                                             only_success, user_data,
+                                             callback_name, callback, NULL);
+}
+
 static int
 cib_client_noop(cib_t * cib, int call_options)
 {
@@ -705,16 +717,6 @@ ciblib_GCompareFunc(gconstpointer a, gconstpointer b)
         return 1;
     }
     return rc;
-}
-
-gboolean
-cib_client_register_callback(cib_t * cib, int call_id, int timeout, gboolean only_success,
-                             void *user_data, const char *callback_name,
-                             void (*callback) (xmlNode *, int, int, xmlNode *, void *))
-{
-    return cib_client_register_callback_full(cib, call_id, timeout,
-                                             only_success, user_data,
-                                             callback_name, callback, NULL);
 }
 
 void
