@@ -146,6 +146,7 @@ configure
 /maint/bumplibs
 /python/pacemaker/buildoptions.py
 /python/setup.py
+/tools/cluster-init
 /tools/cibsecret
 /tools/crm_error
 /tools/crm_failcount
