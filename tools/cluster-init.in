@@ -11,7 +11,6 @@
 accept_defaults=0
 do_raw=0
 ETCHOSTS=0
-pcmk_ver=11
 nodelist=0
 limit=0
 
@@ -83,7 +82,6 @@ function helptext() {
     echo "-D, --distro        The distro within the --repo.  Defaults to fedora-15"
     echo ""
     echo "-d, --debug         Enable debug logging for the cluster"
-    echo "-10                 install stable-1.0 packages, implies: -p 0 -R rpm-test -I"
     echo "--hosts             Copy the local /etc/hosts file to all nodes"
     echo "-e, --extra list    Whitespace separated list of extra packages to install"
     echo "-l, --limit N       Use the first N hosts from the named group" 
@@ -134,7 +132,6 @@ while true; do
 	    CTYPE=corosync;
 	    shift
 	    ;;
-	p0|10) pcmk_ver=10; rpm_repo="rpm-test"; install=1; shift;;
 
 	-y|--yes|--defaults) accept_defaults=1; shift;;
 	-x) set -x; shift;;
@@ -236,11 +233,6 @@ if [ $accept_defaults = 0 ]; then
     echo ""
     echo "Incorrectly configured firewalls will prevent corosync from starting up"
     read -p "Shall I disable iptables? [$IPTABLES] " -t 60 IPTABLES
-    if [ $pcmk_ver = 10 ]; then
-	echo ""
-	echo "Without a default domain, external/ssh fencing probably won't work because it can't find its peers"
-	read -p "Shall I set one? [No] (domain.name) " -t 60 DOMAIN
-    fi
 
     echo ""
     read -p "Shall I install/update the relevant packages? [$INSTALL] "  -t 60 INSTALL
@@ -383,15 +375,7 @@ case $INSTALL in
 	fi
 
 	info Installing cluster software
-	if [ $pcmk_ver = 10 ]; then
-	    yum install -y $pkgs at
-	    service atd start
-	    systemctl enable atd.service
-
-	    yum install -y "pacemaker < 1.1"
-	else
-	    yum install -y $pkgs pacemaker
-	fi
+	yum install -y $pkgs pacemaker
 	;;
 esac
 
@@ -577,12 +561,6 @@ for host in $host_list; do
 
     if [ $ETCHOSTS = 1 ]; then
 	scp /etc/hosts root@${host}:/etc/hosts
-    fi
-
-    if [ $pcmk_ver = 10 ]; then
-	scp /etc/hosts root@${host}:/etc/hosts
-	scp ~/.ssh/id_dsa.suse root@${host}:.ssh/id_dsa
-	scp ~/.ssh/known_hosts root@${host}:.ssh/known_hosts
     fi
 
     ssh -l root ${host} -- grep -q "token:" $cs_conf 2>&1 > /dev/null
