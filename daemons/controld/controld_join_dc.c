@@ -578,7 +578,7 @@ do_dc_join_finalize(long long action,
         controld_set_fsa_input_flags(R_HAVE_CIB);
     }
 
-    if (pcmk_is_set(controld_globals.fsa_input_register, R_IN_TRANSITION)) {
+    if (!controld_globals.transition_graph->complete) {
         crm_warn("Delaying join-%d finalization while transition in progress",
                  current_join_id);
         crmd_join_phase_log(LOG_DEBUG);
