@@ -1,5 +1,4 @@
-""" Test environment classes for Pacemaker's Cluster Test Suite (CTS)
-"""
+""" Test environment classes for Pacemaker's Cluster Test Suite (CTS) """
 
 __all__ = ["EnvFactory"]
 __copyright__ = "Copyright 2014-2023 the Pacemaker project contributors"
@@ -16,6 +15,10 @@ from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.remote import RemoteFactory
 
 class Environment:
+    """ A class for managing the CTS environment, consisting largely of processing
+        and storing command line parameters
+    """
+
     # pylint doesn't understand that self._rsh is callable (it stores the
     # singleton instance of RemoteExec, as returned by the getInstance method
     # of RemoteFactory).  It's possible we could fix this with type annotations,
@@ -25,6 +28,17 @@ class Environment:
     # pylint: disable=not-callable
 
     def __init__(self, args):
+        """ Create a new Environment instance.  This class can be treated kind
+            of like a dictionary due to the presence of typical dict functions
+            like has_key, __getitem__, and __setitem__.  However, it is not a
+            dictionary so do not rely on standard dictionary behavior.
+
+            Arguments:
+
+            args -- A list of command line parameters, minus the program name.
+                    If None, sys.argv will be used.
+        """
+
         self.data = {}
         self._nodes = []
 
@@ -58,6 +72,10 @@ class Environment:
             self._discover()
 
     def _seed_random(self, seed=None):
+        """ Initialize the random number generator with the given seed, or use
+            the current time if None
+        """
+
         if not seed:
             seed = int(time.time())
 
@@ -65,6 +83,8 @@ class Environment:
         self.random_gen.seed(str(seed))
 
     def dump(self):
+        """ Print the current environment """
+
         keys = []
         for key in list(self.data.keys()):
             keys.append(key)
@@ -74,15 +94,21 @@ class Environment:
             self._logger.debug("Environment[%s]:\t%s" % (key, str(self[key])))
 
     def keys(self):
+        """ Return a list of all environment keys stored in this instance """
+
         return list(self.data.keys())
 
     def has_key(self, key):
+        """ Does the given environment key exist? """
+
         if key == "nodes":
             return True
 
         return key in self.data
 
     def __getitem__(self, key):
+        """ Return the given environment key, or None if it does not exist """
+
         if str(key) == "0":
             raise ValueError("Bad call to 'foo in X', should reference 'foo in X.keys()' instead")
 
@@ -98,6 +124,10 @@ class Environment:
         return None
 
     def __setitem__(self, key, value):
+        """ Set the given environment key to the given value, overriding any
+            previous value
+        """
+
         if key == "Stack":
             self._set_stack(value)
 
@@ -126,10 +156,12 @@ class Environment:
 
     def random_node(self):
         """ Choose a random node from the cluster """
+
         return self.random_gen.choice(self["nodes"])
 
     def _set_stack(self, name):
-        # Normalize stack names
+        """ Normalize the given cluster stack name """
+
         if name in ["corosync", "cs", "mcp"]:
             self.data["Stack"] = "corosync 2+"
 
@@ -137,7 +169,8 @@ class Environment:
             raise ValueError("Unknown stack: %s" % name)
 
     def _get_stack_short(self):
-        # Create the Cluster Manager object
+        """ Return the short name for the currently set cluster stack """
+
         if "Stack" not in self.data:
             return "unknown"
 
@@ -148,7 +181,8 @@ class Environment:
         raise ValueError("Unknown stack: %s" % self["stack"])
 
     def _detect_syslog(self):
-        # Detect syslog variant
+        """ Detect the syslog variant in use on the target node """
+
         if "syslogd" not in self.data:
             if self["have_systemd"]:
                 # Systemd
@@ -164,6 +198,8 @@ class Environment:
                 self["syslogd"] = "rsyslog"
 
     def disable_service(self, node, service):
+        """ Disable the given service on the given node """
+
         if self["have_systemd"]:
             # Systemd
             (rc, _) = self._rsh(node, "systemctl disable %s" % service)
@@ -174,6 +210,8 @@ class Environment:
         return rc
 
     def enable_service(self, node, service):
+        """ Enable the given service on the given node """
+
         if self["have_systemd"]:
             # Systemd
             (rc, _) = self._rsh(node, "systemctl enable %s" % service)
@@ -184,6 +222,8 @@ class Environment:
         return rc
 
     def service_is_enabled(self, node, service):
+        """ Is the given service enabled on the given node? """
+
         if self["have_systemd"]:
             # Systemd
 
@@ -199,13 +239,15 @@ class Environment:
         return rc == 0
 
     def _detect_at_boot(self):
-        # Detect if the cluster starts at boot
+        """ Detect if the cluster starts at boot """
+
         if "at-boot" not in self.data:
             self["at-boot"] = self.service_is_enabled(self._target, "corosync") \
                               or self.service_is_enabled(self._target, "pacemaker")
 
     def _detect_ip_offset(self):
-        # Try to determine an offset for IPaddr resources
+        """ Detect the offset for IPaddr resources """
+
         if self["CIBResource"] and "IPBase" not in self.data:
             (_, lines) = self._rsh(self._target, "ip addr | grep inet | grep -v -e link -e inet6 -e '/32' -e ' lo' | awk '{print $2}'", verbose=0)
             network = lines[0].strip()
@@ -233,6 +275,10 @@ class Environment:
                 self._logger.log("Defaulting to '%s', use --test-ip-base to override" % self["IPBase"])
 
     def _filter_nodes(self):
+        """ If --limit-nodes is given, keep that many nodes from the front of the
+            list of cluster nodes and drop the rest
+        """
+
         if self["node-limit"] > 0:
             if len(self["nodes"]) > self["node-limit"]:
                 # pylint thinks self["node-limit"] is a list even though we initialize
@@ -245,10 +291,14 @@ class Environment:
                     self["nodes"].pop(len(self["nodes"])-1)
 
     def _validate(self):
+        """ Were we given all the required command line parameters? """
+
         if not self["nodes"]:
             raise ValueError("No nodes specified!")
 
     def _discover(self):
+        """ Probe cluster nodes to figure out how to log and manage services """
+
         self._target = random.Random().choice(self["nodes"])
 
         exerciser = socket.gethostname()
@@ -270,6 +320,11 @@ class Environment:
         self._detect_ip_offset()
 
     def _parse_args(self, argv):
+        """ Parse and validate command line parameters, setting the appropriate
+            values in the environment dictionary.  If argv is None, use sys.argv
+            instead.
+        """
+
         if not argv:
             argv = sys.argv[1:]
 
@@ -581,10 +636,16 @@ class Environment:
             print("Setting %s = %s" % (name, value))
 
 class EnvFactory:
+    """ A class for constructing a singleton instance of an Environment object """
+
     instance = None
 
     # pylint: disable=invalid-name
     def getInstance(self, args=None):
+        """ Returns the previously created instance of Environment, or creates a
+            new instance if one does not already exist.
+        """
+
         if not EnvFactory.instance:
             EnvFactory.instance = Environment(args)
 
