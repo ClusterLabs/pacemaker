@@ -378,9 +378,9 @@ struct pe_resource_s {
 
     /* Pay special attention to whether you want to use rsc_cons_lhs and
      * rsc_cons directly, which include only colocations explicitly involving
-     * this resource, or call the pcmk__with_this_colocations() and
+     * this resource, or call libpacemaker's pcmk__with_this_colocations() and
      * pcmk__this_with_colocations() functions, which may return relevant
-     * colocations involving the resource's parents as well.
+     * colocations involving the resource's ancestors as well.
      */
 
     //!@{
