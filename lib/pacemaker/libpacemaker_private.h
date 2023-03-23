@@ -634,11 +634,13 @@ void pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
 
 G_GNUC_INTERNAL
 void pcmk__with_primitive_colocations(const pe_resource_t *rsc,
-                                      const pe_resource_t *child, GList **list);
+                                      const pe_resource_t *orig_rsc,
+                                      GList **list);
 
 G_GNUC_INTERNAL
 void pcmk__primitive_with_colocations(const pe_resource_t *rsc,
-                                      const pe_resource_t *child, GList **list);
+                                      const pe_resource_t *orig_rsc,
+                                      GList **list);
 
 G_GNUC_INTERNAL
 void pcmk__schedule_cleanup(pe_resource_t *rsc, const pe_node_t *node,
@@ -675,11 +677,11 @@ void pcmk__group_apply_coloc_score(pe_resource_t *dependent,
 
 G_GNUC_INTERNAL
 void pcmk__with_group_colocations(const pe_resource_t *rsc,
-                                  const pe_resource_t *child, GList **list);
+                                  const pe_resource_t *orig_rsc, GList **list);
 
 G_GNUC_INTERNAL
 void pcmk__group_with_colocations(const pe_resource_t *rsc,
-                                  const pe_resource_t *child, GList **list);
+                                  const pe_resource_t *orig_rsc, GList **list);
 
 G_GNUC_INTERNAL
 void pcmk__group_apply_location(pe_resource_t *rsc, pe__location_t *location);
@@ -720,11 +722,11 @@ void pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
 
 G_GNUC_INTERNAL
 void pcmk__with_clone_colocations(const pe_resource_t *rsc,
-                                  const pe_resource_t *child, GList **list);
+                                  const pe_resource_t *orig_rsc, GList **list);
 
 G_GNUC_INTERNAL
 void pcmk__clone_with_colocations(const pe_resource_t *rsc,
-                                  const pe_resource_t *child, GList **list);
+                                  const pe_resource_t *orig_rsc, GList **list);
 
 // Bundles (pcmk_sched_bundle.c)
 
@@ -739,11 +741,11 @@ void pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
 
 G_GNUC_INTERNAL
 void pcmk__with_bundle_colocations(const pe_resource_t *rsc,
-                                   const pe_resource_t *child, GList **list);
+                                   const pe_resource_t *orig_rsc, GList **list);
 
 G_GNUC_INTERNAL
 void pcmk__bundle_with_colocations(const pe_resource_t *rsc,
-                                   const pe_resource_t *child, GList **list);
+                                   const pe_resource_t *orig_rsc, GList **list);
 
 G_GNUC_INTERNAL
 void pcmk__output_bundle_actions(pe_resource_t *rsc);
