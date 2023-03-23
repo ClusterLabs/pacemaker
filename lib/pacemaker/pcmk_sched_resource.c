@@ -232,7 +232,7 @@ pcmk__colocated_resources(const pe_resource_t *rsc, const pe_resource_t *orig_rs
 
     pe_rsc_trace(orig_rsc, "%s is in colocation chain with %s",
                  rsc->id, orig_rsc->id);
-    colocated_rscs = g_list_append(colocated_rscs, (gpointer) rsc);
+    colocated_rscs = g_list_prepend(colocated_rscs, (gpointer) rsc);
 
     // Follow colocations where this resource is the dependent resource
     colocations = pcmk__this_with_colocations(rsc);

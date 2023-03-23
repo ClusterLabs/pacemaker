@@ -619,7 +619,7 @@ pcmk__group_colocated_resources(const pe_resource_t *rsc,
          * add every child's colocated resources to the list. The first and last
          * members will include the group's own colocations.
          */
-        colocated_rscs = g_list_append(colocated_rscs, (gpointer) rsc);
+        colocated_rscs = g_list_prepend(colocated_rscs, (gpointer) rsc);
         for (const GList *iter = rsc->children;
              iter != NULL; iter = iter->next) {
 
