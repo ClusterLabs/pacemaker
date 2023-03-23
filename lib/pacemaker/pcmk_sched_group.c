@@ -713,11 +713,11 @@ pcmk__group_with_colocations(const pe_resource_t *rsc,
             crm_trace("Adding mandatory '%s with' colocations to list for "
                       "member %s because earlier member %s is unmanaged",
                       rsc->id, orig_rsc->id, member->id);
-            for (GList *cons_iter = rsc->rsc_cons; cons_iter != NULL;
+            for (const GList *cons_iter = rsc->rsc_cons; cons_iter != NULL;
                  cons_iter = cons_iter->next) {
-                pcmk__colocation_t *colocation = NULL;
+                const pcmk__colocation_t *colocation = NULL;
 
-                colocation = (pcmk__colocation_t *) cons_iter->data;
+                colocation = (const pcmk__colocation_t *) cons_iter->data;
                 if (colocation->score == INFINITY) {
                     pcmk__add_this_with(list, colocation);
                 }
