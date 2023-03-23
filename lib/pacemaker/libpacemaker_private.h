@@ -136,7 +136,7 @@ struct resource_alloc_functions_s {
      * \brief Add colocations affecting a resource as primary to a list
      *
      * \param[in]     rsc       Resource whose colocations should be added
-     * \param[in]     orig_rsc  Affected resource (\p rsc or a descendent)
+     * \param[in]     orig_rsc  Affected resource (\p rsc or a descendant)
      * \param[in,out] list      List of colocations to add to
      *
      * \note All arguments should be non-NULL.
@@ -151,7 +151,7 @@ struct resource_alloc_functions_s {
      * \brief Add colocations affecting a resource as dependent to a list
      *
      * \param[in]     rsc       Resource whose colocations should be added
-     * \param[in]     orig_rsc  Affected resource (\p rsc or a descendent)
+     * \param[in]     orig_rsc  Affected resource (\p rsc or a descendant)
      * \param[in,out] list      List of colocations to add to
      *
      * \note All arguments should be non-NULL.
