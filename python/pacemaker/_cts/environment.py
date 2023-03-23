@@ -211,14 +211,22 @@ class Environment:
             network = lines[0].strip()
 
             (_, lines) = self._rsh(self._target, "nmap -sn -n %s | grep 'scan report' | awk '{print $NF}' | sed 's:(::' | sed 's:)::' | sort -V | tail -n 1" % network, verbose=0)
-            self["IPBase"] = lines[0].strip()
+
+            try:
+                self["IPBase"] = lines[0].strip()
+            except (IndexError, TypeError):
+                self["IPBase"] = None
 
             if not self["IPBase"]:
                 self["IPBase"] = " fe80::1234:56:7890:1000"
                 self._logger.log("Could not determine an offset for IPaddr resources.  Perhaps nmap is not installed on the nodes.")
                 self._logger.log("Defaulting to '%s', use --test-ip-base to override" % self["IPBase"])
+                return
 
-            elif int(self["IPBase"].split('.')[3]) >= 240:
+            # pylint thinks self["IPBase"] is a list, not a string, which causes it
+            # to error out because a list doesn't have split().
+            # pylint: disable=no-member
+            if int(self["IPBase"].split('.')[3]) >= 240:
                 self._logger.log("Could not determine an offset for IPaddr resources. Upper bound is too high: %s %s"
                                 % (self["IPBase"], self["IPBase"].split('.')[3]))
                 self["IPBase"] = " fe80::1234:56:7890:1000"
