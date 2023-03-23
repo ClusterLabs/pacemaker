@@ -673,14 +673,6 @@ add_node_copy(xmlNode * parent, xmlNode * src_node)
     return child;
 }
 
-int
-add_node_nocopy(xmlNode * parent, const char *name, xmlNode * child)
-{
-    add_node_copy(parent, child);
-    free_xml(child);
-    return 1;
-}
-
 xmlNode *
 create_xml_node(xmlNode * parent, const char *name)
 {
@@ -2747,6 +2739,14 @@ void
 crm_destroy_xml(gpointer data)
 {
     free_xml(data);
+}
+
+int
+add_node_nocopy(xmlNode *parent, const char *name, xmlNode *child)
+{
+    add_node_copy(parent, child);
+    free_xml(child);
+    return 1;
 }
 
 // LCOV_EXCL_STOP

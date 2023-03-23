@@ -55,7 +55,6 @@ typedef struct cib_operation_s {
 } cib_operation_t;
 
 extern bool based_is_primary;
-extern GHashTable *peer_hash;
 extern GHashTable *config_hash;
 extern xmlNode *the_cib;
 extern crm_trigger_t *cib_writer;
@@ -69,7 +68,6 @@ extern gboolean stand_alone;
 extern gboolean cib_shutdown_flag;
 extern gchar *cib_root;
 extern int cib_status;
-extern FILE *msg_cib_strm;
 extern pcmk__output_t *logger_out;
 
 extern struct qb_ipcs_service_handlers ipc_ro_callbacks;
@@ -83,19 +81,14 @@ void cib_common_callback_worker(uint32_t id, uint32_t flags,
                                 xmlNode *op_request, pcmk__client_t *cib_client,
                                 gboolean privileged);
 void cib_shutdown(int nsig);
-void initiate_exit(void);
 void terminate_cib(const char *caller, int fast);
 gboolean cib_legacy_mode(void);
 
 gboolean uninitializeCib(void);
-xmlNode *readCibXml(char *buffer);
 xmlNode *readCibXmlFile(const char *dir, const char *file,
                         gboolean discard_status);
 int activateCibXml(xmlNode *doc, gboolean to_disk, const char *op);
 
-xmlNode *createCibRequest(gboolean isLocal, const char *operation,
-                          const char *section, const char *verbose,
-                          xmlNode *data);
 int cib_process_shutdown_req(const char *op, int options, const char *section,
                              xmlNode *req, xmlNode *input,
                              xmlNode *existing_cib, xmlNode **result_cib,
@@ -130,9 +123,9 @@ int cib_process_upgrade_server(const char *op, int options, const char *section,
                                xmlNode *existing_cib, xmlNode **result_cib,
                                xmlNode **answer);
 void send_sync_request(const char *host);
+int sync_our_cib(xmlNode *request, gboolean all);
 
 xmlNode *cib_msg_copy(xmlNode *msg, gboolean with_data);
-xmlNode *cib_construct_reply(xmlNode *request, xmlNode *output, int rc);
 int cib_get_operation_id(const char *op, int *operation);
 cib_op_t *cib_op_func(int call_type);
 gboolean cib_op_modifies(int call_type);

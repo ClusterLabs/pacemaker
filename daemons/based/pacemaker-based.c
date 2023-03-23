@@ -383,13 +383,13 @@ cib_init(void)
 {
     crm_cluster = pcmk_cluster_new();
 
-    if (is_corosync_cluster()) {
 #if SUPPORT_COROSYNC
+    if (is_corosync_cluster()) {
         crm_cluster->destroy = cib_cs_destroy;
         crm_cluster->cpg.cpg_deliver_fn = cib_cs_dispatch;
         crm_cluster->cpg.cpg_confchg_fn = pcmk_cpg_membership;
-#endif
     }
+#endif // SUPPORT_COROSYNC
 
     config_hash = pcmk__strkey_table(free, free);
 
@@ -399,9 +399,7 @@ cib_init(void)
     }
 
     if (!stand_alone) {
-        if (is_corosync_cluster()) {
-            crm_set_status_callback(&cib_peer_update_callback);
-        }
+        crm_set_status_callback(&cib_peer_update_callback);
 
         if (!crm_cluster_connect(crm_cluster)) {
             crm_crit("Cannot sign in to the cluster... terminating");

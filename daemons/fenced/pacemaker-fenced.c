@@ -1687,13 +1687,13 @@ main(int argc, char **argv)
     fenced_data_set->priv = logger_out;
 
     if (!stand_alone) {
-        if (is_corosync_cluster()) {
 #if SUPPORT_COROSYNC
+        if (is_corosync_cluster()) {
             cluster->destroy = stonith_peer_cs_destroy;
             cluster->cpg.cpg_deliver_fn = stonith_peer_ais_callback;
             cluster->cpg.cpg_confchg_fn = pcmk_cpg_membership;
-#endif
         }
+#endif // SUPPORT_COROSYNC
 
         crm_set_status_callback(&st_peer_update_callback);
 

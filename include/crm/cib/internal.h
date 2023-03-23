@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -88,8 +88,6 @@ gboolean cib_diff_version_details(xmlNode * diff, int *admin_epoch, int *epoch, 
                                   int *_admin_epoch, int *_epoch, int *_updates);
 
 gboolean cib_read_config(GHashTable * options, xmlNode * current_cib);
-void verify_cib_options(GHashTable * options);
-gboolean cib_internal_config_changed(xmlNode * diff);
 
 typedef struct cib_notify_client_s {
     const char *event;
@@ -144,17 +142,6 @@ xmlNode *cib_create_op(int call_id, const char *token, const char *op, const cha
 
 void cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc);
 void cib_native_notify(gpointer data, gpointer user_data);
-int cib_native_register_notification(cib_t * cib, const char *callback, int enabled);
-gboolean cib_client_register_callback(cib_t * cib, int call_id, int timeout, gboolean only_success,
-                                      void *user_data, const char *callback_name,
-                                      void (*callback) (xmlNode *, int, int, xmlNode *, void *));
-gboolean cib_client_register_callback_full(cib_t *cib, int call_id,
-                                           int timeout, gboolean only_success,
-                                           void *user_data,
-                                           const char *callback_name,
-                                           void (*callback)(xmlNode *, int, int,
-                                                            xmlNode *, void *),
-                                           void (*free_func)(void *));
 
 int cib_process_query(const char *op, int options, const char *section, xmlNode * req,
                       xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
@@ -218,9 +205,7 @@ int cib_process_xpath(const char *op, int options, const char *section,
                       const xmlNode *req, xmlNode *input, xmlNode *existing_cib,
                       xmlNode **result_cib, xmlNode ** answer);
 
-gboolean cib_config_changed(xmlNode * last, xmlNode * next, xmlNode ** diff);
-gboolean update_results(xmlNode * failed, xmlNode * target, const char *operation, int return_code);
-int cib_update_counter(xmlNode * xml_obj, const char *field, gboolean reset);
+bool cib__config_changed_v1(xmlNode *last, xmlNode *next, xmlNode **diff);
 
 int cib_internal_op(cib_t * cib, const char *op, const char *host,
                     const char *section, xmlNode * data,

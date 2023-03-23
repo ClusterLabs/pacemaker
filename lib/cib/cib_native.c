@@ -35,11 +35,7 @@ typedef struct cib_native_opaque_s {
     crm_ipc_t *ipc;
     void (*dnotify_fn) (gpointer user_data);
     mainloop_io_t *source;
-
 } cib_native_opaque_t;
-
-int cib_native_perform_op(cib_t * cib, const char *op, const char *host, const char *section,
-                          xmlNode * data, xmlNode ** output_data, int call_options);
 
 int cib_native_perform_op_delegate(cib_t * cib, const char *op, const char *host,
                                    const char *section, xmlNode * data, xmlNode ** output_data,
@@ -51,6 +47,29 @@ int cib_native_signon(cib_t * cib, const char *name, enum cib_conn_type type);
 int cib_native_signon_raw(cib_t * cib, const char *name, enum cib_conn_type type, int *event_fd);
 
 int cib_native_set_connection_dnotify(cib_t * cib, void (*dnotify) (gpointer user_data));
+
+static int
+cib_native_register_notification(cib_t *cib, const char *callback, int enabled)
+{
+    int rc = pcmk_ok;
+    xmlNode *notify_msg = create_xml_node(NULL, "cib-callback");
+    cib_native_opaque_t *native = cib->variant_opaque;
+
+    if (cib->state != cib_disconnected) {
+        crm_xml_add(notify_msg, F_CIB_OPERATION, T_CIB_NOTIFY);
+        crm_xml_add(notify_msg, F_CIB_NOTIFY_TYPE, callback);
+        crm_xml_add_int(notify_msg, F_CIB_NOTIFY_ACTIVATE, enabled);
+        rc = crm_ipc_send(native->ipc, notify_msg, crm_ipc_client_response,
+                          1000 * cib->call_timeout, NULL);
+        if (rc <= 0) {
+            crm_trace("Notification not registered: %d", rc);
+            rc = -ECOMM;
+        }
+    }
+
+    free_xml(notify_msg);
+    return rc;
+}
 
 cib_t *
 cib_native_new(void)
@@ -305,14 +324,6 @@ cib_native_free(cib_t * cib)
 }
 
 int
-cib_native_perform_op(cib_t * cib, const char *op, const char *host, const char *section,
-                      xmlNode * data, xmlNode ** output_data, int call_options)
-{
-    return cib_native_perform_op_delegate(cib, op, host, section,
-                                          data, output_data, call_options, NULL);
-}
-
-int
 cib_native_perform_op_delegate(cib_t * cib, const char *op, const char *host, const char *section,
                                xmlNode * data, xmlNode ** output_data, int call_options,
                                const char *user_name)
@@ -463,27 +474,4 @@ cib_native_set_connection_dnotify(cib_t * cib, void (*dnotify) (gpointer user_da
     native->dnotify_fn = dnotify;
 
     return pcmk_ok;
-}
-
-int
-cib_native_register_notification(cib_t * cib, const char *callback, int enabled)
-{
-    int rc = pcmk_ok;
-    xmlNode *notify_msg = create_xml_node(NULL, "cib-callback");
-    cib_native_opaque_t *native = cib->variant_opaque;
-
-    if (cib->state != cib_disconnected) {
-        crm_xml_add(notify_msg, F_CIB_OPERATION, T_CIB_NOTIFY);
-        crm_xml_add(notify_msg, F_CIB_NOTIFY_TYPE, callback);
-        crm_xml_add_int(notify_msg, F_CIB_NOTIFY_ACTIVATE, enabled);
-        rc = crm_ipc_send(native->ipc, notify_msg, crm_ipc_client_response,
-                          1000 * cib->call_timeout, NULL);
-        if (rc <= 0) {
-            crm_trace("Notification not registered: %d", rc);
-            rc = -ECOMM;
-        }
-    }
-
-    free_xml(notify_msg);
-    return rc;
 }

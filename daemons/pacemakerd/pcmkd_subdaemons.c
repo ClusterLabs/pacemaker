@@ -493,15 +493,17 @@ start_child(pcmk_child_t * child)
 
         if(gid) {
             // Whether we need root group access to talk to cluster layer
-            bool need_root_group = TRUE;
+            static bool need_root_group = true;
 
-            if (is_corosync_cluster()) {
+#if SUPPORT_COROSYNC
+            if (need_root_group && is_corosync_cluster()) {
                 /* Corosync clusters can drop root group access, because we set
                  * uidgid.gid.${gid}=1 via CMAP, which allows these processes to
                  * connect to corosync.
                  */
-                need_root_group = FALSE;
+                need_root_group = false;
             }
+#endif // SUPPORT_COROSYNC
 
             // Drop root group access if not needed
             if (!need_root_group && (setgid(gid) < 0)) {

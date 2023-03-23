@@ -31,6 +31,9 @@ extern "C" {
 #define XML_PARANOIA_CHECKS 0
 
 //! \deprecated This function will be removed in a future release
+int add_node_nocopy(xmlNode * parent, const char *name, xmlNode * child);
+
+//! \deprecated This function will be removed in a future release
 xmlNode *find_entity(xmlNode *parent, const char *node_name, const char *id);
 
 //! \deprecated This function will be removed in a future release

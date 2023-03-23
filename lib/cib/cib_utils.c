@@ -614,8 +614,8 @@ cib_metadata(void)
     g_free(s);
 }
 
-void
-verify_cib_options(GHashTable * options)
+static void
+verify_cib_options(GHashTable *options)
 {
     pcmk__validate_cluster_options(options, cib_opts, PCMK__NELEM(cib_opts));
 }
@@ -652,27 +652,6 @@ cib_read_config(GHashTable * options, xmlNode * current_cib)
     crm_time_free(now);
 
     return TRUE;
-}
-
-/* v2 and v2 patch formats */
-#define XPATH_CONFIG_CHANGE \
-    "//" XML_CIB_TAG_CRMCONFIG " | " \
-    "//" XML_DIFF_CHANGE "[contains(@" XML_DIFF_PATH ",'/" XML_CIB_TAG_CRMCONFIG "/')]"
-
-gboolean
-cib_internal_config_changed(xmlNode *diff)
-{
-    gboolean changed = FALSE;
-
-    if (diff) {
-        xmlXPathObject *xpathObj = xpath_search(diff, XPATH_CONFIG_CHANGE);
-
-        if (numXpathResults(xpathObj) > 0) {
-            changed = TRUE;
-        }
-        freeXpathObject(xpathObj);
-    }
-    return changed;
 }
 
 int

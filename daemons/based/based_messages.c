@@ -36,17 +36,6 @@
 bool based_is_primary = false;
 
 xmlNode *the_cib = NULL;
-int revision_check(xmlNode * cib_update, xmlNode * cib_copy, int flags);
-int get_revision(xmlNode * xml_obj, int cur_revision);
-
-int updateList(xmlNode * local_cib, xmlNode * update_command, xmlNode * failed,
-               int operation, const char *section);
-
-gboolean update_results(xmlNode * failed, xmlNode * target, const char *operation, int return_code);
-
-int cib_update_counter(xmlNode * xml_obj, const char *field, gboolean reset);
-
-int sync_our_cib(xmlNode * request, gboolean all);
 
 int
 cib_process_shutdown_req(const char *op, int options, const char *section, xmlNode * req,

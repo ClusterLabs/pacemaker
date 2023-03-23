@@ -50,22 +50,20 @@ qb_ipcs_service_t *ipcs_ro = NULL;
 qb_ipcs_service_t *ipcs_rw = NULL;
 qb_ipcs_service_t *ipcs_shm = NULL;
 
-void send_cib_replace(const xmlNode * sync_request, const char *host);
 static void cib_process_request(xmlNode *request, gboolean privileged,
                                 const pcmk__client_t *cib_client);
-
 
 static int cib_process_command(xmlNode *request, xmlNode **reply,
                                xmlNode **cib_diff, gboolean privileged);
 
-gboolean cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size,
-                             gboolean privileged);
+static gboolean cib_common_callback(qb_ipcs_connection_t *c, void *data,
+                                    size_t size, gboolean privileged);
 
-gboolean cib_legacy_mode(void)
+gboolean
+cib_legacy_mode(void)
 {
     return legacy_mode;
 }
-
 
 static int32_t
 cib_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
@@ -272,7 +270,6 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
 static uint64_t ping_seq = 0;
 static char *ping_digest = NULL;
 static bool ping_modified_since = FALSE;
-int sync_our_cib(xmlNode * request, gboolean all);
 
 static gboolean
 cib_digester_cb(gpointer data)
@@ -1181,6 +1178,28 @@ calculate_section_digest(const char *xpath, xmlNode * xml_obj)
 
 }
 
+// v1 and v2 patch formats
+#define XPATH_CONFIG_CHANGE             \
+    "//" XML_CIB_TAG_CRMCONFIG " | "    \
+    "//" XML_DIFF_CHANGE                \
+    "[contains(@" XML_DIFF_PATH ",'/" XML_CIB_TAG_CRMCONFIG "/')]"
+
+static bool
+contains_config_change(xmlNode *diff)
+{
+    bool changed = false;
+
+    if (diff) {
+        xmlXPathObject *xpathObj = xpath_search(diff, XPATH_CONFIG_CHANGE);
+
+        if (numXpathResults(xpathObj) > 0) {
+            changed = true;
+        }
+        freeXpathObject(xpathObj);
+    }
+    return changed;
+}
+
 static int
 cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gboolean privileged)
 {
@@ -1309,7 +1328,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         }
 
         if (format == 1) {
-            config_changed = cib_config_changed(NULL, NULL, cib_diff);
+            config_changed = cib__config_changed_v1(NULL, NULL, cib_diff);
         }
     }
 
@@ -1336,7 +1355,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
                       crm_element_value(current_cib, XML_ATTR_NUMUPDATES), rc);
         }
 
-        if (rc == pcmk_ok && cib_internal_config_changed(*cib_diff)) {
+        if ((rc == pcmk_ok) && contains_config_change(*cib_diff)) {
             cib_read_config(config_hash, result_cib);
         }
 
@@ -1528,6 +1547,30 @@ disconnect_remote_client(gpointer key, gpointer value, gpointer user_data)
             pcmk__client_name(a_client));
 }
 
+static void
+initiate_exit(void)
+{
+    int active = 0;
+    xmlNode *leaving = NULL;
+
+    active = crm_active_peers();
+    if (active < 2) {
+        terminate_cib(__func__, 0);
+        return;
+    }
+
+    crm_info("Sending disconnect notification to %d peers...", active);
+
+    leaving = create_xml_node(NULL, "exit-notification");
+    crm_xml_add(leaving, F_TYPE, "cib");
+    crm_xml_add(leaving, F_CIB_OPERATION, PCMK__CIB_REQUEST_SHUTDOWN);
+
+    send_cluster_message(NULL, crm_msg_cib, leaving, TRUE);
+    free_xml(leaving);
+
+    g_timeout_add(EXIT_ESCALATION_MS, cib_force_exit, NULL);
+}
+
 void
 cib_shutdown(int nsig)
 {
@@ -1592,30 +1635,6 @@ cib_shutdown(int nsig)
         crm_info("Waiting on %d clients to disconnect (%d)",
                  pcmk__ipc_client_count(), srv_stats.active_connections);
     }
-}
-
-void
-initiate_exit(void)
-{
-    int active = 0;
-    xmlNode *leaving = NULL;
-
-    active = crm_active_peers();
-    if (active < 2) {
-        terminate_cib(__func__, 0);
-        return;
-    }
-
-    crm_info("Sending disconnect notification to %d peers...", active);
-
-    leaving = create_xml_node(NULL, "exit-notification");
-    crm_xml_add(leaving, F_TYPE, "cib");
-    crm_xml_add(leaving, F_CIB_OPERATION, PCMK__CIB_REQUEST_SHUTDOWN);
-
-    send_cluster_message(NULL, crm_msg_cib, leaving, TRUE);
-    free_xml(leaving);
-
-    g_timeout_add(EXIT_ESCALATION_MS, cib_force_exit, NULL);
 }
 
 extern int remote_fd;

@@ -41,7 +41,7 @@
         </instance_attributes>
       </transient_attributes>
     </node_state>
-    <node_state id="bb56fda4-7d0d-405c-a6e4-c21b0e070303" uname="sles11-a" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_lrm_query" shutdown="0">
+    <node_state id="bb56fda4-7d0d-405c-a6e4-c21b0e070303" uname="sles11-a" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="controld_query_executor_state" shutdown="0">
       <lrm id="bb56fda4-7d0d-405c-a6e4-c21b0e070303">
         <lrm_resources>
           <lrm_resource id="res_Stateful_1:0" type="Stateful" class="ocf" provider="pacemaker">

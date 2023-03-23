@@ -57,9 +57,6 @@ typedef struct cib_file_opaque_s {
                                                 #flags_to_clear);       \
     } while (0)
 
-int cib_file_perform_op(cib_t * cib, const char *op, const char *host, const char *section,
-                        xmlNode * data, xmlNode ** output_data, int call_options);
-
 int cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, const char *section,
                                  xmlNode * data, xmlNode ** output_data, int call_options,
                                  const char *user_name);
@@ -787,14 +784,6 @@ static struct cib_func_entry cib_file_ops[] = {
     { PCMK__CIB_REQUEST_UPGRADE,    FALSE,  cib_process_upgrade},
 };
 /* *INDENT-ON* */
-
-int
-cib_file_perform_op(cib_t * cib, const char *op, const char *host, const char *section,
-                    xmlNode * data, xmlNode ** output_data, int call_options)
-{
-    return cib_file_perform_op_delegate(cib, op, host, section, data, output_data, call_options,
-                                        NULL);
-}
 
 int
 cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, const char *section,

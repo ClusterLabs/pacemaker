@@ -48,7 +48,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     controld_globals.logger_out->message(controld_globals.logger_out,
                                          "xml-patchset", diff);
 
-    if (cib_config_changed(NULL, NULL, &diff)) {
+    if (cib__config_changed_v1(NULL, NULL, &diff)) {
         abort_transition(INFINITY, pcmk__graph_restart, "Non-status change",
                          diff);
         goto bail;              /* configuration changed */
