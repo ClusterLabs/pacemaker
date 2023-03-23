@@ -1,6 +1,6 @@
-#!/bin/bash
+#!@BASH_PATH@
 #
-# Copyright 2011-2018 the Pacemaker project contributors
+# Copyright 2011-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -88,7 +88,7 @@ for f in $state_files; do
 done
 
 cluster-helper $target -- "find /dev/shm -name 'qb-*' -exec rm -f \{\} \;"
-cluster-helper $target -- "find /var/lib/pacemaker/blackbox -name '*-*' -exec rm -f \{\} \;"
+cluster-helper $target -- "find @CRM_BLACKBOX_DIR@ -name '*-*' -exec rm -f \{\} \;"
 cluster-helper $target -- "find /tmp -name '*.valgrind' -exec rm -f \{\} \;"
 
 cluster-helper $target -- 'service rsyslog restart' > /dev/null  2>&1

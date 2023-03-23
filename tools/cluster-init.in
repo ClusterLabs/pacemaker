@@ -1,6 +1,6 @@
-#!/bin/bash
+#!@BASH_PATH@
 #
-# Copyright 2011-2021 the Pacemaker project contributors
+# Copyright 2011-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -11,7 +11,6 @@
 accept_defaults=0
 do_raw=0
 ETCHOSTS=0
-pcmk_ver=11
 nodelist=0
 limit=0
 
@@ -23,8 +22,6 @@ inaddr_any="no"
 INSTALL=
 cs_conf=
 fence_conf=
-rpm_repo=
-distro=
 
 dsh_group=0
 if [ ! -z $cluster_name ]; then
@@ -78,12 +75,8 @@ function helptext() {
     echo "-u, --unicast       configure point-to-point communication instead of multicast"
     echo ""
     echo "-I, --install       Install packages"
-    echo "-R, --repo name     Setup and update/install Pacemaker from the named clusterlabs.org repo"
-    echo "                    Known values: rpm, rpm-test, rpm-next, rpm-test-next, rpm-test-rhel"
-    echo "-D, --distro        The distro within the --repo.  Defaults to fedora-15"
     echo ""
     echo "-d, --debug         Enable debug logging for the cluster"
-    echo "-10                 install stable-1.0 packages, implies: -p 0 -R rpm-test -I"
     echo "--hosts             Copy the local /etc/hosts file to all nodes"
     echo "-e, --extra list    Whitespace separated list of extra packages to install"
     echo "-l, --limit N       Use the first N hosts from the named group" 
@@ -105,10 +98,8 @@ while true; do
 	    shift; shift;;
 	-r|--raw-ip) do_raw=1;       shift;;
 
-	-D) distro=$2; shift; shift;;
 	-d|--debug) do_debug=on; shift;;
 
-	-R|--repo) rpm_repo=$2; shift; shift;;
 	-I|--install) INSTALL=Yes; shift;;
 	--hosts) ETCHOSTS=1; shift;;
 
@@ -116,12 +107,11 @@ while true; do
 	-C|--nodelist) CTYPE=corosync; nodelist=1; shift;;
 	-u|--unicast) nodelist=1; transport=udpu; inaddr_any="yes"; shift;;
 	-e|--extra) pkgs="$pkgs $2"; shift; shift;;
-	-t|--test)  rpm_repo=rpm-test-next; pkgs="$pkgs valgrind"; shift;;
+	-t|--test)  pkgs="$pkgs valgrind"; shift;;
 	-l|--limit) limit=$2; shift; shift;;
 
 	r*[0-9])
 	    rhel=`echo $1 | sed -e s/rhel// -e s/-// -e s/r//`
-	    distro="rhel-$rhel";
 	    pkgs="$pkgs qarsh-server";
 	    case $rhel in
 		7) CTYPE=corosync;;
@@ -130,11 +120,9 @@ while true; do
 	    ;;
 
 	f*[0-9][0-9])
-	    distro="fedora-`echo $1 | sed -e s/fedora// -e s/-// -e s/f//`";
 	    CTYPE=corosync;
 	    shift
 	    ;;
-	p0|10) pcmk_ver=10; rpm_repo="rpm-test"; install=1; shift;;
 
 	-y|--yes|--defaults) accept_defaults=1; shift;;
 	-x) set -x; shift;;
@@ -198,7 +186,7 @@ if [ -z $CTYPE ]; then
 fi
 
 case $CTYPE in
-    corosync) cs_conf=/etc/corosync/corosync.conf;;
+    corosync) cs_conf="@PCMK__COROSYNC_CONF@" ;;
 esac
 
 function get_defaults()
@@ -236,31 +224,9 @@ if [ $accept_defaults = 0 ]; then
     echo ""
     echo "Incorrectly configured firewalls will prevent corosync from starting up"
     read -p "Shall I disable iptables? [$IPTABLES] " -t 60 IPTABLES
-    if [ $pcmk_ver = 10 ]; then
-	echo ""
-	echo "Without a default domain, external/ssh fencing probably won't work because it can't find its peers"
-	read -p "Shall I set one? [No] (domain.name) " -t 60 DOMAIN
-    fi
 
     echo ""
     read -p "Shall I install/update the relevant packages? [$INSTALL] "  -t 60 INSTALL
-
-    case $INSTALL in
-	[Yy][Ee][Ss]|[Yy]|"")
-	    if [ -z $rpm_repo ]; then
-		echo ""
-		read -p "Would you like to install packages from ClusterLabs.org? [No] (rpm, rpm-next, rpm-test-next) "  -t 60 rpm_repo
-	    fi
-
-	    if [ ! -z $rpm_repo ]; then
-		if [ -z $distro ]; then
-		    distro=fedora-18
-		    echo ""
-		    read -p "Which distro are you installing for? [$distro] (eg. fedora-17, rhel-6) "  -t 60 distro
-		fi
-	    fi
-	    ;;
-    esac
 
     echo ""
     read -p "Shall I sync the date/time? [$DATE] "  -t 60 DATE
@@ -306,11 +272,6 @@ case $DATE in
 	done
 	;;
 esac
-
-REPO=
-if [ ! -z $rpm_repo ]; then
-    REPO=$rpm_repo/$distro
-fi
 
 init=`mktemp`
 cat<<-END>$init
@@ -373,25 +334,8 @@ esac
 
 case $INSTALL in
     [Yy][Ee][Ss]|[Yy]|"")
-
-	if [ ! -z $REPO ]; then
-	    info Configuring Clusterlabs repo: $REPO
-	    yum install -y wget
-	    rm -f /etc/yum.repos.d/clusterlabs.repo
-            wget -O /etc/yum.repos.d/clusterlabs.repo https://www.clusterlabs.org/$REPO/clusterlabs.repo &>/dev/null
-	    yum clean all
-	fi
-
 	info Installing cluster software
-	if [ $pcmk_ver = 10 ]; then
-	    yum install -y $pkgs at
-	    service atd start
-	    systemctl enable atd.service
-
-	    yum install -y "pacemaker < 1.1"
-	else
-	    yum install -y $pkgs pacemaker
-	fi
+	yum install -y $pkgs pacemaker
 	;;
 esac
 
@@ -577,12 +521,6 @@ for host in $host_list; do
 
     if [ $ETCHOSTS = 1 ]; then
 	scp /etc/hosts root@${host}:/etc/hosts
-    fi
-
-    if [ $pcmk_ver = 10 ]; then
-	scp /etc/hosts root@${host}:/etc/hosts
-	scp ~/.ssh/id_dsa.suse root@${host}:.ssh/id_dsa
-	scp ~/.ssh/known_hosts root@${host}:.ssh/known_hosts
     fi
 
     ssh -l root ${host} -- grep -q "token:" $cs_conf 2>&1 > /dev/null
