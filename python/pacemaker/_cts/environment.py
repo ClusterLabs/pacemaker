@@ -235,6 +235,9 @@ class Environment:
     def _filter_nodes(self):
         if self["node-limit"] > 0:
             if len(self["nodes"]) > self["node-limit"]:
+                # pylint thinks self["node-limit"] is a list even though we initialize
+                # it as an int in __init__ and treat it as an int everywhere.
+                # pylint: disable=bad-string-format-type
                 self._logger.log("Limiting the number of nodes configured=%d (max=%d)"
                                 %(len(self["nodes"]), self["node-limit"]))
 
@@ -467,7 +470,7 @@ class Environment:
             if os.path.isfile(dsh_file):
                 self["nodes"] = []
 
-                with open(dsh_file, "r") as f:
+                with open(dsh_file, "r", encoding="utf-8") as f:
                     for line in f:
                         l = line.strip()
 
