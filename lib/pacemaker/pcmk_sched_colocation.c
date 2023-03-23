@@ -136,10 +136,14 @@ cmp_primary_priority(gconstpointer a, gconstpointer b)
  *
  * \param[in,out] list        List of constraints to add \p colocation to
  * \param[in]     colocation  Colocation constraint to add to \p list
+ *
+ * \note The list will be sorted using cmp_primary_priority().
  */
 void
 pcmk__add_this_with(GList **list, const pcmk__colocation_t *colocation)
 {
+    CRM_ASSERT((list != NULL) && (colocation != NULL));
+
     crm_trace("Adding colocation %s (%s with %s%s%s @%d) "
               "to 'this with' list",
               colocation->id, colocation->dependent->id,
@@ -157,6 +161,8 @@ pcmk__add_this_with(GList **list, const pcmk__colocation_t *colocation)
  *
  * \param[in,out] list      List of constraints to add \p addition to
  * \param[in]     addition  List of colocation constraints to add to \p list
+ *
+ * \note The lists must be pre-sorted by cmp_primary_priority().
  */
 void
 pcmk__add_this_with_list(GList **list, GList *addition)
@@ -181,10 +187,14 @@ pcmk__add_this_with_list(GList **list, GList *addition)
  *
  * \param[in,out] list        List of constraints to add \p colocation to
  * \param[in]     colocation  Colocation constraint to add to \p list
+ *
+ * \note The list will be sorted using cmp_dependent_priority().
  */
 void
 pcmk__add_with_this(GList **list, const pcmk__colocation_t *colocation)
 {
+    CRM_ASSERT((list != NULL) && (colocation != NULL));
+
     crm_trace("Adding colocation %s (%s with %s%s%s @%d) "
               "to 'with this' list",
               colocation->id, colocation->dependent->id,
@@ -202,6 +212,8 @@ pcmk__add_with_this(GList **list, const pcmk__colocation_t *colocation)
  *
  * \param[in,out] list      List of constraints to add \p addition to
  * \param[in]     addition  List of colocation constraints to add to \p list
+ *
+ * \note The lists must be pre-sorted by cmp_dependent_priority().
  */
 void
 pcmk__add_with_this_list(GList **list, GList *addition)
