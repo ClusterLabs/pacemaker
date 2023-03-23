@@ -135,6 +135,11 @@ struct resource_alloc_functions_s {
      * \internal
      * \brief Add colocations affecting a resource as primary to a list
      *
+     * Given a resource being assigned (\p orig_rsc) and a resource somewhere in
+     * its chain of ancestors (\p rsc, which may be \p orig_rsc), get
+     * colocations that affect the ancestor as primary and should affect the
+     * resource, and add them to a given list.
+     *
      * \param[in]     rsc       Resource whose colocations should be added
      * \param[in]     orig_rsc  Affected resource (\p rsc or a descendant)
      * \param[in,out] list      List of colocations to add to
@@ -149,6 +154,12 @@ struct resource_alloc_functions_s {
     /*!
      * \internal
      * \brief Add colocations affecting a resource as dependent to a list
+     *
+     * Given a resource being assigned (\p orig_rsc) and a resource somewhere in
+     * its chain of ancestors (\p rsc, which may be \p orig_rsc), get
+     * colocations that affect the ancestor as dependent and should affect the
+     * resource, and add them to a given list.
+     *
      *
      * \param[in]     rsc       Resource whose colocations should be added
      * \param[in]     orig_rsc  Affected resource (\p rsc or a descendant)
