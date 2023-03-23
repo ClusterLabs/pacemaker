@@ -1408,7 +1408,6 @@ init_group_colocated_nodes(const pe_resource_t *rsc, const char *log_id,
         member = pe__last_group_member(rsc);
         pe_rsc_trace(rsc, "%s: Merging scores from group %s using member %s "
                      "(at %.6f)", log_id, rsc->id, member->id, factor);
-        work = pcmk__copy_node_table(*nodes);
         pcmk__add_colocated_node_scores(member, log_id, &work, attr, factor, flags);
     } else {
         /* The first member of the group will recursively incorporate any
@@ -1424,7 +1423,7 @@ init_group_colocated_nodes(const pe_resource_t *rsc, const char *log_id,
         member = rsc->children->data;
         pcmk__add_colocated_node_scores(member, log_id, nodes, attr, factor,
                                         flags);
-        work = NULL; // Above handles everything, so nothing further needed
+        // Above handles everything, so work is left as NULL
     }
     return work;
 }
