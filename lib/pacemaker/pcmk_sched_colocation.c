@@ -1595,6 +1595,16 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
     pe__clear_resource_flags(rsc, pe_rsc_merging);
 }
 
+/*!
+ * \internal
+ * \brief Get all colocations affecting a resource as the primary
+ *
+ * \param[in] rsc  Resource to get colocations for
+ *
+ * \return Newly allocated list of colocations affecting \p rsc as primary
+ *
+ * \note This is a convenience wrapper for the with_this_colocations() method.
+ */
 GList *
 pcmk__with_this_colocations(const pe_resource_t *rsc)
 {
@@ -1604,6 +1614,16 @@ pcmk__with_this_colocations(const pe_resource_t *rsc)
     return list;
 }
 
+/*!
+ * \internal
+ * \brief Get all colocations affecting a resource as the dependent
+ *
+ * \param[in] rsc  Resource to get colocations for
+ *
+ * \return Newly allocated list of colocations affecting \p rsc as dependent
+ *
+ * \note This is a convenience wrapper for the this_with_colocations() method.
+ */
 GList *
 pcmk__this_with_colocations(const pe_resource_t *rsc)
 {
