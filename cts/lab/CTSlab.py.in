@@ -109,15 +109,15 @@ if __name__ == '__main__':
     elif Environment["scenario"] == "all-once":
         NumIter = len(Tests)
         scenario = AllOnce(
-            cm, [ BootCluster(Environment), PacketLoss(Environment) ], Audits, Tests)
+            cm, [ BootCluster(Environment) ], Audits, Tests)
     elif Environment["scenario"] == "sequence":
         scenario = Sequence(
-            cm, [ BootCluster(Environment), PacketLoss(Environment) ], Audits, Tests)
+            cm, [ BootCluster(Environment) ], Audits, Tests)
     elif Environment["scenario"] == "boot":
         scenario = Boot(cm, [ LeaveBooted(Environment)], Audits, [])
     else:
         scenario = RandomTests(
-            cm, [ BootCluster(Environment), PacketLoss(Environment) ], Audits, Tests)
+            cm, [ BootCluster(Environment) ], Audits, Tests)
 
     LogFactory().log(">>>>>>>>>>>>>>>> BEGINNING " + repr(NumIter) + " TEST" + plural_s(NumIter, True) + " ")
     LogFactory().log("Stack:                  %s (%s)" % (Environment["Stack"], Environment["Name"]))

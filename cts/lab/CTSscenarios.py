@@ -448,42 +448,6 @@ According to the manual page for ping:
         sys.exit(1)
 
 
-class PacketLoss(ScenarioComponent):
-    (
-'''
-It would be useful to do some testing of CTS with a modest amount of packet loss
-enabled - so we could see that everything runs like it should with a certain
-amount of packet loss present.
-''')
-
-    def IsApplicable(self):
-        '''always Applicable'''
-        return True
-
-    def SetUp(self, CM):
-        '''Reduce the reliability of communications'''
-        if float(CM.Env["XmitLoss"]) == 0 and float(CM.Env["RecvLoss"]) == 0 :
-            return 1
-
-        for node in CM.Env["nodes"]:
-            CM.reducecomm_node(node)
-
-        CM.log("Reduce the reliability of communications")
-
-        return 1
-
-    def TearDown(self, CM):
-        '''Fix the reliability of communications'''
-
-        if float(CM.Env["XmitLoss"]) == 0 and float(CM.Env["RecvLoss"]) == 0 :
-            return 1
-
-        for node in CM.Env["nodes"]:
-            CM.unisolate_node(node)
-
-        CM.log("Fix the reliability of communications")
-
-
 class BasicSanityCheck(ScenarioComponent):
     (
 '''

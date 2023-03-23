@@ -430,10 +430,6 @@ class Environment:
         grp4.add_argument("--qarsh",
                           action="store_true",
                           help="Use QARSH to access nodes instead of SSH")
-        grp4.add_argument("--recv-loss",
-                          type=float, default=0.0,
-                          metavar="RATE",
-                          help="")
         grp4.add_argument("--schema",
                           metavar="SCHEMA",
                           default="pacemaker-3.0",
@@ -467,10 +463,6 @@ class Environment:
         grp4.add_argument("--warn-inactive",
                           action="store_true",
                           help="Warn if a resource is assigned to an inactive node")
-        grp4.add_argument("--xmit-loss",
-                          type=float, default=0.0,
-                          metavar="RATE",
-                          help="")
 
         parser.add_argument("iterations",
                             type=int,

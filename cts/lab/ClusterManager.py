@@ -474,26 +474,6 @@ class ClusterManager(UserDict):
                 self.rsh(node, self.templates["FixCommCmd"] % self.key_for_node(target), synchronous=False)
                 self.debug("Communication restored between %s and %s" % (target, node))
 
-    def reducecomm_node(self,node):
-        '''reduce the communication between the nodes'''
-        (rc, _) = self.rsh(node, self.templates["ReduceCommCmd"]%(self.Env["XmitLoss"],self.Env["RecvLoss"]))
-        if rc == 0:
-            return 1
-        else:
-            self.logger.log("Could not reduce the communication between the nodes from node: %s" % node)
-        return None
-
-    def restorecomm_node(self,node):
-        '''restore the saved communication between the nodes'''
-        rc = 0
-        if float(self.Env["XmitLoss"]) != 0 or float(self.Env["RecvLoss"]) != 0 :
-            (rc, _) = self.rsh(node, self.templates["RestoreCommCmd"])
-        if rc == 0:
-            return 1
-        else:
-            self.logger.log("Could not restore the communication between the nodes from node: %s" % node)
-        return None
-
     def oprofileStart(self, node=None):
         if not node:
             for n in self.Env["oprofile"]:
