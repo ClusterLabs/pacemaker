@@ -91,7 +91,8 @@ class Environment:
 
         keys.sort()
         for key in keys:
-            self._logger.debug("Environment[%s]:\t%s" % (key, str(self[key])))
+            s = "Environment[%s]" % key
+            self._logger.debug("{key:35}: {val}".format(key=s, val=str(self[key])))
 
     def keys(self):
         """ Return a list of all environment keys stored in this instance """
