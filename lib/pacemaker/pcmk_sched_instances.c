@@ -25,15 +25,14 @@
  * \return true if \p collective has enough instances for all of its available
  *         allowed nodes, otherwise false
  */
-bool
-pcmk__is_everywhere(const pe_resource_t *collective)
+static bool
+can_run_everywhere(const pe_resource_t *collective)
 {
     GHashTableIter iter;
     pe_node_t *node = NULL;
     int available_nodes = 0;
     int max_instances = 0;
 
-    // @TODO make into variant method
     switch (collective->variant) {
         case pe_clone:
             max_instances = pe__clone_max(collective);
@@ -42,7 +41,7 @@ pcmk__is_everywhere(const pe_resource_t *collective)
             max_instances = pe__bundle_max(collective);
             break;
         default:
-            return false;
+            return false; // Not actually possible
     }
 
     g_hash_table_iter_init(&iter, collective->allowed_nodes);
@@ -1236,7 +1235,7 @@ pcmk__add_collective_constraints(GList **list, const pe_resource_t *instance,
             return;
     }
 
-    everywhere = pcmk__is_everywhere(collective);
+    everywhere = can_run_everywhere(collective);
 
     if (with_this) {
         colocations = collective->rsc_cons_lhs;

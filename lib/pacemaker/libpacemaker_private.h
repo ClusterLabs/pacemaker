@@ -713,9 +713,6 @@ void pcmk__group_shutdown_lock(pe_resource_t *rsc);
 // Clones (pcmk_sched_clone.c)
 
 G_GNUC_INTERNAL
-bool pcmk__is_everywhere(const pe_resource_t *collective);
-
-G_GNUC_INTERNAL
 void pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
                                    const pe_resource_t *primary,
                                    const pcmk__colocation_t *colocation,
