@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -180,7 +180,7 @@ check_one(const xmlNode *cron_spec, const char *xml_field, uint32_t time_field)
         goto bail;
     }
 
-    if (pcmk__parse_ll_range(value, &low, &high) == pcmk_rc_unknown_format) {
+    if (pcmk__parse_ll_range(value, &low, &high) != pcmk_rc_ok) {
        goto bail;
     } else if (low == high) {
         /* A single number was given, not a range. */

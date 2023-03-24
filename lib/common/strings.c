@@ -7,6 +7,7 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#include "crm/common/results.h"
 #include <crm_internal.h>
 
 #ifndef _GNU_SOURCE
@@ -809,6 +810,7 @@ int
 pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
 {
     char *remainder = NULL;
+    int rc = pcmk_rc_ok;
 
     CRM_ASSERT(start != NULL && end != NULL);
 
@@ -816,8 +818,10 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
     *end = PCMK__PARSE_INT_DEFAULT;
 
     crm_trace("Attempting to decode: [%s]", srcstring);
-    if (pcmk__str_empty(srcstring) || !strcmp(srcstring, "-")) {
-        return pcmk_rc_unknown_format;
+    if (pcmk__str_eq(srcstring, "", pcmk__str_null_matches)) {
+        return ENODATA;
+    } else if (pcmk__str_eq(srcstring, "-", pcmk__str_none)) {
+        return pcmk_rc_bad_input;
     }
 
     /* String starts with a dash, so this is either a range with
@@ -827,15 +831,15 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
         int rc = scan_ll(srcstring+1, end, PCMK__PARSE_INT_DEFAULT, &remainder);
 
         if (rc != pcmk_rc_ok || *remainder != '\0') {
-            return pcmk_rc_unknown_format;
+            return pcmk_rc_bad_input;
         } else {
             return pcmk_rc_ok;
         }
     }
 
-    if (scan_ll(srcstring, start, PCMK__PARSE_INT_DEFAULT,
-                &remainder) != pcmk_rc_ok) {
-        return pcmk_rc_unknown_format;
+    rc = scan_ll(srcstring, start, PCMK__PARSE_INT_DEFAULT, &remainder);
+    if (rc != pcmk_rc_ok) {
+        return rc;
     }
 
     if (*remainder && *remainder == '-') {
@@ -844,13 +848,15 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
             int rc = scan_ll(remainder+1, end, PCMK__PARSE_INT_DEFAULT,
                              &more_remainder);
 
-            if (rc != pcmk_rc_ok || *more_remainder != '\0') {
-                return pcmk_rc_unknown_format;
+            if (rc != pcmk_rc_ok) {
+                return rc;
+            } else if (*more_remainder != '\0') {
+                return pcmk_rc_bad_input;
             }
         }
     } else if (*remainder && *remainder != '-') {
         *start = PCMK__PARSE_INT_DEFAULT;
-        return pcmk_rc_unknown_format;
+        return pcmk_rc_bad_input;
     } else {
         /* The input string contained only one number.  Set start and end
          * to the same value and return pcmk_rc_ok.  This gives the caller
