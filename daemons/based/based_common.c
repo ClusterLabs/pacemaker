@@ -330,10 +330,9 @@ cib_op_modifies(int call_type)
 }
 
 int
-cib_op_can_run(int call_type, int call_options, gboolean privileged, gboolean global_update)
+cib_op_can_run(int call_type, int call_options, bool privileged)
 {
-    if (privileged == FALSE && cib_server_ops[call_type].needs_privileges) {
-        /* abort */
+    if (!privileged && cib_server_ops[call_type].needs_privileges) {
         return -EACCES;
     }
     return pcmk_ok;

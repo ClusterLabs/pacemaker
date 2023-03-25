@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -133,8 +133,7 @@ int cib_op_prepare(int call_type, xmlNode *request, xmlNode **input,
                    const char **section);
 int cib_op_cleanup(int call_type, int options, xmlNode **input,
                    xmlNode **output);
-int cib_op_can_run(int call_type, int call_options, gboolean privileged,
-                   gboolean global_update);
+int cib_op_can_run(int call_type, int call_options, bool privileged);
 void cib_diff_notify(int options, const char *client, const char *call_id,
                      const char *op, xmlNode *update, int result,
                      xmlNode *old_cib);

@@ -1219,7 +1219,6 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     int rc2 = pcmk_ok;
 
     gboolean send_r_notify = FALSE;
-    gboolean global_update = FALSE;
     gboolean config_changed = FALSE;
     gboolean manage_counters = TRUE;
 
@@ -1248,7 +1247,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     rc = cib_get_operation_id(op, &call_type);
 
     if (rc == pcmk_ok && privileged == FALSE) {
-        rc = cib_op_can_run(call_type, call_options, privileged, global_update);
+        rc = cib_op_can_run(call_type, call_options, privileged);
     }
 
     rc2 = cib_op_prepare(call_type, request, &input, &section);
