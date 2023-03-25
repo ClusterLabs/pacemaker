@@ -29,15 +29,11 @@
 #include <crm/common/remote_internal.h>
 #include <pacemaker-based.h>
 
-int pending_updates = 0;
-
 struct cib_notification_s {
     xmlNode *msg;
     struct iovec *iov;
     int32_t iov_size;
 };
-
-void attach_cib_generation(xmlNode * msg, const char *field, xmlNode * a_cib);
 
 static void
 cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
@@ -129,6 +125,18 @@ cib_notify_send(xmlNode * xml)
     pcmk_free_ipc_event(iov);
 }
 
+static void
+attach_cib_generation(xmlNode *msg, const char *field, xmlNode *a_cib)
+{
+    xmlNode *generation = create_xml_node(NULL, XML_CIB_TAG_GENERATION_TUPPLE);
+
+    if (a_cib != NULL) {
+        copy_in_properties(generation, a_cib);
+    }
+    add_message_xml(msg, field, generation);
+    free_xml(generation);
+}
+
 void
 cib_diff_notify(int options, const char *client, const char *call_id, const char *op,
                 xmlNode * update, int result, xmlNode * diff)
@@ -201,18 +209,6 @@ cib_diff_notify(int options, const char *client, const char *call_id, const char
 
     cib_notify_send(update_msg);
     free_xml(update_msg);
-}
-
-void
-attach_cib_generation(xmlNode * msg, const char *field, xmlNode * a_cib)
-{
-    xmlNode *generation = create_xml_node(NULL, XML_CIB_TAG_GENERATION_TUPPLE);
-
-    if (a_cib != NULL) {
-        copy_in_properties(generation, a_cib);
-    }
-    add_message_xml(msg, field, generation);
-    free_xml(generation);
 }
 
 void
