@@ -356,14 +356,6 @@ cib_client_modify(cib_t * cib, const char *section, xmlNode * data, int call_opt
 }
 
 static int
-cib_client_update(cib_t * cib, const char *section, xmlNode * data, int call_options)
-{
-    op_common(cib);
-    return cib_internal_op(cib, PCMK__CIB_REQUEST_MODIFY, NULL, section, data,
-                           NULL, call_options, NULL);
-}
-
-static int
 cib_client_replace(cib_t * cib, const char *section, xmlNode * data, int call_options)
 {
     op_common(cib);
@@ -659,7 +651,7 @@ cib_new_variant(void)
 
     new_cib->cmds->create = cib_client_create;
     new_cib->cmds->modify = cib_client_modify;
-    new_cib->cmds->update = cib_client_update;
+    new_cib->cmds->update = cib_client_modify;
     new_cib->cmds->replace = cib_client_replace;
     new_cib->cmds->remove = cib_client_delete;
     new_cib->cmds->erase = cib_client_erase;

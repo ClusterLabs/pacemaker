@@ -297,7 +297,7 @@ controld_record_action_event(pcmk__graph_action_t *action,
     pcmk__create_history_xml(rsc, op, CRM_FEATURE_SET, target_rc, target,
                              __func__);
 
-    rc = cib_conn->cmds->update(cib_conn, XML_CIB_TAG_STATUS, state,
+    rc = cib_conn->cmds->modify(cib_conn, XML_CIB_TAG_STATUS, state,
                                 cib_scope_local);
     fsa_register_cib_callback(rc, NULL, cib_action_updated);
     free_xml(state);
