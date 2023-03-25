@@ -62,8 +62,15 @@ enum cib_call_options {
     cib_no_mtime        = (1 << 13),
     cib_zero_copy       = (1 << 14),
     cib_inhibit_notify  = (1 << 16),
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated This value will be removed in a future release
     cib_quorum_override = (1 << 20),
-    cib_inhibit_bcast   = (1 << 24), //!< \deprecated Will be removed in future
+#endif // !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+
+    //! \deprecated This value will be removed in a future release
+    cib_inhibit_bcast   = (1 << 24),
+
     cib_force_diff      = (1 << 28),
 };
 
