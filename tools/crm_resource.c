@@ -2128,10 +2128,6 @@ main(int argc, char **argv)
 
     /* Convert rc into an exit code. */
     if (rc != pcmk_rc_ok && rc != pcmk_rc_no_output) {
-        if (rc == pcmk_rc_no_quorum) {
-            g_prefix_error(&error, "To ignore quorum, use the force option.\n");
-        }
-
         exit_code = pcmk_rc2exitc(rc);
     }
 
