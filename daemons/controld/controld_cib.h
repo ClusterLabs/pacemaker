@@ -20,10 +20,9 @@ fsa_cib_anon_update(const char *section, xmlNode *data) {
     if (controld_globals.cib_conn == NULL) {
         crm_err("No CIB connection available");
     } else {
-        const int opts = cib_scope_local|cib_quorum_override|cib_can_create;
-
         controld_globals.cib_conn->cmds->modify(controld_globals.cib_conn,
-                                                section, data, opts);
+                                                section, data,
+                                                cib_scope_local|cib_can_create);
     }
 }
 
@@ -32,13 +31,11 @@ fsa_cib_anon_update_discard_reply(const char *section, xmlNode *data) {
     if (controld_globals.cib_conn == NULL) {
         crm_err("No CIB connection available");
     } else {
-        const int opts = cib_scope_local
-                         |cib_quorum_override
-                         |cib_can_create
-                         |cib_discard_reply;
-
         controld_globals.cib_conn->cmds->modify(controld_globals.cib_conn,
-                                                section, data, opts);
+                                                section, data,
+                                                cib_scope_local
+                                                |cib_can_create
+                                                |cib_discard_reply);
     }
 }
 

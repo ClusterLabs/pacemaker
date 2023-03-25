@@ -607,8 +607,7 @@ do_dc_join_finalize(long long action,
     crmd_join_phase_log(LOG_DEBUG);
 
     rc = controld_globals.cib_conn->cmds->sync_from(controld_globals.cib_conn,
-                                                    sync_from, NULL,
-                                                    cib_quorum_override);
+                                                    sync_from, NULL, cib_none);
     fsa_register_cib_callback(rc, sync_from, finalize_sync_callback);
 }
 
@@ -699,7 +698,7 @@ do_dc_join_ack(long long action,
     int join_id = -1;
     ha_msg_input_t *join_ack = fsa_typed_data(fsa_dt_ha_msg);
     enum controld_section_e section = controld_section_lrm;
-    const int cib_opts = cib_scope_local|cib_quorum_override|cib_can_create;
+    const int cib_opts = cib_scope_local|cib_can_create;
 
     const char *op = crm_element_value(join_ack->msg, F_CRM_TASK);
     const char *join_from = crm_element_value(join_ack->msg, F_CRM_HOST_FROM);

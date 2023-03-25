@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2022 the Pacemaker project contributors
+ * Copyright 2013-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -209,7 +209,7 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
     xmlNode *xml_top = NULL;
     attribute_value_t *v = NULL;
     GHashTableIter iter;
-    enum cib_call_options flags = cib_quorum_override;
+    enum cib_call_options flags = cib_none;
     GHashTable *alert_attribute_value = NULL;
 
     if (a == NULL) {

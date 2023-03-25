@@ -619,12 +619,6 @@ main(int argc, char **argv)
                               cib_multiple);
     }
 
-    if (options.force) {
-        // Perform the action even without quorum
-        cib__set_call_options(options.cmd_options, crm_system_name,
-                              cib_quorum_override);
-    }
-
     if (options.get_node_path) {
         /* Enable getting node path of XPath query matches.
          * Meaningful only if options.section_type == cibadmin_section_xpath.

@@ -252,7 +252,7 @@ cib_op_timeout(void)
 int
 crmd_cib_smart_opt(void)
 {
-    int call_opt = cib_quorum_override;
+    int call_opt = cib_none;
 
     if ((controld_globals.fsa_state == S_ELECTION)
         || (controld_globals.fsa_state == S_PENDING)) {
@@ -351,7 +351,7 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
         int call_id;
 
         cib__set_call_options(options, "node state deletion",
-                              cib_quorum_override|cib_xpath|cib_multiple);
+                              cib_xpath|cib_multiple);
         call_id = cib_conn->cmds->remove(cib_conn, xpath, NULL, options);
         crm_info("Deleting %s (via CIB call %d) " CRM_XS " xpath=%s",
                  desc, call_id, xpath);
@@ -939,7 +939,7 @@ controld_delete_action_history(const lrmd_event_data_t *op)
 
     controld_globals.cib_conn->cmds->remove(controld_globals.cib_conn,
                                             XML_CIB_TAG_STATUS, xml_top,
-                                            cib_quorum_override);
+                                            cib_none);
 
     crm_log_xml_trace(xml_top, "op:cancel");
     free_xml(xml_top);
@@ -998,8 +998,7 @@ controld_cib_delete_last_failure(const char *rsc_id, const char *node,
     free(last_failure_key);
 
     controld_globals.cib_conn->cmds->remove(controld_globals.cib_conn, xpath,
-                                            NULL,
-                                            cib_quorum_override|cib_xpath);
+                                            NULL, cib_xpath);
     free(xpath);
 }
 
@@ -1027,7 +1026,6 @@ controld_delete_action_history_by_key(const char *rsc_id, const char *node,
         xpath = crm_strdup_printf(XPATH_HISTORY_ID, node, rsc_id, key);
     }
     controld_globals.cib_conn->cmds->remove(controld_globals.cib_conn, xpath,
-                                            NULL,
-                                            cib_quorum_override|cib_xpath);
+                                            NULL, cib_xpath);
     free(xpath);
 }

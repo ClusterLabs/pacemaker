@@ -254,8 +254,7 @@ send_stonith_update(pcmk__graph_action_t *action, const char *target,
 
     rc = controld_globals.cib_conn->cmds->update(controld_globals.cib_conn,
                                                  XML_CIB_TAG_STATUS, node_state,
-                                                 cib_quorum_override
-                                                 |cib_scope_local
+                                                 cib_scope_local
                                                  |cib_can_create);
 
     /* Delay processing the trigger until the update completes */
@@ -264,8 +263,7 @@ send_stonith_update(pcmk__graph_action_t *action, const char *target,
 
     // Make sure it sticks
     /* controld_globals.cib_conn->cmds->bump_epoch(controld_globals.cib_conn,
-     *                                             cib_quorum_override
-     *                                             |cib_scope_local);
+     *                                             cib_scope_local);
      */
 
     controld_delete_node_state(peer->uname, controld_section_all,

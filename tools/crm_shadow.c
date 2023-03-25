@@ -1264,11 +1264,6 @@ main(int argc, char **argv)
                               cib_verbose);
     }
 
-    if (options.force) {
-        cib__set_call_options(options.cmd_options, crm_system_name,
-                              cib_quorum_override);
-    }
-
     // Run the command
     switch (options.cmd) {
         case shadow_cmd_commit:
