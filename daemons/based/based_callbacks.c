@@ -1214,6 +1214,9 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     const char *op = NULL;
     const char *section = NULL;
     const char *call_id = crm_element_value(request, F_CIB_CALLID);
+    const char *client_id = crm_element_value(request, F_CIB_CLIENTID);
+    const char *client_name = crm_element_value(request, F_CIB_CLIENTNAME);
+    const char *origin = crm_element_value(request, F_ORIG);
 
     int rc = pcmk_ok;
     int rc2 = pcmk_ok;
@@ -1435,17 +1438,15 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     }
 
     if ((call_options & (cib_inhibit_notify|cib_dryrun)) == 0) {
-        const char *client = crm_element_value(request, F_CIB_CLIENTNAME);
-
         crm_trace("Sending notifications %d",
                   pcmk_is_set(call_options, cib_dryrun));
-        cib_diff_notify(call_options, client, call_id, op, input, rc, *cib_diff);
+        cib_diff_notify(op, rc, call_id, client_id, client_name, origin, input,
+                        *cib_diff);
     }
 
     if (send_r_notify) {
-        const char *origin = crm_element_value(request, F_ORIG);
-
-        cib_replace_notify(origin, the_cib, rc, *cib_diff, change_section);
+        cib_replace_notify(op, rc, call_id, client_id, client_name, origin,
+                           the_cib, *cib_diff, change_section);
     }
 
     pcmk__output_set_log_level(logger_out, LOG_TRACE);

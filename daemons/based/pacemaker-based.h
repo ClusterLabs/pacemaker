@@ -133,11 +133,13 @@ int cib_op_prepare(int call_type, xmlNode *request, xmlNode **input,
 int cib_op_cleanup(int call_type, int options, xmlNode **input,
                    xmlNode **output);
 int cib_op_can_run(int call_type, int call_options, bool privileged);
-void cib_diff_notify(int options, const char *client, const char *call_id,
-                     const char *op, xmlNode *update, int result,
-                     xmlNode *old_cib);
-void cib_replace_notify(const char *origin, xmlNode *update, int result,
-                        xmlNode *diff, uint32_t change_section);
+void cib_diff_notify(const char *op, int result, const char *call_id,
+                     const char *client_id, const char *client_name,
+                     const char *origin, xmlNode *update, xmlNode *diff);
+void cib_replace_notify(const char *op, int result, const char *call_id,
+                        const char *client_id, const char *client_name,
+                        const char *origin, xmlNode *update, xmlNode *diff,
+                        uint32_t change_section);
 
 static inline const char *
 cib_config_lookup(const char *opt)
