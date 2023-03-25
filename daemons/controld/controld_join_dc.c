@@ -171,7 +171,8 @@ start_join_round(void)
         free_xml(max_generation_xml);
         max_generation_xml = NULL;
     }
-    controld_clear_fsa_input_flags(R_HAVE_CIB|R_CIB_ASKED);
+    controld_clear_fsa_input_flags(R_HAVE_CIB);
+    controld_forget_all_cib_replace_calls();
 }
 
 /*!
@@ -586,28 +587,30 @@ do_dc_join_finalize(long long action,
         return;
     }
 
-    if ((max_generation_from != NULL)
-        && !pcmk_is_set(controld_globals.fsa_input_register, R_HAVE_CIB)) {
-        /* ask for the agreed best CIB */
-        pcmk__str_update(&sync_from, max_generation_from);
-        controld_set_fsa_input_flags(R_CIB_ASKED);
-        crm_notice("Finalizing join-%d for %d node%s (sync'ing CIB from %s)",
-                   current_join_id, count_finalizable,
-                   pcmk__plural_s(count_finalizable), sync_from);
-        crm_log_xml_notice(max_generation_xml, "Requested CIB version");
-
-    } else {
-        /* Send _our_ CIB out to everyone */
+    if (pcmk_is_set(controld_globals.fsa_input_register, R_HAVE_CIB)) {
+        // Send our CIB out to everyone
         pcmk__str_update(&sync_from, controld_globals.our_nodename);
         crm_debug("Finalizing join-%d for %d node%s (sync'ing from local CIB)",
                   current_join_id, count_finalizable,
                   pcmk__plural_s(count_finalizable));
         crm_log_xml_debug(max_generation_xml, "Requested CIB version");
+
+    } else {
+        // Ask for the agreed best CIB
+        pcmk__str_update(&sync_from, max_generation_from);
+        crm_notice("Finalizing join-%d for %d node%s (sync'ing CIB from %s)",
+                   current_join_id, count_finalizable,
+                   pcmk__plural_s(count_finalizable), sync_from);
+        crm_log_xml_notice(max_generation_xml, "Requested CIB version");
     }
     crmd_join_phase_log(LOG_DEBUG);
 
     rc = controld_globals.cib_conn->cmds->sync_from(controld_globals.cib_conn,
                                                     sync_from, NULL, cib_none);
+
+    if (pcmk_is_set(controld_globals.fsa_input_register, R_HAVE_CIB)) {
+        controld_record_cib_replace_call(rc);
+    }
     fsa_register_cib_callback(rc, sync_from, finalize_sync_callback);
 }
 
@@ -625,7 +628,9 @@ void
 finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
     CRM_LOG_ASSERT(-EPERM != rc);
-    controld_clear_fsa_input_flags(R_CIB_ASKED);
+
+    controld_forget_cib_replace_call(call_id);
+
     if (rc != pcmk_ok) {
         const char *sync_from = (const char *) user_data;
 
@@ -651,7 +656,6 @@ finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, voi
 
     } else {
         controld_set_fsa_input_flags(R_HAVE_CIB);
-        controld_clear_fsa_input_flags(R_CIB_ASKED);
 
         /* make sure dc_uuid is re-set to us */
         if (!check_join_state(controld_globals.fsa_state, __func__)) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -514,9 +514,6 @@ fsa_dump_inputs(int log_level, const char *text, long long input_register)
     }
     if (pcmk_is_set(input_register, R_HAVE_CIB)) {
         crm_trace("%s %.16llx (R_HAVE_CIB)", text, R_HAVE_CIB);
-    }
-    if (pcmk_is_set(input_register, R_CIB_ASKED)) {
-        crm_trace("%s %.16llx (R_CIB_ASKED)", text, R_CIB_ASKED);
     }
     if (pcmk_is_set(input_register, R_MEMBERSHIP)) {
         crm_trace("%s %.16llx (R_MEMBERSHIP)", text, R_MEMBERSHIP);

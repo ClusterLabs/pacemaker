@@ -399,7 +399,6 @@ enum crmd_fsa_input {
 #  define R_CIB_DONE        0x00010000ULL
                                         /* Have we calculated the CIB? */
 #  define R_HAVE_CIB        0x00020000ULL   /* Do we have an up-to-date CIB */
-#  define R_CIB_ASKED       0x00040000ULL   /* Have we asked for an up-to-date CIB */
 
 #  define R_MEMBERSHIP      0x00100000ULL   /* Have we got cluster layer data yet */
 #  define R_PEER_DATA       0x00200000ULL   /* Have we got T_CL_STATUS data yet */

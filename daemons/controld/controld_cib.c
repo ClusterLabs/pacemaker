@@ -22,6 +22,90 @@
 // Call ID of the most recent in-progress CIB resource update (or 0 if none)
 static int pending_rsc_update = 0;
 
+// Call IDs of requested CIB replacements that won't trigger a new election
+// (used as a set of gint values)
+static GHashTable *cib_replacements = NULL;
+
+/*!
+ * \internal
+ * \brief Store the call ID of a CIB replacement that the controller requested
+ *
+ * The \p do_cib_replaced() callback function will avoid triggering a new
+ * election when we're notified of one of these expected replacements.
+ *
+ * \param[in] call_id  CIB call ID (or 0 for a synchronous call)
+ *
+ * \note This function should be called after making any asynchronous CIB
+ *       request (or before making any synchronous CIB request) that may replace
+ *       part of the nodes or status section. This may include CIB sync calls.
+ */
+void
+controld_record_cib_replace_call(int call_id)
+{
+    CRM_CHECK(call_id >= 0, return);
+
+    if (cib_replacements == NULL) {
+        cib_replacements = g_hash_table_new(NULL, NULL);
+    }
+
+    /* If the call ID is already present in the table, then it's old. We may not
+     * be removing them properly, and we could improperly ignore replacement
+     * notifications if cib_t:call_id wraps around.
+     */
+    CRM_LOG_ASSERT(g_hash_table_add(cib_replacements,
+                                    GINT_TO_POINTER((gint) call_id)));
+}
+
+/*!
+ * \internal
+ * \brief Remove the call ID of a CIB replacement from the replacements table
+ *
+ * \param[in] call_id  CIB call ID (or 0 for a synchronous call)
+ *
+ * \return \p true if \p call_id was found in the table, or \p false otherwise
+ *
+ * \note CIB notifications run before CIB callbacks. If this function is called
+ *       from within a callback, \p do_cib_replaced() will have removed
+ *       \p call_id from the table first if relevant changes triggered a
+ *       notification.
+ */
+bool
+controld_forget_cib_replace_call(int call_id)
+{
+    CRM_CHECK(call_id >= 0, return false);
+
+    if (cib_replacements == NULL) {
+        return false;
+    }
+    return g_hash_table_remove(cib_replacements,
+                               GINT_TO_POINTER((gint) call_id));
+}
+
+/*!
+ * \internal
+ * \brief Empty the hash table containing call IDs of CIB replacement requests
+ */
+void
+controld_forget_all_cib_replace_calls(void)
+{
+    if (cib_replacements != NULL) {
+        g_hash_table_remove_all(cib_replacements);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Free the hash table containing call IDs of CIB replacement requests
+ */
+void
+controld_destroy_cib_replacements_table(void)
+{
+    if (cib_replacements != NULL) {
+        g_hash_table_destroy(cib_replacements);
+        cib_replacements = NULL;
+    }
+}
+
 /*!
  * \internal
  * \brief Respond to a dropped CIB connection
@@ -58,18 +142,22 @@ do_cib_updated(const char *event, xmlNode * msg)
 static void
 do_cib_replaced(const char *event, xmlNode * msg)
 {
+    int call_id = 0;
+    const char *client_id = crm_element_value(msg, F_CIB_CLIENTID);
     uint32_t change_section = cib_change_section_nodes
                               |cib_change_section_status;
     long long value = 0;
 
     crm_debug("Updating the CIB after a replace: DC=%s", pcmk__btoa(AM_I_DC));
-    if (AM_I_DC == FALSE) {
+    if (!AM_I_DC) {
         return;
+    }
 
-    } else if ((controld_globals.fsa_state == S_FINALIZE_JOIN)
-               && pcmk_is_set(controld_globals.fsa_input_register,
-                              R_CIB_ASKED)) {
-        /* no need to restart the join - we asked for this replace op */
+    if ((crm_element_value_int(msg, F_CIB_CALLID, &call_id) == 0)
+        && pcmk__str_eq(client_id, controld_globals.cib_client_id,
+                        pcmk__str_none)
+        && controld_forget_cib_replace_call(call_id)) {
+        // We requested this replace op. No need to restart the join.
         return;
     }
 
