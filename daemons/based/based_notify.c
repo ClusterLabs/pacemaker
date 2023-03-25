@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -38,10 +38,6 @@ struct cib_notification_s {
 };
 
 void attach_cib_generation(xmlNode * msg, const char *field, xmlNode * a_cib);
-
-static void do_cib_notify(int options, const char *op, xmlNode *update,
-                          int result, xmlNode * result_data,
-                          const char *msg_type);
 
 static void
 cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
@@ -147,6 +143,9 @@ cib_diff_notify(int options, const char *client, const char *call_id, const char
 
     int log_level = LOG_TRACE;
 
+    xmlNode *update_msg = NULL;
+    const char *type = NULL;
+
     if (diff == NULL) {
         return;
     }
@@ -161,61 +160,44 @@ cib_diff_notify(int options, const char *client, const char *call_id, const char
     if (add_updates != del_updates) {
         do_crm_log(log_level,
                    "Update (client: %s%s%s): %d.%d.%d -> %d.%d.%d (%s)",
-                   client, call_id ? ", call:" : "", call_id ? call_id : "",
+                   client,
+                   ((call_id != NULL)? ", call:" : ""), pcmk__s(call_id, ""),
                    del_admin_epoch, del_epoch, del_updates,
-                   add_admin_epoch, add_epoch, add_updates, pcmk_strerror(result));
+                   add_admin_epoch, add_epoch, add_updates,
+                   pcmk_strerror(result));
 
-    } else if (diff != NULL) {
+    } else {
         do_crm_log(log_level,
-                   "Local-only Change (client:%s%s%s): %d.%d.%d (%s)",
-                   client, call_id ? ", call: " : "", call_id ? call_id : "",
-                   add_admin_epoch, add_epoch, add_updates, pcmk_strerror(result));
+                   "Local-only change (client: %s%s%s): %d.%d.%d (%s)",
+                   client,
+                   ((call_id != NULL)? ", call: " : ""), pcmk__s(call_id, ""),
+                   add_admin_epoch, add_epoch, add_updates,
+                   pcmk_strerror(result));
     }
-
-    do_cib_notify(options, op, update, result, diff, T_CIB_DIFF_NOTIFY);
-}
-
-static void
-do_cib_notify(int options, const char *op, xmlNode * update,
-              int result, xmlNode * result_data, const char *msg_type)
-{
-    xmlNode *update_msg = NULL;
-    const char *id = NULL;
 
     update_msg = create_xml_node(NULL, "notify");
 
-    if (result_data != NULL) {
-        id = crm_element_value(result_data, XML_ATTR_ID);
-    }
-
     crm_xml_add(update_msg, F_TYPE, T_CIB_NOTIFY);
-    crm_xml_add(update_msg, F_SUBTYPE, msg_type);
+    crm_xml_add(update_msg, F_SUBTYPE, T_CIB_DIFF_NOTIFY);
     crm_xml_add(update_msg, F_CIB_OPERATION, op);
+    crm_xml_add(update_msg, F_CIB_OBJID, ID(diff));
     crm_xml_add_int(update_msg, F_CIB_RC, result);
 
-    if (id != NULL) {
-        crm_xml_add(update_msg, F_CIB_OBJID, id);
-    }
-
     if (update != NULL) {
-        crm_trace("Setting type to update->name: %s", crm_element_name(update));
-        crm_xml_add(update_msg, F_CIB_OBJTYPE, crm_element_name(update));
-
-    } else if (result_data != NULL) {
-        crm_trace("Setting type to new_obj->name: %s", crm_element_name(result_data));
-        crm_xml_add(update_msg, F_CIB_OBJTYPE, crm_element_name(result_data));
-
+        type = crm_element_name(update);
+        crm_trace("Setting type to update->name: %s", type);
     } else {
-        crm_trace("Not Setting type");
+        type = crm_element_name(diff);
+        crm_trace("Setting type to new_obj->name: %s", type);
     }
 
+    crm_xml_add(update_msg, F_CIB_OBJTYPE, type);
     attach_cib_generation(update_msg, "cib_generation", the_cib);
+
     if (update != NULL) {
         add_message_xml(update_msg, F_CIB_UPDATE, update);
     }
-    if (result_data != NULL) {
-        add_message_xml(update_msg, F_CIB_UPDATE_RESULT, result_data);
-    }
+    add_message_xml(update_msg, F_CIB_UPDATE_RESULT, diff);
 
     cib_notify_send(update_msg);
     free_xml(update_msg);
