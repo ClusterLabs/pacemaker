@@ -1437,8 +1437,6 @@ main(int argc, char **argv)
                 fence_history_cb("--fence-history", "0", NULL, NULL);
                 break;
 
-            case cib_undefined:
-            case cib_database:
             default:
                 /* something is odd */
                 exit_on_invalid_cib();
