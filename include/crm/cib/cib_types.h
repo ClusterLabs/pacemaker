@@ -26,11 +26,15 @@ extern "C" {
  */
 
 enum cib_variant {
-    cib_undefined,
-    cib_native,
-    cib_file,
-    cib_remote,
-    cib_database,
+    cib_undefined = 0,
+    cib_native    = 1,
+    cib_file      = 2,
+    cib_remote    = 3,
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated This value will be removed in a future release
+    cib_database  = 4,
+#endif // !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 };
 
 enum cib_state {
