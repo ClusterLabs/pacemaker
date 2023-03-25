@@ -126,8 +126,11 @@ typedef struct cib_api_operations_s {
                    int call_options);
     int (*modify) (cib_t *cib, const char *section, xmlNode *data,
                    int call_options);
+
+    //! \deprecated Use the \p modify() method instead
     int (*update) (cib_t *cib, const char *section, xmlNode *data,
                    int call_options);
+
     int (*replace) (cib_t *cib, const char *section, xmlNode *data,
                     int call_options);
     int (*remove) (cib_t *cib, const char *section, xmlNode *data,

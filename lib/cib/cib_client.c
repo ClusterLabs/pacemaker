@@ -651,7 +651,7 @@ cib_new_variant(void)
 
     new_cib->cmds->create = cib_client_create;
     new_cib->cmds->modify = cib_client_modify;
-    new_cib->cmds->update = cib_client_modify;
+    new_cib->cmds->update = cib_client_modify; // Deprecated method
     new_cib->cmds->replace = cib_client_replace;
     new_cib->cmds->remove = cib_client_delete;
     new_cib->cmds->erase = cib_client_erase;
