@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -422,6 +422,7 @@ update_cib_object(xmlNode * parent, xmlNode * update)
               pcmk__s(object_id, ""),
               ((object_id == NULL)? "" : "'"));
 
+    // @COMPAT: XML_CIB_ATTR_REPLACE is unused internally. Remove at break.
     replace = crm_element_value(update, XML_CIB_ATTR_REPLACE);
     if (replace != NULL) {
         xmlNode *remove = NULL;
