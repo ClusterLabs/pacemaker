@@ -419,11 +419,9 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         } else if (originated_locally && !pcmk__strcase_any_of(sys_from, CRM_SYSTEM_PENGINE,
                                                                CRM_SYSTEM_TENGINE, NULL)) {
 
-#if SUPPORT_COROSYNC
             if (is_corosync_cluster()) {
                 dest = text2msg_type(sys_to);
             }
-#endif
             crm_trace("Relay message %s to DC", ref);
             send_cluster_message(host_to ? crm_get_peer(0, host_to) : NULL, dest, msg, TRUE);
 
@@ -448,7 +446,6 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     } else {
         crm_node_t *node_to = NULL;
 
-#if SUPPORT_COROSYNC
         if (is_corosync_cluster()) {
             dest = text2msg_type(sys_to);
 
@@ -456,7 +453,6 @@ relay_message(xmlNode * msg, gboolean originated_locally)
                 dest = crm_msg_crmd;
             }
         }
-#endif
 
         if (host_to) {
             node_to = pcmk__search_cluster_node_cache(0, host_to);
