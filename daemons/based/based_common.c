@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2022 the Pacemaker project contributors
+ * Copyright 2008-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -336,14 +336,6 @@ cib_op_can_run(int call_type, int call_options, gboolean privileged, gboolean gl
         /* abort */
         return -EACCES;
     }
-#if 0
-    if (rc == pcmk_ok
-        && stand_alone == FALSE
-        && global_update == FALSE
-        && (call_options & cib_quorum_override) == 0 && cib_server_ops[call_type].needs_quorum) {
-        return -pcmk_err_no_quorum;
-    }
-#endif
     return pcmk_ok;
 }
 
