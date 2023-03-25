@@ -21,6 +21,9 @@
 
 static int cib_retries = 0;
 
+// Call ID of the most recent in-progress CIB resource update (or 0 if none)
+static int pending_rsc_update = 0;
+
 /*!
  * \internal
  * \brief Respond to a dropped CIB connection
@@ -135,10 +138,10 @@ do_cib_control(long long action,
 
     if (pcmk_is_set(action, A_CIB_STOP)) {
         if ((cib_conn->state != cib_disconnected)
-            && (controld_globals.resource_update != 0)) {
+            && (pending_rsc_update != 0)) {
 
             crm_info("Waiting for resource update %d to complete",
-                     controld_globals.resource_update);
+                     pending_rsc_update);
             crmd_fsa_stall(FALSE);
             return;
         }
@@ -743,8 +746,8 @@ cib_rsc_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *use
             crm_warn("Resource update %d failed: (rc=%d) %s", call_id, rc, pcmk_strerror(rc));
     }
 
-    if (call_id == controld_globals.resource_update) { // Most recent CIB call
-        controld_globals.resource_update = 0;
+    if (call_id == pending_rsc_update) {
+        pending_rsc_update = 0;
         controld_trigger_fsa();
     }
 }
@@ -778,6 +781,9 @@ should_preserve_lock(lrmd_event_data_t *op)
  * \param[in]     callback  If not NULL, set this as the operation callback
  *
  * \return Standard Pacemaker return code
+ *
+ * \note If \p callback is \p cib_rsc_callback(), the CIB update's call ID is
+ *       stored in \p pending_rsc_update on success.
  */
 int
 controld_update_cib(const char *section, xmlNode *data, int options,
@@ -809,7 +815,7 @@ controld_update_cib(const char *section, xmlNode *data, int options,
              * didn't seem worth adding an output argument for cib_rc for just
              * one use case.
              */
-            controld_globals.resource_update = cib_rc;
+            pending_rsc_update = cib_rc;
         }
         fsa_register_cib_callback(cib_rc, NULL, callback);
     }
@@ -827,7 +833,7 @@ controld_update_cib(const char *section, xmlNode *data, int options,
  * \param[in]     lock_time  If nonzero, when resource was locked to node
  *
  * \note On success, the CIB update's call ID will be stored in
- *       controld_globals.resource_update.
+ *       pending_rsc_update.
  */
 void
 controld_update_resource_history(const char *node_name,

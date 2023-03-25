@@ -45,9 +45,6 @@ typedef struct {
     //! Connection to the CIB
     cib_t *cib_conn;
 
-    //! Call ID of the in-progress CIB resource update (or 0 if none)
-    int resource_update;
-
 
     // Scheduler
 
