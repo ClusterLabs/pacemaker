@@ -47,7 +47,6 @@ typedef struct cib_operation_s {
     const char *operation;
     gboolean modifies_cib;
     gboolean needs_privileges;
-    gboolean needs_quorum;
     int (*prepare) (xmlNode *, xmlNode **, const char **);
     int (*cleanup) (int, xmlNode **, xmlNode **);
     int (*fn) (const char *, int, const char *, xmlNode *,
