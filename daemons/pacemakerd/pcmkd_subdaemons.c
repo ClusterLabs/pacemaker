@@ -86,6 +86,9 @@ crm_trigger_t *shutdown_trigger = NULL;
 crm_trigger_t *startup_trigger = NULL;
 time_t subdaemon_check_progress = 0;
 
+// Whether we need root group access to talk to cluster layer
+static bool need_root_group = true;
+
 /* When contacted via pacemakerd-api by a client having sbd in
  * the name we assume it is sbd-daemon which wants to know
  * if pacemakerd shutdown gracefully.
@@ -492,19 +495,6 @@ start_child(pcmk_child_t * child)
         opts_default[0] = strdup(child->command);
 
         if(gid) {
-            // Whether we need root group access to talk to cluster layer
-            static bool need_root_group = true;
-
-#if SUPPORT_COROSYNC
-            if (need_root_group && is_corosync_cluster()) {
-                /* Corosync clusters can drop root group access, because we set
-                 * uidgid.gid.${gid}=1 via CMAP, which allows these processes to
-                 * connect to corosync.
-                 */
-                need_root_group = false;
-            }
-#endif // SUPPORT_COROSYNC
-
             // Drop root group access if not needed
             if (!need_root_group && (setgid(gid) < 0)) {
                 crm_warn("Could not set group to %d: %s", gid, strerror(errno));
@@ -809,6 +799,14 @@ find_and_track_existing_processes(void)
 gboolean
 init_children_processes(void *user_data)
 {
+    if (is_corosync_cluster()) {
+        /* Corosync clusters can drop root group access, because we set
+         * uidgid.gid.${gid}=1 via CMAP, which allows these processes to connect
+         * to corosync.
+         */
+        need_root_group = false;
+    }
+
     /* start any children that have not been detected */
     for (int i = 0; i < PCMK__NELEM(pcmk_children); i++) {
         if (pcmk_children[i].pid != 0) {
