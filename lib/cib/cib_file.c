@@ -835,7 +835,8 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
     }
 
     cib->call_id++;
-    request = cib_create_op(cib->call_id, "dummy-token", op, host, section, data, call_options, user_name);
+    request = cib_create_op(cib->call_id, op, host, section, data, call_options,
+                            user_name);
     if(user_name) {
         crm_xml_add(request, XML_ACL_TAG_USER, user_name);
     }

@@ -359,11 +359,8 @@ cib_native_perform_op_delegate(cib_t * cib, const char *op, const char *host, co
         cib->call_id = 1;
     }
 
-    CRM_CHECK(native->token != NULL,;
-        );
-    op_msg =
-        cib_create_op(cib->call_id, native->token, op, host, section, data, call_options,
-                      user_name);
+    op_msg = cib_create_op(cib->call_id, op, host, section, data, call_options,
+                           user_name);
     if (op_msg == NULL) {
         return -EPROTO;
     }

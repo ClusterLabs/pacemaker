@@ -391,8 +391,8 @@ cib_remote_signon(cib_t * cib, const char *name, enum cib_conn_type type)
     }
 
     if (rc == pcmk_ok) {
-        xmlNode *hello =
-            cib_create_op(0, private->callback.token, CRM_OP_REGISTER, NULL, NULL, NULL, 0, NULL);
+        xmlNode *hello = cib_create_op(0, CRM_OP_REGISTER, NULL, NULL, NULL, 0,
+                                       NULL);
         crm_xml_add(hello, F_CIB_CLIENTNAME, name);
         pcmk__remote_send_xml(&private->command, hello);
         free_xml(hello);
@@ -482,9 +482,8 @@ cib_remote_perform_op(cib_t * cib, const char *op, const char *host, const char 
         cib->call_id = 1;
     }
 
-    op_msg =
-        cib_create_op(cib->call_id, private->callback.token, op, host, section, data, call_options,
-                      NULL);
+    op_msg = cib_create_op(cib->call_id, op, host, section, data, call_options,
+                           NULL);
     if (op_msg == NULL) {
         return -EPROTO;
     }

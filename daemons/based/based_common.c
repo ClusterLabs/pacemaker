@@ -281,7 +281,6 @@ cib_msg_copy(xmlNode * msg, gboolean with_data)
         F_CIB_EXISTING,
         F_CIB_SEENCOUNT,
         F_CIB_TIMEOUT,
-        F_CIB_CALLBACK_TOKEN,
         F_CIB_GLOBAL_UPDATE,
         F_CIB_CLIENTNAME,
         F_CIB_USER,
