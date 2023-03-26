@@ -76,16 +76,19 @@ static pcmk__cluster_option_t pe_opts[] = {
             "until they start again on that node after it rejoins (or for at "
             "most shutdown-lock-limit, if set). Stonith resources and "
             "Pacemaker Remote connections are never locked. Clone and bundle "
-            "instances and the promoted role of promotable clones are currently"
-            " never locked, though support could be added in a future release.")
+            "instances and the promoted role of promotable clones are "
+            "currently never locked, though support could be added in a future "
+            "release.")
     },
     {
         XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT, NULL, "time", NULL,
         "0", pcmk__valid_interval_spec,
-        N_("Do not lock resources to a cleanly shut down node longer than this"),
-        N_("If shutdown-lock is true and this is set to a nonzero time duration, "
-            "shutdown locks will expire after this much time has passed since "
-            "the shutdown was initiated, even if the node has not rejoined.")
+        N_("Do not lock resources to a cleanly shut down node longer than "
+           "this"),
+        N_("If shutdown-lock is true and this is set to a nonzero time "
+            "duration, shutdown locks will expire after this much time has "
+            "passed since the shutdown was initiated, even if the node has not "
+            "rejoined.")
     },
 
     // Fencing-related options

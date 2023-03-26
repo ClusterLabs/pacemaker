@@ -90,6 +90,9 @@ typedef struct {
     //! Last saved cluster communication layer membership ID
     unsigned long long membership_id;
 
+    //! Max lifetime (in seconds) of a resource's shutdown lock to a node
+    guint shutdown_lock_limit;
+
     //! Main event loop
     GMainLoop *mainloop;
 } controld_globals_t;
