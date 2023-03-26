@@ -378,11 +378,14 @@ cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
 // Node's lrm section (name 1x)
 #define XPATH_NODE_LRM          XPATH_NODE_STATE "/" XML_CIB_TAG_LRM
 
-// Node's lrm_rsc_op entries and lrm_resource entries without lock (name 2x)
+/* Node's lrm_rsc_op entries and lrm_resource entries without unexpired lock
+ * (name 2x, (seconds_since_epoch - XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT) 1x)
+ */
 #define XPATH_NODE_LRM_UNLOCKED XPATH_NODE_STATE "//" XML_LRM_TAG_RSC_OP    \
                                 "|" XPATH_NODE_STATE                        \
                                 "//" XML_LRM_TAG_RESOURCE                   \
-                                "[not(@" XML_CONFIG_ATTR_SHUTDOWN_LOCK ")]"
+                                "[not(@" XML_CONFIG_ATTR_SHUTDOWN_LOCK ") " \
+                                "or " XML_CONFIG_ATTR_SHUTDOWN_LOCK "<%lld]"
 
 // Node's transient_attributes section (name 1x)
 #define XPATH_NODE_ATTRS        XPATH_NODE_STATE "/" XML_TAG_TRANSIENT_NODEATTRS
@@ -390,7 +393,10 @@ cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
 // Everything under node_state (name 1x)
 #define XPATH_NODE_ALL          XPATH_NODE_STATE "/*"
 
-// Unlocked history + transient attributes (name 3x)
+/* Unlocked history + transient attributes
+ * (name 2x, (seconds_since_epoch - XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT) 1x,
+ * name 1x)
+ */
 #define XPATH_NODE_ALL_UNLOCKED XPATH_NODE_LRM_UNLOCKED "|" XPATH_NODE_ATTRS
 
 /*!
@@ -410,6 +416,10 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
     char *xpath = NULL;
     char *desc = NULL;
 
+    // Shutdown locks that started before this time are expired
+    long long expire = (long long) time(NULL)
+                       - controld_globals.shutdown_lock_limit;
+
     CRM_CHECK(uname != NULL, return);
     switch (section) {
         case controld_section_lrm:
@@ -417,7 +427,8 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
             desc = crm_strdup_printf("resource history for node %s", uname);
             break;
         case controld_section_lrm_unlocked:
-            xpath = crm_strdup_printf(XPATH_NODE_LRM_UNLOCKED, uname, uname);
+            xpath = crm_strdup_printf(XPATH_NODE_LRM_UNLOCKED,
+                                      uname, uname, expire);
             desc = crm_strdup_printf("resource history (other than shutdown "
                                      "locks) for node %s", uname);
             break;
@@ -431,7 +442,7 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
             break;
         case controld_section_all_unlocked:
             xpath = crm_strdup_printf(XPATH_NODE_ALL_UNLOCKED,
-                                      uname, uname, uname);
+                                      uname, uname, expire, uname);
             desc = crm_strdup_printf("all state (other than shutdown locks) "
                                      "for node %s", uname);
             break;
