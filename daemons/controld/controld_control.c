@@ -267,6 +267,7 @@ crmd_exit(crm_exit_t exit_code)
     free_max_generation();
     controld_destroy_cib_replacements_table();
     controld_destroy_failed_sync_table();
+    controld_destroy_outside_events_table();
 
     mainloop_destroy_signal(SIGPIPE);
     mainloop_destroy_signal(SIGUSR1);
