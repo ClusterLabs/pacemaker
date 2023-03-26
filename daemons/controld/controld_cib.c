@@ -19,8 +19,6 @@
 
 #include <pacemaker-controld.h>
 
-static int cib_retries = 0;
-
 // Call ID of the most recent in-progress CIB resource update (or 0 if none)
 static int pending_rsc_update = 0;
 
@@ -126,6 +124,8 @@ do_cib_control(long long action,
                enum crmd_fsa_state cur_state,
                enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
+    static int cib_retries = 0;
+
     cib_t *cib_conn = controld_globals.cib_conn;
 
     void (*dnotify_fn) (gpointer user_data) = handle_cib_disconnect;
@@ -188,6 +188,8 @@ do_cib_control(long long action,
     } else {
         controld_set_fsa_input_flags(R_CIB_CONNECTED);
         cib_retries = 0;
+        cib_conn->cmds->client_id(cib_conn, &controld_globals.cib_client_id,
+                                  NULL);
     }
 
     if (!pcmk_is_set(controld_globals.fsa_input_register, R_CIB_CONNECTED)) {

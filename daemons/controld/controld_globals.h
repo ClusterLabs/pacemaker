@@ -45,6 +45,9 @@ typedef struct {
     //! Connection to the CIB
     cib_t *cib_conn;
 
+    //! CIB connection's client ID
+    const char *cib_client_id;
+
 
     // Scheduler
 
