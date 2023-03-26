@@ -91,6 +91,40 @@ cib_remote_register_notification(cib_t * cib, const char *callback, int enabled)
     return pcmk_ok;
 }
 
+/*!
+ * \internal
+ * \brief Get the given CIB connection's unique client identifiers
+ *
+ * These can be used to check whether this client requested the action that
+ * triggered a CIB notification.
+ *
+ * \param[in]  cib       CIB connection
+ * \param[out] async_id  If not \p NULL, where to store asynchronous client ID
+ * \param[out] sync_id   If not \p NULL, where to store synchronous client ID
+ *
+ * \return Legacy Pacemaker return code (specifically, \p pcmk_ok)
+ *
+ * \note This is the \p cib_remote variant implementation of
+ *       \p cib_api_operations_t:client_id().
+ * \note The client IDs are assigned during CIB sign-on.
+ */
+static int
+cib_remote_client_id(const cib_t *cib, const char **async_id,
+                     const char **sync_id)
+{
+    cib_remote_opaque_t *private = cib->variant_opaque;
+
+    if (async_id != NULL) {
+        // private->callback is the channel for async requests
+        *async_id = private->callback.token;
+    }
+    if (sync_id != NULL) {
+        // private->command is the channel for sync requests
+        *sync_id = private->command.token;
+    }
+    return pcmk_ok;
+}
+
 cib_t *
 cib_remote_new(const char *server, const char *user, const char *passwd, int port,
                gboolean encrypted)
@@ -128,6 +162,8 @@ cib_remote_new(const char *server, const char *user, const char *passwd, int por
 
     cib->cmds->register_notification = cib_remote_register_notification;
     cib->cmds->set_connection_dnotify = cib_remote_set_connection_dnotify;
+
+    cib->cmds->client_id = cib_remote_client_id;
 
     return cib;
 }

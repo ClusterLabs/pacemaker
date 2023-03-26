@@ -71,6 +71,39 @@ cib_native_register_notification(cib_t *cib, const char *callback, int enabled)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Get the given CIB connection's unique client identifier
+ *
+ * These can be used to check whether this client requested the action that
+ * triggered a CIB notification.
+ *
+ * \param[in]  cib       CIB connection
+ * \param[out] async_id  If not \p NULL, where to store asynchronous client ID
+ * \param[out] sync_id   If not \p NULL, where to store synchronous client ID
+ *
+ * \return Legacy Pacemaker return code (specifically, \p pcmk_ok)
+ *
+ * \note This is the \p cib_native variant implementation of
+ *       \p cib_api_operations_t:client_id().
+ * \note For \p cib_native objects, \p async_id and \p sync_id are the same.
+ * \note The client ID is assigned during CIB sign-on.
+ */
+static int
+cib_native_client_id(const cib_t *cib, const char **async_id,
+                     const char **sync_id)
+{
+    cib_native_opaque_t *native = cib->variant_opaque;
+
+    if (async_id != NULL) {
+        *async_id = native->token;
+    }
+    if (sync_id != NULL) {
+        *sync_id = native->token;
+    }
+    return pcmk_ok;
+}
+
 cib_t *
 cib_native_new(void)
 {
@@ -104,6 +137,8 @@ cib_native_new(void)
 
     cib->cmds->register_notification = cib_native_register_notification;
     cib->cmds->set_connection_dnotify = cib_native_set_connection_dnotify;
+
+    cib->cmds->client_id = cib_native_client_id;
 
     return cib;
 }

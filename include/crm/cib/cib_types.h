@@ -175,6 +175,29 @@ typedef struct cib_api_operations_s {
      * \return Legacy Pacemaker return code (in particular, pcmk_ok on success)
      */
     int (*set_secondary)(cib_t *cib, int call_options);
+
+    /*!
+     * \brief Get the given CIB connection's unique client identifier(s)
+     *
+     * These can be used to check whether this client requested the action that
+     * triggered a CIB notification.
+     *
+     * \param[in]  cib       CIB connection
+     * \param[out] async_id  If not \p NULL, where to store asynchronous client
+     *                       ID
+     * \param[out] sync_id   If not \p NULL, where to store synchronous client
+     *                       ID
+     *
+     * \return Legacy Pacemaker return code
+     *
+     * \note The client IDs are assigned by \p pacemaker-based when the client
+     *       connects. \p cib_t variants that don't connect to
+     *       \p pacemaker-based may never be assigned a client ID.
+     * \note Some variants may have only one client for both asynchronous and
+     *       synchronous requests.
+     */
+    int (*client_id)(const cib_t *cib, const char **async_id,
+                     const char **sync_id);
 } cib_api_operations_t;
 
 struct cib_s {
