@@ -297,6 +297,14 @@ static const struct pcmk__rc_info {
       "Disabled",
       -pcmk_err_generic,
     },
+    { "pcmk_rc_bad_input",
+      "Bad input value provided",
+      -pcmk_err_generic,
+    },
+    { "pcmk_rc_bad_xml_patch",
+      "Bad XML patch format",
+      -pcmk_err_generic,
+    },
 };
 
 /*!
@@ -785,6 +793,10 @@ pcmk_rc2exitc(int rc)
 
         case pcmk_rc_duplicate_id:
             return CRM_EX_MULTIPLE;
+
+        case pcmk_rc_bad_input:
+        case pcmk_rc_bad_xml_patch:
+            return CRM_EX_DATAERR;
 
         default:
             return CRM_EX_ERROR;
