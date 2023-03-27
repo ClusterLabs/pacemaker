@@ -551,7 +551,7 @@ implicitly_allowed(const xmlNode *xml)
  * \internal
  * \brief Drop XML nodes created in violation of ACLs
  *
- * Given an XML element, free all of its descendent nodes created in violation
+ * Given an XML element, free all of its descendant nodes created in violation
  * of ACLs, with the exception of allowing "scaffolding" elements (i.e. those
  * that aren't in the ACL section and don't have any attributes other than
  * "id").

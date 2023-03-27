@@ -132,31 +132,104 @@ cmp_primary_priority(gconstpointer a, gconstpointer b)
 
 /*!
  * \internal
- * \brief Add a "this with" colocation constraint to a resource
+ * \brief Add a "this with" colocation constraint to a sorted list
  *
- * \param[in,out] rsc         Resource to add colocation to
- * \param[in]     colocation  Colocation constraint to add to \p rsc
+ * \param[in,out] list        List of constraints to add \p colocation to
+ * \param[in]     colocation  Colocation constraint to add to \p list
+ *
+ * \note The list will be sorted using cmp_primary_priority().
  */
 void
-pcmk__add_this_with(pe_resource_t *rsc, const pcmk__colocation_t *colocation)
+pcmk__add_this_with(GList **list, const pcmk__colocation_t *colocation)
 {
-    rsc->rsc_cons = g_list_insert_sorted(rsc->rsc_cons, (gpointer) colocation,
-                                         cmp_primary_priority);
+    CRM_ASSERT((list != NULL) && (colocation != NULL));
+
+    crm_trace("Adding colocation %s (%s with %s%s%s @%d) "
+              "to 'this with' list",
+              colocation->id, colocation->dependent->id,
+              colocation->primary->id,
+              (colocation->node_attribute == NULL)? "" : " using ",
+              pcmk__s(colocation->node_attribute, ""),
+              colocation->score);
+    *list = g_list_insert_sorted(*list, (gpointer) colocation,
+                                 cmp_primary_priority);
 }
 
 /*!
  * \internal
- * \brief Add a "with this" colocation constraint to a resource
+ * \brief Add a list of "this with" colocation constraints to a list
  *
- * \param[in,out] rsc         Resource to add colocation to
- * \param[in]     colocation  Colocation constraint to add to \p rsc
+ * \param[in,out] list      List of constraints to add \p addition to
+ * \param[in]     addition  List of colocation constraints to add to \p list
+ *
+ * \note The lists must be pre-sorted by cmp_primary_priority().
  */
 void
-pcmk__add_with_this(pe_resource_t *rsc, const pcmk__colocation_t *colocation)
+pcmk__add_this_with_list(GList **list, GList *addition)
 {
-    rsc->rsc_cons_lhs = g_list_insert_sorted(rsc->rsc_cons_lhs,
-                                             (gpointer) colocation,
-                                             cmp_dependent_priority);
+    CRM_CHECK((list != NULL), return);
+
+    if (*list == NULL) { // Trivial case for efficiency
+        crm_trace("Copying %u 'this with' colocations to new list",
+                  g_list_length(addition));
+        *list = g_list_copy(addition);
+    } else {
+        while (addition != NULL) {
+            pcmk__add_this_with(list, addition->data);
+            addition = addition->next;
+        }
+    }
+}
+
+/*!
+ * \internal
+ * \brief Add a "with this" colocation constraint to a sorted list
+ *
+ * \param[in,out] list        List of constraints to add \p colocation to
+ * \param[in]     colocation  Colocation constraint to add to \p list
+ *
+ * \note The list will be sorted using cmp_dependent_priority().
+ */
+void
+pcmk__add_with_this(GList **list, const pcmk__colocation_t *colocation)
+{
+    CRM_ASSERT((list != NULL) && (colocation != NULL));
+
+    crm_trace("Adding colocation %s (%s with %s%s%s @%d) "
+              "to 'with this' list",
+              colocation->id, colocation->dependent->id,
+              colocation->primary->id,
+              (colocation->node_attribute == NULL)? "" : " using ",
+              pcmk__s(colocation->node_attribute, ""),
+              colocation->score);
+    *list = g_list_insert_sorted(*list, (gpointer) colocation,
+                                 cmp_dependent_priority);
+}
+
+/*!
+ * \internal
+ * \brief Add a list of "with this" colocation constraints to a list
+ *
+ * \param[in,out] list      List of constraints to add \p addition to
+ * \param[in]     addition  List of colocation constraints to add to \p list
+ *
+ * \note The lists must be pre-sorted by cmp_dependent_priority().
+ */
+void
+pcmk__add_with_this_list(GList **list, GList *addition)
+{
+    CRM_CHECK((list != NULL), return);
+
+    if (*list == NULL) { // Trivial case for efficiency
+        crm_trace("Copying %u 'with this' colocations to new list",
+                  g_list_length(addition));
+        *list = g_list_copy(addition);
+    } else {
+        while (addition != NULL) {
+            pcmk__add_with_this(list, addition->data);
+            addition = addition->next;
+        }
+    }
 }
 
 /*!
@@ -275,8 +348,8 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
     pe_rsc_trace(dependent, "%s ==> %s (%s %d)",
                  dependent->id, primary->id, node_attr, score);
 
-    pcmk__add_this_with(dependent, new_con);
-    pcmk__add_with_this(primary, new_con);
+    pcmk__add_this_with(&(dependent->rsc_cons), new_con);
+    pcmk__add_with_this(&(primary->rsc_cons_lhs), new_con);
 
     data_set->colocation_constraints = g_list_append(data_set->colocation_constraints,
                                                      new_con);
@@ -842,6 +915,7 @@ pcmk__block_colocation_dependents(pe_action_t *action,
                                   pe_working_set_t *data_set)
 {
     GList *gIter = NULL;
+    GList *colocations = NULL;
     pe_resource_t *rsc = NULL;
     bool is_start = false;
 
@@ -865,10 +939,6 @@ pcmk__block_colocation_dependents(pe_action_t *action,
         rsc = rsc->parent; // Bundle
     }
 
-    if (rsc->rsc_cons_lhs == NULL) {
-        return;
-    }
-
     // Colocation fails only if entire primary can't reach desired role
     for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child = (pe_resource_t *) gIter->data;
@@ -888,7 +958,8 @@ pcmk__block_colocation_dependents(pe_action_t *action,
               rsc->id, action->rsc->id, action->task);
 
     // Check each colocation where this resource is primary
-    for (gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
+    colocations = pcmk__with_this_colocations(rsc);
+    for (gIter = colocations; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *colocation = (pcmk__colocation_t *) gIter->data;
 
         if (colocation->score < INFINITY) {
@@ -913,6 +984,7 @@ pcmk__block_colocation_dependents(pe_action_t *action,
             mark_action_blocked(colocation->dependent, RSC_START, action->rsc);
         }
     }
+    g_list_free(colocations);
 }
 
 /*!
@@ -1334,6 +1406,9 @@ init_group_colocated_nodes(const pe_resource_t *rsc, const char *log_id,
     if (*nodes == NULL) {
         // Only cmp_resources() passes a NULL nodes table
         member = pe__last_group_member(rsc);
+        pe_rsc_trace(rsc, "%s: Merging scores from group %s using member %s "
+                     "(at %.6f)", log_id, rsc->id, member->id, factor);
+        pcmk__add_colocated_node_scores(member, log_id, &work, attr, factor, flags);
     } else {
         /* The first member of the group will recursively incorporate any
          * constraints involving other members (including the group internal
@@ -1346,12 +1421,10 @@ init_group_colocated_nodes(const pe_resource_t *rsc, const char *log_id,
          *       the right approach should be.
          */
         member = rsc->children->data;
+        pcmk__add_colocated_node_scores(member, log_id, nodes, attr, factor,
+                                        flags);
+        // Above handles everything, so work is left as NULL
     }
-
-    pe_rsc_trace(rsc, "%s: Merging scores from group %s using member %s "
-                 "(at %.6f)", log_id, rsc->id, member->id, factor);
-    work = pcmk__copy_node_table(*nodes);
-    pcmk__add_colocated_node_scores(member, log_id, &work, attr, factor, flags);
     return work;
 }
 
@@ -1446,33 +1519,32 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
     }
 
     if (pcmk__any_node_available(work)) {
-        GList *gIter = NULL;
+        GList *colocations = NULL;
         float multiplier = (factor < 0.0)? -1.0 : 1.0;
 
         if (pcmk_is_set(flags, pcmk__coloc_select_this_with)) {
-            gIter = rsc->rsc_cons;
+            colocations = pcmk__this_with_colocations(rsc);
             pe_rsc_trace(rsc,
                          "Checking additional %d optional '%s with' constraints",
-                         g_list_length(gIter), rsc->id);
-
+                         g_list_length(colocations), rsc->id);
         } else if (rsc->variant == pe_group) {
             pe_resource_t *last_rsc = pe__last_group_member(rsc);
 
-            gIter = last_rsc->rsc_cons_lhs;
+            colocations = pcmk__with_this_colocations(last_rsc);
             pe_rsc_trace(rsc, "Checking additional %d optional 'with group %s' "
                          "constraints using last member %s",
-                         g_list_length(gIter), rsc->id, last_rsc->id);
+                         g_list_length(colocations), rsc->id, last_rsc->id);
 
         } else {
-            gIter = rsc->rsc_cons_lhs;
+            colocations = pcmk__with_this_colocations(rsc);
             pe_rsc_trace(rsc,
                          "Checking additional %d optional 'with %s' constraints",
-                         g_list_length(gIter), rsc->id);
+                         g_list_length(colocations), rsc->id);
         }
 
-        for (; gIter != NULL; gIter = gIter->next) {
+        for (GList *iter = colocations; iter != NULL; iter = iter->next) {
             pe_resource_t *other = NULL;
-            pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
+            pcmk__colocation_t *constraint = (pcmk__colocation_t *) iter->data;
 
             if (pcmk_is_set(flags, pcmk__coloc_select_this_with)) {
                 other = constraint->primary;
@@ -1491,6 +1563,7 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
                                             flags|pcmk__coloc_select_active);
             pe__show_node_weights(true, NULL, log_id, work, rsc->cluster);
         }
+        g_list_free(colocations);
 
     } else if (pcmk_is_set(flags, pcmk__coloc_select_active)) {
         pe_rsc_info(rsc, "%s: Rolling back optional scores from %s",
@@ -1519,4 +1592,42 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
     *nodes = work;
 
     pe__clear_resource_flags(rsc, pe_rsc_merging);
+}
+
+/*!
+ * \internal
+ * \brief Get all colocations affecting a resource as the primary
+ *
+ * \param[in] rsc  Resource to get colocations for
+ *
+ * \return Newly allocated list of colocations affecting \p rsc as primary
+ *
+ * \note This is a convenience wrapper for the with_this_colocations() method.
+ */
+GList *
+pcmk__with_this_colocations(const pe_resource_t *rsc)
+{
+    GList *list = NULL;
+
+    rsc->cmds->with_this_colocations(rsc, rsc, &list);
+    return list;
+}
+
+/*!
+ * \internal
+ * \brief Get all colocations affecting a resource as the dependent
+ *
+ * \param[in] rsc  Resource to get colocations for
+ *
+ * \return Newly allocated list of colocations affecting \p rsc as dependent
+ *
+ * \note This is a convenience wrapper for the this_with_colocations() method.
+ */
+GList *
+pcmk__this_with_colocations(const pe_resource_t *rsc)
+{
+    GList *list = NULL;
+
+    rsc->cmds->this_with_colocations(rsc, rsc, &list);
+    return list;
 }

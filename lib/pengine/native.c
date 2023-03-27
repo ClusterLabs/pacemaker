@@ -215,7 +215,7 @@ native_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
          */
         pe__force_anon(standard, parent, rsc->id, data_set);
 
-        /* Clear globally-unique on the parent and all its descendents unpacked
+        /* Clear globally-unique on the parent and all its descendants unpacked
          * so far (clearing the parent should make any future children unpacking
          * correct). We have to clear this resource explicitly because it isn't
          * hooked into the parent's children yet.

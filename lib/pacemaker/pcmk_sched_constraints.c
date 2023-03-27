@@ -77,7 +77,7 @@ pcmk__unpack_constraints(pe_working_set_t *data_set)
         if (lifetime != NULL) {
             pcmk__config_warn("Support for 'lifetime' attribute (in %s) is "
                               "deprecated (the rules it contains should "
-                              "instead be direct descendents of the "
+                              "instead be direct descendants of the "
                               "constraint object)", id);
         }
 

@@ -16,7 +16,43 @@
 #include <pacemaker-internal.h>
 #include "libpacemaker_private.h"
 
-static void append_parent_colocation(pe_resource_t * rsc, pe_resource_t * child, gboolean all);
+/*!
+ * \internal
+ * \brief Check whether a clone or bundle has instances for all available nodes
+ *
+ * \param[in] collective  Clone or bundle to check
+ *
+ * \return true if \p collective has enough instances for all of its available
+ *         allowed nodes, otherwise false
+ */
+static bool
+can_run_everywhere(const pe_resource_t *collective)
+{
+    GHashTableIter iter;
+    pe_node_t *node = NULL;
+    int available_nodes = 0;
+    int max_instances = 0;
+
+    switch (collective->variant) {
+        case pe_clone:
+            max_instances = pe__clone_max(collective);
+            break;
+        case pe_container:
+            max_instances = pe__bundle_max(collective);
+            break;
+        default:
+            return false; // Not actually possible
+    }
+
+    g_hash_table_iter_init(&iter, collective->allowed_nodes);
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+        if (pcmk__node_available(node, false, false)
+            && (max_instances < ++available_nodes)) {
+            return false;
+        }
+    }
+    return true;
+}
 
 /*!
  * \internal
@@ -107,29 +143,20 @@ ban_unavailable_allowed_nodes(pe_resource_t *instance, int max_per_node)
  * \param[in]     prefer        If not NULL, attempt early assignment to this
  *                              node, if still the best choice; otherwise,
  *                              perform final assignment
- * \param[in]     all_coloc     If true (indicating that there are more
- *                              available nodes than instances), add all parent
- *                              colocations to instance, otherwise add only
- *                              negative (and for "this with" colocations,
- *                              infinite) colocations to avoid needless
- *                              shuffling of instances among nodes
  * \param[in]     max_per_node  Assign at most this many instances to one node
  *
  * \return true if \p instance could be assigned to a node, otherwise false
  */
 static bool
 assign_instance(pe_resource_t *instance, const pe_node_t *prefer,
-                bool all_coloc, int max_per_node)
+                int max_per_node)
 {
     pe_node_t *chosen = NULL;
     pe_node_t *allowed = NULL;
 
     CRM_ASSERT(instance != NULL);
-    pe_rsc_trace(instance,
-                 "Assigning %s (preferring %s, using %s parent colocations)",
-                 instance->id,
-                 ((prefer == NULL)? "no node" : prefer->details->uname),
-                 (all_coloc? "all" : "essential"));
+    pe_rsc_trace(instance, "Assigning %s (preferring %s)", instance->id,
+                 ((prefer == NULL)? "no node" : prefer->details->uname));
 
     if (!pcmk_is_set(instance->flags, pe_rsc_provisional)) {
         // Instance is already assigned
@@ -196,34 +223,6 @@ assign_instance(pe_resource_t *instance, const pe_node_t *prefer,
         }
     }
     return chosen != NULL;
-}
-
-static void
-append_parent_colocation(pe_resource_t * rsc, pe_resource_t * child, gboolean all)
-{
-
-    GList *gIter = NULL;
-
-    gIter = rsc->rsc_cons;
-    for (; gIter != NULL; gIter = gIter->next) {
-        pcmk__colocation_t *cons = (pcmk__colocation_t *) gIter->data;
-
-        if (all || cons->score < 0 || cons->score == INFINITY) {
-            pcmk__add_this_with(child, cons);
-        }
-    }
-
-    gIter = rsc->rsc_cons_lhs;
-    for (; gIter != NULL; gIter = gIter->next) {
-        pcmk__colocation_t *cons = (pcmk__colocation_t *) gIter->data;
-
-        if (!pcmk__colocation_has_influence(cons, child)) {
-           continue;
-        }
-        if (all || cons->score < 0) {
-            pcmk__add_with_this(child, cons);
-        }
-    }
 }
 
 /*!
@@ -312,11 +311,6 @@ pcmk__assign_instances(pe_resource_t *collective, GList *instances,
     // Reuse node count to track number of assigned instances
     unsigned int available_nodes = reset_allowed_node_counts(collective);
 
-    /* Include finite positive preferences of the collective's
-     * colocation dependents only if not every node will get an instance.
-     */
-    bool all_coloc = (max_total < available_nodes);
-
     int optimal_per_node = 0;
     int assigned = 0;
     GList *iter = NULL;
@@ -342,11 +336,9 @@ pcmk__assign_instances(pe_resource_t *collective, GList *instances,
          iter = iter->next) {
         instance = (pe_resource_t *) iter->data;
 
-        append_parent_colocation(instance->parent, instance, all_coloc);
-
         current = preferred_node(collective, instance, optimal_per_node);
         if ((current != NULL)
-            && assign_instance(instance, current, all_coloc, max_per_node)) {
+            && assign_instance(instance, current, max_per_node)) {
             pe_rsc_trace(collective, "Assigned %s to current node %s",
                          instance->id, pe__node_name(current));
             assigned++;
@@ -384,7 +376,7 @@ pcmk__assign_instances(pe_resource_t *collective, GList *instances,
             resource_location(instance, NULL, -INFINITY,
                               "collective_limit_reached", collective->cluster);
 
-        } else if (assign_instance(instance, NULL, all_coloc, max_per_node)) {
+        } else if (assign_instance(instance, NULL, max_per_node)) {
             assigned++;
         }
     }
@@ -1210,4 +1202,62 @@ pcmk__collective_action_flags(pe_action_t *action, const GList *instances,
     }
 
     return flags;
+}
+
+/*!
+ * \internal
+ * \brief Add a collective resource's colocations to a list for an instance
+ *
+ * \param[in,out] list        Colocation list to add to
+ * \param[in]     instance    Clone or bundle instance or instance group member
+ * \param[in]     collective  Clone or bundle resource with colocations to add
+ * \param[in]     with_this   If true, add collective's "with this" colocations,
+ *                            otherwise add its "this with" colocations
+ */
+void
+pcmk__add_collective_constraints(GList **list, const pe_resource_t *instance,
+                                 const pe_resource_t *collective,
+                                 bool with_this)
+{
+    const GList *colocations = NULL;
+    bool everywhere = false;
+
+    CRM_CHECK((list != NULL) && (instance != NULL), return);
+
+    if (collective == NULL) {
+        return;
+    }
+    switch (collective->variant) {
+        case pe_clone:
+        case pe_container:
+            break;
+        default:
+            return;
+    }
+
+    everywhere = can_run_everywhere(collective);
+
+    if (with_this) {
+        colocations = collective->rsc_cons_lhs;
+    } else {
+        colocations = collective->rsc_cons;
+    }
+
+    for (const GList *iter = colocations; iter != NULL; iter = iter->next) {
+        const pcmk__colocation_t *colocation = iter->data;
+
+        if (with_this
+            && !pcmk__colocation_has_influence(colocation, instance)) {
+           continue;
+        }
+        if (!everywhere || (colocation->score < 0)
+            || (!with_this && (colocation->score == INFINITY))) {
+
+            if (with_this) {
+                pcmk__add_with_this(list, colocation);
+            } else {
+                pcmk__add_this_with(list, colocation);
+            }
+        }
+    }
 }

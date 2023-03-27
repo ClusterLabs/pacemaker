@@ -287,12 +287,14 @@ apply_this_with(gpointer data, gpointer user_data)
         archive = pcmk__copy_node_table(rsc->allowed_nodes);
     }
 
-    pe_rsc_trace(rsc,
-                 "%s: Assigning colocation %s primary %s first"
-                 "(score=%d role=%s)",
-                 rsc->id, colocation->id, other->id,
-                 colocation->score, role2text(colocation->dependent_role));
-    other->cmds->assign(other, NULL);
+    if (pcmk_is_set(other->flags, pe_rsc_provisional)) {
+        pe_rsc_trace(rsc,
+                     "%s: Assigning colocation %s primary %s first"
+                     "(score=%d role=%s)",
+                     rsc->id, colocation->id, other->id,
+                     colocation->score, role2text(colocation->dependent_role));
+        other->cmds->assign(other, NULL);
+    }
 
     // Apply the colocation score to this resource's allowed node scores
     rsc->cmds->apply_coloc_score(rsc, other, colocation, true);
@@ -385,6 +387,8 @@ remote_connection_assigned(const pe_resource_t *connection)
 pe_node_t *
 pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer)
 {
+    GList *colocations = NULL;
+
     CRM_ASSERT(rsc != NULL);
 
     // Never assign a child without parent being assigned first
@@ -409,11 +413,15 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer)
     pe__show_node_weights(true, rsc, "Pre-assignment", rsc->allowed_nodes,
                           rsc->cluster);
 
-    g_list_foreach(rsc->rsc_cons, apply_this_with, rsc);
+    colocations = pcmk__this_with_colocations(rsc);
+    g_list_foreach(colocations, apply_this_with, rsc);
+    g_list_free(colocations);
     pe__show_node_weights(true, rsc, "Post-this-with", rsc->allowed_nodes,
                           rsc->cluster);
 
-    g_list_foreach(rsc->rsc_cons_lhs, apply_with_this, rsc);
+    colocations = pcmk__with_this_colocations(rsc);
+    g_list_foreach(colocations, apply_with_this, rsc);
+    g_list_free(colocations);
 
     if (rsc->next_role == RSC_ROLE_STOPPED) {
         pe_rsc_trace(rsc,
@@ -1042,6 +1050,44 @@ pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
             break;
         default: // pcmk__coloc_affects_nothing
             return;
+    }
+}
+
+/* Primitive implementation of
+ * resource_alloc_functions_t:with_this_colocations()
+ */
+void
+pcmk__with_primitive_colocations(const pe_resource_t *rsc,
+                                 const pe_resource_t *orig_rsc, GList **list)
+{
+    // Primitives don't have children, so rsc should also be orig_rsc
+    CRM_CHECK((rsc != NULL) && (rsc->variant == pe_native)
+              && (rsc == orig_rsc) && (list != NULL),
+              return);
+
+    // Add primitive's own colocations plus any relevant ones from parent
+    pcmk__add_with_this_list(list, rsc->rsc_cons_lhs);
+    if (rsc->parent != NULL) {
+        rsc->parent->cmds->with_this_colocations(rsc->parent, rsc, list);
+    }
+}
+
+/* Primitive implementation of
+ * resource_alloc_functions_t:this_with_colocations()
+ */
+void
+pcmk__primitive_with_colocations(const pe_resource_t *rsc,
+                                 const pe_resource_t *orig_rsc, GList **list)
+{
+    // Primitives don't have children, so rsc should also be orig_rsc
+    CRM_CHECK((rsc != NULL) && (rsc->variant == pe_native)
+              && (rsc == orig_rsc) && (list != NULL),
+              return);
+
+    // Add primitive's own colocations plus any relevant ones from parent
+    pcmk__add_this_with_list(list, rsc->rsc_cons);
+    if (rsc->parent != NULL) {
+        rsc->parent->cmds->this_with_colocations(rsc->parent, rsc, list);
     }
 }
 

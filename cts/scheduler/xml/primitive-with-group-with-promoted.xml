@@ -1,0 +1,184 @@
+<cib crm_feature_set="3.16.1" validate-with="pacemaker-3.7" epoch="266" num_updates="0" admin_epoch="0" cib-last-written="Tue Oct 25 14:29:45 2022" update-origin="node2" update-client="cibadmin" update-user="root" have-quorum="1" dc-uuid="4">
+  <!-- The essential elements of this test are:
+    - A primitive is colocated with a group colocated with a clone's promoted role
+    - The clone is assigned first
+    - The clone can't run on all nodes (clone-max=3 with 5 nodes)
+    - The clone has equal promotion scores on all nodes
+    - The primitive has a finite location constraint preferring node5
+
+    In this scenario, an instance should be assigned to (and promoted on) node5.
+  -->
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="2.1.5"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="test"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="node1"/>
+      <node id="2" uname="node2"/>
+      <node id="3" uname="node3"/>
+      <node id="4" uname="node4"/>
+      <node id="5" uname="node5"/>
+    </nodes>
+    <resources>
+      <primitive class="stonith" id="Fencing" type="fence_xvm">
+        <meta_attributes id="Fencing-meta">
+          <nvpair id="Fencing-migration-threshold" name="migration-threshold" value="5"/>
+        </meta_attributes>
+        <instance_attributes id="Fencing-params">
+          <nvpair id="Fencing-key_file" name="key_file" value="/etc/pacemaker/fence_xvm.key"/>
+          <nvpair id="Fencing-multicast_address" name="multicast_address" value="239.255.100.100"/>
+          <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="node1 node2 node3 node4 node5"/>
+        </instance_attributes>
+        <operations>
+          <op id="Fencing-monitor-120s" interval="120s" name="monitor" timeout="120s"/>
+        </operations>
+      </primitive>
+      <clone id="rsc2-clone">
+        <primitive class="ocf" id="rsc2" provider="pacemaker" type="Dummy">
+          <operations>
+            <op id="rsc2-migrate_from-interval-0s" interval="0s" name="migrate_from" timeout="20s"/>
+            <op id="rsc2-migrate_to-interval-0s" interval="0s" name="migrate_to" timeout="20s"/>
+            <op id="rsc2-monitor-interval-10s" interval="10s" name="monitor" role="Promoted" timeout="20s"/>
+            <op id="rsc2-monitor-interval-11s" interval="11s" name="monitor" role="Unpromoted" timeout="20s"/>
+            <op id="rsc2-reload-interval-0s" interval="0s" name="reload" timeout="20s"/>
+            <op id="rsc2-reload-agent-interval-0s" interval="0s" name="reload-agent" timeout="20s"/>
+            <op id="rsc2-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+            <op id="rsc2-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="rsc2-clone-meta_attributes">
+          <nvpair id="rsc2-clone-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="rsc2-clone-meta_attributes-clone-max" name="clone-max" value="3"/>
+        </meta_attributes>
+      </clone>
+      <primitive class="ocf" id="rsc1" provider="pacemaker" type="Dummy">
+        <operations>
+          <op id="rsc1-migrate_from-interval-0s" interval="0s" name="migrate_from" timeout="20s"/>
+          <op id="rsc1-migrate_to-interval-0s" interval="0s" name="migrate_to" timeout="20s"/>
+          <op id="rsc1-monitor-interval-10s" interval="10s" name="monitor" timeout="20s"/>
+          <op id="rsc1-reload-interval-0s" interval="0s" name="reload" timeout="20s"/>
+          <op id="rsc1-reload-agent-interval-0s" interval="0s" name="reload-agent" timeout="20s"/>
+          <op id="rsc1-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+          <op id="rsc1-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+        </operations>
+      </primitive>
+      <group id="group1">
+        <primitive class="ocf" id="group1rsc1" provider="pacemaker" type="Dummy">
+          <operations>
+            <op id="group1rsc1-migrate_from-interval-0s" interval="0s" name="migrate_from" timeout="20s"/>
+            <op id="group1rsc1-migrate_to-interval-0s" interval="0s" name="migrate_to" timeout="20s"/>
+            <op id="group1rsc1-monitor-interval-10s" interval="10s" name="monitor" timeout="20s"/>
+            <op id="group1rsc1-reload-interval-0s" interval="0s" name="reload" timeout="20s"/>
+            <op id="group1rsc1-reload-agent-interval-0s" interval="0s" name="reload-agent" timeout="20s"/>
+            <op id="group1rsc1-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+            <op id="group1rsc1-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="group1rsc2" provider="pacemaker" type="Dummy">
+          <operations>
+            <op id="group1rsc2-migrate_from-interval-0s" interval="0s" name="migrate_from" timeout="20s"/>
+            <op id="group1rsc2-migrate_to-interval-0s" interval="0s" name="migrate_to" timeout="20s"/>
+            <op id="group1rsc2-monitor-interval-10s" interval="10s" name="monitor" timeout="20s"/>
+            <op id="group1rsc2-reload-interval-0s" interval="0s" name="reload" timeout="20s"/>
+            <op id="group1rsc2-reload-agent-interval-0s" interval="0s" name="reload-agent" timeout="20s"/>
+            <op id="group1rsc2-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+            <op id="group1rsc2-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+          </operations>
+        </primitive>
+      </group>
+    </resources>
+    <constraints>
+      <rsc_colocation id="colocation-rsc1-group1-INFINITY" rsc="rsc1" score="INFINITY" with-rsc="group1"/>
+      <rsc_colocation id="colocation-group1-rsc2-clone-INFINITY" rsc="group1" score="INFINITY"
+        with-rsc="rsc2-clone" with-rsc-role="Promoted"/>
+      <rsc_location id="location-rsc1-node5-100000" node="node5" rsc="rsc1" score="123456"/>
+    </constraints>
+    <fencing-topology/>
+    <op_defaults/>
+    <alerts/>
+    <rsc_defaults/>
+  </configuration>
+  <status>
+    <node_state id="1" uname="node1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-.feature-set" name="#feature-set" value="3.16.1"/>
+          <nvpair id="status-1.-promoted-rsc2" name="master-rsc2" value="1"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="Fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.16.1" transition-key="9:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;9:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="9" rc-code="0" op-status="0" interval="0" last-rc-change="1666726336" exec-time="0" queue-time="0" op-digest="52e34745a77d95a636428d3b550eb867"/>
+            <lrm_rsc_op id="Fencing_monitor_120000" operation_key="Fencing_monitor_120000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.16.1" transition-key="10:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;10:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="10" rc-code="0" op-status="0" interval="120000" last-rc-change="1666726336" exec-time="0" queue-time="0" op-digest="acc6dd2c58c637db4d12a6fe35626617"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="5" uname="node5" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="5">
+        <instance_attributes id="status-5">
+          <nvpair id="status-5-.feature-set" name="#feature-set" value="3.16.1"/>
+          <nvpair id="status-5.-promoted-rsc2" name="master-rsc2" value="1"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="5">
+        <lrm_resources>
+          <lrm_resource id="Fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.16.1" transition-key="5:0:7:72f87069-7296-4421-b2b0-ab12fa9068ef" transition-magic="0:7;5:0:7:72f87069-7296-4421-b2b0-ab12fa9068ef" exit-reason="" on_node="node5" call-id="5" rc-code="7" op-status="0" interval="0" last-rc-change="1666726234" exec-time="1" queue-time="0" op-digest="ac94f147daea19463126aacea2f8cd39"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="3" uname="node3" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="3">
+        <instance_attributes id="status-3">
+          <nvpair id="status-3-.feature-set" name="#feature-set" value="3.16.1"/>
+          <nvpair id="status-3.-promoted-rsc2" name="master-rsc2" value="1"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="3">
+        <lrm_resources>
+          <lrm_resource id="Fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.16.1" transition-key="3:0:7:72f87069-7296-4421-b2b0-ab12fa9068ef" transition-magic="0:7;3:0:7:72f87069-7296-4421-b2b0-ab12fa9068ef" exit-reason="" on_node="node3" call-id="5" rc-code="7" op-status="0" interval="0" last-rc-change="1666726234" exec-time="1" queue-time="0" op-digest="ac94f147daea19463126aacea2f8cd39"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="4" uname="node4" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="4">
+        <instance_attributes id="status-4">
+          <nvpair id="status-4-.feature-set" name="#feature-set" value="3.16.1"/>
+          <nvpair id="status-4.-promoted-rsc2" name="master-rsc2" value="1"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="4">
+        <lrm_resources>
+          <lrm_resource id="Fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.16.1" transition-key="4:0:7:72f87069-7296-4421-b2b0-ab12fa9068ef" transition-magic="0:7;4:0:7:72f87069-7296-4421-b2b0-ab12fa9068ef" exit-reason="" on_node="node4" call-id="5" rc-code="7" op-status="0" interval="0" last-rc-change="1666726234" exec-time="1" queue-time="0" op-digest="ac94f147daea19463126aacea2f8cd39"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="2" uname="node2" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-.feature-set" name="#feature-set" value="3.16.1"/>
+          <nvpair id="status-2.-promoted-rsc2" name="master-rsc2" value="1"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="Fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.16.1" transition-key="2:0:7:72f87069-7296-4421-b2b0-ab12fa9068ef" transition-magic="0:7;2:0:7:72f87069-7296-4421-b2b0-ab12fa9068ef" exit-reason="" on_node="node2" call-id="5" rc-code="7" op-status="0" interval="0" last-rc-change="1666726234" exec-time="2" queue-time="0" op-digest="ac94f147daea19463126aacea2f8cd39"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

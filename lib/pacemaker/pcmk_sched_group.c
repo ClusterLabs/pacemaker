@@ -18,74 +18,6 @@
 
 /*!
  * \internal
- * \brief Expand a group's colocations to its members
- *
- * \param[in,out] rsc  Group resource
- */
-static void
-expand_group_colocations(pe_resource_t *rsc)
-{
-    pe_resource_t *member = NULL;
-    bool any_unmanaged = false;
-    GList *item = NULL;
-
-    if (rsc->children == NULL) {
-        return;
-    }
-
-    // Treat "group with R" colocations as "first member with R"
-    member = (pe_resource_t *) rsc->children->data;
-    for (item = rsc->rsc_cons; item != NULL; item = item->next) {
-        pcmk__add_this_with(member, (pcmk__colocation_t *) (item->data));
-    }
-
-
-    /* The above works for the whole group because each group member is
-     * colocated with the previous one.
-     *
-     * However, there is a special case when a group has a mandatory colocation
-     * with a resource that can't start. In that case,
-     * pcmk__block_colocation_dependents() will ensure that dependent resources
-     * in mandatory colocations (i.e. the first member for groups) can't start
-     * either. But if any group member is unmanaged and already started, the
-     * internal group colocations are no longer sufficient to make that apply to
-     * later members.
-     *
-     * To handle that case, add mandatory colocations to each member after the
-     * first.
-     */
-    any_unmanaged = !pcmk_is_set(member->flags, pe_rsc_managed);
-    for (item = rsc->children->next; item != NULL; item = item->next) {
-        member = item->data;
-        if (any_unmanaged) {
-            for (GList *cons_iter = rsc->rsc_cons; cons_iter != NULL;
-                 cons_iter = cons_iter->next) {
-
-                pcmk__colocation_t *constraint = (pcmk__colocation_t *) cons_iter->data;
-
-                if (constraint->score == INFINITY) {
-                    pcmk__add_this_with(member, constraint);
-                }
-            }
-        } else if (!pcmk_is_set(member->flags, pe_rsc_managed)) {
-            any_unmanaged = true;
-        }
-    }
-
-    g_list_free(rsc->rsc_cons);
-    rsc->rsc_cons = NULL;
-
-    // Treat "R with group" colocations as "R with last member"
-    member = pe__last_group_member(rsc);
-    for (item = rsc->rsc_cons_lhs; item != NULL; item = item->next) {
-        pcmk__add_with_this(member, (pcmk__colocation_t *) (item->data));
-    }
-    g_list_free(rsc->rsc_cons_lhs);
-    rsc->rsc_cons_lhs = NULL;
-}
-
-/*!
- * \internal
  * \brief Assign a group resource to a node
  *
  * \param[in,out] rsc     Group resource to assign to a node
@@ -119,8 +51,6 @@ pcmk__group_assign(pe_resource_t *rsc, const pe_node_t *prefer)
     pe__set_resource_flags(rsc, pe_rsc_allocating);
     first_member = (pe_resource_t *) rsc->children->data;
     rsc->role = first_member->role;
-
-    expand_group_colocations(rsc);
 
     pe__show_node_weights(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
                           rsc, __func__, rsc->allowed_nodes, rsc->cluster);
@@ -686,8 +616,10 @@ pcmk__group_colocated_resources(const pe_resource_t *rsc,
     if (pe__group_flag_is_set(rsc, pe__group_colocated)
         || pe_rsc_is_clone(rsc->parent)) {
         /* This group has colocated members and/or is cloned -- either way,
-         * add every child's colocated resources to the list.
+         * add every child's colocated resources to the list. The first and last
+         * members will include the group's own colocations.
          */
+        colocated_rscs = g_list_prepend(colocated_rscs, (gpointer) rsc);
         for (const GList *iter = rsc->children;
              iter != NULL; iter = iter->next) {
 
@@ -698,17 +630,102 @@ pcmk__group_colocated_resources(const pe_resource_t *rsc,
 
     } else if (rsc->children != NULL) {
         /* This group's members are not colocated, and the group is not cloned,
-         * so just add the first child's colocations to the list.
+         * so just add the group's own colocations to the list.
          */
-        member = (const pe_resource_t *) rsc->children->data;
-        colocated_rscs = member->cmds->colocated_resources(member, orig_rsc,
-                                                           colocated_rscs);
+        colocated_rscs = pcmk__colocated_resources(rsc, orig_rsc, colocated_rscs);
     }
 
-    // Now consider colocations where the group itself is specified
-    colocated_rscs = pcmk__colocated_resources(rsc, orig_rsc, colocated_rscs);
-
     return colocated_rscs;
+}
+
+// Group implementation of resource_alloc_functions_t:with_this_colocations()
+void
+pcmk__with_group_colocations(const pe_resource_t *rsc,
+                             const pe_resource_t *orig_rsc, GList **list)
+
+{
+    CRM_CHECK((rsc != NULL) && (rsc->variant == pe_group)
+              && (orig_rsc != NULL) && (list != NULL),
+              return);
+
+    // Ignore empty groups
+    if (rsc->children == NULL) {
+        return;
+    }
+
+    /* "With this" colocations are needed only for the group itself and for its
+     * last member. Add the group's colocations plus any relevant
+     * parent colocations if cloned.
+     */
+    if ((rsc == orig_rsc) || (orig_rsc == pe__last_group_member(rsc))) {
+        crm_trace("Adding 'with %s' colocations to list for %s",
+                  rsc->id, orig_rsc->id);
+        pcmk__add_with_this_list(list, rsc->rsc_cons_lhs);
+        if (rsc->parent != NULL) { // Cloned group
+            rsc->parent->cmds->with_this_colocations(rsc->parent, orig_rsc,
+                                                     list);
+        }
+    }
+}
+
+// Group implementation of resource_alloc_functions_t:this_with_colocations()
+void
+pcmk__group_with_colocations(const pe_resource_t *rsc,
+                             const pe_resource_t *orig_rsc, GList **list)
+{
+    CRM_CHECK((rsc != NULL) && (rsc->variant == pe_group)
+              && (orig_rsc != NULL) && (list != NULL),
+              return);
+
+    // Ignore empty groups
+    if (rsc->children == NULL) {
+        return;
+    }
+
+    /* Colocations for the group itself, or for its first member, consist of the
+     * group's colocations plus any relevant parent colocations if cloned.
+     */
+    if ((rsc == orig_rsc)
+        || (orig_rsc == (const pe_resource_t *) rsc->children->data)) {
+        crm_trace("Adding '%s with' colocations to list for %s",
+                  rsc->id, orig_rsc->id);
+        pcmk__add_this_with_list(list, rsc->rsc_cons);
+        if (rsc->parent != NULL) { // Cloned group
+            rsc->parent->cmds->this_with_colocations(rsc->parent, orig_rsc,
+                                                     list);
+        }
+        return;
+    }
+
+    /* Later group members honor the group's colocations indirectly, due to the
+     * internal group colocations that chain everything from the first member.
+     * However, if an earlier group member is unmanaged, this chaining will not
+     * happen, so the group's mandatory colocations must be explicitly added.
+     */
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        const pe_resource_t *member = (const pe_resource_t *) iter->data;
+
+        if (orig_rsc == member) {
+            break; // We've seen all earlier members, and none are unmanaged
+        }
+
+        if (!pcmk_is_set(member->flags, pe_rsc_managed)) {
+            crm_trace("Adding mandatory '%s with' colocations to list for "
+                      "member %s because earlier member %s is unmanaged",
+                      rsc->id, orig_rsc->id, member->id);
+            for (const GList *cons_iter = rsc->rsc_cons; cons_iter != NULL;
+                 cons_iter = cons_iter->next) {
+                const pcmk__colocation_t *colocation = NULL;
+
+                colocation = (const pcmk__colocation_t *) cons_iter->data;
+                if (colocation->score == INFINITY) {
+                    pcmk__add_this_with(list, colocation);
+                }
+            }
+            // @TODO Add mandatory (or all?) clone constraints if cloned
+            break;
+        }
+    }
 }
 
 // Group implementation of resource_alloc_functions_t:add_utilization()

@@ -23,6 +23,40 @@
 #define PE__VARIANT_BUNDLE 1
 #include "./variant.h"
 
+/*!
+ * \internal
+ * \brief Get maximum number of bundle replicas allowed to run
+ *
+ * \param[in] rsc  Bundle or bundled resource to check
+ *
+ * \return Maximum replicas for bundle corresponding to \p rsc
+ */
+int
+pe__bundle_max(const pe_resource_t *rsc)
+{
+    const pe__bundle_variant_data_t *bundle_data = NULL;
+
+    get_bundle_variant_data(bundle_data, pe__const_top_resource(rsc, true));
+    return bundle_data->nreplicas;
+}
+
+/*!
+ * \internal
+ * \brief Get maximum number of bundle replicas allowed to run on one node
+ *
+ * \param[in] rsc  Bundle or bundled resource to check
+ *
+ * \return Maximum replicas per node for bundle corresponding to \p rsc
+ */
+int
+pe__bundle_max_per_node(const pe_resource_t *rsc)
+{
+    const pe__bundle_variant_data_t *bundle_data = NULL;
+
+    get_bundle_variant_data(bundle_data, pe__const_top_resource(rsc, true));
+    return bundle_data->nreplicas_per_host;
+}
+
 static char *
 next_ip(const char *last_ip)
 {
@@ -422,6 +456,7 @@ create_container_resource(pe_resource_t *parent,
                             parent->cluster) != pcmk_rc_ok) {
         return pcmk_rc_unpack_error;
     }
+    pe__set_resource_flags(replica->container, pe_rsc_replica_container);
     parent->children = g_list_append(parent->children, replica->container);
 
     return pcmk_rc_ok;

@@ -304,6 +304,7 @@ struct pe_node_s {
 #  define pe_rsc_allow_migrate              0x00800000ULL
 
 #  define pe_rsc_failure_ignored            0x01000000ULL
+#  define pe_rsc_replica_container          0x02000000ULL
 #  define pe_rsc_maintenance                0x04000000ULL
 #  define pe_rsc_is_container               0x08000000ULL
 
@@ -374,6 +375,13 @@ struct pe_resource_s {
     // @TODO merge these into flags
     gboolean is_remote_node;
     gboolean exclusive_discover;
+
+    /* Pay special attention to whether you want to use rsc_cons_lhs and
+     * rsc_cons directly, which include only colocations explicitly involving
+     * this resource, or call libpacemaker's pcmk__with_this_colocations() and
+     * pcmk__this_with_colocations() functions, which may return relevant
+     * colocations involving the resource's ancestors as well.
+     */
 
     //!@{
     //! This field should be treated as internal to Pacemaker

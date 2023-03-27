@@ -47,8 +47,9 @@ pcmk__clone_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
 
     pe__set_resource_flags(rsc, pe_rsc_allocating);
 
-    /* This information is used by pcmk__cmp_instance() when deciding the order
-     * in which to assign clone instances to nodes.
+    /* If this clone is colocated with any other resources, assign those first.
+     * Since the this_with_colocations() method boils down to a copy of rsc_cons
+     * for clones, we can use that here directly for efficiency.
      */
     for (GList *gIter = rsc->rsc_cons; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
@@ -58,6 +59,10 @@ pcmk__clone_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
         constraint->primary->cmds->assign(constraint->primary, prefer);
     }
 
+    /* If any resources are colocated with this one, consider their preferences.
+     * Because the with_this_colocations() method boils down to a copy of
+     * rsc_cons_lhs for clones, we can use that here directly for efficiency.
+     */
     for (GList *gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
@@ -356,6 +361,34 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
 
         child_rsc->cmds->apply_coloc_score(dependent, child_rsc, colocation,
                                            false);
+    }
+}
+
+// Clone implementation of resource_alloc_functions_t:with_this_colocations()
+void
+pcmk__with_clone_colocations(const pe_resource_t *rsc,
+                             const pe_resource_t *orig_rsc, GList **list)
+{
+    CRM_CHECK((rsc != NULL) && (orig_rsc != NULL) && (list != NULL), return);
+
+    if (rsc == orig_rsc) { // Colocations are wanted for clone itself
+        pcmk__add_with_this_list(list, rsc->rsc_cons_lhs);
+    } else {
+        pcmk__add_collective_constraints(list, orig_rsc, rsc, true);
+    }
+}
+
+// Clone implementation of resource_alloc_functions_t:this_with_colocations()
+void
+pcmk__clone_with_colocations(const pe_resource_t *rsc,
+                             const pe_resource_t *orig_rsc, GList **list)
+{
+    CRM_CHECK((rsc != NULL) && (orig_rsc != NULL) && (list != NULL), return);
+
+    if (rsc == orig_rsc) { // Colocations are wanted for clone itself
+        pcmk__add_this_with_list(list, rsc->rsc_cons);
+    } else {
+        pcmk__add_collective_constraints(list, orig_rsc, rsc, false);
     }
 }
 

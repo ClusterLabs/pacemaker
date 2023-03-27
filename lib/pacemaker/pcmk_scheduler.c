@@ -414,7 +414,7 @@ schedule_resource_actions(pe_working_set_t *data_set)
  *
  * \param[in] rsc  Resource to check
  *
- * \return true if resource or any descendent is managed, otherwise false
+ * \return true if resource or any descendant is managed, otherwise false
  */
 static bool
 is_managed(const pe_resource_t *rsc)

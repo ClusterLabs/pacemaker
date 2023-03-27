@@ -25,6 +25,8 @@ static resource_alloc_functions_t allocation_methods[] = {
         pcmk__primitive_internal_constraints,
         pcmk__primitive_apply_coloc_score,
         pcmk__colocated_resources,
+        pcmk__with_primitive_colocations,
+        pcmk__primitive_with_colocations,
         pcmk__apply_location,
         pcmk__primitive_action_flags,
         pcmk__update_ordered_actions,
@@ -41,6 +43,8 @@ static resource_alloc_functions_t allocation_methods[] = {
         pcmk__group_internal_constraints,
         pcmk__group_apply_coloc_score,
         pcmk__group_colocated_resources,
+        pcmk__with_group_colocations,
+        pcmk__group_with_colocations,
         pcmk__group_apply_location,
         pcmk__group_action_flags,
         pcmk__group_update_ordered_actions,
@@ -57,6 +61,8 @@ static resource_alloc_functions_t allocation_methods[] = {
         clone_internal_constraints,
         pcmk__clone_apply_coloc_score,
         pcmk__colocated_resources,
+        pcmk__with_clone_colocations,
+        pcmk__clone_with_colocations,
         clone_rsc_location,
         clone_action_flags,
         pcmk__instance_update_ordered_actions,
@@ -73,6 +79,8 @@ static resource_alloc_functions_t allocation_methods[] = {
         pcmk__bundle_internal_constraints,
         pcmk__bundle_apply_coloc_score,
         pcmk__colocated_resources,
+        pcmk__with_bundle_colocations,
+        pcmk__bundle_with_colocations,
         pcmk__bundle_rsc_location,
         pcmk__bundle_action_flags,
         pcmk__instance_update_ordered_actions,
@@ -212,6 +220,7 @@ pcmk__colocated_resources(const pe_resource_t *rsc, const pe_resource_t *orig_rs
                           GList *colocated_rscs)
 {
     const GList *iter = NULL;
+    GList *colocations = NULL;
 
     if (orig_rsc == NULL) {
         orig_rsc = rsc;
@@ -223,10 +232,11 @@ pcmk__colocated_resources(const pe_resource_t *rsc, const pe_resource_t *orig_rs
 
     pe_rsc_trace(orig_rsc, "%s is in colocation chain with %s",
                  rsc->id, orig_rsc->id);
-    colocated_rscs = g_list_append(colocated_rscs, (gpointer) rsc);
+    colocated_rscs = g_list_prepend(colocated_rscs, (gpointer) rsc);
 
     // Follow colocations where this resource is the dependent resource
-    for (iter = rsc->rsc_cons; iter != NULL; iter = iter->next) {
+    colocations = pcmk__this_with_colocations(rsc);
+    for (iter = colocations; iter != NULL; iter = iter->next) {
         const pcmk__colocation_t *constraint = iter->data;
         const pe_resource_t *primary = constraint->primary;
 
@@ -243,9 +253,11 @@ pcmk__colocated_resources(const pe_resource_t *rsc, const pe_resource_t *orig_rs
                                                                 colocated_rscs);
         }
     }
+    g_list_free(colocations);
 
     // Follow colocations where this resource is the primary resource
-    for (iter = rsc->rsc_cons_lhs; iter != NULL; iter = iter->next) {
+    colocations = pcmk__with_this_colocations(rsc);
+    for (iter = colocations; iter != NULL; iter = iter->next) {
         const pcmk__colocation_t *constraint = iter->data;
         const pe_resource_t *dependent = constraint->dependent;
 
@@ -266,6 +278,7 @@ pcmk__colocated_resources(const pe_resource_t *rsc, const pe_resource_t *orig_rs
                                                                   colocated_rscs);
         }
     }
+    g_list_free(colocations);
 
     return colocated_rscs;
 }
@@ -737,6 +750,10 @@ apply_parent_colocations(const pe_resource_t *rsc, GHashTable **nodes)
     GList *iter = NULL;
     pcmk__colocation_t *colocation = NULL;
 
+    /* Because the this_with_colocations() and with_this_colocations() methods
+     * boil down to copies of rsc_cons and rsc_cons_lhs for clones and bundles,
+     * we can use those here directly for efficiency.
+     */
     for (iter = rsc->parent->rsc_cons; iter != NULL; iter = iter->next) {
         colocation = (pcmk__colocation_t *) iter->data;
         pcmk__add_colocated_node_scores(colocation->primary, rsc->id, nodes,
