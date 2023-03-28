@@ -941,12 +941,12 @@ pe__create_action_notifications(pe_resource_t *rsc, notify_data_t *n_data)
 
 /*!
  * \internal
- * \brief Free notification data
+ * \brief Free notification data for one action
  *
  * \param[in,out] n_data  Notification data to free
  */
 void
-pe__free_notification_data(notify_data_t *n_data)
+pe__free_action_notification_data(notify_data_t *n_data)
 {
     if (n_data == NULL) {
         return;
@@ -991,6 +991,6 @@ pe__order_notifs_after_fencing(const pe_action_t *stop, pe_resource_t *rsc,
         add_notify_env(n_data, "notify_stop_resource", rsc->id);
         add_notify_env(n_data, "notify_stop_uname", stop->node->details->uname);
         create_notify_actions(uber_parent(rsc), n_data);
-        pe__free_notification_data(n_data);
+        pe__free_action_notification_data(n_data);
     }
 }

@@ -67,7 +67,7 @@ G_GNUC_INTERNAL
 void pe__create_action_notifications(pe_resource_t *rsc, notify_data_t *n_data);
 
 G_GNUC_INTERNAL
-void pe__free_notification_data(notify_data_t *n_data);
+void pe__free_action_notification_data(notify_data_t *n_data);
 
 G_GNUC_INTERNAL
 notify_data_t *pe__clone_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
