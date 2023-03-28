@@ -99,9 +99,9 @@ A partially set up scenario is torn down if it fails during setup.
 
         self.BadNews = LogWatcher(self.ClusterManager.Env["LogFileName"],
                                   self.ClusterManager.templates.get_patterns("BadNews"),
-                                  "BadNews", 0,
-                                  kind=self.ClusterManager.Env["LogWatcher"],
-                                  hosts=self.ClusterManager.Env["nodes"])
+                                  self.ClusterManager.Env["nodes"],
+                                  self.ClusterManager.Env["LogWatcher"],
+                                  "BadNews", 0)
         self.BadNews.setwatch() # Call after we've figured out what type of log watching to do in LogAudit
 
         j = 0

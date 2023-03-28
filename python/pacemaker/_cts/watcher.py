@@ -191,12 +191,15 @@ class LogWatcher(RemoteExec):
           Call look() to scan the log looking for the patterns
     '''
 
-    def __init__(self, log, regexes, name="Anon", timeout=10, debug_level=None, silent=False, hosts=None, kind=None):
+    def __init__(self, log, regexes, hosts, kind, name="Anon", timeout=10, debug_level=None, silent=False):
         '''This is the constructor for the LogWatcher class.  It takes a
         log name to watch, and a list of regular expressions to watch for."
         '''
         self.logger = LogFactory()
 
+        self.hosts = hosts
+        self.kind = kind
+        self.filename = log
         self.name = name
         self.regexes = regexes
 
@@ -214,22 +217,16 @@ class LogWatcher(RemoteExec):
 
         #  Validate our arguments.  Better sooner than later ;-)
         for regex in regexes:
-            assert re.compile(regex)
+            re.compile(regex)
 
-        if kind:
-            self.kind = kind
-        else:
-            raise
+        if not self.hosts:
+            raise ValueError("LogWatcher requires hosts argument")
 
-        if log:
-            self.filename = log
-        else:
-            raise
+        if not self.kind:
+            raise ValueError("LogWatcher requires kind argument")
 
-        if hosts:
-            self.hosts = hosts
-        else:
-            raise
+        if not self.filename:
+            raise ValueError("LogWatcher requires log argument")
 
         if not silent:
             for regex in self.regexes:

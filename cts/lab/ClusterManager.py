@@ -147,7 +147,7 @@ class ClusterManager(UserDict):
                 stonithPats.append(self.templates["Pat:Fencing_ok"] % peer)
                 stonithPats.append(self.templates["Pat:Fencing_start"] % peer)
 
-        stonith = LogWatcher(self.Env["LogFileName"], stonithPats, "StartupFencing", 0, hosts=self.Env["nodes"], kind=self.Env["LogWatcher"])
+        stonith = LogWatcher(self.Env["LogFileName"], stonithPats, self.Env["nodes"], self.Env["LogWatcher"], "StartupFencing", 0)
         stonith.setwatch()
         return stonith
 
@@ -255,7 +255,7 @@ class ClusterManager(UserDict):
             patterns.append(self.templates["Pat:NonDC_started"] % node)
 
         watch = LogWatcher(
-            self.Env["LogFileName"], patterns, "StartaCM", self.Env["StartTime"]+10, hosts=self.Env["nodes"], kind=self.Env["LogWatcher"])
+            self.Env["LogFileName"], patterns, self.Env["nodes"], self.Env["LogWatcher"], "StartaCM", self.Env["StartTime"]+10)
 
         self.install_config(node)
 
@@ -379,7 +379,7 @@ class ClusterManager(UserDict):
             watchpats.append(self.templates["Pat:They_up"] % (nodelist[0], node))
 
         #   Start all the nodes - at about the same time...
-        watch = LogWatcher(self.Env["LogFileName"], watchpats, "fast-start", self.Env["DeadTime"]+10, hosts=self.Env["nodes"], kind=self.Env["LogWatcher"])
+        watch = LogWatcher(self.Env["LogFileName"], watchpats, self.Env["nodes"], self.Env["LogWatcher"], "fast-start", self.Env["DeadTime"]+10)
         watch.setwatch()
 
         if not self.StartaCM(nodelist[0], verbose=verbose):
@@ -559,7 +559,7 @@ class ClusterManager(UserDict):
         watchpats.append("Current ping state: (S_IDLE|S_NOT_DC)")
         watchpats.append(self.templates["Pat:NonDC_started"] % node)
         watchpats.append(self.templates["Pat:DC_started"] % node)
-        idle_watch = LogWatcher(self.Env["LogFileName"], watchpats, "ClusterIdle", hosts=[node], kind=self.Env["LogWatcher"])
+        idle_watch = LogWatcher(self.Env["LogFileName"], watchpats, [node], self.Env["LogWatcher"], "ClusterIdle")
         idle_watch.setwatch()
 
         (_, out) = self.rsh(node, self.templates["StatusCmd"]%node, verbose=1)
@@ -633,7 +633,7 @@ class ClusterManager(UserDict):
             self.debug("Cluster is inactive")
             return 1
 
-        idle_watch = LogWatcher(self.Env["LogFileName"], watchpats, "ClusterStable", timeout, hosts=nodes.split(), kind=self.Env["LogWatcher"])
+        idle_watch = LogWatcher(self.Env["LogFileName"], watchpats, nodes.split(), self.Env["LogWatcher"], "ClusterStable", timeout)
         idle_watch.setwatch()
 
         for node in nodes.split():

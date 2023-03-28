@@ -168,7 +168,7 @@ class CTSTest(object):
     def create_watch(self, patterns, timeout, name=None):
         if not name:
             name = self.name
-        return LogWatcher(self.Env["LogFileName"], patterns, name, timeout, kind=self.Env["LogWatcher"], hosts=self.Env["nodes"])
+        return LogWatcher(self.Env["LogFileName"], patterns, self.Env["nodes"], self.Env["LogWatcher"], name, timeout)
 
     def local_badnews(self, prefix, watch, local_ignore=[]):
         errcount = 0
