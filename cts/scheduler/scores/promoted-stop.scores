@@ -2,18 +2,18 @@
 dummy:0 promotion score on node1: -INFINITY
 dummy:1 promotion score on node2: -INFINITY
 dummy:2 promotion score on none: 0
-pcmk__clone_allocate: dummy:0 allocation score on node1: 1
-pcmk__clone_allocate: dummy:0 allocation score on node2: 0
-pcmk__clone_allocate: dummy:0 allocation score on node3: -INFINITY
-pcmk__clone_allocate: dummy:1 allocation score on node1: 0
-pcmk__clone_allocate: dummy:1 allocation score on node2: 1
-pcmk__clone_allocate: dummy:1 allocation score on node3: -INFINITY
-pcmk__clone_allocate: dummy:2 allocation score on node1: 0
-pcmk__clone_allocate: dummy:2 allocation score on node2: 0
-pcmk__clone_allocate: dummy:2 allocation score on node3: -INFINITY
-pcmk__clone_allocate: m allocation score on node1: 0
-pcmk__clone_allocate: m allocation score on node2: 0
-pcmk__clone_allocate: m allocation score on node3: -INFINITY
+pcmk__clone_assign: dummy:0 allocation score on node1: 1
+pcmk__clone_assign: dummy:0 allocation score on node2: 0
+pcmk__clone_assign: dummy:0 allocation score on node3: -INFINITY
+pcmk__clone_assign: dummy:1 allocation score on node1: 0
+pcmk__clone_assign: dummy:1 allocation score on node2: 1
+pcmk__clone_assign: dummy:1 allocation score on node3: -INFINITY
+pcmk__clone_assign: dummy:2 allocation score on node1: 0
+pcmk__clone_assign: dummy:2 allocation score on node2: 0
+pcmk__clone_assign: dummy:2 allocation score on node3: -INFINITY
+pcmk__clone_assign: m allocation score on node1: 0
+pcmk__clone_assign: m allocation score on node2: 0
+pcmk__clone_assign: m allocation score on node3: -INFINITY
 pcmk__primitive_assign: dummy:0 allocation score on node1: 1
 pcmk__primitive_assign: dummy:0 allocation score on node2: 0
 pcmk__primitive_assign: dummy:0 allocation score on node3: -INFINITY

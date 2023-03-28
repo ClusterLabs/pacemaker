@@ -11,6 +11,8 @@
 #include <crm/msg_xml.h>
 #include <pacemaker-internal.h>
 
+#include "pe_status_private.h"
+
 typedef struct notify_entry_s {
     const pe_resource_t *rsc;
     const pe_node_t *node;
@@ -921,13 +923,13 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
 
 /*!
  * \internal
- * \brief Create notification data and actions for a clone
+ * \brief Create notification data and actions for one clone action
  *
  * \param[in,out] rsc     Clone resource that notification is for
  * \param[in,out] n_data  Clone notification data for some action
  */
 void
-pe__create_notifications(pe_resource_t *rsc, notify_data_t *n_data)
+pe__create_action_notifications(pe_resource_t *rsc, notify_data_t *n_data)
 {
     if ((rsc == NULL) || (n_data == NULL)) {
         return;

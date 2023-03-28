@@ -1,24 +1,24 @@
 
 drbd0:0 promotion score on vbox4: -1
 drbd0:1 promotion score on none: 0
-pcmk__clone_allocate: clvmd:0 allocation score on vbox3: 0
-pcmk__clone_allocate: clvmd:0 allocation score on vbox4: 0
-pcmk__clone_allocate: clvmd:1 allocation score on vbox3: 0
-pcmk__clone_allocate: clvmd:1 allocation score on vbox4: 0
-pcmk__clone_allocate: clvmd_clone allocation score on vbox3: 0
-pcmk__clone_allocate: clvmd_clone allocation score on vbox4: 0
-pcmk__clone_allocate: cman:0 allocation score on vbox3: 0
-pcmk__clone_allocate: cman:0 allocation score on vbox4: 0
-pcmk__clone_allocate: cman:1 allocation score on vbox3: 0
-pcmk__clone_allocate: cman:1 allocation score on vbox4: 0
-pcmk__clone_allocate: cman_clone allocation score on vbox3: 0
-pcmk__clone_allocate: cman_clone allocation score on vbox4: 0
-pcmk__clone_allocate: drbd allocation score on vbox3: 1
-pcmk__clone_allocate: drbd allocation score on vbox4: 0
-pcmk__clone_allocate: drbd0:0 allocation score on vbox3: 1
-pcmk__clone_allocate: drbd0:0 allocation score on vbox4: 0
-pcmk__clone_allocate: drbd0:1 allocation score on vbox3: 1
-pcmk__clone_allocate: drbd0:1 allocation score on vbox4: 0
+pcmk__clone_assign: clvmd:0 allocation score on vbox3: 0
+pcmk__clone_assign: clvmd:0 allocation score on vbox4: 0
+pcmk__clone_assign: clvmd:1 allocation score on vbox3: 0
+pcmk__clone_assign: clvmd:1 allocation score on vbox4: 0
+pcmk__clone_assign: clvmd_clone allocation score on vbox3: 0
+pcmk__clone_assign: clvmd_clone allocation score on vbox4: 0
+pcmk__clone_assign: cman:0 allocation score on vbox3: 0
+pcmk__clone_assign: cman:0 allocation score on vbox4: 0
+pcmk__clone_assign: cman:1 allocation score on vbox3: 0
+pcmk__clone_assign: cman:1 allocation score on vbox4: 0
+pcmk__clone_assign: cman_clone allocation score on vbox3: 0
+pcmk__clone_assign: cman_clone allocation score on vbox4: 0
+pcmk__clone_assign: drbd allocation score on vbox3: 1
+pcmk__clone_assign: drbd allocation score on vbox4: 0
+pcmk__clone_assign: drbd0:0 allocation score on vbox3: 1
+pcmk__clone_assign: drbd0:0 allocation score on vbox4: 0
+pcmk__clone_assign: drbd0:1 allocation score on vbox3: 1
+pcmk__clone_assign: drbd0:1 allocation score on vbox4: 0
 pcmk__primitive_assign: clvmd:0 allocation score on vbox3: -INFINITY
 pcmk__primitive_assign: clvmd:0 allocation score on vbox4: -INFINITY
 pcmk__primitive_assign: clvmd:1 allocation score on vbox3: -INFINITY

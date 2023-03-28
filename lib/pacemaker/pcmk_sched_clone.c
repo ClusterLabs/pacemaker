@@ -14,48 +14,68 @@
 
 #include "libpacemaker_private.h"
 
-#define VARIANT_CLONE 1
-#include <lib/pengine/variant.h>
+/*!
+ * \internal
+ * \brief Consider a colocation dependent's node scores
+ *
+ * \param[in,out] data       Colocation constraint to consider
+ * \param[in,out] user_data  Clone resource that is colocation primary
+ */
+static void
+add_dependent_scores(gpointer data, gpointer user_data)
+{
+    pcmk__colocation_t *colocation = (pcmk__colocation_t *) data;
+    pe_resource_t *clone = (pe_resource_t *) user_data;
+
+    if (pcmk__colocation_has_influence(colocation, NULL)) {
+        pcmk__add_colocated_node_scores(colocation->dependent, clone->id,
+                                        &clone->allowed_nodes,
+                                        colocation->node_attribute,
+                                        colocation->score / (float) INFINITY,
+                                        pcmk__coloc_select_active
+                                        |pcmk__coloc_select_nonnegative);
+    }
+}
 
 /*!
  * \internal
- * \brief Assign a clone resource to a node
+ * \brief Assign a clone resource's instances to nodes
  *
- * \param[in,out] rsc     Resource to assign to a node
+ * \param[in,out] rsc     Clone resource to assign
  * \param[in]     prefer  Node to prefer, if all else is equal
  *
- * \return Node that \p rsc is assigned to, if assigned entirely to one node
+ * \return NULL (clones are not assigned to a single node)
  */
 pe_node_t *
-pcmk__clone_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
+pcmk__clone_assign(pe_resource_t *rsc, const pe_node_t *prefer)
 {
-    clone_variant_data_t *clone_data = NULL;
-
-    get_clone_variant_data(clone_data, rsc);
+    CRM_ASSERT(pe_rsc_is_clone(rsc));
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
-        return NULL;
-
-    } else if (pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
-        pe_rsc_debug(rsc, "Dependency loop detected involving %s", rsc->id);
-        return NULL;
+        return NULL; // Assignment has already been done
     }
 
+    // Detect assignment loops
+    if (pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
+        pe_rsc_debug(rsc, "Breaking assignment loop involving %s", rsc->id);
+        return NULL;
+    }
+    pe__set_resource_flags(rsc, pe_rsc_allocating);
+
+    // If this clone is promotable, consider nodes' promotion scores
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
         pcmk__add_promotion_scores(rsc);
     }
-
-    pe__set_resource_flags(rsc, pe_rsc_allocating);
 
     /* If this clone is colocated with any other resources, assign those first.
      * Since the this_with_colocations() method boils down to a copy of rsc_cons
      * for clones, we can use that here directly for efficiency.
      */
-    for (GList *gIter = rsc->rsc_cons; gIter != NULL; gIter = gIter->next) {
-        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
+    for (GList *iter = rsc->rsc_cons; iter != NULL; iter = iter->next) {
+        pcmk__colocation_t *constraint = (pcmk__colocation_t *) iter->data;
 
-        pe_rsc_trace(rsc, "%s: Allocating %s first",
-                     rsc->id, constraint->primary->id);
+        pe_rsc_trace(rsc, "%s: Assigning colocation %s primary %s first",
+                     rsc->id, constraint->id, constraint->primary->id);
         constraint->primary->cmds->assign(constraint->primary, prefer);
     }
 
@@ -63,35 +83,21 @@ pcmk__clone_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
      * Because the with_this_colocations() method boils down to a copy of
      * rsc_cons_lhs for clones, we can use that here directly for efficiency.
      */
-    for (GList *gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
-        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
-
-        if (pcmk__colocation_has_influence(constraint, NULL)) {
-            pe_resource_t *dependent = constraint->dependent;
-            const char *attr = constraint->node_attribute;
-            const float factor = constraint->score / (float) INFINITY;
-            const uint32_t flags = pcmk__coloc_select_active
-                                   |pcmk__coloc_select_nonnegative;
-
-            pcmk__add_colocated_node_scores(dependent, rsc->id,
-                                            &rsc->allowed_nodes, attr, factor,
-                                            flags);
-        }
-    }
+    g_list_foreach(rsc->rsc_cons_lhs, add_dependent_scores, rsc);
 
     pe__show_node_weights(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
                           rsc, __func__, rsc->allowed_nodes, rsc->cluster);
 
     rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance);
-    pcmk__assign_instances(rsc, rsc->children, clone_data->clone_max,
-                           clone_data->clone_node_max);
+    pcmk__assign_instances(rsc, rsc->children, pe__clone_max(rsc),
+                           pe__clone_node_max(rsc));
 
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
         pcmk__set_instance_roles(rsc);
     }
 
     pe__clear_resource_flags(rsc, pe_rsc_provisional|pe_rsc_allocating);
-    pe_rsc_trace(rsc, "Done allocating %s", rsc->id);
+    pe_rsc_trace(rsc, "Assigned clone %s", rsc->id);
     return NULL;
 }
 
@@ -159,13 +165,8 @@ child_ordering_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 void
 clone_create_actions(pe_resource_t *rsc)
 {
-    clone_variant_data_t *clone_data = NULL;
-
-    get_clone_variant_data(clone_data, rsc);
-
     pe_rsc_debug(rsc, "Creating actions for clone %s", rsc->id);
-    pcmk__create_instance_actions(rsc, rsc->children, &clone_data->start_notify,
-                                  &clone_data->stop_notify);
+    pcmk__create_instance_actions(rsc, rsc->children);
     child_ordering_constraints(rsc, rsc->cluster);
 
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
@@ -424,16 +425,10 @@ void
 clone_expand(pe_resource_t *rsc)
 {
     GList *gIter = NULL;
-    clone_variant_data_t *clone_data = NULL;
-
-    get_clone_variant_data(clone_data, rsc);
 
     g_list_foreach(rsc->actions, (GFunc) rsc->cmds->action_flags, NULL);
 
-    pe__create_notifications(rsc, clone_data->start_notify);
-    pe__create_notifications(rsc, clone_data->stop_notify);
-    pe__create_notifications(rsc, clone_data->promote_notify);
-    pe__create_notifications(rsc, clone_data->demote_notify);
+    pe__create_clone_notifications(rsc);
 
     /* Now that the notifcations have been created we can expand the children */
 
@@ -447,14 +442,7 @@ clone_expand(pe_resource_t *rsc)
     pcmk__add_rsc_actions_to_graph(rsc);
 
     /* The notifications are in the graph now, we can destroy the notify_data */
-    pe__free_notification_data(clone_data->demote_notify);
-    clone_data->demote_notify = NULL;
-    pe__free_notification_data(clone_data->stop_notify);
-    clone_data->stop_notify = NULL;
-    pe__free_notification_data(clone_data->start_notify);
-    clone_data->start_notify = NULL;
-    pe__free_notification_data(clone_data->promote_notify);
-    clone_data->promote_notify = NULL;
+    pe__free_clone_notification_data(rsc);
 }
 
 // Check whether a resource or any of its children is known on node
@@ -582,9 +570,6 @@ void
 clone_append_meta(const pe_resource_t *rsc, xmlNode *xml)
 {
     char *name = NULL;
-    clone_variant_data_t *clone_data = NULL;
-
-    get_clone_variant_data(clone_data, rsc);
 
     name = crm_meta_name(XML_RSC_ATTR_UNIQUE);
     crm_xml_add(xml, name, pe__rsc_bool_str(rsc, pe_rsc_unique));
@@ -595,11 +580,11 @@ clone_append_meta(const pe_resource_t *rsc, xmlNode *xml)
     free(name);
 
     name = crm_meta_name(XML_RSC_ATTR_INCARNATION_MAX);
-    crm_xml_add_int(xml, name, clone_data->clone_max);
+    crm_xml_add_int(xml, name, pe__clone_max(rsc));
     free(name);
 
     name = crm_meta_name(XML_RSC_ATTR_INCARNATION_NODEMAX);
-    crm_xml_add_int(xml, name, clone_data->clone_node_max);
+    crm_xml_add_int(xml, name, pe__clone_node_max(rsc));
     free(name);
 
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {

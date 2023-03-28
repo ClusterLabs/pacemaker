@@ -8,7 +8,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="63" operation="notify" operation_key="rabbitmq-bundle-clone_post_notify_running_0"/>
+        <pseudo_event id="65" operation="notify" operation_key="rabbitmq-bundle-clone_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -27,7 +27,7 @@
         <rsc_op id="53" operation="start" operation_key="rabbitmq:0_start_0" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0" router_node="overcloud-controller-0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="64" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-post_notify_running_0"/>
+        <pseudo_event id="66" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -72,7 +72,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="63" operation="notify" operation_key="rabbitmq-bundle-clone_post_notify_running_0"/>
+        <pseudo_event id="65" operation="notify" operation_key="rabbitmq-bundle-clone_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -91,7 +91,7 @@
         <rsc_op id="55" operation="start" operation_key="rabbitmq:1_start_0" on_node="rabbitmq-bundle-1" on_node_uuid="rabbitmq-bundle-1" router_node="overcloud-controller-1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="64" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-post_notify_running_0"/>
+        <pseudo_event id="66" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -139,7 +139,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="63" operation="notify" operation_key="rabbitmq-bundle-clone_post_notify_running_0"/>
+        <pseudo_event id="65" operation="notify" operation_key="rabbitmq-bundle-clone_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -158,7 +158,7 @@
         <rsc_op id="57" operation="start" operation_key="rabbitmq:2_start_0" on_node="rabbitmq-bundle-2" on_node_uuid="rabbitmq-bundle-2" router_node="overcloud-controller-2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="64" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-post_notify_running_0"/>
+        <pseudo_event id="66" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -199,13 +199,13 @@
   </synapse>
   <synapse id="12" priority="1000000">
     <action_set>
-      <pseudo_event id="64" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-post_notify_running_0">
+      <pseudo_event id="66" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-post_notify_running_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="63" operation="notify" operation_key="rabbitmq-bundle-clone_post_notify_running_0"/>
+        <pseudo_event id="65" operation="notify" operation_key="rabbitmq-bundle-clone_post_notify_running_0"/>
       </trigger>
       <trigger>
         <rsc_op id="84" operation="notify" operation_key="rabbitmq:0_post_notify_start_0" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0" router_node="overcloud-controller-0"/>
@@ -220,7 +220,7 @@
   </synapse>
   <synapse id="13" priority="1000000">
     <action_set>
-      <pseudo_event id="63" operation="notify" operation_key="rabbitmq-bundle-clone_post_notify_running_0">
+      <pseudo_event id="65" operation="notify" operation_key="rabbitmq-bundle-clone_post_notify_running_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -229,25 +229,25 @@
         <pseudo_event id="60" operation="running" operation_key="rabbitmq-bundle-clone_running_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="62" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="64" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="14">
     <action_set>
-      <pseudo_event id="62" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_start_0">
+      <pseudo_event id="64" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_start_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="61" operation="notify" operation_key="rabbitmq-bundle-clone_pre_notify_start_0"/>
+        <pseudo_event id="63" operation="notify" operation_key="rabbitmq-bundle-clone_pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="15">
     <action_set>
-      <pseudo_event id="61" operation="notify" operation_key="rabbitmq-bundle-clone_pre_notify_start_0">
+      <pseudo_event id="63" operation="notify" operation_key="rabbitmq-bundle-clone_pre_notify_start_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -294,7 +294,7 @@
         <pseudo_event id="49" operation="start" operation_key="rabbitmq-bundle_start_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="62" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="64" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -833,7 +833,7 @@
         <rsc_op id="12" operation="start" operation_key="rabbitmq-bundle-docker-2_start_0" on_node="overcloud-rabbit-2" on_node_uuid="overcloud-rabbit-2" router_node="overcloud-controller-2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="64" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-post_notify_running_0"/>
+        <pseudo_event id="66" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>

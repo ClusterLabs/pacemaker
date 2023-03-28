@@ -38,9 +38,41 @@
        do_crm_log(log_level, fmt, ##args); \
    }
 
+typedef struct notify_data_s {
+    GSList *keys;               // Environment variable name/value pairs
+
+    const char *action;
+
+    pe_action_t *pre;
+    pe_action_t *post;
+    pe_action_t *pre_done;
+    pe_action_t *post_done;
+
+    GList *active;            /* notify_entry_t*  */
+    GList *inactive;          /* notify_entry_t*  */
+    GList *start;             /* notify_entry_t*  */
+    GList *stop;              /* notify_entry_t*  */
+    GList *demote;            /* notify_entry_t*  */
+    GList *promote;           /* notify_entry_t*  */
+    GList *promoted;          /* notify_entry_t*  */
+    GList *unpromoted;        /* notify_entry_t*  */
+    GHashTable *allowed_nodes;
+} notify_data_t;
+
 G_GNUC_INTERNAL
 pe_resource_t *pe__create_clone_child(pe_resource_t *rsc,
                                       pe_working_set_t *data_set);
+
+G_GNUC_INTERNAL
+void pe__create_action_notifications(pe_resource_t *rsc, notify_data_t *n_data);
+
+G_GNUC_INTERNAL
+void pe__free_notification_data(notify_data_t *n_data);
+
+G_GNUC_INTERNAL
+notify_data_t *pe__clone_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
+                                          pe_action_t *action,
+                                          pe_action_t *complete);
 
 G_GNUC_INTERNAL
 void pe__force_anon(const char *standard, pe_resource_t *rsc, const char *rid,

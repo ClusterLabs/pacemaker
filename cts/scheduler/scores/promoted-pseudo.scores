@@ -1,9 +1,9 @@
 
 drbd_float:0 promotion score on sambuca.linbit: 50
-pcmk__clone_allocate: drbd_float:0 allocation score on raki.linbit: 0
-pcmk__clone_allocate: drbd_float:0 allocation score on sambuca.linbit: 51
-pcmk__clone_allocate: ms_drbd_float allocation score on raki.linbit: 0
-pcmk__clone_allocate: ms_drbd_float allocation score on sambuca.linbit: 0
+pcmk__clone_assign: drbd_float:0 allocation score on raki.linbit: 0
+pcmk__clone_assign: drbd_float:0 allocation score on sambuca.linbit: 51
+pcmk__clone_assign: ms_drbd_float allocation score on raki.linbit: 0
+pcmk__clone_assign: ms_drbd_float allocation score on sambuca.linbit: 0
 pcmk__group_assign: fs_float allocation score on raki.linbit: 0
 pcmk__group_assign: fs_float allocation score on sambuca.linbit: -INFINITY
 pcmk__group_assign: ip_nfs allocation score on raki.linbit: 0

@@ -1,12 +1,12 @@
 
 MS_RSC_NATIVE:0 promotion score on node1: 10
 MS_RSC_NATIVE:1 promotion score on none: 0
-pcmk__clone_allocate: MS_RSC allocation score on node1: 0
-pcmk__clone_allocate: MS_RSC allocation score on node2: 0
-pcmk__clone_allocate: MS_RSC_NATIVE:0 allocation score on node1: 11
-pcmk__clone_allocate: MS_RSC_NATIVE:0 allocation score on node2: 0
-pcmk__clone_allocate: MS_RSC_NATIVE:1 allocation score on node1: 0
-pcmk__clone_allocate: MS_RSC_NATIVE:1 allocation score on node2: 0
+pcmk__clone_assign: MS_RSC allocation score on node1: 0
+pcmk__clone_assign: MS_RSC allocation score on node2: 0
+pcmk__clone_assign: MS_RSC_NATIVE:0 allocation score on node1: 11
+pcmk__clone_assign: MS_RSC_NATIVE:0 allocation score on node2: 0
+pcmk__clone_assign: MS_RSC_NATIVE:1 allocation score on node1: 0
+pcmk__clone_assign: MS_RSC_NATIVE:1 allocation score on node2: 0
 pcmk__primitive_assign: MS_RSC_NATIVE:0 allocation score on node1: 11
 pcmk__primitive_assign: MS_RSC_NATIVE:0 allocation score on node2: -INFINITY
 pcmk__primitive_assign: MS_RSC_NATIVE:1 allocation score on node1: -INFINITY

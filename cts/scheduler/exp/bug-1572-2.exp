@@ -47,7 +47,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="13" operation="stop" operation_key="ms_drbd_7788_stop_0"/>
+        <pseudo_event id="9" operation="stop" operation_key="ms_drbd_7788_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -228,7 +228,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="14" operation="stopped" operation_key="ms_drbd_7788_stopped_0"/>
+        <pseudo_event id="10" operation="stopped" operation_key="ms_drbd_7788_stopped_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="16" operation="notified" operation_key="ms_drbd_7788_confirmed-pre_notify_stop_0"/>
@@ -267,7 +267,7 @@
   </synapse>
   <synapse id="19" priority="1000000">
     <action_set>
-      <pseudo_event id="14" operation="stopped" operation_key="ms_drbd_7788_stopped_0">
+      <pseudo_event id="10" operation="stopped" operation_key="ms_drbd_7788_stopped_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" />
       </pseudo_event>
     </action_set>
@@ -276,13 +276,13 @@
         <rsc_op id="3" operation="stop" operation_key="rsc_drbd_7788:0_stop_0" on_node="arc-dknightlx" on_node_uuid="8c16c69e-f753-49cf-ba89-3ae421940042"/>
       </trigger>
       <trigger>
-        <pseudo_event id="13" operation="stop" operation_key="ms_drbd_7788_stop_0"/>
+        <pseudo_event id="9" operation="stop" operation_key="ms_drbd_7788_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="20">
     <action_set>
-      <pseudo_event id="13" operation="stop" operation_key="ms_drbd_7788_stop_0">
+      <pseudo_event id="9" operation="stop" operation_key="ms_drbd_7788_stop_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" />
       </pseudo_event>
     </action_set>

@@ -1,12 +1,12 @@
 
 drbd_r0:0 promotion score on ibm2.isg.si: 10000
 drbd_r0:1 promotion score on ibm1.isg.si: 10000
-pcmk__clone_allocate: drbd_r0:0 allocation score on ibm1.isg.si: 0
-pcmk__clone_allocate: drbd_r0:0 allocation score on ibm2.isg.si: 10010
-pcmk__clone_allocate: drbd_r0:1 allocation score on ibm1.isg.si: 10010
-pcmk__clone_allocate: drbd_r0:1 allocation score on ibm2.isg.si: 0
-pcmk__clone_allocate: ms_drbd_r0 allocation score on ibm1.isg.si: 0
-pcmk__clone_allocate: ms_drbd_r0 allocation score on ibm2.isg.si: 0
+pcmk__clone_assign: drbd_r0:0 allocation score on ibm1.isg.si: 0
+pcmk__clone_assign: drbd_r0:0 allocation score on ibm2.isg.si: 10010
+pcmk__clone_assign: drbd_r0:1 allocation score on ibm1.isg.si: 10010
+pcmk__clone_assign: drbd_r0:1 allocation score on ibm2.isg.si: 0
+pcmk__clone_assign: ms_drbd_r0 allocation score on ibm1.isg.si: 0
+pcmk__clone_assign: ms_drbd_r0 allocation score on ibm2.isg.si: 0
 pcmk__primitive_assign: HostingIsg allocation score on ibm1.isg.si: 0
 pcmk__primitive_assign: HostingIsg allocation score on ibm2.isg.si: 10
 pcmk__primitive_assign: drbd_r0:0 allocation score on ibm1.isg.si: 0

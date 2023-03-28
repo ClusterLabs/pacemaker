@@ -34,7 +34,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="14" operation="notify" operation_key="pgsql-ha_post_notify_running_0"/>
+        <pseudo_event id="16" operation="notify" operation_key="pgsql-ha_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -53,7 +53,7 @@
         <rsc_op id="6" operation="promote" operation_key="pgsqld:0_promote_0" on_node="srv1" on_node_uuid="1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="15" operation="notified" operation_key="pgsql-ha_confirmed-post_notify_running_0"/>
+        <pseudo_event id="17" operation="notified" operation_key="pgsql-ha_confirmed-post_notify_running_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="27" operation="notified" operation_key="pgsql-ha_confirmed-post_notify_promoted_0"/>
@@ -133,7 +133,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="14" operation="notify" operation_key="pgsql-ha_post_notify_running_0"/>
+        <pseudo_event id="16" operation="notify" operation_key="pgsql-ha_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -149,7 +149,7 @@
         <rsc_op id="8" operation="start" operation_key="pgsqld:1_start_0" on_node="srv2" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="15" operation="notified" operation_key="pgsql-ha_confirmed-post_notify_running_0"/>
+        <pseudo_event id="17" operation="notified" operation_key="pgsql-ha_confirmed-post_notify_running_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="27" operation="notified" operation_key="pgsql-ha_confirmed-post_notify_promoted_0"/>
@@ -237,7 +237,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="15" operation="notified" operation_key="pgsql-ha_confirmed-post_notify_running_0"/>
+        <pseudo_event id="17" operation="notified" operation_key="pgsql-ha_confirmed-post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -270,13 +270,13 @@
   </synapse>
   <synapse id="19" priority="1000000">
     <action_set>
-      <pseudo_event id="15" operation="notified" operation_key="pgsql-ha_confirmed-post_notify_running_0">
+      <pseudo_event id="17" operation="notified" operation_key="pgsql-ha_confirmed-post_notify_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="14" operation="notify" operation_key="pgsql-ha_post_notify_running_0"/>
+        <pseudo_event id="16" operation="notify" operation_key="pgsql-ha_post_notify_running_0"/>
       </trigger>
       <trigger>
         <rsc_op id="39" operation="notify" operation_key="pgsqld:0_post_notify_start_0" on_node="srv1" on_node_uuid="1"/>
@@ -288,7 +288,7 @@
   </synapse>
   <synapse id="20" priority="1000000">
     <action_set>
-      <pseudo_event id="14" operation="notify" operation_key="pgsql-ha_post_notify_running_0">
+      <pseudo_event id="16" operation="notify" operation_key="pgsql-ha_post_notify_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -297,25 +297,25 @@
         <pseudo_event id="11" operation="running" operation_key="pgsql-ha_running_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="13" operation="notified" operation_key="pgsql-ha_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="15" operation="notified" operation_key="pgsql-ha_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="21">
     <action_set>
-      <pseudo_event id="13" operation="notified" operation_key="pgsql-ha_confirmed-pre_notify_start_0">
+      <pseudo_event id="15" operation="notified" operation_key="pgsql-ha_confirmed-pre_notify_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="12" operation="notify" operation_key="pgsql-ha_pre_notify_start_0"/>
+        <pseudo_event id="14" operation="notify" operation_key="pgsql-ha_pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="22">
     <action_set>
-      <pseudo_event id="12" operation="notify" operation_key="pgsql-ha_pre_notify_start_0">
+      <pseudo_event id="14" operation="notify" operation_key="pgsql-ha_pre_notify_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -353,7 +353,7 @@
         <rsc_op id="3" operation="monitor" operation_key="pgsqld:1_monitor_0" on_node="srv2" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="13" operation="notified" operation_key="pgsql-ha_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="15" operation="notified" operation_key="pgsql-ha_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>

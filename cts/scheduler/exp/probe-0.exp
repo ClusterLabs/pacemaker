@@ -8,7 +8,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="35" operation="notify" operation_key="configstorecloneset_post_notify_running_0"/>
+        <pseudo_event id="37" operation="notify" operation_key="configstorecloneset_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -43,7 +43,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="35" operation="notify" operation_key="configstorecloneset_post_notify_running_0"/>
+        <pseudo_event id="37" operation="notify" operation_key="configstorecloneset_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -71,13 +71,13 @@
   </synapse>
   <synapse id="6" priority="1000000">
     <action_set>
-      <pseudo_event id="36" operation="notified" operation_key="configstorecloneset_confirmed-post_notify_running_0">
+      <pseudo_event id="38" operation="notified" operation_key="configstorecloneset_confirmed-post_notify_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="35" operation="notify" operation_key="configstorecloneset_post_notify_running_0"/>
+        <pseudo_event id="37" operation="notify" operation_key="configstorecloneset_post_notify_running_0"/>
       </trigger>
       <trigger>
         <rsc_op id="47" operation="notify" operation_key="configstoreclone:0_post_notify_start_0" on_node="x32c47" on_node_uuid="a1dbc8cc-4d33-41e7-a75a-cd4f93b26410"/>
@@ -89,7 +89,7 @@
   </synapse>
   <synapse id="7" priority="1000000">
     <action_set>
-      <pseudo_event id="35" operation="notify" operation_key="configstorecloneset_post_notify_running_0">
+      <pseudo_event id="37" operation="notify" operation_key="configstorecloneset_post_notify_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -98,25 +98,25 @@
         <pseudo_event id="32" operation="running" operation_key="configstorecloneset_running_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="34" operation="notified" operation_key="configstorecloneset_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="36" operation="notified" operation_key="configstorecloneset_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="8">
     <action_set>
-      <pseudo_event id="34" operation="notified" operation_key="configstorecloneset_confirmed-pre_notify_start_0">
+      <pseudo_event id="36" operation="notified" operation_key="configstorecloneset_confirmed-pre_notify_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="33" operation="notify" operation_key="configstorecloneset_pre_notify_start_0"/>
+        <pseudo_event id="35" operation="notify" operation_key="configstorecloneset_pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="9">
     <action_set>
-      <pseudo_event id="33" operation="notify" operation_key="configstorecloneset_pre_notify_start_0">
+      <pseudo_event id="35" operation="notify" operation_key="configstorecloneset_pre_notify_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -154,7 +154,7 @@
         <rsc_op id="4" operation="monitor" operation_key="configstoreclone:1_monitor_0" on_node="x32c48" on_node_uuid="ca93fea5-67c9-473d-9ce0-7ed7fb823872"/>
       </trigger>
       <trigger>
-        <pseudo_event id="34" operation="notified" operation_key="configstorecloneset_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="36" operation="notified" operation_key="configstorecloneset_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>

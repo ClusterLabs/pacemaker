@@ -1,21 +1,21 @@
 
 lxc-ms:0 promotion score on lxc1: INFINITY
 lxc-ms:1 promotion score on lxc2: INFINITY
-pcmk__clone_allocate: lxc-ms-master allocation score on 18node1: 0
-pcmk__clone_allocate: lxc-ms-master allocation score on 18node2: 0
-pcmk__clone_allocate: lxc-ms-master allocation score on 18node3: 0
-pcmk__clone_allocate: lxc-ms-master allocation score on lxc1: INFINITY
-pcmk__clone_allocate: lxc-ms-master allocation score on lxc2: INFINITY
-pcmk__clone_allocate: lxc-ms:0 allocation score on 18node1: 0
-pcmk__clone_allocate: lxc-ms:0 allocation score on 18node2: 0
-pcmk__clone_allocate: lxc-ms:0 allocation score on 18node3: 0
-pcmk__clone_allocate: lxc-ms:0 allocation score on lxc1: INFINITY
-pcmk__clone_allocate: lxc-ms:0 allocation score on lxc2: INFINITY
-pcmk__clone_allocate: lxc-ms:1 allocation score on 18node1: 0
-pcmk__clone_allocate: lxc-ms:1 allocation score on 18node2: 0
-pcmk__clone_allocate: lxc-ms:1 allocation score on 18node3: 0
-pcmk__clone_allocate: lxc-ms:1 allocation score on lxc1: INFINITY
-pcmk__clone_allocate: lxc-ms:1 allocation score on lxc2: INFINITY
+pcmk__clone_assign: lxc-ms-master allocation score on 18node1: 0
+pcmk__clone_assign: lxc-ms-master allocation score on 18node2: 0
+pcmk__clone_assign: lxc-ms-master allocation score on 18node3: 0
+pcmk__clone_assign: lxc-ms-master allocation score on lxc1: INFINITY
+pcmk__clone_assign: lxc-ms-master allocation score on lxc2: INFINITY
+pcmk__clone_assign: lxc-ms:0 allocation score on 18node1: 0
+pcmk__clone_assign: lxc-ms:0 allocation score on 18node2: 0
+pcmk__clone_assign: lxc-ms:0 allocation score on 18node3: 0
+pcmk__clone_assign: lxc-ms:0 allocation score on lxc1: INFINITY
+pcmk__clone_assign: lxc-ms:0 allocation score on lxc2: INFINITY
+pcmk__clone_assign: lxc-ms:1 allocation score on 18node1: 0
+pcmk__clone_assign: lxc-ms:1 allocation score on 18node2: 0
+pcmk__clone_assign: lxc-ms:1 allocation score on 18node3: 0
+pcmk__clone_assign: lxc-ms:1 allocation score on lxc1: INFINITY
+pcmk__clone_assign: lxc-ms:1 allocation score on lxc2: INFINITY
 pcmk__primitive_assign: container1 allocation score on 18node1: INFINITY
 pcmk__primitive_assign: container1 allocation score on 18node2: 0
 pcmk__primitive_assign: container1 allocation score on 18node3: 0

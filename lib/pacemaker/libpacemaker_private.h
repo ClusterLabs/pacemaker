@@ -726,6 +726,9 @@ void pcmk__group_shutdown_lock(pe_resource_t *rsc);
 // Clones (pcmk_sched_clone.c)
 
 G_GNUC_INTERNAL
+pe_node_t *pcmk__clone_assign(pe_resource_t *rsc, const pe_node_t *prefer);
+
+G_GNUC_INTERNAL
 void pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
                                    const pe_resource_t *primary,
                                    const pcmk__colocation_t *colocation,
@@ -769,9 +772,7 @@ void pcmk__assign_instances(pe_resource_t *collective, GList *instances,
                             int max_total, int max_per_node);
 
 G_GNUC_INTERNAL
-void pcmk__create_instance_actions(pe_resource_t *rsc, GList *instances,
-                                   notify_data_t **start_notify,
-                                   notify_data_t **stop_notify);
+void pcmk__create_instance_actions(pe_resource_t *rsc, GList *instances);
 
 G_GNUC_INTERNAL
 bool pcmk__instance_matches(const pe_resource_t *instance,

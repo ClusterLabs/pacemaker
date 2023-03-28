@@ -34,7 +34,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="17" operation="notify" operation_key="DB2_HADR-master_post_notify_running_0"/>
+        <pseudo_event id="19" operation="notify" operation_key="DB2_HADR-master_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -47,7 +47,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="15" operation="notify" operation_key="DB2_HADR-master_pre_notify_start_0"/>
+        <pseudo_event id="17" operation="notify" operation_key="DB2_HADR-master_pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -73,7 +73,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="17" operation="notify" operation_key="DB2_HADR-master_post_notify_running_0"/>
+        <pseudo_event id="19" operation="notify" operation_key="DB2_HADR-master_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -89,7 +89,7 @@
         <rsc_op id="11" operation="start" operation_key="DB2_HADR_start_0" internal_operation_key="DB2_HADR:1_start_0" on_node="fastvm-rhel-7-4-96" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="18" operation="notified" operation_key="DB2_HADR-master_confirmed-post_notify_running_0"/>
+        <pseudo_event id="20" operation="notified" operation_key="DB2_HADR-master_confirmed-post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -118,7 +118,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="19" operation="stop" operation_key="DB2_HADR-master_stop_0"/>
+        <pseudo_event id="15" operation="stop" operation_key="DB2_HADR-master_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -145,7 +145,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="20" operation="stopped" operation_key="DB2_HADR-master_stopped_0"/>
+        <pseudo_event id="16" operation="stopped" operation_key="DB2_HADR-master_stopped_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="22" operation="notified" operation_key="DB2_HADR-master_confirmed-pre_notify_stop_0"/>
@@ -180,40 +180,13 @@
   </synapse>
   <synapse id="13" priority="1000000">
     <action_set>
-      <pseudo_event id="20" operation="stopped" operation_key="DB2_HADR-master_stopped_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="4" operation="stop" operation_key="DB2_HADR_stop_0" internal_operation_key="DB2_HADR:1_stop_0" on_node="fastvm-rhel-7-4-96" on_node_uuid="2"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="19" operation="stop" operation_key="DB2_HADR-master_stop_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="14">
-    <action_set>
-      <pseudo_event id="19" operation="stop" operation_key="DB2_HADR-master_stop_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="22" operation="notified" operation_key="DB2_HADR-master_confirmed-pre_notify_stop_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="15" priority="1000000">
-    <action_set>
-      <pseudo_event id="18" operation="notified" operation_key="DB2_HADR-master_confirmed-post_notify_running_0">
+      <pseudo_event id="20" operation="notified" operation_key="DB2_HADR-master_confirmed-post_notify_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="17" operation="notify" operation_key="DB2_HADR-master_post_notify_running_0"/>
+        <pseudo_event id="19" operation="notify" operation_key="DB2_HADR-master_post_notify_running_0"/>
       </trigger>
       <trigger>
         <rsc_op id="40" operation="notify" operation_key="DB2_HADR_post_notify_start_0" internal_operation_key="DB2_HADR:0_post_notify_start_0" on_node="fastvm-rhel-7-4-95" on_node_uuid="1"/>
@@ -223,9 +196,9 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="16" priority="1000000">
+  <synapse id="14" priority="1000000">
     <action_set>
-      <pseudo_event id="17" operation="notify" operation_key="DB2_HADR-master_post_notify_running_0">
+      <pseudo_event id="19" operation="notify" operation_key="DB2_HADR-master_post_notify_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -234,34 +207,61 @@
         <pseudo_event id="14" operation="running" operation_key="DB2_HADR-master_running_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="16" operation="notified" operation_key="DB2_HADR-master_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="18" operation="notified" operation_key="DB2_HADR-master_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="17">
+  <synapse id="15">
     <action_set>
-      <pseudo_event id="16" operation="notified" operation_key="DB2_HADR-master_confirmed-pre_notify_start_0">
+      <pseudo_event id="18" operation="notified" operation_key="DB2_HADR-master_confirmed-pre_notify_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="15" operation="notify" operation_key="DB2_HADR-master_pre_notify_start_0"/>
+        <pseudo_event id="17" operation="notify" operation_key="DB2_HADR-master_pre_notify_start_0"/>
       </trigger>
       <trigger>
         <rsc_op id="39" operation="notify" operation_key="DB2_HADR_pre_notify_start_0" internal_operation_key="DB2_HADR:0_pre_notify_start_0" on_node="fastvm-rhel-7-4-95" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="18">
+  <synapse id="16">
     <action_set>
-      <pseudo_event id="15" operation="notify" operation_key="DB2_HADR-master_pre_notify_start_0">
+      <pseudo_event id="17" operation="notify" operation_key="DB2_HADR-master_pre_notify_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
         <pseudo_event id="24" operation="notified" operation_key="DB2_HADR-master_confirmed-post_notify_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="17" priority="1000000">
+    <action_set>
+      <pseudo_event id="16" operation="stopped" operation_key="DB2_HADR-master_stopped_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="4" operation="stop" operation_key="DB2_HADR_stop_0" internal_operation_key="DB2_HADR:1_stop_0" on_node="fastvm-rhel-7-4-96" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="15" operation="stop" operation_key="DB2_HADR-master_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="18">
+    <action_set>
+      <pseudo_event id="15" operation="stop" operation_key="DB2_HADR-master_stop_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="22" operation="notified" operation_key="DB2_HADR-master_confirmed-pre_notify_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -288,10 +288,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="16" operation="notified" operation_key="DB2_HADR-master_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="16" operation="stopped" operation_key="DB2_HADR-master_stopped_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="20" operation="stopped" operation_key="DB2_HADR-master_stopped_0"/>
+        <pseudo_event id="18" operation="notified" operation_key="DB2_HADR-master_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>

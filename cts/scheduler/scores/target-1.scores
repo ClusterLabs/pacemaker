@@ -1,12 +1,12 @@
 
-pcmk__clone_allocate: promoteme allocation score on c001n01: 0
-pcmk__clone_allocate: promoteme allocation score on c001n02: 0
-pcmk__clone_allocate: promoteme allocation score on c001n03: 100
-pcmk__clone_allocate: promoteme allocation score on c001n08: 0
-pcmk__clone_allocate: rsc_c001n03:0 allocation score on c001n01: 0
-pcmk__clone_allocate: rsc_c001n03:0 allocation score on c001n02: 0
-pcmk__clone_allocate: rsc_c001n03:0 allocation score on c001n03: 101
-pcmk__clone_allocate: rsc_c001n03:0 allocation score on c001n08: 0
+pcmk__clone_assign: promoteme allocation score on c001n01: 0
+pcmk__clone_assign: promoteme allocation score on c001n02: 0
+pcmk__clone_assign: promoteme allocation score on c001n03: 100
+pcmk__clone_assign: promoteme allocation score on c001n08: 0
+pcmk__clone_assign: rsc_c001n03:0 allocation score on c001n01: 0
+pcmk__clone_assign: rsc_c001n03:0 allocation score on c001n02: 0
+pcmk__clone_assign: rsc_c001n03:0 allocation score on c001n03: 101
+pcmk__clone_assign: rsc_c001n03:0 allocation score on c001n08: 0
 pcmk__primitive_assign: DcIPaddr allocation score on c001n01: -INFINITY
 pcmk__primitive_assign: DcIPaddr allocation score on c001n02: 0
 pcmk__primitive_assign: DcIPaddr allocation score on c001n03: -INFINITY

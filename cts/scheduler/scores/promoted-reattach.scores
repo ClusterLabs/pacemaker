@@ -1,12 +1,12 @@
 
 drbd1:0 promotion score on dktest1: INFINITY
 drbd1:1 promotion score on dktest2: -INFINITY
-pcmk__clone_allocate: drbd1:0 allocation score on dktest1: INFINITY
-pcmk__clone_allocate: drbd1:0 allocation score on dktest2: 0
-pcmk__clone_allocate: drbd1:1 allocation score on dktest1: 0
-pcmk__clone_allocate: drbd1:1 allocation score on dktest2: INFINITY
-pcmk__clone_allocate: ms-drbd1 allocation score on dktest1: INFINITY
-pcmk__clone_allocate: ms-drbd1 allocation score on dktest2: 0
+pcmk__clone_assign: drbd1:0 allocation score on dktest1: INFINITY
+pcmk__clone_assign: drbd1:0 allocation score on dktest2: 0
+pcmk__clone_assign: drbd1:1 allocation score on dktest1: 0
+pcmk__clone_assign: drbd1:1 allocation score on dktest2: INFINITY
+pcmk__clone_assign: ms-drbd1 allocation score on dktest1: INFINITY
+pcmk__clone_assign: ms-drbd1 allocation score on dktest2: 0
 pcmk__group_assign: apache allocation score on dktest1: 500
 pcmk__group_assign: apache allocation score on dktest2: 0
 pcmk__group_assign: apache-vip allocation score on dktest1: INFINITY

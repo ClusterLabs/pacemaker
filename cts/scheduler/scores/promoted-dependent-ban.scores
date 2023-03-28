@@ -2,15 +2,15 @@
 p_drbd-dtest1:0 promotion score on c7: 1000
 p_drbd-dtest1:1 promotion score on c6: 1
 p_drbd-dtest1:2 promotion score on none: 0
-pcmk__clone_allocate: ms_drbd-dtest1 allocation score on c6: 0
-pcmk__clone_allocate: ms_drbd-dtest1 allocation score on c7: 0
-pcmk__clone_allocate: ms_drbd-dtest1 allocation score on c8: -INFINITY
-pcmk__clone_allocate: p_drbd-dtest1:0 allocation score on c6: 0
-pcmk__clone_allocate: p_drbd-dtest1:0 allocation score on c7: 1001
-pcmk__clone_allocate: p_drbd-dtest1:0 allocation score on c8: -INFINITY
-pcmk__clone_allocate: p_drbd-dtest1:1 allocation score on c6: 6
-pcmk__clone_allocate: p_drbd-dtest1:1 allocation score on c7: 0
-pcmk__clone_allocate: p_drbd-dtest1:1 allocation score on c8: -INFINITY
+pcmk__clone_assign: ms_drbd-dtest1 allocation score on c6: 0
+pcmk__clone_assign: ms_drbd-dtest1 allocation score on c7: 0
+pcmk__clone_assign: ms_drbd-dtest1 allocation score on c8: -INFINITY
+pcmk__clone_assign: p_drbd-dtest1:0 allocation score on c6: 0
+pcmk__clone_assign: p_drbd-dtest1:0 allocation score on c7: 1001
+pcmk__clone_assign: p_drbd-dtest1:0 allocation score on c8: -INFINITY
+pcmk__clone_assign: p_drbd-dtest1:1 allocation score on c6: 6
+pcmk__clone_assign: p_drbd-dtest1:1 allocation score on c7: 0
+pcmk__clone_assign: p_drbd-dtest1:1 allocation score on c8: -INFINITY
 pcmk__primitive_assign: p_drbd-dtest1:0 allocation score on c6: -INFINITY
 pcmk__primitive_assign: p_drbd-dtest1:0 allocation score on c7: 1001
 pcmk__primitive_assign: p_drbd-dtest1:0 allocation score on c8: -INFINITY

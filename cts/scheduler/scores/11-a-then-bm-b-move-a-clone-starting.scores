@@ -1,10 +1,10 @@
 
-pcmk__clone_allocate: myclone-clone allocation score on f20node1: 0
-pcmk__clone_allocate: myclone-clone allocation score on f20node2: 0
-pcmk__clone_allocate: myclone:0 allocation score on f20node1: 1
-pcmk__clone_allocate: myclone:0 allocation score on f20node2: 0
-pcmk__clone_allocate: myclone:1 allocation score on f20node1: 0
-pcmk__clone_allocate: myclone:1 allocation score on f20node2: 0
+pcmk__clone_assign: myclone-clone allocation score on f20node1: 0
+pcmk__clone_assign: myclone-clone allocation score on f20node2: 0
+pcmk__clone_assign: myclone:0 allocation score on f20node1: 1
+pcmk__clone_assign: myclone:0 allocation score on f20node2: 0
+pcmk__clone_assign: myclone:1 allocation score on f20node1: 0
+pcmk__clone_assign: myclone:1 allocation score on f20node2: 0
 pcmk__primitive_assign: myclone:0 allocation score on f20node1: -INFINITY
 pcmk__primitive_assign: myclone:0 allocation score on f20node2: 0
 pcmk__primitive_assign: myclone:1 allocation score on f20node1: -INFINITY

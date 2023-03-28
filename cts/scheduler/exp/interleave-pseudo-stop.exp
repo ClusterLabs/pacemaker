@@ -101,7 +101,7 @@
         <crm_event id="1" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
       </trigger>
       <trigger>
-        <pseudo_event id="21" operation="stop" operation_key="evmscloneset_stop_0"/>
+        <pseudo_event id="17" operation="stop" operation_key="evmscloneset_stop_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="29" operation="stop" operation_key="imagestoreclone:0_stop_0" internal_operation_key="imagestoreclone:1_stop_0"/>
@@ -134,7 +134,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="22" operation="stopped" operation_key="evmscloneset_stopped_0"/>
+        <pseudo_event id="18" operation="stopped" operation_key="evmscloneset_stopped_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="24" operation="notified" operation_key="evmscloneset_confirmed-pre_notify_stop_0"/>
@@ -166,7 +166,7 @@
   </synapse>
   <synapse id="12" priority="1000000">
     <action_set>
-      <pseudo_event id="22" operation="stopped" operation_key="evmscloneset_stopped_0">
+      <pseudo_event id="18" operation="stopped" operation_key="evmscloneset_stopped_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -175,13 +175,13 @@
         <pseudo_event id="14" operation="stop" operation_key="evmsclone:0_stop_0" internal_operation_key="evmsclone:1_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="21" operation="stop" operation_key="evmscloneset_stop_0"/>
+        <pseudo_event id="17" operation="stop" operation_key="evmscloneset_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="13">
     <action_set>
-      <pseudo_event id="21" operation="stop" operation_key="evmscloneset_stop_0">
+      <pseudo_event id="17" operation="stop" operation_key="evmscloneset_stop_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -267,7 +267,7 @@
         <crm_event id="1" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
       </trigger>
       <trigger>
-        <pseudo_event id="36" operation="stop" operation_key="imagestorecloneset_stop_0"/>
+        <pseudo_event id="32" operation="stop" operation_key="imagestorecloneset_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -294,7 +294,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="37" operation="stopped" operation_key="imagestorecloneset_stopped_0"/>
+        <pseudo_event id="33" operation="stopped" operation_key="imagestorecloneset_stopped_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="39" operation="notified" operation_key="imagestorecloneset_confirmed-pre_notify_stop_0"/>
@@ -326,7 +326,7 @@
   </synapse>
   <synapse id="23" priority="1000000">
     <action_set>
-      <pseudo_event id="37" operation="stopped" operation_key="imagestorecloneset_stopped_0">
+      <pseudo_event id="33" operation="stopped" operation_key="imagestorecloneset_stopped_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -335,13 +335,13 @@
         <pseudo_event id="29" operation="stop" operation_key="imagestoreclone:0_stop_0" internal_operation_key="imagestoreclone:1_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="36" operation="stop" operation_key="imagestorecloneset_stop_0"/>
+        <pseudo_event id="32" operation="stop" operation_key="imagestorecloneset_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="24">
     <action_set>
-      <pseudo_event id="36" operation="stop" operation_key="imagestorecloneset_stop_0">
+      <pseudo_event id="32" operation="stop" operation_key="imagestorecloneset_stop_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -421,7 +421,7 @@
         <crm_event id="1" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
       </trigger>
       <trigger>
-        <pseudo_event id="51" operation="stop" operation_key="configstorecloneset_stop_0"/>
+        <pseudo_event id="47" operation="stop" operation_key="configstorecloneset_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -448,7 +448,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="52" operation="stopped" operation_key="configstorecloneset_stopped_0"/>
+        <pseudo_event id="48" operation="stopped" operation_key="configstorecloneset_stopped_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="54" operation="notified" operation_key="configstorecloneset_confirmed-pre_notify_stop_0"/>
@@ -480,7 +480,7 @@
   </synapse>
   <synapse id="34" priority="1000000">
     <action_set>
-      <pseudo_event id="52" operation="stopped" operation_key="configstorecloneset_stopped_0">
+      <pseudo_event id="48" operation="stopped" operation_key="configstorecloneset_stopped_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -489,13 +489,13 @@
         <pseudo_event id="44" operation="stop" operation_key="configstoreclone:0_stop_0" internal_operation_key="configstoreclone:1_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="51" operation="stop" operation_key="configstorecloneset_stop_0"/>
+        <pseudo_event id="47" operation="stop" operation_key="configstorecloneset_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="35">
     <action_set>
-      <pseudo_event id="51" operation="stop" operation_key="configstorecloneset_stop_0">
+      <pseudo_event id="47" operation="stop" operation_key="configstorecloneset_stop_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>

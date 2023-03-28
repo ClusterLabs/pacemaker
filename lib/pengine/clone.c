@@ -19,9 +19,6 @@
 #include <crm/common/output.h>
 #include <crm/common/xml_internal.h>
 
-#define VARIANT_CLONE 1
-#include "./variant.h"
-
 #ifdef PCMK__COMPAT_2_0
 #define PROMOTED_INSTANCES   RSC_ROLE_PROMOTED_LEGACY_S "s"
 #define UNPROMOTED_INSTANCES RSC_ROLE_UNPROMOTED_LEGACY_S "s"
@@ -29,6 +26,29 @@
 #define PROMOTED_INSTANCES   RSC_ROLE_PROMOTED_S
 #define UNPROMOTED_INSTANCES RSC_ROLE_UNPROMOTED_S
 #endif
+
+typedef struct clone_variant_data_s {
+    int clone_max;
+    int clone_node_max;
+
+    int promoted_max;
+    int promoted_node_max;
+
+    int total_clones;
+
+    uint32_t flags; // Group of enum pe__clone_flags
+
+    notify_data_t *stop_notify;
+    notify_data_t *start_notify;
+    notify_data_t *demote_notify;
+    notify_data_t *promote_notify;
+
+    xmlNode *xml_obj_child;
+} clone_variant_data_t;
+
+#define get_clone_variant_data(data, rsc)                       \
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_clone));    \
+    data = (clone_variant_data_t *) rsc->variant_opaque;
 
 /*!
  * \internal
@@ -45,6 +65,23 @@ pe__clone_max(const pe_resource_t *clone)
 
     get_clone_variant_data(clone_data, pe__const_top_resource(clone, false));
     return clone_data->clone_max;
+}
+
+/*!
+ * \internal
+ * \brief Return the maximum number of clone instances allowed per node
+ *
+ * \param[in] clone  Promotable clone or clone instance to check
+ *
+ * \return Maximum allowed instances per node for \p clone
+ */
+int
+pe__clone_node_max(const pe_resource_t *clone)
+{
+    const clone_variant_data_t *clone_data = NULL;
+
+    get_clone_variant_data(clone_data, pe__const_top_resource(clone, false));
+    return clone_data->clone_node_max;
 }
 
 /*!
@@ -173,9 +210,7 @@ pe__force_anon(const char *standard, pe_resource_t *rsc, const char *rid,
                pe_working_set_t *data_set)
 {
     if (pe_rsc_is_clone(rsc)) {
-        clone_variant_data_t *clone_data = NULL;
-
-        get_clone_variant_data(clone_data, rsc);
+        clone_variant_data_t *clone_data = rsc->variant_opaque;
 
         pe_warn("Ignoring " XML_RSC_ATTR_UNIQUE " for %s because %s resources "
                 "such as %s can be used only as anonymous clones",
@@ -1195,9 +1230,8 @@ pe__is_universal_clone(const pe_resource_t *rsc,
                        const pe_working_set_t *data_set)
 {
     if (pe_rsc_is_clone(rsc)) {
-        clone_variant_data_t *clone_data = NULL;
+        clone_variant_data_t *clone_data = rsc->variant_opaque;
 
-        get_clone_variant_data(clone_data, rsc);
         if (clone_data->clone_max == g_list_length(data_set->nodes)) {
             return TRUE;
         }
@@ -1351,6 +1385,86 @@ pe__create_promotable_pseudo_ops(pe_resource_t *clone, bool any_promoting,
             order_actions(clone_data->demote_notify->post_done,
                           clone_data->stop_notify->pre,
                           pe_order_optional);
+        }
+    }
+}
+
+/*!
+ * \internal
+ * \brief Create all notification data and actions for a clone
+ *
+ * \param[in,out] clone  Clone to create notifications for
+ */
+void
+pe__create_clone_notifications(pe_resource_t *clone)
+{
+    clone_variant_data_t *clone_data = NULL;
+
+    get_clone_variant_data(clone_data, clone);
+
+    pe__create_action_notifications(clone, clone_data->start_notify);
+    pe__create_action_notifications(clone, clone_data->stop_notify);
+    pe__create_action_notifications(clone, clone_data->promote_notify);
+    pe__create_action_notifications(clone, clone_data->demote_notify);
+}
+
+/*!
+ * \internal
+ * \brief Free all notification data for a clone
+ *
+ * \param[in,out] clone  Clone to free notification data for
+ */
+void
+pe__free_clone_notification_data(pe_resource_t *clone)
+{
+    clone_variant_data_t *clone_data = NULL;
+
+    get_clone_variant_data(clone_data, clone);
+
+    pe__free_notification_data(clone_data->demote_notify);
+    clone_data->demote_notify = NULL;
+
+    pe__free_notification_data(clone_data->stop_notify);
+    clone_data->stop_notify = NULL;
+
+    pe__free_notification_data(clone_data->start_notify);
+    clone_data->start_notify = NULL;
+
+    pe__free_notification_data(clone_data->promote_notify);
+    clone_data->promote_notify = NULL;
+}
+
+/*!
+ * \internal
+ * \brief Create pseudo-actions for clone start/stop notifications
+ *
+ * \param[in,out] clone    Clone to create pseudo-actions for
+ * \param[in,out] start    Start action for \p clone
+ * \param[in,out] stop     Stop action for \p clone
+ * \param[in,out] started  Started action for \p clone
+ * \param[in,out] stopped  Stopped action for \p clone
+ */
+void
+pe__create_clone_notif_pseudo_ops(pe_resource_t *clone,
+                                  pe_action_t *start, pe_action_t *started,
+                                  pe_action_t *stop, pe_action_t *stopped)
+{
+    clone_variant_data_t *clone_data = NULL;
+
+    get_clone_variant_data(clone_data, clone);
+
+    if (clone_data->start_notify == NULL) {
+        clone_data->start_notify = pe__clone_notif_pseudo_ops(clone, RSC_START,
+                                                              start, started);
+    }
+
+    if (clone_data->stop_notify == NULL) {
+        clone_data->stop_notify = pe__clone_notif_pseudo_ops(clone, RSC_STOP,
+                                                             stop, stopped);
+        if ((clone_data->start_notify != NULL)
+            && (clone_data->stop_notify != NULL)) {
+            order_actions(clone_data->stop_notify->post_done,
+                          clone_data->start_notify->pre, pe_order_optional);
         }
     }
 }

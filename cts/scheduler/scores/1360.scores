@@ -1,8 +1,8 @@
 
-pcmk__clone_allocate: dollies:0 allocation score on ssgtest1a: 0
-pcmk__clone_allocate: dollies:0 allocation score on ssgtest1b: INFINITY
-pcmk__clone_allocate: dolly allocation score on ssgtest1a: 0
-pcmk__clone_allocate: dolly allocation score on ssgtest1b: INFINITY
+pcmk__clone_assign: dollies:0 allocation score on ssgtest1a: 0
+pcmk__clone_assign: dollies:0 allocation score on ssgtest1b: INFINITY
+pcmk__clone_assign: dolly allocation score on ssgtest1a: 0
+pcmk__clone_assign: dolly allocation score on ssgtest1b: INFINITY
 pcmk__group_assign: ClusterAlias allocation score on ssgtest1a: INFINITY
 pcmk__group_assign: ClusterAlias allocation score on ssgtest1b: 0
 pcmk__group_assign: VIP allocation score on ssgtest1a: INFINITY

@@ -1,6 +1,6 @@
 
-pcmk__clone_allocate: S_A:0 allocation score on fc16-builder: 0
-pcmk__clone_allocate: S_CLONE allocation score on fc16-builder: 0
+pcmk__clone_assign: S_A:0 allocation score on fc16-builder: 0
+pcmk__clone_assign: S_CLONE allocation score on fc16-builder: 0
 pcmk__group_assign: A allocation score on fc16-builder: 0
 pcmk__group_assign: MIXED_GROUP allocation score on fc16-builder: 0
 pcmk__group_assign: S_B allocation score on fc16-builder: 0
