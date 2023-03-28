@@ -94,6 +94,13 @@ enum remote_status {
      * so we have it signalled back with the transition from the scheduler.
      */
     remote_in_maint     = (1 << 3),
+    /* Similar for whether we are controlling a guest node or remote node.
+     * Fortunately there is a meta-attribute in the transition already and
+     * as the situation doesn't change over time we can use the
+     * resource start for noting down the information for later use when
+     * the attributes aren't at hand.
+     */
+    controlling_guest   = (1 << 4),
 };
 
 typedef struct remote_ra_data_s {
@@ -102,14 +109,6 @@ typedef struct remote_ra_data_s {
     GList *cmds;
     GList *recurring_cmds;
     uint32_t status;
-
-    /* Similar for whether we are controlling a guest node or remote node.
-     * Fortunately there is a meta-attribute in the transition already and
-     * as the situation doesn't change over time we can use the
-     * resource start for noting down the information for later use when
-     * the attributes aren't at hand.
-     */
-    gboolean controlling_guest;
 } remote_ra_data_t;
 
 static int handle_remote_ra_start(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd, int timeout_ms);
@@ -768,7 +767,6 @@ handle_remote_ra_start(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd, int timeo
     const char *server = NULL;
     lrmd_key_value_t *tmp = NULL;
     int port = 0;
-    remote_ra_data_t *ra_data = lrm_state->remote_ra_data;
     int timeout_used = timeout_ms > MAX_START_TIMEOUT_MS ? MAX_START_TIMEOUT_MS : timeout_ms;
     int rc = pcmk_rc_ok;
 
@@ -779,7 +777,7 @@ handle_remote_ra_start(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd, int timeo
         } else if (pcmk__str_eq(tmp->key, XML_RSC_ATTR_REMOTE_RA_PORT, pcmk__str_casei)) {
             port = atoi(tmp->value);
         } else if (pcmk__str_eq(tmp->key, CRM_META "_" XML_RSC_ATTR_CONTAINER, pcmk__str_casei)) {
-            ra_data->controlling_guest = TRUE;
+            lrm_remote_set_flags(lrm_state, controlling_guest);
         }
     }
 
@@ -1373,6 +1371,5 @@ gboolean
 remote_ra_controlling_guest(lrm_state_t * lrm_state)
 {
     remote_ra_data_t *ra_data = lrm_state->remote_ra_data;
-
-    return ra_data->controlling_guest;
+    return pcmk_is_set(ra_data->status, controlling_guest);
 }
