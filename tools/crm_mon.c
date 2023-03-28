@@ -1504,28 +1504,15 @@ main(int argc, char **argv)
                 break;
         }
 
-        if (options.one_shot) {
-            if (output_format == mon_output_console) {
-                output_format = mon_output_plain;
-            }
+        if (options.daemonize
+            && !options.one_shot
+            && !options.external_agent
+            && pcmk__str_eq(args->output_dest, "-", pcmk__str_null_matches)) {
 
-        } else if (options.daemonize) {
-            if (pcmk__str_eq(args->output_dest, "-", pcmk__str_null_matches|pcmk__str_casei) &&
-                !options.external_agent) {
-                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                            "--daemonize requires at least one of --output-to and --external-agent");
-                return clean_up(CRM_EX_USAGE);
-            }
-
-        } else if (output_format == mon_output_console) {
-#if CURSES_ENABLED
-            crm_enable_stderr(FALSE);
-#else
-            options.one_shot = TRUE;
-            output_format = mon_output_plain;
-            printf("Defaulting to one-shot mode\n");
-            printf("You need to have curses available at compile time to enable console mode\n");
-#endif
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                        "--daemonize requires at least one of --output-to "
+                        "(with value not set to '-') and --external-agent");
+            return clean_up(CRM_EX_USAGE);
         }
     }
 
