@@ -70,9 +70,25 @@ typedef struct remote_ra_cmd_s {
     uint32_t status;
 } remote_ra_cmd_t;
 
-enum remote_migration_status {
-    expect_takeover = 1,
-    takeover_complete,
+#define lrm_remote_set_flags(lrm_state, flags_to_set) do { \
+    lrm_state_t *lrm = (lrm_state); \
+    remote_ra_data_t *ra = lrm->remote_ra_data; \
+    ra->status = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE, "Remote", \
+                                    lrm->node_name, ra->status, \
+                                    (flags_to_set), #flags_to_set); \
+        } while (0)
+
+#define lrm_remote_clear_flags(lrm_state, flags_to_clear) do { \
+    lrm_state_t *lrm = (lrm_state); \
+    remote_ra_data_t *ra = lrm->remote_ra_data; \
+    ra->status = pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE, "Remote", \
+                                      lrm->node_name, ra->status, \
+                                      (flags_to_clear), #flags_to_clear); \
+        } while (0)
+
+enum remote_status {
+    expect_takeover     = (1 << 0),
+    takeover_complete   = (1 << 1),
 };
 
 typedef struct remote_ra_data_s {
@@ -80,8 +96,7 @@ typedef struct remote_ra_data_s {
     remote_ra_cmd_t *cur_cmd;
     GList *cmds;
     GList *recurring_cmds;
-
-    enum remote_migration_status migrate_status;
+    uint32_t status;
 
     gboolean active;
 
@@ -336,7 +351,7 @@ check_remote_node_state(const remote_ra_cmd_t *cmd)
         remote_ra_data_t *ra_data = lrm_state? lrm_state->remote_ra_data : NULL;
 
         if (ra_data) {
-            if (ra_data->migrate_status != takeover_complete) {
+            if (!pcmk_is_set(ra_data->status, takeover_complete)) {
                 /* Stop means down if we didn't successfully migrate elsewhere */
                 remote_node_down(cmd->rsc_id, DOWN_KEEP_LRM);
             } else if (AM_I_DC == FALSE) {
@@ -559,9 +574,10 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
     if (op->type == lrmd_event_new_client) {
         // Another client has connected to the remote daemon
 
-        if (ra_data->migrate_status == expect_takeover) {
+        if (pcmk_is_set(ra_data->status, expect_takeover)) {
             // Great, we knew this was coming
-            ra_data->migrate_status = takeover_complete;
+            lrm_remote_clear_flags(lrm_state, expect_takeover);
+            lrm_remote_set_flags(lrm_state, takeover_complete);
 
         } else {
             crm_err("Disconnecting from Pacemaker Remote node %s due to "
@@ -576,7 +592,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
 
     /* filter all EXEC events up */
     if (op->type == lrmd_event_exec_complete) {
-        if (ra_data->migrate_status == takeover_complete) {
+        if (pcmk_is_set(ra_data->status, takeover_complete)) {
             crm_debug("ignoring event, this connection is taken over by another node");
         } else {
             lrm_op_callback(op);
@@ -718,7 +734,7 @@ handle_remote_ra_stop(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd)
     CRM_ASSERT(lrm_state);
     ra_data = lrm_state->remote_ra_data;
 
-    if (ra_data->migrate_status != takeover_complete) {
+    if (!pcmk_is_set(ra_data->status, takeover_complete)) {
         /* delete pending ops when ever the remote connection is intentionally stopped */
         g_hash_table_remove_all(lrm_state->active_ops);
     } else {
@@ -805,7 +821,7 @@ handle_remote_ra_exec(gpointer user_data)
         g_list_free_1(first);
 
         if (!strcmp(cmd->action, "start") || !strcmp(cmd->action, "migrate_from")) {
-            ra_data->migrate_status = 0;
+            lrm_remote_clear_flags(lrm_state, expect_takeover | takeover_complete);
             if (handle_remote_ra_start(lrm_state, cmd,
                                        cmd->timeout) == pcmk_rc_ok) {
                 /* take care of this later when we get async connection result */
@@ -841,7 +857,7 @@ handle_remote_ra_exec(gpointer user_data)
 
         } else if (!strcmp(cmd->action, "stop")) {
 
-            if (ra_data->migrate_status == expect_takeover) {
+            if (pcmk_is_set(ra_data->status, expect_takeover)) {
                 /* briefly wait on stop for the takeover event to occur. If the
                  * takeover event does not occur during the wait period, that's fine.
                  * It just means that the remote-node's lrm_status section is going to get
@@ -856,7 +872,8 @@ handle_remote_ra_exec(gpointer user_data)
             handle_remote_ra_stop(lrm_state, cmd);
 
         } else if (!strcmp(cmd->action, "migrate_to")) {
-            ra_data->migrate_status = expect_takeover;
+            lrm_remote_clear_flags(lrm_state, takeover_complete);
+            lrm_remote_set_flags(lrm_state, expect_takeover);
             pcmk__set_result(&(cmd->result), PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
             report_remote_ra_result(cmd);
         } else if (pcmk__str_any_of(cmd->action, CRMD_ACTION_RELOAD,
