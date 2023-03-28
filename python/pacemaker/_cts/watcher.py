@@ -72,7 +72,7 @@ class FileObj(SearchObj):
             elif re.search("^CTSwatcher:.*truncated", line):
                 self.log(line)
             elif re.search("^CTSwatcher:", line):
-                self.debug("Got control line: " + line)
+                self.debug("Got control line: %s" % line)
             else:
                 self.cache.append(line)
 
@@ -235,7 +235,7 @@ class LogWatcher(RemoteExec):
 
         if not silent:
             for regex in self.regexes:
-                self.debug("Looking for regex: " + regex)
+                self.debug("Looking for regex: %s" % regex)
 
         self.Timeout = int(timeout)
         self.returnonlymatch = None
@@ -352,7 +352,7 @@ class LogWatcher(RemoteExec):
                     which = which + 1
 
                     if self.debug_level > 3:
-                        self.debug("Comparing line to: " + regex)
+                        self.debug("Comparing line to: %s" % regex)
 
                     matchobj = re.search(regex, line)
 
@@ -362,10 +362,10 @@ class LogWatcher(RemoteExec):
                         if self.returnonlymatch:
                             return matchobj.group(self.returnonlymatch)
                         else:
-                            self.debug("Matched: " + line)
+                            self.debug("Matched: %s" % line)
 
                             if self.debug_level > 1:
-                                self.debug("With: " + regex)
+                                self.debug("With: %s" % regex)
 
                             return line
 
@@ -408,7 +408,7 @@ class LogWatcher(RemoteExec):
             self.debug("starting search: timeout=%d" % timeout)
             for regex in self.regexes:
                 if self.debug_level > 2:
-                    self.debug("Looking for regex: " + regex)
+                    self.debug("Looking for regex: %s" % regex)
 
         while (len(self.regexes) > 0):
             oneresult = self.look(timeout)
