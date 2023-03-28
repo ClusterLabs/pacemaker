@@ -89,6 +89,7 @@ typedef struct remote_ra_cmd_s {
 enum remote_status {
     expect_takeover     = (1 << 0),
     takeover_complete   = (1 << 1),
+    remote_active       = (1 << 2),
 };
 
 typedef struct remote_ra_data_s {
@@ -97,8 +98,6 @@ typedef struct remote_ra_data_s {
     GList *cmds;
     GList *recurring_cmds;
     uint32_t status;
-
-    gboolean active;
 
     /* Maintenance mode is difficult to determine from the controller's context,
      * so we have it signalled back with the transition from the scheduler.
@@ -602,7 +601,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
 
     if ((op->type == lrmd_event_disconnect) && (ra_data->cur_cmd == NULL)) {
 
-        if (ra_data->active == FALSE) {
+        if (!pcmk_is_set(ra_data->status, remote_active)) {
             crm_debug("Disconnection from Pacemaker Remote node %s complete",
                       lrm_state->node_name);
 
@@ -662,7 +661,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
         } else {
             lrm_state_reset_tables(lrm_state, TRUE);
             pcmk__set_result(&(cmd->result), PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
-            ra_data->active = TRUE;
+            lrm_remote_set_flags(lrm_state, remote_active);
         }
 
         crm_debug("Remote connection event matched %s action", cmd->action);
@@ -697,7 +696,8 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
         cmd_handled = TRUE;
 
     } else if (op->type == lrmd_event_disconnect && pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)) {
-        if (ra_data->active == TRUE && !pcmk_is_set(cmd->status, cmd_cancel)) {
+        if (pcmk_is_set(ra_data->status, remote_active) &&
+            !pcmk_is_set(cmd->status, cmd_cancel)) {
             pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
                              PCMK_EXEC_ERROR,
                              "Remote connection unexpectedly dropped "
@@ -743,7 +743,7 @@ handle_remote_ra_stop(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd)
         lrm_state_reset_tables(lrm_state, FALSE);
     }
 
-    ra_data->active = FALSE;
+    lrm_remote_clear_flags(lrm_state, remote_active);
     lrm_state_disconnect(lrm_state);
 
     if (ra_data->cmds) {
@@ -1345,7 +1345,7 @@ remote_ra_process_maintenance_nodes(xmlNode *xml)
 
             cnt++;
             if (lrm_state && lrm_state->remote_ra_data &&
-                ((remote_ra_data_t *) lrm_state->remote_ra_data)->active) {
+                pcmk_is_set(((remote_ra_data_t *) lrm_state->remote_ra_data)->status, remote_active)) {
                 int is_maint;
 
                 cnt_remote++;
