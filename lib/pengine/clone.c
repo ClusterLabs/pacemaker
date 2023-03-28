@@ -1402,10 +1402,10 @@ pe__create_clone_notifications(pe_resource_t *clone)
 
     get_clone_variant_data(clone_data, clone);
 
-    pe__create_notifications(clone, clone_data->start_notify);
-    pe__create_notifications(clone, clone_data->stop_notify);
-    pe__create_notifications(clone, clone_data->promote_notify);
-    pe__create_notifications(clone, clone_data->demote_notify);
+    pe__create_action_notifications(clone, clone_data->start_notify);
+    pe__create_action_notifications(clone, clone_data->stop_notify);
+    pe__create_action_notifications(clone, clone_data->promote_notify);
+    pe__create_action_notifications(clone, clone_data->demote_notify);
 }
 
 /*!

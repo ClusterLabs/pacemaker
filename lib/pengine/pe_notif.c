@@ -929,7 +929,7 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
  * \param[in,out] n_data  Clone notification data for some action
  */
 void
-pe__create_notifications(pe_resource_t *rsc, notify_data_t *n_data)
+pe__create_action_notifications(pe_resource_t *rsc, notify_data_t *n_data)
 {
     if ((rsc == NULL) || (n_data == NULL)) {
         return;
