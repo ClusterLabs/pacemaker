@@ -210,9 +210,9 @@ static pcmk__message_entry_t fmt_functions[] = {
 
 struct {
     guint reconnect_ms;
-    gboolean daemonize;
+    bool daemonize;
+    bool one_shot;
     gboolean fence_connect;
-    gboolean one_shot;
     gboolean print_pending;
     gboolean show_bans;
     gboolean watch_fencing;
@@ -428,7 +428,7 @@ static gboolean
 as_cgi_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     pcmk__str_update(&args->output_ty, "html");
     output_format = mon_output_cgi;
-    options.one_shot = TRUE;
+    options.one_shot = true;
     return TRUE;
 }
 
@@ -445,7 +445,7 @@ static gboolean
 as_simple_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     pcmk__str_update(&args->output_ty, "text");
     output_format = mon_output_monitor;
-    options.one_shot = TRUE;
+    options.one_shot = true;
     return TRUE;
 }
 
@@ -556,6 +556,42 @@ reconnect_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Enable one-shot mode and disable daemonized mode
+ *
+ * \param[in]  option_name  Name of option being parsed (ignored)
+ * \param[in]  optarg       Value to be parsed (ignored)
+ * \param[in]  data         User data (ignored)
+ * \param[out] err          Where to store error (ignored)
+ */
+static gboolean
+one_shot_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+            GError **err)
+{
+    options.one_shot = true;
+    options.daemonize = false;
+    return TRUE;
+}
+
+/*!
+ * \internal
+ * \brief Enable daemonized mode and disable one-shot mode
+ *
+ * \param[in]  option_name  Name of option being parsed (ignored)
+ * \param[in]  optarg       Value to be parsed (ignored)
+ * \param[in]  data         User data (ignored)
+ * \param[out] err          Where to store error (ignored)
+ */
+static gboolean
+daemonize_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+             GError **err)
+{
+    options.daemonize = true;
+    options.one_shot = false;
+    return TRUE;
+}
+
 static gboolean
 show_attributes_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     return user_include_exclude_cb("--include", "attributes", data, err);
@@ -591,7 +627,7 @@ show_tickets_cb(const gchar *option_name, const gchar *optarg, gpointer data, GE
 static gboolean
 use_cib_file_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     setenv("CIB_file", optarg, 1);
-    options.one_shot = TRUE;
+    options.one_shot = true;
     return TRUE;
 }
 
@@ -603,11 +639,13 @@ static GOptionEntry addl_entries[] = {
       "Update frequency (default is 5 seconds)",
       "TIMESPEC" },
 
-    { "one-shot", '1', 0, G_OPTION_ARG_NONE, &options.one_shot,
+    { "one-shot", '1', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
+      one_shot_cb,
       "Display the cluster status once and exit",
       NULL },
 
-    { "daemonize", 'd', 0, G_OPTION_ARG_NONE, &options.daemonize,
+    { "daemonize", 'd', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
+      daemonize_cb,
       "Run in the background as a daemon.\n"
       INDENT "Requires at least one of --output-to and --external-agent.",
       NULL },
@@ -1344,7 +1382,7 @@ reconcile_output_format(pcmk__common_args_t *args)
             output_format = mon_output_plain;
 
             if (!options.daemonize) {
-                options.one_shot = TRUE;
+                options.one_shot = true;
             }
         } else {
             pcmk__str_update(&args->output_ty, "console");
@@ -1361,7 +1399,7 @@ reconcile_output_format(pcmk__common_args_t *args)
         output_format = mon_output_plain;
 
         if (!options.daemonize) {
-            options.one_shot = TRUE;
+            options.one_shot = true;
         }
     }
 
@@ -1433,7 +1471,7 @@ main(int argc, char **argv)
 
     if (pcmk__ends_with_ext(argv[0], ".cgi")) {
         output_format = mon_output_cgi;
-        options.one_shot = TRUE;
+        options.one_shot = true;
     }
 
     processed_args = pcmk__cmdline_preproc(argv, "ehimpxEILU");
@@ -1488,7 +1526,7 @@ main(int argc, char **argv)
                 /* Notifications are unsupported; nothing to monitor
                  * @COMPAT: Let setup_cib_connection() handle this by exiting?
                  */
-                options.one_shot = TRUE;
+                options.one_shot = true;
                 break;
 
             case cib_remote:
@@ -1505,7 +1543,6 @@ main(int argc, char **argv)
         }
 
         if (options.daemonize
-            && !options.one_shot
             && !options.external_agent
             && pcmk__str_eq(args->output_dest, "-", pcmk__str_null_matches)) {
 
@@ -1616,7 +1653,7 @@ main(int argc, char **argv)
         } else if (options.external_agent != NULL) {
             g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE, "CGI mode cannot be used with --external-agent");
             return clean_up(CRM_EX_USAGE);
-        } else if (options.daemonize == TRUE) {
+        } else if (options.daemonize) {
             g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE, "CGI mode cannot be used with -d");
             return clean_up(CRM_EX_USAGE);
         }
