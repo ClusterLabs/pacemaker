@@ -604,7 +604,7 @@ static GOptionEntry addl_entries[] = {
       "TIMESPEC" },
 
     { "one-shot", '1', 0, G_OPTION_ARG_NONE, &options.one_shot,
-      "Display the cluster status once on the console and exit",
+      "Display the cluster status once and exit",
       NULL },
 
     { "daemonize", 'd', 0, G_OPTION_ARG_NONE, &options.daemonize,
@@ -1187,40 +1187,67 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
 #else
     const char *fmts = "text (default), html, xml, none";
 #endif // CURSES_ENABLED
-    const char *description = "Notes:\n\n"
-                              "If this program is called as crm_mon.cgi, --output-as=html --html-cgi will\n"
-                              "automatically be added to the command line arguments.\n\n"
-                              "Time Specification:\n\n"
-                              "The TIMESPEC in any command line option can be specified in many different\n"
-                              "formats.  It can be just an integer number of seconds, a number plus units\n"
-                              "(ms/msec/us/usec/s/sec/m/min/h/hr), or an ISO 8601 period specification.\n\n"
-                              "Output Control:\n\n"
-                              "By default, a certain list of sections are written to the output destination.\n"
-                              "The default varies based on the output format - XML includes everything, while\n"
-                              "other output formats will display less.  This list can be modified with the\n"
-                              "--include and --exclude command line options.  Each option may be given multiple\n"
-                              "times on the command line, and each can give a comma-separated list of sections.\n"
-                              "The options are applied to the default set, from left to right as seen on the\n"
-                              "command line.  For a list of valid sections, pass --include=list or --exclude=list.\n\n"
-                              "Interactive Use:\n\n"
-                              "When run interactively, crm_mon can be told to hide and display various sections\n"
-                              "of output.  To see a help screen explaining the options, hit '?'.  Any key stroke\n"
-                              "aside from those listed will cause the screen to refresh.\n\n"
-                              "Examples:\n\n"
-                              "Display the cluster status on the console with updates as they occur:\n\n"
-                              "\tcrm_mon\n\n"
-                              "Display the cluster status on the console just once then exit:\n\n"
-                              "\tcrm_mon -1\n\n"
-                              "Display your cluster status, group resources by node, and include inactive resources in the list:\n\n"
-                              "\tcrm_mon --group-by-node --inactive\n\n"
-                              "Start crm_mon as a background daemon and have it write the cluster status to an HTML file:\n\n"
-                              "\tcrm_mon --daemonize --output-as html --output-to /path/to/docroot/filename.html\n\n"
-                              "Start crm_mon and export the current cluster status as XML to stdout, then exit:\n\n"
-                              "\tcrm_mon --output-as xml\n\n";
+    const char *desc = NULL;
+
+    desc = "Notes:\n\n"
+           "If this program is called as crm_mon.cgi, --output-as=html and\n"
+           "--html-cgi are automatically added to the command line\n"
+           "arguments.\n\n"
+
+           "Time Specification:\n\n"
+           "The TIMESPEC in any command line option can be specified in many\n"
+           "different formats. It can be an integer number of seconds, a\n"
+           "number plus units (us/usec/ms/msec/s/sec/m/min/h/hr), or an ISO\n"
+           "8601 period specification.\n\n"
+
+           "Output Control:\n\n"
+           "By default, a particular set of sections are written to the\n"
+           "output destination. The default varies based on the output\n"
+           "format: XML includes all sections by default, while other output\n"
+           "formats include less. This set can be modified with the --include\n"
+           "and --exclude command line options. Each option may be passed\n"
+           "multiple times, and each can specify a comma-separated list of\n"
+           "sections. The options are applied to the default set, in order\n"
+           "from left to right as they are passed on the command line. For a\n"
+           "list of valid sections, pass --include=list or --exclude=list.\n\n"
+
+           "Interactive Use:\n\n"
+#if CURSES_ENABLED
+           "When run interactively, crm_mon can be told to hide and show\n"
+           "various sections of output. To see a help screen explaining the\n"
+           "options, press '?'. Any key stroke aside from those listed will\n"
+           "cause the screen to refresh.\n\n"
+#else
+           "The local installation of Pacemaker was built without support for\n"
+           "interactive (console) mode. A curses library must be available at\n"
+           "build time to support interactive mode.\n\n"
+#endif // CURSES_ENABLED
+
+           "Examples:\n\n"
+#if CURSES_ENABLED
+           "Display the cluster status on the console with updates as they\n"
+           "occur:\n\n"
+           "\tcrm_mon\n\n"
+#endif // CURSES_ENABLED
+
+           "Display the cluster status once and exit:\n\n"
+           "\tcrm_mon -1\n\n"
+
+           "Display the cluster status, group resources by node, and include\n"
+           "inactive resources in the list:\n\n"
+           "\tcrm_mon --group-by-node --inactive\n\n"
+
+           "Start crm_mon as a background daemon and have it write the\n"
+           "cluster status to an HTML file:\n\n"
+           "\tcrm_mon --daemonize --output-as html "
+           "--output-to /path/to/docroot/filename.html\n\n"
+
+           "Display the cluster status as XML:\n\n"
+           "\tcrm_mon --output-as xml\n\n";
 
     context = pcmk__build_arg_context(args, fmts, group, NULL);
     pcmk__add_main_args(context, extra_prog_entries);
-    g_option_context_set_description(context, description);
+    g_option_context_set_description(context, desc);
 
     pcmk__add_arg_group(context, "display", "Display Options:",
                         "Show display options", display_entries);
@@ -1293,28 +1320,49 @@ reconcile_output_format(pcmk__common_args_t *args)
         output_format = mon_output_html;
         umask(S_IWGRP | S_IWOTH);   // World-readable HTML
 
-    } else if (pcmk__str_eq(args->output_ty, "text", pcmk__str_none)) {
-        output_format = mon_output_plain;
-
     } else if (pcmk__str_eq(args->output_ty, "xml", pcmk__str_none)) {
         output_format = mon_output_xml;
 
-    } else if (options.one_shot) {
-        pcmk__str_update(&args->output_ty, "text");
-        output_format = mon_output_plain;
-
-    } else if (!options.daemonize && args->output_dest != NULL) {
-        options.one_shot = TRUE;
-        pcmk__str_update(&args->output_ty, "text");
-        output_format = mon_output_plain;
-
+#if CURSES_ENABLED
     } else if (pcmk__str_eq(args->output_ty, "console",
                             pcmk__str_null_matches)) {
-        /* Default to console if no format was specified and none of the above
-         * overrides were hit
+        /* Console is the default format if no conflicting options are given.
+         *
+         * Use text output instead if one of the following conditions is met:
+         * * We're not in interactive mode (console output is incompatible with
+         *   other modes)
+         * * We requested the version, which is effectively one-shot
+         * * We specified a non-stdout output destination (console mode is
+         *   compatible only with stdout)
          */
-        pcmk__str_update(&args->output_ty, "console");
-        output_format = mon_output_console;
+        if (options.one_shot
+            || options.daemonize
+            || args->version
+            || !pcmk__str_eq(args->output_dest, "-", pcmk__str_null_matches)) {
+
+            pcmk__str_update(&args->output_ty, "text");
+            output_format = mon_output_plain;
+
+            if (!options.daemonize) {
+                options.one_shot = TRUE;
+            }
+        } else {
+            pcmk__str_update(&args->output_ty, "console");
+            output_format = mon_output_console;
+            crm_enable_stderr(FALSE);
+        }
+#endif // CURSES_ENABLED
+
+    } else if (pcmk__str_eq(args->output_ty, "text", pcmk__str_null_matches)) {
+        /* Text output was explicitly requested, or it's the default because
+         * curses is not enabled
+         */
+        pcmk__str_update(&args->output_ty, "text");
+        output_format = mon_output_plain;
+
+        if (!options.daemonize) {
+            options.one_shot = TRUE;
+        }
     }
 
     // Otherwise, invalid format. Let pcmk__output_new() throw an error.
@@ -1486,21 +1534,17 @@ main(int argc, char **argv)
 
     /* output_format MUST NOT BE CHANGED AFTER THIS POINT. */
 
-    if (args->version && output_format == mon_output_console) {
-        /* Use the text output format here if we are in curses mode but were given
-         * --version.  Displaying version information uses printf, and then we
-         *  immediately exit.  We don't want to initialize curses for that.
-         */
-        rc = pcmk__output_new(&out, "text", args->output_dest, argv);
-    } else {
-        rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
-    }
-
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
     if (rc != pcmk_rc_ok) {
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Error creating output format %s: %s",
                     args->output_ty, pcmk_rc_str(rc));
         return clean_up(CRM_EX_ERROR);
     }
+
+    /* If we had a valid format for pcmk__output_new(), output_format should be
+     * set by now.
+     */
+    CRM_ASSERT(output_format != mon_output_unset);
 
     if (options.daemonize) {
         if (!options.external_agent) {
@@ -2162,7 +2206,10 @@ clean_up(crm_exit_t exit_code)
      * down will be lost because doing the shut down will also restore the
      * screen to whatever it looked like before crm_mon was started.
      */
-    if ((error != NULL || exit_code == CRM_EX_USAGE) && output_format == mon_output_console) {
+    if (((error != NULL) || (exit_code == CRM_EX_USAGE))
+        && (output_format == mon_output_console)
+        && (out != NULL)) {
+
         out->finish(out, exit_code, false, NULL);
         pcmk__output_free(out);
         out = NULL;
