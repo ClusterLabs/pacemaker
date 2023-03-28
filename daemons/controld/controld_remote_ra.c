@@ -90,6 +90,10 @@ enum remote_status {
     expect_takeover     = (1 << 0),
     takeover_complete   = (1 << 1),
     remote_active       = (1 << 2),
+    /* Maintenance mode is difficult to determine from the controller's context,
+     * so we have it signalled back with the transition from the scheduler.
+     */
+    remote_in_maint     = (1 << 3),
 };
 
 typedef struct remote_ra_data_s {
@@ -98,11 +102,6 @@ typedef struct remote_ra_data_s {
     GList *cmds;
     GList *recurring_cmds;
     uint32_t status;
-
-    /* Maintenance mode is difficult to determine from the controller's context,
-     * so we have it signalled back with the transition from the scheduler.
-     */
-    gboolean is_maintenance;
 
     /* Similar for whether we are controlling a guest node or remote node.
      * Fortunately there is a meta-attribute in the transition already and
@@ -1299,7 +1298,6 @@ remote_ra_process_pseudo(xmlNode *xml)
 static void
 remote_ra_maintenance(lrm_state_t * lrm_state, gboolean maintenance)
 {
-    remote_ra_data_t *ra_data = lrm_state->remote_ra_data;
     xmlNode *update, *state;
     int call_opt;
     crm_node_t *node;
@@ -1314,7 +1312,11 @@ remote_ra_maintenance(lrm_state_t * lrm_state, gboolean maintenance)
     if (controld_update_cib(XML_CIB_TAG_STATUS, update, call_opt,
                             NULL) == pcmk_rc_ok) {
         /* TODO: still not 100% sure that async update will succeed ... */
-        ra_data->is_maintenance = maintenance;
+        if (maintenance) {
+            lrm_remote_set_flags(lrm_state, remote_in_maint);
+        } else {
+            lrm_remote_clear_flags(lrm_state, remote_in_maint);
+        }
     }
     free_xml(update);
 }
@@ -1364,8 +1366,7 @@ gboolean
 remote_ra_is_in_maintenance(lrm_state_t * lrm_state)
 {
     remote_ra_data_t *ra_data = lrm_state->remote_ra_data;
-
-    return ra_data->is_maintenance;
+    return pcmk_is_set(ra_data->status, remote_in_maint);
 }
 
 gboolean
