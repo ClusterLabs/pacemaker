@@ -83,7 +83,7 @@ class FileObj(SearchObj):
         self.delegate = delegate
         self.cache = []
 
-        if (self.limit is not None) and (self.offset == "EOF" or int(self.offset) > self.limit):
+        if self.limit is not None and (self.offset == "EOF" or int(self.offset) > self.limit):
             if self.delegate:
                 self.delegate.async_complete(-1, -1, [], [])
 
@@ -172,7 +172,7 @@ class JournalObj(SearchObj):
         self.hitLimit = False
         (rc, lines) = self.rsh(self.host, "date +'%Y-%m-%d %H:%M:%S'", verbose=0)
 
-        if (rc == 0) and (len(lines) == 1):
+        if rc == 0 and len(lines) == 1:
             self.limit = lines[0].strip()
             self.debug("Set limit to: %s" % self.limit)
         else:
@@ -410,7 +410,7 @@ class LogWatcher(RemoteExec):
                 if self.debug_level > 2:
                     self.debug("Looking for regex: %s" % regex)
 
-        while (len(self.regexes) > 0):
+        while len(self.regexes) > 0:
             oneresult = self.look(timeout)
             if not oneresult:
                 self.unmatched = self.regexes
