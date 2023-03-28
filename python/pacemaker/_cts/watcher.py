@@ -110,8 +110,6 @@ class FileObj(SearchObj):
                 self.limit = int(match.group(1))
                 self.debug("Set limit to: %d" % self.limit)
 
-        return
-
 class JournalObj(SearchObj):
     def __init__(self, host=None, name=None):
         SearchObj.__init__(self, name, host, name)
@@ -179,8 +177,6 @@ class JournalObj(SearchObj):
         else:
             self.debug("Unable to set limit for %s because date returned %d lines with status %d" % (self.host,
                 len(lines), rc))
-
-        return
 
 class LogWatcher(RemoteExec):
     '''This class watches logs for messages that fit certain regular
