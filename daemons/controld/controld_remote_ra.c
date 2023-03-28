@@ -23,6 +23,23 @@
 /* The max start timeout before cmd retry */
 #define MAX_START_TIMEOUT_MS 10000
 
+#define cmd_set_flags(cmd, flags_to_set) do { \
+    (cmd)->status = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE, \
+                                       "Remote command", (cmd)->rsc_id, (cmd)->status, \
+                                       (flags_to_set), #flags_to_set); \
+        } while (0)
+
+#define cmd_clear_flags(cmd, flags_to_clear) do { \
+    (cmd)->status = pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE, \
+                                         "Remote command", (cmd)->rsc_id, (cmd)->status, \
+                                         (flags_to_clear), #flags_to_clear); \
+        } while (0)
+
+enum remote_cmd_status {
+    cmd_reported_success    = (1 << 0),
+    cmd_cancel              = (1 << 1),
+};
+
 typedef struct remote_ra_cmd_s {
     /*! the local node the cmd is issued from */
     char *owner;
@@ -43,7 +60,6 @@ typedef struct remote_ra_cmd_s {
     guint interval_ms;
     /*! interval timer id */
     int interval_id;
-    int reported_success;
     int monitor_timeout_id;
     int takeover_timeout_id;
     /*! action parameters */
@@ -51,7 +67,7 @@ typedef struct remote_ra_cmd_s {
     pcmk__action_result_t result;
     int call_id;
     time_t start_time;
-    gboolean cancel;
+    uint32_t status;
 } remote_ra_cmd_t;
 
 enum remote_migration_status {
@@ -363,7 +379,7 @@ report_remote_ra_result(remote_ra_cmd_t * cmd)
     lrmd__set_result(&op, cmd->result.exit_status, cmd->result.execution_status,
                      cmd->result.exit_reason);
 
-    if (cmd->reported_success && !pcmk__result_ok(&(cmd->result))) {
+    if (pcmk_is_set(cmd->status, cmd_reported_success) && !pcmk__result_ok(&(cmd->result))) {
         op.t_rcchange = (unsigned int) time(NULL);
         /* This edge case will likely never ever occur, but if it does the
          * result is that a failure will not be processed correctly. This is only
@@ -647,16 +663,16 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
         /* Only report success the first time, after that only worry about failures.
          * For this function, if we get the poke pack, it is always a success. Pokes
          * only fail if the send fails, or the response times out. */
-        if (!cmd->reported_success) {
+        if (!pcmk_is_set(cmd->status, cmd_reported_success)) {
             pcmk__set_result(&(cmd->result), PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
             report_remote_ra_result(cmd);
-            cmd->reported_success = 1;
+            cmd_set_flags(cmd, cmd_reported_success);
         }
 
         crm_debug("Remote poke event matched %s action", cmd->action);
 
         /* success, keep rescheduling if interval is present. */
-        if (cmd->interval_ms && (cmd->cancel == FALSE)) {
+        if (cmd->interval_ms && !pcmk_is_set(cmd->status, cmd_cancel)) {
             ra_data->recurring_cmds = g_list_append(ra_data->recurring_cmds, cmd);
             cmd->interval_id = g_timeout_add(cmd->interval_ms,
                                              recurring_helper, cmd);
@@ -665,7 +681,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
         cmd_handled = TRUE;
 
     } else if (op->type == lrmd_event_disconnect && pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)) {
-        if (ra_data->active == TRUE && (cmd->cancel == FALSE)) {
+        if (ra_data->active == TRUE && !pcmk_is_set(cmd->status, cmd_cancel)) {
             pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
                              PCMK_EXEC_ERROR,
                              "Remote connection unexpectedly dropped "
@@ -1017,7 +1033,7 @@ remote_ra_cancel(lrm_state_t *lrm_state, const char *rsc_id,
         (ra_data->cur_cmd->interval_ms == interval_ms) &&
         (pcmk__str_eq(ra_data->cur_cmd->action, action, pcmk__str_casei))) {
 
-        ra_data->cur_cmd->cancel = TRUE;
+        cmd_set_flags(ra_data->cur_cmd, cmd_cancel);
     }
 
     return 0;
@@ -1041,7 +1057,7 @@ handle_dup_monitor(remote_ra_data_t *ra_data, guint interval_ms,
     }
 
     if (ra_data->cur_cmd &&
-        ra_data->cur_cmd->cancel == FALSE &&
+        !pcmk_is_set(ra_data->cur_cmd->status, cmd_cancel) &&
         (ra_data->cur_cmd->interval_ms == interval_ms) &&
         pcmk__str_eq(ra_data->cur_cmd->action, "monitor", pcmk__str_casei)) {
 
@@ -1079,10 +1095,10 @@ handle_dup:
     }
 
     /* if we've already reported success, generate a new call id */
-    if (cmd->reported_success) {
+    if (pcmk_is_set(cmd->status, cmd_reported_success)) {
         cmd->start_time = time(NULL);
         cmd->call_id = generate_callid();
-        cmd->reported_success = 0;
+        cmd_clear_flags(cmd, cmd_reported_success);
     }
 
     /* if we have an interval_id set, that means we are in the process of
