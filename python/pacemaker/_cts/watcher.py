@@ -278,8 +278,6 @@ class LogWatcher(RemoteExec):
             self.cache_lock.release()
 
     def __get_lines(self, timeout):
-        count=0
-
         if not self.file_list:
             raise ValueError("No sources to read from")
 
@@ -314,7 +312,6 @@ class LogWatcher(RemoteExec):
             timeout = self.Timeout
 
         lines = 0
-        needlines = True
         begin = time.time()
         end = begin + timeout + 1
 
@@ -425,7 +422,7 @@ class LogWatcher(RemoteExec):
                 # Allow multiple regexes to match a single line
                 tmp_regexes = self.regexes
                 self.regexes = []
-                which = 0
+
                 for regex in tmp_regexes:
                     matchobj = re.search(regex, oneresult)
                     if not matchobj:
