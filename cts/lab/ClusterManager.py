@@ -16,13 +16,13 @@ from collections import UserDict
 from cts.CIB         import ConfigFactory
 from cts.CTS         import NodeStatus, Process
 from cts.CTStests    import AuditResource
-from cts.watcher     import LogWatcher
 
 from pacemaker.buildoptions import BuildOptions
 from pacemaker._cts.environment import EnvFactory
 from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.patterns import PatternSelector
 from pacemaker._cts.remote import RemoteFactory
+from pacemaker._cts.watcher import LogWatcher
 
 class ClusterManager(UserDict):
     '''The Cluster Manager class.

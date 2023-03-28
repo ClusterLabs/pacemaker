@@ -5,9 +5,9 @@ __copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import time, re, uuid
-from cts.watcher import LogWatcher
 
 from pacemaker.buildoptions import BuildOptions
+from pacemaker._cts.watcher import LogWatcher
 
 class ClusterAudit(object):
 

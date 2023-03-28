@@ -1,7 +1,7 @@
 """ Test scenario classes for Pacemaker's Cluster Test Suite (CTS)
 """
 
-__copyright__ = "Copyright 2000-2021 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import os
@@ -11,7 +11,8 @@ import time
 
 from cts.CTStests import CTSTest
 from cts.CTSaudits import ClusterAudit
-from cts.watcher  import LogWatcher
+
+from pacemaker._cts.watcher import LogWatcher
 
 class ScenarioComponent(object):
 

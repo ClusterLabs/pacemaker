@@ -25,8 +25,7 @@ ctslib_PYTHON		= __init__.py		\
 			  CTS.py		\
 			  CTSaudits.py		\
 			  CTSscenarios.py	\
-			  CTStests.py		\
-			  watcher.py
+			  CTStests.py
 
 ctsdir			= $(datadir)/$(PACKAGE)/tests/cts
 cts_SCRIPTS		= CTSlab.py		\
