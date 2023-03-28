@@ -49,9 +49,7 @@ add_dependent_scores(gpointer data, gpointer user_data)
 pe_node_t *
 pcmk__clone_assign(pe_resource_t *rsc, const pe_node_t *prefer)
 {
-    GList *iter = NULL;
-
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_clone));
+    CRM_ASSERT(pe_rsc_is_clone(rsc));
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
         return NULL; // Assignment has already been done
@@ -73,7 +71,7 @@ pcmk__clone_assign(pe_resource_t *rsc, const pe_node_t *prefer)
      * Since the this_with_colocations() method boils down to a copy of rsc_cons
      * for clones, we can use that here directly for efficiency.
      */
-    for (iter = rsc->rsc_cons; iter != NULL; iter = iter->next) {
+    for (GList *iter = rsc->rsc_cons; iter != NULL; iter = iter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) iter->data;
 
         pe_rsc_trace(rsc, "%s: Assigning colocation %s primary %s first",
