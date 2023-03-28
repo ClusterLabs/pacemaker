@@ -266,7 +266,8 @@ class LogWatcher(RemoteExec):
         # print("%s now has %d files" % (self.name, len(self.file_list)))
 
     def __del__(self):
-        if self.debug_level > 1: self.debug("Destroy")
+        if self.debug_level > 1:
+            self.debug("Destroy")
 
     def ReturnOnlyMatch(self, onlymatch=1):
         '''Specify one or more subgroups of the match to return rather than the whole string
@@ -316,13 +317,15 @@ class LogWatcher(RemoteExec):
 
         We return the first line which matches any of our patterns.
         '''
-        if timeout == None: timeout = self.Timeout
+        if timeout == None:
+            timeout = self.Timeout
 
         lines=0
         needlines=True
         begin=time.time()
         end=begin+timeout+1
-        if self.debug_level > 2: self.debug("starting single search: timeout=%d, begin=%d, end=%d" % (timeout, begin, end))
+        if self.debug_level > 2:
+            self.debug("starting single search: timeout=%d, begin=%d, end=%d" % (timeout, begin, end))
 
         if not self.regexes:
             self.debug("Nothing to look for")
@@ -344,10 +347,12 @@ class LogWatcher(RemoteExec):
                 which=-1
                 if re.search("CTS:", line):
                     continue
-                if self.debug_level > 2: self.debug("Processing: "+ line)
+                if self.debug_level > 2:
+                    self.debug("Processing: "+ line)
                 for regex in self.regexes:
                     which=which+1
-                    if self.debug_level > 3: self.debug("Comparing line to: "+ regex)
+                    if self.debug_level > 3:
+                        self.debug("Comparing line to: "+ regex)
                     matchobj = re.search(regex, line)
                     if matchobj:
                         self.whichmatch=which
@@ -355,11 +360,13 @@ class LogWatcher(RemoteExec):
                             return matchobj.group(self.returnonlymatch)
                         else:
                             self.debug("Matched: "+line)
-                            if self.debug_level > 1: self.debug("With: "+ regex)
+                            if self.debug_level > 1:
+                                self.debug("With: "+ regex)
                             return line
 
             elif timeout > 0 and end < time.time():
-                if self.debug_level > 1: self.debug("hit timeout: %d" % timeout)
+                if self.debug_level > 1:
+                    self.debug("hit timeout: %d" % timeout)
 
                 timeout = 0
                 for f in self.file_list:
@@ -385,14 +392,16 @@ class LogWatcher(RemoteExec):
         ALL of the regexes that were part of the watch
         '''
 
-        if timeout == None: timeout = self.Timeout
+        if timeout == None:
+            timeout = self.Timeout
         save_regexes = self.regexes
         returnresult = []
 
         if not silent:
             self.debug("starting search: timeout=%d" % timeout)
             for regex in self.regexes:
-                if self.debug_level > 2: self.debug("Looking for regex: "+regex)
+                if self.debug_level > 2:
+                    self.debug("Looking for regex: "+regex)
 
         while (len(self.regexes) > 0):
             oneresult = self.look(timeout)
