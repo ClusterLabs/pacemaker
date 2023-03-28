@@ -428,8 +428,8 @@ new_post_notify_action(pe_resource_t *rsc, const pe_node_t *node,
  * \return Newly created notification data
  */
 notify_data_t *
-pe__clone_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
-                           pe_action_t *action, pe_action_t *complete)
+pe__action_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
+                            pe_action_t *action, pe_action_t *complete)
 {
     notify_data_t *n_data = NULL;
 
@@ -984,7 +984,7 @@ pe__order_notifs_after_fencing(const pe_action_t *stop, pe_resource_t *rsc,
     notify_data_t *n_data;
 
     crm_info("Ordering notifications for implied %s after fencing", stop->uuid);
-    n_data = pe__clone_notif_pseudo_ops(rsc, RSC_STOP, NULL, stonith_op);
+    n_data = pe__action_notif_pseudo_ops(rsc, RSC_STOP, NULL, stonith_op);
 
     if (n_data != NULL) {
         collect_resource_data(rsc, false, n_data);

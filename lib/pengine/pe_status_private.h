@@ -70,9 +70,9 @@ G_GNUC_INTERNAL
 void pe__free_action_notification_data(notify_data_t *n_data);
 
 G_GNUC_INTERNAL
-notify_data_t *pe__clone_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
-                                          pe_action_t *action,
-                                          pe_action_t *complete);
+notify_data_t *pe__action_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
+                                           pe_action_t *action,
+                                           pe_action_t *complete);
 
 G_GNUC_INTERNAL
 void pe__force_anon(const char *standard, pe_resource_t *rsc, const char *rid,
