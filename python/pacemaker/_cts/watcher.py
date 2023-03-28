@@ -50,8 +50,7 @@ class SearchObj(object):
         async_task.join()
 
     def harvest_async(self, delegate=None):
-        self.log("Not implemented")
-        raise
+        raise NotImplementedError
 
     def end(self):
         self.debug("Unsetting the limit")
