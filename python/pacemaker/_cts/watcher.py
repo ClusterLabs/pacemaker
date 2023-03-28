@@ -20,14 +20,15 @@ class SearchObj(object):
         self.limit = None
         self.cache = []
         self.logger = LogFactory()
-        self.host = host
         self.name = name
         self.filename = filename
         self.rsh = RemoteFactory().getInstance()
 
         self.offset = "EOF"
 
-        if host == None:
+        if host:
+            self.host = host
+        else:
             self.host = "localhost"
 
     def __str__(self):
@@ -83,7 +84,7 @@ class FileObj(SearchObj):
         self.delegate = delegate
         self.cache = []
 
-        if self.limit is not None and (self.offset == "EOF" or int(self.offset) > self.limit):
+        if self.limit and (self.offset == "EOF" or int(self.offset) > self.limit):
             if self.delegate:
                 self.delegate.async_complete(-1, -1, [], [])
 
@@ -203,10 +204,11 @@ class LogWatcher(RemoteExec):
         self.name = name
         self.regexes = regexes
 
-        if debug_level is None:
-            debug_level = 1
+        if debug_level:
+            self.debug_level = debug_level
+        else:
+            self.debug_level = 1
 
-        self.debug_level = debug_level
         self.whichmatch = -1
         self.unmatched = None
         self.cache_lock = threading.Lock()
@@ -274,7 +276,7 @@ class LogWatcher(RemoteExec):
         # TODO: Probably need a lock for updating self.line_cache
         self.logger.debug("%s: Got %d lines from %d (total %d)" % (self.name, len(outLines), pid, len(self.line_cache)))
 
-        if len(outLines):
+        if outLines:
             self.cache_lock.acquire()
             self.line_cache.extend(outLines)
             self.cache_lock.release()
@@ -282,7 +284,7 @@ class LogWatcher(RemoteExec):
     def __get_lines(self, timeout):
         count=0
 
-        if not len(self.file_list):
+        if not self.file_list:
             raise ValueError("No sources to read from")
 
         pending = []
@@ -312,7 +314,7 @@ class LogWatcher(RemoteExec):
 
         We return the first line which matches any of our patterns.
         '''
-        if timeout == None:
+        if not timeout:
             timeout = self.Timeout
 
         lines = 0
@@ -332,7 +334,7 @@ class LogWatcher(RemoteExec):
                 f.setend()
 
         while True:
-            if len(self.line_cache):
+            if self.line_cache:
                 lines += 1
 
                 self.cache_lock.acquire()
@@ -380,7 +382,7 @@ class LogWatcher(RemoteExec):
             else:
                 self.__get_lines(timeout)
 
-                if len(self.line_cache) == 0 and end < time.time():
+                if not self.line_cache and end < time.time():
                     self.debug("Single search terminated: start=%d, end=%d, now=%d, lines=%d" % (begin, end, time.time(), lines))
                     return None
                 else:
@@ -398,7 +400,7 @@ class LogWatcher(RemoteExec):
         ALL of the regexes that were part of the watch
         '''
 
-        if timeout == None:
+        if not timeout:
             timeout = self.Timeout
 
         save_regexes = self.regexes
@@ -410,7 +412,7 @@ class LogWatcher(RemoteExec):
                 if self.debug_level > 2:
                     self.debug("Looking for regex: %s" % regex)
 
-        while len(self.regexes) > 0:
+        while self.regexes:
             oneresult = self.look(timeout)
             if not oneresult:
                 self.unmatched = self.regexes
