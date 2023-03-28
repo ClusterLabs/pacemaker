@@ -118,7 +118,6 @@ class JournalObj(SearchObj):
         self.harvest()
 
     def async_complete(self, pid, returncode, outLines, errLines):
-        #self.log( "%d returned on %s" % (pid, self.host))
         foundCursor = False
         for line in outLines:
             match = re.search("^-- cursor: ([^.]+)", line)
@@ -223,19 +222,16 @@ class LogWatcher(RemoteExec):
             self.kind    = kind
         else:
             raise
-            #self.kind    = self.Env["LogWatcher"]
 
         if log:
             self.filename    = log
         else:
             raise
-            #self.filename    = self.Env["LogFileName"]
 
         if hosts:
             self.hosts = hosts
         else:
             raise
-            #self.hosts = self.Env["nodes"]
 
         if not silent:
             for regex in self.regexes:
@@ -263,8 +259,6 @@ class LogWatcher(RemoteExec):
         else:
             self.file_list.append(FileObj(self.filename))
 
-        # print("%s now has %d files" % (self.name, len(self.file_list)))
-
     def __del__(self):
         if self.debug_level > 1:
             self.debug("Destroy")
@@ -289,7 +283,6 @@ class LogWatcher(RemoteExec):
             raise ValueError("No sources to read from")
 
         pending = []
-        #print("%s waiting for %d operations" % (self.name, self.pending))
         for f in self.file_list:
             t = f.harvest_async(self)
             if t:
@@ -300,8 +293,6 @@ class LogWatcher(RemoteExec):
             if t.is_alive():
                 self.logger.log("%s: Aborting after 20s waiting for %s logging commands" % (self.name, repr(t)))
                 return
-
-        #print("Got %d lines" % len(self.line_cache))
 
     def end(self):
         for f in self.file_list:
