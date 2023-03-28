@@ -67,7 +67,7 @@ if __name__ == '__main__':
         LogFactory().log("Unknown stack: "+Environment["stack"])
         sys.exit(1)
 
-    if Environment["TruncateLog"] == 1:
+    if Environment["TruncateLog"]:
         if Environment["OutputFile"] is None:
             LogFactory().log("Ignoring truncate request because no output file specified")
         else:
@@ -77,7 +77,7 @@ if __name__ == '__main__':
 
     Audits = AuditList(cm)
 
-    if Environment["ListTests"] == 1:
+    if Environment["ListTests"]:
         Tests = TestList(cm, Audits)
         LogFactory().log("Total %d tests"%len(Tests))
         for test in Tests :
@@ -109,15 +109,15 @@ if __name__ == '__main__':
     elif Environment["scenario"] == "all-once":
         NumIter = len(Tests)
         scenario = AllOnce(
-            cm, [ BootCluster(Environment), PacketLoss(Environment) ], Audits, Tests)
+            cm, [ BootCluster(Environment) ], Audits, Tests)
     elif Environment["scenario"] == "sequence":
         scenario = Sequence(
-            cm, [ BootCluster(Environment), PacketLoss(Environment) ], Audits, Tests)
+            cm, [ BootCluster(Environment) ], Audits, Tests)
     elif Environment["scenario"] == "boot":
         scenario = Boot(cm, [ LeaveBooted(Environment)], Audits, [])
     else:
         scenario = RandomTests(
-            cm, [ BootCluster(Environment), PacketLoss(Environment) ], Audits, Tests)
+            cm, [ BootCluster(Environment) ], Audits, Tests)
 
     LogFactory().log(">>>>>>>>>>>>>>>> BEGINNING " + repr(NumIter) + " TEST" + plural_s(NumIter, True) + " ")
     LogFactory().log("Stack:                  %s (%s)" % (Environment["Stack"], Environment["Name"]))

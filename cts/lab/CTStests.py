@@ -26,9 +26,9 @@ from stat import *
 from cts import CTS
 from cts.CTSaudits import *
 from cts.watcher   import LogWatcher
-from cts.environment import EnvFactory
 
 from pacemaker import BuildOptions
+from pacemaker._cts.environment import EnvFactory
 from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.patterns import PatternSelector
 from pacemaker._cts.remote import RemoteFactory
@@ -202,23 +202,23 @@ class CTSTest(object):
         return self.is_applicable_common()
 
     def is_applicable_common(self):
-        '''Return TRUE if we are applicable in the current test configuration'''
+        '''Return True if we are applicable in the current test configuration'''
         #raise ValueError("Abstract Class member (is_applicable)")
 
         if self.is_loop and not self.Env["loop-tests"]:
-            return 0
+            return False
         elif self.is_unsafe and not self.Env["unsafe-tests"]:
-            return 0
+            return False
         elif self.is_valgrind and not self.Env["valgrind-tests"]:
-            return 0
+            return False
         elif self.is_experimental and not self.Env["experimental-tests"]:
-            return 0
+            return False
         elif self.is_container and not self.Env["container-tests"]:
-            return 0
+            return False
         elif self.Env["benchmark"] and self.benchmark == 0:
-            return 0
+            return False
 
-        return 1
+        return True
 
     def find_ocfs2_resources(self, node):
         self.r_o2cb = None
@@ -439,7 +439,7 @@ class StonithdTest(CTSTest):
         watchpats.append(self.templates["Pat:Fencing_ok"] % node)
         watchpats.append(self.templates["Pat:NodeFenced"] % node)
 
-        if self.Env["at-boot"] == 0:
+        if not self.Env["at-boot"]:
             self.debug("Expecting %s to stay down" % node)
             self.CM.ShouldBeStatus[node] = "down"
         else:
@@ -450,7 +450,7 @@ class StonithdTest(CTSTest):
         watch = self.create_watch(watchpats, 30 + self.Env["DeadTime"] + self.Env["StableTime"] + self.Env["StartTime"])
         watch.setwatch()
 
-        origin = self.Env.RandomGen.choice(self.Env["nodes"])
+        origin = self.Env.random_gen.choice(self.Env["nodes"])
 
         (rc, _) = self.rsh(origin, "stonith_admin --reboot %s -VVVVVV" % node)
 
@@ -513,12 +513,12 @@ class StonithdTest(CTSTest):
 
     def is_applicable(self):
         if not self.is_applicable_common():
-            return 0
+            return False
 
         if "DoFencing" in list(self.Env.keys()):
             return self.Env["DoFencing"]
 
-        return 1
+        return True
 
 AllTestClasses.append(StonithdTest)
 
@@ -1045,7 +1045,7 @@ class BandwidthTest(CTSTest):
 
     def is_applicable(self):
         '''BandwidthTest never applicable'''
-        return 0
+        return False
 
 AllTestClasses.append(BandwidthTest)
 
@@ -1292,7 +1292,7 @@ class ResourceRecover(CTSTest):
     def choose_resource(self, node, resourcelist):
         """ Choose a random resource to target """
 
-        self.rid = self.Env.RandomGen.choice(resourcelist)
+        self.rid = self.Env.random_gen.choice(resourcelist)
         self.rid_alt = self.rid
         (_, lines) = self.rsh(node, "crm_resource -c", verbose=1)
         for line in lines:
@@ -1400,9 +1400,9 @@ class ComponentFail(CTSTest):
         node_is_dc = self.CM.is_node_dc(node, None)
 
         # select a component to kill
-        chosen = self.Env.RandomGen.choice(self.complist)
+        chosen = self.Env.random_gen.choice(self.complist)
         while chosen.dc_only == 1 and node_is_dc == 0:
-            chosen = self.Env.RandomGen.choice(self.complist)
+            chosen = self.Env.random_gen.choice(self.complist)
 
         self.debug("...component %s (dc=%d,boot=%d)" % (chosen.name, node_is_dc,chosen.triggersreboot))
         self.incr(chosen.name)
@@ -1462,7 +1462,7 @@ class ComponentFail(CTSTest):
             self.debug("Found: " + repr(shot))
             self.okerrpatterns.append(self.templates["Pat:Fencing_start"] % node)
 
-            if self.Env["at-boot"] == 0:
+            if not self.Env["at-boot"]:
                 self.CM.ShouldBeStatus[node] = "down"
 
             # If fencing occurred, chances are many (if not all) the expected logs
@@ -1561,7 +1561,7 @@ class SplitBrainTest(CTSTest):
             partitions = {}
             p_max = len(self.Env["nodes"])
             for node in self.Env["nodes"]:
-                p = self.Env.RandomGen.randint(1, p_max)
+                p = self.Env.random_gen.randint(1, p_max)
                 if not p in partitions:
                     partitions[p] = []
                 partitions[p].append(node)
@@ -1635,7 +1635,7 @@ class SplitBrainTest(CTSTest):
         # trying to continue with in a messed up state
         if not self.CM.cluster_stable(1200):
             self.failure("Reformed cluster not stable")
-            if self.Env["continue"] == 1:
+            if self.Env["continue"]:
                 answer = "Y"
             else:
                 try:
@@ -1666,7 +1666,7 @@ class SplitBrainTest(CTSTest):
 
     def is_applicable(self):
         if not self.is_applicable_common():
-            return 0
+            return False
         return len(self.Env["nodes"]) > 2
 
 AllTestClasses.append(SplitBrainTest)
@@ -1809,7 +1809,7 @@ class Reattach(CTSTest):
         ]
 
     def is_applicable(self):
-        return 1
+        return True
 
 AllTestClasses.append(Reattach)
 
@@ -1941,9 +1941,9 @@ class HAETest(CTSTest):
 
     def is_applicable(self):
         if not self.is_applicable_common():
-            return 0
+            return False
         if self.Env["Schema"] == "hae":
-            return 1
+            return True
         return None
 
 
@@ -2068,8 +2068,8 @@ class NearQuorumPointTest(CTSTest):
         stonith = self.CM.prepare_fencing_watcher("NearQuorumPoint")
         #decide what to do with each node
         for node in self.Env["nodes"]:
-            action = self.Env.RandomGen.choice(["start","stop"])
-            #action = self.Env.RandomGen.choice(["start","stop","no change"])
+            action = self.Env.random_gen.choice(["start","stop"])
+            #action = self.Env.random_gen.choice(["start","stop","no change"])
             if action == "start" :
                 startset.append(node)
             elif action == "stop" :
@@ -2150,7 +2150,7 @@ class NearQuorumPointTest(CTSTest):
         return self.failure()
 
     def is_applicable(self):
-        return 1
+        return True
 
 AllTestClasses.append(NearQuorumPointTest)
 
@@ -2334,7 +2334,7 @@ class BSC_AddResource(CTSTest):
 
     def is_applicable(self):
         if self.Env["DoBSC"]:
-            return 1
+            return True
         return None
 
 AllTestClasses.append(BSC_AddResource)
@@ -2395,7 +2395,7 @@ class SimulStopLite(CTSTest):
 
     def is_applicable(self):
         '''SimulStopLite is a setup test and never applicable'''
-        return 0
+        return False
 
 
 class SimulStartLite(CTSTest):
@@ -2494,7 +2494,7 @@ class SimulStartLite(CTSTest):
 
     def is_applicable(self):
         '''SimulStartLite is a setup test and never applicable'''
-        return 0
+        return False
 
 
 def TestList(cm, audits):
@@ -2629,7 +2629,7 @@ class RemoteDriver(CTSTest):
         self.fail_string = ""
         self.remote_node_added = 0
         self.remote_rsc_added = 0
-        self.remote_use_reconnect_interval = self.Env.RandomGen.choice([True,False])
+        self.remote_use_reconnect_interval = self.Env.random_gen.choice([True,False])
 
     def fail(self, msg):
         """ Mark test as failed. """

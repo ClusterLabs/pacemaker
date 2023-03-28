@@ -94,6 +94,7 @@ disable=line-too-long,
         too-many-arguments,
         too-many-branches,
         too-many-instance-attributes,
+        too-many-statements,
         unrecognized-option,
         useless-option-value
 

@@ -46,9 +46,6 @@ class BasePatterns:
             "BreakCommCmd"   : "iptables -A INPUT -s %s -j DROP >/dev/null 2>&1",
             "FixCommCmd"     : "iptables -D INPUT -s %s -j DROP >/dev/null 2>&1",
 
-            "ReduceCommCmd"  : "",
-            "RestoreCommCmd" : "tc qdisc del dev lo root",
-
             "MaintenanceModeOn"    : "cibadmin --modify -c --xml-text '<cluster_property_set id=\"cib-bootstrap-options\"><nvpair id=\"cts-maintenance-mode-setting\" name=\"maintenance-mode\" value=\"true\"/></cluster_property_set>'",
             "MaintenanceModeOff"    : "cibadmin --delete --xpath \"//nvpair[@name='maintenance-mode']\"",
 

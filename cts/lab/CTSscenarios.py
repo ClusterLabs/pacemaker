@@ -19,7 +19,7 @@ class ScenarioComponent(object):
         self.Env = Env
 
     def IsApplicable(self):
-        '''Return TRUE if the current ScenarioComponent is applicable
+        '''Return True if the current ScenarioComponent is applicable
         in the given LabEnvironment given to the constructor.
         '''
 
@@ -84,14 +84,13 @@ A partially set up scenario is torn down if it fails during setup.
         for comp in self.Components:
             if not comp.IsApplicable():
                 return None
-        return 1
+        return True
 
     def SetUp(self):
         '''Set up the Scenario. Return TRUE on success.'''
 
         self.ClusterManager.prepare()
         self.audit() # Also detects remote/local log config
-        self.ClusterManager.StatsMark(0)
         self.ClusterManager.ns.WaitForAllNodesToComeUp(self.ClusterManager.Env["nodes"])
 
         self.audit()
@@ -129,7 +128,6 @@ A partially set up scenario is torn down if it fails during setup.
             j = j - 1
 
         self.audit()
-        self.ClusterManager.StatsExtract()
         self.ClusterManager.install_support("uninstall")
 
     def incr(self, name):
@@ -151,13 +149,12 @@ A partially set up scenario is torn down if it fails during setup.
         raise ValueError("Abstract Class member (run_loop)")
 
     def run_test(self, test, testcount):
-        nodechoice = self.ClusterManager.Env.RandomNode()
+        nodechoice = self.ClusterManager.Env.random_node()
 
         ret = 1
         where = ""
         did_run = 0
 
-        self.ClusterManager.StatsMark(testcount)
         self.ClusterManager.instance_errorstoignore_clear()
         self.ClusterManager.log(("Running test %s" % test.name).ljust(35) + (" (%s) " % nodechoice).ljust(15) + "[" + ("%d" % testcount).rjust(3) + "]")
 
@@ -176,7 +173,7 @@ A partially set up scenario is torn down if it fails during setup.
 
         if not test.teardown(nodechoice):
             self.ClusterManager.log("Teardown failed")
-            if self.ClusterManager.Env["continue"] == 1:
+            if self.ClusterManager.Env["continue"]:
                 answer = "Y"
             else:
                 try:
@@ -271,7 +268,7 @@ A partially set up scenario is torn down if it fails during setup.
             else:
                 break
         else:
-            if self.ClusterManager.Env["continue"] == 1:
+            if self.ClusterManager.Env["continue"]:
                 answer = "Y"
             else:
                 try:
@@ -303,7 +300,7 @@ class RandomTests(Scenario):
     def run_loop(self, Iterations):
         testcount = 1
         while testcount <= Iterations:
-            test = self.ClusterManager.Env.RandomGen.choice(self.Tests)
+            test = self.ClusterManager.Env.random_gen.choice(self.Tests)
             self.run_test(test, testcount)
             testcount += 1
 
@@ -313,7 +310,7 @@ class BasicSanity(Scenario):
     def run_loop(self, Iterations):
         testcount = 1
         while testcount <= Iterations:
-            test = self.Environment.RandomGen.choice(self.Tests)
+            test = self.Environment.random_gen.choice(self.Tests)
             self.run_test(test, testcount)
             testcount += 1
 
@@ -346,7 +343,7 @@ as they might have been rebooted or crashed for some reason beforehand.
 
     def IsApplicable(self):
         '''BootCluster is so generic it is always Applicable'''
-        return 1
+        return True
 
     def SetUp(self, CM):
         '''Basic Cluster Manager startup.  Start everything'''
@@ -403,7 +400,7 @@ According to the manual page for ping:
         '''PingFests are always applicable ;-)
         '''
 
-        return 1
+        return True
 
     def SetUp(self, CM):
         '''Start the PingFest!'''
@@ -449,42 +446,6 @@ According to the manual page for ping:
         os.execvp("ping", Args)
         self.Env.log("Cannot execvp ping: " + repr(Args))
         sys.exit(1)
-
-
-class PacketLoss(ScenarioComponent):
-    (
-'''
-It would be useful to do some testing of CTS with a modest amount of packet loss
-enabled - so we could see that everything runs like it should with a certain
-amount of packet loss present.
-''')
-
-    def IsApplicable(self):
-        '''always Applicable'''
-        return 1
-
-    def SetUp(self, CM):
-        '''Reduce the reliability of communications'''
-        if float(CM.Env["XmitLoss"]) == 0 and float(CM.Env["RecvLoss"]) == 0 :
-            return 1
-
-        for node in CM.Env["nodes"]:
-            CM.reducecomm_node(node)
-
-        CM.log("Reduce the reliability of communications")
-
-        return 1
-
-    def TearDown(self, CM):
-        '''Fix the reliability of communications'''
-
-        if float(CM.Env["XmitLoss"]) == 0 and float(CM.Env["RecvLoss"]) == 0 :
-            return 1
-
-        for node in CM.Env["nodes"]:
-            CM.unisolate_node(node)
-
-        CM.log("Fix the reliability of communications")
 
 
 class BasicSanityCheck(ScenarioComponent):
@@ -552,7 +513,7 @@ Test a rolling upgrade between two versions of the stack
         if not self.Env["previous-version"]:
             return None
 
-        return 1
+        return True
 
     def install(self, node, version):
 

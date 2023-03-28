@@ -17,89 +17,12 @@ from cts.CIB         import ConfigFactory
 from cts.CTS         import NodeStatus, Process
 from cts.CTStests    import AuditResource
 from cts.watcher     import LogWatcher
-from cts.environment import EnvFactory
 
 from pacemaker.buildoptions import BuildOptions
+from pacemaker._cts.environment import EnvFactory
 from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.patterns import PatternSelector
 from pacemaker._cts.remote import RemoteFactory
-
-has_log_stats = {}
-log_stats_bin = BuildOptions.DAEMON_DIR + "/cts_log_stats.sh"
-log_stats = """
-#!%s
-# Tool for generating system load reports while CTS runs
-
-trap "" 1
-
-f=$1; shift
-action=$1; shift
-base=`basename $0`
-
-if [ ! -e $f ]; then
-    echo "Time, Load 1, Load 5, Load 15, Test Marker" > $f
-fi
-
-function killpid() {
-    if [ -e $f.pid ]; then
-       kill -9 `cat $f.pid`
-       rm -f $f.pid
-    fi
-}
-
-function status() {
-    if [ -e $f.pid ]; then
-       kill -0 `cat $f.pid`
-       return $?
-    else
-       return 1
-    fi
-}
-
-function start() {
-    # Is it already running?
-    if
-        status
-    then
-        return
-    fi
-
-    echo Active as $$
-    echo $$ > $f.pid
-
-    while [ 1 = 1 ]; do
-        uptime | sed s/up.*:/,/ | tr '\\n' ',' >> $f
-        #top -b -c -n1 | grep -e usr/libexec/pacemaker | grep -v -e grep -e python | head -n 1 | sed s@/usr/libexec/pacemaker/@@ | awk '{print " 0, "$9", "$10", "$12}' | tr '\\n' ',' >> $f
-        echo 0 >> $f
-        sleep 5
-    done
-}
-
-case $action in
-    start)
-        start
-        ;;
-    start-bg|bg)
-        # Use c --ssh -- ./stats.sh file start-bg
-        nohup $0 $f start >/dev/null 2>&1 </dev/null &
-        ;;
-    stop)
-        killpid
-        ;;
-    delete)
-        killpid
-        rm -f $f
-        ;;
-    mark)
-        uptime | sed s/up.*:/,/ | tr '\\n' ',' >> $f
-        echo " $*" >> $f
-        start
-        ;;
-    *)
-        echo "Unknown action: $action."
-        ;;
-esac
-""" % (BuildOptions.BASH_PATH)
 
 class ClusterManager(UserDict):
     '''The Cluster Manager class.
@@ -551,26 +474,6 @@ class ClusterManager(UserDict):
                 self.rsh(node, self.templates["FixCommCmd"] % self.key_for_node(target), synchronous=False)
                 self.debug("Communication restored between %s and %s" % (target, node))
 
-    def reducecomm_node(self,node):
-        '''reduce the communication between the nodes'''
-        (rc, _) = self.rsh(node, self.templates["ReduceCommCmd"]%(self.Env["XmitLoss"],self.Env["RecvLoss"]))
-        if rc == 0:
-            return 1
-        else:
-            self.logger.log("Could not reduce the communication between the nodes from node: %s" % node)
-        return None
-
-    def restorecomm_node(self,node):
-        '''restore the saved communication between the nodes'''
-        rc = 0
-        if float(self.Env["XmitLoss"]) != 0 or float(self.Env["RecvLoss"]) != 0 :
-            (rc, _) = self.rsh(node, self.templates["RestoreCommCmd"])
-        if rc == 0:
-            return 1
-        else:
-            self.logger.log("Could not restore the communication between the nodes from node: %s" % node)
-        return None
-
     def oprofileStart(self, node=None):
         if not node:
             for n in self.Env["oprofile"]:
@@ -608,52 +511,6 @@ class ClusterManager(UserDict):
             self.rsh(node, "opcontrol --reset")
             self.rsh(node, "opcontrol --shutdown 2>&1 > /dev/null")
 
-
-    def StatsExtract(self):
-        if not self.Env["stats"]:
-            return
-
-        for host in self.Env["nodes"]:
-            log_stats_file = "%s/cts-stats.csv" % BuildOptions.DAEMON_DIR
-            if host in has_log_stats:
-                self.rsh(host, '''bash %s %s stop''' % (log_stats_bin, log_stats_file))
-                (_, lines) = self.rsh(host, '''cat %s''' % log_stats_file, verbose=1)
-                self.rsh(host, '''bash %s %s delete''' % (log_stats_bin, log_stats_file))
-
-                fname = "cts-stats-%d-nodes-%s.csv" % (len(self.Env["nodes"]), host)
-                print("Extracted stats: %s" % fname)
-                fd = open(fname, "a")
-                fd.writelines(lines)
-                fd.close()
-
-    def StatsMark(self, testnum):
-        '''Mark the test number in the stats log'''
-
-        global has_log_stats
-        if not self.Env["stats"]:
-            return
-
-        for host in self.Env["nodes"]:
-            log_stats_file = "%s/cts-stats.csv" % BuildOptions.DAEMON_DIR
-            if not host in has_log_stats:
-
-                global log_stats
-                global log_stats_bin
-                script=log_stats
-                #script = re.sub("\\\\", "\\\\", script)
-                script = re.sub('\"', '\\\"', script)
-                script = re.sub("'", "\'", script)
-                script = re.sub("`", "\`", script)
-                script = re.sub("\$", "\\\$", script)
-
-                self.debug("Installing %s on %s" % (log_stats_bin, host))
-                self.rsh(host, '''echo "%s" > %s''' % (script, log_stats_bin), verbose=0)
-                self.rsh(host, '''bash %s %s delete''' % (log_stats_bin, log_stats_file))
-                has_log_stats[host] = 1
-
-            # Now mark it
-            self.rsh(host, '''bash %s %s mark %s''' % (log_stats_bin, log_stats_file, testnum), synchronous=False)
-
     def errorstoignore(self):
         # At some point implement a more elegant solution that
         #   also produces a report at the end
@@ -665,7 +522,7 @@ class ClusterManager(UserDict):
             self.log("Node %s is not up." % node)
             return None
 
-        if not node in self.CIBsync and self.Env["ClobberCIB"] == 1:
+        if not node in self.CIBsync and self.Env["ClobberCIB"]:
             self.CIBsync[node] = 1
             self.rsh(node, "rm -f " + BuildOptions.CIB_DIR + "/cib*")
 
@@ -1015,7 +872,7 @@ class ClusterManager(UserDict):
                     r"pacemaker-controld.*exited with status 2",
                     ], badnews_ignore = common_ignore, dc_only=1)
 
-        if self.Env["DoFencing"] == 1 :
+        if self.Env["DoFencing"]:
             complist.append(Process(self, "stoniths", triggersreboot=self.fastfail, dc_pats = [
                         r"pacemaker-controld.*CRIT.*: Fencing daemon connection failed",
                         "Attempting connection to fencing daemon",

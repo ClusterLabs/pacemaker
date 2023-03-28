@@ -217,13 +217,13 @@ class CIB12(ConfigBase):
                     remote_node = "remote-" + node
 
                     # Randomly assign node to a fencing method
-                    ftype = self.CM.Env.RandomGen.choice(["levels-and", "levels-or ", "broadcast "])
+                    ftype = self.CM.Env.random_gen.choice(["levels-and", "levels-or ", "broadcast "])
 
                     # For levels-and, randomly choose targeting by node name or attribute
                     by = ""
                     if ftype == "levels-and":
                         node_id = self.get_node_id(node)
-                        if node_id == 0 or self.CM.Env.RandomGen.choice([True, False]):
+                        if node_id == 0 or self.CM.Env.random_gen.choice([True, False]):
                             by = " (by name)"
                         else:
                             attr_nodes[node] = node_id
@@ -289,7 +289,7 @@ class CIB12(ConfigBase):
         o["dc-deadtime"] = "5s"
         o["no-quorum-policy"] = no_quorum
 
-        if self.CM.Env["DoBSC"] == 1:
+        if self.CM.Env["DoBSC"]:
             o["ident-string"] = "Linux-HA TEST configuration file - REMOVEME!!"
 
         o.commit()
@@ -310,7 +310,7 @@ class CIB12(ConfigBase):
             alerts.commit()
 
         # Add resources?
-        if self.CM.Env["CIBResource"] == 1:
+        if self.CM.Env["CIBResource"]:
             self.add_resources()
 
         if self.CM.cluster_monitor == 1:
@@ -438,7 +438,7 @@ class ConfigFactory(object):
         self.register("pacemaker20", CIB20, CM, self)
         self.register("pacemaker30", CIB30, CM, self)
 #        self.register("hae", HASI, CM, self)
-        if self.CM.Env["ListTests"] == 0:
+        if not self.CM.Env["ListTests"]:
             self.target = self.CM.Env["nodes"][0]
         self.tmpfile = None
 

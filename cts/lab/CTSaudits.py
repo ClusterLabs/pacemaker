@@ -173,7 +173,7 @@ class DiskAudit(ClusterAudit):
                         self.CM.log("CRIT: Out of log disk space on %s (%d%% / %dMB)"
                                     % (node, used_percent, remaining_mb))
                         result = None
-                        if self.CM.Env["continue"] == 1:
+                        if self.CM.Env["continue"]:
                             answer = "Y"
                         else:
                             try:
@@ -348,7 +348,7 @@ class PrimitiveAudit(ClusterAudit):
             self.CM.log("WARN: Resource %s not served anywhere" % resource.id)
             rc = 0
 
-        elif self.CM.Env["warn-inactive"] == 1:
+        elif self.CM.Env["warn-inactive"]:
             if quorum or not resource.needs_quorum:
                 self.CM.log("WARN: Resource %s not served anywhere (Inactive nodes: %s)" 
                             % (resource.id, repr(self.inactive_nodes)))

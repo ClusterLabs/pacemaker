@@ -8,8 +8,7 @@ import sys
 import time
 import traceback
 
-from cts.environment import EnvFactory
-
+from pacemaker._cts.environment import EnvFactory
 from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.remote import RemoteFactory
 
@@ -136,7 +135,7 @@ class NodeStatus(object):
             timeout = timeout - 1
 
         LogFactory().log("%s did not come up within %d tries" % (node, Timeout))
-        if self.Env["continue"] == 1:
+        if self.Env["continue"]:
             answer = "Y"
         else:
             try:
