@@ -2057,7 +2057,7 @@ mon_refresh_display(gpointer user_data)
 
     last_refresh = time(NULL);
 
-    if (output_format == mon_output_none || output_format == mon_output_unset) {
+    if (output_format == mon_output_none) {
         return G_SOURCE_REMOVE;
     }
 
