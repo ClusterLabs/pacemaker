@@ -240,7 +240,6 @@ pe_node_t *native_location(const pe_resource_t *rsc, GList **list, int current);
 void pe_metadata(pcmk__output_t *out);
 void verify_pe_options(GHashTable * options);
 
-void common_update_score(pe_resource_t * rsc, const char *id, int score);
 void native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * data_set, gboolean failed);
 
 gboolean native_unpack(pe_resource_t * rsc, pe_working_set_t * data_set);

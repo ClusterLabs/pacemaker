@@ -122,14 +122,30 @@ ban_unavailable_allowed_nodes(pe_resource_t *instance, int max_per_node)
 {
     if (instance->allowed_nodes != NULL) {
         GHashTableIter iter;
-        const pe_node_t *allowed_node = NULL;
+        pe_node_t *node = NULL;
 
         g_hash_table_iter_init(&iter, instance->allowed_nodes);
-        while (g_hash_table_iter_next(&iter, NULL, (void **) &allowed_node)) {
-            if (!can_run_instance(instance, allowed_node, max_per_node)) {
-                // Ban instance (and all its children) from node
-                common_update_score(instance, allowed_node->details->id,
-                                    -INFINITY);
+        while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
+            if (!can_run_instance(instance, node, max_per_node)) {
+                pe_rsc_trace(instance, "Banning %s from unavailable node %s",
+                             instance->id, pe__node_name(node));
+                node->weight = -INFINITY;
+                for (GList *child_iter = instance->children;
+                     child_iter != NULL; child_iter = child_iter->next) {
+                    pe_resource_t *child = (pe_resource_t *) child_iter->data;
+                    pe_node_t *child_node = NULL;
+
+                    child_node = pe_hash_table_lookup(child->allowed_nodes,
+                                                      node->details->id);
+                    if (child_node != NULL) {
+                        pe_rsc_trace(instance,
+                                     "Banning %s child %s "
+                                     "from unavailable node %s",
+                                     instance->id, child->id,
+                                     pe__node_name(node));
+                        child_node->weight = -INFINITY;
+                    }
+                }
             }
         }
     }
