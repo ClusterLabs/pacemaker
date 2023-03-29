@@ -1250,7 +1250,7 @@ remote_ra_fail(const char *node_name)
  *     </downed>
  *  </pseudo_event>
  */
-#define XPATH_PSEUDO_FENCE "//" XML_GRAPH_TAG_PSEUDO_EVENT \
+#define XPATH_PSEUDO_FENCE "/" XML_GRAPH_TAG_PSEUDO_EVENT \
     "[@" XML_LRM_ATTR_TASK "='stonith']/" XML_GRAPH_TAG_DOWNED \
     "/" XML_CIB_TAG_NODE
 
