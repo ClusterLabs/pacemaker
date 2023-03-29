@@ -1,11 +1,11 @@
 """ Log searching classes for Pacemaker's Cluster Test Suite (CTS)
 """
 
+__all__ = ["LogWatcher"]
 __copyright__ = "Copyright 2014-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import re
-import os
 import time
 import threading
 
@@ -97,6 +97,7 @@ class FileObj(SearchObj):
         if self.limit:
             return
 
+        # pylint: disable=not-callable
         (_, lines) = self.rsh(self.host,
                               "%s -t %s -p CTSwatcher: -l 2 -f %s -o %s" % (LOG_WATCHER_BIN, self.name, self.filename, "EOF"),
                               verbose=0)
@@ -132,6 +133,7 @@ class JournalObj(SearchObj):
             self.debug("Got %d lines but no cursor: %s" % (len(out), self.offset))
 
             # Get the current cursor
+            # pylint: disable=not-callable
             (_, out) = self.rsh(self.host, "journalctl -q -n 0 --show-cursor", verbose=0)
             for line in out:
                 match = re.search(r"^-- cursor: ([^.]+)", line)
@@ -168,6 +170,7 @@ class JournalObj(SearchObj):
             return
 
         self._hit_limit = False
+        # pylint: disable=not-callable
         (rc, lines) = self.rsh(self.host, "date +'%Y-%m-%d %H:%M:%S'", verbose=0)
 
         if rc == 0 and len(lines) == 1:
@@ -245,6 +248,11 @@ class LogWatcher:
             self._file_list.append(FileObj(self.filename))
 
     def async_complete(self, pid, returncode, out, err):
+        # It's not clear to me whether this function ever gets called as
+        # delegate somewhere, which is what would pass returncode and err
+        # as parameters.  Just disable the warning for now.
+        # pylint: disable=unused-argument
+
         # TODO: Probably need a lock for updating self._line_cache
         self._logger.debug("%s: Got %d lines from %d (total %d)" % (self.name, len(out), pid, len(self._line_cache)))
 
