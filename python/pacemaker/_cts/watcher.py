@@ -92,7 +92,7 @@ class FileObj(SearchObj):
                                    "%s -t %s -p CTSwatcher: -l 200 -f %s -o %s" % (LOG_WATCHER_BIN, self.name, self.filename, self.offset),
                                    delegate=self)
 
-    def setend(self):
+    def set_end(self):
         if self.limit:
             return
 
@@ -159,7 +159,7 @@ class JournalObj(SearchObj):
 
         return self.rsh.call_async(self.host, command, delegate=self)
 
-    def setend(self):
+    def set_end(self):
         if self.limit:
             return
 
@@ -308,7 +308,7 @@ class LogWatcher(RemoteExec):
 
         if timeout == 0:
             for f in self.file_list:
-                f.setend()
+                f.set_end()
 
         while True:
             if self.line_cache:
@@ -351,7 +351,7 @@ class LogWatcher(RemoteExec):
 
                 timeout = 0
                 for f in self.file_list:
-                    f.setend()
+                    f.set_end()
 
             else:
                 self.__get_lines()
