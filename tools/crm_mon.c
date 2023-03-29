@@ -210,8 +210,7 @@ static pcmk__message_entry_t fmt_functions[] = {
 
 struct {
     guint reconnect_ms;
-    bool daemonize;
-    bool one_shot;
+    enum mon_exec_mode exec_mode;
     gboolean fence_connect;
     gboolean print_pending;
     gboolean show_bans;
@@ -225,8 +224,9 @@ struct {
     GSList *user_includes_excludes;
     GSList *includes_excludes;
 } options = {
+    .reconnect_ms = RECONNECT_MSECS,
+    .exec_mode = mon_exec_interactive,
     .fence_connect = TRUE,
-    .reconnect_ms = RECONNECT_MSECS
 };
 
 static crm_exit_t clean_up(crm_exit_t exit_code);
@@ -427,7 +427,7 @@ static gboolean
 as_cgi_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     pcmk__str_update(&args->output_ty, "html");
     output_format = mon_output_cgi;
-    options.one_shot = true;
+    options.exec_mode = mon_exec_one_shot;
     return TRUE;
 }
 
@@ -444,7 +444,7 @@ static gboolean
 as_simple_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     pcmk__str_update(&args->output_ty, "text");
     output_format = mon_output_monitor;
-    options.one_shot = true;
+    options.exec_mode = mon_exec_one_shot;
     return TRUE;
 }
 
@@ -557,7 +557,7 @@ reconnect_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
 
 /*!
  * \internal
- * \brief Enable one-shot mode and disable daemonized mode
+ * \brief Enable one-shot mode
  *
  * \param[in]  option_name  Name of option being parsed (ignored)
  * \param[in]  optarg       Value to be parsed (ignored)
@@ -568,14 +568,13 @@ static gboolean
 one_shot_cb(const gchar *option_name, const gchar *optarg, gpointer data,
             GError **err)
 {
-    options.one_shot = true;
-    options.daemonize = false;
+    options.exec_mode = mon_exec_one_shot;
     return TRUE;
 }
 
 /*!
  * \internal
- * \brief Enable daemonized mode and disable one-shot mode
+ * \brief Enable daemonized mode
  *
  * \param[in]  option_name  Name of option being parsed (ignored)
  * \param[in]  optarg       Value to be parsed (ignored)
@@ -586,8 +585,7 @@ static gboolean
 daemonize_cb(const gchar *option_name, const gchar *optarg, gpointer data,
              GError **err)
 {
-    options.daemonize = true;
-    options.one_shot = false;
+    options.exec_mode = mon_exec_daemonized;
     return TRUE;
 }
 
@@ -626,7 +624,7 @@ show_tickets_cb(const gchar *option_name, const gchar *optarg, gpointer data, GE
 static gboolean
 use_cib_file_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     setenv("CIB_file", optarg, 1);
-    options.one_shot = true;
+    options.exec_mode = mon_exec_one_shot;
     return TRUE;
 }
 
@@ -1372,16 +1370,15 @@ reconcile_output_format(pcmk__common_args_t *args)
          * * We specified a non-stdout output destination (console mode is
          *   compatible only with stdout)
          */
-        if (options.one_shot
-            || options.daemonize
+        if ((options.exec_mode != mon_exec_interactive)
             || args->version
             || !pcmk__str_eq(args->output_dest, "-", pcmk__str_null_matches)) {
 
             pcmk__str_update(&args->output_ty, "text");
             output_format = mon_output_plain;
 
-            if (!options.daemonize) {
-                options.one_shot = true;
+            if (options.exec_mode != mon_exec_daemonized) {
+                options.exec_mode = mon_exec_one_shot;
             }
         } else {
             pcmk__str_update(&args->output_ty, "console");
@@ -1397,8 +1394,8 @@ reconcile_output_format(pcmk__common_args_t *args)
         pcmk__str_update(&args->output_ty, "text");
         output_format = mon_output_plain;
 
-        if (!options.daemonize) {
-            options.one_shot = true;
+        if (options.exec_mode != mon_exec_daemonized) {
+            options.exec_mode = mon_exec_one_shot;
         }
     }
 
@@ -1470,7 +1467,7 @@ main(int argc, char **argv)
 
     if (pcmk__ends_with_ext(argv[0], ".cgi")) {
         output_format = mon_output_cgi;
-        options.one_shot = true;
+        options.exec_mode = mon_exec_one_shot;
     }
 
     processed_args = pcmk__cmdline_preproc(argv, "ehimpxEILU");
@@ -1525,7 +1522,7 @@ main(int argc, char **argv)
                 /* Notifications are unsupported; nothing to monitor
                  * @COMPAT: Let setup_cib_connection() handle this by exiting?
                  */
-                options.one_shot = true;
+                options.exec_mode = mon_exec_one_shot;
                 break;
 
             case cib_remote:
@@ -1541,7 +1538,7 @@ main(int argc, char **argv)
                 break;
         }
 
-        if (options.daemonize
+        if ((options.exec_mode == mon_exec_daemonized)
             && !options.external_agent
             && pcmk__str_eq(args->output_dest, "-", pcmk__str_null_matches)) {
 
@@ -1569,7 +1566,7 @@ main(int argc, char **argv)
      */
     CRM_ASSERT(output_format != mon_output_unset);
 
-    if (options.daemonize) {
+    if (options.exec_mode == mon_exec_daemonized) {
         if (!options.external_agent && (output_format == mon_output_none)) {
             g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                         "--daemonize requires --external-agent if used with "
@@ -1633,7 +1630,7 @@ main(int argc, char **argv)
         } else if (options.external_agent != NULL) {
             g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE, "CGI mode cannot be used with --external-agent");
             return clean_up(CRM_EX_USAGE);
-        } else if (options.daemonize) {
+        } else if (options.exec_mode == mon_exec_daemonized) {
             g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE, "CGI mode cannot be used with -d");
             return clean_up(CRM_EX_USAGE);
         }
@@ -1662,7 +1659,7 @@ main(int argc, char **argv)
 
     cib__set_output(cib, out);
 
-    if (options.one_shot) {
+    if (options.exec_mode == mon_exec_one_shot) {
         one_shot();
     }
 
@@ -2252,7 +2249,7 @@ clean_up(crm_exit_t exit_code)
      * crm_mon to be able to do so.
      */
     if (out != NULL) {
-        if (!options.daemonize) {
+        if (options.exec_mode != mon_exec_daemonized) {
             out->finish(out, exit_code, true, NULL);
         }
 
