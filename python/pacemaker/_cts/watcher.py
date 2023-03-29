@@ -15,16 +15,15 @@ from pacemaker._cts.remote import RemoteExec, RemoteFactory
 
 LOG_WATCHER_BIN = BuildOptions.DAEMON_DIR + "/cts-log-watcher"
 
-class SearchObj(object):
+class SearchObj:
     def __init__(self, filename, host=None, name=None):
-        self.limit = None
         self.cache = []
+        self.filename = filename
+        self.limit = None
         self.logger = LogFactory()
         self.name = name
-        self.filename = filename
-        self.rsh = RemoteFactory().getInstance()
-
         self.offset = "EOF"
+        self.rsh = RemoteFactory().getInstance()
 
         if host:
             self.host = host
