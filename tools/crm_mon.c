@@ -263,7 +263,6 @@ default_includes(mon_output_format_t fmt) {
                    |pcmk_section_failures;
 
         case mon_output_xml:
-        case mon_output_legacy_xml:
             return all_includes(fmt);
 
         default:
@@ -1640,7 +1639,7 @@ main(int argc, char **argv)
         }
     }
 
-    if (output_format == mon_output_xml || output_format == mon_output_legacy_xml) {
+    if (output_format == mon_output_xml) {
         show_opts |= pcmk_show_inactive_rscs | pcmk_show_timing;
 
         if (!options.daemonize) {
