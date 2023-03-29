@@ -190,7 +190,7 @@ class LogWatcher(RemoteExec):
           Call look() to scan the log looking for the patterns
     '''
 
-    def __init__(self, log, regexes, hosts, kind, name="Anon", timeout=10, debug_level=None, silent=False):
+    def __init__(self, log, regexes, hosts, kind, name="Anon", timeout=10, silent=False):
         '''This is the constructor for the LogWatcher class.  It takes a
         log name to watch, and a list of regular expressions to watch for."
         '''
@@ -201,11 +201,6 @@ class LogWatcher(RemoteExec):
         self.filename = log
         self.name = name
         self.regexes = regexes
-
-        if debug_level:
-            self.debug_level = debug_level
-        else:
-            self.debug_level = 1
 
         self.whichmatch = -1
         self.unmatched = None
@@ -251,10 +246,6 @@ class LogWatcher(RemoteExec):
 
         else:
             self.file_list.append(FileObj(self.filename))
-
-    def __del__(self):
-        if self.debug_level > 1:
-            self.debug("Destroy")
 
     def async_complete(self, pid, returncode, outLines, errLines):
         # TODO: Probably need a lock for updating self.line_cache
@@ -303,9 +294,6 @@ class LogWatcher(RemoteExec):
         begin = time.time()
         end = begin + timeout + 1
 
-        if self.debug_level > 2:
-            self.debug("starting single search: timeout=%d, begin=%d, end=%d" % (timeout, begin, end))
-
         if not self.regexes:
             self.debug("Nothing to look for")
             return None
@@ -328,31 +316,17 @@ class LogWatcher(RemoteExec):
                 if re.search("CTS:", line):
                     continue
 
-                if self.debug_level > 2:
-                    self.debug("Processing: "+ line)
-
                 for regex in self.regexes:
                     which = which + 1
-
-                    if self.debug_level > 3:
-                        self.debug("Comparing line to: %s" % regex)
 
                     matchobj = re.search(regex, line)
 
                     if matchobj:
                         self.whichmatch = which
-
                         self.debug("Matched: %s" % line)
-
-                        if self.debug_level > 1:
-                            self.debug("With: %s" % regex)
-
                         return line
 
             elif timeout > 0 and end < time.time():
-                if self.debug_level > 1:
-                    self.debug("hit timeout: %d" % timeout)
-
                 timeout = 0
                 for f in self.file_list:
                     f.set_end()
@@ -383,9 +357,6 @@ class LogWatcher(RemoteExec):
 
         if not silent:
             self.debug("starting search: timeout=%d" % self.Timeout)
-            for regex in self.regexes:
-                if self.debug_level > 2:
-                    self.debug("Looking for regex: %s" % regex)
 
         while self.regexes:
             oneresult = self.look(self.Timeout)
