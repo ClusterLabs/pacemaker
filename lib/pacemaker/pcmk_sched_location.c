@@ -166,8 +166,8 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
             if (!do_and) {
                 local->weight = pcmk__add_scores(local->weight, score_f);
             }
-            crm_trace("%s now has weight %d",
-                      pe__node_name(node), local->weight);
+            crm_trace("%s has score %s after %s", pe__node_name(node),
+                      pcmk_readable_score(local->weight), rule_id);
 
         } else if (do_and && !accept) {
             // Remove it

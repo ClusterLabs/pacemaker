@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -108,67 +108,34 @@ pcmk_readable_score(int score)
  *
  * \param[in] score1  First score to add
  * \param[in] score2  Second score to add
+ *
+ * \note This function does not have context about what the scores mean, so it
+ *       does not log any messages.
  */
 int
 pcmk__add_scores(int score1, int score2)
 {
+    /* As long as CRM_SCORE_INFINITY is less than half of the maximum integer,
+     * we can ignore the possibility of integer overflow.
+     */
     int result = score1 + score2;
 
     // First handle the cases where one or both is infinite
-
-    if (score1 <= -CRM_SCORE_INFINITY) {
-
-        if (score2 <= -CRM_SCORE_INFINITY) {
-            crm_trace("-INFINITY + -INFINITY = -INFINITY");
-        } else if (score2 >= CRM_SCORE_INFINITY) {
-            crm_trace("-INFINITY + +INFINITY = -INFINITY");
-        } else {
-            crm_trace("-INFINITY + %d = -INFINITY", score2);
-        }
-
+    if ((score1 <= -CRM_SCORE_INFINITY) || (score2 <= -CRM_SCORE_INFINITY)) {
         return -CRM_SCORE_INFINITY;
-
-    } else if (score2 <= -CRM_SCORE_INFINITY) {
-
-        if (score1 >= CRM_SCORE_INFINITY) {
-            crm_trace("+INFINITY + -INFINITY = -INFINITY");
-        } else {
-            crm_trace("%d + -INFINITY = -INFINITY", score1);
-        }
-
-        return -CRM_SCORE_INFINITY;
-
-    } else if (score1 >= CRM_SCORE_INFINITY) {
-
-        if (score2 >= CRM_SCORE_INFINITY) {
-            crm_trace("+INFINITY + +INFINITY = +INFINITY");
-        } else {
-            crm_trace("+INFINITY + %d = +INFINITY", score2);
-        }
-
-        return CRM_SCORE_INFINITY;
-
-    } else if (score2 >= CRM_SCORE_INFINITY) {
-        crm_trace("%d + +INFINITY = +INFINITY", score1);
+    }
+    if ((score1 >= CRM_SCORE_INFINITY) || (score2 >= CRM_SCORE_INFINITY)) {
         return CRM_SCORE_INFINITY;
     }
 
-    /* As long as CRM_SCORE_INFINITY is less than half of the maximum integer,
-     * we can ignore the possibility of integer overflow
-     */
-
-    // Bound result to infinity
-
+    // Bound result to infinity.
     if (result >= CRM_SCORE_INFINITY) {
-        crm_trace("%d + %d = +INFINITY", score1, score2);
         return CRM_SCORE_INFINITY;
-
-    } else if (result <= -CRM_SCORE_INFINITY) {
-        crm_trace("%d + %d = -INFINITY", score1, score2);
+    }
+    if (result <= -CRM_SCORE_INFINITY) {
         return -CRM_SCORE_INFINITY;
     }
 
-    crm_trace("%d + %d = %d", score1, score2, result);
     return result;
 }
 

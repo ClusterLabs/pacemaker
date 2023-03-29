@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2022 the Pacemaker project contributors
+ * Copyright 2008-2023 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -291,6 +291,8 @@ pe_get_failcount(const pe_node_t *node, pe_resource_t *rsc,
     while (g_hash_table_iter_next(&iter, (gpointer *) &key, (gpointer *) &value)) {
         if (regexec(&failcount_re, key, 0, NULL, 0) == 0) {
             failcount = pcmk__add_scores(failcount, char2score(value));
+            crm_trace("Added %s (%s) to %s fail count (now %s)",
+                      key, value, rsc->id, pcmk_readable_score(failcount));
         } else if (regexec(&lastfailure_re, key, 0, NULL, 0) == 0) {
             long long last_ll;
 

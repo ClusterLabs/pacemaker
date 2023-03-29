@@ -135,9 +135,11 @@ apply_promoted_locations(pe_resource_t *child,
 
             pe_rsc_trace(child,
                          "Applying location %s to %s promotion priority on %s: "
-                         "%d + %d = %d",
+                         "%s + %s = %s",
                          location->id, child->id, pe__node_name(weighted_node),
-                         child->priority, weighted_node->weight, new_priority);
+                         pcmk_readable_score(child->priority),
+                         pcmk_readable_score(weighted_node->weight),
+                         pcmk_readable_score(new_priority));
             child->priority = new_priority;
         }
     }
@@ -319,10 +321,11 @@ add_sort_index_to_node_weight(gpointer data, gpointer user_data)
                                               chosen->details->id);
     CRM_ASSERT(node != NULL);
 
-    pe_rsc_trace(clone, "Adding sort index %s of %s to weight for %s",
-                 pcmk_readable_score(child->sort_index), child->id,
-                 pe__node_name(node));
     node->weight = pcmk__add_scores(child->sort_index, node->weight);
+    pe_rsc_trace(clone,
+                 "Added cumulative priority of %s (%s) to score on %s (now %s)",
+                 child->id, pcmk_readable_score(child->sort_index),
+                 pe__node_name(node), pcmk_readable_score(node->weight));
 }
 
 /*!
@@ -762,13 +765,14 @@ pcmk__add_promotion_scores(pe_resource_t *rsc)
             score = promotion_score(child_rsc, node, NULL);
             if (score > 0) {
                 new_score = pcmk__add_scores(node->weight, score);
-                if (new_score != node->weight) {
-                    pe_rsc_trace(rsc,
-                                 "Adding promotion score to preference "
-                                 "for %s on %s (%d->%d)",
-                                 child_rsc->id, pe__node_name(node),
-                                 node->weight, new_score);
+                if (new_score != node->weight) { // Could remain INFINITY
                     node->weight = new_score;
+                    pe_rsc_trace(rsc,
+                                 "Added %s promotion priority (%s) to score "
+                                 "on %s (now %s)",
+                                 child_rsc->id, pcmk_readable_score(score),
+                                 pe__node_name(node),
+                                 pcmk_readable_score(new_score));
                 }
             }
 
@@ -1171,9 +1175,12 @@ update_dependent_allowed_nodes(pe_resource_t *dependent,
         const char *dependent_value = pe_node_attribute_raw(node, attr);
 
         if (pcmk__str_eq(primary_value, dependent_value, pcmk__str_casei)) {
-            pe_rsc_trace(colocation->primary, "%s: %d + %d",
-                         pe__node_name(node), node->weight, colocation->score);
             node->weight = pcmk__add_scores(node->weight, colocation->score);
+            pe_rsc_trace(colocation->primary,
+                         "Added %s score (%s) to %s (now %s)",
+                         colocation->id, pcmk_readable_score(colocation->score),
+                         pe__node_name(node),
+                         pcmk_readable_score(node->weight));
         }
     }
 }
