@@ -110,45 +110,48 @@ class FileObj(SearchObj):
 class JournalObj(SearchObj):
     def __init__(self, host=None, name=None):
         SearchObj.__init__(self, name, host, name)
+        self._delegate = None
+        self._hit_limit = False
+
         self.harvest()
 
-    def async_complete(self, pid, returncode, outLines, errLines):
-        foundCursor = False
-        for line in outLines:
+    def async_complete(self, pid, returncode, out, err):
+        found_cursor = False
+        for line in out:
             match = re.search("^-- cursor: ([^.]+)", line)
 
             if match:
-                foundCursor = True
+                found_cursor = True
                 self.offset = match.group(1).strip()
-                self.debug("Got %d lines, new cursor: %s" % (len(outLines), self.offset))
+                self.debug("Got %d lines, new cursor: %s" % (len(out), self.offset))
             else:
                 self.cache.append(line)
 
-        if self.limit and not foundCursor:
-            self.hitLimit = True
-            self.debug("Got %d lines but no cursor: %s" % (len(outLines), self.offset))
+        if self.limit and not found_cursor:
+            self._hit_limit = True
+            self.debug("Got %d lines but no cursor: %s" % (len(out), self.offset))
 
             # Get the current cursor
-            (_, outLines) = self.rsh(self.host, "journalctl -q -n 0 --show-cursor", verbose=0)
-            for line in outLines:
+            (_, out) = self.rsh(self.host, "journalctl -q -n 0 --show-cursor", verbose=0)
+            for line in out:
                 match = re.search("^-- cursor: ([^.]+)", line)
 
                 if match:
                     self.offset = match.group(1).strip()
-                    self.debug("Got %d lines, new cursor: %s" % (len(outLines), self.offset))
+                    self.debug("Got %d lines, new cursor: %s" % (len(out), self.offset))
                 else:
                     self.log("Not a new cursor: %s" % line)
                     self.cache.append(line)
 
-        if self.delegate:
-            self.delegate.async_complete(pid, returncode, self.cache, errLines)
+        if self._delegate:
+            self._delegate.async_complete(pid, returncode, self.cache, err)
 
     def harvest_async(self, delegate=None):
-        self.delegate = delegate
+        self._delegate = delegate
         self.cache = []
 
         # Use --lines to prevent journalctl from overflowing the Popen input buffer
-        if self.limit and self.hitLimit:
+        if self.limit and self._hit_limit:
             return None
 
         if self.offset == "EOF":
@@ -164,7 +167,7 @@ class JournalObj(SearchObj):
         if self.limit:
             return
 
-        self.hitLimit = False
+        self._hit_limit = False
         (rc, lines) = self.rsh(self.host, "date +'%Y-%m-%d %H:%M:%S'", verbose=0)
 
         if rc == 0 and len(lines) == 1:
