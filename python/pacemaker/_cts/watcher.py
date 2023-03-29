@@ -58,16 +58,17 @@ class SearchObj:
 class FileObj(SearchObj):
     def __init__(self, filename, host=None, name=None):
         SearchObj.__init__(self, filename, host, name)
+        self._delegate = None
 
         self.harvest()
 
-    def async_complete(self, pid, returncode, outLines, errLines):
-        for line in outLines:
+    def async_complete(self, pid, returncode, out, err):
+        for line in out:
             match = re.search("^CTSwatcher:Last read: (\d+)", line)
 
             if match:
                 self.offset = match.group(1)
-                self.debug("Got %d lines, new offset: %s  %s" % (len(outLines), self.offset, repr(self.delegate)))
+                self.debug("Got %d lines, new offset: %s  %s" % (len(out), self.offset, repr(self._delegate)))
             elif re.search("^CTSwatcher:.*truncated", line):
                 self.log(line)
             elif re.search("^CTSwatcher:", line):
@@ -75,16 +76,16 @@ class FileObj(SearchObj):
             else:
                 self.cache.append(line)
 
-        if self.delegate:
-            self.delegate.async_complete(pid, returncode, self.cache, errLines)
+        if self._delegate:
+            self._delegate.async_complete(pid, returncode, self.cache, err)
 
     def harvest_async(self, delegate=None):
-        self.delegate = delegate
+        self._delegate = delegate
         self.cache = []
 
         if self.limit and (self.offset == "EOF" or int(self.offset) > self.limit):
-            if self.delegate:
-                self.delegate.async_complete(-1, -1, [], [])
+            if self._delegate:
+                self._delegate.async_complete(-1, -1, [], [])
 
             return None
 
