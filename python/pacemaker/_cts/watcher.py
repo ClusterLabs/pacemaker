@@ -13,7 +13,7 @@ from pacemaker.buildoptions import BuildOptions
 from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.remote import RemoteExec, RemoteFactory
 
-log_watcher_bin = BuildOptions.DAEMON_DIR + "/cts-log-watcher"
+LOG_WATCHER_BIN = BuildOptions.DAEMON_DIR + "/cts-log-watcher"
 
 class SearchObj(object):
     def __init__(self, filename, host=None, name=None):
@@ -89,18 +89,16 @@ class FileObj(SearchObj):
 
             return None
 
-        global log_watcher_bin
         return self.rsh.call_async(self.host,
-                                   "%s -t %s -p CTSwatcher: -l 200 -f %s -o %s" % (log_watcher_bin, self.name, self.filename, self.offset),
+                                   "%s -t %s -p CTSwatcher: -l 200 -f %s -o %s" % (LOG_WATCHER_BIN, self.name, self.filename, self.offset),
                                    delegate=self)
 
     def setend(self):
         if self.limit:
             return
 
-        global log_watcher_bin
         (_, lines) = self.rsh(self.host,
-                              "%s -t %s -p CTSwatcher: -l 2 -f %s -o %s" % (log_watcher_bin, self.name, self.filename, "EOF"),
+                              "%s -t %s -p CTSwatcher: -l 2 -f %s -o %s" % (LOG_WATCHER_BIN, self.name, self.filename, "EOF"),
                               verbose=0)
 
         for line in lines:
