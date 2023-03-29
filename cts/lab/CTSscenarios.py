@@ -102,7 +102,7 @@ A partially set up scenario is torn down if it fails during setup.
                                   self.ClusterManager.Env["nodes"],
                                   self.ClusterManager.Env["LogWatcher"],
                                   "BadNews", 0)
-        self.BadNews.setwatch() # Call after we've figured out what type of log watching to do in LogAudit
+        self.BadNews.set_watch() # Call after we've figured out what type of log watching to do in LogAudit
 
         j = 0
         while j < len(self.Components):

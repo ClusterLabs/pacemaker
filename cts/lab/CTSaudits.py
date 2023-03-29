@@ -83,11 +83,11 @@ class LogAudit(ClusterAudit):
         if watch_pref == "any": 
             for k in self.kinds:
                 watch[k] = LogWatcher(self.CM.Env["LogFileName"], patterns, self.CM.Env["nodes"], k, "LogAudit", 5, silent=True)
-                watch[k].setwatch()
+                watch[k].set_watch()
         else:
             k = watch_pref
             watch[k] = LogWatcher(self.CM.Env["LogFileName"], patterns, self.CM.Env["nodes"], k, "LogAudit", 5, silent=True)
-            watch[k].setwatch()
+            watch[k].set_watch()
 
         if watch_pref == "any": self.CM.log("Writing log with key: %s" % (suffix))
         for node in self.CM.Env["nodes"]:

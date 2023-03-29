@@ -148,7 +148,7 @@ class ClusterManager(UserDict):
                 stonithPats.append(self.templates["Pat:Fencing_start"] % peer)
 
         stonith = LogWatcher(self.Env["LogFileName"], stonithPats, self.Env["nodes"], self.Env["LogWatcher"], "StartupFencing", 0)
-        stonith.setwatch()
+        stonith.set_watch()
         return stonith
 
     def fencing_cleanup(self, node, stonith):
@@ -265,7 +265,7 @@ class ClusterManager(UserDict):
             return 1
 
         stonith = self.prepare_fencing_watcher(node)
-        watch.setwatch()
+        watch.set_watch()
 
         (rc, _) = self.rsh(node, self.templates["StartCmd"])
         if rc != 0:
@@ -380,7 +380,7 @@ class ClusterManager(UserDict):
 
         #   Start all the nodes - at about the same time...
         watch = LogWatcher(self.Env["LogFileName"], watchpats, self.Env["nodes"], self.Env["LogWatcher"], "fast-start", self.Env["DeadTime"]+10)
-        watch.setwatch()
+        watch.set_watch()
 
         if not self.StartaCM(nodelist[0], verbose=verbose):
             return 0
@@ -560,7 +560,7 @@ class ClusterManager(UserDict):
         watchpats.append(self.templates["Pat:NonDC_started"] % node)
         watchpats.append(self.templates["Pat:DC_started"] % node)
         idle_watch = LogWatcher(self.Env["LogFileName"], watchpats, [node], self.Env["LogWatcher"], "ClusterIdle")
-        idle_watch.setwatch()
+        idle_watch.set_watch()
 
         (_, out) = self.rsh(node, self.templates["StatusCmd"]%node, verbose=1)
 
@@ -634,7 +634,7 @@ class ClusterManager(UserDict):
             return 1
 
         idle_watch = LogWatcher(self.Env["LogFileName"], watchpats, nodes.split(), self.Env["LogWatcher"], "ClusterStable", timeout)
-        idle_watch.setwatch()
+        idle_watch.set_watch()
 
         for node in nodes.split():
             # have each node dump its current state

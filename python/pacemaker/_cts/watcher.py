@@ -186,7 +186,7 @@ class LogWatcher(RemoteExec):
 
        The way you use this class is as follows:
           Construct a LogWatcher object
-          Call setwatch() when you want to start watching the log
+          Call set_watch() when you want to start watching the log
           Call look() to scan the log looking for the patterns
     '''
 
@@ -237,7 +237,7 @@ class LogWatcher(RemoteExec):
         message = "lw: %s: %s" % (self.name, args)
         self.logger.debug(message)
 
-    def setwatch(self):
+    def set_watch(self):
         '''Mark the place to start watching the log from.
         '''
 
@@ -288,7 +288,7 @@ class LogWatcher(RemoteExec):
 
     def look(self, timeout=None, silent=False):
         '''Examine the log looking for the given patterns.
-        It starts looking from the place marked by setwatch().
+        It starts looking from the place marked by set_watch().
         This function looks in the file in the fashion of tail -f.
         It properly recovers from log file truncation, but not from
         removing and recreating the log.  It would be nice if it
@@ -372,7 +372,7 @@ class LogWatcher(RemoteExec):
 
     def lookforall(self, timeout=None, allow_multiple_matches=None, silent=False):
         '''Examine the log looking for ALL of the given patterns.
-        It starts looking from the place marked by setwatch().
+        It starts looking from the place marked by set_watch().
 
         We return when the timeout is reached, or when we have found
         ALL of the regexes that were part of the watch

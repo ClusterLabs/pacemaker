@@ -272,7 +272,7 @@ class StopTest(CTSTest):
                 #self.debug("Checking %s will notice %s left"%(other, node))
 
         watch = self.create_watch(patterns, self.Env["DeadTime"])
-        watch.setwatch()
+        watch.set_watch()
 
         if node == self.CM.OurNode:
             self.incr("us")
@@ -448,7 +448,7 @@ class StonithdTest(CTSTest):
             watchpats.append("%s.* S_PENDING -> S_NOT_DC" % node)
 
         watch = self.create_watch(watchpats, 30 + self.Env["DeadTime"] + self.Env["StableTime"] + self.Env["StartTime"])
-        watch.setwatch()
+        watch.set_watch()
 
         origin = self.Env.random_gen.choice(self.Env["nodes"])
 
@@ -703,7 +703,7 @@ class PartialStart(CTSTest):
         watchpats = []
         watchpats.append("pacemaker-controld.*Connecting to .* cluster infrastructure")
         watch = self.create_watch(watchpats, self.Env["DeadTime"]+10)
-        watch.setwatch()
+        watch.set_watch()
 
         self.CM.StartaCMnoBlock(node)
         ret = watch.lookforall()
@@ -769,7 +769,7 @@ class StandbyTest(CTSTest):
         watchpats = []
         watchpats.append(r"State transition .* -> S_POLICY_ENGINE")
         watch = self.create_watch(watchpats, self.Env["DeadTime"]+10)
-        watch.setwatch()
+        watch.set_watch()
 
         self.debug("Setting node %s to standby mode" % node)
         if not self.CM.SetStandbyMode(node, "on"):
@@ -1078,7 +1078,7 @@ class MaintenanceMode(CTSTest):
             pats.append(self.templates["Pat:RscOpOK"] % ("start", self.rid))
 
         watch = self.create_watch(pats, 60)
-        watch.setwatch()
+        watch.set_watch()
 
         self.debug("Turning maintenance mode %s" % action)
         self.rsh(node, self.templates["MaintenanceMode%s" % (action)])
@@ -1099,7 +1099,7 @@ class MaintenanceMode(CTSTest):
         pats.append(("%s.*" % node) + (self.templates["Pat:RscOpOK"] % ("start", self.rid)))
 
         watch = self.create_watch(pats, 60)
-        watch.setwatch()
+        watch.set_watch()
 
         self.CM.AddDummyRsc(node, self.rid)
 
@@ -1117,7 +1117,7 @@ class MaintenanceMode(CTSTest):
         pats.append(self.templates["Pat:RscOpOK"] % ("stop", self.rid))
 
         watch = self.create_watch(pats, 60)
-        watch.setwatch()
+        watch.set_watch()
         self.CM.RemoveDummyRsc(node, self.rid)
 
         self.set_timer("removeDummy")
@@ -1330,7 +1330,7 @@ class ResourceRecover(CTSTest):
         orig_failcount = self.get_failcount(node)
 
         watch = self.create_watch(pats, 60)
-        watch.setwatch()
+        watch.set_watch()
 
         self.rsh(node, "crm_resource -V -F -r %s -H %s &>/dev/null" % (self.rid, node))
 
@@ -1437,12 +1437,12 @@ class ComponentFail(CTSTest):
         stonithPats = []
         stonithPats.append(self.templates["Pat:Fencing_ok"] % node)
         stonith = self.create_watch(stonithPats, 0)
-        stonith.setwatch()
+        stonith.set_watch()
 
         # set the watch for stable
         watch = self.create_watch(
             tmpPats, self.Env["DeadTime"] + self.Env["StableTime"] + self.Env["StartTime"])
-        watch.setwatch()
+        watch.set_watch()
 
         # kill the component
         chosen.kill(node)
@@ -1742,7 +1742,7 @@ class Reattach(CTSTest):
         # Conveniently, the scheduler will display this message when disabling
         # management, even if fencing is not enabled, so we can rely on it.
         managed = self.create_watch(["No fencing will be done"], 60)
-        managed.setwatch()
+        managed.set_watch()
 
         self._set_unmanaged(node)
 
@@ -1758,7 +1758,7 @@ class Reattach(CTSTest):
         pats.append(self.templates["Pat:RscOpOK"] % ("migrate", ".*"))
 
         watch = self.create_watch(pats, 60, "ShutdownActivity")
-        watch.setwatch()
+        watch.set_watch()
 
         self.debug("Shutting down the cluster")
         ret = self.stopall(None)
@@ -1778,7 +1778,7 @@ class Reattach(CTSTest):
             return self.failure("Resources stopped or started during cluster restart")
 
         watch = self.create_watch(pats, 60, "StartupActivity")
-        watch.setwatch()
+        watch.set_watch()
 
         # Re-enable resource management (and verify it happened).
         self._set_managed(node)
@@ -2101,7 +2101,7 @@ class NearQuorumPointTest(CTSTest):
 
         watch = self.create_watch(watchpats, self.Env["DeadTime"]+10)
 
-        watch.setwatch()
+        watch.set_watch()
 
         #begin actions
         for node in stopset:
@@ -2268,7 +2268,7 @@ class BSC_AddResource(CTSTest):
         patterns.append(start_pat % r_id)
 
         watch = self.create_watch(patterns, self.Env["DeadTime"])
-        watch.setwatch()
+        watch.set_watch()
 
         ip = self.NextIP()
         if not self.make_ip_resource(node, r_id, "ocf", "IPaddr", ip):
@@ -2366,7 +2366,7 @@ class SimulStopLite(CTSTest):
         #     Stop all the nodes - at about the same time...
         watch = self.create_watch(watchpats, self.Env["DeadTime"]+10)
 
-        watch.setwatch()
+        watch.set_watch()
         self.set_timer()
         for node in self.Env["nodes"]:
             if self.CM.ShouldBeStatus[node] == "up":
@@ -2433,7 +2433,7 @@ class SimulStartLite(CTSTest):
 
             #   Start all the nodes - at about the same time...
             watch = self.create_watch(watchpats, self.Env["DeadTime"]+10)
-            watch.setwatch()
+            watch.set_watch()
 
             stonith = self.CM.prepare_fencing_watcher(self.name)
 
@@ -2526,7 +2526,7 @@ class RemoteLXC(CTSTest):
         # generate the containers, put them in the config, add some resources to them
         pats = [ ]
         watch = self.create_watch(pats, 120)
-        watch.setwatch()
+        watch.set_watch()
         pats.append(self.templates["Pat:RscOpOK"] % ("start", "lxc1"))
         pats.append(self.templates["Pat:RscOpOK"] % ("start", "lxc2"))
         pats.append(self.templates["Pat:RscOpOK"] % ("start", "lxc-ms"))
@@ -2551,7 +2551,7 @@ class RemoteLXC(CTSTest):
             return
 
         watch = self.create_watch(pats, 120)
-        watch.setwatch()
+        watch.set_watch()
 
         pats.append(self.templates["Pat:RscOpOK"] % ("stop", "container1"))
         pats.append(self.templates["Pat:RscOpOK"] % ("stop", "container2"))
@@ -2775,7 +2775,7 @@ class RemoteDriver(CTSTest):
         # Convert node to baremetal now that it has shutdown the cluster stack
         pats = [ ]
         watch = self.create_watch(pats, 120)
-        watch.setwatch()
+        watch.set_watch()
         pats.append(self.templates["Pat:RscOpOK"] % ("start", self.remote_node))
         pats.append(self.templates["Pat:DC_IDLE"])
 
@@ -2796,7 +2796,7 @@ class RemoteDriver(CTSTest):
         pats.append(self.templates["Pat:RscOpOK"] % ("migrate_from", self.remote_node))
         pats.append(self.templates["Pat:DC_IDLE"])
         watch = self.create_watch(pats, 120)
-        watch.setwatch()
+        watch.set_watch()
 
         (rc, _) = self.rsh(node, "crm_resource -M -r %s" % (self.remote_node), verbose=1)
         if rc != 0:
@@ -2821,7 +2821,7 @@ class RemoteDriver(CTSTest):
         watchpats.append(self.templates["Pat:DC_IDLE"])
 
         watch = self.create_watch(watchpats, 120)
-        watch.setwatch()
+        watch.set_watch()
 
         self.debug("causing dummy rsc to fail.")
 
@@ -2842,7 +2842,7 @@ class RemoteDriver(CTSTest):
         watchpats.append(self.templates["Pat:NodeFenced"] % self.remote_node)
 
         watch = self.create_watch(watchpats, 120)
-        watch.setwatch()
+        watch.set_watch()
 
         # freeze the pcmk remote daemon. this will result in fencing
         self.debug("Force stopped active remote node")
@@ -2861,7 +2861,7 @@ class RemoteDriver(CTSTest):
 
         pats = [ ]
         watch = self.create_watch(pats, 240)
-        watch.setwatch()
+        watch.set_watch()
         pats.append(self.templates["Pat:RscOpOK"] % ("start", self.remote_node))
         if self.remote_rsc_added == 1:
             pats.append(self.templates["Pat:RscRemoteOpOK"] % ("start", self.remote_rsc, self.remote_node))
@@ -2887,7 +2887,7 @@ class RemoteDriver(CTSTest):
         # verify we can put a resource on the remote node
         pats = [ ]
         watch = self.create_watch(pats, 120)
-        watch.setwatch()
+        watch.set_watch()
         pats.append(self.templates["Pat:RscRemoteOpOK"] % ("start", self.remote_rsc, self.remote_node))
         pats.append(self.templates["Pat:DC_IDLE"])
 
@@ -2936,7 +2936,7 @@ class RemoteDriver(CTSTest):
         pats = [ ]
 
         watch = self.create_watch(pats, 120)
-        watch.setwatch()
+        watch.set_watch()
 
         if self.remote_rsc_added == 1:
             pats.append(self.templates["Pat:RscOpOK"] % ("stop", self.remote_rsc))
