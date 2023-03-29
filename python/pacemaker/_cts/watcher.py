@@ -370,7 +370,7 @@ class LogWatcher(RemoteExec):
         self.debug("How did we get here")
         return None
 
-    def lookforall(self, timeout=None, allow_multiple_matches=None, silent=False):
+    def look_for_all(self, allow_multiple_matches=False, silent=False):
         '''Examine the log looking for ALL of the given patterns.
         It starts looking from the place marked by set_watch().
 
@@ -378,20 +378,17 @@ class LogWatcher(RemoteExec):
         ALL of the regexes that were part of the watch
         '''
 
-        if not timeout:
-            timeout = self.Timeout
-
         save_regexes = self.regexes
         returnresult = []
 
         if not silent:
-            self.debug("starting search: timeout=%d" % timeout)
+            self.debug("starting search: timeout=%d" % self.Timeout)
             for regex in self.regexes:
                 if self.debug_level > 2:
                     self.debug("Looking for regex: %s" % regex)
 
         while self.regexes:
-            oneresult = self.look(timeout)
+            oneresult = self.look(self.Timeout)
             if not oneresult:
                 self.unmatched = self.regexes
                 self.matched = returnresult

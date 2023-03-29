@@ -283,7 +283,7 @@ class StopTest(CTSTest):
                 self.incr("them")
 
         self.CM.StopaCM(node)
-        watch_result = watch.lookforall()
+        watch_result = watch.look_for_all()
 
         failreason = None
         UnmatchedList = "||"
@@ -480,7 +480,7 @@ class StonithdTest(CTSTest):
             self.logger.log("Locally originated fencing returned %d" % rc)
 
         self.set_timer("fence")
-        matched = watch.lookforall()
+        matched = watch.look_for_all()
         self.log_timer("fence")
         self.set_timer("reform")
         if watch.unmatched:
@@ -706,7 +706,7 @@ class PartialStart(CTSTest):
         watch.set_watch()
 
         self.CM.StartaCMnoBlock(node)
-        ret = watch.lookforall()
+        ret = watch.look_for_all()
         if not ret:
             self.logger.log("Patterns not found: " + repr(watch.unmatched))
             return self.failure("Setup of %s failed" % node)
@@ -777,7 +777,7 @@ class StandbyTest(CTSTest):
 
         self.set_timer("on")
 
-        ret = watch.lookforall()
+        ret = watch.look_for_all()
         if not ret:
             self.logger.log("Patterns not found: " + repr(watch.unmatched))
             self.CM.SetStandbyMode(node, "off")
@@ -1086,7 +1086,7 @@ class MaintenanceMode(CTSTest):
             self.rsh(node, "crm_resource -V -F -r %s -H %s &>/dev/null" % (self.rid, node))
 
         self.set_timer("recover%s" % (action))
-        watch.lookforall()
+        watch.look_for_all()
         self.log_timer("recover%s" % (action))
         if watch.unmatched:
             self.debug("Failed to find patterns when turning maintenance mode %s" % action)
@@ -1104,7 +1104,7 @@ class MaintenanceMode(CTSTest):
         self.CM.AddDummyRsc(node, self.rid)
 
         self.set_timer("addDummy")
-        watch.lookforall()
+        watch.look_for_all()
         self.log_timer("addDummy")
 
         if watch.unmatched:
@@ -1121,7 +1121,7 @@ class MaintenanceMode(CTSTest):
         self.CM.RemoveDummyRsc(node, self.rid)
 
         self.set_timer("removeDummy")
-        watch.lookforall()
+        watch.look_for_all()
         self.log_timer("removeDummy")
 
         if watch.unmatched:
@@ -1335,7 +1335,7 @@ class ResourceRecover(CTSTest):
         self.rsh(node, "crm_resource -V -F -r %s -H %s &>/dev/null" % (self.rid, node))
 
         self.set_timer("recover")
-        watch.lookforall()
+        watch.look_for_all()
         self.log_timer("recover")
 
         self.CM.cluster_stable()
@@ -1470,7 +1470,7 @@ class ComponentFail(CTSTest):
             return self.success()
 
         # check for logs indicating a graceful recovery
-        matched = watch.lookforall(allow_multiple_matches=1)
+        matched = watch.look_for_all(allow_multiple_matches=True)
         if watch.unmatched:
             self.logger.log("Patterns not found: " + repr(watch.unmatched))
 
@@ -1746,7 +1746,7 @@ class Reattach(CTSTest):
 
         self._set_unmanaged(node)
 
-        if not managed.lookforall():
+        if not managed.look_for_all():
             self.logger.log("Patterns not found: " + repr(managed.unmatched))
             return self.failure("Resource management not disabled")
 
@@ -2113,7 +2113,7 @@ class NearQuorumPointTest(CTSTest):
                 self.CM.StartaCMnoBlock(node)
 
         #get the result
-        if watch.lookforall():
+        if watch.look_for_all():
             self.CM.cluster_stable()
             self.CM.fencing_cleanup("NearQuorumPoint", stonith)
             return self.success()
@@ -2275,7 +2275,7 @@ class BSC_AddResource(CTSTest):
             return self.failure("Make resource %s failed" % r_id)
 
         failed = 0
-        watch_result = watch.lookforall()
+        watch_result = watch.look_for_all()
         if watch.unmatched:
             for regex in watch.unmatched:
                 self.logger.log ("Warn: Pattern not found: %s" % (regex))
@@ -2371,7 +2371,7 @@ class SimulStopLite(CTSTest):
         for node in self.Env["nodes"]:
             if self.CM.ShouldBeStatus[node] == "up":
                 self.CM.StopaCMnoBlock(node)
-        if watch.lookforall():
+        if watch.look_for_all():
             # Make sure they're completely down with no residule
             for node in self.Env["nodes"]:
                 self.rsh(node, self.templates["StopCmd"])
@@ -2440,7 +2440,7 @@ class SimulStartLite(CTSTest):
             for node in node_list:
                 self.CM.StartaCMnoBlock(node)
 
-            watch.lookforall()
+            watch.look_for_all()
 
             node_list = self.CM.fencing_cleanup(self.name, stonith)
 
@@ -2534,7 +2534,7 @@ class RemoteLXC(CTSTest):
 
         self.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -g -a -m -s -c %d &>/dev/null" % self.num_containers)
         self.set_timer("remoteSimpleInit")
-        watch.lookforall()
+        watch.look_for_all()
         self.log_timer("remoteSimpleInit")
         if watch.unmatched:
             self.fail_string = "Unmatched patterns: %s" % (repr(watch.unmatched))
@@ -2558,7 +2558,7 @@ class RemoteLXC(CTSTest):
 
         self.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -p &>/dev/null")
         self.set_timer("remoteSimpleCleanup")
-        watch.lookforall()
+        watch.look_for_all()
         self.log_timer("remoteSimpleCleanup")
 
         if watch.unmatched:
@@ -2782,7 +2782,7 @@ class RemoteDriver(CTSTest):
         self.add_connection_rsc(node)
 
         self.set_timer("remoteMetalInit")
-        watch.lookforall()
+        watch.look_for_all()
         self.log_timer("remoteMetalInit")
         if watch.unmatched:
             self.fail("Unmatched patterns: %s" % watch.unmatched)
@@ -2804,7 +2804,7 @@ class RemoteDriver(CTSTest):
             return
 
         self.set_timer("remoteMetalMigrate")
-        watch.lookforall()
+        watch.look_for_all()
         self.log_timer("remoteMetalMigrate")
 
         if watch.unmatched:
@@ -2828,7 +2828,7 @@ class RemoteDriver(CTSTest):
         self.rsh(node, "rm -f /var/run/resource-agents/Dummy*")
 
         self.set_timer("remoteRscFail")
-        watch.lookforall()
+        watch.look_for_all()
         self.log_timer("remoteRscFail")
         if watch.unmatched:
             self.fail("Unmatched patterns during rsc fail: %s" % watch.unmatched)
@@ -2850,7 +2850,7 @@ class RemoteDriver(CTSTest):
 
         self.debug("Waiting for remote node to be fenced.")
         self.set_timer("remoteMetalFence")
-        watch.lookforall()
+        watch.look_for_all()
         self.log_timer("remoteMetalFence")
         if watch.unmatched:
             self.fail("Unmatched patterns: %s" % watch.unmatched)
@@ -2874,7 +2874,7 @@ class RemoteDriver(CTSTest):
 
         self.debug("Waiting for remote node to rejoin cluster after being fenced.")
         self.set_timer("remoteMetalRestart")
-        watch.lookforall()
+        watch.look_for_all()
         self.log_timer("remoteMetalRestart")
         if watch.unmatched:
             self.fail("Unmatched patterns: %s" % watch.unmatched)
@@ -2901,7 +2901,7 @@ class RemoteDriver(CTSTest):
             return
 
         self.set_timer("remoteMetalRsc")
-        watch.lookforall()
+        watch.look_for_all()
         self.log_timer("remoteMetalRsc")
         if watch.unmatched:
             self.fail("Unmatched patterns: %s" % watch.unmatched)
@@ -2961,7 +2961,7 @@ class RemoteDriver(CTSTest):
             self.rsh(self.get_othernode(node), "crm_resource -U -r %s" % (self.remote_node))
             self.del_rsc(node, self.remote_node)
 
-        watch.lookforall()
+        watch.look_for_all()
         self.log_timer("remoteMetalCleanup")
 
         if watch.unmatched:

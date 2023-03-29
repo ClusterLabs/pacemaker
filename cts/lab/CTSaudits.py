@@ -101,7 +101,7 @@ class LogAudit(ClusterAudit):
             if k in watch:
                 w = watch[k]
                 if watch_pref == "any": self.CM.log("Testing for %s logs" % (k))
-                w.lookforall(silent=True)
+                w.look_for_all(silent=True)
                 if not w.unmatched:
                     if watch_pref == "any": 
                         self.CM.log ("Continuing with %s-based log reader" % (w.kind))

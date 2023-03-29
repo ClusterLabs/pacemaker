@@ -274,7 +274,7 @@ class ClusterManager(UserDict):
             return None
 
         self.ShouldBeStatus[node] = "up"
-        watch_result = watch.lookforall()
+        watch_result = watch.look_for_all()
 
         if watch.unmatched:
             for regex in watch.unmatched:
@@ -387,7 +387,7 @@ class ClusterManager(UserDict):
         for node in nodelist:
             self.StartaCMnoBlock(node, verbose=verbose)
 
-        watch.lookforall()
+        watch.look_for_all()
         if watch.unmatched:
             for regex in watch.unmatched:
                 self.logger.log ("Warn: Startup pattern not found: %s" % (regex))
