@@ -263,7 +263,7 @@ class LogWatcher(RemoteExec):
             self.line_cache.extend(outLines)
             self.cache_lock.release()
 
-    def __get_lines(self, timeout):
+    def __get_lines(self):
         if not self.file_list:
             raise ValueError("No sources to read from")
 
@@ -356,7 +356,7 @@ class LogWatcher(RemoteExec):
                     f.setend()
 
             else:
-                self.__get_lines(timeout)
+                self.__get_lines()
 
                 if not self.line_cache and end < time.time():
                     self.debug("Single search terminated: start=%d, end=%d, now=%d, lines=%d" % (begin, end, time.time(), lines))
