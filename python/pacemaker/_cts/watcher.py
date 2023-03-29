@@ -64,14 +64,14 @@ class FileObj(SearchObj):
 
     def async_complete(self, pid, returncode, out, err):
         for line in out:
-            match = re.search("^CTSwatcher:Last read: (\d+)", line)
+            match = re.search(r"^CTSwatcher:Last read: (\d+)", line)
 
             if match:
                 self.offset = match.group(1)
                 self.debug("Got %d lines, new offset: %s  %s" % (len(out), self.offset, repr(self._delegate)))
-            elif re.search("^CTSwatcher:.*truncated", line):
+            elif re.search(r"^CTSwatcher:.*truncated", line):
                 self.log(line)
-            elif re.search("^CTSwatcher:", line):
+            elif re.search(r"^CTSwatcher:", line):
                 self.debug("Got control line: %s" % line)
             else:
                 self.cache.append(line)
@@ -102,7 +102,7 @@ class FileObj(SearchObj):
                               verbose=0)
 
         for line in lines:
-            match = re.search("^CTSwatcher:Last read: (\d+)", line)
+            match = re.search(r"^CTSwatcher:Last read: (\d+)", line)
             if match:
                 self.limit = int(match.group(1))
                 self.debug("Set limit to: %d" % self.limit)
@@ -118,7 +118,7 @@ class JournalObj(SearchObj):
     def async_complete(self, pid, returncode, out, err):
         found_cursor = False
         for line in out:
-            match = re.search("^-- cursor: ([^.]+)", line)
+            match = re.search(r"^-- cursor: ([^.]+)", line)
 
             if match:
                 found_cursor = True
@@ -134,7 +134,7 @@ class JournalObj(SearchObj):
             # Get the current cursor
             (_, out) = self.rsh(self.host, "journalctl -q -n 0 --show-cursor", verbose=0)
             for line in out:
-                match = re.search("^-- cursor: ([^.]+)", line)
+                match = re.search(r"^-- cursor: ([^.]+)", line)
 
                 if match:
                     self.offset = match.group(1).strip()
