@@ -150,13 +150,12 @@ class JournalObj(SearchObj):
         if self.limit and self.hitLimit:
             return None
 
+        if self.offset == "EOF":
+            command = "journalctl -q -n 0 --show-cursor"
         elif self.limit:
             command = "journalctl -q --after-cursor='%s' --until '%s' --lines=200 --show-cursor" % (self.offset, self.limit)
         else:
             command = "journalctl -q --after-cursor='%s' --lines=200 --show-cursor" % (self.offset)
-
-        if self.offset == "EOF":
-            command = "journalctl -q -n 0 --show-cursor"
 
         return self.rsh.call_async(self.host, command, delegate=self)
 
@@ -360,9 +359,9 @@ class LogWatcher(RemoteExec):
                 if not self.line_cache and end < time.time():
                     self.debug("Single search terminated: start=%d, end=%d, now=%d, lines=%d" % (begin, end, time.time(), lines))
                     return None
-                else:
-                    self.debug("Waiting: start=%d, end=%d, now=%d, lines=%d" % (begin, end, time.time(), len(self.line_cache)))
-                    time.sleep(1)
+
+                self.debug("Waiting: start=%d, end=%d, now=%d, lines=%d" % (begin, end, time.time(), len(self.line_cache)))
+                time.sleep(1)
 
         self.debug("How did we get here")
         return None
