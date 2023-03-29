@@ -1571,32 +1571,13 @@ main(int argc, char **argv)
     CRM_ASSERT(output_format != mon_output_unset);
 
     if (options.daemonize) {
-        if (!options.external_agent) {
-            switch (output_format) {
-                case mon_output_console:
-                    /* @TODO: We shouldn't be able to reach this point without
-                     * --output-to=X, which should default to text output if no
-                     * format is given. That will be fixed in an upcoming
-                     * commit.
-                     */
-                    g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                                "--daemonize requires at least one of "
-                                "--output-as=[html|text|xml] and "
-                                "--external-agent");
-                    return clean_up(CRM_EX_USAGE);
-
-                case mon_output_none:
-                    g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                                "--daemonize requires --external-agent if used "
-                                "with --output-as=none");
-                    return clean_up(CRM_EX_USAGE);
-                default:
-                    break;
-            }
+        if (!options.external_agent && (output_format == mon_output_none)) {
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                        "--daemonize requires --external-agent if used with "
+                        "--output-as=none");
+            return clean_up(CRM_EX_USAGE);
         }
-
         crm_enable_stderr(FALSE);
-
         cib_delete(cib);
         cib = NULL;
         pcmk__daemonize(crm_system_name, options.pid_file);
