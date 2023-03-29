@@ -357,7 +357,6 @@ class LogWatcher:
             oneresult = self.look(self._timeout)
             if not oneresult:
                 self.unmatched = self.regexes
-                self.matched = returnresult
                 self.regexes = save_regexes
                 self.end()
                 return None
@@ -377,6 +376,5 @@ class LogWatcher:
                         self.regexes.append(regex)
 
         self.unmatched = None
-        self.matched = returnresult
         self.regexes = save_regexes
         return returnresult
