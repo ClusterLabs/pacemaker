@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 the Pacemaker project contributors
+ * Copyright 2020-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,6 +7,7 @@
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
+#include "crm/common/results.h"
 #include <crm_internal.h>
 
 #include <crm/common/unittest_internal.h>
@@ -16,8 +17,8 @@ empty_input_string(void **state)
 {
     long long start, end;
 
-    assert_int_equal(pcmk__parse_ll_range(NULL, &start, &end), pcmk_rc_unknown_format);
-    assert_int_equal(pcmk__parse_ll_range("", &start, &end), pcmk_rc_unknown_format);
+    assert_int_equal(pcmk__parse_ll_range(NULL, &start, &end), ENODATA);
+    assert_int_equal(pcmk__parse_ll_range("", &start, &end), ENODATA);
 }
 
 static void
@@ -44,7 +45,7 @@ only_separator(void **state)
 {
     long long start, end;
 
-    assert_int_equal(pcmk__parse_ll_range("-", &start, &end), pcmk_rc_unknown_format);
+    assert_int_equal(pcmk__parse_ll_range("-", &start, &end), pcmk_rc_bad_input);
     assert_int_equal(start, PCMK__PARSE_INT_DEFAULT);
     assert_int_equal(end, PCMK__PARSE_INT_DEFAULT);
 }
@@ -78,7 +79,7 @@ range_start_and_end(void **state)
     assert_int_equal(start, 2000);
     assert_int_equal(end, 2020);
 
-    assert_int_equal(pcmk__parse_ll_range("2000-2020-2030", &start, &end), pcmk_rc_unknown_format);
+    assert_int_equal(pcmk__parse_ll_range("2000-2020-2030", &start, &end), pcmk_rc_bad_input);
 }
 
 static void
@@ -86,11 +87,11 @@ garbage(void **state)
 {
     long long start, end;
 
-    assert_int_equal(pcmk__parse_ll_range("2000x-", &start, &end), pcmk_rc_unknown_format);
+    assert_int_equal(pcmk__parse_ll_range("2000x-", &start, &end), pcmk_rc_bad_input);
     assert_int_equal(start, PCMK__PARSE_INT_DEFAULT);
     assert_int_equal(end, PCMK__PARSE_INT_DEFAULT);
 
-    assert_int_equal(pcmk__parse_ll_range("-x2000", &start, &end), pcmk_rc_unknown_format);
+    assert_int_equal(pcmk__parse_ll_range("-x2000", &start, &end), pcmk_rc_bad_input);
     assert_int_equal(start, PCMK__PARSE_INT_DEFAULT);
     assert_int_equal(end, PCMK__PARSE_INT_DEFAULT);
 }
@@ -100,8 +101,8 @@ strtoll_errors(void **state)
 {
     long long start, end;
 
-    assert_int_equal(pcmk__parse_ll_range("20000000000000000000-", &start, &end), pcmk_rc_unknown_format);
-    assert_int_equal(pcmk__parse_ll_range("100-20000000000000000000", &start, &end), pcmk_rc_unknown_format);
+    assert_int_equal(pcmk__parse_ll_range("20000000000000000000-", &start, &end), EOVERFLOW);
+    assert_int_equal(pcmk__parse_ll_range("100-20000000000000000000", &start, &end), EOVERFLOW);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,

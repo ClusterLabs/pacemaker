@@ -112,7 +112,7 @@ pcmk__read_pidfile(const char *filename, pid_t *pid)
 {
     int fd;
     struct stat sbuf;
-    int rc = pcmk_rc_unknown_format;
+    int rc = pcmk_rc_ok;
     long long pid_read = 0;
     char buf[LOCKSTRLEN + 1];
 
@@ -134,7 +134,10 @@ pcmk__read_pidfile(const char *filename, pid_t *pid)
         goto bail;
     }
 
-    if (sscanf(buf, "%lld", &pid_read) > 0) {
+    errno = 0;
+    rc = sscanf(buf, "%lld", &pid_read);
+
+    if (rc > 0) {
         if (pid_read <= 0) {
             rc = ESRCH;
         } else {
@@ -142,6 +145,10 @@ pcmk__read_pidfile(const char *filename, pid_t *pid)
             *pid = (pid_t) pid_read;
             crm_trace("Read pid %lld from %s", pid_read, filename);
         }
+    } else if (rc == 0) {
+        rc = ENODATA;
+    } else {
+        rc = errno;
     }
 
   bail:

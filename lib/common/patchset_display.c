@@ -324,7 +324,7 @@ xml_patchset_default(pcmk__output_t *out, va_list args)
             return xml_show_patchset_v2(out, patchset);
         default:
             crm_err("Unknown patch format: %d", format);
-            return pcmk_rc_unknown_format;
+            return pcmk_rc_bad_xml_patch;
     }
 }
 
@@ -386,7 +386,7 @@ xml_patchset_log(pcmk__output_t *out, va_list args)
             return xml_show_patchset_v2(out, patchset);
         default:
             crm_err("Unknown patch format: %d", format);
-            return pcmk_rc_unknown_format;
+            return pcmk_rc_bad_xml_patch;
     }
 }
 
@@ -506,7 +506,7 @@ xml_log_patchset(uint8_t log_level, const char *function,
             break;
         default:
             crm_err("Unknown patch format: %d", format);
-            rc = pcmk_rc_unknown_format;
+            rc = pcmk_rc_bad_xml_patch;
             break;
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -946,7 +946,7 @@ pcmk__xe_get_bool_attr(const xmlNode *node, const char *name, bool *value)
         *value = ret;
         return pcmk_rc_ok;
     } else {
-        return pcmk_rc_unknown_format;
+        return pcmk_rc_bad_input;
     }
 }
 
