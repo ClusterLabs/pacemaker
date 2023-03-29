@@ -194,21 +194,18 @@ class LogWatcher(RemoteExec):
         '''This is the constructor for the LogWatcher class.  It takes a
         log name to watch, and a list of regular expressions to watch for."
         '''
-        self.logger = LogFactory()
-
+        self.filename = log
         self.hosts = hosts
         self.kind = kind
-        self.filename = log
         self.name = name
         self.regexes = regexes
-
-        self.whichmatch = -1
         self.unmatched = None
-
-        self.file_list = []
-        self.line_cache = []
+        self.whichmatch = -1
 
         self._cache_lock = threading.Lock()
+        self._file_list = []
+        self._line_cache = []
+        self._logger = LogFactory()
         self._timeout = int(timeout)
 
         #  Validate our arguments.  Better sooner than later ;-)
@@ -226,11 +223,11 @@ class LogWatcher(RemoteExec):
 
         if not silent:
             for regex in self.regexes:
-                self.debug("Looking for regex: %s" % regex)
+                self._debug("Looking for regex: %s" % regex)
 
-    def debug(self, args):
+    def _debug(self, args):
         message = "lw: %s: %s" % (self.name, args)
-        self.logger.debug(message)
+        self._logger.debug(message)
 
     def set_watch(self):
         '''Mark the place to start watching the log from.
@@ -238,30 +235,30 @@ class LogWatcher(RemoteExec):
 
         if self.kind == "remote":
             for node in self.hosts:
-                self.file_list.append(FileObj(self.filename, node, self.name))
+                self._file_list.append(FileObj(self.filename, node, self.name))
 
         elif self.kind == "journal":
             for node in self.hosts:
-                self.file_list.append(JournalObj(node, self.name))
+                self._file_list.append(JournalObj(node, self.name))
 
         else:
-            self.file_list.append(FileObj(self.filename))
+            self._file_list.append(FileObj(self.filename))
 
     def async_complete(self, pid, returncode, outLines, errLines):
-        # TODO: Probably need a lock for updating self.line_cache
-        self.logger.debug("%s: Got %d lines from %d (total %d)" % (self.name, len(outLines), pid, len(self.line_cache)))
+        # TODO: Probably need a lock for updating self._line_cache
+        self._logger.debug("%s: Got %d lines from %d (total %d)" % (self.name, len(outLines), pid, len(self._line_cache)))
 
         if outLines:
             with self._cache_lock:
-                self.line_cache.extend(outLines)
+                self._line_cache.extend(outLines)
 
     def __get_lines(self):
-        if not self.file_list:
+        if not self._file_list:
             raise ValueError("No sources to read from")
 
         pending = []
 
-        for f in self.file_list:
+        for f in self._file_list:
             t = f.harvest_async(self)
             if t:
                 pending.append(t)
@@ -269,11 +266,11 @@ class LogWatcher(RemoteExec):
         for t in pending:
             t.join(60.0)
             if t.is_alive():
-                self.logger.log("%s: Aborting after 20s waiting for %s logging commands" % (self.name, repr(t)))
+                self._logger.log("%s: Aborting after 20s waiting for %s logging commands" % (self.name, repr(t)))
                 return
 
     def end(self):
-        for f in self.file_list:
+        for f in self._file_list:
             f.end()
 
     def look(self, timeout=None):
@@ -294,20 +291,20 @@ class LogWatcher(RemoteExec):
         end = begin + timeout + 1
 
         if not self.regexes:
-            self.debug("Nothing to look for")
+            self._debug("Nothing to look for")
             return None
 
         if timeout == 0:
-            for f in self.file_list:
+            for f in self._file_list:
                 f.set_end()
 
         while True:
-            if self.line_cache:
+            if self._line_cache:
                 lines += 1
 
                 with self._cache_lock:
-                    line = self.line_cache[0]
-                    self.line_cache.remove(line)
+                    line = self._line_cache[0]
+                    self._line_cache.remove(line)
 
                 which = -1
 
@@ -321,25 +318,25 @@ class LogWatcher(RemoteExec):
 
                     if matchobj:
                         self.whichmatch = which
-                        self.debug("Matched: %s" % line)
+                        self._debug("Matched: %s" % line)
                         return line
 
             elif timeout > 0 and end < time.time():
                 timeout = 0
-                for f in self.file_list:
+                for f in self._file_list:
                     f.set_end()
 
             else:
                 self.__get_lines()
 
-                if not self.line_cache and end < time.time():
-                    self.debug("Single search terminated: start=%d, end=%d, now=%d, lines=%d" % (begin, end, time.time(), lines))
+                if not self._line_cache and end < time.time():
+                    self._debug("Single search terminated: start=%d, end=%d, now=%d, lines=%d" % (begin, end, time.time(), lines))
                     return None
 
-                self.debug("Waiting: start=%d, end=%d, now=%d, lines=%d" % (begin, end, time.time(), len(self.line_cache)))
+                self._debug("Waiting: start=%d, end=%d, now=%d, lines=%d" % (begin, end, time.time(), len(self._line_cache)))
                 time.sleep(1)
 
-        self.debug("How did we get here")
+        self._debug("How did we get here")
         return None
 
     def look_for_all(self, allow_multiple_matches=False, silent=False):
@@ -354,7 +351,7 @@ class LogWatcher(RemoteExec):
         returnresult = []
 
         if not silent:
-            self.debug("starting search: timeout=%d" % self._timeout)
+            self._debug("starting search: timeout=%d" % self._timeout)
 
         while self.regexes:
             oneresult = self.look(self._timeout)
