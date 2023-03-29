@@ -11,7 +11,7 @@ import threading
 
 from pacemaker.buildoptions import BuildOptions
 from pacemaker._cts.logging import LogFactory
-from pacemaker._cts.remote import RemoteExec, RemoteFactory
+from pacemaker._cts.remote import RemoteFactory
 
 LOG_WATCHER_BIN = BuildOptions.DAEMON_DIR + "/cts-log-watcher"
 
@@ -177,7 +177,7 @@ class JournalObj(SearchObj):
             self.debug("Unable to set limit for %s because date returned %d lines with status %d" % (self.host,
                 len(lines), rc))
 
-class LogWatcher(RemoteExec):
+class LogWatcher:
     '''This class watches logs for messages that fit certain regular
        expressions.  Watching logs for events isn't the ideal way
        to do business, but it's better than nothing :-)
