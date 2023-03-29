@@ -1181,6 +1181,11 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
         { NULL }
     };
 
+#if CURSES_ENABLED
+    const char *fmts = "console (default), html, text, xml, none";
+#else
+    const char *fmts = "text (default), html, xml, none";
+#endif // CURSES_ENABLED
     const char *description = "Notes:\n\n"
                               "If this program is called as crm_mon.cgi, --output-as=html --html-cgi will\n"
                               "automatically be added to the command line arguments.\n\n"
@@ -1212,11 +1217,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
                               "Start crm_mon and export the current cluster status as XML to stdout, then exit:\n\n"
                               "\tcrm_mon --output-as xml\n\n";
 
-#if CURSES_ENABLED
-    context = pcmk__build_arg_context(args, "console (default), html, text, xml", group, NULL);
-#else
-    context = pcmk__build_arg_context(args, "text (default), html, xml", group, NULL);
-#endif
+    context = pcmk__build_arg_context(args, fmts, group, NULL);
     pcmk__add_main_args(context, extra_prog_entries);
     g_option_context_set_description(context, description);
 
@@ -1279,7 +1280,9 @@ reconcile_output_format(pcmk__common_args_t *args) {
         return;
     }
 
-    if (pcmk__str_eq(args->output_ty, "html", pcmk__str_casei)) {
+    if (pcmk__str_eq(args->output_ty, "none", pcmk__str_casei)) {
+        output_format = mon_output_none;
+    } else if (pcmk__str_eq(args->output_ty, "html", pcmk__str_casei)) {
         char *dest = NULL;
 
         pcmk__str_update(&dest, args->output_dest);
