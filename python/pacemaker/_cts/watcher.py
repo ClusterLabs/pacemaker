@@ -204,11 +204,11 @@ class LogWatcher(RemoteExec):
 
         self.whichmatch = -1
         self.unmatched = None
-        self.cache_lock = threading.Lock()
 
         self.file_list = []
         self.line_cache = []
 
+        self._cache_lock = threading.Lock()
         self._timeout = int(timeout)
 
         #  Validate our arguments.  Better sooner than later ;-)
@@ -252,9 +252,8 @@ class LogWatcher(RemoteExec):
         self.logger.debug("%s: Got %d lines from %d (total %d)" % (self.name, len(outLines), pid, len(self.line_cache)))
 
         if outLines:
-            self.cache_lock.acquire()
-            self.line_cache.extend(outLines)
-            self.cache_lock.release()
+            with self._cache_lock:
+                self.line_cache.extend(outLines)
 
     def __get_lines(self):
         if not self.file_list:
@@ -306,10 +305,9 @@ class LogWatcher(RemoteExec):
             if self.line_cache:
                 lines += 1
 
-                self.cache_lock.acquire()
-                line = self.line_cache[0]
-                self.line_cache.remove(line)
-                self.cache_lock.release()
+                with self._cache_lock:
+                    line = self.line_cache[0]
+                    self.line_cache.remove(line)
 
                 which = -1
 
