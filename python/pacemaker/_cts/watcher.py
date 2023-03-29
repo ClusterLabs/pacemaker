@@ -209,6 +209,8 @@ class LogWatcher(RemoteExec):
         self.file_list = []
         self.line_cache = []
 
+        self._timeout = int(timeout)
+
         #  Validate our arguments.  Better sooner than later ;-)
         for regex in regexes:
             re.compile(regex)
@@ -225,8 +227,6 @@ class LogWatcher(RemoteExec):
         if not silent:
             for regex in self.regexes:
                 self.debug("Looking for regex: %s" % regex)
-
-        self.Timeout = int(timeout)
 
     def debug(self, args):
         message = "lw: %s: %s" % (self.name, args)
@@ -288,7 +288,7 @@ class LogWatcher(RemoteExec):
         We return the first line which matches any of our patterns.
         '''
         if not timeout:
-            timeout = self.Timeout
+            timeout = self._timeout
 
         lines = 0
         begin = time.time()
@@ -356,10 +356,10 @@ class LogWatcher(RemoteExec):
         returnresult = []
 
         if not silent:
-            self.debug("starting search: timeout=%d" % self.Timeout)
+            self.debug("starting search: timeout=%d" % self._timeout)
 
         while self.regexes:
-            oneresult = self.look(self.Timeout)
+            oneresult = self.look(self._timeout)
             if not oneresult:
                 self.unmatched = self.regexes
                 self.matched = returnresult
