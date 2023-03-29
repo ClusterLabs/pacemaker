@@ -232,7 +232,6 @@ class LogWatcher(RemoteExec):
                 self.debug("Looking for regex: %s" % regex)
 
         self.Timeout = int(timeout)
-        self.returnonlymatch = None
 
     def debug(self, args):
         message = "lw: %s: %s" % (self.name, args)
@@ -256,13 +255,6 @@ class LogWatcher(RemoteExec):
     def __del__(self):
         if self.debug_level > 1:
             self.debug("Destroy")
-
-    def ReturnOnlyMatch(self, onlymatch=1):
-        '''Specify one or more subgroups of the match to return rather than the whole string
-           http://www.python.org/doc/2.5.2/lib/match-objects.html
-        '''
-
-        self.returnonlymatch = onlymatch
 
     def async_complete(self, pid, returncode, outLines, errLines):
         # TODO: Probably need a lock for updating self.line_cache
@@ -350,15 +342,12 @@ class LogWatcher(RemoteExec):
                     if matchobj:
                         self.whichmatch = which
 
-                        if self.returnonlymatch:
-                            return matchobj.group(self.returnonlymatch)
-                        else:
-                            self.debug("Matched: %s" % line)
+                        self.debug("Matched: %s" % line)
 
-                            if self.debug_level > 1:
-                                self.debug("With: %s" % regex)
+                        if self.debug_level > 1:
+                            self.debug("With: %s" % regex)
 
-                            return line
+                        return line
 
             elif timeout > 0 and end < time.time():
                 if self.debug_level > 1:
