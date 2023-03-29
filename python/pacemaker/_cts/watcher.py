@@ -244,13 +244,13 @@ class LogWatcher:
         else:
             self._file_list.append(FileObj(self.filename))
 
-    def async_complete(self, pid, returncode, outLines, errLines):
+    def async_complete(self, pid, returncode, out, err):
         # TODO: Probably need a lock for updating self._line_cache
-        self._logger.debug("%s: Got %d lines from %d (total %d)" % (self.name, len(outLines), pid, len(self._line_cache)))
+        self._logger.debug("%s: Got %d lines from %d (total %d)" % (self.name, len(out), pid, len(self._line_cache)))
 
-        if outLines:
+        if out:
             with self._cache_lock:
-                self._line_cache.extend(outLines)
+                self._line_cache.extend(out)
 
     def __get_lines(self):
         if not self._file_list:
@@ -312,7 +312,7 @@ class LogWatcher:
                     continue
 
                 for regex in self.regexes:
-                    which = which + 1
+                    which += 1
 
                     matchobj = re.search(regex, line)
 
@@ -348,20 +348,20 @@ class LogWatcher:
         '''
 
         save_regexes = self.regexes
-        returnresult = []
+        result = []
 
         if not silent:
             self._debug("starting search: timeout=%d" % self._timeout)
 
         while self.regexes:
-            oneresult = self.look(self._timeout)
-            if not oneresult:
+            one_result = self.look(self._timeout)
+            if not one_result:
                 self.unmatched = self.regexes
                 self.regexes = save_regexes
                 self.end()
                 return None
 
-            returnresult.append(oneresult)
+            result.append(one_result)
             if not allow_multiple_matches:
                 del self.regexes[self.whichmatch]
 
@@ -371,10 +371,10 @@ class LogWatcher:
                 self.regexes = []
 
                 for regex in tmp_regexes:
-                    matchobj = re.search(regex, oneresult)
+                    matchobj = re.search(regex, one_result)
                     if not matchobj:
                         self.regexes.append(regex)
 
         self.unmatched = None
         self.regexes = save_regexes
-        return returnresult
+        return result
