@@ -286,7 +286,7 @@ class LogWatcher(RemoteExec):
         for f in self.file_list:
             f.end()
 
-    def look(self, timeout=None, silent=False):
+    def look(self, timeout=None):
         '''Examine the log looking for the given patterns.
         It starts looking from the place marked by set_watch().
         This function looks in the file in the fashion of tail -f.
