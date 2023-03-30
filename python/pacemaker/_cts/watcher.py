@@ -1,5 +1,4 @@
-""" Log searching classes for Pacemaker's Cluster Test Suite (CTS)
-"""
+""" Log searching classes for Pacemaker's Cluster Test Suite (CTS) """
 
 __all__ = ["LogKind", "LogWatcher"]
 __copyright__ = "Copyright 2014-2023 the Pacemaker project contributors"
@@ -36,7 +35,20 @@ class LogKind(Enum):
         return "journal"
 
 class SearchObj:
+    """ The base class for various kinds of log watchers.  Log-specific watchers
+        need to be built on top of this one.
+    """
+
     def __init__(self, filename, host=None, name=None):
+        """ Create a new SearchObj instance
+
+            Arguments:
+
+            filename -- The log to watch
+            host     -- The cluster node on which to watch the log
+            name     -- A unique name to use when logging about this watch
+        """
+
         self.cache = []
         self.filename = filename
         self.limit = None
@@ -57,32 +69,71 @@ class SearchObj:
         return self.filename
 
     def log(self, args):
+        """ Log a message """
+
         message = "lw: %s: %s" % (self, args)
         self.logger.log(message)
 
     def debug(self, args):
+        """ Log a debug message """
+
         message = "lw: %s: %s" % (self, args)
         self.logger.debug(message)
 
     def harvest(self, delegate=None):
+        """ Collect lines from a log, optionally calling delegate when complete """
+
         async_task = self.harvest_async(delegate)
         async_task.join()
 
     def harvest_async(self, delegate=None):
+        """ Collect lines from a log asynchronously, optionally calling delegate
+            when complete.  This method must be implemented by all subclasses.
+        """
+
         raise NotImplementedError
 
     def end(self):
+        """ Mark that a log is done being watched, resetting internal data structures
+            to the beginning of the file.  Subsequent watches will therefore start
+            from the beginning again.
+        """
+
         self.debug("Unsetting the limit")
         self.limit = None
 
 class FileObj(SearchObj):
+    """ A specialized SearchObj subclass for watching log files """
+
     def __init__(self, filename, host=None, name=None):
+        """ Create a new FileObj instance
+
+            Arguments:
+
+            filename -- The file to watch
+            host     -- The cluster node on which to watch the file
+            name     -- A unique name to use when logging about this watch
+        """
+
         SearchObj.__init__(self, filename, host, name)
         self._delegate = None
 
         self.harvest()
 
     def async_complete(self, pid, returncode, out, err):
+        """ Called when an asynchronous log file read is complete.  This function
+            saves the output from that read for look()/look_for_all() to process
+            and records the current position in the journal.  Future reads will
+            pick back up from that spot.
+
+            Arguments:
+
+            pid         -- The ID of the process that did the read
+            returncode  -- The return code of the process that did the read
+            out         -- stdout from the file read
+            err         -- stderr from the file read
+        """
+
         for line in out:
             match = re.search(r"^CTSwatcher:Last read: (\d+)", line)
 
@@ -100,6 +151,12 @@ class FileObj(SearchObj):
             self._delegate.async_complete(pid, returncode, self.cache, err)
 
     def harvest_async(self, delegate=None):
+        """ Collect lines from the log file on a single host asynchronously,
+            optionally calling delegate when complete.  This can be called
+            repeatedly, reading a chunk each time or until the end of the log
+            file is hit.
+        """
+
         self._delegate = delegate
         self.cache = []
 
@@ -114,6 +171,12 @@ class FileObj(SearchObj):
                                    delegate=self)
 
     def set_end(self):
+        """ Internally record where we expect to find the end of a log file,
+            which is just the number of lines in the file.  Calls to harvest
+            from the log file will not go any farther than what this function
+            records.
+        """
+
         if self.limit:
             return
 
@@ -129,7 +192,17 @@ class FileObj(SearchObj):
                 self.debug("Set limit to: %d" % self.limit)
 
 class JournalObj(SearchObj):
+    """ A specialized SearchObj subclass for watching systemd journals """
+
     def __init__(self, host=None, name=None):
+        """ Create a new JournalObj instance
+
+            Arguments:
+
+            host     -- The cluster node on which to watch the journal
+            name     -- A unique name to use when logging about this watch
+        """
+
         SearchObj.__init__(self, name, host, name)
         self._delegate = None
         self._hit_limit = False
@@ -137,6 +210,19 @@ class JournalObj(SearchObj):
         self.harvest()
 
     def async_complete(self, pid, returncode, out, err):
+        """ Called when an asynchronous journal read is complete.  This function
+            saves the output from that read for look()/look_for_all() to process
+            and records the current position in the journal.  Future reads will
+            pick back up from that spot.
+
+            Arguments:
+
+            pid         -- The ID of the process that did the journal read
+            returncode  -- The return code of the process that did the journal read
+            out         -- stdout from the journal read
+            err         -- stderr from the journal read
+        """
+
         found_cursor = False
         for line in out:
             match = re.search(r"^-- cursor: ([^.]+)", line)
@@ -169,6 +255,12 @@ class JournalObj(SearchObj):
             self._delegate.async_complete(pid, returncode, self.cache, err)
 
     def harvest_async(self, delegate=None):
+        """ Collect lines from the journal on a single host asynchronously,
+            optionally calling delegate when complete.  This can be called
+            repeatedly, reading a chunk each time or until the end of the
+            journal is hit.
+        """
+
         self._delegate = delegate
         self.cache = []
 
@@ -186,6 +278,11 @@ class JournalObj(SearchObj):
         return self.rsh.call_async(self.host, command, delegate=self)
 
     def set_end(self):
+        """ Internally record where we expect to find the end of a host's journal,
+            which is just the current time.  Calls to harvest from the journal will
+            not go any farther than what this function records.
+        """
+
         if self.limit:
             return
 
@@ -201,22 +298,31 @@ class JournalObj(SearchObj):
                 len(lines), rc))
 
 class LogWatcher:
-    '''This class watches logs for messages that fit certain regular
-       expressions.  Watching logs for events isn't the ideal way
-       to do business, but it's better than nothing :-)
+    """ A class for watching a single log file or journal across multiple hosts,
+        looking for lines that match given regular expressions.
 
-       On the other hand, this class is really pretty cool ;-)
-
-       The way you use this class is as follows:
-          Construct a LogWatcher object
-          Call set_watch() when you want to start watching the log
-          Call look() to scan the log looking for the patterns
-    '''
+        The way you use this class is as follows:
+            - Construct a LogWatcher object
+            - Call set_watch() when you want to start watching the log
+            - Call look() to scan the log looking for the patterns
+    """
 
     def __init__(self, log, regexes, hosts, kind=LogKind.ANY, name="Anon", timeout=10, silent=False):
-        '''This is the constructor for the LogWatcher class.  It takes a
-        log name to watch, and a list of regular expressions to watch for."
-        '''
+        """ Create a new LogWatcher instance.
+
+            Arguments:
+
+            log     -- The log file to watch
+            regexes -- A list of regular expressions to match against the log
+            hosts   -- A list of cluster nodes on which to watch the log
+            kind    -- What type of log is this object watching?
+            name    -- A unique name to use when logging about this watch
+            timeout -- Default number of seconds to watch a log file at a time;
+                       this can be overridden by the timeout= parameter to
+                       self.look on an as-needed basis
+            silent  -- If False, log extra information
+        """
+
         self.filename = log
         self.hosts = hosts
         self.kind = kind
@@ -246,12 +352,13 @@ class LogWatcher:
                 self._debug("Looking for regex: %s" % regex)
 
     def _debug(self, args):
+        """ Log a debug message """
+
         message = "lw: %s: %s" % (self.name, args)
         self._logger.debug(message)
 
     def set_watch(self):
-        '''Mark the place to start watching the log from.
-        '''
+        """ Mark the place to start watching the log from """
 
         if self.kind == LogKind.REMOTE_FILE:
             for node in self.hosts:
@@ -265,6 +372,19 @@ class LogWatcher:
             self._file_list.append(FileObj(self.filename))
 
     def async_complete(self, pid, returncode, out, err):
+        """ Called when an asynchronous log file read is complete.  This function
+            saves the output from that read for look()/look_for_all() to process
+            and records the current position.  Future reads will pick back up
+            from that spot.
+
+            Arguments:
+
+            pid         -- The ID of the process that did the read
+            returncode  -- The return code of the process that did the read
+            out         -- stdout from the file read
+            err         -- stderr from the file read
+        """
+
         # It's not clear to me whether this function ever gets called as
         # delegate somewhere, which is what would pass returncode and err
         # as parameters.  Just disable the warning for now.
@@ -278,6 +398,8 @@ class LogWatcher:
                 self._line_cache.extend(out)
 
     def __get_lines(self):
+        """ Iterate over all watched log files and collect new lines from each """
+
         if not self._file_list:
             raise ValueError("No sources to read from")
 
@@ -295,19 +417,31 @@ class LogWatcher:
                 return
 
     def end(self):
+        """ Mark that a log is done being watched, resetting internal data structures
+            to the beginning of the file.  Subsequent watches will therefore start
+            from the beginning again.
+        """
+
         for f in self._file_list:
             f.end()
 
     def look(self, timeout=None):
-        '''Examine the log looking for the given patterns.
-        It starts looking from the place marked by set_watch().
-        This function looks in the file in the fashion of tail -f.
-        It properly recovers from log file truncation, but not from
-        removing and recreating the log.  It would be nice if it
-        recovered from this as well :-)
+        """ Examine the log looking for the regexes that were given when this
+            object was created.  It starts looking from the place marked by
+            set_watch(), continuing through the file in the fashion of
+            `tail -f`.  It properly recovers from log file truncation but not
+            from removing and recreating the log.
 
-        We return the first line which matches any of our patterns.
-        '''
+            Arguments:
+
+            timeout -- Number of seconds to watch the log file; defaults to
+                       seconds argument passed when this object was created
+
+            Returns:
+
+            The first line which matches any regex
+        """
+
         if not timeout:
             timeout = self._timeout
 
@@ -365,12 +499,24 @@ class LogWatcher:
         return None
 
     def look_for_all(self, allow_multiple_matches=False, silent=False):
-        '''Examine the log looking for ALL of the given patterns.
-        It starts looking from the place marked by set_watch().
+        """ Like look(), but looks for matches for multiple regexes.  This function
+            returns when the timeout is reached or all regexes were matched.  As a
+            side effect, self.unmatched will contain regexes that were not matched.
+            This can be inspected by the caller.
 
-        We return when the timeout is reached, or when we have found
-        ALL of the regexes that were part of the watch
-        '''
+            Arguments:
+
+            allow_multiple_matches -- If True, allow each regex to match more than
+                                      once.  If False (the default), once a regex
+                                      matches a line, it will no longer be searched
+                                      for.
+            silent                 -- If False, log extra information
+
+            Returns:
+
+            If all regexes are matched, return the matching lines.  Otherwise, return
+            None.
+        """
 
         save_regexes = self.regexes
         result = []
