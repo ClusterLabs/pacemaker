@@ -56,9 +56,10 @@ typedef enum mon_output_format_e {
 } mon_output_format_t;
 
 enum mon_exec_mode {
-    mon_exec_interactive,
+    mon_exec_unset,
     mon_exec_daemonized,
     mon_exec_one_shot,
+    mon_exec_update,
 };
 
 void crm_mon_register_messages(pcmk__output_t *out);

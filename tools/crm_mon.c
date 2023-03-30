@@ -225,7 +225,7 @@ struct {
     GSList *includes_excludes;
 } options = {
     .reconnect_ms = RECONNECT_MSECS,
-    .exec_mode = mon_exec_interactive,
+    .exec_mode = mon_exec_unset,
     .fence_connect = TRUE,
 };
 
@@ -550,6 +550,11 @@ reconnect_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
         return FALSE;
     } else {
         options.reconnect_ms = crm_parse_interval_spec(optarg);
+
+        if (options.exec_mode != mon_exec_daemonized) {
+            // Reconnect interval applies to daemonized too, so don't override
+            options.exec_mode = mon_exec_update;
+        }
     }
 
     return TRUE;
@@ -1364,22 +1369,19 @@ reconcile_output_format(pcmk__common_args_t *args)
         /* Console is the default format if no conflicting options are given.
          *
          * Use text output instead if one of the following conditions is met:
-         * * We're not in interactive mode (console output is incompatible with
-         *   other modes)
+         * * We've requested daemonized or one-shot mode (console output is
+         *   incompatible with modes other than mon_exec_update)
          * * We requested the version, which is effectively one-shot
          * * We specified a non-stdout output destination (console mode is
          *   compatible only with stdout)
          */
-        if ((options.exec_mode != mon_exec_interactive)
+        if ((options.exec_mode == mon_exec_daemonized)
+            || (options.exec_mode == mon_exec_one_shot)
             || args->version
             || !pcmk__str_eq(args->output_dest, "-", pcmk__str_null_matches)) {
 
             pcmk__str_update(&args->output_ty, "text");
             output_format = mon_output_plain;
-
-            if (options.exec_mode != mon_exec_daemonized) {
-                options.exec_mode = mon_exec_one_shot;
-            }
         } else {
             pcmk__str_update(&args->output_ty, "console");
             output_format = mon_output_console;
@@ -1393,13 +1395,36 @@ reconcile_output_format(pcmk__common_args_t *args)
          */
         pcmk__str_update(&args->output_ty, "text");
         output_format = mon_output_plain;
-
-        if (options.exec_mode != mon_exec_daemonized) {
-            options.exec_mode = mon_exec_one_shot;
-        }
     }
 
     // Otherwise, invalid format. Let pcmk__output_new() throw an error.
+}
+
+/*!
+ * \internal
+ * \brief Set execution mode to the output format's default if appropriate
+ *
+ * \param[in,out] args  Command line arguments
+ */
+static void
+set_default_exec_mode(const pcmk__common_args_t *args)
+{
+    if (output_format == mon_output_console) {
+        /* Update is the only valid mode for console, but set here instead of
+         * reconcile_output_format() for isolation and consistency
+         */
+        options.exec_mode = mon_exec_update;
+
+    } else if (options.exec_mode == mon_exec_unset) {
+        // Default to one-shot mode for all other formats
+        options.exec_mode = mon_exec_one_shot;
+
+    } else if ((options.exec_mode == mon_exec_update)
+               && pcmk__str_eq(args->output_dest, "-",
+                               pcmk__str_null_matches)) {
+        // If not using console format, update mode cannot be used with stdout
+        options.exec_mode = mon_exec_one_shot;
+    }
 }
 
 static void
@@ -1550,6 +1575,7 @@ main(int argc, char **argv)
     }
 
     reconcile_output_format(args);
+    set_default_exec_mode(args);
     add_output_args();
 
     /* output_format MUST NOT BE CHANGED AFTER THIS POINT. */
@@ -1638,10 +1664,6 @@ main(int argc, char **argv)
 
     if (output_format == mon_output_xml) {
         show_opts |= pcmk_show_inactive_rscs | pcmk_show_timing;
-
-        if (!options.daemonize) {
-            options.one_shot = TRUE;
-        }
     }
 
     if ((output_format == mon_output_html || output_format == mon_output_cgi) &&
