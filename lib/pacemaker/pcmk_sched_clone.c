@@ -124,7 +124,7 @@ find_rsc_action(pe_resource_t *rsc, const char *task)
 }
 
 static void
-child_ordering_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
+child_ordering_constraints(pe_resource_t *rsc)
 {
     pe_action_t *stop = NULL;
     pe_action_t *start = NULL;
@@ -167,7 +167,7 @@ clone_create_actions(pe_resource_t *rsc)
 {
     pe_rsc_debug(rsc, "Creating actions for clone %s", rsc->id);
     pcmk__create_instance_actions(rsc, rsc->children);
-    child_ordering_constraints(rsc, rsc->cluster);
+    child_ordering_constraints(rsc);
 
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
         pcmk__create_promotable_actions(rsc);
