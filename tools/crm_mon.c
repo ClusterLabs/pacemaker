@@ -1263,20 +1263,27 @@ add_output_args(void) {
     }
 }
 
-/* Which output format to use could come from two places:  The --as-xml
- * style arguments we gave in deprecated_entries above, or the formatted output
- * arguments added by pcmk__register_formats.  If the latter were used,
- * output_format will be mon_output_unset.
+/*!
+ * \internal
+ * \brief Set output format based on \p --output-as arguments and mode arguments
  *
- * Call the callbacks as if those older style arguments were provided so
- * the various things they do get done.
+ * When the deprecated output format arguments (\p --as-cgi, \p --as-html,
+ * \p --simple-status, \p --as-xml) are parsed, callback functions set
+ * \p output_format (and the umask if appropriate). If none of the deprecated
+ * arguments were specified, this function does the same based on the current
+ * \p --output-as arguments and the \p --one-shot and \p --daemonize arguments.
+ *
+ * \param[in,out] args  Command line arguments
  */
 static void
-reconcile_output_format(pcmk__common_args_t *args) {
+reconcile_output_format(pcmk__common_args_t *args)
+{
     gboolean retval = TRUE;
-    GError *err = NULL;
 
     if (output_format != mon_output_unset) {
+        /* One of the deprecated arguments was used, and we're finished. Note
+         * that this means the deprecated arguments take precedence.
+         */
         return;
     }
 
@@ -1286,10 +1293,10 @@ reconcile_output_format(pcmk__common_args_t *args) {
         char *dest = NULL;
 
         pcmk__str_update(&dest, args->output_dest);
-        retval = as_html_cb("h", dest, NULL, &err);
+        retval = as_html_cb("h", dest, NULL, &error);
         free(dest);
     } else if (pcmk__str_eq(args->output_ty, "text", pcmk__str_casei)) {
-        retval = no_curses_cb("N", NULL, NULL, &err);
+        retval = no_curses_cb("N", NULL, NULL, &error);
     } else if (pcmk__str_eq(args->output_ty, "xml", pcmk__str_casei)) {
         pcmk__str_update(&args->output_ty, "xml");
         output_format = mon_output_xml;
@@ -1307,7 +1314,6 @@ reconcile_output_format(pcmk__common_args_t *args) {
     }
 
     if (!retval) {
-        g_propagate_error(&error, err);
         clean_up(CRM_EX_USAGE);
     }
 }
