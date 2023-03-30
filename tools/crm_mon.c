@@ -755,10 +755,6 @@ static GOptionEntry display_entries[] = {
       "Display pending state if 'record-pending' is enabled",
       NULL },
 
-    { "simple-status", 's', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, as_simple_cb,
-      "Display the cluster status once as a simple one line output (suitable for nagios)",
-      NULL },
-
     { NULL }
 };
 
@@ -771,6 +767,12 @@ static GOptionEntry deprecated_entries[] = {
     { "as-xml", 'X', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, as_xml_cb,
       "Write cluster status as XML to stdout. This will enable one-shot mode.\n"
       INDENT "Use --output-as=xml instead.",
+      NULL },
+
+    { "simple-status", 's', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
+      as_simple_cb,
+      "Display the cluster status once as a simple one line output\n"
+      INDENT "(suitable for nagios)",
       NULL },
 
     { "disable-ncurses", 'N', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, no_curses_cb,
