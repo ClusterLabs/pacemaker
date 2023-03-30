@@ -1552,14 +1552,6 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
             pe_rsc_trace(rsc,
                          "Checking additional %d optional '%s with' constraints",
                          g_list_length(colocations), rsc->id);
-        } else if (rsc->variant == pe_group) {
-            pe_resource_t *last_rsc = pe__last_group_member(rsc);
-
-            colocations = pcmk__with_this_colocations(last_rsc);
-            pe_rsc_trace(rsc, "Checking additional %d optional 'with group %s' "
-                         "constraints using last member %s",
-                         g_list_length(colocations), rsc->id, last_rsc->id);
-
         } else {
             colocations = pcmk__with_this_colocations(rsc);
             pe_rsc_trace(rsc,
