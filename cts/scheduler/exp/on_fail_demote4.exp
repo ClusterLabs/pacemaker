@@ -631,7 +631,7 @@
     <action_set>
       <rsc_op id="81" operation="start" operation_key="remote-rhel7-2_start_0" on_node="rhel7-1" on_node_uuid="1">
         <primitive id="remote-rhel7-2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_name="start" CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="120000"  server="rhel7-2"/>
+        <attributes CRM_meta_expire_attrs="true" CRM_meta_name="start" CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="120000"  server="rhel7-2"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1373,7 +1373,7 @@
     <action_set>
       <rsc_op id="103" operation="start" operation_key="stateful-bundle-0_start_0" on_node="rhel7-5" on_node_uuid="5">
         <primitive id="stateful-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="stateful-bundle-docker-0" CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="90000" addr="192.168.122.131"  port="9999"/>
+        <attributes CRM_meta_container="stateful-bundle-docker-0" CRM_meta_expire_attrs="true" CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="90000" addr="192.168.122.131"  port="9999"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1554,7 +1554,7 @@
     <action_set>
       <rsc_op id="117" operation="start" operation_key="stateful-bundle-2_start_0" on_node="rhel7-3" on_node_uuid="3">
         <primitive id="stateful-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="stateful-bundle-docker-2" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="90000" addr="192.168.122.133"  port="9999"/>
+        <attributes CRM_meta_container="stateful-bundle-docker-2" CRM_meta_expire_attrs="true" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="90000" addr="192.168.122.133"  port="9999"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1584,7 +1584,7 @@
     <action_set>
       <rsc_op id="147" operation="start" operation_key="lxc2_start_0" on_node="rhel7-3" on_node_uuid="3">
         <primitive id="lxc2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="container2" CRM_meta_name="start" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_container="container2" CRM_meta_expire_attrs="true" CRM_meta_name="start" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>

@@ -214,7 +214,7 @@
     <action_set>
       <rsc_op id="18" operation="start" operation_key="httpd-bundle-0_start_0" on_node="rh74-test" on_node_uuid="3232287163">
         <primitive id="httpd-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="httpd-bundle-docker-0" CRM_meta_on_node="rh74-test" CRM_meta_on_node_uuid="3232287163" CRM_meta_timeout="20000" addr="192.168.20.188"  port="3121"/>
+        <attributes CRM_meta_container="httpd-bundle-docker-0" CRM_meta_expire_attrs="true" CRM_meta_on_node="rh74-test" CRM_meta_on_node_uuid="3232287163" CRM_meta_timeout="20000" addr="192.168.20.188"  port="3121"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -348,7 +348,7 @@
     <action_set>
       <rsc_op id="23" operation="start" operation_key="httpd-bundle-1_start_0" on_node="rh74-test" on_node_uuid="3232287163">
         <primitive id="httpd-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="httpd-bundle-docker-1" CRM_meta_on_node="rh74-test" CRM_meta_on_node_uuid="3232287163" CRM_meta_timeout="20000" addr="192.168.20.189"  port="3121"/>
+        <attributes CRM_meta_container="httpd-bundle-docker-1" CRM_meta_expire_attrs="true" CRM_meta_on_node="rh74-test" CRM_meta_on_node_uuid="3232287163" CRM_meta_timeout="20000" addr="192.168.20.189"  port="3121"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -466,7 +466,7 @@
     <action_set>
       <rsc_op id="29" operation="start" operation_key="httpd-bundle-2_start_0" on_node="rh74-test" on_node_uuid="3232287163">
         <primitive id="httpd-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="httpd-bundle-docker-2" CRM_meta_on_node="rh74-test" CRM_meta_on_node_uuid="3232287163" CRM_meta_timeout="20000" addr="192.168.20.190"  port="3121"/>
+        <attributes CRM_meta_container="httpd-bundle-docker-2" CRM_meta_expire_attrs="true" CRM_meta_on_node="rh74-test" CRM_meta_on_node_uuid="3232287163" CRM_meta_timeout="20000" addr="192.168.20.190"  port="3121"/>
       </rsc_op>
     </action_set>
     <inputs>

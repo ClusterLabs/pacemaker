@@ -628,7 +628,7 @@
     <action_set>
       <rsc_op id="58" operation="start" operation_key="c7auto4_start_0" on_node="c7auto1" on_node_uuid="1">
         <primitive id="c7auto4" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="container" CRM_meta_name="start" CRM_meta_on_node="c7auto1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_container="container" CRM_meta_expire_attrs="true" CRM_meta_name="start" CRM_meta_on_node="c7auto1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>

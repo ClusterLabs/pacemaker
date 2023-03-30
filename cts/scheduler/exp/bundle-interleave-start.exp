@@ -297,7 +297,7 @@
     <action_set>
       <rsc_op id="66" operation="start" operation_key="base-bundle-0_start_0" on_node="node2" on_node_uuid="2">
         <primitive id="base-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="base-bundle-podman-0" CRM_meta_on_node="node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" addr="node2"  port="3121"/>
+        <attributes CRM_meta_container="base-bundle-podman-0" CRM_meta_expire_attrs="true" CRM_meta_on_node="node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" addr="node2"  port="3121"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -495,7 +495,7 @@
     <action_set>
       <rsc_op id="70" operation="start" operation_key="base-bundle-1_start_0" on_node="node3" on_node_uuid="3">
         <primitive id="base-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="base-bundle-podman-1" CRM_meta_on_node="node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" addr="node3"  port="3121"/>
+        <attributes CRM_meta_container="base-bundle-podman-1" CRM_meta_expire_attrs="true" CRM_meta_on_node="node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" addr="node3"  port="3121"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -693,7 +693,7 @@
     <action_set>
       <rsc_op id="74" operation="start" operation_key="base-bundle-2_start_0" on_node="node4" on_node_uuid="4">
         <primitive id="base-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="base-bundle-podman-2" CRM_meta_on_node="node4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000" addr="node4"  port="3121"/>
+        <attributes CRM_meta_container="base-bundle-podman-2" CRM_meta_expire_attrs="true" CRM_meta_on_node="node4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000" addr="node4"  port="3121"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1083,7 +1083,7 @@
     <action_set>
       <rsc_op id="100" operation="start" operation_key="app-bundle-0_start_0" on_node="node2" on_node_uuid="2">
         <primitive id="app-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="app-bundle-podman-0" CRM_meta_on_node="node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" addr="node2"  port="3121"/>
+        <attributes CRM_meta_container="app-bundle-podman-0" CRM_meta_expire_attrs="true" CRM_meta_on_node="node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" addr="node2"  port="3121"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1284,7 +1284,7 @@
     <action_set>
       <rsc_op id="104" operation="start" operation_key="app-bundle-1_start_0" on_node="node3" on_node_uuid="3">
         <primitive id="app-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="app-bundle-podman-1" CRM_meta_on_node="node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" addr="node3"  port="3121"/>
+        <attributes CRM_meta_container="app-bundle-podman-1" CRM_meta_expire_attrs="true" CRM_meta_on_node="node3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" addr="node3"  port="3121"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1485,7 +1485,7 @@
     <action_set>
       <rsc_op id="108" operation="start" operation_key="app-bundle-2_start_0" on_node="node4" on_node_uuid="4">
         <primitive id="app-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="app-bundle-podman-2" CRM_meta_on_node="node4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000" addr="node4"  port="3121"/>
+        <attributes CRM_meta_container="app-bundle-podman-2" CRM_meta_expire_attrs="true" CRM_meta_on_node="node4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000" addr="node4"  port="3121"/>
       </rsc_op>
     </action_set>
     <inputs>

@@ -60,6 +60,7 @@ extern "C" {
  */
 
 #define PCMK_META_ENABLED                   "enabled"
+#define PCMK_META_EXPIRE_ATTRS              "expire_attrs"
 
 
 /*

@@ -761,6 +761,110 @@ unpack_cib(xmlNode *cib, unsigned long long flags, pe_working_set_t *data_set)
 
 /*!
  * \internal
+ * \brief Does a given start action have a matching pseudo-start action for
+ *        a remote resource?
+ *
+ * \param[in] data_set     Cluster working set
+ * \param[in] start_action The start action to find a match for
+ */
+static bool
+has_remote_pseudo_stop_action(const pe_action_t *start_action)
+{
+    for (GList *iter = start_action->rsc->actions; iter != NULL; iter = iter->next) {
+        pe_action_t *action = (pe_action_t *) iter->data;
+
+        if (pcmk_is_set(action->flags, pe_action_pseudo) &&
+            !pcmk_is_set(action->flags, pe_action_optional) &&
+            pcmk__str_eq(action->task, RSC_STOP, pcmk__str_none) &&
+            pcmk__str_eq(action->rsc->id, start_action->rsc->id, pcmk__str_none)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/*!
+ * \internal
+ * \brief Does a given resource have a fencing action?
+ *
+ * \param[in,out] singletons  The list of singleton actions
+ * \param[in]     rsc         A resource, assumed to be remote
+ */
+static bool
+remote_has_fence_action(GHashTable *singletons, const pe_resource_t *rsc)
+{
+    GHashTableIter iter;
+    gpointer value;
+
+    if (!singletons) {
+        return false;
+    }
+
+    g_hash_table_iter_init(&iter, singletons);
+    while (g_hash_table_iter_next(&iter, NULL, &value)) {
+        pe_action_t *action = value;
+
+        if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_none) &&
+            action->node->details->remote_rsc == rsc) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/*!
+ * \internal
+ * \brief Add PCMK_META_EXPIRE_ATTRS="true" to an action
+ */
+static void
+add_purge_attr(pe_action_t *action)
+{
+    char *key = strdup(PCMK_META_EXPIRE_ATTRS);
+    char *val = strdup(XML_BOOLEAN_TRUE);
+
+    CRM_ASSERT(key != NULL && val != NULL);
+    g_hash_table_insert(action->meta, key, val);
+}
+
+/*!
+ * \internal
+ * \brief Mark start actions on remote nodes that need their attributes purged
+ *
+ * \param[in,out] data_set     Cluster working set
+ */
+static void
+add_transient_purge_attrs(pe_working_set_t *data_set)
+{
+    for (GList *iter = data_set->actions; iter != NULL; iter = iter->next) {
+        pe_action_t *action = (pe_action_t *) iter->data;
+
+        /* If this isn't an action involving a remote node, there's no need to
+         * check anything else.
+         */
+        if (action->rsc == NULL || !action->rsc->is_remote_node) {
+            continue;
+        }
+
+        /* We only mark start actions. */
+        if (!pcmk__str_eq(action->task, RSC_START, pcmk__str_none)) {
+            continue;
+        }
+
+        /* If there's a fencing action for this resource, or it's a start action
+         * without a matching pseudo-stop action for the same resource, we want
+         * to purge the transient attributes.
+         */
+        if (remote_has_fence_action(data_set->singletons, action->rsc) ||
+            !has_remote_pseudo_stop_action(action)) {
+            add_purge_attr(action);
+        }
+    }
+}
+
+/*!
+ * \internal
  * \brief Run the scheduler for a given CIB
  *
  * \param[in,out] cib       CIB XML to use as scheduler input
@@ -802,6 +906,7 @@ pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
 
     schedule_fencing_and_shutdowns(data_set);
     pcmk__apply_orderings(data_set);
+    add_transient_purge_attrs(data_set);
     log_all_actions(data_set);
     pcmk__create_graph(data_set);
 

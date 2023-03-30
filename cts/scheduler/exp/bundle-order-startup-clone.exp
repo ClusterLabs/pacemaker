@@ -353,7 +353,7 @@
     <action_set>
       <rsc_op id="68" operation="start" operation_key="redis-bundle-0_start_0" on_node="metal-2" on_node_uuid="2">
         <primitive id="redis-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="redis-bundle-docker-0" CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" addr="metal-2"  port="3124"/>
+        <attributes CRM_meta_container="redis-bundle-docker-0" CRM_meta_expire_attrs="true" CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" addr="metal-2"  port="3124"/>
       </rsc_op>
     </action_set>
     <inputs>

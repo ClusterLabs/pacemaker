@@ -184,7 +184,7 @@
   <synapse id="14">
     <action_set>
       <pseudo_event id="36" operation="start" operation_key="rhel7-node1_start_0">
-        <attributes CRM_meta_container="remote-rsc" CRM_meta_name="start" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_container="remote-rsc" CRM_meta_expire_attrs="true" CRM_meta_name="start" CRM_meta_timeout="60000" />
       </pseudo_event>
     </action_set>
     <inputs>

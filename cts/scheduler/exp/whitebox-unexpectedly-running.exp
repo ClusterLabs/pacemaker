@@ -60,7 +60,7 @@
     <action_set>
       <rsc_op id="9" operation="start" operation_key="remote1_start_0" on_node="18builder" on_node_uuid="5">
         <primitive id="remote1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="FAKE" CRM_meta_name="start" CRM_meta_on_node="18builder" CRM_meta_on_node_uuid="5" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_container="FAKE" CRM_meta_expire_attrs="true" CRM_meta_name="start" CRM_meta_on_node="18builder" CRM_meta_on_node_uuid="5" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -98,7 +98,7 @@
     <action_set>
       <rsc_op id="11" operation="start" operation_key="remote2_start_0" on_node="18builder" on_node_uuid="5">
         <primitive id="remote2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="FAKE-crashed" CRM_meta_name="start" CRM_meta_on_node="18builder" CRM_meta_on_node_uuid="5" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_container="FAKE-crashed" CRM_meta_expire_attrs="true" CRM_meta_name="start" CRM_meta_on_node="18builder" CRM_meta_on_node_uuid="5" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>

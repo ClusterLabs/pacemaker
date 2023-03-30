@@ -24,7 +24,7 @@
   <synapse id="2">
     <action_set>
       <pseudo_event id="61" operation="start" operation_key="pcmk_remote2_start_0">
-        <attributes CRM_meta_name="start" CRM_meta_timeout="10000"  server="172.17.201.2"/>
+        <attributes CRM_meta_expire_attrs="true" CRM_meta_name="start" CRM_meta_timeout="10000"  server="172.17.201.2"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -66,7 +66,7 @@
     <action_set>
       <rsc_op id="66" operation="start" operation_key="pcmk_remote4_start_0" on_node="pcmk2" on_node_uuid="2">
         <primitive id="pcmk_remote4" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_name="start" CRM_meta_on_node="pcmk2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="10000"  server="172.17.201.4"/>
+        <attributes CRM_meta_expire_attrs="true" CRM_meta_name="start" CRM_meta_on_node="pcmk2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="10000"  server="172.17.201.4"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -109,7 +109,7 @@
   <synapse id="9">
     <action_set>
       <pseudo_event id="69" operation="start" operation_key="pcmk_remote5_start_0">
-        <attributes CRM_meta_name="start" CRM_meta_timeout="10000"  server="172.17.201.5"/>
+        <attributes CRM_meta_expire_attrs="true" CRM_meta_name="start" CRM_meta_timeout="10000"  server="172.17.201.5"/>
       </pseudo_event>
     </action_set>
     <inputs>

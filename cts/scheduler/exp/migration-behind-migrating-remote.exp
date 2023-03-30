@@ -100,7 +100,7 @@
   <synapse id="8">
     <action_set>
       <pseudo_event id="13" operation="start" operation_key="remote1_start_0">
-        <attributes CRM_meta_timeout="20000" />
+        <attributes CRM_meta_expire_attrs="true" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>

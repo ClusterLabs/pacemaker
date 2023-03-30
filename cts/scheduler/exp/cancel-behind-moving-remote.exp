@@ -716,7 +716,7 @@
     <action_set>
       <rsc_op id="227" operation="start" operation_key="ovn-dbs-bundle-0_start_0" on_node="controller-2" on_node_uuid="3">
         <primitive id="ovn-dbs-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="ovn-dbs-bundle-podman-0" CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="120000" addr="controller-2"  port="3125"/>
+        <attributes CRM_meta_container="ovn-dbs-bundle-podman-0" CRM_meta_expire_attrs="true" CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="120000" addr="controller-2"  port="3125"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -824,7 +824,7 @@
     <action_set>
       <rsc_op id="72" operation="start" operation_key="ovn-dbs-bundle-1_start_0" on_node="controller-0" on_node_uuid="1">
         <primitive id="ovn-dbs-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="ovn-dbs-bundle-podman-1" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_timeout="120000" addr="controller-0"  port="3125"/>
+        <attributes CRM_meta_container="ovn-dbs-bundle-podman-1" CRM_meta_expire_attrs="true" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_timeout="120000" addr="controller-0"  port="3125"/>
       </rsc_op>
     </action_set>
     <inputs>

@@ -269,7 +269,7 @@
     <action_set>
       <rsc_op id="40" operation="start" operation_key="galera-bundle-0_start_0" on_node="undercloud" on_node_uuid="1">
         <primitive id="galera-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="galera-bundle-docker-0" CRM_meta_on_node="undercloud" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" addr="undercloud"  port="3123"/>
+        <attributes CRM_meta_container="galera-bundle-docker-0" CRM_meta_expire_attrs="true" CRM_meta_on_node="undercloud" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" addr="undercloud"  port="3123"/>
       </rsc_op>
     </action_set>
     <inputs>

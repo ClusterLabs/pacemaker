@@ -38,7 +38,7 @@
     <action_set>
       <rsc_op id="4" operation="start" operation_key="rhel7-alt4_start_0" on_node="rhel7-alt1" on_node_uuid="1">
         <primitive id="rhel7-alt4" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_name="start" CRM_meta_on_node="rhel7-alt1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="15000" />
+        <attributes CRM_meta_expire_attrs="true" CRM_meta_name="start" CRM_meta_on_node="rhel7-alt1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="15000" />
       </rsc_op>
     </action_set>
     <inputs/>

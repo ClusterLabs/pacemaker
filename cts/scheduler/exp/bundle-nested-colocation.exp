@@ -357,7 +357,7 @@
     <action_set>
       <rsc_op id="41" operation="start" operation_key="rabbitmq-bundle-0_start_0" on_node="overcloud-controller-0" on_node_uuid="1">
         <primitive id="rabbitmq-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_on_node="overcloud-controller-0" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" addr="overcloud-rabbit-0"  port="3121"/>
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_expire_attrs="true" CRM_meta_on_node="overcloud-controller-0" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" addr="overcloud-rabbit-0"  port="3121"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -521,7 +521,7 @@
     <action_set>
       <rsc_op id="44" operation="start" operation_key="rabbitmq-bundle-1_start_0" on_node="overcloud-controller-1" on_node_uuid="2">
         <primitive id="rabbitmq-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="rabbitmq-bundle-docker-1" CRM_meta_on_node="overcloud-controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" addr="overcloud-rabbit-1"  port="3121"/>
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-1" CRM_meta_expire_attrs="true" CRM_meta_on_node="overcloud-controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" addr="overcloud-rabbit-1"  port="3121"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -685,7 +685,7 @@
     <action_set>
       <rsc_op id="47" operation="start" operation_key="rabbitmq-bundle-2_start_0" on_node="overcloud-controller-2" on_node_uuid="3">
         <primitive id="rabbitmq-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="rabbitmq-bundle-docker-2" CRM_meta_on_node="overcloud-controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" addr="overcloud-rabbit-2"  port="3121"/>
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-2" CRM_meta_expire_attrs="true" CRM_meta_on_node="overcloud-controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" addr="overcloud-rabbit-2"  port="3121"/>
       </rsc_op>
     </action_set>
     <inputs>

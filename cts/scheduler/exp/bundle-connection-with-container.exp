@@ -167,7 +167,7 @@
     <action_set>
       <rsc_op id="30" operation="start" operation_key="httpd-bundle-0_start_0" on_node="rhel8-1" on_node_uuid="1">
         <primitive id="httpd-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="httpd-bundle-podman-0" CRM_meta_on_node="rhel8-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="90000" addr="192.168.122.131"  port="9999"/>
+        <attributes CRM_meta_container="httpd-bundle-podman-0" CRM_meta_expire_attrs="true" CRM_meta_on_node="rhel8-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="90000" addr="192.168.122.131"  port="9999"/>
       </rsc_op>
     </action_set>
     <inputs>

@@ -24,7 +24,7 @@
   <synapse id="2">
     <action_set>
       <pseudo_event id="53" operation="start" operation_key="pcmk_remote3_start_0">
-        <attributes CRM_meta_name="start" CRM_meta_timeout="10000"  server="172.17.201.3"/>
+        <attributes CRM_meta_expire_attrs="true" CRM_meta_name="start" CRM_meta_timeout="10000"  server="172.17.201.3"/>
       </pseudo_event>
     </action_set>
     <inputs>

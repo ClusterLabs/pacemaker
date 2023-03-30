@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="37" operation="start" operation_key="database-0_start_0" on_node="controller-0" on_node_uuid="1">
         <primitive id="database-0" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_name="start" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_timeout="60000"  reconnect_interval="60"/>
+        <attributes CRM_meta_expire_attrs="true" CRM_meta_name="start" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_timeout="60000"  reconnect_interval="60"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -38,7 +38,7 @@
     <action_set>
       <rsc_op id="41" operation="start" operation_key="database-2_start_0" on_node="controller-1" on_node_uuid="2">
         <primitive id="database-2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_name="start" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="60000"  reconnect_interval="60"/>
+        <attributes CRM_meta_expire_attrs="true" CRM_meta_name="start" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="60000"  reconnect_interval="60"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -480,7 +480,7 @@
     <action_set>
       <rsc_op id="86" operation="start" operation_key="galera-bundle-0_start_0" on_node="controller-0" on_node_uuid="1">
         <primitive id="galera-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="galera-bundle-docker-0" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" addr="database-0"  port="3123"/>
+        <attributes CRM_meta_container="galera-bundle-docker-0" CRM_meta_expire_attrs="true" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" addr="database-0"  port="3123"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -579,7 +579,7 @@
     <action_set>
       <rsc_op id="95" operation="start" operation_key="galera-bundle-2_start_0" on_node="controller-1" on_node_uuid="2">
         <primitive id="galera-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="galera-bundle-docker-2" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" addr="database-2"  port="3123"/>
+        <attributes CRM_meta_container="galera-bundle-docker-2" CRM_meta_expire_attrs="true" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" addr="database-2"  port="3123"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1094,7 +1094,7 @@
     <action_set>
       <rsc_op id="133" operation="start" operation_key="redis-bundle-1_start_0" on_node="controller-1" on_node_uuid="2">
         <primitive id="redis-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="redis-bundle-docker-1" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" addr="controller-1"  port="3124"/>
+        <attributes CRM_meta_container="redis-bundle-docker-1" CRM_meta_expire_attrs="true" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" addr="controller-1"  port="3124"/>
       </rsc_op>
     </action_set>
     <inputs>
