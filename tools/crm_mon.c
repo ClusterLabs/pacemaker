@@ -1308,11 +1308,16 @@ reconcile_output_format(pcmk__common_args_t *args)
         pcmk__str_update(&args->output_ty, "text");
         output_format = mon_output_plain;
 
-    } else {
-        /* Neither old nor new arguments were given, so set the default. */
+    } else if (pcmk__str_eq(args->output_ty, "console",
+                            pcmk__str_null_matches)) {
+        /* Default to console if no format was specified and none of the above
+         * overrides were hit
+         */
         pcmk__str_update(&args->output_ty, "console");
         output_format = mon_output_console;
     }
+
+    // Otherwise, invalid format. Let pcmk__output_new() throw an error.
 }
 
 static void
