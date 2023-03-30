@@ -437,7 +437,7 @@ as_html_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
     pcmk__str_update(&args->output_dest, optarg);
     pcmk__str_update(&args->output_ty, "html");
     output_format = mon_output_html;
-    umask(S_IWGRP | S_IWOTH);
+    umask(S_IWGRP | S_IWOTH);   // World-readable HTML
     return TRUE;
 }
 
@@ -513,6 +513,7 @@ inactive_resources_cb(const gchar *option_name, const gchar *optarg, gpointer da
 
 static gboolean
 no_curses_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+    pcmk__str_update(&args->output_ty, "text");
     output_format = mon_output_plain;
     return TRUE;
 }
@@ -1278,8 +1279,6 @@ add_output_args(void) {
 static void
 reconcile_output_format(pcmk__common_args_t *args)
 {
-    gboolean retval = TRUE;
-
     if (output_format != mon_output_unset) {
         /* One of the deprecated arguments was used, and we're finished. Note
          * that this means the deprecated arguments take precedence.
@@ -1290,13 +1289,12 @@ reconcile_output_format(pcmk__common_args_t *args)
     if (pcmk__str_eq(args->output_ty, "none", pcmk__str_casei)) {
         output_format = mon_output_none;
     } else if (pcmk__str_eq(args->output_ty, "html", pcmk__str_casei)) {
-        char *dest = NULL;
-
-        pcmk__str_update(&dest, args->output_dest);
-        retval = as_html_cb("h", dest, NULL, &error);
-        free(dest);
+        pcmk__str_update(&args->output_ty, "html");
+        output_format = mon_output_html;
+        umask(S_IWGRP | S_IWOTH);   // World-readable HTML
     } else if (pcmk__str_eq(args->output_ty, "text", pcmk__str_casei)) {
-        retval = no_curses_cb("N", NULL, NULL, &error);
+        pcmk__str_update(&args->output_ty, "text");
+        output_format = mon_output_plain;
     } else if (pcmk__str_eq(args->output_ty, "xml", pcmk__str_casei)) {
         pcmk__str_update(&args->output_ty, "xml");
         output_format = mon_output_xml;
@@ -1311,10 +1309,6 @@ reconcile_output_format(pcmk__common_args_t *args)
         /* Neither old nor new arguments were given, so set the default. */
         pcmk__str_update(&args->output_ty, "console");
         output_format = mon_output_console;
-    }
-
-    if (!retval) {
-        clean_up(CRM_EX_USAGE);
     }
 }
 
