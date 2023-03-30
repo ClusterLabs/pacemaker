@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -75,6 +75,7 @@ typedef struct crm_peer_node_s {
     // Only used by controller
     enum crm_join_phase join;
     char *expected;
+    time_t peer_lost;
 } crm_node_t;
 
 void crm_peer_init(void);
