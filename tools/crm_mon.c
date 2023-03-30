@@ -1286,25 +1286,28 @@ reconcile_output_format(pcmk__common_args_t *args)
         return;
     }
 
-    if (pcmk__str_eq(args->output_ty, "none", pcmk__str_casei)) {
+    if (pcmk__str_eq(args->output_ty, "none", pcmk__str_none)) {
         output_format = mon_output_none;
-    } else if (pcmk__str_eq(args->output_ty, "html", pcmk__str_casei)) {
-        pcmk__str_update(&args->output_ty, "html");
+
+    } else if (pcmk__str_eq(args->output_ty, "html", pcmk__str_none)) {
         output_format = mon_output_html;
         umask(S_IWGRP | S_IWOTH);   // World-readable HTML
-    } else if (pcmk__str_eq(args->output_ty, "text", pcmk__str_casei)) {
-        pcmk__str_update(&args->output_ty, "text");
+
+    } else if (pcmk__str_eq(args->output_ty, "text", pcmk__str_none)) {
         output_format = mon_output_plain;
-    } else if (pcmk__str_eq(args->output_ty, "xml", pcmk__str_casei)) {
-        pcmk__str_update(&args->output_ty, "xml");
+
+    } else if (pcmk__str_eq(args->output_ty, "xml", pcmk__str_none)) {
         output_format = mon_output_xml;
+
     } else if (options.one_shot) {
         pcmk__str_update(&args->output_ty, "text");
         output_format = mon_output_plain;
+
     } else if (!options.daemonize && args->output_dest != NULL) {
         options.one_shot = TRUE;
         pcmk__str_update(&args->output_ty, "text");
         output_format = mon_output_plain;
+
     } else {
         /* Neither old nor new arguments were given, so set the default. */
         pcmk__str_update(&args->output_ty, "console");
