@@ -166,7 +166,10 @@ cib_diff_notify(const char *op, int result, const char *call_id,
     cib_diff_version_details(diff, &add_admin_epoch, &add_epoch, &add_updates,
                              &del_admin_epoch, &del_epoch, &del_updates);
 
-    if (add_updates != del_updates) {
+    if ((add_admin_epoch != del_admin_epoch)
+        || (add_epoch != del_epoch)
+        || (add_updates != del_updates)) {
+
         do_crm_log(log_level,
                    "Updated CIB generation %d.%d.%d to %d.%d.%d from client "
                    "%s%s%s (%s) (%s)",
@@ -175,10 +178,14 @@ cib_diff_notify(const char *op, int result, const char *call_id,
                    client_name,
                    ((call_id != NULL)? " call " : ""), pcmk__s(call_id, ""),
                    pcmk__s(origin, "unspecified peer"), pcmk_strerror(result));
-    } else {
+
+    } else if ((add_admin_epoch != 0)
+               || (add_epoch != 0)
+               || (add_updates != 0)) {
+
         do_crm_log(log_level,
                    "Local-only change to CIB generation %d.%d.%d from client "
-                   "%s%s%s (%s)",
+                   "%s%s%s (%s) (%s)",
                    add_admin_epoch, add_epoch, add_updates,
                    client_name,
                    ((call_id != NULL)? " call " : ""), pcmk__s(call_id, ""),
@@ -248,7 +255,10 @@ cib_replace_notify(const char *op, int result, const char *call_id,
         crm_log_xml_debug(diff, "Bad replace diff");
     }
 
-    if (add_updates != del_updates) {
+    if ((add_admin_epoch != del_admin_epoch)
+        || (add_epoch != del_epoch)
+        || (add_updates != del_updates)) {
+
         do_crm_log(log_level,
                    "Replaced CIB generation %d.%d.%d with %d.%d.%d from client "
                    "%s%s%s (%s) (%s)",
@@ -257,10 +267,14 @@ cib_replace_notify(const char *op, int result, const char *call_id,
                    client_name,
                    ((call_id != NULL)? " call " : ""), pcmk__s(call_id, ""),
                    pcmk__s(origin, "unspecified peer"), pcmk_strerror(result));
-    } else {
+
+    } else if ((add_admin_epoch != 0)
+               || (add_epoch != 0)
+               || (add_updates != 0)) {
+
         do_crm_log(log_level,
                    "Local-only replace of CIB generation %d.%d.%d from client "
-                   "%s%s%s (%s)",
+                   "%s%s%s (%s) (%s)",
                    add_admin_epoch, add_epoch, add_updates,
                    client_name,
                    ((call_id != NULL)? " call " : ""), pcmk__s(call_id, ""),
