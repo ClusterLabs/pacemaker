@@ -132,10 +132,6 @@ child_ordering_constraints(pe_resource_t *rsc)
     pe_action_t *last_start = NULL;
     GList *gIter = NULL;
 
-    if (!pe__clone_is_ordered(rsc)) {
-        return;
-    }
-
     /* we have to maintain a consistent sorted child list when building order constraints */
     rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance_number);
 
@@ -167,7 +163,9 @@ clone_create_actions(pe_resource_t *rsc)
 {
     pe_rsc_debug(rsc, "Creating actions for clone %s", rsc->id);
     pcmk__create_instance_actions(rsc, rsc->children);
-    child_ordering_constraints(rsc);
+    if (pe__clone_is_ordered(rsc)) {
+        child_ordering_constraints(rsc);
+    }
 
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
         pcmk__create_promotable_actions(rsc);
