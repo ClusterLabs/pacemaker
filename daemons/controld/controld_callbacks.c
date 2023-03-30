@@ -196,6 +196,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             }
 
             if (!appeared) {
+                node->peer_lost = time(NULL);
                 controld_remove_failed_sync_node(node->uname);
                 controld_remove_voter(node->uname);
             }
