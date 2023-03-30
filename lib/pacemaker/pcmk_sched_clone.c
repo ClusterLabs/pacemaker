@@ -123,37 +123,42 @@ find_rsc_action(pe_resource_t *rsc, const char *task)
     return match;
 }
 
+/*!
+ * \internal
+ * \brief Order starts and stops of an ordered clone's instances
+ *
+ * \param[in,out] rsc  Clone resource
+ */
 static void
-child_ordering_constraints(pe_resource_t *rsc)
+order_instance_starts_stops(pe_resource_t *rsc)
 {
-    pe_action_t *stop = NULL;
-    pe_action_t *start = NULL;
     pe_action_t *last_stop = NULL;
     pe_action_t *last_start = NULL;
-    GList *gIter = NULL;
 
-    /* we have to maintain a consistent sorted child list when building order constraints */
+    // Instances must be ordered by ascending instance number, so sort them
     rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance_number);
 
-    for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child = (pe_resource_t *) gIter->data;
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *child = (pe_resource_t *) iter->data;
+        pe_action_t *action = NULL;
 
-        stop = find_rsc_action(child, RSC_STOP);
-        if (stop) {
-            if (last_stop) {
-                /* child/child relative stop */
-                order_actions(stop, last_stop, pe_order_optional);
+        // Order this instance's stop after previous instance's stop
+        // @TODO: Should instances be stopped in reverse order instead?
+        action = find_rsc_action(child, RSC_STOP);
+        if (action != NULL) {
+            if (last_stop != NULL) {
+                order_actions(action, last_stop, pe_order_optional);
             }
-            last_stop = stop;
+            last_stop = action;
         }
 
-        start = find_rsc_action(child, RSC_START);
-        if (start) {
-            if (last_start) {
-                /* child/child relative start */
-                order_actions(last_start, start, pe_order_optional);
+        // Order this instance's start after previous instance's start
+        action = find_rsc_action(child, RSC_START);
+        if (action != NULL) {
+            if (last_start != NULL) {
+                order_actions(last_start, action, pe_order_optional);
             }
-            last_start = start;
+            last_start = action;
         }
     }
 }
@@ -164,9 +169,8 @@ clone_create_actions(pe_resource_t *rsc)
     pe_rsc_debug(rsc, "Creating actions for clone %s", rsc->id);
     pcmk__create_instance_actions(rsc, rsc->children);
     if (pe__clone_is_ordered(rsc)) {
-        child_ordering_constraints(rsc);
+        order_instance_starts_stops(rsc);
     }
-
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
         pcmk__create_promotable_actions(rsc);
     }
