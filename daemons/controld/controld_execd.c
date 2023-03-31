@@ -1648,6 +1648,18 @@ construct_op(const lrm_state_t *lrm_state, const xmlNode *rsc_op,
         op->interval_ms = 0;
     }
 
+    /* If this is a start action with the special expire_attrs meta-attribute
+     * set to false (or missing entirely), go ahead and clear the purge bit from
+     * the connection resource's flags.
+     */
+    if (!crm_is_true(crm_meta_value(params, PCMK_META_EXPIRE_ATTRS))) {
+        lrm_state_t *connection_rsc = lrm_state_find(rsc_id);
+
+        if (connection_rsc && connection_rsc->remote_ra_data) {
+            remote_ra_clear_purge_attrs(connection_rsc);
+        }
+    }
+
     /* Use pcmk_monitor_timeout instead of meta timeout for stonith
        recurring monitor, if set */
     primitive = find_xml_node(rsc_op, XML_CIB_TAG_RESOURCE, FALSE);
