@@ -29,6 +29,14 @@
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 
+#define CIB_SERIES "cib"
+#define CIB_SERIES_MAX 100
+#define CIB_SERIES_BZIP FALSE /* Must be false because archived copies are
+                                 created with hard links
+                               */
+
+#define CIB_LIVE_NAME CIB_SERIES ".xml"
+
 enum cib_file_flags {
     cib_file_flag_dirty = (1 << 0),
     cib_file_flag_live  = (1 << 1),
@@ -84,6 +92,37 @@ static gboolean cib_do_chown = FALSE;
                                                 (flags_to_clear),       \
                                                 #flags_to_clear);       \
     } while (0)
+
+/*!
+ * \internal
+ * \brief Check whether a file is the live CIB
+ *
+ * \param[in] filename Name of file to check
+ *
+ * \return TRUE if file exists and its real path is same as live CIB's
+ */
+static gboolean
+cib_file_is_live(const char *filename)
+{
+    gboolean same = FALSE;
+
+    if (filename != NULL) {
+        // Canonicalize file names for true comparison
+        char *real_filename = NULL;
+
+        if (pcmk__real_path(filename, &real_filename) == pcmk_rc_ok) {
+            char *real_livename = NULL;
+
+            if (pcmk__real_path(CRM_CONFIG_DIR "/" CIB_LIVE_NAME,
+                                &real_livename) == pcmk_rc_ok) {
+                same = !strcmp(real_filename, real_livename);
+                free(real_livename);
+            }
+            free(real_filename);
+        }
+    }
+    return same;
+}
 
 static int
 cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
@@ -429,19 +468,20 @@ cib_file_free(cib_t *cib)
 }
 
 static int
-cib_file_inputfd(cib_t * cib)
+cib_file_inputfd(cib_t *cib)
 {
     return -EPROTONOSUPPORT;
 }
 
 static int
-cib_file_set_connection_dnotify(cib_t * cib, void (*dnotify) (gpointer user_data))
+cib_file_register_notification(cib_t *cib, const char *callback, int enabled)
 {
     return -EPROTONOSUPPORT;
 }
 
 static int
-cib_file_register_notification(cib_t * cib, const char *callback, int enabled)
+cib_file_set_connection_dnotify(cib_t *cib,
+                                void (*dnotify) (gpointer user_data))
 {
     return -EPROTONOSUPPORT;
 }
@@ -472,6 +512,52 @@ cib_file_client_id(const cib_t *cib, const char **async_id,
         *sync_id = NULL;
     }
     return -EPROTONOSUPPORT;
+}
+
+cib_t *
+cib_file_new(const char *cib_location)
+{
+    cib_file_opaque_t *private = NULL;
+    cib_t *cib = cib_new_variant();
+
+    if (cib == NULL) {
+        return NULL;
+    }
+
+    private = calloc(1, sizeof(cib_file_opaque_t));
+
+    if (private == NULL) {
+        free(cib);
+        return NULL;
+    }
+
+    cib->variant = cib_file;
+    cib->variant_opaque = private;
+
+    if (cib_location == NULL) {
+        cib_location = getenv("CIB_file");
+        CRM_CHECK(cib_location != NULL, return NULL); // Shouldn't be possible
+    }
+    private->flags = 0;
+    if (cib_file_is_live(cib_location)) {
+        cib_set_file_flags(private, cib_file_flag_live);
+        crm_trace("File %s detected as live CIB", cib_location);
+    }
+    private->filename = strdup(cib_location);
+
+    /* assign variant specific ops */
+    cib->delegate_fn = cib_file_perform_op_delegate;
+    cib->cmds->signon = cib_file_signon;
+    cib->cmds->signoff = cib_file_signoff;
+    cib->cmds->free = cib_file_free;
+    cib->cmds->inputfd = cib_file_inputfd;
+
+    cib->cmds->register_notification = cib_file_register_notification;
+    cib->cmds->set_connection_dnotify = cib_file_set_connection_dnotify;
+
+    cib->cmds->client_id = cib_file_client_id;
+
+    return cib;
 }
 
 /*!
@@ -574,45 +660,6 @@ cib_file_read_and_verify(const char *filename, const char *sigfile, xmlNode **ro
         free_xml(local_root);
     }
     return pcmk_ok;
-}
-
-#define CIB_SERIES "cib"
-#define CIB_SERIES_MAX 100
-#define CIB_SERIES_BZIP FALSE /* Must be false because archived copies are
-                                 created with hard links
-                               */
-
-#define CIB_LIVE_NAME CIB_SERIES ".xml"
-
-/*!
- * \internal
- * \brief Check whether a file is the live CIB
- *
- * \param[in] filename Name of file to check
- *
- * \return TRUE if file exists and its real path is same as live CIB's
- */
-static gboolean
-cib_file_is_live(const char *filename)
-{
-    gboolean same = FALSE;
-
-    if (filename != NULL) {
-        // Canonicalize file names for true comparison
-        char *real_filename = NULL;
-
-        if (pcmk__real_path(filename, &real_filename) == pcmk_rc_ok) {
-            char *real_livename = NULL;
-
-            if (pcmk__real_path(CRM_CONFIG_DIR "/" CIB_LIVE_NAME,
-                                &real_livename) == pcmk_rc_ok) {
-                same = !strcmp(real_filename, real_livename);
-                free(real_livename);
-            }
-            free(real_filename);
-        }
-    }
-    return same;
 }
 
 /*!
@@ -869,50 +916,4 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
     free(tmp_digest);
     free(tmp_cib);
     return exit_rc;
-}
-
-cib_t *
-cib_file_new(const char *cib_location)
-{
-    cib_file_opaque_t *private = NULL;
-    cib_t *cib = cib_new_variant();
-
-    if (cib == NULL) {
-        return NULL;
-    }
-
-    private = calloc(1, sizeof(cib_file_opaque_t));
-
-    if (private == NULL) {
-        free(cib);
-        return NULL;
-    }
-
-    cib->variant = cib_file;
-    cib->variant_opaque = private;
-
-    if (cib_location == NULL) {
-        cib_location = getenv("CIB_file");
-        CRM_CHECK(cib_location != NULL, return NULL); // Shouldn't be possible
-    }
-    private->flags = 0;
-    if (cib_file_is_live(cib_location)) {
-        cib_set_file_flags(private, cib_file_flag_live);
-        crm_trace("File %s detected as live CIB", cib_location);
-    }
-    private->filename = strdup(cib_location);
-
-    /* assign variant specific ops */
-    cib->delegate_fn = cib_file_perform_op_delegate;
-    cib->cmds->signon = cib_file_signon;
-    cib->cmds->signoff = cib_file_signoff;
-    cib->cmds->free = cib_file_free;
-    cib->cmds->inputfd = cib_file_inputfd;
-
-    cib->cmds->register_notification = cib_file_register_notification;
-    cib->cmds->set_connection_dnotify = cib_file_set_connection_dnotify;
-
-    cib->cmds->client_id = cib_file_client_id;
-
-    return cib;
 }
