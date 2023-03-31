@@ -37,8 +37,6 @@ typedef struct cib_native_opaque_s {
     mainloop_io_t *source;
 } cib_native_opaque_t;
 
-int cib_native_set_connection_dnotify(cib_t * cib, void (*dnotify) (gpointer user_data));
-
 static int
 cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
                                const char *section, xmlNode *data,
@@ -414,6 +412,23 @@ cib_native_register_notification(cib_t *cib, const char *callback, int enabled)
     return rc;
 }
 
+static int
+cib_native_set_connection_dnotify(cib_t *cib,
+                                  void (*dnotify) (gpointer user_data))
+{
+    cib_native_opaque_t *native = NULL;
+
+    if (cib == NULL) {
+        crm_err("No CIB!");
+        return FALSE;
+    }
+
+    native = cib->variant_opaque;
+    native->dnotify_fn = dnotify;
+
+    return pcmk_ok;
+}
+
 /*!
  * \internal
  * \brief Get the given CIB connection's unique client identifier
@@ -484,20 +499,4 @@ cib_native_new(void)
     cib->cmds->client_id = cib_native_client_id;
 
     return cib;
-}
-
-int
-cib_native_set_connection_dnotify(cib_t * cib, void (*dnotify) (gpointer user_data))
-{
-    cib_native_opaque_t *native = NULL;
-
-    if (cib == NULL) {
-        crm_err("No CIB!");
-        return FALSE;
-    }
-
-    native = cib->variant_opaque;
-    native->dnotify_fn = dnotify;
-
-    return pcmk_ok;
 }
