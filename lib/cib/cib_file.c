@@ -59,6 +59,14 @@ static struct cib_func_entry cib_file_ops[] = {
 
 static xmlNode *in_mem_cib = NULL;
 
+/* cib_file_backup() and cib_file_write_with_digest() need to chown the
+ * written files only in limited circumstances, so these variables allow
+ * that to be indicated without affecting external callers
+ */
+static uid_t cib_file_owner = 0;
+static uid_t cib_file_group = 0;
+static gboolean cib_do_chown = FALSE;
+
 #define cib_set_file_flags(cibfile, flags_to_set) do {                  \
         (cibfile)->flags = pcmk__set_flags_as(__func__, __LINE__,       \
                                               LOG_TRACE, "CIB file",    \
@@ -77,7 +85,6 @@ static xmlNode *in_mem_cib = NULL;
                                                 #flags_to_clear);       \
     } while (0)
 
-int cib_file_signoff(cib_t * cib);
 int cib_file_free(cib_t * cib);
 
 static int
@@ -267,6 +274,138 @@ cib_file_signon(cib_t *cib, const char *name, enum cib_conn_type type)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Write out the in-memory CIB to a live CIB file
+ *
+ * param[in,out] path  Full path to file to write
+ *
+ * \return 0 on success, -1 on failure
+ */
+static int
+cib_file_write_live(char *path)
+{
+    uid_t uid = geteuid();
+    struct passwd *daemon_pwent;
+    char *sep = strrchr(path, '/');
+    const char *cib_dirname, *cib_filename;
+    int rc = 0;
+
+    /* Get the desired uid/gid */
+    errno = 0;
+    daemon_pwent = getpwnam(CRM_DAEMON_USER);
+    if (daemon_pwent == NULL) {
+        crm_perror(LOG_ERR, "Could not find %s user", CRM_DAEMON_USER);
+        return -1;
+    }
+
+    /* If we're root, we can change the ownership;
+     * if we're daemon, anything we create will be OK;
+     * otherwise, block access so we don't create wrong owner
+     */
+    if ((uid != 0) && (uid != daemon_pwent->pw_uid)) {
+        crm_perror(LOG_ERR, "Must be root or %s to modify live CIB",
+                   CRM_DAEMON_USER);
+        return 0;
+    }
+
+    /* fancy footwork to separate dirname from filename
+     * (we know the canonical name maps to the live CIB,
+     * but the given name might be relative, or symlinked)
+     */
+    if (sep == NULL) { /* no directory component specified */
+        cib_dirname = "./";
+        cib_filename = path;
+    } else if (sep == path) { /* given name is in / */
+        cib_dirname = "/";
+        cib_filename = path + 1;
+    } else { /* typical case; split given name into parts */
+        *sep = '\0';
+        cib_dirname = path;
+        cib_filename = sep + 1;
+    }
+
+    /* if we're root, we want to update the file ownership */
+    if (uid == 0) {
+        cib_file_owner = daemon_pwent->pw_uid;
+        cib_file_group = daemon_pwent->pw_gid;
+        cib_do_chown = TRUE;
+    }
+
+    /* write the file */
+    if (cib_file_write_with_digest(in_mem_cib, cib_dirname,
+                                   cib_filename) != pcmk_ok) {
+        rc = -1;
+    }
+
+    /* turn off file ownership changes, for other callers */
+    if (uid == 0) {
+        cib_do_chown = FALSE;
+    }
+
+    /* undo fancy stuff */
+    if ((sep != NULL) && (*sep == '\0')) {
+        *sep = '/';
+    }
+
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Sign-off method for CIB file variants
+ *
+ * This will write the file to disk if needed, and free the in-memory CIB. If
+ * the file is the live CIB, it will compute and write a signature as well.
+ *
+ * \param[in,out] cib  CIB object to sign off
+ *
+ * \return pcmk_ok on success, pcmk_err_generic on failure
+ * \todo This method should refuse to write the live CIB if the CIB manager is
+ *       running.
+ */
+static int
+cib_file_signoff(cib_t *cib)
+{
+    int rc = pcmk_ok;
+    cib_file_opaque_t *private = cib->variant_opaque;
+
+    crm_debug("Disconnecting from the CIB manager");
+    cib->state = cib_disconnected;
+    cib->type = cib_no_connection;
+
+    /* If the in-memory CIB has been changed, write it to disk */
+    if (pcmk_is_set(private->flags, cib_file_flag_dirty)) {
+
+        /* If this is the live CIB, write it out with a digest */
+        if (pcmk_is_set(private->flags, cib_file_flag_live)) {
+            if (cib_file_write_live(private->filename) < 0) {
+                rc = pcmk_err_generic;
+            }
+
+        /* Otherwise, it's a simple write */
+        } else {
+            gboolean do_bzip = pcmk__ends_with_ext(private->filename, ".bz2");
+
+            if (write_xml_file(in_mem_cib, private->filename, do_bzip) <= 0) {
+                rc = pcmk_err_generic;
+            }
+        }
+
+        if (rc == pcmk_ok) {
+            crm_info("Wrote CIB to %s", private->filename);
+            cib_clear_file_flags(private, cib_file_flag_dirty);
+        } else {
+            crm_err("Could not write CIB to %s", private->filename);
+        }
+    }
+
+    /* Free the in-memory CIB */
+    free_xml(in_mem_cib);
+    in_mem_cib = NULL;
+    return rc;
+}
+
 static int
 cib_file_inputfd(cib_t * cib)
 {
@@ -453,14 +592,6 @@ cib_file_is_live(const char *filename)
     }
     return same;
 }
-
-/* cib_file_backup() and cib_file_write_with_digest() need to chown the
- * written files only in limited circumstances, so these variables allow
- * that to be indicated without affecting external callers
- */
-static uid_t cib_file_owner = 0;
-static uid_t cib_file_group = 0;
-static gboolean cib_do_chown = FALSE;
 
 /*!
  * \internal
@@ -762,138 +893,6 @@ cib_file_new(const char *cib_location)
     cib->cmds->client_id = cib_file_client_id;
 
     return cib;
-}
-
-/*!
- * \internal
- * \brief Write out the in-memory CIB to a live CIB file
- *
- * param[in,out] path  Full path to file to write
- *
- * \return 0 on success, -1 on failure
- */
-static int
-cib_file_write_live(char *path)
-{
-    uid_t uid = geteuid();
-    struct passwd *daemon_pwent;
-    char *sep = strrchr(path, '/');
-    const char *cib_dirname, *cib_filename;
-    int rc = 0;
-
-    /* Get the desired uid/gid */
-    errno = 0;
-    daemon_pwent = getpwnam(CRM_DAEMON_USER);
-    if (daemon_pwent == NULL) {
-        crm_perror(LOG_ERR, "Could not find %s user", CRM_DAEMON_USER);
-        return -1;
-    }
-
-    /* If we're root, we can change the ownership;
-     * if we're daemon, anything we create will be OK;
-     * otherwise, block access so we don't create wrong owner
-     */
-    if ((uid != 0) && (uid != daemon_pwent->pw_uid)) {
-        crm_perror(LOG_ERR, "Must be root or %s to modify live CIB",
-                   CRM_DAEMON_USER);
-        return 0;
-    }
-
-    /* fancy footwork to separate dirname from filename
-     * (we know the canonical name maps to the live CIB,
-     * but the given name might be relative, or symlinked)
-     */
-    if (sep == NULL) { /* no directory component specified */
-        cib_dirname = "./";
-        cib_filename = path;
-    } else if (sep == path) { /* given name is in / */
-        cib_dirname = "/";
-        cib_filename = path + 1;
-    } else { /* typical case; split given name into parts */
-        *sep = '\0';
-        cib_dirname = path;
-        cib_filename = sep + 1;
-    }
-
-    /* if we're root, we want to update the file ownership */
-    if (uid == 0) {
-        cib_file_owner = daemon_pwent->pw_uid;
-        cib_file_group = daemon_pwent->pw_gid;
-        cib_do_chown = TRUE;
-    }
-
-    /* write the file */
-    if (cib_file_write_with_digest(in_mem_cib, cib_dirname,
-                                   cib_filename) != pcmk_ok) {
-        rc = -1;
-    }
-
-    /* turn off file ownership changes, for other callers */
-    if (uid == 0) {
-        cib_do_chown = FALSE;
-    }
-
-    /* undo fancy stuff */
-    if ((sep != NULL) && (*sep == '\0')) {
-        *sep = '/';
-    }
-
-    return rc;
-}
-
-/*!
- * \internal
- * \brief Sign-off method for CIB file variants
- *
- * This will write the file to disk if needed, and free the in-memory CIB. If
- * the file is the live CIB, it will compute and write a signature as well.
- *
- * \param[in,out] cib  CIB object to sign off
- *
- * \return pcmk_ok on success, pcmk_err_generic on failure
- * \todo This method should refuse to write the live CIB if the CIB manager is
- *       running.
- */
-int
-cib_file_signoff(cib_t * cib)
-{
-    int rc = pcmk_ok;
-    cib_file_opaque_t *private = cib->variant_opaque;
-
-    crm_debug("Disconnecting from the CIB manager");
-    cib->state = cib_disconnected;
-    cib->type = cib_no_connection;
-
-    /* If the in-memory CIB has been changed, write it to disk */
-    if (pcmk_is_set(private->flags, cib_file_flag_dirty)) {
-
-        /* If this is the live CIB, write it out with a digest */
-        if (pcmk_is_set(private->flags, cib_file_flag_live)) {
-            if (cib_file_write_live(private->filename) < 0) {
-                rc = pcmk_err_generic;
-            }
-
-        /* Otherwise, it's a simple write */
-        } else {
-            gboolean do_bzip = pcmk__ends_with_ext(private->filename, ".bz2");
-
-            if (write_xml_file(in_mem_cib, private->filename, do_bzip) <= 0) {
-                rc = pcmk_err_generic;
-            }
-        }
-
-        if (rc == pcmk_ok) {
-            crm_info("Wrote CIB to %s", private->filename);
-            cib_clear_file_flags(private, cib_file_flag_dirty);
-        } else {
-            crm_err("Could not write CIB to %s", private->filename);
-        }
-    }
-
-    /* Free the in-memory CIB */
-    free_xml(in_mem_cib);
-    in_mem_cib = NULL;
-    return rc;
 }
 
 int
