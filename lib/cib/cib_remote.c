@@ -52,7 +52,6 @@ typedef struct cib_remote_opaque_s {
     pcmk__output_t *out;
 } cib_remote_opaque_t;
 
-int cib_remote_signon(cib_t * cib, const char *name, enum cib_conn_type type);
 int cib_remote_signoff(cib_t * cib);
 int cib_remote_free(cib_t * cib);
 
@@ -321,111 +320,6 @@ cib_remote_connection_destroy(gpointer user_data)
 }
 
 static int
-cib_remote_inputfd(cib_t * cib)
-{
-    cib_remote_opaque_t *private = cib->variant_opaque;
-
-    return private->callback.tcp_socket;
-}
-
-static int
-cib_remote_set_connection_dnotify(cib_t * cib, void (*dnotify) (gpointer user_data))
-{
-    return -EPROTONOSUPPORT;
-}
-
-static int
-cib_remote_register_notification(cib_t * cib, const char *callback, int enabled)
-{
-    xmlNode *notify_msg = create_xml_node(NULL, "cib_command");
-    cib_remote_opaque_t *private = cib->variant_opaque;
-
-    crm_xml_add(notify_msg, F_CIB_OPERATION, T_CIB_NOTIFY);
-    crm_xml_add(notify_msg, F_CIB_NOTIFY_TYPE, callback);
-    crm_xml_add_int(notify_msg, F_CIB_NOTIFY_ACTIVATE, enabled);
-    pcmk__remote_send_xml(&private->callback, notify_msg);
-    free_xml(notify_msg);
-    return pcmk_ok;
-}
-
-/*!
- * \internal
- * \brief Get the given CIB connection's unique client identifiers
- *
- * These can be used to check whether this client requested the action that
- * triggered a CIB notification.
- *
- * \param[in]  cib       CIB connection
- * \param[out] async_id  If not \p NULL, where to store asynchronous client ID
- * \param[out] sync_id   If not \p NULL, where to store synchronous client ID
- *
- * \return Legacy Pacemaker return code (specifically, \p pcmk_ok)
- *
- * \note This is the \p cib_remote variant implementation of
- *       \p cib_api_operations_t:client_id().
- * \note The client IDs are assigned during CIB sign-on.
- */
-static int
-cib_remote_client_id(const cib_t *cib, const char **async_id,
-                     const char **sync_id)
-{
-    cib_remote_opaque_t *private = cib->variant_opaque;
-
-    if (async_id != NULL) {
-        // private->callback is the channel for async requests
-        *async_id = private->callback.token;
-    }
-    if (sync_id != NULL) {
-        // private->command is the channel for sync requests
-        *sync_id = private->command.token;
-    }
-    return pcmk_ok;
-}
-
-cib_t *
-cib_remote_new(const char *server, const char *user, const char *passwd, int port,
-               gboolean encrypted)
-{
-    cib_remote_opaque_t *private = NULL;
-    cib_t *cib = cib_new_variant();
-
-    if (cib == NULL) {
-        return NULL;
-    }
-
-    private = calloc(1, sizeof(cib_remote_opaque_t));
-
-    if (private == NULL) {
-        free(cib);
-        return NULL;
-    }
-
-    cib->variant = cib_remote;
-    cib->variant_opaque = private;
-
-    pcmk__str_update(&private->server, server);
-    pcmk__str_update(&private->user, user);
-    pcmk__str_update(&private->passwd, passwd);
-
-    private->port = port;
-    private->encrypted = encrypted;
-
-    /* assign variant specific ops */
-    cib->delegate_fn = cib_remote_perform_op;
-    cib->cmds->signon = cib_remote_signon;
-    cib->cmds->signoff = cib_remote_signoff;
-    cib->cmds->free = cib_remote_free;
-    cib->cmds->inputfd = cib_remote_inputfd;
-
-    cib->cmds->register_notification = cib_remote_register_notification;
-    cib->cmds->set_connection_dnotify = cib_remote_set_connection_dnotify;
-
-    cib->cmds->client_id = cib_remote_client_id;
-
-    return cib;
-}
-
-static int
 cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
 {
     cib_remote_opaque_t *private = cib->variant_opaque;
@@ -538,8 +432,8 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
     return rc;
 }
 
-int
-cib_remote_signon(cib_t * cib, const char *name, enum cib_conn_type type)
+static int
+cib_remote_signon(cib_t *cib, const char *name, enum cib_conn_type type)
 {
     int rc = pcmk_ok;
     cib_remote_opaque_t *private = cib->variant_opaque;
@@ -587,6 +481,111 @@ cib_remote_signon(cib_t * cib, const char *name, enum cib_conn_type type)
     }
 
     return rc;
+}
+
+static int
+cib_remote_inputfd(cib_t * cib)
+{
+    cib_remote_opaque_t *private = cib->variant_opaque;
+
+    return private->callback.tcp_socket;
+}
+
+static int
+cib_remote_set_connection_dnotify(cib_t * cib, void (*dnotify) (gpointer user_data))
+{
+    return -EPROTONOSUPPORT;
+}
+
+static int
+cib_remote_register_notification(cib_t * cib, const char *callback, int enabled)
+{
+    xmlNode *notify_msg = create_xml_node(NULL, "cib_command");
+    cib_remote_opaque_t *private = cib->variant_opaque;
+
+    crm_xml_add(notify_msg, F_CIB_OPERATION, T_CIB_NOTIFY);
+    crm_xml_add(notify_msg, F_CIB_NOTIFY_TYPE, callback);
+    crm_xml_add_int(notify_msg, F_CIB_NOTIFY_ACTIVATE, enabled);
+    pcmk__remote_send_xml(&private->callback, notify_msg);
+    free_xml(notify_msg);
+    return pcmk_ok;
+}
+
+/*!
+ * \internal
+ * \brief Get the given CIB connection's unique client identifiers
+ *
+ * These can be used to check whether this client requested the action that
+ * triggered a CIB notification.
+ *
+ * \param[in]  cib       CIB connection
+ * \param[out] async_id  If not \p NULL, where to store asynchronous client ID
+ * \param[out] sync_id   If not \p NULL, where to store synchronous client ID
+ *
+ * \return Legacy Pacemaker return code (specifically, \p pcmk_ok)
+ *
+ * \note This is the \p cib_remote variant implementation of
+ *       \p cib_api_operations_t:client_id().
+ * \note The client IDs are assigned during CIB sign-on.
+ */
+static int
+cib_remote_client_id(const cib_t *cib, const char **async_id,
+                     const char **sync_id)
+{
+    cib_remote_opaque_t *private = cib->variant_opaque;
+
+    if (async_id != NULL) {
+        // private->callback is the channel for async requests
+        *async_id = private->callback.token;
+    }
+    if (sync_id != NULL) {
+        // private->command is the channel for sync requests
+        *sync_id = private->command.token;
+    }
+    return pcmk_ok;
+}
+
+cib_t *
+cib_remote_new(const char *server, const char *user, const char *passwd, int port,
+               gboolean encrypted)
+{
+    cib_remote_opaque_t *private = NULL;
+    cib_t *cib = cib_new_variant();
+
+    if (cib == NULL) {
+        return NULL;
+    }
+
+    private = calloc(1, sizeof(cib_remote_opaque_t));
+
+    if (private == NULL) {
+        free(cib);
+        return NULL;
+    }
+
+    cib->variant = cib_remote;
+    cib->variant_opaque = private;
+
+    pcmk__str_update(&private->server, server);
+    pcmk__str_update(&private->user, user);
+    pcmk__str_update(&private->passwd, passwd);
+
+    private->port = port;
+    private->encrypted = encrypted;
+
+    /* assign variant specific ops */
+    cib->delegate_fn = cib_remote_perform_op;
+    cib->cmds->signon = cib_remote_signon;
+    cib->cmds->signoff = cib_remote_signoff;
+    cib->cmds->free = cib_remote_free;
+    cib->cmds->inputfd = cib_remote_inputfd;
+
+    cib->cmds->register_notification = cib_remote_register_notification;
+    cib->cmds->set_connection_dnotify = cib_remote_set_connection_dnotify;
+
+    cib->cmds->client_id = cib_remote_client_id;
+
+    return cib;
 }
 
 int
