@@ -53,7 +53,6 @@ typedef struct cib_remote_opaque_s {
 } cib_remote_opaque_t;
 
 void cib_remote_connection_destroy(gpointer user_data);
-int cib_remote_callback_dispatch(gpointer user_data);
 int cib_remote_command_dispatch(gpointer user_data);
 int cib_remote_signon(cib_t * cib, const char *name, enum cib_conn_type type);
 int cib_remote_signoff(cib_t * cib);
@@ -206,6 +205,46 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
     free_xml(op_reply);
 
     return rc;
+}
+
+static int
+cib_remote_callback_dispatch(gpointer user_data)
+{
+    int rc;
+    cib_t *cib = user_data;
+    cib_remote_opaque_t *private = cib->variant_opaque;
+
+    xmlNode *msg = NULL;
+
+    crm_info("Message on callback channel");
+
+    rc = pcmk__read_remote_message(&private->callback, -1);
+
+    msg = pcmk__remote_message_xml(&private->callback);
+    while (msg) {
+        const char *type = crm_element_value(msg, F_TYPE);
+
+        crm_trace("Activating %s callbacks...", type);
+
+        if (pcmk__str_eq(type, T_CIB, pcmk__str_casei)) {
+            cib_native_callback(cib, msg, 0, 0);
+
+        } else if (pcmk__str_eq(type, T_CIB_NOTIFY, pcmk__str_casei)) {
+            g_list_foreach(cib->notify_list, cib_native_notify, msg);
+
+        } else {
+            crm_err("Unknown message type: %s", type);
+        }
+
+        free_xml(msg);
+        msg = pcmk__remote_message_xml(&private->callback);
+    }
+
+    if (rc == ENOTCONN) {
+        return -1;
+    }
+
+    return 0;
 }
 
 static int
@@ -499,46 +538,6 @@ cib_remote_command_dispatch(gpointer user_data)
     if (rc == ENOTCONN) {
         return -1;
     }
-    return 0;
-}
-
-int
-cib_remote_callback_dispatch(gpointer user_data)
-{
-    int rc;
-    cib_t *cib = user_data;
-    cib_remote_opaque_t *private = cib->variant_opaque;
-
-    xmlNode *msg = NULL;
-
-    crm_info("Message on callback channel");
-
-    rc = pcmk__read_remote_message(&private->callback, -1);
-
-    msg = pcmk__remote_message_xml(&private->callback);
-    while (msg) {
-        const char *type = crm_element_value(msg, F_TYPE);
-
-        crm_trace("Activating %s callbacks...", type);
-
-        if (pcmk__str_eq(type, T_CIB, pcmk__str_casei)) {
-            cib_native_callback(cib, msg, 0, 0);
-
-        } else if (pcmk__str_eq(type, T_CIB_NOTIFY, pcmk__str_casei)) {
-            g_list_foreach(cib->notify_list, cib_native_notify, msg);
-
-        } else {
-            crm_err("Unknown message type: %s", type);
-        }
-
-        free_xml(msg);
-        msg = pcmk__remote_message_xml(&private->callback);
-    }
-
-    if (rc == ENOTCONN) {
-        return -1;
-    }
-
     return 0;
 }
 
