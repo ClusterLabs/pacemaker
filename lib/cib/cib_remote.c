@@ -53,7 +53,6 @@ typedef struct cib_remote_opaque_s {
 } cib_remote_opaque_t;
 
 void cib_remote_connection_destroy(gpointer user_data);
-int cib_remote_command_dispatch(gpointer user_data);
 int cib_remote_signon(cib_t * cib, const char *name, enum cib_conn_type type);
 int cib_remote_signoff(cib_t * cib);
 int cib_remote_free(cib_t * cib);
@@ -244,6 +243,25 @@ cib_remote_callback_dispatch(gpointer user_data)
         return -1;
     }
 
+    return 0;
+}
+
+static int
+cib_remote_command_dispatch(gpointer user_data)
+{
+    int rc;
+    cib_t *cib = user_data;
+    cib_remote_opaque_t *private = cib->variant_opaque;
+
+    rc = pcmk__read_remote_message(&private->command, -1);
+
+    free(private->command.buffer);
+    private->command.buffer = NULL;
+    crm_err("received late reply for remote cib connection, discarding");
+
+    if (rc == ENOTCONN) {
+        return -1;
+    }
     return 0;
 }
 
@@ -520,25 +538,6 @@ cib_remote_connection_destroy(gpointer user_data)
     cib_tls_close(user_data);
 #endif
     return;
-}
-
-int
-cib_remote_command_dispatch(gpointer user_data)
-{
-    int rc;
-    cib_t *cib = user_data;
-    cib_remote_opaque_t *private = cib->variant_opaque;
-
-    rc = pcmk__read_remote_message(&private->command, -1);
-
-    free(private->command.buffer);
-    private->command.buffer = NULL;
-    crm_err("received late reply for remote cib connection, discarding");
-
-    if (rc == ENOTCONN) {
-        return -1;
-    }
-    return 0;
 }
 
 int
