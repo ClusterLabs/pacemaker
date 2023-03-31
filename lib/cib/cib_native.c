@@ -38,7 +38,6 @@ typedef struct cib_native_opaque_s {
 } cib_native_opaque_t;
 
 int cib_native_free(cib_t * cib);
-int cib_native_signon(cib_t * cib, const char *name, enum cib_conn_type type);
 
 int cib_native_set_connection_dnotify(cib_t * cib, void (*dnotify) (gpointer user_data));
 
@@ -368,6 +367,12 @@ cib_native_signon_raw(cib_t *cib, const char *name, enum cib_conn_type type,
 }
 
 static int
+cib_native_signon(cib_t *cib, const char *name, enum cib_conn_type type)
+{
+    return cib_native_signon_raw(cib, name, type, NULL);
+}
+
+static int
 cib_native_register_notification(cib_t *cib, const char *callback, int enabled)
 {
     int rc = pcmk_ok;
@@ -460,12 +465,6 @@ cib_native_new(void)
     cib->cmds->client_id = cib_native_client_id;
 
     return cib;
-}
-
-int
-cib_native_signon(cib_t * cib, const char *name, enum cib_conn_type type)
-{
-    return cib_native_signon_raw(cib, name, type, NULL);
 }
 
 int
