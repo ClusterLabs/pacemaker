@@ -52,7 +52,6 @@ typedef struct cib_remote_opaque_s {
     pcmk__output_t *out;
 } cib_remote_opaque_t;
 
-int cib_remote_signoff(cib_t * cib);
 int cib_remote_free(cib_t * cib);
 
 static int
@@ -484,6 +483,22 @@ cib_remote_signon(cib_t *cib, const char *name, enum cib_conn_type type)
 }
 
 static int
+cib_remote_signoff(cib_t *cib)
+{
+    int rc = pcmk_ok;
+
+    crm_debug("Disconnecting from the CIB manager");
+#ifdef HAVE_GNUTLS_GNUTLS_H
+    cib_tls_close(cib);
+#endif
+
+    cib->state = cib_disconnected;
+    cib->type = cib_no_connection;
+
+    return rc;
+}
+
+static int
 cib_remote_inputfd(cib_t * cib)
 {
     cib_remote_opaque_t *private = cib->variant_opaque;
@@ -586,22 +601,6 @@ cib_remote_new(const char *server, const char *user, const char *passwd, int por
     cib->cmds->client_id = cib_remote_client_id;
 
     return cib;
-}
-
-int
-cib_remote_signoff(cib_t * cib)
-{
-    int rc = pcmk_ok;
-
-    crm_debug("Disconnecting from the CIB manager");
-#ifdef HAVE_GNUTLS_GNUTLS_H
-    cib_tls_close(cib);
-#endif
-
-    cib->state = cib_disconnected;
-    cib->type = cib_no_connection;
-
-    return rc;
 }
 
 int
