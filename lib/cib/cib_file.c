@@ -85,8 +85,6 @@ static gboolean cib_do_chown = FALSE;
                                                 #flags_to_clear);       \
     } while (0)
 
-int cib_file_free(cib_t * cib);
-
 static int
 cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
                              const char *section, xmlNode *data,
@@ -403,6 +401,30 @@ cib_file_signoff(cib_t *cib)
     /* Free the in-memory CIB */
     free_xml(in_mem_cib);
     in_mem_cib = NULL;
+    return rc;
+}
+
+static int
+cib_file_free(cib_t *cib)
+{
+    int rc = pcmk_ok;
+
+    if (cib->state != cib_disconnected) {
+        rc = cib_file_signoff(cib);
+    }
+
+    if (rc == pcmk_ok) {
+        cib_file_opaque_t *private = cib->variant_opaque;
+
+        free(private->filename);
+        free(cib->cmds);
+        free(private);
+        free(cib);
+
+    } else {
+        fprintf(stderr, "Couldn't sign off: %d\n", rc);
+    }
+
     return rc;
 }
 
@@ -893,28 +915,4 @@ cib_file_new(const char *cib_location)
     cib->cmds->client_id = cib_file_client_id;
 
     return cib;
-}
-
-int
-cib_file_free(cib_t * cib)
-{
-    int rc = pcmk_ok;
-
-    if (cib->state != cib_disconnected) {
-        rc = cib_file_signoff(cib);
-    }
-
-    if (rc == pcmk_ok) {
-        cib_file_opaque_t *private = cib->variant_opaque;
-
-        free(private->filename);
-        free(cib->cmds);
-        free(private);
-        free(cib);
-
-    } else {
-        fprintf(stderr, "Couldn't sign off: %d\n", rc);
-    }
-
-    return rc;
 }
