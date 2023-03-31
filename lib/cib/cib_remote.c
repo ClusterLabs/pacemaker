@@ -52,8 +52,6 @@ typedef struct cib_remote_opaque_s {
     pcmk__output_t *out;
 } cib_remote_opaque_t;
 
-int cib_remote_free(cib_t * cib);
-
 static int
 cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
                       const char *section, xmlNode *data,
@@ -499,17 +497,34 @@ cib_remote_signoff(cib_t *cib)
 }
 
 static int
+cib_remote_free(cib_t *cib)
+{
+    int rc = pcmk_ok;
+
+    crm_warn("Freeing CIB");
+    if (cib->state != cib_disconnected) {
+        rc = cib_remote_signoff(cib);
+        if (rc == pcmk_ok) {
+            cib_remote_opaque_t *private = cib->variant_opaque;
+
+            free(private->server);
+            free(private->user);
+            free(private->passwd);
+            free(cib->cmds);
+            free(private);
+            free(cib);
+        }
+    }
+
+    return rc;
+}
+
+static int
 cib_remote_inputfd(cib_t * cib)
 {
     cib_remote_opaque_t *private = cib->variant_opaque;
 
     return private->callback.tcp_socket;
-}
-
-static int
-cib_remote_set_connection_dnotify(cib_t * cib, void (*dnotify) (gpointer user_data))
-{
-    return -EPROTONOSUPPORT;
 }
 
 static int
@@ -524,6 +539,12 @@ cib_remote_register_notification(cib_t * cib, const char *callback, int enabled)
     pcmk__remote_send_xml(&private->callback, notify_msg);
     free_xml(notify_msg);
     return pcmk_ok;
+}
+
+static int
+cib_remote_set_connection_dnotify(cib_t * cib, void (*dnotify) (gpointer user_data))
+{
+    return -EPROTONOSUPPORT;
 }
 
 /*!
@@ -601,29 +622,6 @@ cib_remote_new(const char *server, const char *user, const char *passwd, int por
     cib->cmds->client_id = cib_remote_client_id;
 
     return cib;
-}
-
-int
-cib_remote_free(cib_t * cib)
-{
-    int rc = pcmk_ok;
-
-    crm_warn("Freeing CIB");
-    if (cib->state != cib_disconnected) {
-        rc = cib_remote_signoff(cib);
-        if (rc == pcmk_ok) {
-            cib_remote_opaque_t *private = cib->variant_opaque;
-
-            free(private->server);
-            free(private->user);
-            free(private->passwd);
-            free(cib->cmds);
-            free(private);
-            free(cib);
-        }
-    }
-
-    return rc;
 }
 
 void
