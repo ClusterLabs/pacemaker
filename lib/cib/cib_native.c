@@ -38,7 +38,6 @@ typedef struct cib_native_opaque_s {
 } cib_native_opaque_t;
 
 int cib_native_free(cib_t * cib);
-int cib_native_signoff(cib_t * cib);
 int cib_native_signon(cib_t * cib, const char *name, enum cib_conn_type type);
 
 int cib_native_set_connection_dnotify(cib_t * cib, void (*dnotify) (gpointer user_data));
@@ -234,6 +233,37 @@ cib_native_destroy(void *userdata)
     if (native->dnotify_fn) {
         native->dnotify_fn(userdata);
     }
+}
+
+static int
+cib_native_signoff(cib_t *cib)
+{
+    cib_native_opaque_t *native = cib->variant_opaque;
+
+    crm_debug("Disconnecting from the CIB manager");
+
+    cib_free_notify(cib);
+    remove_cib_op_callback(0, TRUE);
+
+    if (native->source != NULL) {
+        /* Attached to mainloop */
+        mainloop_del_ipc_client(native->source);
+        native->source = NULL;
+        native->ipc = NULL;
+
+    } else if (native->ipc) {
+        /* Not attached to mainloop */
+        crm_ipc_t *ipc = native->ipc;
+
+        native->ipc = NULL;
+        crm_ipc_close(ipc);
+        crm_ipc_destroy(ipc);
+    }
+
+    cib->state = cib_disconnected;
+    cib->type = cib_no_connection;
+
+    return pcmk_ok;
 }
 
 static int
@@ -436,37 +466,6 @@ int
 cib_native_signon(cib_t * cib, const char *name, enum cib_conn_type type)
 {
     return cib_native_signon_raw(cib, name, type, NULL);
-}
-
-int
-cib_native_signoff(cib_t * cib)
-{
-    cib_native_opaque_t *native = cib->variant_opaque;
-
-    crm_debug("Disconnecting from the CIB manager");
-
-    cib_free_notify(cib);
-    remove_cib_op_callback(0, TRUE);
-
-    if (native->source != NULL) {
-        /* Attached to mainloop */
-        mainloop_del_ipc_client(native->source);
-        native->source = NULL;
-        native->ipc = NULL;
-
-    } else if (native->ipc) {
-        /* Not attached to mainloop */
-        crm_ipc_t *ipc = native->ipc;
-
-        native->ipc = NULL;
-        crm_ipc_close(ipc);
-        crm_ipc_destroy(ipc);
-    }
-
-    cib->state = cib_disconnected;
-    cib->type = cib_no_connection;
-
-    return pcmk_ok;
 }
 
 int
