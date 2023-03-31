@@ -101,6 +101,7 @@ enum remote_status {
      * the attributes aren't at hand.
      */
     controlling_guest   = (1 << 4),
+    purge_attrs         = (1 << 5),
 };
 
 typedef struct remote_ra_data_s {
@@ -906,6 +907,7 @@ remote_ra_data_init(lrm_state_t * lrm_state)
     ra_data = calloc(1, sizeof(remote_ra_data_t));
     ra_data->work = mainloop_add_trigger(G_PRIORITY_HIGH, handle_remote_ra_exec, lrm_state);
     lrm_state->remote_ra_data = ra_data;
+    lrm_remote_set_flags(lrm_state, purge_attrs);
 }
 
 void
@@ -1372,4 +1374,17 @@ remote_ra_controlling_guest(lrm_state_t * lrm_state)
 {
     remote_ra_data_t *ra_data = lrm_state->remote_ra_data;
     return pcmk_is_set(ra_data->status, controlling_guest);
+}
+
+bool
+remote_ra_purge_attrs(lrm_state_t *lrm_state)
+{
+    remote_ra_data_t *ra_data = lrm_state->remote_ra_data;
+    return pcmk_is_set(ra_data->status, purge_attrs);
+}
+
+void
+remote_ra_clear_purge_attrs(lrm_state_t *lrm_state)
+{
+    lrm_remote_clear_flags(lrm_state, purge_attrs);
 }

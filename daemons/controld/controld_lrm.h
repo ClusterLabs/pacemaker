@@ -176,6 +176,8 @@ void remote_ra_process_pseudo(xmlNode *xml);
 gboolean remote_ra_is_in_maintenance(lrm_state_t * lrm_state);
 void remote_ra_process_maintenance_nodes(xmlNode *xml);
 gboolean remote_ra_controlling_guest(lrm_state_t * lrm_state);
+bool remote_ra_purge_attrs(lrm_state_t *lrm_state);
+void remote_ra_clear_purge_attrs(lrm_state_t *lrm_state);
 
 void process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
                        active_op_t *pending, const xmlNode *action_xml);
