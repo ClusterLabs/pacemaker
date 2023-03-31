@@ -77,7 +77,6 @@ static xmlNode *in_mem_cib = NULL;
                                                 #flags_to_clear);       \
     } while (0)
 
-int cib_file_signon(cib_t * cib, const char *name, enum cib_conn_type type);
 int cib_file_signoff(cib_t * cib);
 int cib_file_free(cib_t * cib);
 
@@ -190,6 +189,81 @@ done:
         free_xml(output);
     }
     free(effective_user);
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Read CIB from disk and validate it against XML schema
+ *
+ * \param[in] filename Name of file to read CIB from
+ *
+ * \return pcmk_ok on success,
+ *         -ENXIO if file does not exist (or stat() otherwise fails), or
+ *         -pcmk_err_schema_validation if XML doesn't parse or validate
+ * \note If filename is the live CIB, this will *not* verify its digest,
+ *       though that functionality would be trivial to add here.
+ *       Also, this will *not* verify that the file is writable,
+ *       because some callers might not need to write.
+ */
+static int
+load_file_cib(const char *filename)
+{
+    struct stat buf;
+    xmlNode *root = NULL;
+
+    /* Ensure file is readable */
+    if (strcmp(filename, "-") && (stat(filename, &buf) < 0)) {
+        return -ENXIO;
+    }
+
+    /* Parse XML from file */
+    root = filename2xml(filename);
+    if (root == NULL) {
+        return -pcmk_err_schema_validation;
+    }
+
+    /* Add a status section if not already present */
+    if (find_xml_node(root, XML_CIB_TAG_STATUS, FALSE) == NULL) {
+        create_xml_node(root, XML_CIB_TAG_STATUS);
+    }
+
+    /* Validate XML against its specified schema */
+    if (validate_xml(root, NULL, TRUE) == FALSE) {
+        const char *schema = crm_element_value(root, XML_ATTR_VALIDATION);
+
+        crm_err("CIB does not validate against %s", schema);
+        free_xml(root);
+        return -pcmk_err_schema_validation;
+    }
+
+    /* Remember the parsed XML for later use */
+    in_mem_cib = root;
+    return pcmk_ok;
+}
+
+static int
+cib_file_signon(cib_t *cib, const char *name, enum cib_conn_type type)
+{
+    int rc = pcmk_ok;
+    cib_file_opaque_t *private = cib->variant_opaque;
+
+    if (private->filename == NULL) {
+        rc = -EINVAL;
+    } else {
+        rc = load_file_cib(private->filename);
+    }
+
+    if (rc == pcmk_ok) {
+        crm_debug("Opened connection to local file '%s' for %s",
+                  private->filename, name);
+        cib->state = cib_connected_command;
+        cib->type = cib_command;
+
+    } else {
+        crm_info("Connection to local file '%s' for %s failed: %s\n",
+                 private->filename, name, pcmk_strerror(rc));
+    }
     return rc;
 }
 
@@ -688,81 +762,6 @@ cib_file_new(const char *cib_location)
     cib->cmds->client_id = cib_file_client_id;
 
     return cib;
-}
-
-/*!
- * \internal
- * \brief Read CIB from disk and validate it against XML schema
- *
- * \param[in] filename Name of file to read CIB from
- *
- * \return pcmk_ok on success,
- *         -ENXIO if file does not exist (or stat() otherwise fails), or
- *         -pcmk_err_schema_validation if XML doesn't parse or validate
- * \note If filename is the live CIB, this will *not* verify its digest,
- *       though that functionality would be trivial to add here.
- *       Also, this will *not* verify that the file is writable,
- *       because some callers might not need to write.
- */
-static int
-load_file_cib(const char *filename)
-{
-    struct stat buf;
-    xmlNode *root = NULL;
-
-    /* Ensure file is readable */
-    if (strcmp(filename, "-") && (stat(filename, &buf) < 0)) {
-        return -ENXIO;
-    }
-
-    /* Parse XML from file */
-    root = filename2xml(filename);
-    if (root == NULL) {
-        return -pcmk_err_schema_validation;
-    }
-
-    /* Add a status section if not already present */
-    if (find_xml_node(root, XML_CIB_TAG_STATUS, FALSE) == NULL) {
-        create_xml_node(root, XML_CIB_TAG_STATUS);
-    }
-
-    /* Validate XML against its specified schema */
-    if (validate_xml(root, NULL, TRUE) == FALSE) {
-        const char *schema = crm_element_value(root, XML_ATTR_VALIDATION);
-
-        crm_err("CIB does not validate against %s", schema);
-        free_xml(root);
-        return -pcmk_err_schema_validation;
-    }
-
-    /* Remember the parsed XML for later use */
-    in_mem_cib = root;
-    return pcmk_ok;
-}
-
-int
-cib_file_signon(cib_t * cib, const char *name, enum cib_conn_type type)
-{
-    int rc = pcmk_ok;
-    cib_file_opaque_t *private = cib->variant_opaque;
-
-    if (private->filename == NULL) {
-        rc = -EINVAL;
-    } else {
-        rc = load_file_cib(private->filename);
-    }
-
-    if (rc == pcmk_ok) {
-        crm_debug("Opened connection to local file '%s' for %s",
-                  private->filename, name);
-        cib->state = cib_connected_command;
-        cib->type = cib_command;
-
-    } else {
-        crm_info("Connection to local file '%s' for %s failed: %s\n",
-                 private->filename, name, pcmk_strerror(rc));
-    }
-    return rc;
 }
 
 /*!
