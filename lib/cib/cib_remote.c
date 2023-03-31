@@ -52,7 +52,6 @@ typedef struct cib_remote_opaque_s {
     pcmk__output_t *out;
 } cib_remote_opaque_t;
 
-void cib_remote_connection_destroy(gpointer user_data);
 int cib_remote_signon(cib_t * cib, const char *name, enum cib_conn_type type);
 int cib_remote_signoff(cib_t * cib);
 int cib_remote_free(cib_t * cib);
@@ -266,6 +265,62 @@ cib_remote_command_dispatch(gpointer user_data)
 }
 
 static int
+cib_tls_close(cib_t *cib)
+{
+    cib_remote_opaque_t *private = cib->variant_opaque;
+
+#ifdef HAVE_GNUTLS_GNUTLS_H
+    if (private->encrypted) {
+        if (private->command.tls_session) {
+            gnutls_bye(*(private->command.tls_session), GNUTLS_SHUT_RDWR);
+            gnutls_deinit(*(private->command.tls_session));
+            gnutls_free(private->command.tls_session);
+        }
+
+        if (private->callback.tls_session) {
+            gnutls_bye(*(private->callback.tls_session), GNUTLS_SHUT_RDWR);
+            gnutls_deinit(*(private->callback.tls_session));
+            gnutls_free(private->callback.tls_session);
+        }
+        private->command.tls_session = NULL;
+        private->callback.tls_session = NULL;
+        if (remote_gnutls_credentials_init) {
+            gnutls_anon_free_client_credentials(anon_cred_c);
+            gnutls_global_deinit();
+            remote_gnutls_credentials_init = FALSE;
+        }
+    }
+#endif
+
+    if (private->command.tcp_socket) {
+        shutdown(private->command.tcp_socket, SHUT_RDWR);       /* no more receptions */
+        close(private->command.tcp_socket);
+    }
+    if (private->callback.tcp_socket) {
+        shutdown(private->callback.tcp_socket, SHUT_RDWR);      /* no more receptions */
+        close(private->callback.tcp_socket);
+    }
+    private->command.tcp_socket = 0;
+    private->callback.tcp_socket = 0;
+
+    free(private->command.buffer);
+    free(private->callback.buffer);
+    private->command.buffer = NULL;
+    private->callback.buffer = NULL;
+
+    return 0;
+}
+
+static void
+cib_remote_connection_destroy(gpointer user_data)
+{
+    crm_err("Connection destroyed");
+#ifdef HAVE_GNUTLS_GNUTLS_H
+    cib_tls_close(user_data);
+#endif
+}
+
+static int
 cib_remote_inputfd(cib_t * cib)
 {
     cib_remote_opaque_t *private = cib->variant_opaque;
@@ -368,53 +423,6 @@ cib_remote_new(const char *server, const char *user, const char *passwd, int por
     cib->cmds->client_id = cib_remote_client_id;
 
     return cib;
-}
-
-static int
-cib_tls_close(cib_t * cib)
-{
-    cib_remote_opaque_t *private = cib->variant_opaque;
-
-#ifdef HAVE_GNUTLS_GNUTLS_H
-    if (private->encrypted) {
-        if (private->command.tls_session) {
-            gnutls_bye(*(private->command.tls_session), GNUTLS_SHUT_RDWR);
-            gnutls_deinit(*(private->command.tls_session));
-            gnutls_free(private->command.tls_session);
-        }
-
-        if (private->callback.tls_session) {
-            gnutls_bye(*(private->callback.tls_session), GNUTLS_SHUT_RDWR);
-            gnutls_deinit(*(private->callback.tls_session));
-            gnutls_free(private->callback.tls_session);
-        }
-        private->command.tls_session = NULL;
-        private->callback.tls_session = NULL;
-        if (remote_gnutls_credentials_init) {
-            gnutls_anon_free_client_credentials(anon_cred_c);
-            gnutls_global_deinit();
-            remote_gnutls_credentials_init = FALSE;
-        }
-    }
-#endif
-
-    if (private->command.tcp_socket) {
-        shutdown(private->command.tcp_socket, SHUT_RDWR);       /* no more receptions */
-        close(private->command.tcp_socket);
-    }
-    if (private->callback.tcp_socket) {
-        shutdown(private->callback.tcp_socket, SHUT_RDWR);      /* no more receptions */
-        close(private->callback.tcp_socket);
-    }
-    private->command.tcp_socket = 0;
-    private->callback.tcp_socket = 0;
-
-    free(private->command.buffer);
-    free(private->callback.buffer);
-    private->command.buffer = NULL;
-    private->callback.buffer = NULL;
-
-    return 0;
 }
 
 static int
@@ -528,16 +536,6 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
                                          connection->tcp_socket, cib,
                                          &cib_fd_callbacks);
     return rc;
-}
-
-void
-cib_remote_connection_destroy(gpointer user_data)
-{
-    crm_err("Connection destroyed");
-#ifdef HAVE_GNUTLS_GNUTLS_H
-    cib_tls_close(user_data);
-#endif
-    return;
 }
 
 int
