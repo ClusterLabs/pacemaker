@@ -219,6 +219,25 @@ purge_remote_node_attrs(int call_opt, const char *node_name)
         section = controld_section_lrm;
     }
 
+    /* Check the uptime of connection_rsc.  If it hasn't been running long
+     * enough, set purge=true regardless of what we saw above.  "Long enough"
+     * means it started running earlier than the timestamp when we noticed
+     * it went away in the first place.
+     */
+    if (connection_rsc && connection_rsc->conn) {
+        remote_ra_data_t *ra_data = connection_rsc->remote_ra_data;
+        lrmd_t *lrm = connection_rsc->conn;
+        time_t uptime = lrmd__uptime(lrm);
+        time_t now = time(NULL);
+
+        /* Add 20s of fuzziness to give corosync a while to notice the
+         * remote host is gone.
+         */
+        if (ra_data && uptime < 20 + now - ra_data->when_host_lost) {
+            purge = true;
+        }
+    }
+
     if (pcmk_is_set(controld_globals.flags, controld_shutdown_lock_enabled)) {
         if (purge) {
             section = controld_section_lrm_unlocked;
