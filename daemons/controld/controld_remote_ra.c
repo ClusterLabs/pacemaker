@@ -195,6 +195,47 @@ start_delay_helper(gpointer data)
 
 /*!
  * \internal
+ * \brief Clear node's state aside from shutdown locks.
+ *
+ * We always clear the resource history.  Transient attributes are conditionally
+ * cleared, depending on if we were told to do so by the scheduler and if the
+ * remote connection resource has not been up this whole time.
+ */
+static void
+purge_remote_node_attrs(int call_opt, const char *node_name)
+{
+    lrm_state_t *connection_rsc = NULL;
+    bool purge = false;
+    enum controld_section_e section = controld_section_all;
+
+    /* Does the remote connection resource have the purge attributes flag set?
+     * By default, it will.  It's up to the scheduler to unset the flag if it
+     * sees a meta-attr in the transition graph.
+     */
+    connection_rsc = lrm_state_find(node_name);
+    if (connection_rsc && connection_rsc->remote_ra_data) {
+        purge = remote_ra_purge_attrs(connection_rsc);
+        section = controld_section_lrm;
+    }
+
+    if (pcmk_is_set(controld_globals.flags, controld_shutdown_lock_enabled)) {
+        if (purge) {
+            section = controld_section_lrm_unlocked;
+        } else {
+            section = controld_section_all_unlocked;
+        }
+    }
+
+    /* Purge node from attrd's memory */
+    if (purge) {
+        update_attrd_remote_node_removed(node_name, NULL);
+    }
+
+    controld_delete_node_state(node_name, section, call_opt);
+}
+
+/*!
+ * \internal
  * \brief Handle cluster communication related to pacemaker_remote node joining
  *
  * \param[in] node_name  Name of newly integrated pacemaker_remote node
@@ -205,24 +246,12 @@ remote_node_up(const char *node_name)
     int call_opt;
     xmlNode *update, *state;
     crm_node_t *node;
-    enum controld_section_e section = controld_section_all;
 
     CRM_CHECK(node_name != NULL, return);
     crm_info("Announcing Pacemaker Remote node %s", node_name);
 
-    /* Clear node's entire state (resource history and transient attributes)
-     * other than shutdown locks. The transient attributes should and normally
-     * will be cleared when the node leaves, but since remote node state has a
-     * number of corner cases, clear them here as well, to be sure.
-     */
     call_opt = crmd_cib_smart_opt();
-    if (pcmk_is_set(controld_globals.flags, controld_shutdown_lock_enabled)) {
-        section = controld_section_all_unlocked;
-    }
-    /* Purge node from attrd's memory */
-    update_attrd_remote_node_removed(node_name, NULL);
-
-    controld_delete_node_state(node_name, section, call_opt);
+    purge_remote_node_attrs(call_opt, node_name);
 
     /* Delete node's probe_complete attribute. This serves two purposes:
      *
