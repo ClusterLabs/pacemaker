@@ -146,12 +146,12 @@ static const cib_operation_t cib_server_ops[] = {
     },
     {
         PCMK__CIB_REQUEST_MODIFY,
-        cib_op_attr_modifies|cib_op_attr_privileged,
+        cib_op_attr_modifies|cib_op_attr_privileged|cib_op_attr_transaction,
         cib_prepare_data, cib_cleanup_data, cib_process_modify
     },
     {
         PCMK__CIB_REQUEST_APPLY_PATCH,
-        cib_op_attr_modifies|cib_op_attr_privileged,
+        cib_op_attr_modifies|cib_op_attr_privileged|cib_op_attr_transaction,
         cib_prepare_diff, cib_cleanup_data, cib_server_process_diff
     },
     {
@@ -159,17 +159,18 @@ static const cib_operation_t cib_server_ops[] = {
         cib_op_attr_modifies
         |cib_op_attr_privileged
         |cib_op_attr_replaces
-        |cib_op_attr_writes_through,
+        |cib_op_attr_writes_through
+        |cib_op_attr_transaction,
         cib_prepare_data, cib_cleanup_data, cib_process_replace_svr
     },
     {
         PCMK__CIB_REQUEST_CREATE,
-        cib_op_attr_modifies|cib_op_attr_privileged,
+        cib_op_attr_modifies|cib_op_attr_privileged|cib_op_attr_transaction,
         cib_prepare_data, cib_cleanup_data, cib_process_create
     },
     {
         PCMK__CIB_REQUEST_DELETE,
-        cib_op_attr_modifies|cib_op_attr_privileged,
+        cib_op_attr_modifies|cib_op_attr_privileged|cib_op_attr_transaction,
         cib_prepare_data, cib_cleanup_data, cib_process_delete
     },
     {
@@ -179,12 +180,15 @@ static const cib_operation_t cib_server_ops[] = {
     },
     {
         PCMK__CIB_REQUEST_BUMP,
-        cib_op_attr_modifies|cib_op_attr_privileged,
+        cib_op_attr_modifies|cib_op_attr_privileged|cib_op_attr_transaction,
         cib_prepare_none, cib_cleanup_output, cib_process_bump
     },
     {
         PCMK__CIB_REQUEST_ERASE,
-        cib_op_attr_modifies|cib_op_attr_privileged|cib_op_attr_replaces,
+        cib_op_attr_modifies
+        |cib_op_attr_privileged
+        |cib_op_attr_replaces
+        |cib_op_attr_transaction,
         cib_prepare_none, cib_cleanup_output, cib_process_erase
     },
     {
@@ -199,7 +203,10 @@ static const cib_operation_t cib_server_ops[] = {
     },
     {
         PCMK__CIB_REQUEST_UPGRADE,
-        cib_op_attr_modifies|cib_op_attr_privileged|cib_op_attr_writes_through,
+        cib_op_attr_modifies
+        |cib_op_attr_privileged
+        |cib_op_attr_writes_through
+        |cib_op_attr_transaction,
         cib_prepare_none, cib_cleanup_output, cib_process_upgrade_server
     },
     {
@@ -232,6 +239,30 @@ static const cib_operation_t cib_server_ops[] = {
         CRM_OP_PING,
         cib_op_attr_none,
         cib_prepare_none, cib_cleanup_output, cib_process_ping
+    },
+
+    /* PCMK__CIB_REQUEST_*_TRANSACT requests must be processed locally because
+     * they depend on the client table. Requests that manage transactions on
+     * other nodes would likely be problematic in many other ways as well.
+     */
+    {
+        PCMK__CIB_REQUEST_INIT_TRANSACT,
+        cib_op_attr_privileged|cib_op_attr_local,
+        cib_prepare_none, cib_cleanup_none, cib_process_init_transaction,
+    },
+    {
+        PCMK__CIB_REQUEST_COMMIT_TRANSACT,
+        cib_op_attr_modifies
+        |cib_op_attr_privileged
+        |cib_op_attr_local
+        |cib_op_attr_replaces
+        |cib_op_attr_writes_through,
+        cib_prepare_none, cib_cleanup_none, cib_process_commit_transaction,
+    },
+    {
+        PCMK__CIB_REQUEST_DISCARD_TRANSACT,
+        cib_op_attr_privileged|cib_op_attr_local,
+        cib_prepare_none, cib_cleanup_none, cib_process_discard_transaction,
     },
 };
 

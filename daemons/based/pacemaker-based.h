@@ -26,6 +26,8 @@
 #include <crm/common/mainloop.h>
 #include <crm/cib/internal.h>
 
+#include "based_transaction.h"
+
 #ifdef HAVE_GNUTLS_GNUTLS_H
 #  include <gnutls/gnutls.h>
 #endif
@@ -57,6 +59,7 @@ enum cib_op_attr {
     cib_op_attr_local          = (1 << 3),  //!< Must only be processed locally
     cib_op_attr_replaces       = (1 << 4),  //!< Replaces CIB
     cib_op_attr_writes_through = (1 << 5),  //!< Writes to disk on success
+    cib_op_attr_transaction    = (1 << 6),  //!< Supported in a transaction
 };
 
 typedef struct cib_operation_s {
@@ -137,6 +140,18 @@ int cib_process_upgrade_server(const char *op, int options, const char *section,
                                xmlNode *req, xmlNode *input,
                                xmlNode *existing_cib, xmlNode **result_cib,
                                xmlNode **answer);
+int cib_process_init_transaction(const char *op, int options,
+                                 const char *section, xmlNode *req,
+                                 xmlNode *input, xmlNode *existing_cib,
+                                 xmlNode **result_cib, xmlNode **answer);
+int cib_process_commit_transaction(const char *op, int options,
+                                   const char *section, xmlNode *req,
+                                   xmlNode *input, xmlNode *existing_cib,
+                                   xmlNode **result_cib, xmlNode **answer);
+int cib_process_discard_transaction(const char *op, int options,
+                                    const char *section, xmlNode *req,
+                                    xmlNode *input, xmlNode *existing_cib,
+                                    xmlNode **result_cib, xmlNode **answer);
 void send_sync_request(const char *host);
 int sync_our_cib(xmlNode *request, gboolean all);
 

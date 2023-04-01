@@ -18,7 +18,8 @@ COMMONLIBS	= $(top_builddir)/lib/common/libcrmcommon.la \
 
 halib_PROGRAMS	= pacemaker-based
 
-noinst_HEADERS	= pacemaker-based.h
+noinst_HEADERS	= based_transaction.h \
+		  pacemaker-based.h
 
 pacemaker_based_CFLAGS	= $(CFLAGS_HARDENED_EXE)
 pacemaker_based_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
@@ -32,7 +33,8 @@ pacemaker_based_SOURCES	= pacemaker-based.c \
 			  based_io.c \
 			  based_messages.c \
 			  based_notify.c \
-			  based_remote.c
+			  based_remote.c \
+			  based_transaction.c
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~

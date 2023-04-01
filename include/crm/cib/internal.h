@@ -31,6 +31,9 @@
 #define PCMK__CIB_REQUEST_ABS_DELETE    "cib_delete_alt"
 #define PCMK__CIB_REQUEST_NOOP          "noop"
 #define PCMK__CIB_REQUEST_SHUTDOWN      "cib_shutdown_req"
+#define PCMK__CIB_REQUEST_INIT_TRANSACT     "cib_init_transact"
+#define PCMK__CIB_REQUEST_COMMIT_TRANSACT   "cib_commit_transact"
+#define PCMK__CIB_REQUEST_DISCARD_TRANSACT  "cib_discard_transact"
 
 #  define F_CIB_CLIENTID  "cib_clientid"
 #  define F_CIB_CALLOPTS  "cib_callopt"

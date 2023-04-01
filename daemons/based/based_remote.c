@@ -396,6 +396,7 @@ cib_remote_connection_destroy(gpointer user_data)
         close(csock);
     }
 
+    based_discard_transaction(client);
     pcmk__free_client(client);
 
     crm_trace("Freed the cib client");

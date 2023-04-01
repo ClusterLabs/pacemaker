@@ -130,6 +130,7 @@ cib_ipc_closed(qb_ipcs_connection_t * c)
         return 0;
     }
     crm_trace("Connection %p", c);
+    based_discard_transaction(client);
     pcmk__free_client(client);
     return 0;
 }
@@ -274,6 +275,28 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
                            pcmk__client_t *cib_client, gboolean privileged)
 {
     const char *op = crm_element_value(op_request, F_CIB_OPERATION);
+    int call_options = cib_none;
+
+    crm_element_value_int(op_request, F_CIB_CALLOPTS, &call_options);
+
+    if (pcmk_is_set(call_options, cib_transaction)) {
+        // Append request to client's transaction
+        const char *call_id = crm_element_value(op_request, F_CIB_CALLID);
+
+        int rc = based_extend_transaction(cib_client, op_request, privileged);
+
+        xmlNode *reply = create_cib_reply(op, call_id, cib_client->id,
+                                          call_options, rc, NULL);
+
+        if (rc != pcmk_rc_ok) {
+            crm_warn("Could not extend transaction for client %s: %s",
+                     pcmk__client_name(cib_client), pcmk_rc_str(rc));
+        }
+
+        do_local_notify(reply, cib_client->id,
+                        pcmk_is_set(call_options, cib_sync_call), false);
+        return;
+    }
 
     if (pcmk__str_eq(op, CRM_OP_REGISTER, pcmk__str_none)) {
         if (flags & crm_ipc_client_response) {
@@ -655,6 +678,19 @@ parse_local_options(const pcmk__client_t *cib_client,
                     gboolean *needs_reply, gboolean *process,
                     gboolean *needs_forward)
 {
+    if (pcmk_is_set(call_options, cib_transaction)) {
+        /* Process locally and don't notify local client.
+         *
+         * Reaching cib_process_request() with cib_transaction set means we're
+         * committing a transaction (always local and atomic).
+         */
+        *process = TRUE;
+        *needs_reply = FALSE;
+        *local_notify = FALSE;
+        *needs_forward = FALSE;
+        return;
+    }
+
     if(cib_legacy_mode()) {
         parse_local_options_v1(cib_client, operation, call_options, host,
                                op, local_notify, needs_reply, process,
@@ -1015,6 +1051,7 @@ int
 cib_process_request(xmlNode *request, gboolean privileged,
                     const pcmk__client_t *cib_client)
 {
+    // @TODO: Break into multiple smaller functions
     int call_options = 0;
 
     gboolean process = TRUE;        // Whether to process request locally now
@@ -1044,6 +1081,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
         host = NULL;
     }
 
+    // @TODO: Improve trace messages. Target is accurate only for legacy mode.
     if (host) {
         target = host;
 
@@ -1067,6 +1105,15 @@ cib_process_request(xmlNode *request, gboolean privileged,
         /* TODO: construct error reply? */
         crm_err("Pre-processing of command failed: %s", pcmk_strerror(rc));
         return rc;
+    }
+
+    if (pcmk_is_set(call_options, cib_transaction)) {
+        /* We're committing a transaction now, processing each request. If
+         * cib_op_attr_transaction is not set, based_extend_transaction() should
+         * have blocked the request from being added to the transaction.
+         */
+        CRM_CHECK(pcmk_is_set(operation->flags, cib_op_attr_transaction),
+                  return -EOPNOTSUPP);
     }
 
     if (cib_client != NULL) {
@@ -1448,8 +1495,17 @@ cib_process_command(xmlNode *request, const cib_operation_t *operation,
     }
 
     if (!pcmk_is_set(call_options, cib_dryrun)
-        && pcmk__str_eq(section, XML_CIB_TAG_STATUS, pcmk__str_casei)) {
-        // Copying large CIBs accounts for a huge percentage of our CIB usage
+        && !pcmk__str_eq(op, PCMK__CIB_REQUEST_COMMIT_TRANSACT, pcmk__str_none)
+        && (pcmk_is_set(call_options, cib_transaction)
+            || pcmk__str_eq(section, XML_CIB_TAG_STATUS, pcmk__str_none))) {
+        /* Dry runs and commit-transaction requests must always make a copy.
+         *
+         * Requests in a transaction: we made a working CIB copy earlier in the
+         * call chain, and we need to accumulate changes in it.
+         *
+         * Status updates: copying large CIBs accounts for a huge percentage of
+         * our CIB usage, and this avoids some of it.
+         */
         cib__set_call_options(call_options, "call", cib_zero_copy);
     } else {
         cib__clear_call_options(call_options, "call", cib_zero_copy);
@@ -1457,7 +1513,8 @@ cib_process_command(xmlNode *request, const cib_operation_t *operation,
 
     // Calculate the digests of relevant sections before the operation
     if (pcmk_is_set(operation->flags, cib_op_attr_replaces)
-        && !pcmk_any_flags_set(call_options, cib_dryrun|cib_inhibit_notify)) {
+        && !pcmk_any_flags_set(call_options,
+                               cib_dryrun|cib_inhibit_notify|cib_transaction)) {
 
         get_digests(the_cib, &before_digests);
         crm_trace("before-digest %s:%s:%s",
@@ -1494,7 +1551,9 @@ cib_process_command(xmlNode *request, const cib_operation_t *operation,
         config_changed = TRUE;
     }
 
-    if (rc == pcmk_ok && !pcmk_is_set(call_options, cib_dryrun)) {
+    if ((rc == pcmk_ok)
+        && !pcmk_any_flags_set(call_options, cib_dryrun|cib_transaction)) {
+
         uint32_t change_sections = cib_change_section_none;
 
         crm_trace("Activating %s->%s%s%s",
@@ -1522,6 +1581,18 @@ cib_process_command(xmlNode *request, const cib_operation_t *operation,
                                the_cib, *cib_diff, change_sections);
         }
 
+        /* Commit-transaction is special. We process it and activate the result
+         * only locally, but we still need to sync the updated CIB to all nodes.
+         * However, if we run the sync within cib_process_commit_transaction(),
+         * it will be rejected locally due to an older epoch in the replacement
+         * CIB. cib_perform_op() updates the epoch via xml_create_patchset()
+         * after cib_process_commit_transaction() has already returned.
+         */
+        if (pcmk__str_eq(op, PCMK__CIB_REQUEST_COMMIT_TRANSACT,
+                         pcmk__str_none)) {
+            sync_our_cib(request, TRUE);
+        }
+
         mainloop_timer_stop(digest_timer);
         mainloop_timer_start(digest_timer);
 
@@ -1544,7 +1615,8 @@ cib_process_command(xmlNode *request, const cib_operation_t *operation,
         }
     }
 
-    if ((call_options & (cib_inhibit_notify|cib_dryrun)) == 0) {
+    if (!pcmk_any_flags_set(call_options,
+                            cib_dryrun|cib_inhibit_notify|cib_transaction)) {
         crm_trace("Sending notifications %d",
                   pcmk_is_set(call_options, cib_dryrun));
         cib_diff_notify(op, rc, call_id, client_id, client_name, origin, input,
