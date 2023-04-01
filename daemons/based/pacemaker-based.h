@@ -93,6 +93,8 @@ void cib_peer_callback(xmlNode *msg, void *private_data);
 void cib_common_callback_worker(uint32_t id, uint32_t flags,
                                 xmlNode *op_request, pcmk__client_t *cib_client,
                                 gboolean privileged);
+int cib_process_request(xmlNode *request, gboolean privileged,
+                        const pcmk__client_t *cib_client);
 void cib_shutdown(int nsig);
 void terminate_cib(const char *caller, int fast);
 gboolean cib_legacy_mode(void);

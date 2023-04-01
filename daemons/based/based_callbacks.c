@@ -55,9 +55,6 @@ qb_ipcs_service_t *ipcs_ro = NULL;
 qb_ipcs_service_t *ipcs_rw = NULL;
 qb_ipcs_service_t *ipcs_shm = NULL;
 
-static void cib_process_request(xmlNode *request, gboolean privileged,
-                                const pcmk__client_t *cib_client);
-
 static int cib_process_command(xmlNode *request,
                                const cib_operation_t *operation,
                                xmlNode **reply, xmlNode **cib_diff,
@@ -1011,8 +1008,10 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
  * \param[in] privileged         Whether privileged commands may be run
  *                               (see cib_server_ops[] definition)
  * \param[in] cib_client         IPC client that sent request (or NULL if CPG)
+ *
+ * \return Legacy Pacemaker return code
  */
-static void
+int
 cib_process_request(xmlNode *request, gboolean privileged,
                     const pcmk__client_t *cib_client)
 {
@@ -1067,7 +1066,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
     if (rc != pcmk_ok) {
         /* TODO: construct error reply? */
         crm_err("Pre-processing of command failed: %s", pcmk_strerror(rc));
-        return;
+        return rc;
     }
 
     if (cib_client != NULL) {
@@ -1077,7 +1076,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
 
     } else if (!parse_peer_options(operation, request, &local_notify,
                                    &needs_reply, &process)) {
-        return;
+        return rc;
     }
 
     is_update = pcmk_is_set(operation->flags, cib_op_attr_modifies);
@@ -1094,7 +1093,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
 
     if (needs_forward) {
         forward_request(request);
-        return;
+        return rc;
     }
 
     if (cib_status != pcmk_ok) {
@@ -1226,7 +1225,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
     free_xml(op_reply);
     free_xml(result_diff);
 
-    return;
+    return rc;
 }
 
 static char *
