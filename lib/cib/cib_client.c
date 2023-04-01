@@ -387,6 +387,28 @@ cib_client_erase(cib_t * cib, xmlNode ** output_data, int call_options)
                            output_data, call_options, NULL);
 }
 
+static int
+cib_client_init_transaction(cib_t *cib, int call_options)
+{
+    op_common(cib);
+    return cib_internal_op(cib, PCMK__CIB_REQUEST_INIT_TRANSACT, NULL, NULL,
+                           NULL, NULL, call_options, NULL);
+}
+
+static int
+cib_client_end_transaction(cib_t *cib, bool commit, int call_options)
+{
+    op_common(cib);
+
+    if (commit) {
+        return cib_internal_op(cib, PCMK__CIB_REQUEST_COMMIT_TRANSACT, NULL,
+                               NULL, NULL, NULL, call_options, NULL);
+    } else {
+        return cib_internal_op(cib, PCMK__CIB_REQUEST_DISCARD_TRANSACT, NULL,
+                               NULL, NULL, NULL, call_options, NULL);
+    }
+}
+
 static void
 cib_destroy_op_callback(gpointer data)
 {
@@ -660,6 +682,9 @@ cib_new_variant(void)
 
     // Deprecated method
     new_cib->cmds->delete_absolute = cib_client_delete_absolute;
+
+    new_cib->cmds->init_transaction = cib_client_init_transaction;
+    new_cib->cmds->end_transaction = cib_client_end_transaction;
 
     return new_cib;
 }

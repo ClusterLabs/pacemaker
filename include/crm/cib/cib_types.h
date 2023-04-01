@@ -81,7 +81,21 @@ enum cib_call_options {
 
     cib_dryrun          = (1 << 9),
 
-    //! Add request to the client's CIB transaction instead of processing
+    /*!
+     * \brief Process request when the client commits the active transaction
+     *
+     * Add the request to the client's active transaction instead of processing
+     * it immediately. If the client has no active transaction, or if the
+     * request is not supported in transactions, the call will fail.
+     *
+     * Any callback is triggered when adding the request to the transaction;
+     * callbacks and notifications are not triggered when processing the
+     * request.
+     *
+     * Refer to \p cib_api_operations_t:init_transaction() and
+     * \p cib_api_operations_t:end_transaction() for more details on CIB
+     * transactions.
+     */
     cib_transaction     = (1 << 10),
 
     cib_sync_call       = (1 << 12),
@@ -232,6 +246,66 @@ typedef struct cib_api_operations_s {
      */
     int (*client_id)(const cib_t *cib, const char **async_id,
                      const char **sync_id);
+
+    /*!
+     * \brief Initiate an atomic CIB transaction for this client
+     *
+     * If the client has initiated a transaction and a new request's call
+     * options contain \p cib_transaction, the new request is appended to the
+     * transaction for later processing.
+     *
+     * Supported requests are those that meet the following conditions:
+     * * can be processed synchronously (with any changes applied to a working
+     *   CIB copy)
+     * * are not queries
+     * * do not involve other nodes
+     * * do not affect the state of pacemaker-based itself
+     *
+     * Currently supported CIB API functions include:
+     * * \p bump_epoch()
+     * * \p create()
+     * * \p erase()
+     * * \p modify()
+     * * \p remove()
+     * * \p replace()
+     * * \p upgrade()
+     *
+     * Because the transaction is atomic, individual requests do not trigger
+     * callbacks or notifications when they are processed, and they do not
+     * receive output XML. The commit request itself can trigger callbacks and
+     * notifications if any are registered. The init and discard requests can
+     * also trigger a callback.
+     *
+     * \param[in,out] cib           CIB connection
+     * \param[in]     call_options  Group of <tt>enum cib_call_options</tt>
+     *                              flags
+     *
+     * \return Legacy Pacemaker return code
+     */
+    int (*init_transaction)(cib_t *cib, int call_options);
+
+    /*!
+     * \brief End and optionally commit this client's CIB transaction
+     *
+     * When a client commits a transaction, all requests in the queue are
+     * processed in a FIFO manner until either a request fails or all requests
+     * have been processed. Changes are applied to a working copy of the CIB.
+     * If a request fails, the transaction and working CIB copy are discarded,
+     * and an error is returned. If all requests succeed, the working CIB copy
+     * replaces the initial CIB copy.
+     *
+     * Callbacks and notifications can be triggered by the commit request itself
+     * but not by the individual requests in a transaction.
+     *
+     * \param[in,out] cib           CIB connection
+     * \param[in]     commit        If \p true, commit transaction; otherwise,
+     *                              discard it
+     * \param[in]     call_options  Group of <tt>enum cib_call_options</tt>
+     *                              flags
+     *
+     * \return Legacy Pacemaker return code
+     */
+    int (*end_transaction)(cib_t *cib, bool commit, int call_options);
 } cib_api_operations_t;
 
 struct cib_s {
