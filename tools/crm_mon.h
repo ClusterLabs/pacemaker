@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 the Pacemaker project contributors
+ * Copyright 2019-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -54,6 +54,13 @@ typedef enum mon_output_format_e {
     mon_output_html,
     mon_output_cgi
 } mon_output_format_t;
+
+enum mon_exec_mode {
+    mon_exec_unset,
+    mon_exec_daemonized,
+    mon_exec_one_shot,
+    mon_exec_update,
+};
 
 void crm_mon_register_messages(pcmk__output_t *out);
 

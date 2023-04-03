@@ -115,19 +115,12 @@ curses_subprocess_output(pcmk__output_t *out, int exit_status,
 }
 
 /* curses_version is defined in curses.h, so we can't use that name here.
- * Note that this function prints out via text, not with curses.
+ * This function is empty because we create a text object instead of a console
+ * object if version is requested, so this is never called.
  */
 static void
 curses_ver(pcmk__output_t *out, bool extended) {
     CRM_ASSERT(out != NULL);
-
-    if (extended) {
-        printf("Pacemaker %s (Build: %s): %s\n", PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
-    } else {
-        printf("Pacemaker %s\n", PACEMAKER_VERSION);
-        printf("Written by Andrew Beekhof and the "
-               "Pacemaker project contributors\n");
-    }
 }
 
 G_GNUC_PRINTF(2, 3)
