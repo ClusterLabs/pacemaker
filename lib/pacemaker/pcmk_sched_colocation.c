@@ -1153,25 +1153,35 @@ pcmk__apply_coloc_to_weights(pe_resource_t *dependent,
 
         } else if (pcmk__str_eq(pe_node_attribute_raw(node, attribute), value,
                                 pcmk__str_casei)) {
+            /* Add colocation score only if optional (or minus infinity). A
+             * mandatory colocation is a requirement rather than a preference,
+             * so we don't need to consider it for relative assignment purposes.
+             * The resource will simply be forbidden from running on the node if
+             * the primary isn't active there (via the condition above).
+             */
             if (colocation->score < CRM_SCORE_INFINITY) {
                 node->weight = pcmk__add_scores(colocation->score,
                                                 node->weight);
                 pe_rsc_trace(dependent,
                              "Applied %s to %s score on %s (now %s after "
-                             "adding %s",
+                             "adding %s)",
                              colocation->id, dependent->id, pe__node_name(node),
                              pcmk_readable_score(node->weight),
                              pcmk_readable_score(colocation->score));
             }
 
         } else if (colocation->score >= CRM_SCORE_INFINITY) {
-            node->weight = pcmk__add_scores(-colocation->score, node->weight);
+            /* Only mandatory colocations are relevant when the colocation
+             * attribute doesn't match, because an attribute not matching is not
+             * a negative preference -- the colocation is simply relevant only
+             * where it matches.
+             */
+            node->weight = -CRM_SCORE_INFINITY;
             pe_rsc_trace(dependent,
-                         "Applied %s to %s score on %s (now %s after "
-                         "subtracting %s because attribute %s does not match)",
-                         colocation->id, dependent->id, pe__node_name(node),
-                         pcmk_readable_score(node->weight),
-                         pcmk_readable_score(colocation->score), attribute);
+                         "Banned %s from %s because colocation %s attribute %s "
+                         "does not match",
+                         dependent->id, pe__node_name(node), colocation->id,
+                         attribute);
         }
     }
 
@@ -1245,7 +1255,7 @@ pcmk__apply_coloc_to_priority(pe_resource_t *dependent,
     dependent->priority = pcmk__add_scores(score_multiplier * colocation->score,
                                            dependent->priority);
     pe_rsc_trace(dependent,
-                 "Applied %s to %s promotion priority (now %s after %s %s",
+                 "Applied %s to %s promotion priority (now %s after %s %s)",
                  colocation->id, dependent->id,
                  pcmk_readable_score(dependent->priority),
                  ((score_multiplier == 1)? "adding" : "subtracting"),
