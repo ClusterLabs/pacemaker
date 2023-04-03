@@ -876,28 +876,6 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     return pcmk_rc_ok;
 }
 
-void
-common_update_score(pe_resource_t * rsc, const char *id, int score)
-{
-    pe_node_t *node = NULL;
-
-    node = pe_hash_table_lookup(rsc->allowed_nodes, id);
-    if (node != NULL) {
-        pe_rsc_trace(rsc, "Updating score for %s on %s: %d + %d", rsc->id, id, node->weight, score);
-        node->weight = pcmk__add_scores(node->weight, score);
-    }
-
-    if (rsc->children) {
-        GList *gIter = rsc->children;
-
-        for (; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-            common_update_score(child_rsc, id, score);
-        }
-    }
-}
-
 gboolean
 is_parent(pe_resource_t *child, pe_resource_t *rsc)
 {

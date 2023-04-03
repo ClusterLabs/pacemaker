@@ -1348,10 +1348,10 @@ pe__create_promotable_pseudo_ops(pe_resource_t *clone, bool any_promoting,
 
     // Create notification pseudo-actions for promotion
     if (clone_data->promote_notify == NULL) {
-        clone_data->promote_notify = pe__clone_notif_pseudo_ops(clone,
-                                                                RSC_PROMOTE,
-                                                                action,
-                                                                action_complete);
+        clone_data->promote_notify = pe__action_notif_pseudo_ops(clone,
+                                                                 RSC_PROMOTE,
+                                                                 action,
+                                                                 action_complete);
     }
 
     // Create a "demote" action for the clone itself
@@ -1364,10 +1364,10 @@ pe__create_promotable_pseudo_ops(pe_resource_t *clone, bool any_promoting,
 
     // Create notification pseudo-actions for demotion
     if (clone_data->demote_notify == NULL) {
-        clone_data->demote_notify = pe__clone_notif_pseudo_ops(clone,
-                                                               RSC_DEMOTE,
-                                                               action,
-                                                               action_complete);
+        clone_data->demote_notify = pe__action_notif_pseudo_ops(clone,
+                                                                RSC_DEMOTE,
+                                                                action,
+                                                                action_complete);
 
         if (clone_data->promote_notify != NULL) {
             order_actions(clone_data->stop_notify->post_done,
@@ -1421,16 +1421,16 @@ pe__free_clone_notification_data(pe_resource_t *clone)
 
     get_clone_variant_data(clone_data, clone);
 
-    pe__free_notification_data(clone_data->demote_notify);
+    pe__free_action_notification_data(clone_data->demote_notify);
     clone_data->demote_notify = NULL;
 
-    pe__free_notification_data(clone_data->stop_notify);
+    pe__free_action_notification_data(clone_data->stop_notify);
     clone_data->stop_notify = NULL;
 
-    pe__free_notification_data(clone_data->start_notify);
+    pe__free_action_notification_data(clone_data->start_notify);
     clone_data->start_notify = NULL;
 
-    pe__free_notification_data(clone_data->promote_notify);
+    pe__free_action_notification_data(clone_data->promote_notify);
     clone_data->promote_notify = NULL;
 }
 
@@ -1454,13 +1454,13 @@ pe__create_clone_notif_pseudo_ops(pe_resource_t *clone,
     get_clone_variant_data(clone_data, clone);
 
     if (clone_data->start_notify == NULL) {
-        clone_data->start_notify = pe__clone_notif_pseudo_ops(clone, RSC_START,
-                                                              start, started);
+        clone_data->start_notify = pe__action_notif_pseudo_ops(clone, RSC_START,
+                                                               start, started);
     }
 
     if (clone_data->stop_notify == NULL) {
-        clone_data->stop_notify = pe__clone_notif_pseudo_ops(clone, RSC_STOP,
-                                                             stop, stopped);
+        clone_data->stop_notify = pe__action_notif_pseudo_ops(clone, RSC_STOP,
+                                                              stop, stopped);
         if ((clone_data->start_notify != NULL)
             && (clone_data->stop_notify != NULL)) {
             order_actions(clone_data->stop_notify->post_done,

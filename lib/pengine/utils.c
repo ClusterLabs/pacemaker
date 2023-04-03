@@ -120,8 +120,13 @@ node_list_exclude(GHashTable * hash, GList *list, gboolean merge_scores)
         other_node = pe_find_node_id(list, node->details->id);
         if (other_node == NULL) {
             node->weight = -INFINITY;
+            crm_trace("Banning dependent from %s (no primary instance)",
+                      pe__node_name(node));
         } else if (merge_scores) {
             node->weight = pcmk__add_scores(node->weight, other_node->weight);
+            crm_trace("Added primary's score %s to dependent's score for %s "
+                      "(now %s)", pcmk_readable_score(other_node->weight),
+                      pe__node_name(node), pcmk_readable_score(node->weight));
         }
     }
 
@@ -377,14 +382,16 @@ resource_node_score(pe_resource_t *rsc, const pe_node_t *node, int score,
         }
     }
 
-    pe_rsc_trace(rsc, "Setting %s for %s on %s: %d",
-                 tag, rsc->id, pe__node_name(node), score);
     match = pe_hash_table_lookup(rsc->allowed_nodes, node->details->id);
     if (match == NULL) {
         match = pe__copy_node(node);
         g_hash_table_insert(rsc->allowed_nodes, (gpointer) match->details->id, match);
     }
     match->weight = pcmk__add_scores(match->weight, score);
+    pe_rsc_trace(rsc,
+                 "Enabling %s preference (%s) for %s on %s (now %s)",
+                 tag, pcmk_readable_score(score), rsc->id, pe__node_name(node),
+                 pcmk_readable_score(match->weight));
 }
 
 void
@@ -762,6 +769,22 @@ pe__resource_is_disabled(const pe_resource_t *rsc)
         }
     }
     return false;
+}
+
+/*!
+ * \internal
+ * \brief Check whether a resource is running only on given node
+ *
+ * \param[in] rsc   Resource to check
+ * \param[in] node  Node to check
+ *
+ * \return true if \p rsc is running only on \p node, otherwise false
+ */
+bool
+pe__rsc_running_on_only(const pe_resource_t *rsc, const pe_node_t *node)
+{
+    return (rsc != NULL) && pcmk__list_of_1(rsc->running_on)
+            && pe__same_node((const pe_node_t *) rsc->running_on->data, node);
 }
 
 bool

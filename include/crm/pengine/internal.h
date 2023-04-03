@@ -240,7 +240,6 @@ pe_node_t *native_location(const pe_resource_t *rsc, GList **list, int current);
 void pe_metadata(pcmk__output_t *out);
 void verify_pe_options(GHashTable * options);
 
-void common_update_score(pe_resource_t * rsc, const char *id, int score);
 void native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * data_set, gboolean failed);
 
 gboolean native_unpack(pe_resource_t * rsc, pe_working_set_t * data_set);
@@ -616,6 +615,7 @@ GList *pe__unames_with_tag(pe_working_set_t *data_set, const char *tag_name);
 bool pe__rsc_has_tag(pe_working_set_t *data_set, const char *rsc, const char *tag);
 bool pe__uname_has_tag(pe_working_set_t *data_set, const char *node, const char *tag);
 
+bool pe__rsc_running_on_only(const pe_resource_t *rsc, const pe_node_t *node);
 bool pe__rsc_running_on_any(pe_resource_t *rsc, GList *node_list);
 GList *pe__filter_rsc_list(GList *rscs, GList *filter);
 GList * pe__build_node_name_list(pe_working_set_t *data_set, const char *s);

@@ -697,50 +697,45 @@ is_primitive_action(const pe_action_t *action)
  * \internal
  * \brief Update actions in an asymmetric ordering
  *
+ * If the "first" action in an asymmetric ordering is unrunnable, make the
+ * "second" action unrunnable as well, if appropriate.
+ *
  * \param[in]     first  'First' action in an asymmetric ordering
  * \param[in,out] then   'Then' action in an asymmetric ordering
  */
 static void
 handle_asymmetric_ordering(const pe_action_t *first, pe_action_t *then)
 {
-    enum rsc_role_e then_rsc_role = RSC_ROLE_UNKNOWN;
-    GList *then_on = NULL;
-
-    if (then->rsc == NULL) {
-        // Asymmetric orderings only matter if there's a resource involved
+    /* Only resource actions after an unrunnable 'first' action need updates for
+     * asymmetric ordering.
+     */
+    if ((then->rsc == NULL) || pcmk_is_set(first->flags, pe_action_runnable)) {
         return;
     }
 
-    then_rsc_role = then->rsc->fns->state(then->rsc, TRUE);
-    then_on = then->rsc->running_on;
+    // Certain optional 'then' actions are unaffected by unrunnable 'first'
+    if (pcmk_is_set(then->flags, pe_action_optional)) {
+        enum rsc_role_e then_rsc_role = then->rsc->fns->state(then->rsc, TRUE);
 
-    if ((then_rsc_role == RSC_ROLE_STOPPED)
-        && pcmk__str_eq(then->task, RSC_STOP, pcmk__str_none)) {
-        /* Nothing needs to be done for asymmetric ordering if 'then' is
-         * supposed to be stopped after 'first' but is already stopped.
-         */
-        return;
+        if ((then_rsc_role == RSC_ROLE_STOPPED)
+            && pcmk__str_eq(then->task, RSC_STOP, pcmk__str_none)) {
+            /* If 'then' should stop after 'first' but is already stopped, the
+             * ordering is irrelevant.
+             */
+            return;
+        } else if ((then_rsc_role >= RSC_ROLE_STARTED)
+            && pcmk__str_eq(then->task, RSC_START, pcmk__str_none)
+            && pe__rsc_running_on_only(then->rsc, then->node)) {
+            /* Similarly if 'then' should start after 'first' but is already
+             * started on a single node.
+             */
+            return;
+        }
     }
 
-    if ((then_rsc_role >= RSC_ROLE_STARTED)
-        && pcmk_is_set(then->flags, pe_action_optional)
-        && (then->node != NULL)
-        && pcmk__list_of_1(then_on)
-        && (then->node->details == ((pe_node_t *) then_on->data)->details)
-        && pcmk__str_eq(then->task, RSC_START, pcmk__str_none)) {
-        /* Nothing needs to be done for asymmetric ordering if 'then' is
-         * supposed to be started after 'first' but is already started --
-         * unless the start is mandatory, which indicates the resource is
-         * restarting and the ordering is still needed.
-         */
-        return;
-    }
-
-    if (!pcmk_is_set(first->flags, pe_action_runnable)) {
-        // 'First' can't run, so 'then' can't either
-        clear_action_flag_because(then, pe_action_optional, first);
-        clear_action_flag_because(then, pe_action_runnable, first);
-    }
+    // 'First' can't run, so 'then' can't either
+    clear_action_flag_because(then, pe_action_optional, first);
+    clear_action_flag_because(then, pe_action_runnable, first);
 }
 
 /*!
