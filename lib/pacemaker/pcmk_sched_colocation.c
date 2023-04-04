@@ -1458,7 +1458,6 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
 
     if (pcmk__any_node_available(work)) {
         GList *colocations = NULL;
-        float multiplier = (factor < 0.0)? -1.0 : 1.0;
 
         if (pcmk_is_set(flags, pcmk__coloc_select_this_with)) {
             colocations = pcmk__this_with_colocations(rsc);
@@ -1474,8 +1473,10 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
         flags |= pcmk__coloc_select_active;
 
         for (GList *iter = colocations; iter != NULL; iter = iter->next) {
-            pe_resource_t *other = NULL;
             pcmk__colocation_t *constraint = (pcmk__colocation_t *) iter->data;
+
+            pe_resource_t *other = NULL;
+            float other_factor = factor * constraint->score / (float) INFINITY;
 
             if (pcmk_is_set(flags, pcmk__coloc_select_this_with)) {
                 other = constraint->primary;
@@ -1488,10 +1489,9 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
             pe_rsc_trace(rsc, "Optionally merging score of '%s' constraint (%s with %s)",
                          constraint->id, constraint->dependent->id,
                          constraint->primary->id);
-            factor = multiplier * constraint->score / (float) INFINITY;
             other->cmds->add_colocated_node_scores(other, log_id, &work,
                                                    constraint->node_attribute,
-                                                   factor, flags);
+                                                   other_factor, flags);
             pe__show_node_weights(true, NULL, log_id, work, rsc->cluster);
         }
         g_list_free(colocations);
