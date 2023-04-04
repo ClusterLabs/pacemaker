@@ -29,6 +29,7 @@ char *pcmk__epoch2str(const time_t *source, uint32_t flags);
 char *pcmk__timespec2str(const struct timespec *ts, uint32_t flags);
 const char *pcmk__readable_interval(guint interval_ms);
 crm_time_t *pcmk__copy_timet(time_t source);
+void pcmk__time_set_timezone(crm_time_t *dt, int hours, int minutes);
 
 struct pcmk__time_us {
     int years;

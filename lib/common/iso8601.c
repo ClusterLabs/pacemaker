@@ -336,6 +336,40 @@ pcmk__time_get_timezone(const crm_time_t *dt, int *hours, int *minutes)
     }
 }
 
+/*!
+ * \internal
+ * \brief Set a date/time object's timezone relative to UTC
+ *
+ * \param[in,out] dt       Date/time object whose timezone to set
+ * \param[in]     hours    Hours offset from UTC
+ * \param[in]     minutes  Minutes offset from UTC
+ *
+ * \note \p hours and \p minutes are summed. If \p hours is negative, then
+ *       \p minutes typically should also be nonpositive, and vice-versa.
+ */
+void
+pcmk__time_set_timezone(crm_time_t *dt, int hours, int minutes)
+{
+    // Desired offset from UTC in seconds
+    int seconds = (hours * HOUR_SECONDS) + (minutes * 60);
+
+    // Current offsets from UTC
+    int hours_current = 0;
+    int minutes_current = 0;
+    int seconds_current = 0;
+
+    CRM_ASSERT(dt != NULL);
+
+    pcmk__time_get_timezone(dt, &hours_current, &minutes_current);
+    seconds_current = (hours_current * HOUR_SECONDS) + (minutes_current * 60);
+
+    // Adjust the object's time
+    crm_time_add_seconds(dt, seconds - seconds_current);
+
+    // Set the object's timezone
+    dt->offset = seconds;
+}
+
 long long
 crm_time_get_seconds(const crm_time_t *dt)
 {
