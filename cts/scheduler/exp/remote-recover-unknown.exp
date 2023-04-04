@@ -1,8 +1,11 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0">
     <action_set>
-      <pseudo_event id="24" operation="stop" operation_key="messaging-1_stop_0">
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="60000"  reconnect_interval="60"/>
+      <pseudo_event id="24" operation="stop" operation_key="messaging-1_stop_0" on_node="controller-1" on_node_uuid="2">
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="60000"  reconnect_interval="60"/>
+        <downed>
+          <node id="messaging-1"/>
+        </downed>
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -29,7 +32,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="27" operation="stop" operation_key="galera-0_stop_0"/>
+        <pseudo_event id="27" operation="stop" operation_key="galera-0_stop_0" on_node="controller-1" on_node_uuid="2"/>
       </trigger>
       <trigger>
         <crm_event id="130" operation="stonith" operation_key="stonith-messaging-1-reboot" on_node="messaging-1" on_node_uuid="messaging-1"/>
@@ -41,16 +44,22 @@
   </synapse>
   <synapse id="3">
     <action_set>
-      <pseudo_event id="27" operation="stop" operation_key="galera-0_stop_0">
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="60000"  reconnect_interval="60"/>
+      <pseudo_event id="27" operation="stop" operation_key="galera-0_stop_0" on_node="controller-1" on_node_uuid="2">
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="60000"  reconnect_interval="60"/>
+        <downed>
+          <node id="galera-0"/>
+        </downed>
       </pseudo_event>
     </action_set>
     <inputs/>
   </synapse>
   <synapse id="4">
     <action_set>
-      <pseudo_event id="32" operation="stop" operation_key="galera-2_stop_0">
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="60000"  reconnect_interval="60"/>
+      <pseudo_event id="32" operation="stop" operation_key="galera-2_stop_0" on_node="controller-1" on_node_uuid="2">
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="60000"  reconnect_interval="60"/>
+        <downed>
+          <node id="galera-2"/>
+        </downed>
       </pseudo_event>
     </action_set>
     <inputs/>

@@ -27,11 +27,11 @@ Transition Summary:
 Executing Cluster Transition:
   * Resource action: Fencing         stop on rhel7-4
   * Pseudo action:   lxc-ms-master_demote_0
-  * Pseudo action:   lxc1_stop_0
+  * Pseudo action:   lxc1_stop_0 on rhel7-1
   * Resource action: lxc1            monitor on rhel7-5
   * Resource action: lxc1            monitor on rhel7-4
   * Resource action: lxc1            monitor on rhel7-3
-  * Pseudo action:   lxc2_stop_0
+  * Pseudo action:   lxc2_stop_0 on rhel7-1
   * Resource action: lxc2            monitor on rhel7-5
   * Resource action: lxc2            monitor on rhel7-4
   * Resource action: lxc2            monitor on rhel7-2

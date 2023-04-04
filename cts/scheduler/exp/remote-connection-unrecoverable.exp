@@ -1,8 +1,11 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0">
     <action_set>
-      <pseudo_event id="9" operation="stop" operation_key="remote1_stop_0">
-        <attributes CRM_meta_timeout="20000"  reconnect_interval="60"/>
+      <pseudo_event id="9" operation="stop" operation_key="remote1_stop_0" on_node="node1" on_node_uuid="1">
+        <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000"  reconnect_interval="60"/>
+        <downed>
+          <node id="remote1"/>
+        </downed>
       </pseudo_event>
     </action_set>
     <inputs/>

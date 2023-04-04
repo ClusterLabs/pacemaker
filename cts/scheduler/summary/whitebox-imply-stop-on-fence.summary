@@ -49,8 +49,8 @@ Executing Cluster Transition:
   * Resource action: shared0         monitor on lxc-01_kiff-02
   * Resource action: vm-fs           monitor on lxc-02_kiff-02
   * Resource action: vm-fs           monitor on lxc-01_kiff-02
-  * Pseudo action:   lxc-01_kiff-01_stop_0
-  * Pseudo action:   lxc-02_kiff-01_stop_0
+  * Pseudo action:   lxc-01_kiff-01_stop_0 on kiff-01
+  * Pseudo action:   lxc-02_kiff-01_stop_0 on kiff-01
   * Fencing kiff-01 (reboot)
   * Pseudo action:   R-lxc-01_kiff-01_stop_0
   * Pseudo action:   R-lxc-02_kiff-01_stop_0

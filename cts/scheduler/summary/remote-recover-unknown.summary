@@ -54,9 +54,9 @@ Transition Summary:
   * Move       stonith-fence_ipmilan-5254005bdbb5     ( controller-1 -> controller-2 )
 
 Executing Cluster Transition:
-  * Pseudo action:   messaging-1_stop_0
-  * Pseudo action:   galera-0_stop_0
-  * Pseudo action:   galera-2_stop_0
+  * Pseudo action:   messaging-1_stop_0 on controller-1
+  * Pseudo action:   galera-0_stop_0 on controller-1
+  * Pseudo action:   galera-2_stop_0 on controller-1
   * Pseudo action:   rabbitmq-clone_pre_notify_stop_0
   * Pseudo action:   redis-master_pre_notify_stop_0
   * Pseudo action:   stonith-fence_ipmilan-5254005bdbb5_stop_0

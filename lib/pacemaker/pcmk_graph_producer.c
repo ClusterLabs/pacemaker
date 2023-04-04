@@ -420,7 +420,13 @@ create_graph_action(xmlNode *parent, pe_action_t *action, bool skip_details,
             needs_maintenance_info = true;
         }
         action_xml = create_xml_node(parent, XML_GRAPH_TAG_PSEUDO_EVENT);
-        needs_node_info = false;
+
+        if (action->rsc && action->rsc->is_remote_node &&
+            pcmk__str_eq(action->task, RSC_STOP, pcmk__str_none)) {
+            needs_node_info = true;
+        } else {
+            needs_node_info = false;
+        }
 
     } else {
         action_xml = create_xml_node(parent, XML_GRAPH_TAG_RSC_OP);

@@ -310,7 +310,7 @@
         <crm_event id="1" operation="stonith" operation_key="stonith-controller-0-reboot" on_node="controller-0" on_node_uuid="1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="42" operation="stop" operation_key="rabbitmq-bundle-0_stop_0"/>
+        <pseudo_event id="42" operation="stop" operation_key="rabbitmq-bundle-0_stop_0" on_node="controller-0" on_node_uuid="1"/>
       </trigger>
       <trigger>
         <pseudo_event id="55" operation="stop" operation_key="rabbitmq-bundle_stop_0"/>
@@ -343,8 +343,11 @@
   </synapse>
   <synapse id="24">
     <action_set>
-      <pseudo_event id="42" operation="stop" operation_key="rabbitmq-bundle-0_stop_0">
-        <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_notify_stop_resource="rabbitmq-bundle-0" CRM_meta_notify_stop_uname="controller-0" CRM_meta_timeout="20000" addr="controller-0"  port="3122"/>
+      <pseudo_event id="42" operation="stop" operation_key="rabbitmq-bundle-0_stop_0" on_node="controller-0" on_node_uuid="1">
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_notify_stop_resource="rabbitmq-bundle-0" CRM_meta_notify_stop_uname="controller-0" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" addr="controller-0"  port="3122"/>
+        <downed>
+          <node id="rabbitmq-bundle-0"/>
+        </downed>
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -513,7 +516,7 @@
         <crm_event id="1" operation="stonith" operation_key="stonith-controller-0-reboot" on_node="controller-0" on_node_uuid="1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="77" operation="stop" operation_key="galera-bundle-0_stop_0"/>
+        <pseudo_event id="77" operation="stop" operation_key="galera-bundle-0_stop_0" on_node="controller-0" on_node_uuid="1"/>
       </trigger>
       <trigger>
         <pseudo_event id="90" operation="stop" operation_key="galera-bundle_stop_0"/>
@@ -522,8 +525,11 @@
   </synapse>
   <synapse id="38">
     <action_set>
-      <pseudo_event id="77" operation="stop" operation_key="galera-bundle-0_stop_0">
-        <attributes CRM_meta_container="galera-bundle-docker-0" CRM_meta_timeout="20000" addr="controller-0"  port="3123"/>
+      <pseudo_event id="77" operation="stop" operation_key="galera-bundle-0_stop_0" on_node="controller-0" on_node_uuid="1">
+        <attributes CRM_meta_container="galera-bundle-docker-0" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" addr="controller-0"  port="3123"/>
+        <downed>
+          <node id="galera-bundle-0"/>
+        </downed>
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -1272,7 +1278,7 @@
         <crm_event id="1" operation="stonith" operation_key="stonith-controller-0-reboot" on_node="controller-0" on_node_uuid="1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="118" operation="stop" operation_key="redis-bundle-0_stop_0"/>
+        <pseudo_event id="118" operation="stop" operation_key="redis-bundle-0_stop_0" on_node="controller-0" on_node_uuid="1"/>
       </trigger>
       <trigger>
         <pseudo_event id="131" operation="stop" operation_key="redis-bundle_stop_0"/>
@@ -1305,8 +1311,11 @@
   </synapse>
   <synapse id="92">
     <action_set>
-      <pseudo_event id="118" operation="stop" operation_key="redis-bundle-0_stop_0">
-        <attributes CRM_meta_container="redis-bundle-docker-0" CRM_meta_notify_stop_resource="redis-bundle-0" CRM_meta_notify_stop_uname="controller-0" CRM_meta_timeout="20000" addr="controller-0"  port="3124"/>
+      <pseudo_event id="118" operation="stop" operation_key="redis-bundle-0_stop_0" on_node="controller-0" on_node_uuid="1">
+        <attributes CRM_meta_container="redis-bundle-docker-0" CRM_meta_notify_stop_resource="redis-bundle-0" CRM_meta_notify_stop_uname="controller-0" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" addr="controller-0"  port="3124"/>
+        <downed>
+          <node id="redis-bundle-0"/>
+        </downed>
       </pseudo_event>
     </action_set>
     <inputs/>

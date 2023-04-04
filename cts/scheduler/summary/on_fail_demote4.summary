@@ -62,7 +62,7 @@ Executing Cluster Transition:
   * Pseudo action:   rsc2-master_demote_0
   * Pseudo action:   lxc-ms-master_demote_0
   * Resource action: stateful-bundle-0 stop on rhel7-5
-  * Pseudo action:   stateful-bundle-2_stop_0
+  * Pseudo action:   stateful-bundle-2_stop_0 on rhel7-4
   * Resource action: lxc2            stop on rhel7-3
   * Pseudo action:   stateful-bundle_demote_0
   * Fencing remote-rhel7-2 (reboot)

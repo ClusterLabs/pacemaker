@@ -1530,7 +1530,7 @@
         <crm_event id="1" operation="stonith" operation_key="stonith-rhel7-4-reboot" on_node="rhel7-4" on_node_uuid="4"/>
       </trigger>
       <trigger>
-        <pseudo_event id="116" operation="stop" operation_key="stateful-bundle-2_stop_0"/>
+        <pseudo_event id="116" operation="stop" operation_key="stateful-bundle-2_stop_0" on_node="rhel7-4" on_node_uuid="4"/>
       </trigger>
       <trigger>
         <pseudo_event id="121" operation="stop" operation_key="stateful-bundle_stop_0"/>
@@ -1565,7 +1565,7 @@
         <rsc_op id="114" operation="start" operation_key="stateful-bundle-docker-2_start_0" on_node="rhel7-3" on_node_uuid="3"/>
       </trigger>
       <trigger>
-        <pseudo_event id="116" operation="stop" operation_key="stateful-bundle-2_stop_0"/>
+        <pseudo_event id="116" operation="stop" operation_key="stateful-bundle-2_stop_0" on_node="rhel7-4" on_node_uuid="4"/>
       </trigger>
       <trigger>
         <pseudo_event id="148" operation="stonith" operation_key="stonith-lxc2-reboot" on_node="lxc2" on_node_uuid="lxc2"/>
@@ -1574,8 +1574,11 @@
   </synapse>
   <synapse id="86">
     <action_set>
-      <pseudo_event id="116" operation="stop" operation_key="stateful-bundle-2_stop_0">
-        <attributes CRM_meta_container="stateful-bundle-docker-2" CRM_meta_timeout="90000" addr="192.168.122.133"  port="9999"/>
+      <pseudo_event id="116" operation="stop" operation_key="stateful-bundle-2_stop_0" on_node="rhel7-4" on_node_uuid="4">
+        <attributes CRM_meta_container="stateful-bundle-docker-2" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="90000" addr="192.168.122.133"  port="9999"/>
+        <downed>
+          <node id="stateful-bundle-2"/>
+        </downed>
       </pseudo_event>
     </action_set>
     <inputs/>

@@ -22,7 +22,7 @@ Transition Summary:
   * Stop       rsc2:0      (   Promoted node1 )  due to node availability
 
 Executing Cluster Transition:
-  * Pseudo action:   remote1_stop_0
+  * Pseudo action:   remote1_stop_0 on node1
   * Resource action: killer          stop on node2
   * Resource action: rsc1            monitor on node2
   * Fencing node1 (reboot)

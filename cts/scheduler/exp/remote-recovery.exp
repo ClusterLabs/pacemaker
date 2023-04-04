@@ -21,14 +21,17 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="24" operation="stop" operation_key="messaging-1_stop_0"/>
+        <pseudo_event id="24" operation="stop" operation_key="messaging-1_stop_0" on_node="controller-1" on_node_uuid="2"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="2">
     <action_set>
-      <pseudo_event id="24" operation="stop" operation_key="messaging-1_stop_0">
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="60000"  reconnect_interval="60"/>
+      <pseudo_event id="24" operation="stop" operation_key="messaging-1_stop_0" on_node="controller-1" on_node_uuid="2">
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="60000"  reconnect_interval="60"/>
+        <downed>
+          <node id="messaging-1"/>
+        </downed>
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -55,14 +58,17 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="29" operation="stop" operation_key="galera-0_stop_0"/>
+        <pseudo_event id="29" operation="stop" operation_key="galera-0_stop_0" on_node="controller-1" on_node_uuid="2"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="5">
     <action_set>
-      <pseudo_event id="29" operation="stop" operation_key="galera-0_stop_0">
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="60000"  reconnect_interval="60"/>
+      <pseudo_event id="29" operation="stop" operation_key="galera-0_stop_0" on_node="controller-1" on_node_uuid="2">
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="60000"  reconnect_interval="60"/>
+        <downed>
+          <node id="galera-0"/>
+        </downed>
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -89,14 +95,17 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="34" operation="stop" operation_key="galera-2_stop_0"/>
+        <pseudo_event id="34" operation="stop" operation_key="galera-2_stop_0" on_node="controller-1" on_node_uuid="2"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="8">
     <action_set>
-      <pseudo_event id="34" operation="stop" operation_key="galera-2_stop_0">
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="60000"  reconnect_interval="60"/>
+      <pseudo_event id="34" operation="stop" operation_key="galera-2_stop_0" on_node="controller-1" on_node_uuid="2">
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="60000"  reconnect_interval="60"/>
+        <downed>
+          <node id="galera-2"/>
+        </downed>
       </pseudo_event>
     </action_set>
     <inputs/>
