@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2022 the Pacemaker project contributors
+ * Copyright 2015-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -31,6 +31,6 @@ gboolean pe__eval_role_expr(const xmlNode *expr,
 gboolean pe__eval_rsc_expr(const xmlNode *expr,
                            const pe_rule_eval_data_t *rule_data);
 
-int pe_cron_range_satisfied(const crm_time_t *now, const xmlNode *cron_spec);
+int pe__cron_range_satisfied(const crm_time_t *now, const xmlNode *cron_spec);
 
 #endif

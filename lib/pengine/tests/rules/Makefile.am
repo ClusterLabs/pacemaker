@@ -13,6 +13,6 @@ include $(top_srcdir)/mk/unittest.mk
 LDADD += $(top_builddir)/lib/pengine/libpe_rules_test.la
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
-check_PROGRAMS = pe_cron_range_satisfied_test
+check_PROGRAMS = pe__cron_range_satisfied_test
 
 TESTS = $(check_PROGRAMS)
