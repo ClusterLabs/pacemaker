@@ -257,7 +257,6 @@ controld_record_action_event(pcmk__graph_action_t *action,
     const char *task_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
     const char *target_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
 
-    int call_options = cib_quorum_override | cib_scope_local;
     int target_rc = get_target_rc(action);
 
     action_rsc = find_xml_node(action->xml, XML_CIB_TAG_RESOURCE, TRUE);
@@ -298,8 +297,8 @@ controld_record_action_event(pcmk__graph_action_t *action,
     pcmk__create_history_xml(rsc, op, CRM_FEATURE_SET, target_rc, target,
                              __func__);
 
-    rc = cib_conn->cmds->update(cib_conn, XML_CIB_TAG_STATUS, state,
-                                call_options);
+    rc = cib_conn->cmds->modify(cib_conn, XML_CIB_TAG_STATUS, state,
+                                cib_scope_local);
     fsa_register_cib_callback(rc, NULL, cib_action_updated);
     free_xml(state);
 

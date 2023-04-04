@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -321,7 +321,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
 
     crm_log_xml_trace(xml_top, "update_attr");
     rc = cib_internal_op(cib, PCMK__CIB_REQUEST_MODIFY, NULL, section, xml_top,
-                         NULL, call_options|cib_quorum_override, user_name);
+                         NULL, call_options, user_name);
     if (rc < 0) {
         rc = pcmk_legacy2rc(rc);
 
@@ -397,7 +397,7 @@ cib__delete_node_attr(pcmk__output_t *out, cib_t *cib, int options, const char *
     xml_obj = crm_create_nvpair_xml(NULL, attr_id, attr_name, attr_value);
 
     rc = cib_internal_op(cib, PCMK__CIB_REQUEST_DELETE, NULL, section, xml_obj,
-                         NULL, options|cib_quorum_override, user_name);
+                         NULL, options, user_name);
     if (rc < 0) {
         rc = pcmk_legacy2rc(rc);
     } else {

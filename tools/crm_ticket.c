@@ -990,10 +990,6 @@ main(int argc, char **argv)
 
     cib__clean_up_connection(&cib_conn);
 
-    if (rc == pcmk_rc_no_quorum) {
-        g_set_error(&error, PCMK__RC_ERROR, rc, "Use --force to ignore quorum");
-    }
-
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
     g_free(options.attr_default);

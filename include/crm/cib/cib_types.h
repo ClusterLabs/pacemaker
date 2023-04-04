@@ -26,11 +26,15 @@ extern "C" {
  */
 
 enum cib_variant {
-    cib_undefined,
-    cib_native,
-    cib_file,
-    cib_remote,
-    cib_database,
+    cib_undefined = 0,
+    cib_native    = 1,
+    cib_file      = 2,
+    cib_remote    = 3,
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated This value will be removed in a future release
+    cib_database  = 4,
+#endif // !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 };
 
 enum cib_state {
@@ -62,8 +66,15 @@ enum cib_call_options {
     cib_no_mtime        = (1 << 13),
     cib_zero_copy       = (1 << 14),
     cib_inhibit_notify  = (1 << 16),
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated This value will be removed in a future release
     cib_quorum_override = (1 << 20),
-    cib_inhibit_bcast   = (1 << 24), //!< \deprecated Will be removed in future
+#endif // !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+
+    //! \deprecated This value will be removed in a future release
+    cib_inhibit_bcast   = (1 << 24),
+
     cib_force_diff      = (1 << 28),
 };
 
@@ -115,8 +126,11 @@ typedef struct cib_api_operations_s {
                    int call_options);
     int (*modify) (cib_t *cib, const char *section, xmlNode *data,
                    int call_options);
+
+    //! \deprecated Use the \p modify() method instead
     int (*update) (cib_t *cib, const char *section, xmlNode *data,
                    int call_options);
+
     int (*replace) (cib_t *cib, const char *section, xmlNode *data,
                     int call_options);
     int (*remove) (cib_t *cib, const char *section, xmlNode *data,
@@ -161,6 +175,29 @@ typedef struct cib_api_operations_s {
      * \return Legacy Pacemaker return code (in particular, pcmk_ok on success)
      */
     int (*set_secondary)(cib_t *cib, int call_options);
+
+    /*!
+     * \brief Get the given CIB connection's unique client identifier(s)
+     *
+     * These can be used to check whether this client requested the action that
+     * triggered a CIB notification.
+     *
+     * \param[in]  cib       CIB connection
+     * \param[out] async_id  If not \p NULL, where to store asynchronous client
+     *                       ID
+     * \param[out] sync_id   If not \p NULL, where to store synchronous client
+     *                       ID
+     *
+     * \return Legacy Pacemaker return code
+     *
+     * \note The client IDs are assigned by \p pacemaker-based when the client
+     *       connects. \p cib_t variants that don't connect to
+     *       \p pacemaker-based may never be assigned a client ID.
+     * \note Some variants may have only one client for both asynchronous and
+     *       synchronous requests.
+     */
+    int (*client_id)(const cib_t *cib, const char **async_id,
+                     const char **sync_id);
 } cib_api_operations_t;
 
 struct cib_s {

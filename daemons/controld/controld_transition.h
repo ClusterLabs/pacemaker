@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -20,7 +20,8 @@ bool confirm_cancel_action(const char *id, const char *node_id);
 
 void controld_record_action_timeout(pcmk__graph_action_t *action);
 
-void controld_destroy_outside_event_table(void);
+void controld_destroy_outside_events_table(void);
+void controld_remove_all_outside_events(void);
 
 gboolean fail_incompletable_actions(pcmk__graph_t *graph, const char *down_node);
 void process_graph_event(xmlNode *event, const char *event_node);

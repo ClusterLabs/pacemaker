@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -34,10 +34,22 @@ static GHashTable *outside_events = NULL;
 
 /*!
  * \internal
+ * \brief Empty the hash table containing action numbers of outside events
+ */
+void
+controld_remove_all_outside_events(void)
+{
+    if (outside_events != NULL) {
+        g_hash_table_remove_all(outside_events);
+    }
+}
+
+/*!
+ * \internal
  * \brief Destroy the hash table containing action numbers of outside events
  */
 void
-controld_destroy_outside_event_table(void)
+controld_destroy_outside_events_table(void)
 {
     if (outside_events != NULL) {
         g_hash_table_destroy(outside_events);

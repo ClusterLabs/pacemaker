@@ -426,17 +426,6 @@ cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
         }
     }
 
-    if (client->userdata == NULL) {
-        value = crm_element_value(command, F_CIB_CALLBACK_TOKEN);
-        if (value != NULL) {
-            client->userdata = strdup(value);
-            crm_trace("Callback channel for %s is %s", client->id, (char*)client->userdata);
-
-        } else {
-            client->userdata = strdup(client->id);
-        }
-    }
-
     /* unset dangerous options */
     xml_remove_prop(command, F_ORIG);
     xml_remove_prop(command, F_CIB_HOST);

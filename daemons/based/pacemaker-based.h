@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -47,7 +47,6 @@ typedef struct cib_operation_s {
     const char *operation;
     gboolean modifies_cib;
     gboolean needs_privileges;
-    gboolean needs_quorum;
     int (*prepare) (xmlNode *, xmlNode **, const char **);
     int (*cleanup) (int, xmlNode **, xmlNode **);
     int (*fn) (const char *, int, const char *, xmlNode *,
@@ -133,13 +132,14 @@ int cib_op_prepare(int call_type, xmlNode *request, xmlNode **input,
                    const char **section);
 int cib_op_cleanup(int call_type, int options, xmlNode **input,
                    xmlNode **output);
-int cib_op_can_run(int call_type, int call_options, gboolean privileged,
-                   gboolean global_update);
-void cib_diff_notify(int options, const char *client, const char *call_id,
-                     const char *op, xmlNode *update, int result,
-                     xmlNode *old_cib);
-void cib_replace_notify(const char *origin, xmlNode *update, int result,
-                        xmlNode *diff, uint32_t change_section);
+int cib_op_can_run(int call_type, int call_options, bool privileged);
+void cib_diff_notify(const char *op, int result, const char *call_id,
+                     const char *client_id, const char *client_name,
+                     const char *origin, xmlNode *update, xmlNode *diff);
+void cib_replace_notify(const char *op, int result, const char *call_id,
+                        const char *client_id, const char *client_name,
+                        const char *origin, xmlNode *update, xmlNode *diff,
+                        uint32_t change_section);
 
 static inline const char *
 cib_config_lookup(const char *opt)

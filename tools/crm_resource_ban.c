@@ -145,7 +145,8 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
     }
 
     crm_log_xml_notice(fragment, "Modify");
-    rc = cib_conn->cmds->update(cib_conn, XML_CIB_TAG_CONSTRAINTS, fragment, cib_options);
+    rc = cib_conn->cmds->modify(cib_conn, XML_CIB_TAG_CONSTRAINTS, fragment,
+                                cib_options);
     rc = pcmk_legacy2rc(rc);
 
     free_xml(fragment);
@@ -211,7 +212,8 @@ cli_resource_prefer(pcmk__output_t *out,const char *rsc_id, const char *host,
     }
 
     crm_log_xml_info(fragment, "Modify");
-    rc = cib_conn->cmds->update(cib_conn, XML_CIB_TAG_CONSTRAINTS, fragment, cib_options);
+    rc = cib_conn->cmds->modify(cib_conn, XML_CIB_TAG_CONSTRAINTS, fragment,
+                                cib_options);
     rc = pcmk_legacy2rc(rc);
 
     free_xml(fragment);

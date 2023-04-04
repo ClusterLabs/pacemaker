@@ -570,7 +570,7 @@ te_update_diff(const char *event, xmlNode * msg)
             crm_warn("Ignoring malformed CIB update (unknown patch format %d)",
                      format);
     }
-    controld_destroy_outside_event_table();
+    controld_remove_all_outside_events();
 }
 
 void

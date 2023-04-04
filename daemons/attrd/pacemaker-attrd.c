@@ -118,8 +118,7 @@ attrd_erase_attrs(void)
     crm_info("Clearing transient attributes from CIB " CRM_XS " xpath=%s",
              xpath);
 
-    call_id = the_cib->cmds->remove(the_cib, xpath, NULL,
-                                    cib_quorum_override | cib_xpath);
+    call_id = the_cib->cmds->remove(the_cib, xpath, NULL, cib_xpath);
     the_cib->cmds->register_callback_full(the_cib, call_id, 120, FALSE, xpath,
                                           "attrd_erase_cb", attrd_erase_cb,
                                           free);

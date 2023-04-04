@@ -109,9 +109,8 @@ crm_cluster_disconnect(crm_cluster_t *cluster)
 #if SUPPORT_COROSYNC
             crm_peer_destroy();
             pcmk__corosync_disconnect(cluster);
-#else
-            break;
 #endif // SUPPORT_COROSYNC
+            break;
         default:
             break;
     }
@@ -208,11 +207,11 @@ get_node_name(uint32_t nodeid)
     enum cluster_type_e stack = get_cluster_type();
 
     switch (stack) {
-#  if SUPPORT_COROSYNC
         case pcmk_cluster_corosync:
+#if SUPPORT_COROSYNC
             name = pcmk__corosync_name(0, nodeid);
             break;
-#  endif
+#endif // SUPPORT_COROSYNC
 
         default:
             crm_err("Unknown cluster type: %s (%d)", name_for_cluster_type(stack), stack);
@@ -272,7 +271,6 @@ crm_peer_uname(const char *uuid)
     }
     node = NULL;
 
-#if SUPPORT_COROSYNC
     if (is_corosync_cluster()) {
         long long id;
 
@@ -291,7 +289,6 @@ crm_peer_uname(const char *uuid)
         }
         return NULL;
     }
-#endif
 
     return NULL;
 }

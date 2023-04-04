@@ -265,7 +265,9 @@ crmd_exit(crm_exit_t exit_code)
     controld_globals.te_uuid = NULL;
 
     free_max_generation();
+    controld_destroy_cib_replacements_table();
     controld_destroy_failed_sync_table();
+    controld_destroy_outside_events_table();
 
     mainloop_destroy_signal(SIGPIPE);
     mainloop_destroy_signal(SIGUSR1);
@@ -657,19 +659,30 @@ static pcmk__cluster_option_t controller_options[] = {
     {
         "no-quorum-policy", NULL, "select",
         "stop, freeze, ignore, demote, suicide", "stop", pcmk__valid_quorum,
-        "What to do when the cluster does not have quorum", NULL
+        N_("What to do when the cluster does not have quorum"), NULL
     },
     {
         XML_CONFIG_ATTR_SHUTDOWN_LOCK, NULL, "boolean", NULL,
         "false", pcmk__valid_boolean,
-        "Whether to lock resources to a cleanly shut down node",
-        "When true, resources active on a node when it is cleanly shut down "
+        N_("Whether to lock resources to a cleanly shut down node"),
+        N_("When true, resources active on a node when it is cleanly shut down "
             "are kept \"locked\" to that node (not allowed to run elsewhere) "
             "until they start again on that node after it rejoins (or for at "
             "most shutdown-lock-limit, if set). Stonith resources and "
             "Pacemaker Remote connections are never locked. Clone and bundle "
-            "instances and the promoted role of promotable clones are currently"
-            " never locked, though support could be added in a future release."
+            "instances and the promoted role of promotable clones are "
+            "currently never locked, though support could be added in a future "
+            "release.")
+    },
+    {
+        XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT, NULL, "time", NULL,
+        "0", pcmk__valid_interval_spec,
+        N_("Do not lock resources to a cleanly shut down node longer than "
+           "this"),
+        N_("If shutdown-lock is true and this is set to a nonzero time "
+            "duration, shutdown locks will expire after this much time has "
+            "passed since the shutdown was initiated, even if the node has not "
+            "rejoined.")
     },
 };
 
@@ -742,6 +755,11 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     } else {
         controld_clear_global_flags(controld_shutdown_lock_enabled);
     }
+
+    value = g_hash_table_lookup(config_hash,
+                                XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT);
+    controld_globals.shutdown_lock_limit = crm_parse_interval_spec(value)
+                                           / 1000;
 
     value = g_hash_table_lookup(config_hash, "cluster-name");
     pcmk__str_update(&(controld_globals.cluster_name), value);

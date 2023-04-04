@@ -98,7 +98,15 @@ lrm_state_is_local(lrm_state_t *lrm_state)
                            pcmk__str_casei);
 }
 
-lrm_state_t *
+/*!
+ * \internal
+ * \brief Create executor state entry for a node and add it to the state table
+ *
+ * \param[in]  node_name  Node to create entry for
+ *
+ * \return Newly allocated executor state object initialized for \p node_name
+ */
+static lrm_state_t *
 lrm_state_create(const char *node_name)
 {
     lrm_state_t *state = NULL;

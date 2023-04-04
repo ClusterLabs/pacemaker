@@ -85,6 +85,34 @@ cib_file_register_notification(cib_t * cib, const char *callback, int enabled)
 
 /*!
  * \internal
+ * \brief Get the given CIB connection's unique client identifier
+ *
+ * \param[in]  cib       CIB connection
+ * \param[out] async_id  If not \p NULL, where to store asynchronous client ID
+ * \param[out] sync_id   If not \p NULL, where to store synchronous client ID
+ *
+ * \return Legacy Pacemaker return code (specifically, \p -EPROTONOSUPPORT)
+ *
+ * \note This is the \p cib_file variant implementation of
+ *       \p cib_api_operations_t:client_id().
+ * \note A \p cib_file object doesn't connect to the CIB and is never assigned a
+ *       client ID.
+ */
+static int
+cib_file_client_id(const cib_t *cib, const char **async_id,
+                   const char **sync_id)
+{
+    if (async_id != NULL) {
+        *async_id = NULL;
+    }
+    if (sync_id != NULL) {
+        *sync_id = NULL;
+    }
+    return -EPROTONOSUPPORT;
+}
+
+/*!
+ * \internal
  * \brief Compare the calculated digest of an XML tree against a signature file
  *
  * \param[in] root     Root of XML tree to compare
@@ -529,6 +557,8 @@ cib_file_new(const char *cib_location)
     cib->cmds->register_notification = cib_file_register_notification;
     cib->cmds->set_connection_dnotify = cib_file_set_connection_dnotify;
 
+    cib->cmds->client_id = cib_file_client_id;
+
     return cib;
 }
 
@@ -835,7 +865,8 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
     }
 
     cib->call_id++;
-    request = cib_create_op(cib->call_id, "dummy-token", op, host, section, data, call_options, user_name);
+    request = cib_create_op(cib->call_id, op, host, section, data, call_options,
+                            user_name);
     if(user_name) {
         crm_xml_add(request, XML_ACL_TAG_USER, user_name);
     }

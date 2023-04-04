@@ -228,8 +228,7 @@ do_dc_takeover(long long action,
 
     cib = create_xml_node(NULL, XML_TAG_CIB);
     crm_xml_add(cib, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
-    controld_update_cib(XML_TAG_CIB, cib, cib_quorum_override,
-                        feature_update_callback);
+    controld_update_cib(XML_TAG_CIB, cib, cib_none, feature_update_callback);
 
     dc_takeover_update_attr(XML_ATTR_HAVE_WATCHDOG, pcmk__btoa(watchdog));
     dc_takeover_update_attr("dc-version", PACEMAKER_VERSION "-" BUILD_VERSION);

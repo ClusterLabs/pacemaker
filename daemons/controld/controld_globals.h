@@ -45,8 +45,8 @@ typedef struct {
     //! Connection to the CIB
     cib_t *cib_conn;
 
-    //! Call ID of the in-progress CIB resource update (or 0 if none)
-    int resource_update;
+    //! CIB connection's client ID
+    const char *cib_client_id;
 
 
     // Scheduler
@@ -89,6 +89,9 @@ typedef struct {
 
     //! Last saved cluster communication layer membership ID
     unsigned long long membership_id;
+
+    //! Max lifetime (in seconds) of a resource's shutdown lock to a node
+    guint shutdown_lock_limit;
 
     //! Main event loop
     GMainLoop *mainloop;

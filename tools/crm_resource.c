@@ -631,8 +631,8 @@ static GOptionEntry addl_entries[] = {
       INDENT "--restart, --wait, --force-*)",
       "N" },
     { "force", 'f', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &options.force,
-      "If making CIB changes, do so regardless of quorum. See help for\n"
-      INDENT "individual commands for additional behavior.",
+      "Force the action to be performed. See help for individual commands for\n"
+      INDENT "additional behavior.",
       NULL },
     { "xml-file", 'x', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_FILENAME, &options.xml_file,
       NULL,
@@ -1729,12 +1729,6 @@ main(int argc, char **argv)
      * Set up necessary connections
      */
 
-    if (options.force) {
-        crm_debug("Forcing...");
-        cib__set_call_options(options.cib_options, crm_system_name,
-                              cib_quorum_override);
-    }
-
     if (options.find_flags && options.rsc_id) {
         options.require_dataset = TRUE;
     }
@@ -2128,10 +2122,6 @@ main(int argc, char **argv)
 
     /* Convert rc into an exit code. */
     if (rc != pcmk_rc_ok && rc != pcmk_rc_no_output) {
-        if (rc == pcmk_rc_no_quorum) {
-            g_prefix_error(&error, "To ignore quorum, use the force option.\n");
-        }
-
         exit_code = pcmk_rc2exitc(rc);
     }
 

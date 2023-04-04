@@ -19,7 +19,92 @@
 
 #include <pacemaker-controld.h>
 
-static int cib_retries = 0;
+// Call ID of the most recent in-progress CIB resource update (or 0 if none)
+static int pending_rsc_update = 0;
+
+// Call IDs of requested CIB replacements that won't trigger a new election
+// (used as a set of gint values)
+static GHashTable *cib_replacements = NULL;
+
+/*!
+ * \internal
+ * \brief Store the call ID of a CIB replacement that the controller requested
+ *
+ * The \p do_cib_replaced() callback function will avoid triggering a new
+ * election when we're notified of one of these expected replacements.
+ *
+ * \param[in] call_id  CIB call ID (or 0 for a synchronous call)
+ *
+ * \note This function should be called after making any asynchronous CIB
+ *       request (or before making any synchronous CIB request) that may replace
+ *       part of the nodes or status section. This may include CIB sync calls.
+ */
+void
+controld_record_cib_replace_call(int call_id)
+{
+    CRM_CHECK(call_id >= 0, return);
+
+    if (cib_replacements == NULL) {
+        cib_replacements = g_hash_table_new(NULL, NULL);
+    }
+
+    /* If the call ID is already present in the table, then it's old. We may not
+     * be removing them properly, and we could improperly ignore replacement
+     * notifications if cib_t:call_id wraps around.
+     */
+    CRM_LOG_ASSERT(g_hash_table_add(cib_replacements,
+                                    GINT_TO_POINTER((gint) call_id)));
+}
+
+/*!
+ * \internal
+ * \brief Remove the call ID of a CIB replacement from the replacements table
+ *
+ * \param[in] call_id  CIB call ID (or 0 for a synchronous call)
+ *
+ * \return \p true if \p call_id was found in the table, or \p false otherwise
+ *
+ * \note CIB notifications run before CIB callbacks. If this function is called
+ *       from within a callback, \p do_cib_replaced() will have removed
+ *       \p call_id from the table first if relevant changes triggered a
+ *       notification.
+ */
+bool
+controld_forget_cib_replace_call(int call_id)
+{
+    CRM_CHECK(call_id >= 0, return false);
+
+    if (cib_replacements == NULL) {
+        return false;
+    }
+    return g_hash_table_remove(cib_replacements,
+                               GINT_TO_POINTER((gint) call_id));
+}
+
+/*!
+ * \internal
+ * \brief Empty the hash table containing call IDs of CIB replacement requests
+ */
+void
+controld_forget_all_cib_replace_calls(void)
+{
+    if (cib_replacements != NULL) {
+        g_hash_table_remove_all(cib_replacements);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Free the hash table containing call IDs of CIB replacement requests
+ */
+void
+controld_destroy_cib_replacements_table(void)
+{
+    if (cib_replacements != NULL) {
+        g_hash_table_destroy(cib_replacements);
+        cib_replacements = NULL;
+    }
+}
 
 /*!
  * \internal
@@ -57,18 +142,22 @@ do_cib_updated(const char *event, xmlNode * msg)
 static void
 do_cib_replaced(const char *event, xmlNode * msg)
 {
+    int call_id = 0;
+    const char *client_id = crm_element_value(msg, F_CIB_CLIENTID);
     uint32_t change_section = cib_change_section_nodes
                               |cib_change_section_status;
     long long value = 0;
 
     crm_debug("Updating the CIB after a replace: DC=%s", pcmk__btoa(AM_I_DC));
-    if (AM_I_DC == FALSE) {
+    if (!AM_I_DC) {
         return;
+    }
 
-    } else if ((controld_globals.fsa_state == S_FINALIZE_JOIN)
-               && pcmk_is_set(controld_globals.fsa_input_register,
-                              R_CIB_ASKED)) {
-        /* no need to restart the join - we asked for this replace op */
+    if ((crm_element_value_int(msg, F_CIB_CALLID, &call_id) == 0)
+        && pcmk__str_eq(client_id, controld_globals.cib_client_id,
+                        pcmk__str_none)
+        && controld_forget_cib_replace_call(call_id)) {
+        // We requested this replace op. No need to restart the join.
         return;
     }
 
@@ -123,6 +212,8 @@ do_cib_control(long long action,
                enum crmd_fsa_state cur_state,
                enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
+    static int cib_retries = 0;
+
     cib_t *cib_conn = controld_globals.cib_conn;
 
     void (*dnotify_fn) (gpointer user_data) = handle_cib_disconnect;
@@ -135,10 +226,10 @@ do_cib_control(long long action,
 
     if (pcmk_is_set(action, A_CIB_STOP)) {
         if ((cib_conn->state != cib_disconnected)
-            && (controld_globals.resource_update != 0)) {
+            && (pending_rsc_update != 0)) {
 
             crm_info("Waiting for resource update %d to complete",
-                     controld_globals.resource_update);
+                     pending_rsc_update);
             crmd_fsa_stall(FALSE);
             return;
         }
@@ -185,6 +276,8 @@ do_cib_control(long long action,
     } else {
         controld_set_fsa_input_flags(R_CIB_CONNECTED);
         cib_retries = 0;
+        cib_conn->cmds->client_id(cib_conn, &controld_globals.cib_client_id,
+                                  NULL);
     }
 
     if (!pcmk_is_set(controld_globals.fsa_input_register, R_CIB_CONNECTED)) {
@@ -252,7 +345,7 @@ cib_op_timeout(void)
 int
 crmd_cib_smart_opt(void)
 {
-    int call_opt = cib_quorum_override;
+    int call_opt = cib_none;
 
     if ((controld_globals.fsa_state == S_ELECTION)
         || (controld_globals.fsa_state == S_PENDING)) {
@@ -285,11 +378,14 @@ cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
 // Node's lrm section (name 1x)
 #define XPATH_NODE_LRM          XPATH_NODE_STATE "/" XML_CIB_TAG_LRM
 
-// Node's lrm_rsc_op entries and lrm_resource entries without lock (name 2x)
+/* Node's lrm_rsc_op entries and lrm_resource entries without unexpired lock
+ * (name 2x, (seconds_since_epoch - XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT) 1x)
+ */
 #define XPATH_NODE_LRM_UNLOCKED XPATH_NODE_STATE "//" XML_LRM_TAG_RSC_OP    \
                                 "|" XPATH_NODE_STATE                        \
                                 "//" XML_LRM_TAG_RESOURCE                   \
-                                "[not(@" XML_CONFIG_ATTR_SHUTDOWN_LOCK ")]"
+                                "[not(@" XML_CONFIG_ATTR_SHUTDOWN_LOCK ") " \
+                                "or " XML_CONFIG_ATTR_SHUTDOWN_LOCK "<%lld]"
 
 // Node's transient_attributes section (name 1x)
 #define XPATH_NODE_ATTRS        XPATH_NODE_STATE "/" XML_TAG_TRANSIENT_NODEATTRS
@@ -297,7 +393,10 @@ cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
 // Everything under node_state (name 1x)
 #define XPATH_NODE_ALL          XPATH_NODE_STATE "/*"
 
-// Unlocked history + transient attributes (name 3x)
+/* Unlocked history + transient attributes
+ * (name 2x, (seconds_since_epoch - XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT) 1x,
+ * name 1x)
+ */
 #define XPATH_NODE_ALL_UNLOCKED XPATH_NODE_LRM_UNLOCKED "|" XPATH_NODE_ATTRS
 
 /*!
@@ -317,6 +416,10 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
     char *xpath = NULL;
     char *desc = NULL;
 
+    // Shutdown locks that started before this time are expired
+    long long expire = (long long) time(NULL)
+                       - controld_globals.shutdown_lock_limit;
+
     CRM_CHECK(uname != NULL, return);
     switch (section) {
         case controld_section_lrm:
@@ -324,7 +427,8 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
             desc = crm_strdup_printf("resource history for node %s", uname);
             break;
         case controld_section_lrm_unlocked:
-            xpath = crm_strdup_printf(XPATH_NODE_LRM_UNLOCKED, uname, uname);
+            xpath = crm_strdup_printf(XPATH_NODE_LRM_UNLOCKED,
+                                      uname, uname, expire);
             desc = crm_strdup_printf("resource history (other than shutdown "
                                      "locks) for node %s", uname);
             break;
@@ -338,7 +442,7 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
             break;
         case controld_section_all_unlocked:
             xpath = crm_strdup_printf(XPATH_NODE_ALL_UNLOCKED,
-                                      uname, uname, uname);
+                                      uname, uname, expire, uname);
             desc = crm_strdup_printf("all state (other than shutdown locks) "
                                      "for node %s", uname);
             break;
@@ -351,7 +455,7 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
         int call_id;
 
         cib__set_call_options(options, "node state deletion",
-                              cib_quorum_override|cib_xpath|cib_multiple);
+                              cib_xpath|cib_multiple);
         call_id = cib_conn->cmds->remove(cib_conn, xpath, NULL, options);
         crm_info("Deleting %s (via CIB call %d) " CRM_XS " xpath=%s",
                  desc, call_id, xpath);
@@ -743,8 +847,8 @@ cib_rsc_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *use
             crm_warn("Resource update %d failed: (rc=%d) %s", call_id, rc, pcmk_strerror(rc));
     }
 
-    if (call_id == controld_globals.resource_update) { // Most recent CIB call
-        controld_globals.resource_update = 0;
+    if (call_id == pending_rsc_update) {
+        pending_rsc_update = 0;
         controld_trigger_fsa();
     }
 }
@@ -778,6 +882,9 @@ should_preserve_lock(lrmd_event_data_t *op)
  * \param[in]     callback  If not NULL, set this as the operation callback
  *
  * \return Standard Pacemaker return code
+ *
+ * \note If \p callback is \p cib_rsc_callback(), the CIB update's call ID is
+ *       stored in \p pending_rsc_update on success.
  */
 int
 controld_update_cib(const char *section, xmlNode *data, int options,
@@ -809,7 +916,7 @@ controld_update_cib(const char *section, xmlNode *data, int options,
              * didn't seem worth adding an output argument for cib_rc for just
              * one use case.
              */
-            controld_globals.resource_update = cib_rc;
+            pending_rsc_update = cib_rc;
         }
         fsa_register_cib_callback(cib_rc, NULL, callback);
     }
@@ -827,7 +934,7 @@ controld_update_cib(const char *section, xmlNode *data, int options,
  * \param[in]     lock_time  If nonzero, when resource was locked to node
  *
  * \note On success, the CIB update's call ID will be stored in
- *       controld_globals.resource_update.
+ *       pending_rsc_update.
  */
 void
 controld_update_resource_history(const char *node_name,
@@ -939,7 +1046,7 @@ controld_delete_action_history(const lrmd_event_data_t *op)
 
     controld_globals.cib_conn->cmds->remove(controld_globals.cib_conn,
                                             XML_CIB_TAG_STATUS, xml_top,
-                                            cib_quorum_override);
+                                            cib_none);
 
     crm_log_xml_trace(xml_top, "op:cancel");
     free_xml(xml_top);
@@ -998,8 +1105,7 @@ controld_cib_delete_last_failure(const char *rsc_id, const char *node,
     free(last_failure_key);
 
     controld_globals.cib_conn->cmds->remove(controld_globals.cib_conn, xpath,
-                                            NULL,
-                                            cib_quorum_override|cib_xpath);
+                                            NULL, cib_xpath);
     free(xpath);
 }
 
@@ -1027,7 +1133,6 @@ controld_delete_action_history_by_key(const char *rsc_id, const char *node,
         xpath = crm_strdup_printf(XPATH_HISTORY_ID, node, rsc_id, key);
     }
     controld_globals.cib_conn->cmds->remove(controld_globals.cib_conn, xpath,
-                                            NULL,
-                                            cib_quorum_override|cib_xpath);
+                                            NULL, cib_xpath);
     free(xpath);
 }

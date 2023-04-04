@@ -465,18 +465,17 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
 }
 
 xmlNode *
-cib_create_op(int call_id, const char *token, const char *op, const char *host, const char *section,
-              xmlNode * data, int call_options, const char *user_name)
+cib_create_op(int call_id, const char *op, const char *host,
+              const char *section, xmlNode *data, int call_options,
+              const char *user_name)
 {
     xmlNode *op_msg = create_xml_node(NULL, "cib_command");
 
     CRM_CHECK(op_msg != NULL, return NULL);
-    CRM_CHECK(token != NULL, return NULL);
 
     crm_xml_add(op_msg, F_XML_TAGNAME, "cib_command");
 
     crm_xml_add(op_msg, F_TYPE, T_CIB);
-    crm_xml_add(op_msg, F_CIB_CALLBACK_TOKEN, token);
     crm_xml_add(op_msg, F_CIB_OPERATION, op);
     crm_xml_add(op_msg, F_CIB_HOST, host);
     crm_xml_add(op_msg, F_CIB_SECTION, section);

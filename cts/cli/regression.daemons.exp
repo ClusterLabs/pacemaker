@@ -117,6 +117,11 @@
       <shortdesc lang="en">Whether to lock resources to a cleanly shut down node</shortdesc>
       <content type="boolean" default=""/>
     </parameter>
+    <parameter name="shutdown-lock-limit">
+      <longdesc lang="en">If shutdown-lock is true and this is set to a nonzero time duration, shutdown locks will expire after this much time has passed since the shutdown was initiated, even if the node has not rejoined.</longdesc>
+      <shortdesc lang="en">Do not lock resources to a cleanly shut down node longer than this</shortdesc>
+      <content type="time" default=""/>
+    </parameter>
   </parameters>
 </resource-agent>
 =#=#=#= End test: Get controller metadata - OK (0) =#=#=#=

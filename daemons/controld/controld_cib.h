@@ -10,20 +10,23 @@
 #ifndef PCMK__CONTROLD_CIB__H
 #define PCMK__CONTROLD_CIB__H
 
+#include <crm_internal.h>
+
+#include <glib.h>
+
 #include <crm/crm.h>
 #include <crm/common/xml.h>
 #include <crm/cib/internal.h>   // PCMK__CIB_REQUEST_MODIFY
-#include <controld_globals.h>   // controld_globals.cib_conn
+#include "controld_globals.h"   // controld_globals.cib_conn
 
 static inline void
 fsa_cib_anon_update(const char *section, xmlNode *data) {
     if (controld_globals.cib_conn == NULL) {
         crm_err("No CIB connection available");
     } else {
-        const int opts = cib_scope_local|cib_quorum_override|cib_can_create;
-
         controld_globals.cib_conn->cmds->modify(controld_globals.cib_conn,
-                                                section, data, opts);
+                                                section, data,
+                                                cib_scope_local|cib_can_create);
     }
 }
 
@@ -32,15 +35,18 @@ fsa_cib_anon_update_discard_reply(const char *section, xmlNode *data) {
     if (controld_globals.cib_conn == NULL) {
         crm_err("No CIB connection available");
     } else {
-        const int opts = cib_scope_local
-                         |cib_quorum_override
-                         |cib_can_create
-                         |cib_discard_reply;
-
         controld_globals.cib_conn->cmds->modify(controld_globals.cib_conn,
-                                                section, data, opts);
+                                                section, data,
+                                                cib_scope_local
+                                                |cib_can_create
+                                                |cib_discard_reply);
     }
 }
+
+void controld_record_cib_replace_call(int call_id);
+bool controld_forget_cib_replace_call(int call_id);
+void controld_forget_all_cib_replace_calls(void);
+void controld_destroy_cib_replacements_table(void);
 
 int controld_update_cib(const char *section, xmlNode *data, int options,
                         void (*callback)(xmlNode *, int, int, xmlNode *,
