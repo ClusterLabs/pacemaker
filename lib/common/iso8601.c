@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2022 the Pacemaker project contributors
+ * Copyright 2005-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -310,6 +310,39 @@ crm_time_get_timezone(const crm_time_t *dt, uint32_t *h, uint32_t *m)
 
     crm_time_get_sec(dt->seconds, h, m, &s);
     return TRUE;
+}
+
+/*!
+ * \internal
+ * \brief Get a date/time object's timezone as offset relative to UTC
+ *
+ * \param[in]  dt       Date/time object whose timezone to get
+ * \param[out] hours    Where to store hours offset from UTC
+ * \param[out] minutes  Where to store remaining minutes offset from UTC
+ *
+ * \note If the offset is negative, both \p hours and \p minutes will be set to
+ *       nonpositive values. Make note of this if formatting text. Typically, a
+ *       negative sign should precede only the hours field.
+ */
+void
+pcmk__time_get_timezone(const crm_time_t *dt, int *hours, int *minutes)
+{
+    // Be paranoid and don't cast (int *) to (uint32_t *)
+    uint32_t hours_u = 0;
+    uint32_t minutes_u = 0;
+    uint32_t seconds_u = 0;
+
+    CRM_ASSERT((dt != NULL) && (hours != NULL) && (minutes != NULL));
+
+    crm_time_get_sec(dt->offset, &hours_u, &minutes_u, &seconds_u);
+
+    if (dt->offset < 0) {
+        *hours = -hours_u;
+        *minutes = -minutes_u;
+    } else {
+        *hours = hours_u;
+        *minutes = minutes_u;
+    }
 }
 
 long long

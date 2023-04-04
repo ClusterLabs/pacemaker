@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2022 the Pacemaker project contributors
+ * Copyright 2015-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,6 +17,7 @@
 
 typedef struct pcmk__time_us pcmk__time_hr_t;
 
+void pcmk__time_get_timezone(const crm_time_t *dt, int *hours, int *minutes);
 pcmk__time_hr_t *pcmk__time_hr_convert(pcmk__time_hr_t *target,
                                        const crm_time_t *dt);
 void pcmk__time_set_hr_dt(crm_time_t *target, const pcmk__time_hr_t *hr_dt);
