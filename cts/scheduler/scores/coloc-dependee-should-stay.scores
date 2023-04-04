@@ -62,7 +62,7 @@ pcmk__primitive_assign: FencingFail allocation score on rhel7-5: 0
 pcmk__primitive_assign: dummy1a allocation score on rhel7-1: 0
 pcmk__primitive_assign: dummy1a allocation score on rhel7-2: 0
 pcmk__primitive_assign: dummy1a allocation score on rhel7-3: 4000
-pcmk__primitive_assign: dummy1a allocation score on rhel7-4: 3002
+pcmk__primitive_assign: dummy1a allocation score on rhel7-4: 8
 pcmk__primitive_assign: dummy1a allocation score on rhel7-5: 0
 pcmk__primitive_assign: dummy1b allocation score on rhel7-1: -INFINITY
 pcmk__primitive_assign: dummy1b allocation score on rhel7-2: -INFINITY
