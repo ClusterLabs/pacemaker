@@ -27,6 +27,7 @@ static resource_alloc_functions_t allocation_methods[] = {
         pcmk__colocated_resources,
         pcmk__with_primitive_colocations,
         pcmk__primitive_with_colocations,
+        pcmk__add_colocated_node_scores,
         pcmk__apply_location,
         pcmk__primitive_action_flags,
         pcmk__update_ordered_actions,
@@ -45,6 +46,7 @@ static resource_alloc_functions_t allocation_methods[] = {
         pcmk__group_colocated_resources,
         pcmk__with_group_colocations,
         pcmk__group_with_colocations,
+        pcmk__add_colocated_node_scores,
         pcmk__group_apply_location,
         pcmk__group_action_flags,
         pcmk__group_update_ordered_actions,
@@ -63,6 +65,7 @@ static resource_alloc_functions_t allocation_methods[] = {
         pcmk__colocated_resources,
         pcmk__with_clone_colocations,
         pcmk__clone_with_colocations,
+        pcmk__add_colocated_node_scores,
         clone_rsc_location,
         clone_action_flags,
         pcmk__instance_update_ordered_actions,
@@ -81,6 +84,7 @@ static resource_alloc_functions_t allocation_methods[] = {
         pcmk__colocated_resources,
         pcmk__with_bundle_colocations,
         pcmk__bundle_with_colocations,
+        pcmk__add_colocated_node_scores,
         pcmk__bundle_rsc_location,
         pcmk__bundle_action_flags,
         pcmk__instance_update_ordered_actions,
@@ -634,12 +638,12 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
     }
 
     // Calculate and log node weights
-    pcmk__add_colocated_node_scores(convert_const_pointer(resource1),
-                                    resource1->id, &r1_nodes, NULL, 1,
-                                    pcmk__coloc_select_this_with);
-    pcmk__add_colocated_node_scores(convert_const_pointer(resource2),
-                                    resource2->id, &r2_nodes, NULL, 1,
-                                    pcmk__coloc_select_this_with);
+    resource1->cmds->add_colocated_node_scores(convert_const_pointer(resource1),
+                                               resource1->id, &r1_nodes, NULL,
+                                               1, pcmk__coloc_select_this_with);
+    resource2->cmds->add_colocated_node_scores(convert_const_pointer(resource2),
+                                               resource2->id, &r2_nodes, NULL,
+                                               1, pcmk__coloc_select_this_with);
     pe__show_node_weights(true, NULL, resource1->id, r1_nodes,
                           resource1->cluster);
     pe__show_node_weights(true, NULL, resource2->id, r2_nodes,

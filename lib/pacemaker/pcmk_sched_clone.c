@@ -28,12 +28,15 @@ add_dependent_scores(gpointer data, gpointer user_data)
     pe_resource_t *clone = (pe_resource_t *) user_data;
 
     if (pcmk__colocation_has_influence(colocation, NULL)) {
-        pcmk__add_colocated_node_scores(colocation->dependent, clone->id,
-                                        &clone->allowed_nodes,
-                                        colocation->node_attribute,
-                                        colocation->score / (float) INFINITY,
-                                        pcmk__coloc_select_active
-                                        |pcmk__coloc_select_nonnegative);
+        pe_resource_t *rsc = colocation->dependent;
+        const float factor = colocation->score / (float) INFINITY;
+
+        rsc->cmds->add_colocated_node_scores(rsc, clone->id,
+                                             &clone->allowed_nodes,
+                                             colocation->node_attribute,
+                                             factor,
+                                             pcmk__coloc_select_active
+                                             |pcmk__coloc_select_nonnegative);
     }
 }
 

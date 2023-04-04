@@ -1432,8 +1432,8 @@ init_group_colocated_nodes(const pe_resource_t *rsc, const char *log_id,
         member = pe__last_group_member(rsc);
         pe_rsc_trace(rsc, "%s: Merging scores from group %s using member %s "
                      "(at %.6f)", log_id, rsc->id, member->id, factor);
-        pcmk__add_colocated_node_scores(member, log_id, nodes, attr, factor,
-                                        flags);
+        member->cmds->add_colocated_node_scores(member, log_id, nodes, attr,
+                                                factor, flags);
     } else {
         /* The first member of the group will recursively incorporate any
          * constraints involving other members (including the group internal
@@ -1446,8 +1446,8 @@ init_group_colocated_nodes(const pe_resource_t *rsc, const char *log_id,
          *       the right approach should be.
          */
         member = rsc->children->data;
-        pcmk__add_colocated_node_scores(member, log_id, nodes, attr, factor,
-                                        flags);
+        member->cmds->add_colocated_node_scores(member, log_id, nodes, attr,
+                                                factor, flags);
         // Above handles everything, so work is left as NULL
     }
     return NULL;
@@ -1558,6 +1558,7 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
                          "Checking additional %d optional 'with %s' constraints",
                          g_list_length(colocations), rsc->id);
         }
+        flags |= pcmk__coloc_select_active;
 
         for (GList *iter = colocations; iter != NULL; iter = iter->next) {
             pe_resource_t *other = NULL;
@@ -1575,9 +1576,9 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
                          constraint->id, constraint->dependent->id,
                          constraint->primary->id);
             factor = multiplier * constraint->score / (float) INFINITY;
-            pcmk__add_colocated_node_scores(other, log_id, &work,
-                                            constraint->node_attribute, factor,
-                                            flags|pcmk__coloc_select_active);
+            other->cmds->add_colocated_node_scores(other, log_id, &work,
+                                                   constraint->node_attribute,
+                                                   factor, flags);
             pe__show_node_weights(true, NULL, log_id, work, rsc->cluster);
         }
         g_list_free(colocations);
