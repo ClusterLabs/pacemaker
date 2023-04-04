@@ -110,6 +110,7 @@ typedef struct remote_ra_data_s {
     GList *cmds;
     GList *recurring_cmds;
     uint32_t status;
+    time_t when_host_lost;
 } remote_ra_data_t;
 
 static int handle_remote_ra_start(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd, int timeout_ms);
@@ -1285,6 +1286,22 @@ remote_ra_fail(const char *node_name)
     "[@" XML_LRM_ATTR_TASK "='stonith']/" XML_GRAPH_TAG_DOWNED \
     "/" XML_CIB_TAG_NODE
 
+/* A stop action on a remote node connection resource looks like:
+ *
+ *   <pseudo_event id="86" operation="stop" operation_key="remote01_stop_0"
+ *                 on_node="rhel9-cluster-1" on_node_uuid="1">
+ *      <attributes CRM_meta_name="stop" CRM_meta_on_node="rhel9-cluster-1"
+ *                  CRM_meta_on_node_uuid="1" CRM_meta_timeout="60000"
+ *                  crm_feature_set="3.17.4" server="rhel9-cluster-3"/>
+ *   </pseudo_event>
+ *
+ * The following xpath query returns the pseudo_event node that
+ * has an attributes sub-element with an CRM_meta_on_node attribute.
+ */
+#define XPATH_PSEUDO_STOP "/" XML_GRAPH_TAG_PSEUDO_EVENT \
+    "[@" XML_LRM_ATTR_TASK "='stop'][" XML_TAG_ATTRS "[@" \
+    CRM_META "_" XML_LRM_ATTR_TARGET "]]"
+
 /*!
  * \internal
  * \brief Check a pseudo-action for Pacemaker Remote node side effects
@@ -1321,6 +1338,57 @@ remote_ra_process_pseudo(xmlNode *xml)
             }
         }
     }
+    freeXpathObject(search);
+
+    /* Is this a stop pseudo-action on a remote node connection resource? */
+    search = xpath_search(xml, XPATH_PSEUDO_STOP);
+
+    if (numXpathResults(search) == 1) {
+        xmlNode *result = getXpathResult(search, 0);
+
+        if (result) {
+            const char *host = NULL;
+            const char *op_key = NULL;
+            xmlNode *attrs = NULL;
+            char *rsc_id = NULL;
+            lrm_state_t *connection_rsc = NULL;
+
+            /* Get the node that was previously hosting this remote connection
+             * resource from the pseudo-action XML
+             */
+            attrs = find_xml_node(result, XML_TAG_ATTRS, FALSE);
+            if (!attrs) {
+                goto done;
+            }
+
+            host = crm_element_value(attrs, CRM_META "_" XML_LRM_ATTR_TARGET);
+            if (!host) {
+                goto done;
+            }
+
+            /* Then get the name of the remote resource from the operation_key */
+            op_key = crm_element_value(result, XML_LRM_ATTR_TASK_KEY);
+            parse_op_key(op_key, &rsc_id, NULL, NULL);
+
+            /* Get the remote_ra_data_t associated with that resource */
+            connection_rsc = lrm_state_find(rsc_id);
+            free(rsc_id);
+
+            if (connection_rsc && connection_rsc->remote_ra_data) {
+                remote_ra_data_t *ra_data = connection_rsc->remote_ra_data;
+                crm_node_t *peer = crm_get_peer(0, host);
+
+                /* Set the timestamp on the remote data to the timestamp we got
+                 * when we first noticed the hosting peer was lost
+                 */
+                if (peer != NULL) {
+                    ra_data->when_host_lost = peer->peer_lost;
+                }
+            }
+        }
+    }
+
+done:
     freeXpathObject(search);
 }
 
