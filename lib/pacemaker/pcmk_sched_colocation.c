@@ -1420,7 +1420,6 @@ init_group_colocated_nodes(const pe_resource_t *rsc, const char *log_id,
                            GHashTable **nodes, const char *attr, float factor,
                            uint32_t flags)
 {
-    GHashTable *work = NULL;
     pe_resource_t *member = NULL;
 
     // Ignore empty groups (only possible with schema validation disabled)
@@ -1433,7 +1432,8 @@ init_group_colocated_nodes(const pe_resource_t *rsc, const char *log_id,
         member = pe__last_group_member(rsc);
         pe_rsc_trace(rsc, "%s: Merging scores from group %s using member %s "
                      "(at %.6f)", log_id, rsc->id, member->id, factor);
-        pcmk__add_colocated_node_scores(member, log_id, &work, attr, factor, flags);
+        pcmk__add_colocated_node_scores(member, log_id, nodes, attr, factor,
+                                        flags);
     } else {
         /* The first member of the group will recursively incorporate any
          * constraints involving other members (including the group internal
@@ -1450,7 +1450,7 @@ init_group_colocated_nodes(const pe_resource_t *rsc, const char *log_id,
                                         flags);
         // Above handles everything, so work is left as NULL
     }
-    return work;
+    return NULL;
 }
 
 /*!
