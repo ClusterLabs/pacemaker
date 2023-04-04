@@ -16,7 +16,7 @@
 #include <crm/pengine/common.h>
 #include <crm/pengine/rules.h>
 
-GList *pe_unpack_alerts(const xmlNode *alerts);
+GList *pe__unpack_alerts(const xmlNode *alerts);
 void pe_free_alert_list(GList *alert_list);
 
 gboolean pe__eval_attr_expr(const xmlNode *expr,
