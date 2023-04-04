@@ -716,6 +716,12 @@ void pcmk__group_with_colocations(const pe_resource_t *rsc,
                                   const pe_resource_t *orig_rsc, GList **list);
 
 G_GNUC_INTERNAL
+void pcmk__group_add_colocated_node_scores(pe_resource_t *rsc,
+                                           const char *log_id,
+                                           GHashTable **nodes, const char *attr,
+                                           float factor, uint32_t flags);
+
+G_GNUC_INTERNAL
 void pcmk__group_apply_location(pe_resource_t *rsc, pe__location_t *location);
 
 G_GNUC_INTERNAL
