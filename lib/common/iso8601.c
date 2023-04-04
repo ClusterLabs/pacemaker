@@ -303,15 +303,6 @@ crm_time_get_timeofday(const crm_time_t *dt, uint32_t *h, uint32_t *m,
     return TRUE;
 }
 
-int
-crm_time_get_timezone(const crm_time_t *dt, uint32_t *h, uint32_t *m)
-{
-    uint32_t s;
-
-    crm_time_get_sec(dt->seconds, h, m, &s);
-    return TRUE;
-}
-
 /*!
  * \internal
  * \brief Get a date/time object's timezone as offset relative to UTC
@@ -2001,3 +1992,20 @@ pcmk__readable_interval(guint interval_ms)
     }
     return str;
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/iso8601_compat.h>
+
+int
+crm_time_get_timezone(const crm_time_t *dt, uint32_t *h, uint32_t *m)
+{
+    uint32_t s;
+
+    crm_time_get_sec(dt->offset, h, m, &s);
+    return TRUE;
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API

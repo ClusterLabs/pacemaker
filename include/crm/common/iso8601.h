@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2020 the Pacemaker project contributors
+ * Copyright 2005-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -85,7 +85,6 @@ int crm_time_compare(const crm_time_t *a, const crm_time_t *b);
 
 int crm_time_get_timeofday(const crm_time_t *dt, uint32_t *h, uint32_t *m,
                            uint32_t *s);
-int crm_time_get_timezone(const crm_time_t *dt, uint32_t *h, uint32_t *m);
 int crm_time_get_gregorian(const crm_time_t *dt, uint32_t *y, uint32_t *m,
                            uint32_t *d);
 int crm_time_get_ordinal(const crm_time_t *dt, uint32_t *y, uint32_t *d);
@@ -122,6 +121,10 @@ int crm_time_days_in_month(int month, int year);
 
 bool crm_time_leapyear(int year);
 bool crm_time_check(const crm_time_t *dt);
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/common/iso8601_compat.h>
+#endif // !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 
 #ifdef __cplusplus
 }
