@@ -728,6 +728,77 @@ pcmk__group_with_colocations(const pe_resource_t *rsc,
     }
 }
 
+/*!
+ * \internal
+ * \brief Update nodes with scores of colocated resources' nodes
+ *
+ * Given a table of nodes and a resource, update the nodes' scores with the
+ * scores of the best nodes matching the attribute used for each of the
+ * resource's relevant colocations.
+ *
+ * \param[in,out] rsc      Resource to check colocations for
+ * \param[in]     log_id   Resource ID to use in logs (if NULL, use \p rsc ID)
+ * \param[in,out] nodes    Nodes to update
+ * \param[in]     attr     Colocation attribute (NULL to use default)
+ * \param[in]     factor   Incorporate scores multiplied by this factor
+ * \param[in]     flags    Bitmask of enum pcmk__coloc_select values
+ *
+ * \note The caller remains responsible for freeing \p *nodes.
+ */
+void
+pcmk__group_add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
+                                      GHashTable **nodes, const char *attr,
+                                      float factor, uint32_t flags)
+{
+    pe_resource_t *member = NULL;
+
+    CRM_CHECK((rsc != NULL) && (nodes != NULL), return);
+
+    if (log_id == NULL) {
+        log_id = rsc->id;
+    }
+
+    // Avoid infinite recursion
+    if (pcmk_is_set(rsc->flags, pe_rsc_merging)) {
+        pe_rsc_info(rsc, "%s: Breaking dependency loop at %s",
+                    log_id, rsc->id);
+        return;
+    }
+    pe__set_resource_flags(rsc, pe_rsc_merging);
+
+    // Ignore empty groups (only possible with schema validation disabled)
+    if (rsc->children == NULL) {
+        return;
+    }
+
+    /* Refer the operation to the first or last member as appropriate.
+     *
+     * cmp_resources() is the only caller that passes a NULL nodes table,
+     * and is also the only caller using pcmk__coloc_select_this_with.
+     * For "this with" colocations, the last member will recursively incorporate
+     * all the other members' "this with" colocations via the internal group
+     * colocations (and via the first member, the group's own colocations).
+     *
+     * For "with this" colocations, the first member works similarly.
+     */
+    if (*nodes == NULL) {
+        member = pe__last_group_member(rsc);
+    } else {
+        /* @TODO The indirect colocations from the dependent group's other
+         *       members will be incorporated at full strength rather than by
+         *       factor, so the group's combined stickiness will be treated as
+         *       (factor + (#members - 1)) * stickiness. It is questionable what
+         *       the right approach should be.
+         */
+        member = rsc->children->data;
+    }
+    pe_rsc_trace(rsc, "%s: Merging scores from group %s using member %s "
+                 "(at %.6f)", log_id, rsc->id, member->id, factor);
+    member->cmds->add_colocated_node_scores(member, log_id, nodes, attr, factor,
+                                            flags);
+    pe__clear_resource_flags(rsc, pe_rsc_merging);
+}
+
 // Group implementation of resource_alloc_functions_t:add_utilization()
 void
 pcmk__group_add_utilization(const pe_resource_t *rsc,

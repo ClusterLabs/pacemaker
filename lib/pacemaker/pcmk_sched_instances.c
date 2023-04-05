@@ -183,6 +183,8 @@ apply_parent_colocations(const pe_resource_t *rsc, GHashTable **nodes)
 {
     GList *iter = NULL;
     pcmk__colocation_t *colocation = NULL;
+    pe_resource_t *other = NULL;
+    float factor = 0.0;
 
     /* Because the this_with_colocations() and with_this_colocations() methods
      * boil down to copies of rsc_cons and rsc_cons_lhs for clones and bundles,
@@ -190,20 +192,24 @@ apply_parent_colocations(const pe_resource_t *rsc, GHashTable **nodes)
      */
     for (iter = rsc->parent->rsc_cons; iter != NULL; iter = iter->next) {
         colocation = (pcmk__colocation_t *) iter->data;
-        pcmk__add_colocated_node_scores(colocation->primary, rsc->id, nodes,
-                                        colocation->node_attribute,
-                                        colocation->score / (float) INFINITY,
-                                        pcmk__coloc_select_default);
+        other = colocation->primary;
+        factor = colocation->score / (float) INFINITY,
+        other->cmds->add_colocated_node_scores(other, rsc->id, nodes,
+                                               colocation->node_attribute,
+                                               factor,
+                                               pcmk__coloc_select_default);
     }
     for (iter = rsc->parent->rsc_cons_lhs; iter != NULL; iter = iter->next) {
         colocation = (pcmk__colocation_t *) iter->data;
         if (!pcmk__colocation_has_influence(colocation, rsc)) {
             continue;
         }
-        pcmk__add_colocated_node_scores(colocation->dependent, rsc->id, nodes,
-                                        colocation->node_attribute,
-                                        colocation->score / (float) INFINITY,
-                                        pcmk__coloc_select_nonnegative);
+        other = colocation->dependent;
+        factor = colocation->score / (float) INFINITY,
+        other->cmds->add_colocated_node_scores(other, rsc->id, nodes,
+                                               colocation->node_attribute,
+                                               factor,
+                                               pcmk__coloc_select_nonnegative);
     }
 }
 

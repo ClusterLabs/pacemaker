@@ -335,9 +335,9 @@ apply_with_this(void *data, void *user_data)
     pe_rsc_trace(rsc,
                  "%s: Incorporating attenuated %s assignment scores due "
                  "to colocation %s", rsc->id, other->id, colocation->id);
-    pcmk__add_colocated_node_scores(other, rsc->id, &rsc->allowed_nodes,
-                                    colocation->node_attribute, factor,
-                                    pcmk__coloc_select_active);
+    other->cmds->add_colocated_node_scores(other, rsc->id, &rsc->allowed_nodes,
+                                           colocation->node_attribute, factor,
+                                           pcmk__coloc_select_active);
 }
 
 /*!

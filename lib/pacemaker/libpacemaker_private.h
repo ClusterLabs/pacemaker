@@ -16,7 +16,7 @@
 
 #include <crm/pengine/pe_types.h> // pe_action_t, pe_node_t, pe_working_set_t
 
-// Flags to modify the behavior of pcmk__add_colocated_node_scores()
+// Flags to modify the behavior of add_colocated_node_scores()
 enum pcmk__coloc_select {
     // With no other flags, apply all "with this" colocations
     pcmk__coloc_select_default      = 0,
@@ -171,6 +171,27 @@ struct resource_alloc_functions_s {
      */
     void (*this_with_colocations)(const pe_resource_t *rsc,
                                   const pe_resource_t *orig_rsc, GList **list);
+
+    /*!
+     * \internal
+     * \brief Update nodes with scores of colocated resources' nodes
+     *
+     * Given a table of nodes and a resource, update the nodes' scores with the
+     * scores of the best nodes matching the attribute used for each of the
+     * resource's relevant colocations.
+     *
+     * \param[in,out] rsc      Resource to check colocations for
+     * \param[in]     log_id   Resource ID to use in logs (if NULL, use \p rsc ID)
+     * \param[in,out] nodes    Nodes to update
+     * \param[in]     attr     Colocation attribute (NULL to use default)
+     * \param[in]     factor   Incorporate scores multiplied by this factor
+     * \param[in]     flags    Bitmask of enum pcmk__coloc_select values
+     *
+     * \note The caller remains responsible for freeing \p *nodes.
+     */
+    void (*add_colocated_node_scores)(pe_resource_t *rsc, const char *log_id,
+                                      GHashTable **nodes, const char *attr,
+                                      float factor, uint32_t flags);
 
     /*!
      * \internal
@@ -693,6 +714,12 @@ void pcmk__with_group_colocations(const pe_resource_t *rsc,
 G_GNUC_INTERNAL
 void pcmk__group_with_colocations(const pe_resource_t *rsc,
                                   const pe_resource_t *orig_rsc, GList **list);
+
+G_GNUC_INTERNAL
+void pcmk__group_add_colocated_node_scores(pe_resource_t *rsc,
+                                           const char *log_id,
+                                           GHashTable **nodes, const char *attr,
+                                           float factor, uint32_t flags);
 
 G_GNUC_INTERNAL
 void pcmk__group_apply_location(pe_resource_t *rsc, pe__location_t *location);

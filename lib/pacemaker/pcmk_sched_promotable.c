@@ -354,8 +354,10 @@ apply_coloc_to_dependent(gpointer data, gpointer user_data)
                  constraint->id, constraint->dependent->id,
                  constraint->primary->id,
                  pcmk_readable_score(constraint->score));
-    pcmk__add_colocated_node_scores(primary, clone->id, &clone->allowed_nodes,
-                                    constraint->node_attribute, factor, flags);
+    primary->cmds->add_colocated_node_scores(primary, clone->id,
+                                             &clone->allowed_nodes,
+                                             constraint->node_attribute, factor,
+                                             flags);
 }
 
 /*!
@@ -384,8 +386,10 @@ apply_coloc_to_primary(gpointer data, gpointer user_data)
                  constraint->id, constraint->dependent->id,
                  constraint->primary->id,
                  pcmk_readable_score(constraint->score));
-    pcmk__add_colocated_node_scores(dependent, clone->id, &clone->allowed_nodes,
-                                    constraint->node_attribute, factor, flags);
+    dependent->cmds->add_colocated_node_scores(dependent, clone->id,
+                                               &clone->allowed_nodes,
+                                               constraint->node_attribute,
+                                               factor, flags);
 }
 
 /*!
