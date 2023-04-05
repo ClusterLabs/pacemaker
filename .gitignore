@@ -312,8 +312,7 @@ pacemaker_*.info
 /doc/shared/en-US/*.xml
 /doc/shared/en-US/images/pcmk-*.png
 /doc/shared/en-US/images/Policy-Engine-*.png
-/extra/logrotate/pacemaker
-/extra/resources/*
+/extra/*/*
 /fencing
 /include/stamp-*
 /install-sh

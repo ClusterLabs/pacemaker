@@ -47,7 +47,7 @@ AM_DISTCHECK_CONFIGURE_FLAGS	= --prefix="$$dc_install_base/usr"			\
 # Only these will get built with a plain "make"
 CORE	= replace include lib daemons tools xml po python cts rpm
 
-SUBDIRS	= $(CORE) agents devel doc etc extra maint tests
+SUBDIRS	= $(CORE) agents devel doc etc maint tests
 
 AM_CPPFLAGS		= -I$(top_srcdir)/include
 
