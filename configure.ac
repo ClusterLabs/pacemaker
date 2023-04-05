@@ -2002,6 +2002,8 @@ CONFIG_FILES_EXEC([cts/cts-attrd],
 
 dnl Other files we output
 AC_CONFIG_FILES(Makefile                                            \
+                agents/Makefile                                     \
+                agents/alerts/Makefile                              \
                 cts/Makefile                                        \
                 cts/benchmark/Makefile                              \
                 cts/lab/Makefile                                    \
@@ -2035,7 +2037,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 etc/init.d/pacemaker                                \
                 etc/logrotate.d/pacemaker                           \
                 extra/Makefile                                      \
-                extra/alerts/Makefile                               \
                 extra/resources/Makefile                            \
                 include/Makefile                                    \
                 include/crm/Makefile                                \
