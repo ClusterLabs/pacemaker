@@ -100,7 +100,6 @@ configure
 /cts/benchmark/clubench
 /cts/cts-attrd
 /cts/cts-cli
-/cts/cts-coverage
 /cts/cts-exec
 /cts/cts-fencing
 /cts/cts-regression
@@ -290,6 +289,7 @@ pacemaker_*.info
 /cts/OCFIPraTest.py
 /cts/cluster_test
 /cts/cts
+/cts/cts-coverage
 /cts/cts-log-watcher
 /cts/cts-support
 /cts/fence_dummy
