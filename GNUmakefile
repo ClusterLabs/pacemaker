@@ -1,5 +1,5 @@
 #
-# Copyright 2008-2022 the Pacemaker project contributors
+# Copyright 2008-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -22,9 +22,6 @@ EXTRA_CLEAN_TARGETS	= ancillary-clean
 # variables may or may not be defined. Here, we use the current working
 # directory if a relevant variable hasn't been defined.
 abs_srcdir	?= $(shell pwd)
-
-# Define release-related variables
-include $(abs_srcdir)/mk/release.mk
 
 GLIB_CFLAGS	?= $(pkg-config --cflags glib-2.0)
 
