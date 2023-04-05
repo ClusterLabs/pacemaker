@@ -1,6 +1,6 @@
 /*
  * Copyright 2004 International Business Machines
- * Later changes copyright 2004-2022 the Pacemaker project contributors
+ * Later changes copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -37,330 +37,10 @@ typedef struct cib_native_opaque_s {
     mainloop_io_t *source;
 } cib_native_opaque_t;
 
-int cib_native_perform_op_delegate(cib_t * cib, const char *op, const char *host,
-                                   const char *section, xmlNode * data, xmlNode ** output_data,
-                                   int call_options, const char *user_name);
-
-int cib_native_free(cib_t * cib);
-int cib_native_signoff(cib_t * cib);
-int cib_native_signon(cib_t * cib, const char *name, enum cib_conn_type type);
-int cib_native_signon_raw(cib_t * cib, const char *name, enum cib_conn_type type, int *event_fd);
-
-int cib_native_set_connection_dnotify(cib_t * cib, void (*dnotify) (gpointer user_data));
-
 static int
-cib_native_register_notification(cib_t *cib, const char *callback, int enabled)
-{
-    int rc = pcmk_ok;
-    xmlNode *notify_msg = create_xml_node(NULL, "cib-callback");
-    cib_native_opaque_t *native = cib->variant_opaque;
-
-    if (cib->state != cib_disconnected) {
-        crm_xml_add(notify_msg, F_CIB_OPERATION, T_CIB_NOTIFY);
-        crm_xml_add(notify_msg, F_CIB_NOTIFY_TYPE, callback);
-        crm_xml_add_int(notify_msg, F_CIB_NOTIFY_ACTIVATE, enabled);
-        rc = crm_ipc_send(native->ipc, notify_msg, crm_ipc_client_response,
-                          1000 * cib->call_timeout, NULL);
-        if (rc <= 0) {
-            crm_trace("Notification not registered: %d", rc);
-            rc = -ECOMM;
-        }
-    }
-
-    free_xml(notify_msg);
-    return rc;
-}
-
-/*!
- * \internal
- * \brief Get the given CIB connection's unique client identifier
- *
- * These can be used to check whether this client requested the action that
- * triggered a CIB notification.
- *
- * \param[in]  cib       CIB connection
- * \param[out] async_id  If not \p NULL, where to store asynchronous client ID
- * \param[out] sync_id   If not \p NULL, where to store synchronous client ID
- *
- * \return Legacy Pacemaker return code (specifically, \p pcmk_ok)
- *
- * \note This is the \p cib_native variant implementation of
- *       \p cib_api_operations_t:client_id().
- * \note For \p cib_native objects, \p async_id and \p sync_id are the same.
- * \note The client ID is assigned during CIB sign-on.
- */
-static int
-cib_native_client_id(const cib_t *cib, const char **async_id,
-                     const char **sync_id)
-{
-    cib_native_opaque_t *native = cib->variant_opaque;
-
-    if (async_id != NULL) {
-        *async_id = native->token;
-    }
-    if (sync_id != NULL) {
-        *sync_id = native->token;
-    }
-    return pcmk_ok;
-}
-
-cib_t *
-cib_native_new(void)
-{
-    cib_native_opaque_t *native = NULL;
-    cib_t *cib = cib_new_variant();
-
-    if (cib == NULL) {
-        return NULL;
-    }
-
-    native = calloc(1, sizeof(cib_native_opaque_t));
-
-    if (native == NULL) {
-        free(cib);
-        return NULL;
-    }
-
-    cib->variant = cib_native;
-    cib->variant_opaque = native;
-
-    native->ipc = NULL;
-    native->source = NULL;
-    native->dnotify_fn = NULL;
-
-    /* assign variant specific ops */
-    cib->delegate_fn = cib_native_perform_op_delegate;
-    cib->cmds->signon = cib_native_signon;
-    cib->cmds->signon_raw = cib_native_signon_raw;
-    cib->cmds->signoff = cib_native_signoff;
-    cib->cmds->free = cib_native_free;
-
-    cib->cmds->register_notification = cib_native_register_notification;
-    cib->cmds->set_connection_dnotify = cib_native_set_connection_dnotify;
-
-    cib->cmds->client_id = cib_native_client_id;
-
-    return cib;
-}
-
-int
-cib_native_signon(cib_t * cib, const char *name, enum cib_conn_type type)
-{
-    return cib_native_signon_raw(cib, name, type, NULL);
-}
-
-static int
-cib_native_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
-{
-    const char *type = NULL;
-    xmlNode *msg = NULL;
-
-    cib_t *cib = userdata;
-
-    crm_trace("dispatching %p", userdata);
-
-    if (cib == NULL) {
-        crm_err("No CIB!");
-        return 0;
-    }
-
-    msg = string2xml(buffer);
-
-    if (msg == NULL) {
-        crm_warn("Received a NULL message from the CIB manager");
-        return 0;
-    }
-
-    /* do callbacks */
-    type = crm_element_value(msg, F_TYPE);
-    crm_trace("Activating %s callbacks...", type);
-    crm_log_xml_explicit(msg, "cib-reply");
-
-    if (pcmk__str_eq(type, T_CIB, pcmk__str_casei)) {
-        cib_native_callback(cib, msg, 0, 0);
-
-    } else if (pcmk__str_eq(type, T_CIB_NOTIFY, pcmk__str_casei)) {
-        g_list_foreach(cib->notify_list, cib_native_notify, msg);
-
-    } else {
-        crm_err("Unknown message type: %s", type);
-    }
-
-    free_xml(msg);
-    return 0;
-}
-
-static void
-cib_native_destroy(void *userdata)
-{
-    cib_t *cib = userdata;
-    cib_native_opaque_t *native = cib->variant_opaque;
-
-    crm_trace("destroying %p", userdata);
-    cib->state = cib_disconnected;
-    native->source = NULL;
-    native->ipc = NULL;
-
-    if (native->dnotify_fn) {
-        native->dnotify_fn(userdata);
-    }
-}
-
-int
-cib_native_signon_raw(cib_t * cib, const char *name, enum cib_conn_type type, int *async_fd)
-{
-    int rc = pcmk_ok;
-    const char *channel = NULL;
-    cib_native_opaque_t *native = cib->variant_opaque;
-
-    struct ipc_client_callbacks cib_callbacks = {
-        .dispatch = cib_native_dispatch_internal,
-        .destroy = cib_native_destroy
-    };
-
-    cib->call_timeout = PCMK__IPC_TIMEOUT;
-
-    if (type == cib_command) {
-        cib->state = cib_connected_command;
-        channel = PCMK__SERVER_BASED_RW;
-
-    } else if (type == cib_command_nonblocking) {
-        cib->state = cib_connected_command;
-        channel = PCMK__SERVER_BASED_SHM;
-
-    } else if (type == cib_query) {
-        cib->state = cib_connected_query;
-        channel = PCMK__SERVER_BASED_RO;
-
-    } else {
-        return -ENOTCONN;
-    }
-
-    crm_trace("Connecting %s channel", channel);
-
-    if (async_fd != NULL) {
-        native->ipc = crm_ipc_new(channel, 0);
-
-        if (native->ipc && crm_ipc_connect(native->ipc)) {
-            *async_fd = crm_ipc_get_fd(native->ipc);
-
-        } else if (native->ipc) {
-            rc = -ENOTCONN;
-        }
-
-    } else {
-        native->source =
-            mainloop_add_ipc_client(channel, G_PRIORITY_HIGH, 512 * 1024 /* 512k */ , cib,
-                                    &cib_callbacks);
-        native->ipc = mainloop_get_ipc_client(native->source);
-    }
-
-    if (rc != pcmk_ok || native->ipc == NULL || !crm_ipc_connected(native->ipc)) {
-        crm_info("Could not connect to CIB manager for %s", name);
-        rc = -ENOTCONN;
-    }
-
-    if (rc == pcmk_ok) {
-        xmlNode *reply = NULL;
-        xmlNode *hello = create_xml_node(NULL, "cib_command");
-
-        crm_xml_add(hello, F_TYPE, T_CIB);
-        crm_xml_add(hello, F_CIB_OPERATION, CRM_OP_REGISTER);
-        crm_xml_add(hello, F_CIB_CLIENTNAME, name);
-        crm_xml_add_int(hello, F_CIB_CALLOPTS, cib_sync_call);
-
-        if (crm_ipc_send(native->ipc, hello, crm_ipc_client_response, -1, &reply) > 0) {
-            const char *msg_type = crm_element_value(reply, F_CIB_OPERATION);
-
-            rc = pcmk_ok;
-            crm_log_xml_trace(reply, "reg-reply");
-
-            if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
-                crm_info("Reply to CIB registration message has "
-                         "unknown type '%s'", msg_type);
-                rc = -EPROTO;
-
-            } else {
-                native->token = crm_element_value_copy(reply, F_CIB_CLIENTID);
-                if (native->token == NULL) {
-                    rc = -EPROTO;
-                }
-            }
-            free_xml(reply);
-
-        } else {
-            rc = -ECOMM;
-        }
-
-        free_xml(hello);
-    }
-
-    if (rc == pcmk_ok) {
-        crm_info("Successfully connected to CIB manager for %s", name);
-        return pcmk_ok;
-    }
-
-    crm_info("Connection to CIB manager for %s failed: %s",
-             name, pcmk_strerror(rc));
-    cib_native_signoff(cib);
-    return rc;
-}
-
-int
-cib_native_signoff(cib_t * cib)
-{
-    cib_native_opaque_t *native = cib->variant_opaque;
-
-    crm_debug("Disconnecting from the CIB manager");
-
-    cib_free_notify(cib);
-    remove_cib_op_callback(0, TRUE);
-
-    if (native->source != NULL) {
-        /* Attached to mainloop */
-        mainloop_del_ipc_client(native->source);
-        native->source = NULL;
-        native->ipc = NULL;
-
-    } else if (native->ipc) {
-        /* Not attached to mainloop */
-        crm_ipc_t *ipc = native->ipc;
-
-        native->ipc = NULL;
-        crm_ipc_close(ipc);
-        crm_ipc_destroy(ipc);
-    }
-
-    cib->state = cib_disconnected;
-    cib->type = cib_no_connection;
-
-    return pcmk_ok;
-}
-
-int
-cib_native_free(cib_t * cib)
-{
-    int rc = pcmk_ok;
-
-    if (cib->state != cib_disconnected) {
-        rc = cib_native_signoff(cib);
-    }
-
-    if (cib->state == cib_disconnected) {
-        cib_native_opaque_t *native = cib->variant_opaque;
-
-        free(native->token);
-        free(cib->variant_opaque);
-        free(cib->cmds);
-        free(cib);
-    }
-
-    return rc;
-}
-
-int
-cib_native_perform_op_delegate(cib_t * cib, const char *op, const char *host, const char *section,
-                               xmlNode * data, xmlNode ** output_data, int call_options,
+cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
+                               const char *section, xmlNode *data,
+                               xmlNode **output_data, int call_options,
                                const char *user_name)
 {
     int rc = pcmk_ok;
@@ -492,8 +172,249 @@ cib_native_perform_op_delegate(cib_t * cib, const char *op, const char *host, co
     return rc;
 }
 
-int
-cib_native_set_connection_dnotify(cib_t * cib, void (*dnotify) (gpointer user_data))
+static int
+cib_native_dispatch_internal(const char *buffer, ssize_t length,
+                             gpointer userdata)
+{
+    const char *type = NULL;
+    xmlNode *msg = NULL;
+
+    cib_t *cib = userdata;
+
+    crm_trace("dispatching %p", userdata);
+
+    if (cib == NULL) {
+        crm_err("No CIB!");
+        return 0;
+    }
+
+    msg = string2xml(buffer);
+
+    if (msg == NULL) {
+        crm_warn("Received a NULL message from the CIB manager");
+        return 0;
+    }
+
+    /* do callbacks */
+    type = crm_element_value(msg, F_TYPE);
+    crm_trace("Activating %s callbacks...", type);
+    crm_log_xml_explicit(msg, "cib-reply");
+
+    if (pcmk__str_eq(type, T_CIB, pcmk__str_casei)) {
+        cib_native_callback(cib, msg, 0, 0);
+
+    } else if (pcmk__str_eq(type, T_CIB_NOTIFY, pcmk__str_casei)) {
+        g_list_foreach(cib->notify_list, cib_native_notify, msg);
+
+    } else {
+        crm_err("Unknown message type: %s", type);
+    }
+
+    free_xml(msg);
+    return 0;
+}
+
+static void
+cib_native_destroy(void *userdata)
+{
+    cib_t *cib = userdata;
+    cib_native_opaque_t *native = cib->variant_opaque;
+
+    crm_trace("destroying %p", userdata);
+    cib->state = cib_disconnected;
+    native->source = NULL;
+    native->ipc = NULL;
+
+    if (native->dnotify_fn) {
+        native->dnotify_fn(userdata);
+    }
+}
+
+static int
+cib_native_signoff(cib_t *cib)
+{
+    cib_native_opaque_t *native = cib->variant_opaque;
+
+    crm_debug("Disconnecting from the CIB manager");
+
+    cib_free_notify(cib);
+    remove_cib_op_callback(0, TRUE);
+
+    if (native->source != NULL) {
+        /* Attached to mainloop */
+        mainloop_del_ipc_client(native->source);
+        native->source = NULL;
+        native->ipc = NULL;
+
+    } else if (native->ipc) {
+        /* Not attached to mainloop */
+        crm_ipc_t *ipc = native->ipc;
+
+        native->ipc = NULL;
+        crm_ipc_close(ipc);
+        crm_ipc_destroy(ipc);
+    }
+
+    cib->state = cib_disconnected;
+    cib->type = cib_no_connection;
+
+    return pcmk_ok;
+}
+
+static int
+cib_native_signon_raw(cib_t *cib, const char *name, enum cib_conn_type type,
+                      int *async_fd)
+{
+    int rc = pcmk_ok;
+    const char *channel = NULL;
+    cib_native_opaque_t *native = cib->variant_opaque;
+
+    struct ipc_client_callbacks cib_callbacks = {
+        .dispatch = cib_native_dispatch_internal,
+        .destroy = cib_native_destroy
+    };
+
+    cib->call_timeout = PCMK__IPC_TIMEOUT;
+
+    if (type == cib_command) {
+        cib->state = cib_connected_command;
+        channel = PCMK__SERVER_BASED_RW;
+
+    } else if (type == cib_command_nonblocking) {
+        cib->state = cib_connected_command;
+        channel = PCMK__SERVER_BASED_SHM;
+
+    } else if (type == cib_query) {
+        cib->state = cib_connected_query;
+        channel = PCMK__SERVER_BASED_RO;
+
+    } else {
+        return -ENOTCONN;
+    }
+
+    crm_trace("Connecting %s channel", channel);
+
+    if (async_fd != NULL) {
+        native->ipc = crm_ipc_new(channel, 0);
+
+        if (native->ipc && crm_ipc_connect(native->ipc)) {
+            *async_fd = crm_ipc_get_fd(native->ipc);
+
+        } else if (native->ipc) {
+            rc = -ENOTCONN;
+        }
+
+    } else {
+        native->source =
+            mainloop_add_ipc_client(channel, G_PRIORITY_HIGH, 512 * 1024 /* 512k */ , cib,
+                                    &cib_callbacks);
+        native->ipc = mainloop_get_ipc_client(native->source);
+    }
+
+    if (rc != pcmk_ok || native->ipc == NULL || !crm_ipc_connected(native->ipc)) {
+        crm_info("Could not connect to CIB manager for %s", name);
+        rc = -ENOTCONN;
+    }
+
+    if (rc == pcmk_ok) {
+        xmlNode *reply = NULL;
+        xmlNode *hello = create_xml_node(NULL, "cib_command");
+
+        crm_xml_add(hello, F_TYPE, T_CIB);
+        crm_xml_add(hello, F_CIB_OPERATION, CRM_OP_REGISTER);
+        crm_xml_add(hello, F_CIB_CLIENTNAME, name);
+        crm_xml_add_int(hello, F_CIB_CALLOPTS, cib_sync_call);
+
+        if (crm_ipc_send(native->ipc, hello, crm_ipc_client_response, -1, &reply) > 0) {
+            const char *msg_type = crm_element_value(reply, F_CIB_OPERATION);
+
+            rc = pcmk_ok;
+            crm_log_xml_trace(reply, "reg-reply");
+
+            if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
+                crm_info("Reply to CIB registration message has "
+                         "unknown type '%s'", msg_type);
+                rc = -EPROTO;
+
+            } else {
+                native->token = crm_element_value_copy(reply, F_CIB_CLIENTID);
+                if (native->token == NULL) {
+                    rc = -EPROTO;
+                }
+            }
+            free_xml(reply);
+
+        } else {
+            rc = -ECOMM;
+        }
+
+        free_xml(hello);
+    }
+
+    if (rc == pcmk_ok) {
+        crm_info("Successfully connected to CIB manager for %s", name);
+        return pcmk_ok;
+    }
+
+    crm_info("Connection to CIB manager for %s failed: %s",
+             name, pcmk_strerror(rc));
+    cib_native_signoff(cib);
+    return rc;
+}
+
+static int
+cib_native_signon(cib_t *cib, const char *name, enum cib_conn_type type)
+{
+    return cib_native_signon_raw(cib, name, type, NULL);
+}
+
+static int
+cib_native_free(cib_t *cib)
+{
+    int rc = pcmk_ok;
+
+    if (cib->state != cib_disconnected) {
+        rc = cib_native_signoff(cib);
+    }
+
+    if (cib->state == cib_disconnected) {
+        cib_native_opaque_t *native = cib->variant_opaque;
+
+        free(native->token);
+        free(cib->variant_opaque);
+        free(cib->cmds);
+        free(cib);
+    }
+
+    return rc;
+}
+
+static int
+cib_native_register_notification(cib_t *cib, const char *callback, int enabled)
+{
+    int rc = pcmk_ok;
+    xmlNode *notify_msg = create_xml_node(NULL, "cib-callback");
+    cib_native_opaque_t *native = cib->variant_opaque;
+
+    if (cib->state != cib_disconnected) {
+        crm_xml_add(notify_msg, F_CIB_OPERATION, T_CIB_NOTIFY);
+        crm_xml_add(notify_msg, F_CIB_NOTIFY_TYPE, callback);
+        crm_xml_add_int(notify_msg, F_CIB_NOTIFY_ACTIVATE, enabled);
+        rc = crm_ipc_send(native->ipc, notify_msg, crm_ipc_client_response,
+                          1000 * cib->call_timeout, NULL);
+        if (rc <= 0) {
+            crm_trace("Notification not registered: %d", rc);
+            rc = -ECOMM;
+        }
+    }
+
+    free_xml(notify_msg);
+    return rc;
+}
+
+static int
+cib_native_set_connection_dnotify(cib_t *cib,
+                                  void (*dnotify) (gpointer user_data))
 {
     cib_native_opaque_t *native = NULL;
 
@@ -506,4 +427,76 @@ cib_native_set_connection_dnotify(cib_t * cib, void (*dnotify) (gpointer user_da
     native->dnotify_fn = dnotify;
 
     return pcmk_ok;
+}
+
+/*!
+ * \internal
+ * \brief Get the given CIB connection's unique client identifier
+ *
+ * These can be used to check whether this client requested the action that
+ * triggered a CIB notification.
+ *
+ * \param[in]  cib       CIB connection
+ * \param[out] async_id  If not \p NULL, where to store asynchronous client ID
+ * \param[out] sync_id   If not \p NULL, where to store synchronous client ID
+ *
+ * \return Legacy Pacemaker return code (specifically, \p pcmk_ok)
+ *
+ * \note This is the \p cib_native variant implementation of
+ *       \p cib_api_operations_t:client_id().
+ * \note For \p cib_native objects, \p async_id and \p sync_id are the same.
+ * \note The client ID is assigned during CIB sign-on.
+ */
+static int
+cib_native_client_id(const cib_t *cib, const char **async_id,
+                     const char **sync_id)
+{
+    cib_native_opaque_t *native = cib->variant_opaque;
+
+    if (async_id != NULL) {
+        *async_id = native->token;
+    }
+    if (sync_id != NULL) {
+        *sync_id = native->token;
+    }
+    return pcmk_ok;
+}
+
+cib_t *
+cib_native_new(void)
+{
+    cib_native_opaque_t *native = NULL;
+    cib_t *cib = cib_new_variant();
+
+    if (cib == NULL) {
+        return NULL;
+    }
+
+    native = calloc(1, sizeof(cib_native_opaque_t));
+
+    if (native == NULL) {
+        free(cib);
+        return NULL;
+    }
+
+    cib->variant = cib_native;
+    cib->variant_opaque = native;
+
+    native->ipc = NULL;
+    native->source = NULL;
+    native->dnotify_fn = NULL;
+
+    /* assign variant specific ops */
+    cib->delegate_fn = cib_native_perform_op_delegate;
+    cib->cmds->signon = cib_native_signon;
+    cib->cmds->signon_raw = cib_native_signon_raw;
+    cib->cmds->signoff = cib_native_signoff;
+    cib->cmds->free = cib_native_free;
+
+    cib->cmds->register_notification = cib_native_register_notification;
+    cib->cmds->set_connection_dnotify = cib_native_set_connection_dnotify;
+
+    cib->cmds->client_id = cib_native_client_id;
+
+    return cib;
 }
