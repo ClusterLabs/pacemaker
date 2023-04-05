@@ -9,4 +9,4 @@
 
 include $(top_srcdir)/mk/common.mk
 
-SUBDIRS			= alerts
+SUBDIRS			= alerts ocf

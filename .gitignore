@@ -97,6 +97,19 @@ configure
 /po/stamp-po
 
 # configure targets
+/agents/ocf/ClusterMon
+/agents/ocf/Dummy
+/agents/ocf/HealthCPU
+/agents/ocf/HealthIOWait
+/agents/ocf/HealthSMART
+/agents/ocf/Stateful
+/agents/ocf/SysInfo
+/agents/ocf/attribute
+/agents/ocf/controld
+/agents/ocf/ifspeed
+/agents/ocf/o2cb
+/agents/ocf/ping
+/agents/ocf/remote
 /cts/benchmark/clubench
 /cts/cts-attrd
 /cts/cts-cli
@@ -126,19 +139,6 @@ configure
 /doc/Doxyfile
 /etc/init.d/pacemaker
 /etc/logrotate.d/pacemaker
-/extra/resources/ClusterMon
-/extra/resources/Dummy
-/extra/resources/HealthCPU
-/extra/resources/HealthIOWait
-/extra/resources/HealthSMART
-/extra/resources/Stateful
-/extra/resources/SysInfo
-/extra/resources/attribute
-/extra/resources/controld
-/extra/resources/ifspeed
-/extra/resources/o2cb
-/extra/resources/ping
-/extra/resources/remote
 /include/config.h
 /include/config.h.in
 /include/crm_config.h
@@ -313,6 +313,7 @@ pacemaker_*.info
 /doc/shared/en-US/images/pcmk-*.png
 /doc/shared/en-US/images/Policy-Engine-*.png
 /extra/logrotate/pacemaker
+/extra/resources/*
 /fencing
 /include/stamp-*
 /install-sh
