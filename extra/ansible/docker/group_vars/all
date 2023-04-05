@@ -1,5 +1,0 @@
-max: 4
-prefix: ansible-pcmk
-base_image: centos:centos7
-subnet: 172.17.200
-pacemaker_authkey: this_is_very_insecure
