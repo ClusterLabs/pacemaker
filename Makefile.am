@@ -44,11 +44,8 @@ AM_DISTCHECK_CONFIGURE_FLAGS	= --prefix="$$dc_install_base/usr"			\
 				  --with-ocfdir="$$dc_install_base/usr/lib/ocf"		\
 				  --with-systemdsystemunitdir="$$dc_install_base$(systemdsystemunitdir)"
 
-# Only these will get installed with a plain "make install"
-CORE_INSTALL	= replace include lib daemons tools xml po python
-
-# Only these will get built with a plain "make" or "make clean"
-CORE		= $(CORE_INSTALL) cts rpm
+# Only these will get built with a plain "make"
+CORE	= replace include lib daemons tools xml po python cts rpm
 
 SUBDIRS	= $(CORE) devel doc etc extra maint tests
 
@@ -75,13 +72,6 @@ core:
 	@for subdir in $(CORE); do \
 		echo "Building $$subdir"; \
 		$(MAKE) $(AM_MAKEFLAGS) -C $$subdir all || exit 1; \
-	done
-
-core-install:
-	@echo "Installing only core components: $(CORE_INSTALL)"
-	@for subdir in $(CORE_INSTALL); do \
-	    echo "Installing $$subdir"; \
-	    $(MAKE) $(AM_MAKEFLAGS) -C $$subdir install || exit 1; \
 	done
 
 core-clean:
