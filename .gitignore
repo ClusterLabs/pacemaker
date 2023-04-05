@@ -110,6 +110,8 @@ configure
 /agents/ocf/o2cb
 /agents/ocf/ping
 /agents/ocf/remote
+/agents/stonith/fence_legacy
+/agents/stonith/fence_watchdog
 /cts/benchmark/clubench
 /cts/cts-attrd
 /cts/cts-cli
@@ -297,6 +299,8 @@ pacemaker_*.info
 /cts/pacemaker-cts-dummyd
 /cts/pacemaker-cts-dummyd@.service
 /daemons/based/cibmon
+/daemons/fenced/fence_legacy
+/daemons/fenced/fence_watchdog
 /daemons/pacemakerd/pacemaker
 /depcomp
 /doc/*.build

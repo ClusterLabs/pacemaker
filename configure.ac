@@ -1969,6 +1969,8 @@ CONFIG_FILES_EXEC([agents/ocf/ClusterMon],
                   [agents/ocf/o2cb],
                   [agents/ocf/ping],
                   [agents/ocf/remote],
+                  [agents/stonith/fence_legacy],
+                  [agents/stonith/fence_watchdog],
                   [cts/cts-attrd],
                   [cts/cts-cli],
                   [cts/cts-exec],
@@ -1986,8 +1988,6 @@ CONFIG_FILES_EXEC([agents/ocf/ClusterMon],
                   [cts/support/cts-support],
                   [cts/support/fence_dummy],
                   [cts/support/pacemaker-cts-dummyd],
-                  [daemons/fenced/fence_legacy],
-                  [daemons/fenced/fence_watchdog],
                   [doc/abi-check],
                   [maint/bumplibs],
                   [tools/cluster-clean],
@@ -2005,6 +2005,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 agents/Makefile                                     \
                 agents/alerts/Makefile                              \
                 agents/ocf/Makefile                                 \
+                agents/stonith/Makefile                             \
                 cts/Makefile                                        \
                 cts/benchmark/Makefile                              \
                 cts/lab/Makefile                                    \

@@ -1,5 +1,5 @@
 #
-# Copyright 2023 the Pacemaker project contributors
+# Copyright 2003-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -8,5 +8,12 @@
 #
 
 include $(top_srcdir)/mk/common.mk
+include $(top_srcdir)/mk/man.mk
 
-SUBDIRS			= alerts ocf stonith
+sbin_SCRIPTS	= fence_watchdog
+
+if BUILD_LHA_SUPPORT
+sbin_SCRIPTS 	+= fence_legacy
+endif
+
+CLEANFILES = $(man7_MANS) $(man8_MANS)
