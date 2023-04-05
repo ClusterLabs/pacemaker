@@ -1,10 +1,11 @@
 """ Log searching classes for Pacemaker's Cluster Test Suite (CTS)
 """
 
-__all__ = ["LogWatcher"]
+__all__ = ["LogKind", "LogWatcher"]
 __copyright__ = "Copyright 2014-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
+from enum import Enum, unique
 import re
 import time
 import threading
@@ -14,6 +15,25 @@ from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.remote import RemoteFactory
 
 LOG_WATCHER_BIN = BuildOptions.DAEMON_DIR + "/cts-log-watcher"
+
+@unique
+class LogKind(Enum):
+    """ The various kinds of log files that can be watched """
+
+    ANY         = 0
+    FILE        = 1
+    REMOTE_FILE = 2
+    JOURNAL     = 3
+
+    def __str__(self):
+        if self.value == 0:
+            return "any"
+        if self.value == 1:
+            return "combined syslog"
+        if self.value == 2:
+            return "remote"
+
+        return "journal"
 
 class SearchObj:
     def __init__(self, filename, host=None, name=None):
@@ -193,7 +213,7 @@ class LogWatcher:
           Call look() to scan the log looking for the patterns
     '''
 
-    def __init__(self, log, regexes, hosts, kind, name="Anon", timeout=10, silent=False):
+    def __init__(self, log, regexes, hosts, kind=LogKind.ANY, name="Anon", timeout=10, silent=False):
         '''This is the constructor for the LogWatcher class.  It takes a
         log name to watch, and a list of regular expressions to watch for."
         '''
@@ -218,9 +238,6 @@ class LogWatcher:
         if not self.hosts:
             raise ValueError("LogWatcher requires hosts argument")
 
-        if not self.kind:
-            raise ValueError("LogWatcher requires kind argument")
-
         if not self.filename:
             raise ValueError("LogWatcher requires log argument")
 
@@ -236,11 +253,11 @@ class LogWatcher:
         '''Mark the place to start watching the log from.
         '''
 
-        if self.kind == "remote":
+        if self.kind == LogKind.REMOTE_FILE:
             for node in self.hosts:
                 self._file_list.append(FileObj(self.filename, node, self.name))
 
-        elif self.kind == "journal":
+        elif self.kind == LogKind.JOURNAL:
             for node in self.hosts:
                 self._file_list.append(JournalObj(node, self.name))
 

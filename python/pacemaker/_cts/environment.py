@@ -13,6 +13,7 @@ import time
 
 from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.remote import RemoteFactory
+from pacemaker._cts.watcher import LogKind
 
 class Environment:
     """ A class for managing the CTS environment, consisting largely of processing
@@ -54,7 +55,7 @@ class Environment:
         self["ClobberCIB"] = False
         self["CIBfilename"] = None
         self["CIBResource"] = False
-        self["LogWatcher"] = "any"
+        self["LogWatcher"] = LogKind.ANY
         self["node-limit"] = 0
         self["scenario"] = "random"
 
@@ -596,7 +597,7 @@ class Environment:
         if args.logfile:
             self["LogAuditDisabled"] = True
             self["LogFileName"] = args.logfile
-            self["LogWatcher"] = "remote"
+            self["LogWatcher"] = LogKind.REMOTE_FILE
         else:
             # We can't set this as the default on the parser.add_argument call
             # for this option because then args.logfile will be set, which means
