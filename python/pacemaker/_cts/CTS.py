@@ -73,9 +73,9 @@ class CtsLab(object):
         if not Scenario.SetUp():
             return 1
 
-        try :
+        try:
             Scenario.run(Iterations)
-        except :
+        except:
             self.logger.log("Exception by %s" % sys.exc_info()[0])
             self.logger.traceback(traceback)
 
@@ -83,10 +83,9 @@ class CtsLab(object):
             Scenario.TearDown()
             return 1
 
-        #ClusterManager.oprofileSave(Iterations)
         Scenario.TearDown()
-
         Scenario.summarize()
+
         if Scenario.Stats["failure"] > 0:
             return Scenario.Stats["failure"]
 
@@ -101,6 +100,7 @@ class CtsLab(object):
 
         if not self.IsValidNode(node):
             raise ValueError("Invalid node [%s] in CheckNode" % node)
+
 
 class NodeStatus(object):
     def __init__(self, env):
@@ -119,12 +119,14 @@ class NodeStatus(object):
         '''Return TRUE when given node comes up, or None/FALSE if timeout'''
         timeout = Timeout
         anytimeouts = 0
+
         while timeout > 0:
             if self.IsNodeBooted(node) and self.IsSshdUp(node):
                 if anytimeouts:
-                     # Fudge to wait for the system to finish coming up
-                     time.sleep(30)
-                     LogFactory().debug("Node %s now up" % node)
+                    # Fudge to wait for the system to finish coming up
+                    time.sleep(30)
+                    LogFactory().debug("Node %s now up" % node)
+
                 return 1
 
             time.sleep(30)
@@ -142,6 +144,7 @@ class NodeStatus(object):
                 answer = input('Continue? [nY]')
             except EOFError as e:
                 answer = "n"
+
         if answer and answer == "n":
             raise ValueError("%s did not come up within %d tries" % (node, Timeout))
 
@@ -151,6 +154,7 @@ class NodeStatus(object):
         for node in nodes:
             if not self.WaitForNodeToComeUp(node, timeout):
                 return None
+
         return 1
 
 
@@ -174,11 +178,14 @@ class Process(Component):
             self.proc = str(process)
         else:
             self.proc = str(name)
+
         self.KillCmd = "killall -9 " + self.proc
 
     def kill(self, node):
         (rc, _) = self.CM.rsh(node, self.KillCmd)
+
         if rc != 0:
             self.CM.log ("ERROR: Kill %s failed on node %s" % (self.name,node))
             return None
+
         return 1
