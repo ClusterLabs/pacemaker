@@ -257,10 +257,9 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
                               const char *attr_set, const char *attr_set_type,
                               const char *attr_id, const char *attr_name,
                               const char *attr_value, gboolean recursive,
-                              cib_t *cib, int cib_options,
-                              pe_working_set_t *data_set, gboolean force)
+                              cib_t *cib, int cib_options, gboolean force)
 {
-    pcmk__output_t *out = data_set->priv;
+    pcmk__output_t *out = rsc->cluster->priv;
     int rc = pcmk_rc_ok;
     static bool need_init = true;
 
@@ -390,8 +389,9 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
 
             if(need_init) {
                 need_init = false;
-                pcmk__unpack_constraints(data_set);
-                pe__clear_resource_flags_on_all(data_set, pe_rsc_detect_loop);
+                pcmk__unpack_constraints(rsc->cluster);
+                pe__clear_resource_flags_on_all(rsc->cluster,
+                                                pe_rsc_detect_loop);
             }
 
             /* We want to set the attribute only on resources explicitly
@@ -412,7 +412,7 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
                                                   attr_set_type, NULL,
                                                   attr_name, attr_value,
                                                   recursive, cib, cib_options,
-                                                  data_set, force);
+                                                  force);
                 }
             }
         }
@@ -426,10 +426,9 @@ int
 cli_resource_delete_attribute(pe_resource_t *rsc, const char *requested_name,
                               const char *attr_set, const char *attr_set_type,
                               const char *attr_id, const char *attr_name,
-                              cib_t *cib, int cib_options,
-                              pe_working_set_t *data_set, gboolean force)
+                              cib_t *cib, int cib_options, gboolean force)
 {
-    pcmk__output_t *out = data_set->priv;
+    pcmk__output_t *out = rsc->cluster->priv;
     int rc = pcmk_rc_ok;
     GList/*<pe_resource_t*>*/ *resources = NULL;
 
@@ -1495,7 +1494,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc,
         rc = cli_resource_update_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS,
                                            NULL, XML_RSC_ATTR_TARGET_ROLE,
                                            RSC_STOPPED, FALSE, cib, cib_options,
-                                           data_set, force);
+                                           force);
     }
     if(rc != pcmk_rc_ok) {
         out->err(out, "Could not set target-role for %s: %s (%d)", rsc_id, pcmk_strerror(rc), rc);
@@ -1573,13 +1572,13 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc,
         rc = cli_resource_update_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS,
                                            NULL, XML_RSC_ATTR_TARGET_ROLE,
                                            orig_target_role, FALSE, cib,
-                                           cib_options, data_set, force);
+                                           cib_options, force);
         free(orig_target_role);
         orig_target_role = NULL;
     } else {
         rc = cli_resource_delete_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS,
                                            NULL, XML_RSC_ATTR_TARGET_ROLE, cib,
-                                           cib_options, data_set, force);
+                                           cib_options, force);
     }
 
     if(rc != pcmk_rc_ok) {
@@ -1652,12 +1651,12 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc,
     } else if (orig_target_role) {
         cli_resource_update_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS, NULL,
                                       XML_RSC_ATTR_TARGET_ROLE, orig_target_role,
-                                      FALSE, cib, cib_options, data_set, force);
+                                      FALSE, cib, cib_options, force);
         free(orig_target_role);
     } else {
-        cli_resource_delete_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS, NULL,
-                                      XML_RSC_ATTR_TARGET_ROLE, cib, cib_options,
-                                      data_set, force);
+        cli_resource_delete_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS,
+                                      NULL, XML_RSC_ATTR_TARGET_ROLE, cib,
+                                      cib_options, force);
     }
 
 done:

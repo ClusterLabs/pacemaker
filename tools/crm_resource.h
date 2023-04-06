@@ -107,13 +107,11 @@ int cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name
                                   const char *attr_set, const char *attr_set_type,
                                   const char *attr_id, const char *attr_name,
                                   const char *attr_value, gboolean recursive,
-                                  cib_t *cib, int cib_options,
-                                  pe_working_set_t *data_set, gboolean force);
+                                  cib_t *cib, int cib_options, gboolean force);
 int cli_resource_delete_attribute(pe_resource_t *rsc, const char *requested_name,
                                   const char *attr_set, const char *attr_set_type,
                                   const char *attr_id, const char *attr_name,
-                                  cib_t *cib, int cib_options,
-                                  pe_working_set_t *data_set, gboolean force);
+                                  cib_t *cib, int cib_options, gboolean force);
 
 int update_working_set_xml(pe_working_set_t *data_set, xmlNode **xml);
 int wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib);
