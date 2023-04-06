@@ -1,6 +1,7 @@
 """ Main classes for Pacemaker's Cluster Test Suite (CTS)
 """
 
+__all__ = ["CtsLab", "NodeStatus", "Process"]
 __copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
