@@ -1,5 +1,4 @@
-""" Main classes for Pacemaker's Cluster Test Suite (CTS)
-"""
+""" Main classes for Pacemaker's Cluster Test Suite (CTS) """
 
 __all__ = ["CtsLab", "NodeStatus", "Process"]
 __copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
@@ -15,47 +14,50 @@ from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.remote import RemoteFactory
 
 class CtsLab:
-    '''This class defines the Lab Environment for the Cluster Test System.
-    It defines those things which are expected to change from test
-    environment to test environment for the same cluster manager.
+    """ A class that defines the Lab Environment for the Cluster Test System.
+        It defines those things which are expected to change from test
+        environment to test environment for the same cluster manager.
 
-    It is where you define the set of nodes that are in your test lab
-    what kind of reset mechanism you use, etc.
+        This is where you define the set of nodes that are in your test lab,
+        what kind of reset mechanism you use, etc.  All this data is stored
+        as key/value pairs in an Environment instance constructed from arguments
+        passed to this class.
 
-    At this point in time, it is the intent of this class to model static
-    configuration and/or environmental data about the environment which
-    doesn't change as the tests proceed.
-
-    Well-known names (keys) are an important concept in this class.
-    The HasMinimalKeys member function knows the minimal set of
-    well-known names for the class.
-
-    The following names are standard (well-known) at this time:
-
-        nodes           An array of the nodes in the cluster
-        reset           A ResetMechanism object
-        logger          An array of objects that log strings...
-        CMclass         The type of ClusterManager we are running
-                        (This is a class object, not a class instance)
-        RandSeed        Random seed.  It is a triple of bytes. (optional)
-
-    The CTS code ignores names it doesn't know about/need.
-    The individual tests have access to this information, and it is
-    perfectly acceptable to provide hints, tweaks, fine-tuning
-    directions or other information to the tests through this mechanism.
-    '''
+        The CTS code ignores names it doesn't know about or need.  Individual
+        tests have access to this information, and it is perfectly acceptable
+        to provide hints, tweaks, fine-tuning directions, or other information
+        to the tests through this mechanism.
+    """
 
     def __init__(self, args=None):
+        """ Create a new CtsLab instance.  This class can be treated kind
+            of like a dictionary due to the presence of typical dict functions
+            like has_key, __getitem__, and __setitem__.  However, it is not a
+            dictionary so do not rely on standard dictionary behavior.
+
+            Arguments:
+
+            args -- A list of command line parameters, minus the program name.
+        """
+
         self._env = EnvFactory().getInstance(args)
         self._logger = LogFactory()
 
     def dump(self):
+        """ Print the current environment """
+
         self._env.dump()
 
     def has_key(self, key):
+        """ Does the given environment key exist? """
+
         return key in list(self._env.keys())
 
     def __getitem__(self, key):
+        """ Return the given environment key, or raise KeyError if it does
+            not exist
+        """
+
         # Throughout this file, pylint has trouble understanding that EnvFactory
         # and RemoteFactory are singleton instances that can be treated as callable
         # and subscriptable objects.  Various warnings are disabled because of this.
@@ -64,10 +66,21 @@ class CtsLab:
         return self._env[key]
 
     def __setitem__(self, key, value):
+        """ Set the given environment key to the given value, overriding any
+            previous value
+        """
+
         # pylint: disable=unsupported-assignment-operation
         self._env[key] = value
 
     def run(self, scenario, iterations):
+        """ Run the given scenario the given number of times.
+
+            Returns:
+
+            ExitStatus.OK on success, or ExitStatus.ERROR on error
+        """
+
         if not scenario:
             self._logger.log("No scenario was defined")
             return ExitStatus.ERROR
@@ -107,7 +120,17 @@ class CtsLab:
 
 
 class NodeStatus:
+    """ A class for querying the status of cluster nodes - are nodes up?  Do
+        they respond to SSH connections?
+    """
+
     def __init__(self, env):
+        """ Create a new NodeStatus instance
+
+            Arguments:
+
+            env -- An Environment instance
+        """
         self._env = env
 
     def _node_booted(self, node):
@@ -178,9 +201,24 @@ class NodeStatus:
 
 
 class Process:
+    """ A class for managing a Pacemaker daemon """
+
     # pylint: disable=invalid-name
     def __init__(self, cm, name, dc_only=False, pats=None, dc_pats=None,
                  badnews_ignore=None):
+        """ Create a new Process instance.
+
+            Arguments:
+
+            cm              -- A ClusterManager instance
+            name            -- The command being run
+            dc_only         -- Should this daemon be killed only on the DC?
+            pats            -- Regexes we expect to find in log files
+            dc_pats         -- Additional DC-specific regexes we expect to find
+                               in log files
+            badnews_ignore  -- Regexes for lines in the log that can be ignored
+        """
+
         self._cm = cm
         self.badnews_ignore = badnews_ignore
         self.dc_only = dc_only
@@ -198,6 +236,8 @@ class Process:
             self.pats = []
 
     def kill(self, node):
+        """ Kill the instance of this process running on the given node """
+
         (rc, _) = self._cm.rsh(node, "killall -9 %s" % self.name)
 
         if rc != 0:
