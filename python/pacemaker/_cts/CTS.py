@@ -89,7 +89,7 @@ class CtsLab:
         if scenario.Stats["failure"] > 0:
             return ExitStatus.ERROR
 
-        elif scenario.Stats["success"] != iterations:
+        if scenario.Stats["success"] != iterations:
             self._logger.log("No failure count but success != requested iterations")
             return ExitStatus.ERROR
 
@@ -147,7 +147,7 @@ class NodeStatus:
         else:
             try:
                 answer = input('Continue? [nY]')
-            except EOFError as e:
+            except EOFError:
                 answer = "n"
 
         if answer and answer == "n":
