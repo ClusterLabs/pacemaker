@@ -5,8 +5,8 @@ __copyright__ = "Copyright 2007-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from cts.ClusterManager import ClusterManager
-from cts.CTS     import Process
 
+from pacemaker._cts.CTS import Process
 from pacemaker._cts.patterns import PatternSelector
 
 class crm_corosync(ClusterManager):

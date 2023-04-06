@@ -23,10 +23,10 @@ import subprocess
 import tempfile
 
 from stat import *
-from cts import CTS
 from cts.CTSaudits import *
 
 from pacemaker import BuildOptions
+from pacemaker._cts.CTS import NodeStatus
 from pacemaker._cts.environment import EnvFactory
 from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.patterns import PatternSelector
@@ -530,7 +530,7 @@ class StartOnebyOne(CTSTest):
         self.name = "StartOnebyOne"
         self.stopall = SimulStopLite(cm)
         self.start = StartTest(cm)
-        self.ns = CTS.NodeStatus(cm.Env)
+        self.ns = NodeStatus(cm.Env)
 
     def __call__(self, dummy):
         '''Perform the 'StartOnebyOne' test. '''
