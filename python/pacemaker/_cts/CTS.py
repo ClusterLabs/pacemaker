@@ -12,7 +12,7 @@ from pacemaker._cts.environment import EnvFactory
 from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.remote import RemoteFactory
 
-class CtsLab(object):
+class CtsLab:
     '''This class defines the Lab Environment for the Cluster Test System.
     It defines those things which are expected to change from test
     environment to test environment for the same cluster manager.
@@ -96,7 +96,7 @@ class CtsLab(object):
         return 0
 
 
-class NodeStatus(object):
+class NodeStatus:
     def __init__(self, env):
         self.Env = env
 
@@ -152,12 +152,7 @@ class NodeStatus(object):
         return 1
 
 
-class Component(object):
-    def kill(self, node):
-        None
-
-
-class Process(Component):
+class Process:
     def __init__(self, cm, name, process=None, dc_only=0, pats=[], dc_pats=[], badnews_ignore=[], common_ignore=[], triggersreboot=0):
         self.name = str(name)
         self.dc_only = dc_only
