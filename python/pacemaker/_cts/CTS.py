@@ -101,12 +101,15 @@ class NodeStatus:
     def __init__(self, env):
         self.Env = env
 
-    def IsNodeBooted(self, node):
-        '''Return TRUE if the given node is booted (responds to pings)'''
+    def _node_booted(self, node):
+        """ Return True if the given node is booted (responds to pings) """
+
         (rc, _) = RemoteFactory().getInstance()("localhost", "ping -nq -c1 -w1 %s" % node, verbose=0)
         return rc == 0
 
-    def IsSshdUp(self, node):
+    def _sshd_up(self, node):
+        """ Return true if sshd responds on the given node """
+
         (rc, _) = RemoteFactory().getInstance()(node, "true", verbose=0)
         return rc == 0
 
@@ -116,7 +119,7 @@ class NodeStatus:
         anytimeouts = 0
 
         while timeout > 0:
-            if self.IsNodeBooted(node) and self.IsSshdUp(node):
+            if self._node_booted(node) and self._sshd_up(node):
                 if anytimeouts:
                     # Fudge to wait for the system to finish coming up
                     time.sleep(30)
