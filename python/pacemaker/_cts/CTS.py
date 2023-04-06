@@ -61,8 +61,8 @@ class CtsLab:
     def __setitem__(self, key, value):
         self._env[key] = value
 
-    def run(self, Scenario, Iterations):
-        if not Scenario:
+    def run(self, scenario, iterations):
+        if not scenario:
             self._logger.log("No scenario was defined")
             return ExitStatus.ERROR
 
@@ -70,26 +70,26 @@ class CtsLab:
         for node in self._env["nodes"]:
             self._logger.log("    * %s" % (node))
 
-        if not Scenario.SetUp():
+        if not scenario.SetUp():
             return ExitStatus.ERROR
 
         try:
-            Scenario.run(Iterations)
+            scenario.run(iterations)
         except:
             self._logger.log("Exception by %s" % sys.exc_info()[0])
             self._logger.traceback(traceback)
 
-            Scenario.summarize()
-            Scenario.TearDown()
+            scenario.summarize()
+            scenario.TearDown()
             return ExitStatus.ERROR
 
-        Scenario.TearDown()
-        Scenario.summarize()
+        scenario.TearDown()
+        scenario.summarize()
 
-        if Scenario.Stats["failure"] > 0:
+        if scenario.Stats["failure"] > 0:
             return ExitStatus.ERROR
 
-        elif Scenario.Stats["success"] != Iterations:
+        elif scenario.Stats["success"] != iterations:
             self._logger.log("No failure count but success != requested iterations")
             return ExitStatus.ERROR
 
