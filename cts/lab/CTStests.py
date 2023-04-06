@@ -2857,7 +2857,7 @@ class RemoteDriver(CTSTest):
             return
 
         self.debug("Waiting for the remote node to come back up")
-        self.CM.ns.WaitForNodeToComeUp(node, 120);
+        self.CM.ns.wait_for_node(node, 120);
 
         pats = [ ]
         watch = self.create_watch(pats, 240)

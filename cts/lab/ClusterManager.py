@@ -220,7 +220,7 @@ class ClusterManager(UserDict):
                     shot = stonith.look(60)
 
             # Now make sure the node is alive too
-            self.ns.WaitForNodeToComeUp(peer, self.Env["DeadTime"])
+            self.ns.wait_for_node(peer, self.Env["DeadTime"])
 
             # Poll until it comes up
             if self.Env["at-boot"]:
@@ -518,7 +518,7 @@ class ClusterManager(UserDict):
         return self.templates.get_patterns("BadNewsIgnore")
 
     def install_config(self, node):
-        if not self.ns.WaitForNodeToComeUp(node):
+        if not self.ns.wait_for_node(node):
             self.log("Node %s is not up." % node)
             return None
 

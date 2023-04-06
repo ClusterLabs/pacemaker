@@ -113,10 +113,18 @@ class NodeStatus:
         (rc, _) = RemoteFactory().getInstance()(node, "true", verbose=0)
         return rc == 0
 
-    def WaitForNodeToComeUp(self, node, Timeout=300):
-        '''Return TRUE when given node comes up, or None/FALSE if timeout'''
-        timeout = Timeout
-        anytimeouts = 0
+    def wait_for_node(self, node, timeout=300):
+        """ Wait for a node to become available.  Should the timeout be reached,
+            the user will be given a choice whether to continue or not.  If not,
+            ValueError will be raised.
+
+            Returns:
+
+            True when the node is available, or False if the timeout is reached.
+        """
+
+        initial_timeout = timeout
+        anytimeouts = False
 
         while timeout > 0:
             if self._node_booted(node) and self._sshd_up(node):
@@ -125,16 +133,16 @@ class NodeStatus:
                     time.sleep(30)
                     LogFactory().debug("Node %s now up" % node)
 
-                return 1
+                return True
 
             time.sleep(30)
-            if (not anytimeouts):
+            if not anytimeouts:
                 LogFactory().debug("Waiting for node %s to come up" % node)
 
-            anytimeouts = 1
-            timeout = timeout - 1
+            anytimeouts = True
+            timeout -= 1
 
-        LogFactory().log("%s did not come up within %d tries" % (node, Timeout))
+        LogFactory().log("%s did not come up within %d tries" % (node, initial_timeout))
         if self.Env["continue"]:
             answer = "Y"
         else:
@@ -144,13 +152,15 @@ class NodeStatus:
                 answer = "n"
 
         if answer and answer == "n":
-            raise ValueError("%s did not come up within %d tries" % (node, Timeout))
+            raise ValueError("%s did not come up within %d tries" % (node, initial_timeout))
+
+        return False
 
     def WaitForAllNodesToComeUp(self, nodes, timeout=300):
         '''Return TRUE when all nodes come up, or FALSE if timeout'''
 
         for node in nodes:
-            if not self.WaitForNodeToComeUp(node, timeout):
+            if not self.wait_for_node(node, timeout):
                 return None
 
         return 1
