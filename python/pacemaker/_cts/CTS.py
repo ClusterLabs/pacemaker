@@ -9,6 +9,7 @@ import sys
 import time
 import traceback
 
+from pacemaker.exitstatus import ExitStatus
 from pacemaker._cts.environment import EnvFactory
 from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.remote import RemoteFactory
@@ -63,14 +64,14 @@ class CtsLab:
     def run(self, Scenario, Iterations):
         if not Scenario:
             self._logger.log("No scenario was defined")
-            return 1
+            return ExitStatus.ERROR
 
         self._logger.log("Cluster nodes: ")
         for node in self._env["nodes"]:
             self._logger.log("    * %s" % (node))
 
         if not Scenario.SetUp():
-            return 1
+            return ExitStatus.ERROR
 
         try:
             Scenario.run(Iterations)
@@ -80,19 +81,19 @@ class CtsLab:
 
             Scenario.summarize()
             Scenario.TearDown()
-            return 1
+            return ExitStatus.ERROR
 
         Scenario.TearDown()
         Scenario.summarize()
 
         if Scenario.Stats["failure"] > 0:
-            return Scenario.Stats["failure"]
+            return ExitStatus.ERROR
 
         elif Scenario.Stats["success"] != Iterations:
             self._logger.log("No failure count but success != requested iterations")
-            return 1
+            return ExitStatus.ERROR
 
-        return 0
+        return ExitStatus.OK
 
 
 class NodeStatus:
