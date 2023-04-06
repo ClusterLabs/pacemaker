@@ -262,33 +262,33 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
     pcmk__output_t *out = rsc->cluster->priv;
     int rc = pcmk_rc_ok;
 
-    char *local_attr_id = NULL;
+    char *found_attr_id = NULL;
     char *local_attr_set = NULL;
 
     GList/*<pe_resource_t*>*/ *resources = NULL;
-    const pe_resource_t *top = pe__const_top_resource(rsc, false);
+    const char *top_id = pe__const_top_resource(rsc, false)->id;
     const char *common_attr_id = attr_id;
 
     if ((attr_id == NULL) && !force) {
-        find_resource_attr(out, cib, XML_ATTR_ID, top->id, NULL, NULL, NULL,
+        find_resource_attr(out, cib, XML_ATTR_ID, top_id, NULL, NULL, NULL,
                            attr_name, NULL);
     }
 
     if (pcmk__str_eq(attr_set_type, XML_TAG_ATTR_SETS, pcmk__str_casei)) {
         if (!force) {
-            rc = find_resource_attr(out, cib, XML_ATTR_ID, top->id,
+            rc = find_resource_attr(out, cib, XML_ATTR_ID, top_id,
                                     XML_TAG_META_SETS, attr_set, attr_id,
-                                    attr_name, &local_attr_id);
+                                    attr_name, &found_attr_id);
             if ((rc == pcmk_rc_ok) && !out->is_quiet(out)) {
                 out->err(out,
                          "WARNING: There is already a meta attribute "
                          "for '%s' called '%s' (id=%s)",
-                         top->id, attr_name, local_attr_id);
+                         top_id, attr_name, found_attr_id);
                 out->err(out,
                          "         Delete '%s' first or use the force option "
-                         "to override", local_attr_id);
+                         "to override", found_attr_id);
             }
-            free(local_attr_id);
+            free(found_attr_id);
             if (rc == pcmk_rc_ok) {
                 return ENOTUNIQ;
             }
@@ -330,7 +330,7 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
 
         xmlNode *xml_top = NULL;
         xmlNode *xml_obj = NULL;
-        local_attr_id = NULL;
+        found_attr_id = NULL;
         local_attr_set = NULL;
 
         rsc = (pe_resource_t *) iter->data;
@@ -338,13 +338,13 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
 
         lookup_id = clone_strip(rsc->id); /* Could be a cloned group! */
         rc = find_resource_attr(out, cib, XML_ATTR_ID, lookup_id, attr_set_type,
-                                attr_set, attr_id, attr_name, &local_attr_id);
+                                attr_set, attr_id, attr_name, &found_attr_id);
 
         switch (rc) {
             case pcmk_rc_ok:
                 crm_debug("Found a match for name=%s: id=%s",
-                          attr_name, local_attr_id);
-                attr_id = local_attr_id;
+                          attr_name, found_attr_id);
+                attr_id = found_attr_id;
                 break;
 
             case ENXIO:
@@ -354,9 +354,9 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
                     attr_set = local_attr_set;
                 }
                 if (attr_id == NULL) {
-                    local_attr_id = crm_strdup_printf("%s-%s",
+                    found_attr_id = crm_strdup_printf("%s-%s",
                                                       attr_set, attr_name);
-                    attr_id = local_attr_id;
+                    attr_id = found_attr_id;
                 }
 
                 xml_top = create_xml_node(NULL, crm_element_name(rsc->xml));
@@ -368,7 +368,7 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
 
             default:
                 free(lookup_id);
-                free(local_attr_id);
+                free(found_attr_id);
                 g_list_free(resources);
                 return rc;
         }
@@ -386,7 +386,7 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
         rc = pcmk_legacy2rc(rc);
         if (rc == pcmk_rc_ok) {
             out->info(out, "Set '%s' option: id=%s%s%s%s%s value=%s",
-                      lookup_id, local_attr_id,
+                      lookup_id, found_attr_id,
                       ((attr_set == NULL)? "" : " set="),
                       pcmk__s(attr_set, ""),
                       ((attr_name == NULL)? "" : " name="),
@@ -396,7 +396,7 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
         free_xml(xml_top);
 
         free(lookup_id);
-        free(local_attr_id);
+        free(found_attr_id);
         free(local_attr_set);
 
         if (recursive
@@ -477,16 +477,16 @@ cli_resource_delete_attribute(pe_resource_t *rsc, const char *requested_name,
         resources = g_list_append(resources, rsc);
     }
 
-    for (GList *gIter = resources; gIter; gIter = gIter->next) {
+    for (GList *iter = resources; iter != NULL; iter = iter->next) {
         char *lookup_id = NULL;
         xmlNode *xml_obj = NULL;
-        char *local_attr_id = NULL;
+        char *found_attr_id = NULL;
 
-        rsc = (pe_resource_t *) gIter->data;
+        rsc = (pe_resource_t *) iter->data;
 
         lookup_id = clone_strip(rsc->id);
         rc = find_resource_attr(out, cib, XML_ATTR_ID, lookup_id, attr_set_type,
-                                attr_set, attr_id, attr_name, &local_attr_id);
+                                attr_set, attr_id, attr_name, &found_attr_id);
         switch (rc) {
             case pcmk_rc_ok:
                 break;
@@ -503,7 +503,7 @@ cli_resource_delete_attribute(pe_resource_t *rsc, const char *requested_name,
         }
 
         if (attr_id == NULL) {
-            attr_id = local_attr_id;
+            attr_id = found_attr_id;
         }
 
         xml_obj = crm_create_nvpair_xml(NULL, attr_id, attr_name, NULL);
@@ -516,7 +516,7 @@ cli_resource_delete_attribute(pe_resource_t *rsc, const char *requested_name,
 
         if (rc == pcmk_rc_ok) {
             out->info(out, "Deleted '%s' option: id=%s%s%s%s%s",
-                      lookup_id, local_attr_id,
+                      lookup_id, found_attr_id,
                       ((attr_set == NULL)? "" : " set="),
                       pcmk__s(attr_set, ""),
                       ((attr_name == NULL)? "" : " name="),
@@ -525,7 +525,7 @@ cli_resource_delete_attribute(pe_resource_t *rsc, const char *requested_name,
 
         free(lookup_id);
         free_xml(xml_obj);
-        free(local_attr_id);
+        free(found_attr_id);
     }
     g_list_free(resources);
     return rc;
