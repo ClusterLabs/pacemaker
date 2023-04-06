@@ -45,31 +45,29 @@ class CtsLab:
     '''
 
     def __init__(self, args=None):
-        self.Env = EnvFactory().getInstance(args)
-        self.Scenario = None
-        self.logger = LogFactory()
-        self.rsh = RemoteFactory().getInstance()
+        self._env = EnvFactory().getInstance(args)
+        self._logger = LogFactory()
 
     def dump(self):
-        self.Env.dump()
+        self._env.dump()
 
     def has_key(self, key):
-        return key in list(self.Env.keys())
+        return key in list(self._env.keys())
 
     def __getitem__(self, key):
-        return self.Env[key]
+        return self._env[key]
 
     def __setitem__(self, key, value):
-        self.Env[key] = value
+        self._env[key] = value
 
     def run(self, Scenario, Iterations):
         if not Scenario:
-            self.logger.log("No scenario was defined")
+            self._logger.log("No scenario was defined")
             return 1
 
-        self.logger.log("Cluster nodes: ")
-        for node in self.Env["nodes"]:
-            self.logger.log("    * %s" % (node))
+        self._logger.log("Cluster nodes: ")
+        for node in self._env["nodes"]:
+            self._logger.log("    * %s" % (node))
 
         if not Scenario.SetUp():
             return 1
@@ -77,8 +75,8 @@ class CtsLab:
         try:
             Scenario.run(Iterations)
         except:
-            self.logger.log("Exception by %s" % sys.exc_info()[0])
-            self.logger.traceback(traceback)
+            self._logger.log("Exception by %s" % sys.exc_info()[0])
+            self._logger.traceback(traceback)
 
             Scenario.summarize()
             Scenario.TearDown()
@@ -91,7 +89,7 @@ class CtsLab:
             return Scenario.Stats["failure"]
 
         elif Scenario.Stats["success"] != Iterations:
-            self.logger.log("No failure count but success != requested iterations")
+            self._logger.log("No failure count but success != requested iterations")
             return 1
 
         return 0
