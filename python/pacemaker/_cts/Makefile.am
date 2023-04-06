@@ -19,4 +19,5 @@ pkgpython_PYTHON = __init__.py \
 				   patterns.py \
 				   process.py \
 				   remote.py \
-				   test.py
+				   test.py \
+				   watcher.py

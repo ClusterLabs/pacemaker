@@ -5,9 +5,9 @@ __copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import time, re, uuid
-from cts.watcher import LogWatcher
 
 from pacemaker.buildoptions import BuildOptions
+from pacemaker._cts.watcher import LogKind, LogWatcher
 
 class ClusterAudit(object):
 
@@ -41,7 +41,6 @@ class LogAudit(ClusterAudit):
 
     def __init__(self, cm):
         self.CM = cm
-        self.kinds = [ "combined syslog", "journal", "remote" ]
 
     def RestartClusterLogging(self, nodes=None):
         if not nodes:
@@ -80,16 +79,18 @@ class LogAudit(ClusterAudit):
             patterns.append("%s.*%s %s %s" % (simple, prefix, node, suffix))
 
         watch_pref = self.CM.Env["LogWatcher"]
-        if watch_pref == "any": 
-            for k in self.kinds:
-                watch[k] = LogWatcher(self.CM.Env["LogFileName"], patterns, "LogAudit", 5, silent=True, hosts=self.CM.Env["nodes"], kind=k)
-                watch[k].setwatch()
+        if watch_pref == LogKind.ANY:
+            for k in LogKind:
+                watch[k] = LogWatcher(self.CM.Env["LogFileName"], patterns, self.CM.Env["nodes"], k, "LogAudit", 5, silent=True)
+                watch[k].set_watch()
         else:
             k = watch_pref
-            watch[k] = LogWatcher(self.CM.Env["LogFileName"], patterns, "LogAudit", 5, silent=True, hosts=self.CM.Env["nodes"], kind=k)
-            watch[k].setwatch()
+            watch[k] = LogWatcher(self.CM.Env["LogFileName"], patterns, self.CM.Env["nodes"], k, "LogAudit", 5, silent=True)
+            watch[k].set_watch()
 
-        if watch_pref == "any": self.CM.log("Writing log with key: %s" % (suffix))
+        if watch_pref == LogKind.ANY:
+            self.CM.log("Writing log with key: %s" % (suffix))
+
         for node in self.CM.Env["nodes"]:
             cmd = "logger -p %s.info %s %s %s" % (self.CM.Env["SyslogFacility"], prefix, node, suffix)
 
@@ -97,13 +98,15 @@ class LogAudit(ClusterAudit):
             if rc != 0:
                 self.CM.log ("ERROR: Cannot execute remote command [%s] on %s" % (cmd, node))
 
-        for k in self.kinds:
+        for k in LogKind:
             if k in watch:
                 w = watch[k]
-                if watch_pref == "any": self.CM.log("Testing for %s logs" % (k))
-                w.lookforall(silent=True)
+                if watch_pref == LogKind.ANY:
+                    self.CM.log("Testing for %s logs" % (k))
+
+                w.look_for_all(silent=True)
                 if not w.unmatched:
-                    if watch_pref == "any": 
+                    if watch_pref == LogKind.ANY:
                         self.CM.log ("Continuing with %s-based log reader" % (w.kind))
                         self.CM.Env["LogWatcher"] = w.kind
                     return 1

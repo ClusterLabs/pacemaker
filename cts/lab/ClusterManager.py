@@ -16,13 +16,13 @@ from collections import UserDict
 from cts.CIB         import ConfigFactory
 from cts.CTS         import NodeStatus, Process
 from cts.CTStests    import AuditResource
-from cts.watcher     import LogWatcher
 
 from pacemaker.buildoptions import BuildOptions
 from pacemaker._cts.environment import EnvFactory
 from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.patterns import PatternSelector
 from pacemaker._cts.remote import RemoteFactory
+from pacemaker._cts.watcher import LogWatcher
 
 class ClusterManager(UserDict):
     '''The Cluster Manager class.
@@ -147,8 +147,8 @@ class ClusterManager(UserDict):
                 stonithPats.append(self.templates["Pat:Fencing_ok"] % peer)
                 stonithPats.append(self.templates["Pat:Fencing_start"] % peer)
 
-        stonith = LogWatcher(self.Env["LogFileName"], stonithPats, "StartupFencing", 0, hosts=self.Env["nodes"], kind=self.Env["LogWatcher"])
-        stonith.setwatch()
+        stonith = LogWatcher(self.Env["LogFileName"], stonithPats, self.Env["nodes"], self.Env["LogWatcher"], "StartupFencing", 0)
+        stonith.set_watch()
         return stonith
 
     def fencing_cleanup(self, node, stonith):
@@ -255,7 +255,7 @@ class ClusterManager(UserDict):
             patterns.append(self.templates["Pat:NonDC_started"] % node)
 
         watch = LogWatcher(
-            self.Env["LogFileName"], patterns, "StartaCM", self.Env["StartTime"]+10, hosts=self.Env["nodes"], kind=self.Env["LogWatcher"])
+            self.Env["LogFileName"], patterns, self.Env["nodes"], self.Env["LogWatcher"], "StartaCM", self.Env["StartTime"]+10)
 
         self.install_config(node)
 
@@ -265,7 +265,7 @@ class ClusterManager(UserDict):
             return 1
 
         stonith = self.prepare_fencing_watcher(node)
-        watch.setwatch()
+        watch.set_watch()
 
         (rc, _) = self.rsh(node, self.templates["StartCmd"])
         if rc != 0:
@@ -274,7 +274,7 @@ class ClusterManager(UserDict):
             return None
 
         self.ShouldBeStatus[node] = "up"
-        watch_result = watch.lookforall()
+        watch_result = watch.look_for_all()
 
         if watch.unmatched:
             for regex in watch.unmatched:
@@ -379,15 +379,15 @@ class ClusterManager(UserDict):
             watchpats.append(self.templates["Pat:They_up"] % (nodelist[0], node))
 
         #   Start all the nodes - at about the same time...
-        watch = LogWatcher(self.Env["LogFileName"], watchpats, "fast-start", self.Env["DeadTime"]+10, hosts=self.Env["nodes"], kind=self.Env["LogWatcher"])
-        watch.setwatch()
+        watch = LogWatcher(self.Env["LogFileName"], watchpats, self.Env["nodes"], self.Env["LogWatcher"], "fast-start", self.Env["DeadTime"]+10)
+        watch.set_watch()
 
         if not self.StartaCM(nodelist[0], verbose=verbose):
             return 0
         for node in nodelist:
             self.StartaCMnoBlock(node, verbose=verbose)
 
-        watch.lookforall()
+        watch.look_for_all()
         if watch.unmatched:
             for regex in watch.unmatched:
                 self.logger.log ("Warn: Startup pattern not found: %s" % (regex))
@@ -559,8 +559,8 @@ class ClusterManager(UserDict):
         watchpats.append("Current ping state: (S_IDLE|S_NOT_DC)")
         watchpats.append(self.templates["Pat:NonDC_started"] % node)
         watchpats.append(self.templates["Pat:DC_started"] % node)
-        idle_watch = LogWatcher(self.Env["LogFileName"], watchpats, "ClusterIdle", hosts=[node], kind=self.Env["LogWatcher"])
-        idle_watch.setwatch()
+        idle_watch = LogWatcher(self.Env["LogFileName"], watchpats, [node], self.Env["LogWatcher"], "ClusterIdle")
+        idle_watch.set_watch()
 
         (_, out) = self.rsh(node, self.templates["StatusCmd"]%node, verbose=1)
 
@@ -633,8 +633,8 @@ class ClusterManager(UserDict):
             self.debug("Cluster is inactive")
             return 1
 
-        idle_watch = LogWatcher(self.Env["LogFileName"], watchpats, "ClusterStable", timeout, hosts=nodes.split(), kind=self.Env["LogWatcher"])
-        idle_watch.setwatch()
+        idle_watch = LogWatcher(self.Env["LogFileName"], watchpats, nodes.split(), self.Env["LogWatcher"], "ClusterStable", timeout)
+        idle_watch.set_watch()
 
         for node in nodes.split():
             # have each node dump its current state

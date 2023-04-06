@@ -1,7 +1,7 @@
 """ Test scenario classes for Pacemaker's Cluster Test Suite (CTS)
 """
 
-__copyright__ = "Copyright 2000-2021 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import os
@@ -11,7 +11,8 @@ import time
 
 from cts.CTStests import CTSTest
 from cts.CTSaudits import ClusterAudit
-from cts.watcher  import LogWatcher
+
+from pacemaker._cts.watcher import LogWatcher
 
 class ScenarioComponent(object):
 
@@ -98,10 +99,10 @@ A partially set up scenario is torn down if it fails during setup.
 
         self.BadNews = LogWatcher(self.ClusterManager.Env["LogFileName"],
                                   self.ClusterManager.templates.get_patterns("BadNews"),
-                                  "BadNews", 0,
-                                  kind=self.ClusterManager.Env["LogWatcher"],
-                                  hosts=self.ClusterManager.Env["nodes"])
-        self.BadNews.setwatch() # Call after we've figured out what type of log watching to do in LogAudit
+                                  self.ClusterManager.Env["nodes"],
+                                  self.ClusterManager.Env["LogWatcher"],
+                                  "BadNews", 0)
+        self.BadNews.set_watch() # Call after we've figured out what type of log watching to do in LogAudit
 
         j = 0
         while j < len(self.Components):
