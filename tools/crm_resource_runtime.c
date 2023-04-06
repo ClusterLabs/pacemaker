@@ -314,11 +314,18 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
                                                  "update", force);
     }
 
-    /* If either attr_set or attr_id is specified,
-     * one clearly intends to modify a single resource.
-     * It is the last item on the resource list.*/
-    for (GList *gIter = (attr_set||attr_id)? g_list_last(resources) : resources;
-         gIter != NULL; gIter = gIter->next) {
+    /* If the user specified attr_set or attr_id, the intent is to modify a
+     * single resource, which will be the last item in the list.
+     */
+    if ((attr_set != NULL) || (attr_id != NULL)) {
+        GList *last = g_list_last(resources);
+
+        resources = g_list_remove_link(resources, last);
+        g_list_free(resources);
+        resources = last;
+    }
+
+    for (GList *iter = resources; iter != NULL; iter = iter->next) {
         char *lookup_id = NULL;
 
         xmlNode *xml_top = NULL;
@@ -326,7 +333,7 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
         local_attr_id = NULL;
         local_attr_set = NULL;
 
-        rsc = (pe_resource_t *) gIter->data;
+        rsc = (pe_resource_t *) iter->data;
         attr_id = common_attr_id;
 
         lookup_id = clone_strip(rsc->id); /* Could be a cloned group! */
