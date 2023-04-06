@@ -187,11 +187,8 @@ class Process:
         if self.pats is None:
             self.pats = []
 
-        self.KillCmd = "killall -9 " + self.name
-
     def kill(self, node):
-        (rc, _) = self._cm.rsh(node, self.KillCmd)
+        (rc, _) = self._cm.rsh(node, "killall -9 %s" % self.name)
 
         if rc != 0:
             self._cm.log ("ERROR: Kill %s failed on node %s" % (self.name, node))
-            return None
