@@ -95,12 +95,6 @@ class CtsLab(object):
 
         return 0
 
-    def __CheckNode(self, node):
-        "Raise a ValueError if the given node isn't valid"
-
-        if not self.IsValidNode(node):
-            raise ValueError("Invalid node [%s] in CheckNode" % node)
-
 
 class NodeStatus(object):
     def __init__(self, env):
