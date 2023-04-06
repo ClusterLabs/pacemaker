@@ -1401,10 +1401,10 @@ class ComponentFail(CTSTest):
 
         # select a component to kill
         chosen = self.Env.random_gen.choice(self.complist)
-        while chosen.dc_only == 1 and node_is_dc == 0:
+        while chosen.dc_only and node_is_dc == 0:
             chosen = self.Env.random_gen.choice(self.complist)
 
-        self.debug("...component %s (dc=%d,boot=%d)" % (chosen.name, node_is_dc,chosen.triggersreboot))
+        self.debug("...component %s (dc=%d)" % (chosen.name, node_is_dc))
         self.incr(chosen.name)
 
         if chosen.name != "corosync":

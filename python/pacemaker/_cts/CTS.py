@@ -166,28 +166,32 @@ class NodeStatus:
 
 
 class Process:
-    def __init__(self, cm, name, process=None, dc_only=0, pats=[], dc_pats=[], badnews_ignore=[], common_ignore=[], triggersreboot=0):
-        self.name = str(name)
-        self.dc_only = dc_only
-        self.pats = pats
-        self.dc_pats = dc_pats
-        self.CM = cm
+    def __init__(self, cm, name, dc_only=False, pats=None, dc_pats=None,
+                 badnews_ignore=None, common_ignore=None):
+        self._cm = cm
         self.badnews_ignore = badnews_ignore
-        self.badnews_ignore.extend(common_ignore)
-        self.triggersreboot = triggersreboot
+        self.dc_only = dc_only
+        self.dc_pats = dc_pats
+        self.name = name
+        self.pats = pats
 
-        if process:
-            self.proc = str(process)
-        else:
-            self.proc = str(name)
+        if self.badnews_ignore is None:
+            self.badnews_ignore = []
 
-        self.KillCmd = "killall -9 " + self.proc
+        if common_ignore:
+            self.badnews_ignore.extend(common_ignore)
+
+        if self.dc_pats is None:
+            self.dc_pats = []
+
+        if self.pats is None:
+            self.pats = []
+
+        self.KillCmd = "killall -9 " + self.name
 
     def kill(self, node):
-        (rc, _) = self.CM.rsh(node, self.KillCmd)
+        (rc, _) = self._cm.rsh(node, self.KillCmd)
 
         if rc != 0:
-            self.CM.log ("ERROR: Kill %s failed on node %s" % (self.name,node))
+            self._cm.log ("ERROR: Kill %s failed on node %s" % (self.name, node))
             return None
-
-        return 1
