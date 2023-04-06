@@ -361,7 +361,7 @@ class ClusterManager(UserDict):
 
         for node in nodelist:
             if self.ShouldBeStatus[node] == "down":
-                self.ns.WaitForAllNodesToComeUp(nodelist, 300)
+                self.ns.wait_for_all_nodes(nodelist, 300)
 
         if not quick:
             # This is used for "basic sanity checks", so only start one node ...

@@ -156,14 +156,14 @@ class NodeStatus:
 
         return False
 
-    def WaitForAllNodesToComeUp(self, nodes, timeout=300):
-        '''Return TRUE when all nodes come up, or FALSE if timeout'''
+    def wait_for_all_nodes(self, nodes, timeout=300):
+        """ Return True when all nodes come up, or False if the timeout is reached """
 
         for node in nodes:
             if not self.wait_for_node(node, timeout):
-                return None
+                return False
 
-        return 1
+        return True
 
 
 class Process:

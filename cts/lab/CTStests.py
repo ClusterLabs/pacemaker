@@ -471,7 +471,7 @@ class StonithdTest(CTSTest):
             self.CM.cluster_stable()
 
             self.debug("Waiting for fenced node to come back up")
-            self.CM.ns.WaitForAllNodesToComeUp(self.Env["nodes"], 600)
+            self.CM.ns.wait_for_all_nodes(self.Env["nodes"], 600)
 
             self.logger.log("Fencing command on %s failed to fence %s (rc=%d)" % (origin, node, rc))
 
@@ -490,7 +490,7 @@ class StonithdTest(CTSTest):
         self.CM.cluster_stable()
 
         self.debug("Waiting for fenced node to come back up")
-        self.CM.ns.WaitForAllNodesToComeUp(self.Env["nodes"], 600)
+        self.CM.ns.wait_for_all_nodes(self.Env["nodes"], 600)
 
         self.debug("Waiting for the cluster to re-stabilize with all nodes")
         is_stable = self.CM.cluster_stable(self.Env["StartTime"])
@@ -1451,7 +1451,7 @@ class ComponentFail(CTSTest):
         self.CM.cluster_stable()
 
         self.debug("Waiting for any fenced node to come back up")
-        self.CM.ns.WaitForAllNodesToComeUp(self.Env["nodes"], 600)
+        self.CM.ns.wait_for_all_nodes(self.Env["nodes"], 600)
 
         self.debug("Waiting for the cluster to re-stabilize with all nodes")
         self.CM.cluster_stable(self.Env["StartTime"])

@@ -92,7 +92,7 @@ A partially set up scenario is torn down if it fails during setup.
 
         self.ClusterManager.prepare()
         self.audit() # Also detects remote/local log config
-        self.ClusterManager.ns.WaitForAllNodesToComeUp(self.ClusterManager.Env["nodes"])
+        self.ClusterManager.ns.wait_for_all_nodes(self.ClusterManager.Env["nodes"])
 
         self.audit()
         self.ClusterManager.install_support()
