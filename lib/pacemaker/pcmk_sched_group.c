@@ -784,12 +784,6 @@ pcmk__group_add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
     if (*nodes == NULL) {
         member = pe__last_group_member(rsc);
     } else {
-        /* @TODO The indirect colocations from the dependent group's other
-         *       members will be incorporated at full strength rather than by
-         *       factor, so the group's combined stickiness will be treated as
-         *       (factor + (#members - 1)) * stickiness. It is questionable what
-         *       the right approach should be.
-         */
         member = rsc->children->data;
     }
     pe_rsc_trace(rsc, "%s: Merging scores from group %s using member %s "

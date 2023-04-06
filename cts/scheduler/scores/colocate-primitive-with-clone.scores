@@ -2,7 +2,7 @@
 pcmk__clone_assign: clnDiskd1 allocation score on srv01: 0
 pcmk__clone_assign: clnDiskd1 allocation score on srv02: 1
 pcmk__clone_assign: clnDiskd1 allocation score on srv03: 1
-pcmk__clone_assign: clnDiskd1 allocation score on srv04: 504
+pcmk__clone_assign: clnDiskd1 allocation score on srv04: 9
 pcmk__clone_assign: clnG3dummy01:0 allocation score on srv01: 0
 pcmk__clone_assign: clnG3dummy01:0 allocation score on srv02: 100
 pcmk__clone_assign: clnG3dummy01:0 allocation score on srv03: 0
@@ -38,15 +38,15 @@ pcmk__clone_assign: clnG3dummy02:3 allocation score on srv04: 0
 pcmk__clone_assign: clnG3dummy1 allocation score on srv01: 0
 pcmk__clone_assign: clnG3dummy1 allocation score on srv02: 1
 pcmk__clone_assign: clnG3dummy1 allocation score on srv03: 1
-pcmk__clone_assign: clnG3dummy1 allocation score on srv04: 504
+pcmk__clone_assign: clnG3dummy1 allocation score on srv04: 9
 pcmk__clone_assign: clnG3dummy2 allocation score on srv01: 0
 pcmk__clone_assign: clnG3dummy2 allocation score on srv02: 1
 pcmk__clone_assign: clnG3dummy2 allocation score on srv03: 1
-pcmk__clone_assign: clnG3dummy2 allocation score on srv04: 504
+pcmk__clone_assign: clnG3dummy2 allocation score on srv04: 9
 pcmk__clone_assign: clnPingd allocation score on srv01: 0
 pcmk__clone_assign: clnPingd allocation score on srv02: 1
 pcmk__clone_assign: clnPingd allocation score on srv03: 1
-pcmk__clone_assign: clnPingd allocation score on srv04: 504
+pcmk__clone_assign: clnPingd allocation score on srv04: 9
 pcmk__clone_assign: clnPrmDiskd1:0 allocation score on srv01: 0
 pcmk__clone_assign: clnPrmDiskd1:0 allocation score on srv02: 100
 pcmk__clone_assign: clnPrmDiskd1:0 allocation score on srv03: 0
