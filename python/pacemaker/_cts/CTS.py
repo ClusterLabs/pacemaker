@@ -180,7 +180,7 @@ class NodeStatus:
 class Process:
     # pylint: disable=invalid-name
     def __init__(self, cm, name, dc_only=False, pats=None, dc_pats=None,
-                 badnews_ignore=None, common_ignore=None):
+                 badnews_ignore=None):
         self._cm = cm
         self.badnews_ignore = badnews_ignore
         self.dc_only = dc_only
@@ -190,9 +190,6 @@ class Process:
 
         if self.badnews_ignore is None:
             self.badnews_ignore = []
-
-        if common_ignore:
-            self.badnews_ignore.extend(common_ignore)
 
         if self.dc_pats is None:
             self.dc_pats = []

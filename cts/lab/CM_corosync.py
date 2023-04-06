@@ -27,22 +27,22 @@ class crm_corosync(ClusterManager):
                 self.fullcomplist[c] = Process(
                     self, c, 
                     pats = self.templates.get_component(c),
-                    badnews_ignore = self.templates.get_component("%s-ignore" % c),
-                    common_ignore = self.templates.get_component("common-ignore"))
+                    badnews_ignore = self.templates.get_component("%s-ignore" % c) +
+                                     self.templates.get_component("common-ignore"))
 
             # the scheduler uses dc_pats instead of pats
             self.fullcomplist["pacemaker-schedulerd"] = Process(
                 self, "pacemaker-schedulerd", 
                 dc_pats = self.templates.get_component("pacemaker-schedulerd"),
-                badnews_ignore = self.templates.get_component("pacemaker-schedulerd-ignore"),
-                common_ignore = self.templates.get_component("common-ignore"))
+                badnews_ignore = self.templates.get_component("pacemaker-schedulerd-ignore") +
+                                 self.templates.get_component("common-ignore"))
 
             # add (or replace) extra components
             self.fullcomplist["corosync"] = Process(
                 self, "corosync", 
                 pats = self.templates.get_component("corosync"),
-                badnews_ignore = self.templates.get_component("corosync-ignore"),
-                common_ignore = self.templates.get_component("common-ignore")
+                badnews_ignore = self.templates.get_component("corosync-ignore") +
+                                 self.templates.get_component("common-ignore")
             )
 
         # Processes running under valgrind can't be shot with "killall -9 processname",
