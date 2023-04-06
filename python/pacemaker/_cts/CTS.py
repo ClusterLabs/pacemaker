@@ -56,9 +56,15 @@ class CtsLab:
         return key in list(self._env.keys())
 
     def __getitem__(self, key):
+        # Throughout this file, pylint has trouble understanding that EnvFactory
+        # and RemoteFactory are singleton instances that can be treated as callable
+        # and subscriptable objects.  Various warnings are disabled because of this.
+        # See also a comment about self._rsh in environment.py.
+        # pylint: disable=unsubscriptable-object
         return self._env[key]
 
     def __setitem__(self, key, value):
+        # pylint: disable=unsupported-assignment-operation
         self._env[key] = value
 
     def run(self, scenario, iterations):
@@ -67,12 +73,16 @@ class CtsLab:
             return ExitStatus.ERROR
 
         self._logger.log("Cluster nodes: ")
+        # pylint: disable=unsubscriptable-object
         for node in self._env["nodes"]:
             self._logger.log("    * %s" % (node))
 
         if not scenario.SetUp():
             return ExitStatus.ERROR
 
+        # We want to alert on any exceptions caused by running a scenario, so
+        # here it's okay to disable the pylint warning.
+        # pylint: disable=bare-except
         try:
             scenario.run(iterations)
         except:
@@ -103,12 +113,14 @@ class NodeStatus:
     def _node_booted(self, node):
         """ Return True if the given node is booted (responds to pings) """
 
+        # pylint: disable=not-callable
         (rc, _) = RemoteFactory().getInstance()("localhost", "ping -nq -c1 -w1 %s" % node, verbose=0)
         return rc == 0
 
     def _sshd_up(self, node):
         """ Return true if sshd responds on the given node """
 
+        # pylint: disable=not-callable
         (rc, _) = RemoteFactory().getInstance()(node, "true", verbose=0)
         return rc == 0
 
@@ -166,6 +178,7 @@ class NodeStatus:
 
 
 class Process:
+    # pylint: disable=invalid-name
     def __init__(self, cm, name, dc_only=False, pats=None, dc_pats=None,
                  badnews_ignore=None, common_ignore=None):
         self._cm = cm
