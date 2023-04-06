@@ -97,7 +97,7 @@ class CtsLab:
 
 class NodeStatus:
     def __init__(self, env):
-        self.Env = env
+        self._env = env
 
     def _node_booted(self, node):
         """ Return True if the given node is booted (responds to pings) """
@@ -141,7 +141,7 @@ class NodeStatus:
             timeout -= 1
 
         LogFactory().log("%s did not come up within %d tries" % (node, initial_timeout))
-        if self.Env["continue"]:
+        if self._env["continue"]:
             answer = "Y"
         else:
             try:
