@@ -332,7 +332,7 @@ class PrimitiveAudit(ClusterAudit):
         elif resource.orphan:
             self.debug("Resource %s is an inactive orphan" % resource.id)
 
-        elif len(self.inactive_nodes) == 0:
+        elif not self.inactive_nodes:
             self._cm.log("WARN: Resource %s not served anywhere" % resource.id)
             rc = False
 
@@ -364,7 +364,7 @@ class PrimitiveAudit(ClusterAudit):
                 self.inactive_nodes.append(node)
 
         for node in self._cm.Env["nodes"]:
-            if self.target == None and self._cm.ShouldBeStatus[node] == "up":
+            if self.target is None and self._cm.ShouldBeStatus[node] == "up":
                 self.target = node
 
         if not self.target:
@@ -442,7 +442,7 @@ class GroupAudit(PrimitiveAudit):
                     self._cm.log("Child %s of %s is active more than once: %s"
                                 % (child.id, group.id, repr(nodes)))
 
-                elif len(nodes) == 0:
+                elif not nodes:
                     # Groups are allowed to be partially active
                     # However we do need to make sure later children aren't running
                     group_location = None
@@ -513,7 +513,7 @@ class ColocationAudit(PrimitiveAudit):
             source = self.crm_location(coloc.rsc)
             target = self.crm_location(coloc.target)
 
-            if len(source) == 0:
+            if not source:
                 self.debug("Colocation audit (%s): %s not running" % (coloc.id, coloc.rsc))
             else:
                 for node in source:
@@ -631,7 +631,7 @@ class CIBAudit(ClusterAudit):
         result = True
         ccm_partitions = self._cm.find_partitions()
 
-        if len(ccm_partitions) == 0:
+        if not ccm_partitions:
             self.debug("\tNo partitions to audit")
             return result
 
@@ -652,15 +652,15 @@ class CIBAudit(ClusterAudit):
         for node in partition_hosts:
             node_xml = self.store_remote_cib(node, node0)
 
-            if node_xml == None:
+            if node_xml is None:
                 self._cm.log("Could not perform audit: No configuration from %s" % node)
                 passed = 0
 
-            elif node0 == None:
+            elif node0 is None:
                 node0 = node
                 node0_xml = node_xml
 
-            elif node0_xml == None:
+            elif node0_xml is None:
                 self._cm.log("Could not perform audit: No configuration from %s" % node0)
                 passed = 0
 
@@ -747,7 +747,7 @@ class PartitionAudit(ClusterAudit):
         result = True
         ccm_partitions = self._cm.find_partitions()
 
-        if ccm_partitions == None or len(ccm_partitions) == 0:
+        if not ccm_partitions:
             return result
 
         self._cm.cluster_stable(double_check=True)
@@ -813,7 +813,7 @@ class PartitionAudit(ClusterAudit):
                 self._cm.ShouldBeStatus[node] = "down"
                 # not in itself a reason to fail the audit (not what we're
                 #  checking for in this audit)
-            elif lowest_epoch == None or self.NodeEpoch[node] < lowest_epoch:
+            elif lowest_epoch is None or self.NodeEpoch[node] < lowest_epoch:
                 lowest_epoch = self.NodeEpoch[node]
 
         if not lowest_epoch:
@@ -837,7 +837,7 @@ class PartitionAudit(ClusterAudit):
                         % (node, self.NodeEpoch[node], lowest_epoch))
                     passed = 0
 
-        if len(dc_found) == 0:
+        if not dc_found:
             self._cm.log("DC not found on any of the %d allowed nodes: %s (of %s)"
                         % (len(dc_allowed_list), str(dc_allowed_list), str(node_list)))
 
