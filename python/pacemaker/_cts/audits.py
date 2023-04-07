@@ -91,7 +91,7 @@ class LogAudit(ClusterAudit):
             kinds += [ LogKind.REMOTE_FILE ]
             for k in kinds:
                 watch[k] = self._create_watcher(patterns, k)
-            self._cm.log("Logging test message with identifier %s" % (suffix))
+            self._cm.log("Logging test message with identifier %s" % suffix)
         else:
             watch[watch_pref] = self._create_watcher(patterns, watch_pref)
 
@@ -105,14 +105,14 @@ class LogAudit(ClusterAudit):
         for k in list(watch.keys()):
             w = watch[k]
             if watch_pref == LogKind.ANY:
-                self._cm.log("Checking for test message in %s logs" % (k))
+                self._cm.log("Checking for test message in %s logs" % k)
             w.look_for_all(silent=True)
             if w.unmatched:
                 for regex in w.unmatched:
                     self._cm.log("Test message [%s] not found in %s logs" % (regex, w.kind))
             else:
                 if watch_pref == LogKind.ANY:
-                    self._cm.log("Found test message in %s logs" % (k))
+                    self._cm.log("Found test message in %s logs" % k)
                     self._cm.Env["LogWatcher"] = k
                 return 1
 
@@ -183,7 +183,7 @@ class DiskAudit(ClusterAudit):
                             answer = "n"
 
                     if answer and answer == "n":
-                        raise ValueError("Disk full on %s" % (node))
+                        raise ValueError("Disk full on %s" % node)
 
                 elif remaining_mb < 100 or used_percent > 90:
                     self._cm.log("WARN: Low on log disk space (%dMB) on %s" % (remaining_mb, node))
@@ -499,7 +499,7 @@ class ColocationAudit(PrimitiveAudit):
         self.name = "ColocationAudit"
 
     def crm_location(self, resource):
-        (rc, lines) = self._cm.rsh(self.target, "crm_resource -W -r %s -Q"%resource, verbose=1)
+        (rc, lines) = self._cm.rsh(self.target, "crm_resource -W -r %s -Q" % resource, verbose=1)
         hosts = []
 
         if rc == 0:
@@ -795,10 +795,10 @@ class PartitionAudit(ClusterAudit):
         lowest_epoch = None
         node_list = partition.split()
 
-        self.debug("Auditing partition: %s" % (partition))
+        self.debug("Auditing partition: %s" % partition)
         for node in node_list:
             if self._cm.ShouldBeStatus[node] != "up":
-                self._cm.log("Warn: Node %s appeared out of nowhere" % (node))
+                self._cm.log("Warn: Node %s appeared out of nowhere" % node)
                 self._cm.ShouldBeStatus[node] = "up"
                 # not in itself a reason to fail the audit (not what we're
                 #  checking for in this audit)
@@ -818,7 +818,7 @@ class PartitionAudit(ClusterAudit):
             self.NodeQuorum[node] = self.trim_string(self.NodeQuorum[node])
 
             if not self.NodeEpoch[node]:
-                self._cm.log("Warn: Node %s dissappeared: cant determin epoch" % (node))
+                self._cm.log("Warn: Node %s dissappeared: cant determin epoch" % node)
                 self._cm.ShouldBeStatus[node] = "down"
                 # not in itself a reason to fail the audit (not what we're
                 #  checking for in this audit)
@@ -826,7 +826,7 @@ class PartitionAudit(ClusterAudit):
                 lowest_epoch = self.NodeEpoch[node]
 
         if not lowest_epoch:
-            self._cm.log("Lowest epoch not determined in %s" % (partition))
+            self._cm.log("Lowest epoch not determined in %s" % partition)
             passed = 0
 
         for node in node_list:
