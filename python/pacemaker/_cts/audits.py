@@ -533,27 +533,6 @@ class ControllerStateAudit(ClusterAudit):
     def __init__(self, cm):
         ClusterAudit.__init__(self, cm)
         self.name = "ControllerStateAudit"
-        self.Stats = {"calls":0
-        ,        "success":0
-        ,        "failure":0
-        ,        "skipped":0
-        ,        "auditfail":0}
-
-    def has_key(self, key):
-        return key in self.Stats
-
-    def __setitem__(self, key, value):
-        self.Stats[key] = value
-
-    def __getitem__(self, key):
-        return self.Stats[key]
-
-    def incr(self, name):
-        '''Increment (or initialize) the value associated with the given name'''
-        if not name in self.Stats:
-            self.Stats[name] = 0
-
-        self.Stats[name] += 1
 
     def __call__(self):
         result = True
@@ -606,27 +585,6 @@ class CIBAudit(ClusterAudit):
     def __init__(self, cm):
         ClusterAudit.__init__(self, cm)
         self.name = "CibAudit"
-        self.Stats = {"calls":0
-        ,        "success":0
-        ,        "failure":0
-        ,        "skipped":0
-        ,        "auditfail":0}
-
-    def has_key(self, key):
-        return key in self.Stats
-
-    def __setitem__(self, key, value):
-        self.Stats[key] = value
-
-    def __getitem__(self, key):
-        return self.Stats[key]
-
-    def incr(self, name):
-        '''Increment (or initialize) the value associated with the given name'''
-        if not name in self.Stats:
-            self.Stats[name] = 0
-
-        self.Stats[name] += 1
 
     def __call__(self):
         result = True
@@ -719,30 +677,9 @@ class PartitionAudit(ClusterAudit):
     def __init__(self, cm):
         ClusterAudit.__init__(self, cm)
         self.name = "PartitionAudit"
-        self.Stats = {"calls":0
-        ,        "success":0
-        ,        "failure":0
-        ,        "skipped":0
-        ,        "auditfail":0}
         self.NodeEpoch = {}
         self.NodeState = {}
         self.NodeQuorum = {}
-
-    def has_key(self, key):
-        return key in self.Stats
-
-    def __setitem__(self, key, value):
-        self.Stats[key] = value
-
-    def __getitem__(self, key):
-        return self.Stats[key]
-
-    def incr(self, name):
-        '''Increment (or initialize) the value associated with the given name'''
-        if not name in self.Stats:
-            self.Stats[name] = 0
-
-        self.Stats[name] += 1
 
     def __call__(self):
         result = True
