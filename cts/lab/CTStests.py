@@ -1135,7 +1135,7 @@ class MaintenanceMode(CTSTest):
         for line in lines:
             if re.search("^Resource", line):
                 tmp = AuditResource(self.CM, line)
-                if tmp.managed():
+                if tmp.managed:
                     rscList.append(tmp.id)
 
         return rscList
@@ -1150,9 +1150,9 @@ class MaintenanceMode(CTSTest):
         for line in lines:
             if re.search("^Resource", line):
                 tmp = AuditResource(self.CM, line)
-                if managed and not tmp.managed():
+                if managed and not tmp.managed:
                     continue
-                elif not managed and tmp.managed():
+                elif not managed and tmp.managed:
                     continue
                 elif managedList.count(tmp.id):
                     managedList.remove(tmp.id)
@@ -1272,9 +1272,9 @@ class ResourceRecover(CTSTest):
         # Log patterns to watch for (failure, plus restart if managed)
         pats = []
         pats.append(self.templates["Pat:CloneOpFail"] % (self.action, rsc.id, rsc.clone_id))
-        if rsc.managed():
+        if rsc.managed:
             pats.append(self.templates["Pat:RscOpOK"] % ("stop", self.rid))
-            if rsc.unique():
+            if rsc.unique:
                 pats.append(self.templates["Pat:RscOpOK"] % ("start", self.rid))
             else:
                 # Anonymous clones may get restarted with a different clone number
@@ -1344,13 +1344,13 @@ class ResourceRecover(CTSTest):
         if watch.unmatched:
             return self.failure("Patterns not found: %s" % repr(watch.unmatched))
 
-        elif rsc.unique() and len(recovered) > 1:
+        elif rsc.unique and len(recovered) > 1:
             return self.failure("%s is now active on more than one node: %s"%(self.rid, repr(recovered)))
 
         elif len(recovered) > 0:
             self.debug("%s is running on: %s" % (self.rid, repr(recovered)))
 
-        elif rsc.managed():
+        elif rsc.managed:
             return self.failure("%s was not recovered and is inactive" % self.rid)
 
         new_failcount = self.get_failcount(node)

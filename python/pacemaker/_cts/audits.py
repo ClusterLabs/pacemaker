@@ -269,23 +269,17 @@ class AuditResource:
         if self.parent == "NA":
             self.parent = None
 
+    @property
     def unique(self):
-        if self.flags & int("0x00000020", 16):
-            return 1
+        return self.flags & 0x20
 
-        return 0
-
+    @property
     def orphan(self):
-        if self.flags & int("0x00000001", 16):
-            return 1
+        return self.flags & 0x01
 
-        return 0
-
+    @property
     def managed(self):
-        if self.flags & int("0x00000002", 16):
-            return 1
-
-        return 0
+        return self.flags & 0x02
 
 
 class AuditConstraint:
@@ -326,11 +320,11 @@ class PrimitiveAudit(ClusterAudit):
                             % (resource.id, repr(active)))
                 rc = 0
 
-        elif not resource.managed():
+        elif not resource.managed:
             self.CM.log("Resource %s not managed. Active on %s"
                         % (resource.id, repr(active)))
 
-        elif not resource.unique():
+        elif not resource.unique:
             # TODO: Figure out a clever way to actually audit these resource types
             if len(active) > 1:
                 self.debug("Non-unique resource %s is active on: %s"
@@ -343,7 +337,7 @@ class PrimitiveAudit(ClusterAudit):
                         % (resource.id, repr(active)))
             rc = 0
 
-        elif resource.orphan():
+        elif resource.orphan:
             self.debug("Resource %s is an inactive orphan" % resource.id)
 
         elif len(self.inactive_nodes) == 0:
