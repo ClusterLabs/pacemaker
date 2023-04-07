@@ -308,8 +308,8 @@ class PrimitiveAudit(ClusterAudit):
         ClusterAudit.__init__(self, cm)
         self.name = "PrimitiveAudit"
 
-    def doResourceAudit(self, resource, quorum):
-        rc = 1
+    def _audit_resource(self, resource, quorum):
+        rc = True
         active = self._cm.ResourceLocation(resource.id)
 
         if len(active) == 1:
@@ -319,7 +319,7 @@ class PrimitiveAudit(ClusterAudit):
             elif resource.needs_quorum == 1:
                 self._cm.log("Resource %s active without quorum: %s"
                             % (resource.id, repr(active)))
-                rc = 0
+                rc = False
 
         elif not resource.managed:
             self._cm.log("Resource %s not managed. Active on %s"
@@ -336,14 +336,14 @@ class PrimitiveAudit(ClusterAudit):
         elif len(active) > 1:
             self._cm.log("Resource %s is active multiple times: %s"
                         % (resource.id, repr(active)))
-            rc = 0
+            rc = False
 
         elif resource.orphan:
             self.debug("Resource %s is an inactive orphan" % resource.id)
 
         elif len(self.inactive_nodes) == 0:
             self._cm.log("WARN: Resource %s not served anywhere" % resource.id)
-            rc = 0
+            rc = False
 
         elif self._cm.Env["warn-inactive"]:
             if quorum or not resource.needs_quorum:
@@ -402,7 +402,7 @@ class PrimitiveAudit(ClusterAudit):
 
         quorum = self._cm.HasQuorum(None)
         for resource in self.resources:
-            if resource.type == "primitive" and self.doResourceAudit(resource, quorum) == 0:
+            if resource.type == "primitive" and not self._audit_resource(resource, quorum):
                 result = False
 
         return result
