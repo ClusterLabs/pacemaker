@@ -10,8 +10,8 @@ import sys
 import time
 
 from cts.CTStests import CTSTest
-from cts.CTSaudits import ClusterAudit
 
+from pacemaker._cts.audits import ClusterAudit
 from pacemaker._cts.watcher import LogWatcher
 
 class ScenarioComponent(object):

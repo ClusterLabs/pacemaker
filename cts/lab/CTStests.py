@@ -23,10 +23,10 @@ import subprocess
 import tempfile
 
 from stat import *
-from cts.CTSaudits import *
 
 from pacemaker import BuildOptions
 from pacemaker._cts.CTS import NodeStatus
+from pacemaker._cts.audits import AuditConstraint, AuditResource
 from pacemaker._cts.environment import EnvFactory
 from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.patterns import PatternSelector

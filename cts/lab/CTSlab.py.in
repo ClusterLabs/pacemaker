@@ -12,11 +12,11 @@ sys.path.insert(0, pdir) # So that things work from the source directory
 
 try:
     from cts.CM_corosync  import *
-    from cts.CTSaudits    import AuditList
     from cts.CTStests     import TestList
     from cts.CTSscenarios import *
 
     from pacemaker._cts.CTS import CtsLab
+    from pacemaker._cts.audits import AuditList
     from pacemaker._cts.logging import LogFactory
 except ImportError as e:
     sys.stderr.write("abort: %s\n" % e)

@@ -13,6 +13,7 @@ pkgpythondir = $(pythondir)/$(PACKAGE)/_cts
 
 pkgpython_PYTHON = CTS.py \
 				   __init__.py \
+				   audits.py \
 				   corosync.py \
 				   environment.py \
 				   errors.py \
