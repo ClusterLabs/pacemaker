@@ -152,7 +152,7 @@ class CTSTest(object):
         if len(self.Audits) > 0:
             for audit in self.Audits:
                 if not audit():
-                    self.logger.log("Internal %s Audit %s FAILED." % (self.name, audit.name()))
+                    self.logger.log("Internal %s Audit %s FAILED." % (self.name, audit.name))
                     self.incr("auditfail")
                     passed = 0
         return passed

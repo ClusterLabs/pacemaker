@@ -15,6 +15,7 @@ AllAuditClasses = [ ]
 class ClusterAudit:
     def __init__(self, cm):
         self.CM = cm
+        self.name = None
 
     def __call__(self):
         raise ValueError("Abstract Class member (__call__)")
@@ -30,16 +31,11 @@ class ClusterAudit:
     def debug(self, args):
         self.CM.debug("audit: %s" % args)
 
-    def name(self):
-        raise ValueError("Abstract Class member (name)")
-
 
 class LogAudit(ClusterAudit):
-    def name(self):
-        return "LogAudit"
-
     def __init__(self, cm):
-        self.CM = cm
+        ClusterAudit.__init__(self, cm)
+        self.name = "LogAudit"
 
     def RestartClusterLogging(self, nodes=None):
         if not nodes:
@@ -144,11 +140,9 @@ class LogAudit(ClusterAudit):
 
 
 class DiskAudit(ClusterAudit):
-    def name(self):
-        return "DiskspaceAudit"
-
     def __init__(self, cm):
-        self.CM = cm
+        ClusterAudit.__init__(self, cm)
+        self.name = "DiskspaceAudit"
 
     def __call__(self):
         result = 1
@@ -195,12 +189,10 @@ class DiskAudit(ClusterAudit):
 
 
 class FileAudit(ClusterAudit):
-    def name(self):
-        return "FileAudit"
-
     def __init__(self, cm):
-        self.CM = cm
+        ClusterAudit.__init__(self, cm)
         self.known = []
+        self.name = "FileAudit"
 
     def __call__(self):
         result = 1
@@ -312,11 +304,9 @@ class AuditConstraint:
 
 
 class PrimitiveAudit(ClusterAudit):
-    def name(self):
-        return "PrimitiveAudit"
-
     def __init__(self, cm):
-        self.CM = cm
+        ClusterAudit.__init__(self, cm)
+        self.name = "PrimitiveAudit"
 
     def doResourceAudit(self, resource, quorum):
         rc = 1
@@ -389,7 +379,7 @@ class PrimitiveAudit(ClusterAudit):
         if not self.target:
             # TODO: In Pacemaker 1.0 clusters we'll be able to run crm_resource
             # with CIB_file=/path/to/cib.xml even when the cluster isn't running
-            self.debug("No nodes active - skipping %s" % self.name())
+            self.debug("No nodes active - skipping %s" % self.name)
             return 0
 
         (_, lines) = self.CM.rsh(self.target, "crm_resource -c", verbose=1)
@@ -428,8 +418,9 @@ class PrimitiveAudit(ClusterAudit):
 
 
 class GroupAudit(PrimitiveAudit):
-    def name(self):
-        return "GroupAudit"
+    def __init__(self, cm):
+        PrimitiveAudit.__init__(self, cm)
+        self.name = "GroupAudit"
 
     def __call__(self):
         rc = 1
@@ -472,8 +463,9 @@ class GroupAudit(PrimitiveAudit):
 
 
 class CloneAudit(PrimitiveAudit):
-    def name(self):
-        return "CloneAudit"
+    def __init__(self, cm):
+        PrimitiveAudit.__init__(self, cm)
+        self.name = "CloneAudit"
 
     def __call__(self):
         rc = 1
@@ -494,8 +486,9 @@ class CloneAudit(PrimitiveAudit):
 
 
 class ColocationAudit(PrimitiveAudit):
-    def name(self):
-        return "ColocationAudit"
+    def __init__(self, cm):
+        PrimitiveAudit.__init__(self, cm)
+        self.name = "ColocationAudit"
 
     def crm_location(self, resource):
         (rc, lines) = self.CM.rsh(self.target, "crm_resource -W -r %s -Q"%resource, verbose=1)
@@ -535,7 +528,8 @@ class ColocationAudit(PrimitiveAudit):
 
 class ControllerStateAudit(ClusterAudit):
     def __init__(self, cm):
-        self.CM = cm
+        ClusterAudit.__init__(self, cm)
+        self.name = "ControllerStateAudit"
         self.Stats = {"calls":0
         ,        "success":0
         ,        "failure":0
@@ -594,9 +588,6 @@ class ControllerStateAudit(ClusterAudit):
 
         return passed
 
-    def name(self):
-        return "ControllerStateAudit"
-
     def is_applicable(self):
         # @TODO Due to long-ago refactoring, this name test would never match,
         # so this audit (and those derived from it) would never run.
@@ -609,7 +600,8 @@ class ControllerStateAudit(ClusterAudit):
 
 class CIBAudit(ClusterAudit):
     def __init__(self, cm):
-        self.CM = cm
+        ClusterAudit.__init__(self, cm)
+        self.name = "CibAudit"
         self.Stats = {"calls":0
         ,        "success":0
         ,        "failure":0
@@ -710,9 +702,6 @@ class CIBAudit(ClusterAudit):
 
         return filename
 
-    def name(self):
-        return "CibAudit"
-
     def is_applicable(self):
         # @TODO Due to long-ago refactoring, this name test would never match,
         # so this audit (and those derived from it) would never run.
@@ -725,7 +714,8 @@ class CIBAudit(ClusterAudit):
 
 class PartitionAudit(ClusterAudit):
     def __init__(self, cm):
-        self.CM = cm
+        ClusterAudit.__init__(self, cm)
+        self.name = "PartitionAudit"
         self.Stats = {"calls":0
         ,        "success":0
         ,        "failure":0
@@ -861,9 +851,6 @@ class PartitionAudit(ClusterAudit):
                                 % (self.NodeEpoch[node], self.NodeState[node]))
 
         return passed
-
-    def name(self):
-        return "PartitionAudit"
 
     def is_applicable(self):
         # @TODO Due to long-ago refactoring, this name test would never match,
