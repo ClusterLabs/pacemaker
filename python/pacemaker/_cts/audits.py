@@ -119,16 +119,16 @@ class LogAudit(ClusterAudit):
         return 0
 
     def __call__(self):
-        max = 3
+        max_attempts = 3
         attempt = 0
 
         self.CM.ns.wait_for_all_nodes(self.CM.Env["nodes"])
-        while attempt <= max and self.TestLogging() == 0:
+        while attempt <= max_attempts and self.TestLogging() == 0:
             attempt += 1
             self.RestartClusterLogging()
             time.sleep(60*attempt)
 
-        if attempt > max:
+        if attempt > max_attempts:
             self.CM.log("ERROR: Cluster logging unrecoverable.")
             return False
 
