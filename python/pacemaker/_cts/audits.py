@@ -39,7 +39,7 @@ class LogAudit(ClusterAudit):
         ClusterAudit.__init__(self, cm)
         self.name = "LogAudit"
 
-    def RestartClusterLogging(self, nodes=None):
+    def _restart_cluster_logging(self, nodes=None):
         if not nodes:
             nodes = self._cm.Env["nodes"]
 
@@ -125,7 +125,7 @@ class LogAudit(ClusterAudit):
         self._cm.ns.wait_for_all_nodes(self._cm.Env["nodes"])
         while attempt <= max_attempts and self.TestLogging() == 0:
             attempt += 1
-            self.RestartClusterLogging()
+            self._restart_cluster_logging()
             time.sleep(60*attempt)
 
         if attempt > max_attempts:
