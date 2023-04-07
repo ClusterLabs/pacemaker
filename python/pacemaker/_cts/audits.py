@@ -66,7 +66,7 @@ class LogAudit(ClusterAudit):
         watch.set_watch()
         return watch
 
-    def TestLogging(self):
+    def _test_logging(self):
         patterns = []
         prefix   = "Test message from"
         suffix   = str(uuid.uuid4())
@@ -116,14 +116,14 @@ class LogAudit(ClusterAudit):
                     self._cm.Env["LogWatcher"] = k
                 return 1
 
-        return 0
+        return False
 
     def __call__(self):
         max_attempts = 3
         attempt = 0
 
         self._cm.ns.wait_for_all_nodes(self._cm.Env["nodes"])
-        while attempt <= max_attempts and self.TestLogging() == 0:
+        while attempt <= max_attempts and not self._test_logging():
             attempt += 1
             self._restart_cluster_logging()
             time.sleep(60*attempt)
