@@ -300,6 +300,12 @@ class PrimitiveAudit(ClusterAudit):
         ClusterAudit.__init__(self, cm)
         self.name = "PrimitiveAudit"
 
+        self._active_nodes = []
+        self._constraints = []
+        self._inactive_nodes = []
+        self._resources = []
+        self._target = None
+
     def _audit_resource(self, resource, quorum):
         rc = True
         active = self._cm.ResourceLocation(resource.id)
@@ -333,67 +339,61 @@ class PrimitiveAudit(ClusterAudit):
         elif resource.orphan:
             self.debug("Resource %s is an inactive orphan" % resource.id)
 
-        elif not self.inactive_nodes:
+        elif not self._inactive_nodes:
             self._cm.log("WARN: Resource %s not served anywhere" % resource.id)
             rc = False
 
         elif self._cm.Env["warn-inactive"]:
             if quorum or not resource.needs_quorum:
                 self._cm.log("WARN: Resource %s not served anywhere (Inactive nodes: %s)"
-                            % (resource.id, repr(self.inactive_nodes)))
+                            % (resource.id, repr(self._inactive_nodes)))
             else:
                 self.debug("Resource %s not served anywhere (Inactive nodes: %s)"
-                              % (resource.id, repr(self.inactive_nodes)))
+                              % (resource.id, repr(self._inactive_nodes)))
 
         elif quorum or not resource.needs_quorum:
             self.debug("Resource %s not served anywhere (Inactive nodes: %s)"
-                          % (resource.id, repr(self.inactive_nodes)))
+                          % (resource.id, repr(self._inactive_nodes)))
 
         return rc
 
-    def setup(self):
-        self.target = None
-        self.resources = []
-        self.constraints = []
-        self.active_nodes = []
-        self.inactive_nodes = []
-
+    def _setup(self):
         for node in self._cm.Env["nodes"]:
             if self._cm.ShouldBeStatus[node] == "up":
-                self.active_nodes.append(node)
+                self._active_nodes.append(node)
             else:
-                self.inactive_nodes.append(node)
+                self._inactive_nodes.append(node)
 
         for node in self._cm.Env["nodes"]:
-            if self.target is None and self._cm.ShouldBeStatus[node] == "up":
-                self.target = node
+            if self._target is None and self._cm.ShouldBeStatus[node] == "up":
+                self._target = node
 
-        if not self.target:
+        if not self._target:
             # TODO: In Pacemaker 1.0 clusters we'll be able to run crm_resource
             # with CIB_file=/path/to/cib.xml even when the cluster isn't running
             self.debug("No nodes active - skipping %s" % self.name)
-            return 0
+            return False
 
-        (_, lines) = self._cm.rsh(self.target, "crm_resource -c", verbose=1)
+        (_, lines) = self._cm.rsh(self._target, "crm_resource -c", verbose=1)
 
         for line in lines:
             if re.search("^Resource", line):
-                self.resources.append(AuditResource(self._cm, line))
+                self._resources.append(AuditResource(self._cm, line))
             elif re.search("^Constraint", line):
-                self.constraints.append(AuditConstraint(self._cm, line))
+                self._constraints.append(AuditConstraint(self._cm, line))
             else:
                 self._cm.log("Unknown entry: %s" % line)
 
-        return 1
+        return True
 
     def __call__(self):
         result = True
 
-        if not self.setup():
+        if not self._setup():
             return result
 
         quorum = self._cm.HasQuorum(None)
-        for resource in self.resources:
+        for resource in self._resources:
             if resource.type == "primitive" and not self._audit_resource(resource, quorum):
                 result = False
 
@@ -417,17 +417,17 @@ class GroupAudit(PrimitiveAudit):
     def __call__(self):
         result = True
 
-        if not self.setup():
+        if not self._setup():
             return result
 
-        for group in self.resources:
+        for group in self._resources:
             if group.type != "group":
                 continue
 
             first_match = 1
             group_location = None
 
-            for child in self.resources:
+            for child in self._resources:
                 if child.parent != group.id:
                     continue
 
@@ -467,14 +467,14 @@ class CloneAudit(PrimitiveAudit):
     def __call__(self):
         result = True
 
-        if not self.setup():
+        if not self._setup():
             return result
 
-        for clone in self.resources:
+        for clone in self._resources:
             if clone.type != "clone":
                 continue
 
-            for child in self.resources:
+            for child in self._resources:
                 if child.parent == clone.id and child.type == "primitive":
                     self.debug("Checking child %s of %s..." % (child.id, clone.id))
                     # Check max and node_max
@@ -491,7 +491,7 @@ class ColocationAudit(PrimitiveAudit):
         self.name = "ColocationAudit"
 
     def crm_location(self, resource):
-        (rc, lines) = self._cm.rsh(self.target, "crm_resource -W -r %s -Q" % resource, verbose=1)
+        (rc, lines) = self._cm.rsh(self._target, "crm_resource -W -r %s -Q" % resource, verbose=1)
         hosts = []
 
         if rc == 0:
@@ -504,10 +504,10 @@ class ColocationAudit(PrimitiveAudit):
     def __call__(self):
         result = True
 
-        if not self.setup():
+        if not self._setup():
             return result
 
-        for coloc in self.constraints:
+        for coloc in self._constraints:
             if coloc.type != "rsc_colocation":
                 continue
 
