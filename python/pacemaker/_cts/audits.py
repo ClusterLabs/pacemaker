@@ -122,7 +122,7 @@ class LogAudit(ClusterAudit):
 
         self.CM.ns.wait_for_all_nodes(self.CM.Env["nodes"])
         while attempt <= max and self.TestLogging() == 0:
-            attempt = attempt + 1
+            attempt += 1
             self.RestartClusterLogging()
             time.sleep(60*attempt)
 
@@ -549,7 +549,8 @@ class ControllerStateAudit(ClusterAudit):
         '''Increment (or initialize) the value associated with the given name'''
         if not name in self.Stats:
             self.Stats[name] = 0
-        self.Stats[name] = self.Stats[name]+1
+
+        self.Stats[name] += 1
 
     def __call__(self):
         passed = 1
@@ -563,13 +564,13 @@ class ControllerStateAudit(ClusterAudit):
 
             if rc > 0:
                 if should_be == "down":
-                    down_are_up = down_are_up + 1
+                    down_are_up += 1
 
                 if rc == 1:
                     unstable_list.append(node)
 
             elif should_be == "up":
-                up_are_down = up_are_down + 1
+                up_are_down += 1
 
         if len(unstable_list) > 0:
             passed = 0
@@ -621,7 +622,8 @@ class CIBAudit(ClusterAudit):
         '''Increment (or initialize) the value associated with the given name'''
         if not name in self.Stats:
             self.Stats[name] = 0
-        self.Stats[name] = self.Stats[name]+1
+
+        self.Stats[name] += 1
 
     def __call__(self):
         passed = 1
@@ -739,7 +741,7 @@ class PartitionAudit(ClusterAudit):
         if not name in self.Stats:
             self.Stats[name] = 0
 
-        self.Stats[name] = self.Stats[name]+1
+        self.Stats[name] += 1
 
     def __call__(self):
         passed = 1
