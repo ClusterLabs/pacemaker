@@ -20,7 +20,7 @@ class ClusterAudit:
         self.name = None
 
     def __call__(self):
-        raise ValueError("Abstract Class member (__call__)")
+        raise NotImplementedError
 
     def is_applicable(self):
         """ Return True if this class is applicable in the current test configuration """
@@ -130,9 +130,9 @@ class LogAudit(ClusterAudit):
 
         if attempt > max:
             self.CM.log("ERROR: Cluster logging unrecoverable.")
-            return 0
+            return False
 
-        return 1
+        return True
 
     def is_applicable(self):
         if self.CM.Env["DoBSC"] or self.CM.Env["LogAuditDisabled"]:
@@ -147,7 +147,8 @@ class DiskAudit(ClusterAudit):
         self.name = "DiskspaceAudit"
 
     def __call__(self):
-        result = 1
+        result = True
+
         # @TODO Use directory of PCMK_logfile if set on host
         dfcmd = "df -BM " + BuildOptions.LOG_DIR + " | tail -1 | awk '{print $(NF-1)\" \"$(NF-2)}' | tr -d 'M%'"
 
@@ -170,7 +171,8 @@ class DiskAudit(ClusterAudit):
                     if remaining_mb < 10 or used_percent > 95:
                         self.CM.log("CRIT: Out of log disk space on %s (%d%% / %dMB)"
                                     % (node, used_percent, remaining_mb))
-                        result = None
+                        result = False
+
                         if self.CM.Env["continue"]:
                             answer = "Y"
                         else:
@@ -184,6 +186,7 @@ class DiskAudit(ClusterAudit):
 
                     elif remaining_mb < 100 or used_percent > 90:
                         self.CM.log("WARN: Low on log disk space (%dMB) on %s" % (remaining_mb, node))
+
         return result
 
     def is_applicable(self):
@@ -197,7 +200,7 @@ class FileAudit(ClusterAudit):
         self.name = "FileAudit"
 
     def __call__(self):
-        result = 1
+        result = True
 
         self.CM.ns.wait_for_all_nodes(self.CM.Env["nodes"])
         for node in self.CM.Env["nodes"]:
@@ -207,7 +210,7 @@ class FileAudit(ClusterAudit):
                 line = line.strip()
 
                 if line not in self.known:
-                    result = 0
+                    result = False
                     self.known.append(line)
                     self.CM.log("Warning: Pacemaker core file on %s: %s" % (node, line))
 
@@ -216,7 +219,7 @@ class FileAudit(ClusterAudit):
                 line = line.strip()
 
                 if line not in self.known:
-                    result = 0
+                    result = False
                     self.known.append(line)
                     self.CM.log("Warning: Corosync core file on %s: %s" % (node, line))
 
@@ -225,7 +228,7 @@ class FileAudit(ClusterAudit):
                 (_, lsout) = self.CM.rsh(node, "ls -al /dev/shm | grep qb-", verbose=1)
 
                 for line in lsout:
-                    result = 0
+                    result = False
                     clean = 1
                     self.CM.log("Warning: Stale IPC file on %s: %s" % (node, line))
 
@@ -397,17 +400,17 @@ class PrimitiveAudit(ClusterAudit):
         return 1
 
     def __call__(self):
-        rc = 1
+        result = True
 
         if not self.setup():
-            return 1
+            return result
 
         quorum = self.CM.HasQuorum(None)
         for resource in self.resources:
-            if resource.type == "primitive":
-                if self.doResourceAudit(resource, quorum) == 0:
-                    rc = 0
-        return rc
+            if resource.type == "primitive" and self.doResourceAudit(resource, quorum) == 0:
+                result = False
+
+        return result
 
     def is_applicable(self):
         # @TODO Due to long-ago refactoring, this name test would never match,
@@ -425,9 +428,10 @@ class GroupAudit(PrimitiveAudit):
         self.name = "GroupAudit"
 
     def __call__(self):
-        rc = 1
+        result = True
+
         if not self.setup():
-            return 1
+            return result
 
         for group in self.resources:
             if group.type == "group":
@@ -444,7 +448,7 @@ class GroupAudit(PrimitiveAudit):
                         first_match = 0
 
                         if len(nodes) > 1:
-                            rc = 0
+                            result = False
                             self.CM.log("Child %s of %s is active more than once: %s"
                                         % (child.id, group.id, repr(nodes)))
 
@@ -455,13 +459,13 @@ class GroupAudit(PrimitiveAudit):
                             self.debug("Child %s of %s is stopped" % (child.id, group.id))
 
                         elif nodes[0] != group_location:
-                            rc = 0
+                            result = False
                             self.CM.log("Child %s of %s is active on the wrong node (%s) expected %s"
                                         % (child.id, group.id, nodes[0], group_location))
                         else:
                             self.debug("Child %s of %s is active on %s" % (child.id, group.id, nodes[0]))
 
-        return rc
+        return result
 
 
 class CloneAudit(PrimitiveAudit):
@@ -470,9 +474,10 @@ class CloneAudit(PrimitiveAudit):
         self.name = "CloneAudit"
 
     def __call__(self):
-        rc = 1
+        result = True
+
         if not self.setup():
-            return 1
+            return result
 
         for clone in self.resources:
             if clone.type == "clone":
@@ -484,7 +489,7 @@ class CloneAudit(PrimitiveAudit):
                         #    crm_resource -g clone_max --meta -r child.id
                         #    crm_resource -g clone_node_max --meta -r child.id
 
-        return rc
+        return result
 
 
 class ColocationAudit(PrimitiveAudit):
@@ -504,9 +509,10 @@ class ColocationAudit(PrimitiveAudit):
         return hosts
 
     def __call__(self):
-        rc = 1
+        result = True
+
         if not self.setup():
-            return 1
+            return result
 
         for coloc in self.constraints:
             if coloc.type == "rsc_colocation":
@@ -518,14 +524,14 @@ class ColocationAudit(PrimitiveAudit):
                 else:
                     for node in source:
                         if not node in target:
-                            rc = 0
+                            result = False
                             self.CM.log("Colocation audit (%s): %s running on %s (not in %s)"
                                         % (coloc.id, coloc.rsc, node, repr(target)))
                         else:
                             self.debug("Colocation audit (%s): %s running on %s (in %s)"
                                           % (coloc.id, coloc.rsc, node, repr(target)))
 
-        return rc
+        return result
 
 
 class ControllerStateAudit(ClusterAudit):
@@ -555,7 +561,7 @@ class ControllerStateAudit(ClusterAudit):
         self.Stats[name] += 1
 
     def __call__(self):
-        passed = 1
+        result = True
         up_are_down = 0
         down_are_up = 0
         unstable_list = []
@@ -575,21 +581,21 @@ class ControllerStateAudit(ClusterAudit):
                 up_are_down += 1
 
         if len(unstable_list) > 0:
-            passed = 0
+            result = False
             self.CM.log("Cluster is not stable: %d (of %d): %s"
                      % (len(unstable_list), self.CM.upcount(), repr(unstable_list)))
 
         if up_are_down > 0:
-            passed = 0
+            result = False
             self.CM.log("%d (of %d) nodes expected to be up were down."
                      % (up_are_down, len(self.CM.Env["nodes"])))
 
         if down_are_up > 0:
-            passed = 0
+            result = False
             self.CM.log("%d (of %d) nodes expected to be down were up."
                      % (down_are_up, len(self.CM.Env["nodes"])))
 
-        return passed
+        return result
 
     def is_applicable(self):
         # @TODO Due to long-ago refactoring, this name test would never match,
@@ -628,20 +634,20 @@ class CIBAudit(ClusterAudit):
         self.Stats[name] += 1
 
     def __call__(self):
-        passed = 1
+        result = True
         ccm_partitions = self.CM.find_partitions()
 
         if len(ccm_partitions) == 0:
             self.debug("\tNo partitions to audit")
-            return 1
+            return result
 
         for partition in ccm_partitions:
             self.debug("\tAuditing CIB consistency for: %s" % partition)
 
             if self.audit_cib_contents(partition) == 0:
-                passed = 0
+                result = False
 
-        return passed
+        return result
 
     def audit_cib_contents(self, hostlist):
         passed = 1
@@ -744,26 +750,26 @@ class PartitionAudit(ClusterAudit):
         self.Stats[name] += 1
 
     def __call__(self):
-        passed = 1
+        result = True
         ccm_partitions = self.CM.find_partitions()
 
         if ccm_partitions == None or len(ccm_partitions) == 0:
-            return 1
+            return result
 
         self.CM.cluster_stable(double_check=True)
 
         if len(ccm_partitions) != self.CM.partitions_expected:
             self.CM.log("ERROR: %d cluster partitions detected:" % len(ccm_partitions))
-            passed = 0
+            result = False
 
             for partition in ccm_partitions:
                 self.CM.log("\t %s" % partition)
 
         for partition in ccm_partitions:
             if self.audit_partition(partition) == 0:
-                passed = 0
+                result = False
 
-        return passed
+        return result
 
     def trim_string(self, avalue):
         if not avalue:
