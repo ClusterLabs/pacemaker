@@ -4,7 +4,9 @@
 __copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
-import time, re, uuid
+import re
+import time
+import uuid
 
 from pacemaker.buildoptions import BuildOptions
 from pacemaker._cts.watcher import LogKind, LogWatcher
@@ -174,7 +176,7 @@ class DiskAudit(ClusterAudit):
                         else:
                             try:
                                 answer = input('Continue? [nY]')
-                            except EOFError as e:
+                            except EOFError:
                                 answer = "n"
 
                         if answer and answer == "n":
@@ -390,7 +392,7 @@ class PrimitiveAudit(ClusterAudit):
             elif re.search("^Constraint", line):
                 self.constraints.append(AuditConstraint(self.CM, line))
             else:
-                self.CM.log("Unknown entry: %s" % line);
+                self.CM.log("Unknown entry: %s" % line)
 
         return 1
 
@@ -635,7 +637,6 @@ class CIBAudit(ClusterAudit):
 
         for partition in ccm_partitions:
             self.debug("\tAuditing CIB consistency for: %s" % partition)
-            partition_passed = 0
 
             if self.audit_cib_contents(partition) == 0:
                 passed = 0
@@ -683,7 +684,6 @@ class CIBAudit(ClusterAudit):
         return passed
 
     def store_remote_cib(self, node, target):
-        combined = ""
         filename = "/tmp/ctsaudit.%s.xml" % node
 
         if not target:
@@ -760,8 +760,6 @@ class PartitionAudit(ClusterAudit):
                 self.CM.log("\t %s" % partition)
 
         for partition in ccm_partitions:
-            partition_passed = 0
-
             if self.audit_partition(partition) == 0:
                 passed = 0
 
