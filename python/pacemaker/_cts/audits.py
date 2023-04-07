@@ -157,35 +157,36 @@ class DiskAudit(ClusterAudit):
             (_, dfout) = self.CM.rsh(node, dfcmd, verbose=1)
             if not dfout:
                 self.CM.log ("ERROR: Cannot execute remote df command [%s] on %s" % (dfcmd, node))
+                continue
+
+            dfout = dfout[0].strip()
+
+            try:
+                (used, remain) = dfout.split()
+                used_percent = int(used)
+                remaining_mb = int(remain)
+            except (ValueError, TypeError):
+                self.CM.log("Warning: df output '%s' from %s was invalid [%s, %s]"
+                            % (dfout, node, used, remain))
             else:
-                dfout = dfout[0].strip()
+                if remaining_mb < 10 or used_percent > 95:
+                    self.CM.log("CRIT: Out of log disk space on %s (%d%% / %dMB)"
+                                % (node, used_percent, remaining_mb))
+                    result = False
 
-                try:
-                    (used, remain) = dfout.split()
-                    used_percent = int(used)
-                    remaining_mb = int(remain)
-                except (ValueError, TypeError):
-                    self.CM.log("Warning: df output '%s' from %s was invalid [%s, %s]"
-                                % (dfout, node, used, remain))
-                else:
-                    if remaining_mb < 10 or used_percent > 95:
-                        self.CM.log("CRIT: Out of log disk space on %s (%d%% / %dMB)"
-                                    % (node, used_percent, remaining_mb))
-                        result = False
+                    if self.CM.Env["continue"]:
+                        answer = "Y"
+                    else:
+                        try:
+                            answer = input('Continue? [nY]')
+                        except EOFError:
+                            answer = "n"
 
-                        if self.CM.Env["continue"]:
-                            answer = "Y"
-                        else:
-                            try:
-                                answer = input('Continue? [nY]')
-                            except EOFError:
-                                answer = "n"
+                    if answer and answer == "n":
+                        raise ValueError("Disk full on %s" % (node))
 
-                        if answer and answer == "n":
-                            raise ValueError("Disk full on %s" % (node))
-
-                    elif remaining_mb < 100 or used_percent > 90:
-                        self.CM.log("WARN: Low on log disk space (%dMB) on %s" % (remaining_mb, node))
+                elif remaining_mb < 100 or used_percent > 90:
+                    self.CM.log("WARN: Low on log disk space (%dMB) on %s" % (remaining_mb, node))
 
         return result
 
@@ -428,36 +429,40 @@ class GroupAudit(PrimitiveAudit):
             return result
 
         for group in self.resources:
-            if group.type == "group":
-                first_match = 1
-                group_location = None
+            if group.type != "group":
+                continue
 
-                for child in self.resources:
-                    if child.parent == group.id:
-                        nodes = self.CM.ResourceLocation(child.id)
+            first_match = 1
+            group_location = None
 
-                        if first_match and len(nodes) > 0:
-                            group_location = nodes[0]
+            for child in self.resources:
+                if child.parent != group.id:
+                    continue
 
-                        first_match = 0
+                nodes = self.CM.ResourceLocation(child.id)
 
-                        if len(nodes) > 1:
-                            result = False
-                            self.CM.log("Child %s of %s is active more than once: %s"
-                                        % (child.id, group.id, repr(nodes)))
+                if first_match and len(nodes) > 0:
+                    group_location = nodes[0]
 
-                        elif len(nodes) == 0:
-                            # Groups are allowed to be partially active
-                            # However we do need to make sure later children aren't running
-                            group_location = None
-                            self.debug("Child %s of %s is stopped" % (child.id, group.id))
+                first_match = 0
 
-                        elif nodes[0] != group_location:
-                            result = False
-                            self.CM.log("Child %s of %s is active on the wrong node (%s) expected %s"
-                                        % (child.id, group.id, nodes[0], group_location))
-                        else:
-                            self.debug("Child %s of %s is active on %s" % (child.id, group.id, nodes[0]))
+                if len(nodes) > 1:
+                    result = False
+                    self.CM.log("Child %s of %s is active more than once: %s"
+                                % (child.id, group.id, repr(nodes)))
+
+                elif len(nodes) == 0:
+                    # Groups are allowed to be partially active
+                    # However we do need to make sure later children aren't running
+                    group_location = None
+                    self.debug("Child %s of %s is stopped" % (child.id, group.id))
+
+                elif nodes[0] != group_location:
+                    result = False
+                    self.CM.log("Child %s of %s is active on the wrong node (%s) expected %s"
+                                % (child.id, group.id, nodes[0], group_location))
+                else:
+                    self.debug("Child %s of %s is active on %s" % (child.id, group.id, nodes[0]))
 
         return result
 
@@ -474,14 +479,16 @@ class CloneAudit(PrimitiveAudit):
             return result
 
         for clone in self.resources:
-            if clone.type == "clone":
-                for child in self.resources:
-                    if child.parent == clone.id and child.type == "primitive":
-                        self.debug("Checking child %s of %s..." % (child.id, clone.id))
-                        # Check max and node_max
-                        # Obtain with:
-                        #    crm_resource -g clone_max --meta -r child.id
-                        #    crm_resource -g clone_node_max --meta -r child.id
+            if clone.type != "clone":
+                continue
+
+            for child in self.resources:
+                if child.parent == clone.id and child.type == "primitive":
+                    self.debug("Checking child %s of %s..." % (child.id, clone.id))
+                    # Check max and node_max
+                    # Obtain with:
+                    #    crm_resource -g clone_max --meta -r child.id
+                    #    crm_resource -g clone_node_max --meta -r child.id
 
         return result
 
@@ -509,21 +516,23 @@ class ColocationAudit(PrimitiveAudit):
             return result
 
         for coloc in self.constraints:
-            if coloc.type == "rsc_colocation":
-                source = self.crm_location(coloc.rsc)
-                target = self.crm_location(coloc.target)
+            if coloc.type != "rsc_colocation":
+                continue
 
-                if len(source) == 0:
-                    self.debug("Colocation audit (%s): %s not running" % (coloc.id, coloc.rsc))
-                else:
-                    for node in source:
-                        if not node in target:
-                            result = False
-                            self.CM.log("Colocation audit (%s): %s running on %s (not in %s)"
-                                        % (coloc.id, coloc.rsc, node, repr(target)))
-                        else:
-                            self.debug("Colocation audit (%s): %s running on %s (in %s)"
-                                          % (coloc.id, coloc.rsc, node, repr(target)))
+            source = self.crm_location(coloc.rsc)
+            target = self.crm_location(coloc.target)
+
+            if len(source) == 0:
+                self.debug("Colocation audit (%s): %s not running" % (coloc.id, coloc.rsc))
+            else:
+                for node in source:
+                    if not node in target:
+                        result = False
+                        self.CM.log("Colocation audit (%s): %s running on %s (not in %s)"
+                                    % (coloc.id, coloc.rsc, node, repr(target)))
+                    else:
+                        self.debug("Colocation audit (%s): %s running on %s (in %s)"
+                                      % (coloc.id, coloc.rsc, node, repr(target)))
 
         return result
 
@@ -821,19 +830,21 @@ class PartitionAudit(ClusterAudit):
             passed = 0
 
         for node in node_list:
-            if self.CM.ShouldBeStatus[node] == "up":
-                if self.CM.is_node_dc(node, self.NodeState[node]):
-                    dc_found.append(node)
-                    if self.NodeEpoch[node] == lowest_epoch:
-                        self.debug("%s: OK" % node)
-                    elif not self.NodeEpoch[node]:
-                        self.debug("Check on %s ignored: no node epoch" % node)
-                    elif not lowest_epoch:
-                        self.debug("Check on %s ignored: no lowest epoch" % node)
-                    else:
-                        self.CM.log("DC %s is not the oldest node (%d vs. %d)"
-                            % (node, self.NodeEpoch[node], lowest_epoch))
-                        passed = 0
+            if self.CM.ShouldBeStatus[node] != "up":
+                continue
+
+            if self.CM.is_node_dc(node, self.NodeState[node]):
+                dc_found.append(node)
+                if self.NodeEpoch[node] == lowest_epoch:
+                    self.debug("%s: OK" % node)
+                elif not self.NodeEpoch[node]:
+                    self.debug("Check on %s ignored: no node epoch" % node)
+                elif not lowest_epoch:
+                    self.debug("Check on %s ignored: no lowest epoch" % node)
+                else:
+                    self.CM.log("DC %s is not the oldest node (%d vs. %d)"
+                        % (node, self.NodeEpoch[node], lowest_epoch))
+                    passed = 0
 
         if len(dc_found) == 0:
             self.CM.log("DC not found on any of the %d allowed nodes: %s (of %s)"
