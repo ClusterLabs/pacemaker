@@ -9,6 +9,7 @@ import time
 import uuid
 
 from pacemaker.buildoptions import BuildOptions
+from pacemaker._cts.input import should_continue
 from pacemaker._cts.watcher import LogKind, LogWatcher
 
 
@@ -172,15 +173,7 @@ class DiskAudit(ClusterAudit):
                                 % (node, used_percent, remaining_mb))
                     result = False
 
-                    if self._cm.Env["continue"]:
-                        answer = "Y"
-                    else:
-                        try:
-                            answer = input('Continue? [nY]')
-                        except EOFError:
-                            answer = "n"
-
-                    if answer and answer == "n":
+                    if not should_continue(self._cm.Env):
                         raise ValueError("Disk full on %s" % node)
 
                 elif remaining_mb < 100 or used_percent > 90:

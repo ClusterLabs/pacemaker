@@ -17,6 +17,7 @@ pkgpython_PYTHON = CTS.py \
 				   corosync.py \
 				   environment.py \
 				   errors.py \
+				   input.py \
 				   logging.py \
 				   patterns.py \
 				   process.py \

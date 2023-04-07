@@ -10,6 +10,7 @@ import traceback
 
 from pacemaker.exitstatus import ExitStatus
 from pacemaker._cts.environment import EnvFactory
+from pacemaker._cts.input import should_continue
 from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.remote import RemoteFactory
 
@@ -177,15 +178,7 @@ class NodeStatus:
             timeout -= 1
 
         LogFactory().log("%s did not come up within %d tries" % (node, initial_timeout))
-        if self._env["continue"]:
-            answer = "Y"
-        else:
-            try:
-                answer = input('Continue? [nY]')
-            except EOFError:
-                answer = "n"
-
-        if answer and answer == "n":
+        if not should_continue(self._env["continue"]):
             raise ValueError("%s did not come up within %d tries" % (node, initial_timeout))
 
         return False
