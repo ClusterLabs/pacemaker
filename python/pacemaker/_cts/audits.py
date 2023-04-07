@@ -12,7 +12,7 @@ from pacemaker._cts.watcher import LogKind, LogWatcher
 AllAuditClasses = [ ]
 
 
-class ClusterAudit(object):
+class ClusterAudit:
     def __init__(self, cm):
         self.CM = cm
 
@@ -256,7 +256,7 @@ class FileAudit(ClusterAudit):
         return 1
 
 
-class AuditResource(object):
+class AuditResource:
     def __init__(self, cm, line):
         fields = line.split()
         self.CM = cm
@@ -295,7 +295,7 @@ class AuditResource(object):
         return 0
 
 
-class AuditConstraint(object):
+class AuditConstraint:
     def __init__(self, cm, line):
         fields = line.split()
         self.CM = cm
