@@ -16,7 +16,7 @@ try:
     from cts.CTSscenarios import *
 
     from pacemaker._cts.CTS import CtsLab
-    from pacemaker._cts.audits import AuditList
+    from pacemaker._cts.audits import audit_list
     from pacemaker._cts.logging import LogFactory
 except ImportError as e:
     sys.stderr.write("abort: %s\n" % e)
@@ -75,7 +75,7 @@ if __name__ == '__main__':
             with open(Environment["OutputFile"], "w") as outputfile:
                 outputfile.truncate(0)
 
-    Audits = AuditList(cm)
+    Audits = audit_list(cm)
 
     if Environment["ListTests"]:
         Tests = TestList(cm, Audits)

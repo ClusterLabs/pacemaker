@@ -11,8 +11,6 @@ import uuid
 from pacemaker.buildoptions import BuildOptions
 from pacemaker._cts.watcher import LogKind, LogWatcher
 
-AllAuditClasses = [ ]
-
 
 class ClusterAudit:
     def __init__(self, cm):
@@ -872,22 +870,13 @@ class PartitionAudit(ClusterAudit):
         #    return True
         return False
 
-AllAuditClasses.append(DiskAudit)
-AllAuditClasses.append(FileAudit)
-AllAuditClasses.append(LogAudit)
-AllAuditClasses.append(ControllerStateAudit)
-AllAuditClasses.append(PartitionAudit)
-AllAuditClasses.append(PrimitiveAudit)
-AllAuditClasses.append(GroupAudit)
-AllAuditClasses.append(CloneAudit)
-AllAuditClasses.append(ColocationAudit)
-AllAuditClasses.append(CIBAudit)
 
-
-def AuditList(cm):
+def audit_list(cm):
     result = []
 
-    for auditclass in AllAuditClasses:
+    for auditclass in [DiskAudit, FileAudit, LogAudit, ControllerStateAudit,
+                       PartitionAudit, PrimitiveAudit, GroupAudit, CloneAudit,
+                       ColocationAudit, CIBAudit]:
         a = auditclass(cm)
         if a.is_applicable():
             result.append(a)
