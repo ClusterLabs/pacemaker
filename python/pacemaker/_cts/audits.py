@@ -20,9 +20,9 @@ class ClusterAudit:
         raise ValueError("Abstract Class member (__call__)")
 
     def is_applicable(self):
-        '''Return TRUE if we are applicable in the current test configuration'''
-        raise ValueError("Abstract Class member (is_applicable)")
-        return 1
+        """ Return True if this class is applicable in the current test configuration """
+
+        raise NotImplementedError
 
     def log(self, args):
         self.CM.log("audit: %s" % args)
@@ -137,12 +137,10 @@ class LogAudit(ClusterAudit):
         return 1
 
     def is_applicable(self):
-        if self.CM.Env["DoBSC"]:
-            return 0
-        if self.CM.Env["LogAuditDisabled"]:
-            return 0
+        if self.CM.Env["DoBSC"] or self.CM.Env["LogAuditDisabled"]:
+            return False
 
-        return 1
+        return True
 
 
 class DiskAudit(ClusterAudit):
@@ -193,9 +191,7 @@ class DiskAudit(ClusterAudit):
         return result
 
     def is_applicable(self):
-        if self.CM.Env["DoBSC"]:
-            return 0
-        return 1
+        return not self.CM.Env["DoBSC"]
 
 
 class FileAudit(ClusterAudit):
@@ -253,7 +249,7 @@ class FileAudit(ClusterAudit):
         return result
 
     def is_applicable(self):
-        return 1
+        return True
 
 
 class AuditResource:
@@ -427,8 +423,8 @@ class PrimitiveAudit(ClusterAudit):
         # Uncommenting the next lines fixes the name test, but that then
         # exposes pre-existing bugs that need to be fixed.
         #if self.CM["Name"] == "crm-corosync":
-        #    return 1
-        return 0
+        #    return True
+        return False
 
 
 class GroupAudit(PrimitiveAudit):
@@ -607,8 +603,8 @@ class ControllerStateAudit(ClusterAudit):
         # Uncommenting the next lines fixes the name test, but that then
         # exposes pre-existing bugs that need to be fixed.
         #if self.CM["Name"] == "crm-corosync":
-        #    return 1
-        return 0
+        #    return True
+        return False
 
 
 class CIBAudit(ClusterAudit):
@@ -723,8 +719,8 @@ class CIBAudit(ClusterAudit):
         # Uncommenting the next lines fixes the name test, but that then
         # exposes pre-existing bugs that need to be fixed.
         #if self.CM["Name"] == "crm-corosync":
-        #    return 1
-        return 0
+        #    return True
+        return False
 
 
 class PartitionAudit(ClusterAudit):
@@ -875,8 +871,8 @@ class PartitionAudit(ClusterAudit):
         # Uncommenting the next lines fixes the name test, but that then
         # exposes pre-existing bugs that need to be fixed.
         #if self.CM["Name"] == "crm-corosync":
-        #    return 1
-        return 0
+        #    return True
+        return False
 
 AllAuditClasses.append(DiskAudit)
 AllAuditClasses.append(FileAudit)
