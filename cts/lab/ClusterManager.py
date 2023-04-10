@@ -64,7 +64,6 @@ class ClusterManager(UserDict):
         self.OurNode = os.uname()[1].lower()
         self.__instance_errorstoignore = []
 
-        self.fastfail = False
         self.cib_installed = 0
         self.config = None
         self.cluster_monitor = 0
@@ -878,21 +877,20 @@ class ClusterManager(UserDict):
                         "Attempting connection to fencing daemon",
                     ], badnews_ignore = stonith_ignore))
 
-        if not self.fastfail:
-            ccm.pats.extend([
-                # these status numbers are likely wrong now
-                r"attrd.*exited with status 1",
-                r"pacemaker-(based|controld).*exited with status 2",
-                ])
-            based.pats.extend([
-                # these status numbers are likely wrong now
-                r"attrd.*exited with status 1",
-                r"pacemaker-controld.*exited with status 2",
-                ])
-            execd.pats.extend([
-                # these status numbers are likely wrong now
-                r"pacemaker-controld.*exited with status 2",
-                ])
+        ccm.pats.extend([
+            # these status numbers are likely wrong now
+            r"attrd.*exited with status 1",
+            r"pacemaker-(based|controld).*exited with status 2",
+            ])
+        based.pats.extend([
+            # these status numbers are likely wrong now
+            r"attrd.*exited with status 1",
+            r"pacemaker-controld.*exited with status 2",
+            ])
+        execd.pats.extend([
+            # these status numbers are likely wrong now
+            r"pacemaker-controld.*exited with status 2",
+            ])
 
         complist.append(ccm)
         complist.append(based)
