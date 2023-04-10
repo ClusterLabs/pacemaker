@@ -263,7 +263,6 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
     int rc = pcmk_rc_ok;
 
     char *found_attr_id = NULL;
-    char *local_attr_set = NULL;
 
     GList/*<pe_resource_t*>*/ *resources = NULL;
     const char *top_id = pe__const_top_resource(rsc, false)->id;
@@ -326,12 +325,13 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
 
     for (GList *iter = resources; iter != NULL; iter = iter->next) {
         char *lookup_id = NULL;
+        char *local_attr_set = NULL;
         const char *rsc_attr_id = attr_id;
+        const char *rsc_attr_set = attr_set;
 
         xmlNode *xml_top = NULL;
         xmlNode *xml_obj = NULL;
         found_attr_id = NULL;
-        local_attr_set = NULL;
 
         rsc = (pe_resource_t *) iter->data;
 
@@ -347,14 +347,14 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
                 break;
 
             case ENXIO:
-                if (attr_set == NULL) {
+                if (rsc_attr_set == NULL) {
                     local_attr_set = crm_strdup_printf("%s-%s", lookup_id,
                                                        attr_set_type);
-                    attr_set = local_attr_set;
+                    rsc_attr_set = local_attr_set;
                 }
                 if (rsc_attr_id == NULL) {
                     found_attr_id = crm_strdup_printf("%s-%s",
-                                                      attr_set, attr_name);
+                                                      rsc_attr_set, attr_name);
                     rsc_attr_id = found_attr_id;
                 }
 
@@ -362,7 +362,7 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
                 crm_xml_add(xml_top, XML_ATTR_ID, lookup_id);
 
                 xml_obj = create_xml_node(xml_top, attr_set_type);
-                crm_xml_add(xml_obj, XML_ATTR_ID, attr_set);
+                crm_xml_add(xml_obj, XML_ATTR_ID, rsc_attr_set);
                 break;
 
             default:
@@ -386,8 +386,8 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
         if (rc == pcmk_rc_ok) {
             out->info(out, "Set '%s' option: id=%s%s%s%s%s value=%s",
                       lookup_id, found_attr_id,
-                      ((attr_set == NULL)? "" : " set="),
-                      pcmk__s(attr_set, ""),
+                      ((rsc_attr_set == NULL)? "" : " set="),
+                      pcmk__s(rsc_attr_set, ""),
                       ((attr_name == NULL)? "" : " name="),
                       pcmk__s(attr_name, ""), attr_value);
         }
