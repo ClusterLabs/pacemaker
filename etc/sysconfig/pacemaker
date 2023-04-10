@@ -1,8 +1,75 @@
-#==#==# Variables that control logging
+#
+# Pacemaker start-up configuration
+#
+# This file contains environment variables that affect Pacemaker behavior.
+# They are not options stored in the Cluster Information Base (CIB) because
+# they may be needed before the CIB is available.
+#
 
-# Enable debug logging globally (yes|no) or by subsystem. Multiple subsystems
-# may be comma-separated, for example: PCMK_debug=pacemakerd,pacemaker-execd
-# Subsystems are:
+
+## Logging
+
+# PCMK_logfacility
+#
+# Enable logging via the system log or journal, using the specified log
+# facility. Messages sent here are of value to all Pacemaker administrators.
+# This can be disabled using "none", but that is not recommended. Allowed
+# values:
+#
+#  none
+#  daemon
+#  user
+#  local0
+#  local1
+#  local2
+#  local3
+#  local4
+#  local5
+#  local6
+#  local7
+#
+# Default: PCMK_logfacility="daemon"
+
+# PCMK_logpriority
+#
+# Unless system logging is disabled using PCMK_logfacility=none, messages of
+# the specified log severity and higher will be sent to the system log. The
+# default is appropriate for most installations. Allowed values:
+#
+#  emerg
+#  alert
+#  crit
+#  error
+#  warning
+#  notice
+#  info
+#  debug
+#
+# Default: PCMK_logpriority="notice"
+
+# PCMK_logfile
+#
+# Unless set to "none", more detailed log messages will be sent to the
+# specified file (in addition to the system log, if enabled). These messages
+# may have extended information, and will include messages of info severity.
+# This log is of more use to developers and advanced system administrators, and
+# when reporting problems.
+#
+# Default: PCMK_logfile="/var/log/pacemaker/pacemaker.log"
+
+# PCMK_logfile_mode
+#
+# Pacemaker will set the permissions on the detail log to this value (see
+# chmod(1)).
+#
+# Default: PCMK_logfile_mode="0660"
+
+# PCMK_debug (Advanced Use Only)
+#
+# Whether to send debug severity messages to the detail log.
+# This may be set for all subsystems (yes or no) or for specific
+# (comma-separated) subsystems. Allowed subsystems are:
+#
 #  pacemakerd
 #  pacemaker-attrd
 #  pacemaker-based
@@ -10,164 +77,261 @@
 #  pacemaker-execd
 #  pacemaker-fenced
 #  pacemaker-schedulerd
-# PCMK_debug=no
+#
+# Default: PCMK_debug="no"
+# Example: PCMK_debug="pacemakerd,pacemaker-execd"
 
-# Send detailed log messages to the specified file. Compared to messages logged
-# via syslog, messages in this file may have extended information, and will
-# include messages of "info" severity (and, if debug and/or trace logging
-# has been enabled, those as well). This log is of more use to developers and
-# advanced system administrators, and when reporting problems.
-# PCMK_logfile=/var/log/pacemaker/pacemaker.log
+# PCMK_trace_functions (Advanced Use Only)
+#
+# Log trace severity messages from these (comma-separated) functions to the
+# detail log.
+#
+# Default: PCMK_trace_functions=""
+# Example: PCMK_trace_functions="unpack_colocation_set,pcmk__cmp_instance"
 
-# Set the permissions on the above log file to owner/group read/write
-# PCMK_logfile_mode=0660
+# PCMK_trace_files (Advanced Use Only)
+#
+# Log trace severity messages from these (comma-separated) source file names to
+# the detail log.
+#
+# Default: PCMK_trace_files=""
+# Example: PCMK_trace_files="remote.c,watchdog.c"
 
-# Enable logging via syslog, using the specified syslog facility. Messages sent
-# here are of value to all Pacemaker users. This can be disabled using "none",
-# but that is not recommended. The default is "daemon".
-# PCMK_logfacility=none|daemon|user|local0|local1|local2|local3|local4|local5|local6|local7
+# PCMK_trace_formats (Advanced Use Only)
+#
+# Log trace severity messages from these (comma-separated) print formats.
+#
+# Default: PCMK_trace_formats=""
+# Example: PCMK_trace_formats="TLS handshake failed: %s (%d)"
 
-# Unless syslog logging is disabled using PCMK_logfacility=none, messages of
-# the specified severity and higher will be sent to syslog. The default value
-# of "notice" is appropriate for most installations; "info" is highly verbose
-# and "debug" is almost certain to send you blind (which is why there is a
-# separate detail log specified by PCMK_logfile).
-# PCMK_logpriority=emerg|alert|crit|error|warning|notice|info|debug
+# PCMK_trace_tags (Advanced Use Only)
+#
+# Log trace severity messages related to these (comma-separated) resource IDs.
+#
+# Default: PCMK_trace_tags=""
+# Example: PCMK_trace_tags="client-ip,dbfs"
 
-# Log all messages from a comma-separated list of functions.
-# PCMK_trace_functions=function1,function2,function3
+# PCMK_blackbox (Advanced Use Only)
+#
+# Enable blackbox logging globally (yes or no) or by subsystem. A blackbox
+# contains a rolling buffer of all logs (of all severities). Blackboxes are
+# stored under /var/lib/pacemaker/blackbox by default, and their contents can
+# be viewed using the qb-blackbox(8) command.
+#
+# The blackbox recorder can be enabled at start using this variable, or at
+# runtime by sending a Pacemaker subsystem daemon process a SIGUSR1 or SIGTRAP
+# signal, and disabled by sending SIGUSR2 (see kill(1)). The blackbox will be
+# written after a crash, assertion failure, or SIGTRAP signal.
+#
+# Default: PCMK_blackbox="no"
+# Example: PCMK_blackbox="pacemaker-controld,pacemaker-fenced"
 
-# Log all messages from a comma-separated list of file names (without path).
-# PCMK_trace_files=file1.c,file2.c
+# PCMK_trace_blackbox (Advanced Use Only)
+#
+# Write a blackbox whenever the message at the specified function and line is
+# logged. Multiple entries may be comma-separated.
+#
+# Default: PCMK_trace_blackbox=""
+# Example: PCMK_trace_blackbox="remote.c:144,remote.c:149"
 
-# Log all messages matching comma-separated list of formats.
-# PCMK_trace_formats="Sent delete %d"
 
-# Log all messages from a comma-separated list of tags.
-# PCMK_trace_tags=tag1,tag2
+## Node start state
 
-# Dump the blackbox whenever the message at function and line is emitted,
-# e.g. PCMK_trace_blackbox=te_graph_trigger:223,unpack_clone:81
-# PCMK_trace_blackbox=fn:line,fn2:line2,...
+# PCMK_node_start_state
+#
+# By default, the local host will join the cluster in an online or standby
+# state when Pacemaker first starts depending on whether it was previously put
+# into standby mode. If this variable is set to "standby" or "online", it will
+# force the local host to join in the specified state. This has no effect on
+# Pacemaker Remote nodes.
+#
+# Default: PCMK_node_start_state="default"
 
-# Enable blackbox logging globally or per-subsystem. The blackbox contains a
-# rolling buffer of all logs (including info, debug, and trace) and is written
-# after a crash or assertion failure, and/or when SIGTRAP is received. The
-# blackbox recorder can also be enabled for Pacemaker daemons at runtime by
-# sending SIGUSR1 (or SIGTRAP), and disabled by sending SIGUSR2. Specify value
-# as for PCMK_debug above.
-# PCMK_blackbox=no
 
-#==#==# Advanced use only
+## Crash Handling
 
-# By default, nodes will join the cluster in an online state when they first
-# start, unless they were previously put into standby mode. If this variable is
-# set to "standby" or "online", it will force this node to join in the
-# specified state when starting.
-# (only supported for cluster nodes, not Pacemaker Remote nodes)
-# PCMK_node_start_state=default
+# PCMK_fail_fast
+#
+# By default, if a Pacemaker subsystem crashes, the main pacemakerd process
+# will attempt to restart it. If this variable is set to "yes", pacemakerd
+# will panic the local host instead.
+#
+# Default: PCMK_fail_fast="no"
 
-# Specify an alternate location for RNG schemas and XSL transforms.
-# (This is of use only to developers.)
-# PCMK_schema_directory=/some/path
+# PCMK_panic_action
+#
+# Pacemaker will panic the local host under certain conditions. By default,
+# this means rebooting the host. This variable can change that behavior: if
+# "crash", trigger a kernel crash (useful if you want a kernel dump to
+# investigate); if "sync-reboot" or "sync-crash", synchronize filesystems
+# before rebooting the host or triggering a kernel crash. The sync values are
+# more likely to preserve log messages, but with the risk that the host may be
+# left active if the synchronization hangs.
+#
+# Default: PCMK_panic_action="reboot"
 
-# Pacemaker consists of a main process with multiple subsidiary daemons. If
-# one of the daemons crashes, the main process will normally attempt to
-# restart it. If this is set to "true", the main process will instead panic
-# the host (see PCMK_panic_action). The default is unset.
-# PCMK_fail_fast=no
 
-# Pacemaker will panic its host under certain conditions. If this is set to
-# "crash", Pacemaker will trigger a kernel crash (which is useful if you want a
-# kernel dump to investigate). If "sync-reboot" or "sync-crash" is set, execute
-# sync() before host reboot or kernel crash (this leaves information about the
-# crashed daemon in the log file, but note that there is a possibility that the
-# sync() call may not return). For any other value, Pacemaker will trigger a
-# host reboot. The default is unset.
-# PCMK_panic_action=crash
+## Pacemaker Remote
 
-#==#==# Pacemaker Remote
+# PCMK_authkey_location
+#
 # Use the contents of this file as the authorization key to use with Pacemaker
 # Remote connections. This file must be readable by Pacemaker daemons (that is,
 # it must allow read permissions to either the hacluster user or the haclient
-# group), and its contents must be identical on all nodes. The default is
-# "/etc/pacemaker/authkey".
-# PCMK_authkey_location=/etc/pacemaker/authkey
+# group), and its contents must be identical on all nodes.
+#
+# Default: PCMK_authkey_location="/etc/pacemaker/authkey"
 
-# If the Pacemaker Remote service is run on the local node, it will listen
-# for connections on this address. The value may be a resolvable hostname or an
-# IPv4 or IPv6 numeric address. When resolving names or using the default
-# wildcard address (i.e. listen on all available addresses), IPv6 will be
+# PCMK_remote_address
+#
+# By default, if the Pacemaker Remote service is run on the local node, it will
+# listen for connections on all IP addresses. This may be set to one address to
+# listen on instead, as a resolvable hostname or as a numeric IPv4 or IPv6
+# address. When resolving names or listening on all addresses, IPv6 will be
 # preferred if available. When listening on an IPv6 address, IPv4 clients will
-# be supported (via IPv4-mapped IPv6 addresses).
-# PCMK_remote_address="192.0.2.1"
+# be supported via IPv4-mapped IPv6 addresses.
+#
+# Default: PCMK_remote_address=""
+# Example: PCMK_remote_address="192.0.2.1"
 
-# Use this TCP port number when connecting to a Pacemaker Remote node. This
-# value must be the same on all nodes. The default is "3121".
-# PCMK_remote_port=3121
+# PCMK_remote_port
+#
+# Use this TCP port number for Pacemaker Remote node connections. This value
+# must be the same on all nodes.
+#
+# Default: PCMK_remote_port="3121"
 
-# Use these GnuTLS cipher priorities for TLS connections. See:
+# PCMK_tls_priorities (Advanced Use Only)
+#
+# These GnuTLS cipher priorities will be used for TLS connections (whether for
+# Pacemaker Remote connections or remote CIB access, when enabled). See:
 #
 #   https://gnutls.org/manual/html_node/Priority-Strings.html
 #
-# Pacemaker will append ":+ANON-DH" for remote CIB access (when enabled) and
-# ":+DHE-PSK:+PSK" for Pacemaker Remote connections, as they are required for
-# the respective functionality.
-# PCMK_tls_priorities="NORMAL"
+# Pacemaker will append ":+ANON-DH" for remote CIB access and ":+DHE-PSK:+PSK"
+# for Pacemaker Remote connections, as they are required for the respective
+# functionality.
+#
+# Default: PCMK_tls_priorities="NORMAL"
+# Example: PCMK_tls_priorities="SECURE128:+SECURE192:-VERS-ALL:+VERS-TLS1.2"
 
-# Set bounds on the bit length of the prime number generated for Diffie-Hellman
-# parameters needed by TLS connections. The default is not to set any bounds.
+# PCMK_dh_min_bits (Advanced Use Only)
 #
-# If these values are specified, the server (Pacemaker Remote daemon, or CIB
-# manager configured to accept remote clients) will use these values to provide
-# a floor and/or ceiling for the value recommended by the GnuTLS library. The
-# library will only accept a limited number of specific values, which vary by
-# library version, so setting these is recommended only when required for
-# compatibility with specific client versions.
+# Set a lower bound on the bit length of the prime number generated for
+# Diffie-Hellman parameters needed by TLS connections. The default is no
+# minimum.
 #
-# If PCMK_dh_min_bits is specified, the client (connecting cluster node or
-# remote CIB command) will require that the server use a prime of at least this
-# size. This is only recommended when the value must be lowered in order for
-# the client's GnuTLS library to accept a connection to an older server.
-# The client side does not use PCMK_dh_max_bits.
+# The server (Pacemaker Remote daemon, or CIB manager configured to accept
+# remote clients) will use this value to provide a floor for the value
+# recommended by the GnuTLS library. The library will only accept a limited
+# number of specific values, which vary by library version, so setting these is
+# recommended only when required for compatibility with specific client
+# versions.
+#
+# Clients (connecting cluster nodes or remote CIB commands) will require that
+# the server use a prime of at least this size. This is recommended only when
+# the value must be lowered in order for the client's GnuTLS library to accept
+# a connection to an older server.
 # 
-# PCMK_dh_min_bits=1024
-# PCMK_dh_max_bits=2048
+# Default: PCMK_dh_min_bits="1024"
 
-#==#==# IPC
+# PCMK_dh_max_bits (Advanced Use Only)
+#
+# Set an upper bound on the bit length of the prime number generated for
+# Diffie-Hellman parameters needed by TLS connections. The default is no
+# maximum.
+#
+# The server (Pacemaker Remote daemon, or CIB manager configured to accept
+# remote clients) will use this value to provide a ceiling for the value
+# recommended by the GnuTLS library. The library will only accept a limited
+# number of specific values, which vary by library version, so setting these is
+# recommended only when required for compatibility with specific client
+# versions.
+#
+# Clients do not use PCMK_dh_max_bits.
+#
+# Default: PCMK_dh_max_bits="2048"
 
-# Force use of a particular class of IPC connection.
-# PCMK_ipc_type=shared-mem|socket|posix|sysv
 
-# Specify an IPC buffer size in bytes. This is useful when connecting to really
-# big clusters that exceed the default 128KB buffer.
-# PCMK_ipc_buffer=131072
+## Inter-process Communication
 
-#==#==# Profiling and memory leak testing (mainly useful to developers)
+# PCMK_ipc_type (Advanced Use Only)
+#
+# Force use of a particular IPC method. Allowed values:
+#
+#  shared-mem
+#  socket
+#  posix
+#  sysv
+#
+# Default: PCMK_ipc_type="shared-mem"
 
+# PCMK_ipc_buffer (Advanced Use Only)
+#
+# Specify an IPC buffer size in bytes. This can be useful when connecting to
+# large clusters that result in messages exceeding the default size (which will
+# also result in log messages referencing this variable).
+#
+# Default: PCMK_ipc_buffer="131072"
+
+
+## Developer Options
+
+# PCMK_schema_directory (Advanced Use Only)
+#
+# Specify an alternate location for RNG schemas and XSL transforms.
+#
+# Default: PCMK_schema_directory="/usr/share/pacemaker"
+
+# G_SLICE (Advanced Use Only)
+#
 # Affect the behavior of glib's memory allocator. Setting to "always-malloc"
 # when running under valgrind will help valgrind track malloc/free better;
 # setting to "debug-blocks" when not running under valgrind will perform
 # (somewhat expensive) memory checks.
-# G_SLICE=always-malloc
+#
+# Default: G_SLICE=""
+# Example: G_SLICE="always-malloc"
 
-# Uncommenting this will make malloc() initialize newly allocated memory
-# and free() wipe it (to help catch uninitialized-memory/use-after-free).
-# MALLOC_PERTURB_=221
+# MALLOC_PERTURB_ (Advanced Use Only)
+#
+# Setting this to a decimal byte value will make malloc() initialize newly
+# allocated memory and free() wipe it, to help catch uninitialized-memory and
+# use-after-free bugs.
+#
+# Default: MALLOC_PERTURB_=""
+# Example: MALLOC_PERTURB_="221"
 
-# Uncommenting this will make malloc() and friends print to stderr and abort
+# MALLOC_CHECK_ (Advanced Use Only)
+#
+# Setting this to 3 will make malloc() and friends print to stderr and abort
 # for some (inexpensive) memory checks.
-# MALLOC_CHECK_=3
+#
+# Default: MALLOC_CHECK_=""
+# Example: MALLOC_CHECK_="3"
 
-# Set as for PCMK_debug above to run some or all daemons under valgrind.
-# PCMK_valgrind_enabled=no
+# PCMK_valgrind_enabled (Advanced Use Only)
+#
+# Whether subsystem daemons should be run under valgrind. Allowed values are
+# the same as for PCMK_debug.
+#
+# Default: PCMK_valgrind_enabled="no"
 
-# Set as for PCMK_debug above to run some or all daemons under valgrind with
-# the callgrind tool enabled.
-# PCMK_callgrind_enabled=no
+# PCMK_callgrind_enabled
+#
+# Whether subsystem daemons should be run under valgrind with the callgrind
+# tool enabled. Allowed values are the same as for PCMK_debug.
+#
+# Default: PCMK_callgrind_enabled="no"
 
-# Set the options to pass to valgrind, when valgrind is enabled. See
-# valgrind(1) man page for details. "--vgdb=no" is specified because
-# pacemaker-execd can lower privileges when executing commands, which would
-# otherwise leave a bunch of unremovable files in /tmp.
-VALGRIND_OPTS="--leak-check=full --trace-children=no --vgdb=no --num-callers=25 --log-file=/var/lib/pacemaker/valgrind-%p --suppressions=/usr/share/pacemaker/tests/valgrind-pcmk.suppressions --gen-suppressions=all"
+# VALGRIND_OPTS
+#
+# Pass these options to valgrind, when enabled (see valgrind(1)). "--vgdb=no"
+# is specified because pacemaker-execd can lower privileges when executing
+# commands, which would otherwise leave a bunch of unremovable files in /tmp.
+#
+# Default: VALGRIND_OPTS=""
+VALGRIND_OPTS="--leak-check=full --trace-children=no --vgdb=no --num-callers=25"
+VALGRIND_OPTS="$VALGRIND_OPTS --log-file=/var/lib/pacemaker/valgrind-%p"
+VALGRIND_OPTS="$VALGRIND_OPTS --suppressions=/usr/share/pacemaker/tests/valgrind-pcmk.suppressions"
+VALGRIND_OPTS="$VALGRIND_OPTS --gen-suppressions=all"
