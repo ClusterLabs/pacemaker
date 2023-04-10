@@ -480,6 +480,7 @@ cli_resource_delete_attribute(pe_resource_t *rsc, const char *requested_name,
         char *lookup_id = NULL;
         xmlNode *xml_obj = NULL;
         char *found_attr_id = NULL;
+        const char *rsc_attr_id = attr_id;
 
         rsc = (pe_resource_t *) iter->data;
 
@@ -501,11 +502,11 @@ cli_resource_delete_attribute(pe_resource_t *rsc, const char *requested_name,
                 return rc;
         }
 
-        if (attr_id == NULL) {
-            attr_id = found_attr_id;
+        if (rsc_attr_id == NULL) {
+            rsc_attr_id = found_attr_id;
         }
 
-        xml_obj = crm_create_nvpair_xml(NULL, attr_id, attr_name, NULL);
+        xml_obj = crm_create_nvpair_xml(NULL, rsc_attr_id, attr_name, NULL);
         crm_log_xml_debug(xml_obj, "Delete");
 
         CRM_ASSERT(cib);
