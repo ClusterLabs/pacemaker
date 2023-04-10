@@ -267,7 +267,6 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
 
     GList/*<pe_resource_t*>*/ *resources = NULL;
     const char *top_id = pe__const_top_resource(rsc, false)->id;
-    const char *common_attr_id = attr_id;
 
     if ((attr_id == NULL) && !force) {
         find_resource_attr(out, cib, XML_ATTR_ID, top_id, NULL, NULL, NULL,
@@ -327,6 +326,7 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
 
     for (GList *iter = resources; iter != NULL; iter = iter->next) {
         char *lookup_id = NULL;
+        const char *rsc_attr_id = attr_id;
 
         xmlNode *xml_top = NULL;
         xmlNode *xml_obj = NULL;
@@ -334,7 +334,6 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
         local_attr_set = NULL;
 
         rsc = (pe_resource_t *) iter->data;
-        attr_id = common_attr_id;
 
         lookup_id = clone_strip(rsc->id); /* Could be a cloned group! */
         rc = find_resource_attr(out, cib, XML_ATTR_ID, lookup_id, attr_set_type,
@@ -344,7 +343,7 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
             case pcmk_rc_ok:
                 crm_debug("Found a match for name=%s: id=%s",
                           attr_name, found_attr_id);
-                attr_id = found_attr_id;
+                rsc_attr_id = found_attr_id;
                 break;
 
             case ENXIO:
@@ -353,10 +352,10 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
                                                        attr_set_type);
                     attr_set = local_attr_set;
                 }
-                if (attr_id == NULL) {
+                if (rsc_attr_id == NULL) {
                     found_attr_id = crm_strdup_printf("%s-%s",
                                                       attr_set, attr_name);
-                    attr_id = found_attr_id;
+                    rsc_attr_id = found_attr_id;
                 }
 
                 xml_top = create_xml_node(NULL, crm_element_name(rsc->xml));
@@ -373,7 +372,7 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
                 return rc;
         }
 
-        xml_obj = crm_create_nvpair_xml(xml_obj, attr_id, attr_name,
+        xml_obj = crm_create_nvpair_xml(xml_obj, rsc_attr_id, attr_name,
                                         attr_value);
         if (xml_top == NULL) {
             xml_top = xml_obj;
