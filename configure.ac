@@ -198,6 +198,42 @@ check_systemdsystemunitdir() {
     return $?
 }
 
+#
+# Fix the defaults of certain built-in variables so they can be used in our
+# custom argument defaults
+#
+
+AC_MSG_NOTICE([Sanitizing prefix: ${prefix}])
+AS_IF([test x"$prefix" = x"NONE"],
+      [
+          prefix=/usr
+          dnl Fix default variables - "prefix" variable if not specified
+          AS_IF([test x"$localstatedir" = x"\${prefix}/var"],
+                [localstatedir="/var"])
+          AS_IF([test x"$sysconfdir" = x"\${prefix}/etc"],
+                [sysconfdir="/etc"])
+      ])
+
+AC_MSG_NOTICE([Sanitizing exec_prefix: ${exec_prefix}])
+AS_CASE([$exec_prefix],
+        [prefix|NONE], [exec_prefix=$prefix])
+
+AC_MSG_NOTICE([Sanitizing libdir: ${libdir}])
+AS_CASE([$libdir],
+        [prefix|NONE], [
+            AC_MSG_CHECKING([which lib directory to use])
+            for aDir in lib64 lib
+            do
+                trydir="${exec_prefix}/${aDir}"
+                AS_IF([test -d ${trydir}],
+                      [
+                          libdir=${trydir}
+                          break
+                      ])
+            done
+            AC_MSG_RESULT([$libdir])
+        ])
+
 dnl ===============================================
 dnl Configure Options
 dnl ===============================================
@@ -610,21 +646,6 @@ AS_IF([test $enable_fatal_warnings -ne $DISABLED && test x"$GCC" = x"yes" && cc_
                   ])
       ])
 
-AC_MSG_NOTICE([Sanitizing prefix: ${prefix}])
-AS_IF([test x"$prefix" = x"NONE"],
-      [
-          prefix=/usr
-          dnl Fix default variables - "prefix" variable if not specified
-          AS_IF([test x"$localstatedir" = x"\${prefix}/var"],
-                [localstatedir="/var"])
-          AS_IF([test x"$sysconfdir" = x"\${prefix}/etc"],
-                [sysconfdir="/etc"])
-      ])
-
-AC_MSG_NOTICE([Sanitizing exec_prefix: ${exec_prefix}])
-AS_CASE([$exec_prefix],
-        [prefix|NONE], [exec_prefix=$prefix])
-
 AC_MSG_NOTICE([Sanitizing INITDIR: ${INITDIR}])
 AS_CASE([$INITDIR],
         [prefix], [INITDIR=$prefix],
@@ -642,22 +663,6 @@ AS_CASE([$INITDIR],
             AC_MSG_RESULT([$INITDIR])
         ])
 AC_SUBST(INITDIR)
-
-AC_MSG_NOTICE([Sanitizing libdir: ${libdir}])
-AS_CASE([$libdir],
-        [prefix|NONE], [
-            AC_MSG_CHECKING([which lib directory to use])
-            for aDir in lib64 lib
-            do
-                trydir="${exec_prefix}/${aDir}"
-                AS_IF([test -d ${trydir}],
-                      [
-                          libdir=${trydir}
-                          break
-                      ])
-            done
-            AC_MSG_RESULT([$libdir])
-        ])
 
 dnl Expand values of autoconf-provided directory options
 expand_path_option prefix
