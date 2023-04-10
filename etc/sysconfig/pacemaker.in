@@ -55,7 +55,7 @@
 # This log is of more use to developers and advanced system administrators, and
 # when reporting problems.
 #
-# Default: PCMK_logfile="/var/log/pacemaker/pacemaker.log"
+# Default: PCMK_logfile="@CRM_LOG_DIR@/pacemaker.log"
 
 # PCMK_logfile_mode
 #
@@ -115,7 +115,7 @@
 #
 # Enable blackbox logging globally (yes or no) or by subsystem. A blackbox
 # contains a rolling buffer of all logs (of all severities). Blackboxes are
-# stored under /var/lib/pacemaker/blackbox by default, and their contents can
+# stored under @CRM_BLACKBOX_DIR@ by default, and their contents can
 # be viewed using the qb-blackbox(8) command.
 #
 # The blackbox recorder can be enabled at start using this variable, or at
@@ -180,7 +180,7 @@
 # it must allow read permissions to either the hacluster user or the haclient
 # group), and its contents must be identical on all nodes.
 #
-# Default: PCMK_authkey_location="/etc/pacemaker/authkey"
+# Default: PCMK_authkey_location="@PACEMAKER_CONFIG_DIR@/authkey"
 
 # PCMK_remote_address
 #
@@ -212,7 +212,7 @@
 # for Pacemaker Remote connections, as they are required for the respective
 # functionality.
 #
-# Default: PCMK_tls_priorities="NORMAL"
+# Default: PCMK_tls_priorities="@PCMK_GNUTLS_PRIORITIES@"
 # Example: PCMK_tls_priorities="SECURE128:+SECURE192:-VERS-ALL:+VERS-TLS1.2"
 
 # PCMK_dh_min_bits (Advanced Use Only)
@@ -281,7 +281,7 @@
 #
 # Specify an alternate location for RNG schemas and XSL transforms.
 #
-# Default: PCMK_schema_directory="/usr/share/pacemaker"
+# Default: PCMK_schema_directory="@CRM_SCHEMA_DIRECTORY@"
 
 # G_SLICE (Advanced Use Only)
 #
@@ -332,6 +332,6 @@
 #
 # Default: VALGRIND_OPTS=""
 VALGRIND_OPTS="--leak-check=full --trace-children=no --vgdb=no --num-callers=25"
-VALGRIND_OPTS="$VALGRIND_OPTS --log-file=/var/lib/pacemaker/valgrind-%p"
-VALGRIND_OPTS="$VALGRIND_OPTS --suppressions=/usr/share/pacemaker/tests/valgrind-pcmk.suppressions"
+VALGRIND_OPTS="$VALGRIND_OPTS --log-file=@CRM_PACEMAKER_DIR@/valgrind-%p"
+VALGRIND_OPTS="$VALGRIND_OPTS --suppressions=@datadir@/pacemaker/tests/valgrind-pcmk.suppressions"
 VALGRIND_OPTS="$VALGRIND_OPTS --gen-suppressions=all"

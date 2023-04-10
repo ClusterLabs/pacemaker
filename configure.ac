@@ -719,6 +719,7 @@ AS_IF([test x"${PCMK_GNUTLS_PRIORITIES}" != x""], [],
       [AC_MSG_ERROR([--with-gnutls-priorities value must not be empty])])
 AC_DEFINE_UNQUOTED([PCMK_GNUTLS_PRIORITIES], ["$PCMK_GNUTLS_PRIORITIES"],
                    [GnuTLS cipher priorities])
+AC_SUBST(PCMK_GNUTLS_PRIORITIES)
 
 AS_IF([test x"${BUG_URL}" = x""],
       [BUG_URL="https://bugs.clusterlabs.org/enter_bug.cgi?product=Pacemaker"])
