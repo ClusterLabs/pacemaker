@@ -710,12 +710,14 @@ class PartitionAudit(ClusterAudit):
         if len(avalue) > 1:
             return avalue[:-1]
 
-    def trim2int(self, avalue):
-        if not avalue:
-            return None
+        return avalue
 
-        if len(avalue) > 1:
-            return int(avalue[:-1])
+    def trim2int(self, avalue):
+        trimmed = self.trim_string(avalue)
+        if trimmed:
+            return int(trimmed)
+
+        return None
 
     def audit_partition(self, partition):
         passed = 1
