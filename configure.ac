@@ -2038,6 +2038,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 etc/Makefile                                        \
                 etc/init.d/pacemaker                                \
                 etc/logrotate.d/pacemaker                           \
+                etc/sysconfig/pacemaker                             \
                 include/Makefile                                    \
                 include/crm/Makefile                                \
                 include/crm/cib/Makefile                            \
