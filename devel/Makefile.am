@@ -1,5 +1,5 @@
 #
-# Copyright 2020-2022 the Pacemaker project contributors
+# Copyright 2020-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -181,6 +181,56 @@ cppcheck:
 cppcheck-clean:
 	-rm -f "$(CPPCHECK_OUT)"
 
+#
+# Coverage/profiling
+#
+
+COVERAGE_DIR = $(top_builddir)/coverage
+
+# Check coverage of unit tests
+.PHONY: coverage
+coverage: coverage-partial-clean
+	cd $(top_builddir)						\
+	&& $(MAKE) $(AM_MAKEFLAGS) core					\
+	&& lcov --no-external --exclude='*_test.c' -c -i -d .		\
+		-o pacemaker_base.info					\
+	&& $(MAKE) $(AM_MAKEFLAGS) check				\
+	&& lcov --no-external --exclude='*_test.c' -c -d .		\
+		-o pacemaker_test.info					\
+	&& lcov -a pacemaker_base.info -a pacemaker_test.info		\
+		-o pacemaker_total.info
+	genhtml $(top_builddir)/pacemaker_total.info -o $(COVERAGE_DIR) -s
+
+# Check coverage of CLI regression tests
+.PHONY: coverage-cts
+coverage-cts: coverage-partial-clean
+	cd $(top_builddir)						\
+	&& $(MAKE) $(AM_MAKEFLAGS) core					\
+	&& lcov --no-external -c -i -d tools -o pacemaker_base.info	\
+	&& cts/cts-cli							\
+	&& lcov --no-external -c -d tools -o pacemaker_test.info	\
+	&& lcov -a pacemaker_base.info -a pacemaker_test.info		\
+		-o pacemaker_total.info
+	genhtml $(top_builddir)/pacemaker_total.info -o $(COVERAGE_DIR) -s
+
+# Remove coverage-related files that aren't needed across runs
+.PHONY: coverage-partial-clean
+coverage-partial-clean:
+	-rm -f $(top_builddir)/pacemaker_*.info
+	-rm -rf $(COVERAGE_DIR)
+	-find $(top_builddir) -name "*.gcda" -exec rm -f \{\} \;
+
+# This target removes all coverage-related files.  It is only to be run when
+# done with coverage analysis and you are ready to go back to normal development,
+# starting with re-running ./configure.  It is not to be run in between
+# "make coverage" runs.
+#
+# In particular, the *.gcno files are generated when the source is built.
+# Removing those files will break "make coverage" until the whole source tree
+# has been built and the *.gcno files generated again.
+.PHONY: coverage-clean
+coverage-clean: coverage-partial-clean
+	-find $(top_builddir) -name "*.gcno" -exec rm -f \{\} \;
 
 #
 # indent cannot cope with all our exceptions and needs heavy manual editing
@@ -241,5 +291,5 @@ EXTRA_PROGRAMS		= scratch
 nodist_scratch_SOURCES	= scratch.c
 scratch_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la
 
-clean-local: coverity-clean cppcheck-clean
+clean-local: coverage-clean coverity-clean cppcheck-clean
 	-rm -f $(EXTRA_PROGRAMS)

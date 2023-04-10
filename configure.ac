@@ -1956,7 +1956,22 @@ AC_SUBST(LIBTOOL)
 AC_SUBST(QUIET_LIBTOOL_OPTS)
 
 dnl Files we output that need to be executable
-CONFIG_FILES_EXEC([cts/cts-attrd],
+CONFIG_FILES_EXEC([agents/ocf/ClusterMon],
+                  [agents/ocf/Dummy],
+                  [agents/ocf/HealthCPU],
+                  [agents/ocf/HealthIOWait],
+                  [agents/ocf/HealthSMART],
+                  [agents/ocf/Stateful],
+                  [agents/ocf/SysInfo],
+                  [agents/ocf/attribute],
+                  [agents/ocf/controld],
+                  [agents/ocf/ifspeed],
+                  [agents/ocf/o2cb],
+                  [agents/ocf/ping],
+                  [agents/ocf/remote],
+                  [agents/stonith/fence_legacy],
+                  [agents/stonith/fence_watchdog],
+                  [cts/cts-attrd],
                   [cts/cts-cli],
                   [cts/cts-exec],
                   [cts/cts-fencing],
@@ -1973,22 +1988,7 @@ CONFIG_FILES_EXEC([cts/cts-attrd],
                   [cts/support/cts-support],
                   [cts/support/fence_dummy],
                   [cts/support/pacemaker-cts-dummyd],
-                  [daemons/fenced/fence_legacy],
-                  [daemons/fenced/fence_watchdog],
                   [doc/abi-check],
-                  [extra/resources/ClusterMon],
-                  [extra/resources/Dummy],
-                  [extra/resources/HealthCPU],
-                  [extra/resources/HealthIOWait],
-                  [extra/resources/HealthSMART],
-                  [extra/resources/Stateful],
-                  [extra/resources/SysInfo],
-                  [extra/resources/attribute],
-                  [extra/resources/controld],
-                  [extra/resources/ifspeed],
-                  [extra/resources/o2cb],
-                  [extra/resources/ping],
-                  [extra/resources/remote],
                   [maint/bumplibs],
                   [tools/cluster-clean],
                   [tools/cluster-helper],
@@ -2002,6 +2002,10 @@ CONFIG_FILES_EXEC([cts/cts-attrd],
 
 dnl Other files we output
 AC_CONFIG_FILES(Makefile                                            \
+                agents/Makefile                                     \
+                agents/alerts/Makefile                              \
+                agents/ocf/Makefile                                 \
+                agents/stonith/Makefile                             \
                 cts/Makefile                                        \
                 cts/benchmark/Makefile                              \
                 cts/lab/Makefile                                    \
@@ -2034,9 +2038,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 etc/Makefile                                        \
                 etc/init.d/pacemaker                                \
                 etc/logrotate.d/pacemaker                           \
-                extra/Makefile                                      \
-                extra/alerts/Makefile                               \
-                extra/resources/Makefile                            \
                 include/Makefile                                    \
                 include/crm/Makefile                                \
                 include/crm/cib/Makefile                            \

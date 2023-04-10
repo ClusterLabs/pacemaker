@@ -15,6 +15,10 @@ include $(top_srcdir)/mk/release.mk
 # use BOOK_FORMATS in sphinx subdirectory to change local builds)
 BOOK_FORMATS		?= html singlehtml pdf epub
 
+# SNMP MIB
+mibdir		= $(datadir)/snmp/mibs
+dist_mib_DATA	= PCMK-MIB.txt
+
 # Deprecated plaintext documents (dynamically converted to HTML)
 DEPRECATED_ORIGINAL	= crm_fencing.txt
 DEPRECATED_GENERATED	=

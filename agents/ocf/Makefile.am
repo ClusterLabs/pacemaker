@@ -1,5 +1,5 @@
 #
-# Copyright 2008-2021 the Pacemaker project contributors
+# Copyright 2008-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -50,5 +50,4 @@ validate: all
 			| xmllint --noout --relaxng $(RNG) - || break;	\
 	done
 
-clean-generic:
-	rm -f $(man7_MANS) $(ocf_SCRIPTS:%=%.xml) $(dist_ocf_SCRIPTS:%=%.xml) *~
+CLEANFILES = $(man7_MANS) $(ocf_SCRIPTS:%=%.xml) $(dist_ocf_SCRIPTS:%=%.xml)
