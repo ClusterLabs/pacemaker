@@ -9,6 +9,7 @@ import warnings
 import tempfile
 
 from pacemaker.buildoptions import BuildOptions
+from pacemaker._cts.CTS import CtsLab
 
 
 class CibBase(object):
@@ -495,7 +496,6 @@ class ConfigFactoryItem(object):
 if __name__ == '__main__':
     """ Unit test (pass cluster node names as command line arguments) """
 
-    import cts.CTS
     import cts.CM_corosync
     import sys
 
@@ -511,7 +511,7 @@ if __name__ == '__main__':
         "--test-ip-base", "fe80::1234:56:7890:1000",
         "--stonith", "rhcs",
     ]
-    env = CTS.CtsLab(args)
+    env = CtsLab(args)
     cm = CM_corosync.crm_corosync()
     CibFactory = ConfigFactory(cm)
     cib = CibFactory.createConfig("pacemaker-3.0")

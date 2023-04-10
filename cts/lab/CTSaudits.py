@@ -123,7 +123,7 @@ class LogAudit(ClusterAudit):
         max = 3
         attempt = 0
 
-        self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
+        self.CM.ns.wait_for_all_nodes(self.CM.Env["nodes"])
         while attempt <= max and self.TestLogging() == 0:
             attempt = attempt + 1
             self.RestartClusterLogging()
@@ -156,7 +156,7 @@ class DiskAudit(ClusterAudit):
         # @TODO Use directory of PCMK_logfile if set on host
         dfcmd = "df -BM " + BuildOptions.LOG_DIR + " | tail -1 | awk '{print $(NF-1)\" \"$(NF-2)}' | tr -d 'M%'"
 
-        self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
+        self.CM.ns.wait_for_all_nodes(self.CM.Env["nodes"])
         for node in self.CM.Env["nodes"]:
             (_, dfout) = self.CM.rsh(node, dfcmd, verbose=1)
             if not dfout:
@@ -209,7 +209,7 @@ class FileAudit(ClusterAudit):
     def __call__(self):
         result = 1
 
-        self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
+        self.CM.ns.wait_for_all_nodes(self.CM.Env["nodes"])
         for node in self.CM.Env["nodes"]:
 
             (_, lsout) = self.CM.rsh(node, "ls -al /var/lib/pacemaker/cores/* | grep core.[0-9]", verbose=1)

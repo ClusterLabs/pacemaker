@@ -14,10 +14,10 @@ import time
 from collections import UserDict
 
 from cts.CIB         import ConfigFactory
-from cts.CTS         import NodeStatus, Process
 from cts.CTStests    import AuditResource
 
 from pacemaker.buildoptions import BuildOptions
+from pacemaker._cts.CTS import NodeStatus, Process
 from pacemaker._cts.environment import EnvFactory
 from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.patterns import PatternSelector
@@ -64,7 +64,6 @@ class ClusterManager(UserDict):
         self.OurNode = os.uname()[1].lower()
         self.__instance_errorstoignore = []
 
-        self.fastfail = 0
         self.cib_installed = 0
         self.config = None
         self.cluster_monitor = 0
@@ -220,7 +219,7 @@ class ClusterManager(UserDict):
                     shot = stonith.look(60)
 
             # Now make sure the node is alive too
-            self.ns.WaitForNodeToComeUp(peer, self.Env["DeadTime"])
+            self.ns.wait_for_node(peer, self.Env["DeadTime"])
 
             # Poll until it comes up
             if self.Env["at-boot"]:
@@ -361,7 +360,7 @@ class ClusterManager(UserDict):
 
         for node in nodelist:
             if self.ShouldBeStatus[node] == "down":
-                self.ns.WaitForAllNodesToComeUp(nodelist, 300)
+                self.ns.wait_for_all_nodes(nodelist, 300)
 
         if not quick:
             # This is used for "basic sanity checks", so only start one node ...
@@ -518,7 +517,7 @@ class ClusterManager(UserDict):
         return self.templates.get_patterns("BadNewsIgnore")
 
     def install_config(self, node):
-        if not self.ns.WaitForNodeToComeUp(node):
+        if not self.ns.wait_for_node(node):
             self.log("Node %s is not up." % node)
             return None
 
@@ -806,7 +805,7 @@ class ClusterManager(UserDict):
 
         stonith_ignore.extend(common_ignore)
 
-        ccm = Process(self, "ccm", triggersreboot=self.fastfail, pats = [
+        ccm = Process(self, "ccm", pats = [
                     "State transition .* S_RECOVERY",
                     "pacemaker-controld.*Action A_RECOVER .* not supported",
                     r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
@@ -829,7 +828,7 @@ class ClusterManager(UserDict):
                     "State transition S_STARTING -> S_PENDING",
                     ], badnews_ignore = common_ignore)
 
-        based = Process(self, "pacemaker-based", triggersreboot=self.fastfail, pats = [
+        based = Process(self, "pacemaker-based", pats = [
                     "State transition .* S_RECOVERY",
                     "Lost connection to the CIB manager",
                     "Connection to the CIB manager terminated",
@@ -841,7 +840,7 @@ class ClusterManager(UserDict):
                     r"attrd.*exited with status 1",
                     ], badnews_ignore = common_ignore)
 
-        execd = Process(self, "pacemaker-execd", triggersreboot=self.fastfail, pats = [
+        execd = Process(self, "pacemaker-execd", pats = [
                     "State transition .* S_RECOVERY",
                     "LRM Connection failed",
                     "pacemaker-controld.*I_ERROR.*lrm_connection_destroy",
@@ -852,7 +851,7 @@ class ClusterManager(UserDict):
                     r"pacemaker-controld.*exited with status 2",
                     ], badnews_ignore = common_ignore)
 
-        controld = Process(self, "pacemaker-controld", triggersreboot=self.fastfail,
+        controld = Process(self, "pacemaker-controld",
                     pats = [
 #                    "WARN: determine_online_status: Node .* is unclean",
 #                    "Scheduling node .* for fencing",
@@ -862,7 +861,7 @@ class ClusterManager(UserDict):
                     "State transition S_STARTING -> S_PENDING",
                     ], badnews_ignore = common_ignore)
 
-        schedulerd = Process(self, "pacemaker-schedulerd", triggersreboot=self.fastfail, pats = [
+        schedulerd = Process(self, "pacemaker-schedulerd", pats = [
                     "State transition .* S_RECOVERY",
                     r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
                     r"pacemaker-controld.*: Could not recover from internal error",
@@ -870,29 +869,28 @@ class ClusterManager(UserDict):
                     "pacemaker-controld.*I_ERROR.*save_cib_contents",
                     # this status number is likely wrong now
                     r"pacemaker-controld.*exited with status 2",
-                    ], badnews_ignore = common_ignore, dc_only=1)
+                    ], badnews_ignore = common_ignore, dc_only=True)
 
         if self.Env["DoFencing"]:
-            complist.append(Process(self, "stoniths", triggersreboot=self.fastfail, dc_pats = [
+            complist.append(Process(self, "stoniths", dc_pats = [
                         r"pacemaker-controld.*CRIT.*: Fencing daemon connection failed",
                         "Attempting connection to fencing daemon",
                     ], badnews_ignore = stonith_ignore))
 
-        if self.fastfail == 0:
-            ccm.pats.extend([
-                # these status numbers are likely wrong now
-                r"attrd.*exited with status 1",
-                r"pacemaker-(based|controld).*exited with status 2",
-                ])
-            based.pats.extend([
-                # these status numbers are likely wrong now
-                r"attrd.*exited with status 1",
-                r"pacemaker-controld.*exited with status 2",
-                ])
-            execd.pats.extend([
-                # these status numbers are likely wrong now
-                r"pacemaker-controld.*exited with status 2",
-                ])
+        ccm.pats.extend([
+            # these status numbers are likely wrong now
+            r"attrd.*exited with status 1",
+            r"pacemaker-(based|controld).*exited with status 2",
+            ])
+        based.pats.extend([
+            # these status numbers are likely wrong now
+            r"attrd.*exited with status 1",
+            r"pacemaker-controld.*exited with status 2",
+            ])
+        execd.pats.extend([
+            # these status numbers are likely wrong now
+            r"pacemaker-controld.*exited with status 2",
+            ])
 
         complist.append(ccm)
         complist.append(based)

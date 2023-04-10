@@ -23,10 +23,10 @@ import subprocess
 import tempfile
 
 from stat import *
-from cts import CTS
 from cts.CTSaudits import *
 
 from pacemaker import BuildOptions
+from pacemaker._cts.CTS import NodeStatus
 from pacemaker._cts.environment import EnvFactory
 from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.patterns import PatternSelector
@@ -471,7 +471,7 @@ class StonithdTest(CTSTest):
             self.CM.cluster_stable()
 
             self.debug("Waiting for fenced node to come back up")
-            self.CM.ns.WaitForAllNodesToComeUp(self.Env["nodes"], 600)
+            self.CM.ns.wait_for_all_nodes(self.Env["nodes"], 600)
 
             self.logger.log("Fencing command on %s failed to fence %s (rc=%d)" % (origin, node, rc))
 
@@ -490,7 +490,7 @@ class StonithdTest(CTSTest):
         self.CM.cluster_stable()
 
         self.debug("Waiting for fenced node to come back up")
-        self.CM.ns.WaitForAllNodesToComeUp(self.Env["nodes"], 600)
+        self.CM.ns.wait_for_all_nodes(self.Env["nodes"], 600)
 
         self.debug("Waiting for the cluster to re-stabilize with all nodes")
         is_stable = self.CM.cluster_stable(self.Env["StartTime"])
@@ -530,7 +530,7 @@ class StartOnebyOne(CTSTest):
         self.name = "StartOnebyOne"
         self.stopall = SimulStopLite(cm)
         self.start = StartTest(cm)
-        self.ns = CTS.NodeStatus(cm.Env)
+        self.ns = NodeStatus(cm.Env)
 
     def __call__(self, dummy):
         '''Perform the 'StartOnebyOne' test. '''
@@ -1401,10 +1401,10 @@ class ComponentFail(CTSTest):
 
         # select a component to kill
         chosen = self.Env.random_gen.choice(self.complist)
-        while chosen.dc_only == 1 and node_is_dc == 0:
+        while chosen.dc_only and node_is_dc == 0:
             chosen = self.Env.random_gen.choice(self.complist)
 
-        self.debug("...component %s (dc=%d,boot=%d)" % (chosen.name, node_is_dc,chosen.triggersreboot))
+        self.debug("...component %s (dc=%d)" % (chosen.name, node_is_dc))
         self.incr(chosen.name)
 
         if chosen.name != "corosync":
@@ -1451,7 +1451,7 @@ class ComponentFail(CTSTest):
         self.CM.cluster_stable()
 
         self.debug("Waiting for any fenced node to come back up")
-        self.CM.ns.WaitForAllNodesToComeUp(self.Env["nodes"], 600)
+        self.CM.ns.wait_for_all_nodes(self.Env["nodes"], 600)
 
         self.debug("Waiting for the cluster to re-stabilize with all nodes")
         self.CM.cluster_stable(self.Env["StartTime"])
@@ -2857,7 +2857,7 @@ class RemoteDriver(CTSTest):
             return
 
         self.debug("Waiting for the remote node to come back up")
-        self.CM.ns.WaitForNodeToComeUp(node, 120);
+        self.CM.ns.wait_for_node(node, 120);
 
         pats = [ ]
         watch = self.create_watch(pats, 240)

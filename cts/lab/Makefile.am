@@ -22,7 +22,6 @@ ctslib_PYTHON		= __init__.py		\
 			  cib_xml.py		\
 			  ClusterManager.py	\
 			  CM_corosync.py	\
-			  CTS.py		\
 			  CTSaudits.py		\
 			  CTSscenarios.py	\
 			  CTStests.py
