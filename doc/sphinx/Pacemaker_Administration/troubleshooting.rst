@@ -104,8 +104,8 @@ explanation, try to answer questions like the following based on log messages:
 * Did pacemaker-controld on the DC invoke the scheduler and schedule a new
   transition?
 * Did the transition include fencing the failed node?
-* Was the fencing attempted?
-* Did the fencing succeed?
+* Was fencing attempted?
+* Did fencing succeed?
 
 Resource Failures
 #################
