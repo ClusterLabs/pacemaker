@@ -22,8 +22,6 @@ if BUILD_XML_HELP
 man7_MANS	= pacemaker-fenced.7
 endif
 
-EXTRA_DIST	= README.md
-
 cts_fence_helper_SOURCES	= cts-fence-helper.c
 cts_fence_helper_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
 				  $(top_builddir)/lib/fencing/libstonithd.la

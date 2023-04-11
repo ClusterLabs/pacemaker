@@ -141,6 +141,7 @@ configure
 /doc/Doxyfile
 /etc/init.d/pacemaker
 /etc/logrotate.d/pacemaker
+/etc/sysconfig/pacemaker
 /include/config.h
 /include/config.h.in
 /include/crm_config.h
