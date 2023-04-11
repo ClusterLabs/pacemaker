@@ -762,6 +762,9 @@ G_GNUC_INTERNAL
 void pcmk__clone_create_actions(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
+void pcmk__clone_internal_constraints(pe_resource_t *rsc);
+
+G_GNUC_INTERNAL
 void pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
                                    const pe_resource_t *primary,
                                    const pcmk__colocation_t *colocation,

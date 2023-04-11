@@ -161,14 +161,23 @@ pcmk__clone_create_actions(pe_resource_t *rsc)
     }
 }
 
+/*!
+ * \internal
+ * \brief Create implicit constraints needed for a clone resource
+ *
+ * \param[in,out] rsc  Clone resource to create implicit constraints for
+ */
 void
-clone_internal_constraints(pe_resource_t *rsc)
+pcmk__clone_internal_constraints(pe_resource_t *rsc)
 {
-    pe_resource_t *last_rsc = NULL;
-    GList *gIter;
+    pe_resource_t *previous_instance = NULL;
     bool ordered = pe__clone_is_ordered(rsc);
 
-    pe_rsc_trace(rsc, "Internal constraints for %s", rsc->id);
+    CRM_ASSERT(pe_rsc_is_clone(rsc));
+
+    pe_rsc_trace(rsc, "Creating internal constraints for clone %s", rsc->id);
+
+    // Restart ordering: Stop -> stopped -> start -> started
     pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, RSC_START,
                                  pe_order_optional);
     pcmk__order_resource_actions(rsc, RSC_START, rsc, RSC_STARTED,
@@ -176,6 +185,7 @@ clone_internal_constraints(pe_resource_t *rsc)
     pcmk__order_resource_actions(rsc, RSC_STOP, rsc, RSC_STOPPED,
                                  pe_order_runnable_left);
 
+    // Demoted -> stop and started -> promote
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
         pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, RSC_STOP,
                                      pe_order_optional);
@@ -184,30 +194,35 @@ clone_internal_constraints(pe_resource_t *rsc)
     }
 
     if (ordered) {
-        /* we have to maintain a consistent sorted child list when building order constraints */
+        /* Ordered clone instances must start and stop by instance number. The
+         * instances might have been previously shuffled for assignment or
+         * promotion purposes, so re-sort them.
+         */
         rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance_number);
     }
-    for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *instance = (pe_resource_t *) iter->data;
 
-        child_rsc->cmds->internal_constraints(child_rsc);
+        instance->cmds->internal_constraints(instance);
 
-        pcmk__order_starts(rsc, child_rsc,
-                           pe_order_runnable_left|pe_order_implies_first_printed);
-        pcmk__order_resource_actions(child_rsc, RSC_START, rsc, RSC_STARTED,
+        // Start clone -> start instance -> clone started
+        pcmk__order_starts(rsc, instance, pe_order_runnable_left
+                                          |pe_order_implies_first_printed);
+        pcmk__order_resource_actions(instance, RSC_START, rsc, RSC_STARTED,
                                      pe_order_implies_then_printed);
-        if (ordered && (last_rsc != NULL)) {
-            pcmk__order_starts(last_rsc, child_rsc, pe_order_optional);
+        if (ordered && (previous_instance != NULL)) {
+            pcmk__order_starts(previous_instance, instance, pe_order_optional);
         }
 
-        pcmk__order_stops(rsc, child_rsc, pe_order_implies_first_printed);
-        pcmk__order_resource_actions(child_rsc, RSC_STOP, rsc, RSC_STOPPED,
+        // Stop clone -> stop instance -> clone stopped
+        pcmk__order_stops(rsc, instance, pe_order_implies_first_printed);
+        pcmk__order_resource_actions(instance, RSC_STOP, rsc, RSC_STOPPED,
                                      pe_order_implies_then_printed);
-        if (ordered && (last_rsc != NULL)) {
-            pcmk__order_stops(child_rsc, last_rsc, pe_order_optional);
+        if (ordered && (previous_instance != NULL)) {
+            pcmk__order_stops(instance, previous_instance, pe_order_optional);
         }
 
-        last_rsc = child_rsc;
+        previous_instance = instance;
     }
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
         pcmk__order_promotable_instances(rsc);
