@@ -2073,7 +2073,7 @@ main(int argc, char **argv)
                                                options.prop_name,
                                                options.prop_value,
                                                options.recursive, cib_conn,
-                                               options.cib_options, data_set,
+                                               options.cib_options,
                                                options.force);
             break;
 
@@ -2084,7 +2084,7 @@ main(int argc, char **argv)
                                                options.attr_set_type,
                                                options.prop_id,
                                                options.prop_name, cib_conn,
-                                               options.cib_options, data_set,
+                                               options.cib_options,
                                                options.force);
             break;
 
