@@ -58,7 +58,7 @@ static resource_alloc_functions_t allocation_methods[] = {
     },
     {
         pcmk__clone_assign,
-        clone_create_actions,
+        pcmk__clone_create_actions,
         clone_create_probe,
         clone_internal_constraints,
         pcmk__clone_apply_coloc_score,

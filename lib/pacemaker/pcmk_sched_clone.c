@@ -140,10 +140,18 @@ order_instance_starts_stops(pe_resource_t *rsc)
     }
 }
 
+/*!
+ * \internal
+ * \brief Create all actions needed for a given clone resource
+ *
+ * \param[in,out] rsc  Clone resource to create actions for
+ */
 void
-clone_create_actions(pe_resource_t *rsc)
+pcmk__clone_create_actions(pe_resource_t *rsc)
 {
-    pe_rsc_debug(rsc, "Creating actions for clone %s", rsc->id);
+    CRM_ASSERT(pe_rsc_is_clone(rsc));
+
+    pe_rsc_trace(rsc, "Creating actions for clone %s", rsc->id);
     pcmk__create_instance_actions(rsc, rsc->children);
     if (pe__clone_is_ordered(rsc)) {
         order_instance_starts_stops(rsc);
