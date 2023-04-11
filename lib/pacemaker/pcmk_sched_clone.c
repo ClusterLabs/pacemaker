@@ -78,68 +78,6 @@ pcmk__clone_assign(pe_resource_t *rsc, const pe_node_t *prefer)
     return NULL;
 }
 
-static pe_action_t *
-find_rsc_action(pe_resource_t *rsc, const char *task)
-{
-    pe_action_t *match = NULL;
-    GList *actions = pe__resource_actions(rsc, NULL, task, FALSE);
-
-    for (GList *item = actions; item != NULL; item = item->next) {
-        pe_action_t *op = (pe_action_t *) item->data;
-
-        if (!pcmk_is_set(op->flags, pe_action_optional)) {
-            if (match != NULL) {
-                // More than one match, don't return any
-                match = NULL;
-                break;
-            }
-            match = op;
-        }
-    }
-    g_list_free(actions);
-    return match;
-}
-
-/*!
- * \internal
- * \brief Order starts and stops of an ordered clone's instances
- *
- * \param[in,out] rsc  Clone resource
- */
-static void
-order_instance_starts_stops(pe_resource_t *rsc)
-{
-    pe_action_t *last_stop = NULL;
-    pe_action_t *last_start = NULL;
-
-    // Instances must be ordered by ascending instance number, so sort them
-    rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance_number);
-
-    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
-        pe_resource_t *child = (pe_resource_t *) iter->data;
-        pe_action_t *action = NULL;
-
-        // Order this instance's stop after previous instance's stop
-        // @TODO: Should instances be stopped in reverse order instead?
-        action = find_rsc_action(child, RSC_STOP);
-        if (action != NULL) {
-            if (last_stop != NULL) {
-                order_actions(action, last_stop, pe_order_optional);
-            }
-            last_stop = action;
-        }
-
-        // Order this instance's start after previous instance's start
-        action = find_rsc_action(child, RSC_START);
-        if (action != NULL) {
-            if (last_start != NULL) {
-                order_actions(last_start, action, pe_order_optional);
-            }
-            last_start = action;
-        }
-    }
-}
-
 /*!
  * \internal
  * \brief Create all actions needed for a given clone resource
@@ -153,9 +91,6 @@ pcmk__clone_create_actions(pe_resource_t *rsc)
 
     pe_rsc_trace(rsc, "Creating actions for clone %s", rsc->id);
     pcmk__create_instance_actions(rsc, rsc->children);
-    if (pe__clone_is_ordered(rsc)) {
-        order_instance_starts_stops(rsc);
-    }
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
         pcmk__create_promotable_actions(rsc);
     }
@@ -170,7 +105,6 @@ pcmk__clone_create_actions(pe_resource_t *rsc)
 void
 pcmk__clone_internal_constraints(pe_resource_t *rsc)
 {
-    pe_resource_t *previous_instance = NULL;
     bool ordered = pe__clone_is_ordered(rsc);
 
     CRM_ASSERT(pe_rsc_is_clone(rsc));
@@ -210,19 +144,25 @@ pcmk__clone_internal_constraints(pe_resource_t *rsc)
                                           |pe_order_implies_first_printed);
         pcmk__order_resource_actions(instance, RSC_START, rsc, RSC_STARTED,
                                      pe_order_implies_then_printed);
-        if (ordered && (previous_instance != NULL)) {
-            pcmk__order_starts(previous_instance, instance, pe_order_optional);
-        }
 
         // Stop clone -> stop instance -> clone stopped
         pcmk__order_stops(rsc, instance, pe_order_implies_first_printed);
         pcmk__order_resource_actions(instance, RSC_STOP, rsc, RSC_STOPPED,
                                      pe_order_implies_then_printed);
-        if (ordered && (previous_instance != NULL)) {
-            pcmk__order_stops(instance, previous_instance, pe_order_optional);
-        }
 
-        previous_instance = instance;
+        /* Instances of unique clones must be started and stopped by instance
+         * number. Since only some instances may be starting or stopping, order
+         * each instance relative to every later instance.
+         */
+        if (ordered) {
+            for (GList *later = iter->next;
+                 later != NULL; later = later->next) {
+                pcmk__order_starts(instance, (pe_resource_t *) later->data,
+                                   pe_order_optional);
+                pcmk__order_stops((pe_resource_t *) later->data, instance,
+                                  pe_order_optional);
+            }
+        }
     }
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
         pcmk__order_promotable_instances(rsc);
