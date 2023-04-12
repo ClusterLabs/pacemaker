@@ -13,7 +13,7 @@ noinst_HEADERS	= crmcluster_private.h
 ## libraries
 lib_LTLIBRARIES	= libcrmcluster.la 
 
-libcrmcluster_la_LDFLAGS = -version-info 29:10:0
+libcrmcluster_la_LDFLAGS = -version-info 30:0:1
 
 libcrmcluster_la_CFLAGS  = $(CFLAGS_HARDENED_LIB)
 libcrmcluster_la_LDFLAGS += $(LDFLAGS_HARDENED_LIB)
