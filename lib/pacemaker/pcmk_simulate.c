@@ -140,6 +140,7 @@ print_cluster_status(pe_working_set_t *data_set, uint32_t show_opts,
     pcmk__output_t *out = data_set->priv;
     GList *all = NULL;
     crm_exit_t stonith_rc = 0;
+    enum pcmk_pacemakerd_state state = pcmk_pacemakerd_state_invalid;
 
     section_opts |= pcmk_section_nodes | pcmk_section_resources;
     show_opts |= pcmk_show_inactive_rscs | pcmk_show_failed_detail;
@@ -149,7 +150,7 @@ print_cluster_status(pe_working_set_t *data_set, uint32_t show_opts,
     PCMK__OUTPUT_SPACER_IF(out, print_spacer);
     out->begin_list(out, NULL, NULL, "%s", title);
     out->message(out, "cluster-status",
-                 data_set, pcmk_pacemakerd_state_invalid, stonith_rc, NULL,
+                 data_set, state, stonith_rc, NULL,
                  false, section_opts, show_opts, NULL, all, all);
     out->end_list(out);
 

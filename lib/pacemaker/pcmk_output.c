@@ -673,7 +673,7 @@ health_xml(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *",
-                  "enum pcmk_pacemakerd_state", "const char *", "long long")
+                  "enum pcmk_pacemakerd_state", "const char *", "time_t")
 static int
 pacemakerd_health(pcmk__output_t *out, va_list args)
 {
@@ -681,7 +681,7 @@ pacemakerd_health(pcmk__output_t *out, va_list args)
     enum pcmk_pacemakerd_state state =
         (enum pcmk_pacemakerd_state) va_arg(args, int);
     const char *state_s = va_arg(args, const char *);
-    time_t last_updated = (time_t) va_arg(args, long long);
+    time_t last_updated = va_arg(args, time_t);
 
     char *last_updated_s = NULL;
     int rc = pcmk_rc_ok;
@@ -714,7 +714,7 @@ pacemakerd_health(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *",
-                  "enum pcmk_pacemakerd_state", "const char *", "long long")
+                  "enum pcmk_pacemakerd_state", "const char *", "time_t")
 static int
 pacemakerd_health_html(pcmk__output_t *out, va_list args)
 {
@@ -722,7 +722,7 @@ pacemakerd_health_html(pcmk__output_t *out, va_list args)
     enum pcmk_pacemakerd_state state =
         (enum pcmk_pacemakerd_state) va_arg(args, int);
     const char *state_s = va_arg(args, const char *);
-    time_t last_updated = (time_t) va_arg(args, long long);
+    time_t last_updated = va_arg(args, time_t);
 
     char *last_updated_s = NULL;
     char *msg = NULL;
@@ -757,7 +757,7 @@ pacemakerd_health_html(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *",
-                  "enum pcmk_pacemakerd_state", "const char *", "long long")
+                  "enum pcmk_pacemakerd_state", "const char *", "time_t")
 static int
 pacemakerd_health_text(pcmk__output_t *out, va_list args)
 {
@@ -768,7 +768,7 @@ pacemakerd_health_text(pcmk__output_t *out, va_list args)
         enum pcmk_pacemakerd_state state =
             (enum pcmk_pacemakerd_state) va_arg(args, int);
         const char *state_s = va_arg(args, const char *);
-        time_t last_updated G_GNUC_UNUSED = (time_t) va_arg(args, long long);
+        time_t last_updated G_GNUC_UNUSED = va_arg(args, time_t);
 
         if (state_s == NULL) {
             state_s = pcmk_pacemakerd_api_daemon_state_enum2text(state);
@@ -779,7 +779,7 @@ pacemakerd_health_text(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *",
-                  "enum pcmk_pacemakerd_state", "const char *", "long long")
+                  "enum pcmk_pacemakerd_state", "const char *", "time_t")
 static int
 pacemakerd_health_xml(pcmk__output_t *out, va_list args)
 {
@@ -787,7 +787,7 @@ pacemakerd_health_xml(pcmk__output_t *out, va_list args)
     enum pcmk_pacemakerd_state state =
         (enum pcmk_pacemakerd_state) va_arg(args, int);
     const char *state_s = va_arg(args, const char *);
-    time_t last_updated = (time_t) va_arg(args, long long);
+    time_t last_updated = va_arg(args, time_t);
 
     char *last_updated_s = NULL;
 
@@ -1249,13 +1249,13 @@ rsc_action_default(pcmk__output_t *out, va_list args)
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("node-action", "char *", "char *", "char *")
+PCMK__OUTPUT_ARGS("node-action", "const char *", "const char *", "const char *")
 static int
 node_action(pcmk__output_t *out, va_list args)
 {
-    char *task = va_arg(args, char *);
-    char *node_name = va_arg(args, char *);
-    char *reason = va_arg(args, char *);
+    const char *task = va_arg(args, const char *);
+    const char *node_name = va_arg(args, const char *);
+    const char *reason = va_arg(args, const char *);
 
     if (task == NULL) {
         return pcmk_rc_no_output;
@@ -1268,13 +1268,13 @@ node_action(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("node-action", "char *", "char *", "char *")
+PCMK__OUTPUT_ARGS("node-action", "const char *", "const char *", "const char *")
 static int
 node_action_xml(pcmk__output_t *out, va_list args)
 {
-    char *task = va_arg(args, char *);
-    char *node_name = va_arg(args, char *);
-    char *reason = va_arg(args, char *);
+    const char *task = va_arg(args, const char *);
+    const char *node_name = va_arg(args, const char *);
+    const char *reason = va_arg(args, const char *);
 
     if (task == NULL) {
         return pcmk_rc_no_output;
@@ -1291,12 +1291,12 @@ node_action_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("node-info", "uint32_t", "const char *", "const char *",
+PCMK__OUTPUT_ARGS("node-info", "int", "const char *", "const char *",
                   "const char *", "bool", "bool")
 static int
 node_info_default(pcmk__output_t *out, va_list args)
 {
-    uint32_t node_id = va_arg(args, uint32_t);
+    int node_id = va_arg(args, int);
     const char *node_name = va_arg(args, const char *);
     const char *uuid = va_arg(args, const char *);
     const char *state = va_arg(args, const char *);
@@ -1304,26 +1304,26 @@ node_info_default(pcmk__output_t *out, va_list args)
     bool is_remote = (bool) va_arg(args, int);
 
     return out->info(out,
-                     "Node %" PRIu32 ": %s "
+                     "Node %d: %s "
                      "(uuid=%s, state=%s, have_quorum=%s, is_remote=%s)",
                      node_id, pcmk__s(node_name, "unknown"),
                      pcmk__s(uuid, "unknown"), pcmk__s(state, "unknown"),
                      pcmk__btoa(have_quorum), pcmk__btoa(is_remote));
 }
 
-PCMK__OUTPUT_ARGS("node-info", "uint32_t", "const char *", "bool", "bool",
-                  "const char *", "const char *")
+PCMK__OUTPUT_ARGS("node-info", "int", "const char *", "const char *",
+                  "const char *", "bool", "bool")
 static int
 node_info_xml(pcmk__output_t *out, va_list args)
 {
-    uint32_t node_id = va_arg(args, uint32_t);
+    int node_id = va_arg(args, int);
     const char *node_name = va_arg(args, const char *);
     const char *uuid = va_arg(args, const char *);
     const char *state = va_arg(args, const char *);
     bool have_quorum = (bool) va_arg(args, int);
     bool is_remote = (bool) va_arg(args, int);
 
-    char *id_s = crm_strdup_printf("%" PRIu32, node_id);
+    char *id_s = crm_strdup_printf("%d", node_id);
 
     pcmk__output_create_xml_node(out, "node-info",
                                  "nodeid", id_s,
@@ -1384,11 +1384,11 @@ inject_cluster_action_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("inject-fencing-action", "char *", "const char *")
+PCMK__OUTPUT_ARGS("inject-fencing-action", "const char *", "const char *")
 static int
 inject_fencing_action(pcmk__output_t *out, va_list args)
 {
-    char *target = va_arg(args, char *);
+    const char *target = va_arg(args, const char *);
     const char *op = va_arg(args, const char *);
 
     if (out->is_quiet(out)) {
@@ -1399,11 +1399,11 @@ inject_fencing_action(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("inject-fencing-action", "char *", "const char *")
+PCMK__OUTPUT_ARGS("inject-fencing-action", "const char *", "const char *")
 static int
 inject_fencing_action_xml(pcmk__output_t *out, va_list args)
 {
-    char *target = va_arg(args, char *);
+    const char *target = va_arg(args, const char *);
     const char *op = va_arg(args, const char *);
 
     if (out->is_quiet(out)) {
@@ -1496,12 +1496,12 @@ inject_spec_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("inject-modify-config", "char *", "char *")
+PCMK__OUTPUT_ARGS("inject-modify-config", "const char *", "const char *")
 static int
 inject_modify_config(pcmk__output_t *out, va_list args)
 {
-    char *quorum = va_arg(args, char *);
-    char *watchdog = va_arg(args, char *);
+    const char *quorum = va_arg(args, const char *);
+    const char *watchdog = va_arg(args, const char *);
 
     if (out->is_quiet(out)) {
         return pcmk_rc_no_output;
@@ -1520,12 +1520,12 @@ inject_modify_config(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("inject-modify-config", "char *", "char *")
+PCMK__OUTPUT_ARGS("inject-modify-config", "const char *", "const char *")
 static int
 inject_modify_config_xml(pcmk__output_t *out, va_list args)
 {
-    char *quorum = va_arg(args, char *);
-    char *watchdog = va_arg(args, char *);
+    const char *quorum = va_arg(args, const char *);
+    const char *watchdog = va_arg(args, const char *);
 
     xmlNodePtr node = NULL;
 
@@ -1546,12 +1546,12 @@ inject_modify_config_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("inject-modify-node", "const char *", "char *")
+PCMK__OUTPUT_ARGS("inject-modify-node", "const char *", "const char *")
 static int
 inject_modify_node(pcmk__output_t *out, va_list args)
 {
     const char *action = va_arg(args, const char *);
-    char *node = va_arg(args, char *);
+    const char *node = va_arg(args, const char *);
 
     if (out->is_quiet(out)) {
         return pcmk_rc_no_output;
@@ -1571,12 +1571,12 @@ inject_modify_node(pcmk__output_t *out, va_list args)
     return pcmk_rc_no_output;
 }
 
-PCMK__OUTPUT_ARGS("inject-modify-node", "const char *", "char *")
+PCMK__OUTPUT_ARGS("inject-modify-node", "const char *", "const char *")
 static int
 inject_modify_node_xml(pcmk__output_t *out, va_list args)
 {
     const char *action = va_arg(args, const char *);
-    char *node = va_arg(args, char *);
+    const char *node = va_arg(args, const char *);
 
     if (out->is_quiet(out)) {
         return pcmk_rc_no_output;
@@ -1589,12 +1589,12 @@ inject_modify_node_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("inject-modify-ticket", "const char *", "char *")
+PCMK__OUTPUT_ARGS("inject-modify-ticket", "const char *", "const char *")
 static int
 inject_modify_ticket(pcmk__output_t *out, va_list args)
 {
     const char *action = va_arg(args, const char *);
-    char *ticket = va_arg(args, char *);
+    const char *ticket = va_arg(args, const char *);
 
     if (out->is_quiet(out)) {
         return pcmk_rc_no_output;
@@ -1609,12 +1609,12 @@ inject_modify_ticket(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("inject-modify-ticket", "const char *", "char *")
+PCMK__OUTPUT_ARGS("inject-modify-ticket", "const char *", "const char *")
 static int
 inject_modify_ticket_xml(pcmk__output_t *out, va_list args)
 {
     const char *action = va_arg(args, const char *);
-    char *ticket = va_arg(args, char *);
+    const char *ticket = va_arg(args, const char *);
 
     if (out->is_quiet(out)) {
         return pcmk_rc_no_output;
@@ -1666,13 +1666,14 @@ inject_pseudo_action_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("inject-rsc-action", "const char *", "const char *", "char *", "guint")
+PCMK__OUTPUT_ARGS("inject-rsc-action", "const char *", "const char *",
+                  "const char *", "guint")
 static int
 inject_rsc_action(pcmk__output_t *out, va_list args)
 {
     const char *rsc = va_arg(args, const char *);
     const char *operation = va_arg(args, const char *);
-    char *node = va_arg(args, char *);
+    const char *node = va_arg(args, const char *);
     guint interval_ms = va_arg(args, guint);
 
     if (out->is_quiet(out)) {
@@ -1690,13 +1691,14 @@ inject_rsc_action(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("inject-rsc-action", "const char *", "const char *", "char *", "guint")
+PCMK__OUTPUT_ARGS("inject-rsc-action", "const char *", "const char *",
+                  "const char *", "guint")
 static int
 inject_rsc_action_xml(pcmk__output_t *out, va_list args)
 {
     const char *rsc = va_arg(args, const char *);
     const char *operation = va_arg(args, const char *);
-    char *node = va_arg(args, char *);
+    const char *node = va_arg(args, const char *);
     guint interval_ms = va_arg(args, guint);
 
     xmlNodePtr xml_node = NULL;

@@ -61,12 +61,12 @@ lrmd__alternatives_list(pcmk__output_t *out, va_list args) {
     return default_list(out, list, "Providers");
 }
 
-PCMK__OUTPUT_ARGS("agents-list", "lrmd_list_t *", "const char *", "char *")
+PCMK__OUTPUT_ARGS("agents-list", "lrmd_list_t *", "const char *", "const char *")
 static int
 lrmd__agents_list_xml(pcmk__output_t *out, va_list args) {
     lrmd_list_t *list = va_arg(args, lrmd_list_t *);
     const char *agent_spec = va_arg(args, const char *);
-    char *provider = va_arg(args, char *);
+    const char *provider = va_arg(args, const char *);
 
     xmlNodePtr node = pcmk__output_xml_create_parent(out, "agents",
                                                      "standard", agent_spec,
@@ -79,12 +79,12 @@ lrmd__agents_list_xml(pcmk__output_t *out, va_list args) {
     return xml_list(out, list, "agent");
 }
 
-PCMK__OUTPUT_ARGS("agents-list", "lrmd_list_t *", "const char *", "char *")
+PCMK__OUTPUT_ARGS("agents-list", "lrmd_list_t *", "const char *", "const char *")
 static int
 lrmd__agents_list(pcmk__output_t *out, va_list args) {
     lrmd_list_t *list = va_arg(args, lrmd_list_t *);
     const char *agent_spec = va_arg(args, const char *);
-    char *provider = va_arg(args, char *);
+    const char *provider = va_arg(args, const char *);
 
     int rc;
     char *title = crm_strdup_printf("%s agents", pcmk__str_empty(provider) ? agent_spec : provider);
