@@ -633,21 +633,21 @@ class FenceTests(Tests):
                                  negative=True)
             test.add_log_pattern("using true1 returned 0")
 
-        # make sure requested fencing delay is applied only for the first device in the first level
-        # make sure static delay from pcmk_delay_base is added
+        # make sure all fencing delays are applied correctly and taken into account by fencing timeouts with topology
         for test_type in test_types:
             if not test_type["use_cpg"]:
                 continue
 
-            test = self.new_test("%s_topology_delay" % test_type["prefix"],
-                                 "Verify requested fencing delay is applied only for the first device in the first level and pcmk_delay_base is added.",
+            test = self.new_test("%s_topology_delays" % test_type["prefix"],
+                                 "Verify all fencing delays are applied correctly and taken into account by fencing timeouts with topology.",
                                  test_type["use_cpg"])
             test.add_cmd("stonith_admin",
                          "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\" -o \"pcmk_delay_base=1\"")
             test.add_cmd("stonith_admin",
                          "--output-as=xml -R false1 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\" -o \"pcmk_delay_base=1\"")
+            # Resulting "random" delay will always be 1 since (rand() % (delay_max - delay_base)) is always 0 here.
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R true2 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
+                         "--output-as=xml -R true2 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\" -o \"pcmk_delay_base=1\" -o \"pcmk_delay_max=2\"")
             test.add_cmd("stonith_admin",
                          "--output-as=xml -R true3 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
 
@@ -658,10 +658,28 @@ class FenceTests(Tests):
 
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 --delay 1")
 
+            # Total fencing timeout takes all fencing delays into account.
+            test.add_log_pattern("Total timeout set to 576")
+
+            # Fencing timeout for the first device takes the requested fencing delay into account.
+            # Fencing timeout also takes pcmk_delay_base into account.
+            test.add_log_pattern(r"Requesting that .* perform 'off' action targeting node3 using true1 .*144s.*",
+                                 regex=True)
+            # Requested fencing delay is applied only for the first device in the first level.
+            # Static delay from pcmk_delay_base is added.
             test.add_log_pattern("Delaying 'off' action targeting node3 using true1 for 2s | timeout=120s requested_delay=1s base=1s max=1s")
+
+            # Fencing timeout no longer takes the requested fencing delay into account for further devices.
+            test.add_log_pattern(r"Requesting that .* perform 'off' action targeting node3 using false1 .*144s.*",
+                                 regex=True)
+            # Requested fencing delay is no longer applied for further devices.
             test.add_log_pattern("Delaying 'off' action targeting node3 using false1 for 1s | timeout=120s requested_delay=0s base=1s max=1s")
-            test.add_log_pattern("Delaying 'off' action targeting node3 using true2",
-                                 negative=True)
+
+            # Fencing timeout takes pcmk_delay_max into account.
+            test.add_log_pattern(r"Requesting that .* perform 'off' action targeting node3 using true2 .*144s.*",
+                                 regex=True)
+            test.add_log_pattern("Delaying 'off' action targeting node3 using true2 for 1s | timeout=120s requested_delay=0s base=1s max=2s")
+
             test.add_log_pattern("Delaying 'off' action targeting node3 using true3",
                                  negative=True)
 
