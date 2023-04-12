@@ -499,13 +499,14 @@ stonith_event_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("validate", "const char *", "const char *", "char *", "char *", "int")
+PCMK__OUTPUT_ARGS("validate", "const char *", "const char *", "const char *",
+                  "const char *", "int")
 static int
 validate_agent_html(pcmk__output_t *out, va_list args) {
     const char *agent = va_arg(args, const char *);
     const char *device = va_arg(args, const char *);
-    char *output = va_arg(args, char *);
-    char *error_output = va_arg(args, char *);
+    const char *output = va_arg(args, const char *);
+    const char *error_output = va_arg(args, const char *);
     int rc = va_arg(args, int);
 
     if (device) {
@@ -524,13 +525,14 @@ validate_agent_html(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("validate", "const char *", "const char *", "char *", "char *", "int")
+PCMK__OUTPUT_ARGS("validate", "const char *", "const char *", "const char *",
+                  "const char *", "int")
 static int
 validate_agent_text(pcmk__output_t *out, va_list args) {
     const char *agent = va_arg(args, const char *);
     const char *device = va_arg(args, const char *);
-    char *output = va_arg(args, char *);
-    char *error_output = va_arg(args, char *);
+    const char *output = va_arg(args, const char *);
+    const char *error_output = va_arg(args, const char *);
     int rc = va_arg(args, int);
 
     if (device) {
@@ -545,13 +547,14 @@ validate_agent_text(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("validate", "const char *", "const char *", "char *", "char *", "int")
+PCMK__OUTPUT_ARGS("validate", "const char *", "const char *", "const char *",
+                  "const char *", "int")
 static int
 validate_agent_xml(pcmk__output_t *out, va_list args) {
     const char *agent = va_arg(args, const char *);
     const char *device = va_arg(args, const char *);
-    char *output = va_arg(args, char *);
-    char *error_output = va_arg(args, char *);
+    const char *output = va_arg(args, const char *);
+    const char *error_output = va_arg(args, const char *);
     int rc = va_arg(args, int);
 
     xmlNodePtr node = pcmk__output_create_xml_node(
