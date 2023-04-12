@@ -1821,7 +1821,11 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
     }
 
     if (peer) {
-        int timeout_one = 0;
+       /* Take any requested fencing delay into account to prevent it from eating
+        * up the timeout.
+        */
+        int timeout_one = (op->delay > 0 ?
+                           TIMEOUT_MULTIPLY_FACTOR * op->delay : 0);
         xmlNode *remote_op = stonith_create_op(op->client_callid, op->id, STONITH_OP_FENCE, NULL, 0);
 
         crm_xml_add(remote_op, F_STONITH_REMOTE_OP_ID, op->id);
@@ -1835,8 +1839,8 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
         crm_xml_add_int(remote_op, F_STONITH_DELAY, op->delay);
 
         if (device) {
-            timeout_one = TIMEOUT_MULTIPLY_FACTOR *
-                          get_device_timeout(op, peer, device);
+            timeout_one += TIMEOUT_MULTIPLY_FACTOR *
+                           get_device_timeout(op, peer, device);
             crm_notice("Requesting that %s perform '%s' action targeting %s "
                        "using %s " CRM_XS " for client %s (%ds)",
                        peer->host, op->action, op->target, device,
@@ -1844,7 +1848,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
             crm_xml_add(remote_op, F_STONITH_DEVICE, device);
 
         } else {
-            timeout_one = TIMEOUT_MULTIPLY_FACTOR * get_peer_timeout(op, peer);
+            timeout_one += TIMEOUT_MULTIPLY_FACTOR * get_peer_timeout(op, peer);
             crm_notice("Requesting that %s perform '%s' action targeting %s "
                        CRM_XS " for client %s (%ds, %lds)",
                        peer->host, op->action, op->target, op->client_name,

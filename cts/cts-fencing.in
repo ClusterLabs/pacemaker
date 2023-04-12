@@ -663,7 +663,7 @@ class FenceTests(Tests):
 
             # Fencing timeout for the first device takes the requested fencing delay into account.
             # Fencing timeout also takes pcmk_delay_base into account.
-            test.add_log_pattern(r"Requesting that .* perform 'off' action targeting node3 using true1 .*144s.*",
+            test.add_log_pattern(r"Requesting that .* perform 'off' action targeting node3 using true1 .*145s.*",
                                  regex=True)
             # Requested fencing delay is applied only for the first device in the first level.
             # Static delay from pcmk_delay_base is added.
