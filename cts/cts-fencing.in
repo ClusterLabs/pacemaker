@@ -659,7 +659,7 @@ class FenceTests(Tests):
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 --delay 1")
 
             # Total fencing timeout takes all fencing delays into account.
-            test.add_log_pattern("Total timeout set to 577")
+            test.add_log_pattern("Total timeout set to 579")
 
             # Fencing timeout for the first device takes the requested fencing delay into account.
             # Fencing timeout also takes pcmk_delay_base into account.
@@ -676,9 +676,9 @@ class FenceTests(Tests):
             test.add_log_pattern("Delaying 'off' action targeting node3 using false1 for 1s | timeout=120s requested_delay=0s base=1s max=1s")
 
             # Fencing timeout takes pcmk_delay_max into account.
-            test.add_log_pattern(r"Requesting that .* perform 'off' action targeting node3 using true2 .*144s.*",
+            test.add_log_pattern(r"Requesting that .* perform 'off' action targeting node3 using true2 .*146s.*",
                                  regex=True)
-            test.add_log_pattern("Delaying 'off' action targeting node3 using true2 for 1s | timeout=120s requested_delay=0s base=1s max=2s")
+            test.add_log_pattern("Delaying 'off' action targeting node3 using true2 for 1s | timeout=122s requested_delay=0s base=1s max=2s")
 
             test.add_log_pattern("Delaying 'off' action targeting node3 using true3",
                                  negative=True)
