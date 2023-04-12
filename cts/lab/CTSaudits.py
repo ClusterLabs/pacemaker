@@ -87,7 +87,11 @@ class LogAudit(ClusterAudit):
 
         watch_pref = self.CM.Env["LogWatcher"]
         if watch_pref == LogKind.ANY:
-            for k in LogKind:
+            kinds = [ LogKind.FILE ]
+            if self.CM.Env["have_systemd"]:
+                kinds +=  [ LogKind.JOURNAL ]
+            kinds += [ LogKind.REMOTE_FILE ]
+            for k in kinds:
                 watch[k] = self._create_watcher(patterns, k)
             self.CM.log("Logging test message with identifier %s" % (suffix))
         else:
