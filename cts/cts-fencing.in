@@ -659,7 +659,7 @@ class FenceTests(Tests):
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 --delay 1")
 
             # Total fencing timeout takes all fencing delays into account.
-            test.add_log_pattern("Total timeout set to 576")
+            test.add_log_pattern("Total timeout set to 577")
 
             # Fencing timeout for the first device takes the requested fencing delay into account.
             # Fencing timeout also takes pcmk_delay_base into account.

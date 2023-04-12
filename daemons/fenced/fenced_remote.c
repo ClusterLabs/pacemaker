@@ -1597,7 +1597,11 @@ get_op_total_timeout(const remote_fencing_op_t *op,
         total_timeout = op->base_timeout;
     }
 
-    return total_timeout ? total_timeout : op->base_timeout;
+    /* Take any requested fencing delay into account to prevent it from eating
+     * up the total timeout.
+     */
+    return ((total_timeout ? total_timeout : op->base_timeout)
+            + (op->delay > 0 ? op->delay : 0));
 }
 
 static void
