@@ -62,6 +62,13 @@ class LogAudit(ClusterAudit):
             if rc != 0:
                 self.CM.log ("ERROR: Cannot restart '%s' on %s" % (self.CM.Env["syslogd"], node))
 
+    def _create_watcher(self, patterns, kind):
+        watch = LogWatcher(self.CM.Env["LogFileName"], patterns,
+                           self.CM.Env["nodes"], kind, "LogAudit", 5,
+                           silent=True)
+        watch.set_watch()
+        return watch
+
     def TestLogging(self):
         patterns = []
         prefix   = "Test message from"
@@ -81,15 +88,10 @@ class LogAudit(ClusterAudit):
         watch_pref = self.CM.Env["LogWatcher"]
         if watch_pref == LogKind.ANY:
             for k in LogKind:
-                watch[k] = LogWatcher(self.CM.Env["LogFileName"], patterns, self.CM.Env["nodes"], k, "LogAudit", 5, silent=True)
-                watch[k].set_watch()
+                watch[k] = self._create_watcher(patterns, k)
+            self.CM.log("Logging test message with identifier %s" % (suffix))
         else:
-            k = watch_pref
-            watch[k] = LogWatcher(self.CM.Env["LogFileName"], patterns, self.CM.Env["nodes"], k, "LogAudit", 5, silent=True)
-            watch[k].set_watch()
-
-        if watch_pref == LogKind.ANY:
-            self.CM.log("Writing log with key: %s" % (suffix))
+            watch[watch_pref] = self._create_watcher(patterns, watch_pref)
 
         for node in self.CM.Env["nodes"]:
             cmd = "logger -p %s.info %s %s %s" % (self.CM.Env["SyslogFacility"], prefix, node, suffix)
@@ -98,24 +100,19 @@ class LogAudit(ClusterAudit):
             if rc != 0:
                 self.CM.log ("ERROR: Cannot execute remote command [%s] on %s" % (cmd, node))
 
-        for k in LogKind:
-            if k in watch:
-                w = watch[k]
-                if watch_pref == LogKind.ANY:
-                    self.CM.log("Testing for %s logs" % (k))
-
-                w.look_for_all(silent=True)
-                if not w.unmatched:
-                    if watch_pref == LogKind.ANY:
-                        self.CM.log ("Continuing with %s-based log reader" % (w.kind))
-                        self.CM.Env["LogWatcher"] = w.kind
-                    return 1
-
         for k in list(watch.keys()):
             w = watch[k]
+            if watch_pref == LogKind.ANY:
+                self.CM.log("Checking for test message in %s logs" % (k))
+            w.look_for_all(silent=True)
             if w.unmatched:
                 for regex in w.unmatched:
-                    self.CM.log ("Test message [%s] not found in %s logs." % (regex, w.kind))
+                    self.CM.log("Test message [%s] not found in %s logs" % (regex, w.kind))
+            else:
+                if watch_pref == LogKind.ANY:
+                    self.CM.log("Found test message in %s logs" % (k))
+                    self.CM.Env["LogWatcher"] = k
+                return 1
 
         return 0
 
