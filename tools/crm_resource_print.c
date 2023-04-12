@@ -293,11 +293,11 @@ property_list_default(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("property-list", "pe_resource_t *", "char *")
+PCMK__OUTPUT_ARGS("property-list", "pe_resource_t *", "const char *")
 static int
 property_list_text(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    char *attr = va_arg(args, char *);
+    const char *attr = va_arg(args, const char *);
 
     const char *value = crm_element_value(rsc->xml, attr);
 
@@ -310,7 +310,7 @@ property_list_text(pcmk__output_t *out, va_list args) {
 
 PCMK__OUTPUT_ARGS("resource-agent-action", "int", "const char *", "const char *",
                   "const char *", "const char *", "const char *", "GHashTable *",
-                  "crm_exit_t", "int", "const char *", "char *", "char *")
+                  "crm_exit_t", "int", "const char *", "const char *", "const char *")
 static int
 resource_agent_action_default(pcmk__output_t *out, va_list args) {
     int verbose = va_arg(args, int);
@@ -324,8 +324,8 @@ resource_agent_action_default(pcmk__output_t *out, va_list args) {
     crm_exit_t rc = va_arg(args, crm_exit_t);
     int status = va_arg(args, int);
     const char *exit_reason = va_arg(args, const char *);
-    char *stdout_data = va_arg(args, char *);
-    char *stderr_data = va_arg(args, char *);
+    const char *stdout_data = va_arg(args, const char *);
+    const char *stderr_data = va_arg(args, const char *);
 
     if (overrides) {
         GHashTableIter iter;
@@ -369,7 +369,7 @@ resource_agent_action_default(pcmk__output_t *out, va_list args) {
 
 PCMK__OUTPUT_ARGS("resource-agent-action", "int", "const char *", "const char *",
                   "const char *", "const char *", "const char *", "GHashTable *",
-                  "crm_exit_t", "int", "const char *", "char *", "char *")
+                  "crm_exit_t", "int", "const char *", "const char *", "const char *")
 static int
 resource_agent_action_xml(pcmk__output_t *out, va_list args) {
     int verbose G_GNUC_UNUSED = va_arg(args, int);
@@ -383,8 +383,8 @@ resource_agent_action_xml(pcmk__output_t *out, va_list args) {
     crm_exit_t rc = va_arg(args, crm_exit_t);
     int status = va_arg(args, int);
     const char *exit_reason = va_arg(args, const char *);
-    char *stdout_data = va_arg(args, char *);
-    char *stderr_data = va_arg(args, char *);
+    const char *stdout_data = va_arg(args, const char *);
+    const char *stderr_data = va_arg(args, const char *);
 
     xmlNodePtr node = pcmk__output_xml_create_parent(out, "resource-agent-action",
                                                      "action", action,
@@ -516,12 +516,12 @@ resource_check_list_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("resource-search-list", "GList *", "char *")
+PCMK__OUTPUT_ARGS("resource-search-list", "GList *", "const char *")
 static int
 resource_search_list_default(pcmk__output_t *out, va_list args)
 {
     GList *nodes = va_arg(args, GList *);
-    char *requested_name = va_arg(args, char *);
+    const char *requested_name = va_arg(args, const char *);
 
     bool printed = false;
     int rc = pcmk_rc_no_output;
@@ -564,12 +564,12 @@ resource_search_list_default(pcmk__output_t *out, va_list args)
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("resource-search-list", "GList *", "char *")
+PCMK__OUTPUT_ARGS("resource-search-list", "GList *", "const char *")
 static int
 resource_search_list_xml(pcmk__output_t *out, va_list args)
 {
     GList *nodes = va_arg(args, GList *);
-    char *requested_name = va_arg(args, char *);
+    const char *requested_name = va_arg(args, const char *);
 
     pcmk__output_xml_create_parent(out, "nodes",
                                    "resource", requested_name,
