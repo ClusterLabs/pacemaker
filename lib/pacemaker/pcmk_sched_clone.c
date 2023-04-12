@@ -237,16 +237,20 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
               return);
     CRM_CHECK(dependent->variant == pe_native, return);
 
-    pe_rsc_trace(primary, "Processing constraint %s: %s -> %s %d",
-                 colocation->id, dependent->id, primary->id, colocation->score);
+    if (pcmk_is_set(primary->flags, pe_rsc_provisional)) {
+        pe_rsc_trace(primary,
+                     "Delaying processing colocation %s "
+                     "because cloned primary %s is still provisional",
+                     colocation->id, primary->id);
+        return;
+    }
+
+    pe_rsc_trace(primary, "Processing colocation %s (%s with clone %s @%s)",
+                 colocation->id, dependent->id, primary->id,
+                 pcmk_readable_score(colocation->score));
 
     if (pcmk_is_set(primary->flags, pe_rsc_promotable)) {
-        if (pcmk_is_set(primary->flags, pe_rsc_provisional)) {
-            // We haven't placed the primary yet, so we can't apply colocation
-            pe_rsc_trace(primary, "%s is still provisional", primary->id);
-            return;
-
-        } else if (colocation->primary_role == RSC_ROLE_UNKNOWN) {
+        if (colocation->primary_role == RSC_ROLE_UNKNOWN) {
             // This isn't a role-specfic colocation, so handle normally
             pe_rsc_trace(primary, "Handling %s as a clone colocation",
                          colocation->id);
@@ -265,11 +269,7 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
         }
     }
 
-    if (pcmk_is_set(primary->flags, pe_rsc_provisional)) {
-        pe_rsc_trace(primary, "%s is still provisional", primary->id);
-        return;
-
-    } else if (can_interleave(colocation)) {
+    if (can_interleave(colocation)) {
         pe_resource_t *primary_instance = NULL;
 
         primary_instance = pcmk__find_compatible_instance(dependent, primary,
