@@ -100,14 +100,16 @@ static pcmk__supported_format_t formats[] = {
     { NULL, NULL, NULL }
 };
 
-PCMK__OUTPUT_ARGS("crm-mon-disconnected", "const char *", "int")
+PCMK__OUTPUT_ARGS("crm-mon-disconnected", "const char *",
+                  "enum pcmk_pacemakerd_state")
 static int
 crm_mon_disconnected_default(pcmk__output_t *out, va_list args)
 {
     return pcmk_rc_no_output;
 }
 
-PCMK__OUTPUT_ARGS("crm-mon-disconnected", "const char *", "int")
+PCMK__OUTPUT_ARGS("crm-mon-disconnected", "const char *",
+                  "enum pcmk_pacemakerd_state")
 static int
 crm_mon_disconnected_html(pcmk__output_t *out, va_list args)
 {
@@ -138,7 +140,8 @@ crm_mon_disconnected_html(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("crm-mon-disconnected", "const char *", "int")
+PCMK__OUTPUT_ARGS("crm-mon-disconnected", "const char *",
+                  "enum pcmk_pacemakerd_state")
 static int
 crm_mon_disconnected_text(pcmk__output_t *out, va_list args)
 {
@@ -164,7 +167,8 @@ crm_mon_disconnected_text(pcmk__output_t *out, va_list args)
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("crm-mon-disconnected", "const char *", "int")
+PCMK__OUTPUT_ARGS("crm-mon-disconnected", "const char *",
+                  "enum pcmk_pacemakerd_state")
 static int
 crm_mon_disconnected_xml(pcmk__output_t *out, va_list args)
 {
