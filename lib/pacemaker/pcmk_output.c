@@ -673,7 +673,7 @@ health_xml(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *",
-                  "enum pcmk_pacemakerd_state", "const char *", "long long")
+                  "enum pcmk_pacemakerd_state", "const char *", "time_t")
 static int
 pacemakerd_health(pcmk__output_t *out, va_list args)
 {
@@ -681,7 +681,7 @@ pacemakerd_health(pcmk__output_t *out, va_list args)
     enum pcmk_pacemakerd_state state =
         (enum pcmk_pacemakerd_state) va_arg(args, int);
     const char *state_s = va_arg(args, const char *);
-    time_t last_updated = (time_t) va_arg(args, long long);
+    time_t last_updated = va_arg(args, time_t);
 
     char *last_updated_s = NULL;
     int rc = pcmk_rc_ok;
@@ -714,7 +714,7 @@ pacemakerd_health(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *",
-                  "enum pcmk_pacemakerd_state", "const char *", "long long")
+                  "enum pcmk_pacemakerd_state", "const char *", "time_t")
 static int
 pacemakerd_health_html(pcmk__output_t *out, va_list args)
 {
@@ -722,7 +722,7 @@ pacemakerd_health_html(pcmk__output_t *out, va_list args)
     enum pcmk_pacemakerd_state state =
         (enum pcmk_pacemakerd_state) va_arg(args, int);
     const char *state_s = va_arg(args, const char *);
-    time_t last_updated = (time_t) va_arg(args, long long);
+    time_t last_updated = va_arg(args, time_t);
 
     char *last_updated_s = NULL;
     char *msg = NULL;
@@ -757,7 +757,7 @@ pacemakerd_health_html(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *",
-                  "enum pcmk_pacemakerd_state", "const char *", "long long")
+                  "enum pcmk_pacemakerd_state", "const char *", "time_t")
 static int
 pacemakerd_health_text(pcmk__output_t *out, va_list args)
 {
@@ -768,7 +768,7 @@ pacemakerd_health_text(pcmk__output_t *out, va_list args)
         enum pcmk_pacemakerd_state state =
             (enum pcmk_pacemakerd_state) va_arg(args, int);
         const char *state_s = va_arg(args, const char *);
-        time_t last_updated G_GNUC_UNUSED = (time_t) va_arg(args, long long);
+        time_t last_updated G_GNUC_UNUSED = va_arg(args, time_t);
 
         if (state_s == NULL) {
             state_s = pcmk_pacemakerd_api_daemon_state_enum2text(state);
@@ -779,7 +779,7 @@ pacemakerd_health_text(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *",
-                  "enum pcmk_pacemakerd_state", "const char *", "long long")
+                  "enum pcmk_pacemakerd_state", "const char *", "time_t")
 static int
 pacemakerd_health_xml(pcmk__output_t *out, va_list args)
 {
@@ -787,7 +787,7 @@ pacemakerd_health_xml(pcmk__output_t *out, va_list args)
     enum pcmk_pacemakerd_state state =
         (enum pcmk_pacemakerd_state) va_arg(args, int);
     const char *state_s = va_arg(args, const char *);
-    time_t last_updated = (time_t) va_arg(args, long long);
+    time_t last_updated = va_arg(args, time_t);
 
     char *last_updated_s = NULL;
 
