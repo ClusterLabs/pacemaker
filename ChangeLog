@@ -1,3 +1,138 @@
+* Wed Apr 12 2023 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.6-rc1
+- 1071 commits with 398 files changed, 24739 insertions(+), 14585 deletions(-)
+
+- Features added since Pacemaker-2.1.5
+  + CIB: utilization attributes may be set as transient
+  + CIB: alerts and alert recipients support an "enabled" meta-attribute
+  + All daemons support --output-as/--output-to options including
+    XML output with interactive options
+  + tools: attrd_updater supports --wait parameter that can be set to
+           "no" (return immediately after submitting request, which is
+           the default and previous behavior), "local" (return after the
+           new value has taken effect on the local node), or "cluster" (return
+           after new value has taken effect on all nodes)
+  + tools: attrd_updater supports -z/--utilization to modify utilization
+           attributes
+  + tools: attrd_updater supports --pattern to affect all attributes
+           matching a given pattern
+  + tools: crm_attribute supports --pattern with permanent node attributes
+           (in addition to previous support for transient attributes)
+  + tools: crm_mon displays resource descriptions if --show-description or
+           --show-detail is given
+  + tools: crm_mon shows maintenance mode when enabled per-resource
+  + tools: crm_mon --interval can be used to update XML and text output
+           (in addition to previous support for HTML)
+  + tools: crm_mon fencing history includes microseconds in timestamps
+  + tools: crm_mon shows which node it was run on
+  + tools: crm_mon shows whether Pacemaker or Pacemaker Remote is running or
+           shutting down
+  + tools: deprecate crm_mon --simple-status
+  + tools: crm_resource --element option can be used with --get-parameter,
+           --set-parameter, and --delete-parameter to modify resource
+           properties such as class, provider, type, and description
+  + tools: crm_resource --list shows resource descriptions better
+           (including when --output-as=xml is used)
+  + tools: crm_shadow supports standard --output-as/--output-to arguments
+
+- Fixes since Pacemaker-2.1.5
+  + Pacemaker Remote: remote nodes wait for all-clear from cluster before
+                      shutting down (regression introduced in 2.1.5)
+  + tools: attrd_updater --query without --node shows attributes from all
+           nodes instead of local node (regression introduced in 2.1.5)
+  + CIB manager: successful CIB schema upgrade always forces a write
+  + controller: avoid election storm when joining node has CIB newer than DC
+                can accept
+  + controller: avoid election storm due to incompatible CIB
+  + controller: avoid use-after-free when disconnecting proxy IPCs during shutdown
+  + controller: delay join finalization if a transition is in progress
+  + controller: avoid double-incrementing failcount for simulated failures
+  + controller: avoid reprobing remote nodes when target is a cluster node
+  + controller: shutdown gracefully if scheduler connection is interrupted
+                during shutdown
+  + fencer: avoid crash during shutdown when action is pending
+  + fencer: calculate fencing timeout correctly when watchdog is used with
+            topology
+  + scheduler: fix a number of corner cases with colocations, including
+               preventing a resource from starting if it has a mandatory
+               colocation with a group whose start is blocked, preventing
+               optional anti-colocation from overriding infinite stickiness,
+               and correctly considering a group's colocation dependents
+               when the group is itself colocated with a clone
+  + scheduler: handle orderings with bundles more correctly
+  + scheduler: ensure expired results never affect resource state
+  + scheduler: handle cleaned migrate_from history correctly
+  + scheduler: prevent pending monitor of one clone instance from causing
+               unexpected stop of other instances
+  + scheduler: prevent inactive clone instances from starting if probe is
+               unrunnable on any node
+  + agents: SysInfo calculates cpu_load correctly
+  + tools: cibadmin --scope accepts status
+  + tools: crm_attribute -p "" works same as -p when called from resource agent
+  + tools: crm_attribute recognizes "-INFINITY" as value instead of options
+  + tools: crm_mon avoids displaying recurring monitors as pending if first
+           attempt fails
+  + tools: crm_mon --daemonize shows disconnected message when CIB connection
+           is lost instead of continuing to display last known state
+  + tools: crm_mon avoids crash when built without curses library support
+  + tools: crm_mon supports --output-as=none correctly
+  + tools: crm_resource --ban or --move works with single-replica bundles
+  + tools: crm_shadow --commit now works with CIB_file
+  + tools: crm_simulate failure injection avoids crash if node name is unknown
+
+- Public API changes since Pacemaker-2.1.5
+  + Python: New "pacemaker" Python module, packaged as python3-pacemaker in
+            RPMs built with "make rpm", contains supported public API with
+            BuildOptions and ExitStatus classes
+  + libcrmcluster: add crm_join_nack_quiet
+  + libcib: add client_id() method member to cib_api_operations_t
+  + libcib: deprecate cib_database
+  + libcib: deprecate cib_quorum_override
+  + libcib: deprecate the cib_api_operations_t:update() method
+  + libcrmcluster: add pcmk_cluster_new()
+  + libcrmcluster: add pcmk_cluster_free()
+  + libcrmcluster: node argument to send_cluster_message() is now const
+  + libcrmcluster: node argument to send_cluster_text() is now const
+  + libcrmcommon: add crm_time_usecs
+  + libcrmcommon: add PCMK_META_ENABLED
+  + libcrmcommon: add pcmk_pacemakerd_state_remote
+  + libpacemaker: add pcmk_query_node_info()
+  + libpacemaker: add pcmk_query_node_name()
+  + libcrmcommon: add pcmk_rc_bad_xml_patch
+  + libcrmcommon: add pcmk_rc_bad_input
+  + libcrmcommon: add pcmk_rc_disabled
+  + libcrmcommon: deprecate add_xml_nocopy()
+  + libcrmcommon: deprecate log_data_element()
+  + libcrmcommon: deprecate XML_ATTR_UUID
+  + libcrmcommon: deprecate XML_CIB_ATTR_REPLACE
+  + libcrmcommon: deprecate xml_log_changes()
+  + libcrmcommon: deprecate xml_log_options enum
+  + libcrmcommon: deprecate xml_log_patchset()
+  + libcrmcommon: argument to pcmk_xe_is_probe() is now const
+  + libcrmcommon: argument to pcmk_xe_mask_probe_failure() is now const
+  + libcrmcommon: patchset argument of xml_log_patchset() is now const
+  + libcrmcommon: rsc_op_expected_rc() argument is now const
+  + libcrmcommon: second argument to copy_in_properties() is now const
+  + libcrmcommon: xml argument of xml_log_changes() is now const
+  + libpacemaker: multiple arguments to pcmk_simulate() are now const
+  + libpacemaker: node argument to pcmk_resource_digests() is now const
+  + libpacemaker: node_types argument to pcmk_list_nodes() is now const
+  + libpacemaker: pcmk_controller_status() node name arg is now const
+  + libpe_rules: last argument to pe_expand_re_matches() is now const
+  + libpe_rules: rule_data argument to pe_eval_nvpairs() is now const
+  + libpe_rules: second argument to pe_eval_expr() and pe_eval_subexpr() is now const
+  + libpe_rules: second argument to pe_eval_rules() is now const
+  + libpe_rules: second argument to pe_unpack_nvpairs() is now const
+  + libpe_status: add pe_rsc_detect_loop
+  + libpe_status: add pe_rsc_replica_container
+  + libpe_status: deprecate fixed member of pe_node_t
+  + libpe_status: argument to pe_rsc_is_bundled() is now const
+  + libpe_status: argument to rsc_printable_id() is now const
+  + libpe_status: first argument to calculate_active_ops() is now const
+  + libpe_status: first argument to pe_find_node() is now const
+  + libpe_status: first argument to pe_find_node_any() is now const
+  + libpe_status: first argument to pe_find_node_id() is now const
+  + libpe_status: first argument to resource_object_functions_t:is_filtered() is now const
+
 * Wed Dec 7 2022 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.5
 - 1287 commits with 447 files changed, 33546 insertions(+), 21518 deletions(-)
 
@@ -30,7 +165,7 @@
   + tools: crm_resource --why checks node health
   + tools: crm_resource --constraints now accepts --recursive (equivalent to
            --stack) and --force (to show constraints for a group member
-	   instead of the group)
+           instead of the group)
 
 - Fixes since Pacemaker-2.1.4
   + tools: crm_error does not print spurious output when given a negative
@@ -180,7 +315,7 @@
   + libstonithd: last argument to stonith_api_operations_t:register_level() is
                  now const
   + libstonithd: last argument to
-		 stonith_api_operations_t:register_level_full() is now const
+                 stonith_api_operations_t:register_level_full() is now const
   + libstonithd: params argument to stonith_api_operations_t:validate() is now
                  const
 
