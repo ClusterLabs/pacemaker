@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -118,7 +118,7 @@ pcmk__copy_node_list(const GList *list, bool reset)
  *
  * \param[in] a     First node to compare
  * \param[in] b     Second node to compare
- * \param[in] data  Sort data (as struct node_weight_s *)
+ * \param[in] data  Node that resource being assigned is active on, if any
  *
  * \return -1 if \p a is preferred, +1 if \p b is preferred, or 0 if they are
  *         equally preferred
@@ -128,7 +128,7 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
 {
     const pe_node_t *node1 = (const pe_node_t *) a;
     const pe_node_t *node2 = (const pe_node_t *) b;
-    pe_node_t *active = (pe_node_t *) data;
+    const pe_node_t *active = (const pe_node_t *) data;
 
     int node1_weight = 0;
     int node2_weight = 0;
@@ -227,9 +227,8 @@ equal:
  * \internal
  * \brief Sort a list of nodes by allocation desirability
  *
- * \param[in] nodes        Node list to sort
- * \param[in] active_node  If not NULL, node currently running resource
- * \param[in] data_set     Cluster working set
+ * \param[in,out] nodes        Node list to sort
+ * \param[in]     active_node  Node where resource being assigned is active
  *
  * \return New head of sorted list
  */
@@ -252,7 +251,7 @@ bool
 pcmk__any_node_available(GHashTable *nodes)
 {
     GHashTableIter iter;
-    pe_node_t *node = NULL;
+    const pe_node_t *node = NULL;
 
     if (nodes == NULL) {
         return false;
@@ -270,7 +269,7 @@ pcmk__any_node_available(GHashTable *nodes)
  * \internal
  * \brief Apply node health values for all nodes in cluster
  *
- * \param[in] data_set  Cluster working set
+ * \param[in,out] data_set  Cluster working set
  */
 void
 pcmk__apply_node_health(pe_working_set_t *data_set)

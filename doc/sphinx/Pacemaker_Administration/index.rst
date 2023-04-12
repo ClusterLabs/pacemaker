@@ -24,6 +24,7 @@ Table of Contents
    tools
    troubleshooting
    upgrading
+   alerts
    agents
    pcs-crmsh
 

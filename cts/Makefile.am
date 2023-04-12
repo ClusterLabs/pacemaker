@@ -1,5 +1,5 @@
 #
-# Copyright 2001-2022 the Pacemaker project contributors
+# Copyright 2001-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -12,7 +12,8 @@ MAINTAINERCLEANFILES    = Makefile.in
 # Test commands and globally applicable test files should be in $(testdir),
 # and command-specific test data should be in a command-specific subdirectory.
 testdir			= $(datadir)/$(PACKAGE)/tests
-test_SCRIPTS		= cts-cli		\
+test_SCRIPTS		= cts-attrd \
+			  cts-cli		\
 			  cts-exec		\
 			  cts-fencing		\
 			  cts-regression	\
@@ -31,6 +32,7 @@ dist_cli_DATA	= cli/constraints.xml 				\
 		  cli/crm_mon.xml				\
 		  cli/crm_mon-feature_set.xml			\
 		  cli/crm_mon-partial.xml			\
+		  cli/crm_mon-rsc-maint.xml			\
 		  cli/crm_mon-T180.xml				\
 		  cli/crm_mon-unmanaged.xml			\
 		  cli/crm_resource_digests.xml			\

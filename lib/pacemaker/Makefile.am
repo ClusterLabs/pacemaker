@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2022 the Pacemaker project contributors
+# Copyright 2004-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -45,13 +45,13 @@ libpacemaker_la_SOURCES += pcmk_resource.c
 libpacemaker_la_SOURCES += pcmk_result_code.c
 libpacemaker_la_SOURCES += pcmk_rule.c
 libpacemaker_la_SOURCES	+= pcmk_sched_actions.c
-libpacemaker_la_SOURCES	+= pcmk_sched_allocate.c
 libpacemaker_la_SOURCES += pcmk_sched_bundle.c
 libpacemaker_la_SOURCES += pcmk_sched_clone.c
 libpacemaker_la_SOURCES += pcmk_sched_colocation.c
 libpacemaker_la_SOURCES += pcmk_sched_constraints.c
 libpacemaker_la_SOURCES += pcmk_sched_fencing.c
 libpacemaker_la_SOURCES += pcmk_sched_group.c
+libpacemaker_la_SOURCES += pcmk_sched_instances.c
 libpacemaker_la_SOURCES += pcmk_sched_location.c
 libpacemaker_la_SOURCES += pcmk_sched_migration.c
 libpacemaker_la_SOURCES += pcmk_sched_nodes.c
@@ -64,5 +64,6 @@ libpacemaker_la_SOURCES += pcmk_sched_remote.c
 libpacemaker_la_SOURCES += pcmk_sched_resource.c
 libpacemaker_la_SOURCES += pcmk_sched_tickets.c
 libpacemaker_la_SOURCES += pcmk_sched_utilization.c
+libpacemaker_la_SOURCES	+= pcmk_scheduler.c
 libpacemaker_la_SOURCES += pcmk_simulate.c
 libpacemaker_la_SOURCES += pcmk_status.c

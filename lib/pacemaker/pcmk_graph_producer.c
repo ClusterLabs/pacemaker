@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -48,7 +48,7 @@ add_node_to_xml_by_id(const char *id, xmlNode *xml)
     xmlNode *node_xml;
 
     node_xml = create_xml_node(xml, XML_CIB_TAG_NODE);
-    crm_xml_add(node_xml, XML_ATTR_UUID, id);
+    crm_xml_add(node_xml, XML_ATTR_ID, id);
 
     return node_xml;
 }
@@ -192,7 +192,7 @@ add_downed_nodes(xmlNode *xml, const pe_action_t *action,
  * \return Newly allocated string with transition graph operation key
  */
 static char *
-clone_op_key(pe_action_t *action, guint interval_ms)
+clone_op_key(const pe_action_t *action, guint interval_ms)
 {
     if (pcmk__str_eq(action->task, RSC_NOTIFY, pcmk__str_none)) {
         const char *n_type = g_hash_table_lookup(action->meta, "notify_type");
@@ -214,11 +214,11 @@ clone_op_key(pe_action_t *action, guint interval_ms)
  * \internal
  * \brief Add node details to transition graph action XML
  *
- * \param[in] action  Scheduled action
- * \param[in] xml     Transition graph action XML for \p action
+ * \param[in]     action  Scheduled action
+ * \param[in,out] xml     Transition graph action XML for \p action
  */
 static void
-add_node_details(pe_action_t *action, xmlNode *xml)
+add_node_details(const pe_action_t *action, xmlNode *xml)
 {
     pe_node_t *router_node = pcmk__connection_host_for_action(action);
 
@@ -233,11 +233,11 @@ add_node_details(pe_action_t *action, xmlNode *xml)
  * \internal
  * \brief Add resource details to transition graph action XML
  *
- * \param[in] action      Scheduled action
- * \param[in] action_xml  Transition graph action XML for \p action
+ * \param[in]     action      Scheduled action
+ * \param[in,out] action_xml  Transition graph action XML for \p action
  */
 static void
-add_resource_details(pe_action_t *action, xmlNode *action_xml)
+add_resource_details(const pe_action_t *action, xmlNode *action_xml)
 {
     xmlNode *rsc_xml = NULL;
     const char *attr_list[] = {
@@ -315,8 +315,8 @@ add_resource_details(pe_action_t *action, xmlNode *action_xml)
  * \internal
  * \brief Add action attributes to transition graph action XML
  *
- * \param[in] action  Scheduled action
- * \param[in] action_xml  Transition graph action XML for \p action
+ * \param[in,out] action      Scheduled action
+ * \param[in,out] action_xml  Transition graph action XML for \p action
  */
 static void
 add_action_attributes(pe_action_t *action, xmlNode *action_xml)
@@ -378,14 +378,14 @@ add_action_attributes(pe_action_t *action, xmlNode *action_xml)
  * \internal
  * \brief Create the transition graph XML for a scheduled action
  *
- * \param[in] parent        Parent XML element to add action to
- * \param[in] action        Scheduled action
- * \param[in] skip_details  If false, add action details as sub-elements
- * \param[in] data_set      Cluster working set
+ * \param[in,out] parent        Parent XML element to add action to
+ * \param[in,out] action        Scheduled action
+ * \param[in]     skip_details  If false, add action details as sub-elements
+ * \param[in]     data_set      Cluster working set
  */
 static void
 create_graph_action(xmlNode *parent, pe_action_t *action, bool skip_details,
-                    pe_working_set_t *data_set)
+                    const pe_working_set_t *data_set)
 {
     bool needs_node_info = true;
     bool needs_maintenance_info = false;
@@ -486,7 +486,7 @@ create_graph_action(xmlNode *parent, pe_action_t *action, bool skip_details,
  * \return true if action should be added to graph, otherwise false
  */
 static bool
-should_add_action_to_graph(pe_action_t *action)
+should_add_action_to_graph(const pe_action_t *action)
 {
     if (!pcmk_is_set(action->flags, pe_action_runnable)) {
         crm_trace("Ignoring action %s (%d): unrunnable",
@@ -577,7 +577,7 @@ should_add_action_to_graph(pe_action_t *action)
  * \return true if ordering has flags that can change an action, false otherwise
  */
 static bool
-ordering_can_change_actions(pe_action_wrapper_t *ordering)
+ordering_can_change_actions(const pe_action_wrapper_t *ordering)
 {
     return pcmk_any_flags_set(ordering->type, ~(pe_order_implies_first_printed
                                                 |pe_order_implies_then_printed
@@ -596,7 +596,7 @@ ordering_can_change_actions(pe_action_wrapper_t *ordering)
  *       circumstances (load or anti-colocation orderings that are not needed).
  */
 static bool
-should_add_input_to_graph(pe_action_t *action, pe_action_wrapper_t *input)
+should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
 {
     if (input->state == pe_link_dumped) {
         return true;
@@ -749,16 +749,16 @@ should_add_input_to_graph(pe_action_t *action, pe_action_wrapper_t *input)
  * \internal
  * \brief Check whether an ordering creates an ordering loop
  *
- * \param[in] init_action  "First" action in ordering
- * \param[in] action       Callers should always set this the same as
- *                         \p init_action (this function may use a different
- *                         value for recursive calls)
- * \param[in] input        Action wrapper for "then" action in ordering
+ * \param[in]     init_action  "First" action in ordering
+ * \param[in]     action       Callers should always set this the same as
+ *                             \p init_action (this function may use a different
+ *                             value for recursive calls)
+ * \param[in,out] input        Action wrapper for "then" action in ordering
  *
  * \return true if the ordering creates a loop, otherwise false
  */
 bool
-pcmk__graph_has_loop(pe_action_t *init_action, pe_action_t *action,
+pcmk__graph_has_loop(const pe_action_t *init_action, const pe_action_t *action,
                      pe_action_wrapper_t *input)
 {
     bool has_loop = false;
@@ -828,13 +828,13 @@ pcmk__graph_has_loop(pe_action_t *init_action, pe_action_t *action,
  * \internal
  * \brief Create a synapse XML element for a transition graph
  *
- * \param[in] action    Action that synapse is for
- * \param[in] data_set  Cluster working set containing graph
+ * \param[in]     action    Action that synapse is for
+ * \param[in,out] data_set  Cluster working set containing graph
  *
  * \return Newly added XML element for new graph synapse
  */
 static xmlNode *
-create_graph_synapse(pe_action_t *action, pe_working_set_t *data_set)
+create_graph_synapse(const pe_action_t *action, pe_working_set_t *data_set)
 {
     int synapse_priority = 0;
     xmlNode *syn = create_xml_node(data_set->graph, "synapse");
@@ -858,8 +858,8 @@ create_graph_synapse(pe_action_t *action, pe_working_set_t *data_set)
  * \internal
  * \brief Add an action to the transition graph XML if appropriate
  *
- * \param[in] data       Action to possibly add
- * \param[in] user_data  Cluster working set
+ * \param[in,out] data       Action to possibly add
+ * \param[in,out] user_data  Cluster working set
  *
  * \note This will de-duplicate the action inputs, meaning that the
  *       pe_action_wrapper_t:type flags can no longer be relied on to retain
@@ -957,7 +957,7 @@ pcmk__log_transition_summary(const char *filename)
  * \internal
  * \brief Add a resource's actions to the transition graph
  *
- * \param[in] rsc  Resource whose actions should be added
+ * \param[in,out] rsc  Resource whose actions should be added
  */
 void
 pcmk__add_rsc_actions_to_graph(pe_resource_t *rsc)
@@ -982,7 +982,7 @@ pcmk__add_rsc_actions_to_graph(pe_resource_t *rsc)
  * \internal
  * \brief Create a transition graph with all cluster actions needed
  *
- * \param[in] data_set  Cluster working set
+ * \param[in,out] data_set  Cluster working set
  */
 void
 pcmk__create_graph(pe_working_set_t *data_set)

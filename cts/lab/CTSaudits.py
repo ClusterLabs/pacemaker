@@ -1,12 +1,13 @@
 """ Auditing classes for Pacemaker's Cluster Test Suite (CTS)
 """
 
-__copyright__ = "Copyright 2000-2021 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import time, re, uuid
-from cts.watcher import LogWatcher
-from cts.CTSvars import *
+
+from pacemaker.buildoptions import BuildOptions
+from pacemaker._cts.watcher import LogKind, LogWatcher
 
 class ClusterAudit(object):
 
@@ -40,7 +41,6 @@ class LogAudit(ClusterAudit):
 
     def __init__(self, cm):
         self.CM = cm
-        self.kinds = [ "combined syslog", "journal", "remote" ]
 
     def RestartClusterLogging(self, nodes=None):
         if not nodes:
@@ -50,12 +50,16 @@ class LogAudit(ClusterAudit):
 
         for node in nodes:
             if self.CM.Env["have_systemd"]:
-                if self.CM.rsh(node, "systemctl stop systemd-journald.socket") != 0:
+                (rc, _) = self.CM.rsh(node, "systemctl stop systemd-journald.socket")
+                if rc != 0:
                     self.CM.log ("ERROR: Cannot stop 'systemd-journald' on %s" % node)
-                if self.CM.rsh(node, "systemctl start systemd-journald.service") != 0:
+
+                (rc, _) = self.CM.rsh(node, "systemctl start systemd-journald.service")
+                if rc != 0:
                     self.CM.log ("ERROR: Cannot start 'systemd-journald' on %s" % node)
 
-            if self.CM.rsh(node, "service %s restart" % self.CM.Env["syslogd"]) != 0:
+            (rc, _) = self.CM.rsh(node, "service %s restart" % self.CM.Env["syslogd"])
+            if rc != 0:
                 self.CM.log ("ERROR: Cannot restart '%s' on %s" % (self.CM.Env["syslogd"], node))
 
     def TestLogging(self):
@@ -75,28 +79,34 @@ class LogAudit(ClusterAudit):
             patterns.append("%s.*%s %s %s" % (simple, prefix, node, suffix))
 
         watch_pref = self.CM.Env["LogWatcher"]
-        if watch_pref == "any": 
-            for k in self.kinds:
-                watch[k] = LogWatcher(self.CM.Env["LogFileName"], patterns, "LogAudit", 5, silent=True, hosts=self.CM.Env["nodes"], kind=k)
-                watch[k].setwatch()
+        if watch_pref == LogKind.ANY:
+            for k in LogKind:
+                watch[k] = LogWatcher(self.CM.Env["LogFileName"], patterns, self.CM.Env["nodes"], k, "LogAudit", 5, silent=True)
+                watch[k].set_watch()
         else:
             k = watch_pref
-            watch[k] = LogWatcher(self.CM.Env["LogFileName"], patterns, "LogAudit", 5, silent=True, hosts=self.CM.Env["nodes"], kind=k)
-            watch[k].setwatch()
+            watch[k] = LogWatcher(self.CM.Env["LogFileName"], patterns, self.CM.Env["nodes"], k, "LogAudit", 5, silent=True)
+            watch[k].set_watch()
 
-        if watch_pref == "any": self.CM.log("Writing log with key: %s" % (suffix))
+        if watch_pref == LogKind.ANY:
+            self.CM.log("Writing log with key: %s" % (suffix))
+
         for node in self.CM.Env["nodes"]:
             cmd = "logger -p %s.info %s %s %s" % (self.CM.Env["SyslogFacility"], prefix, node, suffix)
-            if self.CM.rsh(node, cmd, synchronous=0, silent=True) != 0:
+
+            (rc, _) = self.CM.rsh(node, cmd, synchronous=False, verbose=0)
+            if rc != 0:
                 self.CM.log ("ERROR: Cannot execute remote command [%s] on %s" % (cmd, node))
 
-        for k in self.kinds:
+        for k in LogKind:
             if k in watch:
                 w = watch[k]
-                if watch_pref == "any": self.CM.log("Testing for %s logs" % (k))
-                w.lookforall(silent=True)
+                if watch_pref == LogKind.ANY:
+                    self.CM.log("Testing for %s logs" % (k))
+
+                w.look_for_all(silent=True)
                 if not w.unmatched:
-                    if watch_pref == "any": 
+                    if watch_pref == LogKind.ANY:
                         self.CM.log ("Continuing with %s-based log reader" % (w.kind))
                         self.CM.Env["LogWatcher"] = w.kind
                     return 1
@@ -113,7 +123,7 @@ class LogAudit(ClusterAudit):
         max = 3
         attempt = 0
 
-        self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
+        self.CM.ns.wait_for_all_nodes(self.CM.Env["nodes"])
         while attempt <= max and self.TestLogging() == 0:
             attempt = attempt + 1
             self.RestartClusterLogging()
@@ -144,14 +154,16 @@ class DiskAudit(ClusterAudit):
     def __call__(self):
         result = 1
         # @TODO Use directory of PCMK_logfile if set on host
-        dfcmd = "df -BM " + CTSvars.CRM_LOG_DIR + " | tail -1 | awk '{print $(NF-1)\" \"$(NF-2)}' | tr -d 'M%'"
+        dfcmd = "df -BM " + BuildOptions.LOG_DIR + " | tail -1 | awk '{print $(NF-1)\" \"$(NF-2)}' | tr -d 'M%'"
 
-        self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
+        self.CM.ns.wait_for_all_nodes(self.CM.Env["nodes"])
         for node in self.CM.Env["nodes"]:
-            dfout = self.CM.rsh(node, dfcmd, 1)
+            (_, dfout) = self.CM.rsh(node, dfcmd, verbose=1)
             if not dfout:
                 self.CM.log ("ERROR: Cannot execute remote df command [%s] on %s" % (dfcmd, node))
             else:
+                dfout = dfout[0].strip()
+
                 try:
                     (used, remain) = dfout.split()
                     used_percent = int(used)
@@ -164,7 +176,7 @@ class DiskAudit(ClusterAudit):
                         self.CM.log("CRIT: Out of log disk space on %s (%d%% / %dMB)"
                                     % (node, used_percent, remaining_mb))
                         result = None
-                        if self.CM.Env["continue"] == 1:
+                        if self.CM.Env["continue"]:
                             answer = "Y"
                         else:
                             try:
@@ -197,10 +209,10 @@ class FileAudit(ClusterAudit):
     def __call__(self):
         result = 1
 
-        self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
+        self.CM.ns.wait_for_all_nodes(self.CM.Env["nodes"])
         for node in self.CM.Env["nodes"]:
 
-            (rc, lsout) = self.CM.rsh(node, "ls -al /var/lib/pacemaker/cores/* | grep core.[0-9]", None)
+            (_, lsout) = self.CM.rsh(node, "ls -al /var/lib/pacemaker/cores/* | grep core.[0-9]", verbose=1)
             for line in lsout:
                 line = line.strip()
                 if line not in self.known:
@@ -208,7 +220,7 @@ class FileAudit(ClusterAudit):
                     self.known.append(line)
                     self.CM.log("Warning: Pacemaker core file on %s: %s" % (node, line))
 
-            (rc, lsout) = self.CM.rsh(node, "ls -al /var/lib/corosync | grep core.[0-9]", None)
+            (_, lsout) = self.CM.rsh(node, "ls -al /var/lib/corosync | grep core.[0-9]", verbose=1)
             for line in lsout:
                 line = line.strip()
                 if line not in self.known:
@@ -218,14 +230,14 @@ class FileAudit(ClusterAudit):
 
             if node in self.CM.ShouldBeStatus and self.CM.ShouldBeStatus[node] == "down":
                 clean = 0
-                (rc, lsout) = self.CM.rsh(node, "ls -al /dev/shm | grep qb-", None)
+                (_, lsout) = self.CM.rsh(node, "ls -al /dev/shm | grep qb-", verbose=1)
                 for line in lsout:
                     result = 0
                     clean = 1
                     self.CM.log("Warning: Stale IPC file on %s: %s" % (node, line))
 
                 if clean:
-                    (rc, lsout) = self.CM.rsh(node, "ps axf | grep -e pacemaker -e corosync", None)
+                    (_, lsout) = self.CM.rsh(node, "ps axf | grep -e pacemaker -e corosync", verbose=1)
                     for line in lsout:
                         self.CM.debug("ps[%s]: %s" % (node, line))
 
@@ -339,7 +351,7 @@ class PrimitiveAudit(ClusterAudit):
             self.CM.log("WARN: Resource %s not served anywhere" % resource.id)
             rc = 0
 
-        elif self.CM.Env["warn-inactive"] == 1:
+        elif self.CM.Env["warn-inactive"]:
             if quorum or not resource.needs_quorum:
                 self.CM.log("WARN: Resource %s not served anywhere (Inactive nodes: %s)" 
                             % (resource.id, repr(self.inactive_nodes)))
@@ -376,7 +388,7 @@ class PrimitiveAudit(ClusterAudit):
             self.debug("No nodes active - skipping %s" % self.name())
             return 0
 
-        (rc, lines) = self.CM.rsh(self.target, "crm_resource -c", None)
+        (_, lines) = self.CM.rsh(self.target, "crm_resource -c", verbose=1)
 
         for line in lines:
             if re.search("^Resource", line):
@@ -481,7 +493,7 @@ class ColocationAudit(PrimitiveAudit):
         return "ColocationAudit"
 
     def crm_location(self, resource):
-        (rc, lines) = self.CM.rsh(self.target, "crm_resource -W -r %s -Q"%resource, None)
+        (rc, lines) = self.CM.rsh(self.target, "crm_resource -W -r %s -Q"%resource, verbose=1)
         hosts = []
         if rc == 0:
             for line in lines:
@@ -648,7 +660,7 @@ class CIBAudit(ClusterAudit):
                 
             else:
                 (rc, result) = self.CM.rsh(
-                    node0, "crm_diff -VV -cf --new %s --original %s" % (node_xml, node0_xml), None)
+                    node0, "crm_diff -VV -cf --new %s --original %s" % (node_xml, node0_xml), verbose=1)
                 
                 if rc != 0:
                     self.CM.log("Diff between %s and %s failed: %d" % (node0_xml, node_xml, rc))
@@ -672,16 +684,16 @@ class CIBAudit(ClusterAudit):
         if not target:
             target = node
 
-        (rc, lines) = self.CM.rsh(node, self.CM["CibQuery"], None)
+        (rc, lines) = self.CM.rsh(node, self.CM["CibQuery"], verbose=1)
         if rc != 0:
             self.CM.log("Could not retrieve configuration")
             return None
 
         self.CM.rsh("localhost", "rm -f %s" % filename)
         for line in lines:
-            self.CM.rsh("localhost", "echo \'%s\' >> %s" % (line[:-1], filename), silent=True)
+            self.CM.rsh("localhost", "echo \'%s\' >> %s" % (line[:-1], filename), verbose=0)
 
-        if self.CM.rsh.cp(filename, "root@%s:%s" % (target, filename), silent=True) != 0:
+        if self.CM.rsh.copy(filename, "root@%s:%s" % (target, filename), silent=True) != 0:
             self.CM.log("Could not store configuration")
             return None
         return filename
@@ -775,10 +787,15 @@ class PartitionAudit(ClusterAudit):
                 # not in itself a reason to fail the audit (not what we're
                 #  checking for in this audit)
 
-            self.NodeState[node]  = self.CM.rsh(node, self.CM["StatusCmd"] % node, 1)
-            self.NodeEpoch[node] = self.CM.rsh(node, self.CM["EpochCmd"], 1)
-            self.NodeQuorum[node] = self.CM.rsh(node, self.CM["QuorumCmd"], 1)
-            
+            (_, out) = self.CM.rsh(node, self.CM["StatusCmd"] % node, verbose=1)
+            self.NodeState[node] = out[0].strip()
+
+            (_, out) = self.CM.rsh(node, self.CM["EpochCmd"], verbose=1)
+            self.NodeEpoch[node] = out[0].strip()
+
+            (_, out) = self.CM.rsh(node, self.CM["QuorumCmd"], verbose=1)
+            self.NodeQuorum[node] = out[0].strip()
+
             self.debug("Node %s: %s - %s - %s." % (node, self.NodeState[node], self.NodeEpoch[node], self.NodeQuorum[node]))
             self.NodeState[node]  = self.trim_string(self.NodeState[node])
             self.NodeEpoch[node] = self.trim2int(self.NodeEpoch[node])

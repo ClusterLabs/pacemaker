@@ -1,10 +1,10 @@
 
-pcmk__clone_allocate: prmStateful-clone allocation score on rh80-test01: -INFINITY
-pcmk__clone_allocate: prmStateful-clone allocation score on rh80-test02: -INFINITY
-pcmk__clone_allocate: prmStateful:0 allocation score on rh80-test01: -INFINITY
-pcmk__clone_allocate: prmStateful:0 allocation score on rh80-test02: -INFINITY
-pcmk__clone_allocate: prmStateful:1 allocation score on rh80-test01: -INFINITY
-pcmk__clone_allocate: prmStateful:1 allocation score on rh80-test02: -INFINITY
+pcmk__clone_assign: prmStateful-clone allocation score on rh80-test01: -INFINITY
+pcmk__clone_assign: prmStateful-clone allocation score on rh80-test02: -INFINITY
+pcmk__clone_assign: prmStateful:0 allocation score on rh80-test01: -INFINITY
+pcmk__clone_assign: prmStateful:0 allocation score on rh80-test02: -INFINITY
+pcmk__clone_assign: prmStateful:1 allocation score on rh80-test01: -INFINITY
+pcmk__clone_assign: prmStateful:1 allocation score on rh80-test02: -INFINITY
 pcmk__group_assign: grpTest allocation score on rh80-test01: 200
 pcmk__group_assign: grpTest allocation score on rh80-test02: 100
 pcmk__group_assign: prmDummy1 allocation score on rh80-test01: INFINITY

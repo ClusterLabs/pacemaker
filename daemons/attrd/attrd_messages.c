@@ -42,7 +42,48 @@ handle_clear_failure_request(pcmk__request_t *request)
         pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
         return NULL;
     } else {
+        if (attrd_request_has_sync_point(request->xml)) {
+            /* If this client supplied a sync point it wants to wait for, add it to
+             * the wait list.  Clients on this list will not receive an ACK until
+             * their sync point is hit which will result in the client stalled there
+             * until it receives a response.
+             *
+             * All other clients will receive the expected response as normal.
+             */
+            attrd_add_client_to_waitlist(request);
+
+        } else {
+            /* If the client doesn't want to wait for a sync point, go ahead and send
+             * the ACK immediately.  Otherwise, we'll send the ACK when the appropriate
+             * sync point is reached.
+             */
+            attrd_send_ack(request->ipc_client, request->ipc_id,
+                           request->ipc_flags);
+        }
+
         return attrd_client_clear_failure(request);
+    }
+}
+
+static xmlNode *
+handle_confirm_request(pcmk__request_t *request)
+{
+    if (request->peer != NULL) {
+        int callid;
+
+        crm_debug("Received confirmation from %s", request->peer);
+
+        if (crm_element_value_int(request->xml, XML_LRM_ATTR_CALLID, &callid) == -1) {
+            pcmk__set_result(&request->result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
+                             "Could not get callid from XML");
+        } else {
+            attrd_handle_confirmation(callid, request->peer);
+        }
+
+        pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+        return NULL;
+    } else {
+        return handle_unknown_request(request);
     }
 }
 
@@ -137,12 +178,31 @@ handle_update_request(pcmk__request_t *request)
         attrd_peer_update(peer, request->xml, host, false);
         pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
         return NULL;
+
     } else {
-        /* Because attrd_client_update can be called recursively, we send the ACK
-         * here to ensure that the client only ever receives one.
-         */
-        attrd_send_ack(request->ipc_client, request->ipc_id,
-                       request->flags|crm_ipc_client_response);
+        if (attrd_request_has_sync_point(request->xml)) {
+            /* If this client supplied a sync point it wants to wait for, add it to
+             * the wait list.  Clients on this list will not receive an ACK until
+             * their sync point is hit which will result in the client stalled there
+             * until it receives a response.
+             *
+             * All other clients will receive the expected response as normal.
+             */
+            attrd_add_client_to_waitlist(request);
+
+        } else {
+            /* If the client doesn't want to wait for a sync point, go ahead and send
+             * the ACK immediately.  Otherwise, we'll send the ACK when the appropriate
+             * sync point is reached.
+             *
+             * In the normal case, attrd_client_update can be called recursively which
+             * makes where to send the ACK tricky.  Doing it here ensures the client
+             * only ever receives one.
+             */
+            attrd_send_ack(request->ipc_client, request->ipc_id,
+                           request->flags|crm_ipc_client_response);
+        }
+
         return attrd_client_update(request);
     }
 }
@@ -152,6 +212,7 @@ attrd_register_handlers(void)
 {
     pcmk__server_command_t handlers[] = {
         { PCMK__ATTRD_CMD_CLEAR_FAILURE, handle_clear_failure_request },
+        { PCMK__ATTRD_CMD_CONFIRM, handle_confirm_request },
         { PCMK__ATTRD_CMD_FLUSH, handle_flush_request },
         { PCMK__ATTRD_CMD_PEER_REMOVE, handle_remove_request },
         { PCMK__ATTRD_CMD_QUERY, handle_query_request },
@@ -241,16 +302,27 @@ attrd_broadcast_protocol(void)
     crm_debug("Broadcasting attrd protocol version %s for node %s",
               ATTRD_PROTOCOL_VERSION, attrd_cluster->uname);
 
-    attrd_send_message(NULL, attrd_op); /* ends up at attrd_peer_message() */
+    attrd_send_message(NULL, attrd_op, false); /* ends up at attrd_peer_message() */
 
     free_xml(attrd_op);
 }
 
 gboolean
-attrd_send_message(crm_node_t * node, xmlNode * data)
+attrd_send_message(crm_node_t *node, xmlNode *data, bool confirm)
 {
+    const char *op = crm_element_value(data, PCMK__XA_TASK);
+
     crm_xml_add(data, F_TYPE, T_ATTRD);
     crm_xml_add(data, PCMK__XA_ATTR_VERSION, ATTRD_PROTOCOL_VERSION);
+
+    /* Request a confirmation from the destination peer node (which could
+     * be all if node is NULL) that the message has been received and
+     * acted upon.
+     */
+    if (!pcmk__str_eq(op, PCMK__ATTRD_CMD_CONFIRM, pcmk__str_none)) {
+        pcmk__xe_set_bool_attr(data, PCMK__XA_CONFIRM, confirm);
+    }
+
     attrd_xml_add_writer(data);
     return send_cluster_message(node, crm_msg_attrd, data, TRUE);
 }

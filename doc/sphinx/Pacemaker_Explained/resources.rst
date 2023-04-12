@@ -245,38 +245,45 @@ where to find that resource agent and what standards it conforms to.
 .. table:: **Properties of a Primitive Resource**
    :widths: 1 4
 
-   +----------+------------------------------------------------------------------+
-   | Field    | Description                                                      |
-   +==========+==================================================================+
-   | id       | .. index::                                                       |
-   |          |    single: id; resource                                          |
-   |          |    single: resource; property, id                                |
-   |          |                                                                  |
-   |          | Your name for the resource                                       |
-   +----------+------------------------------------------------------------------+
-   | class    | .. index::                                                       |
-   |          |    single: class; resource                                       |
-   |          |    single: resource; property, class                             |
-   |          |                                                                  |
-   |          | The standard the resource agent conforms to. Allowed values:     |
-   |          | ``lsb``, ``nagios``, ``ocf``, ``service``, ``stonith``,          |
-   |          | ``systemd``, ``upstart``                                         |
-   +----------+------------------------------------------------------------------+
-   | type     | .. index::                                                       |
-   |          |    single: type; resource                                        |
-   |          |    single: resource; property, type                              |
-   |          |                                                                  |
-   |          | The name of the Resource Agent you wish to use. E.g.             |
-   |          | ``IPaddr`` or ``Filesystem``                                     |
-   +----------+------------------------------------------------------------------+
-   | provider | .. index::                                                       |
-   |          |    single: provider; resource                                    |
-   |          |    single: resource; property, provider                          |
-   |          |                                                                  |
-   |          | The OCF spec allows multiple vendors to supply the same resource |
-   |          | agent. To use the OCF resource agents supplied by the Heartbeat  |
-   |          | project, you would specify ``heartbeat`` here.                   |
-   +----------+------------------------------------------------------------------+
+   +-------------+------------------------------------------------------------------+
+   | Field       | Description                                                      |
+   +=============+==================================================================+
+   | id          | .. index::                                                       |
+   |             |    single: id; resource                                          |
+   |             |    single: resource; property, id                                |
+   |             |                                                                  |
+   |             | Your name for the resource                                       |
+   +-------------+------------------------------------------------------------------+
+   | class       | .. index::                                                       |
+   |             |    single: class; resource                                       |
+   |             |    single: resource; property, class                             |
+   |             |                                                                  |
+   |             | The standard the resource agent conforms to. Allowed values:     |
+   |             | ``lsb``, ``nagios``, ``ocf``, ``service``, ``stonith``,          |
+   |             | ``systemd``, ``upstart``                                         |
+   +-------------+------------------------------------------------------------------+
+   | description | .. index::                                                       |
+   |             |    single: description; resource                                 |
+   |             |    single: resource; property, description                       |
+   |             |                                                                  |
+   |             | A description of the Resource Agent, intended for local use.     |
+   |             | E.g. ``IP address for website``                                  |
+   +-------------+------------------------------------------------------------------+
+   | type        | .. index::                                                       |
+   |             |    single: type; resource                                        |
+   |             |    single: resource; property, type                              |
+   |             |                                                                  |
+   |             | The name of the Resource Agent you wish to use. E.g.             |
+   |             | ``IPaddr`` or ``Filesystem``                                     |
+   +-------------+------------------------------------------------------------------+
+   | provider    | .. index::                                                       |
+   |             |    single: provider; resource                                    |
+   |             |    single: resource; property, provider                          |
+   |             |                                                                  |
+   |             | The OCF spec allows multiple vendors to supply the same resource |
+   |             | agent. To use the OCF resource agents supplied by the Heartbeat  |
+   |             | project, you would specify ``heartbeat`` here.                   |
+   +-------------+------------------------------------------------------------------+
 
 The XML definition of a resource can be queried with the **crm_resource** tool.
 For example:
@@ -915,17 +922,30 @@ settings:
   may require the resource's ``target-role`` to be set to ``Stopped`` then
   ``Started`` to be recovered.
 
+* When a resource is put into maintenance mode (by setting
+  ``maintenance=true``): The resource will be marked as unmanaged. (This
+  overrides ``is-managed=true``.)
+
+  Additionally, all monitor operations will be stopped, except those specifying
+  ``role`` as ``Stopped`` (which will be newly initiated if appropriate). As
+  with unmanaged resources in general, starting a resource on a node other than
+  where the cluster expects it to be will cause problems.
+
 * When a node is put into standby: All resources will be moved away from the
   node, and all ``monitor`` operations will be stopped on the node, except those
   specifying ``role`` as ``Stopped`` (which will be newly initiated if
   appropriate).
 
-* When the cluster is put into maintenance mode: All resources will be marked
-  as unmanaged. All monitor operations will be stopped, except those
-  specifying ``role`` as ``Stopped`` (which will be newly initiated if
-  appropriate). As with single unmanaged resources, starting
-  a resource on a node other than where the cluster expects it to be will
-  cause problems.
+* When a node is put into maintenance mode: All resources that are active on the
+  node will be marked as in maintenance mode. See above for more details.
+
+* When the cluster is put into maintenance mode: All resources in the cluster
+  will be marked as in maintenance mode. See above for more details.
+
+A resource is in maintenance mode if the cluster, the node where the resource
+is active, or the resource itself is configured to be in maintenance mode. If a
+resource is in maintenance mode, then it is also unmanaged. However, if a
+resource is unmanaged, it is not necessarily in maintenance mode.
 
 .. _s-operation-defaults:
 

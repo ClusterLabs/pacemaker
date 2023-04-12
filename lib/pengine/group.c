@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -113,7 +113,8 @@ inactive_resources(pe_resource_t *rsc)
 }
 
 static void
-group_header(pcmk__output_t *out, int *rc, pe_resource_t *rsc, int n_inactive, bool show_inactive)
+group_header(pcmk__output_t *out, int *rc, const pe_resource_t *rsc,
+             int n_inactive, bool show_inactive, const char *desc)
 {
     GString *attrs = NULL;
 
@@ -123,20 +124,28 @@ group_header(pcmk__output_t *out, int *rc, pe_resource_t *rsc, int n_inactive, b
                                pcmk__plural_s(n_inactive));
     }
 
-    if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
-        pcmk__add_separated_word(&attrs, 64, "unmanaged", ", ");
-    }
-
     if (pe__resource_is_disabled(rsc)) {
         pcmk__add_separated_word(&attrs, 64, "disabled", ", ");
     }
 
+    if (pcmk_is_set(rsc->flags, pe_rsc_maintenance)) {
+        pcmk__add_separated_word(&attrs, 64, "maintenance", ", ");
+
+    } else if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+        pcmk__add_separated_word(&attrs, 64, "unmanaged", ", ");
+    }
+
     if (attrs != NULL) {
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, *rc, "Resource Group: %s (%s)",
-                                 rsc->id, (const char *) attrs->str);
+        PCMK__OUTPUT_LIST_HEADER(out, FALSE, *rc, "Resource Group: %s (%s)%s%s%s",
+                                 rsc->id,
+                                 (const char *) attrs->str, desc ? " (" : "",
+                                 desc ? desc : "", desc ? ")" : "");
         g_string_free(attrs, TRUE);
     } else {
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, *rc, "Resource Group: %s", rsc->id);
+        PCMK__OUTPUT_LIST_HEADER(out, FALSE, *rc, "Resource Group: %s%s%s%s",
+                                 rsc->id,
+                                 desc ? " (" : "", desc ? desc : "",
+                                 desc ? ")" : "");
     }
 }
 
@@ -258,7 +267,7 @@ group_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
     GList *gIter = rsc->children;
     char *child_text = crm_strdup_printf("%s     ", pre_text);
 
-    status_print("%s<group id=\"%s\" ", pre_text, rsc->id);
+    status_print("%s<group " XML_ATTR_ID "=\"%s\" ", pre_text, rsc->id);
     status_print("number_resources=\"%d\" ", g_list_length(rsc->children));
     status_print(">\n");
 
@@ -334,17 +343,18 @@ pe__group_xml(pcmk__output_t *out, va_list args)
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
-
+    
+    const char *desc = NULL;
     GList *gIter = rsc->children;
-    char *count = pcmk__itoa(g_list_length(gIter));
 
     int rc = pcmk_rc_no_output;
 
     gboolean parent_passes = pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches) ||
                              (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches));
 
+    desc = pe__resource_description(rsc, show_opts);
+
     if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
-        free(count);
         return rc;
     }
 
@@ -356,17 +366,24 @@ pe__group_xml(pcmk__output_t *out, va_list args)
         }
 
         if (rc == pcmk_rc_no_output) {
-            rc = pe__name_and_nvpairs_xml(out, true, "group", 4
-                                          , "id", rsc->id
-                                          , "number_resources", count
-                                          , "managed", pe__rsc_bool_str(rsc, pe_rsc_managed)
-                                          , "disabled", pcmk__btoa(pe__resource_is_disabled(rsc)));
+            char *count = pcmk__itoa(g_list_length(gIter));
+            const char *maint_s = pe__rsc_bool_str(rsc, pe_rsc_maintenance);
+            const char *managed_s = pe__rsc_bool_str(rsc, pe_rsc_managed);
+            const char *disabled_s = pcmk__btoa(pe__resource_is_disabled(rsc));
+
+            rc = pe__name_and_nvpairs_xml(out, true, "group", 5,
+                                          XML_ATTR_ID, rsc->id,
+                                          "number_resources", count,
+                                          "maintenance", maint_s,
+                                          "managed", managed_s,
+                                          "disabled", disabled_s,
+                                          "description", desc);
             free(count);
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
 
         out->message(out, crm_map_element_name(child_rsc->xml), show_opts, child_rsc,
-					 only_node, only_rsc);
+                     only_node, only_rsc);
     }
 
     if (rc == pcmk_rc_ok) {
@@ -385,6 +402,7 @@ pe__group_default(pcmk__output_t *out, va_list args)
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
+    const char *desc = NULL;
     int rc = pcmk_rc_no_output;
 
     gboolean parent_passes = pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches) ||
@@ -392,6 +410,8 @@ pe__group_default(pcmk__output_t *out, va_list args)
 
     gboolean active = rsc->fns->active(rsc, TRUE);
     gboolean partially_active = rsc->fns->active(rsc, FALSE);
+
+    desc = pe__resource_description(rsc, show_opts);
 
     if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
         return rc;
@@ -402,7 +422,7 @@ pe__group_default(pcmk__output_t *out, va_list args)
 
         if (rscs != NULL) {
             group_header(out, &rc, rsc, !active && partially_active ? inactive_resources(rsc) : 0,
-                         pcmk_is_set(show_opts, pcmk_show_inactive_rscs));
+                         pcmk_is_set(show_opts, pcmk_show_inactive_rscs), desc);
             pe__rscs_brief_output(out, rscs, show_opts | pcmk_show_inactive_rscs);
 
             rc = pcmk_rc_ok;
@@ -418,7 +438,7 @@ pe__group_default(pcmk__output_t *out, va_list args)
             }
 
             group_header(out, &rc, rsc, !active && partially_active ? inactive_resources(rsc) : 0,
-                         pcmk_is_set(show_opts, pcmk_show_inactive_rscs));
+                         pcmk_is_set(show_opts, pcmk_show_inactive_rscs), desc);
             out->message(out, crm_map_element_name(child_rsc->xml), show_opts,
                          child_rsc, only_node, only_rsc);
         }
@@ -470,19 +490,25 @@ group_resource_state(const pe_resource_t * rsc, gboolean current)
 }
 
 gboolean
-pe__group_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent)
+pe__group_is_filtered(const pe_resource_t *rsc, GList *only_rsc,
+                      gboolean check_parent)
 {
     gboolean passes = FALSE;
 
-    if (check_parent && pcmk__str_in_list(rsc_printable_id(uber_parent(rsc)), only_rsc, pcmk__str_star_matches)) {
+    if (check_parent
+        && pcmk__str_in_list(rsc_printable_id(pe__const_top_resource(rsc,
+                                                                     false)),
+                             only_rsc, pcmk__str_star_matches)) {
         passes = TRUE;
     } else if (pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches)) {
         passes = TRUE;
     } else if (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches)) {
         passes = TRUE;
     } else {
-        for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
+        for (const GList *iter = rsc->children;
+             iter != NULL; iter = iter->next) {
+
+            const pe_resource_t *child_rsc = (const pe_resource_t *) iter->data;
 
             if (!child_rsc->fns->is_filtered(child_rsc, only_rsc, FALSE)) {
                 passes = TRUE;

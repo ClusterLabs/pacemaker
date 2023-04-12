@@ -92,9 +92,6 @@
           <instance_attributes id="rabbitmq-instance_attributes">
             <nvpair id="rabbitmq-instance_attributes-set_policy" name="set_policy" value="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
           </instance_attributes>
-          <meta_attributes id="rabbitmq-meta_attributes">
-            <nvpair id="rabbitmq-meta_attributes-notify" name="notify" value="true"/>
-          </meta_attributes>
           <operations>
             <op id="rabbitmq-start-interval-0s" interval="0s" name="start" timeout="100"/>
             <op id="rabbitmq-stop-interval-0s" interval="0s" name="stop" timeout="90"/>
@@ -102,8 +99,9 @@
           </operations>
         </primitive>
         <meta_attributes id="rabbitmq-clone-meta_attributes">
-          <nvpair id="rabbitmq-ordered" name="ordered" value="true"/>
-          <nvpair id="rabbitmq-interleave" name="interleave" value="true"/>
+          <nvpair id="rabbitmq-clone-meta_attributes-notify" name="notify" value="true"/>
+          <nvpair id="rabbitmq-clone-ordered" name="ordered" value="true"/>
+          <nvpair id="rabbitmq-clone-interleave" name="interleave" value="true"/>
         </meta_attributes>
       </clone>
       <clone id="openstack-core-clone">

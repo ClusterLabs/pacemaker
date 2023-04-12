@@ -2,7 +2,7 @@
 """ Command-line interface to Pacemaker's Cluster Test Suite (CTS)
 """
 
-__copyright__ = "Copyright 2001-2021 the Pacemaker project contributors"
+__copyright__ = "Copyright 2001-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import sys, signal, os
@@ -11,13 +11,13 @@ pdir = os.path.dirname(sys.path[0])
 sys.path.insert(0, pdir) # So that things work from the source directory
 
 try:
-    from cts.CTS          import *
-    from cts.CTSvars      import *
     from cts.CM_corosync  import *
     from cts.CTSaudits    import AuditList
     from cts.CTStests     import TestList
     from cts.CTSscenarios import *
-    from cts.logging      import LogFactory
+
+    from pacemaker._cts.CTS import CtsLab
+    from pacemaker._cts.logging import LogFactory
 except ImportError as e:
     sys.stderr.write("abort: %s\n" % e)
     sys.stderr.write("check your install and PYTHONPATH; couldn't find cts libraries in:\n%s\n" %
@@ -67,7 +67,7 @@ if __name__ == '__main__':
         LogFactory().log("Unknown stack: "+Environment["stack"])
         sys.exit(1)
 
-    if Environment["TruncateLog"] == 1:
+    if Environment["TruncateLog"]:
         if Environment["OutputFile"] is None:
             LogFactory().log("Ignoring truncate request because no output file specified")
         else:
@@ -77,7 +77,7 @@ if __name__ == '__main__':
 
     Audits = AuditList(cm)
 
-    if Environment["ListTests"] == 1:
+    if Environment["ListTests"]:
         Tests = TestList(cm, Audits)
         LogFactory().log("Total %d tests"%len(Tests))
         for test in Tests :
@@ -109,15 +109,15 @@ if __name__ == '__main__':
     elif Environment["scenario"] == "all-once":
         NumIter = len(Tests)
         scenario = AllOnce(
-            cm, [ BootCluster(Environment), PacketLoss(Environment) ], Audits, Tests)
+            cm, [ BootCluster(Environment) ], Audits, Tests)
     elif Environment["scenario"] == "sequence":
         scenario = Sequence(
-            cm, [ BootCluster(Environment), PacketLoss(Environment) ], Audits, Tests)
+            cm, [ BootCluster(Environment) ], Audits, Tests)
     elif Environment["scenario"] == "boot":
         scenario = Boot(cm, [ LeaveBooted(Environment)], Audits, [])
     else:
         scenario = RandomTests(
-            cm, [ BootCluster(Environment), PacketLoss(Environment) ], Audits, Tests)
+            cm, [ BootCluster(Environment) ], Audits, Tests)
 
     LogFactory().log(">>>>>>>>>>>>>>>> BEGINNING " + repr(NumIter) + " TEST" + plural_s(NumIter, True) + " ")
     LogFactory().log("Stack:                  %s (%s)" % (Environment["Stack"], Environment["Name"]))

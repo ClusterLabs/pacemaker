@@ -141,7 +141,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="33" operation="stop" operation_key="evmscloneset_stop_0"/>
+        <pseudo_event id="29" operation="stop" operation_key="evmscloneset_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -168,7 +168,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="34" operation="stopped" operation_key="evmscloneset_stopped_0"/>
+        <pseudo_event id="30" operation="stopped" operation_key="evmscloneset_stopped_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="36" operation="notified" operation_key="evmscloneset_confirmed-pre_notify_stop_0"/>
@@ -203,7 +203,7 @@
   </synapse>
   <synapse id="16" priority="1000000">
     <action_set>
-      <pseudo_event id="34" operation="stopped" operation_key="evmscloneset_stopped_0">
+      <pseudo_event id="30" operation="stopped" operation_key="evmscloneset_stopped_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -212,13 +212,13 @@
         <rsc_op id="26" operation="stop" operation_key="evmsclone:1_stop_0" on_node="node1" on_node_uuid="3d8227f0-31dd-4801-b0db-987909d4a321"/>
       </trigger>
       <trigger>
-        <pseudo_event id="33" operation="stop" operation_key="evmscloneset_stop_0"/>
+        <pseudo_event id="29" operation="stop" operation_key="evmscloneset_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="17">
     <action_set>
-      <pseudo_event id="33" operation="stop" operation_key="evmscloneset_stop_0">
+      <pseudo_event id="29" operation="stop" operation_key="evmscloneset_stop_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -295,7 +295,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="48" operation="stop" operation_key="imagestorecloneset_stop_0"/>
+        <pseudo_event id="44" operation="stop" operation_key="imagestorecloneset_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -322,7 +322,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="49" operation="stopped" operation_key="imagestorecloneset_stopped_0"/>
+        <pseudo_event id="45" operation="stopped" operation_key="imagestorecloneset_stopped_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="51" operation="notified" operation_key="imagestorecloneset_confirmed-pre_notify_stop_0"/>
@@ -357,7 +357,7 @@
   </synapse>
   <synapse id="27" priority="1000000">
     <action_set>
-      <pseudo_event id="49" operation="stopped" operation_key="imagestorecloneset_stopped_0">
+      <pseudo_event id="45" operation="stopped" operation_key="imagestorecloneset_stopped_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -366,13 +366,13 @@
         <rsc_op id="41" operation="stop" operation_key="imagestoreclone:0_stop_0" internal_operation_key="imagestoreclone:1_stop_0" on_node="node1" on_node_uuid="3d8227f0-31dd-4801-b0db-987909d4a321"/>
       </trigger>
       <trigger>
-        <pseudo_event id="48" operation="stop" operation_key="imagestorecloneset_stop_0"/>
+        <pseudo_event id="44" operation="stop" operation_key="imagestorecloneset_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="28">
     <action_set>
-      <pseudo_event id="48" operation="stop" operation_key="imagestorecloneset_stop_0">
+      <pseudo_event id="44" operation="stop" operation_key="imagestorecloneset_stop_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -443,7 +443,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="63" operation="stop" operation_key="configstorecloneset_stop_0"/>
+        <pseudo_event id="59" operation="stop" operation_key="configstorecloneset_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -470,7 +470,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="64" operation="stopped" operation_key="configstorecloneset_stopped_0"/>
+        <pseudo_event id="60" operation="stopped" operation_key="configstorecloneset_stopped_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="66" operation="notified" operation_key="configstorecloneset_confirmed-pre_notify_stop_0"/>
@@ -505,7 +505,7 @@
   </synapse>
   <synapse id="38" priority="1000000">
     <action_set>
-      <pseudo_event id="64" operation="stopped" operation_key="configstorecloneset_stopped_0">
+      <pseudo_event id="60" operation="stopped" operation_key="configstorecloneset_stopped_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -514,13 +514,13 @@
         <rsc_op id="56" operation="stop" operation_key="configstoreclone:0_stop_0" internal_operation_key="configstoreclone:1_stop_0" on_node="node1" on_node_uuid="3d8227f0-31dd-4801-b0db-987909d4a321"/>
       </trigger>
       <trigger>
-        <pseudo_event id="63" operation="stop" operation_key="configstorecloneset_stop_0"/>
+        <pseudo_event id="59" operation="stop" operation_key="configstorecloneset_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="39">
     <action_set>
-      <pseudo_event id="63" operation="stop" operation_key="configstorecloneset_stop_0">
+      <pseudo_event id="59" operation="stop" operation_key="configstorecloneset_stop_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>

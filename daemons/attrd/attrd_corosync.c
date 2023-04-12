@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2022 the Pacemaker project contributors
+ * Copyright 2013-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -24,6 +24,19 @@
 #include "pacemaker-attrd.h"
 
 extern crm_exit_t attrd_exit_status;
+
+static xmlNode *
+attrd_confirmation(int callid)
+{
+    xmlNode *node = create_xml_node(NULL, __func__);
+
+    crm_xml_add(node, F_TYPE, T_ATTRD);
+    crm_xml_add(node, F_ORIG, get_local_node_name());
+    crm_xml_add(node, PCMK__XA_TASK, PCMK__ATTRD_CMD_CONFIRM);
+    crm_xml_add_int(node, XML_LRM_ATTR_CALLID, callid);
+
+    return node;
+}
 
 static void
 attrd_peer_message(crm_node_t *peer, xmlNode *xml)
@@ -57,6 +70,32 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
         CRM_CHECK(request.op != NULL, return);
 
         attrd_handle_request(&request);
+
+        /* Having finished handling the request, check to see if the originating
+         * peer requested confirmation.  If so, send that confirmation back now.
+         */
+        if (pcmk__xe_attr_is_true(xml, PCMK__XA_CONFIRM) &&
+            !pcmk__str_eq(request.op, PCMK__ATTRD_CMD_CONFIRM, pcmk__str_none)) {
+            int callid = 0;
+            xmlNode *reply = NULL;
+
+            /* Add the confirmation ID for the message we are confirming to the
+             * response so the originating peer knows what they're a confirmation
+             * for.
+             */
+            crm_element_value_int(xml, XML_LRM_ATTR_CALLID, &callid);
+            reply = attrd_confirmation(callid);
+
+            /* And then send the confirmation back to the originating peer.  This
+             * ends up right back in this same function (attrd_peer_message) on the
+             * peer where it will have to do something with a PCMK__XA_CONFIRM type
+             * message.
+             */
+            crm_debug("Sending %s a confirmation", peer->uname);
+            attrd_send_message(peer, reply, false);
+            free_xml(reply);
+        }
+
         pcmk__reset_request(&request);
     }
 }
@@ -124,7 +163,7 @@ broadcast_local_value(const attribute_t *a)
 
     crm_xml_add(sync, PCMK__XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
     attrd_add_value_xml(sync, a, v, false);
-    attrd_send_message(NULL, sync);
+    attrd_send_message(NULL, sync, false);
     free_xml(sync);
     return v;
 }
@@ -230,6 +269,8 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
     // Remove votes from cluster nodes that leave, in case election in progress
     if (gone && !is_remote) {
         attrd_remove_voter(peer);
+        attrd_remove_peer_protocol_ver(peer->uname);
+        attrd_do_not_expect_from_peer(peer->uname);
 
     // Ensure remote nodes that come up are in the remote node cache
     } else if (!gone && is_remote) {
@@ -265,9 +306,10 @@ update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
         v = broadcast_local_value(a);
 
     } else if (!pcmk__str_eq(v->current, value, pcmk__str_casei)) {
-        crm_notice("Setting %s[%s]: %s -> %s "
+        crm_notice("Setting %s[%s]%s%s: %s -> %s "
                    CRM_XS " from %s with %s write delay",
-                   attr, host, pcmk__s(v->current, "(unset)"),
+                   attr, host, a->set_type ? " in " : "",
+                   pcmk__s(a->set_type, ""), pcmk__s(v->current, "(unset)"),
                    pcmk__s(value, "(unset)"), peer->uname,
                    (a->timeout_ms == 0)? "no" : pcmk__readable_interval(a->timeout_ms));
         pcmk__str_update(&v->current, value);
@@ -357,7 +399,7 @@ attrd_peer_update_one(const crm_node_t *peer, xmlNode *xml, bool filter)
      * version, check to see if it's a new minimum version.
      */
     if (pcmk__str_eq(attr, CRM_ATTR_PROTOCOL, pcmk__str_none)) {
-        attrd_update_minimum_protocol_ver(value);
+        attrd_update_minimum_protocol_ver(peer->uname, value);
     }
 }
 
@@ -387,7 +429,7 @@ broadcast_unseen_local_values(void)
 
     if (sync != NULL) {
         crm_debug("Broadcasting local-only values");
-        attrd_send_message(NULL, sync);
+        attrd_send_message(NULL, sync, false);
         free_xml(sync);
     }
 }
@@ -395,7 +437,7 @@ broadcast_unseen_local_values(void)
 int
 attrd_cluster_connect(void)
 {
-    attrd_cluster = calloc(1, sizeof(crm_cluster_t));
+    attrd_cluster = pcmk_cluster_new();
 
     attrd_cluster->destroy = attrd_cpg_destroy;
     attrd_cluster->cpg.cpg_deliver_fn = attrd_cpg_dispatch;
@@ -539,43 +581,40 @@ attrd_peer_sync(crm_node_t *peer, xmlNode *xml)
     }
 
     crm_debug("Syncing values to %s", peer?peer->uname:"everyone");
-    attrd_send_message(peer, sync);
+    attrd_send_message(peer, sync, false);
     free_xml(sync);
-}
-
-static void
-copy_attrs(xmlNode *src, xmlNode *dest)
-{
-    /* Copy attributes from the wrapper parent node into the child node.
-     * We can't just use copy_in_properties because we want to skip any
-     * attributes that are already set on the child.  For instance, if
-     * we were told to use a specific node, there will already be a node
-     * attribute on the child.  Copying the parent's node attribute over
-     * could result in the wrong value.
-     */
-    for (xmlAttrPtr a = pcmk__xe_first_attr(src); a != NULL; a = a->next) {
-        const char *p_name = (const char *) a->name;
-        const char *p_value = ((a == NULL) || (a->children == NULL)) ? NULL :
-                              (const char *) a->children->content;
-
-        if (crm_element_value(dest, p_name) == NULL) {
-            crm_xml_add(dest, p_name, p_value);
-        }
-    }
 }
 
 void
 attrd_peer_update(const crm_node_t *peer, xmlNode *xml, const char *host,
                   bool filter)
 {
+    bool handle_sync_point = false;
+
     if (xml_has_children(xml)) {
         for (xmlNode *child = first_named_child(xml, XML_ATTR_OP); child != NULL;
              child = crm_next_same_xml(child)) {
-            copy_attrs(xml, child);
+            attrd_copy_xml_attributes(xml, child);
             attrd_peer_update_one(peer, child, filter);
+
+            if (attrd_request_has_sync_point(child)) {
+                handle_sync_point = true;
+            }
         }
 
     } else {
         attrd_peer_update_one(peer, xml, filter);
+
+        if (attrd_request_has_sync_point(xml)) {
+            handle_sync_point = true;
+        }
+    }
+
+    /* If the update XML specified that the client wanted to wait for a sync
+     * point, process that now.
+     */
+    if (handle_sync_point) {
+        crm_trace("Hit local sync point for attribute update");
+        attrd_ack_waitlist_clients(attrd_sync_point_local, xml);
     }
 }

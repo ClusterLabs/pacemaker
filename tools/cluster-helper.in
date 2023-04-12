@@ -1,0 +1,201 @@
+#!@BASH_PATH@
+#
+# Copyright 2011-2023 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
+#
+
+hosts=
+group=$cluster_name
+user=root
+pdsh=`which pdsh 2>/dev/null`
+ssh=`which qarsh 2>/dev/null`
+scp=`which qacp 2>/dev/null`
+command=list
+format=oneline
+replace="{}"
+
+if [ x$ssh = "x" ]; then
+    ssh=ssh
+    scp=scp
+fi
+
+function helptext() {
+    echo "cluster-helper - A tool for running commands on multiple hosts"
+    echo ""
+    echo "Attempt to use pdsh, qarsh, or ssh (in that order) to execute commands"
+    echo "on multiple hosts"
+    echo ""
+    echo "DSH groups can be configured and specified with -g instead of listing"
+    echo "the individual hosts every time"
+    echo ""
+    echo "Usage: cluster-helper [options] [command]"
+    echo ""
+    echo "Options:"
+    echo "--ssh            Force the use of ssh instead of qarsh even if it available"
+    echo "-g, --group      Specify the group to operate on/with"
+    echo "-w, --host       Specify a host to operate on/with.  May be specified multiple times"
+    echo "-f, --format     Specifiy the output format When listing hosts or group contents"
+    echo "                 Allowed values: [oneline], long, short, pdsh, bullet"
+    echo ""
+    echo ""
+    echo "Commands:"
+    echo "--list   format  List the contents of a group in the specified format"
+    echo "--add    name    Add supplied (-w) hosts to the named group"
+    echo "--create name    Create the named group with the supplied (-w) hosts"
+    echo "--run, --        Treat all subsequent arguments as a command to perform on"
+    echo "                 the specified command on the hosts or group"
+    echo "--xargs          Run the supplied command having replaced any occurrences"
+    echo "                 of {} with the node name"
+    echo ""
+    echo "--copy file(s) host:file   Pass subsequent arguments to scp or qacp"
+    echo "                           Any occurrences of {} are replaced with the node name"
+    echo "--key            Install an ssh key"
+    echo ""
+    exit $1
+}
+
+while true ; do
+    case "$1" in
+	--help|-h|-\?) helptext 0;;
+	-x)  set -x; shift;;
+	--ssh) ssh="ssh"; scp="scp"; pdsh=""; shift;;
+	-g|--group) group="$2"; shift; shift;;
+	-w|--host) for h in $2; do
+		hosts="$hosts $h";
+	    done
+	    shift; shift;;
+	-f|--format) format=$2; shift; shift;;
+	-I) replace=$2; shift; shift;;
+	--list|list) format=$2; command=list; shift; shift;;
+	--add|add) command=group-add; shift;;
+	--create|create) group="$2", command=group-create; shift; shift;;
+	--run|run) command=run; shift;;
+	--copy|copy) command=copy; shift; break ;;
+	--key|key) command=key; shift; break ;;
+	--xargs) command=xargs; shift; break ;;
+	--) command=run; shift; break ;;
+	"") break;;
+	*) helptext 1;;
+    esac
+done	
+
+if [ x"$group" = x -a x"$hosts" = x ]; then
+    group=$CTS_GROUP
+fi
+
+function expand() {
+    fmt=$1
+    if [ x$group != x -a -f ~/.dsh/group/$group ]; then
+	hosts=`cat ~/.dsh/group/$group`
+    elif [ x$group != x ]; then
+	echo "Unknown group: $group" >&2
+	exit 1
+    fi
+    
+    if [ "x$hosts" != x -a $fmt = oneline ]; then
+	echo $hosts
+	
+    elif [ "x$hosts" != x -a $fmt = short ]; then
+	( for h in $hosts; do
+		echo $h | sed 's:\..*::'
+		done ) | tr '\n' ' '
+	echo ""
+	
+    elif [ "x$hosts" != x -a $fmt = pdsh ]; then
+	( for h in $hosts; do
+		echo "-w $h"
+	    done ) | tr '\n' ' '
+	echo ""
+	
+    elif [ "x$hosts" != x -a $fmt = long ]; then
+	for h in $hosts; do
+	    echo $h
+	done
+
+    elif [ "x$hosts" != x -a $fmt = bullet ]; then
+	for h in $hosts; do
+	    echo " * $h"
+	done
+
+    elif [ "x$hosts" != x ]; then
+	echo "Unknown format: $fmt" >&2
+    fi
+}
+
+if [ $command = list ]; then
+    expand $format
+
+elif [ $command = key ]; then
+    hosts=`expand oneline`
+    for h in $hosts; do
+	ssh-copy-id root@$h
+    done
+
+elif [ $command = group-create ]; then
+
+    f=`mktemp`
+    mkdir -p ~/.dsh/group
+
+    if [ -f ~/.dsh/group/$group ]; then
+	echo "Overwriting existing group $group"
+    fi
+
+    for h in $hosts; do
+	echo $h >> $f
+    done
+
+    echo "Creating group $group in ~/.dsh/group"
+    sort -u $f > ~/.dsh/group/$group
+    rm -f $f
+
+elif [ $command = group-add ]; then
+    if [ x$group = x ]; then
+	echo "Please specify a group to append to"
+	exit 1
+    fi
+    
+    f=`mktemp`
+    mkdir -p ~/.dsh/group
+
+    if [ -f ~/.dsh/group/$group ]; then
+	cat ~/.dsh/group/$group > $f
+    fi
+
+    for h in $hosts; do
+	echo $h >> $f
+    done
+
+    echo "Appending hosts to group $group in ~/.dsh/group"
+    sort -u $f > ~/.dsh/group/$group
+    rm -f $f
+
+elif [ $command = run ]; then
+    if [ x$pdsh != x ]; then
+	hosts=`expand pdsh`
+	$pdsh -l $user $hosts -- $*
+
+    else
+	hosts=`expand oneline`
+	for n in $hosts; do
+	    $ssh -l $user $n -- $* < /dev/null
+	done
+	if [ x"$hosts" = x ]; then
+	    echo "No hosts specified"
+	fi
+    fi
+elif [ $command = copy ]; then
+    hosts=`expand oneline`
+    for n in $hosts; do
+	$scp `echo $* | sed 's@'$replace'@'$n'@'`
+    done
+
+elif [ $command = xargs ]; then
+    hosts=`expand oneline`
+    for n in $hosts; do
+	eval `echo $* | sed 's@'$replace'@'$n'@'`
+    done
+fi

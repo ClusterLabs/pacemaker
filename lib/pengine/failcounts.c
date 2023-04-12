@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2022 the Pacemaker project contributors
+ * Copyright 2008-2023 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -18,8 +18,8 @@
 #include <crm/pengine/internal.h>
 
 static gboolean
-is_matched_failure(const char *rsc_id, xmlNode *conf_op_xml,
-                   xmlNode *lrm_op_xml)
+is_matched_failure(const char *rsc_id, const xmlNode *conf_op_xml,
+                   const xmlNode *lrm_op_xml)
 {
     gboolean matched = FALSE;
     const char *conf_op_name = NULL;
@@ -77,8 +77,7 @@ is_matched_failure(const char *rsc_id, xmlNode *conf_op_xml,
 }
 
 static gboolean
-block_failure(pe_node_t *node, pe_resource_t *rsc, xmlNode *xml_op,
-              pe_working_set_t *data_set)
+block_failure(const pe_node_t *node, pe_resource_t *rsc, const xmlNode *xml_op)
 {
     char *xml_name = clone_strip(rsc->id);
 
@@ -92,7 +91,10 @@ block_failure(pe_node_t *node, pe_resource_t *rsc, xmlNode *xml_op,
      * Ideally, we'd unpack the operation before this point, and pass in a
      * meta-attributes table that takes all that into consideration.
      */
-    char *xpath = crm_strdup_printf("//primitive[@id='%s']//op[@on-fail='block']",
+    char *xpath = crm_strdup_printf("//" XML_CIB_TAG_RESOURCE
+                                    "[@" XML_ATTR_ID "='%s']"
+                                    "//" XML_ATTR_OP
+                                    "[@" XML_OP_ATTR_ON_FAIL "='block']",
                                     xml_name);
 
     xmlXPathObject *xpathObj = xpath_search(rsc->xml, xpath);
@@ -125,12 +127,16 @@ block_failure(pe_node_t *node, pe_resource_t *rsc, xmlNode *xml_op,
                 conf_op_interval_spec = crm_element_value(pref, XML_LRM_ATTR_INTERVAL);
                 conf_op_interval_ms = crm_parse_interval_spec(conf_op_interval_spec);
 
-                lrm_op_xpath = crm_strdup_printf("//node_state[@uname='%s']"
-                                               "//lrm_resource[@id='%s']"
-                                               "/lrm_rsc_op[@operation='%s'][@interval='%u']",
-                                               node->details->uname, xml_name,
-                                               conf_op_name, conf_op_interval_ms);
-                lrm_op_xpathObj = xpath_search(data_set->input, lrm_op_xpath);
+#define XPATH_FMT "//" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='%s']"       \
+                  "//" XML_LRM_TAG_RESOURCE "[@" XML_ATTR_ID "='%s']"       \
+                  "/" XML_LRM_TAG_RSC_OP "[@" XML_LRM_ATTR_TASK "='%s']"    \
+                  "[@" XML_LRM_ATTR_INTERVAL "='%u']"
+
+                lrm_op_xpath = crm_strdup_printf(XPATH_FMT,
+                                                 node->details->uname, xml_name,
+                                                 conf_op_name,
+                                                 conf_op_interval_ms);
+                lrm_op_xpathObj = xpath_search(rsc->cluster->input, lrm_op_xpath);
 
                 free(lrm_op_xpath);
 
@@ -174,7 +180,7 @@ block_failure(pe_node_t *node, pe_resource_t *rsc, xmlNode *xml_op,
  * \note The caller is responsible for freeing the result.
  */
 static inline char *
-rsc_fail_name(pe_resource_t *rsc)
+rsc_fail_name(const pe_resource_t *rsc)
 {
     const char *name = (rsc->clone_name? rsc->clone_name : rsc->id);
 
@@ -191,10 +197,11 @@ rsc_fail_name(pe_resource_t *rsc)
  * \param[in]  is_unique Whether the resource is a globally unique clone
  * \param[out] re        Where to store resulting regular expression
  *
+ * \return Standard Pacemaker return code
  * \note Fail attributes are named like PREFIX-RESOURCE#OP_INTERVAL.
  *       The caller is responsible for freeing re with regfree().
  */
-static void
+static int
 generate_fail_regex(const char *prefix, const char *rsc_name,
                     gboolean is_legacy, gboolean is_unique, regex_t *re)
 {
@@ -215,8 +222,13 @@ generate_fail_regex(const char *prefix, const char *rsc_name,
 
     pattern = crm_strdup_printf("^%s-%s%s%s$", prefix, rsc_name,
                                 instance_pattern, op_pattern);
-    CRM_LOG_ASSERT(regcomp(re, pattern, REG_EXTENDED|REG_NOSUB) == 0);
+    if (regcomp(re, pattern, REG_EXTENDED|REG_NOSUB) != 0) {
+        free(pattern);
+        return EINVAL;
+    }
+
     free(pattern);
+    return pcmk_rc_ok;
 }
 
 /*!
@@ -228,28 +240,40 @@ generate_fail_regex(const char *prefix, const char *rsc_name,
  * \param[out] failcount_re    Storage for regular expression for fail count
  * \param[out] lastfailure_re  Storage for regular expression for last failure
  *
- * \note The caller is responsible for freeing the expressions with regfree().
+ * \return Standard Pacemaker return code
+ * \note On success, the caller is responsible for freeing the expressions with
+ *       regfree().
  */
-static void
-generate_fail_regexes(pe_resource_t *rsc, pe_working_set_t *data_set,
+static int
+generate_fail_regexes(const pe_resource_t *rsc,
+                      const pe_working_set_t *data_set,
                       regex_t *failcount_re, regex_t *lastfailure_re)
 {
     char *rsc_name = rsc_fail_name(rsc);
     const char *version = crm_element_value(data_set->input, XML_ATTR_CRM_VERSION);
     gboolean is_legacy = (compare_version(version, "3.0.13") < 0);
+    int rc = pcmk_rc_ok;
 
-    generate_fail_regex(PCMK__FAIL_COUNT_PREFIX, rsc_name, is_legacy,
-                        pcmk_is_set(rsc->flags, pe_rsc_unique), failcount_re);
+    if (generate_fail_regex(PCMK__FAIL_COUNT_PREFIX, rsc_name, is_legacy,
+                            pcmk_is_set(rsc->flags, pe_rsc_unique),
+                            failcount_re) != pcmk_rc_ok) {
+        rc = EINVAL;
 
-    generate_fail_regex(PCMK__LAST_FAILURE_PREFIX, rsc_name, is_legacy,
-                        pcmk_is_set(rsc->flags, pe_rsc_unique), lastfailure_re);
+    } else if (generate_fail_regex(PCMK__LAST_FAILURE_PREFIX, rsc_name,
+                                   is_legacy,
+                                   pcmk_is_set(rsc->flags, pe_rsc_unique),
+                                   lastfailure_re) != pcmk_rc_ok) {
+        rc = EINVAL;
+        regfree(failcount_re);
+    }
 
     free(rsc_name);
+    return rc;
 }
 
 int
-pe_get_failcount(pe_node_t *node, pe_resource_t *rsc, time_t *last_failure,
-                 uint32_t flags, xmlNode *xml_op, pe_working_set_t *data_set)
+pe_get_failcount(const pe_node_t *node, pe_resource_t *rsc,
+                 time_t *last_failure, uint32_t flags, const xmlNode *xml_op)
 {
     char *key = NULL;
     const char *value = NULL;
@@ -258,13 +282,17 @@ pe_get_failcount(pe_node_t *node, pe_resource_t *rsc, time_t *last_failure,
     time_t last = 0;
     GHashTableIter iter;
 
-    generate_fail_regexes(rsc, data_set, &failcount_re, &lastfailure_re);
+    CRM_CHECK(generate_fail_regexes(rsc, rsc->cluster, &failcount_re,
+                                    &lastfailure_re) == pcmk_rc_ok,
+              return 0);
 
     /* Resource fail count is sum of all matching operation fail counts */
     g_hash_table_iter_init(&iter, node->details->attrs);
     while (g_hash_table_iter_next(&iter, (gpointer *) &key, (gpointer *) &value)) {
         if (regexec(&failcount_re, key, 0, NULL, 0) == 0) {
             failcount = pcmk__add_scores(failcount, char2score(value));
+            crm_trace("Added %s (%s) to %s fail count (now %s)",
+                      key, value, rsc->id, pcmk_readable_score(failcount));
         } else if (regexec(&lastfailure_re, key, 0, NULL, 0) == 0) {
             long long last_ll;
 
@@ -283,7 +311,7 @@ pe_get_failcount(pe_node_t *node, pe_resource_t *rsc, time_t *last_failure,
 
     /* If failure blocks the resource, disregard any failure timeout */
     if ((failcount > 0) && rsc->failure_timeout
-        && block_failure(node, rsc, xml_op, data_set)) {
+        && block_failure(node, rsc, xml_op)) {
 
         pe_warn("Ignoring failure timeout %d for %s because it conflicts with on-fail=block",
                 rsc->failure_timeout, rsc->id);
@@ -294,7 +322,7 @@ pe_get_failcount(pe_node_t *node, pe_resource_t *rsc, time_t *last_failure,
     if (pcmk_is_set(flags, pe_fc_effective) && (failcount > 0) && (last > 0)
         && rsc->failure_timeout) {
 
-        time_t now = get_effective_time(data_set);
+        time_t now = get_effective_time(rsc->cluster);
 
         if (now > (last + rsc->failure_timeout)) {
             crm_debug("Failcount for %s on %s expired after %ds",
@@ -323,7 +351,7 @@ pe_get_failcount(pe_node_t *node, pe_resource_t *rsc, time_t *last_failure,
             time_t filler_last_failure = 0;
 
             failcount += pe_get_failcount(node, filler, &filler_last_failure,
-                                          flags, xml_op, data_set);
+                                          flags, xml_op);
 
             if (last_failure && filler_last_failure > *last_failure) {
                 *last_failure = filler_last_failure;
@@ -349,15 +377,15 @@ pe_get_failcount(pe_node_t *node, pe_resource_t *rsc, time_t *last_failure,
 /*!
  * \brief Schedule a controller operation to clear a fail count
  *
- * \param[in] rsc       Resource with failure
- * \param[in] node      Node failure occurred on
- * \param[in] reason    Readable description why needed (for logging)
- * \param[in] data_set  Working set for cluster
+ * \param[in,out] rsc       Resource with failure
+ * \param[in]     node      Node failure occurred on
+ * \param[in]     reason    Readable description why needed (for logging)
+ * \param[in,out] data_set  Working set for cluster
  *
  * \return Scheduled action
  */
 pe_action_t *
-pe__clear_failcount(pe_resource_t *rsc, pe_node_t *node,
+pe__clear_failcount(pe_resource_t *rsc, const pe_node_t *node,
                     const char *reason, pe_working_set_t *data_set)
 {
     char *key = NULL;

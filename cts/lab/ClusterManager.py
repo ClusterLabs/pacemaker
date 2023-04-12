@@ -1,7 +1,7 @@
 """ ClusterManager class for Pacemaker's Cluster Test Suite (CTS)
 """
 
-__copyright__ = """Copyright 2000-2022 the Pacemaker project contributors.
+__copyright__ = """Copyright 2000-2023 the Pacemaker project contributors.
 Certain portions by Huang Zhen <zhenhltc@cn.ibm.com> are copyright 2004
 International Business Machines. The version control history for this file
 may have further details."""
@@ -13,92 +13,16 @@ import time
 
 from collections import UserDict
 
-from cts.CTSvars     import *
 from cts.CIB         import ConfigFactory
-from cts.CTS         import NodeStatus, Process
 from cts.CTStests    import AuditResource
-from cts.logging     import LogFactory
-from cts.watcher     import LogWatcher
-from cts.remote      import RemoteFactory
-from cts.environment import EnvFactory
-from cts.patterns    import PatternSelector
 
-has_log_stats = {}
-log_stats_bin = CTSvars.CRM_DAEMON_DIR + "/cts_log_stats.sh"
-log_stats = """
-#!%s
-# Tool for generating system load reports while CTS runs
-
-trap "" 1
-
-f=$1; shift
-action=$1; shift
-base=`basename $0`
-
-if [ ! -e $f ]; then
-    echo "Time, Load 1, Load 5, Load 15, Test Marker" > $f
-fi
-
-function killpid() {
-    if [ -e $f.pid ]; then
-       kill -9 `cat $f.pid`
-       rm -f $f.pid
-    fi
-}
-
-function status() {
-    if [ -e $f.pid ]; then
-       kill -0 `cat $f.pid`
-       return $?
-    else
-       return 1
-    fi
-}
-
-function start() {
-    # Is it already running?
-    if
-        status
-    then
-        return
-    fi
-
-    echo Active as $$
-    echo $$ > $f.pid
-
-    while [ 1 = 1 ]; do
-        uptime | sed s/up.*:/,/ | tr '\\n' ',' >> $f
-        #top -b -c -n1 | grep -e usr/libexec/pacemaker | grep -v -e grep -e python | head -n 1 | sed s@/usr/libexec/pacemaker/@@ | awk '{print " 0, "$9", "$10", "$12}' | tr '\\n' ',' >> $f
-        echo 0 >> $f
-        sleep 5
-    done
-}
-
-case $action in
-    start)
-        start
-        ;;
-    start-bg|bg)
-        # Use c --ssh -- ./stats.sh file start-bg
-        nohup $0 $f start >/dev/null 2>&1 </dev/null &
-        ;;
-    stop)
-        killpid
-        ;;
-    delete)
-        killpid
-        rm -f $f
-        ;;
-    mark)
-        uptime | sed s/up.*:/,/ | tr '\\n' ',' >> $f
-        echo " $*" >> $f
-        start
-        ;;
-    *)
-        echo "Unknown action: $action."
-        ;;
-esac
-""" % (CTSvars.BASH_PATH)
+from pacemaker.buildoptions import BuildOptions
+from pacemaker._cts.CTS import NodeStatus, Process
+from pacemaker._cts.environment import EnvFactory
+from pacemaker._cts.logging import LogFactory
+from pacemaker._cts.patterns import PatternSelector
+from pacemaker._cts.remote import RemoteFactory
+from pacemaker._cts.watcher import LogWatcher
 
 class ClusterManager(UserDict):
     '''The Cluster Manager class.
@@ -140,7 +64,6 @@ class ClusterManager(UserDict):
         self.OurNode = os.uname()[1].lower()
         self.__instance_errorstoignore = []
 
-        self.fastfail = 0
         self.cib_installed = 0
         self.config = None
         self.cluster_monitor = 0
@@ -165,7 +88,7 @@ class ClusterManager(UserDict):
         if key in self.data:
             return self.data[key]
 
-        return self.templates.get_patterns(self.Env["Name"], key)
+        return self.templates.get_patterns(key)
 
     def __setitem__(self, key, value):
         print("FIXME: Setting %s=%s on %s" % (key, value, repr(self)))
@@ -198,7 +121,7 @@ class ClusterManager(UserDict):
 
     def install_support(self, command="install"):
         for node in self.Env["nodes"]:
-            self.rsh(node, CTSvars.CRM_DAEMON_DIR + "/cts-support " + command)
+            self.rsh(node, BuildOptions.DAEMON_DIR + "/cts-support " + command)
 
     def prepare_fencing_watcher(self, name):
         # If we don't have quorum now but get it as a result of starting this node,
@@ -223,8 +146,8 @@ class ClusterManager(UserDict):
                 stonithPats.append(self.templates["Pat:Fencing_ok"] % peer)
                 stonithPats.append(self.templates["Pat:Fencing_start"] % peer)
 
-        stonith = LogWatcher(self.Env["LogFileName"], stonithPats, "StartupFencing", 0, hosts=self.Env["nodes"], kind=self.Env["LogWatcher"])
-        stonith.setwatch()
+        stonith = LogWatcher(self.Env["LogFileName"], stonithPats, self.Env["nodes"], self.Env["LogWatcher"], "StartupFencing", 0)
+        stonith.set_watch()
         return stonith
 
     def fencing_cleanup(self, node, stonith):
@@ -296,7 +219,7 @@ class ClusterManager(UserDict):
                     shot = stonith.look(60)
 
             # Now make sure the node is alive too
-            self.ns.WaitForNodeToComeUp(peer, self.Env["DeadTime"])
+            self.ns.wait_for_node(peer, self.Env["DeadTime"])
 
             # Poll until it comes up
             if self.Env["at-boot"]:
@@ -331,7 +254,7 @@ class ClusterManager(UserDict):
             patterns.append(self.templates["Pat:NonDC_started"] % node)
 
         watch = LogWatcher(
-            self.Env["LogFileName"], patterns, "StartaCM", self.Env["StartTime"]+10, hosts=self.Env["nodes"], kind=self.Env["LogWatcher"])
+            self.Env["LogFileName"], patterns, self.Env["nodes"], self.Env["LogWatcher"], "StartaCM", self.Env["StartTime"]+10)
 
         self.install_config(node)
 
@@ -341,15 +264,16 @@ class ClusterManager(UserDict):
             return 1
 
         stonith = self.prepare_fencing_watcher(node)
-        watch.setwatch()
+        watch.set_watch()
 
-        if self.rsh(node, self.templates["StartCmd"]) != 0:
+        (rc, _) = self.rsh(node, self.templates["StartCmd"])
+        if rc != 0:
             self.logger.log ("Warn: Start command failed on node %s" % (node))
             self.fencing_cleanup(node, stonith)
             return None
 
         self.ShouldBeStatus[node] = "up"
-        watch_result = watch.lookforall()
+        watch_result = watch.look_for_all()
 
         if watch.unmatched:
             for regex in watch.unmatched:
@@ -375,7 +299,7 @@ class ClusterManager(UserDict):
         else: self.debug("Starting %s on node %s" % (self["Name"], node))
 
         self.install_config(node)
-        self.rsh(node, self.templates["StartCmd"], synchronous=0)
+        self.rsh(node, self.templates["StartCmd"], synchronous=False)
         self.ShouldBeStatus[node] = "up"
         return 1
 
@@ -389,7 +313,8 @@ class ClusterManager(UserDict):
         if self.ShouldBeStatus[node] != "up" and force == False:
             return 1
 
-        if self.rsh(node, self.templates["StopCmd"]) == 0:
+        (rc, _) = self.rsh(node, self.templates["StopCmd"])
+        if rc == 0:
             # Make sure we can continue even if corosync leaks
             # fdata-* is the old name
             #self.rsh(node, "rm -rf /dev/shm/qb-* /dev/shm/fdata-*")
@@ -407,7 +332,7 @@ class ClusterManager(UserDict):
 
         self.debug("Stopping %s on node %s" % (self["Name"], node))
 
-        self.rsh(node, self.templates["StopCmd"], synchronous=0)
+        self.rsh(node, self.templates["StopCmd"], synchronous=False)
         self.ShouldBeStatus[node] = "down"
         return 1
 
@@ -416,7 +341,7 @@ class ClusterManager(UserDict):
         '''Force the cluster manager on a given node to reread its config
            This may be a no-op on certain cluster managers.
         '''
-        rc=self.rsh(node, self.templates["RereadCmd"])
+        (rc, _) = self.rsh(node, self.templates["RereadCmd"])
         if rc == 0:
             return 1
         else:
@@ -435,7 +360,7 @@ class ClusterManager(UserDict):
 
         for node in nodelist:
             if self.ShouldBeStatus[node] == "down":
-                self.ns.WaitForAllNodesToComeUp(nodelist, 300)
+                self.ns.wait_for_all_nodes(nodelist, 300)
 
         if not quick:
             # This is used for "basic sanity checks", so only start one node ...
@@ -453,15 +378,15 @@ class ClusterManager(UserDict):
             watchpats.append(self.templates["Pat:They_up"] % (nodelist[0], node))
 
         #   Start all the nodes - at about the same time...
-        watch = LogWatcher(self.Env["LogFileName"], watchpats, "fast-start", self.Env["DeadTime"]+10, hosts=self.Env["nodes"], kind=self.Env["LogWatcher"])
-        watch.setwatch()
+        watch = LogWatcher(self.Env["LogFileName"], watchpats, self.Env["nodes"], self.Env["LogWatcher"], "fast-start", self.Env["DeadTime"]+10)
+        watch.set_watch()
 
         if not self.StartaCM(nodelist[0], verbose=verbose):
             return 0
         for node in nodelist:
             self.StartaCMnoBlock(node, verbose=verbose)
 
-        watch.lookforall()
+        watch.look_for_all()
         if watch.unmatched:
             for regex in watch.unmatched:
                 self.logger.log ("Warn: Startup pattern not found: %s" % (regex))
@@ -544,29 +469,9 @@ class ClusterManager(UserDict):
 
                 # Limit the amount of time we have asynchronous connectivity for
                 # Restore both sides as simultaneously as possible
-                self.rsh(target, self.templates["FixCommCmd"] % self.key_for_node(node), synchronous=0)
-                self.rsh(node, self.templates["FixCommCmd"] % self.key_for_node(target), synchronous=0)
+                self.rsh(target, self.templates["FixCommCmd"] % self.key_for_node(node), synchronous=False)
+                self.rsh(node, self.templates["FixCommCmd"] % self.key_for_node(target), synchronous=False)
                 self.debug("Communication restored between %s and %s" % (target, node))
-
-    def reducecomm_node(self,node):
-        '''reduce the communication between the nodes'''
-        rc = self.rsh(node, self.templates["ReduceCommCmd"]%(self.Env["XmitLoss"],self.Env["RecvLoss"]))
-        if rc == 0:
-            return 1
-        else:
-            self.logger.log("Could not reduce the communication between the nodes from node: %s" % node)
-        return None
-
-    def restorecomm_node(self,node):
-        '''restore the saved communication between the nodes'''
-        rc = 0
-        if float(self.Env["XmitLoss"]) != 0 or float(self.Env["RecvLoss"]) != 0 :
-            rc = self.rsh(node, self.templates["RestoreCommCmd"]);
-        if rc == 0:
-            return 1
-        else:
-            self.logger.log("Could not restore the communication between the nodes from node: %s" % node)
-        return None
 
     def oprofileStart(self, node=None):
         if not node:
@@ -605,66 +510,20 @@ class ClusterManager(UserDict):
             self.rsh(node, "opcontrol --reset")
             self.rsh(node, "opcontrol --shutdown 2>&1 > /dev/null")
 
-
-    def StatsExtract(self):
-        if not self.Env["stats"]:
-            return
-
-        for host in self.Env["nodes"]:
-            log_stats_file = "%s/cts-stats.csv" % CTSvars.CRM_DAEMON_DIR
-            if host in has_log_stats:
-                self.rsh(host, '''bash %s %s stop''' % (log_stats_bin, log_stats_file))
-                (rc, lines) = self.rsh(host, '''cat %s''' % log_stats_file, stdout=2)
-                self.rsh(host, '''bash %s %s delete''' % (log_stats_bin, log_stats_file))
-
-                fname = "cts-stats-%d-nodes-%s.csv" % (len(self.Env["nodes"]), host)
-                print("Extracted stats: %s" % fname)
-                fd = open(fname, "a")
-                fd.writelines(lines)
-                fd.close()
-
-    def StatsMark(self, testnum):
-        '''Mark the test number in the stats log'''
-
-        global has_log_stats
-        if not self.Env["stats"]:
-            return
-
-        for host in self.Env["nodes"]:
-            log_stats_file = "%s/cts-stats.csv" % CTSvars.CRM_DAEMON_DIR
-            if not host in has_log_stats:
-
-                global log_stats
-                global log_stats_bin
-                script=log_stats
-                #script = re.sub("\\\\", "\\\\", script)
-                script = re.sub('\"', '\\\"', script)
-                script = re.sub("'", "\'", script)
-                script = re.sub("`", "\`", script)
-                script = re.sub("\$", "\\\$", script)
-
-                self.debug("Installing %s on %s" % (log_stats_bin, host))
-                self.rsh(host, '''echo "%s" > %s''' % (script, log_stats_bin), silent=True)
-                self.rsh(host, '''bash %s %s delete''' % (log_stats_bin, log_stats_file))
-                has_log_stats[host] = 1
-
-            # Now mark it
-            self.rsh(host, '''bash %s %s mark %s''' % (log_stats_bin, log_stats_file, testnum), synchronous=0)
-
     def errorstoignore(self):
         # At some point implement a more elegant solution that
         #   also produces a report at the end
         """ Return a list of known error messages that should be ignored """
-        return PatternSelector().get_patterns(self.name, "BadNewsIgnore")
+        return self.templates.get_patterns("BadNewsIgnore")
 
     def install_config(self, node):
-        if not self.ns.WaitForNodeToComeUp(node):
+        if not self.ns.wait_for_node(node):
             self.log("Node %s is not up." % node)
             return None
 
-        if not node in self.CIBsync and self.Env["ClobberCIB"] == 1:
+        if not node in self.CIBsync and self.Env["ClobberCIB"]:
             self.CIBsync[node] = 1
-            self.rsh(node, "rm -f "+CTSvars.CRM_CONFIG_DIR+"/cib*")
+            self.rsh(node, "rm -f " + BuildOptions.CIB_DIR + "/cib*")
 
             # Only install the CIB on the first node, all the other ones will pick it up from there
             if self.cib_installed == 1:
@@ -677,10 +536,10 @@ class ClusterManager(UserDict):
 
             else:
                 self.log("Installing CIB (%s) on node %s" % (self.Env["CIBfilename"], node))
-                if 0 != self.rsh.cp(self.Env["CIBfilename"], "root@" + (self.templates["CIBfile"] % node)):
+                if self.rsh.copy(self.Env["CIBfilename"], "root@" + (self.templates["CIBfile"] % node)) != 0:
                     raise ValueError("Can not scp file to %s %d"%(node))
 
-            self.rsh(node, "chown "+CTSvars.CRM_DAEMON_USER+" "+CTSvars.CRM_CONFIG_DIR+"/cib.xml")
+            self.rsh(node, "chown " + BuildOptions.DAEMON_USER + " " + BuildOptions.CIB_DIR + "/cib.xml")
 
     def prepare(self):
         '''Finish the Initialization process. Prepare to test...'''
@@ -699,13 +558,19 @@ class ClusterManager(UserDict):
         watchpats.append("Current ping state: (S_IDLE|S_NOT_DC)")
         watchpats.append(self.templates["Pat:NonDC_started"] % node)
         watchpats.append(self.templates["Pat:DC_started"] % node)
-        idle_watch = LogWatcher(self.Env["LogFileName"], watchpats, "ClusterIdle", hosts=[node], kind=self.Env["LogWatcher"])
-        idle_watch.setwatch()
+        idle_watch = LogWatcher(self.Env["LogFileName"], watchpats, [node], self.Env["LogWatcher"], "ClusterIdle")
+        idle_watch.set_watch()
 
-        out = self.rsh(node, self.templates["StatusCmd"]%node, 1)
+        (_, out) = self.rsh(node, self.templates["StatusCmd"]%node, verbose=1)
+
+        if not out:
+            out = ""
+        else:
+            out = out[0].strip()
+
         self.debug("Node %s status: '%s'" %(node, out))
 
-        if not out or (out.find('ok') < 0):
+        if out.find('ok') < 0:
             if self.ShouldBeStatus[node] == "up":
                 self.log(
                     "Node status for %s is %s but we think it should be %s"
@@ -767,12 +632,12 @@ class ClusterManager(UserDict):
             self.debug("Cluster is inactive")
             return 1
 
-        idle_watch = LogWatcher(self.Env["LogFileName"], watchpats, "ClusterStable", timeout, hosts=nodes.split(), kind=self.Env["LogWatcher"])
-        idle_watch.setwatch()
+        idle_watch = LogWatcher(self.Env["LogFileName"], watchpats, nodes.split(), self.Env["LogWatcher"], "ClusterStable", timeout)
+        idle_watch.set_watch()
 
         for node in nodes.split():
             # have each node dump its current state
-            self.rsh(node, self.templates["StatusCmd"] % node, 1)
+            self.rsh(node, self.templates["StatusCmd"] % node, verbose=1)
 
         ret = idle_watch.look()
         while ret:
@@ -807,7 +672,10 @@ class ClusterManager(UserDict):
         rc = 0
 
         if not status_line:
-            status_line = self.rsh(node, self.templates["StatusCmd"]%node, 1)
+            (_, out) = self.rsh(node, self.templates["StatusCmd"]%node, verbose=1)
+
+            if out:
+                status_line = out[0].strip()
 
         if not status_line:
             rc = 0
@@ -825,7 +693,7 @@ class ClusterManager(UserDict):
         return rc
 
     def active_resources(self, node):
-        (rc, output) = self.rsh(node, """crm_resource -c""", None)
+        (_, output) = self.rsh(node, "crm_resource -c", verbose=1)
         resources = []
         for line in output:
             if re.search("^Resource", line):
@@ -840,7 +708,7 @@ class ClusterManager(UserDict):
             if self.ShouldBeStatus[node] == "up":
 
                 cmd = self.templates["RscRunning"] % (rid)
-                (rc, lines) = self.rsh(node, cmd, None)
+                (rc, lines) = self.rsh(node, cmd)
 
                 if rc == 127:
                     self.log("Command '%s' failed. Binary or pacemaker-cts package not installed?" % cmd)
@@ -856,11 +724,15 @@ class ClusterManager(UserDict):
 
         for node in self.Env["nodes"]:
             if self.ShouldBeStatus[node] == "up":
-                partition = self.rsh(node, self.templates["PartitionCmd"], 1)
+                (_, out) = self.rsh(node, self.templates["PartitionCmd"], verbose=1)
 
-                if not partition:
+                if not out:
                     self.log("no partition details for %s" % node)
-                elif len(partition) > 2:
+                    continue
+
+                partition = out[0].strip()
+
+                if len(partition) > 2:
                     nodes = partition.split()
                     nodes.sort()
                     partition = ' '.join(nodes)
@@ -893,7 +765,9 @@ class ClusterManager(UserDict):
 
         for node in node_list:
             if self.ShouldBeStatus[node] == "up":
-                quorum = self.rsh(node, self.templates["QuorumCmd"], 1)
+                (_, quorum) = self.rsh(node, self.templates["QuorumCmd"], verbose=1)
+                quorum = quorum[0].strip()
+
                 if quorum.find("1") != -1:
                     return 1
                 elif quorum.find("0") != -1:
@@ -931,7 +805,7 @@ class ClusterManager(UserDict):
 
         stonith_ignore.extend(common_ignore)
 
-        ccm = Process(self, "ccm", triggersreboot=self.fastfail, pats = [
+        ccm = Process(self, "ccm", pats = [
                     "State transition .* S_RECOVERY",
                     "pacemaker-controld.*Action A_RECOVER .* not supported",
                     r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
@@ -954,7 +828,7 @@ class ClusterManager(UserDict):
                     "State transition S_STARTING -> S_PENDING",
                     ], badnews_ignore = common_ignore)
 
-        based = Process(self, "pacemaker-based", triggersreboot=self.fastfail, pats = [
+        based = Process(self, "pacemaker-based", pats = [
                     "State transition .* S_RECOVERY",
                     "Lost connection to the CIB manager",
                     "Connection to the CIB manager terminated",
@@ -966,7 +840,7 @@ class ClusterManager(UserDict):
                     r"attrd.*exited with status 1",
                     ], badnews_ignore = common_ignore)
 
-        execd = Process(self, "pacemaker-execd", triggersreboot=self.fastfail, pats = [
+        execd = Process(self, "pacemaker-execd", pats = [
                     "State transition .* S_RECOVERY",
                     "LRM Connection failed",
                     "pacemaker-controld.*I_ERROR.*lrm_connection_destroy",
@@ -977,7 +851,7 @@ class ClusterManager(UserDict):
                     r"pacemaker-controld.*exited with status 2",
                     ], badnews_ignore = common_ignore)
 
-        controld = Process(self, "pacemaker-controld", triggersreboot=self.fastfail,
+        controld = Process(self, "pacemaker-controld",
                     pats = [
 #                    "WARN: determine_online_status: Node .* is unclean",
 #                    "Scheduling node .* for fencing",
@@ -987,7 +861,7 @@ class ClusterManager(UserDict):
                     "State transition S_STARTING -> S_PENDING",
                     ], badnews_ignore = common_ignore)
 
-        schedulerd = Process(self, "pacemaker-schedulerd", triggersreboot=self.fastfail, pats = [
+        schedulerd = Process(self, "pacemaker-schedulerd", pats = [
                     "State transition .* S_RECOVERY",
                     r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
                     r"pacemaker-controld.*: Could not recover from internal error",
@@ -995,29 +869,28 @@ class ClusterManager(UserDict):
                     "pacemaker-controld.*I_ERROR.*save_cib_contents",
                     # this status number is likely wrong now
                     r"pacemaker-controld.*exited with status 2",
-                    ], badnews_ignore = common_ignore, dc_only=1)
+                    ], badnews_ignore = common_ignore, dc_only=True)
 
-        if self.Env["DoFencing"] == 1 :
-            complist.append(Process(self, "stoniths", triggersreboot=self.fastfail, dc_pats = [
+        if self.Env["DoFencing"]:
+            complist.append(Process(self, "stoniths", dc_pats = [
                         r"pacemaker-controld.*CRIT.*: Fencing daemon connection failed",
                         "Attempting connection to fencing daemon",
                     ], badnews_ignore = stonith_ignore))
 
-        if self.fastfail == 0:
-            ccm.pats.extend([
-                # these status numbers are likely wrong now
-                r"attrd.*exited with status 1",
-                r"pacemaker-(based|controld).*exited with status 2",
-                ])
-            based.pats.extend([
-                # these status numbers are likely wrong now
-                r"attrd.*exited with status 1",
-                r"pacemaker-controld.*exited with status 2",
-                ])
-            execd.pats.extend([
-                # these status numbers are likely wrong now
-                r"pacemaker-controld.*exited with status 2",
-                ])
+        ccm.pats.extend([
+            # these status numbers are likely wrong now
+            r"attrd.*exited with status 1",
+            r"pacemaker-(based|controld).*exited with status 2",
+            ])
+        based.pats.extend([
+            # these status numbers are likely wrong now
+            r"attrd.*exited with status 1",
+            r"pacemaker-controld.*exited with status 2",
+            ])
+        execd.pats.extend([
+            # these status numbers are likely wrong now
+            r"pacemaker-controld.*exited with status 2",
+            ])
 
         complist.append(ccm)
         complist.append(based)
@@ -1028,10 +901,10 @@ class ClusterManager(UserDict):
         return complist
 
     def StandbyStatus(self, node):
-        out=self.rsh(node, self.templates["StandbyQueryCmd"] % node, 1)
+        (_, out) = self.rsh(node, self.templates["StandbyQueryCmd"] % node, verbose=1)
         if not out:
             return "off"
-        out = out[:-1]
+        out = out[0].strip()
         self.debug("Standby result: "+out)
         return out
 
@@ -1040,7 +913,7 @@ class ClusterManager(UserDict):
     def SetStandbyMode(self, node, status):
         current_status = self.StandbyStatus(node)
         cmd = self.templates["StandbyCmd"] % (node, status)
-        ret = self.rsh(node, cmd)
+        self.rsh(node, cmd)
         return True
 
     def AddDummyRsc(self, node, rid):

@@ -1,16 +1,18 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
- * This source code is licensed under the GNU Lesser General Public License
- * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
 
 #include <crm/common/unittest_internal.h>
 #include <crm/common/output_internal.h>
+
+#include "../../crmcommon_private.h"
 
 static int
 null_message_fn(pcmk__output_t *out, va_list args) {
@@ -76,7 +78,7 @@ invalid_entries(void **state) {
         { NULL },
     };
 
-    pcmk__output_new(&out, "text", NULL, NULL);
+    pcmk__bare_output_new(&out, "text", NULL, NULL);
 
     pcmk__assert_asserts(pcmk__register_messages(out, entries));
     assert_int_equal(g_hash_table_size(out->messages), 0);
@@ -94,7 +96,7 @@ valid_entries(void **state) {
         { NULL },
     };
 
-    pcmk__output_new(&out, "text", NULL, NULL);
+    pcmk__bare_output_new(&out, "text", NULL, NULL);
 
     pcmk__register_messages(out, entries);
     assert_int_equal(g_hash_table_size(out->messages), 2);
@@ -114,7 +116,7 @@ duplicate_message_ids(void **state) {
         { NULL },
     };
 
-    pcmk__output_new(&out, "text", NULL, NULL);
+    pcmk__bare_output_new(&out, "text", NULL, NULL);
 
     pcmk__register_messages(out, entries);
     assert_int_equal(g_hash_table_size(out->messages), 1);
@@ -133,7 +135,7 @@ duplicate_functions(void **state) {
         { NULL },
     };
 
-    pcmk__output_new(&out, "text", NULL, NULL);
+    pcmk__bare_output_new(&out, "text", NULL, NULL);
 
     pcmk__register_messages(out, entries);
     assert_int_equal(g_hash_table_size(out->messages), 2);
@@ -152,7 +154,7 @@ default_handler(void **state) {
         { NULL },
     };
 
-    pcmk__output_new(&out, "text", NULL, NULL);
+    pcmk__bare_output_new(&out, "text", NULL, NULL);
 
     pcmk__register_messages(out, entries);
     assert_int_equal(g_hash_table_size(out->messages), 1);
@@ -171,7 +173,7 @@ override_default_handler(void **state) {
         { NULL },
     };
 
-    pcmk__output_new(&out, "text", NULL, NULL);
+    pcmk__bare_output_new(&out, "text", NULL, NULL);
 
     pcmk__register_messages(out, entries);
     assert_int_equal(g_hash_table_size(out->messages), 1);

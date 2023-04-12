@@ -71,6 +71,8 @@
 #define PCMK__XA_ATTR_RESOURCE          "attr_resource"
 #define PCMK__XA_ATTR_SECTION           "attr_section"
 #define PCMK__XA_ATTR_SET               "attr_set"
+#define PCMK__XA_ATTR_SET_TYPE          "attr_set_type"
+#define PCMK__XA_ATTR_SYNC_POINT        "attr_sync_point"
 #define PCMK__XA_ATTR_USER              "attr_user"
 #define PCMK__XA_ATTR_UUID              "attr_key"
 #define PCMK__XA_ATTR_VALUE             "attr_value"
@@ -78,6 +80,7 @@
 #define PCMK__XA_ATTR_WRITER            "attr_writer"
 #define PCMK__XA_CONFIG_ERRORS          "config-errors"
 #define PCMK__XA_CONFIG_WARNINGS        "config-warnings"
+#define PCMK__XA_CONFIRM                "confirm"
 #define PCMK__XA_GRAPH_ERRORS           "graph-errors"
 #define PCMK__XA_GRAPH_WARNINGS         "graph-warnings"
 #define PCMK__XA_MODE                   "mode"
@@ -106,6 +109,7 @@
 #define PCMK__ATTRD_CMD_SYNC            "sync"
 #define PCMK__ATTRD_CMD_SYNC_RESPONSE   "sync-response"
 #define PCMK__ATTRD_CMD_CLEAR_FAILURE   "clear-failure"
+#define PCMK__ATTRD_CMD_CONFIRM         "confirm"
 
 #define PCMK__CONTROLD_CMD_NODES        "list-nodes"
 

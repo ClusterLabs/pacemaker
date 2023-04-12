@@ -1,0 +1,167 @@
+<cib crm_feature_set="3.16.1" validate-with="pacemaker-3.7" epoch="259" num_updates="28" admin_epoch="0" cib-last-written="Tue Oct 25 14:29:45 2022" update-origin="node2" update-client="cibadmin" update-user="root" have-quorum="1" dc-uuid="4">
+  <!-- This is a test for interleaving bundle actions.
+
+       There are 5 nodes and 2 promotable bundles, each with 3 replicas and
+       interleave=true. The "app" bundle is colocated with the "base" bundle,
+       and its promoted role is colocated with base's. App's starts and
+       promotes are ordered after base's.
+
+       In this test, all are stopped and must be started.
+    -->
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="2.1.5"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="test"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="node1"/>
+      <node id="2" uname="node2"/>
+      <node id="3" uname="node3"/>
+      <node id="4" uname="node4"/>
+      <node id="5" uname="node5"/>
+    </nodes>
+    <resources>
+      <primitive class="stonith" id="Fencing" type="fence_xvm">
+        <meta_attributes id="Fencing-meta">
+          <nvpair id="Fencing-migration-threshold" name="migration-threshold" value="5"/>
+        </meta_attributes>
+        <instance_attributes id="Fencing-params">
+          <nvpair id="Fencing-key_file" name="key_file" value="/etc/pacemaker/fence_xvm.key"/>
+          <nvpair id="Fencing-multicast_address" name="multicast_address" value="239.255.100.100"/>
+          <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="node1 node2 node3 node4 node5"/>
+        </instance_attributes>
+        <operations>
+          <op id="Fencing-monitor-120s" interval="120s" name="monitor" timeout="120s"/>
+        </operations>
+      </primitive>
+      <bundle id="base-bundle">
+        <meta_attributes id="base-bundle-meta_attributes">
+          <nvpair id="base-bundle-meta_attributes-interleave" name="interleave" value="true"/>
+          <nvpair id="base-bundle-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="base-bundle-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
+        </meta_attributes>
+        <podman image="localhost/pcmktest:base" replicas="3"/>
+        <network control-port="3121"/>
+        <primitive id="base" class="ocf" provider="pacemaker" type="Stateful">
+          <operations>
+            <op id="base-monitor-15s" interval="15s" name="monitor" timeout="15s" role="Promoted"/>
+            <op id="base-monitor-16s" interval="16s" name="monitor" timeout="16s" role="Unpromoted"/>
+          </operations>
+        </primitive>
+      </bundle>
+      <bundle id="app-bundle">
+        <meta_attributes id="app-bundle-meta_attributes">
+          <nvpair id="app-bundle-meta_attributes-interleave" name="interleave" value="true"/>
+          <nvpair id="app-bundle-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="app-budle-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
+        </meta_attributes>
+        <podman image="localhost/pcmktest:app" replicas="3"/>
+        <network control-port="3121"/>
+        <primitive id="app" class="ocf" provider="pacemaker" type="Stateful">
+          <operations>
+            <op id="app-monitor-15s" interval="15s" name="monitor" timeout="15s" role="Promoted"/>
+            <op id="app-monitor-16s" interval="16s" name="monitor" timeout="16s" role="Unpromoted"/>
+          </operations>
+        </primitive>
+      </bundle>
+    </resources>
+    <constraints>
+      <rsc_colocation id="app-with-base" rsc="app-bundle" with-rsc="base-bundle" score="INFINITY"/>
+      <rsc_colocation id="promoted-app-with-promoted-base" rsc-role="Promoted" rsc="app-bundle"
+                      with-rsc-role="Promoted" with-rsc="base-bundle" score="INFINITY"/>
+      <rsc_order id="base-then-app" first-action="start" first="base-bundle" then-action="start" then="app-bundle"/>
+      <rsc_order id="promote-base-then-app" first-action="promote" first="base-bundle" then-action="promote" then="app-bundle"/>
+    </constraints>
+    <fencing-topology/>
+    <op_defaults/>
+    <alerts/>
+    <rsc_defaults/>
+  </configuration>
+  <status>
+    <node_state id="1" uname="node1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-.feature-set" name="#feature-set" value="3.16.1"/>
+          <nvpair id="status-1-promotion-base" name="master-base" value="11"/>
+          <nvpair id="status-1-promotion-app" name="master-app" value="11"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="Fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.16.1" transition-key="9:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;9:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="9" rc-code="0" op-status="0" interval="0" last-rc-change="1666726336" exec-time="0" queue-time="0" op-digest="52e34745a77d95a636428d3b550eb867"/>
+            <lrm_rsc_op id="Fencing_monitor_120000" operation_key="Fencing_monitor_120000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.16.1" transition-key="10:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;10:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="node1" call-id="10" rc-code="0" op-status="0" interval="120000" last-rc-change="1666726336" exec-time="0" queue-time="0" op-digest="acc6dd2c58c637db4d12a6fe35626617"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="5" uname="node5" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="5">
+        <instance_attributes id="status-5">
+          <nvpair id="status-5-.feature-set" name="#feature-set" value="3.16.1"/>
+          <nvpair id="status-5-promotion-base" name="master-base" value="15"/>
+          <nvpair id="status-5-promotion-app" name="master-app" value="15"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="5">
+        <lrm_resources>
+          <lrm_resource id="Fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.16.1" transition-key="5:0:7:72f87069-7296-4421-b2b0-ab12fa9068ef" transition-magic="0:7;5:0:7:72f87069-7296-4421-b2b0-ab12fa9068ef" exit-reason="" on_node="node5" call-id="5" rc-code="7" op-status="0" interval="0" last-rc-change="1666726234" exec-time="1" queue-time="0" op-digest="ac94f147daea19463126aacea2f8cd39"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="3" uname="node3" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="3">
+        <instance_attributes id="status-3">
+          <nvpair id="status-3-.feature-set" name="#feature-set" value="3.16.1"/>
+          <nvpair id="status-5-promotion-base" name="master-base" value="13"/>
+          <nvpair id="status-5-promotion-top" name="master-app" value="13"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="3">
+        <lrm_resources>
+          <lrm_resource id="Fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.16.1" transition-key="3:0:7:72f87069-7296-4421-b2b0-ab12fa9068ef" transition-magic="0:7;3:0:7:72f87069-7296-4421-b2b0-ab12fa9068ef" exit-reason="" on_node="node3" call-id="5" rc-code="7" op-status="0" interval="0" last-rc-change="1666726234" exec-time="1" queue-time="0" op-digest="ac94f147daea19463126aacea2f8cd39"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="4" uname="node4" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="4">
+        <instance_attributes id="status-4">
+          <nvpair id="status-4-.feature-set" name="#feature-set" value="3.16.1"/>
+          <nvpair id="status-5-promotion-base" name="master-base" value="14"/>
+          <nvpair id="status-5-promotion-app" name="master-app" value="14"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="4">
+        <lrm_resources>
+          <lrm_resource id="Fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.16.1" transition-key="4:0:7:72f87069-7296-4421-b2b0-ab12fa9068ef" transition-magic="0:7;4:0:7:72f87069-7296-4421-b2b0-ab12fa9068ef" exit-reason="" on_node="node4" call-id="5" rc-code="7" op-status="0" interval="0" last-rc-change="1666726234" exec-time="1" queue-time="0" op-digest="ac94f147daea19463126aacea2f8cd39"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="2" uname="node2" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-.feature-set" name="#feature-set" value="3.16.1"/>
+          <nvpair id="status-5-promotion-base" name="master-base" value="12"/>
+          <nvpair id="status-5-promotion-app" name="master-app" value="12"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="Fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.16.1" transition-key="2:0:7:72f87069-7296-4421-b2b0-ab12fa9068ef" transition-magic="0:7;2:0:7:72f87069-7296-4421-b2b0-ab12fa9068ef" exit-reason="" on_node="node2" call-id="5" rc-code="7" op-status="0" interval="0" last-rc-change="1666726234" exec-time="2" queue-time="0" op-digest="ac94f147daea19463126aacea2f8cd39"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

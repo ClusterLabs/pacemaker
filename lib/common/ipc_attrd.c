@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2022 the Pacemaker project contributors
+ * Copyright 2011-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -332,10 +332,14 @@ pcmk__attrd_api_query(pcmk_ipc_api_t *api, const char *node, const char *name,
         return EINVAL;
     }
 
-    target = pcmk__node_attr_target(node);
+    if (pcmk_is_set(options, pcmk__node_attr_query_all)) {
+        node = NULL;
+    } else {
+        target = pcmk__node_attr_target(node);
 
-    if (target != NULL) {
-        node = target;
+        if (target != NULL) {
+            node = target;
+        }
     }
 
     request = create_attrd_op(NULL);
@@ -421,6 +425,12 @@ populate_update_op(xmlNode *op, const char *node, const char *name, const char *
         crm_xml_add(op, PCMK__XA_ATTR_NAME, name);
     }
 
+    if (pcmk_is_set(options, pcmk__node_attr_utilization)) {
+        crm_xml_add(op, PCMK__XA_ATTR_SET_TYPE, XML_TAG_UTILIZATION);
+    } else {
+        crm_xml_add(op, PCMK__XA_ATTR_SET_TYPE, XML_TAG_ATTR_SETS);
+    }
+
     add_op_attr(op, options);
 
     crm_xml_add(op, PCMK__XA_ATTR_VALUE, value);
@@ -431,6 +441,12 @@ populate_update_op(xmlNode *op, const char *node, const char *name, const char *
                     pcmk_is_set(options, pcmk__node_attr_remote));
     crm_xml_add_int(op, PCMK__XA_ATTR_IS_PRIVATE,
                     pcmk_is_set(options, pcmk__node_attr_private));
+
+    if (pcmk_is_set(options, pcmk__node_attr_sync_local)) {
+        crm_xml_add(op, PCMK__XA_ATTR_SYNC_POINT, PCMK__VALUE_LOCAL);
+    } else if (pcmk_is_set(options, pcmk__node_attr_sync_cluster)) {
+        crm_xml_add(op, PCMK__XA_ATTR_SYNC_POINT, PCMK__VALUE_CLUSTER);
+    }
 }
 
 int

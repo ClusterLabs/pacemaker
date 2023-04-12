@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -20,11 +20,6 @@
 #include <pacemaker-controld.h>
 
 void te_update_confirm(const char *event, xmlNode * msg);
-
-extern char *te_uuid;
-gboolean shuttingdown = FALSE;
-pcmk__graph_t *transition_graph;
-crm_trigger_t *transition_trigger = NULL;
 
 #define RSC_OP_PREFIX "//" XML_TAG_DIFF_ADDED "//" XML_TAG_CIB \
                       "//" XML_LRM_TAG_RSC_OP "[@" XML_ATTR_ID "='"
@@ -49,8 +44,11 @@ te_update_diff_v1(const char *event, xmlNode *diff)
 
     CRM_CHECK(diff != NULL, return);
 
-    xml_log_patchset(LOG_TRACE, __func__, diff);
-    if (cib_config_changed(NULL, NULL, &diff)) {
+    pcmk__output_set_log_level(controld_globals.logger_out, LOG_TRACE);
+    controld_globals.logger_out->message(controld_globals.logger_out,
+                                         "xml-patchset", diff);
+
+    if (cib__config_changed_v1(NULL, NULL, &diff)) {
         abort_transition(INFINITY, pcmk__graph_restart, "Non-status change",
                          diff);
         goto bail;              /* configuration changed */
@@ -115,7 +113,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
      * Otherwise, we could mistakenly throw away those results here, and
      * the cluster will stall waiting for them and time out the operation.
      */
-    if ((transition_graph->pending == 0) && (max > 1)) {
+    if ((controld_globals.transition_graph->pending == 0) && (max > 1)) {
         crm_debug("Ignoring resource operation updates due to history refresh of %d resources",
                   max);
         crm_log_xml_trace(diff, "lrm-refresh");
@@ -246,8 +244,8 @@ process_resource_updates(const char *node, xmlNode *xml, xmlNode *change,
      * Otherwise, we could mistakenly throw away those results here, and
      * the cluster will stall waiting for them and time out the operation.
      */
-    if ((transition_graph->pending == 0)
-        && xml->children && xml->children->next) {
+    if ((controld_globals.transition_graph->pending == 0)
+        && (xml->children != NULL) && (xml->children->next != NULL)) {
 
         crm_log_xml_trace(change, "lrm-refresh");
         abort_transition(INFINITY, pcmk__graph_restart, "History refresh",
@@ -269,12 +267,12 @@ static char *extract_node_uuid(const char *xpath)
     char *search = NULL;
     char *match = NULL;
 
-    match = strstr(mutable_path, "node_state[@id=\'");
+    match = strstr(mutable_path, "node_state[@" XML_ATTR_ID "=\'");
     if (match == NULL) {
         free(mutable_path);
         return NULL;
     }
-    match += strlen("node_state[@id=\'");
+    match += strlen("node_state[@" XML_ATTR_ID "=\'");
 
     search = strchr(match, '\'');
     if (search == NULL) {
@@ -535,7 +533,7 @@ te_update_diff(const char *event, xmlNode * msg)
     CRM_CHECK(msg != NULL, return);
     crm_element_value_int(msg, F_CIB_RC, &rc);
 
-    if (transition_graph == NULL) {
+    if (controld_globals.transition_graph == NULL) {
         crm_trace("No graph");
         return;
 
@@ -543,11 +541,12 @@ te_update_diff(const char *event, xmlNode * msg)
         crm_trace("Filter rc=%d (%s)", rc, pcmk_strerror(rc));
         return;
 
-    } else if (transition_graph->complete
-               && fsa_state != S_IDLE
-               && fsa_state != S_TRANSITION_ENGINE
-               && fsa_state != S_POLICY_ENGINE) {
-        crm_trace("Filter state=%s (complete)", fsa_state2string(fsa_state));
+    } else if (controld_globals.transition_graph->complete
+               && (controld_globals.fsa_state != S_IDLE)
+               && (controld_globals.fsa_state != S_TRANSITION_ENGINE)
+               && (controld_globals.fsa_state != S_POLICY_ENGINE)) {
+        crm_trace("Filter state=%s (complete)",
+                  fsa_state2string(controld_globals.fsa_state));
         return;
     }
 
@@ -557,7 +556,7 @@ te_update_diff(const char *event, xmlNode * msg)
     xml_patch_versions(diff, p_add, p_del);
     crm_debug("Processing (%s) diff: %d.%d.%d -> %d.%d.%d (%s)", op,
               p_del[0], p_del[1], p_del[2], p_add[0], p_add[1], p_add[2],
-              fsa_state2string(fsa_state));
+              fsa_state2string(controld_globals.fsa_state));
 
     crm_element_value_int(diff, "format", &format);
     switch (format) {
@@ -571,6 +570,7 @@ te_update_diff(const char *event, xmlNode * msg)
             crm_warn("Ignoring malformed CIB update (unknown patch format %d)",
                      format);
     }
+    controld_remove_all_outside_events();
 }
 
 void
@@ -657,7 +657,7 @@ action_timer_callback(gpointer data)
     on_node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
     via_node = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
 
-    if (transition_graph->complete) {
+    if (controld_globals.transition_graph->complete) {
         crm_notice("Node %s did not send %s result (via %s) within %dms "
                    "(ignoring because transition not in progress)",
                    (on_node? on_node : ""), (task? task : "unknown action"),
@@ -669,12 +669,13 @@ action_timer_callback(gpointer data)
                 "(action timeout plus cluster-delay)",
                 (on_node? on_node : ""), (task? task : "unknown action"),
                 (via_node? via_node : "controller"),
-                action->timeout + transition_graph->network_delay);
+                (action->timeout
+                 + controld_globals.transition_graph->network_delay));
         pcmk__log_graph_action(LOG_ERR, action);
 
         pcmk__set_graph_action_flags(action, pcmk__graph_action_failed);
 
-        te_action_confirmed(action, transition_graph);
+        te_action_confirmed(action, controld_globals.transition_graph);
         abort_transition(INFINITY, pcmk__graph_restart, "Action lost", NULL);
 
         // Record timeout in the CIB if appropriate

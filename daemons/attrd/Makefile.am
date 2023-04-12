@@ -32,6 +32,7 @@ pacemaker_attrd_SOURCES	= attrd_alerts.c 	\
 						  attrd_elections.c \
 						  attrd_ipc.c 		\
 						  attrd_messages.c 		\
+						  attrd_sync.c 		\
 						  attrd_utils.c 	\
 						  pacemaker-attrd.c
 

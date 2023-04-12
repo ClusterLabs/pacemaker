@@ -1,7 +1,6 @@
 Created new pacemaker configuration
-Setting up shadow instance
-A new shadow instance was created.  To begin using it paste the following into your shell:
-  CIB_shadow=cts-cli ; export CIB_shadow
+A new shadow instance was created. To begin using it, enter the following into your shell:
+	export CIB_shadow=cts-cli
 =#=#=#= Begin test: Try to make resulting CIB invalid (enum violation) =#=#=#=
    1 <cib epoch="5" num_updates="0" admin_epoch="0">
    2   <configuration>

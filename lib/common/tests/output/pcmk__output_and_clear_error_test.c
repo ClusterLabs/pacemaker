@@ -1,10 +1,10 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
- * This source code is licensed under the GNU Lesser General Public License
- * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -72,10 +72,10 @@ standard_usage(void **state) {
                 "some error message");
 
     expect_function_call(fake_text_err);
-    pcmk__output_and_clear_error(error, out);
+    pcmk__output_and_clear_error(&error, out);
 
     pcmk__output_free(out);
-    assert_null(error->message);
+    assert_null(error);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,

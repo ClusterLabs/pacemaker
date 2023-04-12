@@ -1,0 +1,440 @@
+#!@BASH_PATH@
+#
+# ocf:pacemaker:o2cb resource agent
+#
+# Original copyright 2005-2008 Oracle
+# Later changes copyright 2008-2023 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
+#
+# This source code is licensed under the GNU General Public License version 2
+# (GPLv2) WITHOUT ANY WARRANTY.
+#
+
+#######################################################################
+
+: ${OCF_FUNCTIONS:="${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs"}
+. "${OCF_FUNCTIONS}"
+: ${__OCF_ACTION:="$1"}
+
+: ${OCF_RESKEY_stack:="pcmk"}
+: ${OCF_RESKEY_sysfs:="/sys/fs"}
+: ${OCF_RESKEY_configfs:="/sys/kernel/config"}
+: ${OCF_RESKEY_daemon_timeout:="10"} # How long to wait for things to start
+: ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
+
+DAEMON="/usr/sbin/ocfs2_controld.${OCF_RESKEY_stack}"
+CLUSTER_STACK_FILE="${OCF_RESKEY_sysfs}/ocfs2/cluster_stack"
+LOADED_PLUGINS_FILE="${OCF_RESKEY_sysfs}/ocfs2/loaded_cluster_plugins"
+
+#
+# Check to see if a filesystem driver is loaded.
+# 0 is loaded, 1 is not.
+#
+driver_filesystem() {
+    if [ -z "$1" ]
+    then
+        ocf_log err "driver_filesystem(): Missing an argument"
+        exit 1
+    fi
+    FSNAME="$1"
+
+    FSOUT="$(awk '(NF == 1 && $1 ~ /^'$FSNAME'$/) || $2 ~ /^'$FSNAME'$/{
+                      print $1;exit
+                  }' /proc/filesystems 2>/dev/null)"
+
+    test -n "$FSOUT"
+    return $?
+}
+
+#
+# Check to see if a filesystem of type $1 is mounted at $2.
+#
+# 0 is mounted, 1 is not.
+#
+check_filesystem() {
+    if [ $# -ne 2 ] || [ -z "$1" ] || [ -z "$2" ]
+    then
+        ocf_log err "check_filesystem(): Missing arguments"
+        exit 4
+    fi
+    FSNAME="$1"
+    MOUNTPOINT="$2"
+
+    FULL_MOUNTSEARCH=$(echo "$MOUNTPOINT" | sed -e 's/\//\\\\\//g')
+    MOUNTOUT=$(awk '$2 ~ /^'$FULL_MOUNTSEARCH'$/ && $3 ~ /^'$FSNAME'$/{print $2; exit}' < /proc/mounts 2>/dev/null)
+    test -n "$MOUNTOUT"
+    return $?
+}
+
+#
+# Unload a filesystem driver.
+# Be careful to notice if the driver is built-in and do nothing.
+#
+# 0 is success, 1 is error, 2 is already unloaded.
+#
+unload_filesystem() {
+    if [ $# -ne 1 ] || [ -z "$1" ]
+    then
+        ocf_log err "unload_filesystem(): Missing an argument"
+        return 1
+    fi
+    FSNAME="$1"
+
+    driver_filesystem "$FSNAME" || return 2
+
+    MODOUT=$(awk '$1 ~ /^'$FSNAME'$/{print $1,$3;exit}' < /proc/modules 2>/dev/null)
+    if [ -z "$MODOUT" ]; then
+        # The driver is built in, we can't unload it.
+        return 0
+    fi
+
+    case "$MODOUT" in
+    "$FSNAME 0")
+        ;;
+    "$FSNAME "*)
+        # The driver is busy, leave it alone
+        ocf_log err "Module $FSNAME is still in use"
+        return 1
+        ;;
+    *)
+        ocf_log err "Invalid module parsing! "
+        return 1
+        ;;
+    esac
+
+    modprobe -rs "$FSNAME"
+    if [ $? -ne 0 ]; then
+        ocf_log err "Unable to unload module: $FSNAME"
+        return 1
+    fi
+
+    return 0
+}
+
+status_daemon() {
+    PID=$(pidof "$DAEMON")
+    if [ -n "$PID" ]; then
+        return $OCF_SUCCESS
+    fi
+    return $OCF_NOT_RUNNING
+}
+
+bringup_daemon() {
+    if [ ! -e "$DAEMON" ]; then
+        ocf_log err "Required binary not found: $DAEMON"
+        return $OCF_ERR_INSTALLED
+    fi
+
+    "$DAEMON"; rc=$?
+    if [ $rc -ne 0 ]; then
+        ocf_log err "Could not start $DAEMON"
+        return $OCF_ERR_GENERIC
+    fi
+
+    sleep 1
+    COUNT=0
+    rc=$OCF_NOT_RUNNING
+
+    while [ $rc -eq $OCF_NOT_RUNNING ]; do
+        COUNT=$(expr $COUNT + 1)
+        if [ $COUNT -gt $OCF_RESKEY_daemon_timeout ]; then
+            ocf_log err "$(basename $DAEMON) did not come up"
+            return $OCF_ERR_GENERIC
+        fi
+        status_daemon; rc=$?
+        sleep 1
+    done
+
+    return $rc
+}
+
+kill_daemon() {
+    status_daemon; rc=$?
+    if [ $rc -ne $OCF_SUCCESS ]; then
+        return $rc
+    fi
+
+    ocf_log info "Stopping $(basename "$DAEMON")"
+    killproc "$DAEMON"
+
+    while [ $rc -eq $OCF_NOT_RUNNING ]; do
+        sleep 1
+        status_daemon; rc=$?
+    done
+
+    return $OCF_SUCCESS
+}
+
+#
+# Unload a module
+# 0 is success, 1 is error, 2 is not loaded
+#
+unload_module() {
+    if [ $# -lt 1 ] || [ -z "$1" ]
+    then
+        ocf_log err  "unload_module(): Requires an argument"
+        return 1
+    fi
+    MODNAME="$1"
+
+    MODOUT=$(awk '$1 ~ /^'$MODNAME'$/{print $1,$3;exit}' < /proc/modules 2>/dev/null)
+    if [ -z "$MODOUT" ]
+    then
+        return 2
+    fi
+
+    case "$MODOUT" in
+    "$MODNAME 0")
+        ;;
+    "$MODNAME "*)
+        return 2
+        ;;
+    *)
+        ocf_log err "Invalid module parsing!"
+        return 1
+        ;;
+    esac
+
+    modprobe -rs "$MODNAME"
+    if [ $? -ne 0 ]; then
+        ocf_log err "Unable to unload module \"$MODNAME\""
+        return 1
+    fi
+
+    return 0
+}
+
+o2cb_start() {
+
+    o2cb_monitor; rc=$?
+    if [ $rc -ne $OCF_NOT_RUNNING ]; then
+        return $rc
+    fi
+
+    ocf_log info "Starting $OCF_RESOURCE_INSTANCE"
+
+    if [ ! -e "$CLUSTER_STACK_FILE" ]; then
+        modprobe -s ocfs2_stackglue
+        if [ $? -ne 0 ]; then
+            ocf_log err "Could not load ocfs2_stackglue"
+            return $OCF_ERR_INSTALLED
+        fi
+    fi
+
+    SP_OUT="$(awk '/^'user'$/{print; exit}' "$LOADED_PLUGINS_FILE" 2>/dev/null)"
+    if [ -z "$SP_OUT" ]
+    then
+        modprobe -s ocfs2_stack_user
+        if [ $? -ne 0 ]; then
+            ocf_log err "Could not load ocfs2_stack_user"
+            return $OCF_ERR_INSTALLED
+        fi
+    fi
+
+    SP_OUT="$(awk '/^'user'$/{print; exit}' "$LOADED_PLUGINS_FILE" 2>/dev/null)"
+    if [ -z "$SP_OUT" ]; then
+        ocf_log err "Switch to userspace stack unsuccessful"
+        return $OCF_ERR_INSTALLED
+    fi
+
+    if [ -f "$CLUSTER_STACK_FILE" ]; then
+        echo "$OCF_RESKEY_stack" >"$CLUSTER_STACK_FILE"
+        if [ $? -ne 0 ]; then
+            ocf_log err "Userspace stack '$OCF_RESKEY_stack' not supported"
+            return $OCF_ERR_INSTALLED
+        fi
+    else
+        ocf_log err "Switch to userspace stack not supported"
+        return $OCF_ERR_INSTALLED
+    fi
+
+    driver_filesystem ocfs2; rc=$?
+    if [ $rc -ne 0 ]; then
+        modprobe -s ocfs2
+        if [ $? -ne 0 ]; then
+            ocf_log err "Unable to load ocfs2 module"
+            return $OCF_ERR_INSTALLED
+        fi
+    fi
+
+    bringup_daemon
+    return $?
+}
+
+o2cb_stop() {
+    o2cb_monitor; rc=$?
+    case $rc in
+        "$OCF_NOT_RUNNING") return $OCF_SUCCESS;;
+    esac
+
+    ocf_log info "Stopping $OCF_RESOURCE_INSTANCE"
+
+    kill_daemon
+    if [ $? -ne 0 ]; then
+        ocf_log err "Unable to unload modules: the cluster is still online"
+        return $OCF_ERR_GENERIC
+    fi
+
+    unload_filesystem ocfs2
+    if [ $? -eq 1 ]; then
+        ocf_log err "Unable to unload ocfs2 module"
+        return $OCF_ERR_GENERIC
+    fi
+
+    # If we can't find the stack glue, we have nothing to do.
+    [ ! -e "$LOADED_PLUGINS_FILE" ] && return $OCF_SUCCESS
+
+    while read plugin
+    do
+        unload_module "ocfs2_stack_${plugin}"
+        if [ $? -eq 1 ]; then
+            ocf_log err "Unable to unload ocfs2_stack_${plugin}"
+            return $OCF_ERR_GENERIC
+        fi
+    done <"$LOADED_PLUGINS_FILE"
+
+    unload_module "ocfs2_stackglue"
+    if [ $? -eq 1 ]; then
+        ocf_log err "Unable to unload ocfs2_stackglue"
+        return $OCF_ERR_GENERIC
+    fi
+
+    # Don't unmount configfs - it's always in use by libdlm
+}
+
+o2cb_monitor() {
+    o2cb_validate
+
+    # Assume that ocfs2_controld will terminate if any of the conditions below are met
+
+    driver_filesystem configfs; rc=$?
+    if [ $rc -ne 0 ]; then
+        ocf_log info "configfs not loaded"
+        return $OCF_NOT_RUNNING
+    fi
+
+    check_filesystem configfs "${OCF_RESKEY_configfs}"; rc=$?
+    if [ $rc -ne 0 ]; then
+        ocf_log info "configfs not mounted"
+        return $OCF_NOT_RUNNING
+    fi
+
+    if [ ! -e "$LOADED_PLUGINS_FILE" ]; then
+        ocf_log info "Stack glue driver not loaded"
+        return $OCF_NOT_RUNNING
+    fi
+
+    grep user "$LOADED_PLUGINS_FILE" >/dev/null 2>&1; rc=$?
+    if [ $rc -ne 0 ]; then
+        ocf_log err "Wrong stack $(cat $LOADED_PLUGINS_FILE)"
+        return $OCF_ERR_INSTALLED
+    fi
+
+    driver_filesystem ocfs2; rc=$?
+    if [ $rc -ne 0 ]; then
+        ocf_log info "ocfs2 not loaded"
+        return $OCF_NOT_RUNNING
+    fi
+
+    status_daemon
+    return $?
+}
+
+o2cb_usage() {
+    echo "usage: $0 {start|stop|monitor|validate-all|meta-data}"
+    echo "  Expects to have a fully populated OCF RA-compliant environment set."
+    echo "  In particualr, a value for OCF_ROOT"
+}
+
+o2cb_validate() {
+    check_binary ${DAEMON}
+
+    case "${OCF_RESKEY_CRM_meta_globally_unique}" in
+        yes|Yes|true|True|1)
+            ocf_log err "$OCF_RESOURCE_INSTANCE must be configured with the globally_unique=false meta attribute"
+            exit $OCF_ERR_CONFIGURED
+            ;;
+    esac
+
+    return $OCF_SUCCESS
+}
+
+meta_data() {
+        cat <<END
+<?xml version="1.0"?>
+<resource-agent name="o2cb" version="@VERSION@">
+  <version>1.0</version>
+  <longdesc lang="en">
+This Resource Agent controls the userspace daemon needed by OCFS2.
+  </longdesc>
+  <shortdesc lang="en">OCFS2 daemon resource agent</shortdesc>
+  <parameters>
+
+    <parameter name="sysfs" unique="0">
+      <longdesc lang="en">
+Location where sysfs is mounted
+      </longdesc>
+      <shortdesc lang="en">Sysfs location</shortdesc>
+      <content type="string" default="/sys/fs"/>
+    </parameter>
+
+    <parameter name="configfs" unique="0">
+      <longdesc lang="en">
+Location where configfs is mounted
+      </longdesc>
+      <shortdesc lang="en">Configfs location</shortdesc>
+      <content type="string" default="/sys/kernel/config"/>
+    </parameter>
+
+    <parameter name="stack" unique="0">
+      <longdesc lang="en">
+Which userspace stack to use.  Known values: pcmk
+      </longdesc>
+      <shortdesc lang="en">Userspace stack</shortdesc>
+      <content type="string" default="pcmk"/>
+    </parameter>
+
+    <parameter name="daemon_timeout" unique="0">
+      <longdesc lang="en">
+Number of seconds to allow the control daemon to come up
+      </longdesc>
+      <shortdesc lang="en">Daemon Timeout</shortdesc>
+      <content type="string" default="10"/>
+    </parameter>
+
+  </parameters>
+  <actions>
+    <action name="start"         timeout="90s" />
+    <action name="stop"          timeout="100s" />
+    <action name="monitor"       timeout="20s" depth="0"/>
+    <action name="meta-data"     timeout="5s" />
+    <action name="validate-all"  timeout="30s" />
+  </actions>
+</resource-agent>
+END
+}
+
+case "$__OCF_ACTION" in
+meta-data)      meta_data
+                exit $OCF_SUCCESS
+                ;;
+start)          o2cb_start
+                ;;
+stop)           o2cb_stop
+                ;;
+monitor)        o2cb_monitor
+                ;;
+validate-all)   o2cb_validate
+                ;;
+usage|help)     o2cb_usage
+                exit $OCF_SUCCESS
+                ;;
+*)              o2cb_usage
+                exit $OCF_ERR_UNIMPLEMENTED
+                ;;
+esac
+
+exit $?
+
+# vim: set filetype=sh expandtab tabstop=4 softtabstop=4 shiftwidth=4 textwidth=80:

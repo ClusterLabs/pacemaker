@@ -10,10 +10,6 @@ CTSaudits
 CTS
 CTSscenarios
 CTStests
-CTSvars
-environment
-logging
 patterns
-remote
 watcher
 """

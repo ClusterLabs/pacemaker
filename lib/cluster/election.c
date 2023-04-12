@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -64,7 +64,7 @@ election_timer_cb(gpointer user_data)
  * \return Current state of \e
  */
 enum election_result
-election_state(election_t *e)
+election_state(const election_t *e)
 {
     return (e == NULL)? election_error : e->state;
 }
@@ -122,8 +122,8 @@ election_init(const char *name, const char *uname, guint period_ms, GSourceFunc 
  * This discards any recorded vote from a specified peer. Election users should
  * call this whenever a voting peer becomes inactive.
  *
- * \param[in] e      Election object
- * \param[in] uname  Name of peer to disregard
+ * \param[in,out] e      Election object
+ * \param[in]     uname  Name of peer to disregard
  */
 void
 election_remove(election_t *e, const char *uname)
@@ -137,7 +137,7 @@ election_remove(election_t *e, const char *uname)
 /*!
  * \brief Stop election timer and disregard all votes
  *
- * \param[in] e      Election object
+ * \param[in,out] e  Election object
  */
 void
 election_reset(election_t *e)
@@ -159,7 +159,7 @@ election_reset(election_t *e)
  * Free all memory associated with an election object, stopping its
  * election timer (if running).
  *
- * \param[in] e      Election object
+ * \param[in,out] e  Election object
  */
 void
 election_fini(election_t *e)
@@ -185,7 +185,7 @@ election_timeout_start(election_t *e)
 /*!
  * \brief Stop an election's timer, if running
  *
- * \param[in] e      Election object
+ * \param[in,out] e  Election object
  */
 void
 election_timeout_stop(election_t *e)
@@ -198,8 +198,8 @@ election_timeout_stop(election_t *e)
 /*!
  * \brief Change an election's timeout (restarting timer if running)
  *
- * \param[in] e      Election object
- * \param[in] period New timeout
+ * \param[in,out] e       Election object
+ * \param[in]     period  New timeout
  */
 void
 election_timeout_set_period(election_t *e, guint period)
@@ -278,7 +278,8 @@ compare_age(struct timeval your_age)
  * Broadcast a "vote" election message containing the local node's ID,
  * (incremented) election counter, and uptime, and start the election timer.
  *
- * \param[in] e      Election object
+ * \param[in,out] e  Election object
+ *
  * \note Any nodes agreeing to the candidacy will send a "no-vote" reply, and if
  *       all active peers do so, or if the election times out, the local node
  *       wins the election. (If we lose to any peer vote, we will stop the
@@ -329,7 +330,7 @@ election_vote(election_t *e)
  * If all known peers have sent no-vote messages, stop the election timer, set
  * the election state to won, and call any registered win callback.
  *
- * \param[in] e      Election object
+ * \param[in,out] e  Election object
  *
  * \return TRUE if local node has won, FALSE otherwise
  * \note If all known peers have sent no-vote messages, but the election owner
@@ -409,7 +410,7 @@ struct vote {
 /*!
  * \brief Unpack an election message
  *
- * \param[in] e        Election object
+ * \param[in] e        Election object (for logging only)
  * \param[in] message  Election message XML
  * \param[out] vote    Parsed fields from message
  *
@@ -418,7 +419,8 @@ struct vote {
  *       the message argument.
  */
 static bool
-parse_election_message(election_t *e, xmlNode *message, struct vote *vote)
+parse_election_message(const election_t *e, const xmlNode *message,
+                       struct vote *vote)
 {
     CRM_CHECK(message && vote, return FALSE);
 
@@ -516,9 +518,9 @@ send_no_vote(crm_node_t *peer, struct vote *vote)
 /*!
  * \brief Process an election message (vote or no-vote) from a peer
  *
- * \param[in] e        Election object
- * \param[in] vote     Election message XML from peer
- * \param[in] can_win  Whether to consider the local node eligible for winning
+ * \param[in,out] e        Election object
+ * \param[in]     message  Election message XML from peer
+ * \param[in]     can_win  Whether local node is eligible to win
  *
  * \return Election state after new vote is considered
  * \note If the peer message is a vote, and we prefer the peer to win, this will
@@ -529,7 +531,7 @@ send_no_vote(crm_node_t *peer, struct vote *vote)
  *       this function, and then compare the result.
  */
 enum election_result
-election_count_vote(election_t *e, xmlNode *message, bool can_win)
+election_count_vote(election_t *e, const xmlNode *message, bool can_win)
 {
     int log_level = LOG_INFO;
     gboolean done = FALSE;
@@ -716,7 +718,7 @@ election_count_vote(election_t *e, xmlNode *message, bool can_win)
 /*!
  * \brief Reset any election dampening currently in effect
  *
- * \param[in] e        Election object to clear
+ * \param[in,out] e        Election object to clear
  */
 void
 election_clear_dampening(election_t *e)

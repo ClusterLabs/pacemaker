@@ -2,12 +2,12 @@
 drbd0:0 promotion score on mysql-02: INFINITY
 drbd0:1 promotion score on mysql-01: 75
 drbd0:2 promotion score on none: 0
-pcmk__clone_allocate: drbd0:0 allocation score on mysql-01: 0
-pcmk__clone_allocate: drbd0:0 allocation score on mysql-02: INFINITY
-pcmk__clone_allocate: drbd0:1 allocation score on mysql-01: 75
-pcmk__clone_allocate: drbd0:1 allocation score on mysql-02: 0
-pcmk__clone_allocate: ms-drbd0 allocation score on mysql-01: 0
-pcmk__clone_allocate: ms-drbd0 allocation score on mysql-02: INFINITY
+pcmk__clone_assign: drbd0:0 allocation score on mysql-01: 0
+pcmk__clone_assign: drbd0:0 allocation score on mysql-02: INFINITY
+pcmk__clone_assign: drbd0:1 allocation score on mysql-01: 75
+pcmk__clone_assign: drbd0:1 allocation score on mysql-02: 0
+pcmk__clone_assign: ms-drbd0 allocation score on mysql-01: 0
+pcmk__clone_assign: ms-drbd0 allocation score on mysql-02: INFINITY
 pcmk__group_assign: fs0 allocation score on mysql-01: 0
 pcmk__group_assign: fs0 allocation score on mysql-02: INFINITY
 pcmk__group_assign: fs_mysql_ip allocation score on mysql-01: 0

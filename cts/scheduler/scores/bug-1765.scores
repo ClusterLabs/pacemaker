@@ -5,18 +5,18 @@ drbd0:2 promotion score on none: 0
 drbd1:0 promotion score on sles238: 75
 drbd1:1 promotion score on sles236: 75
 drbd1:2 promotion score on none: 0
-pcmk__clone_allocate: drbd0:0 allocation score on sles236: 76
-pcmk__clone_allocate: drbd0:0 allocation score on sles238: 75
-pcmk__clone_allocate: drbd0:1 allocation score on sles236: 10
-pcmk__clone_allocate: drbd0:1 allocation score on sles238: 5
-pcmk__clone_allocate: drbd1:0 allocation score on sles236: 0
-pcmk__clone_allocate: drbd1:0 allocation score on sles238: 76
-pcmk__clone_allocate: drbd1:1 allocation score on sles236: 76
-pcmk__clone_allocate: drbd1:1 allocation score on sles238: 0
-pcmk__clone_allocate: ms-drbd0 allocation score on sles236: 0
-pcmk__clone_allocate: ms-drbd0 allocation score on sles238: 0
-pcmk__clone_allocate: ms-drbd1 allocation score on sles236: 0
-pcmk__clone_allocate: ms-drbd1 allocation score on sles238: 0
+pcmk__clone_assign: drbd0:0 allocation score on sles236: 76
+pcmk__clone_assign: drbd0:0 allocation score on sles238: 75
+pcmk__clone_assign: drbd0:1 allocation score on sles236: 10
+pcmk__clone_assign: drbd0:1 allocation score on sles238: 5
+pcmk__clone_assign: drbd1:0 allocation score on sles236: 0
+pcmk__clone_assign: drbd1:0 allocation score on sles238: 76
+pcmk__clone_assign: drbd1:1 allocation score on sles236: 76
+pcmk__clone_assign: drbd1:1 allocation score on sles238: 0
+pcmk__clone_assign: ms-drbd0 allocation score on sles236: 0
+pcmk__clone_assign: ms-drbd0 allocation score on sles238: 0
+pcmk__clone_assign: ms-drbd1 allocation score on sles236: 0
+pcmk__clone_assign: ms-drbd1 allocation score on sles238: 0
 pcmk__primitive_assign: drbd0:0 allocation score on sles236: 76
 pcmk__primitive_assign: drbd0:0 allocation score on sles238: 75
 pcmk__primitive_assign: drbd0:1 allocation score on sles236: -INFINITY

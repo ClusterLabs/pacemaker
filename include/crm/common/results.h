@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 the Pacemaker project contributors
+ * Copyright 2012-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -108,6 +108,9 @@ enum pcmk_rc_e {
     /* When adding new values, use consecutively lower numbers, update the array
      * in lib/common/results.c, and test with crm_error.
      */
+    pcmk_rc_bad_xml_patch       = -1036,
+    pcmk_rc_bad_input           = -1035,
+    pcmk_rc_disabled            = -1034,
     pcmk_rc_duplicate_id        = -1033,
     pcmk_rc_unpack_error        = -1032,
     pcmk_rc_invalid_transition  = -1031,

@@ -1,0 +1,89 @@
+Using the original execution date of: 2023-01-19 21:05:59Z
+Current cluster status:
+  * Node List:
+    * Online: [ rhel8-2 rhel8-3 rhel8-4 rhel8-5 ]
+    * OFFLINE: [ rhel8-1 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started rhel8-3
+    * FencingPass	(stonith:fence_dummy):	 Started rhel8-4
+    * FencingFail	(stonith:fence_dummy):	 Started rhel8-5
+    * rsc_rhel8-1	(ocf:heartbeat:IPaddr2):	 Started rhel8-3
+    * rsc_rhel8-2	(ocf:heartbeat:IPaddr2):	 Started rhel8-4
+    * rsc_rhel8-3	(ocf:heartbeat:IPaddr2):	 Started rhel8-3
+    * rsc_rhel8-4	(ocf:heartbeat:IPaddr2):	 Started rhel8-4
+    * rsc_rhel8-5	(ocf:heartbeat:IPaddr2):	 Started rhel8-5
+    * migrator	(ocf:pacemaker:Dummy):	 Started rhel8-5
+    * Clone Set: Connectivity [ping-1]:
+      * Started: [ rhel8-3 rhel8-4 rhel8-5 ]
+      * Stopped: [ rhel8-1 rhel8-2 ]
+    * Clone Set: promotable-1 [stateful-1] (promotable):
+      * Promoted: [ rhel8-3 ]
+      * Unpromoted: [ rhel8-4 rhel8-5 ]
+      * Stopped: [ rhel8-1 rhel8-2 ]
+    * Resource Group: group-1:
+      * r192.168.122.207	(ocf:heartbeat:IPaddr2):	 Started rhel8-3
+      * petulant	(service:pacemaker-cts-dummyd@10):	 Started rhel8-3
+      * r192.168.122.208	(ocf:heartbeat:IPaddr2):	 Started rhel8-3
+    * lsb-dummy	(lsb:LSBDummy):	 Started rhel8-3
+
+Transition Summary:
+  * Move       rsc_rhel8-1     ( rhel8-3 -> rhel8-2 )
+  * Move       rsc_rhel8-2     ( rhel8-4 -> rhel8-2 )
+  * Start      ping-1:3        (            rhel8-2 )
+
+Executing Cluster Transition:
+  * Resource action: Fencing         monitor on rhel8-2
+  * Resource action: FencingPass     monitor on rhel8-2
+  * Resource action: FencingFail     monitor on rhel8-2
+  * Resource action: rsc_rhel8-1     stop on rhel8-3
+  * Resource action: rsc_rhel8-1     monitor on rhel8-2
+  * Resource action: rsc_rhel8-2     stop on rhel8-4
+  * Resource action: rsc_rhel8-2     monitor on rhel8-2
+  * Resource action: rsc_rhel8-3     monitor on rhel8-2
+  * Resource action: rsc_rhel8-4     monitor on rhel8-2
+  * Resource action: rsc_rhel8-5     monitor on rhel8-2
+  * Resource action: migrator        monitor on rhel8-2
+  * Resource action: ping-1          monitor on rhel8-2
+  * Pseudo action:   Connectivity_start_0
+  * Resource action: stateful-1      monitor on rhel8-2
+  * Resource action: r192.168.122.207 monitor on rhel8-2
+  * Resource action: petulant        monitor on rhel8-2
+  * Resource action: r192.168.122.208 monitor on rhel8-2
+  * Resource action: lsb-dummy       monitor on rhel8-2
+  * Resource action: rsc_rhel8-1     start on rhel8-2
+  * Resource action: rsc_rhel8-2     start on rhel8-2
+  * Resource action: ping-1          start on rhel8-2
+  * Pseudo action:   Connectivity_running_0
+  * Resource action: rsc_rhel8-1     monitor=5000 on rhel8-2
+  * Resource action: rsc_rhel8-2     monitor=5000 on rhel8-2
+  * Resource action: ping-1          monitor=60000 on rhel8-2
+Using the original execution date of: 2023-01-19 21:05:59Z
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ rhel8-2 rhel8-3 rhel8-4 rhel8-5 ]
+    * OFFLINE: [ rhel8-1 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started rhel8-3
+    * FencingPass	(stonith:fence_dummy):	 Started rhel8-4
+    * FencingFail	(stonith:fence_dummy):	 Started rhel8-5
+    * rsc_rhel8-1	(ocf:heartbeat:IPaddr2):	 Started rhel8-2
+    * rsc_rhel8-2	(ocf:heartbeat:IPaddr2):	 Started rhel8-2
+    * rsc_rhel8-3	(ocf:heartbeat:IPaddr2):	 Started rhel8-3
+    * rsc_rhel8-4	(ocf:heartbeat:IPaddr2):	 Started rhel8-4
+    * rsc_rhel8-5	(ocf:heartbeat:IPaddr2):	 Started rhel8-5
+    * migrator	(ocf:pacemaker:Dummy):	 Started rhel8-5
+    * Clone Set: Connectivity [ping-1]:
+      * Started: [ rhel8-2 rhel8-3 rhel8-4 rhel8-5 ]
+      * Stopped: [ rhel8-1 ]
+    * Clone Set: promotable-1 [stateful-1] (promotable):
+      * Promoted: [ rhel8-3 ]
+      * Unpromoted: [ rhel8-4 rhel8-5 ]
+      * Stopped: [ rhel8-1 rhel8-2 ]
+    * Resource Group: group-1:
+      * r192.168.122.207	(ocf:heartbeat:IPaddr2):	 Started rhel8-3
+      * petulant	(service:pacemaker-cts-dummyd@10):	 Started rhel8-3
+      * r192.168.122.208	(ocf:heartbeat:IPaddr2):	 Started rhel8-3
+    * lsb-dummy	(lsb:LSBDummy):	 Started rhel8-3

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -20,94 +20,106 @@
 #include <fcntl.h>
 
 #include <crm/crm.h>
+#include <crm/common/cmdline_internal.h>
 #include <crm/common/ipc.h>
+#include <crm/common/output_internal.h>
 #include <crm/common/xml.h>
 
 #include <pacemaker-controld.h>
 
-#define OPTARGS	"hV"
+#define SUMMARY "daemon for coordinating a Pacemaker cluster's response "   \
+                "to events"
 
-void usage(const char *cmd, int exit_status);
 _Noreturn void crmd_init(void);
-void crmd_hamsg_callback(const xmlNode * msg, void *private_data);
 extern void init_dotfile(void);
 
-GMainLoop *crmd_mainloop = NULL;
-
-pcmk__output_t *logger_out = NULL;
-
-static pcmk__cli_option_t long_options[] = {
-    // long option, argument type, storage, short option, description, flags
-    {
-        "help", no_argument, NULL, '?',
-        "\tThis text", pcmk__option_default
-    },
-    {
-        "verbose", no_argument, NULL, 'V',
-        "\tIncrease debug output", pcmk__option_default
-    },
-    { 0, 0, 0, 0 }
+controld_globals_t controld_globals = {
+    // Automatic initialization to 0, false, or NULL is fine for most members
+    .fsa_state = S_STARTING,
+    .fsa_actions = A_NOTHING,
 };
+
+static pcmk__supported_format_t formats[] = {
+    PCMK__SUPPORTED_FORMAT_NONE,
+    PCMK__SUPPORTED_FORMAT_TEXT,
+    PCMK__SUPPORTED_FORMAT_XML,
+    { NULL, NULL, NULL }
+};
+
+static GOptionContext *
+build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
+{
+    return pcmk__build_arg_context(args, "text (default), xml", group,
+                                   "[metadata]");
+}
 
 int
 main(int argc, char **argv)
 {
-    int flag;
-    int index = 0;
-    int argerr = 0;
+    int rc = pcmk_rc_ok;
+    crm_exit_t exit_code = CRM_EX_OK;
+    bool initialize = true;
+
     crm_ipc_t *old_instance = NULL;
 
-    crmd_mainloop = g_main_loop_new(NULL, FALSE);
+    pcmk__output_t *out = NULL;
+
+    GError *error = NULL;
+
+    GOptionGroup *output_group = NULL;
+    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
+    gchar **processed_args = pcmk__cmdline_preproc(argv, NULL);
+    GOptionContext *context = build_arg_context(args, &output_group);
+
     crm_log_preinit(NULL, argc, argv);
-    pcmk__set_cli_options(NULL, "[options]", long_options,
-                          "daemon for coordinating a Pacemaker cluster's "
-                          "response to events");
 
-    while (1) {
-        flag = pcmk__next_cli_option(argc, argv, &index, NULL);
-        if (flag == -1)
-            break;
-
-        switch (flag) {
-            case 'V':
-                crm_bump_log_level(argc, argv);
-                break;
-            case 'h':          /* Help message */
-                pcmk__cli_help(flag, CRM_EX_OK);
-                break;
-            default:
-                ++argerr;
-                break;
-        }
+    pcmk__register_formats(output_group, formats);
+    if (!g_option_context_parse_strv(context, &processed_args, &error)) {
+        exit_code = CRM_EX_USAGE;
+        goto done;
     }
 
-    if (argc - optind == 1 && pcmk__str_eq("metadata", argv[optind], pcmk__str_casei)) {
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    if (rc != pcmk_rc_ok) {
+        exit_code = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Error creating output format %s: %s",
+                    args->output_ty, pcmk_rc_str(rc));
+        goto done;
+    }
+
+    if (args->version) {
+        out->version(out, false);
+        initialize = false;
+        goto done;
+    }
+
+    if ((g_strv_length(processed_args) >= 2)
+        && pcmk__str_eq(processed_args[1], "metadata", pcmk__str_none)) {
         crmd_metadata();
-        return CRM_EX_OK;
-    } else if (argc - optind == 1 && pcmk__str_eq("version", argv[optind], pcmk__str_casei)) {
-        fprintf(stdout, "CRM Version: %s (%s)\n", PACEMAKER_VERSION, BUILD_VERSION);
-        return CRM_EX_OK;
+        initialize = false;
+        goto done;
     }
 
+    pcmk__cli_init_logging("pacemaker-controld", args->verbosity);
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
-
-    if (optind > argc) {
-        ++argerr;
-    }
-
-    if (argerr) {
-        pcmk__cli_help('?', CRM_EX_USAGE);
-    }
-
     crm_notice("Starting Pacemaker controller");
 
     old_instance = crm_ipc_new(CRM_SYSTEM_CRMD, 0);
+    if (old_instance == NULL) {
+        /* crm_ipc_new will have already printed an error message with crm_err. */
+        exit_code = CRM_EX_FATAL;
+        goto done;
+    }
+
     if (crm_ipc_connect(old_instance)) {
         /* IPC end-point already up */
         crm_ipc_close(old_instance);
         crm_ipc_destroy(old_instance);
         crm_err("pacemaker-controld is already active, aborting startup");
-        crm_exit(CRM_EX_OK);
+        initialize = false;
+        goto done;
+
     } else {
         /* not up or not authentic, we'll proceed either way */
         crm_ipc_destroy(old_instance);
@@ -115,34 +127,46 @@ main(int argc, char **argv)
     }
 
     if (pcmk__daemon_can_write(PE_STATE_DIR, NULL) == FALSE) {
+        exit_code = CRM_EX_FATAL;
         crm_err("Terminating due to bad permissions on " PE_STATE_DIR);
-        fprintf(stderr,
-                "ERROR: Bad permissions on " PE_STATE_DIR " (see logs for details)\n");
-        fflush(stderr);
-        return CRM_EX_FATAL;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Bad permissions on " PE_STATE_DIR
+                    " (see logs for details)");
+        goto done;
 
     } else if (pcmk__daemon_can_write(CRM_CONFIG_DIR, NULL) == FALSE) {
+        exit_code = CRM_EX_FATAL;
         crm_err("Terminating due to bad permissions on " CRM_CONFIG_DIR);
-        fprintf(stderr,
-                "ERROR: Bad permissions on " CRM_CONFIG_DIR " (see logs for details)\n");
-        fflush(stderr);
-        return CRM_EX_FATAL;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Bad permissions on " CRM_CONFIG_DIR
+                    " (see logs for details)");
+        goto done;
     }
 
-    if (pcmk__log_output_new(&logger_out) != pcmk_rc_ok) {
-        return CRM_EX_FATAL;
+    if (pcmk__log_output_new(&(controld_globals.logger_out)) != pcmk_rc_ok) {
+        exit_code = CRM_EX_FATAL;
+        goto done;
     }
 
-    pcmk__output_set_log_level(logger_out, LOG_TRACE);
+    pcmk__output_set_log_level(controld_globals.logger_out, LOG_TRACE);
 
-    crmd_init();
-    return 0; // not reachable
-}
+done:
+    g_strfreev(processed_args);
+    pcmk__free_arg_context(context);
 
-static void
-log_deprecation_warnings(void)
-{
-    // Add deprecations here as needed
+    pcmk__output_and_clear_error(&error, out);
+
+    if (out != NULL) {
+        out->finish(out, exit_code, true, NULL);
+        pcmk__output_free(out);
+    }
+    pcmk__unregister_formats();
+
+    if ((exit_code == CRM_EX_OK) && initialize) {
+        // Does not return
+        crmd_init();
+    }
+    crm_exit(exit_code);
 }
 
 void
@@ -150,11 +174,6 @@ crmd_init(void)
 {
     crm_exit_t exit_code = CRM_EX_OK;
     enum crmd_fsa_state state;
-
-    log_deprecation_warnings();
-
-    fsa_state = S_STARTING;
-    fsa_input_register = 0;     /* zero out the regester */
 
     init_dotfile();
     register_fsa_input(C_STARTUP, I_STARTUP, NULL);
@@ -165,8 +184,9 @@ crmd_init(void)
     if (state == S_PENDING || state == S_STARTING) {
         /* Create the mainloop and run it... */
         crm_trace("Starting %s's mainloop", crm_system_name);
-        g_main_loop_run(crmd_mainloop);
-        if (pcmk_is_set(fsa_input_register, R_STAYDOWN)) {
+        controld_globals.mainloop = g_main_loop_new(NULL, FALSE);
+        g_main_loop_run(controld_globals.mainloop);
+        if (pcmk_is_set(controld_globals.fsa_input_register, R_STAYDOWN)) {
             crm_info("Inhibiting automated respawn");
             exit_code = CRM_EX_FATAL;
         }

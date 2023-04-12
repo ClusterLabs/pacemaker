@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,6 +22,40 @@
 
 #define PE__VARIANT_BUNDLE 1
 #include "./variant.h"
+
+/*!
+ * \internal
+ * \brief Get maximum number of bundle replicas allowed to run
+ *
+ * \param[in] rsc  Bundle or bundled resource to check
+ *
+ * \return Maximum replicas for bundle corresponding to \p rsc
+ */
+int
+pe__bundle_max(const pe_resource_t *rsc)
+{
+    const pe__bundle_variant_data_t *bundle_data = NULL;
+
+    get_bundle_variant_data(bundle_data, pe__const_top_resource(rsc, true));
+    return bundle_data->nreplicas;
+}
+
+/*!
+ * \internal
+ * \brief Get maximum number of bundle replicas allowed to run on one node
+ *
+ * \param[in] rsc  Bundle or bundled resource to check
+ *
+ * \return Maximum replicas per node for bundle corresponding to \p rsc
+ */
+int
+pe__bundle_max_per_node(const pe_resource_t *rsc)
+{
+    const pe__bundle_variant_data_t *bundle_data = NULL;
+
+    get_bundle_variant_data(bundle_data, pe__const_top_resource(rsc, true));
+    return bundle_data->nreplicas_per_host;
+}
 
 static char *
 next_ip(const char *last_ip)
@@ -107,7 +141,7 @@ create_resource(const char *name, const char *provider, const char *kind)
  * \internal
  * \brief Check whether cluster can manage resource inside container
  *
- * \param[in] data  Container variant data
+ * \param[in,out] data  Container variant data
  *
  * \return TRUE if networking configuration is acceptable, FALSE otherwise
  *
@@ -422,6 +456,7 @@ create_container_resource(pe_resource_t *parent,
                             parent->cluster) != pcmk_rc_ok) {
         return pcmk_rc_unpack_error;
     }
+    pe__set_resource_flags(replica->container, pe_rsc_replica_container);
     parent->children = g_list_append(parent->children, replica->container);
 
     return pcmk_rc_ok;
@@ -687,7 +722,7 @@ replica_for_remote(pe_resource_t *remote)
 }
 
 bool
-pe__bundle_needs_remote_name(pe_resource_t *rsc, pe_working_set_t *data_set)
+pe__bundle_needs_remote_name(pe_resource_t *rsc)
 {
     const char *value;
     GHashTable *params = NULL;
@@ -697,7 +732,7 @@ pe__bundle_needs_remote_name(pe_resource_t *rsc, pe_working_set_t *data_set)
     }
 
     // Use NULL node since pcmk__bundle_expand() uses that to set value
-    params = pe_rsc_params(rsc, NULL, data_set);
+    params = pe_rsc_params(rsc, NULL, rsc->cluster);
     value = g_hash_table_lookup(params, XML_RSC_ATTR_REMOTE_RA_ADDR);
 
     return pcmk__str_eq(value, "#uname", pcmk__str_casei)
@@ -713,7 +748,7 @@ pe__add_bundle_remote_name(pe_resource_t *rsc, pe_working_set_t *data_set,
     pe_node_t *node = NULL;
     pe__bundle_replica_t *replica = NULL;
 
-    if (!pe__bundle_needs_remote_name(rsc, data_set)) {
+    if (!pe__bundle_needs_remote_name(rsc)) {
         return NULL;
     }
 
@@ -1194,7 +1229,7 @@ bundle_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
     get_bundle_variant_data(bundle_data, rsc);
 
     status_print("%s<bundle ", pre_text);
-    status_print("id=\"%s\" ", rsc->id);
+    status_print(XML_ATTR_ID "=\"%s\" ", rsc->id);
     status_print("type=\"%s\" ", container_agent_str(bundle_data->agent_type));
     status_print("image=\"%s\" ", bundle_data->image);
     status_print("unique=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_unique));
@@ -1207,7 +1242,8 @@ bundle_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
         pe__bundle_replica_t *replica = gIter->data;
 
         CRM_ASSERT(replica);
-        status_print("%s    <replica id=\"%d\">\n", pre_text, replica->offset);
+        status_print("%s    <replica " XML_ATTR_ID "=\"%d\">\n",
+                     pre_text, replica->offset);
         print_rsc_in_list(replica->ip, child_text, options, print_data);
         print_rsc_in_list(replica->child, child_text, options, print_data);
         print_rsc_in_list(replica->container, child_text, options, print_data);
@@ -1232,8 +1268,10 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
     gboolean printed_header = FALSE;
     gboolean print_everything = TRUE;
 
-    CRM_ASSERT(rsc != NULL);
+    const char *desc = NULL;
 
+    CRM_ASSERT(rsc != NULL);
+    
     get_bundle_variant_data(bundle_data, rsc);
 
     if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
@@ -1269,13 +1307,17 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
         if (!printed_header) {
             printed_header = TRUE;
 
-            rc = pe__name_and_nvpairs_xml(out, true, "bundle", 6,
+            desc = pe__resource_description(rsc, show_opts);
+
+            rc = pe__name_and_nvpairs_xml(out, true, "bundle", 8,
                      "id", rsc->id,
                      "type", container_agent_str(bundle_data->agent_type),
                      "image", bundle_data->image,
                      "unique", pe__rsc_bool_str(rsc, pe_rsc_unique),
+                     "maintenance", pe__rsc_bool_str(rsc, pe_rsc_maintenance),
                      "managed", pe__rsc_bool_str(rsc, pe_rsc_managed),
-                     "failed", pe__rsc_bool_str(rsc, pe_rsc_failed));
+                     "failed", pe__rsc_bool_str(rsc, pe_rsc_failed),
+                     "description", desc);
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
 
@@ -1342,6 +1384,27 @@ pe__bundle_replica_output_html(pcmk__output_t *out, pe__bundle_replica_t *replic
     pe__common_output_html(out, rsc, buffer, node, show_opts);
 }
 
+/*!
+ * \internal
+ * \brief Get a string describing a resource's unmanaged state or lack thereof
+ *
+ * \param[in] rsc  Resource to describe
+ *
+ * \return A string indicating that a resource is in maintenance mode or
+ *         otherwise unmanaged, or an empty string otherwise
+ */
+static const char *
+get_unmanaged_str(const pe_resource_t *rsc)
+{
+    if (pcmk_is_set(rsc->flags, pe_rsc_maintenance)) {
+        return " (maintenance)";
+    }
+    if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+        return " (unmanaged)";
+    }
+    return "";
+}
+
 PCMK__OUTPUT_ARGS("bundle", "uint32_t", "pe_resource_t *", "GList *", "GList *")
 int
 pe__bundle_html(pcmk__output_t *out, va_list args)
@@ -1351,6 +1414,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
+    const char *desc = NULL;
     pe__bundle_variant_data_t *bundle_data = NULL;
     int rc = pcmk_rc_no_output;
     gboolean print_everything = TRUE;
@@ -1358,6 +1422,8 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
     CRM_ASSERT(rsc != NULL);
 
     get_bundle_variant_data(bundle_data, rsc);
+
+    desc = pe__resource_description(rsc, show_opts);
 
     if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
         return rc;
@@ -1391,11 +1457,12 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
              */
             uint32_t new_show_opts = show_opts | pcmk_show_implicit_rscs;
 
-            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s",
+            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s%s%s%s",
                                      (bundle_data->nreplicas > 1)? " set" : "",
                                      rsc->id, bundle_data->image,
                                      pcmk_is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
-                                     pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
+                                     desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
+                                     get_unmanaged_str(rsc));
 
             if (pcmk__list_of_multiple(bundle_data->replicas)) {
                 out->begin_list(out, NULL, NULL, "Replica[%d]", replica->offset);
@@ -1427,11 +1494,12 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
         } else if (print_everything == FALSE && !(print_ip || print_child || print_ctnr || print_remote)) {
             continue;
         } else {
-            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s",
+            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s%s%s%s",
                                      (bundle_data->nreplicas > 1)? " set" : "",
                                      rsc->id, bundle_data->image,
                                      pcmk_is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
-                                     pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
+                                     desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
+                                     get_unmanaged_str(rsc));
 
             pe__bundle_replica_output_html(out, replica, pe__current_node(replica->container),
                                            show_opts);
@@ -1446,7 +1514,7 @@ static void
 pe__bundle_replica_output_text(pcmk__output_t *out, pe__bundle_replica_t *replica,
                                pe_node_t *node, uint32_t show_opts)
 {
-    pe_resource_t *rsc = replica->child;
+    const pe_resource_t *rsc = replica->child;
 
     int offset = 0;
     char buffer[LINE_MAX];
@@ -1479,10 +1547,13 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
+    const char *desc = NULL;
     pe__bundle_variant_data_t *bundle_data = NULL;
     int rc = pcmk_rc_no_output;
     gboolean print_everything = TRUE;
 
+    desc = pe__resource_description(rsc, show_opts);
+    
     get_bundle_variant_data(bundle_data, rsc);
 
     CRM_ASSERT(rsc != NULL);
@@ -1519,11 +1590,12 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
              */
             uint32_t new_show_opts = show_opts | pcmk_show_implicit_rscs;
 
-            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s",
+            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s%s%s%s",
                                      (bundle_data->nreplicas > 1)? " set" : "",
                                      rsc->id, bundle_data->image,
                                      pcmk_is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
-                                     pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
+                                     desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
+                                     get_unmanaged_str(rsc));
 
             if (pcmk__list_of_multiple(bundle_data->replicas)) {
                 out->list_item(out, NULL, "Replica[%d]", replica->offset);
@@ -1555,11 +1627,12 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
         } else if (print_everything == FALSE && !(print_ip || print_child || print_ctnr || print_remote)) {
             continue;
         } else {
-            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s",
+            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s%s%s%s",
                                      (bundle_data->nreplicas > 1)? " set" : "",
                                      rsc->id, bundle_data->image,
                                      pcmk_is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
-                                     pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
+                                     desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
+                                     get_unmanaged_str(rsc));
 
             pe__bundle_replica_output_text(out, replica, pe__current_node(replica->container),
                                            show_opts);
@@ -1796,7 +1869,8 @@ pe__count_bundle(pe_resource_t *rsc)
 }
 
 gboolean
-pe__bundle_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent)
+pe__bundle_is_filtered(const pe_resource_t *rsc, GList *only_rsc,
+                       gboolean check_parent)
 {
     gboolean passes = FALSE;
     pe__bundle_variant_data_t *bundle_data = NULL;
@@ -1826,4 +1900,105 @@ pe__bundle_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_paren
     }
 
     return !passes;
+}
+
+/*!
+ * \internal
+ * \brief Get a list of a bundle's containers
+ *
+ * \param[in] bundle  Bundle resource
+ *
+ * \return Newly created list of \p bundle's containers
+ * \note It is the caller's responsibility to free the result with
+ *       g_list_free().
+ */
+GList *
+pe__bundle_containers(const pe_resource_t *bundle)
+{
+    GList *containers = NULL;
+    const pe__bundle_variant_data_t *data = NULL;
+
+    get_bundle_variant_data(data, bundle);
+    for (GList *iter = data->replicas; iter != NULL; iter = iter->next) {
+        pe__bundle_replica_t *replica = iter->data;
+
+        containers = g_list_append(containers, replica->container);
+    }
+    return containers;
+}
+
+// Bundle implementation of resource_object_functions_t:active_node()
+pe_node_t *
+pe__bundle_active_node(const pe_resource_t *rsc, unsigned int *count_all,
+                       unsigned int *count_clean)
+{
+    pe_node_t *active = NULL;
+    pe_node_t *node = NULL;
+    pe_resource_t *container = NULL;
+    GList *containers = NULL;
+    GList *iter = NULL;
+    GHashTable *nodes = NULL;
+    const pe__bundle_variant_data_t *data = NULL;
+
+    if (count_all != NULL) {
+        *count_all = 0;
+    }
+    if (count_clean != NULL) {
+        *count_clean = 0;
+    }
+    if (rsc == NULL) {
+        return NULL;
+    }
+
+    /* For the purposes of this method, we only care about where the bundle's
+     * containers are active, so build a list of active containers.
+     */
+    get_bundle_variant_data(data, rsc);
+    for (iter = data->replicas; iter != NULL; iter = iter->next) {
+        pe__bundle_replica_t *replica = iter->data;
+
+        if (replica->container->running_on != NULL) {
+            containers = g_list_append(containers, replica->container);
+        }
+    }
+    if (containers == NULL) {
+        return NULL;
+    }
+
+    /* If the bundle has only a single active container, just use that
+     * container's method. If live migration is ever supported for bundle
+     * containers, this will allow us to prefer the migration source when there
+     * is only one container and it is migrating. For now, this just lets us
+     * avoid creating the nodes table.
+     */
+    if (pcmk__list_of_1(containers)) {
+        container = containers->data;
+        node = container->fns->active_node(container, count_all, count_clean);
+        g_list_free(containers);
+        return node;
+    }
+
+    // Add all containers' active nodes to a hash table (for uniqueness)
+    nodes = g_hash_table_new(NULL, NULL);
+    for (iter = containers; iter != NULL; iter = iter->next) {
+        container = iter->data;
+
+        for (GList *node_iter = container->running_on; node_iter != NULL;
+             node_iter = node_iter->next) {
+            node = node_iter->data;
+
+            // If insert returns true, we haven't counted this node yet
+            if (g_hash_table_insert(nodes, (gpointer) node->details,
+                                    (gpointer) node)
+                && !pe__count_active_node(rsc, node, &active, count_all,
+                                          count_clean)) {
+                goto done;
+            }
+        }
+    }
+
+done:
+    g_list_free(containers);
+    g_hash_table_destroy(nodes);
+    return active;
 }

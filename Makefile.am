@@ -1,5 +1,5 @@
 #
-# Copyright 2003-2021 the Pacemaker project contributors
+# Copyright 2003-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -44,13 +44,10 @@ AM_DISTCHECK_CONFIGURE_FLAGS	= --prefix="$$dc_install_base/usr"			\
 				  --with-ocfdir="$$dc_install_base/usr/lib/ocf"		\
 				  --with-systemdsystemunitdir="$$dc_install_base$(systemdsystemunitdir)"
 
-# Only these will get installed with a plain "make install"
-CORE_INSTALL	= replace include lib daemons tools xml po
+# Only these will get built with a plain "make"
+CORE	= replace include lib daemons tools xml po python cts rpm
 
-# Only these will get built with a plain "make" or "make clean"
-CORE		= $(CORE_INSTALL) cts rpm
-
-SUBDIRS	= $(CORE) devel doc etc extra maint tests
+SUBDIRS	= $(CORE) agents devel doc etc maint tests
 
 AM_CPPFLAGS		= -I$(top_srcdir)/include
 
@@ -75,13 +72,6 @@ core:
 	@for subdir in $(CORE); do \
 		echo "Building $$subdir"; \
 		$(MAKE) $(AM_MAKEFLAGS) -C $$subdir all || exit 1; \
-	done
-
-core-install:
-	@echo "Installing only core components: $(CORE_INSTALL)"
-	@for subdir in $(CORE_INSTALL); do \
-	    echo "Installing $$subdir"; \
-	    $(MAKE) $(AM_MAKEFLAGS) -C $$subdir install || exit 1; \
 	done
 
 core-clean:
@@ -116,13 +106,7 @@ clean-generic:
 
 PACKAGE         ?= pacemaker
 
-# In a normal build, this file is included by GNUmakefile, which serves as the
-# "real" makefile. But in a VPATH build, GNUmakefile won't exist in the build
-# tree, and this file will be the "real" makefile. EXTRA_CLEAN_TARGETS handles
-# both cases: GNUmakefile defines it before including this file, so the
-# clean-local target can clean up files created by GNUmakefile targets.
-# If this file is used alone, the variable will be undefined.
-clean-local: $(EXTRA_CLEAN_TARGETS)
+clean-local:
 	-rm -f $(builddir)/$(PACKAGE)-*.tar.gz
 
 distclean-local:

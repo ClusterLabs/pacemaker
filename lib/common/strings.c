@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,6 +7,7 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#include "crm/common/results.h"
 #include <crm_internal.h>
 
 #ifndef _GNU_SOURCE
@@ -20,7 +21,6 @@
 #include <ctype.h>
 #include <float.h>  // DBL_MIN
 #include <limits.h>
-#include <math.h>   // fabs()
 #include <bzlib.h>
 #include <sys/types.h>
 
@@ -227,7 +227,7 @@ pcmk__scan_double(const char *text, double *result, const char *default_text,
              */
             const char *over_under;
 
-            if (fabs(*result) > DBL_MIN) {
+            if (QB_ABS(*result) > DBL_MIN) {
                 rc = EOVERFLOW;
                 over_under = "over";
             } else {
@@ -256,7 +256,7 @@ pcmk__scan_double(const char *text, double *result, const char *default_text,
                       "%.1f instead): No digits found", text,
                       PCMK__PARSE_DBL_DEFAULT);
 
-        } else if (fabs(*result) <= DBL_MIN) {
+        } else if (QB_ABS(*result) <= DBL_MIN) {
             /*
              * errno == 0 and text was parsed, but value might have
              * underflowed.
@@ -300,7 +300,7 @@ pcmk__scan_double(const char *text, double *result, const char *default_text,
  * \internal
  * \brief Parse a guint from a string stored in a hash table
  *
- * \param[in,out] table        Hash table to search
+ * \param[in]     table        Hash table to search
  * \param[in]     key          Hash table key to use to retrieve string
  * \param[in]     default_val  What to use if key has no entry in table
  * \param[out]    result       If not NULL, where to store parsed integer
@@ -810,6 +810,7 @@ int
 pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
 {
     char *remainder = NULL;
+    int rc = pcmk_rc_ok;
 
     CRM_ASSERT(start != NULL && end != NULL);
 
@@ -817,8 +818,10 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
     *end = PCMK__PARSE_INT_DEFAULT;
 
     crm_trace("Attempting to decode: [%s]", srcstring);
-    if (pcmk__str_empty(srcstring) || !strcmp(srcstring, "-")) {
-        return pcmk_rc_unknown_format;
+    if (pcmk__str_eq(srcstring, "", pcmk__str_null_matches)) {
+        return ENODATA;
+    } else if (pcmk__str_eq(srcstring, "-", pcmk__str_none)) {
+        return pcmk_rc_bad_input;
     }
 
     /* String starts with a dash, so this is either a range with
@@ -828,15 +831,15 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
         int rc = scan_ll(srcstring+1, end, PCMK__PARSE_INT_DEFAULT, &remainder);
 
         if (rc != pcmk_rc_ok || *remainder != '\0') {
-            return pcmk_rc_unknown_format;
+            return pcmk_rc_bad_input;
         } else {
             return pcmk_rc_ok;
         }
     }
 
-    if (scan_ll(srcstring, start, PCMK__PARSE_INT_DEFAULT,
-                &remainder) != pcmk_rc_ok) {
-        return pcmk_rc_unknown_format;
+    rc = scan_ll(srcstring, start, PCMK__PARSE_INT_DEFAULT, &remainder);
+    if (rc != pcmk_rc_ok) {
+        return rc;
     }
 
     if (*remainder && *remainder == '-') {
@@ -845,13 +848,15 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
             int rc = scan_ll(remainder+1, end, PCMK__PARSE_INT_DEFAULT,
                              &more_remainder);
 
-            if (rc != pcmk_rc_ok || *more_remainder != '\0') {
-                return pcmk_rc_unknown_format;
+            if (rc != pcmk_rc_ok) {
+                return rc;
+            } else if (*more_remainder != '\0') {
+                return pcmk_rc_bad_input;
             }
         }
     } else if (*remainder && *remainder != '-') {
         *start = PCMK__PARSE_INT_DEFAULT;
-        return pcmk_rc_unknown_format;
+        return pcmk_rc_bad_input;
     } else {
         /* The input string contained only one number.  Set start and end
          * to the same value and return pcmk_rc_ok.  This gives the caller
@@ -1122,13 +1127,11 @@ pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
             crm_err("Bad regex '%s' for update: %s", s2, strerror(regcomp_rc));
         } else {
             rc = regexec(&r_patt, s1, 0, NULL, 0);
-
+            regfree(&r_patt);
             if (rc != 0) {
                 rc = 1;
             }
         }
-
-        regfree(&r_patt);
         return rc;
     }
 

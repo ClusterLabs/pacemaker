@@ -1,10 +1,10 @@
 
-pcmk__clone_allocate: cl_tomcat allocation score on CSE-1: -INFINITY
-pcmk__clone_allocate: cl_tomcat allocation score on CSE-2: 0
-pcmk__clone_allocate: d_tomcat:0 allocation score on CSE-1: -INFINITY
-pcmk__clone_allocate: d_tomcat:0 allocation score on CSE-2: 0
-pcmk__clone_allocate: d_tomcat:1 allocation score on CSE-1: -INFINITY
-pcmk__clone_allocate: d_tomcat:1 allocation score on CSE-2: 0
+pcmk__clone_assign: cl_tomcat allocation score on CSE-1: -INFINITY
+pcmk__clone_assign: cl_tomcat allocation score on CSE-2: 0
+pcmk__clone_assign: d_tomcat:0 allocation score on CSE-1: -INFINITY
+pcmk__clone_assign: d_tomcat:0 allocation score on CSE-2: 0
+pcmk__clone_assign: d_tomcat:1 allocation score on CSE-1: -INFINITY
+pcmk__clone_assign: d_tomcat:1 allocation score on CSE-2: 0
 pcmk__group_assign: ip_11 allocation score on CSE-1: 0
 pcmk__group_assign: ip_11 allocation score on CSE-2: 0
 pcmk__group_assign: ip_19 allocation score on CSE-1: 0

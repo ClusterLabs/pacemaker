@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 the Pacemaker project contributors
+ * Copyright 2012-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -250,10 +250,6 @@ static void
 tls_server_dropped(gpointer user_data)
 {
     crm_notice("TLS server session ended");
-    /* If we are in the process of shutting down, then we should actually exit.
-     * bz#1804259
-     */
-    execd_exit_if_shutting_down();
     return;
 }
 

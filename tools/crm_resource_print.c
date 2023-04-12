@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -131,26 +131,21 @@ cli_resource_print(pe_resource_t *rsc, pe_working_set_t *data_set, bool expanded
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("attribute-list", "pe_resource_t *", "char *", "GHashTable *")
+PCMK__OUTPUT_ARGS("attribute-list", "pe_resource_t *", "const char *", "const char *")
 static int
 attribute_list_default(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    char *attr = va_arg(args, char *);
-    GHashTable *params = va_arg(args, GHashTable *);
+    const char *attr = va_arg(args, char *);
+    const char *value = va_arg(args, const char *);
 
-    const char *value = NULL;
-
-    if (params != NULL) {
-        value = g_hash_table_lookup(params, attr);
-    }
     if (value != NULL) {
         out->begin_list(out, NULL, NULL, "Attributes");
         out->list_item(out, attr, "%s", value);
         out->end_list(out);
+        return pcmk_rc_ok;
     } else {
         out->err(out, "Attribute '%s' not found for '%s'", attr, rsc->id);
     }
-
     return pcmk_rc_ok;
 }
 
@@ -229,27 +224,21 @@ agent_status_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("attribute-list", "pe_resource_t *", "char *", "GHashTable *")
+PCMK__OUTPUT_ARGS("attribute-list", "pe_resource_t *", "const char *", "const char *")
 static int
 attribute_list_text(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    char *attr = va_arg(args, char *);
-    GHashTable *params = va_arg(args, GHashTable *);
+    const char *attr = va_arg(args, char *);
+    const char *value = va_arg(args, const char *);
 
-    const char *value = NULL;
-
-    if (params != NULL) {
-        value = g_hash_table_lookup(params, attr);
-    }
     if (value != NULL) {
         pcmk__formatted_printf(out, "%s\n", value);
+        return pcmk_rc_ok;
     } else {
         out->err(out, "Attribute '%s' not found for '%s'", attr, rsc->id);
     }
-
     return pcmk_rc_ok;
 }
-
 PCMK__OUTPUT_ARGS("override", "const char *", "const char *", "const char *")
 static int
 override_default(pcmk__output_t *out, va_list args) {
@@ -287,11 +276,11 @@ override_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("property-list", "pe_resource_t *", "char *")
+PCMK__OUTPUT_ARGS("property-list", "pe_resource_t *", "const char *")
 static int
 property_list_default(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    char *attr = va_arg(args, char *);
+    const char *attr = va_arg(args, char *);
 
     const char *value = crm_element_value(rsc->xml, attr);
 
@@ -452,7 +441,7 @@ static int
 resource_check_list_default(pcmk__output_t *out, va_list args) {
     resource_checks_t *checks = va_arg(args, resource_checks_t *);
 
-    pe_resource_t *parent = uber_parent(checks->rsc);
+    const pe_resource_t *parent = pe__const_top_resource(checks->rsc, false);
 
     if (checks->flags == 0) {
         return pcmk_rc_no_output;
@@ -498,7 +487,7 @@ static int
 resource_check_list_xml(pcmk__output_t *out, va_list args) {
     resource_checks_t *checks = va_arg(args, resource_checks_t *);
 
-    pe_resource_t *parent = uber_parent(checks->rsc);
+    const pe_resource_t *parent = pe__const_top_resource(checks->rsc, false);
 
     xmlNodePtr node = pcmk__output_create_xml_node(out, "check",
                                                    "id", parent->id,

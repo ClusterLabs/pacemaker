@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <start>
+        <ref name="element-resource-list"/>
+    </start>
+
+    <define name="element-resource-list">
+        <interleave>
+            <zeroOrMore>
+                <ref name="element-bundle" />
+            </zeroOrMore>
+            <zeroOrMore>
+                <ref name="element-clone" />
+            </zeroOrMore>
+            <zeroOrMore>
+                <ref name="element-group" />
+            </zeroOrMore>
+            <zeroOrMore>
+                <ref name="element-resource" />
+            </zeroOrMore>
+        </interleave>
+    </define>
+
+    <define name="element-bundle">
+        <element name="bundle">
+            <attribute name="id"> <text/> </attribute>
+            <attribute name="type">
+                <choice>
+                    <value>docker</value>
+                    <value>rkt</value>
+                    <value>podman</value>
+                </choice>
+            </attribute>
+            <attribute name="image"> <text/> </attribute>
+            <attribute name="unique"> <data type="boolean" /> </attribute>
+            <optional>
+                <attribute name="maintenance">
+                    <data type="boolean" />
+                </attribute>
+            </optional>
+            <attribute name="managed"> <data type="boolean" /> </attribute>
+            <attribute name="failed"> <data type="boolean" /> </attribute>
+            <zeroOrMore>
+                <element name="replica">
+                    <attribute name="id"> <data type="nonNegativeInteger" /> </attribute>
+                    <zeroOrMore>
+                        <ref name="element-resource" />
+                    </zeroOrMore>
+                </element>
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="element-clone">
+        <element name="clone">
+            <attribute name="id"> <text/> </attribute>
+            <attribute name="multi_state"> <data type="boolean" /> </attribute>
+            <attribute name="unique"> <data type="boolean" /> </attribute>
+            <optional>
+                <attribute name="maintenance">
+                    <data type="boolean" />
+                </attribute>
+            </optional>
+            <attribute name="managed"> <data type="boolean" /> </attribute>
+            <attribute name="disabled"> <data type="boolean" /> </attribute>
+            <attribute name="failed"> <data type="boolean" /> </attribute>
+            <attribute name="failure_ignored"> <data type="boolean" /> </attribute>
+            <optional>
+                <attribute name="target_role"> <text/> </attribute>
+            </optional>
+            <ref name="element-resource-list" />
+        </element>
+    </define>
+
+    <define name="element-group">
+        <element name="group">
+            <attribute name="id"> <text/> </attribute>
+            <attribute name="number_resources"> <data type="nonNegativeInteger" /> </attribute>
+            <optional>
+                <attribute name="maintenance">
+                    <data type="boolean" />
+                </attribute>
+            </optional>
+            <attribute name="managed"> <data type="boolean" /> </attribute>
+            <attribute name="disabled"> <data type="boolean" /> </attribute>
+            <ref name="element-resource-list" />
+        </element>
+    </define>
+
+    <define name="element-resource">
+        <element name="resource">
+            <attribute name="id"> <text/> </attribute>
+            <attribute name="resource_agent"> <text/> </attribute>
+            <attribute name="role"> <text/> </attribute>
+            <optional>
+                <attribute name="target_role"> <text/> </attribute>
+            </optional>
+            <attribute name="active"> <data type="boolean" /> </attribute>
+            <attribute name="orphaned"> <data type="boolean" /> </attribute>
+            <optional>
+                <attribute name="blocked"> <data type="boolean" /> </attribute>
+            </optional>
+            <optional>
+                <attribute name="maintenance">
+                    <data type="boolean" />
+                </attribute>
+            </optional>
+            <attribute name="failed"> <data type="boolean" /> </attribute>
+            <attribute name="managed"> <data type="boolean" /> </attribute>
+            <attribute name="failure_ignored"> <data type="boolean" /> </attribute>
+            <attribute name="nodes_running_on"> <data type="nonNegativeInteger" />  </attribute>
+            <optional>
+                <attribute name="pending"> <text/> </attribute>
+            </optional>
+            <optional>
+                <attribute name="locked_to"> <text/> </attribute>
+            </optional>
+            <zeroOrMore>
+                <element name="node">
+                    <attribute name="name"> <text/> </attribute>
+                    <attribute name="id"> <text/> </attribute>
+                    <attribute name="cached"> <data type="boolean" /> </attribute>
+                </element>
+            </zeroOrMore>
+            <optional>
+                <element name="xml"> <text/> </element>
+            </optional>
+        </element>
+    </define>
+</grammar>

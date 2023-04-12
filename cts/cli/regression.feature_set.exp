@@ -1,7 +1,6 @@
 Created new pacemaker configuration
-Setting up shadow instance
-A new shadow instance was created.  To begin using it paste the following into your shell:
-  CIB_shadow=cts-cli ; export CIB_shadow
+A new shadow instance was created. To begin using it, enter the following into your shell:
+	export CIB_shadow=cts-cli
 =#=#=#= Begin test: Import the test CIB =#=#=#=
 =#=#=#= Current cib after: Import the test CIB =#=#=#=
 <cib epoch="2" num_updates="0" admin_epoch="0" have-quorum="1" dc-uuid="1">
@@ -87,12 +86,12 @@ Active Resources:
     <node name="remote01" id="4" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote"/>
   </nodes>
   <resources>
-    <bundle id="guest01" type="docker" image="pcmk:http" unique="false" managed="true" failed="false">
+    <bundle id="guest01" type="docker" image="pcmk:http" unique="false" maintenance="false" managed="true" failed="false">
       <replica id="0">
-        <resource id="guest01-ip-192.168.122.131" resource_agent="ocf:heartbeat:IPaddr2" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="guest01-docker-0" resource_agent="ocf:heartbeat:docker" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="guest01-0" resource_agent="ocf:pacemaker:remote" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="guest01-ip-192.168.122.131" resource_agent="ocf:heartbeat:IPaddr2" role="Stopped" active="false" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Stopped" active="false" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="guest01-docker-0" resource_agent="ocf:heartbeat:docker" role="Stopped" active="false" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="guest01-0" resource_agent="ocf:pacemaker:remote" role="Stopped" active="false" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </replica>
     </bundle>
   </resources>
@@ -186,12 +185,12 @@ Active Resources:
     <node name="remote01" id="4" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote"/>
   </nodes>
   <resources>
-    <bundle id="guest01" type="docker" image="pcmk:http" unique="false" managed="true" failed="false">
+    <bundle id="guest01" type="docker" image="pcmk:http" unique="false" maintenance="false" managed="true" failed="false">
       <replica id="0">
-        <resource id="guest01-ip-192.168.122.131" resource_agent="ocf:heartbeat:IPaddr2" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="guest01-docker-0" resource_agent="ocf:heartbeat:docker" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="guest01-0" resource_agent="ocf:pacemaker:remote" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="guest01-ip-192.168.122.131" resource_agent="ocf:heartbeat:IPaddr2" role="Stopped" active="false" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Stopped" active="false" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="guest01-docker-0" resource_agent="ocf:heartbeat:docker" role="Stopped" active="false" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="guest01-0" resource_agent="ocf:pacemaker:remote" role="Stopped" active="false" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </replica>
     </bundle>
   </resources>

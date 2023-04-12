@@ -29,7 +29,8 @@ extern "C" {
 
 #include <crm_config.h>             // HAVE_GETPEEREID
 #include <crm/common/ipc.h>
-#include <crm/common/ipc_pacemakerd.h>  // enum pcmk_pacemakerd_state
+#include <crm/common/ipc_controld.h>    // pcmk_controld_api_reply
+#include <crm/common/ipc_pacemakerd.h>  // pcmk_pacemakerd_{api_reply,state}
 #include <crm/common/mainloop.h>    // mainloop_io_t
 
 /*
@@ -280,6 +281,9 @@ pcmk__ipc_sys_name(const char *ipc_name, const char *fallback)
 }
 
 const char *pcmk__pcmkd_state_enum2friendly(enum pcmk_pacemakerd_state state);
+
+const char *pcmk__controld_api_reply2str(enum pcmk_controld_api_reply reply);
+const char *pcmk__pcmkd_api_reply2str(enum pcmk_pacemakerd_api_reply reply);
 
 #ifdef __cplusplus
 }

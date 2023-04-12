@@ -1,15 +1,15 @@
 
 child_rsc1:0 promotion score on node1: 10
 child_rsc1:1 promotion score on node2: 400
-pcmk__clone_allocate: child_rsc1:0 allocation score on node0: -INFINITY
-pcmk__clone_allocate: child_rsc1:0 allocation score on node1: 10
-pcmk__clone_allocate: child_rsc1:0 allocation score on node2: 30
-pcmk__clone_allocate: child_rsc1:1 allocation score on node0: -INFINITY
-pcmk__clone_allocate: child_rsc1:1 allocation score on node1: 100
-pcmk__clone_allocate: child_rsc1:1 allocation score on node2: 300
-pcmk__clone_allocate: rsc1 allocation score on node0: -INFINITY
-pcmk__clone_allocate: rsc1 allocation score on node1: 0
-pcmk__clone_allocate: rsc1 allocation score on node2: 0
+pcmk__clone_assign: child_rsc1:0 allocation score on node0: -INFINITY
+pcmk__clone_assign: child_rsc1:0 allocation score on node1: 10
+pcmk__clone_assign: child_rsc1:0 allocation score on node2: 30
+pcmk__clone_assign: child_rsc1:1 allocation score on node0: -INFINITY
+pcmk__clone_assign: child_rsc1:1 allocation score on node1: 100
+pcmk__clone_assign: child_rsc1:1 allocation score on node2: 300
+pcmk__clone_assign: rsc1 allocation score on node0: -INFINITY
+pcmk__clone_assign: rsc1 allocation score on node1: 0
+pcmk__clone_assign: rsc1 allocation score on node2: 0
 pcmk__primitive_assign: child_rsc1:0 allocation score on node0: -INFINITY
 pcmk__primitive_assign: child_rsc1:0 allocation score on node1: 10
 pcmk__primitive_assign: child_rsc1:0 allocation score on node2: -INFINITY

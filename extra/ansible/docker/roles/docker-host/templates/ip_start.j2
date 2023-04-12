@@ -1,3 +1,0 @@
-offset=$(hostname | sed s/.*-//)
-export OCF_ROOT=/usr/lib/ocf/ OCF_RESKEY_ip={{ subnet }}.${offset} OCF_RESKEY_cidr_netmask=32
-/usr/lib/ocf/resource.d/heartbeat/IPaddr2 start

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2022 the Pacemaker project contributors
+ * Copyright 2013-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -39,10 +39,14 @@
  *                      PCMK__ATTRD_CMD_UPDATE_DELAY
  *     2       1.1.17   PCMK__ATTRD_CMD_CLEAR_FAILURE
  *     3       2.1.1    PCMK__ATTRD_CMD_SYNC_RESPONSE indicates remote nodes
- *     4       2.2.0    Multiple attributes can be updated in a single IPC
+ *     4       2.1.5    Multiple attributes can be updated in a single IPC
  *                      message
+ *     5       2.1.5    Peers can request confirmation of a sent message
  */
-#define ATTRD_PROTOCOL_VERSION "4"
+#define ATTRD_PROTOCOL_VERSION "5"
+
+#define ATTRD_SUPPORTS_MULTI_MESSAGE(x) ((x) >= 4)
+#define ATTRD_SUPPORTS_CONFIRMATION(x)  ((x) >= 5)
 
 #define attrd_send_ack(client, id, flags) \
     pcmk__ipc_send_ack((client), (id), (flags), "ack", ATTRD_PROTOCOL_VERSION, CRM_EX_INDETERMINATE)
@@ -52,6 +56,7 @@ void attrd_run_mainloop(void);
 
 void attrd_set_requesting_shutdown(void);
 void attrd_clear_requesting_shutdown(void);
+void attrd_free_waitlist(void);
 bool attrd_requesting_shutdown(void);
 bool attrd_shutting_down(void);
 void attrd_shutdown(int nsig);
@@ -114,7 +119,8 @@ void attrd_xml_add_writer(xmlNode *xml);
 typedef struct attribute_s {
     char *uuid; /* TODO: Remove if at all possible */
     char *id;
-    char *set;
+    char *set_id;
+    char *set_type;
     GHashTable *values;
     int update;
     int timeout_ms;
@@ -143,6 +149,7 @@ typedef struct attribute_value_s {
 
 extern crm_cluster_t *attrd_cluster;
 extern GHashTable *attributes;
+extern GHashTable *peer_protocol_vers;
 
 #define CIB_OP_TIMEOUT_S 120
 
@@ -161,7 +168,7 @@ xmlNode *attrd_client_clear_failure(pcmk__request_t *request);
 xmlNode *attrd_client_update(pcmk__request_t *request);
 xmlNode *attrd_client_refresh(pcmk__request_t *request);
 xmlNode *attrd_client_query(pcmk__request_t *request);
-gboolean attrd_send_message(crm_node_t * node, xmlNode * data);
+gboolean attrd_send_message(crm_node_t *node, xmlNode *data, bool confirm);
 
 xmlNode *attrd_add_value_xml(xmlNode *parent, const attribute_t *a,
                              const attribute_value_t *v, bool force_write);
@@ -175,11 +182,35 @@ void attrd_write_attributes(bool all, bool ignore_delay);
 void attrd_write_or_elect_attribute(attribute_t *a);
 
 extern int minimum_protocol_version;
-void attrd_update_minimum_protocol_ver(const char *value);
+void attrd_remove_peer_protocol_ver(const char *host);
+void attrd_update_minimum_protocol_ver(const char *host, const char *value);
 
 mainloop_timer_t *attrd_add_timer(const char *id, int timeout_ms, attribute_t *attr);
 
 void attrd_unregister_handlers(void);
 void attrd_handle_request(pcmk__request_t *request);
+
+enum attrd_sync_point {
+    attrd_sync_point_local,
+    attrd_sync_point_cluster,
+};
+
+typedef int (*attrd_confirmation_action_fn)(xmlNode *);
+
+void attrd_add_client_to_waitlist(pcmk__request_t *request);
+void attrd_ack_waitlist_clients(enum attrd_sync_point sync_point, const xmlNode *xml);
+int attrd_cluster_sync_point_update(xmlNode *xml);
+void attrd_do_not_expect_from_peer(const char *host);
+void attrd_do_not_wait_for_client(pcmk__client_t *client);
+void attrd_expect_confirmations(pcmk__request_t *request, attrd_confirmation_action_fn fn);
+void attrd_free_confirmations(void);
+void attrd_handle_confirmation(int callid, const char *host);
+void attrd_remove_client_from_waitlist(pcmk__client_t *client);
+const char *attrd_request_sync_point(xmlNode *xml);
+bool attrd_request_has_sync_point(xmlNode *xml);
+
+void attrd_copy_xml_attributes(xmlNode *src, xmlNode *dest);
+
+extern gboolean stand_alone;
 
 #endif /* PACEMAKER_ATTRD__H */

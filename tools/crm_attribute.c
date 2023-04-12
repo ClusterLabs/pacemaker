@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -37,7 +37,7 @@
 #include <crm/common/output_internal.h>
 #include <sys/utsname.h>
 
-#include <pcmki/pcmki_output.h>
+#include <pacemaker-internal.h>
 
 #define SUMMARY "crm_attribute - query and update Pacemaker cluster options and node attributes"
 
@@ -89,6 +89,7 @@ struct {
     gchar *attr_default;
     gchar *attr_id;
     gchar *attr_name;
+    uint32_t attr_options;
     gchar *attr_pattern;
     char *attr_value;
     char *dest_node;
@@ -158,6 +159,26 @@ value_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **
     return TRUE;
 }
 
+static gboolean
+wait_cb (const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+    if (pcmk__str_eq(optarg, "no", pcmk__str_none)) {
+        pcmk__clear_node_attr_flags(options.attr_options, pcmk__node_attr_sync_local | pcmk__node_attr_sync_cluster);
+        return TRUE;
+    } else if (pcmk__str_eq(optarg, PCMK__VALUE_LOCAL, pcmk__str_none)) {
+        pcmk__clear_node_attr_flags(options.attr_options, pcmk__node_attr_sync_local | pcmk__node_attr_sync_cluster);
+        pcmk__set_node_attr_flags(options.attr_options, pcmk__node_attr_sync_local);
+        return TRUE;
+    } else if (pcmk__str_eq(optarg, PCMK__VALUE_CLUSTER, pcmk__str_none)) {
+        pcmk__clear_node_attr_flags(options.attr_options, pcmk__node_attr_sync_local | pcmk__node_attr_sync_cluster);
+        pcmk__set_node_attr_flags(options.attr_options, pcmk__node_attr_sync_cluster);
+        return TRUE;
+    } else {
+        g_set_error(err, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                    "--wait= must be one of 'no', 'local', 'cluster'");
+        return FALSE;
+    }
+}
+
 static GOptionEntry selecting_entries[] = {
     { "id", 'i', 0, G_OPTION_ARG_STRING, &options.attr_id,
       "(Advanced) Operate on instance of specified attribute with this\n"
@@ -174,7 +195,7 @@ static GOptionEntry selecting_entries[] = {
 
     { "pattern", 'P', 0, G_OPTION_ARG_STRING, &options.attr_pattern,
       "Operate on all attributes matching this pattern\n"
-      INDENT "(with -G, or with -v/-D and -l reboot)",
+      INDENT "(with -v, -D, or -G)",
       "PATTERN"
     },
 
@@ -239,6 +260,17 @@ static GOptionEntry addl_entries[] = {
       "SECTION"
     },
 
+    { "wait", 'W', 0, G_OPTION_ARG_CALLBACK, wait_cb,
+      "Wait for some event to occur before returning.  Values are 'no' (wait\n"
+      INDENT "only for the attribute daemon to acknowledge the request),\n"
+      INDENT "'local' (wait until the change has propagated to where a local\n"
+      INDENT "query will return the request value, or the value set by a\n"
+      INDENT "later request), or 'cluster' (wait until the change has propagated\n"
+      INDENT "to where a query anywhere on the cluster will return the requested\n"
+      INDENT "value, or the value set by a later request).  Default is 'no'.\n"
+      INDENT "(with -N, and one of -D or -u)",
+      "UNTIL" },
+
     { "utilization", 'z', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, utilization_cb,
       "Set an utilization attribute for the node.",
       NULL
@@ -280,41 +312,6 @@ static GOptionEntry deprecated_entries[] = {
 };
 
 static void
-controller_event_cb(pcmk_ipc_api_t *controld_api,
-                    enum pcmk_ipc_event event_type, crm_exit_t status,
-                    void *event_data, void *user_data)
-{
-    pcmk_controld_api_reply_t *reply = event_data;
-
-    if (event_type != pcmk_ipc_event_reply) {
-        return;
-    }
-
-    if (status != CRM_EX_OK) {
-        exit_code = status;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Bad reply from controller: %s", crm_exit_str(exit_code));
-        return;
-    }
-
-    if (reply->reply_type != pcmk_controld_reply_info) {
-        exit_code = CRM_EX_PROTOCOL;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Unknown reply type %d from controller", reply->reply_type);
-        return;
-    }
-
-    if (reply->data.node_info.uname == NULL) {
-        exit_code = CRM_EX_NOHOST;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Node is not known to cluster");
-    }
-
-    exit_code = CRM_EX_OK;
-    pcmk__str_update(&options.dest_uname, reply->data.node_info.uname);
-}
-
-static void
 get_node_name_from_local(void)
 {
     char *hostname = pcmk_hostname();
@@ -330,61 +327,12 @@ get_node_name_from_local(void)
 }
 
 static int
-get_node_name_from_controller(void)
-{
-    int rc = pcmk_rc_ok;
-    pcmk_ipc_api_t *controld_api = NULL;
-
-    rc = pcmk_new_ipc_api(&controld_api, pcmk_ipc_controld);
-    if (controld_api == NULL) {
-        g_set_error(&error, PCMK__RC_ERROR, rc, "Could not connect to controller: %s",
-                    pcmk_rc_str(rc));
-        return rc;
-    }
-
-    pcmk_register_ipc_callback(controld_api, controller_event_cb, NULL);
-
-    rc = pcmk_connect_ipc(controld_api, pcmk_ipc_dispatch_sync);
-    if (rc != pcmk_rc_ok) {
-        g_set_error(&error, PCMK__RC_ERROR, rc, "Could not connect to controller: %s",
-                    pcmk_rc_str(rc));
-        pcmk_free_ipc_api(controld_api);
-        return rc;
-    }
-
-    rc = pcmk_controld_api_node_info(controld_api, 0);
-
-    if (rc != pcmk_rc_ok) {
-        g_set_error(&error, PCMK__RC_ERROR, rc, "Could not ping controller: %s",
-                    pcmk_rc_str(rc));
-    }
-
-    /* This is a synchronous call, so we have already received and processed
-     * the reply, which means controller_event_cb has been called.  If
-     * exit_code was set, return some generic error here.  The caller can
-     * then check for that and fail with exit_code.
-     */
-    if (exit_code != CRM_EX_OK) {
-        rc = pcmk_rc_error;
-    }
-
-    pcmk_disconnect_ipc(controld_api);
-    pcmk_free_ipc_api(controld_api);
-
-    return rc;
-}
-
-static int
 send_attrd_update(char command, const char *attr_node, const char *attr_name,
                   const char *attr_value, const char *attr_set,
                   const char *attr_dampen, uint32_t attr_options)
 {
     int rc = pcmk_rc_ok;
     uint32_t opts = attr_options;
-
-    if (options.attr_pattern) {
-        opts |= pcmk__node_attr_pattern;
-    }
 
     switch (command) {
         case 'D':
@@ -680,12 +628,9 @@ static bool
 pattern_used_correctly(void)
 {
     /* --pattern can only be used with:
-     * -G (query), or
-     * -v (update) or -D (delete), with till-reboot
+     * -G (query), -v (update), or -D (delete)
      */
-    return options.command == 'G' ||
-           ((options.command == 'u' || options.command == 'D') &&
-            pcmk__str_eq(options.type, XML_CIB_TAG_STATUS, pcmk__str_casei));
+    return options.command == 'G' || options.command == 'u' || options.command == 'D';
 }
 
 static bool
@@ -745,7 +690,6 @@ main(int argc, char **argv)
 {
     cib_t *the_cib = NULL;
     int is_remote_node = 0;
-    int attrd_opts = pcmk__node_attr_none;
 
     int rc = pcmk_rc_ok;
 
@@ -825,20 +769,17 @@ main(int argc, char **argv)
         }
 
         if (options.dest_uname == NULL) {
-            rc = get_node_name_from_controller();
+            char *node_name = NULL;
 
-            if (rc == pcmk_rc_error) {
-                /* The callback failed with some error condition that is stored in
-                 * exit_code.
-                 */
-                goto done;
-            } else if (rc != pcmk_rc_ok) {
-                /* get_node_name_from_controller failed in some other way.  Convert
-                 * the return code to an exit code.
-                 */
+            rc = pcmk__query_node_name(out, 0, &node_name, 0);
+
+            if (rc != pcmk_rc_ok) {
                 exit_code = pcmk_rc2exitc(rc);
+                free(node_name);
                 goto done;
             }
+            options.dest_uname = g_strdup(node_name);
+            free(node_name);
         }
 
         rc = query_node_uuid(the_cib, options.dest_uname, &options.dest_node, &is_remote_node);
@@ -860,25 +801,36 @@ main(int argc, char **argv)
     }
 
     if (options.attr_pattern) {
+        if (options.attr_name) {
+            exit_code = CRM_EX_USAGE;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Error: --name and --pattern cannot be used at the same time");
+            goto done;
+        }
+
         if (!pattern_used_correctly()) {
             exit_code = CRM_EX_USAGE;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Error: pattern can only be used with query, or with "
-                        "till-reboot update or delete");
+                        "Error: pattern can only be used with delete, query, or update");
             goto done;
         }
 
         g_free(options.attr_name);
         options.attr_name = options.attr_pattern;
+        options.attr_options |= pcmk__node_attr_pattern;
     }
 
     if (is_remote_node) {
-        attrd_opts = pcmk__node_attr_remote;
+        options.attr_options |= pcmk__node_attr_remote;
+    }
+
+    if (pcmk__str_eq(options.set_type, XML_TAG_UTILIZATION, pcmk__str_none)) {
+        options.attr_options |= pcmk__node_attr_utilization;
     }
 
     if (try_ipc_update() &&
         (send_attrd_update(options.command, options.dest_uname, options.attr_name,
-                           options.attr_value, options.set_name, NULL, attrd_opts) == pcmk_rc_ok)) {
+                           options.attr_value, options.set_name, NULL, options.attr_options) == pcmk_rc_ok)) {
         crm_info("Update %s=%s sent via pacemaker-attrd",
                  options.attr_name, ((options.command == 'D')? "<none>" : options.attr_value));
 
@@ -919,12 +871,13 @@ done:
 
     cib__clean_up_connection(&the_cib);
 
-    pcmk__output_and_clear_error(error, out);
+    pcmk__output_and_clear_error(&error, out);
 
     if (out != NULL) {
         out->finish(out, exit_code, true, NULL);
         pcmk__output_free(out);
     }
 
+    pcmk__unregister_formats();
     return crm_exit(exit_code);
 }

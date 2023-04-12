@@ -62,16 +62,15 @@ free_common_args(gpointer data) {
 GOptionContext *
 pcmk__build_arg_context(pcmk__common_args_t *common_args, const char *fmts,
                         GOptionGroup **output_group, const char *param_string) {
-    char *desc = crm_strdup_printf("Report bugs to %s\n", PACKAGE_BUGREPORT);
     GOptionContext *context;
     GOptionGroup *main_group;
 
     GOptionEntry main_entries[3] = {
         { "version", '$', 0, G_OPTION_ARG_NONE, &(common_args->version),
-          "Display software version and exit",
+          N_("Display software version and exit"),
           NULL },
         { "verbose", 'V', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, bump_verbosity,
-          "Increase debug output (may be specified multiple times)",
+          N_("Increase debug output (may be specified multiple times)"),
           NULL },
 
         { NULL }
@@ -82,22 +81,23 @@ pcmk__build_arg_context(pcmk__common_args_t *common_args, const char *fmts,
 
     context = g_option_context_new(param_string);
     g_option_context_set_summary(context, common_args->summary);
-    g_option_context_set_description(context, desc);
+    g_option_context_set_description(context,
+                                     "Report bugs to " PCMK__BUG_URL "\n");
     g_option_context_set_main_group(context, main_group);
 
     if (fmts != NULL) {
         GOptionEntry output_entries[3] = {
             { "output-as", 0, 0, G_OPTION_ARG_STRING, &(common_args->output_ty),
               NULL,
-              "FORMAT" },
+              N_("FORMAT") },
             { "output-to", 0, 0, G_OPTION_ARG_STRING, &(common_args->output_dest),
-              "Specify file name for output (or \"-\" for stdout)", "DEST" },
+              N_( "Specify file name for output (or \"-\" for stdout)"), N_("DEST") },
 
             { NULL }
         };
 
         if (*output_group == NULL) {
-            *output_group = g_option_group_new("output", "Output Options:", "Show output help", NULL, NULL);
+            *output_group = g_option_group_new("output", N_("Output Options:"), N_("Show output help"), NULL, NULL);
         }
 
         common_args->output_as_descr = crm_strdup_printf("Specify output format as one of: %s", fmts);
@@ -105,8 +105,6 @@ pcmk__build_arg_context(pcmk__common_args_t *common_args, const char *fmts,
         g_option_group_add_entries(*output_group, output_entries);
         g_option_context_add_group(context, *output_group);
     }
-
-    free(desc);
 
     // main_group is now owned by context, we don't free it here
     // cppcheck-suppress memleak
@@ -259,6 +257,14 @@ pcmk__cmdline_preproc(char *const *argv, const char *special) {
             continue;
         }
 
+        /* "-INFINITY" is almost certainly meant as a string, not as an option
+         * list
+         */
+        if (strcmp(argv[i], "-INFINITY") == 0) {
+            g_ptr_array_add(arr, g_strdup(argv[i]));
+            continue;
+        }
+
         /* This is a short argument, or perhaps several.  Iterate over it
          * and explode them out into individual arguments.
          */
@@ -305,6 +311,11 @@ pcmk__cmdline_preproc(char *const *argv, const char *special) {
                      * arguments.  Take everything through the end as its value.
                      */
                     if (*(ch+1) != '\0') {
+                        fprintf(stderr, "Deprecated argument format '-%c%s' used.\n", *ch, ch+1);
+                        fprintf(stderr, "Please use '-%c %s' instead.  "
+                                        "Support will be removed in a future release.\n",
+                                *ch, ch+1);
+
                         g_ptr_array_add(arr, g_strdup_printf("-%c", *ch));
                         g_ptr_array_add(arr, g_strdup(ch+1));
                         break;

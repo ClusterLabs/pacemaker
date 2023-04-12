@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -284,27 +284,6 @@ char *
 pcmk__format_nvpair(const char *name, const char *value, const char *units)
 {
     return crm_strdup_printf("%s=\"%s%s\"", name, value, units ? units : "");
-}
-
-/*!
- * \internal
- * \brief Format a name/time pair.
- *
- * See pcmk__format_nvpair() for more details.
- *
- * \note The caller is responsible for freeing the return value after use.
- *
- * \param[in]     name       The name for the time.
- * \param[in]     epoch_time The time to format.
- *
- * \return Newly allocated string with name/value pair
- */
-char *
-pcmk__format_named_time(const char *name, time_t epoch_time)
-{
-    const char *now_str = pcmk__epoch2str(&epoch_time);
-
-    return crm_strdup_printf("%s=\"%s\"", name, now_str ? now_str : "");
 }
 
 // XML attribute handling
@@ -967,7 +946,7 @@ pcmk__xe_get_bool_attr(const xmlNode *node, const char *name, bool *value)
         *value = ret;
         return pcmk_rc_ok;
     } else {
-        return pcmk_rc_unknown_format;
+        return pcmk_rc_bad_input;
     }
 }
 
@@ -1002,7 +981,11 @@ pcmk_format_nvpair(const char *name, const char *value,
 char *
 pcmk_format_named_time(const char *name, time_t epoch_time)
 {
-    return pcmk__format_named_time(name, epoch_time);
+    char *now_s = pcmk__epoch2str(&epoch_time, 0);
+    char *result = crm_strdup_printf("%s=\"%s\"", name, pcmk__s(now_s, ""));
+
+    free(now_s);
+    return result;
 }
 
 // LCOV_EXCL_STOP

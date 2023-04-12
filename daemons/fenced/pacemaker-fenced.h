@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the Pacemaker project contributors
+ * Copyright 2009-2023 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -223,7 +223,7 @@ int stonith_device_register(xmlNode *msg, gboolean from_cib);
 
 void stonith_device_remove(const char *id, bool from_cib);
 
-char *stonith_level_key(const xmlNode *msg, int mode);
+char *stonith_level_key(const xmlNode *msg, enum fenced_target_by);
 void fenced_register_level(xmlNode *msg, char **desc,
                            pcmk__action_result_t *result);
 void fenced_unregister_level(xmlNode *msg, char **desc,

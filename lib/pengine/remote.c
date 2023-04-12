@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the Pacemaker project contributors
+ * Copyright 2013-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -143,14 +143,16 @@ pe_foreach_guest_node(const pe_working_set_t *data_set, const pe_node_t *host,
  * \internal
  * \brief Create CIB XML for an implicit remote connection
  *
- * \param[in] parent           If not NULL, use as parent XML element
- * \param[in] uname            Name of Pacemaker Remote node
- * \param[in] container        If not NULL, use this as connection container
- * \param[in] migrateable      If not NULL, use as allow-migrate value
- * \param[in] is_managed       If not NULL, use as is-managed value
- * \param[in] start_timeout    If not NULL, use as remote connect timeout
- * \param[in] server           If not NULL, use as remote server value
- * \param[in] port             If not NULL, use as remote port value
+ * \param[in,out] parent           If not NULL, use as parent XML element
+ * \param[in]     uname            Name of Pacemaker Remote node
+ * \param[in]     container        If not NULL, use this as connection container
+ * \param[in]     migrateable      If not NULL, use as allow-migrate value
+ * \param[in]     is_managed       If not NULL, use as is-managed value
+ * \param[in]     start_timeout    If not NULL, use as remote connect timeout
+ * \param[in]     server           If not NULL, use as remote server value
+ * \param[in]     port             If not NULL, use as remote port value
+ *
+ * \return Newly created XML
  */
 xmlNode *
 pe_create_remote_xml(xmlNode *parent, const char *uname,
@@ -210,15 +212,16 @@ pe_create_remote_xml(xmlNode *parent, const char *uname,
 
 // History entry to be checked for fail count clearing
 struct check_op {
-    xmlNode *rsc_op;    // History entry XML
-    pe_resource_t *rsc; // Known resource corresponding to history entry
-    pe_node_t *node;    // Known node corresponding to history entry
+    const xmlNode *rsc_op; // History entry XML
+    pe_resource_t *rsc;    // Known resource corresponding to history entry
+    pe_node_t *node; // Known node corresponding to history entry
     enum pe_check_parameters check_type; // What needs checking
 };
 
 void
-pe__add_param_check(xmlNode *rsc_op, pe_resource_t *rsc, pe_node_t *node,
-                   enum pe_check_parameters flag, pe_working_set_t *data_set)
+pe__add_param_check(const xmlNode *rsc_op, pe_resource_t *rsc,
+                    pe_node_t *node, enum pe_check_parameters flag,
+                    pe_working_set_t *data_set)
 {
     struct check_op *check_op = NULL;
 
@@ -239,13 +242,13 @@ pe__add_param_check(xmlNode *rsc_op, pe_resource_t *rsc, pe_node_t *node,
  * \internal
  * \brief Call a function for each action to be checked for addr substitution
  *
- * \param[in] data_set  Working set for cluster
- * \param[in] cb        Function to be called
+ * \param[in,out] data_set  Working set for cluster
+ * \param[in]     cb        Function to be called
  */
 void
 pe__foreach_param_check(pe_working_set_t *data_set,
-                       void (*cb)(pe_resource_t*, pe_node_t*, xmlNode*,
-                                  enum pe_check_parameters, pe_working_set_t*))
+                       void (*cb)(pe_resource_t*, pe_node_t*, const xmlNode*,
+                                  enum pe_check_parameters))
 {
     CRM_CHECK(data_set && cb, return);
 
@@ -253,7 +256,7 @@ pe__foreach_param_check(pe_working_set_t *data_set,
         struct check_op *check_op = item->data;
 
         cb(check_op->rsc, check_op->node, check_op->rsc_op,
-           check_op->check_type, data_set);
+           check_op->check_type);
     }
 }
 

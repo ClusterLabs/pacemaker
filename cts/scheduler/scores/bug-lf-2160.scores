@@ -1,13 +1,13 @@
 
-pcmk__clone_allocate: clone-dom0-iscsi1 allocation score on cardhu: 0
-pcmk__clone_allocate: clone-dom0-iscsi1 allocation score on dualamd1: 5000
-pcmk__clone_allocate: clone-dom0-iscsi1 allocation score on dualamd3: 0
-pcmk__clone_allocate: dom0-iscsi1-cnx1:0 allocation score on cardhu: 0
-pcmk__clone_allocate: dom0-iscsi1-cnx1:0 allocation score on dualamd1: 0
-pcmk__clone_allocate: dom0-iscsi1-cnx1:0 allocation score on dualamd3: 5000
-pcmk__clone_allocate: dom0-iscsi1-cnx1:1 allocation score on cardhu: 0
-pcmk__clone_allocate: dom0-iscsi1-cnx1:1 allocation score on dualamd1: 5000
-pcmk__clone_allocate: dom0-iscsi1-cnx1:1 allocation score on dualamd3: 0
+pcmk__clone_assign: clone-dom0-iscsi1 allocation score on cardhu: 0
+pcmk__clone_assign: clone-dom0-iscsi1 allocation score on dualamd1: 5000
+pcmk__clone_assign: clone-dom0-iscsi1 allocation score on dualamd3: 0
+pcmk__clone_assign: dom0-iscsi1-cnx1:0 allocation score on cardhu: 0
+pcmk__clone_assign: dom0-iscsi1-cnx1:0 allocation score on dualamd1: 0
+pcmk__clone_assign: dom0-iscsi1-cnx1:0 allocation score on dualamd3: 5000
+pcmk__clone_assign: dom0-iscsi1-cnx1:1 allocation score on cardhu: 0
+pcmk__clone_assign: dom0-iscsi1-cnx1:1 allocation score on dualamd1: 5000
+pcmk__clone_assign: dom0-iscsi1-cnx1:1 allocation score on dualamd3: 0
 pcmk__primitive_assign: dom0-iscsi1-cnx1:0 allocation score on cardhu: 0
 pcmk__primitive_assign: dom0-iscsi1-cnx1:0 allocation score on dualamd1: -INFINITY
 pcmk__primitive_assign: dom0-iscsi1-cnx1:0 allocation score on dualamd3: 5000

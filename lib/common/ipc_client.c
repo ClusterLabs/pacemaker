@@ -404,7 +404,10 @@ pcmk_poll_ipc(const pcmk_ipc_api_t *api, int timeout_ms)
     pollfd.events = POLLIN;
     rc = poll(&pollfd, 1, timeout_ms);
     if (rc < 0) {
-        return errno;
+        /* Some UNIX systems return negative and set EAGAIN for failure to
+         * allocate memory; standardize the return code in that case
+         */
+        return (errno == EAGAIN)? ENOMEM : errno;
     } else if (rc == 0) {
         return EAGAIN;
     }
@@ -485,6 +488,7 @@ connect_without_main_loop(pcmk_ipc_api_t *api)
 int
 pcmk_connect_ipc(pcmk_ipc_api_t *api, enum pcmk_ipc_dispatch dispatch_type)
 {
+    const int n_attempts = 2;
     int rc = pcmk_rc_ok;
 
     if (api == NULL) {
@@ -507,16 +511,32 @@ pcmk_connect_ipc(pcmk_ipc_api_t *api, enum pcmk_ipc_dispatch dispatch_type)
     }
 
     api->dispatch_type = dispatch_type;
-    switch (dispatch_type) {
-        case pcmk_ipc_dispatch_main:
-            rc = connect_with_main_loop(api);
-            break;
 
-        case pcmk_ipc_dispatch_sync:
-        case pcmk_ipc_dispatch_poll:
-            rc = connect_without_main_loop(api);
+    for (int i = 0; i < n_attempts; i++) {
+        switch (dispatch_type) {
+            case pcmk_ipc_dispatch_main:
+                rc = connect_with_main_loop(api);
+                break;
+
+            case pcmk_ipc_dispatch_sync:
+            case pcmk_ipc_dispatch_poll:
+                rc = connect_without_main_loop(api);
+                break;
+        }
+
+        if (rc != EAGAIN) {
             break;
+        }
+
+        /* EAGAIN may occur due to interruption by a signal or due to some
+         * transient issue. Try one more time to be more resilient.
+         */
+        if (i < (n_attempts - 1)) {
+            crm_trace("Connection to %s IPC API failed with EAGAIN, retrying",
+                      pcmk_ipc_name(api, true));
+        }
     }
+
     if (rc != pcmk_rc_ok) {
         return rc;
     }
@@ -839,7 +859,7 @@ crm_ipc_new(const char *name, size_t max_size)
  *
  * \param[in,out] client  Connection instance obtained from crm_ipc_new()
  *
- * \return TRUE on success, FALSE otherwise (in which case errno will be set;
+ * \return true on success, false otherwise (in which case errno will be set;
  *         specifically, in case of discovering the remote side is not
  *         authentic, its value is set to ECONNABORTED).
  */
@@ -851,13 +871,18 @@ crm_ipc_connect(crm_ipc_t *client)
     pid_t found_pid = 0; uid_t found_uid = 0; gid_t found_gid = 0;
     int rv;
 
+    if (client == NULL) {
+        errno = EINVAL;
+        return false;
+    }
+
     client->need_reply = FALSE;
     client->ipc = qb_ipcc_connect(client->server_name, client->buf_size);
 
     if (client->ipc == NULL) {
         crm_debug("Could not establish %s IPC connection: %s (%d)",
                   client->server_name, pcmk_rc_str(errno), errno);
-        return FALSE;
+        return false;
     }
 
     client->pfd.fd = crm_ipc_get_fd(client);
@@ -866,7 +891,7 @@ crm_ipc_connect(crm_ipc_t *client)
         /* message already omitted */
         crm_ipc_close(client);
         errno = rv;
-        return FALSE;
+        return false;
     }
 
     rv = pcmk_daemon_user(&cl_uid, &cl_gid);
@@ -874,7 +899,7 @@ crm_ipc_connect(crm_ipc_t *client)
         /* message already omitted */
         crm_ipc_close(client);
         errno = -rv;
-        return FALSE;
+        return false;
     }
 
     if ((rv = pcmk__crm_ipc_is_authentic_process(client->ipc, client->pfd.fd, cl_uid, cl_gid,
@@ -888,7 +913,7 @@ crm_ipc_connect(crm_ipc_t *client)
                 (long long) found_gid, (long long) cl_gid);
         crm_ipc_close(client);
         errno = ECONNABORTED;
-        return FALSE;
+        return false;
 
     } else if (rv != pcmk_rc_ok) {
         crm_perror(LOG_ERR, "Could not verify authenticity of %s IPC provider",
@@ -899,7 +924,7 @@ crm_ipc_connect(crm_ipc_t *client)
         } else {
             errno = ENOTCONN;
         }
-        return FALSE;
+        return false;
     }
 
     qb_ipcc_context_set(client->ipc, client);
@@ -910,7 +935,7 @@ crm_ipc_connect(crm_ipc_t *client)
         client->buffer = calloc(1, client->max_buf_size);
         client->buf_size = client->max_buf_size;
     }
-    return TRUE;
+    return true;
 }
 
 void
@@ -1005,7 +1030,7 @@ crm_ipc_ready(crm_ipc_t *client)
 
     CRM_ASSERT(client != NULL);
 
-    if (crm_ipc_connected(client) == FALSE) {
+    if (!crm_ipc_connected(client)) {
         return -ENOTCONN;
     }
 
@@ -1100,7 +1125,7 @@ crm_ipc_read(crm_ipc_t * client)
         }
     }
 
-    if (crm_ipc_connected(client) == FALSE || client->msg_size == -ENOTCONN) {
+    if (!crm_ipc_connected(client) || client->msg_size == -ENOTCONN) {
         crm_err("Connection to %s IPC failed", client->server_name);
     }
 
@@ -1178,7 +1203,7 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
                 crm_log_xml_notice(bad, "ImpossibleReply");
                 CRM_ASSERT(hdr->qb.id <= request_id);
             }
-        } else if (crm_ipc_connected(client) == FALSE) {
+        } else if (!crm_ipc_connected(client)) {
             crm_err("%s IPC provider disconnected while waiting for message %d",
                     client->server_name, request_id);
             break;
@@ -1222,7 +1247,7 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
                    message);
         return -ENOTCONN;
 
-    } else if (crm_ipc_connected(client) == FALSE) {
+    } else if (!crm_ipc_connected(client)) {
         /* Don't even bother */
         crm_notice("Can't send %s IPC requests: Connection closed",
                    client->server_name);
@@ -1340,7 +1365,7 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
     }
 
   send_cleanup:
-    if (crm_ipc_connected(client) == FALSE) {
+    if (!crm_ipc_connected(client)) {
         crm_notice("Couldn't send %s IPC request %d: Connection closed "
                    CRM_XS " rc=%d", client->server_name, header->qb.id, rc);
 

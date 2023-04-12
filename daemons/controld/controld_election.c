@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -20,8 +20,6 @@
 
 #include <pacemaker-controld.h>
 
-extern pcmk__output_t *logger_out;
-
 static election_t *fsa_election = NULL;
 
 static gboolean
@@ -37,12 +35,27 @@ controld_election_init(const char *uname)
     fsa_election = election_init("DC", uname, 60000 /*60s*/, election_win_cb);
 }
 
+/*!
+ * \internal
+ * \brief Configure election options based on the CIB
+ *
+ * \param[in,out] options  Name/value pairs for configured options
+ */
+void
+controld_configure_election(GHashTable *options)
+{
+    const char *value = NULL;
+
+    value = g_hash_table_lookup(options, XML_CONFIG_ATTR_ELECTION_FAIL);
+    election_timeout_set_period(fsa_election, crm_parse_interval_spec(value));
+}
+
 void
 controld_remove_voter(const char *uname)
 {
     election_remove(fsa_election, uname);
 
-    if (pcmk__str_eq(uname, fsa_our_dc, pcmk__str_casei)) {
+    if (pcmk__str_eq(uname, controld_globals.dc_name, pcmk__str_casei)) {
         /* Clear any election dampening in effect. Otherwise, if the lost DC had
          * just won, an immediate new election could fizzle out with no new DC.
          */
@@ -58,13 +71,7 @@ controld_election_fini(void)
 }
 
 void
-controld_set_election_period(const char *value)
-{
-    election_timeout_set_period(fsa_election, crm_parse_interval_spec(value));
-}
-
-void
-controld_stop_election_timer(void)
+controld_stop_current_election_timeout(void)
 {
     election_timeout_stop(fsa_election);
 }
@@ -97,7 +104,7 @@ do_election_vote(long long action,
     }
 
     if (not_voting == FALSE) {
-        if (pcmk_is_set(fsa_input_register, R_STARTING)) {
+        if (pcmk_is_set(controld_globals.fsa_input_register, R_STARTING)) {
             not_voting = TRUE;
         }
     }
@@ -122,7 +129,7 @@ do_election_check(long long action,
                   enum crmd_fsa_state cur_state,
                   enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    if (fsa_state == S_ELECTION) {
+    if (controld_globals.fsa_state == S_ELECTION) {
         election_check(fsa_election);
     } else {
         crm_debug("Ignoring election check because we are not in an election");
@@ -140,7 +147,7 @@ do_election_count_vote(long long action,
     ha_msg_input_t *vote = fsa_typed_data(fsa_dt_ha_msg);
 
     if(crm_peer_cache == NULL) {
-        if (!pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
+        if (!pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
             crm_err("Internal error, no peer cache");
         }
         return;
@@ -156,10 +163,11 @@ do_election_count_vote(long long action,
         case election_lost:
             update_dc(NULL);
 
-            if (fsa_input_register & R_THE_DC) {
+            if (pcmk_is_set(controld_globals.fsa_input_register, R_THE_DC)) {
+                cib_t *cib_conn = controld_globals.cib_conn;
+
                 register_fsa_input(C_FSA_INTERNAL, I_RELEASE_DC, NULL);
-                fsa_cib_conn->cmds->set_secondary(fsa_cib_conn,
-                                                  cib_scope_local);
+                cib_conn->cmds->set_secondary(cib_conn, cib_scope_local);
 
             } else if (cur_state != S_STARTING) {
                 register_fsa_input(C_FSA_INTERNAL, I_PENDING, NULL);
@@ -183,6 +191,20 @@ feature_update_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, vo
     }
 }
 
+/*!
+ * \internal
+ * \brief Update a node attribute in the CIB during a DC takeover
+ *
+ * \param[in] name   Name of attribute to update
+ * \param[in] value  New attribute value
+ */
+#define dc_takeover_update_attr(name, value) do {                           \
+       cib__update_node_attr(controld_globals.logger_out,                   \
+                             controld_globals.cib_conn, cib_none,           \
+                             XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL, \
+                             name, value, NULL, NULL);                      \
+    } while (0)
+
 /*	 A_DC_TAKEOVER	*/
 void
 do_dc_takeover(long long action,
@@ -190,7 +212,6 @@ do_dc_takeover(long long action,
                enum crmd_fsa_state cur_state,
                enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    int rc = pcmk_ok;
     xmlNode *cib = NULL;
     const char *cluster_type = name_for_cluster_type(get_cluster_type());
     pid_t watchdog = pcmk__locate_sbd();
@@ -202,39 +223,29 @@ do_dc_takeover(long long action,
     election_reset(fsa_election);
     controld_set_fsa_input_flags(R_JOIN_OK|R_INVOKE_PE);
 
-    fsa_cib_conn->cmds->set_primary(fsa_cib_conn, cib_scope_local);
+    controld_globals.cib_conn->cmds->set_primary(controld_globals.cib_conn,
+                                                 cib_scope_local);
 
     cib = create_xml_node(NULL, XML_TAG_CIB);
     crm_xml_add(cib, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
-    fsa_cib_update(XML_TAG_CIB, cib, cib_quorum_override, rc, NULL);
-    fsa_register_cib_callback(rc, FALSE, NULL, feature_update_callback);
+    controld_update_cib(XML_TAG_CIB, cib, cib_none, feature_update_callback);
 
-    cib__update_node_attr(logger_out, fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
-                          NULL, NULL, NULL, NULL, XML_ATTR_HAVE_WATCHDOG,
-                          pcmk__btoa(watchdog), NULL, NULL);
-
-    cib__update_node_attr(logger_out, fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
-                          NULL, NULL, NULL, NULL, "dc-version",
-                          PACEMAKER_VERSION "-" BUILD_VERSION, NULL, NULL);
-
-    cib__update_node_attr(logger_out, fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
-                          NULL, NULL, NULL, NULL, "cluster-infrastructure",
-                          cluster_type, NULL, NULL);
+    dc_takeover_update_attr(XML_ATTR_HAVE_WATCHDOG, pcmk__btoa(watchdog));
+    dc_takeover_update_attr("dc-version", PACEMAKER_VERSION "-" BUILD_VERSION);
+    dc_takeover_update_attr("cluster-infrastructure", cluster_type);
 
 #if SUPPORT_COROSYNC
-    if (fsa_cluster_name == NULL && is_corosync_cluster()) {
+    if ((controld_globals.cluster_name == NULL) && is_corosync_cluster()) {
         char *cluster_name = pcmk__corosync_cluster_name();
 
-        if (cluster_name) {
-            cib__update_node_attr(logger_out, fsa_cib_conn, cib_none,
-                                  XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
-                                  "cluster-name", cluster_name, NULL, NULL);
+        if (cluster_name != NULL) {
+            dc_takeover_update_attr("cluster-name", cluster_name);
         }
         free(cluster_name);
     }
 #endif
 
-    mainloop_set_trigger(config_read);
+    controld_trigger_config();
     free_xml(cib);
 }
 
@@ -259,9 +270,9 @@ do_dc_release(long long action,
             result = I_SHUTDOWN;
         }
 #endif
-        if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
+        if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
             xmlNode *update = NULL;
-            crm_node_t *node = crm_get_peer(0, fsa_our_uname);
+            crm_node_t *node = crm_get_peer(0, controld_globals.our_nodename);
 
             pcmk__update_peer_expected(__func__, node, CRMD_JOINSTATE_DOWN);
             update = create_node_state_update(node, node_update_expected, NULL,

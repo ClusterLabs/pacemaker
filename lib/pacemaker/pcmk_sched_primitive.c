@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -71,7 +71,7 @@ static enum rsc_role_e rsc_state_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
  * \brief Function to schedule actions needed for a role change
  *
  * \param[in,out] rsc       Resource whose role is changing
- * \param[in]     node      Node where resource will be in its next role
+ * \param[in,out] node      Node where resource will be in its next role
  * \param[in]     optional  Whether scheduled actions should be optional
  */
 typedef void (*rsc_transition_fn)(pe_resource_t *rsc, pe_node_t *node,
@@ -215,7 +215,7 @@ assign_best_node(pe_resource_t *rsc, const pe_node_t *prefer)
              * it is just as good as the chosen node.
              *
              * We don't do this for unique clone instances, because
-             * distribute_children() has already assigned instances to their
+             * pcmk__assign_instances() has already assigned instances to their
              * running nodes when appropriate, and if we get here, we don't want
              * remaining unassigned instances to prefer a node that's already
              * running another instance.
@@ -287,12 +287,14 @@ apply_this_with(gpointer data, gpointer user_data)
         archive = pcmk__copy_node_table(rsc->allowed_nodes);
     }
 
-    pe_rsc_trace(rsc,
-                 "%s: Assigning colocation %s primary %s first"
-                 "(score=%d role=%s)",
-                 rsc->id, colocation->id, other->id,
-                 colocation->score, role2text(colocation->dependent_role));
-    other->cmds->assign(other, NULL);
+    if (pcmk_is_set(other->flags, pe_rsc_provisional)) {
+        pe_rsc_trace(rsc,
+                     "%s: Assigning colocation %s primary %s first"
+                     "(score=%d role=%s)",
+                     rsc->id, colocation->id, other->id,
+                     colocation->score, role2text(colocation->dependent_role));
+        other->cmds->assign(other, NULL);
+    }
 
     // Apply the colocation score to this resource's allowed node scores
     rsc->cmds->apply_coloc_score(rsc, other, colocation, true);
@@ -333,9 +335,9 @@ apply_with_this(void *data, void *user_data)
     pe_rsc_trace(rsc,
                  "%s: Incorporating attenuated %s assignment scores due "
                  "to colocation %s", rsc->id, other->id, colocation->id);
-    pcmk__add_colocated_node_scores(other, rsc->id, &rsc->allowed_nodes,
-                                    colocation->node_attribute, factor,
-                                    pcmk__coloc_select_active);
+    other->cmds->add_colocated_node_scores(other, rsc->id, &rsc->allowed_nodes,
+                                           colocation->node_attribute, factor,
+                                           pcmk__coloc_select_active);
 }
 
 /*!
@@ -385,6 +387,8 @@ remote_connection_assigned(const pe_resource_t *connection)
 pe_node_t *
 pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer)
 {
+    GList *colocations = NULL;
+
     CRM_ASSERT(rsc != NULL);
 
     // Never assign a child without parent being assigned first
@@ -409,11 +413,15 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer)
     pe__show_node_weights(true, rsc, "Pre-assignment", rsc->allowed_nodes,
                           rsc->cluster);
 
-    g_list_foreach(rsc->rsc_cons, apply_this_with, rsc);
+    colocations = pcmk__this_with_colocations(rsc);
+    g_list_foreach(colocations, apply_this_with, rsc);
+    g_list_free(colocations);
     pe__show_node_weights(true, rsc, "Post-this-with", rsc->allowed_nodes,
                           rsc->cluster);
 
-    g_list_foreach(rsc->rsc_cons_lhs, apply_with_this, rsc);
+    colocations = pcmk__with_this_colocations(rsc);
+    g_list_foreach(colocations, apply_with_this, rsc);
+    g_list_free(colocations);
 
     if (rsc->next_role == RSC_ROLE_STOPPED) {
         pe_rsc_trace(rsc,
@@ -494,7 +502,7 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer)
  * \brief Schedule actions to bring resource down and back to current role
  *
  * \param[in,out] rsc           Resource to restart
- * \param[in]     current       Node that resource should be brought down on
+ * \param[in,out] current       Node that resource should be brought down on
  * \param[in]     need_stop     Whether the resource must be stopped
  * \param[in]     need_promote  Whether the resource must be promoted
  *
@@ -645,7 +653,7 @@ pcmk__primitive_create_actions(pe_resource_t *rsc)
                  rsc->id, role2text(rsc->role), role2text(rsc->next_role),
                  next_role_source, pe__node_name(rsc->allocated_to));
 
-    current = pe__find_active_on(rsc, &num_all_active, &num_clean_active);
+    current = rsc->fns->active_node(rsc, &num_all_active, &num_clean_active);
 
     g_list_foreach(rsc->dangling_migrations, pcmk__abort_dangling_migration,
                    rsc);
@@ -844,7 +852,6 @@ allowed_nodes_as_list(const pe_resource_t *rsc)
 void
 pcmk__primitive_internal_constraints(pe_resource_t *rsc)
 {
-    pe_resource_t *top = NULL;
     GList *allowed_nodes = NULL;
     bool check_unfencing = false;
     bool check_utilization = false;
@@ -857,8 +864,6 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
                      rsc->id);
         return;
     }
-
-    top = uber_parent(rsc);
 
     // Whether resource requires unfencing
     check_unfencing = !pcmk_is_set(rsc->flags, pe_rsc_fence_device)
@@ -877,7 +882,8 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
                        rsc->cluster);
 
     // Promotable ordering: demote before stop, start before promote
-    if (pcmk_is_set(top->flags, pe_rsc_promotable)
+    if (pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
+                    pe_rsc_promotable)
         || (rsc->role > RSC_ROLE_UNPROMOTED)) {
 
         pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_DEMOTE, 0), NULL,
@@ -1047,6 +1053,44 @@ pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
     }
 }
 
+/* Primitive implementation of
+ * resource_alloc_functions_t:with_this_colocations()
+ */
+void
+pcmk__with_primitive_colocations(const pe_resource_t *rsc,
+                                 const pe_resource_t *orig_rsc, GList **list)
+{
+    // Primitives don't have children, so rsc should also be orig_rsc
+    CRM_CHECK((rsc != NULL) && (rsc->variant == pe_native)
+              && (rsc == orig_rsc) && (list != NULL),
+              return);
+
+    // Add primitive's own colocations plus any relevant ones from parent
+    pcmk__add_with_this_list(list, rsc->rsc_cons_lhs);
+    if (rsc->parent != NULL) {
+        rsc->parent->cmds->with_this_colocations(rsc->parent, rsc, list);
+    }
+}
+
+/* Primitive implementation of
+ * resource_alloc_functions_t:this_with_colocations()
+ */
+void
+pcmk__primitive_with_colocations(const pe_resource_t *rsc,
+                                 const pe_resource_t *orig_rsc, GList **list)
+{
+    // Primitives don't have children, so rsc should also be orig_rsc
+    CRM_CHECK((rsc != NULL) && (rsc->variant == pe_native)
+              && (rsc == orig_rsc) && (list != NULL),
+              return);
+
+    // Add primitive's own colocations plus any relevant ones from parent
+    pcmk__add_this_with_list(list, rsc->rsc_cons);
+    if (rsc->parent != NULL) {
+        rsc->parent->cmds->this_with_colocations(rsc->parent, rsc, list);
+    }
+}
+
 /*!
  * \internal
  * \brief Return action flags for a given primitive resource action
@@ -1171,7 +1215,7 @@ stop_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
  * \brief Schedule actions needed to start a resource on a node
  *
  * \param[in,out] rsc       Resource being started
- * \param[in]     node      Node where resource should be started
+ * \param[in,out] node      Node where resource should be started
  * \param[in]     optional  Whether actions should be optional
  */
 static void
@@ -1349,7 +1393,7 @@ pcmk__schedule_cleanup(pe_resource_t *rsc, const pe_node_t *node, bool optional)
  * \param[in,out] xml  Transition graph action attributes XML to add to
  */
 void
-pcmk__primitive_add_graph_meta(pe_resource_t *rsc, xmlNode *xml)
+pcmk__primitive_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml)
 {
     char *name = NULL;
     char *value = NULL;
@@ -1416,13 +1460,12 @@ pcmk__primitive_add_utilization(const pe_resource_t *rsc,
  * \internal
  * \brief Get epoch time of node's shutdown attribute (or now if none)
  *
- * \param[in] node      Node to check
- * \param[in] data_set  Cluster working set
+ * \param[in,out] node  Node to check
  *
  * \return Epoch time corresponding to shutdown attribute if set or now if not
  */
 static time_t
-shutdown_time(const pe_node_t *node)
+shutdown_time(pe_node_t *node)
 {
     const char *shutdown = pe_node_attribute_raw(node, XML_CIB_ATTR_SHUTDOWN);
     time_t result = 0;
@@ -1441,13 +1484,13 @@ shutdown_time(const pe_node_t *node)
  * \internal
  * \brief Ban a resource from a node if it's not locked to the node
  *
- * \param[in] data  Node to check
- * \param[in] user_data  Resource to check
+ * \param[in]     data       Node to check
+ * \param[in,out] user_data  Resource to check
  */
 static void
 ban_if_not_locked(gpointer data, gpointer user_data)
 {
-    pe_node_t *node = (pe_node_t *) data;
+    const pe_node_t *node = (const pe_node_t *) data;
     pe_resource_t *rsc = (pe_resource_t *) user_data;
 
     if (strcmp(node->details->uname, rsc->lock_node->details->uname) != 0) {

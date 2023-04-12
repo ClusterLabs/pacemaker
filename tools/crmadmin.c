@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -144,7 +144,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
                               "The TIMESPEC in any command line option can be specified in many different\n"
                               "formats.  It can be just an integer number of seconds, a number plus units\n"
                               "(ms/msec/us/usec/s/sec/m/min/h/hr), or an ISO 8601 period specification.\n\n"
-                              "Report bugs to users@clusterlabs.org";
+                              "Report bugs to " PCMK__BUG_URL;
 
     GOptionEntry extra_prog_entries[] = {
         { "quiet", 'q', 0, G_OPTION_ARG_NONE, &(args->quiet),
@@ -235,17 +235,20 @@ main(int argc, char **argv)
 
     switch (command) {
         case cmd_health:
-            rc = pcmk__controller_status(out, options.optarg, options.timeout);
+            rc = pcmk__controller_status(out, options.optarg,
+                                         (unsigned int) options.timeout);
             break;
         case cmd_pacemakerd_health:
-            rc = pcmk__pacemakerd_status(out, options.ipc_name, options.timeout,
+            rc = pcmk__pacemakerd_status(out, options.ipc_name,
+                                         (unsigned int) options.timeout, true,
                                          NULL);
             break;
         case cmd_list_nodes:
             rc = pcmk__list_nodes(out, options.optarg, options.bash_export);
             break;
         case cmd_whois_dc:
-            rc = pcmk__designated_controller(out, options.timeout);
+            rc = pcmk__designated_controller(out,
+                                             (unsigned int) options.timeout);
             break;
         case cmd_none:
             rc = pcmk_rc_error;
@@ -258,16 +261,15 @@ main(int argc, char **argv)
     }
 
 done:
-
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
 
-    pcmk__output_and_clear_error(error, out);
+    pcmk__output_and_clear_error(&error, out);
 
     if (out != NULL) {
         out->finish(out, exit_code, true, NULL);
         pcmk__output_free(out);
     }
+    pcmk__unregister_formats();
     return crm_exit(exit_code);
-
 }

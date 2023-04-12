@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -683,8 +683,7 @@ mainloop_add_ipc_server_with_prio(const char *name, enum qb_ipc_type type,
     rc = qb_ipcs_run(server);
     if (rc < 0) {
         crm_err("Could not start %s IPC server: %s (%d)", name, pcmk_strerror(rc), rc);
-        qb_ipcs_destroy(server);
-        return NULL;
+        return NULL; // qb_ipcs_run() destroys server on failure
     }
 
     return server;
@@ -768,7 +767,7 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, gpointer data)
         }
     }
 
-    if (client->ipc && crm_ipc_connected(client->ipc) == FALSE) {
+    if (client->ipc && !crm_ipc_connected(client->ipc)) {
         crm_err("Connection to %s closed " CRM_XS "client=%p condition=%d",
                 client->name, client, condition);
         rc = G_SOURCE_REMOVE;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 the Pacemaker project contributors
+ * Copyright 2012-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -105,6 +105,5 @@ void remoted_spawn_pidone(int argc, char **argv, char **envp);
 int process_lrmd_alert_exec(pcmk__client_t *client, uint32_t id,
                             xmlNode *request);
 void lrmd_drain_alerts(GMainLoop *mloop);
-void execd_exit_if_shutting_down(void);
 
 #endif // PACEMAKER_EXECD__H

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the Pacemaker project contributors
+ * Copyright 2013-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -161,24 +161,20 @@ panic_sbd(void)
 void
 pcmk__panic(const char *origin)
 {
-    static struct qb_log_callsite *panic_cs = NULL;
-
-    if (panic_cs == NULL) {
-        panic_cs = qb_log_callsite_get(__func__, __FILE__, "panic-delay",
-                                       LOG_TRACE, __LINE__, crm_trace_nonlog);
-    }
-
     /* Ensure sbd_pid is set */
     (void) pcmk__locate_sbd();
 
-    if (panic_cs && panic_cs->targets) {
-        /* getppid() == 1 means our original parent no longer exists */
-        crm_emerg("Shutting down instead of panicking the node "
-                  CRM_XS " origin=%s sbd=%lld parent=%d",
-                  origin, (long long) sbd_pid, getppid());
-        crm_exit(CRM_EX_FATAL);
-        return;
-    }
+    pcmk__if_tracing(
+        {
+            // getppid() == 1 means our original parent no longer exists
+            crm_emerg("Shutting down instead of panicking the node "
+                      CRM_XS " origin=%s sbd=%lld parent=%d",
+                      origin, (long long) sbd_pid, getppid());
+            crm_exit(CRM_EX_FATAL);
+            return;
+        },
+        {}
+    );
 
     if(sbd_pid > 1) {
         crm_emerg("Signaling sbd[%lld] to panic the system: %s",

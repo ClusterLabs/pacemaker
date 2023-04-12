@@ -94,30 +94,27 @@ calculate_xml_digest_v2(xmlNode *source, gboolean do_filter)
     char *digest = NULL;
     GString *buffer = g_string_sized_new(1024);
 
-    static struct qb_log_callsite *digest_cs = NULL;
-
     crm_trace("Begin digest %s", do_filter?"filtered":"");
-    pcmk__xml2text(source, (do_filter? xml_log_option_filtered : 0), buffer, 0);
+    pcmk__xml2text(source, (do_filter? pcmk__xml_fmt_filtered : 0), buffer, 0);
 
     CRM_ASSERT(buffer != NULL);
     digest = crm_md5sum((const char *) buffer->str);
 
-    if (digest_cs == NULL) {
-        digest_cs = qb_log_callsite_get(__func__, __FILE__, "cib-digest", LOG_TRACE, __LINE__,
-                                        crm_trace_nonlog);
-    }
-    if (digest_cs && digest_cs->targets) {
-        char *trace_file = crm_strdup_printf("%s/digest-%s",
-                                             pcmk__get_tmpdir(), digest);
+    pcmk__if_tracing(
+        {
+            char *trace_file = crm_strdup_printf("%s/digest-%s",
+                                                 pcmk__get_tmpdir(), digest);
 
-        crm_trace("Saving %s.%s.%s to %s",
-                  crm_element_value(source, XML_ATTR_GENERATION_ADMIN),
-                  crm_element_value(source, XML_ATTR_GENERATION),
-                  crm_element_value(source, XML_ATTR_NUMUPDATES), trace_file);
-        save_xml_to_file(source, "digest input", trace_file);
-        free(trace_file);
-    }
-
+            crm_trace("Saving %s.%s.%s to %s",
+                      crm_element_value(source, XML_ATTR_GENERATION_ADMIN),
+                      crm_element_value(source, XML_ATTR_GENERATION),
+                      crm_element_value(source, XML_ATTR_NUMUPDATES),
+                      trace_file);
+            save_xml_to_file(source, "digest input", trace_file);
+            free(trace_file);
+        },
+        {}
+    );
     g_string_free(buffer, TRUE);
     crm_trace("End digest");
     return digest;

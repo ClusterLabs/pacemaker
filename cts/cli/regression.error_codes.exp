@@ -145,6 +145,9 @@ pcmk_rc_node_unknown - Node not found
 =#=#=#= End test: Get negative Pacemaker return code (with name) (XML) - OK (0) =#=#=#=
 * Passed: crm_error      - Get negative Pacemaker return code (with name) (XML)
 =#=#=#= Begin test: List Pacemaker return codes (non-positive) =#=#=#=
+-1036: Bad XML patch format
+-1035: Bad input value provided
+-1034: Disabled
 -1033: Two or more XML elements have the same ID
 -1032: Unable to parse CIB XML
 -1031: Cluster simulation produced invalid transition
@@ -183,6 +186,9 @@ pcmk_rc_node_unknown - Node not found
 * Passed: crm_error      - List Pacemaker return codes (non-positive)
 =#=#=#= Begin test: List Pacemaker return codes (non-positive) (XML) =#=#=#=
 <pacemaker-result api-version="X" request="crm_error -l -r --output-as=xml">
+  <result-code code="-1036" description="Bad XML patch format"/>
+  <result-code code="-1035" description="Bad input value provided"/>
+  <result-code code="-1034" description="Disabled"/>
   <result-code code="-1033" description="Two or more XML elements have the same ID"/>
   <result-code code="-1032" description="Unable to parse CIB XML"/>
   <result-code code="-1031" description="Cluster simulation produced invalid transition"/>
@@ -221,6 +227,9 @@ pcmk_rc_node_unknown - Node not found
 =#=#=#= End test: List Pacemaker return codes (non-positive) (XML) - OK (0) =#=#=#=
 * Passed: crm_error      - List Pacemaker return codes (non-positive) (XML)
 =#=#=#= Begin test: List Pacemaker return codes (non-positive) (with names) =#=#=#=
+-1036: pcmk_rc_bad_xml_patch       Bad XML patch format
+-1035: pcmk_rc_bad_input           Bad input value provided
+-1034: pcmk_rc_disabled            Disabled
 -1033: pcmk_rc_duplicate_id        Two or more XML elements have the same ID
 -1032: pcmk_rc_unpack_error        Unable to parse CIB XML
 -1031: pcmk_rc_invalid_transition  Cluster simulation produced invalid transition
@@ -259,6 +268,9 @@ pcmk_rc_node_unknown - Node not found
 * Passed: crm_error      - List Pacemaker return codes (non-positive) (with names)
 =#=#=#= Begin test: List Pacemaker return codes (non-positive) (with names) (XML) =#=#=#=
 <pacemaker-result api-version="X" request="crm_error -n -l -r --output-as=xml">
+  <result-code code="-1036" name="pcmk_rc_bad_xml_patch" description="Bad XML patch format"/>
+  <result-code code="-1035" name="pcmk_rc_bad_input" description="Bad input value provided"/>
+  <result-code code="-1034" name="pcmk_rc_disabled" description="Disabled"/>
   <result-code code="-1033" name="pcmk_rc_duplicate_id" description="Two or more XML elements have the same ID"/>
   <result-code code="-1032" name="pcmk_rc_unpack_error" description="Unable to parse CIB XML"/>
   <result-code code="-1031" name="pcmk_rc_invalid_transition" description="Cluster simulation produced invalid transition"/>

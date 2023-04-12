@@ -246,7 +246,7 @@
         <pseudo_event id="36" operation="demote" operation_key="pgsql_demote_0" internal_operation_key="pgsql:0_demote_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="49" operation="stop" operation_key="msPostgresql_stop_0"/>
+        <pseudo_event id="45" operation="stop" operation_key="msPostgresql_stop_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="70" operation="stonith" operation_key="stonith-pgsr02-off" on_node="pgsr02" on_node_uuid="pgsr02"/>
@@ -445,7 +445,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="50" operation="stopped" operation_key="msPostgresql_stopped_0"/>
+        <pseudo_event id="46" operation="stopped" operation_key="msPostgresql_stopped_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="52" operation="notified" operation_key="msPostgresql_confirmed-pre_notify_stop_0"/>
@@ -481,7 +481,7 @@
   </synapse>
   <synapse id="32" priority="1000000">
     <action_set>
-      <pseudo_event id="50" operation="stopped" operation_key="msPostgresql_stopped_0">
+      <pseudo_event id="46" operation="stopped" operation_key="msPostgresql_stopped_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -490,13 +490,13 @@
         <pseudo_event id="37" operation="stop" operation_key="pgsql_stop_0" internal_operation_key="pgsql:0_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="49" operation="stop" operation_key="msPostgresql_stop_0"/>
+        <pseudo_event id="45" operation="stop" operation_key="msPostgresql_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="33">
     <action_set>
-      <pseudo_event id="49" operation="stop" operation_key="msPostgresql_stop_0">
+      <pseudo_event id="45" operation="stop" operation_key="msPostgresql_stop_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -33,7 +33,6 @@
 #define XML_PARSER_DEBUG 0
 #endif
 
-
 /* @TODO XML_PARSE_RECOVER allows some XML errors to be silently worked around
  * by libxml2, which is potentially ambiguous and dangerous. We should drop it
  * when we can break backward compatibility with configurations that might be
@@ -58,36 +57,6 @@ pcmk__tracking_xml_changes(xmlNode *xml, bool lazy)
         return FALSE;
     }
     return TRUE;
-}
-
-/*!
- * \internal
- * \brief Append spaces to a buffer
- *
- * Spaces are appended only if the \p xml_log_option_formatted flag is set.
- *
- * \param[in]     options  Group of \p xml_log_options flags
- * \param[in,out] buffer   Where to append the spaces (must not be \p NULL)
- * \param[in]     depth    Current indentation level
- */
-static inline void
-insert_prefix(int options, GString *buffer, int depth)
-{
-    int spaces = 0;
-
-    if (!pcmk_is_set(options, xml_log_option_formatted)) {
-        return;
-    }
-    CRM_ASSERT(buffer != NULL);
-    CRM_CHECK(depth >= 0, depth = 0);
-
-    /* With -O2, this loop is faster than one g_string_append_printf() call with
-     * width == 2 * depth
-     */
-    spaces = 2 * depth;
-    for (int lpc = 0; lpc < spaces; lpc++) {
-        g_string_append_c(buffer, ' ');
-    }
 }
 
 static inline void
@@ -407,41 +376,6 @@ pcmk__xml_match(const xmlNode *haystack, const xmlNode *needle, bool exact)
 }
 
 void
-xml_log_changes(uint8_t log_level, const char *function, xmlNode * xml)
-{
-    GList *gIter = NULL;
-    xml_doc_private_t *docpriv = NULL;
-
-    if (log_level == LOG_NEVER) {
-        return;
-    }
-
-    CRM_ASSERT(xml);
-    CRM_ASSERT(xml->doc);
-
-    docpriv = xml->doc->_private;
-    if (!pcmk_is_set(docpriv->flags, pcmk__xf_dirty)) {
-        return;
-    }
-
-    for(gIter = docpriv->deleted_objs; gIter; gIter = gIter->next) {
-        pcmk__deleted_xml_t *deleted_obj = gIter->data;
-
-        if (deleted_obj->position >= 0) {
-            do_crm_log_alias(log_level, __FILE__, function, __LINE__, "-- %s (%d)",
-                             deleted_obj->path, deleted_obj->position);
-
-        } else {
-            do_crm_log_alias(log_level, __FILE__, function, __LINE__, "-- %s",
-                             deleted_obj->path);
-        }
-    }
-
-    log_data_element(log_level, __FILE__, function, __LINE__, "+ ", xml, 0,
-                     xml_log_option_formatted|xml_log_option_dirty_add);
-}
-
-void
 xml_accept_changes(xmlNode * xml)
 {
     xmlNode *top = NULL;
@@ -510,7 +444,7 @@ find_xml_node(const xmlNode *root, const char *search_path, gboolean must_find)
  * \param[in] parent     XML element to search
  * \param[in] node_name  If not NULL, only match children of this type
  * \param[in] attr_n     If not NULL, only match children with an attribute
- *                       of this name and a value of \p attr_v
+ *                       of this name.
  * \param[in] attr_v     If \p attr_n and this are not NULL, only match children
  *                       with an attribute named \p attr_n and this value
  *
@@ -520,14 +454,16 @@ xmlNode *
 pcmk__xe_match(const xmlNode *parent, const char *node_name,
                const char *attr_n, const char *attr_v)
 {
-    /* ensure attr_v specified when attr_n is */
-    CRM_CHECK(attr_n == NULL || attr_v != NULL, return NULL);
+    CRM_CHECK(parent != NULL, return NULL);
+    CRM_CHECK(attr_v == NULL || attr_n != NULL, return NULL);
 
     for (xmlNode *child = pcmk__xml_first_child(parent); child != NULL;
          child = pcmk__xml_next(child)) {
         if (pcmk__str_eq(node_name, (const char *) (child->name),
                          pcmk__str_null_matches)
-            && ((attr_n == NULL) || attr_matches(child, attr_n, attr_v))) {
+            && ((attr_n == NULL) ||
+                (attr_v == NULL && xmlHasProp(child, (pcmkXmlStr) attr_n)) ||
+                (attr_v != NULL && attr_matches(child, attr_n, attr_v)))) {
             return child;
         }
     }
@@ -542,7 +478,7 @@ pcmk__xe_match(const xmlNode *parent, const char *node_name,
 }
 
 void
-copy_in_properties(xmlNode * target, xmlNode * src)
+copy_in_properties(xmlNode *target, const xmlNode *src)
 {
     if (src == NULL) {
         crm_warn("No node to copy properties from");
@@ -737,14 +673,6 @@ add_node_copy(xmlNode * parent, xmlNode * src_node)
     return child;
 }
 
-int
-add_node_nocopy(xmlNode * parent, const char *name, xmlNode * child)
-{
-    add_node_copy(parent, child);
-    free_xml(child);
-    return 1;
-}
-
 xmlNode *
 create_xml_node(xmlNode * parent, const char *name)
 {
@@ -831,7 +759,7 @@ free_xml_with_position(xmlNode * child, int position)
         } else if (pcmk__check_acl(child, NULL, pcmk__xf_acl_write) == FALSE) {
             GString *xpath = NULL;
 
-            pcmk__log_else(LOG_TRACE, return);
+            pcmk__if_tracing({}, return);
             xpath = pcmk__element_xpath(child);
             qb_log_from_external_source(__func__, __FILE__,
                                         "Cannot remove %s %x", LOG_TRACE,
@@ -893,37 +821,10 @@ copy_xml(xmlNode * src)
     xmlDoc *doc = xmlNewDoc((pcmkXmlStr) "1.0");
     xmlNode *copy = xmlDocCopyNode(src, doc, 1);
 
+    CRM_ASSERT(copy != NULL);
     xmlDocSetRootElement(doc, copy);
     xmlSetTreeDoc(copy, doc);
     return copy;
-}
-
-static void
-log_xmllib_err(void *ctx, const char *fmt, ...)
-G_GNUC_PRINTF(2, 3);
-
-// Log an XML library error
-static void
-log_xmllib_err(void *ctx, const char *fmt, ...)
-{
-    va_list ap;
-    static struct qb_log_callsite *xml_error_cs = NULL;
-
-    if (xml_error_cs == NULL) {
-        xml_error_cs = qb_log_callsite_get(
-            __func__, __FILE__, "xml library error", LOG_TRACE, __LINE__, crm_trace_nonlog);
-    }
-
-    va_start(ap, fmt);
-    if (xml_error_cs && xml_error_cs->targets) {
-        PCMK__XML_LOG_BASE(LOG_ERR, TRUE,
-                           crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, "xml library error",
-                                     TRUE, TRUE),
-                           "XML Error: ", fmt, ap);
-    } else {
-        PCMK__XML_LOG_BASE(LOG_ERR, TRUE, 0, "XML Error: ", fmt, ap);
-    }
-    va_end(ap);
 }
 
 xmlNode *
@@ -944,7 +845,7 @@ string2xml(const char *input)
     CRM_CHECK(ctxt != NULL, return NULL);
 
     xmlCtxtResetLastError(ctxt);
-    xmlSetGenericErrorFunc(ctxt, log_xmllib_err);
+    xmlSetGenericErrorFunc(ctxt, pcmk__log_xmllib_err);
     output = xmlCtxtReadDoc(ctxt, (pcmkXmlStr) input, NULL, NULL,
                             PCMK__XML_PARSE_OPTS);
     if (output) {
@@ -1116,7 +1017,7 @@ filename2xml(const char *filename)
     CRM_CHECK(ctxt != NULL, return NULL);
 
     xmlCtxtResetLastError(ctxt);
-    xmlSetGenericErrorFunc(ctxt, log_xmllib_err);
+    xmlSetGenericErrorFunc(ctxt, pcmk__log_xmllib_err);
 
     if (filename) {
         uncompressed = !pcmk__ends_with_ext(filename, ".bz2");
@@ -1175,10 +1076,13 @@ filename2xml(const char *filename)
 const char *
 pcmk__xe_add_last_written(xmlNode *xe)
 {
-    const char *now_str = pcmk__epoch2str(NULL);
+    char *now_s = pcmk__epoch2str(NULL, 0);
+    const char *result = NULL;
 
-    return crm_xml_add(xe, XML_CIB_ATTR_WRITTEN,
-                       now_str ? now_str : "Could not determine current time");
+    result = crm_xml_add(xe, XML_CIB_ATTR_WRITTEN,
+                         pcmk__s(now_s, "Could not determine current time"));
+    free(now_s);
+    return result;
 }
 
 /*!
@@ -1476,26 +1380,20 @@ crm_xml_escape(const char *text)
     return copy;
 }
 
-/* Keep this inline. De-inlining resulted in a 0.6% average slowdown in
- * crm_simulate on cts/scheduler/xml during testing.
- */
-
 /*!
  * \internal
  * \brief Append an XML attribute to a buffer
  *
  * \param[in]     attr     Attribute to append
- * \param[in]     options  Group of \p xml_log_options flags
  * \param[in,out] buffer   Where to append the content (must not be \p NULL)
  */
-static inline void
-dump_xml_attr(const xmlAttr *attr, int options, GString *buffer)
+static void
+dump_xml_attr(const xmlAttr *attr, GString *buffer)
 {
     char *p_value = NULL;
     const char *p_name = NULL;
     xml_node_private_t *nodepriv = NULL;
 
-    CRM_ASSERT(buffer != NULL);
     if (attr == NULL || attr->children == NULL) {
         return;
     }
@@ -1513,349 +1411,37 @@ dump_xml_attr(const xmlAttr *attr, int options, GString *buffer)
     free(p_value);
 }
 
-// Log an XML element or comment (and any children) in a formatted way
-static void
-log_xml_node_and_children(GString *buffer, int log_level, const char *file,
-                          const char *function, int line, const char *prefix,
-                          const xmlNode *data, int depth, int options)
-{
-    const char *name = NULL;
-    const char *hidden = NULL;
-
-    xmlNode *child = NULL;
-
-    CRM_ASSERT(buffer != NULL);
-
-    if ((data == NULL) || (log_level == LOG_NEVER)
-        || ((data->type != XML_COMMENT_NODE)
-            && (data->type != XML_ELEMENT_NODE))) {
-        return;
-    }
-
-    name = crm_element_name(data);
-
-    g_string_truncate(buffer, 0);
-
-    if (pcmk_is_set(options, xml_log_option_open)) {
-        insert_prefix(options, buffer, depth);
-
-        if (data->type == XML_COMMENT_NODE) {
-            pcmk__g_strcat(buffer, "<!--", (const char *) data->content, "-->",
-                           NULL);
-
-        } else {
-            pcmk__g_strcat(buffer, "<", name, NULL);
-
-            hidden = crm_element_value(data, "hidden");
-            for (xmlAttrPtr a = pcmk__xe_first_attr(data); a != NULL;
-                 a = a->next) {
-
-                xml_node_private_t *nodepriv = a->_private;
-                const char *p_name = (const char *) a->name;
-                const char *p_value = pcmk__xml_attr_value(a);
-                char *p_copy = NULL;
-
-                if (pcmk_is_set(nodepriv->flags, pcmk__xf_deleted)) {
-                    continue;
-                } else if (pcmk_any_flags_set(options,
-                                              xml_log_option_diff_plus
-                                              |xml_log_option_diff_minus)
-                           && (strcmp(XML_DIFF_MARKER, p_name) == 0)) {
-                    continue;
-
-                } else if (hidden != NULL && p_name[0] != 0 && strstr(hidden, p_name) != NULL) {
-                    p_copy = strdup("*****");
-
-                } else {
-                    p_copy = crm_xml_escape(p_value);
-                }
-
-                pcmk__g_strcat(buffer, " ", p_name, "=\"",
-                               pcmk__s(p_copy, "<null>"), "\"", NULL);
-                free(p_copy);
-            }
-
-            if(xml_has_children(data) == FALSE) {
-                g_string_append(buffer, "/>");
-
-            } else if (pcmk_is_set(options, xml_log_option_children)) {
-                g_string_append_c(buffer, '>');
-
-            } else {
-                g_string_append(buffer, "/>");
-            }
-        }
-
-        do_crm_log_alias(log_level, file, function, line, "%s %s", prefix,
-                         (const char *) buffer->str);
-    }
-
-    if(data->type == XML_COMMENT_NODE) {
-        return;
-
-    } else if(xml_has_children(data) == FALSE) {
-        return;
-
-    } else if (pcmk_is_set(options, xml_log_option_children)) {
-        for (child = pcmk__xml_first_child(data); child != NULL;
-             child = pcmk__xml_next(child)) {
-
-            log_xml_node_and_children(buffer, log_level, file, function, line,
-                                      prefix, child, depth + 1,
-                                      options|xml_log_option_open
-                                          |xml_log_option_close);
-        }
-    }
-
-    if (pcmk_is_set(options, xml_log_option_close)) {
-        g_string_truncate(buffer, 0);
-
-        insert_prefix(options, buffer, depth);
-        pcmk__g_strcat(buffer, "</", name, ">", NULL);
-
-        do_crm_log_alias(log_level, file, function, line, "%s %s", prefix,
-                         (const char *) buffer->str);
-    }
-}
-
-// Log an XML element or comment (and any children) in a formatted way
-void
-pcmk__xml_log(int log_level, const char *file, const char *function, int line,
-              const char *prefix, const xmlNode *data, int depth, int options)
-{
-    /* Allocate a buffer once, for log_xml_node_and_children() to truncate and
-     * reuse in recursive calls
-     */
-    GString *buffer = g_string_sized_new(1024);
-
-    log_xml_node_and_children(buffer, log_level, file, function, line, prefix,
-                              data, depth, options);
-
-    g_string_free(buffer, TRUE);
-}
-
-// Log XML portions that have been marked as changed
-static void
-log_xml_changes(int log_level, const char *file, const char *function, int line,
-                const char *prefix, const xmlNode *data, int depth, int options)
-{
-    xml_node_private_t *nodepriv;
-    char *prefix_m = NULL;
-    xmlNode *child = NULL;
-
-    if ((data == NULL) || (log_level == LOG_NEVER)) {
-        return;
-    }
-
-    nodepriv = data->_private;
-
-    prefix_m = strdup(prefix);
-    prefix_m[1] = '+';
-
-    if (pcmk_all_flags_set(nodepriv->flags, pcmk__xf_dirty|pcmk__xf_created)) {
-        /* Continue and log full subtree */
-        pcmk__xml_log(log_level, file, function, line, prefix_m, data, depth,
-                      options|xml_log_option_open|xml_log_option_close
-                          |xml_log_option_children);
-
-    } else if (pcmk_is_set(nodepriv->flags, pcmk__xf_dirty)) {
-        int spaces = 0;
-        char *prefix_del = NULL;
-        char *prefix_moved = NULL;
-        const char *flags = prefix;
-
-        if (pcmk_is_set(options, xml_log_option_formatted)) {
-            CRM_CHECK(depth >= 0, depth = 0);
-            spaces = 2 * depth;
-        }
-
-        prefix_del = strdup(prefix);
-        prefix_del[0] = '-';
-        prefix_del[1] = '-';
-        prefix_moved = strdup(prefix);
-        prefix_moved[1] = '~';
-
-        if (pcmk_is_set(nodepriv->flags, pcmk__xf_moved)) {
-            flags = prefix_moved;
-        } else {
-            flags = prefix;
-        }
-
-        pcmk__xml_log(log_level, file, function, line, flags, data, depth,
-                      options|xml_log_option_open);
-
-        for (xmlAttrPtr a = pcmk__xe_first_attr(data); a != NULL; a = a->next) {
-            const char *aname = (const char*) a->name;
-
-            nodepriv = a->_private;
-            if (pcmk_is_set(nodepriv->flags, pcmk__xf_deleted)) {
-                const char *value = crm_element_value(data, aname);
-                flags = prefix_del;
-                do_crm_log_alias(log_level, file, function, line,
-                                 "%s %*s @%s=%s", flags, spaces, "", aname,
-                                 value);
-
-            } else if (pcmk_is_set(nodepriv->flags, pcmk__xf_dirty)) {
-                const char *value = crm_element_value(data, aname);
-
-                if (pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
-                    flags = prefix_m;
-
-                } else if (pcmk_is_set(nodepriv->flags, pcmk__xf_modified)) {
-                    flags = prefix;
-
-                } else if (pcmk_is_set(nodepriv->flags, pcmk__xf_moved)) {
-                    flags = prefix_moved;
-
-                } else {
-                    flags = prefix;
-                }
-                do_crm_log_alias(log_level, file, function, line,
-                                 "%s %*s @%s=%s", flags, spaces, "", aname,
-                                 value);
-            }
-        }
-        free(prefix_moved);
-        free(prefix_del);
-
-        for (child = pcmk__xml_first_child(data); child != NULL;
-             child = pcmk__xml_next(child)) {
-            log_xml_changes(log_level, file, function, line, prefix, child,
-                            depth + 1, options);
-        }
-
-        pcmk__xml_log(log_level, file, function, line, prefix, data, depth,
-                      options|xml_log_option_close);
-
-    } else {
-        for (child = pcmk__xml_first_child(data); child != NULL;
-             child = pcmk__xml_next(child)) {
-            log_xml_changes(log_level, file, function, line, prefix, child,
-                            depth + 1, options);
-        }
-    }
-
-    free(prefix_m);
-
-}
-
-void
-log_data_element(int log_level, const char *file, const char *function,
-                 int line, const char *prefix, const xmlNode *data, int depth,
-                 int options)
-{
-    xmlNode *a_child = NULL;
-
-    char *prefix_m = NULL;
-
-    if (log_level == LOG_NEVER) {
-        return;
-    }
-
-    if (prefix == NULL) {
-        prefix = "";
-    }
-
-    /* Since we use the same file and line, to avoid confusing libqb, we need to use the same format strings */
-    if (data == NULL) {
-        do_crm_log_alias(log_level, file, function, line, "%s: %s", prefix,
-                         "No data to dump as XML");
-        return;
-    }
-
-    if (pcmk_is_set(options, xml_log_option_dirty_add)) {
-        log_xml_changes(log_level, file, function, line, prefix, data, depth,
-                        options);
-        return;
-    }
-
-    if (pcmk_is_set(options, xml_log_option_formatted)) {
-        if (pcmk_is_set(options, xml_log_option_diff_plus)
-            && (data->children == NULL || crm_element_value(data, XML_DIFF_MARKER))) {
-            options |= xml_log_option_diff_all;
-            prefix_m = strdup(prefix);
-            prefix_m[1] = '+';
-            prefix = prefix_m;
-
-        } else if (pcmk_is_set(options, xml_log_option_diff_minus)
-                   && (data->children == NULL || crm_element_value(data, XML_DIFF_MARKER))) {
-            options |= xml_log_option_diff_all;
-            prefix_m = strdup(prefix);
-            prefix_m[1] = '-';
-            prefix = prefix_m;
-        }
-    }
-
-    if (pcmk_is_set(options, xml_log_option_diff_short)
-               && !pcmk_is_set(options, xml_log_option_diff_all)) {
-        /* Still searching for the actual change */
-        for (a_child = pcmk__xml_first_child(data); a_child != NULL;
-             a_child = pcmk__xml_next(a_child)) {
-            log_data_element(log_level, file, function, line, prefix, a_child, depth + 1, options);
-        }
-    } else {
-        pcmk__xml_log(log_level, file, function, line, prefix, data, depth,
-                      options|xml_log_option_open|xml_log_option_close
-                          |xml_log_option_children);
-    }
-    free(prefix_m);
-}
-
-/*!
- * \internal
- * \brief Append filtered XML attributes to a buffer
- *
- * \param[in]     data     XML element whose attributes to append
- * \param[in]     options  Group of \p xml_log_options flags
- * \param[in,out] buffer   Where to append the content (must not be \p NULL)
- */
-static void
-dump_filtered_xml(const xmlNode *data, int options, GString *buffer)
-{
-    CRM_ASSERT(buffer != NULL);
-
-    for (const xmlAttr *a = pcmk__xe_first_attr(data); a != NULL; a = a->next) {
-        if (!pcmk__xa_filterable((const char *) (a->name))) {
-            dump_xml_attr(a, options, buffer);
-        }
-    }
-}
-
 /*!
  * \internal
  * \brief Append a string representation of an XML element to a buffer
  *
  * \param[in]     data     XML whose representation to append
- * \param[in]     options  Group of \p xml_log_options flags
+ * \param[in]     options  Group of \p pcmk__xml_fmt_options flags
  * \param[in,out] buffer   Where to append the content (must not be \p NULL)
  * \param[in]     depth    Current indentation level
  */
 static void
-dump_xml_element(const xmlNode *data, int options, GString *buffer, int depth)
+dump_xml_element(const xmlNode *data, uint32_t options, GString *buffer,
+                 int depth)
 {
-    const char *name = NULL;
+    const char *name = crm_element_name(data);
+    bool pretty = pcmk_is_set(options, pcmk__xml_fmt_pretty);
+    bool filtered = pcmk_is_set(options, pcmk__xml_fmt_filtered);
+    int spaces = pretty? (2 * depth) : 0;
 
-    CRM_ASSERT(buffer != NULL);
-
-    if (data == NULL) {
-        crm_trace("Nothing to dump");
-        return;
-    }
-
-    name = crm_element_name(data);
     CRM_ASSERT(name != NULL);
 
-    insert_prefix(options, buffer, depth);
+    for (int lpc = 0; lpc < spaces; lpc++) {
+        g_string_append_c(buffer, ' ');
+    }
+
     pcmk__g_strcat(buffer, "<", name, NULL);
 
-    if (options & xml_log_option_filtered) {
-        dump_filtered_xml(data, options, buffer);
+    for (const xmlAttr *attr = pcmk__xe_first_attr(data); attr != NULL;
+         attr = attr->next) {
 
-    } else {
-        for (const xmlAttr *a = pcmk__xe_first_attr(data); a != NULL;
-             a = a->next) {
-
-            dump_xml_attr(a, options, buffer);
+        if (!filtered || !pcmk__xa_filterable((const char *) (attr->name))) {
+            dump_xml_attr(attr, buffer);
         }
     }
 
@@ -1866,7 +1452,7 @@ dump_xml_element(const xmlNode *data, int options, GString *buffer, int depth)
         g_string_append_c(buffer, '>');
     }
 
-    if (pcmk_is_set(options, xml_log_option_formatted)) {
+    if (pretty) {
         g_string_append_c(buffer, '\n');
     }
 
@@ -1876,10 +1462,13 @@ dump_xml_element(const xmlNode *data, int options, GString *buffer, int depth)
             pcmk__xml2text(xChild, options, buffer, depth + 1);
         }
 
-        insert_prefix(options, buffer, depth);
+        for (int lpc = 0; lpc < spaces; lpc++) {
+            g_string_append_c(buffer, ' ');
+        }
+
         pcmk__g_strcat(buffer, "</", name, ">", NULL);
 
-        if (pcmk_is_set(options, xml_log_option_formatted)) {
+        if (pretty) {
             g_string_append_c(buffer, '\n');
         }
     }
@@ -1895,19 +1484,22 @@ dump_xml_element(const xmlNode *data, int options, GString *buffer, int depth)
  * \param[in]     depth    Current indentation level
  */
 static void
-dump_xml_text(const xmlNode *data, int options, GString *buffer, int depth)
+dump_xml_text(const xmlNode *data, uint32_t options, GString *buffer,
+              int depth)
 {
-    CRM_ASSERT(buffer != NULL);
+    /* @COMPAT: Remove when log_data_element() is removed. There are no internal
+     * code paths to this, except through the deprecated log_data_element().
+     */
+    bool pretty = pcmk_is_set(options, pcmk__xml_fmt_pretty);
+    int spaces = pretty? (2 * depth) : 0;
 
-    if (data == NULL) {
-        crm_trace("Nothing to dump");
-        return;
+    for (int lpc = 0; lpc < spaces; lpc++) {
+        g_string_append_c(buffer, ' ');
     }
 
-    insert_prefix(options, buffer, depth);
     g_string_append(buffer, (const gchar *) data->content);
 
-    if (pcmk_is_set(options, xml_log_option_formatted)) {
+    if (pretty) {
         g_string_append_c(buffer, '\n');
     }
 }
@@ -1917,25 +1509,25 @@ dump_xml_text(const xmlNode *data, int options, GString *buffer, int depth)
  * \brief Append XML CDATA content to a buffer
  *
  * \param[in]     data     XML whose content to append
- * \param[in]     options  Group of \p xml_log_options flags
+ * \param[in]     options  Group of \p pcmk__xml_fmt_options flags
  * \param[in,out] buffer   Where to append the content (must not be \p NULL)
  * \param[in]     depth    Current indentation level
  */
 static void
-dump_xml_cdata(const xmlNode *data, int options, GString *buffer, int depth)
+dump_xml_cdata(const xmlNode *data, uint32_t options, GString *buffer,
+               int depth)
 {
-    CRM_ASSERT(buffer != NULL);
+    bool pretty = pcmk_is_set(options, pcmk__xml_fmt_pretty);
+    int spaces = pretty? (2 * depth) : 0;
 
-    if (data == NULL) {
-        crm_trace("Nothing to dump");
-        return;
+    for (int lpc = 0; lpc < spaces; lpc++) {
+        g_string_append_c(buffer, ' ');
     }
 
-    insert_prefix(options, buffer, depth);
     pcmk__g_strcat(buffer, "<![CDATA[", (const char *) data->content, "]]>",
                    NULL);
 
-    if (pcmk_is_set(options, xml_log_option_formatted)) {
+    if (pretty) {
         g_string_append_c(buffer, '\n');
     }
 }
@@ -1945,24 +1537,24 @@ dump_xml_cdata(const xmlNode *data, int options, GString *buffer, int depth)
  * \brief Append an XML comment to a buffer
  *
  * \param[in]     data     XML whose content to append
- * \param[in]     options  Group of \p xml_log_options flags
+ * \param[in]     options  Group of \p pcmk__xml_fmt_options flags
  * \param[in,out] buffer   Where to append the content (must not be \p NULL)
  * \param[in]     depth    Current indentation level
  */
 static void
-dump_xml_comment(const xmlNode *data, int options, GString *buffer, int depth)
+dump_xml_comment(const xmlNode *data, uint32_t options, GString *buffer,
+                 int depth)
 {
-    CRM_ASSERT(buffer != NULL);
+    bool pretty = pcmk_is_set(options, pcmk__xml_fmt_pretty);
+    int spaces = pretty? (2 * depth) : 0;
 
-    if (data == NULL) {
-        crm_trace("Nothing to dump");
-        return;
+    for (int lpc = 0; lpc < spaces; lpc++) {
+        g_string_append_c(buffer, ' ');
     }
 
-    insert_prefix(options, buffer, depth);
     pcmk__g_strcat(buffer, "<!--", (const char *) data->content, "-->", NULL);
 
-    if (pcmk_is_set(options, xml_log_option_formatted)) {
+    if (pretty) {
         g_string_append_c(buffer, '\n');
     }
 }
@@ -1974,21 +1566,22 @@ dump_xml_comment(const xmlNode *data, int options, GString *buffer, int depth)
  * \brief Create a text representation of an XML object
  *
  * \param[in]     data     XML to convert
- * \param[in]     options  Group of \p xml_log_options flags
+ * \param[in]     options  Group of \p pcmk__xml_fmt_options flags
  * \param[in,out] buffer   Where to store the text (must not be \p NULL)
  * \param[in]     depth    Current indentation level
  */
 void
-pcmk__xml2text(xmlNodePtr data, int options, GString *buffer, int depth)
+pcmk__xml2text(xmlNodePtr data, uint32_t options, GString *buffer, int depth)
 {
-    CRM_ASSERT(buffer != NULL);
-
     if (data == NULL) {
+        crm_trace("Nothing to dump");
         return;
     }
 
-    if (!pcmk_is_set(options, xml_log_option_filtered)
-        && pcmk_is_set(options, xml_log_option_full_fledged)) {
+    CRM_ASSERT(buffer != NULL);
+    CRM_CHECK(depth >= 0, depth = 0);
+
+    if (pcmk_is_set(options, pcmk__xml_fmt_full)) {
         /* libxml's serialization reuse is a good idea, sadly we cannot
            apply it for the filtered cases (preceding filtering pass
            would preclude further reuse of such in-situ modified XML
@@ -2020,7 +1613,7 @@ pcmk__xml2text(xmlNodePtr data, int options, GString *buffer, int depth)
                opposed to libxml's raw functions) */
 
         xmlNodeDumpOutput(xml_buffer, doc, data, 0,
-                          (options & xml_log_option_formatted), NULL);
+                          pcmk_is_set(options, pcmk__xml_fmt_pretty), NULL);
         /* attempt adding final NL - failing shouldn't be fatal here */
         (void) xmlOutputBufferWrite(xml_buffer, sizeof("\n") - 1, "\n");
         if (xml_buffer->buffer != NULL) {
@@ -2048,8 +1641,12 @@ pcmk__xml2text(xmlNodePtr data, int options, GString *buffer, int depth)
             dump_xml_element(data, options, buffer, depth);
             break;
         case XML_TEXT_NODE:
-            /* if option xml_log_option_text is enabled, then dump XML_TEXT_NODE */
-            if (options & xml_log_option_text) {
+            if (pcmk_is_set(options, pcmk__xml_fmt_text)) {
+                /* @COMPAT: Remove when log_data_element() is removed. There are
+                 * no other internal code paths that set pcmk__xml_fmt_text.
+                 * Keep an empty case handler so that we don't log an unhandled
+                 * type warning.
+                 */
                 dump_xml_text(data, options, buffer, depth);
             }
             break;
@@ -2091,14 +1688,11 @@ dump_xml_formatted_with_text(xmlNode * an_xml_node)
     char *buffer = NULL;
     GString *g_buffer = g_string_sized_new(1024);
 
-    pcmk__xml2text(an_xml_node,
-                   xml_log_option_formatted|xml_log_option_full_fledged,
+    pcmk__xml2text(an_xml_node, pcmk__xml_fmt_pretty|pcmk__xml_fmt_full,
                    g_buffer, 0);
 
-    if (g_buffer != NULL) {
-        buffer = strdup((const char *) g_buffer->str);
-        g_string_free(g_buffer, TRUE);
-    }
+    pcmk__str_update(&buffer, g_buffer->str);
+    g_string_free(g_buffer, TRUE);
     return buffer;
 }
 
@@ -2108,12 +1702,10 @@ dump_xml_formatted(xmlNode * an_xml_node)
     char *buffer = NULL;
     GString *g_buffer = g_string_sized_new(1024);
 
-    pcmk__xml2text(an_xml_node, xml_log_option_formatted, g_buffer, 0);
+    pcmk__xml2text(an_xml_node, pcmk__xml_fmt_pretty, g_buffer, 0);
 
-    if (g_buffer != NULL) {
-        buffer = strdup((const char *) g_buffer->str);
-        g_string_free(g_buffer, TRUE);
-    }
+    pcmk__str_update(&buffer, g_buffer->str);
+    g_string_free(g_buffer, TRUE);
     return buffer;
 }
 
@@ -2125,10 +1717,8 @@ dump_xml_unformatted(xmlNode * an_xml_node)
 
     pcmk__xml2text(an_xml_node, 0, g_buffer, 0);
 
-    if (g_buffer != NULL) {
-        buffer = strdup((const char *) g_buffer->str);
-        g_string_free(g_buffer, TRUE);
-    }
+    pcmk__str_update(&buffer, g_buffer->str);
+    g_string_free(g_buffer, TRUE);
     return buffer;
 }
 
@@ -2508,6 +2098,7 @@ xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml)
     xml_calculate_changes(old_xml, new_xml);
 }
 
+// Called functions may set the \p pcmk__xf_skip flag on parts of \p old_xml
 void
 xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
 {
@@ -2643,7 +2234,7 @@ pcmk__xc_update(xmlNode *parent, xmlNode *target, xmlNode *update)
  * \param[in]     update   Make the desired XML match this (must not be NULL)
  * \param[in]     as_diff  If false, expand "++" when making attributes match
  *
- * \note At least one of \parent and \target must be non-NULL
+ * \note At least one of \p parent and \p target must be non-NULL
  */
 void
 pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
@@ -3016,7 +2607,8 @@ expand_idref(xmlNode * input, xmlNode * top)
     ref = crm_element_value(result, XML_ATTR_IDREF);
 
     if (ref != NULL) {
-        char *xpath_string = crm_strdup_printf("//%s[@id='%s']", tag, ref);
+        char *xpath_string = crm_strdup_printf("//%s[@" XML_ATTR_ID "='%s']",
+                                               tag, ref);
 
         result = get_xpath_object(xpath_string, top, LOG_ERR);
         if (result == NULL) {
@@ -3147,6 +2739,14 @@ void
 crm_destroy_xml(gpointer data)
 {
     free_xml(data);
+}
+
+int
+add_node_nocopy(xmlNode *parent, const char *name, xmlNode *child)
+{
+    add_node_copy(parent, child);
+    free_xml(child);
+    return 1;
 }
 
 // LCOV_EXCL_STOP

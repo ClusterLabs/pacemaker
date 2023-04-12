@@ -159,7 +159,7 @@ pcmk__read_series_sequence(const char *directory, const char *series,
     }
     errno = 0;
     if (fscanf(fp, "%u", seq) != 1) {
-        rc = (errno == 0)? pcmk_rc_unknown_format : errno;
+        rc = (errno == 0)? ENODATA : errno;
         crm_debug("Could not read sequence number from series file %s: %s",
                   series_file, pcmk_rc_str(rc));
         fclose(fp);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -72,6 +72,34 @@ cib_process_query(const char *op, int options, const char *section, xmlNode * re
     return result;
 }
 
+static int
+update_counter(xmlNode *xml_obj, const char *field, bool reset)
+{
+    char *new_value = NULL;
+    char *old_value = NULL;
+    int int_value = -1;
+
+    if (!reset && crm_element_value(xml_obj, field) != NULL) {
+        old_value = crm_element_value_copy(xml_obj, field);
+    }
+    if (old_value != NULL) {
+        int_value = atoi(old_value);
+        new_value = pcmk__itoa(++int_value);
+    } else {
+        new_value = strdup("1");
+        CRM_ASSERT(new_value != NULL);
+    }
+
+    crm_trace("Update %s from %s to %s",
+              field, pcmk__s(old_value, "unset"), new_value);
+    crm_xml_add(xml_obj, field, new_value);
+
+    free(new_value);
+    free(old_value);
+
+    return pcmk_ok;
+}
+
 int
 cib_process_erase(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                   xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
@@ -84,7 +112,7 @@ cib_process_erase(const char *op, int options, const char *section, xmlNode * re
     *result_cib = createEmptyCib(0);
 
     copy_in_properties(*result_cib, existing_cib);
-    cib_update_counter(*result_cib, XML_ATTR_GENERATION_ADMIN, FALSE);
+    update_counter(*result_cib, XML_ATTR_GENERATION_ADMIN, false);
 
     return result;
 }
@@ -115,9 +143,9 @@ cib_process_upgrade(const char *op, int options, const char *section, xmlNode * 
     rc = update_validation(result_cib, &new_version, max_version, TRUE,
                            !(options & cib_verbose));
     if (new_version > current_version) {
-        cib_update_counter(*result_cib, XML_ATTR_GENERATION_ADMIN, FALSE);
-        cib_update_counter(*result_cib, XML_ATTR_GENERATION, TRUE);
-        cib_update_counter(*result_cib, XML_ATTR_NUMUPDATES, TRUE);
+        update_counter(*result_cib, XML_ATTR_GENERATION_ADMIN, false);
+        update_counter(*result_cib, XML_ATTR_GENERATION, true);
+        update_counter(*result_cib, XML_ATTR_NUMUPDATES, true);
         return pcmk_ok;
     }
 
@@ -134,37 +162,9 @@ cib_process_bump(const char *op, int options, const char *section, xmlNode * req
               pcmk__s(crm_element_value(existing_cib, XML_ATTR_GENERATION), ""));
 
     *answer = NULL;
-    cib_update_counter(*result_cib, XML_ATTR_GENERATION, FALSE);
+    update_counter(*result_cib, XML_ATTR_GENERATION, false);
 
     return result;
-}
-
-int
-cib_update_counter(xmlNode * xml_obj, const char *field, gboolean reset)
-{
-    char *new_value = NULL;
-    char *old_value = NULL;
-    int int_value = -1;
-
-    if (reset == FALSE && crm_element_value(xml_obj, field) != NULL) {
-        old_value = crm_element_value_copy(xml_obj, field);
-    }
-    if (old_value != NULL) {
-        int_value = atoi(old_value);
-        new_value = pcmk__itoa(++int_value);
-    } else {
-        new_value = strdup("1");
-        CRM_ASSERT(new_value != NULL);
-    }
-
-    crm_trace("Update %s from %s to %s",
-              field, pcmk__s(old_value, "unset"), new_value);
-    crm_xml_add(xml_obj, field, new_value);
-
-    free(new_value);
-    free(old_value);
-
-    return pcmk_ok;
 }
 
 int
@@ -401,7 +401,8 @@ update_cib_object(xmlNode * parent, xmlNode * update)
 
     object_id = ID(update);
     crm_trace("Processing update for <%s%s%s%s>", object_name,
-              ((object_id == NULL)? "" : " id='"), pcmk__s(object_id, ""),
+              ((object_id == NULL)? "" : " " XML_ATTR_ID "='"),
+              pcmk__s(object_id, ""),
               ((object_id == NULL)? "" : "'"));
 
     if (object_id == NULL) {
@@ -417,9 +418,11 @@ update_cib_object(xmlNode * parent, xmlNode * update)
     }
 
     crm_trace("Found node <%s%s%s%s> to update", object_name,
-              ((object_id == NULL)? "" : " id='"), pcmk__s(object_id, ""),
+              ((object_id == NULL)? "" : " " XML_ATTR_ID "='"),
+              pcmk__s(object_id, ""),
               ((object_id == NULL)? "" : "'"));
 
+    // @COMPAT: XML_CIB_ATTR_REPLACE is unused internally. Remove at break.
     replace = crm_element_value(update, XML_CIB_ATTR_REPLACE);
     if (replace != NULL) {
         xmlNode *remove = NULL;
@@ -457,12 +460,15 @@ update_cib_object(xmlNode * parent, xmlNode * update)
     copy_in_properties(target, update);
 
     if (xml_acl_denied(target)) {
-        crm_notice("Cannot update <%s id=%s>", pcmk__s(object_name, "<null>"), pcmk__s(object_id, "<null>"));
+        crm_notice("Cannot update <%s " XML_ATTR_ID "=%s>",
+                   pcmk__s(object_name, "<null>"),
+                   pcmk__s(object_id, "<null>"));
         return -EACCES;
     }
 
     crm_trace("Processing children of <%s%s%s%s>", object_name,
-              ((object_id == NULL)? "" : " id='"), pcmk__s(object_id, ""),
+              ((object_id == NULL)? "" : " " XML_ATTR_ID "='"),
+              pcmk__s(object_id, ""),
               ((object_id == NULL)? "" : "'"));
 
     for (a_child = pcmk__xml_first_child(update); a_child != NULL;
@@ -470,7 +476,7 @@ update_cib_object(xmlNode * parent, xmlNode * update)
         int tmp_result = 0;
 
         crm_trace("Updating child <%s%s%s%s>", crm_element_name(a_child),
-                  ((ID(a_child) == NULL)? "" : " id='"),
+                  ((ID(a_child) == NULL)? "" : " " XML_ATTR_ID "='"),
                   pcmk__s(ID(a_child), ""), ((ID(a_child) == NULL)? "" : "'"));
 
         tmp_result = update_cib_object(target, a_child);
@@ -479,7 +485,7 @@ update_cib_object(xmlNode * parent, xmlNode * update)
         if (tmp_result != pcmk_ok) {
             crm_err("Error updating child <%s%s%s%s>",
                     crm_element_name(a_child),
-                    ((ID(a_child) == NULL)? "" : " id='"),
+                    ((ID(a_child) == NULL)? "" : " " XML_ATTR_ID "='"),
                     pcmk__s(ID(a_child), ""),
                     ((ID(a_child) == NULL)? "" : "'"));
 
@@ -490,7 +496,8 @@ update_cib_object(xmlNode * parent, xmlNode * update)
     }
 
     crm_trace("Finished handling update for <%s%s%s%s>", object_name,
-              ((object_id == NULL)? "" : " id='"), pcmk__s(object_id, ""),
+              ((object_id == NULL)? "" : " " XML_ATTR_ID "='"),
+              pcmk__s(object_id, ""),
               ((object_id == NULL)? "" : "'"));
 
     return result;
@@ -515,7 +522,8 @@ add_cib_object(xmlNode * parent, xmlNode * new_obj)
     object_id = ID(new_obj);
 
     crm_trace("Processing creation of <%s%s%s%s>", object_name,
-              ((object_id == NULL)? "" : " id='"), pcmk__s(object_id, ""),
+              ((object_id == NULL)? "" : " " XML_ATTR_ID "='"),
+              pcmk__s(object_id, ""),
               ((object_id == NULL)? "" : "'"));
 
     if (object_id == NULL) {
@@ -529,6 +537,33 @@ add_cib_object(xmlNode * parent, xmlNode * new_obj)
     }
 
     return update_cib_object(parent, new_obj);
+}
+
+static bool
+update_results(xmlNode *failed, xmlNode *target, const char *operation,
+               int return_code)
+{
+    xmlNode *xml_node = NULL;
+    bool was_error = false;
+    const char *error_msg = NULL;
+
+    if (return_code != pcmk_ok) {
+        error_msg = pcmk_strerror(return_code);
+
+        was_error = true;
+        xml_node = create_xml_node(failed, XML_FAIL_TAG_CIB);
+        add_node_copy(xml_node, target);
+
+        crm_xml_add(xml_node, XML_FAILCIB_ATTR_ID, ID(target));
+        crm_xml_add(xml_node, XML_FAILCIB_ATTR_OBJTYPE, TYPE(target));
+        crm_xml_add(xml_node, XML_FAILCIB_ATTR_OP, operation);
+        crm_xml_add(xml_node, XML_FAILCIB_ATTR_REASON, error_msg);
+
+        crm_warn("Action %s failed: %s (cde=%d)",
+                 operation, error_msg, return_code);
+    }
+
+    return was_error;
 }
 
 int
@@ -616,11 +651,12 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
     return xml_apply_patchset(*result_cib, input, TRUE);
 }
 
-gboolean
-cib_config_changed(xmlNode * last, xmlNode * next, xmlNode ** diff)
+// @COMPAT: v1-only
+bool
+cib__config_changed_v1(xmlNode *last, xmlNode *next, xmlNode **diff)
 {
     int lpc = 0, max = 0;
-    gboolean config_changes = FALSE;
+    bool config_changes = false;
     xmlXPathObject *xpathObj = NULL;
     int format = 1;
 
@@ -635,12 +671,11 @@ cib_config_changed(xmlNode * last, xmlNode * next, xmlNode ** diff)
     }
 
     crm_element_value_int(*diff, "format", &format);
-    /* This function only applies to v1 diffs. */
     CRM_LOG_ASSERT(format == 1);
 
     xpathObj = xpath_search(*diff, "//" XML_CIB_TAG_CONFIGURATION);
     if (numXpathResults(xpathObj) > 0) {
-        config_changes = TRUE;
+        config_changes = true;
         goto done;
     }
     freeXpathObject(xpathObj);
@@ -657,28 +692,28 @@ cib_config_changed(xmlNode * last, xmlNode * next, xmlNode ** diff)
         xmlNode *top = getXpathResult(xpathObj, lpc);
 
         if (crm_element_value(top, XML_ATTR_GENERATION) != NULL) {
-            config_changes = TRUE;
+            config_changes = true;
             goto done;
         }
         if (crm_element_value(top, XML_ATTR_GENERATION_ADMIN) != NULL) {
-            config_changes = TRUE;
+            config_changes = true;
             goto done;
         }
 
         if (crm_element_value(top, XML_ATTR_VALIDATION) != NULL) {
-            config_changes = TRUE;
+            config_changes = true;
             goto done;
         }
         if (crm_element_value(top, XML_ATTR_CRM_VERSION) != NULL) {
-            config_changes = TRUE;
+            config_changes = true;
             goto done;
         }
         if (crm_element_value(top, "remote-clear-port") != NULL) {
-            config_changes = TRUE;
+            config_changes = true;
             goto done;
         }
         if (crm_element_value(top, "remote-tls-port") != NULL) {
-            config_changes = TRUE;
+            config_changes = true;
             goto done;
         }
     }
@@ -786,12 +821,13 @@ cib_process_xpath(const char *op, int options, const char *section,
                     char *new_path = NULL;
 
                     if (id) {
-                        new_path = crm_strdup_printf("/%s[@id='%s']%s",
+                        new_path = crm_strdup_printf("/%s[@" XML_ATTR_ID "='%s']"
+                                                     "%s",
                                                      parent->name, id,
-                                                     (path? path : ""));
+                                                     pcmk__s(path, ""));
                     } else {
                         new_path = crm_strdup_printf("/%s%s", parent->name,
-                                                     (path? path : ""));
+                                                     pcmk__s(path, ""));
                     }
                     free(path);
                     path = new_path;
@@ -830,30 +866,4 @@ cib_process_xpath(const char *op, int options, const char *section,
 
     freeXpathObject(xpathObj);
     return rc;
-}
-
-/* remove this function */
-gboolean
-update_results(xmlNode * failed, xmlNode * target, const char *operation, int return_code)
-{
-    xmlNode *xml_node = NULL;
-    gboolean was_error = FALSE;
-    const char *error_msg = NULL;
-
-    if (return_code != pcmk_ok) {
-        error_msg = pcmk_strerror(return_code);
-
-        was_error = TRUE;
-        xml_node = create_xml_node(failed, XML_FAIL_TAG_CIB);
-        add_node_copy(xml_node, target);
-
-        crm_xml_add(xml_node, XML_FAILCIB_ATTR_ID, ID(target));
-        crm_xml_add(xml_node, XML_FAILCIB_ATTR_OBJTYPE, TYPE(target));
-        crm_xml_add(xml_node, XML_FAILCIB_ATTR_OP, operation);
-        crm_xml_add(xml_node, XML_FAILCIB_ATTR_REASON, error_msg);
-
-        crm_warn("Action %s failed: %s (cde=%d)", operation, error_msg, return_code);
-    }
-
-    return was_error;
 }

@@ -1,6 +1,6 @@
 /*
  * Original copyright 2004 International Business Machines
- * Later changes copyright 2008-2022 the Pacemaker project contributors
+ * Later changes copyright 2008-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -154,9 +154,11 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     xmlNode *local_diff = NULL;
 
     const char *new_version = NULL;
-    static struct qb_log_callsite *diff_cs = NULL;
     const char *user = crm_element_value(req, F_CIB_USER);
     bool with_digest = FALSE;
+
+    pcmk__output_t *out = NULL;
+    int out_rc = pcmk_rc_no_output;
 
     crm_trace("Begin %s%s%s op",
               (pcmk_is_set(call_options, cib_dryrun)? "dry run of " : ""),
@@ -320,39 +322,68 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         local_diff = xml_create_patchset(0, current_cib, scratch, (bool*)config_changed, manage_counters);
     }
 
-    xml_log_changes(LOG_TRACE, __func__, scratch);
+    // Create a log output object only if we're going to use it
+    pcmk__if_tracing(
+        {
+            rc = pcmk_rc2legacy(pcmk__log_output_new(&out));
+            CRM_CHECK(rc == pcmk_ok, goto done);
+
+            pcmk__output_set_log_level(out, LOG_TRACE);
+            out_rc = pcmk__xml_show_changes(out, scratch);
+        },
+        {}
+    );
     xml_accept_changes(scratch);
 
-    if (diff_cs == NULL) {
-        diff_cs = qb_log_callsite_get(__PRETTY_FUNCTION__, __FILE__, "diff-validation", LOG_DEBUG, __LINE__, crm_trace_nonlog);
-    }
-
     if(local_diff) {
+        int temp_rc = pcmk_rc_no_output;
+
         patchset_process_digest(local_diff, current_cib, scratch, with_digest);
 
-        xml_log_patchset(LOG_INFO, __func__, local_diff);
+        if (out == NULL) {
+            rc = pcmk_rc2legacy(pcmk__log_output_new(&out));
+            CRM_CHECK(rc == pcmk_ok, goto done);
+        }
+        pcmk__output_set_log_level(out, LOG_INFO);
+        temp_rc = out->message(out, "xml-patchset", local_diff);
+        out_rc = pcmk__output_select_rc(rc, temp_rc);
+
         crm_log_xml_trace(local_diff, "raw patch");
     }
 
-    if (!pcmk_is_set(call_options, cib_zero_copy) // Original to compare against doesn't exist
-        && local_diff
-        && crm_is_callsite_active(diff_cs, LOG_TRACE, 0)) {
+    if (out != NULL) {
+        out->finish(out, pcmk_rc2exitc(out_rc), true, NULL);
+        pcmk__output_free(out);
+        out = NULL;
+    }
 
-        /* Validate the calculated patch set */
-        int test_rc, format = 1;
-        xmlNode * c = copy_xml(current_cib);
+    if (!pcmk_is_set(call_options, cib_zero_copy) && (local_diff != NULL)) {
+        // Original to compare against doesn't exist
+        pcmk__if_tracing(
+            {
+                // Validate the calculated patch set
+                int test_rc = pcmk_ok;
+                int format = 1;
+                xmlNode *cib_copy = copy_xml(current_cib);
 
-        crm_element_value_int(local_diff, "format", &format);
-        test_rc = xml_apply_patchset(c, local_diff, manage_counters);
+                crm_element_value_int(local_diff, "format", &format);
+                test_rc = xml_apply_patchset(cib_copy, local_diff,
+                                             manage_counters);
 
-        if(test_rc != pcmk_ok) {
-            save_xml_to_file(c,           "PatchApply:calculated", NULL);
-            save_xml_to_file(current_cib, "PatchApply:input", NULL);
-            save_xml_to_file(scratch,     "PatchApply:actual", NULL);
-            save_xml_to_file(local_diff,  "PatchApply:diff", NULL);
-            crm_err("v%d patchset error, patch failed to apply: %s (%d)", format, pcmk_strerror(test_rc), test_rc);
-        }
-        free_xml(c);
+                if (test_rc != pcmk_ok) {
+                    save_xml_to_file(cib_copy, "PatchApply:calculated", NULL);
+                    save_xml_to_file(current_cib, "PatchApply:input", NULL);
+                    save_xml_to_file(scratch, "PatchApply:actual", NULL);
+                    save_xml_to_file(local_diff, "PatchApply:diff", NULL);
+                    crm_err("v%d patchset error, patch failed to apply: %s "
+                            "(%d)",
+                            format, pcmk_rc_str(pcmk_legacy2rc(test_rc)),
+                            test_rc);
+                }
+                free_xml(cib_copy);
+            },
+            {}
+        );
     }
 
     if (pcmk__str_eq(section, XML_CIB_TAG_STATUS, pcmk__str_casei)) {
@@ -434,18 +465,17 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
 }
 
 xmlNode *
-cib_create_op(int call_id, const char *token, const char *op, const char *host, const char *section,
-              xmlNode * data, int call_options, const char *user_name)
+cib_create_op(int call_id, const char *op, const char *host,
+              const char *section, xmlNode *data, int call_options,
+              const char *user_name)
 {
     xmlNode *op_msg = create_xml_node(NULL, "cib_command");
 
     CRM_CHECK(op_msg != NULL, return NULL);
-    CRM_CHECK(token != NULL, return NULL);
 
     crm_xml_add(op_msg, F_XML_TAGNAME, "cib_command");
 
     crm_xml_add(op_msg, F_TYPE, T_CIB);
-    crm_xml_add(op_msg, F_CIB_CALLBACK_TOKEN, token);
     crm_xml_add(op_msg, F_CIB_OPERATION, op);
     crm_xml_add(op_msg, F_CIB_HOST, host);
     crm_xml_add(op_msg, F_CIB_SECTION, section);
@@ -583,8 +613,8 @@ cib_metadata(void)
     g_free(s);
 }
 
-void
-verify_cib_options(GHashTable * options)
+static void
+verify_cib_options(GHashTable *options)
 {
     pcmk__validate_cluster_options(options, cib_opts, PCMK__NELEM(cib_opts));
 }
@@ -621,27 +651,6 @@ cib_read_config(GHashTable * options, xmlNode * current_cib)
     crm_time_free(now);
 
     return TRUE;
-}
-
-/* v2 and v2 patch formats */
-#define XPATH_CONFIG_CHANGE \
-    "//" XML_CIB_TAG_CRMCONFIG " | " \
-    "//" XML_DIFF_CHANGE "[contains(@" XML_DIFF_PATH ",'/" XML_CIB_TAG_CRMCONFIG "/')]"
-
-gboolean
-cib_internal_config_changed(xmlNode *diff)
-{
-    gboolean changed = FALSE;
-
-    if (diff) {
-        xmlXPathObject *xpathObj = xpath_search(diff, XPATH_CONFIG_CHANGE);
-
-        if (numXpathResults(xpathObj) > 0) {
-            changed = TRUE;
-        }
-        freeXpathObject(xpathObj);
-    }
-    return changed;
 }
 
 int
@@ -692,7 +701,16 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
     }
 
     if (level > LOG_CRIT) {
-        xml_log_patchset(level, "Config update", diff);
+        pcmk__output_t *out = NULL;
+
+        rc = pcmk_rc2legacy(pcmk__log_output_new(&out));
+        CRM_CHECK(rc == pcmk_ok, return rc);
+
+        pcmk__output_set_log_level(out, level);
+        rc = out->message(out, "xml-patchset", diff);
+        out->finish(out, pcmk_rc2exitc(rc), true, NULL);
+        pcmk__output_free(out);
+        rc = pcmk_ok;
     }
 
     if (input != NULL) {
@@ -715,8 +733,16 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
     return rc;
 }
 
+#define log_signon_query_err(out, fmt, args...) do {    \
+        if (out != NULL) {                              \
+            out->err(out, fmt, ##args);                 \
+        } else {                                        \
+            crm_err(fmt, ##args);                       \
+        }                                               \
+    } while (0)
+
 int
-cib__signon_query(cib_t **cib, xmlNode **cib_object)
+cib__signon_query(pcmk__output_t *out, cib_t **cib, xmlNode **cib_object)
 {
     int rc = pcmk_rc_ok;
     cib_t *cib_conn = NULL;
@@ -726,7 +752,9 @@ cib__signon_query(cib_t **cib, xmlNode **cib_object)
     if (cib == NULL) {
         cib_conn = cib_new();
     } else {
-        *cib = cib_new();
+        if (*cib == NULL) {
+            *cib = cib_new();
+        }
         cib_conn = *cib;
     }
 
@@ -734,19 +762,34 @@ cib__signon_query(cib_t **cib, xmlNode **cib_object)
         return ENOMEM;
     }
 
-    rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
-    rc = pcmk_legacy2rc(rc);
-
-    if (rc == pcmk_rc_ok) {
-        rc = cib_conn->cmds->query(cib_conn, NULL, cib_object, cib_scope_local | cib_sync_call);
+    if (cib_conn->state == cib_disconnected) {
+        rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
         rc = pcmk_legacy2rc(rc);
     }
 
+    if (rc != pcmk_rc_ok) {
+        log_signon_query_err(out, "Could not connect to the CIB: %s",
+                             pcmk_rc_str(rc));
+        goto done;
+    }
+
+    if (out != NULL) {
+        out->transient(out, "Querying CIB...");
+    }
+    rc = cib_conn->cmds->query(cib_conn, NULL, cib_object,
+                               cib_scope_local|cib_sync_call);
+    rc = pcmk_legacy2rc(rc);
+
+    if (rc != pcmk_rc_ok) {
+        log_signon_query_err(out, "CIB query failed: %s", pcmk_rc_str(rc));
+    }
+
+done:
     if (cib == NULL) {
         cib__clean_up_connection(&cib_conn);
     }
 
-    if (*cib_object == NULL) {
+    if ((rc == pcmk_rc_ok) && (*cib_object == NULL)) {
         return pcmk_rc_no_input;
     }
     return rc;

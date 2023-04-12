@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <!-- Output of the crm_shadow command -->
+    <start>
+        <ref name="element-crm-shadow" />
+    </start>
+
+    <define name="element-crm-shadow">
+        <optional>
+            <choice>
+                <externalRef href="instruction-2.30.rng" />
+                <ref name="element-shadow" />
+            </choice>
+        </optional>
+    </define>
+
+    <define name="element-shadow">
+        <element name="shadow">
+            <attribute name="instance">
+                <text/>
+            </attribute>
+            <optional>
+                <attribute name="file">
+                    <text/>
+                </attribute>
+            </optional>
+            <optional>
+                <element name="content">
+                    <!-- CDATA block containing shadow CIB XML -->
+                    <text/>
+                </element>
+            </optional>
+            <optional>
+                <element name="xml-patchset">
+                    <!--
+                     CDATA block containing the XML patchset (diff) of the
+                     shadow CIB versus the active CIB
+                     -->
+                    <text/>
+                </element>
+            </optional>
+        </element>
+    </define>
+
+</grammar>

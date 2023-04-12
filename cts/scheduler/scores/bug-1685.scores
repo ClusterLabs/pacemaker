@@ -1,10 +1,10 @@
 
-pcmk__clone_allocate: prim_shared_storage:0 allocation score on redun1: 0
-pcmk__clone_allocate: prim_shared_storage:0 allocation score on redun2: 875
-pcmk__clone_allocate: prim_shared_storage:1 allocation score on redun1: 875
-pcmk__clone_allocate: prim_shared_storage:1 allocation score on redun2: 0
-pcmk__clone_allocate: shared_storage allocation score on redun1: 0
-pcmk__clone_allocate: shared_storage allocation score on redun2: 0
+pcmk__clone_assign: prim_shared_storage:0 allocation score on redun1: 0
+pcmk__clone_assign: prim_shared_storage:0 allocation score on redun2: 875
+pcmk__clone_assign: prim_shared_storage:1 allocation score on redun1: 875
+pcmk__clone_assign: prim_shared_storage:1 allocation score on redun2: 0
+pcmk__clone_assign: shared_storage allocation score on redun1: 0
+pcmk__clone_assign: shared_storage allocation score on redun2: 0
 pcmk__primitive_assign: prim_shared_storage:0 allocation score on redun1: 0
 pcmk__primitive_assign: prim_shared_storage:0 allocation score on redun2: 875
 pcmk__primitive_assign: prim_shared_storage:1 allocation score on redun1: 875

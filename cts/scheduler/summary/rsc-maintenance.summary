@@ -5,9 +5,9 @@ Current cluster status:
     * Online: [ node1 node2 ]
 
   * Full List of Resources:
-    * Resource Group: group1 (unmanaged, disabled):
-      * rsc1	(ocf:pacemaker:Dummy):	 Started node1 (disabled, unmanaged)
-      * rsc2	(ocf:pacemaker:Dummy):	 Started node1 (disabled, unmanaged)
+    * Resource Group: group1 (disabled, maintenance):
+      * rsc1	(ocf:pacemaker:Dummy):	 Started node1 (disabled, maintenance)
+      * rsc2	(ocf:pacemaker:Dummy):	 Started node1 (disabled, maintenance)
     * Resource Group: group2:
       * rsc3	(ocf:pacemaker:Dummy):	 Started node2
       * rsc4	(ocf:pacemaker:Dummy):	 Started node2
@@ -23,9 +23,9 @@ Revised Cluster Status:
     * Online: [ node1 node2 ]
 
   * Full List of Resources:
-    * Resource Group: group1 (unmanaged, disabled):
-      * rsc1	(ocf:pacemaker:Dummy):	 Started node1 (disabled, unmanaged)
-      * rsc2	(ocf:pacemaker:Dummy):	 Started node1 (disabled, unmanaged)
+    * Resource Group: group1 (disabled, maintenance):
+      * rsc1	(ocf:pacemaker:Dummy):	 Started node1 (disabled, maintenance)
+      * rsc2	(ocf:pacemaker:Dummy):	 Started node1 (disabled, maintenance)
     * Resource Group: group2:
       * rsc3	(ocf:pacemaker:Dummy):	 Started node2
       * rsc4	(ocf:pacemaker:Dummy):	 Started node2

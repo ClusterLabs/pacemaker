@@ -24,7 +24,7 @@
         <pseudo_event id="22" operation="stop" operation_key="rabbitmq-bundle_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="32" operation="stop" operation_key="rabbitmq-bundle-clone_stop_0"/>
+        <pseudo_event id="28" operation="stop" operation_key="rabbitmq-bundle-clone_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -48,7 +48,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="33" operation="stopped" operation_key="rabbitmq-bundle-clone_stopped_0"/>
+        <pseudo_event id="29" operation="stopped" operation_key="rabbitmq-bundle-clone_stopped_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="35" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_stop_0"/>
@@ -80,7 +80,7 @@
   </synapse>
   <synapse id="6" priority="1000000">
     <action_set>
-      <pseudo_event id="33" operation="stopped" operation_key="rabbitmq-bundle-clone_stopped_0">
+      <pseudo_event id="29" operation="stopped" operation_key="rabbitmq-bundle-clone_stopped_0">
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -89,13 +89,13 @@
         <rsc_op id="24" operation="stop" operation_key="rabbitmq_stop_0" internal_operation_key="rabbitmq:0_stop_0" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0" router_node="undercloud"/>
       </trigger>
       <trigger>
-        <pseudo_event id="32" operation="stop" operation_key="rabbitmq-bundle-clone_stop_0"/>
+        <pseudo_event id="28" operation="stop" operation_key="rabbitmq-bundle-clone_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="7">
     <action_set>
-      <pseudo_event id="32" operation="stop" operation_key="rabbitmq-bundle-clone_stop_0">
+      <pseudo_event id="28" operation="stop" operation_key="rabbitmq-bundle-clone_stop_0">
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -330,7 +330,7 @@
         <rsc_op id="68" operation="demote" operation_key="redis_demote_0" internal_operation_key="redis:0_demote_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="undercloud"/>
       </trigger>
       <trigger>
-        <pseudo_event id="78" operation="stop" operation_key="redis-bundle-master_stop_0"/>
+        <pseudo_event id="74" operation="stop" operation_key="redis-bundle-master_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -462,7 +462,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="79" operation="stopped" operation_key="redis-bundle-master_stopped_0"/>
+        <pseudo_event id="75" operation="stopped" operation_key="redis-bundle-master_stopped_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="81" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_stop_0"/>
@@ -498,7 +498,7 @@
   </synapse>
   <synapse id="35" priority="1000000">
     <action_set>
-      <pseudo_event id="79" operation="stopped" operation_key="redis-bundle-master_stopped_0">
+      <pseudo_event id="75" operation="stopped" operation_key="redis-bundle-master_stopped_0">
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -507,13 +507,13 @@
         <rsc_op id="69" operation="stop" operation_key="redis_stop_0" internal_operation_key="redis:0_stop_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="undercloud"/>
       </trigger>
       <trigger>
-        <pseudo_event id="78" operation="stop" operation_key="redis-bundle-master_stop_0"/>
+        <pseudo_event id="74" operation="stop" operation_key="redis-bundle-master_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="36">
     <action_set>
-      <pseudo_event id="78" operation="stop" operation_key="redis-bundle-master_stop_0">
+      <pseudo_event id="74" operation="stop" operation_key="redis-bundle-master_stop_0">
         <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -760,11 +760,7 @@
         <attributes CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="66" operation="stopped" operation_key="redis-bundle_stopped_0"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="52" priority="1000000">
     <action_set>

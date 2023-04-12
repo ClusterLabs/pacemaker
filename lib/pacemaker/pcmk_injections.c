@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the Pacemaker project contributors
+ * Copyright 2009-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -33,20 +33,20 @@
 
 bool pcmk__simulate_node_config = false;
 
-#define XPATH_NODE_CONFIG   "//" XML_CIB_TAG_NODE "[@uname='%s']"
-#define XPATH_NODE_STATE    "//" XML_CIB_TAG_STATE "[@uname='%s']"
-#define XPATH_RSC_HISTORY   XPATH_NODE_STATE "//" \
-                            XML_LRM_TAG_RESOURCE "[@id='%s']"
+#define XPATH_NODE_CONFIG   "//" XML_CIB_TAG_NODE "[@" XML_ATTR_UNAME "='%s']"
+#define XPATH_NODE_STATE    "//" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='%s']"
+#define XPATH_RSC_HISTORY   XPATH_NODE_STATE \
+                            "//" XML_LRM_TAG_RESOURCE "[@" XML_ATTR_ID "='%s']"
 
 
 /*!
  * \internal
  * \brief Inject a fictitious transient node attribute into scheduler input
  *
- * \param[in] out       Output object for displaying error messages
- * \param[in] cib_node  node_state XML to inject attribute into
- * \param[in] name      Transient node attribute name to inject
- * \param[in] value     Transient node attribute value to inject
+ * \param[in,out] out       Output object for displaying error messages
+ * \param[in,out] cib_node  node_state XML to inject attribute into
+ * \param[in]     name      Transient node attribute name to inject
+ * \param[in]     value     Transient node attribute value to inject
  */
 static void
 inject_transient_attr(pcmk__output_t *out, xmlNode *cib_node,
@@ -77,13 +77,13 @@ inject_transient_attr(pcmk__output_t *out, xmlNode *cib_node,
  * \internal
  * \brief Inject a fictitious fail count into a scheduler input
  *
- * \param[in] out          Output object for displaying error messages
- * \param[in] cib_node     Node state XML to inject into
- * \param[in] resource     ID of resource for fail count to inject
- * \param[in] task         Action name for fail count to inject
- * \param[in] interval_ms  Action interval (in milliseconds) for fail count
- * \param[in] rc           Action result for fail count to inject (if 0, or 7
- *                         when interval_ms is 0, nothing will be injected)
+ * \param[in,out] out          Output object for displaying error messages
+ * \param[in,out] cib_node     Node state XML to inject into
+ * \param[in]     resource     ID of resource for fail count to inject
+ * \param[in]     task         Action name for fail count to inject
+ * \param[in]     interval_ms  Action interval (in milliseconds) for fail count
+ * \param[in]     rc           Action result for fail count to inject (if 0, or
+ *                             7 when interval_ms is 0, inject nothing)
  */
 void
 pcmk__inject_failcount(pcmk__output_t *out, xmlNode *cib_node,
@@ -116,8 +116,8 @@ pcmk__inject_failcount(pcmk__output_t *out, xmlNode *cib_node,
  * \internal
  * \brief Create a CIB configuration entry for a fictitious node
  *
- * \param[in] cib_conn  CIB object to use
- * \param[in] node      Node name to use
+ * \param[in,out] cib_conn  CIB object to use
+ * \param[in]     node      Node name to use
  */
 static void
 create_node_entry(cib_t *cib_conn, const char *node)
@@ -158,7 +158,7 @@ create_node_entry(cib_t *cib_conn, const char *node)
  *       lrmd_free_event().
  */
 static lrmd_event_data_t *
-create_op(xmlNode *cib_resource, const char *task, guint interval_ms,
+create_op(const xmlNode *cib_resource, const char *task, guint interval_ms,
           int outcome)
 {
     lrmd_event_data_t *op = NULL;
@@ -191,9 +191,9 @@ create_op(xmlNode *cib_resource, const char *task, guint interval_ms,
  * \internal
  * \brief Inject a fictitious resource history entry into a scheduler input
  *
- * \param[in] cib_resource  Resource history XML to inject entry into
- * \param[in] op            Action result to inject
- * \param[in] target_rc     Expected result for action to inject
+ * \param[in,out] cib_resource  Resource history XML to inject entry into
+ * \param[in,out] op            Action result to inject
+ * \param[in]     target_rc     Expected result for action to inject
  *
  * \return XML of injected resource history entry
  */
@@ -209,9 +209,9 @@ pcmk__inject_action_result(xmlNode *cib_resource, lrmd_event_data_t *op,
  * \internal
  * \brief Inject a fictitious node into a scheduler input
  *
- * \param[in] cib_conn  Scheduler input CIB to inject node into
- * \param[in] node      Name of node to inject
- * \param[in] uuid      UUID of node to inject
+ * \param[in,out] cib_conn  Scheduler input CIB to inject node into
+ * \param[in]     node      Name of node to inject
+ * \param[in]     uuid      UUID of node to inject
  *
  * \return XML of node_state entry for new node
  * \note If the global pcmk__simulate_node_config has been set to true, a
@@ -224,6 +224,8 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
     int rc = pcmk_ok;
     xmlNode *cib_object = NULL;
     char *xpath = crm_strdup_printf(XPATH_NODE_STATE, node);
+    bool duplicate = false;
+    char *found_uuid = NULL;
 
     if (pcmk__simulate_node_config) {
         create_node_entry(cib_conn, node);
@@ -235,35 +237,66 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
     if ((cib_object != NULL) && (ID(cib_object) == NULL)) {
         crm_err("Detected multiple node_state entries for xpath=%s, bailing",
                 xpath);
-        crm_log_xml_warn(cib_object, "Duplicates");
-        free(xpath);
-        crm_exit(CRM_EX_SOFTWARE);
-        return NULL; // not reached, but makes static analysis happy
+        duplicate = true;
+        goto done;
     }
 
     if (rc == -ENXIO) {
-        char *found_uuid = NULL;
-
         if (uuid == NULL) {
             query_node_uuid(cib_conn, node, &found_uuid, NULL);
         } else {
             found_uuid = strdup(uuid);
         }
 
+        if (found_uuid) {
+            char *xpath_by_uuid = crm_strdup_printf("//" XML_CIB_TAG_STATE "[@" XML_ATTR_ID "='%s']",
+                                                    found_uuid);
+
+            // It's possible that a node_state entry doesn't have an uname yet.
+            rc = cib_conn->cmds->query(cib_conn, xpath_by_uuid, &cib_object,
+                                       cib_xpath|cib_sync_call|cib_scope_local);
+
+            if ((cib_object != NULL) && (ID(cib_object) == NULL)) {
+                crm_err("Detected multiple node_state entries for xpath=%s, bailing",
+                        xpath_by_uuid);
+                duplicate = true;
+                free(xpath_by_uuid);
+                goto done;
+
+            } else if (cib_object != NULL) {
+                crm_xml_add(cib_object, XML_ATTR_UNAME, node);
+
+                rc = cib_conn->cmds->modify(cib_conn, XML_CIB_TAG_STATUS, cib_object,
+                                            cib_sync_call|cib_scope_local);
+            }
+
+            free(xpath_by_uuid);
+        }
+    }
+
+    if (rc == -ENXIO) {
         cib_object = create_xml_node(NULL, XML_CIB_TAG_STATE);
-        crm_xml_add(cib_object, XML_ATTR_UUID, found_uuid);
+        crm_xml_add(cib_object, XML_ATTR_ID, found_uuid);
         crm_xml_add(cib_object, XML_ATTR_UNAME, node);
         cib_conn->cmds->create(cib_conn, XML_CIB_TAG_STATUS, cib_object,
                                cib_sync_call|cib_scope_local);
         free_xml(cib_object);
-        free(found_uuid);
 
         rc = cib_conn->cmds->query(cib_conn, xpath, &cib_object,
                                    cib_xpath|cib_sync_call|cib_scope_local);
         crm_trace("Injecting node state for %s (rc=%d)", node, rc);
     }
 
+done:
+    free(found_uuid);
     free(xpath);
+
+    if (duplicate) {
+        crm_log_xml_warn(cib_object, "Duplicates");
+        crm_exit(CRM_EX_SOFTWARE);
+        return NULL; // not reached, but makes static analysis happy
+    }
+
     CRM_ASSERT(rc == pcmk_ok);
     return cib_object;
 }
@@ -272,9 +305,9 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
  * \internal
  * \brief Inject a fictitious node state change into a scheduler input
  *
- * \param[in] cib_conn  Scheduler input CIB to inject into
- * \param[in] node      Name of node to inject change for
- * \param[in] up        If true, change state to online, otherwise offline
+ * \param[in,out] cib_conn  Scheduler input CIB to inject into
+ * \param[in]     node      Name of node to inject change for
+ * \param[in]     up        If true, change state to online, otherwise offline
  *
  * \return XML of changed (or added) node state entry
  */
@@ -306,8 +339,8 @@ pcmk__inject_node_state_change(cib_t *cib_conn, const char *node, bool up)
  * \internal
  * \brief Check whether a node has history for a given resource
  *
- * \param[in] cib_node  Node state XML to check
- * \param[in] resource  Resource name to check for
+ * \param[in,out] cib_node  Node state XML to check
+ * \param[in]     resource  Resource name to check for
  *
  * \return Resource's lrm_resource XML entry beneath \p cib_node if found,
  *         otherwise NULL
@@ -327,13 +360,13 @@ find_resource_xml(xmlNode *cib_node, const char *resource)
  * \internal
  * \brief Inject a resource history element into a scheduler input
  *
- * \param[in] out       Output object for displaying error messages
- * \param[in] cib_node  Node state XML to inject resource history entry into
- * \param[in] resource  ID (in configuration) of resource to inject
- * \param[in] lrm_name  ID of resource as used in history (e.g. clone instance)
- * \param[in] rclass    Resource agent class of resource to inject
- * \param[in] rtype     Resource agent type of resource to inject
- * \param[in] rprovider Resource agent provider of resource to inject
+ * \param[in,out] out       Output object for displaying error messages
+ * \param[in,out] cib_node  Node state XML to inject resource history entry into
+ * \param[in]     resource  ID (in configuration) of resource to inject
+ * \param[in]     lrm_name  ID as used in history (could be clone instance)
+ * \param[in]     rclass    Resource agent class of resource to inject
+ * \param[in]     rtype     Resource agent type of resource to inject
+ * \param[in]     rprovider Resource agent provider of resource to inject
  *
  * \return XML of injected resource history element
  * \note If a history element already exists under either \p resource or
@@ -458,11 +491,11 @@ find_ticket_state(pcmk__output_t *out, cib_t *the_cib, const char *ticket_id,
  * \internal
  * \brief Inject a ticket attribute into ticket state
  *
- * \param[in] out          Output object for displaying error messages
- * \param[in] ticket_id    Ticket whose state should be changed
- * \param[in] attr_name    Ticket attribute name to inject
- * \param[in] attr_value   Boolean value of ticket attribute to inject
- * \param[in] cib          CIB object to use
+ * \param[in,out] out          Output object for displaying error messages
+ * \param[in]     ticket_id    Ticket whose state should be changed
+ * \param[in]     attr_name    Ticket attribute name to inject
+ * \param[in]     attr_value   Boolean value of ticket attribute to inject
+ * \param[in,out] cib          CIB object to use
  *
  * \return Standard Pacemaker return code
  */
@@ -512,14 +545,14 @@ set_ticket_state_attr(pcmk__output_t *out, const char *ticket_id,
  * \internal
  * \brief Inject a fictitious action into the cluster
  *
- * \param[in] out       Output object for displaying error messages
- * \param[in] spec      Action specification to inject
- * \param[in] cib       CIB object for scheduler input
- * \param[in] data_set  Cluster working set
+ * \param[in,out] out       Output object for displaying error messages
+ * \param[in]     spec      Action specification to inject
+ * \param[in,out] cib       CIB object for scheduler input
+ * \param[in]     data_set  Cluster working set
  */
 static void
 inject_action(pcmk__output_t *out, const char *spec, cib_t *cib,
-              pe_working_set_t *data_set)
+              const pe_working_set_t *data_set)
 {
     int rc;
     int outcome = PCMK_OCF_OK;
@@ -537,7 +570,7 @@ inject_action(pcmk__output_t *out, const char *spec, cib_t *cib,
     xmlNode *cib_op = NULL;
     xmlNode *cib_node = NULL;
     xmlNode *cib_resource = NULL;
-    pe_resource_t *rsc = NULL;
+    const pe_resource_t *rsc = NULL;
     lrmd_event_data_t *op = NULL;
 
     out->message(out, "inject-spec", spec);
@@ -594,16 +627,16 @@ done:
  * \internal
  * \brief Inject fictitious scheduler inputs
  *
- * \param[in] data_set    Cluster working set
- * \param[in] cib         CIB object for scheduler input to modify
- * \param[in] injections  Injections to apply
+ * \param[in,out] data_set    Cluster working set
+ * \param[in,out] cib         CIB object for scheduler input to modify
+ * \param[in]     injections  Injections to apply
  */
 void
 pcmk__inject_scheduler_input(pe_working_set_t *data_set, cib_t *cib,
-                             pcmk_injections_t *injections)
+                             const pcmk_injections_t *injections)
 {
     int rc = pcmk_ok;
-    GList *iter = NULL;
+    const GList *iter = NULL;
     xmlNode *cib_node = NULL;
     pcmk__output_t *out = data_set->priv;
 
@@ -628,7 +661,7 @@ pcmk__inject_scheduler_input(pe_working_set_t *data_set, cib_t *cib,
     }
 
     for (iter = injections->node_up; iter != NULL; iter = iter->next) {
-        char *node = (char *) iter->data;
+        const char *node = (const char *) iter->data;
 
         out->message(out, "inject-modify-node", "Online", node);
 
@@ -642,7 +675,7 @@ pcmk__inject_scheduler_input(pe_working_set_t *data_set, cib_t *cib,
     }
 
     for (iter = injections->node_down; iter != NULL; iter = iter->next) {
-        char *node = (char *) iter->data;
+        const char *node = (const char *) iter->data;
         char *xpath = NULL;
 
         out->message(out, "inject-modify-node", "Offline", node);
@@ -669,7 +702,7 @@ pcmk__inject_scheduler_input(pe_working_set_t *data_set, cib_t *cib,
     }
 
     for (iter = injections->node_fail; iter != NULL; iter = iter->next) {
-        char *node = (char *) iter->data;
+        const char *node = (const char *) iter->data;
 
         out->message(out, "inject-modify-node", "Failing", node);
 
@@ -684,7 +717,7 @@ pcmk__inject_scheduler_input(pe_working_set_t *data_set, cib_t *cib,
     }
 
     for (iter = injections->ticket_grant; iter != NULL; iter = iter->next) {
-        char *ticket_id = (char *) iter->data;
+        const char *ticket_id = (const char *) iter->data;
 
         out->message(out, "inject-modify-ticket", "Granting", ticket_id);
 
@@ -693,7 +726,7 @@ pcmk__inject_scheduler_input(pe_working_set_t *data_set, cib_t *cib,
     }
 
     for (iter = injections->ticket_revoke; iter != NULL; iter = iter->next) {
-        char *ticket_id = (char *) iter->data;
+        const char *ticket_id = (const char *) iter->data;
 
         out->message(out, "inject-modify-ticket", "Revoking", ticket_id);
 
@@ -702,7 +735,7 @@ pcmk__inject_scheduler_input(pe_working_set_t *data_set, cib_t *cib,
     }
 
     for (iter = injections->ticket_standby; iter != NULL; iter = iter->next) {
-        char *ticket_id = (char *) iter->data;
+        const char *ticket_id = (const char *) iter->data;
 
         out->message(out, "inject-modify-ticket", "Standby", ticket_id);
 
@@ -711,7 +744,7 @@ pcmk__inject_scheduler_input(pe_working_set_t *data_set, cib_t *cib,
     }
 
     for (iter = injections->ticket_activate; iter != NULL; iter = iter->next) {
-        char *ticket_id = (char *) iter->data;
+        const char *ticket_id = (const char *) iter->data;
 
         out->message(out, "inject-modify-ticket", "Activating", ticket_id);
 
@@ -720,7 +753,7 @@ pcmk__inject_scheduler_input(pe_working_set_t *data_set, cib_t *cib,
     }
 
     for (iter = injections->op_inject; iter != NULL; iter = iter->next) {
-        inject_action(out, (char *) iter->data, cib, data_set);
+        inject_action(out, (const char *) iter->data, cib, data_set);
     }
 
     if (!out->is_quiet(out)) {

@@ -1,6 +1,6 @@
 /*
  * Original copyright 2004 International Business Machines
- * Later changes copyright 2008-2022 the Pacemaker project contributors
+ * Later changes copyright 2008-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -29,6 +29,14 @@
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 
+#define CIB_SERIES "cib"
+#define CIB_SERIES_MAX 100
+#define CIB_SERIES_BZIP FALSE /* Must be false because archived copies are
+                                 created with hard links
+                               */
+
+#define CIB_LIVE_NAME CIB_SERIES ".xml"
+
 enum cib_file_flags {
     cib_file_flag_dirty = (1 << 0),
     cib_file_flag_live  = (1 << 1),
@@ -38,6 +46,34 @@ typedef struct cib_file_opaque_s {
     uint32_t flags; // Group of enum cib_file_flags
     char *filename;
 } cib_file_opaque_t;
+
+struct cib_func_entry {
+    const char *op;
+    gboolean read_only;
+    cib_op_t fn;
+};
+
+static struct cib_func_entry cib_file_ops[] = {
+    { PCMK__CIB_REQUEST_QUERY,       TRUE,   cib_process_query },
+    { PCMK__CIB_REQUEST_MODIFY,      FALSE,  cib_process_modify },
+    { PCMK__CIB_REQUEST_APPLY_PATCH, FALSE,  cib_process_diff },
+    { PCMK__CIB_REQUEST_BUMP,        FALSE,  cib_process_bump },
+    { PCMK__CIB_REQUEST_REPLACE,     FALSE,  cib_process_replace },
+    { PCMK__CIB_REQUEST_CREATE,      FALSE,  cib_process_create },
+    { PCMK__CIB_REQUEST_DELETE,      FALSE,  cib_process_delete },
+    { PCMK__CIB_REQUEST_ERASE,       FALSE,  cib_process_erase },
+    { PCMK__CIB_REQUEST_UPGRADE,     FALSE,  cib_process_upgrade },
+};
+
+static xmlNode *in_mem_cib = NULL;
+
+/* cib_file_backup() and cib_file_write_with_digest() need to chown the
+ * written files only in limited circumstances, so these variables allow
+ * that to be indicated without affecting external callers
+ */
+static uid_t cib_file_owner = 0;
+static uid_t cib_file_group = 0;
+static gboolean cib_do_chown = FALSE;
 
 #define cib_set_file_flags(cibfile, flags_to_set) do {                  \
         (cibfile)->flags = pcmk__set_flags_as(__func__, __LINE__,       \
@@ -57,41 +93,479 @@ typedef struct cib_file_opaque_s {
                                                 #flags_to_clear);       \
     } while (0)
 
-int cib_file_perform_op(cib_t * cib, const char *op, const char *host, const char *section,
-                        xmlNode * data, xmlNode ** output_data, int call_options);
+/*!
+ * \internal
+ * \brief Check whether a file is the live CIB
+ *
+ * \param[in] filename Name of file to check
+ *
+ * \return TRUE if file exists and its real path is same as live CIB's
+ */
+static gboolean
+cib_file_is_live(const char *filename)
+{
+    gboolean same = FALSE;
 
-int cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, const char *section,
-                                 xmlNode * data, xmlNode ** output_data, int call_options,
-                                 const char *user_name);
+    if (filename != NULL) {
+        // Canonicalize file names for true comparison
+        char *real_filename = NULL;
 
-int cib_file_signon(cib_t * cib, const char *name, enum cib_conn_type type);
-int cib_file_signoff(cib_t * cib);
-int cib_file_free(cib_t * cib);
+        if (pcmk__real_path(filename, &real_filename) == pcmk_rc_ok) {
+            char *real_livename = NULL;
+
+            if (pcmk__real_path(CRM_CONFIG_DIR "/" CIB_LIVE_NAME,
+                                &real_livename) == pcmk_rc_ok) {
+                same = !strcmp(real_filename, real_livename);
+                free(real_livename);
+            }
+            free(real_filename);
+        }
+    }
+    return same;
+}
 
 static int
-cib_file_inputfd(cib_t * cib)
+cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
+                             const char *section, xmlNode *data,
+                             xmlNode **output_data, int call_options,
+                             const char *user_name)
+{
+    int rc = pcmk_ok;
+    char *effective_user = NULL;
+    gboolean query = FALSE;
+    gboolean changed = FALSE;
+    xmlNode *request = NULL;
+    xmlNode *output = NULL;
+    xmlNode *cib_diff = NULL;
+    xmlNode *result_cib = NULL;
+    cib_op_t *fn = NULL;
+    int lpc = 0;
+    static int max_msg_types = PCMK__NELEM(cib_file_ops);
+    cib_file_opaque_t *private = cib->variant_opaque;
+
+    crm_info("Handling %s operation for %s as %s",
+             (op? op : "invalid"), (section? section : "entire CIB"),
+             (user_name? user_name : "default user"));
+
+    cib__set_call_options(call_options, "file operation",
+                          cib_no_mtime|cib_inhibit_bcast|cib_scope_local);
+
+    if (cib->state == cib_disconnected) {
+        return -ENOTCONN;
+    }
+
+    if (output_data != NULL) {
+        *output_data = NULL;
+    }
+
+    if (op == NULL) {
+        return -EINVAL;
+    }
+
+    for (lpc = 0; lpc < max_msg_types; lpc++) {
+        if (pcmk__str_eq(op, cib_file_ops[lpc].op, pcmk__str_casei)) {
+            fn = &(cib_file_ops[lpc].fn);
+            query = cib_file_ops[lpc].read_only;
+            break;
+        }
+    }
+
+    if (fn == NULL) {
+        return -EPROTONOSUPPORT;
+    }
+
+    cib->call_id++;
+    request = cib_create_op(cib->call_id, op, host, section, data, call_options,
+                            user_name);
+    if(user_name) {
+        crm_xml_add(request, XML_ACL_TAG_USER, user_name);
+    }
+
+    /* Mirror the logic in cib_prepare_common() */
+    if (section != NULL && data != NULL && pcmk__str_eq(crm_element_name(data), XML_TAG_CIB, pcmk__str_none)) {
+        data = pcmk_find_cib_element(data, section);
+    }
+
+    rc = cib_perform_op(op, call_options, fn, query,
+                        section, request, data, TRUE, &changed, in_mem_cib, &result_cib, &cib_diff,
+                        &output);
+
+    free_xml(request);
+    if (rc == -pcmk_err_schema_validation) {
+        validate_xml_verbose(result_cib);
+    }
+
+    if (rc != pcmk_ok) {
+        free_xml(result_cib);
+
+    } else if (query == FALSE) {
+        pcmk__output_t *out = NULL;
+
+        rc = pcmk_rc2legacy(pcmk__log_output_new(&out));
+        CRM_CHECK(rc == pcmk_ok, goto done);
+
+        pcmk__output_set_log_level(out, LOG_DEBUG);
+        rc = out->message(out, "xml-patchset", cib_diff);
+        out->finish(out, pcmk_rc2exitc(rc), true, NULL);
+        pcmk__output_free(out);
+        rc = pcmk_ok;
+
+        free_xml(in_mem_cib);
+        in_mem_cib = result_cib;
+        cib_set_file_flags(private, cib_file_flag_dirty);
+    }
+
+    if (cib->op_callback != NULL) {
+        cib->op_callback(NULL, cib->call_id, rc, output);
+    }
+
+    if ((output_data != NULL) && (output != NULL)) {
+        *output_data = (output == in_mem_cib)? copy_xml(output) : output;
+    }
+
+done:
+    free_xml(cib_diff);
+
+    if ((output_data == NULL) && (output != in_mem_cib)) {
+        /* Don't free output if we're still using it. (output_data != NULL)
+         * means we may have assigned *output_data = output above.
+         */
+        free_xml(output);
+    }
+    free(effective_user);
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Read CIB from disk and validate it against XML schema
+ *
+ * \param[in] filename Name of file to read CIB from
+ *
+ * \return pcmk_ok on success,
+ *         -ENXIO if file does not exist (or stat() otherwise fails), or
+ *         -pcmk_err_schema_validation if XML doesn't parse or validate
+ * \note If filename is the live CIB, this will *not* verify its digest,
+ *       though that functionality would be trivial to add here.
+ *       Also, this will *not* verify that the file is writable,
+ *       because some callers might not need to write.
+ */
+static int
+load_file_cib(const char *filename)
+{
+    struct stat buf;
+    xmlNode *root = NULL;
+
+    /* Ensure file is readable */
+    if (strcmp(filename, "-") && (stat(filename, &buf) < 0)) {
+        return -ENXIO;
+    }
+
+    /* Parse XML from file */
+    root = filename2xml(filename);
+    if (root == NULL) {
+        return -pcmk_err_schema_validation;
+    }
+
+    /* Add a status section if not already present */
+    if (find_xml_node(root, XML_CIB_TAG_STATUS, FALSE) == NULL) {
+        create_xml_node(root, XML_CIB_TAG_STATUS);
+    }
+
+    /* Validate XML against its specified schema */
+    if (validate_xml(root, NULL, TRUE) == FALSE) {
+        const char *schema = crm_element_value(root, XML_ATTR_VALIDATION);
+
+        crm_err("CIB does not validate against %s", schema);
+        free_xml(root);
+        return -pcmk_err_schema_validation;
+    }
+
+    /* Remember the parsed XML for later use */
+    in_mem_cib = root;
+    return pcmk_ok;
+}
+
+static int
+cib_file_signon(cib_t *cib, const char *name, enum cib_conn_type type)
+{
+    int rc = pcmk_ok;
+    cib_file_opaque_t *private = cib->variant_opaque;
+
+    if (private->filename == NULL) {
+        rc = -EINVAL;
+    } else {
+        rc = load_file_cib(private->filename);
+    }
+
+    if (rc == pcmk_ok) {
+        crm_debug("Opened connection to local file '%s' for %s",
+                  private->filename, name);
+        cib->state = cib_connected_command;
+        cib->type = cib_command;
+
+    } else {
+        crm_info("Connection to local file '%s' for %s failed: %s\n",
+                 private->filename, name, pcmk_strerror(rc));
+    }
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Write out the in-memory CIB to a live CIB file
+ *
+ * param[in,out] path  Full path to file to write
+ *
+ * \return 0 on success, -1 on failure
+ */
+static int
+cib_file_write_live(char *path)
+{
+    uid_t uid = geteuid();
+    struct passwd *daemon_pwent;
+    char *sep = strrchr(path, '/');
+    const char *cib_dirname, *cib_filename;
+    int rc = 0;
+
+    /* Get the desired uid/gid */
+    errno = 0;
+    daemon_pwent = getpwnam(CRM_DAEMON_USER);
+    if (daemon_pwent == NULL) {
+        crm_perror(LOG_ERR, "Could not find %s user", CRM_DAEMON_USER);
+        return -1;
+    }
+
+    /* If we're root, we can change the ownership;
+     * if we're daemon, anything we create will be OK;
+     * otherwise, block access so we don't create wrong owner
+     */
+    if ((uid != 0) && (uid != daemon_pwent->pw_uid)) {
+        crm_perror(LOG_ERR, "Must be root or %s to modify live CIB",
+                   CRM_DAEMON_USER);
+        return 0;
+    }
+
+    /* fancy footwork to separate dirname from filename
+     * (we know the canonical name maps to the live CIB,
+     * but the given name might be relative, or symlinked)
+     */
+    if (sep == NULL) { /* no directory component specified */
+        cib_dirname = "./";
+        cib_filename = path;
+    } else if (sep == path) { /* given name is in / */
+        cib_dirname = "/";
+        cib_filename = path + 1;
+    } else { /* typical case; split given name into parts */
+        *sep = '\0';
+        cib_dirname = path;
+        cib_filename = sep + 1;
+    }
+
+    /* if we're root, we want to update the file ownership */
+    if (uid == 0) {
+        cib_file_owner = daemon_pwent->pw_uid;
+        cib_file_group = daemon_pwent->pw_gid;
+        cib_do_chown = TRUE;
+    }
+
+    /* write the file */
+    if (cib_file_write_with_digest(in_mem_cib, cib_dirname,
+                                   cib_filename) != pcmk_ok) {
+        rc = -1;
+    }
+
+    /* turn off file ownership changes, for other callers */
+    if (uid == 0) {
+        cib_do_chown = FALSE;
+    }
+
+    /* undo fancy stuff */
+    if ((sep != NULL) && (*sep == '\0')) {
+        *sep = '/';
+    }
+
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Sign-off method for CIB file variants
+ *
+ * This will write the file to disk if needed, and free the in-memory CIB. If
+ * the file is the live CIB, it will compute and write a signature as well.
+ *
+ * \param[in,out] cib  CIB object to sign off
+ *
+ * \return pcmk_ok on success, pcmk_err_generic on failure
+ * \todo This method should refuse to write the live CIB if the CIB manager is
+ *       running.
+ */
+static int
+cib_file_signoff(cib_t *cib)
+{
+    int rc = pcmk_ok;
+    cib_file_opaque_t *private = cib->variant_opaque;
+
+    crm_debug("Disconnecting from the CIB manager");
+    cib->state = cib_disconnected;
+    cib->type = cib_no_connection;
+
+    /* If the in-memory CIB has been changed, write it to disk */
+    if (pcmk_is_set(private->flags, cib_file_flag_dirty)) {
+
+        /* If this is the live CIB, write it out with a digest */
+        if (pcmk_is_set(private->flags, cib_file_flag_live)) {
+            if (cib_file_write_live(private->filename) < 0) {
+                rc = pcmk_err_generic;
+            }
+
+        /* Otherwise, it's a simple write */
+        } else {
+            gboolean do_bzip = pcmk__ends_with_ext(private->filename, ".bz2");
+
+            if (write_xml_file(in_mem_cib, private->filename, do_bzip) <= 0) {
+                rc = pcmk_err_generic;
+            }
+        }
+
+        if (rc == pcmk_ok) {
+            crm_info("Wrote CIB to %s", private->filename);
+            cib_clear_file_flags(private, cib_file_flag_dirty);
+        } else {
+            crm_err("Could not write CIB to %s", private->filename);
+        }
+    }
+
+    /* Free the in-memory CIB */
+    free_xml(in_mem_cib);
+    in_mem_cib = NULL;
+    return rc;
+}
+
+static int
+cib_file_free(cib_t *cib)
+{
+    int rc = pcmk_ok;
+
+    if (cib->state != cib_disconnected) {
+        rc = cib_file_signoff(cib);
+    }
+
+    if (rc == pcmk_ok) {
+        cib_file_opaque_t *private = cib->variant_opaque;
+
+        free(private->filename);
+        free(cib->cmds);
+        free(private);
+        free(cib);
+
+    } else {
+        fprintf(stderr, "Couldn't sign off: %d\n", rc);
+    }
+
+    return rc;
+}
+
+static int
+cib_file_inputfd(cib_t *cib)
 {
     return -EPROTONOSUPPORT;
 }
 
 static int
-cib_file_set_connection_dnotify(cib_t * cib, void (*dnotify) (gpointer user_data))
+cib_file_register_notification(cib_t *cib, const char *callback, int enabled)
 {
     return -EPROTONOSUPPORT;
 }
 
 static int
-cib_file_register_notification(cib_t * cib, const char *callback, int enabled)
+cib_file_set_connection_dnotify(cib_t *cib,
+                                void (*dnotify) (gpointer user_data))
 {
     return -EPROTONOSUPPORT;
 }
 
 /*!
  * \internal
+ * \brief Get the given CIB connection's unique client identifier
+ *
+ * \param[in]  cib       CIB connection
+ * \param[out] async_id  If not \p NULL, where to store asynchronous client ID
+ * \param[out] sync_id   If not \p NULL, where to store synchronous client ID
+ *
+ * \return Legacy Pacemaker return code (specifically, \p -EPROTONOSUPPORT)
+ *
+ * \note This is the \p cib_file variant implementation of
+ *       \p cib_api_operations_t:client_id().
+ * \note A \p cib_file object doesn't connect to the CIB and is never assigned a
+ *       client ID.
+ */
+static int
+cib_file_client_id(const cib_t *cib, const char **async_id,
+                   const char **sync_id)
+{
+    if (async_id != NULL) {
+        *async_id = NULL;
+    }
+    if (sync_id != NULL) {
+        *sync_id = NULL;
+    }
+    return -EPROTONOSUPPORT;
+}
+
+cib_t *
+cib_file_new(const char *cib_location)
+{
+    cib_file_opaque_t *private = NULL;
+    cib_t *cib = cib_new_variant();
+
+    if (cib == NULL) {
+        return NULL;
+    }
+
+    private = calloc(1, sizeof(cib_file_opaque_t));
+
+    if (private == NULL) {
+        free(cib);
+        return NULL;
+    }
+
+    cib->variant = cib_file;
+    cib->variant_opaque = private;
+
+    if (cib_location == NULL) {
+        cib_location = getenv("CIB_file");
+        CRM_CHECK(cib_location != NULL, return NULL); // Shouldn't be possible
+    }
+    private->flags = 0;
+    if (cib_file_is_live(cib_location)) {
+        cib_set_file_flags(private, cib_file_flag_live);
+        crm_trace("File %s detected as live CIB", cib_location);
+    }
+    private->filename = strdup(cib_location);
+
+    /* assign variant specific ops */
+    cib->delegate_fn = cib_file_perform_op_delegate;
+    cib->cmds->signon = cib_file_signon;
+    cib->cmds->signoff = cib_file_signoff;
+    cib->cmds->free = cib_file_free;
+    cib->cmds->inputfd = cib_file_inputfd;
+
+    cib->cmds->register_notification = cib_file_register_notification;
+    cib->cmds->set_connection_dnotify = cib_file_set_connection_dnotify;
+
+    cib->cmds->client_id = cib_file_client_id;
+
+    return cib;
+}
+
+/*!
+ * \internal
  * \brief Compare the calculated digest of an XML tree against a signature file
  *
- * \param[in] root Root of XML tree to compare
- * \param[in] sigfile Name of signature file containing digest to compare
+ * \param[in] root     Root of XML tree to compare
+ * \param[in] sigfile  Name of signature file containing digest to compare
  *
  * \return TRUE if digests match or signature file does not exist, else FALSE
  */
@@ -126,9 +600,9 @@ cib_file_verify_digest(xmlNode *root, const char *sigfile)
  * \internal
  * \brief Read an XML tree from a file and verify its digest
  *
- * \param[in] filename Name of XML file to read
- * \param[in] sigfile Name of signature file containing digest to compare
- * \param[in] root If non-NULL, will be set to pointer to parsed XML tree
+ * \param[in]  filename  Name of XML file to read
+ * \param[in]  sigfile   Name of signature file containing digest to compare
+ * \param[out] root      If non-NULL, will be set to pointer to parsed XML tree
  *
  * \return 0 if file was successfully read, parsed and verified, otherwise:
  *         -errno on stat() failure,
@@ -187,53 +661,6 @@ cib_file_read_and_verify(const char *filename, const char *sigfile, xmlNode **ro
     }
     return pcmk_ok;
 }
-
-#define CIB_SERIES "cib"
-#define CIB_SERIES_MAX 100
-#define CIB_SERIES_BZIP FALSE /* Must be false because archived copies are
-                                 created with hard links
-                               */
-
-#define CIB_LIVE_NAME CIB_SERIES ".xml"
-
-/*!
- * \internal
- * \brief Check whether a file is the live CIB
- *
- * \param[in] filename Name of file to check
- *
- * \return TRUE if file exists and its real path is same as live CIB's
- */
-static gboolean
-cib_file_is_live(const char *filename)
-{
-    gboolean same = FALSE;
-
-    if (filename != NULL) {
-        // Canonicalize file names for true comparison
-        char *real_filename = NULL;
-
-        if (pcmk__real_path(filename, &real_filename) == pcmk_rc_ok) {
-            char *real_livename = NULL;
-
-            if (pcmk__real_path(CRM_CONFIG_DIR "/" CIB_LIVE_NAME,
-                                &real_livename) == pcmk_rc_ok) {
-                same = !strcmp(real_filename, real_livename);
-                free(real_livename);
-            }
-            free(real_filename);
-        }
-    }
-    return same;
-}
-
-/* cib_file_backup() and cib_file_write_with_digest() need to chown the
- * written files only in limited circumstances, so these variables allow
- * that to be indicated without affecting external callers
- */
-static uid_t cib_file_owner = 0;
-static uid_t cib_file_group = 0;
-static gboolean cib_do_chown = FALSE;
 
 /*!
  * \internal
@@ -323,7 +750,7 @@ cib_file_backup(const char *cib_dirname, const char *cib_filename)
  * Set num_updates to 0, set cib-last-written to the current timestamp,
  * and strip out the status section.
  *
- * \param[in] root Root of CIB XML tree
+ * \param[in,out] root  Root of CIB XML tree
  *
  * \return void
  */
@@ -349,9 +776,9 @@ cib_file_prepare_xml(xmlNode *root)
  * \internal
  * \brief Write CIB to disk, along with a signature file containing its digest
  *
- * \param[in] cib_root Root of XML tree to write
- * \param[in] cib_dirname Directory containing CIB and signature files
- * \param[in] cib_filename Name (relative to cib_dirname) of file to write
+ * \param[in,out] cib_root      Root of XML tree to write
+ * \param[in]     cib_dirname   Directory containing CIB and signature files
+ * \param[in]     cib_filename  Name (relative to cib_dirname) of file to write
  *
  * \return pcmk_ok on success,
  *         pcmk_err_cib_modified if existing cib_filename doesn't match digest,
@@ -489,409 +916,4 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
     free(tmp_digest);
     free(tmp_cib);
     return exit_rc;
-}
-
-cib_t *
-cib_file_new(const char *cib_location)
-{
-    cib_file_opaque_t *private = NULL;
-    cib_t *cib = cib_new_variant();
-
-    if (cib == NULL) {
-        return NULL;
-    }
-
-    private = calloc(1, sizeof(cib_file_opaque_t));
-
-    if (private == NULL) {
-        free(cib);
-        return NULL;
-    }
-
-    cib->variant = cib_file;
-    cib->variant_opaque = private;
-
-    if (cib_location == NULL) {
-        cib_location = getenv("CIB_file");
-        CRM_CHECK(cib_location != NULL, return NULL); // Shouldn't be possible
-    }
-    private->flags = 0;
-    if (cib_file_is_live(cib_location)) {
-        cib_set_file_flags(private, cib_file_flag_live);
-        crm_trace("File %s detected as live CIB", cib_location);
-    }
-    private->filename = strdup(cib_location);
-
-    /* assign variant specific ops */
-    cib->delegate_fn = cib_file_perform_op_delegate;
-    cib->cmds->signon = cib_file_signon;
-    cib->cmds->signoff = cib_file_signoff;
-    cib->cmds->free = cib_file_free;
-    cib->cmds->inputfd = cib_file_inputfd;
-
-    cib->cmds->register_notification = cib_file_register_notification;
-    cib->cmds->set_connection_dnotify = cib_file_set_connection_dnotify;
-
-    return cib;
-}
-
-static xmlNode *in_mem_cib = NULL;
-
-/*!
- * \internal
- * \brief Read CIB from disk and validate it against XML schema
- *
- * \param[in] filename Name of file to read CIB from
- *
- * \return pcmk_ok on success,
- *         -ENXIO if file does not exist (or stat() otherwise fails), or
- *         -pcmk_err_schema_validation if XML doesn't parse or validate
- * \note If filename is the live CIB, this will *not* verify its digest,
- *       though that functionality would be trivial to add here.
- *       Also, this will *not* verify that the file is writable,
- *       because some callers might not need to write.
- */
-static int
-load_file_cib(const char *filename)
-{
-    struct stat buf;
-    xmlNode *root = NULL;
-
-    /* Ensure file is readable */
-    if (strcmp(filename, "-") && (stat(filename, &buf) < 0)) {
-        return -ENXIO;
-    }
-
-    /* Parse XML from file */
-    root = filename2xml(filename);
-    if (root == NULL) {
-        return -pcmk_err_schema_validation;
-    }
-
-    /* Add a status section if not already present */
-    if (find_xml_node(root, XML_CIB_TAG_STATUS, FALSE) == NULL) {
-        create_xml_node(root, XML_CIB_TAG_STATUS);
-    }
-
-    /* Validate XML against its specified schema */
-    if (validate_xml(root, NULL, TRUE) == FALSE) {
-        const char *schema = crm_element_value(root, XML_ATTR_VALIDATION);
-
-        crm_err("CIB does not validate against %s", schema);
-        free_xml(root);
-        return -pcmk_err_schema_validation;
-    }
-
-    /* Remember the parsed XML for later use */
-    in_mem_cib = root;
-    return pcmk_ok;
-}
-
-int
-cib_file_signon(cib_t * cib, const char *name, enum cib_conn_type type)
-{
-    int rc = pcmk_ok;
-    cib_file_opaque_t *private = cib->variant_opaque;
-
-    if (private->filename == NULL) {
-        rc = -EINVAL;
-    } else {
-        rc = load_file_cib(private->filename);
-    }
-
-    if (rc == pcmk_ok) {
-        crm_debug("Opened connection to local file '%s' for %s",
-                  private->filename, name);
-        cib->state = cib_connected_command;
-        cib->type = cib_command;
-
-    } else {
-        crm_info("Connection to local file '%s' for %s failed: %s\n",
-                 private->filename, name, pcmk_strerror(rc));
-    }
-    return rc;
-}
-
-/*!
- * \internal
- * \brief Write out the in-memory CIB to a live CIB file
- *
- * param[in] path Full path to file to write
- *
- * \return 0 on success, -1 on failure
- */
-static int
-cib_file_write_live(char *path)
-{
-    uid_t uid = geteuid();
-    struct passwd *daemon_pwent;
-    char *sep = strrchr(path, '/');
-    const char *cib_dirname, *cib_filename;
-    int rc = 0;
-
-    /* Get the desired uid/gid */
-    errno = 0;
-    daemon_pwent = getpwnam(CRM_DAEMON_USER);
-    if (daemon_pwent == NULL) {
-        crm_perror(LOG_ERR, "Could not find %s user", CRM_DAEMON_USER);
-        return -1;
-    }
-
-    /* If we're root, we can change the ownership;
-     * if we're daemon, anything we create will be OK;
-     * otherwise, block access so we don't create wrong owner
-     */
-    if ((uid != 0) && (uid != daemon_pwent->pw_uid)) {
-        crm_perror(LOG_ERR, "Must be root or %s to modify live CIB",
-                   CRM_DAEMON_USER);
-        return 0;
-    }
-
-    /* fancy footwork to separate dirname from filename
-     * (we know the canonical name maps to the live CIB,
-     * but the given name might be relative, or symlinked)
-     */
-    if (sep == NULL) { /* no directory component specified */
-        cib_dirname = "./";
-        cib_filename = path;
-    } else if (sep == path) { /* given name is in / */
-        cib_dirname = "/";
-        cib_filename = path + 1;
-    } else { /* typical case; split given name into parts */
-        *sep = '\0';
-        cib_dirname = path;
-        cib_filename = sep + 1;
-    }
-
-    /* if we're root, we want to update the file ownership */
-    if (uid == 0) {
-        cib_file_owner = daemon_pwent->pw_uid;
-        cib_file_group = daemon_pwent->pw_gid;
-        cib_do_chown = TRUE;
-    }
-
-    /* write the file */
-    if (cib_file_write_with_digest(in_mem_cib, cib_dirname,
-                                   cib_filename) != pcmk_ok) {
-        rc = -1;
-    }
-
-    /* turn off file ownership changes, for other callers */
-    if (uid == 0) {
-        cib_do_chown = FALSE;
-    }
-
-    /* undo fancy stuff */
-    if ((sep != NULL) && (*sep == '\0')) {
-        *sep = '/';
-    }
-
-    return rc;
-}
-
-/*!
- * \internal
- * \brief Sign-off method for CIB file variants
- *
- * This will write the file to disk if needed, and free the in-memory CIB. If
- * the file is the live CIB, it will compute and write a signature as well.
- *
- * \param[in] cib CIB object to sign off
- *
- * \return pcmk_ok on success, pcmk_err_generic on failure
- * \todo This method should refuse to write the live CIB if the CIB manager is
- *       running.
- */
-int
-cib_file_signoff(cib_t * cib)
-{
-    int rc = pcmk_ok;
-    cib_file_opaque_t *private = cib->variant_opaque;
-
-    crm_debug("Disconnecting from the CIB manager");
-    cib->state = cib_disconnected;
-    cib->type = cib_no_connection;
-
-    /* If the in-memory CIB has been changed, write it to disk */
-    if (pcmk_is_set(private->flags, cib_file_flag_dirty)) {
-
-        /* If this is the live CIB, write it out with a digest */
-        if (pcmk_is_set(private->flags, cib_file_flag_live)) {
-            if (cib_file_write_live(private->filename) < 0) {
-                rc = pcmk_err_generic;
-            }
-
-        /* Otherwise, it's a simple write */
-        } else {
-            gboolean do_bzip = pcmk__ends_with_ext(private->filename, ".bz2");
-
-            if (write_xml_file(in_mem_cib, private->filename, do_bzip) <= 0) {
-                rc = pcmk_err_generic;
-            }
-        }
-
-        if (rc == pcmk_ok) {
-            crm_info("Wrote CIB to %s", private->filename);
-            cib_clear_file_flags(private, cib_file_flag_dirty);
-        } else {
-            crm_err("Could not write CIB to %s", private->filename);
-        }
-    }
-
-    /* Free the in-memory CIB */
-    free_xml(in_mem_cib);
-    in_mem_cib = NULL;
-    return rc;
-}
-
-int
-cib_file_free(cib_t * cib)
-{
-    int rc = pcmk_ok;
-
-    if (cib->state != cib_disconnected) {
-        rc = cib_file_signoff(cib);
-    }
-
-    if (rc == pcmk_ok) {
-        cib_file_opaque_t *private = cib->variant_opaque;
-
-        free(private->filename);
-        free(cib->cmds);
-        free(private);
-        free(cib);
-
-    } else {
-        fprintf(stderr, "Couldn't sign off: %d\n", rc);
-    }
-
-    return rc;
-}
-
-struct cib_func_entry {
-    const char *op;
-    gboolean read_only;
-    cib_op_t fn;
-};
-
-/* *INDENT-OFF* */
-static struct cib_func_entry cib_file_ops[] = {
-    { PCMK__CIB_REQUEST_QUERY,      TRUE,   cib_process_query},
-    { PCMK__CIB_REQUEST_MODIFY,     FALSE,  cib_process_modify},
-    { PCMK__CIB_REQUEST_APPLY_PATCH,FALSE,  cib_process_diff},
-    { PCMK__CIB_REQUEST_BUMP,       FALSE,  cib_process_bump },
-    { PCMK__CIB_REQUEST_REPLACE,    FALSE,  cib_process_replace},
-    { PCMK__CIB_REQUEST_CREATE,     FALSE,  cib_process_create },
-    { PCMK__CIB_REQUEST_DELETE,     FALSE,  cib_process_delete},
-    { PCMK__CIB_REQUEST_ERASE,      FALSE,  cib_process_erase},
-    { PCMK__CIB_REQUEST_UPGRADE,    FALSE,  cib_process_upgrade},
-};
-/* *INDENT-ON* */
-
-int
-cib_file_perform_op(cib_t * cib, const char *op, const char *host, const char *section,
-                    xmlNode * data, xmlNode ** output_data, int call_options)
-{
-    return cib_file_perform_op_delegate(cib, op, host, section, data, output_data, call_options,
-                                        NULL);
-}
-
-int
-cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, const char *section,
-                             xmlNode * data, xmlNode ** output_data, int call_options,
-                             const char *user_name)
-{
-    int rc = pcmk_ok;
-    char *effective_user = NULL;
-    gboolean query = FALSE;
-    gboolean changed = FALSE;
-    xmlNode *request = NULL;
-    xmlNode *output = NULL;
-    xmlNode *cib_diff = NULL;
-    xmlNode *result_cib = NULL;
-    cib_op_t *fn = NULL;
-    int lpc = 0;
-    static int max_msg_types = PCMK__NELEM(cib_file_ops);
-    cib_file_opaque_t *private = cib->variant_opaque;
-
-    crm_info("Handling %s operation for %s as %s",
-             (op? op : "invalid"), (section? section : "entire CIB"),
-             (user_name? user_name : "default user"));
-
-    cib__set_call_options(call_options, "file operation",
-                          cib_no_mtime|cib_inhibit_bcast|cib_scope_local);
-
-    if (cib->state == cib_disconnected) {
-        return -ENOTCONN;
-    }
-
-    if (output_data != NULL) {
-        *output_data = NULL;
-    }
-
-    if (op == NULL) {
-        return -EINVAL;
-    }
-
-    for (lpc = 0; lpc < max_msg_types; lpc++) {
-        if (pcmk__str_eq(op, cib_file_ops[lpc].op, pcmk__str_casei)) {
-            fn = &(cib_file_ops[lpc].fn);
-            query = cib_file_ops[lpc].read_only;
-            break;
-        }
-    }
-
-    if (fn == NULL) {
-        return -EPROTONOSUPPORT;
-    }
-
-    cib->call_id++;
-    request = cib_create_op(cib->call_id, "dummy-token", op, host, section, data, call_options, user_name);
-    if(user_name) {
-        crm_xml_add(request, XML_ACL_TAG_USER, user_name);
-    }
-
-    /* Mirror the logic in cib_prepare_common() */
-    if (section != NULL && data != NULL && pcmk__str_eq(crm_element_name(data), XML_TAG_CIB, pcmk__str_none)) {
-        data = pcmk_find_cib_element(data, section);
-    }
-
-    rc = cib_perform_op(op, call_options, fn, query,
-                        section, request, data, TRUE, &changed, in_mem_cib, &result_cib, &cib_diff,
-                        &output);
-
-    free_xml(request);
-    if (rc == -pcmk_err_schema_validation) {
-        validate_xml_verbose(result_cib);
-    }
-
-    if (rc != pcmk_ok) {
-        free_xml(result_cib);
-
-    } else if (query == FALSE) {
-        xml_log_patchset(LOG_DEBUG, "cib:diff", cib_diff);
-        free_xml(in_mem_cib);
-        in_mem_cib = result_cib;
-        cib_set_file_flags(private, cib_file_flag_dirty);
-    }
-
-    free_xml(cib_diff);
-
-    if (cib->op_callback != NULL) {
-        cib->op_callback(NULL, cib->call_id, rc, output);
-    }
-
-    if (output_data && output) {
-        if(output == in_mem_cib) {
-            *output_data = copy_xml(output);
-        } else {
-            *output_data = output;
-        }
-
-    } else if(output != in_mem_cib) {
-        free_xml(output);
-    }
-
-    free(effective_user);
-    return rc;
 }

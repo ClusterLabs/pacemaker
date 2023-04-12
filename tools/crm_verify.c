@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -147,10 +147,10 @@ main(int argc, char **argv)
 
     if (options.use_live_cib) {
         crm_info("Reading XML from: live cluster");
-        rc = cib__signon_query(NULL, &cib_object);
+        rc = cib__signon_query(out, NULL, &cib_object);
 
         if (rc != pcmk_rc_ok) {
-            g_set_error(&error, PCMK__RC_ERROR, rc, "CIB query failed: %s", pcmk_rc_str(rc));
+            // cib__signon_query() outputs any relevant error
             goto done;
         }
 
@@ -273,12 +273,13 @@ main(int argc, char **argv)
         exit_code = pcmk_rc2exitc(rc);
     }
 
-    pcmk__output_and_clear_error(error, NULL);
+    pcmk__output_and_clear_error(&error, NULL);
 
     if (out != NULL) {
         out->finish(out, exit_code, true, NULL);
         pcmk__output_free(out);
     }
 
+    pcmk__unregister_formats();
     crm_exit(exit_code);
 }

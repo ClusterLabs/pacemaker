@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -142,7 +142,6 @@ const char *role2text(enum rsc_role_e role);
 const char *fail2text(enum action_fail_response fail);
 
 const char *pe_pref(GHashTable * options, const char *name);
-void calculate_active_ops(GList * sorted_op_list, int *start_index, int *stop_index);
 
 /*!
  * \brief Get readable description of a recovery type
@@ -191,12 +190,12 @@ typedef struct pe_op_eval_data {
 } pe_op_eval_data_t;
 
 typedef struct pe_rule_eval_data {
-    GHashTable *node_hash;
+    GHashTable *node_hash;          // Only used with g_hash_table_lookup()
     enum rsc_role_e role;
-    crm_time_t *now;
-    pe_match_data_t *match_data;
-    pe_rsc_eval_data_t *rsc_data;
-    pe_op_eval_data_t *op_data;
+    crm_time_t *now;                // @COMPAT could be const
+    pe_match_data_t *match_data;    // @COMPAT could be const
+    pe_rsc_eval_data_t *rsc_data;   // @COMPAT could be const
+    pe_op_eval_data_t *op_data;     // @COMPAT could be const
 } pe_rule_eval_data_t;
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)

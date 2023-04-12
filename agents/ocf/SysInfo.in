@@ -1,0 +1,407 @@
+#!@BASH_PATH@
+#
+# ocf:pacemaker:SysInfo resource agent
+#
+# Original copyright 2004 SUSE LINUX AG, Lars Marowsky-Br<E9>e
+# Later changes copyright 2008-2023 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
+#
+# This source code is licensed under the GNU General Public License version 2
+# (GPLv2) WITHOUT ANY WARRANTY.
+#
+
+#
+# This agent records (in the CIB) various attributes of a node
+#
+#######################################################################
+# Initialization:
+
+: ${OCF_FUNCTIONS:="${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs"}
+. "${OCF_FUNCTIONS}"
+: ${__OCF_ACTION:="$1"}
+
+# Explicitly list all environment variables used, to make static analysis happy
+: ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
+: ${OCF_RESKEY_pidfile:="${HA_VARRUN%%/}/SysInfo-${OCF_RESOURCE_INSTANCE}"}
+: ${OCF_RESKEY_disk_unit:="G"}
+: ${OCF_RESKEY_clone:="0"}
+: ${OCF_RESKEY_disks:=""}
+: ${OCF_RESKEY_delay:=""}
+: ${OCF_RESKEY_min_disk_free:=""}
+
+#######################################################################
+
+meta_data() {
+    cat <<END
+<?xml version="1.0"?>
+<resource-agent name="SysInfo" version="@VERSION@">
+<version>1.1</version>
+
+<longdesc lang="en">
+This is a SysInfo Resource Agent.
+It records (in the CIB) various attributes of a node
+Sample Linux output:
+   arch:   i686
+   os:     Linux-2.4.26-gentoo-r14
+   free_swap:      1999
+   cpu_info:       Intel(R) Celeron(R) CPU 2.40GHz
+   cpu_speed:      4771.02
+   cpu_cores:      1
+   cpu_load:       0.00
+   ram_total:      513
+   ram_free:       117
+   root_free:      2.4
+   #health_disk:   red
+
+Sample Darwin output:
+   arch:   i386
+   os:     Darwin-8.6.2
+   cpu_info:       Intel Core Duo
+   cpu_speed:      2.16
+   cpu_cores:      2
+   cpu_load:       0.18
+   ram_total:      2016
+   ram_free:       787
+   root_free:      13
+   #health_disk:   green
+
+Units:
+   free_swap: MB
+   ram_*:     MB
+   cpu_speed (Linux): bogomips
+   cpu_speed (Darwin): GHz
+   *_free:    GB (or user-defined: disk_unit)
+
+</longdesc>
+<shortdesc lang="en">SysInfo resource agent</shortdesc>
+
+<parameters>
+
+<parameter name="pidfile" unique-group="pidfile">
+<longdesc lang="en">PID file</longdesc>
+<shortdesc lang="en">PID file</shortdesc>
+<content type="string" default="$OCF_RESKEY_pidfile" />
+</parameter>
+
+<parameter name="delay">
+<longdesc lang="en">Interval to allow values to stabilize</longdesc>
+<shortdesc lang="en">Dampening Delay</shortdesc>
+<content type="string" default="0s" />
+</parameter>
+
+<parameter name="disks" reloadable="1">
+<longdesc lang="en">
+Filesystems or Paths to be queried for free disk space as a SPACE
+separated list - e.g "/dev/sda1 /tmp".
+Results will be written to an attribute with leading slashes
+removed, and other slashes replaced with underscore, and the word
+'free' appended - e.g for /dev/sda1 it would be 'dev_sda1_free'.
+Note: The root filesystem '/' is always queried to an attribute
+named 'root_free'
+</longdesc>
+<shortdesc lang="en">List of Filesytems/Paths to query for free disk space</shortdesc>
+<content type="string" />
+</parameter>
+
+<parameter name="disk_unit" reloadable="1">
+<longdesc lang="en">
+Unit to report disk free space in.
+Can be one of: B, K, M, G, T, P (case-insensitive)
+</longdesc>
+<shortdesc lang="en">Unit to report disk free space in</shortdesc>
+<content type="select" default="G">
+  <option value="B" />
+  <option value="b" />
+  <option value="K" />
+  <option value="k" />
+  <option value="M" />  
+  <option value="m" />
+  <option value="G" />
+  <option value="g" />
+  <option value="T" />
+  <option value="t" />
+  <option value="P" />
+  <option value="p" />
+</content>
+</parameter>
+
+<parameter name="min_disk_free" reloadable="1">
+<longdesc lang="en">
+The amount of free space required in monitored disks. If any
+of the monitored disks has less than this amount of free space,
+, with the node attribute "#health_disk" changing to "red",
+all resources will move away from the node. Set the node-health-strategy
+property appropriately for this to take effect.
+If the unit is not specified, it defaults to disk_unit.
+</longdesc>
+<shortdesc lang="en">minimum disk free space required</shortdesc>
+<content type="string" default=""/>
+</parameter>
+
+
+</parameters>
+<actions>
+<action name="start"   timeout="20s" />
+<action name="stop"    timeout="20s" />
+<action name="monitor" timeout="20s" interval="60s"/>
+<action name="reload-agent" timeout="20s" />
+<action name="meta-data"  timeout="5s" />
+<action name="validate-all"  timeout="30s" depth="0" />
+</actions>
+</resource-agent>
+END
+}
+
+#######################################################################
+
+UpdateStat() {
+    name="$1"; shift
+    value="$*"
+    printf "%s:\t%s\n" "$name" "$value"
+    if [ "$__OCF_ACTION" = "start" ] ; then
+        "${HA_SBIN_DIR}/attrd_updater" ${OCF_RESKEY_delay} -S status -n $name -B "$value"
+    else
+        "${HA_SBIN_DIR}/attrd_updater" ${OCF_RESKEY_delay} -S status -n $name -v "$value"
+    fi
+}
+
+SysInfoStats() {
+    local DISK_STATUS="green"
+
+    UpdateStat arch "$(uname -m)"
+    UpdateStat os "$(uname -s)-$(uname -r)"
+
+    case $(uname -s) in
+        "Darwin")
+            mem=$(top -l 1 | grep Mem: | awk '{print $10}')
+            mem_used=$(top -l 1 | grep Mem: | awk '{print $8}')
+            mem=$(SysInfo_mem_units "$mem")
+            mem_used=$(SysInfo_mem_units "$mem_used")
+            mem_total=$(expr $mem_used + $mem)
+            cpu_type=$(system_profiler SPHardwareDataType | awk -F': ' '/^CPU Type/ {print $2; exit}')
+            cpu_speed=$(system_profiler SPHardwareDataType | awk -F': ' '/^CPU Speed/ {print $2; exit}')
+            cpu_cores=$(system_profiler SPHardwareDataType | awk -F': ' '/^Number Of/ {print $2; exit}')
+            cpu_load=$(uptime | awk -F 'load average: ' '{ print $2 }' | awk -F ', ' '{ print $2 }')
+        ;;
+        "FreeBSD")
+            cpu_type=$(sysctl -in hw.model)
+            cpu_speed=$(sysctl -in dev.cpu.0.freq)
+            cpu_cores=$(sysctl -in hw.ncpu)
+            cpu_load=$(sysctl -in vm.loadavg | awk '{ print $4 }')
+
+            free_pages=$(sysctl -in vm.stats.vm.v_free_count)
+            page_count=$(sysctl -in vm.stats.vm.v_page_count)
+            page_size=$(sysctl -in vm.stats.vm.v_page_size)
+
+            mem=$(expr $free_pages \* $page_size / 1024 / 1024)M
+            mem_total=$(expr $page_count \* $page_size / 1024 / 1024)M
+        ;;
+        "Linux")
+            if [ -f /proc/cpuinfo ]; then
+                cpu_type=$(awk -F': ' '/model name/ {print $2; exit}' /proc/cpuinfo)
+                cpu_speed=$(awk -F': ' '/bogomips/ {print $2; exit}' /proc/cpuinfo)
+                cpu_cores=$(grep "^processor" /proc/cpuinfo | wc -l)
+            fi
+            cpu_load=$(uptime | awk -F 'load average: ' '{ print $2 }' | awk -F ', ' '{ print $2 }')
+
+            if [ -f /proc/meminfo ]; then
+                # meminfo results are in kB
+                mem=$(grep "SwapFree" /proc/meminfo | awk '{print $2"k"}')
+                if [ -n "$mem" ]; then
+                    UpdateStat free_swap "$(SysInfo_mem_units "$mem")"
+                fi
+                mem=$(grep "Inactive" /proc/meminfo | awk '{print $2"k"}')
+                mem_total=$(grep "MemTotal" /proc/meminfo | awk '{print $2"k"}')
+            else
+                mem=$(top -n 1 | grep Mem: | awk '{print $7}')
+            fi
+            ;;
+        *)
+    esac
+
+    if [ -n "$cpu_type" ]; then
+        UpdateStat cpu_info "$cpu_type"
+    fi
+
+    if [ -n "$cpu_speed" ]; then
+        UpdateStat cpu_speed "$cpu_speed"
+    fi
+
+    if [ -n "$cpu_cores" ]; then
+        UpdateStat cpu_cores "$cpu_cores"
+    fi
+
+    if [ -n "$cpu_load" ]; then
+        UpdateStat cpu_load "$cpu_load"
+    fi
+
+    if [ -n "$mem" ]; then
+        # Massage the memory values
+        UpdateStat ram_total "$(SysInfo_mem_units "$mem_total")"
+        UpdateStat ram_free "$(SysInfo_mem_units "$mem")"
+    fi
+
+    # Portability notes:
+    #   o tail: explicit "-n" not available in Solaris; instead simplify
+    #     'tail -n <c>' to the equivalent 'tail -<c>'.
+    for disk in "/" ${OCF_RESKEY_disks}; do
+        unset disk_free disk_label
+        disk_free=$(df -h "${disk}" | tail -1 | awk '{print $4}')
+        if [ -n "$disk_free" ]; then
+            disk_label=$(echo $disk | sed -e 's#^/$#root#;s#^/*##;s#/#_#g')
+            disk_free=$(SysInfo_hdd_units "$disk_free")
+            UpdateStat "${disk_label}_free" $disk_free
+            if [ -n "$MIN_FREE" ] && [ $disk_free -le $MIN_FREE ]; then
+                DISK_STATUS="red"
+            fi
+        fi
+    done
+    UpdateStat "#health_disk" "$DISK_STATUS"
+}
+
+SysInfo_megabytes() {
+    # Size in megabytes
+    echo $1 | awk '{ n = $0;
+        sub( /[0-9]+(.[0-9]+)?/, "" );
+        if ( $0 == "" ) { $0 = "G" }; # Do not change previous behavior `if ($0 == "G" || $0 == "") { n *= 1024 };`
+        split( n, a, $0 );
+        n = a[1];
+        if ( /^[pP]i?[bB]?/ ) { n *= 1024 * 1024 * 1024 };
+        if ( /^[tT]i?[bB]?/ ) { n *= 1024 * 1024 };
+        if ( /^[gG]i?[bB]?/ ) { n *= 1024 };
+        if ( /^[mM]i?[bB]?/ ) { n *= 1 };
+        if ( /^[kK]i?[bB]?/ ) { n /= 1024 };
+        if ( /^[bB]i?/ )      { n /= 1024 * 1024 };
+        printf "%d\n", n }' # Intentionally round to an integer
+}
+
+SysInfo_mem_units() {
+    mem="$1"
+
+    if [ -z "$1" ]; then
+        return
+    fi
+
+    mem=$(SysInfo_megabytes "$1")
+    # Round to the next multiple of 50
+    r=$(($mem % 50))
+    if [ $r -ne 0 ]; then
+        mem=$(($mem + 50 - $r))
+    fi
+
+    echo $mem
+}
+
+SysInfo_hdd_units() {
+    # Defauts to size in gigabytes
+
+    case "$OCF_RESKEY_disk_unit" in
+        [Pp]) echo $(($(SysInfo_megabytes "$1") / 1024 / 1024 / 1024));;
+        [Tt]) echo $(($(SysInfo_megabytes "$1") / 1024 / 1024));;
+        [Gg]) echo $(($(SysInfo_megabytes "$1") / 1024));;
+        [Mm]) echo "$(SysInfo_megabytes "$1")" ;;
+        [Kk]) echo $(($(SysInfo_megabytes "$1") * 1024));;
+        [Bb]) echo $(($(SysInfo_megabytes "$1") * 1024 * 1024));;
+        *)
+            ocf_log err "Invalid value for disk_unit: $OCF_RESKEY_disk_unit"
+            echo $(($(SysInfo_megabytes "$1") / 1024));;
+    esac
+}
+
+SysInfo_usage() {
+    cat <<END
+usage: $0 {start|stop|monitor|reload-agent|validate-all|meta-data}
+
+Expects to have a fully populated OCF RA-compliant environment set.
+END
+}
+
+SysInfo_start() {
+    echo $OCF_RESKEY_clone > "$OCF_RESKEY_pidfile"
+    SysInfoStats
+    exit $OCF_SUCCESS
+}
+
+SysInfo_stop() {
+    rm "$OCF_RESKEY_pidfile"
+    exit $OCF_SUCCESS
+}
+
+SysInfo_monitor() {
+    if [ -f "$OCF_RESKEY_pidfile" ]; then
+        clone=$(cat "$OCF_RESKEY_pidfile")
+    fi
+
+    if [ -z "$clone" ]; then
+        rm "$OCF_RESKEY_pidfile"
+        exit $OCF_NOT_RUNNING
+
+    elif [ "$clone" = "$OCF_RESKEY_clone" ]; then
+        SysInfoStats
+        exit $OCF_SUCCESS
+
+    elif ocf_is_true "$OCF_RESKEY_CRM_meta_globally_unique"; then
+        SysInfoStats
+        exit $OCF_SUCCESS
+    fi
+    exit $OCF_NOT_RUNNING
+}
+
+SysInfo_reload_agent() {
+    # No action required
+    :;
+}
+
+SysInfo_validate() {
+    # If specified, is min_disk_free a non-negative integer followed by a disk unit?
+
+    pat="[1-9][0-9]*[KkBbMmGgTtPp]?"
+    if [[ ! $OCF_RESKEY_min_disk_free =~ $pat ]]; then
+        return $OCF_ERR_CONFIGURED
+    fi
+
+}
+
+if [ $# -ne 1 ]; then
+    SysInfo_usage
+    exit $OCF_ERR_ARGS
+fi
+
+if [ -n "${OCF_RESKEY_delay}" ]; then
+    OCF_RESKEY_delay="-d ${OCF_RESKEY_delay}"
+else
+    OCF_RESKEY_delay="-d 0"
+fi
+MIN_FREE=""
+if [ -n "$OCF_RESKEY_min_disk_free" ]; then
+    ocf_is_decimal "$OCF_RESKEY_min_disk_free" &&
+        OCF_RESKEY_min_disk_free="$OCF_RESKEY_min_disk_free$OCF_RESKEY_disk_unit"
+    MIN_FREE=$(SysInfo_hdd_units $OCF_RESKEY_min_disk_free)
+fi
+
+case "$__OCF_ACTION" in
+meta-data)      meta_data
+                exit $OCF_SUCCESS
+                ;;
+start)          SysInfo_start
+                ;;
+stop)           SysInfo_stop
+                ;;
+monitor)        SysInfo_monitor
+                ;;
+reload-agent)   SysInfo_reload_agent
+                ;;
+validate-all)   SysInfo_validate
+                ;;
+usage|help)     SysInfo_usage
+                exit $OCF_SUCCESS
+                ;;
+*)              SysInfo_usage
+                exit $OCF_ERR_UNIMPLEMENTED
+                ;;
+esac
+
+exit $?
+
+# vim: set filetype=sh expandtab tabstop=4 softtabstop=4 shiftwidth=4 textwidth=80:

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,7 +22,6 @@
 
 #include <pacemaker-controld.h>
 
-GList *fsa_message_queue = NULL;
 extern void crm_shutdown(int nsig);
 
 static enum crmd_fsa_input handle_message(xmlNode *msg,
@@ -34,34 +33,34 @@ static enum crmd_fsa_input handle_shutdown_request(xmlNode *stored_msg);
 static void send_msg_via_ipc(xmlNode * msg, const char *sys);
 
 /* debug only, can wrap all it likes */
-int last_data_id = 0;
+static int last_data_id = 0;
 
 void
 register_fsa_error_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
                        fsa_data_t * cur_data, void *new_data, const char *raised_from)
 {
     /* save the current actions if any */
-    if (fsa_actions != A_NOTHING) {
+    if (controld_globals.fsa_actions != A_NOTHING) {
         register_fsa_input_adv(cur_data ? cur_data->fsa_cause : C_FSA_INTERNAL,
                                I_NULL, cur_data ? cur_data->data : NULL,
-                               fsa_actions, TRUE, __func__);
+                               controld_globals.fsa_actions, TRUE, __func__);
     }
 
     /* reset the action list */
     crm_info("Resetting the current action list");
-    fsa_dump_actions(fsa_actions, "Drop");
-    fsa_actions = A_NOTHING;
+    fsa_dump_actions(controld_globals.fsa_actions, "Drop");
+    controld_globals.fsa_actions = A_NOTHING;
 
     /* register the error */
     register_fsa_input_adv(cause, input, new_data, A_NOTHING, TRUE, raised_from);
 }
 
-int
+void
 register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
                        void *data, uint64_t with_actions,
                        gboolean prepend, const char *raised_from)
 {
-    unsigned old_len = g_list_length(fsa_message_queue);
+    unsigned old_len = g_list_length(controld_globals.fsa_message_queue);
     fsa_data_t *fsa_data = NULL;
 
     if (raised_from == NULL) {
@@ -71,11 +70,11 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
     if (input == I_NULL && with_actions == A_NOTHING /* && data == NULL */ ) {
         /* no point doing anything */
         crm_err("Cannot add entry to queue: no input and no action");
-        return 0;
+        return;
     }
 
     if (input == I_WAIT_FOR_EVENT) {
-        do_fsa_stall = TRUE;
+        controld_set_global_flags(controld_fsa_is_stalled);
         crm_debug("Stalling the FSA pending further input: source=%s cause=%s data=%p queue=%d",
                   raised_from, fsa_cause2string(cause), data, old_len);
 
@@ -87,12 +86,14 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
         if (data == NULL) {
             controld_set_fsa_action_flags(with_actions);
             fsa_dump_actions(with_actions, "Restored");
-            return 0;
+            return;
         }
 
-        /* Store everything in the new event and reset fsa_actions */
-        with_actions |= fsa_actions;
-        fsa_actions = A_NOTHING;
+        /* Store everything in the new event and reset
+         * controld_globals.fsa_actions
+         */
+        with_actions |= controld_globals.fsa_actions;
+        controld_globals.fsa_actions = A_NOTHING;
     }
 
     last_data_id++;
@@ -149,35 +150,35 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
 
     /* make sure to free it properly later */
     if (prepend) {
-        fsa_message_queue = g_list_prepend(fsa_message_queue, fsa_data);
+        controld_globals.fsa_message_queue
+            = g_list_prepend(controld_globals.fsa_message_queue, fsa_data);
     } else {
-        fsa_message_queue = g_list_append(fsa_message_queue, fsa_data);
+        controld_globals.fsa_message_queue
+            = g_list_append(controld_globals.fsa_message_queue, fsa_data);
     }
 
     crm_trace("FSA message queue length is %d",
-              g_list_length(fsa_message_queue));
+              g_list_length(controld_globals.fsa_message_queue));
 
     /* fsa_dump_queue(LOG_TRACE); */
 
-    if (old_len == g_list_length(fsa_message_queue)) {
+    if (old_len == g_list_length(controld_globals.fsa_message_queue)) {
         crm_err("Couldn't add message to the queue");
     }
 
-    if (fsa_source && input != I_WAIT_FOR_EVENT) {
-        crm_trace("Triggering FSA");
-        mainloop_set_trigger(fsa_source);
+    if (input != I_WAIT_FOR_EVENT) {
+        controld_trigger_fsa();
     }
-    return last_data_id;
 }
 
 void
 fsa_dump_queue(int log_level)
 {
     int offset = 0;
-    GList *lpc = NULL;
 
-    for (lpc = fsa_message_queue; lpc != NULL; lpc = lpc->next) {
-        fsa_data_t *data = (fsa_data_t *) lpc->data;
+    for (GList *iter = controld_globals.fsa_message_queue; iter != NULL;
+         iter = iter->next) {
+        fsa_data_t *data = (fsa_data_t *) iter->data;
 
         do_crm_log_unlikely(log_level,
                             "queue[%d.%d]: input %s raised by %s(%p.%d)\t(cause=%s)",
@@ -243,9 +244,11 @@ delete_fsa_input(fsa_data_t * fsa_data)
 fsa_data_t *
 get_message(void)
 {
-    fsa_data_t *message = g_list_nth_data(fsa_message_queue, 0);
+    fsa_data_t *message
+        = (fsa_data_t *) controld_globals.fsa_message_queue->data;
 
-    fsa_message_queue = g_list_remove(fsa_message_queue, message);
+    controld_globals.fsa_message_queue
+        = g_list_remove(controld_globals.fsa_message_queue, message);
     crm_trace("Processing input %d", message->id);
     return message;
 }
@@ -391,7 +394,8 @@ relay_message(xmlNode * msg, gboolean originated_locally)
             is_local = true;
         }
 
-    } else if (pcmk__str_eq(fsa_our_uname, host_to, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(controld_globals.our_nodename, host_to,
+                            pcmk__str_casei)) {
         is_local = true;
     } else if (is_for_crm && pcmk__str_eq(task, CRM_OP_LRM_DELETE, pcmk__str_casei)) {
         xmlNode *msg_data = get_message_xml(msg, F_CRM_DATA);
@@ -415,11 +419,9 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         } else if (originated_locally && !pcmk__strcase_any_of(sys_from, CRM_SYSTEM_PENGINE,
                                                                CRM_SYSTEM_TENGINE, NULL)) {
 
-#if SUPPORT_COROSYNC
             if (is_corosync_cluster()) {
                 dest = text2msg_type(sys_to);
             }
-#endif
             crm_trace("Relay message %s to DC", ref);
             send_cluster_message(host_to ? crm_get_peer(0, host_to) : NULL, dest, msg, TRUE);
 
@@ -444,7 +446,6 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     } else {
         crm_node_t *node_to = NULL;
 
-#if SUPPORT_COROSYNC
         if (is_corosync_cluster()) {
             dest = text2msg_type(sys_to);
 
@@ -452,7 +453,6 @@ relay_message(xmlNode * msg, gboolean originated_locally)
                 dest = crm_msg_crmd;
             }
         }
-#endif
 
         if (host_to) {
             node_to = pcmk__search_cluster_node_cache(0, host_to);
@@ -549,7 +549,7 @@ controld_authorize_ipc_message(const xmlNode *client_msg, pcmk__client_t *curr_c
     if (curr_client) {
         curr_client->userdata = strdup(client_name);
     }
-    mainloop_set_trigger(fsa_source);
+    controld_trigger_fsa();
     return false;
 
 rejected:
@@ -616,11 +616,17 @@ handle_failcount_op(xmlNode * stored_msg)
         is_remote_node = TRUE;
     }
 
+    crm_debug("Clearing failures for %s-interval %s on %s "
+              "from attribute manager, CIB, and executor state",
+              pcmk__readable_interval(interval_ms), rsc, uname);
+
     if (interval_ms) {
         interval_spec = crm_strdup_printf("%ums", interval_ms);
     }
     update_attrd_clear_failures(uname, rsc, op, interval_spec, is_remote_node);
     free(interval_spec);
+
+    controld_cib_delete_last_failure(rsc, uname, op, interval_ms);
 
     lrm_clear_last_failure(rsc, uname, op, interval_ms);
 
@@ -759,7 +765,7 @@ handle_ping(const xmlNode *msg)
     crm_xml_add(ping, XML_PING_ATTR_SYSFROM, value);
 
     // Add controller state
-    value = fsa_state2string(fsa_state);
+    value = fsa_state2string(controld_globals.fsa_state);
     crm_xml_add(ping, XML_PING_ATTR_CRMDSTATE, value);
     crm_notice("Current ping state: %s", value); // CTS needs this
 
@@ -839,7 +845,9 @@ handle_node_info_request(const xmlNode *msg)
     crm_xml_add(reply_data, XML_PING_ATTR_SYSFROM, CRM_SYSTEM_CRMD);
 
     // Add whether current partition has quorum
-    pcmk__xe_set_bool_attr(reply_data, XML_ATTR_HAVE_QUORUM, fsa_has_quorum);
+    pcmk__xe_set_bool_attr(reply_data, XML_ATTR_HAVE_QUORUM,
+                           pcmk_is_set(controld_globals.flags,
+                                       controld_has_quorum));
 
     // Check whether client requested node info by ID and/or name
     crm_element_value_int(msg, XML_ATTR_ID, &node_id);
@@ -850,13 +858,12 @@ handle_node_info_request(const xmlNode *msg)
 
     // Default to local node if none given
     if ((node_id == 0) && (value == NULL)) {
-        value = fsa_our_uname;
+        value = controld_globals.our_nodename;
     }
 
     node = pcmk__search_node_caches(node_id, value, CRM_GET_PEER_ANY);
     if (node) {
-        crm_xml_add_int(reply_data, XML_ATTR_ID, node->id);
-        crm_xml_add(reply_data, XML_ATTR_UUID, node->uuid);
+        crm_xml_add(reply_data, XML_ATTR_ID, node->uuid);
         crm_xml_add(reply_data, XML_ATTR_UNAME, node->uname);
         crm_xml_add(reply_data, XML_NODE_IS_PEER, node->state);
         pcmk__xe_set_bool_attr(reply_data, XML_NODE_IS_REMOTE,
@@ -906,20 +913,20 @@ handle_shutdown_self_ack(xmlNode *stored_msg)
 {
     const char *host_from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
 
-    if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
+    if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
         // The expected case -- we initiated own shutdown sequence
         crm_info("Shutting down controller");
         return I_STOP;
     }
 
-    if (pcmk__str_eq(host_from, fsa_our_dc, pcmk__str_casei)) {
+    if (pcmk__str_eq(host_from, controld_globals.dc_name, pcmk__str_casei)) {
         // Must be logic error -- DC confirming its own unrequested shutdown
         crm_err("Shutting down controller immediately due to "
                 "unexpected shutdown confirmation");
         return I_TERMINATE;
     }
 
-    if (fsa_state != S_STOPPING) {
+    if (controld_globals.fsa_state != S_STOPPING) {
         // Shouldn't happen -- non-DC confirming unrequested shutdown
         crm_err("Starting new DC election because %s is "
                 "confirming shutdown we did not request",
@@ -944,9 +951,10 @@ handle_shutdown_ack(xmlNode *stored_msg)
         return I_NULL;
     }
 
-    if ((fsa_our_dc == NULL) || (strcmp(host_from, fsa_our_dc) == 0)) {
+    if (pcmk__str_eq(host_from, controld_globals.dc_name,
+                     pcmk__str_null_matches|pcmk__str_casei)) {
 
-        if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
+        if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
             crm_info("Shutting down controller after confirmation from %s",
                      host_from);
         } else {
@@ -958,7 +966,7 @@ handle_shutdown_ack(xmlNode *stored_msg)
     }
 
     crm_warn("Ignoring shutdown request from %s because DC is %s",
-             host_from, fsa_our_dc);
+             host_from, controld_globals.dc_name);
     return I_NULL;
 }
 
@@ -1020,11 +1028,11 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
 
     } else if (strcmp(op, CRM_OP_THROTTLE) == 0) {
         throttle_update(stored_msg);
-        if (AM_I_DC && transition_graph != NULL) {
-            if (!transition_graph->complete) {
-                crm_debug("The throttle changed. Trigger a graph.");
-                trigger_graph();
-            }
+        if (AM_I_DC && (controld_globals.transition_graph != NULL)
+            && !controld_globals.transition_graph->complete) {
+
+            crm_debug("The throttle changed. Trigger a graph.");
+            trigger_graph();
         }
         return I_NULL;
 
@@ -1041,7 +1049,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
                                __func__);
 
         /* Sometimes we _must_ go into S_ELECTION */
-        if (fsa_state == S_HALT) {
+        if (controld_globals.fsa_state == S_HALT) {
             crm_debug("Forcing an election from S_HALT");
             return I_ELECTION;
 #if 0
@@ -1149,7 +1157,8 @@ handle_response(xmlNode *stored_msg)
         if (msg_ref == NULL) {
             crm_err("%s - Ignoring calculation with no reference", op);
 
-        } else if (pcmk__str_eq(msg_ref, fsa_pe_ref, pcmk__str_casei)) {
+        } else if (pcmk__str_eq(msg_ref, controld_globals.fsa_pe_ref,
+                                pcmk__str_none)) {
             ha_msg_input_t fsa_input;
 
             controld_stop_sched_timer();
@@ -1186,10 +1195,11 @@ handle_shutdown_request(xmlNode * stored_msg)
 
     if (host_from == NULL) {
         /* we're shutting down and the DC */
-        host_from = fsa_our_uname;
+        host_from = controld_globals.our_nodename;
     }
 
-    crm_info("Creating shutdown request for %s (state=%s)", host_from, fsa_state2string(fsa_state));
+    crm_info("Creating shutdown request for %s (state=%s)", host_from,
+             fsa_state2string(controld_globals.fsa_state));
     crm_log_xml_trace(stored_msg, "message");
 
     now_s = pcmk__ttoa(time(NULL));
@@ -1210,7 +1220,7 @@ send_msg_via_ipc(xmlNode * msg, const char *sys)
     client_channel = pcmk__find_client_by_id(sys);
 
     if (crm_element_value(msg, F_CRM_HOST_FROM) == NULL) {
-        crm_xml_add(msg, F_CRM_HOST_FROM, fsa_our_uname);
+        crm_xml_add(msg, F_CRM_HOST_FROM, controld_globals.our_nodename);
     }
 
     if (client_channel != NULL) {
@@ -1237,7 +1247,8 @@ send_msg_via_ipc(xmlNode * msg, const char *sys)
         fsa_data.origin = __func__;
         fsa_data.data_type = fsa_dt_ha_msg;
 
-        do_lrm_invoke(A_LRM_INVOKE, C_IPC_MESSAGE, fsa_state, I_MESSAGE, &fsa_data);
+        do_lrm_invoke(A_LRM_INVOKE, C_IPC_MESSAGE, controld_globals.fsa_state,
+                      I_MESSAGE, &fsa_data);
 
     } else if (crmd_is_proxy_session(sys)) {
         crmd_proxy_send(sys, msg);
@@ -1271,16 +1282,18 @@ send_remote_state_message(const char *node_name, gboolean node_up)
      * the DC will eventually pick up the change via the CIB node state.
      * The message allows it to happen sooner if possible.
      */
-    if (fsa_our_dc) {
-        xmlNode *msg = create_request(CRM_OP_REMOTE_STATE, NULL, fsa_our_dc,
-                                      CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
+    if (controld_globals.dc_name != NULL) {
+        xmlNode *msg = create_request(CRM_OP_REMOTE_STATE, NULL,
+                                      controld_globals.dc_name, CRM_SYSTEM_DC,
+                                      CRM_SYSTEM_CRMD, NULL);
 
         crm_info("Notifying DC %s of Pacemaker Remote node %s %s",
-                 fsa_our_dc, node_name, (node_up? "coming up" : "going down"));
+                 controld_globals.dc_name, node_name,
+                 node_up? "coming up" : "going down");
         crm_xml_add(msg, XML_ATTR_ID, node_name);
         pcmk__xe_set_bool_attr(msg, XML_NODE_IN_CLUSTER, node_up);
-        send_cluster_message(crm_get_peer(0, fsa_our_dc), crm_msg_crmd, msg,
-                             TRUE);
+        send_cluster_message(crm_get_peer(0, controld_globals.dc_name),
+                             crm_msg_crmd, msg, TRUE);
         free_xml(msg);
     } else {
         crm_debug("No DC to notify of Pacemaker Remote node %s %s",

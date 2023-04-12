@@ -63,6 +63,11 @@
     </nodes>
     <resources>
       <bundle id="rabbitmq-bundle">
+        <meta_attributes id="rabbitmq-bundle-meta_attributes">
+          <nvpair id="rabbitmq-bundle-meta_attributes-notify" name="notify" value="true"/>
+          <nvpair id="rabbitmq-bundle-meta_attributes-container-attribute-target"
+                  name="container-attribute-target" value="host"/>
+        </meta_attributes>
         <docker image="192.168.24.1:8787/rhosp12/openstack-rabbitmq-docker:pcmklatest" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
         <network control-port="3122"/>
         <storage>
@@ -81,10 +86,6 @@
           <instance_attributes id="rabbitmq-instance_attributes">
             <nvpair id="rabbitmq-instance_attributes-set_policy" name="set_policy" value="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
           </instance_attributes>
-          <meta_attributes id="rabbitmq-meta_attributes">
-            <nvpair id="rabbitmq-meta_attributes-notify" name="notify" value="true"/>
-            <nvpair id="rabbitmq-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
-          </meta_attributes>
           <operations>
             <op id="rabbitmq-monitor-interval-10" interval="10" name="monitor" timeout="40"/>
             <op id="rabbitmq-start-interval-0s" interval="0s" name="start" timeout="200s"/>
@@ -93,6 +94,12 @@
         </primitive>
       </bundle>
       <bundle id="galera-bundle">
+        <meta_attributes id="galera-meta_attributes">
+          <nvpair id="galera-meta_attributes-promoted-max" name="promoted-max" value="3"/>
+          <nvpair id="galera-meta_attributes-ordered" name="ordered" value="true"/>
+	  <nvpair id="galera-meta_attributes-container-attribute-target"
+                  name="container-attribute-target" value="host"/>
+        </meta_attributes>
         <docker image="192.168.24.1:8787/rhosp12/openstack-mariadb-docker:pcmklatest" promoted-max="3" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
         <network control-port="3123"/>
         <storage>
@@ -111,11 +118,6 @@
             <nvpair id="galera-instance_attributes-enable_creation" name="enable_creation" value="true"/>
             <nvpair id="galera-instance_attributes-wsrep_cluster_address" name="wsrep_cluster_address" value="gcomm://controller-0.internalapi.localdomain,controller-1.internalapi.localdomain,controller-2.internalapi.localdomain"/>
           </instance_attributes>
-          <meta_attributes id="galera-meta_attributes">
-            <nvpair id="galera-meta_attributes-promoted-max" name="promoted-max" value="3"/>
-            <nvpair id="galera-meta_attributes-ordered" name="ordered" value="true"/>
-            <nvpair id="galera-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
-          </meta_attributes>
           <operations>
             <op id="galera-demote-interval-0s" interval="0s" name="demote" timeout="120"/>
             <op id="galera-monitor-interval-20" interval="20" name="monitor" timeout="30"/>
@@ -128,6 +130,13 @@
         </primitive>
       </bundle>
       <bundle id="redis-bundle">
+        <meta_attributes id="redis-meta_attributes">
+          <nvpair id="redis-meta_attributes-interleave" name="interleave" value="true"/>
+          <nvpair id="redis-meta_attributes-notify" name="notify" value="true"/>
+          <nvpair id="redis-meta_attributes-ordered" name="ordered" value="true"/>
+	  <nvpair id="redis-meta_attributes-container-attribute-target"
+                  name="container-attribute-target" value="host"/>
+        </meta_attributes>
         <docker image="192.168.24.1:8787/rhosp12/openstack-redis-docker:pcmklatest" promoted-max="1" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
         <network control-port="3124"/>
         <storage>
@@ -148,12 +157,6 @@
           <instance_attributes id="redis-instance_attributes">
             <nvpair id="redis-instance_attributes-wait_last_known_promoted" name="wait_last_known_master" value="true"/>
           </instance_attributes>
-          <meta_attributes id="redis-meta_attributes">
-            <nvpair id="redis-meta_attributes-interleave" name="interleave" value="true"/>
-            <nvpair id="redis-meta_attributes-notify" name="notify" value="true"/>
-            <nvpair id="redis-meta_attributes-ordered" name="ordered" value="true"/>
-            <nvpair id="redis-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
-          </meta_attributes>
           <operations>
             <op id="redis-demote-interval-0s" interval="0s" name="demote" timeout="120"/>
             <op id="redis-monitor-interval-45" interval="45" name="monitor" timeout="60"/>

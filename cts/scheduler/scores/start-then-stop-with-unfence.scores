@@ -1,10 +1,10 @@
 
-pcmk__clone_allocate: jrummy-clone allocation score on rhel7-node1.example.com: 500
-pcmk__clone_allocate: jrummy-clone allocation score on rhel7-node2.example.com: 500
-pcmk__clone_allocate: jrummy:0 allocation score on rhel7-node1.example.com: 0
-pcmk__clone_allocate: jrummy:0 allocation score on rhel7-node2.example.com: 1
-pcmk__clone_allocate: jrummy:1 allocation score on rhel7-node1.example.com: 0
-pcmk__clone_allocate: jrummy:1 allocation score on rhel7-node2.example.com: 0
+pcmk__clone_assign: jrummy-clone allocation score on rhel7-node1.example.com: 500
+pcmk__clone_assign: jrummy-clone allocation score on rhel7-node2.example.com: 500
+pcmk__clone_assign: jrummy:0 allocation score on rhel7-node1.example.com: 0
+pcmk__clone_assign: jrummy:0 allocation score on rhel7-node2.example.com: 1
+pcmk__clone_assign: jrummy:1 allocation score on rhel7-node1.example.com: 0
+pcmk__clone_assign: jrummy:1 allocation score on rhel7-node2.example.com: 0
 pcmk__primitive_assign: ip1 allocation score on rhel7-node1.example.com: 500
 pcmk__primitive_assign: ip1 allocation score on rhel7-node2.example.com: 0
 pcmk__primitive_assign: ip2 allocation score on rhel7-node1.example.com: 0

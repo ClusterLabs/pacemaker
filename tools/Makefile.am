@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2022 the Pacemaker project contributors
+# Copyright 2004-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -22,9 +22,13 @@ sbin_SCRIPTS		= crm_report crm_standby crm_master crm_failcount
 if BUILD_CIBSECRETS
 sbin_SCRIPTS		+= cibsecret
 endif
-noinst_SCRIPTS		= pcmk_simtimes
+noinst_SCRIPTS		= cluster-clean		\
+			  cluster-init		\
+			  cluster-helper	\
+			  pcmk_simtimes
 
 EXTRA_DIST		= attrd_updater.8.inc \
+			  cibadmin.8.inc \
 				  crm_attribute.8.inc \
 				  crm_diff.8.inc \
 				  crm_error.8.inc \
@@ -32,6 +36,7 @@ EXTRA_DIST		= attrd_updater.8.inc \
 			  crm_node.8.inc \
 			  crm_resource.8.inc \
 			  crm_rule.8.inc \
+			  crm_shadow.8.inc \
 			  crm_simulate.8.inc \
 			  crm_ticket.8.inc \
 			  crm_verify.8.inc \

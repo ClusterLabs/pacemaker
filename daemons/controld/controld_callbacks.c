@@ -32,12 +32,13 @@ crmd_ha_msg_filter(xmlNode * msg)
         if (pcmk__str_eq(sys_from, CRM_SYSTEM_DC, pcmk__str_casei)) {
             const char *from = crm_element_value(msg, F_ORIG);
 
-            if (!pcmk__str_eq(from, fsa_our_uname, pcmk__str_casei)) {
+            if (!pcmk__str_eq(from, controld_globals.our_nodename,
+                              pcmk__str_casei)) {
                 int level = LOG_INFO;
                 const char *op = crm_element_value(msg, F_CRM_TASK);
 
                 /* make sure the election happens NOW */
-                if (fsa_state != S_ELECTION) {
+                if (controld_globals.fsa_state != S_ELECTION) {
                     ha_msg_input_t new_input;
 
                     level = LOG_WARNING;
@@ -63,7 +64,7 @@ crmd_ha_msg_filter(xmlNode * msg)
     route_message(C_HA_MESSAGE, msg);
 
   done:
-    trigger_fsa();
+    controld_trigger_fsa();
 }
 
 /*!
@@ -98,8 +99,6 @@ node_alive(const crm_node_t *node)
 }
 
 #define state_text(state) ((state)? (const char *)(state) : "in unknown state")
-
-bool controld_dc_left = false;
 
 void
 peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data)
@@ -161,6 +160,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                     remove_stonith_cleanup(node->uname);
                 }
             } else {
+                controld_remove_failed_sync_node(node->uname);
                 controld_remove_voter(node->uname);
             }
 
@@ -172,10 +172,18 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             old = *(const uint32_t *)data;
             appeared = pcmk_is_set(node->processes, crm_get_cluster_proc());
 
-            crm_info("Node %s is %s a peer " CRM_XS " DC=%s old=%#07x new=%#07x",
-                     node->uname, (appeared? "now" : "no longer"),
-                     (AM_I_DC? "true" : (fsa_our_dc? fsa_our_dc : "<none>")),
-                     old, node->processes);
+            {
+                const char *dc_s = controld_globals.dc_name;
+
+                if ((dc_s == NULL) && AM_I_DC) {
+                    dc_s = "true";
+                }
+
+                crm_info("Node %s is %s a peer " CRM_XS
+                         " DC=%s old=%#07x new=%#07x",
+                         node->uname, (appeared? "now" : "no longer"),
+                         pcmk__s(dc_s, "<none>"), old, node->processes);
+            }
 
             if (!pcmk_is_set((node->processes ^ old), crm_get_cluster_proc())) {
                 /* Peer status did not change. This should not be possible,
@@ -188,26 +196,33 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             }
 
             if (!appeared) {
+                controld_remove_failed_sync_node(node->uname);
                 controld_remove_voter(node->uname);
             }
 
-            if (!pcmk_is_set(fsa_input_register, R_CIB_CONNECTED)) {
+            if (!pcmk_is_set(controld_globals.fsa_input_register,
+                             R_CIB_CONNECTED)) {
                 crm_trace("Ignoring peer status change because not connected to CIB");
                 return;
 
-            } else if (fsa_state == S_STOPPING) {
+            } else if (controld_globals.fsa_state == S_STOPPING) {
                 crm_trace("Ignoring peer status change because stopping");
                 return;
             }
 
-            if (pcmk__str_eq(node->uname, fsa_our_uname, pcmk__str_casei) && !appeared) {
+            if (!appeared
+                && pcmk__str_eq(node->uname, controld_globals.our_nodename,
+                                pcmk__str_casei)) {
                 /* Did we get evicted? */
                 crm_notice("Our peer connection failed");
                 register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ERROR, NULL);
 
-            } else if (pcmk__str_eq(node->uname, fsa_our_dc, pcmk__str_casei) && crm_is_peer_active(node) == FALSE) {
+            } else if (pcmk__str_eq(node->uname, controld_globals.dc_name,
+                                    pcmk__str_casei)
+                       && !crm_is_peer_active(node)) {
                 /* Did the DC leave us? */
-                crm_notice("Our peer on the DC (%s) is dead", fsa_our_dc);
+                crm_notice("Our peer on the DC (%s) is dead",
+                           controld_globals.dc_name);
                 register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ELECTION, NULL);
 
                 /* @COMPAT DC < 1.1.13: If a DC shuts down normally, we don't
@@ -218,13 +233,15 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                  * the only way to avoid fencing older DCs is to leave the
                  * transient attributes intact until it rejoins.
                  */
-                if (compare_version(fsa_our_dc_version, "3.0.9") > 0) {
+                if (compare_version(controld_globals.dc_version, "3.0.9") > 0) {
                     controld_delete_node_state(node->uname,
                                                controld_section_attrs,
                                                cib_scope_local);
                 }
 
-            } else if (AM_I_DC || controld_dc_left || (fsa_our_dc == NULL)) {
+            } else if (AM_I_DC
+                       || pcmk_is_set(controld_globals.flags, controld_dc_left)
+                       || (controld_globals.dc_name == NULL)) {
                 /* This only needs to be done once, so normally the DC should do
                  * it. However if there is no DC, every node must do it, since
                  * there is no other way to ensure some one node does it.
@@ -268,7 +285,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 if (!is_remote) {
                     flags |= node_update_join | node_update_expected;
                     crmd_peer_down(node, FALSE);
-                    check_join_state(fsa_state, __func__);
+                    check_join_state(controld_globals.fsa_state, __func__);
                 }
                 if (alive >= 0) {
                     crm_info("%s of peer %s is in progress " CRM_XS " action=%d",
@@ -276,7 +293,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 } else {
                     crm_notice("%s of peer %s is complete " CRM_XS " action=%d",
                                task, node->uname, down->id);
-                    pcmk__update_graph(transition_graph, down);
+                    pcmk__update_graph(controld_globals.transition_graph, down);
                     trigger_graph();
                 }
 
@@ -289,7 +306,8 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             }
 
         } else if (appeared == FALSE) {
-            if (transition_graph == NULL || transition_graph->id == -1) {
+            if ((controld_globals.transition_graph == NULL)
+                || (controld_globals.transition_graph->id == -1)) {
                 crm_info("Stonith/shutdown of node %s is unknown to the "
                          "current DC", node->uname);
             } else {
@@ -298,11 +316,12 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             }
             if (!is_remote) {
                 crm_update_peer_join(__func__, node, crm_join_none);
-                check_join_state(fsa_state, __func__);
+                check_join_state(controld_globals.fsa_state, __func__);
             }
             abort_transition(INFINITY, pcmk__graph_restart, "Node failure",
                              NULL);
-            fail_incompletable_actions(transition_graph, node->uuid);
+            fail_incompletable_actions(controld_globals.transition_graph,
+                                       node->uuid);
 
         } else {
             crm_trace("Node %s came up, was not expected to be down",
@@ -332,36 +351,16 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
         free_xml(update);
     }
 
-    trigger_fsa();
-}
-
-void
-crmd_cib_connection_destroy(gpointer user_data)
-{
-    CRM_LOG_ASSERT(user_data == fsa_cib_conn);
-
-    crm_trace("Invoked");
-    trigger_fsa();
-    fsa_cib_conn->state = cib_disconnected;
-
-    if (!pcmk_is_set(fsa_input_register, R_CIB_CONNECTED)) {
-        crm_info("Connection to the CIB manager terminated");
-        return;
-    }
-
-    // @TODO This should trigger a reconnect, not a shutdown
-    crm_crit("Lost connection to the CIB manager, shutting down");
-    register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
-    controld_clear_fsa_input_flags(R_CIB_CONNECTED);
-
-    return;
+    controld_trigger_fsa();
 }
 
 gboolean
 crm_fsa_trigger(gpointer user_data)
 {
-    crm_trace("Invoked (queue len: %d)", g_list_length(fsa_message_queue));
+    crm_trace("Invoked (queue len: %d)",
+              g_list_length(controld_globals.fsa_message_queue));
     s_crmd_fsa(C_FSA_INTERNAL);
-    crm_trace("Exited  (queue len: %d)", g_list_length(fsa_message_queue));
+    crm_trace("Exited  (queue len: %d)",
+              g_list_length(controld_globals.fsa_message_queue));
     return TRUE;
 }

@@ -41,7 +41,7 @@ static DBusConnection *upstart_proxy = NULL;
  * \internal
  * \brief Prepare an Upstart action
  *
- * \param[in] op  Action to prepare
+ * \param[in,out] op  Action to prepare
  *
  * \return Standard Pacemaker return code
  */
@@ -349,9 +349,9 @@ get_first_instance(const gchar * job, int timeout)
  * \internal
  * \brief Parse result of Upstart status check
  *
- * \param[in] name      DBus interface name for property that was checked
- * \param[in] state     Property value
- * \param[in] userdata  Status action that check was done for
+ * \param[in] name          DBus interface name for property that was checked
+ * \param[in] state         Property value
+ * \param[in,out] userdata  Status action that check was done for
  */
 static void
 parse_status_result(const char *name, const char *state, void *userdata)
@@ -401,8 +401,8 @@ upstart_job_metadata(const char *name)
  * \internal
  * \brief Set an action result based on a method error
  *
- * \param[in] op     Action to set result for
- * \param[in] error  Method error
+ * \param[in,out] op     Action to set result for
+ * \param[in]     error  Method error
  */
 static void
 set_result_from_method_error(svc_action_t *op, const DBusError *error)
@@ -441,8 +441,8 @@ set_result_from_method_error(svc_action_t *op, const DBusError *error)
  * \internal
  * \brief Process the completion of an asynchronous job start, stop, or restart
  *
- * \param[in] pending    If not NULL, DBus call associated with request
- * \param[in] user_data  Action that was executed
+ * \param[in,out] pending    If not NULL, DBus call associated with request
+ * \param[in,out] user_data  Action that was executed
  */
 static void
 job_method_complete(DBusPendingCall *pending, void *user_data)
@@ -500,7 +500,7 @@ job_method_complete(DBusPendingCall *pending, void *user_data)
  * \internal
  * \brief Execute an Upstart action
  *
- * \param[in] op  Action to execute
+ * \param[in,out] op  Action to execute
  *
  * \return Standard Pacemaker return code
  * \retval EBUSY          Recurring operation could not be initiated

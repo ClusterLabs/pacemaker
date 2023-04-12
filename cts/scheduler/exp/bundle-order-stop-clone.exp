@@ -21,7 +21,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="51" operation="stop" operation_key="storage-clone_stop_0"/>
+        <pseudo_event id="47" operation="stop" operation_key="storage-clone_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -103,7 +103,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="52" operation="stopped" operation_key="storage-clone_stopped_0"/>
+        <pseudo_event id="48" operation="stopped" operation_key="storage-clone_stopped_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="54" operation="notified" operation_key="storage-clone_confirmed-pre_notify_stop_0"/>
@@ -141,7 +141,7 @@
   </synapse>
   <synapse id="10" priority="1000000">
     <action_set>
-      <pseudo_event id="52" operation="stopped" operation_key="storage-clone_stopped_0">
+      <pseudo_event id="48" operation="stopped" operation_key="storage-clone_stopped_0">
         <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -150,13 +150,13 @@
         <rsc_op id="40" operation="stop" operation_key="storage:0_stop_0" on_node="metal-1" on_node_uuid="1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="51" operation="stop" operation_key="storage-clone_stop_0"/>
+        <pseudo_event id="47" operation="stop" operation_key="storage-clone_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="11">
     <action_set>
-      <pseudo_event id="51" operation="stop" operation_key="storage-clone_stop_0">
+      <pseudo_event id="47" operation="stop" operation_key="storage-clone_stop_0">
         <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>

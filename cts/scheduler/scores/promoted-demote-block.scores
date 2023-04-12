@@ -1,12 +1,12 @@
 
 dummy:0 promotion score on dl380g5c: INFINITY
 dummy:1 promotion score on dl380g5d: 5
-pcmk__clone_allocate: dummy:0 allocation score on dl380g5c: -INFINITY
-pcmk__clone_allocate: dummy:0 allocation score on dl380g5d: 0
-pcmk__clone_allocate: dummy:1 allocation score on dl380g5c: -INFINITY
-pcmk__clone_allocate: dummy:1 allocation score on dl380g5d: INFINITY
-pcmk__clone_allocate: stateful allocation score on dl380g5c: -INFINITY
-pcmk__clone_allocate: stateful allocation score on dl380g5d: 0
+pcmk__clone_assign: dummy:0 allocation score on dl380g5c: -INFINITY
+pcmk__clone_assign: dummy:0 allocation score on dl380g5d: 0
+pcmk__clone_assign: dummy:1 allocation score on dl380g5c: -INFINITY
+pcmk__clone_assign: dummy:1 allocation score on dl380g5d: INFINITY
+pcmk__clone_assign: stateful allocation score on dl380g5c: -INFINITY
+pcmk__clone_assign: stateful allocation score on dl380g5d: 0
 pcmk__primitive_assign: dummy:0 allocation score on dl380g5c: -INFINITY
 pcmk__primitive_assign: dummy:0 allocation score on dl380g5d: -INFINITY
 pcmk__primitive_assign: dummy:1 allocation score on dl380g5c: -INFINITY

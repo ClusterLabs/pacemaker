@@ -21,21 +21,21 @@
 
 int lrmd__new(lrmd_t **api, const char *nodename, const char *server, int port);
 
-int lrmd_send_attribute_alert(lrmd_t *lrmd, GList *alert_list,
+int lrmd_send_attribute_alert(lrmd_t *lrmd, const GList *alert_list,
                               const char *node, uint32_t nodeid,
                               const char *attr_name, const char *attr_value);
-int lrmd_send_node_alert(lrmd_t *lrmd, GList *alert_list,
+int lrmd_send_node_alert(lrmd_t *lrmd, const GList *alert_list,
                          const char *node, uint32_t nodeid, const char *state);
-int lrmd_send_fencing_alert(lrmd_t *lrmd, GList *alert_list,
+int lrmd_send_fencing_alert(lrmd_t *lrmd, const GList *alert_list,
                             const char *target, const char *task,
                             const char *desc, int op_rc);
-int lrmd_send_resource_alert(lrmd_t *lrmd, GList *alert_list,
-                             const char *node, lrmd_event_data_t *op);
+int lrmd_send_resource_alert(lrmd_t *lrmd, const GList *alert_list,
+                             const char *node, const lrmd_event_data_t *op);
 
 int lrmd__remote_send_xml(pcmk__remote_t *session, xmlNode *msg, uint32_t id,
                           const char *msg_type);
 
-int lrmd__metadata_async(lrmd_rsc_info_t *rsc,
+int lrmd__metadata_async(const lrmd_rsc_info_t *rsc,
                          void (*callback)(int pid,
                                           const pcmk__action_result_t *result,
                                           void *user_data),

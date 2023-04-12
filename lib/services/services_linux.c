@@ -238,7 +238,7 @@ sigchld_cleanup(struct sigchld_data_s *data)
  * \internal
  * \brief Close the two file descriptors of a pipe
  *
- * \param[in] fildes  Array of file descriptors opened by pipe()
+ * \param[in,out] fildes  Array of file descriptors opened by pipe()
  */
 static void
 close_pipe(int fildes[])
@@ -642,11 +642,11 @@ parse_exit_reason_from_stderr(svc_action_t *op)
  * \internal
  * \brief Process the completion of an asynchronous child process
  *
- * \param[in] p         Child process that completed
- * \param[in] pid       Process ID of child
- * \param[in] core      (unused)
- * \param[in] signo     Signal that interrupted child, if any
- * \param[in] exitcode  Exit status of child process
+ * \param[in,out] p         Child process that completed
+ * \param[in]     pid       Process ID of child
+ * \param[in]     core      (Unused)
+ * \param[in]     signo     Signal that interrupted child, if any
+ * \param[in]     exitcode  Exit status of child process
  */
 static void
 async_action_complete(mainloop_child_t *p, pid_t pid, int core, int signo,
@@ -718,7 +718,7 @@ async_action_complete(mainloop_child_t *p, pid_t pid, int core, int signo,
  * \note Actions without a standard will get PCMK_OCF_UNKNOWN_ERROR.
  */
 int
-services__generic_error(svc_action_t *op)
+services__generic_error(const svc_action_t *op)
 {
     if ((op == NULL) || (op->standard == NULL)) {
         return PCMK_OCF_UNKNOWN_ERROR;
@@ -753,7 +753,7 @@ services__generic_error(svc_action_t *op)
  * \note Actions without a standard will get PCMK_OCF_UNKNOWN_ERROR.
  */
 int
-services__not_installed_error(svc_action_t *op)
+services__not_installed_error(const svc_action_t *op)
 {
     if ((op == NULL) || (op->standard == NULL)) {
         return PCMK_OCF_UNKNOWN_ERROR;
@@ -788,7 +788,7 @@ services__not_installed_error(svc_action_t *op)
  * \note Actions without a standard will get PCMK_OCF_UNKNOWN_ERROR.
  */
 int
-services__authorization_error(svc_action_t *op)
+services__authorization_error(const svc_action_t *op)
 {
     if ((op == NULL) || (op->standard == NULL)) {
         return PCMK_OCF_UNKNOWN_ERROR;
@@ -824,7 +824,7 @@ services__authorization_error(svc_action_t *op)
  * \note Actions without a standard will get PCMK_OCF_UNKNOWN_ERROR.
  */
 int
-services__configuration_error(svc_action_t *op, bool is_fatal)
+services__configuration_error(const svc_action_t *op, bool is_fatal)
 {
     if ((op == NULL) || (op->standard == NULL)) {
         return PCMK_OCF_UNKNOWN_ERROR;
@@ -898,7 +898,7 @@ services__handle_exec_error(svc_action_t * op, int error)
  * \param[in] exit_reason  Exit reason to output if for OCF agent
  */
 static void
-exit_child(svc_action_t *op, int exit_status, const char *exit_reason)
+exit_child(const svc_action_t *op, int exit_status, const char *exit_reason)
 {
     if ((op != NULL) && (exit_reason != NULL)
         && pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_OCF,
@@ -1014,8 +1014,8 @@ action_launch_child(svc_action_t *op)
  * \internal
  * \brief Wait for synchronous action to complete, and set its result
  *
- * \param[in] op    Action to wait for
- * \param[in] data  Child signal data
+ * \param[in,out] op    Action to wait for
+ * \param[in,out] data  Child signal data
  */
 static void
 wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
@@ -1152,7 +1152,7 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
  * \internal
  * \brief Execute an action whose standard uses executable files
  *
- * \param[in] op  Action to execute
+ * \param[in,out] op  Action to execute
  *
  * \return Standard Pacemaker return value
  * \retval EBUSY          Recurring operation could not be initiated

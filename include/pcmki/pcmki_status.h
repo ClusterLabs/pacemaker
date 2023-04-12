@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,6 +14,7 @@
 
 #include <crm/cib/cib_types.h>
 #include <crm/pengine/pe_types.h>
+#include <crm/common/ipc_pacemakerd.h>
 #include <crm/common/output_internal.h>
 #include <pcmki/pcmki_fence.h>
 
@@ -25,21 +26,24 @@ extern "C" {
  * \internal
  * \brief Print one-line status suitable for use with monitoring software
  *
- * \param[in] data_set  Working set of CIB state
+ * \param[in,out] out       Output object
+ * \param[in]     data_set  Cluster working set
  *
  * \return Standard Pacemaker return code
  *
- * \note This function's output (and the return code when the program exits)
- *       should conform to https://www.monitoring-plugins.org/doc/guidelines.html
+ * \note This function's output should conform to
+ *       https://www.monitoring-plugins.org/doc/guidelines.html
  *
  * \note This function is planned to be deprecated and then removed in the
  *       future.  It should only be called from crm_mon, and no additional
  *       callers should be added.
  */
-int pcmk__output_simple_status(pcmk__output_t *out, pe_working_set_t *data_set);
+int pcmk__output_simple_status(pcmk__output_t *out,
+                               const pe_working_set_t *data_set);
 
 int pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith,
                                 cib_t *cib, xmlNode *current_cib,
+                                enum pcmk_pacemakerd_state pcmkd_state,
                                 enum pcmk__fence_history fence_history,
                                 uint32_t show, uint32_t show_opts,
                                 const char *only_node, const char *only_rsc,
@@ -50,7 +54,7 @@ int pcmk__status(pcmk__output_t *out, cib_t *cib,
                  enum pcmk__fence_history fence_history, uint32_t show,
                  uint32_t show_opts, const char *only_node,
                  const char *only_rsc, const char *neg_location_prefix,
-                 bool simple_output, guint timeout_ms);
+                 bool simple_output, unsigned int timeout_ms);
 
 #ifdef __cplusplus
 }

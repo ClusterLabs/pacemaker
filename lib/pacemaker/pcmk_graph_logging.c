@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -61,21 +61,25 @@ actiontype2text(enum pcmk__graph_action_type type)
  *
  * \return Transition graph action corresponding to \p id, or NULL if none
  */
-static pcmk__graph_action_t *
-find_graph_action_by_id(pcmk__graph_t *graph, int id)
+static const pcmk__graph_action_t *
+find_graph_action_by_id(const pcmk__graph_t *graph, int id)
 {
     if (graph == NULL) {
         return NULL;
     }
 
-    for (GList *sIter = graph->synapses; sIter != NULL; sIter = sIter->next) {
-        pcmk__graph_synapse_t *synapse = (pcmk__graph_synapse_t *) sIter->data;
+    for (const GList *sIter = graph->synapses; sIter != NULL;
+         sIter = sIter->next) {
 
-        for (GList *aIter = synapse->actions; aIter != NULL;
+        const pcmk__graph_synapse_t *synapse = NULL;
+
+        synapse = (const pcmk__graph_synapse_t *) sIter->data;
+        for (const GList *aIter = synapse->actions; aIter != NULL;
              aIter = aIter->next) {
 
-            pcmk__graph_action_t *action = (pcmk__graph_action_t *) aIter->data;
+            const pcmk__graph_action_t *action = NULL;
 
+            action = (const pcmk__graph_action_t *) aIter->data;
             if (action->id == id) {
                 return action;
             }
@@ -116,7 +120,7 @@ synapse_state_str(pcmk__graph_synapse_t *synapse)
  *       \p g_string_free().
  */
 static GString *
-synapse_pending_inputs(pcmk__graph_t *graph,
+synapse_pending_inputs(const pcmk__graph_t *graph,
                        const pcmk__graph_synapse_t *synapse)
 {
     GString *pending = NULL;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -44,10 +44,11 @@ struct {
     char command;
     gchar *attr_dampen;
     gchar *attr_name;
+    gchar *attr_pattern;
     gchar *attr_node;
     gchar *attr_set;
     char *attr_value;
-    int attr_options;
+    uint32_t attr_options;
     gboolean query_all;
     gboolean quiet;
 } options = {
@@ -97,12 +98,47 @@ section_cb (const gchar *option_name, const gchar *optarg, gpointer data, GError
     return TRUE;
 }
 
+static gboolean
+attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    if (pcmk__str_any_of(option_name, "-z", "--utilization", NULL)) {
+        pcmk__set_node_attr_flags(options.attr_options, pcmk__node_attr_utilization);
+    }
+
+    return TRUE;
+}
+
+static gboolean
+wait_cb (const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+    if (pcmk__str_eq(optarg, "no", pcmk__str_none)) {
+        pcmk__clear_node_attr_flags(options.attr_options, pcmk__node_attr_sync_local | pcmk__node_attr_sync_cluster);
+        return TRUE;
+    } else if (pcmk__str_eq(optarg, PCMK__VALUE_LOCAL, pcmk__str_none)) {
+        pcmk__clear_node_attr_flags(options.attr_options, pcmk__node_attr_sync_local | pcmk__node_attr_sync_cluster);
+        pcmk__set_node_attr_flags(options.attr_options, pcmk__node_attr_sync_local);
+        return TRUE;
+    } else if (pcmk__str_eq(optarg, PCMK__VALUE_CLUSTER, pcmk__str_none)) {
+        pcmk__clear_node_attr_flags(options.attr_options, pcmk__node_attr_sync_local | pcmk__node_attr_sync_cluster);
+        pcmk__set_node_attr_flags(options.attr_options, pcmk__node_attr_sync_cluster);
+        return TRUE;
+    } else {
+        g_set_error(err, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                    "--wait= must be one of 'no', 'local', 'cluster'");
+        return FALSE;
+    }
+}
+
 #define INDENT "                              "
 
 static GOptionEntry required_entries[] = {
     { "name", 'n', 0, G_OPTION_ARG_STRING, &options.attr_name,
       "The attribute's name",
       "NAME" },
+
+    { "pattern", 'P', 0, G_OPTION_ARG_STRING, &options.attr_pattern,
+      "Operate on all attributes matching this pattern\n"
+      INDENT "(with -B, -D, -U, or -Y)",
+      "PATTERN"
+    },
 
     { NULL }
 };
@@ -175,6 +211,23 @@ static GOptionEntry addl_entries[] = {
       "If this creates a new attribute, never write the attribute to CIB",
       NULL },
 
+    { "wait", 'W', 0, G_OPTION_ARG_CALLBACK, wait_cb,
+      "Wait for some event to occur before returning.  Values are 'no' (wait\n"
+      INDENT "only for the attribute daemon to acknowledge the request),\n"
+      INDENT "'local' (wait until the change has propagated to where a local\n"
+      INDENT "query will return the request value, or the value set by a\n"
+      INDENT "later request), or 'cluster' (wait until the change has propagated\n"
+      INDENT "to where a query anywhere on the cluster will return the requested\n"
+      INDENT "value, or the value set by a later request).  Default is 'no'.",
+      "UNTIL" },
+
+    { "utilization", 'z', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, attr_set_type_cb,
+      "When creating a new attribute, create it as a node utilization attribute\n"
+      INDENT "instead of an instance attribute.  If the attribute already exists,\n"
+      INDENT "its existing type (utilization vs. instance) will be used regardless.\n"
+      INDENT "(with -B, -U, -Y)",
+      NULL },
+
     { NULL }
 };
 
@@ -199,6 +252,15 @@ static int send_attrd_query(pcmk__output_t *out, const char *attr_name, const ch
 static int send_attrd_update(char command, const char *attr_node, const char *attr_name,
                              const char *attr_value, const char *attr_set,
                              const char *attr_dampen, uint32_t attr_options);
+
+static bool
+pattern_used_correctly(void)
+{
+    /* --pattern can only be used with:
+     * -B (update-both), -D (delete), -U (update), or -Y (update-delay)
+     */
+    return options.command == 'B' || options.command == 'D' || options.command == 'U' || options.command == 'Y';
+}
 
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
@@ -252,9 +314,29 @@ main(int argc, char **argv)
         goto done;
     }
 
+    if (options.attr_pattern) {
+        if (options.attr_name) {
+            exit_code = CRM_EX_USAGE;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Error: --name and --pattern cannot be used at the same time");
+            goto done;
+        }
+
+        if (!pattern_used_correctly()) {
+            exit_code = CRM_EX_USAGE;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Error: pattern can only be used with delete or update");
+            goto done;
+        }
+
+        g_free(options.attr_name);
+        options.attr_name = options.attr_pattern;
+        options.attr_options |= pcmk__node_attr_pattern;
+    }
+
     if (options.command != 'R' && options.attr_name == NULL) {
         exit_code = CRM_EX_USAGE;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Command requires --name argument");
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Command requires --name or --pattern argument");
         goto done;
     } else if ((options.command == 'B'|| options.command == 'Y') && options.attr_dampen == NULL) {
         out->info(out, "Warning: '%c' command given without required --delay", options.command);
@@ -287,29 +369,30 @@ done:
     g_free(options.attr_set);
     free(options.attr_value);
 
-    pcmk__output_and_clear_error(error, out);
+    pcmk__output_and_clear_error(&error, out);
 
     if (out != NULL) {
         out->finish(out, exit_code, true, NULL);
         pcmk__output_free(out);
     }
 
+    pcmk__unregister_formats();
     crm_exit(exit_code);
 }
 
 /*!
  * \brief Print the attribute values in a pacemaker-attrd XML query reply
  *
- * \param[in] reply     List of attribute name/value pairs
- * \param[in] attr_name Name of attribute that was queried
+ * \param[in,out] out    Output object
+ * \param[in]     reply  List of attribute name/value pairs
  *
  * \return true if any values were printed
  */
 static void
-print_attrd_values(pcmk__output_t *out, GList *reply)
+print_attrd_values(pcmk__output_t *out, const GList *reply)
 {
-    for (GList *iter = reply; iter != NULL; iter = iter->next) {
-        pcmk__attrd_query_pair_t *pair = (pcmk__attrd_query_pair_t *) iter->data;
+    for (const GList *iter = reply; iter != NULL; iter = iter->next) {
+        const pcmk__attrd_query_pair_t *pair = iter->data;
 
         out->message(out, "attribute", NULL, NULL, pair->name, pair->value,
                      pair->node);
@@ -337,15 +420,18 @@ attrd_event_cb(pcmk_ipc_api_t *attrd_api, enum pcmk_ipc_event event_type,
 /*!
  * \brief Submit a query to pacemaker-attrd and print reply
  *
- * \param[in] attr_name  Name of attribute to be affected by request
- * \param[in] attr_node  Name of host to query for (or NULL for localhost)
- * \param[in] query_all  If TRUE, ignore attr_node and query all nodes instead
+ * \param[in,out] out  Output object
+ * \param[in]     attr_name  Name of attribute to be affected by request
+ * \param[in]     attr_node  Name of host to query for (or NULL for localhost)
+ * \param[in]     query_all  If TRUE, ignore attr_node and query all nodes
  *
  * \return Standard Pacemaker return code
  */
 static int
-send_attrd_query(pcmk__output_t *out, const char *attr_name, const char *attr_node, gboolean query_all)
+send_attrd_query(pcmk__output_t *out, const char *attr_name,
+                 const char *attr_node, gboolean query_all)
 {
+    uint32_t options = pcmk__node_attr_none;
     pcmk_ipc_api_t *attrd_api = NULL;
     int rc = pcmk_rc_ok;
 
@@ -370,10 +456,10 @@ send_attrd_query(pcmk__output_t *out, const char *attr_name, const char *attr_no
 
     /* Decide which node(s) to query */
     if (query_all == TRUE) {
-        attr_node = NULL;
+        options |= pcmk__node_attr_query_all;
     }
 
-    rc = pcmk__attrd_api_query(attrd_api, attr_node, attr_name, 0);
+    rc = pcmk__attrd_api_query(attrd_api, attr_node, attr_name, options);
 
     if (rc != pcmk_rc_ok) {
         g_set_error(&error, PCMK__RC_ERROR, rc, "Could not query value of %s: %s (%d)",

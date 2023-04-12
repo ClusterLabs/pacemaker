@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -20,8 +20,62 @@
 #include <crm/common/attrd_internal.h>
 #include <crm/common/ipc_attrd_internal.h>
 
-char *failed_stop_offset = NULL;
-char *failed_start_offset = NULL;
+/*!
+ * \internal
+ * \brief Action numbers of outside events processed in current update diff
+ *
+ * This table is to be used as a set. It should be empty when the transitioner
+ * begins processing a CIB update diff. It ensures that if there are multiple
+ * events (for example, "_last_0" and "_last_failure_0") for the same action,
+ * only one of them updates the failcount. Events that originate outside the
+ * cluster can't be confirmed, since they're not in the transition graph.
+ */
+static GHashTable *outside_events = NULL;
+
+/*!
+ * \internal
+ * \brief Empty the hash table containing action numbers of outside events
+ */
+void
+controld_remove_all_outside_events(void)
+{
+    if (outside_events != NULL) {
+        g_hash_table_remove_all(outside_events);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Destroy the hash table containing action numbers of outside events
+ */
+void
+controld_destroy_outside_events_table(void)
+{
+    if (outside_events != NULL) {
+        g_hash_table_destroy(outside_events);
+        outside_events = NULL;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Add an outside event's action number to a set
+ *
+ * \return Standard Pacemaker return code. Specifically, \p pcmk_rc_ok if the
+ *         event was not already in the set, or \p pcmk_rc_already otherwise.
+ */
+static int
+record_outside_event(gint action_num)
+{
+    if (outside_events == NULL) {
+        outside_events = g_hash_table_new(NULL, NULL);
+    }
+
+    if (g_hash_table_add(outside_events, GINT_TO_POINTER(action_num))) {
+        return pcmk_rc_ok;
+    }
+    return pcmk_rc_already;
+}
 
 gboolean
 fail_incompletable_actions(pcmk__graph_t *graph, const char *down_node)
@@ -141,28 +195,20 @@ update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
               crm_err("Couldn't parse: %s", ID(event)); goto bail);
 
     /* Decide whether update is necessary and what value to use */
-    if ((interval_ms > 0) || pcmk__str_eq(task, CRMD_ACTION_PROMOTE, pcmk__str_casei)
-        || pcmk__str_eq(task, CRMD_ACTION_DEMOTE, pcmk__str_casei)) {
+    if ((interval_ms > 0)
+        || pcmk__str_eq(task, CRMD_ACTION_PROMOTE, pcmk__str_none)
+        || pcmk__str_eq(task, CRMD_ACTION_DEMOTE, pcmk__str_none)) {
         do_update = TRUE;
 
-    } else if (pcmk__str_eq(task, CRMD_ACTION_START, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_START, pcmk__str_none)) {
         do_update = TRUE;
-        if (failed_start_offset == NULL) {
-            failed_start_offset = strdup(CRM_INFINITY_S);
-        }
-        value = failed_start_offset;
+        value = pcmk__s(controld_globals.transition_graph->failed_start_offset,
+                        CRM_INFINITY_S);
 
-    } else if (pcmk__str_eq(task, CRMD_ACTION_STOP, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_STOP, pcmk__str_none)) {
         do_update = TRUE;
-        if (failed_stop_offset == NULL) {
-            failed_stop_offset = strdup(CRM_INFINITY_S);
-        }
-        value = failed_stop_offset;
-    }
-
-    /* Fail count will be either incremented or set to infinity */
-    if (!pcmk_str_is_infinity(value)) {
-        value = XML_NVPAIR_ATTR_VALUE "++";
+        value = pcmk__s(controld_globals.transition_graph->failed_stop_offset,
+                        CRM_INFINITY_S);
     }
 
     if (do_update) {
@@ -175,6 +221,11 @@ update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
         uint32_t opts = pcmk__node_attr_none;
 
         char *now = pcmk__ttoa(time(NULL));
+
+        // Fail count will be either incremented or set to infinity
+        if (!pcmk_str_is_infinity(value)) {
+            value = XML_NVPAIR_ATTR_VALUE "++";
+        }
 
         if (g_hash_table_lookup(crm_remote_peer_cache, event_node_uuid)) {
             opts |= pcmk__node_attr_remote;
@@ -212,10 +263,8 @@ update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
 
         update_attrd_list(attrs, opts);
 
-        if (!ignore_failures) {
-            free(fail_name);
-            free(fail_pair);
-        }
+        free(fail_name);
+        free(fail_pair);
 
         free(last_name);
         free(last_pair);
@@ -233,7 +282,8 @@ update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
 pcmk__graph_action_t *
 controld_get_action(int id)
 {
-    for (GList *item = transition_graph->synapses; item; item = item->next) {
+    for (GList *item = controld_globals.transition_graph->synapses;
+         item != NULL; item = item->next) {
         pcmk__graph_synapse_t *synapse = (pcmk__graph_synapse_t *) item->data;
 
         for (GList *item2 = synapse->actions; item2; item2 = item2->next) {
@@ -253,7 +303,7 @@ get_cancel_action(const char *id, const char *node)
     GList *gIter = NULL;
     GList *gIter2 = NULL;
 
-    gIter = transition_graph->synapses;
+    gIter = controld_globals.transition_graph->synapses;
     for (; gIter != NULL; gIter = gIter->next) {
         pcmk__graph_synapse_t *synapse = (pcmk__graph_synapse_t *) gIter->data;
 
@@ -302,7 +352,7 @@ confirm_cancel_action(const char *id, const char *node_id)
     node_name = crm_element_value(cancel->xml, XML_LRM_ATTR_TARGET);
 
     stop_te_timer(cancel);
-    te_action_confirmed(cancel, transition_graph);
+    te_action_confirmed(cancel, controld_globals.transition_graph);
 
     crm_info("Cancellation of %s on %s confirmed (action %d)",
              op_key, node_name, cancel->id);
@@ -311,7 +361,7 @@ confirm_cancel_action(const char *id, const char *node_id)
 
 /* downed nodes are listed like: <downed> <node id="UUID1" /> ... </downed> */
 #define XPATH_DOWNED "//" XML_GRAPH_TAG_DOWNED \
-                     "/" XML_CIB_TAG_NODE "[@" XML_ATTR_UUID "='%s']"
+                     "/" XML_CIB_TAG_NODE "[@" XML_ATTR_ID "='%s']"
 
 /*!
  * \brief Find a transition event that would have made a specified node down
@@ -329,7 +379,7 @@ match_down_event(const char *target)
 
     char *xpath = crm_strdup_printf(XPATH_DOWNED, target);
 
-    for (gIter = transition_graph->synapses;
+    for (gIter = controld_globals.transition_graph->synapses;
          gIter != NULL && match == NULL;
          gIter = gIter->next) {
 
@@ -412,16 +462,23 @@ process_graph_event(xmlNode *event, const char *event_node)
 
     if (transition_num == -1) {
         // E.g. crm_resource --fail
+        if (record_outside_event(action_num) != pcmk_rc_ok) {
+            crm_debug("Outside event with transition key '%s' has already been "
+                      "processed", magic);
+            goto bail;
+        }
         desc = "initiated outside of the cluster";
         abort_transition(INFINITY, pcmk__graph_restart, "Unexpected event",
                          event);
 
-    } else if ((action_num < 0) || !pcmk__str_eq(update_te_uuid, te_uuid, pcmk__str_none)) {
+    } else if ((action_num < 0)
+               || !pcmk__str_eq(update_te_uuid, controld_globals.te_uuid,
+                                pcmk__str_none)) {
         desc = "initiated by a different DC";
         abort_transition(INFINITY, pcmk__graph_restart, "Foreign event", event);
 
-    } else if ((transition_graph->id != transition_num)
-               || transition_graph->complete) {
+    } else if ((controld_globals.transition_graph->id != transition_num)
+               || controld_globals.transition_graph->complete) {
 
         // Action is not from currently active transition
 
@@ -442,7 +499,7 @@ process_graph_event(xmlNode *event, const char *event_node)
             abort_transition(INFINITY, pcmk__graph_restart,
                              "Change in recurring result", event);
 
-        } else if (transition_graph->id != transition_num) {
+        } else if (controld_globals.transition_graph->id != transition_num) {
             desc = "arrived really late";
             abort_transition(INFINITY, pcmk__graph_restart, "Old event", event);
         } else {
@@ -484,7 +541,7 @@ process_graph_event(xmlNode *event, const char *event_node)
             }
 
             stop_te_timer(action);
-            te_action_confirmed(action, transition_graph);
+            te_action_confirmed(action, controld_globals.transition_graph);
 
             if (pcmk_is_set(action->flags, pcmk__graph_action_failed)) {
                 abort_transition(action->synapse->priority + 1,

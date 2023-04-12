@@ -115,19 +115,12 @@ curses_subprocess_output(pcmk__output_t *out, int exit_status,
 }
 
 /* curses_version is defined in curses.h, so we can't use that name here.
- * Note that this function prints out via text, not with curses.
+ * This function is empty because we create a text object instead of a console
+ * object if version is requested, so this is never called.
  */
 static void
 curses_ver(pcmk__output_t *out, bool extended) {
     CRM_ASSERT(out != NULL);
-
-    if (extended) {
-        printf("Pacemaker %s (Build: %s): %s\n", PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
-    } else {
-        printf("Pacemaker %s\n", PACEMAKER_VERSION);
-        printf("Written by Andrew Beekhof and the "
-               "Pacemaker project contributors\n");
-    }
 }
 
 G_GNUC_PRINTF(2, 3)
@@ -359,6 +352,7 @@ crm_mon_mk_curses_output(char **argv) {
     retval->version = curses_ver;
     retval->err = curses_error;
     retval->info = curses_info;
+    retval->transient = curses_info;
     retval->output_xml = curses_output_xml;
 
     retval->begin_list = curses_begin_list;
@@ -444,14 +438,15 @@ cluster_maint_mode_console(pcmk__output_t *out, va_list args) {
     }
 }
 
-PCMK__OUTPUT_ARGS("cluster-status", "pe_working_set_t *", "crm_exit_t",
+PCMK__OUTPUT_ARGS("cluster-status", "pe_working_set_t *",
+                  "enum pcmk_pacemakerd_state", "crm_exit_t",
                   "stonith_history_t *", "enum pcmk__fence_history", "uint32_t",
                   "uint32_t", "const char *", "GList *", "GList *")
 static int
 cluster_status_console(pcmk__output_t *out, va_list args) {
     int rc = pcmk_rc_no_output;
 
-    blank_screen();
+    clear();
     rc = pcmk__cluster_status_text(out, args);
     refresh();
     return rc;
@@ -491,20 +486,5 @@ void
 crm_mon_register_messages(pcmk__output_t *out) {
 #if CURSES_ENABLED
     pcmk__register_messages(out, fmt_functions);
-#endif
-}
-
-void
-blank_screen(void)
-{
-#if CURSES_ENABLED
-    int lpc = 0;
-
-    for (lpc = 0; lpc < LINES; lpc++) {
-        move(lpc, 0);
-        clrtoeol();
-    }
-    move(0, 0);
-    refresh();
 #endif
 }

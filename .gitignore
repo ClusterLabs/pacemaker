@@ -1,3 +1,12 @@
+#
+# Copyright 2011-2023 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
+#
+
 # Common conventions for files that should be ignored
 *~
 *.bz2
@@ -88,16 +97,30 @@ configure
 /po/stamp-po
 
 # configure targets
+/agents/ocf/ClusterMon
+/agents/ocf/Dummy
+/agents/ocf/HealthCPU
+/agents/ocf/HealthIOWait
+/agents/ocf/HealthSMART
+/agents/ocf/Stateful
+/agents/ocf/SysInfo
+/agents/ocf/attribute
+/agents/ocf/controld
+/agents/ocf/ifspeed
+/agents/ocf/o2cb
+/agents/ocf/ping
+/agents/ocf/remote
+/agents/stonith/fence_legacy
+/agents/stonith/fence_watchdog
 /cts/benchmark/clubench
+/cts/cts-attrd
 /cts/cts-cli
-/cts/cts-coverage
 /cts/cts-exec
 /cts/cts-fencing
 /cts/cts-regression
 /cts/cts-scheduler
 /cts/lab/CTS.py
 /cts/lab/CTSlab.py
-/cts/lab/CTSvars.py
 /cts/lab/OCFIPraTest.py
 /cts/lab/cluster_test
 /cts/lab/cts
@@ -118,16 +141,16 @@ configure
 /doc/Doxyfile
 /etc/init.d/pacemaker
 /etc/logrotate.d/pacemaker
-/extra/resources/ClusterMon
-/extra/resources/HealthSMART
-/extra/resources/SysInfo
-/extra/resources/controld
-/extra/resources/ifspeed
-/extra/resources/o2cb
+/etc/sysconfig/pacemaker
 /include/config.h
 /include/config.h.in
 /include/crm_config.h
 /maint/bumplibs
+/python/pacemaker/buildoptions.py
+/python/setup.py
+/tools/cluster-clean
+/tools/cluster-helper
+/tools/cluster-init
 /tools/cibsecret
 /tools/crm_error
 /tools/crm_failcount
@@ -203,6 +226,7 @@ TAGS
 /doc/crm_fencing.html
 /doc/sphinx/*/_build
 /doc/sphinx/*/conf.py
+/doc/sphinx/*/generated
 /doc/sphinx/build-2.1.txt
 /doc/sphinx/shared/images/*.png
 
@@ -268,12 +292,16 @@ pacemaker_*.info
 /cts/OCFIPraTest.py
 /cts/cluster_test
 /cts/cts
+/cts/cts-coverage
 /cts/cts-log-watcher
 /cts/cts-support
 /cts/fence_dummy
+/cts/lab/CTSvars.py
 /cts/pacemaker-cts-dummyd
 /cts/pacemaker-cts-dummyd@.service
 /daemons/based/cibmon
+/daemons/fenced/fence_legacy
+/daemons/fenced/fence_watchdog
 /daemons/pacemakerd/pacemaker
 /depcomp
 /doc/*.build
@@ -289,7 +317,7 @@ pacemaker_*.info
 /doc/shared/en-US/*.xml
 /doc/shared/en-US/images/pcmk-*.png
 /doc/shared/en-US/images/Policy-Engine-*.png
-/extra/logrotate/pacemaker
+/extra/*/*
 /fencing
 /include/stamp-*
 /install-sh

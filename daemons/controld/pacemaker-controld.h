@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,8 +12,10 @@
 
 #include <controld_alerts.h>
 #include <controld_callbacks.h>
+#include <controld_cib.h>
 #include <controld_fencing.h>
 #include <controld_fsa.h>
+#include <controld_globals.h>
 #include <controld_timers.h>
 #include <controld_lrm.h>
 #include <controld_membership.h>
@@ -23,17 +25,15 @@
 #include <controld_transition.h>
 #include <controld_utils.h>
 
-extern GMainLoop *crmd_mainloop;
-extern bool no_quorum_suicide_escalation;
+#  define controld_trigger_config()  \
+    controld_trigger_config_as(__func__, __LINE__)
 
-void do_cib_updated(const char *event, xmlNode * msg);
-void do_cib_replaced(const char *event, xmlNode * msg);
 void crmd_metadata(void);
+void controld_trigger_config_as(const char *fn, int line);
 void controld_election_init(const char *uname);
+void controld_configure_election(GHashTable *options);
 void controld_remove_voter(const char *uname);
 void controld_election_fini(void);
-void controld_set_election_period(const char *value);
-void controld_stop_election_timer(void);
-void controld_disconnect_cib_manager(void);
+void controld_stop_current_election_timeout(void);
 
 #endif

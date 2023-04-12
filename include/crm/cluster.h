@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -33,6 +33,12 @@ extern unsigned long long crm_peer_seq;
 #define CRM_NODE_MEMBER    "member"
 
 enum crm_join_phase {
+    /* @COMPAT: crm_join_nack_quiet can be replaced by crm_node_t:user_data
+     *          at a compatibility break.
+     */
+    //! Not allowed to join, but don't send a nack message
+    crm_join_nack_quiet = -2,
+
     crm_join_nack       = -1,
     crm_join_none       = 0,
     crm_join_welcomed   = 1,
@@ -96,6 +102,9 @@ typedef struct crm_cluster_s {
 gboolean crm_cluster_connect(crm_cluster_t *cluster);
 void crm_cluster_disconnect(crm_cluster_t *cluster);
 
+crm_cluster_t *pcmk_cluster_new(void);
+void pcmk_cluster_free(crm_cluster_t *cluster);
+
 enum crm_ais_msg_class {
     crm_class_cluster = 0,
 };
@@ -120,8 +129,9 @@ enum crm_get_peer_flags {
     CRM_GET_PEER_ANY       = CRM_GET_PEER_CLUSTER|CRM_GET_PEER_REMOTE,
 };
 
-gboolean send_cluster_message(crm_node_t *node, enum crm_ais_msg_types service,
-                              xmlNode *data, gboolean ordered);
+gboolean send_cluster_message(const crm_node_t *node,
+                              enum crm_ais_msg_types service, xmlNode *data,
+                              gboolean ordered);
 
 int crm_remote_peer_cache_size(void);
 
@@ -153,7 +163,7 @@ void pcmk_cpg_membership(cpg_handle_t handle,
                          const struct cpg_address *joined_list, size_t joined_list_entries);
 gboolean crm_is_corosync_peer_active(const crm_node_t * node);
 gboolean send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
-                           gboolean local, crm_node_t * node,
+                           gboolean local, const crm_node_t *node,
                            enum crm_ais_msg_types dest);
 char *pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void *msg,
                         uint32_t *kind, const char **from);
@@ -201,14 +211,15 @@ static inline const char *
 crm_join_phase_str(enum crm_join_phase phase)
 {
     switch (phase) {
+        case crm_join_nack_quiet:   return "nack_quiet";
         case crm_join_nack:         return "nack";
         case crm_join_none:         return "none";
         case crm_join_welcomed:     return "welcomed";
         case crm_join_integrated:   return "integrated";
         case crm_join_finalized:    return "finalized";
         case crm_join_confirmed:    return "confirmed";
+        default:                    return "invalid";
     }
-    return "invalid";
 }
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)

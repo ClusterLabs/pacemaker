@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2022 the Pacemaker project contributors
+ * Copyright 2021-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,7 +16,7 @@
 
 #include <crm/pengine/pe_types.h> // pe_action_t, pe_node_t, pe_working_set_t
 
-// Flags to modify the behavior of pcmk__add_colocated_node_scores()
+// Flags to modify the behavior of add_colocated_node_scores()
 enum pcmk__coloc_select {
     // With no other flags, apply all "with this" colocations
     pcmk__coloc_select_default      = 0,
@@ -77,8 +77,8 @@ struct resource_alloc_functions_s {
      * \internal
      * \brief Schedule any probes needed for a resource on a node
      *
-     * \param[in] rsc   Resource to create probe for
-     * \param[in] node  Node to create probe on
+     * \param[in,out] rsc   Resource to create probe for
+     * \param[in,out] node  Node to create probe on
      *
      * \return true if any probe was created, otherwise false
      */
@@ -117,9 +117,9 @@ struct resource_alloc_functions_s {
      * Given a resource, create a list of all resources involved in mandatory
      * colocations with it, whether directly or indirectly via chained colocations.
      *
-     * \param[in] rsc             Resource to add to colocated list
-     * \param[in] orig_rsc        Resource originally requested
-     * \param[in] colocated_rscs  Existing list
+     * \param[in]     rsc             Resource to add to colocated list
+     * \param[in]     orig_rsc        Resource originally requested
+     * \param[in,out] colocated_rscs  Existing list
      *
      * \return List of given resource and all resources involved in colocations
      *
@@ -127,8 +127,71 @@ struct resource_alloc_functions_s {
      *       \p colocated_rscs and \p orig_rsc, and the desired resource as
      *       \p rsc. The recursive calls will use other values.
      */
-    GList *(*colocated_resources)(pe_resource_t *rsc, pe_resource_t *orig_rsc,
+    GList *(*colocated_resources)(const pe_resource_t *rsc,
+                                  const pe_resource_t *orig_rsc,
                                   GList *colocated_rscs);
+
+    /*!
+     * \internal
+     * \brief Add colocations affecting a resource as primary to a list
+     *
+     * Given a resource being assigned (\p orig_rsc) and a resource somewhere in
+     * its chain of ancestors (\p rsc, which may be \p orig_rsc), get
+     * colocations that affect the ancestor as primary and should affect the
+     * resource, and add them to a given list.
+     *
+     * \param[in]     rsc       Resource whose colocations should be added
+     * \param[in]     orig_rsc  Affected resource (\p rsc or a descendant)
+     * \param[in,out] list      List of colocations to add to
+     *
+     * \note All arguments should be non-NULL.
+     * \note The pcmk__with_this_colocations() wrapper should usually be used
+     *       instead of using this method directly.
+     */
+    void (*with_this_colocations)(const pe_resource_t *rsc,
+                                  const pe_resource_t *orig_rsc, GList **list);
+
+    /*!
+     * \internal
+     * \brief Add colocations affecting a resource as dependent to a list
+     *
+     * Given a resource being assigned (\p orig_rsc) and a resource somewhere in
+     * its chain of ancestors (\p rsc, which may be \p orig_rsc), get
+     * colocations that affect the ancestor as dependent and should affect the
+     * resource, and add them to a given list.
+     *
+     *
+     * \param[in]     rsc       Resource whose colocations should be added
+     * \param[in]     orig_rsc  Affected resource (\p rsc or a descendant)
+     * \param[in,out] list      List of colocations to add to
+     *
+     * \note All arguments should be non-NULL.
+     * \note The pcmk__this_with_colocations() wrapper should usually be used
+     *       instead of using this method directly.
+     */
+    void (*this_with_colocations)(const pe_resource_t *rsc,
+                                  const pe_resource_t *orig_rsc, GList **list);
+
+    /*!
+     * \internal
+     * \brief Update nodes with scores of colocated resources' nodes
+     *
+     * Given a table of nodes and a resource, update the nodes' scores with the
+     * scores of the best nodes matching the attribute used for each of the
+     * resource's relevant colocations.
+     *
+     * \param[in,out] rsc      Resource to check colocations for
+     * \param[in]     log_id   Resource ID to use in logs (if NULL, use \p rsc ID)
+     * \param[in,out] nodes    Nodes to update
+     * \param[in]     attr     Colocation attribute (NULL to use default)
+     * \param[in]     factor   Incorporate scores multiplied by this factor
+     * \param[in]     flags    Bitmask of enum pcmk__coloc_select values
+     *
+     * \note The caller remains responsible for freeing \p *nodes.
+     */
+    void (*add_colocated_node_scores)(pe_resource_t *rsc, const char *log_id,
+                                      GHashTable **nodes, const char *attr,
+                                      float factor, uint32_t flags);
 
     /*!
      * \internal
@@ -160,7 +223,8 @@ struct resource_alloc_functions_s {
      *
      * Given information about an ordering of two actions, update the actions'
      * flags (and runnable_before members if appropriate) as appropriate for the
-     * ordering. In some cases, the ordering could be disabled as well.
+     * ordering. Effects may cascade to other orderings involving the actions as
+     * well.
      *
      * \param[in,out] first     'First' action in an ordering
      * \param[in,out] then      'Then' action in an ordering
@@ -187,7 +251,7 @@ struct resource_alloc_functions_s {
      * \internal
      * \brief Add a resource's actions to the transition graph
      *
-     * \param[in] rsc  Resource whose actions should be added
+     * \param[in,out] rsc  Resource whose actions should be added
      */
     void (*add_actions_to_graph)(pe_resource_t *rsc);
 
@@ -201,7 +265,7 @@ struct resource_alloc_functions_s {
      * \param[in]     rsc  Resource whose meta-attributes should be added
      * \param[in,out] xml  Transition graph action attributes XML to add to
      */
-    void (*add_graph_meta)(pe_resource_t *rsc, xmlNode *xml);
+    void (*add_graph_meta)(const pe_resource_t *rsc, xmlNode *xml);
 
     /*!
      * \internal
@@ -226,7 +290,7 @@ struct resource_alloc_functions_s {
      * \internal
      * \brief Apply a shutdown lock for a resource, if appropriate
      *
-     * \param[in] rsc       Resource to check for shutdown lock
+     * \param[in,out] rsc       Resource to check for shutdown lock
      */
     void (*shutdown_lock)(pe_resource_t *rsc);
 };
@@ -244,7 +308,8 @@ uint32_t pcmk__update_ordered_actions(pe_action_t *first, pe_action_t *then,
                                       pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-void pcmk__log_action(const char *pre_text, pe_action_t *action, bool details);
+void pcmk__log_action(const char *pre_text, const pe_action_t *action,
+                      bool details);
 
 G_GNUC_INTERNAL
 pe_action_t *pcmk__new_cancel_action(pe_resource_t *rsc, const char *name,
@@ -264,7 +329,7 @@ void pcmk__output_actions(pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
 bool pcmk__check_action_config(pe_resource_t *rsc, pe_node_t *node,
-                               xmlNode *xml_op);
+                               const xmlNode *xml_op);
 
 G_GNUC_INTERNAL
 void pcmk__handle_rsc_config_changes(pe_working_set_t *data_set);
@@ -291,7 +356,8 @@ bool pcmk__action_is_recurring(const pe_action_t *action);
 // Producing transition graphs (pcmk_graph_producer.c)
 
 G_GNUC_INTERNAL
-bool pcmk__graph_has_loop(pe_action_t *init_action, pe_action_t *action,
+bool pcmk__graph_has_loop(const pe_action_t *init_action,
+                          const pe_action_t *action,
                           pe_action_wrapper_t *input);
 
 G_GNUC_INTERNAL
@@ -307,14 +373,14 @@ G_GNUC_INTERNAL
 void pcmk__order_vs_fence(pe_action_t *stonith_op, pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-void pcmk__order_vs_unfence(pe_resource_t *rsc, pe_node_t *node,
+void pcmk__order_vs_unfence(const pe_resource_t *rsc, pe_node_t *node,
                             pe_action_t *action, enum pe_ordering order);
 
 G_GNUC_INTERNAL
 void pcmk__fence_guest(pe_node_t *node);
 
 G_GNUC_INTERNAL
-bool pcmk__node_unfenced(pe_node_t *node);
+bool pcmk__node_unfenced(const pe_node_t *node);
 
 G_GNUC_INTERNAL
 void pcmk__order_restart_vs_unfence(gpointer data, gpointer user_data);
@@ -323,7 +389,7 @@ void pcmk__order_restart_vs_unfence(gpointer data, gpointer user_data);
 // Injected scheduler inputs (pcmk_sched_injections.c)
 
 void pcmk__inject_scheduler_input(pe_working_set_t *data_set, cib_t *cib,
-                                  pcmk_injections_t *injections);
+                                  const pcmk_injections_t *injections);
 
 
 // Constraints of any type (pcmk_sched_constraints.c)
@@ -333,15 +399,16 @@ pe_resource_t *pcmk__find_constraint_resource(GList *rsc_list, const char *id);
 
 G_GNUC_INTERNAL
 xmlNode *pcmk__expand_tags_in_sets(xmlNode *xml_obj,
-                                   pe_working_set_t *data_set);
+                                   const pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-bool pcmk__valid_resource_or_tag(pe_working_set_t *data_set, const char *id,
-                                 pe_resource_t **rsc, pe_tag_t **tag);
+bool pcmk__valid_resource_or_tag(const pe_working_set_t *data_set,
+                                 const char *id, pe_resource_t **rsc,
+                                 pe_tag_t **tag);
 
 G_GNUC_INTERNAL
 bool pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
-                      bool convert_rsc, pe_working_set_t *data_set);
+                      bool convert_rsc, const pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
 void pcmk__create_internal_constraints(pe_working_set_t *data_set);
@@ -398,10 +465,16 @@ G_GNUC_INTERNAL
 void pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-void pcmk__add_this_with(pe_resource_t *rsc, pcmk__colocation_t *colocation);
+void pcmk__add_this_with(GList **list, const pcmk__colocation_t *colocation);
 
 G_GNUC_INTERNAL
-void pcmk__add_with_this(pe_resource_t *rsc, pcmk__colocation_t *colocation);
+void pcmk__add_this_with_list(GList **list, GList *addition);
+
+G_GNUC_INTERNAL
+void pcmk__add_with_this(GList **list, const pcmk__colocation_t *colocation);
+
+G_GNUC_INTERNAL
+void pcmk__add_with_this_list(GList **list, GList *addition);
 
 G_GNUC_INTERNAL
 void pcmk__new_colocation(const char *id, const char *node_attr, int score,
@@ -487,12 +560,11 @@ void pcmk__order_after_each(pe_action_t *after, GList *list);
  * \internal
  * \brief Create a new ordering between two resource actions
  *
- * \param[in] first_rsc   Resource for 'first' action
- * \param[in] then_rsc    Resource for 'then' action
- * \param[in] first_task  Action key for 'first' action
- * \param[in] then_task   Action key for 'then' action
- * \param[in] flags       Bitmask of enum pe_ordering flags
- * \param[in] data_set    Cluster working set to add ordering to
+ * \param[in,out] first_rsc   Resource for 'first' action
+ * \param[in,out] first_task  Action key for 'first' action
+ * \param[in]     then_rsc    Resource for 'then' action
+ * \param[in,out] then_task   Action key for 'then' action
+ * \param[in]     flags       Bitmask of enum pe_ordering flags
  */
 #define pcmk__order_resource_actions(first_rsc, first_task,                 \
                                      then_rsc, then_task, flags)            \
@@ -552,22 +624,23 @@ void pcmk__update_promotable_dependent_priority(const pe_resource_t *primary,
 // Pacemaker Remote nodes (pcmk_sched_remote.c)
 
 G_GNUC_INTERNAL
-bool pcmk__is_failed_remote_node(pe_node_t *node);
+bool pcmk__is_failed_remote_node(const pe_node_t *node);
 
 G_GNUC_INTERNAL
 void pcmk__order_remote_connection_actions(pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-bool pcmk__rsc_corresponds_to_guest(pe_resource_t *rsc, pe_node_t *node);
+bool pcmk__rsc_corresponds_to_guest(const pe_resource_t *rsc,
+                                    const pe_node_t *node);
 
 G_GNUC_INTERNAL
-pe_node_t *pcmk__connection_host_for_action(pe_action_t *action);
+pe_node_t *pcmk__connection_host_for_action(const pe_action_t *action);
 
 G_GNUC_INTERNAL
 void pcmk__substitute_remote_addr(pe_resource_t *rsc, GHashTable *params);
 
 G_GNUC_INTERNAL
-void pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, pe_action_t *action);
+void pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pe_action_t *action);
 
 
 // Primitives (pcmk_sched_primitive.c)
@@ -592,11 +665,21 @@ void pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
                                        bool for_dependent);
 
 G_GNUC_INTERNAL
+void pcmk__with_primitive_colocations(const pe_resource_t *rsc,
+                                      const pe_resource_t *orig_rsc,
+                                      GList **list);
+
+G_GNUC_INTERNAL
+void pcmk__primitive_with_colocations(const pe_resource_t *rsc,
+                                      const pe_resource_t *orig_rsc,
+                                      GList **list);
+
+G_GNUC_INTERNAL
 void pcmk__schedule_cleanup(pe_resource_t *rsc, const pe_node_t *node,
                             bool optional);
 
 G_GNUC_INTERNAL
-void pcmk__primitive_add_graph_meta(pe_resource_t *rsc, xmlNode *xml);
+void pcmk__primitive_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml);
 
 G_GNUC_INTERNAL
 void pcmk__primitive_add_utilization(const pe_resource_t *rsc,
@@ -625,6 +708,20 @@ void pcmk__group_apply_coloc_score(pe_resource_t *dependent,
                                    bool for_dependent);
 
 G_GNUC_INTERNAL
+void pcmk__with_group_colocations(const pe_resource_t *rsc,
+                                  const pe_resource_t *orig_rsc, GList **list);
+
+G_GNUC_INTERNAL
+void pcmk__group_with_colocations(const pe_resource_t *rsc,
+                                  const pe_resource_t *orig_rsc, GList **list);
+
+G_GNUC_INTERNAL
+void pcmk__group_add_colocated_node_scores(pe_resource_t *rsc,
+                                           const char *log_id,
+                                           GHashTable **nodes, const char *attr,
+                                           float factor, uint32_t flags);
+
+G_GNUC_INTERNAL
 void pcmk__group_apply_location(pe_resource_t *rsc, pe__location_t *location);
 
 G_GNUC_INTERNAL
@@ -640,8 +737,8 @@ uint32_t pcmk__group_update_ordered_actions(pe_action_t *first,
                                             pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-GList *pcmk__group_colocated_resources(pe_resource_t *rsc,
-                                       pe_resource_t *orig_rsc,
+GList *pcmk__group_colocated_resources(const pe_resource_t *rsc,
+                                       const pe_resource_t *orig_rsc,
                                        GList *colocated_rscs);
 
 G_GNUC_INTERNAL
@@ -656,12 +753,26 @@ void pcmk__group_shutdown_lock(pe_resource_t *rsc);
 // Clones (pcmk_sched_clone.c)
 
 G_GNUC_INTERNAL
+pe_node_t *pcmk__clone_assign(pe_resource_t *rsc, const pe_node_t *prefer);
+
+G_GNUC_INTERNAL
 void pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
                                    const pe_resource_t *primary,
                                    const pcmk__colocation_t *colocation,
                                    bool for_dependent);
 
+G_GNUC_INTERNAL
+void pcmk__with_clone_colocations(const pe_resource_t *rsc,
+                                  const pe_resource_t *orig_rsc, GList **list);
+
+G_GNUC_INTERNAL
+void pcmk__clone_with_colocations(const pe_resource_t *rsc,
+                                  const pe_resource_t *orig_rsc, GList **list);
+
 // Bundles (pcmk_sched_bundle.c)
+
+G_GNUC_INTERNAL
+const pe_resource_t *pcmk__get_rsc_in_container(const pe_resource_t *instance);
 
 G_GNUC_INTERNAL
 void pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
@@ -670,7 +781,55 @@ void pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
                                     bool for_dependent);
 
 G_GNUC_INTERNAL
+void pcmk__with_bundle_colocations(const pe_resource_t *rsc,
+                                   const pe_resource_t *orig_rsc, GList **list);
+
+G_GNUC_INTERNAL
+void pcmk__bundle_with_colocations(const pe_resource_t *rsc,
+                                   const pe_resource_t *orig_rsc, GList **list);
+
+G_GNUC_INTERNAL
 void pcmk__output_bundle_actions(pe_resource_t *rsc);
+
+
+// Clone instances or bundle replica containers (pcmk_sched_instances.c)
+
+G_GNUC_INTERNAL
+void pcmk__assign_instances(pe_resource_t *collective, GList *instances,
+                            int max_total, int max_per_node);
+
+G_GNUC_INTERNAL
+void pcmk__create_instance_actions(pe_resource_t *rsc, GList *instances);
+
+G_GNUC_INTERNAL
+bool pcmk__instance_matches(const pe_resource_t *instance,
+                            const pe_node_t *node, enum rsc_role_e role,
+                            bool current);
+
+G_GNUC_INTERNAL
+pe_resource_t *pcmk__find_compatible_instance(const pe_resource_t *match_rsc,
+                                              const pe_resource_t *rsc,
+                                              enum rsc_role_e role,
+                                              bool current);
+
+G_GNUC_INTERNAL
+uint32_t pcmk__instance_update_ordered_actions(pe_action_t *first,
+                                               pe_action_t *then,
+                                               const pe_node_t *node,
+                                               uint32_t flags, uint32_t filter,
+                                               uint32_t type,
+                                               pe_working_set_t *data_set);
+
+G_GNUC_INTERNAL
+enum pe_action_flags pcmk__collective_action_flags(pe_action_t *action,
+                                                   const GList *instances,
+                                                   const pe_node_t *node);
+
+G_GNUC_INTERNAL
+void pcmk__add_collective_constraints(GList **list,
+                                      const pe_resource_t *instance,
+                                      const pe_resource_t *collective,
+                                      bool with_this);
 
 
 // Injections (pcmk_injections.c)
@@ -733,14 +892,15 @@ bool pcmk__rsc_agent_changed(pe_resource_t *rsc, pe_node_t *node,
                              const xmlNode *rsc_entry, bool active_on_node);
 
 G_GNUC_INTERNAL
-GList *pcmk__rscs_matching_id(const char *id, pe_working_set_t *data_set);
+GList *pcmk__rscs_matching_id(const char *id, const pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-GList *pcmk__colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
+GList *pcmk__colocated_resources(const pe_resource_t *rsc,
+                                 const pe_resource_t *orig_rsc,
                                  GList *colocated_rscs);
 
 G_GNUC_INTERNAL
-void pcmk__noop_add_graph_meta(pe_resource_t *rsc, xmlNode *xml);
+void pcmk__noop_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml);
 
 G_GNUC_INTERNAL
 void pcmk__output_resource_actions(pe_resource_t *rsc);
@@ -756,7 +916,7 @@ G_GNUC_INTERNAL
 void pcmk__unassign_resource(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
-bool pcmk__threshold_reached(pe_resource_t *rsc, pe_node_t *node,
+bool pcmk__threshold_reached(pe_resource_t *rsc, const pe_node_t *node,
                              pe_resource_t **failed);
 
 G_GNUC_INTERNAL
@@ -804,7 +964,7 @@ int pcmk__compare_node_capacities(const pe_node_t *node1,
 
 G_GNUC_INTERNAL
 void pcmk__consume_node_capacity(GHashTable *current_utilization,
-                                 pe_resource_t *rsc);
+                                 const pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
 void pcmk__release_node_capacity(GHashTable *current_utilization,
@@ -815,7 +975,7 @@ const pe_node_t *pcmk__ban_insufficient_capacity(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
 void pcmk__create_utilization_constraints(pe_resource_t *rsc,
-                                          GList *allowed_nodes);
+                                          const GList *allowed_nodes);
 
 G_GNUC_INTERNAL
 void pcmk__show_node_capacities(const char *desc, pe_working_set_t *data_set);

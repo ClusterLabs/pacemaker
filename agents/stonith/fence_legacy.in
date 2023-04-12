@@ -1,0 +1,277 @@
+#!@PYTHON@
+
+__copyright__ = "Copyright 2018-2023 the Pacemaker project contributors"
+__license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
+
+import os
+import sys
+import argparse
+import subprocess
+
+# These imports allow running from a source checkout after running `make`.
+# Note that while this doesn't necessarily mean it will successfully run tests,
+# but being able to see --help output can be useful.
+if os.path.exists("@abs_top_srcdir@/python"):
+    sys.path.insert(0, "@abs_top_srcdir@/python")
+
+if os.path.exists("@abs_top_builddir@/python") and "@abs_top_builddir@" != "@abs_top_srcdir@":
+    sys.path.insert(0, "@abs_top_builddir@/python")
+
+from pacemaker.exitstatus import ExitStatus
+
+VERSION = "1.1.0"
+
+USAGE = """Helper that presents a Pacemaker-style interface for Linux-HA stonith plugins
+
+Should never be invoked by the user directly
+
+
+Usage: fence_legacy [options]
+
+Options:
+  -h               usage
+  -t <sub agent>   sub agent
+  -n <name>        nodename
+  -o <string>      Action:  on | off | reset (default) | stat | hostlist
+  -s <stonith>     stonith command
+  -q               quiet mode
+  -V               version"""
+
+META_DATA = """<?xml version="1.0" ?>
+<resource-agent name="fence_pcmk" shortdesc="Helper that presents a Pacemaker-style interface for Linux-HA stonith plugins">
+<longdesc>
+This agent should never be invoked by the user directly.
+</longdesc>
+<vendor-url>https://www.clusterlabs.org/</vendor-url>
+<parameters>
+        <parameter name="action" unique="1" required="1">
+                <getopt mixed="-o &lt;action&gt;" />
+                <content type="string" default="disable" />
+                <shortdesc lang="en">Fencing Action</shortdesc>
+        </parameter>
+        <parameter name="port" unique="1" required="1">
+                <getopt mixed="-n &lt;id&gt;" />
+                <content type="string"  />
+                <shortdesc lang="en">Physical plug number or name of virtual machine</shortdesc>
+        </parameter>
+        <parameter name="help" unique="1" required="0">
+                <getopt mixed="-h" />
+                <content type="string"  />
+                <shortdesc lang="en">Display help and exit</shortdesc>
+        </parameter>
+</parameters>
+<actions>
+        <action name="enable" />
+        <action name="disable" />
+        <action name="reboot" />
+        <action name="off" />
+        <action name="on" />
+        <action name="status" />
+        <action name="list" />
+        <action name="metadata" />
+</actions>
+</resource-agent>"""
+
+ACTIONS = [
+    "on",
+    "off",
+    "reset",
+    "reboot",
+    "stat",
+    "status",
+    "metadata",
+    "monitor",
+    "list",
+    "hostlist",
+    "poweroff",
+    "poweron"
+]
+
+
+def parse_cli_options():
+    """ Return parsed command-line options (as argparse namespace) """
+
+
+    # Don't add standard help option, so we can format it how we want
+    parser = argparse.ArgumentParser(add_help=False)
+
+    parser.add_argument("-t", metavar="SUBAGENT", dest="subagent",
+                        nargs=1, default="none", help="sub-agent")
+
+    parser.add_argument("-n", metavar="NODE", dest="node",
+                        nargs=1, default="", help="name of target node")
+
+    # The help text here is consistent with the original version, though
+    # perhaps all actions should be listed.
+    parser.add_argument("-o", metavar="ACTION", dest="action",
+                        nargs=1, choices=ACTIONS, default="reset",
+                        help="action: on | off | reset (default) | stat | hostlist")
+
+    parser.add_argument("-s", metavar="COMMAND", dest="command",
+                        nargs=1, default="stonith", help="stonith command")
+
+    parser.add_argument("-q", dest="quiet", action="store_true",
+                        help="quiet mode")
+
+    parser.add_argument("-h", "--help", action="store_true",
+                        help="show usage and exit")
+
+    # Don't use action="version", because that printed to stderr before
+    # Python 3.4, and help2man doesn't like that.
+    parser.add_argument("-V", "--version", action="store_true",
+                        help="show version and exit")
+
+    return parser.parse_args()
+
+
+def parse_stdin_options(options):
+    """ Update options namespace with options parsed from stdin """
+
+    nlines = 0
+    for line in sys.stdin:
+        # Remove leading and trailing whitespace
+        line = line.strip()
+
+        # Skip blank lines and comments
+        if line == "" or line[0] == "#":
+            continue
+
+        nlines = nlines + 1
+
+        # Parse option name and value (allow whitespace around equals sign)
+        try:
+            (name, value) = line.split("=", 1)
+            name = name.rstrip()
+            if name == "":
+                raise ValueError
+        except ValueError:
+            print("parse error: illegal name in option %d" % nlines,
+                  file=sys.stderr)
+            sys.exit(ExitStatus.INVALID_PARAM)
+        value = value.lstrip()
+
+        if name == "plugin":
+            options.subagent = value
+
+        elif name in [ "option", "action" ]:
+            options.action = value
+
+        elif name == "nodename":
+            options.node = value
+            os.environ[name] = value
+
+        elif name == "stonith":
+            options.command = value
+
+        elif name != "agent": # agent is used by fenced
+            os.environ[name] = value
+
+
+def normalize_options(options):
+    """ Use string rather than list of one string """
+
+    if not hasattr(options.subagent, "strip"):
+        options.subagent = options.subagent[0]
+
+    if not hasattr(options.node, "strip"):
+        options.node = options.node[0]
+
+    if not hasattr(options.action, "strip"):
+        options.action = options.action[0]
+
+    if not hasattr(options.command, "strip"):
+        options.command = options.command[0]
+
+
+def build_command(options):
+    """ Return command to execute (as list of arguments) """
+
+    if options.action in [ "hostlist", "list" ]:
+        extra_args = [ "-l" ]
+
+    elif options.action in [ "monitor", "stat", "status" ]:
+        extra_args = [ "-S" ]
+
+    else:
+        if options.node == "":
+            if not options.quiet:
+                print("failed: no plug number")
+            sys.exit(ExitStatus.ERROR)
+        extra_args = [ "-T", options.action, options.node ]
+
+    return [ options.command, "-t", options.subagent, "-E" ] + extra_args
+
+
+def handle_local_options(options):
+    """ Handle options that don't require the fence agent """
+
+    if options.help:
+        print(USAGE)
+        sys.exit(ExitStatus.OK)
+
+    if options.version:
+        print(VERSION)
+        sys.exit(ExitStatus.OK)
+
+
+def remap_action(options):
+    """ Pre-process requested action """
+
+    options.action = options.action.lower()
+
+    if options.action == "metadata":
+        print(META_DATA)
+        sys.exit(ExitStatus.OK)
+
+    elif options.action in [ "hostlist", "list" ]:
+        options.quiet = True
+
+    # Remap accepted aliases to their actual commands
+
+    elif options.action == "reboot":
+        options.action = "reset"
+
+    elif options.action == "poweron":
+        options.action = "on"
+
+    elif options.action == "poweroff":
+        options.action = "off"
+
+
+def execute_command(options, cmd):
+    """ Execute command and return its exit status """
+
+    if not options.quiet:
+        print("Performing: " + " ".join(cmd))
+    return subprocess.call(cmd)
+
+
+def handle_result(options, status):
+    """ Process fence agent result """
+
+    if status == 0:
+        message = "success"
+        exitcode = ExitStatus.OK
+    else:
+        message = "failed"
+        exitcode = ExitStatus.ERROR
+    if not options.quiet:
+        print("%s: %s %d" % (message, options.node, status))
+    sys.exit(exitcode)
+
+
+def main():
+    """ Execute an LHA-style fence agent """
+
+    options = parse_cli_options()
+    handle_local_options(options)
+    normalize_options(options)
+    parse_stdin_options(options)
+    remap_action(options)
+    cmd = build_command(options)
+    status = execute_command(options, cmd)
+    handle_result(options, status)
+
+
+if __name__ == "__main__":
+    main()

@@ -409,7 +409,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="28">
+  <synapse id="28" priority="1000000">
     <action_set>
       <rsc_op id="48" operation="promote" operation_key="vip-164-fw_promote_0" internal_operation_key="vip-164-fw:1_promote_0" on_node="sd01-0" on_node_uuid="1">
         <primitive id="vip-164-fw" long-id="vip-164-fw:1" class="ocf" provider="vds-ok" type="VIPfirewall"/>

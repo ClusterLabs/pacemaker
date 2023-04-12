@@ -1,0 +1,82 @@
+<cib crm_feature_set="3.11.0" validate-with="pacemaker-3.7" epoch="8" num_updates="53" admin_epoch="0" cib-last-written="Fri Dec  2 18:00:35 2022" update-origin="node-1" update-client="crm_resource" update-user="root" have-quorum="1" dc-uuid="1" execution-date="1670000692">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair name="have-watchdog" value="true" id="cib-bootstrap-options-have-watchdog"/>
+        <nvpair name="dc-version" value="2.1.2+20211124.ada5c3b36-150400.29.16-2.1.2+20211124.ada5c3b36" id="cib-bootstrap-options-dc-version"/>
+        <nvpair name="cluster-infrastructure" value="corosync" id="cib-bootstrap-options-cluster-infrastructure"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="node-1"/>
+      <node id="2" uname="node-2"/>
+      <node id="3" uname="node-3"/>
+    </nodes>
+    <resources>
+      <primitive id="st-sbd" class="stonith" type="external/sbd"/>
+      <clone id="promotable-1">
+        <meta_attributes id="promotable-1-meta_attributes">
+          <nvpair name="promotable" value="true" id="promotable-1-meta_attributes-promotable"/>
+          <nvpair name="interleave" value="true" id="promotable-1-meta_attributes-interleave"/>
+        </meta_attributes>
+        <primitive id="stateful-1" class="ocf" provider="pacemaker" type="Stateful">
+          <operations>
+            <op name="monitor" interval="5" id="stateful-1-monitor-5"/>
+            <op name="monitor" interval="10" role="Promoted" id="stateful-1-monitor-10"/>
+          </operations>
+        </primitive>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-prefer-promotable-1" rsc="promotable-1" role="Master" node="node-3" score="INFINITY"/>
+    </constraints>
+    <rsc_defaults>
+      <meta_attributes id="build-resource-defaults">
+        <nvpair id="build-resource-stickiness" name="resource-stickiness" value="1"/>
+      </meta_attributes>
+    </rsc_defaults>
+  </configuration>
+  <status>
+    <node_state id="1" uname="node-1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-.feature-set" name="#feature-set" value="3.11.0"/>
+          <nvpair id="status-1-fail-count-stateful-1.monitor_5000" name="fail-count-stateful-1#monitor_5000" value="2"/>
+          <nvpair id="status-1-last-failure-stateful-1.monitor_5000" name="last-failure-stateful-1#monitor_5000" value="1670000676"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="st-sbd" type="external/sbd" class="stonith">
+            <lrm_rsc_op id="st-sbd_last_0" operation_key="st-sbd_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.11.0" transition-key="3:1:0:85fd6005-3b05-4b2a-a0d6-3635783e4e1d" transition-magic="0:0;3:1:0:85fd6005-3b05-4b2a-a0d6-3635783e4e1d" exit-reason="" on_node="node-1" call-id="11" rc-code="0" op-status="0" interval="0" last-rc-change="1670000509" exec-time="1418" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="stateful-1" type="Stateful" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="stateful-1_last_0" operation_key="stateful-1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.11.0" transition-key="2:7:0:85fd6005-3b05-4b2a-a0d6-3635783e4e1d" transition-magic="0:0;2:7:0:85fd6005-3b05-4b2a-a0d6-3635783e4e1d" exit-reason="" on_node="node-1" call-id="19" rc-code="0" op-status="0" interval="0" last-rc-change="1670000676" exec-time="15102" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart="  state  " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="stateful-1_monitor_5000" operation_key="stateful-1_monitor_5000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.11.0" transition-key="6:6:0:85fd6005-3b05-4b2a-a0d6-3635783e4e1d" transition-magic="-1:193;6:6:0:85fd6005-3b05-4b2a-a0d6-3635783e4e1d" exit-reason="" on_node="node-1" call-id="-1" rc-code="193" op-status="-1" interval="5000" last-rc-change="1670000661" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+            <lrm_rsc_op id="stateful-1_last_failure_0" operation_key="stateful-1_monitor_5000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.11.0" transition-key="6:6:0:85fd6005-3b05-4b2a-a0d6-3635783e4e1d" transition-magic="0:7;6:6:0:85fd6005-3b05-4b2a-a0d6-3635783e4e1d" exit-reason="" on_node="node-1" call-id="17" rc-code="7" op-status="0" interval="5000" last-rc-change="1670000676" exec-time="15023" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="3" in_ccm="true" crmd="online" crm-debug-origin="post_cache_update" uname="node-3" join="member" expected="member">
+      <transient_attributes id="3">
+        <instance_attributes id="status-3">
+          <nvpair id="status-3-.feature-set" name="#feature-set" value="3.11.0"/>
+          <nvpair id="status-3-master-stateful-1" name="master-stateful-1" value="10"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="3">
+        <lrm_resources>
+          <lrm_resource id="st-sbd" type="external/sbd" class="stonith">
+            <lrm_rsc_op id="st-sbd_last_0" operation_key="st-sbd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.11.0" transition-key="1:1:7:85fd6005-3b05-4b2a-a0d6-3635783e4e1d" transition-magic="0:7;1:1:7:85fd6005-3b05-4b2a-a0d6-3635783e4e1d" exit-reason="" on_node="node-3" call-id="5" rc-code="7" op-status="0" interval="0" last-rc-change="1670000497" exec-time="5" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="stateful-1" type="Stateful" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="stateful-1_last_0" operation_key="stateful-1_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.11.0" transition-key="8:2:0:85fd6005-3b05-4b2a-a0d6-3635783e4e1d" transition-magic="0:0;8:2:0:85fd6005-3b05-4b2a-a0d6-3635783e4e1d" exit-reason="" on_node="node-3" call-id="12" rc-code="0" op-status="0" interval="0" last-rc-change="1670000510" exec-time="65" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart="  state  " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="stateful-1_monitor_10000" operation_key="stateful-1_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.11.0" transition-key="10:3:8:85fd6005-3b05-4b2a-a0d6-3635783e4e1d" transition-magic="0:8;10:3:8:85fd6005-3b05-4b2a-a0d6-3635783e4e1d" exit-reason="" on_node="node-3" call-id="13" rc-code="8" op-status="0" interval="10000" last-rc-change="1670000510" exec-time="17" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="2" uname="node-2" crmd="offline" crm-debug-origin="post_cache_update" in_ccm="true" join="down" expected="down"/>
+  </status>
+</cib>

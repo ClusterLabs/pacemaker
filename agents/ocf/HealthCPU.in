@@ -1,0 +1,212 @@
+#!/bin/sh
+#
+# ocf:pacemaker:HealthCPU resource agent
+#
+# Copyright 2004-2023 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
+#
+# This source code is licensed under the GNU General Public License version 2
+# (GPLv2) WITHOUT ANY WARRANTY.
+#
+
+#
+# Measures CPUs idling and writes #health-cpu status into the CIB
+#
+################################
+#
+# TODO: Enter default values
+#       Error handling in getting uptime
+#
+##################################
+
+#######################################################################
+# Initialization:
+
+: ${OCF_FUNCTIONS:="${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs"}
+. "${OCF_FUNCTIONS}"
+: ${__OCF_ACTION:="$1"}
+
+#######################################################################
+
+meta_data() {
+    cat <<END
+<?xml version="1.0"?>
+<resource-agent name="HealthCPU" version="@VERSION@">
+<version>1.1</version>
+
+<longdesc lang="en">
+System health agent that measures the CPU idling and updates the #health-cpu attribute.
+</longdesc>
+<shortdesc lang="en">System health CPU usage</shortdesc>
+
+<parameters>
+<parameter name="state" unique-group="state">
+<longdesc lang="en">
+Location to store the resource state in.
+</longdesc>
+<shortdesc lang="en">State file</shortdesc>
+<content type="string" default="${HA_VARRUN%%/}/health-cpu-${OCF_RESOURCE_INSTANCE}.state" />
+</parameter>
+
+<parameter name="yellow_limit" reloadable="1">
+<longdesc lang="en">
+Lower (!) limit of idle percentage to switch the health attribute to yellow. I.e.
+the #health-cpu will go yellow if the %idle of the CPU falls below 50%.
+</longdesc>
+<shortdesc lang="en">Lower limit for yellow health attribute</shortdesc>
+<content type="string" default="50"/>
+</parameter>
+
+<parameter name="red_limit" reloadable="1">
+<longdesc lang="en">
+Lower (!) limit of idle percentage to switch the health attribute to red. I.e.
+the #health-cpu will go red if the %idle of the CPU falls below 10%.
+</longdesc>
+<shortdesc lang="en">Lower limit for red health attribute</shortdesc>
+<content type="string" default="10"/>
+</parameter>
+
+</parameters>
+
+<actions>
+<action name="start"        timeout="10s" />
+<action name="stop"         timeout="10s" />
+<action name="monitor"      timeout="10s" interval="10s" start-delay="0s" />
+<action name="reload-agent" timeout="20s" />
+<action name="meta-data"    timeout="5s" />
+<action name="validate-all"   timeout="10s" depth="0" />
+</actions>
+</resource-agent>
+END
+}
+
+#######################################################################
+
+healthcpu_usage() {
+    cat <<END
+usage: $0 {start|stop|monitor|reload-agent|validate-all|meta-data}
+
+Expects to have a fully populated OCF RA-compliant environment set.
+END
+}
+
+healthcpu_start() {
+    healthcpu_monitor
+    if [ $? -eq $OCF_SUCCESS ]; then
+        return $OCF_SUCCESS
+    fi
+    touch "${OCF_RESKEY_state}"
+}
+
+healthcpu_stop() {
+    healthcpu_monitor
+    if [ $? -eq $OCF_SUCCESS ]; then
+        rm "${OCF_RESKEY_state}"
+    fi
+    return $OCF_SUCCESS
+}
+
+healthcpu_monitor() {
+    if [ -f "${OCF_RESKEY_state}" ]; then
+
+        IDLE=$(top -b -n2 | grep Cpu | tail -1 | awk -F",|.[0-9][ %]id" '{ print $4 }')
+        # echo "System idle: " $IDLE
+        # echo "$OCF_RESKEY_red_limit"
+        # echo $OCF_RESKEY_yellow_limit
+
+        if [ $IDLE -lt ${OCF_RESKEY_red_limit} ] ; then
+            # echo "System state RED!"
+            attrd_updater -n "#health-cpu" -U "red" -d "30s"
+            return $OCF_SUCCESS
+        fi
+
+        if [ $IDLE -lt ${OCF_RESKEY_yellow_limit} ] ; then
+            # echo "System state yellow."
+            attrd_updater -n "#health-cpu" -U "yellow" -d "30s"
+        else
+            # echo "System state green."
+            attrd_updater -n "#health-cpu" -U "green" -d "30s"
+        fi
+
+        return $OCF_SUCCESS
+    fi
+
+    return $OCF_NOT_RUNNING
+}
+
+healthcpu_reload_agent() {
+    # No action required
+    :;
+}
+
+healthcpu_validate() {
+    # If specified, is yellow_limit a non-negative integer?
+    case "$OCF_RESKEY_yellow_limit" in
+        0|[1-9]|[1-9][0-9]|100) ;;
+        *) return $OCF_ERR_CONFIGURED ;;
+    esac
+
+    # If specified, is red_limit a non-negative integer?
+    case "$OCF_RESKEY_red_limit" in
+        0|[1-9]|[1-9][0-9]|100) ;;
+        *) return $OCF_ERR_CONFIGURED ;;
+    esac
+
+    # Host-specific checks
+    if [ "$OCF_CHECK_LEVEL" = "10" ]; then
+
+        # Is the state directory writable?
+        state_dir=$(dirname "$OCF_RESKEY_state")
+        [ -d "$state_dir" ] && [ -w "$state_dir" ] && [ -x "$state_dir" ]
+        if [ $? -ne 0 ]; then
+            ocf_log err "Invalid location for 'state': $state_dir is not writable"
+            return $OCF_ERR_ARGS
+        fi
+    fi
+
+    return $OCF_SUCCESS
+}
+
+: ${OCF_RESKEY_CRM_meta_interval:=0}
+: ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
+
+if [ -z "$OCF_RESKEY_state" ]; then
+    state="${HA_VARRUN%%/}/HealthCPU-${OCF_RESOURCE_INSTANCE}.state"
+    if [ "${OCF_RESKEY_CRM_meta_globally_unique}" = "false" ]; then
+        # Strip off the trailing clone marker
+        OCF_RESKEY_state=$(echo $state | sed s/:[0-9][0-9]*\.state/.state/)
+    else
+        OCF_RESKEY_state="$state"
+    fi
+fi
+
+if [ -z "${OCF_RESKEY_red_limit}" ] ; then
+    OCF_RESKEY_red_limit=10
+fi
+
+if [ -z "${OCF_RESKEY_yellow_limit}" ] ; then
+    OCF_RESKEY_yellow_limit=50
+fi
+
+case "$__OCF_ACTION" in
+meta-data)      meta_data
+                exit $OCF_SUCCESS
+                ;;
+start)          healthcpu_start;;
+stop)           healthcpu_stop;;
+monitor)        healthcpu_monitor;;
+reload-agent)   healthcpu_reload_agent;;
+validate-all)   healthcpu_validate;;
+usage|help)     healthcpu_usage
+                exit $OCF_SUCCESS
+                ;;
+*)              healthcpu_usage
+                exit $OCF_ERR_UNIMPLEMENTED
+                ;;
+esac
+rc=$?
+ocf_log debug "${OCF_RESOURCE_INSTANCE} $__OCF_ACTION : $rc"
+exit $rc
+
+# vim: set filetype=sh expandtab tabstop=4 softtabstop=4 shiftwidth=4 textwidth=80:

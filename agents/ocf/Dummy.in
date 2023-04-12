@@ -1,0 +1,323 @@
+#!/bin/sh
+#
+# ocf:pacemaker:Dummy resource agent
+#
+# Original copyright 2004 SUSE LINUX AG, Lars Marowsky-Br<E9>e
+# Later changes copyright 2008-2023 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
+#
+# This source code is licensed under the GNU General Public License version 2
+# (GPLv2) WITHOUT ANY WARRANTY.
+
+#
+# The Dummy agent is intended primarily for testing, and has various options to
+# make actions intentionally fail or take a long time. It may also be used as a
+# template for resource agent writers, in which case:
+#
+# - Replace all occurrences of "dummy" and "Dummy" with your agent name.
+# - Update the meta-data appropriately for your agent, such as the description
+#   and supported options. Pay particular attention to the timeouts specified in
+#   the actions section; they should be meaningful for the kind of service the
+#   agent manages. They should be the minimum advised timeouts, but shouldn't
+#   try to cover _all_ possible instances. So, try to be neither overly generous
+#   nor too stingy, but moderate. The minimum timeouts should never be below 10
+#   seconds.
+# - Don't copy the stuff here that is just for testing, such as the
+#   sigterm_handler() or dump_env().
+# - You don't need the state file stuff here if you have a better way of
+#   determining whether your service is running. It's only useful for agents
+#   such as health agents that don't actually correspond to a running service.
+# - Implement the actions appropriately for your service. Your monitor action
+#   must differentiate correctly between running, not running, and failed (that
+#   is THREE states, not just yes/no). The migrate_to, migrate_from, and reload
+#   actions are optional and not appropriate to all services.
+#
+
+#######################################################################
+# Initialization:
+
+: ${OCF_FUNCTIONS:="${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs"}
+. "${OCF_FUNCTIONS}"
+: ${__OCF_ACTION:="$1"}
+
+# Explicitly list all environment variables used, to make static analysis happy
+: ${OCF_RESKEY_fake:="dummy"}
+: ${OCF_RESKEY_op_sleep:=0}
+: ${OCF_RESKEY_CRM_meta_interval:=0}
+: ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
+: ${OCF_RESKEY_envfile:=""}
+: ${OCF_RESKEY_fail_start_on:=""}
+: ${OCF_RESKEY_migrate_source:=""}
+: ${OCF_RESKEY_migrate_target:=""}
+: ${OCF_RESKEY_envfile:=""}
+: ${OCF_RESKEY_state:=""}
+
+#######################################################################
+
+meta_data() {
+    cat <<END
+<?xml version="1.0"?>
+<resource-agent name="Dummy" version="@VERSION@">
+<version>1.1</version>
+
+<longdesc lang="en">
+This is a dummy OCF resource agent. It does absolutely nothing except keep track
+of whether it is running or not, and can be configured so that actions fail or
+take a long time. Its purpose is primarily for testing, and to serve as a
+template for resource agent writers.
+</longdesc>
+<shortdesc lang="en">Example stateless resource agent</shortdesc>
+
+<parameters>
+<parameter name="state" unique-group="state">
+<longdesc lang="en">
+Location to store the resource state in.
+</longdesc>
+<shortdesc lang="en">State file</shortdesc>
+<content type="string" default="${HA_VARRUN%%/}/Dummy-${OCF_RESOURCE_INSTANCE}.state" />
+</parameter>
+
+<parameter name="passwd" reloadable="1">
+<longdesc lang="en">
+Fake password field
+</longdesc>
+<shortdesc lang="en">Password</shortdesc>
+<content type="string" default="" />
+</parameter>
+
+<parameter name="fake" reloadable="1">
+<longdesc lang="en">
+Fake attribute that can be changed to cause an agent reload
+</longdesc>
+<shortdesc lang="en">Fake attribute that can be changed to cause an agent reload</shortdesc>
+<content type="string" default="dummy" />
+</parameter>
+
+<parameter name="op_sleep" reloadable="1">
+<longdesc lang="en">
+Number of seconds to sleep during operations.  This can be used to test how
+the cluster reacts to operation timeouts.
+</longdesc>
+<shortdesc lang="en">Operation sleep duration in seconds.</shortdesc>
+<content type="string" default="0" />
+</parameter>
+
+<parameter name="fail_start_on" reloadable="1">
+<longdesc lang="en">
+Start, migrate_from, and reload-agent actions will return failure if running on
+the host specified here, but the resource will run successfully anyway (future
+monitor calls will find it running). This can be used to test on-fail=ignore.
+</longdesc>
+<shortdesc lang="en">Report bogus start failure on specified host</shortdesc>
+<content type="string" default="" />
+</parameter>
+
+<parameter name="envfile" reloadable="1">
+<longdesc lang="en">
+If this is set, the environment will be dumped to this file for every call.
+</longdesc>
+<shortdesc lang="en">Environment dump file</shortdesc>
+<content type="string" default="" />
+</parameter>
+
+</parameters>
+
+<actions>
+<action name="start"        timeout="20s" />
+<action name="stop"         timeout="20s" />
+<action name="monitor"      timeout="20s" interval="10s" depth="0"/>
+<action name="reload"       timeout="20s" />
+<action name="reload-agent" timeout="20s" />
+<action name="migrate_to"   timeout="20s" />
+<action name="migrate_from" timeout="20s" />
+<action name="validate-all" timeout="20s" depth="0" />
+<action name="meta-data"    timeout="5s" />
+</actions>
+</resource-agent>
+END
+}
+
+#######################################################################
+
+# don't exit on TERM, to test that pacemaker-execd makes sure that we do exit
+trap sigterm_handler TERM
+sigterm_handler() {
+    ocf_log info "They use TERM to bring us down. No such luck."
+
+    # Since we're likely going to get KILLed, clean up any monitor
+    # serialization in progress, so the next probe doesn't return an error.
+    rm -f "${VERIFY_SERIALIZED_FILE}"
+    return
+}
+
+dummy_usage() {
+    cat <<END
+usage: $0 {start|stop|monitor|reload|reload-agent|migrate_to|migrate_from|validate-all|meta-data}
+
+Expects to have a fully populated OCF RA-compliant environment set.
+END
+}
+
+dump_env() {
+    if [ "${OCF_RESKEY_envfile}" != "" ]; then
+            echo "### ${__OCF_ACTION} @ $(date) ###
+$(env | sort)
+###" >> "${OCF_RESKEY_envfile}"
+    fi
+}
+
+dummy_start() {
+    dummy_monitor
+
+    DS_RETVAL=$?
+    if [ $DS_RETVAL -eq $OCF_SUCCESS ]; then
+        if [ "$(uname -n)" = "${OCF_RESKEY_fail_start_on}" ]; then
+            DS_RETVAL=$OCF_ERR_GENERIC
+        fi
+        return $DS_RETVAL
+    fi
+
+    touch "${OCF_RESKEY_state}"
+    DS_RETVAL=$?
+    if [ "$(uname -n)" = "${OCF_RESKEY_fail_start_on}" ]; then
+        DS_RETVAL=$OCF_ERR_GENERIC
+    fi
+    return $DS_RETVAL
+}
+
+dummy_stop() {
+    dummy_monitor --force
+    if [ $? -eq $OCF_SUCCESS ]; then
+        rm "${OCF_RESKEY_state}"
+    fi
+    rm -f "${VERIFY_SERIALIZED_FILE}"
+    return $OCF_SUCCESS
+}
+
+dummy_monitor() {
+    if [ $OCF_RESKEY_op_sleep -ne 0 ]; then
+        if [ "$1" = "" ] && [ -f "${VERIFY_SERIALIZED_FILE}" ]; then
+            # two monitor ops have occurred at the same time.
+            # This verifies a condition in pacemaker-execd regression tests.
+            ocf_log err "$VERIFY_SERIALIZED_FILE exists already"
+            ocf_exit_reason "alternate universe collision"
+            return $OCF_ERR_GENERIC
+        fi
+
+        touch "${VERIFY_SERIALIZED_FILE}"
+        sleep ${OCF_RESKEY_op_sleep}
+        rm "${VERIFY_SERIALIZED_FILE}"
+    fi
+
+    if [ -f "${OCF_RESKEY_state}" ]; then
+        # Multiple monitor levels are defined to support various tests
+        case "$OCF_CHECK_LEVEL" in
+            10)
+            # monitor level with delay, useful for testing timeouts
+            sleep 30
+            ;;
+
+            20)
+            # monitor level that fails intermittently
+            n=$(expr "$(dd if=/dev/urandom bs=1 count=1 2>/dev/null | od | head -1 | cut -f2 -d' ')" % 5)
+            if [ $n -eq 1 ]; then
+                ocf_exit_reason "smoke detected near CPU fan"
+                return $OCF_ERR_GENERIC
+            fi
+            ;;
+
+            30)
+            # monitor level that always fails
+            ocf_exit_reason "hyperdrive quota reached"
+            return $OCF_ERR_GENERIC
+            ;;
+
+            40)
+            # monitor level that returns error code from state file
+            rc=$(cat ${OCF_RESKEY_state})
+            [ -n "$rc" ] && ocf_exit_reason "CPU ejected. Observed leaving the Kronosnet galaxy at $rc times the speed of light." && return $rc
+            ;;
+
+            *)
+            ;;
+        esac
+        return $OCF_SUCCESS
+    fi
+    return $OCF_NOT_RUNNING
+}
+
+dummy_validate() {
+    # If specified, is op_sleep an integer?
+    case "$OCF_RESKEY_op_sleep" in
+        ""|*[0-9]*) ;;
+        *) return $OCF_ERR_CONFIGURED ;;
+    esac
+
+    # Host-specific checks
+    if [ "$OCF_CHECK_LEVEL" = "10" ]; then
+
+        # Is the state directory writable?
+        state_dir=$(dirname "$OCF_RESKEY_state")
+        [ -d "$state_dir" ] && [ -w "$state_dir" ] && [ -x "$state_dir" ]
+        if [ $? -ne 0 ]; then
+            return $OCF_ERR_ARGS
+        fi
+
+        # If specified, is the environment file directory writable?
+        if [ -n "$OCF_RESKEY_envfile" ]; then
+            envfile_dir=$(dirname "$OCF_RESKEY_envfile")
+            [ -d "$envfile_dir" ] && [ -w "$envfile_dir" ] && [ -x "$envfile_dir" ]
+            if [ $? -ne 0 ]; then
+                return $OCF_ERR_ARGS
+            fi
+        fi
+
+    fi
+    return $OCF_SUCCESS
+}
+
+if [ -z "$OCF_RESKEY_state" ]; then
+    OCF_RESKEY_state="${HA_VARRUN%%/}/Dummy-${OCF_RESOURCE_INSTANCE}.state"
+
+    if [ "${OCF_RESKEY_CRM_meta_globally_unique}" = "false" ]; then
+        # Strip off the trailing clone marker (note + is not portable in sed)
+        OCF_RESKEY_state=$(echo $OCF_RESKEY_state | sed s/:[0-9][0-9]*\.state/.state/)
+    fi
+fi
+VERIFY_SERIALIZED_FILE="${OCF_RESKEY_state}.serialized"
+
+dump_env
+
+case "$__OCF_ACTION" in
+meta-data)      meta_data
+                exit $OCF_SUCCESS
+                ;;
+start)          dummy_start;;
+stop)           dummy_stop;;
+monitor)        dummy_monitor;;
+migrate_to)     ocf_log info "Migrating ${OCF_RESOURCE_INSTANCE} to ${OCF_RESKEY_CRM_meta_migrate_target}."
+                dummy_stop
+                ;;
+migrate_from)   ocf_log info "Migrating ${OCF_RESOURCE_INSTANCE} from ${OCF_RESKEY_CRM_meta_migrate_source}."
+                dummy_start
+                ;;
+reload)         ocf_log debug "Reloading $OCF_RESOURCE_INSTANCE (service)"
+                exit $OCF_SUCCESS
+                ;;
+reload-agent)   ocf_log err "Reloading $OCF_RESOURCE_INSTANCE (agent)"
+                dummy_start
+                ;;
+validate-all)   dummy_validate;;
+usage|help)     dummy_usage
+                exit $OCF_SUCCESS
+                ;;
+*)              dummy_usage
+                exit $OCF_ERR_UNIMPLEMENTED
+                ;;
+esac
+rc=$?
+ocf_log debug "${OCF_RESOURCE_INSTANCE} $__OCF_ACTION : $rc"
+exit $rc
+
+# vim: set filetype=sh expandtab tabstop=4 softtabstop=4 shiftwidth=4 textwidth=80:

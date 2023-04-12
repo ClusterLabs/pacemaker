@@ -1,5 +1,5 @@
 #
-# Copyright 2001-2021 the Pacemaker project contributors
+# Copyright 2001-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -22,16 +22,9 @@ ctslib_PYTHON		= __init__.py		\
 			  cib_xml.py		\
 			  ClusterManager.py	\
 			  CM_corosync.py	\
-			  CTS.py		\
 			  CTSaudits.py		\
 			  CTSscenarios.py	\
-			  CTStests.py		\
-			  environment.py	\
-			  logging.py		\
-			  patterns.py		\
-			  remote.py		\
-			  watcher.py
-nodist_ctslib_PYTHON	= CTSvars.py
+			  CTStests.py
 
 ctsdir			= $(datadir)/$(PACKAGE)/tests/cts
 cts_SCRIPTS		= CTSlab.py		\

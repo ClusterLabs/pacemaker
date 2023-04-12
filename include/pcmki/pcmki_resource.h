@@ -15,6 +15,6 @@
 #include <crm/pengine/pe_types.h>
 
 int pcmk__resource_digests(pcmk__output_t *out, pe_resource_t *rsc,
-                           pe_node_t *node, GHashTable *overrides);
+                           const pe_node_t *node, GHashTable *overrides);
 
 #endif /* PCMK__PCMKI_PCMKI_RESOURCE__H */

@@ -1,0 +1,240 @@
+#!/bin/sh
+#
+# ocf:pacemaker:attribute resource agent
+#
+# Copyright 2016-2023 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
+#
+
+USAGE="Usage: $0 {start|stop|monitor|migrate_to|migrate_from|validate-all|meta-data}
+
+Expects to have a fully populated OCF RA-compliant environment set."
+
+# Load OCF helper functions
+: ${OCF_FUNCTIONS:="${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs"}
+. "${OCF_FUNCTIONS}"
+: ${__OCF_ACTION:="$1"}
+
+# Ensure certain variables are set and not empty
+: ${HA_VARRUN:="/var/run"}
+: ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
+: ${OCF_RESOURCE_INSTANCE:="undef"}
+
+DEFAULT_STATE_FILE="${HA_VARRUN%%/}/opa-${OCF_RESOURCE_INSTANCE}.state"
+if [ "${OCF_RESKEY_CRM_meta_globally_unique}" = "false" ]; then
+    # Strip off any trailing clone marker (note + is not portable in sed)
+    DEFAULT_STATE_FILE=$(echo "$DEFAULT_STATE_FILE" | sed s/:[0-9][0-9]*\.state/.state/)
+fi
+
+DEFAULT_ATTR_NAME="opa-${OCF_RESOURCE_INSTANCE}"
+DEFAULT_ACTIVE_VALUE="1"
+DEFAULT_INACTIVE_VALUE="0"
+
+: ${OCF_RESKEY_state:="$DEFAULT_STATE_FILE"}
+: ${OCF_RESKEY_name:="$DEFAULT_ATTR_NAME"}
+
+# If the user did not set a value, use the default. If the user explicitly set
+# a value to the empty string, use that (-z "${V+x}" tests whether $V was set).
+if [ -z "${OCF_RESKEY_active_value+x}" ]; then
+    OCF_RESKEY_active_value="$DEFAULT_ACTIVE_VALUE"
+fi
+if [ -z "${OCF_RESKEY_inactive_value+x}" ]; then
+    OCF_RESKEY_inactive_value="$DEFAULT_INACTIVE_VALUE"
+fi
+
+usage() {
+    USAGE_RC=$1
+    cat <<END
+$USAGE
+END
+    return $USAGE_RC
+}
+
+meta_data() {
+    cat <<END
+<?xml version="1.0"?>
+<resource-agent name="attribute" version="@VERSION@">
+  <version>1.1</version>
+  <longdesc lang="en">
+This resource agent controls a node attribute for the node it's running on.
+It sets the attribute one way when started, and another way when stopped,
+according to the configuration parameters.
+  </longdesc>
+  <shortdesc lang="en">Manages a node attribute</shortdesc>
+  <parameters>
+
+    <parameter name="state" unique-group="state">
+      <longdesc lang="en">
+Full path of a temporary file to store the resource state in
+      </longdesc>
+      <shortdesc lang="en">State file</shortdesc>
+      <content type="string" default="${DEFAULT_STATE_FILE}" />
+    </parameter>
+
+    <parameter name="name" unique-group="name">
+      <longdesc lang="en">
+Name of node attribute to manage
+      </longdesc>
+      <shortdesc lang="en">Attribute name</shortdesc>
+      <content type="string" default="${DEFAULT_ATTR_NAME}" />
+    </parameter>
+
+    <parameter name="active_value">
+      <longdesc lang="en">
+Value to use for node attribute when resource becomes active (empty string is
+discouraged, because monitor cannot distinguish it from a query error)
+      </longdesc>
+      <shortdesc lang="en">Attribute value when active</shortdesc>
+      <content type="string" default="$DEFAULT_ACTIVE_VALUE" />
+    </parameter>
+
+    <parameter name="inactive_value">
+      <longdesc lang="en">
+Value to use for node attribute when resource becomes inactive
+      </longdesc>
+      <shortdesc lang="en">Attribute value when inactive</shortdesc>
+      <content type="string" default="$DEFAULT_INACTIVE_VALUE" />
+    </parameter>
+
+  </parameters>
+  <actions>
+    <action name="start"        timeout="20s" />
+    <action name="stop"         timeout="20s" />
+    <action name="monitor"      timeout="20s" interval="10s" depth="0"/>
+    <action name="reload"       timeout="20s" />
+    <action name="migrate_to"   timeout="20s" />
+    <action name="migrate_from" timeout="20s" />
+    <action name="validate-all" timeout="20s" depth="0" />
+    <action name="meta-data"    timeout="5s" />
+  </actions>
+</resource-agent>
+END
+    return $OCF_SUCCESS
+}
+
+validate() {
+    # Host-specific checks
+    if [ "$OCF_CHECK_LEVEL" = "10" ]; then
+        VALIDATE_DIR=$(dirname "${OCF_RESKEY_state}")
+
+        if [ ! -d "$VALIDATE_DIR" ]; then
+        ocf_exit_reason "state file '$OCF_RESKEY_state' does not have a valid directory"
+        return $OCF_ERR_PERM
+        fi
+
+        if [ ! -w "$VALIDATE_DIR" ] || [ ! -x "$VALIDATE_DIR" ]; then
+        ocf_exit_reason "insufficient privileges on directory of state file '$OCF_RESKEY_state'"
+        return $OCF_ERR_PERM
+        fi
+    fi
+
+    if [ "$OCF_RESKEY_active_value" = "$OCF_RESKEY_inactive_value" ]; then
+        ocf_exit_reason "active value '%s' must be different from inactive value '%s'" \
+            "$OCF_RESKEY_active_value" "$OCF_RESKEY_inactive_value"
+        return $OCF_ERR_CONFIGURED
+    fi
+
+    return $OCF_SUCCESS
+}
+
+get_attribute() {
+    GET_LINE=$(attrd_updater -n "$OCF_RESKEY_name" -Q 2>/dev/null)
+    if [ $? -ne 0 ]; then
+        echo ""
+    else
+        echo "$GET_LINE" | sed -e "s/.* value=\"\(.*\)\"$/\1/"
+    fi
+}
+
+set_attribute() {
+    attrd_updater -n "$OCF_RESKEY_name" -U "$1" 2>/dev/null
+    # TODO if above call is async, loop until get_attribute returns expected value
+}
+
+check_attribute() {
+    CHECK_VALUE=$(get_attribute)
+    CHECK_REASON=""
+    if [ ! -f "$OCF_RESKEY_state" ]; then
+        if [ "$CHECK_VALUE" != "" ] && [ "$CHECK_VALUE" != "$OCF_RESKEY_inactive_value" ]; then
+            CHECK_REASON="Node attribute $OCF_RESKEY_name='$CHECK_VALUE' differs from expected value '$OCF_RESKEY_inactive_value'"
+            return $OCF_ERR_GENERIC
+        fi
+        return $OCF_NOT_RUNNING
+    fi
+    if [ "$CHECK_VALUE" != "$OCF_RESKEY_active_value" ]; then
+        CHECK_REASON="Node attribute $OCF_RESKEY_name='$CHECK_VALUE' differs from expected value '$OCF_RESKEY_active_value'"
+        return $OCF_ERR_GENERIC
+    fi
+    return $OCF_SUCCESS
+}
+
+monitor() {
+    check_attribute
+    MONITOR_RC=$?
+    if [ $MONITOR_RC -eq $OCF_ERR_GENERIC ]; then
+        ocf_exit_reason "$CHECK_REASON"
+    fi
+    return $MONITOR_RC
+}
+
+start() {
+    check_attribute
+    if [ $? -eq $OCF_SUCCESS ]; then
+        return $OCF_SUCCESS
+    fi
+
+    touch "${OCF_RESKEY_state}" 2>/dev/null
+    if [ $? -ne 0 ]; then
+        ocf_exit_reason "Unable to manage state file $OCF_RESKEY_state"
+        return $OCF_ERR_GENERIC
+    fi
+
+    set_attribute "${OCF_RESKEY_active_value}"
+    if [ $? -ne 0 ]; then
+        rm -f "${OCF_RESKEY_state}"
+        ocf_exit_reason "Unable to set node attribute $OCF_RESKEY_name='$OCF_RESKEY_active_value'"
+        return $OCF_ERR_GENERIC
+    fi
+
+    return $OCF_SUCCESS
+}
+
+stop() {
+    check_attribute
+    if [ $? -eq $OCF_NOT_RUNNING ]; then
+        return $OCF_SUCCESS
+    fi
+
+    rm -f ${OCF_RESKEY_state}
+
+    set_attribute "${OCF_RESKEY_inactive_value}"
+    if [ $? -ne 0 ]; then
+        ocf_exit_reason "Unable to set node attribute $OCF_RESKEY_name='$OCF_RESKEY_inactive_value'"
+        return $OCF_ERR_GENERIC
+    fi
+
+    return $OCF_SUCCESS
+}
+
+case $__OCF_ACTION in
+meta-data)      meta_data ;;
+start)          start ;;
+stop)           stop ;;
+monitor)        monitor ;;
+# We don't do anything special for live migration, but we support it so that
+# other resources that live migrate can depend on this one.
+migrate_to)     stop ;;
+migrate_from)   start ;;
+reload)         start ;;
+validate-all)   validate ;;
+usage|help)     usage $OCF_SUCCESS ;;
+*)              usage $OCF_ERR_UNIMPLEMENTED ;;
+esac
+
+exit $?
+
+# vim: set filetype=sh expandtab tabstop=4 softtabstop=4 shiftwidth=4 textwidth=80:

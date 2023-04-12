@@ -1,10 +1,10 @@
 
-pcmk__clone_allocate: ms0 allocation score on hex-13: 0
-pcmk__clone_allocate: ms0 allocation score on hex-14: 0
-pcmk__clone_allocate: s0:0 allocation score on hex-13: 0
-pcmk__clone_allocate: s0:0 allocation score on hex-14: 0
-pcmk__clone_allocate: s0:1 allocation score on hex-13: 0
-pcmk__clone_allocate: s0:1 allocation score on hex-14: 0
+pcmk__clone_assign: ms0 allocation score on hex-13: 0
+pcmk__clone_assign: ms0 allocation score on hex-14: 0
+pcmk__clone_assign: s0:0 allocation score on hex-13: 0
+pcmk__clone_assign: s0:0 allocation score on hex-14: 0
+pcmk__clone_assign: s0:1 allocation score on hex-13: 0
+pcmk__clone_assign: s0:1 allocation score on hex-14: 0
 pcmk__group_assign: d0 allocation score on hex-13: 0
 pcmk__group_assign: d0 allocation score on hex-14: 0
 pcmk__group_assign: d1 allocation score on hex-13: 0

@@ -14,6 +14,8 @@ halibdir		= $(CRM_DAEMON_DIR)
 
 halib_PROGRAMS		= pacemaker-execd cts-exec-helper
 
+EXTRA_DIST	= pacemaker-remoted.8.inc
+
 pacemaker_execd_CFLAGS		= $(CFLAGS_HARDENED_EXE)
 pacemaker_execd_LDFLAGS		= $(LDFLAGS_HARDENED_EXE)
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the Pacemaker project contributors
+ * Copyright 2009-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -544,6 +544,9 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup)
 
     CRM_CHECK((op != NULL), return);
 
+    // This is a no-op if timers have already been cleared
+    clear_remote_op_timers(op);
+
     if (op->notify_sent) {
         // Most likely, this is a timed-out action that eventually completed
         crm_notice("Operation '%s'%s%s by %s for %s@%s%s: "
@@ -558,7 +561,6 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup)
     }
 
     set_fencing_completed(op);
-    clear_remote_op_timers(op);
     undo_op_remap(op);
 
     if (data == NULL) {
@@ -672,7 +674,7 @@ remote_op_timeout_one(gpointer userdata)
 
     // Try another device, if appropriate
     request_peer_fencing(op, NULL);
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 /*!
@@ -685,8 +687,6 @@ remote_op_timeout_one(gpointer userdata)
 static void
 finalize_timed_out_op(remote_fencing_op_t *op, const char *reason)
 {
-    op->op_timer_total = 0;
-
     crm_debug("Action '%s' targeting %s for client %s timed out "
               CRM_XS " id=%.8s",
               op->action, op->target, op->client_name, op->id);
@@ -718,6 +718,8 @@ remote_op_timeout(gpointer userdata)
 {
     remote_fencing_op_t *op = userdata;
 
+    op->op_timer_total = 0;
+
     if (op->state == st_done) {
         crm_debug("Action '%s' targeting %s for client %s already completed "
                   CRM_XS " id=%.8s",
@@ -737,6 +739,7 @@ remote_op_query_timeout(gpointer data)
     remote_fencing_op_t *op = data;
 
     op->query_timer = 0;
+
     if (op->state == st_done) {
         crm_debug("Operation %.8s targeting %s already completed",
                   op->id, op->target);
@@ -751,15 +754,11 @@ remote_op_query_timeout(gpointer data)
     } else {
         crm_debug("Query %.8s targeting %s timed out (state=%s)",
                   op->id, op->target, stonith_op_state_str(op->state));
-        if (op->op_timer_total) {
-            g_source_remove(op->op_timer_total);
-            op->op_timer_total = 0;
-        }
         finalize_timed_out_op(op, "No capable peers replied to device query "
                                   "within timeout");
     }
 
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 static gboolean
@@ -970,8 +969,9 @@ advance_topology_level(remote_fencing_op_t *op, bool empty_ok)
         return pcmk_rc_ok;
     }
 
-    crm_info("All fencing options targeting %s for client %s@%s failed "
+    crm_info("All %sfencing options targeting %s for client %s@%s failed "
              CRM_XS " id=%.8s",
+             (stonith_watchdog_timeout_ms > 0)?"non-watchdog ":"",
              op->target, op->client_name, op->originator, op->id);
     return ENODEV;
 }
@@ -1435,8 +1435,17 @@ stonith_choose_peer(remote_fencing_op_t * op)
              && pcmk_is_set(op->call_options, st_opt_topology)
              && (advance_topology_level(op, false) == pcmk_rc_ok));
 
-    crm_notice("Couldn't find anyone to fence (%s) %s using %s",
-               op->action, op->target, (device? device : "any device"));
+    if ((stonith_watchdog_timeout_ms > 0)
+        && pcmk__is_fencing_action(op->action)
+        && pcmk__str_eq(device, STONITH_WATCHDOG_ID, pcmk__str_none)
+        && node_does_watchdog_fencing(op->target)) {
+        crm_info("Couldn't contact watchdog-fencing target-node (%s)",
+                 op->target);
+        /* check_watchdog_fencing_and_wait will log additional info */
+    } else {
+        crm_notice("Couldn't find anyone to fence (%s) %s using %s",
+                   op->action, op->target, (device? device : "any device"));
+    }
     return NULL;
 }
 
@@ -1532,6 +1541,18 @@ get_op_total_timeout(const remote_fencing_op_t *op,
                 continue;
             }
             for (device_list = tp->levels[i]; device_list; device_list = device_list->next) {
+                /* in case of watchdog-device we add the timeout to the budget
+                   regardless of if we got a reply or not
+                 */
+                if ((stonith_watchdog_timeout_ms > 0)
+                    && pcmk__is_fencing_action(op->action)
+                    && pcmk__str_eq(device_list->data, STONITH_WATCHDOG_ID,
+                                    pcmk__str_none)
+                    && node_does_watchdog_fencing(op->target)) {
+                    total_timeout += stonith_watchdog_timeout_ms / 1000;
+                    continue;
+                }
+
                 for (iter = op->query_results; iter != NULL; iter = iter->next) {
                     const peer_device_info_t *peer = iter->data;
 
@@ -1703,6 +1724,10 @@ check_watchdog_fencing_and_wait(remote_fencing_op_t * op)
                    "client %s " CRM_XS " id=%.8s",
                    (stonith_watchdog_timeout_ms / 1000),
                    op->target, op->action, op->client_name, op->id);
+
+        if (op->op_timer_one) {
+            g_source_remove(op->op_timer_one);
+        }
         op->op_timer_one = g_timeout_add(stonith_watchdog_timeout_ms,
                                          remote_op_watchdog_done, op);
         return TRUE;
@@ -1825,12 +1850,13 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
         op->state = st_exec;
         if (op->op_timer_one) {
             g_source_remove(op->op_timer_one);
+            op->op_timer_one = 0;
         }
 
         if (!((stonith_watchdog_timeout_ms > 0)
               && (pcmk__str_eq(device, STONITH_WATCHDOG_ID, pcmk__str_none)
                   || (pcmk__str_eq(peer->host, op->target, pcmk__str_casei)
-                      && !pcmk__str_eq(op->action, "on", pcmk__str_none)))
+                      && pcmk__is_fencing_action(op->action)))
               && check_watchdog_fencing_and_wait(op))) {
 
             /* Some thoughts about self-fencing cases reaching this point:
@@ -1850,6 +1876,9 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
                  Otherwise the selection of stonith-watchdog-timeout at
                  least is questionable.
              */
+
+            /* coming here we're not waiting for watchdog timeout -
+               thus engage timer with timout evaluated before */
             op->op_timer_one = g_timeout_add((1000 * timeout_one), remote_op_timeout_one, op);
         }
 

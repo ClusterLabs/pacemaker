@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,9 +19,6 @@
 #include <crm/common/output.h>
 #include <crm/common/xml_internal.h>
 
-#define VARIANT_CLONE 1
-#include "./variant.h"
-
 #ifdef PCMK__COMPAT_2_0
 #define PROMOTED_INSTANCES   RSC_ROLE_PROMOTED_LEGACY_S "s"
 #define UNPROMOTED_INSTANCES RSC_ROLE_UNPROMOTED_LEGACY_S "s"
@@ -29,6 +26,63 @@
 #define PROMOTED_INSTANCES   RSC_ROLE_PROMOTED_S
 #define UNPROMOTED_INSTANCES RSC_ROLE_UNPROMOTED_S
 #endif
+
+typedef struct clone_variant_data_s {
+    int clone_max;
+    int clone_node_max;
+
+    int promoted_max;
+    int promoted_node_max;
+
+    int total_clones;
+
+    uint32_t flags; // Group of enum pe__clone_flags
+
+    notify_data_t *stop_notify;
+    notify_data_t *start_notify;
+    notify_data_t *demote_notify;
+    notify_data_t *promote_notify;
+
+    xmlNode *xml_obj_child;
+} clone_variant_data_t;
+
+#define get_clone_variant_data(data, rsc)                       \
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_clone));    \
+    data = (clone_variant_data_t *) rsc->variant_opaque;
+
+/*!
+ * \internal
+ * \brief Return the maximum number of clone instances allowed to be run
+ *
+ * \param[in] clone  Clone or clone instance to check
+ *
+ * \return Maximum instances for \p clone
+ */
+int
+pe__clone_max(const pe_resource_t *clone)
+{
+    const clone_variant_data_t *clone_data = NULL;
+
+    get_clone_variant_data(clone_data, pe__const_top_resource(clone, false));
+    return clone_data->clone_max;
+}
+
+/*!
+ * \internal
+ * \brief Return the maximum number of clone instances allowed per node
+ *
+ * \param[in] clone  Promotable clone or clone instance to check
+ *
+ * \return Maximum allowed instances per node for \p clone
+ */
+int
+pe__clone_node_max(const pe_resource_t *clone)
+{
+    const clone_variant_data_t *clone_data = NULL;
+
+    get_clone_variant_data(clone_data, pe__const_top_resource(clone, false));
+    return clone_data->clone_node_max;
+}
 
 /*!
  * \internal
@@ -39,11 +93,11 @@
  * \return Maximum promoted instances for \p clone
  */
 int
-pe__clone_promoted_max(pe_resource_t *clone)
+pe__clone_promoted_max(const pe_resource_t *clone)
 {
     clone_variant_data_t *clone_data = NULL;
 
-    get_clone_variant_data(clone_data, uber_parent(clone));
+    get_clone_variant_data(clone_data, pe__const_top_resource(clone, false));
     return clone_data->promoted_max;
 }
 
@@ -56,11 +110,11 @@ pe__clone_promoted_max(pe_resource_t *clone)
  * \return Maximum promoted instances for \p clone
  */
 int
-pe__clone_promoted_node_max(pe_resource_t *clone)
+pe__clone_promoted_node_max(const pe_resource_t *clone)
 {
     clone_variant_data_t *clone_data = NULL;
 
-    get_clone_variant_data(clone_data, uber_parent(clone));
+    get_clone_variant_data(clone_data, pe__const_top_resource(clone, false));
     return clone_data->promoted_node_max;
 }
 
@@ -113,7 +167,8 @@ node_list_to_str(const GList *list)
 }
 
 static void
-clone_header(pcmk__output_t *out, int *rc, pe_resource_t *rsc, clone_variant_data_t *clone_data)
+clone_header(pcmk__output_t *out, int *rc, const pe_resource_t *rsc,
+             clone_variant_data_t *clone_data, const char *desc)
 {
     GString *attrs = NULL;
 
@@ -125,22 +180,28 @@ clone_header(pcmk__output_t *out, int *rc, pe_resource_t *rsc, clone_variant_dat
         pcmk__add_separated_word(&attrs, 64, "unique", ", ");
     }
 
-    if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
-        pcmk__add_separated_word(&attrs, 64, "unmanaged", ", ");
-    }
-
     if (pe__resource_is_disabled(rsc)) {
         pcmk__add_separated_word(&attrs, 64, "disabled", ", ");
     }
 
+    if (pcmk_is_set(rsc->flags, pe_rsc_maintenance)) {
+        pcmk__add_separated_word(&attrs, 64, "maintenance", ", ");
+
+    } else if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+        pcmk__add_separated_word(&attrs, 64, "unmanaged", ", ");
+    }
+
     if (attrs != NULL) {
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, *rc, "Clone Set: %s [%s] (%s)",
+        PCMK__OUTPUT_LIST_HEADER(out, FALSE, *rc, "Clone Set: %s [%s] (%s)%s%s%s",
                                  rsc->id, ID(clone_data->xml_obj_child),
-                                 (const char *) attrs->str);
+                                 (const char *) attrs->str, desc ? " (" : "",
+                                 desc ? desc : "", desc ? ")" : "");
         g_string_free(attrs, TRUE);
     } else {
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, *rc, "Clone Set: %s [%s]",
-                                 rsc->id, ID(clone_data->xml_obj_child))
+        PCMK__OUTPUT_LIST_HEADER(out, FALSE, *rc, "Clone Set: %s [%s]%s%s%s",
+                                 rsc->id, ID(clone_data->xml_obj_child),
+                                 desc ? " (" : "", desc ? desc : "",
+                                 desc ? ")" : "");
     }
 }
 
@@ -149,9 +210,7 @@ pe__force_anon(const char *standard, pe_resource_t *rsc, const char *rid,
                pe_working_set_t *data_set)
 {
     if (pe_rsc_is_clone(rsc)) {
-        clone_variant_data_t *clone_data = NULL;
-
-        get_clone_variant_data(clone_data, rsc);
+        clone_variant_data_t *clone_data = rsc->variant_opaque;
 
         pe_warn("Ignoring " XML_RSC_ATTR_UNIQUE " for %s because %s resources "
                 "such as %s can be used only as anonymous clones",
@@ -164,7 +223,7 @@ pe__force_anon(const char *standard, pe_resource_t *rsc, const char *rid,
 }
 
 pe_resource_t *
-find_clone_instance(pe_resource_t * rsc, const char *sub_id, pe_working_set_t * data_set)
+find_clone_instance(const pe_resource_t *rsc, const char *sub_id)
 {
     char *child_id = NULL;
     pe_resource_t *child = NULL;
@@ -469,7 +528,7 @@ clone_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
     GList *gIter = rsc->children;
 
     status_print("%s<clone ", pre_text);
-    status_print("id=\"%s\" ", rsc->id);
+    status_print(XML_ATTR_ID "=\"%s\" ", rsc->id);
     status_print("multi_state=\"%s\" ",
                  pe__rsc_bool_str(rsc, pe_rsc_promotable));
     status_print("unique=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_unique));
@@ -759,11 +818,15 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
+
+    const char *desc = NULL;
     GList *gIter = rsc->children;
     GList *all = NULL;
     int rc = pcmk_rc_no_output;
     gboolean printed_header = FALSE;
     gboolean print_everything = TRUE;
+
+    
 
     if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
         return rc;
@@ -788,15 +851,19 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
         if (!printed_header) {
             printed_header = TRUE;
 
-            rc = pe__name_and_nvpairs_xml(out, true, "clone", 8,
+            desc = pe__resource_description(rsc, show_opts);
+            
+            rc = pe__name_and_nvpairs_xml(out, true, "clone", 10,
                     "id", rsc->id,
                     "multi_state", pe__rsc_bool_str(rsc, pe_rsc_promotable),
                     "unique", pe__rsc_bool_str(rsc, pe_rsc_unique),
+                    "maintenance", pe__rsc_bool_str(rsc, pe_rsc_maintenance),
                     "managed", pe__rsc_bool_str(rsc, pe_rsc_managed),
                     "disabled", pcmk__btoa(pe__resource_is_disabled(rsc)),
                     "failed", pe__rsc_bool_str(rsc, pe_rsc_failed),
                     "failure_ignored", pe__rsc_bool_str(rsc, pe_rsc_failure_ignored),
-                    "target_role", configured_role_str(rsc));
+                    "target_role", configured_role_str(rsc),
+                    "description", desc);
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
 
@@ -829,10 +896,14 @@ pe__clone_default(pcmk__output_t *out, va_list args)
     GList *started_list = NULL;
     GList *gIter = rsc->children;
 
+    const char *desc = NULL;
+
     clone_variant_data_t *clone_data = NULL;
     int active_instances = 0;
     int rc = pcmk_rc_no_output;
     gboolean print_everything = TRUE;
+
+    desc = pe__resource_description(rsc, show_opts);
 
     get_clone_variant_data(clone_data, rsc);
 
@@ -925,7 +996,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
         if (print_full) {
             GList *all = NULL;
 
-            clone_header(out, &rc, rsc, clone_data);
+            clone_header(out, &rc, rsc, clone_data, desc);
 
             /* Print every resource that's a child of this clone. */
             all = g_list_prepend(all, (gpointer) "*");
@@ -956,7 +1027,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
     g_list_free(promoted_list);
 
     if ((list_text != NULL) && (list_text->len > 0)) {
-        clone_header(out, &rc, rsc, clone_data);
+        clone_header(out, &rc, rsc, clone_data, desc);
 
         out->list_item(out, NULL, PROMOTED_INSTANCES ": [ %s ]",
                        (const char *) list_text->str);
@@ -979,7 +1050,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
     g_list_free(started_list);
 
     if ((list_text != NULL) && (list_text->len > 0)) {
-        clone_header(out, &rc, rsc, clone_data);
+        clone_header(out, &rc, rsc, clone_data, desc);
 
         if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
             enum rsc_role_e role = configured_role(rsc);
@@ -1058,7 +1129,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
         if (stopped != NULL) {
             GList *list = sorted_hash_table_values(stopped);
 
-            clone_header(out, &rc, rsc, clone_data);
+            clone_header(out, &rc, rsc, clone_data, desc);
 
             for (GList *status_iter = list; status_iter != NULL; status_iter = status_iter->next) {
                 const char *status = status_iter->data;
@@ -1084,7 +1155,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
          * come up in PCS testing.
          */
         } else if (active_instances == 0) {
-            clone_header(out, &rc, rsc, clone_data);
+            clone_header(out, &rc, rsc, clone_data, desc);
             PCMK__OUTPUT_LIST_FOOTER(out, rc);
             return rc;
         }
@@ -1155,13 +1226,12 @@ clone_resource_state(const pe_resource_t * rsc, gboolean current)
  * \param[in] data_set  Cluster state
  */
 bool
-pe__is_universal_clone(pe_resource_t *rsc,
-                       pe_working_set_t *data_set)
+pe__is_universal_clone(const pe_resource_t *rsc,
+                       const pe_working_set_t *data_set)
 {
     if (pe_rsc_is_clone(rsc)) {
-        clone_variant_data_t *clone_data = NULL;
+        clone_variant_data_t *clone_data = rsc->variant_opaque;
 
-        get_clone_variant_data(clone_data, rsc);
         if (clone_data->clone_max == g_list_length(data_set->nodes)) {
             return TRUE;
         }
@@ -1170,7 +1240,8 @@ pe__is_universal_clone(pe_resource_t *rsc,
 }
 
 gboolean
-pe__clone_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent)
+pe__clone_is_filtered(const pe_resource_t *rsc, GList *only_rsc,
+                      gboolean check_parent)
 {
     gboolean passes = FALSE;
     clone_variant_data_t *clone_data = NULL;
@@ -1182,9 +1253,12 @@ pe__clone_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent
         passes = pcmk__str_in_list(ID(clone_data->xml_obj_child), only_rsc, pcmk__str_star_matches);
 
         if (!passes) {
-            for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-                pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
+            for (const GList *iter = rsc->children;
+                 iter != NULL; iter = iter->next) {
 
+                const pe_resource_t *child_rsc = NULL;
+
+                child_rsc = (const pe_resource_t *) iter->data;
                 if (!child_rsc->fns->is_filtered(child_rsc, only_rsc, FALSE)) {
                     passes = TRUE;
                     break;
@@ -1192,12 +1266,11 @@ pe__clone_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent
             }
         }
     }
-
     return !passes;
 }
 
 const char *
-pe__clone_child_id(pe_resource_t *rsc)
+pe__clone_child_id(const pe_resource_t *rsc)
 {
     clone_variant_data_t *clone_data = NULL;
     get_clone_variant_data(clone_data, rsc);
@@ -1213,7 +1286,7 @@ pe__clone_child_id(pe_resource_t *rsc)
  * \return true if clone is ordered, otherwise false
  */
 bool
-pe__clone_is_ordered(pe_resource_t *clone)
+pe__clone_is_ordered(const pe_resource_t *clone)
 {
     clone_variant_data_t *clone_data = NULL;
 
@@ -1225,8 +1298,8 @@ pe__clone_is_ordered(pe_resource_t *clone)
  * \internal
  * \brief Set a clone flag
  *
- * \param[in] clone  Clone resource to set flag for
- * \param[in] flag   Clone flag to set
+ * \param[in,out] clone  Clone resource to set flag for
+ * \param[in]     flag   Clone flag to set
  *
  * \return Standard Pacemaker return code (either pcmk_rc_ok if flag was not
  *         already set or pcmk_rc_already if it was)
@@ -1250,9 +1323,9 @@ pe__set_clone_flag(pe_resource_t *clone, enum pe__clone_flags flag)
  * \internal
  * \brief Create pseudo-actions needed for promotable clones
  *
- * \param[in] clone          Promotable clone to create actions for
- * \param[in] any_promoting  Whether any instances will be promoted
- * \param[in] any_demoting   Whether any instance will be demoted
+ * \param[in,out] clone          Promotable clone to create actions for
+ * \param[in]     any_promoting  Whether any instances will be promoted
+ * \param[in]     any_demoting   Whether any instance will be demoted
  */
 void
 pe__create_promotable_pseudo_ops(pe_resource_t *clone, bool any_promoting,
@@ -1275,10 +1348,10 @@ pe__create_promotable_pseudo_ops(pe_resource_t *clone, bool any_promoting,
 
     // Create notification pseudo-actions for promotion
     if (clone_data->promote_notify == NULL) {
-        clone_data->promote_notify = pe__clone_notif_pseudo_ops(clone,
-                                                                RSC_PROMOTE,
-                                                                action,
-                                                                action_complete);
+        clone_data->promote_notify = pe__action_notif_pseudo_ops(clone,
+                                                                 RSC_PROMOTE,
+                                                                 action,
+                                                                 action_complete);
     }
 
     // Create a "demote" action for the clone itself
@@ -1291,10 +1364,10 @@ pe__create_promotable_pseudo_ops(pe_resource_t *clone, bool any_promoting,
 
     // Create notification pseudo-actions for demotion
     if (clone_data->demote_notify == NULL) {
-        clone_data->demote_notify = pe__clone_notif_pseudo_ops(clone,
-                                                               RSC_DEMOTE,
-                                                               action,
-                                                               action_complete);
+        clone_data->demote_notify = pe__action_notif_pseudo_ops(clone,
+                                                                RSC_DEMOTE,
+                                                                action,
+                                                                action_complete);
 
         if (clone_data->promote_notify != NULL) {
             order_actions(clone_data->stop_notify->post_done,
@@ -1312,6 +1385,86 @@ pe__create_promotable_pseudo_ops(pe_resource_t *clone, bool any_promoting,
             order_actions(clone_data->demote_notify->post_done,
                           clone_data->stop_notify->pre,
                           pe_order_optional);
+        }
+    }
+}
+
+/*!
+ * \internal
+ * \brief Create all notification data and actions for a clone
+ *
+ * \param[in,out] clone  Clone to create notifications for
+ */
+void
+pe__create_clone_notifications(pe_resource_t *clone)
+{
+    clone_variant_data_t *clone_data = NULL;
+
+    get_clone_variant_data(clone_data, clone);
+
+    pe__create_action_notifications(clone, clone_data->start_notify);
+    pe__create_action_notifications(clone, clone_data->stop_notify);
+    pe__create_action_notifications(clone, clone_data->promote_notify);
+    pe__create_action_notifications(clone, clone_data->demote_notify);
+}
+
+/*!
+ * \internal
+ * \brief Free all notification data for a clone
+ *
+ * \param[in,out] clone  Clone to free notification data for
+ */
+void
+pe__free_clone_notification_data(pe_resource_t *clone)
+{
+    clone_variant_data_t *clone_data = NULL;
+
+    get_clone_variant_data(clone_data, clone);
+
+    pe__free_action_notification_data(clone_data->demote_notify);
+    clone_data->demote_notify = NULL;
+
+    pe__free_action_notification_data(clone_data->stop_notify);
+    clone_data->stop_notify = NULL;
+
+    pe__free_action_notification_data(clone_data->start_notify);
+    clone_data->start_notify = NULL;
+
+    pe__free_action_notification_data(clone_data->promote_notify);
+    clone_data->promote_notify = NULL;
+}
+
+/*!
+ * \internal
+ * \brief Create pseudo-actions for clone start/stop notifications
+ *
+ * \param[in,out] clone    Clone to create pseudo-actions for
+ * \param[in,out] start    Start action for \p clone
+ * \param[in,out] stop     Stop action for \p clone
+ * \param[in,out] started  Started action for \p clone
+ * \param[in,out] stopped  Stopped action for \p clone
+ */
+void
+pe__create_clone_notif_pseudo_ops(pe_resource_t *clone,
+                                  pe_action_t *start, pe_action_t *started,
+                                  pe_action_t *stop, pe_action_t *stopped)
+{
+    clone_variant_data_t *clone_data = NULL;
+
+    get_clone_variant_data(clone_data, clone);
+
+    if (clone_data->start_notify == NULL) {
+        clone_data->start_notify = pe__action_notif_pseudo_ops(clone, RSC_START,
+                                                               start, started);
+    }
+
+    if (clone_data->stop_notify == NULL) {
+        clone_data->stop_notify = pe__action_notif_pseudo_ops(clone, RSC_STOP,
+                                                              stop, stopped);
+        if ((clone_data->start_notify != NULL)
+            && (clone_data->stop_notify != NULL)) {
+            order_actions(clone_data->stop_notify->post_done,
+                          clone_data->start_notify->pre, pe_order_optional);
         }
     }
 }

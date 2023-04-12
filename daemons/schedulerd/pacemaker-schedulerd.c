@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -58,7 +58,8 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
         { NULL }
     };
 
-    context = pcmk__build_arg_context(args, "text (default), xml", group, NULL);
+    context = pcmk__build_arg_context(args, "text (default), xml", group,
+                                      "[metadata]");
     pcmk__add_main_args(context, extra_prog_entries);
     return context;
 }
@@ -77,7 +78,7 @@ main(int argc, char **argv)
     crm_log_preinit(NULL, argc, argv);
     mainloop_add_signal(SIGTERM, pengine_shutdown);
 
-    pcmk__register_formats(NULL, formats);
+    pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
         goto done;
@@ -150,7 +151,7 @@ done:
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
 
-    pcmk__output_and_clear_error(error, out);
+    pcmk__output_and_clear_error(&error, out);
     pengine_shutdown(0);
 }
 

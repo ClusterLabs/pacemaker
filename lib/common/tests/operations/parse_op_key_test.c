@@ -1,10 +1,10 @@
 /*
- * Copyright 2020-2021 the Pacemaker project contributors
+ * Copyright 2020-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
- * This source code is licensed under the GNU Lesser General Public License
- * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -24,6 +24,51 @@ basic(void **state)
     assert_string_equal(rsc, "Fencing");
     assert_string_equal(ty, "monitor");
     assert_int_equal(ms, 60000);
+    free(rsc);
+    free(ty);
+
+    // Single-character resource name
+    assert_true(parse_op_key("R_monitor_100000", &rsc, &ty, &ms));
+    assert_string_equal(rsc, "R");
+    assert_string_equal(ty, "monitor");
+    assert_int_equal(ms, 100000);
+    free(rsc);
+    free(ty);
+
+    // Single-character action name
+    assert_true(parse_op_key("R_A_0", &rsc, &ty, &ms));
+    assert_string_equal(rsc, "R");
+    assert_string_equal(ty, "A");
+    assert_int_equal(ms, 0);
+    free(rsc);
+    free(ty);
+}
+
+static void
+rsc_just_underbars(void **state)
+{
+    char *rsc = NULL;
+    char *ty = NULL;
+    guint ms = 0;
+
+    assert_true(parse_op_key("__monitor_1000", &rsc, &ty, &ms));
+    assert_string_equal(rsc, "_");
+    assert_string_equal(ty, "monitor");
+    assert_int_equal(ms, 1000);
+    free(rsc);
+    free(ty);
+
+    assert_true(parse_op_key("___migrate_from_0", &rsc, &ty, &ms));
+    assert_string_equal(rsc, "__");
+    assert_string_equal(ty, "migrate_from");
+    assert_int_equal(ms, 0);
+    free(rsc);
+    free(ty);
+
+    assert_true(parse_op_key("____pre_notify_stop_0", &rsc, &ty, &ms));
+    assert_string_equal(rsc, "___");
+    assert_string_equal(ty, "pre_notify_stop");
+    assert_int_equal(ms, 0);
     free(rsc);
     free(ty);
 }
@@ -128,6 +173,14 @@ pre_post(void **state)
     assert_int_equal(ms, 0);
     free(rsc);
     free(ty);
+
+    assert_true(parse_op_key("r_confirmed-post_notify_start_0",
+                             &rsc, &ty, &ms));
+    assert_string_equal(rsc, "r");
+    assert_string_equal(ty, "confirmed-post_notify_start");
+    assert_int_equal(ms, 0);
+    free(rsc);
+    free(ty);
 }
 
 static void
@@ -210,6 +263,7 @@ malformed_input(void **state)
 
 PCMK__UNIT_TEST(NULL, NULL,
                 cmocka_unit_test(basic),
+                cmocka_unit_test(rsc_just_underbars),
                 cmocka_unit_test(colon_in_rsc),
                 cmocka_unit_test(dashes_in_rsc),
                 cmocka_unit_test(migrate_to_from),

@@ -1,16 +1,16 @@
 
 grp_ms_sf:0 promotion score on rh44-2: 49
 grp_ms_sf:1 promotion score on rh44-1: 99
-pcmk__clone_allocate: grp_ms_sf:0 allocation score on rh44-1: 0
-pcmk__clone_allocate: grp_ms_sf:0 allocation score on rh44-2: 0
-pcmk__clone_allocate: grp_ms_sf:1 allocation score on rh44-1: 0
-pcmk__clone_allocate: grp_ms_sf:1 allocation score on rh44-2: 0
-pcmk__clone_allocate: ms-sf allocation score on rh44-1: 0
-pcmk__clone_allocate: ms-sf allocation score on rh44-2: 0
-pcmk__clone_allocate: promotable_Stateful:0 allocation score on rh44-1: 0
-pcmk__clone_allocate: promotable_Stateful:0 allocation score on rh44-2: INFINITY
-pcmk__clone_allocate: promotable_Stateful:1 allocation score on rh44-1: INFINITY
-pcmk__clone_allocate: promotable_Stateful:1 allocation score on rh44-2: 0
+pcmk__clone_assign: grp_ms_sf:0 allocation score on rh44-1: 0
+pcmk__clone_assign: grp_ms_sf:0 allocation score on rh44-2: 0
+pcmk__clone_assign: grp_ms_sf:1 allocation score on rh44-1: 0
+pcmk__clone_assign: grp_ms_sf:1 allocation score on rh44-2: 0
+pcmk__clone_assign: ms-sf allocation score on rh44-1: 0
+pcmk__clone_assign: ms-sf allocation score on rh44-2: 0
+pcmk__clone_assign: promotable_Stateful:0 allocation score on rh44-1: 0
+pcmk__clone_assign: promotable_Stateful:0 allocation score on rh44-2: INFINITY
+pcmk__clone_assign: promotable_Stateful:1 allocation score on rh44-1: INFINITY
+pcmk__clone_assign: promotable_Stateful:1 allocation score on rh44-2: 0
 pcmk__group_assign: grp_ms_sf:0 allocation score on rh44-1: 0
 pcmk__group_assign: grp_ms_sf:0 allocation score on rh44-2: 0
 pcmk__group_assign: grp_ms_sf:1 allocation score on rh44-1: 0

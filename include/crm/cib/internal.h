@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -50,7 +50,6 @@
 #  define F_CIB_SEENCOUNT	"cib_seen"
 #  define F_CIB_TIMEOUT	"cib_timeout"
 #  define F_CIB_UPDATE	"cib_update"
-#  define F_CIB_CALLBACK_TOKEN	"cib_async_id"
 #  define F_CIB_GLOBAL_UPDATE	"cib_update"
 #  define F_CIB_UPDATE_RESULT	"cib_update_result"
 #  define F_CIB_CLIENTNAME	"cib_clientname"
@@ -88,8 +87,6 @@ gboolean cib_diff_version_details(xmlNode * diff, int *admin_epoch, int *epoch, 
                                   int *_admin_epoch, int *_epoch, int *_updates);
 
 gboolean cib_read_config(GHashTable * options, xmlNode * current_cib);
-void verify_cib_options(GHashTable * options);
-gboolean cib_internal_config_changed(xmlNode * diff);
 
 typedef struct cib_notify_client_s {
     const char *event;
@@ -138,23 +135,12 @@ int cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_
                    xmlNode * current_cib, xmlNode ** result_cib, xmlNode ** diff,
                    xmlNode ** output);
 
-xmlNode *cib_create_op(int call_id, const char *token, const char *op, const char *host,
+xmlNode *cib_create_op(int call_id, const char *op, const char *host,
                        const char *section, xmlNode * data, int call_options,
                        const char *user_name);
 
 void cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc);
 void cib_native_notify(gpointer data, gpointer user_data);
-int cib_native_register_notification(cib_t * cib, const char *callback, int enabled);
-gboolean cib_client_register_callback(cib_t * cib, int call_id, int timeout, gboolean only_success,
-                                      void *user_data, const char *callback_name,
-                                      void (*callback) (xmlNode *, int, int, xmlNode *, void *));
-gboolean cib_client_register_callback_full(cib_t *cib, int call_id,
-                                           int timeout, gboolean only_success,
-                                           void *user_data,
-                                           const char *callback_name,
-                                           void (*callback)(xmlNode *, int, int,
-                                                            xmlNode *, void *),
-                                           void (*free_func)(void *));
 
 int cib_process_query(const char *op, int options, const char *section, xmlNode * req,
                       xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
@@ -218,9 +204,7 @@ int cib_process_xpath(const char *op, int options, const char *section,
                       const xmlNode *req, xmlNode *input, xmlNode *existing_cib,
                       xmlNode **result_cib, xmlNode ** answer);
 
-gboolean cib_config_changed(xmlNode * last, xmlNode * next, xmlNode ** diff);
-gboolean update_results(xmlNode * failed, xmlNode * target, const char *operation, int return_code);
-int cib_update_counter(xmlNode * xml_obj, const char *field, gboolean reset);
+bool cib__config_changed_v1(xmlNode *last, xmlNode *next, xmlNode **diff);
 
 int cib_internal_op(cib_t * cib, const char *op, const char *host,
                     const char *section, xmlNode * data,
@@ -238,17 +222,26 @@ cib_callback_client_t* cib__lookup_id (int call_id);
 
 /*!
  * \internal
- * \brief Connect to, query, and optionally disconnect from the CIB, returning
- *        the resulting XML object.
+ * \brief Connect to, query, and optionally disconnect from the CIB
  *
- * \param[out] cib        If non-NULL, a pointer to where to store the CIB
- *                        connection.  In this case, it is up to the caller to
- *                        disconnect from the CIB when finished.
- * \param[out] cib_object A pointer to where to store the XML query result.
+ * Open a read-write connection to the CIB manager if an already connected
+ * client is not passed in. Then query the CIB and store the resulting XML.
+ * Finally, disconnect if the CIB connection isn't being returned to the caller.
  *
- * \return A standard Pacemaker return code
+ * \param[in,out] out         Output object (may be \p NULL)
+ * \param[in,out] cib         If not \p NULL, where to store CIB connection
+ * \param[out]    cib_object  Where to store query result
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note If \p cib is not \p NULL, the caller is responsible for freeing \p *cib
+ *       using \p cib_delete().
+ * \note If \p *cib points to an existing \p cib_t object, this function will
+ *       reuse it instead of creating a new one. If the existing client is
+ *       already connected, the connection will be reused, even if it's
+ *       read-only.
  */
-int cib__signon_query(cib_t **cib, xmlNode **cib_object);
+int cib__signon_query(pcmk__output_t *out, cib_t **cib, xmlNode **cib_object);
 
 int cib__clean_up_connection(cib_t **cib);
 

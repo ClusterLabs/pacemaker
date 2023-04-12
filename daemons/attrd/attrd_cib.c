@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2022 the Pacemaker project contributors
+ * Copyright 2013-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -133,9 +133,16 @@ build_update_element(xmlNode *parent, attribute_t *a, const char *nodeid, const 
     xml_obj = create_xml_node(xml_obj, XML_TAG_TRANSIENT_NODEATTRS);
     crm_xml_add(xml_obj, XML_ATTR_ID, nodeid);
 
-    xml_obj = create_xml_node(xml_obj, XML_TAG_ATTR_SETS);
-    if (a->set) {
-        crm_xml_set_id(xml_obj, "%s", a->set);
+    if (pcmk__str_eq(a->set_type, XML_TAG_ATTR_SETS, pcmk__str_null_matches)) {
+        xml_obj = create_xml_node(xml_obj, XML_TAG_ATTR_SETS);
+    } else if (pcmk__str_eq(a->set_type, XML_TAG_UTILIZATION, pcmk__str_none)) {
+        xml_obj = create_xml_node(xml_obj, XML_TAG_UTILIZATION);
+    } else {
+        crm_err("Unknown set type attribute: %s", a->set_type);
+    }
+
+    if (a->set_id) {
+        crm_xml_set_id(xml_obj, "%s", a->set_id);
     } else {
         crm_xml_set_id(xml_obj, "%s-%s", XML_CIB_TAG_STATUS, nodeid);
     }
@@ -202,7 +209,7 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
     xmlNode *xml_top = NULL;
     attribute_value_t *v = NULL;
     GHashTableIter iter;
-    enum cib_call_options flags = cib_quorum_override;
+    enum cib_call_options flags = cib_none;
     GHashTable *alert_attribute_value = NULL;
 
     if (a == NULL) {
@@ -210,7 +217,7 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
     }
 
     /* If this attribute will be written to the CIB ... */
-    if (!a->is_private) {
+    if (!stand_alone && !a->is_private) {
 
         /* Defer the write if now's not a good time */
         CRM_CHECK(the_cib != NULL, return);
@@ -270,7 +277,7 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
         }
 
         /* If this is a private attribute, no update needs to be sent */
-        if (a->is_private) {
+        if (stand_alone || a->is_private) {
             private_updates++;
             continue;
         }
@@ -310,7 +317,7 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
     if (private_updates) {
         crm_info("Processed %d private change%s for %s, id=%s, set=%s",
                  private_updates, pcmk__plural_s(private_updates),
-                 a->id, pcmk__s(a->uuid, "n/a"), pcmk__s(a->set, "n/a"));
+                 a->id, pcmk__s(a->uuid, "n/a"), pcmk__s(a->set_id, "n/a"));
     }
     if (cib_updates) {
         crm_log_xml_trace(xml_top, __func__);
@@ -321,7 +328,7 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
 
         crm_info("Sent CIB request %d with %d change%s for %s (id %s, set %s)",
                  a->update, cib_updates, pcmk__plural_s(cib_updates),
-                 a->id, pcmk__s(a->uuid, "n/a"), pcmk__s(a->set, "n/a"));
+                 a->id, pcmk__s(a->uuid, "n/a"), pcmk__s(a->set_id, "n/a"));
 
         the_cib->cmds->register_callback_full(the_cib, a->update,
                                               CIB_OP_TIMEOUT_S, FALSE,

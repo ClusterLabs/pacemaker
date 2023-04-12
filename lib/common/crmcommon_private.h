@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2022 the Pacemaker project contributors
+ * Copyright 2018-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -63,7 +63,8 @@ typedef struct xml_doc_private_s {
     } while (0)
 
 G_GNUC_INTERNAL
-void pcmk__xml2text(xmlNodePtr data, int options, GString *buffer, int depth);
+void pcmk__xml2text(xmlNodePtr data, uint32_t options, GString *buffer,
+                    int depth);
 
 G_GNUC_INTERNAL
 bool pcmk__tracking_xml_changes(xmlNode *xml, bool lazy);
@@ -78,11 +79,6 @@ int pcmk__xml_position(const xmlNode *xml,
 G_GNUC_INTERNAL
 xmlNode *pcmk__xml_match(const xmlNode *haystack, const xmlNode *needle,
                          bool exact);
-
-G_GNUC_INTERNAL
-void pcmk__xml_log(int log_level, const char *file, const char *function,
-                   int line, const char *prefix, const xmlNode *data, int depth,
-                   int options);
 
 G_GNUC_INTERNAL
 void pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
@@ -115,6 +111,10 @@ void pcmk__mark_xml_attr_dirty(xmlAttr *a);
 
 G_GNUC_INTERNAL
 bool pcmk__xa_filterable(const char *name);
+
+G_GNUC_INTERNAL
+void pcmk__log_xmllib_err(void *ctx, const char *fmt, ...)
+G_GNUC_PRINTF(2, 3);
 
 static inline const char *
 pcmk__xml_attr_value(const xmlAttr *attr)
@@ -252,6 +252,18 @@ pcmk__ipc_methods_t *pcmk__schedulerd_api_methods(void);
  * Logging
  */
 
+//! XML is newly created
+#define PCMK__XML_PREFIX_CREATED "++"
+
+//! XML has been deleted
+#define PCMK__XML_PREFIX_DELETED "--"
+
+//! XML has been modified
+#define PCMK__XML_PREFIX_MODIFIED "+ "
+
+//! XML has been moved
+#define PCMK__XML_PREFIX_MOVED "+~"
+
 /*!
  * \brief Check the authenticity of the IPC socket peer process
  *
@@ -291,6 +303,17 @@ int pcmk__crm_ipc_is_authentic_process(qb_ipcc_connection_t *qb_ipc, int sock,
                                        uid_t refuid, gid_t refgid,
                                        pid_t *gotpid, uid_t *gotuid,
                                        gid_t *gotgid);
+
+
+/*
+ * Output
+ */
+G_GNUC_INTERNAL
+int pcmk__bare_output_new(pcmk__output_t **out, const char *fmt_name,
+                          const char *filename, char **argv);
+
+G_GNUC_INTERNAL
+void pcmk__register_patchset_messages(pcmk__output_t *out);
 
 
 /*

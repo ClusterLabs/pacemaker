@@ -24,8 +24,10 @@ pcmk__time_hr_t *pcmk__time_hr_now(time_t *epoch);
 pcmk__time_hr_t *pcmk__time_hr_new(const char *date_time);
 void pcmk__time_hr_free(pcmk__time_hr_t *hr_dt);
 char *pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt);
-const char *pcmk__epoch2str(const time_t *when);
+char *pcmk__epoch2str(const time_t *source, uint32_t flags);
+char *pcmk__timespec2str(const struct timespec *ts, uint32_t flags);
 const char *pcmk__readable_interval(guint interval_ms);
+crm_time_t *pcmk__copy_timet(time_t source);
 
 struct pcmk__time_us {
     int years;

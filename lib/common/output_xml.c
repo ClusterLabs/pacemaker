@@ -236,7 +236,6 @@ xml_subprocess_output(pcmk__output_t *out, int exit_status,
         crm_xml_add(child_node, "source", "stderr");
     }
 
-    pcmk__output_xml_add_node(out, node);
     free(rc_as_str);
 }
 
@@ -418,6 +417,7 @@ pcmk__mk_xml_output(char **argv) {
     retval->subprocess_output = xml_subprocess_output;
     retval->version = xml_version;
     retval->info = xml_info;
+    retval->transient = xml_info;
     retval->err = xml_err;
     retval->output_xml = xml_output_xml;
 
@@ -453,16 +453,21 @@ pcmk__output_xml_create_parent(pcmk__output_t *out, const char *name, ...) {
 }
 
 void
-pcmk__output_xml_add_node(pcmk__output_t *out, xmlNodePtr node) {
+pcmk__output_xml_add_node_copy(pcmk__output_t *out, xmlNodePtr node) {
     private_data_t *priv = NULL;
+    xmlNodePtr parent = NULL;
 
     CRM_ASSERT(out != NULL && out->priv != NULL);
     CRM_ASSERT(node != NULL);
     CRM_CHECK(pcmk__str_any_of(out->fmt_name, "xml", "html", NULL), return);
 
     priv = out->priv;
+    parent = g_queue_peek_tail(priv->parent_q);
 
-    xmlAddChild(g_queue_peek_tail(priv->parent_q), node);
+    // Shouldn't happen unless the caller popped priv->root
+    CRM_CHECK(parent != NULL, return);
+
+    add_node_copy(parent, node);
 }
 
 xmlNodePtr

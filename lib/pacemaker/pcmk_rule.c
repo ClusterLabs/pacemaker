@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -26,7 +26,7 @@
  * \return Standard Pacemaker return code
  */
 static int
-eval_date_expression(xmlNodePtr expr, crm_time_t *now)
+eval_date_expression(const xmlNode *expr, crm_time_t *now)
 {
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
@@ -83,10 +83,9 @@ init_rule_check(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
         }
 
     } else {
-        int rc = cib__signon_query(NULL, &(new_data_set->input));
+        int rc = cib__signon_query(out, NULL, &(new_data_set->input));
 
         if (rc != pcmk_rc_ok) {
-            out->err(out, "CIB query failed: %s", pcmk_rc_str(rc));
             pe_free_working_set(new_data_set);
             return rc;
         }

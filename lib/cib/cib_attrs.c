@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -321,7 +321,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
 
     crm_log_xml_trace(xml_top, "update_attr");
     rc = cib_internal_op(cib, PCMK__CIB_REQUEST_MODIFY, NULL, section, xml_top,
-                         NULL, call_options|cib_quorum_override, user_name);
+                         NULL, call_options, user_name);
     if (rc < 0) {
         rc = pcmk_legacy2rc(rc);
 
@@ -397,7 +397,7 @@ cib__delete_node_attr(pcmk__output_t *out, cib_t *cib, int options, const char *
     xml_obj = crm_create_nvpair_xml(NULL, attr_id, attr_name, attr_value);
 
     rc = cib_internal_op(cib, PCMK__CIB_REQUEST_DELETE, NULL, section, xml_obj,
-                         NULL, options|cib_quorum_override, user_name);
+                         NULL, options, user_name);
     if (rc < 0) {
         rc = pcmk_legacy2rc(rc);
     } else {
@@ -533,7 +533,7 @@ delete_attr_delegate(cib_t *cib, int options, const char *section, const char *n
  * \return pcmk_ok if UUID was successfully parsed, -ENXIO otherwise
  */
 static int
-get_uuid_from_result(xmlNode *result, char **uuid, int *is_remote)
+get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
 {
     int rc = -ENXIO;
     const char *tag;
@@ -615,7 +615,7 @@ get_uuid_from_result(xmlNode *result, char **uuid, int *is_remote)
         "/" XML_CIB_TAG_RESOURCE "/" XML_TAG_META_SETS "/" XML_CIB_TAG_NVPAIR \
         "[@name='" XML_RSC_ATTR_REMOTE_NODE "'][translate(@value,'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']" \
     "|/" XML_TAG_CIB "/" XML_CIB_TAG_STATUS "/" XML_CIB_TAG_STATE \
-        "[@" XML_NODE_IS_REMOTE "='true'][translate(@" XML_ATTR_UUID ",'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']"
+        "[@" XML_NODE_IS_REMOTE "='true'][translate(@" XML_ATTR_ID ",'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']"
 
 int
 query_node_uuid(cib_t * the_cib, const char *uname, char **uuid, int *is_remote_node)

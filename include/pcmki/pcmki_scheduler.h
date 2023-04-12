@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2022 the Pacemaker project contributors
+ * Copyright 2014-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -36,5 +36,8 @@ void pcmk__unpack_constraints(pe_working_set_t *data_set);
 
 void pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
                             pe_working_set_t *data_set);
+
+GList *pcmk__with_this_colocations(const pe_resource_t *rsc);
+GList *pcmk__this_with_colocations(const pe_resource_t *rsc);
 
 #endif

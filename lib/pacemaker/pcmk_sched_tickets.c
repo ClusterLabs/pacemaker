@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -43,7 +43,7 @@ typedef struct {
  *            constraint's, otherwise false
  */
 static bool
-ticket_role_matches(pe_resource_t *rsc, rsc_ticket_t *rsc_ticket)
+ticket_role_matches(const pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
 {
     if ((rsc_ticket->role == RSC_ROLE_UNKNOWN)
         || (rsc_ticket->role == rsc->role)) {
@@ -57,12 +57,12 @@ ticket_role_matches(pe_resource_t *rsc, rsc_ticket_t *rsc_ticket)
 /*!
  * \brief Create location constraints and fencing as needed for a ticket
  *
- * \param[in] rsc         Resource affected by ticket
- * \param[in] rsc_ticket  Ticket
- * \param[in] data_set    Cluster working set
+ * \param[in,out] rsc         Resource affected by ticket
+ * \param[in]     rsc_ticket  Ticket
+ * \param[in,out] data_set    Cluster working set
  */
 static void
-constraints_for_ticket(pe_resource_t *rsc, rsc_ticket_t *rsc_ticket,
+constraints_for_ticket(pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket,
                        pe_working_set_t *data_set)
 {
     GList *gIter = NULL;
@@ -77,7 +77,7 @@ constraints_for_ticket(pe_resource_t *rsc, rsc_ticket_t *rsc_ticket,
         pe_rsc_trace(rsc, "Processing ticket dependencies from %s", rsc->id);
         for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
             constraints_for_ticket((pe_resource_t *) gIter->data, rsc_ticket,
-                                  data_set);
+                                   data_set);
         }
         return;
     }
@@ -345,7 +345,7 @@ unpack_simple_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
     }
 
     if (instance != NULL) {
-        rsc = find_clone_instance(rsc, instance, data_set);
+        rsc = find_clone_instance(rsc, instance);
         if (rsc == NULL) {
             pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
                               "does not have an instance '%s'",
@@ -514,7 +514,7 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
  * If a resource has tickets for the promoted role, and the ticket is either not
  * granted or set to standby, then ban the resource from all nodes.
  *
- * \param[in] rsc  Resource to check
+ * \param[in,out] rsc  Resource to check
  */
 void
 pcmk__require_promotion_tickets(pe_resource_t *rsc)

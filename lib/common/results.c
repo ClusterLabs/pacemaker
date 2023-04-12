@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -291,6 +291,18 @@ static const struct pcmk__rc_info {
     },
     { "pcmk_rc_duplicate_id",
       "Two or more XML elements have the same ID",
+      -pcmk_err_generic,
+    },
+    { "pcmk_rc_disabled",
+      "Disabled",
+      -pcmk_err_generic,
+    },
+    { "pcmk_rc_bad_input",
+      "Bad input value provided",
+      -pcmk_err_generic,
+    },
+    { "pcmk_rc_bad_xml_patch",
+      "Bad XML patch format",
       -pcmk_err_generic,
     },
 };
@@ -678,6 +690,7 @@ pcmk_rc2exitc(int rc)
 {
     switch (rc) {
         case pcmk_rc_ok:
+        case pcmk_rc_no_output: // quiet mode, or nothing to output
             return CRM_EX_OK;
 
         case pcmk_rc_no_quorum:
@@ -729,7 +742,6 @@ pcmk_rc2exitc(int rc)
             return CRM_EX_EXISTS;
 
         case EIO:
-        case pcmk_rc_no_output:
         case pcmk_rc_dot_error:
         case pcmk_rc_graph_error:
             return CRM_EX_IOERR;
@@ -747,9 +759,11 @@ pcmk_rc2exitc(int rc)
         case ENODEV:
         case ENOENT:
         case ENXIO:
-        case pcmk_rc_node_unknown:
         case pcmk_rc_unknown_format:
             return CRM_EX_NOSUCH;
+
+        case pcmk_rc_node_unknown:
+            return CRM_EX_NOHOST;
 
         case ETIME:
         case ETIMEDOUT:
@@ -779,6 +793,10 @@ pcmk_rc2exitc(int rc)
 
         case pcmk_rc_duplicate_id:
             return CRM_EX_MULTIPLE;
+
+        case pcmk_rc_bad_input:
+        case pcmk_rc_bad_xml_patch:
+            return CRM_EX_DATAERR;
 
         default:
             return CRM_EX_ERROR;
@@ -865,7 +883,7 @@ crm_exit(crm_exit_t rc)
     mainloop_cleanup();
     crm_xml_cleanup();
 
-    pcmk__cli_option_cleanup();
+    free(pcmk__our_nodename);
 
     if (crm_system_name) {
         crm_info("Exiting %s " CRM_XS " with status %d", crm_system_name, rc);
@@ -873,6 +891,7 @@ crm_exit(crm_exit_t rc)
     } else {
         crm_trace("Exiting with status %d", rc);
     }
+    pcmk__free_common_logger();
     qb_log_fini(); // Don't log anything after this point
 
     exit(rc);

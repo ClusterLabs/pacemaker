@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the Pacemaker project contributors
+ * Copyright 2009-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -74,8 +74,9 @@ void election_timeout_stop(election_t *e);
 void election_vote(election_t *e);
 bool election_check(election_t *e);
 void election_remove(election_t *e, const char *uname);
-enum election_result election_state(election_t *e);
-enum election_result election_count_vote(election_t *e, xmlNode *vote, bool can_win);
+enum election_result election_state(const election_t *e);
+enum election_result election_count_vote(election_t *e, const xmlNode *message,
+                                         bool can_win);
 void election_clear_dampening(election_t *e);
 
 #ifdef __cplusplus

@@ -2,12 +2,12 @@
 drbd0:0 promotion score on odin: 75
 drbd0:1 promotion score on frigg: 1
 drbd0:2 promotion score on none: 0
-pcmk__clone_allocate: drbd0:0 allocation score on frigg: 0
-pcmk__clone_allocate: drbd0:0 allocation score on odin: INFINITY
-pcmk__clone_allocate: drbd0:1 allocation score on frigg: INFINITY
-pcmk__clone_allocate: drbd0:1 allocation score on odin: 0
-pcmk__clone_allocate: ms_drbd allocation score on frigg: 0
-pcmk__clone_allocate: ms_drbd allocation score on odin: 0
+pcmk__clone_assign: drbd0:0 allocation score on frigg: 0
+pcmk__clone_assign: drbd0:0 allocation score on odin: INFINITY
+pcmk__clone_assign: drbd0:1 allocation score on frigg: INFINITY
+pcmk__clone_assign: drbd0:1 allocation score on odin: 0
+pcmk__clone_assign: ms_drbd allocation score on frigg: 0
+pcmk__clone_assign: ms_drbd allocation score on odin: 0
 pcmk__group_assign: IPaddr0 allocation score on frigg: -INFINITY
 pcmk__group_assign: IPaddr0 allocation score on odin: 0
 pcmk__group_assign: MailTo allocation score on frigg: 0

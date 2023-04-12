@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2021 the Pacemaker project contributors
+ * Copyright 2014-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -96,7 +96,7 @@ dbus_watch_flags_to_string(int flags)
  * \internal
  * \brief Dispatch data available on a DBus file descriptor watch
  *
- * \param[in] userdata  Pointer to the DBus watch
+ * \param[in,out] userdata  Pointer to the DBus watch
  *
  * \return Always 0
  * \note This is suitable for use as a dispatch function in
@@ -327,7 +327,7 @@ pcmk_dbus_disconnect(DBusConnection *connection)
  *       done using it.
  */
 bool
-pcmk_dbus_find_error(DBusPendingCall *pending, DBusMessage *reply,
+pcmk_dbus_find_error(const DBusPendingCall *pending, DBusMessage *reply,
                      DBusError *ret)
 {
     DBusError error;
@@ -397,10 +397,10 @@ pcmk_dbus_find_error(DBusPendingCall *pending, DBusMessage *reply,
  * \internal
  * \brief Send a DBus request and wait for the reply
  *
- * \param[in]  msg         DBus request to send
- * \param[in]  connection  DBus connection to use
- * \param[out] error       If non-NULL, will be set to error, if any
- * \param[in]  timeout     Timeout to use for request
+ * \param[in,out] msg         DBus request to send
+ * \param[in,out] connection  DBus connection to use
+ * \param[out]    error       If non-NULL, will be set to error, if any
+ * \param[in]     timeout     Timeout to use for request
  *
  * \return DBus reply
  *
@@ -462,7 +462,7 @@ pcmk_dbus_send_recv(DBusMessage *msg, DBusConnection *connection,
  * \internal
  * \brief Send a DBus message with a callback for the reply
  *
- * \param[in]     msg         DBus message to send
+ * \param[in,out] msg         DBus message to send
  * \param[in,out] connection  DBus connection to send on
  * \param[in]     done        Function to call when pending call completes
  * \param[in]     user_data   Data to pass to done callback
@@ -673,17 +673,17 @@ async_query_result_cb(DBusPendingCall *pending, void *user_data)
  * \internal
  * \brief Query a property on a DBus object
  *
- * \param[in]  connection  An active connection to DBus
- * \param[in]  target      DBus name that the query should be sent to
- * \param[in]  obj         DBus object path for object with the property
- * \param[in]  iface       DBus interface for property to query
- * \param[in]  name        Name of property to query
- * \param[in]  callback    If not NULL, perform query asynchronously, and call
- *                         this function when query completes
- * \param[in]  userdata    Caller-provided data to provide to \p callback
- * \param[out] pending     If \p callback is not NULL, this will be set to the
- *                         handle for the reply (or NULL on error)
- * \param[in]  timeout     Abort query if it takes longer than this (ms)
+ * \param[in,out] connection  An active connection to DBus
+ * \param[in]     target      DBus name that the query should be sent to
+ * \param[in]     obj         DBus object path for object with the property
+ * \param[in]     iface       DBus interface for property to query
+ * \param[in]     name        Name of property to query
+ * \param[in]     callback    If not NULL, perform query asynchronously and call
+ *                            this function when query completes
+ * \param[in,out] userdata    Caller-provided data to provide to \p callback
+ * \param[out]    pending     If \p callback is not NULL, this will be set to
+ *                            handle for the reply (or NULL on error)
+ * \param[in]     timeout     Abort query if it takes longer than this (ms)
  *
  * \return NULL if \p callback is non-NULL (i.e. asynchronous), otherwise a
  *         newly allocated string with property value

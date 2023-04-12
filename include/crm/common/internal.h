@@ -37,6 +37,9 @@
  */
 extern bool pcmk__is_daemon;
 
+//! Node name of the local node
+extern char *pcmk__our_nodename;
+
 // Number of elements in a statically defined array
 #define PCMK__NELEM(a) ((int) (sizeof(a)/sizeof(a[0])) )
 
@@ -78,7 +81,6 @@ void pcmk__xe_add_node(xmlNode *xml, const char *node, int nodeid);
 int pcmk__scan_nvpair(const char *input, char **name, char **value);
 char *pcmk__format_nvpair(const char *name, const char *value,
                           const char *units);
-char *pcmk__format_named_time(const char *name, time_t epoch_time);
 
 /*!
  * \internal

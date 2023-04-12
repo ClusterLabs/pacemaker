@@ -1,16 +1,18 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
- * This source code is licensed under the GNU Lesser General Public License
- * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
 
 #include <crm/common/unittest_internal.h>
 #include <crm/common/output_internal.h>
+
+#include "../../crmcommon_private.h"
 
 static int
 null_message_fn(pcmk__output_t *out, va_list args) {
@@ -80,7 +82,7 @@ static void
 add_message(void **state) {
     pcmk__output_t *out = NULL;
 
-    pcmk__output_new(&out, "text", NULL, NULL);
+    pcmk__bare_output_new(&out, "text", NULL, NULL);
 
     /* For starters, there should be no messages defined. */
     assert_int_equal(g_hash_table_size(out->messages), 0);

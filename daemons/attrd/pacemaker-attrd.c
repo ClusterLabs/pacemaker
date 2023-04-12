@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2022 the Pacemaker project contributors
+ * Copyright 2013-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -35,6 +35,19 @@
 #include "pacemaker-attrd.h"
 
 #define SUMMARY "daemon for managing Pacemaker node attributes"
+
+gboolean stand_alone = FALSE;
+gchar **log_files = NULL;
+
+static GOptionEntry entries[] = {
+    { "stand-alone", 's', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &stand_alone,
+      "(Advanced use only) Run in stand-alone mode", NULL },
+
+    { "logfile", 'l', G_OPTION_FLAG_NONE, G_OPTION_ARG_FILENAME_ARRAY,
+      &log_files, "Send logs to the additional named logfile", NULL },
+
+    { NULL }
+};
 
 static pcmk__output_t *out = NULL;
 
@@ -105,8 +118,7 @@ attrd_erase_attrs(void)
     crm_info("Clearing transient attributes from CIB " CRM_XS " xpath=%s",
              xpath);
 
-    call_id = the_cib->cmds->remove(the_cib, xpath, NULL,
-                                    cib_quorum_override | cib_xpath);
+    call_id = the_cib->cmds->remove(the_cib, xpath, NULL, cib_xpath);
     the_cib->cmds->register_callback_full(the_cib, call_id, 120, FALSE, xpath,
                                           "attrd_erase_cb", attrd_erase_cb,
                                           free);
@@ -209,7 +221,11 @@ ipc_already_running(void)
 
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
-    return pcmk__build_arg_context(args, "text (default), xml", group, NULL);
+    GOptionContext *context = NULL;
+
+    context = pcmk__build_arg_context(args, "text (default), xml", group, NULL);
+    pcmk__add_main_args(context, entries);
+    return context;
 }
 
 int
@@ -249,15 +265,23 @@ main(int argc, char **argv)
         goto done;
     }
 
-    initialized = true;
+    // Open additional log files
+    pcmk__add_logfiles(log_files, out);
 
     crm_log_init(T_ATTRD, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
-    crm_notice("Starting Pacemaker node attribute manager");
+    crm_notice("Starting Pacemaker node attribute manager%s",
+               stand_alone ? " in standalone mode" : "");
 
     if (ipc_already_running()) {
-        crm_err("pacemaker-attrd is already active, aborting startup");
-        crm_exit(CRM_EX_OK);
+        const char *msg = "pacemaker-attrd is already active, aborting startup";
+
+        attrd_exit_status = CRM_EX_OK;
+        g_set_error(&error, PCMK__EXITC_ERROR, attrd_exit_status, "%s", msg);
+        crm_err(msg);
+        goto done;
     }
+
+    initialized = true;
 
     attributes = pcmk__strkey_table(NULL, attrd_free_attribute);
 
@@ -265,21 +289,30 @@ main(int argc, char **argv)
      * This allows us to assume the CIB is connected whenever we process a
      * cluster or IPC message (which also avoids start-up race conditions).
      */
-    if (attrd_cib_connect(30) != pcmk_ok) {
-        attrd_exit_status = CRM_EX_FATAL;
-        goto done;
+    if (!stand_alone) {
+        if (attrd_cib_connect(30) != pcmk_ok) {
+            attrd_exit_status = CRM_EX_FATAL;
+            g_set_error(&error, PCMK__EXITC_ERROR, attrd_exit_status,
+                        "Could not connect to the CIB");
+            goto done;
+        }
+        crm_info("CIB connection active");
     }
-    crm_info("CIB connection active");
 
     if (attrd_cluster_connect() != pcmk_ok) {
         attrd_exit_status = CRM_EX_FATAL;
+        g_set_error(&error, PCMK__EXITC_ERROR, attrd_exit_status,
+                    "Could not connect to the cluster");
         goto done;
     }
     crm_info("Cluster connection active");
 
     // Initialization that requires the cluster to be connected
     attrd_election_init();
-    attrd_cib_init();
+
+    if (!stand_alone) {
+        attrd_cib_init();
+    }
 
     /* Set a private attribute for ourselves with the protocol version we
      * support. This lets all nodes determine the minimum supported version
@@ -299,18 +332,27 @@ main(int argc, char **argv)
         attrd_election_fini();
         attrd_ipc_fini();
         attrd_lrmd_disconnect();
-        attrd_cib_disconnect();
+
+        if (!stand_alone) {
+            attrd_cib_disconnect();
+        }
+
+        attrd_free_waitlist();
+        pcmk_cluster_free(attrd_cluster);
         g_hash_table_destroy(attributes);
     }
 
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
 
-    pcmk__output_and_clear_error(error, out);
+    g_strfreev(log_files);
+
+    pcmk__output_and_clear_error(&error, out);
 
     if (out != NULL) {
         out->finish(out, attrd_exit_status, true, NULL);
         pcmk__output_free(out);
     }
+    pcmk__unregister_formats();
     crm_exit(attrd_exit_status);
 }

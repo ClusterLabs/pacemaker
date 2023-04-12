@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -166,8 +166,8 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
             if (!do_and) {
                 local->weight = pcmk__add_scores(local->weight, score_f);
             }
-            crm_trace("%s now has weight %d",
-                      pe__node_name(node), local->weight);
+            crm_trace("%s has score %s after %s", pe__node_name(node),
+                      pcmk_readable_score(local->weight), rule_id);
 
         } else if (do_and && !accept) {
             // Remove it
@@ -310,11 +310,10 @@ unpack_simple_location(xmlNode *xml_obj, pe_working_set_t *data_set)
             invert = true;
         }
 
-        if (regcomp(r_patt, value, REG_EXTENDED)) {
+        if (regcomp(r_patt, value, REG_EXTENDED) != 0) {
             pcmk__config_err("Ignoring constraint '%s' because "
                              XML_LOC_ATTR_SOURCE_PATTERN
                              " has invalid value '%s'", id, value);
-            regfree(r_patt);
             free(r_patt);
             return;
         }
@@ -524,12 +523,12 @@ pcmk__unpack_location(xmlNode *xml_obj, pe_working_set_t *data_set)
  * \internal
  * \brief Add a new location constraint to a cluster working set
  *
- * \param[in] id             XML ID of location constraint
- * \param[in] rsc            Resource in location constraint
- * \param[in] node_weight    Constraint score
- * \param[in] discover_mode  Resource discovery option for constraint
- * \param[in] node           Node in location constraint (or NULL if rule-based)
- * \param[in] data_set       Cluster working set to add constraint to
+ * \param[in]     id             XML ID of location constraint
+ * \param[in,out] rsc            Resource in location constraint
+ * \param[in]     node_weight    Constraint score
+ * \param[in]     discover_mode  Resource discovery option for constraint
+ * \param[in]     node           Node in constraint (or NULL if rule-based)
+ * \param[in,out] data_set       Cluster working set to add constraint to
  *
  * \return Newly allocated location constraint
  * \note The result will be added to \p data_set and should not be freed
@@ -596,7 +595,7 @@ pcmk__new_location(const char *id, pe_resource_t *rsc,
  * \internal
  * \brief Apply all location constraints
  *
- * \param[in] data_set       Cluster working set
+ * \param[in,out] data_set       Cluster working set
  */
 void
 pcmk__apply_locations(pe_working_set_t *data_set)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -69,7 +69,7 @@ invert_action(const char *action)
 }
 
 static enum pe_order_kind
-get_ordering_type(xmlNode *xml_obj)
+get_ordering_type(const xmlNode *xml_obj)
 {
     enum pe_order_kind kind_e = pe_order_kind_mandatory;
     const char *kind = crm_element_value(xml_obj, XML_ORDER_ATTR_KIND);
@@ -121,7 +121,7 @@ get_ordering_type(xmlNode *xml_obj)
  * \retval ordering_asymmetric  Ordering is asymmetric
  */
 static enum ordering_symmetry
-get_ordering_symmetry(xmlNode *xml_obj, enum pe_order_kind parent_kind,
+get_ordering_symmetry(const xmlNode *xml_obj, enum pe_order_kind parent_kind,
                       const char *parent_symmetrical_s)
 {
     int rc = pcmk_rc_ok;
@@ -226,8 +226,9 @@ ordering_flags_for_kind(enum pe_order_kind kind, const char *first,
  * \return Resource corresponding to \p id, or NULL if none
  */
 static pe_resource_t *
-get_ordering_resource(xmlNode *xml, const char *resource_attr,
-                      const char *instance_attr, pe_working_set_t *data_set)
+get_ordering_resource(const xmlNode *xml, const char *resource_attr,
+                      const char *instance_attr,
+                      const pe_working_set_t *data_set)
 {
     // @COMPAT: instance_attr and instance_id variables deprecated since 2.1.5
     pe_resource_t *rsc = NULL;
@@ -259,7 +260,7 @@ get_ordering_resource(xmlNode *xml, const char *resource_attr,
                              ID(xml), rsc_id, instance_id);
             return NULL;
         }
-        rsc = find_clone_instance(rsc, instance_id, data_set);
+        rsc = find_clone_instance(rsc, instance_id);
         if (rsc == NULL) {
             pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
                              "does not have an instance '%s'",
@@ -280,7 +281,7 @@ get_ordering_resource(xmlNode *xml, const char *resource_attr,
  * \return Minimum 'first' instances required (or 0 if not applicable)
  */
 static int
-get_minimum_first_instances(pe_resource_t *rsc, xmlNode *xml)
+get_minimum_first_instances(const pe_resource_t *rsc, const xmlNode *xml)
 {
     const char *clone_min = NULL;
     bool require_all = false;
@@ -318,14 +319,14 @@ get_minimum_first_instances(pe_resource_t *rsc, xmlNode *xml)
  * \internal
  * \brief Create orderings for a constraint with clone-min > 0
  *
- * \param[in] id            Ordering ID
- * \param[in] rsc_first     'First' resource in ordering (a clone)
- * \param[in] action_first  'First' action in ordering
- * \param[in] rsc_then      'Then' resource in ordering
- * \param[in] action_then   'Then' action in ordering
- * \param[in] flags         Ordering flags
- * \param[in] clone_min     Minimum required instances of 'first'
- * \param[in] data_set      Cluster working set
+ * \param[in]     id            Ordering ID
+ * \param[in,out] rsc_first     'First' resource in ordering (a clone)
+ * \param[in]     action_first  'First' action in ordering
+ * \param[in]     rsc_then      'Then' resource in ordering
+ * \param[in]     action_then   'Then' action in ordering
+ * \param[in]     flags         Ordering flags
+ * \param[in]     clone_min     Minimum required instances of 'first'
+ * \param[in,out] data_set      Cluster working set
  */
 static void
 clone_min_ordering(const char *id,
@@ -367,10 +368,10 @@ clone_min_ordering(const char *id,
  * \internal
  * \brief Update ordering flags for restart-type=restart
  *
- * \param[in]  rsc    'Then' resource in ordering
- * \param[in]  kind   Ordering kind
- * \param[in]  flag   Ordering flag to set (when applicable)
- * \param[out] flags  Ordering flag set to update
+ * \param[in]     rsc    'Then' resource in ordering
+ * \param[in]     kind   Ordering kind
+ * \param[in]     flag   Ordering flag to set (when applicable)
+ * \param[in,out] flags  Ordering flag set to update
  *
  * \compat The restart-type resource meta-attribute is deprecated. Eventually,
  *         it will be removed, and pe_restart_ignore will be the only behavior,
@@ -387,19 +388,17 @@ clone_min_ordering(const char *id,
  * \internal
  * \brief Create new ordering for inverse of symmetric constraint
  *
- * \param[in] id            Ordering ID (for logging only)
- * \param[in] kind          Ordering kind
- * \param[in] rsc_first     'First' resource in ordering (a clone)
- * \param[in] action_first  'First' action in ordering
- * \param[in] rsc_then      'Then' resource in ordering
- * \param[in] action_then   'Then' action in ordering
- * \param[in] data_set      Cluster working set
+ * \param[in]     id            Ordering ID (for logging only)
+ * \param[in]     kind          Ordering kind
+ * \param[in]     rsc_first     'First' resource in ordering (a clone)
+ * \param[in]     action_first  'First' action in ordering
+ * \param[in,out] rsc_then      'Then' resource in ordering
+ * \param[in]     action_then   'Then' action in ordering
  */
 static void
 inverse_ordering(const char *id, enum pe_order_kind kind,
                  pe_resource_t *rsc_first, const char *action_first,
-                 pe_resource_t *rsc_then, const char *action_then,
-                 pe_working_set_t *data_set)
+                 pe_resource_t *rsc_then, const char *action_then)
 {
     action_then = invert_action(action_then);
     action_first = invert_action(action_first);
@@ -486,7 +485,7 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
 
     if (symmetry == ordering_symmetric) {
         inverse_ordering(id, kind, rsc_first, action_first,
-                         rsc_then, action_then, data_set);
+                         rsc_then, action_then);
     }
 }
 
@@ -494,26 +493,26 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
  * \internal
  * \brief Create a new ordering between two actions
  *
- * \param[in] first_rsc          Resource for 'first' action (if NULL and
- *                               \p first_action is a resource action, that
- *                               resource will be used)
- * \param[in] first_action_task  Action key for 'first' action (if NULL and
- *                               \p first_action is not NULL, its UUID will be
- *                               used)
- * \param[in] first_action       'first' action (if NULL, \p first_rsc and
- *                               \p first_action_task must be set)
+ * \param[in,out] first_rsc          Resource for 'first' action (if NULL and
+ *                                   \p first_action is a resource action, that
+ *                                   resource will be used)
+ * \param[in,out] first_action_task  Action key for 'first' action (if NULL and
+ *                                   \p first_action is not NULL, its UUID will
+ *                                   be used)
+ * \param[in,out] first_action       'first' action (if NULL, \p first_rsc and
+ *                                   \p first_action_task must be set)
  *
- * \param[in] then_rsc           Resource for 'then' action (if NULL and
- *                               \p then_action is a resource action, that
- *                               resource will be used)
- * \param[in] then_action_task   Action key for 'then' action (if NULL and
- *                               \p then_action is not NULL, its UUID will be
- *                               used)
- * \param[in] then_action        'then' action (if NULL, \p then_rsc and
- *                               \p then_action_task must be set)
+ * \param[in]     then_rsc           Resource for 'then' action (if NULL and
+ *                                   \p then_action is a resource action, that
+ *                                   resource will be used)
+ * \param[in,out] then_action_task   Action key for 'then' action (if NULL and
+ *                                   \p then_action is not NULL, its UUID will
+ *                                   be used)
+ * \param[in]     then_action        'then' action (if NULL, \p then_rsc and
+ *                                   \p then_action_task must be set)
  *
- * \param[in] type               Flag set of enum pe_ordering
- * \param[in] data_set           Cluster working set to add ordering to
+ * \param[in]     flags              Flag set of enum pe_ordering
+ * \param[in,out] data_set           Cluster working set to add ordering to
  *
  * \note This function takes ownership of first_action_task and
  *       then_action_task, which do not need to be freed by the caller.
@@ -579,18 +578,17 @@ pcmk__new_ordering(pe_resource_t *first_rsc, char *first_action_task,
 /*!
  * \brief Unpack a set in an ordering constraint
  *
- * \param[in]  set                    Set XML to unpack
- * \param[in]  parent_kind            rsc_order XML "kind" attribute
- * \param[in]  parent_symmetrical_s   rsc_order XML "symmetrical" attribute
- * \param[in]  data_set               Cluster working set
+ * \param[in]     set                   Set XML to unpack
+ * \param[in]     parent_kind           rsc_order XML "kind" attribute
+ * \param[in]     parent_symmetrical_s  rsc_order XML "symmetrical" attribute
+ * \param[in,out] data_set              Cluster working set
  *
  * \return Standard Pacemaker return code
  */
 static int
-unpack_order_set(xmlNode *set, enum pe_order_kind parent_kind,
+unpack_order_set(const xmlNode *set, enum pe_order_kind parent_kind,
                  const char *parent_symmetrical_s, pe_working_set_t *data_set)
 {
-    xmlNode *xml_rsc = NULL;
     GList *set_iter = NULL;
     GList *resources = NULL;
 
@@ -624,7 +622,7 @@ unpack_order_set(xmlNode *set, enum pe_order_kind parent_kind,
     symmetry = get_ordering_symmetry(set, parent_kind, parent_symmetrical_s);
     flags = ordering_flags_for_kind(local_kind, action, symmetry);
 
-    for (xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
+    for (const xmlNode *xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
          xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
         EXPAND_CONSTRAINT_IDREF(id, resource, ID(xml_rsc));
@@ -696,23 +694,23 @@ unpack_order_set(xmlNode *set, enum pe_order_kind parent_kind,
 /*!
  * \brief Order two resource sets relative to each other
  *
- * \param[in] id        Ordering ID (for logging)
- * \param[in] set1      First listed set
- * \param[in] set2      Second listed set
- * \param[in] kind      Ordering kind
- * \param[in] data_set  Cluster working set
- * \param[in] symmetry  Which ordering symmetry applies to this relation
+ * \param[in]     id        Ordering ID (for logging)
+ * \param[in]     set1      First listed set
+ * \param[in]     set2      Second listed set
+ * \param[in]     kind      Ordering kind
+ * \param[in,out] data_set  Cluster working set
+ * \param[in]     symmetry  Which ordering symmetry applies to this relation
  *
  * \return Standard Pacemaker return code
  */
 static int
-order_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2,
+order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
                enum pe_order_kind kind, pe_working_set_t *data_set,
                enum ordering_symmetry symmetry)
 {
 
-    xmlNode *xml_rsc = NULL;
-    xmlNode *xml_rsc_2 = NULL;
+    const xmlNode *xml_rsc = NULL;
+    const xmlNode *xml_rsc_2 = NULL;
 
     pe_resource_t *rsc_1 = NULL;
     pe_resource_t *rsc_2 = NULL;
@@ -749,8 +747,7 @@ order_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2,
         require_all = true;
     }
 
-    // @TODO is action_2 correct here?
-    flags = ordering_flags_for_kind(kind, action_2, symmetry);
+    flags = ordering_flags_for_kind(kind, action_1, symmetry);
 
     /* If we have an unordered set1, whether it is sequential or not is
      * irrelevant in regards to set2.
@@ -879,16 +876,16 @@ order_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2,
  * \internal
  * \brief If an ordering constraint uses resource tags, expand them
  *
- * \param[in]  xml_obj       Ordering constraint XML
- * \param[out] expanded_xml  Equivalent XML with tags expanded
- * \param[in]  data_set      Cluster working set
+ * \param[in,out] xml_obj       Ordering constraint XML
+ * \param[out]    expanded_xml  Equivalent XML with tags expanded
+ * \param[in]     data_set      Cluster working set
  *
  * \return Standard Pacemaker return code (specifically, pcmk_rc_ok on success,
  *         and pcmk_rc_unpack_error on invalid configuration)
  */
 static int
 unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
-                  pe_working_set_t *data_set)
+                  const pe_working_set_t *data_set)
 {
     const char *id_first = NULL;
     const char *id_then = NULL;
@@ -988,7 +985,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
  * \internal
  * \brief Unpack ordering constraint XML
  *
- * \param[in]     xml_obj   Ordering constraint XML to unpack
+ * \param[in,out] xml_obj   Ordering constraint XML to unpack
  * \param[in,out] data_set  Cluster working set
  */
 void
@@ -1117,8 +1114,8 @@ pcmk__disable_invalid_orderings(pe_working_set_t *data_set)
  * \internal
  * \brief Order stops on a node before the node's shutdown
  *
- * \param[in] node         Node being shut down
- * \param[in] shutdown_op  Shutdown action for node
+ * \param[in,out] node         Node being shut down
+ * \param[in]     shutdown_op  Shutdown action for node
  */
 void
 pcmk__order_stops_before_shutdown(pe_node_t *node, pe_action_t *shutdown_op)
@@ -1414,8 +1411,8 @@ pcmk__apply_orderings(pe_working_set_t *data_set)
  * \internal
  * \brief Order a given action after each action in a given list
  *
- * \param[in] after   "After" action
- * \param[in] list    List of "before" actions
+ * \param[in,out] after  "After" action
+ * \param[in,out] list   List of "before" actions
  */
 void
 pcmk__order_after_each(pe_action_t *after, GList *list)
@@ -1437,7 +1434,7 @@ pcmk__order_after_each(pe_action_t *after, GList *list)
  * \internal
  * \brief Order promotions and demotions for restarts of a clone or bundle
  *
- * \param[in] rsc  Clone or bundle to order
+ * \param[in,out] rsc  Clone or bundle to order
  */
 void
 pcmk__promotable_restart_ordering(pe_resource_t *rsc)

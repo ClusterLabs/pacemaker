@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -92,7 +92,7 @@ struct {
     gchar *interval_spec;         // Value of --interval
     gchar *move_lifetime;         // Value of --lifetime
     gchar *operation;             // Value of --operation
-    const char *attr_set_type;    // Instance, meta, or utilization attribute
+    const char *attr_set_type;    // Instance, meta, utilization, or element attribute
     gchar *prop_id;               // --nvpair (attribute XML ID)
     char *prop_name;              // Attribute name
     gchar *prop_set;              // --set-name (attribute block XML ID)
@@ -200,12 +200,13 @@ static pcmk__supported_format_t formats[] = {
 static crm_exit_t
 bye(crm_exit_t ec)
 {
-    pcmk__output_and_clear_error(error, out);
+    pcmk__output_and_clear_error(&error, out);
 
     if (out != NULL) {
         out->finish(out, ec, true, NULL);
         pcmk__output_free(out);
     }
+    pcmk__unregister_formats();
 
     if (cib_conn != NULL) {
         cib_t *save_cib_conn = cib_conn;
@@ -254,7 +255,7 @@ resource_ipc_timeout(gpointer data)
     }
 
     g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_TIMEOUT,
-                "Aborting because no messages received in %d seconds", MESSAGE_TIMEOUT_S);
+                _("Aborting because no messages received in %d seconds"), MESSAGE_TIMEOUT_S);
 
     quit_main_loop(CRM_EX_TIMEOUT);
     return FALSE;
@@ -386,7 +387,7 @@ static GOptionEntry query_entries[] = {
       NULL },
     { "get-parameter", 'g', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, get_param_prop_cb,
       "Display named parameter for resource (use instance attribute\n"
-      INDENT "unless --meta or --utilization is specified)",
+      INDENT "unless --element, --meta, or --utilization is specified)",
       "PARAM" },
     { "get-property", 'G', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, get_param_prop_cb,
       "Display named property of resource ('class', 'type', or 'provider') "
@@ -443,11 +444,12 @@ static GOptionEntry command_entries[] = {
       NULL },
     { "set-parameter", 'p', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, set_delete_param_cb,
       "Set named parameter for resource (requires -v). Use instance\n"
-      INDENT "attribute unless --meta or --utilization is specified.",
+      INDENT "attribute unless --element, --meta, or --utilization is "
+      "specified.",
       "PARAM" },
     { "delete-parameter", 'd', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, set_delete_param_cb,
       "Delete named parameter for resource. Use instance attribute\n"
-      INDENT "unless --meta or --utilization is specified.",
+      INDENT "unless --element, --meta or, --utilization is specified.",
       "PARAM" },
     { "set-property", 'S', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, set_prop_cb,
       "Set named property of resource ('class', 'type', or 'provider') "
@@ -591,6 +593,10 @@ static GOptionEntry addl_entries[] = {
       "Use resource utilization attribute instead of instance attribute\n"
       INDENT "(with -p, -g, -d)",
       NULL },
+    { "element", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, attr_set_type_cb,
+      "Use resource element attribute instead of instance attribute\n"
+      INDENT "(with -p, -g, -d)",
+      NULL },
     { "operation", 'n', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.operation,
       "Operation to clear instead of all (with -C -r)",
       "OPERATION" },
@@ -625,8 +631,8 @@ static GOptionEntry addl_entries[] = {
       INDENT "--restart, --wait, --force-*)",
       "N" },
     { "force", 'f', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &options.force,
-      "If making CIB changes, do so regardless of quorum. See help for\n"
-      INDENT "individual commands for additional behavior.",
+      "Force the action to be performed. See help for individual commands for\n"
+      INDENT "additional behavior.",
       NULL },
     { "xml-file", 'x', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_FILENAME, &options.xml_file,
       NULL,
@@ -670,8 +676,9 @@ attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
         options.attr_set_type = XML_TAG_META_SETS;
     } else if (pcmk__str_any_of(option_name, "-z", "--utilization", NULL)) {
         options.attr_set_type = XML_TAG_UTILIZATION;
+    } else if (pcmk__str_eq(option_name, "--element", pcmk__str_casei)) {
+        options.attr_set_type = ATTR_SET_ELEMENT;
     }
-
     return TRUE;
 }
 
@@ -905,7 +912,7 @@ validate_or_force_cb(const gchar *option_name, const gchar *optarg,
     if (optarg != NULL) {
         if (pcmk__scan_min_int(optarg, &options.check_level, 0) != pcmk_rc_ok) {
             g_set_error(error, G_OPTION_ERROR, CRM_EX_INVALID_PARAM,
-                        "Invalid check level setting: %s", optarg);
+                        _("Invalid check level setting: %s"), optarg);
             return FALSE;
         }
     }
@@ -989,20 +996,20 @@ ban_or_move(pcmk__output_t *out, pe_resource_t *rsc, const char *move_lifetime)
         } else {
             rc = EINVAL;
             g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                        "Resource '%s' not moved: active in %d locations (promoted in %d).\n"
+                        _("Resource '%s' not moved: active in %d locations (promoted in %d).\n"
                         "To prevent '%s' from running on a specific location, "
                         "specify a node."
                         "To prevent '%s' from being promoted at a specific "
-                        "location, specify a node and the --promoted option.",
+                        "location, specify a node and the --promoted option."),
                         options.rsc_id, nactive, count, options.rsc_id, options.rsc_id);
         }
 
     } else {
         rc = EINVAL;
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                    "Resource '%s' not moved: active in %d locations.\n"
+                    _("Resource '%s' not moved: active in %d locations.\n"
                     "To prevent '%s' from running on a specific location, "
-                    "specify a node.",
+                    "specify a node."),
                     options.rsc_id, nactive, options.rsc_id);
     }
 
@@ -1075,7 +1082,7 @@ clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
 
         if (rc != pcmk_rc_ok) {
             g_set_error(&error, PCMK__RC_ERROR, rc,
-                        "Could not get modified CIB: %s\n", pcmk_strerror(rc));
+                        _("Could not get modified CIB: %s\n"), pcmk_strerror(rc));
             g_list_free(before);
             free_xml(*cib_xml_copy);
             *cib_xml_copy = NULL;
@@ -1109,7 +1116,7 @@ delete(void)
     if (options.rsc_type == NULL) {
         rc = ENXIO;
         g_set_error(&error, PCMK__RC_ERROR, rc,
-                    "You need to specify a resource type with -t");
+                    _("You need to specify a resource type with -t"));
         return rc;
     }
 
@@ -1152,10 +1159,10 @@ error:
     if (rc != pcmk_rc_ok) {
         if (provider == NULL) {
             g_set_error(&error, PCMK__RC_ERROR, rc,
-                        "No agents found for standard '%s'", agent_spec);
+                        _("No agents found for standard '%s'"), agent_spec);
         } else {
             g_set_error(&error, PCMK__RC_ERROR, rc,
-                        "No agents found for standard '%s' and provider '%s'",
+                        _("No agents found for standard '%s' and provider '%s'"),
                         agent_spec, provider);
         }
     }
@@ -1222,12 +1229,12 @@ error:
         if (agent_spec != NULL) {
             rc = ENXIO;
             g_set_error(&error, PCMK__RC_ERROR, rc,
-                        "No %s found for %s", text, agent_spec);
+                        _("No %s found for %s"), text, agent_spec);
 
         } else {
             rc = ENXIO;
             g_set_error(&error, PCMK__RC_ERROR, rc,
-                        "No %s found", text);
+                        _("No %s found"), text);
         }
     }
 
@@ -1287,7 +1294,7 @@ refresh(pcmk__output_t *out)
             if (node == NULL) {
                 rc = ENXIO;
                 g_set_error(&error, PCMK__RC_ERROR, rc,
-                            "No cluster connection to Pacemaker Remote node %s detected",
+                            _("No cluster connection to Pacemaker Remote node %s detected"),
                             options.host_uname);
                 return rc;
             }
@@ -1348,13 +1355,13 @@ set_property(void)
 
     if (pcmk__str_empty(options.rsc_type)) {
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                    "Must specify -t with resource type");
+                    _("Must specify -t with resource type"));
         rc = ENXIO;
         return rc;
 
     } else if (pcmk__str_empty(options.prop_value)) {
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                    "Must supply -v with new value");
+                    _("Must supply -v with new value"));
         rc = ENXIO;
         return rc;
     }
@@ -1386,7 +1393,7 @@ show_metadata(pcmk__output_t *out, const char *agent_spec)
     rc = lrmd__new(&lrmd_conn, NULL, NULL, 0);
     if (rc != pcmk_rc_ok) {
         g_set_error(&error, PCMK__RC_ERROR, rc,
-                    "Could not create executor connection");
+                    _("Could not create executor connection"));
         lrmd_api_delete(lrmd_conn);
         return rc;
     }
@@ -1430,13 +1437,13 @@ validate_cmdline_config(void)
     // Cannot use both --resource and command-line resource configuration
     if (options.rsc_id != NULL) {
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                    "--resource cannot be used with --class, --agent, and --provider");
+                    _("--resource cannot be used with --class, --agent, and --provider"));
 
     // Not all commands support command-line resource configuration
     } else if (options.rsc_cmd != cmd_execute_agent) {
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                    "--class, --agent, and --provider can only be used with "
-                    "--validate and --force-*");
+                    _("--class, --agent, and --provider can only be used with "
+                    "--validate and --force-*"));
 
     // Not all of --class, --agent, and --provider need to be given.  Not all
     // classes support the concept of a provider.  Check that what we were given
@@ -1444,16 +1451,16 @@ validate_cmdline_config(void)
     } else if (pcmk__str_eq(options.v_class, "stonith", pcmk__str_none)) {
         if (options.v_provider != NULL) {
             g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                        "stonith does not support providers");
+                        _("stonith does not support providers"));
 
         } else if (stonith_agent_exists(options.v_agent, 0) == FALSE) {
             g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                        "%s is not a known stonith agent", options.v_agent ? options.v_agent : "");
+                        _("%s is not a known stonith agent"), options.v_agent ? options.v_agent : "");
         }
 
     } else if (resources_agent_exists(options.v_class, options.v_provider, options.v_agent) == FALSE) {
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                    "%s:%s:%s is not a known resource",
+                    _("%s:%s:%s is not a known resource"),
                     options.v_class ? options.v_class : "",
                     options.v_provider ? options.v_provider : "",
                     options.v_agent ? options.v_agent : "");
@@ -1567,7 +1574,7 @@ main(int argc, char **argv)
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
     if (rc != pcmk_rc_ok) {
         exit_code = CRM_EX_ERROR;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Error creating output format %s: %s",
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, _("Error creating output format %s: %s"),
                     args->output_ty, pcmk_rc_str(rc));
         goto done;
     }
@@ -1594,7 +1601,7 @@ main(int argc, char **argv)
     // --expired without --clear/-U doesn't make sense
     if (options.clear_expired && (options.rsc_cmd != cmd_clear)) {
         exit_code = CRM_EX_USAGE;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "--expired requires --clear or -U");
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, _("--expired requires --clear or -U"));
         goto done;
     }
 
@@ -1611,7 +1618,7 @@ main(int argc, char **argv)
             } else {
                 exit_code = CRM_EX_USAGE;
                 g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                            "Error parsing '%s' as a name=value pair",
+                            _("Error parsing '%s' as a name=value pair"),
                             argv[optind]);
                 free(value);
                 free(name);
@@ -1708,25 +1715,19 @@ main(int argc, char **argv)
     if (options.require_resource && (options.rsc_id == NULL)) {
         exit_code = CRM_EX_USAGE;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Must supply a resource id with -r");
+                    _("Must supply a resource id with -r"));
         goto done;
     }
     if (options.require_node && (options.host_uname == NULL)) {
         exit_code = CRM_EX_USAGE;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Must supply a node name with -N");
+                    _("Must supply a node name with -N"));
         goto done;
     }
 
     /*
      * Set up necessary connections
      */
-
-    if (options.force) {
-        crm_debug("Forcing...");
-        cib__set_call_options(options.cib_options, crm_system_name,
-                              cib_quorum_override);
-    }
 
     if (options.find_flags && options.rsc_id) {
         options.require_dataset = TRUE;
@@ -1738,7 +1739,7 @@ main(int argc, char **argv)
         if ((cib_conn == NULL) || (cib_conn->cmds == NULL)) {
             exit_code = CRM_EX_DISCONNECT;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Could not create CIB connection");
+                        _("Could not create CIB connection"));
             goto done;
         }
         rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
@@ -1746,7 +1747,7 @@ main(int argc, char **argv)
         if (rc != pcmk_rc_ok) {
             exit_code = pcmk_rc2exitc(rc);
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Could not connect to the CIB: %s", pcmk_rc_str(rc));
+                        _("Could not connect to the CIB: %s"), pcmk_rc_str(rc));
             goto done;
         }
     }
@@ -1767,7 +1768,7 @@ main(int argc, char **argv)
         if (rsc == NULL) {
             exit_code = CRM_EX_NOSUCH;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Resource '%s' not found", options.rsc_id);
+                        _("Resource '%s' not found"), options.rsc_id);
             goto done;
         }
 
@@ -1779,7 +1780,7 @@ main(int argc, char **argv)
              options.rsc_cmd == cmd_move || options.rsc_cmd == cmd_restart)) {
             exit_code = CRM_EX_INVALID_PARAM;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Cannot operate on clone resource instance '%s'", options.rsc_id);
+                        _("Cannot operate on clone resource instance '%s'"), options.rsc_id);
             goto done;
         }
     }
@@ -1791,7 +1792,7 @@ main(int argc, char **argv)
         if (node == NULL) {
             exit_code = CRM_EX_NOSUCH;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Node '%s' not found", options.host_uname);
+                        _("Node '%s' not found"), options.host_uname);
             goto done;
         }
     }
@@ -1802,7 +1803,7 @@ main(int argc, char **argv)
         if (rc != pcmk_rc_ok) {
             exit_code = pcmk_rc2exitc(rc);
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Error connecting to the controller: %s", pcmk_rc_str(rc));
+                        _("Error connecting to the controller: %s"), pcmk_rc_str(rc));
             goto done;
         }
         pcmk_register_ipc_callback(controld_api, controller_event_callback,
@@ -1811,7 +1812,7 @@ main(int argc, char **argv)
         if (rc != pcmk_rc_ok) {
             exit_code = pcmk_rc2exitc(rc);
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Error connecting to the controller: %s", pcmk_rc_str(rc));
+                        _("Error connecting to the controller: %s"), pcmk_rc_str(rc));
             goto done;
         }
     }
@@ -2010,8 +2011,9 @@ main(int argc, char **argv)
         case cmd_get_param: {
             unsigned int count = 0;
             GHashTable *params = NULL;
-            pe_node_t *current = pe__find_active_on(rsc, &count, NULL);
+            pe_node_t *current = rsc->fns->active_node(rsc, &count, NULL);
             bool free_params = true;
+            const char* value = NULL;
 
             if (count > 1) {
                 out->err(out, "%s is active on more than one node,"
@@ -2022,24 +2024,36 @@ main(int argc, char **argv)
 
             crm_debug("Looking up %s in %s", options.prop_name, rsc->id);
 
-            if (pcmk__str_eq(options.attr_set_type, XML_TAG_ATTR_SETS, pcmk__str_casei)) {
+            if (pcmk__str_eq(options.attr_set_type, XML_TAG_ATTR_SETS, pcmk__str_none)) {
                 params = pe_rsc_params(rsc, current, data_set);
                 free_params = false;
 
-            } else if (pcmk__str_eq(options.attr_set_type, XML_TAG_META_SETS, pcmk__str_casei)) {
+                value = g_hash_table_lookup(params, options.prop_name);
+
+            } else if (pcmk__str_eq(options.attr_set_type, XML_TAG_META_SETS, pcmk__str_none)) {
                 params = pcmk__strkey_table(free, free);
                 get_meta_attributes(params, rsc, current, data_set);
+
+                value = g_hash_table_lookup(params, options.prop_name);
+
+            } else if (pcmk__str_eq(options.attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
+
+                value = crm_element_value(rsc->xml, options.prop_name);
+                free_params = false;
 
             } else {
                 params = pcmk__strkey_table(free, free);
                 pe__unpack_dataset_nvpairs(rsc->xml, XML_TAG_UTILIZATION, NULL, params,
                                            NULL, FALSE, data_set);
+
+                value = g_hash_table_lookup(params, options.prop_name);
             }
 
-            rc = out->message(out, "attribute-list", rsc, options.prop_name, params);
+            rc = out->message(out, "attribute-list", rsc, options.prop_name, value);
             if (free_params) {
                 g_hash_table_destroy(params);
             }
+
             break;
         }
 
@@ -2047,7 +2061,7 @@ main(int argc, char **argv)
             if (pcmk__str_empty(options.prop_value)) {
                 exit_code = CRM_EX_USAGE;
                 g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                            "You need to supply a value with the -v option");
+                            _("You need to supply a value with the -v option"));
                 goto done;
             }
 
@@ -2059,7 +2073,7 @@ main(int argc, char **argv)
                                                options.prop_name,
                                                options.prop_value,
                                                options.recursive, cib_conn,
-                                               options.cib_options, data_set,
+                                               options.cib_options,
                                                options.force);
             break;
 
@@ -2070,7 +2084,7 @@ main(int argc, char **argv)
                                                options.attr_set_type,
                                                options.prop_id,
                                                options.prop_name, cib_conn,
-                                               options.cib_options, data_set,
+                                               options.cib_options,
                                                options.force);
             break;
 
@@ -2102,16 +2116,12 @@ main(int argc, char **argv)
         default:
             exit_code = CRM_EX_USAGE;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Unimplemented command: %d", (int) options.rsc_cmd);
+                        _("Unimplemented command: %d"), (int) options.rsc_cmd);
             goto done;
     }
 
     /* Convert rc into an exit code. */
     if (rc != pcmk_rc_ok && rc != pcmk_rc_no_output) {
-        if (rc == pcmk_rc_no_quorum) {
-            g_prefix_error(&error, "To ignore quorum, use the force option.\n");
-        }
-
         exit_code = pcmk_rc2exitc(rc);
     }
 
@@ -2136,7 +2146,7 @@ done:
             free(msg);
         } else {
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Error performing operation: %s", crm_exit_str(exit_code));
+                        _("Error performing operation: %s"), crm_exit_str(exit_code));
         }
     }
 

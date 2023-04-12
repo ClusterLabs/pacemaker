@@ -25,7 +25,7 @@ prefix="$1"; shift
 cd "$(dirname $0)"
 
 list_candidates() {
-    ls -1 "${1}.rng" "${1}"-*.rng 2>/dev/null
+    ls -1 "${1}.rng" "${1}"-[0-9]*.rng 2>/dev/null
 }
 
 version_from_filename() {

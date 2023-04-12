@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -132,40 +132,118 @@ cmp_primary_priority(gconstpointer a, gconstpointer b)
 
 /*!
  * \internal
- * \brief Add a "this with" colocation constraint to a resource
+ * \brief Add a "this with" colocation constraint to a sorted list
  *
- * \param[in,out] rsc         Resource to add colocation to
- * \param[in]     colocation  Colocation constraint to add to \p rsc
+ * \param[in,out] list        List of constraints to add \p colocation to
+ * \param[in]     colocation  Colocation constraint to add to \p list
+ *
+ * \note The list will be sorted using cmp_primary_priority().
  */
 void
-pcmk__add_this_with(pe_resource_t *rsc, pcmk__colocation_t *colocation)
+pcmk__add_this_with(GList **list, const pcmk__colocation_t *colocation)
 {
-    rsc->rsc_cons = g_list_insert_sorted(rsc->rsc_cons, colocation,
-                                         cmp_primary_priority);
+    CRM_ASSERT((list != NULL) && (colocation != NULL));
+
+    crm_trace("Adding colocation %s (%s with %s%s%s @%d) "
+              "to 'this with' list",
+              colocation->id, colocation->dependent->id,
+              colocation->primary->id,
+              (colocation->node_attribute == NULL)? "" : " using ",
+              pcmk__s(colocation->node_attribute, ""),
+              colocation->score);
+    *list = g_list_insert_sorted(*list, (gpointer) colocation,
+                                 cmp_primary_priority);
 }
 
 /*!
  * \internal
- * \brief Add a "with this" colocation constraint to a resource
+ * \brief Add a list of "this with" colocation constraints to a list
  *
- * \param[in,out] rsc         Resource to add colocation to
- * \param[in]     colocation  Colocation constraint to add to \p rsc
+ * \param[in,out] list      List of constraints to add \p addition to
+ * \param[in]     addition  List of colocation constraints to add to \p list
+ *
+ * \note The lists must be pre-sorted by cmp_primary_priority().
  */
 void
-pcmk__add_with_this(pe_resource_t *rsc, pcmk__colocation_t *colocation)
+pcmk__add_this_with_list(GList **list, GList *addition)
 {
-    rsc->rsc_cons_lhs = g_list_insert_sorted(rsc->rsc_cons_lhs, colocation,
-                                             cmp_dependent_priority);
+    CRM_CHECK((list != NULL), return);
+
+    if (*list == NULL) { // Trivial case for efficiency
+        crm_trace("Copying %u 'this with' colocations to new list",
+                  g_list_length(addition));
+        *list = g_list_copy(addition);
+    } else {
+        while (addition != NULL) {
+            pcmk__add_this_with(list, addition->data);
+            addition = addition->next;
+        }
+    }
+}
+
+/*!
+ * \internal
+ * \brief Add a "with this" colocation constraint to a sorted list
+ *
+ * \param[in,out] list        List of constraints to add \p colocation to
+ * \param[in]     colocation  Colocation constraint to add to \p list
+ *
+ * \note The list will be sorted using cmp_dependent_priority().
+ */
+void
+pcmk__add_with_this(GList **list, const pcmk__colocation_t *colocation)
+{
+    CRM_ASSERT((list != NULL) && (colocation != NULL));
+
+    crm_trace("Adding colocation %s (%s with %s%s%s @%d) "
+              "to 'with this' list",
+              colocation->id, colocation->dependent->id,
+              colocation->primary->id,
+              (colocation->node_attribute == NULL)? "" : " using ",
+              pcmk__s(colocation->node_attribute, ""),
+              colocation->score);
+    *list = g_list_insert_sorted(*list, (gpointer) colocation,
+                                 cmp_dependent_priority);
+}
+
+/*!
+ * \internal
+ * \brief Add a list of "with this" colocation constraints to a list
+ *
+ * \param[in,out] list      List of constraints to add \p addition to
+ * \param[in]     addition  List of colocation constraints to add to \p list
+ *
+ * \note The lists must be pre-sorted by cmp_dependent_priority().
+ */
+void
+pcmk__add_with_this_list(GList **list, GList *addition)
+{
+    CRM_CHECK((list != NULL), return);
+
+    if (*list == NULL) { // Trivial case for efficiency
+        crm_trace("Copying %u 'with this' colocations to new list",
+                  g_list_length(addition));
+        *list = g_list_copy(addition);
+    } else {
+        while (addition != NULL) {
+            pcmk__add_with_this(list, addition->data);
+            addition = addition->next;
+        }
+    }
 }
 
 /*!
  * \internal
  * \brief Add orderings necessary for an anti-colocation constraint
+ *
+ * \param[in,out] first_rsc   One resource in an anti-colocation
+ * \param[in]     first_role  Anti-colocation role of \p first_rsc
+ * \param[in]     then_rsc    Other resource in the anti-colocation
+ * \param[in]     then_role   Anti-colocation role of \p then_rsc
  */
 static void
 anti_colocation_order(pe_resource_t *first_rsc, int first_role,
-                      pe_resource_t *then_rsc, int then_role,
-                      pe_working_set_t *data_set)
+                      pe_resource_t *then_rsc, int then_role)
 {
     const char *first_tasks[] = { NULL, NULL };
     const char *then_tasks[] = { NULL, NULL };
@@ -211,15 +289,15 @@ anti_colocation_order(pe_resource_t *first_rsc, int first_role,
  * \internal
  * \brief Add a new colocation constraint to a cluster working set
  *
- * \param[in] id              XML ID for this constraint
- * \param[in] node_attr       Colocate by this attribute (or NULL for #uname)
- * \param[in] score           Constraint score
- * \param[in] dependent       Resource to be colocated
- * \param[in] primary         Resource to colocate \p dependent with
- * \param[in] dependent_role  Current role of \p dependent
- * \param[in] primary_role    Current role of \p primary
- * \param[in] influence       Whether colocation constraint has influence
- * \param[in] data_set        Cluster working set to add constraint to
+ * \param[in]     id              XML ID for this constraint
+ * \param[in]     node_attr       Colocate by this attribute (NULL for #uname)
+ * \param[in]     score           Constraint score
+ * \param[in,out] dependent       Resource to be colocated
+ * \param[in,out] primary         Resource to colocate \p dependent with
+ * \param[in]     dependent_role  Current role of \p dependent
+ * \param[in]     primary_role    Current role of \p primary
+ * \param[in]     influence       Whether colocation constraint has influence
+ * \param[in,out] data_set        Cluster working set to add constraint to
  */
 void
 pcmk__new_colocation(const char *id, const char *node_attr, int score,
@@ -270,17 +348,17 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
     pe_rsc_trace(dependent, "%s ==> %s (%s %d)",
                  dependent->id, primary->id, node_attr, score);
 
-    pcmk__add_this_with(dependent, new_con);
-    pcmk__add_with_this(primary, new_con);
+    pcmk__add_this_with(&(dependent->rsc_cons), new_con);
+    pcmk__add_with_this(&(primary->rsc_cons_lhs), new_con);
 
     data_set->colocation_constraints = g_list_append(data_set->colocation_constraints,
                                                      new_con);
 
     if (score <= -INFINITY) {
         anti_colocation_order(dependent, new_con->dependent_role, primary,
-                              new_con->primary_role, data_set);
+                              new_con->primary_role);
         anti_colocation_order(primary, new_con->primary_role, dependent,
-                              new_con->dependent_role, data_set);
+                              new_con->dependent_role);
     }
 }
 
@@ -569,7 +647,7 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
     }
 
     if (dependent_instance != NULL) {
-        dependent = find_clone_instance(dependent, dependent_instance, data_set);
+        dependent = find_clone_instance(dependent, dependent_instance);
         if (dependent == NULL) {
             pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
                               "does not have an instance '%s'",
@@ -579,7 +657,7 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
     }
 
     if (primary_instance != NULL) {
-        primary = find_clone_instance(primary, primary_instance, data_set);
+        primary = find_clone_instance(primary, primary_instance);
         if (primary == NULL) {
             pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
                               "does not have an instance '%s'",
@@ -727,8 +805,8 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
  * \internal
  * \brief Parse a colocation constraint from XML into a cluster working set
  *
- * \param[in] xml_obj   Colocation constraint XML to unpack
- * \param[in] data_set  Cluster working set to add constraint to
+ * \param[in,out] xml_obj   Colocation constraint XML to unpack
+ * \param[in,out] data_set  Cluster working set to add constraint to
  */
 void
 pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
@@ -829,14 +907,15 @@ mark_action_blocked(pe_resource_t *rsc, const char *task,
  * promote actions of resources colocated with it, as appropriate to the
  * colocations' configured roles.
  *
- * \param[in] action    Action to check
- * \param[in] data_set  Cluster working set
+ * \param[in,out] action    Action to check
+ * \param[in]     data_set  Cluster working set (ignored)
  */
 void
 pcmk__block_colocation_dependents(pe_action_t *action,
                                   pe_working_set_t *data_set)
 {
     GList *gIter = NULL;
+    GList *colocations = NULL;
     pe_resource_t *rsc = NULL;
     bool is_start = false;
 
@@ -860,10 +939,6 @@ pcmk__block_colocation_dependents(pe_action_t *action,
         rsc = rsc->parent; // Bundle
     }
 
-    if (rsc->rsc_cons_lhs == NULL) {
-        return;
-    }
-
     // Colocation fails only if entire primary can't reach desired role
     for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child = (pe_resource_t *) gIter->data;
@@ -883,7 +958,8 @@ pcmk__block_colocation_dependents(pe_action_t *action,
               rsc->id, action->rsc->id, action->task);
 
     // Check each colocation where this resource is primary
-    for (gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
+    colocations = pcmk__with_this_colocations(rsc);
+    for (gIter = colocations; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *colocation = (pcmk__colocation_t *) gIter->data;
 
         if (colocation->score < INFINITY) {
@@ -908,6 +984,7 @@ pcmk__block_colocation_dependents(pe_action_t *action,
             mark_action_blocked(colocation->dependent, RSC_START, action->rsc);
         }
     }
+    g_list_free(colocations);
 }
 
 /*!
@@ -1066,26 +1143,45 @@ pcmk__apply_coloc_to_weights(pe_resource_t *dependent,
     g_hash_table_iter_init(&iter, work);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
         if (primary->allocated_to == NULL) {
-            pe_rsc_trace(dependent, "%s: %s@%s -= %d (%s inactive)",
-                         colocation->id, dependent->id, pe__node_name(node),
-                         colocation->score, primary->id);
             node->weight = pcmk__add_scores(-colocation->score, node->weight);
+            pe_rsc_trace(dependent,
+                         "Applied %s to %s score on %s (now %s after "
+                         "subtracting %s because primary %s inactive)",
+                         colocation->id, dependent->id, pe__node_name(node),
+                         pcmk_readable_score(node->weight),
+                         pcmk_readable_score(colocation->score), primary->id);
 
         } else if (pcmk__str_eq(pe_node_attribute_raw(node, attribute), value,
                                 pcmk__str_casei)) {
+            /* Add colocation score only if optional (or minus infinity). A
+             * mandatory colocation is a requirement rather than a preference,
+             * so we don't need to consider it for relative assignment purposes.
+             * The resource will simply be forbidden from running on the node if
+             * the primary isn't active there (via the condition above).
+             */
             if (colocation->score < CRM_SCORE_INFINITY) {
-                pe_rsc_trace(dependent, "%s: %s@%s += %d",
-                             colocation->id, dependent->id,
-                             pe__node_name(node), colocation->score);
                 node->weight = pcmk__add_scores(colocation->score,
                                                 node->weight);
+                pe_rsc_trace(dependent,
+                             "Applied %s to %s score on %s (now %s after "
+                             "adding %s)",
+                             colocation->id, dependent->id, pe__node_name(node),
+                             pcmk_readable_score(node->weight),
+                             pcmk_readable_score(colocation->score));
             }
 
         } else if (colocation->score >= CRM_SCORE_INFINITY) {
-            pe_rsc_trace(dependent, "%s: %s@%s -= %d (%s mismatch)",
-                         colocation->id, dependent->id, pe__node_name(node),
-                         colocation->score, attribute);
-            node->weight = pcmk__add_scores(-colocation->score, node->weight);
+            /* Only mandatory colocations are relevant when the colocation
+             * attribute doesn't match, because an attribute not matching is not
+             * a negative preference -- the colocation is simply relevant only
+             * where it matches.
+             */
+            node->weight = -CRM_SCORE_INFINITY;
+            pe_rsc_trace(dependent,
+                         "Banned %s from %s because colocation %s attribute %s "
+                         "does not match",
+                         dependent->id, pe__node_name(node), colocation->id,
+                         attribute);
         }
     }
 
@@ -1158,6 +1254,12 @@ pcmk__apply_coloc_to_priority(pe_resource_t *dependent,
 
     dependent->priority = pcmk__add_scores(score_multiplier * colocation->score,
                                            dependent->priority);
+    pe_rsc_trace(dependent,
+                 "Applied %s to %s promotion priority (now %s after %s %s)",
+                 colocation->id, dependent->id,
+                 pcmk_readable_score(dependent->priority),
+                 ((score_multiplier == 1)? "adding" : "subtracting"),
+                 pcmk_readable_score(colocation->score));
 }
 
 /*!
@@ -1299,99 +1401,6 @@ add_node_scores_matching_attr(GHashTable *nodes, const pe_resource_t *rsc,
 
 /*!
  * \internal
- * \brief Initialize colocated node table for a group resource
- *
- * \param[in] rsc     Group resource being colocated with another resource
- * \param[in] log_id  Resource ID to use in log messages
- * \param[in] nodes   Nodes to update
- * \param[in] attr    Colocation attribute (NULL to use default)
- * \param[in] factor  Incorporate scores multiplied by this factor
- * \param[in] flags   Bitmask of enum pcmk__coloc_select values
- *
- * \return Table of node scores initialized for colocation, or NULL if resource
- *         should be ignored for colocation purposes
- * \note The caller is responsible for freeing a non-NULL return value using
- *       g_hash_table_destroy().
- */
-static GHashTable *
-init_group_colocated_nodes(const pe_resource_t *rsc, const char *log_id,
-                           GHashTable **nodes, const char *attr, float factor,
-                           uint32_t flags)
-{
-    GHashTable *work = NULL;
-    pe_resource_t *member = NULL;
-
-    // Ignore empty groups (only possible with schema validation disabled)
-    if (rsc->children == NULL) {
-        return NULL;
-    }
-
-    if (*nodes == NULL) {
-        // Only cmp_resources() passes a NULL nodes table
-        member = pe__last_group_member(rsc);
-    } else {
-        /* The first member of the group will recursively incorporate any
-         * constraints involving other members (including the group internal
-         * colocation).
-         *
-         * @TODO The indirect colocations from the dependent group's other
-         *       members will be incorporated at full strength rather than by
-         *       factor, so the group's combined stickiness will be treated as
-         *       (factor + (#members - 1)) * stickiness. It is questionable what
-         *       the right approach should be.
-         */
-        member = rsc->children->data;
-    }
-
-    pe_rsc_trace(rsc, "%s: Merging scores from group %s using member %s "
-                 "(at %.6f)", log_id, rsc->id, member->id, factor);
-    work = pcmk__copy_node_table(*nodes);
-    pcmk__add_colocated_node_scores(member, log_id, &work, attr, factor, flags);
-    return work;
-}
-
-/*!
- * \internal
- * \brief Initialize colocated node table for a non-group resource
- *
- * \param[in] rsc     Non-group resource being colocated with another resource
- * \param[in] log_id  Resource ID to use in log messages
- * \param[in] nodes   Nodes to update
- * \param[in] attr    Colocation attribute (NULL to use default)
- * \param[in] factor  Incorporate scores multiplied by this factor
- * \param[in] flags   Bitmask of enum pcmk__coloc_select values
- *
- * \return Table of node scores initialized for colocation, or NULL if resource
- *         should be ignored for colocation purposes
- * \note The caller is responsible for freeing a non-NULL return value using
- *       g_hash_table_destroy().
- */
-static GHashTable *
-init_nongroup_colocated_nodes(const pe_resource_t *rsc, const char *log_id,
-                              GHashTable **nodes, const char *attr,
-                              float factor, uint32_t flags)
-{
-    GHashTable *work = NULL;
-
-    if (*nodes == NULL) {
-        /* Only cmp_resources() passes a NULL nodes table, which indicates we
-         * should initialize it with the resource's allowed node scores.
-         */
-        work = pcmk__copy_node_table(rsc->allowed_nodes);
-
-    } else {
-        pe_rsc_trace(rsc, "%s: Merging scores from %s (at %.6f)",
-                     log_id, rsc->id, factor);
-        work = pcmk__copy_node_table(*nodes);
-        add_node_scores_matching_attr(work, rsc, attr, factor,
-                                      pcmk_is_set(flags,
-                                                  pcmk__coloc_select_nonnegative));
-    }
-    return work;
-}
-
-/*!
- * \internal
  * \brief Update nodes with scores of colocated resources' nodes
  *
  * Given a table of nodes and a resource, update the nodes' scores with the
@@ -1428,46 +1437,46 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
     }
     pe__set_resource_flags(rsc, pe_rsc_merging);
 
-    if (rsc->variant == pe_group) {
-        work = init_group_colocated_nodes(rsc, log_id, nodes, attr, factor,
-                                          flags);
+    if (*nodes == NULL) {
+        /* Only cmp_resources() passes a NULL nodes table, which indicates we
+         * should initialize it with the resource's allowed node scores.
+         */
+        work = pcmk__copy_node_table(rsc->allowed_nodes);
     } else {
-        work = init_nongroup_colocated_nodes(rsc, log_id, nodes, attr, factor,
-                                             flags);
+        pe_rsc_trace(rsc, "%s: Merging scores from %s (at %.6f)",
+                     log_id, rsc->id, factor);
+        work = pcmk__copy_node_table(*nodes);
+        add_node_scores_matching_attr(work, rsc, attr, factor,
+                                      pcmk_is_set(flags,
+                                                  pcmk__coloc_select_nonnegative));
     }
+
     if (work == NULL) {
         pe__clear_resource_flags(rsc, pe_rsc_merging);
         return;
     }
 
     if (pcmk__any_node_available(work)) {
-        GList *gIter = NULL;
-        float multiplier = (factor < 0.0)? -1.0 : 1.0;
+        GList *colocations = NULL;
 
         if (pcmk_is_set(flags, pcmk__coloc_select_this_with)) {
-            gIter = rsc->rsc_cons;
+            colocations = pcmk__this_with_colocations(rsc);
             pe_rsc_trace(rsc,
                          "Checking additional %d optional '%s with' constraints",
-                         g_list_length(gIter), rsc->id);
-
-        } else if (rsc->variant == pe_group) {
-            pe_resource_t *last_rsc = pe__last_group_member(rsc);
-
-            gIter = last_rsc->rsc_cons_lhs;
-            pe_rsc_trace(rsc, "Checking additional %d optional 'with group %s' "
-                         "constraints using last member %s",
-                         g_list_length(gIter), rsc->id, last_rsc->id);
-
+                         g_list_length(colocations), rsc->id);
         } else {
-            gIter = rsc->rsc_cons_lhs;
+            colocations = pcmk__with_this_colocations(rsc);
             pe_rsc_trace(rsc,
                          "Checking additional %d optional 'with %s' constraints",
-                         g_list_length(gIter), rsc->id);
+                         g_list_length(colocations), rsc->id);
         }
+        flags |= pcmk__coloc_select_active;
 
-        for (; gIter != NULL; gIter = gIter->next) {
+        for (GList *iter = colocations; iter != NULL; iter = iter->next) {
+            pcmk__colocation_t *constraint = (pcmk__colocation_t *) iter->data;
+
             pe_resource_t *other = NULL;
-            pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
+            float other_factor = factor * constraint->score / (float) INFINITY;
 
             if (pcmk_is_set(flags, pcmk__coloc_select_this_with)) {
                 other = constraint->primary;
@@ -1480,12 +1489,12 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
             pe_rsc_trace(rsc, "Optionally merging score of '%s' constraint (%s with %s)",
                          constraint->id, constraint->dependent->id,
                          constraint->primary->id);
-            factor = multiplier * constraint->score / (float) INFINITY;
-            pcmk__add_colocated_node_scores(other, log_id, &work,
-                                            constraint->node_attribute, factor,
-                                            flags|pcmk__coloc_select_active);
+            other->cmds->add_colocated_node_scores(other, log_id, &work,
+                                                   constraint->node_attribute,
+                                                   other_factor, flags);
             pe__show_node_weights(true, NULL, log_id, work, rsc->cluster);
         }
+        g_list_free(colocations);
 
     } else if (pcmk_is_set(flags, pcmk__coloc_select_active)) {
         pe_rsc_info(rsc, "%s: Rolling back optional scores from %s",
@@ -1514,4 +1523,42 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
     *nodes = work;
 
     pe__clear_resource_flags(rsc, pe_rsc_merging);
+}
+
+/*!
+ * \internal
+ * \brief Get all colocations affecting a resource as the primary
+ *
+ * \param[in] rsc  Resource to get colocations for
+ *
+ * \return Newly allocated list of colocations affecting \p rsc as primary
+ *
+ * \note This is a convenience wrapper for the with_this_colocations() method.
+ */
+GList *
+pcmk__with_this_colocations(const pe_resource_t *rsc)
+{
+    GList *list = NULL;
+
+    rsc->cmds->with_this_colocations(rsc, rsc, &list);
+    return list;
+}
+
+/*!
+ * \internal
+ * \brief Get all colocations affecting a resource as the dependent
+ *
+ * \param[in] rsc  Resource to get colocations for
+ *
+ * \return Newly allocated list of colocations affecting \p rsc as dependent
+ *
+ * \note This is a convenience wrapper for the this_with_colocations() method.
+ */
+GList *
+pcmk__this_with_colocations(const pe_resource_t *rsc)
+{
+    GList *list = NULL;
+
+    rsc->cmds->this_with_colocations(rsc, rsc, &list);
+    return list;
 }

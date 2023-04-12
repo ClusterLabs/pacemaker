@@ -1,12 +1,12 @@
 
 DB2_HADR:0 promotion score on fastvm-rhel-7-4-95: -1
 DB2_HADR:1 promotion score on fastvm-rhel-7-4-96: 10000
-pcmk__clone_allocate: DB2_HADR-master allocation score on fastvm-rhel-7-4-95: 0
-pcmk__clone_allocate: DB2_HADR-master allocation score on fastvm-rhel-7-4-96: 0
-pcmk__clone_allocate: DB2_HADR:0 allocation score on fastvm-rhel-7-4-95: 1
-pcmk__clone_allocate: DB2_HADR:0 allocation score on fastvm-rhel-7-4-96: 0
-pcmk__clone_allocate: DB2_HADR:1 allocation score on fastvm-rhel-7-4-95: 0
-pcmk__clone_allocate: DB2_HADR:1 allocation score on fastvm-rhel-7-4-96: 10001
+pcmk__clone_assign: DB2_HADR-master allocation score on fastvm-rhel-7-4-95: 0
+pcmk__clone_assign: DB2_HADR-master allocation score on fastvm-rhel-7-4-96: 0
+pcmk__clone_assign: DB2_HADR:0 allocation score on fastvm-rhel-7-4-95: 1
+pcmk__clone_assign: DB2_HADR:0 allocation score on fastvm-rhel-7-4-96: 0
+pcmk__clone_assign: DB2_HADR:1 allocation score on fastvm-rhel-7-4-95: 0
+pcmk__clone_assign: DB2_HADR:1 allocation score on fastvm-rhel-7-4-96: 10001
 pcmk__primitive_assign: DB2_HADR:0 allocation score on fastvm-rhel-7-4-95: 1
 pcmk__primitive_assign: DB2_HADR:0 allocation score on fastvm-rhel-7-4-96: 0
 pcmk__primitive_assign: DB2_HADR:1 allocation score on fastvm-rhel-7-4-95: -INFINITY

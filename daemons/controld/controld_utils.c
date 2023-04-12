@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -515,9 +515,6 @@ fsa_dump_inputs(int log_level, const char *text, long long input_register)
     if (pcmk_is_set(input_register, R_HAVE_CIB)) {
         crm_trace("%s %.16llx (R_HAVE_CIB)", text, R_HAVE_CIB);
     }
-    if (pcmk_is_set(input_register, R_CIB_ASKED)) {
-        crm_trace("%s %.16llx (R_CIB_ASKED)", text, R_CIB_ASKED);
-    }
     if (pcmk_is_set(input_register, R_MEMBERSHIP)) {
         crm_trace("%s %.16llx (R_MEMBERSHIP)", text, R_MEMBERSHIP);
     }
@@ -690,7 +687,7 @@ fsa_dump_actions(uint64_t action, const char *text)
 gboolean
 update_dc(xmlNode * msg)
 {
-    char *last_dc = fsa_our_dc;
+    char *last_dc = controld_globals.dc_name;
     const char *dc_version = NULL;
     const char *welcome_from = NULL;
 
@@ -703,39 +700,45 @@ update_dc(xmlNode * msg)
         CRM_CHECK(dc_version != NULL, return FALSE);
         CRM_CHECK(welcome_from != NULL, return FALSE);
 
-        if (AM_I_DC && !pcmk__str_eq(welcome_from, fsa_our_uname, pcmk__str_casei)) {
+        if (AM_I_DC
+            && !pcmk__str_eq(welcome_from, controld_globals.our_nodename,
+                             pcmk__str_casei)) {
             invalid = TRUE;
 
-        } else if (fsa_our_dc && !pcmk__str_eq(welcome_from, fsa_our_dc, pcmk__str_casei)) {
+        } else if ((controld_globals.dc_name != NULL)
+                   && !pcmk__str_eq(welcome_from, controld_globals.dc_name,
+                                    pcmk__str_casei)) {
             invalid = TRUE;
         }
 
         if (invalid) {
-            CRM_CHECK(fsa_our_dc != NULL, crm_err("We have no DC"));
             if (AM_I_DC) {
-                crm_err("Not updating DC to %s (%s): we are also a DC", welcome_from, dc_version);
+                crm_err("Not updating DC to %s (%s): we are also a DC",
+                        welcome_from, dc_version);
             } else {
-                crm_warn("New DC %s is not %s", welcome_from, fsa_our_dc);
+                crm_warn("New DC %s is not %s",
+                         welcome_from, controld_globals.dc_name);
             }
 
             controld_set_fsa_action_flags(A_CL_JOIN_QUERY | A_DC_TIMER_START);
-            trigger_fsa();
+            controld_trigger_fsa();
             return FALSE;
         }
     }
 
-    fsa_our_dc = NULL;          /* Free'd as last_dc */
-    pcmk__str_update(&fsa_our_dc, welcome_from);
-    pcmk__str_update(&fsa_our_dc_version, dc_version);
+    controld_globals.dc_name = NULL;    // freed as last_dc
+    pcmk__str_update(&(controld_globals.dc_name), welcome_from);
+    pcmk__str_update(&(controld_globals.dc_version), dc_version);
 
-    if (pcmk__str_eq(fsa_our_dc, last_dc, pcmk__str_casei)) {
+    if (pcmk__str_eq(controld_globals.dc_name, last_dc, pcmk__str_casei)) {
         /* do nothing */
 
-    } else if (fsa_our_dc != NULL) {
-        crm_node_t *dc_node = crm_get_peer(0, fsa_our_dc);
+    } else if (controld_globals.dc_name != NULL) {
+        crm_node_t *dc_node = crm_get_peer(0, controld_globals.dc_name);
 
         crm_info("Set DC to %s (%s)",
-                 fsa_our_dc, pcmk__s(fsa_our_dc_version, "unknown version"));
+                 controld_globals.dc_name,
+                 pcmk__s(controld_globals.dc_version, "unknown version"));
         pcmk__update_peer_expected(__func__, dc_node, CRMD_JOINSTATE_MEMBER);
 
     } else if (last_dc != NULL) {
@@ -754,37 +757,6 @@ void crmd_peer_down(crm_node_t *peer, bool full)
     }
     crm_update_peer_join(__func__, peer, crm_join_none);
     pcmk__update_peer_expected(__func__, peer, CRMD_JOINSTATE_DOWN);
-}
-
-#define MIN_CIB_OP_TIMEOUT (30)
-
-unsigned int
-cib_op_timeout(void)
-{
-    static int env_timeout = -1;
-    unsigned int calculated_timeout = 0;
-
-    if (env_timeout == -1) {
-        const char *env = getenv("PCMK_cib_timeout");
-
-        pcmk__scan_min_int(env, &env_timeout, MIN_CIB_OP_TIMEOUT);
-        crm_trace("Minimum CIB op timeout: %ds (environment: %s)",
-                  env_timeout, (env? env : "none"));
-    }
-
-    calculated_timeout = 1 + crm_active_peers();
-    if (crm_remote_peer_cache) {
-        calculated_timeout += g_hash_table_size(crm_remote_peer_cache);
-    }
-    calculated_timeout *= 10;
-
-    calculated_timeout = QB_MAX(calculated_timeout, env_timeout);
-    crm_trace("Calculated timeout: %us", calculated_timeout);
-
-    if (fsa_cib_conn) {
-        fsa_cib_conn->call_timeout = calculated_timeout;
-    }
-    return calculated_timeout;
 }
 
 /*!

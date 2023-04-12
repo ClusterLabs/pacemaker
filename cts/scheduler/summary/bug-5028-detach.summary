@@ -9,8 +9,8 @@ Current cluster status:
     * Online: [ bl460g6a bl460g6b ]
 
   * Full List of Resources:
-    * Resource Group: dummy-g (unmanaged):
-      * dummy01	(ocf:heartbeat:Dummy):	 Started bl460g6a (unmanaged)
+    * Resource Group: dummy-g (maintenance):
+      * dummy01	(ocf:heartbeat:Dummy):	 Started bl460g6a (maintenance)
       * dummy02	(ocf:heartbeat:Dummy-stop-NG):	 FAILED bl460g6a (blocked)
 
 Transition Summary:
@@ -23,6 +23,6 @@ Revised Cluster Status:
     * Online: [ bl460g6a bl460g6b ]
 
   * Full List of Resources:
-    * Resource Group: dummy-g (unmanaged):
-      * dummy01	(ocf:heartbeat:Dummy):	 Started bl460g6a (unmanaged)
+    * Resource Group: dummy-g (maintenance):
+      * dummy01	(ocf:heartbeat:Dummy):	 Started bl460g6a (maintenance)
       * dummy02	(ocf:heartbeat:Dummy-stop-NG):	 FAILED bl460g6a (blocked)

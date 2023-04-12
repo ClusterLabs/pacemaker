@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,7 +22,6 @@ typedef struct ha_msg_input_s {
 
 } ha_msg_input_t;
 
-extern ha_msg_input_t *new_ha_msg_input(xmlNode * orig);
 extern void delete_ha_msg_input(ha_msg_input_t * orig);
 
 extern void *fsa_typed_data_adv(fsa_data_t * fsa_data, enum fsa_data_type a_type,
@@ -36,9 +35,10 @@ extern void register_fsa_error_adv(enum crmd_fsa_cause cause, enum crmd_fsa_inpu
 #define register_fsa_error(cause, input, new_data)  \
     register_fsa_error_adv(cause, input, msg_data, new_data, __func__)
 
-extern int register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
-                                  void *data, uint64_t with_actions,
-                                  gboolean prepend, const char *raised_from);
+void register_fsa_input_adv(enum crmd_fsa_cause cause,
+                            enum crmd_fsa_input input, void *data,
+                            uint64_t with_actions, gboolean prepend,
+                            const char *raised_from);
 
 extern void fsa_dump_queue(int log_level);
 extern void route_message(enum crmd_fsa_cause cause, xmlNode * input);

@@ -27,6 +27,33 @@ struct controld_api_private_s {
     unsigned int replies_expected;
 };
 
+/*!
+ * \internal
+ * \brief Get a string representation of a controller API reply type
+ *
+ * \param[in] reply  Controller API reply type
+ *
+ * \return String representation of a controller API reply type
+ */
+const char *
+pcmk__controld_api_reply2str(enum pcmk_controld_api_reply reply)
+{
+    switch (reply) {
+        case pcmk_controld_reply_reprobe:
+            return "reprobe";
+        case pcmk_controld_reply_info:
+            return "info";
+        case pcmk_controld_reply_resource:
+            return "resource";
+        case pcmk_controld_reply_ping:
+            return "ping";
+        case pcmk_controld_reply_nodes:
+            return "nodes";
+        default:
+            return "unknown";
+    }
+}
+
 // \return Standard Pacemaker return code
 static int
 new_data(pcmk_ipc_api_t *api)
@@ -98,8 +125,15 @@ set_node_info_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
     }
     data->data.node_info.have_quorum = pcmk__xe_attr_is_true(msg_data, XML_ATTR_HAVE_QUORUM);
     data->data.node_info.is_remote = pcmk__xe_attr_is_true(msg_data, XML_NODE_IS_REMOTE);
+
+    /* Integer node_info.id is currently valid only for Corosync nodes.
+     *
+     * @TODO: Improve handling after crm_node_t is refactored to handle layer-
+     * specific data better.
+     */
     crm_element_value_int(msg_data, XML_ATTR_ID, &(data->data.node_info.id));
-    data->data.node_info.uuid = crm_element_value(msg_data, XML_ATTR_UUID);
+
+    data->data.node_info.uuid = crm_element_value(msg_data, XML_ATTR_ID);
     data->data.node_info.uname = crm_element_value(msg_data, XML_ATTR_UNAME);
     data->data.node_info.state = crm_element_value(msg_data, XML_NODE_IS_PEER);
 }

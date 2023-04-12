@@ -117,6 +117,11 @@
       <shortdesc lang="en">Whether to lock resources to a cleanly shut down node</shortdesc>
       <content type="boolean" default=""/>
     </parameter>
+    <parameter name="shutdown-lock-limit">
+      <longdesc lang="en">If shutdown-lock is true and this is set to a nonzero time duration, shutdown locks will expire after this much time has passed since the shutdown was initiated, even if the node has not rejoined.</longdesc>
+      <shortdesc lang="en">Do not lock resources to a cleanly shut down node longer than this</shortdesc>
+      <content type="time" default=""/>
+    </parameter>
   </parameters>
 </resource-agent>
 =#=#=#= End test: Get controller metadata - OK (0) =#=#=#=
@@ -406,22 +411,22 @@
       </content>
     </parameter>
     <parameter name="node-health-base">
-      <longdesc lang="en">Only used when node-health-strategy is set to progressive.</longdesc>
+      <longdesc lang="en">Only used when &quot;node-health-strategy&quot; is set to &quot;progressive&quot;.</longdesc>
       <shortdesc lang="en">Base health score assigned to a node</shortdesc>
       <content type="integer" default=""/>
     </parameter>
     <parameter name="node-health-green">
-      <longdesc lang="en">Only used when node-health-strategy is set to custom or progressive.</longdesc>
+      <longdesc lang="en">Only used when &quot;node-health-strategy&quot; is set to &quot;custom&quot; or &quot;progressive&quot;.</longdesc>
       <shortdesc lang="en">The score to use for a node health attribute whose value is &quot;green&quot;</shortdesc>
       <content type="integer" default=""/>
     </parameter>
     <parameter name="node-health-yellow">
-      <longdesc lang="en">Only used when node-health-strategy is set to custom or progressive.</longdesc>
+      <longdesc lang="en">Only used when &quot;node-health-strategy&quot; is set to &quot;custom&quot; or &quot;progressive&quot;.</longdesc>
       <shortdesc lang="en">The score to use for a node health attribute whose value is &quot;yellow&quot;</shortdesc>
       <content type="integer" default=""/>
     </parameter>
     <parameter name="node-health-red">
-      <longdesc lang="en">Only used when node-health-strategy is set to custom or progressive.</longdesc>
+      <longdesc lang="en">Only used when &quot;node-health-strategy&quot; is set to &quot;custom&quot; or &quot;progressive&quot;.</longdesc>
       <shortdesc lang="en">The score to use for a node health attribute whose value is &quot;red&quot;</shortdesc>
       <content type="integer" default=""/>
     </parameter>

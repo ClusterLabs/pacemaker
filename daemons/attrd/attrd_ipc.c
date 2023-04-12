@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -101,13 +101,11 @@ attrd_client_clear_failure(pcmk__request_t *request)
     xmlNode *xml = request->xml;
     const char *rsc, *op, *interval_spec;
 
-    attrd_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags);
-
     if (minimum_protocol_version >= 2) {
         /* Propagate to all peers (including ourselves).
          * This ends up at attrd_peer_message().
          */
-        attrd_send_message(NULL, xml);
+        attrd_send_message(NULL, xml, false);
         pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
         return NULL;
     }
@@ -186,7 +184,7 @@ attrd_client_peer_remove(pcmk__request_t *request)
     if (host) {
         crm_info("Client %s is requesting all values for %s be removed",
                  pcmk__client_name(request->ipc_client), host);
-        attrd_send_message(NULL, xml); /* ends up at attrd_peer_message() */
+        attrd_send_message(NULL, xml, false); /* ends up at attrd_peer_message() */
         free(host_alloc);
     } else {
         crm_info("Ignoring request by client %s to remove all peer values without specifying peer",
@@ -254,6 +252,86 @@ handle_missing_host(xmlNode *xml)
     }
 }
 
+/* Convert a single IPC message with a regex into one with multiple children, one
+ * for each regex match.
+ */
+static int
+expand_regexes(xmlNode *xml, const char *attr, const char *value, const char *regex)
+{
+    if (attr == NULL && regex) {
+        bool matched = false;
+        GHashTableIter aIter;
+        regex_t r_patt;
+
+        crm_debug("Setting %s to %s", regex, value);
+        if (regcomp(&r_patt, regex, REG_EXTENDED|REG_NOSUB)) {
+            return EINVAL;
+        }
+
+        g_hash_table_iter_init(&aIter, attributes);
+        while (g_hash_table_iter_next(&aIter, (gpointer *) & attr, NULL)) {
+            int status = regexec(&r_patt, attr, 0, NULL, 0);
+
+            if (status == 0) {
+                xmlNode *child = create_xml_node(xml, XML_ATTR_OP);
+
+                crm_trace("Matched %s with %s", attr, regex);
+                matched = true;
+
+                /* Copy all the attributes from the parent over, but remove the
+                 * regex and replace it with the name.
+                 */
+                attrd_copy_xml_attributes(xml, child);
+                crm_xml_replace(child, PCMK__XA_ATTR_PATTERN, NULL);
+                crm_xml_add(child, PCMK__XA_ATTR_NAME, attr);
+            }
+        }
+
+        regfree(&r_patt);
+
+        /* Return a code if we never matched anything.  This should not be treated
+         * as an error.  It indicates there was a regex, and it was a valid regex,
+         * but simply did not match anything and the caller should not continue
+         * doing any regex-related processing.
+         */
+        if (!matched) {
+            return pcmk_rc_op_unsatisfied;
+        }
+
+    } else if (attr == NULL) {
+        return pcmk_rc_bad_nvpair;
+    }
+
+    return pcmk_rc_ok;
+}
+
+static int
+handle_regexes(pcmk__request_t *request)
+{
+    xmlNode *xml = request->xml;
+    int rc = pcmk_rc_ok;
+
+    const char *attr = crm_element_value(xml, PCMK__XA_ATTR_NAME);
+    const char *value = crm_element_value(xml, PCMK__XA_ATTR_VALUE);
+    const char *regex = crm_element_value(xml, PCMK__XA_ATTR_PATTERN);
+
+    rc = expand_regexes(xml, attr, value, regex);
+
+    if (rc == EINVAL) {
+        pcmk__format_result(&request->result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
+                            "Bad regex '%s' for update from client %s", regex,
+                            pcmk__client_name(request->ipc_client));
+
+    } else if (rc == pcmk_rc_bad_nvpair) {
+        crm_err("Update request did not specify attribute or regular expression");
+        pcmk__format_result(&request->result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
+                            "Client %s update request did not specify attribute or regular expression",
+                            pcmk__client_name(request->ipc_client));
+    }
+
+    return rc;
+}
+
 static int
 handle_value_expansion(const char **value, xmlNode *xml, const char *op,
                        const char *attr)
@@ -285,6 +363,41 @@ handle_value_expansion(const char **value, xmlNode *xml, const char *op,
     return pcmk_rc_ok;
 }
 
+static void
+send_update_msg_to_cluster(pcmk__request_t *request, xmlNode *xml)
+{
+    if (pcmk__str_eq(attrd_request_sync_point(xml), PCMK__VALUE_CLUSTER, pcmk__str_none)) {
+        /* The client is waiting on the cluster-wide sync point.  In this case,
+         * the response ACK is not sent until this attrd broadcasts the update
+         * and receives its own confirmation back from all peers.
+         */
+        attrd_expect_confirmations(request, attrd_cluster_sync_point_update);
+        attrd_send_message(NULL, xml, true); /* ends up at attrd_peer_message() */
+
+    } else {
+        /* The client is either waiting on the local sync point or was not
+         * waiting on any sync point at all.  For the local sync point, the
+         * response ACK is sent in attrd_peer_update.  For clients not
+         * waiting on any sync point, the response ACK is sent in
+         * handle_update_request immediately before this function was called.
+         */
+        attrd_send_message(NULL, xml, false); /* ends up at attrd_peer_message() */
+    }
+}
+
+static int
+send_child_update(xmlNode *child, void *data)
+{
+    pcmk__request_t *request = (pcmk__request_t *) data;
+
+    /* Calling pcmk__set_result is handled by one of these calls to
+     * attrd_client_update, so no need to do it again here.
+     */
+    request->xml = child;
+    attrd_client_update(request);
+    return pcmk_rc_ok;
+}
+
 xmlNode *
 attrd_client_update(pcmk__request_t *request)
 {
@@ -296,7 +409,7 @@ attrd_client_update(pcmk__request_t *request)
      * two ways we can handle that.
      */
     if (xml_has_children(xml)) {
-        if (minimum_protocol_version >= 4) {
+        if (ATTRD_SUPPORTS_MULTI_MESSAGE(minimum_protocol_version)) {
             /* First, if all peers support a certain protocol version, we can
              * just broadcast the big message and they'll handle it.  However,
              * we also need to apply all the transformations in this function
@@ -316,22 +429,21 @@ attrd_client_update(pcmk__request_t *request)
                 }
             }
 
-            attrd_send_message(NULL, xml);
+            send_update_msg_to_cluster(request, xml);
             pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
 
         } else {
+            /* Save the original xml node pointer so it can be restored after iterating
+             * over all the children.
+             */
+            xmlNode *orig_xml = request->xml;
+
             /* Second, if they do not support that protocol version, split it
              * up into individual messages and call attrd_client_update on
              * each one.
              */
-            for (xmlNode *child = first_named_child(xml, XML_ATTR_OP); child != NULL;
-                 child = crm_next_same_xml(child)) {
-                request->xml = child;
-                /* Calling pcmk__set_result is handled by one of these calls to
-                 * attrd_client_update, so no need to do it again here.
-                 */
-                attrd_client_update(request);
-            }
+            pcmk__xe_foreach_child(xml, XML_ATTR_OP, send_child_update, request);
+            request->xml = orig_xml;
         }
 
         return NULL;
@@ -341,42 +453,15 @@ attrd_client_update(pcmk__request_t *request)
     value = crm_element_value(xml, PCMK__XA_ATTR_VALUE);
     regex = crm_element_value(xml, PCMK__XA_ATTR_PATTERN);
 
-    /* If a regex was specified, broadcast a message for each match */
-    if ((attr == NULL) && regex) {
-        GHashTableIter aIter;
-        regex_t *r_patt = calloc(1, sizeof(regex_t));
-
-        crm_debug("Setting %s to %s", regex, value);
-        if (regcomp(r_patt, regex, REG_EXTENDED|REG_NOSUB)) {
-            pcmk__format_result(&request->result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
-                                "Bad regex '%s' for update from client %s", regex,
-                                pcmk__client_name(request->ipc_client));
-
-        } else {
-            g_hash_table_iter_init(&aIter, attributes);
-            while (g_hash_table_iter_next(&aIter, (gpointer *) & attr, NULL)) {
-                int status = regexec(r_patt, attr, 0, NULL, 0);
-
-                if (status == 0) {
-                    crm_trace("Matched %s with %s", attr, regex);
-                    crm_xml_add(xml, PCMK__XA_ATTR_NAME, attr);
-                    attrd_send_message(NULL, xml);
-                }
-            }
-
-            pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
-        }
-
-        regfree(r_patt);
-        free(r_patt);
+    if (handle_regexes(request) != pcmk_rc_ok) {
+        /* Error handling was already dealt with in handle_regexes, so just return. */
         return NULL;
-
-    } else if (attr == NULL) {
-        crm_err("Update request did not specify attribute or regular expression");
-        pcmk__format_result(&request->result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
-                            "Client %s update request did not specify attribute or regular expression",
-                            pcmk__client_name(request->ipc_client));
-        return NULL;
+    } else if (regex) {
+        /* Recursively call attrd_client_update on the new message with regexes
+         * expanded.  If supported by the attribute daemon, this means that all
+         * matches can also be handled atomically.
+         */
+        return attrd_client_update(request);
     }
 
     handle_missing_host(xml);
@@ -390,7 +475,7 @@ attrd_client_update(pcmk__request_t *request)
     crm_debug("Broadcasting %s[%s]=%s%s", attr, crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME),
               value, (attrd_election_won()? " (writer)" : ""));
 
-    attrd_send_message(NULL, xml); /* ends up at attrd_peer_message() */
+    send_update_msg_to_cluster(request, xml);
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     return NULL;
 }
@@ -438,8 +523,16 @@ attrd_ipc_closed(qb_ipcs_connection_t *c)
         crm_trace("Ignoring request to clean up unknown connection %p", c);
     } else {
         crm_trace("Cleaning up closed client connection %p", c);
+
+        /* Remove the client from the sync point waitlist if it's present. */
+        attrd_remove_client_from_waitlist(client);
+
+        /* And no longer wait for confirmations from any peers. */
+        attrd_do_not_wait_for_client(client);
+
         pcmk__free_client(client);
     }
+
     return FALSE;
 }
 

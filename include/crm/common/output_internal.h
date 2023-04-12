@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2022 the Pacemaker project contributors
+ * Copyright 2019-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,6 +11,7 @@
 #  define PCMK__OUTPUT_INTERNAL__H
 
 #  include <stdbool.h>
+#  include <stdint.h>
 #  include <stdio.h>
 #  include <libxml/tree.h>
 #  include <libxml/HTMLtree.h>
@@ -26,9 +27,6 @@ extern "C" {
  * \file
  * \brief Formatted output for pacemaker tools
  */
-
-
-#  define PCMK__API_VERSION "2.25"
 
 #if defined(PCMK__WITH_ATTRIBUTE_OUTPUT_ARGS)
 #  define PCMK__OUTPUT_ARGS(ARGS...) __attribute__((output_args(ARGS)))
@@ -378,6 +376,26 @@ struct pcmk__output_s {
 
     /*!
      * \internal
+     * \brief Like \p info() but for messages that should appear only
+     *        transiently. Not all formatters will do this.
+     *
+     * The originally envisioned use case is for console output, where a
+     * transient status-related message may be quickly overwritten by a refresh.
+     *
+     * \param[in,out] out     The output functions structure.
+     * \param[in]     format  The format string of the message to be printed.
+     * \param[in]     ...     Arguments to be formatted.
+     *
+     * \return A standard Pacemaker return code. Generally: \p pcmk_rc_ok if
+     *         output was produced and \p pcmk_rc_no_output if it was not. As
+     *         not all formatters implement this function, those that do not
+     *         will always just return \p pcmk_rc_no_output.
+     */
+    int (*transient) (pcmk__output_t *out, const char *format, ...)
+        G_GNUC_PRINTF(2, 3);
+
+    /*!
+     * \internal
      * \brief Format an error message that should be shown to an interactive
      *        user.  Not all formatters will do this.
      *
@@ -549,6 +567,8 @@ void pcmk__output_free(pcmk__output_t *out);
  * \internal
  * \brief Create a new ::pcmk__output_t structure.
  *
+ * This also registers message functions from libcrmcommon.
+ *
  * \param[in,out] out      The destination of the new ::pcmk__output_t.
  * \param[in]     fmt_name How should output be formatted?
  * \param[in]     filename Where should formatted output be written to?  This
@@ -719,6 +739,17 @@ pcmk__text_prompt(const char *prompt, bool echo, char **dest);
 
 /*!
  * \internal
+ * \brief Get the log level used by the formatted output logger
+ *
+ * \param[in] out  Output object
+ *
+ * \return Log level used by \p out
+ */
+uint8_t
+pcmk__output_get_log_level(const pcmk__output_t *out);
+
+/*!
+ * \internal
  * \brief Set the log level used by the formatted output logger.
  *
  * \param[in,out] out       The output functions structure.
@@ -730,7 +761,7 @@ pcmk__text_prompt(const char *prompt, bool echo, char **dest);
  *       However, out->err will always log at LOG_ERR.
  */
 void
-pcmk__output_set_log_level(pcmk__output_t *out, int log_level);
+pcmk__output_set_log_level(pcmk__output_t *out, uint8_t log_level);
 
 /*!
  * \internal
@@ -749,14 +780,14 @@ G_GNUC_NULL_TERMINATED;
 
 /*!
  * \internal
- * \brief Add the given node as a child of the current list parent.  This is
- *        used when implementing custom message functions.
+ * \brief Add a copy of the given node as a child of the current list parent.
+ *        This is used when implementing custom message functions.
  *
  * \param[in,out] out  The output functions structure.
- * \param[in]     node An XML node to be added as a child.
+ * \param[in]     node An XML node to copy as a child.
  */
 void
-pcmk__output_xml_add_node(pcmk__output_t *out, xmlNodePtr node);
+pcmk__output_xml_add_node_copy(pcmk__output_t *out, xmlNodePtr node);
 
 /*!
  * \internal
@@ -879,11 +910,53 @@ G_GNUC_NULL_TERMINATED;
  * \param[in,out] out   The output functions structure.  If NULL, any errors
  *                      will simply be printed to stderr.
  */
-void pcmk__output_and_clear_error(GError *error, pcmk__output_t *out);
+void pcmk__output_and_clear_error(GError **error, pcmk__output_t *out);
 
 int pcmk__xml_output_new(pcmk__output_t **out, xmlNodePtr *xml);
 void pcmk__xml_output_finish(pcmk__output_t *out, xmlNodePtr *xml);
 int pcmk__log_output_new(pcmk__output_t **out);
+int pcmk__text_output_new(pcmk__output_t **out, const char *filename);
+
+/*!
+ * \internal
+ * \brief Select an updated return code for an operation on a \p pcmk__output_t
+ *
+ * This function helps to keep an up-to-date record of the most relevant return
+ * code from a series of operations on a \p pcmk__output_t object. For example,
+ * suppose the object has already produced some output, and we've saved a
+ * \p pcmk_rc_ok return code. A new operation did not produce any output and
+ * returned \p pcmk_rc_no_output. We can ignore the new \p pcmk_rc_no_output
+ * return code and keep the previous \p pcmk_rc_ok return code.
+ *
+ * It prioritizes return codes as follows (from highest to lowest priority):
+ * 1. Other return codes (unexpected errors)
+ * 2. \p pcmk_rc_ok
+ * 3. \p pcmk_rc_no_output
+ *
+ * \param[in] old_rc  Saved return code from \p pcmk__output_t operations
+ * \param[in] new_rc  New return code from a \p pcmk__output_t operation
+ *
+ * \retval \p old_rc  \p new_rc is \p pcmk_rc_no_output, or \p new_rc is
+ *                    \p pcmk_rc_ok and \p old_rc is not \p pcmk_rc_no_output
+ * \retval \p new_rc  Otherwise
+ */
+static inline int
+pcmk__output_select_rc(int old_rc, int new_rc)
+{
+    switch (new_rc) {
+        case pcmk_rc_no_output:
+            return old_rc;
+        case pcmk_rc_ok:
+            switch (old_rc) {
+                case pcmk_rc_no_output:
+                    return new_rc;
+                default:
+                    return old_rc;
+            }
+        default:
+            return new_rc;
+    }
+}
 
 #if defined(PCMK__UNIT_TESTING)
 /* If we are building libcrmcommon_test.a, add this accessor function so we can

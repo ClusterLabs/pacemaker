@@ -1,0 +1,14 @@
+ digraph "g" {
+"promotable-1_running_0" [ style=bold color="green" fontcolor="orange"]
+"promotable-1_start_0" -> "promotable-1_running_0" [ style = bold]
+"promotable-1_start_0" -> "stateful-1:1_start_0 node-1" [ style = dashed]
+"promotable-1_start_0" [ style=bold color="green" fontcolor="orange"]
+"st-sbd_monitor_0 node-2" [ style=dashed color="red" fontcolor="black"]
+"stateful-1:1_monitor_5000 node-1" [ style=dashed color="red" fontcolor="black"]
+"stateful-1:1_start_0 node-1" -> "promotable-1_running_0" [ style = dashed]
+"stateful-1:1_start_0 node-1" -> "stateful-1:1_monitor_5000 node-1" [ style = dashed]
+"stateful-1:1_start_0 node-1" [ style=dashed color="red" fontcolor="black"]
+"stateful-1_monitor_0 node-2" -> "promotable-1_start_0" [ style = dashed]
+"stateful-1_monitor_0 node-2" -> "stateful-1:1_start_0 node-1" [ style = dashed]
+"stateful-1_monitor_0 node-2" [ style=dashed color="red" fontcolor="black"]
+}

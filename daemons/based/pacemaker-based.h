@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -47,7 +47,6 @@ typedef struct cib_operation_s {
     const char *operation;
     gboolean modifies_cib;
     gboolean needs_privileges;
-    gboolean needs_quorum;
     int (*prepare) (xmlNode *, xmlNode **, const char **);
     int (*cleanup) (int, xmlNode **, xmlNode **);
     int (*fn) (const char *, int, const char *, xmlNode *,
@@ -55,22 +54,20 @@ typedef struct cib_operation_s {
 } cib_operation_t;
 
 extern bool based_is_primary;
-extern GHashTable *peer_hash;
 extern GHashTable *config_hash;
 extern xmlNode *the_cib;
 extern crm_trigger_t *cib_writer;
 extern gboolean cib_writes_enabled;
 
 extern GMainLoop *mainloop;
-extern crm_cluster_t crm_cluster;
+extern crm_cluster_t *crm_cluster;
 extern GHashTable *local_notify_queue;
 extern gboolean legacy_mode;
 extern gboolean stand_alone;
 extern gboolean cib_shutdown_flag;
-extern const char *cib_root;
-extern char *cib_our_uname;
+extern gchar *cib_root;
 extern int cib_status;
-extern FILE *msg_cib_strm;
+extern pcmk__output_t *logger_out;
 
 extern struct qb_ipcs_service_handlers ipc_ro_callbacks;
 extern struct qb_ipcs_service_handlers ipc_rw_callbacks;
@@ -83,19 +80,14 @@ void cib_common_callback_worker(uint32_t id, uint32_t flags,
                                 xmlNode *op_request, pcmk__client_t *cib_client,
                                 gboolean privileged);
 void cib_shutdown(int nsig);
-void initiate_exit(void);
 void terminate_cib(const char *caller, int fast);
 gboolean cib_legacy_mode(void);
 
 gboolean uninitializeCib(void);
-xmlNode *readCibXml(char *buffer);
 xmlNode *readCibXmlFile(const char *dir, const char *file,
                         gboolean discard_status);
 int activateCibXml(xmlNode *doc, gboolean to_disk, const char *op);
 
-xmlNode *createCibRequest(gboolean isLocal, const char *operation,
-                          const char *section, const char *verbose,
-                          xmlNode *data);
 int cib_process_shutdown_req(const char *op, int options, const char *section,
                              xmlNode *req, xmlNode *input,
                              xmlNode *existing_cib, xmlNode **result_cib,
@@ -130,9 +122,9 @@ int cib_process_upgrade_server(const char *op, int options, const char *section,
                                xmlNode *existing_cib, xmlNode **result_cib,
                                xmlNode **answer);
 void send_sync_request(const char *host);
+int sync_our_cib(xmlNode *request, gboolean all);
 
 xmlNode *cib_msg_copy(xmlNode *msg, gboolean with_data);
-xmlNode *cib_construct_reply(xmlNode *request, xmlNode *output, int rc);
 int cib_get_operation_id(const char *op, int *operation);
 cib_op_t *cib_op_func(int call_type);
 gboolean cib_op_modifies(int call_type);
@@ -140,13 +132,14 @@ int cib_op_prepare(int call_type, xmlNode *request, xmlNode **input,
                    const char **section);
 int cib_op_cleanup(int call_type, int options, xmlNode **input,
                    xmlNode **output);
-int cib_op_can_run(int call_type, int call_options, gboolean privileged,
-                   gboolean global_update);
-void cib_diff_notify(int options, const char *client, const char *call_id,
-                     const char *op, xmlNode *update, int result,
-                     xmlNode *old_cib);
-void cib_replace_notify(const char *origin, xmlNode *update, int result,
-                        xmlNode *diff, uint32_t change_section);
+int cib_op_can_run(int call_type, int call_options, bool privileged);
+void cib_diff_notify(const char *op, int result, const char *call_id,
+                     const char *client_id, const char *client_name,
+                     const char *origin, xmlNode *update, xmlNode *diff);
+void cib_replace_notify(const char *op, int result, const char *call_id,
+                        const char *client_id, const char *client_name,
+                        const char *origin, xmlNode *update, xmlNode *diff,
+                        uint32_t change_section);
 
 static inline const char *
 cib_config_lookup(const char *opt)

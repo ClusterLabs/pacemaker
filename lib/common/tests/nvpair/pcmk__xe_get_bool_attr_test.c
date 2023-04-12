@@ -1,10 +1,10 @@
 /*
- * Copyright 2021 the Pacemaker project contributors
+ * Copyright 2021-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
- * This source code is licensed under the GNU Lesser General Public License
- * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -48,7 +48,7 @@ attr_present(void **state)
     value = true;
     assert_int_equal(pcmk__xe_get_bool_attr(node, "b", &value), pcmk_rc_ok);
     assert_false(value);
-    assert_int_equal(pcmk__xe_get_bool_attr(node, "c", &value), pcmk_rc_unknown_format);
+    assert_int_equal(pcmk__xe_get_bool_attr(node, "c", &value), pcmk_rc_bad_input);
 
     free_xml(node);
 }

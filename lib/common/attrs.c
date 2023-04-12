@@ -79,9 +79,9 @@ pcmk__node_attr_target(const char *name)
 char *
 pcmk_promotion_score_name(const char *rsc_id)
 {
-    if (rsc_id == NULL) {
+    if (pcmk__str_empty(rsc_id)) {
         rsc_id = getenv("OCF_RESOURCE_INSTANCE");
-        if (rsc_id == NULL) {
+        if (pcmk__str_empty(rsc_id)) {
             return NULL;
         }
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2022 the Pacemaker project contributors
+ * Copyright 2005-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -209,12 +209,20 @@ generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
                gboolean as_cib, gboolean no_version)
 {
     xmlNode *output = NULL;
+    int rc = pcmk_rc_ok;
+
+    pcmk__output_t *logger_out = NULL;
+    int out_rc = pcmk_rc_no_output;
+    int temp_rc = pcmk_rc_no_output;
 
     const char *vfields[] = {
         XML_ATTR_GENERATION_ADMIN,
         XML_ATTR_GENERATION,
         XML_ATTR_NUMUPDATES,
     };
+
+    rc = pcmk__log_output_new(&logger_out);
+    CRM_CHECK(rc == pcmk_rc_ok, return rc);
 
     /* If we're ignoring the version, make the version information
      * identical, so it isn't detected as a change. */
@@ -236,12 +244,20 @@ generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
 
     output = xml_create_patchset(0, object_1, object_2, NULL, FALSE);
 
-    xml_log_changes(LOG_INFO, __func__, object_2);
+    pcmk__output_set_log_level(logger_out, LOG_INFO);
+    out_rc = pcmk__xml_show_changes(logger_out, object_2);
+
     xml_accept_changes(object_2);
 
     if (output == NULL) {
-        return pcmk_rc_ok;
+        goto done;  // rc == pcmk_rc_ok
     }
+
+    /* pcmk_rc_error means there's non-empty diff.
+     * @COMPAT: Choose a more descriptive return code, like one that maps to
+     * CRM_EX_DIGEST?
+     */
+    rc = pcmk_rc_error;
 
     patchset_process_digest(output, object_1, object_2, as_cib);
 
@@ -252,10 +268,18 @@ generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
         strip_patch_cib_version(output, vfields, PCMK__NELEM(vfields));
     }
 
-    xml_log_patchset(LOG_NOTICE, __func__, output);
+    pcmk__output_set_log_level(logger_out, LOG_NOTICE);
+    temp_rc = logger_out->message(logger_out, "xml-patchset", output);
+    out_rc = pcmk__output_select_rc(out_rc, temp_rc);
+
     print_patch(output);
     free_xml(output);
-    return pcmk_rc_error;
+
+done:
+    logger_out->finish(logger_out, pcmk_rc2exitc(out_rc), true, NULL);
+    pcmk__output_free(logger_out);
+
+    return rc;
 }
 
 static GOptionContext *
@@ -311,7 +335,7 @@ main(int argc, char **argv)
         g_strfreev(processed_args);
         pcmk__free_arg_context(context);
         /* FIXME:  When crm_diff is converted to use formatted output, this can go. */
-        pcmk__cli_help('v', CRM_EX_OK);
+        pcmk__cli_help('v');
     }
 
     if (options.apply && options.no_version) {
@@ -370,6 +394,6 @@ done:
     free_xml(object_1);
     free_xml(object_2);
 
-    pcmk__output_and_clear_error(error, NULL);
+    pcmk__output_and_clear_error(&error, NULL);
     crm_exit(exit_code);
 }

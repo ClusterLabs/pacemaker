@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -242,27 +242,21 @@ pcmk__apply_acl(xmlNode *xml)
         max = numXpathResults(xpathObj);
 
         for (lpc = 0; lpc < max; lpc++) {
-            static struct qb_log_callsite *trace_cs = NULL;
             xmlNode *match = getXpathResult(xpathObj, lpc);
 
             nodepriv = match->_private;
             pcmk__set_xml_flags(nodepriv, acl->mode);
 
-            /* Build a GString only if tracing is enabled.
-             * Can't use pcmk__log_else() because the else_action would be
-             * continue.
-             */
-            if (trace_cs == NULL) {
-                trace_cs = qb_log_callsite_get(__func__, __FILE__, "apply_acl",
-                                               LOG_TRACE, __LINE__, 0);
-            }
-            if (crm_is_callsite_active(trace_cs, LOG_TRACE, 0)) {
-                GString *path = pcmk__element_xpath(match);
-                crm_trace("Applying %s ACL to %s matched by %s",
-                          acl_to_text(acl->mode), (const char *) path->str,
-                          acl->xpath);
-                g_string_free(path, TRUE);
-            }
+            // Build a GString only if tracing is enabled
+            pcmk__if_tracing(
+                {
+                    GString *path = pcmk__element_xpath(match);
+                    crm_trace("Applying %s ACL to %s matched by %s",
+                              acl_to_text(acl->mode), path->str, acl->xpath);
+                    g_string_free(path, TRUE);
+                },
+                {}
+            );
         }
         crm_trace("Applied %s ACL %s (%d match%s)",
                   acl_to_text(acl->mode), acl->xpath, max,
@@ -397,7 +391,8 @@ purge_xml_attributes(xmlNode *xml)
     xml_node_private_t *nodepriv = xml->_private;
 
     if (test_acl_mode(nodepriv->flags, pcmk__xf_acl_read)) {
-        crm_trace("%s[@id=%s] is readable", crm_element_name(xml), ID(xml));
+        crm_trace("%s[@" XML_ATTR_ID "=%s] is readable",
+                  crm_element_name(xml), ID(xml));
         return true;
     }
 
@@ -556,7 +551,7 @@ implicitly_allowed(const xmlNode *xml)
  * \internal
  * \brief Drop XML nodes created in violation of ACLs
  *
- * Given an XML element, free all of its descendent nodes created in violation
+ * Given an XML element, free all of its descendant nodes created in violation
  * of ACLs, with the exception of allowing "scaffolding" elements (i.e. those
  * that aren't in the ACL section and don't have any attributes other than
  * "id").
@@ -589,7 +584,7 @@ pcmk__apply_creation_acl(xmlNode *xml, bool check_top)
             return;
 
         } else {
-            crm_notice("ACLs would disallow creation of %s<%s> with id=\"%s\" ",
+            crm_notice("ACLs would disallow creation of %s<%s> with id=\"%s\"",
                        ((xml == xmlDocGetRootElement(xml->doc))? "root element " : ""),
                        crm_element_name(xml), display_id(xml));
         }
@@ -666,7 +661,7 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
         if (docpriv->acls == NULL) {
             pcmk__set_xml_doc_flag(xml, pcmk__xf_acl_denied);
 
-            pcmk__log_else(LOG_TRACE, return false);
+            pcmk__if_tracing({}, return false);
             xpath = pcmk__element_xpath(xml);
             if (name != NULL) {
                 pcmk__g_strcat(xpath, "[@", name, "]", NULL);
@@ -702,7 +697,7 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
             } else if (pcmk_is_set(nodepriv->flags, pcmk__xf_acl_deny)) {
                 pcmk__set_xml_doc_flag(xml, pcmk__xf_acl_denied);
 
-                pcmk__log_else(LOG_TRACE, return false);
+                pcmk__if_tracing({}, return false);
                 xpath = pcmk__element_xpath(xml);
                 if (name != NULL) {
                     pcmk__g_strcat(xpath, "[@", name, "]", NULL);
@@ -722,7 +717,7 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
 
         pcmk__set_xml_doc_flag(xml, pcmk__xf_acl_denied);
 
-        pcmk__log_else(LOG_TRACE, return false);
+        pcmk__if_tracing({}, return false);
         xpath = pcmk__element_xpath(xml);
         if (name != NULL) {
             pcmk__g_strcat(xpath, "[@", name, "]", NULL);
@@ -765,13 +760,15 @@ pcmk_acl_required(const char *user)
 char *
 pcmk__uid2username(uid_t uid)
 {
+    char *result = NULL;
     struct passwd *pwent = getpwuid(uid);
 
     if (pwent == NULL) {
         crm_perror(LOG_INFO, "Cannot get user details for user ID %d", uid);
         return NULL;
     }
-    return strdup(pwent->pw_name);
+    pcmk__str_update(&result, pwent->pw_name);
+    return result;
 }
 
 /*!

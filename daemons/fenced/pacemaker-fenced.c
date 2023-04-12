@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the Pacemaker project contributors
+ * Copyright 2009-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,8 +23,10 @@
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
+#include <crm/common/cmdline_internal.h>
 #include <crm/common/ipc.h>
 #include <crm/common/ipc_internal.h>
+#include <crm/common/output_internal.h>
 #include <crm/cluster/internal.h>
 
 #include <crm/stonith-ng.h>
@@ -40,6 +42,8 @@
 
 #include <pacemaker-fenced.h>
 
+#define SUMMARY "daemon for executing fencing devices in a Pacemaker cluster"
+
 char *stonith_our_uname = NULL;
 long stonith_watchdog_timeout_ms = 0;
 GList *stonith_watchdog_targets = NULL;
@@ -47,7 +51,6 @@ GList *stonith_watchdog_targets = NULL;
 static GMainLoop *mainloop = NULL;
 
 gboolean stand_alone = FALSE;
-static gboolean no_cib_connect = FALSE;
 static gboolean stonith_shutdown_flag = FALSE;
 
 static qb_ipcs_service_t *ipcs = NULL;
@@ -59,14 +62,22 @@ static const unsigned long long data_set_flags = pe_flag_quick_location
 
 static cib_t *cib_api = NULL;
 
+static pcmk__output_t *logger_out = NULL;
 static pcmk__output_t *out = NULL;
 
 pcmk__supported_format_t formats[] = {
-    PCMK__SUPPORTED_FORMAT_LOG,
     PCMK__SUPPORTED_FORMAT_NONE,
     PCMK__SUPPORTED_FORMAT_TEXT,
+    PCMK__SUPPORTED_FORMAT_XML,
     { NULL, NULL, NULL }
 };
+
+static struct {
+    bool no_cib_connect;
+    gchar **log_files;
+} options;
+
+static crm_exit_t exit_code = CRM_EX_OK;
 
 static void stonith_shutdown(int nsig);
 static void stonith_cleanup(void);
@@ -633,16 +644,17 @@ watchdog_device_update(void)
             rc = stonith_device_register(xml, TRUE);
             free_xml(xml);
             if (rc != pcmk_ok) {
-                crm_crit("Cannot register watchdog pseudo fence agent");
-                crm_exit(CRM_EX_FATAL);
+                rc = pcmk_legacy2rc(rc);
+                exit_code = CRM_EX_FATAL;
+                crm_crit("Cannot register watchdog pseudo fence agent: %s",
+                         pcmk_rc_str(rc));
+                stonith_shutdown(0);
             }
         }
 
-    } else {
+    } else if (g_hash_table_lookup(device_list, STONITH_WATCHDOG_ID) != NULL) {
         /* be silent if no device - todo parameter to stonith_device_remove */
-        if (g_hash_table_lookup(device_list, STONITH_WATCHDOG_ID)) {
-            stonith_device_remove(STONITH_WATCHDOG_ID, true);
-        }
+        stonith_device_remove(STONITH_WATCHDOG_ID, true);
     }
 }
 
@@ -855,13 +867,14 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
             if (strstr(xpath, XML_TAG_ATTR_SETS) ||
                 strstr(xpath, XML_TAG_META_SETS)) {
                 needs_update = TRUE;
-                reason = strdup("(meta) attribute deleted from resource");
+                pcmk__str_update(&reason,
+                                 "(meta) attribute deleted from resource");
                 break;
-            } 
-            mutable = strdup(xpath);
-            rsc_id = strstr(mutable, "primitive[@id=\'");
+            }
+            pcmk__str_update(&mutable, xpath);
+            rsc_id = strstr(mutable, "primitive[@" XML_ATTR_ID "=\'");
             if (rsc_id != NULL) {
-                rsc_id += strlen("primitive[@id=\'");
+                rsc_id += strlen("primitive[@" XML_ATTR_ID "=\'");
                 search = strchr(rsc_id, '\'');
             }
             if (search != NULL) {
@@ -1135,7 +1148,7 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
 {
     int rc = pcmk_ok;
     long timeout_ms_saved = stonith_watchdog_timeout_ms;
-    gboolean need_full_refresh = FALSE;
+    bool need_full_refresh = false;
 
     if(!have_cib_devices) {
         crm_trace("Skipping updates until we get a full dump");
@@ -1159,7 +1172,8 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
         }
 
         patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
-        xml_log_patchset(LOG_TRACE, "Config update", patchset);
+        pcmk__output_set_log_level(logger_out, LOG_TRACE);
+        out->message(out, "xml-patchset", patchset);
         rc = xml_apply_patchset(local_cib, patchset, TRUE);
         switch (rc) {
             case pcmk_ok:
@@ -1186,25 +1200,26 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
             return;
         }
         CRM_ASSERT(local_cib != NULL);
-        need_full_refresh = TRUE;
+        need_full_refresh = true;
     }
 
     pcmk__refresh_node_caches_from_cib(local_cib);
     update_stonith_watchdog_timeout_ms(local_cib);
 
     if (timeout_ms_saved != stonith_watchdog_timeout_ms) {
-            need_full_refresh = TRUE;
-    } else {
-            update_fencing_topology(event, msg);
-            update_cib_stonith_devices(event, msg);
-            watchdog_device_update();
+        need_full_refresh = true;
     }
 
     if (need_full_refresh) {
         fencing_topology_init();
         cib_devices_update();
-        watchdog_device_update();
+    } else {
+        // Partial refresh
+        update_fencing_topology(event, msg);
+        update_cib_stonith_devices(event, msg);
     }
+
+    watchdog_device_update();
 }
 
 static void
@@ -1229,9 +1244,6 @@ stonith_shutdown(int nsig)
     stonith_shutdown_flag = TRUE;
     if (mainloop != NULL && g_main_loop_is_running(mainloop)) {
         g_main_loop_quit(mainloop);
-    } else {
-        stonith_cleanup();
-        crm_exit(CRM_EX_OK);
     }
 }
 
@@ -1277,36 +1289,14 @@ stonith_cleanup(void)
     local_cib = NULL;
 }
 
-static pcmk__cli_option_t long_options[] = {
-    // long option, argument type, storage, short option, description, flags
-    {
-        "stand-alone", no_argument, 0, 's',
-        "\tDeprecated (will be removed in a future release)",
-        pcmk__option_default
-    },
-    {
-        "stand-alone-w-cpg", no_argument, 0, 'c',
-        "\tIntended for use in regression testing only",
-        pcmk__option_default
-    },
-    {
-        "logfile", required_argument, 0, 'l',
-        NULL, pcmk__option_default
-    },
-    {
-        "verbose", no_argument, 0, 'V',
-        NULL, pcmk__option_default
-    },
-    {
-        "version", no_argument, 0, '$',
-        NULL, pcmk__option_default
-    },
-    {
-        "help", no_argument, 0, '?',
-        NULL, pcmk__option_default
-    },
-    { 0, 0, 0, 0 }
-};
+static gboolean
+stand_alone_cpg_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+                   GError **error)
+{
+    stand_alone = FALSE;
+    options.no_cib_connect = true;
+    return TRUE;
+}
 
 static void
 setup_cib(void)
@@ -1576,94 +1566,97 @@ fencer_metadata(void)
     g_free(s);
 }
 
-/*
-static const char *
-fenceder_options(GHashTable *options, const char *name)
+static GOptionEntry entries[] = {
+    { "stand-alone", 's', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &stand_alone,
+      "Deprecated (will be removed in a future release)", NULL },
+
+    { "stand-alone-w-cpg", 'c', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
+      stand_alone_cpg_cb, "Intended for use in regression testing only", NULL },
+
+    { "logfile", 'l', G_OPTION_FLAG_NONE, G_OPTION_ARG_FILENAME_ARRAY,
+      &options.log_files, "Send logs to the additional named logfile", NULL },
+
+    { NULL }
+};
+
+static GOptionContext *
+build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
 {
-    return pcmk__cluster_option(options, fenceder_options,
-                                PCMK__NELEM(fenceder_options), name);
+    GOptionContext *context = NULL;
+
+    context = pcmk__build_arg_context(args, "text (default), xml", group,
+                                      "[metadata]");
+    pcmk__add_main_args(context, entries);
+    return context;
 }
-*/
+
 int
 main(int argc, char **argv)
 {
-    int flag;
-    int argerr = 0;
-    int option_index = 0;
+    int rc = pcmk_rc_ok;
     crm_cluster_t *cluster = NULL;
     crm_ipc_t *old_instance = NULL;
-    int rc = pcmk_rc_ok;
+
+    GError *error = NULL;
+
+    GOptionGroup *output_group = NULL;
+    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
+    gchar **processed_args = pcmk__cmdline_preproc(argv, "l");
+    GOptionContext *context = build_arg_context(args, &output_group);
 
     crm_log_preinit(NULL, argc, argv);
-    pcmk__set_cli_options(NULL, "[options]", long_options,
-                          "daemon for executing fencing devices in a "
-                          "Pacemaker cluster");
 
-    while (1) {
-        flag = pcmk__next_cli_option(argc, argv, &option_index, NULL);
-        if (flag == -1) {
-            break;
-        }
-
-        switch (flag) {
-            case 'V':
-                crm_bump_log_level(argc, argv);
-                break;
-            case 'l':
-                {
-                    int rc = pcmk__add_logfile(optarg);
-
-                    if (rc != pcmk_rc_ok) {
-                        /* Logging has not yet been initialized, so stderr is
-                         * the only way to get information out
-                         */
-                        fprintf(stderr, "Logging to %s is disabled: %s\n",
-                                optarg, pcmk_rc_str(rc));
-                    }
-                }
-                break;
-            case 's':
-                stand_alone = TRUE;
-                break;
-            case 'c':
-                stand_alone = FALSE;
-                no_cib_connect = TRUE;
-                break;
-            case '$':
-            case '?':
-                pcmk__cli_help(flag, CRM_EX_OK);
-                break;
-            default:
-                ++argerr;
-                break;
-        }
+    pcmk__register_formats(output_group, formats);
+    if (!g_option_context_parse_strv(context, &processed_args, &error)) {
+        exit_code = CRM_EX_USAGE;
+        goto done;
     }
 
-    if (argc - optind == 1 && pcmk__str_eq("metadata", argv[optind], pcmk__str_casei)) {
-	fencer_metadata();
-        return CRM_EX_OK;
-    }    
-    if (optind != argc) {
-        ++argerr;
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    if (rc != pcmk_rc_ok) {
+        exit_code = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Error creating output format %s: %s",
+                    args->output_ty, pcmk_rc_str(rc));
+        goto done;
     }
 
-    if (argerr) {
-        pcmk__cli_help('?', CRM_EX_USAGE);
+    if (args->version) {
+        out->version(out, false);
+        goto done;
     }
 
-    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
+    if ((g_strv_length(processed_args) >= 2)
+        && pcmk__str_eq(processed_args[1], "metadata", pcmk__str_none)) {
+        fencer_metadata();
+        goto done;
+    }
+
+    // Open additional log files
+    pcmk__add_logfiles(options.log_files, out);
+
+    crm_log_init(NULL, LOG_INFO + args->verbosity, TRUE,
+                 (args->verbosity > 0), argc, argv, FALSE);
 
     crm_notice("Starting Pacemaker fencer");
 
     old_instance = crm_ipc_new("stonith-ng", 0);
+    if (old_instance == NULL) {
+        /* crm_ipc_new() will have already logged an error message with
+         * crm_err()
+         */
+        exit_code = CRM_EX_FATAL;
+        goto done;
+    }
+
     if (crm_ipc_connect(old_instance)) {
-        // IPC end-point already up 
+        // IPC endpoint already up
         crm_ipc_close(old_instance);
         crm_ipc_destroy(old_instance);
         crm_err("pacemaker-fenced is already active, aborting startup");
-        crm_exit(CRM_EX_OK);
+        goto done;
     } else {
-        // not up or not authentic, we'll proceed either way 
+        // Not up or not authentic, we'll proceed either way
         crm_ipc_destroy(old_instance);
         old_instance = NULL;
     }
@@ -1675,33 +1668,48 @@ main(int argc, char **argv)
     fenced_data_set = pe_new_working_set();
     CRM_ASSERT(fenced_data_set != NULL);
 
-    cluster = calloc(1, sizeof(crm_cluster_t));
-    CRM_ASSERT(cluster != NULL);
+    cluster = pcmk_cluster_new();
 
-    if (stand_alone == FALSE) {
+    /* Initialize the logger prior to setup_cib(). update_cib_cache_cb() may
+     * call the "xml-patchset" message function, which needs the logger, after
+     * setup_cib() has run.
+     */
+    rc = pcmk__log_output_new(&logger_out) != pcmk_rc_ok;
+    if (rc != pcmk_rc_ok) {
+        exit_code = CRM_EX_FATAL;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Error creating output format log: %s", pcmk_rc_str(rc));
+        goto done;
+    }
+    pe__register_messages(logger_out);
+    pcmk__register_lib_messages(logger_out);
+    pcmk__output_set_log_level(logger_out, LOG_TRACE);
+    fenced_data_set->priv = logger_out;
 
-        if (is_corosync_cluster()) {
+    if (!stand_alone) {
 #if SUPPORT_COROSYNC
+        if (is_corosync_cluster()) {
             cluster->destroy = stonith_peer_cs_destroy;
             cluster->cpg.cpg_deliver_fn = stonith_peer_ais_callback;
             cluster->cpg.cpg_confchg_fn = pcmk_cpg_membership;
-#endif
         }
+#endif // SUPPORT_COROSYNC
 
         crm_set_status_callback(&st_peer_update_callback);
 
         if (crm_cluster_connect(cluster) == FALSE) {
+            exit_code = CRM_EX_FATAL;
             crm_crit("Cannot sign in to the cluster... terminating");
-            crm_exit(CRM_EX_FATAL);
+            goto done;
         }
-        stonith_our_uname = strdup(cluster->uname);
+        pcmk__str_update(&stonith_our_uname, cluster->uname);
 
-        if (no_cib_connect == FALSE) {
+        if (!options.no_cib_connect) {
             setup_cib();
         }
 
     } else {
-        stonith_our_uname = strdup("localhost");
+        pcmk__str_update(&stonith_our_uname, "localhost");
         crm_warn("Stand-alone mode is deprecated and will be removed "
                  "in a future release");
     }
@@ -1711,34 +1719,33 @@ main(int argc, char **argv)
 
     pcmk__serve_fenced_ipc(&ipcs, &ipc_callbacks);
 
-    pcmk__register_formats(NULL, formats);
-    rc = pcmk__output_new(&out, "log", NULL, argv);
-    if ((rc != pcmk_rc_ok) || (out == NULL)) {
-        crm_err("Can't log resource details due to internal error: %s\n",
-                pcmk_rc_str(rc));
-        crm_exit(CRM_EX_FATAL);
-    }
-
-    pe__register_messages(out);
-    pcmk__register_lib_messages(out);
-
-    pcmk__output_set_log_level(out, LOG_TRACE);
-    fenced_data_set->priv = out;
-
-    // Create the mainloop and run it... 
+    // Create the mainloop and run it...
     mainloop = g_main_loop_new(NULL, FALSE);
     crm_notice("Pacemaker fencer successfully started and accepting connections");
     g_main_loop_run(mainloop);
 
+done:
+    g_strfreev(processed_args);
+    pcmk__free_arg_context(context);
+
+    g_strfreev(options.log_files);
+
     stonith_cleanup();
-    free(cluster->uuid);
-    free(cluster->uname);
-    free(cluster);
+    pcmk_cluster_free(cluster);
     pe_free_working_set(fenced_data_set);
 
-    out->finish(out, CRM_EX_OK, true, NULL);
-    pcmk__output_free(out);
-    pcmk__unregister_formats();
+    pcmk__output_and_clear_error(&error, out);
 
-    crm_exit(CRM_EX_OK);
+    if (logger_out != NULL) {
+        logger_out->finish(logger_out, exit_code, true, NULL);
+        pcmk__output_free(logger_out);
+    }
+
+    if (out != NULL) {
+        out->finish(out, exit_code, true, NULL);
+        pcmk__output_free(out);
+    }
+
+    pcmk__unregister_formats();
+    crm_exit(exit_code);
 }

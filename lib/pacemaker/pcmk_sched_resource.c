@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2022 the Pacemaker project contributors
+ * Copyright 2014-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -25,6 +25,9 @@ static resource_alloc_functions_t allocation_methods[] = {
         pcmk__primitive_internal_constraints,
         pcmk__primitive_apply_coloc_score,
         pcmk__colocated_resources,
+        pcmk__with_primitive_colocations,
+        pcmk__primitive_with_colocations,
+        pcmk__add_colocated_node_scores,
         pcmk__apply_location,
         pcmk__primitive_action_flags,
         pcmk__update_ordered_actions,
@@ -41,6 +44,9 @@ static resource_alloc_functions_t allocation_methods[] = {
         pcmk__group_internal_constraints,
         pcmk__group_apply_coloc_score,
         pcmk__group_colocated_resources,
+        pcmk__with_group_colocations,
+        pcmk__group_with_colocations,
+        pcmk__group_add_colocated_node_scores,
         pcmk__group_apply_location,
         pcmk__group_action_flags,
         pcmk__group_update_ordered_actions,
@@ -51,15 +57,18 @@ static resource_alloc_functions_t allocation_methods[] = {
         pcmk__group_shutdown_lock,
     },
     {
-        pcmk__clone_allocate,
+        pcmk__clone_assign,
         clone_create_actions,
         clone_create_probe,
         clone_internal_constraints,
         pcmk__clone_apply_coloc_score,
         pcmk__colocated_resources,
+        pcmk__with_clone_colocations,
+        pcmk__clone_with_colocations,
+        pcmk__add_colocated_node_scores,
         clone_rsc_location,
         clone_action_flags,
-        pcmk__multi_update_actions,
+        pcmk__instance_update_ordered_actions,
         pcmk__output_resource_actions,
         clone_expand,
         clone_append_meta,
@@ -73,9 +82,12 @@ static resource_alloc_functions_t allocation_methods[] = {
         pcmk__bundle_internal_constraints,
         pcmk__bundle_apply_coloc_score,
         pcmk__colocated_resources,
+        pcmk__with_bundle_colocations,
+        pcmk__bundle_with_colocations,
+        pcmk__add_colocated_node_scores,
         pcmk__bundle_rsc_location,
         pcmk__bundle_action_flags,
-        pcmk__multi_update_actions,
+        pcmk__instance_update_ordered_actions,
         pcmk__output_bundle_actions,
         pcmk__bundle_expand,
         pcmk__noop_add_graph_meta,
@@ -88,10 +100,10 @@ static resource_alloc_functions_t allocation_methods[] = {
  * \internal
  * \brief Check whether a resource's agent standard, provider, or type changed
  *
- * \param[in] rsc             Resource to check
- * \param[in] node            Node needing unfencing/restart if agent changed
- * \param[in] rsc_entry       XML with previously known agent information
- * \param[in] active_on_node  Whether \p rsc is active on \p node
+ * \param[in,out] rsc             Resource to check
+ * \param[in,out] node            Node needing unfencing if agent changed
+ * \param[in]     rsc_entry       XML with previously known agent information
+ * \param[in]     active_on_node  Whether \p rsc is active on \p node
  *
  * \return true if agent for \p rsc changed, otherwise false
  */
@@ -168,7 +180,7 @@ add_rsc_if_matching(GList *result, pe_resource_t *rsc, const char *id)
  *       g_list_free().
  */
 GList *
-pcmk__rscs_matching_id(const char *id, pe_working_set_t *data_set)
+pcmk__rscs_matching_id(const char *id, const pe_working_set_t *data_set)
 {
     GList *result = NULL;
 
@@ -183,8 +195,8 @@ pcmk__rscs_matching_id(const char *id, pe_working_set_t *data_set)
  * \internal
  * \brief Set the variant-appropriate allocation methods for a resource
  *
- * \param[in] rsc      Resource to set allocation methods for
- * \param[in] ignored  Only here so function can be used with g_list_foreach()
+ * \param[in,out] rsc      Resource to set allocation methods for
+ * \param[in]     ignored  Here so function can be used with g_list_foreach()
  */
 static void
 set_allocation_methods_for_rsc(pe_resource_t *rsc, void *ignored)
@@ -197,7 +209,7 @@ set_allocation_methods_for_rsc(pe_resource_t *rsc, void *ignored)
  * \internal
  * \brief Set the variant-appropriate allocation methods for all resources
  *
- * \param[in] data_set  Cluster working set
+ * \param[in,out] data_set  Cluster working set
  */
 void
 pcmk__set_allocation_methods(pe_working_set_t *data_set)
@@ -208,10 +220,11 @@ pcmk__set_allocation_methods(pe_working_set_t *data_set)
 
 // Shared implementation of resource_alloc_functions_t:colocated_resources()
 GList *
-pcmk__colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
+pcmk__colocated_resources(const pe_resource_t *rsc, const pe_resource_t *orig_rsc,
                           GList *colocated_rscs)
 {
-    GList *gIter = NULL;
+    const GList *iter = NULL;
+    GList *colocations = NULL;
 
     if (orig_rsc == NULL) {
         orig_rsc = rsc;
@@ -223,12 +236,13 @@ pcmk__colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
 
     pe_rsc_trace(orig_rsc, "%s is in colocation chain with %s",
                  rsc->id, orig_rsc->id);
-    colocated_rscs = g_list_append(colocated_rscs, rsc);
+    colocated_rscs = g_list_prepend(colocated_rscs, (gpointer) rsc);
 
     // Follow colocations where this resource is the dependent resource
-    for (gIter = rsc->rsc_cons; gIter != NULL; gIter = gIter->next) {
-        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
-        pe_resource_t *primary = constraint->primary;
+    colocations = pcmk__this_with_colocations(rsc);
+    for (iter = colocations; iter != NULL; iter = iter->next) {
+        const pcmk__colocation_t *constraint = iter->data;
+        const pe_resource_t *primary = constraint->primary;
 
         if (primary == orig_rsc) {
             continue; // Break colocation loop
@@ -243,11 +257,13 @@ pcmk__colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
                                                                 colocated_rscs);
         }
     }
+    g_list_free(colocations);
 
     // Follow colocations where this resource is the primary resource
-    for (gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
-        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
-        pe_resource_t *dependent = constraint->dependent;
+    colocations = pcmk__with_this_colocations(rsc);
+    for (iter = colocations; iter != NULL; iter = iter->next) {
+        const pcmk__colocation_t *constraint = iter->data;
+        const pe_resource_t *dependent = constraint->dependent;
 
         if (dependent == orig_rsc) {
             continue; // Break colocation loop
@@ -266,13 +282,14 @@ pcmk__colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
                                                                   colocated_rscs);
         }
     }
+    g_list_free(colocations);
 
     return colocated_rscs;
 }
 
 // No-op function for variants that don't need to implement add_graph_meta()
 void
-pcmk__noop_add_graph_meta(pe_resource_t *rsc, xmlNode *xml)
+pcmk__noop_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml)
 {
 }
 
@@ -323,9 +340,9 @@ pcmk__output_resource_actions(pe_resource_t *rsc)
  * and update any existing actions scheduled for it. This is not done
  * recursively for children, so it should be called only for primitives.
  *
- * \param[in] rsc     Resource to assign
- * \param[in] chosen  Node to assign \p rsc to
- * \param[in] force   If true, assign to \p chosen even if unavailable
+ * \param[in,out] rsc     Resource to assign
+ * \param[in,out] chosen  Node to assign \p rsc to
+ * \param[in]     force   If true, assign to \p chosen even if unavailable
  *
  * \return true if \p rsc could be assigned, otherwise false
  *
@@ -421,9 +438,9 @@ pcmk__finalize_assignment(pe_resource_t *rsc, pe_node_t *chosen, bool force)
  * (or \p chosen is NULL), unassign any previous assignments, set next role to
  * stopped, and update any existing actions scheduled for them.
  *
- * \param[in] rsc     Resource to assign
- * \param[in] chosen  Node to assign \p rsc to
- * \param[in] force   If true, assign to \p chosen even if unavailable
+ * \param[in,out] rsc     Resource to assign
+ * \param[in,out] chosen  Node to assign \p rsc to
+ * \param[in]     force   If true, assign to \p chosen even if unavailable
  *
  * \return true if \p rsc could be assigned, otherwise false
  *
@@ -460,7 +477,7 @@ pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force)
  * and mark the resource as provisional again. This is not done recursively for
  * children, so it should be called only for primitives.
  *
- * \param[in] rsc  Resource to unassign
+ * \param[in,out] rsc  Resource to unassign
  */
 void
 pcmk__unassign_resource(pe_resource_t *rsc)
@@ -489,15 +506,15 @@ pcmk__unassign_resource(pe_resource_t *rsc)
  * \internal
  * \brief Check whether a resource has reached its migration threshold on a node
  *
- * \param[in]  rsc       Resource to check
- * \param[in]  node      Node to check
- * \param[out] failed    If the threshold has been reached, this will be set to
- *                       the resource that failed (possibly a parent of \p rsc)
+ * \param[in,out] rsc       Resource to check
+ * \param[in]     node      Node to check
+ * \param[out]    failed    If threshold has been reached, this will be set to
+ *                          resource that failed (possibly a parent of \p rsc)
  *
  * \return true if the migration threshold has been reached, false otherwise
  */
 bool
-pcmk__threshold_reached(pe_resource_t *rsc, pe_node_t *node,
+pcmk__threshold_reached(pe_resource_t *rsc, const pe_node_t *node,
                         pe_resource_t **failed)
 {
     int fail_count, remaining_tries;
@@ -515,8 +532,7 @@ pcmk__threshold_reached(pe_resource_t *rsc, pe_node_t *node,
 
     // If there are no failures, there's no need to force away
     fail_count = pe_get_failcount(node, rsc, NULL,
-                                  pe_fc_effective|pe_fc_fillers, NULL,
-                                  rsc->cluster);
+                                  pe_fc_effective|pe_fc_fillers, NULL);
     if (fail_count <= 0) {
         return false;
     }
@@ -565,7 +581,7 @@ convert_const_pointer(const void *ptr)
  * \return Node's weight, or -INFINITY if not found
  */
 static int
-get_node_weight(pe_node_t *node, GHashTable *nodes)
+get_node_weight(const pe_node_t *node, GHashTable *nodes)
 {
     pe_node_t *weighted_node = NULL;
 
@@ -591,7 +607,7 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
 {
     const pe_resource_t *resource1 = a;
     const pe_resource_t *resource2 = b;
-    GList *nodes = (GList *) data;
+    const GList *nodes = (const GList *) data;
 
     int rc = 0;
     int r1_weight = -INFINITY;
@@ -622,12 +638,12 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
     }
 
     // Calculate and log node weights
-    pcmk__add_colocated_node_scores(convert_const_pointer(resource1),
-                                    resource1->id, &r1_nodes, NULL, 1,
-                                    pcmk__coloc_select_this_with);
-    pcmk__add_colocated_node_scores(convert_const_pointer(resource2),
-                                    resource2->id, &r2_nodes, NULL, 1,
-                                    pcmk__coloc_select_this_with);
+    resource1->cmds->add_colocated_node_scores(convert_const_pointer(resource1),
+                                               resource1->id, &r1_nodes, NULL,
+                                               1, pcmk__coloc_select_this_with);
+    resource2->cmds->add_colocated_node_scores(convert_const_pointer(resource2),
+                                               resource2->id, &r2_nodes, NULL,
+                                               1, pcmk__coloc_select_this_with);
     pe__show_node_weights(true, NULL, resource1->id, r1_nodes,
                           resource1->cluster);
     pe__show_node_weights(true, NULL, resource2->id, r2_nodes,
@@ -654,8 +670,8 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
 
     // Otherwise a higher weight on any node will do
     reason = "score";
-    for (GList *iter = nodes; iter != NULL; iter = iter->next) {
-        pe_node_t *node = (pe_node_t *) iter->data;
+    for (const GList *iter = nodes; iter != NULL; iter = iter->next) {
+        const pe_node_t *node = (const pe_node_t *) iter->data;
 
         r1_weight = get_node_weight(node, r1_nodes);
         r2_weight = get_node_weight(node, r2_nodes);
@@ -692,7 +708,7 @@ done:
  * \internal
  * \brief Sort resources in the order they should be allocated to nodes
  *
- * \param[in] data_set  Cluster working set
+ * \param[in,out] data_set  Cluster working set
  */
 void
 pcmk__sort_resources(pe_working_set_t *data_set)
@@ -703,387 +719,4 @@ pcmk__sort_resources(pe_working_set_t *data_set)
     data_set->resources = g_list_sort_with_data(data_set->resources,
                                                 cmp_resources, nodes);
     g_list_free(nodes);
-}
-
-/*!
- * \internal
- * \brief Create a hash table with a single node in it
- *
- * \param[in] node  Node to copy into new table
- *
- * \return Newly created hash table containing a copy of \p node
- * \note The caller is responsible for freeing the result with
- *       g_hash_table_destroy().
- */
-static GHashTable *
-new_node_table(pe_node_t *node)
-{
-    GHashTable *table = pcmk__strkey_table(NULL, free);
-
-    node = pe__copy_node(node);
-    g_hash_table_insert(table, (gpointer) node->details->id, node);
-    return table;
-}
-
-/*!
- * \internal
- * \brief Apply a resource's parent's colocation scores to a node table
- *
- * \param[in]     rsc    Resource whose colocations should be applied
- * \param[in,out] nodes  Node table to apply colocations to
- */
-static void
-apply_parent_colocations(const pe_resource_t *rsc, GHashTable **nodes)
-{
-    GList *iter = NULL;
-    pcmk__colocation_t *colocation = NULL;
-
-    for (iter = rsc->parent->rsc_cons; iter != NULL; iter = iter->next) {
-        colocation = (pcmk__colocation_t *) iter->data;
-        pcmk__add_colocated_node_scores(colocation->primary, rsc->id, nodes,
-                                        colocation->node_attribute,
-                                        colocation->score / (float) INFINITY,
-                                        pcmk__coloc_select_default);
-    }
-    for (iter = rsc->parent->rsc_cons_lhs; iter != NULL; iter = iter->next) {
-        colocation = (pcmk__colocation_t *) iter->data;
-        if (!pcmk__colocation_has_influence(colocation, rsc)) {
-            continue;
-        }
-        pcmk__add_colocated_node_scores(colocation->dependent, rsc->id, nodes,
-                                        colocation->node_attribute,
-                                        colocation->score / (float) INFINITY,
-                                        pcmk__coloc_select_nonnegative);
-    }
-}
-
-/*!
- * \internal
- * \brief Compare clone or bundle instances based on colocation scores
- *
- * Determine the relative order in which two clone or bundle instances should be
- * assigned to nodes, considering the scores of colocation constraints directly
- * or indirectly involving them.
- *
- * \param[in] instance1  First instance to compare
- * \param[in] instance2  Second instance to compare
- *
- * \return A negative number if \p instance1 should be assigned first,
- *         a positive number if \p instance2 should be assigned first,
- *         or 0 if assignment order doesn't matter
- */
-static int
-cmp_instance_by_colocation(const pe_resource_t *instance1,
-                           const pe_resource_t *instance2)
-{
-    int rc = 0;
-    pe_node_t *node1 = NULL;
-    pe_node_t *node2 = NULL;
-    pe_node_t *current_node1 = pe__current_node(instance1);
-    pe_node_t *current_node2 = pe__current_node(instance2);
-    GHashTable *colocated_scores1 = NULL;
-    GHashTable *colocated_scores2 = NULL;
-
-    CRM_ASSERT((instance1 != NULL) && (instance1->parent != NULL)
-               && (instance2 != NULL) && (instance2->parent != NULL)
-               && (current_node1 != NULL) && (current_node2 != NULL));
-
-    // Create node tables initialized with each node
-    colocated_scores1 = new_node_table(current_node1);
-    colocated_scores2 = new_node_table(current_node2);
-
-    // Apply parental colocations
-    apply_parent_colocations(instance1, &colocated_scores1);
-    apply_parent_colocations(instance2, &colocated_scores2);
-
-    // Find original nodes again, with scores updated for colocations
-    node1 = g_hash_table_lookup(colocated_scores1, current_node1->details->id);
-    node2 = g_hash_table_lookup(colocated_scores2, current_node2->details->id);
-
-    // Compare nodes by updated scores
-    if (node1->weight < node2->weight) {
-        crm_trace("Assign %s (%d on %s) after %s (%d on %s)",
-                  instance1->id, node1->weight, pe__node_name(node1),
-                  instance2->id, node2->weight, pe__node_name(node2));
-        rc = 1;
-
-    } else if (node1->weight > node2->weight) {
-        crm_trace("Assign %s (%d on %s) before %s (%d on %s)",
-                  instance1->id, node1->weight, pe__node_name(node1),
-                  instance2->id, node2->weight, pe__node_name(node2));
-        rc = -1;
-    }
-
-    g_hash_table_destroy(colocated_scores1);
-    g_hash_table_destroy(colocated_scores2);
-    return rc;
-}
-
-/*!
- * \internal
- * \brief Check whether a resource or any of its children are failed
- *
- * \param[in] rsc  Resource to check
- *
- * \return true if \p rsc or any of its children are failed, otherwise false
- */
-static bool
-did_fail(const pe_resource_t * rsc)
-{
-    if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
-        return true;
-    }
-    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
-        if (did_fail((pe_resource_t *) iter->data)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-/*!
- * \internal
- * \brief Check whether a node is allowed to run a resource
- *
- * \param[in]     rsc   Resource to check
- * \param[in,out] node  Node to check (will be set NULL if not allowed)
- *
- * \return true if *node is either NULL or allowed for \p rsc, otherwise false
- */
-static bool
-node_is_allowed(const pe_resource_t *rsc, pe_node_t **node)
-{
-    if (*node != NULL) {
-        pe_node_t *allowed = pe_hash_table_lookup(rsc->allowed_nodes,
-                                                  (*node)->details->id);
-        if ((allowed == NULL) || (allowed->weight < 0)) {
-            pe_rsc_trace(rsc, "%s: current location (%s) is unavailable",
-                         rsc->id, pe__node_name(*node));
-            *node = NULL;
-            return false;
-        }
-    }
-    return true;
-}
-
-/*!
- * \internal
- * \brief Compare two clone or bundle instances' instance numbers
- *
- * \param[in] a  First instance to compare
- * \param[in] b  Second instance to compare
- *
- * \return A negative number if \p a's instance number is lower,
- *         a positive number if \p b's instance number is lower,
- *         or 0 if their instance numbers are the same
- */
-gint
-pcmk__cmp_instance_number(gconstpointer a, gconstpointer b)
-{
-    const pe_resource_t *instance1 = (const pe_resource_t *) a;
-    const pe_resource_t *instance2 = (const pe_resource_t *) b;
-    char *div1 = NULL;
-    char *div2 = NULL;
-
-    CRM_ASSERT((instance1 != NULL) && (instance2 != NULL));
-
-    // Clone numbers are after a colon, bundle numbers after a dash
-    div1 = strrchr(instance1->id, ':');
-    if (div1 == NULL) {
-        div1 = strrchr(instance1->id, '-');
-    }
-    div2 = strrchr(instance2->id, ':');
-    if (div2 == NULL) {
-        div2 = strrchr(instance2->id, '-');
-    }
-    CRM_ASSERT((div1 != NULL) && (div2 != NULL));
-
-    return (gint) (strtol(div1 + 1, NULL, 10) - strtol(div2 + 1, NULL, 10));
-}
-
-/*!
- * \internal
- * \brief Compare clone or bundle instances according to assignment order
- *
- * Compare two clone or bundle instances according to the order they should be
- * assigned to nodes, preferring (in order):
- *
- *  - Active instance that is less multiply active
- *  - Instance that is not active on a disallowed node
- *  - Instance with higher configured priority
- *  - Active instance whose current node can run resources
- *  - Active instance whose parent is allowed on current node
- *  - Active instance whose current node has fewer other instances
- *  - Active instance
- *  - Failed instance
- *  - Instance whose colocations result in higher score on current node
- *  - Instance with lower ID in lexicographic order
- *
- * \param[in] a          First instance to compare
- * \param[in] b          Second instance to compare
- *
- * \return A negative number if \p a should be assigned first,
- *         a positive number if \p b should be assigned first,
- *         or 0 if assignment order doesn't matter
- */
-gint
-pcmk__cmp_instance(gconstpointer a, gconstpointer b)
-{
-    int rc = 0;
-    pe_node_t *node1 = NULL;
-    pe_node_t *node2 = NULL;
-    unsigned int nnodes1 = 0;
-    unsigned int nnodes2 = 0;
-
-    bool can1 = true;
-    bool can2 = true;
-
-    const pe_resource_t *instance1 = (const pe_resource_t *) a;
-    const pe_resource_t *instance2 = (const pe_resource_t *) b;
-
-    CRM_ASSERT((instance1 != NULL) && (instance2 != NULL));
-
-    node1 = pe__find_active_on(instance1, &nnodes1, NULL);
-    node2 = pe__find_active_on(instance2, &nnodes2, NULL);
-
-    /* If both instances are running and at least one is multiply
-     * active, prefer instance that's running on fewer nodes.
-     */
-    if ((nnodes1 > 0) && (nnodes2 > 0)) {
-        if (nnodes1 < nnodes2) {
-            crm_trace("Assign %s (active on %d) before %s (active on %d): "
-                      "less multiply active",
-                      instance1->id, nnodes1, instance2->id, nnodes2);
-            return -1;
-
-        } else if (nnodes1 > nnodes2) {
-            crm_trace("Assign %s (active on %d) after %s (active on %d): "
-                      "more multiply active",
-                      instance1->id, nnodes1, instance2->id, nnodes2);
-            return 1;
-        }
-    }
-
-    /* An instance that is either inactive or active on an allowed node is
-     * preferred over an instance that is active on a no-longer-allowed node.
-     */
-    can1 = node_is_allowed(instance1, &node1);
-    can2 = node_is_allowed(instance2, &node2);
-    if (can1 && !can2) {
-        crm_trace("Assign %s before %s: not active on a disallowed node",
-                  instance1->id, instance2->id);
-        return -1;
-
-    } else if (!can1 && can2) {
-        crm_trace("Assign %s after %s: active on a disallowed node",
-                  instance1->id, instance2->id);
-        return 1;
-    }
-
-    // Prefer instance with higher configured priority
-    if (instance1->priority > instance2->priority) {
-        crm_trace("Assign %s before %s: priority (%d > %d)",
-                  instance1->id, instance2->id,
-                  instance1->priority, instance2->priority);
-        return -1;
-
-    } else if (instance1->priority < instance2->priority) {
-        crm_trace("Assign %s after %s: priority (%d < %d)",
-                  instance1->id, instance2->id,
-                  instance1->priority, instance2->priority);
-        return 1;
-    }
-
-    // Prefer active instance
-    if ((node1 == NULL) && (node2 == NULL)) {
-        crm_trace("No assignment preference for %s vs. %s: inactive",
-                  instance1->id, instance2->id);
-        return 0;
-
-    } else if (node1 == NULL) {
-        crm_trace("Assign %s after %s: active", instance1->id, instance2->id);
-        return 1;
-
-    } else if (node2 == NULL) {
-        crm_trace("Assign %s before %s: active", instance1->id, instance2->id);
-        return -1;
-    }
-
-    // Prefer instance whose current node can run resources
-    can1 = pcmk__node_available(node1, false, false);
-    can2 = pcmk__node_available(node2, false, false);
-    if (can1 && !can2) {
-        crm_trace("Assign %s before %s: current node can run resources",
-                  instance1->id, instance2->id);
-        return -1;
-
-    } else if (!can1 && can2) {
-        crm_trace("Assign %s after %s: current node can't run resources",
-                  instance1->id, instance2->id);
-        return 1;
-    }
-
-    // Prefer instance whose parent is allowed to run on instance's current node
-    node1 = pcmk__top_allowed_node(instance1, node1);
-    node2 = pcmk__top_allowed_node(instance2, node2);
-    if ((node1 == NULL) && (node2 == NULL)) {
-        crm_trace("No assignment preference for %s vs. %s: "
-                  "parent not allowed on either instance's current node",
-                  instance1->id, instance2->id);
-        return 0;
-
-    } else if (node1 == NULL) {
-        crm_trace("Assign %s after %s: parent not allowed on current node",
-                  instance1->id, instance2->id);
-        return 1;
-
-    } else if (node2 == NULL) {
-        crm_trace("Assign %s before %s: parent allowed on current node",
-                  instance1->id, instance2->id);
-        return -1;
-    }
-
-    // Prefer instance whose current node is running fewer other instances
-    if (node1->count < node2->count) {
-        crm_trace("Assign %s before %s: fewer active instances on current node",
-                  instance1->id, instance2->id);
-        return -1;
-
-    } else if (node1->count > node2->count) {
-        crm_trace("Assign %s after %s: more active instances on current node",
-                  instance1->id, instance2->id);
-        return 1;
-    }
-
-    // Prefer failed instance
-    can1 = did_fail(instance1);
-    can2 = did_fail(instance2);
-    if (!can1 && can2) {
-        crm_trace("Assign %s before %s: failed", instance1->id, instance2->id);
-        return -1;
-    } else if (can1 && !can2) {
-        crm_trace("Assign %s after %s: not failed",
-                  instance1->id, instance2->id);
-        return 1;
-    }
-
-    // Prefer instance with higher cumulative colocation score on current node
-    rc = cmp_instance_by_colocation(instance1, instance2);
-    if (rc != 0) {
-        return rc;
-    }
-
-    // Prefer instance with lower instance number
-    rc = pcmk__cmp_instance_number(instance1, instance2);
-    if (rc < 0) {
-        crm_trace("Assign %s before %s: instance number",
-                  instance1->id, instance2->id);
-    } else if (rc > 0) {
-        crm_trace("Assign %s after %s: instance number",
-                  instance1->id, instance2->id);
-    } else {
-        crm_trace("No assignment preference for %s vs. %s",
-                  instance1->id, instance2->id);
-    }
-    return rc;
 }

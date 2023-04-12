@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -26,11 +26,15 @@ extern "C" {
  */
 
 enum cib_variant {
-    cib_undefined,
-    cib_native,
-    cib_file,
-    cib_remote,
-    cib_database,
+    cib_undefined = 0,
+    cib_native    = 1,
+    cib_file      = 2,
+    cib_remote    = 3,
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated This value will be removed in a future release
+    cib_database  = 4,
+#endif // !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 };
 
 enum cib_state {
@@ -47,24 +51,31 @@ enum cib_conn_type {
 };
 
 enum cib_call_options {
-    cib_none            = 0x00000000,
-    cib_verbose         = 0x00000001,  //!< Prefer stderr to logs
-    cib_xpath           = 0x00000002,
-    cib_multiple        = 0x00000004,
-    cib_can_create      = 0x00000008,
-    cib_discard_reply   = 0x00000010,
-    cib_no_children     = 0x00000020,
-    cib_xpath_address   = 0x00000040,
-    cib_mixed_update    = 0x00000080,
-    cib_scope_local     = 0x00000100,
-    cib_dryrun          = 0x00000200,
-    cib_sync_call       = 0x00001000,
-    cib_no_mtime        = 0x00002000,
-    cib_zero_copy       = 0x00004000,
-    cib_inhibit_notify  = 0x00010000,
-    cib_quorum_override = 0x00100000,
-    cib_inhibit_bcast   = 0x01000000, //!< \deprecated Will be removed in future
-    cib_force_diff      = 0x10000000
+    cib_none            = 0,
+    cib_verbose         = (1 << 0),  //!< Prefer stderr to logs
+    cib_xpath           = (1 << 1),
+    cib_multiple        = (1 << 2),
+    cib_can_create      = (1 << 3),
+    cib_discard_reply   = (1 << 4),
+    cib_no_children     = (1 << 5),
+    cib_xpath_address   = (1 << 6),
+    cib_mixed_update    = (1 << 7),
+    cib_scope_local     = (1 << 8),
+    cib_dryrun          = (1 << 9),
+    cib_sync_call       = (1 << 12),
+    cib_no_mtime        = (1 << 13),
+    cib_zero_copy       = (1 << 14),
+    cib_inhibit_notify  = (1 << 16),
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated This value will be removed in a future release
+    cib_quorum_override = (1 << 20),
+#endif // !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+
+    //! \deprecated This value will be removed in a future release
+    cib_inhibit_bcast   = (1 << 24),
+
+    cib_force_diff      = (1 << 28),
 };
 
 typedef struct cib_s cib_t;
@@ -115,8 +126,11 @@ typedef struct cib_api_operations_s {
                    int call_options);
     int (*modify) (cib_t *cib, const char *section, xmlNode *data,
                    int call_options);
+
+    //! \deprecated Use the \p modify() method instead
     int (*update) (cib_t *cib, const char *section, xmlNode *data,
                    int call_options);
+
     int (*replace) (cib_t *cib, const char *section, xmlNode *data,
                     int call_options);
     int (*remove) (cib_t *cib, const char *section, xmlNode *data,
@@ -161,6 +175,29 @@ typedef struct cib_api_operations_s {
      * \return Legacy Pacemaker return code (in particular, pcmk_ok on success)
      */
     int (*set_secondary)(cib_t *cib, int call_options);
+
+    /*!
+     * \brief Get the given CIB connection's unique client identifier(s)
+     *
+     * These can be used to check whether this client requested the action that
+     * triggered a CIB notification.
+     *
+     * \param[in]  cib       CIB connection
+     * \param[out] async_id  If not \p NULL, where to store asynchronous client
+     *                       ID
+     * \param[out] sync_id   If not \p NULL, where to store synchronous client
+     *                       ID
+     *
+     * \return Legacy Pacemaker return code
+     *
+     * \note The client IDs are assigned by \p pacemaker-based when the client
+     *       connects. \p cib_t variants that don't connect to
+     *       \p pacemaker-based may never be assigned a client ID.
+     * \note Some variants may have only one client for both asynchronous and
+     *       synchronous requests.
+     */
+    int (*client_id)(const cib_t *cib, const char **async_id,
+                     const char **sync_id);
 } cib_api_operations_t;
 
 struct cib_s {

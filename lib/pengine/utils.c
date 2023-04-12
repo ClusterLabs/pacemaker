@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -33,7 +33,7 @@ gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
  * \return true if node can be fenced, false otherwise
  */
 bool
-pe_can_fence(pe_working_set_t *data_set, pe_node_t *node)
+pe_can_fence(const pe_working_set_t *data_set, const pe_node_t *node)
 {
     if (pe__is_guest_node(node)) {
         /* Guest nodes are fenced by stopping their container resource. We can
@@ -97,7 +97,7 @@ pe__copy_node(const pe_node_t *this_node)
 
     new_node->rsc_discover_mode = this_node->rsc_discover_mode;
     new_node->weight = this_node->weight;
-    new_node->fixed = this_node->fixed;
+    new_node->fixed = this_node->fixed; // @COMPAT deprecated and unused
     new_node->details = this_node->details;
 
     return new_node;
@@ -120,8 +120,13 @@ node_list_exclude(GHashTable * hash, GList *list, gboolean merge_scores)
         other_node = pe_find_node_id(list, node->details->id);
         if (other_node == NULL) {
             node->weight = -INFINITY;
+            crm_trace("Banning dependent from %s (no primary instance)",
+                      pe__node_name(node));
         } else if (merge_scores) {
             node->weight = pcmk__add_scores(node->weight, other_node->weight);
+            crm_trace("Added primary's score %s to dependent's score for %s "
+                      "(now %s)", pcmk_readable_score(other_node->weight),
+                      pe__node_name(node), pcmk_readable_score(node->weight));
         }
     }
 
@@ -148,13 +153,13 @@ node_list_exclude(GHashTable * hash, GList *list, gboolean merge_scores)
  * \return Hash table equivalent of node list
  */
 GHashTable *
-pe__node_list2table(GList *list)
+pe__node_list2table(const GList *list)
 {
     GHashTable *result = NULL;
 
     result = pcmk__strkey_table(NULL, free);
-    for (GList *gIter = list; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *new_node = pe__copy_node((pe_node_t *) gIter->data);
+    for (const GList *gIter = list; gIter != NULL; gIter = gIter->next) {
+        pe_node_t *new_node = pe__copy_node((const pe_node_t *) gIter->data);
 
         g_hash_table_insert(result, (gpointer) new_node->details->id, new_node);
     }
@@ -202,12 +207,13 @@ pe__cmp_node_name(gconstpointer a, gconstpointer b)
  * \internal
  * \brief Output node weights to stdout
  *
- * \param[in] rsc       Use allowed nodes for this resource
- * \param[in] comment   Text description to prefix lines with
- * \param[in] nodes     If rsc is not specified, use these nodes
+ * \param[in]     rsc       Use allowed nodes for this resource
+ * \param[in]     comment   Text description to prefix lines with
+ * \param[in]     nodes     If rsc is not specified, use these nodes
+ * \param[in,out] data_set  Cluster working set
  */
 static void
-pe__output_node_weights(pe_resource_t *rsc, const char *comment,
+pe__output_node_weights(const pe_resource_t *rsc, const char *comment,
                         GHashTable *nodes, pe_working_set_t *data_set)
 {
     pcmk__output_t *out = data_set->priv;
@@ -216,8 +222,8 @@ pe__output_node_weights(pe_resource_t *rsc, const char *comment,
     GList *list = g_list_sort(g_hash_table_get_values(nodes),
                               pe__cmp_node_name);
 
-    for (GList *gIter = list; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *node = (pe_node_t *) gIter->data;
+    for (const GList *gIter = list; gIter != NULL; gIter = gIter->next) {
+        const pe_node_t *node = (const pe_node_t *) gIter->data;
 
         out->message(out, "node-weight", rsc, comment, node->details->uname,
                      pcmk_readable_score(node->weight));
@@ -232,19 +238,20 @@ pe__output_node_weights(pe_resource_t *rsc, const char *comment,
  * \param[in] file      Caller's filename
  * \param[in] function  Caller's function name
  * \param[in] line      Caller's line number
- * \param[in] rsc       Use allowed nodes for this resource
+ * \param[in] rsc       If not NULL, include this resource's ID in logs
  * \param[in] comment   Text description to prefix lines with
- * \param[in] nodes     If rsc is not specified, use these nodes
+ * \param[in] nodes     Nodes whose scores should be logged
  */
 static void
 pe__log_node_weights(const char *file, const char *function, int line,
-                     pe_resource_t *rsc, const char *comment, GHashTable *nodes)
+                     const pe_resource_t *rsc, const char *comment,
+                     GHashTable *nodes)
 {
     GHashTableIter iter;
     pe_node_t *node = NULL;
 
     // Don't waste time if we're not tracing at this point
-    pcmk__log_else(LOG_TRACE, return);
+    pcmk__if_tracing({}, return);
 
     g_hash_table_iter_init(&iter, nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
@@ -268,18 +275,21 @@ pe__log_node_weights(const char *file, const char *function, int line,
  * \internal
  * \brief Log or output node weights
  *
- * \param[in] file      Caller's filename
- * \param[in] function  Caller's function name
- * \param[in] line      Caller's line number
- * \param[in] to_log    Log if true, otherwise output
- * \param[in] rsc       Use allowed nodes for this resource
- * \param[in] comment   Text description to prefix lines with
- * \param[in] nodes     Use these nodes
+ * \param[in]     file      Caller's filename
+ * \param[in]     function  Caller's function name
+ * \param[in]     line      Caller's line number
+ * \param[in]     to_log    Log if true, otherwise output
+ * \param[in]     rsc       If not NULL, use this resource's ID in logs,
+ *                          and show scores recursively for any children
+ * \param[in]     comment   Text description to prefix lines with
+ * \param[in]     nodes     Nodes whose scores should be shown
+ * \param[in,out] data_set  Cluster working set
  */
 void
 pe__show_node_weights_as(const char *file, const char *function, int line,
-                         bool to_log, pe_resource_t *rsc, const char *comment,
-                         GHashTable *nodes, pe_working_set_t *data_set)
+                         bool to_log, const pe_resource_t *rsc,
+                         const char *comment, GHashTable *nodes,
+                         pe_working_set_t *data_set)
 {
     if (rsc != NULL && pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
         // Don't show allocation scores for orphans
@@ -349,7 +359,8 @@ pe__cmp_rsc_priority(gconstpointer a, gconstpointer b)
 }
 
 static void
-resource_node_score(pe_resource_t * rsc, pe_node_t * node, int score, const char *tag)
+resource_node_score(pe_resource_t *rsc, const pe_node_t *node, int score,
+                    const char *tag)
 {
     pe_node_t *match = NULL;
 
@@ -371,19 +382,21 @@ resource_node_score(pe_resource_t * rsc, pe_node_t * node, int score, const char
         }
     }
 
-    pe_rsc_trace(rsc, "Setting %s for %s on %s: %d",
-                 tag, rsc->id, pe__node_name(node), score);
     match = pe_hash_table_lookup(rsc->allowed_nodes, node->details->id);
     if (match == NULL) {
         match = pe__copy_node(node);
         g_hash_table_insert(rsc->allowed_nodes, (gpointer) match->details->id, match);
     }
     match->weight = pcmk__add_scores(match->weight, score);
+    pe_rsc_trace(rsc,
+                 "Enabling %s preference (%s) for %s on %s (now %s)",
+                 tag, pcmk_readable_score(score), rsc->id, pe__node_name(node),
+                 pcmk_readable_score(match->weight));
 }
 
 void
-resource_location(pe_resource_t * rsc, pe_node_t * node, int score, const char *tag,
-                  pe_working_set_t * data_set)
+resource_location(pe_resource_t *rsc, const pe_node_t *node, int score,
+                  const char *tag, pe_working_set_t *data_set)
 {
     if (node != NULL) {
         resource_node_score(rsc, node, score, tag);
@@ -433,7 +446,7 @@ get_effective_time(pe_working_set_t * data_set)
 }
 
 gboolean
-get_target_role(pe_resource_t * rsc, enum rsc_role_e * role)
+get_target_role(const pe_resource_t *rsc, enum rsc_role_e *role)
 {
     enum rsc_role_e local_role = RSC_ROLE_UNKNOWN;
     const char *value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
@@ -452,7 +465,8 @@ get_target_role(pe_resource_t * rsc, enum rsc_role_e * role)
         return FALSE;
 
     } else if (local_role > RSC_ROLE_STARTED) {
-        if (pcmk_is_set(uber_parent(rsc)->flags, pe_rsc_promotable)) {
+        if (pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
+                        pe_rsc_promotable)) {
             if (local_role > RSC_ROLE_UNPROMOTED) {
                 /* This is what we'd do anyway, just leave the default to avoid messing up the placement algorithm */
                 return FALSE;
@@ -565,12 +579,10 @@ ticket_new(const char *ticket_id, pe_working_set_t * data_set)
     return ticket;
 }
 
-const char *rsc_printable_id(pe_resource_t *rsc)
+const char *
+rsc_printable_id(const pe_resource_t *rsc)
 {
-    if (!pcmk_is_set(rsc->flags, pe_rsc_unique)) {
-        return ID(rsc->xml);
-    }
-    return rsc->id;
+    return pcmk_is_set(rsc->flags, pe_rsc_unique)? rsc->id : ID(rsc->xml);
 }
 
 void
@@ -601,8 +613,8 @@ pe__set_resource_flags_recursive(pe_resource_t *rsc, uint64_t flags)
 }
 
 void
-trigger_unfencing(
-    pe_resource_t * rsc, pe_node_t *node, const char *reason, pe_action_t *dependency, pe_working_set_t * data_set) 
+trigger_unfencing(pe_resource_t *rsc, pe_node_t *node, const char *reason,
+                  pe_action_t *dependency, pe_working_set_t *data_set)
 {
     if (!pcmk_is_set(data_set->flags, pe_flag_enable_unfencing)) {
         /* No resources require it */
@@ -685,7 +697,7 @@ add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref)
  *       shutdown of remote nodes by virtue of their connection stopping.
  */
 bool
-pe__shutdown_requested(pe_node_t *node)
+pe__shutdown_requested(const pe_node_t *node)
 {
     const char *shutdown = pe_node_attribute_raw(node, XML_CIB_ATTR_SHUTDOWN);
 
@@ -711,13 +723,21 @@ pe__update_recheck_time(time_t recheck, pe_working_set_t *data_set)
 
 /*!
  * \internal
- * \brief Wrapper for pe_unpack_nvpairs() using a cluster working set
+ * \brief Extract nvpair blocks contained by a CIB XML element into a hash table
+ *
+ * \param[in]     xml_obj       XML element containing blocks of nvpair elements
+ * \param[in]     set_name      If not NULL, only use blocks of this element
+ * \param[in]     rule_data     Matching parameters to use when unpacking
+ * \param[out]    hash          Where to store extracted name/value pairs
+ * \param[in]     always_first  If not NULL, process block with this ID first
+ * \param[in]     overwrite     Whether to replace existing values with same name
+ * \param[in,out] data_set      Cluster working set containing \p xml_obj
  */
 void
 pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
-                           pe_rule_eval_data_t *rule_data, GHashTable *hash,
-                           const char *always_first, gboolean overwrite,
-                           pe_working_set_t *data_set)
+                           const pe_rule_eval_data_t *rule_data,
+                           GHashTable *hash, const char *always_first,
+                           gboolean overwrite, pe_working_set_t *data_set)
 {
     crm_time_t *next_change = crm_time_new_undefined();
 
@@ -732,7 +752,7 @@ pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
 }
 
 bool
-pe__resource_is_disabled(pe_resource_t *rsc)
+pe__resource_is_disabled(const pe_resource_t *rsc)
 {
     const char *target_role = NULL;
 
@@ -743,11 +763,28 @@ pe__resource_is_disabled(pe_resource_t *rsc)
 
         if ((target_role_e == RSC_ROLE_STOPPED)
             || ((target_role_e == RSC_ROLE_UNPROMOTED)
-                && pcmk_is_set(uber_parent(rsc)->flags, pe_rsc_promotable))) {
+                && pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
+                               pe_rsc_promotable))) {
             return true;
         }
     }
     return false;
+}
+
+/*!
+ * \internal
+ * \brief Check whether a resource is running only on given node
+ *
+ * \param[in] rsc   Resource to check
+ * \param[in] node  Node to check
+ *
+ * \return true if \p rsc is running only on \p node, otherwise false
+ */
+bool
+pe__rsc_running_on_only(const pe_resource_t *rsc, const pe_node_t *node)
+{
+    return (rsc != NULL) && pcmk__list_of_1(rsc->running_on)
+            && pe__same_node((const pe_node_t *) rsc->running_on->data, node);
 }
 
 bool
@@ -856,14 +893,12 @@ pe__build_rsc_list(pe_working_set_t *data_set, const char *s) {
 }
 
 xmlNode *
-pe__failed_probe_for_rsc(pe_resource_t *rsc, const char *name)
+pe__failed_probe_for_rsc(const pe_resource_t *rsc, const char *name)
 {
-    pe_resource_t *parent = uber_parent(rsc);
+    const pe_resource_t *parent = pe__const_top_resource(rsc, false);
     const char *rsc_id = rsc->id;
 
-    if (rsc->variant == pe_clone) {
-        rsc_id = pe__clone_child_id(rsc);
-    } else if (parent->variant == pe_clone) {
+    if (parent->variant == pe_clone) {
         rsc_id = pe__clone_child_id(parent);
     }
 
@@ -885,10 +920,8 @@ pe__failed_probe_for_rsc(pe_resource_t *rsc, const char *name)
             continue;
         }
 
-        /* This resource operation has no operation_key. */
-        value = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
-        if (!parse_op_key(value ? value : ID(xml_op), &op_id, NULL, NULL)) {
-            continue;
+        if (!parse_op_key(pe__xe_history_key(xml_op), &op_id, NULL, NULL)) {
+            continue; // This history entry is missing an operation key
         }
 
         /* This resource operation's ID does not match the rsc_id we are looking for. */

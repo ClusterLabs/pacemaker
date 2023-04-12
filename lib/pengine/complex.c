@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,6 +18,9 @@
 
 void populate_hash(xmlNode * nvpair_list, GHashTable * hash, const char **attrs, int attrs_length);
 
+static pe_node_t *active_node(const pe_resource_t *rsc, unsigned int *count_all,
+                              unsigned int *count_clean);
+
 resource_object_functions_t resource_class_functions[] = {
     {
          native_unpack,
@@ -30,6 +33,7 @@ resource_object_functions_t resource_class_functions[] = {
          native_free,
          pe__count_common,
          pe__native_is_filtered,
+         active_node,
     },
     {
          group_unpack,
@@ -42,6 +46,7 @@ resource_object_functions_t resource_class_functions[] = {
          group_free,
          pe__count_common,
          pe__group_is_filtered,
+         active_node,
     },
     {
          clone_unpack,
@@ -54,6 +59,7 @@ resource_object_functions_t resource_class_functions[] = {
          clone_free,
          pe__count_common,
          pe__clone_is_filtered,
+         active_node,
     },
     {
          pe__unpack_bundle,
@@ -66,6 +72,7 @@ resource_object_functions_t resource_class_functions[] = {
          pe__free_bundle,
          pe__count_bundle,
          pe__bundle_is_filtered,
+         pe__bundle_active_node,
     }
 };
 
@@ -418,7 +425,7 @@ free_params_table(gpointer data)
  *
  * \param[in,out] rsc       Resource to query
  * \param[in]     node      Node for evaluating rules (NULL for defaults)
- * \param[in]     data_set  Cluster working set
+ * \param[in,out] data_set  Cluster working set
  *
  * \return Hash table containing resource parameter names and values
  *         (or NULL if \p rsc or \p data_set is NULL)
@@ -466,9 +473,9 @@ pe_rsc_params(pe_resource_t *rsc, const pe_node_t *node,
  * \internal
  * \brief Unpack a resource's "requires" meta-attribute
  *
- * \param[in] rsc         Resource being unpacked
- * \param[in] value       Value of "requires" meta-attribute
- * \param[in] is_default  Whether \p value was selected by default
+ * \param[in,out] rsc         Resource being unpacked
+ * \param[in]     value       Value of "requires" meta-attribute
+ * \param[in]     is_default  Whether \p value was selected by default
  */
 static void
 unpack_requires(pe_resource_t *rsc, const char *value, bool is_default)
@@ -722,7 +729,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
         pe__set_resource_flags(*rsc, pe_rsc_maintenance);
     }
 
-    if (pe_rsc_is_clone(uber_parent(*rsc))) {
+    if (pe_rsc_is_clone(pe__const_top_resource(*rsc, false))) {
         value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_UNIQUE);
         if (crm_is_true(value)) {
             pe__set_resource_flags(*rsc, pe_rsc_unique);
@@ -869,28 +876,6 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     return pcmk_rc_ok;
 }
 
-void
-common_update_score(pe_resource_t * rsc, const char *id, int score)
-{
-    pe_node_t *node = NULL;
-
-    node = pe_hash_table_lookup(rsc->allowed_nodes, id);
-    if (node != NULL) {
-        pe_rsc_trace(rsc, "Updating score for %s on %s: %d + %d", rsc->id, id, node->weight, score);
-        node->weight = pcmk__add_scores(node->weight, score);
-    }
-
-    if (rsc->children) {
-        GList *gIter = rsc->children;
-
-        for (; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-            common_update_score(child_rsc, id, score);
-        }
-    }
-}
-
 gboolean
 is_parent(pe_resource_t *child, pe_resource_t *rsc)
 {
@@ -917,6 +902,34 @@ uber_parent(pe_resource_t * rsc)
         return NULL;
     }
     while (parent->parent != NULL && parent->parent->variant != pe_container) {
+        parent = parent->parent;
+    }
+    return parent;
+}
+
+/*!
+ * \internal
+ * \brief Get the topmost parent of a resource as a const pointer
+ *
+ * \param[in] rsc             Resource to check
+ * \param[in] include_bundle  If true, go all the way to bundle
+ *
+ * \return \p NULL if \p rsc is NULL, \p rsc if \p rsc has no parent,
+ *         the bundle if \p rsc is bundled and \p include_bundle is true,
+ *         otherwise the topmost parent of \p rsc up to a clone
+ */
+const pe_resource_t *
+pe__const_top_resource(const pe_resource_t *rsc, bool include_bundle)
+{
+    const pe_resource_t *parent = rsc;
+
+    if (parent == NULL) {
+        return NULL;
+    }
+    while (parent->parent != NULL) {
+        if (!include_bundle && (parent->parent->variant == pe_container)) {
+            break;
+        }
         parent = parent->parent;
     }
     return parent;
@@ -985,82 +998,82 @@ common_free(pe_resource_t * rsc)
 }
 
 /*!
- * \brief
- * \internal Find a node (and optionally count all) where resource is active
+ * \internal
+ * \brief Count a node and update most preferred to it as appropriate
  *
- * \param[in]  rsc          Resource to check
- * \param[out] count_all    If not NULL, will be set to count of active nodes
- * \param[out] count_clean  If not NULL, will be set to count of clean nodes
+ * \param[in]     rsc          An active resource
+ * \param[in]     node         A node that \p rsc is active on
+ * \param[in,out] active       This will be set to \p node if \p node is more
+ *                             preferred than the current value
+ * \param[in,out] count_all    If not NULL, this will be incremented
+ * \param[in,out] count_clean  If not NULL, this will be incremented if \p node
+ *                             is online and clean
  *
- * \return An active node (or NULL if resource is not active anywhere)
- *
- * \note The order of preference is: an active node that is the resource's
- *       partial migration source; if the resource's "requires" is "quorum" or
- *       "nothing", the first active node in the list that is clean and online;
- *       the first active node in the list.
+ * \return true if the count should continue, or false if sufficiently known
  */
-pe_node_t *
-pe__find_active_on(const pe_resource_t *rsc, unsigned int *count_all,
-                   unsigned int *count_clean)
+bool
+pe__count_active_node(const pe_resource_t *rsc, pe_node_t *node,
+                      pe_node_t **active, unsigned int *count_all,
+                      unsigned int *count_clean)
+{
+    bool keep_looking = false;
+    bool is_happy = false;
+
+    CRM_CHECK((rsc != NULL) && (node != NULL) && (active != NULL),
+              return false);
+
+    is_happy = node->details->online && !node->details->unclean;
+
+    if (count_all != NULL) {
+        ++*count_all;
+    }
+    if ((count_clean != NULL) && is_happy) {
+        ++*count_clean;
+    }
+    if ((count_all != NULL) || (count_clean != NULL)) {
+        keep_looking = true; // We're counting, so go through entire list
+    }
+
+    if (rsc->partial_migration_source != NULL) {
+        if (node->details == rsc->partial_migration_source->details) {
+            *active = node; // This is the migration source
+        } else {
+            keep_looking = true;
+        }
+    } else if (!pcmk_is_set(rsc->flags, pe_rsc_needs_fencing)) {
+        if (is_happy && ((*active == NULL) || !(*active)->details->online
+                         || (*active)->details->unclean)) {
+            *active = node; // This is the first clean node
+        } else {
+            keep_looking = true;
+        }
+    }
+    if (*active == NULL) {
+        *active = node; // This is the first node checked
+    }
+    return keep_looking;
+}
+
+// Shared implementation of resource_object_functions_t:active_node()
+static pe_node_t *
+active_node(const pe_resource_t *rsc, unsigned int *count_all,
+            unsigned int *count_clean)
 {
     pe_node_t *active = NULL;
-    pe_node_t *node = NULL;
-    bool keep_looking = FALSE;
-    bool is_happy = FALSE;
 
-    if (count_all) {
+    if (count_all != NULL) {
         *count_all = 0;
     }
-    if (count_clean) {
+    if (count_clean != NULL) {
         *count_clean = 0;
     }
     if (rsc == NULL) {
         return NULL;
     }
-
-    for (GList *node_iter = rsc->running_on; node_iter != NULL;
-         node_iter = node_iter->next) {
-
-        node = node_iter->data;
-        keep_looking = FALSE;
-
-        is_happy = node->details->online && !node->details->unclean;
-
-        if (count_all) {
-            ++*count_all;
-        }
-        if (count_clean && is_happy) {
-            ++*count_clean;
-        }
-        if (count_all || count_clean) {
-            // If we're counting, we need to go through entire list
-            keep_looking = TRUE;
-        }
-
-        if (rsc->partial_migration_source != NULL) {
-            if (node->details == rsc->partial_migration_source->details) {
-                // This is the migration source
-                active = node;
-            } else {
-                keep_looking = TRUE;
-            }
-        } else if (!pcmk_is_set(rsc->flags, pe_rsc_needs_fencing)) {
-            if (is_happy && (!active || !active->details->online
-                             || active->details->unclean)) {
-                // This is the first clean node
-                active = node;
-            } else {
-                keep_looking = TRUE;
-            }
-        }
-        if (active == NULL) {
-            // This is first node in list
-            active = node;
-        }
-
-        if (keep_looking == FALSE) {
-            // Don't waste time iterating if we don't have to
-            break;
+    for (GList *iter = rsc->running_on; iter != NULL; iter = iter->next) {
+        if (!pe__count_active_node(rsc, (pe_node_t *) iter->data, &active,
+                                   count_all, count_clean)) {
+            break; // Don't waste time iterating if we don't have to
         }
     }
     return active;
@@ -1075,17 +1088,25 @@ pe__find_active_on(const pe_resource_t *rsc, unsigned int *count_all,
  *
  * \return An active node (or NULL if resource is not active anywhere)
  *
- * \note This is a convenience wrapper for pe__find_active_on() where the count
- *       of all active nodes or only clean active nodes is desired according to
- *       the "requires" meta-attribute.
+ * \note This is a convenience wrapper for active_node() where the count of all
+ *       active nodes or only clean active nodes is desired according to the
+ *       "requires" meta-attribute.
  */
 pe_node_t *
 pe__find_active_requires(const pe_resource_t *rsc, unsigned int *count)
 {
-    if (rsc && !pcmk_is_set(rsc->flags, pe_rsc_needs_fencing)) {
-        return pe__find_active_on(rsc, NULL, count);
+    if (rsc == NULL) {
+        if (count != NULL) {
+            *count = 0;
+        }
+        return NULL;
+
+    } else if (pcmk_is_set(rsc->flags, pe_rsc_needs_fencing)) {
+        return rsc->fns->active_node(rsc, count, NULL);
+
+    } else {
+        return rsc->fns->active_node(rsc, NULL, count);
     }
-    return pe__find_active_on(rsc, count, NULL);
 }
 
 void

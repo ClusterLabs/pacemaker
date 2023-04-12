@@ -1,7 +1,7 @@
 dnl
 dnl autoconf for Pacemaker
 dnl
-dnl Copyright 2009-2022 the Pacemaker project contributors
+dnl Copyright 2009-2023 the Pacemaker project contributors
 dnl
 dnl The version control history for this file may have further details.
 dnl
@@ -198,6 +198,42 @@ check_systemdsystemunitdir() {
     return $?
 }
 
+#
+# Fix the defaults of certain built-in variables so they can be used in our
+# custom argument defaults
+#
+
+AC_MSG_NOTICE([Sanitizing prefix: ${prefix}])
+AS_IF([test x"$prefix" = x"NONE"],
+      [
+          prefix=/usr
+          dnl Fix default variables - "prefix" variable if not specified
+          AS_IF([test x"$localstatedir" = x"\${prefix}/var"],
+                [localstatedir="/var"])
+          AS_IF([test x"$sysconfdir" = x"\${prefix}/etc"],
+                [sysconfdir="/etc"])
+      ])
+
+AC_MSG_NOTICE([Sanitizing exec_prefix: ${exec_prefix}])
+AS_CASE([$exec_prefix],
+        [prefix|NONE], [exec_prefix=$prefix])
+
+AC_MSG_NOTICE([Sanitizing libdir: ${libdir}])
+AS_CASE([$libdir],
+        [prefix|NONE], [
+            AC_MSG_CHECKING([which lib directory to use])
+            for aDir in lib64 lib
+            do
+                trydir="${exec_prefix}/${aDir}"
+                AS_IF([test -d ${trydir}],
+                      [
+                          libdir=${trydir}
+                          break
+                      ])
+            done
+            AC_MSG_RESULT([$libdir])
+        ])
+
 dnl ===============================================
 dnl Configure Options
 dnl ===============================================
@@ -319,6 +355,18 @@ VERSION_ARG(VERSION_NUMBER)
 PACKAGE_VERSION=$PACEMAKER_VERSION
 VERSION=$PACEMAKER_VERSION
 
+# Detect highest API schema version (use git if available to list managed RNGs,
+# in case there are leftover schema files from an earlier build of a different
+# version, otherwise check all RNGs)
+API_VERSION=$({ git ls-files xml/api/*.rng 2>/dev/null || ls -1 xml/api/*.rng ; } dnl
+              | sed -n -e 's/^.*-\([[0-9]][[0-9.]]*\).rng$/\1/p' | sort -V | tail -1)
+AC_DEFINE_UNQUOTED([PCMK__API_VERSION], ["$API_VERSION"],
+                   [Highest API schema version])
+
+# Re-run configure at next make if any RNG changes, to re-detect highest
+AC_SUBST([CONFIG_STATUS_DEPENDENCIES],
+         [$(echo '$(wildcard $(top_srcdir)/xml/api/*.rng)')])
+
 CRM_DAEMON_USER=""
 AC_ARG_WITH([daemon-user],
     [AS_HELP_STRING([--with-daemon-user=USER],
@@ -415,7 +463,8 @@ yes_no_try "$with_corosync" "try"
 with_corosync=$?
 
 dnl Get default from corosync if possible.
-PKG_CHECK_VAR([PCMK__COROSYNC_CONF], [corosync], [corosysconfdir], [],
+PKG_CHECK_VAR([PCMK__COROSYNC_CONF], [corosync], [corosysconfdir],
+              [PCMK__COROSYNC_CONF="$PCMK__COROSYNC_CONF/corosync.conf"],
               [PCMK__COROSYNC_CONF="${sysconfdir}/corosync/corosync.conf"])
 AC_ARG_WITH([corosync-conf],
     [AS_HELP_STRING([--with-corosync-conf], m4_normalize([
@@ -597,21 +646,6 @@ AS_IF([test $enable_fatal_warnings -ne $DISABLED && test x"$GCC" = x"yes" && cc_
                   ])
       ])
 
-AC_MSG_NOTICE([Sanitizing prefix: ${prefix}])
-AS_IF([test x"$prefix" = x"NONE"],
-      [
-          prefix=/usr
-          dnl Fix default variables - "prefix" variable if not specified
-          AS_IF([test x"$localstatedir" = x"\${prefix}/var"],
-                [localstatedir="/var"])
-          AS_IF([test x"$sysconfdir" = x"\${prefix}/etc"],
-                [sysconfdir="/etc"])
-      ])
-
-AC_MSG_NOTICE([Sanitizing exec_prefix: ${exec_prefix}])
-AS_CASE([$exec_prefix],
-        [prefix|NONE], [exec_prefix=$prefix])
-
 AC_MSG_NOTICE([Sanitizing INITDIR: ${INITDIR}])
 AS_CASE([$INITDIR],
         [prefix], [INITDIR=$prefix],
@@ -629,22 +663,6 @@ AS_CASE([$INITDIR],
             AC_MSG_RESULT([$INITDIR])
         ])
 AC_SUBST(INITDIR)
-
-AC_MSG_NOTICE([Sanitizing libdir: ${libdir}])
-AS_CASE([$libdir],
-        [prefix|NONE], [
-            AC_MSG_CHECKING([which lib directory to use])
-            for aDir in lib64 lib
-            do
-                trydir="${exec_prefix}/${aDir}"
-                AS_IF([test -d ${trydir}],
-                      [
-                          libdir=${trydir}
-                          break
-                      ])
-            done
-            AC_MSG_RESULT([$libdir])
-        ])
 
 dnl Expand values of autoconf-provided directory options
 expand_path_option prefix
@@ -706,10 +724,13 @@ AS_IF([test x"${PCMK_GNUTLS_PRIORITIES}" != x""], [],
       [AC_MSG_ERROR([--with-gnutls-priorities value must not be empty])])
 AC_DEFINE_UNQUOTED([PCMK_GNUTLS_PRIORITIES], ["$PCMK_GNUTLS_PRIORITIES"],
                    [GnuTLS cipher priorities])
+AC_SUBST(PCMK_GNUTLS_PRIORITIES)
 
 AS_IF([test x"${BUG_URL}" = x""],
       [BUG_URL="https://bugs.clusterlabs.org/enter_bug.cgi?product=Pacemaker"])
 AC_SUBST(BUG_URL)
+AC_DEFINE_UNQUOTED([PCMK__BUG_URL], ["$BUG_URL"],
+                   [Where bugs should be reported])
 
 for j in prefix exec_prefix bindir sbindir libexecdir datadir sysconfdir \
     sharedstatedir localstatedir libdir includedir oldincludedir infodir \
@@ -969,7 +990,6 @@ dnl ========================================================================
 cc_temp_flags "$CFLAGS $WERROR"
 
 # Optional headers (inclusion of these should be conditional in C code)
-AC_CHECK_HEADERS([getopt.h])
 AC_CHECK_HEADERS([linux/swab.h])
 AC_CHECK_HEADERS([stddef.h])
 AC_CHECK_HEADERS([sys/signalfd.h])
@@ -1942,7 +1962,23 @@ AC_SUBST(LIBTOOL)
 AC_SUBST(QUIET_LIBTOOL_OPTS)
 
 dnl Files we output that need to be executable
-CONFIG_FILES_EXEC([cts/cts-cli],
+CONFIG_FILES_EXEC([agents/ocf/ClusterMon],
+                  [agents/ocf/Dummy],
+                  [agents/ocf/HealthCPU],
+                  [agents/ocf/HealthIOWait],
+                  [agents/ocf/HealthSMART],
+                  [agents/ocf/Stateful],
+                  [agents/ocf/SysInfo],
+                  [agents/ocf/attribute],
+                  [agents/ocf/controld],
+                  [agents/ocf/ifspeed],
+                  [agents/ocf/o2cb],
+                  [agents/ocf/ping],
+                  [agents/ocf/remote],
+                  [agents/stonith/fence_legacy],
+                  [agents/stonith/fence_watchdog],
+                  [cts/cts-attrd],
+                  [cts/cts-cli],
                   [cts/cts-exec],
                   [cts/cts-fencing],
                   [cts/cts-regression],
@@ -1958,16 +1994,11 @@ CONFIG_FILES_EXEC([cts/cts-cli],
                   [cts/support/cts-support],
                   [cts/support/fence_dummy],
                   [cts/support/pacemaker-cts-dummyd],
-                  [daemons/fenced/fence_legacy],
-                  [daemons/fenced/fence_watchdog],
                   [doc/abi-check],
-                  [extra/resources/ClusterMon],
-                  [extra/resources/HealthSMART],
-                  [extra/resources/SysInfo],
-                  [extra/resources/controld],
-                  [extra/resources/ifspeed],
-                  [extra/resources/o2cb],
                   [maint/bumplibs],
+                  [tools/cluster-clean],
+                  [tools/cluster-helper],
+                  [tools/cluster-init],
                   [tools/crm_failcount],
                   [tools/crm_master],
                   [tools/crm_report],
@@ -1977,9 +2008,12 @@ CONFIG_FILES_EXEC([cts/cts-cli],
 
 dnl Other files we output
 AC_CONFIG_FILES(Makefile                                            \
+                agents/Makefile                                     \
+                agents/alerts/Makefile                              \
+                agents/ocf/Makefile                                 \
+                agents/stonith/Makefile                             \
                 cts/Makefile                                        \
                 cts/benchmark/Makefile                              \
-                cts/lab/CTSvars.py                                  \
                 cts/lab/Makefile                                    \
                 cts/scheduler/Makefile                              \
                 cts/scheduler/dot/Makefile                          \
@@ -2010,9 +2044,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 etc/Makefile                                        \
                 etc/init.d/pacemaker                                \
                 etc/logrotate.d/pacemaker                           \
-                extra/Makefile                                      \
-                extra/alerts/Makefile                               \
-                extra/resources/Makefile                            \
+                etc/sysconfig/pacemaker                             \
                 include/Makefile                                    \
                 include/crm/Makefile                                \
                 include/crm/cib/Makefile                            \
@@ -2068,6 +2100,12 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/services/Makefile                               \
                 maint/Makefile                                      \
                 po/Makefile.in                                      \
+                python/Makefile                                     \
+                python/setup.py                                     \
+                python/pacemaker/Makefile                           \
+                python/pacemaker/_cts/Makefile                      \
+                python/pacemaker/buildoptions.py                    \
+                python/tests/Makefile                               \
                 replace/Makefile                                    \
                 rpm/Makefile                                        \
                 tests/Makefile                                      \

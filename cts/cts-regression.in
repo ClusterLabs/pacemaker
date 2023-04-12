@@ -4,86 +4,26 @@
 Usage: cts-regression [-h] [-V] [-v] [COMPONENT ...]
 """
 
-__copyright__ = 'Copyright 2012-2022 the Pacemaker project contributors'
+__copyright__ = 'Copyright 2012-2023 the Pacemaker project contributors'
 __license__ = 'GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY'
 
 import argparse
-from enum import IntEnum, unique
 import os
 import subprocess
 import sys
 import textwrap
 
+# These imports allow running from a source checkout after running `make`.
+# Note that while this doesn't necessarily mean it will successfully run tests,
+# but being able to see --help output can be useful.
+if os.path.exists("@abs_top_srcdir@/python"):
+    sys.path.insert(0, "@abs_top_srcdir@/python")
 
-REMOTE_ENABLED = bool('@PC_NAME_GNUTLS@')
+if os.path.exists("@abs_top_builddir@/python") and "@abs_top_builddir@" != "@abs_top_srcdir@":
+    sys.path.insert(0, "@abs_top_builddir@/python")
 
-
-@unique
-class CrmExit(IntEnum):
-    """Pacemaker exit codes.
-
-    These values must be kept in sync with include/crm/common/results.h.
-    """
-
-    # Common convention
-    OK = 0
-    ERROR = 1
-
-    # LSB + OCF
-    INVALID_PARAM = 2
-    UNIMPLEMENT_FEATURE = 3
-    INSUFFICIENT_PRIV = 4
-    NOT_INSTALLED = 5
-    NOT_CONFIGURED = 6
-    NOT_RUNNING = 7
-    PROMOTED = 8
-    FAILED_PROMOTED = 9
-
-    # sysexits.h
-    USAGE = 64
-    DATAERR = 65
-    NOINPUT = 66
-    NOUSER = 67
-    NOHOST = 68
-    UNAVAILABLE = 69
-    SOFTWARE = 70
-    OSERR = 71
-    OSFILE = 72
-    CANTCREAT = 73
-    IOERR = 74
-    TEMPFAIL = 75
-    PROTOCOL = 76
-    NOPERM = 77
-    CONFIG = 78
-
-    # Custom
-    FATAL = 100
-    PANIC = 101
-    DISCONNECT = 102
-    OLD = 103
-    DIGEST = 104
-    NOSUCH = 105
-    QUORUM = 106
-    UNSAFE = 107
-    EXISTS = 108
-    MULTIPLE = 109
-    EXPIRED = 110
-    NOT_YET_IN_EFFECT = 111
-    INDETERMINATE = 112
-    UNSATISFIED = 113
-
-    # Other
-    TIMEOUT = 124
-
-    # OCF Resource Agent API 1.1
-    DEGRADED = 190
-    DEGRADED_PROMOTED = 191
-
-    # Custom
-    NONE = 193
-
-    MAX = 255
-
+from pacemaker.buildoptions import BuildOptions
+from pacemaker.exitstatus import ExitStatus
 
 class Component():
     """A class for running regression tests on a component.
@@ -144,7 +84,7 @@ class Component():
         :param valgrind: Whether to run the test under valgrind.
         :type valgrind: bool
         :return: The exit code from the component's test suite.
-        :rtype: :class:`CrmExit`
+        :rtype: :class:`ExitStatus`
         """
         print('Executing the %s regression tests' % self.name)
         print('=' * 60)
@@ -161,10 +101,10 @@ class Component():
             cmd.append('--valgrind')
 
         try:
-            rc = CrmExit(subprocess.call(cmd))
+            rc = ExitStatus(subprocess.call(cmd))
         except OSError as err:
             error_print('Failed to execute %s tests: %s' % (self.name, err))
-            rc = CrmExit.NOT_INSTALLED
+            rc = ExitStatus.NOT_INSTALLED
 
         print('=' * 60 + '\n\n')
         return rc
@@ -187,7 +127,7 @@ class ComponentsArgAction(argparse.Action):
     """
 
     def __call__(self, parser, namespace, values, option_string=None):
-        all_components = ['cli', 'exec', 'fencing', 'scheduler']
+        all_components = ['attrd', 'cli', 'exec', 'fencing', 'scheduler']
         default_components = ['cli', 'scheduler']
 
         if not values:
@@ -234,15 +174,15 @@ def run_components(components, verbose=False, valgrind=False):
     :param components: A list of names of components for which to run
         tests.
     :type components: list[:class:`Component`]
-    :return: :attr:`CrmExit.OK` if all tests were successful,
-        :attr:`CrmExit.ERROR` otherwise.
-    :rtype: :class:`CrmExit`
+    :return: :attr:`ExitStatus.OK` if all tests were successful,
+        :attr:`ExitStatus.ERROR` otherwise.
+    :rtype: :class:`ExitStatus`
     """
     failed = []
 
     for comp in components:
         rc = comp.run(verbose, valgrind)
-        if rc != CrmExit.OK:
+        if rc != ExitStatus.OK:
             error_print('%s regression tests failed (%s)' % (comp.name, rc))
             failed.append(comp.name)
 
@@ -251,9 +191,9 @@ def run_components(components, verbose=False, valgrind=False):
         for comp in failed:
             print(' %s' % comp, end='')
         print()
-        return CrmExit.ERROR
+        return ExitStatus.ERROR
 
-    return CrmExit.OK
+    return ExitStatus.OK
 
 
 def main():
@@ -265,6 +205,13 @@ def main():
 
     # Available components
     components = {
+        'attrd': Component(
+            'attrd',
+            'Attribute manager',
+            test_home,
+            requires_root=True,
+            supports_valgrind=False,
+        ),
         'cli': Component(
             'cli',
             'Command-line tools',
@@ -295,7 +242,7 @@ def main():
         ),
     }
 
-    if REMOTE_ENABLED:
+    if BuildOptions.REMOTE_ENABLED:
         components['pacemaker_remote'] = Component(
             'pacemaker_remote',
             'Resource agent executor in remote mode',
@@ -338,7 +285,8 @@ def main():
 
     # Run the tests
     selected = [components[x] for x in args.components]
-    run_components(selected, args.verbose, args.valgrind)
+    rc = run_components(selected, args.verbose, args.valgrind)
+    sys.exit(rc)
 
 
 if __name__ == '__main__':

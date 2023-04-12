@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -89,7 +89,7 @@ static void crm_cs_flush(gpointer data);
 /*!
  * \brief Disconnect from Corosync CPG
  *
- * \param[in] Cluster to disconnect
+ * \param[in,out] cluster  Cluster to disconnect
  */
 void
 cluster_disconnect_cpg(crm_cluster_t *cluster)
@@ -271,7 +271,7 @@ crm_cs_flush(gpointer data)
  * \internal
  * \brief Dispatch function for CPG handle
  *
- * \param[in] user_data  Cluster object
+ * \param[in,out] user_data  Cluster object
  *
  * \return 0 on success, -1 on error (per mainloop_io_t interface)
  */
@@ -424,15 +424,15 @@ check_message_sanity(const pcmk__cpg_msg_t *msg)
 /*!
  * \brief Extract text data from a Corosync CPG message
  *
- * \param[in]  handle   CPG connection (to get local node ID if not yet known)
- * \param[in]  nodeid   Corosync ID of node that sent message
- * \param[in]  pid      Process ID of message sender (for logging only)
- * \param[in]  content  CPG message
- * \param[out] kind     If not NULL, will be set to CPG header ID
- *                      (which should be an enum crm_ais_msg_class value,
- *                      currently always crm_class_cluster)
- * \param[out] from     If not NULL, will be set to sender uname
- *                      (valid for the lifetime of \p content)
+ * \param[in]     handle   CPG connection (to get local node ID if not known)
+ * \param[in]     nodeid   Corosync ID of node that sent message
+ * \param[in]     pid      Process ID of message sender (for logging only)
+ * \param[in,out] content  CPG message
+ * \param[out]    kind     If not NULL, will be set to CPG header ID
+ *                         (which should be an enum crm_ais_msg_class value,
+ *                         currently always crm_class_cluster)
+ * \param[out]    from     If not NULL, will be set to sender uname
+ *                         (valid for the lifetime of \p content)
  *
  * \return Newly allocated string with message data
  * \note It is the caller's responsibility to free the return value with free().
@@ -599,7 +599,7 @@ cpgreason2str(cpg_reason_t reason)
  * \return Node's uname, or readable string if not known
  */
 static inline const char *
-peer_name(crm_node_t *peer)
+peer_name(const crm_node_t *peer)
 {
     if (peer == NULL) {
         return "unknown node";
@@ -777,7 +777,7 @@ pcmk_cpg_membership(cpg_handle_t handle,
 /*!
  * \brief Connect to Corosync CPG
  *
- * \param[in] cluster  Cluster object
+ * \param[in,out] cluster  Cluster object
  *
  * \return TRUE on success, otherwise FALSE
  */
@@ -889,7 +889,8 @@ cluster_connect_cpg(crm_cluster_t *cluster)
  * \return TRUE on success, otherwise FALSE
  */
 gboolean
-pcmk__cpg_send_xml(xmlNode *msg, crm_node_t *node, enum crm_ais_msg_types dest)
+pcmk__cpg_send_xml(xmlNode *msg, const crm_node_t *node,
+                   enum crm_ais_msg_types dest)
 {
     gboolean rc = TRUE;
     char *data = NULL;
@@ -914,7 +915,8 @@ pcmk__cpg_send_xml(xmlNode *msg, crm_node_t *node, enum crm_ais_msg_types dest)
  */
 gboolean
 send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
-                  gboolean local, crm_node_t *node, enum crm_ais_msg_types dest)
+                  gboolean local, const crm_node_t *node,
+                  enum crm_ais_msg_types dest)
 {
     static int msg_id = 0;
     static int local_pid = 0;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,13 +16,17 @@ extern "C" {
 
 // Options for clients to use with functions below
 enum pcmk__node_attr_opts {
-    pcmk__node_attr_none    = 0,
-    pcmk__node_attr_remote  = (1 << 0),
-    pcmk__node_attr_private = (1 << 1),
-    pcmk__node_attr_pattern = (1 << 2),
-    pcmk__node_attr_value   = (1 << 3),
-    pcmk__node_attr_delay   = (1 << 4),
-    pcmk__node_attr_perm    = (1 << 5),
+    pcmk__node_attr_none           = 0,
+    pcmk__node_attr_remote         = (1 << 0),
+    pcmk__node_attr_private        = (1 << 1),
+    pcmk__node_attr_pattern        = (1 << 2),
+    pcmk__node_attr_value          = (1 << 3),
+    pcmk__node_attr_delay          = (1 << 4),
+    pcmk__node_attr_perm           = (1 << 5),
+    pcmk__node_attr_sync_local     = (1 << 6),
+    pcmk__node_attr_sync_cluster   = (1 << 7),
+    pcmk__node_attr_utilization    = (1 << 8),
+    pcmk__node_attr_query_all      = (1 << 9),
 };
 
 #define pcmk__set_node_attr_flags(node_attr_flags, flags_to_set) do {   \

@@ -1,9 +1,9 @@
 
 NATIVE_RSC_A:0 promotion score on none: 0
-pcmk__clone_allocate: NATIVE_RSC_A:0 allocation score on fc16-builder2: -INFINITY
-pcmk__clone_allocate: NATIVE_RSC_A:0 allocation score on fc16-builder: -INFINITY
-pcmk__clone_allocate: PROMOTABLE_RSC_A allocation score on fc16-builder2: -INFINITY
-pcmk__clone_allocate: PROMOTABLE_RSC_A allocation score on fc16-builder: -INFINITY
+pcmk__clone_assign: NATIVE_RSC_A:0 allocation score on fc16-builder2: -INFINITY
+pcmk__clone_assign: NATIVE_RSC_A:0 allocation score on fc16-builder: -INFINITY
+pcmk__clone_assign: PROMOTABLE_RSC_A allocation score on fc16-builder2: -INFINITY
+pcmk__clone_assign: PROMOTABLE_RSC_A allocation score on fc16-builder: -INFINITY
 pcmk__primitive_assign: NATIVE_RSC_A:0 allocation score on fc16-builder2: -INFINITY
 pcmk__primitive_assign: NATIVE_RSC_A:0 allocation score on fc16-builder: -INFINITY
 pcmk__primitive_assign: NATIVE_RSC_B allocation score on fc16-builder2: -INFINITY

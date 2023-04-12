@@ -37,7 +37,7 @@ You can name utilization attributes according to your preferences and define as
 many name/value pairs as your configuration needs. However, the attributes'
 values must be integers.
 
-.. topic: Specifying CPU and RAM capacities of two nodes
+.. topic:: Specifying CPU and RAM capacities of two nodes
 
    .. code-block:: xml
 
@@ -82,6 +82,21 @@ capacity to satisfy the resource's requirements. The nature of the required
 or provided capacities is completely irrelevant to Pacemaker -- it just makes
 sure that all capacity requirements of a resource are satisfied before placing
 a resource to a node.
+
+Utilization attributes used on a node object can also be *transient* *(since 2.1.6)*.
+These attributes are added to a ``transient_attributes`` section for the node
+and are forgotten by the cluster when the node goes offline.  The ``attrd_updater``
+tool can be used to set these attributes.
+
+.. topic:: Transient utilization attribute for node cluster-1
+
+   .. code-block:: xml
+
+      <transient_attributes id="cluster-1">
+        <utilization id="status-cluster-1">
+          <nvpair id="status-cluster-1-cpu" name="cpu" value="1"/>
+        </utilization>
+      </transient_attributes>
 
 .. note::
 

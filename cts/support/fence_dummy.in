@@ -2,7 +2,7 @@
 """Dummy fence agent for testing
 """
 
-__copyright__ = "Copyright 2012-2022 the Pacemaker project contributors"
+__copyright__ = "Copyright 2012-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import io
@@ -123,6 +123,15 @@ ALL_OPT = {
         "help" : "-d, --monitor_delay [seconds]  Wait X seconds before monitor completes",
         "required" : "0",
         "shortdesc" : "Wait X seconds before monitor completes",
+        "default" : "0",
+        "order" : 3
+        },
+    "off_delay" : {
+        "getopt" : "F:",
+        "longopt" : "off_delay",
+        "help" : "-F, --off_delay [seconds]      Wait additional X seconds before off action",
+        "required" : "0",
+        "shortdesc" : "Wait additional X seconds before off action",
         "default" : "0",
         "order" : 3
         },
@@ -499,6 +508,11 @@ def main():
                 exitcode = 0
         else:
             exitcode = 1
+
+    elif action == "off":
+        if "-F" in options:
+            time.sleep(int(options["-F"]))
+        exitcode = success_mode(options, "-M", "random")
 
     else:
         exitcode = success_mode(options, "-M", "random")

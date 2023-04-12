@@ -1,14 +1,15 @@
 """ CIB generator for Pacemaker's Cluster Test Suite (CTS)
 """
 
-__copyright__ = "Copyright 2008-2021 the Pacemaker project contributors"
+__copyright__ = "Copyright 2008-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import os
 import warnings
 import tempfile
 
-from cts.CTSvars import *
+from pacemaker.buildoptions import BuildOptions
+from pacemaker._cts.CTS import CtsLab
 
 
 class CibBase(object):
@@ -75,7 +76,7 @@ class CIB12(ConfigBase):
 
     def _show(self, command=""):
         output = ""
-        (rc, result) = self.Factory.rsh(self.Factory.target, "HOME=/root CIB_file="+self.Factory.tmpfile+" cibadmin -Ql "+command, None, )
+        (_, result) = self.Factory.rsh(self.Factory.target, "HOME=/root CIB_file="+self.Factory.tmpfile+" cibadmin -Ql "+command, verbose=1)
         for line in result:
             output += line
             self.Factory.debug("Generated Config: "+line)
@@ -128,7 +129,7 @@ class CIB12(ConfigBase):
             r"""awk -v RS="}" """
             r"""'/^(\s*nodelist\s*{)?\s*node\s*{.*(ring0_addr|name):\s*%s(\s+|$)/"""
             r"""{gsub(/.*nodeid:\s*/,"");gsub(/\s+.*$/,"");print}' %s"""
-            % (node_name, CTSvars.COROSYNC_CONF), None)
+            % (node_name, BuildOptions.COROSYNC_CONFIG_FILE), verbose=1)
 
         if rc == 0 and len(output) == 1:
             try:
@@ -144,9 +145,9 @@ class CIB12(ConfigBase):
         # Force a rebuild
         self.cts_cib = None
 
-        self.Factory.tmpfile = CTSvars.CRM_CONFIG_DIR+"/cib.xml"
+        self.Factory.tmpfile = BuildOptions.CIB_DIR + "/cib.xml"
         self.contents(target)
-        self.Factory.rsh(self.Factory.target, "chown "+CTSvars.CRM_DAEMON_USER+" "+self.Factory.tmpfile)
+        self.Factory.rsh(self.Factory.target, "chown " + BuildOptions.DAEMON_USER + " " + self.Factory.tmpfile)
 
         self.Factory.tmpfile = old
 
@@ -217,13 +218,13 @@ class CIB12(ConfigBase):
                     remote_node = "remote-" + node
 
                     # Randomly assign node to a fencing method
-                    ftype = self.CM.Env.RandomGen.choice(["levels-and", "levels-or ", "broadcast "])
+                    ftype = self.CM.Env.random_gen.choice(["levels-and", "levels-or ", "broadcast "])
 
                     # For levels-and, randomly choose targeting by node name or attribute
                     by = ""
                     if ftype == "levels-and":
                         node_id = self.get_node_id(node)
-                        if node_id == 0 or self.CM.Env.RandomGen.choice([True, False]):
+                        if node_id == 0 or self.CM.Env.random_gen.choice([True, False]):
                             by = " (by name)"
                         else:
                             attr_nodes[node] = node_id
@@ -289,7 +290,7 @@ class CIB12(ConfigBase):
         o["dc-deadtime"] = "5s"
         o["no-quorum-policy"] = no_quorum
 
-        if self.CM.Env["DoBSC"] == 1:
+        if self.CM.Env["DoBSC"]:
             o["ident-string"] = "Linux-HA TEST configuration file - REMOVEME!!"
 
         o.commit()
@@ -310,7 +311,7 @@ class CIB12(ConfigBase):
             alerts.commit()
 
         # Add resources?
-        if self.CM.Env["CIBResource"] == 1:
+        if self.CM.Env["CIBResource"]:
             self.add_resources()
 
         if self.CM.cluster_monitor == 1:
@@ -328,7 +329,7 @@ class CIB12(ConfigBase):
         # generate cib
         self.cts_cib = self._show()
 
-        if self.Factory.tmpfile != CTSvars.CRM_CONFIG_DIR+"/cib.xml":
+        if self.Factory.tmpfile != BuildOptions.CIB_DIR + "/cib.xml":
             self.Factory.rsh(self.Factory.target, "rm -f "+self.Factory.tmpfile)
 
         return self.cts_cib
@@ -438,7 +439,7 @@ class ConfigFactory(object):
         self.register("pacemaker20", CIB20, CM, self)
         self.register("pacemaker30", CIB30, CM, self)
 #        self.register("hae", HASI, CM, self)
-        if self.CM.Env["ListTests"] == 0:
+        if not self.CM.Env["ListTests"]:
             self.target = self.CM.Env["nodes"][0]
         self.tmpfile = None
 
@@ -495,7 +496,6 @@ class ConfigFactoryItem(object):
 if __name__ == '__main__':
     """ Unit test (pass cluster node names as command line arguments) """
 
-    import cts.CTS
     import cts.CM_corosync
     import sys
 
@@ -511,7 +511,7 @@ if __name__ == '__main__':
         "--test-ip-base", "fe80::1234:56:7890:1000",
         "--stonith", "rhcs",
     ]
-    env = CTS.CtsLab(args)
+    env = CtsLab(args)
     cm = CM_corosync.crm_corosync()
     CibFactory = ConfigFactory(cm)
     cib = CibFactory.createConfig("pacemaker-3.0")

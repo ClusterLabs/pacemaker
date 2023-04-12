@@ -1,5 +1,5 @@
 #
-# Copyright 2018-2021 the Pacemaker project contributors
+# Copyright 2018-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -16,10 +16,11 @@ halib_PROGRAMS	= pacemaker-controld
 
 noinst_HEADERS	= controld_alerts.h		\
 		  controld_callbacks.h		\
+		  controld_cib.h		\
 		  controld_fencing.h		\
 		  controld_fsa.h		\
+		  controld_globals.h		\
 		  controld_lrm.h		\
-		  controld_matrix.h		\
 		  controld_membership.h		\
 		  controld_messages.h		\
 		  controld_metadata.h		\
@@ -46,7 +47,7 @@ pacemaker_controld_SOURCES = pacemaker-controld.c	\
 			     controld_alerts.c		\
 			     controld_attrd.c		\
 			     controld_callbacks.c	\
-			     controld_based.c		\
+			     controld_cib.c		\
 			     controld_control.c		\
 			     controld_corosync.c	\
 			     controld_election.c	\
@@ -56,6 +57,7 @@ pacemaker_controld_SOURCES = pacemaker-controld.c	\
 			     controld_fsa.c		\
 			     controld_join_client.c	\
 			     controld_join_dc.c		\
+			     controld_matrix.c		\
 			     controld_membership.c	\
 			     controld_messages.c	\
 			     controld_metadata.c	\

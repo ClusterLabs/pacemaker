@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <!--
+     CIB XML patchset
+
+     Note: This schema supports only v2-format patchsets. It does not and will
+     not support the v1 format. If a newer XML patchset format is created in the
+     future, then this schema should be updated accoridngly, or a new schema
+     should be created.
+     -->
+    <start>
+        <ref name="element-diff" />
+    </start>
+
+    <define name="element-diff">
+        <element name="diff">
+            <attribute name="format"> <data type="integer" /> </attribute>
+            <element name="version">
+                <element name="source">
+                    <ref name="attributes-patchset-version" />
+                </element>
+                <element name="target">
+                    <ref name="attributes-patchset-version" />
+                </element>
+            </element>
+            <oneOrMore>
+                <ref name="element-change" />
+            </oneOrMore>
+        </element>
+    </define>
+
+    <define name="attributes-patchset-version">
+        <attribute name="admin_epoch"> <data type="integer" /> </attribute>
+        <attribute name="epoch"> <data type="integer" /> </attribute>
+        <attribute name="num_updates"> <data type="integer" /> </attribute>
+    </define>
+
+    <define name="element-change">
+        <choice>
+            <ref name="element-change-create" />
+            <ref name="element-change-delete" />
+            <ref name="element-change-modify" />
+            <ref name="element-change-move" />
+        </choice>
+    </define>
+
+    <define name="element-change-create">
+        <element name="change">
+            <attribute name="operation"> <value>create</value> </attribute>
+            <attribute name="path"> <text/> </attribute>
+            <attribute name="position"> <data type="integer" /> </attribute>
+
+            <!--
+             Copy of the newly created node. To avoid maintenance headaches
+             like forgetting to update this schema when new CIB element types
+             are added, we'll simply allow any element here.
+             -->
+            <choice>
+              <externalRef href="any-element-2.30.rng" />
+              <text/>
+            </choice>
+        </element>
+    </define>
+
+    <define name="element-change-delete">
+        <element name="change">
+            <attribute name="operation"> <value>delete</value> </attribute>
+            <attribute name="path"> <text/> </attribute>
+            <optional>
+                <attribute name="position"> <data type="integer" /> </attribute>
+            </optional>
+        </element>
+    </define>
+
+    <define name="element-change-modify">
+        <element name="change">
+            <attribute name="operation"> <value>modify</value> </attribute>
+            <attribute name="path"> <text/> </attribute>
+            <ref name="element-change-list" />
+            <ref name="element-change-result" />
+        </element>
+    </define>
+
+    <define name="element-change-move">
+        <element name="change">
+            <attribute name="operation"> <value>move</value> </attribute>
+            <attribute name="path"> <text/> </attribute>
+            <attribute name="position"> <data type="integer" /> </attribute>
+        </element>
+    </define>
+
+    <!-- List of modified attributes -->
+    <define name="element-change-list">
+        <element name="change-list">
+            <oneOrMore>
+                <ref name="element-change-attr" />
+            </oneOrMore>
+        </element>
+    </define>
+
+    <!-- Attribute that has been modified ((re-)set or unset) -->
+    <define name="element-change-attr">
+        <element name="change-attr">
+            <attribute name="name"> <text/> </attribute>
+            <choice>
+                <group>
+                    <attribute name="operation"> <value>set</value> </attribute>
+                    <attribute name="value"> <text/> </attribute>
+                </group>
+                <attribute name="operation"> <value>unset</value> </attribute>
+            </choice>
+        </element>
+    </define>
+
+    <!-- Result of a modification -->
+    <define name="element-change-result">
+        <element name="change-result">
+            <!-- The modified element, without children -->
+            <element>
+                <anyName />
+                <zeroOrMore>
+                    <attribute> <anyName /> <text/> </attribute>
+                </zeroOrMore>
+            </element>
+        </element>
+    </define>
+
+</grammar>

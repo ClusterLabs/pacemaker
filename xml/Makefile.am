@@ -60,6 +60,7 @@ API_request_base	= command-output	\
 			  crm_mon		\
 			  crm_resource		\
 			  crm_rule \
+			  crm_shadow		\
 			  crm_simulate		\
 			  crmadmin		\
 			  digests		\
@@ -72,13 +73,16 @@ CIB_cfg_base		= options nodes resources constraints fencing acls tags alerts
 
 # Names of all schemas (including top level and those included by others)
 API_base		= $(API_request_base)	\
+			  any-element		\
 			  failure		\
 			  fence-event 		\
 			  generic-list		\
+			  instruction		\
 			  item			\
 			  node-attrs		\
 			  node-history		\
 			  nodes			\
+			  patchset		\
 			  resources		\
 			  status		\
 			  subprocess-output

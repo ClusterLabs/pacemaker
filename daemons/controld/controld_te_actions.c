@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -20,8 +20,7 @@
 #include <pacemaker-internal.h>
 #include <pacemaker-controld.h>
 
-char *te_uuid = NULL;
-GHashTable *te_targets = NULL;
+static GHashTable *te_targets = NULL;
 void send_rsc_command(pcmk__graph_action_t *action);
 static void te_update_job_count(pcmk__graph_action_t *action, int offset);
 
@@ -56,7 +55,8 @@ execute_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *pseudo)
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             xmlNode *cmd = NULL;
 
-            if (pcmk__str_eq(fsa_our_uname, node->uname, pcmk__str_casei)) {
+            if (pcmk__str_eq(controld_globals.our_nodename, node->uname,
+                             pcmk__str_casei)) {
                 continue;
             }
 
@@ -129,12 +129,13 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
             const char *mode = crm_element_value(action->xml, PCMK__XA_MODE);
 
             if (pcmk__str_eq(mode, XML_TAG_CIB, pcmk__str_none)) {
-                router_node = fsa_our_uname;
+                router_node = controld_globals.our_nodename;
             }
         }
     }
 
-    if (pcmk__str_eq(router_node, fsa_our_uname, pcmk__str_casei)) {
+    if (pcmk__str_eq(router_node, controld_globals.our_nodename,
+                     pcmk__str_casei)) {
         is_local = TRUE;
     }
 
@@ -163,8 +164,9 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
     cmd = create_request(task, action->xml, router_node, CRM_SYSTEM_CRMD, CRM_SYSTEM_TENGINE, NULL);
 
-    counter = pcmk__transition_key(transition_graph->id, action->id,
-                                   get_target_rc(action), te_uuid);
+    counter = pcmk__transition_key(controld_globals.transition_graph->id,
+                                   action->id, get_target_rc(action),
+                                   controld_globals.te_uuid);
     crm_xml_add(cmd, XML_ATTR_TRANSITION_KEY, counter);
 
     rc = send_cluster_message(crm_get_peer(0, router_node), crm_msg_crmd, cmd, TRUE);
@@ -231,8 +233,9 @@ synthesize_timeout_event(const pcmk__graph_action_t *action, int target_rc)
     op = pcmk__event_from_graph_action(NULL, action, PCMK_EXEC_TIMEOUT,
                                        PCMK_OCF_UNKNOWN_ERROR, reason);
     op->call_id = -1;
-    op->user_data = pcmk__transition_key(transition_graph->id, action->id,
-                                         target_rc, te_uuid);
+    op->user_data = pcmk__transition_key(controld_globals.transition_graph->id,
+                                         action->id, target_rc,
+                                         controld_globals.te_uuid);
     free(dynamic_reason);
     return op;
 }
@@ -241,6 +244,8 @@ static void
 controld_record_action_event(pcmk__graph_action_t *action,
                              lrmd_event_data_t *op)
 {
+    cib_t *cib_conn = controld_globals.cib_conn;
+
     xmlNode *state = NULL;
     xmlNode *rsc = NULL;
     xmlNode *action_rsc = NULL;
@@ -252,7 +257,6 @@ controld_record_action_event(pcmk__graph_action_t *action,
     const char *task_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
     const char *target_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
 
-    int call_options = cib_quorum_override | cib_scope_local;
     int target_rc = get_target_rc(action);
 
     action_rsc = find_xml_node(action->xml, XML_CIB_TAG_RESOURCE, TRUE);
@@ -275,7 +279,7 @@ controld_record_action_event(pcmk__graph_action_t *action,
 
     state = create_xml_node(NULL, XML_CIB_TAG_STATE);
 
-    crm_xml_add(state, XML_ATTR_UUID, target_uuid);
+    crm_xml_add(state, XML_ATTR_ID, target_uuid);
     crm_xml_add(state, XML_ATTR_UNAME, target);
 
     rsc = create_xml_node(state, XML_CIB_TAG_LRM);
@@ -293,8 +297,9 @@ controld_record_action_event(pcmk__graph_action_t *action,
     pcmk__create_history_xml(rsc, op, CRM_FEATURE_SET, target_rc, target,
                              __func__);
 
-    rc = fsa_cib_conn->cmds->update(fsa_cib_conn, XML_CIB_TAG_STATUS, state, call_options);
-    fsa_register_cib_callback(rc, FALSE, NULL, cib_action_updated);
+    rc = cib_conn->cmds->modify(cib_conn, XML_CIB_TAG_STATUS, state,
+                                cib_scope_local);
+    fsa_register_cib_callback(rc, NULL, cib_action_updated);
     free_xml(state);
 
     crm_trace("Sent CIB update (call ID %d) for synthesized event of action %d (%s on %s)",
@@ -372,11 +377,13 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         router_node = on_node;
     }
 
-    counter = pcmk__transition_key(transition_graph->id, action->id,
-                                   get_target_rc(action), te_uuid);
+    counter = pcmk__transition_key(controld_globals.transition_graph->id,
+                                   action->id, get_target_rc(action),
+                                   controld_globals.te_uuid);
     crm_xml_add(rsc_op, XML_ATTR_TRANSITION_KEY, counter);
 
-    if (pcmk__str_eq(router_node, fsa_our_uname, pcmk__str_casei)) {
+    if (pcmk__str_eq(router_node, controld_globals.our_nodename,
+                     pcmk__str_casei)) {
         is_local = TRUE;
     }
 
@@ -409,7 +416,8 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
             .origin = __func__,
         };
 
-        do_lrm_invoke(A_LRM_INVOKE, C_FSA_INTERNAL, fsa_state, I_NULL, &msg);
+        do_lrm_invoke(A_LRM_INVOKE, C_FSA_INTERNAL, controld_globals.fsa_state,
+                      I_NULL, &msg);
 
     } else {
         rc = send_cluster_message(crm_get_peer(0, router_node), crm_msg_lrmd, cmd, TRUE);
@@ -430,7 +438,7 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
          */
         crm_info("Action %d confirmed - no wait", action->id);
         pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
-        pcmk__update_graph(transition_graph, action);
+        pcmk__update_graph(controld_globals.transition_graph, action);
         trigger_graph();
 
     } else if (pcmk_is_set(action->flags, pcmk__graph_action_confirmed)) {
@@ -654,8 +662,7 @@ te_action_confirmed(pcmk__graph_action_t *action, pcmk__graph_t *graph)
     }
 }
 
-
-pcmk__graph_functions_t te_graph_fns = {
+static pcmk__graph_functions_t te_graph_fns = {
     execute_pseudo_action,
     execute_rsc_action,
     execute_cluster_action,
@@ -663,49 +670,60 @@ pcmk__graph_functions_t te_graph_fns = {
     graph_action_allowed,
 };
 
+/*
+ * \internal
+ * \brief Register the transitioner's graph functions with \p libpacemaker
+ */
+void
+controld_register_graph_functions(void)
+{
+    pcmk__set_graph_functions(&te_graph_fns);
+}
+
 void
 notify_crmd(pcmk__graph_t *graph)
 {
     const char *type = "unknown";
     enum crmd_fsa_input event = I_NULL;
 
-    crm_debug("Processing transition completion in state %s", fsa_state2string(fsa_state));
+    crm_debug("Processing transition completion in state %s",
+              fsa_state2string(controld_globals.fsa_state));
 
     CRM_CHECK(graph->complete, graph->complete = true);
 
     switch (graph->completion_action) {
         case pcmk__graph_wait:
             type = "stop";
-            if (fsa_state == S_TRANSITION_ENGINE) {
+            if (controld_globals.fsa_state == S_TRANSITION_ENGINE) {
                 event = I_TE_SUCCESS;
             }
             break;
         case pcmk__graph_done:
             type = "done";
-            if (fsa_state == S_TRANSITION_ENGINE) {
+            if (controld_globals.fsa_state == S_TRANSITION_ENGINE) {
                 event = I_TE_SUCCESS;
             }
             break;
 
         case pcmk__graph_restart:
             type = "restart";
-            if (fsa_state == S_TRANSITION_ENGINE) {
-                if (transition_timer->period_ms > 0) {
-                    controld_stop_timer(transition_timer);
-                    controld_start_timer(transition_timer);
+            if (controld_globals.fsa_state == S_TRANSITION_ENGINE) {
+                if (controld_get_period_transition_timer() > 0) {
+                    controld_stop_transition_timer();
+                    controld_start_transition_timer();
                 } else {
                     event = I_PE_CALC;
                 }
 
-            } else if (fsa_state == S_POLICY_ENGINE) {
+            } else if (controld_globals.fsa_state == S_POLICY_ENGINE) {
                 controld_set_fsa_action_flags(A_PE_INVOKE);
-                trigger_fsa();
+                controld_trigger_fsa();
             }
             break;
 
         case pcmk__graph_shutdown:
             type = "shutdown";
-            if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
+            if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
                 event = I_STOP;
 
             } else {
@@ -719,12 +737,10 @@ notify_crmd(pcmk__graph_t *graph)
 
     graph->abort_reason = NULL;
     graph->completion_action = pcmk__graph_done;
-    controld_clear_fsa_input_flags(R_IN_TRANSITION);
 
     if (event != I_NULL) {
         register_fsa_input(C_FSA_INTERNAL, event, NULL);
-
-    } else if (fsa_source) {
-        mainloop_set_trigger(fsa_source);
+    } else {
+        controld_trigger_fsa();
     }
 }

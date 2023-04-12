@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -24,19 +24,24 @@ extern "C" {
  * attribute names).
  *
  * For consistency, new constants should start with "PCMK_", followed by "XE"
- * for XML element names and "XA" for XML attribute names. Old names that don't
- * follow this policy should eventually be deprecated and replaced with names
- * that do.
+ * for XML element names, "XA" for XML attribute names, and "META" for meta
+ * attribute names. Old names that don't follow this policy should eventually be
+ * deprecated and replaced with names that do.
  */
 
 /*
  * XML elements
  */
 
+#define PCMK_XE_DATE_EXPRESSION             "date_expression"
+#define PCMK_XE_OP_EXPRESSION               "op_expression"
+
 /* This has been deprecated as a CIB element (an alias for <clone> with
  * "promotable" set to "true") since 2.0.0.
  */
 #define PCMK_XE_PROMOTABLE_LEGACY           "master"
+
+#define PCMK_XE_RSC_EXPRESSION              "rsc_expression"
 
 
 /*
@@ -48,6 +53,14 @@ extern "C" {
  */
 #define PCMK_XA_PROMOTED_MAX_LEGACY         "master-max"
 #define PCMK_XA_PROMOTED_NODE_MAX_LEGACY    "master-node-max"
+
+
+/*
+ * Meta attributes
+ */
+
+#define PCMK_META_ENABLED                   "enabled"
+
 
 /*
  * Older constants that don't follow current naming
@@ -155,7 +168,6 @@ extern "C" {
 #  define XML_ATTR_RESPONSE		"response"
 
 #  define XML_ATTR_UNAME		"uname"
-#  define XML_ATTR_UUID			"id"
 #  define XML_ATTR_REFERENCE		"reference"
 
 #  define XML_CRM_TAG_PING		"ping_response"
@@ -169,6 +181,7 @@ extern "C" {
 #  define XML_PING_ATTR_PACEMAKERDSTATE_RUNNING "running"
 #  define XML_PING_ATTR_PACEMAKERDSTATE_SHUTTINGDOWN "shutting_down"
 #  define XML_PING_ATTR_PACEMAKERDSTATE_SHUTDOWNCOMPLETE "shutdown_complete"
+#  define XML_PING_ATTR_PACEMAKERDSTATE_REMOTE "remote"
 
 #  define XML_TAG_FRAGMENT		"cib_fragment"
 
@@ -269,7 +282,9 @@ extern "C" {
 #  define XML_AGENT_ATTR_CLASS		"class"
 #  define XML_AGENT_ATTR_PROVIDER	"provider"
 
+//! \deprecated Do not use (will be removed in a future release)
 #  define XML_CIB_ATTR_REPLACE       	"replace"
+
 #  define XML_CIB_ATTR_SOURCE       	"source"
 
 #  define XML_CIB_ATTR_PRIORITY     	"priority"
@@ -339,9 +354,6 @@ extern "C" {
 #  define XML_RULE_ATTR_BOOLEAN_OP	"boolean-op"
 
 #  define XML_TAG_EXPRESSION		"expression"
-#  define PCMK_XE_DATE_EXPRESSION	"date_expression"
-#  define PCMK_XE_OP_EXPRESSION		"op_expression"
-#  define PCMK_XE_RSC_EXPRESSION	"rsc_expression"
 #  define XML_EXPR_ATTR_ATTRIBUTE	"attribute"
 #  define XML_EXPR_ATTR_OPERATION	"operation"
 #  define XML_EXPR_ATTR_VALUE		"value"

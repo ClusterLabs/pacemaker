@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -67,7 +67,7 @@ gboolean decode_transition_key(const char *key, char **uuid, int *transition_id,
 gboolean decode_transition_magic(const char *magic, char **uuid,
                                  int *transition_id, int *action_id,
                                  int *op_status, int *op_rc, int *target_rc);
-int rsc_op_expected_rc(lrmd_event_data_t *event);
+int rsc_op_expected_rc(const lrmd_event_data_t *event);
 gboolean did_rsc_op_fail(lrmd_event_data_t *event, int target_rc);
 bool crm_op_needs_metadata(const char *rsc_class, const char *op);
 xmlNode *crm_create_op_xml(xmlNode *parent, const char *prefix,
@@ -76,8 +76,8 @@ xmlNode *crm_create_op_xml(xmlNode *parent, const char *prefix,
 #define CRM_DEFAULT_OP_TIMEOUT_S "20s"
 
 bool pcmk_is_probe(const char *task, guint interval);
-bool pcmk_xe_is_probe(xmlNode *xml_op);
-bool pcmk_xe_mask_probe_failure(xmlNode *xml_op);
+bool pcmk_xe_is_probe(const xmlNode *xml_op);
+bool pcmk_xe_mask_probe_failure(const xmlNode *xml_op);
 
 int compare_version(const char *version1, const char *version2);
 

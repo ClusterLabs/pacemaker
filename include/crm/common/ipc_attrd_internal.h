@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -110,9 +110,12 @@ int pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node);
  *
  * \param[in,out] api           Connection to pacemaker-attrd
  * \param[in]     node          Look up the attribute for this node
- *                              (or NULL for all nodes)
+ *                              (or NULL for the local node)
  * \param[in]     name          Attribute name
  * \param[in]     options       Bitmask of pcmk__node_attr_opts
+ *
+ * \note Passing pcmk__node_attr_query_all will cause the function to query
+ *       the value of \p name on all nodes, regardless of the value of \p node.
  *
  * \return Standard Pacemaker return code
  */

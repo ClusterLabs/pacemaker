@@ -10,33 +10,7 @@
 #ifndef PE_VARIANT__H
 #  define PE_VARIANT__H
 
-#  if VARIANT_CLONE
-
-typedef struct clone_variant_data_s {
-    int clone_max;
-    int clone_node_max;
-
-    int promoted_max;
-    int promoted_node_max;
-
-    int total_clones;
-
-    uint32_t flags; // Group of enum pe__clone_flags
-
-    notify_data_t *stop_notify;
-    notify_data_t *start_notify;
-    notify_data_t *demote_notify;
-    notify_data_t *promote_notify;
-
-    xmlNode *xml_obj_child;
-} clone_variant_data_t;
-
-#    define get_clone_variant_data(data, rsc)				\
-	CRM_ASSERT(rsc != NULL);					\
-	CRM_ASSERT(rsc->variant == pe_clone); \
-	data = (clone_variant_data_t *)rsc->variant_opaque;
-
-#  elif PE__VARIANT_BUNDLE
+#  if PE__VARIANT_BUNDLE
 
 typedef struct {
     int offset;

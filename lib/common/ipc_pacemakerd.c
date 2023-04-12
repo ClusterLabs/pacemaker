@@ -31,7 +31,8 @@ static const char *pacemakerd_state_str[] = {
     XML_PING_ATTR_PACEMAKERDSTATE_WAITPING,
     XML_PING_ATTR_PACEMAKERDSTATE_RUNNING,
     XML_PING_ATTR_PACEMAKERDSTATE_SHUTTINGDOWN,
-    XML_PING_ATTR_PACEMAKERDSTATE_SHUTDOWNCOMPLETE
+    XML_PING_ATTR_PACEMAKERDSTATE_SHUTDOWNCOMPLETE,
+    XML_PING_ATTR_PACEMAKERDSTATE_REMOTE,
 };
 
 enum pcmk_pacemakerd_state
@@ -90,8 +91,31 @@ pcmk__pcmkd_state_enum2friendly(enum pcmk_pacemakerd_state state)
              * shutdown_complete state unless reporting to SBD
              */
             return "Pacemaker daemons are shut down (reporting to SBD)";
+        case pcmk_pacemakerd_state_remote:
+            return "pacemaker-remoted is running (on a Pacemaker Remote node)";
         default:
             return "Invalid pacemakerd state";
+    }
+}
+
+/*!
+ * \internal
+ * \brief Get a string representation of a \p pacemakerd API reply type
+ *
+ * \param[in] reply  \p pacemakerd API reply type
+ *
+ * \return String representation of a \p pacemakerd API reply type
+ */
+const char *
+pcmk__pcmkd_api_reply2str(enum pcmk_pacemakerd_api_reply reply)
+{
+    switch (reply) {
+        case pcmk_pacemakerd_reply_ping:
+            return "ping";
+        case pcmk_pacemakerd_reply_shutdown:
+            return "shutdown";
+        default:
+            return "unknown";
     }
 }
 

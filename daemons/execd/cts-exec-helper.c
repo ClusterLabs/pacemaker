@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 the Pacemaker project contributors
+ * Copyright 2012-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -457,9 +457,8 @@ generate_params(void)
     }
 
     // Retrieve and update CIB
-    rc = cib__signon_query(NULL, &cib_xml_copy);
+    rc = cib__signon_query(NULL, NULL, &cib_xml_copy);
     if (rc != pcmk_rc_ok) {
-        crm_err("CIB query failed: %s", pcmk_rc_str(rc));
         return rc;
     }
     if (!cli_config_update(&cib_xml_copy, NULL, FALSE)) {
@@ -620,6 +619,6 @@ done:
     free(key);
     free(val);
 
-    pcmk__output_and_clear_error(error, NULL);
+    pcmk__output_and_clear_error(&error, NULL);
     return test_exit(exit_code);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -45,9 +45,11 @@ typedef time_t log_time_t;
 unsigned int crm_log_level = LOG_INFO;
 unsigned int crm_trace_nonlog = 0;
 bool pcmk__is_daemon = false;
+char *pcmk__our_nodename = NULL;
 
 static unsigned int crm_log_priority = LOG_NOTICE;
 static GLogFunc glib_log_default = NULL;
+static pcmk__output_t *logger_out = NULL;
 
 static gboolean crm_tracing_enabled(void);
 
@@ -64,12 +66,11 @@ crm_glib_handler(const gchar * log_domain, GLogLevelFlags flags, const gchar * m
                                       LOG_DEBUG, __LINE__, crm_trace_nonlog);
     }
 
-
     switch (msg_level) {
         case G_LOG_LEVEL_CRITICAL:
             log_level = LOG_CRIT;
 
-            if (crm_is_callsite_active(glib_cs, LOG_DEBUG, 0) == FALSE) {
+            if (!crm_is_callsite_active(glib_cs, LOG_DEBUG, crm_trace_nonlog)) {
                 /* log and record how we got here */
                 crm_abort(__FILE__, __func__, __LINE__, message, TRUE, TRUE);
             }
@@ -381,6 +382,31 @@ pcmk__add_logfile(const char *filename)
     enable_logfile(fd);
     have_logfile = true;
     return pcmk_rc_ok;
+}
+
+/*!
+ * \brief Add multiple additional log files
+ *
+ * \param[in] log_files  Array of log files to add
+ * \param[in] out        Output object to use for error reporting
+ *
+ * \return Standard Pacemaker return code
+ */
+void
+pcmk__add_logfiles(gchar **log_files, pcmk__output_t *out)
+{
+    if (log_files == NULL) {
+        return;
+    }
+
+    for (gchar **fname = log_files; *fname != NULL; fname++) {
+        int rc = pcmk__add_logfile(*fname);
+
+        if (rc != pcmk_rc_ok) {
+            out->err(out, "Logging to %s is disabled: %s",
+                     *fname, pcmk_rc_str(rc));
+        }
+    }
 }
 
 static int blackbox_trigger = 0;
@@ -1095,6 +1121,52 @@ pcmk__cli_init_logging(const char *name, unsigned int verbosity)
     for (int i = 0; i < verbosity; i++) {
         /* These arguments are ignored, so pass placeholders. */
         crm_bump_log_level(0, NULL);
+    }
+}
+
+/*!
+ * \brief Log XML line-by-line in a formatted fashion
+ *
+ * \param[in] level  Priority at which to log the messages
+ * \param[in] text   Prefix for each line
+ * \param[in] xml    XML to log
+ *
+ * \note This does nothing when \p level is \p LOG_STDOUT.
+ * \note Do not call this function directly. It should be called only from the
+ *       \p do_crm_log_xml() macro.
+ */
+void
+pcmk_log_xml_impl(uint8_t level, const char *text, const xmlNode *xml)
+{
+    if (xml == NULL) {
+        do_crm_log(level, "%s%sNo data to dump as XML",
+                   pcmk__s(text, ""), pcmk__str_empty(text)? "" : " ");
+
+    } else {
+        if (logger_out == NULL) {
+            CRM_CHECK(pcmk__log_output_new(&logger_out) == pcmk_rc_ok, return);
+        }
+
+        pcmk__output_set_log_level(logger_out, level);
+        pcmk__xml_show(logger_out, text, xml, 1,
+                       pcmk__xml_fmt_pretty
+                       |pcmk__xml_fmt_open
+                       |pcmk__xml_fmt_children
+                       |pcmk__xml_fmt_close);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Free the logging library's internal log output object
+ */
+void
+pcmk__free_common_logger(void)
+{
+    if (logger_out != NULL) {
+        logger_out->finish(logger_out, CRM_EX_OK, true, NULL);
+        pcmk__output_free(logger_out);
+        logger_out = NULL;
     }
 }
 

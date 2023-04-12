@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2022 the Pacemaker project contributors
+ * Copyright 2019-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,6 +17,7 @@
 #include <libxml/tree.h>
 #include <pacemaker-internal.h>
 
+#include <inttypes.h>
 #include <stdint.h>
 
 static char *
@@ -363,18 +364,21 @@ rsc_is_colocated_with_list(pcmk__output_t *out, va_list args) {
 
     int rc = pcmk_rc_no_output;
 
-    if (pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_detect_loop)) {
         return rc;
     }
 
-    pe__set_resource_flags(rsc, pe_rsc_allocating);
+    /* We're listing constraints explicitly involving rsc, so use rsc->rsc_cons
+     * directly rather than rsc->cmds->this_with_colocations().
+     */
+    pe__set_resource_flags(rsc, pe_rsc_detect_loop);
     for (GList *lpc = rsc->rsc_cons; lpc != NULL; lpc = lpc->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
         char *hdr = NULL;
 
         PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Resources %s is colocated with", rsc->id);
 
-        if (pcmk_is_set(cons->primary->flags, pe_rsc_allocating)) {
+        if (pcmk_is_set(cons->primary->flags, pe_rsc_detect_loop)) {
             out->list_item(out, NULL, "%s (id=%s - loop)",
                            cons->primary->id, cons->id);
             continue;
@@ -408,15 +412,18 @@ rsc_is_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
 
     int rc = pcmk_rc_no_output;
 
-    if (pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_detect_loop)) {
         return rc;
     }
 
-    pe__set_resource_flags(rsc, pe_rsc_allocating);
+    /* We're listing constraints explicitly involving rsc, so use rsc->rsc_cons
+     * directly rather than rsc->cmds->this_with_colocations().
+     */
+    pe__set_resource_flags(rsc, pe_rsc_detect_loop);
     for (GList *lpc = rsc->rsc_cons; lpc != NULL; lpc = lpc->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
 
-        if (pcmk_is_set(cons->primary->flags, pe_rsc_allocating)) {
+        if (pcmk_is_set(cons->primary->flags, pe_rsc_detect_loop)) {
             colocations_xml_node(out, cons->primary, cons);
             continue;
         }
@@ -441,18 +448,22 @@ rscs_colocated_with_list(pcmk__output_t *out, va_list args) {
 
     int rc = pcmk_rc_no_output;
 
-    if (pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_detect_loop)) {
         return rc;
     }
 
-    pe__set_resource_flags(rsc, pe_rsc_allocating);
+    /* We're listing constraints explicitly involving rsc, so use
+     * rsc->rsc_cons_lhs directly rather than
+     * rsc->cmds->with_this_colocations().
+     */
+    pe__set_resource_flags(rsc, pe_rsc_detect_loop);
     for (GList *lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
         char *hdr = NULL;
 
         PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Resources colocated with %s", rsc->id);
 
-        if (pcmk_is_set(cons->dependent->flags, pe_rsc_allocating)) {
+        if (pcmk_is_set(cons->dependent->flags, pe_rsc_detect_loop)) {
             out->list_item(out, NULL, "%s (id=%s - loop)",
                            cons->dependent->id, cons->id);
             continue;
@@ -486,15 +497,19 @@ rscs_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
 
     int rc = pcmk_rc_no_output;
 
-    if (pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_detect_loop)) {
         return rc;
     }
 
-    pe__set_resource_flags(rsc, pe_rsc_allocating);
+    /* We're listing constraints explicitly involving rsc, so use
+     * rsc->rsc_cons_lhs directly rather than
+     * rsc->cmds->with_this_colocations().
+     */
+    pe__set_resource_flags(rsc, pe_rsc_detect_loop);
     for (GList *lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
 
-        if (pcmk_is_set(cons->dependent->flags, pe_rsc_allocating)) {
+        if (pcmk_is_set(cons->dependent->flags, pe_rsc_detect_loop)) {
             colocations_xml_node(out, cons->dependent, cons);
             continue;
         }
@@ -566,10 +581,10 @@ locations_and_colocations(pcmk__output_t *out, va_list args)
 
     out->message(out, "locations-list", rsc);
 
-    pe__clear_resource_flags_on_all(data_set, pe_rsc_allocating);
+    pe__clear_resource_flags_on_all(data_set, pe_rsc_detect_loop);
     out->message(out, "rscs-colocated-with-list", rsc, recursive);
 
-    pe__clear_resource_flags_on_all(data_set, pe_rsc_allocating);
+    pe__clear_resource_flags_on_all(data_set, pe_rsc_detect_loop);
     out->message(out, "rsc-is-colocated-with-list", rsc, recursive);
     return pcmk_rc_ok;
 }
@@ -594,10 +609,10 @@ locations_and_colocations_xml(pcmk__output_t *out, va_list args)
     pcmk__output_xml_create_parent(out, "constraints", NULL);
     do_locations_list_xml(out, rsc, false);
 
-    pe__clear_resource_flags_on_all(data_set, pe_rsc_allocating);
+    pe__clear_resource_flags_on_all(data_set, pe_rsc_detect_loop);
     out->message(out, "rscs-colocated-with-list", rsc, recursive);
 
-    pe__clear_resource_flags_on_all(data_set, pe_rsc_allocating);
+    pe__clear_resource_flags_on_all(data_set, pe_rsc_detect_loop);
     out->message(out, "rsc-is-colocated-with-list", rsc, recursive);
 
     pcmk__output_xml_pop_parent(out);
@@ -657,8 +672,8 @@ health_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *", "int", "const char *",
-                  "const char *")
+PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *",
+                  "enum pcmk_pacemakerd_state", "const char *", "long long")
 static int
 pacemakerd_health(pcmk__output_t *out, va_list args)
 {
@@ -666,18 +681,40 @@ pacemakerd_health(pcmk__output_t *out, va_list args)
     enum pcmk_pacemakerd_state state =
         (enum pcmk_pacemakerd_state) va_arg(args, int);
     const char *state_s = va_arg(args, const char *);
-    const char *last_updated = va_arg(args, const char *);
+    time_t last_updated = (time_t) va_arg(args, long long);
+
+    char *last_updated_s = NULL;
+    int rc = pcmk_rc_ok;
+
+    if (sys_from == NULL) {
+        if (state == pcmk_pacemakerd_state_remote) {
+            sys_from = "pacemaker-remoted";
+        } else {
+            sys_from = CRM_SYSTEM_MCP;
+        }
+    }
 
     if (state_s == NULL) {
         state_s = pcmk__pcmkd_state_enum2friendly(state);
     }
-    return out->info(out, "Status of %s: '%s' (last updated %s)",
-                     pcmk__s(sys_from, "unknown subsystem"), state_s,
-                     pcmk__s(last_updated, "at unknown time"));
+
+    if (last_updated != 0) {
+        last_updated_s = pcmk__epoch2str(&last_updated,
+                                         crm_time_log_date
+                                         |crm_time_log_timeofday
+                                         |crm_time_log_with_timezone);
+    }
+
+    rc = out->info(out, "Status of %s: '%s' (last updated %s)",
+                   sys_from, state_s,
+                   pcmk__s(last_updated_s, "at unknown time"));
+
+    free(last_updated_s);
+    return rc;
 }
 
-PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *", "int", "const char *",
-                  "const char *")
+PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *",
+                  "enum pcmk_pacemakerd_state", "const char *", "long long")
 static int
 pacemakerd_health_html(pcmk__output_t *out, va_list args)
 {
@@ -685,24 +722,42 @@ pacemakerd_health_html(pcmk__output_t *out, va_list args)
     enum pcmk_pacemakerd_state state =
         (enum pcmk_pacemakerd_state) va_arg(args, int);
     const char *state_s = va_arg(args, const char *);
-    const char *last_updated = va_arg(args, const char *);
+    time_t last_updated = (time_t) va_arg(args, long long);
+
+    char *last_updated_s = NULL;
     char *msg = NULL;
+
+    if (sys_from == NULL) {
+        if (state == pcmk_pacemakerd_state_remote) {
+            sys_from = "pacemaker-remoted";
+        } else {
+            sys_from = CRM_SYSTEM_MCP;
+        }
+    }
 
     if (state_s == NULL) {
         state_s = pcmk__pcmkd_state_enum2friendly(state);
     }
 
+    if (last_updated != 0) {
+        last_updated_s = pcmk__epoch2str(&last_updated,
+                                         crm_time_log_date
+                                         |crm_time_log_timeofday
+                                         |crm_time_log_with_timezone);
+    }
+
     msg = crm_strdup_printf("Status of %s: '%s' (last updated %s)",
-                            pcmk__s(sys_from, "unknown subsystem"), state_s,
-                            pcmk__s(last_updated, "at unknown time"));
+                            sys_from, state_s,
+                            pcmk__s(last_updated_s, "at unknown time"));
     pcmk__output_create_html_node(out, "li", NULL, NULL, msg);
 
     free(msg);
+    free(last_updated_s);
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *", "int", "const char *",
-                  "const char *")
+PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *",
+                  "enum pcmk_pacemakerd_state", "const char *", "long long")
 static int
 pacemakerd_health_text(pcmk__output_t *out, va_list args)
 {
@@ -713,7 +768,7 @@ pacemakerd_health_text(pcmk__output_t *out, va_list args)
         enum pcmk_pacemakerd_state state =
             (enum pcmk_pacemakerd_state) va_arg(args, int);
         const char *state_s = va_arg(args, const char *);
-        const char *last_updated G_GNUC_UNUSED = va_arg(args, const char *);
+        time_t last_updated G_GNUC_UNUSED = (time_t) va_arg(args, long long);
 
         if (state_s == NULL) {
             state_s = pcmk_pacemakerd_api_daemon_state_enum2text(state);
@@ -723,8 +778,8 @@ pacemakerd_health_text(pcmk__output_t *out, va_list args)
     }
 }
 
-PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *", "int", "const char *",
-                  "const char *")
+PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *",
+                  "enum pcmk_pacemakerd_state", "const char *", "long long")
 static int
 pacemakerd_health_xml(pcmk__output_t *out, va_list args)
 {
@@ -732,17 +787,35 @@ pacemakerd_health_xml(pcmk__output_t *out, va_list args)
     enum pcmk_pacemakerd_state state =
         (enum pcmk_pacemakerd_state) va_arg(args, int);
     const char *state_s = va_arg(args, const char *);
-    const char *last_updated = va_arg(args, const char *);
+    time_t last_updated = (time_t) va_arg(args, long long);
+
+    char *last_updated_s = NULL;
+
+    if (sys_from == NULL) {
+        if (state == pcmk_pacemakerd_state_remote) {
+            sys_from = "pacemaker-remoted";
+        } else {
+            sys_from = CRM_SYSTEM_MCP;
+        }
+    }
 
     if (state_s == NULL) {
         state_s = pcmk_pacemakerd_api_daemon_state_enum2text(state);
     }
 
+    if (last_updated != 0) {
+        last_updated_s = pcmk__epoch2str(&last_updated,
+                                         crm_time_log_date
+                                         |crm_time_log_timeofday
+                                         |crm_time_log_with_timezone);
+    }
+
     pcmk__output_create_xml_node(out, "pacemakerd",
                                  "sys_from", sys_from,
                                  "state", state_s,
-                                 "last_updated", last_updated,
+                                 "last_updated", last_updated_s,
                                  NULL);
+    free(last_updated_s);
     return pcmk_rc_ok;
 }
 
@@ -869,16 +942,16 @@ crmadmin_node_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("digests", "pe_resource_t *", "pe_node_t *", "const char *",
-                  "guint", "op_digest_cache_t *")
+PCMK__OUTPUT_ARGS("digests", "const pe_resource_t *", "const pe_node_t *",
+                  "const char *", "guint", "const op_digest_cache_t *")
 static int
 digests_text(pcmk__output_t *out, va_list args)
 {
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    pe_node_t *node = va_arg(args, pe_node_t *);
+    const pe_resource_t *rsc = va_arg(args, const pe_resource_t *);
+    const pe_node_t *node = va_arg(args, const pe_node_t *);
     const char *task = va_arg(args, const char *);
     guint interval_ms = va_arg(args, guint);
-    op_digest_cache_t *digests = va_arg(args, op_digest_cache_t *);
+    const op_digest_cache_t *digests = va_arg(args, const op_digest_cache_t *);
 
     char *action_desc = NULL;
     const char *rsc_desc = "unknown resource";
@@ -939,16 +1012,16 @@ add_digest_xml(xmlNode *parent, const char *type, const char *digest,
     }
 }
 
-PCMK__OUTPUT_ARGS("digests", "pe_resource_t *", "pe_node_t *", "const char *",
-                  "guint", "op_digest_cache_t *")
+PCMK__OUTPUT_ARGS("digests", "const pe_resource_t *", "const pe_node_t *",
+                  "const char *", "guint", "const op_digest_cache_t *")
 static int
 digests_xml(pcmk__output_t *out, va_list args)
 {
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    pe_node_t *node = va_arg(args, pe_node_t *);
+    const pe_resource_t *rsc = va_arg(args, const pe_resource_t *);
+    const pe_node_t *node = va_arg(args, const pe_node_t *);
     const char *task = va_arg(args, const char *);
     guint interval_ms = va_arg(args, guint);
-    op_digest_cache_t *digests = va_arg(args, op_digest_cache_t *);
+    const op_digest_cache_t *digests = va_arg(args, const op_digest_cache_t *);
 
     char *interval_s = crm_strdup_printf("%ums", interval_ms);
     xmlNode *xml = NULL;
@@ -1215,6 +1288,52 @@ node_action_xml(pcmk__output_t *out, va_list args)
         crm_notice(" * %s %s", task, node_name);
     }
 
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("node-info", "uint32_t", "const char *", "const char *",
+                  "const char *", "bool", "bool")
+static int
+node_info_default(pcmk__output_t *out, va_list args)
+{
+    uint32_t node_id = va_arg(args, uint32_t);
+    const char *node_name = va_arg(args, const char *);
+    const char *uuid = va_arg(args, const char *);
+    const char *state = va_arg(args, const char *);
+    bool have_quorum = (bool) va_arg(args, int);
+    bool is_remote = (bool) va_arg(args, int);
+
+    return out->info(out,
+                     "Node %" PRIu32 ": %s "
+                     "(uuid=%s, state=%s, have_quorum=%s, is_remote=%s)",
+                     node_id, pcmk__s(node_name, "unknown"),
+                     pcmk__s(uuid, "unknown"), pcmk__s(state, "unknown"),
+                     pcmk__btoa(have_quorum), pcmk__btoa(is_remote));
+}
+
+PCMK__OUTPUT_ARGS("node-info", "uint32_t", "const char *", "bool", "bool",
+                  "const char *", "const char *")
+static int
+node_info_xml(pcmk__output_t *out, va_list args)
+{
+    uint32_t node_id = va_arg(args, uint32_t);
+    const char *node_name = va_arg(args, const char *);
+    const char *uuid = va_arg(args, const char *);
+    const char *state = va_arg(args, const char *);
+    bool have_quorum = (bool) va_arg(args, int);
+    bool is_remote = (bool) va_arg(args, int);
+
+    char *id_s = crm_strdup_printf("%" PRIu32, node_id);
+
+    pcmk__output_create_xml_node(out, "node-info",
+                                 "nodeid", id_s,
+                                 XML_ATTR_UNAME, node_name,
+                                 XML_ATTR_ID, uuid,
+                                 XML_NODE_IS_PEER, state,
+                                 XML_ATTR_HAVE_QUORUM, pcmk__btoa(have_quorum),
+                                 XML_NODE_IS_REMOTE, pcmk__btoa(is_remote),
+                                 NULL);
+    free(id_s);
     return pcmk_rc_ok;
 }
 
@@ -1607,13 +1726,16 @@ inject_rsc_action_xml(pcmk__output_t *out, va_list args)
         retcode = pcmk_rc_ok;       \
     }
 
-PCMK__OUTPUT_ARGS("cluster-status", "pe_working_set_t *", "crm_exit_t", "stonith_history_t *",
-                  "enum pcmk__fence_history", "uint32_t", "uint32_t", "const char *", "GList *",
-                  "GList *")
+PCMK__OUTPUT_ARGS("cluster-status", "pe_working_set_t *",
+                  "enum pcmk_pacemakerd_state", "crm_exit_t",
+                  "stonith_history_t *", "enum pcmk__fence_history", "uint32_t",
+                  "uint32_t", "const char *", "GList *", "GList *")
 int
 pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
 {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    enum pcmk_pacemakerd_state pcmkd_state =
+        (enum pcmk_pacemakerd_state) va_arg(args, int);
     crm_exit_t history_rc = va_arg(args, crm_exit_t);
     stonith_history_t *stonith_history = va_arg(args, stonith_history_t *);
     enum pcmk__fence_history fence_history = va_arg(args, int);
@@ -1626,7 +1748,7 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
     int rc = pcmk_rc_no_output;
     bool already_printed_failure = false;
 
-    CHECK_RC(rc, out->message(out, "cluster-summary", data_set,
+    CHECK_RC(rc, out->message(out, "cluster-summary", data_set, pcmkd_state,
                               section_opts, show_opts));
 
     if (pcmk_is_set(section_opts, pcmk_section_nodes) && unames) {
@@ -1730,13 +1852,16 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("cluster-status", "pe_working_set_t *", "crm_exit_t", "stonith_history_t *",
-                  "enum pcmk__fence_history", "uint32_t", "uint32_t", "const char *", "GList *",
-                  "GList *")
+PCMK__OUTPUT_ARGS("cluster-status", "pe_working_set_t *",
+                  "enum pcmk_pacemakerd_state", "crm_exit_t",
+                  "stonith_history_t *", "enum pcmk__fence_history", "uint32_t",
+                  "uint32_t", "const char *", "GList *", "GList *")
 static int
 cluster_status_xml(pcmk__output_t *out, va_list args)
 {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    enum pcmk_pacemakerd_state pcmkd_state =
+        (enum pcmk_pacemakerd_state) va_arg(args, int);
     crm_exit_t history_rc = va_arg(args, crm_exit_t);
     stonith_history_t *stonith_history = va_arg(args, stonith_history_t *);
     enum pcmk__fence_history fence_history = va_arg(args, int);
@@ -1746,7 +1871,8 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
     GList *unames = va_arg(args, GList *);
     GList *resources = va_arg(args, GList *);
 
-    out->message(out, "cluster-summary", data_set, section_opts, show_opts);
+    out->message(out, "cluster-summary", data_set, pcmkd_state, section_opts,
+                 show_opts);
 
     /*** NODES ***/
     if (pcmk_is_set(section_opts, pcmk_section_nodes)) {
@@ -1806,13 +1932,16 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("cluster-status", "pe_working_set_t *", "crm_exit_t", "stonith_history_t *",
-                  "enum pcmk__fence_history", "uint32_t", "uint32_t", "const char *", "GList *",
-                  "GList *")
+PCMK__OUTPUT_ARGS("cluster-status", "pe_working_set_t *",
+                  "enum pcmk_pacemakerd_state", "crm_exit_t",
+                  "stonith_history_t *", "enum pcmk__fence_history", "uint32_t",
+                  "uint32_t", "const char *", "GList *", "GList *")
 static int
 cluster_status_html(pcmk__output_t *out, va_list args)
 {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    enum pcmk_pacemakerd_state pcmkd_state =
+        (enum pcmk_pacemakerd_state) va_arg(args, int);
     crm_exit_t history_rc = va_arg(args, crm_exit_t);
     stonith_history_t *stonith_history = va_arg(args, stonith_history_t *);
     enum pcmk__fence_history fence_history = va_arg(args, int);
@@ -1823,7 +1952,8 @@ cluster_status_html(pcmk__output_t *out, va_list args)
     GList *resources = va_arg(args, GList *);
     bool already_printed_failure = false;
 
-    out->message(out, "cluster-summary", data_set, section_opts, show_opts);
+    out->message(out, "cluster-summary", data_set, pcmkd_state, section_opts,
+                 show_opts);
 
     /*** NODE LIST ***/
     if (pcmk_is_set(section_opts, pcmk_section_nodes) && unames) {
@@ -2167,6 +2297,8 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "locations-list", "xml", locations_list_xml },
     { "node-action", "default", node_action },
     { "node-action", "xml", node_action_xml },
+    { "node-info", "default", node_info_default },
+    { "node-info", "xml", node_info_xml },
     { "pacemakerd-health", "default", pacemakerd_health },
     { "pacemakerd-health", "html", pacemakerd_health_html },
     { "pacemakerd-health", "text", pacemakerd_health_text },

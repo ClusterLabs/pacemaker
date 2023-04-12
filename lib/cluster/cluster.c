@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -30,7 +30,7 @@ CRM_TRACE_INIT_DATA(cluster);
 /*!
  * \brief Get (and set if needed) a node's UUID
  *
- * \param[in] peer  Node to check
+ * \param[in,out] peer  Node to check
  *
  * \return Node UUID of \p peer, or NULL if unknown
  */
@@ -67,7 +67,7 @@ crm_peer_uuid(crm_node_t *peer)
 /*!
  * \brief Connect to the cluster layer
  *
- * \param[in] Initialized cluster object to connect
+ * \param[in,out] Initialized cluster object to connect
  *
  * \return TRUE on success, otherwise FALSE
  */
@@ -81,12 +81,11 @@ crm_cluster_connect(crm_cluster_t *cluster)
     switch (type) {
         case pcmk_cluster_corosync:
 #if SUPPORT_COROSYNC
-            if (is_corosync_cluster()) {
-                crm_peer_init();
-                return pcmk__corosync_connect(cluster);
-            }
-#endif
+            crm_peer_init();
+            return pcmk__corosync_connect(cluster);
+#else
             break;
+#endif // SUPPORT_COROSYNC
         default:
             break;
     }
@@ -96,7 +95,7 @@ crm_cluster_connect(crm_cluster_t *cluster)
 /*!
  * \brief Disconnect from the cluster layer
  *
- * \param[in] cluster  Cluster object to disconnect
+ * \param[in,out] cluster  Cluster object to disconnect
  */
 void
 crm_cluster_disconnect(crm_cluster_t *cluster)
@@ -108,15 +107,45 @@ crm_cluster_disconnect(crm_cluster_t *cluster)
     switch (type) {
         case pcmk_cluster_corosync:
 #if SUPPORT_COROSYNC
-            if (is_corosync_cluster()) {
-                crm_peer_destroy();
-                pcmk__corosync_disconnect(cluster);
-            }
-#endif
+            crm_peer_destroy();
+            pcmk__corosync_disconnect(cluster);
+#endif // SUPPORT_COROSYNC
             break;
         default:
             break;
     }
+}
+
+/*!
+ * \brief Allocate a new \p crm_cluster_t object
+ *
+ * \return A newly allocated \p crm_cluster_t object (guaranteed not \p NULL)
+ * \note The caller is responsible for freeing the return value using
+ *       \p pcmk_cluster_free().
+ */
+crm_cluster_t *
+pcmk_cluster_new(void)
+{
+    crm_cluster_t *cluster = calloc(1, sizeof(crm_cluster_t));
+
+    CRM_ASSERT(cluster != NULL);
+    return cluster;
+}
+
+/*!
+ * \brief Free a \p crm_cluster_t object and its dynamically allocated members
+ *
+ * \param[in,out] cluster  Cluster object to free
+ */
+void
+pcmk_cluster_free(crm_cluster_t *cluster)
+{
+    if (cluster == NULL) {
+        return;
+    }
+    free(cluster->uuid);
+    free(cluster->uname);
+    free(cluster);
 }
 
 /*!
@@ -130,7 +159,7 @@ crm_cluster_disconnect(crm_cluster_t *cluster)
  * \return TRUE on success, otherwise FALSE
  */
 gboolean
-send_cluster_message(crm_node_t *node, enum crm_ais_msg_types service,
+send_cluster_message(const crm_node_t *node, enum crm_ais_msg_types service,
                      xmlNode *data, gboolean ordered)
 {
     switch (get_cluster_type()) {
@@ -178,11 +207,11 @@ get_node_name(uint32_t nodeid)
     enum cluster_type_e stack = get_cluster_type();
 
     switch (stack) {
-#  if SUPPORT_COROSYNC
         case pcmk_cluster_corosync:
+#if SUPPORT_COROSYNC
             name = pcmk__corosync_name(0, nodeid);
             break;
-#  endif
+#endif // SUPPORT_COROSYNC
 
         default:
             crm_err("Unknown cluster type: %s (%d)", name_for_cluster_type(stack), stack);
@@ -242,7 +271,6 @@ crm_peer_uname(const char *uuid)
     }
     node = NULL;
 
-#if SUPPORT_COROSYNC
     if (is_corosync_cluster()) {
         long long id;
 
@@ -261,7 +289,6 @@ crm_peer_uname(const char *uuid)
         }
         return NULL;
     }
-#endif
 
     return NULL;
 }
@@ -271,7 +298,7 @@ crm_peer_uname(const char *uuid)
  *
  * \param[in,out] xml   XML element to add UUID to
  * \param[in]     attr  XML attribute name to set
- * \param[in]     node  Node whose UUID should be used as attribute value
+ * \param[in,out] node  Node whose UUID should be used as attribute value
  */
 void
 set_uuid(xmlNode *xml, const char *attr, crm_node_t *node)

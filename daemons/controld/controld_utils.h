@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,49 +12,8 @@
 
 #  include <crm/crm.h>
 #  include <crm/common/xml.h>
-#  include <crm/cib/internal.h>     // PCMK__CIB_REQUEST_MODIFY
-#  include <controld_fsa.h>         // fsa_cib_conn
-#  include <controld_alerts.h>
 
 #  define FAKE_TE_ID	"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-
-
-#  define fsa_cib_update(section, data, options, call_id, user_name)	\
-	if(fsa_cib_conn != NULL) {					\
-	    call_id = cib_internal_op(                                  \
-        fsa_cib_conn, PCMK__CIB_REQUEST_MODIFY, NULL, section, data,    \
-		NULL, options, user_name);				\
-									\
-	} else {							\
-		crm_err("No CIB manager connection available");			\
-	}
-
-static inline void
-fsa_cib_anon_update(const char *section, xmlNode *data) {
-    if (fsa_cib_conn == NULL) {
-        crm_err("No CIB connection available");
-    } else {
-        int opts = cib_scope_local | cib_quorum_override | cib_can_create;
-
-        fsa_cib_conn->cmds->modify(fsa_cib_conn, section, data, opts);
-    }
-}
-
-static inline void
-fsa_cib_anon_update_discard_reply(const char *section, xmlNode *data) {
-    if (fsa_cib_conn == NULL) {
-        crm_err("No CIB connection available");
-    } else {
-        int opts = cib_scope_local | cib_quorum_override | cib_can_create | cib_discard_reply;
-
-        fsa_cib_conn->cmds->modify(fsa_cib_conn, section, data, opts);
-    }
-}
-
-extern gboolean fsa_has_quorum;
-extern bool controld_shutdown_lock_enabled;
-extern int last_peer_update;
-extern int last_resource_update;
 
 enum node_update_flags {
     node_update_none = 0x0000,
@@ -94,35 +53,9 @@ int crmd_join_phase_count(enum crm_join_phase phase);
 void crmd_join_phase_log(int level);
 
 void crmd_peer_down(crm_node_t *peer, bool full);
-unsigned int cib_op_timeout(void);
 
 bool feature_set_compatible(const char *dc_version, const char *join_version);
-bool controld_action_is_recordable(const char *action);
-
-// Subsections of node_state
-enum controld_section_e {
-    controld_section_lrm,
-    controld_section_lrm_unlocked,
-    controld_section_attrs,
-    controld_section_all,
-    controld_section_all_unlocked
-};
-
-void controld_delete_node_state(const char *uname,
-                                enum controld_section_e section, int options);
-int controld_delete_resource_history(const char *rsc_id, const char *node,
-                                     const char *user_name, int call_options);
 
 const char *get_node_id(xmlNode *lrm_rsc_op);
-
-/* Convenience macro for registering a CIB callback
- * (assumes that data can be freed with free())
- */
-#  define fsa_register_cib_callback(id, flag, data, fn) do {            \
-    CRM_ASSERT(fsa_cib_conn);                                           \
-    fsa_cib_conn->cmds->register_callback_full(                         \
-        fsa_cib_conn, id, cib_op_timeout(),                             \
-            flag, data, #fn, fn, free);                                 \
-    } while(0)
 
 #endif

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -86,7 +86,7 @@ handle_disconnect(void)
     // If we aren't connected to the scheduler, we can't expect a reply
     controld_expect_sched_reply(NULL);
 
-    if (pcmk_is_set(fsa_input_register, R_PE_REQUIRED)) {
+    if (pcmk_is_set(controld_globals.fsa_input_register, R_PE_REQUIRED)) {
         int rc = pcmk_ok;
         char *uuid_str = crm_generate_uuid();
 
@@ -103,15 +103,17 @@ handle_disconnect(void)
          * 5s is up, whichever comes first.
          *
          */
-        rc = fsa_cib_conn->cmds->query(fsa_cib_conn, NULL, NULL, cib_scope_local);
-        fsa_register_cib_callback(rc, FALSE, uuid_str, save_cib_contents);
+        rc = controld_globals.cib_conn->cmds->query(controld_globals.cib_conn,
+                                                    NULL, NULL,
+                                                    cib_scope_local);
+        fsa_register_cib_callback(rc, uuid_str, save_cib_contents);
 
     } else {
         crm_info("Connection to the scheduler released");
     }
 
     controld_clear_fsa_input_flags(R_PE_CONNECTED);
-    mainloop_set_trigger(fsa_source);
+    controld_trigger_fsa();
     return;
 }
 
@@ -129,7 +131,8 @@ handle_reply(pcmk_schedulerd_api_reply_t *reply)
     if (msg_ref == NULL) {
         crm_err("%s - Ignoring calculation with no reference", CRM_OP_PECALC);
 
-    } else if (pcmk__str_eq(msg_ref, fsa_pe_ref, pcmk__str_none)) {
+    } else if (pcmk__str_eq(msg_ref, controld_globals.fsa_pe_ref,
+                            pcmk__str_none)) {
         ha_msg_input_t fsa_input;
         xmlNode *crm_data_node;
 
@@ -216,13 +219,13 @@ do_pe_control(long long action,
               enum crmd_fsa_state cur_state,
               enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    if (action & A_PE_STOP) {
+    if (pcmk_is_set(action, A_PE_STOP)) {
         controld_clear_fsa_input_flags(R_PE_REQUIRED);
         pcmk_disconnect_ipc(schedulerd_api);
         handle_disconnect();
     }
-    if ((action & A_PE_START)
-        && !pcmk_is_set(fsa_input_register, R_PE_CONNECTED)) {
+    if (pcmk_is_set(action, A_PE_START)
+        && !pcmk_is_set(controld_globals.fsa_input_register, R_PE_CONNECTED)) {
 
         if (cur_state == S_STOPPING) {
             crm_info("Ignoring request to connect to scheduler while shutting down");
@@ -234,8 +237,7 @@ do_pe_control(long long action,
     }
 }
 
-int fsa_pe_query = 0;
-char *fsa_pe_ref = NULL;
+static int fsa_pe_query = 0;
 static mainloop_timer_t *controld_sched_timer = NULL;
 
 // @TODO Make this a configurable cluster option if there's demand for it
@@ -270,8 +272,10 @@ controld_sched_timeout(gpointer user_data)
 void
 controld_stop_sched_timer(void)
 {
-    if (controld_sched_timer && fsa_pe_ref) {
-        crm_trace("Stopping timer for scheduler reply %s", fsa_pe_ref);
+    if ((controld_sched_timer != NULL)
+        && (controld_globals.fsa_pe_ref != NULL)) {
+        crm_trace("Stopping timer for scheduler reply %s",
+                  controld_globals.fsa_pe_ref);
     }
     mainloop_timer_stop(controld_sched_timer);
 }
@@ -298,8 +302,8 @@ controld_expect_sched_reply(char *ref)
     } else {
         controld_stop_sched_timer();
     }
-    free(fsa_pe_ref);
-    fsa_pe_ref = ref;
+    free(controld_globals.fsa_pe_ref);
+    controld_globals.fsa_pe_ref = ref;
 }
 
 /*!
@@ -322,14 +326,16 @@ do_pe_invoke(long long action,
              enum crmd_fsa_state cur_state,
              enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
+    cib_t *cib_conn = controld_globals.cib_conn;
+
     if (AM_I_DC == FALSE) {
         crm_err("Not invoking scheduler because not DC: %s",
                 fsa_action2string(action));
         return;
     }
 
-    if (!pcmk_is_set(fsa_input_register, R_PE_CONNECTED)) {
-        if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
+    if (!pcmk_is_set(controld_globals.fsa_input_register, R_PE_CONNECTED)) {
+        if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
             crm_err("Cannot shut down gracefully without the scheduler");
             register_fsa_input_before(C_FSA_INTERNAL, I_TERMINATE, NULL);
 
@@ -337,7 +343,7 @@ do_pe_invoke(long long action,
             crm_info("Waiting for the scheduler to connect");
             crmd_fsa_stall(FALSE);
             controld_set_fsa_action_flags(A_PE_START);
-            trigger_fsa();
+            controld_trigger_fsa();
         }
         return;
     }
@@ -347,7 +353,7 @@ do_pe_invoke(long long action,
                    fsa_state2string(cur_state));
         return;
     }
-    if (!pcmk_is_set(fsa_input_register, R_HAVE_CIB)) {
+    if (!pcmk_is_set(controld_globals.fsa_input_register, R_HAVE_CIB)) {
         crm_err("Attempted to invoke scheduler without consistent Cluster Information Base!");
 
         /* start the join from scratch */
@@ -355,13 +361,13 @@ do_pe_invoke(long long action,
         return;
     }
 
-    fsa_pe_query = fsa_cib_conn->cmds->query(fsa_cib_conn, NULL, NULL, cib_scope_local);
+    fsa_pe_query = cib_conn->cmds->query(cib_conn, NULL, NULL, cib_scope_local);
 
     crm_debug("Query %d: Requesting the current CIB: %s", fsa_pe_query,
-              fsa_state2string(fsa_state));
+              fsa_state2string(controld_globals.fsa_state));
 
     controld_expect_sched_reply(NULL);
-    fsa_register_cib_callback(fsa_pe_query, FALSE, NULL, do_pe_invoke_callback);
+    fsa_register_cib_callback(fsa_pe_query, NULL, do_pe_invoke_callback);
 }
 
 static void
@@ -444,13 +450,15 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         crm_trace("Skipping superseded CIB query: %d (current=%d)", call_id, fsa_pe_query);
         return;
 
-    } else if (!AM_I_DC || !pcmk_is_set(fsa_input_register, R_PE_CONNECTED)) {
+    } else if (!AM_I_DC
+               || !pcmk_is_set(controld_globals.fsa_input_register,
+                               R_PE_CONNECTED)) {
         crm_debug("No need to invoke the scheduler anymore");
         return;
 
-    } else if (fsa_state != S_POLICY_ENGINE) {
+    } else if (controld_globals.fsa_state != S_POLICY_ENGINE) {
         crm_debug("Discarding scheduler request in state: %s",
-                  fsa_state2string(fsa_state));
+                  fsa_state2string(controld_globals.fsa_state));
         return;
 
     /* this callback counts as 1 */
@@ -459,7 +467,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
                   (num_cib_op_callbacks() - 1));
         sleep(1);
         controld_set_fsa_action_flags(A_PE_INVOKE);
-        trigger_fsa();
+        controld_trigger_fsa();
         return;
     }
 
@@ -469,12 +477,15 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
      * scheduler is invoked */
     pcmk__refresh_node_caches_from_cib(output);
 
-    crm_xml_add(output, XML_ATTR_DC_UUID, fsa_our_uuid);
-    crm_xml_add_int(output, XML_ATTR_HAVE_QUORUM, fsa_has_quorum);
+    crm_xml_add(output, XML_ATTR_DC_UUID, controld_globals.our_uuid);
+    pcmk__xe_set_bool_attr(output, XML_ATTR_HAVE_QUORUM,
+                           pcmk_is_set(controld_globals.flags,
+                                       controld_has_quorum));
 
     force_local_option(output, XML_ATTR_HAVE_WATCHDOG, pcmk__btoa(watchdog));
 
-    if (ever_had_quorum && crm_have_quorum == FALSE) {
+    if (pcmk_is_set(controld_globals.flags, controld_ever_had_quorum)
+        && !crm_have_quorum) {
         crm_xml_add_int(output, XML_ATTR_QUORUM_PANIC, 1);
     }
 
@@ -487,7 +498,9 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     } else {
         CRM_ASSERT(ref != NULL);
         controld_expect_sched_reply(ref);
-        crm_debug("Invoking the scheduler: query=%d, ref=%s, seq=%llu, quorate=%d",
-                  fsa_pe_query, fsa_pe_ref, crm_peer_seq, fsa_has_quorum);
+        crm_debug("Invoking the scheduler: query=%d, ref=%s, seq=%llu, "
+                  "quorate=%s", fsa_pe_query, controld_globals.fsa_pe_ref,
+                  crm_peer_seq, pcmk__btoa(pcmk_is_set(controld_globals.flags,
+                                                       controld_has_quorum)));
     }
 }

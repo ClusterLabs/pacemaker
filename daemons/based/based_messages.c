@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -36,17 +36,6 @@
 bool based_is_primary = false;
 
 xmlNode *the_cib = NULL;
-int revision_check(xmlNode * cib_update, xmlNode * cib_copy, int flags);
-int get_revision(xmlNode * xml_obj, int cur_revision);
-
-int updateList(xmlNode * local_cib, xmlNode * update_command, xmlNode * failed,
-               int operation, const char *section);
-
-gboolean update_results(xmlNode * failed, xmlNode * target, const char *operation, int return_code);
-
-int cib_update_counter(xmlNode * xml_obj, const char *field, gboolean reset);
-
-int sync_our_cib(xmlNode * request, gboolean all);
 
 int
 cib_process_shutdown_req(const char *op, int options, const char *section, xmlNode * req,
@@ -142,7 +131,8 @@ send_sync_request(const char *host)
 
     crm_xml_add(sync_me, F_TYPE, "cib");
     crm_xml_add(sync_me, F_CIB_OPERATION, PCMK__CIB_REQUEST_SYNC_TO_ONE);
-    crm_xml_add(sync_me, F_CIB_DELEGATED, cib_our_uname);
+    crm_xml_add(sync_me, F_CIB_DELEGATED,
+                stand_alone? "localhost" : crm_cluster->uname);
 
     send_cluster_message(host ? crm_get_peer(0, host) : NULL, crm_msg_cib, sync_me, FALSE);
     free_xml(sync_me);
@@ -156,8 +146,6 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
     const char *seq = crm_element_value(req, F_CIB_PING_ID);
     char *digest = calculate_xml_versioned_digest(the_cib, FALSE, TRUE, CRM_FEATURE_SET);
 
-    static struct qb_log_callsite *cs = NULL;
-
     crm_trace("Processing \"%s\" event %s from %s", op, seq, host);
     *answer = create_xml_node(NULL, XML_CRM_TAG_PING);
 
@@ -165,31 +153,27 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
     crm_xml_add(*answer, XML_ATTR_DIGEST, digest);
     crm_xml_add(*answer, F_CIB_PING_ID, seq);
 
-    if (cs == NULL) {
-        cs = qb_log_callsite_get(__func__, __FILE__, __func__, LOG_TRACE,
-                                 __LINE__, crm_trace_nonlog);
-    }
-    if (cs && cs->targets) {
-        /* Append additional detail so the reciever can log the differences */
-        add_message_xml(*answer, F_CIB_CALLDATA, the_cib);
+    pcmk__if_tracing(
+        {
+            // Append additional detail so the receiver can log the differences
+            add_message_xml(*answer, F_CIB_CALLDATA, the_cib);
+        },
+        {
+            // Always include at least the version details
+            const char *tag = TYPE(the_cib);
+            xmlNode *shallow = create_xml_node(NULL, tag);
 
-    } else {
-        /* Always include at least the version details */
-        const char *tag = TYPE(the_cib);
-        xmlNode *shallow = create_xml_node(NULL, tag);
+            copy_in_properties(shallow, the_cib);
+            add_message_xml(*answer, F_CIB_CALLDATA, shallow);
+            free_xml(shallow);
+        }
+    );
 
-        copy_in_properties(shallow, the_cib);
-        add_message_xml(*answer, F_CIB_CALLDATA, shallow);
-        free_xml(shallow);
-    }
-
-    crm_info("Reporting our current digest to %s: %s for %s.%s.%s (%p %d)",
+    crm_info("Reporting our current digest to %s: %s for %s.%s.%s",
              host, digest,
              crm_element_value(existing_cib, XML_ATTR_GENERATION_ADMIN),
              crm_element_value(existing_cib, XML_ATTR_GENERATION),
-             crm_element_value(existing_cib, XML_ATTR_NUMUPDATES),
-             existing_cib,
-             cs && cs->targets);
+             crm_element_value(existing_cib, XML_ATTR_NUMUPDATES));
 
     free(digest);
 
@@ -356,7 +340,9 @@ cib_server_process_diff(const char *op, int options, const char *section, xmlNod
     } else if ((rc != pcmk_ok) && !based_is_primary && cib_legacy_mode()) {
         crm_warn("Requesting full CIB refresh because update failed: %s"
                  CRM_XS " rc=%d", pcmk_strerror(rc), rc);
-        xml_log_patchset(LOG_INFO, __func__, input);
+
+        pcmk__output_set_log_level(logger_out, LOG_INFO);
+        logger_out->message(logger_out, "xml-patchset", input);
         free_xml(*result_cib);
         *result_cib = NULL;
         send_sync_request(NULL);

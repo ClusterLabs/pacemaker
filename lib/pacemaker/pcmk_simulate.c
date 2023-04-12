@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2022 the Pacemaker project contributors
+ * Copyright 2021-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -25,10 +25,10 @@
 static pcmk__output_t *out = NULL;
 static cib_t *fake_cib = NULL;
 static GList *fake_resource_list = NULL;
-static GList *fake_op_fail_list = NULL;
+static const GList *fake_op_fail_list = NULL;
 
 static void set_effective_date(pe_working_set_t *data_set, bool print_original,
-                               char *use_date);
+                               const char *use_date);
 
 /*!
  * \internal
@@ -41,7 +41,7 @@ static void set_effective_date(pe_working_set_t *data_set, bool print_original,
  * \note It is the caller's responsibility to free the result.
  */
 static char *
-create_action_name(pe_action_t *action, bool verbose)
+create_action_name(const pe_action_t *action, bool verbose)
 {
     char *action_name = NULL;
     const char *prefix = "";
@@ -127,11 +127,11 @@ create_action_name(pe_action_t *action, bool verbose)
  * \internal
  * \brief Display the status of a cluster
  *
- * \param[in] data_set      Cluster working set
- * \param[in] show_opts     How to modify display (as pcmk_show_opt_e flags)
- * \param[in] section_opts  Sections to display (as pcmk_section_e flags)
- * \param[in] title         What to use as list title
- * \param[in] print_spacer  Whether to display a spacer first
+ * \param[in,out] data_set      Cluster working set
+ * \param[in]     show_opts     How to modify display (as pcmk_show_opt_e flags)
+ * \param[in]     section_opts  Sections to display (as pcmk_section_e flags)
+ * \param[in]     title         What to use as list title
+ * \param[in]     print_spacer  Whether to display a spacer first
  */
 static void
 print_cluster_status(pe_working_set_t *data_set, uint32_t show_opts,
@@ -148,8 +148,9 @@ print_cluster_status(pe_working_set_t *data_set, uint32_t show_opts,
 
     PCMK__OUTPUT_SPACER_IF(out, print_spacer);
     out->begin_list(out, NULL, NULL, "%s", title);
-    out->message(out, "cluster-status", data_set, stonith_rc, NULL, false,
-                 section_opts, show_opts, NULL, all, all);
+    out->message(out, "cluster-status",
+                 data_set, pcmk_pacemakerd_state_invalid, stonith_rc, NULL,
+                 false, section_opts, show_opts, NULL, all, all);
     out->end_list(out);
 
     g_list_free(all);
@@ -159,8 +160,8 @@ print_cluster_status(pe_working_set_t *data_set, uint32_t show_opts,
  * \internal
  * \brief Display a summary of all actions scheduled in a transition
  *
- * \param[in] data_set      Cluster working set (fully scheduled)
- * \param[in] print_spacer  Whether to display a spacer first
+ * \param[in,out] data_set      Cluster working set (fully scheduled)
+ * \param[in]     print_spacer  Whether to display a spacer first
  */
 static void
 print_transition_summary(pe_working_set_t *data_set, bool print_spacer)
@@ -177,15 +178,15 @@ print_transition_summary(pe_working_set_t *data_set, bool print_spacer)
  * \internal
  * \brief Reset a cluster working set's input, output, date, and flags
  *
- * \param[in] data_set  Cluster working set
- * \param[in] input     What to set as cluster input
- * \param[in] out       What to set as cluster output object
- * \param[in] use_date  What to set as cluster's current timestamp
- * \param[in] flags     Cluster flags to add (pe_flag_*)
+ * \param[in,out] data_set  Cluster working set
+ * \param[in]     input     What to set as cluster input
+ * \param[in]     out       What to set as cluster output object
+ * \param[in]     use_date  What to set as cluster's current timestamp
+ * \param[in]     flags     Cluster flags to add (pe_flag_*)
  */
 static void
 reset(pe_working_set_t *data_set, xmlNodePtr input, pcmk__output_t *out,
-      char *use_date, unsigned int flags)
+      const char *use_date, unsigned int flags)
 {
     data_set->input = input;
     data_set->priv = out;
@@ -205,12 +206,12 @@ reset(pe_working_set_t *data_set, xmlNodePtr input, pcmk__output_t *out,
  * \brief Write out a file in dot(1) format describing the actions that will
  *        be taken by the scheduler in response to an input CIB file.
  *
- * \param[in] data_set     Working set for the cluster
- * \param[in] dot_file     The filename to write
- * \param[in] all_actions  Write all actions, even those that are optional or
- *                         are on unmanaged resources
- * \param[in] verbose      Add extra information, such as action IDs, to the
- *                         output
+ * \param[in,out] data_set     Working set for the cluster
+ * \param[in]     dot_file     The filename to write
+ * \param[in]     all_actions  Write all actions, even those that are optional
+ *                             or are on unmanaged resources
+ * \param[in]     verbose      Add extra information, such as action IDs, to the
+ *                             output
  *
  * \return Standard Pacemaker return code
  */
@@ -315,14 +316,14 @@ write_sim_dotfile(pe_working_set_t *data_set, const char *dot_file,
  * \note \p data_set->priv must have been set to a valid \p pcmk__output_t
  *       object before this function is called.
  *
- * \param[in] xml_file  The CIB file to profile
- * \param[in] repeat    Number of times to run
- * \param[in] data_set  Working set for the cluster
- * \param[in] use_date  The date to set the cluster's time to (may be NULL)
+ * \param[in]     xml_file  The CIB file to profile
+ * \param[in]     repeat    Number of times to run
+ * \param[in,out] data_set  Working set for the cluster
+ * \param[in]     use_date  The date to set the cluster's time to (may be NULL)
  */
 static void
 profile_file(const char *xml_file, long long repeat, pe_working_set_t *data_set,
-             char *use_date)
+             const char *use_date)
 {
     pcmk__output_t *out = data_set->priv;
     xmlNode *cib_object = NULL;
@@ -370,7 +371,8 @@ profile_file(const char *xml_file, long long repeat, pe_working_set_t *data_set,
 }
 
 void
-pcmk__profile_dir(const char *dir, long long repeat, pe_working_set_t *data_set, char *use_date)
+pcmk__profile_dir(const char *dir, long long repeat, pe_working_set_t *data_set,
+                  const char *use_date)
 {
     pcmk__output_t *out = data_set->priv;
     struct dirent **namelist;
@@ -422,7 +424,7 @@ pcmk__profile_dir(const char *dir, long long repeat, pe_working_set_t *data_set,
  */
 static void
 set_effective_date(pe_working_set_t *data_set, bool print_original,
-                   char *use_date)
+                   const char *use_date)
 {
     pcmk__output_t *out = data_set->priv;
     time_t original_date = 0;
@@ -437,10 +439,8 @@ set_effective_date(pe_working_set_t *data_set, bool print_original,
         crm_time_log(LOG_NOTICE, "Pretending 'now' is", data_set->now,
                      crm_time_log_date | crm_time_log_timeofday);
 
-    } else if (original_date) {
-
-        data_set->now = crm_time_new(NULL);
-        crm_time_set_timet(data_set->now, &original_date);
+    } else if (original_date != 0) {
+        data_set->now = pcmk__copy_timet(original_date);
 
         if (print_original) {
             char *when = crm_time_as_string(data_set->now,
@@ -456,8 +456,8 @@ set_effective_date(pe_working_set_t *data_set, bool print_original,
  * \internal
  * \brief Simulate successfully executing a pseudo-action in a graph
  *
- * \param[in] graph   Graph to update with pseudo-action result
- * \param[in] action  Pseudo-action to simulate executing
+ * \param[in,out] graph   Graph to update with pseudo-action result
+ * \param[in,out] action  Pseudo-action to simulate executing
  *
  * \return Standard Pacemaker return code
  */
@@ -478,8 +478,8 @@ simulate_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
  * \internal
  * \brief Simulate executing a resource action in a graph
  *
- * \param[in] graph   Graph to update with resource action result
- * \param[in] action  Resource action to simulate executing
+ * \param[in,out] graph   Graph to update with resource action result
+ * \param[in,out] action  Resource action to simulate executing
  *
  * \return Standard Pacemaker return code
  */
@@ -583,8 +583,9 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
                  op->interval_ms);
 
     // Check whether action is in a list of desired simulated failures
-    for (GList *iter = fake_op_fail_list; iter != NULL; iter = iter->next) {
-        char *spec = (char *) iter->data;
+    for (const GList *iter = fake_op_fail_list;
+         iter != NULL; iter = iter->next) {
+        const char *spec = (const char *) iter->data;
         char *key = NULL;
         const char *match_name = NULL;
 
@@ -647,8 +648,8 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
  * \internal
  * \brief Simulate successfully executing a cluster action
  *
- * \param[in] graph   Graph to update with action result
- * \param[in] action  Cluster action to simulate
+ * \param[in,out] graph   Graph to update with action result
+ * \param[in,out] action  Cluster action to simulate
  *
  * \return Standard Pacemaker return code
  */
@@ -669,8 +670,8 @@ simulate_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
  * \internal
  * \brief Simulate successfully executing a fencing action
  *
- * \param[in] graph   Graph to update with action result
- * \param[in] action  Fencing action to simulate
+ * \param[in,out] graph   Graph to update with action result
+ * \param[in,out] action  Fencing action to simulate
  *
  * \return Standard Pacemaker return code
  */
@@ -724,7 +725,7 @@ simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
 enum pcmk__graph_status
 pcmk__simulate_transition(pe_working_set_t *data_set, cib_t *cib,
-                          GList *op_fail_list)
+                          const GList *op_fail_list)
 {
     pcmk__graph_t *transition = NULL;
     enum pcmk__graph_status graph_rc;
@@ -779,22 +780,32 @@ pcmk__simulate_transition(pe_working_set_t *data_set, cib_t *cib,
 
 int
 pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
-               pcmk_injections_t *injections, unsigned int flags,
-               uint32_t section_opts, char *use_date, char *input_file,
-               char *graph_file, char *dot_file)
+               const pcmk_injections_t *injections, unsigned int flags,
+               uint32_t section_opts, const char *use_date,
+               const char *input_file, const char *graph_file,
+               const char *dot_file)
 {
     int printed = pcmk_rc_no_output;
     int rc = pcmk_rc_ok;
     xmlNodePtr input = NULL;
     cib_t *cib = NULL;
 
-    rc = cib__signon_query(&cib, &input);
+    rc = cib__signon_query(out, &cib, &input);
     if (rc != pcmk_rc_ok) {
         goto simulate_done;
     }
 
     reset(data_set, input, out, use_date, flags);
     cluster_status(data_set);
+
+    if ((cib->variant == cib_native)
+        && pcmk_is_set(section_opts, pcmk_section_times)) {
+        if (pcmk__our_nodename == NULL) {
+            // Currently used only in the times section
+            pcmk__query_node_name(out, 0, &pcmk__our_nodename, 0);
+        }
+        data_set->localhost = pcmk__our_nodename;
+    }
 
     if (!out->is_quiet(out)) {
         if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
@@ -964,9 +975,10 @@ simulate_done:
 
 int
 pcmk_simulate(xmlNodePtr *xml, pe_working_set_t *data_set,
-              pcmk_injections_t *injections, unsigned int flags,
-              unsigned int section_opts, char *use_date, char *input_file,
-              char *graph_file, char *dot_file)
+              const pcmk_injections_t *injections, unsigned int flags,
+              unsigned int section_opts, const char *use_date,
+              const char *input_file, const char *graph_file,
+              const char *dot_file)
 {
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
