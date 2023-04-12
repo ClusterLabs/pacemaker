@@ -171,6 +171,43 @@ pcmk__clone_internal_constraints(pe_resource_t *rsc)
 
 /*!
  * \internal
+ * \brief Check whether colocated resources can be interleaved
+ *
+ * \param[in] colocation  Colocation constraint with clone as primary
+ *
+ * \return true if colocated resources can be interleaved, otherwise false
+ */
+static bool
+can_interleave(const pcmk__colocation_t *colocation)
+{
+    // Only colocations between clone or bundle resources use interleaving
+    if (colocation->dependent->variant <= pe_group) {
+        return false;
+    }
+
+    // Only the dependent needs to be marked for interleaving
+    if (!crm_is_true(g_hash_table_lookup(colocation->dependent->meta,
+                                         XML_RSC_ATTR_INTERLEAVE))) {
+        return false;
+    }
+
+    /* @TODO Do we actually care about multiple primary instances sharing a
+     * dependent instance?
+     */
+    if (copies_per_node(colocation->dependent)
+        != copies_per_node(colocation->primary)) {
+        pcmk__config_err("Cannot interleave %s and %s because they do not "
+                         "support the same number of instances per node",
+                         colocation->dependent->id,
+                         colocation->primary->id);
+        return false;
+    }
+
+    return true;
+}
+
+/*!
+ * \internal
  * \brief Apply a colocation's score to node weights or resource priority
  *
  * Given a colocation constraint, apply its score to the dependent's
@@ -189,8 +226,6 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
                               bool for_dependent)
 {
     GList *gIter = NULL;
-    gboolean do_interleave = FALSE;
-    const char *interleave_s = NULL;
 
     /* This should never be called for the clone itself as a dependent. Instead,
      * we add its colocation constraints to its instances and call the
@@ -230,30 +265,11 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
         }
     }
 
-    // Only the dependent needs to be marked for interleave
-    interleave_s = g_hash_table_lookup(colocation->dependent->meta,
-                                       XML_RSC_ATTR_INTERLEAVE);
-    if (crm_is_true(interleave_s)
-        && (colocation->dependent->variant > pe_group)) {
-        /* @TODO Do we actually care about multiple primary copies sharing a
-         * dependent copy anymore?
-         */
-        if (copies_per_node(colocation->dependent) != copies_per_node(colocation->primary)) {
-            pcmk__config_err("Cannot interleave %s and %s because they do not "
-                             "support the same number of instances per node",
-                             colocation->dependent->id,
-                             colocation->primary->id);
-
-        } else {
-            do_interleave = TRUE;
-        }
-    }
-
     if (pcmk_is_set(primary->flags, pe_rsc_provisional)) {
         pe_rsc_trace(primary, "%s is still provisional", primary->id);
         return;
 
-    } else if (do_interleave) {
+    } else if (can_interleave(colocation)) {
         pe_resource_t *primary_instance = NULL;
 
         primary_instance = pcmk__find_compatible_instance(dependent, primary,
