@@ -177,6 +177,9 @@
         <rsc_op id="47" operation="start" operation_key="rabbitmq-bundle-2_start_0" on_node="overcloud-controller-2" on_node_uuid="3"/>
       </trigger>
       <trigger>
+        <rsc_op id="53" operation="start" operation_key="rabbitmq:0_start_0" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0" router_node="overcloud-controller-0"/>
+      </trigger>
+      <trigger>
         <rsc_op id="55" operation="start" operation_key="rabbitmq:1_start_0" on_node="rabbitmq-bundle-1" on_node_uuid="rabbitmq-bundle-1" router_node="overcloud-controller-1"/>
       </trigger>
       <trigger>

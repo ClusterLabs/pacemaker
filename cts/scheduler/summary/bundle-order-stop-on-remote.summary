@@ -140,8 +140,8 @@ Executing Cluster Transition:
   * Resource action: galera-bundle-docker-2 monitor=60000 on database-2
   * Resource action: galera-bundle-2 start on controller-1
   * Resource action: redis           notify on redis-bundle-0
-  * Resource action: redis           notify on redis-bundle-1
   * Resource action: redis           notify on redis-bundle-2
+  * Resource action: redis           notify on redis-bundle-1
   * Pseudo action:   redis-bundle-master_confirmed-post_notify_running_0
   * Pseudo action:   redis-bundle_running_0
   * Resource action: galera          start on galera-bundle-0
@@ -153,8 +153,8 @@ Executing Cluster Transition:
   * Pseudo action:   redis-bundle_promote_0
   * Pseudo action:   galera-bundle_running_0
   * Resource action: redis           notify on redis-bundle-0
-  * Resource action: redis           notify on redis-bundle-1
   * Resource action: redis           notify on redis-bundle-2
+  * Resource action: redis           notify on redis-bundle-1
   * Pseudo action:   redis-bundle-master_confirmed-pre_notify_promote_0
   * Pseudo action:   redis-bundle-master_promote_0
   * Pseudo action:   galera-bundle_promote_0
@@ -169,8 +169,8 @@ Executing Cluster Transition:
   * Resource action: galera          monitor=10000 on galera-bundle-0
   * Resource action: galera          monitor=10000 on galera-bundle-2
   * Resource action: redis           notify on redis-bundle-0
-  * Resource action: redis           notify on redis-bundle-1
   * Resource action: redis           notify on redis-bundle-2
+  * Resource action: redis           notify on redis-bundle-1
   * Pseudo action:   redis-bundle-master_confirmed-post_notify_promoted_0
   * Pseudo action:   redis-bundle_promoted_0
   * Resource action: redis           monitor=20000 on redis-bundle-0

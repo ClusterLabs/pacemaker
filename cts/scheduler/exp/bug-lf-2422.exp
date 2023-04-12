@@ -304,6 +304,12 @@
         <rsc_op id="53" operation="stop" operation_key="ocfs:0_stop_0" internal_operation_key="ocfs:1_stop_0" on_node="qa-suse-4" on_node_uuid="qa-suse-4"/>
       </trigger>
       <trigger>
+        <rsc_op id="54" operation="stop" operation_key="ocfs:2_stop_0" on_node="qa-suse-3" on_node_uuid="qa-suse-3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="55" operation="stop" operation_key="ocfs:3_stop_0" on_node="qa-suse-2" on_node_uuid="qa-suse-2"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="58" operation="stop" operation_key="c-ocfs_stop_0"/>
       </trigger>
     </inputs>
@@ -318,6 +324,9 @@
     <inputs>
       <trigger>
         <rsc_op id="54" operation="stop" operation_key="ocfs:2_stop_0" on_node="qa-suse-3" on_node_uuid="qa-suse-3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="55" operation="stop" operation_key="ocfs:3_stop_0" on_node="qa-suse-2" on_node_uuid="qa-suse-2"/>
       </trigger>
       <trigger>
         <pseudo_event id="58" operation="stop" operation_key="c-ocfs_stop_0"/>

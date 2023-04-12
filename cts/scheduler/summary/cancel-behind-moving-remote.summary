@@ -121,23 +121,23 @@ Executing Cluster Transition:
   * Resource action: ovn-dbs-bundle-podman-1 start on controller-0
   * Resource action: ovn-dbs-bundle-1 start on controller-0
   * Resource action: ovndb_servers   start on ovn-dbs-bundle-0
-  * Resource action: ovndb_servers   start on ovn-dbs-bundle-1
-  * Pseudo action:   ovn-dbs-bundle-master_running_0
   * Resource action: ovn-dbs-bundle-podman-0 monitor=60000 on controller-2
   * Resource action: ovn-dbs-bundle-0 monitor=30000 on controller-2
   * Resource action: ovn-dbs-bundle-podman-1 monitor=60000 on controller-0
   * Resource action: ovn-dbs-bundle-1 monitor=30000 on controller-0
+  * Resource action: ovndb_servers   start on ovn-dbs-bundle-1
+  * Pseudo action:   ovn-dbs-bundle-master_running_0
   * Pseudo action:   ovn-dbs-bundle-master_post_notify_running_0
-  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-0
   * Resource action: ovndb_servers   notify on ovn-dbs-bundle-1
   * Resource action: ovndb_servers   notify on ovn-dbs-bundle-2
+  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-0
   * Pseudo action:   ovn-dbs-bundle-master_confirmed-post_notify_running_0
   * Pseudo action:   ovn-dbs-bundle_running_0
   * Pseudo action:   ovn-dbs-bundle-master_pre_notify_promote_0
   * Pseudo action:   ovn-dbs-bundle_promote_0
-  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-0
   * Resource action: ovndb_servers   notify on ovn-dbs-bundle-1
   * Resource action: ovndb_servers   notify on ovn-dbs-bundle-2
+  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-0
   * Pseudo action:   ovn-dbs-bundle-master_confirmed-pre_notify_promote_0
   * Pseudo action:   ovn-dbs-bundle-master_promote_0
   * Resource action: ip-172.17.1.87  start on controller-0
@@ -145,13 +145,13 @@ Executing Cluster Transition:
   * Pseudo action:   ovn-dbs-bundle-master_promoted_0
   * Resource action: ip-172.17.1.87  monitor=10000 on controller-0
   * Pseudo action:   ovn-dbs-bundle-master_post_notify_promoted_0
-  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-0
   * Resource action: ovndb_servers   notify on ovn-dbs-bundle-1
   * Resource action: ovndb_servers   notify on ovn-dbs-bundle-2
+  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-0
   * Pseudo action:   ovn-dbs-bundle-master_confirmed-post_notify_promoted_0
   * Pseudo action:   ovn-dbs-bundle_promoted_0
-  * Resource action: ovndb_servers   monitor=30000 on ovn-dbs-bundle-0
   * Resource action: ovndb_servers   monitor=10000 on ovn-dbs-bundle-1
+  * Resource action: ovndb_servers   monitor=30000 on ovn-dbs-bundle-0
 Using the original execution date of: 2021-02-15 01:40:51Z
 
 Revised Cluster Status:

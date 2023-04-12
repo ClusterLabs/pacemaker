@@ -76,6 +76,9 @@
     </action_set>
     <inputs>
       <trigger>
+        <rsc_op id="10" operation="start" operation_key="dlm_start_0" internal_operation_key="dlm:2_start_0" on_node="virt-009.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
         <rsc_op id="12" operation="start" operation_key="dlm:3_start_0" on_node="virt-013.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="4"/>
       </trigger>
       <trigger>
@@ -104,6 +107,12 @@
       </rsc_op>
     </action_set>
     <inputs>
+      <trigger>
+        <rsc_op id="10" operation="start" operation_key="dlm_start_0" internal_operation_key="dlm:2_start_0" on_node="virt-009.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="12" operation="start" operation_key="dlm:3_start_0" on_node="virt-013.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="4"/>
+      </trigger>
       <trigger>
         <rsc_op id="14" operation="start" operation_key="dlm:4_start_0" on_node="virt-014.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="5"/>
       </trigger>
@@ -134,6 +143,15 @@
     </action_set>
     <inputs>
       <trigger>
+        <rsc_op id="10" operation="start" operation_key="dlm_start_0" internal_operation_key="dlm:2_start_0" on_node="virt-009.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="12" operation="start" operation_key="dlm:3_start_0" on_node="virt-013.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="14" operation="start" operation_key="dlm:4_start_0" on_node="virt-014.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
         <rsc_op id="16" operation="start" operation_key="dlm:5_start_0" on_node="virt-015.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="6"/>
       </trigger>
       <trigger>
@@ -162,6 +180,18 @@
       </rsc_op>
     </action_set>
     <inputs>
+      <trigger>
+        <rsc_op id="10" operation="start" operation_key="dlm_start_0" internal_operation_key="dlm:2_start_0" on_node="virt-009.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="12" operation="start" operation_key="dlm:3_start_0" on_node="virt-013.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="14" operation="start" operation_key="dlm:4_start_0" on_node="virt-014.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="16" operation="start" operation_key="dlm:5_start_0" on_node="virt-015.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="6"/>
+      </trigger>
       <trigger>
         <rsc_op id="18" operation="start" operation_key="dlm:6_start_0" on_node="virt-016.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="7"/>
       </trigger>
@@ -192,6 +222,21 @@
     </action_set>
     <inputs>
       <trigger>
+        <rsc_op id="10" operation="start" operation_key="dlm_start_0" internal_operation_key="dlm:2_start_0" on_node="virt-009.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="12" operation="start" operation_key="dlm:3_start_0" on_node="virt-013.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="14" operation="start" operation_key="dlm:4_start_0" on_node="virt-014.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="16" operation="start" operation_key="dlm:5_start_0" on_node="virt-015.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="6"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="18" operation="start" operation_key="dlm:6_start_0" on_node="virt-016.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="7"/>
+      </trigger>
+      <trigger>
         <rsc_op id="20" operation="start" operation_key="dlm:7_start_0" on_node="virt-020.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="8"/>
       </trigger>
       <trigger>
@@ -220,6 +265,24 @@
       </rsc_op>
     </action_set>
     <inputs>
+      <trigger>
+        <rsc_op id="10" operation="start" operation_key="dlm_start_0" internal_operation_key="dlm:2_start_0" on_node="virt-009.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="12" operation="start" operation_key="dlm:3_start_0" on_node="virt-013.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="14" operation="start" operation_key="dlm:4_start_0" on_node="virt-014.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="16" operation="start" operation_key="dlm:5_start_0" on_node="virt-015.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="6"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="18" operation="start" operation_key="dlm:6_start_0" on_node="virt-016.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="7"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="20" operation="start" operation_key="dlm:7_start_0" on_node="virt-020.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="8"/>
+      </trigger>
       <trigger>
         <rsc_op id="22" operation="start" operation_key="dlm:8_start_0" on_node="virt-027.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="9"/>
       </trigger>
@@ -250,6 +313,27 @@
     </action_set>
     <inputs>
       <trigger>
+        <rsc_op id="10" operation="start" operation_key="dlm_start_0" internal_operation_key="dlm:2_start_0" on_node="virt-009.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="12" operation="start" operation_key="dlm:3_start_0" on_node="virt-013.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="14" operation="start" operation_key="dlm:4_start_0" on_node="virt-014.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="16" operation="start" operation_key="dlm:5_start_0" on_node="virt-015.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="6"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="18" operation="start" operation_key="dlm:6_start_0" on_node="virt-016.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="7"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="20" operation="start" operation_key="dlm:7_start_0" on_node="virt-020.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="8"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="22" operation="start" operation_key="dlm:8_start_0" on_node="virt-027.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="9"/>
+      </trigger>
+      <trigger>
         <rsc_op id="24" operation="start" operation_key="dlm:9_start_0" on_node="virt-028.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="10"/>
       </trigger>
       <trigger>
@@ -278,6 +362,30 @@
       </rsc_op>
     </action_set>
     <inputs>
+      <trigger>
+        <rsc_op id="10" operation="start" operation_key="dlm_start_0" internal_operation_key="dlm:2_start_0" on_node="virt-009.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="12" operation="start" operation_key="dlm:3_start_0" on_node="virt-013.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="14" operation="start" operation_key="dlm:4_start_0" on_node="virt-014.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="16" operation="start" operation_key="dlm:5_start_0" on_node="virt-015.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="6"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="18" operation="start" operation_key="dlm:6_start_0" on_node="virt-016.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="7"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="20" operation="start" operation_key="dlm:7_start_0" on_node="virt-020.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="8"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="22" operation="start" operation_key="dlm:8_start_0" on_node="virt-027.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="9"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="24" operation="start" operation_key="dlm:9_start_0" on_node="virt-028.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="10"/>
+      </trigger>
       <trigger>
         <rsc_op id="26" operation="start" operation_key="dlm:10_start_0" on_node="virt-029.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="11"/>
       </trigger>
@@ -308,6 +416,33 @@
     </action_set>
     <inputs>
       <trigger>
+        <rsc_op id="10" operation="start" operation_key="dlm_start_0" internal_operation_key="dlm:2_start_0" on_node="virt-009.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="12" operation="start" operation_key="dlm:3_start_0" on_node="virt-013.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="14" operation="start" operation_key="dlm:4_start_0" on_node="virt-014.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="16" operation="start" operation_key="dlm:5_start_0" on_node="virt-015.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="6"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="18" operation="start" operation_key="dlm:6_start_0" on_node="virt-016.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="7"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="20" operation="start" operation_key="dlm:7_start_0" on_node="virt-020.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="8"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="22" operation="start" operation_key="dlm:8_start_0" on_node="virt-027.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="9"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="24" operation="start" operation_key="dlm:9_start_0" on_node="virt-028.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="10"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="26" operation="start" operation_key="dlm:10_start_0" on_node="virt-029.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="11"/>
+      </trigger>
+      <trigger>
         <rsc_op id="28" operation="start" operation_key="dlm:11_start_0" on_node="virt-030.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="12"/>
       </trigger>
       <trigger>
@@ -336,6 +471,36 @@
       </rsc_op>
     </action_set>
     <inputs>
+      <trigger>
+        <rsc_op id="10" operation="start" operation_key="dlm_start_0" internal_operation_key="dlm:2_start_0" on_node="virt-009.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="12" operation="start" operation_key="dlm:3_start_0" on_node="virt-013.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="14" operation="start" operation_key="dlm:4_start_0" on_node="virt-014.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="16" operation="start" operation_key="dlm:5_start_0" on_node="virt-015.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="6"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="18" operation="start" operation_key="dlm:6_start_0" on_node="virt-016.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="7"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="20" operation="start" operation_key="dlm:7_start_0" on_node="virt-020.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="8"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="22" operation="start" operation_key="dlm:8_start_0" on_node="virt-027.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="9"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="24" operation="start" operation_key="dlm:9_start_0" on_node="virt-028.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="10"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="26" operation="start" operation_key="dlm:10_start_0" on_node="virt-029.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="11"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="28" operation="start" operation_key="dlm:11_start_0" on_node="virt-030.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="12"/>
+      </trigger>
       <trigger>
         <rsc_op id="30" operation="start" operation_key="dlm:12_start_0" on_node="virt-031.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="13"/>
       </trigger>
@@ -366,6 +531,39 @@
     </action_set>
     <inputs>
       <trigger>
+        <rsc_op id="10" operation="start" operation_key="dlm_start_0" internal_operation_key="dlm:2_start_0" on_node="virt-009.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="12" operation="start" operation_key="dlm:3_start_0" on_node="virt-013.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="14" operation="start" operation_key="dlm:4_start_0" on_node="virt-014.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="16" operation="start" operation_key="dlm:5_start_0" on_node="virt-015.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="6"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="18" operation="start" operation_key="dlm:6_start_0" on_node="virt-016.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="7"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="20" operation="start" operation_key="dlm:7_start_0" on_node="virt-020.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="8"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="22" operation="start" operation_key="dlm:8_start_0" on_node="virt-027.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="9"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="24" operation="start" operation_key="dlm:9_start_0" on_node="virt-028.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="10"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="26" operation="start" operation_key="dlm:10_start_0" on_node="virt-029.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="11"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="28" operation="start" operation_key="dlm:11_start_0" on_node="virt-030.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="12"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="30" operation="start" operation_key="dlm:12_start_0" on_node="virt-031.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="13"/>
+      </trigger>
+      <trigger>
         <rsc_op id="32" operation="start" operation_key="dlm:13_start_0" on_node="virt-032.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="14"/>
       </trigger>
       <trigger>
@@ -394,6 +592,42 @@
       </rsc_op>
     </action_set>
     <inputs>
+      <trigger>
+        <rsc_op id="10" operation="start" operation_key="dlm_start_0" internal_operation_key="dlm:2_start_0" on_node="virt-009.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="12" operation="start" operation_key="dlm:3_start_0" on_node="virt-013.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="14" operation="start" operation_key="dlm:4_start_0" on_node="virt-014.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="16" operation="start" operation_key="dlm:5_start_0" on_node="virt-015.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="6"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="18" operation="start" operation_key="dlm:6_start_0" on_node="virt-016.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="7"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="20" operation="start" operation_key="dlm:7_start_0" on_node="virt-020.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="8"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="22" operation="start" operation_key="dlm:8_start_0" on_node="virt-027.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="9"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="24" operation="start" operation_key="dlm:9_start_0" on_node="virt-028.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="10"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="26" operation="start" operation_key="dlm:10_start_0" on_node="virt-029.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="11"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="28" operation="start" operation_key="dlm:11_start_0" on_node="virt-030.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="12"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="30" operation="start" operation_key="dlm:12_start_0" on_node="virt-031.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="13"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="32" operation="start" operation_key="dlm:13_start_0" on_node="virt-032.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="14"/>
+      </trigger>
       <trigger>
         <rsc_op id="34" operation="start" operation_key="dlm:14_start_0" on_node="virt-033.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="15"/>
       </trigger>

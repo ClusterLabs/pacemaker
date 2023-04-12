@@ -103,6 +103,9 @@
         <rsc_op id="74" operation="start" operation_key="base-bundle-2_start_0" on_node="node4" on_node_uuid="4"/>
       </trigger>
       <trigger>
+        <rsc_op id="80" operation="start" operation_key="base:0_start_0" on_node="base-bundle-0" on_node_uuid="base-bundle-0" router_node="node2"/>
+      </trigger>
+      <trigger>
         <rsc_op id="82" operation="start" operation_key="base:1_start_0" on_node="base-bundle-1" on_node_uuid="base-bundle-1" router_node="node3"/>
       </trigger>
       <trigger>
@@ -884,6 +887,9 @@
       </trigger>
       <trigger>
         <rsc_op id="108" operation="start" operation_key="app-bundle-2_start_0" on_node="node4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="114" operation="start" operation_key="app:0_start_0" on_node="app-bundle-0" on_node_uuid="app-bundle-0" router_node="node2"/>
       </trigger>
       <trigger>
         <rsc_op id="116" operation="start" operation_key="app:1_start_0" on_node="app-bundle-1" on_node_uuid="app-bundle-1" router_node="node3"/>
