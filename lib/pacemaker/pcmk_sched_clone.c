@@ -225,17 +225,16 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
                               const pcmk__colocation_t *colocation,
                               bool for_dependent)
 {
-    GList *gIter = NULL;
+    GList *iter = NULL;
 
     /* This should never be called for the clone itself as a dependent. Instead,
      * we add its colocation constraints to its instances and call the
-     * apply_coloc_score() for the instances as dependents.
+     * apply_coloc_score() method for the instances as dependents.
      */
     CRM_ASSERT(!for_dependent);
 
-    CRM_CHECK((colocation != NULL) && (dependent != NULL) && (primary != NULL),
-              return);
-    CRM_CHECK(dependent->variant == pe_native, return);
+    CRM_ASSERT((colocation != NULL) && pe_rsc_is_clone(primary)
+               && (dependent != NULL) && (dependent->variant == pe_native));
 
     if (pcmk_is_set(primary->flags, pe_rsc_provisional)) {
         pe_rsc_trace(primary,
@@ -249,26 +248,24 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
                  colocation->id, dependent->id, primary->id,
                  pcmk_readable_score(colocation->score));
 
-    if (pcmk_is_set(primary->flags, pe_rsc_promotable)) {
-        if (colocation->primary_role == RSC_ROLE_UNKNOWN) {
-            // This isn't a role-specfic colocation, so handle normally
-            pe_rsc_trace(primary, "Handling %s as a clone colocation",
-                         colocation->id);
+    // Apply role-specific colocations
+    if (pcmk_is_set(primary->flags, pe_rsc_promotable)
+        && (colocation->primary_role != RSC_ROLE_UNKNOWN)) {
 
-        } else if (pcmk_is_set(dependent->flags, pe_rsc_provisional)) {
-            // We're placing the dependent
+        if (pcmk_is_set(dependent->flags, pe_rsc_provisional)) {
+            // We're assigning the dependent to a node
             pcmk__update_dependent_with_promotable(primary, dependent,
                                                    colocation);
-            return;
 
         } else if (colocation->dependent_role == RSC_ROLE_PROMOTED) {
-            // We're choosing roles for the dependent
+            // We're choosing a role for the dependent
             pcmk__update_promotable_dependent_priority(primary, dependent,
                                                        colocation);
-            return;
         }
+        return;
     }
 
+    // Apply interleaved colocations
     if (can_interleave(colocation)) {
         pe_resource_t *primary_instance = NULL;
 
@@ -276,50 +273,54 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
                                                           RSC_ROLE_UNKNOWN,
                                                           false);
         if (primary_instance != NULL) {
-            pe_rsc_debug(primary, "Pairing %s with %s",
+            pe_rsc_debug(primary, "Interleaving %s with %s",
                          dependent->id, primary_instance->id);
             dependent->cmds->apply_coloc_score(dependent, primary_instance,
                                                colocation, true);
 
         } else if (colocation->score >= INFINITY) {
-            crm_notice("Cannot pair %s with instance of %s",
-                       dependent->id, primary->id);
+            crm_notice("%s cannot run because it cannot interleave with "
+                       "any instance of %s", dependent->id, primary->id);
             pcmk__assign_resource(dependent, NULL, true);
 
         } else {
-            pe_rsc_debug(primary, "Cannot pair %s with instance of %s",
+            pe_rsc_debug(primary,
+                         "%s will not colocate with %s "
+                         "because no instance can interleave with it",
                          dependent->id, primary->id);
         }
 
         return;
+    }
 
-    } else if (colocation->score >= INFINITY) {
-        GList *affected_nodes = NULL;
+    // Apply mandatory colocations
+    if (colocation->score >= INFINITY) {
+        GList *primary_nodes = NULL;
 
-        gIter = primary->children;
-        for (; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-            pe_node_t *chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
+        // Dependent can run only where primary will have unblocked instances
+        for (iter = primary->children; iter != NULL; iter = iter->next) {
+            const pe_resource_t *instance = iter->data;
+            pe_node_t *chosen = instance->fns->location(instance, NULL, 0);
 
-            if (chosen != NULL && is_set_recursive(child_rsc, pe_rsc_block, TRUE) == FALSE) {
+            if ((chosen != NULL)
+                && !is_set_recursive(instance, pe_rsc_block, TRUE)) {
                 pe_rsc_trace(primary, "Allowing %s: %s %d",
                              colocation->id, pe__node_name(chosen),
                              chosen->weight);
-                affected_nodes = g_list_prepend(affected_nodes, chosen);
+                primary_nodes = g_list_prepend(primary_nodes, chosen);
             }
         }
-
-        node_list_exclude(dependent->allowed_nodes, affected_nodes, FALSE);
-        g_list_free(affected_nodes);
+        node_list_exclude(dependent->allowed_nodes, primary_nodes, FALSE);
+        g_list_free(primary_nodes);
         return;
     }
 
-    gIter = primary->children;
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
+    // Apply optional colocations
+    for (iter = primary->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *instance = (pe_resource_t *) iter->data;
 
-        child_rsc->cmds->apply_coloc_score(dependent, child_rsc, colocation,
-                                           false);
+        instance->cmds->apply_coloc_score(dependent, instance, colocation,
+                                          false);
     }
 }
 
