@@ -33,8 +33,6 @@ void pcmk__bundle_add_utilization(const pe_resource_t *rsc,
 void pcmk__bundle_shutdown_lock(pe_resource_t *rsc);
 
 void clone_rsc_location(pe_resource_t *rsc, pe__location_t *constraint);
-enum pe_action_flags clone_action_flags(pe_action_t *action,
-                                        const pe_node_t *node);
 void clone_expand(pe_resource_t *rsc);
 bool clone_create_probe(pe_resource_t *rsc, pe_node_t *node);
 void clone_append_meta(const pe_resource_t *rsc, xmlNode *xml);

@@ -352,9 +352,20 @@ pcmk__clone_with_colocations(const pe_resource_t *rsc,
     }
 }
 
+/*!
+ * \internal
+ * \brief Return action flags for a given clone resource action
+ *
+ * \param[in,out] action  Action to get flags for
+ * \param[in]     node    If not NULL, limit effects to this node
+ *
+ * \return Flags appropriate to \p action on \p node
+ */
 enum pe_action_flags
-clone_action_flags(pe_action_t *action, const pe_node_t *node)
+pcmk__clone_action_flags(pe_action_t *action, const pe_node_t *node)
 {
+    CRM_ASSERT((action != NULL) && pe_rsc_is_clone(action->rsc));
+
     return pcmk__collective_action_flags(action, action->rsc->children, node);
 }
 
