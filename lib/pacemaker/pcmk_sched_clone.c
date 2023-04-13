@@ -454,15 +454,24 @@ rsc_probed_on(const pe_resource_t *rsc, const pe_node_t *node)
     return false;
 }
 
-// Look for an instance of clone that is known on node
+/*!
+ * \internal
+ * \brief Find clone instance that has been probed on given node
+ *
+ * \param[in] clone  Clone resource to check
+ * \param[in] node   Node to check
+ *
+ * \return Instance of \p clone that has been probed on \p node if any,
+ *         otherwise NULL
+ */
 static pe_resource_t *
-find_instance_on(const pe_resource_t *clone, const pe_node_t *node)
+find_probed_instance_on(const pe_resource_t *clone, const pe_node_t *node)
 {
-    for (GList *gIter = clone->children; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child = (pe_resource_t *) gIter->data;
+    for (GList *iter = clone->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *instance = (pe_resource_t *) iter->data;
 
-        if (rsc_probed_on(child, node)) {
-            return child;
+        if (rsc_probed_on(instance, node)) {
+            return instance;
         }
     }
     return NULL;
@@ -474,7 +483,7 @@ probe_anonymous_clone(pe_resource_t *rsc, pe_node_t *node,
                       pe_working_set_t *data_set)
 {
     // First, check if we probed an instance on this node last time
-    pe_resource_t *child = find_instance_on(rsc, node);
+    pe_resource_t *child = find_probed_instance_on(rsc, node);
 
     // Otherwise, check if we plan to start an instance on this node
     if (child == NULL) {
