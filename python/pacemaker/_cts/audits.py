@@ -16,6 +16,7 @@ from pacemaker._cts.watcher import LogKind, LogWatcher
 
 class ClusterAudit:
     def __init__(self, cm):
+        # pylint: disable=invalid-name
         self._cm = cm
         self.name = None
 
@@ -244,6 +245,7 @@ class FileAudit(ClusterAudit):
 
 class AuditResource:
     def __init__(self, cm, line):
+        # pylint: disable=invalid-name
         fields = line.split()
         self._cm = cm
         self.line = line
@@ -277,6 +279,7 @@ class AuditResource:
 
 class AuditConstraint:
     def __init__(self, cm, line):
+        # pylint: disable=invalid-name
         fields = line.split()
         self._cm = cm
         self.line = line
@@ -805,6 +808,7 @@ class PartitionAudit(ClusterAudit):
         return False
 
 
+# pylint: disable=invalid-name
 def audit_list(cm):
     result = []
 
