@@ -641,8 +641,6 @@ class CIBAudit(ClusterAudit):
                     else:
                         self.debug("CibDiff[%s-%s] Ignoring: %s" % (node0, node, line))
 
-#            self._cm.rsh(node0, "rm -f %s" % node_xml)
-#        self._cm.rsh(node0, "rm -f %s" % node0_xml)
         return passed
 
     def store_remote_cib(self, node, target):
