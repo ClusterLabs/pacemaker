@@ -218,12 +218,12 @@ class FileAudit(ClusterAudit):
                     self._cm.log("Warning: Corosync core file on %s: %s" % (node, line))
 
             if node in self._cm.ShouldBeStatus and self._cm.ShouldBeStatus[node] == "down":
-                clean = 0
+                clean = False
                 (_, lsout) = self._cm.rsh(node, "ls -al /dev/shm | grep qb-", verbose=1)
 
                 for line in lsout:
                     result = False
-                    clean = 1
+                    clean = True
                     self._cm.log("Warning: Stale IPC file on %s: %s" % (node, line))
 
                 if clean:
@@ -427,7 +427,7 @@ class GroupAudit(PrimitiveAudit):
             if group.type != "group":
                 continue
 
-            first_match = 1
+            first_match = True
             group_location = None
 
             for child in self._resources:
@@ -439,7 +439,7 @@ class GroupAudit(PrimitiveAudit):
                 if first_match and len(nodes) > 0:
                     group_location = nodes[0]
 
-                first_match = 0
+                first_match = False
 
                 if len(nodes) > 1:
                     result = False
@@ -606,7 +606,7 @@ class CIBAudit(ClusterAudit):
         return result
 
     def _audit_cib_contents(self, hostlist):
-        passed = 1
+        passed = True
         node0 = None
         node0_xml = None
 
@@ -616,7 +616,7 @@ class CIBAudit(ClusterAudit):
 
             if node_xml is None:
                 self._cm.log("Could not perform audit: No configuration from %s" % node)
-                passed = 0
+                passed = False
 
             elif node0 is None:
                 node0 = node
@@ -624,7 +624,7 @@ class CIBAudit(ClusterAudit):
 
             elif node0_xml is None:
                 self._cm.log("Could not perform audit: No configuration from %s" % node0)
-                passed = 0
+                passed = False
 
             else:
                 (rc, result) = self._cm.rsh(
@@ -632,11 +632,11 @@ class CIBAudit(ClusterAudit):
 
                 if rc != 0:
                     self._cm.log("Diff between %s and %s failed: %d" % (node0_xml, node_xml, rc))
-                    passed = 0
+                    passed = False
 
                 for line in result:
                     if not re.search("<diff/>", line):
-                        passed = 0
+                        passed = False
                         self.debug("CibDiff[%s-%s]: %s" % (node0, node, line))
                     else:
                         self.debug("CibDiff[%s-%s] Ignoring: %s" % (node0, node, line))
@@ -722,7 +722,7 @@ class PartitionAudit(ClusterAudit):
         return None
 
     def _audit_partition(self, partition):
-        passed = 1
+        passed = True
         dc_found = []
         dc_allowed_list = []
         lowest_epoch = None
@@ -760,7 +760,7 @@ class PartitionAudit(ClusterAudit):
 
         if not lowest_epoch:
             self._cm.log("Lowest epoch not determined in %s" % partition)
-            passed = 0
+            passed = False
 
         for node in node_list:
             if self._cm.ShouldBeStatus[node] != "up":
@@ -777,7 +777,7 @@ class PartitionAudit(ClusterAudit):
                 else:
                     self._cm.log("DC %s is not the oldest node (%d vs. %d)"
                         % (node, self._node_epoch[node], lowest_epoch))
-                    passed = 0
+                    passed = False
 
         if not dc_found:
             self._cm.log("DC not found on any of the %d allowed nodes: %s (of %s)"
@@ -786,9 +786,9 @@ class PartitionAudit(ClusterAudit):
         elif len(dc_found) > 1:
             self._cm.log("%d DCs (%s) found in cluster partition: %s"
                         % (len(dc_found), str(dc_found), str(node_list)))
-            passed = 0
+            passed = False
 
-        if passed == 0:
+        if not passed:
             for node in node_list:
                 if self._cm.ShouldBeStatus[node] == "up":
                     self._cm.log("epoch %s : %s"
