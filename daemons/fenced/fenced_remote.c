@@ -1454,6 +1454,7 @@ get_device_timeout(const remote_fencing_op_t *op,
                    const peer_device_info_t *peer, const char *device)
 {
     device_properties_t *props;
+    int delay = 0;
 
     if (!peer || !device) {
         return op->base_timeout;
@@ -1464,9 +1465,16 @@ get_device_timeout(const remote_fencing_op_t *op,
         return op->base_timeout;
     }
 
+    // op->delay < 0 means disable any static/random fencing delays
+    if (op->delay >= 0) {
+        // delay_base is eventually limited by delay_max
+        delay = (props->delay_max[op->phase] > 0 ?
+                 props->delay_max[op->phase] : props->delay_base[op->phase]);
+    }
+
     return (props->custom_action_timeout[op->phase]?
-           props->custom_action_timeout[op->phase] : op->base_timeout)
-           + props->delay_max[op->phase];
+            props->custom_action_timeout[op->phase] : op->base_timeout)
+           + delay;
 }
 
 struct timeout_data {
