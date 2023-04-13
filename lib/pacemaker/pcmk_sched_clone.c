@@ -477,36 +477,37 @@ find_probed_instance_on(const pe_resource_t *clone, const pe_node_t *node)
     return NULL;
 }
 
-// For anonymous clones, only a single instance needs to be probed
+/*!
+ * \internal
+ * \brief Probe an anonymous clone on a node
+ *
+ * \param[in] clone  Anonymous clone to probe
+ * \param[in] node   Node to probe \p clone on
+ */
 static bool
-probe_anonymous_clone(pe_resource_t *rsc, pe_node_t *node,
-                      pe_working_set_t *data_set)
+probe_anonymous_clone(pe_resource_t *clone, pe_node_t *node)
 {
-    // First, check if we probed an instance on this node last time
-    pe_resource_t *child = find_probed_instance_on(rsc, node);
+    // Check whether we already probed an instance on this node
+    pe_resource_t *child = find_probed_instance_on(clone, node);
 
     // Otherwise, check if we plan to start an instance on this node
-    if (child == NULL) {
-        for (GList *child_iter = rsc->children; child_iter && !child;
-             child_iter = child_iter->next) {
+    for (GList *iter = clone->children; (iter != NULL) && (child == NULL);
+         iter = iter->next) {
+        pe_resource_t *instance = (pe_resource_t *) iter->data;
+        const pe_node_t *instance_node = NULL;
 
-            pe_node_t *local_node = NULL;
-            pe_resource_t *child_rsc = (pe_resource_t *) child_iter->data;
-
-            if (child_rsc) { /* make clang analyzer happy */
-                local_node = child_rsc->fns->location(child_rsc, NULL, FALSE);
-                if (local_node && (local_node->details == node->details)) {
-                    child = child_rsc;
-                }
-            }
+        instance_node = instance->fns->location(instance, NULL, 0);
+        if (pe__same_node(instance_node, node)) {
+            child = instance;
         }
     }
 
     // Otherwise, use the first clone instance
     if (child == NULL) {
-        child = rsc->children->data;
+        child = clone->children->data;
     }
-    CRM_ASSERT(child);
+
+    // Anonymous clones only need to probe a single instance
     return child->cmds->create_probe(child, node);
 }
 
@@ -551,7 +552,7 @@ clone_create_probe(pe_resource_t *rsc, pe_node_t *node)
     if (pcmk_is_set(rsc->flags, pe_rsc_unique)) {
         return pcmk__probe_resource_list(rsc->children, node);
     } else {
-        return probe_anonymous_clone(rsc, node, rsc->cluster);
+        return probe_anonymous_clone(rsc, node);
     }
 }
 
