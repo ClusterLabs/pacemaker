@@ -672,6 +672,14 @@ remote_op_timeout_one(gpointer userdata)
     pcmk__set_result(&op->result, CRM_EX_ERROR, PCMK_EXEC_TIMEOUT,
                      "Peer did not return fence result within timeout");
 
+    // The requested delay has been applied for the first device
+    if (op->delay > 0) {
+        op->delay = 0;
+        crm_trace("Try another device for '%s' action targeting %s "
+                  "for client %s without delay " CRM_XS " id=%.8s",
+                  op->action, op->target, op->client_name, op->id);
+    }
+
     // Try another device, if appropriate
     request_peer_fencing(op, NULL);
     return G_SOURCE_REMOVE;
