@@ -762,6 +762,9 @@ G_GNUC_INTERNAL
 void pcmk__clone_create_actions(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
+bool pcmk__clone_create_probe(pe_resource_t *rsc, pe_node_t *node);
+
+G_GNUC_INTERNAL
 void pcmk__clone_internal_constraints(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
@@ -787,6 +790,7 @@ enum pe_action_flags pcmk__clone_action_flags(pe_action_t *action,
 
 G_GNUC_INTERNAL
 void pcmk__clone_add_actions_to_graph(pe_resource_t *rsc);
+
 
 // Bundles (pcmk_sched_bundle.c)
 

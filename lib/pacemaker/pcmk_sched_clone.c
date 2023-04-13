@@ -513,7 +513,6 @@ probe_anonymous_clone(pe_resource_t *clone, pe_node_t *node)
 
 /*!
  * \internal
- *
  * \brief Schedule any probes needed for a resource on a node
  *
  * \param[in,out] rsc   Resource to create probe for
@@ -522,29 +521,26 @@ probe_anonymous_clone(pe_resource_t *clone, pe_node_t *node)
  * \return true if any probe was created, otherwise false
  */
 bool
-clone_create_probe(pe_resource_t *rsc, pe_node_t *node)
+pcmk__clone_create_probe(pe_resource_t *rsc, pe_node_t *node)
 {
-    CRM_ASSERT(rsc);
+    CRM_CHECK((node != NULL) && pe_rsc_is_clone(rsc), return false);
 
     rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance_number);
-    if (rsc->children == NULL) {
-        pe_warn("Clone %s has no children", rsc->id);
-        return false;
-    }
 
     if (rsc->exclusive_discover) {
-        pe_node_t *allowed = g_hash_table_lookup(rsc->allowed_nodes, node->details->id);
-        if (allowed && allowed->rsc_discover_mode != pe_discover_exclusive) {
-            /* exclusive discover is enabled and this node is not marked
-             * as a node this resource should be discovered on
-             *
-             * remove the node from allowed_nodes so that the
-             * notification contains only nodes that we might ever run
-             * on
+        /* The user has configured the clone to be probed only where a
+         * location constraint exists with resource-discovery=exclusive.
+         */
+        pe_node_t *allowed = g_hash_table_lookup(rsc->allowed_nodes,
+                                                 node->details->id);
+
+        if ((allowed != NULL)
+            && (allowed->rsc_discover_mode != pe_discover_exclusive)) {
+            /* This node is not marked for resource discovery. Remove it from
+             * allowed_nodes so that notifications contain only nodes that the
+             * clone can possibly run on.
              */
             g_hash_table_remove(rsc->allowed_nodes, node->details->id);
-
-            /* Bit of a shortcut - might as well take it */
             return false;
         }
     }

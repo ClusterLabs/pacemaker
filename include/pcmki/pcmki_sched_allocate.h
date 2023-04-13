@@ -32,7 +32,6 @@ void pcmk__bundle_add_utilization(const pe_resource_t *rsc,
                                   GList *all_rscs, GHashTable *utilization);
 void pcmk__bundle_shutdown_lock(pe_resource_t *rsc);
 
-bool clone_create_probe(pe_resource_t *rsc, pe_node_t *node);
 void clone_append_meta(const pe_resource_t *rsc, xmlNode *xml);
 void pcmk__clone_add_utilization(const pe_resource_t *rsc,
                                  const pe_resource_t *orig_rsc,
