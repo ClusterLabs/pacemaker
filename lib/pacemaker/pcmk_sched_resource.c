@@ -70,7 +70,7 @@ static resource_alloc_functions_t allocation_methods[] = {
         pcmk__clone_action_flags,
         pcmk__instance_update_ordered_actions,
         pcmk__output_resource_actions,
-        clone_expand,
+        pcmk__clone_add_actions_to_graph,
         clone_append_meta,
         pcmk__clone_add_utilization,
         pcmk__clone_shutdown_lock,

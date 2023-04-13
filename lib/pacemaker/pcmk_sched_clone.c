@@ -392,31 +392,25 @@ pcmk__clone_apply_location(pe_resource_t *rsc, pe__location_t *constraint)
 
 /*!
  * \internal
- * \brief Add a resource's actions to the transition graph
+ * \brief Add a clone resource's actions to the transition graph
  *
  * \param[in,out] rsc  Resource whose actions should be added
  */
 void
-clone_expand(pe_resource_t *rsc)
+pcmk__clone_add_actions_to_graph(pe_resource_t *rsc)
 {
-    GList *gIter = NULL;
+    CRM_CHECK(pe_rsc_is_clone(rsc), return);
 
     g_list_foreach(rsc->actions, (GFunc) rsc->cmds->action_flags, NULL);
-
     pe__create_clone_notifications(rsc);
 
-    /* Now that the notifcations have been created we can expand the children */
-
-    gIter = rsc->children;
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *child_rsc = (pe_resource_t *) iter->data;
 
         child_rsc->cmds->add_actions_to_graph(child_rsc);
     }
 
     pcmk__add_rsc_actions_to_graph(rsc);
-
-    /* The notifications are in the graph now, we can destroy the notify_data */
     pe__free_clone_notification_data(rsc);
 }
 
