@@ -182,6 +182,13 @@ class Environment:
         LogFactory().log("Unknown stack: %s" % self["stack"])
         raise ValueError("Unknown stack: %s" % self["stack"])
 
+    def _detect_systemd(self):
+        """ Detect whether systemd is in use on the target node """
+
+        if "have_systemd" not in self.data:
+            (rc, _) = self._rsh(self._target, "systemctl list-units", verbose=0)
+            self["have_systemd"] = rc == 0
+
     def _detect_syslog(self):
         """ Detect the syslog variant in use on the target node """
 
@@ -313,10 +320,7 @@ class Environment:
 
         self["cts-exerciser"] = exerciser
 
-        if "have_systemd" not in self.data:
-            (rc, _) = self._rsh(self._target, "systemctl list-units", verbose=0)
-            self["have_systemd"] = rc == 0
-
+        self._detect_systemd()
         self._detect_syslog()
         self._detect_at_boot()
         self._detect_ip_offset()

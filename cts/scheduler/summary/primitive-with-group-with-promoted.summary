@@ -13,11 +13,11 @@ Current cluster status:
 
 Transition Summary:
   * Promote    rsc2:0         ( Stopped -> Promoted node5 )
-  * Start      rsc2:1         (                   node2 )
-  * Start      rsc2:2         (                   node3 )
-  * Start      rsc1           (                   node5 )
-  * Start      group1rsc1     (                   node5 )
-  * Start      group1rsc2     (                   node5 )
+  * Start      rsc2:1         (                     node2 )
+  * Start      rsc2:2         (                     node3 )
+  * Start      rsc1           (                     node5 )
+  * Start      group1rsc1     (                     node5 )
+  * Start      group1rsc2     (                     node5 )
 
 Executing Cluster Transition:
   * Resource action: rsc2:0          monitor on node5
