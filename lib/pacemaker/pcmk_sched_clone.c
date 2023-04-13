@@ -525,8 +525,6 @@ pcmk__clone_create_probe(pe_resource_t *rsc, pe_node_t *node)
 {
     CRM_CHECK((node != NULL) && pe_rsc_is_clone(rsc), return false);
 
-    rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance_number);
-
     if (rsc->exclusive_discover) {
         /* The user has configured the clone to be probed only where a
          * location constraint exists with resource-discovery=exclusive.
@@ -545,6 +543,7 @@ pcmk__clone_create_probe(pe_resource_t *rsc, pe_node_t *node)
         }
     }
 
+    rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance_number);
     if (pcmk_is_set(rsc->flags, pe_rsc_unique)) {
         return pcmk__probe_resource_list(rsc->children, node);
     } else {
