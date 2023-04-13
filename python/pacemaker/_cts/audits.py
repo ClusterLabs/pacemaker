@@ -1,5 +1,4 @@
-""" Auditing classes for Pacemaker's Cluster Test Suite (CTS)
-"""
+""" Auditing classes for Pacemaker's Cluster Test Suite (CTS) """
 
 __all__ = ["AuditConstraint", "AuditResource", "ClusterAudit", "audit_list"]
 __copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
@@ -15,7 +14,20 @@ from pacemaker._cts.watcher import LogKind, LogWatcher
 
 
 class ClusterAudit:
+    """ The base class for various kinds of auditors.  Specific audit implementations
+        should be built on top of this one.  Audits can do all kinds of checks on the
+        system.  The basic interface for callers is the `__call__` method, which
+        returns True if the audit passes and False if it fails.
+    """
+
     def __init__(self, cm):
+        """ Create a new ClusterAudit instance
+
+            Arguments:
+
+            cm -- A ClusterManager instance
+        """
+
         # pylint: disable=invalid-name
         self._cm = cm
         self.name = None
@@ -24,23 +36,43 @@ class ClusterAudit:
         raise NotImplementedError
 
     def is_applicable(self):
-        """ Return True if this class is applicable in the current test configuration """
+        """ Return True if this audit is applicable in the current test configuration.
+            This method must be implemented by all subclasses.
+        """
 
         raise NotImplementedError
 
     def log(self, args):
+        """ Log a message """
+
         self._cm.log("audit: %s" % args)
 
     def debug(self, args):
+        """ Log a debug message """
+
         self._cm.debug("audit: %s" % args)
 
 
 class LogAudit(ClusterAudit):
+    """ Audit each cluster node to verify that some logging system is usable.
+        This is done by logging a unique test message and then verifying that
+        we can read back that test message using logging tools.
+    """
+
     def __init__(self, cm):
+        """ Create a new LogAudit instance
+
+            Arguments:
+
+            cm -- A ClusterManager instance
+        """
+
         ClusterAudit.__init__(self, cm)
         self.name = "LogAudit"
 
     def _restart_cluster_logging(self, nodes=None):
+        """ Restart logging on the given nodes, or all if none are given """
+
         if not nodes:
             nodes = self._cm.Env["nodes"]
 
@@ -61,6 +93,8 @@ class LogAudit(ClusterAudit):
                 self._cm.log ("ERROR: Cannot restart '%s' on %s" % (self._cm.Env["syslogd"], node))
 
     def _create_watcher(self, patterns, kind):
+        """ Create a new LogWatcher instance for the given patterns """
+
         watch = LogWatcher(self._cm.Env["LogFileName"], patterns,
                            self._cm.Env["nodes"], kind, "LogAudit", 5,
                            silent=True)
@@ -68,6 +102,8 @@ class LogAudit(ClusterAudit):
         return watch
 
     def _test_logging(self):
+        """ Perform the log audit """
+
         patterns = []
         prefix   = "Test message from"
         suffix   = str(uuid.uuid4())
@@ -136,6 +172,8 @@ class LogAudit(ClusterAudit):
         return True
 
     def is_applicable(self):
+        """ Return True if this audit is applicable in the current test configuration. """
+
         if self._cm.Env["DoBSC"] or self._cm.Env["LogAuditDisabled"]:
             return False
 
@@ -143,7 +181,21 @@ class LogAudit(ClusterAudit):
 
 
 class DiskAudit(ClusterAudit):
+    """ Audit disk usage on cluster nodes to verify that there is enough free
+        space left on whichever mounted file system holds the logs.
+
+        Warn on:  less than 100 MB or 10% of free space
+        Error on: less than 10 MB or 5% of free space
+    """
+
     def __init__(self, cm):
+        """ Create a new DiskAudit instance
+
+            Arguments:
+
+            cm -- A ClusterManager instance
+        """
+
         ClusterAudit.__init__(self, cm)
         self.name = "DiskspaceAudit"
 
@@ -184,11 +236,26 @@ class DiskAudit(ClusterAudit):
         return result
 
     def is_applicable(self):
+        """ Return True if this audit is applicable in the current test configuration. """
+
         return not self._cm.Env["DoBSC"]
 
 
 class FileAudit(ClusterAudit):
+    """ Audit the filesystem looking for various failure conditions:
+
+        * The presence of core dumps from corosync or Pacemaker daemons
+        * Stale IPC files
+    """
+
     def __init__(self, cm):
+        """ Create a new FileAudit instance
+
+            Arguments:
+
+            cm -- A ClusterManager instance
+        """
+
         ClusterAudit.__init__(self, cm)
         self.known = []
         self.name = "FileAudit"
@@ -240,11 +307,24 @@ class FileAudit(ClusterAudit):
         return result
 
     def is_applicable(self):
+        """ Return True if this audit is applicable in the current test configuration. """
+
         return True
 
 
 class AuditResource:
+    """ A base class for storing information about a cluster resource """
+
     def __init__(self, cm, line):
+        """ Create a new AuditResource instance
+
+            Arguments:
+
+            cm   -- A ClusterManager instance
+            line -- One line of output from `crm_resource` describing a single
+                    resource
+        """
+
         # pylint: disable=invalid-name
         fields = line.split()
         self._cm = cm
@@ -266,19 +346,36 @@ class AuditResource:
 
     @property
     def unique(self):
+        """ Is this resource unique? """
+
         return self.flags & 0x20
 
     @property
     def orphan(self):
+        """ Is this resource an orphan? """
+
         return self.flags & 0x01
 
     @property
     def managed(self):
+        """ Is this resource managed by the cluster? """
+
         return self.flags & 0x02
 
 
 class AuditConstraint:
+    """ A base class for storing information about a cluster constraint """
+
     def __init__(self, cm, line):
+        """ Create a new AuditConstraint instance
+
+            Arguments:
+
+            cm   -- A ClusterManager instance
+            line -- One line of output from `crm_resource` describing a single
+                    constraint
+        """
+
         # pylint: disable=invalid-name
         fields = line.split()
         self._cm = cm
@@ -299,7 +396,19 @@ class AuditConstraint:
 
 
 class PrimitiveAudit(ClusterAudit):
+    """ Audit primitive resources to verify a variety of conditions, including that
+        they are active and managed only when expected; they are active on the
+        expected clusted node; and that they are not orphaned.
+    """
+
     def __init__(self, cm):
+        """ Create a new PrimitiveAudit instance
+
+            Arguments:
+
+            cm -- A ClusterManager instance
+        """
+
         ClusterAudit.__init__(self, cm)
         self.name = "PrimitiveAudit"
 
@@ -310,6 +419,8 @@ class PrimitiveAudit(ClusterAudit):
         self._target = None
 
     def _audit_resource(self, resource, quorum):
+        """ Perform the audit of a single resource """
+
         rc = True
         active = self._cm.ResourceLocation(resource.id)
 
@@ -361,6 +472,10 @@ class PrimitiveAudit(ClusterAudit):
         return rc
 
     def _setup(self):
+        """ Verify cluster nodes are active, and collect resource and colocation
+            information used for performing the audit.
+        """
+
         for node in self._cm.Env["nodes"]:
             if self._cm.ShouldBeStatus[node] == "up":
                 self._active_nodes.append(node)
@@ -403,6 +518,8 @@ class PrimitiveAudit(ClusterAudit):
         return result
 
     def is_applicable(self):
+        """ Return True if this audit is applicable in the current test configuration. """
+
         # @TODO Due to long-ago refactoring, this name test would never match,
         # so this audit (and those derived from it) would never run.
         # Uncommenting the next lines fixes the name test, but that then
@@ -413,7 +530,18 @@ class PrimitiveAudit(ClusterAudit):
 
 
 class GroupAudit(PrimitiveAudit):
+    """ Audit group resources to verify that each of its child primitive
+        resources is active on the expected cluster node.
+    """
+
     def __init__(self, cm):
+        """ Create a new GroupAudit instance
+
+            Arguments:
+
+            cm -- A ClusterManager instance
+        """
+
         PrimitiveAudit.__init__(self, cm)
         self.name = "GroupAudit"
 
@@ -463,7 +591,18 @@ class GroupAudit(PrimitiveAudit):
 
 
 class CloneAudit(PrimitiveAudit):
+    """ Audit clone resources.  NOTE: Currently, this class does not perform
+        any actual audit functions.
+    """
+
     def __init__(self, cm):
+        """ Create a new CloneAudit instance
+
+            Arguments:
+
+            cm -- A ClusterManager instance
+        """
+
         PrimitiveAudit.__init__(self, cm)
         self.name = "CloneAudit"
 
@@ -489,11 +628,24 @@ class CloneAudit(PrimitiveAudit):
 
 
 class ColocationAudit(PrimitiveAudit):
+    """ Audit cluster resources to verify that those that should be colocated
+        with each other actually are.
+    """
+
     def __init__(self, cm):
+        """ Create a new ColocationAudit instance
+
+            Arguments:
+
+            cm -- A ClusterManager instance
+        """
+
         PrimitiveAudit.__init__(self, cm)
         self.name = "ColocationAudit"
 
     def _crm_location(self, resource):
+        """ Return a list of cluster nodes where a given resource is running """
+
         (rc, lines) = self._cm.rsh(self._target, "crm_resource -W -r %s -Q" % resource, verbose=1)
         hosts = []
 
@@ -533,7 +685,18 @@ class ColocationAudit(PrimitiveAudit):
 
 
 class ControllerStateAudit(ClusterAudit):
+    """ Audit cluster nodes to verify that those we expect to be active are
+        active, and those that are expected to be inactive are inactive.
+    """
+
     def __init__(self, cm):
+        """ Create a new ControllerStateAudit instance
+
+            Arguments:
+
+            cm -- A ClusterManager instance
+        """
+
         ClusterAudit.__init__(self, cm)
         self.name = "ControllerStateAudit"
 
@@ -575,6 +738,8 @@ class ControllerStateAudit(ClusterAudit):
         return result
 
     def is_applicable(self):
+        """ Return True if this audit is applicable in the current test configuration. """
+
         # @TODO Due to long-ago refactoring, this name test would never match,
         # so this audit (and those derived from it) would never run.
         # Uncommenting the next lines fixes the name test, but that then
@@ -585,7 +750,16 @@ class ControllerStateAudit(ClusterAudit):
 
 
 class CIBAudit(ClusterAudit):
+    """ Audit the CIB by verifying that it is identical across cluster nodes """
+
     def __init__(self, cm):
+        """ Create a new CIBAudit instance
+
+            Arguments:
+
+            cm -- A ClusterManager instance
+        """
+
         ClusterAudit.__init__(self, cm)
         self.name = "CibAudit"
 
@@ -606,6 +780,8 @@ class CIBAudit(ClusterAudit):
         return result
 
     def _audit_cib_contents(self, hostlist):
+        """ Perform the CIB audit on the given hosts """
+
         passed = True
         node0 = None
         node0_xml = None
@@ -644,6 +820,10 @@ class CIBAudit(ClusterAudit):
         return passed
 
     def _store_remote_cib(self, node, target):
+        """ Store a copy of the given node's CIB on the given target node.  If
+            no target is given, store the CIB on the given node.
+        """
+
         filename = "/tmp/ctsaudit.%s.xml" % node
 
         if not target:
@@ -665,6 +845,8 @@ class CIBAudit(ClusterAudit):
         return filename
 
     def is_applicable(self):
+        """ Return True if this audit is applicable in the current test configuration. """
+
         # @TODO Due to long-ago refactoring, this name test would never match,
         # so this audit (and those derived from it) would never run.
         # Uncommenting the next lines fixes the name test, but that then
@@ -675,7 +857,24 @@ class CIBAudit(ClusterAudit):
 
 
 class PartitionAudit(ClusterAudit):
+    """ Audit each partition in a cluster to verify a variety of conditions:
+
+        * The number of partitions and the nodes in each is as expected
+        * Each node is active when it should be active and inactive when it
+          should be inactive
+        * The status and epoch of each node is as expected
+        * A partition has quorum
+        * A partition has a DC when expected
+    """
+
     def __init__(self, cm):
+        """ Create a new PartitionAudit instance
+
+            Arguments:
+
+            cm -- A ClusterManager instance
+        """
+
         ClusterAudit.__init__(self, cm)
         self.name = "PartitionAudit"
 
@@ -706,6 +905,8 @@ class PartitionAudit(ClusterAudit):
         return result
 
     def _trim_string(self, avalue):
+        """ Remove the last character from a multi-character string """
+
         if not avalue:
             return None
 
@@ -715,6 +916,10 @@ class PartitionAudit(ClusterAudit):
         return avalue
 
     def _trim2int(self, avalue):
+        """ Remove the last character from a multi-character string and convert
+            the result to an int.
+        """
+
         trimmed = self._trim_string(avalue)
         if trimmed:
             return int(trimmed)
@@ -722,6 +927,8 @@ class PartitionAudit(ClusterAudit):
         return None
 
     def _audit_partition(self, partition):
+        """ Perform the audit of a single partition """
+
         passed = True
         dc_found = []
         dc_allowed_list = []
@@ -797,6 +1004,8 @@ class PartitionAudit(ClusterAudit):
         return passed
 
     def is_applicable(self):
+        """ Return True if this audit is applicable in the current test configuration. """
+
         # @TODO Due to long-ago refactoring, this name test would never match,
         # so this audit (and those derived from it) would never run.
         # Uncommenting the next lines fixes the name test, but that then
@@ -808,6 +1017,10 @@ class PartitionAudit(ClusterAudit):
 
 # pylint: disable=invalid-name
 def audit_list(cm):
+    """ Return a list of instances of applicable audits that can be performed
+        for the given ClusterManager.
+    """
+
     result = []
 
     for auditclass in [DiskAudit, FileAudit, LogAudit, ControllerStateAudit,
