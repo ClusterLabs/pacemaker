@@ -369,19 +369,24 @@ pcmk__clone_action_flags(pe_action_t *action, const pe_node_t *node)
     return pcmk__collective_action_flags(action, action->rsc->children, node);
 }
 
+/*!
+ * \internal
+ * \brief Apply a location constraint to a clone resource's allowed node scores
+ *
+ * \param[in,out] rsc       Clone resource to apply constraint to
+ * \param[in,out] location  Location constraint to apply
+ */
 void
-clone_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
+pcmk__clone_apply_location(pe_resource_t *rsc, pe__location_t *constraint)
 {
-    GList *gIter = rsc->children;
-
-    pe_rsc_trace(rsc, "Processing location constraint %s for %s", constraint->id, rsc->id);
+    CRM_CHECK((constraint != NULL) && pe_rsc_is_clone(rsc), return);
 
     pcmk__apply_location(rsc, constraint);
 
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *instance = (pe_resource_t *) iter->data;
 
-        child_rsc->cmds->apply_location(child_rsc, constraint);
+        instance->cmds->apply_location(instance, constraint);
     }
 }
 

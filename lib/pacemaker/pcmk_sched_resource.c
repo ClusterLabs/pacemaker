@@ -66,7 +66,7 @@ static resource_alloc_functions_t allocation_methods[] = {
         pcmk__with_clone_colocations,
         pcmk__clone_with_colocations,
         pcmk__add_colocated_node_scores,
-        clone_rsc_location,
+        pcmk__clone_apply_location,
         pcmk__clone_action_flags,
         pcmk__instance_update_ordered_actions,
         pcmk__output_resource_actions,
