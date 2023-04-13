@@ -526,18 +526,28 @@ pcmk__clone_create_probe(pe_resource_t *rsc, pe_node_t *node)
     CRM_CHECK((node != NULL) && pe_rsc_is_clone(rsc), return false);
 
     if (rsc->exclusive_discover) {
-        /* The user has configured the clone to be probed only where a
-         * location constraint exists with resource-discovery=exclusive.
+        /* The clone is configured to be probed only where a location constraint
+         * exists with resource-discovery set to exclusive.
+         *
+         * This check is not strictly necessary here since the instance's
+         * create_probe() method would also check, but doing it here is more
+         * efficient (especially for unique clones with a large number of
+         * instances), and affects the CRM_meta_notify_available_uname variable
+         * passed with notify actions.
          */
         pe_node_t *allowed = g_hash_table_lookup(rsc->allowed_nodes,
                                                  node->details->id);
 
-        if ((allowed != NULL)
-            && (allowed->rsc_discover_mode != pe_discover_exclusive)) {
+        if ((allowed == NULL)
+            || (allowed->rsc_discover_mode != pe_discover_exclusive)) {
             /* This node is not marked for resource discovery. Remove it from
              * allowed_nodes so that notifications contain only nodes that the
              * clone can possibly run on.
              */
+            pe_rsc_trace(rsc,
+                         "Skipping probe for %s on %s because resource has "
+                         "exclusive discovery but is not allowed on node",
+                         rsc->id, pe__node_name(node));
             g_hash_table_remove(rsc->allowed_nodes, node->details->id);
             return false;
         }
