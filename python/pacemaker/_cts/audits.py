@@ -493,7 +493,7 @@ class ColocationAudit(PrimitiveAudit):
         PrimitiveAudit.__init__(self, cm)
         self.name = "ColocationAudit"
 
-    def crm_location(self, resource):
+    def _crm_location(self, resource):
         (rc, lines) = self._cm.rsh(self._target, "crm_resource -W -r %s -Q" % resource, verbose=1)
         hosts = []
 
@@ -514,8 +514,8 @@ class ColocationAudit(PrimitiveAudit):
             if coloc.type != "rsc_colocation":
                 continue
 
-            source = self.crm_location(coloc.rsc)
-            target = self.crm_location(coloc.target)
+            source = self._crm_location(coloc.rsc)
+            target = self._crm_location(coloc.target)
 
             if not source:
                 self.debug("Colocation audit (%s): %s not running" % (coloc.id, coloc.rsc))
@@ -600,19 +600,19 @@ class CIBAudit(ClusterAudit):
         for partition in ccm_partitions:
             self.debug("\tAuditing CIB consistency for: %s" % partition)
 
-            if self.audit_cib_contents(partition) == 0:
+            if self._audit_cib_contents(partition) == 0:
                 result = False
 
         return result
 
-    def audit_cib_contents(self, hostlist):
+    def _audit_cib_contents(self, hostlist):
         passed = 1
         node0 = None
         node0_xml = None
 
         partition_hosts = hostlist.split()
         for node in partition_hosts:
-            node_xml = self.store_remote_cib(node, node0)
+            node_xml = self._store_remote_cib(node, node0)
 
             if node_xml is None:
                 self._cm.log("Could not perform audit: No configuration from %s" % node)
@@ -643,7 +643,7 @@ class CIBAudit(ClusterAudit):
 
         return passed
 
-    def store_remote_cib(self, node, target):
+    def _store_remote_cib(self, node, target):
         filename = "/tmp/ctsaudit.%s.xml" % node
 
         if not target:
@@ -700,12 +700,12 @@ class PartitionAudit(ClusterAudit):
                 self._cm.log("\t %s" % partition)
 
         for partition in ccm_partitions:
-            if self.audit_partition(partition) == 0:
+            if self._audit_partition(partition) == 0:
                 result = False
 
         return result
 
-    def trim_string(self, avalue):
+    def _trim_string(self, avalue):
         if not avalue:
             return None
 
@@ -714,14 +714,14 @@ class PartitionAudit(ClusterAudit):
 
         return avalue
 
-    def trim2int(self, avalue):
-        trimmed = self.trim_string(avalue)
+    def _trim2int(self, avalue):
+        trimmed = self._trim_string(avalue)
         if trimmed:
             return int(trimmed)
 
         return None
 
-    def audit_partition(self, partition):
+    def _audit_partition(self, partition):
         passed = 1
         dc_found = []
         dc_allowed_list = []
@@ -746,9 +746,9 @@ class PartitionAudit(ClusterAudit):
             self._node_quorum[node] = out[0].strip()
 
             self.debug("Node %s: %s - %s - %s." % (node, self._node_state[node], self._node_epoch[node], self._node_quorum[node]))
-            self._node_state[node]  = self.trim_string(self._node_state[node])
-            self._node_epoch[node] = self.trim2int(self._node_epoch[node])
-            self._node_quorum[node] = self.trim_string(self._node_quorum[node])
+            self._node_state[node]  = self._trim_string(self._node_state[node])
+            self._node_epoch[node] = self._trim2int(self._node_epoch[node])
+            self._node_quorum[node] = self._trim_string(self._node_quorum[node])
 
             if not self._node_epoch[node]:
                 self._cm.log("Warn: Node %s dissappeared: cant determin epoch" % node)
