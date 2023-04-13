@@ -414,33 +414,44 @@ pcmk__clone_add_actions_to_graph(pe_resource_t *rsc)
     pe__free_clone_notification_data(rsc);
 }
 
-// Check whether a resource or any of its children is known on node
+/*!
+ * \internal
+ * \brief Check whether a resource or any children have been probed on a node
+ *
+ * \param[in] rsc   Resource to check
+ * \param[in] node  Node to check
+ *
+ * \return true if \p node is in the known_on table of \p rsc or any of its
+ *         children, otherwise false
+ */
 static bool
-rsc_known_on(const pe_resource_t *rsc, const pe_node_t *node)
+rsc_probed_on(const pe_resource_t *rsc, const pe_node_t *node)
 {
-    if (rsc->children) {
+    if (rsc->children != NULL) {
         for (GList *child_iter = rsc->children; child_iter != NULL;
              child_iter = child_iter->next) {
 
             pe_resource_t *child = (pe_resource_t *) child_iter->data;
 
-            if (rsc_known_on(child, node)) {
-                return TRUE;
+            if (rsc_probed_on(child, node)) {
+                return true;
             }
         }
+        return false;
+    }
 
-    } else if (rsc->known_on) {
+    if (rsc->known_on != NULL) {
         GHashTableIter iter;
         pe_node_t *known_node = NULL;
 
         g_hash_table_iter_init(&iter, rsc->known_on);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &known_node)) {
-            if (node->details == known_node->details) {
-                return TRUE;
+            if (pe__same_node(node, known_node)) {
+                return true;
             }
         }
     }
-    return FALSE;
+    return false;
 }
 
 // Look for an instance of clone that is known on node
@@ -450,7 +461,7 @@ find_instance_on(const pe_resource_t *clone, const pe_node_t *node)
     for (GList *gIter = clone->children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child = (pe_resource_t *) gIter->data;
 
-        if (rsc_known_on(child, node)) {
+        if (rsc_probed_on(child, node)) {
             return child;
         }
     }
