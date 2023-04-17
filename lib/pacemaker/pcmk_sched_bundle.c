@@ -131,35 +131,42 @@ pcmk__bundle_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
     return NULL;
 }
 
+/*!
+ * \internal
+ * \brief Create actions for a bundle replica's resources (other than container)
+ *
+ * \param[in,out] replica    Replica to create actions for
+ * \param[in]     user_data  Unused
+ *
+ * \return true (to indicate that any further replicas should be processed)
+ */
+static bool
+create_replica_actions(pe__bundle_replica_t *replica, void *user_data)
+{
+    if (replica->ip != NULL) {
+        replica->ip->cmds->create_actions(replica->ip);
+    }
+    if (replica->container != NULL) {
+        replica->container->cmds->create_actions(replica->container);
+    }
+    if (replica->remote != NULL) {
+        replica->remote->cmds->create_actions(replica->remote);
+    }
+    return true;
+}
 
 void
 pcmk__bundle_create_actions(pe_resource_t *rsc)
 {
     pe_action_t *action = NULL;
     GList *containers = NULL;
-    pe__bundle_variant_data_t *bundle_data = NULL;
     pe_resource_t *bundled_resource = NULL;
 
     CRM_CHECK(rsc != NULL, return);
 
+    pe__foreach_bundle_replica(rsc, create_replica_actions, NULL);
+
     containers = pe__bundle_containers(rsc);
-    get_bundle_variant_data(bundle_data, rsc);
-    for (GList *gIter = bundle_data->replicas; gIter != NULL;
-         gIter = gIter->next) {
-        pe__bundle_replica_t *replica = gIter->data;
-
-        CRM_ASSERT(replica);
-        if (replica->ip) {
-            replica->ip->cmds->create_actions(replica->ip);
-        }
-        if (replica->container) {
-            replica->container->cmds->create_actions(replica->container);
-        }
-        if (replica->remote) {
-            replica->remote->cmds->create_actions(replica->remote);
-        }
-    }
-
     pcmk__create_instance_actions(rsc, containers);
 
     bundled_resource = pe__bundled_resource(rsc);
