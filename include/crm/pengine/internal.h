@@ -570,6 +570,7 @@ GList *pe__bundle_containers(const pe_resource_t *bundle);
 int pe__bundle_max(const pe_resource_t *rsc);
 bool pe__node_is_bundle_instance(const pe_resource_t *bundle,
                                  const pe_node_t *node);
+pe_resource_t *pe__bundled_resource(const pe_resource_t *rsc);
 
 pe_resource_t *pe__find_bundle_replica(const pe_resource_t *bundle,
                                        const pe_node_t *node);

@@ -33,6 +33,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
 {
     GList *containers = NULL;
     pe__bundle_variant_data_t *bundle_data = NULL;
+    pe_resource_t *bundled_resource = NULL;
 
     CRM_CHECK(rsc != NULL, return NULL);
 
@@ -103,10 +104,11 @@ pcmk__bundle_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
         }
     }
 
-    if (bundle_data->child) {
+    bundled_resource = pe__bundled_resource(rsc);
+    if (bundled_resource != NULL) {
         pe_node_t *node = NULL;
         GHashTableIter iter;
-        g_hash_table_iter_init(&iter, bundle_data->child->allowed_nodes);
+        g_hash_table_iter_init(&iter, bundled_resource->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & node)) {
             if (pe__node_is_bundle_instance(rsc, node)) {
                 node->weight = 0;
@@ -115,8 +117,8 @@ pcmk__bundle_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
             }
         }
         pe_rsc_trace(rsc, "Allocating bundle %s child %s",
-                     rsc->id, bundle_data->child->id);
-        bundle_data->child->cmds->assign(bundle_data->child, prefer);
+                     rsc->id, bundled_resource->id);
+        bundled_resource->cmds->assign(bundled_resource, prefer);
     }
 
     pe__clear_resource_flags(rsc, pe_rsc_allocating|pe_rsc_provisional);
@@ -130,6 +132,7 @@ pcmk__bundle_create_actions(pe_resource_t *rsc)
     pe_action_t *action = NULL;
     GList *containers = NULL;
     pe__bundle_variant_data_t *bundle_data = NULL;
+    pe_resource_t *bundled_resource = NULL;
 
     CRM_CHECK(rsc != NULL, return);
 
@@ -153,10 +156,11 @@ pcmk__bundle_create_actions(pe_resource_t *rsc)
 
     pcmk__create_instance_actions(rsc, containers);
 
-    if (bundle_data->child) {
-        bundle_data->child->cmds->create_actions(bundle_data->child);
+    bundled_resource = pe__bundled_resource(rsc);
+    if (bundled_resource != NULL) {
+        bundled_resource->cmds->create_actions(bundled_resource);
 
-        if (pcmk_is_set(bundle_data->child->flags, pe_rsc_promotable)) {
+        if (pcmk_is_set(bundled_resource->flags, pe_rsc_promotable)) {
             /* promote */
             pe__new_rsc_pseudo_action(rsc, RSC_PROMOTE, true, true);
             action = pe__new_rsc_pseudo_action(rsc, RSC_PROMOTED, true, true);
@@ -176,29 +180,31 @@ void
 pcmk__bundle_internal_constraints(pe_resource_t *rsc)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
+    pe_resource_t *bundled_resource = NULL;
 
     CRM_CHECK(rsc != NULL, return);
 
     get_bundle_variant_data(bundle_data, rsc);
 
-    if (bundle_data->child) {
-        pcmk__order_resource_actions(rsc, RSC_START, bundle_data->child,
+    bundled_resource = pe__bundled_resource(rsc);
+    if (bundled_resource != NULL) {
+        pcmk__order_resource_actions(rsc, RSC_START, bundled_resource,
                                      RSC_START, pe_order_implies_first_printed);
-        pcmk__order_resource_actions(rsc, RSC_STOP, bundle_data->child,
-                                     RSC_STOP, pe_order_implies_first_printed);
+        pcmk__order_resource_actions(rsc, RSC_STOP, bundled_resource, RSC_STOP,
+                                     pe_order_implies_first_printed);
 
-        if (bundle_data->child->children) {
-            pcmk__order_resource_actions(bundle_data->child, RSC_STARTED, rsc,
+        if (bundled_resource->children != NULL) {
+            pcmk__order_resource_actions(bundled_resource, RSC_STARTED, rsc,
                                          RSC_STARTED,
                                          pe_order_implies_then_printed);
-            pcmk__order_resource_actions(bundle_data->child, RSC_STOPPED, rsc,
+            pcmk__order_resource_actions(bundled_resource, RSC_STOPPED, rsc,
                                          RSC_STOPPED,
                                          pe_order_implies_then_printed);
         } else {
-            pcmk__order_resource_actions(bundle_data->child, RSC_START, rsc,
+            pcmk__order_resource_actions(bundled_resource, RSC_START, rsc,
                                          RSC_STARTED,
                                          pe_order_implies_then_printed);
-            pcmk__order_resource_actions(bundle_data->child, RSC_STOP, rsc,
+            pcmk__order_resource_actions(bundled_resource, RSC_STOP, rsc,
                                          RSC_STOPPED,
                                          pe_order_implies_then_printed);
         }
@@ -260,28 +266,28 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
 
     }
 
-    if (bundle_data->child) {
-        bundle_data->child->cmds->internal_constraints(bundle_data->child);
-        if (pcmk_is_set(bundle_data->child->flags, pe_rsc_promotable)) {
+    if (bundled_resource != NULL) {
+        bundled_resource->cmds->internal_constraints(bundled_resource);
+        if (pcmk_is_set(bundled_resource->flags, pe_rsc_promotable)) {
             pcmk__promotable_restart_ordering(rsc);
 
             /* child demoted before global demoted */
-            pcmk__order_resource_actions(bundle_data->child, RSC_DEMOTED, rsc,
+            pcmk__order_resource_actions(bundled_resource, RSC_DEMOTED, rsc,
                                          RSC_DEMOTED,
                                          pe_order_implies_then_printed);
 
             /* global demote before child demote */
-            pcmk__order_resource_actions(rsc, RSC_DEMOTE, bundle_data->child,
+            pcmk__order_resource_actions(rsc, RSC_DEMOTE, bundled_resource,
                                          RSC_DEMOTE,
                                          pe_order_implies_first_printed);
 
             /* child promoted before global promoted */
-            pcmk__order_resource_actions(bundle_data->child, RSC_PROMOTED, rsc,
+            pcmk__order_resource_actions(bundled_resource, RSC_PROMOTED, rsc,
                                          RSC_PROMOTED,
                                          pe_order_implies_then_printed);
 
             /* global promote before child promote */
-            pcmk__order_resource_actions(rsc, RSC_PROMOTE, bundle_data->child,
+            pcmk__order_resource_actions(rsc, RSC_PROMOTE, bundled_resource,
                                          RSC_PROMOTE,
                                          pe_order_implies_first_printed);
         }
@@ -496,11 +502,12 @@ pcmk__bundle_action_flags(pe_action_t *action, const pe_node_t *node)
 {
     GList *containers = NULL;
     enum pe_action_flags flags = 0;
-    pe__bundle_variant_data_t *data = NULL;
+    pe_resource_t *bundled_resource = pe__bundled_resource(action->rsc);
 
-    get_bundle_variant_data(data, action->rsc);
-    if(data->child) {
-        enum action_tasks task = get_complex_task(data->child, action->task);
+    if (bundled_resource != NULL) {
+        enum action_tasks task = get_complex_task(bundled_resource,
+                                                  action->task);
+
         switch(task) {
             case no_action:
             case action_notify:
@@ -510,7 +517,7 @@ pcmk__bundle_action_flags(pe_action_t *action, const pe_node_t *node)
             case action_demote:
             case action_demoted:
                 return pcmk__collective_action_flags(action,
-                                                     data->child->children,
+                                                     bundled_resource->children,
                                                      node);
             default:
                 break;
@@ -557,6 +564,8 @@ void
 pcmk__bundle_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
+    pe_resource_t *bundled_resource = NULL;
+
     get_bundle_variant_data(bundle_data, rsc);
 
     pcmk__apply_location(rsc, constraint);
@@ -574,13 +583,14 @@ pcmk__bundle_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
         }
     }
 
-    if (bundle_data->child
+    bundled_resource = pe__bundled_resource(rsc);
+    if ((bundled_resource != NULL)
         && ((constraint->role_filter == RSC_ROLE_UNPROMOTED)
             || (constraint->role_filter == RSC_ROLE_PROMOTED))) {
-        bundle_data->child->cmds->apply_location(bundle_data->child,
-                                                 constraint);
-        bundle_data->child->rsc_location = g_list_prepend(bundle_data->child->rsc_location,
-                                                          constraint);
+        bundled_resource->cmds->apply_location(bundled_resource,
+                                               constraint);
+        bundled_resource->rsc_location = g_list_prepend(bundled_resource->rsc_location,
+                                                        constraint);
     }
 }
 
@@ -594,13 +604,15 @@ void
 pcmk__bundle_expand(pe_resource_t *rsc)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
+    pe_resource_t *bundled_resource = NULL;
 
     CRM_CHECK(rsc != NULL, return);
 
     get_bundle_variant_data(bundle_data, rsc);
 
-    if (bundle_data->child) {
-        bundle_data->child->cmds->add_actions_to_graph(bundle_data->child);
+    bundled_resource = pe__bundled_resource(rsc);
+    if (bundled_resource != NULL) {
+        bundled_resource->cmds->add_actions_to_graph(bundled_resource);
     }
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;

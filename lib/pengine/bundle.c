@@ -42,6 +42,23 @@ pe__bundle_max(const pe_resource_t *rsc)
 
 /*!
  * \internal
+ * \brief Get the resource inside a bundle
+ *
+ * \param[in] bundle  Bundle to check
+ *
+ * \return Resource inside \p bundle if any, otherwise NULL
+ */
+pe_resource_t *
+pe__bundled_resource(const pe_resource_t *rsc)
+{
+    const pe__bundle_variant_data_t *bundle_data = NULL;
+
+    get_bundle_variant_data(bundle_data, pe__const_top_resource(rsc, true));
+    return bundle_data->child;
+}
+
+/*!
+ * \internal
  * \brief Check whether a given node is created by a bundle
  *
  * \param[in] bundle  Bundle resource to check
