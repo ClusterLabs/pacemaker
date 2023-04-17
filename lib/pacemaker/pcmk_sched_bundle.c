@@ -661,6 +661,74 @@ pcmk__bundle_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
     }
 }
 
+#define XPATH_REMOTE "//nvpair[@name='" XML_RSC_ATTR_REMOTE_RA_ADDR "']"
+
+/*!
+ * \internal
+ * \brief Add a bundle replica's actions to transition graph
+ *
+ * \param[in,out] replica    Replica to add to graph
+ * \param[in]     user_data  Preferred node, if any
+ *
+ * \return true (to indicate that any further replicas should be processed)
+ */
+static bool
+add_replica_actions_to_graph(pe__bundle_replica_t *replica, void *user_data)
+{
+    if ((replica->remote != NULL) && (replica->container != NULL)
+        && pe__bundle_needs_remote_name(replica->remote)) {
+
+        /* REMOTE_CONTAINER_HACK: Allow remote nodes to run containers that
+         * run pacemaker-remoted inside, without needing a separate IP for
+         * the container. This is done by configuring the inner remote's
+         * connection host as the magic string "#uname", then
+         * replacing it with the underlying host when needed.
+         */
+        xmlNode *nvpair = get_xpath_object(XPATH_REMOTE, replica->remote->xml,
+                                           LOG_ERR);
+        const char *calculated_addr = NULL;
+
+        // Replace the value in replica->remote->xml (if appropriate)
+        calculated_addr = pe__add_bundle_remote_name(replica->remote,
+                                                     replica->remote->cluster,
+                                                     nvpair, "value");
+        if (calculated_addr != NULL) {
+            /* Since this is for the bundle as a resource, and not any
+             * particular action, replace the value in the default
+             * parameters (not evaluated for node). create_graph_action()
+             * will grab it from there to replace it in node-evaluated
+             * parameters.
+             */
+            GHashTable *params = pe_rsc_params(replica->remote,
+                                               NULL, replica->remote->cluster);
+
+            g_hash_table_replace(params,
+                                 strdup(XML_RSC_ATTR_REMOTE_RA_ADDR),
+                                 strdup(calculated_addr));
+        } else {
+            /* The only way to get here is if the remote connection is
+             * neither currently running nor scheduled to run. That means we
+             * won't be doing any operations that require addr (only start
+             * requires it; we additionally use it to compare digests when
+             * unpacking status, promote, and migrate_from history, but
+             * that's already happened by this point).
+             */
+            crm_info("Unable to determine address for bundle %s remote connection",
+                     pe__const_top_resource(replica->remote, true)->id);
+        }
+    }
+    if (replica->ip != NULL) {
+        replica->ip->cmds->add_actions_to_graph(replica->ip);
+    }
+    if (replica->container != NULL) {
+        replica->container->cmds->add_actions_to_graph(replica->container);
+    }
+    if (replica->remote != NULL) {
+        replica->remote->cmds->add_actions_to_graph(replica->remote);
+    }
+    return true;
+}
+
 /*!
  * \internal
  * \brief Add a resource's actions to the transition graph
@@ -670,75 +738,15 @@ pcmk__bundle_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 void
 pcmk__bundle_expand(pe_resource_t *rsc)
 {
-    pe__bundle_variant_data_t *bundle_data = NULL;
     pe_resource_t *bundled_resource = NULL;
 
     CRM_CHECK(rsc != NULL, return);
-
-    get_bundle_variant_data(bundle_data, rsc);
 
     bundled_resource = pe__bundled_resource(rsc);
     if (bundled_resource != NULL) {
         bundled_resource->cmds->add_actions_to_graph(bundled_resource);
     }
-
-    for (GList *gIter = bundle_data->replicas; gIter != NULL;
-         gIter = gIter->next) {
-        pe__bundle_replica_t *replica = gIter->data;
-
-        CRM_ASSERT(replica);
-        if (replica->remote && replica->container
-            && pe__bundle_needs_remote_name(replica->remote)) {
-
-            /* REMOTE_CONTAINER_HACK: Allow remote nodes to run containers that
-             * run pacemaker-remoted inside, without needing a separate IP for
-             * the container. This is done by configuring the inner remote's
-             * connection host as the magic string "#uname", then
-             * replacing it with the underlying host when needed.
-             */
-            xmlNode *nvpair = get_xpath_object("//nvpair[@name='" XML_RSC_ATTR_REMOTE_RA_ADDR "']",
-                                               replica->remote->xml, LOG_ERR);
-            const char *calculated_addr = NULL;
-
-            // Replace the value in replica->remote->xml (if appropriate)
-            calculated_addr = pe__add_bundle_remote_name(replica->remote,
-                                                         rsc->cluster,
-                                                         nvpair, "value");
-            if (calculated_addr) {
-                /* Since this is for the bundle as a resource, and not any
-                 * particular action, replace the value in the default
-                 * parameters (not evaluated for node). create_graph_action()
-                 * will grab it from there to replace it in node-evaluated
-                 * parameters.
-                 */
-                GHashTable *params = pe_rsc_params(replica->remote,
-                                                   NULL, rsc->cluster);
-
-                g_hash_table_replace(params,
-                                     strdup(XML_RSC_ATTR_REMOTE_RA_ADDR),
-                                     strdup(calculated_addr));
-            } else {
-                /* The only way to get here is if the remote connection is
-                 * neither currently running nor scheduled to run. That means we
-                 * won't be doing any operations that require addr (only start
-                 * requires it; we additionally use it to compare digests when
-                 * unpacking status, promote, and migrate_from history, but
-                 * that's already happened by this point).
-                 */
-                crm_info("Unable to determine address for bundle %s remote connection",
-                         rsc->id);
-            }
-        }
-        if (replica->ip) {
-            replica->ip->cmds->add_actions_to_graph(replica->ip);
-        }
-        if (replica->container) {
-            replica->container->cmds->add_actions_to_graph(replica->container);
-        }
-        if (replica->remote) {
-            replica->remote->cmds->add_actions_to_graph(replica->remote);
-        }
-    }
+    pe__foreach_bundle_replica(rsc, add_replica_actions_to_graph, NULL);
 }
 
 /*!
