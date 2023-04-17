@@ -21,6 +21,67 @@
 
 /*!
  * \internal
+ * \brief Assign a single bundle replica's resources (other than container)
+ *
+ * \param[in,out] replica    Replica to assign
+ * \param[in]     user_data  Preferred node, if any
+ *
+ * \return true (to indicate that any further replicas should be processed)
+ */
+static bool
+assign_replica(pe__bundle_replica_t *replica, void *user_data)
+{
+    pe_node_t *container_host = NULL;
+    const pe_node_t *prefer = user_data;
+    const pe_resource_t *bundle = pe__const_top_resource(replica->container,
+                                                         true);
+
+    if (replica->ip != NULL) {
+        pe_rsc_trace(bundle, "Assigning bundle %s IP %s",
+                     bundle->id, replica->ip->id);
+        replica->ip->cmds->assign(replica->ip, prefer);
+    }
+
+    container_host = replica->container->allocated_to;
+    if (replica->remote != NULL) {
+        if (pe__is_guest_or_remote_node(container_host)) {
+            /* REMOTE_CONTAINER_HACK: "Nested" connection resources must be on
+             * the same host because Pacemaker Remote only supports a single
+             * active connection.
+             */
+            pcmk__new_colocation("child-remote-with-docker-remote", NULL,
+                                 INFINITY, replica->remote,
+                                 container_host->details->remote_rsc, NULL,
+                                 NULL, true, bundle->cluster);
+        }
+        pe_rsc_trace(bundle, "Assigning bundle %s connection %s",
+                     bundle->id, replica->remote->id);
+        replica->remote->cmds->assign(replica->remote, prefer);
+    }
+
+    if (replica->child != NULL) {
+        pe_node_t *node = NULL;
+        GHashTableIter iter;
+
+        g_hash_table_iter_init(&iter, replica->child->allowed_nodes);
+        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & node)) {
+            if (!pe__same_node(node, replica->node)
+                || !pcmk__threshold_reached(replica->child, node, NULL)) {
+                node->weight = INFINITY;
+            }
+        }
+
+        pe__set_resource_flags(replica->child->parent, pe_rsc_allocating);
+        pe_rsc_trace(bundle, "Assigning bundle %s replica child %s",
+                     bundle->id, replica->child->id);
+        replica->child->cmds->assign(replica->child, replica->node);
+        pe__clear_resource_flags(replica->child->parent, pe_rsc_allocating);
+    }
+    return true;
+}
+
+/*!
+ * \internal
  * \brief Assign a bundle resource to a node
  *
  * \param[in,out] rsc     Resource to assign to a node
@@ -32,12 +93,9 @@ pe_node_t *
 pcmk__bundle_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
 {
     GList *containers = NULL;
-    pe__bundle_variant_data_t *bundle_data = NULL;
     pe_resource_t *bundled_resource = NULL;
 
     CRM_CHECK(rsc != NULL, return NULL);
-
-    get_bundle_variant_data(bundle_data, rsc);
 
     pe__set_resource_flags(rsc, pe_rsc_allocating);
     containers = pe__bundle_containers(rsc);
@@ -50,59 +108,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
                            rsc->fns->max_per_node(rsc));
     g_list_free(containers);
 
-    for (GList *gIter = bundle_data->replicas; gIter != NULL;
-         gIter = gIter->next) {
-        pe__bundle_replica_t *replica = gIter->data;
-        pe_node_t *container_host = NULL;
-
-        CRM_ASSERT(replica);
-        if (replica->ip) {
-            pe_rsc_trace(rsc, "Allocating bundle %s IP %s",
-                         rsc->id, replica->ip->id);
-            replica->ip->cmds->assign(replica->ip, prefer);
-        }
-
-        container_host = replica->container->allocated_to;
-        if (replica->remote && pe__is_guest_or_remote_node(container_host)) {
-            /* We need 'nested' connection resources to be on the same
-             * host because pacemaker-remoted only supports a single
-             * active connection
-             */
-            pcmk__new_colocation("child-remote-with-docker-remote", NULL,
-                                 INFINITY, replica->remote,
-                                 container_host->details->remote_rsc, NULL,
-                                 NULL, true, rsc->cluster);
-        }
-
-        if (replica->remote) {
-            pe_rsc_trace(rsc, "Allocating bundle %s connection %s",
-                         rsc->id, replica->remote->id);
-            replica->remote->cmds->assign(replica->remote, prefer);
-        }
-
-        // Explicitly allocate replicas' children before bundle child
-        if (replica->child) {
-            pe_node_t *node = NULL;
-            GHashTableIter iter;
-
-            g_hash_table_iter_init(&iter, replica->child->allowed_nodes);
-            while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & node)) {
-                if (node->details != replica->node->details) {
-                    node->weight = -INFINITY;
-                } else if (!pcmk__threshold_reached(replica->child, node,
-                                                    NULL)) {
-                    node->weight = INFINITY;
-                }
-            }
-
-            pe__set_resource_flags(replica->child->parent, pe_rsc_allocating);
-            pe_rsc_trace(rsc, "Allocating bundle %s replica child %s",
-                         rsc->id, replica->child->id);
-            replica->child->cmds->assign(replica->child, replica->node);
-            pe__clear_resource_flags(replica->child->parent,
-                                       pe_rsc_allocating);
-        }
-    }
+    pe__foreach_bundle_replica(rsc, assign_replica, (void *) prefer);
 
     bundled_resource = pe__bundled_resource(rsc);
     if (bundled_resource != NULL) {

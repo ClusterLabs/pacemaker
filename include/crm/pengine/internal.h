@@ -10,6 +10,7 @@
 #ifndef PE_INTERNAL__H
 #  define PE_INTERNAL__H
 
+#  include <stdbool.h>
 #  include <stdint.h>
 #  include <string.h>
 #  include <crm/msg_xml.h>
@@ -582,7 +583,9 @@ int pe__bundle_max(const pe_resource_t *rsc);
 bool pe__node_is_bundle_instance(const pe_resource_t *bundle,
                                  const pe_node_t *node);
 pe_resource_t *pe__bundled_resource(const pe_resource_t *rsc);
-
+void pe__foreach_bundle_replica(const pe_resource_t *bundle,
+                                bool (*fn)(pe__bundle_replica_t *, void *),
+                                void *user_data);
 pe_resource_t *pe__find_bundle_replica(const pe_resource_t *bundle,
                                        const pe_node_t *node);
 bool pe__bundle_needs_remote_name(pe_resource_t *rsc);
