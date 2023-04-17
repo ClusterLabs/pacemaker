@@ -791,6 +791,9 @@ enum pe_action_flags pcmk__clone_action_flags(pe_action_t *action,
 G_GNUC_INTERNAL
 void pcmk__clone_add_actions_to_graph(pe_resource_t *rsc);
 
+G_GNUC_INTERNAL
+void pcmk__clone_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml);
+
 
 // Bundles (pcmk_sched_bundle.c)
 

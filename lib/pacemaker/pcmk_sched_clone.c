@@ -561,8 +561,17 @@ pcmk__clone_create_probe(pe_resource_t *rsc, pe_node_t *node)
     }
 }
 
+/*!
+ * \internal
+ * \brief Add meta-attributes relevant to transition graph actions to XML
+ *
+ * Add clone-specific meta-attributes needed for transition graph actions.
+ *
+ * \param[in]     rsc  Clone resource whose meta-attributes should be added
+ * \param[in,out] xml  Transition graph action attributes XML to add to
+ */
 void
-clone_append_meta(const pe_resource_t *rsc, xmlNode *xml)
+pcmk__clone_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml)
 {
     char *name = NULL;
 
