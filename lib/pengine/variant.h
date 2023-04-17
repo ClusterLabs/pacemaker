@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,16 +11,6 @@
 #  define PE_VARIANT__H
 
 #  if PE__VARIANT_BUNDLE
-
-typedef struct {
-    int offset;
-    char *ipaddr;
-    pe_node_t *node;
-    pe_resource_t *ip;
-    pe_resource_t *child;
-    pe_resource_t *container;
-    pe_resource_t *remote;
-} pe__bundle_replica_t;
 
 enum pe__bundle_mount_flags {
     pe__bundle_mount_none       = 0x00,

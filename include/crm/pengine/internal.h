@@ -565,6 +565,17 @@ int pe__common_output_html(pcmk__output_t *out, const pe_resource_t *rsc,
                            const char *name, const pe_node_t *node,
                            unsigned int options);
 
+//! A single instance of a bundle
+typedef struct {
+    int offset;                 //!< 0-origin index of this instance in bundle
+    char *ipaddr;               //!< IP address associated with this instance
+    pe_node_t *node;            //!< Node created for this instance
+    pe_resource_t *ip;          //!< IP address resource for ipaddr
+    pe_resource_t *child;       //!< Instance of bundled resource
+    pe_resource_t *container;   //!< Container associated with this instance
+    pe_resource_t *remote;      //!< Pacemaker Remote connection into container
+} pe__bundle_replica_t;
+
 GList *pe__bundle_containers(const pe_resource_t *bundle);
 
 int pe__bundle_max(const pe_resource_t *rsc);
