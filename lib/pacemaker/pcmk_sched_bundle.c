@@ -399,6 +399,56 @@ compatible_replica(const pe_resource_t *rsc_lh, const pe_resource_t *rsc,
     return pair;
 }
 
+struct coloc_data {
+    const pcmk__colocation_t *colocation;
+    pe_resource_t *dependent;
+    GList *container_hosts;
+};
+
+/*!
+ * \internal
+ * \brief Apply a colocation score to replica node weights or resource priority
+ *
+ * \param[in,out] replica    Replica to apply colocation score to
+ * \param[in]     user_data  struct coloc_data for colocation being applied
+ *
+ * \return true (to indicate that any further replicas should be processed)
+ */
+static bool
+replica_apply_coloc_score(pe__bundle_replica_t *replica, void *user_data)
+{
+    struct coloc_data *coloc_data = user_data;
+    pe_node_t *chosen = NULL;
+
+    if (coloc_data->colocation->score < INFINITY) {
+        replica->container->cmds->apply_coloc_score(coloc_data->dependent,
+                                                    replica->container,
+                                                    coloc_data->colocation,
+                                                    false);
+        return true;
+    }
+
+    chosen = replica->container->fns->location(replica->container, NULL, 0);
+    if ((chosen == NULL)
+        || is_set_recursive(replica->container, pe_rsc_block, true)) {
+        return true;
+    }
+
+    if ((coloc_data->colocation->primary_role >= RSC_ROLE_PROMOTED)
+        && ((replica->child == NULL)
+            || (replica->child->next_role < RSC_ROLE_PROMOTED))) {
+        return true;
+    }
+
+    pe_rsc_trace(pe__const_top_resource(replica->container, true),
+                 "Allowing mandatory colocation %s using %s @%d",
+                 coloc_data->colocation->id, pe__node_name(chosen),
+                 chosen->weight);
+    coloc_data->container_hosts = g_list_prepend(coloc_data->container_hosts,
+                                                 chosen);
+    return true;
+}
+
 /*!
  * \internal
  * \brief Apply a colocation's score to node weights or resource priority
@@ -418,8 +468,7 @@ pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
                                const pcmk__colocation_t *colocation,
                                bool for_dependent)
 {
-    GList *allocated_primaries = NULL;
-    pe__bundle_variant_data_t *bundle_data = NULL;
+    struct coloc_data coloc_data = { colocation, dependent, NULL };
 
     /* This should never be called for the bundle itself as a dependent.
      * Instead, we add its colocation constraints to its replicas and call the
@@ -458,46 +507,17 @@ pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
         return;
     }
 
-    get_bundle_variant_data(bundle_data, primary);
     pe_rsc_trace(primary, "Processing constraint %s: %s -> %s %d",
                  colocation->id, dependent->id, primary->id, colocation->score);
 
-    for (GList *gIter = bundle_data->replicas; gIter != NULL;
-         gIter = gIter->next) {
-        pe__bundle_replica_t *replica = gIter->data;
-
-        if (colocation->score < INFINITY) {
-            replica->container->cmds->apply_coloc_score(dependent,
-                                                        replica->container,
-                                                        colocation, false);
-
-        } else {
-            pe_node_t *chosen = replica->container->fns->location(replica->container,
-                                                                  NULL, FALSE);
-
-            if ((chosen == NULL)
-                || is_set_recursive(replica->container, pe_rsc_block, TRUE)) {
-                continue;
-            }
-            if ((colocation->primary_role >= RSC_ROLE_PROMOTED)
-                && (replica->child == NULL)) {
-                continue;
-            }
-            if ((colocation->primary_role >= RSC_ROLE_PROMOTED)
-                && (replica->child->next_role < RSC_ROLE_PROMOTED)) {
-                continue;
-            }
-
-            pe_rsc_trace(primary, "Allowing %s: %s %d",
-                         colocation->id, pe__node_name(chosen), chosen->weight);
-            allocated_primaries = g_list_prepend(allocated_primaries, chosen);
-        }
-    }
+    pe__foreach_bundle_replica(primary, replica_apply_coloc_score,
+                               (void *) &coloc_data);
 
     if (colocation->score >= INFINITY) {
-        node_list_exclude(dependent->allowed_nodes, allocated_primaries, FALSE);
+        node_list_exclude(dependent->allowed_nodes, coloc_data.container_hosts,
+                          FALSE);
     }
-    g_list_free(allocated_primaries);
+    g_list_free(coloc_data.container_hosts);
 }
 
 // Bundle implementation of resource_alloc_functions_t:with_this_colocations()
