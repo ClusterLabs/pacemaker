@@ -19,19 +19,6 @@
 #define PE__VARIANT_BUNDLE 1
 #include <lib/pengine/variant.h>
 
-static bool
-is_bundle_node(pe__bundle_variant_data_t *data, pe_node_t *node)
-{
-    for (GList *gIter = data->replicas; gIter != NULL; gIter = gIter->next) {
-        pe__bundle_replica_t *replica = gIter->data;
-
-        if (node->details == replica->node->details) {
-            return TRUE;
-        }
-    }
-    return FALSE;
-}
-
 /*!
  * \internal
  * \brief Assign a bundle resource to a node
@@ -121,7 +108,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
         GHashTableIter iter;
         g_hash_table_iter_init(&iter, bundle_data->child->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & node)) {
-            if (is_bundle_node(bundle_data, node)) {
+            if (pe__node_is_bundle_instance(rsc, node)) {
                 node->weight = 0;
             } else {
                 node->weight = -INFINITY;

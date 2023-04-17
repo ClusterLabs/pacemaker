@@ -40,6 +40,31 @@ pe__bundle_max(const pe_resource_t *rsc)
     return bundle_data->nreplicas;
 }
 
+/*!
+ * \internal
+ * \brief Check whether a given node is created by a bundle
+ *
+ * \param[in] bundle  Bundle resource to check
+ * \param[in] node    Node to check
+ *
+ * \return true if \p node is an instance of \p bundle, otherwise false
+ */
+bool
+pe__node_is_bundle_instance(const pe_resource_t *bundle, const pe_node_t *node)
+{
+    pe__bundle_variant_data_t *bundle_data = NULL;
+
+    get_bundle_variant_data(bundle_data, bundle);
+    for (GList *iter = bundle_data->replicas; iter != NULL; iter = iter->next) {
+        pe__bundle_replica_t *replica = iter->data;
+
+        if (pe__same_node(node, replica->node)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 static char *
 next_ip(const char *last_ip)
 {
