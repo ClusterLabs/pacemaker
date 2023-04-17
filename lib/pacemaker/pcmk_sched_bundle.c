@@ -591,36 +591,6 @@ pcmk__bundle_action_flags(pe_action_t *action, const pe_node_t *node)
 
 /*!
  * \internal
- * \brief Get containerized resource corresponding to a given bundle container
- *
- * \param[in] instance  Collective instance that might be a bundle container
- *
- * \return Bundled resource instance inside \p instance if it is a bundle
- *         container instance, otherwise NULL
- */
-const pe_resource_t *
-pcmk__get_rsc_in_container(const pe_resource_t *instance)
-{
-    const pe__bundle_variant_data_t *data = NULL;
-    const pe_resource_t *top = pe__const_top_resource(instance, true);
-
-    if ((top == NULL) || (top->variant != pe_container)) {
-        return NULL;
-    }
-    get_bundle_variant_data(data, top);
-
-    for (const GList *iter = data->replicas; iter != NULL; iter = iter->next) {
-        const pe__bundle_replica_t *replica = iter->data;
-
-        if (instance == replica->container) {
-            return replica->child;
-        }
-    }
-    return NULL;
-}
-
-/*!
- * \internal
  * \brief Apply a location constraint to a bundle replica
  *
  * \param[in,out] replica    Replica to apply constraint to

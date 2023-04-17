@@ -805,9 +805,6 @@ void pcmk__clone_shutdown_lock(pe_resource_t *rsc);
 // Bundles (pcmk_sched_bundle.c)
 
 G_GNUC_INTERNAL
-const pe_resource_t *pcmk__get_rsc_in_container(const pe_resource_t *instance);
-
-G_GNUC_INTERNAL
 void pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
                                     const pe_resource_t *primary,
                                     const pcmk__colocation_t *colocation,

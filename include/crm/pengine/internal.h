@@ -583,6 +583,7 @@ int pe__bundle_max(const pe_resource_t *rsc);
 bool pe__node_is_bundle_instance(const pe_resource_t *bundle,
                                  const pe_node_t *node);
 pe_resource_t *pe__bundled_resource(const pe_resource_t *rsc);
+const pe_resource_t *pe__get_rsc_in_container(const pe_resource_t *instance);
 void pe__foreach_bundle_replica(const pe_resource_t *bundle,
                                 bool (*fn)(pe__bundle_replica_t *, void *),
                                 void *user_data);
