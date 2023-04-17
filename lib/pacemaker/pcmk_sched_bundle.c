@@ -874,32 +874,39 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node)
     return probe_data.any_created;
 }
 
+/*!
+ * \internal
+ * \brief Output actions for one bundle replica
+ *
+ * \param[in,out] replica    Replica to output actions for
+ * \param[in]     user_data  Unused
+ *
+ * \return true (to indicate that any further replicas should be processed)
+ */
+static bool
+output_replica_actions(pe__bundle_replica_t *replica, void *user_data)
+{
+    if (replica->ip != NULL) {
+        replica->ip->cmds->output_actions(replica->ip);
+    }
+    if (replica->container != NULL) {
+        replica->container->cmds->output_actions(replica->container);
+    }
+    if (replica->remote != NULL) {
+        replica->remote->cmds->output_actions(replica->remote);
+    }
+    if (replica->child != NULL) {
+        replica->child->cmds->output_actions(replica->child);
+    }
+    return true;
+}
+
 void
 pcmk__output_bundle_actions(pe_resource_t *rsc)
 {
-    pe__bundle_variant_data_t *bundle_data = NULL;
-
     CRM_CHECK(rsc != NULL, return);
 
-    get_bundle_variant_data(bundle_data, rsc);
-    for (GList *gIter = bundle_data->replicas; gIter != NULL;
-         gIter = gIter->next) {
-        pe__bundle_replica_t *replica = gIter->data;
-
-        CRM_ASSERT(replica);
-        if (replica->ip != NULL) {
-            replica->ip->cmds->output_actions(replica->ip);
-        }
-        if (replica->container != NULL) {
-            replica->container->cmds->output_actions(replica->container);
-        }
-        if (replica->remote != NULL) {
-            replica->remote->cmds->output_actions(replica->remote);
-        }
-        if (replica->child != NULL) {
-            replica->child->cmds->output_actions(replica->child);
-        }
-    }
+    pe__foreach_bundle_replica(rsc, output_replica_actions, NULL);
 }
 
 // Bundle implementation of resource_alloc_functions_t:add_utilization()
