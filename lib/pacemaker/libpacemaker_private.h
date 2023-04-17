@@ -794,6 +794,10 @@ void pcmk__clone_add_actions_to_graph(pe_resource_t *rsc);
 G_GNUC_INTERNAL
 void pcmk__clone_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml);
 
+G_GNUC_INTERNAL
+void pcmk__clone_add_utilization(const pe_resource_t *rsc,
+                                 const pe_resource_t *orig_rsc,
+                                 GList *all_rscs, GHashTable *utilization);
 
 // Bundles (pcmk_sched_bundle.c)
 
