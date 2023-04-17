@@ -32,8 +32,6 @@ void pcmk__bundle_add_utilization(const pe_resource_t *rsc,
                                   GList *all_rscs, GHashTable *utilization);
 void pcmk__bundle_shutdown_lock(pe_resource_t *rsc);
 
-void pcmk__clone_shutdown_lock(pe_resource_t *rsc);
-
 void pcmk__log_transition_summary(const char *filename);
 
 #endif

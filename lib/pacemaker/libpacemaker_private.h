@@ -799,6 +799,9 @@ void pcmk__clone_add_utilization(const pe_resource_t *rsc,
                                  const pe_resource_t *orig_rsc,
                                  GList *all_rscs, GHashTable *utilization);
 
+G_GNUC_INTERNAL
+void pcmk__clone_shutdown_lock(pe_resource_t *rsc);
+
 // Bundles (pcmk_sched_bundle.c)
 
 G_GNUC_INTERNAL
