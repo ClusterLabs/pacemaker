@@ -45,8 +45,8 @@ pcmk__bundle_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
                           rsc, __func__, rsc->allowed_nodes, rsc->cluster);
 
     containers = g_list_sort(containers, pcmk__cmp_instance);
-    pcmk__assign_instances(rsc, containers, bundle_data->nreplicas,
-                           bundle_data->nreplicas_per_host);
+    pcmk__assign_instances(rsc, containers, pe__bundle_max(rsc),
+                           rsc->fns->max_per_node(rsc));
     g_list_free(containers);
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
@@ -705,7 +705,7 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node)
              * we've established that no other copies are already
              * running.
              *
-             * Partly this is to ensure that nreplicas_per_host is
+             * Partly this is to ensure that the maximum replicas per host is
              * observed, but also to ensure that the containers
              * don't fail to start because the necessary port
              * mappings (which won't include an IP for uniqueness)
@@ -713,7 +713,7 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node)
              */
 
             for (GList *tIter = bundle_data->replicas;
-                 tIter && (bundle_data->nreplicas_per_host == 1);
+                 tIter && (rsc->fns->max_per_node(rsc) == 1);
                  tIter = tIter->next) {
                 pe__bundle_replica_t *other = tIter->data;
 
