@@ -619,28 +619,36 @@ pcmk__get_rsc_in_container(const pe_resource_t *instance)
     return NULL;
 }
 
+/*!
+ * \internal
+ * \brief Apply a location constraint to a bundle replica
+ *
+ * \param[in,out] replica    Replica to apply constraint to
+ * \param[in,out] user_data  Location constraint to apply
+ *
+ * \return true (to indicate that any further replicas should be processed)
+ */
+static bool
+apply_location_to_replica(pe__bundle_replica_t *replica, void *user_data)
+{
+    pe__location_t *location = user_data;
+
+    if (replica->container != NULL) {
+        replica->container->cmds->apply_location(replica->container, location);
+    }
+    if (replica->ip != NULL) {
+        replica->ip->cmds->apply_location(replica->ip, location);
+    }
+    return true;
+}
+
 void
 pcmk__bundle_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 {
-    pe__bundle_variant_data_t *bundle_data = NULL;
     pe_resource_t *bundled_resource = NULL;
 
-    get_bundle_variant_data(bundle_data, rsc);
-
     pcmk__apply_location(rsc, constraint);
-
-    for (GList *gIter = bundle_data->replicas; gIter != NULL;
-         gIter = gIter->next) {
-        pe__bundle_replica_t *replica = gIter->data;
-
-        if (replica->container) {
-            replica->container->cmds->apply_location(replica->container,
-                                                     constraint);
-        }
-        if (replica->ip) {
-            replica->ip->cmds->apply_location(replica->ip, constraint);
-        }
-    }
+    pe__foreach_bundle_replica(rsc, apply_location_to_replica, constraint);
 
     bundled_resource = pe__bundled_resource(rsc);
     if ((bundled_resource != NULL)
