@@ -959,7 +959,8 @@ controld_execute_fence_action(pcmk__graph_t *graph,
     const char *priority_delay = NULL;
     int delay_i = 0;
     gboolean invalid_action = FALSE;
-    guint stonith_timeout = controld_globals.transition_graph->stonith_timeout;
+    int stonith_timeout = (int) (controld_globals.transition_graph->stonith_timeout
+                                 / 1000);
 
     CRM_CHECK(id != NULL, invalid_action = TRUE);
     CRM_CHECK(uuid != NULL, invalid_action = TRUE);
@@ -974,7 +975,7 @@ controld_execute_fence_action(pcmk__graph_t *graph,
     priority_delay = crm_meta_value(action->params, XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY);
 
     crm_notice("Requesting fencing (%s) of node %s "
-               CRM_XS " action=%s timeout=%u%s%s",
+               CRM_XS " action=%s timeout=%i%s%s",
                type, target, id, stonith_timeout,
                priority_delay ? " priority_delay=" : "",
                priority_delay ? priority_delay : "");
@@ -988,7 +989,7 @@ controld_execute_fence_action(pcmk__graph_t *graph,
                                           action->id, 0,
                                           controld_globals.te_uuid),
     stonith_api->cmds->register_callback(stonith_api, rc,
-                                         ((int) (stonith_timeout / 1000)
+                                         (stonith_timeout
                                           + (delay_i > 0 ? delay_i : 0)),
                                          st_opt_timeout_updates, transition_key,
                                          "tengine_stonith_callback",
