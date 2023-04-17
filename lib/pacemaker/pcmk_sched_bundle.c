@@ -318,34 +318,54 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
     }
 }
 
+struct match_data {
+    const pe_node_t *node;     // Node to compare against replica
+    pe_resource_t *container;  // Replica container corresponding to node
+};
+
+/*!
+ * \internal
+ * \brief Check whether a replica container is assigned to a given node
+ *
+ * \param[in,out] replica    Replica to check
+ * \param[in,out] user_data  struct match_data with node to compare against
+ *
+ * \return true if the replica does not match (to indicate further replicas
+ *         should be processed), otherwise false
+ */
+static bool
+match_replica_container(pe__bundle_replica_t *replica, void *user_data)
+{
+    struct match_data *match_data = user_data;
+
+    if (pcmk__instance_matches(replica->container, match_data->node,
+                               RSC_ROLE_UNKNOWN, false)) {
+        match_data->container = replica->container;
+        return false; // Match found, don't bother searching further replicas
+    }
+    return true; // No match, keep searching
+}
+
 static pe_resource_t *
 compatible_replica_for_node(const pe_resource_t *rsc_lh,
                             const pe_node_t *candidate,
                             const pe_resource_t *rsc)
 {
-    pe__bundle_variant_data_t *bundle_data = NULL;
+    struct match_data match_data = { candidate, NULL };
 
     CRM_CHECK(candidate != NULL, return NULL);
-    get_bundle_variant_data(bundle_data, rsc);
 
     crm_trace("Looking for compatible child from %s for %s on %s",
               rsc_lh->id, rsc->id, pe__node_name(candidate));
-
-    for (GList *gIter = bundle_data->replicas; gIter != NULL;
-         gIter = gIter->next) {
-        pe__bundle_replica_t *replica = gIter->data;
-
-        if (pcmk__instance_matches(replica->container, candidate,
-                                   RSC_ROLE_UNKNOWN, false)) {
-            crm_trace("Pairing %s with %s on %s",
-                      rsc_lh->id, replica->container->id,
-                      pe__node_name(candidate));
-            return replica->container;
-        }
+    pe__foreach_bundle_replica(rsc, match_replica_container, &match_data);
+    if (match_data.container == NULL) {
+        pe_rsc_trace(rsc, "Can't pair %s with %s", rsc_lh->id, rsc->id);
+    } else {
+        pe_rsc_trace(rsc, "Pairing %s with %s on %s",
+                     rsc_lh->id, match_data.container->id,
+                     pe__node_name(candidate));
     }
-
-    crm_trace("Can't pair %s with %s", rsc_lh->id, rsc->id);
-    return NULL;
+    return match_data.container;
 }
 
 static pe_resource_t *
