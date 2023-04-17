@@ -974,7 +974,7 @@ controld_execute_fence_action(pcmk__graph_t *graph,
 
     priority_delay = crm_meta_value(action->params, XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY);
 
-    crm_notice("Requesting fencing (%s) of node %s "
+    crm_notice("Requesting fencing (%s) targeting node %s "
                CRM_XS " action=%s timeout=%i%s%s",
                type, target, id, stonith_timeout,
                priority_delay ? " priority_delay=" : "",
