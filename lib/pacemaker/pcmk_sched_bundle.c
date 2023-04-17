@@ -189,15 +189,80 @@ pcmk__bundle_create_actions(pe_resource_t *rsc)
     g_list_free(containers);
 }
 
+/*!
+ * \internal
+ * \brief Create internal constraints for a bundle replica's resources
+ *
+ * \param[in,out] replica    Replica to create internal constraints for
+ * \param[in,out] user_data  Replica's parent bundle
+ *
+ * \return true (to indicate that any further replicas should be processed)
+ */
+static bool
+replica_internal_constraints(pe__bundle_replica_t *replica, void *user_data)
+{
+    pe_resource_t *bundle = user_data;
+
+    replica->container->cmds->internal_constraints(replica->container);
+
+    // Start bundle -> start replica container
+    pcmk__order_starts(bundle, replica->container,
+                       pe_order_runnable_left|pe_order_implies_first_printed);
+
+    // Stop bundle -> stop replica child and container
+    if (replica->child != NULL) {
+        pcmk__order_stops(bundle, replica->child,
+                          pe_order_implies_first_printed);
+    }
+    pcmk__order_stops(bundle, replica->container,
+                      pe_order_implies_first_printed);
+
+    // Start replica container -> bundle is started
+    pcmk__order_resource_actions(replica->container, RSC_START, bundle,
+                                 RSC_STARTED,
+                                 pe_order_implies_then_printed);
+
+    // Stop replica container -> bundle is stopped
+    pcmk__order_resource_actions(replica->container, RSC_STOP, bundle,
+                                 RSC_STOPPED,
+                                 pe_order_implies_then_printed);
+
+    if (replica->ip != NULL) {
+        replica->ip->cmds->internal_constraints(replica->ip);
+
+        // Replica IP address -> replica container (symmetric)
+        pcmk__order_starts(replica->ip, replica->container,
+                           pe_order_runnable_left|pe_order_preserve);
+        pcmk__order_stops(replica->container, replica->ip,
+                          pe_order_implies_first|pe_order_preserve);
+
+        pcmk__new_colocation("ip-with-docker", NULL, INFINITY, replica->ip,
+                             replica->container, NULL, NULL, true,
+                             bundle->cluster);
+    }
+
+    if (replica->remote != NULL) {
+        /* This handles ordering and colocating remote relative to container
+         * (via "resource-with-container"). Since IP is also ordered and
+         * colocated relative to the container, we don't need to do anything
+         * explicit here with IP.
+         */
+        replica->remote->cmds->internal_constraints(replica->remote);
+    }
+
+    if (replica->child != NULL) {
+        CRM_ASSERT(replica->remote != NULL);
+        // "Start remote then child" is implicit in scheduler's remote logic
+    }
+    return true;
+}
+
 void
 pcmk__bundle_internal_constraints(pe_resource_t *rsc)
 {
-    pe__bundle_variant_data_t *bundle_data = NULL;
     pe_resource_t *bundled_resource = NULL;
 
     CRM_CHECK(rsc != NULL, return);
-
-    get_bundle_variant_data(bundle_data, rsc);
 
     bundled_resource = pe__bundled_resource(rsc);
     if (bundled_resource != NULL) {
@@ -223,61 +288,7 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
         }
     }
 
-    for (GList *gIter = bundle_data->replicas; gIter != NULL;
-         gIter = gIter->next) {
-        pe__bundle_replica_t *replica = gIter->data;
-
-        CRM_ASSERT(replica);
-        CRM_ASSERT(replica->container);
-
-        replica->container->cmds->internal_constraints(replica->container);
-
-        pcmk__order_starts(rsc, replica->container,
-                           pe_order_runnable_left|pe_order_implies_first_printed);
-
-        if (replica->child) {
-            pcmk__order_stops(rsc, replica->child,
-                              pe_order_implies_first_printed);
-        }
-        pcmk__order_stops(rsc, replica->container,
-                          pe_order_implies_first_printed);
-        pcmk__order_resource_actions(replica->container, RSC_START, rsc,
-                                     RSC_STARTED,
-                                     pe_order_implies_then_printed);
-        pcmk__order_resource_actions(replica->container, RSC_STOP, rsc,
-                                     RSC_STOPPED,
-                                     pe_order_implies_then_printed);
-
-        if (replica->ip) {
-            replica->ip->cmds->internal_constraints(replica->ip);
-
-            // Start IP then container
-            pcmk__order_starts(replica->ip, replica->container,
-                               pe_order_runnable_left|pe_order_preserve);
-            pcmk__order_stops(replica->container, replica->ip,
-                              pe_order_implies_first|pe_order_preserve);
-
-            pcmk__new_colocation("ip-with-docker", NULL, INFINITY, replica->ip,
-                                 replica->container, NULL, NULL, true,
-                                 rsc->cluster);
-        }
-
-        if (replica->remote) {
-            /* This handles ordering and colocating remote relative to container
-             * (via "resource-with-container"). Since IP is also ordered and
-             * colocated relative to the container, we don't need to do anything
-             * explicit here with IP.
-             */
-            replica->remote->cmds->internal_constraints(replica->remote);
-        }
-
-        if (replica->child) {
-            CRM_ASSERT(replica->remote);
-
-            // "Start remote then child" is implicit in scheduler's remote logic
-        }
-
-    }
+    pe__foreach_bundle_replica(rsc, replica_internal_constraints, (void *) rsc);
 
     if (bundled_resource != NULL) {
         bundled_resource->cmds->internal_constraints(bundled_resource);
