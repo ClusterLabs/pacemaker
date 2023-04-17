@@ -1459,7 +1459,8 @@ stonith_choose_peer(remote_fencing_op_t * op)
 
 static int
 get_device_timeout(const remote_fencing_op_t *op,
-                   const peer_device_info_t *peer, const char *device)
+                   const peer_device_info_t *peer, const char *device,
+                   bool with_delay)
 {
     device_properties_t *props;
     int delay = 0;
@@ -1474,7 +1475,7 @@ get_device_timeout(const remote_fencing_op_t *op,
     }
 
     // op->delay < 0 means disable any static/random fencing delays
-    if (op->delay >= 0) {
+    if (with_delay && op->delay >= 0) {
         // delay_base is eventually limited by delay_max
         delay = (props->delay_max[op->phase] > 0 ?
                  props->delay_max[op->phase] : props->delay_base[op->phase]);
@@ -1508,8 +1509,8 @@ add_device_timeout(gpointer key, gpointer value, gpointer user_data)
 
     if (!props->executed[timeout->op->phase]
         && !props->disallowed[timeout->op->phase]) {
-        timeout->total_timeout += get_device_timeout(timeout->op,
-                                                     timeout->peer, device_id);
+        timeout->total_timeout += get_device_timeout(timeout->op, timeout->peer,
+                                                     device_id, true);
     }
 }
 
@@ -1583,7 +1584,8 @@ get_op_total_timeout(const remote_fencing_op_t *op,
                     if (find_peer_device(op, peer, device_list->data,
                                          fenced_support_flag(op->action))) {
                         total_timeout += get_device_timeout(op, peer,
-                                                            device_list->data);
+                                                            device_list->data,
+                                                            true);
                         break;
                     }
                 }               /* End Loop3: match device with peer that owns device, find device's timeout period */
@@ -1598,7 +1600,8 @@ get_op_total_timeout(const remote_fencing_op_t *op,
                 for (iter2 = op->query_results; iter2 != NULL; iter = iter2->next) {
                     peer_device_info_t *peer = iter2->data;
                     if (find_peer_device(op, peer, iter->data, st_device_supports_on)) {
-                        total_timeout += get_device_timeout(op, peer, iter->data);
+                        total_timeout += get_device_timeout(op, peer,
+                                                            iter->data, true);
                         break;
                     }
                 }
@@ -1833,7 +1836,11 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
         peer = stonith_choose_peer(op);
 
         device = op->devices->data;
-        timeout = get_device_timeout(op, peer, device);
+        /* Fencing timeout sent to peer takes no delay into account.
+         * The peer will add a dedicated timer for any delay upon
+         * schedule_stonith_command().
+         */
+        timeout = get_device_timeout(op, peer, device, false);
     }
 
     if (peer) {
@@ -1856,7 +1863,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
 
         if (device) {
             timeout_one += TIMEOUT_MULTIPLY_FACTOR *
-                           get_device_timeout(op, peer, device);
+                           get_device_timeout(op, peer, device, true);
             crm_notice("Requesting that %s perform '%s' action targeting %s "
                        "using %s " CRM_XS " for client %s (%ds)",
                        peer->host, op->action, op->target, device,
