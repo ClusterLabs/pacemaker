@@ -467,7 +467,8 @@ class Environment:
                           help="Warn if a resource is assigned to an inactive node")
 
         parser.add_argument("iterations",
-                            type=int,
+                            nargs='?',
+                            type=int, default=1,
                             help="Number of tests to run")
 
         args = parser.parse_args(args=argv)
