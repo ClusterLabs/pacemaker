@@ -749,6 +749,111 @@ pcmk__bundle_expand(pe_resource_t *rsc)
     pe__foreach_bundle_replica(rsc, add_replica_actions_to_graph, NULL);
 }
 
+struct probe_data {
+    pe_resource_t *bundle;  // Bundle being probed
+    pe_node_t *node;        // Node to create probes on
+    bool any_created;       // Whether any probes have been created
+};
+
+/*!
+ * \internal
+ * \brief Order a bundle replica's start after another replica's probe
+ *
+ * \param[in,out] replica    Replica to order start for
+ * \param[in]     user_data  Replica with probe to order after
+ *
+ * \return true (to indicate that any further replicas should be processed)
+ */
+static bool
+order_replica_start_after(pe__bundle_replica_t *replica, void *user_data)
+{
+    pe__bundle_replica_t *probed_replica = user_data;
+
+    if ((replica == probed_replica) || (replica->container == NULL)) {
+        return true;
+    }
+    pcmk__new_ordering(probed_replica->container,
+                       pcmk__op_key(probed_replica->container->id, RSC_STATUS,
+                                    0),
+                       NULL, replica->container,
+                       pcmk__op_key(replica->container->id, RSC_START, 0), NULL,
+                       pe_order_optional|pe_order_same_node,
+                       replica->container->cluster);
+    return true;
+}
+
+/*!
+ * \internal
+ * \brief Create probes for a bundle replica's resources
+ *
+ * \param[in,out] replica    Replica to create probes for
+ * \param[in]     user_data  struct probe_data
+ *
+ * \return true (to indicate that any further replicas should be processed)
+ */
+static bool
+create_replica_probes(pe__bundle_replica_t *replica, void *user_data)
+{
+    struct probe_data *probe_data = user_data;
+
+    if ((replica->ip != NULL)
+        && replica->ip->cmds->create_probe(replica->ip, probe_data->node)) {
+        probe_data->any_created = true;
+    }
+    if ((replica->child != NULL)
+        && pe__same_node(probe_data->node, replica->node)
+        && replica->child->cmds->create_probe(replica->child, probe_data->node)) {
+        probe_data->any_created = true;
+    }
+    if ((replica->container != NULL)
+        && replica->container->cmds->create_probe(replica->container,
+                                                  probe_data->node)) {
+        probe_data->any_created = true;
+
+        /* If we're limited to one replica per host (due to
+         * the lack of an IP range probably), then we don't
+         * want any of our peer containers starting until
+         * we've established that no other copies are already
+         * running.
+         *
+         * Partly this is to ensure that the maximum replicas per host is
+         * observed, but also to ensure that the containers
+         * don't fail to start because the necessary port
+         * mappings (which won't include an IP for uniqueness)
+         * are already taken
+         */
+        if (probe_data->bundle->fns->max_per_node(probe_data->bundle) == 1) {
+            pe__foreach_bundle_replica(probe_data->bundle,
+                                       order_replica_start_after, replica);
+        }
+    }
+    if ((replica->container != NULL) && (replica->remote != NULL)
+        && replica->remote->cmds->create_probe(replica->remote,
+                                               probe_data->node)) {
+        /* Do not probe the remote resource until we know where the container is
+         * running. This is required for REMOTE_CONTAINER_HACK to correctly
+         * probe remote resources.
+         */
+        char *probe_uuid = pcmk__op_key(replica->remote->id, RSC_STATUS, 0);
+        pe_action_t *probe = find_first_action(replica->remote->actions,
+                                               probe_uuid, NULL,
+                                               probe_data->node);
+
+        free(probe_uuid);
+        if (probe != NULL) {
+            probe_data->any_created = true;
+            crm_trace("Ordering %s probe on %s",
+                      replica->remote->id, pe__node_name(probe_data->node));
+            pcmk__new_ordering(replica->container,
+                               pcmk__op_key(replica->container->id, RSC_START,
+                                            0),
+                               NULL, replica->remote, NULL, probe,
+                               pe_order_probe, probe_data->bundle->cluster);
+        }
+    }
+    return true;
+}
+
 /*!
  * \internal
  *
@@ -762,86 +867,11 @@ pcmk__bundle_expand(pe_resource_t *rsc)
 bool
 pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node)
 {
-    bool any_created = false;
-    pe__bundle_variant_data_t *bundle_data = NULL;
+    struct probe_data probe_data = { rsc, node, false };
 
     CRM_CHECK(rsc != NULL, return false);
-
-    get_bundle_variant_data(bundle_data, rsc);
-    for (GList *gIter = bundle_data->replicas; gIter != NULL;
-         gIter = gIter->next) {
-        pe__bundle_replica_t *replica = gIter->data;
-
-        CRM_ASSERT(replica);
-        if ((replica->ip != NULL)
-            && replica->ip->cmds->create_probe(replica->ip, node)) {
-            any_created = true;
-        }
-        if ((replica->child != NULL) && (node->details == replica->node->details)
-            && replica->child->cmds->create_probe(replica->child, node)) {
-            any_created = true;
-        }
-        if ((replica->container != NULL)
-            && replica->container->cmds->create_probe(replica->container,
-                                                      node)) {
-            any_created = true;
-
-            /* If we're limited to one replica per host (due to
-             * the lack of an IP range probably), then we don't
-             * want any of our peer containers starting until
-             * we've established that no other copies are already
-             * running.
-             *
-             * Partly this is to ensure that the maximum replicas per host is
-             * observed, but also to ensure that the containers
-             * don't fail to start because the necessary port
-             * mappings (which won't include an IP for uniqueness)
-             * are already taken
-             */
-
-            for (GList *tIter = bundle_data->replicas;
-                 tIter && (rsc->fns->max_per_node(rsc) == 1);
-                 tIter = tIter->next) {
-                pe__bundle_replica_t *other = tIter->data;
-
-                if ((other != replica) && (other != NULL)
-                    && (other->container != NULL)) {
-
-                    pcmk__new_ordering(replica->container,
-                                       pcmk__op_key(replica->container->id, RSC_STATUS, 0),
-                                       NULL, other->container,
-                                       pcmk__op_key(other->container->id, RSC_START, 0),
-                                       NULL,
-                                       pe_order_optional|pe_order_same_node,
-                                       rsc->cluster);
-                }
-            }
-        }
-        if ((replica->container != NULL) && (replica->remote != NULL)
-            && replica->remote->cmds->create_probe(replica->remote, node)) {
-
-            /* Do not probe the remote resource until we know where the
-             * container is running. This is required for REMOTE_CONTAINER_HACK
-             * to correctly probe remote resources.
-             */
-            char *probe_uuid = pcmk__op_key(replica->remote->id, RSC_STATUS,
-                                               0);
-            pe_action_t *probe = find_first_action(replica->remote->actions,
-                                                   probe_uuid, NULL, node);
-
-            free(probe_uuid);
-            if (probe != NULL) {
-                any_created = true;
-                crm_trace("Ordering %s probe on %s",
-                          replica->remote->id, pe__node_name(node));
-                pcmk__new_ordering(replica->container,
-                                   pcmk__op_key(replica->container->id, RSC_START, 0),
-                                   NULL, replica->remote, NULL, probe,
-                                   pe_order_probe, rsc->cluster);
-            }
-        }
-    }
-    return any_created;
+    pe__foreach_bundle_replica(rsc, create_replica_probes, &probe_data);
+    return probe_data.any_created;
 }
 
 void
