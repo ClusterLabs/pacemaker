@@ -321,8 +321,7 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
 static pe_resource_t *
 compatible_replica_for_node(const pe_resource_t *rsc_lh,
                             const pe_node_t *candidate,
-                            const pe_resource_t *rsc, enum rsc_role_e filter,
-                            gboolean current)
+                            const pe_resource_t *rsc)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
 
@@ -336,8 +335,8 @@ compatible_replica_for_node(const pe_resource_t *rsc_lh,
          gIter = gIter->next) {
         pe__bundle_replica_t *replica = gIter->data;
 
-        if (pcmk__instance_matches(replica->container, candidate, filter,
-                                   current)) {
+        if (pcmk__instance_matches(replica->container, candidate,
+                                   RSC_ROLE_UNKNOWN, false)) {
             crm_trace("Pairing %s with %s on %s",
                       rsc_lh->id, replica->container->id,
                       pe__node_name(candidate));
@@ -351,17 +350,15 @@ compatible_replica_for_node(const pe_resource_t *rsc_lh,
 
 static pe_resource_t *
 compatible_replica(const pe_resource_t *rsc_lh, const pe_resource_t *rsc,
-                   enum rsc_role_e filter, gboolean current,
                    pe_working_set_t *data_set)
 {
     GList *scratch = NULL;
     pe_resource_t *pair = NULL;
     pe_node_t *active_node_lh = NULL;
 
-    active_node_lh = rsc_lh->fns->location(rsc_lh, NULL, current);
+    active_node_lh = rsc_lh->fns->location(rsc_lh, NULL, 0);
     if (active_node_lh) {
-        return compatible_replica_for_node(rsc_lh, active_node_lh, rsc, filter,
-                                           current);
+        return compatible_replica_for_node(rsc_lh, active_node_lh, rsc);
     }
 
     scratch = g_hash_table_get_values(rsc_lh->allowed_nodes);
@@ -370,7 +367,7 @@ compatible_replica(const pe_resource_t *rsc_lh, const pe_resource_t *rsc,
     for (GList *gIter = scratch; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
 
-        pair = compatible_replica_for_node(rsc_lh, node, rsc, filter, current);
+        pair = compatible_replica_for_node(rsc_lh, node, rsc);
         if (pair) {
             goto done;
         }
@@ -420,8 +417,6 @@ pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
 
     } else if (colocation->dependent->variant > pe_group) {
         pe_resource_t *primary_replica = compatible_replica(dependent, primary,
-                                                            RSC_ROLE_UNKNOWN,
-                                                            FALSE,
                                                             dependent->cluster);
 
         if (primary_replica) {
