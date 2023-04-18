@@ -817,6 +817,9 @@ G_GNUC_INTERNAL
 pe_node_t *pcmk__bundle_assign(pe_resource_t *rsc, const pe_node_t *prefer);
 
 G_GNUC_INTERNAL
+void pcmk__bundle_create_actions(pe_resource_t *rsc);
+
+G_GNUC_INTERNAL
 void pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
                                     pe_resource_t *primary,
                                     const pcmk__colocation_t *colocation,

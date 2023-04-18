@@ -155,6 +155,12 @@ create_replica_actions(pe__bundle_replica_t *replica, void *user_data)
     return true;
 }
 
+/*!
+ * \internal
+ * \brief Create all actions needed for a given bundle resource
+ *
+ * \param[in,out] rsc  Bundle resource to create actions for
+ */
 void
 pcmk__bundle_create_actions(pe_resource_t *rsc)
 {
@@ -162,31 +168,28 @@ pcmk__bundle_create_actions(pe_resource_t *rsc)
     GList *containers = NULL;
     pe_resource_t *bundled_resource = NULL;
 
-    CRM_CHECK(rsc != NULL, return);
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container));
 
     pe__foreach_bundle_replica(rsc, create_replica_actions, NULL);
 
     containers = pe__bundle_containers(rsc);
     pcmk__create_instance_actions(rsc, containers);
+    g_list_free(containers);
 
     bundled_resource = pe__bundled_resource(rsc);
     if (bundled_resource != NULL) {
         bundled_resource->cmds->create_actions(bundled_resource);
 
         if (pcmk_is_set(bundled_resource->flags, pe_rsc_promotable)) {
-            /* promote */
             pe__new_rsc_pseudo_action(rsc, RSC_PROMOTE, true, true);
             action = pe__new_rsc_pseudo_action(rsc, RSC_PROMOTED, true, true);
             action->priority = INFINITY;
 
-            /* demote */
             pe__new_rsc_pseudo_action(rsc, RSC_DEMOTE, true, true);
             action = pe__new_rsc_pseudo_action(rsc, RSC_DEMOTED, true, true);
             action->priority = INFINITY;
         }
     }
-
-    g_list_free(containers);
 }
 
 /*!
