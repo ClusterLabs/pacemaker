@@ -114,6 +114,29 @@ pe__node_is_bundle_instance(const pe_resource_t *bundle, const pe_node_t *node)
 
 /*!
  * \internal
+ * \brief Get the container of a bundle's first replica
+ *
+ * \param[in] bundle  Bundle resource to get container for
+ *
+ * \return Container resource from first replica of \p bundle if any,
+ *         otherwise NULL
+ */
+pe_resource_t *
+pe__first_container(const pe_resource_t *bundle)
+{
+    const pe__bundle_variant_data_t *bundle_data = NULL;
+    const pe__bundle_replica_t *replica = NULL;
+
+    get_bundle_variant_data(bundle_data, bundle);
+    if (bundle_data->replicas == NULL) {
+        return NULL;
+    }
+    replica = bundle_data->replicas->data;
+    return replica->container;
+}
+
+/*!
+ * \internal
  * \brief Iterate over bundle replicas
  *
  * \param[in,out] bundle     Bundle to iterate over

@@ -16,9 +16,6 @@
 
 #include "libpacemaker_private.h"
 
-#define PE__VARIANT_BUNDLE 1
-#include <lib/pengine/variant.h>
-
 /*!
  * \internal
  * \brief Assign a single bundle replica's resources (other than container)
@@ -885,15 +882,9 @@ pcmk__bundle_add_utilization(const pe_resource_t *rsc,
                              const pe_resource_t *orig_rsc, GList *all_rscs,
                              GHashTable *utilization)
 {
-    pe__bundle_variant_data_t *bundle_data = NULL;
-    pe__bundle_replica_t *replica = NULL;
+    pe_resource_t *container = NULL;
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
-        return;
-    }
-
-    get_bundle_variant_data(bundle_data, rsc);
-    if (bundle_data->replicas == NULL) {
         return;
     }
 
@@ -901,10 +892,10 @@ pcmk__bundle_add_utilization(const pe_resource_t *rsc,
      * is sufficient for any. Only the implicit container resource can have
      * utilization values.
      */
-    replica = (pe__bundle_replica_t *) bundle_data->replicas->data;
-    if (replica->container != NULL) {
-        replica->container->cmds->add_utilization(replica->container, orig_rsc,
-                                                  all_rscs, utilization);
+    container = pe__first_container(rsc);
+    if (container != NULL) {
+        container->cmds->add_utilization(container, orig_rsc, all_rscs,
+                                         utilization);
     }
 }
 
