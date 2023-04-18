@@ -465,44 +465,50 @@ pcmk__bundle_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
     struct coloc_data coloc_data = { colocation, dependent, NULL };
 
     /* This should never be called for the bundle itself as a dependent.
-     * Instead, we add its colocation constraints to its replicas and call the
-     * apply_coloc_score() for the replicas as dependents.
+     * Instead, we add its colocation constraints to its containers and call the
+     * apply_coloc_score() method for the containers as dependents.
      */
-    CRM_ASSERT(!for_dependent);
-
-    CRM_CHECK((colocation != NULL) && (dependent != NULL) && (primary != NULL),
-              return);
-    CRM_ASSERT(dependent->variant == pe_native);
+    CRM_ASSERT((primary != NULL) && (primary->variant == pe_container)
+               && (dependent != NULL) && (dependent->variant == pe_native)
+               && (colocation != NULL) && !for_dependent);
 
     if (pcmk_is_set(primary->flags, pe_rsc_provisional)) {
-        pe_rsc_trace(primary, "%s is still provisional", primary->id);
+        pe_rsc_trace(primary,
+                     "Skipping applying colocation %s "
+                     "because %s is still provisional",
+                     colocation->id, primary->id);
         return;
+    }
+    pe_rsc_trace(primary, "Applying colocation %s (%s with %s at %s)",
+                 colocation->id, dependent->id, primary->id,
+                 pcmk_readable_score(colocation->score));
 
-    } else if (colocation->dependent->variant > pe_group) {
-        pe_resource_t *primary_replica = compatible_container(dependent,
-                                                              primary);
+    /* If the constraint dependent is a clone or bundle, "dependent" here is one
+     * of its instances. Look for a compatible instance of this bundle.
+     */
+    if (colocation->dependent->variant > pe_group) {
+        pe_resource_t *primary_replica = NULL;
 
-        if (primary_replica) {
+        primary_replica = compatible_container(dependent, primary);
+        if (primary_replica != NULL) { // Success, we found one
             pe_rsc_debug(primary, "Pairing %s with %s",
                          dependent->id, primary_replica->id);
             dependent->cmds->apply_coloc_score(dependent, primary_replica,
                                                colocation, true);
 
-        } else if (colocation->score >= INFINITY) {
-            crm_notice("Cannot pair %s with instance of %s",
+        } else if (colocation->score >= INFINITY) { // Failure, and it's fatal
+            crm_notice("%s cannot run because there is no compatible "
+                       "instance of %s to colocate with",
                        dependent->id, primary->id);
             pcmk__assign_resource(dependent, NULL, true);
 
-        } else {
-            pe_rsc_debug(primary, "Cannot pair %s with instance of %s",
+        } else { // Failure, but we can ignore it
+            pe_rsc_debug(primary,
+                         "%s cannot be colocated with any instance of %s",
                          dependent->id, primary->id);
         }
-
         return;
     }
-
-    pe_rsc_trace(primary, "Processing constraint %s: %s -> %s %d",
-                 colocation->id, dependent->id, primary->id, colocation->score);
 
     pe__foreach_bundle_replica(primary, replica_apply_coloc_score, &coloc_data);
 
