@@ -355,46 +355,29 @@ match_replica_container(pe__bundle_replica_t *replica, void *user_data)
 }
 
 static pe_resource_t *
-compatible_replica_for_node(const pe_resource_t *rsc_lh,
-                            const pe_node_t *candidate, pe_resource_t *rsc)
-{
-    struct match_data match_data = { candidate, NULL };
-
-    CRM_CHECK(candidate != NULL, return NULL);
-
-    crm_trace("Looking for compatible child from %s for %s on %s",
-              rsc_lh->id, rsc->id, pe__node_name(candidate));
-    pe__foreach_bundle_replica(rsc, match_replica_container, &match_data);
-    if (match_data.container == NULL) {
-        pe_rsc_trace(rsc, "Can't pair %s with %s", rsc_lh->id, rsc->id);
-    } else {
-        pe_rsc_trace(rsc, "Pairing %s with %s on %s",
-                     rsc_lh->id, match_data.container->id,
-                     pe__node_name(candidate));
-    }
-    return match_data.container;
-}
-
-static pe_resource_t *
 compatible_replica(const pe_resource_t *rsc_lh, pe_resource_t *rsc,
                    pe_working_set_t *data_set)
 {
     GList *scratch = NULL;
     pe_resource_t *pair = NULL;
     pe_node_t *active_node_lh = NULL;
+    struct match_data match_data = { NULL, NULL };
 
     active_node_lh = rsc_lh->fns->location(rsc_lh, NULL, 0);
     if (active_node_lh) {
-        return compatible_replica_for_node(rsc_lh, active_node_lh, rsc);
+        match_data.node = active_node_lh;
+        pe__foreach_bundle_replica(rsc, match_replica_container, &match_data);
+        return match_data.container;
     }
 
     scratch = g_hash_table_get_values(rsc_lh->allowed_nodes);
     scratch = pcmk__sort_nodes(scratch, NULL);
 
     for (GList *gIter = scratch; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *node = (pe_node_t *) gIter->data;
+        match_data.node = (pe_node_t *) gIter->data;
 
-        pair = compatible_replica_for_node(rsc_lh, node, rsc);
+        pe__foreach_bundle_replica(rsc, match_replica_container, &match_data);
+        pair = match_data.container;
         if (pair) {
             goto done;
         }
