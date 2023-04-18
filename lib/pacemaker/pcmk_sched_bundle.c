@@ -283,21 +283,15 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
         pcmk__order_resource_actions(rsc, RSC_STOP, bundled_resource, RSC_STOP,
                                      pe_order_implies_first_printed);
 
-        if (bundled_resource->children != NULL) {
-            pcmk__order_resource_actions(bundled_resource, RSC_STARTED, rsc,
-                                         RSC_STARTED,
-                                         pe_order_implies_then_printed);
-            pcmk__order_resource_actions(bundled_resource, RSC_STOPPED, rsc,
-                                         RSC_STOPPED,
-                                         pe_order_implies_then_printed);
-        } else {
-            pcmk__order_resource_actions(bundled_resource, RSC_START, rsc,
-                                         RSC_STARTED,
-                                         pe_order_implies_then_printed);
-            pcmk__order_resource_actions(bundled_resource, RSC_STOP, rsc,
-                                         RSC_STOPPED,
-                                         pe_order_implies_then_printed);
-        }
+        // Bundled clone is started -> bundle is started
+        pcmk__order_resource_actions(bundled_resource, RSC_STARTED,
+                                     rsc, RSC_STARTED,
+                                     pe_order_implies_then_printed);
+
+        // Bundled clone is stopped -> bundle is stopped
+        pcmk__order_resource_actions(bundled_resource, RSC_STOPPED,
+                                     rsc, RSC_STOPPED,
+                                     pe_order_implies_then_printed);
     }
 
     pe__foreach_bundle_replica(rsc, replica_internal_constraints, rsc);
