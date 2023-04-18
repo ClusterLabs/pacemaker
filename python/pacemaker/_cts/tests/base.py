@@ -55,15 +55,15 @@ class CTSTest:
     def __init__(self, cm):
         # pylint: disable=invalid-name
 
-        self.Stats = {"calls":0
-        ,        "success":0
-        ,        "failure":0
-        ,        "skipped":0
-        ,        "auditfail":0}
-
         self.audits = []
         self.name = None
         self.templates = PatternSelector(cm["Name"])
+
+        self.stats = { "auditfail": 0,
+                      "calls": 0,
+                      "failure": 0,
+                      "skipped": 0,
+                      "success": 0 }
 
         self._cm = cm
         self._env = EnvFactory().getInstance()
@@ -87,20 +87,6 @@ class CTSTest:
 
     def debug(self, args):
         self._logger.debug(args)
-
-    def has_key(self, key):
-        return key in self.Stats
-
-    def __setitem__(self, key, value):
-        self.Stats[key] = value
-
-    def __getitem__(self, key):
-        if str(key) == "0":
-            raise ValueError("Bad call to 'foo in X', should reference 'foo in X.Stats' instead")
-
-        if key in self.Stats:
-            return self.Stats[key]
-        return None
 
     def log_mark(self, msg):
         self.debug("MARK: test %s %s %d" % (self.name,msg,time.time()))
@@ -128,10 +114,10 @@ class CTSTest:
         del self._timers[key]
 
     def incr(self, name):
-        '''Increment (or initialize) the value associated with the given name'''
-        if not name in self.Stats:
-            self.Stats[name] = 0
-        self.Stats[name] += 1
+        if name not in self.stats:
+            self.stats[name] = 0
+
+        self.stats[name] += 1
 
         # Reset the test passed boolean
         if name == "calls":
@@ -146,11 +132,13 @@ class CTSTest:
 
     def success(self):
         '''Increment the success count'''
+
         self.incr("success")
         return 1
 
     def skipped(self):
         '''Increment the skipped count'''
+
         self.incr("skipped")
         return 1
 

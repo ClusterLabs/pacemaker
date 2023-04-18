@@ -618,11 +618,13 @@ class BandwidthTest(CTSTest):
     '''Test the bandwidth which the cluster uses'''
     def __init__(self, cm):
         CTSTest.__init__(self, cm)
+
+        self.stats["min"] = 0
+        self.stats["max"] = 0
+        self.stats["totalbandwidth"] = 0
+
         self.name = "Bandwidth"
         self._start = StartTest(cm)
-        self.__setitem__("min",0)
-        self.__setitem__("max",0)
-        self.__setitem__("totalbandwidth",0)
         (handle, self.tempfile) = tempfile.mkstemp(".cts")
         os.close(handle)
         self._startall = SimulStartLite(cm)
@@ -660,13 +662,18 @@ class BandwidthTest(CTSTest):
                 return self.success()
             intband = int(Bandwidth + 0.5)
             self._logger.log("...bandwidth: %d bits/sec" % intband)
-            self.Stats["totalbandwidth"] = self.Stats["totalbandwidth"] + Bandwidth
-            if self.Stats["min"] == 0:
-                self.Stats["min"] = Bandwidth
-            if Bandwidth > self.Stats["max"]:
-                self.Stats["max"] = Bandwidth
-            if Bandwidth < self.Stats["min"]:
-                self.Stats["min"] = Bandwidth
+
+            self.stats["totalbandwidth"] += Bandwidth
+
+            if self.stats["min"] == 0:
+                self.stats["min"] = Bandwidth
+
+            if Bandwidth > self.stats["max"]:
+                self.stats["max"] = Bandwidth
+
+            if Bandwidth < self.stats["min"]:
+                self.stats["min"] = Bandwidth
+
             self._rsh(node, "rm -f %s" % fstmpfile)
             os.unlink(self.tempfile)
             return self.success()

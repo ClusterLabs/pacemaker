@@ -189,16 +189,16 @@ A partially set up scenario is torn down if it fails during setup.
 
         elapsed_time = stoptime - starttime
         test_time = stoptime - test.get_timer()
-        if not test["min_time"]:
-            test["elapsed_time"] = elapsed_time
-            test["min_time"] = test_time
-            test["max_time"] = test_time
+        if "min_time" not in test.stats:
+            test.stats["elapsed_time"] = elapsed_time
+            test.stats["min_time"] = test_time
+            test.stats["max_time"] = test_time
         else:
-            test["elapsed_time"] = test["elapsed_time"] + elapsed_time
-            if test_time < test["min_time"]:
-                test["min_time"] = test_time
-            if test_time > test["max_time"]:
-                test["max_time"] = test_time
+            test.stats["elapsed_time"] = test.stats["elapsed_time"] + elapsed_time
+            if test_time < test.stats["min_time"]:
+                test.stats["min_time"] = test_time
+            if test_time > test.stats["max_time"]:
+                test.stats["max_time"] = test_time
 
         if ret:
             self.incr("success")
@@ -225,12 +225,12 @@ A partially set up scenario is torn down if it fails during setup.
         self.ClusterManager.log("Test Summary")
         for test in self.Tests:
             for key in list(stat_filter.keys()):
-                stat_filter[key] = test.Stats[key]
+                stat_filter[key] = test.stats[key]
             self.ClusterManager.log(("Test %s: "%test.name).ljust(25) + " %s"%repr(stat_filter))
 
         self.ClusterManager.debug("Detailed Results")
         for test in self.Tests:
-            self.ClusterManager.debug(("Test %s: "%test.name).ljust(25) + " %s"%repr(test.Stats))
+            self.ClusterManager.debug(("Test %s: "%test.name).ljust(25) + " %s"%repr(test.stats))
 
         self.ClusterManager.log("<<<<<<<<<<<<<<<< TESTS COMPLETED")
 
