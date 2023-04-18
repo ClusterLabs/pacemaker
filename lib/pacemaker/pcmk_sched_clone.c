@@ -180,13 +180,15 @@ pcmk__clone_internal_constraints(pe_resource_t *rsc)
 static bool
 can_interleave(const pcmk__colocation_t *colocation)
 {
+    const pe_resource_t *dependent = colocation->dependent;
+
     // Only colocations between clone or bundle resources use interleaving
-    if (colocation->dependent->variant <= pe_group) {
+    if (dependent->variant <= pe_group) {
         return false;
     }
 
     // Only the dependent needs to be marked for interleaving
-    if (!crm_is_true(g_hash_table_lookup(colocation->dependent->meta,
+    if (!crm_is_true(g_hash_table_lookup(dependent->meta,
                                          XML_RSC_ATTR_INTERLEAVE))) {
         return false;
     }
@@ -194,12 +196,11 @@ can_interleave(const pcmk__colocation_t *colocation)
     /* @TODO Do we actually care about multiple primary instances sharing a
      * dependent instance?
      */
-    if (copies_per_node(colocation->dependent)
-        != copies_per_node(colocation->primary)) {
+    if (dependent->fns->max_per_node(dependent)
+        != colocation->primary->fns->max_per_node(colocation->primary)) {
         pcmk__config_err("Cannot interleave %s and %s because they do not "
                          "support the same number of instances per node",
-                         colocation->dependent->id,
-                         colocation->primary->id);
+                         dependent->id, colocation->primary->id);
         return false;
     }
 

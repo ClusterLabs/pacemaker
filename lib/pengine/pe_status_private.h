@@ -113,9 +113,29 @@ op_digest_cache_t *pe__compare_fencing_digest(pe_resource_t *rsc,
 G_GNUC_INTERNAL
 void pe__unpack_node_health_scores(pe_working_set_t *data_set);
 
+// Primitive resource methods
+
+G_GNUC_INTERNAL
+unsigned int pe__primitive_max_per_node(const pe_resource_t *rsc);
+
+// Group resource methods
+
+G_GNUC_INTERNAL
+unsigned int pe__group_max_per_node(const pe_resource_t *rsc);
+
+// Clone resource methods
+
+G_GNUC_INTERNAL
+unsigned int pe__clone_max_per_node(const pe_resource_t *rsc);
+
+// Bundle resource methods
+
 G_GNUC_INTERNAL
 pe_node_t *pe__bundle_active_node(const pe_resource_t *rsc,
                                   unsigned int *count_all,
                                   unsigned int *count_clean);
+
+G_GNUC_INTERNAL
+unsigned int pe__bundle_max_per_node(const pe_resource_t *rsc);
 
 #endif  // PE_STATUS_PRIVATE__H

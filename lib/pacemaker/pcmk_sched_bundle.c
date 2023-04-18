@@ -365,47 +365,6 @@ compatible_replica(const pe_resource_t *rsc_lh, const pe_resource_t *rsc,
     return pair;
 }
 
-int copies_per_node(pe_resource_t * rsc) 
-{
-    /* Strictly speaking, there should be a 'copies_per_node' addition
-     * to the resource function table and each case would be a
-     * function.  However that would be serious overkill to return an
-     * int.  In fact, it seems to me that both function tables
-     * could/should be replaced by resources.{c,h} full of
-     * rsc_{some_operation} functions containing a switch as below
-     * which calls out to functions named {variant}_{some_operation}
-     * as needed.
-     */
-    switch(rsc->variant) {
-        case pe_unknown:
-            return 0;
-        case pe_native:
-        case pe_group:
-            return 1;
-        case pe_clone:
-            {
-                const char *max_clones_node = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INCARNATION_NODEMAX);
-
-                if (max_clones_node == NULL) {
-                    return 1;
-
-                } else {
-                    int max_i;
-
-                    pcmk__scan_min_int(max_clones_node, &max_i, 0);
-                    return max_i;
-                }
-            }
-        case pe_container:
-            {
-                pe__bundle_variant_data_t *data = NULL;
-                get_bundle_variant_data(data, rsc);
-                return data->nreplicas_per_host;
-            }
-    }
-    return 0;
-}
-
 /*!
  * \internal
  * \brief Apply a colocation's score to node weights or resource priority
