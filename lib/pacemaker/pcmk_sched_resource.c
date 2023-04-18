@@ -76,7 +76,7 @@ static resource_alloc_functions_t allocation_methods[] = {
         pcmk__clone_shutdown_lock,
     },
     {
-        pcmk__bundle_allocate,
+        pcmk__bundle_assign,
         pcmk__bundle_create_actions,
         pcmk__bundle_create_probe,
         pcmk__bundle_internal_constraints,

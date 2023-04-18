@@ -88,30 +88,34 @@ assign_replica(pe__bundle_replica_t *replica, void *user_data)
  * \return Node that \p rsc is assigned to, if assigned entirely to one node
  */
 pe_node_t *
-pcmk__bundle_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
+pcmk__bundle_assign(pe_resource_t *rsc, const pe_node_t *prefer)
 {
     GList *containers = NULL;
     pe_resource_t *bundled_resource = NULL;
 
-    CRM_CHECK(rsc != NULL, return NULL);
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container));
 
+    pe_rsc_trace(rsc, "Assigning bundle %s", rsc->id);
     pe__set_resource_flags(rsc, pe_rsc_allocating);
-    containers = pe__bundle_containers(rsc);
 
     pe__show_node_weights(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
                           rsc, __func__, rsc->allowed_nodes, rsc->cluster);
 
-    containers = g_list_sort(containers, pcmk__cmp_instance);
+    // Assign all containers first, so we know what nodes the bundle will be on
+    containers = g_list_sort(pe__bundle_containers(rsc), pcmk__cmp_instance);
     pcmk__assign_instances(rsc, containers, pe__bundle_max(rsc),
                            rsc->fns->max_per_node(rsc));
     g_list_free(containers);
 
+    // Then assign remaining replica resources
     pe__foreach_bundle_replica(rsc, assign_replica, (void *) prefer);
 
+    // Finally, assign the bundled resources to each bundle node
     bundled_resource = pe__bundled_resource(rsc);
     if (bundled_resource != NULL) {
         pe_node_t *node = NULL;
         GHashTableIter iter;
+
         g_hash_table_iter_init(&iter, bundled_resource->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & node)) {
             if (pe__node_is_bundle_instance(rsc, node)) {
@@ -120,8 +124,6 @@ pcmk__bundle_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
                 node->weight = -INFINITY;
             }
         }
-        pe_rsc_trace(rsc, "Allocating bundle %s child %s",
-                     rsc->id, bundled_resource->id);
         bundled_resource->cmds->assign(bundled_resource, prefer);
     }
 
