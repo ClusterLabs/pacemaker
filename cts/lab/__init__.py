@@ -6,7 +6,6 @@ CIB
 cib_xml
 CM_common
 CM_corosync
-CTSaudits
 CTS
 CTSscenarios
 CTStests

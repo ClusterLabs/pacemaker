@@ -10,8 +10,8 @@ import sys
 import time
 
 from cts.CTStests import CTSTest
-from cts.CTSaudits import ClusterAudit
 
+from pacemaker._cts.audits import ClusterAudit
 from pacemaker._cts.watcher import LogWatcher
 
 class ScenarioComponent(object):
@@ -247,10 +247,10 @@ A partially set up scenario is torn down if it fails during setup.
         failed = 0
         for audit in self.Audits:
             if not audit():
-                self.ClusterManager.log("Audit " + audit.name() + " FAILED.")
+                self.ClusterManager.log("Audit " + audit.name + " FAILED.")
                 failed += 1
             else:
-                self.ClusterManager.debug("Audit " + audit.name() + " passed.")
+                self.ClusterManager.debug("Audit " + audit.name + " passed.")
 
         while errcount < 1000:
             match = None
