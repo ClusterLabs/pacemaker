@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2022 the Pacemaker project contributors
+# Copyright 2004-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -19,7 +19,7 @@ lib_LTLIBRARIES		= libpe_rules.la libpe_status.la
 check_LTLIBRARIES 	= libpe_rules_test.la libpe_status_test.la
 
 ## SOURCES
-noinst_HEADERS		= variant.h pe_status_private.h
+noinst_HEADERS		= pe_status_private.h
 
 libpe_rules_la_LDFLAGS	= -version-info 30:0:4
 
