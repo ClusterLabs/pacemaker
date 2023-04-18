@@ -260,17 +260,26 @@ replica_internal_constraints(pe__bundle_replica_t *replica, void *user_data)
     return true;
 }
 
+/*!
+ * \internal
+ * \brief Create implicit constraints needed for a bundle resource
+ *
+ * \param[in,out] rsc  Bundle resource to create implicit constraints for
+ */
 void
 pcmk__bundle_internal_constraints(pe_resource_t *rsc)
 {
     pe_resource_t *bundled_resource = NULL;
 
-    CRM_CHECK(rsc != NULL, return);
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container));
 
     bundled_resource = pe__bundled_resource(rsc);
     if (bundled_resource != NULL) {
+        // Start bundle -> start bundled clone
         pcmk__order_resource_actions(rsc, RSC_START, bundled_resource,
                                      RSC_START, pe_order_implies_first_printed);
+
+        // Stop bundle -> stop bundled clone
         pcmk__order_resource_actions(rsc, RSC_STOP, bundled_resource, RSC_STOP,
                                      pe_order_implies_first_printed);
 
@@ -293,32 +302,34 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
 
     pe__foreach_bundle_replica(rsc, replica_internal_constraints, rsc);
 
-    if (bundled_resource != NULL) {
-        bundled_resource->cmds->internal_constraints(bundled_resource);
-        if (pcmk_is_set(bundled_resource->flags, pe_rsc_promotable)) {
-            pcmk__promotable_restart_ordering(rsc);
-
-            /* child demoted before global demoted */
-            pcmk__order_resource_actions(bundled_resource, RSC_DEMOTED, rsc,
-                                         RSC_DEMOTED,
-                                         pe_order_implies_then_printed);
-
-            /* global demote before child demote */
-            pcmk__order_resource_actions(rsc, RSC_DEMOTE, bundled_resource,
-                                         RSC_DEMOTE,
-                                         pe_order_implies_first_printed);
-
-            /* child promoted before global promoted */
-            pcmk__order_resource_actions(bundled_resource, RSC_PROMOTED, rsc,
-                                         RSC_PROMOTED,
-                                         pe_order_implies_then_printed);
-
-            /* global promote before child promote */
-            pcmk__order_resource_actions(rsc, RSC_PROMOTE, bundled_resource,
-                                         RSC_PROMOTE,
-                                         pe_order_implies_first_printed);
-        }
+    if (bundled_resource == NULL) {
+        return;
     }
+    bundled_resource->cmds->internal_constraints(bundled_resource);
+
+    if (!pcmk_is_set(bundled_resource->flags, pe_rsc_promotable)) {
+        return;
+    }
+    pcmk__promotable_restart_ordering(rsc);
+
+    // Bundled clone is demoted -> bundle is demoted
+    pcmk__order_resource_actions(bundled_resource, RSC_DEMOTED,
+                                 rsc, RSC_DEMOTED,
+                                 pe_order_implies_then_printed);
+
+    // Demote bundle -> demote bundled clone
+    pcmk__order_resource_actions(rsc, RSC_DEMOTE, bundled_resource, RSC_DEMOTE,
+                                 pe_order_implies_first_printed);
+
+    // Bundled clone is promoted -> bundle is promoted
+    pcmk__order_resource_actions(bundled_resource, RSC_PROMOTED,
+                                 rsc, RSC_PROMOTED,
+                                 pe_order_implies_then_printed);
+
+    // Promote bundle -> promote bundled clone
+    pcmk__order_resource_actions(rsc, RSC_PROMOTE,
+                                 bundled_resource, RSC_PROMOTE,
+                                 pe_order_implies_first_printed);
 }
 
 struct match_data {
