@@ -354,39 +354,44 @@ match_replica_container(pe__bundle_replica_t *replica, void *user_data)
     return true; // No match, keep searching
 }
 
+/*!
+ * \internal
+ * \brief Find a bundle container compatible with a dependent resource
+ *
+ * \param[in] dependent  Dependent resource in colocation with bundle
+ * \param[in] bundle     Bundle that \p dependent is colocated with
+ *
+ * \return A container from \p bundle assigned to the same node as \p dependent
+ *         if assigned, otherwise assigned to any of dependent's allowed nodes,
+ *         otherwise NULL.
+ */
 static pe_resource_t *
-compatible_replica(const pe_resource_t *rsc_lh, pe_resource_t *rsc,
-                   pe_working_set_t *data_set)
+compatible_container(const pe_resource_t *dependent, pe_resource_t *bundle)
 {
     GList *scratch = NULL;
-    pe_resource_t *pair = NULL;
-    pe_node_t *active_node_lh = NULL;
     struct match_data match_data = { NULL, NULL };
 
-    active_node_lh = rsc_lh->fns->location(rsc_lh, NULL, 0);
-    if (active_node_lh) {
-        match_data.node = active_node_lh;
-        pe__foreach_bundle_replica(rsc, match_replica_container, &match_data);
+    // If dependent is assigned, only check there
+    match_data.node = dependent->fns->location(dependent, NULL, 0);
+    if (match_data.node != NULL) {
+        pe__foreach_bundle_replica(bundle, match_replica_container,
+                                   &match_data);
         return match_data.container;
     }
 
-    scratch = g_hash_table_get_values(rsc_lh->allowed_nodes);
+    // Otherwise, check for any of the dependent's allowed nodes
+    scratch = g_hash_table_get_values(dependent->allowed_nodes);
     scratch = pcmk__sort_nodes(scratch, NULL);
-
-    for (GList *gIter = scratch; gIter != NULL; gIter = gIter->next) {
-        match_data.node = (pe_node_t *) gIter->data;
-
-        pe__foreach_bundle_replica(rsc, match_replica_container, &match_data);
-        pair = match_data.container;
-        if (pair) {
-            goto done;
+    for (const GList *iter = scratch; iter != NULL; iter = iter->next) {
+        match_data.node = (const pe_node_t *) iter->data;
+        pe__foreach_bundle_replica(bundle, match_replica_container,
+                                   &match_data);
+        if (match_data.container != NULL) {
+            break;
         }
     }
-
-    pe_rsc_debug(rsc, "Can't pair %s with %s", rsc_lh->id, (rsc? rsc->id : "none"));
-  done:
     g_list_free(scratch);
-    return pair;
+    return match_data.container;
 }
 
 struct coloc_data {
@@ -474,8 +479,8 @@ pcmk__bundle_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
         return;
 
     } else if (colocation->dependent->variant > pe_group) {
-        pe_resource_t *primary_replica = compatible_replica(dependent, primary,
-                                                            dependent->cluster);
+        pe_resource_t *primary_replica = compatible_container(dependent,
+                                                              primary);
 
         if (primary_replica) {
             pe_rsc_debug(primary, "Pairing %s with %s",
