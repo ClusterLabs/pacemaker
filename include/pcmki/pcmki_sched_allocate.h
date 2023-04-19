@@ -21,8 +21,6 @@
 
 bool pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node);
 void pcmk__bundle_rsc_location(pe_resource_t *rsc, pe__location_t *constraint);
-enum pe_action_flags pcmk__bundle_action_flags(pe_action_t *action,
-                                               const pe_node_t *node);
 void pcmk__bundle_expand(pe_resource_t *rsc);
 void pcmk__bundle_add_utilization(const pe_resource_t *rsc,
                                   const pe_resource_t *orig_rsc,

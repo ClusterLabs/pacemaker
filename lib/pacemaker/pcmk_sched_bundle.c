@@ -555,18 +555,28 @@ pcmk__bundle_with_colocations(const pe_resource_t *rsc,
     }
 }
 
+/*!
+ * \internal
+ * \brief Return action flags for a given bundle resource action
+ *
+ * \param[in,out] action  Bundle resource action to get flags for
+ * \param[in]     node    If not NULL, limit effects to this node
+ *
+ * \return Flags appropriate to \p action on \p node
+ */
 enum pe_action_flags
 pcmk__bundle_action_flags(pe_action_t *action, const pe_node_t *node)
 {
     GList *containers = NULL;
     enum pe_action_flags flags = 0;
-    pe_resource_t *bundled_resource = pe__bundled_resource(action->rsc);
+    pe_resource_t *bundled_resource = NULL;
 
+    CRM_ASSERT((action != NULL) && (action->rsc != NULL)
+               && (action->rsc->variant == pe_container));
+
+    bundled_resource = pe__bundled_resource(action->rsc);
     if (bundled_resource != NULL) {
-        enum action_tasks task = get_complex_task(bundled_resource,
-                                                  action->task);
-
-        switch(task) {
+        switch (get_complex_task(bundled_resource, action->task)) {
             case no_action:
             case action_notify:
             case action_notified:
