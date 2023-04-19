@@ -27,6 +27,7 @@ from pacemaker._cts.environment import EnvFactory
 from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.patterns import PatternSelector
 from pacemaker._cts.remote import RemoteFactory
+from pacemaker._cts.timer import Timer
 from pacemaker._cts.watcher import LogWatcher
 
 # Disable various pylint warnings that occur in so many places throughout this
@@ -63,7 +64,6 @@ class CTSTest:
         self.audits = []
         self.name = None
         self.templates = PatternSelector(cm["Name"])
-        self.timer = {}  # timers
 
         self._cm = cm
         self._env = EnvFactory().getInstance()
@@ -71,6 +71,7 @@ class CTSTest:
         self._r_ocfs2 = []
         self._rsh = RemoteFactory().getInstance()
         self._logger = LogFactory()
+        self._timers = {}
 
         self.benchmark = True  # which tests to benchmark
         self.failed = False
@@ -104,24 +105,27 @@ class CTSTest:
     def log_mark(self, msg):
         self.debug("MARK: test %s %s %d" % (self.name,msg,time.time()))
 
-    def get_timer(self,key = "test"):
+    def get_timer(self, key="test"):
         try:
-            return self.timer[key]
+            return self._timers[key].start_time
         except KeyError:
             return 0
 
-    def set_timer(self,key = "test"):
-        self.timer[key] = time.time()
-        return self.timer[key]
+    def set_timer(self, key="test"):
 
-    def log_timer(self,key = "test"):
-        elapsed = 0
-        if key in self.timer:
-            elapsed = time.time() - self.timer[key]
-            s = "%s:%s" % (self.name, key)
-            self.debug("%s runtime: %.2f" % (s, elapsed))
-            del self.timer[key]
-        return elapsed
+        if key not in self._timers:
+            self._timers[key] = Timer(self._logger, self.name, key)
+
+        self._timers[key].start()
+        return self._timers[key].start_time
+
+    def log_timer(self, key="test"):
+        if key not in self._timers:
+            return
+
+        elapsed = self._timers[key].elapsed
+        self.debug("%s:%s runtime: %.2f" % (self.name, key, elapsed))
+        del self._timers[key]
 
     def incr(self, name):
         '''Increment (or initialize) the value associated with the given name'''
@@ -449,9 +453,9 @@ class RemoteDriver(CTSTest):
 
         self._add_connection_rsc(node)
 
-        self.set_timer("remoteMetalInit")
-        watch.look_for_all()
-        self.log_timer("remoteMetalInit")
+        with Timer(self._logger, self.name, "remoteMetalInit"):
+            watch.look_for_all()
+
         if watch.unmatched:
             self.fail("Unmatched patterns: %s" % watch.unmatched)
 
@@ -471,9 +475,8 @@ class RemoteDriver(CTSTest):
             self.fail("failed to move remote node connection resource")
             return
 
-        self.set_timer("remoteMetalMigrate")
-        watch.look_for_all()
-        self.log_timer("remoteMetalMigrate")
+        with Timer(self._logger, self.name, "remoteMetalMigrate"):
+            watch.look_for_all()
 
         if watch.unmatched:
             self.fail("Unmatched patterns: %s" % watch.unmatched)
@@ -494,9 +497,9 @@ class RemoteDriver(CTSTest):
 
         self._rsh(node, "rm -f /var/run/resource-agents/Dummy*")
 
-        self.set_timer("remoteRscFail")
-        watch.look_for_all()
-        self.log_timer("remoteRscFail")
+        with Timer(self._logger, self.name, "remoteRscFail"):
+            watch.look_for_all()
+
         if watch.unmatched:
             self.fail("Unmatched patterns during rsc fail: %s" % watch.unmatched)
 
@@ -515,9 +518,10 @@ class RemoteDriver(CTSTest):
         self._freeze_pcmk_remote(node)
 
         self.debug("Waiting for remote node to be fenced.")
-        self.set_timer("remoteMetalFence")
-        watch.look_for_all()
-        self.log_timer("remoteMetalFence")
+
+        with Timer(self._logger, self.name, "remoteMetalFence"):
+            watch.look_for_all()
+
         if watch.unmatched:
             self.fail("Unmatched patterns: %s" % watch.unmatched)
             return
@@ -540,9 +544,10 @@ class RemoteDriver(CTSTest):
             return
 
         self.debug("Waiting for remote node to rejoin cluster after being fenced.")
-        self.set_timer("remoteMetalRestart")
-        watch.look_for_all()
-        self.log_timer("remoteMetalRestart")
+
+        with Timer(self._logger, self.name, "remoteMetalRestart"):
+            watch.look_for_all()
+
         if watch.unmatched:
             self.fail("Unmatched patterns: %s" % watch.unmatched)
             return
@@ -567,9 +572,9 @@ class RemoteDriver(CTSTest):
             self.fail("Failed to place remote resource on remote node.")
             return
 
-        self.set_timer("remoteMetalRsc")
-        watch.look_for_all()
-        self.log_timer("remoteMetalRsc")
+        with Timer(self._logger, self.name, "remoteMetalRsc"):
+            watch.look_for_all()
+
         if watch.unmatched:
             self.fail("Unmatched patterns: %s" % watch.unmatched)
 
@@ -611,24 +616,22 @@ class RemoteDriver(CTSTest):
         if self._remote_node_added:
             pats.append(self.templates["Pat:RscOpOK"] % ("stop", self._remote_node))
 
-        self.set_timer("remoteMetalCleanup")
+        with Timer(self._logger, self.name, "remoteMetalCleanup"):
+            self._resume_pcmk_remote(node)
 
-        self._resume_pcmk_remote(node)
+            if self._remote_rsc_added:
+                # Remove dummy resource added for remote node tests
+                self.debug("Cleaning up dummy rsc put on remote node")
+                self._rsh(self._get_other_node(node), "crm_resource -U -r %s" % self._remote_rsc)
+                self._del_rsc(node, self._remote_rsc)
 
-        if self._remote_rsc_added:
-            # Remove dummy resource added for remote node tests
-            self.debug("Cleaning up dummy rsc put on remote node")
-            self._rsh(self._get_other_node(node), "crm_resource -U -r %s" % self._remote_rsc)
-            self._del_rsc(node, self._remote_rsc)
+            if self._remote_node_added:
+                # Remove remote node's connection resource
+                self.debug("Cleaning up remote node connection resource")
+                self._rsh(self._get_other_node(node), "crm_resource -U -r %s" % self._remote_node)
+                self._del_rsc(node, self._remote_node)
 
-        if self._remote_node_added:
-            # Remove remote node's connection resource
-            self.debug("Cleaning up remote node connection resource")
-            self._rsh(self._get_other_node(node), "crm_resource -U -r %s" % self._remote_node)
-            self._del_rsc(node, self._remote_node)
-
-        watch.look_for_all()
-        self.log_timer("remoteMetalCleanup")
+            watch.look_for_all()
 
         if watch.unmatched:
             self.fail("Unmatched patterns: %s" % watch.unmatched)

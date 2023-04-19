@@ -27,6 +27,7 @@ from pacemaker import BuildOptions
 from pacemaker._cts.CTS import NodeStatus
 from pacemaker._cts.audits import AuditResource
 from pacemaker._cts.tests.base import CTSTest, RemoteDriver, SimulStartLite, SimulStopLite, StartTest, StopTest
+from pacemaker._cts.timer import Timer
 
 AllTestClasses = [ ]
 
@@ -161,9 +162,9 @@ class StonithdTest(CTSTest):
             # 255 == broken pipe, ie. the node was fenced as expected
             self._logger.log("Locally originated fencing returned %d" % rc)
 
-        self.set_timer("fence")
-        matched = watch.look_for_all()
-        self.log_timer("fence")
+        with Timer(self._logger, self.name, "fence"):
+            matched = watch.look_for_all()
+
         self.set_timer("reform")
         if watch.unmatched:
             self._logger.log("Patterns not found: " + repr(watch.unmatched))
@@ -765,9 +766,9 @@ class MaintenanceMode(CTSTest):
         if (action == "On"):
             self._rsh(node, "crm_resource -V -F -r %s -H %s &>/dev/null" % (self.rid, node))
 
-        self.set_timer("recover%s" % (action))
-        watch.look_for_all()
-        self.log_timer("recover%s" % (action))
+        with Timer(self._logger, self.name, "recover%s" % action):
+            watch.look_for_all()
+
         if watch.unmatched:
             self.debug("Failed to find patterns when turning maintenance mode %s" % action)
             return repr(watch.unmatched)
@@ -783,9 +784,8 @@ class MaintenanceMode(CTSTest):
 
         self._cm.AddDummyRsc(node, self.rid)
 
-        self.set_timer("addDummy")
-        watch.look_for_all()
-        self.log_timer("addDummy")
+        with Timer(self._logger, self.name, "addDummy"):
+            watch.look_for_all()
 
         if watch.unmatched:
             self.debug("Failed to find patterns when adding maintenance dummy resource")
@@ -800,9 +800,8 @@ class MaintenanceMode(CTSTest):
         watch.set_watch()
         self._cm.RemoveDummyRsc(node, self.rid)
 
-        self.set_timer("removeDummy")
-        watch.look_for_all()
-        self.log_timer("removeDummy")
+        with Timer(self._logger, self.name, "removeDummy"):
+            watch.look_for_all()
 
         if watch.unmatched:
             self.debug("Failed to find patterns when removing maintenance dummy resource")
@@ -1013,9 +1012,8 @@ class ResourceRecover(CTSTest):
 
         self._rsh(node, "crm_resource -V -F -r %s -H %s &>/dev/null" % (self.rid, node))
 
-        self.set_timer("recover")
-        watch.look_for_all()
-        self.log_timer("recover")
+        with Timer(self._logger, self.name, "recover"):
+            watch.look_for_all()
 
         self._cm.cluster_stable()
         recovered = self._cm.ResourceLocation(self.rid)
@@ -2057,9 +2055,10 @@ class RemoteLXC(CTSTest):
         pats.append(self.templates["Pat:RscOpOK"] % ("promote", "lxc-ms"))
 
         self._rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -g -a -m -s -c %d &>/dev/null" % self.num_containers)
-        self.set_timer("remoteSimpleInit")
-        watch.look_for_all()
-        self.log_timer("remoteSimpleInit")
+
+        with Timer(self._logger, self.name, "remoteSimpleInit"):
+            watch.look_for_all()
+
         if watch.unmatched:
             self.fail_string = "Unmatched patterns: %s" % (repr(watch.unmatched))
             self.failed = True
@@ -2081,9 +2080,9 @@ class RemoteLXC(CTSTest):
         pats.append(self.templates["Pat:RscOpOK"] % ("stop", "container2"))
 
         self._rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -p &>/dev/null")
-        self.set_timer("remoteSimpleCleanup")
-        watch.look_for_all()
-        self.log_timer("remoteSimpleCleanup")
+
+        with Timer(self._logger, self.name, "remoteSimpleCleanup"):
+            watch.look_for_all()
 
         if watch.unmatched:
             self.fail_string = "Unmatched patterns: %s" % (repr(watch.unmatched))
