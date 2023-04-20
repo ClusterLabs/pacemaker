@@ -81,6 +81,6 @@ extern gboolean send_request(xmlNode * msg, char **msg_reference);
 
 extern ha_msg_input_t *copy_ha_msg_input(ha_msg_input_t * orig);
 
-void send_remote_state_message(const char *node_name, gboolean node_up);
+void broadcast_remote_state_message(const char *node_name, bool node_up);
 
 #endif

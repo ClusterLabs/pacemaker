@@ -242,7 +242,7 @@ remote_node_up(const char *node_name)
      * so the DC will get it sooner (via message) or later (via CIB refresh),
      * and any other interested parties can query the CIB.
      */
-    send_remote_state_message(node_name, TRUE);
+    broadcast_remote_state_message(node_name, true);
 
     update = create_xml_node(NULL, XML_CIB_TAG_STATUS);
     state = create_node_state_update(node, node_update_cluster, update,
@@ -304,7 +304,7 @@ remote_node_down(const char *node_name, const enum down_opts opts)
     pcmk__update_peer_state(__func__, node, CRM_NODE_LOST, 0);
 
     /* Notify DC */
-    send_remote_state_message(node_name, FALSE);
+    broadcast_remote_state_message(node_name, false);
 
     /* Update CIB node state */
     update = create_xml_node(NULL, XML_CIB_TAG_STATUS);
