@@ -525,11 +525,9 @@ add_start_orderings_for_probe(pe_action_t *probe, pe_action_wrapper_t *after)
  *
  * \param[in,out] probe     Probe as 'first' action in an ordering
  * \param[in,out] after     'then' action in the ordering
- * \param[in,out] data_set  Cluster working set
  */
 static void
-add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after,
-                                pe_working_set_t *data_set)
+add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
 {
     GList *iter = NULL;
     bool interleave = false;
@@ -646,7 +644,7 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after,
                   pe__node_name(after_wrapper->action->node),
                   after_wrapper->type);
 
-        add_restart_orderings_for_probe(probe, after_wrapper->action, data_set);
+        add_restart_orderings_for_probe(probe, after_wrapper->action);
     }
 }
 
@@ -672,19 +670,19 @@ clear_actions_tracking_flag(pe_working_set_t *data_set)
  * \internal
  * \brief Add start and restart orderings for probes scheduled for a resource
  *
- * \param[in,out] rsc       Resource whose probes should be ordered
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] data       Resource whose probes should be ordered
+ * \param[in]     user_data  Unused
  */
 static void
-add_start_restart_orderings_for_rsc(pe_resource_t *rsc,
-                                    pe_working_set_t *data_set)
+add_start_restart_orderings_for_rsc(gpointer data, gpointer user_data)
 {
+    pe_resource_t *rsc = data;
     GList *probes = NULL;
 
     // For collective resources, order each instance recursively
     if (rsc->variant != pe_native) {
-        g_list_foreach(rsc->children,
-                       (GFunc) add_start_restart_orderings_for_rsc, data_set);
+        g_list_foreach(rsc->children, add_start_restart_orderings_for_rsc,
+                       NULL);
         return;
     }
 
@@ -701,8 +699,8 @@ add_start_restart_orderings_for_rsc(pe_resource_t *rsc,
             pe_action_wrapper_t *then = (pe_action_wrapper_t *) then_iter->data;
 
             add_start_orderings_for_probe(probe, then);
-            add_restart_orderings_for_probe(probe, then->action, data_set);
-            clear_actions_tracking_flag(data_set);
+            add_restart_orderings_for_probe(probe, then->action);
+            clear_actions_tracking_flag(rsc->cluster);
         }
     }
 
@@ -832,8 +830,8 @@ void
 pcmk__order_probes(pe_working_set_t *data_set)
 {
     // Add orderings for "probe then X"
-    g_list_foreach(data_set->resources,
-                   (GFunc) add_start_restart_orderings_for_rsc, data_set);
+    g_list_foreach(data_set->resources, add_start_restart_orderings_for_rsc,
+                   NULL);
     add_probe_orderings_for_stops(data_set);
 
     order_then_probes(data_set);
