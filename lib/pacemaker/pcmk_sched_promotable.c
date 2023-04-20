@@ -123,22 +123,23 @@ apply_promoted_locations(pe_resource_t *child,
 {
     for (const GList *iter = location_constraints; iter; iter = iter->next) {
         const pe__location_t *location = iter->data;
-        pe_node_t *weighted_node = NULL;
+        const pe_node_t *constraint_node = NULL;
 
         if (location->role_filter == RSC_ROLE_PROMOTED) {
-            weighted_node = pe_find_node_id(location->node_list_rh,
-                                            chosen->details->id);
+            constraint_node = pe_find_node_id(location->node_list_rh,
+                                              chosen->details->id);
         }
-        if (weighted_node != NULL) {
+        if (constraint_node != NULL) {
             int new_priority = pcmk__add_scores(child->priority,
-                                                weighted_node->weight);
+                                                constraint_node->weight);
 
             pe_rsc_trace(child,
                          "Applying location %s to %s promotion priority on %s: "
                          "%s + %s = %s",
-                         location->id, child->id, pe__node_name(weighted_node),
+                         location->id, child->id,
+                         pe__node_name(constraint_node),
                          pcmk_readable_score(child->priority),
-                         pcmk_readable_score(weighted_node->weight),
+                         pcmk_readable_score(constraint_node->weight),
                          pcmk_readable_score(new_priority));
             child->priority = new_priority;
         }
@@ -288,17 +289,17 @@ cmp_promotable_instance(gconstpointer a, gconstpointer b)
 
 /*!
  * \internal
- * \brief Add a promotable clone instance's sort index to its node's weight
+ * \brief Add a promotable clone instance's sort index to its node's score
  *
  * Add a promotable clone instance's sort index (which sums its promotion
  * preferences and scores of relevant location constraints for the promoted
- * role) to the node weight of the instance's assigned node.
+ * role) to the node score of the instance's assigned node.
  *
  * \param[in]     data       Promotable clone instance
  * \param[in,out] user_data  Clone parent of \p data
  */
 static void
-add_sort_index_to_node_weight(gpointer data, gpointer user_data)
+add_sort_index_to_node_score(gpointer data, gpointer user_data)
 {
     const pe_resource_t *child = (const pe_resource_t *) data;
     pe_resource_t *clone = (pe_resource_t *) user_data;
@@ -330,7 +331,7 @@ add_sort_index_to_node_weight(gpointer data, gpointer user_data)
 
 /*!
  * \internal
- * \brief Apply colocation to dependent's node weights if for promoted role
+ * \brief Apply colocation to dependent's node scores if for promoted role
  *
  * \param[in,out] data       Colocation constraint to apply
  * \param[in,out] user_data  Promotable clone that is constraint's dependent
@@ -361,7 +362,7 @@ apply_coloc_to_dependent(gpointer data, gpointer user_data)
 
 /*!
  * \internal
- * \brief Apply colocation to primary's node weights if for promoted role
+ * \brief Apply colocation to primary's node scores if for promoted role
  *
  * \param[in,out] data       Colocation constraint to apply
  * \param[in,out] user_data  Promotable clone that is constraint's primary
@@ -392,13 +393,13 @@ apply_coloc_to_primary(gpointer data, gpointer user_data)
 
 /*!
  * \internal
- * \brief Set clone instance's sort index to its node's weight
+ * \brief Set clone instance's sort index to its node's score
  *
  * \param[in,out] data       Promotable clone instance
  * \param[in]     user_data  Parent clone of \p data
  */
 static void
-set_sort_index_to_node_weight(gpointer data, gpointer user_data)
+set_sort_index_to_node_score(gpointer data, gpointer user_data)
 {
     pe_resource_t *child = (pe_resource_t *) data;
     const pe_resource_t *clone = (const pe_resource_t *) user_data;
@@ -414,7 +415,7 @@ set_sort_index_to_node_weight(gpointer data, gpointer user_data)
 
     } else if ((chosen == NULL) || (child->sort_index < 0)) {
         pe_rsc_trace(clone,
-                     "Final sort index for %s is %d (ignoring node weight)",
+                     "Final sort index for %s is %d (ignoring node score)",
                      child->id, child->sort_index);
 
     } else {
@@ -425,7 +426,7 @@ set_sort_index_to_node_weight(gpointer data, gpointer user_data)
 
         child->sort_index = node->weight;
         pe_rsc_trace(clone,
-                     "Merging weights for %s: final sort index for %s is %d",
+                     "Adding scores for %s: final sort index for %s is %d",
                      clone->id, child->id, child->sort_index);
     }
 }
@@ -449,7 +450,7 @@ sort_promotable_instances(pe_resource_t *clone)
         pe_resource_t *child = (pe_resource_t *) iter->data;
 
         pe_rsc_trace(clone,
-                     "Merging weights for %s: initial sort index for %s is %d",
+                     "Adding scores for %s: initial sort index for %s is %d",
                      clone->id, child->id, child->sort_index);
     }
     pe__show_node_scores(true, clone, "Before", clone->allowed_nodes,
@@ -459,7 +460,7 @@ sort_promotable_instances(pe_resource_t *clone)
      * boil down to copies of rsc_cons and rsc_cons_lhs for clones, we can use
      * those here directly for efficiency.
      */
-    g_list_foreach(clone->children, add_sort_index_to_node_weight, clone);
+    g_list_foreach(clone->children, add_sort_index_to_node_score, clone);
     g_list_foreach(clone->rsc_cons, apply_coloc_to_dependent, clone);
     g_list_foreach(clone->rsc_cons_lhs, apply_coloc_to_primary, clone);
 
@@ -469,8 +470,8 @@ sort_promotable_instances(pe_resource_t *clone)
     pe__show_node_scores(true, clone, "After", clone->allowed_nodes,
                          clone->cluster);
 
-    // Reset sort indexes to final node weights
-    g_list_foreach(clone->children, set_sort_index_to_node_weight, clone);
+    // Reset sort indexes to final node scores
+    g_list_foreach(clone->children, set_sort_index_to_node_score, clone);
 
     // Finally, sort instances in descending order of promotion priority
     clone->children = g_list_sort(clone->children, cmp_promotable_instance);
@@ -737,7 +738,7 @@ promotion_score(const pe_resource_t *rsc, const pe_node_t *node,
 
 /*!
  * \internal
- * \brief Include promotion scores in instances' node weights and priorities
+ * \brief Include promotion scores in instances' node scores and priorities
  *
  * \param[in,out] rsc  Promotable clone resource to update
  */
@@ -1218,8 +1219,8 @@ pcmk__update_dependent_with_promotable(const pe_resource_t *primary,
         }
     }
 
-    /* For mandatory colocations, add the primary's node weight to the
-     * dependent's node weight for each affected node, and ban the dependent
+    /* For mandatory colocations, add the primary's node score to the
+     * dependent's node score for each affected node, and ban the dependent
      * from all other nodes.
      *
      * However, skip this for promoted-with-promoted colocations, otherwise

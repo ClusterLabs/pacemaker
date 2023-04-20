@@ -114,7 +114,7 @@ pcmk__copy_node_list(const GList *list, bool reset)
  * \brief Compare two nodes for assignment preference
  *
  * Given two nodes, check which one is more preferred by assignment criteria
- * such as node weight and utilization.
+ * such as node score and utilization.
  *
  * \param[in] a     First node to compare
  * \param[in] b     Second node to compare
@@ -130,8 +130,8 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
     const pe_node_t *node2 = (const pe_node_t *) b;
     const pe_node_t *active = (const pe_node_t *) data;
 
-    int node1_weight = 0;
-    int node2_weight = 0;
+    int node1_score = 0;
+    int node2_score = 0;
 
     int result = 0;
 
@@ -142,28 +142,28 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
         return -1;
     }
 
-    // Compare node weights
+    // Compare node scores
 
-    node1_weight = pcmk__node_available(node1, false, false)? node1->weight : -INFINITY;
-    node2_weight = pcmk__node_available(node2, false, false)? node2->weight : -INFINITY;
+    node1_score = pcmk__node_available(node1, false, false)? node1->weight : -INFINITY;
+    node2_score = pcmk__node_available(node2, false, false)? node2->weight : -INFINITY;
 
-    if (node1_weight > node2_weight) {
-        crm_trace("%s (%d) > %s (%d) : weight",
-                  pe__node_name(node1), node1_weight, pe__node_name(node2),
-                  node2_weight);
+    if (node1_score > node2_score) {
+        crm_trace("%s (%d) > %s (%d) : score",
+                  pe__node_name(node1), node1_score, pe__node_name(node2),
+                  node2_score);
         return -1;
     }
 
-    if (node1_weight < node2_weight) {
-        crm_trace("%s (%d) < %s (%d) : weight",
-                  pe__node_name(node1), node1_weight, pe__node_name(node2),
-                  node2_weight);
+    if (node1_score < node2_score) {
+        crm_trace("%s (%d) < %s (%d) : score",
+                  pe__node_name(node1), node1_score, pe__node_name(node2),
+                  node2_score);
         return 1;
     }
 
-    crm_trace("%s (%d) == %s (%d) : weight",
-              pe__node_name(node1), node1_weight, pe__node_name(node2),
-              node2_weight);
+    crm_trace("%s (%d) == %s (%d) : score",
+              pe__node_name(node1), node1_score, pe__node_name(node2),
+              node2_score);
 
     // If appropriate, compare node utilization
 

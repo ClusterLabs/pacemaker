@@ -401,7 +401,7 @@ struct coloc_data {
 
 /*!
  * \internal
- * \brief Apply a colocation score to replica node weights or resource priority
+ * \brief Apply a colocation score to replica node scores or resource priority
  *
  * \param[in,out] replica    Replica to apply colocation score to
  * \param[in,out] user_data  struct coloc_data for colocation being applied
@@ -445,10 +445,10 @@ replica_apply_coloc_score(pe__bundle_replica_t *replica, void *user_data)
 
 /*!
  * \internal
- * \brief Apply a colocation's score to node weights or resource priority
+ * \brief Apply a colocation's score to node scores or resource priority
  *
  * Given a colocation constraint, apply its score to the dependent's
- * allowed node weights (if we are still placing resources) or priority (if
+ * allowed node scores (if we are still placing resources) or priority (if
  * we are choosing promotable clone instance roles).
  *
  * \param[in,out] dependent      Dependent resource in colocation

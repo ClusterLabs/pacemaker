@@ -118,11 +118,11 @@ static rsc_transition_fn rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
 
 /*!
  * \internal
- * \brief Get a list of a resource's allowed nodes sorted by node weight
+ * \brief Get a list of a resource's allowed nodes sorted by node score
  *
  * \param[in] rsc  Resource to check
  *
- * \return List of allowed nodes sorted by node weight
+ * \return List of allowed nodes sorted by node score
  */
 static GList *
 sorted_allowed_nodes(const pe_resource_t *rsc)
@@ -164,7 +164,7 @@ assign_best_node(pe_resource_t *rsc, const pe_node_t *prefer)
         return rsc->allocated_to != NULL;
     }
 
-    // Sort allowed nodes by weight
+    // Sort allowed nodes by score
     nodes = sorted_allowed_nodes(rsc);
     if (nodes != NULL) {
         best = (pe_node_t *) nodes->data; // First node has best score
@@ -178,11 +178,11 @@ assign_best_node(pe_resource_t *rsc, const pe_node_t *prefer)
             pe_rsc_trace(rsc, "Preferred node %s for %s was unknown",
                          pe__node_name(prefer), rsc->id);
 
-        /* Favor the preferred node as long as its weight is at least as good as
+        /* Favor the preferred node as long as its score is at least as good as
          * the best allowed node's.
          *
          * An alternative would be to favor the preferred node even if the best
-         * node is better, when the best node's weight is less than INFINITY.
+         * node is better, when the best node's score is less than INFINITY.
          */
         } else if (chosen->weight < best->weight) {
             pe_rsc_trace(rsc, "Preferred node %s for %s was unsuitable",
@@ -236,7 +236,7 @@ assign_best_node(pe_resource_t *rsc, const pe_node_t *prefer)
                     pe_node_t *allowed = (pe_node_t *) iter->data;
 
                     if (allowed->weight != chosen->weight) {
-                        // The nodes are sorted by weight, so no more are equal
+                        // The nodes are sorted by score, so no more are equal
                         break;
                     }
                     if (pe__same_node(allowed, running)) {
@@ -1015,10 +1015,10 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
 
 /*!
  * \internal
- * \brief Apply a colocation's score to node weights or resource priority
+ * \brief Apply a colocation's score to node scores or resource priority
  *
  * Given a colocation constraint, apply its score to the dependent's
- * allowed node weights (if we are still placing resources) or priority (if
+ * allowed node scores (if we are still placing resources) or priority (if
  * we are choosing promotable clone instance roles).
  *
  * \param[in,out] dependent      Dependent resource in colocation
@@ -1055,7 +1055,7 @@ pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
             pcmk__apply_coloc_to_priority(dependent, primary, colocation);
             break;
         case pcmk__coloc_affects_location:
-            pcmk__apply_coloc_to_weights(dependent, primary, colocation);
+            pcmk__apply_coloc_to_scores(dependent, primary, colocation);
             break;
         default: // pcmk__coloc_affects_nothing
             return;

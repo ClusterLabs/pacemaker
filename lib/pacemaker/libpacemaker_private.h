@@ -95,10 +95,10 @@ struct resource_alloc_functions_s {
 
     /*!
      * \internal
-     * \brief Apply a colocation's score to node weights or resource priority
+     * \brief Apply a colocation's score to node scores or resource priority
      *
      * Given a colocation constraint, apply its score to the dependent's
-     * allowed node weights (if we are still placing resources) or priority (if
+     * allowed node scores (if we are still placing resources) or priority (if
      * we are choosing promotable clone instance roles).
      *
      * \param[in,out] dependent      Dependent resource in colocation
@@ -434,7 +434,7 @@ void pcmk__unpack_location(xmlNode *xml_obj, pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
 pe__location_t *pcmk__new_location(const char *id, pe_resource_t *rsc,
-                                   int node_weight, const char *discover_mode,
+                                   int node_score, const char *discover_mode,
                                    pe_node_t *foo_node,
                                    pe_working_set_t *data_set);
 
@@ -460,9 +460,9 @@ enum pcmk__coloc_affects pcmk__colocation_affects(const pe_resource_t *dependent
                                                   bool preview);
 
 G_GNUC_INTERNAL
-void pcmk__apply_coloc_to_weights(pe_resource_t *dependent,
-                                  const pe_resource_t *primary,
-                                  const pcmk__colocation_t *colocation);
+void pcmk__apply_coloc_to_scores(pe_resource_t *dependent,
+                                 const pe_resource_t *primary,
+                                 const pcmk__colocation_t *colocation);
 
 G_GNUC_INTERNAL
 void pcmk__apply_coloc_to_priority(pe_resource_t *dependent,

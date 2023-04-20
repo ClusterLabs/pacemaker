@@ -1108,7 +1108,7 @@ pcmk__colocation_affects(const pe_resource_t *dependent,
  * \internal
  * \brief Apply colocation to dependent for assignment purposes
  *
- * Update the allowed node weights of the dependent resource in a colocation,
+ * Update the allowed node scores of the dependent resource in a colocation,
  * for the purposes of assigning it to a node.
  *
  * \param[in,out] dependent   Dependent resource in colocation
@@ -1116,9 +1116,9 @@ pcmk__colocation_affects(const pe_resource_t *dependent,
  * \param[in]     colocation  Colocation constraint
  */
 void
-pcmk__apply_coloc_to_weights(pe_resource_t *dependent,
-                             const pe_resource_t *primary,
-                             const pcmk__colocation_t *colocation)
+pcmk__apply_coloc_to_scores(pe_resource_t *dependent,
+                            const pe_resource_t *primary,
+                            const pcmk__colocation_t *colocation)
 {
     const char *attribute = CRM_ATTR_ID;
     const char *value = NULL;
@@ -1364,8 +1364,8 @@ add_node_scores_matching_attr(GHashTable *nodes, const pe_resource_t *rsc,
     // Iterate through each node
     g_hash_table_iter_init(&iter, nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-        float weight_f = 0;
-        int weight = 0;
+        float delta_f = 0;
+        int delta = 0;
         int score = 0;
         int new_score = 0;
         const char *value = pe_node_attribute_raw(node, attr);
@@ -1423,24 +1423,24 @@ add_node_scores_matching_attr(GHashTable *nodes, const pe_resource_t *rsc,
             continue;
         }
 
-        weight_f = factor * score;
+        delta_f = factor * score;
 
         // Round the number; see http://c-faq.com/fp/round.html
-        weight = (int) ((weight_f < 0)? (weight_f - 0.5) : (weight_f + 0.5));
+        delta = (int) ((delta_f < 0)? (delta_f - 0.5) : (delta_f + 0.5));
 
         /* Small factors can obliterate the small scores that are often actually
          * used in configurations. If the score and factor are nonzero, ensure
          * that the result is nonzero as well.
          */
-        if ((weight == 0) && (score != 0)) {
+        if ((delta == 0) && (score != 0)) {
             if (factor > 0.0) {
-                weight = 1;
+                delta = 1;
             } else if (factor < 0.0) {
-                weight = -1;
+                delta = -1;
             }
         }
 
-        new_score = pcmk__add_scores(weight, node->weight);
+        new_score = pcmk__add_scores(delta, node->weight);
 
         if (only_positive && (new_score < 0) && (node->weight > 0)) {
             crm_trace("%s: Filtering %d + %f * %d = %d "

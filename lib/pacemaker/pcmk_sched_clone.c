@@ -209,10 +209,10 @@ can_interleave(const pcmk__colocation_t *colocation)
 
 /*!
  * \internal
- * \brief Apply a colocation's score to node weights or resource priority
+ * \brief Apply a colocation's score to node scores or resource priority
  *
  * Given a colocation constraint, apply its score to the dependent's
- * allowed node weights (if we are still placing resources) or priority (if
+ * allowed node scores (if we are still placing resources) or priority (if
  * we are choosing promotable clone instance roles).
  *
  * \param[in,out] dependent      Dependent resource in colocation

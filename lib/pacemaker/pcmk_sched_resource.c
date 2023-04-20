@@ -364,10 +364,10 @@ pcmk__finalize_assignment(pe_resource_t *rsc, pe_node_t *chosen, bool force)
                 && !pe__is_guest_node(chosen))) {
 
             crm_debug("All nodes for resource %s are unavailable, unclean or "
-                      "shutting down (%s can%s run resources, with weight %d)",
+                      "shutting down (%s can%s run resources, with score %s)",
                       rsc->id, pe__node_name(chosen),
                       (pcmk__node_available(chosen, true, false)? "" : "not"),
-                      chosen->weight);
+                      pcmk_readable_score(chosen->weight));
             pe__set_next_role(rsc, RSC_ROLE_STOPPED, "node availability");
             chosen = NULL;
         }
@@ -574,22 +574,22 @@ convert_const_pointer(const void *ptr)
 
 /*!
  * \internal
- * \brief Get a node's weight
+ * \brief Get a node's score
  *
- * \param[in] node     Unweighted node to check (for node ID)
- * \param[in] nodes    List of weighted nodes to look for \p node in
+ * \param[in] node     Node with ID to check
+ * \param[in] nodes    List of nodes to look for \p node score in
  *
- * \return Node's weight, or -INFINITY if not found
+ * \return Node's score, or -INFINITY if not found
  */
 static int
-get_node_weight(const pe_node_t *node, GHashTable *nodes)
+get_node_score(const pe_node_t *node, GHashTable *nodes)
 {
-    pe_node_t *weighted_node = NULL;
+    pe_node_t *found_node = NULL;
 
     if ((node != NULL) && (nodes != NULL)) {
-        weighted_node = g_hash_table_lookup(nodes, node->details->id);
+        found_node = g_hash_table_lookup(nodes, node->details->id);
     }
-    return (weighted_node == NULL)? -INFINITY : weighted_node->weight;
+    return (found_node == NULL)? -INFINITY : found_node->weight;
 }
 
 /*!
@@ -611,8 +611,8 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
     const GList *nodes = (const GList *) data;
 
     int rc = 0;
-    int r1_weight = -INFINITY;
-    int r2_weight = -INFINITY;
+    int r1_score = -INFINITY;
+    int r2_score = -INFINITY;
     pe_node_t *r1_node = NULL;
     pe_node_t *r2_node = NULL;
     GHashTable *r1_nodes = NULL;
@@ -621,13 +621,13 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
 
     // Resources with highest priority should be assigned first
     reason = "priority";
-    r1_weight = resource1->priority;
-    r2_weight = resource2->priority;
-    if (r1_weight > r2_weight) {
+    r1_score = resource1->priority;
+    r2_score = resource2->priority;
+    if (r1_score > r2_score) {
         rc = -1;
         goto done;
     }
-    if (r1_weight < r2_weight) {
+    if (r1_score < r2_score) {
         rc = 1;
         goto done;
     }
@@ -638,7 +638,7 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
         goto done;
     }
 
-    // Calculate and log node weights
+    // Calculate and log node scores
     resource1->cmds->add_colocated_node_scores(convert_const_pointer(resource1),
                                                resource1->id, &r1_nodes, NULL,
                                                1, pcmk__coloc_select_this_with);
@@ -658,29 +658,29 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
     if (resource2->running_on != NULL) {
         r2_node = pe__current_node(resource2);
     }
-    r1_weight = get_node_weight(r1_node, r1_nodes);
-    r2_weight = get_node_weight(r2_node, r2_nodes);
-    if (r1_weight > r2_weight) {
+    r1_score = get_node_score(r1_node, r1_nodes);
+    r2_score = get_node_score(r2_node, r2_nodes);
+    if (r1_score > r2_score) {
         rc = -1;
         goto done;
     }
-    if (r1_weight < r2_weight) {
+    if (r1_score < r2_score) {
         rc = 1;
         goto done;
     }
 
-    // Otherwise a higher weight on any node will do
+    // Otherwise a higher score on any node will do
     reason = "score";
     for (const GList *iter = nodes; iter != NULL; iter = iter->next) {
         const pe_node_t *node = (const pe_node_t *) iter->data;
 
-        r1_weight = get_node_weight(node, r1_nodes);
-        r2_weight = get_node_weight(node, r2_nodes);
-        if (r1_weight > r2_weight) {
+        r1_score = get_node_score(node, r1_nodes);
+        r2_score = get_node_score(node, r2_nodes);
+        if (r1_score > r2_score) {
             rc = -1;
             goto done;
         }
-        if (r1_weight < r2_weight) {
+        if (r1_score < r2_score) {
             rc = 1;
             goto done;
         }
@@ -688,11 +688,11 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
 
 done:
     crm_trace("%s (%d)%s%s %c %s (%d)%s%s: %s",
-              resource1->id, r1_weight,
+              resource1->id, r1_score,
               ((r1_node == NULL)? "" : " on "),
               ((r1_node == NULL)? "" : r1_node->details->id),
               ((rc < 0)? '>' : ((rc > 0)? '<' : '=')),
-              resource2->id, r2_weight,
+              resource2->id, r2_score,
               ((r2_node == NULL)? "" : " on "),
               ((r2_node == NULL)? "" : r2_node->details->id),
               reason);

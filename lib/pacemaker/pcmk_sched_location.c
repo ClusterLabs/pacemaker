@@ -526,7 +526,7 @@ pcmk__unpack_location(xmlNode *xml_obj, pe_working_set_t *data_set)
  *
  * \param[in]     id             XML ID of location constraint
  * \param[in,out] rsc            Resource in location constraint
- * \param[in]     node_weight    Constraint score
+ * \param[in]     node_score     Constraint score
  * \param[in]     discover_mode  Resource discovery option for constraint
  * \param[in]     node           Node in constraint (or NULL if rule-based)
  * \param[in,out] data_set       Cluster working set to add constraint to
@@ -537,7 +537,7 @@ pcmk__unpack_location(xmlNode *xml_obj, pe_working_set_t *data_set)
  */
 pe__location_t *
 pcmk__new_location(const char *id, pe_resource_t *rsc,
-                   int node_weight, const char *discover_mode,
+                   int node_score, const char *discover_mode,
                    pe_node_t *node, pe_working_set_t *data_set)
 {
     pe__location_t *new_con = NULL;
@@ -551,7 +551,7 @@ pcmk__new_location(const char *id, pe_resource_t *rsc,
         return NULL;
 
     } else if (node == NULL) {
-        CRM_CHECK(node_weight == 0, return NULL);
+        CRM_CHECK(node_score == 0, return NULL);
     }
 
     new_con = calloc(1, sizeof(pe__location_t));
@@ -580,7 +580,7 @@ pcmk__new_location(const char *id, pe_resource_t *rsc,
         if (node != NULL) {
             pe_node_t *copy = pe__copy_node(node);
 
-            copy->weight = node_weight;
+            copy->weight = node_score;
             new_con->node_list_rh = g_list_prepend(NULL, copy);
         }
 
@@ -650,30 +650,30 @@ pcmk__apply_location(pe_resource_t *rsc, pe__location_t *location)
          gIter = gIter->next) {
 
         pe_node_t *node = (pe_node_t *) gIter->data;
-        pe_node_t *weighted_node = NULL;
+        pe_node_t *allowed_node = NULL;
 
-        weighted_node = (pe_node_t *) pe_hash_table_lookup(rsc->allowed_nodes,
-                                                           node->details->id);
-        if (weighted_node == NULL) {
+        allowed_node = (pe_node_t *) pe_hash_table_lookup(rsc->allowed_nodes,
+                                                          node->details->id);
+        if (allowed_node == NULL) {
             pe_rsc_trace(rsc, "* = %d on %s",
                          node->weight, pe__node_name(node));
-            weighted_node = pe__copy_node(node);
+            allowed_node = pe__copy_node(node);
             g_hash_table_insert(rsc->allowed_nodes,
-                                (gpointer) weighted_node->details->id,
-                                weighted_node);
+                                (gpointer) allowed_node->details->id,
+                                allowed_node);
         } else {
             pe_rsc_trace(rsc, "* + %d on %s",
                          node->weight, pe__node_name(node));
-            weighted_node->weight = pcmk__add_scores(weighted_node->weight,
-                                                     node->weight);
+            allowed_node->weight = pcmk__add_scores(allowed_node->weight,
+                                                    node->weight);
         }
 
-        if (weighted_node->rsc_discover_mode < location->discover_mode) {
+        if (allowed_node->rsc_discover_mode < location->discover_mode) {
             if (location->discover_mode == pe_discover_exclusive) {
                 rsc->exclusive_discover = TRUE;
             }
             /* exclusive > never > always... always is default */
-            weighted_node->rsc_discover_mode = location->discover_mode;
+            allowed_node->rsc_discover_mode = location->discover_mode;
         }
     }
 }

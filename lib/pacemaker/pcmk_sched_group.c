@@ -305,10 +305,10 @@ pcmk__group_internal_constraints(pe_resource_t *rsc)
 
 /*!
  * \internal
- * \brief Apply a colocation's score to node weights or resource priority
+ * \brief Apply a colocation's score to node scores or resource priority
  *
  * Given a colocation constraint for a group with some other resource, apply the
- * score to the dependent's allowed node weights (if we are still placing
+ * score to the dependent's allowed node scores (if we are still placing
  * resources) or priority (if we are choosing promotable clone instance roles).
  *
  * \param[in,out] dependent      Dependent group resource in colocation
@@ -351,10 +351,10 @@ colocate_group_with(pe_resource_t *dependent, pe_resource_t *primary,
 
 /*!
  * \internal
- * \brief Apply a colocation's score to node weights or resource priority
+ * \brief Apply a colocation's score to node scores or resource priority
  *
  * Given a colocation constraint for some other resource with a group, apply the
- * score to the dependent's allowed node weights (if we are still placing
+ * score to the dependent's allowed node scores (if we are still placing
  * resources) or priority (if we are choosing promotable clone instance roles).
  *
  * \param[in,out] dependent      Dependent resource in colocation
@@ -414,10 +414,10 @@ colocate_with_group(pe_resource_t *dependent, const pe_resource_t *primary,
 
 /*!
  * \internal
- * \brief Apply a colocation's score to node weights or resource priority
+ * \brief Apply a colocation's score to node scores or resource priority
  *
  * Given a colocation constraint, apply its score to the dependent's
- * allowed node weights (if we are still placing resources) or priority (if
+ * allowed node scores (if we are still placing resources) or priority (if
  * we are choosing promotable clone instance roles).
  *
  * \param[in,out] dependent      Dependent resource in colocation
