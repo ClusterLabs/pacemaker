@@ -111,9 +111,9 @@ pcmk__copy_node_list(const GList *list, bool reset)
 
 /*!
  * \internal
- * \brief Compare two nodes for allocation desirability
+ * \brief Compare two nodes for assignment preference
  *
- * Given two nodes, check which one is more preferred by allocation criteria
+ * Given two nodes, check which one is more preferred by assignment criteria
  * such as node weight and utilization.
  *
  * \param[in] a     First node to compare
@@ -186,7 +186,7 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
         }
     }
 
-    // Compare number of allocated resources
+    // Compare number of resources already assigned to node
 
     if (node1->details->num_resources < node2->details->num_resources) {
         crm_trace("%s (%d) > %s (%d) : resources",
@@ -225,7 +225,7 @@ equal:
 
 /*!
  * \internal
- * \brief Sort a list of nodes by allocation desirability
+ * \brief Sort a list of nodes by assigment preference
  *
  * \param[in,out] nodes        Node list to sort
  * \param[in]     active_node  Node where resource being assigned is active

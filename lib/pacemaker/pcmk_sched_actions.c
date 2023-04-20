@@ -1811,7 +1811,7 @@ process_rsc_history(const xmlNode *rsc_entry, pe_resource_t *rsc,
              */
 
             if (pe__bundle_needs_remote_name(rsc)) {
-                /* We haven't allocated resources to nodes yet, so if the
+                /* We haven't assigned resources to nodes yet, so if the
                  * REMOTE_CONTAINER_HACK is used, we may calculate the digest
                  * based on the literal "#uname" value rather than the properly
                  * substituted value. That would mistakenly make the action

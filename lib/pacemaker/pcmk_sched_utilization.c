@@ -265,7 +265,7 @@ have_enough_capacity(const pe_node_t *node, const char *rsc_id,
  * \internal
  * \brief Sum the utilization requirements of a list of resources
  *
- * \param[in] orig_rsc  Resource being allocated (for logging purposes)
+ * \param[in] orig_rsc  Resource being assigned (for logging purposes)
  * \param[in] rscs      Resources whose utilization should be summed
  *
  * \return Newly allocated hash table with sum of all utilization values
@@ -302,7 +302,7 @@ pcmk__ban_insufficient_capacity(pe_resource_t *rsc)
     pe_node_t *node = NULL;
     const pe_node_t *most_capable_node = NULL;
     GList *colocated_rscs = NULL;
-    GHashTable *unallocated_utilization = NULL;
+    GHashTable *unassigned_utilization = NULL;
     GHashTableIter iter;
 
     CRM_CHECK(rsc != NULL, return NULL);
@@ -326,8 +326,8 @@ pcmk__ban_insufficient_capacity(pe_resource_t *rsc)
         colocated_rscs = g_list_append(colocated_rscs, rsc);
     }
 
-    // Sum utilization of colocated resources that haven't been allocated yet
-    unallocated_utilization = sum_resource_utilization(rsc, colocated_rscs);
+    // Sum utilization of colocated resources that haven't been assigned yet
+    unassigned_utilization = sum_resource_utilization(rsc, colocated_rscs);
 
     // Check whether any node has enough capacity for all the resources
     g_hash_table_iter_init(&iter, rsc->allowed_nodes);
@@ -336,7 +336,7 @@ pcmk__ban_insufficient_capacity(pe_resource_t *rsc)
             continue;
         }
 
-        if (have_enough_capacity(node, rscs_id, unallocated_utilization)) {
+        if (have_enough_capacity(node, rscs_id, unassigned_utilization)) {
             any_capable = true;
         }
 
@@ -353,7 +353,7 @@ pcmk__ban_insufficient_capacity(pe_resource_t *rsc)
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
             if (pcmk__node_available(node, true, false)
                 && !have_enough_capacity(node, rscs_id,
-                                         unallocated_utilization)) {
+                                         unassigned_utilization)) {
                 pe_rsc_debug(rsc, "%s does not have enough capacity for %s",
                              pe__node_name(node), rscs_id);
                 resource_location(rsc, node, -INFINITY, "__limit_utilization__",
@@ -376,7 +376,7 @@ pcmk__ban_insufficient_capacity(pe_resource_t *rsc)
         }
     }
 
-    g_hash_table_destroy(unallocated_utilization);
+    g_hash_table_destroy(unassigned_utilization);
     g_list_free(colocated_rscs);
     free(rscs_id);
 

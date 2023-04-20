@@ -1001,7 +1001,7 @@ pcmk__block_colocation_dependents(pe_action_t *action,
  * \param[in] dependent   Dependent resource in colocation
  * \param[in] primary     Primary resource in colocation
  * \param[in] colocation  Colocation constraint
- * \param[in] preview     If true, pretend resources have already been allocated
+ * \param[in] preview     If true, pretend resources have already been assigned
  *
  * \return How colocation constraint should be applied at this point
  */
@@ -1011,7 +1011,7 @@ pcmk__colocation_affects(const pe_resource_t *dependent,
                          const pcmk__colocation_t *colocation, bool preview)
 {
     if (!preview && pcmk_is_set(primary->flags, pe_rsc_provisional)) {
-        // Primary resource has not been allocated yet, so we can't do anything
+        // Primary resource has not been assigned yet, so we can't do anything
         return pcmk__coloc_affects_nothing;
     }
 
@@ -1021,14 +1021,14 @@ pcmk__colocation_affects(const pe_resource_t *dependent,
         && !pcmk_is_set(dependent->flags, pe_rsc_provisional)) {
 
         /* This is a colocation by role, and the dependent is a promotable clone
-         * that has already been allocated, so the colocation should now affect
+         * that has already been assigned, so the colocation should now affect
          * the role.
          */
         return pcmk__coloc_affects_role;
     }
 
     if (!preview && !pcmk_is_set(dependent->flags, pe_rsc_provisional)) {
-        /* The dependent resource has already been through allocation, so the
+        /* The dependent resource has already been through assignment, so the
          * constraint no longer has any effect. Log an error if a mandatory
          * colocation constraint has been violated.
          */
@@ -1055,7 +1055,7 @@ pcmk__colocation_affects(const pe_resource_t *dependent,
 
             if ((primary_node != NULL) &&
                 (dependent->allocated_to->details == primary_node->details)) {
-                crm_err("%s and %s must be anti-colocated but are allocated "
+                crm_err("%s and %s must be anti-colocated but are assigned "
                         "to the same node (%s)",
                         dependent->id, primary->id, pe__node_name(primary_node));
             }
@@ -1106,10 +1106,10 @@ pcmk__colocation_affects(const pe_resource_t *dependent,
 
 /*!
  * \internal
- * \brief Apply colocation to dependent for allocation purposes
+ * \brief Apply colocation to dependent for assignment purposes
  *
  * Update the allowed node weights of the dependent resource in a colocation,
- * for the purposes of allocating it to a node
+ * for the purposes of assigning it to a node.
  *
  * \param[in,out] dependent   Dependent resource in colocation
  * \param[in]     primary     Primary resource in colocation
@@ -1333,7 +1333,7 @@ allowed_on_one(const pe_resource_t *rsc)
 
 /*!
  * \internal
- * \brief Add resource's colocation matches to current node allocation scores
+ * \brief Add resource's colocation matches to current node assignment scores
  *
  * For each node in a given table, if any of a given resource's allowed nodes
  * have a matching value for the colocation attribute, add the highest of those

@@ -25,7 +25,7 @@ CRM_TRACE_INIT_DATA(pacemaker);
 
 /*!
  * \internal
- * \brief Do deferred action checks after allocation
+ * \brief Do deferred action checks after assignment
  *
  * When unpacking the resource history, the scheduler checks for resource
  * configurations that have changed since an action was run. However, at that
@@ -291,16 +291,16 @@ apply_node_criteria(pe_working_set_t *data_set)
 
 /*!
  * \internal
- * \brief Allocate resources to nodes
+ * \brief Assign resources to nodes
  *
  * \param[in,out] data_set  Cluster working set
  */
 static void
-allocate_resources(pe_working_set_t *data_set)
+assign_resources(pe_working_set_t *data_set)
 {
     GList *iter = NULL;
 
-    crm_trace("Allocating resources to nodes");
+    crm_trace("Assigning resources to nodes");
 
     if (!pcmk__str_eq(data_set->placement_strategy, "default", pcmk__str_casei)) {
         pcmk__sort_resources(data_set);
@@ -308,15 +308,15 @@ allocate_resources(pe_working_set_t *data_set)
     pcmk__show_node_capacities("Original", data_set);
 
     if (pcmk_is_set(data_set->flags, pe_flag_have_remote_nodes)) {
-        /* Allocate remote connection resources first (which will also allocate
-         * any colocation dependencies). If the connection is migrating, always
+        /* Assign remote connection resources first (which will also assign any
+         * colocation dependencies). If the connection is migrating, always
          * prefer the partial migration target.
          */
         for (iter = data_set->resources; iter != NULL; iter = iter->next) {
             pe_resource_t *rsc = (pe_resource_t *) iter->data;
 
             if (rsc->is_remote_node) {
-                pe_rsc_trace(rsc, "Allocating remote connection resource '%s'",
+                pe_rsc_trace(rsc, "Assigning remote connection resource '%s'",
                              rsc->id);
                 rsc->cmds->assign(rsc, rsc->partial_migration_target);
             }
@@ -328,7 +328,7 @@ allocate_resources(pe_working_set_t *data_set)
         pe_resource_t *rsc = (pe_resource_t *) iter->data;
 
         if (!rsc->is_remote_node) {
-            pe_rsc_trace(rsc, "Allocating %s resource '%s'",
+            pe_rsc_trace(rsc, "Assigning %s resource '%s'",
                          crm_element_name(rsc->xml), rsc->id);
             rsc->cmds->assign(rsc, NULL);
         }
@@ -353,7 +353,7 @@ clear_failcounts_if_orphaned(pe_resource_t *rsc, pe_working_set_t *data_set)
     crm_trace("Clear fail counts for orphaned resource %s", rsc->id);
 
     /* There's no need to recurse into rsc->children because those
-     * should just be unallocated clone instances.
+     * should just be unassigned clone instances.
      */
 
     for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
@@ -772,7 +772,7 @@ pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
                        pe_working_set_t *data_set)
 {
     unpack_cib(cib, flags, data_set);
-    pcmk__set_allocation_methods(data_set);
+    pcmk__set_assignment_methods(data_set);
     pcmk__apply_node_health(data_set);
     pcmk__unpack_constraints(data_set);
     if (pcmk_is_set(data_set->flags, pe_flag_check_config)) {
@@ -792,7 +792,7 @@ pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
 
     pcmk__create_internal_constraints(data_set);
     pcmk__handle_rsc_config_changes(data_set);
-    allocate_resources(data_set);
+    assign_resources(data_set);
     schedule_resource_actions(data_set);
 
     /* Remote ordering constraints need to happen prior to calculating fencing

@@ -315,7 +315,7 @@ defaults and calls a series of functions for the scheduling. Some key steps:
   the CIB status section. This is used to decide whether certain
   actions need to be done, such as deleting orphan resources, forcing a restart
   when a resource definition changes, etc.
-* ``allocate_resources()`` assigns resources to nodes.
+* ``assign_resources()`` assigns resources to nodes.
 * ``schedule_resource_actions()`` schedules resource-specific actions (which
   might or might not end up in the final graph).
 * ``pcmk__apply_orderings()`` processes ordering constraints in order to modify

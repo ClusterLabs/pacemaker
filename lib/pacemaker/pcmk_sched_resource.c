@@ -16,8 +16,8 @@
 
 #include "libpacemaker_private.h"
 
-// Resource allocation methods that vary by resource variant
-static resource_alloc_functions_t allocation_methods[] = {
+// Resource assignment methods by resource variant
+static resource_alloc_functions_t assignment_methods[] = {
     {
         pcmk__primitive_assign,
         pcmk__primitive_create_actions,
@@ -193,28 +193,28 @@ pcmk__rscs_matching_id(const char *id, const pe_working_set_t *data_set)
 
 /*!
  * \internal
- * \brief Set the variant-appropriate allocation methods for a resource
+ * \brief Set the variant-appropriate assignment methods for a resource
  *
- * \param[in,out] rsc      Resource to set allocation methods for
+ * \param[in,out] rsc      Resource to set assignment methods for
  * \param[in]     ignored  Here so function can be used with g_list_foreach()
  */
 static void
-set_allocation_methods_for_rsc(pe_resource_t *rsc, void *ignored)
+set_assignment_methods_for_rsc(pe_resource_t *rsc, void *ignored)
 {
-    rsc->cmds = &allocation_methods[rsc->variant];
-    g_list_foreach(rsc->children, (GFunc) set_allocation_methods_for_rsc, NULL);
+    rsc->cmds = &assignment_methods[rsc->variant];
+    g_list_foreach(rsc->children, (GFunc) set_assignment_methods_for_rsc, NULL);
 }
 
 /*!
  * \internal
- * \brief Set the variant-appropriate allocation methods for all resources
+ * \brief Set the variant-appropriate assignment methods for all resources
  *
  * \param[in,out] data_set  Cluster working set
  */
 void
-pcmk__set_allocation_methods(pe_working_set_t *data_set)
+pcmk__set_assignment_methods(pe_working_set_t *data_set)
 {
-    g_list_foreach(data_set->resources, (GFunc) set_allocation_methods_for_rsc,
+    g_list_foreach(data_set->resources, (GFunc) set_assignment_methods_for_rsc,
                    NULL);
 }
 
@@ -377,13 +377,14 @@ pcmk__finalize_assignment(pe_resource_t *rsc, pe_node_t *chosen, bool force)
     pe__clear_resource_flags(rsc, pe_rsc_provisional);
 
     if (chosen == NULL) {
-        crm_debug("Could not allocate a node for %s", rsc->id);
-        pe__set_next_role(rsc, RSC_ROLE_STOPPED, "unable to allocate");
+        crm_debug("Could not assign %s to a node", rsc->id);
+        pe__set_next_role(rsc, RSC_ROLE_STOPPED, "unable to assign");
 
         for (GList *iter = rsc->actions; iter != NULL; iter = iter->next) {
             pe_action_t *op = (pe_action_t *) iter->data;
 
-            crm_debug("Updating %s for allocation failure", op->uuid);
+            pe_rsc_debug(rsc, "Updating %s for %s assignment failure",
+                         op->uuid, rsc->id);
 
             if (pcmk__str_eq(op->task, RSC_STOP, pcmk__str_casei)) {
                 pe__clear_action_flags(op, pe_action_optional);
@@ -593,14 +594,14 @@ get_node_weight(const pe_node_t *node, GHashTable *nodes)
 
 /*!
  * \internal
- * \brief Compare two resources according to which should be allocated first
+ * \brief Compare two resources according to which should be assigned first
  *
  * \param[in] a     First resource to compare
  * \param[in] b     Second resource to compare
  * \param[in] data  Sorted list of all nodes in cluster
  *
- * \return -1 if \p a should be allocated before \b, 0 if they are equal,
- *         or +1 if \p a should be allocated after \b
+ * \return -1 if \p a should be assigned before \b, 0 if they are equal,
+ *         or +1 if \p a should be assigned after \b
  */
 static gint
 cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
@@ -618,7 +619,7 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
     GHashTable *r2_nodes = NULL;
     const char *reason = NULL;
 
-    // Resources with highest priority should be allocated first
+    // Resources with highest priority should be assigned first
     reason = "priority";
     r1_weight = resource1->priority;
     r2_weight = resource2->priority;
@@ -706,7 +707,7 @@ done:
 
 /*!
  * \internal
- * \brief Sort resources in the order they should be allocated to nodes
+ * \brief Sort resources in the order they should be assigned to nodes
  *
  * \param[in,out] data_set  Cluster working set
  */

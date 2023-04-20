@@ -434,7 +434,7 @@ pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
             continue;
         }
 
-        // We are only interested in actions allocated to a node
+        // We are only interested in actions assigned to a node
         if (action->node == NULL) {
             continue;
         }

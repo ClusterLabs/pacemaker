@@ -53,7 +53,7 @@ enum pcmk__updated {
                                         (flags_to_clear), #flags_to_clear); \
     } while (0)
 
-// Resource allocation methods
+// Resource assignment methods
 struct resource_alloc_functions_s {
     /*!
      * \internal
@@ -288,10 +288,10 @@ struct resource_alloc_functions_s {
      * resources colocated with it, to determine whether a node has sufficient
      * capacity. Given a resource and a table of utilization values, it will add
      * the resource's utilization to the existing values, if the resource has
-     * not yet been allocated to a node.
+     * not yet been assigned to a node.
      *
      * \param[in]     rsc          Resource with utilization to add
-     * \param[in]     orig_rsc     Resource being allocated (for logging only)
+     * \param[in]     orig_rsc     Resource being assigned (for logging only)
      * \param[in]     all_rscs     List of all resources that will be summed
      * \param[in,out] utilization  Table of utilization values to add to
      */
@@ -958,7 +958,7 @@ pe_node_t *pcmk__top_allowed_node(const pe_resource_t *rsc,
 // Functions applying to more than one variant (pcmk_sched_resource.c)
 
 G_GNUC_INTERNAL
-void pcmk__set_allocation_methods(pe_working_set_t *data_set);
+void pcmk__set_assignment_methods(pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
 bool pcmk__rsc_agent_changed(pe_resource_t *rsc, pe_node_t *node,

@@ -205,7 +205,7 @@ node_to_be_promoted_on(const pe_resource_t *rsc)
     local_node = pe_hash_table_lookup(parent->allowed_nodes, node->details->id);
 
     if (local_node == NULL) {
-        /* It should not be possible for the scheduler to have allocated the
+        /* It should not be possible for the scheduler to have assigned the
          * instance to a node where its parent is not allowed, but it's good to
          * have a fail-safe.
          */
@@ -292,7 +292,7 @@ cmp_promotable_instance(gconstpointer a, gconstpointer b)
  *
  * Add a promotable clone instance's sort index (which sums its promotion
  * preferences and scores of relevant location constraints for the promoted
- * role) to the node weight of the instance's allocated node.
+ * role) to the node weight of the instance's assigned node.
  *
  * \param[in]     data       Promotable clone instance
  * \param[in,out] user_data  Clone parent of \p data
@@ -1031,7 +1031,7 @@ pcmk__set_instance_roles(pe_resource_t *rsc)
     GHashTableIter iter;
     pe_node_t *node = NULL;
 
-    // Repurpose count to track the number of promoted instances allocated
+    // Repurpose count to track the number of promoted instances assigned
     g_hash_table_iter_init(&iter, rsc->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
         node->count = 0;

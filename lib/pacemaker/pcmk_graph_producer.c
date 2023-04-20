@@ -534,9 +534,9 @@ should_add_action_to_graph(const pe_action_t *action)
 
     if (action->node == NULL) {
         pe_err("Skipping action %s (%d) "
-               "because it was not allocated to a node (bug?)",
+               "because it was not assigned to a node (bug?)",
                action->uuid, action->id);
-        pcmk__log_action("Unallocated", action, false);
+        pcmk__log_action("Unassigned", action, false);
         return false;
     }
 
@@ -656,18 +656,18 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
         // load orderings are relevant only if actions are for same node
 
         if (action->rsc && pcmk__str_eq(action->task, RSC_MIGRATE, pcmk__str_casei)) {
-            pe_node_t *allocated = action->rsc->allocated_to;
+            pe_node_t *assigned = action->rsc->allocated_to;
 
             /* For load_stopped -> migrate_to orderings, we care about where it
-             * has been allocated to, not where it will be executed.
+             * has been assigned to, not where it will be executed.
              */
-            if ((input_node == NULL) || (allocated == NULL)
-                || (input_node->details != allocated->details)) {
+            if ((input_node == NULL) || (assigned == NULL)
+                || (input_node->details != assigned->details)) {
                 crm_trace("Ignoring %s (%d) input %s (%d): "
                           "load ordering node mismatch %s vs %s",
                           action->uuid, action->id,
                           input->action->uuid, input->action->id,
-                          (allocated? allocated->details->uname : "<none>"),
+                          (assigned? assigned->details->uname : "<none>"),
                           (input_node? input_node->details->uname : "<none>"));
                 input->type = pe_order_none;
                 return false;
