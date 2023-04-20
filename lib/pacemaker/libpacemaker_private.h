@@ -859,6 +859,11 @@ void pcmk__output_bundle_actions(pe_resource_t *rsc);
 G_GNUC_INTERNAL
 void pcmk__bundle_add_actions_to_graph(pe_resource_t *rsc);
 
+G_GNUC_INTERNAL
+void pcmk__bundle_add_utilization(const pe_resource_t *rsc,
+                                  const pe_resource_t *orig_rsc,
+                                  GList *all_rscs, GHashTable *utilization);
+
 
 // Clone instances or bundle replica containers (pcmk_sched_instances.c)
 

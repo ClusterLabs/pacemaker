@@ -913,6 +913,8 @@ pcmk__bundle_add_utilization(const pe_resource_t *rsc,
 {
     pe_resource_t *container = NULL;
 
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container));
+
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
         return;
     }

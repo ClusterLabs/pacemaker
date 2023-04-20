@@ -19,9 +19,6 @@
 #  include <crm/common/xml.h>
 #  include <pcmki/pcmki_scheduler.h>
 
-void pcmk__bundle_add_utilization(const pe_resource_t *rsc,
-                                  const pe_resource_t *orig_rsc,
-                                  GList *all_rscs, GHashTable *utilization);
 void pcmk__bundle_shutdown_lock(pe_resource_t *rsc);
 
 void pcmk__log_transition_summary(const char *filename);
