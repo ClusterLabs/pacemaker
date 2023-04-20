@@ -934,5 +934,6 @@ pcmk__bundle_add_utilization(const pe_resource_t *rsc,
 void
 pcmk__bundle_shutdown_lock(pe_resource_t *rsc)
 {
-    return; // Bundles currently don't support shutdown locks
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container));
+    // Bundles currently don't support shutdown locks
 }

@@ -864,6 +864,9 @@ void pcmk__bundle_add_utilization(const pe_resource_t *rsc,
                                   const pe_resource_t *orig_rsc,
                                   GList *all_rscs, GHashTable *utilization);
 
+G_GNUC_INTERNAL
+void pcmk__bundle_shutdown_lock(pe_resource_t *rsc);
+
 
 // Clone instances or bundle replica containers (pcmk_sched_instances.c)
 
