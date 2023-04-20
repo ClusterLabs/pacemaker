@@ -86,6 +86,7 @@
 #define PCMK__XA_MODE                   "mode"
 #define PCMK__XA_TASK                   "task"
 #define PCMK__XA_UPTIME                 "uptime"
+#define PCMK__XA_CONN_HOST              "connection_host"
 
 
 /*

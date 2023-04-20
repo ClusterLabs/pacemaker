@@ -1284,8 +1284,14 @@ broadcast_remote_state_message(const char *node_name, bool node_up)
 
     crm_info("Notifying cluster of Pacemaker Remote node %s %s",
              node_name, node_up? "coming up" : "going down");
+
     crm_xml_add(msg, XML_ATTR_ID, node_name);
     pcmk__xe_set_bool_attr(msg, XML_NODE_IN_CLUSTER, node_up);
+
+    if (node_up) {
+        crm_xml_add(msg, PCMK__XA_CONN_HOST, controld_globals.our_nodename);
+    }
+
     send_cluster_message(NULL, crm_msg_crmd, msg, TRUE);
     free_xml(msg);
 }
