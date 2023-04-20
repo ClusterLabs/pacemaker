@@ -171,8 +171,7 @@ member_internal_constraints(gpointer data, gpointer user_data)
         // Colocate this member with the previous one
         pcmk__new_colocation("group:internal_colocation", NULL, INFINITY,
                              member, member_data->previous_member, NULL, NULL,
-                             pcmk_is_set(member->flags, pe_rsc_critical),
-                             member->cluster);
+                             pcmk_is_set(member->flags, pe_rsc_critical));
     }
 
     if (member_data->promotable) {

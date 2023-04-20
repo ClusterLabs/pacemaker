@@ -483,7 +483,7 @@ G_GNUC_INTERNAL
 void pcmk__new_colocation(const char *id, const char *node_attr, int score,
                           pe_resource_t *dependent, pe_resource_t *primary,
                           const char *dependent_role, const char *primary_role,
-                          bool influence, pe_working_set_t *data_set);
+                          bool influence);
 
 G_GNUC_INTERNAL
 void pcmk__block_colocation_dependents(pe_action_t *action,

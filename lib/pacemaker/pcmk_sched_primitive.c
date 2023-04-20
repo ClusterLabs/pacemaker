@@ -999,8 +999,7 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
                 score = INFINITY; /* Force them to run on the same host */
             }
             pcmk__new_colocation("resource-with-container", NULL, score, rsc,
-                                 rsc->container, NULL, NULL, true,
-                                 rsc->cluster);
+                                 rsc->container, NULL, NULL, true);
         }
     }
 
