@@ -165,13 +165,13 @@ add_downed_nodes(xmlNode *xml, const pe_action_t *action,
          */
         GList *iter;
         pe_action_t *input;
-        gboolean migrating = FALSE;
+        bool migrating = false;
 
         for (iter = action->actions_before; iter != NULL; iter = iter->next) {
             input = ((pe_action_wrapper_t *) iter->data)->action;
             if (input->rsc && pcmk__str_eq(action->rsc->id, input->rsc->id, pcmk__str_casei)
                 && pcmk__str_eq(input->task, CRMD_ACTION_MIGRATED, pcmk__str_casei)) {
-                migrating = TRUE;
+                migrating = true;
                 break;
             }
         }

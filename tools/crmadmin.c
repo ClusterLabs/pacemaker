@@ -244,7 +244,8 @@ main(int argc, char **argv)
                                          NULL);
             break;
         case cmd_list_nodes:
-            rc = pcmk__list_nodes(out, options.optarg, options.bash_export);
+            rc = pcmk__list_nodes(out, options.optarg,
+                                  (options.bash_export? true : false));
             break;
         case cmd_whois_dc:
             rc = pcmk__designated_controller(out,

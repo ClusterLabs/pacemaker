@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 the Pacemaker project contributors
+ * Copyright 2020-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,7 +10,8 @@
 #ifndef PCMK__PCMKI_PCMKI_CLUSTER_QUERIES__H
 #  define PCMK__PCMKI_PCMKI_CLUSTER_QUERIES__H
 
-#include <glib.h>               // gboolean, GMainLoop, etc.
+#include <stdbool.h>
+#include <stdint.h>
 
 #include <crm/crm.h>
 #include <crm/common/output_internal.h>
@@ -19,7 +20,7 @@
 
 // CIB queries
 int pcmk__list_nodes(pcmk__output_t *out, const char *node_types,
-                     gboolean bash_export);
+                     bool bash_export);
 
 // Controller queries
 int pcmk__controller_status(pcmk__output_t *out, const char *node_name,
