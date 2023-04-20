@@ -1126,8 +1126,7 @@ pcmk__order_stops_before_shutdown(pe_node_t *node, pe_action_t *shutdown_op)
         pe_action_t *action = (pe_action_t *) iter->data;
 
         // Only stops on the node shutting down are relevant
-        if ((action->rsc == NULL) || (action->node == NULL)
-            || (action->node->details != node->details)
+        if (!pe__same_node(action->node, node)
             || !pcmk__str_eq(action->task, RSC_STOP, pcmk__str_casei)) {
             continue;
         }

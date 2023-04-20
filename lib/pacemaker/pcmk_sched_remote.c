@@ -469,7 +469,7 @@ pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
                  item = item->next) {
                 pe_action_t *rsc_action = item->data;
 
-                if ((rsc_action->node->details != action->node->details)
+                if (!pe__same_node(rsc_action->node, action->node)
                     && pcmk__str_eq(rsc_action->task, RSC_STOP, pcmk__str_casei)) {
                     pcmk__new_ordering(remote, start_key(remote), NULL,
                                        action->rsc, NULL, rsc_action,
@@ -586,7 +586,7 @@ pcmk__connection_host_for_action(const pe_action_t *action)
         return began_on;
     }
 
-    if (began_on->details == ended_on->details) {
+    if (pe__same_node(began_on, ended_on)) {
         crm_trace("Routing %s for %s through remote connection's "
                   "current node %s (not moving)%s",
                   action->task, (action->rsc? action->rsc->id : "no resource"),

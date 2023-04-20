@@ -661,8 +661,7 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
             /* For load_stopped -> migrate_to orderings, we care about where it
              * has been assigned to, not where it will be executed.
              */
-            if ((input_node == NULL) || (assigned == NULL)
-                || (input_node->details != assigned->details)) {
+            if (!pe__same_node(input_node, assigned)) {
                 crm_trace("Ignoring %s (%d) input %s (%d): "
                           "load ordering node mismatch %s vs %s",
                           action->uuid, action->id,
@@ -673,8 +672,7 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
                 return false;
             }
 
-        } else if ((input_node == NULL) || (action->node == NULL)
-                   || (input_node->details != action->node->details)) {
+        } else if (!pe__same_node(input_node, action->node)) {
             crm_trace("Ignoring %s (%d) input %s (%d): "
                       "load ordering node mismatch %s vs %s",
                       action->uuid, action->id,
@@ -695,7 +693,7 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
 
     } else if (input->type == pe_order_anti_colocation) {
         if (input->action->node && action->node
-            && (input->action->node->details != action->node->details)) {
+            && !pe__same_node(input->action->node, action->node)) {
             crm_trace("Ignoring %s (%d) input %s (%d): "
                       "anti-colocation node mismatch %s vs %s",
                       action->uuid, action->id,

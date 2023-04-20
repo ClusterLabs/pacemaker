@@ -204,12 +204,12 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
     // Check whether one node is already running desired resource
 
     if (active != NULL) {
-        if (active->details == node1->details) {
+        if (pe__same_node(active, node1)) {
             crm_trace("%s (%d) > %s (%d) : active",
                       pe__node_name(node1), node1->details->num_resources,
                       pe__node_name(node2), node2->details->num_resources);
             return -1;
-        } else if (active->details == node2->details) {
+        } else if (pe__same_node(active, node2)) {
             crm_trace("%s (%d) < %s (%d) : active",
                       pe__node_name(node1), node1->details->num_resources,
                       pe__node_name(node2), node2->details->num_resources);

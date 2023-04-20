@@ -668,7 +668,7 @@ pcmk__primitive_create_actions(pe_resource_t *rsc)
                    rsc);
 
     if ((current != NULL) && (rsc->allocated_to != NULL)
-        && (current->details != rsc->allocated_to->details)
+        && !pe__same_node(current, rsc->allocated_to)
         && (rsc->next_role >= RSC_ROLE_STARTED)) {
 
         pe_rsc_trace(rsc, "Moving %s from %s to %s",

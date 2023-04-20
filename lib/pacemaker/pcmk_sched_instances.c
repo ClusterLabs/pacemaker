@@ -603,7 +603,7 @@ assign_instance(pe_resource_t *instance, const pe_node_t *prefer,
         chosen = instance->cmds->assign(instance, prefer);
 
         // Revert nodes if preferred node won't be assigned
-        if ((chosen != NULL) && (chosen->details != prefer->details)) {
+        if ((chosen != NULL) && !pe__same_node(chosen, prefer)) {
             crm_info("Not assigning %s to preferred node %s: %s is better",
                      instance->id, pe__node_name(prefer),
                      pe__node_name(chosen));
@@ -1028,7 +1028,7 @@ pcmk__instance_matches(const pe_resource_t *instance, const pe_node_t *node,
         return false;
     }
 
-    if (instance_node->details != node->details) {
+    if (!pe__same_node(instance_node, node)) {
         pe_rsc_trace(instance,
                      "%s is not a compatible instance (assigned to %s not %s)",
                      instance->id, pe__node_name(instance_node),
