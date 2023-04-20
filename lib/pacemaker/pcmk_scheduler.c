@@ -459,16 +459,14 @@ any_managed_resources(const pe_working_set_t *data_set)
  *
  * \param[in] node          Node to check
  * \param[in] have_managed  Whether any resource in cluster is managed
- * \param[in] data_set      Cluster working set
  *
  * \return true if \p node should be fenced, otherwise false
  */
 static bool
-needs_fencing(const pe_node_t *node, bool have_managed,
-              const pe_working_set_t *data_set)
+needs_fencing(const pe_node_t *node, bool have_managed)
 {
     return have_managed && node->details->unclean
-           && pe_can_fence(data_set, node);
+           && pe_can_fence(node->details->data_set, node);
 }
 
 /*!
@@ -522,16 +520,15 @@ add_nondc_fencing(GList *list, pe_action_t *action,
  * \brief Schedule a node for fencing
  *
  * \param[in,out] node      Node that requires fencing
- * \param[in,out] data_set  Cluster working set
  */
 static pe_action_t *
-schedule_fencing(pe_node_t *node, pe_working_set_t *data_set)
+schedule_fencing(pe_node_t *node)
 {
     pe_action_t *fencing = pe_fence_op(node, NULL, FALSE, "node is unclean",
-                                       FALSE, data_set);
+                                       FALSE, node->details->data_set);
 
     pe_warn("Scheduling node %s for fencing", pe__node_name(node));
-    pcmk__order_vs_fence(fencing, data_set);
+    pcmk__order_vs_fence(fencing, node->details->data_set);
     return fencing;
 }
 
@@ -571,8 +568,8 @@ schedule_fencing_and_shutdowns(pe_working_set_t *data_set)
             continue;
         }
 
-        if (needs_fencing(node, have_managed, data_set)) {
-            fencing = schedule_fencing(node, data_set);
+        if (needs_fencing(node, have_managed)) {
+            fencing = schedule_fencing(node);
 
             // Track DC and non-DC fence actions separately
             if (node->details->is_dc) {
