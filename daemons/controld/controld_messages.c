@@ -726,6 +726,7 @@ handle_lrm_delete(xmlNode *stored_msg)
 static enum crmd_fsa_input
 handle_remote_state(const xmlNode *msg)
 {
+    const char *conn_host = NULL;
     const char *remote_uname = ID(msg);
     crm_node_t *remote_peer;
     bool remote_is_up = false;
@@ -741,6 +742,14 @@ handle_remote_state(const xmlNode *msg)
     pcmk__update_peer_state(__func__, remote_peer,
                             remote_is_up ? CRM_NODE_MEMBER : CRM_NODE_LOST,
                             0);
+
+    conn_host = crm_element_value(msg, PCMK__XA_CONN_HOST);
+    if (conn_host) {
+        pcmk__str_update(&remote_peer->conn_host, conn_host);
+    } else if (remote_peer->conn_host) {
+        free(remote_peer->conn_host);
+        remote_peer->conn_host = NULL;
+    }
 
     return I_NULL;
 }

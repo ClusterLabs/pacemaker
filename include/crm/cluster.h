@@ -75,7 +75,9 @@ typedef struct crm_peer_node_s {
     // Only used by controller
     enum crm_join_phase join;
     char *expected;
+
     time_t peer_lost;
+    char *conn_host;
 } crm_node_t;
 
 void crm_peer_init(void);
