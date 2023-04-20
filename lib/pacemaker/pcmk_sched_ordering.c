@@ -326,17 +326,16 @@ get_minimum_first_instances(const pe_resource_t *rsc, const xmlNode *xml)
  * \param[in]     action_then   'Then' action in ordering
  * \param[in]     flags         Ordering flags
  * \param[in]     clone_min     Minimum required instances of 'first'
- * \param[in,out] data_set      Cluster working set
  */
 static void
 clone_min_ordering(const char *id,
                    pe_resource_t *rsc_first, const char *action_first,
                    pe_resource_t *rsc_then, const char *action_then,
-                   uint32_t flags, int clone_min, pe_working_set_t *data_set)
+                   uint32_t flags, int clone_min)
 {
     // Create a pseudo-action for when the minimum instances are active
     char *task = crm_strdup_printf(CRM_OP_RELAXED_CLONE ":%s", id);
-    pe_action_t *clone_min_met = get_pseudo_op(task, data_set);
+    pe_action_t *clone_min_met = get_pseudo_op(task, rsc_first->cluster);
 
     free(task);
 
@@ -355,13 +354,13 @@ clone_min_ordering(const char *id,
         pcmk__new_ordering(child, pcmk__op_key(child->id, action_first, 0),
                            NULL, NULL, NULL, clone_min_met,
                            pe_order_one_or_more|pe_order_implies_then_printed,
-                           data_set);
+                           rsc_first->cluster);
     }
 
     // Order "then" action after the pseudo-action (if runnable)
     pcmk__new_ordering(NULL, NULL, clone_min_met, rsc_then,
                        pcmk__op_key(rsc_then->id, action_then, 0),
-                       NULL, flags|pe_order_runnable_left, data_set);
+                       NULL, flags|pe_order_runnable_left, rsc_first->cluster);
 }
 
 /*!
@@ -477,7 +476,7 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
     min_required_before = get_minimum_first_instances(rsc_first, xml_obj);
     if (min_required_before > 0) {
         clone_min_ordering(id, rsc_first, action_first, rsc_then, action_then,
-                           flags, min_required_before, data_set);
+                           flags, min_required_before);
     } else {
         pcmk__order_resource_actions(rsc_first, action_first, rsc_then,
                                      action_then, flags);
@@ -1273,8 +1272,7 @@ order_resource_actions_after(pe_action_t *first_action,
 }
 
 static void
-rsc_order_first(pe_resource_t *first_rsc, pe__ordering_t *order,
-                pe_working_set_t *data_set)
+rsc_order_first(pe_resource_t *first_rsc, pe__ordering_t *order)
 {
     GList *first_actions = NULL;
     pe_action_t *first_action = order->lh_action;
@@ -1323,7 +1321,7 @@ rsc_order_first(pe_resource_t *first_rsc, pe__ordering_t *order,
                          "Creating first (%s for %s) for constraint %d ",
                          order->lh_action_task, first_rsc->id, order->id);
             first_action = custom_action(first_rsc, key, op_type, NULL, TRUE,
-                                         TRUE, data_set);
+                                         TRUE, first_rsc->cluster);
             first_actions = g_list_prepend(NULL, first_action);
         }
 
@@ -1385,7 +1383,7 @@ pcmk__apply_orderings(pe_working_set_t *data_set)
         pe_resource_t *rsc = order->lh_rsc;
 
         if (rsc != NULL) {
-            rsc_order_first(rsc, order, data_set);
+            rsc_order_first(rsc, order);
             continue;
         }
 
