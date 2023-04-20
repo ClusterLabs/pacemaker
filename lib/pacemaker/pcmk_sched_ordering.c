@@ -1352,6 +1352,13 @@ rsc_order_first(pe_resource_t *first_rsc, pe__ordering_t *order,
     g_list_free(first_actions);
 }
 
+// GFunc to call pcmk__block_colocation_dependents()
+static void
+block_colocation_dependents(gpointer data, gpointer user_data)
+{
+    pcmk__block_colocation_dependents(data);
+}
+
 void
 pcmk__apply_orderings(pe_working_set_t *data_set)
 {
@@ -1393,8 +1400,7 @@ pcmk__apply_orderings(pe_working_set_t *data_set)
         }
     }
 
-    g_list_foreach(data_set->actions, (GFunc) pcmk__block_colocation_dependents,
-                   data_set);
+    g_list_foreach(data_set->actions, block_colocation_dependents, NULL);
 
     crm_trace("Ordering probes");
     pcmk__order_probes(data_set);
