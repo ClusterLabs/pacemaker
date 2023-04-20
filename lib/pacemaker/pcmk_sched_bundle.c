@@ -722,16 +722,16 @@ add_replica_actions_to_graph(pe__bundle_replica_t *replica, void *user_data)
 
 /*!
  * \internal
- * \brief Add a resource's actions to the transition graph
+ * \brief Add a bundle resource's actions to the transition graph
  *
- * \param[in,out] rsc  Resource whose actions should be added
+ * \param[in,out] rsc  Bundle resource whose actions should be added
  */
 void
-pcmk__bundle_expand(pe_resource_t *rsc)
+pcmk__bundle_add_actions_to_graph(pe_resource_t *rsc)
 {
     pe_resource_t *bundled_resource = NULL;
 
-    CRM_CHECK(rsc != NULL, return);
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container));
 
     bundled_resource = pe__bundled_resource(rsc);
     if (bundled_resource != NULL) {

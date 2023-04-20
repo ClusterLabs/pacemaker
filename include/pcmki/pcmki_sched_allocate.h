@@ -20,7 +20,6 @@
 #  include <pcmki/pcmki_scheduler.h>
 
 bool pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node);
-void pcmk__bundle_expand(pe_resource_t *rsc);
 void pcmk__bundle_add_utilization(const pe_resource_t *rsc,
                                   const pe_resource_t *orig_rsc,
                                   GList *all_rscs, GHashTable *utilization);

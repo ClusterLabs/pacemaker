@@ -847,6 +847,9 @@ enum pe_action_flags pcmk__bundle_action_flags(pe_action_t *action,
 G_GNUC_INTERNAL
 void pcmk__output_bundle_actions(pe_resource_t *rsc);
 
+G_GNUC_INTERNAL
+void pcmk__bundle_add_actions_to_graph(pe_resource_t *rsc);
+
 
 // Clone instances or bundle replica containers (pcmk_sched_instances.c)
 

@@ -89,7 +89,7 @@ static resource_alloc_functions_t allocation_methods[] = {
         pcmk__bundle_action_flags,
         pcmk__instance_update_ordered_actions,
         pcmk__output_bundle_actions,
-        pcmk__bundle_expand,
+        pcmk__bundle_add_actions_to_graph,
         pcmk__noop_add_graph_meta,
         pcmk__bundle_add_utilization,
         pcmk__bundle_shutdown_lock,
