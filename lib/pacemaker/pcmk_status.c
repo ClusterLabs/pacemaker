@@ -17,6 +17,7 @@
 #include <crm/common/output.h>
 #include <crm/common/results.h>
 #include <crm/fencing/internal.h>
+#include <crm/pengine/internal.h>
 #include <crm/stonith-ng.h>
 #include <pacemaker.h>
 #include <pacemaker-internal.h>

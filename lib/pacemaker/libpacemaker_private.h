@@ -15,6 +15,7 @@
  */
 
 #include <crm/pengine/pe_types.h> // pe_action_t, pe_node_t, pe_working_set_t
+#include <crm/pengine/internal.h> // pe__location_t
 
 // Flags to modify the behavior of add_colocated_node_scores()
 enum pcmk__coloc_select {

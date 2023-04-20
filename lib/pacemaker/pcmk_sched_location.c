@@ -14,6 +14,7 @@
 
 #include <crm/crm.h>
 #include <crm/pengine/status.h>
+#include <crm/pengine/rules.h>
 #include <pacemaker-internal.h>
 
 #include "libpacemaker_private.h"

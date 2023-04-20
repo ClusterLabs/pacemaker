@@ -19,6 +19,11 @@
 #define G_GNUC_INTERNAL
 #endif
 
+#include <glib.h>                 // GSList, GList, GHashTable
+#include <libxml/tree.h>          // xmlNode
+
+#include <crm/pengine/status.h>   // pe_action_t, pe_resource_t, etc.
+
 /*!
  * \internal
  * \deprecated This macro will be removed in a future release
