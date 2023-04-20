@@ -59,11 +59,9 @@ ticket_role_matches(const pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
  *
  * \param[in,out] rsc         Resource affected by ticket
  * \param[in]     rsc_ticket  Ticket
- * \param[in,out] data_set    Cluster working set
  */
 static void
-constraints_for_ticket(pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket,
-                       pe_working_set_t *data_set)
+constraints_for_ticket(pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
 {
     GList *gIter = NULL;
 
@@ -76,8 +74,7 @@ constraints_for_ticket(pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket,
     if (rsc->children) {
         pe_rsc_trace(rsc, "Processing ticket dependencies from %s", rsc->id);
         for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-            constraints_for_ticket((pe_resource_t *) gIter->data, rsc_ticket,
-                                   data_set);
+            constraints_for_ticket((pe_resource_t *) gIter->data, rsc_ticket);
         }
         return;
     }
@@ -91,14 +88,14 @@ constraints_for_ticket(pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket,
         switch (rsc_ticket->loss_policy) {
             case loss_ticket_stop:
                 resource_location(rsc, NULL, -INFINITY, "__loss_of_ticket__",
-                                  data_set);
+                                  rsc->cluster);
                 break;
 
             case loss_ticket_demote:
                 // Promotion score will be set to -INFINITY in promotion_order()
                 if (rsc_ticket->role != RSC_ROLE_PROMOTED) {
                     resource_location(rsc, NULL, -INFINITY,
-                                      "__loss_of_ticket__", data_set);
+                                      "__loss_of_ticket__", rsc->cluster);
                 }
                 break;
 
@@ -108,11 +105,11 @@ constraints_for_ticket(pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket,
                 }
 
                 resource_location(rsc, NULL, -INFINITY, "__loss_of_ticket__",
-                                  data_set);
+                                  rsc->cluster);
 
                 for (gIter = rsc->running_on; gIter != NULL;
                      gIter = gIter->next) {
-                    pe_fence_node(data_set, (pe_node_t *) gIter->data,
+                    pe_fence_node(rsc->cluster, (pe_node_t *) gIter->data,
                                   "deadman ticket was lost", FALSE);
                 }
                 break;
@@ -133,7 +130,7 @@ constraints_for_ticket(pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket,
         if ((rsc_ticket->role != RSC_ROLE_PROMOTED)
             || (rsc_ticket->loss_policy == loss_ticket_stop)) {
             resource_location(rsc, NULL, -INFINITY, "__no_ticket__",
-                              data_set);
+                              rsc->cluster);
         }
 
     } else if (rsc_ticket->ticket->standby) {
@@ -141,15 +138,14 @@ constraints_for_ticket(pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket,
         if ((rsc_ticket->role != RSC_ROLE_PROMOTED)
             || (rsc_ticket->loss_policy == loss_ticket_stop)) {
             resource_location(rsc, NULL, -INFINITY, "__ticket_standby__",
-                              data_set);
+                              rsc->cluster);
         }
     }
 }
 
 static void
 rsc_ticket_new(const char *id, pe_resource_t *rsc, pe_ticket_t *ticket,
-               const char *state, const char *loss_policy,
-               pe_working_set_t *data_set)
+               const char *state, const char *loss_policy)
 {
     rsc_ticket_t *new_rsc_ticket = NULL;
 
@@ -175,7 +171,7 @@ rsc_ticket_new(const char *id, pe_resource_t *rsc, pe_ticket_t *ticket,
     new_rsc_ticket->role = text2role(state);
 
     if (pcmk__str_eq(loss_policy, "fence", pcmk__str_casei)) {
-        if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
+        if (pcmk_is_set(rsc->cluster->flags, pe_flag_stonith_enabled)) {
             new_rsc_ticket->loss_policy = loss_ticket_fence;
         } else {
             pcmk__config_err("Resetting '" XML_TICKET_ATTR_LOSS_POLICY
@@ -228,11 +224,11 @@ rsc_ticket_new(const char *id, pe_resource_t *rsc, pe_ticket_t *ticket,
 
     rsc->rsc_tickets = g_list_append(rsc->rsc_tickets, new_rsc_ticket);
 
-    data_set->ticket_constraints = g_list_append(data_set->ticket_constraints,
-                                                 new_rsc_ticket);
+    rsc->cluster->ticket_constraints = g_list_append(
+        rsc->cluster->ticket_constraints, new_rsc_ticket);
 
     if (!(new_rsc_ticket->ticket->granted) || new_rsc_ticket->ticket->standby) {
-        constraints_for_ticket(rsc, new_rsc_ticket, data_set);
+        constraints_for_ticket(rsc, new_rsc_ticket);
     }
 }
 
@@ -270,7 +266,7 @@ unpack_rsc_ticket_set(xmlNode *set, pe_ticket_t *ticket,
         }
         pe_rsc_trace(resource, "Resource '%s' depends on ticket '%s'",
                      resource->id, ticket->id);
-        rsc_ticket_new(set_id, resource, ticket, role, loss_policy, data_set);
+        rsc_ticket_new(set_id, resource, ticket, role, loss_policy);
     }
 
     return pcmk_rc_ok;
@@ -354,7 +350,7 @@ unpack_simple_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
         }
     }
 
-    rsc_ticket_new(id, rsc, ticket, state, loss_policy, data_set);
+    rsc_ticket_new(id, rsc, ticket, state, loss_policy);
 }
 
 // \return Standard Pacemaker return code
