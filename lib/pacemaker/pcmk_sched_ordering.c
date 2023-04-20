@@ -1357,6 +1357,14 @@ block_colocation_dependents(gpointer data, gpointer user_data)
     pcmk__block_colocation_dependents(data);
 }
 
+// GFunc to call pcmk__update_action_for_orderings()
+static void
+update_action_for_orderings(gpointer data, gpointer user_data)
+{
+    pcmk__update_action_for_orderings((pe_action_t *) data,
+                                      (pe_working_set_t *) user_data);
+}
+
 void
 pcmk__apply_orderings(pe_working_set_t *data_set)
 {
@@ -1404,8 +1412,7 @@ pcmk__apply_orderings(pe_working_set_t *data_set)
     pcmk__order_probes(data_set);
 
     crm_trace("Updating %d actions", g_list_length(data_set->actions));
-    g_list_foreach(data_set->actions,
-                   (GFunc) pcmk__update_action_for_orderings, data_set);
+    g_list_foreach(data_set->actions, update_action_for_orderings, data_set);
 
     pcmk__disable_invalid_orderings(data_set);
 }
