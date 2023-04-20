@@ -837,6 +837,10 @@ void pcmk__bundle_with_colocations(const pe_resource_t *rsc,
                                    const pe_resource_t *orig_rsc, GList **list);
 
 G_GNUC_INTERNAL
+void pcmk__bundle_apply_location(pe_resource_t *rsc,
+                                 pe__location_t *constraint);
+
+G_GNUC_INTERNAL
 enum pe_action_flags pcmk__bundle_action_flags(pe_action_t *action,
                                                const pe_node_t *node);
 

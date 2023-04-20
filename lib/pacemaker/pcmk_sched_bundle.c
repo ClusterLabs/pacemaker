@@ -621,22 +621,31 @@ apply_location_to_replica(pe__bundle_replica_t *replica, void *user_data)
     return true;
 }
 
+/*!
+ * \internal
+ * \brief Apply a location constraint to a bundle resource's allowed node scores
+ *
+ * \param[in,out] rsc       Bundle resource to apply constraint to
+ * \param[in,out] location  Location constraint to apply
+ */
 void
-pcmk__bundle_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
+pcmk__bundle_apply_location(pe_resource_t *rsc, pe__location_t *location)
 {
     pe_resource_t *bundled_resource = NULL;
 
-    pcmk__apply_location(rsc, constraint);
-    pe__foreach_bundle_replica(rsc, apply_location_to_replica, constraint);
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container)
+               && (location != NULL));
+
+    pcmk__apply_location(rsc, location);
+    pe__foreach_bundle_replica(rsc, apply_location_to_replica, location);
 
     bundled_resource = pe__bundled_resource(rsc);
     if ((bundled_resource != NULL)
-        && ((constraint->role_filter == RSC_ROLE_UNPROMOTED)
-            || (constraint->role_filter == RSC_ROLE_PROMOTED))) {
-        bundled_resource->cmds->apply_location(bundled_resource,
-                                               constraint);
-        bundled_resource->rsc_location = g_list_prepend(bundled_resource->rsc_location,
-                                                        constraint);
+        && ((location->role_filter == RSC_ROLE_UNPROMOTED)
+            || (location->role_filter == RSC_ROLE_PROMOTED))) {
+        bundled_resource->cmds->apply_location(bundled_resource, location);
+        bundled_resource->rsc_location = g_list_prepend(
+            bundled_resource->rsc_location, location);
     }
 }
 

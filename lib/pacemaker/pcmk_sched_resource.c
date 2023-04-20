@@ -85,7 +85,7 @@ static resource_alloc_functions_t allocation_methods[] = {
         pcmk__with_bundle_colocations,
         pcmk__bundle_with_colocations,
         pcmk__add_colocated_node_scores,
-        pcmk__bundle_rsc_location,
+        pcmk__bundle_apply_location,
         pcmk__bundle_action_flags,
         pcmk__instance_update_ordered_actions,
         pcmk__output_bundle_actions,
