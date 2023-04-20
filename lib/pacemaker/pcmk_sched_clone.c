@@ -392,6 +392,15 @@ pcmk__clone_apply_location(pe_resource_t *rsc, pe__location_t *location)
     }
 }
 
+// GFunc wrapper for calling the action_flags() resource method
+static void
+call_action_flags(gpointer data, gpointer user_data)
+{
+    pe_resource_t *rsc = user_data;
+
+    rsc->cmds->action_flags((pe_action_t *) data, NULL);
+}
+
 /*!
  * \internal
  * \brief Add a clone resource's actions to the transition graph
@@ -403,7 +412,7 @@ pcmk__clone_add_actions_to_graph(pe_resource_t *rsc)
 {
     CRM_CHECK(pe_rsc_is_clone(rsc), return);
 
-    g_list_foreach(rsc->actions, (GFunc) rsc->cmds->action_flags, NULL);
+    g_list_foreach(rsc->actions, call_action_flags, rsc);
     pe__create_clone_notifications(rsc);
 
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
