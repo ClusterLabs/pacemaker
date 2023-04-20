@@ -96,8 +96,7 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
         do_and = false;
     }
 
-    location_rule = pcmk__new_location(rule_id, rsc, 0, discovery, NULL,
-                                       data_set);
+    location_rule = pcmk__new_location(rule_id, rsc, 0, discovery, NULL);
 
     if (location_rule == NULL) {
         return NULL;
@@ -225,8 +224,7 @@ unpack_rsc_location(xmlNode *xml_obj, pe_resource_t *rsc, const char *role,
         if (!match) {
             return;
         }
-        location = pcmk__new_location(id, rsc, score_i, discovery, match,
-                                      data_set);
+        location = pcmk__new_location(id, rsc, score_i, discovery, match);
 
     } else {
         bool empty = true;
@@ -529,16 +527,14 @@ pcmk__unpack_location(xmlNode *xml_obj, pe_working_set_t *data_set)
  * \param[in]     node_score     Constraint score
  * \param[in]     discover_mode  Resource discovery option for constraint
  * \param[in]     node           Node in constraint (or NULL if rule-based)
- * \param[in,out] data_set       Cluster working set to add constraint to
  *
  * \return Newly allocated location constraint
- * \note The result will be added to \p data_set and should not be freed
- *       separately.
+ * \note The result will be added to the cluster (via \p rsc) and should not be
+ *       freed separately.
  */
 pe__location_t *
 pcmk__new_location(const char *id, pe_resource_t *rsc,
-                   int node_score, const char *discover_mode,
-                   pe_node_t *node, pe_working_set_t *data_set)
+                   int node_score, const char *discover_mode, pe_node_t *node)
 {
     pe__location_t *new_con = NULL;
 
@@ -584,8 +580,8 @@ pcmk__new_location(const char *id, pe_resource_t *rsc,
             new_con->node_list_rh = g_list_prepend(NULL, copy);
         }
 
-        data_set->placement_constraints = g_list_prepend(data_set->placement_constraints,
-                                                         new_con);
+        rsc->cluster->placement_constraints = g_list_prepend(
+            rsc->cluster->placement_constraints, new_con);
         rsc->rsc_location = g_list_prepend(rsc->rsc_location, new_con);
     }
 

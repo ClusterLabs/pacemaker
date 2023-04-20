@@ -315,8 +315,7 @@ pcmk__apply_node_health(pe_working_set_t *data_set)
                                          PCMK__META_ALLOW_UNHEALTHY_NODES));
             }
             if (constrain) {
-                pcmk__new_location(strategy_str, rsc, health, NULL, node,
-                                   data_set);
+                pcmk__new_location(strategy_str, rsc, health, NULL, node);
             } else {
                 pe_rsc_trace(rsc, "%s is immune from health ban on %s",
                              rsc->id, pe__node_name(node));

@@ -435,8 +435,7 @@ void pcmk__unpack_location(xmlNode *xml_obj, pe_working_set_t *data_set);
 G_GNUC_INTERNAL
 pe__location_t *pcmk__new_location(const char *id, pe_resource_t *rsc,
                                    int node_score, const char *discover_mode,
-                                   pe_node_t *foo_node,
-                                   pe_working_set_t *data_set);
+                                   pe_node_t *foo_node);
 
 G_GNUC_INTERNAL
 void pcmk__apply_locations(pe_working_set_t *data_set);
