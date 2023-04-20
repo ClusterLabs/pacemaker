@@ -132,13 +132,12 @@ add_maintenance_update(pe_working_set_t *data_set)
  *
  * \param[in,out] xml       Parent XML tag to add to
  * \param[in]     action    Action to check for downed nodes
- * \param[in]     data_set  Working set for cluster
  */
 static void
-add_downed_nodes(xmlNode *xml, const pe_action_t *action,
-                 const pe_working_set_t *data_set)
+add_downed_nodes(xmlNode *xml, const pe_action_t *action)
 {
-    CRM_CHECK(xml && action && action->node && data_set, return);
+    CRM_CHECK((xml != NULL) && (action != NULL) && (action->node != NULL),
+              return);
 
     if (pcmk__str_eq(action->task, CRM_OP_SHUTDOWN, pcmk__str_casei)) {
 
@@ -154,7 +153,8 @@ add_downed_nodes(xmlNode *xml, const pe_action_t *action,
         if (pcmk__is_fencing_action(fence)) {
             xmlNode *downed = create_xml_node(xml, XML_GRAPH_TAG_DOWNED);
             add_node_to_xml_by_id(action->node->details->id, downed);
-            pe_foreach_guest_node(data_set, action->node, add_node_to_xml, downed);
+            pe_foreach_guest_node(action->node->details->data_set, action->node,
+                                  add_node_to_xml, downed);
         }
 
     } else if (action->rsc && action->rsc->is_remote_node
@@ -469,7 +469,7 @@ create_graph_action(xmlNode *parent, pe_action_t *action, bool skip_details,
 
     /* List any nodes this action is expected to make down */
     if (needs_node_info && (action->node != NULL)) {
-        add_downed_nodes(action_xml, action, data_set);
+        add_downed_nodes(action_xml, action);
     }
 
     if (needs_maintenance_info) {
