@@ -390,16 +390,16 @@ pcmk__ban_insufficient_capacity(pe_resource_t *rsc)
  * \brief Create a new load_stopped pseudo-op for a node
  *
  * \param[in]     node      Node to create op for
- * \param[in,out] data_set  Cluster working set
  *
  * \return Newly created load_stopped op
  */
 static pe_action_t *
-new_load_stopped_op(const pe_node_t *node, pe_working_set_t *data_set)
+new_load_stopped_op(const pe_node_t *node)
 {
     char *load_stopped_task = crm_strdup_printf(LOAD_STOPPED "_%s",
                                                 node->details->uname);
-    pe_action_t *load_stopped = get_pseudo_op(load_stopped_task, data_set);
+    pe_action_t *load_stopped = get_pseudo_op(load_stopped_task,
+                                              node->details->data_set);
 
     if (load_stopped->node == NULL) {
         load_stopped->node = pe__copy_node(node);
@@ -430,7 +430,7 @@ pcmk__create_utilization_constraints(pe_resource_t *rsc,
     // "stop rsc then load_stopped" constraints for current nodes
     for (iter = rsc->running_on; iter != NULL; iter = iter->next) {
         node = (const pe_node_t *) iter->data;
-        load_stopped = new_load_stopped_op(node, rsc->cluster);
+        load_stopped = new_load_stopped_op(node);
         pcmk__new_ordering(rsc, stop_key(rsc), NULL, NULL, NULL, load_stopped,
                            pe_order_load, rsc->cluster);
     }
@@ -438,7 +438,7 @@ pcmk__create_utilization_constraints(pe_resource_t *rsc,
     // "load_stopped then start/migrate_to rsc" constraints for allowed nodes
     for (iter = allowed_nodes; iter; iter = iter->next) {
         node = (const pe_node_t *) iter->data;
-        load_stopped = new_load_stopped_op(node, rsc->cluster);
+        load_stopped = new_load_stopped_op(node);
         pcmk__new_ordering(NULL, NULL, load_stopped, rsc, start_key(rsc), NULL,
                            pe_order_load, rsc->cluster);
         pcmk__new_ordering(NULL, NULL, load_stopped,
