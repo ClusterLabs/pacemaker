@@ -645,10 +645,10 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
     resource2->cmds->add_colocated_node_scores(convert_const_pointer(resource2),
                                                resource2->id, &r2_nodes, NULL,
                                                1, pcmk__coloc_select_this_with);
-    pe__show_node_weights(true, NULL, resource1->id, r1_nodes,
-                          resource1->cluster);
-    pe__show_node_weights(true, NULL, resource2->id, r2_nodes,
-                          resource2->cluster);
+    pe__show_node_scores(true, NULL, resource1->id, r1_nodes,
+                         resource1->cluster);
+    pe__show_node_scores(true, NULL, resource2->id, r2_nodes,
+                         resource2->cluster);
 
     // The resource with highest score on its current node goes first
     reason = "current location";

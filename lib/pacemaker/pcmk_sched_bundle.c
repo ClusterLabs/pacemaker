@@ -98,8 +98,8 @@ pcmk__bundle_assign(pe_resource_t *rsc, const pe_node_t *prefer)
     pe_rsc_trace(rsc, "Assigning bundle %s", rsc->id);
     pe__set_resource_flags(rsc, pe_rsc_allocating);
 
-    pe__show_node_weights(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
-                          rsc, __func__, rsc->allowed_nodes, rsc->cluster);
+    pe__show_node_scores(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
+                         rsc, __func__, rsc->allowed_nodes, rsc->cluster);
 
     // Assign all containers first, so we know what nodes the bundle will be on
     containers = g_list_sort(pe__bundle_containers(rsc), pcmk__cmp_instance);

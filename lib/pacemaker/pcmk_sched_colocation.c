@@ -1563,7 +1563,7 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
             other->cmds->add_colocated_node_scores(other, log_id, &work,
                                                    constraint,
                                                    other_factor, flags);
-            pe__show_node_weights(true, NULL, log_id, work, rsc->cluster);
+            pe__show_node_scores(true, NULL, log_id, work, rsc->cluster);
         }
         g_list_free(colocations);
 

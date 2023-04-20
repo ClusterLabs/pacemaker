@@ -386,8 +386,8 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer)
     }
     pe__set_resource_flags(rsc, pe_rsc_allocating);
 
-    pe__show_node_weights(true, rsc, "Pre-assignment", rsc->allowed_nodes,
-                          rsc->cluster);
+    pe__show_node_scores(true, rsc, "Pre-assignment", rsc->allowed_nodes,
+                         rsc->cluster);
 
     this_with_colocations = pcmk__this_with_colocations(rsc);
     with_this_colocations = pcmk__with_this_colocations(rsc);
@@ -408,8 +408,8 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer)
         }
     }
 
-    pe__show_node_weights(true, rsc, "Mandatory-colocations",
-                          rsc->allowed_nodes, rsc->cluster);
+    pe__show_node_scores(true, rsc, "Mandatory-colocations",
+                         rsc->allowed_nodes, rsc->cluster);
 
     // Then apply optional colocations
     for (iter = this_with_colocations; iter != NULL; iter = iter->next) {
@@ -448,8 +448,8 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer)
         pe__set_next_role(rsc, rsc->role, "no-quorum-policy=freeze");
     }
 
-    pe__show_node_weights(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
-                          rsc, __func__, rsc->allowed_nodes, rsc->cluster);
+    pe__show_node_scores(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
+                         rsc, __func__, rsc->allowed_nodes, rsc->cluster);
 
     // Unmanage resource if fencing is enabled but no device is configured
     if (pcmk_is_set(rsc->cluster->flags, pe_flag_stonith_enabled)

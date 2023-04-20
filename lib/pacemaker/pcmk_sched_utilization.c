@@ -380,8 +380,8 @@ pcmk__ban_insufficient_capacity(pe_resource_t *rsc)
     g_list_free(colocated_rscs);
     free(rscs_id);
 
-    pe__show_node_weights(true, rsc, "Post-utilization",
-                          rsc->allowed_nodes, rsc->cluster);
+    pe__show_node_scores(true, rsc, "Post-utilization", rsc->allowed_nodes,
+                         rsc->cluster);
     return most_capable_node;
 }
 

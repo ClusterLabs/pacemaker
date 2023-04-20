@@ -452,8 +452,8 @@ sort_promotable_instances(pe_resource_t *clone)
                      "Merging weights for %s: initial sort index for %s is %d",
                      clone->id, child->id, child->sort_index);
     }
-    pe__show_node_weights(true, clone, "Before", clone->allowed_nodes,
-                          clone->cluster);
+    pe__show_node_scores(true, clone, "Before", clone->allowed_nodes,
+                         clone->cluster);
 
     /* Because the this_with_colocations() and with_this_colocations() methods
      * boil down to copies of rsc_cons and rsc_cons_lhs for clones, we can use
@@ -466,8 +466,8 @@ sort_promotable_instances(pe_resource_t *clone)
     // Ban resource from all nodes if it needs a ticket but doesn't have it
     pcmk__require_promotion_tickets(clone);
 
-    pe__show_node_weights(true, clone, "After", clone->allowed_nodes,
-                          clone->cluster);
+    pe__show_node_scores(true, clone, "After", clone->allowed_nodes,
+                         clone->cluster);
 
     // Reset sort indexes to final node weights
     g_list_foreach(clone->children, set_sort_index_to_node_weight, clone);
