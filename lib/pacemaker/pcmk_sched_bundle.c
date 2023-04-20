@@ -848,9 +848,9 @@ create_replica_probes(pe__bundle_replica_t *replica, void *user_data)
 /*!
  * \internal
  *
- * \brief Schedule any probes needed for a resource on a node
+ * \brief Schedule any probes needed for a bundle resource on a node
  *
- * \param[in,out] rsc   Resource to create probe for
+ * \param[in,out] rsc   Bundle resource to create probes for
  * \param[in,out] node  Node to create probe on
  *
  * \return true if any probe was created, otherwise false
@@ -860,7 +860,7 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node)
 {
     struct probe_data probe_data = { rsc, node, false };
 
-    CRM_CHECK(rsc != NULL, return false);
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container));
     pe__foreach_bundle_replica(rsc, create_replica_probes, &probe_data);
     return probe_data.any_created;
 }

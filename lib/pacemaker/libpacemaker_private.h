@@ -820,6 +820,9 @@ G_GNUC_INTERNAL
 void pcmk__bundle_create_actions(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
+bool pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node);
+
+G_GNUC_INTERNAL
 void pcmk__bundle_internal_constraints(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
