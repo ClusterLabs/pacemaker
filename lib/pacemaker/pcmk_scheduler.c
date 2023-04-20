@@ -171,17 +171,18 @@ apply_exclusive_discovery(pe_resource_t *rsc, const pe_node_t *node)
  * \internal
  * \brief Apply stickiness to a resource if appropriate
  *
- * \param[in,out] rsc       Resource to check for stickiness
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] data       Resource to check for stickiness
+ * \param[in,out] user_data  Ignored
  */
 static void
-apply_stickiness(pe_resource_t *rsc, pe_working_set_t *data_set)
+apply_stickiness(gpointer data, gpointer user_data)
 {
+    pe_resource_t *rsc = data;
     pe_node_t *node = NULL;
 
     // If this is a collective resource, apply recursively to children instead
     if (rsc->children != NULL) {
-        g_list_foreach(rsc->children, (GFunc) apply_stickiness, data_set);
+        g_list_foreach(rsc->children, apply_stickiness, NULL);
         return;
     }
 
@@ -212,7 +213,7 @@ apply_stickiness(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     pe_rsc_debug(rsc, "Resource %s has %d stickiness on %s",
                  rsc->id, rsc->stickiness, pe__node_name(node));
-    resource_location(rsc, node, rsc->stickiness, "stickiness", data_set);
+    resource_location(rsc, node, rsc->stickiness, "stickiness", rsc->cluster);
 }
 
 /*!
@@ -274,7 +275,7 @@ apply_node_criteria(pe_working_set_t *data_set)
     apply_shutdown_locks(data_set);
     count_available_nodes(data_set);
     pcmk__apply_locations(data_set);
-    g_list_foreach(data_set->resources, (GFunc) apply_stickiness, data_set);
+    g_list_foreach(data_set->resources, apply_stickiness, NULL);
 
     for (GList *node_iter = data_set->nodes; node_iter != NULL;
          node_iter = node_iter->next) {
