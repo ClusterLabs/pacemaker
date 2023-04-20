@@ -28,8 +28,7 @@
                          "/" XML_LRM_TAG_RESOURCE "[@" XML_ATTR_ID "='%s']"
 
 static xmlNode *
-best_op(const pe_resource_t *rsc, const pe_node_t *node,
-        pe_working_set_t *data_set)
+best_op(const pe_resource_t *rsc, const pe_node_t *node)
 {
     char *xpath = NULL;
     xmlNode *history = NULL;
@@ -41,7 +40,7 @@ best_op(const pe_resource_t *rsc, const pe_node_t *node,
 
     // Find node's resource history
     xpath = crm_strdup_printf(XPATH_OP_HISTORY, node->details->uname, rsc->id);
-    history = get_xpath_object(xpath, data_set->input, LOG_NEVER);
+    history = get_xpath_object(xpath, rsc->cluster->input, LOG_NEVER);
     free(xpath);
 
     // Examine each history entry
@@ -133,7 +132,7 @@ pcmk__resource_digests(pcmk__output_t *out, pe_resource_t *rsc,
     }
 
     // Find XML of operation history to use
-    xml_op = best_op(rsc, node, rsc->cluster);
+    xml_op = best_op(rsc, node);
 
     // Generate an operation key
     if (xml_op != NULL) {
