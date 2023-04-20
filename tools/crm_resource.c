@@ -1901,7 +1901,7 @@ main(int argc, char **argv)
             break;
 
         case cmd_colocations:
-            rc = out->message(out, "locations-and-colocations", rsc, data_set,
+            rc = out->message(out, "locations-and-colocations", rsc,
                               options.recursive, (bool) options.force);
             break;
 
