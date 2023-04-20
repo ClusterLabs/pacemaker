@@ -252,6 +252,12 @@ struct resource_alloc_functions_s {
                                        uint32_t filter, uint32_t type,
                                        pe_working_set_t *data_set);
 
+    /*!
+     * \internal
+     * \brief Output a summary of scheduled actions for a resource
+     *
+     * \param[in,out] rsc  Resource to output actions for
+     */
     void (*output_actions)(pe_resource_t *rsc);
 
     /*!

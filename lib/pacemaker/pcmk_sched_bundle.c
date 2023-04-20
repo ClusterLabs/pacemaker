@@ -892,11 +892,16 @@ output_replica_actions(pe__bundle_replica_t *replica, void *user_data)
     return true;
 }
 
+/*!
+ * \internal
+ * \brief Output a summary of scheduled actions for a bundle resource
+ *
+ * \param[in,out] rsc  Bundle resource to output actions for
+ */
 void
 pcmk__output_bundle_actions(pe_resource_t *rsc)
 {
-    CRM_CHECK(rsc != NULL, return);
-
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container));
     pe__foreach_bundle_replica(rsc, output_replica_actions, NULL);
 }
 
