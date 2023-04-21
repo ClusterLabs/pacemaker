@@ -192,6 +192,82 @@ start_delay_helper(gpointer data)
     return FALSE;
 }
 
+static bool
+should_purge_attributes(crm_node_t *node)
+{
+    bool purge = true;
+    crm_node_t *conn_node = NULL;
+    lrm_state_t *connection_rsc = NULL;
+
+    if (!node->conn_host) {
+        return purge;
+    }
+
+    /* Get the node that was hosting the remote connection resource from the
+     * peer cache.  That's the one we really care about here.
+     */
+    conn_node = crm_get_peer(0, node->conn_host);
+    if (conn_node == NULL) {
+        return purge;
+    }
+
+    /* Check the uptime of connection_rsc.  If it hasn't been running long
+     * enough, set purge=true.  "Long enough" means it started running earlier
+     * than the timestamp when we noticed it went away in the first place.
+     */
+    connection_rsc = lrm_state_find(node->uname);
+
+    if (connection_rsc != NULL) {
+        lrmd_t *lrm = connection_rsc->conn;
+        time_t uptime = lrmd__uptime(lrm);
+        time_t now = time(NULL);
+
+        /* Add 20s of fuzziness to give corosync a while to notice the remote
+         * host is gone.  On various error conditions (failure to get uptime,
+         * peer_lost isn't set) we default to purging.
+         */
+        if (uptime > 0 &&
+            conn_node->peer_lost > 0 &&
+            uptime + 20 >= now - conn_node->peer_lost) {
+            purge = false;
+        }
+    }
+
+    return purge;
+}
+
+static enum controld_section_e
+section_to_delete(bool purge)
+{
+    if (pcmk_is_set(controld_globals.flags, controld_shutdown_lock_enabled)) {
+        if (purge) {
+            return controld_section_all_unlocked;
+        } else {
+            return controld_section_lrm_unlocked;
+        }
+    } else {
+        if (purge) {
+            return controld_section_all;
+        } else {
+            return controld_section_lrm;
+        }
+    }
+}
+
+static void
+purge_remote_node_attrs(int call_opt, crm_node_t *node)
+{
+    bool purge = should_purge_attributes(node);
+    enum controld_section_e section = section_to_delete(purge);
+
+    /* Purge node from attrd's memory */
+    if (purge) {
+        update_attrd_remote_node_removed(node->uname, NULL);
+    }
+
+    controld_delete_node_state(node->uname, section, call_opt);
+}
+
 /*!
  * \internal
  * \brief Handle cluster communication related to pacemaker_remote node joining
@@ -204,24 +280,11 @@ remote_node_up(const char *node_name)
     int call_opt;
     xmlNode *update, *state;
     crm_node_t *node;
-    enum controld_section_e section = controld_section_all;
 
     CRM_CHECK(node_name != NULL, return);
     crm_info("Announcing Pacemaker Remote node %s", node_name);
 
-    /* Clear node's entire state (resource history and transient attributes)
-     * other than shutdown locks. The transient attributes should and normally
-     * will be cleared when the node leaves, but since remote node state has a
-     * number of corner cases, clear them here as well, to be sure.
-     */
     call_opt = crmd_cib_smart_opt();
-    if (pcmk_is_set(controld_globals.flags, controld_shutdown_lock_enabled)) {
-        section = controld_section_all_unlocked;
-    }
-    /* Purge node from attrd's memory */
-    update_attrd_remote_node_removed(node_name, NULL);
-
-    controld_delete_node_state(node_name, section, call_opt);
 
     /* Delete node's probe_complete attribute. This serves two purposes:
      *
@@ -234,6 +297,8 @@ remote_node_up(const char *node_name)
     /* Ensure node is in the remote peer cache with member status */
     node = crm_remote_peer_get(node_name);
     CRM_CHECK(node != NULL, return);
+
+    purge_remote_node_attrs(call_opt, node);
     pcmk__update_peer_state(__func__, node, CRM_NODE_MEMBER, 0);
 
     /* pacemaker_remote nodes don't participate in the membership layer,
