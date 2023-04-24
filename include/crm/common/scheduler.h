@@ -29,7 +29,10 @@ extern "C" {
 enum pe_quorum_policy {
     pcmk_no_quorum_freeze,  //<! Do not recover resources from outside partition
 
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated Use pcmk_no_quorum_freeze instead
     no_quorum_freeze    = pcmk_no_quorum_freeze,
+#endif
     no_quorum_stop      = 1,
     no_quorum_ignore    = 2,
     no_quorum_suicide   = 3,
