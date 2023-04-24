@@ -41,8 +41,10 @@ enum pe_obj_types {
 
     //! \deprecated Use pcmk_rsc_variant_clone instead
     pe_clone        = pcmk_rsc_variant_clone,
-#endif
+
+    //! \deprecated Use pcmk_rsc_variant_bundle instead
     pe_container    = pcmk_rsc_variant_bundle,
+#endif
 };
 
 //! What resource needs before it can be recovered from a failed node
