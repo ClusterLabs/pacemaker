@@ -523,7 +523,8 @@ pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
      * primitive and call the apply_coloc_score() method for them as dependents.
      */
     CRM_ASSERT((primary != NULL) && (primary->variant == pe_container)
-               && (dependent != NULL) && (dependent->variant == pe_native)
+               && (dependent != NULL)
+               && (dependent->variant == pcmk_rsc_variant_primitive)
                && (colocation != NULL) && !for_dependent);
 
     if (pcmk_is_set(primary->flags, pe_rsc_provisional)) {

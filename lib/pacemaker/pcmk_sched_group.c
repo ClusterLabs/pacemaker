@@ -466,7 +466,7 @@ pcmk__group_apply_coloc_score(pe_resource_t *dependent,
 
     } else {
         // Method should only be called for primitive dependents
-        CRM_ASSERT(dependent->variant == pe_native);
+        CRM_ASSERT(dependent->variant == pcmk_rsc_variant_primitive);
 
         colocate_with_group(dependent, primary, colocation);
     }

@@ -31,7 +31,7 @@ rsc_is_known_on(const pe_resource_t *rsc, const pe_node_t *node)
    if (g_hash_table_lookup(rsc->known_on, node->details->id) != NULL) {
        return TRUE;
 
-   } else if ((rsc->variant == pe_native)
+   } else if ((rsc->variant == pcmk_rsc_variant_primitive)
               && pe_rsc_is_anon_clone(rsc->parent)
               && (g_hash_table_lookup(rsc->parent->known_on,
                                       node->details->id) != NULL)) {

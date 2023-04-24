@@ -895,7 +895,7 @@ check_instance_state(const pe_resource_t *instance, uint32_t *state)
     }
 
     // If instance is a collective (a cloned group), check its children instead
-    if (instance->variant > pe_native) {
+    if (instance->variant > pcmk_rsc_variant_primitive) {
         for (iter = instance->children;
              (iter != NULL) && !pcmk_all_flags_set(*state, instance_all);
              iter = iter->next) {
@@ -1622,7 +1622,7 @@ pcmk__collective_action_flags(pe_action_t *action, const GList *instances,
         uint32_t instance_flags;
 
         // Node is relevant only to primitive instances
-        if (instance->variant == pe_native) {
+        if (instance->variant == pcmk_rsc_variant_primitive) {
             instance_node = node;
         }
 

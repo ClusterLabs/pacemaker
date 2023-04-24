@@ -667,7 +667,8 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
 static inline bool
 is_primitive_action(const pe_action_t *action)
 {
-    return action && action->rsc && (action->rsc->variant == pe_native);
+    return (action != NULL) && (action->rsc != NULL)
+           && (action->rsc->variant == pcmk_rsc_variant_primitive);
 }
 
 /*!
@@ -1552,7 +1553,7 @@ schedule_reload(gpointer data, gpointer user_data)
     pe_action_t *reload = NULL;
 
     // For collective resources, just call recursively for children
-    if (rsc->variant > pe_native) {
+    if (rsc->variant > pcmk_rsc_variant_primitive) {
         g_list_foreach(rsc->children, schedule_reload, user_data);
         return;
     }
@@ -1873,7 +1874,7 @@ process_node_history(pe_node_t *node, const xmlNode *lrm_rscs)
             for (GList *iter = result; iter != NULL; iter = iter->next) {
                 pe_resource_t *rsc = (pe_resource_t *) iter->data;
 
-                if (rsc->variant == pe_native) {
+                if (rsc->variant == pcmk_rsc_variant_primitive) {
                     process_rsc_history(rsc_entry, rsc, node);
                 }
             }

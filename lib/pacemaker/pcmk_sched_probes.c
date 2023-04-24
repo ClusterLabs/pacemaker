@@ -544,7 +544,7 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
 
     // Validate that this is a resource probe followed by some action
     if ((after == NULL) || (probe == NULL) || (probe->rsc == NULL)
-        || (probe->rsc->variant != pe_native)
+        || (probe->rsc->variant != pcmk_rsc_variant_primitive)
         || !pcmk__str_eq(probe->task, PCMK_ACTION_MONITOR, pcmk__str_none)) {
         return;
     }
@@ -562,7 +562,8 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
     /* Add restart orderings if "then" is for a different primitive.
      * Orderings for collective resources will be added later.
      */
-    if ((after->rsc != NULL) && (after->rsc->variant == pe_native)
+    if ((after->rsc != NULL)
+        && (after->rsc->variant == pcmk_rsc_variant_primitive)
         && (probe->rsc != after->rsc)) {
 
             GList *then_actions = NULL;
@@ -688,7 +689,7 @@ add_start_restart_orderings_for_rsc(gpointer data, gpointer user_data)
     GList *probes = NULL;
 
     // For collective resources, order each instance recursively
-    if (rsc->variant != pe_native) {
+    if (rsc->variant != pcmk_rsc_variant_primitive) {
         g_list_foreach(rsc->children, add_start_restart_orderings_for_rsc,
                        NULL);
         return;

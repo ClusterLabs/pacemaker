@@ -346,7 +346,8 @@ add_action_attributes(pe_action_t *action, xmlNode *action_xml)
 
         g_hash_table_foreach(params, hash2smartfield, args_xml);
 
-    } else if ((action->rsc != NULL) && (action->rsc->variant <= pe_native)) {
+    } else if ((action->rsc != NULL)
+               && (action->rsc->variant <= pcmk_rsc_variant_primitive)) {
         GHashTable *params = pe_rsc_params(action->rsc, NULL,
                                            action->rsc->cluster);
 

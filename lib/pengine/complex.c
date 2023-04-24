@@ -85,7 +85,7 @@ static enum pe_obj_types
 get_resource_type(const char *name)
 {
     if (pcmk__str_eq(name, XML_CIB_TAG_RESOURCE, pcmk__str_casei)) {
-        return pe_native;
+        return pcmk_rsc_variant_primitive;
 
     } else if (pcmk__str_eq(name, XML_CIB_TAG_GROUP, pcmk__str_casei)) {
         return pe_group;
@@ -522,7 +522,7 @@ unpack_requires(pe_resource_t *rsc, const char *value, bool is_default)
         if (pcmk_is_set(rsc->flags, pe_rsc_fence_device)) {
             value = PCMK__VALUE_QUORUM;
 
-        } else if ((rsc->variant == pe_native)
+        } else if ((rsc->variant == pcmk_rsc_variant_primitive)
                    && xml_contains_remote_node(rsc->xml)) {
             value = PCMK__VALUE_QUORUM;
 

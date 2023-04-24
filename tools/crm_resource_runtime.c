@@ -228,7 +228,7 @@ find_matching_attr_resources(pcmk__output_t *out, pe_resource_t * rsc,
     } else if(rsc->parent == NULL && rsc->children && pe_clone == rsc->variant) {
         pe_resource_t *child = rsc->children->data;
 
-        if(child->variant == pe_native) {
+        if (child->variant == pcmk_rsc_variant_primitive) {
             lookup_id = clone_strip(child->id); /* Could be a cloned group! */
             rc = find_resource_attr(out, cib, XML_ATTR_ID, lookup_id, attr_set_type,
                                     attr_set, attr_id, attr_name, &local_attr_id);
@@ -550,7 +550,7 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
         out->err(out, "Resource %s not found", rsc_id);
         return ENXIO;
 
-    } else if (rsc->variant != pe_native) {
+    } else if (rsc->variant != pcmk_rsc_variant_primitive) {
         out->err(out, "We can only process primitive resources, not %s", rsc_id);
         return EINVAL;
     }

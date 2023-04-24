@@ -202,7 +202,7 @@ static inline enum pe_obj_types
 get_resource_type(const char *name)
 {
     if (safe_str_eq(name, XML_CIB_TAG_RESOURCE)) {
-        return pe_native;
+        return pcmk_rsc_variant_primitive;
 
     } else if (safe_str_eq(name, XML_CIB_TAG_GROUP)) {
         return pe_group;
@@ -222,7 +222,7 @@ static inline const char *
 get_resource_typename(enum pe_obj_types type)
 {
     switch (type) {
-        case pe_native:
+        case pcmk_rsc_variant_primitive:
             return XML_CIB_TAG_RESOURCE;
         case pe_group:
             return XML_CIB_TAG_GROUP;

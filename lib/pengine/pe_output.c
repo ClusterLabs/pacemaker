@@ -2792,7 +2792,8 @@ resource_list(pcmk__output_t *out, va_list args)
             }
 
         /* Skip primitives already counted in a brief summary */
-        } else if (pcmk_is_set(show_opts, pcmk_show_brief) && (rsc->variant == pe_native)) {
+        } else if (pcmk_is_set(show_opts, pcmk_show_brief)
+                   && (rsc->variant == pcmk_rsc_variant_primitive)) {
             continue;
 
         /* Skip resources that aren't at least partially active,
