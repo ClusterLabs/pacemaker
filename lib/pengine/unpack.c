@@ -433,7 +433,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
     new_node->details->data_set = data_set;
 
     if (pcmk__str_eq(type, "member", pcmk__str_null_matches | pcmk__str_casei)) {
-        new_node->details->type = node_member;
+        new_node->details->type = pcmk_node_variant_cluster;
 
     } else if (pcmk__str_eq(type, "remote", pcmk__str_casei)) {
         new_node->details->type = node_remote;

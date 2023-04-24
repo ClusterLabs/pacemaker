@@ -22,8 +22,10 @@ extern "C" {
 
 //! Possible node types
 enum node_type {
-    node_ping,      //! \deprecated Do not use
-    node_member,
+    pcmk_node_variant_cluster  = 1,     //!< Cluster layer node
+
+    node_ping   = 0,      //! \deprecated Do not use
+    node_member = pcmk_node_variant_cluster,
     node_remote
 };
 

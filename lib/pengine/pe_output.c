@@ -1828,7 +1828,7 @@ node_xml(pcmk__output_t *out, va_list args) {
         const char *feature_set;
 
         switch (node->details->type) {
-            case node_member:
+            case pcmk_node_variant_cluster:
                 node_type = "member";
                 break;
             case node_remote:
