@@ -221,7 +221,7 @@ class Corosync2Patterns(BasePatterns):
             r"Lost connection to the CIB manager",
             r"pacemaker-controld.*:\s*Action A_RECOVER .* not supported",
             r"pacemaker-controld.*:\s*Performing A_EXIT_1 - forcefully exiting ",
-            r".*:\s*Requesting fencing \([^)]+\) of node ",
+            r".*:\s*Requesting fencing \([^)]+\) targeting node ",
             r"(Blackbox dump requested|Problem detected)",
         ]
 

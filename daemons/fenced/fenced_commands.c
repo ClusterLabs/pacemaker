@@ -2318,25 +2318,25 @@ add_action_specific_attributes(xmlNode *xml, const char *action,
 
     delay_max = get_action_delay_max(device, action);
     if (delay_max > 0) {
-        crm_trace("Action '%s' has maximum random delay %dms using %s",
+        crm_trace("Action '%s' has maximum random delay %ds using %s",
                   action, delay_max, device->id);
-        crm_xml_add_int(xml, F_STONITH_DELAY_MAX, delay_max / 1000);
+        crm_xml_add_int(xml, F_STONITH_DELAY_MAX, delay_max);
     }
 
     delay_base = get_action_delay_base(device, action, target);
     if (delay_base > 0) {
-        crm_xml_add_int(xml, F_STONITH_DELAY_BASE, delay_base / 1000);
+        crm_xml_add_int(xml, F_STONITH_DELAY_BASE, delay_base);
     }
 
     if ((delay_max > 0) && (delay_base == 0)) {
-        crm_trace("Action '%s' has maximum random delay %dms using %s",
+        crm_trace("Action '%s' has maximum random delay %ds using %s",
                   action, delay_max, device->id);
     } else if ((delay_max == 0) && (delay_base > 0)) {
-        crm_trace("Action '%s' has a static delay of %dms using %s",
+        crm_trace("Action '%s' has a static delay of %ds using %s",
                   action, delay_base, device->id);
     } else if ((delay_max > 0) && (delay_base > 0)) {
-        crm_trace("Action '%s' has a minimum delay of %dms and a randomly chosen "
-                  "maximum delay of %dms using %s",
+        crm_trace("Action '%s' has a minimum delay of %ds and a randomly chosen "
+                  "maximum delay of %ds using %s",
                   action, delay_base, delay_max, device->id);
     }
 }
