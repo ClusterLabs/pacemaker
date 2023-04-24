@@ -101,19 +101,22 @@ failcount_clear_action_exists(const pe_node_t *node, const pe_resource_t *rsc)
  * \internal
  * \brief Ban a resource from a node if it reached its failure threshold there
  *
- * \param[in,out] rsc   Resource to check failure threshold for
- * \param[in]     node  Node to check \p rsc on
+ * \param[in,out] data       Resource to check failure threshold for
+ * \param[in]     user_data  Node to check resource on
  */
 static void
-check_failure_threshold(pe_resource_t *rsc, const pe_node_t *node)
+check_failure_threshold(gpointer data, gpointer user_data)
 {
+    pe_resource_t *rsc = data;
+    const pe_node_t *node = user_data;
+
     // If this is a collective resource, apply recursively to children instead
     if (rsc->children != NULL) {
-        g_list_foreach(rsc->children, (GFunc) check_failure_threshold,
-                       (gpointer) node);
+        g_list_foreach(rsc->children, check_failure_threshold, user_data);
         return;
+    }
 
-    } else if (failcount_clear_action_exists(node, rsc)) {
+    if (!failcount_clear_action_exists(node, rsc)) {
         /* Don't force the resource away from this node due to a failcount
          * that's going to be cleared.
          *
@@ -124,9 +127,6 @@ check_failure_threshold(pe_resource_t *rsc, const pe_node_t *node)
          * threshold when we shouldn't. Worst case, we stop or move the
          * resource, then move it back in the next transition.
          */
-        return;
-
-    } else {
         pe_resource_t *failed = NULL;
 
         if (pcmk__threshold_reached(rsc, node, &failed)) {
@@ -145,19 +145,21 @@ check_failure_threshold(pe_resource_t *rsc, const pe_node_t *node)
  * exclusive, probes will only be done on nodes listed in exclusive constraints.
  * This function bans the resource from the node if the node is not listed.
  *
- * \param[in,out] rsc   Resource to check
- * \param[in]     node  Node to check \p rsc on
+ * \param[in,out] data       Resource to check
+ * \param[in]     user_data  Node to check resource on
  */
 static void
-apply_exclusive_discovery(pe_resource_t *rsc, const pe_node_t *node)
+apply_exclusive_discovery(gpointer data, gpointer user_data)
 {
+    pe_resource_t *rsc = data;
+    const pe_node_t *node = user_data;
+
     if (rsc->exclusive_discover
         || pe__const_top_resource(rsc, false)->exclusive_discover) {
         pe_node_t *match = NULL;
 
         // If this is a collective resource, apply recursively to children
-        g_list_foreach(rsc->children, (GFunc) apply_exclusive_discovery,
-                       (gpointer) node);
+        g_list_foreach(rsc->children, apply_exclusive_discovery, user_data);
 
         match = g_hash_table_lookup(rsc->allowed_nodes, node->details->id);
         if ((match != NULL)
@@ -281,11 +283,8 @@ apply_node_criteria(pe_working_set_t *data_set)
          node_iter = node_iter->next) {
         for (GList *rsc_iter = data_set->resources; rsc_iter != NULL;
              rsc_iter = rsc_iter->next) {
-            pe_node_t *node = (pe_node_t *) node_iter->data;
-            pe_resource_t *rsc = (pe_resource_t *) rsc_iter->data;
-
-            check_failure_threshold(rsc, node);
-            apply_exclusive_discovery(rsc, node);
+            check_failure_threshold(rsc_iter->data, node_iter->data);
+            apply_exclusive_discovery(rsc_iter->data, node_iter->data);
         }
     }
 }
