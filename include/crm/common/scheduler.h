@@ -45,8 +45,10 @@ enum pe_quorum_policy {
 
     //! \deprecated Use pcmk_no_quorum_fence instead
     no_quorum_suicide   = pcmk_no_quorum_fence,
-#endif
+
+    //! \deprecated Use pcmk_no_quorum_demote instead
     no_quorum_demote    = pcmk_no_quorum_demote,
+#endif
 };
 
 #ifdef __cplusplus
