@@ -1831,7 +1831,7 @@ node_xml(pcmk__output_t *out, va_list args) {
             case pcmk_node_variant_cluster:
                 node_type = "member";
                 break;
-            case node_remote:
+            case pcmk_node_variant_remote:
                 node_type = "remote";
                 break;
             case node_ping:

@@ -24,7 +24,7 @@ pe__resource_is_remote_conn(const pe_resource_t *rsc)
 bool
 pe__is_remote_node(const pe_node_t *node)
 {
-    return (node != NULL) && (node->details->type == node_remote)
+    return (node != NULL) && (node->details->type == pcmk_node_variant_remote)
            && ((node->details->remote_rsc == NULL)
                || (node->details->remote_rsc->container == NULL));
 }
@@ -32,7 +32,7 @@ pe__is_remote_node(const pe_node_t *node)
 bool
 pe__is_guest_node(const pe_node_t *node)
 {
-    return (node != NULL) && (node->details->type == node_remote)
+    return (node != NULL) && (node->details->type == pcmk_node_variant_remote)
            && (node->details->remote_rsc != NULL)
            && (node->details->remote_rsc->container != NULL);
 }
@@ -40,7 +40,7 @@ pe__is_guest_node(const pe_node_t *node)
 bool
 pe__is_guest_or_remote_node(const pe_node_t *node)
 {
-    return (node != NULL) && (node->details->type == node_remote);
+    return (node != NULL) && (node->details->type == pcmk_node_variant_remote);
 }
 
 bool
