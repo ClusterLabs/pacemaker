@@ -85,12 +85,6 @@ enum pe_quorum_policy {
     no_quorum_demote
 };
 
-enum node_type {
-    node_ping,      //! \deprecated Do not use
-    node_member,
-    node_remote
-};
-
 //! Determine behavior of pe_find_resource_with_flags()
 enum pe_find {
     pe_find_renamed  = 0x001, //!< match resource ID or LRM history ID

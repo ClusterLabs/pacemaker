@@ -7,13 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__CRM_COMMON_SCHEDULER__H
-#  define PCMK__CRM_COMMON_SCHEDULER__H
-
-#include <crm/common/actions.h>
-#include <crm/common/nodes.h>
-#include <crm/common/resources.h>
-#include <crm/common/roles.h>
+#ifndef PCMK__CRM_COMMON_NODES__H
+#  define PCMK__CRM_COMMON_NODES__H
 
 #ifdef __cplusplus
 extern "C" {
@@ -21,12 +16,19 @@ extern "C" {
 
 /*!
  * \file
- * \brief Scheduler API
+ * \brief Scheduler API for nodes
  * \ingroup core
  */
+
+//! Possible node types
+enum node_type {
+    node_ping,      //! \deprecated Do not use
+    node_member,
+    node_remote
+};
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // PCMK__CRM_COMMON_SCHEDULER__H
+#endif // PCMK__CRM_COMMON_NODES__H
