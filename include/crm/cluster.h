@@ -78,6 +78,9 @@ typedef struct crm_peer_node_s {
 
     time_t peer_lost;
     char *conn_host;
+
+    time_t when_member;         // Since when node has been a cluster member
+    time_t when_online;         // Since when peer has been online in CPG
 } crm_node_t;
 
 void crm_peer_init(void);

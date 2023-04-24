@@ -917,6 +917,13 @@ crm_update_peer_proc(const char *source, crm_node_t * node, uint32_t flag, const
                      proc2text(flag), status);
         }
 
+        if (pcmk_is_set(node->processes, crm_get_cluster_proc())) {
+            node->when_online = time(NULL);
+
+        } else {
+            node->when_online = 0;
+        }
+
         /* Call the client callback first, then update the peer state,
          * in case the node will be reaped
          */
@@ -1024,6 +1031,13 @@ update_peer_state_iter(const char *source, crm_node_t *node, const char *state,
 
     if (state && !pcmk__str_eq(node->state, state, pcmk__str_casei)) {
         char *last = node->state;
+
+        if (is_member) {
+             node->when_member = time(NULL);
+
+        } else {
+             node->when_member = 0;
+        }
 
         node->state = strdup(state);
         crm_notice("Node %s state is now %s " CRM_XS
