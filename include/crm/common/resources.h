@@ -33,8 +33,10 @@ enum pe_obj_types {
 
     //! \deprecated Use pcmk_rsc_variant_primitive instead
     pe_native       = pcmk_rsc_variant_primitive,
-#endif
+
+    //! \deprecated Use pcmk_rsc_variant_group instead
     pe_group        = pcmk_rsc_variant_group,
+#endif
     pe_clone = 2,
     pe_container = 3,
 };
