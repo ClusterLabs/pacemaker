@@ -101,7 +101,7 @@ get_resource_type(const char *name)
         return pe_container;
     }
 
-    return pe_unknown;
+    return pcmk_rsc_variant_unknown;
 }
 
 static void
@@ -655,7 +655,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     (*rsc)->ops_xml = expand_idref(ops, data_set->input);
 
     (*rsc)->variant = get_resource_type((const char *) (*rsc)->xml->name);
-    if ((*rsc)->variant == pe_unknown) {
+    if ((*rsc)->variant == pcmk_rsc_variant_unknown) {
         pe_err("Ignoring resource '%s' of unknown type '%s'",
                id, (*rsc)->xml->name);
         common_free(*rsc);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -215,7 +215,7 @@ get_resource_type(const char *name)
         return pe_container;
     }
 
-    return pe_unknown;
+    return pcmk_rsc_variant_unknown;
 }
 
 static inline const char *
@@ -230,7 +230,7 @@ get_resource_typename(enum pe_obj_types type)
             return XML_CIB_TAG_INCARNATION;
         case pe_container:
             return XML_CIB_TAG_CONTAINER;
-        case pe_unknown:
+        case pcmk_rsc_variant_unknown:
             return "unknown";
     }
     return "<unknown>";
