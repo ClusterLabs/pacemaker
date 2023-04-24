@@ -33,8 +33,10 @@ enum pe_quorum_policy {
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_no_quorum_freeze instead
     no_quorum_freeze    = pcmk_no_quorum_freeze,
-#endif
+
+    //! \deprecated Use pcmk_no_quorum_stop instead
     no_quorum_stop      = pcmk_no_quorum_stop,
+#endif
     no_quorum_ignore    = 2,
     no_quorum_suicide   = 3,
     no_quorum_demote    = 4,
