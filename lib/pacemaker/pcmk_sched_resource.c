@@ -195,14 +195,16 @@ pcmk__rscs_matching_id(const char *id, const pe_working_set_t *data_set)
  * \internal
  * \brief Set the variant-appropriate assignment methods for a resource
  *
- * \param[in,out] rsc      Resource to set assignment methods for
+ * \param[in,out] data     Resource to set assignment methods for
  * \param[in]     ignored  Here so function can be used with g_list_foreach()
  */
 static void
-set_assignment_methods_for_rsc(pe_resource_t *rsc, void *ignored)
+set_assignment_methods_for_rsc(gpointer data, gpointer user_data)
 {
+    pe_resource_t *rsc = data;
+
     rsc->cmds = &assignment_methods[rsc->variant];
-    g_list_foreach(rsc->children, (GFunc) set_assignment_methods_for_rsc, NULL);
+    g_list_foreach(rsc->children, set_assignment_methods_for_rsc, NULL);
 }
 
 /*!
@@ -214,8 +216,7 @@ set_assignment_methods_for_rsc(pe_resource_t *rsc, void *ignored)
 void
 pcmk__set_assignment_methods(pe_working_set_t *data_set)
 {
-    g_list_foreach(data_set->resources, (GFunc) set_assignment_methods_for_rsc,
-                   NULL);
+    g_list_foreach(data_set->resources, set_assignment_methods_for_rsc, NULL);
 }
 
 // Shared implementation of resource_alloc_functions_t:colocated_resources()
