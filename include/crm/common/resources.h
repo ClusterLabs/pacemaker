@@ -29,8 +29,10 @@ enum pe_obj_types {
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_rsc_variant_unknown instead
     pe_unknown      = pcmk_rsc_variant_unknown,
-#endif
+
+    //! \deprecated Use pcmk_rsc_variant_primitive instead
     pe_native       = pcmk_rsc_variant_primitive,
+#endif
     pe_group = 1,
     pe_clone = 2,
     pe_container = 3,
