@@ -77,14 +77,6 @@ typedef struct resource_object_functions_s {
 
 typedef struct resource_alloc_functions_s resource_alloc_functions_t;
 
-enum pe_quorum_policy {
-    no_quorum_freeze,
-    no_quorum_stop,
-    no_quorum_ignore,
-    no_quorum_suicide,
-    no_quorum_demote
-};
-
 //! Determine behavior of pe_find_resource_with_flags()
 enum pe_find {
     pe_find_renamed  = 0x001, //!< match resource ID or LRM history ID
