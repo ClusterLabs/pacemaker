@@ -87,6 +87,16 @@ enum rsc_recovery_type {
 #endif
 };
 
+//! Search options for resources (exact resource ID always matches)
+enum pe_find {
+    pe_find_renamed  = 0x001, //!< match resource ID or LRM history ID
+    pe_find_anon     = 0x002, //!< match base name of anonymous clone instances
+    pe_find_clone    = 0x004, //!< match only clone instances
+    pe_find_current  = 0x008, //!< match resource active on specified node
+    pe_find_inactive = 0x010, //!< match resource not running anywhere
+    pe_find_any      = 0x020, //!< match base name of any clone instance
+};
+
 //!@{
 //! \deprecated Do not use
 enum pe_restart {
