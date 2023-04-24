@@ -735,7 +735,7 @@ cib_device_update(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     /* Check whether our node is allowed for this resource (and its parent if in a group) */
     node = our_node_allowed_for(rsc);
-    if (rsc->parent && (rsc->parent->variant == pe_group)) {
+    if (rsc->parent && (rsc->parent->variant == pcmk_rsc_variant_group)) {
         parent = our_node_allowed_for(rsc->parent);
     }
 

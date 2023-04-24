@@ -88,7 +88,7 @@ get_resource_type(const char *name)
         return pcmk_rsc_variant_primitive;
 
     } else if (pcmk__str_eq(name, XML_CIB_TAG_GROUP, pcmk__str_casei)) {
-        return pe_group;
+        return pcmk_rsc_variant_group;
 
     } else if (pcmk__str_eq(name, XML_CIB_TAG_INCARNATION, pcmk__str_casei)) {
         return pe_clone;

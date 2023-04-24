@@ -25,6 +25,7 @@ enum pe_obj_types {
     // Order matters: some code compares greater or lesser than
     pcmk_rsc_variant_unknown    = -1,   //!< Unknown resource variant
     pcmk_rsc_variant_primitive  = 0,    //!< Primitive resource
+    pcmk_rsc_variant_group      = 1,    //!< Group resource
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_rsc_variant_unknown instead
@@ -33,7 +34,7 @@ enum pe_obj_types {
     //! \deprecated Use pcmk_rsc_variant_primitive instead
     pe_native       = pcmk_rsc_variant_primitive,
 #endif
-    pe_group = 1,
+    pe_group        = pcmk_rsc_variant_group,
     pe_clone = 2,
     pe_container = 3,
 };

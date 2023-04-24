@@ -2221,7 +2221,7 @@ node_history_list(pcmk__output_t *out, va_list args) {
          *
          * For other resource types, is_filtered is okay.
          */
-        if (parent->variant == pe_group) {
+        if (parent->variant == pcmk_rsc_variant_group) {
             if (!pcmk__str_in_list(rsc_printable_id(rsc), only_rsc,
                                    pcmk__str_star_matches)
                 && !pcmk__str_in_list(rsc_printable_id(parent), only_rsc,

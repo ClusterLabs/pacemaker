@@ -100,7 +100,7 @@ action_uuid_for_ordering(const char *first_uuid, const pe_resource_t *first_rsc)
 
     // Only non-notify actions for collective resources need remapping
     if ((strstr(first_uuid, PCMK_ACTION_NOTIFY) != NULL)
-        || (first_rsc->variant < pe_group)) {
+        || (first_rsc->variant < pcmk_rsc_variant_group)) {
         goto done;
     }
 
@@ -187,7 +187,8 @@ action_for_ordering(pe_action_t *action)
     pe_action_t *result = action;
     pe_resource_t *rsc = action->rsc;
 
-    if ((rsc != NULL) && (rsc->variant >= pe_group) && (action->uuid != NULL)) {
+    if ((rsc != NULL) && (rsc->variant >= pcmk_rsc_variant_group)
+        && (action->uuid != NULL)) {
         char *uuid = action_uuid_for_ordering(action->uuid, rsc);
 
         result = find_first_action(rsc->actions, uuid, NULL, NULL);
@@ -533,7 +534,7 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
         pe_node_t *first_node = first->node;
 
         if ((first->rsc != NULL)
-            && (first->rsc->variant == pe_group)
+            && (first->rsc->variant == pcmk_rsc_variant_group)
             && pcmk__str_eq(first->task, PCMK_ACTION_START, pcmk__str_none)) {
 
             first_node = first->rsc->fns->location(first->rsc, NULL, FALSE);
@@ -544,7 +545,7 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
         }
 
         if ((then->rsc != NULL)
-            && (then->rsc->variant == pe_group)
+            && (then->rsc->variant == pcmk_rsc_variant_group)
             && pcmk__str_eq(then->task, PCMK_ACTION_START, pcmk__str_none)) {
 
             then_node = then->rsc->fns->location(then->rsc, NULL, FALSE);

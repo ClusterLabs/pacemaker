@@ -37,7 +37,7 @@ pe_resource_t *
 pe__last_group_member(const pe_resource_t *group)
 {
     if (group != NULL) {
-        CRM_CHECK((group->variant == pe_group)
+        CRM_CHECK((group->variant == pcmk_rsc_variant_group)
                   && (group->variant_opaque != NULL), return NULL);
         return ((group_variant_data_t *) group->variant_opaque)->last_child;
     }
@@ -58,7 +58,7 @@ pe__group_flag_is_set(const pe_resource_t *group, uint32_t flags)
 {
     group_variant_data_t *group_data = NULL;
 
-    CRM_CHECK((group != NULL) && (group->variant == pe_group)
+    CRM_CHECK((group != NULL) && (group->variant == pcmk_rsc_variant_group)
               && (group->variant_opaque != NULL), return false);
     group_data = (group_variant_data_t *) group->variant_opaque;
     return pcmk_all_flags_set(group_data->flags, flags);
@@ -531,6 +531,6 @@ pe__group_is_filtered(const pe_resource_t *rsc, GList *only_rsc,
 unsigned int
 pe__group_max_per_node(const pe_resource_t *rsc)
 {
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_group));
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_group));
     return 1U;
 }

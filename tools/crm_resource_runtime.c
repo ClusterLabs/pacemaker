@@ -1138,7 +1138,7 @@ get_active_resources(const char *host, GList *rsc_list)
          * other than the first, we can't otherwise tell which resources are
          * stopping and starting.
          */
-        if (rsc->variant == pe_group) {
+        if (rsc->variant == pcmk_rsc_variant_group) {
             active = g_list_concat(active,
                                    get_active_resources(host, rsc->children));
         } else if (resource_is_running_on(rsc, host)) {
@@ -2035,7 +2035,7 @@ cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
         rsc = rsc->children->data;
     }
 
-    if(rsc->variant == pe_group) {
+    if (rsc->variant == pcmk_rsc_variant_group) {
         out->err(out, "Sorry, the %s option doesn't support group resources", rsc_action);
         return CRM_EX_UNIMPLEMENT_FEATURE;
     } else if (rsc->variant == pe_container || pe_rsc_is_bundled(rsc)) {
