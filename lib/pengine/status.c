@@ -390,7 +390,7 @@ set_working_set_defaults(pe_working_set_t * data_set)
 pe_resource_t *
 pe_find_resource(GList *rsc_list, const char *id)
 {
-    return pe_find_resource_with_flags(rsc_list, id, pe_find_renamed);
+    return pe_find_resource_with_flags(rsc_list, id, pcmk_rsc_match_history);
 }
 
 pe_resource_t *

@@ -828,7 +828,8 @@ pe__build_rsc_list(pe_working_set_t *data_set, const char *s) {
         resources = g_list_prepend(resources, strdup("*"));
     } else {
         pe_resource_t *rsc = pe_find_resource_with_flags(data_set->resources, s,
-                                                         pe_find_renamed|pe_find_any);
+                                                         pcmk_rsc_match_history
+                                                         |pe_find_any);
 
         if (rsc) {
             /* A colon in the name we were given means we're being asked to filter

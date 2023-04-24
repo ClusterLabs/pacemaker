@@ -287,7 +287,7 @@ native_find_rsc(pe_resource_t * rsc, const char *id, const pe_node_t *on_node,
     } else if (!strcmp(id, rsc->id)) {
         match = true;
 
-    } else if (pcmk_is_set(flags, pe_find_renamed)
+    } else if (pcmk_is_set(flags, pcmk_rsc_match_history)
                && rsc->clone_name && strcmp(rsc->clone_name, id) == 0) {
         match = true;
 

@@ -479,7 +479,7 @@ generate_params(void)
 
     // Find resource in CIB
     rsc = pe_find_resource_with_flags(data_set->resources, options.rsc_id,
-                                      pe_find_renamed|pe_find_any);
+                                      pcmk_rsc_match_history|pe_find_any);
     if (rsc == NULL) {
         crm_err("Resource does not exist in config");
         pe_free_working_set(data_set);

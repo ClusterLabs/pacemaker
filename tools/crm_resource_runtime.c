@@ -690,10 +690,12 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
 
         // No resource specified means all resources match
         if (rsc_id) {
-            pe_resource_t *fail_rsc = pe_find_resource_with_flags(data_set->resources,
-                                                                  failed_id,
-                                                                  pe_find_renamed|pe_find_anon);
+            pe_resource_t *fail_rsc = NULL;
 
+            fail_rsc = pe_find_resource_with_flags(data_set->resources,
+                                                   failed_id,
+                                                   pcmk_rsc_match_history
+                                                   |pe_find_anon);
             if (!fail_rsc || !pcmk__str_eq(rsc_id, fail_rsc->id, pcmk__str_casei)) {
                 continue;
             }
