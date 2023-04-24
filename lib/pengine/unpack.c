@@ -307,23 +307,23 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
                 data_set->no_quorum_policy = no_quorum_suicide;
             } else {
                 crm_notice("Resetting no-quorum-policy to 'stop': cluster has never had quorum");
-                data_set->no_quorum_policy = no_quorum_stop;
+                data_set->no_quorum_policy = pcmk_no_quorum_stop;
             }
         } else {
             pcmk__config_err("Resetting no-quorum-policy to 'stop' because "
                              "fencing is disabled");
-            data_set->no_quorum_policy = no_quorum_stop;
+            data_set->no_quorum_policy = pcmk_no_quorum_stop;
         }
 
     } else {
-        data_set->no_quorum_policy = no_quorum_stop;
+        data_set->no_quorum_policy = pcmk_no_quorum_stop;
     }
 
     switch (data_set->no_quorum_policy) {
         case pcmk_no_quorum_freeze:
             crm_debug("On loss of quorum: Freeze resources");
             break;
-        case no_quorum_stop:
+        case pcmk_no_quorum_stop:
             crm_debug("On loss of quorum: Stop ALL resources");
             break;
         case no_quorum_demote:

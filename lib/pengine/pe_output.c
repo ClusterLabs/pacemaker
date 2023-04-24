@@ -968,7 +968,7 @@ cluster_options_html(pcmk__output_t *out, va_list args) {
             out->list_item(out, NULL, "No quorum policy: Freeze resources");
             break;
 
-        case no_quorum_stop:
+        case pcmk_no_quorum_stop:
             out->list_item(out, NULL, "No quorum policy: Stop ALL resources");
             break;
 
@@ -1037,7 +1037,7 @@ cluster_options_text(pcmk__output_t *out, va_list args) {
             out->list_item(out, NULL, "No quorum policy: Freeze resources");
             break;
 
-        case no_quorum_stop:
+        case pcmk_no_quorum_stop:
             out->list_item(out, NULL, "No quorum policy: Stop ALL resources");
             break;
 
@@ -1072,7 +1072,7 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
             no_quorum_policy = "freeze";
             break;
 
-        case no_quorum_stop:
+        case pcmk_no_quorum_stop:
             no_quorum_policy = "stop";
             break;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -374,7 +374,7 @@ set_working_set_defaults(pe_working_set_t * data_set)
     data_set->priv = priv;
     data_set->order_id = 1;
     data_set->action_id = 1;
-    data_set->no_quorum_policy = no_quorum_stop;
+    data_set->no_quorum_policy = pcmk_no_quorum_stop;
 
     data_set->flags = 0x0ULL;
 

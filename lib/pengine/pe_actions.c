@@ -298,7 +298,7 @@ effective_quorum_policy(pe_resource_t *rsc, pe_working_set_t *data_set)
                 policy = no_quorum_ignore;
                 break;
             default:
-                policy = no_quorum_stop;
+                policy = pcmk_no_quorum_stop;
                 break;
         }
     }
@@ -372,7 +372,7 @@ update_resource_action_runnable(pe_action_t *action, bool for_graph,
 
     } else {
         switch (effective_quorum_policy(action->rsc, data_set)) {
-            case no_quorum_stop:
+            case pcmk_no_quorum_stop:
                 pe_rsc_debug(action->rsc, "%s on %s is unrunnable (no quorum)",
                              action->uuid, pe__node_name(action->node));
                 pe__clear_action_flags(action, pe_action_runnable);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -33,7 +33,7 @@ check_defaults(void **state) {
     assert_null(data_set->priv);
     assert_int_equal(data_set->order_id, 1);
     assert_int_equal(data_set->action_id, 1);
-    assert_int_equal(data_set->no_quorum_policy, no_quorum_stop);
+    assert_int_equal(data_set->no_quorum_policy, pcmk_no_quorum_stop);
     assert_int_equal(data_set->flags, flags);
 
     /* Avoid calling pe_free_working_set here so we don't artificially
