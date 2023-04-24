@@ -964,7 +964,7 @@ cluster_options_html(pcmk__output_t *out, va_list args) {
                    pcmk_is_set(data_set->flags, pe_flag_symmetric_cluster) ? "symmetric" : "asymmetric");
 
     switch (data_set->no_quorum_policy) {
-        case no_quorum_freeze:
+        case pcmk_no_quorum_freeze:
             out->list_item(out, NULL, "No quorum policy: Freeze resources");
             break;
 
@@ -1033,7 +1033,7 @@ cluster_options_text(pcmk__output_t *out, va_list args) {
                    pcmk_is_set(data_set->flags, pe_flag_symmetric_cluster) ? "symmetric" : "asymmetric");
 
     switch (data_set->no_quorum_policy) {
-        case no_quorum_freeze:
+        case pcmk_no_quorum_freeze:
             out->list_item(out, NULL, "No quorum policy: Freeze resources");
             break;
 
@@ -1068,7 +1068,7 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
     char *priority_fencing_delay_str = pcmk__itoa(data_set->priority_fencing_delay * 1000);
 
     switch (data_set->no_quorum_policy) {
-        case no_quorum_freeze:
+        case pcmk_no_quorum_freeze:
             no_quorum_policy = "freeze";
             break;
 

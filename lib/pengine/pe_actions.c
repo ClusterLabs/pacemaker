@@ -379,7 +379,7 @@ update_resource_action_runnable(pe_action_t *action, bool for_graph,
                 pe_action_set_reason(action, "no quorum", true);
                 break;
 
-            case no_quorum_freeze:
+            case pcmk_no_quorum_freeze:
                 if (!action->rsc->fns->active(action->rsc, TRUE)
                     || (action->rsc->next_role > action->rsc->role)) {
                     pe_rsc_debug(action->rsc,

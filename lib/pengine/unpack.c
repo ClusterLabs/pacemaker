@@ -292,7 +292,7 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
         data_set->no_quorum_policy = no_quorum_ignore;
 
     } else if (pcmk__str_eq(value, "freeze", pcmk__str_casei)) {
-        data_set->no_quorum_policy = no_quorum_freeze;
+        data_set->no_quorum_policy = pcmk_no_quorum_freeze;
 
     } else if (pcmk__str_eq(value, "demote", pcmk__str_casei)) {
         data_set->no_quorum_policy = no_quorum_demote;
@@ -320,7 +320,7 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     }
 
     switch (data_set->no_quorum_policy) {
-        case no_quorum_freeze:
+        case pcmk_no_quorum_freeze:
             crm_debug("On loss of quorum: Freeze resources");
             break;
         case no_quorum_stop:

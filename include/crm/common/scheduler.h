@@ -27,11 +27,13 @@ extern "C" {
 
 //! Possible responses to loss of quorum
 enum pe_quorum_policy {
-    no_quorum_freeze,
-    no_quorum_stop,
-    no_quorum_ignore,
-    no_quorum_suicide,
-    no_quorum_demote
+    pcmk_no_quorum_freeze,  //<! Do not recover resources from outside partition
+
+    no_quorum_freeze    = pcmk_no_quorum_freeze,
+    no_quorum_stop      = 1,
+    no_quorum_ignore    = 2,
+    no_quorum_suicide   = 3,
+    no_quorum_demote    = 4,
 };
 
 #ifdef __cplusplus
