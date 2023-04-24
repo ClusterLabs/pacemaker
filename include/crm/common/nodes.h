@@ -29,8 +29,10 @@ enum node_type {
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_node_variant_cluster instead
     node_member = pcmk_node_variant_cluster,
-#endif
+
+    //! \deprecated Use pcmk_node_variant_remote instead
     node_remote = pcmk_node_variant_remote,
+#endif
 };
 
 #ifdef __cplusplus
