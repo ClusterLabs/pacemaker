@@ -37,8 +37,10 @@ enum pe_quorum_policy {
 
     //! \deprecated Use pcmk_no_quorum_stop instead
     no_quorum_stop      = pcmk_no_quorum_stop,
-#endif
+
+    //! \deprecated Use pcmk_no_quorum_ignore instead
     no_quorum_ignore    = pcmk_no_quorum_ignore,
+#endif
     no_quorum_suicide   = 3,
     no_quorum_demote    = 4,
 };
