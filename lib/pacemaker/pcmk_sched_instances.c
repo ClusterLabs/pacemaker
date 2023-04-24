@@ -1011,7 +1011,7 @@ pcmk__create_instance_actions(pe_resource_t *collective, GList *instances)
         pe__set_action_flags(stop, pe_action_migrate_runnable);
     }
 
-    if (collective->variant == pe_clone) {
+    if (collective->variant == pcmk_rsc_variant_clone) {
         pe__create_clone_notif_pseudo_ops(collective, start, started, stop,
                                           stopped);
     }
@@ -1450,7 +1450,8 @@ can_interleave_actions(const pe_action_t *first, const pe_action_t *then)
         return false;
     }
 
-    if ((first->rsc->variant < pe_clone) || (then->rsc->variant < pe_clone)) {
+    if ((first->rsc->variant < pcmk_rsc_variant_clone)
+        || (then->rsc->variant < pcmk_rsc_variant_clone)) {
         crm_trace("Not interleaving %s with %s: not clones or bundles",
                   first->uuid, then->uuid);
         return false;

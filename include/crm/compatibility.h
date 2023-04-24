@@ -196,7 +196,7 @@ extern "C" {
 /* Clone terminology definitions */
 
 // These can no longer be used in a switch together
-#define pe_master pe_clone
+#define pe_master pcmk_rsc_variant_clone
 
 static inline enum pe_obj_types
 get_resource_type(const char *name)
@@ -209,7 +209,7 @@ get_resource_type(const char *name)
 
     } else if (safe_str_eq(name, XML_CIB_TAG_INCARNATION)
                 || safe_str_eq(name, PCMK_XE_PROMOTABLE_LEGACY)) {
-        return pe_clone;
+        return pcmk_rsc_variant_clone;
 
     } else if (safe_str_eq(name, XML_CIB_TAG_CONTAINER)) {
         return pe_container;
@@ -226,7 +226,7 @@ get_resource_typename(enum pe_obj_types type)
             return XML_CIB_TAG_RESOURCE;
         case pcmk_rsc_variant_group:
             return XML_CIB_TAG_GROUP;
-        case pe_clone:
+        case pcmk_rsc_variant_clone:
             return XML_CIB_TAG_INCARNATION;
         case pe_container:
             return XML_CIB_TAG_CONTAINER;

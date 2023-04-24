@@ -91,11 +91,11 @@ get_resource_type(const char *name)
         return pcmk_rsc_variant_group;
 
     } else if (pcmk__str_eq(name, XML_CIB_TAG_INCARNATION, pcmk__str_casei)) {
-        return pe_clone;
+        return pcmk_rsc_variant_clone;
 
     } else if (pcmk__str_eq(name, PCMK_XE_PROMOTABLE_LEGACY, pcmk__str_casei)) {
         // @COMPAT deprecated since 2.0.0
-        return pe_clone;
+        return pcmk_rsc_variant_clone;
 
     } else if (pcmk__str_eq(name, XML_CIB_TAG_CONTAINER, pcmk__str_casei)) {
         return pe_container;

@@ -175,7 +175,7 @@ find_matching_attr_resources_recursive(pcmk__output_t *out, GList/* <pe_resource
                                                rsc_id, attr_set, attr_set_type,
                                                attr_id, attr_name, cib, cmd, depth+1);
         /* do it only once for clones */
-        if(pe_clone == rsc->variant) {
+        if (rsc->variant == pcmk_rsc_variant_clone) {
             break;
         }
     }
@@ -212,7 +212,8 @@ find_matching_attr_resources(pcmk__output_t *out, pe_resource_t * rsc,
     if(force == TRUE) {
         return g_list_append(result, rsc);
     }
-    if(rsc->parent && pe_clone == rsc->parent->variant) {
+    if ((rsc->parent != NULL)
+        && (rsc->parent->variant == pcmk_rsc_variant_clone)) {
         int rc = pcmk_rc_ok;
         char *local_attr_id = NULL;
         rc = find_resource_attr(out, cib, XML_ATTR_ID, rsc_id, attr_set_type,
@@ -225,7 +226,9 @@ find_matching_attr_resources(pcmk__output_t *out, pe_resource_t * rsc,
                       cmd, attr_name, rsc->id, rsc_id);
         }
         return g_list_append(result, rsc);
-    } else if(rsc->parent == NULL && rsc->children && pe_clone == rsc->variant) {
+
+    } else if ((rsc->parent == NULL) && (rsc->children != NULL)
+               && (rsc->variant == pcmk_rsc_variant_clone)) {
         pe_resource_t *child = rsc->children->data;
 
         if (child->variant == pcmk_rsc_variant_primitive) {
