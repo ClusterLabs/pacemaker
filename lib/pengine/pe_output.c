@@ -972,7 +972,7 @@ cluster_options_html(pcmk__output_t *out, va_list args) {
             out->list_item(out, NULL, "No quorum policy: Stop ALL resources");
             break;
 
-        case no_quorum_demote:
+        case pcmk_no_quorum_demote:
             out->list_item(out, NULL, "No quorum policy: Demote promotable "
                            "resources and stop all other resources");
             break;
@@ -1041,7 +1041,7 @@ cluster_options_text(pcmk__output_t *out, va_list args) {
             out->list_item(out, NULL, "No quorum policy: Stop ALL resources");
             break;
 
-        case no_quorum_demote:
+        case pcmk_no_quorum_demote:
             out->list_item(out, NULL, "No quorum policy: Demote promotable "
                            "resources and stop all other resources");
             break;
@@ -1076,7 +1076,7 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
             no_quorum_policy = "stop";
             break;
 
-        case no_quorum_demote:
+        case pcmk_no_quorum_demote:
             no_quorum_policy = "demote";
             break;
 

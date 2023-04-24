@@ -287,7 +287,7 @@ effective_quorum_policy(pe_resource_t *rsc, pe_working_set_t *data_set)
     if (pcmk_is_set(data_set->flags, pe_flag_have_quorum)) {
         policy = pcmk_no_quorum_ignore;
 
-    } else if (data_set->no_quorum_policy == no_quorum_demote) {
+    } else if (data_set->no_quorum_policy == pcmk_no_quorum_demote) {
         switch (rsc->role) {
             case pcmk_role_promoted:
             case pcmk_role_unpromoted:

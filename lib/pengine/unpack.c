@@ -295,7 +295,7 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
         data_set->no_quorum_policy = pcmk_no_quorum_freeze;
 
     } else if (pcmk__str_eq(value, "demote", pcmk__str_casei)) {
-        data_set->no_quorum_policy = no_quorum_demote;
+        data_set->no_quorum_policy = pcmk_no_quorum_demote;
 
     } else if (pcmk__str_eq(value, "suicide", pcmk__str_casei)) {
         if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
@@ -326,7 +326,7 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
         case pcmk_no_quorum_stop:
             crm_debug("On loss of quorum: Stop ALL resources");
             break;
-        case no_quorum_demote:
+        case pcmk_no_quorum_demote:
             crm_debug("On loss of quorum: "
                       "Demote promotable resources and stop other resources");
             break;

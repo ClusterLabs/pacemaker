@@ -31,6 +31,7 @@ enum pe_quorum_policy {
     pcmk_no_quorum_stop,    //<! Stop all resources in partition
     pcmk_no_quorum_ignore,  //<! Act as if partition still holds quorum
     pcmk_no_quorum_fence,   //<! Fence all nodes in partition
+    pcmk_no_quorum_demote,  //<! Demote promotable resources and stop all others
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_no_quorum_freeze instead
@@ -45,7 +46,7 @@ enum pe_quorum_policy {
     //! \deprecated Use pcmk_no_quorum_fence instead
     no_quorum_suicide   = pcmk_no_quorum_fence,
 #endif
-    no_quorum_demote    = 4,
+    no_quorum_demote    = pcmk_no_quorum_demote,
 };
 
 #ifdef __cplusplus
