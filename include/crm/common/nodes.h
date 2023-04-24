@@ -24,8 +24,11 @@ extern "C" {
 enum node_type {
     pcmk_node_variant_cluster  = 1,     //!< Cluster layer node
 
-    node_ping   = 0,      //! \deprecated Do not use
+    node_ping   = 0,      //!< \deprecated Do not use
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated Use pcmk_node_variant_cluster instead
     node_member = pcmk_node_variant_cluster,
+#endif
     node_remote
 };
 
