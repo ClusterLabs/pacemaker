@@ -981,7 +981,7 @@ cluster_options_html(pcmk__output_t *out, va_list args) {
             out->list_item(out, NULL, "No quorum policy: Ignore");
             break;
 
-        case no_quorum_suicide:
+        case pcmk_no_quorum_fence:
             out->list_item(out, NULL, "No quorum policy: Suicide");
             break;
     }
@@ -1050,7 +1050,7 @@ cluster_options_text(pcmk__output_t *out, va_list args) {
             out->list_item(out, NULL, "No quorum policy: Ignore");
             break;
 
-        case no_quorum_suicide:
+        case pcmk_no_quorum_fence:
             out->list_item(out, NULL, "No quorum policy: Suicide");
             break;
     }
@@ -1084,7 +1084,7 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
             no_quorum_policy = "ignore";
             break;
 
-        case no_quorum_suicide:
+        case pcmk_no_quorum_fence:
             no_quorum_policy = "suicide";
             break;
     }

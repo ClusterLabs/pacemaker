@@ -304,7 +304,7 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
             crm_element_value_int(data_set->input, XML_ATTR_QUORUM_PANIC,
                                   &do_panic);
             if (do_panic || pcmk_is_set(data_set->flags, pe_flag_have_quorum)) {
-                data_set->no_quorum_policy = no_quorum_suicide;
+                data_set->no_quorum_policy = pcmk_no_quorum_fence;
             } else {
                 crm_notice("Resetting no-quorum-policy to 'stop': cluster has never had quorum");
                 data_set->no_quorum_policy = pcmk_no_quorum_stop;
@@ -330,7 +330,7 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
             crm_debug("On loss of quorum: "
                       "Demote promotable resources and stop other resources");
             break;
-        case no_quorum_suicide:
+        case pcmk_no_quorum_fence:
             crm_notice("On loss of quorum: Fence all remaining nodes");
             break;
         case pcmk_no_quorum_ignore:
@@ -1142,7 +1142,7 @@ unpack_node_state(const xmlNode *state, pe_working_set_t *data_set)
 
     if (!pcmk_is_set(data_set->flags, pe_flag_have_quorum)
         && this_node->details->online
-        && (data_set->no_quorum_policy == no_quorum_suicide)) {
+        && (data_set->no_quorum_policy == pcmk_no_quorum_fence)) {
         /* Everything else should flow from this automatically
          * (at least until the scheduler becomes able to migrate off
          * healthy resources)
