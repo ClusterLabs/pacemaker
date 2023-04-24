@@ -1533,17 +1533,19 @@ force_restart(pe_resource_t *rsc, const char *task, guint interval_ms,
  * \internal
  * \brief Schedule a reload of a resource on a node
  *
- * \param[in,out] rsc   Resource to reload
- * \param[in]     node  Where resource should be reloaded
+ * \param[in,out] data       Resource to reload
+ * \param[in]     user_data  Where resource should be reloaded
  */
 static void
-schedule_reload(pe_resource_t *rsc, const pe_node_t *node)
+schedule_reload(gpointer data, gpointer user_data)
 {
+    pe_resource_t *rsc = data;
+    const pe_node_t *node = user_data;
     pe_action_t *reload = NULL;
 
     // For collective resources, just call recursively for children
     if (rsc->variant > pe_native) {
-        g_list_foreach(rsc->children, (GFunc) schedule_reload, (gpointer) node);
+        g_list_foreach(rsc->children, schedule_reload, user_data);
         return;
     }
 
@@ -1680,7 +1682,7 @@ pcmk__check_action_config(pe_resource_t *rsc, pe_node_t *node,
                                   "Device parameters changed (reload)", NULL,
                                   rsc->cluster);
                 crm_log_xml_debug(digest_data->params_all, "params:reload");
-                schedule_reload(rsc, node);
+                schedule_reload((gpointer) rsc, (gpointer) node);
 
             } else {
                 pe_rsc_trace(rsc,
