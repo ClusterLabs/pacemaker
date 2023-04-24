@@ -41,8 +41,10 @@ enum pe_quorum_policy {
 
     //! \deprecated Use pcmk_no_quorum_ignore instead
     no_quorum_ignore    = pcmk_no_quorum_ignore,
-#endif
+
+    //! \deprecated Use pcmk_no_quorum_fence instead
     no_quorum_suicide   = pcmk_no_quorum_fence,
+#endif
     no_quorum_demote    = 4,
 };
 
