@@ -285,7 +285,7 @@ effective_quorum_policy(pe_resource_t *rsc, pe_working_set_t *data_set)
     enum pe_quorum_policy policy = data_set->no_quorum_policy;
 
     if (pcmk_is_set(data_set->flags, pe_flag_have_quorum)) {
-        policy = no_quorum_ignore;
+        policy = pcmk_no_quorum_ignore;
 
     } else if (data_set->no_quorum_policy == no_quorum_demote) {
         switch (rsc->role) {
@@ -295,7 +295,7 @@ effective_quorum_policy(pe_resource_t *rsc, pe_working_set_t *data_set)
                     pe__set_next_role(rsc, pcmk_role_unpromoted,
                                       "no-quorum-policy=demote");
                 }
-                policy = no_quorum_ignore;
+                policy = pcmk_no_quorum_ignore;
                 break;
             default:
                 policy = pcmk_no_quorum_stop;

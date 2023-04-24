@@ -977,7 +977,7 @@ cluster_options_html(pcmk__output_t *out, va_list args) {
                            "resources and stop all other resources");
             break;
 
-        case no_quorum_ignore:
+        case pcmk_no_quorum_ignore:
             out->list_item(out, NULL, "No quorum policy: Ignore");
             break;
 
@@ -1046,7 +1046,7 @@ cluster_options_text(pcmk__output_t *out, va_list args) {
                            "resources and stop all other resources");
             break;
 
-        case no_quorum_ignore:
+        case pcmk_no_quorum_ignore:
             out->list_item(out, NULL, "No quorum policy: Ignore");
             break;
 
@@ -1080,7 +1080,7 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
             no_quorum_policy = "demote";
             break;
 
-        case no_quorum_ignore:
+        case pcmk_no_quorum_ignore:
             no_quorum_policy = "ignore";
             break;
 

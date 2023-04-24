@@ -109,7 +109,7 @@ cluster_status(pe_working_set_t * data_set)
 
    if (!pcmk_any_flags_set(data_set->flags,
                            pe_flag_quick_location|pe_flag_have_quorum)
-       && (data_set->no_quorum_policy != no_quorum_ignore)) {
+       && (data_set->no_quorum_policy != pcmk_no_quorum_ignore)) {
         crm_warn("Fencing and resource management disabled due to lack of quorum");
     }
 

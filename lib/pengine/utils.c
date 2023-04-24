@@ -60,7 +60,7 @@ pe_can_fence(const pe_working_set_t *data_set, const pe_node_t *node)
     } else if (pcmk_is_set(data_set->flags, pe_flag_have_quorum)) {
         return true;
 
-    } else if (data_set->no_quorum_policy == no_quorum_ignore) {
+    } else if (data_set->no_quorum_policy == pcmk_no_quorum_ignore) {
         return true;
 
     } else if(node == NULL) {

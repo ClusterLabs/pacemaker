@@ -289,7 +289,7 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     value = pe_pref(data_set->config_hash, "no-quorum-policy");
 
     if (pcmk__str_eq(value, "ignore", pcmk__str_casei)) {
-        data_set->no_quorum_policy = no_quorum_ignore;
+        data_set->no_quorum_policy = pcmk_no_quorum_ignore;
 
     } else if (pcmk__str_eq(value, "freeze", pcmk__str_casei)) {
         data_set->no_quorum_policy = pcmk_no_quorum_freeze;
@@ -333,7 +333,7 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
         case no_quorum_suicide:
             crm_notice("On loss of quorum: Fence all remaining nodes");
             break;
-        case no_quorum_ignore:
+        case pcmk_no_quorum_ignore:
             crm_notice("On loss of quorum: Ignore");
             break;
     }
