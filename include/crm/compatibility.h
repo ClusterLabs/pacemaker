@@ -212,7 +212,7 @@ get_resource_type(const char *name)
         return pcmk_rsc_variant_clone;
 
     } else if (safe_str_eq(name, XML_CIB_TAG_CONTAINER)) {
-        return pe_container;
+        return pcmk_rsc_variant_bundle;
     }
 
     return pcmk_rsc_variant_unknown;
@@ -228,7 +228,7 @@ get_resource_typename(enum pe_obj_types type)
             return XML_CIB_TAG_GROUP;
         case pcmk_rsc_variant_clone:
             return XML_CIB_TAG_INCARNATION;
-        case pe_container:
+        case pcmk_rsc_variant_bundle:
             return XML_CIB_TAG_CONTAINER;
         case pcmk_rsc_variant_unknown:
             return "unknown";

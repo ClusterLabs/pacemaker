@@ -98,7 +98,7 @@ get_resource_type(const char *name)
         return pcmk_rsc_variant_clone;
 
     } else if (pcmk__str_eq(name, XML_CIB_TAG_CONTAINER, pcmk__str_casei)) {
-        return pe_container;
+        return pcmk_rsc_variant_bundle;
     }
 
     return pcmk_rsc_variant_unknown;
@@ -930,7 +930,8 @@ uber_parent(pe_resource_t * rsc)
     if (parent == NULL) {
         return NULL;
     }
-    while (parent->parent != NULL && parent->parent->variant != pe_container) {
+    while ((parent->parent != NULL)
+           && (parent->parent->variant != pcmk_rsc_variant_bundle)) {
         parent = parent->parent;
     }
     return parent;
@@ -956,7 +957,8 @@ pe__const_top_resource(const pe_resource_t *rsc, bool include_bundle)
         return NULL;
     }
     while (parent->parent != NULL) {
-        if (!include_bundle && (parent->parent->variant == pe_container)) {
+        if (!include_bundle
+            && (parent->parent->variant == pcmk_rsc_variant_bundle)) {
             break;
         }
         parent = parent->parent;

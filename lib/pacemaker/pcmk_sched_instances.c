@@ -1031,7 +1031,7 @@ pcmk__create_instance_actions(pe_resource_t *collective, GList *instances)
 static inline GList *
 get_instance_list(const pe_resource_t *rsc)
 {
-    if (rsc->variant == pe_container) {
+    if (rsc->variant == pcmk_rsc_variant_bundle) {
         return pe__bundle_containers(rsc);
     } else {
         return rsc->children;

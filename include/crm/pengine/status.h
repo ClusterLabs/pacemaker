@@ -102,7 +102,7 @@ pe_rsc_is_bundled(const pe_resource_t *rsc)
     while (rsc->parent != NULL) {
         rsc = rsc->parent;
     }
-    return rsc->variant == pe_container;
+    return rsc->variant == pcmk_rsc_variant_bundle;
 }
 
 #ifdef __cplusplus

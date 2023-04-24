@@ -136,15 +136,11 @@ action_uuid_for_ordering(const char *first_uuid, const pe_resource_t *first_rsc)
     }
 
     if (remapped_task != pcmk_action_unspecified) {
-        /* If a (clone) resource has notifications enabled, we want to order
-         * relative to when all notifications have been sent for the remapped
-         * task. Only outermost resources or those in bundles have
-         * notifications.
+        /* If a clone or bundle has notifications enabled, the ordering will be
+         * relative to when notifications have been sent for the remapped task.
          */
         if (pcmk_is_set(first_rsc->flags, pe_rsc_notify)
-            && ((first_rsc->parent == NULL)
-                || (pe_rsc_is_clone(first_rsc)
-                    && (first_rsc->parent->variant == pe_container)))) {
+            && (pe_rsc_is_clone(first_rsc) || pe_rsc_is_bundled(first_rsc))) {
             uuid = pcmk__notify_key(rid, "confirmed-post",
                                     task2text(remapped_task));
         } else {

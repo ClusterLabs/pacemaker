@@ -80,7 +80,7 @@ typedef struct pe__bundle_variant_data_s {
 
 #define get_bundle_variant_data(data, rsc)                      \
     CRM_ASSERT(rsc != NULL);                                    \
-    CRM_ASSERT(rsc->variant == pe_container);                   \
+    CRM_ASSERT(rsc->variant == pcmk_rsc_variant_bundle);        \
     CRM_ASSERT(rsc->variant_opaque != NULL);                    \
     data = (pe__bundle_variant_data_t *) rsc->variant_opaque;
 
@@ -133,7 +133,7 @@ pe__get_rsc_in_container(const pe_resource_t *instance)
     const pe__bundle_variant_data_t *data = NULL;
     const pe_resource_t *top = pe__const_top_resource(instance, true);
 
-    if ((top == NULL) || (top->variant != pe_container)) {
+    if ((top == NULL) || (top->variant != pcmk_rsc_variant_bundle)) {
         return NULL;
     }
     get_bundle_variant_data(data, top);
@@ -2026,7 +2026,7 @@ pe__bundle_resource_state(const pe_resource_t *rsc, gboolean current)
 int
 pe_bundle_replicas(const pe_resource_t *rsc)
 {
-    if ((rsc == NULL) || (rsc->variant != pe_container)) {
+    if ((rsc == NULL) || (rsc->variant != pcmk_rsc_variant_bundle)) {
         return 0;
     } else {
         pe__bundle_variant_data_t *bundle_data = NULL;

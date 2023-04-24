@@ -157,7 +157,7 @@ native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * dat
                  */
                 if (rsc->parent
                     && ((rsc->parent->variant == pcmk_rsc_variant_group)
-                        || (rsc->parent->variant == pe_container))
+                        || (rsc->parent->variant == pcmk_rsc_variant_bundle))
                     && (rsc->parent->recovery_type == pcmk_multiply_active_block)) {
                     GList *gIter = rsc->parent->children;
 
