@@ -149,17 +149,31 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
     crm_xml_add(node_state, XML_ATTR_UNAME, node->uname);
 
     if ((flags & node_update_cluster) && node->state) {
-        pcmk__xe_set_bool_attr(node_state, XML_NODE_IN_CLUSTER,
-                               pcmk__str_eq(node->state, CRM_NODE_MEMBER, pcmk__str_casei));
+        if (compare_version(controld_globals.dc_version, "3.18.0") >= 0) {
+            // A value 0 means the node is not a cluster member.
+            crm_xml_add_ll(node_state, XML_NODE_IN_CLUSTER, node->when_member);
+
+        } else {
+            pcmk__xe_set_bool_attr(node_state, XML_NODE_IN_CLUSTER,
+                                   pcmk__str_eq(node->state, CRM_NODE_MEMBER,
+                                                pcmk__str_casei));
+        }
     }
 
     if (!pcmk_is_set(node->flags, crm_remote_node)) {
         if (flags & node_update_peer) {
-            value = OFFLINESTATUS;
-            if (pcmk_is_set(node->processes, crm_get_cluster_proc())) {
-                value = ONLINESTATUS;
+            if (compare_version(controld_globals.dc_version, "3.18.0") >= 0) {
+                // A value 0 means the peer is offline in CPG.
+                crm_xml_add_ll(node_state, XML_NODE_IS_PEER,
+                               node->when_online);
+
+            } else {
+                value = OFFLINESTATUS;
+                if (pcmk_is_set(node->processes, crm_get_cluster_proc())) {
+                    value = ONLINESTATUS;
+                }
+                crm_xml_add(node_state, XML_NODE_IS_PEER, value);
             }
-            crm_xml_add(node_state, XML_NODE_IS_PEER, value);
         }
 
         if (flags & node_update_join) {
