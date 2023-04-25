@@ -255,7 +255,7 @@ rsc_is_on_node(pe_resource_t *rsc, const pe_node_t *node, int flags)
             }
         }
 
-    } else if (pcmk_is_set(flags, pe_find_inactive)
+    } else if (pcmk_is_set(flags, pe_find_inactive) // @COMPAT deprecated
                && (rsc->running_on == NULL)) {
         return true;
 

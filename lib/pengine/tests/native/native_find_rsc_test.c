@@ -190,7 +190,6 @@ inactive_group_rsc(void **state) {
     assert_ptr_equal(inactive_group,
                      native_find_rsc(inactive_group, "inactive-group", NULL,
                                      pcmk_rsc_match_current_node));
-    assert_ptr_equal(inactive_group, native_find_rsc(inactive_group, "inactive-group", NULL, pe_find_inactive));
 
     /* Fails because resource is not a clone (nor cloned). */
     assert_null(native_find_rsc(inactive_group, "inactive-group", NULL,
@@ -203,11 +202,6 @@ inactive_group_rsc(void **state) {
                                 pcmk_rsc_match_current_node));
     assert_null(native_find_rsc(inactive_group, "inactive-group", cluster02,
                                 pcmk_rsc_match_current_node));
-
-    /* Passes because of flags. */
-    assert_ptr_equal(inactive_group, native_find_rsc(inactive_group, "inactive-group", cluster01, pe_find_inactive));
-    /* Passes because of flags. */
-    assert_ptr_equal(inactive_group, native_find_rsc(inactive_group, "inactive-group", cluster02, pe_find_inactive));
 }
 
 static void
@@ -284,11 +278,6 @@ inactive_group_member_rsc(void **state) {
                                 pcmk_rsc_match_current_node));
     assert_null(native_find_rsc(inactive_dummy_1, "inactive-dummy-1", cluster02,
                                 pcmk_rsc_match_current_node));
-
-    /* Passes because of flags. */
-    assert_ptr_equal(inactive_dummy_1, native_find_rsc(inactive_dummy_1, "inactive-dummy-1", cluster01, pe_find_inactive));
-    /* Passes because of flags. */
-    assert_ptr_equal(inactive_dummy_1, native_find_rsc(inactive_dummy_1, "inactive-dummy-1", cluster02, pe_find_inactive));
 }
 
 static void
@@ -345,7 +334,6 @@ inactive_clone_rsc(void **state) {
     assert_ptr_equal(inactive_clone,
                      native_find_rsc(inactive_clone, "inactive-clone", NULL,
                                      pcmk_rsc_match_clone_only));
-    assert_ptr_equal(inactive_clone, native_find_rsc(inactive_clone, "inactive-clone", NULL, pe_find_inactive));
 
     /* Fails because none of inactive-clone's children are running. */
     assert_null(native_find_rsc(inactive_clone, "inactive-clone", cluster01,
@@ -354,11 +342,6 @@ inactive_clone_rsc(void **state) {
     assert_null(native_find_rsc(inactive_clone, "inactive-clone", cluster02,
                                 pcmk_rsc_match_current_node
                                 |pcmk_rsc_match_clone_only));
-
-    /* Passes because of flags. */
-    assert_ptr_equal(inactive_clone, native_find_rsc(inactive_clone, "inactive-clone", cluster01, pe_find_inactive));
-    /* Passes because of flags. */
-    assert_ptr_equal(inactive_clone, native_find_rsc(inactive_clone, "inactive-clone", cluster02, pe_find_inactive));
 }
 
 static void
