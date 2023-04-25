@@ -394,9 +394,13 @@ clone_instance_rsc(void **state) {
                      native_find_rsc(promotable_0, "promotable-rsc", NULL,
                                      pcmk_rsc_match_clone_only));
 
-    /* Passes because pe_find_any matches any instance's base name. */
-    assert_ptr_equal(promotable_0, native_find_rsc(promotable_0, "promotable-rsc", NULL, pe_find_any));
-    assert_ptr_equal(promotable_1, native_find_rsc(promotable_1, "promotable-rsc", NULL, pe_find_any));
+    // Passes because pcmk_rsc_match_basename matches any instance's base name
+    assert_ptr_equal(promotable_0,
+                     native_find_rsc(promotable_0, "promotable-rsc", NULL,
+                                     pcmk_rsc_match_basename));
+    assert_ptr_equal(promotable_1,
+                     native_find_rsc(promotable_1, "promotable-rsc", NULL,
+                                     pcmk_rsc_match_basename));
 
     // Passes because pcmk_rsc_match_anon_basename matches
     assert_ptr_equal(promotable_0,
@@ -409,25 +413,29 @@ clone_instance_rsc(void **state) {
     /* Check that the resource is running on the node we expect. */
     assert_ptr_equal(promotable_0,
                      native_find_rsc(promotable_0, "promotable-rsc", cluster02,
-                                     pe_find_any|pcmk_rsc_match_current_node));
+                                     pcmk_rsc_match_basename
+                                     |pcmk_rsc_match_current_node));
     assert_ptr_equal(promotable_0,
                      native_find_rsc(promotable_0, "promotable-rsc", cluster02,
                                      pcmk_rsc_match_anon_basename
                                      |pcmk_rsc_match_current_node));
     assert_null(native_find_rsc(promotable_0, "promotable-rsc", cluster01,
-                                pe_find_any|pcmk_rsc_match_current_node));
+                                pcmk_rsc_match_basename
+                                |pcmk_rsc_match_current_node));
     assert_null(native_find_rsc(promotable_0, "promotable-rsc", cluster01,
                                 pcmk_rsc_match_anon_basename
                                 |pcmk_rsc_match_current_node));
     assert_ptr_equal(promotable_1,
                      native_find_rsc(promotable_1, "promotable-rsc", cluster01,
-                                     pe_find_any|pcmk_rsc_match_current_node));
+                                     pcmk_rsc_match_basename
+                                     |pcmk_rsc_match_current_node));
     assert_ptr_equal(promotable_1,
                      native_find_rsc(promotable_1, "promotable-rsc", cluster01,
                                      pcmk_rsc_match_anon_basename
                                      |pcmk_rsc_match_current_node));
     assert_null(native_find_rsc(promotable_1, "promotable-rsc", cluster02,
-                                pe_find_any|pcmk_rsc_match_current_node));
+                                pcmk_rsc_match_basename
+                                |pcmk_rsc_match_current_node));
     assert_null(native_find_rsc(promotable_1, "promotable-rsc", cluster02,
                                 pcmk_rsc_match_anon_basename
                                 |pcmk_rsc_match_current_node));
@@ -453,7 +461,8 @@ clone_instance_rsc(void **state) {
     assert_ptr_equal(promotable_0,
                      native_find_rsc(promotable_clone, "promotable-rsc",
                                      cluster02,
-                                     pe_find_any|pcmk_rsc_match_current_node));
+                                     pcmk_rsc_match_basename
+                                     |pcmk_rsc_match_current_node));
     assert_ptr_equal(promotable_0,
                      native_find_rsc(promotable_clone, "promotable-rsc",
                                      cluster02,
@@ -465,7 +474,8 @@ clone_instance_rsc(void **state) {
     assert_ptr_equal(promotable_1,
                      native_find_rsc(promotable_clone, "promotable-rsc",
                                      cluster01,
-                                     pe_find_any|pcmk_rsc_match_current_node));
+                                     pcmk_rsc_match_basename
+                                     |pcmk_rsc_match_current_node));
     assert_ptr_equal(promotable_1,
                      native_find_rsc(promotable_clone, "promotable-rsc",
                                      cluster01,
@@ -581,8 +591,10 @@ bundle_first_replica(pe__bundle_replica_t *replica, void *user_data)
     assert_null(native_find_rsc(remote_0, "httpd-bundle-0", httpd_bundle_0,
                                 pcmk_rsc_match_current_node));
 
-    /* Passes because pe_find_any matches any replica's base name. */
-    assert_ptr_equal(child_0, native_find_rsc(child_0, "httpd", NULL, pe_find_any));
+    // Passes because pcmk_rsc_match_basename matches any replica's base name
+    assert_ptr_equal(child_0,
+                     native_find_rsc(child_0, "httpd", NULL,
+                                     pcmk_rsc_match_basename));
 
     // Passes because pcmk_rsc_match_anon_basename matches
     assert_ptr_equal(child_0,
@@ -592,18 +604,21 @@ bundle_first_replica(pe__bundle_replica_t *replica, void *user_data)
     /* Check that the resource is running on the node we expect. */
     assert_ptr_equal(child_0,
                      native_find_rsc(child_0, "httpd", httpd_bundle_0,
-                                     pe_find_any|pcmk_rsc_match_current_node));
+                                     pcmk_rsc_match_basename
+                                     |pcmk_rsc_match_current_node));
     assert_ptr_equal(child_0,
                      native_find_rsc(child_0, "httpd", httpd_bundle_0,
                                      pcmk_rsc_match_anon_basename
                                      |pcmk_rsc_match_current_node));
     assert_null(native_find_rsc(child_0, "httpd", cluster01,
-                                pe_find_any|pcmk_rsc_match_current_node));
+                                pcmk_rsc_match_basename
+                                |pcmk_rsc_match_current_node));
     assert_null(native_find_rsc(child_0, "httpd", cluster01,
                                 pcmk_rsc_match_anon_basename
                                 |pcmk_rsc_match_current_node));
     assert_null(native_find_rsc(child_0, "httpd", cluster02,
-                                pe_find_any|pcmk_rsc_match_current_node));
+                                pcmk_rsc_match_basename
+                                |pcmk_rsc_match_current_node));
     assert_null(native_find_rsc(child_0, "httpd", cluster02,
                                 pcmk_rsc_match_anon_basename
                                 |pcmk_rsc_match_current_node));
@@ -737,9 +752,13 @@ clone_group_instance_rsc(void **rsc) {
                      native_find_rsc(mysql_group_0, "mysql-group" , NULL,
                                      pcmk_rsc_match_clone_only));
 
-    /* Passes because pe_find_any matches any base name. */
-    assert_ptr_equal(mysql_group_0, native_find_rsc(mysql_group_0, "mysql-group" , NULL, pe_find_any));
-    assert_ptr_equal(mysql_group_1, native_find_rsc(mysql_group_1, "mysql-group" , NULL, pe_find_any));
+    // Passes because pcmk_rsc_match_basename matches any base name
+    assert_ptr_equal(mysql_group_0,
+                     native_find_rsc(mysql_group_0, "mysql-group" , NULL,
+                                     pcmk_rsc_match_basename));
+    assert_ptr_equal(mysql_group_1,
+                     native_find_rsc(mysql_group_1, "mysql-group" , NULL,
+                                     pcmk_rsc_match_basename));
 
     // Passes because pcmk_rsc_match_anon_basename matches
     assert_ptr_equal(mysql_group_0,
@@ -752,25 +771,29 @@ clone_group_instance_rsc(void **rsc) {
     /* Check that the resource is running on the node we expect. */
     assert_ptr_equal(mysql_group_0,
                      native_find_rsc(mysql_group_0, "mysql-group", cluster02,
-                                     pe_find_any|pcmk_rsc_match_current_node));
+                                     pcmk_rsc_match_basename
+                                     |pcmk_rsc_match_current_node));
     assert_ptr_equal(mysql_group_0,
                      native_find_rsc(mysql_group_0, "mysql-group", cluster02,
                                      pcmk_rsc_match_anon_basename
                                      |pcmk_rsc_match_current_node));
     assert_null(native_find_rsc(mysql_group_0, "mysql-group", cluster01,
-                                pe_find_any|pcmk_rsc_match_current_node));
+                                pcmk_rsc_match_basename
+                                |pcmk_rsc_match_current_node));
     assert_null(native_find_rsc(mysql_group_0, "mysql-group", cluster01,
                                 pcmk_rsc_match_anon_basename
                                 |pcmk_rsc_match_current_node));
     assert_ptr_equal(mysql_group_1,
                      native_find_rsc(mysql_group_1, "mysql-group", cluster01,
-                                     pe_find_any|pcmk_rsc_match_current_node));
+                                     pcmk_rsc_match_basename
+                                     |pcmk_rsc_match_current_node));
     assert_ptr_equal(mysql_group_1,
                      native_find_rsc(mysql_group_1, "mysql-group", cluster01,
                                      pcmk_rsc_match_anon_basename
                                      |pcmk_rsc_match_current_node));
     assert_null(native_find_rsc(mysql_group_1, "mysql-group", cluster02,
-                                pe_find_any|pcmk_rsc_match_current_node));
+                                pcmk_rsc_match_basename
+                                |pcmk_rsc_match_current_node));
     assert_null(native_find_rsc(mysql_group_1, "mysql-group", cluster02,
                                 pcmk_rsc_match_anon_basename
                                 |pcmk_rsc_match_current_node));
@@ -796,7 +819,8 @@ clone_group_instance_rsc(void **rsc) {
     assert_ptr_equal(mysql_group_0,
                      native_find_rsc(mysql_clone_group, "mysql-group",
                                      cluster02,
-                                     pe_find_any|pcmk_rsc_match_current_node));
+                                     pcmk_rsc_match_basename
+                                     |pcmk_rsc_match_current_node));
     assert_ptr_equal(mysql_group_0,
                      native_find_rsc(mysql_clone_group, "mysql-group",
                                      cluster02,
@@ -808,7 +832,8 @@ clone_group_instance_rsc(void **rsc) {
     assert_ptr_equal(mysql_group_1,
                      native_find_rsc(mysql_clone_group, "mysql-group",
                                      cluster01,
-                                     pe_find_any|pcmk_rsc_match_current_node));
+                                     pcmk_rsc_match_basename
+                                     |pcmk_rsc_match_current_node));
     assert_ptr_equal(mysql_group_1,
                      native_find_rsc(mysql_clone_group, "mysql-group",
                                      cluster01,

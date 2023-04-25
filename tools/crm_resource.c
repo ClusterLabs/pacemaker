@@ -710,7 +710,7 @@ gboolean
 delete_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     SET_COMMAND(cmd_delete);
     options.require_dataset = FALSE;
-    options.find_flags = pcmk_rsc_match_history|pe_find_any;
+    options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_basename;
     return TRUE;
 }
 
@@ -818,10 +818,10 @@ flag_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **e
                              |pcmk_rsc_match_anon_basename;
     } else if (pcmk__str_any_of(option_name, "-q", "--query-xml", NULL)) {
         SET_COMMAND(cmd_query_xml);
-        options.find_flags = pcmk_rsc_match_history|pe_find_any;
+        options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_basename;
     } else if (pcmk__str_any_of(option_name, "-w", "--query-xml-raw", NULL)) {
         SET_COMMAND(cmd_query_raw_xml);
-        options.find_flags = pcmk_rsc_match_history|pe_find_any;
+        options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_basename;
     } else if (pcmk__str_any_of(option_name, "-W", "--locate", NULL)) {
         SET_COMMAND(cmd_locate);
         options.find_flags = pcmk_rsc_match_history
@@ -851,7 +851,7 @@ get_param_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, 
     }
 
     pcmk__str_update(&options.prop_name, optarg);
-    options.find_flags = pcmk_rsc_match_history|pe_find_any;
+    options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_basename;
     return TRUE;
 }
 
@@ -882,7 +882,7 @@ set_delete_param_cb(const gchar *option_name, const gchar *optarg, gpointer data
     }
 
     pcmk__str_update(&options.prop_name, optarg);
-    options.find_flags = pcmk_rsc_match_history|pe_find_any;
+    options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_basename;
     return TRUE;
 }
 
@@ -891,7 +891,7 @@ set_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError
     SET_COMMAND(cmd_set_property);
     options.require_dataset = FALSE;
     pcmk__str_update(&options.prop_name, optarg);
-    options.find_flags = pcmk_rsc_match_history|pe_find_any;
+    options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_basename;
     return TRUE;
 }
 

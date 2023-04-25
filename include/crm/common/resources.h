@@ -104,6 +104,9 @@ enum pe_find {
     //! \deprecated Do not use
     pe_find_inactive                = (1 << 4),
 
+    //! Match clone instances (even unique) by base name as well as exact ID
+    pcmk_rsc_match_basename         = (1 << 5),
+
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_rsc_match_history instead
     pe_find_renamed     = pcmk_rsc_match_history,
@@ -117,7 +120,7 @@ enum pe_find {
     //! \deprecated Use pcmk_rsc_match_current_node instead
     pe_find_current     = pcmk_rsc_match_current_node,
 #endif
-    pe_find_any      = 0x020, //!< match base name of any clone instance
+    pe_find_any         = pcmk_rsc_match_basename,
 };
 
 //!@{

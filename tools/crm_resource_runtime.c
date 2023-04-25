@@ -1469,7 +1469,8 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc,
         }
 
         rsc = parent->fns->find_rsc(parent, lookup_id, node,
-                                    pe_find_any|pcmk_rsc_match_current_node);
+                                    pcmk_rsc_match_basename
+                                    |pcmk_rsc_match_current_node);
         free(lookup_id);
         running = resource_is_running_on(rsc, host);
     }
