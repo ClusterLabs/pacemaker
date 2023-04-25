@@ -695,7 +695,7 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
             fail_rsc = pe_find_resource_with_flags(data_set->resources,
                                                    failed_id,
                                                    pcmk_rsc_match_history
-                                                   |pe_find_anon);
+                                                   |pcmk_rsc_match_anon_basename);
             if (!fail_rsc || !pcmk__str_eq(rsc_id, fail_rsc->id, pcmk__str_casei)) {
                 continue;
             }

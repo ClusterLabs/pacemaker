@@ -702,7 +702,7 @@ cleanup_refresh_cb(const gchar *option_name, const gchar *optarg, gpointer data,
     if (getenv("CIB_file") == NULL) {
         options.require_crmd = TRUE;
     }
-    options.find_flags = pcmk_rsc_match_history|pe_find_anon;
+    options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_anon_basename;
     return TRUE;
 }
 
@@ -806,13 +806,16 @@ gboolean
 flag_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     if (pcmk__str_any_of(option_name, "-U", "--clear", NULL)) {
         SET_COMMAND(cmd_clear);
-        options.find_flags = pcmk_rsc_match_history|pe_find_anon;
+        options.find_flags = pcmk_rsc_match_history
+                             |pcmk_rsc_match_anon_basename;
     } else if (pcmk__str_any_of(option_name, "-B", "--ban", NULL)) {
         SET_COMMAND(cmd_ban);
-        options.find_flags = pcmk_rsc_match_history|pe_find_anon;
+        options.find_flags = pcmk_rsc_match_history
+                             |pcmk_rsc_match_anon_basename;
     } else if (pcmk__str_any_of(option_name, "-M", "--move", NULL)) {
         SET_COMMAND(cmd_move);
-        options.find_flags = pcmk_rsc_match_history|pe_find_anon;
+        options.find_flags = pcmk_rsc_match_history
+                             |pcmk_rsc_match_anon_basename;
     } else if (pcmk__str_any_of(option_name, "-q", "--query-xml", NULL)) {
         SET_COMMAND(cmd_query_xml);
         options.find_flags = pcmk_rsc_match_history|pe_find_any;
@@ -821,15 +824,18 @@ flag_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **e
         options.find_flags = pcmk_rsc_match_history|pe_find_any;
     } else if (pcmk__str_any_of(option_name, "-W", "--locate", NULL)) {
         SET_COMMAND(cmd_locate);
-        options.find_flags = pcmk_rsc_match_history|pe_find_anon;
+        options.find_flags = pcmk_rsc_match_history
+                             |pcmk_rsc_match_anon_basename;
 
     } else if (pcmk__str_any_of(option_name, "-a", "--constraints", NULL)) {
         SET_COMMAND(cmd_colocations);
-        options.find_flags = pcmk_rsc_match_history|pe_find_anon;
+        options.find_flags = pcmk_rsc_match_history
+                             |pcmk_rsc_match_anon_basename;
 
     } else if (pcmk__str_any_of(option_name, "-A", "--stack", NULL)) {
         SET_COMMAND(cmd_colocations);
-        options.find_flags = pcmk_rsc_match_history|pe_find_anon;
+        options.find_flags = pcmk_rsc_match_history
+                             |pcmk_rsc_match_anon_basename;
         options.recursive = TRUE;
     }
 
@@ -904,7 +910,7 @@ validate_or_force_cb(const gchar *option_name, const gchar *optarg,
         g_free(options.operation);
     }
     options.operation = g_strdup(option_name + 2); // skip "--"
-    options.find_flags = pcmk_rsc_match_history|pe_find_anon;
+    options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_anon_basename;
     if (options.override_params == NULL) {
         options.override_params = pcmk__strkey_table(free, free);
     }
@@ -925,7 +931,7 @@ restart_cb(const gchar *option_name, const gchar *optarg, gpointer data,
            GError **error)
 {
     SET_COMMAND(cmd_restart);
-    options.find_flags = pcmk_rsc_match_history|pe_find_anon;
+    options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_anon_basename;
     return TRUE;
 }
 
@@ -934,7 +940,7 @@ digests_cb(const gchar *option_name, const gchar *optarg, gpointer data,
            GError **error)
 {
     SET_COMMAND(cmd_digests);
-    options.find_flags = pcmk_rsc_match_history|pe_find_anon;
+    options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_anon_basename;
     if (options.override_params == NULL) {
         options.override_params = pcmk__strkey_table(free, free);
     }
@@ -955,7 +961,7 @@ gboolean
 why_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     SET_COMMAND(cmd_why);
     options.require_resource = FALSE;
-    options.find_flags = pcmk_rsc_match_history|pe_find_anon;
+    options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_anon_basename;
     return TRUE;
 }
 

@@ -92,11 +92,14 @@ enum pe_find {
     //! Also match clone instance ID from resource history
     pcmk_rsc_match_history          = (1 << 0),
 
+    //! Also match anonymous clone instances by base name
+    pcmk_rsc_match_anon_basename    = (1 << 1),
+
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_rsc_match_history instead
     pe_find_renamed     = pcmk_rsc_match_history,
 #endif
-    pe_find_anon     = 0x002, //!< match base name of anonymous clone instances
+    pe_find_anon        = pcmk_rsc_match_anon_basename,
     pe_find_clone    = 0x004, //!< match only clone instances
     pe_find_current  = 0x008, //!< match resource active on specified node
     pe_find_inactive = 0x010, //!< match resource not running anywhere

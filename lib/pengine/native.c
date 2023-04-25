@@ -292,7 +292,7 @@ native_find_rsc(pe_resource_t * rsc, const char *id, const pe_node_t *on_node,
         match = true;
 
     } else if (pcmk_is_set(flags, pe_find_any)
-               || (pcmk_is_set(flags, pe_find_anon)
+               || (pcmk_is_set(flags, pcmk_rsc_match_anon_basename)
                    && !pcmk_is_set(rsc->flags, pe_rsc_unique))) {
         match = pe_base_name_eq(rsc, id);
     }
