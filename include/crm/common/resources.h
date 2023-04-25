@@ -119,8 +119,10 @@ enum pe_find {
 
     //! \deprecated Use pcmk_rsc_match_current_node instead
     pe_find_current     = pcmk_rsc_match_current_node,
-#endif
+
+    //! \deprecated Use pcmk_rsc_match_basename instead
     pe_find_any         = pcmk_rsc_match_basename,
+#endif
 };
 
 //!@{
