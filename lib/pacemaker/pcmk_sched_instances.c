@@ -46,7 +46,7 @@ can_run_everywhere(const pe_resource_t *collective)
 
     g_hash_table_iter_init(&iter, collective->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-        if (pcmk__node_available(node, false, false)
+        if (pcmk__node_available(node, pcmk__node_alive|pcmk__node_usable)
             && (max_instances < ++available_nodes)) {
             return false;
         }
@@ -76,7 +76,7 @@ can_run_instance(const pe_resource_t *instance, const pe_node_t *node,
         return false;
     }
 
-    if (!pcmk__node_available(node, false, false)) {
+    if (!pcmk__node_available(node, pcmk__node_alive|pcmk__node_usable)) {
         pe_rsc_trace(instance,
                      "%s cannot run on %s: node cannot run resources",
                      instance->id, pe__node_name(node));
@@ -466,8 +466,8 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
     }
 
     // Prefer instance whose current node can run resources
-    can1 = pcmk__node_available(node1, false, false);
-    can2 = pcmk__node_available(node2, false, false);
+    can1 = pcmk__node_available(node1, pcmk__node_alive|pcmk__node_usable);
+    can2 = pcmk__node_available(node2, pcmk__node_alive|pcmk__node_usable);
     if (can1 && !can2) {
         crm_trace("Assign %s before %s: current node can run resources",
                   instance1->id, instance2->id);
@@ -653,7 +653,7 @@ reset_allowed_node_counts(pe_resource_t *rsc)
     g_hash_table_iter_init(&iter, rsc->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
         node->count = 0;
-        if (pcmk__node_available(node, false, false)) {
+        if (pcmk__node_available(node, pcmk__node_alive|pcmk__node_usable)) {
             available_nodes++;
         }
     }
@@ -686,7 +686,9 @@ preferred_node(const pe_resource_t *rsc, const pe_resource_t *instance,
 
     // Check whether instance's current node can run resources
     node = pe__current_node(instance);
-    if (!pcmk__node_available(node, true, false)) {
+    if (!pcmk__node_available(node, pcmk__node_alive
+                                    |pcmk__node_usable
+                                    |pcmk__node_no_negative)) {
         pe_rsc_trace(rsc, "Not assigning %s to %s early (unavailable)",
                      instance->id, pe__node_name(node));
         return NULL;

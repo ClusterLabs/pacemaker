@@ -1283,7 +1283,8 @@ best_node_score_matching_attr(const pe_resource_t *rsc, const char *attr,
     g_hash_table_iter_init(&iter, rsc->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
 
-        if ((node->weight > best_score) && pcmk__node_available(node, false, false)
+        if ((node->weight > best_score)
+            && pcmk__node_available(node, pcmk__node_alive|pcmk__node_usable)
             && pcmk__str_eq(value, pe_node_attribute_raw(node, attr), pcmk__str_casei)) {
 
             best_score = node->weight;

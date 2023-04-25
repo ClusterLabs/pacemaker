@@ -195,7 +195,9 @@ node_to_be_promoted_on(const pe_resource_t *rsc)
                      rsc->id, rsc->priority);
         return NULL;
 
-    } else if (!pcmk__node_available(node, false, true)) {
+    } else if (!pcmk__node_available(node, pcmk__node_alive
+                                           |pcmk__node_usable
+                                           |pcmk__node_no_unrunnable_guest)) {
         pe_rsc_trace(rsc, "%s can't be promoted because %s can't run resources",
                      rsc->id, pe__node_name(node));
         return NULL;
@@ -759,7 +761,8 @@ pcmk__add_promotion_scores(pe_resource_t *rsc)
 
         g_hash_table_iter_init(&iter, child_rsc->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
-            if (!pcmk__node_available(node, false, false)) {
+            if (!pcmk__node_available(node,
+                                      pcmk__node_alive|pcmk__node_usable)) {
                 /* This node will never be promoted, so don't apply the
                  * promotion score, as that may lead to clone shuffling.
                  */

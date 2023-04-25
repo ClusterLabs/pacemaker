@@ -358,15 +358,17 @@ pcmk__finalize_assignment(pe_resource_t *rsc, pe_node_t *chosen, bool force)
     CRM_ASSERT(rsc->variant == pe_native);
 
     if (!force && (chosen != NULL)) {
+        bool available = pcmk__node_available(chosen, pcmk__node_alive
+                                                      |pcmk__node_usable
+                                                      |pcmk__node_no_negative);
+
         if ((chosen->weight < 0)
             // Allow the graph to assume that guest node connections will come up
-            || (!pcmk__node_available(chosen, true, false)
-                && !pe__is_guest_node(chosen))) {
+            || (!available && !pe__is_guest_node(chosen))) {
 
             crm_debug("All nodes for resource %s are unavailable, unclean or "
                       "shutting down (%s can%s run resources, with weight %d)",
-                      rsc->id, pe__node_name(chosen),
-                      (pcmk__node_available(chosen, true, false)? "" : "not"),
+                      rsc->id, pe__node_name(chosen), (available? "" : "not"),
                       chosen->weight);
             pe__set_next_role(rsc, RSC_ROLE_STOPPED, "node availability");
             chosen = NULL;

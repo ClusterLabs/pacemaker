@@ -19,30 +19,34 @@
  * \internal
  * \brief Check whether a node is available to run resources
  *
- * \param[in] node            Node to check
- * \param[in] consider_score  If true, consider a negative score unavailable
- * \param[in] consider_guest  If true, consider a guest node unavailable whose
- *                            resource will not be active
+ * \param[in] node   Node to check
+ * \param[in] flags  Group of enum pcmk__node_availability flags
  *
  * \return true if node is online and not shutting down, unclean, or in standby
  *         or maintenance mode, otherwise false
  */
 bool
-pcmk__node_available(const pe_node_t *node, bool consider_score,
-                     bool consider_guest)
+pcmk__node_available(const pe_node_t *node, uint32_t flags)
 {
-    if ((node == NULL) || (node->details == NULL) || !node->details->online
-            || node->details->shutdown || node->details->unclean
-            || node->details->standby || node->details->maintenance) {
+    // pcmk__node_alive is implicit
+    if ((node == NULL) || (node->details == NULL)
+        || !node->details->online || node->details->unclean) {
         return false;
     }
 
-    if (consider_score && (node->weight < 0)) {
+    if (pcmk_is_set(flags, pcmk__node_usable)
+        && (node->details->shutdown || node->details->standby
+            || node->details->maintenance)) {
         return false;
     }
 
-    // @TODO Go through all callers to see which should set consider_guest
-    if (consider_guest && pe__is_guest_node(node)) {
+    if (pcmk_is_set(flags, pcmk__node_no_negative)
+        && (node->weight < 0)) {
+        return false;
+    }
+
+    if (pcmk_is_set(flags, pcmk__node_no_unrunnable_guest)
+        && pe__is_guest_node(node)) {
         pe_resource_t *guest = node->details->remote_rsc->container;
 
         if (guest->fns->location(guest, NULL, FALSE) == NULL) {
@@ -144,8 +148,16 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
 
     // Compare node weights
 
-    node1_weight = pcmk__node_available(node1, false, false)? node1->weight : -INFINITY;
-    node2_weight = pcmk__node_available(node2, false, false)? node2->weight : -INFINITY;
+    if (pcmk__node_available(node1, pcmk__node_alive|pcmk__node_usable)) {
+        node1_weight = node1->weight;
+    } else {
+        node1_weight = -INFINITY;
+    }
+    if (pcmk__node_available(node2, pcmk__node_alive|pcmk__node_usable)) {
+        node2_weight = node2->weight;
+    } else {
+        node2_weight = -INFINITY;
+    }
 
     if (node1_weight > node2_weight) {
         crm_trace("%s (%d) > %s (%d) : weight",
@@ -258,7 +270,9 @@ pcmk__any_node_available(GHashTable *nodes)
     }
     g_hash_table_iter_init(&iter, nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
-        if (pcmk__node_available(node, true, false)) {
+        if (pcmk__node_available(node, pcmk__node_alive
+                                       |pcmk__node_usable
+                                       |pcmk__node_no_negative)) {
             return true;
         }
     }
