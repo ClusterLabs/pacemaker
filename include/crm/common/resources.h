@@ -104,8 +104,10 @@ enum pe_find {
 
     //! \deprecated Use pcmk_rsc_match_anon_basename instead
     pe_find_anon        = pcmk_rsc_match_anon_basename,
-#endif
+
+    //! \deprecated Use pcmk_rsc_match_clone_only instead
     pe_find_clone       = pcmk_rsc_match_clone_only,
+#endif
     pe_find_current  = 0x008, //!< match resource active on specified node
     pe_find_inactive = 0x010, //!< match resource not running anywhere
     pe_find_any      = 0x020, //!< match base name of any clone instance
