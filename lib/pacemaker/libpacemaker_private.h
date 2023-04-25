@@ -875,6 +875,9 @@ enum pcmk__node_availability {
     //! Disallow nodes with negative scores
     pcmk__node_no_negative          = (1 << 2),
 
+    //! Disallow nodes with minus infinity scores
+    pcmk__node_no_banned            = (1 << 3),
+
     //! Disallow guest nodes whose guest resource is unrunnable
     pcmk__node_no_unrunnable_guest  = (1 << 4),
 

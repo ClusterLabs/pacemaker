@@ -58,6 +58,11 @@ pcmk__node_available(const pe_node_t *node, uint32_t flags)
         return false;
     }
 
+    if (pcmk_is_set(flags, pcmk__node_no_banned)
+        && (node->weight <= -CRM_SCORE_INFINITY)) {
+        return false;
+    }
+
     if (pcmk_is_set(flags, pcmk__node_no_unrunnable_guest)
         && pe__is_guest_node(node)) {
         pe_resource_t *guest = node->details->remote_rsc->container;
