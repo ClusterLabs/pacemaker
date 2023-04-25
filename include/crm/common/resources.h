@@ -98,8 +98,10 @@ enum pe_find {
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_rsc_match_history instead
     pe_find_renamed     = pcmk_rsc_match_history,
-#endif
+
+    //! \deprecated Use pcmk_rsc_match_anon_basename instead
     pe_find_anon        = pcmk_rsc_match_anon_basename,
+#endif
     pe_find_clone    = 0x004, //!< match only clone instances
     pe_find_current  = 0x008, //!< match resource active on specified node
     pe_find_inactive = 0x010, //!< match resource not running anywhere
