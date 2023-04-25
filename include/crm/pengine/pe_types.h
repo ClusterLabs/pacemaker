@@ -91,12 +91,6 @@ enum node_type {
     node_remote
 };
 
-//! \deprecated will be removed in a future release
-enum pe_restart {
-    pe_restart_restart, //! \deprecated will be removed in a future release
-    pe_restart_ignore   //! \deprecated will be removed in a future release
-};
-
 //! Determine behavior of pe_find_resource_with_flags()
 enum pe_find {
     pe_find_renamed  = 0x001, //!< match resource ID or LRM history ID

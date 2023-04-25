@@ -89,6 +89,11 @@ enum rsc_recovery_type {
 
 //!@{
 //! \deprecated Do not use
+enum pe_restart {
+    pe_restart_restart,
+    pe_restart_ignore,
+};
+
 enum pe_print_options {
     pe_print_log            = (1 << 0),
     pe_print_html           = (1 << 1),
