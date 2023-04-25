@@ -274,7 +274,7 @@ native_find_rsc(pe_resource_t * rsc, const char *id, const pe_node_t *on_node,
 
     CRM_CHECK(id && rsc && rsc->id, return NULL);
 
-    if (flags & pe_find_clone) {
+    if (pcmk_is_set(flags, pcmk_rsc_match_clone_only)) {
         const char *rid = ID(rsc->xml);
 
         if (!pe_rsc_is_clone(pe__const_top_resource(rsc, false))) {

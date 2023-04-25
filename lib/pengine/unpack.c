@@ -1831,7 +1831,8 @@ create_anonymous_orphan(pe_resource_t *parent, const char *rsc_id,
     pe_resource_t *top = pe__create_clone_child(parent, data_set);
 
     // find_rsc() because we might be a cloned group
-    pe_resource_t *orphan = top->fns->find_rsc(top, rsc_id, NULL, pe_find_clone);
+    pe_resource_t *orphan = top->fns->find_rsc(top, rsc_id, NULL,
+                                               pcmk_rsc_match_clone_only);
 
     pe_rsc_debug(parent, "Created orphan %s for %s: %s on %s",
                  top->id, parent->id, rsc_id, pe__node_name(node));
@@ -1903,7 +1904,8 @@ find_anonymous_clone(pe_working_set_t *data_set, const pe_node_t *node,
                  *
                  * If the history entry is orphaned, rsc will be NULL.
                  */
-                rsc = parent->fns->find_rsc(child, rsc_id, NULL, pe_find_clone);
+                rsc = parent->fns->find_rsc(child, rsc_id, NULL,
+                                            pcmk_rsc_match_clone_only);
                 if (rsc) {
                     /* If there are multiple instance history entries for an
                      * anonymous clone in a single node's history (which can
@@ -1931,7 +1933,7 @@ find_anonymous_clone(pe_working_set_t *data_set, const pe_node_t *node,
                 && !pcmk_is_set(child->flags, pe_rsc_block)) {
                 // Remember one inactive instance in case we don't find active
                 inactive_instance = parent->fns->find_rsc(child, rsc_id, NULL,
-                                                          pe_find_clone);
+                                                          pcmk_rsc_match_clone_only);
 
                 /* ... but don't use it if it was already associated with a
                  * pending action on another node

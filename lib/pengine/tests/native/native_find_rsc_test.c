@@ -132,8 +132,10 @@ primitive_rsc(void **state) {
     assert_ptr_equal(dummy, native_find_rsc(dummy, "dummy", NULL, pe_find_current));
 
     /* Fails because resource is not a clone (nor cloned). */
-    assert_null(native_find_rsc(dummy, "dummy", NULL, pe_find_clone));
-    assert_null(native_find_rsc(dummy, "dummy", cluster02, pe_find_clone));
+    assert_null(native_find_rsc(dummy, "dummy", NULL,
+                                pcmk_rsc_match_clone_only));
+    assert_null(native_find_rsc(dummy, "dummy", cluster02,
+                                pcmk_rsc_match_clone_only));
 
     /* Fails because dummy is not running on cluster01, even with the right flags. */
     assert_null(native_find_rsc(dummy, "dummy", cluster01, pe_find_current));
@@ -154,8 +156,10 @@ group_rsc(void **state) {
     assert_ptr_equal(exim_group, native_find_rsc(exim_group, "exim-group", NULL, pe_find_current));
 
     /* Fails because resource is not a clone (nor cloned). */
-    assert_null(native_find_rsc(exim_group, "exim-group", NULL, pe_find_clone));
-    assert_null(native_find_rsc(exim_group, "exim-group", cluster01, pe_find_clone));
+    assert_null(native_find_rsc(exim_group, "exim-group", NULL,
+                                pcmk_rsc_match_clone_only));
+    assert_null(native_find_rsc(exim_group, "exim-group", cluster01,
+                                pcmk_rsc_match_clone_only));
 
     /* Fails because none of exim-group's children are running on cluster01, even with the right flags. */
     assert_null(native_find_rsc(exim_group, "exim-group", cluster01, pe_find_current));
@@ -177,8 +181,10 @@ inactive_group_rsc(void **state) {
     assert_ptr_equal(inactive_group, native_find_rsc(inactive_group, "inactive-group", NULL, pe_find_inactive));
 
     /* Fails because resource is not a clone (nor cloned). */
-    assert_null(native_find_rsc(inactive_group, "inactive-group", NULL, pe_find_clone));
-    assert_null(native_find_rsc(inactive_group, "inactive-group", cluster01, pe_find_clone));
+    assert_null(native_find_rsc(inactive_group, "inactive-group", NULL,
+                                pcmk_rsc_match_clone_only));
+    assert_null(native_find_rsc(inactive_group, "inactive-group", cluster01,
+                                pcmk_rsc_match_clone_only));
 
     /* Fails because none of inactive-group's children are running. */
     assert_null(native_find_rsc(inactive_group, "inactive-group", cluster01, pe_find_current));
@@ -211,8 +217,10 @@ group_member_rsc(void **state) {
     assert_ptr_equal(public_ip, native_find_rsc(public_ip, "Public-IP", NULL, pe_find_current));
 
     /* Fails because resource is not a clone (nor cloned). */
-    assert_null(native_find_rsc(public_ip, "Public-IP", NULL, pe_find_clone));
-    assert_null(native_find_rsc(public_ip, "Public-IP", cluster02, pe_find_clone));
+    assert_null(native_find_rsc(public_ip, "Public-IP", NULL,
+                                pcmk_rsc_match_clone_only));
+    assert_null(native_find_rsc(public_ip, "Public-IP", cluster02,
+                                pcmk_rsc_match_clone_only));
 
     /* Fails because Public-IP is not running on cluster01, even with the right flags. */
     assert_null(native_find_rsc(public_ip, "Public-IP", cluster01, pe_find_current));
@@ -245,8 +253,10 @@ inactive_group_member_rsc(void **state) {
     assert_ptr_equal(inactive_dummy_1, native_find_rsc(inactive_dummy_1, "inactive-dummy-1", NULL, pe_find_current));
 
     /* Fails because resource is not a clone (nor cloned). */
-    assert_null(native_find_rsc(inactive_dummy_1, "inactive-dummy-1", NULL, pe_find_clone));
-    assert_null(native_find_rsc(inactive_dummy_1, "inactive-dummy-1", cluster01, pe_find_clone));
+    assert_null(native_find_rsc(inactive_dummy_1, "inactive-dummy-1", NULL,
+                                pcmk_rsc_match_clone_only));
+    assert_null(native_find_rsc(inactive_dummy_1, "inactive-dummy-1", cluster01,
+                                pcmk_rsc_match_clone_only));
 
     /* Fails because inactive-dummy-1 is not running. */
     assert_null(native_find_rsc(inactive_dummy_1, "inactive-dummy-1", cluster01, pe_find_current));
@@ -265,7 +275,9 @@ clone_rsc(void **state) {
     /* Passes because NULL was passed for node, regardless of flags. */
     assert_ptr_equal(promotable_clone, native_find_rsc(promotable_clone, "promotable-clone", NULL, 0));
     assert_ptr_equal(promotable_clone, native_find_rsc(promotable_clone, "promotable-clone", NULL, pe_find_current));
-    assert_ptr_equal(promotable_clone, native_find_rsc(promotable_clone, "promotable-clone", NULL, pe_find_clone));
+    assert_ptr_equal(promotable_clone,
+                     native_find_rsc(promotable_clone, "promotable-clone", NULL,
+                                     pcmk_rsc_match_clone_only));
 
     /* Fails because pe_find_current is required if a node is given. */
     assert_null(native_find_rsc(promotable_clone, "promotable-clone", cluster01, 0));
@@ -279,9 +291,17 @@ clone_rsc(void **state) {
     /* Passes because one of ping_clone's children is running on cluster02. */
     assert_ptr_equal(promotable_clone, native_find_rsc(promotable_clone, "promotable-clone", cluster02, pe_find_current));
 
-    /* Passes for previous reasons, plus includes pe_find_clone check. */
-    assert_ptr_equal(promotable_clone, native_find_rsc(promotable_clone, "promotable-clone", cluster01, pe_find_clone|pe_find_current));
-    assert_ptr_equal(promotable_clone, native_find_rsc(promotable_clone, "promotable-clone", cluster02, pe_find_clone|pe_find_current));
+    // Passes for previous reasons, plus includes pcmk_rsc_match_clone_only
+    assert_ptr_equal(promotable_clone,
+                     native_find_rsc(promotable_clone, "promotable-clone",
+                                     cluster01,
+                                     pcmk_rsc_match_clone_only
+                                     |pe_find_current));
+    assert_ptr_equal(promotable_clone,
+                     native_find_rsc(promotable_clone, "promotable-clone",
+                                     cluster02,
+                                     pcmk_rsc_match_clone_only
+                                     |pe_find_current));
 }
 
 static void
@@ -291,12 +311,16 @@ inactive_clone_rsc(void **state) {
     /* Passes because NULL was passed for node, regardless of flags. */
     assert_ptr_equal(inactive_clone, native_find_rsc(inactive_clone, "inactive-clone", NULL, 0));
     assert_ptr_equal(inactive_clone, native_find_rsc(inactive_clone, "inactive-clone", NULL, pe_find_current));
-    assert_ptr_equal(inactive_clone, native_find_rsc(inactive_clone, "inactive-clone", NULL, pe_find_clone));
+    assert_ptr_equal(inactive_clone,
+                     native_find_rsc(inactive_clone, "inactive-clone", NULL,
+                                     pcmk_rsc_match_clone_only));
     assert_ptr_equal(inactive_clone, native_find_rsc(inactive_clone, "inactive-clone", NULL, pe_find_inactive));
 
     /* Fails because none of inactive-clone's children are running. */
-    assert_null(native_find_rsc(inactive_clone, "inactive-clone", cluster01, pe_find_current|pe_find_clone));
-    assert_null(native_find_rsc(inactive_clone, "inactive-clone", cluster02, pe_find_current|pe_find_clone));
+    assert_null(native_find_rsc(inactive_clone, "inactive-clone", cluster01,
+                                pe_find_current|pcmk_rsc_match_clone_only));
+    assert_null(native_find_rsc(inactive_clone, "inactive-clone", cluster02,
+                                pe_find_current|pcmk_rsc_match_clone_only));
 
     /* Passes because of flags. */
     assert_ptr_equal(inactive_clone, native_find_rsc(inactive_clone, "inactive-clone", cluster01, pe_find_inactive));
@@ -340,7 +364,9 @@ clone_instance_rsc(void **state) {
     assert_null(native_find_rsc(promotable_1, "promotable-rsc:1", cluster02, pe_find_current));
 
     /* Passes because NULL was passed for node and primitive name was given, with correct flags. */
-    assert_ptr_equal(promotable_0, native_find_rsc(promotable_0, "promotable-rsc", NULL, pe_find_clone));
+    assert_ptr_equal(promotable_0,
+                     native_find_rsc(promotable_0, "promotable-rsc", NULL,
+                                     pcmk_rsc_match_clone_only));
 
     /* Passes because pe_find_any matches any instance's base name. */
     assert_ptr_equal(promotable_0, native_find_rsc(promotable_0, "promotable-rsc", NULL, pe_find_any));
@@ -438,8 +464,10 @@ bundle_rsc(void **state) {
     assert_ptr_equal(httpd_bundle, native_find_rsc(httpd_bundle, "httpd-bundle", NULL, pe_find_current));
 
     /* Fails because resource is not a clone (nor cloned). */
-    assert_null(native_find_rsc(httpd_bundle, "httpd-bundle", NULL, pe_find_clone));
-    assert_null(native_find_rsc(httpd_bundle, "httpd-bundle", cluster01, pe_find_clone));
+    assert_null(native_find_rsc(httpd_bundle, "httpd-bundle", NULL,
+                                pcmk_rsc_match_clone_only));
+    assert_null(native_find_rsc(httpd_bundle, "httpd-bundle", cluster01,
+                                pcmk_rsc_match_clone_only));
 
     /* Fails because pe_find_current is required if a node is given. */
     assert_null(native_find_rsc(httpd_bundle, "httpd-bundle", cluster01, 0));
@@ -542,7 +570,9 @@ clone_group_rsc(void **rsc) {
     /* Passes because NULL was passed for node, regardless of flags. */
     assert_ptr_equal(mysql_clone_group, native_find_rsc(mysql_clone_group, "mysql-clone-group", NULL, 0));
     assert_ptr_equal(mysql_clone_group, native_find_rsc(mysql_clone_group, "mysql-clone-group", NULL, pe_find_current));
-    assert_ptr_equal(mysql_clone_group, native_find_rsc(mysql_clone_group, "mysql-clone-group", NULL, pe_find_clone));
+    assert_ptr_equal(mysql_clone_group,
+                     native_find_rsc(mysql_clone_group, "mysql-clone-group",
+                                     NULL, pcmk_rsc_match_clone_only));
 
     /* Fails because pe_find_current is required if a node is given. */
     assert_null(native_find_rsc(mysql_clone_group, "mysql-clone-group", cluster01, 0));
@@ -556,9 +586,17 @@ clone_group_rsc(void **rsc) {
     /* Passes because one of mysql-clone-group's children is running on cluster02. */
     assert_ptr_equal(mysql_clone_group, native_find_rsc(mysql_clone_group, "mysql-clone-group", cluster02, pe_find_current));
 
-    /* Passes for previous reasons, plus includes pe_find_clone check. */
-    assert_ptr_equal(mysql_clone_group, native_find_rsc(mysql_clone_group, "mysql-clone-group", cluster01, pe_find_clone|pe_find_current));
-    assert_ptr_equal(mysql_clone_group, native_find_rsc(mysql_clone_group, "mysql-clone-group", cluster02, pe_find_clone|pe_find_current));
+    // Passes for previous reasons, plus includes pcmk_rsc_match_clone_only
+    assert_ptr_equal(mysql_clone_group,
+                     native_find_rsc(mysql_clone_group, "mysql-clone-group",
+                                     cluster01,
+                                     pcmk_rsc_match_clone_only
+                                     |pe_find_current));
+    assert_ptr_equal(mysql_clone_group,
+                     native_find_rsc(mysql_clone_group, "mysql-clone-group",
+                                     cluster02,
+                                     pcmk_rsc_match_clone_only
+                                     |pe_find_current));
 }
 
 static void
@@ -597,7 +635,9 @@ clone_group_instance_rsc(void **rsc) {
     assert_null(native_find_rsc(mysql_group_1, "mysql-group:1", cluster02, pe_find_current));
 
     /* Passes because NULL was passed for node and base name was given, with correct flags. */
-    assert_ptr_equal(mysql_group_0, native_find_rsc(mysql_group_0, "mysql-group" , NULL, pe_find_clone));
+    assert_ptr_equal(mysql_group_0,
+                     native_find_rsc(mysql_group_0, "mysql-group" , NULL,
+                                     pcmk_rsc_match_clone_only));
 
     /* Passes because pe_find_any matches any base name. */
     assert_ptr_equal(mysql_group_0, native_find_rsc(mysql_group_0, "mysql-group" , NULL, pe_find_any));
@@ -687,8 +727,13 @@ clone_group_member_rsc(void **state) {
     assert_ptr_equal(mysql_proxy, native_find_rsc(mysql_proxy, "mysql-proxy:0", NULL, pe_find_current));
 
     /* Passes because resource's parent is a clone. */
-    assert_ptr_equal(mysql_proxy, native_find_rsc(mysql_proxy, "mysql-proxy:0", NULL, pe_find_clone));
-    assert_ptr_equal(mysql_proxy, native_find_rsc(mysql_proxy, "mysql-proxy:0", cluster02, pe_find_clone|pe_find_current));
+    assert_ptr_equal(mysql_proxy,
+                     native_find_rsc(mysql_proxy, "mysql-proxy:0", NULL,
+                                     pcmk_rsc_match_clone_only));
+    assert_ptr_equal(mysql_proxy,
+                     native_find_rsc(mysql_proxy, "mysql-proxy:0", cluster02,
+                                     pcmk_rsc_match_clone_only
+                                     |pe_find_current));
 
     /* Fails because mysql-proxy:0 is not running on cluster01, even with the right flags. */
     assert_null(native_find_rsc(mysql_proxy, "mysql-proxy:0", cluster01, pe_find_current));
