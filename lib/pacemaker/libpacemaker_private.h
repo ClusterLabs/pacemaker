@@ -889,7 +889,7 @@ G_GNUC_INTERNAL
 bool pcmk__node_available(const pe_node_t *node, uint32_t flags);
 
 G_GNUC_INTERNAL
-bool pcmk__any_node_available(GHashTable *nodes);
+bool pcmk__any_node_available(GHashTable *nodes, uint32_t flags);
 
 G_GNUC_INTERNAL
 GHashTable *pcmk__copy_node_table(GHashTable *nodes);

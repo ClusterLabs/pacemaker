@@ -1186,7 +1186,9 @@ pcmk__apply_coloc_to_weights(pe_resource_t *dependent,
     }
 
     if ((colocation->score <= -INFINITY) || (colocation->score >= INFINITY)
-        || pcmk__any_node_available(work)) {
+        || pcmk__any_node_available(work, pcmk__node_alive
+                                          |pcmk__node_usable
+                                          |pcmk__node_no_negative)) {
 
         g_hash_table_destroy(dependent->allowed_nodes);
         dependent->allowed_nodes = work;
@@ -1457,7 +1459,9 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
         return;
     }
 
-    if (pcmk__any_node_available(work)) {
+    if (pcmk__any_node_available(work, pcmk__node_alive
+                                       |pcmk__node_usable
+                                       |pcmk__node_no_negative)) {
         GList *colocations = NULL;
 
         if (pcmk_is_set(flags, pcmk__coloc_select_this_with)) {

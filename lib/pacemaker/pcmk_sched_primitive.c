@@ -304,7 +304,10 @@ apply_this_with(gpointer data, gpointer user_data)
     // Apply the colocation score to this resource's allowed node scores
     rsc->cmds->apply_coloc_score(rsc, other, colocation, true);
     if ((archive != NULL)
-        && !pcmk__any_node_available(rsc->allowed_nodes)) {
+        && !pcmk__any_node_available(rsc->allowed_nodes,
+                                     pcmk__node_alive
+                                     |pcmk__node_usable
+                                     |pcmk__node_no_negative)) {
         pe_rsc_info(rsc,
                     "%s: Reverting scores from colocation with %s "
                     "because no nodes allowed",
