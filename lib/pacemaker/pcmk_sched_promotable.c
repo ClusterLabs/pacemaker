@@ -508,7 +508,7 @@ find_active_anon_instance(const pe_resource_t *clone, const char *id,
         // Use ->find_rsc() in case this is a cloned group
         active = clone->fns->find_rsc(child, id, node,
                                       pcmk_rsc_match_clone_only
-                                      |pe_find_current);
+                                      |pcmk_rsc_match_current_node);
         if (active != NULL) {
             return active;
         }

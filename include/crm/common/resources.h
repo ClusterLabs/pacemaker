@@ -98,6 +98,9 @@ enum pe_find {
     //! Match only clones and their instances, by either clone or instance ID
     pcmk_rsc_match_clone_only       = (1 << 2),
 
+    //! If matching by node, compare current node instead of assigned node
+    pcmk_rsc_match_current_node     = (1 << 3),
+
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_rsc_match_history instead
     pe_find_renamed     = pcmk_rsc_match_history,
@@ -108,7 +111,7 @@ enum pe_find {
     //! \deprecated Use pcmk_rsc_match_clone_only instead
     pe_find_clone       = pcmk_rsc_match_clone_only,
 #endif
-    pe_find_current  = 0x008, //!< match resource active on specified node
+    pe_find_current     = pcmk_rsc_match_current_node,
     pe_find_inactive = 0x010, //!< match resource not running anywhere
     pe_find_any      = 0x020, //!< match base name of any clone instance
 };

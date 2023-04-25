@@ -244,7 +244,8 @@ rsc_is_on_node(pe_resource_t *rsc, const pe_node_t *node, int flags)
     pe_rsc_trace(rsc, "Checking whether %s is on %s",
                  rsc->id, pe__node_name(node));
 
-    if (pcmk_is_set(flags, pe_find_current) && rsc->running_on) {
+    if (pcmk_is_set(flags, pcmk_rsc_match_current_node)
+        && (rsc->running_on != NULL)) {
 
         for (GList *iter = rsc->running_on; iter; iter = iter->next) {
             pe_node_t *loc = (pe_node_t *) iter->data;
@@ -258,7 +259,8 @@ rsc_is_on_node(pe_resource_t *rsc, const pe_node_t *node, int flags)
                && (rsc->running_on == NULL)) {
         return true;
 
-    } else if (!pcmk_is_set(flags, pe_find_current) && rsc->allocated_to
+    } else if (!pcmk_is_set(flags, pcmk_rsc_match_current_node)
+               && (rsc->allocated_to != NULL)
                && (rsc->allocated_to->details == node->details)) {
         return true;
     }
