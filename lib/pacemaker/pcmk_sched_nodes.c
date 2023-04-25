@@ -48,6 +48,11 @@ pcmk__node_available(const pe_node_t *node, uint32_t flags)
         }
     }
 
+    if (pcmk_is_set(flags, pcmk__node_only_positive)
+        && (node->weight <= 0)) {
+        return false;
+    }
+
     if (pcmk_is_set(flags, pcmk__node_no_negative)
         && (node->weight < 0)) {
         return false;

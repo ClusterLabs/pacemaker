@@ -211,9 +211,9 @@ assign_best_node(pe_resource_t *rsc, const pe_node_t *prefer)
         chosen = best;
 
         if (!pe_rsc_is_unique_clone(rsc->parent)
-            && (chosen->weight > 0) // Zero not acceptable
-            && pcmk__node_available(chosen,
-                                    pcmk__node_alive|pcmk__node_usable)) {
+            && pcmk__node_available(chosen, pcmk__node_alive
+                                            |pcmk__node_usable
+                                            |pcmk__node_only_positive)) {
             /* If the resource is already running on a node, prefer that node if
              * it is just as good as the chosen node.
              *
