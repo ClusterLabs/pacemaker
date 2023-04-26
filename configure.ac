@@ -2104,6 +2104,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 python/setup.py                                     \
                 python/pacemaker/Makefile                           \
                 python/pacemaker/_cts/Makefile                      \
+                python/pacemaker/_cts/tests/Makefile                \
                 python/pacemaker/buildoptions.py                    \
                 python/tests/Makefile                               \
                 replace/Makefile                                    \

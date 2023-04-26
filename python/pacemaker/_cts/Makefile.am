@@ -24,3 +24,5 @@ pkgpython_PYTHON = CTS.py \
 				   remote.py \
 				   test.py \
 				   watcher.py
+
+SUBDIRS = tests
