@@ -185,7 +185,7 @@ print_transition_summary(pe_working_set_t *data_set, bool print_spacer)
  * \param[in]     input     What to set as cluster input
  * \param[in]     out       What to set as cluster output object
  * \param[in]     use_date  What to set as cluster's current timestamp
- * \param[in]     flags     Cluster flags to add (pe_flag_*)
+ * \param[in]     flags     Group of enum pcmk_scheduler_flags to set
  */
 static void
 reset(pe_working_set_t *data_set, xmlNodePtr input, pcmk__output_t *out,
