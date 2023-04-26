@@ -1072,7 +1072,7 @@ pcmk__create_graph(pe_working_set_t *data_set)
              * it's the best way to detect (in CTS) when CIB resource updates
              * are being lost.
              */
-            if (pcmk_is_set(data_set->flags, pe_flag_have_quorum)
+            if (pcmk_is_set(data_set->flags, pcmk_sched_quorate)
                 || (data_set->no_quorum_policy == pcmk_no_quorum_ignore)) {
                 const bool managed = pcmk_is_set(action->rsc->flags,
                                                  pe_rsc_managed);

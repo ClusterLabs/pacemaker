@@ -93,9 +93,9 @@ cluster_status(pe_working_set_t * data_set)
     }
 
     if (pcmk__xe_attr_is_true(data_set->input, XML_ATTR_HAVE_QUORUM)) {
-        pe__set_working_set_flags(data_set, pe_flag_have_quorum);
+        pe__set_working_set_flags(data_set, pcmk_sched_quorate);
     } else {
-        pe__clear_working_set_flags(data_set, pe_flag_have_quorum);
+        pe__clear_working_set_flags(data_set, pcmk_sched_quorate);
     }
 
     data_set->op_defaults = get_xpath_object("//" XML_CIB_TAG_OPCONFIG,
@@ -108,7 +108,7 @@ cluster_status(pe_working_set_t * data_set)
     unpack_config(section, data_set);
 
    if (!pcmk_any_flags_set(data_set->flags,
-                           pe_flag_quick_location|pe_flag_have_quorum)
+                           pe_flag_quick_location|pcmk_sched_quorate)
        && (data_set->no_quorum_policy != pcmk_no_quorum_ignore)) {
         crm_warn("Fencing and resource management disabled due to lack of quorum");
     }

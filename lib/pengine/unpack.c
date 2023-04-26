@@ -303,7 +303,7 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
 
             crm_element_value_int(data_set->input, XML_ATTR_QUORUM_PANIC,
                                   &do_panic);
-            if (do_panic || pcmk_is_set(data_set->flags, pe_flag_have_quorum)) {
+            if (do_panic || pcmk_is_set(data_set->flags, pcmk_sched_quorate)) {
                 data_set->no_quorum_policy = pcmk_no_quorum_fence;
             } else {
                 crm_notice("Resetting no-quorum-policy to 'stop': cluster has never had quorum");
@@ -1140,7 +1140,7 @@ unpack_node_state(const xmlNode *state, pe_working_set_t *data_set)
               pe__node_name(this_node), id);
     determine_online_status(state, this_node, data_set);
 
-    if (!pcmk_is_set(data_set->flags, pe_flag_have_quorum)
+    if (!pcmk_is_set(data_set->flags, pcmk_sched_quorate)
         && this_node->details->online
         && (data_set->no_quorum_policy == pcmk_no_quorum_fence)) {
         /* Everything else should flow from this automatically

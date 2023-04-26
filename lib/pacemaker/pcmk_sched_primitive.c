@@ -475,7 +475,7 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer,
                           rsc->cluster);
 
     } else if ((rsc->next_role > rsc->role)
-               && !pcmk_is_set(rsc->cluster->flags, pe_flag_have_quorum)
+               && !pcmk_is_set(rsc->cluster->flags, pcmk_sched_quorate)
                && (rsc->cluster->no_quorum_policy == pcmk_no_quorum_freeze)) {
         crm_notice("Resource %s cannot be elevated from %s to %s due to "
                    "no-quorum-policy=freeze",

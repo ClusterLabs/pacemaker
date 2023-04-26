@@ -605,7 +605,7 @@ schedule_fencing_and_shutdowns(pe_working_set_t *data_set)
                     "guaranteed (configure, enable, and test fencing to "
                     "correct this)");
 
-        } else if (!pcmk_is_set(data_set->flags, pe_flag_have_quorum)) {
+        } else if (!pcmk_is_set(data_set->flags, pcmk_sched_quorate)) {
             crm_notice("Unclean nodes will not be fenced until quorum is "
                        "attained or no-quorum-policy is set to ignore");
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -24,6 +24,9 @@ extern "C" {
  *             header, and the header itself, will be removed in a future
  *             release.
  */
+
+//! \deprecated Use pcmk_sched_quorate instead
+#define pe_flag_have_quorum             pcmk_sched_quorate
 
 //!@{
 //! \deprecated Do not use (unused by Pacemaker)

@@ -1018,7 +1018,7 @@ set_instance_role(gpointer data, gpointer user_data)
     }
 
     if ((instance->role < pcmk_role_promoted)
-        && !pcmk_is_set(instance->cluster->flags, pe_flag_have_quorum)
+        && !pcmk_is_set(instance->cluster->flags, pcmk_sched_quorate)
         && (instance->cluster->no_quorum_policy == pcmk_no_quorum_freeze)) {
         crm_notice("Clone instance %s cannot be promoted without quorum",
                    instance->id);
