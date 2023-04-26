@@ -246,9 +246,10 @@ class CTSTest:
         self.debug("Found ocfs2 filesystems: %s" % repr(self.r_ocfs2))
         return len(self.r_ocfs2)
 
-    def canrunnow(self, node):
-        '''Return TRUE if we can meaningfully run right now'''
-        return 1
+    def can_run_now(self, node):
+        """ Return True if we can meaningfully run right now """
+
+        return True
 
     def errorstoignore(self):
         '''Return list of errors which are 'normal' and should be ignored'''

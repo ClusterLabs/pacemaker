@@ -163,7 +163,7 @@ A partially set up scenario is torn down if it fails during setup.
             self.ClusterManager.log("Setup failed")
             ret = 0
 
-        elif not test.canrunnow(nodechoice):
+        elif not test.can_run_now(nodechoice):
             self.ClusterManager.log("Skipped")
             test.skipped()
 
