@@ -46,6 +46,9 @@ extern "C" {
 //! \deprecated Use pcmk_sched_concurrent_fencing instead
 #define pe_flag_concurrent_fencing      pcmk_sched_concurrent_fencing
 
+//! \deprecated Use pcmk_sched_stop_removed_resources instead
+#define pe_flag_stop_rsc_orphans        pcmk_sched_stop_removed_resources
+
 //!@{
 //! \deprecated Do not use (unused by Pacemaker)
 enum pe_graph_flags {

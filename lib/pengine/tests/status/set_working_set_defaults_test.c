@@ -23,7 +23,7 @@ check_defaults(void **state) {
 
     set_working_set_defaults(data_set);
 
-    flags = pe_flag_stop_rsc_orphans
+    flags = pcmk_sched_stop_removed_resources
             |pcmk_sched_symmetric_cluster
             |pe_flag_stop_action_orphans;
 

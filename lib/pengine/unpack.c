@@ -346,9 +346,13 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
             break;
     }
 
-    set_config_flag(data_set, "stop-orphan-resources", pe_flag_stop_rsc_orphans);
-    crm_trace("Orphan resources are %s",
-              pcmk_is_set(data_set->flags, pe_flag_stop_rsc_orphans)? "stopped" : "ignored");
+    set_config_flag(data_set, "stop-orphan-resources",
+                    pcmk_sched_stop_removed_resources);
+    if (pcmk_is_set(data_set->flags, pcmk_sched_stop_removed_resources)) {
+        crm_trace("Orphan resources are stopped");
+    } else {
+        crm_trace("Orphan resources are ignored");
+    }
 
     set_config_flag(data_set, "stop-orphan-actions", pe_flag_stop_action_orphans);
     crm_trace("Orphan resource actions are %s",
@@ -2063,7 +2067,7 @@ process_orphan_resource(const xmlNode *rsc_entry, const pe_node_t *node,
         return NULL;
     }
 
-    if (!pcmk_is_set(data_set->flags, pe_flag_stop_rsc_orphans)) {
+    if (!pcmk_is_set(data_set->flags, pcmk_sched_stop_removed_resources)) {
         pe__clear_resource_flags(rsc, pe_rsc_managed);
 
     } else {

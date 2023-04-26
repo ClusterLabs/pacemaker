@@ -379,7 +379,7 @@ set_working_set_defaults(pe_working_set_t * data_set)
     data_set->flags = 0x0ULL;
 
     pe__set_working_set_flags(data_set,
-                              pe_flag_stop_rsc_orphans
+                              pcmk_sched_stop_removed_resources
                               |pcmk_sched_symmetric_cluster
                               |pe_flag_stop_action_orphans);
     if (!strcmp(PCMK__CONCURRENT_FENCING_DEFAULT, "true")) {

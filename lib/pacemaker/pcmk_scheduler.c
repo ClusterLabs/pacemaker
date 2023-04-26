@@ -401,7 +401,7 @@ schedule_resource_actions(pe_working_set_t *data_set)
         pcmk__schedule_probes(data_set);
     }
 
-    if (pcmk_is_set(data_set->flags, pe_flag_stop_rsc_orphans)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_stop_removed_resources)) {
         g_list_foreach(data_set->resources, clear_failcounts_if_orphaned, NULL);
     }
 
