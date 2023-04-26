@@ -957,8 +957,11 @@ static int
 cluster_options_html(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
 
-    out->list_item(out, NULL, "STONITH of failed nodes %s",
-                   pcmk_is_set(data_set->flags, pe_flag_stonith_enabled) ? "enabled" : "disabled");
+    if (pcmk_is_set(data_set->flags, pcmk_sched_fencing_enabled)) {
+        out->list_item(out, NULL, "STONITH of failed nodes enabled");
+    } else {
+        out->list_item(out, NULL, "STONITH of failed nodes disabled");
+    }
 
     if (pcmk_is_set(data_set->flags, pcmk_sched_symmetric_cluster)) {
         out->list_item(out, NULL, "Cluster is symmetric");
@@ -1029,8 +1032,11 @@ static int
 cluster_options_text(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
 
-    out->list_item(out, NULL, "STONITH of failed nodes %s",
-                   pcmk_is_set(data_set->flags, pe_flag_stonith_enabled) ? "enabled" : "disabled");
+    if (pcmk_is_set(data_set->flags, pcmk_sched_fencing_enabled)) {
+        out->list_item(out, NULL, "STONITH of failed nodes enabled");
+    } else {
+        out->list_item(out, NULL, "STONITH of failed nodes disabled");
+    }
 
     if (pcmk_is_set(data_set->flags, pcmk_sched_symmetric_cluster)) {
         out->list_item(out, NULL, "Cluster is symmetric");
@@ -1099,7 +1105,7 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
 
     pcmk__output_create_xml_node(out, "cluster_options",
                                  "stonith-enabled",
-                                 bv(pe_flag_stonith_enabled),
+                                 bv(pcmk_sched_fencing_enabled),
                                  "symmetric-cluster",
                                  bv(pcmk_sched_symmetric_cluster),
                                  "no-quorum-policy", no_quorum_policy,

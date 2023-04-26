@@ -600,7 +600,7 @@ schedule_fencing_and_shutdowns(pe_working_set_t *data_set)
     }
 
     if (integrity_lost) {
-        if (!pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
+        if (!pcmk_is_set(data_set->flags, pcmk_sched_fencing_enabled)) {
             pe_warn("Resource functionality and data integrity cannot be "
                     "guaranteed (configure, enable, and test fencing to "
                     "correct this)");

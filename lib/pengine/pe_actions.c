@@ -829,7 +829,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
         value = "node fencing";
 
         if (!pcmk_is_set(action->rsc->cluster->flags,
-                         pe_flag_stonith_enabled)) {
+                         pcmk_sched_fencing_enabled)) {
             pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for "
                              "operation '%s' to 'stop' because 'fence' is not "
                              "valid when fencing is disabled", action->uuid);
@@ -905,7 +905,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
 
         } else {
             if (pcmk_is_set(action->rsc->cluster->flags,
-                            pe_flag_stonith_enabled)) {
+                            pcmk_sched_fencing_enabled)) {
                 value = "fence remote node (default)";
             } else {
                 value = "recover remote node connection (default)";
@@ -920,7 +920,8 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
     } else if ((value == NULL)
                && pcmk__str_eq(action->task, PCMK_ACTION_STOP,
                                pcmk__str_casei)) {
-        if (pcmk_is_set(action->rsc->cluster->flags, pe_flag_stonith_enabled)) {
+        if (pcmk_is_set(action->rsc->cluster->flags,
+                        pcmk_sched_fencing_enabled)) {
             action->on_fail = pcmk_on_fail_fence_node;
             value = "resource fence (default)";
 

@@ -491,7 +491,7 @@ unpack_requires(pe_resource_t *rsc, const char *value, bool is_default)
 
     } else if (pcmk__str_eq(value, PCMK__VALUE_FENCING, pcmk__str_casei)) {
         pe__set_resource_flags(rsc, pe_rsc_needs_fencing);
-        if (!pcmk_is_set(rsc->cluster->flags, pe_flag_stonith_enabled)) {
+        if (!pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)) {
             pcmk__config_warn("%s requires fencing but fencing is disabled",
                               rsc->id);
         }
@@ -504,7 +504,8 @@ unpack_requires(pe_resource_t *rsc, const char *value, bool is_default)
             unpack_requires(rsc, PCMK__VALUE_QUORUM, true);
             return;
 
-        } else if (!pcmk_is_set(rsc->cluster->flags, pe_flag_stonith_enabled)) {
+        } else if (!pcmk_is_set(rsc->cluster->flags,
+                                pcmk_sched_fencing_enabled)) {
             pcmk__config_warn("Resetting \"" XML_RSC_ATTR_REQUIRES "\" for %s "
                               "to \"" PCMK__VALUE_QUORUM "\" because fencing "
                               "is disabled", rsc->id);
@@ -529,7 +530,8 @@ unpack_requires(pe_resource_t *rsc, const char *value, bool is_default)
         } else if (pcmk_is_set(rsc->cluster->flags, pe_flag_enable_unfencing)) {
             value = PCMK__VALUE_UNFENCING;
 
-        } else if (pcmk_is_set(rsc->cluster->flags, pe_flag_stonith_enabled)) {
+        } else if (pcmk_is_set(rsc->cluster->flags,
+                               pcmk_sched_fencing_enabled)) {
             value = PCMK__VALUE_FENCING;
 
         } else if (rsc->cluster->no_quorum_policy == pcmk_no_quorum_ignore) {
