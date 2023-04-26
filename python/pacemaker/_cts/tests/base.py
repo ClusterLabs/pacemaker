@@ -177,15 +177,15 @@ class CTSTest(object):
         while errcount < 100:
             match = watch.look(0)
             if match:
-               add_err = 1
-               for ignore in ignorelist:
-                   if add_err == 1 and re.search(ignore, match):
-                       add_err = 0
-               if add_err == 1:
-                   self.logger.log(prefix + " " + match)
-                   errcount = errcount + 1
+                add_err = 1
+                for ignore in ignorelist:
+                    if add_err == 1 and re.search(ignore, match):
+                        add_err = 0
+                if add_err == 1:
+                    self.logger.log(prefix + " " + match)
+                    errcount = errcount + 1
             else:
-              break
+                break
         else:
             self.logger.log("Too many errors!")
 
@@ -525,7 +525,7 @@ class RemoteDriver(CTSTest):
         # Add a resource that must live on remote-node
         self.add_primitive_rsc(node)
 
-        # force that rsc to prefer the remote node. 
+        # force that rsc to prefer the remote node.
         (rc, _) = self.CM.rsh(node, "crm_resource -M -r %s -N %s -f" % (self.remote_rsc, self.remote_node), verbose=1)
         if rc != 0:
             self.fail("Failed to place remote resource on remote node.")
@@ -723,7 +723,7 @@ class SimulStartLite(CTSTest):
                         watch.unmatched.remove(uppat % node)
                     except:
                         self.debug("Already matched: %s" % (uppat % node))
-                    try:                        
+                    try:
                         watch.unmatched.remove(self.templates["Pat:InfraUp"] % node)
                     except:
                         self.debug("Already matched: %s" % (self.templates["Pat:InfraUp"] % node))
