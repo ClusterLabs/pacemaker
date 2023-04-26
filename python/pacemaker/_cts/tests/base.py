@@ -206,15 +206,20 @@ class CTSTest:
 
         if self.is_loop and not self.Env["loop-tests"]:
             return False
-        elif self.is_unsafe and not self.Env["unsafe-tests"]:
+
+        if self.is_unsafe and not self.Env["unsafe-tests"]:
             return False
-        elif self.is_valgrind and not self.Env["valgrind-tests"]:
+
+        if self.is_valgrind and not self.Env["valgrind-tests"]:
             return False
-        elif self.is_experimental and not self.Env["experimental-tests"]:
+
+        if self.is_experimental and not self.Env["experimental-tests"]:
             return False
-        elif self.is_container and not self.Env["container-tests"]:
+
+        if self.is_container and not self.Env["container-tests"]:
             return False
-        elif self.Env["benchmark"] and self.benchmark == 0:
+
+        if self.Env["benchmark"] and self.benchmark == 0:
             return False
 
         return True
@@ -285,8 +290,8 @@ class RemoteDriver(CTSTest):
                 # we don't want to try and use the cib that we just shutdown.
                 # find a cluster node that is not our soon to be remote-node.
                 continue
-            else:
-                return othernode
+
+            return othernode
 
     def del_rsc(self, node, rsc):
         othernode = self.get_othernode(node)
@@ -843,11 +848,12 @@ class StartTest(CTSTest):
 
         if self.CM.ShouldBeStatus[node] != "down":
             return self.skipped()
-        elif self.CM.StartaCM(node):
+
+        if self.CM.StartaCM(node):
             return self.success()
-        else:
-            return self.failure("Startup %s on node %s failed"
-                                % (self.Env["Name"], node))
+
+        return self.failure("Startup %s on node %s failed"
+                            % (self.Env["Name"], node))
 
 
 class StopTest(CTSTest):
@@ -912,5 +918,5 @@ class StopTest(CTSTest):
 
         if failreason == None:
             return self.success()
-        else:
-            return self.failure(failreason)
+
+        return self.failure(failreason)
