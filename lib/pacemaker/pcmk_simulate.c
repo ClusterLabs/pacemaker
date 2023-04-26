@@ -815,7 +815,7 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
     if (!out->is_quiet(out)) {
         const bool show_pending = pcmk_is_set(flags, pcmk_sim_show_pending);
 
-        if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
+        if (pcmk_is_set(data_set->flags, pcmk_sched_in_maintenance)) {
             printed = out->message(out, "maint-mode", data_set->flags);
         }
 

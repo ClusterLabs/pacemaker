@@ -939,7 +939,7 @@ static int
 cluster_maint_mode_text(pcmk__output_t *out, va_list args) {
     unsigned long long flags = va_arg(args, unsigned long long);
 
-    if (pcmk_is_set(flags, pe_flag_maintenance_mode)) {
+    if (pcmk_is_set(flags, pcmk_sched_in_maintenance)) {
         pcmk__formatted_printf(out, "\n              *** Resource management is DISABLED ***\n");
         pcmk__formatted_printf(out, "  The cluster will not attempt to start, stop or recover services\n");
         return pcmk_rc_ok;
@@ -989,7 +989,7 @@ cluster_options_html(pcmk__output_t *out, va_list args) {
             break;
     }
 
-    if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_in_maintenance)) {
         xmlNodePtr node = pcmk__output_create_xml_node(out, "li", NULL);
 
         pcmk_create_html_node(node, "span", NULL, NULL, "Resource management: ");
@@ -1015,7 +1015,7 @@ static int
 cluster_options_log(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
 
-    if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_in_maintenance)) {
         return out->info(out, "Resource management is DISABLED.  The cluster will not attempt to start, stop or recover services.");
     } else if (pcmk_is_set(data_set->flags, pe_flag_stop_everything)) {
         return out->info(out, "Resource management is DISABLED.  The cluster has stopped all resources.");
@@ -1104,7 +1104,7 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
                                  bv(pcmk_sched_symmetric_cluster),
                                  "no-quorum-policy", no_quorum_policy,
                                  "maintenance-mode",
-                                 bv(pe_flag_maintenance_mode),
+                                 bv(pcmk_sched_in_maintenance),
                                  "stop-all-resources",
                                  bv(pe_flag_stop_everything),
                                  "stonith-timeout-ms", stonith_timeout_str,

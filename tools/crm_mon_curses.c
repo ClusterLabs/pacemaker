@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2022 the Pacemaker project contributors
+ * Copyright 2019-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -425,7 +425,7 @@ static int
 cluster_maint_mode_console(pcmk__output_t *out, va_list args) {
     unsigned long long flags = va_arg(args, unsigned long long);
 
-    if (pcmk_is_set(flags, pe_flag_maintenance_mode)) {
+    if (pcmk_is_set(flags, pcmk_sched_in_maintenance)) {
         curses_formatted_printf(out, "\n              *** Resource management is DISABLED ***\n");
         curses_formatted_printf(out, "  The cluster will not attempt to start, stop or recover services\n");
         return pcmk_rc_ok;

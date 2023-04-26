@@ -361,9 +361,10 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
         }
     }
 
-    set_config_flag(data_set, "maintenance-mode", pe_flag_maintenance_mode);
+    set_config_flag(data_set, "maintenance-mode", pcmk_sched_in_maintenance);
     crm_trace("Maintenance mode: %s",
-              pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)));
+              pcmk__btoa(pcmk_is_set(data_set->flags,
+                                     pcmk_sched_in_maintenance)));
 
     set_config_flag(data_set, "start-failure-is-fatal", pe_flag_start_failure_fatal);
     crm_trace("Start failures are %s",

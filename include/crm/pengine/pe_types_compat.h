@@ -31,6 +31,9 @@ extern "C" {
 //! \deprecated Use pcmk_sched_symmetric_cluster instead
 #define pe_flag_symmetric_cluster       pcmk_sched_symmetric_cluster
 
+//! \deprecated Use pcmk_sched_in_maintenance instead
+#define pe_flag_maintenance_mode        pcmk_sched_in_maintenance
+
 //!@{
 //! \deprecated Do not use (unused by Pacemaker)
 enum pe_graph_flags {

@@ -688,7 +688,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     (*rsc)->flags = 0;
     pe__set_resource_flags(*rsc, pe_rsc_runnable|pe_rsc_provisional);
 
-    if (!pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
+    if (!pcmk_is_set(data_set->flags, pcmk_sched_in_maintenance)) {
         pe__set_resource_flags(*rsc, pe_rsc_managed);
     }
 
@@ -753,7 +753,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
         pe__clear_resource_flags(*rsc, pe_rsc_managed);
         pe__set_resource_flags(*rsc, pe_rsc_maintenance);
     }
-    if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_in_maintenance)) {
         pe__clear_resource_flags(*rsc, pe_rsc_managed);
         pe__set_resource_flags(*rsc, pe_rsc_maintenance);
     }
