@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 the Pacemaker project contributors
+ * Copyright 2012-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1472,6 +1472,7 @@ process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
                     xmlNode **reply)
 {
     int rc = pcmk_ok;
+    time_t now = time(NULL);
     const char *protocol_version = crm_element_value(request, F_LRMD_PROTOCOL_VERSION);
 
     if (compare_version(protocol_version, LRMD_MIN_PROTOCOL_VERSION) < 0) {
@@ -1500,6 +1501,7 @@ process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
     crm_xml_add(*reply, F_LRMD_OPERATION, CRM_OP_REGISTER);
     crm_xml_add(*reply, F_LRMD_CLIENTID, client->id);
     crm_xml_add(*reply, F_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
+    crm_xml_add_ll(*reply, PCMK__XA_UPTIME, now - start_time);
 
     return rc;
 }

@@ -40,6 +40,7 @@ static GMainLoop *mainloop = NULL;
 static qb_ipcs_service_t *ipcs = NULL;
 static stonith_t *stonith_api = NULL;
 int lrmd_call_id = 0;
+time_t start_time;
 
 static struct {
     gchar **log_files;
@@ -514,6 +515,8 @@ main(int argc, char **argv, char **envp)
         setenv("PCMK_remote_port", options.port, 1);
     }
 #endif  // PCMK__COMPILE_REMOTE
+
+    start_time = time(NULL);
 
     crm_notice("Starting Pacemaker " EXECD_TYPE " executor");
 
