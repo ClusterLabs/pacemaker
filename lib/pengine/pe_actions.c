@@ -1157,7 +1157,7 @@ pe_fence_op(pe_node_t *node, const char *op, bool optional,
         add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET_UUID, node->details->id);
         add_hash_param(stonith_op->meta, "stonith_action", op);
 
-        if (pcmk_is_set(data_set->flags, pe_flag_enable_unfencing)) {
+        if (pcmk_is_set(data_set->flags, pcmk_sched_enable_unfencing)) {
             /* Extra work to detect device changes
              */
             GString *digests_all = g_string_sized_new(1024);

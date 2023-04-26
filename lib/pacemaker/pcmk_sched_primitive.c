@@ -909,7 +909,7 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
     // Whether resource requires unfencing
     check_unfencing = !pcmk_is_set(rsc->flags, pe_rsc_fence_device)
                       && pcmk_is_set(rsc->cluster->flags,
-                                     pe_flag_enable_unfencing)
+                                     pcmk_sched_enable_unfencing)
                       && pcmk_is_set(rsc->flags, pe_rsc_needs_unfencing);
 
     // Whether a non-default placement strategy is used

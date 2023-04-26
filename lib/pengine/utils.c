@@ -576,7 +576,7 @@ void
 trigger_unfencing(pe_resource_t *rsc, pe_node_t *node, const char *reason,
                   pe_action_t *dependency, pe_working_set_t *data_set)
 {
-    if (!pcmk_is_set(data_set->flags, pe_flag_enable_unfencing)) {
+    if (!pcmk_is_set(data_set->flags, pcmk_sched_enable_unfencing)) {
         /* No resources require it */
         return;
 

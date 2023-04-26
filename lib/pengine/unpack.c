@@ -247,7 +247,7 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     /* Set certain flags via xpath here, so they can be used before the relevant
      * configuration sections are unpacked.
      */
-    set_if_xpath(pe_flag_enable_unfencing, XPATH_ENABLE_UNFENCING, data_set);
+    set_if_xpath(pcmk_sched_enable_unfencing, XPATH_ENABLE_UNFENCING, data_set);
 
     value = pe_pref(data_set->config_hash, "stonith-timeout");
     data_set->stonith_timeout = (int) crm_parse_interval_spec(value);

@@ -527,7 +527,8 @@ unpack_requires(pe_resource_t *rsc, const char *value, bool is_default)
                    && xml_contains_remote_node(rsc->xml)) {
             value = PCMK__VALUE_QUORUM;
 
-        } else if (pcmk_is_set(rsc->cluster->flags, pe_flag_enable_unfencing)) {
+        } else if (pcmk_is_set(rsc->cluster->flags,
+                               pcmk_sched_enable_unfencing)) {
             value = PCMK__VALUE_UNFENCING;
 
         } else if (pcmk_is_set(rsc->cluster->flags,
