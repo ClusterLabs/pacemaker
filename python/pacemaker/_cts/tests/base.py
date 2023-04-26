@@ -174,12 +174,15 @@ class CTSTest:
             name = self.name
         return LogWatcher(self._env["LogFileName"], patterns, self._env["nodes"], self._env["LogWatcher"], name, timeout)
 
-    def local_badnews(self, prefix, watch, local_ignore=[]):
+    def local_badnews(self, prefix, watch, local_ignore=None):
         errcount = 0
         if not prefix:
             prefix = "LocalBadNews:"
 
-        ignorelist = [" CTS: ", prefix] + local_ignore
+        ignorelist = [" CTS: ", prefix]
+
+        if local_ignore:
+            ignorelist += local_ignore
 
         while errcount < 100:
             match = watch.look(0)
