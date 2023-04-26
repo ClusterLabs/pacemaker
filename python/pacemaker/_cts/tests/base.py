@@ -265,7 +265,6 @@ class RemoteDriver(CTSTest):
         self.startall = SimulStartLite(cm)
         self.stop = StopTest(cm)
         self.remote_rsc = "remote-rsc"
-        self.cib_cmd = """cibadmin -C -o %s -X '%s' """
         self.reset()
 
     def reset(self):
@@ -305,7 +304,7 @@ class RemoteDriver(CTSTest):
 
     def add_rsc(self, node, rsc_xml):
         othernode = self.get_othernode(node)
-        (rc, _) = self._rsh(othernode, self.cib_cmd % ("resources", rsc_xml))
+        (rc, _) = self._rsh(othernode, "cibadmin -C -o resources -X '%s'" % rsc_xml)
         if rc != 0:
             self.fail("resource creation failed")
 
