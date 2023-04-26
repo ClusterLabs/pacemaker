@@ -280,7 +280,7 @@ class RemoteDriver(CTSTest):
 
     def del_rsc(self, node, rsc):
         othernode = self.get_othernode(node)
-        (rc, _) = self.rsh(othernode, "crm_resource -D -r %s -t primitive" % (rsc))
+        (rc, _) = self.rsh(othernode, "crm_resource -D -r %s -t primitive" % rsc)
         if rc != 0:
             self.fail("Removal of resource '%s' failed" % rsc)
 
@@ -313,7 +313,7 @@ class RemoteDriver(CTSTest):
             # Set reconnect interval on resource
             rsc_xml += """
     <nvpair id="%s-instance_attributes-reconnect_interval" name="reconnect_interval" value="60s"/>
-""" % (self.remote_node)
+""" % self.remote_node
 
         rsc_xml += """
   </instance_attributes>
@@ -385,8 +385,8 @@ class RemoteDriver(CTSTest):
         pcmk_started = 0
 
         # make sure the resource doesn't already exist for some reason
-        self.rsh(node, "crm_resource -D -r %s -t primitive" % (self.remote_rsc))
-        self.rsh(node, "crm_resource -D -r %s -t primitive" % (self.remote_node))
+        self.rsh(node, "crm_resource -D -r %s -t primitive" % self.remote_rsc)
+        self.rsh(node, "crm_resource -D -r %s -t primitive" % self.remote_node)
 
         if not self.stop(node):
             self.fail("Failed to shutdown cluster node %s" % node)
@@ -424,7 +424,7 @@ class RemoteDriver(CTSTest):
         watch = self.create_watch(pats, 120)
         watch.set_watch()
 
-        (rc, _) = self.rsh(node, "crm_resource -M -r %s" % (self.remote_node), verbose=1)
+        (rc, _) = self.rsh(node, "crm_resource -M -r %s" % self.remote_node, verbose=1)
         if rc != 0:
             self.fail("failed to move remote node connection resource")
             return
@@ -538,17 +538,17 @@ class RemoteDriver(CTSTest):
 
         # This verifies permanent attributes can be set on a remote-node. It also
         # verifies the remote-node can edit its own cib node section remotely.
-        (rc, line) = self.CM.rsh(node, "crm_attribute -l forever -n testattr -v testval -N %s" % (self.remote_node), verbose=1)
+        (rc, line) = self.CM.rsh(node, "crm_attribute -l forever -n testattr -v testval -N %s" % self.remote_node, verbose=1)
         if rc != 0:
             self.fail("Failed to set remote-node attribute. rc:%s output:%s" % (rc, line))
             return
 
-        (rc, _) = self.CM.rsh(node, "crm_attribute -l forever -n testattr -q -N %s" % (self.remote_node), verbose=1)
+        (rc, _) = self.CM.rsh(node, "crm_attribute -l forever -n testattr -q -N %s" % self.remote_node, verbose=1)
         if rc != 0:
             self.fail("Failed to get remote-node attribute")
             return
 
-        (rc, _) = self.CM.rsh(node, "crm_attribute -l forever -n testattr -D -N %s" % (self.remote_node), verbose=1)
+        (rc, _) = self.CM.rsh(node, "crm_attribute -l forever -n testattr -D -N %s" % self.remote_node, verbose=1)
         if rc != 0:
             self.fail("Failed to delete remote-node attribute")
             return
@@ -584,7 +584,7 @@ class RemoteDriver(CTSTest):
 
             # Remove remote node's connection resource
             self.debug("Cleaning up remote node connection resource")
-            self.rsh(self.get_othernode(node), "crm_resource -U -r %s" % (self.remote_node))
+            self.rsh(self.get_othernode(node), "crm_resource -U -r %s" % self.remote_node)
             self.del_rsc(node, self.remote_node)
 
         watch.look_for_all()
@@ -604,8 +604,7 @@ class RemoteDriver(CTSTest):
             self.rsh(self.get_othernode(node), "crm_node --force --remove %s" % self.remote_node)
 
     def setup_env(self, node):
-
-        self.remote_node = "remote-%s" % (node)
+        self.remote_node = "remote-%s" % node
 
         # we are assuming if all nodes have a key, that it is
         # the right key... If any node doesn't have a remote
@@ -729,7 +728,7 @@ class SimulStartLite(CTSTest):
 
             if watch.unmatched:
                 for regex in watch.unmatched:
-                    self.logger.log ("Warn: Startup pattern not found: %s" %(regex))
+                    self.logger.log ("Warn: Startup pattern not found: %s" % regex)
 
             if not self.CM.cluster_stable():
                 return self.failure("Cluster did not stabilize")
@@ -891,7 +890,7 @@ class StopTest(CTSTest):
                 self.debug(line)
 
             for regex in watch.unmatched:
-                self.logger.log ("ERROR: Shutdown pattern not found: %s" % (regex))
+                self.logger.log ("ERROR: Shutdown pattern not found: %s" % regex)
                 UnmatchedList +=  regex + "||"
                 failreason = "Missing shutdown pattern"
 
