@@ -269,9 +269,13 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     }
     crm_trace("STONITH will %s nodes", data_set->stonith_action);
 
-    set_config_flag(data_set, "concurrent-fencing", pe_flag_concurrent_fencing);
-    crm_debug("Concurrent fencing is %s",
-              pcmk_is_set(data_set->flags, pe_flag_concurrent_fencing)? "enabled" : "disabled");
+    set_config_flag(data_set, "concurrent-fencing",
+                    pcmk_sched_concurrent_fencing);
+    if (pcmk_is_set(data_set->flags, pcmk_sched_concurrent_fencing)) {
+        crm_debug("Concurrent fencing is enabled");
+    } else {
+        crm_debug("Concurrent fencing is disabled");
+    }
 
     value = pe_pref(data_set->config_hash,
                     XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY);

@@ -505,7 +505,7 @@ static GList *
 add_nondc_fencing(GList *list, pe_action_t *action,
                   const pe_working_set_t *data_set)
 {
-    if (!pcmk_is_set(data_set->flags, pe_flag_concurrent_fencing)
+    if (!pcmk_is_set(data_set->flags, pcmk_sched_concurrent_fencing)
         && (list != NULL)) {
         /* Concurrent fencing is disabled, so order each non-DC
          * fencing in a chain. If there is any DC fencing or
@@ -626,7 +626,7 @@ schedule_fencing_and_shutdowns(pe_working_set_t *data_set)
 
         // Order any non-DC fencing before any DC fencing or shutdown
 
-        if (pcmk_is_set(data_set->flags, pe_flag_concurrent_fencing)) {
+        if (pcmk_is_set(data_set->flags, pcmk_sched_concurrent_fencing)) {
             /* With concurrent fencing, order each non-DC fencing action
              * separately before any DC fencing or shutdown.
              */

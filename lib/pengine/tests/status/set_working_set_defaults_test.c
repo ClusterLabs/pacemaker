@@ -28,7 +28,7 @@ check_defaults(void **state) {
             |pe_flag_stop_action_orphans;
 
     if (!strcmp(PCMK__CONCURRENT_FENCING_DEFAULT, "true")) {
-        flags |= pe_flag_concurrent_fencing;
+        flags |= pcmk_sched_concurrent_fencing;
     }
 
 
