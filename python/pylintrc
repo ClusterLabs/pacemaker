@@ -446,7 +446,8 @@ exclude-too-few-public-methods=
 [CLASSES]
 
 # List of method names used to declare (i.e. assign) instance attributes.
-defining-attr-methods=__init__,__new__,setUp,__post_init__
+# CHANGED: Remove setUp and __post_init__, add reset
+defining-attr-methods=__init__,__new__,reset
 
 # List of valid names for the first argument in a class method.
 valid-classmethod-first-arg=cls
