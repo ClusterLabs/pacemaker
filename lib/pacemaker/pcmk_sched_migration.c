@@ -170,7 +170,8 @@ pcmk__abort_dangling_migration(void *data, void *user_data)
     pe_resource_t *rsc = (pe_resource_t *) user_data;
 
     pe_action_t *stop = NULL;
-    bool cleanup = pcmk_is_set(rsc->cluster->flags, pe_flag_remove_after_stop);
+    bool cleanup = pcmk_is_set(rsc->cluster->flags,
+                               pcmk_sched_remove_after_stop);
 
     pe_rsc_trace(rsc,
                  "Scheduling stop%s for %s on %s due to dangling migration",

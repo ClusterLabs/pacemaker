@@ -58,6 +58,9 @@ extern "C" {
 //! \deprecated Use pcmk_sched_start_failure_fatal instead
 #define pe_flag_start_failure_fatal     pcmk_sched_start_failure_fatal
 
+//! \deprecated Do not use
+#define pe_flag_remove_after_stop       pcmk_sched_remove_after_stop
+
 //!@{
 //! \deprecated Do not use (unused by Pacemaker)
 enum pe_graph_flags {

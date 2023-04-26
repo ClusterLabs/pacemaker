@@ -365,14 +365,14 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     value = pe_pref(data_set->config_hash, "remove-after-stop");
     if (value != NULL) {
         if (crm_is_true(value)) {
-            pe__set_working_set_flags(data_set, pe_flag_remove_after_stop);
+            pe__set_working_set_flags(data_set, pcmk_sched_remove_after_stop);
 #ifndef PCMK__COMPAT_2_0
             pe_warn_once(pe_wo_remove_after,
                          "Support for the remove-after-stop cluster property is"
                          " deprecated and will be removed in a future release");
 #endif
         } else {
-            pe__clear_working_set_flags(data_set, pe_flag_remove_after_stop);
+            pe__clear_working_set_flags(data_set, pcmk_sched_remove_after_stop);
         }
     }
 

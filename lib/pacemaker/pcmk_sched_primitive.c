@@ -1268,7 +1268,7 @@ stop_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
             pe__clear_action_flags(stop, pe_action_runnable);
         }
 
-        if (pcmk_is_set(rsc->cluster->flags, pe_flag_remove_after_stop)) {
+        if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_remove_after_stop)) {
             pcmk__schedule_cleanup(rsc, current, optional);
         }
 
