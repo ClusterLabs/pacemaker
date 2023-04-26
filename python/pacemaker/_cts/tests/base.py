@@ -42,15 +42,12 @@ class CTSTest(object):
     '''
 
     def __init__(self, cm):
-        #self.name="the unnamed test"
         self.Stats = {"calls":0
         ,        "success":0
         ,        "failure":0
         ,        "skipped":0
         ,        "auditfail":0}
 
-#        if not issubclass(cm.__class__, ClusterManager):
-#            raise ValueError("Must be a ClusterManager object")
         self.CM = cm
         self.Env = EnvFactory().getInstance()
         self.rsh = RemoteFactory().getInstance()
@@ -89,7 +86,6 @@ class CTSTest(object):
 
     def log_mark(self, msg):
         self.debug("MARK: test %s %s %d" % (self.name,msg,time.time()))
-        return
 
     def get_timer(self,key = "test"):
         try:
@@ -140,8 +136,6 @@ class CTSTest(object):
     def __call__(self, node):
         '''Perform the given test'''
         raise ValueError("Abstract Class member (__call__)")
-        self.incr("calls")
-        return self.failure()
 
     def audit(self):
         passed = 1
@@ -199,7 +193,6 @@ class CTSTest(object):
 
     def is_applicable_common(self):
         '''Return True if we are applicable in the current test configuration'''
-        #raise ValueError("Abstract Class member (is_applicable)")
 
         if self.is_loop and not self.Env["loop-tests"]:
             return False
@@ -871,7 +864,6 @@ class StopTest(CTSTest):
         for other in self.Env["nodes"]:
             if self.CM.ShouldBeStatus[other] == "up" and other != node:
                 patterns.append(self.templates["Pat:They_stopped"] %(other, self.CM.key_for_node(node)))
-                #self.debug("Checking %s will notice %s left"%(other, node))
 
         watch = self.create_watch(patterns, self.Env["DeadTime"])
         watch.set_watch()
