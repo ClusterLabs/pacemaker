@@ -874,6 +874,9 @@ enum pcmk__node_availability {
 
     //! Disallow guest nodes whose guest resource is unrunnable
     pcmk__node_no_unrunnable_guest  = (1 << 4),
+
+    //! Exempt guest nodes from alive and usable checks
+    pcmk__node_exempt_guest         = (1 << 5),
 };
 
 G_GNUC_INTERNAL
