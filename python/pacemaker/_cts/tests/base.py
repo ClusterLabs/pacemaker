@@ -110,7 +110,7 @@ class CTSTest(object):
         '''Increment (or initialize) the value associated with the given name'''
         if not name in self.Stats:
             self.Stats[name] = 0
-        self.Stats[name] = self.Stats[name]+1
+        self.Stats[name] += 1
 
         # Reset the test passed boolean
         if name == "calls":
@@ -179,7 +179,7 @@ class CTSTest(object):
                         add_err = 0
                 if add_err == 1:
                     self.logger.log(prefix + " " + match)
-                    errcount = errcount + 1
+                    errcount += 1
             else:
                 break
         else:
@@ -311,11 +311,11 @@ class RemoteDriver(CTSTest):
 
         if self.remote_use_reconnect_interval:
             # Set reconnect interval on resource
-            rsc_xml = rsc_xml + """
+            rsc_xml += """
     <nvpair id="%s-instance_attributes-reconnect_interval" name="reconnect_interval" value="60s"/>
 """ % (self.remote_node)
 
-        rsc_xml = rsc_xml + """
+        rsc_xml += """
   </instance_attributes>
   <operations>
     <op id="%(node)s-start"       name="start"   interval="0"   timeout="120s"/>
