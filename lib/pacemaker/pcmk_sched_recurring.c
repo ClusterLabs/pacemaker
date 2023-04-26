@@ -309,8 +309,7 @@ recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
         pe_rsc_trace(rsc, "%s is unrunnable because start is", mon->uuid);
         pe__clear_action_flags(mon, pe_action_runnable);
 
-    } else if ((node == NULL) || !node->details->online
-               || node->details->unclean) {
+    } else if (!pcmk__node_available(node, pcmk__node_alive)) {
         pe_rsc_trace(rsc, "%s is unrunnable because no node is available",
                      mon->uuid);
         pe__clear_action_flags(mon, pe_action_runnable);
@@ -527,7 +526,7 @@ recurring_op_for_inactive(pe_resource_t *rsc, const pe_node_t *node,
          */
         order_after_stops(rsc, stop_node, stopped_mon);
 
-        if (!stop_node->details->online || stop_node->details->unclean) {
+        if (!pcmk__node_available(stop_node, pcmk__node_alive)) {
             pe_rsc_debug(rsc, "%s unrunnable on %s: node unavailable)",
                          stopped_mon->uuid, pe__node_name(stop_node));
             pe__clear_action_flags(stopped_mon, pe_action_runnable);

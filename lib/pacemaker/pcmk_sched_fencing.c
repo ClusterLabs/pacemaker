@@ -211,7 +211,7 @@ order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
     for (gIter = action_list; gIter != NULL; gIter = gIter->next) {
         pe_action_t *action = (pe_action_t *) gIter->data;
 
-        if (!(action->node->details->online) || action->node->details->unclean
+        if (!pcmk__node_available(action->node, pcmk__node_alive)
             || pcmk_is_set(rsc->flags, pe_rsc_failed)) {
 
             if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {

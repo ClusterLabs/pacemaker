@@ -140,8 +140,7 @@ get_remote_node_state(const pe_node_t *node)
          */
         return remote_state_unknown;
 
-    } else if (cluster_node->details->unclean
-               || !(cluster_node->details->online)) {
+    } else if (!pcmk__node_available(cluster_node, pcmk__node_alive)) {
         // Connection is running on a dead node, see if we can recover it first
         return remote_state_resting;
 
