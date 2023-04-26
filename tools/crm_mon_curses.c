@@ -429,7 +429,7 @@ cluster_maint_mode_console(pcmk__output_t *out, va_list args) {
         curses_formatted_printf(out, "\n              *** Resource management is DISABLED ***\n");
         curses_formatted_printf(out, "  The cluster will not attempt to start, stop or recover services\n");
         return pcmk_rc_ok;
-    } else if (pcmk_is_set(flags, pe_flag_stop_everything)) {
+    } else if (pcmk_is_set(flags, pcmk_sched_stop_all)) {
         curses_formatted_printf(out, "\n    *** Resource management is DISABLED ***\n");
         curses_formatted_printf(out, "  The cluster will keep all resources stopped\n");
         return pcmk_rc_ok;

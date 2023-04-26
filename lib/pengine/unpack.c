@@ -284,9 +284,9 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
         crm_trace("Priority fencing delay is %ds", data_set->priority_fencing_delay);
     }
 
-    set_config_flag(data_set, "stop-all-resources", pe_flag_stop_everything);
+    set_config_flag(data_set, "stop-all-resources", pcmk_sched_stop_all);
     crm_debug("Stop all active resources: %s",
-              pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_stop_everything)));
+              pcmk__btoa(pcmk_is_set(data_set->flags, pcmk_sched_stop_all)));
 
     set_config_flag(data_set, "symmetric-cluster",
                     pcmk_sched_symmetric_cluster);

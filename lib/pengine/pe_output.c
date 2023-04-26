@@ -943,7 +943,7 @@ cluster_maint_mode_text(pcmk__output_t *out, va_list args) {
         pcmk__formatted_printf(out, "\n              *** Resource management is DISABLED ***\n");
         pcmk__formatted_printf(out, "  The cluster will not attempt to start, stop or recover services\n");
         return pcmk_rc_ok;
-    } else if (pcmk_is_set(flags, pe_flag_stop_everything)) {
+    } else if (pcmk_is_set(flags, pcmk_sched_stop_all)) {
         pcmk__formatted_printf(out, "\n    *** Resource management is DISABLED ***\n");
         pcmk__formatted_printf(out, "  The cluster will keep all resources stopped\n");
         return pcmk_rc_ok;
@@ -999,7 +999,7 @@ cluster_options_html(pcmk__output_t *out, va_list args) {
         pcmk_create_html_node(node, "span", NULL, "bold", "DISABLED");
         pcmk_create_html_node(node, "span", NULL, NULL,
                               " (the cluster will not attempt to start, stop, or recover services)");
-    } else if (pcmk_is_set(data_set->flags, pe_flag_stop_everything)) {
+    } else if (pcmk_is_set(data_set->flags, pcmk_sched_stop_all)) {
         xmlNodePtr node = pcmk__output_create_xml_node(out, "li", NULL);
 
         pcmk_create_html_node(node, "span", NULL, NULL, "Resource management: ");
@@ -1020,7 +1020,7 @@ cluster_options_log(pcmk__output_t *out, va_list args) {
 
     if (pcmk_is_set(data_set->flags, pcmk_sched_in_maintenance)) {
         return out->info(out, "Resource management is DISABLED.  The cluster will not attempt to start, stop or recover services.");
-    } else if (pcmk_is_set(data_set->flags, pe_flag_stop_everything)) {
+    } else if (pcmk_is_set(data_set->flags, pcmk_sched_stop_all)) {
         return out->info(out, "Resource management is DISABLED.  The cluster has stopped all resources.");
     } else {
         return pcmk_rc_no_output;
@@ -1111,8 +1111,7 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
                                  "no-quorum-policy", no_quorum_policy,
                                  "maintenance-mode",
                                  bv(pcmk_sched_in_maintenance),
-                                 "stop-all-resources",
-                                 bv(pe_flag_stop_everything),
+                                 "stop-all-resources", bv(pcmk_sched_stop_all),
                                  "stonith-timeout-ms", stonith_timeout_str,
                                  "priority-fencing-delay-ms", priority_fencing_delay_str,
                                  NULL);
