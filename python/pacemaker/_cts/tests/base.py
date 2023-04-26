@@ -356,7 +356,7 @@ class RemoteDriver(CTSTest):
 
     def stop_pcmk_remote(self, node):
         # disable pcmk remote
-        for i in range(10):
+        for _ in range(10):
             (rc, _) = self.rsh(node, "service pacemaker_remote stop")
             if rc != 0:
                 time.sleep(6)
@@ -364,7 +364,7 @@ class RemoteDriver(CTSTest):
                 break
 
     def start_pcmk_remote(self, node):
-        for i in range(10):
+        for _ in range(10):
             (rc, _) = self.rsh(node, "service pacemaker_remote start")
             if rc != 0:
                 time.sleep(6)
@@ -391,8 +391,6 @@ class RemoteDriver(CTSTest):
         #
         # Temporarily disable any enabled cluster serivces.
         self.disable_services(node)
-
-        pcmk_started = 0
 
         # make sure the resource doesn't already exist for some reason
         self.rsh(node, "crm_resource -D -r %s -t primitive" % self.remote_rsc)
@@ -886,7 +884,7 @@ class StopTest(CTSTest):
                 self.incr("them")
 
         self.CM.StopaCM(node)
-        watch_result = watch.look_for_all()
+        watch.look_for_all()
 
         failreason = None
         UnmatchedList = "||"
