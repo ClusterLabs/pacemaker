@@ -354,9 +354,13 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
         crm_trace("Orphan resources are ignored");
     }
 
-    set_config_flag(data_set, "stop-orphan-actions", pe_flag_stop_action_orphans);
-    crm_trace("Orphan resource actions are %s",
-              pcmk_is_set(data_set->flags, pe_flag_stop_action_orphans)? "stopped" : "ignored");
+    set_config_flag(data_set, "stop-orphan-actions",
+                    pcmk_sched_cancel_removed_actions);
+    if (pcmk_is_set(data_set->flags, pcmk_sched_cancel_removed_actions)) {
+        crm_trace("Orphan resource actions are stopped");
+    } else {
+        crm_trace("Orphan resource actions are ignored");
+    }
 
     value = pe_pref(data_set->config_hash, "remove-after-stop");
     if (value != NULL) {

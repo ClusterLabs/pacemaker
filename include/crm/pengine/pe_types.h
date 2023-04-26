@@ -77,7 +77,6 @@ typedef struct resource_object_functions_s {
 
 typedef struct resource_alloc_functions_s resource_alloc_functions_t;
 
-#  define pe_flag_stop_action_orphans   0x00000200ULL
 #  define pe_flag_stop_everything       0x00000400ULL
 
 #  define pe_flag_start_failure_fatal   0x00001000ULL

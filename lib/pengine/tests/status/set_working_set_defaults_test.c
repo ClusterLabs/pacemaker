@@ -23,9 +23,9 @@ check_defaults(void **state) {
 
     set_working_set_defaults(data_set);
 
-    flags = pcmk_sched_stop_removed_resources
-            |pcmk_sched_symmetric_cluster
-            |pe_flag_stop_action_orphans;
+    flags = pcmk_sched_symmetric_cluster
+            |pcmk_sched_stop_removed_resources
+            |pcmk_sched_cancel_removed_actions;
 
     if (!strcmp(PCMK__CONCURRENT_FENCING_DEFAULT, "true")) {
         flags |= pcmk_sched_concurrent_fencing;

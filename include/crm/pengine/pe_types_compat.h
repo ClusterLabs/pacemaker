@@ -49,6 +49,9 @@ extern "C" {
 //! \deprecated Use pcmk_sched_stop_removed_resources instead
 #define pe_flag_stop_rsc_orphans        pcmk_sched_stop_removed_resources
 
+//! \deprecated Use pcmk_sched_cancel_removed_actions instead
+#define pe_flag_stop_action_orphans     pcmk_sched_cancel_removed_actions
+
 //!@{
 //! \deprecated Do not use (unused by Pacemaker)
 enum pe_graph_flags {
