@@ -40,7 +40,7 @@ from pacemaker._cts.watcher import LogWatcher
 # pylint: disable=unsubscriptable-object
 
 
-class CTSTest(object):
+class CTSTest:
     '''
     A Cluster test.
     We implement the basic set of properties and behaviors for a generic
