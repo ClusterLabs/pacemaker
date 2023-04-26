@@ -29,6 +29,16 @@ from pacemaker._cts.patterns import PatternSelector
 from pacemaker._cts.remote import RemoteFactory
 from pacemaker._cts.watcher import LogWatcher
 
+# Disable various pylint warnings that occur in so many places throughout this
+# file it's easiest to just take care of them globally.  This does introduce the
+# possibility that we'll miss some other cause of the same warning, but we'll
+# just have to be careful.
+
+# pylint doesn't understand that self._rsh is callable.
+# pylint: disable=not-callable
+# pylint doesn't understand that self._env is subscriptable.
+# pylint: disable=unsubscriptable-object
+
 
 class CTSTest(object):
     '''
