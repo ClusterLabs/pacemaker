@@ -179,10 +179,7 @@ class CTSTest:
         if not prefix:
             prefix = "LocalBadNews:"
 
-        ignorelist = []
-        ignorelist.append(" CTS: ")
-        ignorelist.append(prefix)
-        ignorelist.extend(local_ignore)
+        ignorelist = [" CTS: ", prefix] + local_ignore
 
         while errcount < 100:
             match = watch.look(0)
@@ -419,11 +416,10 @@ class RemoteDriver(CTSTest):
             return
 
         # Convert node to baremetal now that it has shutdown the cluster stack
-        pats = [ ]
+        pats = [ self.templates["Pat:RscOpOK"] % ("start", self.remote_node),
+                 self.templates["Pat:DC_IDLE"] ]
         watch = self.create_watch(pats, 120)
         watch.set_watch()
-        pats.append(self.templates["Pat:RscOpOK"] % ("start", self.remote_node))
-        pats.append(self.templates["Pat:DC_IDLE"])
 
         self.add_connection_rsc(node)
 
@@ -437,10 +433,10 @@ class RemoteDriver(CTSTest):
         if self.failed:
             return
 
-        pats = [ ]
-        pats.append(self.templates["Pat:RscOpOK"] % ("migrate_to", self.remote_node))
-        pats.append(self.templates["Pat:RscOpOK"] % ("migrate_from", self.remote_node))
-        pats.append(self.templates["Pat:DC_IDLE"])
+        pats = [ self.templates["Pat:RscOpOK"] % ("migrate_to", self.remote_node),
+                 self.templates["Pat:RscOpOK"] % ("migrate_from", self.remote_node),
+                 self.templates["Pat:DC_IDLE"] ]
+
         watch = self.create_watch(pats, 120)
         watch.set_watch()
 
@@ -461,10 +457,9 @@ class RemoteDriver(CTSTest):
         if self.failed:
             return
 
-        watchpats = [ ]
-        watchpats.append(self.templates["Pat:RscRemoteOpOK"] % ("stop", self.remote_rsc, self.remote_node))
-        watchpats.append(self.templates["Pat:RscRemoteOpOK"] % ("start", self.remote_rsc, self.remote_node))
-        watchpats.append(self.templates["Pat:DC_IDLE"])
+        watchpats = [ self.templates["Pat:RscRemoteOpOK"] % ("stop", self.remote_rsc, self.remote_node),
+                      self.templates["Pat:RscRemoteOpOK"] % ("start", self.remote_rsc, self.remote_node),
+                      self.templates["Pat:DC_IDLE"] ]
 
         watch = self.create_watch(watchpats, 120)
         watch.set_watch()
@@ -483,9 +478,8 @@ class RemoteDriver(CTSTest):
         if self.failed:
             return
 
-        watchpats = [ ]
-        watchpats.append(self.templates["Pat:Fencing_ok"] % self.remote_node)
-        watchpats.append(self.templates["Pat:NodeFenced"] % self.remote_node)
+        watchpats = [ self.templates["Pat:Fencing_ok"] % self.remote_node,
+                      self.templates["Pat:NodeFenced"] % self.remote_node ]
 
         watch = self.create_watch(watchpats, 120)
         watch.set_watch()
@@ -505,12 +499,13 @@ class RemoteDriver(CTSTest):
         self.debug("Waiting for the remote node to come back up")
         self._cm.ns.wait_for_node(node, 120)
 
-        pats = [ ]
-        watch = self.create_watch(pats, 240)
-        watch.set_watch()
-        pats.append(self.templates["Pat:RscOpOK"] % ("start", self.remote_node))
+        pats = [ self.templates["Pat:RscOpOK"] % ("start", self.remote_node) ]
+
         if self.remote_rsc_added == 1:
             pats.append(self.templates["Pat:RscRemoteOpOK"] % ("start", self.remote_rsc, self.remote_node))
+
+        watch = self.create_watch([], 240)
+        watch.set_watch()
 
         # start the remote node again watch it integrate back into cluster.
         self.start_pcmk_remote(node)
@@ -531,11 +526,11 @@ class RemoteDriver(CTSTest):
             return
 
         # verify we can put a resource on the remote node
-        pats = [ ]
+        pats = [ self.templates["Pat:RscRemoteOpOK"] % ("start", self.remote_rsc, self.remote_node),
+                 self.templates["Pat:DC_IDLE"] ]
+
         watch = self.create_watch(pats, 120)
         watch.set_watch()
-        pats.append(self.templates["Pat:RscRemoteOpOK"] % ("start", self.remote_rsc, self.remote_node))
-        pats.append(self.templates["Pat:DC_IDLE"])
 
         # Add a resource that must live on remote-node
         self.add_primitive_rsc(node)
@@ -704,17 +699,15 @@ class SimulStartLite(CTSTest):
         self.set_timer()
         while len(node_list) > 0:
             # Repeat until all nodes come up
-            watchpats = [ ]
-
             uppat = self.templates["Pat:NonDC_started"]
             if self._cm.upcount() == 0:
                 uppat = self.templates["Pat:Local_started"]
 
-            watchpats.append(self.templates["Pat:DC_IDLE"])
+            watchpats = [ self.templates["Pat:DC_IDLE"] ]
             for node in node_list:
-                watchpats.append(uppat % node)
-                watchpats.append(self.templates["Pat:InfraUp"] % node)
-                watchpats.append(self.templates["Pat:PacemakerUp"] % node)
+                watchpats.extend([uppat % node,
+                                  self.templates["Pat:InfraUp"] % node,
+                                  self.templates["Pat:PacemakerUp"] % node])
 
             #   Start all the nodes - at about the same time...
             watch = self.create_watch(watchpats, self._env["DeadTime"]+10)
@@ -795,7 +788,7 @@ class SimulStopLite(CTSTest):
         self.debug("Setup: " + self.name)
 
         #     We ignore the "node" parameter...
-        watchpats = [ ]
+        watchpats = []
 
         for node in self._env["nodes"]:
             if self._cm.ShouldBeStatus[node] == "up":
@@ -878,9 +871,8 @@ class StopTest(CTSTest):
         if self._cm.ShouldBeStatus[node] != "up":
             return self.skipped()
 
-        patterns = []
         # Technically we should always be able to notice ourselves stopping
-        patterns.append(self.templates["Pat:We_stopped"] % node)
+        patterns = [ self.templates["Pat:We_stopped"] % node ]
 
         # Any active node needs to notice this one left
         # (note that this won't work if we have multiple partitions)
