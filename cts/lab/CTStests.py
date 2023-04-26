@@ -74,7 +74,7 @@ class RestartTest(CTSTest):
         self.name = "Restart"
         self.start = StartTest(cm)
         self.stop = StopTest(cm)
-        self.benchmark = 1
+        self.benchmark = True
 
     def __call__(self, node):
         '''Perform the 'restart' test. '''
@@ -104,7 +104,7 @@ class StonithdTest(CTSTest):
         CTSTest.__init__(self, cm)
         self.name = "Stonithd"
         self.startall = SimulStartLite(cm)
-        self.benchmark = 1
+        self.benchmark = True
 
     def __call__(self, node):
         self.incr("calls")
@@ -372,7 +372,6 @@ class PartialStart(CTSTest):
         self.startall = SimulStartLite(cm)
         self.stopall = SimulStopLite(cm)
         self.stop = StopTest(cm)
-        #self.is_unsafe = 1
 
     def __call__(self, node):
         '''Perform the 'PartialStart' test. '''
@@ -416,7 +415,7 @@ class StandbyTest(CTSTest):
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
         self.name = "Standby"
-        self.benchmark = 1
+        self.benchmark = True
 
         self.start = StartTest(cm)
         self.startall = SimulStartLite(cm)
@@ -504,8 +503,8 @@ class ValgrindTest(CTSTest):
         self.name = "Valgrind"
         self.stopall = SimulStopLite(cm)
         self.startall = SimulStartLite(cm)
-        self.is_valgrind = 1
-        self.is_loop = 1
+        self.is_valgrind = True
+        self.is_loop = True
 
     def setup(self, node):
         self.incr("calls")
@@ -741,8 +740,7 @@ class MaintenanceMode(CTSTest):
         self.start = StartTest(cm)
         self.startall = SimulStartLite(cm)
         self.max = 30
-        #self.is_unsafe = 1
-        self.benchmark = 1
+        self.benchmark = True
         self.action = "asyncmon"
         self.interval = 0
         self.rid = "maintenanceDummy"
@@ -921,8 +919,7 @@ class ResourceRecover(CTSTest):
         self.max = 30
         self.rid = None
         self.rid_alt = None
-        #self.is_unsafe = 1
-        self.benchmark = 1
+        self.benchmark = True
 
         # these are the values used for the new LRM API call
         self.action = "asyncmon"
@@ -1063,7 +1060,7 @@ class ComponentFail(CTSTest):
         self.complist = cm.Components()
         self.patterns = []
         self.okerrpatterns = []
-        self.is_unsafe = 1
+        self.is_unsafe = True
 
     def __call__(self, node):
         '''Perform the 'ComponentFail' test. '''
@@ -1184,7 +1181,7 @@ class SplitBrainTest(CTSTest):
         self.name = "SplitBrain"
         self.start = StartTest(cm)
         self.startall = SimulStartLite(cm)
-        self.is_experimental = 1
+        self.is_experimental = True
 
     def isolate_partition(self, partition):
         other_nodes = []
@@ -1231,7 +1228,7 @@ class SplitBrainTest(CTSTest):
     def __call__(self, node):
         '''Perform split-brain test'''
         self.incr("calls")
-        self.passed = 1
+        self.passed = True
         partitions = {}
 
         ret = self.startall(None)
@@ -1361,7 +1358,7 @@ class Reattach(CTSTest):
         self.startall = SimulStartLite(cm)
         self.restart1 = RestartTest(cm)
         self.stopall = SimulStopLite(cm)
-        self.is_unsafe = 0 # Handled by canrunnow()
+        self.is_unsafe = False
 
     def _is_managed(self, node):
         (_, is_managed) = self.rsh(node, "crm_attribute -t rsc_defaults -n is-managed -q -G -d true", verbose=1)
@@ -1549,7 +1546,7 @@ class HAETest(CTSTest):
         self.name = "HAETest"
         self.stopall = SimulStopLite(cm)
         self.startall = SimulStartLite(cm)
-        self.is_loop = 1
+        self.is_loop = True
 
     def setup(self, node):
         #  Start all remaining nodes
@@ -2039,8 +2036,7 @@ class RemoteLXC(CTSTest):
         self.start = StartTest(cm)
         self.startall = SimulStartLite(cm)
         self.num_containers = 2
-        self.is_container = 1
-        self.failed = 0
+        self.is_container = True
         self.fail_string = ""
 
     def start_lxc_simple(self, node):
@@ -2063,14 +2059,14 @@ class RemoteLXC(CTSTest):
         self.log_timer("remoteSimpleInit")
         if watch.unmatched:
             self.fail_string = "Unmatched patterns: %s" % (repr(watch.unmatched))
-            self.failed = 1
+            self.failed = True
 
     def cleanup_lxc_simple(self, node):
 
         pats = [ ]
         # if the test failed, attempt to clean up the cib and libvirt environment
         # as best as possible 
-        if self.failed == 1:
+        if self.failed:
             # restore libvirt and cib
             self.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -s -R &>/dev/null")
             return
@@ -2088,7 +2084,7 @@ class RemoteLXC(CTSTest):
 
         if watch.unmatched:
             self.fail_string = "Unmatched patterns: %s" % (repr(watch.unmatched))
-            self.failed = 1
+            self.failed = True
 
         # cleanup libvirt
         self.rsh(node, "/usr/share/pacemaker/tests/cts/lxc_autogen.sh -s -R &>/dev/null")
@@ -2112,7 +2108,7 @@ class RemoteLXC(CTSTest):
         self.debug("Waiting for the cluster to recover")
         self.CM.cluster_stable()
 
-        if self.failed == 1:
+        if self.failed:
             return self.failure(self.fail_string)
 
         return self.success()

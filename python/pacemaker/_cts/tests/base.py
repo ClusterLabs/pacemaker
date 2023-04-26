@@ -64,15 +64,16 @@ class CTSTest:
         self.logger = LogFactory()
         self.templates = PatternSelector(cm["Name"])
         self.Audits = []
-        self.timeout = 120
-        self.passed = 1
-        self.is_loop = 0
-        self.is_unsafe = 0
-        self.is_experimental = 0
-        self.is_container = 0
-        self.is_valgrind = 0
-        self.benchmark = 0  # which tests to benchmark
         self.timer = {}  # timers
+
+        self.benchmark = True  # which tests to benchmark
+        self.failed = False
+        self.is_container = False
+        self.is_experimental = False
+        self.is_loop = False
+        self.is_unsafe = False
+        self.is_valgrind = False
+        self.passed = True
 
     def log(self, args):
         self.logger.log(args)
@@ -124,11 +125,11 @@ class CTSTest:
 
         # Reset the test passed boolean
         if name == "calls":
-            self.passed = 1
+            self.passed = True
 
     def failure(self, reason="none"):
         '''Increment the failure count'''
-        self.passed = 0
+        self.passed = False
         self.incr("failure")
         self.logger.log(("Test %s" % self.name).ljust(35) + " FAILED: %s" % reason)
         return None
@@ -219,7 +220,7 @@ class CTSTest:
         if self.is_container and not self.Env["container-tests"]:
             return False
 
-        if self.Env["benchmark"] and self.benchmark == 0:
+        if self.Env["benchmark"] and not self.benchmark:
             return False
 
         return True
