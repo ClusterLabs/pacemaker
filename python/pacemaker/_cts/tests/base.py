@@ -60,10 +60,10 @@ class CTSTest:
 
         self.CM = cm
         self.Env = EnvFactory().getInstance()
+        self.audits = []
         self.rsh = RemoteFactory().getInstance()
         self.logger = LogFactory()
         self.templates = PatternSelector(cm["Name"])
-        self.Audits = []
         self.timer = {}  # timers
 
         self.benchmark = True  # which tests to benchmark
@@ -150,12 +150,13 @@ class CTSTest:
 
     def audit(self):
         passed = 1
-        if len(self.Audits) > 0:
-            for audit in self.Audits:
-                if not audit():
-                    self.logger.log("Internal %s Audit %s FAILED." % (self.name, audit.name))
-                    self.incr("auditfail")
-                    passed = 0
+
+        for audit in self.audits:
+            if not audit():
+                self.logger.log("Internal %s Audit %s FAILED." % (self.name, audit.name))
+                self.incr("auditfail")
+                passed = 0
+
         return passed
 
     def setup(self, node):

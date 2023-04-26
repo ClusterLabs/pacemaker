@@ -2024,7 +2024,7 @@ def TestList(cm, audits):
     for testclass in AllTestClasses:
         bound_test = testclass(cm)
         if bound_test.is_applicable():
-            bound_test.Audits = audits
+            bound_test.audits = audits
             result.append(bound_test)
     return result
 
