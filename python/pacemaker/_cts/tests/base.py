@@ -146,8 +146,9 @@ class CTSTest:
         return 1
 
     def __call__(self, node):
-        '''Perform the given test'''
-        raise ValueError("Abstract Class member (__call__)")
+        """ Perform the given test """
+
+        raise NotImplementedError
 
     def audit(self):
         passed = 1
@@ -669,7 +670,9 @@ class RemoteDriver(CTSTest):
         return True
 
     def __call__(self, node):
-        return self.failure("This base class is not meant to be called directly.")
+        """ Perform the given test """
+
+        raise NotImplementedError
 
     @property
     def errors_to_ignore(self):
