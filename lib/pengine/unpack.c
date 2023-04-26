@@ -381,9 +381,13 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
               pcmk__btoa(pcmk_is_set(data_set->flags,
                                      pcmk_sched_in_maintenance)));
 
-    set_config_flag(data_set, "start-failure-is-fatal", pe_flag_start_failure_fatal);
-    crm_trace("Start failures are %s",
-              pcmk_is_set(data_set->flags, pe_flag_start_failure_fatal)? "always fatal" : "handled by failcount");
+    set_config_flag(data_set, "start-failure-is-fatal",
+                    pcmk_sched_start_failure_fatal);
+    if (pcmk_is_set(data_set->flags, pcmk_sched_start_failure_fatal)) {
+        crm_trace("Start failures are always fatal");
+    } else {
+        crm_trace("Start failures are handled by failcount");
+    }
 
     if (pcmk_is_set(data_set->flags, pcmk_sched_fencing_enabled)) {
         set_config_flag(data_set, "startup-fencing", pe_flag_startup_fencing);

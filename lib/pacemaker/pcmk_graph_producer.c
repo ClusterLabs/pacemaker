@@ -1016,7 +1016,7 @@ pcmk__create_graph(pe_working_set_t *data_set)
 
     crm_xml_add(data_set->graph, "failed-stop-offset", "INFINITY");
 
-    if (pcmk_is_set(data_set->flags, pe_flag_start_failure_fatal)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_start_failure_fatal)) {
         crm_xml_add(data_set->graph, "failed-start-offset", "INFINITY");
     } else {
         crm_xml_add(data_set->graph, "failed-start-offset", "1");

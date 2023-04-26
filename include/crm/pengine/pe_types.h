@@ -77,8 +77,6 @@ typedef struct resource_object_functions_s {
 
 typedef struct resource_alloc_functions_s resource_alloc_functions_t;
 
-#  define pe_flag_start_failure_fatal   0x00001000ULL
-
 //! \deprecated
 #  define pe_flag_remove_after_stop     0x00002000ULL
 
