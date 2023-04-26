@@ -92,8 +92,10 @@ class CTSTest(object):
         return
 
     def get_timer(self,key = "test"):
-        try: return self.timer[key]
-        except: return 0
+        try:
+            return self.timer[key]
+        except:
+            return 0
 
     def set_timer(self,key = "test"):
         self.timer[key] = time.time()
@@ -488,7 +490,7 @@ class RemoteDriver(CTSTest):
             return
 
         self.debug("Waiting for the remote node to come back up")
-        self.CM.ns.wait_for_node(node, 120);
+        self.CM.ns.wait_for_node(node, 120)
 
         pats = [ ]
         watch = self.create_watch(pats, 240)
@@ -898,7 +900,7 @@ class StopTest(CTSTest):
 
             for regex in watch.unmatched:
                 self.logger.log ("ERROR: Shutdown pattern not found: %s" % (regex))
-                UnmatchedList +=  regex + "||";
+                UnmatchedList +=  regex + "||"
                 failreason = "Missing shutdown pattern"
 
         self.CM.cluster_stable(self.Env["DeadTime"])
