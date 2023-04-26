@@ -184,11 +184,13 @@ class CTSTest:
         while errcount < 100:
             match = watch.look(0)
             if match:
-                add_err = 1
+                add_err = True
+
                 for ignore in ignorelist:
-                    if add_err == 1 and re.search(ignore, match):
-                        add_err = 0
-                if add_err == 1:
+                    if add_err and re.search(ignore, match):
+                        add_err = False
+
+                if add_err:
                     self._logger.log(prefix + " " + match)
                     errcount += 1
             else:
@@ -268,11 +270,11 @@ class RemoteDriver(CTSTest):
         self.reset()
 
     def reset(self):
-        self.pcmk_started = 0
+        self.pcmk_started = False
         self.failed = False
         self.fail_string = ""
-        self.remote_node_added = 0
-        self.remote_rsc_added = 0
+        self.remote_node_added = False
+        self.remote_rsc_added = False
         self.remote_use_reconnect_interval = self._env.random_gen.choice([True,False])
 
     def fail(self, msg):
@@ -318,7 +320,7 @@ class RemoteDriver(CTSTest):
 </primitive>""" % { "node": self.remote_rsc }
         self.add_rsc(node, rsc_xml)
         if not self.failed:
-            self.remote_rsc_added = 1
+            self.remote_rsc_added = True
 
     def add_connection_rsc(self, node):
         rsc_xml = """
@@ -344,7 +346,7 @@ class RemoteDriver(CTSTest):
 
         self.add_rsc(node, rsc_xml)
         if not self.failed:
-            self.remote_node_added = 1
+            self.remote_node_added = True
 
     def disable_services(self, node):
         self.corosync_enabled = self._env.service_is_enabled(node, "corosync")
@@ -377,7 +379,7 @@ class RemoteDriver(CTSTest):
             if rc != 0:
                 time.sleep(6)
             else:
-                self.pcmk_started = 1
+                self.pcmk_started = True
                 break
 
     def freeze_pcmk_remote(self, node):
@@ -410,7 +412,7 @@ class RemoteDriver(CTSTest):
 
         self.start_pcmk_remote(node)
 
-        if self.pcmk_started == 0:
+        if not self.pcmk_started:
             self.fail("Failed to start pacemaker_remote on node %s" % node)
             return
 
@@ -500,7 +502,7 @@ class RemoteDriver(CTSTest):
 
         pats = [ self.templates["Pat:RscOpOK"] % ("start", self.remote_node) ]
 
-        if self.remote_rsc_added == 1:
+        if self.remote_rsc_added:
             pats.append(self.templates["Pat:RscRemoteOpOK"] % ("start", self.remote_rsc, self.remote_node))
 
         watch = self.create_watch([], 240)
@@ -508,7 +510,7 @@ class RemoteDriver(CTSTest):
 
         # start the remote node again watch it integrate back into cluster.
         self.start_pcmk_remote(node)
-        if self.pcmk_started == 0:
+        if not self.pcmk_started:
             self.fail("Failed to start pacemaker_remote on node %s" % node)
             return
 
@@ -570,7 +572,7 @@ class RemoteDriver(CTSTest):
     def cleanup_metal(self, node):
         self.restore_services(node)
 
-        if self.pcmk_started == 0:
+        if not self.pcmk_started:
             return
 
         pats = [ ]
@@ -578,24 +580,23 @@ class RemoteDriver(CTSTest):
         watch = self.create_watch(pats, 120)
         watch.set_watch()
 
-        if self.remote_rsc_added == 1:
+        if self.remote_rsc_added:
             pats.append(self.templates["Pat:RscOpOK"] % ("stop", self.remote_rsc))
-        if self.remote_node_added == 1:
+
+        if self.remote_node_added:
             pats.append(self.templates["Pat:RscOpOK"] % ("stop", self.remote_node))
 
         self.set_timer("remoteMetalCleanup")
 
         self.resume_pcmk_remote(node)
 
-        if self.remote_rsc_added == 1:
-
+        if self.remote_rsc_added:
             # Remove dummy resource added for remote node tests
             self.debug("Cleaning up dummy rsc put on remote node")
             self._rsh(self.get_othernode(node), "crm_resource -U -r %s" % self.remote_rsc)
             self.del_rsc(node, self.remote_rsc)
 
-        if self.remote_node_added == 1:
-
+        if self.remote_node_added:
             # Remove remote node's connection resource
             self.debug("Cleaning up remote node connection resource")
             self._rsh(self.get_othernode(node), "crm_resource -U -r %s" % self.remote_node)
@@ -612,7 +613,7 @@ class RemoteDriver(CTSTest):
         self.debug("Waiting for the cluster to recover")
         self._cm.cluster_stable()
 
-        if self.remote_node_added == 1:
+        if self.remote_node_added:
             # Remove remote node itself
             self.debug("Cleaning up node entry for remote node")
             self._rsh(self.get_othernode(node), "crm_node --force --remove %s" % self.remote_node)
@@ -748,11 +749,11 @@ class SimulStartLite(CTSTest):
             if not self._cm.cluster_stable():
                 return self.failure("Cluster did not stabilize")
 
-        did_fail = 0
+        did_fail = False
         unstable = []
         for node in self._env["nodes"]:
             if self._cm.StataCM(node) == 0:
-                did_fail = 1
+                did_fail = True
                 unstable.append(node)
 
         if did_fail:
@@ -761,7 +762,7 @@ class SimulStartLite(CTSTest):
         unstable = []
         for node in self._env["nodes"]:
             if not self._cm.node_stable(node):
-                did_fail = 1
+                did_fail = True
                 unstable.append(node)
 
         if did_fail:
@@ -812,11 +813,11 @@ class SimulStopLite(CTSTest):
 
             return self.success()
 
-        did_fail = 0
+        did_fail = False
         up_nodes = []
         for node in self._env["nodes"]:
             if self._cm.StataCM(node) == 1:
-                did_fail = 1
+                did_fail = True
                 up_nodes.append(node)
 
         if did_fail:
