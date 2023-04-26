@@ -28,6 +28,9 @@ extern "C" {
 //! \deprecated Use pcmk_sched_quorate instead
 #define pe_flag_have_quorum             pcmk_sched_quorate
 
+//! \deprecated Use pcmk_sched_symmetric_cluster instead
+#define pe_flag_symmetric_cluster       pcmk_sched_symmetric_cluster
+
 //!@{
 //! \deprecated Do not use (unused by Pacemaker)
 enum pe_graph_flags {

@@ -877,7 +877,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
         return pcmk_rc_unpack_error;
     }
 
-    if (pcmk_is_set(data_set->flags, pe_flag_symmetric_cluster)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_symmetric_cluster)) {
         // This tag must stay exactly the same because it is tested elsewhere
         resource_location(*rsc, NULL, 0, "symmetric_default", data_set);
     } else if (guest_node) {

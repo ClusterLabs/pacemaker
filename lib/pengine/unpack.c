@@ -281,8 +281,9 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     crm_debug("Stop all active resources: %s",
               pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_stop_everything)));
 
-    set_config_flag(data_set, "symmetric-cluster", pe_flag_symmetric_cluster);
-    if (pcmk_is_set(data_set->flags, pe_flag_symmetric_cluster)) {
+    set_config_flag(data_set, "symmetric-cluster",
+                    pcmk_sched_symmetric_cluster);
+    if (pcmk_is_set(data_set->flags, pcmk_sched_symmetric_cluster)) {
         crm_debug("Cluster is symmetric" " - resources can run anywhere by default");
     }
 
@@ -3471,7 +3472,7 @@ unpack_rsc_op_failure(struct action_history *history, xmlNode **last_failure,
     is_probe = pcmk_xe_is_probe(history->xml);
     last_change_s = last_change_str(history->xml);
 
-    if (!pcmk_is_set(history->rsc->cluster->flags, pe_flag_symmetric_cluster)
+    if (!pcmk_is_set(history->rsc->cluster->flags, pcmk_sched_symmetric_cluster)
         && (history->exit_status == PCMK_OCF_NOT_INSTALLED)) {
         crm_trace("Unexpected result (%s%s%s) was recorded for "
                   "%s of %s on %s at %s " CRM_XS " exit-status=%d id=%s",

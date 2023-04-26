@@ -205,7 +205,7 @@ apply_stickiness(gpointer data, gpointer user_data)
      * allowed on the node, so we don't keep the resource somewhere it is no
      * longer explicitly enabled.
      */
-    if (!pcmk_is_set(rsc->cluster->flags, pe_flag_symmetric_cluster)
+    if (!pcmk_is_set(rsc->cluster->flags, pcmk_sched_symmetric_cluster)
         && (g_hash_table_lookup(rsc->allowed_nodes,
                                 node->details->id) == NULL)) {
         pe_rsc_debug(rsc,

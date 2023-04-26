@@ -960,8 +960,11 @@ cluster_options_html(pcmk__output_t *out, va_list args) {
     out->list_item(out, NULL, "STONITH of failed nodes %s",
                    pcmk_is_set(data_set->flags, pe_flag_stonith_enabled) ? "enabled" : "disabled");
 
-    out->list_item(out, NULL, "Cluster is %s",
-                   pcmk_is_set(data_set->flags, pe_flag_symmetric_cluster) ? "symmetric" : "asymmetric");
+    if (pcmk_is_set(data_set->flags, pcmk_sched_symmetric_cluster)) {
+        out->list_item(out, NULL, "Cluster is symmetric");
+    } else {
+        out->list_item(out, NULL, "Cluster is asymmetric");
+    }
 
     switch (data_set->no_quorum_policy) {
         case pcmk_no_quorum_freeze:
@@ -1029,8 +1032,11 @@ cluster_options_text(pcmk__output_t *out, va_list args) {
     out->list_item(out, NULL, "STONITH of failed nodes %s",
                    pcmk_is_set(data_set->flags, pe_flag_stonith_enabled) ? "enabled" : "disabled");
 
-    out->list_item(out, NULL, "Cluster is %s",
-                   pcmk_is_set(data_set->flags, pe_flag_symmetric_cluster) ? "symmetric" : "asymmetric");
+    if (pcmk_is_set(data_set->flags, pcmk_sched_symmetric_cluster)) {
+        out->list_item(out, NULL, "Cluster is symmetric");
+    } else {
+        out->list_item(out, NULL, "Cluster is asymmetric");
+    }
 
     switch (data_set->no_quorum_policy) {
         case pcmk_no_quorum_freeze:
@@ -1057,6 +1063,8 @@ cluster_options_text(pcmk__output_t *out, va_list args) {
 
     return pcmk_rc_ok;
 }
+
+#define bv(flag) pcmk__btoa(pcmk_is_set(data_set->flags, (flag)))
 
 PCMK__OUTPUT_ARGS("cluster-options", "pe_working_set_t *")
 static int
@@ -1090,11 +1098,15 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
     }
 
     pcmk__output_create_xml_node(out, "cluster_options",
-                                 "stonith-enabled", pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)),
-                                 "symmetric-cluster", pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_symmetric_cluster)),
+                                 "stonith-enabled",
+                                 bv(pe_flag_stonith_enabled),
+                                 "symmetric-cluster",
+                                 bv(pcmk_sched_symmetric_cluster),
                                  "no-quorum-policy", no_quorum_policy,
-                                 "maintenance-mode", pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)),
-                                 "stop-all-resources", pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_stop_everything)),
+                                 "maintenance-mode",
+                                 bv(pe_flag_maintenance_mode),
+                                 "stop-all-resources",
+                                 bv(pe_flag_stop_everything),
                                  "stonith-timeout-ms", stonith_timeout_str,
                                  "priority-fencing-delay-ms", priority_fencing_delay_str,
                                  NULL);

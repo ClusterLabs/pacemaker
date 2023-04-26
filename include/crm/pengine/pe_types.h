@@ -77,7 +77,6 @@ typedef struct resource_object_functions_s {
 
 typedef struct resource_alloc_functions_s resource_alloc_functions_t;
 
-#  define pe_flag_symmetric_cluster     0x00000002ULL
 #  define pe_flag_maintenance_mode      0x00000008ULL
 
 #  define pe_flag_stonith_enabled       0x00000010ULL
