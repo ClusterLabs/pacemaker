@@ -488,7 +488,7 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer,
 
     // Unmanage resource if fencing is enabled but no device is configured
     if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)
-        && !pcmk_is_set(rsc->cluster->flags, pe_flag_have_stonith_resource)) {
+        && !pcmk_is_set(rsc->cluster->flags, pcmk_sched_have_fencing)) {
         pe__clear_resource_flags(rsc, pe_rsc_managed);
     }
 

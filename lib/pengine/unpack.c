@@ -241,7 +241,7 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     if (value && crm_is_true(value)) {
         crm_info("Watchdog-based self-fencing will be performed via SBD if "
                  "fencing is required and stonith-watchdog-timeout is nonzero");
-        pe__set_working_set_flags(data_set, pe_flag_have_stonith_resource);
+        pe__set_working_set_flags(data_set, pcmk_sched_have_fencing);
     }
 
     /* Set certain flags via xpath here, so they can be used before the relevant
@@ -831,7 +831,7 @@ unpack_resources(const xmlNode *xml_resources, pe_working_set_t * data_set)
         /* Ignore */
 
     } else if (pcmk_is_set(data_set->flags, pcmk_sched_fencing_enabled)
-               && !pcmk_is_set(data_set->flags, pe_flag_have_stonith_resource)) {
+               && !pcmk_is_set(data_set->flags, pcmk_sched_have_fencing)) {
 
         pcmk__config_err("Resource start-up disabled since no STONITH resources have been defined");
         pcmk__config_err("Either configure some or disable STONITH with the stonith-enabled option");

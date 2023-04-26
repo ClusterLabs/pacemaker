@@ -37,6 +37,9 @@ extern "C" {
 //! \deprecated Use pcmk_sched_fencing_enabled instead
 #define pe_flag_stonith_enabled         pcmk_sched_fencing_enabled
 
+//! \deprecated Use pcmk_sched_have_fencing instead
+#define pe_flag_have_stonith_resource   pcmk_sched_have_fencing
+
 //!@{
 //! \deprecated Do not use (unused by Pacemaker)
 enum pe_graph_flags {

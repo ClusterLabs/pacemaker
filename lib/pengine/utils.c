@@ -54,7 +54,7 @@ pe_can_fence(const pe_working_set_t *data_set, const pe_node_t *node)
     } else if (!pcmk_is_set(data_set->flags, pcmk_sched_fencing_enabled)) {
         return false; /* Turned off */
 
-    } else if (!pcmk_is_set(data_set->flags, pe_flag_have_stonith_resource)) {
+    } else if (!pcmk_is_set(data_set->flags, pcmk_sched_have_fencing)) {
         return false; /* No devices */
 
     } else if (pcmk_is_set(data_set->flags, pcmk_sched_quorate)) {
