@@ -251,8 +251,10 @@ class CTSTest:
 
         return True
 
-    def errorstoignore(self):
-        '''Return list of errors which are 'normal' and should be ignored'''
+    @property
+    def errors_to_ignore(self):
+        """ Return list of errors which should be ignored """
+
         return []
 
 
@@ -669,12 +671,13 @@ class RemoteDriver(CTSTest):
     def __call__(self, node):
         return self.failure("This base class is not meant to be called directly.")
 
-    def errorstoignore(self):
-        '''Return list of errors which should be ignored'''
+    @property
+    def errors_to_ignore(self):
+        """ Return list of errors which should be ignored """
+
         return [ r"""is running on remote.*which isn't allowed""",
                  r"""Connection terminated""",
-                 r"""Could not send remote""",
-                ]
+                 r"""Could not send remote""" ]
 
 
 class SimulStartLite(CTSTest):

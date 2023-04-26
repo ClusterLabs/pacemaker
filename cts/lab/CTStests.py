@@ -185,13 +185,14 @@ class StonithdTest(CTSTest):
         self.log_timer("reform")
         return self.success()
 
-    def errorstoignore(self):
-        return [
-            self.templates["Pat:Fencing_start"] % ".*",
-            self.templates["Pat:Fencing_ok"] % ".*",
-            self.templates["Pat:Fencing_active"],
-            r"error.*: Operation 'reboot' targeting .* by .* for stonith_admin.*: Timer expired",
-        ]
+    @property
+    def errors_to_ignore(self):
+        """ Return list of errors which should be ignored """
+
+        return [ self.templates["Pat:Fencing_start"] % ".*",
+                 self.templates["Pat:Fencing_ok"] % ".*",
+                 self.templates["Pat:Fencing_active"],
+                 r"error.*: Operation 'reboot' targeting .* by .* for stonith_admin.*: Timer expired" ]
 
     def is_applicable(self):
         if not self.is_applicable_common():
@@ -398,14 +399,13 @@ class PartialStart(CTSTest):
 
         return self.success()
 
-    def errorstoignore(self):
-        '''Return list of errors which should be ignored'''
+    @property
+    def errors_to_ignore(self):
+        """ Return list of errors which should be ignored """
 
         # We might do some fencing in the 2-node case if we make it up far enough
-        return [
-            r"Executing reboot fencing operation",
-            r"Requesting fencing \([^)]+\) targeting node ",
-        ]
+        return [ r"Executing reboot fencing operation",
+                 r"Requesting fencing \([^)]+\) targeting node " ]
 
 #     Register StopOnebyOne as a good test to run
 AllTestClasses.append(PartialStart)
@@ -564,13 +564,13 @@ class ValgrindTest(CTSTest):
 
         return self.success()
 
-    def errorstoignore(self):
-        '''Return list of errors which should be ignored'''
-        return [
-            r"pacemaker-based.*: \*\*\*\*\*\*\*\*\*\*\*\*\*",
-            r"pacemaker-based.*: .* avoid confusing Valgrind",
-            r"HA_VALGRIND_ENABLED",
-        ]
+    @property
+    def errors_to_ignore(self):
+        """ Return list of errors which should be ignored """
+
+        return [ r"pacemaker-based.*: \*\*\*\*\*\*\*\*\*\*\*\*\*",
+                 r"pacemaker-based.*: .* avoid confusing Valgrind",
+                 r"HA_VALGRIND_ENABLED" ]
 
 
 class StandbyLoopTest(ValgrindTest):
@@ -897,15 +897,15 @@ class MaintenanceMode(CTSTest):
 
         return self.success()
 
-    def errorstoignore(self):
-        '''Return list of errors which should be ignored'''
-        return [
-            r"Updating failcount for %s" % self.rid,
-            r"schedulerd.*: Recover\s+%s\s+\(.*\)" % self.rid,
-            r"Unknown operation: fail",
-            self.templates["Pat:RscOpOK"] % (self.action, self.rid),
-            r"(ERROR|error).*: Action %s_%s_%d .* initiated outside of a transition" % (self.rid, self.action, self.interval),
-        ]
+    @property
+    def errors_to_ignore(self):
+        """ Return list of errors which should be ignored """
+
+        return [ r"Updating failcount for %s" % self.rid,
+                 r"schedulerd.*: Recover\s+%s\s+\(.*\)" % self.rid,
+                 r"Unknown operation: fail",
+                 self.templates["Pat:RscOpOK"] % (self.action, self.rid),
+                 r"(ERROR|error).*: Action %s_%s_%d .* initiated outside of a transition" % (self.rid, self.action, self.interval) ]
 
 AllTestClasses.append(MaintenanceMode)
 
@@ -1039,15 +1039,15 @@ class ResourceRecover(CTSTest):
 
         return 0 # Anything but None is success
 
-    def errorstoignore(self):
-        '''Return list of errors which should be ignored'''
-        return [
-            r"Updating failcount for %s" % self.rid,
-            r"schedulerd.*: Recover\s+(%s|%s)\s+\(.*\)" % (self.rid, self.rid_alt),
-            r"Unknown operation: fail",
-            self.templates["Pat:RscOpOK"] % (self.action, self.rid),
-            r"(ERROR|error).*: Action %s_%s_%d .* initiated outside of a transition" % (self.rid, self.action, self.interval),
-        ]
+    @property
+    def errors_to_ignore(self):
+        """ Return list of errors which should be ignored """
+
+        return [ r"Updating failcount for %s" % self.rid,
+                 r"schedulerd.*: Recover\s+(%s|%s)\s+\(.*\)" % (self.rid, self.rid_alt),
+                 r"Unknown operation: fail",
+                 self.templates["Pat:RscOpOK"] % (self.action, self.rid),
+                 r"(ERROR|error).*: Action %s_%s_%d .* initiated outside of a transition" % (self.rid, self.action, self.interval) ]
 
 AllTestClasses.append(ResourceRecover)
 
@@ -1163,10 +1163,12 @@ class ComponentFail(CTSTest):
 
         return self.success()
 
-    def errorstoignore(self):
-        '''Return list of errors which should be ignored'''
-    # Note that okerrpatterns refers to the last time we ran this test
-    # The good news is that this works fine for us...
+    @property
+    def errors_to_ignore(self):
+        """ Return list of errors which should be ignored """
+
+        # Note that okerrpatterns refers to the last time we ran this test
+        # The good news is that this works fine for us...
         self.okerrpatterns.extend(self.patterns)
         return self.okerrpatterns
 
@@ -1334,14 +1336,14 @@ class SplitBrainTest(CTSTest):
             return self.success()
         return self.failure("See previous errors")
 
-    def errorstoignore(self):
-        '''Return list of errors which are 'normal' and should be ignored'''
-        return [
-            r"Another DC detected:",
-            r"(ERROR|error).*: .*Application of an update diff failed",
-            r"pacemaker-controld.*:.*not in our membership list",
-            r"CRIT:.*node.*returning after partition",
-        ]
+    @property
+    def errors_to_ignore(self):
+        """ Return list of errors which should be ignored """
+
+        return [ r"Another DC detected:",
+                 r"(ERROR|error).*: .*Application of an update diff failed",
+                 r"pacemaker-controld.*:.*not in our membership list",
+                 r"CRIT:.*node.*returning after partition" ]
 
     def is_applicable(self):
         if not self.is_applicable_common():
@@ -1482,11 +1484,11 @@ class Reattach(CTSTest):
 
         return ret
 
-    def errorstoignore(self):
-        '''Return list of errors which should be ignored'''
-        return [
-            r"resource( was|s were) active at shutdown",
-        ]
+    @property
+    def errors_to_ignore(self):
+        """ Return list of errors which should be ignored """
+
+        return [ r"resource( was|s were) active at shutdown" ]
 
     def is_applicable(self):
         return True
@@ -1527,15 +1529,15 @@ class SpecialTest1(CTSTest):
 
         return self.success()
 
-    def errorstoignore(self):
-        '''Return list of errors which should be ignored'''
+    @property
+    def errors_to_ignore(self):
+        """ Return list of errors which should be ignored """
+
         # Errors that occur as a result of the CIB being wiped
-        return [
-            r"error.*: v1 patchset error, patch failed to apply: Application of an update diff failed",
-            r"error.*: Resource start-up disabled since no STONITH resources have been defined",
-            r"error.*: Either configure some or disable STONITH with the stonith-enabled option",
-            r"error.*: NOTE: Clusters with shared data need STONITH to ensure data integrity",
-        ]
+        return [ r"error.*: v1 patchset error, patch failed to apply: Application of an update diff failed",
+                 r"error.*: Resource start-up disabled since no STONITH resources have been defined",
+                 r"error.*: Either configure some or disable STONITH with the stonith-enabled option",
+                 r"error.*: NOTE: Clusters with shared data need STONITH to ensure data integrity" ]
 
 AllTestClasses.append(SpecialTest1)
 
@@ -2114,21 +2116,21 @@ class RemoteLXC(CTSTest):
 
         return self.success()
 
-    def errorstoignore(self):
-        '''Return list of errors which should be ignored'''
-        return [
-            r"Updating failcount for ping",
-            r"schedulerd.*: Recover\s+(ping|lxc-ms|container)\s+\(.*\)",
-            # The orphaned lxc-ms resource causes an expected transition error
-            # that is a result of the scheduler not having knowledge that the
-            # promotable resource used to be a clone. As a result, it looks like that 
-            # resource is running in multiple locations when it shouldn't... But in
-            # this instance we know why this error is occurring and that it is expected.
-            r"Calculated [Tt]ransition .*pe-error",
-            r"Resource lxc-ms .* is active on 2 nodes attempting recovery",
-            r"Unknown operation: fail",
-            r"VirtualDomain.*ERROR: Unable to determine emulator",
-        ]
+    @property
+    def errors_to_ignore(self):
+        """ Return list of errors which should be ignored """
+
+        return [ r"Updating failcount for ping",
+                 r"schedulerd.*: Recover\s+(ping|lxc-ms|container)\s+\(.*\)",
+                 # The orphaned lxc-ms resource causes an expected transition error
+                 # that is a result of the scheduler not having knowledge that the
+                 # promotable resource used to be a clone. As a result, it looks like that
+                 # resource is running in multiple locations when it shouldn't... But in
+                 # this instance we know why this error is occurring and that it is expected.
+                 r"Calculated [Tt]ransition .*pe-error",
+                 r"Resource lxc-ms .* is active on 2 nodes attempting recovery",
+                 r"Unknown operation: fail",
+                 r"VirtualDomain.*ERROR: Unable to determine emulator" ]
 
 AllTestClasses.append(RemoteLXC)
 
@@ -2180,18 +2182,16 @@ class RemoteStonithd(RemoteDriver):
 
         return True
 
-    def errorstoignore(self):
-        ignore_pats = [
-            r"Lost connection to Pacemaker Remote node",
-            r"Software caused connection abort",
-            r"pacemaker-controld.*:\s+error.*: Operation remote-.*_monitor",
-            r"pacemaker-controld.*:\s+error.*: Result of monitor operation for remote-.*",
-            r"schedulerd.*:\s+Recover\s+remote-.*\s+\(.*\)",
-            r"error: Result of monitor operation for .* on remote-.*: Internal communication failure",
-        ]
+    @property
+    def errors_to_ignore(self):
+        """ Return list of errors which should be ignored """
 
-        ignore_pats.extend(RemoteDriver.errorstoignore(self))
-        return ignore_pats
+        return [ r"Lost connection to Pacemaker Remote node",
+                 r"Software caused connection abort",
+                 r"pacemaker-controld.*:\s+error.*: Operation remote-.*_monitor",
+                 r"pacemaker-controld.*:\s+error.*: Result of monitor operation for remote-.*",
+                 r"schedulerd.*:\s+Recover\s+remote-.*\s+\(.*\)",
+                 r"error: Result of monitor operation for .* on remote-.*: Internal communication failure" ] + super().errors_to_ignore
 
 AllTestClasses.append(RemoteStonithd)
 
@@ -2250,14 +2250,12 @@ class RemoteRscFailure(RemoteDriver):
 
         return self.success()
 
-    def errorstoignore(self):
-        ignore_pats = [
-            r"schedulerd.*: Recover\s+remote-rsc\s+\(.*\)",
-            r"Dummy.*: No process state file found",
-        ]
+    @property
+    def errors_to_ignore(self):
+        """ Return list of errors which should be ignored """
 
-        ignore_pats.extend(RemoteDriver.errorstoignore(self))
-        return ignore_pats
+        return [ r"schedulerd.*: Recover\s+remote-rsc\s+\(.*\)",
+                 r"Dummy.*: No process state file found" ] + super().errors_to_ignore
 
     def is_applicable(self):
         if not RemoteDriver.is_applicable(self):

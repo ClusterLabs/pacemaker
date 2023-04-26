@@ -208,7 +208,7 @@ A partially set up scenario is torn down if it fails during setup.
             self.ClusterManager.statall()
             did_run = 1  # Force the test count to be incremented anyway so test extraction works
 
-        self.audit(test.errorstoignore())
+        self.audit(test.errors_to_ignore)
         return did_run
 
     def summarize(self):
