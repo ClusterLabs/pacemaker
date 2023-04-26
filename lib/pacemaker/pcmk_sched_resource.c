@@ -362,7 +362,7 @@ pcmk__finalize_assignment(pe_resource_t *rsc, pe_node_t *chosen, bool force)
         && !pcmk__node_available(chosen, pcmk__node_exempt_guest
                                          |pcmk__node_alive
                                          |pcmk__node_usable
-                                         |pcmk__node_no_negative)) {
+                                         |pcmk__node_no_banned)) {
         crm_debug("All nodes for resource %s are unavailable, unclean or "
                   "shutting down (preferring %s @ %s)",
                   rsc->id, pe__node_name(chosen),

@@ -189,7 +189,7 @@ assign_best_node(pe_resource_t *rsc, const pe_node_t *prefer)
                          pe__node_name(chosen), rsc->id);
             chosen = NULL;
 
-        } else if (!pcmk__node_available(chosen, pcmk__node_no_negative
+        } else if (!pcmk__node_available(chosen, pcmk__node_no_banned
                                                  |pcmk__node_alive
                                                  |pcmk__node_usable)) {
             pe_rsc_trace(rsc, "Preferred node %s for %s was unavailable",
@@ -228,7 +228,7 @@ assign_best_node(pe_resource_t *rsc, const pe_node_t *prefer)
             if (running == NULL) {
                 // Nothing to do
 
-            } else if (!pcmk__node_available(running, pcmk__node_no_negative
+            } else if (!pcmk__node_available(running, pcmk__node_no_banned
                                                       |pcmk__node_alive
                                                       |pcmk__node_usable)) {
                 pe_rsc_trace(rsc, "Current node for %s (%s) can't run resources",
