@@ -82,6 +82,9 @@ extern "C" {
 //! \deprecated Use pcmk_sched_sanitized instead
 #define pe_flag_sanitized               pcmk_sched_sanitized
 
+//! \deprecated Do not use
+#define pe_flag_stdout                  (1ULL << 22)
+
 //!@{
 //! \deprecated Do not use (unused by Pacemaker)
 enum pe_graph_flags {

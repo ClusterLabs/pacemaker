@@ -77,9 +77,6 @@ typedef struct resource_object_functions_s {
 
 typedef struct resource_alloc_functions_s resource_alloc_functions_t;
 
-//! \deprecated
-#  define pe_flag_stdout                0x00400000ULL
-
 //! Don't count total, disabled and blocked resource instances
 #  define pe_flag_no_counts             0x00800000ULL
 
