@@ -360,7 +360,10 @@ remote_connection_assigned(const pe_resource_t *connection)
 pe_node_t *
 pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer)
 {
-    GList *colocations = NULL;
+    GList *this_with_colocations = NULL;
+    GList *with_this_colocations = NULL;
+    GList *iter = NULL;
+    pcmk__colocation_t *colocation = NULL;
 
     CRM_ASSERT(rsc != NULL);
 
@@ -386,15 +389,48 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer)
     pe__show_node_weights(true, rsc, "Pre-assignment", rsc->allowed_nodes,
                           rsc->cluster);
 
-    colocations = pcmk__this_with_colocations(rsc);
-    g_list_foreach(colocations, apply_this_with, rsc);
-    g_list_free(colocations);
-    pe__show_node_weights(true, rsc, "Post-this-with", rsc->allowed_nodes,
-                          rsc->cluster);
+    this_with_colocations = pcmk__this_with_colocations(rsc);
+    with_this_colocations = pcmk__with_this_colocations(rsc);
 
-    colocations = pcmk__with_this_colocations(rsc);
-    g_list_foreach(colocations, pcmk__add_dependent_scores, rsc);
-    g_list_free(colocations);
+    // Apply mandatory colocations first, to satisfy as many as possible
+    for (iter = this_with_colocations; iter != NULL; iter = iter->next) {
+        colocation = iter->data;
+        if ((colocation->score <= -CRM_SCORE_INFINITY)
+            || (colocation->score >= CRM_SCORE_INFINITY)) {
+            apply_this_with(iter->data, rsc);
+        }
+    }
+    for (iter = with_this_colocations; iter != NULL; iter = iter->next) {
+        colocation = iter->data;
+        if ((colocation->score <= -CRM_SCORE_INFINITY)
+            || (colocation->score >= CRM_SCORE_INFINITY)) {
+            pcmk__add_dependent_scores(iter->data, rsc);
+        }
+    }
+
+    pe__show_node_weights(true, rsc, "Mandatory-colocations",
+                          rsc->allowed_nodes, rsc->cluster);
+
+    // Then apply optional colocations
+    for (iter = this_with_colocations; iter != NULL; iter = iter->next) {
+        colocation = iter->data;
+
+        if ((colocation->score > -CRM_SCORE_INFINITY)
+            && (colocation->score < CRM_SCORE_INFINITY)) {
+            apply_this_with(iter->data, rsc);
+        }
+    }
+    for (iter = with_this_colocations; iter != NULL; iter = iter->next) {
+        colocation = iter->data;
+
+        if ((colocation->score > -CRM_SCORE_INFINITY)
+            && (colocation->score < CRM_SCORE_INFINITY)) {
+            pcmk__add_dependent_scores(iter->data, rsc);
+        }
+    }
+
+    g_list_free(this_with_colocations);
+    g_list_free(with_this_colocations);
 
     if (rsc->next_role == RSC_ROLE_STOPPED) {
         pe_rsc_trace(rsc,
