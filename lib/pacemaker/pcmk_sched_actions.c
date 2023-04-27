@@ -1502,7 +1502,7 @@ only_sanitized_changed(const xmlNode *xml_op,
 {
     const char *digest_secure = NULL;
 
-    if (!pcmk_is_set(data_set->flags, pe_flag_sanitized)) {
+    if (!pcmk_is_set(data_set->flags, pcmk_sched_sanitized)) {
         // The scheduler is not being run as a simulation
         return false;
     }

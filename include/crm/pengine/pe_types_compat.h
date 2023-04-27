@@ -79,6 +79,9 @@ extern "C" {
 //! \deprecated Use pcmk_sched_location_only instead
 #define pe_flag_quick_location          pcmk_sched_location_only
 
+//! \deprecated Use pcmk_sched_sanitized instead
+#define pe_flag_sanitized               pcmk_sched_sanitized
+
 //!@{
 //! \deprecated Do not use (unused by Pacemaker)
 enum pe_graph_flags {

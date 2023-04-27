@@ -195,7 +195,7 @@ reset(pe_working_set_t *data_set, xmlNodePtr input, pcmk__output_t *out,
     data_set->priv = out;
     set_effective_date(data_set, true, use_date);
     if (pcmk_is_set(flags, pcmk_sim_sanitized)) {
-        pe__set_working_set_flags(data_set, pe_flag_sanitized);
+        pe__set_working_set_flags(data_set, pcmk_sched_sanitized);
     }
     if (pcmk_is_set(flags, pcmk_sim_show_scores)) {
         pe__set_working_set_flags(data_set, pe_flag_show_scores);
