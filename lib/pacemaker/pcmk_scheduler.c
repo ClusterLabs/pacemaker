@@ -229,7 +229,7 @@ apply_stickiness(gpointer data, gpointer user_data)
 static void
 apply_shutdown_locks(pe_working_set_t *data_set)
 {
-    if (!pcmk_is_set(data_set->flags, pe_flag_shutdown_lock)) {
+    if (!pcmk_is_set(data_set->flags, pcmk_sched_shutdown_lock)) {
         return;
     }
     for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
