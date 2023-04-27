@@ -102,7 +102,7 @@ class CTSTest:
     def get_timer(self,key = "test"):
         try:
             return self.timer[key]
-        except:
+        except KeyError:
             return 0
 
     def set_timer(self,key = "test"):
@@ -738,15 +738,17 @@ class SimulStartLite(CTSTest):
                 if watch.unmatched:
                     try:
                         watch.unmatched.remove(uppat % node)
-                    except:
+                    except ValueError:
                         self.debug("Already matched: %s" % (uppat % node))
+
                     try:
                         watch.unmatched.remove(self.templates["Pat:InfraUp"] % node)
-                    except:
+                    except ValueError:
                         self.debug("Already matched: %s" % (self.templates["Pat:InfraUp"] % node))
+
                     try:
                         watch.unmatched.remove(self.templates["Pat:PacemakerUp"] % node)
-                    except:
+                    except ValueError:
                         self.debug("Already matched: %s" % (self.templates["Pat:PacemakerUp"] % node))
 
             if watch.unmatched:
