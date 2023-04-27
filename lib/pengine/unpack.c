@@ -390,9 +390,10 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     }
 
     if (pcmk_is_set(data_set->flags, pcmk_sched_fencing_enabled)) {
-        set_config_flag(data_set, "startup-fencing", pe_flag_startup_fencing);
+        set_config_flag(data_set, "startup-fencing",
+                        pcmk_sched_startup_fencing);
     }
-    if (pcmk_is_set(data_set->flags, pe_flag_startup_fencing)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_startup_fencing)) {
         crm_trace("Unseen nodes will be fenced");
     } else {
         pe_warn_once(pe_wo_blind, "Blind faith: not fencing unseen nodes");
@@ -564,7 +565,7 @@ handle_startup_fencing(pe_working_set_t *data_set, pe_node_t *new_node)
         return;
     }
 
-    if (pcmk_is_set(data_set->flags, pe_flag_startup_fencing)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_startup_fencing)) {
         // All nodes are unclean until we've seen their status entry
         new_node->details->unclean = TRUE;
 

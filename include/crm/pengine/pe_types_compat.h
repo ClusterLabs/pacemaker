@@ -61,6 +61,9 @@ extern "C" {
 //! \deprecated Do not use
 #define pe_flag_remove_after_stop       pcmk_sched_remove_after_stop
 
+//! \deprecated Use pcmk_sched_startup_fencing instead
+#define pe_flag_startup_fencing         pcmk_sched_startup_fencing
+
 //!@{
 //! \deprecated Do not use (unused by Pacemaker)
 enum pe_graph_flags {

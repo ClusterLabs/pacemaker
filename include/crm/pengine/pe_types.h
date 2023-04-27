@@ -77,7 +77,6 @@ typedef struct resource_object_functions_s {
 
 typedef struct resource_alloc_functions_s resource_alloc_functions_t;
 
-#  define pe_flag_startup_fencing       0x00004000ULL
 #  define pe_flag_shutdown_lock         0x00008000ULL
 
 #  define pe_flag_startup_probes        0x00010000ULL
