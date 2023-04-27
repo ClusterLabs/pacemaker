@@ -77,8 +77,6 @@ typedef struct resource_object_functions_s {
 
 typedef struct resource_alloc_functions_s resource_alloc_functions_t;
 
-#  define pe_flag_show_utilization      0x04000000ULL
-
 /*!
  * When scheduling, only unpack the CIB (including constraints), calculate
  * as much cluster status as possible, and apply node health.

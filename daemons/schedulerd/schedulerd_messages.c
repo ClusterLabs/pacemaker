@@ -100,7 +100,7 @@ handle_pecalc_request(pcmk__request_t *request)
         pcmk__schedule_actions(converted,
                                pcmk_sched_no_counts
                                |pcmk_sched_no_compat
-                               |pe_flag_show_utilization, data_set);
+                               |pcmk_sched_show_utilization, data_set);
     }
 
     // Get appropriate index into series[] array

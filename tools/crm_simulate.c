@@ -525,7 +525,7 @@ main(int argc, char **argv)
         pe__set_working_set_flags(data_set, pcmk_sched_output_scores);
     }
     if (pcmk_is_set(options.flags, pcmk_sim_show_utilization)) {
-        pe__set_working_set_flags(data_set, pe_flag_show_utilization);
+        pe__set_working_set_flags(data_set, pcmk_sched_show_utilization);
     }
     pe__set_working_set_flags(data_set, pcmk_sched_no_compat);
 
