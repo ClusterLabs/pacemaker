@@ -548,6 +548,21 @@ unpack_requires(pe_resource_t *rsc, const char *value, bool is_default)
                  (is_default? " (default)" : ""));
 }
 
+#ifndef PCMK__COMPAT_2_0
+static void
+warn_about_deprecated_classes(pe_resource_t *rsc)
+{
+    const char *std = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+
+    if (pcmk__str_eq(std, PCMK_RESOURCE_CLASS_UPSTART, pcmk__str_none)) {
+        pe_warn_once(pe_wo_upstart,
+                     "Support for Upstart resources (such as %s) is deprecated "
+                     "and will be removed in a future release of Pacemaker",
+                     rsc->id);
+    }
+}
+#endif
+
 /*!
  * \internal
  * \brief Unpack configuration XML for a given resource
@@ -637,6 +652,10 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
         *rsc = NULL;
         return pcmk_rc_unpack_error;
     }
+
+#ifndef PCMK__COMPAT_2_0
+    warn_about_deprecated_classes(*rsc);
+#endif
 
     (*rsc)->meta = pcmk__strkey_table(free, free);
     (*rsc)->allowed_nodes = pcmk__strkey_table(NULL, free);
