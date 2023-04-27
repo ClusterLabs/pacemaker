@@ -248,7 +248,7 @@ main(int argc, char **argv)
 
         if ((status == NULL) && !options.use_live_cib) {
             // No status available, so do minimal checks
-            flags |= pe_flag_check_config;
+            flags |= pcmk_sched_validate_only;
         }
         pcmk__schedule_actions(cib_object, flags, data_set);
     }

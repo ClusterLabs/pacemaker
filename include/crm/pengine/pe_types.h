@@ -77,12 +77,6 @@ typedef struct resource_object_functions_s {
 
 typedef struct resource_alloc_functions_s resource_alloc_functions_t;
 
-/*!
- * When scheduling, only unpack the CIB (including constraints), calculate
- * as much cluster status as possible, and apply node health.
- */
-#  define pe_flag_check_config          0x08000000ULL
-
 struct pe_working_set_s {
     xmlNode *input;
     crm_time_t *now;

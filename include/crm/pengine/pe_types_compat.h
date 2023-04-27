@@ -97,6 +97,9 @@ extern "C" {
 //! \deprecated Use pcmk_sched_show_utilization instead
 #define pe_flag_show_utilization        pcmk_sched_show_utilization
 
+//! \deprecated Use pcmk_sched_validate_only instead
+#define pe_flag_check_config            pcmk_sched_validate_only
+
 //!@{
 //! \deprecated Do not use (unused by Pacemaker)
 enum pe_graph_flags {

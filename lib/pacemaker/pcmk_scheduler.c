@@ -780,7 +780,7 @@ pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
     pcmk__set_assignment_methods(data_set);
     pcmk__apply_node_health(data_set);
     pcmk__unpack_constraints(data_set);
-    if (pcmk_is_set(data_set->flags, pe_flag_check_config)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_validate_only)) {
         return;
     }
 
