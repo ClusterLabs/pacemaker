@@ -310,7 +310,7 @@ assign_resources(pe_working_set_t *data_set)
     }
     pcmk__show_node_capacities("Original", data_set);
 
-    if (pcmk_is_set(data_set->flags, pe_flag_have_remote_nodes)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_have_remote_nodes)) {
         /* Assign remote connection resources first (which will also assign any
          * colocation dependencies). If the connection is migrating, always
          * prefer the partial migration target.

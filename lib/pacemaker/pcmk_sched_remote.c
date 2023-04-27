@@ -395,7 +395,7 @@ apply_container_ordering(pe_action_t *action)
 void
 pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
 {
-    if (!pcmk_is_set(data_set->flags, pe_flag_have_remote_nodes)) {
+    if (!pcmk_is_set(data_set->flags, pcmk_sched_have_remote_nodes)) {
         return;
     }
 

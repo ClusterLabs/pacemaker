@@ -463,7 +463,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
 
     } else if (pcmk__str_eq(type, "remote", pcmk__str_casei)) {
         new_node->details->type = pcmk_node_variant_remote;
-        pe__set_working_set_flags(data_set, pe_flag_have_remote_nodes);
+        pe__set_working_set_flags(data_set, pcmk_sched_have_remote_nodes);
 
     } else {
         /* @COMPAT 'ping' is the default for backward compatibility, but it
