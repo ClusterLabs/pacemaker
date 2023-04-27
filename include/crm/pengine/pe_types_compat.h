@@ -70,6 +70,9 @@ extern "C" {
 //! \deprecated Use pcmk_sched_probe_resources instead
 #define pe_flag_startup_probes          pcmk_sched_probe_resources
 
+//! \deprecated Use pcmk_sched_have_status instead
+#define pe_flag_have_status             pcmk_sched_have_status
+
 //!@{
 //! \deprecated Do not use (unused by Pacemaker)
 enum pe_graph_flags {

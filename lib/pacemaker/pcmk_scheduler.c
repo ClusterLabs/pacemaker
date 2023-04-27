@@ -735,7 +735,7 @@ unpack_cib(xmlNode *cib, unsigned long long flags, pe_working_set_t *data_set)
 {
     const char* localhost_save = NULL;
 
-    if (pcmk_is_set(data_set->flags, pe_flag_have_status)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_have_status)) {
         crm_trace("Reusing previously calculated cluster status");
         pe__set_working_set_flags(data_set, flags);
         return;
@@ -750,7 +750,7 @@ unpack_cib(xmlNode *cib, unsigned long long flags, pe_working_set_t *data_set)
 
     /* This will zero the entire struct without freeing anything first, so
      * callers should never call pcmk__schedule_actions() with a populated data
-     * set unless pe_flag_have_status is set (i.e. cluster_status() was
+     * set unless pcmk_sched_have_status is set (i.e. cluster_status() was
      * previously called, whether directly or via pcmk__schedule_actions()).
      */
     set_working_set_defaults(data_set);
@@ -761,7 +761,7 @@ unpack_cib(xmlNode *cib, unsigned long long flags, pe_working_set_t *data_set)
 
     pe__set_working_set_flags(data_set, flags);
     data_set->input = cib;
-    cluster_status(data_set); // Sets pe_flag_have_status
+    cluster_status(data_set); // Sets pcmk_sched_have_status
 }
 
 /*!

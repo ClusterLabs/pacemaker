@@ -144,7 +144,7 @@ cluster_status(pe_working_set_t * data_set)
                   data_set->blocked_resources);
     }
 
-    pe__set_working_set_flags(data_set, pe_flag_have_status);
+    pe__set_working_set_flags(data_set, pcmk_sched_have_status);
     return TRUE;
 }
 
@@ -282,7 +282,7 @@ cleanup_calculations(pe_working_set_t * data_set)
         return;
     }
 
-    pe__clear_working_set_flags(data_set, pe_flag_have_status);
+    pe__clear_working_set_flags(data_set, pcmk_sched_have_status);
     if (data_set->config_hash != NULL) {
         g_hash_table_destroy(data_set->config_hash);
     }
