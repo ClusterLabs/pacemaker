@@ -474,7 +474,7 @@ behave and can be easily set using the ``--meta`` option of the
    |                            |                                  |   resource agent's monitor of an existing instance   |
    |                            |                                  |   is capable of detecting any problems that could be |
    |                            |                                  |   caused; note that any resources ordered after this |
-   |                            |                                  |   will still need to be restarted)                   |
+   |                            |                                  |   will still need to be restarted) *(since 2.1.3)*   |
    +----------------------------+----------------------------------+------------------------------------------------------+
    | allow-migrate              | TRUE for ocf:pacemaker:remote    | Whether the cluster should try to "live migrate"     |
    |                            | resources, FALSE otherwise       | this resource when it needs to be moved (see         |
