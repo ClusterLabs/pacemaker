@@ -114,7 +114,7 @@ class CTSTest:
         elapsed = 0
         if key in self.timer:
             elapsed = time.time() - self.timer[key]
-            s = key == "test" and self.name or "%s:%s" % (self.name,key)
+            s = "%s:%s" % (self.name, key)
             self.debug("%s runtime: %.2f" % (s, elapsed))
             del self.timer[key]
         return elapsed
@@ -195,7 +195,7 @@ class CTSTest:
                         add_err = False
 
                 if add_err:
-                    self._logger.log(prefix + " " + match)
+                    self._logger.log("%s %s" % (prefix, match))
                     errcount += 1
             else:
                 break
@@ -247,7 +247,7 @@ class CTSTest:
                 if c.type == "rsc_colocation" and c.target == self.r_o2cb:
                     self.r_ocfs2.append(c.rsc)
 
-        self.debug("Found ocfs2 filesystems: %s" % repr(self.r_ocfs2))
+        self.debug("Found ocfs2 filesystems: %s" % self.r_ocfs2)
         return len(self.r_ocfs2)
 
     def can_run_now(self, node):
@@ -695,7 +695,7 @@ class SimulStartLite(CTSTest):
     def __call__(self, dummy):
         '''Perform the 'SimulStartList' setup work. '''
         self.incr("calls")
-        self.debug("Setup: " + self.name)
+        self.debug("Setup: %s" % self.name)
 
         #        We ignore the "node" parameter...
         node_list = []
@@ -735,7 +735,7 @@ class SimulStartLite(CTSTest):
 
             # Remove node_list messages from watch.unmatched
             for node in node_list:
-                self._logger.debug("Dealing with stonith operations for %s" % repr(node_list))
+                self._logger.debug("Dealing with stonith operations for %s" % node_list)
                 if watch.unmatched:
                     try:
                         watch.unmatched.remove(uppat % node)
@@ -767,7 +767,7 @@ class SimulStartLite(CTSTest):
                 unstable.append(node)
 
         if did_fail:
-            return self.failure("Unstarted nodes exist: " + repr(unstable))
+            return self.failure("Unstarted nodes exist: %s" % unstable)
 
         unstable = []
         for node in self._env["nodes"]:
@@ -776,7 +776,7 @@ class SimulStartLite(CTSTest):
                 unstable.append(node)
 
         if did_fail:
-            return self.failure("Unstable cluster nodes exist: " + repr(unstable))
+            return self.failure("Unstable cluster nodes exist: %s" % unstable)
 
         return self.success()
 
@@ -795,7 +795,7 @@ class SimulStopLite(CTSTest):
         '''Perform the 'SimulStopLite' setup work. '''
         self.incr("calls")
 
-        self.debug("Setup: " + self.name)
+        self.debug("Setup: %s" % self.name)
 
         #     We ignore the "node" parameter...
         watchpats = []
@@ -831,12 +831,11 @@ class SimulStopLite(CTSTest):
                 up_nodes.append(node)
 
         if did_fail:
-            return self.failure("Active nodes exist: " + repr(up_nodes))
+            return self.failure("Active nodes exist: %s" % up_nodes)
 
-        self._logger.log("Warn: All nodes stopped but CTS didn't detect: "
-                    + repr(watch.unmatched))
+        self._logger.log("Warn: All nodes stopped but CTS didn't detect: %s" % watch.unmatched)
 
-        return self.failure("Missing log message: "+repr(watch.unmatched))
+        return self.failure("Missing log message: %s " % watch.unmatched)
 
     def is_applicable(self):
         '''SimulStopLite is a setup test and never applicable'''
@@ -917,7 +916,7 @@ class StopTest(CTSTest):
 
             for regex in watch.unmatched:
                 self._logger.log ("ERROR: Shutdown pattern not found: %s" % regex)
-                UnmatchedList +=  regex + "||"
+                UnmatchedList +=  "%s||" % regex
                 failreason = "Missing shutdown pattern"
 
         self._cm.cluster_stable(self._env["DeadTime"])
