@@ -267,12 +267,14 @@ class RemoteDriver(CTSTest):
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
         self.name = "RemoteDriver"
-        self.start = StartTest(cm)
-        self.startall = SimulStartLite(cm)
-        self.stop = StopTest(cm)
 
+        self._corosync_enabled = False
+        self._pacemaker_enabled = False
         self._remote_node = None
         self._remote_rsc = "remote-rsc"
+        self._start = StartTest(cm)
+        self._startall = SimulStartLite(cm)
+        self._stop = StopTest(cm)
 
         self.reset()
 
@@ -357,19 +359,19 @@ class RemoteDriver(CTSTest):
             self._remote_node_added = True
 
     def disable_services(self, node):
-        self.corosync_enabled = self._env.service_is_enabled(node, "corosync")
-        if self.corosync_enabled:
+        self._corosync_enabled = self._env.service_is_enabled(node, "corosync")
+        if self._corosync_enabled:
             self._env.disable_service(node, "corosync")
 
-        self.pacemaker_enabled = self._env.service_is_enabled(node, "pacemaker")
-        if self.pacemaker_enabled:
+        self._pacemaker_enabled = self._env.service_is_enabled(node, "pacemaker")
+        if self._pacemaker_enabled:
             self._env.disable_service(node, "pacemaker")
 
     def restore_services(self, node):
-        if self.corosync_enabled:
+        if self._corosync_enabled:
             self._env.enable_service(node, "corosync")
 
-        if self.pacemaker_enabled:
+        if self._pacemaker_enabled:
             self._env.enable_service(node, "pacemaker")
 
     def stop_pcmk_remote(self, node):
@@ -414,7 +416,7 @@ class RemoteDriver(CTSTest):
         self._rsh(node, "crm_resource -D -r %s -t primitive" % self._remote_rsc)
         self._rsh(node, "crm_resource -D -r %s -t primitive" % self._remote_node)
 
-        if not self.stop(node):
+        if not self._stop(node):
             self.fail("Failed to shutdown cluster node %s" % node)
             return
 
@@ -663,7 +665,7 @@ class RemoteDriver(CTSTest):
         self.incr("calls")
         self.reset()
 
-        ret = self.startall(None)
+        ret = self._startall(None)
         if not ret:
             return self.failure("setup failed: could not start all nodes")
 
