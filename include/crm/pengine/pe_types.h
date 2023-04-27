@@ -211,18 +211,6 @@ struct pe_working_set_s {
     guint node_pending_timeout; // Node pending timeout
 };
 
-enum pe_check_parameters {
-    /* Clear fail count if parameters changed for un-expired start or monitor
-     * last_failure.
-     */
-    pe_check_last_failure,
-
-    /* Clear fail count if parameters changed for start, monitor, promote, or
-     * migrate_from actions for active resources.
-     */
-    pe_check_active,
-};
-
 struct pe_node_shared_s {
     const char *id;
     const char *uname;

@@ -35,6 +35,14 @@ enum pe_graph_flags {
 };
 //!@}
 
+//!@{
+//! \deprecated Do not use
+enum pe_check_parameters {
+    pe_check_last_failure,
+    pe_check_active,
+};
+//!@}
+
 //!< \deprecated Use pe_action_t instead
 typedef struct pe_action_s action_t;
 
