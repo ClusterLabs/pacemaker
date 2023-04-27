@@ -315,33 +315,6 @@ apply_this_with(gpointer data, gpointer user_data)
 
 /*!
  * \internal
- * \brief Apply a "with this" colocation to a node's allowed node scores
- *
- * \param[in,out] data       Colocation to apply
- * \param[in,out] user_data  Resource being assigned
- */
-static void
-apply_with_this(void *data, void *user_data)
-{
-    pcmk__colocation_t *colocation = (pcmk__colocation_t *) data;
-    pe_resource_t *rsc = (pe_resource_t *) user_data;
-
-    pe_resource_t *other = colocation->dependent;
-    const float factor = colocation->score / (float) INFINITY;
-
-    if (!pcmk__colocation_has_influence(colocation, NULL)) {
-        return;
-    }
-    pe_rsc_trace(rsc,
-                 "%s: Incorporating attenuated %s assignment scores due "
-                 "to colocation %s", rsc->id, other->id, colocation->id);
-    other->cmds->add_colocated_node_scores(other, rsc->id, &rsc->allowed_nodes,
-                                           colocation->node_attribute, factor,
-                                           pcmk__coloc_select_active);
-}
-
-/*!
- * \internal
  * \brief Update a Pacemaker Remote node once its connection has been assigned
  *
  * \param[in] connection  Connection resource that has been assigned
@@ -420,7 +393,7 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer)
                           rsc->cluster);
 
     colocations = pcmk__with_this_colocations(rsc);
-    g_list_foreach(colocations, apply_with_this, rsc);
+    g_list_foreach(colocations, pcmk__add_dependent_scores, rsc);
     g_list_free(colocations);
 
     if (rsc->next_role == RSC_ROLE_STOPPED) {
