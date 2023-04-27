@@ -301,7 +301,7 @@ class RemoteDriver(CTSTest):
         if not self.fail_string:
             self.fail_string = msg
 
-    def get_othernode(self, node):
+    def _get_other_node(self, node):
         for othernode in self._env["nodes"]:
             if othernode == node:
                 # we don't want to try and use the cib that we just shutdown.
@@ -310,19 +310,19 @@ class RemoteDriver(CTSTest):
 
             return othernode
 
-    def del_rsc(self, node, rsc):
-        othernode = self.get_othernode(node)
+    def _del_rsc(self, node, rsc):
+        othernode = self._get_other_node(node)
         (rc, _) = self._rsh(othernode, "crm_resource -D -r %s -t primitive" % rsc)
         if rc != 0:
             self.fail("Removal of resource '%s' failed" % rsc)
 
-    def add_rsc(self, node, rsc_xml):
-        othernode = self.get_othernode(node)
+    def _add_rsc(self, node, rsc_xml):
+        othernode = self._get_other_node(node)
         (rc, _) = self._rsh(othernode, "cibadmin -C -o resources -X '%s'" % rsc_xml)
         if rc != 0:
             self.fail("resource creation failed")
 
-    def add_primitive_rsc(self, node):
+    def _add_primitive_rsc(self, node):
         rsc_xml = """
 <primitive class="ocf" id="%(node)s" provider="heartbeat" type="Dummy">
   <meta_attributes id="%(node)s-meta_attributes"/>
@@ -330,11 +330,11 @@ class RemoteDriver(CTSTest):
     <op id="%(node)s-monitor-interval-20s" interval="20s" name="monitor"/>
   </operations>
 </primitive>""" % { "node": self._remote_rsc }
-        self.add_rsc(node, rsc_xml)
+        self._add_rsc(node, rsc_xml)
         if not self.failed:
             self._remote_rsc_added = True
 
-    def add_connection_rsc(self, node):
+    def _add_connection_rsc(self, node):
         rsc_xml = """
 <primitive class="ocf" id="%(node)s" provider="pacemaker" type="remote">
   <instance_attributes id="%(node)s-instance_attributes">
@@ -356,11 +356,11 @@ class RemoteDriver(CTSTest):
 </primitive>
 """ % { "node": self._remote_node }
 
-        self.add_rsc(node, rsc_xml)
+        self._add_rsc(node, rsc_xml)
         if not self.failed:
             self._remote_node_added = True
 
-    def disable_services(self, node):
+    def _disable_services(self, node):
         self._corosync_enabled = self._env.service_is_enabled(node, "corosync")
         if self._corosync_enabled:
             self._env.disable_service(node, "corosync")
@@ -369,14 +369,14 @@ class RemoteDriver(CTSTest):
         if self._pacemaker_enabled:
             self._env.disable_service(node, "pacemaker")
 
-    def restore_services(self, node):
+    def _enable_services(self, node):
         if self._corosync_enabled:
             self._env.enable_service(node, "corosync")
 
         if self._pacemaker_enabled:
             self._env.enable_service(node, "pacemaker")
 
-    def stop_pcmk_remote(self, node):
+    def _stop_pcmk_remote(self, node):
         # disable pcmk remote
         for _ in range(10):
             (rc, _) = self._rsh(node, "service pacemaker_remote stop")
@@ -385,7 +385,7 @@ class RemoteDriver(CTSTest):
             else:
                 break
 
-    def start_pcmk_remote(self, node):
+    def _start_pcmk_remote(self, node):
         for _ in range(10):
             (rc, _) = self._rsh(node, "service pacemaker_remote start")
             if rc != 0:
@@ -394,17 +394,17 @@ class RemoteDriver(CTSTest):
                 self._pcmk_started = True
                 break
 
-    def freeze_pcmk_remote(self, node):
+    def _freeze_pcmk_remote(self, node):
         """ Simulate a Pacemaker Remote daemon failure. """
 
         # We freeze the process.
         self._rsh(node, "killall -STOP pacemaker-remoted")
 
-    def resume_pcmk_remote(self, node):
+    def _resume_pcmk_remote(self, node):
         # We resume the process.
         self._rsh(node, "killall -CONT pacemaker-remoted")
 
-    def start_metal(self, node):
+    def _start_metal(self, node):
         # Cluster nodes are reused as remote nodes in remote tests. If cluster
         # services were enabled at boot, in case the remote node got fenced, the
         # cluster node would join instead of the expected remote one. Meanwhile
@@ -412,7 +412,7 @@ class RemoteDriver(CTSTest):
         # the situations might not be able to be orchestrated gracefully any more.
         #
         # Temporarily disable any enabled cluster serivces.
-        self.disable_services(node)
+        self._disable_services(node)
 
         # make sure the resource doesn't already exist for some reason
         self._rsh(node, "crm_resource -D -r %s -t primitive" % self._remote_rsc)
@@ -422,7 +422,7 @@ class RemoteDriver(CTSTest):
             self.fail("Failed to shutdown cluster node %s" % node)
             return
 
-        self.start_pcmk_remote(node)
+        self._start_pcmk_remote(node)
 
         if not self._pcmk_started:
             self.fail("Failed to start pacemaker_remote on node %s" % node)
@@ -434,7 +434,7 @@ class RemoteDriver(CTSTest):
         watch = self.create_watch(pats, 120)
         watch.set_watch()
 
-        self.add_connection_rsc(node)
+        self._add_connection_rsc(node)
 
         self.set_timer("remoteMetalInit")
         watch.look_for_all()
@@ -499,7 +499,7 @@ class RemoteDriver(CTSTest):
 
         # freeze the pcmk remote daemon. this will result in fencing
         self.debug("Force stopped active remote node")
-        self.freeze_pcmk_remote(node)
+        self._freeze_pcmk_remote(node)
 
         self.debug("Waiting for remote node to be fenced.")
         self.set_timer("remoteMetalFence")
@@ -521,7 +521,7 @@ class RemoteDriver(CTSTest):
         watch.set_watch()
 
         # start the remote node again watch it integrate back into cluster.
-        self.start_pcmk_remote(node)
+        self._start_pcmk_remote(node)
         if not self._pcmk_started:
             self.fail("Failed to start pacemaker_remote on node %s" % node)
             return
@@ -534,7 +534,7 @@ class RemoteDriver(CTSTest):
             self.fail("Unmatched patterns: %s" % watch.unmatched)
             return
 
-    def add_dummy_rsc(self, node):
+    def _add_dummy_rsc(self, node):
         if self.failed:
             return
 
@@ -546,7 +546,7 @@ class RemoteDriver(CTSTest):
         watch.set_watch()
 
         # Add a resource that must live on remote-node
-        self.add_primitive_rsc(node)
+        self._add_primitive_rsc(node)
 
         # force that rsc to prefer the remote node.
         (rc, _) = self._cm.rsh(node, "crm_resource -M -r %s -N %s -f" % (self._remote_rsc, self._remote_node), verbose=1)
@@ -582,7 +582,7 @@ class RemoteDriver(CTSTest):
             return
 
     def cleanup_metal(self, node):
-        self.restore_services(node)
+        self._enable_services(node)
 
         if not self._pcmk_started:
             return
@@ -600,19 +600,19 @@ class RemoteDriver(CTSTest):
 
         self.set_timer("remoteMetalCleanup")
 
-        self.resume_pcmk_remote(node)
+        self._resume_pcmk_remote(node)
 
         if self._remote_rsc_added:
             # Remove dummy resource added for remote node tests
             self.debug("Cleaning up dummy rsc put on remote node")
-            self._rsh(self.get_othernode(node), "crm_resource -U -r %s" % self._remote_rsc)
-            self.del_rsc(node, self._remote_rsc)
+            self._rsh(self._get_other_node(node), "crm_resource -U -r %s" % self._remote_rsc)
+            self._del_rsc(node, self._remote_rsc)
 
         if self._remote_node_added:
             # Remove remote node's connection resource
             self.debug("Cleaning up remote node connection resource")
-            self._rsh(self.get_othernode(node), "crm_resource -U -r %s" % self._remote_node)
-            self.del_rsc(node, self._remote_node)
+            self._rsh(self._get_other_node(node), "crm_resource -U -r %s" % self._remote_node)
+            self._del_rsc(node, self._remote_node)
 
         watch.look_for_all()
         self.log_timer("remoteMetalCleanup")
@@ -620,7 +620,7 @@ class RemoteDriver(CTSTest):
         if watch.unmatched:
             self.fail("Unmatched patterns: %s" % watch.unmatched)
 
-        self.stop_pcmk_remote(node)
+        self._stop_pcmk_remote(node)
 
         self.debug("Waiting for the cluster to recover")
         self._cm.cluster_stable()
@@ -628,9 +628,9 @@ class RemoteDriver(CTSTest):
         if self._remote_node_added:
             # Remove remote node itself
             self.debug("Cleaning up node entry for remote node")
-            self._rsh(self.get_othernode(node), "crm_node --force --remove %s" % self._remote_node)
+            self._rsh(self._get_other_node(node), "crm_node --force --remove %s" % self._remote_node)
 
-    def setup_env(self, node):
+    def _setup_env(self, node):
         self._remote_node = "remote-%s" % node
 
         # we are assuming if all nodes have a key, that it is
@@ -671,9 +671,9 @@ class RemoteDriver(CTSTest):
         if not ret:
             return self.failure("setup failed: could not start all nodes")
 
-        self.setup_env(node)
-        self.start_metal(node)
-        self.add_dummy_rsc(node)
+        self._setup_env(node)
+        self._start_metal(node)
+        self._add_dummy_rsc(node)
         return True
 
     def __call__(self, node):
