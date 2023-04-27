@@ -37,10 +37,10 @@ Pacemaker supports several classes, or standards, of resource agents:
 * OCF
 * LSB
 * Systemd
-* Upstart (deprecated)
 * Service
 * Fencing
 * Nagios
+* Upstart *(deprecated since 2.1.0)*
 
 
 .. index::
@@ -129,34 +129,6 @@ as it relates to init scripts.
 
 
 .. index::
-   single: Resource; Upstart
-   single: Upstart; resources
-
-Upstart
-_______
-
-Some Linux distributions previously used `Upstart
-<https://upstart.ubuntu.com/>`_ for system initialization and service
-management. Pacemaker is able to manage services using Upstart if the local
-system supports them and support was enabled when your Pacemaker software was
-built.
-
-The *jobs* that specify how services are managed are usually provided by the
-operating system distribution.
-
-.. important::
-
-   Make sure the host is *not* configured to start any Upstart services at boot
-   that will be controlled by the cluster.
-
-.. warning::
-
-   Upstart support is deprecated in Pacemaker. Upstart is no longer actively
-   maintained, and test platforms for it are no longer readily usable. Support
-   will be dropped entirely at the next major release of Pacemaker.
-
-
-.. index::
    single: Resource; System Services
    single: System Service; resources
 
@@ -234,6 +206,34 @@ inside, but plugin resources can be useful when it is not practical to modify
 the virtual machine or container image for this purpose.
 
 
+.. index::
+   single: Resource; Upstart
+   single: Upstart; resources
+
+Upstart
+_______
+
+Some Linux distributions previously used `Upstart
+<https://upstart.ubuntu.com/>`_ for system initialization and service
+management. Pacemaker is able to manage services using Upstart if the local
+system supports them and support was enabled when your Pacemaker software was
+built.
+
+The *jobs* that specify how services are managed are usually provided by the
+operating system distribution.
+
+.. important::
+
+   Make sure the host is *not* configured to start any Upstart services at boot
+   that will be controlled by the cluster.
+
+.. warning::
+
+   Upstart support is deprecated in Pacemaker. Upstart is no longer actively
+   maintained, and test platforms for it are no longer readily usable. Support
+   will be dropped entirely at the next major release of Pacemaker.
+
+
 .. _primitive-resource:
 
 Resource Properties
@@ -260,7 +260,7 @@ where to find that resource agent and what standards it conforms to.
    |             |                                                                  |
    |             | The standard the resource agent conforms to. Allowed values:     |
    |             | ``lsb``, ``nagios``, ``ocf``, ``service``, ``stonith``,          |
-   |             | ``systemd``, ``upstart``                                         |
+   |             | ``systemd``, and ``upstart`` *(deprecated since 2.1.0)*          |
    +-------------+------------------------------------------------------------------+
    | description | .. index::                                                       |
    |             |    single: description; resource                                 |
