@@ -88,6 +88,9 @@ extern "C" {
 //! \deprecated Use pcmk_sched_no_counts instead
 #define pe_flag_no_counts               pcmk_sched_no_counts
 
+//! \deprecated Use pcmk_sched_no_compat instead
+#define pe_flag_no_compat               pcmk_sched_no_compat
+
 //!@{
 //! \deprecated Do not use (unused by Pacemaker)
 enum pe_graph_flags {

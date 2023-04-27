@@ -527,7 +527,7 @@ main(int argc, char **argv)
     if (pcmk_is_set(options.flags, pcmk_sim_show_utilization)) {
         pe__set_working_set_flags(data_set, pe_flag_show_utilization);
     }
-    pe__set_working_set_flags(data_set, pe_flag_no_compat);
+    pe__set_working_set_flags(data_set, pcmk_sched_no_compat);
 
     if (options.test_dir != NULL) {
         data_set->priv = out;

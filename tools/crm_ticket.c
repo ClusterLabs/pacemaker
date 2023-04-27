@@ -750,7 +750,8 @@ main(int argc, char **argv)
         exit_code = CRM_EX_OSERR;
         goto done;
     }
-    pe__set_working_set_flags(data_set, pcmk_sched_no_counts|pe_flag_no_compat);
+    pe__set_working_set_flags(data_set,
+                              pcmk_sched_no_counts|pcmk_sched_no_compat);
 
     cib_conn = cib_new();
     if (cib_conn == NULL) {

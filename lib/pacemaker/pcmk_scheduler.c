@@ -248,7 +248,7 @@ apply_shutdown_locks(pe_working_set_t *data_set)
 static void
 count_available_nodes(pe_working_set_t *data_set)
 {
-    if (pcmk_is_set(data_set->flags, pe_flag_no_compat)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_no_compat)) {
         return;
     }
 

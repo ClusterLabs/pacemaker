@@ -99,7 +99,7 @@ handle_pecalc_request(pcmk__request_t *request)
     if (process) {
         pcmk__schedule_actions(converted,
                                pcmk_sched_no_counts
-                               |pe_flag_no_compat
+                               |pcmk_sched_no_compat
                                |pe_flag_show_utilization, data_set);
     }
 

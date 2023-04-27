@@ -77,11 +77,6 @@ typedef struct resource_object_functions_s {
 
 typedef struct resource_alloc_functions_s resource_alloc_functions_t;
 
-/*! Skip deprecated code that is kept solely for backward API compatibility.
- * (Internal code should always set this.)
- */
-#  define pe_flag_no_compat             0x01000000ULL
-
 #  define pe_flag_show_scores           0x02000000ULL
 #  define pe_flag_show_utilization      0x04000000ULL
 

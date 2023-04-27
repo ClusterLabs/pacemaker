@@ -1247,7 +1247,8 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
     pcmk__output_t *out = data_set->priv;
 
     pe_reset_working_set(data_set);
-    pe__set_working_set_flags(data_set, pcmk_sched_no_counts|pe_flag_no_compat);
+    pe__set_working_set_flags(data_set,
+                              pcmk_sched_no_counts|pcmk_sched_no_compat);
     rc = update_working_set_from_cib(out, data_set, cib);
     if (rc != pcmk_rc_ok) {
         return rc;
@@ -1282,7 +1283,7 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
         }
 
         pcmk__schedule_actions(data_set->input,
-                               pcmk_sched_no_counts|pe_flag_no_compat,
+                               pcmk_sched_no_counts|pcmk_sched_no_compat,
                                data_set);
 
         prev_quiet = out->is_quiet(out);
@@ -1859,7 +1860,7 @@ wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
             return rc;
         }
         pcmk__schedule_actions(data_set->input,
-                               pcmk_sched_no_counts|pe_flag_no_compat,
+                               pcmk_sched_no_counts|pcmk_sched_no_compat,
                                data_set);
 
         if (!printed_version_warning) {

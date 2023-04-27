@@ -102,7 +102,7 @@ pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith, cib_t *cib,
 
     data_set = pe_new_working_set();
     CRM_ASSERT(data_set != NULL);
-    pe__set_working_set_flags(data_set, pe_flag_no_compat);
+    pe__set_working_set_flags(data_set, pcmk_sched_no_compat);
 
     data_set->input = cib_copy;
     data_set->priv = out;

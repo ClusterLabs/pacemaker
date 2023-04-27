@@ -332,7 +332,7 @@ profile_file(const char *xml_file, long long repeat, pe_working_set_t *data_set,
     xmlNode *cib_object = NULL;
     clock_t start = 0;
     clock_t end;
-    unsigned long long data_set_flags = pe_flag_no_compat;
+    unsigned long long data_set_flags = pcmk_sched_no_compat;
 
     CRM_ASSERT(out != NULL);
 
@@ -874,7 +874,7 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
 
     if (pcmk_any_flags_set(flags, pcmk_sim_process | pcmk_sim_simulate)) {
         pcmk__output_t *logger_out = NULL;
-        unsigned long long data_set_flags = pe_flag_no_compat;
+        unsigned long long data_set_flags = pcmk_sched_no_compat;
 
         if (pcmk_is_set(data_set->flags, pe_flag_show_scores)) {
             data_set_flags |= pe_flag_show_scores;

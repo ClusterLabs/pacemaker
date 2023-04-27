@@ -58,7 +58,7 @@ static qb_ipcs_service_t *ipcs = NULL;
 static xmlNode *local_cib = NULL;
 static pe_working_set_t *fenced_data_set = NULL;
 static const unsigned long long data_set_flags = pcmk_sched_location_only
-                                                 | pe_flag_no_compat
+                                                 |pcmk_sched_no_compat
                                                  |pcmk_sched_no_counts;
 
 static cib_t *cib_api = NULL;
