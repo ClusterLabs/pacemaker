@@ -2136,6 +2136,9 @@ AllTestClasses.append(RemoteLXC)
 
 
 class RemoteBasic(RemoteDriver):
+    def __init__(self, cm):
+        RemoteDriver.__init__(self, cm)
+        self.name = "RemoteBasic"
 
     def __call__(self, node):
         '''Perform the 'RemoteBaremetal' test. '''
@@ -2156,6 +2159,9 @@ class RemoteBasic(RemoteDriver):
 AllTestClasses.append(RemoteBasic)
 
 class RemoteStonithd(RemoteDriver):
+    def __init__(self, cm):
+        RemoteDriver.__init__(self, cm)
+        self.name = "RemoteStonithd"
 
     def __call__(self, node):
         '''Perform the 'RemoteStonithd' test. '''
@@ -2197,6 +2203,9 @@ AllTestClasses.append(RemoteStonithd)
 
 
 class RemoteMigrate(RemoteDriver):
+    def __init__(self, cm):
+        RemoteDriver.__init__(self, cm)
+        self.name = "RemoteMigrate"
 
     def __call__(self, node):
         '''Perform the 'RemoteMigrate' test. '''
@@ -2228,6 +2237,9 @@ AllTestClasses.append(RemoteMigrate)
 
 
 class RemoteRscFailure(RemoteDriver):
+    def __init__(self, cm):
+        RemoteDriver.__init__(self, cm)
+        self.name = "RemoteRscFailure"
 
     def __call__(self, node):
         '''Perform the 'RemoteRscFailure' test. '''

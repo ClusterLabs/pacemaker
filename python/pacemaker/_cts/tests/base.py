@@ -59,6 +59,7 @@ class CTSTest:
         ,        "auditfail":0}
 
         self.audits = []
+        self.name = None
         self.templates = PatternSelector(cm["Name"])
         self.timer = {}  # timers
 
@@ -265,7 +266,7 @@ class RemoteDriver(CTSTest):
 
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name = self.__class__.__name__
+        self.name = "RemoteDriver"
         self.start = StartTest(cm)
         self.startall = SimulStartLite(cm)
         self.stop = StopTest(cm)
@@ -846,7 +847,7 @@ class StartTest(CTSTest):
     '''Start (activate) the cluster manager on a node'''
     def __init__(self, cm, debug=None):
         CTSTest.__init__(self,cm)
-        self.name = "start"
+        self.name = "Start"
         self.debug = debug
 
     def __call__(self, node):
