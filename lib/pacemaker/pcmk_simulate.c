@@ -198,7 +198,7 @@ reset(pe_working_set_t *data_set, xmlNodePtr input, pcmk__output_t *out,
         pe__set_working_set_flags(data_set, pcmk_sched_sanitized);
     }
     if (pcmk_is_set(flags, pcmk_sim_show_scores)) {
-        pe__set_working_set_flags(data_set, pe_flag_show_scores);
+        pe__set_working_set_flags(data_set, pcmk_sched_output_scores);
     }
     if (pcmk_is_set(flags, pcmk_sim_show_utilization)) {
         pe__set_working_set_flags(data_set, pe_flag_show_utilization);
@@ -353,8 +353,8 @@ profile_file(const char *xml_file, long long repeat, pe_working_set_t *data_set,
         return;
     }
 
-    if (pcmk_is_set(data_set->flags, pe_flag_show_scores)) {
-        data_set_flags |= pe_flag_show_scores;
+    if (pcmk_is_set(data_set->flags, pcmk_sched_output_scores)) {
+        data_set_flags |= pcmk_sched_output_scores;
     }
     if (pcmk_is_set(data_set->flags, pe_flag_show_utilization)) {
         data_set_flags |= pe_flag_show_utilization;
@@ -876,21 +876,22 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
         pcmk__output_t *logger_out = NULL;
         unsigned long long data_set_flags = pcmk_sched_no_compat;
 
-        if (pcmk_is_set(data_set->flags, pe_flag_show_scores)) {
-            data_set_flags |= pe_flag_show_scores;
+        if (pcmk_is_set(data_set->flags, pcmk_sched_output_scores)) {
+            data_set_flags |= pcmk_sched_output_scores;
         }
         if (pcmk_is_set(data_set->flags, pe_flag_show_utilization)) {
             data_set_flags |= pe_flag_show_utilization;
         }
 
         if (pcmk_all_flags_set(data_set->flags,
-                               pe_flag_show_scores|pe_flag_show_utilization)) {
+                               pcmk_sched_output_scores
+                               |pe_flag_show_utilization)) {
             PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
             out->begin_list(out, NULL, NULL,
                             "Assignment Scores and Utilization Information");
             printed = pcmk_rc_ok;
 
-        } else if (pcmk_is_set(data_set->flags, pe_flag_show_scores)) {
+        } else if (pcmk_is_set(data_set->flags, pcmk_sched_output_scores)) {
             PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
             out->begin_list(out, NULL, NULL, "Assignment Scores");
             printed = pcmk_rc_ok;
@@ -964,7 +965,7 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
     set_effective_date(data_set, true, use_date);
 
     if (pcmk_is_set(flags, pcmk_sim_show_scores)) {
-        pe__set_working_set_flags(data_set, pe_flag_show_scores);
+        pe__set_working_set_flags(data_set, pcmk_sched_output_scores);
     }
     if (pcmk_is_set(flags, pcmk_sim_show_utilization)) {
         pe__set_working_set_flags(data_set, pe_flag_show_utilization);

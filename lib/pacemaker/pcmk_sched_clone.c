@@ -74,7 +74,8 @@ pcmk__clone_assign(pe_resource_t *rsc, const pe_node_t *prefer,
     g_list_foreach(colocations, pcmk__add_dependent_scores, rsc);
     g_list_free(colocations);
 
-    pe__show_node_scores(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
+    pe__show_node_scores(!pcmk_is_set(rsc->cluster->flags,
+                                      pcmk_sched_output_scores),
                          rsc, __func__, rsc->allowed_nodes, rsc->cluster);
 
     rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance);

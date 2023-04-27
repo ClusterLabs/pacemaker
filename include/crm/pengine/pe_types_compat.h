@@ -91,6 +91,9 @@ extern "C" {
 //! \deprecated Use pcmk_sched_no_compat instead
 #define pe_flag_no_compat               pcmk_sched_no_compat
 
+//! \deprecated Use pcmk_sched_output_scores instead
+#define pe_flag_show_scores             pcmk_sched_output_scores
+
 //!@{
 //! \deprecated Do not use (unused by Pacemaker)
 enum pe_graph_flags {

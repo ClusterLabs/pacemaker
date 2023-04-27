@@ -875,7 +875,7 @@ show_promotion_score(pe_resource_t *instance)
 {
     pe_node_t *chosen = instance->fns->location(instance, NULL, FALSE);
 
-    if (pcmk_is_set(instance->cluster->flags, pe_flag_show_scores)
+    if (pcmk_is_set(instance->cluster->flags, pcmk_sched_output_scores)
         && !pcmk__is_daemon && (instance->cluster->priv != NULL)) {
 
         pcmk__output_t *out = instance->cluster->priv;
