@@ -14,6 +14,7 @@
 #include <glib.h>
 
 #include <crm/lrmd_internal.h>
+#include <crm/common/scheduler_internal.h>
 #include <pacemaker-internal.h>
 #include "libpacemaker_private.h"
 
@@ -1829,7 +1830,7 @@ process_rsc_history(const xmlNode *rsc_entry, pe_resource_t *rsc,
                  * definition appear to have been changed. Defer the check until
                  * later in this case.
                  */
-                pe__add_param_check(rsc_op, rsc, node, pe_check_active,
+                pe__add_param_check(rsc_op, rsc, node, pcmk__check_active,
                                     rsc->cluster);
 
             } else if (pcmk__check_action_config(rsc, node, rsc_op)

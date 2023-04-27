@@ -19,6 +19,7 @@
 #  include <crm/common/internal.h>
 #  include <crm/common/options_internal.h>
 #  include <crm/common/output_internal.h>
+#  include <crm/common/scheduler_internal.h>
 
 const char *pe__resource_description(const pe_resource_t *rsc, uint32_t show_opts);
 
@@ -612,12 +613,12 @@ const char *pe_node_attribute_raw(const pe_node_t *node, const char *name);
 bool pe__is_universal_clone(const pe_resource_t *rsc,
                             const pe_working_set_t *data_set);
 void pe__add_param_check(const xmlNode *rsc_op, pe_resource_t *rsc,
-                         pe_node_t *node, enum pe_check_parameters,
+                         pe_node_t *node, enum pcmk__check_parameters,
                          pe_working_set_t *data_set);
 void pe__foreach_param_check(pe_working_set_t *data_set,
                              void (*cb)(pe_resource_t*, pe_node_t*,
                                         const xmlNode*,
-                                        enum pe_check_parameters));
+                                        enum pcmk__check_parameters));
 void pe__free_param_checks(pe_working_set_t *data_set);
 
 bool pe__shutdown_requested(const pe_node_t *node);

@@ -16,6 +16,18 @@
 extern "C" {
 #endif
 
+enum pcmk__check_parameters {
+    /* Clear fail count if parameters changed for un-expired start or monitor
+     * last_failure.
+     */
+    pcmk__check_last_failure,
+
+    /* Clear fail count if parameters changed for start, monitor, promote, or
+     * migrate_from actions for active resources.
+     */
+    pcmk__check_active,
+};
+
 #ifdef __cplusplus
 }
 #endif
