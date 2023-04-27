@@ -744,7 +744,7 @@ link_rsc2remotenode(pe_working_set_t *data_set, pe_resource_t *new_rsc)
         return;
     }
 
-    if (pcmk_is_set(data_set->flags, pe_flag_quick_location)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_location_only)) {
         /* remote_nodes and remote_resources are not linked in quick location calculations */
         return;
     }
@@ -848,7 +848,7 @@ unpack_resources(const xmlNode *xml_resources, pe_working_set_t * data_set)
 
     data_set->resources = g_list_sort(data_set->resources,
                                       pe__cmp_rsc_priority);
-    if (pcmk_is_set(data_set->flags, pe_flag_quick_location)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_location_only)) {
         /* Ignore */
 
     } else if (pcmk_is_set(data_set->flags, pcmk_sched_fencing_enabled)

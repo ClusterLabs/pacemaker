@@ -76,6 +76,9 @@ extern "C" {
 //! \deprecated Use pcmk_sched_have_remote_nodes instead
 #define pe_flag_have_remote_nodes       pcmk_sched_have_remote_nodes
 
+//! \deprecated Use pcmk_sched_location_only instead
+#define pe_flag_quick_location          pcmk_sched_location_only
+
 //!@{
 //! \deprecated Do not use (unused by Pacemaker)
 enum pe_graph_flags {

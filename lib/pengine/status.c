@@ -108,7 +108,7 @@ cluster_status(pe_working_set_t * data_set)
     unpack_config(section, data_set);
 
    if (!pcmk_any_flags_set(data_set->flags,
-                           pe_flag_quick_location|pcmk_sched_quorate)
+                           pcmk_sched_location_only|pcmk_sched_quorate)
        && (data_set->no_quorum_policy != pcmk_no_quorum_ignore)) {
         crm_warn("Fencing and resource management disabled due to lack of quorum");
     }
@@ -119,7 +119,7 @@ cluster_status(pe_working_set_t * data_set)
 
     section = get_xpath_object("//" XML_CIB_TAG_RESOURCES, data_set->input,
                                LOG_TRACE);
-    if (!pcmk_is_set(data_set->flags, pe_flag_quick_location)) {
+    if (!pcmk_is_set(data_set->flags, pcmk_sched_location_only)) {
         unpack_remote_nodes(section, data_set);
     }
     unpack_resources(section, data_set);
@@ -128,7 +128,7 @@ cluster_status(pe_working_set_t * data_set)
                                LOG_NEVER);
     unpack_tags(section, data_set);
 
-    if (!pcmk_is_set(data_set->flags, pe_flag_quick_location)) {
+    if (!pcmk_is_set(data_set->flags, pcmk_sched_location_only)) {
         section = get_xpath_object("//"XML_CIB_TAG_STATUS, data_set->input,
                                    LOG_TRACE);
         unpack_status(section, data_set);

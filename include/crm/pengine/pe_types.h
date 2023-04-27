@@ -77,7 +77,6 @@ typedef struct resource_object_functions_s {
 
 typedef struct resource_alloc_functions_s resource_alloc_functions_t;
 
-#  define pe_flag_quick_location        0x00100000ULL
 #  define pe_flag_sanitized             0x00200000ULL
 
 //! \deprecated

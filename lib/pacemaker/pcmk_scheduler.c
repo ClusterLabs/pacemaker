@@ -784,14 +784,14 @@ pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
         return;
     }
 
-    if (!pcmk_is_set(data_set->flags, pe_flag_quick_location) &&
-         pcmk__is_daemon) {
+    if (!pcmk_is_set(data_set->flags, pcmk_sched_location_only)
+        && pcmk__is_daemon) {
         log_resource_details(data_set);
     }
 
     apply_node_criteria(data_set);
 
-    if (pcmk_is_set(data_set->flags, pe_flag_quick_location)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_location_only)) {
         return;
     }
 
