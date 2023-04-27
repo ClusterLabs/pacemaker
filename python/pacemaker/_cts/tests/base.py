@@ -646,11 +646,11 @@ class RemoteDriver(CTSTest):
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
         # sync key throughout the cluster
-        for node in self._env["nodes"]:
-            self._rsh(node, "mkdir -p --mode=0750 /etc/pacemaker")
-            self._rsh.copy(keyfile, "root@%s:/etc/pacemaker/authkey" % node)
-            self._rsh(node, "chgrp haclient /etc/pacemaker /etc/pacemaker/authkey")
-            self._rsh(node, "chmod 0640 /etc/pacemaker/authkey")
+        for n in self._env["nodes"]:
+            self._rsh(n, "mkdir -p --mode=0750 /etc/pacemaker")
+            self._rsh.copy(keyfile, "root@%s:/etc/pacemaker/authkey" % n)
+            self._rsh(n, "chgrp haclient /etc/pacemaker /etc/pacemaker/authkey")
+            self._rsh(n, "chmod 0640 /etc/pacemaker/authkey")
         os.unlink(keyfile)
 
     def is_applicable(self):
