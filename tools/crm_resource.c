@@ -1269,7 +1269,7 @@ populate_working_set(xmlNodePtr *cib_xml_copy)
             rc = ENOMEM;
         } else {
             pe__set_working_set_flags(data_set,
-                                      pe_flag_no_counts|pe_flag_no_compat);
+                                      pcmk_sched_no_counts|pe_flag_no_compat);
             data_set->priv = out;
             rc = update_working_set_xml(data_set, cib_xml_copy);
         }

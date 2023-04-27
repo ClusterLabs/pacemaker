@@ -134,7 +134,7 @@ cluster_status(pe_working_set_t * data_set)
         unpack_status(section, data_set);
     }
 
-    if (!pcmk_is_set(data_set->flags, pe_flag_no_counts)) {
+    if (!pcmk_is_set(data_set->flags, pcmk_sched_no_counts)) {
         for (GList *item = data_set->resources; item != NULL;
              item = item->next) {
             ((pe_resource_t *) (item->data))->fns->count(item->data);

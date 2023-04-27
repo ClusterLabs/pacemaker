@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -98,7 +98,7 @@ handle_pecalc_request(pcmk__request_t *request)
 
     if (process) {
         pcmk__schedule_actions(converted,
-                               pe_flag_no_counts
+                               pcmk_sched_no_counts
                                |pe_flag_no_compat
                                |pe_flag_show_utilization, data_set);
     }

@@ -472,7 +472,7 @@ generate_params(void)
         crm_crit("Could not allocate working set");
         return ENOMEM;
     }
-    pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
+    pe__set_working_set_flags(data_set, pcmk_sched_no_counts|pe_flag_no_compat);
     data_set->input = cib_xml_copy;
     data_set->now = crm_time_new(NULL);
     cluster_status(data_set);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -42,7 +42,7 @@ setup(void **state) {
         return 1;
     }
 
-    pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
+    pe__set_working_set_flags(data_set, pcmk_sched_no_counts|pe_flag_no_compat);
     data_set->input = input;
 
     cluster_status(data_set);

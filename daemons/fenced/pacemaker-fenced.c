@@ -59,7 +59,7 @@ static xmlNode *local_cib = NULL;
 static pe_working_set_t *fenced_data_set = NULL;
 static const unsigned long long data_set_flags = pcmk_sched_location_only
                                                  | pe_flag_no_compat
-                                                 | pe_flag_no_counts;
+                                                 |pcmk_sched_no_counts;
 
 static cib_t *cib_api = NULL;
 
