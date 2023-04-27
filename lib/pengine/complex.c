@@ -559,6 +559,12 @@ warn_about_deprecated_classes(pe_resource_t *rsc)
                      "Support for Upstart resources (such as %s) is deprecated "
                      "and will be removed in a future release of Pacemaker",
                      rsc->id);
+
+    } else if (pcmk__str_eq(std, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_none)) {
+        pe_warn_once(pe_wo_nagios,
+                     "Support for Nagios resources (such as %s) is deprecated "
+                     "and will be removed in a future release of Pacemaker",
+                     rsc->id);
     }
 }
 #endif

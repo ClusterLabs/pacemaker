@@ -39,7 +39,7 @@ Pacemaker supports several classes, or standards, of resource agents:
 * Systemd
 * Service
 * Fencing
-* Nagios
+* Nagios *(deprecated since 2.1.6)*
 * Upstart *(deprecated since 2.1.0)*
 
 
@@ -167,7 +167,7 @@ The ``stonith`` class is used for managing fencing devices, discussed later in
 Nagios Plugins
 ______________
 
-Nagios Plugins [#]_ are a way to monitor services. Pacemaker can use these as
+Nagios Plugins are a way to monitor services. Pacemaker can use these as
 resources, to react to a change in the service's status.
 
 To use plugins as resources, Pacemaker must have been built with support, and
@@ -200,10 +200,17 @@ will be considered failed if the plugin resource fails. This allows monitoring
 of a service inside a virtual machine or container, with recovery of the
 virtual machine or container if the service fails.
 
-Configuring a virtual machine as a guest node, or a container as a
-:ref:`bundle <s-resource-bundle>`, is the preferred way of monitoring a service
-inside, but plugin resources can be useful when it is not practical to modify
-the virtual machine or container image for this purpose.
+.. warning::
+
+   Nagios support is deprecated in Pacemaker. Support will be dropped entirely
+   at the next major release of Pacemaker.
+
+   For monitoring a service inside a virtual machine or container, the
+   recommended alternative is to configure the virtual machine as a guest node
+   or the container as a :ref:`bundle <s-resource-bundle>`. For other use
+   cases, or when the virtual machine or container image cannot be modified,
+   the recommended alternative is to write a custom OCF agent for the service
+   (which may even call the Nagios plugin as part of its status action).
 
 
 .. index::
@@ -259,8 +266,9 @@ where to find that resource agent and what standards it conforms to.
    |             |    single: resource; property, class                             |
    |             |                                                                  |
    |             | The standard the resource agent conforms to. Allowed values:     |
-   |             | ``lsb``, ``nagios``, ``ocf``, ``service``, ``stonith``,          |
-   |             | ``systemd``, and ``upstart`` *(deprecated since 2.1.0)*          |
+   |             | ``lsb``, ``ocf``, ``service``, ``stonith``, ``systemd``,         |
+   |             | ``nagios`` *(deprecated since 2.1.6)*, and ``upstart``           |
+   |             | *(deprecated since 2.1.0)*                                       |
    +-------------+------------------------------------------------------------------+
    | description | .. index::                                                       |
    |             |    single: description; resource                                 |
@@ -1061,11 +1069,6 @@ Once you've done whatever you needed to do, you can then re-enable it with
 .. code-block:: none
 
    # cibadmin --modify --xml-text '<op id="public-ip-check" enabled="true"/>'
-
-.. [#] The project has two independent forks, hosted at
-       https://www.nagios-plugins.org/ and https://www.monitoring-plugins.org/. Output
-       from both projects' plugins is similar, so plugins from either project can be
-       used with pacemaker.
 
 .. [#] Currently, anyway. Automatic monitoring operations may be added in a future
        version of Pacemaker.
