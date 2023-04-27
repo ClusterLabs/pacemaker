@@ -52,6 +52,8 @@ class CTSTest:
     '''
 
     def __init__(self, cm):
+        # pylint: disable=invalid-name
+
         self.Stats = {"calls":0
         ,        "success":0
         ,        "failure":0
@@ -906,7 +908,8 @@ class StopTest(CTSTest):
         watch.look_for_all()
 
         failreason = None
-        UnmatchedList = "||"
+        unmatched_str = "||"
+
         if watch.unmatched:
             (_, output) = self._rsh(node, "/bin/ps axf", verbose=1)
             for line in output:
@@ -918,7 +921,7 @@ class StopTest(CTSTest):
 
             for regex in watch.unmatched:
                 self._logger.log ("ERROR: Shutdown pattern not found: %s" % regex)
-                UnmatchedList +=  "%s||" % regex
+                unmatched_str +=  "%s||" % regex
                 failreason = "Missing shutdown pattern"
 
         self._cm.cluster_stable(self._env["DeadTime"])
@@ -927,7 +930,7 @@ class StopTest(CTSTest):
             return self.success()
 
         if len(watch.unmatched) >= self._cm.upcount():
-            return self.failure("no match against (%s)" % UnmatchedList)
+            return self.failure("no match against (%s)" % unmatched_str)
 
         if failreason == None:
             return self.success()
