@@ -1461,7 +1461,7 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
 
     if (pcmk__any_node_available(work, pcmk__node_alive
                                        |pcmk__node_usable
-                                       |pcmk__node_no_negative)) {
+                                       |pcmk__node_no_banned)) {
         GList *colocations = NULL;
 
         if (pcmk_is_set(flags, pcmk__coloc_select_this_with)) {
