@@ -232,8 +232,9 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
 
     verify_pe_options(data_set->config_hash);
 
-    set_config_flag(data_set, "enable-startup-probes", pe_flag_startup_probes);
-    if (!pcmk_is_set(data_set->flags, pe_flag_startup_probes)) {
+    set_config_flag(data_set, "enable-startup-probes",
+                    pcmk_sched_probe_resources);
+    if (!pcmk_is_set(data_set->flags, pcmk_sched_probe_resources)) {
         crm_info("Startup probes: disabled (dangerous)");
     }
 

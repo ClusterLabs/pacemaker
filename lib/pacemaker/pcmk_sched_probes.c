@@ -164,7 +164,7 @@ pcmk__probe_rsc_on_node(pe_resource_t *rsc, pe_node_t *node)
 
     CRM_ASSERT((rsc != NULL) && (node != NULL));
 
-    if (!pcmk_is_set(rsc->cluster->flags, pe_flag_startup_probes)) {
+    if (!pcmk_is_set(rsc->cluster->flags, pcmk_sched_probe_resources)) {
         reason = "start-up probes are disabled";
         goto no_probe;
     }

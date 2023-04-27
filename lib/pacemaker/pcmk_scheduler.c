@@ -396,7 +396,7 @@ schedule_resource_actions(pe_working_set_t *data_set)
     pe__foreach_param_check(data_set, check_params);
     pe__free_param_checks(data_set);
 
-    if (pcmk_is_set(data_set->flags, pe_flag_startup_probes)) {
+    if (pcmk_is_set(data_set->flags, pcmk_sched_probe_resources)) {
         crm_trace("Scheduling probes");
         pcmk__schedule_probes(data_set);
     }
