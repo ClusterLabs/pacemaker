@@ -147,7 +147,7 @@ class Test:
             this requires all subclasses to set self._daemon_location before
             accessing this property or an exception will be raised.
         """
-        return os.path.join(self.logdir, self._daemon_location + ".log")
+        return os.path.join(self.logdir, "%s.log" % self._daemon_location)
 
     ###
     ### PRIVATE METHODS
@@ -427,7 +427,7 @@ class Test:
 
         if args['validate']:
             if args['check_rng']:
-                rng_file = rng_directory() + "/api/api-result.rng"
+                rng_file = "%s/api/api-result.rng" % rng_directory()
             else:
                 rng_file = None
 
