@@ -734,7 +734,7 @@ class SimulStartLite(CTSTest):
 
             node_list = self._cm.fencing_cleanup(self.name, stonith)
 
-            if node_list == None:
+            if node_list is None:
                 return self.failure("Cluster did not stabilize")
 
             # Remove node_list messages from watch.unmatched
@@ -932,7 +932,7 @@ class StopTest(CTSTest):
         if len(watch.unmatched) >= self._cm.upcount():
             return self.failure("no match against (%s)" % unmatched_str)
 
-        if failreason == None:
+        if failreason is None:
             return self.success()
 
         return self.failure(failreason)
