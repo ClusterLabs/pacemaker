@@ -63,7 +63,7 @@ def pipe_communicate(pipes, check_stderr=False, stdin=None):
 
     output = pipe_outputs[0].decode(sys.stdout.encoding)
     if check_stderr:
-        output = output + pipe_outputs[1].decode(sys.stderr.encoding)
+        output += pipe_outputs[1].decode(sys.stderr.encoding)
 
     return output
 

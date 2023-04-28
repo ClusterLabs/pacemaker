@@ -361,7 +361,7 @@ class Test:
             if self.verbose:
                 print("Step %d SUCCESS" % (i))
 
-            i = i + 1
+            i += 1
 
         self.clean_environment()
 
@@ -562,10 +562,10 @@ class Tests:
                 continue
 
             if test.exitcode != ExitStatus.OK:
-                failures = failures + 1
+                failures += 1
                 test.print_result("    ")
             else:
-                success = success + 1
+                success += 1
 
         if failures == 0:
             print("    None")
