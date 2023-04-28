@@ -166,10 +166,18 @@ class CTSTest:
 
     def setup(self, node):
         '''Setup the given test'''
+
+        # node is used in subclasses
+        # pylint: disable=unused-argument
+
         return self.success()
 
     def teardown(self, node):
         '''Tear down the given test'''
+
+        # node is used in subclasses
+        # pylint: disable=unused-argument
+
         return self.success()
 
     def create_watch(self, patterns, timeout, name=None):
@@ -254,6 +262,9 @@ class CTSTest:
 
     def can_run_now(self, node):
         """ Return True if we can meaningfully run right now """
+
+        # node is used in subclasses
+        # pylint: disable=unused-argument
 
         return True
 
