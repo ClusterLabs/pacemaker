@@ -1262,7 +1262,7 @@ order_resource_actions_after(pe_action_t *first_action,
         if (first_action != NULL) {
             order_actions(first_action, then_action_iter, flags);
         } else {
-            pe__clear_action_flags(then_action_iter, pe_action_runnable);
+            pe__clear_action_flags(then_action_iter, pcmk_action_runnable);
             crm_warn("%s of %s is unrunnable because there is no %s of %s "
                      "to order it after", then_action_iter->task, rsc->id,
                      order->lh_action_task, order->lh_rsc->id);

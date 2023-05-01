@@ -101,7 +101,7 @@ create_group_pseudo_op(pe_resource_t *group, const char *action)
 {
     pe_action_t *op = custom_action(group, pcmk__op_key(group->id, action, 0),
                                     action, NULL, TRUE, TRUE, group->cluster);
-    pe__set_action_flags(op, pcmk_action_pseudo|pe_action_runnable);
+    pe__set_action_flags(op, pcmk_action_pseudo|pcmk_action_runnable);
     return op;
 }
 
@@ -486,7 +486,7 @@ uint32_t
 pcmk__group_action_flags(pe_action_t *action, const pe_node_t *node)
 {
     // Default flags for a group action
-    uint32_t flags = pe_action_optional|pe_action_runnable|pcmk_action_pseudo;
+    uint32_t flags = pe_action_optional|pcmk_action_runnable|pcmk_action_pseudo;
 
     CRM_ASSERT(action != NULL);
 
@@ -516,14 +516,14 @@ pcmk__group_action_flags(pe_action_t *action, const pe_node_t *node)
 
             // Group action is unrunnable if any member action is
             if (!pcmk__str_eq(task_s, action->task, pcmk__str_none)
-                && pcmk_is_set(flags, pe_action_runnable)
-                && !pcmk_is_set(member_flags, pe_action_runnable)) {
+                && pcmk_is_set(flags, pcmk_action_runnable)
+                && !pcmk_is_set(member_flags, pcmk_action_runnable)) {
 
                 pe_rsc_trace(action->rsc, "%s is unrunnable because %s is",
                              action->uuid, member_action->uuid);
                 pe__clear_raw_action_flags(flags, "group action",
-                                           pe_action_runnable);
-                pe__clear_action_flags(action, pe_action_runnable);
+                                           pcmk_action_runnable);
+                pe__clear_action_flags(action, pcmk_action_runnable);
             }
 
         /* Group (pseudo-)actions other than stop or demote are unrunnable
@@ -534,7 +534,7 @@ pcmk__group_action_flags(pe_action_t *action, const pe_node_t *node)
                          "%s is not runnable because %s will not %s",
                          action->uuid, member->id, task_s);
             pe__clear_raw_action_flags(flags, "group action",
-                                       pe_action_runnable);
+                                       pcmk_action_runnable);
         }
     }
 
@@ -556,7 +556,7 @@ pcmk__group_action_flags(pe_action_t *action, const pe_node_t *node)
  * \param[in]     flags     Action flags for \p first for ordering purposes
  * \param[in]     filter    Action flags to limit scope of certain updates (may
  *                          include pe_action_optional to affect only mandatory
- *                          actions, and pe_action_runnable to affect only
+ *                          actions, and pcmk_action_runnable to affect only
  *                          runnable actions)
  * \param[in]     type      Group of enum pe_ordering flags to apply
  * \param[in,out] data_set  Cluster working set

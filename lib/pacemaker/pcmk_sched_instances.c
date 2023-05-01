@@ -921,7 +921,9 @@ check_instance_state(const pe_resource_t *instance, uint32_t *state)
         const bool optional = pcmk_is_set(action->flags, pe_action_optional);
 
         if (pcmk__str_eq(PCMK_ACTION_START, action->task, pcmk__str_none)) {
-            if (!optional && pcmk_is_set(action->flags, pe_action_runnable)) {
+            if (!optional
+                && pcmk_is_set(action->flags, pcmk_action_runnable)) {
+
                 pe_rsc_trace(instance, "Instance is starting due to %s",
                              action->uuid);
                 instance_state |= instance_starting;
@@ -939,7 +941,7 @@ check_instance_state(const pe_resource_t *instance, uint32_t *state)
              */
             if (!optional
                 && pcmk_any_flags_set(action->flags, pcmk_action_pseudo
-                                                     |pe_action_runnable)) {
+                                                     |pcmk_action_runnable)) {
                 pe_rsc_trace(instance, "Instance is stopping due to %s",
                              action->uuid);
                 instance_state |= instance_stopping;
@@ -996,7 +998,7 @@ pcmk__create_instance_actions(pe_resource_t *collective, GList *instances)
                                         false);
     started->priority = INFINITY;
     if (pcmk_any_flags_set(state, instance_active|instance_starting)) {
-        pe__set_action_flags(started, pe_action_runnable);
+        pe__set_action_flags(started, pcmk_action_runnable);
     }
 
     // Create pseudo-actions for rsc stop and stopped
@@ -1354,7 +1356,7 @@ orig_action_name(const pe_action_t *action)
  * \param[in]     node      If not NULL, limit scope of ordering to this node
  * \param[in]     filter    Action flags to limit scope of certain updates (may
  *                          include pe_action_optional to affect only mandatory
- *                          actions, and pe_action_runnable to affect only
+ *                          actions, and pcmk_action_runnable to affect only
  *                          runnable actions)
  * \param[in]     type      Group of enum pe_ordering flags to apply
  *
@@ -1487,7 +1489,7 @@ can_interleave_actions(const pe_action_t *first, const pe_action_t *then)
  * \param[in]     flags     Action flags for \p first for ordering purposes
  * \param[in]     filter    Action flags to limit scope of certain updates (may
  *                          include pe_action_optional to affect only mandatory
- *                          actions, and pe_action_runnable to affect only
+ *                          actions, and pcmk_action_runnable to affect only
  *                          runnable actions)
  * \param[in]     type      Group of enum pe_ordering flags to apply
  *
@@ -1511,7 +1513,7 @@ update_noninterleaved_actions(pe_resource_t *instance, pe_action_t *first,
 
     // Check whether action is runnable
     instance_flags = instance->cmds->action_flags(instance_action, node);
-    if (!pcmk_is_set(instance_flags, pe_action_runnable)) {
+    if (!pcmk_is_set(instance_flags, pcmk_action_runnable)) {
         return changed;
     }
 
@@ -1549,7 +1551,7 @@ update_noninterleaved_actions(pe_resource_t *instance, pe_action_t *first,
  * \param[in]     flags     Action flags for \p first for ordering purposes
  * \param[in]     filter    Action flags to limit scope of certain updates (may
  *                          include pe_action_optional to affect only mandatory
- *                          actions, and pe_action_runnable to affect only
+ *                          actions, and pcmk_action_runnable to affect only
  *                          runnable actions)
  * \param[in]     type      Group of enum pe_ordering flags to apply
  * \param[in,out] data_set  Cluster working set
@@ -1614,7 +1616,7 @@ pcmk__collective_action_flags(pe_action_t *action, const GList *instances,
     const char *action_name = orig_action_name(action);
 
     // Set original assumptions (optional and runnable may be cleared below)
-    uint32_t flags = pe_action_optional|pe_action_runnable|pcmk_action_pseudo;
+    uint32_t flags = pe_action_optional|pcmk_action_runnable|pcmk_action_pseudo;
 
     for (const GList *iter = instances; iter != NULL; iter = iter->next) {
         const pe_resource_t *instance = iter->data;
@@ -1651,7 +1653,7 @@ pcmk__collective_action_flags(pe_action_t *action, const GList *instances,
         }
 
         // If any instance action is runnable, so is the collective action
-        if (pcmk_is_set(instance_flags, pe_action_runnable)) {
+        if (pcmk_is_set(instance_flags, pcmk_action_runnable)) {
             any_runnable = true;
         }
     }
@@ -1660,9 +1662,9 @@ pcmk__collective_action_flags(pe_action_t *action, const GList *instances,
         pe_rsc_trace(action->rsc,
                      "%s is not runnable because no instance can run %s",
                      action->uuid, action_name);
-        pe__clear_action_summary_flags(flags, action, pe_action_runnable);
+        pe__clear_action_summary_flags(flags, action, pcmk_action_runnable);
         if (node == NULL) {
-            pe__clear_action_flags(action, pe_action_runnable);
+            pe__clear_action_flags(action, pcmk_action_runnable);
         }
     }
 

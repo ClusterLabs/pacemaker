@@ -261,7 +261,7 @@ write_sim_dotfile(pe_working_set_t *data_set, const char *dot_file,
 
         } else {
             color = "red";
-            CRM_LOG_ASSERT(!pcmk_is_set(action->flags, pe_action_runnable));
+            CRM_LOG_ASSERT(!pcmk_is_set(action->flags, pcmk_action_runnable));
         }
 
         pe__set_action_flags(action, pe_action_dumped);

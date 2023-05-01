@@ -307,15 +307,15 @@ recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
     mon = custom_action(rsc, strdup(op->key), op->name, node, is_optional, TRUE,
                         rsc->cluster);
 
-    if (!pcmk_is_set(start->flags, pe_action_runnable)) {
+    if (!pcmk_is_set(start->flags, pcmk_action_runnable)) {
         pe_rsc_trace(rsc, "%s is unrunnable because start is", mon->uuid);
-        pe__clear_action_flags(mon, pe_action_runnable);
+        pe__clear_action_flags(mon, pcmk_action_runnable);
 
     } else if ((node == NULL) || !node->details->online
                || node->details->unclean) {
         pe_rsc_trace(rsc, "%s is unrunnable because no node is available",
                      mon->uuid);
-        pe__clear_action_flags(mon, pe_action_runnable);
+        pe__clear_action_flags(mon, pcmk_action_runnable);
 
     } else if (!pcmk_is_set(mon->flags, pe_action_optional)) {
         pe_rsc_info(rsc, "Start %s-interval %s for %s on %s",
@@ -446,10 +446,10 @@ order_after_stops(pe_resource_t *rsc, const pe_node_t *node,
             pe__set_action_flags(action, pe_action_optional);
         }
 
-        if (!pcmk_is_set(stop->flags, pe_action_runnable)) {
+        if (!pcmk_is_set(stop->flags, pcmk_action_runnable)) {
             crm_debug("%s unrunnable on %s: stop is unrunnable",
                       action->uuid, pe__node_name(node));
-            pe__clear_action_flags(action, pe_action_runnable);
+            pe__clear_action_flags(action, pcmk_action_runnable);
         }
 
         if (pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
@@ -532,10 +532,10 @@ recurring_op_for_inactive(pe_resource_t *rsc, const pe_node_t *node,
         if (!stop_node->details->online || stop_node->details->unclean) {
             pe_rsc_debug(rsc, "%s unrunnable on %s: node unavailable)",
                          stopped_mon->uuid, pe__node_name(stop_node));
-            pe__clear_action_flags(stopped_mon, pe_action_runnable);
+            pe__clear_action_flags(stopped_mon, pcmk_action_runnable);
         }
 
-        if (pcmk_is_set(stopped_mon->flags, pe_action_runnable)
+        if (pcmk_is_set(stopped_mon->flags, pcmk_action_runnable)
             && !pcmk_is_set(stopped_mon->flags, pe_action_optional)) {
             crm_notice("Start recurring %s-interval %s for "
                        PCMK__ROLE_STOPPED " %s on %s",

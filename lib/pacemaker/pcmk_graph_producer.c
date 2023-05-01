@@ -30,7 +30,7 @@
     (pcmk_is_set((flags), pe_action_optional)? "optional" : "required")
 
 #define action_runnable_str(flags) \
-    (pcmk_is_set((flags), pe_action_runnable)? "runnable" : "unrunnable")
+    (pcmk_is_set((flags), pcmk_action_runnable)? "runnable" : "unrunnable")
 
 #define action_node_str(a) \
     (((a)->node == NULL)? "no node" : (a)->node->details->uname)
@@ -498,7 +498,7 @@ create_graph_action(xmlNode *parent, pe_action_t *action, bool skip_details,
 static bool
 should_add_action_to_graph(const pe_action_t *action)
 {
-    if (!pcmk_is_set(action->flags, pe_action_runnable)) {
+    if (!pcmk_is_set(action->flags, pcmk_action_runnable)) {
         crm_trace("Ignoring action %s (%d): unrunnable",
                   action->uuid, action->id);
         return false;
@@ -620,7 +620,7 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
                   input->action->uuid, input->action->id);
         return false;
 
-    } else if (!pcmk_is_set(input->action->flags, pe_action_runnable)
+    } else if (!pcmk_is_set(input->action->flags, pcmk_action_runnable)
                && !ordering_can_change_actions(input)) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
                   "optional and input unrunnable",
@@ -628,7 +628,7 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
                   input->action->uuid, input->action->id);
         return false;
 
-    } else if (!pcmk_is_set(input->action->flags, pe_action_runnable)
+    } else if (!pcmk_is_set(input->action->flags, pcmk_action_runnable)
                && pcmk_is_set(input->type, pe_order_one_or_more)) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
                   "one-or-more and input unrunnable",
@@ -637,7 +637,7 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
         return false;
 
     } else if (pcmk_is_set(input->type, pe_order_implies_first_migratable)
-               && !pcmk_is_set(input->action->flags, pe_action_runnable)) {
+               && !pcmk_is_set(input->action->flags, pcmk_action_runnable)) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
                   "implies input migratable but input unrunnable",
                   action->uuid, action->id,
@@ -1067,7 +1067,7 @@ pcmk__create_graph(pe_working_set_t *data_set)
             && action->node->details->shutdown
             && !pcmk_is_set(action->rsc->flags, pcmk_rsc_maintenance)
             && !pcmk_any_flags_set(action->flags,
-                                   pe_action_optional|pe_action_runnable)
+                                   pe_action_optional|pcmk_action_runnable)
             && pcmk__str_eq(action->task, PCMK_ACTION_STOP, pcmk__str_none)) {
             /* Eventually we should just ignore the 'fence' case, but for now
              * it's the best way to detect (in CTS) when CIB resource updates

@@ -326,7 +326,7 @@ new_notify_action(pe_resource_t *rsc, const pe_node_t *node, pe_action_t *op,
         skip_reason = "no parent notification";
     } else if (!node->details->online) {
         skip_reason = "node offline";
-    } else if (!pcmk_is_set(op->flags, pe_action_runnable)) {
+    } else if (!pcmk_is_set(op->flags, pcmk_action_runnable)) {
         skip_reason = "original action not runnable";
     }
     if (skip_reason != NULL) {
@@ -449,7 +449,7 @@ pe__action_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
         // Create "pre-" notify pseudo-action for clone
         n_data->pre = new_notify_pseudo_action(rsc, action, PCMK_ACTION_NOTIFY,
                                                "pre");
-        pe__set_action_flags(n_data->pre, pe_action_runnable);
+        pe__set_action_flags(n_data->pre, pcmk_action_runnable);
         add_hash_param(n_data->pre->meta, "notify_type", "pre");
         add_hash_param(n_data->pre->meta, "notify_operation", n_data->action);
 
@@ -457,7 +457,7 @@ pe__action_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
         n_data->pre_done = new_notify_pseudo_action(rsc, action,
                                                     PCMK_ACTION_NOTIFIED,
                                                     "confirmed-pre");
-        pe__set_action_flags(n_data->pre_done, pe_action_runnable);
+        pe__set_action_flags(n_data->pre_done, pcmk_action_runnable);
         add_hash_param(n_data->pre_done->meta, "notify_type", "pre");
         add_hash_param(n_data->pre_done->meta,
                        "notify_operation", n_data->action);
@@ -473,10 +473,10 @@ pe__action_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
         n_data->post = new_notify_pseudo_action(rsc, complete,
                                                 PCMK_ACTION_NOTIFY, "post");
         n_data->post->priority = INFINITY;
-        if (pcmk_is_set(complete->flags, pe_action_runnable)) {
-            pe__set_action_flags(n_data->post, pe_action_runnable);
+        if (pcmk_is_set(complete->flags, pcmk_action_runnable)) {
+            pe__set_action_flags(n_data->post, pcmk_action_runnable);
         } else {
-            pe__clear_action_flags(n_data->post, pe_action_runnable);
+            pe__clear_action_flags(n_data->post, pcmk_action_runnable);
         }
         add_hash_param(n_data->post->meta, "notify_type", "post");
         add_hash_param(n_data->post->meta, "notify_operation", n_data->action);
@@ -486,10 +486,10 @@ pe__action_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
                                                      PCMK_ACTION_NOTIFIED,
                                                      "confirmed-post");
         n_data->post_done->priority = INFINITY;
-        if (pcmk_is_set(complete->flags, pe_action_runnable)) {
-            pe__set_action_flags(n_data->post_done, pe_action_runnable);
+        if (pcmk_is_set(complete->flags, pcmk_action_runnable)) {
+            pe__set_action_flags(n_data->post_done, pcmk_action_runnable);
         } else {
-            pe__clear_action_flags(n_data->post_done, pe_action_runnable);
+            pe__clear_action_flags(n_data->post_done, pcmk_action_runnable);
         }
         add_hash_param(n_data->post_done->meta, "notify_type", "post");
         add_hash_param(n_data->post_done->meta,
@@ -612,7 +612,7 @@ collect_resource_data(const pe_resource_t *rsc, bool activity,
 
             if ((task == pcmk_action_stop) && op->node->details->unclean) {
                 // Create anyway (additional noise if node can't be fenced)
-            } else if (!pcmk_is_set(op->flags, pe_action_runnable)) {
+            } else if (!pcmk_is_set(op->flags, pcmk_action_runnable)) {
                 continue;
             }
 
@@ -903,7 +903,7 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
             pe_action_t *remote_start = find_remote_start(start);
 
             if ((remote_start != NULL)
-                && !pcmk_is_set(remote_start->flags, pe_action_runnable)) {
+                && !pcmk_is_set(remote_start->flags, pcmk_action_runnable)) {
                 /* Start and promote actions for a clone instance behind
                  * a Pacemaker Remote connection happen after the
                  * connection starts. If the connection start is blocked, do

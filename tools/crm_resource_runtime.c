@@ -1752,7 +1752,7 @@ static inline bool
 action_is_pending(const pe_action_t *action)
 {
     if (pcmk_any_flags_set(action->flags, pe_action_optional|pcmk_action_pseudo)
-        || !pcmk_is_set(action->flags, pe_action_runnable)
+        || !pcmk_is_set(action->flags, pcmk_action_runnable)
         || pcmk__str_eq(PCMK_ACTION_NOTIFY, action->task, pcmk__str_casei)) {
         return false;
     }

@@ -189,7 +189,7 @@ new_action(char *key, const char *task, pe_resource_t *rsc,
         pe__set_action_flags(action, pe_action_dc);
     }
 
-    pe__set_action_flags(action, pe_action_runnable);
+    pe__set_action_flags(action, pcmk_action_runnable);
     if (optional) {
         pe__set_action_flags(action, pe_action_optional);
     } else {
@@ -326,13 +326,13 @@ update_resource_action_runnable(pe_action_t *action, bool for_graph,
     if (action->node == NULL) {
         pe_rsc_trace(action->rsc, "%s is unrunnable (unallocated)",
                      action->uuid);
-        pe__clear_action_flags(action, pe_action_runnable);
+        pe__clear_action_flags(action, pcmk_action_runnable);
 
     } else if (!pcmk_is_set(action->flags, pe_action_dc)
                && !(action->node->details->online)
                && (!pe__is_guest_node(action->node)
                    || action->node->details->remote_requires_reset)) {
-        pe__clear_action_flags(action, pe_action_runnable);
+        pe__clear_action_flags(action, pcmk_action_runnable);
         do_crm_log((for_graph? LOG_WARNING: LOG_TRACE),
                    "%s on %s is unrunnable (node is offline)",
                    action->uuid, pe__node_name(action->node));
@@ -345,7 +345,7 @@ update_resource_action_runnable(pe_action_t *action, bool for_graph,
 
     } else if (!pcmk_is_set(action->flags, pe_action_dc)
                && action->node->details->pending) {
-        pe__clear_action_flags(action, pe_action_runnable);
+        pe__clear_action_flags(action, pcmk_action_runnable);
         do_crm_log((for_graph? LOG_WARNING: LOG_TRACE),
                    "Action %s on %s is unrunnable (node is pending)",
                    action->uuid, pe__node_name(action->node));
@@ -362,12 +362,12 @@ update_resource_action_runnable(pe_action_t *action, bool for_graph,
             pe_rsc_debug(action->rsc, "%s on %s is unrunnable "
                          "(node's host cannot be fenced)",
                          action->uuid, pe__node_name(action->node));
-            pe__clear_action_flags(action, pe_action_runnable);
+            pe__clear_action_flags(action, pcmk_action_runnable);
         } else {
             pe_rsc_trace(action->rsc,
                          "%s on %s does not require fencing or quorum",
                          action->uuid, pe__node_name(action->node));
-            pe__set_action_flags(action, pe_action_runnable);
+            pe__set_action_flags(action, pcmk_action_runnable);
         }
 
     } else {
@@ -375,7 +375,7 @@ update_resource_action_runnable(pe_action_t *action, bool for_graph,
             case pcmk_no_quorum_stop:
                 pe_rsc_debug(action->rsc, "%s on %s is unrunnable (no quorum)",
                              action->uuid, pe__node_name(action->node));
-                pe__clear_action_flags(action, pe_action_runnable);
+                pe__clear_action_flags(action, pcmk_action_runnable);
                 pe_action_set_reason(action, "no quorum", true);
                 break;
 
@@ -385,14 +385,14 @@ update_resource_action_runnable(pe_action_t *action, bool for_graph,
                     pe_rsc_debug(action->rsc,
                                  "%s on %s is unrunnable (no quorum)",
                                  action->uuid, pe__node_name(action->node));
-                    pe__clear_action_flags(action, pe_action_runnable);
+                    pe__clear_action_flags(action, pcmk_action_runnable);
                     pe_action_set_reason(action, "quorum freeze", true);
                 }
                 break;
 
             default:
                 //pe_action_set_reason(action, NULL, TRUE);
-                pe__set_action_flags(action, pe_action_runnable);
+                pe__set_action_flags(action, pcmk_action_runnable);
                 break;
         }
     }
@@ -415,7 +415,7 @@ update_resource_flags_for_action(pe_resource_t *rsc, const pe_action_t *action)
         pe__set_resource_flags(rsc, pcmk_rsc_stopping);
 
     } else if (pcmk__str_eq(action->task, PCMK_ACTION_START, pcmk__str_casei)) {
-        if (pcmk_is_set(action->flags, pe_action_runnable)) {
+        if (pcmk_is_set(action->flags, pcmk_action_runnable)) {
             pe__set_resource_flags(rsc, pcmk_rsc_starting);
         } else {
             pe__clear_resource_flags(rsc, pcmk_rsc_starting);
@@ -1037,7 +1037,7 @@ get_pseudo_op(const char *name, pe_working_set_t * data_set)
 
     if (op == NULL) {
         op = custom_action(NULL, strdup(name), name, NULL, TRUE, TRUE, data_set);
-        pe__set_action_flags(op, pcmk_action_pseudo|pe_action_runnable);
+        pe__set_action_flags(op, pcmk_action_pseudo|pcmk_action_runnable);
     }
     return op;
 }
@@ -1485,7 +1485,7 @@ pe__action2reason(const pe_action_t *action, enum pe_action_flags flag)
     const char *change = NULL;
 
     switch (flag) {
-        case pe_action_runnable:
+        case pcmk_action_runnable:
             change = "unrunnable";
             break;
         case pe_action_migrate_runnable:
@@ -1717,7 +1717,7 @@ pe__new_rsc_pseudo_action(pe_resource_t *rsc, const char *task, bool optional,
                            optional, TRUE, rsc->cluster);
     pe__set_action_flags(action, pcmk_action_pseudo);
     if (runnable) {
-        pe__set_action_flags(action, pe_action_runnable);
+        pe__set_action_flags(action, pcmk_action_runnable);
     }
     return action;
 }

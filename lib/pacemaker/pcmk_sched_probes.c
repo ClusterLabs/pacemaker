@@ -269,7 +269,7 @@ pcmk__probe_rsc_on_node(pe_resource_t *rsc, pe_node_t *node)
     /* Prevent a start if the resource can't be probed, but don't cause the
      * resource or entire clone to stop if already active.
      */
-    if (!pcmk_is_set(probe->flags, pe_action_runnable)
+    if (!pcmk_is_set(probe->flags, pcmk_action_runnable)
         && (top->running_on == NULL)) {
         pe__set_order_flags(flags, pe_order_runnable_left);
     }
@@ -482,7 +482,7 @@ add_start_orderings_for_probe(pe_action_t *probe, pe_action_wrapper_t *after)
      * many instances before we know the state on all nodes.
      */
     if ((after->action->rsc->variant <= pcmk_rsc_variant_group)
-        || pcmk_is_set(probe->flags, pe_action_runnable)
+        || pcmk_is_set(probe->flags, pcmk_action_runnable)
         // The order type is already enforced for its parent.
         || pcmk_is_set(after->type, pe_order_runnable_left)
         || (pe__const_top_resource(probe->rsc, false) != after->action->rsc)

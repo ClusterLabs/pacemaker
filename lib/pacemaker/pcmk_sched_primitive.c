@@ -1267,7 +1267,7 @@ stop_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
         }
 
         if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
-            pe__clear_action_flags(stop, pe_action_runnable);
+            pe__clear_action_flags(stop, pcmk_action_runnable);
         }
 
         if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_remove_after_stop)) {
@@ -1309,7 +1309,7 @@ start_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
 
     pcmk__order_vs_unfence(rsc, node, start, pe_order_implies_then);
 
-    if (pcmk_is_set(start->flags, pe_action_runnable) && !optional) {
+    if (pcmk_is_set(start->flags, pcmk_action_runnable) && !optional) {
         pe__clear_action_flags(start, pe_action_optional);
     }
 
@@ -1347,7 +1347,7 @@ promote_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
     for (iter = action_list; iter != NULL; iter = iter->next) {
         pe_action_t *start = (pe_action_t *) iter->data;
 
-        if (!pcmk_is_set(start->flags, pe_action_runnable)) {
+        if (!pcmk_is_set(start->flags, pcmk_action_runnable)) {
             runnable = false;
         }
     }
@@ -1378,7 +1378,7 @@ promote_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
         for (iter = action_list; iter != NULL; iter = iter->next) {
             pe_action_t *promote = (pe_action_t *) iter->data;
 
-            pe__clear_action_flags(promote, pe_action_runnable);
+            pe__clear_action_flags(promote, pcmk_action_runnable);
         }
         g_list_free(action_list);
     }
