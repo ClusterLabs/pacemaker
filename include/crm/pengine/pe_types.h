@@ -179,8 +179,6 @@ struct pe_node_s {
     int rsc_discover_mode;
 };
 
-#  define pe_rsc_needs_unfencing            0x40000000ULL
-
 /* *INDENT-OFF* */
 enum pe_action_flags {
     pe_action_pseudo = 0x00001,

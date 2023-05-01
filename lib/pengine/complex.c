@@ -514,7 +514,7 @@ unpack_requires(pe_resource_t *rsc, const char *value, bool is_default)
 
         } else {
             pe__set_resource_flags(rsc, pcmk_rsc_needs_fencing
-                                        |pe_rsc_needs_unfencing);
+                                        |pcmk_rsc_needs_unfencing);
         }
 
     } else {

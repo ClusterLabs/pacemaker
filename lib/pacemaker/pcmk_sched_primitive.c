@@ -911,7 +911,7 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
     check_unfencing = !pcmk_is_set(rsc->flags, pcmk_rsc_fence_device)
                       && pcmk_is_set(rsc->cluster->flags,
                                      pcmk_sched_enable_unfencing)
-                      && pcmk_is_set(rsc->flags, pe_rsc_needs_unfencing);
+                      && pcmk_is_set(rsc->flags, pcmk_rsc_needs_unfencing);
 
     // Whether a non-default placement strategy is used
     check_utilization = (g_hash_table_size(rsc->utilization) > 0)
@@ -1274,7 +1274,7 @@ stop_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
             pcmk__schedule_cleanup(rsc, current, optional);
         }
 
-        if (pcmk_is_set(rsc->flags, pe_rsc_needs_unfencing)) {
+        if (pcmk_is_set(rsc->flags, pcmk_rsc_needs_unfencing)) {
             pe_action_t *unfence = pe_fence_op(current, PCMK_ACTION_ON, true,
                                                NULL, false, rsc->cluster);
 

@@ -315,7 +315,7 @@ pcmk__order_vs_unfence(const pe_resource_t *rsc, pe_node_t *node,
      */
     if ((pcmk_is_set(rsc->flags, pcmk_rsc_fence_device)
          && pcmk_is_set(rsc->cluster->flags, pcmk_sched_enable_unfencing))
-        || pcmk_is_set(rsc->flags, pe_rsc_needs_unfencing)) {
+        || pcmk_is_set(rsc->flags, pcmk_rsc_needs_unfencing)) {
 
         /* Start with an optional ordering. Requiring unfencing would result in
          * the node being unfenced, and all its resources being stopped,

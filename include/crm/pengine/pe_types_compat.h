@@ -115,6 +115,9 @@ extern "C" {
 //! \deprecated Use pcmk_rsc_needs_fencing instead
 #define pe_rsc_needs_fencing            pcmk_rsc_needs_fencing
 
+//! \deprecated Use pcmk_rsc_needs_unfencing instead
+#define pe_rsc_needs_unfencing          pcmk_rsc_needs_unfencing
+
 //! \deprecated Use pcmk_sched_quorate instead
 #define pe_flag_have_quorum             pcmk_sched_quorate
 

@@ -1054,7 +1054,7 @@ find_unfencing_devices(GList *candidates, GList *matches)
         } else if (!pcmk_is_set(candidate->flags, pcmk_rsc_fence_device)) {
             continue;
 
-        } else if (pcmk_is_set(candidate->flags, pe_rsc_needs_unfencing)) {
+        } else if (pcmk_is_set(candidate->flags, pcmk_rsc_needs_unfencing)) {
             matches = g_list_prepend(matches, candidate);
 
         } else if (pcmk__str_eq(g_hash_table_lookup(candidate->meta,
