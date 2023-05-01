@@ -711,7 +711,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_CRITICAL);
     if ((value == NULL) || crm_is_true(value)) {
-        pe__set_resource_flags(*rsc, pe_rsc_critical);
+        pe__set_resource_flags(*rsc, pcmk_rsc_critical);
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_NOTIFY);

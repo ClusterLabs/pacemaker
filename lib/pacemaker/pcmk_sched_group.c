@@ -181,7 +181,7 @@ member_internal_constraints(gpointer data, gpointer user_data)
     } else if (member_data->colocated) {
         uint32_t flags = pcmk__coloc_none;
 
-        if (pcmk_is_set(member->flags, pe_rsc_critical)) {
+        if (pcmk_is_set(member->flags, pcmk_rsc_critical)) {
             flags |= pcmk__coloc_influence;
         }
 

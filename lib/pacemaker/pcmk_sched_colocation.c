@@ -430,7 +430,7 @@ unpack_influence(const char *coloc_id, const pe_resource_t *rsc,
             return (influence_i == 0)? pcmk__coloc_none : pcmk__coloc_influence;
         }
     }
-    if (pcmk_is_set(rsc->flags, pe_rsc_critical)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_critical)) {
         return pcmk__coloc_influence;
     }
     return pcmk__coloc_none;
