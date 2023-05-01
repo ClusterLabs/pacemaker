@@ -1722,6 +1722,28 @@ dump_xml_unformatted(xmlNode * an_xml_node)
     return buffer;
 }
 
+int
+pcmk__xml2fd(int fd, xmlNode *cur)
+{
+    bool success;
+
+    xmlOutputBuffer *fd_out = xmlOutputBufferCreateFd(fd, NULL);
+    CRM_ASSERT(fd_out != NULL);
+    xmlNodeDumpOutput(fd_out, cur->doc, cur, 0, pcmk__xml_fmt_pretty, NULL);
+
+    success = xmlOutputBufferWrite(fd_out, sizeof("\n") - 1, "\n") != -1;
+
+    success = xmlOutputBufferClose(fd_out) != -1 && success;
+
+    if (!success) {
+        return EIO;
+    }
+
+    fsync(fd);
+    return pcmk_rc_ok;
+    
+}
+
 gboolean
 xml_has_children(const xmlNode * xml_root)
 {

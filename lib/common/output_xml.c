@@ -13,6 +13,10 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <crm/crm.h>
+#include <crm/common/output.h>
+#include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>  /* pcmk__xml2fd */
 #include <glib.h>
 
 #include <crm/common/cmdline_internal.h>
@@ -190,10 +194,7 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
     }
 
     if (print) {
-        char *buf = dump_xml_formatted_with_text(priv->root);
-        fprintf(out->dest, "%s", buf);
-        fflush(out->dest);
-        free(buf);
+        pcmk__xml2fd(fileno(out->dest), priv->root);
     }
 
     if (copy_dest != NULL) {
