@@ -261,6 +261,11 @@ pe_cron_range_satisfied(const crm_time_t *now, const xmlNode *cron_spec)
     CHECK_ONE(cron_spec, "weekdays", d);
 
     CHECK_ONE(cron_spec, "moon", phase_of_the_moon(now));
+    if (crm_element_value(cron_spec, "moon") != NULL) {
+        pcmk__config_warn("Support for 'moon' in date_spec elements "
+                          "(such as %s) is deprecated and will be removed "
+                          "in a future release of Pacemaker", ID(cron_spec));
+    }
 
     /* If we get here, either no fields were specified (which is success), or all
      * the fields that were specified had their conditions met (which is also a

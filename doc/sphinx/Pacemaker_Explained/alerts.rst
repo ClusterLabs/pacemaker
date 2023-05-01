@@ -103,7 +103,7 @@ whether and how Pacemaker calls them.
    |                  |               | If false for an alert, the alert will not be used.  |
    |                  |               | If true for an alert and false for a particular     |
    |                  |               | recipient of that alert, that recipient will not be |
-   |                  |               | used.                                               |
+   |                  |               | used. *(since 2.1.6)*                               |
    +------------------+---------------+-----------------------------------------------------+
    | timestamp-format | %H:%M:%S.%06N | .. index::                                          |
    |                  |               |    single: alert; meta-attribute, timestamp-format  |

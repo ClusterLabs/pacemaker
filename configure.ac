@@ -475,7 +475,7 @@ AC_ARG_WITH([corosync-conf],
 )
 
 AC_ARG_WITH([nagios],
-    [AS_HELP_STRING([--with-nagios], [support nagios resources])]
+    [AS_HELP_STRING([--with-nagios], [support nagios resources (deprecated)])]
 )
 yes_no_try "$with_nagios" "try"
 with_nagios=$?
@@ -484,13 +484,13 @@ dnl --with-* options: directory locations
 
 AC_ARG_WITH([nagios-plugin-dir],
     [AS_HELP_STRING([--with-nagios-plugin-dir=DIR],
-        [directory for nagios plugins @<:@LIBEXECDIR/nagios/plugins@:>@])],
+        [directory for nagios plugins (deprecated) @<:@LIBEXECDIR/nagios/plugins@:>@])],
     [ NAGIOS_PLUGIN_DIR="$withval" ]
 )
 
 AC_ARG_WITH([nagios-metadata-dir],
     [AS_HELP_STRING([--with-nagios-metadata-dir=DIR],
-        [directory for nagios plugins metadata @<:@DATADIR/nagios/plugins-metadata@:>@])],
+        [directory for nagios plugins metadata (deprecated) @<:@DATADIR/nagios/plugins-metadata@:>@])],
     [ NAGIOS_METADATA_DIR="$withval" ]
 )
 

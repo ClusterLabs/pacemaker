@@ -374,9 +374,7 @@ supplied is ignored.
    |               |    pair: moon; date_spec                                  |
    |               |                                                           |
    |               | Allowed values are 0-7 (where 0 is the new moon and 4 is  |
-   |               | full moon). Seriously, you can use this. This was         |
-   |               | implemented to demonstrate the ease with which new        |
-   |               | comparisons could be added.                               |
+   |               | full moon). *(deprecated since 2.1.6)*                    |
    +---------------+-----------------------------------------------------------+
 
 For example, ``monthdays="1"`` matches the first day of every month, and
@@ -546,16 +544,6 @@ A small sample of how time-based expressions can be used:
              implied. This means that the range includes all of 2005-03-01 but
              none of 2005-04-01. You may wish to write ``end`` as
              ``"2005-03-31T23:59:59"`` to avoid confusion.
-
-.. topic:: A full moon on Friday the 13th
-
-   .. code-block:: xml
-
-      <rule id="rule7" score="INFINITY" boolean-op="and">
-         <date_expression id="date_expr7" operation="date_spec">
-          <date_spec id="date_spec7" weekdays="5" monthdays="13" moon="4"/>
-         </date_expression>
-      </rule>
 
 
 .. index::

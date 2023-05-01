@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2022 the Pacemaker project contributors
+ * Copyright 2010-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -70,6 +70,9 @@ enum lsb_status_exitcode {
     PCMK_LSB_STATUS_INSUFFICIENT_PRIV  = 151,
 };
 
+//!@{
+//! \deprecated Do not use
+
 enum nagios_exitcode {
     NAGIOS_STATE_OK        = 0,
     NAGIOS_STATE_WARNING   = 1,
@@ -83,10 +86,12 @@ enum nagios_exitcode {
     NAGIOS_INSUFFICIENT_PRIV = 100,
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    NAGIOS_STATE_DEPENDENT   = 4,   //! \deprecated Unused
-    NAGIOS_NOT_INSTALLED     = 101, //! \deprecated Unused
+    NAGIOS_STATE_DEPENDENT   = 4,
+    NAGIOS_NOT_INSTALLED     = 101,
 #endif
 };
+
+//!@}
 
 enum svc_action_flags {
     /* On timeout, only kill pid, do not kill entire pid group */
