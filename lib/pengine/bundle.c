@@ -1225,8 +1225,8 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
             replica->offset = lpc++;
 
             // Ensure the child's notify gets set based on the underlying primitive's value
-            if (pcmk_is_set(replica->child->flags, pe_rsc_notify)) {
-                pe__set_resource_flags(bundle_data->child, pe_rsc_notify);
+            if (pcmk_is_set(replica->child->flags, pcmk_rsc_notify)) {
+                pe__set_resource_flags(bundle_data->child, pcmk_rsc_notify);
             }
 
             allocate_ip(bundle_data, replica, buffer);

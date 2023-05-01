@@ -617,7 +617,7 @@ pcmk__clone_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml)
     free(name);
 
     name = crm_meta_name(XML_RSC_ATTR_NOTIFY);
-    crm_xml_add(xml, name, pe__rsc_bool_str(rsc, pe_rsc_notify));
+    crm_xml_add(xml, name, pe__rsc_bool_str(rsc, pcmk_rsc_notify));
     free(name);
 
     name = crm_meta_name(XML_RSC_ATTR_INCARNATION_MAX);

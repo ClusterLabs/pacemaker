@@ -175,7 +175,7 @@ order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
                      pe__node_name(target));
         }
 
-        if (pcmk_is_set(rsc->flags, pe_rsc_notify)) {
+        if (pcmk_is_set(rsc->flags, pcmk_rsc_notify)) {
             pe__order_notifs_after_fencing(action, rsc, stonith_op);
         }
 

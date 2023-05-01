@@ -140,7 +140,7 @@ action_uuid_for_ordering(const char *first_uuid, const pe_resource_t *first_rsc)
         /* If a clone or bundle has notifications enabled, the ordering will be
          * relative to when notifications have been sent for the remapped task.
          */
-        if (pcmk_is_set(first_rsc->flags, pe_rsc_notify)
+        if (pcmk_is_set(first_rsc->flags, pcmk_rsc_notify)
             && (pe_rsc_is_clone(first_rsc) || pe_rsc_is_bundled(first_rsc))) {
             uuid = pcmk__notify_key(rid, "confirmed-post",
                                     task2text(remapped_task));

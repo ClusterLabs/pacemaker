@@ -37,6 +37,9 @@ extern "C" {
 //! \deprecated Use pcmk_rsc_removed_filler instead
 #define pe_rsc_orphan_container_filler  pcmk_rsc_removed_filler
 
+//! \deprecated Use pcmk_rsc_notify instead
+#define pe_rsc_notify                   pcmk_rsc_notify
+
 //! \deprecated Use pcmk_sched_quorate instead
 #define pe_flag_have_quorum             pcmk_sched_quorate
 
