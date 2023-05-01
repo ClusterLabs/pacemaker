@@ -408,11 +408,11 @@ update_resource_action_runnable(pe_action_t *action, bool for_graph,
 static void
 update_resource_flags_for_action(pe_resource_t *rsc, const pe_action_t *action)
 {
-    /* @COMPAT pcmk_rsc_starting and pe_rsc_stopping are deprecated and unused
+    /* @COMPAT pcmk_rsc_starting and pcmk_rsc_stopping are deprecated and unused
      * within Pacemaker, and will eventually be removed
      */
     if (pcmk__str_eq(action->task, PCMK_ACTION_STOP, pcmk__str_casei)) {
-        pe__set_resource_flags(rsc, pe_rsc_stopping);
+        pe__set_resource_flags(rsc, pcmk_rsc_stopping);
 
     } else if (pcmk__str_eq(action->task, PCMK_ACTION_START, pcmk__str_casei)) {
         if (pcmk_is_set(action->flags, pe_action_runnable)) {

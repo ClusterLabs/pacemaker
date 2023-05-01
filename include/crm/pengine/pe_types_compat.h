@@ -88,6 +88,9 @@ extern "C" {
 //!< \deprecated Do not use
 #define pe_rsc_starting                 pcmk_rsc_starting
 
+//!< \deprecated Do not use
+#define pe_rsc_stopping                 pcmk_rsc_stopping
+
 //! \deprecated Use pcmk_sched_quorate instead
 #define pe_flag_have_quorum             pcmk_sched_quorate
 

@@ -179,9 +179,6 @@ struct pe_node_s {
     int rsc_discover_mode;
 };
 
-//!< \deprecated Do not use
-#  define pe_rsc_stopping                   0x00200000ULL
-
 #  define pe_rsc_stop_unexpected            0x00400000ULL
 #  define pe_rsc_allow_migrate              0x00800000ULL
 
