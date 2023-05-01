@@ -108,6 +108,7 @@ enum pcmk_rc_e {
     /* When adding new values, use consecutively lower numbers, update the array
      * in lib/common/results.c, and test with crm_error.
      */
+    pcmk_rc_no_transaction      = -1037,
     pcmk_rc_bad_xml_patch       = -1036,
     pcmk_rc_bad_input           = -1035,
     pcmk_rc_disabled            = -1034,
