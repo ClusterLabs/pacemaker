@@ -236,8 +236,10 @@ enum pe_action_flags {
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_action_pseudo instead
     pe_action_pseudo                = pcmk_action_pseudo,
-#endif
+
+    //! \deprecated Use pcmk_action_runnable instead
     pe_action_runnable              = pcmk_action_runnable,
+#endif
     pe_action_optional = 0x00004,
     pe_action_print_always = 0x00008,
 
