@@ -689,7 +689,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     (*rsc)->parameters = pe_rsc_params(*rsc, NULL, data_set); // \deprecated
 
     (*rsc)->flags = 0;
-    pe__set_resource_flags(*rsc, pe_rsc_runnable|pcmk_rsc_unassigned);
+    pe__set_resource_flags(*rsc, pcmk_rsc_runnable|pcmk_rsc_unassigned);
 
     if (!pcmk_is_set(data_set->flags, pcmk_sched_in_maintenance)) {
         pe__set_resource_flags(*rsc, pcmk_rsc_managed);

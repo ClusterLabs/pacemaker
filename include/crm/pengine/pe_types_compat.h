@@ -79,6 +79,9 @@ extern "C" {
 //! \deprecated Use pcmk_rsc_detect_loop instead
 #define pe_rsc_detect_loop              pcmk_rsc_detect_loop
 
+//! \deprecated Do not use
+#define pe_rsc_runnable                 pcmk_rsc_runnable
+
 //! \deprecated Use pcmk_sched_quorate instead
 #define pe_flag_have_quorum             pcmk_sched_quorate
 

@@ -179,7 +179,6 @@ struct pe_node_s {
     int rsc_discover_mode;
 };
 
-#  define pe_rsc_runnable                   0x00040000ULL
 #  define pe_rsc_start_pending              0x00080000ULL
 
 //!< \deprecated Do not use
