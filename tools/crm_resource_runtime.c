@@ -411,19 +411,19 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
                 need_init = false;
                 pcmk__unpack_constraints(rsc->cluster);
                 pe__clear_resource_flags_on_all(rsc->cluster,
-                                                pe_rsc_detect_loop);
+                                                pcmk_rsc_detect_loop);
             }
 
             /* We want to set the attribute only on resources explicitly
              * colocated with this one, so we use rsc->rsc_cons_lhs directly
              * rather than the with_this_colocations() method.
              */
-            pe__set_resource_flags(rsc, pe_rsc_detect_loop);
+            pe__set_resource_flags(rsc, pcmk_rsc_detect_loop);
             for (lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
                 pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
 
                 crm_debug("Checking %s %d", cons->id, cons->score);
-                if (!pcmk_is_set(cons->dependent->flags, pe_rsc_detect_loop)
+                if (!pcmk_is_set(cons->dependent->flags, pcmk_rsc_detect_loop)
                     && (cons->score > 0)) {
                     crm_debug("Setting %s=%s for dependent resource %s",
                               attr_name, attr_value, cons->dependent->id);
