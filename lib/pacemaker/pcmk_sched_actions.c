@@ -1571,7 +1571,7 @@ schedule_reload(gpointer data, gpointer user_data)
     /* If a resource's configuration changed while a start was pending,
      * force a full restart instead of a reload.
      */
-    if (pcmk_is_set(rsc->flags, pe_rsc_start_pending)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_start_pending)) {
         pe_rsc_trace(rsc, "%s: preventing agent reload because start pending",
                      rsc->id);
         custom_action(rsc, stop_key(rsc), PCMK_ACTION_STOP, node, FALSE, TRUE,

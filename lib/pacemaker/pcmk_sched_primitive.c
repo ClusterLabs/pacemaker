@@ -787,7 +787,7 @@ pcmk__primitive_create_actions(pe_resource_t *rsc)
         pe__clear_resource_flags(rsc, pe_rsc_stop_unexpected);
     }
 
-    if (pcmk_is_set(rsc->flags, pe_rsc_start_pending)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_start_pending)) {
         create_pending_start(rsc);
     }
 

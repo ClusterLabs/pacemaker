@@ -217,7 +217,7 @@ pcmk__rsc_can_migrate(const pe_resource_t *rsc, const pe_node_t *current)
         return false;
     }
 
-    if (pcmk_is_set(rsc->flags, pe_rsc_start_pending)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_start_pending)) {
         pe_rsc_trace(rsc, "%s cannot migrate because it has a start pending",
                      rsc->id);
         return false;

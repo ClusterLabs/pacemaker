@@ -4524,7 +4524,7 @@ process_pending_action(struct action_history *history,
     }
 
     if (strcmp(history->task, PCMK_ACTION_START) == 0) {
-        pe__set_resource_flags(history->rsc, pe_rsc_start_pending);
+        pe__set_resource_flags(history->rsc, pcmk_rsc_start_pending);
         set_active(history->rsc);
 
     } else if (strcmp(history->task, PCMK_ACTION_PROMOTE) == 0) {

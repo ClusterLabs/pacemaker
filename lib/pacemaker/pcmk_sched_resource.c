@@ -138,7 +138,7 @@ pcmk__rsc_agent_changed(pe_resource_t *rsc, pe_node_t *node,
         // Make sure the resource is restarted
         custom_action(rsc, stop_key(rsc), PCMK_ACTION_STOP, node, FALSE, TRUE,
                       rsc->cluster);
-        pe__set_resource_flags(rsc, pe_rsc_start_pending);
+        pe__set_resource_flags(rsc, pcmk_rsc_start_pending);
     }
     return changed;
 }
