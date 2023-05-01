@@ -748,7 +748,7 @@ pcmk__primitive_create_actions(pe_resource_t *rsc)
         rsc->partial_migration_source = rsc->partial_migration_target = NULL;
         allow_migrate = false;
 
-    } else if (pcmk_is_set(rsc->flags, pe_rsc_needs_fencing)) {
+    } else if (pcmk_is_set(rsc->flags, pcmk_rsc_needs_fencing)) {
         multiply_active = (num_all_active > 1);
     } else {
         /* If a resource has "requires" set to nothing or quorum, don't consider

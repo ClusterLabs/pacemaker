@@ -490,7 +490,7 @@ unpack_requires(pe_resource_t *rsc, const char *value, bool is_default)
         pe__set_resource_flags(rsc, pcmk_rsc_needs_quorum);
 
     } else if (pcmk__str_eq(value, PCMK__VALUE_FENCING, pcmk__str_casei)) {
-        pe__set_resource_flags(rsc, pe_rsc_needs_fencing);
+        pe__set_resource_flags(rsc, pcmk_rsc_needs_fencing);
         if (!pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)) {
             pcmk__config_warn("%s requires fencing but fencing is disabled",
                               rsc->id);
@@ -513,8 +513,8 @@ unpack_requires(pe_resource_t *rsc, const char *value, bool is_default)
             return;
 
         } else {
-            pe__set_resource_flags(rsc,
-                                   pe_rsc_needs_fencing|pe_rsc_needs_unfencing);
+            pe__set_resource_flags(rsc, pcmk_rsc_needs_fencing
+                                        |pe_rsc_needs_unfencing);
         }
 
     } else {
@@ -1076,7 +1076,7 @@ pe__count_active_node(const pe_resource_t *rsc, pe_node_t *node,
         } else {
             keep_looking = true;
         }
-    } else if (!pcmk_is_set(rsc->flags, pe_rsc_needs_fencing)) {
+    } else if (!pcmk_is_set(rsc->flags, pcmk_rsc_needs_fencing)) {
         if (is_happy && ((*active == NULL) || !(*active)->details->online
                          || (*active)->details->unclean)) {
             *active = node; // This is the first clean node
@@ -1137,7 +1137,7 @@ pe__find_active_requires(const pe_resource_t *rsc, unsigned int *count)
         }
         return NULL;
 
-    } else if (pcmk_is_set(rsc->flags, pe_rsc_needs_fencing)) {
+    } else if (pcmk_is_set(rsc->flags, pcmk_rsc_needs_fencing)) {
         return rsc->fns->active_node(rsc, count, NULL);
 
     } else {

@@ -803,7 +803,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
         action->needs = pcmk_requires_nothing;
         value = "nothing (not start or promote)";
 
-    } else if (pcmk_is_set(action->rsc->flags, pe_rsc_needs_fencing)) {
+    } else if (pcmk_is_set(action->rsc->flags, pcmk_rsc_needs_fencing)) {
         action->needs = pcmk_requires_fencing;
         value = "fencing";
 

@@ -1992,7 +1992,7 @@ find_anonymous_clone(pe_working_set_t *data_set, const pe_node_t *node,
      * @TODO Ideally, we'd use an inactive instance number if it is not needed
      * for any clean instances. However, we don't know that at this point.
      */
-    if ((rsc != NULL) && !pcmk_is_set(rsc->flags, pe_rsc_needs_fencing)
+    if ((rsc != NULL) && !pcmk_is_set(rsc->flags, pcmk_rsc_needs_fencing)
         && (!node->details->online || node->details->unclean)
         && !pe__is_guest_node(node)
         && !pe__is_universal_clone(parent, data_set)) {
