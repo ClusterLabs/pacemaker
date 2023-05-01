@@ -313,7 +313,7 @@ pcmk__order_vs_unfence(const pe_resource_t *rsc, pe_node_t *node,
      * only quorum. However, fence agents that unfence often don't have enough
      * information to even probe or start unless the node is first unfenced.
      */
-    if ((pcmk_is_set(rsc->flags, pe_rsc_fence_device)
+    if ((pcmk_is_set(rsc->flags, pcmk_rsc_fence_device)
          && pcmk_is_set(rsc->cluster->flags, pcmk_sched_enable_unfencing))
         || pcmk_is_set(rsc->flags, pe_rsc_needs_unfencing)) {
 

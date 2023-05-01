@@ -581,7 +581,7 @@ trigger_unfencing(pe_resource_t *rsc, pe_node_t *node, const char *reason,
         return;
 
     } else if ((rsc != NULL)
-               && !pcmk_is_set(rsc->flags, pe_rsc_fence_device)) {
+               && !pcmk_is_set(rsc->flags, pcmk_rsc_fence_device)) {
         /* Wasn't a stonith device */
         return;
 

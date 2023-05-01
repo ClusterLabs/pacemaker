@@ -497,7 +497,7 @@ unpack_requires(pe_resource_t *rsc, const char *value, bool is_default)
         }
 
     } else if (pcmk__str_eq(value, PCMK__VALUE_UNFENCING, pcmk__str_casei)) {
-        if (pcmk_is_set(rsc->flags, pe_rsc_fence_device)) {
+        if (pcmk_is_set(rsc->flags, pcmk_rsc_fence_device)) {
             pcmk__config_warn("Resetting \"" XML_RSC_ATTR_REQUIRES "\" for %s "
                               "to \"" PCMK__VALUE_QUORUM "\" because fencing "
                               "devices cannot require unfencing", rsc->id);
@@ -520,7 +520,7 @@ unpack_requires(pe_resource_t *rsc, const char *value, bool is_default)
     } else {
         const char *orig_value = value;
 
-        if (pcmk_is_set(rsc->flags, pe_rsc_fence_device)) {
+        if (pcmk_is_set(rsc->flags, pcmk_rsc_fence_device)) {
             value = PCMK__VALUE_QUORUM;
 
         } else if ((rsc->variant == pcmk_rsc_variant_primitive)
@@ -838,7 +838,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     if (pcmk__str_eq(crm_element_value((*rsc)->xml, XML_AGENT_ATTR_CLASS),
                      PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         pe__set_working_set_flags(data_set, pcmk_sched_have_fencing);
-        pe__set_resource_flags(*rsc, pe_rsc_fence_device);
+        pe__set_resource_flags(*rsc, pcmk_rsc_fence_device);
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_REQUIRES);

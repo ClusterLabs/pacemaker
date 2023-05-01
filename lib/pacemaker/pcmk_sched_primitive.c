@@ -908,7 +908,7 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
     }
 
     // Whether resource requires unfencing
-    check_unfencing = !pcmk_is_set(rsc->flags, pe_rsc_fence_device)
+    check_unfencing = !pcmk_is_set(rsc->flags, pcmk_rsc_fence_device)
                       && pcmk_is_set(rsc->cluster->flags,
                                      pcmk_sched_enable_unfencing)
                       && pcmk_is_set(rsc->flags, pe_rsc_needs_unfencing);
@@ -1049,7 +1049,8 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
         }
     }
 
-    if (rsc->is_remote_node || pcmk_is_set(rsc->flags, pe_rsc_fence_device)) {
+    if (rsc->is_remote_node
+        || pcmk_is_set(rsc->flags, pcmk_rsc_fence_device)) {
         /* Remote connections and fencing devices are not allowed to run on
          * Pacemaker Remote nodes
          */

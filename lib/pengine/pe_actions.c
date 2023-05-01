@@ -1051,7 +1051,7 @@ find_unfencing_devices(GList *candidates, GList *matches)
         if (candidate->children != NULL) {
             matches = find_unfencing_devices(candidate->children, matches);
 
-        } else if (!pcmk_is_set(candidate->flags, pe_rsc_fence_device)) {
+        } else if (!pcmk_is_set(candidate->flags, pcmk_rsc_fence_device)) {
             continue;
 
         } else if (pcmk_is_set(candidate->flags, pe_rsc_needs_unfencing)) {

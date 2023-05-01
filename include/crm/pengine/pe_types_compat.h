@@ -43,6 +43,9 @@ extern "C" {
 //! \deprecated Use pcmk_rsc_unique instead
 #define pe_rsc_unique                   pcmk_rsc_unique
 
+//! \deprecated Use pcmk_rsc_fence_device instead
+#define pe_rsc_fence_device             pcmk_rsc_fence_device
+
 //! \deprecated Use pcmk_sched_quorate instead
 #define pe_flag_have_quorum             pcmk_sched_quorate
 
