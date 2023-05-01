@@ -230,7 +230,10 @@ enum pe_action_flags {
     //! Whether action does not require invoking an agent
     pcmk_action_pseudo              = (1 << 0),
 
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated Use pcmk_action_pseudo instead
     pe_action_pseudo                = pcmk_action_pseudo,
+#endif
     pe_action_runnable = 0x00002,
     pe_action_optional = 0x00004,
     pe_action_print_always = 0x00008,
