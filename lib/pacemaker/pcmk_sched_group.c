@@ -46,7 +46,7 @@ pcmk__group_assign(pe_resource_t *rsc, const pe_node_t *prefer,
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_unassigned)) {
         return rsc->allocated_to; // Assignment already done
     }
-    if (pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_assigning)) {
         pe_rsc_debug(rsc, "Assignment dependency loop detected involving %s",
                      rsc->id);
         return NULL;
@@ -58,7 +58,7 @@ pcmk__group_assign(pe_resource_t *rsc, const pe_node_t *prefer,
         return NULL;
     }
 
-    pe__set_resource_flags(rsc, pe_rsc_allocating);
+    pe__set_resource_flags(rsc, pcmk_rsc_assigning);
     first_member = (pe_resource_t *) rsc->children->data;
     rsc->role = first_member->role;
 
@@ -79,7 +79,7 @@ pcmk__group_assign(pe_resource_t *rsc, const pe_node_t *prefer,
     }
 
     pe__set_next_role(rsc, first_member->next_role, "first group member");
-    pe__clear_resource_flags(rsc, pe_rsc_allocating|pcmk_rsc_unassigned);
+    pe__clear_resource_flags(rsc, pcmk_rsc_assigning|pcmk_rsc_unassigned);
 
     if (!pe__group_flag_is_set(rsc, pe__group_colocated)) {
         return NULL;

@@ -559,7 +559,7 @@ assign_instance(pe_resource_t *instance, const pe_node_t *prefer,
     pe_rsc_trace(instance, "Assigning %s (preferring %s)", instance->id,
                  ((prefer == NULL)? "no node" : prefer->details->uname));
 
-    if (pcmk_is_set(instance->flags, pe_rsc_allocating)) {
+    if (pcmk_is_set(instance->flags, pcmk_rsc_assigning)) {
         pe_rsc_debug(instance,
                      "Assignment loop detected involving %s colocations",
                      instance->id);

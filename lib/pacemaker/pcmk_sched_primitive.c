@@ -395,7 +395,7 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer,
 
     // Never assign a child without parent being assigned first
     if ((rsc->parent != NULL)
-        && !pcmk_is_set(rsc->parent->flags, pe_rsc_allocating)) {
+        && !pcmk_is_set(rsc->parent->flags, pcmk_rsc_assigning)) {
         pe_rsc_debug(rsc, "%s: Assigning parent %s first",
                      rsc->id, rsc->parent->id);
         rsc->parent->cmds->assign(rsc->parent, prefer, stop_if_fail);
@@ -413,11 +413,11 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer,
     }
 
     // Ensure we detect assignment loops
-    if (pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_assigning)) {
         pe_rsc_debug(rsc, "Breaking assignment loop involving %s", rsc->id);
         return NULL;
     }
-    pe__set_resource_flags(rsc, pe_rsc_allocating);
+    pe__set_resource_flags(rsc, pcmk_rsc_assigning);
 
     pe__show_node_scores(true, rsc, "Pre-assignment", rsc->allowed_nodes,
                          rsc->cluster);
@@ -530,7 +530,7 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer,
         }
     }
 
-    pe__clear_resource_flags(rsc, pe_rsc_allocating);
+    pe__clear_resource_flags(rsc, pcmk_rsc_assigning);
 
     if (rsc->is_remote_node) {
         remote_connection_assigned(rsc);
