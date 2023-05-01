@@ -589,7 +589,7 @@ pcmk__with_bundle_colocations(const pe_resource_t *rsc,
 
     // The bundle itself and its containers always get its colocations
     if ((orig_rsc == rsc)
-        || pcmk_is_set(orig_rsc->flags, pe_rsc_replica_container)) {
+        || pcmk_is_set(orig_rsc->flags, pcmk_rsc_replica_container)) {
 
         pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
         return;
@@ -633,7 +633,7 @@ pcmk__bundle_with_colocations(const pe_resource_t *rsc,
 
     // The bundle itself and its containers always get its colocations
     if ((orig_rsc == rsc)
-        || pcmk_is_set(orig_rsc->flags, pe_rsc_replica_container)) {
+        || pcmk_is_set(orig_rsc->flags, pcmk_rsc_replica_container)) {
 
         pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
         return;

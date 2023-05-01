@@ -1145,7 +1145,7 @@ pcmk__block_colocation_dependents(pe_action_t *action)
 static const pe_resource_t *
 get_resource_for_role(const pe_resource_t *rsc)
 {
-    if (pcmk_is_set(rsc->flags, pe_rsc_replica_container)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_replica_container)) {
         const pe_resource_t *child = pe__get_rsc_in_container(rsc);
 
         if (child != NULL) {
