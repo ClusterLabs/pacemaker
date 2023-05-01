@@ -1892,7 +1892,7 @@ find_anonymous_clone(pe_working_set_t *data_set, const pe_node_t *node,
 
     CRM_ASSERT(parent != NULL);
     CRM_ASSERT(pe_rsc_is_clone(parent));
-    CRM_ASSERT(!pcmk_is_set(parent->flags, pe_rsc_unique));
+    CRM_ASSERT(!pcmk_is_set(parent->flags, pcmk_rsc_unique));
 
     // Check for active (or partially active, for cloned groups) instance
     pe_rsc_trace(parent, "Looking for %s on %s in %s",
@@ -2024,7 +2024,7 @@ unpack_find_resource(pe_working_set_t *data_set, const pe_node_t *node,
         char *clone0_id = clone_zero(rsc_id);
         pe_resource_t *clone0 = pe_find_resource(data_set->resources, clone0_id);
 
-        if (clone0 && !pcmk_is_set(clone0->flags, pe_rsc_unique)) {
+        if (clone0 && !pcmk_is_set(clone0->flags, pcmk_rsc_unique)) {
             rsc = clone0;
             parent = uber_parent(clone0);
             crm_trace("%s found as %s (%s)", rsc_id, clone0_id, parent->id);
@@ -2119,7 +2119,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
                              pe__node_name(n));
                 g_hash_table_insert(iter->known_on, (gpointer) n->details->id, n);
             }
-            if (pcmk_is_set(iter->flags, pe_rsc_unique)) {
+            if (pcmk_is_set(iter->flags, pcmk_rsc_unique)) {
                 break;
             }
             iter = iter->parent;
@@ -4427,7 +4427,7 @@ mask_probe_failure(struct action_history *history, int orig_exit_status,
 {
     pe_resource_t *ban_rsc = history->rsc;
 
-    if (!pcmk_is_set(history->rsc->flags, pe_rsc_unique)) {
+    if (!pcmk_is_set(history->rsc->flags, pcmk_rsc_unique)) {
         ban_rsc = uber_parent(history->rsc);
     }
 
@@ -4636,7 +4636,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
         goto done;
     }
 
-    if (!pcmk_is_set(rsc->flags, pe_rsc_unique)) {
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_unique)) {
         parent = uber_parent(rsc);
     }
 

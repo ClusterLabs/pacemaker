@@ -589,7 +589,7 @@ pcmk__clone_create_probe(pe_resource_t *rsc, pe_node_t *node)
     }
 
     rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance_number);
-    if (pcmk_is_set(rsc->flags, pe_rsc_unique)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_unique)) {
         return pcmk__probe_resource_list(rsc->children, node);
     } else {
         return probe_anonymous_clone(rsc, node);
@@ -613,7 +613,7 @@ pcmk__clone_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml)
     CRM_ASSERT(pe_rsc_is_clone(rsc) && (xml != NULL));
 
     name = crm_meta_name(XML_RSC_ATTR_UNIQUE);
-    crm_xml_add(xml, name, pe__rsc_bool_str(rsc, pe_rsc_unique));
+    crm_xml_add(xml, name, pe__rsc_bool_str(rsc, pcmk_rsc_unique));
     free(name);
 
     name = crm_meta_name(XML_RSC_ATTR_NOTIFY);

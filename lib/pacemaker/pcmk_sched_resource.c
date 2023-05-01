@@ -590,7 +590,7 @@ pcmk__threshold_reached(pe_resource_t *rsc, const pe_node_t *node,
     }
 
     // If failed resource is anonymous clone instance, we'll force clone away
-    if (!pcmk_is_set(rsc->flags, pe_rsc_unique)) {
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_unique)) {
         rsc_to_ban = uber_parent(rsc);
     }
 

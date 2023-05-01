@@ -584,7 +584,7 @@ promotion_score_applies(const pe_resource_t *rsc, const pe_node_t *node)
     const char *reason = "allowed";
 
     // Some checks apply only to anonymous clone instances
-    if (!pcmk_is_set(rsc->flags, pe_rsc_unique)) {
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_unique)) {
 
         // If instance is active on the node, its score definitely applies
         active = find_active_anon_instance(parent, id, node);
@@ -726,7 +726,7 @@ promotion_score(const pe_resource_t *rsc, const pe_node_t *node,
     if (attr_value != NULL) {
         pe_rsc_trace(rsc, "Promotion score for %s on %s = %s",
                      name, pe__node_name(node), pcmk__s(attr_value, "(unset)"));
-    } else if (!pcmk_is_set(rsc->flags, pe_rsc_unique)) {
+    } else if (!pcmk_is_set(rsc->flags, pcmk_rsc_unique)) {
         /* If we don't have any resource history yet, we won't have clone_name.
          * In that case, for anonymous clones, try the resource name without
          * any instance number.

@@ -177,7 +177,7 @@ clone_header(pcmk__output_t *out, int *rc, const pe_resource_t *rsc,
         pcmk__add_separated_word(&attrs, 64, "promotable", ", ");
     }
 
-    if (pcmk_is_set(rsc->flags, pe_rsc_unique)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_unique)) {
         pcmk__add_separated_word(&attrs, 64, "unique", ", ");
     }
 
@@ -372,7 +372,9 @@ clone_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
                                                "pe__clone_ordered");
     }
 
-    if ((rsc->flags & pe_rsc_unique) == 0 && clone_data->clone_node_max > 1) {
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_unique)
+        && (clone_data->clone_node_max > 1)) {
+
         pcmk__config_err("Ignoring " XML_RSC_ATTR_PROMOTED_MAX " for %s "
                          "because anonymous clones support only one instance "
                          "per node", rsc->id);
@@ -383,7 +385,7 @@ clone_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
     pe_rsc_trace(rsc, "\tClone max: %d", clone_data->clone_max);
     pe_rsc_trace(rsc, "\tClone node max: %d", clone_data->clone_node_max);
     pe_rsc_trace(rsc, "\tClone is unique: %s",
-                 pe__rsc_bool_str(rsc, pe_rsc_unique));
+                 pe__rsc_bool_str(rsc, pcmk_rsc_unique));
     pe_rsc_trace(rsc, "\tClone is promotable: %s",
                  pe__rsc_bool_str(rsc, pe_rsc_promotable));
 
@@ -416,7 +418,7 @@ clone_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
      * inherit when being unpacked, as well as in resource agents' environment.
      */
     add_hash_param(rsc->meta, XML_RSC_ATTR_UNIQUE,
-                   pe__rsc_bool_str(rsc, pe_rsc_unique));
+                   pe__rsc_bool_str(rsc, pcmk_rsc_unique));
 
     if (clone_data->clone_max <= 0) {
         /* Create one child instance so that unpack_find_resource() will hook up
@@ -532,7 +534,7 @@ clone_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
     status_print(XML_ATTR_ID "=\"%s\" ", rsc->id);
     status_print("multi_state=\"%s\" ",
                  pe__rsc_bool_str(rsc, pe_rsc_promotable));
-    status_print("unique=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_unique));
+    status_print("unique=\"%s\" ", pe__rsc_bool_str(rsc, pcmk_rsc_unique));
     status_print("managed=\"%s\" ",
                  pe__rsc_bool_str(rsc, pcmk_rsc_managed));
     status_print("failed=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_failed));
@@ -619,7 +621,7 @@ clone_print(pe_resource_t *rsc, const char *pre_text, long options,
     status_print("%sClone Set: %s [%s]%s%s%s",
                  pre_text ? pre_text : "", rsc->id, ID(clone_data->xml_obj_child),
                  pcmk_is_set(rsc->flags, pe_rsc_promotable)? " (promotable)" : "",
-                 pcmk_is_set(rsc->flags, pe_rsc_unique)? " (unique)" : "",
+                 pcmk_is_set(rsc->flags, pcmk_rsc_unique)? " (unique)" : "",
                  pcmk_is_set(rsc->flags, pcmk_rsc_managed)? "" : " (unmanaged)");
 
     if (options & pe_print_html) {
@@ -638,7 +640,7 @@ clone_print(pe_resource_t *rsc, const char *pre_text, long options,
             print_full = TRUE;
         }
 
-        if (pcmk_is_set(rsc->flags, pe_rsc_unique)) {
+        if (pcmk_is_set(rsc->flags, pcmk_rsc_unique)) {
             // Print individual instance when unique (except stopped orphans)
             if (partially_active
                 || !pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
@@ -763,7 +765,7 @@ clone_print(pe_resource_t *rsc, const char *pre_text, long options,
             state = "Stopped (disabled)";
         }
 
-        if (!pcmk_is_set(rsc->flags, pe_rsc_unique)
+        if (!pcmk_is_set(rsc->flags, pcmk_rsc_unique)
             && (clone_data->clone_max > active_instances)) {
 
             GList *nIter;
@@ -858,7 +860,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
             rc = pe__name_and_nvpairs_xml(out, true, "clone", 10,
                     "id", rsc->id,
                     "multi_state", pe__rsc_bool_str(rsc, pe_rsc_promotable),
-                    "unique", pe__rsc_bool_str(rsc, pe_rsc_unique),
+                    "unique", pe__rsc_bool_str(rsc, pcmk_rsc_unique),
                     "maintenance", pe__rsc_bool_str(rsc, pe_rsc_maintenance),
                     "managed", pe__rsc_bool_str(rsc, pcmk_rsc_managed),
                     "disabled", pcmk__btoa(pe__resource_is_disabled(rsc)),
@@ -933,7 +935,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
             print_full = TRUE;
         }
 
-        if (pcmk_is_set(rsc->flags, pe_rsc_unique)) {
+        if (pcmk_is_set(rsc->flags, pcmk_rsc_unique)) {
             // Print individual instance when unique (except stopped orphans)
             if (partially_active
                 || !pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
@@ -1078,7 +1080,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
     }
 
     if (pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {
-        if (!pcmk_is_set(rsc->flags, pe_rsc_unique)
+        if (!pcmk_is_set(rsc->flags, pcmk_rsc_unique)
             && (clone_data->clone_max > active_instances)) {
 
             GList *nIter;

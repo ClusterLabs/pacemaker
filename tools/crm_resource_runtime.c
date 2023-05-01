@@ -52,7 +52,7 @@ cli_resource_search(pe_resource_t *rsc, const char *requested_name,
 
     /* The anonymous clone children's common ID is supplied */
     } else if (pe_rsc_is_clone(parent)
-               && !pcmk_is_set(rsc->flags, pe_rsc_unique)
+               && !pcmk_is_set(rsc->flags, pcmk_rsc_unique)
                && rsc->clone_name
                && pcmk__str_eq(requested_name, rsc->clone_name, pcmk__str_casei)
                && !pcmk__str_eq(requested_name, rsc->id, pcmk__str_casei)) {
@@ -624,7 +624,10 @@ rsc_fail_name(const pe_resource_t *rsc)
 {
     const char *name = (rsc->clone_name? rsc->clone_name : rsc->id);
 
-    return pcmk_is_set(rsc->flags, pe_rsc_unique)? strdup(name) : clone_strip(name);
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_unique)) {
+        return strdup(name);
+    }
+    return clone_strip(name);
 }
 
 // \return Standard Pacemaker return code

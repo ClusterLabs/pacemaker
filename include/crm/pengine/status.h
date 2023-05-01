@@ -70,7 +70,7 @@ pe_rsc_is_clone(const pe_resource_t *rsc)
 static inline bool
 pe_rsc_is_unique_clone(const pe_resource_t *rsc)
 {
-    return pe_rsc_is_clone(rsc) && pcmk_is_set(rsc->flags, pe_rsc_unique);
+    return pe_rsc_is_clone(rsc) && pcmk_is_set(rsc->flags, pcmk_rsc_unique);
 }
 
 /*!
@@ -83,7 +83,7 @@ pe_rsc_is_unique_clone(const pe_resource_t *rsc)
 static inline bool
 pe_rsc_is_anon_clone(const pe_resource_t *rsc)
 {
-    return pe_rsc_is_clone(rsc) && !pcmk_is_set(rsc->flags, pe_rsc_unique);
+    return pe_rsc_is_clone(rsc) && !pcmk_is_set(rsc->flags, pcmk_rsc_unique);
 }
 
 /*!

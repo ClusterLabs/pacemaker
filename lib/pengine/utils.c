@@ -542,7 +542,7 @@ ticket_new(const char *ticket_id, pe_working_set_t * data_set)
 const char *
 rsc_printable_id(const pe_resource_t *rsc)
 {
-    return pcmk_is_set(rsc->flags, pe_rsc_unique)? rsc->id : ID(rsc->xml);
+    return pcmk_is_set(rsc->flags, pcmk_rsc_unique)? rsc->id : ID(rsc->xml);
 }
 
 void

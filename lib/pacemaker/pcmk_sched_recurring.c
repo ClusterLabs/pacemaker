@@ -481,7 +481,7 @@ recurring_op_for_inactive(pe_resource_t *rsc, const pe_node_t *node,
         return;
     }
 
-    if (!pcmk_is_set(rsc->flags, pe_rsc_unique)) {
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_unique)) {
         crm_notice("Ignoring %s (recurring monitors for " PCMK__ROLE_STOPPED
                    " role are not supported for anonymous clones)", op->id);
         return; // @TODO add support

@@ -194,7 +194,7 @@ native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * dat
 static void
 recursive_clear_unique(pe_resource_t *rsc, gpointer user_data)
 {
-    pe__clear_resource_flags(rsc, pe_rsc_unique);
+    pe__clear_resource_flags(rsc, pcmk_rsc_unique);
     add_hash_param(rsc->meta, XML_RSC_ATTR_UNIQUE, XML_BOOLEAN_FALSE);
     g_list_foreach(rsc->children, (GFunc) recursive_clear_unique, NULL);
 }
@@ -210,7 +210,8 @@ native_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
 
     // Only some agent standards support unique and promotable clones
     if (!pcmk_is_set(ra_caps, pcmk_ra_cap_unique)
-        && pcmk_is_set(rsc->flags, pe_rsc_unique) && pe_rsc_is_clone(parent)) {
+        && pcmk_is_set(rsc->flags, pcmk_rsc_unique)
+        && pe_rsc_is_clone(parent)) {
 
         /* @COMPAT We should probably reject this situation as an error (as we
          * do for promotable below) rather than warn and convert, but that would
@@ -295,7 +296,7 @@ native_find_rsc(pe_resource_t * rsc, const char *id, const pe_node_t *on_node,
 
     } else if (pcmk_is_set(flags, pcmk_rsc_match_basename)
                || (pcmk_is_set(flags, pcmk_rsc_match_anon_basename)
-                   && !pcmk_is_set(rsc->flags, pe_rsc_unique))) {
+                   && !pcmk_is_set(rsc->flags, pcmk_rsc_unique))) {
         match = pe_base_name_eq(rsc, id);
     }
 

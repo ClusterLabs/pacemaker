@@ -277,7 +277,7 @@ add_resource_details(const pe_action_t *action, xmlNode *action_xml)
         crm_xml_add(rsc_xml, XML_ATTR_ID, action->rsc->clone_name);
         crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->id);
 
-    } else if (!pcmk_is_set(action->rsc->flags, pe_rsc_unique)) {
+    } else if (!pcmk_is_set(action->rsc->flags, pcmk_rsc_unique)) {
         const char *xml_id = ID(action->rsc->xml);
 
         crm_debug("Using anonymous clone name %s for %s (aka %s)",

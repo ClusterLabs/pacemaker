@@ -764,13 +764,13 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     if (pe_rsc_is_clone(pe__const_top_resource(*rsc, false))) {
         value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_UNIQUE);
         if (crm_is_true(value)) {
-            pe__set_resource_flags(*rsc, pe_rsc_unique);
+            pe__set_resource_flags(*rsc, pcmk_rsc_unique);
         }
         if (detect_promotable(*rsc)) {
             pe__set_resource_flags(*rsc, pe_rsc_promotable);
         }
     } else {
-        pe__set_resource_flags(*rsc, pe_rsc_unique);
+        pe__set_resource_flags(*rsc, pcmk_rsc_unique);
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_RESTART);
