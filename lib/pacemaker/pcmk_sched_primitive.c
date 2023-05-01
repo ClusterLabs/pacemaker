@@ -777,14 +777,14 @@ pcmk__primitive_create_actions(pe_resource_t *rsc)
                 break;
             case pcmk_multiply_active_unexpected:
                 need_stop = true; // stop_resource() will skip expected node
-                pe__set_resource_flags(rsc, pe_rsc_stop_unexpected);
+                pe__set_resource_flags(rsc, pcmk_rsc_stop_unexpected);
                 break;
             default:
                 break;
         }
 
     } else {
-        pe__clear_resource_flags(rsc, pe_rsc_stop_unexpected);
+        pe__clear_resource_flags(rsc, pcmk_rsc_stop_unexpected);
     }
 
     if (pcmk_is_set(rsc->flags, pcmk_rsc_start_pending)) {
@@ -1201,7 +1201,7 @@ static bool
 is_expected_node(const pe_resource_t *rsc, const pe_node_t *node)
 {
     return pcmk_all_flags_set(rsc->flags,
-                              pe_rsc_stop_unexpected|pcmk_rsc_restarting)
+                              pcmk_rsc_stop_unexpected|pcmk_rsc_restarting)
            && (rsc->next_role > pcmk_role_stopped)
            && pe__same_node(rsc->allocated_to, node);
 }
@@ -1258,7 +1258,7 @@ stop_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
         if (rsc->allocated_to == NULL) {
             pe_action_set_reason(stop, "node availability", true);
         } else if (pcmk_all_flags_set(rsc->flags, pcmk_rsc_restarting
-                                                  |pe_rsc_stop_unexpected)) {
+                                                  |pcmk_rsc_stop_unexpected)) {
             /* We are stopping a multiply active resource on a node that is
              * not its expected node, and we are still scheduling restart
              * actions, so the stop is for being multiply active.
