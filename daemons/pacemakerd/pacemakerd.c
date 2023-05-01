@@ -337,9 +337,32 @@ main(int argc, char **argv)
         if (old_instance_connected) {
             rc = pcmk_pacemakerd_api_shutdown(old_instance, crm_system_name);
             pcmk_dispatch_ipc(old_instance);
-            pcmk_free_ipc_api(old_instance);
+
             exit_code = pcmk_rc2exitc(rc);
+
+            if (exit_code != CRM_EX_OK) {
+                pcmk_free_ipc_api(old_instance);
+                goto done;
+            }
+
+            /* We get the ACK immediately, and the response right after that,
+             * but it might take a while for pacemakerd to get around to
+             * shutting down.  Wait for that to happen (with 30-minute timeout).
+             */
+            for (int i = 0; i < 900; i++) {
+                if (!pcmk_ipc_is_connected(old_instance)) {
+                    exit_code = CRM_EX_OK;
+                    pcmk_free_ipc_api(old_instance);
+                    goto done;
+                }
+
+                sleep(2);
+            }
+
+            exit_code = CRM_EX_TIMEOUT;
+            pcmk_free_ipc_api(old_instance);
             goto done;
+
         } else {
             out->err(out, "Could not request shutdown "
                      "of existing Pacemaker instance: %s", pcmk_rc_str(rc));
