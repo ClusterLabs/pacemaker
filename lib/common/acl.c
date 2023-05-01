@@ -26,7 +26,7 @@
 
 typedef struct xml_acl_s {
         enum xml_private_flags mode;
-        char *xpath;
+        gchar *xpath;
 } xml_acl_t;
 
 static void
@@ -35,7 +35,7 @@ free_acl(void *data)
     if (data) {
         xml_acl_t *acl = data;
 
-        free(acl->xpath);
+        g_free(acl->xpath);
         free(acl);
     }
 }
@@ -77,8 +77,7 @@ create_acl(const xmlNode *xml, GList *acls, enum xml_private_flags mode)
 
     acl->mode = mode;
     if (xpath) {
-        acl->xpath = strdup(xpath);
-        CRM_ASSERT(acl->xpath != NULL);
+        acl->xpath = g_strdup(xpath);
         crm_trace("Unpacked ACL <%s> element using xpath: %s",
                   crm_element_name(xml), acl->xpath);
 
@@ -101,10 +100,9 @@ create_acl(const xmlNode *xml, GList *acls, enum xml_private_flags mode)
             pcmk__g_strcat(buf, "//", pcmk__s(tag, "*"), NULL);
         }
 
-        acl->xpath = strdup((const char *) buf->str);
-        CRM_ASSERT(acl->xpath != NULL);
+        acl->xpath = buf->str;
 
-        g_string_free(buf, TRUE);
+        g_string_free(buf, FALSE);
         crm_trace("Unpacked ACL <%s> element as xpath: %s",
                   crm_element_name(xml), acl->xpath);
     }
