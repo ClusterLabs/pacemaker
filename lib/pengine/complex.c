@@ -487,7 +487,7 @@ unpack_requires(pe_resource_t *rsc, const char *value, bool is_default)
     if (pcmk__str_eq(value, PCMK__VALUE_NOTHING, pcmk__str_casei)) {
 
     } else if (pcmk__str_eq(value, PCMK__VALUE_QUORUM, pcmk__str_casei)) {
-        pe__set_resource_flags(rsc, pe_rsc_needs_quorum);
+        pe__set_resource_flags(rsc, pcmk_rsc_needs_quorum);
 
     } else if (pcmk__str_eq(value, PCMK__VALUE_FENCING, pcmk__str_casei)) {
         pe__set_resource_flags(rsc, pe_rsc_needs_fencing);

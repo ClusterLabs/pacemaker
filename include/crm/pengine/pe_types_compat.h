@@ -109,6 +109,9 @@ extern "C" {
 //! \deprecated Do not use
 #define pe_rsc_is_container             pcmk_rsc_has_filler
 
+//! \deprecated Use pcmk_rsc_needs_quorum instead
+#define pe_rsc_needs_quorum             pcmk_rsc_needs_quorum
+
 //! \deprecated Use pcmk_sched_quorate instead
 #define pe_flag_have_quorum             pcmk_sched_quorate
 
