@@ -179,8 +179,6 @@ struct pe_node_s {
     int rsc_discover_mode;
 };
 
-#  define pe_rsc_restarting                 0x00000800ULL
-
 #  define pe_rsc_stop                       0x00001000ULL
 #  define pe_rsc_reload                     0x00002000ULL
 #  define pe_rsc_allow_remote_remotes       0x00004000ULL

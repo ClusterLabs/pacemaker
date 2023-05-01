@@ -58,6 +58,9 @@ extern "C" {
 //! \deprecated Use pcmk_rsc_updating_nodes instead
 #define pe_rsc_merging                  pcmk_rsc_updating_nodes
 
+//! \deprecated Use pcmk_rsc_restarting instead
+#define pe_rsc_restarting               pcmk_rsc_restarting
+
 //! \deprecated Use pcmk_sched_quorate instead
 #define pe_flag_have_quorum             pcmk_sched_quorate
 
