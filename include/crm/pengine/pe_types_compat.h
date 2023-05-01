@@ -94,6 +94,9 @@ extern "C" {
 //! \deprecated Use pcmk_rsc_stop_unexpected instead
 #define pe_rsc_stop_unexpected          pcmk_rsc_stop_unexpected
 
+//! \deprecated Use pcmk_rsc_migratable instead
+#define pe_rsc_allow_migrate            pcmk_rsc_migratable
+
 //! \deprecated Use pcmk_sched_quorate instead
 #define pe_flag_have_quorum             pcmk_sched_quorate
 

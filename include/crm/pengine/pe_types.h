@@ -179,8 +179,6 @@ struct pe_node_s {
     int rsc_discover_mode;
 };
 
-#  define pe_rsc_allow_migrate              0x00800000ULL
-
 #  define pe_rsc_failure_ignored            0x01000000ULL
 #  define pe_rsc_replica_container          0x02000000ULL
 #  define pe_rsc_maintenance                0x04000000ULL

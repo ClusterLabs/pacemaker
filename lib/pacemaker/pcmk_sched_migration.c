@@ -198,7 +198,7 @@ pcmk__rsc_can_migrate(const pe_resource_t *rsc, const pe_node_t *current)
 {
     CRM_CHECK(rsc != NULL, return false);
 
-    if (!pcmk_is_set(rsc->flags, pe_rsc_allow_migrate)) {
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_migratable)) {
         pe_rsc_trace(rsc, "%s cannot migrate because "
                           "the configuration does not allow it",
                      rsc->id);
@@ -290,8 +290,8 @@ pcmk__order_migration_equivalents(pe__ordering_t *order)
     }
 
     // Only orderings involving at least one migratable resource are relevant
-    first_migratable = pcmk_is_set(order->lh_rsc->flags, pe_rsc_allow_migrate);
-    then_migratable = pcmk_is_set(order->rh_rsc->flags, pe_rsc_allow_migrate);
+    first_migratable = pcmk_is_set(order->lh_rsc->flags, pcmk_rsc_migratable);
+    then_migratable = pcmk_is_set(order->rh_rsc->flags, pcmk_rsc_migratable);
     if (!first_migratable && !then_migratable) {
         return;
     }

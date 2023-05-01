@@ -730,7 +730,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
 
     value = g_hash_table_lookup((*rsc)->meta, XML_OP_ATTR_ALLOW_MIGRATE);
     if (crm_is_true(value)) {
-        pe__set_resource_flags(*rsc, pe_rsc_allow_migrate);
+        pe__set_resource_flags(*rsc, pcmk_rsc_migratable);
     } else if ((value == NULL) && remote_node) {
         /* By default, we want remote nodes to be able
          * to float around the cluster without having to stop all the
@@ -739,7 +739,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
          * problems, migration support can be explicitly turned off with
          * allow-migrate=false.
          */
-        pe__set_resource_flags(*rsc, pe_rsc_allow_migrate);
+        pe__set_resource_flags(*rsc, pcmk_rsc_migratable);
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MANAGED);

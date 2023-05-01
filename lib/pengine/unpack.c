@@ -3140,7 +3140,7 @@ unpack_migrate_to_success(struct action_history *history)
             // Mark resource as failed, require recovery, and prevent migration
             pe__set_resource_flags(history->rsc,
                                    pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
-            pe__clear_resource_flags(history->rsc, pe_rsc_allow_migrate);
+            pe__clear_resource_flags(history->rsc, pcmk_rsc_migratable);
         }
         return;
     }
@@ -3177,7 +3177,7 @@ unpack_migrate_to_success(struct action_history *history)
         // Mark resource as failed, require recovery, and prevent migration
         pe__set_resource_flags(history->rsc,
                                pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
-        pe__clear_resource_flags(history->rsc, pe_rsc_allow_migrate);
+        pe__clear_resource_flags(history->rsc, pcmk_rsc_migratable);
     }
 }
 
