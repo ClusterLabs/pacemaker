@@ -650,7 +650,7 @@ assign_instance_early(const pe_resource_t *rsc, pe_resource_t *instance,
             pe_rsc_info(instance,
                         "Not assigning %s to current node %s: unavailable",
                         instance->id, pe__node_name(current));
-            pe__set_resource_flags(instance, pe_rsc_provisional);
+            pe__set_resource_flags(instance, pcmk_rsc_unassigned);
             break;
         }
 
@@ -738,7 +738,7 @@ preferred_node(const pe_resource_t *instance, int optimal_per_node)
 
     // Check whether instance is active, healthy, and not yet assigned
     if ((instance->running_on == NULL)
-        || !pcmk_is_set(instance->flags, pe_rsc_provisional)
+        || !pcmk_is_set(instance->flags, pcmk_rsc_unassigned)
         || pcmk_is_set(instance->flags, pe_rsc_failed)) {
         return NULL;
     }
@@ -806,7 +806,7 @@ pcmk__assign_instances(pe_resource_t *collective, GList *instances,
         int available = max_total - assigned;
 
         instance = iter->data;
-        if (!pcmk_is_set(instance->flags, pe_rsc_provisional)) {
+        if (!pcmk_is_set(instance->flags, pcmk_rsc_unassigned)) {
             continue;   // Already assigned
         }
 
@@ -824,7 +824,7 @@ pcmk__assign_instances(pe_resource_t *collective, GList *instances,
     for (iter = instances; iter != NULL; iter = iter->next) {
         instance = (pe_resource_t *) iter->data;
 
-        if (!pcmk_is_set(instance->flags, pe_rsc_provisional)) {
+        if (!pcmk_is_set(instance->flags, pcmk_rsc_unassigned)) {
             continue; // Already assigned
         }
 

@@ -171,7 +171,7 @@ assign_best_node(pe_resource_t *rsc, const pe_node_t *prefer, bool stop_if_fail)
         prefer = most_free_node;
     }
 
-    if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_unassigned)) {
         // We've already finished assignment of resources to nodes
         return rsc->allocated_to != NULL;
     }
@@ -303,7 +303,7 @@ apply_this_with(pcmk__colocation_t *colocation, pe_resource_t *rsc)
         archive = pcmk__copy_node_table(rsc->allowed_nodes);
     }
 
-    if (pcmk_is_set(other->flags, pe_rsc_provisional)) {
+    if (pcmk_is_set(other->flags, pcmk_rsc_unassigned)) {
         pe_rsc_trace(rsc,
                      "%s: Assigning colocation %s primary %s first"
                      "(score=%d role=%s)",
@@ -401,7 +401,7 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer,
         rsc->parent->cmds->assign(rsc->parent, prefer, stop_if_fail);
     }
 
-    if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_unassigned)) {
         // Assignment has already been done
         const char *node_name = "no node";
 
@@ -1531,7 +1531,7 @@ pcmk__primitive_add_utilization(const pe_resource_t *rsc,
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_primitive)
                && (orig_rsc != NULL) && (utilization != NULL));
 
-    if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_unassigned)) {
         return;
     }
 

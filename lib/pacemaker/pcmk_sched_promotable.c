@@ -657,7 +657,7 @@ promotion_attr_value(const pe_resource_t *rsc, const pe_node_t *node,
     const char *attr_value = NULL;
     enum pe__rsc_node node_type = pe__rsc_node_assigned;
 
-    if (pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_unassigned)) {
         // Not assigned yet
         node_type = pe__rsc_node_current;
     }

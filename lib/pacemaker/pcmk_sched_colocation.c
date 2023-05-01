@@ -1184,7 +1184,7 @@ pcmk__colocation_affects(const pe_resource_t *dependent,
     CRM_ASSERT((dependent != NULL) && (primary != NULL)
                && (colocation != NULL));
 
-    if (!preview && pcmk_is_set(primary->flags, pe_rsc_provisional)) {
+    if (!preview && pcmk_is_set(primary->flags, pcmk_rsc_unassigned)) {
         // Primary resource has not been assigned yet, so we can't do anything
         return pcmk__coloc_affects_nothing;
     }
@@ -1195,7 +1195,7 @@ pcmk__colocation_affects(const pe_resource_t *dependent,
     if ((colocation->dependent_role >= pcmk_role_unpromoted)
         && (dependent_role_rsc->parent != NULL)
         && pcmk_is_set(dependent_role_rsc->parent->flags, pcmk_rsc_promotable)
-        && !pcmk_is_set(dependent_role_rsc->flags, pe_rsc_provisional)) {
+        && !pcmk_is_set(dependent_role_rsc->flags, pcmk_rsc_unassigned)) {
 
         /* This is a colocation by role, and the dependent is a promotable clone
          * that has already been assigned, so the colocation should now affect
@@ -1204,7 +1204,7 @@ pcmk__colocation_affects(const pe_resource_t *dependent,
         return pcmk__coloc_affects_role;
     }
 
-    if (!preview && !pcmk_is_set(dependent->flags, pe_rsc_provisional)) {
+    if (!preview && !pcmk_is_set(dependent->flags, pcmk_rsc_unassigned)) {
         /* The dependent resource has already been through assignment, so the
          * constraint no longer has any effect. Log an error if a mandatory
          * colocation constraint has been violated.

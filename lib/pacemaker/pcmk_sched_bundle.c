@@ -150,7 +150,7 @@ pcmk__bundle_assign(pe_resource_t *rsc, const pe_node_t *prefer,
         bundled_resource->cmds->assign(bundled_resource, prefer, stop_if_fail);
     }
 
-    pe__clear_resource_flags(rsc, pe_rsc_allocating|pe_rsc_provisional);
+    pe__clear_resource_flags(rsc, pe_rsc_allocating|pcmk_rsc_unassigned);
     return NULL;
 }
 
@@ -529,7 +529,7 @@ pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
                && (dependent->variant == pcmk_rsc_variant_primitive)
                && (colocation != NULL) && !for_dependent);
 
-    if (pcmk_is_set(primary->flags, pe_rsc_provisional)) {
+    if (pcmk_is_set(primary->flags, pcmk_rsc_unassigned)) {
         pe_rsc_trace(primary,
                      "Skipping applying colocation %s "
                      "because %s is still provisional",
@@ -613,7 +613,7 @@ pcmk__with_bundle_colocations(const pe_resource_t *rsc,
             pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
         }
 
-    } else if (!pcmk_is_set(orig_rsc->flags, pe_rsc_provisional)) {
+    } else if (!pcmk_is_set(orig_rsc->flags, pcmk_rsc_unassigned)) {
         /* orig_rsc is an instance and is already assigned. If something
          * requests colocations for orig_rsc now, it's for setting roles.
          */
@@ -657,7 +657,7 @@ pcmk__bundle_with_colocations(const pe_resource_t *rsc,
             pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
         }
 
-    } else if (!pcmk_is_set(orig_rsc->flags, pe_rsc_provisional)) {
+    } else if (!pcmk_is_set(orig_rsc->flags, pcmk_rsc_unassigned)) {
         /* orig_rsc is an instance and is already assigned. If something
          * requests colocations for orig_rsc now, it's for setting roles.
          */
@@ -1029,7 +1029,7 @@ pcmk__bundle_add_utilization(const pe_resource_t *rsc,
 
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
 
-    if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_unassigned)) {
         return;
     }
 

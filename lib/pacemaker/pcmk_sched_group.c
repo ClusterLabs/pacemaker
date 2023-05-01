@@ -43,7 +43,7 @@ pcmk__group_assign(pe_resource_t *rsc, const pe_node_t *prefer,
 
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_group));
 
-    if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_unassigned)) {
         return rsc->allocated_to; // Assignment already done
     }
     if (pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
@@ -54,7 +54,7 @@ pcmk__group_assign(pe_resource_t *rsc, const pe_node_t *prefer,
 
     if (rsc->children == NULL) {
         // No members to assign
-        pe__clear_resource_flags(rsc, pe_rsc_provisional);
+        pe__clear_resource_flags(rsc, pcmk_rsc_unassigned);
         return NULL;
     }
 
@@ -79,7 +79,7 @@ pcmk__group_assign(pe_resource_t *rsc, const pe_node_t *prefer,
     }
 
     pe__set_next_role(rsc, first_member->next_role, "first group member");
-    pe__clear_resource_flags(rsc, pe_rsc_allocating|pe_rsc_provisional);
+    pe__clear_resource_flags(rsc, pe_rsc_allocating|pcmk_rsc_unassigned);
 
     if (!pe__group_flag_is_set(rsc, pe__group_colocated)) {
         return NULL;
@@ -398,7 +398,7 @@ colocate_with_group(pe_resource_t *dependent, const pe_resource_t *primary,
                  "Processing colocation %s (%s with group %s) for primary",
                  colocation->id, dependent->id, primary->id);
 
-    if (pcmk_is_set(primary->flags, pe_rsc_provisional)) {
+    if (pcmk_is_set(primary->flags, pcmk_rsc_unassigned)) {
         return;
     }
 
@@ -902,7 +902,7 @@ pcmk__group_add_utilization(const pe_resource_t *rsc,
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_group)
                && (orig_rsc != NULL) && (utilization != NULL));
 
-    if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_unassigned)) {
         return;
     }
 
@@ -914,7 +914,7 @@ pcmk__group_add_utilization(const pe_resource_t *rsc,
         for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
             member = (pe_resource_t *) iter->data;
 
-            if (pcmk_is_set(member->flags, pe_rsc_provisional)
+            if (pcmk_is_set(member->flags, pcmk_rsc_unassigned)
                 && (g_list_find(all_rscs, member) == NULL)) {
                 member->cmds->add_utilization(member, orig_rsc, all_rscs,
                                               utilization);
@@ -925,7 +925,7 @@ pcmk__group_add_utilization(const pe_resource_t *rsc,
         // Just add first member's utilization
         member = (pe_resource_t *) rsc->children->data;
         if ((member != NULL)
-            && pcmk_is_set(member->flags, pe_rsc_provisional)
+            && pcmk_is_set(member->flags, pcmk_rsc_unassigned)
             && (g_list_find(all_rscs, member) == NULL)) {
 
             member->cmds->add_utilization(member, orig_rsc, all_rscs,

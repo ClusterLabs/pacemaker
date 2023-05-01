@@ -443,7 +443,7 @@ pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force,
         changed = (node != NULL);
     }
     pcmk__unassign_resource(rsc);
-    pe__clear_resource_flags(rsc, pe_rsc_provisional);
+    pe__clear_resource_flags(rsc, pcmk_rsc_unassigned);
 
     if (node == NULL) {
         char *rc_stopped = NULL;
@@ -530,7 +530,7 @@ pcmk__unassign_resource(pe_resource_t *rsc)
         crm_info("Unassigning %s from %s", rsc->id, pe__node_name(old));
     }
 
-    pe__set_resource_flags(rsc, pe_rsc_provisional);
+    pe__set_resource_flags(rsc, pcmk_rsc_unassigned);
 
     if (rsc->children == NULL) {
         if (old == NULL) {

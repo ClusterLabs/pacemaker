@@ -41,7 +41,7 @@ pcmk__clone_assign(pe_resource_t *rsc, const pe_node_t *prefer,
 
     CRM_ASSERT(pe_rsc_is_clone(rsc));
 
-    if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_unassigned)) {
         return NULL; // Assignment has already been done
     }
 
@@ -86,7 +86,7 @@ pcmk__clone_assign(pe_resource_t *rsc, const pe_node_t *prefer,
         pcmk__set_instance_roles(rsc);
     }
 
-    pe__clear_resource_flags(rsc, pe_rsc_provisional|pe_rsc_allocating);
+    pe__clear_resource_flags(rsc, pcmk_rsc_unassigned|pe_rsc_allocating);
     pe_rsc_trace(rsc, "Assigned clone %s", rsc->id);
     return NULL;
 }
@@ -259,7 +259,7 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
                && (dependent != NULL)
                && (dependent->variant == pcmk_rsc_variant_primitive));
 
-    if (pcmk_is_set(primary->flags, pe_rsc_provisional)) {
+    if (pcmk_is_set(primary->flags, pcmk_rsc_unassigned)) {
         pe_rsc_trace(primary,
                      "Delaying processing colocation %s "
                      "because cloned primary %s is still provisional",
@@ -275,7 +275,7 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
     if (pcmk_is_set(primary->flags, pcmk_rsc_promotable)
         && (colocation->primary_role != pcmk_role_unknown)) {
 
-        if (pcmk_is_set(dependent->flags, pe_rsc_provisional)) {
+        if (pcmk_is_set(dependent->flags, pcmk_rsc_unassigned)) {
             // We're assigning the dependent to a node
             pcmk__update_dependent_with_promotable(primary, dependent,
                                                    colocation);
@@ -665,7 +665,7 @@ pcmk__clone_add_utilization(const pe_resource_t *rsc,
     CRM_ASSERT(pe_rsc_is_clone(rsc) && (orig_rsc != NULL)
                && (utilization != NULL));
 
-    if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_unassigned)) {
         return;
     }
 
