@@ -180,9 +180,6 @@ struct pe_node_s {
 };
 
 //!< \deprecated Do not use
-#  define pe_rsc_starting                   0x00100000ULL
-
-//!< \deprecated Do not use
 #  define pe_rsc_stopping                   0x00200000ULL
 
 #  define pe_rsc_stop_unexpected            0x00400000ULL
