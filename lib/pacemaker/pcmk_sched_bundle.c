@@ -479,7 +479,7 @@ replica_apply_coloc_score(const pe__bundle_replica_t *replica, void *user_data)
 
     chosen = replica->container->fns->location(replica->container, NULL, 0);
     if ((chosen == NULL)
-        || is_set_recursive(replica->container, pe_rsc_block, true)) {
+        || is_set_recursive(replica->container, pcmk_rsc_blocked, true)) {
         return true;
     }
 

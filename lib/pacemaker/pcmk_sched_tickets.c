@@ -120,7 +120,7 @@ constraints_for_ticket(pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
                 }
                 if (rsc->running_on != NULL) {
                     pe__clear_resource_flags(rsc, pcmk_rsc_managed);
-                    pe__set_resource_flags(rsc, pe_rsc_block);
+                    pe__set_resource_flags(rsc, pcmk_rsc_blocked);
                 }
                 break;
         }

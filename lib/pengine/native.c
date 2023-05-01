@@ -150,7 +150,7 @@ native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * dat
                 break;
             case pcmk_multiply_active_block:
                 pe__clear_resource_flags(rsc, pcmk_rsc_managed);
-                pe__set_resource_flags(rsc, pe_rsc_block);
+                pe__set_resource_flags(rsc, pcmk_rsc_blocked);
 
                 /* If the resource belongs to a group or bundle configured with
                  * multiple-active=block, block the entire entity.
@@ -165,7 +165,7 @@ native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * dat
                         pe_resource_t *child = (pe_resource_t *) gIter->data;
 
                         pe__clear_resource_flags(child, pcmk_rsc_managed);
-                        pe__set_resource_flags(child, pe_rsc_block);
+                        pe__set_resource_flags(child, pcmk_rsc_blocked);
                     }
                 }
                 break;
@@ -484,7 +484,8 @@ native_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
     }
     status_print("active=\"%s\" ", pcmk__btoa(rsc->fns->active(rsc, TRUE)));
     status_print("orphaned=\"%s\" ", pe__rsc_bool_str(rsc, pcmk_rsc_removed));
-    status_print("blocked=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_block));
+    status_print("blocked=\"%s\" ",
+                 pe__rsc_bool_str(rsc, pcmk_rsc_blocked));
     status_print("managed=\"%s\" ",
                  pe__rsc_bool_str(rsc, pcmk_rsc_managed));
     status_print("failed=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_failed));
@@ -657,8 +658,8 @@ pcmk__native_output_string(const pe_resource_t *rsc, const char *name,
     }
 
     // Blocked or maintenance implies unmanaged
-    if (pcmk_any_flags_set(rsc->flags, pe_rsc_block|pe_rsc_maintenance)) {
-        if (pcmk_is_set(rsc->flags, pe_rsc_block)) {
+    if (pcmk_any_flags_set(rsc->flags, pcmk_rsc_blocked|pe_rsc_maintenance)) {
+        if (pcmk_is_set(rsc->flags, pcmk_rsc_blocked)) {
             have_flags = add_output_flag(outstr, "blocked", have_flags);
 
         } else if (pcmk_is_set(rsc->flags, pe_rsc_maintenance)) {
@@ -994,7 +995,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
              "target_role", target_role,
              "active", pcmk__btoa(rsc->fns->active(rsc, TRUE)),
              "orphaned", pe__rsc_bool_str(rsc, pcmk_rsc_removed),
-             "blocked", pe__rsc_bool_str(rsc, pe_rsc_block),
+             "blocked", pe__rsc_bool_str(rsc, pcmk_rsc_blocked),
              "maintenance", pe__rsc_bool_str(rsc, pe_rsc_maintenance),
              "managed", pe__rsc_bool_str(rsc, pcmk_rsc_managed),
              "failed", pe__rsc_bool_str(rsc, pe_rsc_failed),

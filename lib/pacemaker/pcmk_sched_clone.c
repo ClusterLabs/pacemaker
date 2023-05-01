@@ -328,7 +328,7 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
             pe_node_t *chosen = instance->fns->location(instance, NULL, 0);
 
             if ((chosen != NULL)
-                && !is_set_recursive(instance, pe_rsc_block, TRUE)) {
+                && !is_set_recursive(instance, pcmk_rsc_blocked, TRUE)) {
                 pe_rsc_trace(primary, "Allowing %s: %s %d",
                              colocation->id, pe__node_name(chosen),
                              chosen->weight);

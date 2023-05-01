@@ -576,7 +576,7 @@ schedule_restart_actions(pe_resource_t *rsc, pe_node_t *current,
 
     // Bring resource up to its next role on its next node
     while ((rsc->role <= rsc->next_role) && (role != rsc->role)
-           && !pcmk_is_set(rsc->flags, pe_rsc_block)) {
+           && !pcmk_is_set(rsc->flags, pcmk_rsc_blocked)) {
         bool required = need_stop;
 
         next_role = rsc_state_matrix[role][rsc->role];
@@ -805,7 +805,7 @@ pcmk__primitive_create_actions(pe_resource_t *rsc)
             }
         }
 
-    } else if (pcmk_is_set(rsc->flags, pe_rsc_block)) {
+    } else if (pcmk_is_set(rsc->flags, pcmk_rsc_blocked)) {
         pe_rsc_trace(rsc, "Blocking further actions on %s", rsc->id);
         need_stop = true;
 

@@ -556,7 +556,7 @@ pcmk__create_recurring_actions(pe_resource_t *rsc)
 {
     pe_action_t *start = NULL;
 
-    if (pcmk_is_set(rsc->flags, pe_rsc_block)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_blocked)) {
         pe_rsc_trace(rsc, "Skipping recurring actions for blocked resource %s",
                      rsc->id);
         return;

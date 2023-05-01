@@ -1082,7 +1082,7 @@ pcmk__instance_matches(const pe_resource_t *instance, const pe_node_t *node,
         return false;
     }
 
-    if (!is_set_recursive(instance, pe_rsc_block, true)) {
+    if (!is_set_recursive(instance, pcmk_rsc_blocked, true)) {
         // We only want instances that haven't failed
         instance_node = instance->fns->location(instance, NULL, current);
     }

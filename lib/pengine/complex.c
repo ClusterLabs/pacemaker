@@ -1159,7 +1159,7 @@ pe__count_common(pe_resource_t *rsc)
         if (pe__resource_is_disabled(rsc)) {
             rsc->cluster->disabled_resources++;
         }
-        if (pcmk_is_set(rsc->flags, pe_rsc_block)) {
+        if (pcmk_is_set(rsc->flags, pcmk_rsc_blocked)) {
             rsc->cluster->blocked_resources++;
         }
     }

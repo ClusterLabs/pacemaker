@@ -452,7 +452,7 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
                                         |pe_order_restart)
         && (first->rsc != NULL)
         && !pcmk_is_set(first->rsc->flags, pcmk_rsc_managed)
-        && pcmk_is_set(first->rsc->flags, pe_rsc_block)
+        && pcmk_is_set(first->rsc->flags, pcmk_rsc_blocked)
         && !pcmk_is_set(first->flags, pe_action_runnable)
         && pcmk__str_eq(first->task, PCMK_ACTION_STOP, pcmk__str_none)) {
 

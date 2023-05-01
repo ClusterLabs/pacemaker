@@ -1958,7 +1958,7 @@ find_anonymous_clone(pe_working_set_t *data_set, const pe_node_t *node,
         } else {
             pe_rsc_trace(parent, "Resource %s, skip inactive", child->id);
             if (!skip_inactive && !inactive_instance
-                && !pcmk_is_set(child->flags, pe_rsc_block)) {
+                && !pcmk_is_set(child->flags, pcmk_rsc_blocked)) {
                 // Remember one inactive instance in case we don't find active
                 inactive_instance = parent->fns->find_rsc(child, rsc_id, NULL,
                                                           pcmk_rsc_match_clone_only);
@@ -2213,7 +2213,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
              * actions being sent for the resource
              */
             pe__clear_resource_flags(rsc, pcmk_rsc_managed);
-            pe__set_resource_flags(rsc, pe_rsc_block);
+            pe__set_resource_flags(rsc, pcmk_rsc_blocked);
             break;
 
         case pcmk_on_fail_ban:
@@ -3639,7 +3639,7 @@ block_if_unrecoverable(struct action_history *history)
     free(last_change_s);
 
     pe__clear_resource_flags(history->rsc, pcmk_rsc_managed);
-    pe__set_resource_flags(history->rsc, pe_rsc_block);
+    pe__set_resource_flags(history->rsc, pcmk_rsc_blocked);
 }
 
 /*!
