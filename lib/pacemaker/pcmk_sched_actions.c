@@ -451,7 +451,7 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
                                         |pe_order_implies_first
                                         |pe_order_restart)
         && (first->rsc != NULL)
-        && !pcmk_is_set(first->rsc->flags, pe_rsc_managed)
+        && !pcmk_is_set(first->rsc->flags, pcmk_rsc_managed)
         && pcmk_is_set(first->rsc->flags, pe_rsc_block)
         && !pcmk_is_set(first->flags, pe_action_runnable)
         && pcmk__str_eq(first->task, PCMK_ACTION_STOP, pcmk__str_none)) {
@@ -765,7 +765,7 @@ handle_restart_ordering(pe_action_t *first, pe_action_t *then, uint32_t filter)
      */
     if (pcmk_is_set(filter, pe_action_runnable)
         && !pcmk_is_set(then->flags, pe_action_runnable)
-        && pcmk_is_set(then->rsc->flags, pe_rsc_managed)
+        && pcmk_is_set(then->rsc->flags, pcmk_rsc_managed)
         && (first->rsc == then->rsc)) {
         reason = "stop";
     }
@@ -1558,11 +1558,11 @@ schedule_reload(gpointer data, gpointer user_data)
 
     // Skip the reload in certain situations
     if ((node == NULL)
-        || !pcmk_is_set(rsc->flags, pe_rsc_managed)
+        || !pcmk_is_set(rsc->flags, pcmk_rsc_managed)
         || pcmk_is_set(rsc->flags, pe_rsc_failed)) {
         pe_rsc_trace(rsc, "Skip reload of %s:%s%s %s",
                      rsc->id,
-                     pcmk_is_set(rsc->flags, pe_rsc_managed)? "" : " unmanaged",
+                     pcmk_is_set(rsc->flags, pcmk_rsc_managed)? "" : " unmanaged",
                      pcmk_is_set(rsc->flags, pe_rsc_failed)? " failed" : "",
                      (node == NULL)? "inactive" : node->details->uname);
         return;

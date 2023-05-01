@@ -120,7 +120,7 @@ pe_fence_node(pe_working_set_t * data_set, pe_node_t * node,
         pe_resource_t *rsc = node->details->remote_rsc->container;
 
         if (!pcmk_is_set(rsc->flags, pe_rsc_failed)) {
-            if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+            if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
                 crm_notice("Not fencing guest node %s "
                            "(otherwise would because %s): "
                            "its guest resource %s is unmanaged",
@@ -150,7 +150,7 @@ pe_fence_node(pe_working_set_t * data_set, pe_node_t * node,
     } else if (pe__is_remote_node(node)) {
         pe_resource_t *rsc = node->details->remote_rsc;
 
-        if ((rsc != NULL) && !pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+        if ((rsc != NULL) && !pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
             crm_notice("Not fencing remote node %s "
                        "(otherwise would because %s): connection is unmanaged",
                        pe__node_name(node), reason);
@@ -1035,7 +1035,7 @@ unpack_handle_remote_attrs(pe_node_t *this_node, const xmlNode *state,
     }
 
     if (crm_is_true(pe_node_attribute_raw(this_node, "maintenance")) ||
-        ((rsc != NULL) && !pcmk_is_set(rsc->flags, pe_rsc_managed))) {
+        ((rsc != NULL) && !pcmk_is_set(rsc->flags, pcmk_rsc_managed))) {
         crm_info("%s is in maintenance mode", pe__node_name(this_node));
         this_node->details->maintenance = TRUE;
     }
@@ -2081,7 +2081,7 @@ process_orphan_resource(const xmlNode *rsc_entry, const pe_node_t *node,
     }
 
     if (!pcmk_is_set(data_set->flags, pcmk_sched_stop_removed_resources)) {
-        pe__clear_resource_flags(rsc, pe_rsc_managed);
+        pe__clear_resource_flags(rsc, pcmk_rsc_managed);
 
     } else {
         CRM_CHECK(rsc != NULL, return NULL);
@@ -2130,7 +2130,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
     if ((rsc->role > pcmk_role_stopped)
         && node->details->online == FALSE
         && node->details->maintenance == FALSE
-        && pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+        && pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
 
         gboolean should_fence = FALSE;
 
@@ -2212,7 +2212,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             /* is_managed == FALSE will prevent any
              * actions being sent for the resource
              */
-            pe__clear_resource_flags(rsc, pe_rsc_managed);
+            pe__clear_resource_flags(rsc, pcmk_rsc_managed);
             pe__set_resource_flags(rsc, pe_rsc_block);
             break;
 
@@ -2300,7 +2300,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
     if ((rsc->role != pcmk_role_stopped)
         && (rsc->role != pcmk_role_unknown)) {
         if (pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
-            if (pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+            if (pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
                 pcmk__config_warn("Detected active orphan %s running on %s",
                                   rsc->id, pe__node_name(node));
             } else {
@@ -3638,7 +3638,7 @@ block_if_unrecoverable(struct action_history *history)
 
     free(last_change_s);
 
-    pe__clear_resource_flags(history->rsc, pe_rsc_managed);
+    pe__clear_resource_flags(history->rsc, pcmk_rsc_managed);
     pe__set_resource_flags(history->rsc, pe_rsc_block);
 }
 
@@ -3786,7 +3786,7 @@ remap_operation(struct action_history *history,
         case PCMK_OCF_NOT_RUNNING:
             if (is_probe
                 || (history->expected_exit_status == history->exit_status)
-                || !pcmk_is_set(history->rsc->flags, pe_rsc_managed)) {
+                || !pcmk_is_set(history->rsc->flags, pcmk_rsc_managed)) {
 
                 /* For probes, recurring monitors for the Stopped role, and
                  * unmanaged resources, "not running" is not considered a
@@ -4670,7 +4670,8 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 
         case PCMK_EXEC_NOT_CONNECTED:
             if (pe__is_guest_or_remote_node(node)
-                && pcmk_is_set(node->details->remote_rsc->flags, pe_rsc_managed)) {
+                && pcmk_is_set(node->details->remote_rsc->flags,
+                               pcmk_rsc_managed)) {
                 /* We should never get into a situation where a managed remote
                  * connection resource is considered OK but a resource action
                  * behind the connection gets a "not connected" status. But as a

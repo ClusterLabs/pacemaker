@@ -1425,7 +1425,8 @@ bundle_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
     status_print("type=\"%s\" ", container_agent_str(bundle_data->agent_type));
     status_print("image=\"%s\" ", bundle_data->image);
     status_print("unique=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_unique));
-    status_print("managed=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_managed));
+    status_print("managed=\"%s\" ",
+                 pe__rsc_bool_str(rsc, pcmk_rsc_managed));
     status_print("failed=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_failed));
     status_print(">\n");
 
@@ -1507,7 +1508,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
                      "image", bundle_data->image,
                      "unique", pe__rsc_bool_str(rsc, pe_rsc_unique),
                      "maintenance", pe__rsc_bool_str(rsc, pe_rsc_maintenance),
-                     "managed", pe__rsc_bool_str(rsc, pe_rsc_managed),
+                     "managed", pe__rsc_bool_str(rsc, pcmk_rsc_managed),
                      "failed", pe__rsc_bool_str(rsc, pe_rsc_failed),
                      "description", desc);
             CRM_ASSERT(rc == pcmk_rc_ok);
@@ -1591,7 +1592,7 @@ get_unmanaged_str(const pe_resource_t *rsc)
     if (pcmk_is_set(rsc->flags, pe_rsc_maintenance)) {
         return " (maintenance)";
     }
-    if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
         return " (unmanaged)";
     }
     return "";
@@ -1896,7 +1897,7 @@ pe__print_bundle(pe_resource_t *rsc, const char *pre_text, long options,
                  pre_text, ((bundle_data->nreplicas > 1)? " set" : ""),
                  rsc->id, bundle_data->image,
                  pcmk_is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
-                 pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
+                 pcmk_is_set(rsc->flags, pcmk_rsc_managed)? "" : " (unmanaged)");
     if (options & pe_print_html) {
         status_print("<br />\n<ul>\n");
     }

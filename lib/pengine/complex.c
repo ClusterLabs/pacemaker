@@ -692,7 +692,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     pe__set_resource_flags(*rsc, pe_rsc_runnable|pe_rsc_provisional);
 
     if (!pcmk_is_set(data_set->flags, pcmk_sched_in_maintenance)) {
-        pe__set_resource_flags(*rsc, pe_rsc_managed);
+        pe__set_resource_flags(*rsc, pcmk_rsc_managed);
     }
 
     (*rsc)->rsc_cons = NULL;
@@ -745,19 +745,19 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MANAGED);
     if (value != NULL && !pcmk__str_eq("default", value, pcmk__str_casei)) {
         if (crm_is_true(value)) {
-            pe__set_resource_flags(*rsc, pe_rsc_managed);
+            pe__set_resource_flags(*rsc, pcmk_rsc_managed);
         } else {
-            pe__clear_resource_flags(*rsc, pe_rsc_managed);
+            pe__clear_resource_flags(*rsc, pcmk_rsc_managed);
         }
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MAINTENANCE);
     if (crm_is_true(value)) {
-        pe__clear_resource_flags(*rsc, pe_rsc_managed);
+        pe__clear_resource_flags(*rsc, pcmk_rsc_managed);
         pe__set_resource_flags(*rsc, pe_rsc_maintenance);
     }
     if (pcmk_is_set(data_set->flags, pcmk_sched_in_maintenance)) {
-        pe__clear_resource_flags(*rsc, pe_rsc_managed);
+        pe__clear_resource_flags(*rsc, pcmk_rsc_managed);
         pe__set_resource_flags(*rsc, pe_rsc_maintenance);
     }
 

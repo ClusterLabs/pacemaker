@@ -193,7 +193,7 @@ apply_stickiness(gpointer data, gpointer user_data)
     /* A resource is sticky if it is managed, has stickiness configured, and is
      * active on a single node.
      */
-    if (!pcmk_is_set(rsc->flags, pe_rsc_managed)
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)
         || (rsc->stickiness < 1) || !pcmk__list_of_1(rsc->running_on)) {
         return;
     }
@@ -424,7 +424,7 @@ schedule_resource_actions(pe_working_set_t *data_set)
 static bool
 is_managed(const pe_resource_t *rsc)
 {
-    if (pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
         return true;
     }
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {

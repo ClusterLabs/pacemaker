@@ -1153,7 +1153,7 @@ pcmk__order_stops_before_shutdown(pe_node_t *node, pe_action_t *shutdown_op)
          * we may still end up blocking)
          */
         if (!pcmk_any_flags_set(action->rsc->flags,
-                                pe_rsc_managed|pe_rsc_block)) {
+                                pcmk_rsc_managed|pe_rsc_block)) {
             pe_rsc_trace(action->rsc,
                          "Not ordering %s before shutdown of %s because "
                          "resource is unmanaged or blocked",

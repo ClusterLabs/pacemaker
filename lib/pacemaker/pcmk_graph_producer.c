@@ -515,8 +515,9 @@ should_add_action_to_graph(const pe_action_t *action)
      * with the exception of monitors and cancellation of recurring monitors.
      */
     if ((action->rsc != NULL)
-        && !pcmk_is_set(action->rsc->flags, pe_rsc_managed)
+        && !pcmk_is_set(action->rsc->flags, pcmk_rsc_managed)
         && !pcmk__str_eq(action->task, PCMK_ACTION_MONITOR, pcmk__str_none)) {
+
         const char *interval_ms_s;
 
         /* A cancellation of a recurring monitor will get here because the task
@@ -729,7 +730,7 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
     } else if (input->action->rsc
                && input->action->rsc != action->rsc
                && pcmk_is_set(input->action->rsc->flags, pe_rsc_failed)
-               && !pcmk_is_set(input->action->rsc->flags, pe_rsc_managed)
+               && !pcmk_is_set(input->action->rsc->flags, pcmk_rsc_managed)
                && pcmk__ends_with(input->action->uuid, "_stop_0")
                && action->rsc && pe_rsc_is_clone(action->rsc)) {
         crm_warn("Ignoring requirement that %s complete before %s:"
@@ -1075,7 +1076,7 @@ pcmk__create_graph(pe_working_set_t *data_set)
             if (pcmk_is_set(data_set->flags, pcmk_sched_quorate)
                 || (data_set->no_quorum_policy == pcmk_no_quorum_ignore)) {
                 const bool managed = pcmk_is_set(action->rsc->flags,
-                                                 pe_rsc_managed);
+                                                 pcmk_rsc_managed);
                 const bool failed = pcmk_is_set(action->rsc->flags,
                                                 pe_rsc_failed);
 

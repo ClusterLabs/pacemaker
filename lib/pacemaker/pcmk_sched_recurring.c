@@ -328,7 +328,7 @@ recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
     }
 
     // Order monitor relative to other actions
-    if ((node == NULL) || pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+    if ((node == NULL) || pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
         pcmk__new_ordering(rsc, start_key(rsc), NULL,
                            NULL, strdup(mon->uuid), mon,
                            pe_order_implies_then|pe_order_runnable_left,
@@ -440,7 +440,7 @@ order_after_stops(pe_resource_t *rsc, const pe_node_t *node,
 
         if (!pcmk_is_set(stop->flags, pe_action_optional)
             && !pcmk_is_set(action->flags, pe_action_optional)
-            && !pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+            && !pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
             pe_rsc_trace(rsc, "%s optional on %s: unmanaged",
                          action->uuid, pe__node_name(node));
             pe__set_action_flags(action, pe_action_optional);
@@ -452,7 +452,7 @@ order_after_stops(pe_resource_t *rsc, const pe_node_t *node,
             pe__clear_action_flags(action, pe_action_runnable);
         }
 
-        if (pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+        if (pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
             pcmk__new_ordering(rsc, stop_key(rsc), stop,
                                NULL, NULL, action,
                                pe_order_implies_then|pe_order_runnable_left,
@@ -520,7 +520,7 @@ recurring_op_for_inactive(pe_resource_t *rsc, const pe_node_t *node,
 
         pe__add_action_expected_result(stopped_mon, CRM_EX_NOT_RUNNING);
 
-        if (pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+        if (pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
             order_after_probes(rsc, stop_node, stopped_mon);
         }
 
@@ -578,7 +578,7 @@ pcmk__create_recurring_actions(pe_resource_t *rsc)
                      rsc->id, pe__node_name(rsc->allocated_to));
 
     } else if ((rsc->next_role != pcmk_role_stopped)
-        || !pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+        || !pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
         // Recurring actions for active roles needed
         start = start_action(rsc, rsc->allocated_to, TRUE);
     }

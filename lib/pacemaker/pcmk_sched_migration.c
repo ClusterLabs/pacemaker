@@ -205,7 +205,7 @@ pcmk__rsc_can_migrate(const pe_resource_t *rsc, const pe_node_t *current)
         return false;
     }
 
-    if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
         pe_rsc_trace(rsc, "%s cannot migrate because it is not managed",
                      rsc->id);
         return false;

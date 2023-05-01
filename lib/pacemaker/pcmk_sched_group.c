@@ -788,7 +788,7 @@ pcmk__group_with_colocations(const pe_resource_t *rsc,
             break; // We've seen all earlier members, and none are unmanaged
         }
 
-        if (!pcmk_is_set(member->flags, pe_rsc_managed)) {
+        if (!pcmk_is_set(member->flags, pcmk_rsc_managed)) {
             crm_trace("Adding mandatory '%s with' colocations to list for "
                       "member %s because earlier member %s is unmanaged",
                       rsc->id, orig_rsc->id, member->id);

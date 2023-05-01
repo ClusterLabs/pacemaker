@@ -1090,9 +1090,9 @@ rsc_action_default(pcmk__output_t *out, va_list args)
     pe_action_t *demote = NULL;
     pe_action_t *reason_op = NULL;
 
-    if (!pcmk_is_set(rsc->flags, pe_rsc_managed)
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)
         || (current == NULL && next == NULL)) {
-        const bool managed = pcmk_is_set(rsc->flags, pe_rsc_managed);
+        const bool managed = pcmk_is_set(rsc->flags, pcmk_rsc_managed);
 
         pe_rsc_info(rsc, "Leave   %s\t(%s%s)",
                     rsc->id, role2text(rsc->role),

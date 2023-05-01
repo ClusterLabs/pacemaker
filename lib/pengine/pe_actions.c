@@ -264,7 +264,7 @@ update_action_optional(pe_action_t *action, gboolean optional)
     // Force a non-recurring action to be optional if its resource is unmanaged
     if ((action->rsc != NULL) && (action->node != NULL)
         && !pcmk_is_set(action->flags, pe_action_pseudo)
-        && !pcmk_is_set(action->rsc->flags, pe_rsc_managed)
+        && !pcmk_is_set(action->rsc->flags, pcmk_rsc_managed)
         && (g_hash_table_lookup(action->meta,
                                 XML_LRM_ATTR_INTERVAL_MS) == NULL)) {
             pe_rsc_debug(action->rsc, "%s on %s is optional (%s is unmanaged)",
@@ -336,7 +336,7 @@ update_resource_action_runnable(pe_action_t *action, bool for_graph,
         do_crm_log((for_graph? LOG_WARNING: LOG_TRACE),
                    "%s on %s is unrunnable (node is offline)",
                    action->uuid, pe__node_name(action->node));
-        if (pcmk_is_set(action->rsc->flags, pe_rsc_managed)
+        if (pcmk_is_set(action->rsc->flags, pcmk_rsc_managed)
             && for_graph
             && pcmk__str_eq(action->task, PCMK_ACTION_STOP, pcmk__str_casei)
             && !(action->node->details->unclean)) {
@@ -891,14 +891,15 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
      * 2. start - a start failure indicates that an active connection does not already
      * exist. The user can set op on-fail=fence if they really want to fence start
      * failures. */
-    } else if (((value == NULL) || !pcmk_is_set(action->rsc->flags, pe_rsc_managed))
+    } else if (((value == NULL)
+                || !pcmk_is_set(action->rsc->flags, pcmk_rsc_managed))
                && pe__resource_is_remote_conn(action->rsc)
                && !(pcmk__str_eq(action->task, PCMK_ACTION_MONITOR,
                                  pcmk__str_casei)
                     && (interval_ms == 0))
                && !pcmk__str_eq(action->task, PCMK_ACTION_START, pcmk__str_casei)) {
 
-        if (!pcmk_is_set(action->rsc->flags, pe_rsc_managed)) {
+        if (!pcmk_is_set(action->rsc->flags, pcmk_rsc_managed)) {
             action->on_fail = pcmk_on_fail_stop;
             action->fail_role = pcmk_role_stopped;
             value = "stop unmanaged remote node (enforcing default)";

@@ -531,7 +531,7 @@ increment_parent_count(pe_resource_t *instance, const pe_node_t *assigned_to)
          * shouldn't be possible if the resource is managed, and we won't be
          * able to limit the number of instances assigned to the node.
          */
-        CRM_LOG_ASSERT(!pcmk_is_set(instance->flags, pe_rsc_managed));
+        CRM_LOG_ASSERT(!pcmk_is_set(instance->flags, pcmk_rsc_managed));
 
     } else {
         allowed->count++;
@@ -833,7 +833,7 @@ pcmk__assign_instances(pe_resource_t *collective, GList *instances,
             if (pcmk__top_allowed_node(instance, current) == NULL) {
                 const char *unmanaged = "";
 
-                if (!pcmk_is_set(instance->flags, pe_rsc_managed)) {
+                if (!pcmk_is_set(instance->flags, pcmk_rsc_managed)) {
                     unmanaged = "Unmanaged resource ";
                 }
                 crm_notice("%s%s is running on %s which is no longer allowed",

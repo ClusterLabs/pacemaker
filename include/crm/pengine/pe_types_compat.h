@@ -28,6 +28,9 @@ extern "C" {
 //! \deprecated Use pcmk_rsc_removed instead
 #define pe_rsc_orphan                   pcmk_rsc_removed
 
+//! \deprecated Use pcmk_rsc_managed instead
+#define pe_rsc_managed                  pcmk_rsc_managed
+
 //! \deprecated Use pcmk_sched_quorate instead
 #define pe_flag_have_quorum             pcmk_sched_quorate
 

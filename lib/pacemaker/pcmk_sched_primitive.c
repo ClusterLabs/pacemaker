@@ -490,10 +490,10 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer,
     // Unmanage resource if fencing is enabled but no device is configured
     if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)
         && !pcmk_is_set(rsc->cluster->flags, pcmk_sched_have_fencing)) {
-        pe__clear_resource_flags(rsc, pe_rsc_managed);
+        pe__clear_resource_flags(rsc, pcmk_rsc_managed);
     }
 
-    if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
         // Unmanaged resources stay on their current node
         const char *reason = NULL;
         pe_node_t *assign_to = NULL;
@@ -900,7 +900,7 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
 
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_primitive));
 
-    if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
         pe_rsc_trace(rsc,
                      "Skipping implicit constraints for unmanaged resource %s",
                      rsc->id);
@@ -1265,7 +1265,7 @@ stop_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
             pe_action_set_reason(stop, "being multiply active", true);
         }
 
-        if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+        if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
             pe__clear_action_flags(stop, pe_action_runnable);
         }
 
