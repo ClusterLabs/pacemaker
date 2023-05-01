@@ -4723,7 +4723,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
         update_resource_state(&history, history.expected_exit_status,
                               *last_failure, on_fail);
         crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
-        pe__set_resource_flags(rsc, pe_rsc_failure_ignored);
+        pe__set_resource_flags(rsc, pcmk_rsc_ignore_failure);
 
         record_failed_op(&history);
 

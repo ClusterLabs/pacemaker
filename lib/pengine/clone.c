@@ -539,7 +539,7 @@ clone_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
                  pe__rsc_bool_str(rsc, pcmk_rsc_managed));
     status_print("failed=\"%s\" ", pe__rsc_bool_str(rsc, pcmk_rsc_failed));
     status_print("failure_ignored=\"%s\" ",
-                 pe__rsc_bool_str(rsc, pe_rsc_failure_ignored));
+                 pe__rsc_bool_str(rsc, pcmk_rsc_ignore_failure));
     if (target_role) {
         status_print("target_role=\"%s\" ", target_role);
     }
@@ -866,7 +866,8 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
                     "managed", pe__rsc_bool_str(rsc, pcmk_rsc_managed),
                     "disabled", pcmk__btoa(pe__resource_is_disabled(rsc)),
                     "failed", pe__rsc_bool_str(rsc, pcmk_rsc_failed),
-                    "failure_ignored", pe__rsc_bool_str(rsc, pe_rsc_failure_ignored),
+                    "failure_ignored",
+                    pe__rsc_bool_str(rsc, pcmk_rsc_ignore_failure),
                     "target_role", configured_role_str(rsc),
                     "description", desc);
             CRM_ASSERT(rc == pcmk_rc_ok);

@@ -578,7 +578,7 @@ pcmk__threshold_reached(pe_resource_t *rsc, const pe_node_t *node,
     }
 
     // If we're ignoring failures, also ignore the migration threshold
-    if (pcmk_is_set(rsc->flags, pe_rsc_failure_ignored)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_ignore_failure)) {
         return false;
     }
 

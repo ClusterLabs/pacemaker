@@ -97,6 +97,9 @@ extern "C" {
 //! \deprecated Use pcmk_rsc_migratable instead
 #define pe_rsc_allow_migrate            pcmk_rsc_migratable
 
+//! \deprecated Use pcmk_rsc_ignore_failure instead
+#define pe_rsc_failure_ignored          pcmk_rsc_ignore_failure
+
 //! \deprecated Use pcmk_sched_quorate instead
 #define pe_flag_have_quorum             pcmk_sched_quorate
 

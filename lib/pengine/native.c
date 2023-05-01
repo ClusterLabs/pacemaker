@@ -491,7 +491,7 @@ native_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
                  pe__rsc_bool_str(rsc, pcmk_rsc_managed));
     status_print("failed=\"%s\" ", pe__rsc_bool_str(rsc, pcmk_rsc_failed));
     status_print("failure_ignored=\"%s\" ",
-                 pe__rsc_bool_str(rsc, pe_rsc_failure_ignored));
+                 pe__rsc_bool_str(rsc, pcmk_rsc_ignore_failure));
     status_print("nodes_running_on=\"%d\" ", g_list_length(rsc->running_on));
 
     if (options & pe_print_pending) {
@@ -670,7 +670,7 @@ pcmk__native_output_string(const pe_resource_t *rsc, const char *name,
         have_flags = add_output_flag(outstr, "unmanaged", have_flags);
     }
 
-    if (pcmk_is_set(rsc->flags, pe_rsc_failure_ignored)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_ignore_failure)) {
         have_flags = add_output_flag(outstr, "failure ignored", have_flags);
     }
 
@@ -748,7 +748,7 @@ pe__common_output_html(pcmk__output_t *out, const pe_resource_t *rsc,
     } else if (pcmk__list_of_multiple(rsc->running_on)) {
         cl = "rsc-multiple";
 
-    } else if (pcmk_is_set(rsc->flags, pe_rsc_failure_ignored)) {
+    } else if (pcmk_is_set(rsc->flags, pcmk_rsc_ignore_failure)) {
         cl = "rsc-failure-ignored";
 
     } else {
@@ -846,7 +846,7 @@ common_print(pe_resource_t *rsc, const char *pre_text, const char *name,
         } else if (pcmk__list_of_multiple(rsc->running_on)) {
             status_print("<font color=\"orange\">");
 
-        } else if (pcmk_is_set(rsc->flags, pe_rsc_failure_ignored)) {
+        } else if (pcmk_is_set(rsc->flags, pcmk_rsc_ignore_failure)) {
             status_print("<font color=\"yellow\">");
 
         } else {
@@ -1000,7 +1000,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
              "maintenance", pe__rsc_bool_str(rsc, pe_rsc_maintenance),
              "managed", pe__rsc_bool_str(rsc, pcmk_rsc_managed),
              "failed", pe__rsc_bool_str(rsc, pcmk_rsc_failed),
-             "failure_ignored", pe__rsc_bool_str(rsc, pe_rsc_failure_ignored),
+             "failure_ignored", pe__rsc_bool_str(rsc, pcmk_rsc_ignore_failure),
              "nodes_running_on", nodes_running_on,
              "pending", (print_pending? native_pending_task(rsc) : NULL),
              "locked_to", lock_node_name,
