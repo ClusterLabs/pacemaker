@@ -582,7 +582,7 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
                 pe_action_t *then = (pe_action_t *) iter->data;
 
                 // Skip pseudo-actions (for example, those implied by fencing)
-                if (!pcmk_is_set(then->flags, pe_action_pseudo)) {
+                if (!pcmk_is_set(then->flags, pcmk_action_pseudo)) {
                     order_actions(probe, then, pe_order_optional);
                 }
             }

@@ -227,7 +227,10 @@ enum pe_action_flags {
     //! No action flags set (compare with equality rather than bit set)
     pcmk_no_action_flags            = 0,
 
-    pe_action_pseudo = 0x00001,
+    //! Whether action does not require invoking an agent
+    pcmk_action_pseudo              = (1 << 0),
+
+    pe_action_pseudo                = pcmk_action_pseudo,
     pe_action_runnable = 0x00002,
     pe_action_optional = 0x00004,
     pe_action_print_always = 0x00008,

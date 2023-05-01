@@ -76,7 +76,7 @@ pcmk__create_migration_actions(pe_resource_t *rsc, const pe_node_t *current)
         pe__set_action_flags(stop, pe_action_migrate_runnable);
 
         // This is easier than trying to delete it from the graph
-        pe__set_action_flags(start, pe_action_pseudo);
+        pe__set_action_flags(start, pcmk_action_pseudo);
 
         if (rsc->partial_migration_target == NULL) {
             pe__set_action_flags(migrate_from, pe_action_migrate_runnable);

@@ -101,7 +101,7 @@ create_group_pseudo_op(pe_resource_t *group, const char *action)
 {
     pe_action_t *op = custom_action(group, pcmk__op_key(group->id, action, 0),
                                     action, NULL, TRUE, TRUE, group->cluster);
-    pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
+    pe__set_action_flags(op, pcmk_action_pseudo|pe_action_runnable);
     return op;
 }
 
@@ -486,7 +486,7 @@ uint32_t
 pcmk__group_action_flags(pe_action_t *action, const pe_node_t *node)
 {
     // Default flags for a group action
-    uint32_t flags = pe_action_optional|pe_action_runnable|pe_action_pseudo;
+    uint32_t flags = pe_action_optional|pe_action_runnable|pcmk_action_pseudo;
 
     CRM_ASSERT(action != NULL);
 

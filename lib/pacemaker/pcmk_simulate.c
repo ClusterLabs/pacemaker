@@ -51,7 +51,7 @@ create_action_name(const pe_action_t *action, bool verbose)
 
     if (action->node != NULL) {
         action_host = action->node->details->uname;
-    } else if (!pcmk_is_set(action->flags, pe_action_pseudo)) {
+    } else if (!pcmk_is_set(action->flags, pcmk_action_pseudo)) {
         action_host = "<none>";
     }
 
@@ -237,7 +237,7 @@ write_sim_dotfile(pe_working_set_t *data_set, const char *dot_file,
         const char *color = "black";
         char *action_name = create_action_name(action, verbose);
 
-        if (pcmk_is_set(action->flags, pe_action_pseudo)) {
+        if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
             font = "orange";
         }
 

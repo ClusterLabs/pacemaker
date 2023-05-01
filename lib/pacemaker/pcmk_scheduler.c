@@ -708,7 +708,7 @@ log_unrunnable_actions(const pe_working_set_t *data_set)
 {
     const uint64_t flags = pe_action_optional
                            |pe_action_runnable
-                           |pe_action_pseudo;
+                           |pcmk_action_pseudo;
 
     crm_trace("Required but unrunnable actions:");
     for (const GList *iter = data_set->actions;

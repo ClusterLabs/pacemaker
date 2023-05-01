@@ -289,7 +289,7 @@ new_notify_pseudo_action(pe_resource_t *rsc, const pe_action_t *action,
                            notif_action, NULL,
                            pcmk_is_set(action->flags, pe_action_optional),
                            TRUE, rsc->cluster);
-    pe__set_action_flags(notify, pe_action_pseudo);
+    pe__set_action_flags(notify, pcmk_action_pseudo);
     add_hash_param(notify->meta, "notify_key_type", notif_type);
     add_hash_param(notify->meta, "notify_key_operation", action->task);
     return notify;
@@ -877,7 +877,8 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
             /* If a stop is a pseudo-action implied by fencing, don't try to
              * notify the node getting fenced.
              */
-            if ((stop != NULL) && pcmk_is_set(stop->flags, pe_action_pseudo)
+            if ((stop != NULL)
+                && pcmk_is_set(stop->flags, pcmk_action_pseudo)
                 && (current_node->details->unclean
                     || current_node->details->remote_requires_reset)) {
                 continue;

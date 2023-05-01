@@ -263,7 +263,7 @@ update_action_optional(pe_action_t *action, gboolean optional)
 {
     // Force a non-recurring action to be optional if its resource is unmanaged
     if ((action->rsc != NULL) && (action->node != NULL)
-        && !pcmk_is_set(action->flags, pe_action_pseudo)
+        && !pcmk_is_set(action->flags, pcmk_action_pseudo)
         && !pcmk_is_set(action->rsc->flags, pcmk_rsc_managed)
         && (g_hash_table_lookup(action->meta,
                                 XML_LRM_ATTR_INTERVAL_MS) == NULL)) {
@@ -319,7 +319,7 @@ static void
 update_resource_action_runnable(pe_action_t *action, bool for_graph,
                                 pe_working_set_t *data_set)
 {
-    if (pcmk_is_set(action->flags, pe_action_pseudo)) {
+    if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
         return;
     }
 
@@ -1037,7 +1037,7 @@ get_pseudo_op(const char *name, pe_working_set_t * data_set)
 
     if (op == NULL) {
         op = custom_action(NULL, strdup(name), name, NULL, TRUE, TRUE, data_set);
-        pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
+        pe__set_action_flags(op, pcmk_action_pseudo|pe_action_runnable);
     }
     return op;
 }
@@ -1715,7 +1715,7 @@ pe__new_rsc_pseudo_action(pe_resource_t *rsc, const char *task, bool optional,
 
     action = custom_action(rsc, pcmk__op_key(rsc->id, task, 0), task, NULL,
                            optional, TRUE, rsc->cluster);
-    pe__set_action_flags(action, pe_action_pseudo);
+    pe__set_action_flags(action, pcmk_action_pseudo);
     if (runnable) {
         pe__set_action_flags(action, pe_action_runnable);
     }

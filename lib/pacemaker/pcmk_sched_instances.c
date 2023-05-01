@@ -938,8 +938,8 @@ check_instance_state(const pe_resource_t *instance, uint32_t *state)
              * is implied rather than actually executed.
              */
             if (!optional
-                && pcmk_any_flags_set(action->flags,
-                                      pe_action_pseudo|pe_action_runnable)) {
+                && pcmk_any_flags_set(action->flags, pcmk_action_pseudo
+                                                     |pe_action_runnable)) {
                 pe_rsc_trace(instance, "Instance is stopping due to %s",
                              action->uuid);
                 instance_state |= instance_stopping;
@@ -1614,7 +1614,7 @@ pcmk__collective_action_flags(pe_action_t *action, const GList *instances,
     const char *action_name = orig_action_name(action);
 
     // Set original assumptions (optional and runnable may be cleared below)
-    uint32_t flags = pe_action_optional|pe_action_runnable|pe_action_pseudo;
+    uint32_t flags = pe_action_optional|pe_action_runnable|pcmk_action_pseudo;
 
     for (const GList *iter = instances; iter != NULL; iter = iter->next) {
         const pe_resource_t *instance = iter->data;

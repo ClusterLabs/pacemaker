@@ -24,7 +24,7 @@
 // Convenience macros for logging action properties
 
 #define action_type_str(flags) \
-    (pcmk_is_set((flags), pe_action_pseudo)? "pseudo-action" : "action")
+    (pcmk_is_set((flags), pcmk_action_pseudo)? "pseudo-action" : "action")
 
 #define action_optional_str(flags) \
     (pcmk_is_set((flags), pe_action_optional)? "optional" : "required")
@@ -406,7 +406,7 @@ create_graph_action(xmlNode *parent, pe_action_t *action, bool skip_details,
 
     if (pcmk__str_eq(action->task, PCMK_ACTION_STONITH, pcmk__str_none)) {
         /* All fences need node info; guest node fences are pseudo-events */
-        if (pcmk_is_set(action->flags, pe_action_pseudo)) {
+        if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
             action_xml = create_xml_node(parent, XML_GRAPH_TAG_PSEUDO_EVENT);
         } else {
             action_xml = create_xml_node(parent, XML_GRAPH_TAG_CRM_EVENT);
@@ -423,7 +423,7 @@ create_graph_action(xmlNode *parent, pe_action_t *action, bool skip_details,
         action_xml = create_xml_node(parent, XML_GRAPH_TAG_CRM_EVENT);
         crm_xml_add(action_xml, PCMK__XA_MODE, XML_TAG_CIB);
 
-    } else if (pcmk_is_set(action->flags, pe_action_pseudo)) {
+    } else if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
         if (pcmk__str_eq(action->task, PCMK_ACTION_MAINTENANCE_NODES,
                          pcmk__str_none)) {
             needs_maintenance_info = true;
@@ -468,7 +468,7 @@ create_graph_action(xmlNode *parent, pe_action_t *action, bool skip_details,
     }
 
     if ((action->rsc != NULL)
-        && !pcmk_is_set(action->flags, pe_action_pseudo)) {
+        && !pcmk_is_set(action->flags, pcmk_action_pseudo)) {
 
         // This is a real resource action, so add resource details
         add_resource_details(action, action_xml);
@@ -537,7 +537,7 @@ should_add_action_to_graph(const pe_action_t *action)
     /* Always add pseudo-actions, fence actions, and shutdown actions (already
      * determined to be required and runnable by this point)
      */
-    if (pcmk_is_set(action->flags, pe_action_pseudo)
+    if (pcmk_is_set(action->flags, pcmk_action_pseudo)
         || pcmk__strcase_any_of(action->task, PCMK_ACTION_STONITH,
                                 PCMK_ACTION_DO_SHUTDOWN, NULL)) {
         return true;

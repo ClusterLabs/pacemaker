@@ -1321,7 +1321,7 @@ start_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
                      "Start of multiply active resouce %s "
                      "on expected node %s will be a pseudo-action",
                      rsc->id, pe__node_name(node));
-        pe__set_action_flags(start, pe_action_pseudo);
+        pe__set_action_flags(start, pcmk_action_pseudo);
     }
 }
 
@@ -1368,7 +1368,7 @@ promote_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
                          "Promotion of multiply active resouce %s "
                          "on expected node %s will be a pseudo-action",
                          rsc->id, pe__node_name(node));
-            pe__set_action_flags(promote, pe_action_pseudo);
+            pe__set_action_flags(promote, pcmk_action_pseudo);
         }
     } else {
         pe_rsc_trace(rsc, "Not promoting %s on %s: start unrunnable",

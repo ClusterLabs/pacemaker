@@ -472,7 +472,7 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
 // Convenience macros for logging action properties
 
 #define action_type_str(flags) \
-    (pcmk_is_set((flags), pe_action_pseudo)? "pseudo-action" : "action")
+    (pcmk_is_set((flags), pcmk_action_pseudo)? "pseudo-action" : "action")
 
 #define action_optional_str(flags) \
     (pcmk_is_set((flags), pe_action_optional)? "optional" : "required")
@@ -887,7 +887,7 @@ pcmk__update_ordered_actions(pe_action_t *first, pe_action_t *then,
         && !pcmk_is_set(first->flags, pe_action_runnable)) {
 
         clear_action_flag_because(then, pe_action_migrate_runnable, first);
-        pe__clear_action_flags(then, pe_action_pseudo);
+        pe__clear_action_flags(then, pcmk_action_pseudo);
     }
 
     if (pcmk_is_set(type, pe_order_runnable_left)
@@ -955,7 +955,7 @@ pcmk__log_action(const char *pre_text, const pe_action_t *action, bool details)
 
     CRM_CHECK(action != NULL, return);
 
-    if (!pcmk_is_set(action->flags, pe_action_pseudo)) {
+    if (!pcmk_is_set(action->flags, pcmk_action_pseudo)) {
         if (action->node != NULL) {
             node_uname = action->node->details->uname;
             node_uuid = action->node->details->id;
@@ -967,7 +967,7 @@ pcmk__log_action(const char *pre_text, const pe_action_t *action, bool details)
     switch (text2task(action->task)) {
         case pcmk_action_fence:
         case pcmk_action_shutdown:
-            if (pcmk_is_set(action->flags, pe_action_pseudo)) {
+            if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
                 desc = "Pseudo ";
             } else if (pcmk_is_set(action->flags, pe_action_optional)) {
                 desc = "Optional ";
@@ -989,7 +989,7 @@ pcmk__log_action(const char *pre_text, const pe_action_t *action, bool details)
         default:
             if (pcmk_is_set(action->flags, pe_action_optional)) {
                 desc = "Optional ";
-            } else if (pcmk_is_set(action->flags, pe_action_pseudo)) {
+            } else if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
                 desc = "Pseudo ";
             } else if (!pcmk_is_set(action->flags, pe_action_runnable)) {
                 desc = "!!Non-Startable!! ";
