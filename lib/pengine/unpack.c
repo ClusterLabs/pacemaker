@@ -94,7 +94,7 @@ is_dangling_guest_node(pe_node_t *node)
         node->details->remote_rsc &&
         node->details->remote_rsc->container == NULL &&
         pcmk_is_set(node->details->remote_rsc->flags,
-                    pe_rsc_orphan_container_filler)) {
+                    pcmk_rsc_removed_filler)) {
         return TRUE;
     }
 
@@ -1834,7 +1834,7 @@ create_fake_resource(const char *rsc_id, const xmlNode *rsc_entry,
     if (crm_element_value(rsc_entry, XML_RSC_ATTR_CONTAINER)) {
         /* This orphaned rsc needs to be mapped to a container. */
         crm_trace("Detected orphaned container filler %s", rsc_id);
-        pe__set_resource_flags(rsc, pe_rsc_orphan_container_filler);
+        pe__set_resource_flags(rsc, pcmk_rsc_removed_filler);
     }
     pe__set_resource_flags(rsc, pcmk_rsc_removed);
     data_set->resources = g_list_append(data_set->resources, rsc);
@@ -2638,9 +2638,8 @@ handle_orphaned_container_fillers(const xmlNode *lrm_rsc_list,
         }
 
         rsc = pe_find_resource(data_set->resources, rsc_id);
-        if (rsc == NULL ||
-            !pcmk_is_set(rsc->flags, pe_rsc_orphan_container_filler) ||
-            rsc->container != NULL) {
+        if ((rsc == NULL) || (rsc->container != NULL)
+            || !pcmk_is_set(rsc->flags, pcmk_rsc_removed_filler)) {
             continue;
         }
 
@@ -2681,7 +2680,7 @@ unpack_node_lrm(pe_node_t *node, const xmlNode *xml, pe_working_set_t *data_set)
         pe_resource_t *rsc = unpack_lrm_resource(node, rsc_entry, data_set);
 
         if ((rsc != NULL)
-            && pcmk_is_set(rsc->flags, pe_rsc_orphan_container_filler)) {
+            && pcmk_is_set(rsc->flags, pcmk_rsc_removed_filler)) {
             found_orphaned_container_filler = true;
         }
     }
