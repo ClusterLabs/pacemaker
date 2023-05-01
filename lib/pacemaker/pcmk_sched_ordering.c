@@ -1133,7 +1133,7 @@ pcmk__order_stops_before_shutdown(pe_node_t *node, pe_action_t *shutdown_op)
 
         // Resources and nodes in maintenance mode won't be touched
 
-        if (pcmk_is_set(action->rsc->flags, pe_rsc_maintenance)) {
+        if (pcmk_is_set(action->rsc->flags, pcmk_rsc_maintenance)) {
             pe_rsc_trace(action->rsc,
                          "Not ordering %s before shutdown of %s because "
                          "resource in maintenance mode",

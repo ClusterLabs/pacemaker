@@ -562,7 +562,7 @@ pcmk__create_recurring_actions(pe_resource_t *rsc)
         return;
     }
 
-    if (pcmk_is_set(rsc->flags, pe_rsc_maintenance)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_maintenance)) {
         pe_rsc_trace(rsc, "Skipping recurring actions for %s "
                           "in maintenance mode", rsc->id);
         return;

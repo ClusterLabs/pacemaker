@@ -1509,7 +1509,8 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
                      "type", container_agent_str(bundle_data->agent_type),
                      "image", bundle_data->image,
                      "unique", pe__rsc_bool_str(rsc, pcmk_rsc_unique),
-                     "maintenance", pe__rsc_bool_str(rsc, pe_rsc_maintenance),
+                     "maintenance",
+                     pe__rsc_bool_str(rsc, pcmk_rsc_maintenance),
                      "managed", pe__rsc_bool_str(rsc, pcmk_rsc_managed),
                      "failed", pe__rsc_bool_str(rsc, pcmk_rsc_failed),
                      "description", desc);
@@ -1591,7 +1592,7 @@ pe__bundle_replica_output_html(pcmk__output_t *out, pe__bundle_replica_t *replic
 static const char *
 get_unmanaged_str(const pe_resource_t *rsc)
 {
-    if (pcmk_is_set(rsc->flags, pe_rsc_maintenance)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_maintenance)) {
         return " (maintenance)";
     }
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {

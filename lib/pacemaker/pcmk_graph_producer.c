@@ -1065,7 +1065,7 @@ pcmk__create_graph(pe_working_set_t *data_set)
         if ((action->rsc != NULL)
             && (action->node != NULL)
             && action->node->details->shutdown
-            && !pcmk_is_set(action->rsc->flags, pe_rsc_maintenance)
+            && !pcmk_is_set(action->rsc->flags, pcmk_rsc_maintenance)
             && !pcmk_any_flags_set(action->flags,
                                    pe_action_optional|pe_action_runnable)
             && pcmk__str_eq(action->task, PCMK_ACTION_STOP, pcmk__str_none)) {

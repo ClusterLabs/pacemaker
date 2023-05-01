@@ -1805,7 +1805,7 @@ process_rsc_history(const xmlNode *rsc_entry, pe_resource_t *rsc,
         crm_element_value_ms(rsc_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
 
         if ((interval_ms > 0)
-            && (pcmk_is_set(rsc->flags, pe_rsc_maintenance)
+            && (pcmk_is_set(rsc->flags, pcmk_rsc_maintenance)
                 || node->details->maintenance)) {
             // Maintenance mode cancels recurring operations
             pcmk__schedule_cancel(rsc,

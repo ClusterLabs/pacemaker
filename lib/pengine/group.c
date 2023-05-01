@@ -128,7 +128,7 @@ group_header(pcmk__output_t *out, int *rc, const pe_resource_t *rsc,
         pcmk__add_separated_word(&attrs, 64, "disabled", ", ");
     }
 
-    if (pcmk_is_set(rsc->flags, pe_rsc_maintenance)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_maintenance)) {
         pcmk__add_separated_word(&attrs, 64, "maintenance", ", ");
 
     } else if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
@@ -367,7 +367,7 @@ pe__group_xml(pcmk__output_t *out, va_list args)
 
         if (rc == pcmk_rc_no_output) {
             char *count = pcmk__itoa(g_list_length(gIter));
-            const char *maint_s = pe__rsc_bool_str(rsc, pe_rsc_maintenance);
+            const char *maint_s = pe__rsc_bool_str(rsc, pcmk_rsc_maintenance);
             const char *managed_s = pe__rsc_bool_str(rsc, pcmk_rsc_managed);
             const char *disabled_s = pcmk__btoa(pe__resource_is_disabled(rsc));
 

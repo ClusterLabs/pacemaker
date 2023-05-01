@@ -179,7 +179,6 @@ struct pe_node_s {
     int rsc_discover_mode;
 };
 
-#  define pe_rsc_maintenance                0x04000000ULL
 #  define pe_rsc_is_container               0x08000000ULL
 
 #  define pe_rsc_needs_quorum               0x10000000ULL
