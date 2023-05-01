@@ -795,7 +795,7 @@ pcmk__primitive_create_actions(pe_resource_t *rsc)
         // Remaining tests are only for resources staying where they are
 
     } else if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
-        if (pcmk_is_set(rsc->flags, pe_rsc_stop)) {
+        if (pcmk_is_set(rsc->flags, pcmk_rsc_stop_if_failed)) {
             need_stop = true;
             pe_rsc_trace(rsc, "Recovering %s", rsc->id);
         } else {

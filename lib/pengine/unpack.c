@@ -135,7 +135,8 @@ pe_fence_node(pe_working_set_t * data_set, pe_node_t * node,
                  * in this transition if the recovery succeeds.
                  */
                 node->details->remote_requires_reset = TRUE;
-                pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
+                pe__set_resource_flags(rsc,
+                                       pe_rsc_failed|pcmk_rsc_stop_if_failed);
             }
         }
 
@@ -145,7 +146,7 @@ pe_fence_node(pe_working_set_t * data_set, pe_node_t * node,
                  "and guest resource no longer exists",
                  pe__node_name(node), reason);
         pe__set_resource_flags(node->details->remote_rsc,
-                               pe_rsc_failed|pe_rsc_stop);
+                               pe_rsc_failed|pcmk_rsc_stop_if_failed);
 
     } else if (pe__is_remote_node(node)) {
         pe_resource_t *rsc = node->details->remote_rsc;
@@ -2142,7 +2143,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
          * resource to run again once we are sure we know its state.
          */
         if (pe__is_guest_node(node)) {
-            pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
+            pe__set_resource_flags(rsc, pe_rsc_failed|pcmk_rsc_stop_if_failed);
             should_fence = TRUE;
 
         } else if (pcmk_is_set(rsc->cluster->flags,
@@ -2231,13 +2232,14 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
         case pcmk_on_fail_restart:
             if ((rsc->role != pcmk_role_stopped)
                 && (rsc->role != pcmk_role_unknown)) {
-                pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
+                pe__set_resource_flags(rsc,
+                                       pe_rsc_failed|pcmk_rsc_stop_if_failed);
                 stop_action(rsc, node, FALSE);
             }
             break;
 
         case pcmk_on_fail_restart_container:
-            pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
+            pe__set_resource_flags(rsc, pe_rsc_failed|pcmk_rsc_stop_if_failed);
             if (rsc->container && pe_rsc_is_bundled(rsc)) {
                 /* A bundle's remote connection can run on a different node than
                  * the bundle's container. We don't necessarily know where the
@@ -2255,7 +2257,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             break;
 
         case pcmk_on_fail_reset_remote:
-            pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
+            pe__set_resource_flags(rsc, pe_rsc_failed|pcmk_rsc_stop_if_failed);
             if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)) {
                 tmpnode = NULL;
                 if (rsc->is_remote_node) {
@@ -2321,7 +2323,8 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
                 pe__set_resource_flags(rsc, pe_rsc_failed);
                 break;
             default:
-                pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
+                pe__set_resource_flags(rsc,
+                                       pe_rsc_failed|pcmk_rsc_stop_if_failed);
                 break;
         }
 
@@ -3131,7 +3134,8 @@ unpack_migrate_to_success(struct action_history *history)
                                TRUE);
         } else {
             // Mark resource as failed, require recovery, and prevent migration
-            pe__set_resource_flags(history->rsc, pe_rsc_failed|pe_rsc_stop);
+            pe__set_resource_flags(history->rsc,
+                                   pe_rsc_failed|pcmk_rsc_stop_if_failed);
             pe__clear_resource_flags(history->rsc, pe_rsc_allow_migrate);
         }
         return;
@@ -3167,7 +3171,8 @@ unpack_migrate_to_success(struct action_history *history)
 
     } else if (!source_newer_op) {
         // Mark resource as failed, require recovery, and prevent migration
-        pe__set_resource_flags(history->rsc, pe_rsc_failed|pe_rsc_stop);
+        pe__set_resource_flags(history->rsc,
+                               pe_rsc_failed|pcmk_rsc_stop_if_failed);
         pe__clear_resource_flags(history->rsc, pe_rsc_allow_migrate);
     }
 }
@@ -4678,7 +4683,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                  * that, ensure the remote connection is considered failed.
                  */
                 pe__set_resource_flags(node->details->remote_rsc,
-                                       pe_rsc_failed|pe_rsc_stop);
+                                       pe_rsc_failed|pcmk_rsc_stop_if_failed);
             }
             break; // Not done, do error handling
 
