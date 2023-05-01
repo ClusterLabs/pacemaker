@@ -1429,7 +1429,7 @@ bundle_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
     status_print("unique=\"%s\" ", pe__rsc_bool_str(rsc, pcmk_rsc_unique));
     status_print("managed=\"%s\" ",
                  pe__rsc_bool_str(rsc, pcmk_rsc_managed));
-    status_print("failed=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_failed));
+    status_print("failed=\"%s\" ", pe__rsc_bool_str(rsc, pcmk_rsc_failed));
     status_print(">\n");
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
@@ -1511,7 +1511,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
                      "unique", pe__rsc_bool_str(rsc, pcmk_rsc_unique),
                      "maintenance", pe__rsc_bool_str(rsc, pe_rsc_maintenance),
                      "managed", pe__rsc_bool_str(rsc, pcmk_rsc_managed),
-                     "failed", pe__rsc_bool_str(rsc, pe_rsc_failed),
+                     "failed", pe__rsc_bool_str(rsc, pcmk_rsc_failed),
                      "description", desc);
             CRM_ASSERT(rc == pcmk_rc_ok);
         }

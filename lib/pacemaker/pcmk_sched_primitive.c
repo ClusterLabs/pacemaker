@@ -504,7 +504,7 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer,
             reason = "inactive";
         } else if (rsc->role == pcmk_role_promoted) {
             reason = "promoted";
-        } else if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
+        } else if (pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
             reason = "failed";
         } else {
             reason = "active";
@@ -794,7 +794,7 @@ pcmk__primitive_create_actions(pe_resource_t *rsc)
     if (is_moving) {
         // Remaining tests are only for resources staying where they are
 
-    } else if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
+    } else if (pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
         if (pcmk_is_set(rsc->flags, pcmk_rsc_stop_if_failed)) {
             need_stop = true;
             pe_rsc_trace(rsc, "Recovering %s", rsc->id);
@@ -1443,7 +1443,7 @@ pcmk__schedule_cleanup(pe_resource_t *rsc, const pe_node_t *node, bool optional)
 
     CRM_CHECK((rsc != NULL) && (node != NULL), return);
 
-    if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
         pe_rsc_trace(rsc, "Skipping clean-up of %s on %s: resource failed",
                      rsc->id, pe__node_name(node));
         return;

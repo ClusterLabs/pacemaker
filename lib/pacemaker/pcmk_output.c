@@ -1191,13 +1191,13 @@ rsc_action_default(pcmk__output_t *out, va_list args)
             STOP_SANITY_ASSERT(__LINE__);
 
         } else if (moving && current) {
-            const bool failed = pcmk_is_set(rsc->flags, pe_rsc_failed);
+            const bool failed = pcmk_is_set(rsc->flags, pcmk_rsc_failed);
 
             rc = out->message(out, "rsc-action-item",
                               (failed? "Recover" : "Move"), rsc, current, next,
                               stop, NULL);
 
-        } else if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
+        } else if (pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
             rc = out->message(out, "rsc-action-item", "Recover", rsc, current,
                               NULL, stop, NULL);
             STOP_SANITY_ASSERT(__LINE__);
@@ -1253,7 +1253,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
 
     } else if ((stop != NULL)
                && pcmk_all_flags_set(rsc->flags,
-                                     pe_rsc_failed|pcmk_rsc_stop_if_failed)) {
+                                     pcmk_rsc_failed|pcmk_rsc_stop_if_failed)) {
         /* 'stop' may be NULL if the failure was ignored */
         rc = out->message(out, "rsc-action-item", "Recover", rsc, current,
                           next, stop, start);

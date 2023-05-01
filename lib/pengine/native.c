@@ -489,7 +489,7 @@ native_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
                  pe__rsc_bool_str(rsc, pcmk_rsc_blocked));
     status_print("managed=\"%s\" ",
                  pe__rsc_bool_str(rsc, pcmk_rsc_managed));
-    status_print("failed=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_failed));
+    status_print("failed=\"%s\" ", pe__rsc_bool_str(rsc, pcmk_rsc_failed));
     status_print("failure_ignored=\"%s\" ",
                  pe__rsc_bool_str(rsc, pe_rsc_failure_ignored));
     status_print("nodes_running_on=\"%d\" ", g_list_length(rsc->running_on));
@@ -598,7 +598,7 @@ pcmk__native_output_string(const pe_resource_t *rsc, const char *name,
     if (pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
         g_string_append(outstr, " ORPHANED");
     }
-    if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
         enum rsc_role_e role = native_displayable_role(rsc);
 
         g_string_append(outstr, " FAILED");
@@ -738,7 +738,7 @@ pe__common_output_html(pcmk__output_t *out, const pe_resource_t *rsc,
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
         cl = "rsc-managed";
 
-    } else if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
+    } else if (pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
         cl = "rsc-failed";
 
     } else if ((rsc->variant == pcmk_rsc_variant_primitive)
@@ -837,7 +837,7 @@ common_print(pe_resource_t *rsc, const char *pre_text, const char *name,
         if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
             status_print("<font color=\"yellow\">");
 
-        } else if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
+        } else if (pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
             status_print("<font color=\"red\">");
 
         } else if (rsc->running_on == NULL) {
@@ -999,7 +999,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
              "blocked", pe__rsc_bool_str(rsc, pcmk_rsc_blocked),
              "maintenance", pe__rsc_bool_str(rsc, pe_rsc_maintenance),
              "managed", pe__rsc_bool_str(rsc, pcmk_rsc_managed),
-             "failed", pe__rsc_bool_str(rsc, pe_rsc_failed),
+             "failed", pe__rsc_bool_str(rsc, pcmk_rsc_failed),
              "failure_ignored", pe__rsc_bool_str(rsc, pe_rsc_failure_ignored),
              "nodes_running_on", nodes_running_on,
              "pending", (print_pending? native_pending_task(rsc) : NULL),

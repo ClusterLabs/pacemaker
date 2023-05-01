@@ -211,7 +211,7 @@ pcmk__rsc_can_migrate(const pe_resource_t *rsc, const pe_node_t *current)
         return false;
     }
 
-    if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
         pe_rsc_trace(rsc, "%s cannot migrate because it is failed",
                      rsc->id);
         return false;

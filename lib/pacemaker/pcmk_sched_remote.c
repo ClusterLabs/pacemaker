@@ -110,7 +110,7 @@ get_remote_node_state(const pe_node_t *node)
             return remote_state_failed;
         }
 
-        if (!pcmk_is_set(remote_rsc->flags, pe_rsc_failed)) {
+        if (!pcmk_is_set(remote_rsc->flags, pcmk_rsc_failed)) {
             /* Connection resource is cleanly stopped */
             return remote_state_stopped;
         }
@@ -183,7 +183,7 @@ apply_remote_ordering(pe_action_t *action)
 
     crm_trace("Order %s action %s relative to %s%s (state: %s)",
               action->task, action->uuid,
-              pcmk_is_set(remote_rsc->flags, pe_rsc_failed)? "failed " : "",
+              pcmk_is_set(remote_rsc->flags, pcmk_rsc_failed)? "failed " : "",
               remote_rsc->id, state2text(state));
 
     if (pcmk__strcase_any_of(action->task, PCMK_ACTION_MIGRATE_TO,
@@ -316,16 +316,16 @@ apply_container_ordering(pe_action_t *action)
     container = remote_rsc->container;
     CRM_ASSERT(container != NULL);
 
-    if (pcmk_is_set(container->flags, pe_rsc_failed)) {
+    if (pcmk_is_set(container->flags, pcmk_rsc_failed)) {
         pe_fence_node(action->rsc->cluster, action->node, "container failed",
                       FALSE);
     }
 
     crm_trace("Order %s action %s relative to %s%s for %s%s",
               action->task, action->uuid,
-              pcmk_is_set(remote_rsc->flags, pe_rsc_failed)? "failed " : "",
+              pcmk_is_set(remote_rsc->flags, pcmk_rsc_failed)? "failed " : "",
               remote_rsc->id,
-              pcmk_is_set(container->flags, pe_rsc_failed)? "failed " : "",
+              pcmk_is_set(container->flags, pcmk_rsc_failed)? "failed " : "",
               container->id);
 
     if (pcmk__strcase_any_of(action->task, PCMK_ACTION_MIGRATE_TO,
@@ -348,7 +348,7 @@ apply_container_ordering(pe_action_t *action)
 
         case pcmk_action_stop:
         case pcmk_action_demote:
-            if (pcmk_is_set(container->flags, pe_rsc_failed)) {
+            if (pcmk_is_set(container->flags, pcmk_rsc_failed)) {
                 /* When the container representing a guest node fails, any stop
                  * or demote actions for resources running on the guest node
                  * are implied by the container stopping. This is similar to

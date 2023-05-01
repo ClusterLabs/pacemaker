@@ -537,7 +537,7 @@ clone_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
     status_print("unique=\"%s\" ", pe__rsc_bool_str(rsc, pcmk_rsc_unique));
     status_print("managed=\"%s\" ",
                  pe__rsc_bool_str(rsc, pcmk_rsc_managed));
-    status_print("failed=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_failed));
+    status_print("failed=\"%s\" ", pe__rsc_bool_str(rsc, pcmk_rsc_failed));
     status_print("failure_ignored=\"%s\" ",
                  pe__rsc_bool_str(rsc, pe_rsc_failure_ignored));
     if (target_role) {
@@ -665,7 +665,7 @@ clone_print(pe_resource_t *rsc, const char *pre_text, long options,
 
         } else if (is_set_recursive(child_rsc, pcmk_rsc_removed, TRUE)
                    || !is_set_recursive(child_rsc, pcmk_rsc_managed, FALSE)
-                   || is_set_recursive(child_rsc, pe_rsc_failed, TRUE)) {
+                   || is_set_recursive(child_rsc, pcmk_rsc_failed, TRUE)) {
 
             // Print individual instance when active orphaned/unmanaged/failed
             print_full = TRUE;
@@ -865,7 +865,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
                     "maintenance", pe__rsc_bool_str(rsc, pe_rsc_maintenance),
                     "managed", pe__rsc_bool_str(rsc, pcmk_rsc_managed),
                     "disabled", pcmk__btoa(pe__resource_is_disabled(rsc)),
-                    "failed", pe__rsc_bool_str(rsc, pe_rsc_failed),
+                    "failed", pe__rsc_bool_str(rsc, pcmk_rsc_failed),
                     "failure_ignored", pe__rsc_bool_str(rsc, pe_rsc_failure_ignored),
                     "target_role", configured_role_str(rsc),
                     "description", desc);
@@ -964,7 +964,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
 
         } else if (is_set_recursive(child_rsc, pcmk_rsc_removed, TRUE)
                    || !is_set_recursive(child_rsc, pcmk_rsc_managed, FALSE)
-                   || is_set_recursive(child_rsc, pe_rsc_failed, TRUE)) {
+                   || is_set_recursive(child_rsc, pcmk_rsc_failed, TRUE)) {
 
             // Print individual instance when active orphaned/unmanaged/failed
             print_full = TRUE;

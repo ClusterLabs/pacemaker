@@ -73,6 +73,9 @@ extern "C" {
 //! \deprecated Use pcmk_rsc_critical instead
 #define pe_rsc_critical                 pcmk_rsc_critical
 
+//! \deprecated Use pcmk_rsc_failed instead
+#define pe_rsc_failed                   pcmk_rsc_failed
+
 //! \deprecated Use pcmk_sched_quorate instead
 #define pe_flag_have_quorum             pcmk_sched_quorate
 

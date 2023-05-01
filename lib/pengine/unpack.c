@@ -119,7 +119,7 @@ pe_fence_node(pe_working_set_t * data_set, pe_node_t * node,
     if (pe__is_guest_node(node)) {
         pe_resource_t *rsc = node->details->remote_rsc->container;
 
-        if (!pcmk_is_set(rsc->flags, pe_rsc_failed)) {
+        if (!pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
             if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
                 crm_notice("Not fencing guest node %s "
                            "(otherwise would because %s): "
@@ -136,7 +136,7 @@ pe_fence_node(pe_working_set_t * data_set, pe_node_t * node,
                  */
                 node->details->remote_requires_reset = TRUE;
                 pe__set_resource_flags(rsc,
-                                       pe_rsc_failed|pcmk_rsc_stop_if_failed);
+                                       pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
             }
         }
 
@@ -146,7 +146,7 @@ pe_fence_node(pe_working_set_t * data_set, pe_node_t * node,
                  "and guest resource no longer exists",
                  pe__node_name(node), reason);
         pe__set_resource_flags(node->details->remote_rsc,
-                               pe_rsc_failed|pcmk_rsc_stop_if_failed);
+                               pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
 
     } else if (pe__is_remote_node(node)) {
         pe_resource_t *rsc = node->details->remote_rsc;
@@ -1616,13 +1616,13 @@ determine_remote_online_status(pe_working_set_t * data_set, pe_node_t * this_nod
     }
 
     /* Now check all the failure conditions. */
-    if(container && pcmk_is_set(container->flags, pe_rsc_failed)) {
+    if(container && pcmk_is_set(container->flags, pcmk_rsc_failed)) {
         crm_trace("Guest node %s UNCLEAN because guest resource failed",
                   this_node->details->id);
         this_node->details->online = FALSE;
         this_node->details->remote_requires_reset = TRUE;
 
-    } else if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
+    } else if (pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
         crm_trace("%s node %s OFFLINE because connection resource failed",
                   (container? "Guest" : "Remote"), this_node->details->id);
         this_node->details->online = FALSE;
@@ -2143,13 +2143,15 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
          * resource to run again once we are sure we know its state.
          */
         if (pe__is_guest_node(node)) {
-            pe__set_resource_flags(rsc, pe_rsc_failed|pcmk_rsc_stop_if_failed);
+            pe__set_resource_flags(rsc,
+                                   pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
             should_fence = TRUE;
 
         } else if (pcmk_is_set(rsc->cluster->flags,
                                pcmk_sched_fencing_enabled)) {
             if (pe__is_remote_node(node) && node->details->remote_rsc
-                && !pcmk_is_set(node->details->remote_rsc->flags, pe_rsc_failed)) {
+                && !pcmk_is_set(node->details->remote_rsc->flags,
+                                pcmk_rsc_failed)) {
 
                 /* Setting unseen means that fencing of the remote node will
                  * occur only if the connection resource is not going to start
@@ -2191,7 +2193,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             break;
 
         case pcmk_on_fail_demote:
-            pe__set_resource_flags(rsc, pe_rsc_failed);
+            pe__set_resource_flags(rsc, pcmk_rsc_failed);
             demote_action(rsc, node, FALSE);
             break;
 
@@ -2233,13 +2235,14 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             if ((rsc->role != pcmk_role_stopped)
                 && (rsc->role != pcmk_role_unknown)) {
                 pe__set_resource_flags(rsc,
-                                       pe_rsc_failed|pcmk_rsc_stop_if_failed);
+                                       pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
                 stop_action(rsc, node, FALSE);
             }
             break;
 
         case pcmk_on_fail_restart_container:
-            pe__set_resource_flags(rsc, pe_rsc_failed|pcmk_rsc_stop_if_failed);
+            pe__set_resource_flags(rsc,
+                                   pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
             if (rsc->container && pe_rsc_is_bundled(rsc)) {
                 /* A bundle's remote connection can run on a different node than
                  * the bundle's container. We don't necessarily know where the
@@ -2257,7 +2260,8 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             break;
 
         case pcmk_on_fail_reset_remote:
-            pe__set_resource_flags(rsc, pe_rsc_failed|pcmk_rsc_stop_if_failed);
+            pe__set_resource_flags(rsc,
+                                   pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
             if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)) {
                 tmpnode = NULL;
                 if (rsc->is_remote_node) {
@@ -2292,7 +2296,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
      * to be fenced. By setting unseen = FALSE, the remote-node failure will
      * result in a fencing operation regardless if we're going to attempt to 
      * reconnect to the remote-node in this transition or not. */
-    if (pcmk_is_set(rsc->flags, pe_rsc_failed) && rsc->is_remote_node) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_failed) && rsc->is_remote_node) {
         tmpnode = pe_find_node(rsc->cluster->nodes, rsc->id);
         if (tmpnode && tmpnode->details->unclean) {
             tmpnode->details->unseen = FALSE;
@@ -2320,11 +2324,11 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
                 break;
             case pcmk_on_fail_demote:
             case pcmk_on_fail_block:
-                pe__set_resource_flags(rsc, pe_rsc_failed);
+                pe__set_resource_flags(rsc, pcmk_rsc_failed);
                 break;
             default:
                 pe__set_resource_flags(rsc,
-                                       pe_rsc_failed|pcmk_rsc_stop_if_failed);
+                                       pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
                 break;
         }
 
@@ -3135,7 +3139,7 @@ unpack_migrate_to_success(struct action_history *history)
         } else {
             // Mark resource as failed, require recovery, and prevent migration
             pe__set_resource_flags(history->rsc,
-                                   pe_rsc_failed|pcmk_rsc_stop_if_failed);
+                                   pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
             pe__clear_resource_flags(history->rsc, pe_rsc_allow_migrate);
         }
         return;
@@ -3172,7 +3176,7 @@ unpack_migrate_to_success(struct action_history *history)
     } else if (!source_newer_op) {
         // Mark resource as failed, require recovery, and prevent migration
         pe__set_resource_flags(history->rsc,
-                               pe_rsc_failed|pcmk_rsc_stop_if_failed);
+                               pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
         pe__clear_resource_flags(history->rsc, pe_rsc_allow_migrate);
     }
 }
@@ -4664,7 +4668,9 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                          history.task, rsc->id, pe__node_name(node),
                          history.execution_status, history.exit_status,
                          history.id);
-                /* Also for printing it as "FAILED" by marking it as pe_rsc_failed later */
+                /* Also for printing it as "FAILED" by marking it as
+                 * pcmk_rsc_failed later
+                 */
                 *on_fail = pcmk_on_fail_ban;
             }
             resource_location(parent, node, -INFINITY, "hard-error",
@@ -4683,7 +4689,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                  * that, ensure the remote connection is considered failed.
                  */
                 pe__set_resource_flags(node->details->remote_rsc,
-                                       pe_rsc_failed|pcmk_rsc_stop_if_failed);
+                                       pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
             }
             break; // Not done, do error handling
 

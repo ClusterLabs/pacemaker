@@ -245,7 +245,7 @@ cmp_instance_by_colocation(const pe_resource_t *instance1,
 static bool
 did_fail(const pe_resource_t *rsc)
 {
-    if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
         return true;
     }
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
@@ -739,7 +739,7 @@ preferred_node(const pe_resource_t *instance, int optimal_per_node)
     // Check whether instance is active, healthy, and not yet assigned
     if ((instance->running_on == NULL)
         || !pcmk_is_set(instance->flags, pcmk_rsc_unassigned)
-        || pcmk_is_set(instance->flags, pe_rsc_failed)) {
+        || pcmk_is_set(instance->flags, pcmk_rsc_failed)) {
         return NULL;
     }
 

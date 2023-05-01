@@ -1559,11 +1559,11 @@ schedule_reload(gpointer data, gpointer user_data)
     // Skip the reload in certain situations
     if ((node == NULL)
         || !pcmk_is_set(rsc->flags, pcmk_rsc_managed)
-        || pcmk_is_set(rsc->flags, pe_rsc_failed)) {
+        || pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
         pe_rsc_trace(rsc, "Skip reload of %s:%s%s %s",
                      rsc->id,
                      pcmk_is_set(rsc->flags, pcmk_rsc_managed)? "" : " unmanaged",
-                     pcmk_is_set(rsc->flags, pe_rsc_failed)? " failed" : "",
+                     pcmk_is_set(rsc->flags, pcmk_rsc_failed)? " failed" : "",
                      (node == NULL)? "inactive" : node->details->uname);
         return;
     }

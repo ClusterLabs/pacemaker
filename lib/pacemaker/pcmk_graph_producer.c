@@ -729,7 +729,7 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
 
     } else if (input->action->rsc
                && input->action->rsc != action->rsc
-               && pcmk_is_set(input->action->rsc->flags, pe_rsc_failed)
+               && pcmk_is_set(input->action->rsc->flags, pcmk_rsc_failed)
                && !pcmk_is_set(input->action->rsc->flags, pcmk_rsc_managed)
                && pcmk__ends_with(input->action->uuid, "_stop_0")
                && action->rsc && pe_rsc_is_clone(action->rsc)) {
@@ -1078,7 +1078,7 @@ pcmk__create_graph(pe_working_set_t *data_set)
                 const bool managed = pcmk_is_set(action->rsc->flags,
                                                  pcmk_rsc_managed);
                 const bool failed = pcmk_is_set(action->rsc->flags,
-                                                pe_rsc_failed);
+                                                pcmk_rsc_failed);
 
                 crm_crit("Cannot %s %s because of %s:%s%s (%s)",
                          action->node->details->unclean? "fence" : "shut down",

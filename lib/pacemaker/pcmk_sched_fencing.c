@@ -165,7 +165,7 @@ order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
             order_actions(stonith_op, parent_stop, pe_order_preserve);
         }
 
-        if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
+        if (pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
             crm_notice("Stop of failed resource %s is implicit %s %s is fenced",
                        rsc->id, (order_implicit? "after" : "because"),
                        pe__node_name(target));
@@ -215,9 +215,9 @@ order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
         pe_action_t *action = iter->data;
 
         if (!(action->node->details->online) || action->node->details->unclean
-            || pcmk_is_set(rsc->flags, pe_rsc_failed)) {
+            || pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
 
-            if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
+            if (pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
                 pe_rsc_info(rsc,
                             "Demote of failed resource %s is implicit "
                             "after %s is fenced",
