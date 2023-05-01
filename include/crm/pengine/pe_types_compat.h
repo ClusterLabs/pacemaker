@@ -64,6 +64,9 @@ extern "C" {
 //! \deprecated Use pcmk_rsc_stop_if_failed instead
 #define pe_rsc_stop                     pcmk_rsc_stop_if_failed
 
+//! \deprecated Use pcmk_rsc_reload instead
+#define pe_rsc_reload                   pcmk_rsc_reload
+
 //! \deprecated Use pcmk_sched_quorate instead
 #define pe_flag_have_quorum             pcmk_sched_quorate
 

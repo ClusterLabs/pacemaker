@@ -1164,7 +1164,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
             rc = out->message(out, "rsc-action-item", "Migrate", rsc, current,
                               next, start, NULL);
 
-        } else if (pcmk_is_set(rsc->flags, pe_rsc_reload)) {
+        } else if (pcmk_is_set(rsc->flags, pcmk_rsc_reload)) {
             rc = out->message(out, "rsc-action-item", "Reload", rsc, current,
                               next, start, NULL);
 
@@ -1264,7 +1264,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
                           stop, NULL);
         STOP_SANITY_ASSERT(__LINE__);
 
-    } else if (pcmk_is_set(rsc->flags, pe_rsc_reload)) {
+    } else if (pcmk_is_set(rsc->flags, pcmk_rsc_reload)) {
         rc = out->message(out, "rsc-action-item", "Reload", rsc, current, next,
                           start, NULL);
 
