@@ -262,7 +262,7 @@ add_resource_details(const pe_action_t *action, xmlNode *action_xml)
 
     rsc_xml = create_xml_node(action_xml,
                               (const char *) action->rsc->xml->name);
-    if (pcmk_is_set(action->rsc->flags, pe_rsc_orphan)
+    if (pcmk_is_set(action->rsc->flags, pcmk_rsc_removed)
         && (action->rsc->clone_name != NULL)) {
         /* Use the numbered instance name here, because if there is more
          * than one instance on a node, we need to make sure the command

@@ -179,7 +179,6 @@ struct pe_node_s {
     int rsc_discover_mode;
 };
 
-#  define pe_rsc_orphan                     0x00000001ULL
 #  define pe_rsc_managed                    0x00000002ULL
 #  define pe_rsc_block                      0x00000004ULL
 #  define pe_rsc_orphan_container_filler    0x00000008ULL

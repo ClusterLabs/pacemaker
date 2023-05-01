@@ -251,7 +251,7 @@ pe__show_node_scores_as(const char *file, const char *function, int line,
                         const char *comment, GHashTable *nodes,
                         pe_working_set_t *data_set)
 {
-    if (rsc != NULL && pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
+    if ((rsc != NULL) && pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
         // Don't show allocation scores for orphans
         return;
     }

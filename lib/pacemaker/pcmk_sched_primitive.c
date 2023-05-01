@@ -523,7 +523,7 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer,
 
     } else if (!assign_best_node(rsc, prefer, stop_if_fail)) {
         // Assignment failed
-        if (!pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
+        if (!pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
             pe_rsc_info(rsc, "Resource %s cannot run anywhere", rsc->id);
         } else if ((rsc->running_on != NULL) && stop_if_fail) {
             pe_rsc_info(rsc, "Stopping orphan resource %s", rsc->id);

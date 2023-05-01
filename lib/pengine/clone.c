@@ -279,7 +279,7 @@ pe__create_clone_child(pe_resource_t *rsc, pe_working_set_t *data_set)
     pe_rsc_trace(child_rsc, "Setting clone attributes for: %s", child_rsc->id);
     rsc->children = g_list_append(rsc->children, child_rsc);
     if (as_orphan) {
-        pe__set_resource_flags_recursive(child_rsc, pe_rsc_orphan);
+        pe__set_resource_flags_recursive(child_rsc, pcmk_rsc_removed);
     }
 
     add_hash_param(child_rsc->meta, XML_RSC_ATTR_INCARNATION_MAX, inc_max);
@@ -639,7 +639,8 @@ clone_print(pe_resource_t *rsc, const char *pre_text, long options,
 
         if (pcmk_is_set(rsc->flags, pe_rsc_unique)) {
             // Print individual instance when unique (except stopped orphans)
-            if (partially_active || !pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
+            if (partially_active
+                || !pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
                 print_full = TRUE;
             }
 
@@ -653,13 +654,13 @@ clone_print(pe_resource_t *rsc, const char *pre_text, long options,
 
         } else if (partially_active == FALSE) {
             // List stopped instances when requested (except orphans)
-            if (!pcmk_is_set(child_rsc->flags, pe_rsc_orphan)
+            if (!pcmk_is_set(child_rsc->flags, pcmk_rsc_removed)
                 && !pcmk_is_set(options, pe_print_clone_active)) {
 
                 pcmk__add_word(&stopped_list, 1024, child_rsc->id);
             }
 
-        } else if (is_set_recursive(child_rsc, pe_rsc_orphan, TRUE)
+        } else if (is_set_recursive(child_rsc, pcmk_rsc_removed, TRUE)
                    || is_set_recursive(child_rsc, pe_rsc_managed, FALSE) == FALSE
                    || is_set_recursive(child_rsc, pe_rsc_failed, TRUE)) {
 
@@ -934,7 +935,8 @@ pe__clone_default(pcmk__output_t *out, va_list args)
 
         if (pcmk_is_set(rsc->flags, pe_rsc_unique)) {
             // Print individual instance when unique (except stopped orphans)
-            if (partially_active || !pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
+            if (partially_active
+                || !pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
                 print_full = TRUE;
             }
 
@@ -948,7 +950,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
 
         } else if (partially_active == FALSE) {
             // List stopped instances when requested (except orphans)
-            if (!pcmk_is_set(child_rsc->flags, pe_rsc_orphan)
+            if (!pcmk_is_set(child_rsc->flags, pcmk_rsc_removed)
                 && !pcmk_is_set(show_opts, pcmk_show_clone_detail)
                 && pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {
                 if (stopped == NULL) {
@@ -957,7 +959,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
                 g_hash_table_insert(stopped, strdup(child_rsc->id), strdup("Stopped"));
             }
 
-        } else if (is_set_recursive(child_rsc, pe_rsc_orphan, TRUE)
+        } else if (is_set_recursive(child_rsc, pcmk_rsc_removed, TRUE)
                    || is_set_recursive(child_rsc, pe_rsc_managed, FALSE) == FALSE
                    || is_set_recursive(child_rsc, pe_rsc_failed, TRUE)) {
 

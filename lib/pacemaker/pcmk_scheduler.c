@@ -352,7 +352,7 @@ clear_failcounts_if_orphaned(gpointer data, gpointer user_data)
 {
     pe_resource_t *rsc = data;
 
-    if (!pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
+    if (!pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
         return;
     }
     crm_trace("Clear fail counts for orphaned resource %s", rsc->id);
@@ -661,7 +661,7 @@ log_resource_details(pe_working_set_t *data_set)
         pe_resource_t *rsc = (pe_resource_t *) item->data;
 
         // Log all resources except inactive orphans
-        if (!pcmk_is_set(rsc->flags, pe_rsc_orphan)
+        if (!pcmk_is_set(rsc->flags, pcmk_rsc_removed)
             || (rsc->role != pcmk_role_stopped)) {
             out->message(out, crm_map_element_name(rsc->xml), 0, rsc, all, all);
         }

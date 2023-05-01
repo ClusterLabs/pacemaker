@@ -196,7 +196,7 @@ pcmk__probe_rsc_on_node(pe_resource_t *rsc, pe_node_t *node)
         reason = "resource is inside a container";
         goto no_probe;
 
-    } else if (pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
+    } else if (pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
         reason = "resource is orphaned";
         goto no_probe;
 

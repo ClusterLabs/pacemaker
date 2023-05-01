@@ -482,7 +482,7 @@ native_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
         status_print("target_role=\"%s\" ", target_role);
     }
     status_print("active=\"%s\" ", pcmk__btoa(rsc->fns->active(rsc, TRUE)));
-    status_print("orphaned=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_orphan));
+    status_print("orphaned=\"%s\" ", pe__rsc_bool_str(rsc, pcmk_rsc_removed));
     status_print("blocked=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_block));
     status_print("managed=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_managed));
     status_print("failed=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_failed));
@@ -591,7 +591,7 @@ pcmk__native_output_string(const pe_resource_t *rsc, const char *name,
                    pcmk__s(provider, ""), ":", kind, "):\t", NULL);
 
     // State on node
-    if (pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
         g_string_append(outstr, " ORPHANED");
     }
     if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
@@ -991,7 +991,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
              "role", rsc_state,
              "target_role", target_role,
              "active", pcmk__btoa(rsc->fns->active(rsc, TRUE)),
-             "orphaned", pe__rsc_bool_str(rsc, pe_rsc_orphan),
+             "orphaned", pe__rsc_bool_str(rsc, pcmk_rsc_removed),
              "blocked", pe__rsc_bool_str(rsc, pe_rsc_block),
              "maintenance", pe__rsc_bool_str(rsc, pe_rsc_maintenance),
              "managed", pe__rsc_bool_str(rsc, pe_rsc_managed),

@@ -1836,7 +1836,7 @@ create_fake_resource(const char *rsc_id, const xmlNode *rsc_entry,
         crm_trace("Detected orphaned container filler %s", rsc_id);
         pe__set_resource_flags(rsc, pe_rsc_orphan_container_filler);
     }
-    pe__set_resource_flags(rsc, pe_rsc_orphan);
+    pe__set_resource_flags(rsc, pcmk_rsc_removed);
     data_set->resources = g_list_append(data_set->resources, rsc);
     return rsc;
 }
@@ -2062,7 +2062,7 @@ unpack_find_resource(pe_working_set_t *data_set, const pe_node_t *node,
         pcmk__str_update(&rsc->clone_name, rsc_id);
         pe_rsc_debug(rsc, "Internally renamed %s on %s to %s%s",
                      rsc_id, pe__node_name(node), rsc->id,
-                     (pcmk_is_set(rsc->flags, pe_rsc_orphan)? " (ORPHAN)" : ""));
+                     (pcmk_is_set(rsc->flags, pcmk_rsc_removed)? " (ORPHAN)" : ""));
     }
     return rsc;
 }
@@ -2299,8 +2299,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
 
     if ((rsc->role != pcmk_role_stopped)
         && (rsc->role != pcmk_role_unknown)) {
-
-        if (pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
+        if (pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
             if (pcmk_is_set(rsc->flags, pe_rsc_managed)) {
                 pcmk__config_warn("Detected active orphan %s running on %s",
                                   rsc->id, pe__node_name(node));

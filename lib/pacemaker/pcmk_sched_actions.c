@@ -1753,7 +1753,7 @@ process_rsc_history(const xmlNode *rsc_entry, pe_resource_t *rsc,
     int start_index = 0;
     GList *sorted_op_list = NULL;
 
-    if (pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
         if (pe_rsc_is_anon_clone(pe__const_top_resource(rsc, false))) {
             pe_rsc_trace(rsc,
                          "Skipping configuration check "

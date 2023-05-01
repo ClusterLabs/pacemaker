@@ -993,7 +993,9 @@ common_free(pe_resource_t * rsc)
         g_hash_table_destroy(rsc->utilization);
     }
 
-    if ((rsc->parent == NULL) && pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
+    if ((rsc->parent == NULL)
+        && pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
+
         free_xml(rsc->xml);
         rsc->xml = NULL;
         free_xml(rsc->orig_xml);
@@ -1151,7 +1153,7 @@ pe__count_common(pe_resource_t *rsc)
             ((pe_resource_t *) item->data)->fns->count(item->data);
         }
 
-    } else if (!pcmk_is_set(rsc->flags, pe_rsc_orphan)
+    } else if (!pcmk_is_set(rsc->flags, pcmk_rsc_removed)
                || (rsc->role > pcmk_role_stopped)) {
         rsc->cluster->ninstances++;
         if (pe__resource_is_disabled(rsc)) {
