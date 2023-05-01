@@ -222,6 +222,36 @@ enum action_fail_response {
 #endif
 };
 
+//! Action scheduling flags
+enum pe_action_flags {
+    pe_action_pseudo = 0x00001,
+    pe_action_runnable = 0x00002,
+    pe_action_optional = 0x00004,
+    pe_action_print_always = 0x00008,
+
+    pe_action_have_node_attrs = 0x00010,
+    pe_action_implied_by_stonith = 0x00040,
+    pe_action_migrate_runnable =   0x00080,
+
+    pe_action_dumped = 0x00100,
+    pe_action_processed = 0x00200,
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    pe_action_clear = 0x00400, //! \deprecated Unused
+#endif
+    pe_action_dangle = 0x00800,
+
+    /* This action requires one or more of its dependencies to be runnable.
+     * We use this to clear the runnable flag before checking dependencies.
+     */
+    pe_action_requires_any = 0x01000,
+
+    pe_action_reschedule = 0x02000,
+    pe_action_tracking = 0x04000,
+    pe_action_dedup = 0x08000, //! Internal state tracking when creating graph
+
+    pe_action_dc = 0x10000,         //! Action may run on DC instead of target
+};
+
 // For parsing various action-related string specifications
 gboolean parse_op_key(const char *key, char **rsc_id, char **op_type,
                       guint *interval_ms);
