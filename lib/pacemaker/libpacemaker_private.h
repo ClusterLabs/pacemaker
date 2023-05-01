@@ -613,7 +613,8 @@ pcmk__colocation_has_influence(const pcmk__colocation_t *colocation,
      * This also avoids problematic scenarios where two containers want to
      * perpetually swap places.
      */
-    if (pcmk_is_set(colocation->dependent->flags, pe_rsc_allow_remote_remotes)
+    if (pcmk_is_set(colocation->dependent->flags,
+                    pcmk_rsc_remote_nesting_allowed)
         && !pcmk_is_set(rsc->flags, pe_rsc_failed)
         && pcmk__list_of_1(rsc->running_on)) {
         return false;

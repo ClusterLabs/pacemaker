@@ -179,7 +179,6 @@ struct pe_node_s {
     int rsc_discover_mode;
 };
 
-#  define pe_rsc_allow_remote_remotes       0x00004000ULL
 #  define pe_rsc_critical                   0x00008000ULL
 
 #  define pe_rsc_failed                     0x00010000ULL

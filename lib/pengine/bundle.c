@@ -851,7 +851,8 @@ create_replica_resources(pe_resource_t *parent, pe__bundle_variant_data_t *data,
          * containers with pacemaker-remoted inside in order to start
          * services inside those containers.
          */
-        pe__set_resource_flags(replica->remote, pe_rsc_allow_remote_remotes);
+        pe__set_resource_flags(replica->remote,
+                               pcmk_rsc_remote_nesting_allowed);
     }
     return rc;
 }

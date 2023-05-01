@@ -971,7 +971,7 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
             /* Guest resources are not allowed to run on Pacemaker Remote nodes,
              * to avoid nesting remotes. However, bundles are allowed.
              */
-            if (!pcmk_is_set(rsc->flags, pe_rsc_allow_remote_remotes)) {
+            if (!pcmk_is_set(rsc->flags, pcmk_rsc_remote_nesting_allowed)) {
                 rsc_avoids_remote_nodes(rsc->container);
             }
 
@@ -1038,7 +1038,7 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
                                             PCMK_ACTION_STOP, 0),
                                NULL, pe_order_implies_first, rsc->cluster);
 
-            if (pcmk_is_set(rsc->flags, pe_rsc_allow_remote_remotes)) {
+            if (pcmk_is_set(rsc->flags, pcmk_rsc_remote_nesting_allowed)) {
                 score = 10000;    /* Highly preferred but not essential */
             } else {
                 score = INFINITY; /* Force them to run on the same host */
