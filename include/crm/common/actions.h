@@ -224,6 +224,9 @@ enum action_fail_response {
 
 //! Action scheduling flags
 enum pe_action_flags {
+    //! No action flags set (compare with equality rather than bit set)
+    pcmk_no_action_flags            = 0,
+
     pe_action_pseudo = 0x00001,
     pe_action_runnable = 0x00002,
     pe_action_optional = 0x00004,
