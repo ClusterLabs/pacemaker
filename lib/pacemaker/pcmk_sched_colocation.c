@@ -1680,12 +1680,12 @@ pcmk__add_colocated_node_scores(pe_resource_t *source_rsc,
     }
 
     // Avoid infinite recursion
-    if (pcmk_is_set(source_rsc->flags, pe_rsc_merging)) {
+    if (pcmk_is_set(source_rsc->flags, pcmk_rsc_updating_nodes)) {
         pe_rsc_info(source_rsc, "%s: Breaking dependency loop at %s",
                     log_id, source_rsc->id);
         return;
     }
-    pe__set_resource_flags(source_rsc, pe_rsc_merging);
+    pe__set_resource_flags(source_rsc, pcmk_rsc_updating_nodes);
 
     if (*nodes == NULL) {
         work = pcmk__copy_node_table(source_rsc->allowed_nodes);
@@ -1701,7 +1701,7 @@ pcmk__add_colocated_node_scores(pe_resource_t *source_rsc,
     }
 
     if (work == NULL) {
-        pe__clear_resource_flags(source_rsc, pe_rsc_merging);
+        pe__clear_resource_flags(source_rsc, pcmk_rsc_updating_nodes);
         return;
     }
 
@@ -1753,7 +1753,7 @@ pcmk__add_colocated_node_scores(pe_resource_t *source_rsc,
         pe_rsc_info(source_rsc, "%s: Rolling back optional scores from %s",
                     log_id, source_rsc->id);
         g_hash_table_destroy(work);
-        pe__clear_resource_flags(source_rsc, pe_rsc_merging);
+        pe__clear_resource_flags(source_rsc, pcmk_rsc_updating_nodes);
         return;
     }
 
@@ -1775,7 +1775,7 @@ pcmk__add_colocated_node_scores(pe_resource_t *source_rsc,
     }
     *nodes = work;
 
-    pe__clear_resource_flags(source_rsc, pe_rsc_merging);
+    pe__clear_resource_flags(source_rsc, pcmk_rsc_updating_nodes);
 }
 
 /*!

@@ -857,12 +857,12 @@ pcmk__group_add_colocated_node_scores(pe_resource_t *source_rsc,
     }
 
     // Avoid infinite recursion
-    if (pcmk_is_set(source_rsc->flags, pe_rsc_merging)) {
+    if (pcmk_is_set(source_rsc->flags, pcmk_rsc_updating_nodes)) {
         pe_rsc_info(source_rsc, "%s: Breaking dependency loop at %s",
                     log_id, source_rsc->id);
         return;
     }
-    pe__set_resource_flags(source_rsc, pe_rsc_merging);
+    pe__set_resource_flags(source_rsc, pcmk_rsc_updating_nodes);
 
     // Ignore empty groups (only possible with schema validation disabled)
     if (source_rsc->children == NULL) {
@@ -888,7 +888,7 @@ pcmk__group_add_colocated_node_scores(pe_resource_t *source_rsc,
                  "(at %.6f)", log_id, source_rsc->id, member->id, factor);
     member->cmds->add_colocated_node_scores(member, target_rsc, log_id, nodes,
                                             colocation, factor, flags);
-    pe__clear_resource_flags(source_rsc, pe_rsc_merging);
+    pe__clear_resource_flags(source_rsc, pcmk_rsc_updating_nodes);
 }
 
 // Group implementation of resource_alloc_functions_t:add_utilization()

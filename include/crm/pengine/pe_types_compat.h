@@ -55,6 +55,9 @@ extern "C" {
 //! \deprecated Use pcmk_rsc_assigning instead
 #define pe_rsc_allocating               pcmk_rsc_assigning
 
+//! \deprecated Use pcmk_rsc_updating_nodes instead
+#define pe_rsc_merging                  pcmk_rsc_updating_nodes
+
 //! \deprecated Use pcmk_sched_quorate instead
 #define pe_flag_have_quorum             pcmk_sched_quorate
 
