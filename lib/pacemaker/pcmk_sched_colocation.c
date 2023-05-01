@@ -93,12 +93,12 @@ cmp_colocation_priority(const pcmk__colocation_t *colocation1,
      * tests)
      */
     if (rsc1->variant == pcmk_rsc_variant_clone) {
-        if (pcmk_is_set(rsc1->flags, pe_rsc_promotable)
-            && !pcmk_is_set(rsc2->flags, pe_rsc_promotable)) {
+        if (pcmk_is_set(rsc1->flags, pcmk_rsc_promotable)
+            && !pcmk_is_set(rsc2->flags, pcmk_rsc_promotable)) {
             return -1;
         }
-        if (!pcmk_is_set(rsc1->flags, pe_rsc_promotable)
-            && pcmk_is_set(rsc2->flags, pe_rsc_promotable)) {
+        if (!pcmk_is_set(rsc1->flags, pcmk_rsc_promotable)
+            && pcmk_is_set(rsc2->flags, pcmk_rsc_promotable)) {
             return 1;
         }
     }
@@ -1194,7 +1194,7 @@ pcmk__colocation_affects(const pe_resource_t *dependent,
 
     if ((colocation->dependent_role >= pcmk_role_unpromoted)
         && (dependent_role_rsc->parent != NULL)
-        && pcmk_is_set(dependent_role_rsc->parent->flags, pe_rsc_promotable)
+        && pcmk_is_set(dependent_role_rsc->parent->flags, pcmk_rsc_promotable)
         && !pcmk_is_set(dependent_role_rsc->flags, pe_rsc_provisional)) {
 
         /* This is a colocation by role, and the dependent is a promotable clone

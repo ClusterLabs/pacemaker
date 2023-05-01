@@ -203,7 +203,7 @@ pcmk__bundle_create_actions(pe_resource_t *rsc)
     if (bundled_resource != NULL) {
         bundled_resource->cmds->create_actions(bundled_resource);
 
-        if (pcmk_is_set(bundled_resource->flags, pe_rsc_promotable)) {
+        if (pcmk_is_set(bundled_resource->flags, pcmk_rsc_promotable)) {
             pe__new_rsc_pseudo_action(rsc, PCMK_ACTION_PROMOTE, true, true);
             action = pe__new_rsc_pseudo_action(rsc, PCMK_ACTION_PROMOTED,
                                                true, true);
@@ -327,7 +327,7 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
 
     bundled_resource->cmds->internal_constraints(bundled_resource);
 
-    if (!pcmk_is_set(bundled_resource->flags, pe_rsc_promotable)) {
+    if (!pcmk_is_set(bundled_resource->flags, pcmk_rsc_promotable)) {
         return;
     }
     pcmk__promotable_restart_ordering(rsc);
@@ -600,7 +600,7 @@ pcmk__with_bundle_colocations(const pe_resource_t *rsc,
      */
     bundled_rsc = pe__bundled_resource(rsc);
     if ((bundled_rsc == NULL)
-        || !pcmk_is_set(bundled_rsc->flags, pe_rsc_promotable)
+        || !pcmk_is_set(bundled_rsc->flags, pcmk_rsc_promotable)
         || (pe__const_top_resource(orig_rsc, false) != bundled_rsc)) {
         return;
     }
@@ -644,7 +644,7 @@ pcmk__bundle_with_colocations(const pe_resource_t *rsc,
      */
     bundled_rsc = pe__bundled_resource(rsc);
     if ((bundled_rsc == NULL)
-        || !pcmk_is_set(bundled_rsc->flags, pe_rsc_promotable)
+        || !pcmk_is_set(bundled_rsc->flags, pcmk_rsc_promotable)
         || (pe__const_top_resource(orig_rsc, false) != bundled_rsc)) {
         return;
     }

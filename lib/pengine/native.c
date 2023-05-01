@@ -229,7 +229,7 @@ native_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
         recursive_clear_unique(rsc, NULL);
     }
     if (!pcmk_is_set(ra_caps, pcmk_ra_cap_promotable)
-        && pcmk_is_set(parent->flags, pe_rsc_promotable)) {
+        && pcmk_is_set(parent->flags, pcmk_rsc_promotable)) {
 
         pe_err("Resource %s is of type %s and therefore "
                "cannot be used as a promotable clone resource",
@@ -434,7 +434,7 @@ native_displayable_role(const pe_resource_t *rsc)
 
     if ((role == pcmk_role_started)
         && pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
-                       pe_rsc_promotable)) {
+                       pcmk_rsc_promotable)) {
 
         role = pcmk_role_unpromoted;
     }
@@ -651,7 +651,7 @@ pcmk__native_output_string(const pe_resource_t *rsc, const char *name,
             have_flags = add_output_flag(outstr, "disabled", have_flags);
 
         } else if (pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
-                               pe_rsc_promotable)
+                               pcmk_rsc_promotable)
                    && (target_role_e == pcmk_role_unpromoted)) {
             have_flags = add_output_flag(outstr, "target-role:", have_flags);
             g_string_append(outstr, target_role);

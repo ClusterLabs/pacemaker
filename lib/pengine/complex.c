@@ -767,7 +767,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
             pe__set_resource_flags(*rsc, pcmk_rsc_unique);
         }
         if (detect_promotable(*rsc)) {
-            pe__set_resource_flags(*rsc, pe_rsc_promotable);
+            pe__set_resource_flags(*rsc, pcmk_rsc_promotable);
         }
     } else {
         pe__set_resource_flags(*rsc, pcmk_rsc_unique);

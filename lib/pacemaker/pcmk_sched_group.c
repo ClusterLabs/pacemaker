@@ -326,7 +326,7 @@ pcmk__group_internal_constraints(pe_resource_t *rsc)
 
     member_data.ordered = pe__group_flag_is_set(rsc, pe__group_ordered);
     member_data.colocated = pe__group_flag_is_set(rsc, pe__group_colocated);
-    member_data.promotable = pcmk_is_set(top->flags, pe_rsc_promotable);
+    member_data.promotable = pcmk_is_set(top->flags, pcmk_rsc_promotable);
     g_list_foreach(rsc->children, member_internal_constraints, &member_data);
 }
 

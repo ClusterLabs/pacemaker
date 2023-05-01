@@ -426,7 +426,7 @@ get_target_role(const pe_resource_t *rsc, enum rsc_role_e *role)
 
     } else if (local_role > pcmk_role_started) {
         if (pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
-                        pe_rsc_promotable)) {
+                        pcmk_rsc_promotable)) {
             if (local_role > pcmk_role_unpromoted) {
                 /* This is what we'd do anyway, just leave the default to avoid messing up the placement algorithm */
                 return FALSE;
@@ -725,7 +725,7 @@ pe__resource_is_disabled(const pe_resource_t *rsc)
         if ((target_role_e == pcmk_role_stopped)
             || ((target_role_e == pcmk_role_unpromoted)
                 && pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
-                               pe_rsc_promotable))) {
+                               pcmk_rsc_promotable))) {
             return true;
         }
     }

@@ -2698,7 +2698,7 @@ set_active(pe_resource_t * rsc)
 {
     const pe_resource_t *top = pe__const_top_resource(rsc, false);
 
-    if (top && pcmk_is_set(top->flags, pe_rsc_promotable)) {
+    if (top && pcmk_is_set(top->flags, pcmk_rsc_promotable)) {
         rsc->role = pcmk_role_unpromoted;
     } else {
         rsc->role = pcmk_role_started;

@@ -173,7 +173,7 @@ clone_header(pcmk__output_t *out, int *rc, const pe_resource_t *rsc,
 {
     GString *attrs = NULL;
 
-    if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
         pcmk__add_separated_word(&attrs, 64, "promotable", ", ");
     }
 
@@ -308,7 +308,7 @@ clone_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
     clone_data = calloc(1, sizeof(clone_variant_data_t));
     rsc->variant_opaque = clone_data;
 
-    if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
         const char *promoted_max = NULL;
         const char *promoted_node_max = NULL;
 
@@ -387,7 +387,7 @@ clone_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
     pe_rsc_trace(rsc, "\tClone is unique: %s",
                  pe__rsc_bool_str(rsc, pcmk_rsc_unique));
     pe_rsc_trace(rsc, "\tClone is promotable: %s",
-                 pe__rsc_bool_str(rsc, pe_rsc_promotable));
+                 pe__rsc_bool_str(rsc, pcmk_rsc_promotable));
 
     // Clones may contain a single group or primitive
     for (a_child = pcmk__xe_first_child(xml_obj); a_child != NULL;
@@ -533,7 +533,7 @@ clone_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
     status_print("%s<clone ", pre_text);
     status_print(XML_ATTR_ID "=\"%s\" ", rsc->id);
     status_print("multi_state=\"%s\" ",
-                 pe__rsc_bool_str(rsc, pe_rsc_promotable));
+                 pe__rsc_bool_str(rsc, pcmk_rsc_promotable));
     status_print("unique=\"%s\" ", pe__rsc_bool_str(rsc, pcmk_rsc_unique));
     status_print("managed=\"%s\" ",
                  pe__rsc_bool_str(rsc, pcmk_rsc_managed));
@@ -620,7 +620,7 @@ clone_print(pe_resource_t *rsc, const char *pre_text, long options,
 
     status_print("%sClone Set: %s [%s]%s%s%s",
                  pre_text ? pre_text : "", rsc->id, ID(clone_data->xml_obj_child),
-                 pcmk_is_set(rsc->flags, pe_rsc_promotable)? " (promotable)" : "",
+                 pcmk_is_set(rsc->flags, pcmk_rsc_promotable)? " (promotable)" : "",
                  pcmk_is_set(rsc->flags, pcmk_rsc_unique)? " (unique)" : "",
                  pcmk_is_set(rsc->flags, pcmk_rsc_managed)? "" : " (unmanaged)");
 
@@ -737,7 +737,7 @@ clone_print(pe_resource_t *rsc, const char *pre_text, long options,
     }
 
     if (list_text != NULL) {
-        if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
+        if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
             enum rsc_role_e role = configured_role(rsc);
 
             if (role == pcmk_role_unpromoted) {
@@ -859,7 +859,8 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
             desc = pe__resource_description(rsc, show_opts);
             rc = pe__name_and_nvpairs_xml(out, true, "clone", 10,
                     "id", rsc->id,
-                    "multi_state", pe__rsc_bool_str(rsc, pe_rsc_promotable),
+                    "multi_state",
+                    pe__rsc_bool_str(rsc, pcmk_rsc_promotable),
                     "unique", pe__rsc_bool_str(rsc, pcmk_rsc_unique),
                     "maintenance", pe__rsc_bool_str(rsc, pe_rsc_maintenance),
                     "managed", pe__rsc_bool_str(rsc, pcmk_rsc_managed),
@@ -1057,7 +1058,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
     if ((list_text != NULL) && (list_text->len > 0)) {
         clone_header(out, &rc, rsc, clone_data, desc);
 
-        if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
+        if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
             enum rsc_role_e role = configured_role(rsc);
 
             if (role == pcmk_role_unpromoted) {

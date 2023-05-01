@@ -53,7 +53,7 @@ pcmk__clone_assign(pe_resource_t *rsc, const pe_node_t *prefer,
     pe__set_resource_flags(rsc, pe_rsc_allocating);
 
     // If this clone is promotable, consider nodes' promotion scores
-    if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
         pcmk__add_promotion_scores(rsc);
     }
 
@@ -82,7 +82,7 @@ pcmk__clone_assign(pe_resource_t *rsc, const pe_node_t *prefer,
     pcmk__assign_instances(rsc, rsc->children, pe__clone_max(rsc),
                            pe__clone_node_max(rsc));
 
-    if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
         pcmk__set_instance_roles(rsc);
     }
 
@@ -104,7 +104,7 @@ pcmk__clone_create_actions(pe_resource_t *rsc)
 
     pe_rsc_trace(rsc, "Creating actions for clone %s", rsc->id);
     pcmk__create_instance_actions(rsc, rsc->children);
-    if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
         pcmk__create_promotable_actions(rsc);
     }
 }
@@ -136,7 +136,7 @@ pcmk__clone_internal_constraints(pe_resource_t *rsc)
                                  pe_order_runnable_left);
 
     // Demoted -> stop and started -> promote
-    if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
         pcmk__order_resource_actions(rsc, PCMK_ACTION_DEMOTED,
                                      rsc, PCMK_ACTION_STOP,
                                      pe_order_optional);
@@ -185,7 +185,7 @@ pcmk__clone_internal_constraints(pe_resource_t *rsc)
             }
         }
     }
-    if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
         pcmk__order_promotable_instances(rsc);
     }
 }
@@ -272,7 +272,7 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
                  pcmk_readable_score(colocation->score));
 
     // Apply role-specific colocations
-    if (pcmk_is_set(primary->flags, pe_rsc_promotable)
+    if (pcmk_is_set(primary->flags, pcmk_rsc_promotable)
         && (colocation->primary_role != pcmk_role_unknown)) {
 
         if (pcmk_is_set(dependent->flags, pe_rsc_provisional)) {
@@ -628,7 +628,7 @@ pcmk__clone_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml)
     crm_xml_add_int(xml, name, pe__clone_node_max(rsc));
     free(name);
 
-    if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
         int promoted_max = pe__clone_promoted_max(rsc);
         int promoted_node_max = pe__clone_promoted_node_max(rsc);
 

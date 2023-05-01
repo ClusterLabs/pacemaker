@@ -30,7 +30,7 @@ build_node_info_list(const pe_resource_t *rsc)
             node_info_t *ni = calloc(1, sizeof(node_info_t));
 
             ni->node_name = node->details->uname;
-            ni->promoted = pcmk_is_set(rsc->flags, pe_rsc_promotable) &&
+            ni->promoted = pcmk_is_set(rsc->flags, pcmk_rsc_promotable) &&
                            child->fns->state(child, TRUE) == pcmk_role_promoted;
 
             retval = g_list_prepend(retval, ni);
@@ -947,7 +947,7 @@ check_role(resource_checks_t *checks)
 
         case pcmk_role_unpromoted:
             if (pcmk_is_set(pe__const_top_resource(checks->rsc, false)->flags,
-                            pe_rsc_promotable)) {
+                            pcmk_rsc_promotable)) {
                 checks->flags |= rsc_unpromotable;
             }
             break;
@@ -2122,10 +2122,12 @@ cli_resource_move(const pe_resource_t *rsc, const char *rsc_id,
         return pcmk_rc_node_unknown;
     }
 
-    if (promoted_role_only && !pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
+    if (promoted_role_only
+        && !pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
+
         const pe_resource_t *p = pe__const_top_resource(rsc, false);
 
-        if (pcmk_is_set(p->flags, pe_rsc_promotable)) {
+        if (pcmk_is_set(p->flags, pcmk_rsc_promotable)) {
             out->info(out, "Using parent '%s' for move instead of '%s'.", rsc->id, rsc_id);
             rsc_id = p->id;
             rsc = p;
@@ -2139,7 +2141,7 @@ cli_resource_move(const pe_resource_t *rsc, const char *rsc_id,
 
     current = pe__find_active_requires(rsc, &count);
 
-    if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
         unsigned int promoted_count = 0;
         pe_node_t *promoted_node = NULL;
 

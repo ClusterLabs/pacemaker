@@ -926,7 +926,7 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
 
     // Promotable ordering: demote before stop, start before promote
     if (pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
-                    pe_rsc_promotable)
+                    pcmk_rsc_promotable)
         || (rsc->role > pcmk_role_unpromoted)) {
 
         pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, PCMK_ACTION_DEMOTE, 0),
