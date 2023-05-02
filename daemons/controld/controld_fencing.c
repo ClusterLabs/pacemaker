@@ -924,19 +924,17 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
 }
 
 static int
-fence_with_delay(const char *target, const char *type, const char *delay)
+fence_with_delay(const char *target, const char *type, int delay)
 {
     uint32_t options = st_opt_none; // Group of enum stonith_call_options
     int timeout_sec = (int) (controld_globals.transition_graph->stonith_timeout
                              / 1000);
-    int delay_i;
 
     if (crmd_join_phase_count(crm_join_confirmed) == 1) {
         stonith__set_call_options(options, target, st_opt_allow_suicide);
     }
-    pcmk__scan_min_int(delay, &delay_i, 0);
     return stonith_api->cmds->fence_with_delay(stonith_api, options, target,
-                                               type, timeout_sec, 0, delay_i);
+                                               type, timeout_sec, 0, delay);
 }
 
 /*!
@@ -959,8 +957,10 @@ controld_execute_fence_action(pcmk__graph_t *graph,
     const char *type = crm_meta_value(action->params, "stonith_action");
     char *transition_key = NULL;
     const char *priority_delay = NULL;
+    int delay_i = 0;
     gboolean invalid_action = FALSE;
-    guint stonith_timeout = controld_globals.transition_graph->stonith_timeout;
+    int stonith_timeout = (int) (controld_globals.transition_graph->stonith_timeout
+                                 / 1000);
 
     CRM_CHECK(id != NULL, invalid_action = TRUE);
     CRM_CHECK(uuid != NULL, invalid_action = TRUE);
@@ -974,8 +974,8 @@ controld_execute_fence_action(pcmk__graph_t *graph,
 
     priority_delay = crm_meta_value(action->params, XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY);
 
-    crm_notice("Requesting fencing (%s) of node %s "
-               CRM_XS " action=%s timeout=%u%s%s",
+    crm_notice("Requesting fencing (%s) targeting node %s "
+               CRM_XS " action=%s timeout=%i%s%s",
                type, target, id, stonith_timeout,
                priority_delay ? " priority_delay=" : "",
                priority_delay ? priority_delay : "");
@@ -983,12 +983,14 @@ controld_execute_fence_action(pcmk__graph_t *graph,
     /* Passing NULL means block until we can connect... */
     te_connect_stonith(NULL);
 
-    rc = fence_with_delay(target, type, priority_delay);
+    pcmk__scan_min_int(priority_delay, &delay_i, 0);
+    rc = fence_with_delay(target, type, delay_i);
     transition_key = pcmk__transition_key(controld_globals.transition_graph->id,
                                           action->id, 0,
                                           controld_globals.te_uuid),
     stonith_api->cmds->register_callback(stonith_api, rc,
-                                         (int) (stonith_timeout / 1000),
+                                         (stonith_timeout
+                                          + (delay_i > 0 ? delay_i : 0)),
                                          st_opt_timeout_updates, transition_key,
                                          "tengine_stonith_callback",
                                          tengine_stonith_callback);

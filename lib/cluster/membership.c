@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -392,6 +392,7 @@ destroy_crm_node(gpointer data)
     free(node->state);
     free(node->uuid);
     free(node->expected);
+    free(node->conn_host);
     free(node);
 }
 

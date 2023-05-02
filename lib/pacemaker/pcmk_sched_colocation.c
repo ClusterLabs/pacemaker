@@ -1527,6 +1527,37 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
 
 /*!
  * \internal
+ * \brief Apply a "with this" colocation to a resource's allowed node scores
+ *
+ * \param[in,out] data       Colocation to apply
+ * \param[in,out] user_data  Resource being assigned
+ */
+void
+pcmk__add_dependent_scores(gpointer data, gpointer user_data)
+{
+    pcmk__colocation_t *colocation = (pcmk__colocation_t *) data;
+    pe_resource_t *rsc = (pe_resource_t *) user_data;
+
+    pe_resource_t *other = colocation->dependent;
+    const float factor = colocation->score / (float) INFINITY;
+    uint32_t flags = pcmk__coloc_select_active;
+
+    if (!pcmk__colocation_has_influence(colocation, NULL)) {
+        return;
+    }
+    if (rsc->variant == pe_clone) {
+        flags |= pcmk__coloc_select_nonnegative;
+    }
+    pe_rsc_trace(rsc,
+                 "%s: Incorporating attenuated %s assignment scores due "
+                 "to colocation %s", rsc->id, other->id, colocation->id);
+    other->cmds->add_colocated_node_scores(other, rsc->id, &rsc->allowed_nodes,
+                                           colocation->node_attribute, factor,
+                                           flags);
+}
+
+/*!
+ * \internal
  * \brief Get all colocations affecting a resource as the primary
  *
  * \param[in] rsc  Resource to get colocations for

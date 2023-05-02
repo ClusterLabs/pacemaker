@@ -844,6 +844,32 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
         // No change needed for a nacked node
         crm_update_peer_join(__func__, join_node, crm_join_finalized);
         pcmk__update_peer_expected(__func__, join_node, CRMD_JOINSTATE_MEMBER);
+
+        /* Iterate through the remote peer cache and add information on which
+         * node hosts each to the ACK message.  This keeps new controllers in
+         * sync with what has already happened.
+         */
+        if (crm_remote_peer_cache_size() != 0) {
+            GHashTableIter iter;
+            crm_node_t *node = NULL;
+            xmlNode *remotes = create_xml_node(acknak, XML_CIB_TAG_NODES);
+
+            g_hash_table_iter_init(&iter, crm_remote_peer_cache);
+            while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+                xmlNode *remote = NULL;
+
+                if (!node->conn_host) {
+                    continue;
+                }
+
+                remote = create_xml_node(remotes, XML_CIB_TAG_NODE);
+                pcmk__xe_set_props(remote,
+                                   XML_ATTR_ID, node->uname,
+                                   XML_CIB_TAG_STATE, node->state,
+                                   PCMK__XA_CONN_HOST, node->conn_host,
+                                   NULL);
+            }
+        }
     }
     send_cluster_message(join_node, crm_msg_crmd, acknak, TRUE);
     free_xml(acknak);

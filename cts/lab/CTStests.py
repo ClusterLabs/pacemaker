@@ -723,7 +723,7 @@ class PartialStart(CTSTest):
         # We might do some fencing in the 2-node case if we make it up far enough
         return [
             r"Executing reboot fencing operation",
-            r"Requesting fencing \([^)]+\) of node ",
+            r"Requesting fencing \([^)]+\) targeting node ",
         ]
 
 #     Register StopOnebyOne as a good test to run

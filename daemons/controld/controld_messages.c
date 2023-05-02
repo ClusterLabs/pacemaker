@@ -726,6 +726,7 @@ handle_lrm_delete(xmlNode *stored_msg)
 static enum crmd_fsa_input
 handle_remote_state(const xmlNode *msg)
 {
+    const char *conn_host = NULL;
     const char *remote_uname = ID(msg);
     crm_node_t *remote_peer;
     bool remote_is_up = false;
@@ -741,6 +742,15 @@ handle_remote_state(const xmlNode *msg)
     pcmk__update_peer_state(__func__, remote_peer,
                             remote_is_up ? CRM_NODE_MEMBER : CRM_NODE_LOST,
                             0);
+
+    conn_host = crm_element_value(msg, PCMK__XA_CONN_HOST);
+    if (conn_host) {
+        pcmk__str_update(&remote_peer->conn_host, conn_host);
+    } else if (remote_peer->conn_host) {
+        free(remote_peer->conn_host);
+        remote_peer->conn_host = NULL;
+    }
+
     return I_NULL;
 }
 
@@ -1010,10 +1020,6 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
         } else if (strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0) {
             // Another controller wants to shut down its node
             return handle_shutdown_request(stored_msg);
-
-        } else if (strcmp(op, CRM_OP_REMOTE_STATE) == 0) {
-            /* a remote connection host is letting us know the node state */
-            return handle_remote_state(stored_msg);
         }
     }
 
@@ -1025,6 +1031,10 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
         register_fsa_input_adv(C_HA_MESSAGE, I_NULL, &fsa_input,
                                A_ELECTION_COUNT | A_ELECTION_CHECK, FALSE,
                                __func__);
+
+    } else if (strcmp(op, CRM_OP_REMOTE_STATE) == 0) {
+        /* a remote connection host is letting us know the node state */
+        return handle_remote_state(stored_msg);
 
     } else if (strcmp(op, CRM_OP_THROTTLE) == 0) {
         throttle_update(stored_msg);
@@ -1270,34 +1280,28 @@ delete_ha_msg_input(ha_msg_input_t * orig)
 
 /*!
  * \internal
- * \brief Notify the DC of a remote node state change
+ * \brief Notify the cluster of a remote node state change
  *
  * \param[in] node_name  Node's name
- * \param[in] node_up    TRUE if node is up, FALSE if down
+ * \param[in] node_up    true if node is up, false if down
  */
 void
-send_remote_state_message(const char *node_name, gboolean node_up)
+broadcast_remote_state_message(const char *node_name, bool node_up)
 {
-    /* If we don't have a DC, or the message fails, we have a failsafe:
-     * the DC will eventually pick up the change via the CIB node state.
-     * The message allows it to happen sooner if possible.
-     */
-    if (controld_globals.dc_name != NULL) {
-        xmlNode *msg = create_request(CRM_OP_REMOTE_STATE, NULL,
-                                      controld_globals.dc_name, CRM_SYSTEM_DC,
-                                      CRM_SYSTEM_CRMD, NULL);
+    xmlNode *msg = create_request(CRM_OP_REMOTE_STATE, NULL, NULL,
+                                  CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
-        crm_info("Notifying DC %s of Pacemaker Remote node %s %s",
-                 controld_globals.dc_name, node_name,
-                 node_up? "coming up" : "going down");
-        crm_xml_add(msg, XML_ATTR_ID, node_name);
-        pcmk__xe_set_bool_attr(msg, XML_NODE_IN_CLUSTER, node_up);
-        send_cluster_message(crm_get_peer(0, controld_globals.dc_name),
-                             crm_msg_crmd, msg, TRUE);
-        free_xml(msg);
-    } else {
-        crm_debug("No DC to notify of Pacemaker Remote node %s %s",
-                  node_name, (node_up? "coming up" : "going down"));
+    crm_info("Notifying cluster of Pacemaker Remote node %s %s",
+             node_name, node_up? "coming up" : "going down");
+
+    crm_xml_add(msg, XML_ATTR_ID, node_name);
+    pcmk__xe_set_bool_attr(msg, XML_NODE_IN_CLUSTER, node_up);
+
+    if (node_up) {
+        crm_xml_add(msg, PCMK__XA_CONN_HOST, controld_globals.our_nodename);
     }
+
+    send_cluster_message(NULL, crm_msg_crmd, msg, TRUE);
+    free_xml(msg);
 }
 

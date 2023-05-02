@@ -16,32 +16,6 @@
 
 /*!
  * \internal
- * \brief Consider a colocation dependent's node scores
- *
- * \param[in,out] data       Colocation constraint to consider
- * \param[in,out] user_data  Clone resource that is colocation primary
- */
-static void
-add_dependent_scores(gpointer data, gpointer user_data)
-{
-    pcmk__colocation_t *colocation = (pcmk__colocation_t *) data;
-    pe_resource_t *clone = (pe_resource_t *) user_data;
-
-    if (pcmk__colocation_has_influence(colocation, NULL)) {
-        pe_resource_t *rsc = colocation->dependent;
-        const float factor = colocation->score / (float) INFINITY;
-
-        rsc->cmds->add_colocated_node_scores(rsc, clone->id,
-                                             &clone->allowed_nodes,
-                                             colocation->node_attribute,
-                                             factor,
-                                             pcmk__coloc_select_active
-                                             |pcmk__coloc_select_nonnegative);
-    }
-}
-
-/*!
- * \internal
  * \brief Assign a clone resource's instances to nodes
  *
  * \param[in,out] rsc     Clone resource to assign
@@ -86,7 +60,7 @@ pcmk__clone_assign(pe_resource_t *rsc, const pe_node_t *prefer)
      * Because the with_this_colocations() method boils down to a copy of
      * rsc_cons_lhs for clones, we can use that here directly for efficiency.
      */
-    g_list_foreach(rsc->rsc_cons_lhs, add_dependent_scores, rsc);
+    g_list_foreach(rsc->rsc_cons_lhs, pcmk__add_dependent_scores, rsc);
 
     pe__show_node_weights(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
                           rsc, __func__, rsc->allowed_nodes, rsc->cluster);

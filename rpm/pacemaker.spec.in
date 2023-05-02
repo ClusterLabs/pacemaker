@@ -267,10 +267,10 @@ Summary:       Scalable High-Availability cluster resource manager
 Version:       %{pcmkversion}
 Release:       %{pcmk_release}%{?dist}
 %if %{defined _unitdir}
-License:       GPLv2+ and LGPLv2+
+License:       GPL-2.0-or-later AND LGPL-2.1-or-later
 %else
 # initscript is Revised BSD
-License:       GPLv2+ and LGPLv2+ and BSD
+License:       GPL-2.0-or-later AND LGPL-2.1-or-later AND BSD-3-Clause
 %endif
 Url:           https://www.clusterlabs.org/
 
@@ -383,7 +383,7 @@ Available rpmbuild rebuild options:
                 stonithd upstart_job
 
 %package cli
-License:       GPLv2+ and LGPLv2+
+License:       GPL-2.0-or-later AND LGPL-2.1-or-later
 Summary:       Command line tools for controlling Pacemaker clusters
 Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
 %if 0%{?supports_recommends}
@@ -406,7 +406,7 @@ to query and control the cluster from machines that may, or may not,
 be part of the cluster.
 
 %package -n %{pkgname_pcmk_libs}
-License:       GPLv2+ and LGPLv2+
+License:       GPL-2.0-or-later AND LGPL-2.1-or-later
 Summary:       Core Pacemaker libraries
 Requires(pre): %{pkgname_shadow_utils}
 Requires:      %{name}-schemas = %{version}-%{release}
@@ -421,7 +421,7 @@ The %{pkgname_pcmk_libs} package contains shared libraries needed for cluster
 nodes and those just running the CLI tools.
 
 %package cluster-libs
-License:       GPLv2+ and LGPLv2+
+License:       GPL-2.0-or-later AND LGPL-2.1-or-later
 Summary:       Cluster Libraries used by Pacemaker
 Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
 
@@ -433,7 +433,7 @@ The %{name}-cluster-libs package contains cluster-aware shared
 libraries needed for nodes that will form part of the cluster nodes.
 
 %package -n %{python_name}-%{name}
-License:       LGPLv2+
+License:       LGPL-2.1-or-later
 Summary:       Python libraries for Pacemaker
 Requires:      %{python_path}
 Requires:      %{pkgname_pcmk_libs} = %{version}-%{release}
@@ -448,10 +448,10 @@ to interface with Pacemaker.
 
 %package remote
 %if %{defined _unitdir}
-License:       GPLv2+ and LGPLv2+
+License:       GPL-2.0-or-later AND LGPL-2.1-or-later
 %else
 # initscript is Revised BSD
-License:       GPLv2+ and LGPLv2+ and BSD
+License:       GPL-2.0-or-later AND LGPL-2.1-or-later AND BSD-3-Clause
 %endif
 Summary:       Pacemaker remote executor daemon for non-cluster nodes
 Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
@@ -474,7 +474,7 @@ which is capable of extending pacemaker functionality to remote
 nodes not running the full corosync/cluster stack.
 
 %package -n %{pkgname_pcmk_libs}-devel
-License:       GPLv2+ and LGPLv2+
+License:       GPL-2.0-or-later AND LGPL-2.1-or-later
 Summary:       Pacemaker development package
 Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cluster-libs%{?_isa} = %{version}-%{release}
@@ -497,7 +497,7 @@ The %{pkgname_pcmk_libs}-devel package contains headers and shared libraries
 for developing tools for Pacemaker.
 
 %package       cts
-License:       GPLv2+ and LGPLv2+
+License:       GPL-2.0-or-later AND LGPL-2.1-or-later
 Summary:       Test framework for cluster-related technologies like Pacemaker
 Requires:      %{python_path}
 Requires:      %{pkgname_pcmk_libs} = %{version}-%{release}
@@ -530,7 +530,7 @@ Pacemaker is an advanced, scalable High-Availability cluster resource
 manager.
 
 %package       schemas
-License:       GPLv2+
+License:       GPL-2.0-or-later
 Summary:       Schemas and upgrade stylesheets for Pacemaker
 BuildArch:     noarch
 
@@ -857,21 +857,22 @@ exit 0
 %dir %{ocf_root}/resource.d
 %{ocf_root}/resource.d/pacemaker
 
-%doc %{_mandir}/man7/*
+%doc %{_mandir}/man7/*pacemaker*
 %exclude %{_mandir}/man7/pacemaker-controld.*
 %exclude %{_mandir}/man7/pacemaker-schedulerd.*
 %exclude %{_mandir}/man7/pacemaker-fenced.*
 %exclude %{_mandir}/man7/ocf_pacemaker_controld.*
 %exclude %{_mandir}/man7/ocf_pacemaker_o2cb.*
 %exclude %{_mandir}/man7/ocf_pacemaker_remote.*
-%doc %{_mandir}/man8/*
+%doc %{_mandir}/man8/crm*.8.gz
 %exclude %{_mandir}/man8/crm_master.*
-%if %{with stonithd}
-%exclude %{_mandir}/man8/fence_legacy.*
+%doc %{_mandir}/man8/attrd_updater.*
+%doc %{_mandir}/man8/cibadmin.*
+%if %{with cibsecrets}
+    %doc %{_mandir}/man8/cibsecret.*
 %endif
-%exclude %{_mandir}/man8/fence_watchdog.*
-%exclude %{_mandir}/man8/pacemakerd.*
-%exclude %{_mandir}/man8/pacemaker-remoted.*
+%doc %{_mandir}/man8/iso8601.*
+%doc %{_mandir}/man8/stonith_admin.*
 
 %license licenses/GPLv2
 %doc COPYING
@@ -947,8 +948,16 @@ exit 0
 
 %files -n %{pkgname_pcmk_libs}-devel
 %{_includedir}/pacemaker
-%{_libdir}/*.so
-%{_libdir}/pkgconfig/*.pc
+%{_libdir}/libcib.so
+%{_libdir}/liblrmd.so
+%{_libdir}/libcrmservice.so
+%{_libdir}/libcrmcommon.so
+%{_libdir}/libpe_status.so
+%{_libdir}/libpe_rules.so
+%{_libdir}/libpacemaker.so
+%{_libdir}/libstonithd.so
+%{_libdir}/libcrmcluster.so
+%{_libdir}/pkgconfig/*pacemaker*.pc
 %license licenses/LGPLv2.1
 %doc COPYING
 %doc ChangeLog

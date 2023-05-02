@@ -224,6 +224,30 @@ set_join_state(const char * start_state)
     }
 }
 
+static int
+update_conn_host_cache(xmlNode *node, void *userdata)
+{
+    const char *remote = crm_element_value(node, XML_ATTR_ID);
+    const char *conn_host = crm_element_value(node, PCMK__XA_CONN_HOST);
+    const char *state = crm_element_value(node, XML_CIB_TAG_STATE);
+
+    crm_node_t *remote_peer = crm_remote_peer_get(remote);
+
+    if (remote_peer == NULL) {
+        return pcmk_rc_ok;
+    }
+
+    if (conn_host != NULL) {
+        pcmk__str_update(&remote_peer->conn_host, conn_host);
+    }
+
+    if (state != NULL) {
+        pcmk__update_peer_state(__func__, remote_peer, state, 0);
+    }
+
+    return pcmk_rc_ok;
+}
+
 /*	A_CL_JOIN_RESULT	*/
 /* aka. this is notification that we have (or have not) been accepted */
 void
@@ -284,6 +308,7 @@ do_cl_join_finalize_respond(long long action,
     /* send our status section to the DC */
     tmp1 = controld_query_executor_state();
     if (tmp1 != NULL) {
+        xmlNode *remotes = NULL;
         xmlNode *reply = create_request(CRM_OP_JOIN_CONFIRM, tmp1,
                                         controld_globals.dc_name, CRM_SYSTEM_DC,
                                         CRM_SYSTEM_CRMD, NULL);
@@ -324,6 +349,14 @@ do_cl_join_finalize_respond(long long action,
         }
 
         free_xml(tmp1);
+
+        /* Update the remote node cache with information about which node
+         * is hosting the connection.
+         */
+        remotes = pcmk__xe_match(input->msg, XML_CIB_TAG_NODES, NULL, NULL);
+        if (remotes != NULL) {
+            pcmk__xe_foreach_child(remotes, XML_CIB_TAG_NODE, update_conn_host_cache, NULL);
+        }
 
     } else {
         crm_err("Could not confirm join-%d with %s: Local operation history "
