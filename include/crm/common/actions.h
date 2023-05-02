@@ -248,8 +248,10 @@ enum pe_action_flags {
 
     //! \deprecated Use pcmk_action_optional instead
     pe_action_optional              = pcmk_action_optional,
-#endif
+
+    //! \deprecated Use pcmk_action_always_in_graph instead
     pe_action_print_always          = pcmk_action_always_in_graph,
+#endif
 
     pe_action_have_node_attrs = 0x00010,
     pe_action_implied_by_stonith = 0x00040,
