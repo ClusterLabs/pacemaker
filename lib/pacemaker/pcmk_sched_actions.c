@@ -973,8 +973,6 @@ pcmk__log_action(const char *pre_text, const pe_action_t *action, bool details)
                 desc = "Optional ";
             } else if (!pcmk_is_set(action->flags, pcmk_action_runnable)) {
                 desc = "!!Non-Startable!! ";
-            } else if (pcmk_is_set(action->flags, pe_action_processed)) {
-               desc = "";
             } else {
                desc = "(Provisional) ";
             }
@@ -993,8 +991,6 @@ pcmk__log_action(const char *pre_text, const pe_action_t *action, bool details)
                 desc = "Pseudo ";
             } else if (!pcmk_is_set(action->flags, pcmk_action_runnable)) {
                 desc = "!!Non-Startable!! ";
-            } else if (pcmk_is_set(action->flags, pe_action_processed)) {
-               desc = "";
             } else {
                desc = "(Provisional) ";
             }

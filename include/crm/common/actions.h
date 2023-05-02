@@ -272,11 +272,12 @@ enum pe_action_flags {
 
     //! \deprecated Use pcmk_action_added_to_graph instead
     pe_action_dumped                = pcmk_action_added_to_graph,
-#endif
 
-    pe_action_processed = 0x00200,
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    pe_action_clear = 0x00400, //! \deprecated Unused
+    //! \deprecated Do not use
+    pe_action_processed             = (1 << 9),
+
+    //! \deprecated Do not use
+    pe_action_clear                 = (1 << 10),
 #endif
     pe_action_dangle = 0x00800,
 
