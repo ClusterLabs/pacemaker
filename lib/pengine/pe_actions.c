@@ -186,7 +186,7 @@ new_action(char *key, const char *task, pe_resource_t *rsc,
 
     if (pcmk__str_eq(task, PCMK_ACTION_LRM_DELETE, pcmk__str_casei)) {
         // Resource history deletion for a node can be done on the DC
-        pe__set_action_flags(action, pe_action_dc);
+        pe__set_action_flags(action, pcmk_action_on_dc);
     }
 
     pe__set_action_flags(action, pcmk_action_runnable);
@@ -328,7 +328,7 @@ update_resource_action_runnable(pe_action_t *action, bool for_graph,
                      action->uuid);
         pe__clear_action_flags(action, pcmk_action_runnable);
 
-    } else if (!pcmk_is_set(action->flags, pe_action_dc)
+    } else if (!pcmk_is_set(action->flags, pcmk_action_on_dc)
                && !(action->node->details->online)
                && (!pe__is_guest_node(action->node)
                    || action->node->details->remote_requires_reset)) {
@@ -343,7 +343,7 @@ update_resource_action_runnable(pe_action_t *action, bool for_graph,
             pe_fence_node(data_set, action->node, "stop is unrunnable", false);
         }
 
-    } else if (!pcmk_is_set(action->flags, pe_action_dc)
+    } else if (!pcmk_is_set(action->flags, pcmk_action_on_dc)
                && action->node->details->pending) {
         pe__clear_action_flags(action, pcmk_action_runnable);
         do_crm_log((for_graph? LOG_WARNING: LOG_TRACE),

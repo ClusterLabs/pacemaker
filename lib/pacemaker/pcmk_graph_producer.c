@@ -551,7 +551,7 @@ should_add_action_to_graph(const pe_action_t *action)
         return false;
     }
 
-    if (pcmk_is_set(action->flags, pe_action_dc)) {
+    if (pcmk_is_set(action->flags, pcmk_action_on_dc)) {
         crm_trace("Action %s (%d) should be dumped: "
                   "can run on DC instead of %s",
                   action->uuid, action->id, pe__node_name(action->node));
