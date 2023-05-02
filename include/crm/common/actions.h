@@ -303,9 +303,11 @@ enum pe_action_flags {
 
     //! \deprecated Use pcmk_action_reschedule instead
     pe_action_reschedule            = pcmk_action_reschedule,
+
+    //! \deprecated Use pcmk_action_detect_loop instead
+    pe_action_tracking              = pcmk_action_detect_loop,
 #endif
 
-    pe_action_tracking              = pcmk_action_detect_loop,
     pe_action_dedup = 0x08000, //! Internal state tracking when creating graph
 
     pe_action_dc = 0x10000,         //! Action may run on DC instead of target
