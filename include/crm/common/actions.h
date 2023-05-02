@@ -239,6 +239,9 @@ enum pe_action_flags {
     //! Whether action should be added to transition graph even if optional
     pcmk_action_always_in_graph     = (1 << 3),
 
+    //! Whether operation-specific instance attributes have been unpacked yet
+    pcmk_action_attrs_evaluated     = (1 << 4),
+
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_action_pseudo instead
     pe_action_pseudo                = pcmk_action_pseudo,
@@ -253,7 +256,7 @@ enum pe_action_flags {
     pe_action_print_always          = pcmk_action_always_in_graph,
 #endif
 
-    pe_action_have_node_attrs = 0x00010,
+    pe_action_have_node_attrs       = pcmk_action_attrs_evaluated,
     pe_action_implied_by_stonith = 0x00040,
     pe_action_migrate_runnable =   0x00080,
 

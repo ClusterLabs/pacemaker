@@ -232,7 +232,7 @@ new_action(char *key, const char *task, pe_resource_t *rsc,
 static void
 unpack_action_node_attributes(pe_action_t *action, pe_working_set_t *data_set)
 {
-    if (!pcmk_is_set(action->flags, pe_action_have_node_attrs)
+    if (!pcmk_is_set(action->flags, pcmk_action_attrs_evaluated)
         && (action->op_entry != NULL)) {
 
         pe_rule_eval_data_t rule_data = {
@@ -244,10 +244,10 @@ unpack_action_node_attributes(pe_action_t *action, pe_working_set_t *data_set)
             .op_data = NULL
         };
 
-        pe__set_action_flags(action, pe_action_have_node_attrs);
         pe__unpack_dataset_nvpairs(action->op_entry, XML_TAG_ATTR_SETS,
                                    &rule_data, action->extra, NULL,
                                    FALSE, data_set);
+        pe__set_action_flags(action, pcmk_action_attrs_evaluated);
     }
 }
 
