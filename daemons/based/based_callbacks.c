@@ -1302,7 +1302,9 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
 #define XPATH_STATUS    "//" XML_TAG_CIB "/" XML_CIB_TAG_STATUS
 
     // Calculate the hash value of the section before the change
-    if (pcmk__str_eq(PCMK__CIB_REQUEST_REPLACE, op, pcmk__str_none)) {
+    if (!pcmk_any_flags_set(call_options, cib_dryrun|cib_inhibit_notify)
+        && pcmk__str_eq(op, PCMK__CIB_REQUEST_REPLACE, pcmk__str_none)) {
+
         current_nodes_digest = calculate_section_digest(XPATH_NODES,
                                                         current_cib);
         current_alerts_digest = calculate_section_digest(XPATH_ALERTS,
@@ -1361,7 +1363,9 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
             cib_read_config(config_hash, result_cib);
         }
 
-        if (pcmk__str_eq(PCMK__CIB_REQUEST_REPLACE, op, pcmk__str_none)) {
+        if (!pcmk_is_set(call_options, cib_inhibit_notify)
+            && pcmk__str_eq(op, PCMK__CIB_REQUEST_REPLACE, pcmk__str_none)) {
+
             char *result_nodes_digest = NULL;
             char *result_alerts_digest = NULL;
             char *result_status_digest = NULL;
@@ -1406,12 +1410,14 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
             if (change_section != cib_change_section_none) {
                 send_r_notify = TRUE;
             }
-            
+
             free(result_nodes_digest);
             free(result_alerts_digest);
             free(result_status_digest);
 
-        } else if (pcmk__str_eq(PCMK__CIB_REQUEST_ERASE, op, pcmk__str_none)) {
+        } else if (!pcmk_is_set(call_options, cib_inhibit_notify)
+                   && pcmk__str_eq(op, PCMK__CIB_REQUEST_ERASE,
+                                   pcmk__str_none)) {
             send_r_notify = TRUE;
         }
 
