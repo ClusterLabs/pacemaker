@@ -151,7 +151,7 @@ A partially set up scenario is torn down if it fails during setup.
     def run_test(self, test, testcount):
         nodechoice = self.ClusterManager.Env.random_node()
 
-        ret = 1
+        ret = True
         where = ""
         did_run = 0
 
@@ -161,7 +161,7 @@ A partially set up scenario is torn down if it fails during setup.
         starttime = test.set_timer()
         if not test.setup(nodechoice):
             self.ClusterManager.log("Setup failed")
-            ret = 0
+            ret = False
 
         elif not test.can_run_now(nodechoice):
             self.ClusterManager.log("Skipped")
@@ -182,7 +182,7 @@ A partially set up scenario is torn down if it fails during setup.
                     answer = "n"
             if answer and answer == "n":
                 raise ValueError("Teardown of %s on %s failed" % (test.name, nodechoice))
-            ret = 0
+            ret = False
 
         stoptime = time.time()
         self.ClusterManager.oprofileSave(testcount)

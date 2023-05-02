@@ -128,19 +128,19 @@ class CTSTest:
         self.passed = False
         self.incr("failure")
         self._logger.log(("Test %s" % self.name).ljust(35) + " FAILED: %s" % reason)
-        return None
+        return False
 
     def success(self):
         '''Increment the success count'''
 
         self.incr("success")
-        return 1
+        return True
 
     def skipped(self):
         '''Increment the skipped count'''
 
         self.incr("skipped")
-        return 1
+        return True
 
     def __call__(self, node):
         """ Perform the given test """
