@@ -118,7 +118,7 @@ add_maintenance_update(pe_working_set_t *data_set)
 
     if (add_maintenance_nodes(NULL, data_set) != 0) {
         action = get_pseudo_op(PCMK_ACTION_MAINTENANCE_NODES, data_set);
-        pe__set_action_flags(action, pe_action_print_always);
+        pe__set_action_flags(action, pcmk_action_always_in_graph);
     }
 }
 
@@ -505,7 +505,7 @@ should_add_action_to_graph(const pe_action_t *action)
     }
 
     if (pcmk_is_set(action->flags, pcmk_action_optional)
-        && !pcmk_is_set(action->flags, pe_action_print_always)) {
+        && !pcmk_is_set(action->flags, pcmk_action_always_in_graph)) {
         crm_trace("Ignoring action %s (%d): optional",
                   action->uuid, action->id);
         return false;
@@ -740,7 +740,8 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
 
     } else if (pcmk_is_set(input->action->flags, pcmk_action_optional)
                && !pcmk_any_flags_set(input->action->flags,
-                                      pe_action_print_always|pe_action_dumped)
+                                      pcmk_action_always_in_graph
+                                      |pe_action_dumped)
                && !should_add_action_to_graph(input->action)) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
                   "input optional",

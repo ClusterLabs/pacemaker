@@ -434,7 +434,7 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
 
         pe_rsc_trace(then->rsc, "%s will be in graph because %s is required",
                      then->uuid, first->uuid);
-        pe__set_action_flags(then, pe_action_print_always);
+        pe__set_action_flags(then, pcmk_action_always_in_graph);
         // Don't bother marking 'then' as changed just for this
     }
 
@@ -443,7 +443,7 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
 
         pe_rsc_trace(then->rsc, "%s will be in graph because %s is required",
                      first->uuid, then->uuid);
-        pe__set_action_flags(first, pe_action_print_always);
+        pe__set_action_flags(first, pcmk_action_always_in_graph);
         // Don't bother marking 'first' as changed just for this
     }
 

@@ -635,7 +635,7 @@ create_pending_start(pe_resource_t *rsc)
                  "Creating action for %s to represent already pending start",
                  rsc->id);
     start = start_action(rsc, rsc->allocated_to, TRUE);
-    pe__set_action_flags(start, pe_action_print_always);
+    pe__set_action_flags(start, pcmk_action_always_in_graph);
 }
 
 /*!
