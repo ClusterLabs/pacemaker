@@ -281,8 +281,10 @@ enum pe_action_flags {
 
     //! \deprecated Do not use
     pe_action_clear                 = (1 << 10),
-#endif
+
+    //! \deprecated Use pcmk_action_migration_abort instead
     pe_action_dangle                = pcmk_action_migration_abort,
+#endif
 
     /* This action requires one or more of its dependencies to be runnable.
      * We use this to clear the runnable flag before checking dependencies.
