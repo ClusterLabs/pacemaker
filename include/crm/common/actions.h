@@ -309,9 +309,10 @@ enum pe_action_flags {
 
     //! \deprecated Use pcmk_action_detect_loop instead
     pe_action_tracking              = pcmk_action_detect_loop,
-#endif
 
+    //! \deprecated Use pcmk_action_inputs_deduplicated instead
     pe_action_dedup                 = pcmk_action_inputs_deduplicated,
+#endif
 
     pe_action_dc = 0x10000,         //! Action may run on DC instead of target
 };
