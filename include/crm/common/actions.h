@@ -291,9 +291,10 @@ enum pe_action_flags {
 
     //! \deprecated Use pcmk_action_migration_abort instead
     pe_action_dangle                = pcmk_action_migration_abort,
-#endif
 
+    //! \deprecated Use pcmk_action_min_runnable instead
     pe_action_requires_any          = pcmk_action_min_runnable,
+#endif
 
     pe_action_reschedule = 0x02000,
     pe_action_tracking = 0x04000,
