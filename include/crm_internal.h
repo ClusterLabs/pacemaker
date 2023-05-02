@@ -84,6 +84,7 @@
 #define PCMK__XA_GRAPH_ERRORS           "graph-errors"
 #define PCMK__XA_GRAPH_WARNINGS         "graph-warnings"
 #define PCMK__XA_MODE                   "mode"
+#define PCMK__XA_NODE_START_STATE       "node_start_state"
 #define PCMK__XA_TASK                   "task"
 #define PCMK__XA_UPTIME                 "uptime"
 #define PCMK__XA_CONN_HOST              "connection_host"
