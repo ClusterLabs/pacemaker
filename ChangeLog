@@ -1,3 +1,27 @@
+* Tue May 02 2023 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.6-rc2
+- 34 commits with 29 files changed, 438 insertions(+), 150 deletions(-)
+
+- Features added since Pacemaker-2.1.6-rc1
+  + scheduler: deprecate "moon" in date_spec elements in rules
+  + scheduler: deprecate support for Nagios resources
+
+- Fixes since Pacemaker-2.1.6-rc1
+  + pacemakerd: -S should wait for cluster to shut down before returning
+                (regression introduced in 2.1.1)
+  + pacemaker-attrd: Preserve a Pacemaker Remote node's transient attributes
+                     if its connection to the cluster is lost but reconnects
+  + controller: initial fencing timeout includes any priority-fencing-delay
+  + fencer: apply priority-fencing-delay only to first device tried
+  + fencer: total and per-device fencing timeouts include any
+            priority-fencing-delay and pcmk_delay_base
+  + scheduler: honor as many mandatory colocations as possible before
+               considering any optional ones
+
+- Public API changes since Pacemaker-2.1.6-rc1
+  + libcrmcommon: deprecate PCMK_RESOURCE_CLASS_NAGIOS
+  + libcrmcommon: deprecate PCMK_RESOURCE_CLASS_UPSTART
+  + libcrmservice: deprecate enum nagios_exitcode
+
 * Wed Apr 12 2023 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.6-rc1
 - 1071 commits with 398 files changed, 24739 insertions(+), 14585 deletions(-)
 
