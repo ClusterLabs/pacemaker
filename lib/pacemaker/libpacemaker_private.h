@@ -462,6 +462,9 @@ void pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
                                      float factor, uint32_t flags);
 
 G_GNUC_INTERNAL
+void pcmk__add_dependent_scores(gpointer data, gpointer user_data);
+
+G_GNUC_INTERNAL
 void pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
