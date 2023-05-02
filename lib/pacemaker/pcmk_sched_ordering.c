@@ -1240,7 +1240,7 @@ order_resource_actions_after(pe_action_t *first_action,
     }
 
     if ((first_action != NULL) && (first_action->rsc == rsc)
-        && pcmk_is_set(first_action->flags, pe_action_dangle)) {
+        && pcmk_is_set(first_action->flags, pcmk_action_migration_abort)) {
 
         pe_rsc_trace(rsc,
                      "Detected dangling migration ordering (%s then %s %s)",

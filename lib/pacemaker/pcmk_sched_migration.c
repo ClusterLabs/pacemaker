@@ -178,7 +178,7 @@ pcmk__abort_dangling_migration(void *data, void *user_data)
                  (cleanup? " and cleanup" : ""), rsc->id,
                  pe__node_name(dangling_source));
     stop = stop_action(rsc, dangling_source, FALSE);
-    pe__set_action_flags(stop, pe_action_dangle);
+    pe__set_action_flags(stop, pcmk_action_migration_abort);
     if (cleanup) {
         pcmk__schedule_cleanup(rsc, dangling_source, false);
     }

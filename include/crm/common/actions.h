@@ -248,6 +248,9 @@ enum pe_action_flags {
     //! Whether action has been added to transition graph
     pcmk_action_added_to_graph       = (1 << 8),
 
+    //! Whether action is a stop to abort a dangling migration
+    pcmk_action_migration_abort      = (1 << 11),
+
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_action_pseudo instead
     pe_action_pseudo                = pcmk_action_pseudo,
@@ -279,7 +282,7 @@ enum pe_action_flags {
     //! \deprecated Do not use
     pe_action_clear                 = (1 << 10),
 #endif
-    pe_action_dangle = 0x00800,
+    pe_action_dangle                = pcmk_action_migration_abort,
 
     /* This action requires one or more of its dependencies to be runnable.
      * We use this to clear the runnable flag before checking dependencies.
