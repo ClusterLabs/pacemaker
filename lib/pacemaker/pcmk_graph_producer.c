@@ -897,9 +897,9 @@ add_action_to_graph(gpointer data, gpointer user_data)
      * the action to the graph, so that crm_simulate's dot graphs don't have
      * duplicates).
      */
-    if (!pcmk_is_set(action->flags, pe_action_dedup)) {
+    if (!pcmk_is_set(action->flags, pcmk_action_inputs_deduplicated)) {
         pcmk__deduplicate_action_inputs(action);
-        pe__set_action_flags(action, pe_action_dedup);
+        pe__set_action_flags(action, pcmk_action_inputs_deduplicated);
     }
 
     if (pcmk_is_set(action->flags, pcmk_action_added_to_graph)

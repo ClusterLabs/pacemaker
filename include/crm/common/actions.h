@@ -264,6 +264,9 @@ enum pe_action_flags {
     //! Whether action has already been processed by a recursive procedure
     pcmk_action_detect_loop          = (1 << 14),
 
+    //! Whether action's inputs have been de-duplicated yet
+    pcmk_action_inputs_deduplicated  = (1 << 15),
+
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_action_pseudo instead
     pe_action_pseudo                = pcmk_action_pseudo,
@@ -308,7 +311,7 @@ enum pe_action_flags {
     pe_action_tracking              = pcmk_action_detect_loop,
 #endif
 
-    pe_action_dedup = 0x08000, //! Internal state tracking when creating graph
+    pe_action_dedup                 = pcmk_action_inputs_deduplicated,
 
     pe_action_dc = 0x10000,         //! Action may run on DC instead of target
 };
