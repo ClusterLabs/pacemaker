@@ -740,7 +740,7 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
     } else if (pcmk_is_set(input->action->flags, pcmk_action_optional)
                && !pcmk_any_flags_set(input->action->flags,
                                       pcmk_action_always_in_graph
-                                      |pe_action_dumped)
+                                      |pcmk_action_added_to_graph)
                && !should_add_action_to_graph(input->action)) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
                   "input optional",
@@ -902,11 +902,11 @@ add_action_to_graph(gpointer data, gpointer user_data)
         pe__set_action_flags(action, pe_action_dedup);
     }
 
-    if (pcmk_is_set(action->flags, pe_action_dumped)    // Already added, or
-        || !should_add_action_to_graph(action)) {       // shouldn't be added
-        return;
+    if (pcmk_is_set(action->flags, pcmk_action_added_to_graph)
+        || !should_add_action_to_graph(action)) {
+        return; // Already added, or shouldn't be
     }
-    pe__set_action_flags(action, pe_action_dumped);
+    pe__set_action_flags(action, pcmk_action_added_to_graph);
 
     crm_trace("Adding action %d (%s%s%s) to graph",
               action->id, action->uuid,

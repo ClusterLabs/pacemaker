@@ -245,6 +245,9 @@ enum pe_action_flags {
     //! Whether action can be related to a live migration
     pcmk_action_migratable           = (1 << 7),
 
+    //! Whether action has been added to transition graph
+    pcmk_action_added_to_graph       = (1 << 8),
+
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_action_pseudo instead
     pe_action_pseudo                = pcmk_action_pseudo,
@@ -268,7 +271,7 @@ enum pe_action_flags {
     pe_action_migrate_runnable      = pcmk_action_migratable,
 #endif
 
-    pe_action_dumped = 0x00100,
+    pe_action_dumped                = pcmk_action_added_to_graph,
     pe_action_processed = 0x00200,
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     pe_action_clear = 0x00400, //! \deprecated Unused
