@@ -242,8 +242,10 @@ enum pe_action_flags {
 
     //! \deprecated Use pcmk_action_runnable instead
     pe_action_runnable              = pcmk_action_runnable,
-#endif
+
+    //! \deprecated Use pcmk_action_optional instead
     pe_action_optional              = pcmk_action_optional,
+#endif
     pe_action_print_always = 0x00008,
 
     pe_action_have_node_attrs = 0x00010,
