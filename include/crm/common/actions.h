@@ -315,9 +315,10 @@ enum pe_action_flags {
 
     //! \deprecated Use pcmk_action_inputs_deduplicated instead
     pe_action_dedup                 = pcmk_action_inputs_deduplicated,
-#endif
 
+    //! \deprecated Use pcmk_action_on_dc instead
     pe_action_dc                    = pcmk_action_on_dc,
+#endif
 };
 
 // For parsing various action-related string specifications
