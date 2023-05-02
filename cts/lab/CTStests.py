@@ -1411,7 +1411,7 @@ class Reattach(CTSTest):
 
     def can_run_now(self, node):
         """ Return True if we can meaningfully run right now"""
-        if self.find_ocfs2_resources(node):
+        if self._find_ocfs2_resources(node):
             self._logger.log("Detach/Reattach scenarios are not possible with OCFS2 services present")
             return False
 
@@ -1615,11 +1615,11 @@ class HAETest(CTSTest):
 
     def find_hae_resources(self, node):
         self.r_dlm = None
-        self.r_o2cb = None
-        self.r_ocfs2 = []
+        self._r_o2cb = None
+        self._r_ocfs2 = []
 
         if self.find_dlm(node):
-            self.find_ocfs2_resources(node)
+            self._find_ocfs2_resources(node)
 
     def is_applicable(self):
         if not self.is_applicable_common():
@@ -1661,11 +1661,11 @@ class HAERoleTest(HAETest):
                 self.failure("%s did not come up correctly" % self.r_dlm)
                 failed = lpc
 
-            if not self.wait_on_state(node, self.r_o2cb, clone_max):
-                self.failure("%s did not come up correctly" % self.r_o2cb)
+            if not self.wait_on_state(node, self._r_o2cb, clone_max):
+                self.failure("%s did not come up correctly" % self._r_o2cb)
                 failed = lpc
 
-            for fs in self.r_ocfs2:
+            for fs in self._r_ocfs2:
                 if not self.wait_on_state(node, fs, clone_max):
                     self.failure("%s did not come up correctly" % fs)
                     failed = lpc
@@ -1709,11 +1709,11 @@ class HAEStandbyTest(HAETest):
                 self.failure("%s did not come up correctly" % self.r_dlm)
                 failed = lpc
 
-            if not self.wait_on_state(node, self.r_o2cb, clone_max):
-                self.failure("%s did not come up correctly" % self.r_o2cb)
+            if not self.wait_on_state(node, self._r_o2cb, clone_max):
+                self.failure("%s did not come up correctly" % self._r_o2cb)
                 failed = lpc
 
-            for fs in self.r_ocfs2:
+            for fs in self._r_ocfs2:
                 if not self.wait_on_state(node, fs, clone_max):
                     self.failure("%s did not come up correctly" % fs)
                     failed = lpc

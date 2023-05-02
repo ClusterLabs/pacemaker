@@ -67,6 +67,8 @@ class CTSTest:
 
         self._cm = cm
         self._env = EnvFactory().getInstance()
+        self._r_o2cb = None
+        self._r_ocfs2 = []
         self._rsh = RemoteFactory().getInstance()
         self._logger = LogFactory()
 
@@ -241,24 +243,24 @@ class CTSTest:
 
         return True
 
-    def find_ocfs2_resources(self, node):
-        self.r_o2cb = None
-        self.r_ocfs2 = []
+    def _find_ocfs2_resources(self, node):
+        self._r_o2cb = None
+        self._r_ocfs2 = []
 
         (_, lines) = self._rsh(node, "crm_resource -c", verbose=1)
         for line in lines:
             if re.search("^Resource", line):
                 r = AuditResource(self._cm, line)
                 if r.rtype == "o2cb" and r.parent != "NA":
-                    self.debug("Found o2cb: %s" % self.r_o2cb)
-                    self.r_o2cb = r.parent
+                    self.debug("Found o2cb: %s" % self._r_o2cb)
+                    self._r_o2cb = r.parent
             if re.search("^Constraint", line):
                 c = AuditConstraint(self._cm, line)
-                if c.type == "rsc_colocation" and c.target == self.r_o2cb:
-                    self.r_ocfs2.append(c.rsc)
+                if c.type == "rsc_colocation" and c.target == self._r_o2cb:
+                    self._r_ocfs2.append(c.rsc)
 
-        self.debug("Found ocfs2 filesystems: %s" % self.r_ocfs2)
-        return len(self.r_ocfs2)
+        self.debug("Found ocfs2 filesystems: %s" % self._r_ocfs2)
+        return len(self._r_ocfs2)
 
     def can_run_now(self, node):
         """ Return True if we can meaningfully run right now """
