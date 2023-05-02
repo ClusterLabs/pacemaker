@@ -217,7 +217,7 @@ active_recurring_should_be_optional(const pe_resource_t *rsc,
 
         const pe_action_t *op = (const pe_action_t *) iter->data;
 
-        if (pcmk_is_set(op->flags, pe_action_reschedule)) {
+        if (pcmk_is_set(op->flags, pcmk_action_reschedule)) {
             pe_rsc_trace(rsc,
                          "%s will be mandatory because "
                          "it needs to be rescheduled", key);
@@ -676,7 +676,7 @@ pcmk__schedule_cancel(pe_resource_t *rsc, const char *call_id, const char *task,
 
 /*!
  * \internal
- * \brief Reschedule a recurring action
+ * \brief Create a recurring action marked as needing rescheduling if active
  *
  * \param[in,out] rsc          Resource that action is for
  * \param[in]     task         Name of action being rescheduled
@@ -693,7 +693,7 @@ pcmk__reschedule_recurring(pe_resource_t *rsc, const char *task,
                       NULL, rsc->cluster);
     op = custom_action(rsc, pcmk__op_key(rsc->id, task, interval_ms),
                        task, node, TRUE, TRUE, rsc->cluster);
-    pe__set_action_flags(op, pe_action_reschedule);
+    pe__set_action_flags(op, pcmk_action_reschedule);
 }
 
 /*!

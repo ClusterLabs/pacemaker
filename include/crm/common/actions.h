@@ -258,6 +258,9 @@ enum pe_action_flags {
      */
     pcmk_action_min_runnable         = (1 << 12),
 
+    //! Whether action is recurring monitor that must be rescheduled if active
+    pcmk_action_reschedule           = (1 << 13),
+
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_action_pseudo instead
     pe_action_pseudo                = pcmk_action_pseudo,
@@ -296,7 +299,7 @@ enum pe_action_flags {
     pe_action_requires_any          = pcmk_action_min_runnable,
 #endif
 
-    pe_action_reschedule = 0x02000,
+    pe_action_reschedule            = pcmk_action_reschedule,
     pe_action_tracking = 0x04000,
     pe_action_dedup = 0x08000, //! Internal state tracking when creating graph
 
