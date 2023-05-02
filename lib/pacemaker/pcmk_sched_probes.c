@@ -135,7 +135,7 @@ probe_action(pe_resource_t *rsc, pe_node_t *node)
 
     probe = custom_action(rsc, key, PCMK_ACTION_MONITOR, node, FALSE, TRUE,
                           rsc->cluster);
-    pe__clear_action_flags(probe, pe_action_optional);
+    pe__clear_action_flags(probe, pcmk_action_optional);
 
     pcmk__order_vs_unfence(rsc, node, probe, pe_order_optional);
     add_expected_result(probe, rsc, node);

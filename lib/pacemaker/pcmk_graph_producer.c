@@ -27,7 +27,7 @@
     (pcmk_is_set((flags), pcmk_action_pseudo)? "pseudo-action" : "action")
 
 #define action_optional_str(flags) \
-    (pcmk_is_set((flags), pe_action_optional)? "optional" : "required")
+    (pcmk_is_set((flags), pcmk_action_optional)? "optional" : "required")
 
 #define action_runnable_str(flags) \
     (pcmk_is_set((flags), pcmk_action_runnable)? "runnable" : "unrunnable")
@@ -504,7 +504,7 @@ should_add_action_to_graph(const pe_action_t *action)
         return false;
     }
 
-    if (pcmk_is_set(action->flags, pe_action_optional)
+    if (pcmk_is_set(action->flags, pcmk_action_optional)
         && !pcmk_is_set(action->flags, pe_action_print_always)) {
         crm_trace("Ignoring action %s (%d): optional",
                   action->uuid, action->id);
@@ -697,7 +697,7 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
             input->type = pe_order_none;
             return false;
 
-        } else if (pcmk_is_set(input->action->flags, pe_action_optional)) {
+        } else if (pcmk_is_set(input->action->flags, pcmk_action_optional)) {
             crm_trace("Ignoring %s (%d) input %s (%d): "
                       "load ordering input optional",
                       action->uuid, action->id,
@@ -718,7 +718,7 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
             input->type = pe_order_none;
             return false;
 
-        } else if (pcmk_is_set(input->action->flags, pe_action_optional)) {
+        } else if (pcmk_is_set(input->action->flags, pcmk_action_optional)) {
             crm_trace("Ignoring %s (%d) input %s (%d): "
                       "anti-colocation input optional",
                       action->uuid, action->id,
@@ -738,7 +738,7 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
                  input->action->uuid, action->uuid);
         return false;
 
-    } else if (pcmk_is_set(input->action->flags, pe_action_optional)
+    } else if (pcmk_is_set(input->action->flags, pcmk_action_optional)
                && !pcmk_any_flags_set(input->action->flags,
                                       pe_action_print_always|pe_action_dumped)
                && !should_add_action_to_graph(input->action)) {
@@ -1067,7 +1067,7 @@ pcmk__create_graph(pe_working_set_t *data_set)
             && action->node->details->shutdown
             && !pcmk_is_set(action->rsc->flags, pcmk_rsc_maintenance)
             && !pcmk_any_flags_set(action->flags,
-                                   pe_action_optional|pcmk_action_runnable)
+                                   pcmk_action_optional|pcmk_action_runnable)
             && pcmk__str_eq(action->task, PCMK_ACTION_STOP, pcmk__str_none)) {
             /* Eventually we should just ignore the 'fence' case, but for now
              * it's the best way to detect (in CTS) when CIB resource updates

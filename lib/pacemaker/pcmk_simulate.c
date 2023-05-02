@@ -253,7 +253,7 @@ write_sim_dotfile(pe_working_set_t *data_set, const char *dot_file,
                 goto do_not_write;
             }
 
-        } else if (pcmk_is_set(action->flags, pe_action_optional)) {
+        } else if (pcmk_is_set(action->flags, pcmk_action_optional)) {
             color = "blue";
             if (!all_actions) {
                 goto do_not_write;

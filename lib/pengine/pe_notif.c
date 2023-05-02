@@ -287,7 +287,7 @@ new_notify_pseudo_action(pe_resource_t *rsc, const pe_action_t *action,
     notify = custom_action(rsc,
                            pcmk__notify_key(rsc->id, notif_type, action->task),
                            notif_action, NULL,
-                           pcmk_is_set(action->flags, pe_action_optional),
+                           pcmk_is_set(action->flags, pcmk_action_optional),
                            TRUE, rsc->cluster);
     pe__set_action_flags(notify, pcmk_action_pseudo);
     add_hash_param(notify->meta, "notify_key_type", notif_type);
@@ -344,7 +344,7 @@ new_notify_action(pe_resource_t *rsc, const pe_node_t *node, pe_action_t *op,
     // Create the notify action
     key = pcmk__notify_key(rsc->id, value, task);
     notify_action = custom_action(rsc, key, op->task, node,
-                                  pcmk_is_set(op->flags, pe_action_optional),
+                                  pcmk_is_set(op->flags, pcmk_action_optional),
                                   TRUE, rsc->cluster);
 
     // Add meta-data to notify action
@@ -607,7 +607,8 @@ collect_resource_data(const pe_resource_t *rsc, bool activity,
     for (iter = rsc->actions; iter != NULL; iter = iter->next) {
         const pe_action_t *op = (const pe_action_t *) iter->data;
 
-        if (!pcmk_is_set(op->flags, pe_action_optional) && (op->node != NULL)) {
+        if (!pcmk_is_set(op->flags, pcmk_action_optional)
+            && (op->node != NULL)) {
             enum action_tasks task = text2task(op->task);
 
             if ((task == pcmk_action_stop) && op->node->details->unclean) {
@@ -759,13 +760,13 @@ add_notif_keys(const pe_resource_t *rsc, notify_data_t *n_data)
     add_notify_env_free_gs(n_data, "notify_all_uname", node_list);
 
     if (required && (n_data->pre != NULL)) {
-        pe__clear_action_flags(n_data->pre, pe_action_optional);
-        pe__clear_action_flags(n_data->pre_done, pe_action_optional);
+        pe__clear_action_flags(n_data->pre, pcmk_action_optional);
+        pe__clear_action_flags(n_data->pre_done, pcmk_action_optional);
     }
 
     if (required && (n_data->post != NULL)) {
-        pe__clear_action_flags(n_data->post, pe_action_optional);
-        pe__clear_action_flags(n_data->post_done, pe_action_optional);
+        pe__clear_action_flags(n_data->post, pcmk_action_optional);
+        pe__clear_action_flags(n_data->post_done, pcmk_action_optional);
     }
 }
 
@@ -817,7 +818,8 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
     for (iter = rsc->actions; iter != NULL; iter = iter->next) {
         pe_action_t *op = (pe_action_t *) iter->data;
 
-        if (!pcmk_is_set(op->flags, pe_action_optional) && (op->node != NULL)) {
+        if (!pcmk_is_set(op->flags, pcmk_action_optional)
+            && (op->node != NULL)) {
             switch (text2task(op->task)) {
                 case pcmk_action_start:
                 case pcmk_action_stop:
@@ -888,7 +890,7 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
                               n_data->pre_done, n_data);
 
             if ((task == pcmk_action_demote) || (stop == NULL)
-                || pcmk_is_set(stop->flags, pe_action_optional)) {
+                || pcmk_is_set(stop->flags, pcmk_action_optional)) {
                 new_post_notify_action(rsc, current_node, n_data);
             }
         }
@@ -918,7 +920,7 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
             return;
         }
         if ((task != pcmk_action_start) || (start == NULL)
-            || pcmk_is_set(start->flags, pe_action_optional)) {
+            || pcmk_is_set(start->flags, pcmk_action_optional)) {
 
             new_notify_action(rsc, rsc->allocated_to, n_data->pre,
                               n_data->pre_done, n_data);

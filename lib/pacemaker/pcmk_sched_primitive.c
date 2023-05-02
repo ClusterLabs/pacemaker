@@ -816,7 +816,7 @@ pcmk__primitive_create_actions(pe_resource_t *rsc)
         pe_rsc_trace(rsc, "Creating start action for promoted resource %s",
                      rsc->id);
         start = start_action(rsc, rsc->allocated_to, TRUE);
-        if (!pcmk_is_set(start->flags, pe_action_optional)) {
+        if (!pcmk_is_set(start->flags, pcmk_action_optional)) {
             // Recovery of a promoted resource
             pe_rsc_trace(rsc, "%s restart is required for recovery", rsc->id);
             need_stop = true;
@@ -1310,7 +1310,7 @@ start_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
     pcmk__order_vs_unfence(rsc, node, start, pe_order_implies_then);
 
     if (pcmk_is_set(start->flags, pcmk_action_runnable) && !optional) {
-        pe__clear_action_flags(start, pe_action_optional);
+        pe__clear_action_flags(start, pcmk_action_optional);
     }
 
     if (is_expected_node(rsc, node)) {

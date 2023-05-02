@@ -199,7 +199,7 @@ active_recurring_should_be_optional(const pe_resource_t *rsc,
     }
 
     if (!pcmk_is_set(rsc->cmds->action_flags(start, NULL),
-                     pe_action_optional)) {
+                     pcmk_action_optional)) {
         pe_rsc_trace(rsc, "%s will be mandatory because %s is",
                      key, start->uuid);
         return false;
@@ -317,7 +317,7 @@ recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
                      mon->uuid);
         pe__clear_action_flags(mon, pcmk_action_runnable);
 
-    } else if (!pcmk_is_set(mon->flags, pe_action_optional)) {
+    } else if (!pcmk_is_set(mon->flags, pcmk_action_optional)) {
         pe_rsc_info(rsc, "Start %s-interval %s for %s on %s",
                     pcmk__readable_interval(op->interval_ms), mon->task,
                     rsc->id, pe__node_name(node));
@@ -438,12 +438,12 @@ order_after_stops(pe_resource_t *rsc, const pe_node_t *node,
     for (GList *iter = stop_ops; iter != NULL; iter = iter->next) {
         pe_action_t *stop = (pe_action_t *) iter->data;
 
-        if (!pcmk_is_set(stop->flags, pe_action_optional)
-            && !pcmk_is_set(action->flags, pe_action_optional)
+        if (!pcmk_is_set(stop->flags, pcmk_action_optional)
+            && !pcmk_is_set(action->flags, pcmk_action_optional)
             && !pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
             pe_rsc_trace(rsc, "%s optional on %s: unmanaged",
                          action->uuid, pe__node_name(node));
-            pe__set_action_flags(action, pe_action_optional);
+            pe__set_action_flags(action, pcmk_action_optional);
         }
 
         if (!pcmk_is_set(stop->flags, pcmk_action_runnable)) {
@@ -536,7 +536,7 @@ recurring_op_for_inactive(pe_resource_t *rsc, const pe_node_t *node,
         }
 
         if (pcmk_is_set(stopped_mon->flags, pcmk_action_runnable)
-            && !pcmk_is_set(stopped_mon->flags, pe_action_optional)) {
+            && !pcmk_is_set(stopped_mon->flags, pcmk_action_optional)) {
             crm_notice("Start recurring %s-interval %s for "
                        PCMK__ROLE_STOPPED " %s on %s",
                        pcmk__readable_interval(op->interval_ms),

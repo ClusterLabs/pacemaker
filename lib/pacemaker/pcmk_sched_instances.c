@@ -918,7 +918,7 @@ check_instance_state(const pe_resource_t *instance, uint32_t *state)
          iter = iter->next) {
 
         const pe_action_t *action = (const pe_action_t *) iter->data;
-        const bool optional = pcmk_is_set(action->flags, pe_action_optional);
+        const bool optional = pcmk_is_set(action->flags, pcmk_action_optional);
 
         if (pcmk__str_eq(PCMK_ACTION_START, action->task, pcmk__str_none)) {
             if (!optional
@@ -1355,9 +1355,9 @@ orig_action_name(const pe_action_t *action)
  * \param[in,out] then      'Then' action in an ordering
  * \param[in]     node      If not NULL, limit scope of ordering to this node
  * \param[in]     filter    Action flags to limit scope of certain updates (may
- *                          include pe_action_optional to affect only mandatory
- *                          actions, and pcmk_action_runnable to affect only
- *                          runnable actions)
+ *                          include pcmk_action_optional to affect only
+ *                          mandatory actions, and pcmk_action_runnable to
+ *                          affect only runnable actions)
  * \param[in]     type      Group of enum pe_ordering flags to apply
  *
  * \return Group of enum pcmk__updated flags indicating what was updated
@@ -1488,9 +1488,9 @@ can_interleave_actions(const pe_action_t *first, const pe_action_t *then)
  * \param[in]     node      If not NULL, limit scope of ordering to this node
  * \param[in]     flags     Action flags for \p first for ordering purposes
  * \param[in]     filter    Action flags to limit scope of certain updates (may
- *                          include pe_action_optional to affect only mandatory
- *                          actions, and pcmk_action_runnable to affect only
- *                          runnable actions)
+ *                          include pcmk_action_optional to affect only
+ *                          mandatory actions, and pcmk_action_runnable to
+ *                          affect only runnable actions)
  * \param[in]     type      Group of enum pe_ordering flags to apply
  *
  * \return Group of enum pcmk__updated flags indicating what was updated
@@ -1550,9 +1550,9 @@ update_noninterleaved_actions(pe_resource_t *instance, pe_action_t *first,
  *                          (only used when interleaving instances)
  * \param[in]     flags     Action flags for \p first for ordering purposes
  * \param[in]     filter    Action flags to limit scope of certain updates (may
- *                          include pe_action_optional to affect only mandatory
- *                          actions, and pcmk_action_runnable to affect only
- *                          runnable actions)
+ *                          include pcmk_action_optional to affect only
+ *                          mandatory actions, and pcmk_action_runnable to
+ *                          affect only runnable actions)
  * \param[in]     type      Group of enum pe_ordering flags to apply
  * \param[in,out] data_set  Cluster working set
  *
@@ -1616,7 +1616,9 @@ pcmk__collective_action_flags(pe_action_t *action, const GList *instances,
     const char *action_name = orig_action_name(action);
 
     // Set original assumptions (optional and runnable may be cleared below)
-    uint32_t flags = pe_action_optional|pcmk_action_runnable|pcmk_action_pseudo;
+    uint32_t flags = pcmk_action_optional
+                     |pcmk_action_runnable
+                     |pcmk_action_pseudo;
 
     for (const GList *iter = instances; iter != NULL; iter = iter->next) {
         const pe_resource_t *instance = iter->data;
@@ -1644,12 +1646,13 @@ pcmk__collective_action_flags(pe_action_t *action, const GList *instances,
         instance_flags = instance->cmds->action_flags(instance_action, node);
 
         // If any instance action is mandatory, so is the collective action
-        if (pcmk_is_set(flags, pe_action_optional)
-            && !pcmk_is_set(instance_flags, pe_action_optional)) {
+        if (pcmk_is_set(flags, pcmk_action_optional)
+            && !pcmk_is_set(instance_flags, pcmk_action_optional)) {
             pe_rsc_trace(instance, "%s is mandatory because %s is",
                          action->uuid, instance_action->uuid);
-            pe__clear_action_summary_flags(flags, action, pe_action_optional);
-            pe__clear_action_flags(action, pe_action_optional);
+            pe__clear_action_summary_flags(flags, action,
+                                           pcmk_action_optional);
+            pe__clear_action_flags(action, pcmk_action_optional);
         }
 
         // If any instance action is runnable, so is the collective action

@@ -270,9 +270,9 @@ struct resource_alloc_functions_s {
      *                          node (only used when interleaving instances)
      * \param[in]     flags     Action flags for \p first for ordering purposes
      * \param[in]     filter    Action flags to limit scope of certain updates
-     *                          (may include pe_action_optional to affect only
-     *                          mandatory actions, and pcmk_action_runnable to
-     *                          affect only runnable actions)
+     *                          (may include pcmk_action_optional to affect
+     *                          only mandatory actions, and pcmk_action_runnable
+     *                          to affect only runnable actions)
      * \param[in]     type      Group of enum pe_ordering flags to apply
      * \param[in,out] data_set  Cluster working set
      *

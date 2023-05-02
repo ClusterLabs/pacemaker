@@ -706,7 +706,7 @@ log_all_actions(pe_working_set_t *data_set)
 static void
 log_unrunnable_actions(const pe_working_set_t *data_set)
 {
-    const uint64_t flags = pe_action_optional
+    const uint64_t flags = pcmk_action_optional
                            |pcmk_action_runnable
                            |pcmk_action_pseudo;
 

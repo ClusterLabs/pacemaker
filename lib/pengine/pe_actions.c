@@ -191,9 +191,9 @@ new_action(char *key, const char *task, pe_resource_t *rsc,
 
     pe__set_action_flags(action, pcmk_action_runnable);
     if (optional) {
-        pe__set_action_flags(action, pe_action_optional);
+        pe__set_action_flags(action, pcmk_action_optional);
     } else {
-        pe__clear_action_flags(action, pe_action_optional);
+        pe__clear_action_flags(action, pcmk_action_optional);
     }
 
     if (rsc != NULL) {
@@ -270,12 +270,12 @@ update_action_optional(pe_action_t *action, gboolean optional)
             pe_rsc_debug(action->rsc, "%s on %s is optional (%s is unmanaged)",
                          action->uuid, pe__node_name(action->node),
                          action->rsc->id);
-            pe__set_action_flags(action, pe_action_optional);
+            pe__set_action_flags(action, pcmk_action_optional);
             // We shouldn't clear runnable here because ... something
 
     // Otherwise require the action if requested
     } else if (!optional) {
-        pe__clear_action_flags(action, pe_action_optional);
+        pe__clear_action_flags(action, pcmk_action_optional);
     }
 }
 
@@ -1239,7 +1239,7 @@ pe_fence_op(pe_node_t *node, const char *op, bool optional,
     }
 
     if(optional == FALSE && pe_can_fence(data_set, node)) {
-        pe__clear_action_flags(stonith_op, pe_action_optional);
+        pe__clear_action_flags(stonith_op, pcmk_action_optional);
         pe_action_set_reason(stonith_op, reason, false);
 
     } else if(reason && stonith_op->reason == NULL) {
@@ -1491,7 +1491,7 @@ pe__action2reason(const pe_action_t *action, enum pe_action_flags flag)
         case pe_action_migrate_runnable:
             change = "unmigrateable";
             break;
-        case pe_action_optional:
+        case pcmk_action_optional:
             change = "required";
             break;
         default:

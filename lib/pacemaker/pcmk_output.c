@@ -1064,10 +1064,10 @@ digests_xml(pcmk__output_t *out, va_list args)
             crm_err("%s:%d: No stop action exists for %s",              \
                     __func__, lineno, rsc->id);                         \
             CRM_ASSERT(stop != NULL);                                   \
-        } else if (pcmk_is_set(stop->flags, pe_action_optional)) {      \
+        } else if (pcmk_is_set(stop->flags, pcmk_action_optional)) {    \
             crm_err("%s:%d: Action %s is still optional",               \
                     __func__, lineno, stop->uuid);                      \
-            CRM_ASSERT(!pcmk_is_set(stop->flags, pe_action_optional));  \
+            CRM_ASSERT(!pcmk_is_set(stop->flags, pcmk_action_optional));\
         }                                                               \
     } while (0)
 
@@ -1171,10 +1171,10 @@ rsc_action_default(pcmk__output_t *out, va_list args)
                               next, start, NULL);
 
         } else if ((start == NULL)
-                   || pcmk_is_set(start->flags, pe_action_optional)) {
+                   || pcmk_is_set(start->flags, pcmk_action_optional)) {
             if ((demote != NULL) && (promote != NULL)
-                && !pcmk_is_set(demote->flags, pe_action_optional)
-                && !pcmk_is_set(promote->flags, pe_action_optional)) {
+                && !pcmk_is_set(demote->flags, pcmk_action_optional)
+                && !pcmk_is_set(promote->flags, pcmk_action_optional)) {
                 rc = out->message(out, "rsc-action-item", "Re-promote", rsc,
                                   current, next, promote, demote);
             } else {
@@ -1270,7 +1270,8 @@ rsc_action_default(pcmk__output_t *out, va_list args)
         rc = out->message(out, "rsc-action-item", "Reload", rsc, current, next,
                           start, NULL);
 
-    } else if (stop != NULL && !pcmk_is_set(stop->flags, pe_action_optional)) {
+    } else if ((stop != NULL)
+               && !pcmk_is_set(stop->flags, pcmk_action_optional)) {
         rc = out->message(out, "rsc-action-item", "Restart", rsc, current,
                           next, start, NULL);
         STOP_SANITY_ASSERT(__LINE__);
