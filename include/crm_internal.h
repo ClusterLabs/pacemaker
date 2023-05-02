@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2021 the Pacemaker project contributors
+ * Copyright 2006-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -85,6 +85,8 @@
 #define PCMK__XA_GRAPH_WARNINGS         "graph-warnings"
 #define PCMK__XA_MODE                   "mode"
 #define PCMK__XA_TASK                   "task"
+#define PCMK__XA_UPTIME                 "uptime"
+#define PCMK__XA_CONN_HOST              "connection_host"
 
 
 /*

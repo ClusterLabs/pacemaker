@@ -672,6 +672,14 @@ remote_op_timeout_one(gpointer userdata)
     pcmk__set_result(&op->result, CRM_EX_ERROR, PCMK_EXEC_TIMEOUT,
                      "Peer did not return fence result within timeout");
 
+    // The requested delay has been applied for the first device
+    if (op->delay > 0) {
+        op->delay = 0;
+        crm_trace("Try another device for '%s' action targeting %s "
+                  "for client %s without delay " CRM_XS " id=%.8s",
+                  op->action, op->target, op->client_name, op->id);
+    }
+
     // Try another device, if appropriate
     request_peer_fencing(op, NULL);
     return G_SOURCE_REMOVE;
@@ -1451,9 +1459,11 @@ stonith_choose_peer(remote_fencing_op_t * op)
 
 static int
 get_device_timeout(const remote_fencing_op_t *op,
-                   const peer_device_info_t *peer, const char *device)
+                   const peer_device_info_t *peer, const char *device,
+                   bool with_delay)
 {
     device_properties_t *props;
+    int delay = 0;
 
     if (!peer || !device) {
         return op->base_timeout;
@@ -1464,9 +1474,16 @@ get_device_timeout(const remote_fencing_op_t *op,
         return op->base_timeout;
     }
 
+    // op->delay < 0 means disable any static/random fencing delays
+    if (with_delay && op->delay >= 0) {
+        // delay_base is eventually limited by delay_max
+        delay = (props->delay_max[op->phase] > 0 ?
+                 props->delay_max[op->phase] : props->delay_base[op->phase]);
+    }
+
     return (props->custom_action_timeout[op->phase]?
-           props->custom_action_timeout[op->phase] : op->base_timeout)
-           + props->delay_max[op->phase];
+            props->custom_action_timeout[op->phase] : op->base_timeout)
+           + delay;
 }
 
 struct timeout_data {
@@ -1492,8 +1509,8 @@ add_device_timeout(gpointer key, gpointer value, gpointer user_data)
 
     if (!props->executed[timeout->op->phase]
         && !props->disallowed[timeout->op->phase]) {
-        timeout->total_timeout += get_device_timeout(timeout->op,
-                                                     timeout->peer, device_id);
+        timeout->total_timeout += get_device_timeout(timeout->op, timeout->peer,
+                                                     device_id, true);
     }
 }
 
@@ -1567,7 +1584,8 @@ get_op_total_timeout(const remote_fencing_op_t *op,
                     if (find_peer_device(op, peer, device_list->data,
                                          fenced_support_flag(op->action))) {
                         total_timeout += get_device_timeout(op, peer,
-                                                            device_list->data);
+                                                            device_list->data,
+                                                            true);
                         break;
                     }
                 }               /* End Loop3: match device with peer that owns device, find device's timeout period */
@@ -1582,7 +1600,8 @@ get_op_total_timeout(const remote_fencing_op_t *op,
                 for (iter2 = op->query_results; iter2 != NULL; iter = iter2->next) {
                     peer_device_info_t *peer = iter2->data;
                     if (find_peer_device(op, peer, iter->data, st_device_supports_on)) {
-                        total_timeout += get_device_timeout(op, peer, iter->data);
+                        total_timeout += get_device_timeout(op, peer,
+                                                            iter->data, true);
                         break;
                     }
                 }
@@ -1597,7 +1616,11 @@ get_op_total_timeout(const remote_fencing_op_t *op,
         total_timeout = op->base_timeout;
     }
 
-    return total_timeout ? total_timeout : op->base_timeout;
+    /* Take any requested fencing delay into account to prevent it from eating
+     * up the total timeout.
+     */
+    return ((total_timeout ? total_timeout : op->base_timeout)
+            + (op->delay > 0 ? op->delay : 0));
 }
 
 static void
@@ -1813,11 +1836,19 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
         peer = stonith_choose_peer(op);
 
         device = op->devices->data;
-        timeout = get_device_timeout(op, peer, device);
+        /* Fencing timeout sent to peer takes no delay into account.
+         * The peer will add a dedicated timer for any delay upon
+         * schedule_stonith_command().
+         */
+        timeout = get_device_timeout(op, peer, device, false);
     }
 
     if (peer) {
-        int timeout_one = 0;
+       /* Take any requested fencing delay into account to prevent it from eating
+        * up the timeout.
+        */
+        int timeout_one = (op->delay > 0 ?
+                           TIMEOUT_MULTIPLY_FACTOR * op->delay : 0);
         xmlNode *remote_op = stonith_create_op(op->client_callid, op->id, STONITH_OP_FENCE, NULL, 0);
 
         crm_xml_add(remote_op, F_STONITH_REMOTE_OP_ID, op->id);
@@ -1831,8 +1862,8 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
         crm_xml_add_int(remote_op, F_STONITH_DELAY, op->delay);
 
         if (device) {
-            timeout_one = TIMEOUT_MULTIPLY_FACTOR *
-                          get_device_timeout(op, peer, device);
+            timeout_one += TIMEOUT_MULTIPLY_FACTOR *
+                           get_device_timeout(op, peer, device, true);
             crm_notice("Requesting that %s perform '%s' action targeting %s "
                        "using %s " CRM_XS " for client %s (%ds)",
                        peer->host, op->action, op->target, device,
@@ -1840,7 +1871,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
             crm_xml_add(remote_op, F_STONITH_DEVICE, device);
 
         } else {
-            timeout_one = TIMEOUT_MULTIPLY_FACTOR * get_peer_timeout(op, peer);
+            timeout_one += TIMEOUT_MULTIPLY_FACTOR * get_peer_timeout(op, peer);
             crm_notice("Requesting that %s perform '%s' action targeting %s "
                        CRM_XS " for client %s (%ds, %lds)",
                        peer->host, op->action, op->target, op->client_name,

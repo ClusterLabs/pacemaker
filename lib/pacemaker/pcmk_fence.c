@@ -173,7 +173,8 @@ async_fence_helper(gpointer user_data)
 
     st->cmds->register_callback(st,
                                 call_id,
-                                async_fence_data.timeout/1000,
+                                (async_fence_data.timeout/1000
+                                + (async_fence_data.delay > 0 ? async_fence_data.delay : 0)),
                                 st_opt_timeout_updates, NULL, "callback", fence_callback);
 
     return TRUE;

@@ -20,6 +20,7 @@
 #  endif
 
 extern GHashTable *rsc_list;
+extern time_t start_time;
 
 typedef struct lrmd_rsc_s {
     char *rsc_id;
