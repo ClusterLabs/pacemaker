@@ -257,8 +257,11 @@ enum pe_action_flags {
 
     //! \deprecated Use pcmk_action_attrs_evaluated instead
     pe_action_have_node_attrs       = pcmk_action_attrs_evaluated,
+
+    //! \deprecated Do not use
+    pe_action_implied_by_stonith    = (1 << 6),
 #endif
-    pe_action_implied_by_stonith = 0x00040,
+
     pe_action_migrate_runnable =   0x00080,
 
     pe_action_dumped = 0x00100,

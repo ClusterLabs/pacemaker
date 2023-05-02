@@ -145,8 +145,6 @@ order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
         pe__set_action_flags(action, pcmk_action_pseudo|pcmk_action_runnable);
 
         if (order_implicit) {
-            pe__set_action_flags(action, pe_action_implied_by_stonith);
-
             /* Order the stonith before the parent stop (if any).
              *
              * Also order the stonith before the resource stop, unless the
