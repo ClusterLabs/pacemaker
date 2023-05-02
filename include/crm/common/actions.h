@@ -254,9 +254,10 @@ enum pe_action_flags {
 
     //! \deprecated Use pcmk_action_always_in_graph instead
     pe_action_print_always          = pcmk_action_always_in_graph,
-#endif
 
+    //! \deprecated Use pcmk_action_attrs_evaluated instead
     pe_action_have_node_attrs       = pcmk_action_attrs_evaluated,
+#endif
     pe_action_implied_by_stonith = 0x00040,
     pe_action_migrate_runnable =   0x00080,
 
