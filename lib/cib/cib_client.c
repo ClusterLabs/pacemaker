@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -656,6 +656,7 @@ cib_new_variant(void)
     new_cib->cmds->remove = cib_client_delete;
     new_cib->cmds->erase = cib_client_erase;
 
+    // Deprecated method
     new_cib->cmds->delete_absolute = cib_client_delete_absolute;
 
     return new_cib;
