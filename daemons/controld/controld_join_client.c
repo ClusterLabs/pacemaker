@@ -196,7 +196,8 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
 }
 
 void
-set_join_state(const char *start_state, const char *node_name, const char *node_uuid)
+set_join_state(const char *start_state, const char *node_name, const char *node_uuid,
+               bool remote)
 {
     if (pcmk__str_eq(start_state, "standby", pcmk__str_casei)) {
         crm_notice("Forcing node %s to join in %s state per configured "
@@ -204,7 +205,8 @@ set_join_state(const char *start_state, const char *node_name, const char *node_
         cib__update_node_attr(controld_globals.logger_out,
                               controld_globals.cib_conn, cib_sync_call,
                               XML_CIB_TAG_NODES, node_uuid,
-                              NULL, NULL, NULL, "standby", "on", NULL, NULL);
+                              NULL, NULL, NULL, "standby", "on", NULL,
+                              remote ? "remote" : NULL);
 
     } else if (pcmk__str_eq(start_state, "online", pcmk__str_casei)) {
         crm_notice("Forcing node %s to join in %s state per configured "
@@ -212,7 +214,8 @@ set_join_state(const char *start_state, const char *node_name, const char *node_
         cib__update_node_attr(controld_globals.logger_out,
                               controld_globals.cib_conn, cib_sync_call,
                               XML_CIB_TAG_NODES, node_uuid,
-                              NULL, NULL, NULL, "standby", "off", NULL, NULL);
+                              NULL, NULL, NULL, "standby", "off", NULL,
+                              remote ? "remote" : NULL);
 
     } else if (pcmk__str_eq(start_state, "default", pcmk__str_casei)) {
         crm_debug("Not forcing a starting state on node %s", node_name);
@@ -335,7 +338,7 @@ do_cl_join_finalize_respond(long long action,
             first_join = FALSE;
             if (start_state) {
                 set_join_state(start_state, controld_globals.our_nodename,
-                               controld_globals.our_uuid);
+                               controld_globals.our_uuid, false);
             }
         }
 

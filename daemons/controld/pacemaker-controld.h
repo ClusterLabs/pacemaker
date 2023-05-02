@@ -37,6 +37,6 @@ void controld_election_fini(void);
 void controld_stop_current_election_timeout(void);
 
 void set_join_state(const char *start_state, const char *node_name,
-                    const char *node_uuid);
+                    const char *node_uuid, bool remote);
 
 #endif
