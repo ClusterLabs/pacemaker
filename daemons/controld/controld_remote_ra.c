@@ -280,6 +280,7 @@ remote_node_up(const char *node_name)
     int call_opt;
     xmlNode *update, *state;
     crm_node_t *node;
+    lrm_state_t *connection_rsc = NULL;
 
     CRM_CHECK(node_name != NULL, return);
     crm_info("Announcing Pacemaker Remote node %s", node_name);
@@ -300,6 +301,20 @@ remote_node_up(const char *node_name)
 
     purge_remote_node_attrs(call_opt, node);
     pcmk__update_peer_state(__func__, node, CRM_NODE_MEMBER, 0);
+
+    /* Apply any start state that we were given from the environment on the
+     * remote node.
+     */
+    connection_rsc = lrm_state_find(node->uname);
+
+    if (connection_rsc != NULL) {
+        lrmd_t *lrm = connection_rsc->conn;
+        const char *start_state = lrmd__node_start_state(lrm);
+
+        if (start_state) {
+            set_join_state(start_state, node->uname, node->uuid, true);
+        }
+    }
 
     /* pacemaker_remote nodes don't participate in the membership layer,
      * so cluster nodes don't automatically get notified when they come and go.
