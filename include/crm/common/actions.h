@@ -297,9 +297,11 @@ enum pe_action_flags {
 
     //! \deprecated Use pcmk_action_min_runnable instead
     pe_action_requires_any          = pcmk_action_min_runnable,
+
+    //! \deprecated Use pcmk_action_reschedule instead
+    pe_action_reschedule            = pcmk_action_reschedule,
 #endif
 
-    pe_action_reschedule            = pcmk_action_reschedule,
     pe_action_tracking = 0x04000,
     pe_action_dedup = 0x08000, //! Internal state tracking when creating graph
 
