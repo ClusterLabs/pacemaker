@@ -141,7 +141,9 @@ typedef struct cib_api_operations_s {
     int (*delete_absolute) (cib_t *cib, const char *section, xmlNode *data,
                             int call_options);
 
+    //! \deprecated This method is not implemented and should not be used
     int (*quit) (cib_t *cib, int call_options);
+
     int (*register_notification) (cib_t *cib, const char *callback,
                                   int enabled);
     gboolean (*register_callback) (cib_t *cib, int call_id, int timeout,
