@@ -2538,3 +2538,15 @@ lrmd__uptime(lrmd_t *lrmd)
         return native->remote->uptime;
     }
 }
+
+const char *
+lrmd__node_start_state(lrmd_t *lrmd)
+{
+    lrmd_private_t *native = lrmd->lrmd_private;
+
+    if (native->remote == NULL) {
+        return NULL;
+    } else {
+        return native->remote->start_state;
+    }
+}
