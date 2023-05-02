@@ -112,6 +112,7 @@ struct pcmk__remote_s {
     int tcp_socket;
     mainloop_io_t *source;
     time_t uptime;
+    char *start_state;
 
     /* CIB-only */
     char *token;
