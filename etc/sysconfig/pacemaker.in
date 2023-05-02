@@ -144,8 +144,7 @@
 # By default, the local host will join the cluster in an online or standby
 # state when Pacemaker first starts depending on whether it was previously put
 # into standby mode. If this variable is set to "standby" or "online", it will
-# force the local host to join in the specified state. This has no effect on
-# Pacemaker Remote nodes.
+# force the local host to join in the specified state.
 #
 # Default: PCMK_node_start_state="default"
 
