@@ -386,7 +386,7 @@ sync_our_cib(xmlNode * request, gboolean all)
 
     CRM_CHECK(the_cib != NULL, return -EINVAL);
 
-    replace_request = cib_msg_copy(request, FALSE);
+    replace_request = cib_msg_copy(request);
     CRM_CHECK(replace_request != NULL, return -EINVAL);
 
     crm_debug("Syncing CIB to %s", all ? "all peers" : host);

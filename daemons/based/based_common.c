@@ -257,13 +257,8 @@ cib_get_operation_id(const char *op, int *operation)
 }
 
 xmlNode *
-cib_msg_copy(xmlNode * msg, gboolean with_data)
+cib_msg_copy(xmlNode *msg)
 {
-    int lpc = 0;
-    const char *field = NULL;
-    const char *value = NULL;
-    xmlNode *value_struct = NULL;
-
     static const char *field_list[] = {
         F_XML_TAGNAME,
         F_TYPE,
@@ -288,28 +283,16 @@ cib_msg_copy(xmlNode * msg, gboolean with_data)
         F_CIB_NOTIFY_ACTIVATE
     };
 
-    static const char *data_list[] = {
-        F_CIB_CALLDATA,
-        F_CIB_UPDATE,
-        F_CIB_UPDATE_RESULT
-    };
-
     xmlNode *copy = create_xml_node(NULL, "copy");
 
     CRM_ASSERT(copy != NULL);
 
-    for (lpc = 0; lpc < PCMK__NELEM(field_list); lpc++) {
-        field = field_list[lpc];
-        value = crm_element_value(msg, field);
+    for (int lpc = 0; lpc < PCMK__NELEM(field_list); lpc++) {
+        const char *field = field_list[lpc];
+        const char *value = crm_element_value(msg, field);
+
         if (value != NULL) {
             crm_xml_add(copy, field, value);
-        }
-    }
-    for (lpc = 0; with_data && lpc < PCMK__NELEM(data_list); lpc++) {
-        field = data_list[lpc];
-        value_struct = get_message_xml(msg, field);
-        if (value_struct != NULL) {
-            add_message_xml(copy, field, value_struct);
         }
     }
 
