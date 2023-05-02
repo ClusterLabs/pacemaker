@@ -645,8 +645,7 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
         return false;
 
     } else if (pcmk_is_set(input->type, pe_order_apply_first_non_migratable)
-               && pcmk_is_set(input->action->flags,
-                              pe_action_migrate_runnable)) {
+               && pcmk_is_set(input->action->flags, pcmk_action_migratable)) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
                   "only if input unmigratable but input unrunnable",
                   action->uuid, action->id,
@@ -654,7 +653,7 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
         return false;
 
     } else if ((input->type == pe_order_optional)
-               && pcmk_is_set(input->action->flags, pe_action_migrate_runnable)
+               && pcmk_is_set(input->action->flags, pcmk_action_migratable)
                && pcmk__ends_with(input->action->uuid, "_stop_0")) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
                   "optional but stop in migration",

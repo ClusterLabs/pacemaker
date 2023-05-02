@@ -1488,7 +1488,7 @@ pe__action2reason(const pe_action_t *action, enum pe_action_flags flag)
         case pcmk_action_runnable:
             change = "unrunnable";
             break;
-        case pe_action_migrate_runnable:
+        case pcmk_action_migratable:
             change = "unmigrateable";
             break;
         case pcmk_action_optional:

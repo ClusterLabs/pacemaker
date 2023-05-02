@@ -1010,7 +1010,7 @@ pcmk__create_instance_actions(pe_resource_t *collective, GList *instances)
                                         true);
     stopped->priority = INFINITY;
     if (!pcmk_is_set(state, instance_restarting)) {
-        pe__set_action_flags(stop, pe_action_migrate_runnable);
+        pe__set_action_flags(stop, pcmk_action_migratable);
     }
 
     if (collective->variant == pcmk_rsc_variant_clone) {

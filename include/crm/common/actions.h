@@ -242,6 +242,9 @@ enum pe_action_flags {
     //! Whether operation-specific instance attributes have been unpacked yet
     pcmk_action_attrs_evaluated     = (1 << 4),
 
+    //! Whether action can be related to a live migration
+    pcmk_action_migratable           = (1 << 7),
+
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_action_pseudo instead
     pe_action_pseudo                = pcmk_action_pseudo,
@@ -262,7 +265,7 @@ enum pe_action_flags {
     pe_action_implied_by_stonith    = (1 << 6),
 #endif
 
-    pe_action_migrate_runnable =   0x00080,
+    pe_action_migrate_runnable      = pcmk_action_migratable,
 
     pe_action_dumped = 0x00100,
     pe_action_processed = 0x00200,

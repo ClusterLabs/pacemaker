@@ -789,8 +789,8 @@ handle_restart_ordering(pe_action_t *first, pe_action_t *then, uint32_t filter)
     }
 
     // Make 'first' unmigratable if 'then' is unmigratable
-    if (!pcmk_is_set(then->flags, pe_action_migrate_runnable)) {
-        clear_action_flag_because(first, pe_action_migrate_runnable, then);
+    if (!pcmk_is_set(then->flags, pcmk_action_migratable)) {
+        clear_action_flag_because(first, pcmk_action_migratable, then);
     }
 
     // Make 'then' unrunnable if 'first' is required but unrunnable
@@ -850,9 +850,9 @@ pcmk__update_ordered_actions(pe_action_t *first, pe_action_t *then,
             clear_action_flag_because(first, pcmk_action_optional, then);
         }
 
-        if (pcmk_is_set(flags, pe_action_migrate_runnable)
-            && !pcmk_is_set(then->flags, pe_action_migrate_runnable)) {
-            clear_action_flag_because(first, pe_action_migrate_runnable, then);
+        if (pcmk_is_set(flags, pcmk_action_migratable)
+            && !pcmk_is_set(then->flags, pcmk_action_migratable)) {
+            clear_action_flag_because(first, pcmk_action_migratable, then);
         }
     }
 
@@ -863,17 +863,16 @@ pcmk__update_ordered_actions(pe_action_t *first, pe_action_t *then,
 
         clear_action_flag_because(first, pcmk_action_optional, then);
 
-        if (pcmk_is_set(first->flags, pe_action_migrate_runnable)
-            && !pcmk_is_set(then->flags, pe_action_migrate_runnable)) {
-            clear_action_flag_because(first, pe_action_migrate_runnable,
-                                      then);
+        if (pcmk_is_set(first->flags, pcmk_action_migratable)
+            && !pcmk_is_set(then->flags, pcmk_action_migratable)) {
+            clear_action_flag_because(first, pcmk_action_migratable, then);
         }
     }
 
     if (pcmk_is_set(type, pe_order_implies_first_migratable)
         && pcmk_is_set(filter, pcmk_action_optional)) {
 
-        if (!pcmk_all_flags_set(then->flags, pe_action_migrate_runnable
+        if (!pcmk_all_flags_set(then->flags, pcmk_action_migratable
                                              |pcmk_action_runnable)) {
             clear_action_flag_because(first, pcmk_action_runnable, then);
         }
@@ -887,7 +886,7 @@ pcmk__update_ordered_actions(pe_action_t *first, pe_action_t *then,
         && pcmk_is_set(filter, pcmk_action_optional)
         && !pcmk_is_set(first->flags, pcmk_action_runnable)) {
 
-        clear_action_flag_because(then, pe_action_migrate_runnable, first);
+        clear_action_flag_because(then, pcmk_action_migratable, first);
         pe__clear_action_flags(then, pcmk_action_pseudo);
     }
 
@@ -897,14 +896,14 @@ pcmk__update_ordered_actions(pe_action_t *first, pe_action_t *then,
         && !pcmk_is_set(flags, pcmk_action_runnable)) {
 
         clear_action_flag_because(then, pcmk_action_runnable, first);
-        clear_action_flag_because(then, pe_action_migrate_runnable, first);
+        clear_action_flag_because(then, pcmk_action_migratable, first);
     }
 
     if (pcmk_is_set(type, pe_order_implies_then)
         && pcmk_is_set(filter, pcmk_action_optional)
         && pcmk_is_set(then->flags, pcmk_action_optional)
         && !pcmk_is_set(flags, pcmk_action_optional)
-        && !pcmk_is_set(first->flags, pe_action_migrate_runnable)) {
+        && !pcmk_is_set(first->flags, pcmk_action_migratable)) {
 
         clear_action_flag_because(then, pcmk_action_optional, first);
     }

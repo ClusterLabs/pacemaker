@@ -72,17 +72,17 @@ pcmk__create_migration_actions(pe_resource_t *rsc, const pe_node_t *current)
     if ((migrate_from != NULL)
         && ((migrate_to != NULL) || (rsc->partial_migration_target != NULL))) {
 
-        pe__set_action_flags(start, pe_action_migrate_runnable);
-        pe__set_action_flags(stop, pe_action_migrate_runnable);
+        pe__set_action_flags(start, pcmk_action_migratable);
+        pe__set_action_flags(stop, pcmk_action_migratable);
 
         // This is easier than trying to delete it from the graph
         pe__set_action_flags(start, pcmk_action_pseudo);
 
         if (rsc->partial_migration_target == NULL) {
-            pe__set_action_flags(migrate_from, pe_action_migrate_runnable);
+            pe__set_action_flags(migrate_from, pcmk_action_migratable);
 
             if (migrate_to != NULL) {
-                pe__set_action_flags(migrate_to, pe_action_migrate_runnable);
+                pe__set_action_flags(migrate_to, pcmk_action_migratable);
                 migrate_to->needs = start->needs;
             }
 
@@ -102,7 +102,7 @@ pcmk__create_migration_actions(pe_resource_t *rsc, const pe_node_t *current)
                                |pe_order_implies_first_migratable,
                                rsc->cluster);
         } else {
-            pe__set_action_flags(migrate_from, pe_action_migrate_runnable);
+            pe__set_action_flags(migrate_from, pcmk_action_migratable);
             migrate_from->needs = start->needs;
 
             // Probe -> migrate_from (migrate_to already completed)
