@@ -344,7 +344,7 @@ clone_min_ordering(const char *id,
      * considered runnable before allowing the pseudo-action to be runnable.
      */
     clone_min_met->required_runnable_before = clone_min;
-    pe__set_action_flags(clone_min_met, pe_action_requires_any);
+    pe__set_action_flags(clone_min_met, pcmk_action_min_runnable);
 
     // Order the actions for each clone instance before the pseudo-action
     for (GList *iter = rsc_first->children; iter != NULL; iter = iter->next) {
@@ -755,7 +755,7 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
         pe_action_t *unordered_action = get_pseudo_op(task, data_set);
 
         free(task);
-        pe__set_action_flags(unordered_action, pe_action_requires_any);
+        pe__set_action_flags(unordered_action, pcmk_action_min_runnable);
 
         for (xml_rsc = first_named_child(set1, XML_TAG_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {

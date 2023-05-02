@@ -502,7 +502,7 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
                  action_optional_str(then->flags),
                  action_runnable_str(then->flags), action_node_str(then));
 
-    if (pcmk_is_set(then->flags, pe_action_requires_any)) {
+    if (pcmk_is_set(then->flags, pcmk_action_min_runnable)) {
         /* Initialize current known "runnable before" actions. As
          * update_action_for_ordering_flags() is called for each of then's
          * before actions, this number will increment as runnable 'first'
@@ -638,7 +638,7 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
         }
     }
 
-    if (pcmk_is_set(then->flags, pe_action_requires_any)) {
+    if (pcmk_is_set(then->flags, pcmk_action_min_runnable)) {
         if (last_flags == then->flags) {
             pcmk__clear_updated_flags(changed, then, pcmk__updated_then);
         } else {

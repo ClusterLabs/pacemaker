@@ -251,6 +251,13 @@ enum pe_action_flags {
     //! Whether action is a stop to abort a dangling migration
     pcmk_action_migration_abort      = (1 << 11),
 
+    /*!
+     * Whether action is an ordering point for minimum required instances
+     * (used to implement ordering after clones with clone-min configured,
+     * and ordered sets with require-all=false)
+     */
+    pcmk_action_min_runnable         = (1 << 12),
+
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_action_pseudo instead
     pe_action_pseudo                = pcmk_action_pseudo,
@@ -286,10 +293,7 @@ enum pe_action_flags {
     pe_action_dangle                = pcmk_action_migration_abort,
 #endif
 
-    /* This action requires one or more of its dependencies to be runnable.
-     * We use this to clear the runnable flag before checking dependencies.
-     */
-    pe_action_requires_any = 0x01000,
+    pe_action_requires_any          = pcmk_action_min_runnable,
 
     pe_action_reschedule = 0x02000,
     pe_action_tracking = 0x04000,
