@@ -261,6 +261,9 @@ enum pe_action_flags {
     //! Whether action is recurring monitor that must be rescheduled if active
     pcmk_action_reschedule           = (1 << 13),
 
+    //! Whether action has already been processed by a recursive procedure
+    pcmk_action_detect_loop          = (1 << 14),
+
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_action_pseudo instead
     pe_action_pseudo                = pcmk_action_pseudo,
@@ -302,7 +305,7 @@ enum pe_action_flags {
     pe_action_reschedule            = pcmk_action_reschedule,
 #endif
 
-    pe_action_tracking = 0x04000,
+    pe_action_tracking              = pcmk_action_detect_loop,
     pe_action_dedup = 0x08000, //! Internal state tracking when creating graph
 
     pe_action_dc = 0x10000,         //! Action may run on DC instead of target

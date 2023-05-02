@@ -550,10 +550,10 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
     }
 
     // Avoid running into any possible loop
-    if (pcmk_is_set(after->flags, pe_action_tracking)) {
+    if (pcmk_is_set(after->flags, pcmk_action_detect_loop)) {
         return;
     }
-    pe__set_action_flags(after, pe_action_tracking);
+    pe__set_action_flags(after, pcmk_action_detect_loop);
 
     crm_trace("Adding probe restart orderings for '%s@%s then %s@%s'",
               probe->uuid, pe__node_name(probe->node),
@@ -671,7 +671,7 @@ clear_actions_tracking_flag(pe_working_set_t *data_set)
     for (GList *iter = data_set->actions; iter != NULL; iter = iter->next) {
         pe_action_t *action = iter->data;
 
-        pe__clear_action_flags(action, pe_action_tracking);
+        pe__clear_action_flags(action, pcmk_action_detect_loop);
     }
 }
 

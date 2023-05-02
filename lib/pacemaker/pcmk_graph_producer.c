@@ -776,7 +776,7 @@ pcmk__graph_has_loop(const pe_action_t *init_action, const pe_action_t *action,
 {
     bool has_loop = false;
 
-    if (pcmk_is_set(input->action->flags, pe_action_tracking)) {
+    if (pcmk_is_set(input->action->flags, pcmk_action_detect_loop)) {
         crm_trace("Breaking tracking loop: %s@%s -> %s@%s (%#.6x)",
                   input->action->uuid,
                   input->action->node? input->action->node->details->uname : "",
@@ -800,7 +800,7 @@ pcmk__graph_has_loop(const pe_action_t *init_action, const pe_action_t *action,
         return true;
     }
 
-    pe__set_action_flags(input->action, pe_action_tracking);
+    pe__set_action_flags(input->action, pcmk_action_detect_loop);
 
     crm_trace("Checking inputs of action %s@%s input %s@%s (%#.6x)"
               "for graph loop with %s@%s ",
@@ -824,7 +824,7 @@ pcmk__graph_has_loop(const pe_action_t *init_action, const pe_action_t *action,
         }
     }
 
-    pe__clear_action_flags(input->action, pe_action_tracking);
+    pe__clear_action_flags(input->action, pcmk_action_detect_loop);
 
     if (!has_loop) {
         crm_trace("No input loop found in %s@%s -> %s@%s (%#.6x)",
