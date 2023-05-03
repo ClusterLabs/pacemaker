@@ -43,8 +43,10 @@ enum pe_discover_e {
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_probe_always instead
     pe_discover_always      = pcmk_probe_always,
-#endif
+
+    //! \deprecated Use pcmk_probe_never instead
     pe_discover_never       = pcmk_probe_never,
+#endif
     pe_discover_exclusive   = 2,
 };
 
