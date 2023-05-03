@@ -561,7 +561,7 @@ pcmk__new_location(const char *id, pe_resource_t *rsc,
             new_con->discover_mode = pcmk_probe_always;
 
         } else if (pcmk__str_eq(discover_mode, "never", pcmk__str_casei)) {
-            new_con->discover_mode = pe_discover_never;
+            new_con->discover_mode = pcmk_probe_never;
 
         } else if (pcmk__str_eq(discover_mode, "exclusive", pcmk__str_casei)) {
             new_con->discover_mode = pe_discover_exclusive;

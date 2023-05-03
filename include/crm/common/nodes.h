@@ -38,12 +38,13 @@ enum node_type {
 //! When to probe a resource on a node (as specified in location constraints)
 enum pe_discover_e {
     pcmk_probe_always       = 0,    //! Always probe resource on node
+    pcmk_probe_never        = 1,    //! Never probe resource on node
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_probe_always instead
     pe_discover_always      = pcmk_probe_always,
 #endif
-    pe_discover_never       = 1,
+    pe_discover_never       = pcmk_probe_never,
     pe_discover_exclusive   = 2,
 };
 

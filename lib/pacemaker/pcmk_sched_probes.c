@@ -227,7 +227,7 @@ pcmk__probe_rsc_on_node(pe_resource_t *rsc, pe_node_t *node)
     if (allowed == NULL) {
         allowed = node;
     }
-    if (allowed->rsc_discover_mode == pe_discover_never) {
+    if (allowed->rsc_discover_mode == pcmk_probe_never) {
         reason = "node has discovery disabled";
         goto no_probe;
     }
