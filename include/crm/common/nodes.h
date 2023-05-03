@@ -37,7 +37,9 @@ enum node_type {
 
 //! When to probe a resource on a node (as specified in location constraints)
 enum pe_discover_e {
-    pe_discover_always = 0,
+    pcmk_probe_always       = 0,    //! Always probe resource on node
+
+    pe_discover_always      = pcmk_probe_always,
     pe_discover_never,
     pe_discover_exclusive,
 };

@@ -558,7 +558,7 @@ pcmk__new_location(const char *id, pe_resource_t *rsc,
 
         if (pcmk__str_eq(discover_mode, "always",
                          pcmk__str_null_matches|pcmk__str_casei)) {
-            new_con->discover_mode = pe_discover_always;
+            new_con->discover_mode = pcmk_probe_always;
 
         } else if (pcmk__str_eq(discover_mode, "never", pcmk__str_casei)) {
             new_con->discover_mode = pe_discover_never;
