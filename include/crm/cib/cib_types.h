@@ -86,9 +86,12 @@ typedef struct cib_api_operations_s {
                        int *event_fd);
     int (*signoff) (cib_t *cib);
     int (*free) (cib_t *cib);
+
+    //! \deprecated This method will be removed and should not be used
     int (*set_op_callback) (cib_t *cib, void (*callback) (const xmlNode *msg,
                                                           int callid, int rc,
                                                           xmlNode *output));
+
     int (*add_notify_callback) (cib_t *cib, const char *event,
                                 void (*callback) (const char *event,
                                                   xmlNode *msg));

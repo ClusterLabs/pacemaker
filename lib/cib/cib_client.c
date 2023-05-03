@@ -622,7 +622,9 @@ cib_new_variant(void)
         return NULL;
     }
 
+    // Deprecated method
     new_cib->cmds->set_op_callback = cib_client_set_op_callback;
+
     new_cib->cmds->add_notify_callback = cib_client_add_notify_callback;
     new_cib->cmds->del_notify_callback = cib_client_del_notify_callback;
     new_cib->cmds->register_callback = cib_client_register_callback;
