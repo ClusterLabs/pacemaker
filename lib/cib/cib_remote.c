@@ -614,7 +614,7 @@ cib_remote_new(const char *server, const char *user, const char *passwd, int por
     cib->cmds->signon = cib_remote_signon;
     cib->cmds->signoff = cib_remote_signoff;
     cib->cmds->free = cib_remote_free;
-    cib->cmds->inputfd = cib_remote_inputfd;
+    cib->cmds->inputfd = cib_remote_inputfd; // Deprecated method
 
     cib->cmds->register_notification = cib_remote_register_notification;
     cib->cmds->set_connection_dnotify = cib_remote_set_connection_dnotify;
