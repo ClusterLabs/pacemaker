@@ -546,13 +546,12 @@ parse_local_options_v2(const pcmk__client_t *cib_client, int call_type,
             *needs_reply = TRUE;
             *needs_forward = TRUE;
             *process = FALSE;
-            crm_trace("%s op from %s needs to be forwarded to client %s",
+            crm_trace("%s op from %s needs to be forwarded to %s",
                       op, pcmk__client_name(cib_client),
-                      pcmk__s(host, "the primary instance"));
+                      pcmk__s(host, "all nodes"));
             return;
         }
     }
-
 
     *process = TRUE;
     *needs_reply = FALSE;
