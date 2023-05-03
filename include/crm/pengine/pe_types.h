@@ -325,12 +325,6 @@ typedef struct pe_tag_s {
     GList *refs;
 } pe_tag_t;
 
-enum pe_discover_e {
-    pe_discover_always = 0,
-    pe_discover_never,
-    pe_discover_exclusive,
-};
-
 /* *INDENT-OFF* */
 enum pe_ordering {
     pe_order_none                  = 0x0,       /* deleted */
