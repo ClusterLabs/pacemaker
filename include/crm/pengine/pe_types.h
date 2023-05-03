@@ -325,13 +325,6 @@ typedef struct pe_tag_s {
     GList *refs;
 } pe_tag_t;
 
-//! Internal tracking for transition graph creation
-enum pe_link_state {
-    pe_link_not_dumped, //! Internal tracking for transition graph creation
-    pe_link_dumped,     //! Internal tracking for transition graph creation
-    pe_link_dup,        //! \deprecated No longer used by Pacemaker
-};
-
 enum pe_discover_e {
     pe_discover_always = 0,
     pe_discover_never,

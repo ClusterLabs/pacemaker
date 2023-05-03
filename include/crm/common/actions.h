@@ -321,6 +321,15 @@ enum pe_action_flags {
 #endif
 };
 
+//! \internal Do not use
+enum pe_link_state {
+    pe_link_not_dumped  = 0,    //!< \internal Do not use
+    pe_link_dumped      = 1,    //!< \internal Do not use
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    pe_link_dup         = 2,    //!< \deprecated Do not use
+#endif
+};
+
 // For parsing various action-related string specifications
 gboolean parse_op_key(const char *key, char **rsc_id, char **op_type,
                       guint *interval_ms);
