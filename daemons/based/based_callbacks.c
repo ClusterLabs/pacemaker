@@ -31,7 +31,6 @@
 #include <pacemaker-based.h>
 
 #define EXIT_ESCALATION_MS 10000
-#define OUR_NODENAME (stand_alone? "localhost" : crm_cluster->uname)
 
 static unsigned long cib_local_bcast_num = 0;
 

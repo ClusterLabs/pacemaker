@@ -30,6 +30,8 @@
 #  include <gnutls/gnutls.h>
 #endif
 
+#define OUR_NODENAME (stand_alone? "localhost" : crm_cluster->uname)
+
 // CIB-specific client flags
 enum cib_client_flags {
     // Notifications
