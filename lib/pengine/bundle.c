@@ -762,7 +762,7 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
 
         replica->node = pe__copy_node(node);
         replica->node->weight = 500;
-        replica->node->rsc_discover_mode = pe_discover_exclusive;
+        replica->node->rsc_discover_mode = pcmk_probe_exclusive;
 
         /* Ensure the node shows up as allowed and with the correct discovery set */
         if (replica->child->allowed_nodes != NULL) {

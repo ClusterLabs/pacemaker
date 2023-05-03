@@ -216,7 +216,7 @@ pcmk__probe_rsc_on_node(pe_resource_t *rsc, pe_node_t *node)
                      "on node";
             goto no_probe;
 
-        } else if (allowed->rsc_discover_mode != pe_discover_exclusive) {
+        } else if (allowed->rsc_discover_mode != pcmk_probe_exclusive) {
             // ... but no constraint marks this node for discovery of resource
             reason = "resource has exclusive discovery but is not enabled "
                      "on node";

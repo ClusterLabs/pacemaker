@@ -564,7 +564,7 @@ pcmk__new_location(const char *id, pe_resource_t *rsc,
             new_con->discover_mode = pcmk_probe_never;
 
         } else if (pcmk__str_eq(discover_mode, "exclusive", pcmk__str_casei)) {
-            new_con->discover_mode = pe_discover_exclusive;
+            new_con->discover_mode = pcmk_probe_exclusive;
             rsc->exclusive_discover = TRUE;
 
         } else {
@@ -663,7 +663,7 @@ pcmk__apply_location(pe_resource_t *rsc, pe__location_t *location)
         }
 
         if (allowed_node->rsc_discover_mode < location->discover_mode) {
-            if (location->discover_mode == pe_discover_exclusive) {
+            if (location->discover_mode == pcmk_probe_exclusive) {
                 rsc->exclusive_discover = TRUE;
             }
             /* exclusive > never > always... always is default */

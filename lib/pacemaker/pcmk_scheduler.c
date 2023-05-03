@@ -165,7 +165,7 @@ apply_exclusive_discovery(gpointer data, gpointer user_data)
 
         match = g_hash_table_lookup(rsc->allowed_nodes, node->details->id);
         if ((match != NULL)
-            && (match->rsc_discover_mode != pe_discover_exclusive)) {
+            && (match->rsc_discover_mode != pcmk_probe_exclusive)) {
             match->weight = -INFINITY;
         }
     }

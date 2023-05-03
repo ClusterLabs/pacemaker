@@ -39,6 +39,7 @@ enum node_type {
 enum pe_discover_e {
     pcmk_probe_always       = 0,    //! Always probe resource on node
     pcmk_probe_never        = 1,    //! Never probe resource on node
+    pcmk_probe_exclusive    = 2,    //! Probe only on designated nodes
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_probe_always instead
@@ -47,7 +48,7 @@ enum pe_discover_e {
     //! \deprecated Use pcmk_probe_never instead
     pe_discover_never       = pcmk_probe_never,
 #endif
-    pe_discover_exclusive   = 2,
+    pe_discover_exclusive   = pcmk_probe_exclusive,
 };
 
 #ifdef __cplusplus
