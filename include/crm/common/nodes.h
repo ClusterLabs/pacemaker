@@ -47,8 +47,10 @@ enum pe_discover_e {
 
     //! \deprecated Use pcmk_probe_never instead
     pe_discover_never       = pcmk_probe_never,
-#endif
+
+    //! \deprecated Use pcmk_probe_exclusive instead
     pe_discover_exclusive   = pcmk_probe_exclusive,
+#endif
 };
 
 #ifdef __cplusplus
