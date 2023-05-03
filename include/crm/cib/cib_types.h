@@ -101,7 +101,9 @@ typedef struct cib_api_operations_s {
     //! \deprecated This method will be removed and should not be used
     int (*inputfd) (cib_t *cib);
 
+    //! \deprecated This method will be removed and should not be used
     int (*noop) (cib_t *cib, int call_options);
+
     int (*ping) (cib_t *cib, xmlNode **output_data, int call_options);
     int (*query) (cib_t *cib, const char *section, xmlNode **output_data,
                   int call_options);

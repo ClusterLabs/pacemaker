@@ -628,7 +628,7 @@ cib_new_variant(void)
     new_cib->cmds->register_callback = cib_client_register_callback;
     new_cib->cmds->register_callback_full = cib_client_register_callback_full;
 
-    new_cib->cmds->noop = cib_client_noop;
+    new_cib->cmds->noop = cib_client_noop; // Deprecated method
     new_cib->cmds->ping = cib_client_ping;
     new_cib->cmds->query = cib_client_query;
     new_cib->cmds->sync = cib_client_sync;
