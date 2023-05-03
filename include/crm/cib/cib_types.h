@@ -80,6 +80,10 @@ enum cib_call_options {
     cib_scope_local     = (1 << 8),
 
     cib_dryrun          = (1 << 9),
+
+    //! Add request to the client's CIB transaction instead of processing
+    cib_transaction     = (1 << 10),
+
     cib_sync_call       = (1 << 12),
     cib_no_mtime        = (1 << 13),
     cib_zero_copy       = (1 << 14),
