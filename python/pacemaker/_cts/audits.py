@@ -284,7 +284,7 @@ class FileAudit(ClusterAudit):
                     self.known.append(line)
                     self._cm.log("Warning: Corosync core file on %s: %s" % (node, line))
 
-            if node in self._cm.ShouldBeStatus and self._cm.ShouldBeStatus[node] == "down":
+            if self._cm.ShouldBeStatus.get(node) == "down":
                 clean = False
                 (_, lsout) = self._cm.rsh(node, "ls -al /dev/shm | grep qb-", verbose=1)
 
