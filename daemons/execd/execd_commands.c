@@ -1474,6 +1474,7 @@ process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
     int rc = pcmk_ok;
     time_t now = time(NULL);
     const char *protocol_version = crm_element_value(request, F_LRMD_PROTOCOL_VERSION);
+    const char *start_state = pcmk__env_option(PCMK__ENV_NODE_START_STATE);
 
     if (compare_version(protocol_version, LRMD_MIN_PROTOCOL_VERSION) < 0) {
         crm_err("Cluster API version must be greater than or equal to %s, not %s",
@@ -1502,6 +1503,10 @@ process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
     crm_xml_add(*reply, F_LRMD_CLIENTID, client->id);
     crm_xml_add(*reply, F_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
     crm_xml_add_ll(*reply, PCMK__XA_UPTIME, now - start_time);
+
+    if (start_state) {
+        crm_xml_add(*reply, PCMK__XA_NODE_START_STATE, start_state);
+    }
 
     return rc;
 }
