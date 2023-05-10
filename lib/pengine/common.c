@@ -374,7 +374,7 @@ text2task(const char *task)
         return pcmk_action_shutdown;
 
     } else if (pcmk__str_eq(task, PCMK_ACTION_STONITH, pcmk__str_casei)) {
-        return stonith_node;
+        return pcmk_action_fence;
 
     } else if (pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_casei)) {
         return pcmk_action_monitor;
@@ -424,7 +424,7 @@ task2text(enum action_tasks task)
         case pcmk_action_shutdown:
             result = PCMK_ACTION_DO_SHUTDOWN;
             break;
-        case stonith_node:
+        case pcmk_action_fence:
             result = PCMK_ACTION_STONITH;
             break;
         case pcmk_action_monitor:

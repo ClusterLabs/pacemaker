@@ -128,7 +128,7 @@ action_uuid_for_ordering(const char *first_uuid, const pe_resource_t *first_rsc)
             break;
         case pcmk_action_monitor:
         case pcmk_action_shutdown:
-        case stonith_node:
+        case pcmk_action_fence:
             break;
         default:
             crm_err("Unknown action '%s' in ordering", first_task_str);
@@ -966,7 +966,7 @@ pcmk__log_action(const char *pre_text, const pe_action_t *action, bool details)
     }
 
     switch (text2task(action->task)) {
-        case stonith_node:
+        case pcmk_action_fence:
         case pcmk_action_shutdown:
             if (pcmk_is_set(action->flags, pe_action_pseudo)) {
                 desc = "Pseudo ";
