@@ -178,6 +178,14 @@ enum action_fail_response {
     // @TODO Define as 50
     pcmk_on_fail_restart_container  = 7,    //!< Restart resource's container
 
+    // @TODO Define as 40
+    /*!
+     * Fence the remote node created by the resource if fencing is enabled,
+     * otherwise attempt to restart the resource (used internally for some
+     * remote connection failures).
+     */
+    pcmk_on_fail_reset_remote       = 8,
+
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_on_fail_ignore instead
     action_fail_ignore              = pcmk_on_fail_ignore,
@@ -199,18 +207,12 @@ enum action_fail_response {
 
     //! \deprecated Use pcmk_on_fail_fence_node instead
     action_fail_fence               = pcmk_on_fail_fence_node,
+
+    //! \deprecated Use pcmk_on_fail_restart_container instead
+    action_fail_restart_container   = pcmk_on_fail_restart_container,
 #endif
     // @TODO action_fail_demote = 20,
-    // @TODO action_fail_reset_remote = 40,
 
-    action_fail_restart_container   = pcmk_on_fail_restart_container,
-
-    /* This is reserved for internal use for remote node connection resources.
-     * Fence the remote node if stonith is enabled, otherwise attempt to recover
-     * the connection resource. This allows us to specify types of connection
-     * resource failures that should result in fencing the remote node
-     * (for example, recurring monitor failures).
-     */
     action_fail_reset_remote,
 
     action_fail_demote,
