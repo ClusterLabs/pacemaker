@@ -72,7 +72,10 @@ extern "C" {
 enum action_tasks {
     pcmk_action_unspecified = 0,    //!< Unspecified or unknown action
 
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated Use pcmk_action_unspecified instead
     no_action               = pcmk_action_unspecified,
+#endif
     monitor_rsc,
 
     // Each "completed" action must be the regular action plus 1
