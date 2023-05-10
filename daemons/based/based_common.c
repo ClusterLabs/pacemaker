@@ -139,7 +139,7 @@ cib_cleanup_none(int options, xmlNode ** data, xmlNode ** output)
     return pcmk_ok;
 }
 
-static cib_operation_t cib_server_ops[] = {
+static const cib_operation_t cib_server_ops[] = {
     {
         NULL,
         cib_op_attr_none,
@@ -243,36 +243,30 @@ static cib_operation_t cib_server_ops[] = {
 };
 
 int
-cib_get_operation_id(const char *op, int *operation)
+cib_get_operation(const char *op, const cib_operation_t **operation)
 {
     static GHashTable *operation_hash = NULL;
 
+    CRM_ASSERT((op != NULL) && (operation != NULL));
+
     if (operation_hash == NULL) {
-        int lpc = 0;
-        int max_msg_types = PCMK__NELEM(cib_server_ops);
+        operation_hash = pcmk__strkey_table(NULL, NULL);
 
-        operation_hash = pcmk__strkey_table(NULL, free);
-        for (lpc = 1; lpc < max_msg_types; lpc++) {
-            int *value = malloc(sizeof(int));
+        for (int lpc = 1; lpc < PCMK__NELEM(cib_server_ops); lpc++) {
+            const cib_operation_t *oper = &(cib_server_ops[lpc]);
 
-            if(value) {
-                *value = lpc;
-                g_hash_table_insert(operation_hash, (gpointer) cib_server_ops[lpc].operation, value);
-            }
+            g_hash_table_insert(operation_hash, (gpointer) oper->name,
+                                (gpointer) oper);
         }
     }
 
-    if (op != NULL) {
-        int *value = g_hash_table_lookup(operation_hash, op);
+    *operation = g_hash_table_lookup(operation_hash, op);
 
-        if (value) {
-            *operation = *value;
-            return pcmk_ok;
-        }
+    if (*operation == NULL) {
+        crm_err("Operation %s is not valid", op);
+        return -EINVAL;
     }
-    crm_err("Operation %s is not valid", op);
-    *operation = -1;
-    return -EINVAL;
+    return pcmk_ok;
 }
 
 xmlNode *
@@ -316,41 +310,4 @@ cib_msg_copy(xmlNode *msg)
     }
 
     return copy;
-}
-
-cib_op_t
-cib_op_func(int call_type)
-{
-    return cib_server_ops[call_type].fn;
-}
-
-gboolean
-cib_op_modifies(int call_type)
-{
-    return pcmk_is_set(cib_server_ops[call_type].flags, cib_op_attr_modifies);
-}
-
-int
-cib_op_can_run(int call_type, int call_options, bool privileged)
-{
-    if (!privileged
-        && pcmk_is_set(cib_server_ops[call_type].flags,
-                       cib_op_attr_privileged)) {
-        return -EACCES;
-    }
-    return pcmk_ok;
-}
-
-int
-cib_op_prepare(int call_type, xmlNode * request, xmlNode ** input, const char **section)
-{
-    crm_trace("Prepare %d", call_type);
-    return cib_server_ops[call_type].prepare(request, input, section);
-}
-
-int
-cib_op_cleanup(int call_type, int options, xmlNode ** input, xmlNode ** output)
-{
-    crm_trace("Cleanup %d", call_type);
-    return cib_server_ops[call_type].cleanup(options, input, output);
 }
