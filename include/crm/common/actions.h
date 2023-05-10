@@ -191,11 +191,13 @@ enum action_fail_response {
 
     //! \deprecated Use pcmk_on_fail_standby_node instead
     action_fail_standby             = pcmk_on_fail_standby_node,
+
+    //! \deprecated Use pcmk_on_fail_fence_node instead
+    action_fail_fence               = pcmk_on_fail_fence_node,
 #endif
     // @TODO action_fail_demote = 20,
     // @TODO action_fail_reset_remote = 40,
     // @TODO action_fail_restart_container = 50,
-    action_fail_fence               = pcmk_on_fail_fence_node,
 
     // @COMPAT Values below here are out of order for API compatibility
 
