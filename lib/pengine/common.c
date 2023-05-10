@@ -327,7 +327,7 @@ fail2text(enum action_fail_response fail)
         case action_fail_demote:
             result = "demote";
             break;
-        case action_fail_block:
+        case pcmk_on_fail_block:
             result = "block";
             break;
         case pcmk_on_fail_restart:

@@ -2176,7 +2176,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             node->details->standby_onfail = TRUE;
             break;
 
-        case action_fail_block:
+        case pcmk_on_fail_block:
             /* is_managed == FALSE will prevent any
              * actions being sent for the resource
              */
@@ -2286,7 +2286,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             case pcmk_on_fail_ignore:
                 break;
             case action_fail_demote:
-            case action_fail_block:
+            case pcmk_on_fail_block:
                 pe__set_resource_flags(rsc, pe_rsc_failed);
                 break;
             default:
@@ -3528,7 +3528,7 @@ unpack_rsc_op_failure(struct action_history *history, xmlNode **last_failure,
         history->rsc->role = pcmk_role_promoted;
 
     } else if (strcmp(history->task, PCMK_ACTION_DEMOTE) == 0) {
-        if (action->on_fail == action_fail_block) {
+        if (action->on_fail == pcmk_on_fail_block) {
             history->rsc->role = pcmk_role_promoted;
             pe__set_next_role(history->rsc, pcmk_role_stopped,
                               "demote with on-fail=block");
@@ -4217,7 +4217,7 @@ update_resource_state(struct action_history *history, int exit_status,
                          history->rsc->id, fail2text(*on_fail), history->task);
             break;
 
-        case action_fail_block:
+        case pcmk_on_fail_block:
         case pcmk_on_fail_ignore:
         case action_fail_demote:
         case pcmk_on_fail_restart:

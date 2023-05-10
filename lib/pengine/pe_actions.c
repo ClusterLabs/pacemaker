@@ -778,7 +778,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
     if (value == NULL) {
 
     } else if (pcmk__str_eq(value, "block", pcmk__str_casei)) {
-        action->on_fail = action_fail_block;
+        action->on_fail = pcmk_on_fail_block;
         g_hash_table_insert(action->meta, strdup(XML_OP_ATTR_ON_FAIL), strdup("block"));
         value = "block"; // The above could destroy the original string
 
@@ -881,7 +881,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
             value = "resource fence (default)";
 
         } else {
-            action->on_fail = action_fail_block;
+            action->on_fail = pcmk_on_fail_block;
             value = "resource block (default)";
         }
 
