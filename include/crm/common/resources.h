@@ -20,6 +20,16 @@ extern "C" {
  * \ingroup core
  */
 
+//! Resource variants supported by Pacemaker
+enum pe_obj_types {
+    // Order matters: some code compares greater or lesser than
+    pe_unknown = -1,
+    pe_native = 0,
+    pe_group = 1,
+    pe_clone = 2,
+    pe_container = 3,
+};
+
 //! What resource needs before it can be recovered from a failed node
 enum rsc_start_requirement {
     pcmk_requires_nothing   = 0,    //!< Resource can be recovered immediately
