@@ -138,7 +138,7 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     xmlNode *output = NULL;
     xmlNode *cib_diff = NULL;
     xmlNode *result_cib = NULL;
-    cib_op_t *fn = NULL;
+    cib_op_t fn = NULL;
     int lpc = 0;
     static int max_msg_types = PCMK__NELEM(cib_file_ops);
     cib_file_opaque_t *private = cib->variant_opaque;
@@ -164,7 +164,7 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
 
     for (lpc = 0; lpc < max_msg_types; lpc++) {
         if (pcmk__str_eq(op, cib_file_ops[lpc].op, pcmk__str_casei)) {
-            fn = &(cib_file_ops[lpc].fn);
+            fn = cib_file_ops[lpc].fn;
             query = cib_file_ops[lpc].read_only;
             break;
         }

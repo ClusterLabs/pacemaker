@@ -318,10 +318,10 @@ cib_msg_copy(xmlNode *msg)
     return copy;
 }
 
-cib_op_t *
+cib_op_t
 cib_op_func(int call_type)
 {
-    return &(cib_server_ops[call_type].fn);
+    return cib_server_ops[call_type].fn;
 }
 
 gboolean

@@ -136,7 +136,7 @@ int sync_our_cib(xmlNode *request, gboolean all);
 
 xmlNode *cib_msg_copy(xmlNode *msg);
 int cib_get_operation_id(const char *op, int *operation);
-cib_op_t *cib_op_func(int call_type);
+cib_op_t cib_op_func(int call_type);
 gboolean cib_op_modifies(int call_type);
 int cib_op_prepare(int call_type, xmlNode *request, xmlNode **input,
                    const char **section);
