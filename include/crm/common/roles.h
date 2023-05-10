@@ -35,8 +35,10 @@ enum rsc_role_e {
 
     //! \deprecated Use pcmk_role_stopped instead
     RSC_ROLE_STOPPED        = pcmk_role_stopped,
-#endif
+
+    //! \deprecated Use pcmk_role_started instead
     RSC_ROLE_STARTED        = pcmk_role_started,
+#endif
     RSC_ROLE_UNPROMOTED = 3,
     RSC_ROLE_PROMOTED   = 4,
 
