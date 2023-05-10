@@ -132,8 +132,10 @@ enum action_tasks {
 
     //! \deprecated Use pcmk_action_shutdown instead
     shutdown_crm            = pcmk_action_shutdown,
-#endif
+
+    //! \deprecated Use pcmk_action_fence instead
     stonith_node            = pcmk_action_fence,
+#endif
 };
 
 // For parsing various action-related string specifications
