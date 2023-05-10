@@ -64,7 +64,7 @@ promoted_role_name(void)
      * otherwise. Basing it on --enable-compat-2.0 is a decent guess.
      */
 #ifdef PCMK__COMPAT_2_0
-        return RSC_ROLE_PROMOTED_LEGACY_S;
+        return PCMK__ROLE_PROMOTED_LEGACY;
 #else
         return PCMK__ROLE_PROMOTED;
 #endif

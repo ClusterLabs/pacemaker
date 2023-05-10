@@ -603,7 +603,7 @@ role_desc(enum rsc_role_e role)
 {
     if (role == pcmk_role_promoted) {
 #ifdef PCMK__COMPAT_2_0
-        return "as " RSC_ROLE_PROMOTED_LEGACY_S " ";
+        return "as " PCMK__ROLE_PROMOTED_LEGACY " ";
 #else
         return "in " PCMK__ROLE_PROMOTED " role ";
 #endif

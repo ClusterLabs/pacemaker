@@ -473,7 +473,7 @@ unpack_operation_on_fail(pe_action_t * action)
                 continue;
             } else if (!pcmk__str_eq(name, PCMK_ACTION_MONITOR, pcmk__str_casei)
                        || !pcmk__strcase_any_of(role, PCMK__ROLE_PROMOTED,
-                                                RSC_ROLE_PROMOTED_LEGACY_S,
+                                                PCMK__ROLE_PROMOTED_LEGACY,
                                                 NULL)) {
                 continue;
             } else if (crm_parse_interval_spec(interval_spec) == 0) {
@@ -497,7 +497,7 @@ unpack_operation_on_fail(pe_action_t * action)
         if (!pcmk__str_eq(name, PCMK_ACTION_PROMOTE, pcmk__str_casei)
             && (!pcmk__str_eq(name, PCMK_ACTION_MONITOR, pcmk__str_casei)
                 || !pcmk__strcase_any_of(role, PCMK__ROLE_PROMOTED,
-                                         RSC_ROLE_PROMOTED_LEGACY_S, NULL)
+                                         PCMK__ROLE_PROMOTED_LEGACY, NULL)
                 || (crm_parse_interval_spec(interval_spec) == 0))) {
             pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for %s %s "
                              "action to default value because 'demote' is not "
