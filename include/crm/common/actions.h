@@ -128,8 +128,10 @@ enum action_tasks {
 
     //! \deprecated Use pcmk_action_demoted instead
     action_demoted          = pcmk_action_demoted,
-#endif
+
+    //! \deprecated Use pcmk_action_shutdown instead
     shutdown_crm            = pcmk_action_shutdown,
+#endif
     stonith_node
 };
 
