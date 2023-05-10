@@ -131,40 +131,6 @@ struct pe_working_set_s {
     guint node_pending_timeout; // Node pending timeout
 };
 
-struct pe_node_shared_s {
-    const char *id;
-    const char *uname;
-    enum node_type type;
-
-    /* @TODO convert these flags into a bitfield */
-    gboolean online;
-    gboolean standby;
-    gboolean standby_onfail;
-    gboolean pending;
-    gboolean unclean;
-    gboolean unseen;
-    gboolean shutdown;
-    gboolean expected_up;
-    gboolean is_dc;
-    gboolean maintenance;
-    gboolean rsc_discovery_enabled;
-    gboolean remote_requires_reset;
-    gboolean remote_was_fenced;
-    gboolean remote_maintenance; /* what the remote-rsc is thinking */
-    gboolean unpacked;
-
-    int num_resources;
-    pcmk_resource_t *remote_rsc;
-    GList *running_rsc;         // pcmk_resource_t*
-    GList *allocated_rsc;       // pcmk_resource_t*
-
-    GHashTable *attrs;          /* char* => char* */
-    GHashTable *utilization;
-    GHashTable *digest_cache;   //!< cache of calculated resource digests
-    int priority; // calculated based on the priority of resources running on the node
-    pcmk_scheduler_t *data_set; //!< Cluster that this node is part of
-};
-
 struct pe_node_s {
     int weight;
     gboolean fixed; //!< \deprecated Will be removed in a future release
