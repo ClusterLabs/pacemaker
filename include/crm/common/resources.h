@@ -24,7 +24,10 @@ extern "C" {
 enum rsc_recovery_type {
     pcmk_multiply_active_restart    = 0,    //!< Stop on all, start on desired
 
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated Use pcmk_multiply_active_restart instead
     recovery_stop_start             = pcmk_multiply_active_restart,
+#endif
     recovery_stop_only              = 1,
     recovery_block                  = 2,
     recovery_stop_unexpected        = 3,
