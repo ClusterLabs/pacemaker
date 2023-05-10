@@ -210,11 +210,11 @@ enum action_fail_response {
 
     //! \deprecated Use pcmk_on_fail_restart_container instead
     action_fail_restart_container   = pcmk_on_fail_restart_container,
+
+    //! \deprecated Use pcmk_on_fail_reset_remote instead
+    action_fail_reset_remote        = pcmk_on_fail_reset_remote,
 #endif
     // @TODO action_fail_demote = 20,
-
-    action_fail_reset_remote        = pcmk_on_fail_reset_remote,
-
     action_fail_demote,
 };
 
