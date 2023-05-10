@@ -819,7 +819,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
 
     } else if (pcmk__str_eq(value, "restart-container", pcmk__str_casei)) {
         if (container) {
-            action->on_fail = action_fail_restart_container;
+            action->on_fail = pcmk_on_fail_restart_container;
             value = "restart container (and possibly migrate)";
 
         } else {
@@ -837,7 +837,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
 
     /* defaults */
     if (value == NULL && container) {
-        action->on_fail = action_fail_restart_container;
+        action->on_fail = pcmk_on_fail_restart_container;
         value = "restart container (and possibly migrate) (default)";
 
     /* For remote nodes, ensure that any failure that results in dropping an

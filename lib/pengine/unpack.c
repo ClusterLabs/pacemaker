@@ -2204,7 +2204,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             }
             break;
 
-        case action_fail_restart_container:
+        case pcmk_on_fail_restart_container:
             pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
             if (rsc->container && pe_rsc_is_bundled(rsc)) {
                 /* A bundle's remote connection can run on a different node than
@@ -3365,14 +3365,14 @@ cmp_on_fail(enum action_fail_response first, enum action_fail_response second)
             }
             break;
 
-        case action_fail_restart_container:
+        case pcmk_on_fail_restart_container:
             switch (second) {
                 case pcmk_on_fail_ignore:
                 case action_fail_demote:
                 case pcmk_on_fail_restart:
                 case action_fail_reset_remote:
                     return 1;
-                case action_fail_restart_container:
+                case pcmk_on_fail_restart_container:
                     return 0;
                 default:
                     return -1;
@@ -3397,7 +3397,7 @@ cmp_on_fail(enum action_fail_response first, enum action_fail_response second)
             }
             break;
 
-        case action_fail_restart_container:
+        case pcmk_on_fail_restart_container:
             switch (first) {
                 case pcmk_on_fail_ignore:
                 case action_fail_demote:
@@ -4221,7 +4221,7 @@ update_resource_state(struct action_history *history, int exit_status,
         case pcmk_on_fail_ignore:
         case action_fail_demote:
         case pcmk_on_fail_restart:
-        case action_fail_restart_container:
+        case pcmk_on_fail_restart_container:
             *on_fail = pcmk_on_fail_ignore;
             pe__set_next_role(history->rsc, pcmk_role_unknown,
                               "clear past failures");
@@ -4664,7 +4664,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 
     failure_strategy = get_action_on_fail(&history);
     if ((failure_strategy == pcmk_on_fail_ignore)
-        || (failure_strategy == action_fail_restart_container
+        || ((failure_strategy == pcmk_on_fail_restart_container)
             && (strcmp(history.task, PCMK_ACTION_STOP) == 0))) {
 
         char *last_change_s = last_change_str(xml_op);
@@ -4684,7 +4684,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 
         record_failed_op(&history);
 
-        if ((failure_strategy == action_fail_restart_container)
+        if ((failure_strategy == pcmk_on_fail_restart_container)
             && cmp_on_fail(*on_fail, pcmk_on_fail_restart) <= 0) {
             *on_fail = failure_strategy;
         }

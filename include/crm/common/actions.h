@@ -173,6 +173,11 @@ enum action_fail_response {
     // @TODO Define as 100
     pcmk_on_fail_fence_node         = 6,    //!< Fence resource's node
 
+    // @COMPAT Values below here are out of desired order for API compatibility
+
+    // @TODO Define as 50
+    pcmk_on_fail_restart_container  = 7,    //!< Restart resource's container
+
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_on_fail_ignore instead
     action_fail_ignore              = pcmk_on_fail_ignore,
@@ -197,11 +202,8 @@ enum action_fail_response {
 #endif
     // @TODO action_fail_demote = 20,
     // @TODO action_fail_reset_remote = 40,
-    // @TODO action_fail_restart_container = 50,
 
-    // @COMPAT Values below here are out of order for API compatibility
-
-    action_fail_restart_container,
+    action_fail_restart_container   = pcmk_on_fail_restart_container,
 
     /* This is reserved for internal use for remote node connection resources.
      * Fence the remote node if stonith is enabled, otherwise attempt to recover
