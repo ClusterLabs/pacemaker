@@ -13,6 +13,7 @@
 #  include <glib.h>
 #  include <regex.h>
 #  include <crm/common/iso8601.h>
+#  include <crm/common/scheduler.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -73,13 +74,6 @@ enum action_tasks {
     action_demoted,
     shutdown_crm,
     stonith_node
-};
-
-enum rsc_recovery_type {
-    recovery_stop_start,
-    recovery_stop_only,
-    recovery_block,
-    recovery_stop_unexpected,
 };
 
 enum rsc_start_requirement {
