@@ -747,7 +747,7 @@ pcmk__primitive_create_actions(pe_resource_t *rsc)
                    "#Resource_is_Too_Active for more information");
 
         switch (rsc->recovery_type) {
-            case recovery_stop_start:
+            case pcmk_multiply_active_restart:
                 need_stop = true;
                 break;
             case recovery_stop_unexpected:

@@ -150,7 +150,7 @@ recovery2text(enum rsc_recovery_type type)
     switch (type) {
         case recovery_stop_only:
             return "shutting it down";
-        case recovery_stop_start:
+        case pcmk_multiply_active_restart:
             return "attempting recovery";
         case recovery_block:
             return "waiting for an administrator";

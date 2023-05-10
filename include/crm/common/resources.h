@@ -22,10 +22,12 @@ extern "C" {
 
 //! How to recover a resource that is incorrectly active on multiple nodes
 enum rsc_recovery_type {
-    recovery_stop_start,
-    recovery_stop_only,
-    recovery_block,
-    recovery_stop_unexpected,
+    pcmk_multiply_active_restart    = 0,    //!< Stop on all, start on desired
+
+    recovery_stop_start             = pcmk_multiply_active_restart,
+    recovery_stop_only              = 1,
+    recovery_block                  = 2,
+    recovery_stop_unexpected        = 3,
 };
 
 #ifdef __cplusplus

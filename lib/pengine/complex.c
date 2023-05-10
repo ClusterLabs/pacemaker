@@ -698,7 +698,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     (*rsc)->role = RSC_ROLE_STOPPED;
     (*rsc)->next_role = RSC_ROLE_UNKNOWN;
 
-    (*rsc)->recovery_type = recovery_stop_start;
+    (*rsc)->recovery_type = pcmk_multiply_active_restart;
     (*rsc)->stickiness = 0;
     (*rsc)->migration_threshold = INFINITY;
     (*rsc)->failure_timeout = 0;
@@ -807,7 +807,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
             pe_warn("%s is not a valid value for " XML_RSC_ATTR_MULTIPLE
                     ", using default of \"stop_start\"", value);
         }
-        (*rsc)->recovery_type = recovery_stop_start;
+        (*rsc)->recovery_type = pcmk_multiply_active_restart;
         pe_rsc_trace((*rsc), "%s multiple running resource recovery: "
                              "stop/start", (*rsc)->id);
     }
