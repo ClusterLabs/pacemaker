@@ -805,7 +805,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
         value = "ignore";
 
     } else if (pcmk__str_eq(value, "migrate", pcmk__str_casei)) {
-        action->on_fail = action_fail_migrate;
+        action->on_fail = pcmk_on_fail_ban;
         value = "force migration";
 
     } else if (pcmk__str_eq(value, "stop", pcmk__str_casei)) {

@@ -158,6 +158,9 @@ enum action_fail_response {
     // @TODO Define as 30
     pcmk_on_fail_restart            = 1,    //!< Restart resource
 
+    // @TODO Define as 60
+    pcmk_on_fail_ban                = 2,    //!< Ban resource from current node
+
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_on_fail_ignore instead
     action_fail_ignore              = pcmk_on_fail_ignore,
@@ -168,7 +171,7 @@ enum action_fail_response {
     // @TODO action_fail_demote = 20,
     // @TODO action_fail_reset_remote = 40,
     // @TODO action_fail_restart_container = 50,
-    action_fail_migrate,    // @TODO = 60
+    action_fail_migrate             = pcmk_on_fail_ban,
     action_fail_block,      // @TODO = 70
     action_fail_stop,       // @TODO = 80
     action_fail_standby,    // @TODO = 90

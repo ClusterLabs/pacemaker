@@ -2184,7 +2184,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             pe__set_resource_flags(rsc, pe_rsc_block);
             break;
 
-        case action_fail_migrate:
+        case pcmk_on_fail_ban:
             /* make sure it comes up somewhere else
              * or not at all
              */
@@ -4210,7 +4210,7 @@ update_resource_state(struct action_history *history, int exit_status,
     switch (*on_fail) {
         case action_fail_stop:
         case action_fail_fence:
-        case action_fail_migrate:
+        case pcmk_on_fail_ban:
         case action_fail_standby:
             pe_rsc_trace(history->rsc,
                          "%s (%s) is not cleared by a completed %s",
@@ -4629,7 +4629,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                          history.execution_status, history.exit_status,
                          history.id);
                 /* Also for printing it as "FAILED" by marking it as pe_rsc_failed later */
-                *on_fail = action_fail_migrate;
+                *on_fail = pcmk_on_fail_ban;
             }
             resource_location(parent, node, -INFINITY, "hard-error",
                               rsc->cluster);
