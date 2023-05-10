@@ -173,11 +173,13 @@ enum action_fail_response {
 
     //! \deprecated Use pcmk_on_fail_ban instead
     action_fail_migrate             = pcmk_on_fail_ban,
+
+    //! \deprecated Use pcmk_on_fail_block instead
+    action_fail_block               = pcmk_on_fail_block,
 #endif
     // @TODO action_fail_demote = 20,
     // @TODO action_fail_reset_remote = 40,
     // @TODO action_fail_restart_container = 50,
-    action_fail_block               = pcmk_on_fail_block,
     action_fail_stop,       // @TODO = 80
     action_fail_standby,    // @TODO = 90
     action_fail_fence,      // @TODO = 100
