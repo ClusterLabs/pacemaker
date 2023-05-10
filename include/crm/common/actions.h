@@ -213,7 +213,7 @@ enum action_fail_response {
 #endif
     // @TODO action_fail_demote = 20,
 
-    action_fail_reset_remote,
+    action_fail_reset_remote        = pcmk_on_fail_reset_remote,
 
     action_fail_demote,
 };

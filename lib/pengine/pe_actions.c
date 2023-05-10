@@ -870,7 +870,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
             if (action->rsc->remote_reconnect_ms) {
                 action->fail_role = pcmk_role_stopped;
             }
-            action->on_fail = action_fail_reset_remote;
+            action->on_fail = pcmk_on_fail_reset_remote;
         }
 
     } else if ((value == NULL)

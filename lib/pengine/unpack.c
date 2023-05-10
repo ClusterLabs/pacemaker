@@ -2222,7 +2222,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             }
             break;
 
-        case action_fail_reset_remote:
+        case pcmk_on_fail_reset_remote:
             pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
             if (pcmk_is_set(rsc->cluster->flags, pe_flag_stonith_enabled)) {
                 tmpnode = NULL;
@@ -3352,13 +3352,13 @@ cmp_on_fail(enum action_fail_response first, enum action_fail_response second)
             }
             break;
 
-        case action_fail_reset_remote:
+        case pcmk_on_fail_reset_remote:
             switch (second) {
                 case pcmk_on_fail_ignore:
                 case action_fail_demote:
                 case pcmk_on_fail_restart:
                     return 1;
-                case action_fail_reset_remote:
+                case pcmk_on_fail_reset_remote:
                     return 0;
                 default:
                     return -1;
@@ -3370,7 +3370,7 @@ cmp_on_fail(enum action_fail_response first, enum action_fail_response second)
                 case pcmk_on_fail_ignore:
                 case action_fail_demote:
                 case pcmk_on_fail_restart:
-                case action_fail_reset_remote:
+                case pcmk_on_fail_reset_remote:
                     return 1;
                 case pcmk_on_fail_restart_container:
                     return 0;
@@ -3386,7 +3386,7 @@ cmp_on_fail(enum action_fail_response first, enum action_fail_response second)
         case action_fail_demote:
             return (first == pcmk_on_fail_ignore)? -1 : 1;
 
-        case action_fail_reset_remote:
+        case pcmk_on_fail_reset_remote:
             switch (first) {
                 case pcmk_on_fail_ignore:
                 case action_fail_demote:
@@ -3402,7 +3402,7 @@ cmp_on_fail(enum action_fail_response first, enum action_fail_response second)
                 case pcmk_on_fail_ignore:
                 case action_fail_demote:
                 case pcmk_on_fail_restart:
-                case action_fail_reset_remote:
+                case pcmk_on_fail_reset_remote:
                     return -1;
                 default:
                     return 1;
@@ -4227,7 +4227,7 @@ update_resource_state(struct action_history *history, int exit_status,
                               "clear past failures");
             break;
 
-        case action_fail_reset_remote:
+        case pcmk_on_fail_reset_remote:
             if (history->rsc->remote_reconnect_ms == 0) {
                 /* With no reconnect interval, the connection is allowed to
                  * start again after the remote node is fenced and
