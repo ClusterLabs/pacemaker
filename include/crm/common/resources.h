@@ -24,6 +24,7 @@ extern "C" {
 enum rsc_start_requirement {
     pcmk_requires_nothing   = 0,    //!< Resource can be recovered immediately
     pcmk_requires_quorum    = 1,    //!< Resource can be recovered if quorate
+    pcmk_requires_fencing   = 2,    //!< Resource can be recovered after fencing
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_requires_nothing instead
@@ -32,7 +33,7 @@ enum rsc_start_requirement {
     //! \deprecated Use pcmk_requires_quorum instead
     rsc_req_quorum          = pcmk_requires_quorum,
 #endif
-    rsc_req_stonith         = 2, /* Enforced by native_start_constraints() */
+    rsc_req_stonith         = pcmk_requires_fencing,
 };
 
 //! How to recover a resource that is incorrectly active on multiple nodes

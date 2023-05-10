@@ -760,7 +760,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
         value = "nothing (not start or promote)";
 
     } else if (pcmk_is_set(action->rsc->flags, pe_rsc_needs_fencing)) {
-        action->needs = rsc_req_stonith;
+        action->needs = pcmk_requires_fencing;
         value = "fencing";
 
     } else if (pcmk_is_set(action->rsc->flags, pe_rsc_needs_quorum)) {

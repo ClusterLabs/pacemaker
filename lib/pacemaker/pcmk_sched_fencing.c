@@ -67,7 +67,7 @@ order_start_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
                 // Anything other than start or promote requires nothing
                 break;
 
-            case rsc_req_stonith:
+            case pcmk_requires_fencing:
                 order_actions(stonith_op, action, pe_order_optional);
                 break;
 
