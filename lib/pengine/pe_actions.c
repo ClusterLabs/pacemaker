@@ -908,7 +908,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
         if (pcmk__str_eq(action->task, PCMK_ACTION_PROMOTE, pcmk__str_casei)) {
             action->fail_role = RSC_ROLE_UNPROMOTED;
         } else {
-            action->fail_role = RSC_ROLE_STARTED;
+            action->fail_role = pcmk_role_started;
         }
     }
     pe_rsc_trace(action->rsc, "%s failure results in: %s",

@@ -337,7 +337,7 @@ pcmk__output_resource_actions(pe_resource_t *rsc)
             /* This can occur when resources are being recovered because
              * the current role can change in pcmk__primitive_create_actions()
              */
-            rsc->role = RSC_ROLE_STARTED;
+            rsc->role = pcmk_role_started;
         }
     }
 

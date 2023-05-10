@@ -426,7 +426,7 @@ native_displayable_role(const pe_resource_t *rsc)
 {
     enum rsc_role_e role = rsc->role;
 
-    if ((role == RSC_ROLE_STARTED)
+    if ((role == pcmk_role_started)
         && pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
                        pe_rsc_promotable)) {
 

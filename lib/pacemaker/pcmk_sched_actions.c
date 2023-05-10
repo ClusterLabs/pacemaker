@@ -719,7 +719,7 @@ handle_asymmetric_ordering(const pe_action_t *first, pe_action_t *then)
              * ordering is irrelevant.
              */
             return;
-        } else if ((then_rsc_role >= RSC_ROLE_STARTED)
+        } else if ((then_rsc_role >= pcmk_role_started)
             && pcmk__str_eq(then->task, PCMK_ACTION_START, pcmk__str_none)
             && pe__rsc_running_on_only(then->rsc, then->node)) {
             /* Similarly if 'then' should start after 'first' but is already

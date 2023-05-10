@@ -424,7 +424,7 @@ get_target_role(const pe_resource_t *rsc, enum rsc_role_e *role)
                          "because '%s' is not valid", rsc->id, value);
         return FALSE;
 
-    } else if (local_role > RSC_ROLE_STARTED) {
+    } else if (local_role > pcmk_role_started) {
         if (pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
                         pe_rsc_promotable)) {
             if (local_role > RSC_ROLE_UNPROMOTED) {

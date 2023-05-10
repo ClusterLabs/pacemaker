@@ -575,7 +575,7 @@ collect_resource_data(const pe_resource_t *rsc, bool activity,
             n_data->inactive = g_list_prepend(n_data->inactive, entry);
             break;
 
-        case RSC_ROLE_STARTED:
+        case pcmk_role_started:
             n_data->active = g_list_prepend(n_data->active, entry);
             break;
 

@@ -814,7 +814,7 @@ set_current_role_unpromoted(void *data, void *user_data)
 {
     pe_resource_t *rsc = (pe_resource_t *) data;
 
-    if (rsc->role == RSC_ROLE_STARTED) {
+    if (rsc->role == pcmk_role_started) {
         // Promotable clones should use unpromoted role instead of started
         rsc->role = RSC_ROLE_UNPROMOTED;
     }
@@ -909,7 +909,7 @@ set_instance_priority(gpointer data, gpointer user_data)
     pe_rsc_trace(clone, "Assigning priority for %s: %s", instance->id,
                  role2text(instance->next_role));
 
-    if (instance->fns->state(instance, TRUE) == RSC_ROLE_STARTED) {
+    if (instance->fns->state(instance, TRUE) == pcmk_role_started) {
         set_current_role_unpromoted(instance, NULL);
     }
 
@@ -926,7 +926,7 @@ set_instance_priority(gpointer data, gpointer user_data)
 
     next_role = instance->fns->state(instance, FALSE);
     switch (next_role) {
-        case RSC_ROLE_STARTED:
+        case pcmk_role_started:
         case pcmk_role_unknown:
             // Set instance priority to its promotion score (or -1 if none)
             {

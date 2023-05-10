@@ -43,13 +43,13 @@ static enum rsc_role_e rsc_state_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
                         },
     /* Stopped */       { pcmk_role_stopped,    /* Unknown */
                           pcmk_role_stopped,    /* Stopped */
-                          RSC_ROLE_STARTED,     /* Started */
+                          pcmk_role_started,    /* Started */
                           RSC_ROLE_UNPROMOTED,  /* Unpromoted */
                           RSC_ROLE_UNPROMOTED,  /* Promoted */
                         },
     /* Started */       { pcmk_role_stopped,    /* Unknown */
                           pcmk_role_stopped,    /* Stopped */
-                          RSC_ROLE_STARTED,     /* Started */
+                          pcmk_role_started,    /* Started */
                           RSC_ROLE_UNPROMOTED,  /* Unpromoted */
                           RSC_ROLE_PROMOTED,    /* Promoted */
                         },
@@ -612,7 +612,7 @@ set_default_next_role(pe_resource_t *rsc)
     if (rsc->allocated_to == NULL) {
         pe__set_next_role(rsc, pcmk_role_stopped, "assignment");
     } else {
-        pe__set_next_role(rsc, RSC_ROLE_STARTED, "assignment");
+        pe__set_next_role(rsc, pcmk_role_started, "assignment");
     }
     return "implicit";
 }
@@ -699,7 +699,7 @@ pcmk__primitive_create_actions(pe_resource_t *rsc)
 
     if ((current != NULL) && (rsc->allocated_to != NULL)
         && !pe__same_node(current, rsc->allocated_to)
-        && (rsc->next_role >= RSC_ROLE_STARTED)) {
+        && (rsc->next_role >= pcmk_role_started)) {
 
         pe_rsc_trace(rsc, "Moving %s from %s to %s",
                      rsc->id, pe__node_name(current),
@@ -806,7 +806,7 @@ pcmk__primitive_create_actions(pe_resource_t *rsc)
         pe_rsc_trace(rsc, "Blocking further actions on %s", rsc->id);
         need_stop = true;
 
-    } else if ((rsc->role > RSC_ROLE_STARTED) && (current != NULL)
+    } else if ((rsc->role > pcmk_role_started) && (current != NULL)
                && (rsc->allocated_to != NULL)) {
         pe_action_t *start = NULL;
 

@@ -272,7 +272,7 @@ unpack_rsc_location(xmlNode *xml_obj, pe_resource_t *rsc, const char *role,
             enum rsc_role_e r = text2role(role);
             switch (r) {
                 case pcmk_role_unknown:
-                case RSC_ROLE_STARTED:
+                case pcmk_role_started:
                 case RSC_ROLE_UNPROMOTED:
                     /* Applies to all */
                     location->role_filter = pcmk_role_unknown;

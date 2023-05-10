@@ -1213,8 +1213,8 @@ unpack_node_history(const xmlNode *status, bool fence,
              */
             pe_resource_t *rsc = this_node->details->remote_rsc;
 
-            if ((rsc == NULL) || (rsc->role != RSC_ROLE_STARTED)
-                || (rsc->container->role != RSC_ROLE_STARTED)) {
+            if ((rsc == NULL) || (rsc->role != pcmk_role_started)
+                || (rsc->container->role != pcmk_role_started)) {
                 crm_trace("Not unpacking resource history for guest node %s "
                           "because container and connection are not known to "
                           "be up", id);
@@ -1231,7 +1231,7 @@ unpack_node_history(const xmlNode *status, bool fence,
 
             if ((rsc == NULL)
                 || (!pcmk_is_set(data_set->flags, pe_flag_shutdown_lock)
-                    && (rsc->role != RSC_ROLE_STARTED))) {
+                    && (rsc->role != pcmk_role_started))) {
                 crm_trace("Not unpacking resource history for remote node %s "
                           "because connection is not known to be up", id);
                 continue;
@@ -1570,14 +1570,14 @@ determine_remote_online_status(pe_working_set_t * data_set, pe_node_t * this_nod
     }
 
     /* If the resource is currently started, mark it online. */
-    if (rsc->role == RSC_ROLE_STARTED) {
+    if (rsc->role == pcmk_role_started) {
         crm_trace("%s node %s presumed ONLINE because connection resource is started",
                   (container? "Guest" : "Remote"), this_node->details->id);
         this_node->details->online = TRUE;
     }
 
     /* consider this node shutting down if transitioning start->stop */
-    if ((rsc->role == RSC_ROLE_STARTED)
+    if ((rsc->role == pcmk_role_started)
         && (rsc->next_role == pcmk_role_stopped)) {
 
         crm_trace("%s node %s shutting down because connection resource is stopping",
@@ -2325,7 +2325,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
         && rsc->partial_migration_target
         && rsc->running_on) {
 
-        rsc->role = RSC_ROLE_STARTED;
+        rsc->role = pcmk_role_started;
     }
 }
 
@@ -2671,7 +2671,7 @@ set_active(pe_resource_t * rsc)
     if (top && pcmk_is_set(top->flags, pe_rsc_promotable)) {
         rsc->role = RSC_ROLE_UNPROMOTED;
     } else {
-        rsc->role = RSC_ROLE_STARTED;
+        rsc->role = pcmk_role_started;
     }
 }
 
@@ -3089,7 +3089,7 @@ unpack_migrate_to_success(struct action_history *history)
     /* Without newer state, this migrate_to implies the resource is active.
      * (Clones are not allowed to migrate, so role can't be promoted.)
      */
-    history->rsc->role = RSC_ROLE_STARTED;
+    history->rsc->role = pcmk_role_started;
 
     target_node = pe_find_node(history->rsc->cluster->nodes, target);
     active_on_target = !target_newer_state && (target_node != NULL)
@@ -3164,7 +3164,7 @@ unpack_migrate_to_failure(struct action_history *history)
     /* If a migration failed, we have to assume the resource is active. Clones
      * are not allowed to migrate, so role can't be promoted.
      */
-    history->rsc->role = RSC_ROLE_STARTED;
+    history->rsc->role = pcmk_role_started;
 
     // Check for migrate_from on the target
     target_migrate_from = find_lrm_op(history->rsc->id,
@@ -3231,7 +3231,7 @@ unpack_migrate_from_failure(struct action_history *history)
     /* If a migration failed, we have to assume the resource is active. Clones
      * are not allowed to migrate, so role can't be promoted.
      */
-    history->rsc->role = RSC_ROLE_STARTED;
+    history->rsc->role = pcmk_role_started;
 
     // Check for a migrate_to on the source
     source_migrate_to = find_lrm_op(history->rsc->id, PCMK_ACTION_MIGRATE_TO,
@@ -3551,7 +3551,7 @@ unpack_rsc_op_failure(struct action_history *history, xmlNode **last_failure,
         pe_rsc_trace(history->rsc, "Leaving %s stopped", history->rsc->id);
         history->rsc->role = pcmk_role_stopped;
 
-    } else if (history->rsc->role < RSC_ROLE_STARTED) {
+    } else if (history->rsc->role < pcmk_role_started) {
         pe_rsc_trace(history->rsc, "Setting %s active", history->rsc->id);
         set_active(history->rsc);
     }
@@ -3562,7 +3562,7 @@ unpack_rsc_op_failure(struct action_history *history, xmlNode **last_failure,
                  pcmk__btoa(history->node->details->unclean),
                  fail2text(action->on_fail), role2text(action->fail_role));
 
-    if ((action->fail_role != RSC_ROLE_STARTED)
+    if ((action->fail_role != pcmk_role_started)
         && (history->rsc->next_role < action->fail_role)) {
         pe__set_next_role(history->rsc, action->fail_role, "failure");
     }
@@ -4163,12 +4163,12 @@ update_resource_state(struct action_history *history, int exit_status,
                             pcmk__str_none)) {
             clear_past_failure = true;
         }
-        if (history->rsc->role < RSC_ROLE_STARTED) {
+        if (history->rsc->role < pcmk_role_started) {
             set_active(history->rsc);
         }
 
     } else if (pcmk__str_eq(history->task, PCMK_ACTION_START, pcmk__str_none)) {
-        history->rsc->role = RSC_ROLE_STARTED;
+        history->rsc->role = pcmk_role_started;
         clear_past_failure = true;
 
     } else if (pcmk__str_eq(history->task, PCMK_ACTION_STOP, pcmk__str_none)) {
@@ -4190,14 +4190,14 @@ update_resource_state(struct action_history *history, int exit_status,
 
     } else if (pcmk__str_eq(history->task, PCMK_ACTION_MIGRATE_FROM,
                             pcmk__str_none)) {
-        history->rsc->role = RSC_ROLE_STARTED;
+        history->rsc->role = pcmk_role_started;
         clear_past_failure = true;
 
     } else if (pcmk__str_eq(history->task, PCMK_ACTION_MIGRATE_TO,
                             pcmk__str_none)) {
         unpack_migrate_to_success(history);
 
-    } else if (history->rsc->role < RSC_ROLE_STARTED) {
+    } else if (history->rsc->role < pcmk_role_started) {
         pe_rsc_trace(history->rsc, "%s active on %s",
                      history->rsc->id, pe__node_name(history->node));
         set_active(history->rsc);

@@ -1166,7 +1166,7 @@ pe__eval_role_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
     op = crm_element_value(expr, XML_EXPR_ATTR_OPERATION);
 
     if (pcmk__str_eq(op, "defined", pcmk__str_casei)) {
-        if (rule_data->role > RSC_ROLE_STARTED) {
+        if (rule_data->role > pcmk_role_started) {
             accept = TRUE;
         }
 

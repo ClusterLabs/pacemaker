@@ -25,7 +25,7 @@ colocations_header(pe_resource_t *rsc, pcmk__colocation_t *cons,
                    bool dependents) {
     char *retval = NULL;
 
-    if (cons->primary_role > RSC_ROLE_STARTED) {
+    if (cons->primary_role > pcmk_role_started) {
         retval = crm_strdup_printf("%s (score=%s, %s role=%s, id=%s)",
                                    rsc->id, pcmk_readable_score(cons->score),
                                    (dependents? "needs" : "with"),
@@ -138,7 +138,7 @@ rsc_action_item(pcmk__output_t *out, va_list args)
         rsc_width = len + 2;
     }
 
-    if ((rsc->role > RSC_ROLE_STARTED)
+    if ((rsc->role > pcmk_role_started)
         || (rsc->next_role > RSC_ROLE_UNPROMOTED)) {
         need_role = true;
     }
@@ -257,7 +257,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
         source = action;
     }
 
-    if ((rsc->role > RSC_ROLE_STARTED)
+    if ((rsc->role > pcmk_role_started)
         || (rsc->next_role > RSC_ROLE_UNPROMOTED)) {
         need_role = true;
     }
