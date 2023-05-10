@@ -31,6 +31,7 @@ header_HEADERS = acl.h \
 				 resources.h		\
 				 results.h \
 				 results_compat.h \
+				 roles.h		\
 				 scheduler.h		\
 				 util.h \
 				 util_compat.h \

@@ -82,23 +82,6 @@ enum rsc_start_requirement {
     rsc_req_stonith             /* Enforced by native_start_constraints() */
 };
 
-//! Possible roles that a resource can be in
-enum rsc_role_e {
-    RSC_ROLE_UNKNOWN    = 0,
-    RSC_ROLE_STOPPED    = 1,
-    RSC_ROLE_STARTED    = 2,
-    RSC_ROLE_UNPROMOTED = 3,
-    RSC_ROLE_PROMOTED   = 4,
-
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    //! \deprecated Use RSC_ROLE_UNPROMOTED instead
-    RSC_ROLE_SLAVE      = RSC_ROLE_UNPROMOTED,
-
-    //! \deprecated Use RSC_ROLE_PROMOTED instead
-    RSC_ROLE_MASTER     = RSC_ROLE_PROMOTED,
-#endif
-};
-
 #  define RSC_ROLE_MAX  (RSC_ROLE_PROMOTED + 1)
 
 #  define RSC_ROLE_UNKNOWN_S "Unknown"
