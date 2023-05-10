@@ -704,7 +704,7 @@ pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pe_action_t *action)
         case pcmk_action_started:
         case pcmk_action_monitor:
         case pcmk_action_promote:
-        case action_promoted:
+        case pcmk_action_promoted:
             // "Up" actions take place on guest's next host
             host = guest->details->remote_rsc->container->allocated_to;
             break;

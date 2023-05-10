@@ -1282,7 +1282,7 @@ get_complex_task(const pe_resource_t *rsc, const char *name)
             case pcmk_action_stopped:
             case pcmk_action_started:
             case action_demoted:
-            case action_promoted:
+            case pcmk_action_promoted:
                 crm_trace("Folding %s back into its atomic counterpart for %s",
                           name, rsc->id);
                 --task;
