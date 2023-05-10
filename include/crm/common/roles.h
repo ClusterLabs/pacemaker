@@ -27,7 +27,10 @@ extern "C" {
 enum rsc_role_e {
     pcmk_role_unknown       = 0, //!< Resource role is unknown
 
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated Use pcmk_role_unknown instead
     RSC_ROLE_UNKNOWN        = pcmk_role_unknown,
+#endif
     RSC_ROLE_STOPPED    = 1,
     RSC_ROLE_STARTED    = 2,
     RSC_ROLE_UNPROMOTED = 3,
