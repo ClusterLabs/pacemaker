@@ -76,8 +76,10 @@ enum action_tasks {
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_action_unspecified instead
     no_action               = pcmk_action_unspecified,
-#endif
+
+    //! \deprecated Use pcmk_action_monitor instead
     monitor_rsc             = pcmk_action_monitor,
+#endif
 
     // Each "completed" action must be the regular action plus 1
 
