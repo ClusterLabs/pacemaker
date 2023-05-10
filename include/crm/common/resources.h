@@ -36,8 +36,10 @@ enum rsc_recovery_type {
 
     //! \deprecated Use pcmk_multiply_active_block instead
     recovery_block                  = pcmk_multiply_active_block,
-#endif
+
+    //! \deprecated Use pcmk_multiply_active_unexpected instead
     recovery_stop_unexpected        = pcmk_multiply_active_unexpected,
+#endif
 };
 
 #ifdef __cplusplus
