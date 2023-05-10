@@ -148,7 +148,7 @@ static inline const char *
 recovery2text(enum rsc_recovery_type type)
 {
     switch (type) {
-        case recovery_stop_only:
+        case pcmk_multiply_active_stop:
             return "shutting it down";
         case pcmk_multiply_active_restart:
             return "attempting recovery";

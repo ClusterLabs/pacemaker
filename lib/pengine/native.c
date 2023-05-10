@@ -131,7 +131,7 @@ native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * dat
 
     if (is_multiply_active(rsc)) {
         switch (rsc->recovery_type) {
-            case recovery_stop_only:
+            case pcmk_multiply_active_stop:
                 {
                     GHashTableIter gIter;
                     pe_node_t *local_node = NULL;

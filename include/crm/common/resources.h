@@ -23,12 +23,13 @@ extern "C" {
 //! How to recover a resource that is incorrectly active on multiple nodes
 enum rsc_recovery_type {
     pcmk_multiply_active_restart    = 0,    //!< Stop on all, start on desired
+    pcmk_multiply_active_stop       = 1,    //!< Stop on all and leave stopped
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_multiply_active_restart instead
     recovery_stop_start             = pcmk_multiply_active_restart,
 #endif
-    recovery_stop_only              = 1,
+    recovery_stop_only              = pcmk_multiply_active_stop,
     recovery_block                  = 2,
     recovery_stop_unexpected        = 3,
 };
