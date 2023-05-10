@@ -113,7 +113,7 @@ action_uuid_for_ordering(const char *first_uuid, const pe_resource_t *first_rsc)
     first_task = text2task(first_task_str);
     switch (first_task) {
         case pcmk_action_stop:
-        case start_rsc:
+        case pcmk_action_start:
         case action_notify:
         case action_promote:
         case action_demote:

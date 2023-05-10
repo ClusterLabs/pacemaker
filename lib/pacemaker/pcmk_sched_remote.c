@@ -195,7 +195,7 @@ apply_remote_ordering(pe_action_t *action)
     }
 
     switch (task) {
-        case start_rsc:
+        case pcmk_action_start:
         case action_promote:
             order_opts = pe_order_none;
 
@@ -337,7 +337,7 @@ apply_container_ordering(pe_action_t *action)
     }
 
     switch (task) {
-        case start_rsc:
+        case pcmk_action_start:
         case action_promote:
             // Force resource recovery if the container is recovered
             order_start_then_action(container, action, pe_order_implies_then);
@@ -700,7 +700,7 @@ pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pe_action_t *action)
             host = pe__current_node(guest->details->remote_rsc->container);
             break;
 
-        case start_rsc:
+        case pcmk_action_start:
         case started_rsc:
         case pcmk_action_monitor:
         case action_promote:

@@ -619,7 +619,7 @@ collect_resource_data(const pe_resource_t *rsc, bool activity,
             entry = new_notify_entry(rsc, op->node);
 
             switch (task) {
-                case start_rsc:
+                case pcmk_action_start:
                     n_data->start = g_list_prepend(n_data->start, entry);
                     break;
                 case pcmk_action_stop:
@@ -819,7 +819,7 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
 
         if (!pcmk_is_set(op->flags, pe_action_optional) && (op->node != NULL)) {
             switch (text2task(op->task)) {
-                case start_rsc:
+                case pcmk_action_start:
                 case pcmk_action_stop:
                 case action_promote:
                 case action_demote:
@@ -833,7 +833,7 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
 
     // Skip notify action itself if original action was not needed
     switch (task) {
-        case start_rsc:
+        case pcmk_action_start:
             if (n_data->start == NULL) {
                 pe_rsc_trace(rsc, "No notify action needed for %s %s",
                              rsc->id, n_data->action);
@@ -895,7 +895,7 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
 
     // Create notify actions for start or promote
     if ((rsc->next_role != pcmk_role_stopped)
-        && ((task == start_rsc) || (task == action_promote))) {
+        && ((task == pcmk_action_start) || (task == action_promote))) {
 
         start = find_first_action(rsc->actions, NULL, PCMK_ACTION_START, NULL);
         if (start != NULL) {
@@ -916,7 +916,7 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
                         role2text(rsc->next_role), rsc->id);
             return;
         }
-        if ((task != start_rsc) || (start == NULL)
+        if ((task != pcmk_action_start) || (start == NULL)
             || pcmk_is_set(start->flags, pe_action_optional)) {
 
             new_notify_action(rsc, rsc->allocated_to, n_data->pre,
