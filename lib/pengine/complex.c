@@ -796,7 +796,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
                      (*rsc)->id);
 
     } else if (pcmk__str_eq(value, "stop_unexpected", pcmk__str_casei)) {
-        (*rsc)->recovery_type = recovery_stop_unexpected;
+        (*rsc)->recovery_type = pcmk_multiply_active_unexpected;
         pe_rsc_trace((*rsc), "%s multiple running resource recovery: "
                              "stop unexpected instances",
                      (*rsc)->id);

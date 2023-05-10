@@ -167,7 +167,9 @@ native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * dat
                     }
                 }
                 break;
-            default: // pcmk_multiply_active_restart, recovery_stop_unexpected
+
+            // pcmk_multiply_active_restart, pcmk_multiply_active_unexpected
+            default:
                 /* The scheduler will do the right thing because the relevant
                  * variables and flags are set when unpacking the history.
                  */

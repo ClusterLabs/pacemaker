@@ -750,7 +750,7 @@ pcmk__primitive_create_actions(pe_resource_t *rsc)
             case pcmk_multiply_active_restart:
                 need_stop = true;
                 break;
-            case recovery_stop_unexpected:
+            case pcmk_multiply_active_unexpected:
                 need_stop = true; // stop_resource() will skip expected node
                 pe__set_resource_flags(rsc, pe_rsc_stop_unexpected);
                 break;

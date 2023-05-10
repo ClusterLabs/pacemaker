@@ -25,6 +25,7 @@ enum rsc_recovery_type {
     pcmk_multiply_active_restart    = 0,    //!< Stop on all, start on desired
     pcmk_multiply_active_stop       = 1,    //!< Stop on all and leave stopped
     pcmk_multiply_active_block      = 2,    //!< Do nothing to resource
+    pcmk_multiply_active_unexpected = 3,    //!< Stop unexpected instances
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_multiply_active_restart instead
@@ -36,7 +37,7 @@ enum rsc_recovery_type {
     //! \deprecated Use pcmk_multiply_active_block instead
     recovery_block                  = pcmk_multiply_active_block,
 #endif
-    recovery_stop_unexpected        = 3,
+    recovery_stop_unexpected        = pcmk_multiply_active_unexpected,
 };
 
 #ifdef __cplusplus
