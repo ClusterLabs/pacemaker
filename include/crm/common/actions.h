@@ -119,8 +119,10 @@ enum action_tasks {
 
     //! \deprecated Use pcmk_action_promoted instead
     action_promoted         = pcmk_action_promoted,
-#endif
+
+    //! \deprecated Use pcmk_action_demote instead
     action_demote           = pcmk_action_demote,
+#endif
     action_demoted,
     shutdown_crm,
     stonith_node
