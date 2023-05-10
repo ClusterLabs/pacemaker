@@ -126,6 +126,17 @@ struct pe_node_shared_s {
     pcmk_scheduler_t *data_set;     //!< Cluster that node is part of
 };
 
+//! Implementation of pcmk_node_t
+struct pe_node_s {
+    int weight;         //!< Node score for a given resource
+    gboolean fixed;     //!< \deprecated Do not use
+    int count;          //!< Counter reused by assignment and promotion code
+    struct pe_node_shared_s *details;   //!< Basic node information
+
+    // @COMPAT This should be enum pe_discover_e
+    int rsc_discover_mode;              //!< Probe mode (enum pe_discover_e)
+};
+
 #ifdef __cplusplus
 }
 #endif

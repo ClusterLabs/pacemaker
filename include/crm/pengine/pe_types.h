@@ -131,14 +131,6 @@ struct pe_working_set_s {
     guint node_pending_timeout; // Node pending timeout
 };
 
-struct pe_node_s {
-    int weight;
-    gboolean fixed; //!< \deprecated Will be removed in a future release
-    int count;
-    struct pe_node_shared_s *details;
-    int rsc_discover_mode;
-};
-
 struct pe_resource_s {
     char *id;
     char *clone_name;
