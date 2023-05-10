@@ -686,7 +686,7 @@ pcmk__bundle_action_flags(pe_action_t *action, const pe_node_t *node)
         // Clone actions are done on the bundled clone resource, not container
         switch (get_complex_task(bundled_resource, action->task)) {
             case pcmk_action_unspecified:
-            case action_notify:
+            case pcmk_action_notify:
             case action_notified:
             case action_promote:
             case action_promoted:

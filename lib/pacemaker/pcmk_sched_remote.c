@@ -687,7 +687,7 @@ pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pe_action_t *action)
     }
 
     task = text2task(action->task);
-    if ((task == action_notify) || (task == action_notified)) {
+    if ((task == pcmk_action_notify) || (task == action_notified)) {
         task = text2task(g_hash_table_lookup(action->meta, "notify_operation"));
     }
 
