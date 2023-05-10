@@ -96,8 +96,10 @@ enum action_tasks {
 
     //! \deprecated Use pcmk_action_start instead
     start_rsc               = pcmk_action_start,
-#endif
+
+    //! \deprecated Use pcmk_action_started instead
     started_rsc             = pcmk_action_started,
+#endif
     action_notify,
     action_notified,
     action_promote,
