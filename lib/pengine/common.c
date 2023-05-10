@@ -459,29 +459,29 @@ const char *
 role2text(enum rsc_role_e role)
 {
     switch (role) {
-        case pcmk_role_unknown:
-            return RSC_ROLE_UNKNOWN_S;
         case pcmk_role_stopped:
             return RSC_ROLE_STOPPED_S;
+
         case pcmk_role_started:
             return RSC_ROLE_STARTED_S;
+
         case pcmk_role_unpromoted:
 #ifdef PCMK__COMPAT_2_0
             return RSC_ROLE_UNPROMOTED_LEGACY_S;
 #else
             return RSC_ROLE_UNPROMOTED_S;
 #endif
+
         case pcmk_role_promoted:
 #ifdef PCMK__COMPAT_2_0
             return RSC_ROLE_PROMOTED_LEGACY_S;
 #else
             return RSC_ROLE_PROMOTED_S;
 #endif
+
+        default: // pcmk_role_unknown
+            return RSC_ROLE_UNKNOWN_S;
     }
-    CRM_CHECK(role >= pcmk_role_unknown, return RSC_ROLE_UNKNOWN_S);
-    CRM_CHECK(role < RSC_ROLE_MAX, return RSC_ROLE_UNKNOWN_S);
-    // coverity[dead_error_line]
-    return RSC_ROLE_UNKNOWN_S;
 }
 
 enum rsc_role_e
