@@ -241,7 +241,7 @@ apply_remote_ordering(pe_action_t *action)
             }
             break;
 
-        case action_demote:
+        case pcmk_action_demote:
             /* Only order this demote relative to the connection start if the
              * connection isn't being torn down. Otherwise, the demote would be
              * blocked because the connection start would not be allowed.
@@ -347,7 +347,7 @@ apply_container_ordering(pe_action_t *action)
             break;
 
         case pcmk_action_stop:
-        case action_demote:
+        case pcmk_action_demote:
             if (pcmk_is_set(container->flags, pe_rsc_failed)) {
                 /* When the container representing a guest node fails, any stop
                  * or demote actions for resources running on the guest node
@@ -694,7 +694,7 @@ pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pe_action_t *action)
     switch (task) {
         case pcmk_action_stop:
         case pcmk_action_stopped:
-        case action_demote:
+        case pcmk_action_demote:
         case action_demoted:
             // "Down" actions take place on guest's current host
             host = pe__current_node(guest->details->remote_rsc->container);

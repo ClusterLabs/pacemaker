@@ -87,6 +87,8 @@ enum action_tasks {
     pcmk_action_promote,            //!< Promote
     pcmk_action_promoted,           //!< Promoted
 
+    pcmk_action_demote,             //!< Demote
+
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_action_unspecified instead
     no_action               = pcmk_action_unspecified,
@@ -118,7 +120,7 @@ enum action_tasks {
     //! \deprecated Use pcmk_action_promoted instead
     action_promoted         = pcmk_action_promoted,
 #endif
-    action_demote,
+    action_demote           = pcmk_action_demote,
     action_demoted,
     shutdown_crm,
     stonith_node

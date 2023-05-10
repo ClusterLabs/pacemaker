@@ -116,7 +116,7 @@ action_uuid_for_ordering(const char *first_uuid, const pe_resource_t *first_rsc)
         case pcmk_action_start:
         case pcmk_action_notify:
         case pcmk_action_promote:
-        case action_demote:
+        case pcmk_action_demote:
             remapped_task = first_task + 1;
             break;
         case pcmk_action_stopped:
