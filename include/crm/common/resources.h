@@ -28,8 +28,10 @@ enum rsc_recovery_type {
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_multiply_active_restart instead
     recovery_stop_start             = pcmk_multiply_active_restart,
-#endif
+
+    //! \deprecated Use pcmk_multiply_active_stop instead
     recovery_stop_only              = pcmk_multiply_active_stop,
+#endif
     recovery_block                  = 2,
     recovery_stop_unexpected        = 3,
 };
