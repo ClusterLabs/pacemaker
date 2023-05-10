@@ -28,8 +28,10 @@ enum rsc_start_requirement {
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_requires_nothing instead
     rsc_req_nothing         = pcmk_requires_nothing,
-#endif
+
+    //! \deprecated Use pcmk_requires_quorum instead
     rsc_req_quorum          = pcmk_requires_quorum,
+#endif
     rsc_req_stonith         = 2, /* Enforced by native_start_constraints() */
 };
 
