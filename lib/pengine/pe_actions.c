@@ -764,7 +764,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
         value = "fencing";
 
     } else if (pcmk_is_set(action->rsc->flags, pe_rsc_needs_quorum)) {
-        action->needs = rsc_req_quorum;
+        action->needs = pcmk_requires_quorum;
         value = "quorum";
 
     } else {

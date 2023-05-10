@@ -23,12 +23,13 @@ extern "C" {
 //! What resource needs before it can be recovered from a failed node
 enum rsc_start_requirement {
     pcmk_requires_nothing   = 0,    //!< Resource can be recovered immediately
+    pcmk_requires_quorum    = 1,    //!< Resource can be recovered if quorate
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_requires_nothing instead
     rsc_req_nothing         = pcmk_requires_nothing,
 #endif
-    rsc_req_quorum          = 1, /* Enforced by custom_action() */
+    rsc_req_quorum          = pcmk_requires_quorum,
     rsc_req_stonith         = 2, /* Enforced by native_start_constraints() */
 };
 

@@ -71,7 +71,7 @@ order_start_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
                 order_actions(stonith_op, action, pe_order_optional);
                 break;
 
-            case rsc_req_quorum:
+            case pcmk_requires_quorum:
                 if (pcmk__str_eq(action->task, PCMK_ACTION_START,
                                  pcmk__str_none)
                     && (g_hash_table_lookup(rsc->allowed_nodes,
