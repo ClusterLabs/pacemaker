@@ -3525,11 +3525,11 @@ unpack_rsc_op_failure(struct action_history *history, xmlNode **last_failure,
         unpack_migrate_from_failure(history);
 
     } else if (strcmp(history->task, PCMK_ACTION_PROMOTE) == 0) {
-        history->rsc->role = RSC_ROLE_PROMOTED;
+        history->rsc->role = pcmk_role_promoted;
 
     } else if (strcmp(history->task, PCMK_ACTION_DEMOTE) == 0) {
         if (action->on_fail == action_fail_block) {
-            history->rsc->role = RSC_ROLE_PROMOTED;
+            history->rsc->role = pcmk_role_promoted;
             pe__set_next_role(history->rsc, pcmk_role_stopped,
                               "demote with on-fail=block");
 
@@ -3783,13 +3783,13 @@ remap_operation(struct action_history *history,
             }
             if (!expired
                 || (history->exit_status == history->expected_exit_status)) {
-                history->rsc->role = RSC_ROLE_PROMOTED;
+                history->rsc->role = pcmk_role_promoted;
             }
             break;
 
         case PCMK_OCF_FAILED_PROMOTED:
             if (!expired) {
-                history->rsc->role = RSC_ROLE_PROMOTED;
+                history->rsc->role = pcmk_role_promoted;
             }
             remap_because(history, &why, PCMK_EXEC_ERROR, "exit status");
             break;
@@ -4177,7 +4177,7 @@ update_resource_state(struct action_history *history, int exit_status,
 
     } else if (pcmk__str_eq(history->task, PCMK_ACTION_PROMOTE,
                             pcmk__str_none)) {
-        history->rsc->role = RSC_ROLE_PROMOTED;
+        history->rsc->role = pcmk_role_promoted;
         clear_past_failure = true;
 
     } else if (pcmk__str_eq(history->task, PCMK_ACTION_DEMOTE,
@@ -4488,7 +4488,7 @@ process_pending_action(struct action_history *history,
         set_active(history->rsc);
 
     } else if (strcmp(history->task, PCMK_ACTION_PROMOTE) == 0) {
-        history->rsc->role = RSC_ROLE_PROMOTED;
+        history->rsc->role = pcmk_role_promoted;
 
     } else if ((strcmp(history->task, PCMK_ACTION_MIGRATE_TO) == 0)
                && history->node->details->unclean) {

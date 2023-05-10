@@ -255,7 +255,7 @@ recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
                                                       start);
 
     if ((!is_default_role && (rsc->next_role != op->role))
-        || (is_default_role && (rsc->next_role == RSC_ROLE_PROMOTED))) {
+        || (is_default_role && (rsc->next_role == pcmk_role_promoted))) {
         // Configured monitor role doesn't match role resource will have
 
         if (is_optional) { // It's running, so cancel it
@@ -267,7 +267,7 @@ recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
             switch (rsc->role) {
                 case pcmk_role_unpromoted:
                 case pcmk_role_started:
-                    if (rsc->next_role == RSC_ROLE_PROMOTED) {
+                    if (rsc->next_role == pcmk_role_promoted) {
                         after_key = promote_key(rsc);
 
                     } else if (rsc->next_role == pcmk_role_stopped) {
@@ -275,7 +275,7 @@ recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
                     }
 
                     break;
-                case RSC_ROLE_PROMOTED:
+                case pcmk_role_promoted:
                     after_key = demote_key(rsc);
                     break;
                 default:
@@ -322,7 +322,7 @@ recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
                     rsc->id, pe__node_name(node));
     }
 
-    if (rsc->next_role == RSC_ROLE_PROMOTED) {
+    if (rsc->next_role == pcmk_role_promoted) {
         pe__add_action_expected_result(mon, CRM_EX_PROMOTED);
     }
 
@@ -338,13 +338,13 @@ recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
                            pe_order_implies_then|pe_order_runnable_left,
                            rsc->cluster);
 
-        if (rsc->next_role == RSC_ROLE_PROMOTED) {
+        if (rsc->next_role == pcmk_role_promoted) {
             pcmk__new_ordering(rsc, promote_key(rsc), NULL,
                                rsc, NULL, mon,
                                pe_order_optional|pe_order_runnable_left,
                                rsc->cluster);
 
-        } else if (rsc->role == RSC_ROLE_PROMOTED) {
+        } else if (rsc->role == pcmk_role_promoted) {
             pcmk__new_ordering(rsc, demote_key(rsc), NULL,
                                rsc, NULL, mon,
                                pe_order_optional|pe_order_runnable_left,

@@ -49,7 +49,7 @@ native_priority_to_node(pe_resource_t * rsc, pe_node_t * node, gboolean failed)
         return;
     }
 
-    if (rsc->role == RSC_ROLE_PROMOTED) {
+    if (rsc->role == pcmk_role_promoted) {
         // Promoted instance takes base priority + 1
         priority = rsc->priority + 1;
 
@@ -60,9 +60,9 @@ native_priority_to_node(pe_resource_t * rsc, pe_node_t * node, gboolean failed)
     node->details->priority += priority;
     pe_rsc_trace(rsc, "%s now has priority %d with %s'%s' (priority: %d%s)",
                  pe__node_name(node), node->details->priority,
-                 (rsc->role == RSC_ROLE_PROMOTED)? "promoted " : "",
+                 (rsc->role == pcmk_role_promoted)? "promoted " : "",
                  rsc->id, rsc->priority,
-                 (rsc->role == RSC_ROLE_PROMOTED)? " + 1" : "");
+                 (rsc->role == pcmk_role_promoted)? " + 1" : "");
 
     /* Priority of a resource running on a guest node is added to the cluster
      * node as well. */
@@ -77,9 +77,9 @@ native_priority_to_node(pe_resource_t * rsc, pe_node_t * node, gboolean failed)
             pe_rsc_trace(rsc, "%s now has priority %d with %s'%s' (priority: %d%s) "
                          "from guest node %s",
                          pe__node_name(a_node), a_node->details->priority,
-                         (rsc->role == RSC_ROLE_PROMOTED)? "promoted " : "",
+                         (rsc->role == pcmk_role_promoted)? "promoted " : "",
                          rsc->id, rsc->priority,
-                         (rsc->role == RSC_ROLE_PROMOTED)? " + 1" : "",
+                         (rsc->role == pcmk_role_promoted)? " + 1" : "",
                          pe__node_name(node));
         }
     }

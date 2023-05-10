@@ -598,7 +598,7 @@ pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name
 static const char *
 role_desc(enum rsc_role_e role)
 {
-    if (role == RSC_ROLE_PROMOTED) {
+    if (role == pcmk_role_promoted) {
 #ifdef PCMK__COMPAT_2_0
         return "as " RSC_ROLE_PROMOTED_LEGACY_S " ";
 #else
@@ -652,7 +652,7 @@ ban_xml(pcmk__output_t *out, va_list args) {
     pe__location_t *location = va_arg(args, pe__location_t *);
     uint32_t show_opts G_GNUC_UNUSED = va_arg(args, uint32_t);
 
-    const char *promoted_only = pcmk__btoa(location->role_filter == RSC_ROLE_PROMOTED);
+    const char *promoted_only = pcmk__btoa(location->role_filter == pcmk_role_promoted);
     char *weight_s = pcmk__itoa(pe_node->weight);
 
     pcmk__output_create_xml_node(out, "ban",

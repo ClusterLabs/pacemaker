@@ -857,7 +857,7 @@ pcmk__update_ordered_actions(pe_action_t *first, pe_action_t *then,
     }
 
     if (pcmk_is_set(type, pe_order_promoted_implies_first)
-        && (then->rsc != NULL) && (then->rsc->role == RSC_ROLE_PROMOTED)
+        && (then->rsc != NULL) && (then->rsc->role == pcmk_role_promoted)
         && pcmk_is_set(filter, pe_action_optional)
         && !pcmk_is_set(then->flags, pe_action_optional)) {
 

@@ -51,19 +51,19 @@ static enum rsc_role_e rsc_state_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
                           pcmk_role_stopped,    /* Stopped */
                           pcmk_role_started,    /* Started */
                           pcmk_role_unpromoted, /* Unpromoted */
-                          RSC_ROLE_PROMOTED,    /* Promoted */
+                          pcmk_role_promoted,   /* Promoted */
                         },
     /* Unpromoted */    { pcmk_role_stopped,    /* Unknown */
                           pcmk_role_stopped,    /* Stopped */
                           pcmk_role_stopped,    /* Started */
                           pcmk_role_unpromoted, /* Unpromoted */
-                          RSC_ROLE_PROMOTED,    /* Promoted */
+                          pcmk_role_promoted,   /* Promoted */
                         },
     /* Promoted  */     { pcmk_role_stopped,    /* Unknown */
                           pcmk_role_unpromoted, /* Stopped */
                           pcmk_role_unpromoted, /* Started */
                           pcmk_role_unpromoted, /* Unpromoted */
-                          RSC_ROLE_PROMOTED,    /* Promoted */
+                          pcmk_role_promoted,   /* Promoted */
                         },
 };
 
@@ -296,7 +296,7 @@ apply_this_with(pcmk__colocation_t *colocation, pe_resource_t *rsc)
     pe_resource_t *other = colocation->primary;
 
     // In certain cases, we will need to revert the node scores
-    if ((colocation->dependent_role >= RSC_ROLE_PROMOTED)
+    if ((colocation->dependent_role >= pcmk_role_promoted)
         || ((colocation->score < 0) && (colocation->score > -INFINITY))) {
         archive = pcmk__copy_node_table(rsc->allowed_nodes);
     }
@@ -499,7 +499,7 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer,
         assign_to = pe__current_node(rsc);
         if (assign_to == NULL) {
             reason = "inactive";
-        } else if (rsc->role == RSC_ROLE_PROMOTED) {
+        } else if (rsc->role == pcmk_role_promoted) {
             reason = "promoted";
         } else if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
             reason = "failed";
@@ -577,7 +577,7 @@ schedule_restart_actions(pe_resource_t *rsc, pe_node_t *current,
         bool required = need_stop;
 
         next_role = rsc_state_matrix[role][rsc->role];
-        if ((next_role == RSC_ROLE_PROMOTED) && need_promote) {
+        if ((next_role == pcmk_role_promoted) && need_promote) {
             required = true;
         }
         pe_rsc_trace(rsc, "Creating %s action to take %s up from %s to %s",
@@ -797,7 +797,7 @@ pcmk__primitive_create_actions(pe_resource_t *rsc)
             pe_rsc_trace(rsc, "Recovering %s", rsc->id);
         } else {
             pe_rsc_trace(rsc, "Recovering %s by demotion", rsc->id);
-            if (rsc->next_role == RSC_ROLE_PROMOTED) {
+            if (rsc->next_role == pcmk_role_promoted) {
                 need_promote = true;
             }
         }

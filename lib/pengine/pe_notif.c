@@ -585,7 +585,7 @@ collect_resource_data(const pe_resource_t *rsc, bool activity,
                                             dup_notify_entry(entry));
             break;
 
-        case RSC_ROLE_PROMOTED:
+        case pcmk_role_promoted:
             n_data->promoted = g_list_prepend(n_data->promoted, entry);
             n_data->active = g_list_prepend(n_data->active,
                                             dup_notify_entry(entry));

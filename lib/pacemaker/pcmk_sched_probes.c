@@ -35,7 +35,7 @@ add_expected_result(pe_action_t *probe, const pe_resource_t *rsc,
     if (running == NULL) {
         pe__add_action_expected_result(probe, CRM_EX_NOT_RUNNING);
 
-    } else if (rsc->role == RSC_ROLE_PROMOTED) {
+    } else if (rsc->role == pcmk_role_promoted) {
         pe__add_action_expected_result(probe, CRM_EX_PROMOTED);
     }
 }

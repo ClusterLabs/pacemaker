@@ -280,7 +280,7 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
             return;
         }
 
-        if (colocation->dependent_role == RSC_ROLE_PROMOTED) {
+        if (colocation->dependent_role == pcmk_role_promoted) {
             // We're choosing a role for the dependent
             pcmk__update_promotable_dependent_priority(primary, dependent,
                                                        colocation);
