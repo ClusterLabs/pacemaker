@@ -32,8 +32,10 @@ enum rsc_start_requirement {
 
     //! \deprecated Use pcmk_requires_quorum instead
     rsc_req_quorum          = pcmk_requires_quorum,
-#endif
+
+    //! \deprecated Use pcmk_requires_fencing instead
     rsc_req_stonith         = pcmk_requires_fencing,
+#endif
 };
 
 //! How to recover a resource that is incorrectly active on multiple nodes
