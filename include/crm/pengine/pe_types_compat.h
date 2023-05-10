@@ -214,6 +214,9 @@ enum pe_check_parameters {
 //!< \deprecated Use pcmk_action_t instead
 typedef struct pe_action_s action_t;
 
+//!< \deprecated Use pcmk_action_t instead
+typedef struct pe_action_s pe_action_t;
+
 //!< \deprecated Use pe_action_wrapper_t instead
 typedef struct pe_action_wrapper_s action_wrapper_t;
 
