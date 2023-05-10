@@ -13,6 +13,7 @@
 #include <crm/pengine/internal.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml_internal.h>
+#include <crm/common/scheduler_internal.h>
 
 #include "pe_status_private.h"
 
@@ -240,7 +241,7 @@ template_op_key(xmlNode * op)
     if ((role == NULL)
         || pcmk__strcase_any_of(role, RSC_ROLE_STARTED_S, RSC_ROLE_UNPROMOTED_S,
                                 RSC_ROLE_UNPROMOTED_LEGACY_S, NULL)) {
-        role = RSC_ROLE_UNKNOWN_S;
+        role = PCMK__ROLE_UNKNOWN;
     }
 
     key = crm_strdup_printf("%s-%s", name, role);

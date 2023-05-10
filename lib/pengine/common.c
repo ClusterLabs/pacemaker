@@ -15,6 +15,7 @@
 
 #include <glib.h>
 
+#include <crm/common/scheduler_internal.h>
 #include <crm/pengine/internal.h>
 
 gboolean was_processing_error = FALSE;
@@ -480,7 +481,7 @@ role2text(enum rsc_role_e role)
 #endif
 
         default: // pcmk_role_unknown
-            return RSC_ROLE_UNKNOWN_S;
+            return PCMK__ROLE_UNKNOWN;
     }
 }
 
@@ -498,7 +499,7 @@ text2role(const char *role)
     } else if (pcmk__strcase_any_of(role, RSC_ROLE_PROMOTED_S,
                                     RSC_ROLE_PROMOTED_LEGACY_S, NULL)) {
         return pcmk_role_promoted;
-    } else if (pcmk__str_eq(role, RSC_ROLE_UNKNOWN_S, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(role, PCMK__ROLE_UNKNOWN, pcmk__str_casei)) {
         return pcmk_role_unknown;
     }
     crm_err("Unknown role: %s", role);

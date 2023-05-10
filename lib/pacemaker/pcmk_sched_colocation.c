@@ -13,6 +13,7 @@
 #include <glib.h>
 
 #include <crm/crm.h>
+#include <crm/common/scheduler_internal.h>
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
 
@@ -371,12 +372,12 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
 
     if (pcmk__str_eq(dependent_role, RSC_ROLE_STARTED_S,
                      pcmk__str_null_matches|pcmk__str_casei)) {
-        dependent_role = RSC_ROLE_UNKNOWN_S;
+        dependent_role = PCMK__ROLE_UNKNOWN;
     }
 
     if (pcmk__str_eq(primary_role, RSC_ROLE_STARTED_S,
                      pcmk__str_null_matches|pcmk__str_casei)) {
-        primary_role = RSC_ROLE_UNKNOWN_S;
+        primary_role = PCMK__ROLE_UNKNOWN;
     }
 
     new_con->id = id;
