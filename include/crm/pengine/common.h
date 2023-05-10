@@ -82,7 +82,6 @@ enum rsc_start_requirement {
     rsc_req_stonith             /* Enforced by native_start_constraints() */
 };
 
-#  define RSC_ROLE_STOPPED_S "Stopped"
 #  define RSC_ROLE_STARTED_S "Started"
 #  define RSC_ROLE_UNPROMOTED_S         "Unpromoted"
 #  define RSC_ROLE_PROMOTED_S           "Promoted"

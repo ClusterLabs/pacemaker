@@ -12,6 +12,7 @@
 #include <stdbool.h>
 
 #include <crm/msg_xml.h>
+#include <crm/common/scheduler_internal.h>
 #include <pacemaker-internal.h>
 
 #include "libpacemaker_private.h"
@@ -394,7 +395,7 @@ cancel_if_running(pe_resource_t *rsc, const pe_node_t *node, const char *key,
     }
     pe_rsc_info(rsc,
                 "Cancelling %s-interval %s action for %s on %s because "
-                "configured for " RSC_ROLE_STOPPED_S " role (not %s)",
+                "configured for " PCMK__ROLE_STOPPED " role (not %s)",
                 pcmk__readable_interval(interval_ms), name, rsc->id,
                 pe__node_name(node), role2text(rsc->next_role));
 }
@@ -481,7 +482,7 @@ recurring_op_for_inactive(pe_resource_t *rsc, const pe_node_t *node,
     }
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_unique)) {
-        crm_notice("Ignoring %s (recurring monitors for " RSC_ROLE_STOPPED_S
+        crm_notice("Ignoring %s (recurring monitors for " PCMK__ROLE_STOPPED
                    " role are not supported for anonymous clones)", op->id);
         return; // @TODO add support
     }
@@ -510,7 +511,7 @@ recurring_op_for_inactive(pe_resource_t *rsc, const pe_node_t *node,
 
         pe_rsc_trace(rsc,
                      "Creating %s recurring action %s for %s (%s "
-                     RSC_ROLE_STOPPED_S " on %s)",
+                     PCMK__ROLE_STOPPED " on %s)",
                      (is_optional? "optional" : "mandatory"),
                      op->key, op->id, rsc->id, pe__node_name(stop_node));
 
@@ -537,7 +538,7 @@ recurring_op_for_inactive(pe_resource_t *rsc, const pe_node_t *node,
         if (pcmk_is_set(stopped_mon->flags, pe_action_runnable)
             && !pcmk_is_set(stopped_mon->flags, pe_action_optional)) {
             crm_notice("Start recurring %s-interval %s for "
-                       RSC_ROLE_STOPPED_S " %s on %s",
+                       PCMK__ROLE_STOPPED " %s on %s",
                        pcmk__readable_interval(op->interval_ms),
                        stopped_mon->task, rsc->id, pe__node_name(stop_node));
         }
