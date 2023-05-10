@@ -688,7 +688,7 @@ pcmk__bundle_action_flags(pe_action_t *action, const pe_node_t *node)
             case pcmk_action_unspecified:
             case pcmk_action_notify:
             case pcmk_action_notified:
-            case action_promote:
+            case pcmk_action_promote:
             case action_promoted:
             case action_demote:
             case action_demoted:

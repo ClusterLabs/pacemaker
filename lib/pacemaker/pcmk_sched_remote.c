@@ -196,7 +196,7 @@ apply_remote_ordering(pe_action_t *action)
 
     switch (task) {
         case pcmk_action_start:
-        case action_promote:
+        case pcmk_action_promote:
             order_opts = pe_order_none;
 
             if (state == remote_state_failed) {
@@ -338,7 +338,7 @@ apply_container_ordering(pe_action_t *action)
 
     switch (task) {
         case pcmk_action_start:
-        case action_promote:
+        case pcmk_action_promote:
             // Force resource recovery if the container is recovered
             order_start_then_action(container, action, pe_order_implies_then);
 
@@ -703,7 +703,7 @@ pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pe_action_t *action)
         case pcmk_action_start:
         case pcmk_action_started:
         case pcmk_action_monitor:
-        case action_promote:
+        case pcmk_action_promote:
         case action_promoted:
             // "Up" actions take place on guest's next host
             host = guest->details->remote_rsc->container->allocated_to;

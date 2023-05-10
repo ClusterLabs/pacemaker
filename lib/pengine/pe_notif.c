@@ -625,7 +625,7 @@ collect_resource_data(const pe_resource_t *rsc, bool activity,
                 case pcmk_action_stop:
                     n_data->stop = g_list_prepend(n_data->stop, entry);
                     break;
-                case action_promote:
+                case pcmk_action_promote:
                     n_data->promote = g_list_prepend(n_data->promote, entry);
                     break;
                 case action_demote:
@@ -821,7 +821,7 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
             switch (text2task(op->task)) {
                 case pcmk_action_start:
                 case pcmk_action_stop:
-                case action_promote:
+                case pcmk_action_promote:
                 case action_demote:
                     add_notify_data_to_action_meta(n_data, op);
                     break;
@@ -841,7 +841,7 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
             }
             break;
 
-        case action_promote:
+        case pcmk_action_promote:
             if (n_data->promote == NULL) {
                 pe_rsc_trace(rsc, "No notify action needed for %s %s",
                              rsc->id, n_data->action);
@@ -895,7 +895,7 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
 
     // Create notify actions for start or promote
     if ((rsc->next_role != pcmk_role_stopped)
-        && ((task == pcmk_action_start) || (task == action_promote))) {
+        && ((task == pcmk_action_start) || (task == pcmk_action_promote))) {
 
         start = find_first_action(rsc->actions, NULL, PCMK_ACTION_START, NULL);
         if (start != NULL) {
