@@ -141,8 +141,8 @@ enum action_tasks {
 //! Possible responses to a resource action failure
 enum action_fail_response {
     /* The order is (partially) significant here; the values from
-     * pcmk_on_fail_ignore through action_fail_fence are in order of increasing
-     * severity.
+     * pcmk_on_fail_ignore through pcmk_on_fail_fence_node are in order of
+     * increasing severity.
      *
      * @COMPAT The values should be ordered and numbered per the "TODO" comments
      *         below, so all values are in order of severity and there is room for
@@ -170,6 +170,9 @@ enum action_fail_response {
     // @TODO Define as 90
     pcmk_on_fail_standby_node       = 5,    //!< Put resource's node in standby
 
+    // @TODO Define as 100
+    pcmk_on_fail_fence_node         = 6,    //!< Fence resource's node
+
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_on_fail_ignore instead
     action_fail_ignore              = pcmk_on_fail_ignore,
@@ -192,7 +195,7 @@ enum action_fail_response {
     // @TODO action_fail_demote = 20,
     // @TODO action_fail_reset_remote = 40,
     // @TODO action_fail_restart_container = 50,
-    action_fail_fence,      // @TODO = 100
+    action_fail_fence               = pcmk_on_fail_fence_node,
 
     // @COMPAT Values below here are out of order for API compatibility
 

@@ -783,7 +783,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
         value = "block"; // The above could destroy the original string
 
     } else if (pcmk__str_eq(value, "fence", pcmk__str_casei)) {
-        action->on_fail = action_fail_fence;
+        action->on_fail = pcmk_on_fail_fence_node;
         value = "node fencing";
 
         if (!pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
@@ -877,7 +877,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
                && pcmk__str_eq(action->task, PCMK_ACTION_STOP,
                                pcmk__str_casei)) {
         if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
-            action->on_fail = action_fail_fence;
+            action->on_fail = pcmk_on_fail_fence_node;
             value = "resource fence (default)";
 
         } else {
