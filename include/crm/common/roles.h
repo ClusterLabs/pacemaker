@@ -46,10 +46,10 @@ enum rsc_role_e {
 
     //! \deprecated Use pcmk_role_unpromoted instead
     RSC_ROLE_SLAVE              = pcmk_role_unpromoted,
-#endif
+
+    //! \deprecated Use pcmk_role_promoted instead
     RSC_ROLE_PROMOTED           = pcmk_role_promoted,
 
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_role_promoted instead
     RSC_ROLE_MASTER             = pcmk_role_promoted,
 #endif
