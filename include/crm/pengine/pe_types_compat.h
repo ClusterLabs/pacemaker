@@ -241,6 +241,9 @@ typedef struct pe_tag_s tag_t;
 //!< \deprecated Use pe_ticket_t instead
 typedef struct pe_ticket_s ticket_t;
 
+//!< \deprecated Use pcmk_scheduler_t instead
+typedef struct pe_working_set_s pe_working_set_t;
+
 #ifdef __cplusplus
 }
 #endif

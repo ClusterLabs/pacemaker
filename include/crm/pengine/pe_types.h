@@ -29,8 +29,6 @@ extern "C" {
  * \ingroup pengine
  */
 
-typedef struct pe_working_set_s pe_working_set_t;
-
 typedef struct resource_object_functions_s {
     gboolean (*unpack)(pcmk_resource_t*, pcmk_scheduler_t*);
     pcmk_resource_t *(*find_rsc)(pcmk_resource_t *parent, const char *search,
