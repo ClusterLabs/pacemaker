@@ -827,7 +827,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
         }
 
     } else if (pcmk__str_eq(value, "demote", pcmk__str_casei)) {
-        action->on_fail = action_fail_demote;
+        action->on_fail = pcmk_on_fail_demote;
         value = "demote instance";
 
     } else {

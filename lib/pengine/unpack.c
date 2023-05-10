@@ -2157,7 +2157,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             /* nothing to do */
             break;
 
-        case action_fail_demote:
+        case pcmk_on_fail_demote:
             pe__set_resource_flags(rsc, pe_rsc_failed);
             demote_action(rsc, node, FALSE);
             break;
@@ -2285,7 +2285,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
         switch (on_fail) {
             case pcmk_on_fail_ignore:
                 break;
-            case action_fail_demote:
+            case pcmk_on_fail_demote:
             case pcmk_on_fail_block:
                 pe__set_resource_flags(rsc, pe_rsc_failed);
                 break;
@@ -3341,11 +3341,11 @@ static int
 cmp_on_fail(enum action_fail_response first, enum action_fail_response second)
 {
     switch (first) {
-        case action_fail_demote:
+        case pcmk_on_fail_demote:
             switch (second) {
                 case pcmk_on_fail_ignore:
                     return 1;
-                case action_fail_demote:
+                case pcmk_on_fail_demote:
                     return 0;
                 default:
                     return -1;
@@ -3355,7 +3355,7 @@ cmp_on_fail(enum action_fail_response first, enum action_fail_response second)
         case pcmk_on_fail_reset_remote:
             switch (second) {
                 case pcmk_on_fail_ignore:
-                case action_fail_demote:
+                case pcmk_on_fail_demote:
                 case pcmk_on_fail_restart:
                     return 1;
                 case pcmk_on_fail_reset_remote:
@@ -3368,7 +3368,7 @@ cmp_on_fail(enum action_fail_response first, enum action_fail_response second)
         case pcmk_on_fail_restart_container:
             switch (second) {
                 case pcmk_on_fail_ignore:
-                case action_fail_demote:
+                case pcmk_on_fail_demote:
                 case pcmk_on_fail_restart:
                 case pcmk_on_fail_reset_remote:
                     return 1;
@@ -3383,13 +3383,13 @@ cmp_on_fail(enum action_fail_response first, enum action_fail_response second)
             break;
     }
     switch (second) {
-        case action_fail_demote:
+        case pcmk_on_fail_demote:
             return (first == pcmk_on_fail_ignore)? -1 : 1;
 
         case pcmk_on_fail_reset_remote:
             switch (first) {
                 case pcmk_on_fail_ignore:
-                case action_fail_demote:
+                case pcmk_on_fail_demote:
                 case pcmk_on_fail_restart:
                     return -1;
                 default:
@@ -3400,7 +3400,7 @@ cmp_on_fail(enum action_fail_response first, enum action_fail_response second)
         case pcmk_on_fail_restart_container:
             switch (first) {
                 case pcmk_on_fail_ignore:
-                case action_fail_demote:
+                case pcmk_on_fail_demote:
                 case pcmk_on_fail_restart:
                 case pcmk_on_fail_reset_remote:
                     return -1;
@@ -4182,7 +4182,7 @@ update_resource_state(struct action_history *history, int exit_status,
 
     } else if (pcmk__str_eq(history->task, PCMK_ACTION_DEMOTE,
                             pcmk__str_none)) {
-        if (*on_fail == action_fail_demote) {
+        if (*on_fail == pcmk_on_fail_demote) {
             // Demote clears an error only if on-fail=demote
             clear_past_failure = true;
         }
@@ -4219,7 +4219,7 @@ update_resource_state(struct action_history *history, int exit_status,
 
         case pcmk_on_fail_block:
         case pcmk_on_fail_ignore:
-        case action_fail_demote:
+        case pcmk_on_fail_demote:
         case pcmk_on_fail_restart:
         case pcmk_on_fail_restart_container:
             *on_fail = pcmk_on_fail_ignore;

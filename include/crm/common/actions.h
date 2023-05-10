@@ -186,6 +186,9 @@ enum action_fail_response {
      */
     pcmk_on_fail_reset_remote       = 8,
 
+    // @TODO Define as 20
+    pcmk_on_fail_demote             = 9,    //!< Demote if promotable, else stop
+
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_on_fail_ignore instead
     action_fail_ignore              = pcmk_on_fail_ignore,
@@ -214,8 +217,7 @@ enum action_fail_response {
     //! \deprecated Use pcmk_on_fail_reset_remote instead
     action_fail_reset_remote        = pcmk_on_fail_reset_remote,
 #endif
-    // @TODO action_fail_demote = 20,
-    action_fail_demote,
+    action_fail_demote              = pcmk_on_fail_demote,
 };
 
 // For parsing various action-related string specifications
