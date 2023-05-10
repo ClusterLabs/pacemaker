@@ -39,14 +39,16 @@ enum rsc_role_e {
 
     //! \deprecated Use pcmk_role_started instead
     RSC_ROLE_STARTED        = pcmk_role_started,
+
+    //! \deprecated Use pcmk_role_unpromoted instead
+    RSC_ROLE_UNPROMOTED         = pcmk_role_unpromoted,
+
+    //! \deprecated Use pcmk_role_unpromoted instead
+    RSC_ROLE_SLAVE              = pcmk_role_unpromoted,
 #endif
-    RSC_ROLE_UNPROMOTED     = pcmk_role_unpromoted,
     RSC_ROLE_PROMOTED   = 4,
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    //! \deprecated Use pcmk_role_unpromoted instead
-    RSC_ROLE_SLAVE      = pcmk_role_unpromoted,
-
     //! \deprecated Use RSC_ROLE_PROMOTED instead
     RSC_ROLE_MASTER     = RSC_ROLE_PROMOTED,
 #endif
