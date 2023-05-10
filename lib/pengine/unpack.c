@@ -2192,7 +2192,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
                               rsc->cluster);
             break;
 
-        case action_fail_stop:
+        case pcmk_on_fail_stop:
             pe__set_next_role(rsc, pcmk_role_stopped, "on-fail=stop");
             break;
 
@@ -4208,7 +4208,7 @@ update_resource_state(struct action_history *history, int exit_status,
     }
 
     switch (*on_fail) {
-        case action_fail_stop:
+        case pcmk_on_fail_stop:
         case action_fail_fence:
         case pcmk_on_fail_ban:
         case action_fail_standby:

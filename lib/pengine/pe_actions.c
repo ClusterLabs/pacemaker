@@ -790,7 +790,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
             pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for "
                              "operation '%s' to 'stop' because 'fence' is not "
                              "valid when fencing is disabled", action->uuid);
-            action->on_fail = action_fail_stop;
+            action->on_fail = pcmk_on_fail_stop;
             action->fail_role = pcmk_role_stopped;
             value = "stop resource";
         }
@@ -809,7 +809,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
         value = "force migration";
 
     } else if (pcmk__str_eq(value, "stop", pcmk__str_casei)) {
-        action->on_fail = action_fail_stop;
+        action->on_fail = pcmk_on_fail_stop;
         action->fail_role = pcmk_role_stopped;
         value = "stop resource";
 
@@ -856,7 +856,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
                && !pcmk__str_eq(action->task, PCMK_ACTION_START, pcmk__str_casei)) {
 
         if (!pcmk_is_set(action->rsc->flags, pe_rsc_managed)) {
-            action->on_fail = action_fail_stop;
+            action->on_fail = pcmk_on_fail_stop;
             action->fail_role = pcmk_role_stopped;
             value = "stop unmanaged remote node (enforcing default)";
 
