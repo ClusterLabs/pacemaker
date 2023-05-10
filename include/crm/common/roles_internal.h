@@ -20,6 +20,7 @@ extern "C" {
 #define PCMK__ROLE_STARTED      "Started"
 #define PCMK__ROLE_UNPROMOTED   "Unpromoted"
 #define PCMK__ROLE_PROMOTED     "Promoted"
+#define PCMK__ROLE_UNPROMOTED_LEGACY    "Slave"
 
 #ifdef __cplusplus
 }
