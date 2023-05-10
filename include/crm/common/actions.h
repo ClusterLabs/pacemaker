@@ -161,9 +161,11 @@ enum action_fail_response {
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_on_fail_ignore instead
     action_fail_ignore              = pcmk_on_fail_ignore,
+
+    //! \deprecated Use pcmk_on_fail_restart instead
+    action_fail_recover             = pcmk_on_fail_restart,
 #endif
     // @TODO action_fail_demote = 20,
-    action_fail_recover             = pcmk_on_fail_restart,
     // @TODO action_fail_reset_remote = 40,
     // @TODO action_fail_restart_container = 50,
     action_fail_migrate,    // @TODO = 60
