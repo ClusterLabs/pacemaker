@@ -141,17 +141,21 @@ enum action_tasks {
 //! Possible responses to a resource action failure
 enum action_fail_response {
     /* The order is (partially) significant here; the values from
-     * action_fail_ignore through action_fail_fence are in order of increasing
+     * pcmk_on_fail_ignore through action_fail_fence are in order of increasing
      * severity.
      *
      * @COMPAT The values should be ordered and numbered per the "TODO" comments
      *         below, so all values are in order of severity and there is room for
      *         future additions, but that would break API compatibility.
      * @TODO   For now, we just use a function to compare the values specially, but
-     *         at the next compatibility break, we should arrange things properly.
+     *         at the next compatibility break, we should arrange things
+     *         properly so we can compare with less than and greater than.
      */
 
-    action_fail_ignore,     // @TODO = 10
+    // @TODO Define as 10
+    pcmk_on_fail_ignore             = 0,    //!< Act as if failure didn't happen
+
+    action_fail_ignore              = pcmk_on_fail_ignore,
     // @TODO action_fail_demote = 20,
     action_fail_recover,    // @TODO = 30
     // @TODO action_fail_reset_remote = 40,

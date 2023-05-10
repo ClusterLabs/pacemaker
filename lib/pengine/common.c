@@ -321,7 +321,7 @@ fail2text(enum action_fail_response fail)
     const char *result = "<unknown>";
 
     switch (fail) {
-        case action_fail_ignore:
+        case pcmk_on_fail_ignore:
             result = "ignore";
             break;
         case action_fail_demote:

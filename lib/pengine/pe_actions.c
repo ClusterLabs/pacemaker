@@ -801,7 +801,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
 
     } else if (pcmk__strcase_any_of(value, "ignore", PCMK__VALUE_NOTHING,
                                     NULL)) {
-        action->on_fail = action_fail_ignore;
+        action->on_fail = pcmk_on_fail_ignore;
         value = "ignore";
 
     } else if (pcmk__str_eq(value, "migrate", pcmk__str_casei)) {

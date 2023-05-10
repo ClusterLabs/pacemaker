@@ -2066,7 +2066,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
 {
     pe_node_t *tmpnode = NULL;
     char *reason = NULL;
-    enum action_fail_response save_on_fail = action_fail_ignore;
+    enum action_fail_response save_on_fail = pcmk_on_fail_ignore;
 
     CRM_ASSERT(rsc);
     pe_rsc_trace(rsc, "Resource %s is %s on %s: on_fail=%s",
@@ -2149,11 +2149,11 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
         /* No extra processing needed
          * Also allows resources to be started again after a node is shot
          */
-        on_fail = action_fail_ignore;
+        on_fail = pcmk_on_fail_ignore;
     }
 
     switch (on_fail) {
-        case action_fail_ignore:
+        case pcmk_on_fail_ignore:
             /* nothing to do */
             break;
 
@@ -2281,9 +2281,9 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
         }
 
         native_add_running(rsc, node, rsc->cluster,
-                           (save_on_fail != action_fail_ignore));
+                           (save_on_fail != pcmk_on_fail_ignore));
         switch (on_fail) {
-            case action_fail_ignore:
+            case pcmk_on_fail_ignore:
                 break;
             case action_fail_demote:
             case action_fail_block:
@@ -2497,7 +2497,7 @@ unpack_lrm_resource(pe_node_t *node, const xmlNode *lrm_resource,
     xmlNode *rsc_op = NULL;
     xmlNode *last_failure = NULL;
 
-    enum action_fail_response on_fail = action_fail_ignore;
+    enum action_fail_response on_fail = pcmk_on_fail_ignore;
     enum rsc_role_e saved_role = pcmk_role_unknown;
 
     if (rsc_id == NULL) {
@@ -3343,7 +3343,7 @@ cmp_on_fail(enum action_fail_response first, enum action_fail_response second)
     switch (first) {
         case action_fail_demote:
             switch (second) {
-                case action_fail_ignore:
+                case pcmk_on_fail_ignore:
                     return 1;
                 case action_fail_demote:
                     return 0;
@@ -3354,7 +3354,7 @@ cmp_on_fail(enum action_fail_response first, enum action_fail_response second)
 
         case action_fail_reset_remote:
             switch (second) {
-                case action_fail_ignore:
+                case pcmk_on_fail_ignore:
                 case action_fail_demote:
                 case action_fail_recover:
                     return 1;
@@ -3367,7 +3367,7 @@ cmp_on_fail(enum action_fail_response first, enum action_fail_response second)
 
         case action_fail_restart_container:
             switch (second) {
-                case action_fail_ignore:
+                case pcmk_on_fail_ignore:
                 case action_fail_demote:
                 case action_fail_recover:
                 case action_fail_reset_remote:
@@ -3384,11 +3384,11 @@ cmp_on_fail(enum action_fail_response first, enum action_fail_response second)
     }
     switch (second) {
         case action_fail_demote:
-            return (first == action_fail_ignore)? -1 : 1;
+            return (first == pcmk_on_fail_ignore)? -1 : 1;
 
         case action_fail_reset_remote:
             switch (first) {
-                case action_fail_ignore:
+                case pcmk_on_fail_ignore:
                 case action_fail_demote:
                 case action_fail_recover:
                     return -1;
@@ -3399,7 +3399,7 @@ cmp_on_fail(enum action_fail_response first, enum action_fail_response second)
 
         case action_fail_restart_container:
             switch (first) {
-                case action_fail_ignore:
+                case pcmk_on_fail_ignore:
                 case action_fail_demote:
                 case action_fail_recover:
                 case action_fail_reset_remote:
@@ -3763,7 +3763,7 @@ remap_operation(struct action_history *history,
                  */
                 remap_because(history, &why, PCMK_EXEC_DONE, "exit status");
                 history->rsc->role = pcmk_role_stopped;
-                *on_fail = action_fail_ignore;
+                *on_fail = pcmk_on_fail_ignore;
                 pe__set_next_role(history->rsc, pcmk_role_unknown,
                                   "not running");
             }
@@ -4218,11 +4218,11 @@ update_resource_state(struct action_history *history, int exit_status,
             break;
 
         case action_fail_block:
-        case action_fail_ignore:
+        case pcmk_on_fail_ignore:
         case action_fail_demote:
         case action_fail_recover:
         case action_fail_restart_container:
-            *on_fail = action_fail_ignore;
+            *on_fail = pcmk_on_fail_ignore;
             pe__set_next_role(history->rsc, pcmk_role_unknown,
                               "clear past failures");
             break;
@@ -4235,7 +4235,7 @@ update_resource_state(struct action_history *history, int exit_status,
                  * for the failure to be cleared entirely before attempting
                  * to reconnect.)
                  */
-                *on_fail = action_fail_ignore;
+                *on_fail = pcmk_on_fail_ignore;
                 pe__set_next_role(history->rsc, pcmk_role_unknown,
                                   "clear past failures and reset remote");
             }
@@ -4621,7 +4621,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 
         case PCMK_EXEC_NOT_INSTALLED:
             failure_strategy = get_action_on_fail(&history);
-            if (failure_strategy == action_fail_ignore) {
+            if (failure_strategy == pcmk_on_fail_ignore) {
                 crm_warn("Cannot ignore failed %s of %s on %s: "
                          "Resource agent doesn't exist "
                          CRM_XS " status=%d rc=%d id=%s",
@@ -4663,7 +4663,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     }
 
     failure_strategy = get_action_on_fail(&history);
-    if ((failure_strategy == action_fail_ignore)
+    if ((failure_strategy == pcmk_on_fail_ignore)
         || (failure_strategy == action_fail_restart_container
             && (strcmp(history.task, PCMK_ACTION_STOP) == 0))) {
 
