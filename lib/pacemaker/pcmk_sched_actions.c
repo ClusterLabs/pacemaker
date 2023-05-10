@@ -127,7 +127,7 @@ action_uuid_for_ordering(const char *first_uuid, const pe_resource_t *first_rsc)
             remapped_task = first_task;
             break;
         case pcmk_action_monitor:
-        case shutdown_crm:
+        case pcmk_action_shutdown:
         case stonith_node:
             break;
         default:
@@ -967,7 +967,7 @@ pcmk__log_action(const char *pre_text, const pe_action_t *action, bool details)
 
     switch (text2task(action->task)) {
         case stonith_node:
-        case shutdown_crm:
+        case pcmk_action_shutdown:
             if (pcmk_is_set(action->flags, pe_action_pseudo)) {
                 desc = "Pseudo ";
             } else if (pcmk_is_set(action->flags, pe_action_optional)) {

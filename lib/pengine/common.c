@@ -371,7 +371,8 @@ text2task(const char *task)
         return pcmk_action_started;
 
     } else if (pcmk__str_eq(task, PCMK_ACTION_DO_SHUTDOWN, pcmk__str_casei)) {
-        return shutdown_crm;
+        return pcmk_action_shutdown;
+
     } else if (pcmk__str_eq(task, PCMK_ACTION_STONITH, pcmk__str_casei)) {
         return stonith_node;
 
@@ -420,7 +421,7 @@ task2text(enum action_tasks task)
         case pcmk_action_started:
             result = PCMK_ACTION_RUNNING;
             break;
-        case shutdown_crm:
+        case pcmk_action_shutdown:
             result = PCMK_ACTION_DO_SHUTDOWN;
             break;
         case stonith_node:
