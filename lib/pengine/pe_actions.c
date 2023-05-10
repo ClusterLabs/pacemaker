@@ -1280,7 +1280,7 @@ get_complex_task(const pe_resource_t *rsc, const char *name)
     if ((rsc != NULL) && (rsc->variant == pe_native)) {
         switch (task) {
             case pcmk_action_stopped:
-            case started_rsc:
+            case pcmk_action_started:
             case action_demoted:
             case action_promoted:
                 crm_trace("Folding %s back into its atomic counterpart for %s",

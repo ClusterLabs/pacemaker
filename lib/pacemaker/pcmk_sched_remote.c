@@ -701,7 +701,7 @@ pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pe_action_t *action)
             break;
 
         case pcmk_action_start:
-        case started_rsc:
+        case pcmk_action_started:
         case pcmk_action_monitor:
         case action_promote:
         case action_promoted:
