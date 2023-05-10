@@ -76,6 +76,7 @@ enum action_tasks {
     // Each "completed" action must be the regular action plus 1
 
     pcmk_action_stop,               //!< Stop
+    pcmk_action_stopped,            //!< Stop completed
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_action_unspecified instead
@@ -87,7 +88,7 @@ enum action_tasks {
     //! \deprecated Use pcmk_action_stop instead
     stop_rsc                = pcmk_action_stop,
 #endif
-    stopped_rsc,
+    stopped_rsc             = pcmk_action_stopped,
     start_rsc,
     started_rsc,
     action_notify,

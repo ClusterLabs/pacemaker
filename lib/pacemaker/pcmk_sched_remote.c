@@ -693,7 +693,7 @@ pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pe_action_t *action)
 
     switch (task) {
         case pcmk_action_stop:
-        case stopped_rsc:
+        case pcmk_action_stopped:
         case action_demote:
         case action_demoted:
             // "Down" actions take place on guest's current host

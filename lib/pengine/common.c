@@ -362,7 +362,8 @@ text2task(const char *task)
         return pcmk_action_stop;
 
     } else if (pcmk__str_eq(task, PCMK_ACTION_STOPPED, pcmk__str_casei)) {
-        return stopped_rsc;
+        return pcmk_action_stopped;
+
     } else if (pcmk__str_eq(task, PCMK_ACTION_START, pcmk__str_casei)) {
         return start_rsc;
     } else if (pcmk__str_eq(task, PCMK_ACTION_RUNNING, pcmk__str_casei)) {
@@ -403,7 +404,7 @@ task2text(enum action_tasks task)
         case pcmk_action_stop:
             result = PCMK_ACTION_STOP;
             break;
-        case stopped_rsc:
+        case pcmk_action_stopped:
             result = PCMK_ACTION_STOPPED;
             break;
         case start_rsc:

@@ -1279,7 +1279,7 @@ get_complex_task(const pe_resource_t *rsc, const char *name)
 
     if ((rsc != NULL) && (rsc->variant == pe_native)) {
         switch (task) {
-            case stopped_rsc:
+            case pcmk_action_stopped:
             case started_rsc:
             case action_demoted:
             case action_promoted:
