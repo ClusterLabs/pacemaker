@@ -266,7 +266,7 @@ apply_remote_ordering(pe_action_t *action)
             } else {
                 pe_node_t *cluster_node = pe__current_node(remote_rsc);
 
-                if ((task == monitor_rsc) && (state == remote_state_failed)) {
+                if ((task == pcmk_action_monitor) && (state == remote_state_failed)) {
                     /* We would only be here if we do not know the state of the
                      * resource on the remote node. Since we have no way to find
                      * out, it is necessary to fence the node.
@@ -702,7 +702,7 @@ pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pe_action_t *action)
 
         case start_rsc:
         case started_rsc:
-        case monitor_rsc:
+        case pcmk_action_monitor:
         case action_promote:
         case action_promoted:
             // "Up" actions take place on guest's next host

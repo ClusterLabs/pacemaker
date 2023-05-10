@@ -126,7 +126,7 @@ action_uuid_for_ordering(const char *first_uuid, const pe_resource_t *first_rsc)
         case action_demoted:
             remapped_task = first_task;
             break;
-        case monitor_rsc:
+        case pcmk_action_monitor:
         case shutdown_crm:
         case stonith_node:
             break;
