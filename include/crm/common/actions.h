@@ -155,7 +155,10 @@ enum action_fail_response {
     // @TODO Define as 10
     pcmk_on_fail_ignore             = 0,    //!< Act as if failure didn't happen
 
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated Use pcmk_on_fail_ignore instead
     action_fail_ignore              = pcmk_on_fail_ignore,
+#endif
     // @TODO action_fail_demote = 20,
     action_fail_recover,    // @TODO = 30
     // @TODO action_fail_reset_remote = 40,
