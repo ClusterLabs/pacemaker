@@ -82,6 +82,7 @@ enum action_tasks {
     pcmk_action_started,            //!< Start completed
 
     pcmk_action_notify,             //!< Notify
+    pcmk_action_notified,           //!< Notify completed
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_action_unspecified instead
@@ -105,7 +106,7 @@ enum action_tasks {
     //! \deprecated Use pcmk_action_notify instead
     action_notify           = pcmk_action_notify,
 #endif
-    action_notified,
+    action_notified         = pcmk_action_notified,
     action_promote,
     action_promoted,
     action_demote,

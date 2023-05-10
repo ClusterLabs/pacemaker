@@ -687,7 +687,7 @@ pcmk__bundle_action_flags(pe_action_t *action, const pe_node_t *node)
         switch (get_complex_task(bundled_resource, action->task)) {
             case pcmk_action_unspecified:
             case pcmk_action_notify:
-            case action_notified:
+            case pcmk_action_notified:
             case action_promote:
             case action_promoted:
             case action_demote:
