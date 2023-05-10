@@ -749,7 +749,7 @@ pcmk__bundle_apply_location(pe_resource_t *rsc, pe__location_t *location)
 
     bundled_resource = pe__bundled_resource(rsc);
     if ((bundled_resource != NULL)
-        && ((location->role_filter == RSC_ROLE_UNPROMOTED)
+        && ((location->role_filter == pcmk_role_unpromoted)
             || (location->role_filter == RSC_ROLE_PROMOTED))) {
         bundled_resource->cmds->apply_location(bundled_resource, location);
         bundled_resource->rsc_location = g_list_prepend(

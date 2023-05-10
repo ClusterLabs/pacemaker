@@ -291,9 +291,9 @@ effective_quorum_policy(pe_resource_t *rsc, pe_working_set_t *data_set)
     } else if (data_set->no_quorum_policy == no_quorum_demote) {
         switch (rsc->role) {
             case RSC_ROLE_PROMOTED:
-            case RSC_ROLE_UNPROMOTED:
-                if (rsc->next_role > RSC_ROLE_UNPROMOTED) {
-                    pe__set_next_role(rsc, RSC_ROLE_UNPROMOTED,
+            case pcmk_role_unpromoted:
+                if (rsc->next_role > pcmk_role_unpromoted) {
+                    pe__set_next_role(rsc, pcmk_role_unpromoted,
                                       "no-quorum-policy=demote");
                 }
                 policy = no_quorum_ignore;
@@ -906,7 +906,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
     /* defaults */
     if (action->fail_role == pcmk_role_unknown) {
         if (pcmk__str_eq(action->task, PCMK_ACTION_PROMOTE, pcmk__str_casei)) {
-            action->fail_role = RSC_ROLE_UNPROMOTED;
+            action->fail_role = pcmk_role_unpromoted;
         } else {
             action->fail_role = pcmk_role_started;
         }

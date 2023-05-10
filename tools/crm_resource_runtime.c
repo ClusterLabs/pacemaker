@@ -937,7 +937,7 @@ check_role(resource_checks_t *checks)
             checks->flags |= rsc_remain_stopped;
             break;
 
-        case RSC_ROLE_UNPROMOTED:
+        case pcmk_role_unpromoted:
             if (pcmk_is_set(pe__const_top_resource(checks->rsc, false)->flags,
                             pe_rsc_promotable)) {
                 checks->flags |= rsc_unpromotable;

@@ -816,7 +816,7 @@ set_current_role_unpromoted(void *data, void *user_data)
 
     if (rsc->role == pcmk_role_started) {
         // Promotable clones should use unpromoted role instead of started
-        rsc->role = RSC_ROLE_UNPROMOTED;
+        rsc->role = pcmk_role_unpromoted;
     }
     g_list_foreach(rsc->children, set_current_role_unpromoted, NULL);
 }
@@ -838,7 +838,7 @@ set_next_role_unpromoted(void *data, void *user_data)
     if (assigned == NULL) {
         pe__set_next_role(rsc, pcmk_role_stopped, "stopped instance");
     } else {
-        pe__set_next_role(rsc, RSC_ROLE_UNPROMOTED, "unpromoted instance");
+        pe__set_next_role(rsc, pcmk_role_unpromoted, "unpromoted instance");
         g_list_free(assigned);
     }
     g_list_foreach(rsc->children, set_next_role_unpromoted, NULL);
@@ -947,7 +947,7 @@ set_instance_priority(gpointer data, gpointer user_data)
             }
             break;
 
-        case RSC_ROLE_UNPROMOTED:
+        case pcmk_role_unpromoted:
         case pcmk_role_stopped:
             // Instance can't be promoted
             instance->priority = -INFINITY;

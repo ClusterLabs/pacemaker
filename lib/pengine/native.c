@@ -430,7 +430,7 @@ native_displayable_role(const pe_resource_t *rsc)
         && pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
                        pe_rsc_promotable)) {
 
-        role = RSC_ROLE_UNPROMOTED;
+        role = pcmk_role_unpromoted;
     }
     return role;
 }
@@ -594,7 +594,7 @@ pcmk__native_output_string(const pe_resource_t *rsc, const char *name,
         enum rsc_role_e role = native_displayable_role(rsc);
 
         g_string_append(outstr, " FAILED");
-        if (role > RSC_ROLE_UNPROMOTED) {
+        if (role > pcmk_role_unpromoted) {
             pcmk__add_word(&outstr, 0, role2text(role));
         }
     } else {
@@ -644,7 +644,7 @@ pcmk__native_output_string(const pe_resource_t *rsc, const char *name,
 
         } else if (pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
                                pe_rsc_promotable)
-                   && target_role_e == RSC_ROLE_UNPROMOTED) {
+                   && (target_role_e == pcmk_role_unpromoted)) {
             have_flags = add_output_flag(outstr, "target-role:", have_flags);
             g_string_append(outstr, target_role);
         }

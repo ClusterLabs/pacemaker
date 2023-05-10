@@ -2669,7 +2669,7 @@ set_active(pe_resource_t * rsc)
     const pe_resource_t *top = pe__const_top_resource(rsc, false);
 
     if (top && pcmk_is_set(top->flags, pe_rsc_promotable)) {
-        rsc->role = RSC_ROLE_UNPROMOTED;
+        rsc->role = pcmk_role_unpromoted;
     } else {
         rsc->role = pcmk_role_started;
     }
@@ -3542,7 +3542,7 @@ unpack_rsc_op_failure(struct action_history *history, xmlNode **last_failure,
              * dangerous because the resource will be stopped as part of
              * recovery, and any promotion will be ordered after that stop.
              */
-            history->rsc->role = RSC_ROLE_UNPROMOTED;
+            history->rsc->role = pcmk_role_unpromoted;
         }
     }
 
@@ -4186,7 +4186,7 @@ update_resource_state(struct action_history *history, int exit_status,
             // Demote clears an error only if on-fail=demote
             clear_past_failure = true;
         }
-        history->rsc->role = RSC_ROLE_UNPROMOTED;
+        history->rsc->role = pcmk_role_unpromoted;
 
     } else if (pcmk__str_eq(history->task, PCMK_ACTION_MIGRATE_FROM,
                             pcmk__str_none)) {

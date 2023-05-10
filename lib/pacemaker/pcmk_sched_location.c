@@ -118,7 +118,7 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
     if (role != NULL) {
         crm_trace("Setting role filter: %s", role);
         location_rule->role_filter = text2role(role);
-        if (location_rule->role_filter == RSC_ROLE_UNPROMOTED) {
+        if (location_rule->role_filter == pcmk_role_unpromoted) {
             /* Any promotable clone cannot be promoted without being in the
              * unpromoted role first. Ergo, any constraint for the unpromoted
              * role applies to every role.
@@ -273,7 +273,7 @@ unpack_rsc_location(xmlNode *xml_obj, pe_resource_t *rsc, const char *role,
             switch (r) {
                 case pcmk_role_unknown:
                 case pcmk_role_started:
-                case RSC_ROLE_UNPROMOTED:
+                case pcmk_role_unpromoted:
                     /* Applies to all */
                     location->role_filter = pcmk_role_unknown;
                     break;

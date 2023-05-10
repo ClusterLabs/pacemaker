@@ -1311,7 +1311,7 @@ rsc_order_first(pe_resource_t *first_rsc, pe__ordering_t *order)
                          order->id, order->lh_action_task, first_rsc->id);
 
         } else if ((first_rsc->fns->state(first_rsc,
-                                          TRUE) == RSC_ROLE_UNPROMOTED)
+                                          TRUE) == pcmk_role_unpromoted)
                    && pcmk__str_eq(op_type, PCMK_ACTION_DEMOTE,
                                    pcmk__str_none)) {
             free(key);

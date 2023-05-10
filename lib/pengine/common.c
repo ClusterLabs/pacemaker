@@ -465,7 +465,7 @@ role2text(enum rsc_role_e role)
             return RSC_ROLE_STOPPED_S;
         case pcmk_role_started:
             return RSC_ROLE_STARTED_S;
-        case RSC_ROLE_UNPROMOTED:
+        case pcmk_role_unpromoted:
 #ifdef PCMK__COMPAT_2_0
             return RSC_ROLE_UNPROMOTED_LEGACY_S;
 #else
@@ -494,7 +494,7 @@ text2role(const char *role)
         return pcmk_role_started;
     } else if (pcmk__strcase_any_of(role, RSC_ROLE_UNPROMOTED_S,
                                     RSC_ROLE_UNPROMOTED_LEGACY_S, NULL)) {
-        return RSC_ROLE_UNPROMOTED;
+        return pcmk_role_unpromoted;
     } else if (pcmk__strcase_any_of(role, RSC_ROLE_PROMOTED_S,
                                     RSC_ROLE_PROMOTED_LEGACY_S, NULL)) {
         return RSC_ROLE_PROMOTED;

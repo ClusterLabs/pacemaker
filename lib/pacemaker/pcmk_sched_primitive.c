@@ -44,25 +44,25 @@ static enum rsc_role_e rsc_state_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
     /* Stopped */       { pcmk_role_stopped,    /* Unknown */
                           pcmk_role_stopped,    /* Stopped */
                           pcmk_role_started,    /* Started */
-                          RSC_ROLE_UNPROMOTED,  /* Unpromoted */
-                          RSC_ROLE_UNPROMOTED,  /* Promoted */
+                          pcmk_role_unpromoted, /* Unpromoted */
+                          pcmk_role_unpromoted, /* Promoted */
                         },
     /* Started */       { pcmk_role_stopped,    /* Unknown */
                           pcmk_role_stopped,    /* Stopped */
                           pcmk_role_started,    /* Started */
-                          RSC_ROLE_UNPROMOTED,  /* Unpromoted */
+                          pcmk_role_unpromoted, /* Unpromoted */
                           RSC_ROLE_PROMOTED,    /* Promoted */
                         },
     /* Unpromoted */    { pcmk_role_stopped,    /* Unknown */
                           pcmk_role_stopped,    /* Stopped */
                           pcmk_role_stopped,    /* Started */
-                          RSC_ROLE_UNPROMOTED,  /* Unpromoted */
+                          pcmk_role_unpromoted, /* Unpromoted */
                           RSC_ROLE_PROMOTED,    /* Promoted */
                         },
     /* Promoted  */     { pcmk_role_stopped,    /* Unknown */
-                          RSC_ROLE_UNPROMOTED,  /* Stopped */
-                          RSC_ROLE_UNPROMOTED,  /* Started */
-                          RSC_ROLE_UNPROMOTED,  /* Unpromoted */
+                          pcmk_role_unpromoted, /* Stopped */
+                          pcmk_role_unpromoted, /* Started */
+                          pcmk_role_unpromoted, /* Unpromoted */
                           RSC_ROLE_PROMOTED,    /* Promoted */
                         },
 };
@@ -924,7 +924,7 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
     // Promotable ordering: demote before stop, start before promote
     if (pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
                     pe_rsc_promotable)
-        || (rsc->role > RSC_ROLE_UNPROMOTED)) {
+        || (rsc->role > pcmk_role_unpromoted)) {
 
         pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, PCMK_ACTION_DEMOTE, 0),
                            NULL,

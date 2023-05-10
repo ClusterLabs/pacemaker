@@ -28,6 +28,7 @@ enum rsc_role_e {
     pcmk_role_unknown       = 0, //!< Resource role is unknown
     pcmk_role_stopped       = 1, //!< Stopped
     pcmk_role_started       = 2, //!< Started
+    pcmk_role_unpromoted    = 3, //!< Unpromoted
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_role_unknown instead
@@ -39,12 +40,12 @@ enum rsc_role_e {
     //! \deprecated Use pcmk_role_started instead
     RSC_ROLE_STARTED        = pcmk_role_started,
 #endif
-    RSC_ROLE_UNPROMOTED = 3,
+    RSC_ROLE_UNPROMOTED     = pcmk_role_unpromoted,
     RSC_ROLE_PROMOTED   = 4,
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    //! \deprecated Use RSC_ROLE_UNPROMOTED instead
-    RSC_ROLE_SLAVE      = RSC_ROLE_UNPROMOTED,
+    //! \deprecated Use pcmk_role_unpromoted instead
+    RSC_ROLE_SLAVE      = pcmk_role_unpromoted,
 
     //! \deprecated Use RSC_ROLE_PROMOTED instead
     RSC_ROLE_MASTER     = RSC_ROLE_PROMOTED,

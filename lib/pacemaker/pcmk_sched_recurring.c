@@ -265,7 +265,7 @@ recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
                                                              node);
 
             switch (rsc->role) {
-                case RSC_ROLE_UNPROMOTED:
+                case pcmk_role_unpromoted:
                 case pcmk_role_started:
                     if (rsc->next_role == RSC_ROLE_PROMOTED) {
                         after_key = promote_key(rsc);
@@ -292,7 +292,7 @@ recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
                    "%s recurring action %s because %s configured for %s role "
                    "(not %s)",
                    (is_optional? "Cancelling" : "Ignoring"), op->key, op->id,
-                   role2text(is_default_role? RSC_ROLE_UNPROMOTED : op->role),
+                   role2text(is_default_role? pcmk_role_unpromoted : op->role),
                    role2text(rsc->next_role));
         return;
     }
@@ -379,7 +379,7 @@ cancel_if_running(pe_resource_t *rsc, const pe_node_t *node, const char *key,
 
     switch (rsc->next_role) {
         case pcmk_role_started:
-        case RSC_ROLE_UNPROMOTED:
+        case pcmk_role_unpromoted:
             /* Order starts after cancel. If the current role is
              * stopped, this cancels the monitor before the resource
              * starts; if the current role is started, then this cancels

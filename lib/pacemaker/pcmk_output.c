@@ -139,7 +139,7 @@ rsc_action_item(pcmk__output_t *out, va_list args)
     }
 
     if ((rsc->role > pcmk_role_started)
-        || (rsc->next_role > RSC_ROLE_UNPROMOTED)) {
+        || (rsc->next_role > pcmk_role_unpromoted)) {
         need_role = true;
     }
 
@@ -258,7 +258,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
     }
 
     if ((rsc->role > pcmk_role_started)
-        || (rsc->next_role > RSC_ROLE_UNPROMOTED)) {
+        || (rsc->next_role > pcmk_role_unpromoted)) {
         need_role = true;
     }
 

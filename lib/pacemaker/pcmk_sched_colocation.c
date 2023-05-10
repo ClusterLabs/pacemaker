@@ -300,7 +300,7 @@ anti_colocation_order(pe_resource_t *first_rsc, int first_role,
     } else {
         first_tasks[0] = PCMK_ACTION_STOP;
 
-        if (first_role == RSC_ROLE_UNPROMOTED) {
+        if (first_role == pcmk_role_unpromoted) {
             first_tasks[1] = PCMK_ACTION_PROMOTE;
         }
     }
@@ -312,7 +312,7 @@ anti_colocation_order(pe_resource_t *first_rsc, int first_role,
     } else {
         then_tasks[0] = PCMK_ACTION_START;
 
-        if (then_role == RSC_ROLE_UNPROMOTED) {
+        if (then_role == pcmk_role_unpromoted) {
             then_tasks[1] = PCMK_ACTION_DEMOTE;
         }
     }
@@ -1191,7 +1191,7 @@ pcmk__colocation_affects(const pe_resource_t *dependent,
     dependent_role_rsc = get_resource_for_role(dependent);
     primary_role_rsc = get_resource_for_role(primary);
 
-    if ((colocation->dependent_role >= RSC_ROLE_UNPROMOTED)
+    if ((colocation->dependent_role >= pcmk_role_unpromoted)
         && (dependent_role_rsc->parent != NULL)
         && pcmk_is_set(dependent_role_rsc->parent->flags, pe_rsc_promotable)
         && !pcmk_is_set(dependent_role_rsc->flags, pe_rsc_provisional)) {
@@ -1414,7 +1414,7 @@ pcmk__apply_coloc_to_priority(pe_resource_t *dependent,
         return;
     }
 
-    if (colocation->dependent_role == RSC_ROLE_UNPROMOTED) {
+    if (colocation->dependent_role == pcmk_role_unpromoted) {
         score_multiplier = -1;
     }
 
