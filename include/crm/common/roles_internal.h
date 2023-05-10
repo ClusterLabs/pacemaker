@@ -19,6 +19,7 @@ extern "C" {
 #define PCMK__ROLE_STOPPED      "Stopped"
 #define PCMK__ROLE_STARTED      "Started"
 #define PCMK__ROLE_UNPROMOTED   "Unpromoted"
+#define PCMK__ROLE_PROMOTED     "Promoted"
 
 #ifdef __cplusplus
 }

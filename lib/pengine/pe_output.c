@@ -8,9 +8,12 @@
  */
 
 #include <crm_internal.h>
+
 #include <stdint.h>
+
 #include <crm/common/xml_internal.h>
 #include <crm/common/output.h>
+#include <crm/common/scheduler_internal.h>
 #include <crm/cib/util.h>
 #include <crm/msg_xml.h>
 #include <crm/pengine/internal.h>
@@ -602,7 +605,7 @@ role_desc(enum rsc_role_e role)
 #ifdef PCMK__COMPAT_2_0
         return "as " RSC_ROLE_PROMOTED_LEGACY_S " ";
 #else
-        return "in " RSC_ROLE_PROMOTED_S " role ";
+        return "in " PCMK__ROLE_PROMOTED " role ";
 #endif
     }
     return "";

@@ -14,6 +14,7 @@
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
+#include <crm/common/scheduler_internal.h>
 #include <crm/pengine/internal.h>
 #include <crm/common/xml_internal.h>
 #include "pe_status_private.h"
@@ -471,7 +472,7 @@ unpack_operation_on_fail(pe_action_t * action)
             } else if (pcmk__xe_get_bool_attr(operation, "enabled", &enabled) == pcmk_rc_ok && !enabled) {
                 continue;
             } else if (!pcmk__str_eq(name, PCMK_ACTION_MONITOR, pcmk__str_casei)
-                       || !pcmk__strcase_any_of(role, RSC_ROLE_PROMOTED_S,
+                       || !pcmk__strcase_any_of(role, PCMK__ROLE_PROMOTED,
                                                 RSC_ROLE_PROMOTED_LEGACY_S,
                                                 NULL)) {
                 continue;
@@ -495,7 +496,7 @@ unpack_operation_on_fail(pe_action_t * action)
 
         if (!pcmk__str_eq(name, PCMK_ACTION_PROMOTE, pcmk__str_casei)
             && (!pcmk__str_eq(name, PCMK_ACTION_MONITOR, pcmk__str_casei)
-                || !pcmk__strcase_any_of(role, RSC_ROLE_PROMOTED_S,
+                || !pcmk__strcase_any_of(role, PCMK__ROLE_PROMOTED,
                                          RSC_ROLE_PROMOTED_LEGACY_S, NULL)
                 || (crm_parse_interval_spec(interval_spec) == 0))) {
             pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for %s %s "

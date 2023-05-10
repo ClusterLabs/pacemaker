@@ -66,7 +66,7 @@ promoted_role_name(void)
 #ifdef PCMK__COMPAT_2_0
         return RSC_ROLE_PROMOTED_LEGACY_S;
 #else
-        return RSC_ROLE_PROMOTED_S;
+        return PCMK__ROLE_PROMOTED;
 #endif
 }
 
