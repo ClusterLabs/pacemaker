@@ -461,7 +461,7 @@ role2text(enum rsc_role_e role)
     switch (role) {
         case pcmk_role_unknown:
             return RSC_ROLE_UNKNOWN_S;
-        case RSC_ROLE_STOPPED:
+        case pcmk_role_stopped:
             return RSC_ROLE_STOPPED_S;
         case RSC_ROLE_STARTED:
             return RSC_ROLE_STARTED_S;
@@ -489,7 +489,7 @@ text2role(const char *role)
 {
     CRM_ASSERT(role != NULL);
     if (pcmk__str_eq(role, RSC_ROLE_STOPPED_S, pcmk__str_casei)) {
-        return RSC_ROLE_STOPPED;
+        return pcmk_role_stopped;
     } else if (pcmk__str_eq(role, RSC_ROLE_STARTED_S, pcmk__str_casei)) {
         return RSC_ROLE_STARTED;
     } else if (pcmk__strcase_any_of(role, RSC_ROLE_UNPROMOTED_S,

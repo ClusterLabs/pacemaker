@@ -836,7 +836,7 @@ set_next_role_unpromoted(void *data, void *user_data)
 
     rsc->fns->location(rsc, &assigned, FALSE);
     if (assigned == NULL) {
-        pe__set_next_role(rsc, RSC_ROLE_STOPPED, "stopped instance");
+        pe__set_next_role(rsc, pcmk_role_stopped, "stopped instance");
     } else {
         pe__set_next_role(rsc, RSC_ROLE_UNPROMOTED, "unpromoted instance");
         g_list_free(assigned);
@@ -948,7 +948,7 @@ set_instance_priority(gpointer data, gpointer user_data)
             break;
 
         case RSC_ROLE_UNPROMOTED:
-        case RSC_ROLE_STOPPED:
+        case pcmk_role_stopped:
             // Instance can't be promoted
             instance->priority = -INFINITY;
             break;

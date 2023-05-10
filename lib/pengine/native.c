@@ -607,7 +607,7 @@ pcmk__native_output_string(const pe_resource_t *rsc, const char *name,
     }
 
     // Failed probe operation
-    if (native_displayable_role(rsc) == RSC_ROLE_STOPPED) {
+    if (native_displayable_role(rsc) == pcmk_role_stopped) {
         xmlNode *probe_op = pe__failed_probe_for_rsc(rsc, node ? node->details->uname : NULL);
         if (probe_op != NULL) {
             int rc;
@@ -639,7 +639,7 @@ pcmk__native_output_string(const pe_resource_t *rsc, const char *name,
          * Started, as it is the default anyways, and doesn't prevent the
          * resource from becoming promoted).
          */
-        if (target_role_e == RSC_ROLE_STOPPED) {
+        if (target_role_e == pcmk_role_stopped) {
             have_flags = add_output_flag(outstr, "disabled", have_flags);
 
         } else if (pcmk_is_set(pe__const_top_resource(rsc, false)->flags,

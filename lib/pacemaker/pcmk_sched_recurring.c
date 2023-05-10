@@ -247,7 +247,7 @@ recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
     const bool is_default_role = (op->role == pcmk_role_unknown);
 
     // We're only interested in recurring actions for active roles
-    if (op->role == RSC_ROLE_STOPPED) {
+    if (op->role == pcmk_role_stopped) {
         return;
     }
 
@@ -270,7 +270,7 @@ recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
                     if (rsc->next_role == RSC_ROLE_PROMOTED) {
                         after_key = promote_key(rsc);
 
-                    } else if (rsc->next_role == RSC_ROLE_STOPPED) {
+                    } else if (rsc->next_role == pcmk_role_stopped) {
                         after_key = stop_key(rsc);
                     }
 
@@ -476,7 +476,7 @@ recurring_op_for_inactive(pe_resource_t *rsc, const pe_node_t *node,
     GList *possible_matches = NULL;
 
     // We're only interested in recurring actions for the inactive role
-    if (op->role != RSC_ROLE_STOPPED) {
+    if (op->role != pcmk_role_stopped) {
         return;
     }
 
@@ -576,7 +576,7 @@ pcmk__create_recurring_actions(pe_resource_t *rsc)
                      "in maintenance mode",
                      rsc->id, pe__node_name(rsc->allocated_to));
 
-    } else if ((rsc->next_role != RSC_ROLE_STOPPED)
+    } else if ((rsc->next_role != pcmk_role_stopped)
         || !pcmk_is_set(rsc->flags, pe_rsc_managed)) {
         // Recurring actions for active roles needed
         start = start_action(rsc, rsc->allocated_to, TRUE);

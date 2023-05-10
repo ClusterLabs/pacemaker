@@ -722,7 +722,7 @@ pe__resource_is_disabled(const pe_resource_t *rsc)
     if (target_role) {
         enum rsc_role_e target_role_e = text2role(target_role);
 
-        if ((target_role_e == RSC_ROLE_STOPPED)
+        if ((target_role_e == pcmk_role_stopped)
             || ((target_role_e == RSC_ROLE_UNPROMOTED)
                 && pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
                                pe_rsc_promotable))) {

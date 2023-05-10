@@ -333,7 +333,7 @@ pcmk__output_resource_actions(pe_resource_t *rsc)
     next = rsc->allocated_to;
     if (rsc->running_on) {
         current = pe__current_node(rsc);
-        if (rsc->role == RSC_ROLE_STOPPED) {
+        if (rsc->role == pcmk_role_stopped) {
             /* This can occur when resources are being recovered because
              * the current role can change in pcmk__primitive_create_actions()
              */
@@ -432,7 +432,7 @@ pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force,
                      pcmk_readable_score(node->weight));
 
         if (stop_if_fail) {
-            pe__set_next_role(rsc, RSC_ROLE_STOPPED, "node availability");
+            pe__set_next_role(rsc, pcmk_role_stopped, "node availability");
         }
         node = NULL;
     }
@@ -453,7 +453,7 @@ pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force,
         if (!stop_if_fail) {
             return changed;
         }
-        pe__set_next_role(rsc, RSC_ROLE_STOPPED, "unable to assign");
+        pe__set_next_role(rsc, pcmk_role_stopped, "unable to assign");
 
         for (GList *iter = rsc->actions; iter != NULL; iter = iter->next) {
             pe_action_t *op = (pe_action_t *) iter->data;

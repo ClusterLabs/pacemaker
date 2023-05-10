@@ -1218,7 +1218,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
     }
 
     if ((stop != NULL)
-        && ((rsc->next_role == RSC_ROLE_STOPPED)
+        && ((rsc->next_role == pcmk_role_stopped)
             || ((start != NULL)
                 && !pcmk_is_set(start->flags, pe_action_runnable)))) {
 
@@ -1282,8 +1282,8 @@ rsc_action_default(pcmk__output_t *out, va_list args)
         rc = out->message(out, "rsc-action-item", "Promote", rsc, current,
                           next, promote, NULL);
 
-    } else if ((rsc->role == RSC_ROLE_STOPPED)
-               && (rsc->next_role > RSC_ROLE_STOPPED)) {
+    } else if ((rsc->role == pcmk_role_stopped)
+               && (rsc->next_role > pcmk_role_stopped)) {
         rc = out->message(out, "rsc-action-item", "Start", rsc, current, next,
                           start, NULL);
     }

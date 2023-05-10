@@ -571,7 +571,7 @@ collect_resource_data(const pe_resource_t *rsc, bool activity,
 
     // Add notification indicating the resource state
     switch (rsc->role) {
-        case RSC_ROLE_STOPPED:
+        case pcmk_role_stopped:
             n_data->inactive = g_list_prepend(n_data->inactive, entry);
             break;
 
@@ -866,7 +866,7 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
                  rsc->id, n_data->action);
 
     // Create notify actions for stop or demote
-    if ((rsc->role != RSC_ROLE_STOPPED)
+    if ((rsc->role != pcmk_role_stopped)
         && ((task == stop_rsc) || (task == action_demote))) {
 
         stop = find_first_action(rsc->actions, NULL, PCMK_ACTION_STOP, NULL);
@@ -894,7 +894,7 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
     }
 
     // Create notify actions for start or promote
-    if ((rsc->next_role != RSC_ROLE_STOPPED)
+    if ((rsc->next_role != pcmk_role_stopped)
         && ((task == start_rsc) || (task == action_promote))) {
 
         start = find_first_action(rsc->actions, NULL, PCMK_ACTION_START, NULL);

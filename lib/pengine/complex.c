@@ -694,7 +694,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     (*rsc)->rsc_cons = NULL;
     (*rsc)->rsc_tickets = NULL;
     (*rsc)->actions = NULL;
-    (*rsc)->role = RSC_ROLE_STOPPED;
+    (*rsc)->role = pcmk_role_stopped;
     (*rsc)->next_role = pcmk_role_unknown;
 
     (*rsc)->recovery_type = pcmk_multiply_active_restart;
@@ -1146,7 +1146,7 @@ pe__count_common(pe_resource_t *rsc)
         }
 
     } else if (!pcmk_is_set(rsc->flags, pe_rsc_orphan)
-               || (rsc->role > RSC_ROLE_STOPPED)) {
+               || (rsc->role > pcmk_role_stopped)) {
         rsc->cluster->ninstances++;
         if (pe__resource_is_disabled(rsc)) {
             rsc->cluster->disabled_resources++;

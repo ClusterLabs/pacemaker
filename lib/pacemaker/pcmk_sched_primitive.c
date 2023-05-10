@@ -36,30 +36,30 @@ static enum rsc_role_e rsc_state_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
      * ------------       -------------------   -----------------
      */
     /* Unknown */       { pcmk_role_unknown,    /* Unknown */
-                          RSC_ROLE_STOPPED,     /* Stopped */
-                          RSC_ROLE_STOPPED,     /* Started */
-                          RSC_ROLE_STOPPED,     /* Unpromoted */
-                          RSC_ROLE_STOPPED,     /* Promoted */
+                          pcmk_role_stopped,    /* Stopped */
+                          pcmk_role_stopped,    /* Started */
+                          pcmk_role_stopped,    /* Unpromoted */
+                          pcmk_role_stopped,    /* Promoted */
                         },
-    /* Stopped */       { RSC_ROLE_STOPPED,     /* Unknown */
-                          RSC_ROLE_STOPPED,     /* Stopped */
+    /* Stopped */       { pcmk_role_stopped,    /* Unknown */
+                          pcmk_role_stopped,    /* Stopped */
                           RSC_ROLE_STARTED,     /* Started */
                           RSC_ROLE_UNPROMOTED,  /* Unpromoted */
                           RSC_ROLE_UNPROMOTED,  /* Promoted */
                         },
-    /* Started */       { RSC_ROLE_STOPPED,     /* Unknown */
-                          RSC_ROLE_STOPPED,     /* Stopped */
+    /* Started */       { pcmk_role_stopped,    /* Unknown */
+                          pcmk_role_stopped,    /* Stopped */
                           RSC_ROLE_STARTED,     /* Started */
                           RSC_ROLE_UNPROMOTED,  /* Unpromoted */
                           RSC_ROLE_PROMOTED,    /* Promoted */
                         },
-    /* Unpromoted */    { RSC_ROLE_STOPPED,     /* Unknown */
-                          RSC_ROLE_STOPPED,     /* Stopped */
-                          RSC_ROLE_STOPPED,     /* Started */
+    /* Unpromoted */    { pcmk_role_stopped,    /* Unknown */
+                          pcmk_role_stopped,    /* Stopped */
+                          pcmk_role_stopped,    /* Started */
                           RSC_ROLE_UNPROMOTED,  /* Unpromoted */
                           RSC_ROLE_PROMOTED,    /* Promoted */
                         },
-    /* Promoted  */     { RSC_ROLE_STOPPED,     /* Unknown */
+    /* Promoted  */     { pcmk_role_stopped,    /* Unknown */
                           RSC_ROLE_UNPROMOTED,  /* Stopped */
                           RSC_ROLE_UNPROMOTED,  /* Started */
                           RSC_ROLE_UNPROMOTED,  /* Unpromoted */
@@ -342,7 +342,7 @@ remote_connection_assigned(const pe_resource_t *connection)
     CRM_CHECK(remote_node != NULL, return);
 
     if ((connection->allocated_to != NULL)
-        && (connection->next_role != RSC_ROLE_STOPPED)) {
+        && (connection->next_role != pcmk_role_stopped)) {
 
         crm_trace("Pacemaker Remote node %s will be online",
                   remote_node->details->id);
@@ -465,7 +465,7 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer,
     g_list_free(this_with_colocations);
     g_list_free(with_this_colocations);
 
-    if (rsc->next_role == RSC_ROLE_STOPPED) {
+    if (rsc->next_role == pcmk_role_stopped) {
         pe_rsc_trace(rsc,
                      "Banning %s from all nodes because it will be stopped",
                      rsc->id);
@@ -558,8 +558,8 @@ schedule_restart_actions(pe_resource_t *rsc, pe_node_t *current,
     pe__set_resource_flags(rsc, pe_rsc_restarting);
 
     // Bring resource down to a stop on its current node
-    while (role != RSC_ROLE_STOPPED) {
-        next_role = rsc_state_matrix[role][RSC_ROLE_STOPPED];
+    while (role != pcmk_role_stopped) {
+        next_role = rsc_state_matrix[role][pcmk_role_stopped];
         pe_rsc_trace(rsc, "Creating %s action to take %s down from %s to %s",
                      (need_stop? "required" : "optional"), rsc->id,
                      role2text(role), role2text(next_role));
@@ -610,7 +610,7 @@ set_default_next_role(pe_resource_t *rsc)
     }
 
     if (rsc->allocated_to == NULL) {
-        pe__set_next_role(rsc, RSC_ROLE_STOPPED, "assignment");
+        pe__set_next_role(rsc, pcmk_role_stopped, "assignment");
     } else {
         pe__set_next_role(rsc, RSC_ROLE_STARTED, "assignment");
     }
@@ -1196,7 +1196,7 @@ is_expected_node(const pe_resource_t *rsc, const pe_node_t *node)
 {
     return pcmk_all_flags_set(rsc->flags,
                               pe_rsc_stop_unexpected|pe_rsc_restarting)
-           && (rsc->next_role > RSC_ROLE_STOPPED)
+           && (rsc->next_role > pcmk_role_stopped)
            && pe__same_node(rsc->allocated_to, node);
 }
 

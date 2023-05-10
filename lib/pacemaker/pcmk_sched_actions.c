@@ -713,7 +713,7 @@ handle_asymmetric_ordering(const pe_action_t *first, pe_action_t *then)
     if (pcmk_is_set(then->flags, pe_action_optional)) {
         enum rsc_role_e then_rsc_role = then->rsc->fns->state(then->rsc, TRUE);
 
-        if ((then_rsc_role == RSC_ROLE_STOPPED)
+        if ((then_rsc_role == pcmk_role_stopped)
             && pcmk__str_eq(then->task, PCMK_ACTION_STOP, pcmk__str_none)) {
             /* If 'then' should stop after 'first' but is already stopped, the
              * ordering is irrelevant.

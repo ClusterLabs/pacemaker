@@ -756,7 +756,7 @@ clone_print(pe_resource_t *rsc, const char *pre_text, long options,
         const char *state = "Stopped";
         enum rsc_role_e role = configured_role(rsc);
 
-        if (role == RSC_ROLE_STOPPED) {
+        if (role == pcmk_role_stopped) {
             state = "Stopped (disabled)";
         }
 
@@ -1104,7 +1104,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
                     xmlNode *probe_op = pe__failed_probe_for_rsc(rsc, node->details->uname);
                     const char *state = "Stopped";
 
-                    if (configured_role(rsc) == RSC_ROLE_STOPPED) {
+                    if (configured_role(rsc) == pcmk_role_stopped) {
                         state = "Stopped (disabled)";
                     }
 

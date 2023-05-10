@@ -790,7 +790,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
                              "operation '%s' to 'stop' because 'fence' is not "
                              "valid when fencing is disabled", action->uuid);
             action->on_fail = action_fail_stop;
-            action->fail_role = RSC_ROLE_STOPPED;
+            action->fail_role = pcmk_role_stopped;
             value = "stop resource";
         }
 
@@ -809,7 +809,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
 
     } else if (pcmk__str_eq(value, "stop", pcmk__str_casei)) {
         action->on_fail = action_fail_stop;
-        action->fail_role = RSC_ROLE_STOPPED;
+        action->fail_role = pcmk_role_stopped;
         value = "stop resource";
 
     } else if (pcmk__str_eq(value, "restart", pcmk__str_casei)) {
@@ -856,7 +856,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
 
         if (!pcmk_is_set(action->rsc->flags, pe_rsc_managed)) {
             action->on_fail = action_fail_stop;
-            action->fail_role = RSC_ROLE_STOPPED;
+            action->fail_role = pcmk_role_stopped;
             value = "stop unmanaged remote node (enforcing default)";
 
         } else {
@@ -867,7 +867,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
             }
 
             if (action->rsc->remote_reconnect_ms) {
-                action->fail_role = RSC_ROLE_STOPPED;
+                action->fail_role = pcmk_role_stopped;
             }
             action->on_fail = action_fail_reset_remote;
         }

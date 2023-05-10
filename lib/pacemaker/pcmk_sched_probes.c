@@ -106,10 +106,10 @@ guest_resource_will_stop(const pe_node_t *node)
     return node->details->remote_requires_reset
            || node->details->unclean
            || pcmk_is_set(guest_rsc->flags, pe_rsc_failed)
-           || (guest_rsc->next_role == RSC_ROLE_STOPPED)
+           || (guest_rsc->next_role == pcmk_role_stopped)
 
            // Guest is moving
-           || ((guest_rsc->role > RSC_ROLE_STOPPED)
+           || ((guest_rsc->role > pcmk_role_stopped)
                && (guest_rsc->allocated_to != NULL)
                && (pe_find_node(guest_rsc->running_on,
                    guest_rsc->allocated_to->details->uname) == NULL));
@@ -235,7 +235,7 @@ pcmk__probe_rsc_on_node(pe_resource_t *rsc, pe_node_t *node)
     if (pe__is_guest_node(node)) {
         pe_resource_t *guest = node->details->remote_rsc->container;
 
-        if (guest->role == RSC_ROLE_STOPPED) {
+        if (guest->role == pcmk_role_stopped) {
             // The guest is stopped, so we know no resource is active there
             reason = "node's guest is stopped";
             probe_then_start(guest, top);

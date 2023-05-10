@@ -1303,7 +1303,7 @@ rsc_order_first(pe_resource_t *first_rsc, pe__ordering_t *order)
         parse_op_key(order->lh_action_task, NULL, &op_type, &interval_ms);
         key = pcmk__op_key(first_rsc->id, op_type, interval_ms);
 
-        if ((first_rsc->fns->state(first_rsc, TRUE) == RSC_ROLE_STOPPED)
+        if ((first_rsc->fns->state(first_rsc, TRUE) == pcmk_role_stopped)
             && pcmk__str_eq(op_type, PCMK_ACTION_STOP, pcmk__str_none)) {
             free(key);
             pe_rsc_trace(first_rsc,

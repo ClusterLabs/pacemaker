@@ -1328,7 +1328,7 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
         }
         if (this_node->details->shutdown
             && (this_node->details->remote_rsc != NULL)) {
-            pe__set_next_role(this_node->details->remote_rsc, RSC_ROLE_STOPPED,
+            pe__set_next_role(this_node->details->remote_rsc, pcmk_role_stopped,
                               "remote shutdown");
         }
         if (!this_node->details->unpacked) {
@@ -1577,7 +1577,9 @@ determine_remote_online_status(pe_working_set_t * data_set, pe_node_t * this_nod
     }
 
     /* consider this node shutting down if transitioning start->stop */
-    if (rsc->role == RSC_ROLE_STARTED && rsc->next_role == RSC_ROLE_STOPPED) {
+    if ((rsc->role == RSC_ROLE_STARTED)
+        && (rsc->next_role == pcmk_role_stopped)) {
+
         crm_trace("%s node %s shutting down because connection resource is stopping",
                   (container? "Guest" : "Remote"), this_node->details->id);
         this_node->details->shutdown = TRUE;
@@ -1595,8 +1597,9 @@ determine_remote_online_status(pe_working_set_t * data_set, pe_node_t * this_nod
                   (container? "Guest" : "Remote"), this_node->details->id);
         this_node->details->online = FALSE;
 
-    } else if (rsc->role == RSC_ROLE_STOPPED
-        || (container && container->role == RSC_ROLE_STOPPED)) {
+    } else if ((rsc->role == pcmk_role_stopped)
+               || ((container != NULL)
+                   && (container->role == pcmk_role_stopped))) {
 
         crm_trace("%s node %s OFFLINE because its resource is stopped",
                   (container? "Guest" : "Remote"), this_node->details->id);
@@ -2093,7 +2096,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
     }
 
     /* If a managed resource is believed to be running, but node is down ... */
-    if (rsc->role > RSC_ROLE_STOPPED
+    if ((rsc->role > pcmk_role_stopped)
         && node->details->online == FALSE
         && node->details->maintenance == FALSE
         && pcmk_is_set(rsc->flags, pe_rsc_managed)) {
@@ -2190,11 +2193,11 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             break;
 
         case action_fail_stop:
-            pe__set_next_role(rsc, RSC_ROLE_STOPPED, "on-fail=stop");
+            pe__set_next_role(rsc, pcmk_role_stopped, "on-fail=stop");
             break;
 
         case action_fail_recover:
-            if ((rsc->role != RSC_ROLE_STOPPED)
+            if ((rsc->role != pcmk_role_stopped)
                 && (rsc->role != pcmk_role_unknown)) {
                 pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
                 stop_action(rsc, node, FALSE);
@@ -2213,7 +2216,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
                     g_list_prepend(rsc->cluster->stop_needed, rsc->container);
             } else if (rsc->container) {
                 stop_action(rsc->container, node, FALSE);
-            } else if ((rsc->role != RSC_ROLE_STOPPED)
+            } else if ((rsc->role != pcmk_role_stopped)
                        && (rsc->role != pcmk_role_unknown)) {
                 stop_action(rsc, node, FALSE);
             }
@@ -2239,14 +2242,14 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             }
 
             /* require the stop action regardless if fencing is occurring or not. */
-            if (rsc->role > RSC_ROLE_STOPPED) {
+            if (rsc->role > pcmk_role_stopped) {
                 stop_action(rsc, node, FALSE);
             }
 
             /* if reconnect delay is in use, prevent the connection from exiting the
              * "STOPPED" role until the failure is cleared by the delay timeout. */
             if (rsc->remote_reconnect_ms) {
-                pe__set_next_role(rsc, RSC_ROLE_STOPPED, "remote reset");
+                pe__set_next_role(rsc, pcmk_role_stopped, "remote reset");
             }
             break;
     }
@@ -2262,7 +2265,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
         }
     }
 
-    if ((rsc->role != RSC_ROLE_STOPPED)
+    if ((rsc->role != pcmk_role_stopped)
         && (rsc->role != pcmk_role_unknown)) {
 
         if (pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
@@ -2316,7 +2319,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
     /* A successful stop after migrate_to on the migration source doesn't make
      * the partially migrated resource stopped on the migration target.
      */
-    if (rsc->role == RSC_ROLE_STOPPED
+    if ((rsc->role == pcmk_role_stopped)
         && rsc->partial_migration_source
         && rsc->partial_migration_source->details == node->details
         && rsc->partial_migration_target
@@ -2983,7 +2986,7 @@ add_dangling_migration(pe_resource_t *rsc, const pe_node_t *node)
 {
     pe_rsc_trace(rsc, "Dangling migration of %s requires stop on %s",
                  rsc->id, pe__node_name(node));
-    rsc->role = RSC_ROLE_STOPPED;
+    rsc->role = pcmk_role_stopped;
     rsc->dangling_migrations = g_list_prepend(rsc->dangling_migrations,
                                               (gpointer) node);
 }
@@ -3527,11 +3530,11 @@ unpack_rsc_op_failure(struct action_history *history, xmlNode **last_failure,
     } else if (strcmp(history->task, PCMK_ACTION_DEMOTE) == 0) {
         if (action->on_fail == action_fail_block) {
             history->rsc->role = RSC_ROLE_PROMOTED;
-            pe__set_next_role(history->rsc, RSC_ROLE_STOPPED,
+            pe__set_next_role(history->rsc, pcmk_role_stopped,
                               "demote with on-fail=block");
 
         } else if (history->exit_status == PCMK_OCF_NOT_RUNNING) {
-            history->rsc->role = RSC_ROLE_STOPPED;
+            history->rsc->role = pcmk_role_stopped;
 
         } else {
             /* Staying in the promoted role would put the scheduler and
@@ -3546,7 +3549,7 @@ unpack_rsc_op_failure(struct action_history *history, xmlNode **last_failure,
     if (is_probe && (history->exit_status == PCMK_OCF_NOT_INSTALLED)) {
         /* leave stopped */
         pe_rsc_trace(history->rsc, "Leaving %s stopped", history->rsc->id);
-        history->rsc->role = RSC_ROLE_STOPPED;
+        history->rsc->role = pcmk_role_stopped;
 
     } else if (history->rsc->role < RSC_ROLE_STARTED) {
         pe_rsc_trace(history->rsc, "Setting %s active", history->rsc->id);
@@ -3564,7 +3567,7 @@ unpack_rsc_op_failure(struct action_history *history, xmlNode **last_failure,
         pe__set_next_role(history->rsc, action->fail_role, "failure");
     }
 
-    if (action->fail_role == RSC_ROLE_STOPPED) {
+    if (action->fail_role == pcmk_role_stopped) {
         ban_from_all_nodes(history->rsc);
     }
 
@@ -3759,7 +3762,7 @@ remap_operation(struct action_history *history,
                  * failure.
                  */
                 remap_because(history, &why, PCMK_EXEC_DONE, "exit status");
-                history->rsc->role = RSC_ROLE_STOPPED;
+                history->rsc->role = pcmk_role_stopped;
                 *on_fail = action_fail_ignore;
                 pe__set_next_role(history->rsc, pcmk_role_unknown,
                                   "not running");
@@ -4148,7 +4151,7 @@ update_resource_state(struct action_history *history, int exit_status,
     if ((exit_status == PCMK_OCF_NOT_INSTALLED)
         || (!pe_rsc_is_bundled(history->rsc)
             && pcmk_xe_mask_probe_failure(history->xml))) {
-        history->rsc->role = RSC_ROLE_STOPPED;
+        history->rsc->role = pcmk_role_stopped;
 
     } else if (exit_status == PCMK_OCF_NOT_RUNNING) {
         clear_past_failure = true;
@@ -4169,7 +4172,7 @@ update_resource_state(struct action_history *history, int exit_status,
         clear_past_failure = true;
 
     } else if (pcmk__str_eq(history->task, PCMK_ACTION_STOP, pcmk__str_none)) {
-        history->rsc->role = RSC_ROLE_STOPPED;
+        history->rsc->role = pcmk_role_stopped;
         clear_past_failure = true;
 
     } else if (pcmk__str_eq(history->task, PCMK_ACTION_PROMOTE,
@@ -4332,7 +4335,7 @@ process_expired_result(struct action_history *history, int orig_exit_status)
         && pcmk_xe_mask_probe_failure(history->xml)
         && (orig_exit_status != history->expected_exit_status)) {
 
-        if (history->rsc->role <= RSC_ROLE_STOPPED) {
+        if (history->rsc->role <= pcmk_role_stopped) {
             history->rsc->role = pcmk_role_unknown;
         }
         crm_trace("Ignoring resource history entry %s for probe of %s on %s: "
