@@ -216,8 +216,10 @@ enum action_fail_response {
 
     //! \deprecated Use pcmk_on_fail_reset_remote instead
     action_fail_reset_remote        = pcmk_on_fail_reset_remote,
-#endif
+
+    //! \deprecated Use pcmk_on_fail_demote instead
     action_fail_demote              = pcmk_on_fail_demote,
+#endif
 };
 
 // For parsing various action-related string specifications
