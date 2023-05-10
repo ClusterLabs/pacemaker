@@ -114,8 +114,10 @@ enum action_tasks {
 
     //! \deprecated Use pcmk_action_promote instead
     action_promote          = pcmk_action_promote,
-#endif
+
+    //! \deprecated Use pcmk_action_promoted instead
     action_promoted         = pcmk_action_promoted,
+#endif
     action_demote,
     action_demoted,
     shutdown_crm,
