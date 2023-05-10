@@ -83,8 +83,10 @@ enum action_tasks {
 
     //! \deprecated Use pcmk_action_monitor instead
     monitor_rsc             = pcmk_action_monitor,
-#endif
+
+    //! \deprecated Use pcmk_action_stop instead
     stop_rsc                = pcmk_action_stop,
+#endif
     stopped_rsc,
     start_rsc,
     started_rsc,
