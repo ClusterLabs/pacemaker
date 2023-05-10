@@ -68,6 +68,27 @@ extern "C" {
 #define PCMK_ACTION_STOPPED             "stopped"
 #define PCMK_ACTION_VALIDATE_ALL        "validate-all"
 
+//! Possible actions (including some pseudo-actions)
+enum action_tasks {
+    no_action,
+    monitor_rsc,
+
+    // Each "completed" action must be the regular action plus 1
+
+    stop_rsc,
+    stopped_rsc,
+    start_rsc,
+    started_rsc,
+    action_notify,
+    action_notified,
+    action_promote,
+    action_promoted,
+    action_demote,
+    action_demoted,
+    shutdown_crm,
+    stonith_node
+};
+
 // For parsing various action-related string specifications
 gboolean parse_op_key(const char *key, char **rsc_id, char **op_type,
                       guint *interval_ms);
