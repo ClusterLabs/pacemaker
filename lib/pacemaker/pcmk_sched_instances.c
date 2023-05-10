@@ -1059,7 +1059,7 @@ free_instance_list(const pe_resource_t *rsc, GList *list)
  *
  * \param[in] instance  Clone instance or bundle replica container
  * \param[in] node      Instance must match this node
- * \param[in] role      If not RSC_ROLE_UNKNOWN, instance must match this role
+ * \param[in] role      If not pcmk_role_unknown, instance must match this role
  * \param[in] current   If true, compare instance's original node and role,
  *                      otherwise compare assigned next node and role
  *
@@ -1074,7 +1074,7 @@ pcmk__instance_matches(const pe_resource_t *instance, const pe_node_t *node,
 
     CRM_CHECK((instance != NULL) && (node != NULL), return false);
 
-    if ((role != RSC_ROLE_UNKNOWN)
+    if ((role != pcmk_role_unknown)
         && (role != instance->fns->state(instance, current))) {
         pe_rsc_trace(instance,
                      "%s is not a compatible instance (role is not %s)",
@@ -1112,7 +1112,7 @@ pcmk__instance_matches(const pe_resource_t *instance, const pe_node_t *node,
  * \param[in] match_rsc  Resource that instance must match (for logging only)
  * \param[in] rsc        Clone or bundle resource to check for matching instance
  * \param[in] node       Instance must match this node
- * \param[in] role       If not RSC_ROLE_UNKNOWN, instance must match this role
+ * \param[in] role       If not pcmk_role_unknown, instance must match this role
  * \param[in] current    If true, compare instance's original node and role,
  *                       otherwise compare assigned next node and role
  *
@@ -1133,7 +1133,7 @@ find_compatible_instance_on_node(const pe_resource_t *match_rsc,
         if (pcmk__instance_matches(instance, node, role, current)) {
             pe_rsc_trace(match_rsc,
                          "Found %s %s instance %s compatible with %s on %s",
-                         role == RSC_ROLE_UNKNOWN? "matching" : role2text(role),
+                         role == pcmk_role_unknown? "matching" : role2text(role),
                          rsc->id, instance->id, match_rsc->id,
                          pe__node_name(node));
             free_instance_list(rsc, instances); // Only frees list, not contents
@@ -1143,7 +1143,7 @@ find_compatible_instance_on_node(const pe_resource_t *match_rsc,
     free_instance_list(rsc, instances);
 
     pe_rsc_trace(match_rsc, "No %s %s instance found compatible with %s on %s",
-                 ((role == RSC_ROLE_UNKNOWN)? "matching" : role2text(role)),
+                 ((role == pcmk_role_unknown)? "matching" : role2text(role)),
                  rsc->id, match_rsc->id, pe__node_name(node));
     return NULL;
 }
@@ -1154,7 +1154,7 @@ find_compatible_instance_on_node(const pe_resource_t *match_rsc,
  *
  * \param[in] match_rsc  Resource that instance must match
  * \param[in] rsc        Clone or bundle resource to check for matching instance
- * \param[in] role       If not RSC_ROLE_UNKNOWN, instance must match this role
+ * \param[in] role       If not pcmk_role_unknown, instance must match this role
  * \param[in] current    If true, compare instance's original node and role,
  *                       otherwise compare assigned next node and role
  *
@@ -1385,7 +1385,7 @@ update_interleaved_actions(pe_action_t *first, pe_action_t *then,
         // Find a "first" instance to interleave with this "then" instance
         first_instance = pcmk__find_compatible_instance(then_instance,
                                                         first->rsc,
-                                                        RSC_ROLE_UNKNOWN,
+                                                        pcmk_role_unknown,
                                                         current);
 
         if (first_instance == NULL) { // No instance can be interleaved

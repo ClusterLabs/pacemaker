@@ -512,7 +512,7 @@ configured_role(pe_resource_t * rsc)
     if (target_role) {
         return text2role(target_role);
     }
-    return RSC_ROLE_UNKNOWN;
+    return pcmk_role_unknown;
 }
 
 /*!
@@ -1202,7 +1202,7 @@ clone_free(pe_resource_t * rsc)
 enum rsc_role_e
 clone_resource_state(const pe_resource_t * rsc, gboolean current)
 {
-    enum rsc_role_e clone_role = RSC_ROLE_UNKNOWN;
+    enum rsc_role_e clone_role = pcmk_role_unknown;
     GList *gIter = rsc->children;
 
     for (; gIter != NULL; gIter = gIter->next) {

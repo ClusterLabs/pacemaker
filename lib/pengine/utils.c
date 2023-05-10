@@ -408,7 +408,7 @@ get_effective_time(pe_working_set_t * data_set)
 gboolean
 get_target_role(const pe_resource_t *rsc, enum rsc_role_e *role)
 {
-    enum rsc_role_e local_role = RSC_ROLE_UNKNOWN;
+    enum rsc_role_e local_role = pcmk_role_unknown;
     const char *value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
 
     CRM_CHECK(role != NULL, return FALSE);
@@ -419,7 +419,7 @@ get_target_role(const pe_resource_t *rsc, enum rsc_role_e *role)
     }
 
     local_role = text2role(value);
-    if (local_role == RSC_ROLE_UNKNOWN) {
+    if (local_role == pcmk_role_unknown) {
         pcmk__config_err("Ignoring '" XML_RSC_ATTR_TARGET_ROLE "' for %s "
                          "because '%s' is not valid", rsc->id, value);
         return FALSE;

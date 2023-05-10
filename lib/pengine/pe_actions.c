@@ -238,7 +238,7 @@ unpack_action_node_attributes(pe_action_t *action, pe_working_set_t *data_set)
 
         pe_rule_eval_data_t rule_data = {
             .node_hash = action->node->details->attrs,
-            .role = RSC_ROLE_UNKNOWN,
+            .role = pcmk_role_unknown,
             .now = data_set->now,
             .match_data = NULL,
             .rsc_data = NULL,
@@ -658,7 +658,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
 
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
-        .role = RSC_ROLE_UNKNOWN,
+        .role = pcmk_role_unknown,
         .now = data_set->now,
         .match_data = NULL,
         .rsc_data = &rsc_rule_data,
@@ -900,11 +900,11 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
                         "Support for role_after_failure is deprecated and will be removed in a future release");
         }
     }
-    if (value != NULL && action->fail_role == RSC_ROLE_UNKNOWN) {
+    if (value != NULL && action->fail_role == pcmk_role_unknown) {
         action->fail_role = text2role(value);
     }
     /* defaults */
-    if (action->fail_role == RSC_ROLE_UNKNOWN) {
+    if (action->fail_role == pcmk_role_unknown) {
         if (pcmk__str_eq(action->task, PCMK_ACTION_PROMOTE, pcmk__str_casei)) {
             action->fail_role = RSC_ROLE_UNPROMOTED;
         } else {
@@ -1234,7 +1234,7 @@ pe_get_configured_timeout(pe_resource_t *rsc, const char *action, pe_working_set
 
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
-        .role = RSC_ROLE_UNKNOWN,
+        .role = pcmk_role_unknown,
         .now = data_set->now,
         .match_data = NULL,
         .rsc_data = NULL,

@@ -1238,9 +1238,10 @@ pcmk__colocation_affects(const pe_resource_t *dependent,
         return pcmk__coloc_affects_nothing;
     }
 
-    if ((colocation->dependent_role != RSC_ROLE_UNKNOWN)
+    if ((colocation->dependent_role != pcmk_role_unknown)
         && (colocation->dependent_role != dependent_role_rsc->next_role)) {
         crm_trace("Skipping %scolocation '%s': dependent limited to %s role "
+
                   "but %s next role is %s",
                   ((colocation->score < 0)? "anti-" : ""),
                   colocation->id, role2text(colocation->dependent_role),
@@ -1249,7 +1250,7 @@ pcmk__colocation_affects(const pe_resource_t *dependent,
         return pcmk__coloc_affects_nothing;
     }
 
-    if ((colocation->primary_role != RSC_ROLE_UNKNOWN)
+    if ((colocation->primary_role != pcmk_role_unknown)
         && (colocation->primary_role != primary_role_rsc->next_role)) {
         crm_trace("Skipping %scolocation '%s': primary limited to %s role "
                   "but %s next role is %s",
@@ -1408,7 +1409,7 @@ pcmk__apply_coloc_to_priority(pe_resource_t *dependent,
         return;
     }
 
-    if ((colocation->primary_role != RSC_ROLE_UNKNOWN)
+    if ((colocation->primary_role != pcmk_role_unknown)
         && (colocation->primary_role != primary_role_rsc->next_role)) {
         return;
     }

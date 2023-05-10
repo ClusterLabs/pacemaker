@@ -271,7 +271,7 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
 
     // Apply role-specific colocations
     if (pcmk_is_set(primary->flags, pe_rsc_promotable)
-        && (colocation->primary_role != RSC_ROLE_UNKNOWN)) {
+        && (colocation->primary_role != pcmk_role_unknown)) {
 
         if (pcmk_is_set(dependent->flags, pe_rsc_provisional)) {
             // We're assigning the dependent to a node
@@ -293,7 +293,7 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
         const pe_resource_t *primary_instance = NULL;
 
         primary_instance = pcmk__find_compatible_instance(dependent, primary,
-                                                          RSC_ROLE_UNKNOWN,
+                                                          pcmk_role_unknown,
                                                           false);
         if (primary_instance != NULL) {
             pe_rsc_debug(primary, "Interleaving %s with %s",

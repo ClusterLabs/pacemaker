@@ -2012,7 +2012,7 @@ pe__free_bundle(pe_resource_t *rsc)
 enum rsc_role_e
 pe__bundle_resource_state(const pe_resource_t *rsc, gboolean current)
 {
-    enum rsc_role_e container_role = RSC_ROLE_UNKNOWN;
+    enum rsc_role_e container_role = pcmk_role_unknown;
     return container_role;
 }
 

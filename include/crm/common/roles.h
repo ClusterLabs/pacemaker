@@ -25,7 +25,9 @@ extern "C" {
  * (order matters; values can be compared with less than and greater than)
  */
 enum rsc_role_e {
-    RSC_ROLE_UNKNOWN    = 0,
+    pcmk_role_unknown       = 0, //!< Resource role is unknown
+
+    RSC_ROLE_UNKNOWN        = pcmk_role_unknown,
     RSC_ROLE_STOPPED    = 1,
     RSC_ROLE_STARTED    = 2,
     RSC_ROLE_UNPROMOTED = 3,

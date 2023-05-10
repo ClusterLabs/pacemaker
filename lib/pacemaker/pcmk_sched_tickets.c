@@ -45,7 +45,7 @@ typedef struct {
 static bool
 ticket_role_matches(const pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
 {
-    if ((rsc_ticket->role == RSC_ROLE_UNKNOWN)
+    if ((rsc_ticket->role == pcmk_role_unknown)
         || (rsc_ticket->role == rsc->role)) {
         return true;
     }

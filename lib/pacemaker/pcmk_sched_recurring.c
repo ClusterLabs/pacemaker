@@ -24,7 +24,7 @@ struct op_history {
 
     // Parsed information
     char *key;              // Operation key for action
-    enum rsc_role_e role;   // Action role (or RSC_ROLE_UNKNOWN for default)
+    enum rsc_role_e role;   // Action role (or pcmk_role_unknown for default)
     guint interval_ms;      // Action interval
 };
 
@@ -152,10 +152,10 @@ is_recurring_history(const pe_resource_t *rsc, const xmlNode *xml,
     // Ensure role is valid if specified
     role = crm_element_value(xml, "role");
     if (role == NULL) {
-        op->role = RSC_ROLE_UNKNOWN;
+        op->role = pcmk_role_unknown;
     } else {
         op->role = text2role(role);
-        if (op->role == RSC_ROLE_UNKNOWN) {
+        if (op->role == pcmk_role_unknown) {
             pcmk__config_err("Ignoring %s because %s is not a valid role",
                              op->id, role);
         }
@@ -244,7 +244,7 @@ recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
 {
     pe_action_t *mon = NULL;
     bool is_optional = true;
-    const bool is_default_role = (op->role == RSC_ROLE_UNKNOWN);
+    const bool is_default_role = (op->role == pcmk_role_unknown);
 
     // We're only interested in recurring actions for active roles
     if (op->role == RSC_ROLE_STOPPED) {

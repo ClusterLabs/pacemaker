@@ -161,7 +161,7 @@ get_meta_attributes(GHashTable * meta_hash, pe_resource_t * rsc,
 
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
-        .role = RSC_ROLE_UNKNOWN,
+        .role = pcmk_role_unknown,
         .now = data_set->now,
         .match_data = NULL,
         .rsc_data = &rsc_rule_data,
@@ -205,7 +205,7 @@ get_rsc_attributes(GHashTable *meta_hash, const pe_resource_t *rsc,
 {
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
-        .role = RSC_ROLE_UNKNOWN,
+        .role = pcmk_role_unknown,
         .now = data_set->now,
         .match_data = NULL,
         .rsc_data = NULL,
@@ -602,7 +602,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
 
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
-        .role = RSC_ROLE_UNKNOWN,
+        .role = pcmk_role_unknown,
         .now = NULL,
         .match_data = NULL,
         .rsc_data = NULL,
@@ -695,7 +695,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     (*rsc)->rsc_tickets = NULL;
     (*rsc)->actions = NULL;
     (*rsc)->role = RSC_ROLE_STOPPED;
-    (*rsc)->next_role = RSC_ROLE_UNKNOWN;
+    (*rsc)->next_role = pcmk_role_unknown;
 
     (*rsc)->recovery_type = pcmk_multiply_active_restart;
     (*rsc)->stickiness = 0;
@@ -868,7 +868,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
 
     get_target_role(*rsc, &((*rsc)->next_role));
     pe_rsc_trace((*rsc), "%s desired next state: %s", (*rsc)->id,
-                 (*rsc)->next_role != RSC_ROLE_UNKNOWN ? role2text((*rsc)->next_role) : "default");
+                 (*rsc)->next_role != pcmk_role_unknown? role2text((*rsc)->next_role) : "default");
 
     if ((*rsc)->fns->unpack(*rsc, data_set) == FALSE) {
         (*rsc)->fns->free(*rsc);

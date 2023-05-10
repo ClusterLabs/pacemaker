@@ -218,7 +218,7 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
 
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
-        .role = RSC_ROLE_UNKNOWN,
+        .role = pcmk_role_unknown,
         .now = data_set->now,
         .match_data = NULL,
         .rsc_data = NULL,
@@ -2071,7 +2071,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
                  fail2text(on_fail));
 
     /* process current state */
-    if (rsc->role != RSC_ROLE_UNKNOWN) {
+    if (rsc->role != pcmk_role_unknown) {
         pe_resource_t *iter = rsc;
 
         while (iter) {
@@ -2194,7 +2194,8 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             break;
 
         case action_fail_recover:
-            if (rsc->role != RSC_ROLE_STOPPED && rsc->role != RSC_ROLE_UNKNOWN) {
+            if ((rsc->role != RSC_ROLE_STOPPED)
+                && (rsc->role != pcmk_role_unknown)) {
                 pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
                 stop_action(rsc, node, FALSE);
             }
@@ -2212,7 +2213,8 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
                     g_list_prepend(rsc->cluster->stop_needed, rsc->container);
             } else if (rsc->container) {
                 stop_action(rsc->container, node, FALSE);
-            } else if (rsc->role != RSC_ROLE_STOPPED && rsc->role != RSC_ROLE_UNKNOWN) {
+            } else if ((rsc->role != RSC_ROLE_STOPPED)
+                       && (rsc->role != pcmk_role_unknown)) {
                 stop_action(rsc, node, FALSE);
             }
             break;
@@ -2260,7 +2262,9 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
         }
     }
 
-    if (rsc->role != RSC_ROLE_STOPPED && rsc->role != RSC_ROLE_UNKNOWN) {
+    if ((rsc->role != RSC_ROLE_STOPPED)
+        && (rsc->role != pcmk_role_unknown)) {
+
         if (pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
             if (pcmk_is_set(rsc->flags, pe_rsc_managed)) {
                 pcmk__config_warn("Detected active orphan %s running on %s",
@@ -2479,7 +2483,7 @@ unpack_lrm_resource(pe_node_t *node, const xmlNode *lrm_resource,
     GList *gIter = NULL;
     int stop_index = -1;
     int start_index = -1;
-    enum rsc_role_e req_role = RSC_ROLE_UNKNOWN;
+    enum rsc_role_e req_role = pcmk_role_unknown;
 
     const char *rsc_id = ID(lrm_resource);
 
@@ -2491,7 +2495,7 @@ unpack_lrm_resource(pe_node_t *node, const xmlNode *lrm_resource,
     xmlNode *last_failure = NULL;
 
     enum action_fail_response on_fail = action_fail_ignore;
-    enum rsc_role_e saved_role = RSC_ROLE_UNKNOWN;
+    enum rsc_role_e saved_role = pcmk_role_unknown;
 
     if (rsc_id == NULL) {
         crm_warn("Ignoring malformed " XML_LRM_TAG_RESOURCE
@@ -2534,7 +2538,7 @@ unpack_lrm_resource(pe_node_t *node, const xmlNode *lrm_resource,
 
     /* process operations */
     saved_role = rsc->role;
-    rsc->role = RSC_ROLE_UNKNOWN;
+    rsc->role = pcmk_role_unknown;
     sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
 
     for (gIter = sorted_op_list; gIter != NULL; gIter = gIter->next) {
@@ -2553,7 +2557,9 @@ unpack_lrm_resource(pe_node_t *node, const xmlNode *lrm_resource,
     process_rsc_state(rsc, node, on_fail);
 
     if (get_target_role(rsc, &req_role)) {
-        if (rsc->next_role == RSC_ROLE_UNKNOWN || req_role < rsc->next_role) {
+        if ((rsc->next_role == pcmk_role_unknown)
+            || (req_role < rsc->next_role)) {
+
             pe__set_next_role(rsc, req_role, XML_RSC_ATTR_TARGET_ROLE);
 
         } else if (req_role > rsc->next_role) {
@@ -3755,7 +3761,7 @@ remap_operation(struct action_history *history,
                 remap_because(history, &why, PCMK_EXEC_DONE, "exit status");
                 history->rsc->role = RSC_ROLE_STOPPED;
                 *on_fail = action_fail_ignore;
-                pe__set_next_role(history->rsc, RSC_ROLE_UNKNOWN,
+                pe__set_next_role(history->rsc, pcmk_role_unknown,
                                   "not running");
             }
             break;
@@ -4214,7 +4220,7 @@ update_resource_state(struct action_history *history, int exit_status,
         case action_fail_recover:
         case action_fail_restart_container:
             *on_fail = action_fail_ignore;
-            pe__set_next_role(history->rsc, RSC_ROLE_UNKNOWN,
+            pe__set_next_role(history->rsc, pcmk_role_unknown,
                               "clear past failures");
             break;
 
@@ -4227,7 +4233,7 @@ update_resource_state(struct action_history *history, int exit_status,
                  * to reconnect.)
                  */
                 *on_fail = action_fail_ignore;
-                pe__set_next_role(history->rsc, RSC_ROLE_UNKNOWN,
+                pe__set_next_role(history->rsc, pcmk_role_unknown,
                                   "clear past failures and reset remote");
             }
             break;
@@ -4327,7 +4333,7 @@ process_expired_result(struct action_history *history, int orig_exit_status)
         && (orig_exit_status != history->expected_exit_status)) {
 
         if (history->rsc->role <= RSC_ROLE_STOPPED) {
-            history->rsc->role = RSC_ROLE_UNKNOWN;
+            history->rsc->role = pcmk_role_unknown;
         }
         crm_trace("Ignoring resource history entry %s for probe of %s on %s: "
                   "Masked failure expired",
@@ -4724,7 +4730,7 @@ add_node_attrs(const xmlNode *xml_obj, pe_node_t *node, bool overwrite,
 
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
-        .role = RSC_ROLE_UNKNOWN,
+        .role = pcmk_role_unknown,
         .now = data_set->now,
         .match_data = NULL,
         .rsc_data = NULL,

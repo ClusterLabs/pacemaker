@@ -35,7 +35,7 @@ static enum rsc_role_e rsc_state_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
      * Current role       Immediate next role   Final target role
      * ------------       -------------------   -----------------
      */
-    /* Unknown */       { RSC_ROLE_UNKNOWN,     /* Unknown */
+    /* Unknown */       { pcmk_role_unknown,    /* Unknown */
                           RSC_ROLE_STOPPED,     /* Stopped */
                           RSC_ROLE_STOPPED,     /* Started */
                           RSC_ROLE_STOPPED,     /* Unpromoted */
@@ -605,7 +605,7 @@ schedule_restart_actions(pe_resource_t *rsc, pe_node_t *current,
 static const char *
 set_default_next_role(pe_resource_t *rsc)
 {
-    if (rsc->next_role != RSC_ROLE_UNKNOWN) {
+    if (rsc->next_role != pcmk_role_unknown) {
         return "explicit";
     }
 

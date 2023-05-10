@@ -373,7 +373,7 @@ match_replica_container(const pe__bundle_replica_t *replica, void *user_data)
     struct match_data *match_data = user_data;
 
     if (pcmk__instance_matches(replica->container, match_data->node,
-                               RSC_ROLE_UNKNOWN, false)) {
+                               pcmk_role_unknown, false)) {
         match_data->container = replica->container;
         return false; // Match found, don't bother searching further replicas
     }

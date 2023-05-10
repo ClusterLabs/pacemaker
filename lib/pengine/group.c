@@ -473,7 +473,7 @@ group_free(pe_resource_t * rsc)
 enum rsc_role_e
 group_resource_state(const pe_resource_t * rsc, gboolean current)
 {
-    enum rsc_role_e group_role = RSC_ROLE_UNKNOWN;
+    enum rsc_role_e group_role = pcmk_role_unknown;
     GList *gIter = rsc->children;
 
     for (; gIter != NULL; gIter = gIter->next) {

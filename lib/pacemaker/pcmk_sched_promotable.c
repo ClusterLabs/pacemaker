@@ -253,8 +253,8 @@ cmp_promotable_instance(gconstpointer a, gconstpointer b)
     const pe_resource_t *rsc1 = (const pe_resource_t *) a;
     const pe_resource_t *rsc2 = (const pe_resource_t *) b;
 
-    enum rsc_role_e role1 = RSC_ROLE_UNKNOWN;
-    enum rsc_role_e role2 = RSC_ROLE_UNKNOWN;
+    enum rsc_role_e role1 = pcmk_role_unknown;
+    enum rsc_role_e role2 = pcmk_role_unknown;
 
     CRM_ASSERT((rsc1 != NULL) && (rsc2 != NULL));
 
@@ -856,7 +856,7 @@ set_next_role_promoted(void *data, gpointer user_data)
 {
     pe_resource_t *rsc = (pe_resource_t *) data;
 
-    if (rsc->next_role == RSC_ROLE_UNKNOWN) {
+    if (rsc->next_role == pcmk_role_unknown) {
         pe__set_next_role(rsc, RSC_ROLE_PROMOTED, "promoted instance");
     }
     g_list_foreach(rsc->children, set_next_role_promoted, NULL);
@@ -903,7 +903,7 @@ set_instance_priority(gpointer data, gpointer user_data)
     pe_resource_t *instance = (pe_resource_t *) data;
     const pe_resource_t *clone = (const pe_resource_t *) user_data;
     const pe_node_t *chosen = NULL;
-    enum rsc_role_e next_role = RSC_ROLE_UNKNOWN;
+    enum rsc_role_e next_role = pcmk_role_unknown;
     GList *list = NULL;
 
     pe_rsc_trace(clone, "Assigning priority for %s: %s", instance->id,
@@ -927,7 +927,7 @@ set_instance_priority(gpointer data, gpointer user_data)
     next_role = instance->fns->state(instance, FALSE);
     switch (next_role) {
         case RSC_ROLE_STARTED:
-        case RSC_ROLE_UNKNOWN:
+        case pcmk_role_unknown:
             // Set instance priority to its promotion score (or -1 if none)
             {
                 bool is_default = false;
