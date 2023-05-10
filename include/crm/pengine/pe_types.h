@@ -30,7 +30,6 @@ extern "C" {
  */
 
 typedef struct pe_action_s pe_action_t;
-typedef struct pe_resource_s pe_resource_t;
 typedef struct pe_working_set_s pe_working_set_t;
 
 typedef struct resource_object_functions_s {
