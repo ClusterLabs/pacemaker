@@ -342,7 +342,7 @@ fail2text(enum action_fail_response fail)
         case action_fail_fence:
             result = "fence";
             break;
-        case action_fail_standby:
+        case pcmk_on_fail_standby_node:
             result = "standby";
             break;
         case action_fail_restart_container:

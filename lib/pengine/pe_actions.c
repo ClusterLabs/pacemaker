@@ -796,7 +796,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
         }
 
     } else if (pcmk__str_eq(value, "standby", pcmk__str_casei)) {
-        action->on_fail = action_fail_standby;
+        action->on_fail = pcmk_on_fail_standby_node;
         value = "node standby";
 
     } else if (pcmk__strcase_any_of(value, "ignore", PCMK__VALUE_NOTHING,

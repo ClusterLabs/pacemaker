@@ -2171,7 +2171,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             free(reason);
             break;
 
-        case action_fail_standby:
+        case pcmk_on_fail_standby_node:
             node->details->standby = TRUE;
             node->details->standby_onfail = TRUE;
             break;
@@ -4211,7 +4211,7 @@ update_resource_state(struct action_history *history, int exit_status,
         case pcmk_on_fail_stop:
         case action_fail_fence:
         case pcmk_on_fail_ban:
-        case action_fail_standby:
+        case pcmk_on_fail_standby_node:
             pe_rsc_trace(history->rsc,
                          "%s (%s) is not cleared by a completed %s",
                          history->rsc->id, fail2text(*on_fail), history->task);

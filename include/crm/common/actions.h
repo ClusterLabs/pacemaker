@@ -167,6 +167,9 @@ enum action_fail_response {
     // @TODO Define as 80
     pcmk_on_fail_stop               = 4,    //!< Stop resource and leave stopped
 
+    // @TODO Define as 90
+    pcmk_on_fail_standby_node       = 5,    //!< Put resource's node in standby
+
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_on_fail_ignore instead
     action_fail_ignore              = pcmk_on_fail_ignore,
@@ -186,7 +189,7 @@ enum action_fail_response {
     // @TODO action_fail_demote = 20,
     // @TODO action_fail_reset_remote = 40,
     // @TODO action_fail_restart_container = 50,
-    action_fail_standby,    // @TODO = 90
+    action_fail_standby             = pcmk_on_fail_standby_node,
     action_fail_fence,      // @TODO = 100
 
     // @COMPAT Values below here are out of order for API compatibility
