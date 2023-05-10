@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,8 @@
 
 #ifndef PCMK__CRM_PENGINE_COMMON_COMPAT__H
 #  define PCMK__CRM_PENGINE_COMMON_COMPAT__H
+
+#include <crm/common/scheduler.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,6 +24,9 @@ extern "C" {
  *             header, and the header itself, will be removed in a future
  *             release.
  */
+
+//! \deprecated Use (pcmk_role_promoted + 1) instead
+#define RSC_ROLE_MAX    (pcmk_role_promoted + 1)
 
 //! \deprecated Use RSC_ROLE_UNPROMOTED_LEGACY_S instead
 #  define RSC_ROLE_SLAVE_S   RSC_ROLE_UNPROMOTED_LEGACY_S

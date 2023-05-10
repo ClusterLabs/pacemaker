@@ -25,6 +25,8 @@ static void promote_resource(pe_resource_t *rsc, pe_node_t *node,
 static void assert_role_error(pe_resource_t *rsc, pe_node_t *node,
                               bool optional);
 
+#define RSC_ROLE_MAX    (pcmk_role_promoted + 1)
+
 static enum rsc_role_e rsc_state_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
     /* This array lists the immediate next role when transitioning from one role
      * to a target role. For example, when going from Stopped to Promoted, the
