@@ -110,8 +110,10 @@ enum action_tasks {
 
     //! \deprecated Use pcmk_action_notified instead
     action_notified         = pcmk_action_notified,
-#endif
+
+    //! \deprecated Use pcmk_action_promote instead
     action_promote          = pcmk_action_promote,
+#endif
     action_promoted,
     action_demote,
     action_demoted,
