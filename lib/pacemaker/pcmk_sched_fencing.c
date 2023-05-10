@@ -63,7 +63,7 @@ order_start_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
         pe_action_t *action = iter->data;
 
         switch (action->needs) {
-            case rsc_req_nothing:
+            case pcmk_requires_nothing:
                 // Anything other than start or promote requires nothing
                 break;
 

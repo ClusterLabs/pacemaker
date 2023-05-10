@@ -352,7 +352,7 @@ update_resource_action_runnable(pe_action_t *action, bool for_graph,
                    "Action %s on %s is unrunnable (node is pending)",
                    action->uuid, pe__node_name(action->node));
 
-    } else if (action->needs == rsc_req_nothing) {
+    } else if (action->needs == pcmk_requires_nothing) {
         pe_action_set_reason(action, NULL, TRUE);
         if (pe__is_guest_node(action->node)
             && !pe_can_fence(data_set, action->node)) {
@@ -756,7 +756,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
 
     if (!pcmk__strcase_any_of(action->task, PCMK_ACTION_START,
                               PCMK_ACTION_PROMOTE, NULL)) {
-        action->needs = rsc_req_nothing;
+        action->needs = pcmk_requires_nothing;
         value = "nothing (not start or promote)";
 
     } else if (pcmk_is_set(action->rsc->flags, pe_rsc_needs_fencing)) {
@@ -768,7 +768,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
         value = "quorum";
 
     } else {
-        action->needs = rsc_req_nothing;
+        action->needs = pcmk_requires_nothing;
         value = "nothing";
     }
     pe_rsc_trace(action->rsc, "%s requires %s", action->uuid, value);

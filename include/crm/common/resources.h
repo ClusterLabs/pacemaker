@@ -22,9 +22,11 @@ extern "C" {
 
 //! What resource needs before it can be recovered from a failed node
 enum rsc_start_requirement {
-    rsc_req_nothing,            /* Allowed by custom_action() */
-    rsc_req_quorum,             /* Enforced by custom_action() */
-    rsc_req_stonith             /* Enforced by native_start_constraints() */
+    pcmk_requires_nothing   = 0,    //!< Resource can be recovered immediately
+
+    rsc_req_nothing         = pcmk_requires_nothing,
+    rsc_req_quorum          = 1, /* Enforced by custom_action() */
+    rsc_req_stonith         = 2, /* Enforced by native_start_constraints() */
 };
 
 //! How to recover a resource that is incorrectly active on multiple nodes
