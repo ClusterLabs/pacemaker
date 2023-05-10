@@ -385,22 +385,7 @@ text2task(const char *task)
     } else if (pcmk__str_eq(task, PCMK_ACTION_DEMOTED, pcmk__str_casei)) {
         return action_demoted;
     }
-#if SUPPORT_TRACING
-    if (pcmk__str_eq(task, PCMK_ACTION_CANCEL, pcmk__str_casei)) {
-        return no_action;
-    } else if (pcmk__str_eq(task, PCMK_ACTION_DELETE, pcmk__str_casei)) {
-        return no_action;
-    } else if (pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_casei)) {
-        return no_action;
-    } else if (pcmk__str_eq(task, PCMK_ACTION_MIGRATE_TO, pcmk__str_casei)) {
-        return no_action;
-    } else if (pcmk__str_eq(task, PCMK_ACTION_MIGRATE_FROM, pcmk__str_casei)) {
-        return no_action;
-    }
-    crm_trace("Unsupported action: %s", task);
-#endif
-
-    return no_action;
+    return pcmk_action_unspecified;
 }
 
 const char *
@@ -409,7 +394,7 @@ task2text(enum action_tasks task)
     const char *result = "<unknown>";
 
     switch (task) {
-        case no_action:
+        case pcmk_action_unspecified:
             result = "no_action";
             break;
         case stop_rsc:

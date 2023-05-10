@@ -70,7 +70,9 @@ extern "C" {
 
 //! Possible actions (including some pseudo-actions)
 enum action_tasks {
-    no_action,
+    pcmk_action_unspecified = 0,    //!< Unspecified or unknown action
+
+    no_action               = pcmk_action_unspecified,
     monitor_rsc,
 
     // Each "completed" action must be the regular action plus 1

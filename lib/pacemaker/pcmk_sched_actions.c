@@ -95,8 +95,8 @@ action_uuid_for_ordering(const char *first_uuid, const pe_resource_t *first_rsc)
     char *uuid = NULL;
     char *rid = NULL;
     char *first_task_str = NULL;
-    enum action_tasks first_task = no_action;
-    enum action_tasks remapped_task = no_action;
+    enum action_tasks first_task = pcmk_action_unspecified;
+    enum action_tasks remapped_task = pcmk_action_unspecified;
 
     // Only non-notify actions for collective resources need remapping
     if ((strstr(first_uuid, PCMK_ACTION_NOTIFY) != NULL)
@@ -135,7 +135,7 @@ action_uuid_for_ordering(const char *first_uuid, const pe_resource_t *first_rsc)
             break;
     }
 
-    if (remapped_task != no_action) {
+    if (remapped_task != pcmk_action_unspecified) {
         /* If a (clone) resource has notifications enabled, we want to order
          * relative to when all notifications have been sent for the remapped
          * task. Only outermost resources or those in bundles have
