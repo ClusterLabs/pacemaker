@@ -695,7 +695,7 @@ pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pe_action_t *action)
         case pcmk_action_stop:
         case pcmk_action_stopped:
         case pcmk_action_demote:
-        case action_demoted:
+        case pcmk_action_demoted:
             // "Down" actions take place on guest's current host
             host = pe__current_node(guest->details->remote_rsc->container);
             break;

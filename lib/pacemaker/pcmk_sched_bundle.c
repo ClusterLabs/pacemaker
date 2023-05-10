@@ -691,7 +691,7 @@ pcmk__bundle_action_flags(pe_action_t *action, const pe_node_t *node)
             case pcmk_action_promote:
             case pcmk_action_promoted:
             case pcmk_action_demote:
-            case action_demoted:
+            case pcmk_action_demoted:
                 return pcmk__collective_action_flags(action,
                                                      bundled_resource->children,
                                                      node);
