@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -116,7 +116,7 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
     if(promoted_role_only) {
         crm_xml_add(location, XML_RULE_ATTR_ROLE, promoted_role_name());
     } else {
-        crm_xml_add(location, XML_RULE_ATTR_ROLE, RSC_ROLE_STARTED_S);
+        crm_xml_add(location, XML_RULE_ATTR_ROLE, PCMK__ROLE_STARTED);
     }
 
     if (later_s == NULL) {
@@ -183,7 +183,7 @@ cli_resource_prefer(pcmk__output_t *out,const char *rsc_id, const char *host,
     if(promoted_role_only) {
         crm_xml_add(location, XML_RULE_ATTR_ROLE, promoted_role_name());
     } else {
-        crm_xml_add(location, XML_RULE_ATTR_ROLE, RSC_ROLE_STARTED_S);
+        crm_xml_add(location, XML_RULE_ATTR_ROLE, PCMK__ROLE_STARTED);
     }
 
     if (later_s == NULL) {

@@ -34,6 +34,9 @@ extern "C" {
 //! \deprecated Use role2text(pcmk_role_stopped) instead
 #define RSC_ROLE_STOPPED_S      role2text(pcmk_role_stopped)
 
+//! \deprecated Use role2text(pcmk_role_started) instead
+#define RSC_ROLE_STARTED_S      role2text(pcmk_role_started)
+
 //! \deprecated Use RSC_ROLE_UNPROMOTED_LEGACY_S instead
 #  define RSC_ROLE_SLAVE_S   RSC_ROLE_UNPROMOTED_LEGACY_S
 

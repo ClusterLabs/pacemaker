@@ -19,6 +19,7 @@
 #include <crm/common/xml.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/output_internal.h>
+#include <crm/common/scheduler_internal.h>
 
 #include <crm/cib.h>
 #include <crm/common/attrd_internal.h>
