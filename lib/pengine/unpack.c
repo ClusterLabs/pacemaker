@@ -2196,7 +2196,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             pe__set_next_role(rsc, pcmk_role_stopped, "on-fail=stop");
             break;
 
-        case action_fail_recover:
+        case pcmk_on_fail_restart:
             if ((rsc->role != pcmk_role_stopped)
                 && (rsc->role != pcmk_role_unknown)) {
                 pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
@@ -3356,7 +3356,7 @@ cmp_on_fail(enum action_fail_response first, enum action_fail_response second)
             switch (second) {
                 case pcmk_on_fail_ignore:
                 case action_fail_demote:
-                case action_fail_recover:
+                case pcmk_on_fail_restart:
                     return 1;
                 case action_fail_reset_remote:
                     return 0;
@@ -3369,7 +3369,7 @@ cmp_on_fail(enum action_fail_response first, enum action_fail_response second)
             switch (second) {
                 case pcmk_on_fail_ignore:
                 case action_fail_demote:
-                case action_fail_recover:
+                case pcmk_on_fail_restart:
                 case action_fail_reset_remote:
                     return 1;
                 case action_fail_restart_container:
@@ -3390,7 +3390,7 @@ cmp_on_fail(enum action_fail_response first, enum action_fail_response second)
             switch (first) {
                 case pcmk_on_fail_ignore:
                 case action_fail_demote:
-                case action_fail_recover:
+                case pcmk_on_fail_restart:
                     return -1;
                 default:
                     return 1;
@@ -3401,7 +3401,7 @@ cmp_on_fail(enum action_fail_response first, enum action_fail_response second)
             switch (first) {
                 case pcmk_on_fail_ignore:
                 case action_fail_demote:
-                case action_fail_recover:
+                case pcmk_on_fail_restart:
                 case action_fail_reset_remote:
                     return -1;
                 default:
@@ -4122,7 +4122,7 @@ pe__target_rc_from_xml(const xmlNode *xml_op)
 static enum action_fail_response
 get_action_on_fail(struct action_history *history)
 {
-    enum action_fail_response result = action_fail_recover;
+    enum action_fail_response result = pcmk_on_fail_restart;
     pe_action_t *action = custom_action(history->rsc, strdup(history->key),
                                         history->task, NULL, TRUE, FALSE,
                                         history->rsc->cluster);
@@ -4220,7 +4220,7 @@ update_resource_state(struct action_history *history, int exit_status,
         case action_fail_block:
         case pcmk_on_fail_ignore:
         case action_fail_demote:
-        case action_fail_recover:
+        case pcmk_on_fail_restart:
         case action_fail_restart_container:
             *on_fail = pcmk_on_fail_ignore;
             pe__set_next_role(history->rsc, pcmk_role_unknown,
@@ -4536,7 +4536,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     int old_rc = 0;
     bool expired = false;
     pe_resource_t *parent = rsc;
-    enum action_fail_response failure_strategy = action_fail_recover;
+    enum action_fail_response failure_strategy = pcmk_on_fail_restart;
 
     struct action_history history = {
         .rsc = rsc,
@@ -4685,7 +4685,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
         record_failed_op(&history);
 
         if ((failure_strategy == action_fail_restart_container)
-            && cmp_on_fail(*on_fail, action_fail_recover) <= 0) {
+            && cmp_on_fail(*on_fail, pcmk_on_fail_restart) <= 0) {
             *on_fail = failure_strategy;
         }
 

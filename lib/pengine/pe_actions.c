@@ -814,7 +814,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
         value = "stop resource";
 
     } else if (pcmk__str_eq(value, "restart", pcmk__str_casei)) {
-        action->on_fail = action_fail_recover;
+        action->on_fail = pcmk_on_fail_restart;
         value = "restart (and possibly migrate)";
 
     } else if (pcmk__str_eq(value, "restart-container", pcmk__str_casei)) {
@@ -886,7 +886,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
         }
 
     } else if (value == NULL) {
-        action->on_fail = action_fail_recover;
+        action->on_fail = pcmk_on_fail_restart;
         value = "restart (and possibly migrate) (default)";
     }
 

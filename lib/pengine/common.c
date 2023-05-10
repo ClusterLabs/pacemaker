@@ -330,7 +330,7 @@ fail2text(enum action_fail_response fail)
         case action_fail_block:
             result = "block";
             break;
-        case action_fail_recover:
+        case pcmk_on_fail_restart:
             result = "recover";
             break;
         case action_fail_migrate:
