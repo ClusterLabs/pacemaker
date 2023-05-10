@@ -191,7 +191,7 @@ apply_remote_ordering(pe_action_t *action)
         /* Migration ops map to pcmk_action_unspecified, but we need to apply
          * the same ordering as for stop or demote (see get_router_node()).
          */
-        task = stop_rsc;
+        task = pcmk_action_stop;
     }
 
     switch (task) {
@@ -208,7 +208,7 @@ apply_remote_ordering(pe_action_t *action)
             order_start_then_action(remote_rsc, action, order_opts);
             break;
 
-        case stop_rsc:
+        case pcmk_action_stop:
             if (state == remote_state_alive) {
                 order_action_then_stop(action, remote_rsc,
                                        pe_order_implies_first);
@@ -333,7 +333,7 @@ apply_container_ordering(pe_action_t *action)
         /* Migration ops map to pcmk_action_unspecified, but we need to apply
          * the same ordering as for stop or demote (see get_router_node()).
          */
-        task = stop_rsc;
+        task = pcmk_action_stop;
     }
 
     switch (task) {
@@ -346,7 +346,7 @@ apply_container_ordering(pe_action_t *action)
             order_start_then_action(remote_rsc, action, pe_order_none);
             break;
 
-        case stop_rsc:
+        case pcmk_action_stop:
         case action_demote:
             if (pcmk_is_set(container->flags, pe_rsc_failed)) {
                 /* When the container representing a guest node fails, any stop
@@ -692,7 +692,7 @@ pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pe_action_t *action)
     }
 
     switch (task) {
-        case stop_rsc:
+        case pcmk_action_stop:
         case stopped_rsc:
         case action_demote:
         case action_demoted:

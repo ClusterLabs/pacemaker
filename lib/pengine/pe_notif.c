@@ -610,7 +610,7 @@ collect_resource_data(const pe_resource_t *rsc, bool activity,
         if (!pcmk_is_set(op->flags, pe_action_optional) && (op->node != NULL)) {
             enum action_tasks task = text2task(op->task);
 
-            if ((task == stop_rsc) && op->node->details->unclean) {
+            if ((task == pcmk_action_stop) && op->node->details->unclean) {
                 // Create anyway (additional noise if node can't be fenced)
             } else if (!pcmk_is_set(op->flags, pe_action_runnable)) {
                 continue;
@@ -622,7 +622,7 @@ collect_resource_data(const pe_resource_t *rsc, bool activity,
                 case start_rsc:
                     n_data->start = g_list_prepend(n_data->start, entry);
                     break;
-                case stop_rsc:
+                case pcmk_action_stop:
                     n_data->stop = g_list_prepend(n_data->stop, entry);
                     break;
                 case action_promote:
@@ -820,7 +820,7 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
         if (!pcmk_is_set(op->flags, pe_action_optional) && (op->node != NULL)) {
             switch (text2task(op->task)) {
                 case start_rsc:
-                case stop_rsc:
+                case pcmk_action_stop:
                 case action_promote:
                 case action_demote:
                     add_notify_data_to_action_meta(n_data, op);
@@ -867,7 +867,7 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
 
     // Create notify actions for stop or demote
     if ((rsc->role != pcmk_role_stopped)
-        && ((task == stop_rsc) || (task == action_demote))) {
+        && ((task == pcmk_action_stop) || (task == action_demote))) {
 
         stop = find_first_action(rsc->actions, NULL, PCMK_ACTION_STOP, NULL);
 

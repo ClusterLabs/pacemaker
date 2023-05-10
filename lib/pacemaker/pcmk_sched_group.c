@@ -528,7 +528,7 @@ pcmk__group_action_flags(pe_action_t *action, const pe_node_t *node)
         /* Group (pseudo-)actions other than stop or demote are unrunnable
          * unless every member will do it.
          */
-        } else if ((task != stop_rsc) && (task != action_demote)) {
+        } else if ((task != pcmk_action_stop) && (task != action_demote)) {
             pe_rsc_trace(action->rsc,
                          "%s is not runnable because %s will not %s",
                          action->uuid, member->id, task_s);
