@@ -24,6 +24,7 @@ extern "C" {
 enum rsc_recovery_type {
     pcmk_multiply_active_restart    = 0,    //!< Stop on all, start on desired
     pcmk_multiply_active_stop       = 1,    //!< Stop on all and leave stopped
+    pcmk_multiply_active_block      = 2,    //!< Do nothing to resource
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use pcmk_multiply_active_restart instead
@@ -32,7 +33,7 @@ enum rsc_recovery_type {
     //! \deprecated Use pcmk_multiply_active_stop instead
     recovery_stop_only              = pcmk_multiply_active_stop,
 #endif
-    recovery_block                  = 2,
+    recovery_block                  = pcmk_multiply_active_block,
     recovery_stop_unexpected        = 3,
 };
 

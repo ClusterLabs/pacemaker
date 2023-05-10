@@ -147,7 +147,7 @@ native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * dat
                     }
                 }
                 break;
-            case recovery_block:
+            case pcmk_multiply_active_block:
                 pe__clear_resource_flags(rsc, pe_rsc_managed);
                 pe__set_resource_flags(rsc, pe_rsc_block);
 
@@ -156,7 +156,7 @@ native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * dat
                  */
                 if (rsc->parent
                     && (rsc->parent->variant == pe_group || rsc->parent->variant == pe_container)
-                    && rsc->parent->recovery_type == recovery_block) {
+                    && (rsc->parent->recovery_type == pcmk_multiply_active_block)) {
                     GList *gIter = rsc->parent->children;
 
                     for (; gIter != NULL; gIter = gIter->next) {

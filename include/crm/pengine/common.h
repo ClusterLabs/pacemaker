@@ -152,7 +152,7 @@ recovery2text(enum rsc_recovery_type type)
             return "shutting it down";
         case pcmk_multiply_active_restart:
             return "attempting recovery";
-        case recovery_block:
+        case pcmk_multiply_active_block:
             return "waiting for an administrator";
         case recovery_stop_unexpected:
             return "stopping unexpected instances";
