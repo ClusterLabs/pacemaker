@@ -20,6 +20,13 @@ extern "C" {
  * \ingroup core
  */
 
+//! What resource needs before it can be recovered from a failed node
+enum rsc_start_requirement {
+    rsc_req_nothing,            /* Allowed by custom_action() */
+    rsc_req_quorum,             /* Enforced by custom_action() */
+    rsc_req_stonith             /* Enforced by native_start_constraints() */
+};
+
 //! How to recover a resource that is incorrectly active on multiple nodes
 enum rsc_recovery_type {
     pcmk_multiply_active_restart    = 0,    //!< Stop on all, start on desired

@@ -76,12 +76,6 @@ enum action_tasks {
     stonith_node
 };
 
-enum rsc_start_requirement {
-    rsc_req_nothing,            /* Allowed by custom_action() */
-    rsc_req_quorum,             /* Enforced by custom_action() */
-    rsc_req_stonith             /* Enforced by native_start_constraints() */
-};
-
 //! Deprecated
 enum pe_print_options {
     pe_print_log            = (1 << 0),
