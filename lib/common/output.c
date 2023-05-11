@@ -290,6 +290,34 @@ pcmk__log_output_new(pcmk__output_t **out)
 
 /*!
  * \internal
+ * \brief Create a new output object using the "none" format
+ *
+ * \param[out] out       Where to store newly allocated output object
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__none_output_new(pcmk__output_t **out)
+{
+    int rc = pcmk_rc_ok;
+    const char* argv[] = { "", NULL };
+    pcmk__supported_format_t formats[] = {
+        PCMK__SUPPORTED_FORMAT_NONE,
+        { NULL, NULL, NULL }
+    };
+
+    pcmk__register_formats(NULL, formats);
+    rc = pcmk__output_new(out, "none", NULL, (char **) argv);
+    if ((rc != pcmk_rc_ok) || (*out == NULL)) {
+        crm_err("Can't create none output object to internal error: %s",
+                pcmk_rc_str(rc));
+        return rc;
+    }
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
  * \brief Create a new output object using the "text" format
  *
  * \param[out] out       Where to store newly allocated output object
