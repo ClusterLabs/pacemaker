@@ -20,6 +20,7 @@
 #include <crm/common/results.h>
 #include <crm/common/strings_internal.h>
 #include <crm/msg_xml.h>
+#include <pacemaker-internal.h>
 
 #include "pacemaker-attrd.h"
 
@@ -259,9 +260,31 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
                     attrd_peer_sync(peer, NULL);
                 }
             } else {
-                // Remove all attribute values associated with lost nodes
-                attrd_peer_remove(peer->uname, false, "loss");
-                gone = true;
+                /* This should happen infrequently enough that creating and
+                 * destroying a special output object every time is not a
+                 * performance burden.  We need this object because the whole
+                 * pcmk__controller_status call chain does a lot of output.  We
+                 * don't actually care why something failed, only if it did.
+                 */
+                pcmk__output_t *none_out = NULL;
+                int rc = pcmk_rc_ok;
+
+                rc = pcmk__none_output_new(&none_out);
+
+                /* If the controller is still up that likely means that just
+                 * attrd died - segfault, etc.  Don't delete its transient
+                 * attributes so they can be synced back over once attrd on
+                 * the peer is respawned.
+                 */
+                if (rc != pcmk_rc_ok || none_out == NULL ||
+                    pcmk__controller_status(none_out, peer->uname, 0) != pcmk_rc_ok) {
+                    attrd_peer_remove(peer->uname, false, "loss");
+                    gone = true;
+                }
+
+                if (none_out != NULL) {
+                    pcmk__output_free(none_out);
+                }
             }
             break;
     }

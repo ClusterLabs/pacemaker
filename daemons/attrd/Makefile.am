@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2022 the Pacemaker project contributors
+# Copyright 2004-2023 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -18,7 +18,8 @@ noinst_HEADERS  = pacemaker-attrd.h
 pacemaker_attrd_CFLAGS	= $(CFLAGS_HARDENED_EXE)
 pacemaker_attrd_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
 
-pacemaker_attrd_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la	\
+pacemaker_attrd_LDADD	= $(top_builddir)/lib/pacemaker/libpacemaker.la \
+			  $(top_builddir)/lib/cluster/libcrmcluster.la	\
 			  $(top_builddir)/lib/pengine/libpe_rules.la	\
 			  $(top_builddir)/lib/common/libcrmcommon.la	\
 			  $(top_builddir)/lib/cib/libcib.la		\
