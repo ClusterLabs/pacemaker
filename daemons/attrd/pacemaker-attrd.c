@@ -103,11 +103,6 @@ attrd_erase_cb(xmlNode *msg, int call_id, int rc, xmlNode *output,
  * normally done by the DC's controller when this node leaves the cluster, but
  * this handles the case where the node restarted so quickly that the
  * cluster layer didn't notice.
- *
- * \todo If pacemaker-attrd respawns after crashing (see PCMK_respawned),
- *       ideally we'd skip this and sync our attributes from the writer.
- *       However, currently we reject any values for us that the writer has, in
- *       attrd_peer_update().
  */
 static void
 attrd_erase_attrs(void)
@@ -188,7 +183,9 @@ static void
 attrd_cib_init(void)
 {
     // We have no attribute values in memory, wipe the CIB to match
-    attrd_erase_attrs();
+    if (!crm_is_true(getenv("PCMK_respawned"))) {
+        attrd_erase_attrs();
+    }
 
     // Set a trigger for reading the CIB (for the alerts section)
     attrd_config_read = mainloop_add_trigger(G_PRIORITY_HIGH, attrd_read_options, NULL);

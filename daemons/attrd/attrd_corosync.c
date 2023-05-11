@@ -541,7 +541,7 @@ attrd_peer_sync_response(const crm_node_t *peer, bool peer_won, xmlNode *xml)
          child = pcmk__xml_next(child)) {
         attrd_peer_update(peer, child,
                           crm_element_value(child, PCMK__XA_ATTR_NODE_NAME),
-                          true);
+                          !crm_is_true(getenv("PCMK_respawned")));
     }
 
     if (peer_won) {
