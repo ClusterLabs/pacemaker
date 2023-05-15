@@ -540,11 +540,11 @@ been promoted before they can start.
 Clone Stickiness
 ________________
    
-To achieve a stable allocation pattern, clones are slightly sticky by
-default.  If no value for ``resource-stickiness`` is provided, the clone
-will use a value of 1.  Being a small value, it causes minimal
-disturbance to the score calculations of other resources but is enough
-to prevent Pacemaker from needlessly moving copies around the cluster.
+To achieve stable assignments, clones are slightly sticky by default. If no
+value for ``resource-stickiness`` is provided, the clone will use a value of 1.
+Being a small value, it causes minimal disturbance to the score calculations of
+other resources but is enough to prevent Pacemaker from needlessly moving
+instances around the cluster.
    
 .. note::
 

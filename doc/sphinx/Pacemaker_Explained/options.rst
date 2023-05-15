@@ -479,7 +479,7 @@ values, by running the ``man pacemaker-schedulerd`` and
    | placement-strategy        | default | .. index::                                         |
    |                           |         |    pair: cluster option; placement-strategy        |
    |                           |         |                                                    |
-   |                           |         | How the cluster should allocate resources to nodes |
+   |                           |         | How the cluster should assign resources to nodes   |
    |                           |         | (see :ref:`utilization`). Allowed values are       |
    |                           |         | ``default``, ``utilization``, ``balanced``, and    |
    |                           |         | ``minimal``.                                       |
