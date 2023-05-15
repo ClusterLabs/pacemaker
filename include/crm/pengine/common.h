@@ -22,26 +22,6 @@ extern "C" {
 extern gboolean was_processing_error;
 extern gboolean was_processing_warning;
 
-//! Deprecated
-enum pe_print_options {
-    pe_print_log            = (1 << 0),
-    pe_print_html           = (1 << 1),
-    pe_print_ncurses        = (1 << 2),
-    pe_print_printf         = (1 << 3),
-    pe_print_dev            = (1 << 4),  //! Ignored
-    pe_print_details        = (1 << 5),  //! Ignored
-    pe_print_max_details    = (1 << 6),  //! Ignored
-    pe_print_rsconly        = (1 << 7),
-    pe_print_ops            = (1 << 8),
-    pe_print_suppres_nl     = (1 << 9),
-    pe_print_xml            = (1 << 10),
-    pe_print_brief          = (1 << 11),
-    pe_print_pending        = (1 << 12),
-    pe_print_clone_details  = (1 << 13),
-    pe_print_clone_active   = (1 << 14), // Print clone instances only if active
-    pe_print_implicit       = (1 << 15)  // Print implicitly created resources
-};
-
 const char *task2text(enum action_tasks task);
 enum action_tasks text2task(const char *task);
 enum rsc_role_e text2role(const char *role);
