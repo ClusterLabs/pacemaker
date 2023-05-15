@@ -66,7 +66,7 @@ TESTS = [
         [ "group15", "Negative group colocation" ],
         [ "bug-1573", "Partial stop of a group with two children" ],
         [ "bug-1718", "Mandatory group ordering - Stop group_FUN" ],
-        [ "bug-lf-2613", "Move group on failure" ],
+        [ "failed-sticky-group", "Move group on last member failure despite infinite stickiness" ],
         [ "bug-lf-2619", "Move group on clone failure" ],
         [ "group-fail", "Ensure stop order is preserved for partially active groups" ],
         [ "group-unmanaged", "No need to restart r115 because r114 is unmanaged" ],
