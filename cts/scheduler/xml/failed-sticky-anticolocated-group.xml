@@ -6,10 +6,11 @@
 	 * There are two nodes, and the groups are active on different ones
 	 * The dependent group's last member (member2b) is failed and has
            reached its migration-threshold
+         * Stickiness is infinite
 
 	 In this situation, the goal of keeping as many resources active as
-	 possible should override the optional anti-colocation, and the
-         dependent group should move to the primary group's node.
+	 possible should override both the first member's stickiness and the
+         optional anti-colocation, and the group should move to another node.
       -->
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -95,6 +96,7 @@
     <rsc_defaults>
       <meta_attributes id="rsc_defaults-meta_attributes">
         <nvpair id="rsc_defaults-meta_attributes-migration-threshold" name="migration-threshold" value="1"/>
+        <nvpair id="rsc_defaults-meta_attributes-resource-stickiness" name="resource-stickiness" value="INFINITY"/>
       </meta_attributes>
     </rsc_defaults>
   </configuration>

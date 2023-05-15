@@ -1,6 +1,16 @@
 <cib epoch="640" num_updates="185" admin_epoch="0" validate-with="pacemaker-3.0" crm_feature_set="3.0.5" cib-last-written="Fri Jul 13 13:51:03 2012" have-quorum="1" dc-uuid="act1">
   <configuration>
     <crm_config>
+    <!-- The essential elements of this test are:
+         * A group (grpPostgreSQLDB1) is active on a node (act1)
+	 * The group's last member (prmApPostgreSQLDB1) is failed and has
+           reached its migration-threshold
+         * Stickiness is infinite
+
+	 In this situation, the goal of keeping as many resources active as
+	 possible should override the first member's stickiness, and the group
+         should move to another node.
+      -->
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.5-22acba43e041"/>
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
