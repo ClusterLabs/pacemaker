@@ -10,6 +10,12 @@
 #ifndef PCMK__CRM_COMMON_SCHEDULER__H
 #  define PCMK__CRM_COMMON_SCHEDULER__H
 
+#include <sys/types.h>                  // time_t
+#include <libxml/tree.h>                // xmlNode
+#include <glib.h>                       // guint, GList, GHashTable
+
+#include <crm/common/iso8601.h>         // crm_time_t
+
 #include <crm/common/actions.h>
 #include <crm/common/nodes.h>
 #include <crm/common/resources.h>
@@ -158,6 +164,63 @@ enum pcmk_scheduler_flags {
      * applying node-specific location criteria, assignment, etc.)
      */
     pcmk_sched_validate_only            = (1ULL << 27),
+};
+
+//! Implementation of pcmk_scheduler_t
+struct pe_working_set_s {
+    // Be careful about when each piece of information is available and final
+
+    xmlNode *input;                 //!< CIB XML
+    crm_time_t *now;                //!< Current time for evaluation purposes
+    char *dc_uuid;                  //!< Node ID of designated controller
+    pcmk_node_t *dc_node;           //!< Node object for DC
+    const char *stonith_action;     //!< Default fencing action
+    const char *placement_strategy; //!< Value of placement-strategy property
+    unsigned long long flags;       //!< Group of enum pcmk_scheduler_flags
+    int stonith_timeout;            //!< Value of stonith-timeout property
+    enum pe_quorum_policy no_quorum_policy; //!< Response to loss of quorum
+    GHashTable *config_hash;        //!< Cluster properties
+
+    //!< Ticket constraints unpacked from ticket state
+    GHashTable *tickets;
+
+    //! Actions for which there can be only one (such as "fence node X")
+    GHashTable *singletons;
+
+    GList *nodes;                   //!< Nodes in cluster
+    GList *resources;               //!< Resources in cluster
+    GList *placement_constraints;   //!< Location constraints
+    GList *ordering_constraints;    //!< Ordering constraints
+    GList *colocation_constraints;  //!< Colocation constraints
+
+    //!< Ticket constraints unpacked by libpacemaker
+    GList *ticket_constraints;
+
+    GList *actions;                 //!< Scheduled actions
+    xmlNode *failed;                //!< History entries of failed actions
+    xmlNode *op_defaults;           //!< Configured operation defaults
+    xmlNode *rsc_defaults;          //!< Configured resource defaults
+    int num_synapse;                //!< Number of transition graph synapses
+    int max_valid_nodes;            //!< \deprecated Do not use
+    int order_id;                   //!< ID to use for next created ordering
+    int action_id;                  //!< ID to use for next created action
+    xmlNode *graph;                 //!< Transition graph
+    GHashTable *template_rsc_sets;  //!< Mappings of template ID to resource ID
+    const char *localhost;          //!< Node will be created for this if needed
+    GHashTable *tags;               //!< Configuration tags (ID -> pe_tag_t *)
+    int blocked_resources;          //!< Number of blocked resources in cluster
+    int disabled_resources;         //!< Number of disabled resources in cluster
+    GList *param_check;             //!< History entries that need to be checked
+    GList *stop_needed;             //!< Containers that need stop actions
+    time_t recheck_by;              //!< Hint to controller when to reschedule
+    int ninstances;                 //!< Total number of resource instances
+    guint shutdown_lock;            //!< How long to lock resources (seconds)
+    int priority_fencing_delay;     //!< Priority fencing delay
+
+    // pcmk__output_t *
+    void *priv;                     //!< For Pacemaker use only
+
+    guint node_pending_timeout;     //!< Pending join times out after this (ms)
 };
 
 #ifdef __cplusplus

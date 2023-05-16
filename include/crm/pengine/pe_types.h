@@ -29,66 +29,6 @@ extern "C" {
  * \ingroup pengine
  */
 
-struct pe_working_set_s {
-    xmlNode *input;
-    crm_time_t *now;
-
-    /* options extracted from the input */
-    char *dc_uuid;
-    pcmk_node_t *dc_node;
-    const char *stonith_action;
-    const char *placement_strategy;
-
-    unsigned long long flags;
-
-    int stonith_timeout;
-    enum pe_quorum_policy no_quorum_policy;
-
-    GHashTable *config_hash;
-    GHashTable *tickets;
-
-    // Actions for which there can be only one (e.g. fence nodeX)
-    GHashTable *singletons;
-
-    GList *nodes;
-    GList *resources;
-    GList *placement_constraints;
-    GList *ordering_constraints;
-    GList *colocation_constraints;
-    GList *ticket_constraints;
-
-    GList *actions;
-    xmlNode *failed;
-    xmlNode *op_defaults;
-    xmlNode *rsc_defaults;
-
-    /* stats */
-    int num_synapse;
-    int max_valid_nodes;    //! Deprecated (will be removed in a future release)
-    int order_id;
-    int action_id;
-
-    /* final output */
-    xmlNode *graph;
-
-    GHashTable *template_rsc_sets;
-    const char *localhost;
-    GHashTable *tags;
-
-    int blocked_resources;
-    int disabled_resources;
-
-    GList *param_check; // History entries that need to be checked
-    GList *stop_needed; // Containers that need stop actions
-    time_t recheck_by;  // Hint to controller to re-run scheduler by this time
-    int ninstances;     // Total number of resource instances
-    guint shutdown_lock;// How long (seconds) to lock resources to shutdown node
-    int priority_fencing_delay; // Priority fencing delay
-
-    void *priv;
-    guint node_pending_timeout; // Node pending timeout
-};
-
 struct pe_action_s {
     int id;
     int priority;
