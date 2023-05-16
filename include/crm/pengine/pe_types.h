@@ -213,6 +213,7 @@ struct pe_working_set_s {
     int priority_fencing_delay; // Priority fencing delay
 
     void *priv;
+    guint node_pending_timeout; // Node pending timeout
 };
 
 enum pe_check_parameters {

@@ -392,6 +392,11 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
         crm_trace("Shutdown locks expire after %us", data_set->shutdown_lock);
     }
 
+    value = pe_pref(data_set->config_hash,
+                    XML_CONFIG_ATTR_NODE_PENDING_TIMEOUT);
+    data_set->node_pending_timeout = crm_parse_interval_spec(value) / 1000;
+    crm_trace("Node pending timeout is %us", data_set->node_pending_timeout);
+
     return TRUE;
 }
 
@@ -1486,7 +1491,15 @@ determine_online_status_fencing(pe_working_set_t *data_set,
 
     } else if (do_terminate == FALSE && pcmk__str_eq(exp_state, CRMD_JOINSTATE_DOWN, pcmk__str_casei)) {
 
-        if (member || crmd_online) {
+        if (when_member > 0
+            && when_online == 0
+            && (get_effective_time(data_set) - when_member
+                >= data_set->node_pending_timeout)) {
+            pe_fence_node(data_set, this_node,
+                          "peer pending timed out on joining the process group",
+                          FALSE);
+
+        } else if (member || crmd_online) {
             crm_info("- %s is not ready to run resources",
                      pe__node_name(this_node));
             this_node->details->standby = TRUE;
