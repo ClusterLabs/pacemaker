@@ -413,6 +413,7 @@ extern "C" {
 #  define XML_CONFIG_ATTR_SHUTDOWN_LOCK         "shutdown-lock"
 #  define XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT   "shutdown-lock-limit"
 #  define XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY "priority-fencing-delay"
+#  define XML_CONFIG_ATTR_NODE_PENDING_TIMEOUT "node-pending-timeout"
 
 #  define XML_ALERT_ATTR_PATH		"path"
 #  define XML_ALERT_ATTR_TIMEOUT	"timeout"
