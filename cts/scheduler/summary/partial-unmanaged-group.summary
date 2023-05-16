@@ -15,7 +15,7 @@ Current cluster status:
       * grp1c	(ocf:pacemaker:Dummy):	 Started rhel8-2 (unmanaged)
 
 Transition Summary:
-  * Start      interloper     ( rhel8-2 )
+  * Start      interloper     ( rhel8-2 )  due to unrunnable grp1b stop (blocked)
 
 Executing Cluster Transition:
   * Pseudo action:   grp1_start_0
@@ -23,10 +23,6 @@ Executing Cluster Transition:
   * Resource action: interloper      monitor on rhel8-4
   * Resource action: interloper      monitor on rhel8-2
   * Resource action: interloper      monitor on rhel8-1
-  * Resource action: interloper      start on rhel8-2
-  * Resource action: interloper      monitor=10000 on rhel8-2
-Transition failed: terminated
-An invalid transition was produced
 Using the original execution date of: 2020-01-20 21:19:17Z
 
 Revised Cluster Status:
@@ -40,6 +36,6 @@ Revised Cluster Status:
     * rsc2	(ocf:pacemaker:Dummy):	 Started rhel8-5
     * Resource Group: grp1:
       * grp1a	(ocf:pacemaker:Dummy):	 Started rhel8-2
-      * interloper	(ocf:pacemaker:Dummy):	 Started rhel8-2
+      * interloper	(ocf:pacemaker:Dummy):	 Stopped
       * grp1b	(ocf:pacemaker:Dummy):	 Started rhel8-2 (unmanaged)
       * grp1c	(ocf:pacemaker:Dummy):	 Started rhel8-2 (unmanaged)
