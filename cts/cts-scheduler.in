@@ -74,6 +74,9 @@ TESTS = [
         [ "group-fail", "Ensure stop order is preserved for partially active groups" ],
         [ "group-unmanaged", "No need to restart r115 because r114 is unmanaged" ],
         [ "group-unmanaged-stopped", "Make sure r115 is stopped when r114 fails" ],
+        [ "partial-unmanaged-group",
+          "New member in partially unmanaged group"
+        ],
         [ "group-dependents", "Account for the location preferences of things colocated with a group" ],
         [ "group-stop-ordering", "Ensure blocked group member stop does not force other member stops" ],
         [ "colocate-unmanaged-group", "Respect mandatory colocations even if earlier group member is unmanaged" ],

@@ -1,0 +1,45 @@
+Using the original execution date of: 2020-01-20 21:19:17Z
+Current cluster status:
+  * Node List:
+    * Online: [ rhel8-1 rhel8-2 rhel8-4 rhel8-5 ]
+    * OFFLINE: [ rhel8-3 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started rhel8-1
+    * rsc1	(ocf:pacemaker:Dummy):	 Started rhel8-4
+    * rsc2	(ocf:pacemaker:Dummy):	 Started rhel8-5
+    * Resource Group: grp1:
+      * grp1a	(ocf:pacemaker:Dummy):	 Started rhel8-2
+      * interloper	(ocf:pacemaker:Dummy):	 Stopped
+      * grp1b	(ocf:pacemaker:Dummy):	 Started rhel8-2 (unmanaged)
+      * grp1c	(ocf:pacemaker:Dummy):	 Started rhel8-2 (unmanaged)
+
+Transition Summary:
+  * Start      interloper     ( rhel8-2 )
+
+Executing Cluster Transition:
+  * Pseudo action:   grp1_start_0
+  * Resource action: interloper      monitor on rhel8-5
+  * Resource action: interloper      monitor on rhel8-4
+  * Resource action: interloper      monitor on rhel8-2
+  * Resource action: interloper      monitor on rhel8-1
+  * Resource action: interloper      start on rhel8-2
+  * Resource action: interloper      monitor=10000 on rhel8-2
+Transition failed: terminated
+An invalid transition was produced
+Using the original execution date of: 2020-01-20 21:19:17Z
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ rhel8-1 rhel8-2 rhel8-4 rhel8-5 ]
+    * OFFLINE: [ rhel8-3 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started rhel8-1
+    * rsc1	(ocf:pacemaker:Dummy):	 Started rhel8-4
+    * rsc2	(ocf:pacemaker:Dummy):	 Started rhel8-5
+    * Resource Group: grp1:
+      * grp1a	(ocf:pacemaker:Dummy):	 Started rhel8-2
+      * interloper	(ocf:pacemaker:Dummy):	 Started rhel8-2
+      * grp1b	(ocf:pacemaker:Dummy):	 Started rhel8-2 (unmanaged)
+      * grp1c	(ocf:pacemaker:Dummy):	 Started rhel8-2 (unmanaged)
