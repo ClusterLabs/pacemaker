@@ -221,8 +221,11 @@ struct cib_s {
     void *delegate_fn;
 
     GList *notify_list;
+
+    //! \deprecated This method will be removed in a future release
     void (*op_callback) (const xmlNode *msg, int call_id, int rc,
                          xmlNode *output);
+
     cib_api_operations_t *cmds;
 };
 

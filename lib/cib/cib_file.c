@@ -215,6 +215,7 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
         cib_set_file_flags(private, cib_file_flag_dirty);
     }
 
+    // Global operation callback (deprecated)
     if (cib->op_callback != NULL) {
         cib->op_callback(NULL, cib->call_id, rc, output);
     }
