@@ -20,6 +20,7 @@
 #include <crm/common/nodes.h>
 #include <crm/common/resources.h>
 #include <crm/common/roles.h>
+#include <crm/common/rules.h>
 #include <crm/common/scheduler_types.h>
 #include <crm/common/tags.h>
 #include <crm/common/tickets.h>
