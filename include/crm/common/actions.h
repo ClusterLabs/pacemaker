@@ -17,6 +17,13 @@
 
 #include <crm/lrmd_events.h>            // lrmd_event_data_t
 
+#include <glib.h>                       // GList, GHashTable
+#include <libxml/tree.h>                // xmlNode
+
+#include <crm/common/nodes.h>
+#include <crm/common/resources.h>       // enum rsc_start_requirement, etc.
+#include <crm/common/scheduler_types.h> // pcmk_resource_t, pcmk_node_t
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -336,6 +343,54 @@ enum pe_link_state {
 #endif
 };
 //!@}
+
+//! Implementation of pcmk_action_t
+struct pe_action_s {
+    int id;                 //!< Counter to identify action
+
+    /*!
+     * When the controller aborts a transition graph, it sets an abort priority.
+     * If this priority is higher, the action will still be executed anyway.
+     * Pseudo-actions are always allowed, so this is irrelevant for them.
+     */
+    int priority;
+
+    pcmk_resource_t *rsc;   //!< Resource to apply action to, if any
+    pcmk_node_t *node;      //!< Node to execute action on, if any
+    xmlNode *op_entry;      //!< Action XML configuration, if any
+    char *task;             //!< Action name
+    char *uuid;             //!< Action key
+    char *cancel_task;      //!< If task is "cancel", the action being cancelled
+    char *reason;           //!< Readable description of why action is needed
+
+    enum pe_action_flags flags;         //!< Group of enum pe_action_flags
+    enum rsc_start_requirement needs;   //!< Prerequisite for recovery
+    enum action_fail_response on_fail;  //!< Response to failure
+    enum rsc_role_e fail_role;          //!< Resource role if action fails
+    GHashTable *meta;                   //!< Meta-attributes relevant to action
+    GHashTable *extra;                  //!< Action-specific instance attributes
+
+    /* Current count of runnable instance actions for "first" action in an
+     * ordering dependency with pcmk__ar_min_runnable set.
+     */
+    int runnable_before;                //!< For Pacemaker use only
+
+    /*!
+     * Number of instance actions for "first" action in an ordering dependency
+     * with pcmk__ar_min_runnable set that must be runnable before this action
+     * can be runnable.
+     */
+    int required_runnable_before;
+
+    GList *actions_before;  //!< Actions ordered before (pe_action_wrapper_t *)
+    GList *actions_after;   //!< Actions ordered after (pe_action_wrapper_t *)
+
+    /* This is intended to hold data that varies by the type of action, but is
+     * not currently used. Some of the above fields could be moved here except
+     * for API backward compatibility.
+     */
+    void *action_details;               //!< For Pacemaker use only
+};
 
 // For parsing various action-related string specifications
 gboolean parse_op_key(const char *key, char **rsc_id, char **op_type,

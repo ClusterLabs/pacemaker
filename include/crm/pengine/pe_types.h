@@ -29,56 +29,6 @@ extern "C" {
  * \ingroup pengine
  */
 
-struct pe_action_s {
-    int id;
-    int priority;
-
-    pcmk_resource_t *rsc;
-    pcmk_node_t *node;
-    xmlNode *op_entry;
-
-    char *task;
-    char *uuid;
-    char *cancel_task;
-    char *reason;
-
-    enum pe_action_flags flags;
-    enum rsc_start_requirement needs;
-    enum action_fail_response on_fail;
-    enum rsc_role_e fail_role;
-
-    GHashTable *meta;
-    GHashTable *extra;
-
-    /* 
-     * These two varables are associated with the constraint logic
-     * that involves first having one or more actions runnable before
-     * then allowing this action to execute.
-     *
-     * These varables are used with features such as 'clone-min' which
-     * requires at minimum X number of cloned instances to be running
-     * before an order dependency can run. Another option that uses
-     * this is 'require-all=false' in ordering constrants. This option
-     * says "only require one instance of a resource to start before
-     * allowing dependencies to start" -- basically, require-all=false is
-     * the same as clone-min=1.
-     */
-
-    /* current number of known runnable actions in the before list. */
-    int runnable_before;
-    /* the number of "before" runnable actions required for this action
-     * to be considered runnable */ 
-    int required_runnable_before;
-
-    GList *actions_before;    /* pe_action_wrapper_t* */
-    GList *actions_after;     /* pe_action_wrapper_t* */
-
-    /* Some of the above fields could be moved to the details,
-     * except for API backward compatibility.
-     */
-    void *action_details; // varies by type of action
-};
-
 typedef struct pe_ticket_s {
     char *id;
     gboolean granted;
