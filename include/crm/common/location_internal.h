@@ -23,7 +23,7 @@ extern "C" {
 //! Location constraint object
 typedef struct {
     char *id;                           // XML ID of location constraint
-    pcmk_resource_t *rsc_lh;            // Resource with location preference
+    pcmk_resource_t *rsc;               // Resource with location preference
     enum rsc_role_e role_filter;        // Limit to instances with this role
     enum pe_discover_e discover_mode;   // How to probe resource on node
     GList *node_list_rh;                // Affected nodes, with preference score

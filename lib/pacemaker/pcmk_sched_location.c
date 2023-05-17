@@ -555,7 +555,7 @@ pcmk__new_location(const char *id, pcmk_resource_t *rsc,
     new_con = calloc(1, sizeof(pcmk__location_t));
     if (new_con != NULL) {
         new_con->id = strdup(id);
-        new_con->rsc_lh = rsc;
+        new_con->rsc = rsc;
         new_con->node_list_rh = NULL;
         new_con->role_filter = pcmk_role_unknown;
 
@@ -603,7 +603,7 @@ pcmk__apply_locations(pcmk_scheduler_t *scheduler)
          iter != NULL; iter = iter->next) {
         pcmk__location_t *location = iter->data;
 
-        location->rsc_lh->cmds->apply_location(location->rsc_lh, location);
+        location->rsc->cmds->apply_location(location->rsc, location);
     }
 }
 

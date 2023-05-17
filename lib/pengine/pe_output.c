@@ -645,7 +645,7 @@ ban_html(pcmk__output_t *out, va_list args) {
     char *node_name = pe__node_display_name(pe_node,
                                             pcmk_is_set(show_opts, pcmk_show_node_id));
     char *buf = crm_strdup_printf("%s\tprevents %s from running %son %s",
-                                  location->id, location->rsc_lh->id,
+                                  location->id, location->rsc->id,
                                   role_desc(location->role_filter), node_name);
 
     pcmk__output_create_html_node(out, "li", NULL, NULL, buf);
@@ -665,7 +665,7 @@ ban_text(pcmk__output_t *out, va_list args) {
     char *node_name = pe__node_display_name(pe_node,
                                             pcmk_is_set(show_opts, pcmk_show_node_id));
     out->list_item(out, NULL, "%s\tprevents %s from running %son %s",
-                   location->id, location->rsc_lh->id,
+                   location->id, location->rsc->id,
                    role_desc(location->role_filter), node_name);
 
     free(node_name);
@@ -684,7 +684,7 @@ ban_xml(pcmk__output_t *out, va_list args) {
 
     pcmk__output_create_xml_node(out, "ban",
                                  "id", location->id,
-                                 "resource", location->rsc_lh->id,
+                                 "resource", location->rsc->id,
                                  "node", pe_node->details->uname,
                                  "weight", weight_s,
                                  "promoted-only", promoted_only,
@@ -718,7 +718,7 @@ ban_list(pcmk__output_t *out, va_list args) {
     for (gIter = scheduler->placement_constraints;
          gIter != NULL; gIter = gIter->next) {
         pcmk__location_t *location = gIter->data;
-        const pcmk_resource_t *rsc = location->rsc_lh;
+        const pcmk_resource_t *rsc = location->rsc;
 
         if (prefix != NULL && !g_str_has_prefix(location->id, prefix)) {
             continue;
