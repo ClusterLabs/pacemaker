@@ -562,13 +562,13 @@ warn_about_deprecated_classes(pe_resource_t *rsc)
     const char *std = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
     if (pcmk__str_eq(std, PCMK_RESOURCE_CLASS_UPSTART, pcmk__str_none)) {
-        pe_warn_once(pe_wo_upstart,
+        pe_warn_once(pcmk__wo_upstart,
                      "Support for Upstart resources (such as %s) is deprecated "
                      "and will be removed in a future release of Pacemaker",
                      rsc->id);
 
     } else if (pcmk__str_eq(std, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_none)) {
-        pe_warn_once(pe_wo_nagios,
+        pe_warn_once(pcmk__wo_nagios,
                      "Support for Nagios resources (such as %s) is deprecated "
                      "and will be removed in a future release of Pacemaker",
                      rsc->id);
@@ -778,7 +778,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
         (*rsc)->restart_type = pe_restart_restart;
         pe_rsc_trace((*rsc), "%s dependency restart handling: restart",
                      (*rsc)->id);
-        pe_warn_once(pe_wo_restart_type,
+        pe_warn_once(pcmk__wo_restart_type,
                      "Support for restart-type is deprecated and will be removed in a future release");
 
     } else {
@@ -828,7 +828,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
              * should probably use the default (INFINITY) or 0 (to disable)
              * instead.
              */
-            pe_warn_once(pe_wo_neg_threshold,
+            pe_warn_once(pcmk__wo_neg_threshold,
                          PCMK_META_MIGRATION_THRESHOLD
                          " must be non-negative, using 1 instead");
             (*rsc)->migration_threshold = 1;

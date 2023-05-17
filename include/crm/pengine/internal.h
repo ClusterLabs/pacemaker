@@ -138,32 +138,11 @@ pe_resource_t *pe__last_group_member(const pe_resource_t *group);
                                            #flags_to_clear);                  \
     } while (0)
 
-// Some warnings we don't want to print every transition
-
-enum pe_warn_once_e {
-    pe_wo_blind         = (1 << 0),
-    pe_wo_restart_type  = (1 << 1),
-    pe_wo_role_after    = (1 << 2),
-    pe_wo_poweroff      = (1 << 3),
-    pe_wo_require_all   = (1 << 4),
-    pe_wo_order_score   = (1 << 5),
-    pe_wo_neg_threshold = (1 << 6),
-    pe_wo_remove_after  = (1 << 7),
-    pe_wo_ping_node     = (1 << 8),
-    pe_wo_order_inst    = (1 << 9),
-    pe_wo_coloc_inst    = (1 << 10),
-    pe_wo_group_order   = (1 << 11),
-    pe_wo_group_coloc   = (1 << 12),
-    pe_wo_upstart       = (1 << 13),
-    pe_wo_nagios        = (1 << 14),
-    pe_wo_set_ordering  = (1 << 15),
-};
-
 extern uint32_t pe_wo;
 
 #define pe_warn_once(pe_wo_bit, fmt...) do {    \
         if (!pcmk_is_set(pe_wo, pe_wo_bit)) {  \
-            if (pe_wo_bit == pe_wo_blind) {     \
+            if (pe_wo_bit == pcmk__wo_blind) {  \
                 crm_warn(fmt);                  \
             } else {                            \
                 pe_warn(fmt);                   \

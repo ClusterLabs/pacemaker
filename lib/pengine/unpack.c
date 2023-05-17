@@ -264,7 +264,7 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
 
     data_set->stonith_action = pe_pref(data_set->config_hash, "stonith-action");
     if (!strcmp(data_set->stonith_action, "poweroff")) {
-        pe_warn_once(pe_wo_poweroff,
+        pe_warn_once(pcmk__wo_poweroff,
                      "Support for stonith-action of 'poweroff' is deprecated "
                      "and will be removed in a future release (use 'off' instead)");
         data_set->stonith_action = PCMK_ACTION_OFF;
@@ -369,7 +369,7 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
         if (crm_is_true(value)) {
             pe__set_working_set_flags(data_set, pcmk_sched_remove_after_stop);
 #ifndef PCMK__COMPAT_2_0
-            pe_warn_once(pe_wo_remove_after,
+            pe_warn_once(pcmk__wo_remove_after,
                          "Support for the remove-after-stop cluster property is"
                          " deprecated and will be removed in a future release");
 #endif
@@ -398,7 +398,7 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     if (pcmk_is_set(data_set->flags, pcmk_sched_startup_fencing)) {
         crm_trace("Unseen nodes will be fenced");
     } else {
-        pe_warn_once(pe_wo_blind, "Blind faith: not fencing unseen nodes");
+        pe_warn_once(pcmk__wo_blind, "Blind faith: not fencing unseen nodes");
     }
 
     pe__unpack_node_health_scores(data_set);
@@ -475,7 +475,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
                               "assuming 'ping'", pcmk__s(uname, "without name"),
                               type);
         }
-        pe_warn_once(pe_wo_ping_node,
+        pe_warn_once(pcmk__wo_ping_node,
                      "Support for nodes of type 'ping' (such as %s) is "
                      "deprecated and will be removed in a future release",
                      pcmk__s(uname, "unnamed node"));

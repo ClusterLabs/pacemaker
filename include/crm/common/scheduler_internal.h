@@ -19,6 +19,30 @@
 extern "C" {
 #endif
 
+/* Some warnings are too noisy when logged every time a give function is called
+ * (for example, using a deprecated feature). As an alternative, we allow
+ * warnings to be logged once per scheduler sequence (transition). Each of those
+ * warnings needs a flag defined here.
+ */
+enum pcmk__sched_warnings {
+    pcmk__wo_blind          = (1 << 0),
+    pcmk__wo_restart_type   = (1 << 1),
+    pcmk__wo_role_after     = (1 << 2),
+    pcmk__wo_poweroff       = (1 << 3),
+    pcmk__wo_require_all    = (1 << 4),
+    pcmk__wo_order_score    = (1 << 5),
+    pcmk__wo_neg_threshold  = (1 << 6),
+    pcmk__wo_remove_after   = (1 << 7),
+    pcmk__wo_ping_node      = (1 << 8),
+    pcmk__wo_order_inst     = (1 << 9),
+    pcmk__wo_coloc_inst     = (1 << 10),
+    pcmk__wo_group_order    = (1 << 11),
+    pcmk__wo_group_coloc    = (1 << 12),
+    pcmk__wo_upstart        = (1 << 13),
+    pcmk__wo_nagios         = (1 << 14),
+    pcmk__wo_set_ordering   = (1 << 15),
+};
+
 enum pcmk__check_parameters {
     /* Clear fail count if parameters changed for un-expired start or monitor
      * last_failure.

@@ -994,7 +994,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
     if (xml_obj != NULL) {
         value = g_hash_table_lookup(action->meta, "role_after_failure");
         if (value) {
-            pe_warn_once(pe_wo_role_after,
+            pe_warn_once(pcmk__wo_role_after,
                         "Support for role_after_failure is deprecated and will be removed in a future release");
         }
     }

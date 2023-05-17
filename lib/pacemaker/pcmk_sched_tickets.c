@@ -293,7 +293,7 @@ unpack_simple_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
     pe_resource_t *rsc = NULL;
 
     if (instance != NULL) {
-        pe_warn_once(pe_wo_coloc_inst,
+        pe_warn_once(pcmk__wo_coloc_inst,
                      "Support for " XML_COLOC_ATTR_SOURCE_INSTANCE " is "
                      "deprecated and will be removed in a future release.");
     }

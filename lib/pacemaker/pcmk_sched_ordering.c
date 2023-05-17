@@ -87,7 +87,7 @@ get_ordering_type(const xmlNode *xml_obj)
             if (score_i == 0) {
                 kind_e = pe_order_kind_optional;
             }
-            pe_warn_once(pe_wo_order_score,
+            pe_warn_once(pcmk__wo_order_score,
                          "Support for 'score' in rsc_order is deprecated "
                          "and will be removed in a future release "
                          "(use 'kind' instead)");
@@ -255,7 +255,7 @@ get_ordering_resource(const xmlNode *xml, const char *resource_attr,
     }
 
     if (instance_id != NULL) {
-        pe_warn_once(pe_wo_order_inst,
+        pe_warn_once(pcmk__wo_order_inst,
                      "Support for " XML_ORDER_ATTR_FIRST_INSTANCE " and "
                      XML_ORDER_ATTR_THEN_INSTANCE " is deprecated and will be "
                      "removed in a future release.");
@@ -308,7 +308,7 @@ get_minimum_first_instances(const pe_resource_t *rsc, const xmlNode *xml)
      * require-all=false is deprecated equivalent of clone-min=1
      */
     if (pcmk__xe_get_bool_attr(xml, "require-all", &require_all) != ENODATA) {
-        pe_warn_once(pe_wo_require_all,
+        pe_warn_once(pcmk__wo_require_all,
                      "Support for require-all in ordering constraints "
                      "is deprecated and will be removed in a future release"
                      " (use clone-min clone meta-attribute instead)");

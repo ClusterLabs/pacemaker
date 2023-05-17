@@ -192,8 +192,9 @@ group_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
 
     // @COMPAT These are deprecated since 2.1.5
     set_group_flag(rsc, XML_RSC_ATTR_ORDERED, pcmk__group_ordered,
-                   pe_wo_group_order);
-    set_group_flag(rsc, "collocated", pcmk__group_colocated, pe_wo_group_coloc);
+                   pcmk__wo_group_order);
+    set_group_flag(rsc, "collocated", pcmk__group_colocated,
+                   pcmk__wo_group_coloc);
 
     clone_id = crm_element_value(rsc->xml, XML_RSC_ATTR_INCARNATION);
 
