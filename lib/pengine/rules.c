@@ -109,28 +109,28 @@ find_expression_type(xmlNode * expr)
     attr = crm_element_value(expr, XML_EXPR_ATTR_ATTRIBUTE);
 
     if (pcmk__xe_is(expr, PCMK_XE_DATE_EXPRESSION)) {
-        return time_expr;
+        return pcmk__subexpr_datetime;
 
     } else if (pcmk__xe_is(expr, PCMK_XE_RSC_EXPRESSION)) {
-        return rsc_expr;
+        return pcmk__subexpr_resource;
 
     } else if (pcmk__xe_is(expr, PCMK_XE_OP_EXPRESSION)) {
-        return op_expr;
+        return pcmk__subexpr_operation;
 
     } else if (pcmk__xe_is(expr, XML_TAG_RULE)) {
-        return nested_rule;
+        return pcmk__subexpr_rule;
 
     } else if (!pcmk__xe_is(expr, XML_TAG_EXPRESSION)) {
-        return not_expr;
+        return pcmk__subexpr_unknown;
 
     } else if (pcmk__str_any_of(attr, CRM_ATTR_UNAME, CRM_ATTR_KIND, CRM_ATTR_ID, NULL)) {
-        return loc_expr;
+        return pcmk__subexpr_location;
 
     } else if (pcmk__str_eq(attr, CRM_ATTR_ROLE, pcmk__str_none)) {
-        return role_expr;
+        return pcmk__subexpr_role;
     }
 
-    return attr_expr;
+    return pcmk__subexpr_attribute;
 }
 
 /* As per the nethack rules:
@@ -719,11 +719,11 @@ pe_eval_subexpr(xmlNode *expr, const pe_rule_eval_data_t *rule_data,
     const char *uname = NULL;
 
     switch (find_expression_type(expr)) {
-        case nested_rule:
+        case pcmk__subexpr_rule:
             accept = pe_eval_expr(expr, rule_data, next_change);
             break;
-        case attr_expr:
-        case loc_expr:
+        case pcmk__subexpr_attribute:
+        case pcmk__subexpr_location:
             /* these expressions can never succeed if there is
              * no node to compare with
              */
@@ -732,7 +732,7 @@ pe_eval_subexpr(xmlNode *expr, const pe_rule_eval_data_t *rule_data,
             }
             break;
 
-        case time_expr:
+        case pcmk__subexpr_datetime:
             switch (pe__eval_date_expr(expr, rule_data, next_change)) {
                 case pcmk_rc_within_range:
                 case pcmk_rc_ok:
@@ -745,15 +745,15 @@ pe_eval_subexpr(xmlNode *expr, const pe_rule_eval_data_t *rule_data,
             }
             break;
 
-        case role_expr:
+        case pcmk__subexpr_role:
             accept = pe__eval_role_expr(expr, rule_data);
             break;
 
-        case rsc_expr:
+        case pcmk__subexpr_resource:
             accept = pe__eval_rsc_expr(expr, rule_data);
             break;
 
-        case op_expr:
+        case pcmk__subexpr_operation:
             accept = pe__eval_op_expr(expr, rule_data);
             break;
 

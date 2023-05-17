@@ -214,7 +214,7 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
      * checking can't hurt.
      */
     CRM_ASSERT(match != NULL);
-    CRM_ASSERT(find_expression_type(match) == time_expr);
+    CRM_ASSERT(find_expression_type(match) == pcmk__subexpr_datetime);
 
     rc = eval_date_expression(match, scheduler->now);
     if (rc == pcmk_rc_undetermined) {

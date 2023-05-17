@@ -26,17 +26,26 @@ extern "C" {
 //!@{
 //! \deprecated For Pacemaker use only
 enum expression_type {
-    not_expr        = 0,
-    nested_rule     = 1,
-    attr_expr       = 2,
-    loc_expr        = 3,
-    role_expr       = 4,
-    time_expr       = 5,
+    pcmk__subexpr_unknown   = 0,        // Unknown subexpression type
+    pcmk__subexpr_rule      = 1,        // Nested rule
+    pcmk__subexpr_attribute = 2,        // Node attribute expression
+    pcmk__subexpr_location  = 3,        // Node location expression
+    pcmk__subexpr_role      = 4,        // Resource role expression
+    pcmk__subexpr_datetime  = 5,        // Date/time expression
+    pcmk__subexpr_resource  = 7,        // Resource agent expression
+    pcmk__subexpr_operation = 8,        // Operation expression
+
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    not_expr        = pcmk__subexpr_unknown,
+    nested_rule     = pcmk__subexpr_rule,
+    attr_expr       = pcmk__subexpr_attribute,
+    loc_expr        = pcmk__subexpr_location,
+    role_expr       = pcmk__subexpr_role,
+    time_expr       = pcmk__subexpr_datetime,
     version_expr    = 6,
+    rsc_expr        = pcmk__subexpr_resource,
+    op_expr         = pcmk__subexpr_operation,
 #endif
-    rsc_expr        = 7,
-    op_expr         = 8,
 };
 //!@}
 
