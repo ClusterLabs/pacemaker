@@ -59,12 +59,12 @@ check_params(pe_resource_t *rsc, pe_node_t *node, const xmlNode *rsc_op,
             digest_data = rsc_action_digest_cmp(rsc, rsc_op, node,
                                                 rsc->cluster);
             switch (digest_data->rc) {
-                case RSC_DIGEST_UNKNOWN:
+                case pcmk__digest_unknown:
                     crm_trace("Resource %s history entry %s on %s has "
                               "no digest to compare",
                               rsc->id, ID(rsc_op), node->details->id);
                     break;
-                case RSC_DIGEST_MATCH:
+                case pcmk__digest_match:
                     break;
                 default:
                     reason = "resource parameters have changed";

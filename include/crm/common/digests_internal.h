@@ -16,6 +16,14 @@
 extern "C" {
 #endif
 
+// Digest comparison results
+enum pcmk__digest_result {
+    pcmk__digest_unknown,   // No digest available for comparison
+    pcmk__digest_match,     // Digests match
+    pcmk__digest_mismatch,  // Any parameter changed (potentially reloadable)
+    pcmk__digest_restart,   // Parameters that require a restart changed
+};
+
 bool pcmk__verify_digest(xmlNode *input, const char *expected);
 
 #ifdef __cplusplus

@@ -1214,7 +1214,7 @@ pe_fence_op(pe_node_t *node, const char *op, bool optional,
                 op_digest_cache_t *data = NULL;
 
                 data = pe__compare_fencing_digest(match, agent, node, data_set);
-                if(data->rc == RSC_DIGEST_ALL) {
+                if (data->rc == pcmk__digest_mismatch) {
                     optional = FALSE;
                     crm_notice("Unfencing node %s because the definition of "
                                "%s changed", pe__node_name(node), match->id);

@@ -3909,13 +3909,13 @@ should_clear_for_param_change(const xmlNode *xml_op, const char *task,
             digest_data = rsc_action_digest_cmp(rsc, xml_op, node,
                                                 rsc->cluster);
             switch (digest_data->rc) {
-                case RSC_DIGEST_UNKNOWN:
+                case pcmk__digest_unknown:
                     crm_trace("Resource %s history entry %s on %s"
                               " has no digest to compare",
                               rsc->id, pe__xe_history_key(xml_op),
                               node->details->id);
                     break;
-                case RSC_DIGEST_MATCH:
+                case pcmk__digest_match:
                     break;
                 default:
                     return TRUE;

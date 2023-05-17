@@ -425,20 +425,8 @@ int pe__target_rc_from_xml(const xmlNode *xml_op);
 gint pe__cmp_node_name(gconstpointer a, gconstpointer b);
 bool is_set_recursive(const pe_resource_t *rsc, long long flag, bool any);
 
-enum rsc_digest_cmp_val {
-    /*! Digests are the same */
-    RSC_DIGEST_MATCH = 0,
-    /*! Params that require a restart changed */
-    RSC_DIGEST_RESTART,
-    /*! Some parameter changed.  */
-    RSC_DIGEST_ALL,
-    /*! rsc op didn't have a digest associated with it, so
-     *  it is unknown if parameters changed or not. */
-    RSC_DIGEST_UNKNOWN,
-};
-
 typedef struct op_digest_cache_s {
-    enum rsc_digest_cmp_val rc;
+    enum pcmk__digest_result rc;
     xmlNode *params_all;
     xmlNode *params_secure;
     xmlNode *params_restart;
