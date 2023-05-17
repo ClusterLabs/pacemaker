@@ -23,6 +23,8 @@ extern "C" {
 /* Allowed subexpressions of a rule
  * @COMPAT This should be made internal at an API compatibility break
  */
+//!@{
+//! \deprecated For Pacemaker use only
 enum expression_type {
     not_expr        = 0,
     nested_rule     = 1,
@@ -36,6 +38,7 @@ enum expression_type {
     rsc_expr        = 7,
     op_expr         = 8,
 };
+//!@}
 
 #ifdef __cplusplus
 }
