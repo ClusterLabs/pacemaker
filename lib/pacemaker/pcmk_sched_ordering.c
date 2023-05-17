@@ -527,7 +527,7 @@ pcmk__new_ordering(pcmk_resource_t *first_rsc, char *first_action_task,
                    char *then_action_task, pcmk_action_t *then_action,
                    uint32_t flags, pcmk_scheduler_t *sched)
 {
-    pe__ordering_t *order = NULL;
+    pcmk__action_relation_t *order = NULL;
 
     // One of action or resource must be specified for each side
     CRM_CHECK(((first_action != NULL) || (first_rsc != NULL))
@@ -541,7 +541,7 @@ pcmk__new_ordering(pcmk_resource_t *first_rsc, char *first_action_task,
         then_rsc = then_action->rsc;
     }
 
-    order = calloc(1, sizeof(pe__ordering_t));
+    order = calloc(1, sizeof(pcmk__action_relation_t));
     CRM_ASSERT(order != NULL);
 
     order->id = sched->order_id++;
@@ -1224,7 +1224,8 @@ find_actions_by_task(const pcmk_resource_t *rsc, const char *original_key)
  */
 static void
 order_resource_actions_after(pcmk_action_t *first_action,
-                             const pcmk_resource_t *rsc, pe__ordering_t *order)
+                             const pcmk_resource_t *rsc,
+                             pcmk__action_relation_t *order)
 {
     GList *then_actions = NULL;
     uint32_t flags = pcmk__ar_none;
@@ -1284,7 +1285,7 @@ order_resource_actions_after(pcmk_action_t *first_action,
 }
 
 static void
-rsc_order_first(pcmk_resource_t *first_rsc, pe__ordering_t *order)
+rsc_order_first(pcmk_resource_t *first_rsc, pcmk__action_relation_t *order)
 {
     GList *first_actions = NULL;
     pcmk_action_t *first_action = order->lh_action;
@@ -1407,7 +1408,7 @@ pcmk__apply_orderings(pcmk_scheduler_t *sched)
     for (GList *iter = sched->ordering_constraints;
          iter != NULL; iter = iter->next) {
 
-        pe__ordering_t *order = iter->data;
+        pcmk__action_relation_t *order = iter->data;
         pcmk_resource_t *rsc = order->lh_rsc;
 
         if (rsc != NULL) {

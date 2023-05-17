@@ -235,7 +235,7 @@ pe__free_ordering(GList *constraints)
     GList *iterator = constraints;
 
     while (iterator != NULL) {
-        pe__ordering_t *order = iterator->data;
+        pcmk__action_relation_t *order = iterator->data;
 
         iterator = iterator->next;
 

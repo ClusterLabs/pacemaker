@@ -343,7 +343,7 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
     for (GList *iter = scheduler->ordering_constraints; iter != NULL;
          iter = iter->next) {
 
-        pe__ordering_t *order = iter->data;
+        pcmk__action_relation_t *order = iter->data;
         uint32_t order_flags = pcmk__ar_ordered;
         GList *probes = NULL;
         GList *then_actions = NULL;

@@ -10,6 +10,9 @@
 #ifndef PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H
 #  define PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H
 
+#include <stdint.h>                     // uint32_t
+#include <crm/common/scheduler_types.h> // pcmk_resource_t, pcmk_action_t
+
 /*!
  * Flags to indicate the relationship between two actions
  *
@@ -126,6 +129,18 @@ enum pcmk__action_relation_flags {
     //! If 'then' action becomes required, 'first' becomes optional
     pcmk__ar_then_cancels_first             = (1U << 25),
 };
+
+// Action relation object
+typedef struct {
+    int id;                     // Counter to identify relation
+    uint32_t flags;             // Group of enum pcmk__action_relation_flags
+    pcmk_resource_t *lh_rsc;    // Resource for first action, if any
+    pcmk_action_t *lh_action;   // First action in relation
+    char *lh_action_task;       // Action name or key for first action
+    pcmk_resource_t *rh_rsc;    // Resource for 'then' action, if any
+    pcmk_action_t *rh_action;   // 'Then' action in relation
+    char *rh_action_task;       // Action name or key for 'then' action
+} pcmk__action_relation_t;
 
 typedef struct pe_action_wrapper_s pcmk__related_action_t;
 

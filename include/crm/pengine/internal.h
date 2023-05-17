@@ -154,21 +154,6 @@ pcmk_resource_t *pe__last_group_member(const pcmk_resource_t *group);
         }                                                                   \
     } while (0);
 
-typedef struct pe__order_constraint_s {
-    int id;
-    uint32_t flags; // Group of enum pcmk__action_relation_flags
-
-    void *lh_opaque;
-    pcmk_resource_t *lh_rsc;
-    pcmk_action_t *lh_action;
-    char *lh_action_task;
-
-    void *rh_opaque;
-    pcmk_resource_t *rh_rsc;
-    pcmk_action_t *rh_action;
-    char *rh_action_task;
-} pe__ordering_t;
-
 const pcmk_resource_t *pe__const_top_resource(const pcmk_resource_t *rsc,
                                               bool include_bundle);
 

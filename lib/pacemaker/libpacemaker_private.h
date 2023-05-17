@@ -1133,7 +1133,7 @@ void pcmk__abort_dangling_migration(void *data, void *user_data);
 bool pcmk__rsc_can_migrate(const pcmk_resource_t *rsc,
                            const pcmk_node_t *current);
 
-void pcmk__order_migration_equivalents(pe__ordering_t *order);
+void pcmk__order_migration_equivalents(pcmk__action_relation_t *order);
 
 
 // Functions related to node utilization (pcmk_sched_utilization.c)

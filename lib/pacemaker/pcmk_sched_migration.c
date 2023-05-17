@@ -260,7 +260,7 @@ task_from_action_or_key(const pcmk_action_t *action, const char *key)
  * \param[in,out] order     Ordering constraint to check
  */
 void
-pcmk__order_migration_equivalents(pe__ordering_t *order)
+pcmk__order_migration_equivalents(pcmk__action_relation_t *order)
 {
     char *first_task = NULL;
     char *then_task = NULL;
