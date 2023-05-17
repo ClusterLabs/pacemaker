@@ -154,15 +154,6 @@ pcmk_resource_t *pe__last_group_member(const pcmk_resource_t *group);
         }                                                                   \
     } while (0);
 
-
-typedef struct pe__location_constraint_s {
-    char *id;                           // Constraint XML ID
-    pcmk_resource_t *rsc_lh;            // Resource being located
-    enum rsc_role_e role_filter;        // Role to locate
-    enum pe_discover_e discover_mode;   // Resource discovery
-    GList *node_list_rh;                // List of pcmk_node_t*
-} pe__location_t;
-
 typedef struct pe__order_constraint_s {
     int id;
     uint32_t flags; // Group of enum pcmk__action_relation_flags

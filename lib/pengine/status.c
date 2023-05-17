@@ -254,7 +254,7 @@ pe__free_location(GList *constraints)
     GList *iterator = constraints;
 
     while (iterator != NULL) {
-        pe__location_t *cons = iterator->data;
+        pcmk__location_t *cons = iterator->data;
 
         iterator = iterator->next;
 

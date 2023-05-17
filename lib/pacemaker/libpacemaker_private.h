@@ -16,7 +16,7 @@
 
 #include <crm/lrmd_events.h>      // lrmd_event_data_t
 #include <crm/common/scheduler.h> // pcmk_action_t, pcmk_node_t, etc.
-#include <crm/pengine/internal.h> // pe__location_t
+#include <crm/pengine/internal.h> // pcmk__location_t
 
 // Colocation flags
 enum pcmk__coloc_flags {
@@ -241,7 +241,7 @@ struct resource_alloc_functions_s {
      * \param[in,out] rsc       Resource to apply constraint to
      * \param[in,out] location  Location constraint to apply
      */
-    void (*apply_location)(pcmk_resource_t *rsc, pe__location_t *location);
+    void (*apply_location)(pcmk_resource_t *rsc, pcmk__location_t *location);
 
     /*!
      * \internal
@@ -471,15 +471,15 @@ G_GNUC_INTERNAL
 void pcmk__unpack_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
-pe__location_t *pcmk__new_location(const char *id, pcmk_resource_t *rsc,
-                                   int node_score, const char *discover_mode,
-                                   pcmk_node_t *foo_node);
+pcmk__location_t *pcmk__new_location(const char *id, pcmk_resource_t *rsc,
+                                     int node_score, const char *discover_mode,
+                                     pcmk_node_t *foo_node);
 
 G_GNUC_INTERNAL
 void pcmk__apply_locations(pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
-void pcmk__apply_location(pcmk_resource_t *rsc, pe__location_t *constraint);
+void pcmk__apply_location(pcmk_resource_t *rsc, pcmk__location_t *constraint);
 
 
 // Colocation constraints (pcmk_sched_colocation.c)
@@ -837,7 +837,8 @@ void pcmk__group_add_colocated_node_scores(pcmk_resource_t *source_rsc,
                                            float factor, uint32_t flags);
 
 G_GNUC_INTERNAL
-void pcmk__group_apply_location(pcmk_resource_t *rsc, pe__location_t *location);
+void pcmk__group_apply_location(pcmk_resource_t *rsc,
+                                pcmk__location_t *location);
 
 G_GNUC_INTERNAL
 uint32_t pcmk__group_action_flags(pcmk_action_t *action,
@@ -898,7 +899,7 @@ void pcmk__clone_with_colocations(const pcmk_resource_t *rsc,
 
 G_GNUC_INTERNAL
 void pcmk__clone_apply_location(pcmk_resource_t *rsc,
-                                pe__location_t *constraint);
+                                pcmk__location_t *constraint);
 
 G_GNUC_INTERNAL
 uint32_t pcmk__clone_action_flags(pcmk_action_t *action,
@@ -951,7 +952,7 @@ void pcmk__bundle_with_colocations(const pcmk_resource_t *rsc,
 
 G_GNUC_INTERNAL
 void pcmk__bundle_apply_location(pcmk_resource_t *rsc,
-                                 pe__location_t *constraint);
+                                 pcmk__location_t *constraint);
 
 G_GNUC_INTERNAL
 uint32_t pcmk__bundle_action_flags(pcmk_action_t *action,

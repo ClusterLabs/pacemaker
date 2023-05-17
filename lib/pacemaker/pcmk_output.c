@@ -76,7 +76,7 @@ do_locations_list_xml(pcmk__output_t *out, pcmk_resource_t *rsc,
     int rc = pcmk_rc_no_output;
 
     for (lpc = list; lpc != NULL; lpc = lpc->next) {
-        pe__location_t *cons = lpc->data;
+        pcmk__location_t *cons = lpc->data;
 
         GList *lpc2 = NULL;
 
@@ -545,7 +545,7 @@ locations_list(pcmk__output_t *out, va_list args) {
     int rc = pcmk_rc_no_output;
 
     for (lpc = list; lpc != NULL; lpc = lpc->next) {
-        pe__location_t *cons = lpc->data;
+        pcmk__location_t *cons = lpc->data;
 
         GList *lpc2 = NULL;
 

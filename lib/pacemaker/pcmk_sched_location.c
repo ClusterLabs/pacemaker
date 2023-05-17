@@ -52,7 +52,7 @@ get_node_score(const char *rule, const char *score, bool raw,
     return score_f;
 }
 
-static pe__location_t *
+static pcmk__location_t *
 generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
                        const char *discovery, crm_time_t *next_change,
                        pe_re_match_data_t *re_match_data)
@@ -70,7 +70,7 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
     bool raw_score = true;
     bool score_allocated = false;
 
-    pe__location_t *location_rule = NULL;
+    pcmk__location_t *location_rule = NULL;
 
     rule_xml = expand_idref(rule_xml, rsc->cluster->input);
     if (rule_xml == NULL) {
@@ -201,7 +201,7 @@ static void
 unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc, const char *role,
                     const char *score, pe_re_match_data_t *re_match_data)
 {
-    pe__location_t *location = NULL;
+    pcmk__location_t *location = NULL;
     const char *rsc_id = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
     const char *node = crm_element_value(xml_obj, XML_CIB_TAG_NODE);
@@ -534,11 +534,11 @@ pcmk__unpack_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
  * \note The result will be added to the cluster (via \p rsc) and should not be
  *       freed separately.
  */
-pe__location_t *
+pcmk__location_t *
 pcmk__new_location(const char *id, pcmk_resource_t *rsc,
                    int node_score, const char *discover_mode, pcmk_node_t *node)
 {
-    pe__location_t *new_con = NULL;
+    pcmk__location_t *new_con = NULL;
 
     if (id == NULL) {
         pe_err("Invalid constraint: no ID specified");
@@ -552,7 +552,7 @@ pcmk__new_location(const char *id, pcmk_resource_t *rsc,
         CRM_CHECK(node_score == 0, return NULL);
     }
 
-    new_con = calloc(1, sizeof(pe__location_t));
+    new_con = calloc(1, sizeof(pcmk__location_t));
     if (new_con != NULL) {
         new_con->id = strdup(id);
         new_con->rsc_lh = rsc;
@@ -601,7 +601,7 @@ pcmk__apply_locations(pcmk_scheduler_t *scheduler)
 {
     for (GList *iter = scheduler->placement_constraints;
          iter != NULL; iter = iter->next) {
-        pe__location_t *location = iter->data;
+        pcmk__location_t *location = iter->data;
 
         location->rsc_lh->cmds->apply_location(location->rsc_lh, location);
     }
@@ -618,7 +618,7 @@ pcmk__apply_locations(pcmk_scheduler_t *scheduler)
  *       apply_location() method should be used instead in most cases.
  */
 void
-pcmk__apply_location(pcmk_resource_t *rsc, pe__location_t *location)
+pcmk__apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
 {
     bool need_role = false;
 

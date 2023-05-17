@@ -607,7 +607,7 @@ pcmk__group_update_ordered_actions(pcmk_action_t *first, pcmk_action_t *then,
  * \param[in,out] location  Location constraint to apply
  */
 void
-pcmk__group_apply_location(pcmk_resource_t *rsc, pe__location_t *location)
+pcmk__group_apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
 {
     GList *node_list_orig = NULL;
     GList *node_list_copy = NULL;

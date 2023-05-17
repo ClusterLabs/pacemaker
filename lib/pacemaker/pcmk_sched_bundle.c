@@ -725,7 +725,7 @@ pcmk__bundle_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
 static bool
 apply_location_to_replica(pe__bundle_replica_t *replica, void *user_data)
 {
-    pe__location_t *location = user_data;
+    pcmk__location_t *location = user_data;
 
     if (replica->container != NULL) {
         replica->container->cmds->apply_location(replica->container, location);
@@ -744,7 +744,7 @@ apply_location_to_replica(pe__bundle_replica_t *replica, void *user_data)
  * \param[in,out] location  Location constraint to apply
  */
 void
-pcmk__bundle_apply_location(pcmk_resource_t *rsc, pe__location_t *location)
+pcmk__bundle_apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
 {
     pcmk_resource_t *bundled_resource = NULL;
 

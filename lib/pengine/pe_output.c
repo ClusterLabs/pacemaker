@@ -635,11 +635,11 @@ role_desc(enum rsc_role_e role)
     return "";
 }
 
-PCMK__OUTPUT_ARGS("ban", "pcmk_node_t *", "pe__location_t *", "uint32_t")
+PCMK__OUTPUT_ARGS("ban", "pcmk_node_t *", "pcmk__location_t *", "uint32_t")
 static int
 ban_html(pcmk__output_t *out, va_list args) {
     pcmk_node_t *pe_node = va_arg(args, pcmk_node_t *);
-    pe__location_t *location = va_arg(args, pe__location_t *);
+    pcmk__location_t *location = va_arg(args, pcmk__location_t *);
     uint32_t show_opts = va_arg(args, uint32_t);
 
     char *node_name = pe__node_display_name(pe_node,
@@ -655,11 +655,11 @@ ban_html(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("ban", "pcmk_node_t *", "pe__location_t *", "uint32_t")
+PCMK__OUTPUT_ARGS("ban", "pcmk_node_t *", "pcmk__location_t *", "uint32_t")
 static int
 ban_text(pcmk__output_t *out, va_list args) {
     pcmk_node_t *pe_node = va_arg(args, pcmk_node_t *);
-    pe__location_t *location = va_arg(args, pe__location_t *);
+    pcmk__location_t *location = va_arg(args, pcmk__location_t *);
     uint32_t show_opts = va_arg(args, uint32_t);
 
     char *node_name = pe__node_display_name(pe_node,
@@ -672,11 +672,11 @@ ban_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("ban", "pcmk_node_t *", "pe__location_t *", "uint32_t")
+PCMK__OUTPUT_ARGS("ban", "pcmk_node_t *", "pcmk__location_t *", "uint32_t")
 static int
 ban_xml(pcmk__output_t *out, va_list args) {
     pcmk_node_t *pe_node = va_arg(args, pcmk_node_t *);
-    pe__location_t *location = va_arg(args, pe__location_t *);
+    pcmk__location_t *location = va_arg(args, pcmk__location_t *);
     uint32_t show_opts G_GNUC_UNUSED = va_arg(args, uint32_t);
 
     const char *promoted_only = pcmk__btoa(location->role_filter == pcmk_role_promoted);
@@ -717,7 +717,7 @@ ban_list(pcmk__output_t *out, va_list args) {
     /* Print each ban */
     for (gIter = scheduler->placement_constraints;
          gIter != NULL; gIter = gIter->next) {
-        pe__location_t *location = gIter->data;
+        pcmk__location_t *location = gIter->data;
         const pcmk_resource_t *rsc = location->rsc_lh;
 
         if (prefix != NULL && !g_str_has_prefix(location->id, prefix)) {

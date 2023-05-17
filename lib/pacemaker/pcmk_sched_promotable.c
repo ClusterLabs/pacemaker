@@ -130,7 +130,7 @@ apply_promoted_locations(pcmk_resource_t *child,
                          const pcmk_node_t *chosen)
 {
     for (const GList *iter = location_constraints; iter; iter = iter->next) {
-        const pe__location_t *location = iter->data;
+        const pcmk__location_t *location = iter->data;
         const pcmk_node_t *constraint_node = NULL;
 
         if (location->role_filter == pcmk_role_promoted) {
