@@ -1908,10 +1908,10 @@ xml_diff_old_attrs(xmlNode *old_xml, xmlNode *new_xml)
     xmlAttr *attr_iter = pcmk__xe_first_attr(old_xml);
 
     while (attr_iter != NULL) {
+        const char *name = (const char *) attr_iter->name;
         xmlAttr *old_attr = attr_iter;
         xmlAttr *new_attr = xmlHasProp(new_xml, attr_iter->name);
-        const char *name = (const char *) attr_iter->name;
-        const char *old_value = crm_element_value(old_xml, name);
+        const char *old_value = pcmk__xml_attr_value(attr_iter);
 
         attr_iter = attr_iter->next;
         if (new_attr == NULL) {
@@ -1965,7 +1965,7 @@ mark_created_attrs(xmlNode *new_xml)
             const char *attr_name = (const char *) new_attr->name;
 
             crm_trace("Created new attribute %s=%s in %s",
-                      attr_name, crm_element_value(new_xml, attr_name),
+                      attr_name, pcmk__xml_attr_value(new_attr),
                       new_xml->name);
 
             /* Check ACLs (we can't use the remove-then-create trick because it
