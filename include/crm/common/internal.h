@@ -21,6 +21,7 @@
 #include <crm/common/logging.h>  // do_crm_log_unlikely(), etc.
 #include <crm/common/mainloop.h> // mainloop_io_t, struct ipc_client_callbacks
 #include <crm/common/actions_internal.h>
+#include <crm/common/digests_internal.h>
 #include <crm/common/health_internal.h>
 #include <crm/common/io_internal.h>
 #include <crm/common/iso8601_internal.h>
@@ -49,11 +50,6 @@ extern char *pcmk__our_nodename;
 
 int pcmk__substitute_secrets(const char *rsc_id, GHashTable *params);
 #endif
-
-
-/* internal digest-related utilities (from digest.c) */
-
-bool pcmk__verify_digest(xmlNode *input, const char *expected);
 
 
 /* internal main loop utilities (from mainloop.c) */
