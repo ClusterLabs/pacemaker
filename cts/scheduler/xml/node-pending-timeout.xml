@@ -1,0 +1,27 @@
+<cib crm_feature_set="3.18.0" validate-with="pacemaker-2.10" epoch="5" num_updates="0" admin_epoch="0" cib-last-written="Tue Feb 21 13:19:57 2023" update-origin="node-1" update-client="cibadmin" update-user="root" have-quorum="true" dc-uuid="1" execution-date="1676981997">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="true"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-node-pending-timeout" name="node-pending-timeout" value="300s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="node-1"/>
+      <node id="2" uname="node-2"/>
+    </nodes>
+    <resources>
+      <primitive id="st-sbd" class="stonith" type="external/sbd"/>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="1" uname="node-1" in_ccm="true" crmd="online" crm-debug-origin="post_cache_update" join="member" expected="member">
+      <lrm id="1">
+        <lrm_resources/>
+      </lrm>
+    </node_state>
+    <node_state id="2" in_ccm="1676981697" crmd="0" crm-debug-origin="post_cache_update"/>
+  </status>
+</cib>

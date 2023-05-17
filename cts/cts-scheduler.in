@@ -716,6 +716,7 @@ TESTS = [
         [ "concurrent-fencing", "Allow performing fencing operations in parallel" ],
         [ "priority-fencing-delay", "Delay fencing targeting the more significant node" ],
         [ "pending-node-no-uname", "Do not fence a pending node that doesn't have an uname in node state yet" ],
+        [ "node-pending-timeout", "Fence a pending node that has reached `node-pending-timeout`" ],
     ],
     [
         [ "systemhealth1", "System Health ()               #1" ],
