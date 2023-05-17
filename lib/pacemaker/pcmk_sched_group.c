@@ -616,7 +616,7 @@ pcmk__group_apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_group)
                && (location != NULL));
 
-    node_list_orig = location->node_list_rh;
+    node_list_orig = location->nodes;
     node_list_copy = pcmk__copy_node_list(node_list_orig, true);
     reset_scores = pe__group_flag_is_set(rsc, pcmk__group_colocated);
 
@@ -635,11 +635,11 @@ pcmk__group_apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
              * the first member's scores already incorporate theirs.
              */
             reset_scores = false;
-            location->node_list_rh = node_list_copy;
+            location->nodes = node_list_copy;
         }
     }
 
-    location->node_list_rh = node_list_orig;
+    location->nodes = node_list_orig;
     g_list_free_full(node_list_copy, free);
 }
 

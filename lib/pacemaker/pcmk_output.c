@@ -80,7 +80,7 @@ do_locations_list_xml(pcmk__output_t *out, pcmk_resource_t *rsc,
 
         GList *lpc2 = NULL;
 
-        for (lpc2 = cons->node_list_rh; lpc2 != NULL; lpc2 = lpc2->next) {
+        for (lpc2 = cons->nodes; lpc2 != NULL; lpc2 = lpc2->next) {
             pcmk_node_t *node = (pcmk_node_t *) lpc2->data;
 
             if (add_header) {
@@ -549,7 +549,7 @@ locations_list(pcmk__output_t *out, va_list args) {
 
         GList *lpc2 = NULL;
 
-        for (lpc2 = cons->node_list_rh; lpc2 != NULL; lpc2 = lpc2->next) {
+        for (lpc2 = cons->nodes; lpc2 != NULL; lpc2 = lpc2->next) {
             pcmk_node_t *node = (pcmk_node_t *) lpc2->data;
 
             PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Locations");

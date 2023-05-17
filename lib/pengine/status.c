@@ -258,7 +258,7 @@ pe__free_location(GList *constraints)
 
         iterator = iterator->next;
 
-        g_list_free_full(cons->node_list_rh, free);
+        g_list_free_full(cons->nodes, free);
         free(cons->id);
         free(cons);
     }

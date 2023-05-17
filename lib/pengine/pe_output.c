@@ -731,7 +731,7 @@ ban_list(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        for (gIter2 = location->node_list_rh; gIter2 != NULL; gIter2 = gIter2->next) {
+        for (gIter2 = location->nodes; gIter2 != NULL; gIter2 = gIter2->next) {
             pcmk_node_t *node = (pcmk_node_t *) gIter2->data;
 
             if (node->weight < 0) {

@@ -26,7 +26,7 @@ typedef struct {
     pcmk_resource_t *rsc;               // Resource with location preference
     enum rsc_role_e role_filter;        // Limit to instances with this role
     enum pe_discover_e discover_mode;   // How to probe resource on node
-    GList *node_list_rh;                // Affected nodes, with preference score
+    GList *nodes;                       // Affected nodes, with preference score
 } pcmk__location_t;
 
 #ifdef __cplusplus

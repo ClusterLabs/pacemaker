@@ -186,14 +186,14 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
         free((char *)score);
     }
 
-    location_rule->node_list_rh = nodes;
-    if (location_rule->node_list_rh == NULL) {
+    location_rule->nodes = nodes;
+    if (location_rule->nodes == NULL) {
         crm_trace("No matching nodes for rule %s", rule_id);
         return NULL;
     }
 
     crm_trace("%s: %d nodes matched",
-              rule_id, g_list_length(location_rule->node_list_rh));
+              rule_id, g_list_length(location_rule->nodes));
     return location_rule;
 }
 
@@ -556,7 +556,7 @@ pcmk__new_location(const char *id, pcmk_resource_t *rsc,
     if (new_con != NULL) {
         new_con->id = strdup(id);
         new_con->rsc = rsc;
-        new_con->node_list_rh = NULL;
+        new_con->nodes = NULL;
         new_con->role_filter = pcmk_role_unknown;
 
         if (pcmk__str_eq(discover_mode, "always",
@@ -579,7 +579,7 @@ pcmk__new_location(const char *id, pcmk_resource_t *rsc,
             pcmk_node_t *copy = pe__copy_node(node);
 
             copy->weight = node_score;
-            new_con->node_list_rh = g_list_prepend(NULL, copy);
+            new_con->nodes = g_list_prepend(NULL, copy);
         }
 
         rsc->cluster->placement_constraints = g_list_prepend(
@@ -634,7 +634,7 @@ pcmk__apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
         return;
     }
 
-    if (location->node_list_rh == NULL) {
+    if (location->nodes == NULL) {
         pe_rsc_trace(rsc, "Not applying %s to %s because no nodes match",
                      location->id, rsc->id);
         return;
@@ -644,9 +644,7 @@ pcmk__apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
                  (need_role? " for role " : ""),
                  (need_role? role2text(location->role_filter) : ""), rsc->id);
 
-    for (GList *iter = location->node_list_rh;
-         iter != NULL; iter = iter->next) {
-
+    for (GList *iter = location->nodes; iter != NULL; iter = iter->next) {
         pcmk_node_t *node = iter->data;
         pcmk_node_t *allowed_node = g_hash_table_lookup(rsc->allowed_nodes,
                                                         node->details->id);
