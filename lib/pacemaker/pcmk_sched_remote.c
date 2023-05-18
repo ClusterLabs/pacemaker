@@ -375,7 +375,7 @@ apply_container_ordering(pe_action_t *action)
                  * recurring monitors to be restarted, even if just
                  * the connection was re-established
                  */
-                if(task != no_action) {
+                if (task != no_action) {
                     order_start_then_action(remote_rsc, action,
                                             pe_order_implies_then);
                 }

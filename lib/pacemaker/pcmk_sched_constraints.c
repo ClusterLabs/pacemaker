@@ -117,7 +117,7 @@ pcmk__find_constraint_resource(GList *rsc_list, const char *id)
                                                      pe_find_renamed);
 
         if (match != NULL) {
-            if(!pcmk__str_eq(match->id, id, pcmk__str_casei)) {
+            if (!pcmk__str_eq(match->id, id, pcmk__str_casei)) {
                 /* We found an instance of a clone instead */
                 match = uber_parent(match);
                 crm_debug("Found %s for %s", match->id, id);

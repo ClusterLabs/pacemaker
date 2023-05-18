@@ -270,7 +270,7 @@ unpack_rsc_location(xmlNode *xml_obj, pe_resource_t *rsc, const char *role,
 
         } else {
             enum rsc_role_e r = text2role(role);
-            switch(r) {
+            switch (r) {
                 case RSC_ROLE_UNKNOWN:
                 case RSC_ROLE_STARTED:
                 case RSC_ROLE_UNPROMOTED:
@@ -322,7 +322,7 @@ unpack_simple_location(xmlNode *xml_obj, pe_working_set_t *data_set)
             regmatch_t *pmatch = NULL;
             int status;
 
-            if(r_patt->re_nsub > 0) {
+            if (r_patt->re_nsub > 0) {
                 nregs = r_patt->re_nsub + 1;
             } else {
                 nregs = 1;

@@ -129,12 +129,12 @@ rsc_action_item(pcmk__output_t *out, va_list args)
     CRM_ASSERT(action);
     CRM_ASSERT(destination != NULL || origin != NULL);
 
-    if(source == NULL) {
+    if (source == NULL) {
         source = action;
     }
 
     len = strlen(rsc->id);
-    if(len > rsc_width) {
+    if (len > rsc_width) {
         rsc_width = len + 2;
     }
 
@@ -147,7 +147,7 @@ rsc_action_item(pcmk__output_t *out, va_list args)
         same_host = true;
     }
 
-    if(rsc->role == rsc->next_role) {
+    if (rsc->role == rsc->next_role) {
         same_role = true;
     }
 
@@ -205,14 +205,15 @@ rsc_action_item(pcmk__output_t *out, va_list args)
     }
 
     len = strlen(details);
-    if(len > detail_width) {
+    if (len > detail_width) {
         detail_width = len;
     }
 
-    if(source->reason && !pcmk_is_set(action->flags, pe_action_runnable)) {
+    if ((source->reason != NULL)
+        && !pcmk_is_set(action->flags, pe_action_runnable)) {
         reason = crm_strdup_printf("due to %s (blocked)", source->reason);
 
-    } else if(source->reason) {
+    } else if (source->reason) {
         reason = crm_strdup_printf("due to %s", source->reason);
 
     } else if (!pcmk_is_set(action->flags, pe_action_runnable)) {
@@ -265,7 +266,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
         same_host = true;
     }
 
-    if(rsc->role == rsc->next_role) {
+    if (rsc->role == rsc->next_role) {
         same_role = true;
     }
 
@@ -349,7 +350,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
                            "blocked", "true",
                            NULL);
 
-    } else if(source->reason) {
+    } else if (source->reason != NULL) {
         crm_xml_add(xml, "reason", source->reason);
 
     } else if (!pcmk_is_set(action->flags, pe_action_runnable)) {
@@ -1056,9 +1057,9 @@ digests_xml(pcmk__output_t *out, va_list args)
 }
 
 #define STOP_SANITY_ASSERT(lineno) do {                                 \
-        if(current && current->details->unclean) {                      \
+        if ((current != NULL) && current->details->unclean) {           \
             /* It will be a pseudo op */                                \
-        } else if(stop == NULL) {                                       \
+        } else if (stop == NULL) {                                      \
             crm_err("%s:%d: No stop action exists for %s",              \
                     __func__, lineno, rsc->id);                         \
             CRM_ASSERT(stop != NULL);                                   \
@@ -1067,7 +1068,7 @@ digests_xml(pcmk__output_t *out, va_list args)
                     __func__, lineno, stop->uuid);                      \
             CRM_ASSERT(!pcmk_is_set(stop->flags, pe_action_optional));  \
         }                                                               \
-    } while(0)
+    } while (0)
 
 PCMK__OUTPUT_ARGS("rsc-action", "pe_resource_t *", "pe_node_t *", "pe_node_t *")
 static int
@@ -1199,9 +1200,10 @@ rsc_action_default(pcmk__output_t *out, va_list args)
         return rc;
     }
 
-    if(stop
-       && (rsc->next_role == RSC_ROLE_STOPPED
-           || (start && !pcmk_is_set(start->flags, pe_action_runnable)))) {
+    if ((stop != NULL)
+        && ((rsc->next_role == RSC_ROLE_STOPPED)
+            || ((start != NULL)
+                && !pcmk_is_set(start->flags, pe_action_runnable)))) {
 
         key = stop_key(rsc);
         for (GList *iter = rsc->running_on; iter != NULL; iter = iter->next) {
@@ -1368,7 +1370,7 @@ inject_cluster_action(pcmk__output_t *out, va_list args)
         return pcmk_rc_no_output;
     }
 
-    if(rsc) {
+    if (rsc != NULL) {
         out->list_item(out, NULL, "Cluster action:  %s for %s on %s",
                        task, ID(rsc), node);
     } else {
