@@ -42,17 +42,20 @@ from pacemaker._cts.watcher import LogWatcher
 
 
 class CTSTest:
-    '''
-    A Cluster test.
-    We implement the basic set of properties and behaviors for a generic
-    cluster test.
-
-    Cluster tests track their own statistics.
-    We keep each of the kinds of counts we track as separate {name,value}
-    pairs.
-    '''
+    """ The base class for all cluster tests.  This implements a basic set of
+        properties and behaviors like setup, tear down, time keeping, and
+        statistics tracking.  It is up to specific tests to implement their own
+        specialized behavior on top of this class.
+    """
 
     def __init__(self, cm):
+        """ Create a new CTSTest instance
+
+            Arguments:
+
+            cm -- A ClusterManager instance
+        """
+
         # pylint: disable=invalid-name
 
         self.audits = []
@@ -83,18 +86,27 @@ class CTSTest:
         self.passed = True
 
     def log(self, args):
+        """ Log a message """
+
         self._logger.log(args)
 
     def debug(self, args):
+        """ Log a debug message """
+
         self._logger.debug(args)
 
     def get_timer(self, key="test"):
+        """ Get the start time of the given timer """
+
         try:
             return self._timers[key].start_time
         except KeyError:
             return 0
 
     def set_timer(self, key="test"):
+        """ Set the start time of the given timer to now, and return
+            that time
+        """
 
         if key not in self._timers:
             self._timers[key] = Timer(self._logger, self.name, key)
@@ -103,6 +115,8 @@ class CTSTest:
         return self._timers[key].start_time
 
     def log_timer(self, key="test"):
+        """ Log the elapsed time of the given timer """
+
         if key not in self._timers:
             return
 
@@ -111,6 +125,8 @@ class CTSTest:
         del self._timers[key]
 
     def incr(self, name):
+        """ Increment the given stats key """
+
         if name not in self.stats:
             self.stats[name] = 0
 
@@ -121,7 +137,7 @@ class CTSTest:
             self.passed = True
 
     def failure(self, reason="none"):
-        '''Increment the failure count'''
+        """ Increment the failure count, with an optional failure reason """
 
         self.passed = False
         self.incr("failure")
@@ -130,23 +146,27 @@ class CTSTest:
         return False
 
     def success(self):
-        '''Increment the success count'''
+        """ Increment the success count """
 
         self.incr("success")
         return True
 
     def skipped(self):
-        '''Increment the skipped count'''
+        """ Increment the skipped count """
 
         self.incr("skipped")
         return True
 
     def __call__(self, node):
-        """ Perform the given test """
+        """ Perform this test """
 
         raise NotImplementedError
 
     def audit(self):
+        """ Perform all the relevant audits (see ClusterAudit), returning
+            whether or not they all passed.
+        """
+
         passed = True
 
         for audit in self.audits:
@@ -158,7 +178,7 @@ class CTSTest:
         return passed
 
     def setup(self, node):
-        '''Setup the given test'''
+        """ Setup this test """
 
         # node is used in subclasses
         # pylint: disable=unused-argument
@@ -166,7 +186,7 @@ class CTSTest:
         return self.success()
 
     def teardown(self, node):
-        '''Tear down the given test'''
+        """ Tear down this test """
 
         # node is used in subclasses
         # pylint: disable=unused-argument
@@ -174,12 +194,24 @@ class CTSTest:
         return self.success()
 
     def create_watch(self, patterns, timeout, name=None):
+        """ Create a new LogWatcher object with the given patterns, timeout,
+            and optional name.  This object can be used to search log files
+            for matching patterns during this test's run.
+        """
         if not name:
             name = self.name
 
         return LogWatcher(self._env["LogFileName"], patterns, self._env["nodes"], self._env["LogWatcher"], name, timeout)
 
     def local_badnews(self, prefix, watch, local_ignore=None):
+        """ Use the given watch object to search through log files for messages
+            starting with the given prefix.  If no prefix is given, use
+            "LocalBadNews:" by default.  The optional local_ignore list should
+            be a list of regexes that, if found in a line, will cause that line
+            to be ignored.
+
+            Return the number of matches found.
+        """
         errcount = 0
         if not prefix:
             prefix = "LocalBadNews:"
@@ -210,7 +242,9 @@ class CTSTest:
         return errcount
 
     def is_applicable(self):
-        '''Return True if we are applicable in the current test configuration'''
+        """ Return True if this test is applicable in the current test configuration.
+            This method must be implemented by all subclasses.
+        """
 
         if self.is_loop and not self._env["loop-tests"]:
             return False
@@ -233,6 +267,11 @@ class CTSTest:
         return True
 
     def _find_ocfs2_resources(self, node):
+        """ Find any OCFS2 filesystems mounted on the given cluster node,
+            populating the internal self._r_ocfs2 list with them and returning
+            the number of OCFS2 filesystems.
+         """
+
         self._r_o2cb = None
         self._r_ocfs2 = []
 
@@ -270,8 +309,21 @@ class CTSTest:
 
 
 class RemoteDriver(CTSTest):
+    """ A specialized base class for cluster tests that run on Pacemaker
+        Remote nodes.  This builds on top of CTSTest to provide methods
+        for starting and stopping services and resources, and managing
+        remote nodes.  This is still just an abstract class -- specific
+        tests need to implement their own specialized behavior.
+    """
 
     def __init__(self, cm):
+        """ Create a new RemoteDriver instance
+
+            Arguments:
+
+            cm -- A ClusterManager instance
+        """
+
         CTSTest.__init__(self,cm)
         self.name = "RemoteDriver"
 
@@ -286,6 +338,10 @@ class RemoteDriver(CTSTest):
         self.reset()
 
     def reset(self):
+        """ Reset the state of this test back to what it was before the test
+            was run
+        """
+
         self.failed = False
         self.fail_string = ""
 
@@ -295,7 +351,7 @@ class RemoteDriver(CTSTest):
         self._remote_use_reconnect_interval = self._env.random_gen.choice([True,False])
 
     def fail(self, msg):
-        """ Mark test as failed. """
+        """ Mark test as failed """
 
         self.failed = True
 
@@ -307,6 +363,11 @@ class RemoteDriver(CTSTest):
             self.fail_string = msg
 
     def _get_other_node(self, node):
+        """ Get the first cluster node out of the environment that is not the
+            given node.  Typically, this is used to find some node that will
+            still be active that we can run cluster commands on.
+        """
+
         for othernode in self._env["nodes"]:
             if othernode == node:
                 # we don't want to try and use the cib that we just shutdown.
@@ -316,18 +377,31 @@ class RemoteDriver(CTSTest):
             return othernode
 
     def _del_rsc(self, node, rsc):
+        """ Delete the given named resource from the cluster.  The given `node`
+            is the cluster node on which we should *not* run the delete command.
+        """
+
         othernode = self._get_other_node(node)
         (rc, _) = self._rsh(othernode, "crm_resource -D -r %s -t primitive" % rsc)
         if rc != 0:
             self.fail("Removal of resource '%s' failed" % rsc)
 
     def _add_rsc(self, node, rsc_xml):
+        """ Add a resource given in XML format to the cluster.  The given `node`
+            is the cluster node on which we should *not* run the add command.
+        """
+
         othernode = self._get_other_node(node)
         (rc, _) = self._rsh(othernode, "cibadmin -C -o resources -X '%s'" % rsc_xml)
         if rc != 0:
             self.fail("resource creation failed")
 
     def _add_primitive_rsc(self, node):
+        """ Add a primitive heartbeat resource for the remote node to the
+            cluster.  The given `node` is the cluster node on which we should
+            *not* run the add command.
+        """
+
         rsc_xml = """
 <primitive class="ocf" id="%(node)s" provider="heartbeat" type="Dummy">
   <meta_attributes id="%(node)s-meta_attributes"/>
@@ -341,6 +415,11 @@ class RemoteDriver(CTSTest):
             self._remote_rsc_added = True
 
     def _add_connection_rsc(self, node):
+        """ Add a primitive connection resource for the remote node to the
+            cluster.  The given `node` is teh cluster node on which we should
+            *not* run the add command.
+        """
+
         rsc_xml = """
 <primitive class="ocf" id="%(node)s" provider="pacemaker" type="remote">
   <instance_attributes id="%(node)s-instance_attributes">
@@ -367,6 +446,8 @@ class RemoteDriver(CTSTest):
             self._remote_node_added = True
 
     def _disable_services(self, node):
+        """ Disable the corosync and pacemaker services on the given node """
+
         self._corosync_enabled = self._env.service_is_enabled(node, "corosync")
         if self._corosync_enabled:
             self._env.disable_service(node, "corosync")
@@ -376,6 +457,8 @@ class RemoteDriver(CTSTest):
             self._env.disable_service(node, "pacemaker")
 
     def _enable_services(self, node):
+        """ Enable the corosync and pacemaker services on the given node """
+
         if self._corosync_enabled:
             self._env.enable_service(node, "corosync")
 
@@ -383,7 +466,8 @@ class RemoteDriver(CTSTest):
             self._env.enable_service(node, "pacemaker")
 
     def _stop_pcmk_remote(self, node):
-        # disable pcmk remote
+        """ Stop the Pacemaker Remote service on the given node """
+
         for _ in range(10):
             (rc, _) = self._rsh(node, "service pacemaker_remote stop")
             if rc != 0:
@@ -392,6 +476,8 @@ class RemoteDriver(CTSTest):
                 break
 
     def _start_pcmk_remote(self, node):
+        """ Start the Pacemaker Remote service on the given node """
+
         for _ in range(10):
             (rc, _) = self._rsh(node, "service pacemaker_remote start")
             if rc != 0:
@@ -401,16 +487,21 @@ class RemoteDriver(CTSTest):
                 break
 
     def _freeze_pcmk_remote(self, node):
-        """ Simulate a Pacemaker Remote daemon failure. """
+        """ Simulate a Pacemaker Remote daemon failure """
 
-        # We freeze the process.
         self._rsh(node, "killall -STOP pacemaker-remoted")
 
     def _resume_pcmk_remote(self, node):
-        # We resume the process.
+        """ Simulate the Pacemaker Remote daemon recovering """
+
         self._rsh(node, "killall -CONT pacemaker-remoted")
 
     def _start_metal(self, node):
+        """ Setup a Pacemaker Remote configuration.  Remove any existing
+            connection resources or nodes.  Start the pacemaker_remote service.
+            Create a connection resource.
+        """
+
         # Cluster nodes are reused as remote nodes in remote tests. If cluster
         # services were enabled at boot, in case the remote node got fenced, the
         # cluster node would join instead of the expected remote one. Meanwhile
@@ -449,6 +540,10 @@ class RemoteDriver(CTSTest):
             self.fail("Unmatched patterns: %s" % watch.unmatched)
 
     def migrate_connection(self, node):
+        """ Move the remote connection resource from the node it's currently
+            running on to any other available node
+        """
+
         if self.failed:
             return
 
@@ -471,6 +566,10 @@ class RemoteDriver(CTSTest):
             self.fail("Unmatched patterns: %s" % watch.unmatched)
 
     def fail_rsc(self, node):
+        """ Cause the dummy resource running on a Pacemaker Remote node to fail
+            and verify that the failure is logged correctly
+        """
+
         if self.failed:
             return
 
@@ -492,6 +591,11 @@ class RemoteDriver(CTSTest):
             self.fail("Unmatched patterns during rsc fail: %s" % watch.unmatched)
 
     def fail_connection(self, node):
+        """ Cause the remote connection resource to fail and verify that the
+            node is fenced and the connection resource is restarted on another
+            node.
+        """
+
         if self.failed:
             return
 
@@ -540,6 +644,8 @@ class RemoteDriver(CTSTest):
             self.fail("Unmatched patterns: %s" % watch.unmatched)
 
     def _add_dummy_rsc(self, node):
+        """ Add a dummy resource that runs on the Pacemaker Remote node """
+
         if self.failed:
             return
 
@@ -566,6 +672,8 @@ class RemoteDriver(CTSTest):
             self.fail("Unmatched patterns: %s" % watch.unmatched)
 
     def test_attributes(self, node):
+        """ Verify that attributes can be set on the Pacemaker Remote node """
+
         if self.failed:
             return
 
@@ -586,6 +694,11 @@ class RemoteDriver(CTSTest):
             self.fail("Failed to delete remote-node attribute")
 
     def cleanup_metal(self, node):
+        """ Clean up the Pacemaker Remote node configuration previously created by
+            _setup_metal.  Stop and remove dummy resources and connection resources.
+            Stop the pacemaker_remote service.  Remove the remote node itself.
+        """
+
         self._enable_services(node)
 
         if not self._pcmk_started:
@@ -633,6 +746,10 @@ class RemoteDriver(CTSTest):
             self._rsh(self._get_other_node(node), "crm_node --force --remove %s" % self._remote_node)
 
     def _setup_env(self, node):
+        """ Setup the environment to allow Pacemaker Remote to function.  This
+            involves generating a key and copying it to all nodes in the cluster.
+        """
+
         self._remote_node = "remote-%s" % node
 
         # we are assuming if all nodes have a key, that it is
@@ -657,6 +774,8 @@ class RemoteDriver(CTSTest):
         os.unlink(keyfile)
 
     def is_applicable(self):
+        """ Return True if this test is applicable in the current test configuration. """
+
         if not CTSTest.is_applicable(self):
             return False
 
@@ -668,6 +787,10 @@ class RemoteDriver(CTSTest):
         return True
 
     def start_new_test(self, node):
+        """ Prepare a remote test for running by setting up its environment
+            and resources
+        """
+
         self.incr("calls")
         self.reset()
 
@@ -681,7 +804,7 @@ class RemoteDriver(CTSTest):
         return True
 
     def __call__(self, node):
-        """ Perform the given test """
+        """ Perform this test """
 
         raise NotImplementedError
 
@@ -695,14 +818,28 @@ class RemoteDriver(CTSTest):
 
 
 class SimulStartLite(CTSTest):
-    '''Start any stopped nodes ~ simultaneously'''
+    """ A pseudo-test that is only used to set up conditions before running
+        some other test.  This class starts any stopped nodes more or less
+        simultaneously.
+
+        Other test classes should not use this one as a superclass.
+    """
 
     def __init__(self, cm):
+        """ Create a new SimulStartLite instance
+
+            Arguments:
+
+            cm -- A ClusterManager instance
+        """
+
         CTSTest.__init__(self,cm)
         self.name = "SimulStartLite"
 
     def __call__(self, dummy):
-        '''Perform the 'SimulStartList' setup work. '''
+        """ Start all stopped nodes more or less simultaneously, returning
+            whether this succeeded or not.
+        """
 
         self.incr("calls")
         self.debug("Setup: %s" % self.name)
@@ -791,20 +928,35 @@ class SimulStartLite(CTSTest):
         return self.success()
 
     def is_applicable(self):
-        '''SimulStartLite is a setup test and never applicable'''
+        """ SimulStartLite is a setup test and never applicable """
 
         return False
 
 
 class SimulStopLite(CTSTest):
-    '''Stop any active nodes ~ simultaneously'''
+    """ A pseudo-test that is only used to set up conditions before running
+        some other test.  This class stops any running nodes more or less
+        simultaneously.  It can be used both to set up a test or to clean up
+        a test.
+
+        Other test classes should not use this one as a superclass.
+    """
 
     def __init__(self, cm):
+        """ Create a new SimulStopLite instance
+
+            Arguments:
+
+            cm -- A ClusterManager instance
+        """
+
         CTSTest.__init__(self,cm)
         self.name = "SimulStopLite"
 
     def __call__(self, dummy):
-        '''Perform the 'SimulStopLite' setup work. '''
+        """ Stop all running nodes more or less simultaneously, returning
+            whether this succeeded or not.
+        """
 
         self.incr("calls")
         self.debug("Setup: %s" % self.name)
@@ -850,21 +1002,32 @@ class SimulStopLite(CTSTest):
         return self.failure("Missing log message: %s " % watch.unmatched)
 
     def is_applicable(self):
-        '''SimulStopLite is a setup test and never applicable'''
+        """ SimulStopLite is a setup test and never applicable """
 
         return False
 
 
 class StartTest(CTSTest):
-    '''Start (activate) the cluster manager on a node'''
+    """ A pseudo-test that is only used to set up conditions before running
+        some other test.  This class starts the cluster manager on a given
+        node.
 
-    def __init__(self, cm, debug=None):
+        Other test classes should not use this one as a superclass.
+    """
+
+    def __init__(self, cm):
+        """ Create a new StartTest instance
+
+            Arguments:
+
+            cm -- A ClusterManager instance
+        """
+
         CTSTest.__init__(self,cm)
         self.name = "Start"
-        self.debug = debug
 
     def __call__(self, node):
-        '''Perform the 'start' test. '''
+        """ Start the given node, returning whether this succeeded or not """
 
         self.incr("calls")
 
@@ -884,14 +1047,26 @@ class StartTest(CTSTest):
 
 
 class StopTest(CTSTest):
-    '''Stop (deactivate) the cluster manager on a node'''
+    """ A pseudo-test that is only used to set up conditions before running
+        some other test.  This class stops the cluster manager on a given
+        node.
+
+        Other test classes should not use this one as a superclass.
+    """
 
     def __init__(self, cm):
+        """ Create a new StopTest instance
+
+            Arguments:
+
+            cm -- A ClusterManager instance
+        """
+
         CTSTest.__init__(self, cm)
         self.name = "Stop"
 
     def __call__(self, node):
-        '''Perform the 'stop' test. '''
+        """ Stop the given node, returning whether this succeeded or not """
 
         self.incr("calls")
         if self._cm.ShouldBeStatus[node] != "up":
