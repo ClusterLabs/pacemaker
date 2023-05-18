@@ -188,7 +188,7 @@ static const cib_operation_t cib_server_ops[] = {
     {
         PCMK__CIB_REQUEST_NOOP,
         cib_op_attr_none,
-        cib_prepare_none, cib_cleanup_none, cib_process_default
+        cib_prepare_none, cib_cleanup_none, cib_process_noop
     },
     {
         PCMK__CIB_REQUEST_ABS_DELETE,
