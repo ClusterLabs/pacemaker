@@ -88,9 +88,6 @@ class CTSTest:
     def debug(self, args):
         self._logger.debug(args)
 
-    def log_mark(self, msg):
-        self.debug("MARK: test %s %s %d" % (self.name,msg,time.time()))
-
     def get_timer(self, key="test"):
         try:
             return self._timers[key].start_time
