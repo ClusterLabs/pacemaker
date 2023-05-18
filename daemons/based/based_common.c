@@ -109,8 +109,7 @@ static int
 cib_cleanup_query(int options, xmlNode ** data, xmlNode ** output)
 {
     CRM_LOG_ASSERT(*data == NULL);
-    if ((options & cib_no_children)
-        || pcmk__str_eq(crm_element_name(*output), "xpath-query", pcmk__str_casei)) {
+    if (*output != the_cib) {
         free_xml(*output);
     }
     return pcmk_ok;

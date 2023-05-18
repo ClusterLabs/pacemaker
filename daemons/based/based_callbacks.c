@@ -1493,12 +1493,6 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     crm_trace("cleanup");
 
     if (operation != NULL) {
-        if (!pcmk_is_set(operation->flags, cib_op_attr_modifies)
-            && (output != current_cib)) {
-
-            free_xml(output);
-            output = NULL;
-        }
         operation->cleanup(call_options, &input, &output);
     }
 
