@@ -147,13 +147,13 @@ class CTSTest:
         raise NotImplementedError
 
     def audit(self):
-        passed = 1
+        passed = True
 
         for audit in self.audits:
             if not audit():
                 self._logger.log("Internal %s Audit %s FAILED." % (self.name, audit.name))
                 self.incr("auditfail")
-                passed = 0
+                passed = False
 
         return passed
 
