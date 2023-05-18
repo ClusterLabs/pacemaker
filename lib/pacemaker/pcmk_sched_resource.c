@@ -221,8 +221,8 @@ pcmk__set_assignment_methods(pe_working_set_t *data_set)
 
 // Shared implementation of resource_alloc_functions_t:colocated_resources()
 GList *
-pcmk__colocated_resources(const pe_resource_t *rsc, const pe_resource_t *orig_rsc,
-                          GList *colocated_rscs)
+pcmk__colocated_resources(const pe_resource_t *rsc,
+                          const pe_resource_t *orig_rsc, GList *colocated_rscs)
 {
     const GList *iter = NULL;
     GList *colocations = NULL;
@@ -360,7 +360,7 @@ pcmk__finalize_assignment(pe_resource_t *rsc, pe_node_t *chosen, bool force)
 
     if (!force && (chosen != NULL)) {
         if ((chosen->weight < 0)
-            // Allow the graph to assume that guest node connections will come up
+            // Allow graph to assume that guest node connections will come up
             || (!pcmk__node_available(chosen, true, false)
                 && !pe__is_guest_node(chosen))) {
 

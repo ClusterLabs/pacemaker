@@ -158,7 +158,8 @@ add_downed_nodes(xmlNode *xml, const pe_action_t *action)
         }
 
     } else if (action->rsc && action->rsc->is_remote_node
-               && pcmk__str_eq(action->task, CRMD_ACTION_STOP, pcmk__str_casei)) {
+               && pcmk__str_eq(action->task, CRMD_ACTION_STOP,
+                               pcmk__str_casei)) {
 
         /* Stopping a remote connection resource makes connected node down,
          * unless it's part of a migration
@@ -169,8 +170,11 @@ add_downed_nodes(xmlNode *xml, const pe_action_t *action)
 
         for (iter = action->actions_before; iter != NULL; iter = iter->next) {
             input = ((pe_action_wrapper_t *) iter->data)->action;
-            if (input->rsc && pcmk__str_eq(action->rsc->id, input->rsc->id, pcmk__str_casei)
-                && pcmk__str_eq(input->task, CRMD_ACTION_MIGRATED, pcmk__str_casei)) {
+            if ((input->rsc != NULL)
+                && pcmk__str_eq(action->rsc->id, input->rsc->id,
+                                pcmk__str_casei)
+                && pcmk__str_eq(input->task, CRMD_ACTION_MIGRATED,
+                                pcmk__str_casei)) {
                 migrating = true;
                 break;
             }
@@ -367,7 +371,8 @@ add_action_attributes(pe_action_t *action, xmlNode *action_xml)
          * added in 33d99707, probably for the libfence-based implementation in
          * c9a90bd, which is no longer used.
          */
-        g_hash_table_foreach(action->node->details->attrs, hash2metafield, args_xml);
+        g_hash_table_foreach(action->node->details->attrs, hash2metafield,
+                             args_xml);
     }
 
     sorted_xml(args_xml, action_xml, FALSE);
@@ -399,10 +404,11 @@ create_graph_action(xmlNode *parent, pe_action_t *action, bool skip_details,
 
     if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_casei)) {
         /* All fences need node info; guest node fences are pseudo-events */
-        action_xml = create_xml_node(parent,
-                                     pcmk_is_set(action->flags, pe_action_pseudo)?
-                                     XML_GRAPH_TAG_PSEUDO_EVENT :
-                                     XML_GRAPH_TAG_CRM_EVENT);
+        if (pcmk_is_set(action->flags, pe_action_pseudo)) {
+            action_xml = create_xml_node(parent, XML_GRAPH_TAG_PSEUDO_EVENT);
+        } else {
+            action_xml = create_xml_node(parent, XML_GRAPH_TAG_CRM_EVENT);
+        }
 
     } else if (pcmk__str_any_of(action->task,
                                 CRM_OP_SHUTDOWN,
@@ -439,7 +445,8 @@ create_graph_action(xmlNode *parent, pe_action_t *action, bool skip_details,
         }
         clone_key = clone_op_key(action, interval_ms);
         crm_xml_add(action_xml, XML_LRM_ATTR_TASK_KEY, clone_key);
-        crm_xml_add(action_xml, "internal_" XML_LRM_ATTR_TASK_KEY, action->uuid);
+        crm_xml_add(action_xml, "internal_" XML_LRM_ATTR_TASK_KEY,
+                    action->uuid);
         free(clone_key);
     } else {
         crm_xml_add(action_xml, XML_LRM_ATTR_TASK_KEY, action->uuid);
@@ -634,7 +641,8 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
         return false;
 
     } else if (pcmk_is_set(input->type, pe_order_apply_first_non_migratable)
-               && pcmk_is_set(input->action->flags, pe_action_migrate_runnable)) {
+               && pcmk_is_set(input->action->flags,
+                              pe_action_migrate_runnable)) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
                   "only if input unmigratable but input unrunnable",
                   action->uuid, action->id,
@@ -655,7 +663,9 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
 
         // load orderings are relevant only if actions are for same node
 
-        if (action->rsc && pcmk__str_eq(action->task, RSC_MIGRATE, pcmk__str_casei)) {
+        if ((action->rsc != NULL)
+            && pcmk__str_eq(action->task, RSC_MIGRATE, pcmk__str_casei)) {
+
             pe_node_t *assigned = action->rsc->allocated_to;
 
             /* For load_stopped -> migrate_to orderings, we care about where it

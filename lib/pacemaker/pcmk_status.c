@@ -119,7 +119,8 @@ pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith, cib_t *cib,
     /* Unpack constraints if any section will need them
      * (tickets may be referenced in constraints but not granted yet,
      * and bans need negative location constraints) */
-    if (pcmk_is_set(show, pcmk_section_bans) || pcmk_is_set(show, pcmk_section_tickets)) {
+    if (pcmk_is_set(show, pcmk_section_bans)
+        || pcmk_is_set(show, pcmk_section_tickets)) {
         pcmk__unpack_constraints(data_set);
     }
 
@@ -156,7 +157,9 @@ pcmk_status(xmlNodePtr *xml)
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
 
-    uint32_t show_opts = pcmk_show_pending | pcmk_show_inactive_rscs | pcmk_show_timing;
+    uint32_t show_opts = pcmk_show_pending
+                         |pcmk_show_inactive_rscs
+                         |pcmk_show_timing;
 
     cib = cib_new();
 
@@ -287,8 +290,16 @@ done:
     return pcmk_rc_ok;
 }
 
-/* This is an internal-only function that is planned to be deprecated and removed.
- * It should only ever be called from crm_mon.
+/*!
+ * \internal
+ * \brief Output cluster status in Nagios Plugin format
+ *
+ * \param[in,out] out       Output object
+ * \param[in]     data_set  Cluster working set
+ *
+ * \return Standard Pacemaker return code
+ * \note This is for a deprecated crm_mon option and should be called only for
+ *       that.
  */
 int
 pcmk__output_simple_status(pcmk__output_t *out,
@@ -339,7 +350,8 @@ pcmk__output_simple_status(pcmk__output_t *out,
         char *nodes_maint_s = NULL;
 
         if (nodes_standby > 0) {
-            nodes_standby_s = crm_strdup_printf(", %d standby node%s", nodes_standby,
+            nodes_standby_s = crm_strdup_printf(", %d standby node%s",
+                                                nodes_standby,
                                                 pcmk__plural_s(nodes_standby));
         }
 

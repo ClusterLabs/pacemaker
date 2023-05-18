@@ -648,7 +648,7 @@ pcmk__new_cancel_action(pe_resource_t *rsc, const char *task, guint interval_ms,
  * \param[in]     task         Action name
  * \param[in]     interval_ms  Action interval
  * \param[in]     node         Node that history entry is for
- * \param[in]     reason       Short description of why action is being cancelled
+ * \param[in]     reason       Short description of why action is cancelled
  */
 void
 pcmk__schedule_cancel(pe_resource_t *rsc, const char *call_id, const char *task,

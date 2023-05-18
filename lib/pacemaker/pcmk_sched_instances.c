@@ -1065,7 +1065,8 @@ find_compatible_instance_on_node(const pe_resource_t *match_rsc,
         pe_resource_t *instance = (pe_resource_t *) iter->data;
 
         if (pcmk__instance_matches(instance, node, role, current)) {
-            pe_rsc_trace(match_rsc, "Found %s %s instance %s compatible with %s on %s",
+            pe_rsc_trace(match_rsc,
+                         "Found %s %s instance %s compatible with %s on %s",
                          role == RSC_ROLE_UNKNOWN? "matching" : role2text(role),
                          rsc->id, instance->id, match_rsc->id,
                          pe__node_name(node));

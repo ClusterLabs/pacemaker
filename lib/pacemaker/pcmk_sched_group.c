@@ -242,7 +242,8 @@ member_internal_constraints(gpointer data, gpointer user_data)
         if ((member->running_on != NULL)
             && (member_data->previous_member->running_on == NULL)) {
             pcmk__order_resource_actions(member, RSC_STOP,
-                                         member_data->previous_member, RSC_START,
+                                         member_data->previous_member,
+                                         RSC_START,
                                          pe_order_implies_first
                                          |pe_order_runnable_left);
         }
@@ -264,7 +265,8 @@ member_internal_constraints(gpointer data, gpointer user_data)
             && (member_data->previous_member->running_on == NULL)
             && (member_data->last_active != NULL)
             && (member_data->last_active->running_on != NULL)) {
-            pcmk__order_stops(member, member_data->last_active, pe_order_optional);
+            pcmk__order_stops(member, member_data->last_active,
+                              pe_order_optional);
         }
         member_data->last_active = member;
     }
@@ -643,7 +645,8 @@ pcmk__group_colocated_resources(const pe_resource_t *rsc,
         /* This group's members are not colocated, and the group is not cloned,
          * so just add the group's own colocations to the list.
          */
-        colocated_rscs = pcmk__colocated_resources(rsc, orig_rsc, colocated_rscs);
+        colocated_rscs = pcmk__colocated_resources(rsc, orig_rsc,
+                                                   colocated_rscs);
     }
 
     return colocated_rscs;

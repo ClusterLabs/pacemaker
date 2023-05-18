@@ -29,12 +29,13 @@ enum ordering_symmetry {
     ordering_symmetric_inverse, // the inverse relation in a symmetric ordering
 };
 
-#define EXPAND_CONSTRAINT_IDREF(__set, __rsc, __name) do {                      \
-        __rsc = pcmk__find_constraint_resource(data_set->resources, __name);    \
-        if (__rsc == NULL) {                                                    \
-            pcmk__config_err("%s: No resource found for %s", __set, __name);    \
-            return pcmk_rc_unpack_error;                                        \
-        }                                                                       \
+#define EXPAND_CONSTRAINT_IDREF(__set, __rsc, __name) do {                  \
+        __rsc = pcmk__find_constraint_resource(data_set->resources,         \
+                                               __name);                     \
+        if (__rsc == NULL) {                                                \
+            pcmk__config_err("%s: No resource found for %s", __set, __name);\
+            return pcmk_rc_unpack_error;                                    \
+        }                                                                   \
     } while (0)
 
 static const char *
@@ -767,7 +768,8 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
              */
             pcmk__new_ordering(rsc_1, pcmk__op_key(rsc_1->id, action_1, 0),
                                NULL, NULL, NULL, unordered_action,
-                               pe_order_one_or_more|pe_order_implies_then_printed,
+                               pe_order_one_or_more
+                               |pe_order_implies_then_printed,
                                data_set);
         }
         for (xml_rsc_2 = first_named_child(set2, XML_TAG_RESOURCE_REF);
@@ -856,7 +858,8 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
 
             EXPAND_CONSTRAINT_IDREF(id, rsc_1, ID(xml_rsc));
 
-            for (xmlNode *xml_rsc_2 = first_named_child(set2, XML_TAG_RESOURCE_REF);
+            for (xmlNode *xml_rsc_2 = first_named_child(set2,
+                                                        XML_TAG_RESOURCE_REF);
                  xml_rsc_2 != NULL; xml_rsc_2 = crm_next_same_xml(xml_rsc_2)) {
 
                 EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc_2));
@@ -934,7 +937,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     *expanded_xml = copy_xml(xml_obj);
 
-    // Convert template/tag reference in "first" into resource_set under constraint
+    // Convert template/tag reference in "first" into constraint resource_set
     if (!pcmk__tag_to_set(*expanded_xml, &rsc_set_first, XML_ORDER_ATTR_FIRST,
                           true, data_set)) {
         free_xml(*expanded_xml);
@@ -951,7 +954,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         any_sets = true;
     }
 
-    // Convert template/tag reference in "then" into resource_set under constraint
+    // Convert template/tag reference in "then" into constraint resource_set
     if (!pcmk__tag_to_set(*expanded_xml, &rsc_set_then, XML_ORDER_ATTR_THEN,
                           true, data_set)) {
         free_xml(*expanded_xml);
@@ -1307,7 +1310,8 @@ rsc_order_first(pe_resource_t *first_rsc, pe__ordering_t *order)
                          "Ignoring constraint %d: first (%s for %s) not found",
                          order->id, order->lh_action_task, first_rsc->id);
 
-        } else if ((first_rsc->fns->state(first_rsc, TRUE) == RSC_ROLE_UNPROMOTED)
+        } else if ((first_rsc->fns->state(first_rsc,
+                                          TRUE) == RSC_ROLE_UNPROMOTED)
                    && pcmk__str_eq(op_type, RSC_DEMOTE, pcmk__str_casei)) {
             free(key);
             pe_rsc_trace(first_rsc,

@@ -204,7 +204,8 @@ unpack_rsc_location(xmlNode *xml_obj, pe_resource_t *rsc, const char *role,
     const char *rsc_id = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
     const char *node = crm_element_value(xml_obj, XML_CIB_TAG_NODE);
-    const char *discovery = crm_element_value(xml_obj, XML_LOCATION_ATTR_DISCOVERY);
+    const char *discovery = crm_element_value(xml_obj,
+                                              XML_LOCATION_ATTR_DISCOVERY);
 
     if (rsc == NULL) {
         pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
@@ -406,7 +407,7 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     *expanded_xml = copy_xml(xml_obj);
 
-    // Convert template/tag reference in "rsc" into resource_set under constraint
+    // Convert any template or tag reference into constraint resource_set
     if (!pcmk__tag_to_set(*expanded_xml, &rsc_set, XML_LOC_ATTR_SOURCE,
                           false, data_set)) {
         free_xml(*expanded_xml);

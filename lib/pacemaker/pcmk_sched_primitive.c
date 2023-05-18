@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <stdbool.h>
+#include <stdint.h>                 // uint8_t, uint32_t
 
 #include <crm/msg_xml.h>
 #include <pacemaker-internal.h>
@@ -196,7 +197,8 @@ assign_best_node(pe_resource_t *rsc, const pe_node_t *prefer)
 
         } else {
             pe_rsc_trace(rsc,
-                         "Chose preferred node %s for %s (ignoring %d candidates)",
+                         "Chose preferred node %s for %s "
+                         "(ignoring %d candidates)",
                          pe__node_name(chosen), rsc->id, g_list_length(nodes));
         }
     }
@@ -226,7 +228,8 @@ assign_best_node(pe_resource_t *rsc, const pe_node_t *prefer)
                 // Nothing to do
 
             } else if (!pcmk__node_available(running, true, false)) {
-                pe_rsc_trace(rsc, "Current node for %s (%s) can't run resources",
+                pe_rsc_trace(rsc,
+                             "Current node for %s (%s) can't run resources",
                              rsc->id, pe__node_name(running));
 
             } else {
@@ -247,7 +250,12 @@ assign_best_node(pe_resource_t *rsc, const pe_node_t *prefer)
                 }
 
                 if (nodes_with_best_score > 1) {
-                    do_crm_log(((chosen->weight >= INFINITY)? LOG_WARNING : LOG_INFO),
+                    uint8_t log_level = LOG_INFO;
+
+                    if (chosen->weight >= INFINITY) {
+                        log_level = LOG_WARNING;
+                    }
+                    do_crm_log(log_level,
                                "Chose %s for %s from %d nodes with score %s",
                                pe__node_name(chosen), rsc->id,
                                nodes_with_best_score,
@@ -876,7 +884,8 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
 
     // Whether resource requires unfencing
     check_unfencing = !pcmk_is_set(rsc->flags, pe_rsc_fence_device)
-                      && pcmk_is_set(rsc->cluster->flags, pe_flag_enable_unfencing)
+                      && pcmk_is_set(rsc->cluster->flags,
+                                     pe_flag_enable_unfencing)
                       && pcmk_is_set(rsc->flags, pe_rsc_needs_unfencing);
 
     // Whether a non-default placement strategy is used

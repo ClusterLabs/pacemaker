@@ -792,7 +792,8 @@ create_replica_probes(pe__bundle_replica_t *replica, void *user_data)
     }
     if ((replica->child != NULL)
         && pe__same_node(probe_data->node, replica->node)
-        && replica->child->cmds->create_probe(replica->child, probe_data->node)) {
+        && replica->child->cmds->create_probe(replica->child,
+                                              probe_data->node)) {
         probe_data->any_created = true;
     }
     if ((replica->container != NULL)

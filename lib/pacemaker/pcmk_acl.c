@@ -53,7 +53,10 @@ static const xmlChar *NS_DENIED =   (const xmlChar *) ACL_NS_PREFIX "denied";
  * \param[in,out] ns_recycle_denied
  */
 static void
-pcmk__acl_mark_node_with_namespace(xmlNode *i_node, const xmlChar *ns, int *ret, xmlNs **ns_recycle_writable, xmlNs **ns_recycle_readable, xmlNs **ns_recycle_denied)
+pcmk__acl_mark_node_with_namespace(xmlNode *i_node, const xmlChar *ns, int *ret,
+                                   xmlNs **ns_recycle_writable,
+                                   xmlNs **ns_recycle_readable,
+                                   xmlNs **ns_recycle_denied)
 {
     if (ns == NS_WRITABLE)
     {
@@ -133,7 +136,10 @@ pcmk__acl_annotate_permissions_recursive(xmlNode *xml_modify)
             } else {
                 ns = NS_WRITABLE;
             }
-            pcmk__acl_mark_node_with_namespace(i_node, ns, &ret, &ns_recycle_writable, &ns_recycle_readable, &ns_recycle_denied);
+            pcmk__acl_mark_node_with_namespace(i_node, ns, &ret,
+                                               &ns_recycle_writable,
+                                               &ns_recycle_readable,
+                                               &ns_recycle_denied);
             /* XXX recursion can be turned into plain iteration to save stack */
             if (i_node->properties != NULL) {
                 /* this is not entirely clear, but relies on the very same
@@ -158,23 +164,27 @@ pcmk__acl_annotate_permissions_recursive(xmlNode *xml_modify)
             } else {
                 ns = NS_WRITABLE;
             }
-            pcmk__acl_mark_node_with_namespace(i_node, ns, &ret, &ns_recycle_writable, &ns_recycle_readable, &ns_recycle_denied);
+            pcmk__acl_mark_node_with_namespace(i_node, ns, &ret,
+                                               &ns_recycle_writable,
+                                               &ns_recycle_readable,
+                                               &ns_recycle_denied);
             break;
         case XML_COMMENT_NODE:
             /* we can utilize that parent has already been assigned the ns */
-            if (!pcmk__check_acl(i_node->parent, (const char *) i_node->name, pcmk__xf_acl_read))
-            {
+            if (!pcmk__check_acl(i_node->parent, (const char *) i_node->name,
+                                 pcmk__xf_acl_read)) {
                 ns = NS_DENIED;
-            }
-            else if (!pcmk__check_acl(i_node->parent, (const char *) i_node->name, pcmk__xf_acl_write))
-            {
+            } else if (!pcmk__check_acl(i_node->parent,
+                                        (const char *) i_node->name,
+                                        pcmk__xf_acl_write)) {
                 ns = NS_READABLE;
-            }
-            else
-            {
+            } else {
                 ns = NS_WRITABLE;
             }
-            pcmk__acl_mark_node_with_namespace(i_node, ns, &ret, &ns_recycle_writable, &ns_recycle_readable, &ns_recycle_denied);
+            pcmk__acl_mark_node_with_namespace(i_node, ns, &ret,
+                                               &ns_recycle_writable,
+                                               &ns_recycle_readable,
+                                               &ns_recycle_denied);
             break;
         default:
             break;
@@ -225,7 +235,9 @@ pcmk__acl_annotate_permissions(const char *cred, const xmlDoc *cib_doc,
     ret = pcmk__acl_annotate_permissions_recursive(target);
 
     if (ret == pcmk_rc_ok) {
-        char* credentials = crm_strdup_printf("ACLs as evaluated for user %s", cred);
+        char *credentials = crm_strdup_printf("ACLs as evaluated for user %s",
+                                              cred);
+
         comment = xmlNewDocComment(target->doc, (pcmkXmlStr) credentials);
         free(credentials);
         if (comment == NULL) {

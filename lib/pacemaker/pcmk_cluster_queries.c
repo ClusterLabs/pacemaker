@@ -858,7 +858,8 @@ pcmk__list_nodes(pcmk__output_t *out, const char *node_types, bool bash_export)
                                      remote_node_print_helper, &data);
         }
 
-        if (pcmk__str_empty(node_types) || !pcmk__strcmp(node_types, ",|^remote", pcmk__str_regex)) {
+        if (pcmk__str_empty(node_types)
+            || !pcmk__strcmp(node_types, ",|^remote", pcmk__str_regex)) {
             data.field = "id";
             data.type = "remote";
             crm_foreach_xpath_result(xml_node, PCMK__XP_REMOTE_NODE_CONFIG,

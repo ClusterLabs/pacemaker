@@ -302,7 +302,8 @@ assign_resources(pe_working_set_t *data_set)
 
     crm_trace("Assigning resources to nodes");
 
-    if (!pcmk__str_eq(data_set->placement_strategy, "default", pcmk__str_casei)) {
+    if (!pcmk__str_eq(data_set->placement_strategy, "default",
+                      pcmk__str_casei)) {
         pcmk__sort_resources(data_set);
     }
     pcmk__show_node_capacities("Original", data_set);
@@ -548,7 +549,8 @@ schedule_fencing_and_shutdowns(pe_working_set_t *data_set)
 
     crm_trace("Scheduling fencing and shutdowns as needed");
     if (!have_managed) {
-        crm_notice("No fencing will be done until there are resources to manage");
+        crm_notice("No fencing will be done until there are resources "
+                   "to manage");
     }
 
     // Check each node for whether it needs fencing or shutdown
@@ -646,10 +648,9 @@ log_resource_details(pe_working_set_t *data_set)
     pcmk__output_t *out = data_set->priv;
     GList *all = NULL;
 
-    /* We need a list of nodes that we are allowed to output information for.
-     * This is necessary because out->message for all the resource-related
-     * messages expects such a list, due to the `crm_mon --node=` feature.  Here,
-     * we just make it a list of all the nodes.
+    /* Due to the `crm_mon --node=` feature, out->message() for all the
+     * resource-related messages expects a list of nodes that we are allowed to
+     * output information for. Here, we create a wildcard to match all nodes.
      */
     all = g_list_prepend(all, (gpointer) "*");
 
@@ -702,7 +703,9 @@ log_all_actions(pe_working_set_t *data_set)
 static void
 log_unrunnable_actions(const pe_working_set_t *data_set)
 {
-    const uint64_t flags = pe_action_optional|pe_action_runnable|pe_action_pseudo;
+    const uint64_t flags = pe_action_optional
+                           |pe_action_runnable
+                           |pe_action_pseudo;
 
     crm_trace("Required but unrunnable actions:");
     for (const GList *iter = data_set->actions;

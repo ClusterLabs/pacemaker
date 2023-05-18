@@ -70,7 +70,7 @@ best_op(const pe_resource_t *rsc, const pe_node_t *node)
             if (!effective_op) {
                 continue;
             }
-        // Do not use an ineffective non-recurring op if there's a recurring one.
+        // Do not use an ineffective non-recurring op if there's a recurring one
         } else if (best_interval != 0
                    && !effective_op
                    && interval_ms == 0) {

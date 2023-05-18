@@ -99,7 +99,8 @@ reduce_fence_history(stonith_history_t *history)
                     pcmk__str_eq(hp->action, np->action, pcmk__str_none) &&
                     (hp->state == np->state) &&
                     ((hp->state == st_done) ||
-                     pcmk__str_eq(hp->delegate, np->delegate, pcmk__str_casei))) {
+                     pcmk__str_eq(hp->delegate, np->delegate,
+                                  pcmk__str_casei))) {
                         /* purge older hp */
                         stonith_history_free(hp);
                         break;
@@ -146,6 +147,7 @@ async_fence_helper(gpointer user_data)
     stonith_t *st = async_fence_data.st;
     int call_id = 0;
     int rc = stonith_api_connect_retry(st, async_fence_data.name, 10);
+    int timeout = 0;
 
     if (rc != pcmk_ok) {
         g_main_loop_quit(mainloop);
@@ -154,7 +156,8 @@ async_fence_helper(gpointer user_data)
         return TRUE;
     }
 
-    st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE, notify_callback);
+    st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE,
+                                    notify_callback);
 
     call_id = st->cmds->fence_with_delay(st,
                                          st_opt_allow_suicide,
@@ -171,12 +174,12 @@ async_fence_helper(gpointer user_data)
         return TRUE;
     }
 
-    st->cmds->register_callback(st,
-                                call_id,
-                                (async_fence_data.timeout/1000
-                                + (async_fence_data.delay > 0 ? async_fence_data.delay : 0)),
-                                st_opt_timeout_updates, NULL, "callback", fence_callback);
-
+    timeout = async_fence_data.timeout / 1000;
+    if (async_fence_data.delay > 0) {
+        timeout += async_fence_data.delay;
+    }
+    st->cmds->register_callback(st, call_id, timeout, st_opt_timeout_updates,
+                                NULL, "callback", fence_callback);
     return TRUE;
 }
 
@@ -251,9 +254,10 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, const char *target,
     if (broadcast) {
         stonith__set_call_options(opts, target, st_opt_broadcast);
     }
-    rc = st->cmds->history(st, opts,
-                           pcmk__str_eq(target, "*", pcmk__str_none)? NULL : target,
-                           &history, timeout/1000);
+    if (pcmk__str_eq(target, "*", pcmk__str_none)) {
+        target = NULL;
+    }
+    rc = st->cmds->history(st, opts, target, &history, (timeout / 1000));
 
     if (cleanup) {
         // Cleanup doesn't return a history list
@@ -314,7 +318,8 @@ pcmk_fence_history(xmlNodePtr *xml, stonith_t *st, const char *target,
 
     out->quiet = quiet;
 
-    rc = pcmk__fence_history(out, st, target, timeout, verbose, broadcast, cleanup);
+    rc = pcmk__fence_history(out, st, target, timeout, verbose, broadcast,
+                             cleanup);
     pcmk__xml_output_finish(out, xml);
     return rc;
 }
@@ -326,13 +331,15 @@ pcmk__fence_installed(pcmk__output_t *out, stonith_t *st, unsigned int timeout)
     stonith_key_value_t *devices = NULL;
     int rc = pcmk_rc_ok;
 
-    rc = st->cmds->list_agents(st, st_opt_sync_call, NULL, &devices, timeout/1000);
-    /* list_agents returns a negative error code or a positive number of agents. */
+    rc = st->cmds->list_agents(st, st_opt_sync_call, NULL, &devices,
+                               (timeout / 1000));
+    // rc is a negative error code or a positive number of agents
     if (rc < 0) {
         return pcmk_legacy2rc(rc);
     }
 
-    out->begin_list(out, "fence device", "fence devices", "Installed fence devices");
+    out->begin_list(out, "fence device", "fence devices",
+                    "Installed fence devices");
     for (stonith_key_value_t *iter = devices; iter != NULL; iter = iter->next) {
         out->list_item(out, "device", "%s", iter->value);
     }
@@ -498,7 +505,8 @@ pcmk__fence_registered(pcmk__output_t *out, stonith_t *st, const char *target,
         return pcmk_legacy2rc(rc);
     }
 
-    out->begin_list(out, "fence device", "fence devices", "Registered fence devices");
+    out->begin_list(out, "fence device", "fence devices",
+                    "Registered fence devices");
     for (stonith_key_value_t *iter = devices; iter; iter = iter->next) {
         out->list_item(out, "device", "%s", iter->value);
     }
@@ -609,7 +617,8 @@ pcmk__get_fencing_history(stonith_t *st, stonith_history_t **stonith_history,
     if ((st == NULL) || (st->state == stonith_disconnected)) {
         rc = ENOTCONN;
     } else if (fence_history != pcmk__fence_history_none) {
-        rc = st->cmds->history(st, st_opt_sync_call, NULL, stonith_history, 120);
+        rc = st->cmds->history(st, st_opt_sync_call, NULL, stonith_history,
+                               120);
 
         rc = pcmk_legacy2rc(rc);
         if (rc != pcmk_rc_ok) {

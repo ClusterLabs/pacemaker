@@ -221,7 +221,8 @@ apply_remote_ordering(pe_action_t *action)
                  * by the fencing.
                  */
                 pe_fence_node(remote_rsc->cluster, action->node,
-                              "resources are active but connection is unrecoverable",
+                              "resources are active but "
+                              "connection is unrecoverable",
                               FALSE);
 
             } else if (remote_rsc->next_role == RSC_ROLE_STOPPED) {
@@ -414,7 +415,8 @@ pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
          * any start of the resource in this transition.
          */
         if (action->rsc->is_remote_node &&
-            pcmk__str_eq(action->task, CRM_OP_CLEAR_FAILCOUNT, pcmk__str_casei)) {
+            pcmk__str_eq(action->task, CRM_OP_CLEAR_FAILCOUNT,
+                         pcmk__str_casei)) {
 
             pcmk__new_ordering(action->rsc, NULL, action, action->rsc,
                                pcmk__op_key(action->rsc->id, RSC_START, 0),
@@ -459,7 +461,8 @@ pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
                 pe_action_t *rsc_action = item->data;
 
                 if (!pe__same_node(rsc_action->node, action->node)
-                    && pcmk__str_eq(rsc_action->task, RSC_STOP, pcmk__str_casei)) {
+                    && pcmk__str_eq(rsc_action->task, RSC_STOP,
+                                    pcmk__str_casei)) {
                     pcmk__new_ordering(remote, start_key(remote), NULL,
                                        action->rsc, NULL, rsc_action,
                                        pe_order_optional, data_set);

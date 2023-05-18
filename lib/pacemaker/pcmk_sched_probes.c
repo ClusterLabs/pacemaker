@@ -360,10 +360,12 @@ add_probe_orderings_for_stops(pe_working_set_t *data_set)
 
         // Skip orderings for first actions other than stop
         if ((order->lh_action != NULL)
-            && !pcmk__str_eq(order->lh_action->task, RSC_STOP, pcmk__str_none)) {
+            && !pcmk__str_eq(order->lh_action->task, RSC_STOP,
+                             pcmk__str_none)) {
             continue;
         } else if ((order->lh_action == NULL)
-                   && !pcmk__ends_with(order->lh_action_task, "_" RSC_STOP "_0")) {
+                   && !pcmk__ends_with(order->lh_action_task,
+                                       "_" RSC_STOP "_0")) {
             continue;
         }
 
@@ -562,7 +564,8 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
                 then_actions = pe__resource_actions(after->rsc, NULL, RSC_STOP,
                                                     FALSE);
 
-            } else if (pcmk__str_eq(after->task, RSC_PROMOTE, pcmk__str_casei)) {
+            } else if (pcmk__str_eq(after->task, RSC_PROMOTE,
+                                    pcmk__str_casei)) {
                 then_actions = pe__resource_actions(after->rsc, NULL,
                                                     RSC_DEMOTE, FALSE);
             }

@@ -135,7 +135,8 @@ create_action_name(const pe_action_t *action, bool verbose)
  */
 static void
 print_cluster_status(pe_working_set_t *data_set, uint32_t show_opts,
-                     uint32_t section_opts, const char *title, bool print_spacer)
+                     uint32_t section_opts, const char *title,
+                     bool print_spacer)
 {
     pcmk__output_t *out = data_set->priv;
     GList *all = NULL;
@@ -398,7 +399,8 @@ pcmk__profile_dir(const char *dir, long long repeat, pe_working_set_t *data_set,
                 free(namelist[file_num]);
                 continue;
             }
-            snprintf(buffer, sizeof(buffer), "%s/%s", dir, namelist[file_num]->d_name);
+            snprintf(buffer, sizeof(buffer), "%s/%s",
+                     dir, namelist[file_num]->d_name);
             if (stat(buffer, &prop) == 0 && S_ISREG(prop.st_mode)) {
                 profile_file(buffer, repeat, data_set, use_date);
             }

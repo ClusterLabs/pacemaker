@@ -563,7 +563,8 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
             && !pe__same_node(first_node, then_node)) {
 
             pe_rsc_trace(then->rsc,
-                         "Disabled ordering %s on %s then %s on %s: not same node",
+                         "Disabled ordering %s on %s then %s on %s: "
+                         "not same node",
                          other->action->uuid, pe__node_name(first_node),
                          then->uuid, pe__node_name(then_node));
             other->type = pe_order_none;
@@ -872,8 +873,8 @@ pcmk__update_ordered_actions(pe_action_t *first, pe_action_t *then,
     if (pcmk_is_set(type, pe_order_implies_first_migratable)
         && pcmk_is_set(filter, pe_action_optional)) {
 
-        if (!pcmk_all_flags_set(then->flags,
-                                pe_action_migrate_runnable|pe_action_runnable)) {
+        if (!pcmk_all_flags_set(then->flags, pe_action_migrate_runnable
+                                             |pe_action_runnable)) {
             clear_action_flag_because(first, pe_action_runnable, then);
         }
 
@@ -1211,8 +1212,8 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     crm_xml_add(xml_op, XML_ATTR_CRM_VERSION, caller_version);
     crm_xml_add(xml_op, XML_ATTR_TRANSITION_KEY, op->user_data);
     crm_xml_add(xml_op, XML_ATTR_TRANSITION_MAGIC, magic);
-    crm_xml_add(xml_op, XML_LRM_ATTR_EXIT_REASON, exit_reason == NULL ? "" : exit_reason);
-    crm_xml_add(xml_op, XML_LRM_ATTR_TARGET, node); /* For context during triage */
+    crm_xml_add(xml_op, XML_LRM_ATTR_EXIT_REASON, pcmk__s(exit_reason, ""));
+    crm_xml_add(xml_op, XML_LRM_ATTR_TARGET, node); // For context during triage
 
     crm_xml_add_int(xml_op, XML_LRM_ATTR_CALLID, op->call_id);
     crm_xml_add_int(xml_op, XML_LRM_ATTR_RC, op->rc);
@@ -1240,7 +1241,8 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
         }
     }
 
-    if (pcmk__str_any_of(op->op_type, CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED, NULL)) {
+    if (pcmk__str_any_of(op->op_type, CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED,
+                         NULL)) {
         /*
          * Record migrate_source and migrate_target always for migrate ops.
          */
@@ -1399,7 +1401,8 @@ pcmk__output_actions(pe_working_set_t *data_set)
             task = strdup("Shutdown");
 
         } else if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_casei)) {
-            const char *op = g_hash_table_lookup(action->meta, "stonith_action");
+            const char *op = g_hash_table_lookup(action->meta,
+                                                 "stonith_action");
 
             task = crm_strdup_printf("Fence (%s)", op);
 
@@ -1464,8 +1467,8 @@ task_for_digest(const char *task, guint interval_ms)
     /* Certain actions need to be compared against the parameters used to start
      * the resource.
      */
-    if ((interval_ms == 0)
-        && pcmk__str_any_of(task, RSC_STATUS, RSC_MIGRATED, RSC_PROMOTE, NULL)) {
+    if ((interval_ms == 0) && pcmk__str_any_of(task, RSC_STATUS, RSC_MIGRATED,
+                                               RSC_PROMOTE, NULL)) {
         task = RSC_START;
     }
     return task;
@@ -1626,7 +1629,8 @@ pcmk__check_action_config(pe_resource_t *rsc, pe_node_t *node,
         } else if (pcmk_is_set(rsc->cluster->flags,
                                pe_flag_stop_action_orphans)) {
             pcmk__schedule_cancel(rsc,
-                                  crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
+                                  crm_element_value(xml_op,
+                                                    XML_LRM_ATTR_CALLID),
                                   task, interval_ms, node, "orphan");
             return true;
         } else {
@@ -1686,8 +1690,8 @@ pcmk__check_action_config(pe_resource_t *rsc, pe_node_t *node,
 
             } else {
                 pe_rsc_trace(rsc,
-                             "Restarting %s because agent doesn't support reload",
-                             rsc->id);
+                             "Restarting %s "
+                             "because agent doesn't support reload", rsc->id);
                 crm_log_xml_debug(digest_data->params_restart,
                                   "params:restart");
                 force_restart(rsc, task, interval_ms, node);
@@ -1801,7 +1805,8 @@ process_rsc_history(const xmlNode *rsc_entry, pe_resource_t *rsc,
                 || node->details->maintenance)) {
             // Maintenance mode cancels recurring operations
             pcmk__schedule_cancel(rsc,
-                                  crm_element_value(rsc_op, XML_LRM_ATTR_CALLID),
+                                  crm_element_value(rsc_op,
+                                                    XML_LRM_ATTR_CALLID),
                                   task, interval_ms, node, "maintenance mode");
 
         } else if ((interval_ms > 0)
