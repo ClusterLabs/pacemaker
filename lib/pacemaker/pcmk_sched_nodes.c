@@ -96,9 +96,9 @@ pcmk__copy_node_list(const GList *list, bool reset)
 {
     GList *result = NULL;
 
-    for (const GList *gIter = list; gIter != NULL; gIter = gIter->next) {
+    for (const GList *iter = list; iter != NULL; iter = iter->next) {
         pe_node_t *new_node = NULL;
-        pe_node_t *this_node = (pe_node_t *) gIter->data;
+        pe_node_t *this_node = iter->data;
 
         new_node = pe__copy_node(this_node);
         if (reset) {

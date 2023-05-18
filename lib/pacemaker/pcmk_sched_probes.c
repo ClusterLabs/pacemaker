@@ -657,10 +657,8 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
 static void
 clear_actions_tracking_flag(pe_working_set_t *data_set)
 {
-    GList *gIter = NULL;
-
-    for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
+    for (GList *iter = data_set->actions; iter != NULL; iter = iter->next) {
+        pe_action_t *action = iter->data;
 
         pe__clear_action_flags(action, pe_action_tracking);
     }

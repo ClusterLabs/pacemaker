@@ -105,10 +105,11 @@ pcmk__unpack_constraints(pe_working_set_t *data_set)
 pe_resource_t *
 pcmk__find_constraint_resource(GList *rsc_list, const char *id)
 {
-    GList *rIter = NULL;
-
-    for (rIter = rsc_list; id && rIter; rIter = rIter->next) {
-        pe_resource_t *parent = rIter->data;
+    if (id == NULL) {
+        return NULL;
+    }
+    for (GList *iter = rsc_list; iter != NULL; iter = iter->next) {
+        pe_resource_t *parent = iter->data;
         pe_resource_t *match = parent->fns->find_rsc(parent, id, NULL,
                                                      pe_find_renamed);
 
@@ -228,7 +229,7 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pe_working_set_t *data_set)
          set != NULL; set = crm_next_same_xml(set)) {
 
         GList *tag_refs = NULL;
-        GList *gIter = NULL;
+        GList *iter = NULL;
 
         for (xmlNode *xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
@@ -273,8 +274,8 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pe_working_set_t *data_set)
 
                  */
 
-                for (gIter = tag->refs; gIter != NULL; gIter = gIter->next) {
-                    const char *obj_ref = (const char *) gIter->data;
+                for (iter = tag->refs; iter != NULL; iter = iter->next) {
+                    const char *obj_ref = iter->data;
                     xmlNode *new_rsc_ref = NULL;
 
                     new_rsc_ref = xmlNewDocRawNode(getDocPtr(set), NULL,
@@ -304,8 +305,8 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pe_working_set_t *data_set)
            </resource_set>
 
          */
-        for (gIter = tag_refs; gIter != NULL; gIter = gIter->next) {
-            xmlNode *tag_ref = gIter->data;
+        for (iter = tag_refs; iter != NULL; iter = iter->next) {
+            xmlNode *tag_ref = iter->data;
 
             free_xml(tag_ref);
         }
@@ -361,16 +362,14 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
         return false;
 
     } else if (tag) {
-        GList *gIter = NULL;
-
         /* A template/tag is referenced by the "attr" attribute (first, then, rsc or with-rsc).
            Add the template/tag's corresponding "resource_set" which contains the resources derived
            from it or tagged with it under the constraint. */
         *rsc_set = create_xml_node(xml_obj, XML_CONS_TAG_RSC_SET);
         crm_xml_add(*rsc_set, XML_ATTR_ID, id);
 
-        for (gIter = tag->refs; gIter != NULL; gIter = gIter->next) {
-            const char *obj_ref = (const char *) gIter->data;
+        for (GList *iter = tag->refs; iter != NULL; iter = iter->next) {
+            const char *obj_ref = iter->data;
             xmlNode *rsc_ref = NULL;
 
             rsc_ref = create_xml_node(*rsc_set, XML_TAG_RESOURCE_REF);

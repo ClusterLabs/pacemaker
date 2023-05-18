@@ -872,10 +872,11 @@ static void
 mark_action_blocked(pe_resource_t *rsc, const char *task,
                     const pe_resource_t *reason)
 {
+    GList *iter = NULL;
     char *reason_text = crm_strdup_printf("colocation with %s", reason->id);
 
-    for (GList *gIter = rsc->actions; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
+    for (iter = rsc->actions; iter != NULL; iter = iter->next) {
+        pe_action_t *action = iter->data;
 
         if (pcmk_is_set(action->flags, pe_action_runnable)
             && pcmk__str_eq(action->task, task, pcmk__str_casei)) {
@@ -888,7 +889,7 @@ mark_action_blocked(pe_resource_t *rsc, const char *task,
     }
 
     // If parent resource can't perform an action, neither can any children
-    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+    for (iter = rsc->children; iter != NULL; iter = iter->next) {
         mark_action_blocked((pe_resource_t *) (iter->data), task, reason);
     }
     free(reason_text);
@@ -907,7 +908,7 @@ mark_action_blocked(pe_resource_t *rsc, const char *task,
 void
 pcmk__block_colocation_dependents(pe_action_t *action)
 {
-    GList *gIter = NULL;
+    GList *iter = NULL;
     GList *colocations = NULL;
     pe_resource_t *rsc = NULL;
     bool is_start = false;
@@ -933,8 +934,8 @@ pcmk__block_colocation_dependents(pe_action_t *action)
     }
 
     // Colocation fails only if entire primary can't reach desired role
-    for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child = (pe_resource_t *) gIter->data;
+    for (iter = rsc->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *child = iter->data;
         pe_action_t *child_action = find_first_action(child->actions, NULL,
                                                       action->task, NULL);
 
@@ -952,8 +953,8 @@ pcmk__block_colocation_dependents(pe_action_t *action)
 
     // Check each colocation where this resource is primary
     colocations = pcmk__with_this_colocations(rsc);
-    for (gIter = colocations; gIter != NULL; gIter = gIter->next) {
-        pcmk__colocation_t *colocation = (pcmk__colocation_t *) gIter->data;
+    for (iter = colocations; iter != NULL; iter = iter->next) {
+        pcmk__colocation_t *colocation = iter->data;
 
         if (colocation->score < INFINITY) {
             continue; // Only mandatory colocations block dependent

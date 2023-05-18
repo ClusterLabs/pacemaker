@@ -346,10 +346,8 @@ clone_min_ordering(const char *id,
     pe__set_action_flags(clone_min_met, pe_action_requires_any);
 
     // Order the actions for each clone instance before the pseudo-action
-    for (GList *rIter = rsc_first->children; rIter != NULL;
-         rIter = rIter->next) {
-
-        pe_resource_t *child = rIter->data;
+    for (GList *iter = rsc_first->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *child = iter->data;
 
         pcmk__new_ordering(child, pcmk__op_key(child->id, action_first, 0),
                            NULL, NULL, NULL, clone_min_met,
@@ -643,8 +641,8 @@ unpack_order_set(const xmlNode *set, enum pe_order_kind parent_kind,
         if (local_kind == pe_order_kind_serialize) {
             /* Serialize before everything that comes after */
 
-            for (GList *gIter = set_iter; gIter != NULL; gIter = gIter->next) {
-                pe_resource_t *then_rsc = (pe_resource_t *) gIter->data;
+            for (GList *iter = set_iter; iter != NULL; iter = iter->next) {
+                pe_resource_t *then_rsc = iter->data;
                 char *then_key = pcmk__op_key(then_rsc->id, action, 0);
 
                 pcmk__new_ordering(resource, strdup(key), NULL, then_rsc,
@@ -1336,8 +1334,8 @@ rsc_order_first(pe_resource_t *first_rsc, pe__ordering_t *order)
         }
         then_rsc = order->rh_action->rsc;
     }
-    for (GList *gIter = first_actions; gIter != NULL; gIter = gIter->next) {
-        first_action = (pe_action_t *) gIter->data;
+    for (GList *iter = first_actions; iter != NULL; iter = iter->next) {
+        first_action = iter->data;
 
         if (then_rsc == NULL) {
             order_actions(first_action, order->rh_action, order->flags);
@@ -1384,10 +1382,10 @@ pcmk__apply_orderings(pe_working_set_t *data_set)
      */
     data_set->ordering_constraints = g_list_reverse(data_set->ordering_constraints);
 
-    for (GList *gIter = data_set->ordering_constraints;
-         gIter != NULL; gIter = gIter->next) {
+    for (GList *iter = data_set->ordering_constraints;
+         iter != NULL; iter = iter->next) {
 
-        pe__ordering_t *order = gIter->data;
+        pe__ordering_t *order = iter->data;
         pe_resource_t *rsc = order->lh_rsc;
 
         if (rsc != NULL) {

@@ -1183,11 +1183,9 @@ rsc_action_default(pcmk__output_t *out, va_list args)
        && (rsc->next_role == RSC_ROLE_STOPPED
            || (start && !pcmk_is_set(start->flags, pe_action_runnable)))) {
 
-        GList *gIter = NULL;
-
         key = stop_key(rsc);
-        for (gIter = rsc->running_on; gIter != NULL; gIter = gIter->next) {
-            pe_node_t *node = (pe_node_t *) gIter->data;
+        for (GList *iter = rsc->running_on; iter != NULL; iter = iter->next) {
+            pe_node_t *node = iter->data;
             pe_action_t *stop_op = NULL;
 
             possible_matches = find_actions(rsc->actions, key, node);

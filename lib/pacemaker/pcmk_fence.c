@@ -333,8 +333,8 @@ pcmk__fence_installed(pcmk__output_t *out, stonith_t *st, unsigned int timeout)
     }
 
     out->begin_list(out, "fence device", "fence devices", "Installed fence devices");
-    for (stonith_key_value_t *dIter = devices; dIter; dIter = dIter->next) {
-        out->list_item(out, "device", "%s", dIter->value);
+    for (stonith_key_value_t *iter = devices; iter != NULL; iter = iter->next) {
+        out->list_item(out, "device", "%s", iter->value);
     }
     out->end_list(out);
 
@@ -499,8 +499,8 @@ pcmk__fence_registered(pcmk__output_t *out, stonith_t *st, const char *target,
     }
 
     out->begin_list(out, "fence device", "fence devices", "Registered fence devices");
-    for (stonith_key_value_t *dIter = devices; dIter; dIter = dIter->next) {
-        out->list_item(out, "device", "%s", dIter->value);
+    for (stonith_key_value_t *iter = devices; iter; iter = iter->next) {
+        out->list_item(out, "device", "%s", iter->value);
     }
     out->end_list(out);
 

@@ -68,18 +68,15 @@ find_graph_action_by_id(const pcmk__graph_t *graph, int id)
         return NULL;
     }
 
-    for (const GList *sIter = graph->synapses; sIter != NULL;
-         sIter = sIter->next) {
+    for (const GList *synapse_iter = graph->synapses;
+         synapse_iter != NULL; synapse_iter = synapse_iter->next) {
 
-        const pcmk__graph_synapse_t *synapse = NULL;
+        const pcmk__graph_synapse_t *synapse = synapse_iter->data;
 
-        synapse = (const pcmk__graph_synapse_t *) sIter->data;
-        for (const GList *aIter = synapse->actions; aIter != NULL;
-             aIter = aIter->next) {
+        for (const GList *action_iter = synapse->actions;
+             action_iter != NULL; action_iter = action_iter->next) {
 
-            const pcmk__graph_action_t *action = NULL;
-
-            action = (const pcmk__graph_action_t *) aIter->data;
+            const pcmk__graph_action_t *action = action_iter->data;
             if (action->id == id) {
                 return action;
             }

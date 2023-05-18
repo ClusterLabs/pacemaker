@@ -63,7 +63,7 @@ ticket_role_matches(const pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
 static void
 constraints_for_ticket(pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
 {
-    GList *gIter = NULL;
+    GList *iter = NULL;
 
     CRM_CHECK((rsc != NULL) && (rsc_ticket != NULL), return);
 
@@ -73,8 +73,8 @@ constraints_for_ticket(pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
 
     if (rsc->children) {
         pe_rsc_trace(rsc, "Processing ticket dependencies from %s", rsc->id);
-        for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-            constraints_for_ticket((pe_resource_t *) gIter->data, rsc_ticket);
+        for (iter = rsc->children; iter != NULL; iter = iter->next) {
+            constraints_for_ticket((pe_resource_t *) iter->data, rsc_ticket);
         }
         return;
     }
@@ -107,9 +107,8 @@ constraints_for_ticket(pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
                 resource_location(rsc, NULL, -INFINITY, "__loss_of_ticket__",
                                   rsc->cluster);
 
-                for (gIter = rsc->running_on; gIter != NULL;
-                     gIter = gIter->next) {
-                    pe_fence_node(rsc->cluster, (pe_node_t *) gIter->data,
+                for (iter = rsc->running_on; iter != NULL; iter = iter->next) {
+                    pe_fence_node(rsc->cluster, (pe_node_t *) iter->data,
                                   "deadman ticket was lost", FALSE);
                 }
                 break;

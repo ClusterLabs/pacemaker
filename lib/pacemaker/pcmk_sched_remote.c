@@ -400,8 +400,8 @@ pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
 
     crm_trace("Creating remote connection orderings");
 
-    for (GList *gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
+    for (GList *iter = data_set->actions; iter != NULL; iter = iter->next) {
+        pe_action_t *action = iter->data;
         pe_resource_t *remote = NULL;
 
         // We are only interested in resource actions
