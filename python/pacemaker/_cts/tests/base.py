@@ -125,9 +125,11 @@ class CTSTest:
 
     def failure(self, reason="none"):
         '''Increment the failure count'''
+
         self.passed = False
         self.incr("failure")
         self._logger.log(("Test %s" % self.name).ljust(35) + " FAILED: %s" % reason)
+
         return False
 
     def success(self):
@@ -177,6 +179,7 @@ class CTSTest:
     def create_watch(self, patterns, timeout, name=None):
         if not name:
             name = self.name
+
         return LogWatcher(self._env["LogFileName"], patterns, self._env["nodes"], self._env["LogWatcher"], name, timeout)
 
     def local_badnews(self, prefix, watch, local_ignore=None):
@@ -243,11 +246,14 @@ class CTSTest:
         for line in lines:
             if re.search("^Resource", line):
                 r = AuditResource(self._cm, line)
+
                 if r.rtype == "o2cb" and r.parent != "NA":
                     self.debug("Found o2cb: %s" % self._r_o2cb)
                     self._r_o2cb = r.parent
+
             if re.search("^Constraint", line):
                 c = AuditConstraint(self._cm, line)
+
                 if c.type == "rsc_colocation" and c.target == self._r_o2cb:
                     self._r_ocfs2.append(c.rsc)
 
@@ -335,6 +341,7 @@ class RemoteDriver(CTSTest):
     <op id="%(node)s-monitor-interval-20s" interval="20s" name="monitor"/>
   </operations>
 </primitive>""" % { "node": self._remote_rsc }
+
         self._add_rsc(node, rsc_xml)
         if not self.failed:
             self._remote_rsc_added = True
@@ -644,7 +651,7 @@ class RemoteDriver(CTSTest):
         (handle, keyfile) = tempfile.mkstemp(".cts")
         os.close(handle)
         subprocess.check_call(["dd", "if=/dev/urandom", "of=%s" % keyfile, "bs=4096", "count=1"],
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
         # sync key throughout the cluster
         for n in self._env["nodes"]:
@@ -652,6 +659,7 @@ class RemoteDriver(CTSTest):
             self._rsh.copy(keyfile, "root@%s:/etc/pacemaker/authkey" % n)
             self._rsh(n, "chgrp haclient /etc/pacemaker /etc/pacemaker/authkey")
             self._rsh(n, "chmod 0640 /etc/pacemaker/authkey")
+
         os.unlink(keyfile)
 
     def is_applicable(self):
@@ -662,6 +670,7 @@ class RemoteDriver(CTSTest):
             (rc, _) = self._rsh(node, "which pacemaker-remoted >/dev/null 2>&1")
             if rc != 0:
                 return False
+
         return True
 
     def start_new_test(self, node):
@@ -693,16 +702,18 @@ class RemoteDriver(CTSTest):
 
 class SimulStartLite(CTSTest):
     '''Start any stopped nodes ~ simultaneously'''
+
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
         self.name = "SimulStartLite"
 
     def __call__(self, dummy):
         '''Perform the 'SimulStartList' setup work. '''
+
         self.incr("calls")
         self.debug("Setup: %s" % self.name)
 
-        #        We ignore the "node" parameter...
+        # We ignore the "node" parameter...
         node_list = []
         for node in self._env["nodes"]:
             if self._cm.ShouldBeStatus[node] == "down":
@@ -787,22 +798,24 @@ class SimulStartLite(CTSTest):
 
     def is_applicable(self):
         '''SimulStartLite is a setup test and never applicable'''
+
         return False
 
 
 class SimulStopLite(CTSTest):
     '''Stop any active nodes ~ simultaneously'''
+
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
         self.name = "SimulStopLite"
 
     def __call__(self, dummy):
         '''Perform the 'SimulStopLite' setup work. '''
-        self.incr("calls")
 
+        self.incr("calls")
         self.debug("Setup: %s" % self.name)
 
-        #     We ignore the "node" parameter...
+        # We ignore the "node" parameter...
         watchpats = []
 
         for node in self._env["nodes"]:
@@ -813,7 +826,7 @@ class SimulStopLite(CTSTest):
         if len(watchpats) == 0:
             return self.success()
 
-        #     Stop all the nodes - at about the same time...
+        # Stop all the nodes - at about the same time...
         watch = self.create_watch(watchpats, self._env["DeadTime"]+10)
 
         watch.set_watch()
@@ -821,6 +834,7 @@ class SimulStopLite(CTSTest):
         for node in self._env["nodes"]:
             if self._cm.ShouldBeStatus[node] == "up":
                 self._cm.StopaCMnoBlock(node)
+
         if watch.look_for_all():
             # Make sure they're completely down with no residule
             for node in self._env["nodes"]:
@@ -839,16 +853,17 @@ class SimulStopLite(CTSTest):
             return self.failure("Active nodes exist: %s" % up_nodes)
 
         self._logger.log("Warn: All nodes stopped but CTS didn't detect: %s" % watch.unmatched)
-
         return self.failure("Missing log message: %s " % watch.unmatched)
 
     def is_applicable(self):
         '''SimulStopLite is a setup test and never applicable'''
+
         return False
 
 
 class StartTest(CTSTest):
     '''Start (activate) the cluster manager on a node'''
+
     def __init__(self, cm, debug=None):
         CTSTest.__init__(self,cm)
         self.name = "Start"
@@ -856,6 +871,7 @@ class StartTest(CTSTest):
 
     def __call__(self, node):
         '''Perform the 'start' test. '''
+
         self.incr("calls")
 
         if self._cm.upcount() == 0:
@@ -875,12 +891,14 @@ class StartTest(CTSTest):
 
 class StopTest(CTSTest):
     '''Stop (deactivate) the cluster manager on a node'''
+
     def __init__(self, cm):
         CTSTest.__init__(self, cm)
         self.name = "Stop"
 
     def __call__(self, node):
         '''Perform the 'stop' test. '''
+
         self.incr("calls")
         if self._cm.ShouldBeStatus[node] != "up":
             return self.skipped()
