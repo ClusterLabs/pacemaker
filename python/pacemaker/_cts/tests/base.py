@@ -210,9 +210,6 @@ class CTSTest:
         return errcount
 
     def is_applicable(self):
-        return self.is_applicable_common()
-
-    def is_applicable_common(self):
         '''Return True if we are applicable in the current test configuration'''
 
         if self.is_loop and not self._env["loop-tests"]:
@@ -660,7 +657,7 @@ class RemoteDriver(CTSTest):
         os.unlink(keyfile)
 
     def is_applicable(self):
-        if not self.is_applicable_common():
+        if not CTSTest.is_applicable(self):
             return False
 
         for node in self._env["nodes"]:

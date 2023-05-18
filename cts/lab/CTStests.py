@@ -196,7 +196,7 @@ class StonithdTest(CTSTest):
                  r"error.*: Operation 'reboot' targeting .* by .* for stonith_admin.*: Timer expired" ]
 
     def is_applicable(self):
-        if not self.is_applicable_common():
+        if not CTSTest.is_applicable(self):
             return False
 
         if "DoFencing" in list(self._env.keys()):
@@ -1351,7 +1351,7 @@ class SplitBrainTest(CTSTest):
                  r"CRIT:.*node.*returning after partition" ]
 
     def is_applicable(self):
-        if not self.is_applicable_common():
+        if not CTSTest.is_applicable(self):
             return False
         return len(self._env["nodes"]) > 2
 
@@ -1627,7 +1627,7 @@ class HAETest(CTSTest):
             self._find_ocfs2_resources(node)
 
     def is_applicable(self):
-        if not self.is_applicable_common():
+        if not CTSTest.is_applicable(self):
             return False
         if self._env["Schema"] == "hae":
             return True
@@ -1920,7 +1920,7 @@ class RollingUpgradeTest(CTSTest):
         return self.success()
 
     def is_applicable(self):
-        if not self.is_applicable_common():
+        if not CTSTest.is_applicable(self):
             return None
 
         if not "rpm-dir" in list(self._env.keys()):
