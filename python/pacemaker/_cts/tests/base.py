@@ -468,7 +468,6 @@ class RemoteDriver(CTSTest):
 
         if watch.unmatched:
             self.fail("Unmatched patterns: %s" % watch.unmatched)
-            return
 
     def fail_rsc(self, node):
         if self.failed:
@@ -538,7 +537,6 @@ class RemoteDriver(CTSTest):
 
         if watch.unmatched:
             self.fail("Unmatched patterns: %s" % watch.unmatched)
-            return
 
     def _add_dummy_rsc(self, node):
         if self.failed:
@@ -585,7 +583,6 @@ class RemoteDriver(CTSTest):
         (rc, _) = self._cm.rsh(node, "crm_attribute -l forever -n testattr -D -N %s" % self._remote_node, verbose=1)
         if rc != 0:
             self.fail("Failed to delete remote-node attribute")
-            return
 
     def cleanup_metal(self, node):
         self._enable_services(node)
