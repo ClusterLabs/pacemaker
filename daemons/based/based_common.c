@@ -141,11 +141,6 @@ cib_cleanup_none(int options, xmlNode ** data, xmlNode ** output)
 
 static const cib_operation_t cib_server_ops[] = {
     {
-        NULL,
-        cib_op_attr_none,
-        cib_prepare_none, cib_cleanup_none, cib_process_default
-    },
-    {
         PCMK__CIB_REQUEST_QUERY,
         cib_op_attr_none,
         cib_prepare_none, cib_cleanup_query, cib_process_query
@@ -252,7 +247,7 @@ cib_get_operation(const char *op, const cib_operation_t **operation)
     if (operation_hash == NULL) {
         operation_hash = pcmk__strkey_table(NULL, NULL);
 
-        for (int lpc = 1; lpc < PCMK__NELEM(cib_server_ops); lpc++) {
+        for (int lpc = 0; lpc < PCMK__NELEM(cib_server_ops); lpc++) {
             const cib_operation_t *oper = &(cib_server_ops[lpc]);
 
             g_hash_table_insert(operation_hash, (gpointer) oper->name,
