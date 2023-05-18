@@ -68,39 +68,40 @@ add_node_to_xml(const pe_node_t *node, void *xml)
 
 /*!
  * \internal
- * \brief Add XML with nodes that need an update of their maintenance state
+ * \brief Count (optionally add to XML) nodes needing maintenance state update
  *
- * \param[in,out] xml       Parent XML tag to add to
+ * \param[in,out] xml       Parent XML tag to add to, if any
  * \param[in]     data_set  Working set for cluster
+ *
+ * \return Count of nodes added
+ * \note Only Pacemaker Remote nodes are considered currently
  */
 static int
 add_maintenance_nodes(xmlNode *xml, const pe_working_set_t *data_set)
 {
-    GList *gIter = NULL;
-    xmlNode *maintenance =
-        xml?create_xml_node(xml, XML_GRAPH_TAG_MAINTENANCE):NULL;
+    xmlNode *maintenance = NULL;
     int count = 0;
 
-    for (gIter = data_set->nodes; gIter != NULL;
-         gIter = gIter->next) {
-        pe_node_t *node = (pe_node_t *) gIter->data;
-        struct pe_node_shared_s *details = node->details;
+    if (xml != NULL) {
+        maintenance = create_xml_node(xml, XML_GRAPH_TAG_MAINTENANCE);
+    }
+    for (const GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
+        const pe_node_t *node = iter->data;
 
-        if (!pe__is_guest_or_remote_node(node)) {
-            continue; /* just remote nodes need to know atm */
-        }
+        if (pe__is_guest_or_remote_node(node) &&
+            (node->details->maintenance != node->details->remote_maintenance)) {
 
-        if (details->maintenance != details->remote_maintenance) {
-            if (maintenance) {
-                crm_xml_add(
-                    add_node_to_xml_by_id(node->details->id, maintenance),
-                    XML_NODE_IS_MAINTENANCE, details->maintenance?"1":"0");
+            if (maintenance != NULL) {
+                crm_xml_add(add_node_to_xml_by_id(node->details->id,
+                                                  maintenance),
+                            XML_NODE_IS_MAINTENANCE,
+                            (node->details->maintenance? "1" : "0"));
             }
             count++;
         }
     }
-    crm_trace("%s %d nodes to adjust maintenance-mode "
-              "to transition", maintenance?"Added":"Counted", count);
+    crm_trace("%s %d nodes in need of maintenance mode update in state",
+              ((maintenance == NULL)? "Counted" : "Added"), count);
     return count;
 }
 
@@ -115,8 +116,7 @@ add_maintenance_update(pe_working_set_t *data_set)
 {
     pe_action_t *action = NULL;
 
-    if (add_maintenance_nodes(NULL, data_set)) {
-        crm_trace("adding maintenance state update pseudo action");
+    if (add_maintenance_nodes(NULL, data_set) != 0) {
         action = get_pseudo_op(CRM_OP_MAINTENANCE_NODES, data_set);
         pe__set_action_flags(action, pe_action_print_always);
     }
