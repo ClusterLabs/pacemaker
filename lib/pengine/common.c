@@ -483,8 +483,10 @@ role2text(enum rsc_role_e role)
 enum rsc_role_e
 text2role(const char *role)
 {
-    CRM_ASSERT(role != NULL);
-    if (pcmk__str_eq(role, PCMK__ROLE_STOPPED, pcmk__str_casei)) {
+    if (pcmk__str_eq(role, PCMK__ROLE_UNKNOWN,
+                     pcmk__str_casei|pcmk__str_null_matches)) {
+        return pcmk_role_unknown;
+    } else if (pcmk__str_eq(role, PCMK__ROLE_STOPPED, pcmk__str_casei)) {
         return pcmk_role_stopped;
     } else if (pcmk__str_eq(role, PCMK__ROLE_STARTED, pcmk__str_casei)) {
         return pcmk_role_started;
@@ -494,11 +496,8 @@ text2role(const char *role)
     } else if (pcmk__strcase_any_of(role, PCMK__ROLE_PROMOTED,
                                     PCMK__ROLE_PROMOTED_LEGACY, NULL)) {
         return pcmk_role_promoted;
-    } else if (pcmk__str_eq(role, PCMK__ROLE_UNKNOWN, pcmk__str_casei)) {
-        return pcmk_role_unknown;
     }
-    crm_err("Unknown role: %s", role);
-    return pcmk_role_unknown;
+    return pcmk_role_unknown; // Invalid role given
 }
 
 void

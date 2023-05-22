@@ -644,21 +644,32 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
             have_flags = add_output_flag(outstr, pending_task, have_flags);
         }
     }
-    if (target_role) {
-        enum rsc_role_e target_role_e = text2role(target_role);
+    if (target_role != NULL) {
+        switch (text2role(target_role)) {
+            case pcmk_role_unknown:
+                pcmk__config_err("Invalid " XML_RSC_ATTR_TARGET_ROLE
+                                 " %s for resource %s", target_role, rsc->id);
+                break;
 
-        /* Only show target role if it limits our abilities (i.e. ignore
-         * Started, as it is the default anyways, and doesn't prevent the
-         * resource from becoming promoted).
-         */
-        if (target_role_e == pcmk_role_stopped) {
-            have_flags = add_output_flag(outstr, "disabled", have_flags);
+            case pcmk_role_stopped:
+                have_flags = add_output_flag(outstr, "disabled", have_flags);
+                break;
 
-        } else if (pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
-                               pcmk_rsc_promotable)
-                   && (target_role_e == pcmk_role_unpromoted)) {
-            have_flags = add_output_flag(outstr, "target-role:", have_flags);
-            g_string_append(outstr, target_role);
+            case pcmk_role_unpromoted:
+                if (pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
+                                pcmk_rsc_promotable)) {
+                    have_flags = add_output_flag(outstr, "target-role:",
+                                                 have_flags);
+                    g_string_append(outstr, target_role);
+                }
+                break;
+
+            default:
+                /* Only show target role if it limits our abilities (i.e. ignore
+                 * Started, as it is the default anyways, and doesn't prevent
+                 * the resource from becoming promoted).
+                 */
+                break;
         }
     }
 

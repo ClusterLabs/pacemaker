@@ -1150,6 +1150,28 @@ pe__eval_op_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
 
 /*!
  * \internal
+ * \brief Check whether a resource role matches a rule role
+ *
+ * \param[in] expr       XML of rule expression
+ * \param[in] rule_data  Only the role member is used
+ *
+ * \return true if role matches, otherwise false
+ */
+static bool
+role_matches(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
+{
+    const char *value = crm_element_value(expr, XML_EXPR_ATTR_VALUE);
+    enum rsc_role_e role = text2role(value);
+
+    if (role == pcmk_role_unknown) {
+        pcmk__config_err("Invalid role %s in rule expression", value);
+        return false;
+    }
+    return role == rule_data->role;
+}
+
+/*!
+ * \internal
  * \brief Evaluate a node attribute expression based on #role
  *
  * \param[in] expr       XML of rule expression
@@ -1160,44 +1182,40 @@ pe__eval_op_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
 gboolean
 pe__eval_role_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
 {
-    gboolean accept = FALSE;
     const char *op = NULL;
-    const char *value = NULL;
 
-    if (rule_data->role == pcmk_role_unknown) {
-        return accept;
+    if (rule_data->role == pcmk_role_unknown) { // Skip role checks for now
+        return FALSE;
     }
 
-    value = crm_element_value(expr, XML_EXPR_ATTR_VALUE);
     op = crm_element_value(expr, XML_EXPR_ATTR_OPERATION);
+
+    // @TODO Why are only Unpromoted/Promoted considered defined?
 
     if (pcmk__str_eq(op, "defined", pcmk__str_casei)) {
         if (rule_data->role > pcmk_role_started) {
-            accept = TRUE;
+            return TRUE;
         }
 
     } else if (pcmk__str_eq(op, "not_defined", pcmk__str_casei)) {
         if ((rule_data->role > pcmk_role_unknown)
             && (rule_data->role < pcmk_role_unpromoted)) {
-            accept = TRUE;
+            return TRUE;
         }
 
     } else if (pcmk__str_eq(op, "eq", pcmk__str_casei)) {
-        if (text2role(value) == rule_data->role) {
-            accept = TRUE;
-        }
+        return role_matches(expr, rule_data)? TRUE : FALSE;
 
-    } else if (pcmk__str_eq(op, "ne", pcmk__str_casei)) {
-        // Test "ne" only with promotable clone roles
-        if ((rule_data->role > pcmk_role_unknown)
-            && (rule_data->role < pcmk_role_unpromoted)) {
-            accept = FALSE;
+    } else if (pcmk__str_eq(op, "ne", pcmk__str_casei)
+               // Test "ne" only with promotable clone roles (@TODO Why?)
+               && (rule_data->role >= pcmk_role_unpromoted)) {
+        return role_matches(expr, rule_data)? FALSE : TRUE;
 
-        } else if (text2role(value) != rule_data->role) {
-            accept = TRUE;
-        }
+    } else {
+        pcmk__config_err("Operation '%s' is not valid with " CRM_ATTR_ROLE
+                         " comparisons", op);
     }
-    return accept;
+    return FALSE;
 }
 
 gboolean

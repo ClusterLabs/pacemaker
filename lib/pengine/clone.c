@@ -511,12 +511,17 @@ configured_role_str(pcmk_resource_t * rsc)
 static enum rsc_role_e
 configured_role(pcmk_resource_t *rsc)
 {
+    enum rsc_role_e role = pcmk_role_unknown;
     const char *target_role = configured_role_str(rsc);
 
-    if (target_role) {
-        return text2role(target_role);
+    if (target_role != NULL) {
+        role = text2role(target_role);
+        if (role == pcmk_role_unknown) {
+            pcmk__config_err("Invalid " XML_RSC_ATTR_TARGET_ROLE
+                             " for resource %s", rsc->id);
+        }
     }
-    return pcmk_role_unknown;
+    return role;
 }
 
 /*!
