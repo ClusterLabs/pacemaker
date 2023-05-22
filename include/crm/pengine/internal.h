@@ -31,16 +31,6 @@ bool pe__clone_flag_is_set(const pcmk_resource_t *clone, uint32_t flags);
 bool pe__group_flag_is_set(const pcmk_resource_t *group, uint32_t flags);
 pcmk_resource_t *pe__last_group_member(const pcmk_resource_t *group);
 
-#  define pe_err(fmt...) do {           \
-        was_processing_error = TRUE;    \
-        pcmk__config_err(fmt);          \
-    } while (0)
-
-#  define pe_warn(fmt...) do {          \
-        was_processing_warning = TRUE;  \
-        pcmk__config_warn(fmt);         \
-    } while (0)
-
 #define pe__set_working_set_flags(scheduler, flags_to_set) do {             \
         (scheduler)->flags = pcmk__set_flags_as(__func__, __LINE__,         \
             LOG_TRACE, "Scheduler", crm_system_name,                        \
@@ -136,7 +126,7 @@ pcmk_resource_t *pe__last_group_member(const pcmk_resource_t *group);
             if (pe_wo_bit == pcmk__wo_blind) {  \
                 crm_warn(fmt);                  \
             } else {                            \
-                pe_warn(fmt);                   \
+                pcmk__config_warn(fmt);         \
             }                                   \
             pcmk__warnings = pcmk__set_flags_as(__func__, __LINE__,         \
                                                LOG_TRACE,                   \

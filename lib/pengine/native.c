@@ -235,9 +235,9 @@ native_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     if (!pcmk_is_set(ra_caps, pcmk_ra_cap_promotable)
         && pcmk_is_set(parent->flags, pcmk_rsc_promotable)) {
 
-        pe_err("Resource %s is of type %s and therefore "
-               "cannot be used as a promotable clone resource",
-               rsc->id, standard);
+        pcmk__config_err("Resource %s is of type %s and therefore "
+                         "cannot be used as a promotable clone resource",
+                         rsc->id, standard);
         return FALSE;
     }
     return TRUE;

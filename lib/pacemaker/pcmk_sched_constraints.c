@@ -98,7 +98,7 @@ pcmk__unpack_constraints(pcmk_scheduler_t *scheduler)
             pcmk__unpack_rsc_ticket(xml_obj, scheduler);
 
         } else {
-            pe_err("Unsupported constraint type: %s", tag);
+            pcmk__config_err("Unsupported constraint type: %s", tag);
         }
     }
 }

@@ -31,7 +31,8 @@ utilization_value(const char *s)
     int value = 0;
 
     if ((s != NULL) && (pcmk__scan_min_int(s, &value, INT_MIN) == EINVAL)) {
-        pe_warn("Using 0 for utilization instead of invalid value '%s'", value);
+        pcmk__config_warn("Using 0 for utilization instead of "
+                          "invalid value '%s'", value);
         value = 0;
     }
     return value;

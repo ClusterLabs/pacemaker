@@ -987,12 +987,12 @@ pe__eval_attr_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
     value_source = crm_element_value(expr, XML_EXPR_ATTR_VALUE_SOURCE);
 
     if (attr == NULL) {
-        pe_err("Expression %s invalid: " XML_EXPR_ATTR_ATTRIBUTE
-               " not specified", pcmk__s(ID(expr), "without ID"));
+        pcmk__config_err("Expression %s invalid: " XML_EXPR_ATTR_ATTRIBUTE
+                         " not specified", pcmk__s(ID(expr), "without ID"));
         return FALSE;
     } else if (op == NULL) {
-        pe_err("Expression %s invalid: " XML_EXPR_ATTR_OPERATION
-               " not specified", pcmk__s(ID(expr), "without ID"));
+        pcmk__config_err("Expression %s invalid: " XML_EXPR_ATTR_OPERATION
+                         " not specified", pcmk__s(ID(expr), "without ID"));
     }
 
     if (rule_data->match_data != NULL) {

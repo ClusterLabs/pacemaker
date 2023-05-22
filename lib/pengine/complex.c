@@ -267,7 +267,7 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
     const char *id = NULL;
 
     if (xml_obj == NULL) {
-        pe_err("No resource object for template unpacking");
+        pcmk__config_err("No resource object for template unpacking");
         return FALSE;
     }
 
@@ -278,26 +278,27 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     id = ID(xml_obj);
     if (id == NULL) {
-        pe_err("'%s' object must have a id", xml_obj->name);
+        pcmk__config_err("'%s' object must have a id", xml_obj->name);
         return FALSE;
     }
 
     if (pcmk__str_eq(template_ref, id, pcmk__str_none)) {
-        pe_err("The resource object '%s' should not reference itself", id);
+        pcmk__config_err("The resource object '%s' should not reference itself",
+                         id);
         return FALSE;
     }
 
     cib_resources = get_xpath_object("//" XML_CIB_TAG_RESOURCES,
                                      scheduler->input, LOG_TRACE);
     if (cib_resources == NULL) {
-        pe_err("No resources configured");
+        pcmk__config_err("No resources configured");
         return FALSE;
     }
 
     template = pcmk__xe_match(cib_resources, XML_CIB_TAG_RSC_TEMPLATE,
                               XML_ATTR_ID, template_ref);
     if (template == NULL) {
-        pe_err("No template named '%s'", template_ref);
+        pcmk__config_err("No template named '%s'", template_ref);
         return FALSE;
     }
 
@@ -375,7 +376,8 @@ add_template_rsc(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     const char *id = NULL;
 
     if (xml_obj == NULL) {
-        pe_err("No resource object for processing resource list of template");
+        pcmk__config_err("No resource object for processing resource list "
+                         "of template");
         return FALSE;
     }
 
@@ -386,12 +388,13 @@ add_template_rsc(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 
     id = ID(xml_obj);
     if (id == NULL) {
-        pe_err("'%s' object must have a id", xml_obj->name);
+        pcmk__config_err("'%s' object must have a id", xml_obj->name);
         return FALSE;
     }
 
     if (pcmk__str_eq(template_ref, id, pcmk__str_none)) {
-        pe_err("The resource object '%s' should not reference itself", id);
+        pcmk__config_err("The resource object '%s' should not reference itself",
+                         id);
         return FALSE;
     }
 
@@ -630,8 +633,8 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     id = crm_element_value(xml_obj, XML_ATTR_ID);
     if (id == NULL) {
-        pe_err("Ignoring <%s> configuration without " XML_ATTR_ID,
-               xml_obj->name);
+        pcmk__config_err("Ignoring <%s> configuration without " XML_ATTR_ID,
+                         xml_obj->name);
         return pcmk_rc_unpack_error;
     }
 
@@ -665,8 +668,8 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     (*rsc)->variant = get_resource_type((const char *) (*rsc)->xml->name);
     if ((*rsc)->variant == pcmk_rsc_variant_unknown) {
-        pe_err("Ignoring resource '%s' of unknown type '%s'",
-               id, (*rsc)->xml->name);
+        pcmk__config_err("Ignoring resource '%s' of unknown type '%s'",
+                         id, (*rsc)->xml->name);
         common_free(*rsc);
         *rsc = NULL;
         return pcmk_rc_unpack_error;
@@ -814,8 +817,9 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     } else { // "stop_start"
         if (!pcmk__str_eq(value, "stop_start",
                           pcmk__str_casei|pcmk__str_null_matches)) {
-            pe_warn("%s is not a valid value for " XML_RSC_ATTR_MULTIPLE
-                    ", using default of \"stop_start\"", value);
+            pcmk__config_warn("%s is not a valid value for "
+                              XML_RSC_ATTR_MULTIPLE
+                              ", using default of \"stop_start\"", value);
         }
         (*rsc)->recovery_type = pcmk_multiply_active_restart;
         pcmk__rsc_trace(*rsc,

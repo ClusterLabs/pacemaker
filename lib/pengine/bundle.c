@@ -348,7 +348,8 @@ valid_network(pe__bundle_variant_data_t *data)
     }
     if(data->control_port) {
         if(data->nreplicas_per_host > 1) {
-            pe_err("Specifying the 'control-port' for %s requires 'replicas-per-host=1'", data->prefix);
+            pcmk__config_err("Specifying the 'control-port' for %s requires "
+                             "'replicas-per-host=1'", data->prefix);
             data->nreplicas_per_host = 1;
             // @TODO to be sure:
             // pe__clear_resource_flags(rsc, pcmk_rsc_unique);
@@ -1077,7 +1078,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
                 bundle_data->ports = g_list_append(bundle_data->ports, port);
 
             } else {
-                pe_err("Invalid port directive %s", ID(xml_child));
+                pcmk__config_err("Invalid port directive %s", ID(xml_child));
                 port_free(port);
             }
         }
@@ -1104,7 +1105,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
                 need_log_mount = FALSE;
             }
         } else {
-            pe_err("Invalid mount directive %s", ID(xml_child));
+            pcmk__config_err("Invalid mount directive %s", ID(xml_child));
         }
     }
 
@@ -1153,8 +1154,9 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         add_node_copy(xml_resource, xml_obj);
 
     } else if(xml_obj) {
-        pe_err("Cannot control %s inside %s without either ip-range-start or control-port",
-               rsc->id, ID(xml_obj));
+        pcmk__config_err("Cannot control %s inside %s without either "
+                         "ip-range-start or control-port",
+                         rsc->id, ID(xml_obj));
         return FALSE;
     }
 
@@ -1268,7 +1270,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         pcmk__bundle_replica_t *replica = gIter->data;
 
         if (create_replica_resources(rsc, bundle_data, replica) != pcmk_rc_ok) {
-            pe_err("Failed unpacking resource %s", rsc->id);
+            pcmk__config_err("Failed unpacking resource %s", rsc->id);
             rsc->fns->free(rsc);
             return FALSE;
         }

@@ -545,9 +545,9 @@ should_add_action_to_graph(const pcmk_action_t *action)
     }
 
     if (action->node == NULL) {
-        pe_err("Skipping action %s (%d) "
-               "because it was not assigned to a node (bug?)",
-               action->uuid, action->id);
+        pcmk__sched_err("Skipping action %s (%d) "
+                        "because it was not assigned to a node (bug?)",
+                        action->uuid, action->id);
         pcmk__log_action("Unassigned", action, false);
         return false;
     }
@@ -564,16 +564,16 @@ should_add_action_to_graph(const pcmk_action_t *action)
                   action->uuid, action->id, pe__node_name(action->node));
 
     } else if (!action->node->details->online) {
-        pe_err("Skipping action %s (%d) "
-               "because it was scheduled for offline node (bug?)",
-               action->uuid, action->id);
+        pcmk__sched_err("Skipping action %s (%d) "
+                        "because it was scheduled for offline node (bug?)",
+                        action->uuid, action->id);
         pcmk__log_action("Offline node", action, false);
         return false;
 
     } else if (action->node->details->unclean) {
-        pe_err("Skipping action %s (%d) "
-               "because it was scheduled for unclean node (bug?)",
-               action->uuid, action->id);
+        pcmk__sched_err("Skipping action %s (%d) "
+                        "because it was scheduled for unclean node (bug?)",
+                        action->uuid, action->id);
         pcmk__log_action("Unclean node", action, false);
         return false;
     }

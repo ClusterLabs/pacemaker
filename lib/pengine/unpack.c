@@ -666,7 +666,8 @@ setup_container(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
             pcmk__rsc_trace(rsc, "Resource %s's container is %s",
                             rsc->id, container_id);
         } else {
-            pe_err("Resource %s: Unknown resource container (%s)", rsc->id, container_id);
+            pcmk__config_err("Resource %s: Unknown resource container (%s)",
+                             rsc->id, container_id);
         }
     }
 }

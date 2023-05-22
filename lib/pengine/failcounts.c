@@ -383,9 +383,9 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
     if ((fc_data.failcount > 0) && (rsc->failure_timeout > 0)
         && block_failure(node, rsc, xml_op)) {
 
-        pe_warn("Ignoring failure timeout %d for %s "
-                "because it conflicts with on-fail=block",
-                rsc->failure_timeout, rsc->id);
+        pcmk__config_warn("Ignoring failure timeout %d for %s "
+                          "because it conflicts with on-fail=block",
+                          rsc->failure_timeout, rsc->id);
         rsc->failure_timeout = 0;
     }
 

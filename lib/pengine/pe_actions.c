@@ -1719,7 +1719,7 @@ pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b,
          *    - we can handle it easily enough, but we need to get
          *    to the bottom of why it's happening.
          */
-        pe_err("Duplicate lrm_rsc_op entries named %s", a_xml_id);
+        pcmk__config_err("Duplicate lrm_rsc_op entries named %s", a_xml_id);
         sort_return(0, "duplicate");
     }
 

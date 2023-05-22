@@ -532,7 +532,7 @@ schedule_fencing(pcmk_node_t *node)
     pcmk_action_t *fencing = pe_fence_op(node, NULL, FALSE, "node is unclean",
                                        FALSE, node->details->data_set);
 
-    pe_warn("Scheduling node %s for fencing", pe__node_name(node));
+    pcmk__config_warn("Scheduling node %s for fencing", pe__node_name(node));
     pcmk__order_vs_fence(fencing, node->details->data_set);
     return fencing;
 }
@@ -598,16 +598,16 @@ schedule_fencing_and_shutdowns(pcmk_scheduler_t *scheduler)
 
         if ((fencing == NULL) && node->details->unclean) {
             integrity_lost = true;
-            pe_warn("Node %s is unclean but cannot be fenced",
-                    pe__node_name(node));
+            pcmk__config_warn("Node %s is unclean but cannot be fenced",
+                              pe__node_name(node));
         }
     }
 
     if (integrity_lost) {
         if (!pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
-            pe_warn("Resource functionality and data integrity cannot be "
-                    "guaranteed (configure, enable, and test fencing to "
-                    "correct this)");
+            pcmk__config_warn("Resource functionality and data integrity "
+                              "cannot be guaranteed (configure, enable, "
+                              "and test fencing to correct this)");
 
         } else if (!pcmk_is_set(scheduler->flags, pcmk_sched_quorate)) {
             crm_notice("Unclean nodes will not be fenced until quorum is "

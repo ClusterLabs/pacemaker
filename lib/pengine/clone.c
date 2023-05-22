@@ -213,9 +213,9 @@ pe__force_anon(const char *standard, pcmk_resource_t *rsc, const char *rid,
     if (pe_rsc_is_clone(rsc)) {
         clone_variant_data_t *clone_data = rsc->variant_opaque;
 
-        pe_warn("Ignoring " XML_RSC_ATTR_UNIQUE " for %s because %s resources "
-                "such as %s can be used only as anonymous clones",
-                rsc->id, standard, rid);
+        pcmk__config_warn("Ignoring " XML_RSC_ATTR_UNIQUE " for %s because "
+                          "%s resources such as %s can be used only as "
+                          "anonymous clones", rsc->id, standard, rid);
 
         clone_data->clone_node_max = 1;
         clone_data->clone_max = QB_MIN(clone_data->clone_max,

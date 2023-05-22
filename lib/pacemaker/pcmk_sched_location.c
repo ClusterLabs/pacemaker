@@ -26,7 +26,7 @@ get_node_score(const char *rule, const char *score, bool raw,
     int score_f = 0;
 
     if (score == NULL) {
-        pe_err("Rule %s: no score specified.  Assuming 0.", rule);
+        pcmk__config_err("Rule %s: no score specified (assuming 0)", rule);
 
     } else if (raw) {
         score_f = char2score(score);
@@ -84,7 +84,7 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
     crm_trace("Processing rule: %s", rule_id);
 
     if ((role != NULL) && (text2role(role) == pcmk_role_unknown)) {
-        pe_err("Bad role specified for %s: %s", rule_id, role);
+        pcmk__config_err("Bad role specified for %s: %s", rule_id, role);
         return NULL;
     }
 
@@ -267,7 +267,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc, const char *role,
 
     if ((location != NULL) && (role != NULL)) {
         if (text2role(role) == pcmk_role_unknown) {
-            pe_err("Invalid constraint %s: Bad role %s", id, role);
+            pcmk__config_err("Invalid constraint %s: Bad role %s", id, role);
             return;
 
         } else {
@@ -541,11 +541,11 @@ pcmk__new_location(const char *id, pcmk_resource_t *rsc,
     pcmk__location_t *new_con = NULL;
 
     if (id == NULL) {
-        pe_err("Invalid constraint: no ID specified");
+        pcmk__config_err("Invalid constraint: no ID specified");
         return NULL;
 
     } else if (rsc == NULL) {
-        pe_err("Invalid constraint %s: no resource specified", id);
+        pcmk__config_err("Invalid constraint %s: no resource specified", id);
         return NULL;
 
     } else if (node == NULL) {
@@ -571,8 +571,8 @@ pcmk__new_location(const char *id, pcmk_resource_t *rsc,
             rsc->exclusive_discover = TRUE;
 
         } else {
-            pe_err("Invalid " XML_LOCATION_ATTR_DISCOVERY " value %s "
-                   "in location constraint", discover_mode);
+            pcmk__config_err("Invalid " XML_LOCATION_ATTR_DISCOVERY " value %s "
+                             "in location constraint", discover_mode);
         }
 
         if (node != NULL) {
