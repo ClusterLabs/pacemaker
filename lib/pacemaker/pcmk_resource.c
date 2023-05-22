@@ -194,7 +194,7 @@ pcmk__resource_digests(pcmk__output_t *out, pcmk_resource_t *rsc,
 {
     const char *task = NULL;
     xmlNode *xml_op = NULL;
-    op_digest_cache_t *digests = NULL;
+    pcmk__op_digest_t *digests = NULL;
     guint interval_ms = 0;
     int rc = pcmk_rc_ok;
 

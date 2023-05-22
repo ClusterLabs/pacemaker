@@ -956,7 +956,7 @@ crmadmin_node_xml(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("digests", "const pcmk_resource_t *", "const pcmk_node_t *",
-                  "const char *", "guint", "const op_digest_cache_t *")
+                  "const char *", "guint", "const pcmk__op_digest_t *")
 static int
 digests_text(pcmk__output_t *out, va_list args)
 {
@@ -964,7 +964,7 @@ digests_text(pcmk__output_t *out, va_list args)
     const pcmk_node_t *node = va_arg(args, const pcmk_node_t *);
     const char *task = va_arg(args, const char *);
     guint interval_ms = va_arg(args, guint);
-    const op_digest_cache_t *digests = va_arg(args, const op_digest_cache_t *);
+    const pcmk__op_digest_t *digests = va_arg(args, const pcmk__op_digest_t *);
 
     char *action_desc = NULL;
     const char *rsc_desc = "unknown resource";
@@ -1026,7 +1026,7 @@ add_digest_xml(xmlNode *parent, const char *type, const char *digest,
 }
 
 PCMK__OUTPUT_ARGS("digests", "const pcmk_resource_t *", "const pcmk_node_t *",
-                  "const char *", "guint", "const op_digest_cache_t *")
+                  "const char *", "guint", "const pcmk__op_digest_t *")
 static int
 digests_xml(pcmk__output_t *out, va_list args)
 {
@@ -1034,7 +1034,7 @@ digests_xml(pcmk__output_t *out, va_list args)
     const pcmk_node_t *node = va_arg(args, const pcmk_node_t *);
     const char *task = va_arg(args, const char *);
     guint interval_ms = va_arg(args, guint);
-    const op_digest_cache_t *digests = va_arg(args, const op_digest_cache_t *);
+    const pcmk__op_digest_t *digests = va_arg(args, const pcmk__op_digest_t *);
 
     char *interval_s = crm_strdup_printf("%ums", interval_ms);
     xmlNode *xml = NULL;

@@ -427,17 +427,7 @@ int pe__target_rc_from_xml(const xmlNode *xml_op);
 gint pe__cmp_node_name(gconstpointer a, gconstpointer b);
 bool is_set_recursive(const pcmk_resource_t *rsc, long long flag, bool any);
 
-typedef struct op_digest_cache_s {
-    enum pcmk__digest_result rc;
-    xmlNode *params_all;
-    xmlNode *params_secure;
-    xmlNode *params_restart;
-    char *digest_all_calc;
-    char *digest_secure_calc;
-    char *digest_restart_calc;
-} op_digest_cache_t;
-
-op_digest_cache_t *pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
+pcmk__op_digest_t *pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
                                          guint *interval_ms,
                                          const pcmk_node_t *node,
                                          const xmlNode *xml_op,
@@ -447,7 +437,7 @@ op_digest_cache_t *pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
 
 void pe__free_digests(gpointer ptr);
 
-op_digest_cache_t *rsc_action_digest_cmp(pcmk_resource_t *rsc,
+pcmk__op_digest_t *rsc_action_digest_cmp(pcmk_resource_t *rsc,
                                          const xmlNode *xml_op,
                                          pcmk_node_t *node,
                                          pcmk_scheduler_t *scheduler);

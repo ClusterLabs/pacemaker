@@ -24,6 +24,17 @@ enum pcmk__digest_result {
     pcmk__digest_restart,   // Parameters that require a restart changed
 };
 
+// Information needed to compare operation digests
+typedef struct {
+    enum pcmk__digest_result rc;    // Result of digest comparison
+    xmlNode *params_all;            // All operation parameters
+    xmlNode *params_secure;         // Parameters marked private
+    xmlNode *params_restart;        // Parameters marked not reloadable
+    char *digest_all_calc;          // Digest of params_all
+    char *digest_secure_calc;       // Digest of params_secure
+    char *digest_restart_calc;      // Digest of params_restart
+} pcmk__op_digest_t;
+
 bool pcmk__verify_digest(xmlNode *input, const char *expected);
 
 #ifdef __cplusplus

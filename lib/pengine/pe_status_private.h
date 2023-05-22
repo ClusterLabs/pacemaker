@@ -114,7 +114,7 @@ G_GNUC_INTERNAL
 gboolean unpack_status(xmlNode *status, pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
-op_digest_cache_t *pe__compare_fencing_digest(pcmk_resource_t *rsc,
+pcmk__op_digest_t *pe__compare_fencing_digest(pcmk_resource_t *rsc,
                                               const char *agent,
                                               pcmk_node_t *node,
                                               pcmk_scheduler_t *scheduler);
