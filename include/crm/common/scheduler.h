@@ -234,15 +234,16 @@ struct pe_working_set_s {
 
 /* Whether the scheduler input currently being processed has warnings or errors
  *
- * @COMPAT When we can break API compatibility, we should make this
- * internal-only. Ideally it would be converted to a pcmk_scheduler_flags
- * value, but everywhere it's needed doesn't currently have access to the
+ * @COMPAT When we can break API compatibility, we should make these
+ * internal-only. Ideally they would be converted to pcmk_scheduler_flags
+ * values, but everywhere it's needed doesn't currently have access to the
  * scheduler data.
  */
+//!@{
 //! \deprecated Do not use
 extern gboolean was_processing_error;
-
 extern gboolean was_processing_warning;
+//!@}
 
 #ifdef __cplusplus
 }
