@@ -1261,9 +1261,9 @@ order_resource_actions_after(pcmk_action_t *first_action,
     if ((first_action == NULL)
         && !pcmk_is_set(flags, pcmk__ar_first_implies_then)) {
 
-        pe_rsc_debug(rsc,
-                     "Ignoring ordering %d for %s: No first action found",
-                     order->id, rsc->id);
+        pcmk__rsc_debug(rsc,
+                        "Ignoring ordering %d for %s: No first action found",
+                        order->id, rsc->id);
         g_list_free(then_actions);
         return;
     }

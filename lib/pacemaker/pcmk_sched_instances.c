@@ -561,9 +561,9 @@ assign_instance(pcmk_resource_t *instance, const pcmk_node_t *prefer,
                  ((prefer == NULL)? "no node" : prefer->details->uname));
 
     if (pcmk_is_set(instance->flags, pcmk_rsc_assigning)) {
-        pe_rsc_debug(instance,
-                     "Assignment loop detected involving %s colocations",
-                     instance->id);
+        pcmk__rsc_debug(instance,
+                        "Assignment loop detected involving %s colocations",
+                        instance->id);
         return NULL;
     }
     ban_unavailable_allowed_nodes(instance, max_per_node);
@@ -644,7 +644,8 @@ assign_instance_early(const pcmk_resource_t *rsc, pcmk_resource_t *instance,
         }
 
         // Assignment updates scores, so restore to original state
-        pe_rsc_debug(instance, "Rolling back node scores for %s", instance->id);
+        pcmk__rsc_debug(instance, "Rolling back node scores for %s",
+                        instance->id);
         pcmk__restore_node_tables(instance, allowed_orig);
 
         if (chosen == NULL) {
@@ -657,10 +658,10 @@ assign_instance_early(const pcmk_resource_t *rsc, pcmk_resource_t *instance,
         }
 
         // We prefer more strongly to assign an instance to the chosen node
-        pe_rsc_debug(instance,
-                     "Not assigning %s to current node %s: %s is better",
-                     instance->id, pe__node_name(current),
-                     pe__node_name(chosen));
+        pcmk__rsc_debug(instance,
+                        "Not assigning %s to current node %s: %s is better",
+                        instance->id, pe__node_name(current),
+                        pe__node_name(chosen));
 
         // Reserve one instance for the chosen node and try again
         if (++reserved >= available) {
@@ -670,11 +671,11 @@ assign_instance_early(const pcmk_resource_t *rsc, pcmk_resource_t *instance,
                            instance->id, pe__node_name(current));
 
         } else {
-            pe_rsc_debug(instance,
-                         "Reserved an instance of %s for %s. Retrying "
-                         "assignment of %s to %s",
-                         rsc->id, pe__node_name(chosen), instance->id,
-                         pe__node_name(current));
+            pcmk__rsc_debug(instance,
+                            "Reserved an instance of %s for %s. Retrying "
+                            "assignment of %s to %s",
+                            rsc->id, pe__node_name(chosen), instance->id,
+                            pe__node_name(current));
         }
 
         // Clear this assignment (frees chosen); leave instance counts in parent
@@ -795,12 +796,12 @@ pcmk__assign_instances(pcmk_resource_t *collective, GList *instances,
         optimal_per_node = 1;
     }
 
-    pe_rsc_debug(collective,
-                 "Assigning up to %d %s instance%s to up to %u node%s "
-                 "(at most %d per host, %d optimal)",
-                 max_total, collective->id, pcmk__plural_s(max_total),
-                 available_nodes, pcmk__plural_s(available_nodes),
-                 max_per_node, optimal_per_node);
+    pcmk__rsc_debug(collective,
+                    "Assigning up to %d %s instance%s to up to %u node%s "
+                    "(at most %d per host, %d optimal)",
+                    max_total, collective->id, pcmk__plural_s(max_total),
+                    available_nodes, pcmk__plural_s(available_nodes),
+                    max_per_node, optimal_per_node);
 
     // Assign as many instances as possible to their current location
     for (iter = instances; (iter != NULL) && (assigned < max_total);
@@ -844,10 +845,10 @@ pcmk__assign_instances(pcmk_resource_t *collective, GList *instances,
         }
 
         if (assigned >= max_total) {
-            pe_rsc_debug(collective,
-                         "Not assigning %s because maximum %d instances "
-                         "already assigned",
-                         instance->id, max_total);
+            pcmk__rsc_debug(collective,
+                            "Not assigning %s because maximum %d instances "
+                            "already assigned",
+                            instance->id, max_total);
             resource_location(instance, NULL, -INFINITY,
                               "collective_limit_reached", collective->cluster);
 
@@ -856,9 +857,9 @@ pcmk__assign_instances(pcmk_resource_t *collective, GList *instances,
         }
     }
 
-    pe_rsc_debug(collective, "Assigned %d of %d possible instance%s of %s",
-                 assigned, max_total, pcmk__plural_s(max_total),
-                 collective->id);
+    pcmk__rsc_debug(collective, "Assigned %d of %d possible instance%s of %s",
+                    assigned, max_total, pcmk__plural_s(max_total),
+                    collective->id);
 }
 
 enum instance_state {
@@ -1192,8 +1193,8 @@ pcmk__find_compatible_instance(const pcmk_resource_t *match_rsc,
     }
 
     if (instance == NULL) {
-        pe_rsc_debug(rsc, "No %s instance found compatible with %s",
-                     rsc->id, match_rsc->id);
+        pcmk__rsc_debug(rsc, "No %s instance found compatible with %s",
+                        rsc->id, match_rsc->id);
     }
     g_list_free(nodes);
     return instance;

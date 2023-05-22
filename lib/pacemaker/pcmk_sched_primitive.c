@@ -400,8 +400,8 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     // Never assign a child without parent being assigned first
     if ((rsc->parent != NULL)
         && !pcmk_is_set(rsc->parent->flags, pcmk_rsc_assigning)) {
-        pe_rsc_debug(rsc, "%s: Assigning parent %s first",
-                     rsc->id, rsc->parent->id);
+        pcmk__rsc_debug(rsc, "%s: Assigning parent %s first",
+                        rsc->id, rsc->parent->id);
         rsc->parent->cmds->assign(rsc->parent, prefer, stop_if_fail);
     }
 
@@ -412,13 +412,13 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
         if (rsc->allocated_to != NULL) {
             node_name = pe__node_name(rsc->allocated_to);
         }
-        pe_rsc_debug(rsc, "%s: pre-assigned to %s", rsc->id, node_name);
+        pcmk__rsc_debug(rsc, "%s: pre-assigned to %s", rsc->id, node_name);
         return rsc->allocated_to;
     }
 
     // Ensure we detect assignment loops
     if (pcmk_is_set(rsc->flags, pcmk_rsc_assigning)) {
-        pe_rsc_debug(rsc, "Breaking assignment loop involving %s", rsc->id);
+        pcmk__rsc_debug(rsc, "Breaking assignment loop involving %s", rsc->id);
         return NULL;
     }
     pe__set_resource_flags(rsc, pcmk_rsc_assigning);
@@ -521,8 +521,8 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     } else if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_stop_all)) {
         // Must stop at some point, but be consistent with stop_if_fail
         if (stop_if_fail) {
-            pe_rsc_debug(rsc, "Forcing %s to stop: stop-all-resources",
-                         rsc->id);
+            pcmk__rsc_debug(rsc, "Forcing %s to stop: stop-all-resources",
+                            rsc->id);
         }
         pcmk__assign_resource(rsc, NULL, true, stop_if_fail);
 
@@ -1631,8 +1631,9 @@ pcmk__primitive_shutdown_lock(pcmk_resource_t *rsc)
 
         if (node->details->shutdown) {
             if (node->details->unclean) {
-                pe_rsc_debug(rsc, "Not locking %s to unclean %s for shutdown",
-                             rsc->id, pe__node_name(node));
+                pcmk__rsc_debug(rsc,
+                                "Not locking %s to unclean %s for shutdown",
+                                rsc->id, pe__node_name(node));
             } else {
                 rsc->lock_node = node;
                 rsc->lock_time = shutdown_time(node);

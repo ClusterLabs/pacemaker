@@ -551,8 +551,8 @@ pcmk__bundle_apply_coloc_score(pcmk_resource_t *dependent,
 
         primary_container = compatible_container(dependent, primary);
         if (primary_container != NULL) { // Success, we found one
-            pe_rsc_debug(primary, "Pairing %s with %s",
-                         dependent->id, primary_container->id);
+            pcmk__rsc_debug(primary, "Pairing %s with %s",
+                            dependent->id, primary_container->id);
             dependent->cmds->apply_coloc_score(dependent, primary_container,
                                                colocation, true);
 
@@ -563,9 +563,9 @@ pcmk__bundle_apply_coloc_score(pcmk_resource_t *dependent,
             pcmk__assign_resource(dependent, NULL, true, true);
 
         } else { // Failure, but we can ignore it
-            pe_rsc_debug(primary,
-                         "%s cannot be colocated with any instance of %s",
-                         dependent->id, primary->id);
+            pcmk__rsc_debug(primary,
+                            "%s cannot be colocated with any instance of %s",
+                            dependent->id, primary->id);
         }
         return;
     }

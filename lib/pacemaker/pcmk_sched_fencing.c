@@ -87,8 +87,8 @@ order_start_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
                      * The most likely explanation is that the DC died and took
                      * its status with it.
                      */
-                    pe_rsc_debug(rsc, "Ordering %s after %s recovery",
-                                 action->uuid, pe__node_name(target));
+                    pcmk__rsc_debug(rsc, "Ordering %s after %s recovery",
+                                    action->uuid, pe__node_name(target));
                     order_actions(stonith_op, action,
                                   pcmk__ar_ordered
                                   |pcmk__ar_unrunnable_first_blocks);

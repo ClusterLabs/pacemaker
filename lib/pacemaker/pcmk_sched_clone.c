@@ -47,7 +47,7 @@ pcmk__clone_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
 
     // Detect assignment loops
     if (pcmk_is_set(rsc->flags, pcmk_rsc_assigning)) {
-        pe_rsc_debug(rsc, "Breaking assignment loop involving %s", rsc->id);
+        pcmk__rsc_debug(rsc, "Breaking assignment loop involving %s", rsc->id);
         return NULL;
     }
     pe__set_resource_flags(rsc, pcmk_rsc_assigning);
@@ -298,8 +298,8 @@ pcmk__clone_apply_coloc_score(pcmk_resource_t *dependent,
                                                           pcmk_role_unknown,
                                                           false);
         if (primary_instance != NULL) {
-            pe_rsc_debug(primary, "Interleaving %s with %s",
-                         dependent->id, primary_instance->id);
+            pcmk__rsc_debug(primary, "Interleaving %s with %s",
+                            dependent->id, primary_instance->id);
             dependent->cmds->apply_coloc_score(dependent, primary_instance,
                                                colocation, true);
 
@@ -309,10 +309,10 @@ pcmk__clone_apply_coloc_score(pcmk_resource_t *dependent,
             pcmk__assign_resource(dependent, NULL, true, true);
 
         } else {
-            pe_rsc_debug(primary,
-                         "%s will not colocate with %s "
-                         "because no instance can interleave with it",
-                         dependent->id, primary->id);
+            pcmk__rsc_debug(primary,
+                            "%s will not colocate with %s "
+                            "because no instance can interleave with it",
+                            dependent->id, primary->id);
         }
 
         return;

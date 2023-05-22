@@ -1629,9 +1629,9 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
                                   task, interval_ms, node, "orphan");
             return true;
         } else {
-            pe_rsc_debug(rsc, "%s-interval %s for %s on %s is orphaned",
-                         pcmk__readable_interval(interval_ms), task, rsc->id,
-                         pe__node_name(node));
+            pcmk__rsc_debug(rsc, "%s-interval %s for %s on %s is orphaned",
+                            pcmk__readable_interval(interval_ms), task, rsc->id,
+                            pe__node_name(node));
             return true;
         }
     }

@@ -426,12 +426,12 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
             || (!pcmk__node_available(node, true, false)
                 && !pe__is_guest_node(node)))) {
 
-        pe_rsc_debug(rsc,
-                     "All nodes for resource %s are unavailable, unclean or "
-                     "shutting down (%s can%s run resources, with score %s)",
-                     rsc->id, pe__node_name(node),
-                     (pcmk__node_available(node, true, false)? "" : "not"),
-                     pcmk_readable_score(node->weight));
+        pcmk__rsc_debug(rsc,
+                        "All nodes for resource %s are unavailable, unclean or "
+                        "shutting down (%s can%s run resources, with score %s)",
+                        rsc->id, pe__node_name(node),
+                        (pcmk__node_available(node, true, false)? "" : "not"),
+                        pcmk_readable_score(node->weight));
 
         if (stop_if_fail) {
             pe__set_next_role(rsc, pcmk_role_stopped, "node availability");
@@ -450,7 +450,7 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
     if (node == NULL) {
         char *rc_stopped = NULL;
 
-        pe_rsc_debug(rsc, "Could not assign %s to a node", rsc->id);
+        pcmk__rsc_debug(rsc, "Could not assign %s to a node", rsc->id);
 
         if (!stop_if_fail) {
             return changed;
@@ -460,8 +460,8 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
         for (GList *iter = rsc->actions; iter != NULL; iter = iter->next) {
             pcmk_action_t *op = (pcmk_action_t *) iter->data;
 
-            pe_rsc_debug(rsc, "Updating %s for %s assignment failure",
-                         op->uuid, rsc->id);
+            pcmk__rsc_debug(rsc, "Updating %s for %s assignment failure",
+                            op->uuid, rsc->id);
 
             if (pcmk__str_eq(op->task, PCMK_ACTION_STOP, pcmk__str_none)) {
                 pe__clear_action_flags(op, pcmk_action_optional);
@@ -494,7 +494,7 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
         return changed;
     }
 
-    pe_rsc_debug(rsc, "Assigning %s to %s", rsc->id, pe__node_name(node));
+    pcmk__rsc_debug(rsc, "Assigning %s to %s", rsc->id, pe__node_name(node));
     rsc->allocated_to = pe__copy_node(node);
 
     add_assigned_resource(node, rsc);

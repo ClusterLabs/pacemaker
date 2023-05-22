@@ -885,12 +885,12 @@ show_promotion_score(pcmk_resource_t *instance)
         out->message(out, "promotion-score", instance, chosen,
                      pcmk_readable_score(instance->sort_index));
     } else {
-        pe_rsc_debug(pe__const_top_resource(instance, false),
-                     "%s promotion score on %s: sort=%s priority=%s",
-                     instance->id,
-                     ((chosen == NULL)? "none" : pe__node_name(chosen)),
-                     pcmk_readable_score(instance->sort_index),
-                     pcmk_readable_score(instance->priority));
+        pcmk__rsc_debug(pe__const_top_resource(instance, false),
+                        "%s promotion score on %s: sort=%s priority=%s",
+                        instance->id,
+                        ((chosen == NULL)? "none" : pe__node_name(chosen)),
+                        pcmk_readable_score(instance->sort_index),
+                        pcmk_readable_score(instance->priority));
     }
 }
 

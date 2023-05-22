@@ -352,8 +352,8 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
             if (pcmk__node_available(node, true, false)
                 && !have_enough_capacity(node, rscs_id,
                                          unassigned_utilization)) {
-                pe_rsc_debug(rsc, "%s does not have enough capacity for %s",
-                             pe__node_name(node), rscs_id);
+                pcmk__rsc_debug(rsc, "%s does not have enough capacity for %s",
+                                pe__node_name(node), rscs_id);
                 resource_location(rsc, node, -INFINITY, "__limit_utilization__",
                                   rsc->cluster);
             }
@@ -366,8 +366,8 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
             if (pcmk__node_available(node, true, false)
                 && !have_enough_capacity(node, rsc->id, rsc->utilization)) {
-                pe_rsc_debug(rsc, "%s does not have enough capacity for %s",
-                             pe__node_name(node), rsc->id);
+                pcmk__rsc_debug(rsc, "%s does not have enough capacity for %s",
+                                pe__node_name(node), rsc->id);
                 resource_location(rsc, node, -INFINITY, "__limit_utilization__",
                                   rsc->cluster);
             }

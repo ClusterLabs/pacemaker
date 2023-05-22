@@ -274,9 +274,10 @@ update_action_optional(pcmk_action_t *action, gboolean optional)
         && !pcmk_is_set(action->rsc->flags, pcmk_rsc_managed)
         && (g_hash_table_lookup(action->meta,
                                 XML_LRM_ATTR_INTERVAL_MS) == NULL)) {
-            pe_rsc_debug(action->rsc, "%s on %s is optional (%s is unmanaged)",
-                         action->uuid, pe__node_name(action->node),
-                         action->rsc->id);
+            pcmk__rsc_debug(action->rsc,
+                            "%s on %s is optional (%s is unmanaged)",
+                            action->uuid, pe__node_name(action->node),
+                            action->rsc->id);
             pe__set_action_flags(action, pcmk_action_optional);
             // We shouldn't clear runnable here because ... something
 
@@ -363,9 +364,10 @@ update_resource_action_runnable(pcmk_action_t *action,
              * such an action cannot be completed if it is on a guest node whose
              * host is unclean and cannot be fenced.
              */
-            pe_rsc_debug(action->rsc, "%s on %s is unrunnable "
-                         "(node's host cannot be fenced)",
-                         action->uuid, pe__node_name(action->node));
+            pcmk__rsc_debug(action->rsc,
+                            "%s on %s is unrunnable "
+                            "(node's host cannot be fenced)",
+                            action->uuid, pe__node_name(action->node));
             pe__clear_action_flags(action, pcmk_action_runnable);
         } else {
             pe_rsc_trace(action->rsc,
@@ -377,8 +379,9 @@ update_resource_action_runnable(pcmk_action_t *action,
     } else {
         switch (effective_quorum_policy(action->rsc, scheduler)) {
             case pcmk_no_quorum_stop:
-                pe_rsc_debug(action->rsc, "%s on %s is unrunnable (no quorum)",
-                             action->uuid, pe__node_name(action->node));
+                pcmk__rsc_debug(action->rsc,
+                                "%s on %s is unrunnable (no quorum)",
+                                action->uuid, pe__node_name(action->node));
                 pe__clear_action_flags(action, pcmk_action_runnable);
                 pe_action_set_reason(action, "no quorum", true);
                 break;
@@ -386,9 +389,9 @@ update_resource_action_runnable(pcmk_action_t *action,
             case pcmk_no_quorum_freeze:
                 if (!action->rsc->fns->active(action->rsc, TRUE)
                     || (action->rsc->next_role > action->rsc->role)) {
-                    pe_rsc_debug(action->rsc,
-                                 "%s on %s is unrunnable (no quorum)",
-                                 action->uuid, pe__node_name(action->node));
+                    pcmk__rsc_debug(action->rsc,
+                                    "%s on %s is unrunnable (no quorum)",
+                                    action->uuid, pe__node_name(action->node));
                     pe__clear_action_flags(action, pcmk_action_runnable);
                     pe_action_set_reason(action, "quorum freeze", true);
                 }
@@ -935,10 +938,10 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
 
     } else if (pcmk__str_eq(value, "restart-container", pcmk__str_casei)) {
         if (rsc->container == NULL) {
-            pe_rsc_debug(rsc,
-                         "Using default " XML_OP_ATTR_ON_FAIL
-                         " for %s of %s because it does not have a container",
-                         action_name, rsc->id);
+            pcmk__rsc_debug(rsc,
+                            "Using default " XML_OP_ATTR_ON_FAIL " for %s "
+                            "of %s because it does not have a container",
+                            action_name, rsc->id);
         } else {
             on_fail = pcmk_on_fail_restart_container;
             desc = "restart container (and possibly migrate)";

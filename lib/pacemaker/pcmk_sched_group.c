@@ -47,8 +47,8 @@ pcmk__group_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
         return rsc->allocated_to; // Assignment already done
     }
     if (pcmk_is_set(rsc->flags, pcmk_rsc_assigning)) {
-        pe_rsc_debug(rsc, "Assignment dependency loop detected involving %s",
-                     rsc->id);
+        pcmk__rsc_debug(rsc, "Assignment dependency loop detected involving %s",
+                        rsc->id);
         return NULL;
     }
 

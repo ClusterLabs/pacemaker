@@ -1961,8 +1961,8 @@ create_anonymous_orphan(pcmk_resource_t *parent, const char *rsc_id,
     pcmk_resource_t *orphan = top->fns->find_rsc(top, rsc_id, NULL,
                                                pcmk_rsc_match_clone_only);
 
-    pe_rsc_debug(parent, "Created orphan %s for %s: %s on %s",
-                 top->id, parent->id, rsc_id, pe__node_name(node));
+    pcmk__rsc_debug(parent, "Created orphan %s for %s: %s on %s",
+                    top->id, parent->id, rsc_id, pe__node_name(node));
     return orphan;
 }
 
@@ -2160,9 +2160,9 @@ unpack_find_resource(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
         && !pcmk__str_eq(rsc_id, rsc->clone_name, pcmk__str_casei)) {
 
         pcmk__str_update(&rsc->clone_name, rsc_id);
-        pe_rsc_debug(rsc, "Internally renamed %s on %s to %s%s",
-                     rsc_id, pe__node_name(node), rsc->id,
-                     (pcmk_is_set(rsc->flags, pcmk_rsc_removed)? " (ORPHAN)" : ""));
+        pcmk__rsc_debug(rsc, "Internally renamed %s on %s to %s%s",
+                        rsc_id, pe__node_name(node), rsc->id,
+                        pcmk_is_set(rsc->flags, pcmk_rsc_removed)? " (ORPHAN)" : "");
     }
     return rsc;
 }
@@ -3898,15 +3898,15 @@ remap_operation(struct action_history *history,
 
     } else {
         remap_because(history, &why, PCMK_EXEC_ERROR, "unexpected result");
-        pe_rsc_debug(history->rsc,
-                     "%s on %s: expected %d (%s), got %d (%s%s%s)",
-                     history->key, pe__node_name(history->node),
-                     history->expected_exit_status,
-                     services_ocf_exitcode_str(history->expected_exit_status),
-                     history->exit_status,
-                     services_ocf_exitcode_str(history->exit_status),
-                     (pcmk__str_empty(history->exit_reason)? "" : ": "),
-                     pcmk__s(history->exit_reason, ""));
+        pcmk__rsc_debug(history->rsc,
+                        "%s on %s: expected %d (%s), got %d (%s%s%s)",
+                        history->key, pe__node_name(history->node),
+                        history->expected_exit_status,
+                        services_ocf_exitcode_str(history->expected_exit_status),
+                        history->exit_status,
+                        services_ocf_exitcode_str(history->exit_status),
+                        (pcmk__str_empty(history->exit_reason)? "" : ": "),
+                        pcmk__s(history->exit_reason, ""));
     }
 
     switch (history->exit_status) {

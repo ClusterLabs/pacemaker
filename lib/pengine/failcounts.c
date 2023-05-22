@@ -395,8 +395,8 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
         time_t now = get_effective_time(rsc->cluster);
 
         if (now > (fc_data.last_failure + rsc->failure_timeout)) {
-            pe_rsc_debug(rsc, "Failcount for %s on %s expired after %ds",
-                         rsc->id, pe__node_name(node), rsc->failure_timeout);
+            pcmk__rsc_debug(rsc, "Failcount for %s on %s expired after %ds",
+                            rsc->id, pe__node_name(node), rsc->failure_timeout);
             fc_data.failcount = 0;
         }
     }

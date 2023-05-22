@@ -210,15 +210,15 @@ apply_stickiness(gpointer data, gpointer user_data)
     if (!pcmk_is_set(rsc->cluster->flags, pcmk_sched_symmetric_cluster)
         && (g_hash_table_lookup(rsc->allowed_nodes,
                                 node->details->id) == NULL)) {
-        pe_rsc_debug(rsc,
-                     "Ignoring %s stickiness because the cluster is "
-                     "asymmetric and %s is not explicitly allowed",
-                     rsc->id, pe__node_name(node));
+        pcmk__rsc_debug(rsc,
+                        "Ignoring %s stickiness because the cluster is "
+                        "asymmetric and %s is not explicitly allowed",
+                        rsc->id, pe__node_name(node));
         return;
     }
 
-    pe_rsc_debug(rsc, "Resource %s has %d stickiness on %s",
-                 rsc->id, rsc->stickiness, pe__node_name(node));
+    pcmk__rsc_debug(rsc, "Resource %s has %d stickiness on %s",
+                    rsc->id, rsc->stickiness, pe__node_name(node));
     resource_location(rsc, node, rsc->stickiness, "stickiness", rsc->cluster);
 }
 

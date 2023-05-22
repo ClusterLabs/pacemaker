@@ -32,7 +32,6 @@ bool pe__group_flag_is_set(const pcmk_resource_t *group, uint32_t flags);
 pcmk_resource_t *pe__last_group_member(const pcmk_resource_t *group);
 
 
-#  define pe_rsc_debug(rsc, fmt, args...) crm_log_tag(LOG_DEBUG, rsc ? rsc->id : "<NULL>", fmt, ##args)
 #  define pe_rsc_trace(rsc, fmt, args...) crm_log_tag(LOG_TRACE, rsc ? rsc->id : "<NULL>", fmt, ##args)
 
 #  define pe_err(fmt...) do {           \

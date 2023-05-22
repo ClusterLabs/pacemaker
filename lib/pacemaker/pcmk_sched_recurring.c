@@ -540,8 +540,8 @@ recurring_op_for_inactive(pcmk_resource_t *rsc, const pcmk_node_t *node,
         order_after_stops(rsc, stop_node, stopped_mon);
 
         if (!stop_node->details->online || stop_node->details->unclean) {
-            pe_rsc_debug(rsc, "%s unrunnable on %s: node unavailable)",
-                         stopped_mon->uuid, pe__node_name(stop_node));
+            pcmk__rsc_debug(rsc, "%s unrunnable on %s: node unavailable)",
+                            stopped_mon->uuid, pe__node_name(stop_node));
             pe__clear_action_flags(stopped_mon, pcmk_action_runnable);
         }
 
