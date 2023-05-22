@@ -416,17 +416,18 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
 
         g_list_foreach(rsc->fillers, update_failcount_for_filler, &fc_data);
         if (fc_data.failcount > 0) {
-            pe_rsc_info(rsc,
-                        "Container %s and the resources within it "
-                        "have failed %s time%s on %s",
-                        rsc->id, pcmk_readable_score(fc_data.failcount),
-                        pcmk__plural_s(fc_data.failcount), pe__node_name(node));
+            pcmk__rsc_info(rsc,
+                           "Container %s and the resources within it "
+                           "have failed %s time%s on %s",
+                           rsc->id, pcmk_readable_score(fc_data.failcount),
+                           pcmk__plural_s(fc_data.failcount),
+                           pe__node_name(node));
         }
 
     } else if (fc_data.failcount > 0) {
-        pe_rsc_info(rsc, "%s has failed %s time%s on %s",
-                    rsc->id, pcmk_readable_score(fc_data.failcount),
-                    pcmk__plural_s(fc_data.failcount), pe__node_name(node));
+        pcmk__rsc_info(rsc, "%s has failed %s time%s on %s",
+                       rsc->id, pcmk_readable_score(fc_data.failcount),
+                       pcmk__plural_s(fc_data.failcount), pe__node_name(node));
     }
 
     if (last_failure != NULL) {

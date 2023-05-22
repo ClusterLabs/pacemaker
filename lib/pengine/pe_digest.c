@@ -410,13 +410,13 @@ rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
                              scheduler);
 
     if (digest_restart && data->digest_restart_calc && strcmp(data->digest_restart_calc, digest_restart) != 0) {
-        pe_rsc_info(rsc, "Parameters to %ums-interval %s action for %s on %s "
-                         "changed: hash was %s vs. now %s (restart:%s) %s",
-                    interval_ms, task, rsc->id, pe__node_name(node),
-                    pcmk__s(digest_restart, "missing"),
-                    data->digest_restart_calc,
-                    op_version,
-                    crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
+        pcmk__rsc_info(rsc,
+                       "Parameters to %ums-interval %s action for %s on %s "
+                       "changed: hash was %s vs. now %s (restart:%s) %s",
+                       interval_ms, task, rsc->id, pe__node_name(node),
+                       pcmk__s(digest_restart, "missing"),
+                       data->digest_restart_calc, op_version,
+                       crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
         data->rc = pcmk__digest_restart;
 
     } else if (digest_all == NULL) {
@@ -434,22 +434,27 @@ rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
          * main digest doesn't match.
          */
         if ((interval_ms == 0) && (data->rc == pcmk__digest_restart)) {
-            pe_rsc_info(rsc, "Parameters containing extra ones to %ums-interval"
-                             " %s action for %s on %s "
-                             "changed: hash was %s vs. now %s (restart:%s) %s",
-                        interval_ms, task, rsc->id, pe__node_name(node),
-                        pcmk__s(digest_all, "missing"), data->digest_all_calc,
-                        op_version,
-                        crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
+            pcmk__rsc_info(rsc,
+                           "Parameters containing extra ones to %ums-interval"
+                           " %s action for %s on %s "
+                           "changed: hash was %s vs. now %s (restart:%s) %s",
+                           interval_ms, task, rsc->id, pe__node_name(node),
+                           pcmk__s(digest_all, "missing"),
+                           data->digest_all_calc, op_version,
+                           crm_element_value(xml_op,
+                                             XML_ATTR_TRANSITION_MAGIC));
 
         } else {
-            pe_rsc_info(rsc, "Parameters to %ums-interval %s action for %s on %s "
-                             "changed: hash was %s vs. now %s (%s:%s) %s",
-                        interval_ms, task, rsc->id, pe__node_name(node),
-                        pcmk__s(digest_all, "missing"), data->digest_all_calc,
-                        (interval_ms > 0)? "reschedule" : "reload",
-                        op_version,
-                        crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
+            pcmk__rsc_info(rsc,
+                           "Parameters to %ums-interval %s action for %s on %s "
+                           "changed: hash was %s vs. now %s (%s:%s) %s",
+                           interval_ms, task, rsc->id, pe__node_name(node),
+                           pcmk__s(digest_all, "missing"),
+                           data->digest_all_calc,
+                           (interval_ms > 0)? "reschedule" : "reload",
+                           op_version,
+                           crm_element_value(xml_op,
+                                             XML_ATTR_TRANSITION_MAGIC));
             data->rc = pcmk__digest_mismatch;
         }
 

@@ -323,9 +323,9 @@ recurring_op_for_active(pcmk_resource_t *rsc, pcmk_action_t *start,
         pe__clear_action_flags(mon, pcmk_action_runnable);
 
     } else if (!pcmk_is_set(mon->flags, pcmk_action_optional)) {
-        pe_rsc_info(rsc, "Start %s-interval %s for %s on %s",
-                    pcmk__readable_interval(op->interval_ms), mon->task,
-                    rsc->id, pe__node_name(node));
+        pcmk__rsc_info(rsc, "Start %s-interval %s for %s on %s",
+                       pcmk__readable_interval(op->interval_ms), mon->task,
+                       rsc->id, pe__node_name(node));
     }
 
     if (rsc->next_role == pcmk_role_promoted) {
@@ -402,11 +402,11 @@ cancel_if_running(pcmk_resource_t *rsc, const pcmk_node_t *node,
         default:
             break;
     }
-    pe_rsc_info(rsc,
-                "Cancelling %s-interval %s action for %s on %s because "
-                "configured for " PCMK__ROLE_STOPPED " role (not %s)",
-                pcmk__readable_interval(interval_ms), name, rsc->id,
-                pe__node_name(node), role2text(rsc->next_role));
+    pcmk__rsc_info(rsc,
+                   "Cancelling %s-interval %s action for %s on %s because "
+                   "configured for " PCMK__ROLE_STOPPED " role (not %s)",
+                   pcmk__readable_interval(interval_ms), name, rsc->id,
+                   pe__node_name(node), role2text(rsc->next_role));
 }
 
 /*!

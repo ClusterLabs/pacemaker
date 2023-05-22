@@ -606,9 +606,9 @@ assign_instance_early(const pcmk_resource_t *rsc, pcmk_resource_t *instance,
     allowed_node = g_hash_table_lookup(instance->allowed_nodes,
                                        current->details->id);
     if (!pcmk__node_available(allowed_node, true, false)) {
-        pe_rsc_info(instance,
-                    "Not assigning %s to current node %s: unavailable",
-                    instance->id, pe__node_name(current));
+        pcmk__rsc_info(instance,
+                       "Not assigning %s to current node %s: unavailable",
+                       instance->id, pe__node_name(current));
         return false;
     }
 
@@ -649,9 +649,9 @@ assign_instance_early(const pcmk_resource_t *rsc, pcmk_resource_t *instance,
 
         if (chosen == NULL) {
             // Assignment failed, so give up
-            pe_rsc_info(instance,
-                        "Not assigning %s to current node %s: unavailable",
-                        instance->id, pe__node_name(current));
+            pcmk__rsc_info(instance,
+                           "Not assigning %s to current node %s: unavailable",
+                           instance->id, pe__node_name(current));
             pe__set_resource_flags(instance, pcmk_rsc_unassigned);
             break;
         }
@@ -664,10 +664,10 @@ assign_instance_early(const pcmk_resource_t *rsc, pcmk_resource_t *instance,
 
         // Reserve one instance for the chosen node and try again
         if (++reserved >= available) {
-            pe_rsc_info(instance,
-                        "Not assigning %s to current node %s: "
-                        "other assignments are more important",
-                        instance->id, pe__node_name(current));
+            pcmk__rsc_info(instance,
+                           "Not assigning %s to current node %s: "
+                           "other assignments are more important",
+                           instance->id, pe__node_name(current));
 
         } else {
             pe_rsc_debug(instance,
@@ -1228,10 +1228,10 @@ unassign_if_mandatory(const pcmk_action_t *first, const pcmk_action_t *then,
      */
     } else if (pcmk_any_flags_set(type, pcmk__ar_unrunnable_first_blocks
                                         |pcmk__ar_first_implies_then)) {
-        pe_rsc_info(then->rsc,
-                    "Inhibiting %s from being active "
-                    "because there is no %s instance to interleave",
-                    then_instance->id, first->rsc->id);
+        pcmk__rsc_info(then->rsc,
+                       "Inhibiting %s from being active "
+                       "because there is no %s instance to interleave",
+                       then_instance->id, first->rsc->id);
         return pcmk__assign_resource(then_instance, NULL, true, true);
     }
     return false;

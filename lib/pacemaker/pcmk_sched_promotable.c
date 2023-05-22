@@ -1029,9 +1029,9 @@ set_instance_role(gpointer data, gpointer user_data)
     }
 
     chosen->count++;
-    pe_rsc_info(clone, "Choosing %s (%s) on %s for promotion",
-                instance->id, role2text(instance->role),
-                pe__node_name(chosen));
+    pcmk__rsc_info(clone, "Choosing %s (%s) on %s for promotion",
+                   instance->id, role2text(instance->role),
+                   pe__node_name(chosen));
     set_next_role_promoted(instance, NULL);
     (*count)++;
 }
@@ -1061,8 +1061,8 @@ pcmk__set_instance_roles(pcmk_resource_t *rsc)
 
     // Choose the first N eligible instances to be promoted
     g_list_foreach(rsc->children, set_instance_role, &promoted);
-    pe_rsc_info(rsc, "%s: Promoted %d instances of a possible %d",
-                rsc->id, promoted, pe__clone_promoted_max(rsc));
+    pcmk__rsc_info(rsc, "%s: Promoted %d instances of a possible %d",
+                   rsc->id, promoted, pe__clone_promoted_max(rsc));
 }
 
 /*!

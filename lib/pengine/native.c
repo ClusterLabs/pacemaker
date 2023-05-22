@@ -121,7 +121,7 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
         pcmk_resource_t *p = rsc->parent;
 
-        pe_rsc_info(rsc, "resource %s isn't managed", rsc->id);
+        pcmk__rsc_info(rsc, "resource %s isn't managed", rsc->id);
         resource_location(rsc, node, INFINITY, "not_managed_default",
                           scheduler);
 

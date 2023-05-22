@@ -320,10 +320,10 @@ apply_this_with(pcmk__colocation_t *colocation, pcmk_resource_t *rsc)
     rsc->cmds->apply_coloc_score(rsc, other, colocation, true);
     if ((archive != NULL)
         && !pcmk__any_node_available(rsc->allowed_nodes)) {
-        pe_rsc_info(rsc,
-                    "%s: Reverting scores from colocation with %s "
-                    "because no nodes allowed",
-                    rsc->id, other->id);
+        pcmk__rsc_info(rsc,
+                       "%s: Reverting scores from colocation with %s "
+                       "because no nodes allowed",
+                       rsc->id, other->id);
         g_hash_table_destroy(rsc->allowed_nodes);
         rsc->allowed_nodes = archive;
         archive = NULL;
@@ -513,8 +513,9 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
         } else {
             reason = "active";
         }
-        pe_rsc_info(rsc, "Unmanaged resource %s assigned to %s: %s", rsc->id,
-                    (assign_to? assign_to->details->uname : "no node"), reason);
+        pcmk__rsc_info(rsc, "Unmanaged resource %s assigned to %s: %s", rsc->id,
+                       (assign_to? assign_to->details->uname : "no node"),
+                       reason);
         pcmk__assign_resource(rsc, assign_to, true, stop_if_fail);
 
     } else if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_stop_all)) {
@@ -528,9 +529,9 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     } else if (!assign_best_node(rsc, prefer, stop_if_fail)) {
         // Assignment failed
         if (!pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
-            pe_rsc_info(rsc, "Resource %s cannot run anywhere", rsc->id);
+            pcmk__rsc_info(rsc, "Resource %s cannot run anywhere", rsc->id);
         } else if ((rsc->running_on != NULL) && stop_if_fail) {
-            pe_rsc_info(rsc, "Stopping orphan resource %s", rsc->id);
+            pcmk__rsc_info(rsc, "Stopping orphan resource %s", rsc->id);
         }
     }
 
@@ -1616,9 +1617,9 @@ pcmk__primitive_shutdown_lock(pcmk_resource_t *rsc)
              * considered locked. This shouldn't be possible, but as a
              * failsafe, we don't want to disturb the resource now.
              */
-            pe_rsc_info(rsc,
-                        "Cancelling shutdown lock because %s is already active",
-                        rsc->id);
+            pcmk__rsc_info(rsc,
+                           "Cancelling shutdown lock "
+                           "because %s is already active", rsc->id);
             pe__clear_resource_history(rsc, rsc->lock_node);
             rsc->lock_node = NULL;
             rsc->lock_time = 0;
@@ -1647,14 +1648,14 @@ pcmk__primitive_shutdown_lock(pcmk_resource_t *rsc)
     if (rsc->cluster->shutdown_lock > 0) {
         time_t lock_expiration = rsc->lock_time + rsc->cluster->shutdown_lock;
 
-        pe_rsc_info(rsc, "Locking %s to %s due to shutdown (expires @%lld)",
-                    rsc->id, pe__node_name(rsc->lock_node),
-                    (long long) lock_expiration);
+        pcmk__rsc_info(rsc, "Locking %s to %s due to shutdown (expires @%lld)",
+                       rsc->id, pe__node_name(rsc->lock_node),
+                       (long long) lock_expiration);
         pe__update_recheck_time(++lock_expiration, rsc->cluster,
                                 "shutdown lock expiration");
     } else {
-        pe_rsc_info(rsc, "Locking %s to %s due to shutdown",
-                    rsc->id, pe__node_name(rsc->lock_node));
+        pcmk__rsc_info(rsc, "Locking %s to %s due to shutdown",
+                       rsc->id, pe__node_name(rsc->lock_node));
     }
 
     // If resource is locked to one node, ban it from all other nodes

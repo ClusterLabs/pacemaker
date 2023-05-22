@@ -217,13 +217,13 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
             || pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
 
             if (pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
-                pe_rsc_info(rsc,
-                            "Demote of failed resource %s is implicit "
-                            "after %s is fenced",
-                            rsc->id, pe__node_name(target));
+                pcmk__rsc_info(rsc,
+                               "Demote of failed resource %s is implicit "
+                               "after %s is fenced",
+                               rsc->id, pe__node_name(target));
             } else {
-                pe_rsc_info(rsc, "%s is implicit after %s is fenced",
-                            action->uuid, pe__node_name(target));
+                pcmk__rsc_info(rsc, "%s is implicit after %s is fenced",
+                               action->uuid, pe__node_name(target));
             }
 
             /* The demote would never complete and is now implied by the

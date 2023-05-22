@@ -819,9 +819,9 @@ add_replica_actions_to_graph(pcmk__bundle_replica_t *replica, void *user_data)
              * unpacking status, promote, and migrate_from history, but
              * that's already happened by this point).
              */
-            pe_rsc_info(bundle,
-                        "Unable to determine address for bundle %s "
-                        "remote connection", bundle->id);
+            pcmk__rsc_info(bundle,
+                           "Unable to determine address for bundle %s "
+                           "remote connection", bundle->id);
         }
     }
     if (replica->ip != NULL) {

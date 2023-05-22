@@ -2593,8 +2593,8 @@ unpack_shutdown_lock(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
         if ((scheduler->shutdown_lock > 0)
             && (get_effective_time(scheduler)
                 > (lock_time + scheduler->shutdown_lock))) {
-            pe_rsc_info(rsc, "Shutdown lock for %s on %s expired",
-                        rsc->id, pe__node_name(node));
+            pcmk__rsc_info(rsc, "Shutdown lock for %s on %s expired",
+                           rsc->id, pe__node_name(node));
             pe__clear_resource_history(rsc, node);
         } else {
             /* @COMPAT I don't like breaking const signatures, but
@@ -2705,9 +2705,11 @@ unpack_lrm_resource(pcmk_node_t *node, const xmlNode *lrm_resource,
             pe__set_next_role(rsc, req_role, XML_RSC_ATTR_TARGET_ROLE);
 
         } else if (req_role > rsc->next_role) {
-            pe_rsc_info(rsc, "%s: Not overwriting calculated next role %s"
-                        " with requested next role %s",
-                        rsc->id, role2text(rsc->next_role), role2text(req_role));
+            pcmk__rsc_info(rsc,
+                           "%s: Not overwriting calculated next role %s"
+                           " with requested next role %s",
+                           rsc->id, role2text(rsc->next_role),
+                           role2text(req_role));
         }
     }
 
@@ -3914,9 +3916,10 @@ remap_operation(struct action_history *history,
                 char *last_change_s = last_change_str(history->xml);
 
                 remap_because(history, &why, PCMK_EXEC_DONE, "probe");
-                pe_rsc_info(history->rsc, "Probe found %s active on %s at %s",
-                            history->rsc->id, pe__node_name(history->node),
-                            last_change_s);
+                pcmk__rsc_info(history->rsc,
+                               "Probe found %s active on %s at %s",
+                               history->rsc->id, pe__node_name(history->node),
+                               last_change_s);
                 free(last_change_s);
             }
             break;
@@ -3944,10 +3947,10 @@ remap_operation(struct action_history *history,
                 char *last_change_s = last_change_str(history->xml);
 
                 remap_because(history, &why, PCMK_EXEC_DONE, "probe");
-                pe_rsc_info(history->rsc,
-                            "Probe found %s active and promoted on %s at %s",
-                            history->rsc->id, pe__node_name(history->node),
-                            last_change_s);
+                pcmk__rsc_info(history->rsc,
+                               "Probe found %s active and promoted on %s at %s",
+                                history->rsc->id, pe__node_name(history->node),
+                                last_change_s);
                 free(last_change_s);
             }
             if (!expired

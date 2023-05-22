@@ -861,8 +861,8 @@ pcmk__group_add_colocated_node_scores(pcmk_resource_t *source_rsc,
 
     // Avoid infinite recursion
     if (pcmk_is_set(source_rsc->flags, pcmk_rsc_updating_nodes)) {
-        pe_rsc_info(source_rsc, "%s: Breaking dependency loop at %s",
-                    log_id, source_rsc->id);
+        pcmk__rsc_info(source_rsc, "%s: Breaking dependency loop at %s",
+                       log_id, source_rsc->id);
         return;
     }
     pe__set_resource_flags(source_rsc, pcmk_rsc_updating_nodes);
