@@ -943,13 +943,13 @@ static int transition_id = -1;
 void
 pcmk__log_transition_summary(const char *filename)
 {
-    if (was_processing_error) {
+    if (was_processing_error || crm_config_error) {
         crm_err("Calculated transition %d (with errors)%s%s",
                 transition_id,
                 (filename == NULL)? "" : ", saving inputs in ",
                 (filename == NULL)? "" : filename);
 
-    } else if (was_processing_warning) {
+    } else if (was_processing_warning || crm_config_warning) {
         crm_warn("Calculated transition %d (with warnings)%s%s",
                  transition_id,
                  (filename == NULL)? "" : ", saving inputs in ",
