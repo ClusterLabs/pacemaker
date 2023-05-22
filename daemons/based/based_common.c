@@ -109,8 +109,7 @@ static int
 cib_cleanup_query(int options, xmlNode ** data, xmlNode ** output)
 {
     CRM_LOG_ASSERT(*data == NULL);
-    if ((options & cib_no_children)
-        || pcmk__str_eq(crm_element_name(*output), "xpath-query", pcmk__str_casei)) {
+    if (*output != the_cib) {
         free_xml(*output);
     }
     return pcmk_ok;
@@ -139,131 +138,134 @@ cib_cleanup_none(int options, xmlNode ** data, xmlNode ** output)
     return pcmk_ok;
 }
 
-static cib_operation_t cib_server_ops[] = {
-    // Booleans are modifies_cib, needs_privileges
+static const cib_operation_t cib_server_ops[] = {
     {
-        NULL, FALSE, FALSE,
-        cib_prepare_none, cib_cleanup_none, cib_process_default
-    },
-    {
-        PCMK__CIB_REQUEST_QUERY, FALSE, FALSE,
+        PCMK__CIB_REQUEST_QUERY,
+        cib_op_attr_none,
         cib_prepare_none, cib_cleanup_query, cib_process_query
     },
     {
-        PCMK__CIB_REQUEST_MODIFY, TRUE, TRUE,
+        PCMK__CIB_REQUEST_MODIFY,
+        cib_op_attr_modifies|cib_op_attr_privileged,
         cib_prepare_data, cib_cleanup_data, cib_process_modify
     },
     {
-        PCMK__CIB_REQUEST_APPLY_PATCH, TRUE, TRUE,
+        PCMK__CIB_REQUEST_APPLY_PATCH,
+        cib_op_attr_modifies|cib_op_attr_privileged,
         cib_prepare_diff, cib_cleanup_data, cib_server_process_diff
     },
     {
-        PCMK__CIB_REQUEST_REPLACE, TRUE, TRUE,
+        PCMK__CIB_REQUEST_REPLACE,
+        cib_op_attr_modifies|cib_op_attr_privileged,
         cib_prepare_data, cib_cleanup_data, cib_process_replace_svr
     },
     {
-        PCMK__CIB_REQUEST_CREATE, TRUE, TRUE,
+        PCMK__CIB_REQUEST_CREATE,
+        cib_op_attr_modifies|cib_op_attr_privileged,
         cib_prepare_data, cib_cleanup_data, cib_process_create
     },
     {
-        PCMK__CIB_REQUEST_DELETE, TRUE, TRUE,
+        PCMK__CIB_REQUEST_DELETE,
+        cib_op_attr_modifies|cib_op_attr_privileged,
         cib_prepare_data, cib_cleanup_data, cib_process_delete
     },
     {
-        PCMK__CIB_REQUEST_SYNC_TO_ALL, FALSE, TRUE,
+        PCMK__CIB_REQUEST_SYNC_TO_ALL,
+        cib_op_attr_privileged,
         cib_prepare_sync, cib_cleanup_none, cib_process_sync
     },
     {
-        PCMK__CIB_REQUEST_BUMP, TRUE, TRUE,
+        PCMK__CIB_REQUEST_BUMP,
+        cib_op_attr_modifies|cib_op_attr_privileged,
         cib_prepare_none, cib_cleanup_output, cib_process_bump
     },
     {
-        PCMK__CIB_REQUEST_ERASE, TRUE, TRUE,
+        PCMK__CIB_REQUEST_ERASE,
+        cib_op_attr_modifies|cib_op_attr_privileged,
         cib_prepare_none, cib_cleanup_output, cib_process_erase
     },
     {
-        PCMK__CIB_REQUEST_NOOP, FALSE, FALSE,
-        cib_prepare_none, cib_cleanup_none, cib_process_default
+        PCMK__CIB_REQUEST_NOOP,
+        cib_op_attr_none,
+        cib_prepare_none, cib_cleanup_none, cib_process_noop
     },
     {
-        PCMK__CIB_REQUEST_ABS_DELETE, TRUE, TRUE,
+        PCMK__CIB_REQUEST_ABS_DELETE,
+        cib_op_attr_modifies|cib_op_attr_privileged,
         cib_prepare_data, cib_cleanup_data, cib_process_delete_absolute
     },
     {
-        PCMK__CIB_REQUEST_UPGRADE, TRUE, TRUE,
+        PCMK__CIB_REQUEST_UPGRADE,
+        cib_op_attr_modifies|cib_op_attr_privileged,
         cib_prepare_none, cib_cleanup_output, cib_process_upgrade_server
     },
     {
-        PCMK__CIB_REQUEST_SECONDARY, FALSE, TRUE,
+        PCMK__CIB_REQUEST_SECONDARY,
+        cib_op_attr_privileged,
         cib_prepare_none, cib_cleanup_none, cib_process_readwrite
     },
     {
-        PCMK__CIB_REQUEST_ALL_SECONDARY, FALSE, TRUE,
+        PCMK__CIB_REQUEST_ALL_SECONDARY,
+        cib_op_attr_privileged,
         cib_prepare_none, cib_cleanup_none, cib_process_readwrite
     },
     {
-        PCMK__CIB_REQUEST_SYNC_TO_ONE, FALSE, TRUE,
+        PCMK__CIB_REQUEST_SYNC_TO_ONE,
+        cib_op_attr_privileged,
         cib_prepare_sync, cib_cleanup_none, cib_process_sync_one
     },
     {
-        PCMK__CIB_REQUEST_PRIMARY, TRUE, TRUE,
+        PCMK__CIB_REQUEST_PRIMARY,
+        cib_op_attr_modifies|cib_op_attr_privileged,
         cib_prepare_data, cib_cleanup_data, cib_process_readwrite
     },
     {
-        PCMK__CIB_REQUEST_IS_PRIMARY, FALSE, TRUE,
+        PCMK__CIB_REQUEST_IS_PRIMARY,
+        cib_op_attr_privileged,
         cib_prepare_none, cib_cleanup_none, cib_process_readwrite
     },
     {
-        PCMK__CIB_REQUEST_SHUTDOWN, FALSE, TRUE,
+        PCMK__CIB_REQUEST_SHUTDOWN,
+        cib_op_attr_privileged,
         cib_prepare_sync, cib_cleanup_none, cib_process_shutdown_req
     },
     {
-        CRM_OP_PING, FALSE, FALSE,
+        CRM_OP_PING,
+        cib_op_attr_none,
         cib_prepare_none, cib_cleanup_output, cib_process_ping
     },
 };
 
 int
-cib_get_operation_id(const char *op, int *operation)
+cib_get_operation(const char *op, const cib_operation_t **operation)
 {
     static GHashTable *operation_hash = NULL;
 
+    CRM_ASSERT((op != NULL) && (operation != NULL));
+
     if (operation_hash == NULL) {
-        int lpc = 0;
-        int max_msg_types = PCMK__NELEM(cib_server_ops);
+        operation_hash = pcmk__strkey_table(NULL, NULL);
 
-        operation_hash = pcmk__strkey_table(NULL, free);
-        for (lpc = 1; lpc < max_msg_types; lpc++) {
-            int *value = malloc(sizeof(int));
+        for (int lpc = 0; lpc < PCMK__NELEM(cib_server_ops); lpc++) {
+            const cib_operation_t *oper = &(cib_server_ops[lpc]);
 
-            if(value) {
-                *value = lpc;
-                g_hash_table_insert(operation_hash, (gpointer) cib_server_ops[lpc].operation, value);
-            }
+            g_hash_table_insert(operation_hash, (gpointer) oper->name,
+                                (gpointer) oper);
         }
     }
 
-    if (op != NULL) {
-        int *value = g_hash_table_lookup(operation_hash, op);
+    *operation = g_hash_table_lookup(operation_hash, op);
 
-        if (value) {
-            *operation = *value;
-            return pcmk_ok;
-        }
+    if (*operation == NULL) {
+        crm_err("Operation %s is not valid", op);
+        return -EINVAL;
     }
-    crm_err("Operation %s is not valid", op);
-    *operation = -1;
-    return -EINVAL;
+    return pcmk_ok;
 }
 
 xmlNode *
-cib_msg_copy(xmlNode * msg, gboolean with_data)
+cib_msg_copy(xmlNode *msg)
 {
-    int lpc = 0;
-    const char *field = NULL;
-    const char *value = NULL;
-    xmlNode *value_struct = NULL;
-
     static const char *field_list[] = {
         F_XML_TAGNAME,
         F_TYPE,
@@ -288,65 +290,18 @@ cib_msg_copy(xmlNode * msg, gboolean with_data)
         F_CIB_NOTIFY_ACTIVATE
     };
 
-    static const char *data_list[] = {
-        F_CIB_CALLDATA,
-        F_CIB_UPDATE,
-        F_CIB_UPDATE_RESULT
-    };
-
     xmlNode *copy = create_xml_node(NULL, "copy");
 
     CRM_ASSERT(copy != NULL);
 
-    for (lpc = 0; lpc < PCMK__NELEM(field_list); lpc++) {
-        field = field_list[lpc];
-        value = crm_element_value(msg, field);
+    for (int lpc = 0; lpc < PCMK__NELEM(field_list); lpc++) {
+        const char *field = field_list[lpc];
+        const char *value = crm_element_value(msg, field);
+
         if (value != NULL) {
             crm_xml_add(copy, field, value);
         }
     }
-    for (lpc = 0; with_data && lpc < PCMK__NELEM(data_list); lpc++) {
-        field = data_list[lpc];
-        value_struct = get_message_xml(msg, field);
-        if (value_struct != NULL) {
-            add_message_xml(copy, field, value_struct);
-        }
-    }
 
     return copy;
-}
-
-cib_op_t *
-cib_op_func(int call_type)
-{
-    return &(cib_server_ops[call_type].fn);
-}
-
-gboolean
-cib_op_modifies(int call_type)
-{
-    return cib_server_ops[call_type].modifies_cib;
-}
-
-int
-cib_op_can_run(int call_type, int call_options, bool privileged)
-{
-    if (!privileged && cib_server_ops[call_type].needs_privileges) {
-        return -EACCES;
-    }
-    return pcmk_ok;
-}
-
-int
-cib_op_prepare(int call_type, xmlNode * request, xmlNode ** input, const char **section)
-{
-    crm_trace("Prepare %d", call_type);
-    return cib_server_ops[call_type].prepare(request, input, section);
-}
-
-int
-cib_op_cleanup(int call_type, int options, xmlNode ** input, xmlNode ** output)
-{
-    crm_trace("Cleanup %d", call_type);
-    return cib_server_ops[call_type].cleanup(options, input, output);
 }

@@ -114,7 +114,10 @@ void
 pcmk__mark_xml_created(xmlNode *xml)
 {
     xmlNode *cIter = NULL;
-    xml_node_private_t *nodepriv = xml->_private;
+    xml_node_private_t *nodepriv = NULL;
+
+    CRM_ASSERT(xml != NULL);
+    nodepriv = xml->_private;
 
     if (nodepriv && pcmk__tracking_xml_changes(xml, FALSE)) {
         if (!pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
@@ -662,12 +665,21 @@ getDocPtr(xmlNode * node)
 xmlNode *
 add_node_copy(xmlNode * parent, xmlNode * src_node)
 {
+    xmlDoc *doc = NULL;
     xmlNode *child = NULL;
-    xmlDoc *doc = getDocPtr(parent);
 
-    CRM_CHECK(src_node != NULL, return NULL);
+    CRM_CHECK((parent != NULL) && (src_node != NULL), return NULL);
+
+    doc = getDocPtr(parent);
+    if (doc == NULL) {
+        return NULL;
+    }
 
     child = xmlDocCopyNode(src_node, doc, 1);
+    if (child == NULL) {
+        return NULL;
+    }
+
     xmlAddChild(parent, child);
     pcmk__mark_xml_created(child);
     return child;
@@ -686,12 +698,27 @@ create_xml_node(xmlNode * parent, const char *name)
 
     if (parent == NULL) {
         doc = xmlNewDoc((pcmkXmlStr) "1.0");
+        if (doc == NULL) {
+            return NULL;
+        }
+
         node = xmlNewDocRawNode(doc, NULL, (pcmkXmlStr) name, NULL);
+        if (node == NULL) {
+            xmlFreeDoc(doc);
+            return NULL;
+        }
         xmlDocSetRootElement(doc, node);
 
     } else {
         doc = getDocPtr(parent);
+        if (doc == NULL) {
+            return NULL;
+        }
+
         node = xmlNewDocRawNode(doc, NULL, (pcmkXmlStr) name, NULL);
+        if (node == NULL) {
+            return NULL;
+        }
         xmlAddChild(parent, node);
     }
     pcmk__mark_xml_created(node);

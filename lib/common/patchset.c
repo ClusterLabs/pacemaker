@@ -1022,6 +1022,10 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
             }
 
             child = xmlDocCopyNode(change->children, match->doc, 1);
+            if (child == NULL) {
+                return ENOMEM;
+            }
+
             if (match_child) {
                 crm_trace("Adding %s at position %d", child->name, position);
                 xmlAddPrevSibling(match_child, child);

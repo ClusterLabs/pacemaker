@@ -138,7 +138,7 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     xmlNode *output = NULL;
     xmlNode *cib_diff = NULL;
     xmlNode *result_cib = NULL;
-    cib_op_t *fn = NULL;
+    cib_op_t fn = NULL;
     int lpc = 0;
     static int max_msg_types = PCMK__NELEM(cib_file_ops);
     cib_file_opaque_t *private = cib->variant_opaque;
@@ -164,7 +164,7 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
 
     for (lpc = 0; lpc < max_msg_types; lpc++) {
         if (pcmk__str_eq(op, cib_file_ops[lpc].op, pcmk__str_casei)) {
-            fn = &(cib_file_ops[lpc].fn);
+            fn = cib_file_ops[lpc].fn;
             query = cib_file_ops[lpc].read_only;
             break;
         }
@@ -215,6 +215,7 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
         cib_set_file_flags(private, cib_file_flag_dirty);
     }
 
+    // Global operation callback (deprecated)
     if (cib->op_callback != NULL) {
         cib->op_callback(NULL, cib->call_id, rc, output);
     }
@@ -550,7 +551,7 @@ cib_file_new(const char *cib_location)
     cib->cmds->signon = cib_file_signon;
     cib->cmds->signoff = cib_file_signoff;
     cib->cmds->free = cib_file_free;
-    cib->cmds->inputfd = cib_file_inputfd;
+    cib->cmds->inputfd = cib_file_inputfd; // Deprecated method
 
     cib->cmds->register_notification = cib_file_register_notification;
     cib->cmds->set_connection_dnotify = cib_file_set_connection_dnotify;

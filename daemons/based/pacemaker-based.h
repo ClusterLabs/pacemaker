@@ -43,14 +43,23 @@ enum cib_client_flags {
     cib_is_daemon      = (UINT64_C(1) << 12),
 };
 
+/*!
+ * \internal
+ * \enum cib_op_attr
+ * \brief Bit flags for CIB operation attributes
+ */
+enum cib_op_attr {
+    cib_op_attr_none       = 0,         //!< No special attributes
+    cib_op_attr_modifies   = (1 << 1),  //!< Modifies CIB
+    cib_op_attr_privileged = (1 << 2),  //!< Requires privileges
+};
+
 typedef struct cib_operation_s {
-    const char *operation;
-    gboolean modifies_cib;
-    gboolean needs_privileges;
+    const char *name;
+    uint32_t flags; //!< Group of <tt>enum cib_op_attr</tt> flags
     int (*prepare) (xmlNode *, xmlNode **, const char **);
     int (*cleanup) (int, xmlNode **, xmlNode **);
-    int (*fn) (const char *, int, const char *, xmlNode *,
-               xmlNode *, xmlNode *, xmlNode **, xmlNode **);
+    cib_op_t fn;
 } cib_operation_t;
 
 extern bool based_is_primary;
@@ -92,9 +101,9 @@ int cib_process_shutdown_req(const char *op, int options, const char *section,
                              xmlNode *req, xmlNode *input,
                              xmlNode *existing_cib, xmlNode **result_cib,
                              xmlNode **answer);
-int cib_process_default(const char *op, int options, const char *section,
-                        xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                        xmlNode **result_cib, xmlNode **answer);
+int cib_process_noop(const char *op, int options, const char *section,
+                     xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                     xmlNode **result_cib, xmlNode **answer);
 int cib_process_ping(const char *op, int options, const char *section,
                      xmlNode *req, xmlNode *input, xmlNode *existing_cib,
                      xmlNode **result_cib, xmlNode **answer);
@@ -124,15 +133,8 @@ int cib_process_upgrade_server(const char *op, int options, const char *section,
 void send_sync_request(const char *host);
 int sync_our_cib(xmlNode *request, gboolean all);
 
-xmlNode *cib_msg_copy(xmlNode *msg, gboolean with_data);
-int cib_get_operation_id(const char *op, int *operation);
-cib_op_t *cib_op_func(int call_type);
-gboolean cib_op_modifies(int call_type);
-int cib_op_prepare(int call_type, xmlNode *request, xmlNode **input,
-                   const char **section);
-int cib_op_cleanup(int call_type, int options, xmlNode **input,
-                   xmlNode **output);
-int cib_op_can_run(int call_type, int call_options, bool privileged);
+xmlNode *cib_msg_copy(xmlNode *msg);
+int cib_get_operation(const char *op, const cib_operation_t **operation);
 void cib_diff_notify(const char *op, int result, const char *call_id,
                      const char *client_id, const char *client_name,
                      const char *origin, xmlNode *update, xmlNode *diff);

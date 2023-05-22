@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -622,13 +622,15 @@ cib_new_variant(void)
         return NULL;
     }
 
+    // Deprecated method
     new_cib->cmds->set_op_callback = cib_client_set_op_callback;
+
     new_cib->cmds->add_notify_callback = cib_client_add_notify_callback;
     new_cib->cmds->del_notify_callback = cib_client_del_notify_callback;
     new_cib->cmds->register_callback = cib_client_register_callback;
     new_cib->cmds->register_callback_full = cib_client_register_callback_full;
 
-    new_cib->cmds->noop = cib_client_noop;
+    new_cib->cmds->noop = cib_client_noop; // Deprecated method
     new_cib->cmds->ping = cib_client_ping;
     new_cib->cmds->query = cib_client_query;
     new_cib->cmds->sync = cib_client_sync;
@@ -656,6 +658,7 @@ cib_new_variant(void)
     new_cib->cmds->remove = cib_client_delete;
     new_cib->cmds->erase = cib_client_erase;
 
+    // Deprecated method
     new_cib->cmds->delete_absolute = cib_client_delete_absolute;
 
     return new_cib;

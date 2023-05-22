@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,11 +14,6 @@
 #include <crm/common/xml.h>
 
 #include <pacemaker-controld.h>
-
-static void
-global_cib_callback(const xmlNode * msg, int callid, int rc, xmlNode * output)
-{
-}
 
 static pcmk__graph_t *
 create_blank_graph(void)
@@ -80,12 +75,6 @@ do_te_control(long long action,
         if (cib_conn->cmds->add_notify_callback(cib_conn, T_CIB_DIFF_NOTIFY,
                                                 te_update_diff) != pcmk_ok) {
             crm_err("Could not set CIB notification callback");
-            init_ok = FALSE;
-        }
-
-        if (cib_conn->cmds->set_op_callback(cib_conn,
-                                            global_cib_callback) != pcmk_ok) {
-            crm_err("Could not set CIB global callback");
             init_ok = FALSE;
         }
     }

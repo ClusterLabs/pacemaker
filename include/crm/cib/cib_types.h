@@ -60,7 +60,25 @@ enum cib_call_options {
     cib_no_children     = (1 << 5),
     cib_xpath_address   = (1 << 6),
     cib_mixed_update    = (1 << 7),
+
+    /* @COMPAT: cib_scope_local is processed only in the legacy function
+     * parse_local_options_v1().
+     *
+     * If (host == NULL):
+     * * In legacy mode, the CIB manager forwards a request to the primary
+     *   instance unless cib_scope_local is set or the local node is primary.
+     * * Outside of legacy mode:
+     *   * If a request modifies the CIB, the CIB manager forwards it to all
+     *     nodes.
+     *   * Otherwise, the CIB manager processes the request locally.
+     *
+     * There is no current use case for this implementing this flag in
+     * non-legacy mode.
+     */
+
+    //! \deprecated This value will be removed in a future release
     cib_scope_local     = (1 << 8),
+
     cib_dryrun          = (1 << 9),
     cib_sync_call       = (1 << 12),
     cib_no_mtime        = (1 << 13),
@@ -86,9 +104,12 @@ typedef struct cib_api_operations_s {
                        int *event_fd);
     int (*signoff) (cib_t *cib);
     int (*free) (cib_t *cib);
+
+    //! \deprecated This method will be removed and should not be used
     int (*set_op_callback) (cib_t *cib, void (*callback) (const xmlNode *msg,
                                                           int callid, int rc,
                                                           xmlNode *output));
+
     int (*add_notify_callback) (cib_t *cib, const char *event,
                                 void (*callback) (const char *event,
                                                   xmlNode *msg));
@@ -97,8 +118,13 @@ typedef struct cib_api_operations_s {
                                                   xmlNode *msg));
     int (*set_connection_dnotify) (cib_t *cib,
                                    void (*dnotify) (gpointer user_data));
+
+    //! \deprecated This method will be removed and should not be used
     int (*inputfd) (cib_t *cib);
+
+    //! \deprecated This method will be removed and should not be used
     int (*noop) (cib_t *cib, int call_options);
+
     int (*ping) (cib_t *cib, xmlNode **output_data, int call_options);
     int (*query) (cib_t *cib, const char *section, xmlNode **output_data,
                   int call_options);
@@ -141,7 +167,9 @@ typedef struct cib_api_operations_s {
     int (*delete_absolute) (cib_t *cib, const char *section, xmlNode *data,
                             int call_options);
 
+    //! \deprecated This method is not implemented and should not be used
     int (*quit) (cib_t *cib, int call_options);
+
     int (*register_notification) (cib_t *cib, const char *callback,
                                   int enabled);
     gboolean (*register_callback) (cib_t *cib, int call_id, int timeout,
@@ -211,8 +239,11 @@ struct cib_s {
     void *delegate_fn;
 
     GList *notify_list;
+
+    //! \deprecated This method will be removed in a future release
     void (*op_callback) (const xmlNode *msg, int call_id, int rc,
                          xmlNode *output);
+
     cib_api_operations_t *cmds;
 };
 

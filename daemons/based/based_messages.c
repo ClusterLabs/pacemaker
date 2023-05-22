@@ -61,25 +61,15 @@ cib_process_shutdown_req(const char *op, int options, const char *section, xmlNo
     return pcmk_ok;
 }
 
+// @COMPAT: Remove when PCMK__CIB_REQUEST_NOOP is removed
 int
-cib_process_default(const char *op, int options, const char *section, xmlNode * req,
-                    xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                    xmlNode ** answer)
+cib_process_noop(const char *op, int options, const char *section, xmlNode *req,
+                 xmlNode *input, xmlNode *existing_cib, xmlNode **result_cib,
+                 xmlNode **answer)
 {
-    int result = pcmk_ok;
-
     crm_trace("Processing \"%s\" event", op);
     *answer = NULL;
-
-    if (op == NULL) {
-        result = -EINVAL;
-        crm_err("No operation specified");
-
-    } else if (strcmp(PCMK__CIB_REQUEST_NOOP, op) != 0) {
-        result = -EPROTONOSUPPORT;
-        crm_err("Action [%s] is not supported by the CIB manager", op);
-    }
-    return result;
+    return pcmk_ok;
 }
 
 int
@@ -365,6 +355,7 @@ cib_process_replace_svr(const char *op, int options, const char *section, xmlNod
     return rc;
 }
 
+// @COMPAT: Remove when PCMK__CIB_REQUEST_ABS_DELETE is removed
 int
 cib_process_delete_absolute(const char *op, int options, const char *section, xmlNode * req,
                             xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
@@ -385,7 +376,7 @@ sync_our_cib(xmlNode * request, gboolean all)
 
     CRM_CHECK(the_cib != NULL, return -EINVAL);
 
-    replace_request = cib_msg_copy(request, FALSE);
+    replace_request = cib_msg_copy(request);
     CRM_CHECK(replace_request != NULL, return -EINVAL);
 
     crm_debug("Syncing CIB to %s", all ? "all peers" : host);
