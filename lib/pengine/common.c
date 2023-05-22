@@ -18,8 +18,6 @@
 #include <crm/common/scheduler_internal.h>
 #include <crm/pengine/internal.h>
 
-gboolean was_processing_warning = FALSE;
-
 static bool
 check_placement_strategy(const char *value)
 {

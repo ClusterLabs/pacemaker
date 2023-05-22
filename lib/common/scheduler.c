@@ -15,3 +15,4 @@
 uint32_t pcmk__warnings = 0;
 
 gboolean was_processing_error = FALSE;
+gboolean was_processing_warning = FALSE;
