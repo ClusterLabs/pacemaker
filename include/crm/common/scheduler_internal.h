@@ -103,6 +103,17 @@ extern uint32_t pcmk__warnings;
         crm_err(fmt);                   \
     } while (0)
 
+/*!
+ * \internal
+ * \brief Log a warning and remember that current scheduler input has warnings
+ *
+ * \param[in] fmt...  printf(3)-style format and arguments
+ */
+#define pcmk__sched_warn(fmt...) do {   \
+        was_processing_warning = TRUE;  \
+        crm_warn(fmt);                  \
+    } while (0)
+
 #ifdef __cplusplus
 }
 #endif

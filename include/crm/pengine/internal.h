@@ -41,8 +41,6 @@ pcmk_resource_t *pe__last_group_member(const pcmk_resource_t *group);
         pcmk__config_warn(fmt);         \
     } while (0)
 
-#  define pe_proc_warn(fmt...) { was_processing_warning = TRUE; crm_warn(fmt); }
-
 #define pe__set_working_set_flags(scheduler, flags_to_set) do {             \
         (scheduler)->flags = pcmk__set_flags_as(__func__, __LINE__,         \
             LOG_TRACE, "Scheduler", crm_system_name,                        \

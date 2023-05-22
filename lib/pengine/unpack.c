@@ -1800,7 +1800,7 @@ determine_online_status(const xmlNode *node_state, pcmk_node_t *this_node,
         crm_info("%s is not a Pacemaker node", pe__node_name(this_node));
 
     } else if (this_node->details->unclean) {
-        pe_proc_warn("%s is unclean", pe__node_name(this_node));
+        pcmk__sched_warn("%s is unclean", pe__node_name(this_node));
 
     } else if (this_node->details->online) {
         crm_info("%s is %s", pe__node_name(this_node),
