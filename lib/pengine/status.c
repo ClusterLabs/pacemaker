@@ -110,7 +110,8 @@ cluster_status(pcmk_scheduler_t * scheduler)
    if (!pcmk_any_flags_set(scheduler->flags,
                            pcmk_sched_location_only|pcmk_sched_quorate)
        && (scheduler->no_quorum_policy != pcmk_no_quorum_ignore)) {
-        crm_warn("Fencing and resource management disabled due to lack of quorum");
+        pcmk__sched_warn("Fencing and resource management disabled "
+                         "due to lack of quorum");
     }
 
     section = get_xpath_object("//" XML_CIB_TAG_NODES, scheduler->input,

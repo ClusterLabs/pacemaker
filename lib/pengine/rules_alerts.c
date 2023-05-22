@@ -53,8 +53,10 @@ get_meta_attrs_from_cib(xmlNode *basenode, pcmk__alert_t *entry,
                 crm_trace("Alert %s uses default timeout of %dmsec",
                           entry->id, PCMK__ALERT_DEFAULT_TIMEOUT_MS);
             } else {
-                crm_warn("Alert %s has invalid timeout value '%s', using default %dmsec",
-                         entry->id, (char*)value, PCMK__ALERT_DEFAULT_TIMEOUT_MS);
+                pcmk__config_warn("Alert %s has invalid timeout value '%s', "
+                                  "using default (%d ms)",
+                                  entry->id, value,
+                                  PCMK__ALERT_DEFAULT_TIMEOUT_MS);
             }
             entry->timeout = PCMK__ALERT_DEFAULT_TIMEOUT_MS;
         } else {
@@ -225,8 +227,14 @@ pe_unpack_alerts(const xmlNode *alerts)
         const char *alert_path = crm_element_value(alert, XML_ALERT_ATTR_PATH);
 
         /* The schema should enforce this, but to be safe ... */
-        if ((alert_id == NULL) || (alert_path == NULL)) {
-            crm_warn("Ignoring invalid alert without id and path");
+        if (alert_id == NULL) {
+            pcmk__config_warn("Ignoring invalid alert without " XML_ATTR_ID);
+            crm_log_xml_info(alert, "missing-id");
+            continue;
+        }
+        if (alert_path == NULL) {
+            pcmk__config_warn("Ignoring alert %s: No " XML_ALERT_ATTR_PATH,
+                              alert_id);
             continue;
         }
 

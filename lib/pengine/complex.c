@@ -644,7 +644,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     *rsc = calloc(1, sizeof(pcmk_resource_t));
     if (*rsc == NULL) {
-        crm_crit("Unable to allocate memory for resource '%s'", id);
+        pcmk__sched_err("Unable to allocate memory for resource '%s'", id);
         return ENOMEM;
     }
     (*rsc)->cluster = scheduler;

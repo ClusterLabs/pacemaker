@@ -33,10 +33,9 @@ void pcmk__set_config_warning_handler(pcmk__config_warning_func warning_handler,
 
 /*!
  * \internal
- * \brief Log a configuration error
+ * \brief Log an error and make crm_verify return failure status
  *
- * \param[in] fmt   printf(3)-style format string
- * \param[in] ...   Arguments for format string
+ * \param[in] fmt...  printf(3)-style format string and arguments
  */
 #  define pcmk__config_err(fmt...) do {                             \
         crm_config_error = TRUE;                                    \
@@ -49,10 +48,9 @@ void pcmk__set_config_warning_handler(pcmk__config_warning_func warning_handler,
 
 /*!
  * \internal
- * \brief Log a configuration warning
+ * \brief Log a warning and make crm_verify return failure status
  *
- * \param[in] fmt   printf(3)-style format string
- * \param[in] ...   Arguments for format string
+ * \param[in] fmt...  printf(3)-style format string and arguments
  */
 #  define pcmk__config_warn(fmt...) do {                            \
         crm_config_warning = TRUE;                                  \

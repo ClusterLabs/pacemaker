@@ -524,7 +524,7 @@ ticket_new(const char *ticket_id, pcmk_scheduler_t *scheduler)
 
         ticket = calloc(1, sizeof(pcmk_ticket_t));
         if (ticket == NULL) {
-            crm_err("Cannot allocate ticket '%s'", ticket_id);
+            pcmk__sched_err("Cannot allocate ticket '%s'", ticket_id);
             return NULL;
         }
 
@@ -626,6 +626,7 @@ add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref)
     if (tag == NULL) {
         tag = calloc(1, sizeof(pcmk_tag_t));
         if (tag == NULL) {
+            pcmk__sched_err("Could not allocate memory for tag %s", tag_name);
             return FALSE;
         }
         tag->id = strdup(tag_name);

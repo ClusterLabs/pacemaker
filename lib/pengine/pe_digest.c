@@ -313,6 +313,7 @@ pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
     GHashTable *params = NULL;
 
     if (data == NULL) {
+        pcmk__sched_err("Could not allocate memory for operation digest");
         return NULL;
     }
 

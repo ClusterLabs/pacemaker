@@ -220,9 +220,9 @@ node_to_be_promoted_on(const pcmk_resource_t *rsc)
          * have a fail-safe.
          */
         if (pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
-            crm_warn("%s can't be promoted because %s is not allowed on %s "
-                     "(scheduler bug?)",
-                     rsc->id, parent->id, pe__node_name(node));
+            pcmk__sched_err("%s can't be promoted because %s is not allowed "
+                            "on %s (scheduler bug?)",
+                            rsc->id, parent->id, pe__node_name(node));
         } // else the instance is unmanaged and already promoted
         return NULL;
 

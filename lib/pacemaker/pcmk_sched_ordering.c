@@ -65,7 +65,8 @@ invert_action(const char *action)
     } else if (pcmk__str_eq(action, PCMK_ACTION_STOPPED, pcmk__str_none)) {
         return PCMK_ACTION_RUNNING;
     }
-    crm_warn("Unknown action '%s' specified in order constraint", action);
+    pcmk__config_warn("Unknown action '%s' specified in order constraint",
+                      action);
     return NULL;
 }
 
@@ -1079,8 +1080,8 @@ ordering_is_invalid(pcmk_action_t *action, pcmk__related_action_t *input)
         && (input->action->rsc != NULL)
         && pcmk__rsc_corresponds_to_guest(action->rsc, input->action->node)) {
 
-        crm_warn("Invalid ordering constraint between %s and %s",
-                 input->action->rsc->id, action->rsc->id);
+        pcmk__config_warn("Invalid ordering constraint between %s and %s",
+                          input->action->rsc->id, action->rsc->id);
         return true;
     }
 
@@ -1202,14 +1203,12 @@ find_actions_by_task(const pcmk_resource_t *rsc, const char *original_key)
         char *task = NULL;
         guint interval_ms = 0;
 
-        if (parse_op_key(original_key, NULL, &task, &interval_ms)) {
-            key = pcmk__op_key(rsc->id, task, interval_ms);
-            list = find_actions(rsc->actions, key, NULL);
-            free(key);
-            free(task);
-        } else {
-            crm_err("Invalid operation key (bug?): %s", original_key);
-        }
+        CRM_CHECK(parse_op_key(original_key, NULL, &task, &interval_ms),
+                  return NULL);
+        key = pcmk__op_key(rsc->id, task, interval_ms);
+        list = find_actions(rsc->actions, key, NULL);
+        free(key);
+        free(task);
     }
     return list;
 }

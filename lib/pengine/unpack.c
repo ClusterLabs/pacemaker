@@ -123,9 +123,9 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
                            "its guest resource %s is unmanaged",
                            pe__node_name(node), reason, rsc->id);
             } else {
-                crm_warn("Guest node %s will be fenced "
-                         "(by recovering its guest resource %s): %s",
-                         pe__node_name(node), rsc->id, reason);
+                pcmk__sched_warn("Guest node %s will be fenced "
+                                 "(by recovering its guest resource %s): %s",
+                                 pe__node_name(node), rsc->id, reason);
 
                 /* We don't mark the node as unclean because that would prevent the
                  * node from running resources. We want to allow it to run resources
@@ -154,10 +154,10 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
                        pe__node_name(node), reason);
         } else if(node->details->remote_requires_reset == FALSE) {
             node->details->remote_requires_reset = TRUE;
-            crm_warn("Remote node %s %s: %s",
-                     pe__node_name(node),
-                     pe_can_fence(scheduler, node)? "will be fenced" : "is unclean",
-                     reason);
+            pcmk__sched_warn("Remote node %s %s: %s",
+                             pe__node_name(node),
+                             pe_can_fence(scheduler, node)? "will be fenced" : "is unclean",
+                             reason);
         }
         node->details->unclean = TRUE;
         // No need to apply `priority-fencing-delay` for remote nodes
@@ -170,10 +170,10 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
                   reason);
 
     } else {
-        crm_warn("Cluster node %s %s: %s",
-                 pe__node_name(node),
-                 pe_can_fence(scheduler, node)? "will be fenced" : "is unclean",
-                 reason);
+        pcmk__sched_warn("Cluster node %s %s: %s",
+                         pe__node_name(node),
+                         pe_can_fence(scheduler, node)? "will be fenced" : "is unclean",
+                         reason);
         node->details->unclean = TRUE;
         pe_fence_op(node, NULL, TRUE, reason, priority_delay, scheduler);
     }
@@ -448,6 +448,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
 
     new_node = calloc(1, sizeof(pcmk_node_t));
     if (new_node == NULL) {
+        pcmk__sched_err("Could not allocate memory for node %s", uname);
         return NULL;
     }
 
@@ -456,6 +457,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
 
     if (new_node->details == NULL) {
         free(new_node);
+        pcmk__sched_err("Could not allocate memory for node %s", uname);
         return NULL;
     }
 
@@ -1064,10 +1066,10 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
     if (resource_discovery_enabled && !crm_is_true(resource_discovery_enabled)) {
         if (pe__is_remote_node(this_node)
             && !pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
-            crm_warn("Ignoring " XML_NODE_ATTR_RSC_DISCOVERY
-                     " attribute on Pacemaker Remote node %s"
-                     " because fencing is disabled",
-                     pe__node_name(this_node));
+            pcmk__config_warn("Ignoring " XML_NODE_ATTR_RSC_DISCOVERY
+                              " attribute on Pacemaker Remote node %s"
+                              " because fencing is disabled",
+                              pe__node_name(this_node));
         } else {
             /* This is either a remote node with fencing enabled, or a guest
              * node. We don't care whether fencing is enabled when fencing guest
@@ -1111,9 +1113,9 @@ unpack_transient_attributes(const xmlNode *state, pcmk_node_t *node,
 
     discovery = pe_node_attribute_raw(node, XML_NODE_ATTR_RSC_DISCOVERY);
     if ((discovery != NULL) && !crm_is_true(discovery)) {
-        crm_warn("Ignoring " XML_NODE_ATTR_RSC_DISCOVERY
-                 " attribute for %s because disabling resource discovery "
-                 "is not allowed for cluster nodes", pe__node_name(node));
+        pcmk__config_warn("Ignoring " XML_NODE_ATTR_RSC_DISCOVERY " attribute "
+                          "for %s because disabling resource discovery is "
+                          "not allowed for cluster nodes", pe__node_name(node));
     }
 }
 
@@ -1138,8 +1140,9 @@ unpack_node_state(const xmlNode *state, pcmk_scheduler_t *scheduler)
 
     id = crm_element_value(state, XML_ATTR_ID);
     if (id == NULL) {
-        crm_warn("Ignoring malformed " XML_CIB_TAG_STATE " entry without "
-                 XML_ATTR_ID);
+        pcmk__config_err("Ignoring invalid " XML_CIB_TAG_STATE " entry without "
+                         XML_ATTR_ID);
+        crm_log_xml_info(state, "missing-id");
         return;
     }
 
@@ -2644,8 +2647,9 @@ unpack_lrm_resource(pcmk_node_t *node, const xmlNode *lrm_resource,
     enum rsc_role_e saved_role = pcmk_role_unknown;
 
     if (rsc_id == NULL) {
-        crm_warn("Ignoring malformed " XML_LRM_TAG_RESOURCE
-                 " entry without id");
+        pcmk__config_err("Ignoring invalid " XML_LRM_TAG_RESOURCE
+                         " entry: No " XML_ATTR_ID);
+        crm_log_xml_info(lrm_resource, "missing-id");
         return NULL;
     }
     crm_trace("Unpacking " XML_LRM_TAG_RESOURCE " for %s on %s",
@@ -3088,27 +3092,27 @@ get_migration_node_names(const xmlNode *entry, const pcmk_node_t *source_node,
     *source_name = crm_element_value(entry, XML_LRM_ATTR_MIGRATE_SOURCE);
     *target_name = crm_element_value(entry, XML_LRM_ATTR_MIGRATE_TARGET);
     if ((*source_name == NULL) || (*target_name == NULL)) {
-        crm_err("Ignoring resource history entry %s without "
-                XML_LRM_ATTR_MIGRATE_SOURCE " and " XML_LRM_ATTR_MIGRATE_TARGET,
-                ID(entry));
+        pcmk__config_err("Ignoring resource history entry %s without "
+                         XML_LRM_ATTR_MIGRATE_SOURCE " and "
+                         XML_LRM_ATTR_MIGRATE_TARGET, ID(entry));
         return pcmk_rc_unpack_error;
     }
 
     if ((source_node != NULL)
         && !pcmk__str_eq(*source_name, source_node->details->uname,
                          pcmk__str_casei|pcmk__str_null_matches)) {
-        crm_err("Ignoring resource history entry %s because "
-                XML_LRM_ATTR_MIGRATE_SOURCE "='%s' does not match %s",
-                ID(entry), *source_name, pe__node_name(source_node));
+        pcmk__config_err("Ignoring resource history entry %s because "
+                         XML_LRM_ATTR_MIGRATE_SOURCE "='%s' does not match %s",
+                         ID(entry), *source_name, pe__node_name(source_node));
         return pcmk_rc_unpack_error;
     }
 
     if ((target_node != NULL)
         && !pcmk__str_eq(*target_name, target_node->details->uname,
                          pcmk__str_casei|pcmk__str_null_matches)) {
-        crm_err("Ignoring resource history entry %s because "
-                XML_LRM_ATTR_MIGRATE_TARGET "='%s' does not match %s",
-                ID(entry), *target_name, pe__node_name(target_node));
+        pcmk__config_err("Ignoring resource history entry %s because "
+                         XML_LRM_ATTR_MIGRATE_TARGET "='%s' does not match %s",
+                         ID(entry), *target_name, pe__node_name(target_node));
         return pcmk_rc_unpack_error;
     }
 
@@ -3659,14 +3663,14 @@ unpack_rsc_op_failure(struct action_history *history,
                   pe__node_name(history->node), last_change_s,
                   history->exit_status, history->id);
     } else {
-        crm_warn("Unexpected result (%s%s%s) was recorded for "
-                  "%s of %s on %s at %s " CRM_XS " exit-status=%d id=%s",
-                 services_ocf_exitcode_str(history->exit_status),
-                 (pcmk__str_empty(history->exit_reason)? "" : ": "),
-                 pcmk__s(history->exit_reason, ""),
-                 (is_probe? "probe" : history->task), history->rsc->id,
-                 pe__node_name(history->node), last_change_s,
-                 history->exit_status, history->id);
+        pcmk__sched_warn("Unexpected result (%s%s%s) was recorded for %s of "
+                         "%s on %s at %s " CRM_XS " exit-status=%d id=%s",
+                         services_ocf_exitcode_str(history->exit_status),
+                         (pcmk__str_empty(history->exit_reason)? "" : ": "),
+                         pcmk__s(history->exit_reason, ""),
+                         (is_probe? "probe" : history->task), history->rsc->id,
+                         pe__node_name(history->node), last_change_s,
+                         history->exit_status, history->id);
 
         if (is_probe && (history->exit_status != PCMK_OCF_OK)
             && (history->exit_status != PCMK_OCF_NOT_RUNNING)
@@ -3895,9 +3899,9 @@ remap_operation(struct action_history *history,
          */
         remap_because(history, &why, PCMK_EXEC_ERROR,
                       "obsolete history format");
-        crm_warn("Expected result not found for %s on %s "
-                 "(corrupt or obsolete CIB?)",
-                 history->key, pe__node_name(history->node));
+        pcmk__config_warn("Expected result not found for %s on %s "
+                          "(corrupt or obsolete CIB?)",
+                          history->key, pe__node_name(history->node));
 
     } else if (history->exit_status == history->expected_exit_status) {
         remap_because(history, &why, PCMK_EXEC_DONE, "expected result");
@@ -4450,11 +4454,13 @@ unpack_action_result(struct action_history *history)
         || (history->execution_status < PCMK_EXEC_PENDING)
         || (history->execution_status > PCMK_EXEC_MAX)
         || (history->execution_status == PCMK_EXEC_CANCELLED)) {
-        crm_err("Ignoring resource history entry %s for %s on %s "
-                "with invalid " XML_LRM_ATTR_OPSTATUS " '%s'",
-                history->id, history->rsc->id, pe__node_name(history->node),
-                pcmk__s(crm_element_value(history->xml, XML_LRM_ATTR_OPSTATUS),
-                        ""));
+        pcmk__config_err("Ignoring resource history entry %s for %s on %s "
+                         "with invalid " XML_LRM_ATTR_OPSTATUS " '%s'",
+                         history->id, history->rsc->id,
+                         pe__node_name(history->node),
+                         pcmk__s(crm_element_value(history->xml,
+                                                   XML_LRM_ATTR_OPSTATUS),
+                                 ""));
         return pcmk_rc_unpack_error;
     }
     if ((crm_element_value_int(history->xml, XML_LRM_ATTR_RC,
@@ -4465,11 +4471,13 @@ unpack_action_result(struct action_history *history)
          * change behavior, it should be done at a major or minor series
          * release.
          */
-        crm_err("Ignoring resource history entry %s for %s on %s "
-                "with invalid " XML_LRM_ATTR_RC " '%s'",
-                history->id, history->rsc->id, pe__node_name(history->node),
-                pcmk__s(crm_element_value(history->xml, XML_LRM_ATTR_RC),
-                        ""));
+        pcmk__config_err("Ignoring resource history entry %s for %s on %s "
+                         "with invalid " XML_LRM_ATTR_RC " '%s'",
+                         history->id, history->rsc->id,
+                         pe__node_name(history->node),
+                         pcmk__s(crm_element_value(history->xml,
+                                                   XML_LRM_ATTR_RC),
+                                 ""));
         return pcmk_rc_unpack_error;
 #else
         history->exit_status = CRM_EX_ERROR;
@@ -4712,16 +4720,17 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
 
     history.id = ID(xml_op);
     if (history.id == NULL) {
-        crm_err("Ignoring resource history entry for %s on %s without ID",
-                rsc->id, pe__node_name(node));
+        pcmk__config_err("Ignoring resource history entry for %s on %s "
+                         "without ID", rsc->id, pe__node_name(node));
         return;
     }
 
     // Task and interval
     history.task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
     if (history.task == NULL) {
-        crm_err("Ignoring resource history entry %s for %s on %s without "
-                XML_LRM_ATTR_TASK, history.id, rsc->id, pe__node_name(node));
+        pcmk__config_err("Ignoring resource history entry %s for %s on %s "
+                         "without " XML_LRM_ATTR_TASK,
+                         history.id, rsc->id, pe__node_name(node));
         return;
     }
     crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS,
@@ -4878,11 +4887,12 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
                               rsc->cluster);
 
         } else if (history.execution_status == PCMK_EXEC_ERROR_FATAL) {
-            crm_err("Preventing %s from restarting anywhere because "
-                    "of fatal failure (%s%s%s) " CRM_XS " %s",
-                    parent->id, services_ocf_exitcode_str(history.exit_status),
-                    (pcmk__str_empty(history.exit_reason)? "" : ": "),
-                    pcmk__s(history.exit_reason, ""), history.id);
+            pcmk__sched_err("Preventing %s from restarting anywhere because "
+                            "of fatal failure (%s%s%s) " CRM_XS " %s",
+                            parent->id,
+                            services_ocf_exitcode_str(history.exit_status),
+                            (pcmk__str_empty(history.exit_reason)? "" : ": "),
+                            pcmk__s(history.exit_reason, ""), history.id);
             resource_location(parent, NULL, -INFINITY, "fatal-error",
                               rsc->cluster);
         }

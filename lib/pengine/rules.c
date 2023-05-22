@@ -695,7 +695,8 @@ pe_eval_expr(xmlNode *rule, const pe_rule_eval_data_t *rule_data,
     }
 
     if (empty) {
-        crm_err("Invalid Rule %s: rules must contain at least one expression", ID(rule));
+        pcmk__config_err("Ignoring rule %s because it contains no expressions",
+                         ID(rule));
     }
 
     crm_trace("Rule %s %s", ID(rule), passed ? "passed" : "failed");

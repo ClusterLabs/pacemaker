@@ -595,9 +595,9 @@ collect_resource_data(const pcmk_resource_t *rsc, bool activity,
             break;
 
         default:
-            crm_err("Resource %s role on %s (%s) is not supported for "
-                    "notifications (bug?)",
-                    rsc->id, pe__node_name(node), role2text(rsc->role));
+            pcmk__sched_err("Resource %s role on %s (%s) is not supported for "
+                            "notifications (bug?)",
+                            rsc->id, pe__node_name(node), role2text(rsc->role));
             free(entry);
             break;
     }
