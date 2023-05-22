@@ -138,19 +138,19 @@ pe_resource_t *pe__last_group_member(const pe_resource_t *group);
                                            #flags_to_clear);                  \
     } while (0)
 
-extern uint32_t pe_wo;
-
 #define pe_warn_once(pe_wo_bit, fmt...) do {    \
-        if (!pcmk_is_set(pe_wo, pe_wo_bit)) {  \
+        if (!pcmk_is_set(pcmk__warnings, pe_wo_bit)) {  \
             if (pe_wo_bit == pcmk__wo_blind) {  \
                 crm_warn(fmt);                  \
             } else {                            \
                 pe_warn(fmt);                   \
             }                                   \
-            pe_wo = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,       \
-                                      "Warn-once", "logging", pe_wo,        \
-                                      (pe_wo_bit), #pe_wo_bit);             \
-        }                                       \
+            pcmk__warnings = pcmk__set_flags_as(__func__, __LINE__,         \
+                                               LOG_TRACE,                   \
+                                               "Warn-once", "logging",      \
+                                               pcmk__warnings,              \
+                                               (pe_wo_bit), #pe_wo_bit);    \
+        }                                                                   \
     } while (0);
 
 

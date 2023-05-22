@@ -55,6 +55,9 @@ enum pcmk__check_parameters {
     pcmk__check_active,
 };
 
+// Group of enum pcmk__sched_warnings flags for warnings we want to log once
+extern uint32_t pcmk__warnings;
+
 #ifdef __cplusplus
 }
 #endif

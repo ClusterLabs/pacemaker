@@ -81,9 +81,6 @@ static void unpack_node_lrm(pe_node_t *node, const xmlNode *xml,
                             pe_working_set_t *data_set);
 
 
-// Bitmask for warnings we only want to print once
-uint32_t pe_wo = 0;
-
 static gboolean
 is_dangling_guest_node(pe_node_t *node)
 {
