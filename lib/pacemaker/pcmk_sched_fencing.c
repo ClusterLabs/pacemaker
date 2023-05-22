@@ -72,7 +72,7 @@ order_start_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
                 break;
 
             case rsc_req_quorum:
-                if (pcmk__str_eq(action->task, RSC_START, pcmk__str_casei)
+                if (pcmk__str_eq(action->task, RSC_START, pcmk__str_none)
                     && pe_hash_table_lookup(rsc->allowed_nodes,
                                             target->details->id)
                     && !rsc_is_known_on(rsc, target)) {

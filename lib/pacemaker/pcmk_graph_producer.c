@@ -139,13 +139,13 @@ add_downed_nodes(xmlNode *xml, const pe_action_t *action)
     CRM_CHECK((xml != NULL) && (action != NULL) && (action->node != NULL),
               return);
 
-    if (pcmk__str_eq(action->task, CRM_OP_SHUTDOWN, pcmk__str_casei)) {
+    if (pcmk__str_eq(action->task, CRM_OP_SHUTDOWN, pcmk__str_none)) {
 
         /* Shutdown makes the action's node down */
         xmlNode *downed = create_xml_node(xml, XML_GRAPH_TAG_DOWNED);
         add_node_to_xml_by_id(action->node->details->id, downed);
 
-    } else if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_none)) {
 
         /* Fencing makes the action's node and any hosted guest nodes down */
         const char *fence = g_hash_table_lookup(action->meta, "stonith_action");
@@ -159,7 +159,7 @@ add_downed_nodes(xmlNode *xml, const pe_action_t *action)
 
     } else if (action->rsc && action->rsc->is_remote_node
                && pcmk__str_eq(action->task, CRMD_ACTION_STOP,
-                               pcmk__str_casei)) {
+                               pcmk__str_none)) {
 
         /* Stopping a remote connection resource makes connected node down,
          * unless it's part of a migration
@@ -171,10 +171,9 @@ add_downed_nodes(xmlNode *xml, const pe_action_t *action)
         for (iter = action->actions_before; iter != NULL; iter = iter->next) {
             input = ((pe_action_wrapper_t *) iter->data)->action;
             if ((input->rsc != NULL)
-                && pcmk__str_eq(action->rsc->id, input->rsc->id,
-                                pcmk__str_casei)
+                && pcmk__str_eq(action->rsc->id, input->rsc->id, pcmk__str_none)
                 && pcmk__str_eq(input->task, CRMD_ACTION_MIGRATED,
-                                pcmk__str_casei)) {
+                                pcmk__str_none)) {
                 migrating = true;
                 break;
             }
@@ -402,7 +401,7 @@ create_graph_action(xmlNode *parent, pe_action_t *action, bool skip_details,
 
     // Create the top-level element based on task
 
-    if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_casei)) {
+    if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_none)) {
         /* All fences need node info; guest node fences are pseudo-events */
         if (pcmk_is_set(action->flags, pe_action_pseudo)) {
             action_xml = create_xml_node(parent, XML_GRAPH_TAG_PSEUDO_EVENT);
@@ -664,7 +663,7 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
         // load orderings are relevant only if actions are for same node
 
         if ((action->rsc != NULL)
-            && pcmk__str_eq(action->task, RSC_MIGRATE, pcmk__str_casei)) {
+            && pcmk__str_eq(action->task, RSC_MIGRATE, pcmk__str_none)) {
 
             pe_node_t *assigned = action->rsc->allocated_to;
 

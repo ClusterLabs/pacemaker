@@ -298,7 +298,7 @@ static bool
 probe_needed_before_action(const pe_action_t *probe, const pe_action_t *then)
 {
     // Probes on a node are performed after unfencing it, not before
-    if (pcmk__str_eq(then->task, CRM_OP_FENCE, pcmk__str_casei)
+    if (pcmk__str_eq(then->task, CRM_OP_FENCE, pcmk__str_none)
         && pe__same_node(probe->node, then->node)) {
         const char *op = g_hash_table_lookup(then->meta, "stonith_action");
 
@@ -538,7 +538,7 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
     // Validate that this is a resource probe followed by some action
     if ((after == NULL) || (probe == NULL) || (probe->rsc == NULL)
         || (probe->rsc->variant != pe_native)
-        || !pcmk__str_eq(probe->task, RSC_STATUS, pcmk__str_casei)) {
+        || !pcmk__str_eq(probe->task, RSC_STATUS, pcmk__str_none)) {
         return;
     }
 
@@ -560,12 +560,11 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
 
             GList *then_actions = NULL;
 
-            if (pcmk__str_eq(after->task, RSC_START, pcmk__str_casei)) {
+            if (pcmk__str_eq(after->task, RSC_START, pcmk__str_none)) {
                 then_actions = pe__resource_actions(after->rsc, NULL, RSC_STOP,
                                                     FALSE);
 
-            } else if (pcmk__str_eq(after->task, RSC_PROMOTE,
-                                    pcmk__str_casei)) {
+            } else if (pcmk__str_eq(after->task, RSC_PROMOTE, pcmk__str_none)) {
                 then_actions = pe__resource_actions(after->rsc, NULL,
                                                     RSC_DEMOTE, FALSE);
             }

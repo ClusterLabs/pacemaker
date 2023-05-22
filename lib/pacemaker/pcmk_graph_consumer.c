@@ -252,7 +252,7 @@ initiate_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
         case pcmk__cluster_graph_action:
             if (pcmk__str_eq(crm_element_value(action->xml, XML_LRM_ATTR_TASK),
-                             CRM_OP_FENCE, pcmk__str_casei)) {
+                             CRM_OP_FENCE, pcmk__str_none)) {
                 crm_trace("Executing fencing action %d (%s)",
                           action->id, id);
                 return graph_fns->fence(graph, action);
@@ -490,15 +490,14 @@ unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
         return NULL;
     }
 
-    if (pcmk__str_eq(element, XML_GRAPH_TAG_RSC_OP, pcmk__str_casei)) {
+    if (pcmk__str_eq(element, XML_GRAPH_TAG_RSC_OP, pcmk__str_none)) {
         action_type = pcmk__rsc_graph_action;
 
     } else if (pcmk__str_eq(element, XML_GRAPH_TAG_PSEUDO_EVENT,
-                            pcmk__str_casei)) {
+                            pcmk__str_none)) {
         action_type = pcmk__pseudo_graph_action;
 
-    } else if (pcmk__str_eq(element, XML_GRAPH_TAG_CRM_EVENT,
-                            pcmk__str_casei)) {
+    } else if (pcmk__str_eq(element, XML_GRAPH_TAG_CRM_EVENT, pcmk__str_none)) {
         action_type = pcmk__cluster_graph_action;
 
     } else {

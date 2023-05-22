@@ -478,7 +478,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
                  xml_rsc_with = crm_next_same_xml(xml_rsc_with)) {
 
                 if (pcmk__str_eq(resource->id, ID(xml_rsc_with),
-                                 pcmk__str_casei)) {
+                                 pcmk__str_none)) {
                     break;
                 }
                 EXPAND_CONSTRAINT_IDREF(set_id, with, ID(xml_rsc_with));
@@ -882,7 +882,7 @@ mark_action_blocked(pe_resource_t *rsc, const char *task,
         pe_action_t *action = iter->data;
 
         if (pcmk_is_set(action->flags, pe_action_runnable)
-            && pcmk__str_eq(action->task, task, pcmk__str_casei)) {
+            && pcmk__str_eq(action->task, task, pcmk__str_none)) {
 
             pe__clear_action_flags(action, pe_action_runnable);
             pe_action_set_reason(action, reason_text, false);
@@ -1289,7 +1289,7 @@ best_node_score_matching_attr(const pe_resource_t *rsc, const char *attr,
         }
     }
 
-    if (!pcmk__str_eq(attr, CRM_ATTR_UNAME, pcmk__str_casei)) {
+    if (!pcmk__str_eq(attr, CRM_ATTR_UNAME, pcmk__str_none)) {
         if (best_node == NULL) {
             crm_info("No allowed node for %s matches node attribute %s=%s",
                      rsc->id, attr, value);

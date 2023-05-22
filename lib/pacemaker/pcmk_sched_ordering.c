@@ -41,28 +41,28 @@ enum ordering_symmetry {
 static const char *
 invert_action(const char *action)
 {
-    if (pcmk__str_eq(action, RSC_START, pcmk__str_casei)) {
+    if (pcmk__str_eq(action, RSC_START, pcmk__str_none)) {
         return RSC_STOP;
 
-    } else if (pcmk__str_eq(action, RSC_STOP, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(action, RSC_STOP, pcmk__str_none)) {
         return RSC_START;
 
-    } else if (pcmk__str_eq(action, RSC_PROMOTE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(action, RSC_PROMOTE, pcmk__str_none)) {
         return RSC_DEMOTE;
 
-    } else if (pcmk__str_eq(action, RSC_DEMOTE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(action, RSC_DEMOTE, pcmk__str_none)) {
         return RSC_PROMOTE;
 
-    } else if (pcmk__str_eq(action, RSC_PROMOTED, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(action, RSC_PROMOTED, pcmk__str_none)) {
         return RSC_DEMOTED;
 
-    } else if (pcmk__str_eq(action, RSC_DEMOTED, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(action, RSC_DEMOTED, pcmk__str_none)) {
         return RSC_PROMOTED;
 
-    } else if (pcmk__str_eq(action, RSC_STARTED, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(action, RSC_STARTED, pcmk__str_none)) {
         return RSC_STOPPED;
 
-    } else if (pcmk__str_eq(action, RSC_STOPPED, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(action, RSC_STOPPED, pcmk__str_none)) {
         return RSC_STARTED;
     }
     crm_warn("Unknown action '%s' specified in order constraint", action);
@@ -93,13 +93,13 @@ get_ordering_type(const xmlNode *xml_obj)
                          "(use 'kind' instead)");
         }
 
-    } else if (pcmk__str_eq(kind, "Mandatory", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(kind, "Mandatory", pcmk__str_none)) {
         kind_e = pe_order_kind_mandatory;
 
-    } else if (pcmk__str_eq(kind, "Optional", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(kind, "Optional", pcmk__str_none)) {
         kind_e = pe_order_kind_optional;
 
-    } else if (pcmk__str_eq(kind, "Serialize", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(kind, "Serialize", pcmk__str_none)) {
         kind_e = pe_order_kind_serialize;
 
     } else {
@@ -735,8 +735,8 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
         action_2 = invert_action(action_2);
     }
 
-    if (pcmk__str_eq(RSC_STOP, action_1, pcmk__str_casei)
-        || pcmk__str_eq(RSC_DEMOTE, action_1, pcmk__str_casei)) {
+    if (pcmk__str_eq(RSC_STOP, action_1, pcmk__str_none)
+        || pcmk__str_eq(RSC_DEMOTE, action_1, pcmk__str_none)) {
         /* Assuming: A -> ( B || C) -> D
          * The one-or-more logic only applies during the start/promote phase.
          * During shutdown neither B nor can shutdown until D is down, so simply
@@ -1084,7 +1084,7 @@ ordering_is_invalid(pe_action_t *action, pe_action_wrapper_t *input)
      * break the order "load_stopped_node2" -> "rscA_migrate_to node1".
      */
     if ((input->type == pe_order_load) && action->rsc
-        && pcmk__str_eq(action->task, RSC_MIGRATE, pcmk__str_casei)
+        && pcmk__str_eq(action->task, RSC_MIGRATE, pcmk__str_none)
         && pcmk__graph_has_loop(action, action, input)) {
         return true;
     }
@@ -1127,7 +1127,7 @@ pcmk__order_stops_before_shutdown(pe_node_t *node, pe_action_t *shutdown_op)
 
         // Only stops on the node shutting down are relevant
         if (!pe__same_node(action->node, node)
-            || !pcmk__str_eq(action->task, RSC_STOP, pcmk__str_casei)) {
+            || !pcmk__str_eq(action->task, RSC_STOP, pcmk__str_none)) {
             continue;
         }
 
@@ -1304,7 +1304,7 @@ rsc_order_first(pe_resource_t *first_rsc, pe__ordering_t *order)
         key = pcmk__op_key(first_rsc->id, op_type, interval_ms);
 
         if ((first_rsc->fns->state(first_rsc, TRUE) == RSC_ROLE_STOPPED)
-            && pcmk__str_eq(op_type, RSC_STOP, pcmk__str_casei)) {
+            && pcmk__str_eq(op_type, RSC_STOP, pcmk__str_none)) {
             free(key);
             pe_rsc_trace(first_rsc,
                          "Ignoring constraint %d: first (%s for %s) not found",
@@ -1312,7 +1312,7 @@ rsc_order_first(pe_resource_t *first_rsc, pe__ordering_t *order)
 
         } else if ((first_rsc->fns->state(first_rsc,
                                           TRUE) == RSC_ROLE_UNPROMOTED)
-                   && pcmk__str_eq(op_type, RSC_DEMOTE, pcmk__str_casei)) {
+                   && pcmk__str_eq(op_type, RSC_DEMOTE, pcmk__str_none)) {
             free(key);
             pe_rsc_trace(first_rsc,
                          "Ignoring constraint %d: first (%s for %s) not found",

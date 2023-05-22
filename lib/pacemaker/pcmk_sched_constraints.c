@@ -84,19 +84,17 @@ pcmk__unpack_constraints(pe_working_set_t *data_set)
         if ((lifetime != NULL) && !evaluate_lifetime(lifetime, data_set)) {
             crm_info("Constraint %s %s is not active", tag, id);
 
-        } else if (pcmk__str_eq(XML_CONS_TAG_RSC_ORDER, tag, pcmk__str_casei)) {
+        } else if (pcmk__str_eq(XML_CONS_TAG_RSC_ORDER, tag, pcmk__str_none)) {
             pcmk__unpack_ordering(xml_obj, data_set);
 
-        } else if (pcmk__str_eq(XML_CONS_TAG_RSC_DEPEND, tag,
-                                pcmk__str_casei)) {
+        } else if (pcmk__str_eq(XML_CONS_TAG_RSC_DEPEND, tag, pcmk__str_none)) {
             pcmk__unpack_colocation(xml_obj, data_set);
 
         } else if (pcmk__str_eq(XML_CONS_TAG_RSC_LOCATION, tag,
-                                pcmk__str_casei)) {
+                                pcmk__str_none)) {
             pcmk__unpack_location(xml_obj, data_set);
 
-        } else if (pcmk__str_eq(XML_CONS_TAG_RSC_TICKET, tag,
-                                pcmk__str_casei)) {
+        } else if (pcmk__str_eq(XML_CONS_TAG_RSC_TICKET, tag, pcmk__str_none)) {
             pcmk__unpack_rsc_ticket(xml_obj, data_set);
 
         } else {
@@ -117,7 +115,7 @@ pcmk__find_constraint_resource(GList *rsc_list, const char *id)
                                                      pe_find_renamed);
 
         if (match != NULL) {
-            if (!pcmk__str_eq(match->id, id, pcmk__str_casei)) {
+            if (!pcmk__str_eq(match->id, id, pcmk__str_none)) {
                 /* We found an instance of a clone instead */
                 match = uber_parent(match);
                 crm_debug("Found %s for %s", match->id, id);

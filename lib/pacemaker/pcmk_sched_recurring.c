@@ -63,8 +63,7 @@ is_op_dup(const pe_resource_t *rsc, const char *name, guint interval_ms)
          op != NULL; op = crm_next_same_xml(op)) {
 
         // Check whether action name and interval match
-        if (!pcmk__str_eq(crm_element_value(op, "name"),
-                          name, pcmk__str_none)
+        if (!pcmk__str_eq(crm_element_value(op, "name"), name, pcmk__str_none)
             || (xe_interval(op) != interval_ms)) {
             continue;
         }

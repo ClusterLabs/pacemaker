@@ -416,7 +416,7 @@ pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
          */
         if (action->rsc->is_remote_node &&
             pcmk__str_eq(action->task, CRM_OP_CLEAR_FAILCOUNT,
-                         pcmk__str_casei)) {
+                         pcmk__str_none)) {
 
             pcmk__new_ordering(action->rsc, NULL, action, action->rsc,
                                pcmk__op_key(action->rsc->id, RSC_START, 0),
@@ -455,14 +455,14 @@ pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
          * remote connection. This ensures that if the connection fails to
          * start, we leave the resource running on the original node.
          */
-        if (pcmk__str_eq(action->task, RSC_START, pcmk__str_casei)) {
+        if (pcmk__str_eq(action->task, RSC_START, pcmk__str_none)) {
             for (GList *item = action->rsc->actions; item != NULL;
                  item = item->next) {
                 pe_action_t *rsc_action = item->data;
 
                 if (!pe__same_node(rsc_action->node, action->node)
                     && pcmk__str_eq(rsc_action->task, RSC_STOP,
-                                    pcmk__str_casei)) {
+                                    pcmk__str_none)) {
                     pcmk__new_ordering(remote, start_key(remote), NULL,
                                        action->rsc, NULL, rsc_action,
                                        pe_order_optional, data_set);
@@ -545,7 +545,7 @@ pcmk__connection_host_for_action(const pe_action_t *action)
     bool partial_migration = false;
     const char *task = action->task;
 
-    if (pcmk__str_eq(task, CRM_OP_FENCE, pcmk__str_casei)
+    if (pcmk__str_eq(task, CRM_OP_FENCE, pcmk__str_none)
         || !pe__is_guest_or_remote_node(action->node)) {
         return NULL;
     }
@@ -594,7 +594,7 @@ pcmk__connection_host_for_action(const pe_action_t *action)
      * on.
      */
 
-    if (pcmk__str_eq(task, "notify", pcmk__str_casei)) {
+    if (pcmk__str_eq(task, "notify", pcmk__str_none)) {
         task = g_hash_table_lookup(action->meta, "notify_operation");
     }
 

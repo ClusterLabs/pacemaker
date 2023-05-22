@@ -459,7 +459,7 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
         && !pcmk_is_set(first->rsc->flags, pe_rsc_managed)
         && pcmk_is_set(first->rsc->flags, pe_rsc_block)
         && !pcmk_is_set(first->flags, pe_action_runnable)
-        && pcmk__str_eq(first->task, RSC_STOP, pcmk__str_casei)) {
+        && pcmk__str_eq(first->task, RSC_STOP, pcmk__str_none)) {
 
         if (pcmk_is_set(then->flags, pe_action_runnable)) {
             pe__clear_action_flags(then, pe_action_runnable);
@@ -537,7 +537,7 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
 
         if ((first->rsc != NULL)
             && (first->rsc->variant == pe_group)
-            && pcmk__str_eq(first->task, RSC_START, pcmk__str_casei)) {
+            && pcmk__str_eq(first->task, RSC_START, pcmk__str_none)) {
 
             first_node = first->rsc->fns->location(first->rsc, NULL, FALSE);
             if (first_node != NULL) {
@@ -548,7 +548,7 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
 
         if ((then->rsc != NULL)
             && (then->rsc->variant == pe_group)
-            && pcmk__str_eq(then->task, RSC_START, pcmk__str_casei)) {
+            && pcmk__str_eq(then->task, RSC_START, pcmk__str_none)) {
 
             then_node = then->rsc->fns->location(then->rsc, NULL, FALSE);
             if (then_node != NULL) {
@@ -1401,10 +1401,10 @@ pcmk__output_actions(pe_working_set_t *data_set)
             continue; // This action was not scheduled
         }
 
-        if (pcmk__str_eq(action->task, CRM_OP_SHUTDOWN, pcmk__str_casei)) {
+        if (pcmk__str_eq(action->task, CRM_OP_SHUTDOWN, pcmk__str_none)) {
             task = strdup("Shutdown");
 
-        } else if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_casei)) {
+        } else if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_none)) {
             const char *op = g_hash_table_lookup(action->meta,
                                                  "stonith_action");
 

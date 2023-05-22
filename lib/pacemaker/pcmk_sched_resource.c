@@ -395,10 +395,10 @@ pcmk__finalize_assignment(pe_resource_t *rsc, pe_node_t *chosen, bool force)
             pe_rsc_debug(rsc, "Updating %s for %s assignment failure",
                          op->uuid, rsc->id);
 
-            if (pcmk__str_eq(op->task, RSC_STOP, pcmk__str_casei)) {
+            if (pcmk__str_eq(op->task, RSC_STOP, pcmk__str_none)) {
                 pe__clear_action_flags(op, pe_action_optional);
 
-            } else if (pcmk__str_eq(op->task, RSC_START, pcmk__str_casei)) {
+            } else if (pcmk__str_eq(op->task, RSC_START, pcmk__str_none)) {
                 pe__clear_action_flags(op, pe_action_runnable);
                 //pe__set_resource_flags(rsc, pe_rsc_block);
 
