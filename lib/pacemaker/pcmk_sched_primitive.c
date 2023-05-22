@@ -773,9 +773,9 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
         const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
         // Resource was (possibly) incorrectly multiply active
-        pe_proc_err("%s resource %s might be active on %u nodes (%s)",
-                    pcmk__s(class, "Untyped"), rsc->id, num_all_active,
-                    recovery2text(rsc->recovery_type));
+        pcmk__sched_err("%s resource %s might be active on %u nodes (%s)",
+                        pcmk__s(class, "Untyped"), rsc->id, num_all_active,
+                        recovery2text(rsc->recovery_type));
         crm_notice("See https://wiki.clusterlabs.org/wiki/FAQ"
                    "#Resource_is_Too_Active for more information");
 
@@ -1293,8 +1293,8 @@ stop_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
 
             order_actions(stop, unfence, pcmk__ar_then_implies_first);
             if (!pcmk__node_unfenced(current)) {
-                pe_proc_err("Stopping %s until %s can be unfenced",
-                            rsc->id, pe__node_name(current));
+                pcmk__sched_err("Stopping %s until %s can be unfenced",
+                                rsc->id, pe__node_name(current));
             }
         }
     }

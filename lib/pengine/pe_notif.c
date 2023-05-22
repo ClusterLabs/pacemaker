@@ -918,8 +918,8 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
             }
         }
         if (rsc->allocated_to == NULL) {
-            pe_proc_err("Next role '%s' but %s is not allocated",
-                        role2text(rsc->next_role), rsc->id);
+            pcmk__sched_err("Next role '%s' but %s is not allocated",
+                            role2text(rsc->next_role), rsc->id);
             return;
         }
         if ((task != pcmk_action_start) || (start == NULL)

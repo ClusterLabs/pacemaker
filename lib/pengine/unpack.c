@@ -3771,14 +3771,15 @@ block_if_unrecoverable(struct action_history *history)
     }
 
     last_change_s = last_change_str(history->xml);
-    pe_proc_err("No further recovery can be attempted for %s "
-                "because %s on %s failed (%s%s%s) at %s "
-                CRM_XS " rc=%d id=%s",
-                history->rsc->id, history->task, pe__node_name(history->node),
-                services_ocf_exitcode_str(history->exit_status),
-                (pcmk__str_empty(history->exit_reason)? "" : ": "),
-                pcmk__s(history->exit_reason, ""),
-                last_change_s, history->exit_status, history->id);
+    pcmk__sched_err("No further recovery can be attempted for %s "
+                    "because %s on %s failed (%s%s%s) at %s "
+                    CRM_XS " rc=%d id=%s",
+                    history->rsc->id, history->task,
+                    pe__node_name(history->node),
+                    services_ocf_exitcode_str(history->exit_status),
+                    (pcmk__str_empty(history->exit_reason)? "" : ": "),
+                    pcmk__s(history->exit_reason, ""),
+                    last_change_s, history->exit_status, history->id);
 
     free(last_change_s);
 

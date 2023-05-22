@@ -41,7 +41,6 @@ pcmk_resource_t *pe__last_group_member(const pcmk_resource_t *group);
         pcmk__config_warn(fmt);         \
     } while (0)
 
-#  define pe_proc_err(fmt...) { was_processing_error = TRUE; crm_err(fmt); }
 #  define pe_proc_warn(fmt...) { was_processing_warning = TRUE; crm_warn(fmt); }
 
 #define pe__set_working_set_flags(scheduler, flags_to_set) do {             \
