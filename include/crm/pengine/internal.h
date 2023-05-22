@@ -481,17 +481,6 @@ int pe__common_output_html(pcmk__output_t *out, const pcmk_resource_t *rsc,
                            const char *name, const pcmk_node_t *node,
                            unsigned int options);
 
-//! A single instance of a bundle
-typedef struct {
-    int offset;                 //!< 0-origin index of this instance in bundle
-    char *ipaddr;               //!< IP address associated with this instance
-    pcmk_node_t *node;          //!< Node created for this instance
-    pcmk_resource_t *ip;        //!< IP address resource for ipaddr
-    pcmk_resource_t *child;     //!< Instance of bundled resource
-    pcmk_resource_t *container; //!< Container associated with this instance
-    pcmk_resource_t *remote;    //!< Pacemaker Remote connection into container
-} pe__bundle_replica_t;
-
 GList *pe__bundle_containers(const pcmk_resource_t *bundle);
 
 int pe__bundle_max(const pcmk_resource_t *rsc);
@@ -501,10 +490,10 @@ pcmk_resource_t *pe__bundled_resource(const pcmk_resource_t *rsc);
 const pcmk_resource_t *pe__get_rsc_in_container(const pcmk_resource_t *instance);
 pcmk_resource_t *pe__first_container(const pcmk_resource_t *bundle);
 void pe__foreach_bundle_replica(pcmk_resource_t *bundle,
-                                bool (*fn)(pe__bundle_replica_t *, void *),
+                                bool (*fn)(pcmk__bundle_replica_t *, void *),
                                 void *user_data);
 void pe__foreach_const_bundle_replica(const pcmk_resource_t *bundle,
-                                      bool (*fn)(const pe__bundle_replica_t *,
+                                      bool (*fn)(const pcmk__bundle_replica_t *,
                                                  void *),
                                       void *user_data);
 pcmk_resource_t *pe__find_bundle_replica(const pcmk_resource_t *bundle,

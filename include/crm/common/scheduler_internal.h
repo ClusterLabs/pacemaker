@@ -11,6 +11,7 @@
 #  define PCMK__CRM_COMMON_SCHEDULER_INTERNAL__H
 
 #include <crm/common/action_relation_internal.h>
+#include <crm/common/bundles_internal.h>
 #include <crm/common/clone_internal.h>
 #include <crm/common/digests_internal.h>
 #include <crm/common/failcounts_internal.h>

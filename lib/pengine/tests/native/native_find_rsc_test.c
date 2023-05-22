@@ -539,7 +539,7 @@ bundle_rsc(void **state) {
 }
 
 static bool
-bundle_first_replica(pe__bundle_replica_t *replica, void *user_data)
+bundle_first_replica(pcmk__bundle_replica_t *replica, void *user_data)
 {
     pcmk_resource_t *ip_0 = replica->ip;
     pcmk_resource_t *child_0 = replica->child;
