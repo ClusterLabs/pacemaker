@@ -50,10 +50,10 @@ pcmk__create_migration_actions(pcmk_resource_t *rsc, const pcmk_node_t *current)
     pcmk_action_t *start = NULL;
     pcmk_action_t *stop = NULL;
 
-    pe_rsc_trace(rsc, "Creating actions to %smigrate %s from %s to %s",
-                 ((rsc->partial_migration_target == NULL)? "" : "partially "),
-                 rsc->id, pe__node_name(current),
-                 pe__node_name(rsc->allocated_to));
+    pcmk__rsc_trace(rsc, "Creating actions to %smigrate %s from %s to %s",
+                    ((rsc->partial_migration_target == NULL)? "" : "partially "),
+                    rsc->id, pe__node_name(current),
+                    pe__node_name(rsc->allocated_to));
     start = start_action(rsc, rsc->allocated_to, TRUE);
     stop = stop_action(rsc, current, TRUE);
 
@@ -159,10 +159,10 @@ pcmk__abort_dangling_migration(void *data, void *user_data)
     bool cleanup = pcmk_is_set(rsc->cluster->flags,
                                pcmk_sched_remove_after_stop);
 
-    pe_rsc_trace(rsc,
-                 "Scheduling stop%s for %s on %s due to dangling migration",
-                 (cleanup? " and cleanup" : ""), rsc->id,
-                 pe__node_name(dangling_source));
+    pcmk__rsc_trace(rsc,
+                    "Scheduling stop%s for %s on %s due to dangling migration",
+                    (cleanup? " and cleanup" : ""), rsc->id,
+                    pe__node_name(dangling_source));
     stop = stop_action(rsc, dangling_source, FALSE);
     pe__set_action_flags(stop, pcmk_action_migration_abort);
     if (cleanup) {
@@ -185,41 +185,42 @@ pcmk__rsc_can_migrate(const pcmk_resource_t *rsc, const pcmk_node_t *current)
     CRM_CHECK(rsc != NULL, return false);
 
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_migratable)) {
-        pe_rsc_trace(rsc, "%s cannot migrate because "
-                          "the configuration does not allow it",
-                     rsc->id);
+        pcmk__rsc_trace(rsc,
+                        "%s cannot migrate because "
+                        "the configuration does not allow it", rsc->id);
         return false;
     }
 
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
-        pe_rsc_trace(rsc, "%s cannot migrate because it is not managed",
-                     rsc->id);
+        pcmk__rsc_trace(rsc, "%s cannot migrate because it is not managed",
+                        rsc->id);
         return false;
     }
 
     if (pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
-        pe_rsc_trace(rsc, "%s cannot migrate because it is failed",
-                     rsc->id);
+        pcmk__rsc_trace(rsc, "%s cannot migrate because it is failed", rsc->id);
         return false;
     }
 
     if (pcmk_is_set(rsc->flags, pcmk_rsc_start_pending)) {
-        pe_rsc_trace(rsc, "%s cannot migrate because it has a start pending",
-                     rsc->id);
+        pcmk__rsc_trace(rsc, "%s cannot migrate because it has a start pending",
+                        rsc->id);
         return false;
     }
 
     if ((current == NULL) || current->details->unclean) {
-        pe_rsc_trace(rsc, "%s cannot migrate because "
-                          "its current node (%s) is unclean",
-                     rsc->id, pe__node_name(current));
+        pcmk__rsc_trace(rsc,
+                        "%s cannot migrate because "
+                        "its current node (%s) is unclean",
+                        rsc->id, pe__node_name(current));
         return false;
     }
 
     if ((rsc->allocated_to == NULL) || rsc->allocated_to->details->unclean) {
-        pe_rsc_trace(rsc, "%s cannot migrate because "
-                          "its next node (%s) is unclean",
-                     rsc->id, pe__node_name(rsc->allocated_to));
+        pcmk__rsc_trace(rsc,
+                        "%s cannot migrate because "
+                        "its next node (%s) is unclean",
+                        rsc->id, pe__node_name(rsc->allocated_to));
         return false;
     }
 

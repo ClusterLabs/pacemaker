@@ -210,11 +210,11 @@ new_action(char *key, const char *task, pcmk_resource_t *rsc,
         unpack_operation(action, action->op_entry, interval_ms);
     }
 
-    pe_rsc_trace(rsc, "Created %s action %d (%s): %s for %s on %s",
-                 (optional? "optional" : "required"),
-                 scheduler->action_id, key, task,
-                 ((rsc == NULL)? "no resource" : rsc->id),
-                 pe__node_name(node));
+    pcmk__rsc_trace(rsc, "Created %s action %d (%s): %s for %s on %s",
+                    (optional? "optional" : "required"),
+                    scheduler->action_id, key, task,
+                    ((rsc == NULL)? "no resource" : rsc->id),
+                    pe__node_name(node));
     action->id = scheduler->action_id++;
 
     scheduler->actions = g_list_prepend(scheduler->actions, action);
@@ -331,8 +331,8 @@ update_resource_action_runnable(pcmk_action_t *action,
     }
 
     if (action->node == NULL) {
-        pe_rsc_trace(action->rsc, "%s is unrunnable (unallocated)",
-                     action->uuid);
+        pcmk__rsc_trace(action->rsc, "%s is unrunnable (unallocated)",
+                        action->uuid);
         pe__clear_action_flags(action, pcmk_action_runnable);
 
     } else if (!pcmk_is_set(action->flags, pcmk_action_on_dc)
@@ -370,9 +370,9 @@ update_resource_action_runnable(pcmk_action_t *action,
                             action->uuid, pe__node_name(action->node));
             pe__clear_action_flags(action, pcmk_action_runnable);
         } else {
-            pe_rsc_trace(action->rsc,
-                         "%s on %s does not require fencing or quorum",
-                         action->uuid, pe__node_name(action->node));
+            pcmk__rsc_trace(action->rsc,
+                            "%s on %s does not require fencing or quorum",
+                            action->uuid, pe__node_name(action->node));
             pe__set_action_flags(action, pcmk_action_runnable);
         }
 
@@ -739,10 +739,10 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
             timeout_spec = crm_element_value(min_interval_mon,
                                              XML_ATTR_TIMEOUT);
             if (timeout_spec != NULL) {
-                pe_rsc_trace(rsc,
-                             "Setting default timeout for %s probe to "
-                             "most frequent monitor's timeout '%s'",
-                             rsc->id, timeout_spec);
+                pcmk__rsc_trace(rsc,
+                                "Setting default timeout for %s probe to "
+                                "most frequent monitor's timeout '%s'",
+                                rsc->id, timeout_spec);
                 name = strdup(XML_ATTR_TIMEOUT);
                 value = strdup(timeout_spec);
                 CRM_ASSERT((name != NULL) && (value != NULL));
@@ -802,10 +802,10 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
 
         timeout_spec = g_hash_table_lookup(params, "pcmk_monitor_timeout");
         if (timeout_spec != NULL) {
-            pe_rsc_trace(rsc,
-                         "Setting timeout for %s %s to "
-                         "pcmk_monitor_timeout (%s)",
-                         rsc->id, action_name, timeout_spec);
+            pcmk__rsc_trace(rsc,
+                            "Setting timeout for %s %s to "
+                            "pcmk_monitor_timeout (%s)",
+                            rsc->id, action_name, timeout_spec);
             name = strdup(XML_ATTR_TIMEOUT);
             value = strdup(timeout_spec);
             CRM_ASSERT((name != NULL) && (value != NULL));
@@ -873,7 +873,7 @@ pcmk__action_requires(const pcmk_resource_t *rsc, const char *action_name)
     } else {
         value = "nothing";
     }
-    pe_rsc_trace(rsc, "%s of %s requires %s", action_name, rsc->id, value);
+    pcmk__rsc_trace(rsc, "%s of %s requires %s", action_name, rsc->id, value);
     return requires;
 }
 
@@ -1006,9 +1006,9 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
         desc = "restart (and possibly migrate) (default)";
     }
 
-    pe_rsc_trace(rsc, "Failure handling for %s-interval %s of %s: %s",
-                 pcmk__readable_interval(interval_ms), action_name,
-                 rsc->id, desc);
+    pcmk__rsc_trace(rsc, "Failure handling for %s-interval %s of %s: %s",
+                    pcmk__readable_interval(interval_ms), action_name,
+                    rsc->id, desc);
     return on_fail;
 }
 
@@ -1065,8 +1065,8 @@ pcmk__role_after_failure(const pcmk_resource_t *rsc, const char *action_name,
             role = pcmk_role_started;
         }
     }
-    pe_rsc_trace(rsc, "Role after %s %s failure is: %s",
-                 rsc->id, action_name, role2text(role));
+    pcmk__rsc_trace(rsc, "Role after %s %s failure is: %s",
+                    rsc->id, action_name, role2text(role));
     return role;
 }
 
@@ -1643,11 +1643,12 @@ void pe_action_set_reason(pcmk_action_t *action, const char *reason,
                           bool overwrite)
 {
     if (action->reason != NULL && overwrite) {
-        pe_rsc_trace(action->rsc, "Changing %s reason from '%s' to '%s'",
-                     action->uuid, action->reason, pcmk__s(reason, "(none)"));
+        pcmk__rsc_trace(action->rsc, "Changing %s reason from '%s' to '%s'",
+                        action->uuid, action->reason,
+                        pcmk__s(reason, "(none)"));
     } else if (action->reason == NULL) {
-        pe_rsc_trace(action->rsc, "Set %s reason to '%s'",
-                     action->uuid, pcmk__s(reason, "(none)"));
+        pcmk__rsc_trace(action->rsc, "Set %s reason to '%s'",
+                        action->uuid, pcmk__s(reason, "(none)"));
     } else {
         // crm_assert(action->reason != NULL && !overwrite);
         return;

@@ -321,8 +321,8 @@ assign_resources(pcmk_scheduler_t *scheduler)
             pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
             if (rsc->is_remote_node) {
-                pe_rsc_trace(rsc, "Assigning remote connection resource '%s'",
-                             rsc->id);
+                pcmk__rsc_trace(rsc, "Assigning remote connection resource '%s'",
+                                rsc->id);
                 rsc->cmds->assign(rsc, rsc->partial_migration_target, true);
             }
         }
@@ -333,8 +333,8 @@ assign_resources(pcmk_scheduler_t *scheduler)
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         if (!rsc->is_remote_node) {
-            pe_rsc_trace(rsc, "Assigning %s resource '%s'",
-                         rsc->xml->name, rsc->id);
+            pcmk__rsc_trace(rsc, "Assigning %s resource '%s'",
+                            rsc->xml->name, rsc->id);
             rsc->cmds->assign(rsc, NULL, true);
         }
     }

@@ -50,8 +50,8 @@ ticket_role_matches(const pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
         || (rsc_ticket->role == rsc->role)) {
         return true;
     }
-    pe_rsc_trace(rsc, "Skipping constraint: \"%s\" state filter",
-                 role2text(rsc_ticket->role));
+    pcmk__rsc_trace(rsc, "Skipping constraint: \"%s\" state filter",
+                    role2text(rsc_ticket->role));
     return false;
 }
 
@@ -73,16 +73,16 @@ constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
     }
 
     if (rsc->children) {
-        pe_rsc_trace(rsc, "Processing ticket dependencies from %s", rsc->id);
+        pcmk__rsc_trace(rsc, "Processing ticket dependencies from %s", rsc->id);
         for (iter = rsc->children; iter != NULL; iter = iter->next) {
             constraints_for_ticket((pcmk_resource_t *) iter->data, rsc_ticket);
         }
         return;
     }
 
-    pe_rsc_trace(rsc, "%s: Processing ticket dependency on %s (%s, %s)",
-                 rsc->id, rsc_ticket->ticket->id, rsc_ticket->id,
-                 role2text(rsc_ticket->role));
+    pcmk__rsc_trace(rsc, "%s: Processing ticket dependency on %s (%s, %s)",
+                    rsc->id, rsc_ticket->ticket->id, rsc_ticket->id,
+                    role2text(rsc_ticket->role));
 
     if (!rsc_ticket->ticket->granted && (rsc->running_on != NULL)) {
 
@@ -219,8 +219,8 @@ rsc_ticket_new(const char *id, pcmk_resource_t *rsc, pcmk_ticket_t *ticket,
         }
     }
 
-    pe_rsc_trace(rsc, "%s (%s) ==> %s",
-                 rsc->id, role2text(new_rsc_ticket->role), ticket->id);
+    pcmk__rsc_trace(rsc, "%s (%s) ==> %s",
+                    rsc->id, role2text(new_rsc_ticket->role), ticket->id);
 
     rsc->rsc_tickets = g_list_append(rsc->rsc_tickets, new_rsc_ticket);
 
@@ -264,8 +264,8 @@ unpack_rsc_ticket_set(xmlNode *set, pcmk_ticket_t *ticket,
                              set_id, ID(xml_rsc));
             return pcmk_rc_unpack_error;
         }
-        pe_rsc_trace(resource, "Resource '%s' depends on ticket '%s'",
-                     resource->id, ticket->id);
+        pcmk__rsc_trace(resource, "Resource '%s' depends on ticket '%s'",
+                        resource->id, ticket->id);
         rsc_ticket_new(set_id, resource, ticket, role, loss_policy);
     }
 

@@ -175,12 +175,12 @@ pcmk__add_this_with(GList **list, const pcmk__colocation_t *colocation,
 {
     CRM_ASSERT((list != NULL) && (colocation != NULL) && (rsc != NULL));
 
-    pe_rsc_trace(rsc,
-                 "Adding colocation %s (%s with %s using %s @%s) to "
-                 "'this with' list for %s",
-                 colocation->id, colocation->dependent->id,
-                 colocation->primary->id, colocation->node_attribute,
-                 pcmk_readable_score(colocation->score), rsc->id);
+    pcmk__rsc_trace(rsc,
+                    "Adding colocation %s (%s with %s using %s @%s) to "
+                    "'this with' list for %s",
+                    colocation->id, colocation->dependent->id,
+                    colocation->primary->id, colocation->node_attribute,
+                    pcmk_readable_score(colocation->score), rsc->id);
     *list = g_list_insert_sorted(*list, (gpointer) colocation,
                                  cmp_primary_priority);
 }
@@ -235,12 +235,12 @@ pcmk__add_with_this(GList **list, const pcmk__colocation_t *colocation,
 {
     CRM_ASSERT((list != NULL) && (colocation != NULL) && (rsc != NULL));
 
-    pe_rsc_trace(rsc,
-                 "Adding colocation %s (%s with %s using %s @%s) to "
-                 "'with this' list for %s",
-                 colocation->id, colocation->dependent->id,
-                 colocation->primary->id, colocation->node_attribute,
-                 pcmk_readable_score(colocation->score), rsc->id);
+    pcmk__rsc_trace(rsc,
+                    "Adding colocation %s (%s with %s using %s @%s) to "
+                    "'with this' list for %s",
+                    colocation->id, colocation->dependent->id,
+                    colocation->primary->id, colocation->node_attribute,
+                    pcmk_readable_score(colocation->score), rsc->id);
     *list = g_list_insert_sorted(*list, (gpointer) colocation,
                                  cmp_dependent_priority);
 }
@@ -361,9 +361,9 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
     }
 
     if (score == 0) {
-        pe_rsc_trace(dependent,
-                     "Ignoring colocation '%s' (%s with %s) because score is 0",
-                     id, dependent->id, primary->id);
+        pcmk__rsc_trace(dependent,
+                        "Ignoring colocation '%s' (%s with %s) because score is 0",
+                        id, dependent->id, primary->id);
         return;
     }
 
@@ -496,13 +496,13 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
                 flags = pcmk__coloc_explicit
                         | unpack_influence(coloc_id, resource, influence_s);
                 if (with_previous) {
-                    pe_rsc_trace(resource, "Colocating %s with %s in set %s",
-                                 resource->id, other->id, set_id);
+                    pcmk__rsc_trace(resource, "Colocating %s with %s in set %s",
+                                    resource->id, other->id, set_id);
                     pcmk__new_colocation(set_id, NULL, local_score, resource,
                                          other, role, role, flags);
                 } else {
-                    pe_rsc_trace(resource, "Colocating %s with %s in set %s",
-                                 other->id, resource->id, set_id);
+                    pcmk__rsc_trace(resource, "Colocating %s with %s in set %s",
+                                    other->id, resource->id, set_id);
                     pcmk__new_colocation(set_id, NULL, local_score, other,
                                          resource, role, role, flags);
                 }
@@ -1302,12 +1302,12 @@ pcmk__apply_coloc_to_scores(pcmk_resource_t *dependent,
     while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
         if (primary->allocated_to == NULL) {
             node->weight = pcmk__add_scores(-colocation->score, node->weight);
-            pe_rsc_trace(dependent,
-                         "Applied %s to %s score on %s (now %s after "
-                         "subtracting %s because primary %s inactive)",
-                         colocation->id, dependent->id, pe__node_name(node),
-                         pcmk_readable_score(node->weight),
-                         pcmk_readable_score(colocation->score), primary->id);
+            pcmk__rsc_trace(dependent,
+                            "Applied %s to %s score on %s (now %s after "
+                            "subtracting %s because primary %s inactive)",
+                            colocation->id, dependent->id, pe__node_name(node),
+                            pcmk_readable_score(node->weight),
+                            pcmk_readable_score(colocation->score), primary->id);
             continue;
         }
 
@@ -1323,12 +1323,13 @@ pcmk__apply_coloc_to_scores(pcmk_resource_t *dependent,
             if (colocation->score < CRM_SCORE_INFINITY) {
                 node->weight = pcmk__add_scores(colocation->score,
                                                 node->weight);
-                pe_rsc_trace(dependent,
-                             "Applied %s to %s score on %s (now %s after "
-                             "adding %s)",
-                             colocation->id, dependent->id, pe__node_name(node),
-                             pcmk_readable_score(node->weight),
-                             pcmk_readable_score(colocation->score));
+                pcmk__rsc_trace(dependent,
+                                "Applied %s to %s score on %s (now %s after "
+                                "adding %s)",
+                                colocation->id, dependent->id,
+                                pe__node_name(node),
+                                pcmk_readable_score(node->weight),
+                                pcmk_readable_score(colocation->score));
             }
             continue;
         }
@@ -1340,11 +1341,11 @@ pcmk__apply_coloc_to_scores(pcmk_resource_t *dependent,
              * where it matches.
              */
             node->weight = -CRM_SCORE_INFINITY;
-            pe_rsc_trace(dependent,
-                         "Banned %s from %s because colocation %s attribute %s "
-                         "does not match",
-                         dependent->id, pe__node_name(node), colocation->id,
-                         attr);
+            pcmk__rsc_trace(dependent,
+                            "Banned %s from %s because colocation %s attribute %s "
+                            "does not match",
+                            dependent->id, pe__node_name(node), colocation->id,
+                            attr);
         }
     }
 
@@ -1422,12 +1423,12 @@ pcmk__apply_coloc_to_priority(pcmk_resource_t *dependent,
 
     dependent->priority = pcmk__add_scores(score_multiplier * colocation->score,
                                            dependent->priority);
-    pe_rsc_trace(dependent,
-                 "Applied %s to %s promotion priority (now %s after %s %s)",
-                 colocation->id, dependent->id,
-                 pcmk_readable_score(dependent->priority),
-                 ((score_multiplier == 1)? "adding" : "subtracting"),
-                 pcmk_readable_score(colocation->score));
+    pcmk__rsc_trace(dependent,
+                    "Applied %s to %s promotion priority (now %s after %s %s)",
+                    colocation->id, dependent->id,
+                    pcmk_readable_score(dependent->priority),
+                    ((score_multiplier == 1)? "adding" : "subtracting"),
+                    pcmk_readable_score(colocation->score));
 }
 
 /*!
@@ -1492,12 +1493,12 @@ allowed_on_one(const pcmk_resource_t *rsc)
     g_hash_table_iter_init(&iter, rsc->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &allowed_node)) {
         if ((allowed_node->weight >= 0) && (++allowed_nodes > 1)) {
-            pe_rsc_trace(rsc, "%s is allowed on multiple nodes", rsc->id);
+            pcmk__rsc_trace(rsc, "%s is allowed on multiple nodes", rsc->id);
             return false;
         }
     }
-    pe_rsc_trace(rsc, "%s is allowed %s", rsc->id,
-                 ((allowed_nodes == 1)? "on a single node" : "nowhere"));
+    pcmk__rsc_trace(rsc, "%s is allowed %s", rsc->id,
+                    ((allowed_nodes == 1)? "on a single node" : "nowhere"));
     return (allowed_nodes == 1);
 }
 
@@ -1694,8 +1695,8 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
     } else {
         const bool pos = pcmk_is_set(flags, pcmk__coloc_select_nonnegative);
 
-        pe_rsc_trace(source_rsc, "%s: Merging %s scores from %s (at %.6f)",
-                     log_id, (pos? "positive" : "all"), source_rsc->id, factor);
+        pcmk__rsc_trace(source_rsc, "%s: Merging %s scores from %s (at %.6f)",
+                        log_id, (pos? "positive" : "all"), source_rsc->id, factor);
         work = pcmk__copy_node_table(*nodes);
         add_node_scores_matching_attr(work, source_rsc, target_rsc, colocation,
                                       factor, pos);
@@ -1711,16 +1712,16 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
 
         if (pcmk_is_set(flags, pcmk__coloc_select_this_with)) {
             colocations = pcmk__this_with_colocations(source_rsc);
-            pe_rsc_trace(source_rsc,
-                         "Checking additional %d optional '%s with' "
-                         "constraints",
-                         g_list_length(colocations), source_rsc->id);
+            pcmk__rsc_trace(source_rsc,
+                            "Checking additional %d optional '%s with' "
+                            "constraints",
+                            g_list_length(colocations), source_rsc->id);
         } else {
             colocations = pcmk__with_this_colocations(source_rsc);
-            pe_rsc_trace(source_rsc,
-                         "Checking additional %d optional 'with %s' "
-                         "constraints",
-                         g_list_length(colocations), source_rsc->id);
+            pcmk__rsc_trace(source_rsc,
+                            "Checking additional %d optional 'with %s' "
+                            "constraints",
+                            g_list_length(colocations), source_rsc->id);
         }
         flags |= pcmk__coloc_select_active;
 
@@ -1738,11 +1739,11 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
                 other = constraint->dependent;
             }
 
-            pe_rsc_trace(source_rsc,
-                         "Optionally merging score of '%s' constraint "
-                         "(%s with %s)",
-                         constraint->id, constraint->dependent->id,
-                         constraint->primary->id);
+            pcmk__rsc_trace(source_rsc,
+                            "Optionally merging score of '%s' constraint "
+                            "(%s with %s)",
+                            constraint->id, constraint->dependent->id,
+                            constraint->primary->id);
             other->cmds->add_colocated_node_scores(other, target_rsc, log_id,
                                                    &work, constraint,
                                                    other_factor, flags);
@@ -1802,10 +1803,10 @@ pcmk__add_dependent_scores(gpointer data, gpointer user_data)
     if (target_rsc->variant == pcmk_rsc_variant_clone) {
         flags |= pcmk__coloc_select_nonnegative;
     }
-    pe_rsc_trace(target_rsc,
-                 "%s: Incorporating attenuated %s assignment scores due "
-                 "to colocation %s",
-                 target_rsc->id, source_rsc->id, colocation->id);
+    pcmk__rsc_trace(target_rsc,
+                    "%s: Incorporating attenuated %s assignment scores due "
+                    "to colocation %s",
+                    target_rsc->id, source_rsc->id, colocation->id);
     source_rsc->cmds->add_colocated_node_scores(source_rsc, target_rsc,
                                                 source_rsc->id,
                                                 &target_rsc->allowed_nodes,
@@ -1849,21 +1850,21 @@ pcmk__colocation_intersect_nodes(pcmk_resource_t *dependent,
                                        dependent_node->details->id);
         if (primary_node == NULL) {
             dependent_node->weight = -INFINITY;
-            pe_rsc_trace(dependent,
-                         "Banning %s from %s (no primary instance) for %s",
-                         dependent->id, pe__node_name(dependent_node),
-                         colocation->id);
+            pcmk__rsc_trace(dependent,
+                            "Banning %s from %s (no primary instance) for %s",
+                            dependent->id, pe__node_name(dependent_node),
+                            colocation->id);
 
         } else if (merge_scores) {
             dependent_node->weight = pcmk__add_scores(dependent_node->weight,
                                                       primary_node->weight);
-            pe_rsc_trace(dependent,
-                         "Added %s's score %s to %s's score for %s (now %s) "
-                         "for colocation %s",
-                         primary->id, pcmk_readable_score(primary_node->weight),
-                         dependent->id, pe__node_name(dependent_node),
-                         pcmk_readable_score(dependent_node->weight),
-                         colocation->id);
+            pcmk__rsc_trace(dependent,
+                            "Added %s's score %s to %s's score for %s (now %s) "
+                            "for colocation %s",
+                            primary->id, pcmk_readable_score(primary_node->weight),
+                            dependent->id, pe__node_name(dependent_node),
+                            pcmk_readable_score(dependent_node->weight),
+                            colocation->id);
         }
     }
 }

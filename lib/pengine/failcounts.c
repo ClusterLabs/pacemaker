@@ -302,9 +302,10 @@ update_failcount_for_attr(gpointer key, gpointer value, gpointer user_data)
     if (regexec(&(fc_data->failcount_re), (const char *) key, 0, NULL, 0) == 0) {
         fc_data->failcount = pcmk__add_scores(fc_data->failcount,
                                               char2score(value));
-        pe_rsc_trace(fc_data->rsc, "Added %s (%s) to %s fail count (now %s)",
-                     (const char *) key, (const char *) value, fc_data->rsc->id,
-                     pcmk_readable_score(fc_data->failcount));
+        pcmk__rsc_trace(fc_data->rsc, "Added %s (%s) to %s fail count (now %s)",
+                        (const char *) key, (const char *) value,
+                        fc_data->rsc->id,
+                        pcmk_readable_score(fc_data->failcount));
         return;
     }
 

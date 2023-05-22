@@ -263,9 +263,9 @@ rsc_stonith_ordering(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
         }
 
     } else if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
-        pe_rsc_trace(rsc,
-                     "Skipping fencing constraints for unmanaged resource: %s",
-                     rsc->id);
+        pcmk__rsc_trace(rsc,
+                        "Skipping fencing constraints for unmanaged resource: "
+                        "%s", rsc->id);
 
     } else {
         order_start_vs_fencing(rsc, stonith_op);

@@ -59,11 +59,11 @@ native_priority_to_node(pcmk_resource_t *rsc, pcmk_node_t *node,
     }
 
     node->details->priority += priority;
-    pe_rsc_trace(rsc, "%s now has priority %d with %s'%s' (priority: %d%s)",
-                 pe__node_name(node), node->details->priority,
-                 (rsc->role == pcmk_role_promoted)? "promoted " : "",
-                 rsc->id, rsc->priority,
-                 (rsc->role == pcmk_role_promoted)? " + 1" : "");
+    pcmk__rsc_trace(rsc, "%s now has priority %d with %s'%s' (priority: %d%s)",
+                    pe__node_name(node), node->details->priority,
+                    (rsc->role == pcmk_role_promoted)? "promoted " : "",
+                    rsc->id, rsc->priority,
+                    (rsc->role == pcmk_role_promoted)? " + 1" : "");
 
     /* Priority of a resource running on a guest node is added to the cluster
      * node as well. */
@@ -75,13 +75,14 @@ native_priority_to_node(pcmk_resource_t *rsc, pcmk_node_t *node,
             pcmk_node_t *a_node = gIter->data;
 
             a_node->details->priority += priority;
-            pe_rsc_trace(rsc, "%s now has priority %d with %s'%s' (priority: %d%s) "
-                         "from guest node %s",
-                         pe__node_name(a_node), a_node->details->priority,
-                         (rsc->role == pcmk_role_promoted)? "promoted " : "",
-                         rsc->id, rsc->priority,
-                         (rsc->role == pcmk_role_promoted)? " + 1" : "",
-                         pe__node_name(node));
+            pcmk__rsc_trace(rsc,
+                            "%s now has priority %d with %s'%s' "
+                            "(priority: %d%s) from guest node %s",
+                            pe__node_name(a_node), a_node->details->priority,
+                            (rsc->role == pcmk_role_promoted)? "promoted " : "",
+                            rsc->id, rsc->priority,
+                            (rsc->role == pcmk_role_promoted)? " + 1" : "",
+                            pe__node_name(node));
         }
     }
 }
@@ -102,8 +103,8 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
         }
     }
 
-    pe_rsc_trace(rsc, "Adding %s to %s %s", rsc->id, pe__node_name(node),
-                 pcmk_is_set(rsc->flags, pcmk_rsc_managed)? "" : "(unmanaged)");
+    pcmk__rsc_trace(rsc, "Adding %s to %s %s", rsc->id, pe__node_name(node),
+                    pcmk_is_set(rsc->flags, pcmk_rsc_managed)? "" : "(unmanaged)");
 
     rsc->running_on = g_list_append(rsc->running_on, node);
     if (rsc->variant == pcmk_rsc_variant_primitive) {
@@ -185,8 +186,8 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
                   recovery2text(rsc->recovery_type));
 
     } else {
-        pe_rsc_trace(rsc, "Resource %s is active on %s",
-                     rsc->id, pe__node_name(node));
+        pcmk__rsc_trace(rsc, "Resource %s is active on %s",
+                        rsc->id, pe__node_name(node));
     }
 
     if (rsc->parent != NULL) {
@@ -209,7 +210,7 @@ native_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     const char *standard = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     uint32_t ra_caps = pcmk_get_ra_caps(standard);
 
-    pe_rsc_trace(rsc, "Processing resource %s...", rsc->id);
+    pcmk__rsc_trace(rsc, "Processing resource %s...", rsc->id);
 
     // Only some agent standards support unique and promotable clones
     if (!pcmk_is_set(ra_caps, pcmk_ra_cap_unique)
@@ -245,8 +246,8 @@ native_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 static bool
 rsc_is_on_node(pcmk_resource_t *rsc, const pcmk_node_t *node, int flags)
 {
-    pe_rsc_trace(rsc, "Checking whether %s is on %s",
-                 rsc->id, pe__node_name(node));
+    pcmk__rsc_trace(rsc, "Checking whether %s is on %s",
+                    rsc->id, pe__node_name(node));
 
     if (pcmk_is_set(flags, pcmk_rsc_match_current_node)
         && (rsc->running_on != NULL)) {
@@ -336,7 +337,7 @@ native_parameter(pcmk_resource_t *rsc, pcmk_node_t *node, gboolean create,
     CRM_CHECK(rsc != NULL, return NULL);
     CRM_CHECK(name != NULL && strlen(name) != 0, return NULL);
 
-    pe_rsc_trace(rsc, "Looking up %s in %s", name, rsc->id);
+    pcmk__rsc_trace(rsc, "Looking up %s in %s", name, rsc->id);
     params = pe_rsc_params(rsc, node, scheduler);
     value = g_hash_table_lookup(params, name);
     if (value == NULL) {
@@ -354,16 +355,16 @@ native_active(pcmk_resource_t * rsc, gboolean all)
         pcmk_node_t *a_node = (pcmk_node_t *) gIter->data;
 
         if (a_node->details->unclean) {
-            pe_rsc_trace(rsc, "Resource %s: %s is unclean",
-                         rsc->id, pe__node_name(a_node));
+            pcmk__rsc_trace(rsc, "Resource %s: %s is unclean",
+                            rsc->id, pe__node_name(a_node));
             return TRUE;
         } else if (!a_node->details->online
                    && pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
-            pe_rsc_trace(rsc, "Resource %s: %s is offline",
-                         rsc->id, pe__node_name(a_node));
+            pcmk__rsc_trace(rsc, "Resource %s: %s is offline",
+                            rsc->id, pe__node_name(a_node));
         } else {
-            pe_rsc_trace(rsc, "Resource %s active on %s",
-                         rsc->id, pe__node_name(a_node));
+            pcmk__rsc_trace(rsc, "Resource %s active on %s",
+                            rsc->id, pe__node_name(a_node));
             return TRUE;
         }
     }
@@ -1085,7 +1086,7 @@ pe__resource_text(pcmk__output_t *out, va_list args)
 void
 native_free(pcmk_resource_t * rsc)
 {
-    pe_rsc_trace(rsc, "Freeing resource action list (not the data)");
+    pcmk__rsc_trace(rsc, "Freeing resource action list (not the data)");
     common_free(rsc);
 }
 
@@ -1097,7 +1098,7 @@ native_resource_state(const pcmk_resource_t * rsc, gboolean current)
     if (current) {
         role = rsc->role;
     }
-    pe_rsc_trace(rsc, "%s state: %s", rsc->id, role2text(role));
+    pcmk__rsc_trace(rsc, "%s state: %s", rsc->id, role2text(role));
     return role;
 }
 

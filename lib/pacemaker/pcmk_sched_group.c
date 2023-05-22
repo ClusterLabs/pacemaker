@@ -70,8 +70,8 @@ pcmk__group_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
         pcmk_resource_t *member = (pcmk_resource_t *) iter->data;
         pcmk_node_t *node = NULL;
 
-        pe_rsc_trace(rsc, "Assigning group %s member %s",
-                     rsc->id, member->id);
+        pcmk__rsc_trace(rsc, "Assigning group %s member %s",
+                        rsc->id, member->id);
         node = member->cmds->assign(member, prefer, stop_if_fail);
         if (first_assigned_node == NULL) {
             first_assigned_node = node;
@@ -116,7 +116,7 @@ pcmk__group_create_actions(pcmk_resource_t *rsc)
 {
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_group));
 
-    pe_rsc_trace(rsc, "Creating actions for group %s", rsc->id);
+    pcmk__rsc_trace(rsc, "Creating actions for group %s", rsc->id);
 
     // Create actions for individual group members
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
@@ -353,8 +353,8 @@ colocate_group_with(pcmk_resource_t *dependent, const pcmk_resource_t *primary,
         return;
     }
 
-    pe_rsc_trace(primary, "Processing %s (group %s with %s) for dependent",
-                 colocation->id, dependent->id, primary->id);
+    pcmk__rsc_trace(primary, "Processing %s (group %s with %s) for dependent",
+                    colocation->id, dependent->id, primary->id);
 
     if (pe__group_flag_is_set(dependent, pcmk__group_colocated)) {
         // Colocate first member (internal colocations will handle the rest)
@@ -395,9 +395,9 @@ colocate_with_group(pcmk_resource_t *dependent, const pcmk_resource_t *primary,
 {
     const pcmk_resource_t *member = NULL;
 
-    pe_rsc_trace(primary,
-                 "Processing colocation %s (%s with group %s) for primary",
-                 colocation->id, dependent->id, primary->id);
+    pcmk__rsc_trace(primary,
+                    "Processing colocation %s (%s with group %s) for primary",
+                    colocation->id, dependent->id, primary->id);
 
     if (pcmk_is_set(primary->flags, pcmk_rsc_unassigned)) {
         return;
@@ -510,8 +510,8 @@ pcmk__group_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
             // Group action is mandatory if any member action is
             if (pcmk_is_set(flags, pcmk_action_optional)
                 && !pcmk_is_set(member_flags, pcmk_action_optional)) {
-                pe_rsc_trace(action->rsc, "%s is mandatory because %s is",
-                             action->uuid, member_action->uuid);
+                pcmk__rsc_trace(action->rsc, "%s is mandatory because %s is",
+                                action->uuid, member_action->uuid);
                 pe__clear_raw_action_flags(flags, "group action",
                                            pcmk_action_optional);
                 pe__clear_action_flags(action, pcmk_action_optional);
@@ -522,8 +522,8 @@ pcmk__group_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
                 && pcmk_is_set(flags, pcmk_action_runnable)
                 && !pcmk_is_set(member_flags, pcmk_action_runnable)) {
 
-                pe_rsc_trace(action->rsc, "%s is unrunnable because %s is",
-                             action->uuid, member_action->uuid);
+                pcmk__rsc_trace(action->rsc, "%s is unrunnable because %s is",
+                                action->uuid, member_action->uuid);
                 pe__clear_raw_action_flags(flags, "group action",
                                            pcmk_action_runnable);
                 pe__clear_action_flags(action, pcmk_action_runnable);
@@ -533,9 +533,9 @@ pcmk__group_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
          * unless every member will do it.
          */
         } else if ((task != pcmk_action_stop) && (task != pcmk_action_demote)) {
-            pe_rsc_trace(action->rsc,
-                         "%s is not runnable because %s will not %s",
-                         action->uuid, member->id, task_s);
+            pcmk__rsc_trace(action->rsc,
+                            "%s is not runnable because %s will not %s",
+                            action->uuid, member->id, task_s);
             pe__clear_raw_action_flags(flags, "group action",
                                        pcmk_action_runnable);
         }
@@ -705,8 +705,8 @@ pcmk__with_group_colocations(const pcmk_resource_t *rsc,
         return;
     }
 
-    pe_rsc_trace(rsc, "Adding 'with %s' colocations to list for %s",
-                 rsc->id, orig_rsc->id);
+    pcmk__rsc_trace(rsc, "Adding 'with %s' colocations to list for %s",
+                    rsc->id, orig_rsc->id);
 
     // Add the group's own colocations
     pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
@@ -752,8 +752,8 @@ pcmk__group_with_colocations(const pcmk_resource_t *rsc,
      */
     if ((rsc == orig_rsc)
         || (orig_rsc == (const pcmk_resource_t *) rsc->children->data)) {
-        pe_rsc_trace(rsc, "Adding '%s with' colocations to list for %s",
-                     rsc->id, orig_rsc->id);
+        pcmk__rsc_trace(rsc, "Adding '%s with' colocations to list for %s",
+                        rsc->id, orig_rsc->id);
 
         // Add the group's own colocations
         pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
@@ -887,8 +887,8 @@ pcmk__group_add_colocated_node_scores(pcmk_resource_t *source_rsc,
     } else {
         member = source_rsc->children->data;
     }
-    pe_rsc_trace(source_rsc, "%s: Merging scores from group %s using member %s "
-                 "(at %.6f)", log_id, source_rsc->id, member->id, factor);
+    pcmk__rsc_trace(source_rsc, "%s: Merging scores from group %s using member %s "
+                    "(at %.6f)", log_id, source_rsc->id, member->id, factor);
     member->cmds->add_colocated_node_scores(member, target_rsc, log_id, nodes,
                                             colocation, factor, flags);
     pe__clear_resource_flags(source_rsc, pcmk_rsc_updating_nodes);
@@ -909,8 +909,8 @@ pcmk__group_add_utilization(const pcmk_resource_t *rsc,
         return;
     }
 
-    pe_rsc_trace(orig_rsc, "%s: Adding group %s as colocated utilization",
-                 orig_rsc->id, rsc->id);
+    pcmk__rsc_trace(orig_rsc, "%s: Adding group %s as colocated utilization",
+                    orig_rsc->id, rsc->id);
     if (pe__group_flag_is_set(rsc, pcmk__group_colocated)
         || pe_rsc_is_clone(rsc->parent)) {
         // Every group member will be on same node, so sum all members

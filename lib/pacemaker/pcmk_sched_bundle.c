@@ -43,8 +43,8 @@ assign_replica(pcmk__bundle_replica_t *replica, void *user_data)
                                                            true);
 
     if (replica->ip != NULL) {
-        pe_rsc_trace(bundle, "Assigning bundle %s IP %s",
-                     bundle->id, replica->ip->id);
+        pcmk__rsc_trace(bundle, "Assigning bundle %s IP %s",
+                        bundle->id, replica->ip->id);
         replica->ip->cmds->assign(replica->ip, prefer, stop_if_fail);
     }
 
@@ -60,8 +60,8 @@ assign_replica(pcmk__bundle_replica_t *replica, void *user_data)
                                  container_host->details->remote_rsc, NULL,
                                  NULL, pcmk__coloc_influence);
         }
-        pe_rsc_trace(bundle, "Assigning bundle %s connection %s",
-                     bundle->id, replica->remote->id);
+        pcmk__rsc_trace(bundle, "Assigning bundle %s connection %s",
+                        bundle->id, replica->remote->id);
         replica->remote->cmds->assign(replica->remote, prefer, stop_if_fail);
     }
 
@@ -79,8 +79,8 @@ assign_replica(pcmk__bundle_replica_t *replica, void *user_data)
         }
 
         pe__set_resource_flags(replica->child->parent, pcmk_rsc_assigning);
-        pe_rsc_trace(bundle, "Assigning bundle %s replica child %s",
-                     bundle->id, replica->child->id);
+        pcmk__rsc_trace(bundle, "Assigning bundle %s replica child %s",
+                        bundle->id, replica->child->id);
         replica->child->cmds->assign(replica->child, replica->node,
                                      stop_if_fail);
         pe__clear_resource_flags(replica->child->parent, pcmk_rsc_assigning);
@@ -117,7 +117,7 @@ pcmk__bundle_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
 
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
 
-    pe_rsc_trace(rsc, "Assigning bundle %s", rsc->id);
+    pcmk__rsc_trace(rsc, "Assigning bundle %s", rsc->id);
     pe__set_resource_flags(rsc, pcmk_rsc_assigning);
 
     pe__show_node_scores(!pcmk_is_set(rsc->cluster->flags,
@@ -492,10 +492,10 @@ replica_apply_coloc_score(const pcmk__bundle_replica_t *replica,
         return true;
     }
 
-    pe_rsc_trace(pe__const_top_resource(replica->container, true),
-                 "Allowing mandatory colocation %s using %s @%d",
-                 coloc_data->colocation->id, pe__node_name(chosen),
-                 chosen->weight);
+    pcmk__rsc_trace(pe__const_top_resource(replica->container, true),
+                    "Allowing mandatory colocation %s using %s @%d",
+                    coloc_data->colocation->id, pe__node_name(chosen),
+                    chosen->weight);
     coloc_data->container_hosts = g_list_prepend(coloc_data->container_hosts,
                                                  chosen);
     return true;
@@ -533,15 +533,15 @@ pcmk__bundle_apply_coloc_score(pcmk_resource_t *dependent,
                && (colocation != NULL) && !for_dependent);
 
     if (pcmk_is_set(primary->flags, pcmk_rsc_unassigned)) {
-        pe_rsc_trace(primary,
-                     "Skipping applying colocation %s "
-                     "because %s is still provisional",
-                     colocation->id, primary->id);
+        pcmk__rsc_trace(primary,
+                        "Skipping applying colocation %s "
+                        "because %s is still provisional",
+                        colocation->id, primary->id);
         return;
     }
-    pe_rsc_trace(primary, "Applying colocation %s (%s with %s at %s)",
-                 colocation->id, dependent->id, primary->id,
-                 pcmk_readable_score(colocation->score));
+    pcmk__rsc_trace(primary, "Applying colocation %s (%s with %s at %s)",
+                    colocation->id, dependent->id, primary->id,
+                    pcmk_readable_score(colocation->score));
 
     /* If the constraint dependent is a clone or bundle, "dependent" here is one
      * of its instances. Look for a compatible instance of this bundle.
@@ -952,8 +952,9 @@ create_replica_probes(pcmk__bundle_replica_t *replica, void *user_data)
         free(probe_uuid);
         if (probe != NULL) {
             probe_data->any_created = true;
-            pe_rsc_trace(probe_data->bundle, "Ordering %s probe on %s",
-                         replica->remote->id, pe__node_name(probe_data->node));
+            pcmk__rsc_trace(probe_data->bundle, "Ordering %s probe on %s",
+                            replica->remote->id,
+                            pe__node_name(probe_data->node));
             pcmk__new_ordering(replica->container,
                                pcmk__op_key(replica->container->id,
                                             PCMK_ACTION_START, 0),

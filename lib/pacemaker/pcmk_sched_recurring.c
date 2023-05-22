@@ -166,11 +166,11 @@ is_recurring_history(const pcmk_resource_t *rsc, const xmlNode *xml,
     // Only actions that are still configured and enabled matter
     if (pcmk__find_action_config(rsc, op->name, op->interval_ms,
                                  false) == NULL) {
-        pe_rsc_trace(rsc,
-                     "Ignoring %s (%s-interval %s for %s) because it is "
-                     "disabled or no longer in configuration",
-                     op->id, pcmk__readable_interval(op->interval_ms), op->name,
-                     rsc->id);
+        pcmk__rsc_trace(rsc,
+                        "Ignoring %s (%s-interval %s for %s) because it is "
+                        "disabled or no longer in configuration",
+                        op->id, pcmk__readable_interval(op->interval_ms),
+                        op->name, rsc->id);
         return false;
     }
 
@@ -197,22 +197,24 @@ active_recurring_should_be_optional(const pcmk_resource_t *rsc,
     GList *possible_matches = NULL;
 
     if (node == NULL) { // Should only be possible if unmanaged and stopped
-        pe_rsc_trace(rsc, "%s will be mandatory because resource is unmanaged",
-                     key);
+        pcmk__rsc_trace(rsc,
+                        "%s will be mandatory because resource is unmanaged",
+                        key);
         return false;
     }
 
     if (!pcmk_is_set(rsc->cmds->action_flags(start, NULL),
                      pcmk_action_optional)) {
-        pe_rsc_trace(rsc, "%s will be mandatory because %s is",
-                     key, start->uuid);
+        pcmk__rsc_trace(rsc, "%s will be mandatory because %s is",
+                        key, start->uuid);
         return false;
     }
 
     possible_matches = find_actions_exact(rsc->actions, key, node);
     if (possible_matches == NULL) {
-        pe_rsc_trace(rsc, "%s will be mandatory because it is not active on %s",
-                     key, pe__node_name(node));
+        pcmk__rsc_trace(rsc,
+                        "%s will be mandatory because it is not active on %s",
+                        key, pe__node_name(node));
         return false;
     }
 
@@ -222,9 +224,9 @@ active_recurring_should_be_optional(const pcmk_resource_t *rsc,
         const pcmk_action_t *op = (const pcmk_action_t *) iter->data;
 
         if (pcmk_is_set(op->flags, pcmk_action_reschedule)) {
-            pe_rsc_trace(rsc,
-                         "%s will be mandatory because "
-                         "it needs to be rescheduled", key);
+            pcmk__rsc_trace(rsc,
+                            "%s will be mandatory because "
+                            "it needs to be rescheduled", key);
             g_list_free(possible_matches);
             return false;
         }
@@ -303,23 +305,23 @@ recurring_op_for_active(pcmk_resource_t *rsc, pcmk_action_t *start,
         return;
     }
 
-    pe_rsc_trace(rsc,
-                 "Creating %s recurring action %s for %s (%s %s on %s)",
-                 (is_optional? "optional" : "mandatory"), op->key,
-                 op->id, rsc->id, role2text(rsc->next_role),
-                 pe__node_name(node));
+    pcmk__rsc_trace(rsc,
+                    "Creating %s recurring action %s for %s (%s %s on %s)",
+                    (is_optional? "optional" : "mandatory"), op->key,
+                    op->id, rsc->id, role2text(rsc->next_role),
+                    pe__node_name(node));
 
     mon = custom_action(rsc, strdup(op->key), op->name, node, is_optional,
                         rsc->cluster);
 
     if (!pcmk_is_set(start->flags, pcmk_action_runnable)) {
-        pe_rsc_trace(rsc, "%s is unrunnable because start is", mon->uuid);
+        pcmk__rsc_trace(rsc, "%s is unrunnable because start is", mon->uuid);
         pe__clear_action_flags(mon, pcmk_action_runnable);
 
     } else if ((node == NULL) || !node->details->online
                || node->details->unclean) {
-        pe_rsc_trace(rsc, "%s is unrunnable because no node is available",
-                     mon->uuid);
+        pcmk__rsc_trace(rsc, "%s is unrunnable because no node is available",
+                        mon->uuid);
         pe__clear_action_flags(mon, pcmk_action_runnable);
 
     } else if (!pcmk_is_set(mon->flags, pcmk_action_optional)) {
@@ -450,8 +452,8 @@ order_after_stops(pcmk_resource_t *rsc, const pcmk_node_t *node,
         if (!pcmk_is_set(stop->flags, pcmk_action_optional)
             && !pcmk_is_set(action->flags, pcmk_action_optional)
             && !pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
-            pe_rsc_trace(rsc, "%s optional on %s: unmanaged",
-                         action->uuid, pe__node_name(node));
+            pcmk__rsc_trace(rsc, "%s optional on %s: unmanaged",
+                            action->uuid, pe__node_name(node));
             pe__set_action_flags(action, pcmk_action_optional);
         }
 
@@ -497,8 +499,9 @@ recurring_op_for_inactive(pcmk_resource_t *rsc, const pcmk_node_t *node,
         return; // @TODO add support
     }
 
-    pe_rsc_trace(rsc, "Creating recurring action %s for %s on nodes "
-                      "where it should not be running", op->id, rsc->id);
+    pcmk__rsc_trace(rsc,
+                    "Creating recurring action %s for %s on nodes "
+                    "where it should not be running", op->id, rsc->id);
 
     for (GList *iter = rsc->cluster->nodes; iter != NULL; iter = iter->next) {
         pcmk_node_t *stop_node = (pcmk_node_t *) iter->data;
@@ -519,11 +522,11 @@ recurring_op_for_inactive(pcmk_resource_t *rsc, const pcmk_node_t *node,
         is_optional = (possible_matches != NULL);
         g_list_free(possible_matches);
 
-        pe_rsc_trace(rsc,
-                     "Creating %s recurring action %s for %s (%s "
-                     PCMK__ROLE_STOPPED " on %s)",
-                     (is_optional? "optional" : "mandatory"),
-                     op->key, op->id, rsc->id, pe__node_name(stop_node));
+        pcmk__rsc_trace(rsc,
+                        "Creating %s recurring action %s for %s (%s "
+                        PCMK__ROLE_STOPPED " on %s)",
+                        (is_optional? "optional" : "mandatory"),
+                        op->key, op->id, rsc->id, pe__node_name(stop_node));
 
         stopped_mon = custom_action(rsc, strdup(op->key), op->name, stop_node,
                                     is_optional, rsc->cluster);
@@ -567,14 +570,16 @@ pcmk__create_recurring_actions(pcmk_resource_t *rsc)
     pcmk_action_t *start = NULL;
 
     if (pcmk_is_set(rsc->flags, pcmk_rsc_blocked)) {
-        pe_rsc_trace(rsc, "Skipping recurring actions for blocked resource %s",
-                     rsc->id);
+        pcmk__rsc_trace(rsc,
+                        "Skipping recurring actions for blocked resource %s",
+                        rsc->id);
         return;
     }
 
     if (pcmk_is_set(rsc->flags, pcmk_rsc_maintenance)) {
-        pe_rsc_trace(rsc, "Skipping recurring actions for %s "
-                          "in maintenance mode", rsc->id);
+        pcmk__rsc_trace(rsc,
+                        "Skipping recurring actions for %s "
+                        "in maintenance mode", rsc->id);
         return;
     }
 
@@ -582,10 +587,10 @@ pcmk__create_recurring_actions(pcmk_resource_t *rsc)
         // Recurring actions for active roles not needed
 
     } else if (rsc->allocated_to->details->maintenance) {
-        pe_rsc_trace(rsc,
-                     "Skipping recurring actions for %s on %s "
-                     "in maintenance mode",
-                     rsc->id, pe__node_name(rsc->allocated_to));
+        pcmk__rsc_trace(rsc,
+                        "Skipping recurring actions for %s on %s "
+                        "in maintenance mode",
+                        rsc->id, pe__node_name(rsc->allocated_to));
 
     } else if ((rsc->next_role != pcmk_role_stopped)
         || !pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
@@ -593,7 +598,8 @@ pcmk__create_recurring_actions(pcmk_resource_t *rsc)
         start = start_action(rsc, rsc->allocated_to, TRUE);
     }
 
-    pe_rsc_trace(rsc, "Creating any recurring actions needed for %s", rsc->id);
+    pcmk__rsc_trace(rsc, "Creating any recurring actions needed for %s",
+                    rsc->id);
 
     for (xmlNode *op = first_named_child(rsc->ops_xml, "op");
          op != NULL; op = crm_next_same_xml(op)) {

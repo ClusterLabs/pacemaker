@@ -663,7 +663,8 @@ setup_container(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
             rsc->container = container;
             pe__set_resource_flags(container, pcmk_rsc_has_filler);
             container->fillers = g_list_append(container->fillers, rsc);
-            pe_rsc_trace(rsc, "Resource %s's container is %s", rsc->id, container_id);
+            pcmk__rsc_trace(rsc, "Resource %s's container is %s",
+                            rsc->id, container_id);
         } else {
             pe_err("Resource %s: Unknown resource container (%s)", rsc->id, container_id);
         }
@@ -769,8 +770,8 @@ link_rsc2remotenode(pcmk_scheduler_t *scheduler, pcmk_resource_t *new_rsc)
     remote_node = pe_find_node(scheduler->nodes, new_rsc->id);
     CRM_CHECK(remote_node != NULL, return);
 
-    pe_rsc_trace(new_rsc, "Linking remote connection resource %s to %s",
-                 new_rsc->id, pe__node_name(remote_node));
+    pcmk__rsc_trace(new_rsc, "Linking remote connection resource %s to %s",
+                    new_rsc->id, pe__node_name(remote_node));
     remote_node->details->remote_rsc = new_rsc;
 
     if (new_rsc->container == NULL) {
@@ -848,7 +849,7 @@ unpack_resources(const xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
         if (pe__unpack_resource(xml_obj, &new_rsc, NULL,
                                 scheduler) == pcmk_rc_ok) {
             scheduler->resources = g_list_append(scheduler->resources, new_rsc);
-            pe_rsc_trace(new_rsc, "Added resource %s", new_rsc->id);
+            pcmk__rsc_trace(new_rsc, "Added resource %s", new_rsc->id);
 
         } else {
             pcmk__config_err("Ignoring <%s> resource '%s' "
@@ -1994,8 +1995,8 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
     CRM_ASSERT(!pcmk_is_set(parent->flags, pcmk_rsc_unique));
 
     // Check for active (or partially active, for cloned groups) instance
-    pe_rsc_trace(parent, "Looking for %s on %s in %s",
-                 rsc_id, pe__node_name(node), parent->id);
+    pcmk__rsc_trace(parent, "Looking for %s on %s in %s",
+                    rsc_id, pe__node_name(node), parent->id);
     for (rIter = parent->children; rsc == NULL && rIter; rIter = rIter->next) {
         GList *locations = NULL;
         pcmk_resource_t *child = rIter->data;
@@ -2048,14 +2049,14 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
                         skip_inactive = TRUE;
                         rsc = NULL;
                     } else {
-                        pe_rsc_trace(parent, "Resource %s, active", rsc->id);
+                        pcmk__rsc_trace(parent, "Resource %s, active", rsc->id);
                     }
                 }
             }
             g_list_free(locations);
 
         } else {
-            pe_rsc_trace(parent, "Resource %s, skip inactive", child->id);
+            pcmk__rsc_trace(parent, "Resource %s, skip inactive", child->id);
             if (!skip_inactive && !inactive_instance
                 && !pcmk_is_set(child->flags, pcmk_rsc_blocked)) {
                 // Remember one inactive instance in case we don't find active
@@ -2074,7 +2075,8 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
     }
 
     if ((rsc == NULL) && !skip_inactive && (inactive_instance != NULL)) {
-        pe_rsc_trace(parent, "Resource %s, empty slot", inactive_instance->id);
+        pcmk__rsc_trace(parent, "Resource %s, empty slot",
+                        inactive_instance->id);
         rsc = inactive_instance;
     }
 
@@ -2100,7 +2102,7 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
 
     if (rsc == NULL) {
         rsc = create_anonymous_orphan(parent, rsc_id, node, scheduler);
-        pe_rsc_trace(parent, "Resource %s, orphan", rsc->id);
+        pcmk__rsc_trace(parent, "Resource %s, orphan", rsc->id);
     }
     return rsc;
 }
@@ -2185,7 +2187,7 @@ process_orphan_resource(const xmlNode *rsc_entry, const pcmk_node_t *node,
 
     } else {
         CRM_CHECK(rsc != NULL, return NULL);
-        pe_rsc_trace(rsc, "Added orphan %s", rsc->id);
+        pcmk__rsc_trace(rsc, "Added orphan %s", rsc->id);
         resource_location(rsc, NULL, -INFINITY, "__orphan_do_not_run__",
                           scheduler);
     }
@@ -2201,9 +2203,9 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
     enum action_fail_response save_on_fail = pcmk_on_fail_ignore;
 
     CRM_ASSERT(rsc);
-    pe_rsc_trace(rsc, "Resource %s is %s on %s: on_fail=%s",
-                 rsc->id, role2text(rsc->role), pe__node_name(node),
-                 fail2text(on_fail));
+    pcmk__rsc_trace(rsc, "Resource %s is %s on %s: on_fail=%s",
+                    rsc->id, role2text(rsc->role), pe__node_name(node),
+                    fail2text(on_fail));
 
     /* process current state */
     if (rsc->role != pcmk_role_unknown) {
@@ -2213,11 +2215,11 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
             if (g_hash_table_lookup(iter->known_on, node->details->id) == NULL) {
                 pcmk_node_t *n = pe__copy_node(node);
 
-                pe_rsc_trace(rsc, "%s%s%s known on %s",
-                             rsc->id,
-                             ((rsc->clone_name == NULL)? "" : " also known as "),
-                             ((rsc->clone_name == NULL)? "" : rsc->clone_name),
-                             pe__node_name(n));
+                pcmk__rsc_trace(rsc, "%s%s%s known on %s",
+                                rsc->id,
+                                ((rsc->clone_name == NULL)? "" : " also known as "),
+                                ((rsc->clone_name == NULL)? "" : rsc->clone_name),
+                                pe__node_name(n));
                 g_hash_table_insert(iter->known_on, (gpointer) n->details->id, n);
             }
             if (pcmk_is_set(iter->flags, pcmk_rsc_unique)) {
@@ -2436,7 +2438,8 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
         /* Only do this for older status sections that included instance numbers
          * Otherwise stopped instances will appear as orphans
          */
-        pe_rsc_trace(rsc, "Resetting clone_name %s for %s (stopped)", rsc->clone_name, rsc->id);
+        pcmk__rsc_trace(rsc, "Resetting clone_name %s for %s (stopped)",
+                        rsc->clone_name, rsc->id);
         free(rsc->clone_name);
         rsc->clone_name = NULL;
 
@@ -2479,7 +2482,8 @@ process_recurring(pcmk_node_t *node, pcmk_resource_t *rsc,
     GList *gIter = sorted_op_list;
 
     CRM_ASSERT(rsc);
-    pe_rsc_trace(rsc, "%s: Start index %d, stop index = %d", rsc->id, start_index, stop_index);
+    pcmk__rsc_trace(rsc, "%s: Start index %d, stop index = %d",
+                    rsc->id, start_index, stop_index);
 
     for (; gIter != NULL; gIter = gIter->next) {
         xmlNode *rsc_op = (xmlNode *) gIter->data;
@@ -2491,39 +2495,39 @@ process_recurring(pcmk_node_t *node, pcmk_resource_t *rsc,
         counter++;
 
         if (node->details->online == FALSE) {
-            pe_rsc_trace(rsc, "Skipping %s on %s: node is offline",
-                         rsc->id, pe__node_name(node));
+            pcmk__rsc_trace(rsc, "Skipping %s on %s: node is offline",
+                            rsc->id, pe__node_name(node));
             break;
 
             /* Need to check if there's a monitor for role="Stopped" */
         } else if (start_index < stop_index && counter <= stop_index) {
-            pe_rsc_trace(rsc, "Skipping %s on %s: resource is not active",
-                         id, pe__node_name(node));
+            pcmk__rsc_trace(rsc, "Skipping %s on %s: resource is not active",
+                            id, pe__node_name(node));
             continue;
 
         } else if (counter < start_index) {
-            pe_rsc_trace(rsc, "Skipping %s on %s: old %d",
-                         id, pe__node_name(node), counter);
+            pcmk__rsc_trace(rsc, "Skipping %s on %s: old %d",
+                            id, pe__node_name(node), counter);
             continue;
         }
 
         crm_element_value_ms(rsc_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
         if (interval_ms == 0) {
-            pe_rsc_trace(rsc, "Skipping %s on %s: non-recurring",
-                         id, pe__node_name(node));
+            pcmk__rsc_trace(rsc, "Skipping %s on %s: non-recurring",
+                            id, pe__node_name(node));
             continue;
         }
 
         status = crm_element_value(rsc_op, XML_LRM_ATTR_OPSTATUS);
         if (pcmk__str_eq(status, "-1", pcmk__str_casei)) {
-            pe_rsc_trace(rsc, "Skipping %s on %s: status",
-                         id, pe__node_name(node));
+            pcmk__rsc_trace(rsc, "Skipping %s on %s: status",
+                            id, pe__node_name(node));
             continue;
         }
         task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
         /* create the action */
         key = pcmk__op_key(rsc->id, task, interval_ms);
-        pe_rsc_trace(rsc, "Creating %s on %s", key, pe__node_name(node));
+        pcmk__rsc_trace(rsc, "Creating %s on %s", key, pe__node_name(node));
         custom_action(rsc, key, task, node, TRUE, scheduler);
     }
 }
@@ -2753,8 +2757,8 @@ handle_orphaned_container_fillers(const xmlNode *lrm_rsc_list,
             continue;
         }
 
-        pe_rsc_trace(rsc, "Mapped container of orphaned resource %s to %s",
-                     rsc->id, container_id);
+        pcmk__rsc_trace(rsc, "Mapped container of orphaned resource %s to %s",
+                        rsc->id, container_id);
         rsc->container = container;
         container->fillers = g_list_append(container->fillers, rsc);
     }
@@ -3125,8 +3129,8 @@ get_migration_node_names(const xmlNode *entry, const pcmk_node_t *source_node,
 static void
 add_dangling_migration(pcmk_resource_t *rsc, const pcmk_node_t *node)
 {
-    pe_rsc_trace(rsc, "Dangling migration of %s requires stop on %s",
-                 rsc->id, pe__node_name(node));
+    pcmk__rsc_trace(rsc, "Dangling migration of %s requires stop on %s",
+                    rsc->id, pe__node_name(node));
     rsc->role = pcmk_role_stopped;
     rsc->dangling_migrations = g_list_prepend(rsc->dangling_migrations,
                                               (gpointer) node);
@@ -3681,9 +3685,9 @@ unpack_rsc_op_failure(struct action_history *history,
     free(last_change_s);
 
     if (cmp_on_fail(*on_fail, config_on_fail) < 0) {
-        pe_rsc_trace(history->rsc, "on-fail %s -> %s for %s",
-                     fail2text(*on_fail), fail2text(config_on_fail),
-                     history->key);
+        pcmk__rsc_trace(history->rsc, "on-fail %s -> %s for %s",
+                        fail2text(*on_fail), fail2text(config_on_fail),
+                        history->key);
         *on_fail = config_on_fail;
     }
 
@@ -3721,19 +3725,19 @@ unpack_rsc_op_failure(struct action_history *history,
 
     if (is_probe && (history->exit_status == PCMK_OCF_NOT_INSTALLED)) {
         /* leave stopped */
-        pe_rsc_trace(history->rsc, "Leaving %s stopped", history->rsc->id);
+        pcmk__rsc_trace(history->rsc, "Leaving %s stopped", history->rsc->id);
         history->rsc->role = pcmk_role_stopped;
 
     } else if (history->rsc->role < pcmk_role_started) {
-        pe_rsc_trace(history->rsc, "Setting %s active", history->rsc->id);
+        pcmk__rsc_trace(history->rsc, "Setting %s active", history->rsc->id);
         set_active(history->rsc);
     }
 
-    pe_rsc_trace(history->rsc,
-                 "Resource %s: role=%s, unclean=%s, on_fail=%s, fail_role=%s",
-                 history->rsc->id, role2text(history->rsc->role),
-                 pcmk__btoa(history->node->details->unclean),
-                 fail2text(config_on_fail), role2text(fail_role));
+    pcmk__rsc_trace(history->rsc,
+                    "Resource %s: role=%s unclean=%s on_fail=%s fail_role=%s",
+                    history->rsc->id, role2text(history->rsc->role),
+                    pcmk__btoa(history->node->details->unclean),
+                    fail2text(config_on_fail), role2text(fail_role));
 
     if ((fail_role != pcmk_role_started)
         && (history->rsc->next_role < fail_role)) {
@@ -4015,13 +4019,13 @@ remap_operation(struct action_history *history,
 
 remap_done:
     if (why != NULL) {
-        pe_rsc_trace(history->rsc,
-                     "Remapped %s result from [%s: %s] to [%s: %s] "
-                     "because of %s",
-                     history->key, pcmk_exec_status_str(orig_exec_status),
-                     crm_exit_str(orig_exit_status),
-                     pcmk_exec_status_str(history->execution_status),
-                     crm_exit_str(history->exit_status), why);
+        pcmk__rsc_trace(history->rsc,
+                        "Remapped %s result from [%s: %s] to [%s: %s] "
+                        "because of %s",
+                        history->key, pcmk_exec_status_str(orig_exec_status),
+                        crm_exit_str(orig_exit_status),
+                        pcmk_exec_status_str(history->execution_status),
+                        crm_exit_str(history->exit_status), why);
     }
 }
 
@@ -4146,10 +4150,10 @@ check_operation_expiry(struct action_history *history)
     const char *clear_reason = NULL;
 
     if (history->execution_status == PCMK_EXEC_NOT_INSTALLED) {
-        pe_rsc_trace(history->rsc,
-                     "Resource history entry %s on %s is not expired: "
-                     "Not Installed does not expire",
-                     history->id, pe__node_name(history->node));
+        pcmk__rsc_trace(history->rsc,
+                        "Resource history entry %s on %s is not expired: "
+                        "Not Installed does not expire",
+                        history->id, pe__node_name(history->node));
         return false; // "Not installed" must always be cleared manually
     }
 
@@ -4205,10 +4209,10 @@ check_operation_expiry(struct action_history *history)
                  * fail count should be expired too), so this is really just a
                  * failsafe.
                  */
-                pe_rsc_trace(history->rsc,
-                             "Resource history entry %s on %s is not expired: "
-                             "Unexpired fail count",
-                             history->id, pe__node_name(history->node));
+                pcmk__rsc_trace(history->rsc,
+                                "Resource history entry %s on %s is not "
+                                "expired: Unexpired fail count",
+                                history->id, pe__node_name(history->node));
                 expired = false;
             }
 
@@ -4262,9 +4266,9 @@ check_operation_expiry(struct action_history *history)
             case PCMK_OCF_DEGRADED:
             case PCMK_OCF_DEGRADED_PROMOTED:
                 // Don't expire probes that return these values
-                pe_rsc_trace(history->rsc,
-                             "Resource history entry %s on %s is not expired: "
-                             "Probe result",
+                pcmk__rsc_trace(history->rsc,
+                                "Resource history entry %s on %s is not "
+                                "expired: Probe result",
                              history->id, pe__node_name(history->node));
                 expired = false;
                 break;
@@ -4353,8 +4357,8 @@ update_resource_state(struct action_history *history, int exit_status,
         unpack_migrate_to_success(history);
 
     } else if (history->rsc->role < pcmk_role_started) {
-        pe_rsc_trace(history->rsc, "%s active on %s",
-                     history->rsc->id, pe__node_name(history->node));
+        pcmk__rsc_trace(history->rsc, "%s active on %s",
+                        history->rsc->id, pe__node_name(history->node));
         set_active(history->rsc);
     }
 
@@ -4367,9 +4371,10 @@ update_resource_state(struct action_history *history, int exit_status,
         case pcmk_on_fail_ban:
         case pcmk_on_fail_standby_node:
         case pcmk_on_fail_fence_node:
-            pe_rsc_trace(history->rsc,
-                         "%s (%s) is not cleared by a completed %s",
-                         history->rsc->id, fail2text(*on_fail), history->task);
+            pcmk__rsc_trace(history->rsc,
+                            "%s (%s) is not cleared by a completed %s",
+                            history->rsc->id, fail2text(*on_fail),
+                            history->task);
             break;
 
         case pcmk_on_fail_block:
@@ -4720,10 +4725,10 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
     crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS,
                          &(history.interval_ms));
     if (!can_affect_state(&history)) {
-        pe_rsc_trace(rsc,
-                     "Ignoring resource history entry %s for %s on %s "
-                     "with irrelevant action '%s'",
-                     history.id, rsc->id, pe__node_name(node), history.task);
+        pcmk__rsc_trace(rsc,
+                        "Ignoring resource history entry %s for %s on %s "
+                        "with irrelevant action '%s'",
+                        history.id, rsc->id, pe__node_name(node), history.task);
         return;
     }
 
@@ -4735,16 +4740,17 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
     history.key = pe__xe_history_key(xml_op);
     crm_element_value_int(xml_op, XML_LRM_ATTR_CALLID, &(history.call_id));
 
-    pe_rsc_trace(rsc, "Unpacking %s (%s call %d on %s): %s (%s)",
-                 history.id, history.task, history.call_id, pe__node_name(node),
-                 pcmk_exec_status_str(history.execution_status),
-                 crm_exit_str(history.exit_status));
+    pcmk__rsc_trace(rsc, "Unpacking %s (%s call %d on %s): %s (%s)",
+                    history.id, history.task, history.call_id,
+                    pe__node_name(node),
+                    pcmk_exec_status_str(history.execution_status),
+                    crm_exit_str(history.exit_status));
 
     if (node->details->unclean) {
-        pe_rsc_trace(rsc,
-                     "%s is running on %s, which is unclean (further action "
-                     "depends on value of stop's on-fail attribute)",
-                     rsc->id, pe__node_name(node));
+        pcmk__rsc_trace(rsc,
+                        "%s is running on %s, which is unclean (further action "
+                        "depends on value of stop's on-fail attribute)",
+                        rsc->id, pe__node_name(node));
     }
 
     expired = check_operation_expiry(&history);
@@ -4881,9 +4887,9 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
     }
 
 done:
-    pe_rsc_trace(rsc, "%s role on %s after %s is %s (next %s)",
-                 rsc->id, pe__node_name(node), history.id,
-                 role2text(rsc->role), role2text(rsc->next_role));
+    pcmk__rsc_trace(rsc, "%s role on %s after %s is %s (next %s)",
+                    rsc->id, pe__node_name(node), history.id,
+                    role2text(rsc->role), role2text(rsc->next_role));
 }
 
 static void

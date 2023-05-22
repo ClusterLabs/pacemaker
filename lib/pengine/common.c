@@ -601,16 +601,16 @@ pe__node_attribute_calculated(const pcmk_node_t *node, const char *name,
     if (host != NULL) {
         const char *value = g_hash_table_lookup(host->details->attrs, name);
 
-        pe_rsc_trace(rsc,
-                     "%s: Value lookup for %s on %s container host %s %s%s",
-                     rsc->id, name, node_type_s, pe__node_name(host),
-                     ((value != NULL)? "succeeded: " : "failed"),
-                     pcmk__s(value, ""));
+        pcmk__rsc_trace(rsc,
+                        "%s: Value lookup for %s on %s container host %s %s%s",
+                        rsc->id, name, node_type_s, pe__node_name(host),
+                        ((value != NULL)? "succeeded: " : "failed"),
+                        pcmk__s(value, ""));
         return value;
     }
-    pe_rsc_trace(rsc,
-                 "%s: Not looking for %s on %s container host: %s is %s",
-                 rsc->id, name, node_type_s, container->id, reason);
+    pcmk__rsc_trace(rsc,
+                    "%s: Not looking for %s on %s container host: %s is %s",
+                    rsc->id, name, node_type_s, container->id, reason);
     return NULL;
 }
 

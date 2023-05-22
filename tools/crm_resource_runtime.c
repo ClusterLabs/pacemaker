@@ -1344,9 +1344,10 @@ max_rsc_stop_timeout(pcmk_resource_t *rsc)
             int delay = max_rsc_stop_timeout(child);
 
             if (delay > max_delay) {
-                pe_rsc_trace(rsc,
-                             "Maximum stop timeout for %s is now %s due to %s",
-                             rsc->id, pcmk__readable_interval(delay), child->id);
+                pcmk__rsc_trace(rsc,
+                                "Maximum stop timeout for %s is now %s "
+                                "due to %s", rsc->id,
+                                pcmk__readable_interval(delay), child->id);
                 max_delay = delay;
             }
         }
@@ -1399,9 +1400,9 @@ wait_time_estimate(pcmk_scheduler_t *scheduler, const GList *resources)
         int delay = max_rsc_stop_timeout(rsc);
 
         if (delay > max_delay) {
-            pe_rsc_trace(rsc,
-                         "Wait time is now %s due to %s",
-                         pcmk__readable_interval(delay), rsc->id);
+            pcmk__rsc_trace(rsc,
+                            "Wait time is now %s due to %s",
+                            pcmk__readable_interval(delay), rsc->id);
             max_delay = delay;
         }
     }

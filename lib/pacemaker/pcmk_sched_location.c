@@ -627,22 +627,23 @@ pcmk__apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
     // If a role was specified, ensure constraint is applicable
     need_role = (location->role_filter > pcmk_role_unknown);
     if (need_role && (location->role_filter != rsc->next_role)) {
-        pe_rsc_trace(rsc,
-                     "Not applying %s to %s because role will be %s not %s",
-                     location->id, rsc->id, role2text(rsc->next_role),
-                     role2text(location->role_filter));
+        pcmk__rsc_trace(rsc,
+                        "Not applying %s to %s because role will be %s not %s",
+                        location->id, rsc->id, role2text(rsc->next_role),
+                        role2text(location->role_filter));
         return;
     }
 
     if (location->nodes == NULL) {
-        pe_rsc_trace(rsc, "Not applying %s to %s because no nodes match",
-                     location->id, rsc->id);
+        pcmk__rsc_trace(rsc, "Not applying %s to %s because no nodes match",
+                        location->id, rsc->id);
         return;
     }
 
-    pe_rsc_trace(rsc, "Applying %s%s%s to %s", location->id,
-                 (need_role? " for role " : ""),
-                 (need_role? role2text(location->role_filter) : ""), rsc->id);
+    pcmk__rsc_trace(rsc, "Applying %s%s%s to %s", location->id,
+                    (need_role? " for role " : ""),
+                    (need_role? role2text(location->role_filter) : ""),
+                    rsc->id);
 
     for (GList *iter = location->nodes; iter != NULL; iter = iter->next) {
         pcmk_node_t *node = iter->data;
@@ -650,15 +651,15 @@ pcmk__apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
                                                         node->details->id);
 
         if (allowed_node == NULL) {
-            pe_rsc_trace(rsc, "* = %d on %s",
-                         node->weight, pe__node_name(node));
+            pcmk__rsc_trace(rsc, "* = %d on %s",
+                            node->weight, pe__node_name(node));
             allowed_node = pe__copy_node(node);
             g_hash_table_insert(rsc->allowed_nodes,
                                 (gpointer) allowed_node->details->id,
                                 allowed_node);
         } else {
-            pe_rsc_trace(rsc, "* + %d on %s",
-                         node->weight, pe__node_name(node));
+            pcmk__rsc_trace(rsc, "* + %d on %s",
+                            node->weight, pe__node_name(node));
             allowed_node->weight = pcmk__add_scores(allowed_node->weight,
                                                     node->weight);
         }

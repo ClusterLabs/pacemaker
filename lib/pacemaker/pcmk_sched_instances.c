@@ -33,15 +33,15 @@ can_run_instance(const pcmk_resource_t *instance, const pcmk_node_t *node,
     pcmk_node_t *allowed_node = NULL;
 
     if (pcmk_is_set(instance->flags, pcmk_rsc_removed)) {
-        pe_rsc_trace(instance, "%s cannot run on %s: orphaned",
-                     instance->id, pe__node_name(node));
+        pcmk__rsc_trace(instance, "%s cannot run on %s: orphaned",
+                        instance->id, pe__node_name(node));
         return false;
     }
 
     if (!pcmk__node_available(node, false, false)) {
-        pe_rsc_trace(instance,
-                     "%s cannot run on %s: node cannot run resources",
-                     instance->id, pe__node_name(node));
+        pcmk__rsc_trace(instance,
+                        "%s cannot run on %s: node cannot run resources",
+                        instance->id, pe__node_name(node));
         return false;
     }
 
@@ -53,22 +53,23 @@ can_run_instance(const pcmk_resource_t *instance, const pcmk_node_t *node,
     }
 
     if (allowed_node->weight < 0) {
-        pe_rsc_trace(instance, "%s cannot run on %s: parent score is %s there",
-                     instance->id, pe__node_name(node),
-                     pcmk_readable_score(allowed_node->weight));
+        pcmk__rsc_trace(instance,
+                        "%s cannot run on %s: parent score is %s there",
+                        instance->id, pe__node_name(node),
+                        pcmk_readable_score(allowed_node->weight));
         return false;
     }
 
     if (allowed_node->count >= max_per_node) {
-        pe_rsc_trace(instance,
-                     "%s cannot run on %s: node already has %d instance%s",
-                     instance->id, pe__node_name(node), max_per_node,
-                     pcmk__plural_s(max_per_node));
+        pcmk__rsc_trace(instance,
+                        "%s cannot run on %s: node already has %d instance%s",
+                        instance->id, pe__node_name(node), max_per_node,
+                        pcmk__plural_s(max_per_node));
         return false;
     }
 
-    pe_rsc_trace(instance, "%s can run on %s (%d already running)",
-                 instance->id, pe__node_name(node), allowed_node->count);
+    pcmk__rsc_trace(instance, "%s can run on %s (%d already running)",
+                    instance->id, pe__node_name(node), allowed_node->count);
     return true;
 }
 
@@ -89,8 +90,8 @@ ban_unavailable_allowed_nodes(pcmk_resource_t *instance, int max_per_node)
         g_hash_table_iter_init(&iter, instance->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
             if (!can_run_instance(instance, node, max_per_node)) {
-                pe_rsc_trace(instance, "Banning %s from unavailable node %s",
-                             instance->id, pe__node_name(node));
+                pcmk__rsc_trace(instance, "Banning %s from unavailable node %s",
+                                instance->id, pe__node_name(node));
                 node->weight = -INFINITY;
                 for (GList *child_iter = instance->children;
                      child_iter != NULL; child_iter = child_iter->next) {
@@ -100,11 +101,11 @@ ban_unavailable_allowed_nodes(pcmk_resource_t *instance, int max_per_node)
                     child_node = g_hash_table_lookup(child->allowed_nodes,
                                                      node->details->id);
                     if (child_node != NULL) {
-                        pe_rsc_trace(instance,
-                                     "Banning %s child %s "
-                                     "from unavailable node %s",
-                                     instance->id, child->id,
-                                     pe__node_name(node));
+                        pcmk__rsc_trace(instance,
+                                        "Banning %s child %s "
+                                        "from unavailable node %s",
+                                        instance->id, child->id,
+                                        pe__node_name(node));
                         child_node->weight = -INFINITY;
                     }
                 }
@@ -273,8 +274,8 @@ node_is_allowed(const pcmk_resource_t *rsc, pcmk_node_t **node)
                                                    (*node)->details->id);
 
         if ((allowed == NULL) || (allowed->weight < 0)) {
-            pe_rsc_trace(rsc, "%s: current location (%s) is unavailable",
-                         rsc->id, pe__node_name(*node));
+            pcmk__rsc_trace(rsc, "%s: current location (%s) is unavailable",
+                            rsc->id, pe__node_name(*node));
             *node = NULL;
             return false;
         }
@@ -557,8 +558,8 @@ assign_instance(pcmk_resource_t *instance, const pcmk_node_t *prefer,
 {
     pcmk_node_t *chosen = NULL;
 
-    pe_rsc_trace(instance, "Assigning %s (preferring %s)", instance->id,
-                 ((prefer == NULL)? "no node" : prefer->details->uname));
+    pcmk__rsc_trace(instance, "Assigning %s (preferring %s)", instance->id,
+                    ((prefer == NULL)? "no node" : prefer->details->uname));
 
     if (pcmk_is_set(instance->flags, pcmk_rsc_assigning)) {
         pcmk__rsc_debug(instance,
@@ -600,8 +601,8 @@ assign_instance_early(const pcmk_resource_t *rsc, pcmk_resource_t *instance,
     GHashTable *allowed_orig_parent = parent->allowed_nodes;
     const pcmk_node_t *allowed_node = NULL;
 
-    pe_rsc_trace(instance, "Trying to assign %s to its current node %s",
-                 instance->id, pe__node_name(current));
+    pcmk__rsc_trace(instance, "Trying to assign %s to its current node %s",
+                    instance->id, pe__node_name(current));
 
     allowed_node = g_hash_table_lookup(instance->allowed_nodes,
                                        current->details->id);
@@ -693,8 +694,8 @@ assign_instance_early(const pcmk_resource_t *rsc, pcmk_resource_t *instance,
         // Couldn't assign instance to current node
         return false;
     }
-    pe_rsc_trace(instance, "Assigned %s to current node %s",
-                 instance->id, pe__node_name(current));
+    pcmk__rsc_trace(instance, "Assigned %s to current node %s",
+                    instance->id, pe__node_name(current));
     increment_parent_count(instance, chosen);
     return true;
 }
@@ -749,18 +750,18 @@ preferred_node(const pcmk_resource_t *instance, int optimal_per_node)
     // Check whether instance's current node can run resources
     node = pe__current_node(instance);
     if (!pcmk__node_available(node, true, false)) {
-        pe_rsc_trace(instance, "Not assigning %s to %s early (unavailable)",
-                     instance->id, pe__node_name(node));
+        pcmk__rsc_trace(instance, "Not assigning %s to %s early (unavailable)",
+                        instance->id, pe__node_name(node));
         return NULL;
     }
 
     // Check whether node already has optimal number of instances assigned
     parent_node = pcmk__top_allowed_node(instance, node);
     if ((parent_node != NULL) && (parent_node->count >= optimal_per_node)) {
-        pe_rsc_trace(instance,
-                     "Not assigning %s to %s early "
-                     "(optimal instances already assigned)",
-                     instance->id, pe__node_name(node));
+        pcmk__rsc_trace(instance,
+                        "Not assigning %s to %s early "
+                        "(optimal instances already assigned)",
+                        instance->id, pe__node_name(node));
         return NULL;
     }
 
@@ -821,8 +822,8 @@ pcmk__assign_instances(pcmk_resource_t *collective, GList *instances,
         }
     }
 
-    pe_rsc_trace(collective, "Assigned %d of %d instance%s to current node",
-                 assigned, max_total, pcmk__plural_s(max_total));
+    pcmk__rsc_trace(collective, "Assigned %d of %d instance%s to current node",
+                    assigned, max_total, pcmk__plural_s(max_total));
 
     for (iter = instances; iter != NULL; iter = iter->next) {
         instance = (pcmk_resource_t *) iter->data;
@@ -927,13 +928,13 @@ check_instance_state(const pcmk_resource_t *instance, uint32_t *state)
             if (!optional
                 && pcmk_is_set(action->flags, pcmk_action_runnable)) {
 
-                pe_rsc_trace(instance, "Instance is starting due to %s",
-                             action->uuid);
+                pcmk__rsc_trace(instance, "Instance is starting due to %s",
+                                action->uuid);
                 instance_state |= instance_starting;
             } else {
-                pe_rsc_trace(instance, "%s doesn't affect %s state (%s)",
-                             action->uuid, instance->id,
-                             (optional? "optional" : "unrunnable"));
+                pcmk__rsc_trace(instance, "%s doesn't affect %s state (%s)",
+                                action->uuid, instance->id,
+                                (optional? "optional" : "unrunnable"));
             }
 
         } else if (pcmk__str_eq(PCMK_ACTION_STOP, action->task,
@@ -945,13 +946,13 @@ check_instance_state(const pcmk_resource_t *instance, uint32_t *state)
             if (!optional
                 && pcmk_any_flags_set(action->flags, pcmk_action_pseudo
                                                      |pcmk_action_runnable)) {
-                pe_rsc_trace(instance, "Instance is stopping due to %s",
-                             action->uuid);
+                pcmk__rsc_trace(instance, "Instance is stopping due to %s",
+                                action->uuid);
                 instance_state |= instance_stopping;
             } else {
-                pe_rsc_trace(instance, "%s doesn't affect %s state (%s)",
-                             action->uuid, instance->id,
-                             (optional? "optional" : "unrunnable"));
+                pcmk__rsc_trace(instance, "%s doesn't affect %s state (%s)",
+                                action->uuid, instance->id,
+                                (optional? "optional" : "unrunnable"));
             }
         }
     }
@@ -981,8 +982,8 @@ pcmk__create_instance_actions(pcmk_resource_t *collective, GList *instances)
     pcmk_action_t *start = NULL;
     pcmk_action_t *started = NULL;
 
-    pe_rsc_trace(collective, "Creating collective instance actions for %s",
-                 collective->id);
+    pcmk__rsc_trace(collective, "Creating collective instance actions for %s",
+                    collective->id);
 
     // Create actions for each instance appropriate to its variant
     for (GList *iter = instances; iter != NULL; iter = iter->next) {
@@ -1081,9 +1082,9 @@ pcmk__instance_matches(const pcmk_resource_t *instance, const pcmk_node_t *node,
 
     if ((role != pcmk_role_unknown)
         && (role != instance->fns->state(instance, current))) {
-        pe_rsc_trace(instance,
-                     "%s is not a compatible instance (role is not %s)",
-                     instance->id, role2text(role));
+        pcmk__rsc_trace(instance,
+                        "%s is not a compatible instance (role is not %s)",
+                        instance->id, role2text(role));
         return false;
     }
 
@@ -1093,17 +1094,19 @@ pcmk__instance_matches(const pcmk_resource_t *instance, const pcmk_node_t *node,
     }
 
     if (instance_node == NULL) {
-        pe_rsc_trace(instance,
-                     "%s is not a compatible instance (not assigned to a node)",
-                     instance->id);
+        pcmk__rsc_trace(instance,
+                        "%s is not a compatible instance "
+                        "(not assigned to a node)",
+                        instance->id);
         return false;
     }
 
     if (!pe__same_node(instance_node, node)) {
-        pe_rsc_trace(instance,
-                     "%s is not a compatible instance (assigned to %s not %s)",
-                     instance->id, pe__node_name(instance_node),
-                     pe__node_name(node));
+        pcmk__rsc_trace(instance,
+                        "%s is not a compatible instance "
+                        "(assigned to %s not %s)",
+                        instance->id, pe__node_name(instance_node),
+                        pe__node_name(node));
         return false;
     }
 
@@ -1136,20 +1139,21 @@ find_compatible_instance_on_node(const pcmk_resource_t *match_rsc,
         pcmk_resource_t *instance = (pcmk_resource_t *) iter->data;
 
         if (pcmk__instance_matches(instance, node, role, current)) {
-            pe_rsc_trace(match_rsc,
-                         "Found %s %s instance %s compatible with %s on %s",
-                         role == pcmk_role_unknown? "matching" : role2text(role),
-                         rsc->id, instance->id, match_rsc->id,
-                         pe__node_name(node));
+            pcmk__rsc_trace(match_rsc,
+                            "Found %s %s instance %s compatible with %s on %s",
+                            role == pcmk_role_unknown? "matching" : role2text(role),
+                            rsc->id, instance->id, match_rsc->id,
+                            pe__node_name(node));
             free_instance_list(rsc, instances); // Only frees list, not contents
             return instance;
         }
     }
     free_instance_list(rsc, instances);
 
-    pe_rsc_trace(match_rsc, "No %s %s instance found compatible with %s on %s",
-                 ((role == pcmk_role_unknown)? "matching" : role2text(role)),
-                 rsc->id, match_rsc->id, pe__node_name(node));
+    pcmk__rsc_trace(match_rsc,
+                    "No %s %s instance found compatible with %s on %s",
+                    ((role == pcmk_role_unknown)? "matching" : role2text(role)),
+                    rsc->id, match_rsc->id, pe__node_name(node));
     return NULL;
 }
 
@@ -1219,10 +1223,10 @@ unassign_if_mandatory(const pcmk_action_t *first, const pcmk_action_t *then,
 {
     // Allow "then" instance to go down even without an interleave match
     if (current) {
-        pe_rsc_trace(then->rsc,
-                     "%s has no instance to order before stopping "
-                     "or demoting %s",
-                     first->rsc->id, then_instance->id);
+        pcmk__rsc_trace(then->rsc,
+                        "%s has no instance to order before stopping "
+                        "or demoting %s",
+                        first->rsc->id, then_instance->id);
 
     /* If the "first" action must be runnable, but there is no "first"
      * instance, the "then" instance must not be allowed to come up.
@@ -1475,8 +1479,9 @@ can_interleave_actions(const pcmk_action_t *first, const pcmk_action_t *then)
 
     interleave = crm_is_true(g_hash_table_lookup(rsc->meta,
                                                  XML_RSC_ATTR_INTERLEAVE));
-    pe_rsc_trace(rsc, "'%s then %s' will %sbe interleaved (based on %s)",
-                 first->uuid, then->uuid, (interleave? "" : "not "), rsc->id);
+    pcmk__rsc_trace(rsc, "'%s then %s' will %sbe interleaved (based on %s)",
+                    first->uuid, then->uuid, (interleave? "" : "not "),
+                    rsc->id);
     return interleave;
 }
 
@@ -1641,22 +1646,22 @@ pcmk__collective_action_flags(pcmk_action_t *action, const GList *instances,
         instance_action = find_first_action(instance->actions, NULL,
                                             action_name, instance_node);
         if (instance_action == NULL) {
-            pe_rsc_trace(action->rsc, "%s has no %s action on %s",
-                         instance->id, action_name, pe__node_name(node));
+            pcmk__rsc_trace(action->rsc, "%s has no %s action on %s",
+                            instance->id, action_name, pe__node_name(node));
             continue;
         }
 
-        pe_rsc_trace(action->rsc, "%s has %s for %s on %s",
-                     instance->id, instance_action->uuid, action_name,
-                     pe__node_name(node));
+        pcmk__rsc_trace(action->rsc, "%s has %s for %s on %s",
+                        instance->id, instance_action->uuid, action_name,
+                        pe__node_name(node));
 
         instance_flags = instance->cmds->action_flags(instance_action, node);
 
         // If any instance action is mandatory, so is the collective action
         if (pcmk_is_set(flags, pcmk_action_optional)
             && !pcmk_is_set(instance_flags, pcmk_action_optional)) {
-            pe_rsc_trace(instance, "%s is mandatory because %s is",
-                         action->uuid, instance_action->uuid);
+            pcmk__rsc_trace(instance, "%s is mandatory because %s is",
+                            action->uuid, instance_action->uuid);
             pe__clear_action_summary_flags(flags, action,
                                            pcmk_action_optional);
             pe__clear_action_flags(action, pcmk_action_optional);
@@ -1669,9 +1674,9 @@ pcmk__collective_action_flags(pcmk_action_t *action, const GList *instances,
     }
 
     if (!any_runnable) {
-        pe_rsc_trace(action->rsc,
-                     "%s is not runnable because no instance can run %s",
-                     action->uuid, action_name);
+        pcmk__rsc_trace(action->rsc,
+                        "%s is not runnable because no instance can run %s",
+                        action->uuid, action_name);
         pe__clear_action_summary_flags(flags, action, pcmk_action_runnable);
         if (node == NULL) {
             pe__clear_action_flags(action, pcmk_action_runnable);

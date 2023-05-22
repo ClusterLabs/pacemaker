@@ -62,8 +62,8 @@ pcmk__clone_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     for (GList *iter = colocations; iter != NULL; iter = iter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) iter->data;
 
-        pe_rsc_trace(rsc, "%s: Assigning colocation %s primary %s first",
-                     rsc->id, constraint->id, constraint->primary->id);
+        pcmk__rsc_trace(rsc, "%s: Assigning colocation %s primary %s first",
+                        rsc->id, constraint->id, constraint->primary->id);
         constraint->primary->cmds->assign(constraint->primary, prefer,
                                           stop_if_fail);
     }
@@ -87,7 +87,7 @@ pcmk__clone_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     }
 
     pe__clear_resource_flags(rsc, pcmk_rsc_unassigned|pcmk_rsc_assigning);
-    pe_rsc_trace(rsc, "Assigned clone %s", rsc->id);
+    pcmk__rsc_trace(rsc, "Assigned clone %s", rsc->id);
     return NULL;
 }
 
@@ -102,7 +102,7 @@ pcmk__clone_create_actions(pcmk_resource_t *rsc)
 {
     CRM_ASSERT(pe_rsc_is_clone(rsc));
 
-    pe_rsc_trace(rsc, "Creating actions for clone %s", rsc->id);
+    pcmk__rsc_trace(rsc, "Creating actions for clone %s", rsc->id);
     pcmk__create_instance_actions(rsc, rsc->children);
     if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
         pcmk__create_promotable_actions(rsc);
@@ -122,7 +122,7 @@ pcmk__clone_internal_constraints(pcmk_resource_t *rsc)
 
     CRM_ASSERT(pe_rsc_is_clone(rsc));
 
-    pe_rsc_trace(rsc, "Creating internal constraints for clone %s", rsc->id);
+    pcmk__rsc_trace(rsc, "Creating internal constraints for clone %s", rsc->id);
 
     // Restart ordering: Stop -> stopped -> start -> started
     pcmk__order_resource_actions(rsc, PCMK_ACTION_STOPPED,
@@ -260,16 +260,16 @@ pcmk__clone_apply_coloc_score(pcmk_resource_t *dependent,
                && (dependent->variant == pcmk_rsc_variant_primitive));
 
     if (pcmk_is_set(primary->flags, pcmk_rsc_unassigned)) {
-        pe_rsc_trace(primary,
-                     "Delaying processing colocation %s "
-                     "because cloned primary %s is still provisional",
-                     colocation->id, primary->id);
+        pcmk__rsc_trace(primary,
+                        "Delaying processing colocation %s "
+                        "because cloned primary %s is still provisional",
+                        colocation->id, primary->id);
         return;
     }
 
-    pe_rsc_trace(primary, "Processing colocation %s (%s with clone %s @%s)",
-                 colocation->id, dependent->id, primary->id,
-                 pcmk_readable_score(colocation->score));
+    pcmk__rsc_trace(primary, "Processing colocation %s (%s with clone %s @%s)",
+                    colocation->id, dependent->id, primary->id,
+                    pcmk_readable_score(colocation->score));
 
     // Apply role-specific colocations
     if (pcmk_is_set(primary->flags, pcmk_rsc_promotable)
@@ -329,9 +329,9 @@ pcmk__clone_apply_coloc_score(pcmk_resource_t *dependent,
 
             if ((chosen != NULL)
                 && !is_set_recursive(instance, pcmk_rsc_blocked, TRUE)) {
-                pe_rsc_trace(primary, "Allowing %s: %s %d",
-                             colocation->id, pe__node_name(chosen),
-                             chosen->weight);
+                pcmk__rsc_trace(primary, "Allowing %s: %s %d",
+                                colocation->id, pe__node_name(chosen),
+                                chosen->weight);
                 primary_nodes = g_list_prepend(primary_nodes, chosen);
             }
         }
@@ -579,10 +579,10 @@ pcmk__clone_create_probe(pcmk_resource_t *rsc, pcmk_node_t *node)
              * allowed_nodes so that notifications contain only nodes that the
              * clone can possibly run on.
              */
-            pe_rsc_trace(rsc,
-                         "Skipping probe for %s on %s because resource has "
-                         "exclusive discovery but is not allowed on node",
-                         rsc->id, pe__node_name(node));
+            pcmk__rsc_trace(rsc,
+                            "Skipping probe for %s on %s because resource has "
+                            "exclusive discovery but is not allowed on node",
+                            rsc->id, pe__node_name(node));
             g_hash_table_remove(rsc->allowed_nodes, node->details->id);
             return false;
         }

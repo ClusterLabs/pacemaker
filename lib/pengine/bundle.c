@@ -991,7 +991,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     bool need_log_mount = TRUE;
 
     CRM_ASSERT(rsc != NULL);
-    pe_rsc_trace(rsc, "Processing resource %s...", rsc->id);
+    pcmk__rsc_trace(rsc, "Processing resource %s...", rsc->id);
 
     bundle_data = calloc(1, sizeof(pe__bundle_variant_data_t));
     rsc->variant_opaque = bundle_data;
@@ -1992,7 +1992,7 @@ pe__free_bundle(pcmk_resource_t *rsc)
     CRM_CHECK(rsc != NULL, return);
 
     get_bundle_variant_data(bundle_data, rsc);
-    pe_rsc_trace(rsc, "Freeing %s", rsc->id);
+    pcmk__rsc_trace(rsc, "Freeing %s", rsc->id);
 
     free(bundle_data->prefix);
     free(bundle_data->image);

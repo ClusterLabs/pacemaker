@@ -979,7 +979,7 @@ pcmk__add_rsc_actions_to_graph(pcmk_resource_t *rsc)
     GList *iter = NULL;
 
     CRM_ASSERT(rsc != NULL);
-    pe_rsc_trace(rsc, "Adding actions for %s to graph", rsc->id);
+    pcmk__rsc_trace(rsc, "Adding actions for %s to graph", rsc->id);
 
     // First add the resource's own actions
     g_list_foreach(rsc->actions, add_action_to_graph, rsc->cluster);
@@ -1052,7 +1052,7 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
     for (iter = scheduler->resources; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
-        pe_rsc_trace(rsc, "Processing actions for %s", rsc->id);
+        pcmk__rsc_trace(rsc, "Processing actions for %s", rsc->id);
         rsc->cmds->add_actions_to_graph(rsc);
     }
 

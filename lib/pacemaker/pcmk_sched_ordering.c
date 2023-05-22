@@ -569,10 +569,10 @@ pcmk__new_ordering(pcmk_resource_t *first_rsc, char *first_action_task,
         order->rsc2 = then_action->rsc;
     }
 
-    pe_rsc_trace(first_rsc, "Created ordering %d for %s then %s",
-                 (sched->order_id - 1),
-                 pcmk__s(order->task1, "an underspecified action"),
-                 pcmk__s(order->task2, "an underspecified action"));
+    pcmk__rsc_trace(first_rsc, "Created ordering %d for %s then %s",
+                    (sched->order_id - 1),
+                    pcmk__s(order->task1, "an underspecified action"),
+                    pcmk__s(order->task2, "an underspecified action"));
 
     sched->ordering_constraints = g_list_prepend(sched->ordering_constraints,
                                                  order);
@@ -1143,17 +1143,17 @@ pcmk__order_stops_before_shutdown(pcmk_node_t *node, pcmk_action_t *shutdown_op)
         // Resources and nodes in maintenance mode won't be touched
 
         if (pcmk_is_set(action->rsc->flags, pcmk_rsc_maintenance)) {
-            pe_rsc_trace(action->rsc,
-                         "Not ordering %s before shutdown of %s because "
-                         "resource in maintenance mode",
-                         action->uuid, pe__node_name(node));
+            pcmk__rsc_trace(action->rsc,
+                            "Not ordering %s before shutdown of %s because "
+                            "resource in maintenance mode",
+                            action->uuid, pe__node_name(node));
             continue;
 
         } else if (node->details->maintenance) {
-            pe_rsc_trace(action->rsc,
-                         "Not ordering %s before shutdown of %s because "
-                         "node in maintenance mode",
-                         action->uuid, pe__node_name(node));
+            pcmk__rsc_trace(action->rsc,
+                            "Not ordering %s before shutdown of %s because "
+                            "node in maintenance mode",
+                            action->uuid, pe__node_name(node));
             continue;
         }
 
@@ -1163,15 +1163,15 @@ pcmk__order_stops_before_shutdown(pcmk_node_t *node, pcmk_action_t *shutdown_op)
          */
         if (!pcmk_any_flags_set(action->rsc->flags,
                                 pcmk_rsc_managed|pcmk_rsc_blocked)) {
-            pe_rsc_trace(action->rsc,
-                         "Not ordering %s before shutdown of %s because "
-                         "resource is unmanaged or blocked",
-                         action->uuid, pe__node_name(node));
+            pcmk__rsc_trace(action->rsc,
+                            "Not ordering %s before shutdown of %s because "
+                            "resource is unmanaged or blocked",
+                            action->uuid, pe__node_name(node));
             continue;
         }
 
-        pe_rsc_trace(action->rsc, "Ordering %s before shutdown of %s",
-                     action->uuid, pe__node_name(node));
+        pcmk__rsc_trace(action->rsc, "Ordering %s before shutdown of %s",
+                        action->uuid, pe__node_name(node));
         pe__clear_action_flags(action, pcmk_action_optional);
         pcmk__new_ordering(action->rsc, NULL, action, NULL,
                            strdup(PCMK_ACTION_DO_SHUTDOWN), shutdown_op,
@@ -1233,8 +1233,8 @@ order_resource_actions_after(pcmk_action_t *first_action,
     CRM_CHECK((rsc != NULL) && (order != NULL), return);
 
     flags = order->flags;
-    pe_rsc_trace(rsc, "Applying ordering %d for 'then' resource %s",
-                 order->id, rsc->id);
+    pcmk__rsc_trace(rsc, "Applying ordering %d for 'then' resource %s",
+                    order->id, rsc->id);
 
     if (order->action2 != NULL) {
         then_actions = g_list_prepend(NULL, order->action2);
@@ -1244,17 +1244,17 @@ order_resource_actions_after(pcmk_action_t *first_action,
     }
 
     if (then_actions == NULL) {
-        pe_rsc_trace(rsc, "Ignoring ordering %d: no %s actions found for %s",
-                     order->id, order->task2, rsc->id);
+        pcmk__rsc_trace(rsc, "Ignoring ordering %d: no %s actions found for %s",
+                        order->id, order->task2, rsc->id);
         return;
     }
 
     if ((first_action != NULL) && (first_action->rsc == rsc)
         && pcmk_is_set(first_action->flags, pcmk_action_migration_abort)) {
 
-        pe_rsc_trace(rsc,
-                     "Detected dangling migration ordering (%s then %s %s)",
-                     first_action->uuid, order->task2, rsc->id);
+        pcmk__rsc_trace(rsc,
+                        "Detected dangling migration ordering (%s then %s %s)",
+                        first_action->uuid, order->task2, rsc->id);
         pe__clear_order_flags(flags, pcmk__ar_first_implies_then);
     }
 
@@ -1292,8 +1292,8 @@ rsc_order_first(pcmk_resource_t *first_rsc, pcmk__action_relation_t *order)
     pcmk_resource_t *then_rsc = order->rsc2;
 
     CRM_ASSERT(first_rsc != NULL);
-    pe_rsc_trace(first_rsc, "Applying ordering constraint %d (first: %s)",
-                 order->id, first_rsc->id);
+    pcmk__rsc_trace(first_rsc, "Applying ordering constraint %d (first: %s)",
+                    order->id, first_rsc->id);
 
     if (first_action != NULL) {
         first_actions = g_list_prepend(NULL, first_action);
@@ -1303,9 +1303,9 @@ rsc_order_first(pcmk_resource_t *first_rsc, pcmk__action_relation_t *order)
     }
 
     if ((first_actions == NULL) && (first_rsc == then_rsc)) {
-        pe_rsc_trace(first_rsc,
-                     "Ignoring constraint %d: first (%s for %s) not found",
-                     order->id, order->task1, first_rsc->id);
+        pcmk__rsc_trace(first_rsc,
+                        "Ignoring constraint %d: first (%s for %s) not found",
+                        order->id, order->task1, first_rsc->id);
 
     } else if (first_actions == NULL) {
         char *key = NULL;
@@ -1318,23 +1318,25 @@ rsc_order_first(pcmk_resource_t *first_rsc, pcmk__action_relation_t *order)
         if ((first_rsc->fns->state(first_rsc, TRUE) == pcmk_role_stopped)
             && pcmk__str_eq(op_type, PCMK_ACTION_STOP, pcmk__str_none)) {
             free(key);
-            pe_rsc_trace(first_rsc,
-                         "Ignoring constraint %d: first (%s for %s) not found",
-                         order->id, order->task1, first_rsc->id);
+            pcmk__rsc_trace(first_rsc,
+                            "Ignoring constraint %d: first (%s for %s) "
+                            "not found",
+                            order->id, order->task1, first_rsc->id);
 
         } else if ((first_rsc->fns->state(first_rsc,
                                           TRUE) == pcmk_role_unpromoted)
                    && pcmk__str_eq(op_type, PCMK_ACTION_DEMOTE,
                                    pcmk__str_none)) {
             free(key);
-            pe_rsc_trace(first_rsc,
-                         "Ignoring constraint %d: first (%s for %s) not found",
-                         order->id, order->task1, first_rsc->id);
+            pcmk__rsc_trace(first_rsc,
+                            "Ignoring constraint %d: first (%s for %s) "
+                            "not found",
+                            order->id, order->task1, first_rsc->id);
 
         } else {
-            pe_rsc_trace(first_rsc,
-                         "Creating first (%s for %s) for constraint %d ",
-                         order->task1, first_rsc->id, order->id);
+            pcmk__rsc_trace(first_rsc,
+                            "Creating first (%s for %s) for constraint %d ",
+                            order->task1, first_rsc->id, order->id);
             first_action = custom_action(first_rsc, key, op_type, NULL, TRUE,
                                          first_rsc->cluster);
             first_actions = g_list_prepend(NULL, first_action);
@@ -1345,8 +1347,8 @@ rsc_order_first(pcmk_resource_t *first_rsc, pcmk__action_relation_t *order)
 
     if (then_rsc == NULL) {
         if (order->action2 == NULL) {
-            pe_rsc_trace(first_rsc, "Ignoring constraint %d: then not found",
-                         order->id);
+            pcmk__rsc_trace(first_rsc, "Ignoring constraint %d: then not found",
+                            order->id);
             return;
         }
         then_rsc = order->action2->rsc;

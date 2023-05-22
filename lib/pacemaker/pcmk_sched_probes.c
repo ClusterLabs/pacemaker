@@ -284,9 +284,9 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
     return true;
 
 no_probe:
-    pe_rsc_trace(rsc,
-                 "Skipping probe for %s on %s because %s",
-                 rsc->id, node->details->id, reason);
+    pcmk__rsc_trace(rsc,
+                    "Skipping probe for %s on %s because %s",
+                    rsc->id, node->details->id, reason);
     return false;
 }
 

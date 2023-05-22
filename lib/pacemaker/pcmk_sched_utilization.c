@@ -421,8 +421,9 @@ pcmk__create_utilization_constraints(pcmk_resource_t *rsc,
     const GList *iter = NULL;
     pcmk_action_t *load_stopped = NULL;
 
-    pe_rsc_trace(rsc, "Creating utilization constraints for %s - strategy: %s",
-                 rsc->id, rsc->cluster->placement_strategy);
+    pcmk__rsc_trace(rsc,
+                    "Creating utilization constraints for %s - strategy: %s",
+                    rsc->id, rsc->cluster->placement_strategy);
 
     // "stop rsc then load_stopped" constraints for current nodes
     for (iter = rsc->running_on; iter != NULL; iter = iter->next) {

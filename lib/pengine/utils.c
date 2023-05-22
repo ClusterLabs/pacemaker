@@ -350,10 +350,10 @@ resource_node_score(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
         g_hash_table_insert(rsc->allowed_nodes, (gpointer) match->details->id, match);
     }
     match->weight = pcmk__add_scores(match->weight, score);
-    pe_rsc_trace(rsc,
-                 "Enabling %s preference (%s) for %s on %s (now %s)",
-                 tag, pcmk_readable_score(score), rsc->id, pe__node_name(node),
-                 pcmk_readable_score(match->weight));
+    pcmk__rsc_trace(rsc,
+                    "Enabling %s preference (%s) for %s on %s (now %s)",
+                    tag, pcmk_readable_score(score), rsc->id,
+                    pe__node_name(node), pcmk_readable_score(match->weight));
 }
 
 void

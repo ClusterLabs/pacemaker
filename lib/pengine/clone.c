@@ -276,14 +276,15 @@ pe__create_clone_child(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
     CRM_ASSERT(child_rsc);
     clone_data->total_clones += 1;
-    pe_rsc_trace(child_rsc, "Setting clone attributes for: %s", child_rsc->id);
+    pcmk__rsc_trace(child_rsc, "Setting clone attributes for: %s",
+                    child_rsc->id);
     rsc->children = g_list_append(rsc->children, child_rsc);
     if (as_orphan) {
         pe__set_resource_flags_recursive(child_rsc, pcmk_rsc_removed);
     }
 
     add_hash_param(child_rsc->meta, PCMK_META_CLONE_MAX, inc_max);
-    pe_rsc_trace(rsc, "Added %s instance %s", rsc->id, child_rsc->id);
+    pcmk__rsc_trace(rsc, "Added %s instance %s", rsc->id, child_rsc->id);
 
   bail:
     free(inc_num);
@@ -329,7 +330,7 @@ clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     xmlNode *xml_obj = rsc->xml;
     clone_variant_data_t *clone_data = NULL;
 
-    pe_rsc_trace(rsc, "Processing resource %s...", rsc->id);
+    pcmk__rsc_trace(rsc, "Processing resource %s...", rsc->id);
 
     clone_data = calloc(1, sizeof(clone_variant_data_t));
     rsc->variant_opaque = clone_data;
@@ -378,13 +379,13 @@ clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         clone_data->clone_node_max = 1;
     }
 
-    pe_rsc_trace(rsc, "Options for %s", rsc->id);
-    pe_rsc_trace(rsc, "\tClone max: %d", clone_data->clone_max);
-    pe_rsc_trace(rsc, "\tClone node max: %d", clone_data->clone_node_max);
-    pe_rsc_trace(rsc, "\tClone is unique: %s",
-                 pe__rsc_bool_str(rsc, pcmk_rsc_unique));
-    pe_rsc_trace(rsc, "\tClone is promotable: %s",
-                 pe__rsc_bool_str(rsc, pcmk_rsc_promotable));
+    pcmk__rsc_trace(rsc, "Options for %s", rsc->id);
+    pcmk__rsc_trace(rsc, "\tClone max: %d", clone_data->clone_max);
+    pcmk__rsc_trace(rsc, "\tClone node max: %d", clone_data->clone_node_max);
+    pcmk__rsc_trace(rsc, "\tClone is unique: %s",
+                    pe__rsc_bool_str(rsc, pcmk_rsc_unique));
+    pcmk__rsc_trace(rsc, "\tClone is promotable: %s",
+                    pe__rsc_bool_str(rsc, pcmk_rsc_promotable));
 
     // Clones may contain a single group or primitive
     for (a_child = pcmk__xe_first_child(xml_obj); a_child != NULL;
@@ -434,7 +435,8 @@ clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         }
     }
 
-    pe_rsc_trace(rsc, "Added %d children to resource %s...", clone_data->clone_max, rsc->id);
+    pcmk__rsc_trace(rsc, "Added %d children to resource %s...",
+                    clone_data->clone_max, rsc->id);
     return TRUE;
 }
 
@@ -1183,13 +1185,13 @@ clone_free(pcmk_resource_t * rsc)
 
     get_clone_variant_data(clone_data, rsc);
 
-    pe_rsc_trace(rsc, "Freeing %s", rsc->id);
+    pcmk__rsc_trace(rsc, "Freeing %s", rsc->id);
 
     for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
 
         CRM_ASSERT(child_rsc);
-        pe_rsc_trace(child_rsc, "Freeing child %s", child_rsc->id);
+        pcmk__rsc_trace(child_rsc, "Freeing child %s", child_rsc->id);
         free_xml(child_rsc->xml);
         child_rsc->xml = NULL;
         /* There could be a saved unexpanded xml */
@@ -1225,7 +1227,7 @@ clone_resource_state(const pcmk_resource_t * rsc, gboolean current)
         }
     }
 
-    pe_rsc_trace(rsc, "%s role: %s", rsc->id, role2text(clone_role));
+    pcmk__rsc_trace(rsc, "%s role: %s", rsc->id, role2text(clone_role));
     return clone_role;
 }
 

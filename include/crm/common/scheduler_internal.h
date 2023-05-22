@@ -82,6 +82,16 @@ extern uint32_t pcmk__warnings;
 #define pcmk__rsc_debug(rsc, fmt, args...)  \
     crm_log_tag(LOG_DEBUG, ((rsc) == NULL)? "<NULL>" : (rsc)->id, (fmt), ##args)
 
+/*!
+ * \internal
+ * \brief Log a resource-tagged message at trace severity
+ *
+ * \param[in] rsc       Tag message with this resource's ID
+ * \param[in] fmt...    printf(3)-style format and arguments
+ */
+#define pcmk__rsc_trace(rsc, fmt, args...)  \
+    crm_log_tag(LOG_TRACE, ((rsc) == NULL)? "<NULL>" : (rsc)->id, (fmt), ##args)
+
 #ifdef __cplusplus
 }
 #endif
