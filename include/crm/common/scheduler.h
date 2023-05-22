@@ -232,6 +232,9 @@ struct pe_working_set_s {
     guint node_pending_timeout;     //!< Pending join times out after this (ms)
 };
 
+// Whether the scheduler input currently being processed has errors
+extern gboolean was_processing_error;
+
 #ifdef __cplusplus
 }
 #endif

@@ -18,7 +18,6 @@
 #include <crm/common/scheduler_internal.h>
 #include <crm/pengine/internal.h>
 
-gboolean was_processing_error = FALSE;
 gboolean was_processing_warning = FALSE;
 
 static bool
