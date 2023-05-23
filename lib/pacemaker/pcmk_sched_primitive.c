@@ -776,7 +776,7 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
         // Resource was (possibly) incorrectly multiply active
         pcmk__sched_err("%s resource %s might be active on %u nodes (%s)",
                         pcmk__s(class, "Untyped"), rsc->id, num_all_active,
-                        recovery2text(rsc->recovery_type));
+                        pcmk_multiply_active_text(rsc->recovery_type));
         crm_notice("See https://wiki.clusterlabs.org/wiki/FAQ"
                    "#Resource_is_Too_Active for more information");
 

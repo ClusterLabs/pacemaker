@@ -37,17 +37,7 @@ const char *pe_pref(GHashTable * options, const char *name);
 static inline const char *
 recovery2text(enum rsc_recovery_type type)
 {
-    switch (type) {
-        case pcmk_multiply_active_stop:
-            return "shutting it down";
-        case pcmk_multiply_active_restart:
-            return "attempting recovery";
-        case pcmk_multiply_active_block:
-            return "waiting for an administrator";
-        case pcmk_multiply_active_unexpected:
-            return "stopping unexpected instances";
-    }
-    return "Unknown";
+    return pcmk_multiply_active_text(type);
 }
 
 typedef struct pe_re_match_data {
