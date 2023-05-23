@@ -1477,7 +1477,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
     running = resource_is_running_on(rsc, host);
 
     if (pcmk__is_clone(parent) && !running) {
-        if (pe_rsc_is_unique_clone(parent)) {
+        if (pcmk__is_unique_clone(parent)) {
             lookup_id = strdup(rsc->id);
         } else {
             lookup_id = clone_strip(rsc->id);
@@ -1506,7 +1506,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
 
     rsc_id = strdup(rsc->id);
 
-    if (pe_rsc_is_unique_clone(parent)) {
+    if (pcmk__is_unique_clone(parent)) {
         lookup_id = strdup(rsc->id);
     } else {
         lookup_id = clone_strip(rsc->id);

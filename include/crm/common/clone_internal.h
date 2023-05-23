@@ -45,6 +45,20 @@ pcmk__is_clone(const pcmk_resource_t *rsc)
     return (rsc != NULL) && (rsc->variant == pcmk_rsc_variant_clone);
 }
 
+/*!
+ * \internal
+ * \brief Check whether a resource is a globally unique clone
+ *
+ * \param[in] rsc  Resource to check
+ *
+ * \return true if \p rsc is a unique clone, otherwise false
+ */
+static inline bool
+pcmk__is_unique_clone(const pcmk_resource_t *rsc)
+{
+    return pcmk__is_clone(rsc) && pcmk_is_set(rsc->flags, pcmk_rsc_unique);
+}
+
 #ifdef __cplusplus
 }
 #endif
