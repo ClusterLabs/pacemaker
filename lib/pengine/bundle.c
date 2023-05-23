@@ -958,7 +958,7 @@ pe__add_bundle_remote_name(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler,
         /* If it won't be running anywhere after the
          * transition, go with where it's running now.
          */
-        node = pe__current_node(replica->container);
+        node = pcmk__current_node(replica->container);
     }
 
     if(node == NULL) {
@@ -1708,7 +1708,8 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
                                      desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
                                      get_unmanaged_str(rsc));
 
-            pe__bundle_replica_output_html(out, replica, pe__current_node(replica->container),
+            pe__bundle_replica_output_html(out, replica,
+                                           pcmk__current_node(replica->container),
                                            show_opts);
         }
     }
@@ -1843,7 +1844,8 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
                                      desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
                                      get_unmanaged_str(rsc));
 
-            pe__bundle_replica_output_text(out, replica, pe__current_node(replica->container),
+            pe__bundle_replica_output_text(out, replica,
+                                           pcmk__current_node(replica->container),
                                            show_opts);
         }
     }
@@ -1882,7 +1884,7 @@ print_bundle_replica(pcmk__bundle_replica_t *replica, const char *pre_text,
                            replica->ipaddr);
     }
 
-    node = pe__current_node(replica->container);
+    node = pcmk__current_node(replica->container);
     common_print(rsc, pre_text, buffer, node, options, print_data);
 }
 

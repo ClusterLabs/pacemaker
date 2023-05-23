@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -48,6 +48,20 @@ extern "C" {
             LOG_TRACE, "Resource", (resource)->id, (resource)->flags,       \
             (flags_to_clear), #flags_to_clear);                             \
     } while (0)
+
+/*!
+ * \internal
+ * \brief Get node where resource is currently active (if any)
+ *
+ * \param[in] rsc  Resource to check
+ *
+ * \return Node that \p rsc is active on, if any, otherwise NULL
+ */
+static inline pcmk_node_t *
+pcmk__current_node(const pcmk_resource_t *rsc)
+{
+    return (rsc == NULL)? NULL : rsc->fns->active_node(rsc, NULL, NULL);
+}
 
 #ifdef __cplusplus
 }

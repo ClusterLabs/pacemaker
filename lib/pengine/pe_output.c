@@ -560,7 +560,7 @@ pe__node_display_name(pcmk_node_t *node, bool print_detail)
     /* Host is displayed only if this is a guest node and detail is requested */
     if (print_detail && pe__is_guest_node(node)) {
         const pcmk_resource_t *container = node->details->remote_rsc->container;
-        const pcmk_node_t *host_node = pe__current_node(container);
+        const pcmk_node_t *host_node = pcmk__current_node(container);
 
         if (host_node && host_node->details) {
             node_host = host_node->details->uname;
@@ -2050,7 +2050,7 @@ node_and_op(pcmk__output_t *out, va_list args) {
     rsc = pe_find_resource(scheduler->resources, op_rsc);
 
     if (rsc) {
-        const pcmk_node_t *node = pe__current_node(rsc);
+        const pcmk_node_t *node = pcmk__current_node(rsc);
         const char *target_role = g_hash_table_lookup(rsc->meta,
                                                       PCMK_META_TARGET_ROLE);
         uint32_t show_opts = pcmk_show_rsc_only | pcmk_show_pending;

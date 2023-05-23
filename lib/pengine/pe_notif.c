@@ -143,7 +143,7 @@ get_node_names(const GList *list, GString **all_node_names,
         if (host_node_names != NULL) {
             if (pe__is_guest_node(node)
                 && (node->details->remote_rsc->container->running_on != NULL)) {
-                node = pe__current_node(node->details->remote_rsc->container);
+                node = pcmk__current_node(node->details->remote_rsc->container);
                 if (node->details->uname == NULL) {
                     continue;
                 }

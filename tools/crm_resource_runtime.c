@@ -586,7 +586,7 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
             }
         }
         if (!cib_only && pe__is_guest_or_remote_node(node)) {
-            node = pe__current_node(node->details->remote_rsc);
+            node = pcmk__current_node(node->details->remote_rsc);
             if (node == NULL) {
                 out->err(out, "No cluster connection to Pacemaker Remote node %s detected",
                          host_uname);
@@ -2182,7 +2182,7 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
 
             if (child_role == pcmk_role_promoted) {
                 rsc = child;
-                promoted_node = pe__current_node(child);
+                promoted_node = pcmk__current_node(child);
                 promoted_count++;
             }
         }

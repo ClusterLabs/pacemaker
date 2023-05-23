@@ -137,7 +137,7 @@ sorted_allowed_nodes(const pcmk_resource_t *rsc)
         GList *nodes = g_hash_table_get_values(rsc->allowed_nodes);
 
         if (nodes != NULL) {
-            return pcmk__sort_nodes(nodes, pe__current_node(rsc));
+            return pcmk__sort_nodes(nodes, pcmk__current_node(rsc));
         }
     }
     return NULL;
@@ -238,7 +238,7 @@ assign_best_node(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
              * remaining unassigned instances to prefer a node that's already
              * running another instance.
              */
-            pcmk_node_t *running = pe__current_node(rsc);
+            pcmk_node_t *running = pcmk__current_node(rsc);
 
             if (running == NULL) {
                 // Nothing to do
@@ -504,7 +504,7 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
         pcmk_node_t *assign_to = NULL;
 
         pe__set_next_role(rsc, rsc->role, "unmanaged");
-        assign_to = pe__current_node(rsc);
+        assign_to = pcmk__current_node(rsc);
         if (assign_to == NULL) {
             reason = "inactive";
         } else if (rsc->role == pcmk_role_promoted) {

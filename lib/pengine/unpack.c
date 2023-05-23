@@ -1384,7 +1384,7 @@ unpack_status(xmlNode *status, pcmk_scheduler_t *scheduler)
     if (scheduler->stop_needed != NULL) {
         for (GList *item = scheduler->stop_needed; item; item = item->next) {
             pcmk_resource_t *container = item->data;
-            pcmk_node_t *node = pe__current_node(container);
+            pcmk_node_t *node = pcmk__current_node(container);
 
             if (node) {
                 stop_action(container, node, FALSE);

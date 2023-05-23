@@ -957,7 +957,7 @@ native_print(pcmk_resource_t *rsc, const char *pre_text, long options,
         return;
     }
 
-    node = pe__current_node(rsc);
+    node = pcmk__current_node(rsc);
 
     if (node == NULL) {
         // This is set only if a non-probe action is pending on this node
@@ -1061,7 +1061,7 @@ pe__resource_html(pcmk__output_t *out, va_list args)
     GList *only_node G_GNUC_UNUSED = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
-    const pcmk_node_t *node = pe__current_node(rsc);
+    const pcmk_node_t *node = pcmk__current_node(rsc);
 
     if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
         return pcmk_rc_no_output;
@@ -1086,7 +1086,7 @@ pe__resource_text(pcmk__output_t *out, va_list args)
     GList *only_node G_GNUC_UNUSED = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
-    const pcmk_node_t *node = pe__current_node(rsc);
+    const pcmk_node_t *node = pcmk__current_node(rsc);
 
     CRM_ASSERT(rsc->variant == pcmk_rsc_variant_primitive);
 

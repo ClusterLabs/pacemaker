@@ -334,7 +334,7 @@ pcmk__output_resource_actions(pcmk_resource_t *rsc)
 
     next = rsc->allocated_to;
     if (rsc->running_on) {
-        current = pe__current_node(rsc);
+        current = pcmk__current_node(rsc);
         if (rsc->role == pcmk_role_stopped) {
             /* This can occur when resources are being recovered because
              * the current role can change in pcmk__primitive_create_actions()
@@ -704,10 +704,10 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
     // The resource with highest score on its current node goes first
     reason = "current location";
     if (resource1->running_on != NULL) {
-        r1_node = pe__current_node(resource1);
+        r1_node = pcmk__current_node(resource1);
     }
     if (resource2->running_on != NULL) {
-        r2_node = pe__current_node(resource2);
+        r2_node = pcmk__current_node(resource2);
     }
     r1_score = get_node_score(r1_node, r1_nodes);
     r2_score = get_node_score(r2_node, r2_nodes);

@@ -195,8 +195,8 @@ cmp_instance_by_colocation(const pcmk_resource_t *instance1,
     int rc = 0;
     pcmk_node_t *node1 = NULL;
     pcmk_node_t *node2 = NULL;
-    pcmk_node_t *current_node1 = pe__current_node(instance1);
-    pcmk_node_t *current_node2 = pe__current_node(instance2);
+    pcmk_node_t *current_node1 = pcmk__current_node(instance1);
+    pcmk_node_t *current_node2 = pcmk__current_node(instance2);
     GHashTable *colocated_scores1 = NULL;
     GHashTable *colocated_scores2 = NULL;
 
@@ -748,7 +748,7 @@ preferred_node(const pcmk_resource_t *instance, int optimal_per_node)
     }
 
     // Check whether instance's current node can run resources
-    node = pe__current_node(instance);
+    node = pcmk__current_node(instance);
     if (!pcmk__node_available(node, true, false)) {
         pcmk__rsc_trace(instance, "Not assigning %s to %s early (unavailable)",
                         instance->id, pe__node_name(node));
@@ -833,7 +833,7 @@ pcmk__assign_instances(pcmk_resource_t *collective, GList *instances,
         }
 
         if (instance->running_on != NULL) {
-            current = pe__current_node(instance);
+            current = pcmk__current_node(instance);
             if (pcmk__top_allowed_node(instance, current) == NULL) {
                 const char *unmanaged = "";
 

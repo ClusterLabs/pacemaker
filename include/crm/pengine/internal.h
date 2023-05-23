@@ -167,13 +167,6 @@ bool pe__count_active_node(const pcmk_resource_t *rsc, pcmk_node_t *node,
 pcmk_node_t *pe__find_active_requires(const pcmk_resource_t *rsc,
                                     unsigned int *count);
 
-static inline pcmk_node_t *
-pe__current_node(const pcmk_resource_t *rsc)
-{
-    return (rsc == NULL)? NULL : rsc->fns->active_node(rsc, NULL, NULL);
-}
-
-
 /* Binary like operators for lists of nodes */
 GHashTable *pe__node_list2table(const GList *list);
 

@@ -993,7 +993,7 @@ ban_or_move(pcmk__output_t *out, pcmk_resource_t *rsc,
 
             if (child_role == pcmk_role_promoted) {
                 count++;
-                current = pe__current_node(child);
+                current = pcmk__current_node(child);
             }
         }
 
@@ -1167,7 +1167,7 @@ refresh(pcmk__output_t *out)
         pcmk_node_t *node = pe_find_node(scheduler->nodes, options.host_uname);
 
         if (pe__is_guest_or_remote_node(node)) {
-            node = pe__current_node(node->details->remote_rsc);
+            node = pcmk__current_node(node->details->remote_rsc);
             if (node == NULL) {
                 rc = ENXIO;
                 g_set_error(&error, PCMK__RC_ERROR, rc,
