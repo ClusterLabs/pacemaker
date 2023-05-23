@@ -46,7 +46,7 @@ struct action_history {
 };
 
 /* This uses pcmk__set_flags_as()/pcmk__clear_flags_as() directly rather than
- * use pe__set_working_set_flags()/pe__clear_working_set_flags() so that the
+ * use pcmk__set_scheduler_flags()/pcmk__clear_scheduler_flags() so that the
  * flag is stringified more readably in log messages.
  */
 #define set_config_flag(scheduler, option, flag) do {                         \
@@ -203,7 +203,7 @@ set_if_xpath(uint64_t flag, const char *xpath, pcmk_scheduler_t *scheduler)
     if (!pcmk_is_set(scheduler->flags, flag)) {
         result = xpath_search(scheduler->input, xpath);
         if (result && (numXpathResults(result) > 0)) {
-            pe__set_working_set_flags(scheduler, flag);
+            pcmk__set_scheduler_flags(scheduler, flag);
         }
         freeXpathObject(result);
     }
@@ -243,7 +243,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
         crm_info("Watchdog-based self-fencing will be performed via SBD if "
                  "fencing is required and " PCMK_OPT_STONITH_WATCHDOG_TIMEOUT
                  " is nonzero");
-        pe__set_working_set_flags(scheduler, pcmk_sched_have_fencing);
+        pcmk__set_scheduler_flags(scheduler, pcmk_sched_have_fencing);
     }
 
     /* Set certain flags via xpath here, so they can be used before the relevant
@@ -381,7 +381,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     value = pe_pref(scheduler->config_hash, PCMK__OPT_REMOVE_AFTER_STOP);
     if (value != NULL) {
         if (crm_is_true(value)) {
-            pe__set_working_set_flags(scheduler, pcmk_sched_remove_after_stop);
+            pcmk__set_scheduler_flags(scheduler, pcmk_sched_remove_after_stop);
 #ifndef PCMK__COMPAT_2_0
             pcmk__warn_once(pcmk__wo_remove_after,
                             "Support for the " PCMK__OPT_REMOVE_AFTER_STOP
@@ -389,7 +389,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
                             "removed in a future release");
 #endif
         } else {
-            pe__clear_working_set_flags(scheduler,
+            pcmk__clear_scheduler_flags(scheduler,
                                         pcmk_sched_remove_after_stop);
         }
     }
@@ -492,7 +492,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
 
     } else if (pcmk__str_eq(type, "remote", pcmk__str_casei)) {
         new_node->details->type = pcmk_node_variant_remote;
-        pe__set_working_set_flags(scheduler, pcmk_sched_have_remote_nodes);
+        pcmk__set_scheduler_flags(scheduler, pcmk_sched_have_remote_nodes);
 
     } else {
         /* @COMPAT 'ping' is the default for backward compatibility, but it

@@ -31,18 +31,6 @@ bool pe__clone_flag_is_set(const pcmk_resource_t *clone, uint32_t flags);
 bool pe__group_flag_is_set(const pcmk_resource_t *group, uint32_t flags);
 pcmk_resource_t *pe__last_group_member(const pcmk_resource_t *group);
 
-#define pe__set_working_set_flags(scheduler, flags_to_set) do {             \
-        (scheduler)->flags = pcmk__set_flags_as(__func__, __LINE__,         \
-            LOG_TRACE, "Scheduler", crm_system_name,                        \
-            (scheduler)->flags, (flags_to_set), #flags_to_set);             \
-    } while (0)
-
-#define pe__clear_working_set_flags(scheduler, flags_to_clear) do {         \
-        (scheduler)->flags = pcmk__clear_flags_as(__func__, __LINE__,       \
-            LOG_TRACE, "Scheduler", crm_system_name,                        \
-            (scheduler)->flags, (flags_to_clear), #flags_to_clear);         \
-    } while (0)
-
 #define pe__set_resource_flags(resource, flags_to_set) do {                 \
         (resource)->flags = pcmk__set_flags_as(__func__, __LINE__,          \
             LOG_TRACE, "Resource", (resource)->id, (resource)->flags,       \

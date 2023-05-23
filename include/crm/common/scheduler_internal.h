@@ -136,6 +136,32 @@ extern uint32_t pcmk__warnings;
         }                                                               \
     } while (0)
 
+/*!
+ * \internal
+ * \brief Set scheduler flags
+ *
+ * \param[in,out] scheduler     Scheduler data
+ * \param[in]     flags_to_set  Group of enum pcmk_scheduler_flags to set
+ */
+#define pcmk__set_scheduler_flags(scheduler, flags_to_set) do {             \
+        (scheduler)->flags = pcmk__set_flags_as(__func__, __LINE__,         \
+            LOG_TRACE, "Scheduler", crm_system_name,                        \
+            (scheduler)->flags, (flags_to_set), #flags_to_set);             \
+    } while (0)
+
+/*!
+ * \internal
+ * \brief Clear scheduler flags
+ *
+ * \param[in,out] scheduler       Scheduler data
+ * \param[in]     flags_to_clear  Group of enum pcmk_scheduler_flags to clear
+ */
+#define pcmk__clear_scheduler_flags(scheduler, flags_to_clear) do {         \
+        (scheduler)->flags = pcmk__clear_flags_as(__func__, __LINE__,       \
+            LOG_TRACE, "Scheduler", crm_system_name,                        \
+            (scheduler)->flags, (flags_to_clear), #flags_to_clear);         \
+    } while (0)
+
 #ifdef __cplusplus
 }
 #endif

@@ -847,7 +847,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     if (pcmk__str_eq(crm_element_value((*rsc)->xml, XML_AGENT_ATTR_CLASS),
                      PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
-        pe__set_working_set_flags(scheduler, pcmk_sched_have_fencing);
+        pcmk__set_scheduler_flags(scheduler, pcmk_sched_have_fencing);
         pe__set_resource_flags(*rsc, pcmk_rsc_fence_device);
     }
 

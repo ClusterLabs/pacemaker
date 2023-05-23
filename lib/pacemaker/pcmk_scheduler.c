@@ -742,7 +742,7 @@ unpack_cib(xmlNode *cib, unsigned long long flags, pcmk_scheduler_t *scheduler)
 
     if (pcmk_is_set(scheduler->flags, pcmk_sched_have_status)) {
         crm_trace("Reusing previously calculated cluster status");
-        pe__set_working_set_flags(scheduler, flags);
+        pcmk__set_scheduler_flags(scheduler, flags);
         return;
     }
 
@@ -764,7 +764,7 @@ unpack_cib(xmlNode *cib, unsigned long long flags, pcmk_scheduler_t *scheduler)
         scheduler->localhost = localhost_save;
     }
 
-    pe__set_working_set_flags(scheduler, flags);
+    pcmk__set_scheduler_flags(scheduler, flags);
     scheduler->input = cib;
     cluster_status(scheduler); // Sets pcmk_sched_have_status
 }
