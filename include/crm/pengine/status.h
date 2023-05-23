@@ -62,19 +62,6 @@ pe_rsc_is_clone(const pcmk_resource_t *rsc)
 }
 
 /*!
- * \brief Check whether a resource is an anonymous clone
- *
- * \param[in] rsc  Resource to check
- *
- * \return true if resource is anonymous clone, false otherwise
- */
-static inline bool
-pe_rsc_is_anon_clone(const pcmk_resource_t *rsc)
-{
-    return pe_rsc_is_clone(rsc) && !pcmk_is_set(rsc->flags, pcmk_rsc_unique);
-}
-
-/*!
  * \brief Check whether a resource is part of a bundle
  *
  * \param[in] rsc  Resource to check
