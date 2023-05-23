@@ -12,7 +12,7 @@
 
 #include <stdbool.h>                // bool
 #include <crm/common/util.h>        // pcmk_is_set()
-#include <crm/common/scheduler.h>   // pcmk_resource_t, pcmk_rsc_unique
+#include <crm/common/scheduler.h>   // pcmk_resource_t, pcmk_rsc_unique, etc.
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,6 +26,13 @@ extern "C" {
  *             header, and the header itself, will be removed in a future
  *             release.
  */
+
+//! \deprecated Compare variant directly instead
+static inline bool
+pe_rsc_is_clone(const pcmk_resource_t *rsc)
+{
+    return (rsc != NULL) && (rsc->variant == pcmk_rsc_variant_clone);
+}
 
 //! \deprecated Compare variant and flags directly
 static inline bool

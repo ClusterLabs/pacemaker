@@ -49,19 +49,6 @@ void calculate_active_ops(const GList *sorted_op_list, int *start_index,
 int pe_bundle_replicas(const pcmk_resource_t *rsc);
 
 /*!
- * \brief Check whether a resource is any clone type
- *
- * \param[in] rsc  Resource to check
- *
- * \return true if resource is clone, false otherwise
- */
-static inline bool
-pe_rsc_is_clone(const pcmk_resource_t *rsc)
-{
-    return (rsc != NULL) && (rsc->variant == pcmk_rsc_variant_clone);
-}
-
-/*!
  * \brief Check whether a resource is part of a bundle
  *
  * \param[in] rsc  Resource to check
