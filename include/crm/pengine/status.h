@@ -48,25 +48,6 @@ void calculate_active_ops(const GList *sorted_op_list, int *start_index,
                           int *stop_index);
 int pe_bundle_replicas(const pcmk_resource_t *rsc);
 
-/*!
- * \brief Check whether a resource is part of a bundle
- *
- * \param[in] rsc  Resource to check
- *
- * \return true if resource is part of a bundle, false otherwise
- */
-static inline bool
-pe_rsc_is_bundled(const pcmk_resource_t *rsc)
-{
-    if (rsc == NULL) {
-        return false;
-    }
-    while (rsc->parent != NULL) {
-        rsc = rsc->parent;
-    }
-    return rsc->variant == pcmk_rsc_variant_bundle;
-}
-
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 #include <crm/pengine/status_compat.h>
 #endif

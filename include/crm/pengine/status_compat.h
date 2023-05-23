@@ -48,6 +48,19 @@ pe_rsc_is_anon_clone(const pcmk_resource_t *rsc)
     return pe_rsc_is_clone(rsc) && !pcmk_is_set(rsc->flags, pcmk_rsc_unique);
 }
 
+//! \deprecated Compare ancestor variants directly
+static inline bool
+pe_rsc_is_bundled(const pcmk_resource_t *rsc)
+{
+    if (rsc == NULL) {
+        return false;
+    }
+    while (rsc->parent != NULL) {
+        rsc = rsc->parent;
+    }
+    return rsc->variant == pcmk_rsc_variant_bundle;
+}
+
 #ifdef __cplusplus
 }
 #endif
