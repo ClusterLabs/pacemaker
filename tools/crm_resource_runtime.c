@@ -2136,7 +2136,7 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
                                                scheduler);
     }
 
-    rid = pe_rsc_is_anon_clone(rsc->parent)? requested_name : rsc->id;
+    rid = pcmk__is_anonymous_clone(rsc->parent)? requested_name : rsc->id;
 
     exit_code = cli_resource_execute_from_params(out, rid, rclass, rprov, rtype, rsc_action,
                                                  params, override_hash, timeout_ms,

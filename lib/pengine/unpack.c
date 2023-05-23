@@ -2199,7 +2199,7 @@ unpack_find_resource(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
         parent = uber_parent(rsc);
     }
 
-    if (pe_rsc_is_anon_clone(parent)) {
+    if (pcmk__is_anonymous_clone(parent)) {
 
         if (pe_rsc_is_bundled(parent)) {
             rsc = pe__find_bundle_replica(parent->parent, node);
@@ -3634,7 +3634,7 @@ ban_from_all_nodes(pcmk_resource_t *rsc)
     if (fail_rsc->parent != NULL) {
         pcmk_resource_t *parent = uber_parent(fail_rsc);
 
-        if (pe_rsc_is_anon_clone(parent)) {
+        if (pcmk__is_anonymous_clone(parent)) {
             /* For anonymous clones, if an operation with
              * PCMK_META_ON_FAIL=PCMK_VALUE_STOP fails for any instance, the
              * entire clone must stop.

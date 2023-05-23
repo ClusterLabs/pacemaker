@@ -1757,7 +1757,7 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
     GList *sorted_op_list = NULL;
 
     if (pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
-        if (pe_rsc_is_anon_clone(pe__const_top_resource(rsc, false))) {
+        if (pcmk__is_anonymous_clone(pe__const_top_resource(rsc, false))) {
             pcmk__rsc_trace(rsc,
                             "Skipping configuration check "
                             "for orphaned clone instance %s",

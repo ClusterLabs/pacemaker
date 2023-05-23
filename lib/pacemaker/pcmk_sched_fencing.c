@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -32,7 +32,7 @@ rsc_is_known_on(const pcmk_resource_t *rsc, const pcmk_node_t *node)
        return TRUE;
 
    } else if ((rsc->variant == pcmk_rsc_variant_primitive)
-              && pe_rsc_is_anon_clone(rsc->parent)
+              && pcmk__is_anonymous_clone(rsc->parent)
               && (g_hash_table_lookup(rsc->parent->known_on,
                                       node->details->id) != NULL)) {
        /* We check only the parent, not the uber-parent, because we cannot
