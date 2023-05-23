@@ -175,7 +175,7 @@ member_internal_constraints(gpointer data, gpointer user_data)
     if (member_data->previous_member == NULL) {
         // This is first member
         if (member_data->ordered) {
-            pe__set_order_flags(down_flags, pcmk__ar_ordered);
+            pcmk__set_relation_flags(down_flags, pcmk__ar_ordered);
             post_down_flags = pcmk__ar_first_implies_then;
         }
 

@@ -271,7 +271,7 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
      */
     if (!pcmk_is_set(probe->flags, pcmk_action_runnable)
         && (top->running_on == NULL)) {
-        pe__set_order_flags(flags, pcmk__ar_unrunnable_first_blocks);
+        pcmk__set_relation_flags(flags, pcmk__ar_unrunnable_first_blocks);
     }
 
     // Start or reload after probing the resource
@@ -396,10 +396,11 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
 
         // Preserve certain order options for future filtering
         if (pcmk_is_set(order->flags, pcmk__ar_if_first_unmigratable)) {
-            pe__set_order_flags(order_flags, pcmk__ar_if_first_unmigratable);
+            pcmk__set_relation_flags(order_flags,
+                                     pcmk__ar_if_first_unmigratable);
         }
         if (pcmk_is_set(order->flags, pcmk__ar_if_on_same_node)) {
-            pe__set_order_flags(order_flags, pcmk__ar_if_on_same_node);
+            pcmk__set_relation_flags(order_flags, pcmk__ar_if_on_same_node);
         }
 
         // Preserve certain order types for future filtering

@@ -183,7 +183,7 @@ ordering_flags_for_kind(enum pe_order_kind kind, const char *first,
 
     switch (kind) {
         case pe_order_kind_optional:
-            pe__set_order_flags(flags, pcmk__ar_ordered);
+            pcmk__set_relation_flags(flags, pcmk__ar_ordered);
             break;
 
         case pe_order_kind_serialize:
@@ -191,27 +191,29 @@ ordering_flags_for_kind(enum pe_order_kind kind, const char *first,
              * will not match an equality comparison against pcmk__ar_none or
              * pcmk__ar_ordered.
              */
-            pe__set_order_flags(flags, pcmk__ar_serialize);
+            pcmk__set_relation_flags(flags, pcmk__ar_serialize);
             break;
 
         case pe_order_kind_mandatory:
-            pe__set_order_flags(flags, pcmk__ar_ordered);
+            pcmk__set_relation_flags(flags, pcmk__ar_ordered);
             switch (symmetry) {
                 case ordering_asymmetric:
-                    pe__set_order_flags(flags, pcmk__ar_asymmetric);
+                    pcmk__set_relation_flags(flags, pcmk__ar_asymmetric);
                     break;
 
                 case ordering_symmetric:
-                    pe__set_order_flags(flags, pcmk__ar_first_implies_then);
+                    pcmk__set_relation_flags(flags,
+                                             pcmk__ar_first_implies_then);
                     if (pcmk__strcase_any_of(first, PCMK_ACTION_START,
                                              PCMK_ACTION_PROMOTE, NULL)) {
-                        pe__set_order_flags(flags,
-                                            pcmk__ar_unrunnable_first_blocks);
+                        pcmk__set_relation_flags(flags,
+                                                 pcmk__ar_unrunnable_first_blocks);
                     }
                     break;
 
                 case ordering_symmetric_inverse:
-                    pe__set_order_flags(flags, pcmk__ar_then_implies_first);
+                    pcmk__set_relation_flags(flags,
+                                             pcmk__ar_then_implies_first);
                     break;
             }
             break;
@@ -386,7 +388,7 @@ clone_min_ordering(const char *id,
 #define handle_restart_type(rsc, kind, flag, flags) do {        \
         if (((kind) == pe_order_kind_optional)                  \
             && ((rsc)->restart_type == pe_restart_restart)) {   \
-            pe__set_order_flags((flags), (flag));               \
+            pcmk__set_relation_flags((flags), (flag));          \
         }                                                       \
     } while (0)
 
@@ -1255,7 +1257,7 @@ order_resource_actions_after(pcmk_action_t *first_action,
         pcmk__rsc_trace(rsc,
                         "Detected dangling migration ordering (%s then %s %s)",
                         first_action->uuid, order->task2, rsc->id);
-        pe__clear_order_flags(flags, pcmk__ar_first_implies_then);
+        pcmk__clear_relation_flags(flags, pcmk__ar_first_implies_then);
     }
 
     if ((first_action == NULL)

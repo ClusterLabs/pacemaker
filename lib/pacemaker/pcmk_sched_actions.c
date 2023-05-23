@@ -262,9 +262,9 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
          * first->node, at which point this case is handled like a normal
          * pcmk__ar_first_implies_then.
          */
-        pe__clear_order_flags(order->type,
-                              pcmk__ar_first_implies_same_node_then);
-        pe__set_order_flags(order->type, pcmk__ar_first_implies_then);
+        pcmk__clear_relation_flags(order->type,
+                                   pcmk__ar_first_implies_same_node_then);
+        pcmk__set_relation_flags(order->type, pcmk__ar_first_implies_then);
         node = first->node;
         pcmk__rsc_trace(then->rsc,
                         "%s then %s: mapped "
