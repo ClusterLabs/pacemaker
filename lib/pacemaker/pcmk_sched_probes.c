@@ -131,7 +131,7 @@ probe_action(pcmk_resource_t *rsc, pcmk_node_t *node)
     char *key = pcmk__op_key(rsc->id, PCMK_ACTION_MONITOR, 0);
 
     crm_debug("Scheduling probe of %s %s on %s",
-              role2text(rsc->role), rsc->id, pe__node_name(node));
+              role2text(rsc->role), rsc->id, pcmk__node_name(node));
 
     probe = custom_action(rsc, key, PCMK_ACTION_MONITOR, node, FALSE,
                           rsc->cluster);
@@ -494,8 +494,8 @@ add_start_orderings_for_probe(pcmk_action_t *probe,
 
     crm_trace("Adding probe start orderings for 'unrunnable %s@%s "
               "then instances of %s@%s'",
-              probe->uuid, pe__node_name(probe->node),
-              after->action->uuid, pe__node_name(after->action->node));
+              probe->uuid, pcmk__node_name(probe->node),
+              after->action->uuid, pcmk__node_name(after->action->node));
 
     for (GList *then_iter = after->action->actions_after; then_iter != NULL;
          then_iter = then_iter->next) {
@@ -512,8 +512,9 @@ add_start_orderings_for_probe(pcmk_action_t *probe,
 
         crm_trace("Adding probe start ordering for 'unrunnable %s@%s "
                   "then %s@%s' (type=%#.6x)",
-                  probe->uuid, pe__node_name(probe->node),
-                  then->action->uuid, pe__node_name(then->action->node), flags);
+                  probe->uuid, pcmk__node_name(probe->node),
+                  then->action->uuid, pcmk__node_name(then->action->node),
+                  flags);
 
         /* Prevent the instance from starting if the instance can't, but don't
          * cause any other intances to stop if already active.
@@ -557,8 +558,8 @@ add_restart_orderings_for_probe(pcmk_action_t *probe, pcmk_action_t *after)
     pcmk__set_action_flags(after, pcmk_action_detect_loop);
 
     crm_trace("Adding probe restart orderings for '%s@%s then %s@%s'",
-              probe->uuid, pe__node_name(probe->node),
-              after->uuid, pe__node_name(after->node));
+              probe->uuid, pcmk__node_name(probe->node),
+              after->uuid, pcmk__node_name(after->node));
 
     /* Add restart orderings if "then" is for a different primitive.
      * Orderings for collective resources will be added later.
@@ -652,9 +653,9 @@ add_restart_orderings_for_probe(pcmk_action_t *probe, pcmk_action_t *after)
 
         crm_trace("Recursively adding probe restart orderings for "
                   "'%s@%s then %s@%s' (type=%#.6x)",
-                  after->uuid, pe__node_name(after->node),
+                  after->uuid, pcmk__node_name(after->node),
                   after_wrapper->action->uuid,
-                  pe__node_name(after_wrapper->action->node),
+                  pcmk__node_name(after_wrapper->action->node),
                   after_wrapper->type);
 
         add_restart_orderings_for_probe(probe, after_wrapper->action);

@@ -603,7 +603,7 @@ pe__node_attribute_calculated(const pcmk_node_t *node, const char *name,
 
         pcmk__rsc_trace(rsc,
                         "%s: Value lookup for %s on %s container host %s %s%s",
-                        rsc->id, name, node_type_s, pe__node_name(host),
+                        rsc->id, name, node_type_s, pcmk__node_name(host),
                         ((value != NULL)? "succeeded: " : "failed"),
                         pcmk__s(value, ""));
         return value;

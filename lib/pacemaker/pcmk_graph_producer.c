@@ -555,13 +555,13 @@ should_add_action_to_graph(const pcmk_action_t *action)
     if (pcmk_is_set(action->flags, pcmk_action_on_dc)) {
         crm_trace("Action %s (%d) should be dumped: "
                   "can run on DC instead of %s",
-                  action->uuid, action->id, pe__node_name(action->node));
+                  action->uuid, action->id, pcmk__node_name(action->node));
 
     } else if (pe__is_guest_node(action->node)
                && !action->node->details->remote_requires_reset) {
         crm_trace("Action %s (%d) should be dumped: "
                   "assuming will be runnable on guest %s",
-                  action->uuid, action->id, pe__node_name(action->node));
+                  action->uuid, action->id, pcmk__node_name(action->node));
 
     } else if (!action->node->details->online) {
         pcmk__sched_err("Skipping action %s (%d) "
@@ -714,8 +714,8 @@ should_add_input_to_graph(const pcmk_action_t *action,
                       "not on same node (%s vs %s)",
                       action->uuid, action->id,
                       input->action->uuid, input->action->id,
-                      pe__node_name(action->node),
-                      pe__node_name(input->action->node));
+                      pcmk__node_name(action->node),
+                      pcmk__node_name(input->action->node));
             input->type = (enum pe_ordering) pcmk__ar_none;
             return false;
 
@@ -1083,7 +1083,7 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
 
                 crm_crit("Cannot %s %s because of %s:%s%s (%s)",
                          action->node->details->unclean? "fence" : "shut down",
-                         pe__node_name(action->node), action->rsc->id,
+                         pcmk__node_name(action->node), action->rsc->id,
                          (managed? " blocked" : " unmanaged"),
                          (failed? " failed" : ""), action->uuid);
             }

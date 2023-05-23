@@ -230,7 +230,7 @@ check_capacity(gpointer key, gpointer value, gpointer user_data)
     if (required > remaining) {
         crm_debug("Remaining capacity for %s on %s (%d) is insufficient "
                   "for resource %s usage (%d)",
-                  (const char *) key, pe__node_name(data->node), remaining,
+                  (const char *) key, pcmk__node_name(data->node), remaining,
                   data->rsc_id, required);
         data->is_enough = false;
     }
@@ -354,7 +354,7 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
                 && !have_enough_capacity(node, rscs_id,
                                          unassigned_utilization)) {
                 pcmk__rsc_debug(rsc, "%s does not have enough capacity for %s",
-                                pe__node_name(node), rscs_id);
+                                pcmk__node_name(node), rscs_id);
                 resource_location(rsc, node, -INFINITY, "__limit_utilization__",
                                   rsc->cluster);
             }
@@ -368,7 +368,7 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
             if (pcmk__node_available(node, true, false)
                 && !have_enough_capacity(node, rsc->id, rsc->utilization)) {
                 pcmk__rsc_debug(rsc, "%s does not have enough capacity for %s",
-                                pe__node_name(node), rsc->id);
+                                pcmk__node_name(node), rsc->id);
                 resource_location(rsc, node, -INFINITY, "__limit_utilization__",
                                   rsc->cluster);
             }

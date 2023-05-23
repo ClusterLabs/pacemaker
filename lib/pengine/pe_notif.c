@@ -333,7 +333,7 @@ new_notify_action(pcmk_resource_t *rsc, const pcmk_node_t *node,
     }
     if (skip_reason != NULL) {
         pcmk__rsc_trace(rsc, "Skipping notify action for %s on %s: %s",
-                        rsc->id, pe__node_name(node), skip_reason);
+                        rsc->id, pcmk__node_name(node), skip_reason);
         return NULL;
     }
 
@@ -341,7 +341,7 @@ new_notify_action(pcmk_resource_t *rsc, const pcmk_node_t *node,
     task = g_hash_table_lookup(op->meta, "notify_operation"); // original action
 
     pcmk__rsc_trace(rsc, "Creating notify action for %s on %s (%s-%s)",
-                    rsc->id, pe__node_name(node), value, task);
+                    rsc->id, pcmk__node_name(node), value, task);
 
     // Create the notify action
     key = pcmk__notify_key(rsc->id, value, task);
@@ -596,7 +596,8 @@ collect_resource_data(const pcmk_resource_t *rsc, bool activity,
         default:
             pcmk__sched_err("Resource %s role on %s (%s) is not supported for "
                             "notifications (bug?)",
-                            rsc->id, pe__node_name(node), role2text(rsc->role));
+                            rsc->id, pcmk__node_name(node),
+                            role2text(rsc->role));
             free(entry);
             break;
     }

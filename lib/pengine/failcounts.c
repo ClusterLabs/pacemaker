@@ -397,7 +397,8 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
 
         if (now > (fc_data.last_failure + rsc->failure_timeout)) {
             pcmk__rsc_debug(rsc, "Failcount for %s on %s expired after %ds",
-                            rsc->id, pe__node_name(node), rsc->failure_timeout);
+                            rsc->id, pcmk__node_name(node),
+                            rsc->failure_timeout);
             fc_data.failcount = 0;
         }
     }
@@ -422,13 +423,14 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
                            "have failed %s time%s on %s",
                            rsc->id, pcmk_readable_score(fc_data.failcount),
                            pcmk__plural_s(fc_data.failcount),
-                           pe__node_name(node));
+                           pcmk__node_name(node));
         }
 
     } else if (fc_data.failcount > 0) {
         pcmk__rsc_info(rsc, "%s has failed %s time%s on %s",
                        rsc->id, pcmk_readable_score(fc_data.failcount),
-                       pcmk__plural_s(fc_data.failcount), pe__node_name(node));
+                       pcmk__plural_s(fc_data.failcount),
+                       pcmk__node_name(node));
     }
 
     if (last_failure != NULL) {
@@ -465,6 +467,6 @@ pe__clear_failcount(pcmk_resource_t *rsc, const pcmk_node_t *node,
                           scheduler);
     add_hash_param(clear->meta, PCMK__META_OP_NO_WAIT, PCMK_VALUE_TRUE);
     crm_notice("Clearing failure of %s on %s because %s " CRM_XS " %s",
-               rsc->id, pe__node_name(node), reason, clear->uuid);
+               rsc->id, pcmk__node_name(node), reason, clear->uuid);
     return clear;
 }

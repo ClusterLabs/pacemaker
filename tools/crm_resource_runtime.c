@@ -1817,7 +1817,7 @@ print_pending_actions(pcmk__output_t *out, GList *actions)
 
         if (a->node) {
             out->info(out, "\tAction %d: %s\ton %s",
-                      a->id, a->uuid, pe__node_name(a->node));
+                      a->id, a->uuid, pcmk__node_name(a->node));
         } else {
             out->info(out, "\tAction %d: %s", a->id, a->uuid);
         }
@@ -2206,7 +2206,7 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
         if (force) {
             crm_info("%s is already %s on %s, reinforcing placement with location constraint.",
                      rsc_id, promoted_role_only?"promoted":"active",
-                     pe__node_name(dest));
+                     pcmk__node_name(dest));
         } else {
             return pcmk_rc_already;
         }
@@ -2227,7 +2227,7 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
 
     crm_trace("%s%s now prefers %s%s",
               rsc->id, (promoted_role_only? " (promoted)" : ""),
-              pe__node_name(dest), force?"(forced)":"");
+              pcmk__node_name(dest), force?"(forced)":"");
 
     /* only ban the previous location if current location != destination location.
      * it is possible to use -M to enforce a location without regard of where the
@@ -2242,7 +2242,7 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
             out->info(out, "Resource '%s' is currently %s in %d locations. "
                       "One may now move to %s",
                       rsc_id, (promoted_role_only? "promoted" : "active"),
-                      count, pe__node_name(dest));
+                      count, pcmk__node_name(dest));
             out->info(out, "To prevent '%s' from being %s at a specific location, "
                       "specify a node.",
                       rsc_id, (promoted_role_only? "promoted" : "active"));

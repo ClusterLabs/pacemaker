@@ -60,7 +60,7 @@ native_priority_to_node(pcmk_resource_t *rsc, pcmk_node_t *node,
 
     node->details->priority += priority;
     pcmk__rsc_trace(rsc, "%s now has priority %d with %s'%s' (priority: %d%s)",
-                    pe__node_name(node), node->details->priority,
+                    pcmk__node_name(node), node->details->priority,
                     (rsc->role == pcmk_role_promoted)? "promoted " : "",
                     rsc->id, rsc->priority,
                     (rsc->role == pcmk_role_promoted)? " + 1" : "");
@@ -78,11 +78,11 @@ native_priority_to_node(pcmk_resource_t *rsc, pcmk_node_t *node,
             pcmk__rsc_trace(rsc,
                             "%s now has priority %d with %s'%s' "
                             "(priority: %d%s) from guest node %s",
-                            pe__node_name(a_node), a_node->details->priority,
+                            pcmk__node_name(a_node), a_node->details->priority,
                             (rsc->role == pcmk_role_promoted)? "promoted " : "",
                             rsc->id, rsc->priority,
                             (rsc->role == pcmk_role_promoted)? " + 1" : "",
-                            pe__node_name(node));
+                            pcmk__node_name(node));
         }
     }
 }
@@ -103,7 +103,7 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
         }
     }
 
-    pcmk__rsc_trace(rsc, "Adding %s to %s %s", rsc->id, pe__node_name(node),
+    pcmk__rsc_trace(rsc, "Adding %s to %s %s", rsc->id, pcmk__node_name(node),
                     pcmk_is_set(rsc->flags, pcmk_rsc_managed)? "" : "(unmanaged)");
 
     rsc->running_on = g_list_append(rsc->running_on, node);
@@ -182,12 +182,12 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
                 break;
         }
         crm_debug("%s is active on multiple nodes including %s: %s",
-                  rsc->id, pe__node_name(node),
+                  rsc->id, pcmk__node_name(node),
                   pcmk_multiply_active_text(rsc->recovery_type));
 
     } else {
         pcmk__rsc_trace(rsc, "Resource %s is active on %s",
-                        rsc->id, pe__node_name(node));
+                        rsc->id, pcmk__node_name(node));
     }
 
     if (rsc->parent != NULL) {
@@ -247,7 +247,7 @@ static bool
 rsc_is_on_node(pcmk_resource_t *rsc, const pcmk_node_t *node, int flags)
 {
     pcmk__rsc_trace(rsc, "Checking whether %s is on %s",
-                    rsc->id, pe__node_name(node));
+                    rsc->id, pcmk__node_name(node));
 
     if (pcmk_is_set(flags, pcmk_rsc_match_current_node)
         && (rsc->running_on != NULL)) {
@@ -356,15 +356,15 @@ native_active(pcmk_resource_t * rsc, gboolean all)
 
         if (a_node->details->unclean) {
             pcmk__rsc_trace(rsc, "Resource %s: %s is unclean",
-                            rsc->id, pe__node_name(a_node));
+                            rsc->id, pcmk__node_name(a_node));
             return TRUE;
         } else if (!a_node->details->online
                    && pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
             pcmk__rsc_trace(rsc, "Resource %s: %s is offline",
-                            rsc->id, pe__node_name(a_node));
+                            rsc->id, pcmk__node_name(a_node));
         } else {
             pcmk__rsc_trace(rsc, "Resource %s active on %s",
-                            rsc->id, pe__node_name(a_node));
+                            rsc->id, pcmk__node_name(a_node));
             return TRUE;
         }
     }
@@ -617,7 +617,7 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
         pcmk__add_word(&outstr, 0, native_displayable_state(rsc, show_pending));
     }
     if (node) {
-        pcmk__add_word(&outstr, 0, pe__node_name(node));
+        pcmk__add_word(&outstr, 0, pcmk__node_name(node));
     }
 
     // Failed probe operation
@@ -906,17 +906,17 @@ common_print(pcmk_resource_t *rsc, const char *pre_text, const char *name,
             counter++;
 
             if (options & pe_print_html) {
-                status_print("<li>\n%s", pe__node_name(n));
+                status_print("<li>\n%s", pcmk__node_name(n));
 
             } else if ((options & pe_print_printf)
                        || (options & pe_print_ncurses)) {
-                status_print(" %s", pe__node_name(n));
+                status_print(" %s", pcmk__node_name(n));
 
             } else if ((options & pe_print_log)) {
-                status_print("\t%d : %s", counter, pe__node_name(n));
+                status_print("\t%d : %s", counter, pcmk__node_name(n));
 
             } else {
-                status_print("%s", pe__node_name(n));
+                status_print("%s", pcmk__node_name(n));
             }
             if (options & pe_print_html) {
                 status_print("</li>\n");

@@ -1150,14 +1150,14 @@ pcmk__order_stops_before_shutdown(pcmk_node_t *node, pcmk_action_t *shutdown_op)
             pcmk__rsc_trace(action->rsc,
                             "Not ordering %s before shutdown of %s because "
                             "resource in maintenance mode",
-                            action->uuid, pe__node_name(node));
+                            action->uuid, pcmk__node_name(node));
             continue;
 
         } else if (node->details->maintenance) {
             pcmk__rsc_trace(action->rsc,
                             "Not ordering %s before shutdown of %s because "
                             "node in maintenance mode",
-                            action->uuid, pe__node_name(node));
+                            action->uuid, pcmk__node_name(node));
             continue;
         }
 
@@ -1170,12 +1170,12 @@ pcmk__order_stops_before_shutdown(pcmk_node_t *node, pcmk_action_t *shutdown_op)
             pcmk__rsc_trace(action->rsc,
                             "Not ordering %s before shutdown of %s because "
                             "resource is unmanaged or blocked",
-                            action->uuid, pe__node_name(node));
+                            action->uuid, pcmk__node_name(node));
             continue;
         }
 
         pcmk__rsc_trace(action->rsc, "Ordering %s before shutdown of %s",
-                        action->uuid, pe__node_name(node));
+                        action->uuid, pcmk__node_name(node));
         pcmk__clear_action_flags(action, pcmk_action_optional);
         pcmk__new_ordering(action->rsc, NULL, action, NULL,
                            strdup(PCMK_ACTION_DO_SHUTDOWN), shutdown_op,
@@ -1459,8 +1459,8 @@ pcmk__order_after_each(pcmk_action_t *after, GList *list)
         const char *before_desc = before->task? before->task : before->uuid;
 
         crm_debug("Ordering %s on %s before %s on %s",
-                  before_desc, pe__node_name(before->node),
-                  after_desc, pe__node_name(after->node));
+                  before_desc, pcmk__node_name(before->node),
+                  after_desc, pcmk__node_name(after->node));
         order_actions(before, after, pcmk__ar_ordered);
     }
 }

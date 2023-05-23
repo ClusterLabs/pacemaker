@@ -2243,7 +2243,7 @@ node_capacity(pcmk__output_t *out, va_list args)
     const char *comment = va_arg(args, const char *);
 
     char *dump_text = crm_strdup_printf("%s: %s capacity:",
-                                        comment, pe__node_name(node));
+                                        comment, pcmk__node_name(node));
 
     g_hash_table_foreach(node->details->utilization, append_dump_text, &dump_text);
     out->list_item(out, NULL, "%s", dump_text);
@@ -2997,7 +2997,7 @@ resource_util(pcmk__output_t *out, va_list args)
     const char *fn = va_arg(args, const char *);
 
     char *dump_text = crm_strdup_printf("%s: %s utilization on %s:",
-                                        fn, rsc->id, pe__node_name(node));
+                                        fn, rsc->id, pcmk__node_name(node));
 
     g_hash_table_foreach(rsc->utilization, append_dump_text, &dump_text);
     out->list_item(out, NULL, "%s", dump_text);

@@ -330,7 +330,7 @@ pcmk__clone_apply_coloc_score(pcmk_resource_t *dependent,
             if ((chosen != NULL)
                 && !is_set_recursive(instance, pcmk_rsc_blocked, TRUE)) {
                 pcmk__rsc_trace(primary, "Allowing %s: %s %d",
-                                colocation->id, pe__node_name(chosen),
+                                colocation->id, pcmk__node_name(chosen),
                                 chosen->weight);
                 primary_nodes = g_list_prepend(primary_nodes, chosen);
             }
@@ -582,7 +582,7 @@ pcmk__clone_create_probe(pcmk_resource_t *rsc, pcmk_node_t *node)
             pcmk__rsc_trace(rsc,
                             "Skipping probe for %s on %s because resource has "
                             "exclusive discovery but is not allowed on node",
-                            rsc->id, pe__node_name(node));
+                            rsc->id, pcmk__node_name(node));
             g_hash_table_remove(rsc->allowed_nodes, node->details->id);
             return false;
         }

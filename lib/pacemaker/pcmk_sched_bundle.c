@@ -494,7 +494,7 @@ replica_apply_coloc_score(const pcmk__bundle_replica_t *replica,
 
     pcmk__rsc_trace(pe__const_top_resource(replica->container, true),
                     "Allowing mandatory colocation %s using %s @%d",
-                    coloc_data->colocation->id, pe__node_name(chosen),
+                    coloc_data->colocation->id, pcmk__node_name(chosen),
                     chosen->weight);
     coloc_data->container_hosts = g_list_prepend(coloc_data->container_hosts,
                                                  chosen);
@@ -954,7 +954,7 @@ create_replica_probes(pcmk__bundle_replica_t *replica, void *user_data)
             probe_data->any_created = true;
             pcmk__rsc_trace(probe_data->bundle, "Ordering %s probe on %s",
                             replica->remote->id,
-                            pe__node_name(probe_data->node));
+                            pcmk__node_name(probe_data->node));
             pcmk__new_ordering(replica->container,
                                pcmk__op_key(replica->container->id,
                                             PCMK_ACTION_START, 0),

@@ -68,11 +68,11 @@ pe_can_fence(const pcmk_scheduler_t *scheduler, const pcmk_node_t *node)
 
     } else if(node->details->online) {
         crm_notice("We can fence %s without quorum because they're in our membership",
-                   pe__node_name(node));
+                   pcmk__node_name(node));
         return true;
     }
 
-    crm_trace("Cannot fence %s", pe__node_name(node));
+    crm_trace("Cannot fence %s", pcmk__node_name(node));
     return false;
 }
 
@@ -221,12 +221,12 @@ pe__log_node_weights(const char *file, const char *function, int line,
                                         "%s: %s allocation score on %s: %s",
                                         LOG_TRACE, line, 0,
                                         comment, rsc->id,
-                                        pe__node_name(node),
+                                        pcmk__node_name(node),
                                         pcmk_readable_score(node->weight));
         } else {
             qb_log_from_external_source(function, file, "%s: %s = %s",
                                         LOG_TRACE, line, 0,
-                                        comment, pe__node_name(node),
+                                        comment, pcmk__node_name(node),
                                         pcmk_readable_score(node->weight));
         }
     }
@@ -353,7 +353,7 @@ resource_node_score(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
     pcmk__rsc_trace(rsc,
                     "Enabling %s preference (%s) for %s on %s (now %s)",
                     tag, pcmk_readable_score(score), rsc->id,
-                    pe__node_name(node), pcmk_readable_score(match->weight));
+                    pcmk__node_name(node), pcmk_readable_score(match->weight));
 }
 
 void
@@ -385,7 +385,7 @@ resource_location(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
     if (node == NULL && score == -INFINITY) {
         if (rsc->allocated_to) {
             crm_info("Deallocating %s from %s",
-                     rsc->id, pe__node_name(rsc->allocated_to));
+                     rsc->id, pcmk__node_name(rsc->allocated_to));
             free(rsc->allocated_to);
             rsc->allocated_to = NULL;
         }

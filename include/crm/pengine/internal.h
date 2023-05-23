@@ -453,33 +453,6 @@ pe__health_score(const char *option, pcmk_scheduler_t *scheduler)
 
 /*!
  * \internal
- * \brief Return a string suitable for logging as a node name
- *
- * \param[in] node  Node to return a node name string for
- *
- * \return Node name if available, otherwise node ID if available,
- *         otherwise "unspecified node" if node is NULL or "unidentified node"
- *         if node has neither a name nor ID.
- */
-static inline const char *
-pe__node_name(const pcmk_node_t *node)
-{
-    if (node == NULL) {
-        return "unspecified node";
-
-    } else if (node->details->uname != NULL) {
-        return node->details->uname;
-
-    } else if (node->details->id != NULL) {
-        return node->details->id;
-
-    } else {
-        return "unidentified node";
-    }
-}
-
-/*!
- * \internal
  * \brief Check whether two node objects refer to the same node
  *
  * \param[in] node1  First node object to compare

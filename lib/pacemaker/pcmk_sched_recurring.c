@@ -218,7 +218,7 @@ active_recurring_should_be_optional(const pcmk_resource_t *rsc,
     if (possible_matches == NULL) {
         pcmk__rsc_trace(rsc,
                         "%s will be mandatory because it is not active on %s",
-                        key, pe__node_name(node));
+                        key, pcmk__node_name(node));
         return false;
     }
 
@@ -313,7 +313,7 @@ recurring_op_for_active(pcmk_resource_t *rsc, pcmk_action_t *start,
                     "Creating %s recurring action %s for %s (%s %s on %s)",
                     (is_optional? "optional" : "mandatory"), op->key,
                     op->id, rsc->id, role2text(rsc->next_role),
-                    pe__node_name(node));
+                    pcmk__node_name(node));
 
     mon = custom_action(rsc, strdup(op->key), op->name, node, is_optional,
                         rsc->cluster);
@@ -331,7 +331,7 @@ recurring_op_for_active(pcmk_resource_t *rsc, pcmk_action_t *start,
     } else if (!pcmk_is_set(mon->flags, pcmk_action_optional)) {
         pcmk__rsc_info(rsc, "Start %s-interval %s for %s on %s",
                        pcmk__readable_interval(op->interval_ms), mon->task,
-                       rsc->id, pe__node_name(node));
+                       rsc->id, pcmk__node_name(node));
     }
 
     if (rsc->next_role == pcmk_role_promoted) {
@@ -412,7 +412,7 @@ cancel_if_running(pcmk_resource_t *rsc, const pcmk_node_t *node,
                    "Cancelling %s-interval %s action for %s on %s because "
                    "configured for " PCMK__ROLE_STOPPED " role (not %s)",
                    pcmk__readable_interval(interval_ms), name, rsc->id,
-                   pe__node_name(node), role2text(rsc->next_role));
+                   pcmk__node_name(node), role2text(rsc->next_role));
 }
 
 /*!
@@ -457,13 +457,13 @@ order_after_stops(pcmk_resource_t *rsc, const pcmk_node_t *node,
             && !pcmk_is_set(action->flags, pcmk_action_optional)
             && !pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
             pcmk__rsc_trace(rsc, "%s optional on %s: unmanaged",
-                            action->uuid, pe__node_name(node));
+                            action->uuid, pcmk__node_name(node));
             pcmk__set_action_flags(action, pcmk_action_optional);
         }
 
         if (!pcmk_is_set(stop->flags, pcmk_action_runnable)) {
             crm_debug("%s unrunnable on %s: stop is unrunnable",
-                      action->uuid, pe__node_name(node));
+                      action->uuid, pcmk__node_name(node));
             pcmk__clear_action_flags(action, pcmk_action_runnable);
         }
 
@@ -530,7 +530,7 @@ recurring_op_for_inactive(pcmk_resource_t *rsc, const pcmk_node_t *node,
                         "Creating %s recurring action %s for %s (%s "
                         PCMK__ROLE_STOPPED " on %s)",
                         (is_optional? "optional" : "mandatory"),
-                        op->key, op->id, rsc->id, pe__node_name(stop_node));
+                        op->key, op->id, rsc->id, pcmk__node_name(stop_node));
 
         stopped_mon = custom_action(rsc, strdup(op->key), op->name, stop_node,
                                     is_optional, rsc->cluster);
@@ -548,7 +548,7 @@ recurring_op_for_inactive(pcmk_resource_t *rsc, const pcmk_node_t *node,
 
         if (!stop_node->details->online || stop_node->details->unclean) {
             pcmk__rsc_debug(rsc, "%s unrunnable on %s: node unavailable)",
-                            stopped_mon->uuid, pe__node_name(stop_node));
+                            stopped_mon->uuid, pcmk__node_name(stop_node));
             pcmk__clear_action_flags(stopped_mon, pcmk_action_runnable);
         }
 
@@ -557,7 +557,7 @@ recurring_op_for_inactive(pcmk_resource_t *rsc, const pcmk_node_t *node,
             crm_notice("Start recurring %s-interval %s for "
                        PCMK__ROLE_STOPPED " %s on %s",
                        pcmk__readable_interval(op->interval_ms),
-                       stopped_mon->task, rsc->id, pe__node_name(stop_node));
+                       stopped_mon->task, rsc->id, pcmk__node_name(stop_node));
         }
     }
 }
@@ -594,7 +594,7 @@ pcmk__create_recurring_actions(pcmk_resource_t *rsc)
         pcmk__rsc_trace(rsc,
                         "Skipping recurring actions for %s on %s "
                         "in maintenance mode",
-                        rsc->id, pe__node_name(rsc->allocated_to));
+                        rsc->id, pcmk__node_name(rsc->allocated_to));
 
     } else if ((rsc->next_role != pcmk_role_stopped)
         || !pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
@@ -685,7 +685,7 @@ pcmk__schedule_cancel(pcmk_resource_t *rsc, const char *call_id,
 
     crm_info("Recurring %s-interval %s for %s will be stopped on %s: %s",
              pcmk__readable_interval(interval_ms), task, rsc->id,
-             pe__node_name(node), reason);
+             pcmk__node_name(node), reason);
     cancel = pcmk__new_cancel_action(rsc, task, interval_ms, node);
     add_hash_param(cancel->meta, PCMK__XA_CALL_ID, call_id);
 

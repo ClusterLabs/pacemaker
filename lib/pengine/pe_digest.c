@@ -415,7 +415,7 @@ rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
         pcmk__rsc_info(rsc,
                        "Parameters to %ums-interval %s action for %s on %s "
                        "changed: hash was %s vs. now %s (restart:%s) %s",
-                       interval_ms, task, rsc->id, pe__node_name(node),
+                       interval_ms, task, rsc->id, pcmk__node_name(node),
                        pcmk__s(digest_restart, "missing"),
                        data->digest_restart_calc, op_version,
                        crm_element_value(xml_op, PCMK__XA_TRANSITION_MAGIC));
@@ -440,7 +440,7 @@ rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
                            "Parameters containing extra ones to %ums-interval"
                            " %s action for %s on %s "
                            "changed: hash was %s vs. now %s (restart:%s) %s",
-                           interval_ms, task, rsc->id, pe__node_name(node),
+                           interval_ms, task, rsc->id, pcmk__node_name(node),
                            pcmk__s(digest_all, "missing"),
                            data->digest_all_calc, op_version,
                            crm_element_value(xml_op,
@@ -450,7 +450,7 @@ rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
             pcmk__rsc_info(rsc,
                            "Parameters to %ums-interval %s action for %s on %s "
                            "changed: hash was %s vs. now %s (%s:%s) %s",
-                           interval_ms, task, rsc->id, pe__node_name(node),
+                           interval_ms, task, rsc->id, pcmk__node_name(node),
                            pcmk__s(digest_all, "missing"),
                            data->digest_all_calc,
                            (interval_ms > 0)? "reschedule" : "reload",
@@ -577,7 +577,7 @@ pe__compare_fencing_digest(pcmk_resource_t *rsc, const char *agent,
             pcmk__output_t *out = scheduler->priv;
             out->info(out, "Only 'private' parameters to %s "
                       "for unfencing %s changed", rsc->id,
-                      pe__node_name(node));
+                      pcmk__node_name(node));
         }
         return data;
     }
@@ -594,14 +594,14 @@ pe__compare_fencing_digest(pcmk_resource_t *rsc, const char *agent,
 
             out->info(out, "Parameters to %s for unfencing "
                       "%s changed, try '%s'", rsc->id,
-                      pe__node_name(node), digest);
+                      pcmk__node_name(node), digest);
             free(digest);
         } else if (!pcmk__is_daemon) {
             char *digest = create_unfencing_summary(rsc->id, agent,
                                                     data->digest_secure_calc);
 
             printf("Parameters to %s for unfencing %s changed, try '%s'\n",
-                   rsc->id, pe__node_name(node), digest);
+                   rsc->id, pcmk__node_name(node), digest);
             free(digest);
         }
     }
