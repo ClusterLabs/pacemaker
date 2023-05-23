@@ -567,8 +567,8 @@ pcmk__new_ordering(pe_resource_t *first_rsc, char *first_action_task,
 
     pe_rsc_trace(first_rsc, "Created ordering %d for %s then %s",
                  (data_set->order_id - 1),
-                 ((first_action_task == NULL)? "?" : first_action_task),
-                 ((then_action_task == NULL)? "?" : then_action_task));
+                 pcmk__s(order->lh_action_task, "an underspecified action"),
+                 pcmk__s(order->rh_action_task, "an underspecified action"));
 
     data_set->ordering_constraints = g_list_prepend(data_set->ordering_constraints,
                                                     order);

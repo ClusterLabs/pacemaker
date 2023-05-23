@@ -143,7 +143,7 @@ struct member_data {
  * \brief Create implicit constraints needed for a group member
  *
  * \param[in,out] data       Group member to create implicit constraints for
- * \param[in,out] user_data  Group member to create implicit constraints for
+ * \param[in,out] user_data  Member data (struct member_data *)
  */
 static void
 member_internal_constraints(gpointer data, gpointer user_data)
@@ -228,10 +228,26 @@ member_internal_constraints(gpointer data, gpointer user_data)
 
     } else {
         // Order this member relative to the previous one
+
         pcmk__order_starts(member_data->previous_member, member,
                            pe_order_implies_then|pe_order_runnable_left);
         pcmk__order_stops(member, member_data->previous_member,
                           pe_order_optional|pe_order_restart);
+
+        /* In unusual circumstances (such as adding a new member to the middle
+         * of a group with unmanaged later members), this member may be active
+         * while the previous (new) member is inactive. In this situation, the
+         * usual restart orderings will be irrelevant, so we need to order this
+         * member's stop before the previous member's start.
+         */
+        if ((member->running_on != NULL)
+            && (member_data->previous_member->running_on == NULL)) {
+            pcmk__order_resource_actions(member, RSC_STOP,
+                                         member_data->previous_member, RSC_START,
+                                         pe_order_implies_first
+                                         |pe_order_runnable_left);
+        }
+
         if (member_data->promotable) {
             pcmk__order_resource_actions(member_data->previous_member,
                                          RSC_PROMOTE, member, RSC_PROMOTE,
