@@ -1,31 +1,9 @@
-* Tue May 02 2023 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.6-rc2
-- 34 commits with 29 files changed, 438 insertions(+), 150 deletions(-)
-
-- Features added since Pacemaker-2.1.6-rc1
-  + scheduler: deprecate "moon" in date_spec elements in rules
-  + scheduler: deprecate support for Nagios resources
-
-- Fixes since Pacemaker-2.1.6-rc1
-  + pacemakerd: -S should wait for cluster to shut down before returning
-                (regression introduced in 2.1.1)
-  + pacemaker-attrd: Preserve a Pacemaker Remote node's transient attributes
-                     if its connection to the cluster is lost but reconnects
-  + controller: initial fencing timeout includes any priority-fencing-delay
-  + fencer: apply priority-fencing-delay only to first device tried
-  + fencer: total and per-device fencing timeouts include any
-            priority-fencing-delay and pcmk_delay_base
-  + scheduler: honor as many mandatory colocations as possible before
-               considering any optional ones
-
-- Public API changes since Pacemaker-2.1.6-rc1
-  + libcrmcommon: deprecate PCMK_RESOURCE_CLASS_NAGIOS
-  + libcrmcommon: deprecate PCMK_RESOURCE_CLASS_UPSTART
-  + libcrmservice: deprecate enum nagios_exitcode
-
-* Wed Apr 12 2023 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.6-rc1
-- 1071 commits with 398 files changed, 24739 insertions(+), 14585 deletions(-)
+* Wed May 24 2023 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.6
+- 1124 commits with 402 files changed, 25220 insertions(+), 14751 deletions(-)
 
 - Features added since Pacemaker-2.1.5
+  + CIB: deprecate "moon" in date_spec elements in rules
+  + CIB: deprecate support for Nagios resources
   + CIB: utilization attributes may be set as transient
   + CIB: alerts and alert recipients support an "enabled" meta-attribute
   + All daemons support --output-as/--output-to options including
@@ -59,29 +37,40 @@
   + tools: crm_shadow supports standard --output-as/--output-to arguments
 
 - Fixes since Pacemaker-2.1.5
+  + pacemakerd: -S should wait for cluster to shut down before returning
+                (regression introduced in 2.1.1)
   + Pacemaker Remote: remote nodes wait for all-clear from cluster before
                       shutting down (regression introduced in 2.1.5)
   + tools: attrd_updater --query without --node shows attributes from all
            nodes instead of local node (regression introduced in 2.1.5)
+  + pacemaker-attrd: Preserve a Pacemaker Remote node's transient attributes
+                     if its connection to the cluster is lost but reconnects
   + CIB manager: successful CIB schema upgrade always forces a write
   + controller: avoid election storm when joining node has CIB newer than DC
                 can accept
   + controller: avoid election storm due to incompatible CIB
   + controller: avoid use-after-free when disconnecting proxy IPCs during shutdown
-  + controller: delay join finalization if a transition is in progress
   + controller: avoid double-incrementing failcount for simulated failures
   + controller: avoid reprobing remote nodes when target is a cluster node
+  + controller: delay join finalization if a transition is in progress
+  + controller: initial fencing timeout includes any priority-fencing-delay
   + controller: shutdown gracefully if scheduler connection is interrupted
                 during shutdown
   + fencer: avoid crash during shutdown when action is pending
   + fencer: calculate fencing timeout correctly when watchdog is used with
             topology
+  + fencer: apply priority-fencing-delay only to first device tried
+  + fencer: total and per-device fencing timeouts include any
+            priority-fencing-delay and pcmk_delay_base
   + scheduler: fix a number of corner cases with colocations, including
                preventing a resource from starting if it has a mandatory
                colocation with a group whose start is blocked, preventing
                optional anti-colocation from overriding infinite stickiness,
                and correctly considering a group's colocation dependents
                when the group is itself colocated with a clone
+  + scheduler: honor as many mandatory colocations as possible before
+               considering any optional ones
+  + scheduler: ensure earlier group member starts occur after later member stops
   + scheduler: handle orderings with bundles more correctly
   + scheduler: ensure expired results never affect resource state
   + scheduler: handle cleaned migrate_from history correctly
@@ -104,28 +93,28 @@
   + tools: crm_simulate failure injection avoids crash if node name is unknown
 
 - Public API changes since Pacemaker-2.1.5
-  + Python: New "pacemaker" Python module, packaged as python3-pacemaker in
-            RPMs built with "make rpm", contains supported public API with
+  + Python: New "pacemaker" Python module (packaged as python3-pacemaker in
+            RPMs built with "make rpm") contains supported public API with
             BuildOptions and ExitStatus classes
-  + libcrmcluster: add crm_join_nack_quiet
   + libcib: add client_id() method member to cib_api_operations_t
   + libcib: deprecate cib_database
   + libcib: deprecate cib_quorum_override
   + libcib: deprecate the cib_api_operations_t:update() method
   + libcrmcluster: add pcmk_cluster_new()
+  + libcrmcluster: add crm_join_nack_quiet
   + libcrmcluster: add pcmk_cluster_free()
   + libcrmcluster: node argument to send_cluster_message() is now const
   + libcrmcluster: node argument to send_cluster_text() is now const
   + libcrmcommon: add crm_time_usecs
   + libcrmcommon: add PCMK_META_ENABLED
   + libcrmcommon: add pcmk_pacemakerd_state_remote
-  + libpacemaker: add pcmk_query_node_info()
-  + libpacemaker: add pcmk_query_node_name()
   + libcrmcommon: add pcmk_rc_bad_xml_patch
   + libcrmcommon: add pcmk_rc_bad_input
   + libcrmcommon: add pcmk_rc_disabled
   + libcrmcommon: deprecate add_xml_nocopy()
   + libcrmcommon: deprecate log_data_element()
+  + libcrmcommon: deprecate PCMK_RESOURCE_CLASS_NAGIOS
+  + libcrmcommon: deprecate PCMK_RESOURCE_CLASS_UPSTART
   + libcrmcommon: deprecate XML_ATTR_UUID
   + libcrmcommon: deprecate XML_CIB_ATTR_REPLACE
   + libcrmcommon: deprecate xml_log_changes()
@@ -137,6 +126,9 @@
   + libcrmcommon: rsc_op_expected_rc() argument is now const
   + libcrmcommon: second argument to copy_in_properties() is now const
   + libcrmcommon: xml argument of xml_log_changes() is now const
+  + libcrmservice: deprecate enum nagios_exitcode
+  + libpacemaker: add pcmk_query_node_info()
+  + libpacemaker: add pcmk_query_node_name()
   + libpacemaker: multiple arguments to pcmk_simulate() are now const
   + libpacemaker: node argument to pcmk_resource_digests() is now const
   + libpacemaker: node_types argument to pcmk_list_nodes() is now const
