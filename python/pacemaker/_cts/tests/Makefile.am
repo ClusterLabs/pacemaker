@@ -12,4 +12,9 @@ MAINTAINERCLEANFILES    = Makefile.in
 pkgpythondir = $(pythondir)/$(PACKAGE)/_cts/tests
 
 pkgpython_PYTHON = __init__.py \
-				   base.py
+				   ctstest.py \
+				   remotedriver.py \
+				   simulstartlite.py \
+				   simulstoplite.py \
+				   starttest.py \
+				   stoptest.py

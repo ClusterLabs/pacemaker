@@ -26,7 +26,7 @@ from stat import *
 from pacemaker import BuildOptions
 from pacemaker._cts.CTS import NodeStatus
 from pacemaker._cts.audits import AuditResource
-from pacemaker._cts.tests.base import CTSTest, RemoteDriver, SimulStartLite, SimulStopLite, StartTest, StopTest
+from pacemaker._cts.tests import CTSTest, RemoteDriver, SimulStartLite, SimulStopLite, StartTest, StopTest
 from pacemaker._cts.timer import Timer
 
 AllTestClasses = [ ]
