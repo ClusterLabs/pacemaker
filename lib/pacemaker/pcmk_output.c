@@ -144,7 +144,7 @@ rsc_action_item(pcmk__output_t *out, va_list args)
         need_role = true;
     }
 
-    if (pe__same_node(origin, destination)) {
+    if (pcmk__same_node(origin, destination)) {
         same_host = true;
     }
 
@@ -263,7 +263,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
         need_role = true;
     }
 
-    if (pe__same_node(origin, destination)) {
+    if (pcmk__same_node(origin, destination)) {
         same_host = true;
     }
 
@@ -1104,7 +1104,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
     }
 
     moving = (current != NULL) && (next != NULL)
-             && !pe__same_node(current, next);
+             && !pcmk__same_node(current, next);
 
     possible_matches = pe__resource_actions(rsc, next, PCMK_ACTION_START,
                                             false);

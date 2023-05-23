@@ -258,7 +258,7 @@ assign_best_node(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
                         // The nodes are sorted by score, so no more are equal
                         break;
                     }
-                    if (pe__same_node(allowed, running)) {
+                    if (pcmk__same_node(allowed, running)) {
                         // Scores are equal, so prefer the current node
                         chosen = allowed;
                     }
@@ -709,7 +709,7 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
                    rsc);
 
     if ((current != NULL) && (rsc->allocated_to != NULL)
-        && !pe__same_node(current, rsc->allocated_to)
+        && !pcmk__same_node(current, rsc->allocated_to)
         && (rsc->next_role >= pcmk_role_started)) {
 
         pcmk__rsc_trace(rsc, "Moving %s from %s to %s",
@@ -726,8 +726,8 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
     if ((rsc->partial_migration_source != NULL)
         && (rsc->partial_migration_target != NULL)
         && allow_migrate && (num_all_active == 2)
-        && pe__same_node(current, rsc->partial_migration_source)
-        && pe__same_node(rsc->allocated_to, rsc->partial_migration_target)) {
+        && pcmk__same_node(current, rsc->partial_migration_source)
+        && pcmk__same_node(rsc->allocated_to, rsc->partial_migration_target)) {
         /* A partial migration is in progress, and the migration target remains
          * the same as when the migration began.
          */
@@ -1218,7 +1218,7 @@ is_expected_node(const pcmk_resource_t *rsc, const pcmk_node_t *node)
     return pcmk_all_flags_set(rsc->flags,
                               pcmk_rsc_stop_unexpected|pcmk_rsc_restarting)
            && (rsc->next_role > pcmk_role_stopped)
-           && pe__same_node(rsc->allocated_to, node);
+           && pcmk__same_node(rsc->allocated_to, node);
 }
 
 /*!
@@ -1250,8 +1250,8 @@ stop_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
 
         if (rsc->partial_migration_target != NULL) {
             // Continue migration if node originally was and remains target
-            if (pe__same_node(current, rsc->partial_migration_target)
-                && pe__same_node(current, rsc->allocated_to)) {
+            if (pcmk__same_node(current, rsc->partial_migration_target)
+                && pcmk__same_node(current, rsc->allocated_to)) {
                 pcmk__rsc_trace(rsc,
                                 "Skipping stop of %s on %s "
                                 "because partial migration there will continue",

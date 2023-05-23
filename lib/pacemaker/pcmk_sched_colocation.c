@@ -1218,7 +1218,7 @@ pcmk__colocation_affects(const pcmk_resource_t *dependent,
         } else if (colocation->score >= INFINITY) {
             // Dependent resource must colocate with primary resource
 
-            if (!pe__same_node(primary_node, dependent->allocated_to)) {
+            if (!pcmk__same_node(primary_node, dependent->allocated_to)) {
                 pcmk__sched_err("%s must be colocated with %s but is not "
                                 "(%s vs. %s)",
                                 dependent->id, primary->id,
@@ -1229,7 +1229,7 @@ pcmk__colocation_affects(const pcmk_resource_t *dependent,
         } else if (colocation->score <= -CRM_SCORE_INFINITY) {
             // Dependent resource must anti-colocate with primary resource
 
-            if (pe__same_node(dependent->allocated_to, primary_node)) {
+            if (pcmk__same_node(dependent->allocated_to, primary_node)) {
                 pcmk__sched_err("%s and %s must be anti-colocated but are "
                                 "assigned to the same node (%s)",
                                 dependent->id, primary->id,

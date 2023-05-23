@@ -465,7 +465,7 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
                  item = item->next) {
                 pcmk_action_t *rsc_action = item->data;
 
-                if (!pe__same_node(rsc_action->node, action->node)
+                if (!pcmk__same_node(rsc_action->node, action->node)
                     && pcmk__str_eq(rsc_action->task, PCMK_ACTION_STOP,
                                     pcmk__str_none)) {
                     pcmk__new_ordering(remote, start_key(remote), NULL,
@@ -584,7 +584,7 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
         return began_on;
     }
 
-    if (pe__same_node(began_on, ended_on)) {
+    if (pcmk__same_node(began_on, ended_on)) {
         crm_trace("Routing %s for %s through remote connection's "
                   "current node %s (not moving)%s",
                   action->task, (action->rsc? action->rsc->id : "no resource"),

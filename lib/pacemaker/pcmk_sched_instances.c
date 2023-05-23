@@ -639,7 +639,7 @@ assign_instance_early(const pcmk_resource_t *rsc, pcmk_resource_t *instance,
     while (reserved < available) {
         chosen = assign_instance(instance, current, max_per_node);
 
-        if (pe__same_node(chosen, current)) {
+        if (pcmk__same_node(chosen, current)) {
             // Successfully assigned to current node
             break;
         }
@@ -1101,7 +1101,7 @@ pcmk__instance_matches(const pcmk_resource_t *instance, const pcmk_node_t *node,
         return false;
     }
 
-    if (!pe__same_node(instance_node, node)) {
+    if (!pcmk__same_node(instance_node, node)) {
         pcmk__rsc_trace(instance,
                         "%s is not a compatible instance "
                         "(assigned to %s not %s)",

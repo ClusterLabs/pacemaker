@@ -1139,7 +1139,7 @@ pcmk__order_stops_before_shutdown(pcmk_node_t *node, pcmk_action_t *shutdown_op)
         pcmk_action_t *action = (pcmk_action_t *) iter->data;
 
         // Only stops on the node shutting down are relevant
-        if (!pe__same_node(action->node, node)
+        if (!pcmk__same_node(action->node, node)
             || !pcmk__str_eq(action->task, PCMK_ACTION_STOP, pcmk__str_none)) {
             continue;
         }

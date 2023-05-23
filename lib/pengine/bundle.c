@@ -167,7 +167,7 @@ pe__node_is_bundle_instance(const pcmk_resource_t *bundle,
     for (GList *iter = bundle_data->replicas; iter != NULL; iter = iter->next) {
         pcmk__bundle_replica_t *replica = iter->data;
 
-        if (pe__same_node(node, replica->node)) {
+        if (pcmk__same_node(node, replica->node)) {
             return true;
         }
     }

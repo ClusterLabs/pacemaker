@@ -453,22 +453,6 @@ pe__health_score(const char *option, pcmk_scheduler_t *scheduler)
 
 /*!
  * \internal
- * \brief Check whether two node objects refer to the same node
- *
- * \param[in] node1  First node object to compare
- * \param[in] node2  Second node object to compare
- *
- * \return true if \p node1 and \p node2 refer to the same node
- */
-static inline bool
-pe__same_node(const pcmk_node_t *node1, const pcmk_node_t *node2)
-{
-    return (node1 != NULL) && (node2 != NULL)
-           && (node1->details == node2->details);
-}
-
-/*!
- * \internal
  * \brief Get the operation key from an action history entry
  *
  * \param[in] xml  Action history entry

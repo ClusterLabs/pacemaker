@@ -575,7 +575,7 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
         // Disable constraint if it only applies when on same node, but isn't
         if (pcmk_is_set(other->type, pcmk__ar_if_on_same_node)
             && (first_node != NULL) && (then_node != NULL)
-            && !pe__same_node(first_node, then_node)) {
+            && !pcmk__same_node(first_node, then_node)) {
 
             pcmk__rsc_trace(then->rsc,
                             "Disabled ordering %s on %s then %s on %s: "
@@ -1312,7 +1312,7 @@ pcmk__action_locks_rsc_to_node(const pcmk_action_t *action)
 {
     // Only resource actions taking place on resource's lock node are locked
     if ((action == NULL) || (action->rsc == NULL)
-        || !pe__same_node(action->node, action->rsc->lock_node)) {
+        || !pcmk__same_node(action->node, action->rsc->lock_node)) {
         return false;
     }
 

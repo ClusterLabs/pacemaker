@@ -677,7 +677,7 @@ should_add_input_to_graph(const pcmk_action_t *action,
              * the resource has been assigned, not where migrate_to will be
              * executed.
              */
-            if (!pe__same_node(input_node, assigned)) {
+            if (!pcmk__same_node(input_node, assigned)) {
                 crm_trace("Ignoring %s (%d) input %s (%d): "
                           "migration target %s is not same as input node %s",
                           action->uuid, action->id,
@@ -688,7 +688,7 @@ should_add_input_to_graph(const pcmk_action_t *action,
                 return false;
             }
 
-        } else if (!pe__same_node(input_node, action->node)) {
+        } else if (!pcmk__same_node(input_node, action->node)) {
             crm_trace("Ignoring %s (%d) input %s (%d): "
                       "not on same node (%s vs %s)",
                       action->uuid, action->id,
@@ -709,7 +709,7 @@ should_add_input_to_graph(const pcmk_action_t *action,
 
     } else if ((uint32_t) input->type == pcmk__ar_if_required_on_same_node) {
         if (input->action->node && action->node
-            && !pe__same_node(input->action->node, action->node)) {
+            && !pcmk__same_node(input->action->node, action->node)) {
             crm_trace("Ignoring %s (%d) input %s (%d): "
                       "not on same node (%s vs %s)",
                       action->uuid, action->id,

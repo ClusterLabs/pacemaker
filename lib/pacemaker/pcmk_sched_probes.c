@@ -305,7 +305,7 @@ probe_needed_before_action(const pcmk_action_t *probe,
 {
     // Probes on a node are performed after unfencing it, not before
     if (pcmk__str_eq(then->task, PCMK_ACTION_STONITH, pcmk__str_none)
-        && pe__same_node(probe->node, then->node)) {
+        && pcmk__same_node(probe->node, then->node)) {
         const char *op = g_hash_table_lookup(then->meta, "stonith_action");
 
         if (pcmk__str_eq(op, PCMK_ACTION_ON, pcmk__str_casei)) {
@@ -316,7 +316,7 @@ probe_needed_before_action(const pcmk_action_t *probe,
     // Probes should be done on a node before shutting it down
     if (pcmk__str_eq(then->task, PCMK_ACTION_DO_SHUTDOWN, pcmk__str_none)
         && (probe->node != NULL) && (then->node != NULL)
-        && !pe__same_node(probe->node, then->node)) {
+        && !pcmk__same_node(probe->node, then->node)) {
         return false;
     }
 

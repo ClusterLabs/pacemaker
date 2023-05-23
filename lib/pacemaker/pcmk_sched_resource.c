@@ -440,7 +440,7 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
     }
 
     if (rsc->allocated_to != NULL) {
-        changed = !pe__same_node(rsc->allocated_to, node);
+        changed = !pcmk__same_node(rsc->allocated_to, node);
     } else {
         changed = (node != NULL);
     }

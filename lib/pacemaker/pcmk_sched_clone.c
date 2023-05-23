@@ -481,7 +481,7 @@ rsc_probed_on(const pcmk_resource_t *rsc, const pcmk_node_t *node)
 
         g_hash_table_iter_init(&iter, rsc->known_on);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &known_node)) {
-            if (pe__same_node(node, known_node)) {
+            if (pcmk__same_node(node, known_node)) {
                 return true;
             }
         }
@@ -532,7 +532,7 @@ probe_anonymous_clone(pcmk_resource_t *clone, pcmk_node_t *node)
         const pcmk_node_t *instance_node = NULL;
 
         instance_node = instance->fns->location(instance, NULL, 0);
-        if (pe__same_node(instance_node, node)) {
+        if (pcmk__same_node(instance_node, node)) {
             child = instance;
         }
     }

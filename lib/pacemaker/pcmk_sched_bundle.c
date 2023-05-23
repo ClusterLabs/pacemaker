@@ -71,7 +71,7 @@ assign_replica(pcmk__bundle_replica_t *replica, void *user_data)
 
         g_hash_table_iter_init(&iter, replica->child->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-            if (!pe__same_node(node, replica->node)) {
+            if (!pcmk__same_node(node, replica->node)) {
                 node->weight = -INFINITY;
             } else if (!pcmk__threshold_reached(replica->child, node, NULL)) {
                 node->weight = INFINITY;
@@ -909,7 +909,7 @@ create_replica_probes(pcmk__bundle_replica_t *replica, void *user_data)
         probe_data->any_created = true;
     }
     if ((replica->child != NULL)
-        && pe__same_node(probe_data->node, replica->node)
+        && pcmk__same_node(probe_data->node, replica->node)
         && replica->child->cmds->create_probe(replica->child,
                                               probe_data->node)) {
         probe_data->any_created = true;

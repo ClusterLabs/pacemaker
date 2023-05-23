@@ -756,7 +756,8 @@ bool
 pe__rsc_running_on_only(const pcmk_resource_t *rsc, const pcmk_node_t *node)
 {
     return (rsc != NULL) && pcmk__list_of_1(rsc->running_on)
-            && pe__same_node((const pcmk_node_t *) rsc->running_on->data, node);
+            && pcmk__same_node((const pcmk_node_t *) rsc->running_on->data,
+                               node);
 }
 
 bool

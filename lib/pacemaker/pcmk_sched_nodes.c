@@ -280,11 +280,11 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
     // Check whether one node is already running desired resource
 
     if (preferred != NULL) {
-        if (pe__same_node(preferred, node1)) {
+        if (pcmk__same_node(preferred, node1)) {
             crm_trace("%s before %s (preferred node)",
                       pcmk__node_name(node1), pcmk__node_name(node2));
             return -1;
-        } else if (pe__same_node(preferred, node2)) {
+        } else if (pcmk__same_node(preferred, node2)) {
             crm_trace("%s after %s (not preferred node)",
                       pcmk__node_name(node1), pcmk__node_name(node2));
             return 1;
