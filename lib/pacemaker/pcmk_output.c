@@ -378,7 +378,7 @@ rsc_is_colocated_with_list(pcmk__output_t *out, va_list args) {
     /* We're listing constraints explicitly involving rsc, so use rsc->rsc_cons
      * directly rather than rsc->cmds->this_with_colocations().
      */
-    pe__set_resource_flags(rsc, pcmk_rsc_detect_loop);
+    pcmk__set_rsc_flags(rsc, pcmk_rsc_detect_loop);
     for (GList *lpc = rsc->rsc_cons; lpc != NULL; lpc = lpc->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
         char *hdr = NULL;
@@ -427,7 +427,7 @@ rsc_is_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
     /* We're listing constraints explicitly involving rsc, so use rsc->rsc_cons
      * directly rather than rsc->cmds->this_with_colocations().
      */
-    pe__set_resource_flags(rsc, pcmk_rsc_detect_loop);
+    pcmk__set_rsc_flags(rsc, pcmk_rsc_detect_loop);
     for (GList *lpc = rsc->rsc_cons; lpc != NULL; lpc = lpc->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
 
@@ -464,7 +464,7 @@ rscs_colocated_with_list(pcmk__output_t *out, va_list args) {
      * rsc->rsc_cons_lhs directly rather than
      * rsc->cmds->with_this_colocations().
      */
-    pe__set_resource_flags(rsc, pcmk_rsc_detect_loop);
+    pcmk__set_rsc_flags(rsc, pcmk_rsc_detect_loop);
     for (GList *lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
         char *hdr = NULL;
@@ -514,7 +514,7 @@ rscs_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
      * rsc->rsc_cons_lhs directly rather than
      * rsc->cmds->with_this_colocations().
      */
-    pe__set_resource_flags(rsc, pcmk_rsc_detect_loop);
+    pcmk__set_rsc_flags(rsc, pcmk_rsc_detect_loop);
     for (GList *lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
 

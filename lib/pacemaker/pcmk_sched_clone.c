@@ -50,7 +50,7 @@ pcmk__clone_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
         pcmk__rsc_debug(rsc, "Breaking assignment loop involving %s", rsc->id);
         return NULL;
     }
-    pe__set_resource_flags(rsc, pcmk_rsc_assigning);
+    pcmk__set_rsc_flags(rsc, pcmk_rsc_assigning);
 
     // If this clone is promotable, consider nodes' promotion scores
     if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
@@ -86,7 +86,7 @@ pcmk__clone_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
         pcmk__set_instance_roles(rsc);
     }
 
-    pe__clear_resource_flags(rsc, pcmk_rsc_unassigned|pcmk_rsc_assigning);
+    pcmk__clear_rsc_flags(rsc, pcmk_rsc_unassigned|pcmk_rsc_assigning);
     pcmk__rsc_trace(rsc, "Assigned clone %s", rsc->id);
     return NULL;
 }

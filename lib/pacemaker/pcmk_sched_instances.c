@@ -654,7 +654,7 @@ assign_instance_early(const pcmk_resource_t *rsc, pcmk_resource_t *instance,
             pcmk__rsc_info(instance,
                            "Not assigning %s to current node %s: unavailable",
                            instance->id, pe__node_name(current));
-            pe__set_resource_flags(instance, pcmk_rsc_unassigned);
+            pcmk__set_rsc_flags(instance, pcmk_rsc_unassigned);
             break;
         }
 

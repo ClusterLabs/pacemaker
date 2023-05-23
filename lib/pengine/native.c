@@ -115,8 +115,8 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
 
     if ((rsc->variant == pcmk_rsc_variant_primitive)
         && node->details->maintenance) {
-        pe__clear_resource_flags(rsc, pcmk_rsc_managed);
-        pe__set_resource_flags(rsc, pcmk_rsc_maintenance);
+        pcmk__clear_rsc_flags(rsc, pcmk_rsc_managed);
+        pcmk__set_rsc_flags(rsc, pcmk_rsc_maintenance);
     }
 
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
@@ -153,8 +153,8 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
                 }
                 break;
             case pcmk_multiply_active_block:
-                pe__clear_resource_flags(rsc, pcmk_rsc_managed);
-                pe__set_resource_flags(rsc, pcmk_rsc_blocked);
+                pcmk__clear_rsc_flags(rsc, pcmk_rsc_managed);
+                pcmk__set_rsc_flags(rsc, pcmk_rsc_blocked);
 
                 /* If the resource belongs to a group or bundle configured with
                  * PCMK_META_MULTIPLE_ACTIVE=block, block the entire entity.
@@ -168,8 +168,8 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
                     for (; gIter != NULL; gIter = gIter->next) {
                         pcmk_resource_t *child = gIter->data;
 
-                        pe__clear_resource_flags(child, pcmk_rsc_managed);
-                        pe__set_resource_flags(child, pcmk_rsc_blocked);
+                        pcmk__clear_rsc_flags(child, pcmk_rsc_managed);
+                        pcmk__set_rsc_flags(child, pcmk_rsc_blocked);
                     }
                 }
                 break;
@@ -198,7 +198,7 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
 static void
 recursive_clear_unique(pcmk_resource_t *rsc, gpointer user_data)
 {
-    pe__clear_resource_flags(rsc, pcmk_rsc_unique);
+    pcmk__clear_rsc_flags(rsc, pcmk_rsc_unique);
     add_hash_param(rsc->meta, PCMK_META_GLOBALLY_UNIQUE, XML_BOOLEAN_FALSE);
     g_list_foreach(rsc->children, (GFunc) recursive_clear_unique, NULL);
 }

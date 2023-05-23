@@ -551,7 +551,7 @@ rsc_printable_id(const pcmk_resource_t *rsc)
 void
 pe__clear_resource_flags_recursive(pcmk_resource_t *rsc, uint64_t flags)
 {
-    pe__clear_resource_flags(rsc, flags);
+    pcmk__clear_rsc_flags(rsc, flags);
     for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pe__clear_resource_flags_recursive((pcmk_resource_t *) gIter->data,
                                            flags);
@@ -570,7 +570,7 @@ pe__clear_resource_flags_on_all(pcmk_scheduler_t *scheduler, uint64_t flag)
 void
 pe__set_resource_flags_recursive(pcmk_resource_t *rsc, uint64_t flags)
 {
-    pe__set_resource_flags(rsc, flags);
+    pcmk__set_rsc_flags(rsc, flags);
     for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pe__set_resource_flags_recursive((pcmk_resource_t *) gIter->data,
                                          flags);

@@ -422,13 +422,13 @@ update_resource_flags_for_action(pcmk_resource_t *rsc,
      * within Pacemaker, and will eventually be removed
      */
     if (pcmk__str_eq(action->task, PCMK_ACTION_STOP, pcmk__str_casei)) {
-        pe__set_resource_flags(rsc, pcmk_rsc_stopping);
+        pcmk__set_rsc_flags(rsc, pcmk_rsc_stopping);
 
     } else if (pcmk__str_eq(action->task, PCMK_ACTION_START, pcmk__str_casei)) {
         if (pcmk_is_set(action->flags, pcmk_action_runnable)) {
-            pe__set_resource_flags(rsc, pcmk_rsc_starting);
+            pcmk__set_rsc_flags(rsc, pcmk_rsc_starting);
         } else {
-            pe__clear_resource_flags(rsc, pcmk_rsc_starting);
+            pcmk__clear_rsc_flags(rsc, pcmk_rsc_starting);
         }
     }
 }

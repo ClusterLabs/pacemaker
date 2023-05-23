@@ -422,7 +422,7 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
         pcmk__rsc_debug(rsc, "Breaking assignment loop involving %s", rsc->id);
         return NULL;
     }
-    pe__set_resource_flags(rsc, pcmk_rsc_assigning);
+    pcmk__set_rsc_flags(rsc, pcmk_rsc_assigning);
 
     pe__show_node_scores(true, rsc, "Pre-assignment", rsc->allowed_nodes,
                          rsc->cluster);
@@ -495,7 +495,7 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     // Unmanage resource if fencing is enabled but no device is configured
     if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)
         && !pcmk_is_set(rsc->cluster->flags, pcmk_sched_have_fencing)) {
-        pe__clear_resource_flags(rsc, pcmk_rsc_managed);
+        pcmk__clear_rsc_flags(rsc, pcmk_rsc_managed);
     }
 
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
@@ -537,7 +537,7 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
         }
     }
 
-    pe__clear_resource_flags(rsc, pcmk_rsc_assigning);
+    pcmk__clear_rsc_flags(rsc, pcmk_rsc_assigning);
 
     if (rsc->is_remote_node) {
         remote_connection_assigned(rsc);
@@ -565,7 +565,7 @@ schedule_restart_actions(pcmk_resource_t *rsc, pcmk_node_t *current,
     enum rsc_role_e next_role;
     rsc_transition_fn fn = NULL;
 
-    pe__set_resource_flags(rsc, pcmk_rsc_restarting);
+    pcmk__set_rsc_flags(rsc, pcmk_rsc_restarting);
 
     // Bring resource down to a stop on its current node
     while (role != pcmk_role_stopped) {
@@ -601,7 +601,7 @@ schedule_restart_actions(pcmk_resource_t *rsc, pcmk_node_t *current,
         role = next_role;
     }
 
-    pe__clear_resource_flags(rsc, pcmk_rsc_restarting);
+    pcmk__clear_rsc_flags(rsc, pcmk_rsc_restarting);
 }
 
 /*!
@@ -786,14 +786,14 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
                 break;
             case pcmk_multiply_active_unexpected:
                 need_stop = true; // stop_resource() will skip expected node
-                pe__set_resource_flags(rsc, pcmk_rsc_stop_unexpected);
+                pcmk__set_rsc_flags(rsc, pcmk_rsc_stop_unexpected);
                 break;
             default:
                 break;
         }
 
     } else {
-        pe__clear_resource_flags(rsc, pcmk_rsc_stop_unexpected);
+        pcmk__clear_rsc_flags(rsc, pcmk_rsc_stop_unexpected);
     }
 
     if (pcmk_is_set(rsc->flags, pcmk_rsc_start_pending)) {

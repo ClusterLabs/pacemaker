@@ -54,11 +54,11 @@ pcmk__group_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
 
     if (rsc->children == NULL) {
         // No members to assign
-        pe__clear_resource_flags(rsc, pcmk_rsc_unassigned);
+        pcmk__clear_rsc_flags(rsc, pcmk_rsc_unassigned);
         return NULL;
     }
 
-    pe__set_resource_flags(rsc, pcmk_rsc_assigning);
+    pcmk__set_rsc_flags(rsc, pcmk_rsc_assigning);
     first_member = (pcmk_resource_t *) rsc->children->data;
     rsc->role = first_member->role;
 
@@ -79,7 +79,7 @@ pcmk__group_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     }
 
     pe__set_next_role(rsc, first_member->next_role, "first group member");
-    pe__clear_resource_flags(rsc, pcmk_rsc_assigning|pcmk_rsc_unassigned);
+    pcmk__clear_rsc_flags(rsc, pcmk_rsc_assigning|pcmk_rsc_unassigned);
 
     if (!pe__group_flag_is_set(rsc, pcmk__group_colocated)) {
         return NULL;
@@ -865,7 +865,7 @@ pcmk__group_add_colocated_node_scores(pcmk_resource_t *source_rsc,
                        log_id, source_rsc->id);
         return;
     }
-    pe__set_resource_flags(source_rsc, pcmk_rsc_updating_nodes);
+    pcmk__set_rsc_flags(source_rsc, pcmk_rsc_updating_nodes);
 
     // Ignore empty groups (only possible with schema validation disabled)
     if (source_rsc->children == NULL) {
@@ -891,7 +891,7 @@ pcmk__group_add_colocated_node_scores(pcmk_resource_t *source_rsc,
                     "(at %.6f)", log_id, source_rsc->id, member->id, factor);
     member->cmds->add_colocated_node_scores(member, target_rsc, log_id, nodes,
                                             colocation, factor, flags);
-    pe__clear_resource_flags(source_rsc, pcmk_rsc_updating_nodes);
+    pcmk__clear_rsc_flags(source_rsc, pcmk_rsc_updating_nodes);
 }
 
 // Group implementation of pcmk_assignment_methods_t:add_utilization()

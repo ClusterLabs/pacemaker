@@ -352,7 +352,7 @@ valid_network(pe__bundle_variant_data_t *data)
                              "'replicas-per-host=1'", data->prefix);
             data->nreplicas_per_host = 1;
             // @TODO to be sure:
-            // pe__clear_resource_flags(rsc, pcmk_rsc_unique);
+            // pcmk__clear_rsc_flags(rsc, pcmk_rsc_unique);
         }
         return TRUE;
     }
@@ -651,7 +651,7 @@ create_container_resource(pcmk_resource_t *parent,
                             parent->cluster) != pcmk_rc_ok) {
         return pcmk_rc_unpack_error;
     }
-    pe__set_resource_flags(replica->container, pcmk_rsc_replica_container);
+    pcmk__set_rsc_flags(replica->container, pcmk_rsc_replica_container);
     parent->children = g_list_append(parent->children, replica->container);
 
     return pcmk_rc_ok;
@@ -854,8 +854,7 @@ create_replica_resources(pcmk_resource_t *parent,
          * containers with pacemaker-remoted inside in order to start
          * services inside those containers.
          */
-        pe__set_resource_flags(replica->remote,
-                               pcmk_rsc_remote_nesting_allowed);
+        pcmk__set_rsc_flags(replica->remote, pcmk_rsc_remote_nesting_allowed);
     }
     return rc;
 }
@@ -1041,7 +1040,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     value = crm_element_value(xml_obj, "replicas-per-host");
     pcmk__scan_min_int(value, &bundle_data->nreplicas_per_host, 1);
     if (bundle_data->nreplicas_per_host == 1) {
-        pe__clear_resource_flags(rsc, pcmk_rsc_unique);
+        pcmk__clear_rsc_flags(rsc, pcmk_rsc_unique);
     }
 
     bundle_data->container_command = crm_element_value_copy(xml_obj, "run-command");
@@ -1232,7 +1231,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
             // Ensure the child's notify gets set based on the underlying primitive's value
             if (pcmk_is_set(replica->child->flags, pcmk_rsc_notify)) {
-                pe__set_resource_flags(bundle_data->child, pcmk_rsc_notify);
+                pcmk__set_rsc_flags(bundle_data->child, pcmk_rsc_notify);
             }
 
             allocate_ip(bundle_data, replica, buffer);

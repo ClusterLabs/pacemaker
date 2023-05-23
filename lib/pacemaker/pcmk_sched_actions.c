@@ -596,7 +596,7 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
              */
             pe__set_action_flags(other->action, pcmk_action_optional);
             if (!strcmp(first->task, PCMK_ACTION_RELOAD_AGENT)) {
-                pe__clear_resource_flags(first->rsc, pcmk_rsc_reload);
+                pcmk__clear_rsc_flags(first->rsc, pcmk_rsc_reload);
             }
         }
 
@@ -1579,7 +1579,7 @@ schedule_reload(gpointer data, gpointer user_data)
     }
 
     // Schedule the reload
-    pe__set_resource_flags(rsc, pcmk_rsc_reload);
+    pcmk__set_rsc_flags(rsc, pcmk_rsc_reload);
     reload = custom_action(rsc, reload_key(rsc), PCMK_ACTION_RELOAD_AGENT, node,
                            FALSE, rsc->cluster);
     pe_action_set_reason(reload, "resource definition change", FALSE);

@@ -1688,7 +1688,7 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
                        log_id, source_rsc->id);
         return;
     }
-    pe__set_resource_flags(source_rsc, pcmk_rsc_updating_nodes);
+    pcmk__set_rsc_flags(source_rsc, pcmk_rsc_updating_nodes);
 
     if (*nodes == NULL) {
         work = pcmk__copy_node_table(source_rsc->allowed_nodes);
@@ -1704,7 +1704,7 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
     }
 
     if (work == NULL) {
-        pe__clear_resource_flags(source_rsc, pcmk_rsc_updating_nodes);
+        pcmk__clear_rsc_flags(source_rsc, pcmk_rsc_updating_nodes);
         return;
     }
 
@@ -1756,7 +1756,7 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
         pcmk__rsc_info(source_rsc, "%s: Rolling back optional scores from %s",
                        log_id, source_rsc->id);
         g_hash_table_destroy(work);
-        pe__clear_resource_flags(source_rsc, pcmk_rsc_updating_nodes);
+        pcmk__clear_rsc_flags(source_rsc, pcmk_rsc_updating_nodes);
         return;
     }
 
@@ -1778,7 +1778,7 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
     }
     *nodes = work;
 
-    pe__clear_resource_flags(source_rsc, pcmk_rsc_updating_nodes);
+    pcmk__clear_rsc_flags(source_rsc, pcmk_rsc_updating_nodes);
 }
 
 /*!

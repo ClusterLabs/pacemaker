@@ -457,7 +457,7 @@ sort_promotable_instances(pcmk_resource_t *clone)
             == pcmk_rc_already) {
         return;
     }
-    pe__set_resource_flags(clone, pcmk_rsc_updating_nodes);
+    pcmk__set_rsc_flags(clone, pcmk_rsc_updating_nodes);
 
     for (GList *iter = clone->children; iter != NULL; iter = iter->next) {
         pcmk_resource_t *child = (pcmk_resource_t *) iter->data;
@@ -490,7 +490,7 @@ sort_promotable_instances(pcmk_resource_t *clone)
 
     // Finally, sort instances in descending order of promotion priority
     clone->children = g_list_sort(clone->children, cmp_promotable_instance);
-    pe__clear_resource_flags(clone, pcmk_rsc_updating_nodes);
+    pcmk__clear_rsc_flags(clone, pcmk_rsc_updating_nodes);
 }
 
 /*!

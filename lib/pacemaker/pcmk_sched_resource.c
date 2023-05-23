@@ -138,7 +138,7 @@ pcmk__rsc_agent_changed(pcmk_resource_t *rsc, pcmk_node_t *node,
         // Make sure the resource is restarted
         custom_action(rsc, stop_key(rsc), PCMK_ACTION_STOP, node, FALSE,
                       rsc->cluster);
-        pe__set_resource_flags(rsc, pcmk_rsc_start_pending);
+        pcmk__set_rsc_flags(rsc, pcmk_rsc_start_pending);
     }
     return changed;
 }
@@ -445,7 +445,7 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
         changed = (node != NULL);
     }
     pcmk__unassign_resource(rsc);
-    pe__clear_resource_flags(rsc, pcmk_rsc_unassigned);
+    pcmk__clear_rsc_flags(rsc, pcmk_rsc_unassigned);
 
     if (node == NULL) {
         char *rc_stopped = NULL;
@@ -532,7 +532,7 @@ pcmk__unassign_resource(pcmk_resource_t *rsc)
         crm_info("Unassigning %s from %s", rsc->id, pe__node_name(old));
     }
 
-    pe__set_resource_flags(rsc, pcmk_rsc_unassigned);
+    pcmk__set_rsc_flags(rsc, pcmk_rsc_unassigned);
 
     if (rsc->children == NULL) {
         if (old == NULL) {
