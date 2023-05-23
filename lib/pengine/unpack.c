@@ -2043,7 +2043,7 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
     gboolean skip_inactive = FALSE;
 
     CRM_ASSERT(parent != NULL);
-    CRM_ASSERT(pe_rsc_is_clone(parent));
+    CRM_ASSERT(pcmk__is_clone(parent));
     CRM_ASSERT(!pcmk_is_set(parent->flags, pcmk_rsc_unique));
 
     // Check for active (or partially active, for cloned groups) instance

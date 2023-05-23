@@ -286,7 +286,7 @@ pcmk__colocated_resources(const pcmk_resource_t *rsc,
             continue; // Break colocation loop
         }
 
-        if (pe_rsc_is_clone(rsc) && !pe_rsc_is_clone(dependent)) {
+        if (pcmk__is_clone(rsc) && !pcmk__is_clone(dependent)) {
             continue; // We can't be sure whether dependent will be colocated
         }
 

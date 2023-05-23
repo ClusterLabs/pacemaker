@@ -265,7 +265,7 @@ get_ordering_resource(const xmlNode *xml, const char *resource_attr,
                         PCMK__XA_THEN_INSTANCE " is deprecated and will be "
                         "removed in a future release.");
 
-        if (!pe_rsc_is_clone(rsc)) {
+        if (!pcmk__is_clone(rsc)) {
             pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
                              "is not a clone but instance '%s' was requested",
                              ID(xml), rsc_id, instance_id);
@@ -297,7 +297,7 @@ get_minimum_first_instances(const pcmk_resource_t *rsc, const xmlNode *xml)
     const char *clone_min = NULL;
     bool require_all = false;
 
-    if (!pe_rsc_is_clone(rsc)) {
+    if (!pcmk__is_clone(rsc)) {
         return 0;
     }
 

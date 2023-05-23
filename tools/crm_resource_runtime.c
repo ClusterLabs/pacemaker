@@ -47,11 +47,11 @@ cli_resource_search(pcmk_resource_t *rsc, const char *requested_name,
     GList *retval = NULL;
     const pcmk_resource_t *parent = pe__const_top_resource(rsc, false);
 
-    if (pe_rsc_is_clone(rsc)) {
+    if (pcmk__is_clone(rsc)) {
         retval = build_node_info_list(rsc);
 
     /* The anonymous clone children's common ID is supplied */
-    } else if (pe_rsc_is_clone(parent)
+    } else if (pcmk__is_clone(parent)
                && !pcmk_is_set(rsc->flags, pcmk_rsc_unique)
                && rsc->clone_name
                && pcmk__str_eq(requested_name, rsc->clone_name, pcmk__str_casei)
@@ -1476,7 +1476,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
 
     running = resource_is_running_on(rsc, host);
 
-    if (pe_rsc_is_clone(parent) && !running) {
+    if (pcmk__is_clone(parent) && !running) {
         if (pe_rsc_is_unique_clone(parent)) {
             lookup_id = strdup(rsc->id);
         } else {
@@ -1513,9 +1513,9 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
     }
 
     if (host) {
-        if (pe_rsc_is_clone(rsc) || pe_bundle_replicas(rsc)) {
+        if (pcmk__is_clone(rsc) || pe_bundle_replicas(rsc)) {
             stop_via_ban = true;
-        } else if (pe_rsc_is_clone(parent)) {
+        } else if (pcmk__is_clone(parent)) {
             stop_via_ban = true;
             free(lookup_id);
             lookup_id = strdup(parent->id);
@@ -2095,7 +2095,7 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
 
     if (pcmk__strcase_any_of(rsc_action, "force-start", "force-demote",
                                     "force-promote", NULL)) {
-        if(pe_rsc_is_clone(rsc)) {
+        if (pcmk__is_clone(rsc)) {
             GList *nodes = cli_resource_search(rsc, requested_name, scheduler);
             if(nodes != NULL && force == FALSE) {
                 out->err(out, "It is not safe to %s %s here: the cluster claims it is already active",
@@ -2111,7 +2111,7 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
         }
     }
 
-    if(pe_rsc_is_clone(rsc)) {
+    if (pcmk__is_clone(rsc)) {
         /* Grab the first child resource in the hope it's not a group */
         rsc = rsc->children->data;
     }
@@ -2203,7 +2203,7 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
     }
 
     if (count > 1) {
-        if (pe_rsc_is_clone(rsc)) {
+        if (pcmk__is_clone(rsc)) {
             current = NULL;
         } else {
             return pcmk_rc_multiple;

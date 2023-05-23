@@ -216,7 +216,7 @@ native_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     // Only some agent standards support unique and promotable clones
     if (!pcmk_is_set(ra_caps, pcmk_ra_cap_unique)
         && pcmk_is_set(rsc->flags, pcmk_rsc_unique)
-        && pe_rsc_is_clone(parent)) {
+        && pcmk__is_clone(parent)) {
 
         /* @COMPAT We should probably reject this situation as an error (as we
          * do for promotable below) rather than warn and convert, but that would
@@ -283,7 +283,7 @@ native_find_rsc(pcmk_resource_t *rsc, const char *id,
     if (pcmk_is_set(flags, pcmk_rsc_match_clone_only)) {
         const char *rid = ID(rsc->xml);
 
-        if (!pe_rsc_is_clone(pe__const_top_resource(rsc, false))) {
+        if (!pcmk__is_clone(pe__const_top_resource(rsc, false))) {
             match = false;
 
         } else if (!strcmp(id, rsc->id) || pcmk__str_eq(id, rid, pcmk__str_none)) {

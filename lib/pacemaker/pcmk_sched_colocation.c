@@ -760,13 +760,13 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
                          "does not exist", id, primary_id);
         return;
 
-    } else if ((dependent_instance != NULL) && !pe_rsc_is_clone(dependent)) {
+    } else if ((dependent_instance != NULL) && !pcmk__is_clone(dependent)) {
         pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
                          "is not a clone but instance '%s' was requested",
                          id, dependent_id, dependent_instance);
         return;
 
-    } else if ((primary_instance != NULL) && !pe_rsc_is_clone(primary)) {
+    } else if ((primary_instance != NULL) && !pcmk__is_clone(primary)) {
         pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
                          "is not a clone but instance '%s' was requested",
                          id, primary_id, primary_instance);
