@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -283,8 +283,8 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
         crm_debug("Exiting the FSA: queue=%d, fsa_actions=%#llx, stalled=%s",
                   g_list_length(controld_globals.fsa_message_queue),
                   (unsigned long long) controld_globals.fsa_actions,
-                  pcmk__btoa(pcmk_is_set(controld_globals.flags,
-                                         controld_fsa_is_stalled)));
+                  pcmk__flag_text(controld_globals.flags,
+                                  controld_fsa_is_stalled));
     } else {
         crm_trace("Exiting the FSA");
     }

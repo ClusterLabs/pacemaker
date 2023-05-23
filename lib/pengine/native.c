@@ -488,14 +488,16 @@ native_print_xml(pcmk_resource_t *rsc, const char *pre_text, long options,
         status_print("target_role=\"%s\" ", target_role);
     }
     status_print("active=\"%s\" ", pcmk__btoa(rsc->fns->active(rsc, TRUE)));
-    status_print("orphaned=\"%s\" ", pe__rsc_bool_str(rsc, pcmk_rsc_removed));
+    status_print("orphaned=\"%s\" ",
+                 pcmk__flag_text(rsc->flags, pcmk_rsc_removed));
     status_print("blocked=\"%s\" ",
-                 pe__rsc_bool_str(rsc, pcmk_rsc_blocked));
+                 pcmk__flag_text(rsc->flags, pcmk_rsc_blocked));
     status_print("managed=\"%s\" ",
-                 pe__rsc_bool_str(rsc, pcmk_rsc_managed));
-    status_print("failed=\"%s\" ", pe__rsc_bool_str(rsc, pcmk_rsc_failed));
+                 pcmk__flag_text(rsc->flags, pcmk_rsc_managed));
+    status_print("failed=\"%s\" ",
+                 pcmk__flag_text(rsc->flags, pcmk_rsc_failed));
     status_print("failure_ignored=\"%s\" ",
-                 pe__rsc_bool_str(rsc, pcmk_rsc_ignore_failure));
+                 pcmk__flag_text(rsc->flags, pcmk_rsc_ignore_failure));
     status_print("nodes_running_on=\"%d\" ", g_list_length(rsc->running_on));
 
     if (options & pe_print_pending) {
@@ -1016,12 +1018,13 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
              PCMK_XA_ROLE, rsc_state,
              "target_role", target_role,
              "active", pcmk__btoa(rsc->fns->active(rsc, TRUE)),
-             "orphaned", pe__rsc_bool_str(rsc, pcmk_rsc_removed),
-             "blocked", pe__rsc_bool_str(rsc, pcmk_rsc_blocked),
-             "maintenance", pe__rsc_bool_str(rsc, pcmk_rsc_maintenance),
-             "managed", pe__rsc_bool_str(rsc, pcmk_rsc_managed),
-             "failed", pe__rsc_bool_str(rsc, pcmk_rsc_failed),
-             "failure_ignored", pe__rsc_bool_str(rsc, pcmk_rsc_ignore_failure),
+             "orphaned", pcmk__flag_text(rsc->flags, pcmk_rsc_removed),
+             "blocked", pcmk__flag_text(rsc->flags, pcmk_rsc_blocked),
+             "maintenance", pcmk__flag_text(rsc->flags, pcmk_rsc_maintenance),
+             "managed", pcmk__flag_text(rsc->flags, pcmk_rsc_managed),
+             "failed", pcmk__flag_text(rsc->flags, pcmk_rsc_failed),
+             "failure_ignored", pcmk__flag_text(rsc->flags,
+                                                pcmk_rsc_ignore_failure),
              "nodes_running_on", nodes_running_on,
              "pending", (print_pending? native_pending_task(rsc) : NULL),
              "locked_to", lock_node_name,

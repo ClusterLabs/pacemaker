@@ -383,9 +383,9 @@ clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     pcmk__rsc_trace(rsc, "\tClone max: %d", clone_data->clone_max);
     pcmk__rsc_trace(rsc, "\tClone node max: %d", clone_data->clone_node_max);
     pcmk__rsc_trace(rsc, "\tClone is unique: %s",
-                    pe__rsc_bool_str(rsc, pcmk_rsc_unique));
+                    pcmk__flag_text(rsc->flags, pcmk_rsc_unique));
     pcmk__rsc_trace(rsc, "\tClone is promotable: %s",
-                    pe__rsc_bool_str(rsc, pcmk_rsc_promotable));
+                    pcmk__flag_text(rsc->flags, pcmk_rsc_promotable));
 
     // Clones may contain a single group or primitive
     for (a_child = pcmk__xe_first_child(xml_obj); a_child != NULL;
@@ -417,7 +417,7 @@ clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
      * environment.
      */
     add_hash_param(rsc->meta, PCMK_META_GLOBALLY_UNIQUE,
-                   pe__rsc_bool_str(rsc, pcmk_rsc_unique));
+                   pcmk__flag_text(rsc->flags, pcmk_rsc_unique));
 
     if (clone_data->clone_max <= 0) {
         /* Create one child instance so that unpack_find_resource() will hook up
@@ -540,13 +540,15 @@ clone_print_xml(pcmk_resource_t *rsc, const char *pre_text, long options,
     status_print("%s<clone ", pre_text);
     status_print(PCMK_XA_ID "=\"%s\" ", rsc->id);
     status_print("multi_state=\"%s\" ",
-                 pe__rsc_bool_str(rsc, pcmk_rsc_promotable));
-    status_print("unique=\"%s\" ", pe__rsc_bool_str(rsc, pcmk_rsc_unique));
+                 pcmk__flag_text(rsc->flags, pcmk_rsc_promotable));
+    status_print("unique=\"%s\" ",
+                 pcmk__flag_text(rsc->flags, pcmk_rsc_unique));
     status_print("managed=\"%s\" ",
-                 pe__rsc_bool_str(rsc, pcmk_rsc_managed));
-    status_print("failed=\"%s\" ", pe__rsc_bool_str(rsc, pcmk_rsc_failed));
+                 pcmk__flag_text(rsc->flags, pcmk_rsc_managed));
+    status_print("failed=\"%s\" ",
+                 pcmk__flag_text(rsc->flags, pcmk_rsc_failed));
     status_print("failure_ignored=\"%s\" ",
-                 pe__rsc_bool_str(rsc, pcmk_rsc_ignore_failure));
+                 pcmk__flag_text(rsc->flags, pcmk_rsc_ignore_failure));
     if (target_role) {
         status_print("target_role=\"%s\" ", target_role);
     }
@@ -870,15 +872,15 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
             rc = pe__name_and_nvpairs_xml(out, true, "clone", 10,
                     PCMK_XA_ID, rsc->id,
                     "multi_state",
-                    pe__rsc_bool_str(rsc, pcmk_rsc_promotable),
-                    "unique", pe__rsc_bool_str(rsc, pcmk_rsc_unique),
+                    pcmk__flag_text(rsc->flags, pcmk_rsc_promotable),
+                    "unique", pcmk__flag_text(rsc->flags, pcmk_rsc_unique),
                     "maintenance",
-                    pe__rsc_bool_str(rsc, pcmk_rsc_maintenance),
-                    "managed", pe__rsc_bool_str(rsc, pcmk_rsc_managed),
+                    pcmk__flag_text(rsc->flags, pcmk_rsc_maintenance),
+                    "managed", pcmk__flag_text(rsc->flags, pcmk_rsc_managed),
                     "disabled", pcmk__btoa(pe__resource_is_disabled(rsc)),
-                    "failed", pe__rsc_bool_str(rsc, pcmk_rsc_failed),
+                    "failed", pcmk__flag_text(rsc->flags, pcmk_rsc_failed),
                     "failure_ignored",
-                    pe__rsc_bool_str(rsc, pcmk_rsc_ignore_failure),
+                    pcmk__flag_text(rsc->flags, pcmk_rsc_ignore_failure),
                     "target_role", configured_role_str(rsc),
                     PCMK_XA_DESCRIPTION, desc);
             CRM_ASSERT(rc == pcmk_rc_ok);

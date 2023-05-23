@@ -1103,8 +1103,6 @@ cluster_options_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-#define bv(flag) pcmk__btoa(pcmk_is_set(scheduler->flags, (flag)))
-
 PCMK__OUTPUT_ARGS("cluster-options", "pcmk_scheduler_t *")
 static int
 cluster_options_xml(pcmk__output_t *out, va_list args) {
@@ -1138,18 +1136,29 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
 
     pcmk__output_create_xml_node(out, "cluster_options",
                                  PCMK_OPT_STONITH_ENABLED,
-                                    bv(pcmk_sched_fencing_enabled),
+                                 pcmk__flag_text(scheduler->flags,
+                                                 pcmk_sched_fencing_enabled),
+
                                  PCMK_OPT_SYMMETRIC_CLUSTER,
-                                    bv(pcmk_sched_symmetric_cluster),
+                                 pcmk__flag_text(scheduler->flags,
+                                                 pcmk_sched_symmetric_cluster),
+
                                  PCMK_OPT_NO_QUORUM_POLICY, no_quorum_policy,
+
                                  PCMK_OPT_MAINTENANCE_MODE,
-                                    bv(pcmk_sched_in_maintenance),
+                                 pcmk__flag_text(scheduler->flags,
+                                                 pcmk_sched_in_maintenance),
+
                                  PCMK_OPT_STOP_ALL_RESOURCES,
-                                    bv(pcmk_sched_stop_all),
+                                 pcmk__flag_text(scheduler->flags,
+                                                 pcmk_sched_stop_all),
+
                                  PCMK_OPT_STONITH_TIMEOUT "-ms",
-                                    stonith_timeout_str,
+                                 stonith_timeout_str,
+
                                  PCMK_OPT_PRIORITY_FENCING_DELAY "-ms",
-                                    priority_fencing_delay_str,
+                                 priority_fencing_delay_str,
+
                                  NULL);
     free(stonith_timeout_str);
     free(priority_fencing_delay_str);

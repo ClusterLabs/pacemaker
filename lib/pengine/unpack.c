@@ -301,7 +301,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     set_config_flag(scheduler, PCMK_OPT_STOP_ALL_RESOURCES,
                     pcmk_sched_stop_all);
     crm_debug("Stop all active resources: %s",
-              pcmk__btoa(pcmk_is_set(scheduler->flags, pcmk_sched_stop_all)));
+              pcmk__flag_text(scheduler->flags, pcmk_sched_stop_all));
 
     set_config_flag(scheduler, PCMK_OPT_SYMMETRIC_CLUSTER,
                     pcmk_sched_symmetric_cluster);
@@ -397,8 +397,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     set_config_flag(scheduler, PCMK_OPT_MAINTENANCE_MODE,
                     pcmk_sched_in_maintenance);
     crm_trace("Maintenance mode: %s",
-              pcmk__btoa(pcmk_is_set(scheduler->flags,
-                                     pcmk_sched_in_maintenance)));
+              pcmk__flag_text(scheduler->flags, pcmk_sched_in_maintenance));
 
     set_config_flag(scheduler, PCMK_OPT_START_FAILURE_IS_FATAL,
                     pcmk_sched_start_failure_fatal);

@@ -613,11 +613,11 @@ pcmk__clone_add_graph_meta(const pcmk_resource_t *rsc, xmlNode *xml)
     CRM_ASSERT(pe_rsc_is_clone(rsc) && (xml != NULL));
 
     name = crm_meta_name(PCMK_META_GLOBALLY_UNIQUE);
-    crm_xml_add(xml, name, pe__rsc_bool_str(rsc, pcmk_rsc_unique));
+    crm_xml_add(xml, name, pcmk__flag_text(rsc->flags, pcmk_rsc_unique));
     free(name);
 
     name = crm_meta_name(PCMK_META_NOTIFY);
-    crm_xml_add(xml, name, pe__rsc_bool_str(rsc, pcmk_rsc_notify));
+    crm_xml_add(xml, name, pcmk__flag_text(rsc->flags, pcmk_rsc_notify));
     free(name);
 
     name = crm_meta_name(PCMK_META_CLONE_MAX);

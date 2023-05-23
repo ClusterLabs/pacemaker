@@ -111,12 +111,7 @@ void pe__order_notifs_after_fencing(const pcmk_action_t *action,
                                     pcmk_action_t *stonith_op);
 
 
-static inline const char *
-pe__rsc_bool_str(const pcmk_resource_t *rsc, uint64_t rsc_flag)
-{
-    return pcmk__btoa(pcmk_is_set(rsc->flags, rsc_flag));
-}
-
+// Resource output methods
 int pe__clone_xml(pcmk__output_t *out, va_list args);
 int pe__clone_default(pcmk__output_t *out, va_list args);
 int pe__group_xml(pcmk__output_t *out, va_list args);
