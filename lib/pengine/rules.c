@@ -373,6 +373,10 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
         if (pcmk__str_eq((const char *)an_attr->name, XML_CIB_TAG_NVPAIR, pcmk__str_none)) {
             xmlNode *ref_nvpair = expand_idref(an_attr, top);
 
+            if (ref_nvpair == NULL) {
+                continue; // Not possible with schema validation enabled
+            }
+
             name = crm_element_value(an_attr, XML_NVPAIR_ATTR_NAME);
             if (name == NULL) {
                 name = crm_element_value(ref_nvpair, XML_NVPAIR_ATTR_NAME);
@@ -465,8 +469,7 @@ make_pairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
             xmlNode *expanded_attr_set = expand_idref(attr_set, top);
 
             if (expanded_attr_set == NULL) {
-                // Schema (if not "none") prevents this
-                continue;
+                continue; // Not possible with schema validation enabled
             }
 
             pair = calloc(1, sizeof(sorted_set_t));
@@ -671,6 +674,10 @@ pe_eval_expr(xmlNode *rule, const pe_rule_eval_data_t *rule_data,
     const char *value = NULL;
 
     rule = expand_idref(rule, NULL);
+    if (rule == NULL) {
+        return FALSE; // Not possible with schema validation enabled
+    }
+
     value = crm_element_value(rule, XML_RULE_ATTR_BOOLEAN_OP);
     if (pcmk__str_eq(value, "or", pcmk__str_casei)) {
         do_and = FALSE;

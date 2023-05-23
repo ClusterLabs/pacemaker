@@ -2570,12 +2570,13 @@ expand_idref(xmlNode * input, xmlNode * top)
         char *xpath_string = crm_strdup_printf("//%s[@" XML_ATTR_ID "='%s']",
                                                result->name, ref);
 
-        result = get_xpath_object(xpath_string, top, LOG_ERR);
-        if (result == NULL) {
+        result = get_xpath_object(xpath_string, top, LOG_DEBUG);
+        if (result == NULL) { // Not possible with schema validation enabled
             char *nodePath = (char *)xmlGetNodePath(top);
 
-            crm_err("No match for %s found in %s: Invalid configuration",
-                    xpath_string, pcmk__s(nodePath, "unrecognizable path"));
+            pcmk__config_err("Ignoring invalid %s configuration: "
+                             XML_ATTR_IDREF " '%s' does not reference "
+                             "a valid object", result->name, ref);
             free(nodePath);
         }
         free(xpath_string);

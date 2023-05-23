@@ -124,8 +124,7 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
 
     rule_xml = expand_idref(rule_xml, rsc->cluster->input);
     if (rule_xml == NULL) {
-        pcmk__config_err("Ignoring rule %s: Invalid " XML_ATTR_IDREF, rule_id);
-        return NULL;
+        return NULL; // Error already logged
     }
 
     rule_id = crm_element_value(rule_xml, XML_ATTR_ID);
