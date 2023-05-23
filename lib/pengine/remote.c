@@ -47,7 +47,7 @@ bool
 pe__is_bundle_node(const pcmk_node_t *node)
 {
     return pe__is_guest_node(node)
-           && pe_rsc_is_bundled(node->details->remote_rsc);
+           && pcmk__is_bundled(node->details->remote_rsc);
 }
 
 /*!

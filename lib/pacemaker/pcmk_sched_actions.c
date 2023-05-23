@@ -142,7 +142,7 @@ action_uuid_for_ordering(const char *first_uuid,
          * relative to when notifications have been sent for the remapped task.
          */
         if (pcmk_is_set(first_rsc->flags, pcmk_rsc_notify)
-            && (pcmk__is_clone(first_rsc) || pe_rsc_is_bundled(first_rsc))) {
+            && (pcmk__is_clone(first_rsc) || pcmk__is_bundled(first_rsc))) {
             uuid = pcmk__notify_key(rid, "confirmed-post",
                                     task2text(remapped_task));
         } else {

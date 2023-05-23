@@ -1470,7 +1470,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
     /* If the implicit resource or primitive resource of a bundle is given, operate on the
      * bundle itself instead.
      */
-    if (pe_rsc_is_bundled(rsc)) {
+    if (pcmk__is_bundled(rsc)) {
         rsc = parent->parent;
     }
 
@@ -2119,7 +2119,7 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
     if (rsc->variant == pcmk_rsc_variant_group) {
         out->err(out, "Sorry, the %s option doesn't support group resources", rsc_action);
         return CRM_EX_UNIMPLEMENT_FEATURE;
-    } else if (pe_rsc_is_bundled(rsc)) {
+    } else if (pcmk__is_bundled(rsc)) {
         out->err(out, "Sorry, the %s option doesn't support bundled resources", rsc_action);
         return CRM_EX_UNIMPLEMENT_FEATURE;
     }

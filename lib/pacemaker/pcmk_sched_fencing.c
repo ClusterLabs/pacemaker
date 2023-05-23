@@ -158,7 +158,7 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
              * cluster and thus immune to that check (and is irrelevant if
              * target is not a guest).
              */
-            if (!pe_rsc_is_bundled(rsc)) {
+            if (!pcmk__is_bundled(rsc)) {
                 order_actions(stonith_op, action, pcmk__ar_guest_allowed);
             }
             order_actions(stonith_op, parent_stop, pcmk__ar_guest_allowed);
@@ -232,7 +232,7 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
             pcmk__set_action_flags(action,
                                    pcmk_action_pseudo|pcmk_action_runnable);
 
-            if (pe_rsc_is_bundled(rsc)) {
+            if (pcmk__is_bundled(rsc)) {
                 // Recovery will be ordered as usual after parent's implied stop
 
             } else if (order_implicit) {

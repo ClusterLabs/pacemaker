@@ -416,7 +416,7 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
      * container on the wrong node.
      */
     if (pcmk_is_set(flags, pcmk__fc_fillers) && (rsc->fillers != NULL)
-        && !pe_rsc_is_bundled(rsc)) {
+        && !pcmk__is_bundled(rsc)) {
 
         g_list_foreach(rsc->fillers, update_failcount_for_filler, &fc_data);
         if (fc_data.failcount > 0) {
