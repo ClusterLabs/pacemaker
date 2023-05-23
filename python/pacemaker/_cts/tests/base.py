@@ -4,18 +4,6 @@ __all__ = ["CTSTest", "RemoteDriver", "SimulStartLite", "SimulStopLite", "StartT
 __copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
-#
-#        SPECIAL NOTE:
-#
-#        Tests may NOT implement any cluster-manager-specific code in them.
-#        EXTEND the ClusterManager object to provide the base capabilities
-#        the test needs if you need to do something that the current CM classes
-#        do not.  Otherwise you screw up the whole point of the object structure
-#        in CTS.
-#
-#                Thank you.
-#
-
 import os
 import re
 import time
