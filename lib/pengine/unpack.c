@@ -2058,7 +2058,7 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
              */
             CRM_LOG_ASSERT(locations->next == NULL);
 
-            if (((pcmk_node_t *) locations->data)->details == node->details) {
+            if (pcmk__same_node((pcmk_node_t *) locations->data, node)) {
                 /* This child instance is active on the requested node, so check
                  * for a corresponding configured resource. We use find_rsc()
                  * instead of child because child may be a cloned group, and we
@@ -2100,8 +2100,9 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
                 /* ... but don't use it if it was already associated with a
                  * pending action on another node
                  */
-                if (inactive_instance && inactive_instance->pending_node
-                    && (inactive_instance->pending_node->details != node->details)) {
+                if ((inactive_instance != NULL) &&
+                    (inactive_instance->pending_node != NULL) &&
+                    !pcmk__same_node(inactive_instance->pending_node, node)) {
                     inactive_instance = NULL;
                 }
             }

@@ -1088,7 +1088,7 @@ pe__count_active_node(const pcmk_resource_t *rsc, pcmk_node_t *node,
     }
 
     if (rsc->partial_migration_source != NULL) {
-        if (node->details == rsc->partial_migration_source->details) {
+        if (pcmk__same_node(node, rsc->partial_migration_source)) {
             *active = node; // This is the migration source
         } else {
             keep_looking = true;

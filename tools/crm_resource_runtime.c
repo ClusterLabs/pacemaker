@@ -2201,7 +2201,7 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
         }
     }
 
-    if (current && (current->details == dest->details)) {
+    if (pcmk__same_node(current, dest)) {
         cur_is_dest = true;
         if (force) {
             crm_info("%s is already %s on %s, reinforcing placement with location constraint.",

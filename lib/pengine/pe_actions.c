@@ -1521,7 +1521,7 @@ find_first_action(const GList *input, const char *uuid, const char *task,
         } else if (action->node == NULL) {
             continue;
 
-        } else if (on_node->details == action->node->details) {
+        } else if (pcmk__same_node(on_node, action->node)) {
             return action;
         }
     }
@@ -1554,7 +1554,7 @@ find_actions(GList *input, const char *key, const pcmk_node_t *on_node)
             action->node = pe__copy_node(on_node);
             result = g_list_prepend(result, action);
 
-        } else if (on_node->details == action->node->details) {
+        } else if (pcmk__same_node(on_node, action->node)) {
             crm_trace("Action %s on %s matches", key, pcmk__node_name(on_node));
             result = g_list_prepend(result, action);
         }

@@ -1383,7 +1383,7 @@ pe__find_bundle_replica(const pcmk_resource_t *bundle, const pcmk_node_t *node)
         pcmk__bundle_replica_t *replica = gIter->data;
 
         CRM_ASSERT(replica && replica->node);
-        if (replica->node->details == node->details) {
+        if (pcmk__same_node(replica->node, node)) {
             return replica->child;
         }
     }

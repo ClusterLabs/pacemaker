@@ -253,9 +253,7 @@ rsc_is_on_node(pcmk_resource_t *rsc, const pcmk_node_t *node, int flags)
         && (rsc->running_on != NULL)) {
 
         for (GList *iter = rsc->running_on; iter; iter = iter->next) {
-            pcmk_node_t *loc = (pcmk_node_t *) iter->data;
-
-            if (loc->details == node->details) {
+            if (pcmk__same_node((pcmk_node_t *) iter->data, node)) {
                 return true;
             }
         }
@@ -266,7 +264,7 @@ rsc_is_on_node(pcmk_resource_t *rsc, const pcmk_node_t *node, int flags)
 
     } else if (!pcmk_is_set(flags, pcmk_rsc_match_current_node)
                && (rsc->allocated_to != NULL)
-               && (rsc->allocated_to->details == node->details)) {
+               && pcmk__same_node(rsc->allocated_to, node)) {
         return true;
     }
     return false;
