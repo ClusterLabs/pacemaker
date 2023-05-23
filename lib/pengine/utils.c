@@ -896,7 +896,7 @@ pe__failed_probe_for_rsc(const pcmk_resource_t *rsc, const char *name)
             continue;
         }
 
-        if (!parse_op_key(pe__xe_history_key(xml_op), &op_id, NULL, NULL)) {
+        if (!parse_op_key(pcmk__xe_history_key(xml_op), &op_id, NULL, NULL)) {
             continue; // This history entry is missing an operation key
         }
 

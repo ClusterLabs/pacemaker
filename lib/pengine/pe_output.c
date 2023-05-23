@@ -1469,7 +1469,7 @@ failed_action_default(pcmk__output_t *out, va_list args)
     xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
     uint32_t show_opts = va_arg(args, uint32_t);
 
-    const char *op_key = pe__xe_history_key(xml_op);
+    const char *op_key = pcmk__xe_history_key(xml_op);
     const char *node_name = crm_element_value(xml_op, PCMK_XA_UNAME);
     const char *exit_reason = crm_element_value(xml_op, PCMK_XA_EXIT_REASON);
     const char *exec_time = crm_element_value(xml_op, PCMK_XA_EXEC_TIME);
@@ -1502,7 +1502,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
     uint32_t show_opts G_GNUC_UNUSED = va_arg(args, uint32_t);
 
-    const char *op_key = pe__xe_history_key(xml_op);
+    const char *op_key = pcmk__xe_history_key(xml_op);
     const char *op_key_name = "op_key";
     int rc;
     int status;
@@ -1595,7 +1595,7 @@ failed_action_list(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (!parse_op_key(pe__xe_history_key(xml_op), &rsc, NULL, NULL)) {
+        if (!parse_op_key(pcmk__xe_history_key(xml_op), &rsc, NULL, NULL)) {
             continue;
         }
 
@@ -2076,7 +2076,7 @@ node_and_op(pcmk__output_t *out, va_list args) {
     }
 
     out->list_item(out, NULL, "%s: %s (node=%s, call=%s, rc=%s%s): %s",
-                   node_str, pe__xe_history_key(xml_op),
+                   node_str, pcmk__xe_history_key(xml_op),
                    crm_element_value(xml_op, PCMK_XA_UNAME),
                    crm_element_value(xml_op, PCMK__XA_CALL_ID),
                    crm_element_value(xml_op, PCMK__XA_RC_CODE),
@@ -2106,7 +2106,7 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
     pcmk__scan_min_int(crm_element_value(xml_op, PCMK__XA_OP_STATUS),
                        &status, PCMK_EXEC_UNKNOWN);
     node = pcmk__output_create_xml_node(out, PCMK_XE_OPERATION,
-                                        PCMK_XA_OP, pe__xe_history_key(xml_op),
+                                        PCMK_XA_OP, pcmk__xe_history_key(xml_op),
                                         "node", uname,
                                         "call", call_id,
                                         "rc", rc_s,
