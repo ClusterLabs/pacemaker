@@ -264,7 +264,7 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
             CRM_LOG_ASSERT(!pcmk_is_set(action->flags, pcmk_action_runnable));
         }
 
-        pe__set_action_flags(action, pcmk_action_added_to_graph);
+        pcmk__set_action_flags(action, pcmk_action_added_to_graph);
         fprintf(dot_strm, "\"%s\" [ style=%s color=\"%s\" fontcolor=\"%s\"]\n",
                 action_name, style, color, font);
   do_not_write:

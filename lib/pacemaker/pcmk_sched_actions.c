@@ -65,7 +65,8 @@ action_flags_for_ordering(pcmk_action_t *action, const pcmk_node_t *node)
      * changes. Not very satisfying, but it's logical and appears to work well.
      */
     if (runnable && !pcmk_is_set(flags, pcmk_action_runnable)) {
-        pe__set_raw_action_flags(flags, action->rsc->id, pcmk_action_runnable);
+        pcmk__set_raw_action_flags(flags, action->rsc->id,
+                                   pcmk_action_runnable);
     }
     return flags;
 }
@@ -280,7 +281,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                               scheduler);
         } else if (!pcmk_is_set(first_flags, pcmk_action_optional)
                    && pcmk_is_set(then->flags, pcmk_action_optional)) {
-            pe__clear_action_flags(then, pcmk_action_optional);
+            pcmk__clear_action_flags(then, pcmk_action_optional);
             pcmk__set_updated_flags(changed, first, pcmk__updated_then);
         }
         pcmk__rsc_trace(then->rsc,
@@ -309,7 +310,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                               scheduler);
         } else if (!pcmk_is_set(first_flags, pcmk_action_optional)
                    && pcmk_is_set(first->flags, pcmk_action_runnable)) {
-            pe__clear_action_flags(first, pcmk_action_runnable);
+            pcmk__clear_action_flags(first, pcmk_action_runnable);
             pcmk__set_updated_flags(changed, first, pcmk__updated_first);
         }
         pcmk__rsc_trace(then->rsc,
@@ -348,7 +349,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
             if ((then->runnable_before >= then->required_runnable_before)
                 && !pcmk_is_set(then->flags, pcmk_action_runnable)) {
 
-                pe__set_action_flags(then, pcmk_action_runnable);
+                pcmk__set_action_flags(then, pcmk_action_runnable);
                 pcmk__set_updated_flags(changed, first, pcmk__updated_then);
             }
         }
@@ -387,7 +388,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
         } else if (!pcmk_is_set(first_flags, pcmk_action_runnable)
                    && pcmk_is_set(then->flags, pcmk_action_runnable)) {
 
-            pe__clear_action_flags(then, pcmk_action_runnable);
+            pcmk__clear_action_flags(then, pcmk_action_runnable);
             pcmk__set_updated_flags(changed, first, pcmk__updated_then);
         }
         pcmk__rsc_trace(then->rsc,
@@ -449,7 +450,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
 
         pcmk__rsc_trace(then->rsc, "%s will be in graph because %s is required",
                         then->uuid, first->uuid);
-        pe__set_action_flags(then, pcmk_action_always_in_graph);
+        pcmk__set_action_flags(then, pcmk_action_always_in_graph);
         // Don't bother marking 'then' as changed just for this
     }
 
@@ -458,7 +459,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
 
         pcmk__rsc_trace(then->rsc, "%s will be in graph because %s is required",
                         first->uuid, then->uuid);
-        pe__set_action_flags(first, pcmk_action_always_in_graph);
+        pcmk__set_action_flags(first, pcmk_action_always_in_graph);
         // Don't bother marking 'first' as changed just for this
     }
 
@@ -472,7 +473,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
         && pcmk__str_eq(first->task, PCMK_ACTION_STOP, pcmk__str_none)) {
 
         if (pcmk_is_set(then->flags, pcmk_action_runnable)) {
-            pe__clear_action_flags(then, pcmk_action_runnable);
+            pcmk__clear_action_flags(then, pcmk_action_runnable);
             pcmk__set_updated_flags(changed, first, pcmk__updated_then);
         }
         pcmk__rsc_trace(then->rsc,
@@ -539,7 +540,7 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
          * update_action_for_ordering_flags() (called below)
          * will reset runnable if appropriate.
          */
-        pe__clear_action_flags(then, pcmk_action_runnable);
+        pcmk__clear_action_flags(then, pcmk_action_runnable);
     }
 
     for (lpc = then->actions_before; lpc != NULL; lpc = lpc->next) {
@@ -594,7 +595,7 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
             /* 'then' is required, so we must abandon 'first'
              * (e.g. a required stop cancels any agent reload).
              */
-            pe__set_action_flags(other->action, pcmk_action_optional);
+            pcmk__set_action_flags(other->action, pcmk_action_optional);
             if (!strcmp(first->task, PCMK_ACTION_RELOAD_AGENT)) {
                 pcmk__clear_rsc_flags(first->rsc, pcmk_rsc_reload);
             }
@@ -699,7 +700,7 @@ is_primitive_action(const pcmk_action_t *action)
  */
 #define clear_action_flag_because(action, flag, reason) do {                \
         if (pcmk_is_set((action)->flags, (flag))) {                         \
-            pe__clear_action_flags(action, flag);                           \
+            pcmk__clear_action_flags(action, flag);                         \
             if ((action)->rsc != (reason)->rsc) {                           \
                 char *reason_text = pe__action2reason((reason), (flag));    \
                 pe_action_set_reason((action), reason_text, false);         \
@@ -908,7 +909,7 @@ pcmk__update_ordered_actions(pcmk_action_t *first, pcmk_action_t *then,
         && !pcmk_is_set(first->flags, pcmk_action_runnable)) {
 
         clear_action_flag_because(then, pcmk_action_migratable, first);
-        pe__clear_action_flags(then, pcmk_action_pseudo);
+        pcmk__clear_action_flags(then, pcmk_action_pseudo);
     }
 
     if (pcmk_is_set(type, pcmk__ar_unrunnable_first_blocks)

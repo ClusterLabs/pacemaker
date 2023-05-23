@@ -1023,7 +1023,7 @@ mark_action_blocked(pcmk_resource_t *rsc, const char *task,
         if (pcmk_is_set(action->flags, pcmk_action_runnable)
             && pcmk__str_eq(action->task, task, pcmk__str_none)) {
 
-            pe__clear_action_flags(action, pcmk_action_runnable);
+            pcmk__clear_action_flags(action, pcmk_action_runnable);
             pe_action_set_reason(action, reason_text, false);
             pcmk__block_colocation_dependents(action);
             pcmk__update_action_for_orderings(action, rsc->cluster);

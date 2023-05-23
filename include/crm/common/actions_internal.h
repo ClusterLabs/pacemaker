@@ -24,6 +24,69 @@ extern "C" {
 //! printf-style format to create operation key from resource, action, interval
 #define PCMK__OP_FMT "%s_%s_%u"
 
+/*!
+ * \internal
+ * \brief Set action flags for an action
+ *
+ * \param[in,out] action        Action to set flags for
+ * \param[in]     flags_to_set  Group of enum pe_action_flags to set
+ */
+#define pcmk__set_action_flags(action, flags_to_set) do {               \
+        (action)->flags = pcmk__set_flags_as(__func__, __LINE__,        \
+                                             LOG_TRACE,                 \
+                                             "Action", (action)->uuid,  \
+                                             (action)->flags,           \
+                                             (flags_to_set),            \
+                                             #flags_to_set);            \
+    } while (0)
+
+/*!
+ * \internal
+ * \brief Clear action flags for an action
+ *
+ * \param[in,out] action          Action to clear flags for
+ * \param[in]     flags_to_clear  Group of enum pe_action_flags to clear
+ */
+#define pcmk__clear_action_flags(action, flags_to_clear) do {               \
+        (action)->flags = pcmk__clear_flags_as(__func__, __LINE__,          \
+                                               LOG_TRACE,                   \
+                                               "Action", (action)->uuid,    \
+                                               (action)->flags,             \
+                                               (flags_to_clear),            \
+                                               #flags_to_clear);            \
+    } while (0)
+
+/*!
+ * \internal
+ * \brief Set action flags for a flag group
+ *
+ * \param[in,out] action_flags  Flag group to set flags for
+ * \param[in]     action_name   Name of action being modified (for logging)
+ * \param[in]     to_set        Group of enum pe_action_flags to set
+ */
+#define pcmk__set_raw_action_flags(action_flags, action_name, to_set) do {  \
+        action_flags = pcmk__set_flags_as(__func__, __LINE__,               \
+                                          LOG_TRACE, "Action", action_name, \
+                                          (action_flags),                   \
+                                          (to_set), #to_set);               \
+    } while (0)
+
+/*!
+ * \internal
+ * \brief Clear action flags for a flag group
+ *
+ * \param[in,out] action_flags  Flag group to clear flags for
+ * \param[in]     action_name   Name of action being modified (for logging)
+ * \param[in]     to_clear      Group of enum pe_action_flags to clear
+ */
+#define pcmk__clear_raw_action_flags(action_flags, action_name, to_clear)   \
+    do {                                                                    \
+        action_flags = pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE,  \
+                                            "Action", action_name,          \
+                                            (action_flags),                 \
+                                            (to_clear), #to_clear);         \
+    } while (0)
+
 char *pcmk__op_key(const char *rsc_id, const char *op_type, guint interval_ms);
 char *pcmk__notify_key(const char *rsc_id, const char *notify_type,
                        const char *op_type);

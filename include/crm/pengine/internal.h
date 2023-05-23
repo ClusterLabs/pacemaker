@@ -31,58 +31,6 @@ bool pe__clone_flag_is_set(const pcmk_resource_t *clone, uint32_t flags);
 bool pe__group_flag_is_set(const pcmk_resource_t *group, uint32_t flags);
 pcmk_resource_t *pe__last_group_member(const pcmk_resource_t *group);
 
-#define pe__set_action_flags(action, flags_to_set) do {                     \
-        (action)->flags = pcmk__set_flags_as(__func__, __LINE__,            \
-                                             LOG_TRACE,                     \
-                                             "Action", (action)->uuid,      \
-                                             (action)->flags,               \
-                                             (flags_to_set),                \
-                                             #flags_to_set);                \
-    } while (0)
-
-#define pe__clear_action_flags(action, flags_to_clear) do {                 \
-        (action)->flags = pcmk__clear_flags_as(__func__, __LINE__,          \
-                                               LOG_TRACE,                   \
-                                               "Action", (action)->uuid,    \
-                                               (action)->flags,             \
-                                               (flags_to_clear),            \
-                                               #flags_to_clear);            \
-    } while (0)
-
-#define pe__set_raw_action_flags(action_flags, action_name, flags_to_set) do { \
-        action_flags = pcmk__set_flags_as(__func__, __LINE__,               \
-                                          LOG_TRACE, "Action", action_name, \
-                                          (action_flags),                   \
-                                          (flags_to_set), #flags_to_set);   \
-    } while (0)
-
-#define pe__clear_raw_action_flags(action_flags, action_name, flags_to_clear) do { \
-        action_flags = pcmk__clear_flags_as(__func__, __LINE__,             \
-                                            LOG_TRACE,                      \
-                                            "Action", action_name,          \
-                                            (action_flags),                 \
-                                            (flags_to_clear),               \
-                                            #flags_to_clear);               \
-    } while (0)
-
-#define pe__set_action_flags_as(function, line, action, flags_to_set) do {  \
-        (action)->flags = pcmk__set_flags_as((function), (line),            \
-                                             LOG_TRACE,                     \
-                                             "Action", (action)->uuid,      \
-                                             (action)->flags,               \
-                                             (flags_to_set),                \
-                                             #flags_to_set);                \
-    } while (0)
-
-#define pe__clear_action_flags_as(function, line, action, flags_to_clear) do { \
-        (action)->flags = pcmk__clear_flags_as((function), (line),          \
-                                               LOG_TRACE,                   \
-                                               "Action", (action)->uuid,    \
-                                               (action)->flags,             \
-                                               (flags_to_clear),            \
-                                               #flags_to_clear);            \
-    } while (0)
-
 #define pe__set_order_flags(order_flags, flags_to_set) do {                 \
         order_flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,     \
                                          "Ordering", "constraint",          \

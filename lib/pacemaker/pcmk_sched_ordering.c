@@ -350,7 +350,7 @@ clone_min_ordering(const char *id,
      * considered runnable before allowing the pseudo-action to be runnable.
      */
     clone_min_met->required_runnable_before = clone_min;
-    pe__set_action_flags(clone_min_met, pcmk_action_min_runnable);
+    pcmk__set_action_flags(clone_min_met, pcmk_action_min_runnable);
 
     // Order the actions for each clone instance before the pseudo-action
     for (GList *iter = rsc_first->children; iter != NULL; iter = iter->next) {
@@ -763,7 +763,7 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
         pcmk_action_t *unordered_action = get_pseudo_op(task, scheduler);
 
         free(task);
-        pe__set_action_flags(unordered_action, pcmk_action_min_runnable);
+        pcmk__set_action_flags(unordered_action, pcmk_action_min_runnable);
 
         for (xml_rsc = first_named_child(set1, XML_TAG_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
@@ -1174,7 +1174,7 @@ pcmk__order_stops_before_shutdown(pcmk_node_t *node, pcmk_action_t *shutdown_op)
 
         pcmk__rsc_trace(action->rsc, "Ordering %s before shutdown of %s",
                         action->uuid, pe__node_name(node));
-        pe__clear_action_flags(action, pcmk_action_optional);
+        pcmk__clear_action_flags(action, pcmk_action_optional);
         pcmk__new_ordering(action->rsc, NULL, action, NULL,
                            strdup(PCMK_ACTION_DO_SHUTDOWN), shutdown_op,
                            pcmk__ar_ordered|pcmk__ar_unrunnable_first_blocks,
@@ -1274,7 +1274,7 @@ order_resource_actions_after(pcmk_action_t *first_action,
         if (first_action != NULL) {
             order_actions(first_action, then_action_iter, flags);
         } else {
-            pe__clear_action_flags(then_action_iter, pcmk_action_runnable);
+            pcmk__clear_action_flags(then_action_iter, pcmk_action_runnable);
             crm_warn("%s of %s is unrunnable because there is no %s of %s "
                      "to order it after", then_action_iter->task, rsc->id,
                      order->task1, order->rsc1->id);

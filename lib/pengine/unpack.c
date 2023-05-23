@@ -2479,7 +2479,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
         for (; gIter != NULL; gIter = gIter->next) {
             pcmk_action_t *stop = (pcmk_action_t *) gIter->data;
 
-            pe__set_action_flags(stop, pcmk_action_optional);
+            pcmk__set_action_flags(stop, pcmk_action_optional);
         }
 
         g_list_free(possible_matches);

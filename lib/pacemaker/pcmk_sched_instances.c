@@ -1002,7 +1002,7 @@ pcmk__create_instance_actions(pcmk_resource_t *collective, GList *instances)
                                         false);
     started->priority = INFINITY;
     if (pcmk_any_flags_set(state, instance_active|instance_starting)) {
-        pe__set_action_flags(started, pcmk_action_runnable);
+        pcmk__set_action_flags(started, pcmk_action_runnable);
     }
 
     // Create pseudo-actions for rsc stop and stopped
@@ -1014,7 +1014,7 @@ pcmk__create_instance_actions(pcmk_resource_t *collective, GList *instances)
                                         true);
     stopped->priority = INFINITY;
     if (!pcmk_is_set(state, instance_restarting)) {
-        pe__set_action_flags(stop, pcmk_action_migratable);
+        pcmk__set_action_flags(stop, pcmk_action_migratable);
     }
 
     if (collective->variant == pcmk_rsc_variant_clone) {
@@ -1664,7 +1664,7 @@ pcmk__collective_action_flags(pcmk_action_t *action, const GList *instances,
                             action->uuid, instance_action->uuid);
             pe__clear_action_summary_flags(flags, action,
                                            pcmk_action_optional);
-            pe__clear_action_flags(action, pcmk_action_optional);
+            pcmk__clear_action_flags(action, pcmk_action_optional);
         }
 
         // If any instance action is runnable, so is the collective action
@@ -1679,7 +1679,7 @@ pcmk__collective_action_flags(pcmk_action_t *action, const GList *instances,
                         action->uuid, action_name);
         pe__clear_action_summary_flags(flags, action, pcmk_action_runnable);
         if (node == NULL) {
-            pe__clear_action_flags(action, pcmk_action_runnable);
+            pcmk__clear_action_flags(action, pcmk_action_runnable);
         }
     }
 

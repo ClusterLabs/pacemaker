@@ -119,7 +119,7 @@ add_maintenance_update(pcmk_scheduler_t *scheduler)
 
     if (add_maintenance_nodes(NULL, scheduler) != 0) {
         action = get_pseudo_op(PCMK_ACTION_MAINTENANCE_NODES, scheduler);
-        pe__set_action_flags(action, pcmk_action_always_in_graph);
+        pcmk__set_action_flags(action, pcmk_action_always_in_graph);
     }
 }
 
@@ -802,7 +802,7 @@ pcmk__graph_has_loop(const pcmk_action_t *init_action,
         return true;
     }
 
-    pe__set_action_flags(input->action, pcmk_action_detect_loop);
+    pcmk__set_action_flags(input->action, pcmk_action_detect_loop);
 
     crm_trace("Checking inputs of action %s@%s input %s@%s (%#.6x)"
               "for graph loop with %s@%s ",
@@ -826,7 +826,7 @@ pcmk__graph_has_loop(const pcmk_action_t *init_action,
         }
     }
 
-    pe__clear_action_flags(input->action, pcmk_action_detect_loop);
+    pcmk__clear_action_flags(input->action, pcmk_action_detect_loop);
 
     if (!has_loop) {
         crm_trace("No input loop found in %s@%s -> %s@%s (%#.6x)",
@@ -901,14 +901,14 @@ add_action_to_graph(gpointer data, gpointer user_data)
      */
     if (!pcmk_is_set(action->flags, pcmk_action_inputs_deduplicated)) {
         pcmk__deduplicate_action_inputs(action);
-        pe__set_action_flags(action, pcmk_action_inputs_deduplicated);
+        pcmk__set_action_flags(action, pcmk_action_inputs_deduplicated);
     }
 
     if (pcmk_is_set(action->flags, pcmk_action_added_to_graph)
         || !should_add_action_to_graph(action)) {
         return; // Already added, or shouldn't be
     }
-    pe__set_action_flags(action, pcmk_action_added_to_graph);
+    pcmk__set_action_flags(action, pcmk_action_added_to_graph);
 
     crm_trace("Adding action %d (%s%s%s) to graph",
               action->id, action->uuid,

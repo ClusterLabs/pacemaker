@@ -101,7 +101,8 @@ create_group_pseudo_op(pcmk_resource_t *group, const char *action)
 {
     pcmk_action_t *op = custom_action(group, pcmk__op_key(group->id, action, 0),
                                       action, NULL, TRUE, group->cluster);
-    pe__set_action_flags(op, pcmk_action_pseudo|pcmk_action_runnable);
+
+    pcmk__set_action_flags(op, pcmk_action_pseudo|pcmk_action_runnable);
     return op;
 }
 
@@ -512,9 +513,9 @@ pcmk__group_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
                 && !pcmk_is_set(member_flags, pcmk_action_optional)) {
                 pcmk__rsc_trace(action->rsc, "%s is mandatory because %s is",
                                 action->uuid, member_action->uuid);
-                pe__clear_raw_action_flags(flags, "group action",
-                                           pcmk_action_optional);
-                pe__clear_action_flags(action, pcmk_action_optional);
+                pcmk__clear_raw_action_flags(flags, "group action",
+                                             pcmk_action_optional);
+                pcmk__clear_action_flags(action, pcmk_action_optional);
             }
 
             // Group action is unrunnable if any member action is
@@ -524,9 +525,9 @@ pcmk__group_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
 
                 pcmk__rsc_trace(action->rsc, "%s is unrunnable because %s is",
                                 action->uuid, member_action->uuid);
-                pe__clear_raw_action_flags(flags, "group action",
-                                           pcmk_action_runnable);
-                pe__clear_action_flags(action, pcmk_action_runnable);
+                pcmk__clear_raw_action_flags(flags, "group action",
+                                             pcmk_action_runnable);
+                pcmk__clear_action_flags(action, pcmk_action_runnable);
             }
 
         /* Group (pseudo-)actions other than stop or demote are unrunnable
@@ -536,8 +537,8 @@ pcmk__group_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
             pcmk__rsc_trace(action->rsc,
                             "%s is not runnable because %s will not %s",
                             action->uuid, member->id, task_s);
-            pe__clear_raw_action_flags(flags, "group action",
-                                       pcmk_action_runnable);
+            pcmk__clear_raw_action_flags(flags, "group action",
+                                         pcmk_action_runnable);
         }
     }
 
