@@ -138,6 +138,46 @@ struct qb_ipcs_service_handlers ipc_rw_callbacks = {
     .connection_destroyed = cib_ipc_destroy
 };
 
+/*!
+ * \internal
+ * \brief Create reply XML for a CIB request
+ *
+ * \param[in] op            CIB operation type
+ * \param[in] call_id       CIB call ID
+ * \param[in] client_id     CIB client ID
+ * \param[in] call_options  Group of <tt>enum cib_call_options</tt> flags
+ * \param[in] rc            Request return code
+ * \param[in] call_data     Request output data
+ *
+ * \return Reply XML
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       \p free_xml().
+ */
+static xmlNode *
+create_cib_reply(const char *op, const char *call_id, const char *client_id,
+                 int call_options, int rc, xmlNode *call_data)
+{
+    xmlNode *reply = create_xml_node(NULL, "cib-reply");
+
+    CRM_ASSERT(reply != NULL);
+
+    crm_xml_add(reply, F_TYPE, T_CIB);
+    crm_xml_add(reply, F_CIB_OPERATION, op);
+    crm_xml_add(reply, F_CIB_CALLID, call_id);
+    crm_xml_add(reply, F_CIB_CLIENTID, client_id);
+    crm_xml_add_int(reply, F_CIB_CALLOPTS, call_options);
+    crm_xml_add_int(reply, F_CIB_RC, rc);
+
+    if (call_data != NULL) {
+        crm_trace("Attaching reply output");
+        add_message_xml(reply, F_CIB_CALLDATA, call_data);
+    }
+
+    crm_log_xml_explicit(reply, "cib:reply");
+    return reply;
+}
+
 void
 cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
                            pcmk__client_t *cib_client, gboolean privileged)
@@ -1025,24 +1065,12 @@ cib_process_request(xmlNode *request, gboolean privileged,
     }
 
     if (cib_status != pcmk_ok) {
-        const char *call = crm_element_value(request, F_CIB_CALLID);
-
         rc = cib_status;
         crm_err("Operation ignored, cluster configuration is invalid."
                 " Please repair and restart: %s", pcmk_strerror(cib_status));
 
-        op_reply = create_xml_node(NULL, "cib-reply");
-        crm_xml_add(op_reply, F_TYPE, T_CIB);
-        crm_xml_add(op_reply, F_CIB_OPERATION, op);
-        crm_xml_add(op_reply, F_CIB_CALLID, call);
-        crm_xml_add(op_reply, F_CIB_CLIENTID, client_id);
-        crm_xml_add_int(op_reply, F_CIB_CALLOPTS, call_options);
-        crm_xml_add_int(op_reply, F_CIB_RC, rc);
-
-        crm_trace("Attaching reply output");
-        add_message_xml(op_reply, F_CIB_CALLDATA, the_cib);
-
-        crm_log_xml_explicit(op_reply, "cib:reply");
+        op_reply = create_cib_reply(op, call_id, client_id, call_options, rc,
+                                    the_cib);
 
     } else if (process) {
         time_t finished = 0;
@@ -1472,22 +1500,8 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
 
   done:
     if (!pcmk_is_set(call_options, cib_discard_reply) || cib_legacy_mode()) {
-        const char *caller = crm_element_value(request, F_CIB_CLIENTID);
-
-        *reply = create_xml_node(NULL, "cib-reply");
-        crm_xml_add(*reply, F_TYPE, T_CIB);
-        crm_xml_add(*reply, F_CIB_OPERATION, op);
-        crm_xml_add(*reply, F_CIB_CALLID, call_id);
-        crm_xml_add(*reply, F_CIB_CLIENTID, caller);
-        crm_xml_add_int(*reply, F_CIB_CALLOPTS, call_options);
-        crm_xml_add_int(*reply, F_CIB_RC, rc);
-
-        if (output != NULL) {
-            crm_trace("Attaching reply output");
-            add_message_xml(*reply, F_CIB_CALLDATA, output);
-        }
-
-        crm_log_xml_explicit(*reply, "cib:reply");
+        *reply = create_cib_reply(op, call_id, client_id, call_options, rc,
+                                  output);
     }
 
     crm_trace("cleanup");
