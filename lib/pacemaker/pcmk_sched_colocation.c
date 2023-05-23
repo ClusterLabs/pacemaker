@@ -468,10 +468,10 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
                      pcmk__str_null_matches|pcmk__str_casei)) {
         with_previous = true;
     } else {
-        pe_warn_once(pcmk__wo_set_ordering,
-                     "Support for 'ordering' other than 'group' in "
-                     XML_CONS_TAG_RSC_SET " (such as %s) is deprecated and "
-                     "will be removed in a future release", set_id);
+        pcmk__warn_once(pcmk__wo_set_ordering,
+                        "Support for 'ordering' other than 'group' in "
+                        XML_CONS_TAG_RSC_SET " (such as %s) is deprecated and "
+                        "will be removed in a future release", set_id);
     }
 
     if ((pcmk__xe_get_bool_attr(set, "sequential", &sequential) == pcmk_rc_ok)
@@ -738,14 +738,14 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
     dependent_instance = crm_element_value(xml_obj,
                                            XML_COLOC_ATTR_SOURCE_INSTANCE);
     if (dependent_instance != NULL) {
-        pe_warn_once(pcmk__wo_coloc_inst,
-                     "Support for " XML_COLOC_ATTR_SOURCE_INSTANCE " is "
-                     "deprecated and will be removed in a future release.");
+        pcmk__warn_once(pcmk__wo_coloc_inst,
+                        "Support for " XML_COLOC_ATTR_SOURCE_INSTANCE " is "
+                        "deprecated and will be removed in a future release");
     }
     if (primary_instance != NULL) {
-        pe_warn_once(pcmk__wo_coloc_inst,
-                     "Support for " XML_COLOC_ATTR_TARGET_INSTANCE " is "
-                     "deprecated and will be removed in a future release.");
+        pcmk__warn_once(pcmk__wo_coloc_inst,
+                        "Support for " XML_COLOC_ATTR_TARGET_INSTANCE " is "
+                        "deprecated and will be removed in a future release");
     }
 
     if (dependent == NULL) {

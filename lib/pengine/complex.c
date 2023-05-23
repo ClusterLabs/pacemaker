@@ -417,7 +417,7 @@ detect_promotable(pcmk_resource_t *rsc)
 
     // @COMPAT deprecated since 2.0.0
     if (pcmk__xe_is(rsc->xml, PCMK_XE_PROMOTABLE_LEGACY)) {
-        /* @TODO in some future version, pe_warn_once() here,
+        /* @TODO in some future version, pcmk__warn_once() here,
          *       then drop support in even later version
          */
         g_hash_table_insert(rsc->meta, strdup(XML_RSC_ATTR_PROMOTABLE),
@@ -571,16 +571,16 @@ warn_about_deprecated_classes(pcmk_resource_t *rsc)
     const char *std = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
     if (pcmk__str_eq(std, PCMK_RESOURCE_CLASS_UPSTART, pcmk__str_none)) {
-        pe_warn_once(pcmk__wo_upstart,
-                     "Support for Upstart resources (such as %s) is deprecated "
-                     "and will be removed in a future release of Pacemaker",
-                     rsc->id);
+        pcmk__warn_once(pcmk__wo_upstart,
+                        "Support for Upstart resources (such as %s) is "
+                        "deprecated and will be removed in a future release",
+                        rsc->id);
 
     } else if (pcmk__str_eq(std, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_none)) {
-        pe_warn_once(pcmk__wo_nagios,
-                     "Support for Nagios resources (such as %s) is deprecated "
-                     "and will be removed in a future release of Pacemaker",
-                     rsc->id);
+        pcmk__warn_once(pcmk__wo_nagios,
+                        "Support for Nagios resources (such as %s) is "
+                        "deprecated and will be removed in a future release",
+                        rsc->id);
     }
 }
 #endif
@@ -787,8 +787,9 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         (*rsc)->restart_type = pe_restart_restart;
         pcmk__rsc_trace(*rsc, "%s dependency restart handling: restart",
                         (*rsc)->id);
-        pe_warn_once(pcmk__wo_restart_type,
-                     "Support for restart-type is deprecated and will be removed in a future release");
+        pcmk__warn_once(pcmk__wo_restart_type,
+                        "Support for restart-type is deprecated "
+                        "and will be removed in a future release");
 
     } else {
         (*rsc)->restart_type = pe_restart_ignore;
@@ -840,9 +841,9 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
              * should probably use the default (INFINITY) or 0 (to disable)
              * instead.
              */
-            pe_warn_once(pcmk__wo_neg_threshold,
-                         PCMK_META_MIGRATION_THRESHOLD
-                         " must be non-negative, using 1 instead");
+            pcmk__warn_once(pcmk__wo_neg_threshold,
+                            PCMK_META_MIGRATION_THRESHOLD
+                            " must be non-negative, using 1 instead");
             (*rsc)->migration_threshold = 1;
         }
     }

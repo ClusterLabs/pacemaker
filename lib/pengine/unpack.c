@@ -263,9 +263,10 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     scheduler->stonith_action = pe_pref(scheduler->config_hash,
                                         "stonith-action");
     if (!strcmp(scheduler->stonith_action, "poweroff")) {
-        pe_warn_once(pcmk__wo_poweroff,
-                     "Support for stonith-action of 'poweroff' is deprecated "
-                     "and will be removed in a future release (use 'off' instead)");
+        pcmk__warn_once(pcmk__wo_poweroff,
+                        "Support for stonith-action of 'poweroff' is "
+                        "deprecated and will be removed in a future release "
+                        "(use 'off' instead)");
         scheduler->stonith_action = PCMK_ACTION_OFF;
     }
     crm_trace("STONITH will %s nodes", scheduler->stonith_action);
@@ -370,9 +371,10 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
         if (crm_is_true(value)) {
             pe__set_working_set_flags(scheduler, pcmk_sched_remove_after_stop);
 #ifndef PCMK__COMPAT_2_0
-            pe_warn_once(pcmk__wo_remove_after,
-                         "Support for the remove-after-stop cluster property is"
-                         " deprecated and will be removed in a future release");
+            pcmk__warn_once(pcmk__wo_remove_after,
+                            "Support for the remove-after-stop cluster "
+                            "property is deprecated and will be removed in a "
+                            "future release");
 #endif
         } else {
             pe__clear_working_set_flags(scheduler,
@@ -400,7 +402,8 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     if (pcmk_is_set(scheduler->flags, pcmk_sched_startup_fencing)) {
         crm_trace("Unseen nodes will be fenced");
     } else {
-        pe_warn_once(pcmk__wo_blind, "Blind faith: not fencing unseen nodes");
+        pcmk__warn_once(pcmk__wo_blind,
+                        "Blind faith: not fencing unseen nodes");
     }
 
     pe__unpack_node_health_scores(scheduler);
@@ -486,10 +489,10 @@ pe_create_node(const char *id, const char *uname, const char *type,
                               "assuming 'ping'", pcmk__s(uname, "without name"),
                               type);
         }
-        pe_warn_once(pcmk__wo_ping_node,
-                     "Support for nodes of type 'ping' (such as %s) is "
-                     "deprecated and will be removed in a future release",
-                     pcmk__s(uname, "unnamed node"));
+        pcmk__warn_once(pcmk__wo_ping_node,
+                        "Support for nodes of type 'ping' (such as %s) is "
+                        "deprecated and will be removed in a future release",
+                        pcmk__s(uname, "unnamed node"));
         new_node->details->type = node_ping;
     }
 

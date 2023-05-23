@@ -1049,9 +1049,9 @@ pcmk__role_after_failure(const pcmk_resource_t *rsc, const char *action_name,
     // @COMPAT Check for explicitly configured role (deprecated)
     value = g_hash_table_lookup(meta, "role_after_failure");
     if (value != NULL) {
-        pe_warn_once(pcmk__wo_role_after,
-                    "Support for role_after_failure is deprecated "
-                    "and will be removed in a future release");
+        pcmk__warn_once(pcmk__wo_role_after,
+                        "Support for role_after_failure is deprecated "
+                        "and will be removed in a future release");
         if (role == pcmk_role_unknown) {
             role = text2role(value);
             if (role == pcmk_role_unknown) {

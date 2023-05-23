@@ -121,21 +121,6 @@ pcmk_resource_t *pe__last_group_member(const pcmk_resource_t *group);
                                            #flags_to_clear);                  \
     } while (0)
 
-#define pe_warn_once(pe_wo_bit, fmt...) do {    \
-        if (!pcmk_is_set(pcmk__warnings, pe_wo_bit)) {  \
-            if (pe_wo_bit == pcmk__wo_blind) {  \
-                crm_warn(fmt);                  \
-            } else {                            \
-                pcmk__config_warn(fmt);         \
-            }                                   \
-            pcmk__warnings = pcmk__set_flags_as(__func__, __LINE__,         \
-                                               LOG_TRACE,                   \
-                                               "Warn-once", "logging",      \
-                                               pcmk__warnings,              \
-                                               (pe_wo_bit), #pe_wo_bit);    \
-        }                                                                   \
-    } while (0);
-
 const pcmk_resource_t *pe__const_top_resource(const pcmk_resource_t *rsc,
                                               bool include_bundle);
 

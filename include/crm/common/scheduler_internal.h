@@ -114,6 +114,28 @@ extern uint32_t pcmk__warnings;
         crm_warn(fmt);                  \
     } while (0)
 
+/*!
+ * \internal
+ * \brief Log a warning once per scheduler run
+ *
+ * \param[in] wo_flag  enum pcmk__sched_warnings value for this warning
+ * \param[in] fmt...   printf(3)-style format and arguments
+ */
+#define pcmk__warn_once(wo_flag, fmt...) do {                           \
+        if (!pcmk_is_set(pcmk__warnings, wo_flag)) {                    \
+            if (wo_flag == pcmk__wo_blind) {                            \
+                crm_warn(fmt);                                          \
+            } else {                                                    \
+                pcmk__config_warn(fmt);                                 \
+            }                                                           \
+            pcmk__warnings = pcmk__set_flags_as(__func__, __LINE__,     \
+                                                LOG_TRACE,              \
+                                                "Warn-once", "logging", \
+                                                pcmk__warnings,         \
+                                                (wo_flag), #wo_flag);   \
+        }                                                               \
+    } while (0)
+
 #ifdef __cplusplus
 }
 #endif

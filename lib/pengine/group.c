@@ -89,10 +89,10 @@ set_group_flag(pcmk_resource_t *group, const char *option, uint32_t flag,
         ((group_variant_data_t *) group->variant_opaque)->flags |= flag;
 
     } else {
-        pe_warn_once(wo_bit,
-                     "Support for the '%s' group meta-attribute is deprecated "
-                     "and will be removed in a future release "
-                     "(use a resource set instead)", option);
+        pcmk__warn_once(wo_bit,
+                        "Support for the '%s' group meta-attribute is "
+                        "deprecated and will be removed in a future release "
+                        "(use a resource set instead)", option);
     }
 }
 

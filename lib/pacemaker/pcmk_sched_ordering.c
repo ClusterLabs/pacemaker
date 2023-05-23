@@ -88,10 +88,10 @@ get_ordering_type(const xmlNode *xml_obj)
             if (score_i == 0) {
                 kind_e = pe_order_kind_optional;
             }
-            pe_warn_once(pcmk__wo_order_score,
-                         "Support for 'score' in rsc_order is deprecated "
-                         "and will be removed in a future release "
-                         "(use 'kind' instead)");
+            pcmk__warn_once(pcmk__wo_order_score,
+                            "Support for 'score' in rsc_order is deprecated "
+                            "and will be removed in a future release "
+                            "(use 'kind' instead)");
         }
 
     } else if (pcmk__str_eq(kind, "Mandatory", pcmk__str_none)) {
@@ -256,10 +256,10 @@ get_ordering_resource(const xmlNode *xml, const char *resource_attr,
     }
 
     if (instance_id != NULL) {
-        pe_warn_once(pcmk__wo_order_inst,
-                     "Support for " XML_ORDER_ATTR_FIRST_INSTANCE " and "
-                     XML_ORDER_ATTR_THEN_INSTANCE " is deprecated and will be "
-                     "removed in a future release.");
+        pcmk__warn_once(pcmk__wo_order_inst,
+                        "Support for " XML_ORDER_ATTR_FIRST_INSTANCE " and "
+                        XML_ORDER_ATTR_THEN_INSTANCE " is deprecated and will "
+                        "be removed in a future release.");
 
         if (!pe_rsc_is_clone(rsc)) {
             pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
@@ -309,10 +309,10 @@ get_minimum_first_instances(const pcmk_resource_t *rsc, const xmlNode *xml)
      * require-all=false is deprecated equivalent of clone-min=1
      */
     if (pcmk__xe_get_bool_attr(xml, "require-all", &require_all) != ENODATA) {
-        pe_warn_once(pcmk__wo_require_all,
-                     "Support for require-all in ordering constraints "
-                     "is deprecated and will be removed in a future release"
-                     " (use clone-min clone meta-attribute instead)");
+        pcmk__warn_once(pcmk__wo_require_all,
+                        "Support for require-all in ordering constraints "
+                        "is deprecated and will be removed in a future release "
+                        "(use clone-min clone meta-attribute instead)");
         if (!require_all) {
             return 1;
         }
