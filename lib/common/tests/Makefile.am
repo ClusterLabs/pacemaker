@@ -21,6 +21,7 @@ SUBDIRS = \
 	nvpair 		\
 	options		\
 	output 		\
+	probes 		\
 	results		\
 	schemas		\
 	scores		\
