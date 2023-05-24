@@ -4,9 +4,20 @@ __all__ = ["StonithdTest"]
 __copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
+from pacemaker.exitstatus import ExitStatus
 from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
 from pacemaker._cts.timer import Timer
+
+# Disable various pylint warnings that occur in so many places throughout this
+# file it's easiest to just take care of them globally.  This does introduce the
+# possibility that we'll miss some other cause of the same warning, but we'll
+# just have to be careful.
+
+# pylint doesn't understand that self._rsh is callable.
+# pylint: disable=not-callable
+# pylint doesn't understand that self._env is subscriptable.
+# pylint: disable=unsubscriptable-object
 
 
 class StonithdTest(CTSTest):
@@ -21,10 +32,10 @@ class StonithdTest(CTSTest):
         """
 
         CTSTest.__init__(self, cm)
+        self.benchmark = True
         self.name = "Stonithd"
 
         self._startall = SimulStartLite(cm)
-        self.benchmark = True
 
     def __call__(self, node):
         """ Perform this test """
@@ -37,19 +48,16 @@ class StonithdTest(CTSTest):
         if not ret:
             return self.failure("Setup failed")
 
-        is_dc = self._cm.is_node_dc(node)
-
-        watchpats = []
-        watchpats.append(self.templates["Pat:Fencing_ok"] % node)
-        watchpats.append(self.templates["Pat:NodeFenced"] % node)
+        watchpats = [ self.templates["Pat:Fencing_ok"] % node,
+                      self.templates["Pat:NodeFenced"] % node ]
 
         if not self._env["at-boot"]:
             self.debug("Expecting %s to stay down" % node)
             self._cm.ShouldBeStatus[node] = "down"
         else:
             self.debug("Expecting %s to come up again %d" % (node, self._env["at-boot"]))
-            watchpats.append("%s.* S_STARTING -> S_PENDING" % node)
-            watchpats.append("%s.* S_PENDING -> S_NOT_DC" % node)
+            watchpats.extend([ "%s.* S_STARTING -> S_PENDING" % node,
+                               "%s.* S_PENDING -> S_NOT_DC" % node ])
 
         watch = self.create_watch(watchpats, 30 + self._env["DeadTime"] + self._env["StableTime"] + self._env["StartTime"])
         watch.set_watch()
@@ -58,7 +66,7 @@ class StonithdTest(CTSTest):
 
         (rc, _) = self._rsh(origin, "stonith_admin --reboot %s -VVVVVV" % node)
 
-        if rc == 124: # CRM_EX_TIMEOUT
+        if rc == ExitStatus.TIMEOUT:
             # Look for the patterns, usually this means the required
             # device was running on the node to be fenced - or that
             # the required devices were in the process of being loaded
@@ -101,7 +109,8 @@ class StonithdTest(CTSTest):
 
         if not matched:
             return self.failure("Didn't find all expected patterns")
-        elif not is_stable:
+
+        if not is_stable:
             return self.failure("Cluster did not become stable")
 
         self.log_timer("reform")
@@ -122,6 +131,8 @@ class StonithdTest(CTSTest):
         if not CTSTest.is_applicable(self):
             return False
 
+        # pylint gets confused because of EnvFactory here.
+        # pylint: disable=unsupported-membership-test
         if "DoFencing" in self._env:
             return self._env["DoFencing"]
 
