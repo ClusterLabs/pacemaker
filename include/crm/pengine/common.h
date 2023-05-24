@@ -22,7 +22,6 @@ extern "C" {
 const char *task2text(enum action_tasks task);
 enum action_tasks text2task(const char *task);
 enum rsc_role_e text2role(const char *role);
-const char *role2text(enum rsc_role_e role);
 const char *fail2text(enum action_fail_response fail);
 
 const char *pe_pref(GHashTable * options, const char *name);

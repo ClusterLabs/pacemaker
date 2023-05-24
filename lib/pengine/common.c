@@ -452,12 +452,6 @@ task2text(enum action_tasks task)
     return result;
 }
 
-const char *
-role2text(enum rsc_role_e role)
-{
-    return pcmk_role_text(role);
-}
-
 enum rsc_role_e
 text2role(const char *role)
 {
@@ -599,3 +593,17 @@ pe_node_attribute_raw(const pcmk_node_t *node, const char *name)
     }
     return g_hash_table_lookup(node->details->attrs, name);
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/pengine/common_compat.h>
+
+const char *
+role2text(enum rsc_role_e role)
+{
+    return pcmk_role_text(role);
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API
