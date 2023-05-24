@@ -12,5 +12,6 @@ from pacemaker._cts.tests.remotedriver import RemoteDriver
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
 from pacemaker._cts.tests.simulstoplite import SimulStopLite
 from pacemaker._cts.tests.starttest import StartTest
+from pacemaker._cts.tests.startonebyone import StartOnebyOne
 from pacemaker._cts.tests.stonithdtest import StonithdTest
 from pacemaker._cts.tests.stoptest import StopTest

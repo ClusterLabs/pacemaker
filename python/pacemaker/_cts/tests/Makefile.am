@@ -18,6 +18,7 @@ pkgpython_PYTHON = __init__.py \
 				   restarttest.py \
 				   simulstartlite.py \
 				   simulstoplite.py \
+				   startonebyone.py \
 				   starttest.py \
 				   stonithdtest.py \
 				   stoptest.py
