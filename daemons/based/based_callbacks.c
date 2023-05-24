@@ -200,6 +200,75 @@ create_cib_reply(const char *op, const char *call_id, const char *client_id,
     return reply;
 }
 
+static void
+do_local_notify(xmlNode *notify_src, const char *client_id, bool sync_reply,
+                bool from_peer)
+{
+    int rid = 0;
+    int call_id = 0;
+    pcmk__client_t *client_obj = NULL;
+
+    CRM_ASSERT(notify_src && client_id);
+
+    crm_element_value_int(notify_src, F_CIB_CALLID, &call_id);
+
+    client_obj = pcmk__find_client_by_id(client_id);
+    if (client_obj == NULL) {
+        crm_debug("Could not send response %d: client %s not found",
+                  call_id, client_id);
+        return;
+    }
+
+    if (sync_reply) {
+        if (client_obj->ipcs) {
+            CRM_LOG_ASSERT(client_obj->request_id);
+
+            rid = client_obj->request_id;
+            client_obj->request_id = 0;
+
+            crm_trace("Sending response %d to client %s%s",
+                      rid, pcmk__client_name(client_obj),
+                      (from_peer? " (originator of delegated request)" : ""));
+        } else {
+            crm_trace("Sending response (call %d) to client %s%s",
+                      call_id, pcmk__client_name(client_obj),
+                      (from_peer? " (originator of delegated request)" : ""));
+        }
+
+    } else {
+        crm_trace("Sending event %d to client %s%s",
+                  call_id, pcmk__client_name(client_obj),
+                  (from_peer? " (originator of delegated request)" : ""));
+    }
+
+    switch (PCMK__CLIENT_TYPE(client_obj)) {
+        case pcmk__client_ipc:
+            {
+                int rc = pcmk__ipc_send_xml(client_obj, rid, notify_src,
+                                            (sync_reply? crm_ipc_flags_none
+                                             : crm_ipc_server_event));
+
+                if (rc != pcmk_rc_ok) {
+                    crm_warn("%s reply to client %s failed: %s " CRM_XS " rc=%d",
+                             (sync_reply? "Synchronous" : "Asynchronous"),
+                             pcmk__client_name(client_obj), pcmk_rc_str(rc),
+                             rc);
+                }
+            }
+            break;
+#ifdef HAVE_GNUTLS_GNUTLS_H
+        case pcmk__client_tls:
+#endif
+        case pcmk__client_tcp:
+            pcmk__remote_send_xml(client_obj->remote, notify_src);
+            break;
+        default:
+            crm_err("Unknown transport for client %s "
+                    CRM_XS " flags=%#016" PRIx64,
+                    pcmk__client_name(client_obj), client_obj->flags);
+    }
+}
+
 void
 cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
                            pcmk__client_t *cib_client, gboolean privileged)
@@ -425,75 +494,6 @@ process_ping_reply(xmlNode *reply)
             free_xml(remote_cib);
             sync_our_cib(reply, FALSE);
         }
-    }
-}
-
-static void
-do_local_notify(xmlNode * notify_src, const char *client_id,
-                gboolean sync_reply, gboolean from_peer)
-{
-    int rid = 0;
-    int call_id = 0;
-    pcmk__client_t *client_obj = NULL;
-
-    CRM_ASSERT(notify_src && client_id);
-
-    crm_element_value_int(notify_src, F_CIB_CALLID, &call_id);
-
-    client_obj = pcmk__find_client_by_id(client_id);
-    if (client_obj == NULL) {
-        crm_debug("Could not send response %d: client %s not found",
-                  call_id, client_id);
-        return;
-    }
-
-    if (sync_reply) {
-        if (client_obj->ipcs) {
-            CRM_LOG_ASSERT(client_obj->request_id);
-
-            rid = client_obj->request_id;
-            client_obj->request_id = 0;
-
-            crm_trace("Sending response %d to client %s%s",
-                      rid, pcmk__client_name(client_obj),
-                      (from_peer? " (originator of delegated request)" : ""));
-        } else {
-            crm_trace("Sending response (call %d) to client %s%s",
-                      call_id, pcmk__client_name(client_obj),
-                      (from_peer? " (originator of delegated request)" : ""));
-        }
-
-    } else {
-        crm_trace("Sending event %d to client %s%s",
-                  call_id, pcmk__client_name(client_obj),
-                  (from_peer? " (originator of delegated request)" : ""));
-    }
-
-    switch (PCMK__CLIENT_TYPE(client_obj)) {
-        case pcmk__client_ipc:
-            {
-                int rc = pcmk__ipc_send_xml(client_obj, rid, notify_src,
-                                            (sync_reply? crm_ipc_flags_none
-                                             : crm_ipc_server_event));
-
-                if (rc != pcmk_rc_ok) {
-                    crm_warn("%s reply to client %s failed: %s " CRM_XS " rc=%d",
-                             (sync_reply? "Synchronous" : "Asynchronous"),
-                             pcmk__client_name(client_obj), pcmk_rc_str(rc),
-                             rc);
-                }
-            }
-            break;
-#ifdef HAVE_GNUTLS_GNUTLS_H
-        case pcmk__client_tls:
-#endif
-        case pcmk__client_tcp:
-            pcmk__remote_send_xml(client_obj->remote, notify_src);
-            break;
-        default:
-            crm_err("Unknown transport for client %s "
-                    CRM_XS " flags=%#016" PRIx64,
-                    pcmk__client_name(client_obj), client_obj->flags);
     }
 }
 
