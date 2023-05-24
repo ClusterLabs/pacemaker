@@ -131,7 +131,7 @@ probe_action(pcmk_resource_t *rsc, pcmk_node_t *node)
     char *key = pcmk__op_key(rsc->id, PCMK_ACTION_MONITOR, 0);
 
     crm_debug("Scheduling probe of %s %s on %s",
-              role2text(rsc->role), rsc->id, pcmk__node_name(node));
+              pcmk_role_text(rsc->role), rsc->id, pcmk__node_name(node));
 
     probe = custom_action(rsc, key, PCMK_ACTION_MONITOR, node, FALSE,
                           rsc->cluster);

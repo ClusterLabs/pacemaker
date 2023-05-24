@@ -1079,7 +1079,7 @@ pcmk__role_after_failure(const pcmk_resource_t *rsc, const char *action_name,
         }
     }
     pcmk__rsc_trace(rsc, "Role after %s %s failure is: %s",
-                    rsc->id, action_name, role2text(role));
+                    rsc->id, action_name, pcmk_role_text(role));
     return role;
 }
 

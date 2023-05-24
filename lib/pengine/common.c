@@ -455,30 +455,7 @@ task2text(enum action_tasks task)
 const char *
 role2text(enum rsc_role_e role)
 {
-    switch (role) {
-        case pcmk_role_stopped:
-            return PCMK__ROLE_STOPPED;
-
-        case pcmk_role_started:
-            return PCMK__ROLE_STARTED;
-
-        case pcmk_role_unpromoted:
-#ifdef PCMK__COMPAT_2_0
-            return PCMK__ROLE_UNPROMOTED_LEGACY;
-#else
-            return PCMK__ROLE_UNPROMOTED;
-#endif
-
-        case pcmk_role_promoted:
-#ifdef PCMK__COMPAT_2_0
-            return PCMK__ROLE_PROMOTED_LEGACY;
-#else
-            return PCMK__ROLE_PROMOTED;
-#endif
-
-        default: // pcmk_role_unknown
-            return PCMK__ROLE_UNKNOWN;
-    }
+    return pcmk_role_text(role);
 }
 
 enum rsc_role_e

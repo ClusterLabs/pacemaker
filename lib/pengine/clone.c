@@ -1241,7 +1241,7 @@ clone_resource_state(const pcmk_resource_t * rsc, gboolean current)
         }
     }
 
-    pcmk__rsc_trace(rsc, "%s role: %s", rsc->id, role2text(clone_role));
+    pcmk__rsc_trace(rsc, "%s role: %s", rsc->id, pcmk_role_text(clone_role));
     return clone_role;
 }
 

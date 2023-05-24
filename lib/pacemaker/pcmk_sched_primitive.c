@@ -313,7 +313,8 @@ apply_this_with(pcmk__colocation_t *colocation, pcmk_resource_t *rsc)
                         "%s: Assigning colocation %s primary %s first"
                         "(score=%d role=%s)",
                         rsc->id, colocation->id, other->id,
-                        colocation->score, role2text(colocation->dependent_role));
+                        colocation->score,
+                        pcmk_role_text(colocation->dependent_role));
         other->cmds->assign(other, NULL, true);
     }
 
@@ -364,7 +365,7 @@ remote_connection_assigned(const pcmk_resource_t *connection)
                   "(%sassigned connection's next role is %s)",
                   remote_node->details->id,
                   ((connection->allocated_to == NULL)? "un" : ""),
-                  role2text(connection->next_role));
+                  pcmk_role_text(connection->next_role));
         remote_node->details->shutdown = TRUE;
     }
 }
@@ -484,7 +485,8 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
                && (rsc->cluster->no_quorum_policy == pcmk_no_quorum_freeze)) {
         crm_notice("Resource %s cannot be elevated from %s to %s due to "
                    PCMK_OPT_NO_QUORUM_POLICY "=freeze",
-                   rsc->id, role2text(rsc->role), role2text(rsc->next_role));
+                   rsc->id, pcmk_role_text(rsc->role),
+                   pcmk_role_text(rsc->next_role));
         pe__set_next_role(rsc, rsc->role, PCMK_OPT_NO_QUORUM_POLICY "=freeze");
     }
 
@@ -572,7 +574,7 @@ schedule_restart_actions(pcmk_resource_t *rsc, pcmk_node_t *current,
         next_role = rsc_state_matrix[role][pcmk_role_stopped];
         pcmk__rsc_trace(rsc, "Creating %s action to take %s down from %s to %s",
                         (need_stop? "required" : "optional"), rsc->id,
-                        role2text(role), role2text(next_role));
+                        pcmk_role_text(role), pcmk_role_text(next_role));
         fn = rsc_action_matrix[role][next_role];
         if (fn == NULL) {
             break;
@@ -592,7 +594,7 @@ schedule_restart_actions(pcmk_resource_t *rsc, pcmk_node_t *current,
         }
         pcmk__rsc_trace(rsc, "Creating %s action to take %s up from %s to %s",
                         (required? "required" : "optional"), rsc->id,
-                        role2text(role), role2text(next_role));
+                        pcmk_role_text(role), pcmk_role_text(next_role));
         fn = rsc_action_matrix[role][next_role];
         if (fn == NULL) {
             break;
@@ -663,8 +665,9 @@ schedule_role_transition_actions(pcmk_resource_t *rsc)
         pcmk__rsc_trace(rsc,
                         "Creating action to take %s from %s to %s "
                         "(ending at %s)",
-                        rsc->id, role2text(role), role2text(next_role),
-                        role2text(rsc->next_role));
+                        rsc->id, pcmk_role_text(role),
+                        pcmk_role_text(next_role),
+                        pcmk_role_text(rsc->next_role));
         fn = rsc_action_matrix[role][next_role];
         if (fn == NULL) {
             break;
@@ -700,8 +703,9 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
     pcmk__rsc_trace(rsc,
                     "Creating all actions for %s transition from %s to %s "
                     "(%s) on %s",
-                    rsc->id, role2text(rsc->role), role2text(rsc->next_role),
-                    next_role_source, pcmk__node_name(rsc->allocated_to));
+                    rsc->id, pcmk_role_text(rsc->role),
+                    pcmk_role_text(rsc->next_role), next_role_source,
+                    pcmk__node_name(rsc->allocated_to));
 
     current = rsc->fns->active_node(rsc, &num_all_active, &num_clean_active);
 

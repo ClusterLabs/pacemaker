@@ -255,20 +255,26 @@ recurring_op_for_active(pcmk_resource_t *rsc, pcmk_action_t *start,
 {
     pcmk_action_t *mon = NULL;
     bool is_optional = true;
-    const bool is_default_role = (op->role == pcmk_role_unknown);
+    bool role_match = false;
+    enum rsc_role_e monitor_role = op->role;
 
     // We're only interested in recurring actions for active roles
-    if (op->role == pcmk_role_stopped) {
+    if (monitor_role == pcmk_role_stopped) {
         return;
     }
 
     is_optional = active_recurring_should_be_optional(rsc, node, op->key,
                                                       start);
 
-    if ((!is_default_role && (rsc->next_role != op->role))
-        || (is_default_role && (rsc->next_role == pcmk_role_promoted))) {
-        // Configured monitor role doesn't match role resource will have
+    // Check whether monitor's role matches role resource will have
+    if (monitor_role == pcmk_role_unknown) {
+        monitor_role = pcmk_role_unpromoted;
+        role_match = (rsc->next_role != pcmk_role_promoted);
+    } else {
+        role_match = (rsc->next_role == monitor_role);
+    }
 
+    if (!role_match) {
         if (is_optional) { // It's running, so cancel it
             char *after_key = NULL;
             pcmk_action_t *cancel_op = pcmk__new_cancel_action(rsc, op->name,
@@ -304,15 +310,15 @@ recurring_op_for_active(pcmk_resource_t *rsc, pcmk_action_t *start,
                    "%s recurring action %s because %s configured for %s role "
                    "(not %s)",
                    (is_optional? "Cancelling" : "Ignoring"), op->key, op->id,
-                   role2text(is_default_role? pcmk_role_unpromoted : op->role),
-                   role2text(rsc->next_role));
+                   pcmk_role_text(monitor_role),
+                   pcmk_role_text(rsc->next_role));
         return;
     }
 
     pcmk__rsc_trace(rsc,
                     "Creating %s recurring action %s for %s (%s %s on %s)",
                     (is_optional? "optional" : "mandatory"), op->key,
-                    op->id, rsc->id, role2text(rsc->next_role),
+                    op->id, rsc->id, pcmk_role_text(rsc->next_role),
                     pcmk__node_name(node));
 
     mon = custom_action(rsc, strdup(op->key), op->name, node, is_optional,
@@ -412,7 +418,7 @@ cancel_if_running(pcmk_resource_t *rsc, const pcmk_node_t *node,
                    "Cancelling %s-interval %s action for %s on %s because "
                    "configured for " PCMK__ROLE_STOPPED " role (not %s)",
                    pcmk__readable_interval(interval_ms), name, rsc->id,
-                   pcmk__node_name(node), role2text(rsc->next_role));
+                   pcmk__node_name(node), pcmk_role_text(rsc->next_role));
 }
 
 /*!

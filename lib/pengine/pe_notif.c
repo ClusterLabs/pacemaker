@@ -597,7 +597,7 @@ collect_resource_data(const pcmk_resource_t *rsc, bool activity,
             pcmk__sched_err("Resource %s role on %s (%s) is not supported for "
                             "notifications (bug?)",
                             rsc->id, pcmk__node_name(node),
-                            role2text(rsc->role));
+                            pcmk_role_text(rsc->role));
             free(entry);
             break;
     }
@@ -919,7 +919,7 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
         }
         if (rsc->allocated_to == NULL) {
             pcmk__sched_err("Next role '%s' but %s is not allocated",
-                            role2text(rsc->next_role), rsc->id);
+                            pcmk_role_text(rsc->next_role), rsc->id);
             return;
         }
         if ((task != pcmk_action_start) || (start == NULL)

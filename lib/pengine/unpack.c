@@ -2247,7 +2247,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
 
     CRM_ASSERT(rsc);
     pcmk__rsc_trace(rsc, "Resource %s is %s on %s: on_fail=%s",
-                    rsc->id, role2text(rsc->role), pcmk__node_name(node),
+                    rsc->id, pcmk_role_text(rsc->role), pcmk__node_name(node),
                     fail2text(on_fail));
 
     /* process current state */
@@ -2753,8 +2753,8 @@ unpack_lrm_resource(pcmk_node_t *node, const xmlNode *lrm_resource,
             pcmk__rsc_info(rsc,
                            "%s: Not overwriting calculated next role %s"
                            " with requested next role %s",
-                           rsc->id, role2text(rsc->next_role),
-                           role2text(req_role));
+                           rsc->id, pcmk_role_text(rsc->next_role),
+                           pcmk_role_text(req_role));
         }
     }
 
@@ -3776,9 +3776,9 @@ unpack_rsc_op_failure(struct action_history *history,
 
     pcmk__rsc_trace(history->rsc,
                     "Resource %s: role=%s unclean=%s on_fail=%s fail_role=%s",
-                    history->rsc->id, role2text(history->rsc->role),
+                    history->rsc->id, pcmk_role_text(history->rsc->role),
                     pcmk__btoa(history->node->details->unclean),
-                    fail2text(config_on_fail), role2text(fail_role));
+                    fail2text(config_on_fail), pcmk_role_text(fail_role));
 
     if ((fail_role != pcmk_role_started)
         && (history->rsc->next_role < fail_role)) {
@@ -4938,7 +4938,8 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
 done:
     pcmk__rsc_trace(rsc, "%s role on %s after %s is %s (next %s)",
                     rsc->id, pcmk__node_name(node), history.id,
-                    role2text(rsc->role), role2text(rsc->next_role));
+                    pcmk_role_text(rsc->role),
+                    pcmk_role_text(rsc->next_role));
 }
 
 static void

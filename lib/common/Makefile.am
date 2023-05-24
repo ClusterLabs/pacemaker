@@ -93,6 +93,7 @@ libcrmcommon_la_SOURCES	+= procfs.c
 libcrmcommon_la_SOURCES	+= remote.c
 libcrmcommon_la_SOURCES	+= resources.c
 libcrmcommon_la_SOURCES	+= results.c
+libcrmcommon_la_SOURCES	+= roles.c
 libcrmcommon_la_SOURCES	+= scheduler.c
 libcrmcommon_la_SOURCES	+= schemas.c
 libcrmcommon_la_SOURCES	+= scores.c
