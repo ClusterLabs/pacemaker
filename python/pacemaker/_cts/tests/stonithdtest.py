@@ -1,5 +1,4 @@
-""" Test-specific classes for Pacemaker's Cluster Test Suite (CTS)
-"""
+""" Fence a running node and wait for it to restart """
 
 __all__ = ["StonithdTest"]
 __copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
@@ -11,13 +10,25 @@ from pacemaker._cts.timer import Timer
 
 
 class StonithdTest(CTSTest):
+    """ A concrete test that fences a running node and waits for it to restart """
+
     def __init__(self, cm):
+        """ Create a new StonithdTest instance
+
+            Arguments:
+
+            cm -- A ClusterManager instance
+        """
+
         CTSTest.__init__(self, cm)
         self.name = "Stonithd"
+
         self._startall = SimulStartLite(cm)
         self.benchmark = True
 
     def __call__(self, node):
+        """ Perform this test """
+
         self.incr("calls")
         if len(self._env["nodes"]) < 2:
             return self.skipped()
@@ -106,6 +117,8 @@ class StonithdTest(CTSTest):
                  r"error.*: Operation 'reboot' targeting .* by .* for stonith_admin.*: Timer expired" ]
 
     def is_applicable(self):
+        """ Return True if this test is applicable in the current test configuration. """
+
         if not CTSTest.is_applicable(self):
             return False
 
