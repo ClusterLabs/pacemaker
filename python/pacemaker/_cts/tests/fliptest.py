@@ -1,5 +1,4 @@
-""" Test-specific classes for Pacemaker's Cluster Test Suite (CTS)
-"""
+""" Stop running nodes, and start stopped nodes """
 
 __all__ = ["FlipTest"]
 __copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
@@ -13,18 +12,27 @@ from pacemaker._cts.tests.stoptest import StopTest
 
 
 class FlipTest(CTSTest):
-    '''If it's running, stop it.  If it's stopped start it.
-       Overthrow the status quo...
-    '''
+    """ A concrete test that stops running nodes and starts stopped nodes """
+
     def __init__(self, cm):
-        CTSTest.__init__(self,cm)
+        """ Create a new FlipTest instance
+
+            Arguments:
+
+            cm -- A ClusterManager instance
+        """
+
+        CTSTest.__init__(self, cm)
         self.name = "Flip"
+
         self._start = StartTest(cm)
         self._stop = StopTest(cm)
 
     def __call__(self, node):
-        '''Perform the 'Flip' test. '''
+        """ Perform this test """
+
         self.incr("calls")
+
         if self._cm.ShouldBeStatus[node] == "up":
             self.incr("stopped")
             ret = self._stop(node)
