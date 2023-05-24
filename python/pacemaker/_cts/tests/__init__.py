@@ -9,6 +9,7 @@ from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.fliptest import FlipTest
 from pacemaker._cts.tests.restarttest import RestartTest
 from pacemaker._cts.tests.remotedriver import RemoteDriver
+from pacemaker._cts.tests.simulstart import SimulStart
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
 from pacemaker._cts.tests.simulstoplite import SimulStopLite
 from pacemaker._cts.tests.starttest import StartTest
