@@ -1323,7 +1323,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         cib__set_call_options(call_options, "call", cib_force_diff);
         crm_trace("Global update detected");
 
-        CRM_LOG_ASSERT(pcmk__str_any_of(operation->name,
+        CRM_LOG_ASSERT(pcmk__str_any_of(op,
                                         PCMK__CIB_REQUEST_APPLY_PATCH,
                                         PCMK__CIB_REQUEST_REPLACE,
                                         NULL));
@@ -1349,11 +1349,8 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
 #define XPATH_STATUS    "//" XML_TAG_CIB "/" XML_CIB_TAG_STATUS
 
     // Calculate the digests of relevant sections before the operation
-    if (!pcmk_any_flags_set(call_options, cib_dryrun|cib_inhibit_notify)
-        && pcmk__str_any_of(op,
-                            PCMK__CIB_REQUEST_ERASE,
-                            PCMK__CIB_REQUEST_REPLACE,
-                            NULL)) {
+    if (pcmk_is_set(operation->flags, cib_op_attr_replaces)
+        && !pcmk_any_flags_set(call_options, cib_dryrun|cib_inhibit_notify)) {
 
         current_nodes_digest = calculate_section_digest(XPATH_NODES,
                                                         the_cib);
@@ -1386,14 +1383,12 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         }
     }
 
-    /* Always write to disk for successful replace and upgrade ops. This also
+    /* Always write to disk for successful ops with the flag set. This also
      * negates the need to detect ordering changes.
      */
     if ((rc == pcmk_ok)
-        && pcmk__str_any_of(op,
-                            PCMK__CIB_REQUEST_REPLACE,
-                            PCMK__CIB_REQUEST_UPGRADE,
-                            NULL)) {
+        && pcmk_is_set(operation->flags, cib_op_attr_writes_through)) {
+
         config_changed = TRUE;
     }
 
@@ -1415,11 +1410,8 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
             cib_read_config(config_hash, result_cib);
         }
 
-        if (!pcmk_is_set(call_options, cib_inhibit_notify)
-            && pcmk__str_any_of(op,
-                                PCMK__CIB_REQUEST_ERASE,
-                                PCMK__CIB_REQUEST_REPLACE,
-                                NULL)) {
+        if (pcmk_is_set(operation->flags, cib_op_attr_replaces)
+            && !pcmk_is_set(call_options, cib_inhibit_notify)) {
 
             char *result_nodes_digest = NULL;
             char *result_alerts_digest = NULL;

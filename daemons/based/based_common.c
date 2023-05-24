@@ -156,7 +156,10 @@ static const cib_operation_t cib_server_ops[] = {
     },
     {
         PCMK__CIB_REQUEST_REPLACE,
-        cib_op_attr_modifies|cib_op_attr_privileged,
+        cib_op_attr_modifies
+        |cib_op_attr_privileged
+        |cib_op_attr_replaces
+        |cib_op_attr_writes_through,
         cib_prepare_data, cib_cleanup_data, cib_process_replace_svr
     },
     {
@@ -181,7 +184,7 @@ static const cib_operation_t cib_server_ops[] = {
     },
     {
         PCMK__CIB_REQUEST_ERASE,
-        cib_op_attr_modifies|cib_op_attr_privileged,
+        cib_op_attr_modifies|cib_op_attr_privileged|cib_op_attr_replaces,
         cib_prepare_none, cib_cleanup_output, cib_process_erase
     },
     {
@@ -196,7 +199,7 @@ static const cib_operation_t cib_server_ops[] = {
     },
     {
         PCMK__CIB_REQUEST_UPGRADE,
-        cib_op_attr_modifies|cib_op_attr_privileged,
+        cib_op_attr_modifies|cib_op_attr_privileged|cib_op_attr_writes_through,
         cib_prepare_none, cib_cleanup_output, cib_process_upgrade_server
     },
     {
