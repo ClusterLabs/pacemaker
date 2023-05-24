@@ -10,6 +10,14 @@ from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.starttest import StartTest
 from pacemaker._cts.tests.stoptest import StopTest
 
+# Disable various pylint warnings that occur in so many places throughout this
+# file it's easiest to just take care of them globally.  This does introduce the
+# possibility that we'll miss some other cause of the same warning, but we'll
+# just have to be careful.
+
+# pylint doesn't understand that self._env is subscriptable.
+# pylint: disable=unsubscriptable-object
+
 
 class FlipTest(CTSTest):
     """ A concrete test that stops running nodes and starts stopped nodes """
@@ -36,18 +44,18 @@ class FlipTest(CTSTest):
         if self._cm.ShouldBeStatus[node] == "up":
             self.incr("stopped")
             ret = self._stop(node)
-            type = "up->down"
+            kind = "up->down"
             # Give the cluster time to recognize it's gone...
             time.sleep(self._env["StableTime"])
         elif self._cm.ShouldBeStatus[node] == "down":
             self.incr("started")
             ret = self._start(node)
-            type = "down->up"
+            kind = "down->up"
         else:
             return self.skipped()
 
-        self.incr(type)
+        self.incr(kind)
         if ret:
             return self.success()
-        else:
-            return self.failure("%s failure" % type)
+
+        return self.failure("%s failure" % kind)
