@@ -15,6 +15,7 @@ pkgpython_PYTHON = __init__.py \
 				   ctstest.py \
 				   fliptest.py \
 				   remotedriver.py \
+				   restarttest.py \
 				   simulstartlite.py \
 				   simulstoplite.py \
 				   starttest.py \

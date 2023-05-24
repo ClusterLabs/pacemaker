@@ -31,37 +31,6 @@ from pacemaker._cts.timer import Timer
 
 AllTestClasses = [ ]
 AllTestClasses.append(FlipTest)
-
-
-class RestartTest(CTSTest):
-    '''Stop and restart a node'''
-    def __init__(self, cm):
-        CTSTest.__init__(self,cm)
-        self.name = "Restart"
-        self._start = StartTest(cm)
-        self._stop = StopTest(cm)
-        self.benchmark = True
-
-    def __call__(self, node):
-        '''Perform the 'restart' test. '''
-        self.incr("calls")
-
-        self.incr("node:" + node)
-
-        ret1 = 1
-        if self._cm.StataCM(node):
-            self.incr("WasStopped")
-            if not self._start(node):
-                return self.failure("start (setup) failure: "+node)
-
-        self.set_timer()
-        if not self._stop(node):
-            return self.failure("stop failure: "+node)
-        if not self._start(node):
-            return self.failure("start failure: "+node)
-        return self.success()
-
-#        Register RestartTest as a good test to run
 AllTestClasses.append(RestartTest)
 
 
