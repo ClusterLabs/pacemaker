@@ -1,5 +1,4 @@
-""" Test-specific classes for Pacemaker's Cluster Test Suite (CTS)
-"""
+""" Start all stopped nodes simultaneously """
 
 __all__ = ["SimulStart"]
 __copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
@@ -11,20 +10,28 @@ from pacemaker._cts.tests.simulstoplite import SimulStopLite
 
 
 class SimulStart(CTSTest):
-    '''Start all the nodes ~ simultaneously'''
+    """ A concrete test that starts all stopped nodes simultaneously """
+
     def __init__(self, cm):
-        CTSTest.__init__(self,cm)
+        """ Create a new SimulStart instance
+
+            Arguments:
+
+            cm -- A ClusterManager instance
+        """
+
+        CTSTest.__init__(self, cm)
+
         self.name = "SimulStart"
         self.stopall = SimulStopLite(cm)
+
         self._startall = SimulStartLite(cm)
 
     def __call__(self, dummy):
-        '''Perform the 'SimulStart' test. '''
+        """ Perform this test """
+
         self.incr("calls")
 
-        #        We ignore the "node" parameter...
-
-        #        Shut down all the nodes...
         ret = self.stopall(None)
         if not ret:
             return self.failure("Setup failed")
