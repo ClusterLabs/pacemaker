@@ -1,5 +1,4 @@
-""" Test-specific classes for Pacemaker's Cluster Test Suite (CTS)
-"""
+""" Stop and restart a node """
 
 __all__ = ["RestartTest"]
 __copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
@@ -11,18 +10,27 @@ from pacemaker._cts.tests.stoptest import StopTest
 
 
 class RestartTest(CTSTest):
-    '''Stop and restart a node'''
+    """ A concrete test that stops and restarts a node """
+
     def __init__(self, cm):
-        CTSTest.__init__(self,cm)
+        """ Create a new RestartTest instance
+
+            Arguments:
+
+            cm -- A ClusterManager instance
+        """
+
+        CTSTest.__init__(self, cm)
         self.name = "Restart"
+
         self._start = StartTest(cm)
         self._stop = StopTest(cm)
         self.benchmark = True
 
     def __call__(self, node):
-        '''Perform the 'restart' test. '''
-        self.incr("calls")
+        """ Perform this test """
 
+        self.incr("calls")
         self.incr("node:" + node)
 
         ret1 = 1
@@ -32,8 +40,11 @@ class RestartTest(CTSTest):
                 return self.failure("start (setup) failure: "+node)
 
         self.set_timer()
+
         if not self._stop(node):
             return self.failure("stop failure: "+node)
+
         if not self._start(node):
             return self.failure("start failure: "+node)
+
         return self.success()
