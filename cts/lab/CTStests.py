@@ -199,7 +199,7 @@ class StonithdTest(CTSTest):
         if not CTSTest.is_applicable(self):
             return False
 
-        if "DoFencing" in list(self._env.keys()):
+        if "DoFencing" in self._env:
             return self._env["DoFencing"]
 
         return True
@@ -1923,11 +1923,11 @@ class RollingUpgradeTest(CTSTest):
         if not CTSTest.is_applicable(self):
             return None
 
-        if not "rpm-dir" in list(self._env.keys()):
+        if "rpm-dir" not in self._env:
             return None
-        if not "current-version" in list(self._env.keys()):
+        if "current-version" not in self._env:
             return None
-        if not "previous-version" in list(self._env.keys()):
+        if "previous-version" not in self._env:
             return None
 
         return 1
@@ -2189,7 +2189,7 @@ class RemoteStonithd(RemoteDriver):
         if not RemoteDriver.is_applicable(self):
             return False
 
-        if "DoFencing" in list(self._env.keys()):
+        if "DoFencing" in self._env:
             return self._env["DoFencing"]
 
         return True

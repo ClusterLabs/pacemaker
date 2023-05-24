@@ -31,7 +31,7 @@ class Environment:
     def __init__(self, args):
         """ Create a new Environment instance.  This class can be treated kind
             of like a dictionary due to the presence of typical dict functions
-            like has_key, __getitem__, and __setitem__.  However, it is not a
+            like __contains__, __getitem__, and __setitem__.  However, it is not a
             dictionary so do not rely on standard dictionary behavior.
 
             Arguments:
@@ -100,7 +100,7 @@ class Environment:
 
         return list(self.data.keys())
 
-    def has_key(self, key):
+    def __contains__(self, key):
         """ Does the given environment key exist? """
 
         if key == "nodes":
@@ -120,10 +120,7 @@ class Environment:
         if key == "Name":
             return self._get_stack_short()
 
-        if key in self.data:
-            return self.data[key]
-
-        return None
+        return self.data.get(key)
 
     def __setitem__(self, key, value):
         """ Set the given environment key to the given value, overriding any

@@ -126,7 +126,7 @@ if __name__ == '__main__':
     LogFactory().log("Random Seed:            %s" % Environment["RandSeed"])
     LogFactory().log("Syslog variant:         %s" % Environment["syslogd"].strip())
     LogFactory().log("System log files:       %s" % Environment["LogFileName"])
-    if Environment.has_key("IPBase"):
+    if "IPBase" in Environment:
         LogFactory().log("Base IP for resources:  %s" % Environment["IPBase"])
     LogFactory().log("Cluster starts at boot: %d" % Environment["at-boot"])
 
