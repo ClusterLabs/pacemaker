@@ -33,7 +33,7 @@ class CtsLab:
     def __init__(self, args=None):
         """ Create a new CtsLab instance.  This class can be treated kind
             of like a dictionary due to the presence of typical dict functions
-            like has_key, __getitem__, and __setitem__.  However, it is not a
+            like __contains__, __getitem__, and __setitem__.  However, it is not a
             dictionary so do not rely on standard dictionary behavior.
 
             Arguments:
@@ -49,7 +49,7 @@ class CtsLab:
 
         self._env.dump()
 
-    def has_key(self, key):
+    def __contains__(self, key):
         """ Does the given environment key exist? """
 
         # pylint gets confused because of EnvFactory here.
