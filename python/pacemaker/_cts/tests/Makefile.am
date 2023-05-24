@@ -13,6 +13,7 @@ pkgpythondir = $(pythondir)/$(PACKAGE)/_cts/tests
 
 pkgpython_PYTHON = __init__.py \
 				   ctstest.py \
+				   fliptest.py \
 				   remotedriver.py \
 				   simulstartlite.py \
 				   simulstoplite.py \
