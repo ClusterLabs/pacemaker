@@ -23,4 +23,7 @@ pkgpython_PYTHON = CTS.py \
 				   process.py \
 				   remote.py \
 				   test.py \
+				   timer.py \
 				   watcher.py
+
+SUBDIRS = tests

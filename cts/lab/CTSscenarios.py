@@ -9,9 +9,8 @@ import re
 import sys
 import time
 
-from cts.CTStests import CTSTest
-
 from pacemaker._cts.audits import ClusterAudit
+from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.watcher import LogWatcher
 
 class ScenarioComponent(object):
@@ -152,7 +151,7 @@ A partially set up scenario is torn down if it fails during setup.
     def run_test(self, test, testcount):
         nodechoice = self.ClusterManager.Env.random_node()
 
-        ret = 1
+        ret = True
         where = ""
         did_run = 0
 
@@ -162,9 +161,9 @@ A partially set up scenario is torn down if it fails during setup.
         starttime = test.set_timer()
         if not test.setup(nodechoice):
             self.ClusterManager.log("Setup failed")
-            ret = 0
+            ret = False
 
-        elif not test.canrunnow(nodechoice):
+        elif not test.can_run_now(nodechoice):
             self.ClusterManager.log("Skipped")
             test.skipped()
 
@@ -183,23 +182,23 @@ A partially set up scenario is torn down if it fails during setup.
                     answer = "n"
             if answer and answer == "n":
                 raise ValueError("Teardown of %s on %s failed" % (test.name, nodechoice))
-            ret = 0
+            ret = False
 
         stoptime = time.time()
         self.ClusterManager.oprofileSave(testcount)
 
         elapsed_time = stoptime - starttime
         test_time = stoptime - test.get_timer()
-        if not test["min_time"]:
-            test["elapsed_time"] = elapsed_time
-            test["min_time"] = test_time
-            test["max_time"] = test_time
+        if "min_time" not in test.stats:
+            test.stats["elapsed_time"] = elapsed_time
+            test.stats["min_time"] = test_time
+            test.stats["max_time"] = test_time
         else:
-            test["elapsed_time"] = test["elapsed_time"] + elapsed_time
-            if test_time < test["min_time"]:
-                test["min_time"] = test_time
-            if test_time > test["max_time"]:
-                test["max_time"] = test_time
+            test.stats["elapsed_time"] = test.stats["elapsed_time"] + elapsed_time
+            if test_time < test.stats["min_time"]:
+                test.stats["min_time"] = test_time
+            if test_time > test.stats["max_time"]:
+                test.stats["max_time"] = test_time
 
         if ret:
             self.incr("success")
@@ -209,7 +208,7 @@ A partially set up scenario is torn down if it fails during setup.
             self.ClusterManager.statall()
             did_run = 1  # Force the test count to be incremented anyway so test extraction works
 
-        self.audit(test.errorstoignore())
+        self.audit(test.errors_to_ignore)
         return did_run
 
     def summarize(self):
@@ -226,12 +225,12 @@ A partially set up scenario is torn down if it fails during setup.
         self.ClusterManager.log("Test Summary")
         for test in self.Tests:
             for key in list(stat_filter.keys()):
-                stat_filter[key] = test.Stats[key]
+                stat_filter[key] = test.stats[key]
             self.ClusterManager.log(("Test %s: "%test.name).ljust(25) + " %s"%repr(stat_filter))
 
         self.ClusterManager.debug("Detailed Results")
         for test in self.Tests:
-            self.ClusterManager.debug(("Test %s: "%test.name).ljust(25) + " %s"%repr(test.Stats))
+            self.ClusterManager.debug(("Test %s: "%test.name).ljust(25) + " %s"%repr(test.stats))
 
         self.ClusterManager.log("<<<<<<<<<<<<<<<< TESTS COMPLETED")
 
