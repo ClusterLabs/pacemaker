@@ -815,7 +815,7 @@ parse_peer_options_v2(const cib_operation_t *operation, xmlNode *request,
         return FALSE;
 
     } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SHUTDOWN, pcmk__str_none)) {
-        /* Legacy handling */
+        // @COMPAT: Legacy handling
         crm_debug("Legacy handling of %s message from %s", op, originator);
         *local_notify = FALSE;
         if (reply_to == NULL) {
@@ -909,9 +909,10 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
     CRM_ASSERT(msg != NULL);
 
     if (broadcast) {
-        /* this (successful) call modified the CIB _and_ the
-         * change needs to be broadcast...
-         *   send via HA to other nodes
+        /* @COMPAT: Legacy code
+         *
+         * This successful call modified the CIB, and the change needs to be
+         * broadcast (sent via cluster to all nodes).
          */
         int diff_add_updates = 0;
         int diff_add_epoch = 0;
@@ -1313,9 +1314,14 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         goto done;
     }
 
-    /* Handle a valid write action */
+    /* @COMPAT: Handle a valid write action (legacy)
+     *
+     * @TODO: Re-evaluate whether this is all truly legacy. The cib_force_diff
+     * portion is. However, F_CIB_GLOBAL_UPDATE may be set by a sync operation
+     * even in non-legacy mode, and manage_counters tells xml_create_patchset()
+     * whether to update version/epoch info.
+     */
     if (pcmk__xe_attr_is_true(request, F_CIB_GLOBAL_UPDATE)) {
-        /* legacy code */
         manage_counters = FALSE;
         cib__set_call_options(call_options, "call", cib_force_diff);
         crm_trace("Global update detected");
@@ -1364,12 +1370,11 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
                         request, input, manage_counters, &config_changed,
                         current_cib, &result_cib, cib_diff, &output);
 
+    // @COMPAT: Legacy code
     if (!manage_counters) {
         int format = 1;
 
-        /* Legacy code
-         * If the diff is NULL at this point, it's because nothing changed
-         */
+        // If the diff is NULL at this point, it's because nothing changed
         if (*cib_diff != NULL) {
             crm_element_value_int(*cib_diff, "format", &format);
         }
