@@ -1,5 +1,4 @@
-""" Test-specific classes for Pacemaker's Cluster Test Suite (CTS)
-"""
+""" Start all stopped nodes serially """
 
 __all__ = ["StartOnebyOne"]
 __copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
@@ -12,21 +11,28 @@ from pacemaker._cts.tests.starttest import StartTest
 
 
 class StartOnebyOne(CTSTest):
-    '''Start all the nodes ~ one by one'''
+    """ A concrete test that starts all stopped nodes serially """
+
     def __init__(self, cm):
-        CTSTest.__init__(self,cm)
+        """ Create a new StartOnebyOne instance
+
+            Arguments:
+
+            cm -- A ClusterManager instance
+        """
+
+        CTSTest.__init__(self, cm)
         self.name = "StartOnebyOne"
-        self.stopall = SimulStopLite(cm)
-        self._start = StartTest(cm)
         self.ns = NodeStatus(cm.Env)
+        self.stopall = SimulStopLite(cm)
+
+        self._start = StartTest(cm)
 
     def __call__(self, dummy):
-        '''Perform the 'StartOnebyOne' test. '''
+        """ Perform this test """
+
         self.incr("calls")
 
-        #        We ignore the "node" parameter...
-
-        #        Shut down all the nodes...
         ret = self.stopall(None)
         if not ret:
             return self.failure("Test setup failed")
