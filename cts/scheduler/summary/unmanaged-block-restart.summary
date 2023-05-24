@@ -12,15 +12,13 @@ Current cluster status:
       * rsc4	(ocf:pacemaker:Dummy):	 FAILED yingying.site (blocked)
 
 Transition Summary:
-  * Start      rsc1    ( yingying.site )
+  * Start      rsc1    ( yingying.site )  due to unrunnable rsc2 stop (blocked)
   * Stop       rsc2    ( yingying.site )  due to unrunnable rsc3 stop (blocked)
   * Stop       rsc3    ( yingying.site )  due to required rsc2 stop (blocked)
 
 Executing Cluster Transition:
   * Pseudo action:   group1_stop_0
   * Pseudo action:   group1_start_0
-  * Resource action: rsc1            start on yingying.site
-  * Resource action: rsc1            monitor=10000 on yingying.site
 
 Revised Cluster Status:
   * Node List:
@@ -28,7 +26,7 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * Resource Group: group1:
-      * rsc1	(ocf:pacemaker:Dummy):	 Started yingying.site
+      * rsc1	(ocf:pacemaker:Dummy):	 Stopped
       * rsc2	(ocf:pacemaker:Dummy):	 Started yingying.site
       * rsc3	(ocf:pacemaker:Dummy):	 Started yingying.site
       * rsc4	(ocf:pacemaker:Dummy):	 FAILED yingying.site (blocked)

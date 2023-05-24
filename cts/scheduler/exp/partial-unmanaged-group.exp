@@ -1,0 +1,46 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="1"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <pseudo_event id="25" operation="start" operation_key="grp1_start_0">
+        <attributes CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="10" operation="monitor" operation_key="interloper_monitor_0" on_node="rhel8-5" on_node_uuid="5">
+        <primitive id="interloper" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_on_node="rhel8-5" CRM_meta_on_node_uuid="5" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <rsc_op id="9" operation="monitor" operation_key="interloper_monitor_0" on_node="rhel8-4" on_node_uuid="4">
+        <primitive id="interloper" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_on_node="rhel8-4" CRM_meta_on_node_uuid="4" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <rsc_op id="8" operation="monitor" operation_key="interloper_monitor_0" on_node="rhel8-2" on_node_uuid="2">
+        <primitive id="interloper" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_on_node="rhel8-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <rsc_op id="7" operation="monitor" operation_key="interloper_monitor_0" on_node="rhel8-1" on_node_uuid="1">
+        <primitive id="interloper" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_on_node="rhel8-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+</transition_graph>

@@ -19,6 +19,7 @@
 "rsc2_start_0 node1" -> "rsc3_start_0 node1" [ style = bold]
 "rsc2_start_0 node1" [ style=bold color="green" fontcolor="black"]
 "rsc2_stop_0 node1" -> "group1_stopped_0" [ style = bold]
+"rsc2_stop_0 node1" -> "rsc1_start_0 node1" [ style = bold]
 "rsc2_stop_0 node1" -> "rsc2_start_0 node1" [ style = bold]
 "rsc2_stop_0 node1" [ style=bold color="green" fontcolor="black"]
 "rsc3_start_0 node1" -> "group1_running_0" [ style = bold]
@@ -28,6 +29,7 @@
 "rsc4_start_0 node1" [ style=bold color="green" fontcolor="black"]
 "rsc4_stop_0 node1" -> "group1_stopped_0" [ style = bold]
 "rsc4_stop_0 node1" -> "rsc2_stop_0 node1" [ style = bold]
+"rsc4_stop_0 node1" -> "rsc3_start_0 node1" [ style = bold]
 "rsc4_stop_0 node1" -> "rsc4_start_0 node1" [ style = bold]
 "rsc4_stop_0 node1" [ style=bold color="green" fontcolor="black"]
 }

@@ -1275,6 +1275,7 @@ get_complex_task(const pe_resource_t *rsc, const char *name)
                 crm_trace("Folding %s back into its atomic counterpart for %s",
                           name, rsc->id);
                 --task;
+                break;
             default:
                 break;
         }
