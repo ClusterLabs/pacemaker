@@ -23,16 +23,16 @@ class SimulStart(CTSTest):
         CTSTest.__init__(self, cm)
 
         self.name = "SimulStart"
-        self.stopall = SimulStopLite(cm)
 
         self._startall = SimulStartLite(cm)
+        self._stopall = SimulStopLite(cm)
 
     def __call__(self, dummy):
         """ Perform this test """
 
         self.incr("calls")
 
-        ret = self.stopall(None)
+        ret = self._stopall(None)
         if not ret:
             return self.failure("Setup failed")
 
