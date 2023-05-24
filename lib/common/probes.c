@@ -17,41 +17,68 @@
 #include <crm/common/options.h>     // PCMK_META_INTERVAL
 #include <crm/msg_xml.h>            // PCMK_XA_OPERATION
 
+/*!
+ * \brief Check whether an action name and interval represent a probe
+ *
+ * \param[in] task         Action name
+ * \param[in] interval_ms  Action interval in milliseconds
+ *
+ * \return true if \p task is \c PCMK_ACTION_MONITOR and \p interval_ms is 0,
+ *         otherwise false
+ */
 bool
-pcmk_is_probe(const char *task, guint interval)
+pcmk_is_probe(const char *task, guint interval_ms)
 {
-    if (task == NULL) {
-        return false;
-    }
-
-    return (interval == 0)
+    // @COMPAT This should be made inline at an API compatibility break
+    return (interval_ms == 0)
            && pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_none);
 }
 
+/*!
+ * \brief Check whether an action history entry represents a probe
+ *
+ * \param[in] xml  XML of action history entry
+ *
+ * \return true if \p xml is for a probe action, otherwise false
+ */
 bool
-pcmk_xe_is_probe(const xmlNode *xml_op)
+pcmk_xe_is_probe(const xmlNode *xml)
 {
-    const char *task = crm_element_value(xml_op, PCMK_XA_OPERATION);
-    const char *interval_ms_s = crm_element_value(xml_op, PCMK_META_INTERVAL);
-    int interval_ms;
+    int interval_ms = 0;
 
-    pcmk__scan_min_int(interval_ms_s, &interval_ms, 0);
-    return pcmk_is_probe(task, interval_ms);
-}
-
-bool
-pcmk_xe_mask_probe_failure(const xmlNode *xml_op)
-{
-    int status = PCMK_EXEC_UNKNOWN;
-    int rc = PCMK_OCF_OK;
-
-    if (!pcmk_xe_is_probe(xml_op)) {
+    if (xml == NULL) {
         return false;
     }
 
-    crm_element_value_int(xml_op, PCMK__XA_OP_STATUS, &status);
-    crm_element_value_int(xml_op, PCMK__XA_RC_CODE, &rc);
+    pcmk__scan_min_int(crm_element_value(xml, PCMK_META_INTERVAL),
+                       &interval_ms, 0);
 
-    return rc == PCMK_OCF_NOT_INSTALLED || rc == PCMK_OCF_INVALID_PARAM ||
-           status == PCMK_EXEC_NOT_INSTALLED;
+    return pcmk_is_probe(crm_element_value(xml, PCMK_XA_OPERATION),
+                         interval_ms);
+}
+
+/*!
+ * \brief Check whether an action history entry represents a maskable probe
+ *
+ * \param[in] xml  XML of action history entry
+ *
+ * \return true if \p xml is for a failed probe action that should be treated as
+ *         successful, otherwise false
+ */
+bool
+pcmk_xe_mask_probe_failure(const xmlNode *xml)
+{
+    int exec_status = PCMK_EXEC_UNKNOWN;
+    int exit_status = PCMK_OCF_OK;
+
+    if (!pcmk_xe_is_probe(xml)) {
+        return false;
+    }
+
+    crm_element_value_int(xml, PCMK__XA_OP_STATUS, &exec_status);
+    crm_element_value_int(xml, PCMK__XA_RC_CODE, &exit_status);
+
+    return (exit_status == PCMK_OCF_NOT_INSTALLED)
+           || (exit_status == PCMK_OCF_INVALID_PARAM)
+           || (exec_status == PCMK_EXEC_NOT_INSTALLED);
 }
