@@ -205,11 +205,6 @@ static const cib_operation_t cib_server_ops[] = {
         cib_prepare_none, cib_cleanup_none, cib_process_readwrite
     },
     {
-        PCMK__CIB_REQUEST_ALL_SECONDARY,
-        cib_op_attr_privileged,
-        cib_prepare_none, cib_cleanup_none, cib_process_readwrite
-    },
-    {
         PCMK__CIB_REQUEST_SYNC_TO_ONE,
         cib_op_attr_privileged,
         cib_prepare_sync, cib_cleanup_none, cib_process_sync_one
