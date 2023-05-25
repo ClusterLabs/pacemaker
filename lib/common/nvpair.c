@@ -947,22 +947,29 @@ crm_meta_name(const char *attr_name)
     return env_name;
 }
 
+/*!
+ * \brief Get the value of a meta-attribute
+ *
+ * Get the value of a meta-attribute from a hash table whose keys are
+ * meta-attribute environment variable names (as crm_meta_name() would
+ * create, like pcmk__graph_action_t:params, not pcmk_resource_t:meta).
+ *
+ * \param[in] meta       Hash table of meta-attributes
+ * \param[in] attr_name  Name of meta-attribute to get
+ *
+ * \return Value of given meta-attribute
+ */
 const char *
-crm_meta_value(GHashTable * hash, const char *field)
+crm_meta_value(GHashTable *meta, const char *attr_name)
 {
-    char *key = NULL;
-    const char *value = NULL;
+    if ((meta != NULL) && (attr_name != NULL)) {
+        char *key = crm_meta_name(attr_name);
+        const char *value = g_hash_table_lookup(meta, key);
 
-    if (field == NULL) {
-        return NULL;
-    }
-    key = crm_meta_name(field);
-    if (key) {
-        value = g_hash_table_lookup(hash, key);
         free(key);
+        return value;
     }
-
-    return value;
+    return NULL;
 }
 
 // Deprecated functions kept only for backward API compatibility
