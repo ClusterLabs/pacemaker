@@ -215,6 +215,7 @@ static const cib_operation_t cib_server_ops[] = {
         cib_prepare_sync, cib_cleanup_none, cib_process_sync_one
     },
     {
+        // @COMPAT: Drop cib_op_attr_modifies when we drop legacy mode support
         PCMK__CIB_REQUEST_PRIMARY,
         cib_op_attr_modifies|cib_op_attr_privileged|cib_op_attr_local,
         cib_prepare_data, cib_cleanup_data, cib_process_readwrite
