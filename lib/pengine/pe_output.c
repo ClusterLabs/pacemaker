@@ -2308,7 +2308,7 @@ node_attribute_list(pcmk__output_t *out, va_list args) {
             int expected_score = 0;
             bool add_extra = false;
 
-            value = pe_node_attribute_raw(node, name);
+            value = pcmk__node_attr(node, name, NULL, pcmk__rsc_node_current);
 
             add_extra = add_extra_info(node, node->details->running_rsc,
                                        scheduler, name, &expected_score);

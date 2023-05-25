@@ -887,7 +887,8 @@ pcmk__schedule_probes(pcmk_scheduler_t *scheduler)
          * for processing old saved CIBs (< 1.1.14), including the
          * reprobe-target_rc regression test.
          */
-        probed = pe_node_attribute_raw(node, CRM_OP_PROBED);
+        probed = pcmk__node_attr(node, CRM_OP_PROBED, NULL,
+                                 pcmk__rsc_node_current);
         if (probed != NULL && crm_is_true(probed) == FALSE) {
             pcmk_action_t *probe_op = NULL;
 

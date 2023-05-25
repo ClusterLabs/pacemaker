@@ -554,7 +554,8 @@ pe__compare_fencing_digest(pcmk_resource_t *rsc, const char *agent,
                                                 node, NULL, TRUE, scheduler);
 
     // Check whether node has special unfencing summary node attribute
-    node_summary = pe_node_attribute_raw(node, CRM_ATTR_DIGESTS_ALL);
+    node_summary = pcmk__node_attr(node, CRM_ATTR_DIGESTS_ALL, NULL,
+                                   pcmk__rsc_node_current);
     if (node_summary == NULL) {
         data->rc = pcmk__digest_unknown;
         return data;
@@ -568,7 +569,8 @@ pe__compare_fencing_digest(pcmk_resource_t *rsc, const char *agent,
     }
 
     // Check whether secure parameter digest matches
-    node_summary = pe_node_attribute_raw(node, CRM_ATTR_DIGESTS_SECURE);
+    node_summary = pcmk__node_attr(node, CRM_ATTR_DIGESTS_SECURE, NULL,
+                                   pcmk__rsc_node_current);
     if (unfencing_digest_matches(rsc->id, agent, data->digest_secure_calc,
                                  node_summary)) {
         data->rc = pcmk__digest_match;

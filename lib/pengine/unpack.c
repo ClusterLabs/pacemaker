@@ -1076,23 +1076,23 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
         crm_info("%s is shutting down", pcmk__node_name(this_node));
         this_node->details->shutdown = TRUE;
     }
- 
-    if (crm_is_true(pe_node_attribute_raw(this_node, PCMK_NODE_ATTR_STANDBY))) {
+
+    if (crm_is_true(pcmk__node_attr(this_node, PCMK_NODE_ATTR_STANDBY, NULL,
+                                    pcmk__rsc_node_current))) {
         crm_info("%s is in standby mode", pcmk__node_name(this_node));
         this_node->details->standby = TRUE;
     }
 
-    if (crm_is_true(pe_node_attribute_raw(this_node,
-                                          PCMK_NODE_ATTR_MAINTENANCE))
+    if (crm_is_true(pcmk__node_attr(this_node, PCMK_NODE_ATTR_MAINTENANCE, NULL,
+                                    pcmk__rsc_node_current))
         || ((rsc != NULL) && !pcmk_is_set(rsc->flags, pcmk_rsc_managed))) {
-
         crm_info("%s is in maintenance mode", pcmk__node_name(this_node));
         this_node->details->maintenance = TRUE;
     }
 
-    discovery =
-        pe_node_attribute_raw(this_node,
-                              PCMK__NODE_ATTR_RESOURCE_DISCOVERY_ENABLED);
+    discovery = pcmk__node_attr(this_node,
+                                PCMK__NODE_ATTR_RESOURCE_DISCOVERY_ENABLED,
+                                NULL, pcmk__rsc_node_current);
     if ((discovery != NULL) && !crm_is_true(discovery)) {
         pcmk__warn_once(pcmk__wo_rdisc_enabled,
                         "Support for the "
@@ -1138,19 +1138,21 @@ unpack_transient_attributes(const xmlNode *state, pcmk_node_t *node,
 
     add_node_attrs(attrs, node, TRUE, scheduler);
 
-    if (crm_is_true(pe_node_attribute_raw(node, PCMK_NODE_ATTR_STANDBY))) {
+    if (crm_is_true(pcmk__node_attr(node, PCMK_NODE_ATTR_STANDBY, NULL,
+                                    pcmk__rsc_node_current))) {
         crm_info("%s is in standby mode", pcmk__node_name(node));
         node->details->standby = TRUE;
     }
 
-    if (crm_is_true(pe_node_attribute_raw(node, PCMK_NODE_ATTR_MAINTENANCE))) {
+    if (crm_is_true(pcmk__node_attr(node, PCMK_NODE_ATTR_MAINTENANCE, NULL,
+                                    pcmk__rsc_node_current))) {
         crm_info("%s is in maintenance mode", pcmk__node_name(node));
         node->details->maintenance = TRUE;
     }
 
-    discovery
-        = pe_node_attribute_raw(node,
-                                PCMK__NODE_ATTR_RESOURCE_DISCOVERY_ENABLED);
+    discovery = pcmk__node_attr(node,
+                                PCMK__NODE_ATTR_RESOURCE_DISCOVERY_ENABLED,
+                                NULL, pcmk__rsc_node_current);
     if ((discovery != NULL) && !crm_is_true(discovery)) {
         pcmk__config_warn("Ignoring "
                           PCMK__NODE_ATTR_RESOURCE_DISCOVERY_ENABLED
@@ -1527,7 +1529,8 @@ unpack_node_terminate(const pcmk_node_t *node, const xmlNode *node_state)
 {
     long long value = 0LL;
     int value_i = 0;
-    const char *value_s = pe_node_attribute_raw(node, PCMK_NODE_ATTR_TERMINATE);
+    const char *value_s = pcmk__node_attr(node, PCMK_NODE_ATTR_TERMINATE,
+                                          NULL, pcmk__rsc_node_current);
 
     // Value may be boolean or an epoch time
     if (crm_str_to_boolean(value_s, &value_i) == 1) {
@@ -5005,8 +5008,10 @@ add_node_attrs(const xmlNode *xml_obj, pcmk_node_t *node, bool overwrite,
                                node->details->utilization, NULL,
                                FALSE, scheduler);
 
-    if (pe_node_attribute_raw(node, CRM_ATTR_SITE_NAME) == NULL) {
-        const char *site_name = pe_node_attribute_raw(node, "site-name");
+    if (pcmk__node_attr(node, CRM_ATTR_SITE_NAME, NULL,
+                        pcmk__rsc_node_current) == NULL) {
+        const char *site_name = pcmk__node_attr(node, "site-name", NULL,
+                                                pcmk__rsc_node_current);
 
         if (site_name) {
             pcmk__insert_dup(node->details->attrs,

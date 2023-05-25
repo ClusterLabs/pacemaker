@@ -32,12 +32,14 @@ get_node_score(const char *rule, const char *score, bool raw,
         score_f = char2score(score);
 
     } else {
+        const char *target = NULL;
         const char *attr_score = NULL;
 
-        attr_score = pe__node_attribute_calculated(node, score, rsc,
-                                                   pcmk__rsc_node_current,
-                                                   false);
+        target = g_hash_table_lookup(rsc->meta,
+                                     PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
 
+        attr_score = pcmk__node_attr(node, score, target,
+                                     pcmk__rsc_node_current);
         if (attr_score == NULL) {
             crm_debug("Rule %s: %s did not have a value for %s",
                       rule, pcmk__node_name(node), score);

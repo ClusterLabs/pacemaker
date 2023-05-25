@@ -10,6 +10,11 @@
 #ifndef PCMK__CRM_COMMON_ATTRS_INTERNAL__H
 #define PCMK__CRM_COMMON_ATTRS_INTERNAL__H
 
+#include <crm/crm.h>                        // crm_system_name
+#include <crm/common/logging.h>             // LOG_TRACE
+#include <crm/common/scheduler_types.h>     // pcmk_node_t
+#include <crm/common/failcounts_internal.h> // enum pcmk__rsc_node
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -42,6 +47,8 @@ enum pcmk__node_attr_opts {
     } while (0)
 
 const char *pcmk__node_attr_target(const char *name);
+const char *pcmk__node_attr(const pcmk_node_t *node, const char *name,
+                            const char *target, enum pcmk__rsc_node node_type);
 
 #ifdef __cplusplus
 }

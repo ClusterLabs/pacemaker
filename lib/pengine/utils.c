@@ -669,8 +669,8 @@ add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref)
 bool
 pe__shutdown_requested(const pcmk_node_t *node)
 {
-    const char *shutdown = pe_node_attribute_raw(node,
-                                                 PCMK__NODE_ATTR_SHUTDOWN);
+    const char *shutdown = pcmk__node_attr(node, PCMK__NODE_ATTR_SHUTDOWN, NULL,
+                                           pcmk__rsc_node_current);
 
     return !pcmk__str_eq(shutdown, "0", pcmk__str_null_matches);
 }

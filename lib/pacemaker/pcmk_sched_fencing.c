@@ -448,7 +448,8 @@ pcmk__fence_guest(pcmk_node_t *node)
 bool
 pcmk__node_unfenced(const pcmk_node_t *node)
 {
-    const char *unfenced = pe_node_attribute_raw(node, CRM_ATTR_UNFENCED);
+    const char *unfenced = pcmk__node_attr(node, CRM_ATTR_UNFENCED, NULL,
+                                           pcmk__rsc_node_current);
 
     return !pcmk__str_eq(unfenced, "0", pcmk__str_null_matches);
 }

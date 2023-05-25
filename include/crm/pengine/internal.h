@@ -361,13 +361,6 @@ bool pe__bundle_needs_remote_name(pcmk_resource_t *rsc);
 const char *pe__add_bundle_remote_name(pcmk_resource_t *rsc,
                                        pcmk_scheduler_t *scheduler,
                                        xmlNode *xml, const char *field);
-
-const char *pe__node_attribute_calculated(const pcmk_node_t *node,
-                                          const char *name,
-                                          const pcmk_resource_t *rsc,
-                                          enum pcmk__rsc_node node_type,
-                                          bool force_host);
-const char *pe_node_attribute_raw(const pcmk_node_t *node, const char *name);
 bool pe__is_universal_clone(const pcmk_resource_t *rsc,
                             const pcmk_scheduler_t *scheduler);
 void pe__add_param_check(const xmlNode *rsc_op, pcmk_resource_t *rsc,
