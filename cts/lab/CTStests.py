@@ -36,39 +36,6 @@ AllTestClasses.append(StonithdTest)
 AllTestClasses.append(StartOnebyOne)
 AllTestClasses.append(SimulStart)
 AllTestClasses.append(SimulStop)
-
-
-class StopOnebyOne(CTSTest):
-    '''Stop all the nodes in order'''
-    def __init__(self, cm):
-        CTSTest.__init__(self,cm)
-        self.name = "StopOnebyOne"
-        self._startall = SimulStartLite(cm)
-        self._stop = StopTest(cm)
-
-    def __call__(self, dummy):
-        '''Perform the 'StopOnebyOne' test. '''
-        self.incr("calls")
-
-        #     We ignore the "node" parameter...
-
-        #     Start up all the nodes...
-        ret = self._startall(None)
-        if not ret:
-            return self.failure("Setup failed")
-
-        failed = []
-        self.set_timer()
-        for node in self._env["nodes"]:
-            if not self._stop(node):
-                failed.append(node)
-
-        if len(failed) > 0:
-            return self.failure("Some node failed to stop: " + repr(failed))
-
-        return self.success()
-
-#     Register StopOnebyOne as a good test to run
 AllTestClasses.append(StopOnebyOne)
 
 
