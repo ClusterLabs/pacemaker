@@ -384,13 +384,6 @@ sync_our_cib(xmlNode * request, gboolean all)
         crm_log_xml_err(request, "bad sync");
     }
 
-    /* remove the "all == FALSE" condition
-     *
-     * sync_from was failing, the local client wasn't being notified
-     *    because it didn't know it was a reply
-     * setting this does not prevent the other nodes from applying it
-     *    if all == TRUE
-     */
     if (host != NULL) {
         crm_xml_add(replace_request, F_CIB_ISREPLY, host);
     }
