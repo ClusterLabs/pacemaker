@@ -1,5 +1,4 @@
-""" Test-specific classes for Pacemaker's Cluster Test Suite (CTS)
-"""
+""" Put a node into standby mode and check that resources migrate """
 
 __all__ = ["StandbyTest"]
 __copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
@@ -11,8 +10,20 @@ from pacemaker._cts.tests.starttest import StartTest
 
 
 class StandbyTest(CTSTest):
+    """ A concrete tests that puts a node into standby and checks that resources
+        migrate away from the node
+    """
+
     def __init__(self, cm):
-        CTSTest.__init__(self,cm)
+        """ Create a new StandbyTest instance
+
+            Arguments:
+
+            cm -- A ClusterManager instance
+        """
+
+        CTSTest.__init__(self, cm)
+
         self.name = "Standby"
         self.benchmark = True
 
@@ -23,9 +34,10 @@ class StandbyTest(CTSTest):
     # set the node to standby mode
     # check resources, none resource should be running on the node
     # set the node to active mode
-    # check resouces, resources should have been migrated back (SHOULD THEY?)
+    # check resources, resources should have been migrated back (SHOULD THEY?)
 
     def __call__(self, node):
+        """ Perform this test """
 
         self.incr("calls")
         ret = self._startall(None)
@@ -68,6 +80,7 @@ class StandbyTest(CTSTest):
         status = self._cm.StandbyStatus(node)
         if status != "on":
             return self.failure("standby status of %s is [%s] but we expect [on]" % (node, status))
+
         self.log_timer("on")
 
         self.debug("Checking resources")
@@ -88,6 +101,7 @@ class StandbyTest(CTSTest):
         status = self._cm.StandbyStatus(node)
         if status != "off":
             return self.failure("standby status of %s is [%s] but we expect [off]" % (node, status))
+
         self.log_timer("off")
 
         return self.success()
