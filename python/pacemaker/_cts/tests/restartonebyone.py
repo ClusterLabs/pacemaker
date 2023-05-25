@@ -8,6 +8,14 @@ from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.restarttest import RestartTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
 
+# Disable various pylint warnings that occur in so many places throughout this
+# file it's easiest to just take care of them globally.  This does introduce the
+# possibility that we'll miss some other cause of the same warning, but we'll
+# just have to be careful.
+
+# pylint doesn't understand that self._env is subscriptable.
+# pylint: disable=unsubscriptable-object
+
 
 class RestartOnebyOne(CTSTest):
     """ A concrete test that restarts all nodes in order """
@@ -23,6 +31,8 @@ class RestartOnebyOne(CTSTest):
         CTSTest.__init__(self, cm)
 
         self.name = "RestartOnebyOne"
+
+        self._restart = None
         self._startall = SimulStartLite(cm)
 
     def __call__(self, dummy):
@@ -36,10 +46,10 @@ class RestartOnebyOne(CTSTest):
 
         did_fail = []
         self.set_timer()
-        self.restart = RestartTest(self._cm)
+        self._restart = RestartTest(self._cm)
 
         for node in self._env["nodes"]:
-            if not self.restart(node):
+            if not self._restart(node):
                 did_fail.append(node)
 
         if did_fail:
