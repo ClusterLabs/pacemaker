@@ -22,11 +22,12 @@
 #include "crmcommon_private.h"
 
 /*
- * This file isolates handling of three types of name/value pairs:
+ * This file isolates handling of various kinds of name/value pairs:
  *
  * - pcmk_nvpair_t data type
  * - XML attributes (<TAG ... NAME=VALUE ...>)
  * - XML nvpair elements (<nvpair id=ID name=NAME value=VALUE>)
+ * - Meta-attributes (for resources and actions)
  */
 
 // pcmk_nvpair_t handling
@@ -915,6 +916,45 @@ pcmk__xe_attr_is_true(const xmlNode *node, const char *name)
 
     rc = pcmk__xe_get_bool_attr(node, name, &value);
     return rc == pcmk_rc_ok && value == true;
+}
+
+// Meta-attribute handling
+
+char *
+crm_meta_name(const char *field)
+{
+    int lpc = 0;
+    int max = 0;
+    char *crm_name = NULL;
+
+    CRM_CHECK(field != NULL, return NULL);
+    crm_name = crm_strdup_printf(CRM_META "_%s", field);
+
+    /* Massage the names so they can be used as shell variables */
+    max = strlen(crm_name);
+    for (; lpc < max; lpc++) {
+        switch (crm_name[lpc]) {
+            case '-':
+                crm_name[lpc] = '_';
+                break;
+        }
+    }
+    return crm_name;
+}
+
+const char *
+crm_meta_value(GHashTable * hash, const char *field)
+{
+    char *key = NULL;
+    const char *value = NULL;
+
+    key = crm_meta_name(field);
+    if (key) {
+        value = g_hash_table_lookup(hash, key);
+        free(key);
+    }
+
+    return value;
 }
 
 // Deprecated functions kept only for backward API compatibility

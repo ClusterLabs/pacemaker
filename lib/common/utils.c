@@ -423,43 +423,6 @@ pcmk__daemonize(const char *name, const char *pidfile)
     pcmk__open_devnull(O_WRONLY);   // stderr (fd 2)
 }
 
-char *
-crm_meta_name(const char *field)
-{
-    int lpc = 0;
-    int max = 0;
-    char *crm_name = NULL;
-
-    CRM_CHECK(field != NULL, return NULL);
-    crm_name = crm_strdup_printf(CRM_META "_%s", field);
-
-    /* Massage the names so they can be used as shell variables */
-    max = strlen(crm_name);
-    for (; lpc < max; lpc++) {
-        switch (crm_name[lpc]) {
-            case '-':
-                crm_name[lpc] = '_';
-                break;
-        }
-    }
-    return crm_name;
-}
-
-const char *
-crm_meta_value(GHashTable * hash, const char *field)
-{
-    char *key = NULL;
-    const char *value = NULL;
-
-    key = crm_meta_name(field);
-    if (key) {
-        value = g_hash_table_lookup(hash, key);
-        free(key);
-    }
-
-    return value;
-}
-
 #ifdef HAVE_UUID_UUID_H
 #  include <uuid/uuid.h>
 #endif

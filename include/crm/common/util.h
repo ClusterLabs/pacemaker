@@ -22,6 +22,7 @@
 #  include <crm/common/actions.h>
 #  include <crm/common/agents.h>
 #  include <crm/common/results.h>
+#  include <crm/common/nvpair.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -93,9 +94,6 @@ pcmk_all_flags_set(uint64_t flag_group, uint64_t flags_to_check)
  * \brief Convenience alias for pcmk_all_flags_set(), to check single flag
  */
 #define pcmk_is_set(g, f)   pcmk_all_flags_set((g), (f))
-
-char *crm_meta_name(const char *field);
-const char *crm_meta_value(GHashTable * hash, const char *field);
 
 char *crm_md5sum(const char *buffer);
 
