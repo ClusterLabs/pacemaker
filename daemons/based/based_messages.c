@@ -375,14 +375,12 @@ sync_our_cib(xmlNode * request, gboolean all)
     xmlNode *replace_request = NULL;
 
     CRM_CHECK(the_cib != NULL, return -EINVAL);
+    CRM_CHECK(all || (host != NULL), return -EINVAL);
 
     replace_request = cib_msg_copy(request);
     CRM_CHECK(replace_request != NULL, return -EINVAL);
 
     crm_debug("Syncing CIB to %s", all ? "all peers" : host);
-    if (all == FALSE && host == NULL) {
-        crm_log_xml_err(request, "bad sync");
-    }
 
     if (host != NULL) {
         crm_xml_add(replace_request, F_CIB_ISREPLY, host);
