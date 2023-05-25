@@ -9,6 +9,14 @@ from pacemaker._cts.tests.simulstartlite import SimulStartLite
 from pacemaker._cts.tests.simulstoplite import SimulStopLite
 from pacemaker._cts.tests.stoptest import StopTest
 
+# Disable various pylint warnings that occur in so many places throughout this
+# file it's easiest to just take care of them globally.  This does introduce the
+# possibility that we'll miss some other cause of the same warning, but we'll
+# just have to be careful.
+
+# pylint doesn't understand that self._env is subscriptable.
+# pylint: disable=unsubscriptable-object
+
 
 class PartialStart(CTSTest):
     """ A concrete test that interrupts a node before it's finished starting up """
@@ -24,23 +32,22 @@ class PartialStart(CTSTest):
         CTSTest.__init__(self, cm)
 
         self.name = "PartialStart"
-        self.stopall = SimulStopLite(cm)
 
         self._startall = SimulStartLite(cm)
         self._stop = StopTest(cm)
+        self._stopall = SimulStopLite(cm)
 
     def __call__(self, node):
         """ Perform this test """
 
         self.incr("calls")
 
-        ret = self.stopall(None)
+        ret = self._stopall(None)
         if not ret:
             return self.failure("Setup failed")
 
-        watchpats = []
-        watchpats.append("pacemaker-controld.*Connecting to .* cluster infrastructure")
-        watch = self.create_watch(watchpats, self._env["DeadTime"]+10)
+        watchpats = [ "pacemaker-controld.*Connecting to .* cluster infrastructure" ]
+        watch = self.create_watch(watchpats, self._env["DeadTime"] + 10)
         watch.set_watch()
 
         self._cm.StartaCMnoBlock(node)
