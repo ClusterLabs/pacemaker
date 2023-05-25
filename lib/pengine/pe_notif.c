@@ -612,7 +612,7 @@ collect_resource_data(const pcmk_resource_t *rsc, bool activity,
 
         if (!pcmk_is_set(op->flags, pcmk_action_optional)
             && (op->node != NULL)) {
-            enum action_tasks task = text2task(op->task);
+            enum action_tasks task = pcmk_parse_action(op->task);
 
             if ((task == pcmk_action_stop) && op->node->details->unclean) {
                 // Create anyway (additional noise if node can't be fenced)
@@ -809,7 +809,7 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
     GList *iter = NULL;
     pcmk_action_t *stop = NULL;
     pcmk_action_t *start = NULL;
-    enum action_tasks task = text2task(n_data->action);
+    enum action_tasks task = pcmk_parse_action(n_data->action);
 
     // If this is a clone, call recursively for each instance
     if (rsc->children != NULL) {
@@ -823,7 +823,7 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
 
         if (!pcmk_is_set(op->flags, pcmk_action_optional)
             && (op->node != NULL)) {
-            switch (text2task(op->task)) {
+            switch (pcmk_parse_action(op->task)) {
                 case pcmk_action_start:
                 case pcmk_action_stop:
                 case pcmk_action_promote:

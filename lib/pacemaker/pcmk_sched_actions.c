@@ -112,7 +112,7 @@ action_uuid_for_ordering(const char *first_uuid,
         goto done;
     }
 
-    first_task = text2task(first_task_str);
+    first_task = pcmk_parse_action(first_task_str);
     switch (first_task) {
         case pcmk_action_stop:
         case pcmk_action_start:
@@ -987,7 +987,7 @@ pcmk__log_action(const char *pre_text, const pcmk_action_t *action,
         }
     }
 
-    switch (text2task(action->task)) {
+    switch (pcmk_parse_action(action->task)) {
         case pcmk_action_fence:
         case pcmk_action_shutdown:
             if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {

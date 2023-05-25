@@ -83,6 +83,61 @@ pcmk_action_text(enum action_tasks action)
 }
 
 /*!
+ * \brief Parse an action type from an action name
+ *
+ * \param[in] action_name  Action name
+ *
+ * \return Action type corresponding to \p action_name
+ */
+enum action_tasks
+pcmk_parse_action(const char *action_name)
+{
+    if (pcmk__str_eq(action_name, PCMK_ACTION_STOP, pcmk__str_none)) {
+        return pcmk_action_stop;
+
+    } else if (pcmk__str_eq(action_name, PCMK_ACTION_STOPPED, pcmk__str_none)) {
+        return pcmk_action_stopped;
+
+    } else if (pcmk__str_eq(action_name, PCMK_ACTION_START, pcmk__str_none)) {
+        return pcmk_action_start;
+
+    } else if (pcmk__str_eq(action_name, PCMK_ACTION_RUNNING, pcmk__str_none)) {
+        return pcmk_action_started;
+
+    } else if (pcmk__str_eq(action_name, PCMK_ACTION_DO_SHUTDOWN,
+                            pcmk__str_none)) {
+        return pcmk_action_shutdown;
+
+    } else if (pcmk__str_eq(action_name, PCMK_ACTION_STONITH, pcmk__str_none)) {
+        return pcmk_action_fence;
+
+    } else if (pcmk__str_eq(action_name, PCMK_ACTION_MONITOR, pcmk__str_none)) {
+        return pcmk_action_monitor;
+
+    } else if (pcmk__str_eq(action_name, PCMK_ACTION_NOTIFY, pcmk__str_none)) {
+        return pcmk_action_notify;
+
+    } else if (pcmk__str_eq(action_name, PCMK_ACTION_NOTIFIED,
+                            pcmk__str_none)) {
+        return pcmk_action_notified;
+
+    } else if (pcmk__str_eq(action_name, PCMK_ACTION_PROMOTE, pcmk__str_none)) {
+        return pcmk_action_promote;
+
+    } else if (pcmk__str_eq(action_name, PCMK_ACTION_DEMOTE, pcmk__str_none)) {
+        return pcmk_action_demote;
+
+    } else if (pcmk__str_eq(action_name, PCMK_ACTION_PROMOTED,
+                            pcmk__str_none)) {
+        return pcmk_action_promoted;
+
+    } else if (pcmk__str_eq(action_name, PCMK_ACTION_DEMOTED, pcmk__str_none)) {
+        return pcmk_action_demoted;
+    }
+    return pcmk_action_unspecified;
+}
+
+/*!
  * \brief Generate an operation key (RESOURCE_ACTION_INTERVAL)
  *
  * \param[in] rsc_id       ID of resource being operated on
