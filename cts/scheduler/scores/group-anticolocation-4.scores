@@ -1,0 +1,23 @@
+
+pcmk__group_assign: group1 allocation score on node1: 0
+pcmk__group_assign: group1 allocation score on node2: 0
+pcmk__group_assign: group2 allocation score on node1: 0
+pcmk__group_assign: group2 allocation score on node2: 0
+pcmk__group_assign: member1a allocation score on node1: 0
+pcmk__group_assign: member1a allocation score on node2: 0
+pcmk__group_assign: member1b allocation score on node1: 0
+pcmk__group_assign: member1b allocation score on node2: 0
+pcmk__group_assign: member2a allocation score on node1: 0
+pcmk__group_assign: member2a allocation score on node2: 0
+pcmk__group_assign: member2b allocation score on node1: -INFINITY
+pcmk__group_assign: member2b allocation score on node2: 0
+pcmk__primitive_assign: Fencing allocation score on node1: 0
+pcmk__primitive_assign: Fencing allocation score on node2: 0
+pcmk__primitive_assign: member1a allocation score on node1: 0
+pcmk__primitive_assign: member1a allocation score on node2: 0
+pcmk__primitive_assign: member1b allocation score on node1: -INFINITY
+pcmk__primitive_assign: member1b allocation score on node2: 0
+pcmk__primitive_assign: member2a allocation score on node1: -INFINITY
+pcmk__primitive_assign: member2a allocation score on node2: 0
+pcmk__primitive_assign: member2b allocation score on node1: -INFINITY
+pcmk__primitive_assign: member2b allocation score on node2: 0
