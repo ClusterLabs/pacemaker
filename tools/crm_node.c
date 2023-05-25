@@ -23,7 +23,7 @@
 #include <crm/cib.h>
 #include <crm/cib/internal.h>
 #include <crm/common/ipc_controld.h>
-#include <crm/common/attrd_internal.h>
+#include <crm/common/attrs_internal.h>
 
 #include <pacemaker-internal.h>
 

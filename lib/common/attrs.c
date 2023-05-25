@@ -16,7 +16,7 @@
 #include <stdio.h>
 
 #include <crm/common/xml.h>
-#include <crm/common/attrd_internal.h>
+#include <crm/common/attrs_internal.h>
 
 #define OCF_RESKEY_PREFIX "OCF_RESKEY_"
 #define LRM_TARGET_ENV OCF_RESKEY_PREFIX CRM_META "_" PCMK__META_ON_NODE
