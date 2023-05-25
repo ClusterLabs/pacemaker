@@ -14,6 +14,7 @@ pkgpythondir = $(pythondir)/$(PACKAGE)/_cts/tests
 pkgpython_PYTHON = __init__.py \
 				   ctstest.py \
 				   fliptest.py \
+				   partialstart.py \
 				   remotedriver.py \
 				   restarttest.py \
 				   restartonebyone.py \
