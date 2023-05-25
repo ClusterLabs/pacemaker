@@ -144,9 +144,9 @@ action_uuid_for_ordering(const char *first_uuid,
         if (pcmk_is_set(first_rsc->flags, pcmk_rsc_notify)
             && (pcmk__is_clone(first_rsc) || pcmk__is_bundled(first_rsc))) {
             uuid = pcmk__notify_key(rid, "confirmed-post",
-                                    task2text(remapped_task));
+                                    pcmk_action_text(remapped_task));
         } else {
-            uuid = pcmk__op_key(rid, task2text(remapped_task), 0);
+            uuid = pcmk__op_key(rid, pcmk_action_text(remapped_task), 0);
         }
         pcmk__rsc_trace(first_rsc,
                         "Remapped action UUID %s to %s for ordering purposes",

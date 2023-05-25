@@ -106,54 +106,7 @@ text2task(const char *task)
 const char *
 task2text(enum action_tasks task)
 {
-    const char *result = "<unknown>";
-
-    switch (task) {
-        case pcmk_action_unspecified:
-            result = "no_action";
-            break;
-        case pcmk_action_stop:
-            result = PCMK_ACTION_STOP;
-            break;
-        case pcmk_action_stopped:
-            result = PCMK_ACTION_STOPPED;
-            break;
-        case pcmk_action_start:
-            result = PCMK_ACTION_START;
-            break;
-        case pcmk_action_started:
-            result = PCMK_ACTION_RUNNING;
-            break;
-        case pcmk_action_shutdown:
-            result = PCMK_ACTION_DO_SHUTDOWN;
-            break;
-        case pcmk_action_fence:
-            result = PCMK_ACTION_STONITH;
-            break;
-        case pcmk_action_monitor:
-            result = PCMK_ACTION_MONITOR;
-            break;
-        case pcmk_action_notify:
-            result = PCMK_ACTION_NOTIFY;
-            break;
-        case pcmk_action_notified:
-            result = PCMK_ACTION_NOTIFIED;
-            break;
-        case pcmk_action_promote:
-            result = PCMK_ACTION_PROMOTE;
-            break;
-        case pcmk_action_promoted:
-            result = PCMK_ACTION_PROMOTED;
-            break;
-        case pcmk_action_demote:
-            result = PCMK_ACTION_DEMOTE;
-            break;
-        case pcmk_action_demoted:
-            result = PCMK_ACTION_DEMOTED;
-            break;
-    }
-
-    return result;
+    return pcmk_action_text(task);
 }
 
 void

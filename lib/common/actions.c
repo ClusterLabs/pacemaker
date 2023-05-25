@@ -25,6 +25,62 @@
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include <crm/common/util.h>
+#include <crm/common/scheduler.h>
+
+/*!
+ * \brief Get string equivalent of an action type
+ *
+ * \param[in] action  Action type
+ *
+ * \return Static string describing \p action
+ */
+const char *
+pcmk_action_text(enum action_tasks action)
+{
+    switch (action) {
+        case pcmk_action_stop:
+            return PCMK_ACTION_STOP;
+
+        case pcmk_action_stopped:
+            return PCMK_ACTION_STOPPED;
+
+        case pcmk_action_start:
+            return PCMK_ACTION_START;
+
+        case pcmk_action_started:
+            return PCMK_ACTION_RUNNING;
+
+        case pcmk_action_shutdown:
+            return PCMK_ACTION_DO_SHUTDOWN;
+
+        case pcmk_action_fence:
+            return PCMK_ACTION_STONITH;
+
+        case pcmk_action_monitor:
+            return PCMK_ACTION_MONITOR;
+
+        case pcmk_action_notify:
+            return PCMK_ACTION_NOTIFY;
+
+        case pcmk_action_notified:
+            return PCMK_ACTION_NOTIFIED;
+
+        case pcmk_action_promote:
+            return PCMK_ACTION_PROMOTE;
+
+        case pcmk_action_promoted:
+            return PCMK_ACTION_PROMOTED;
+
+        case pcmk_action_demote:
+            return PCMK_ACTION_DEMOTE;
+
+        case pcmk_action_demoted:
+            return PCMK_ACTION_DEMOTED;
+
+        default: // pcmk_action_unspecified or invalid
+            return "no_action";
+    }
+}
 
 /*!
  * \brief Generate an operation key (RESOURCE_ACTION_INTERVAL)

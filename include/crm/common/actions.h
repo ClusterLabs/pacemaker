@@ -439,6 +439,8 @@ struct pe_action_s {
     void *action_details;               //!< For Pacemaker use only
 };
 
+const char *pcmk_action_text(enum action_tasks action);
+
 // For parsing various action-related string specifications
 gboolean parse_op_key(const char *key, char **rsc_id, char **op_type,
                       guint *interval_ms);
