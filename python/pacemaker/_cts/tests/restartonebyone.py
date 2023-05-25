@@ -1,5 +1,4 @@
-""" Test-specific classes for Pacemaker's Cluster Test Suite (CTS)
-"""
+""" Restart all nodes in order """
 
 __all__ = ["RestartOnebyOne"]
 __copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
@@ -11,19 +10,26 @@ from pacemaker._cts.tests.simulstartlite import SimulStartLite
 
 
 class RestartOnebyOne(CTSTest):
-    '''Restart all the nodes in order'''
+    """ A concrete test that restarts all nodes in order """
+
     def __init__(self, cm):
-        CTSTest.__init__(self,cm)
+        """ Create a new RestartOnebyOne instance
+
+            Arguments:
+
+            cm -- A ClusterManager instance
+        """
+
+        CTSTest.__init__(self, cm)
+
         self.name = "RestartOnebyOne"
         self._startall = SimulStartLite(cm)
 
     def __call__(self, dummy):
-        '''Perform the 'RestartOnebyOne' test. '''
+        """ Perform the test """
+
         self.incr("calls")
 
-        #     We ignore the "node" parameter...
-
-        #     Start up all the nodes...
         ret = self._startall(None)
         if not ret:
             return self.failure("Setup failed")
@@ -31,6 +37,7 @@ class RestartOnebyOne(CTSTest):
         did_fail = []
         self.set_timer()
         self.restart = RestartTest(self._cm)
+
         for node in self._env["nodes"]:
             if not self.restart(node):
                 did_fail.append(node)
@@ -38,4 +45,5 @@ class RestartOnebyOne(CTSTest):
         if did_fail:
             return self.failure("Could not restart %d nodes: %s"
                                 % (len(did_fail), repr(did_fail)))
+
         return self.success()
