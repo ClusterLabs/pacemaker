@@ -17,24 +17,6 @@
 #include <crm/common/scheduler_internal.h>
 #include <crm/pengine/internal.h>
 
-void
-add_hash_param(GHashTable * hash, const char *name, const char *value)
-{
-    CRM_CHECK(hash != NULL, return);
-
-    crm_trace("Adding name='%s' value='%s' to hash table",
-              pcmk__s(name, "<null>"), pcmk__s(value, "<null>"));
-    if (name == NULL || value == NULL) {
-        return;
-
-    } else if (pcmk__str_eq(value, "#default", pcmk__str_casei)) {
-        return;
-
-    } else if (g_hash_table_lookup(hash, name) == NULL) {
-        pcmk__insert_dup(hash, name, value);
-    }
-}
-
 /*!
  * \internal
  * \brief Look up an attribute value on the appropriate node
