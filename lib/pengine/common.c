@@ -103,12 +103,6 @@ text2task(const char *task)
     return pcmk_action_unspecified;
 }
 
-const char *
-task2text(enum action_tasks task)
-{
-    return pcmk_action_text(task);
-}
-
 void
 add_hash_param(GHashTable * hash, const char *name, const char *value)
 {
@@ -247,6 +241,12 @@ enum rsc_role_e
 text2role(const char *role)
 {
     return pcmk_parse_role(role);
+}
+
+const char *
+task2text(enum action_tasks task)
+{
+    return pcmk_action_text(task);
 }
 
 const char *
