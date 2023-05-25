@@ -1,5 +1,4 @@
-""" Test-specific classes for Pacemaker's Cluster Test Suite (CTS)
-"""
+""" Start a node and then tell it to stop before it is fully running """
 
 __all__ = ["PartialStart"]
 __copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
@@ -12,16 +11,27 @@ from pacemaker._cts.tests.stoptest import StopTest
 
 
 class PartialStart(CTSTest):
-    '''Start a node - but tell it to stop before it finishes starting up'''
+    """ A concrete test that interrupts a node before it's finished starting up """
+
     def __init__(self, cm):
-        CTSTest.__init__(self,cm)
+        """ Create a new PartialStart instance
+
+            Arguments:
+
+            cm -- A ClusterManager instance
+        """
+
+        CTSTest.__init__(self, cm)
+
         self.name = "PartialStart"
-        self._startall = SimulStartLite(cm)
         self.stopall = SimulStopLite(cm)
+
+        self._startall = SimulStartLite(cm)
         self._stop = StopTest(cm)
 
     def __call__(self, node):
-        '''Perform the 'PartialStart' test. '''
+        """ Perform this test """
+
         self.incr("calls")
 
         ret = self.stopall(None)
