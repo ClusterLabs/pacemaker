@@ -8,6 +8,14 @@ from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
 from pacemaker._cts.tests.stoptest import StopTest
 
+# Disable various pylint warnings that occur in so many places throughout this
+# file it's easiest to just take care of them globally.  This does introduce the
+# possibility that we'll miss some other cause of the same warning, but we'll
+# just have to be careful.
+
+# pylint doesn't understand that self._env is subscriptable.
+# pylint: disable=unsubscriptable-object
+
 
 class StopOnebyOne(CTSTest):
     """ A concrete test that stops all running nodes serially """
@@ -42,7 +50,7 @@ class StopOnebyOne(CTSTest):
             if not self._stop(node):
                 failed.append(node)
 
-        if len(failed) > 0:
+        if failed:
             return self.failure("Some node failed to stop: " + repr(failed))
 
         return self.success()
