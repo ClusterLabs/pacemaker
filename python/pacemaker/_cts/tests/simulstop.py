@@ -23,9 +23,9 @@ class SimulStop(CTSTest):
         CTSTest.__init__(self, cm)
 
         self.name = "SimulStop"
-        self.stopall = SimulStopLite(cm)
 
         self._startall = SimulStartLite(cm)
+        self._stopall = SimulStopLite(cm)
 
     def __call__(self, dummy):
         """ Perform this test """
@@ -36,7 +36,7 @@ class SimulStop(CTSTest):
         if not ret:
             return self.failure("Setup failed")
 
-        if not self.stopall(None):
+        if not self._stopall(None):
             return self.failure("Stopall failed")
 
         return self.success()
