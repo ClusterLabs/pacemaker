@@ -15,6 +15,7 @@ from pacemaker._cts.tests.simulstart import SimulStart
 from pacemaker._cts.tests.simulstop import SimulStop
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
 from pacemaker._cts.tests.simulstoplite import SimulStopLite
+from pacemaker._cts.tests.standbytest import StandbyTest
 from pacemaker._cts.tests.starttest import StartTest
 from pacemaker._cts.tests.startonebyone import StartOnebyOne
 from pacemaker._cts.tests.stonithdtest import StonithdTest

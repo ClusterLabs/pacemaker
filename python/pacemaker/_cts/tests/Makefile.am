@@ -22,6 +22,7 @@ pkgpython_PYTHON = __init__.py \
 				   simulstop.py \
 				   simulstartlite.py \
 				   simulstoplite.py \
+				   standbytest.py \
 				   startonebyone.py \
 				   starttest.py \
 				   stonithdtest.py \
