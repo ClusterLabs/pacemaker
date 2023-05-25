@@ -134,7 +134,6 @@ int cib_process_upgrade_server(const char *op, int options, const char *section,
 void send_sync_request(const char *host);
 int sync_our_cib(xmlNode *request, gboolean all);
 
-xmlNode *cib_msg_copy(xmlNode *msg);
 int cib_get_operation(const char *op, const cib_operation_t **operation);
 void cib_diff_notify(const char *op, int result, const char *call_id,
                      const char *client_id, const char *client_name,
