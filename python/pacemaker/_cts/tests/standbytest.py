@@ -8,6 +8,14 @@ from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
 from pacemaker._cts.tests.starttest import StartTest
 
+# Disable various pylint warnings that occur in so many places throughout this
+# file it's easiest to just take care of them globally.  This does introduce the
+# possibility that we'll miss some other cause of the same warning, but we'll
+# just have to be careful.
+
+# pylint doesn't understand that self._env is subscriptable.
+# pylint: disable=unsubscriptable-object
+
 
 class StandbyTest(CTSTest):
     """ A concrete tests that puts a node into standby and checks that resources
@@ -24,8 +32,8 @@ class StandbyTest(CTSTest):
 
         CTSTest.__init__(self, cm)
 
-        self.name = "Standby"
         self.benchmark = True
+        self.name = "Standby"
 
         self._start = StartTest(cm)
         self._startall = SimulStartLite(cm)
@@ -55,11 +63,7 @@ class StandbyTest(CTSTest):
         if status != "off":
             return self.failure("standby status of %s is [%s] but we expect [off]" % (node, status))
 
-        self.debug("Getting resources running on node %s" % node)
-        rsc_on_node = self._cm.active_resources(node)
-
-        watchpats = []
-        watchpats.append(r"State transition .* -> S_POLICY_ENGINE")
+        watchpats = [ r"State transition .* -> S_POLICY_ENGINE" ]
         watch = self.create_watch(watchpats, self._env["DeadTime"]+10)
         watch.set_watch()
 
@@ -84,9 +88,9 @@ class StandbyTest(CTSTest):
         self.log_timer("on")
 
         self.debug("Checking resources")
-        bad_run = self._cm.active_resources(node)
-        if len(bad_run) > 0:
-            rc = self.failure("%s set to standby, %s is still running on it" % (node, repr(bad_run)))
+        rscs_on_node = self._cm.active_resources(node)
+        if rscs_on_node:
+            rc = self.failure("%s set to standby, %s is still running on it" % (node, repr(rscs_on_node)))
             self.debug("Setting node %s to active mode" % node)
             self._cm.SetStandbyMode(node, "off")
             return rc
