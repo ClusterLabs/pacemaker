@@ -19,8 +19,6 @@
 extern "C" {
 #endif
 
-const char *fail2text(enum action_fail_response fail);
-
 typedef struct pe_re_match_data {
     char *string;
     int nregs;

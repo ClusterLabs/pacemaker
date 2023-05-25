@@ -18,12 +18,6 @@
 #include <crm/common/scheduler_internal.h>
 #include <crm/pengine/internal.h>
 
-const char *
-fail2text(enum action_fail_response fail)
-{
-    return pcmk_on_fail_text(fail);
-}
-
 void
 add_hash_param(GHashTable * hash, const char *name, const char *value)
 {
@@ -180,6 +174,12 @@ const char *
 pe_pref(GHashTable * options, const char *name)
 {
     return pcmk__cluster_option(options, name);
+}
+
+const char *
+fail2text(enum action_fail_response fail)
+{
+    return pcmk_on_fail_text(fail);
 }
 
 // LCOV_EXCL_STOP
