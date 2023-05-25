@@ -37,39 +37,6 @@ AllTestClasses.append(StartOnebyOne)
 AllTestClasses.append(SimulStart)
 AllTestClasses.append(SimulStop)
 AllTestClasses.append(StopOnebyOne)
-
-
-class RestartOnebyOne(CTSTest):
-    '''Restart all the nodes in order'''
-    def __init__(self, cm):
-        CTSTest.__init__(self,cm)
-        self.name = "RestartOnebyOne"
-        self._startall = SimulStartLite(cm)
-
-    def __call__(self, dummy):
-        '''Perform the 'RestartOnebyOne' test. '''
-        self.incr("calls")
-
-        #     We ignore the "node" parameter...
-
-        #     Start up all the nodes...
-        ret = self._startall(None)
-        if not ret:
-            return self.failure("Setup failed")
-
-        did_fail = []
-        self.set_timer()
-        self.restart = RestartTest(self._cm)
-        for node in self._env["nodes"]:
-            if not self.restart(node):
-                did_fail.append(node)
-
-        if did_fail:
-            return self.failure("Could not restart %d nodes: %s"
-                                % (len(did_fail), repr(did_fail)))
-        return self.success()
-
-#     Register StopOnebyOne as a good test to run
 AllTestClasses.append(RestartOnebyOne)
 
 
