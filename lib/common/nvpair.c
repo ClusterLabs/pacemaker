@@ -920,26 +920,31 @@ pcmk__xe_attr_is_true(const xmlNode *node, const char *name)
 
 // Meta-attribute handling
 
+/*!
+ * \brief Get the environment variable equivalent of a meta-attribute name
+ *
+ * \param[in] attr_name  Name of meta-attribute
+ *
+ * \return Newly allocated string for \p attr_name with "CRM_meta_" prefix and
+ *         underbars instead of dashes
+ * \note This asserts on an invalid argument or memory allocation error, so
+ *       callers can assume the result is non-NULL. The caller is responsible
+ *       for freeing the result using free().
+ */
 char *
-crm_meta_name(const char *field)
+crm_meta_name(const char *attr_name)
 {
-    int lpc = 0;
-    int max = 0;
-    char *crm_name = NULL;
+    char *env_name = NULL;
 
-    CRM_CHECK(field != NULL, return NULL);
-    crm_name = crm_strdup_printf(CRM_META "_%s", field);
+    CRM_ASSERT(!pcmk__str_empty(attr_name));
 
-    /* Massage the names so they can be used as shell variables */
-    max = strlen(crm_name);
-    for (; lpc < max; lpc++) {
-        switch (crm_name[lpc]) {
-            case '-':
-                crm_name[lpc] = '_';
-                break;
+    env_name = crm_strdup_printf(CRM_META "_%s", attr_name);
+    for (char *c = env_name; *c != '\0'; ++c) {
+        if (*c == '-') {
+            *c = '_';
         }
     }
-    return crm_name;
+    return env_name;
 }
 
 const char *
@@ -948,6 +953,9 @@ crm_meta_value(GHashTable * hash, const char *field)
     char *key = NULL;
     const char *value = NULL;
 
+    if (field == NULL) {
+        return NULL;
+    }
     key = crm_meta_name(field);
     if (key) {
         value = g_hash_table_lookup(hash, key);
