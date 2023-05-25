@@ -494,7 +494,7 @@ report_remote_ra_result(remote_ra_cmd_t * cmd)
 
         op.params = pcmk__strkey_table(free, free);
         for (tmp = cmd->params; tmp; tmp = tmp->next) {
-            g_hash_table_insert(op.params, strdup(tmp->key), strdup(tmp->value));
+            pcmk__insert_dup(op.params, tmp->key, tmp->value);
         }
 
     }

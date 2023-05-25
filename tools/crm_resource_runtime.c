@@ -1077,7 +1077,7 @@ generate_resource_params(pcmk_resource_t *rsc, pcmk_node_t *node,
     if (params != NULL) {
         g_hash_table_iter_init(&iter, params);
         while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
-            g_hash_table_insert(combined, strdup(key), strdup(value));
+            pcmk__insert_dup(combined, key, value);
         }
     }
 
@@ -1969,8 +1969,7 @@ set_agent_environment(GHashTable *params, int timeout_ms, int check_level,
     g_hash_table_insert(params, crm_meta_name(PCMK_META_TIMEOUT),
                         crm_strdup_printf("%d", timeout_ms));
 
-    g_hash_table_insert(params, strdup(PCMK_XA_CRM_FEATURE_SET),
-                        strdup(CRM_FEATURE_SET));
+    pcmk__insert_dup(params, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
 
     if (check_level >= 0) {
         char *level = crm_strdup_printf("%d", check_level);
@@ -2009,7 +2008,7 @@ apply_overrides(GHashTable *params, GHashTable *overrides)
         g_hash_table_iter_init(&iter, overrides);
         while (g_hash_table_iter_next(&iter, (gpointer *) &name,
                                       (gpointer *) &value)) {
-            g_hash_table_replace(params, strdup(name), strdup(value));
+            pcmk__insert_dup(params, name, value);
         }
     }
 }

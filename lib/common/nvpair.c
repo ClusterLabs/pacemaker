@@ -855,7 +855,7 @@ xml2list(const xmlNode *parent)
 
         crm_trace("Added %s=%s", p_name, p_value);
 
-        g_hash_table_insert(nvpair_hash, strdup(p_name), strdup(p_value));
+        pcmk__insert_dup(nvpair_hash, p_name, p_value);
     }
 
     for (child = pcmk__xml_first_child(nvpair_list); child != NULL;
@@ -867,7 +867,7 @@ xml2list(const xmlNode *parent)
 
             crm_trace("Added %s=%s", key, value);
             if (key != NULL && value != NULL) {
-                g_hash_table_insert(nvpair_hash, strdup(key), strdup(value));
+                pcmk__insert_dup(nvpair_hash, key, value);
             }
         }
     }

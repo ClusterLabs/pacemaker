@@ -111,7 +111,7 @@ get_envvars_from_cib(xmlNode *basenode, pcmk__alert_t *entry)
         if (value == NULL) {
             value = "";
         }
-        g_hash_table_insert(entry->envvars, strdup(name), strdup(value));
+        pcmk__insert_dup(entry->envvars, name, value);
         crm_trace("Alert %s: added environment variable %s='%s'",
                   entry->id, name, value);
     }

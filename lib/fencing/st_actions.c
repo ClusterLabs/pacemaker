@@ -100,8 +100,7 @@ append_config_arg(gpointer key, gpointer value, gpointer user_data)
 
         crm_trace("Passing %s=%s with fence action",
                   (const char *) key, (const char *) (value? value : ""));
-        g_hash_table_insert((GHashTable *) user_data,
-                            strdup(key), strdup(value? value : ""));
+        pcmk__insert_dup((GHashTable *) user_data, key, pcmk__s(value, ""));
     }
 }
 
@@ -143,8 +142,7 @@ make_args(const char *agent, const char *action, const char *target,
             action = value;
         }
     }
-    g_hash_table_insert(arg_list, strdup(STONITH_ATTR_ACTION_OP),
-                        strdup(action));
+    pcmk__insert_dup(arg_list, STONITH_ATTR_ACTION_OP, action);
 
     /* If this is a fencing operation against another node, add more standard
      * arguments.
@@ -155,7 +153,7 @@ make_args(const char *agent, const char *action, const char *target,
         /* Always pass the target's name, per
          * https://github.com/ClusterLabs/fence-agents/blob/main/doc/FenceAgentAPI.md
          */
-        g_hash_table_insert(arg_list, strdup("nodename"), strdup(target));
+        pcmk__insert_dup(arg_list, "nodename", target);
 
         // If the target's node ID was specified, pass it, too
         if (target_nodeid != 0) {
@@ -195,7 +193,7 @@ make_args(const char *agent, const char *action, const char *target,
                 }
                 crm_debug("Passing %s='%s' with fence action %s targeting %s",
                           param, alias, action, pcmk__s(target, "no node"));
-                g_hash_table_insert(arg_list, strdup(param), strdup(alias));
+                pcmk__insert_dup(arg_list, param, alias);
             }
         }
     }

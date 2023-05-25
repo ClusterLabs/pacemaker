@@ -806,9 +806,7 @@ add_replica_actions_to_graph(pcmk__bundle_replica_t *replica, void *user_data)
             GHashTable *params = pe_rsc_params(replica->remote,
                                                NULL, replica->remote->cluster);
 
-            g_hash_table_replace(params,
-                                 strdup(PCMK_REMOTE_RA_ADDR),
-                                 strdup(calculated_addr));
+            pcmk__insert_dup(params, PCMK_REMOTE_RA_ADDR, calculated_addr);
         } else {
             pcmk_resource_t *bundle = user_data;
 

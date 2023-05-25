@@ -983,7 +983,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
                 if (stopped == NULL) {
                     stopped = pcmk__strkey_table(free, free);
                 }
-                g_hash_table_insert(stopped, strdup(child_rsc->id), strdup("Stopped"));
+                pcmk__insert_dup(stopped, child_rsc->id, "Stopped");
             }
 
         } else if (is_set_recursive(child_rsc, pcmk_rsc_removed, TRUE)
@@ -1153,8 +1153,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
                         g_hash_table_insert(stopped, strdup(node->details->uname),
                                             crm_strdup_printf("Stopped (%s)", services_ocf_exitcode_str(rc)));
                     } else {
-                        g_hash_table_insert(stopped, strdup(node->details->uname),
-                                            strdup(state));
+                        pcmk__insert_dup(stopped, node->details->uname, state);
                     }
                 }
             }

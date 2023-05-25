@@ -803,8 +803,8 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         /* A bundle's #kind is closer to "container" (guest node) than the
          * "remote" set by pe_create_node().
          */
-        g_hash_table_insert(replica->node->details->attrs,
-                            strdup(CRM_ATTR_KIND), strdup("container"));
+        pcmk__insert_dup(replica->node->details->attrs,
+                         CRM_ATTR_KIND, "container");
 
         /* One effect of this is that setup_container() will add
          * replica->remote to replica->container's fillers, which will make
@@ -1260,12 +1260,11 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         bundle_data->container_host_options = g_string_free(buffer, FALSE);
 
         if (bundle_data->attribute_target) {
-            g_hash_table_replace(rsc->meta,
-                                 strdup(PCMK_META_CONTAINER_ATTRIBUTE_TARGET),
-                                 strdup(bundle_data->attribute_target));
-            g_hash_table_replace(bundle_data->child->meta,
-                                 strdup(PCMK_META_CONTAINER_ATTRIBUTE_TARGET),
-                                 strdup(bundle_data->attribute_target));
+            pcmk__insert_dup(rsc->meta, PCMK_META_CONTAINER_ATTRIBUTE_TARGET,
+                             bundle_data->attribute_target);
+            pcmk__insert_dup(bundle_data->child->meta,
+                             PCMK_META_CONTAINER_ATTRIBUTE_TARGET,
+                             bundle_data->attribute_target);
         }
 
     } else {

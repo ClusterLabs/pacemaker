@@ -424,8 +424,7 @@ detect_promotable(pcmk_resource_t *rsc)
         /* @TODO in some future version, pcmk__warn_once() here,
          *       then drop support in even later version
          */
-        g_hash_table_insert(rsc->meta, strdup(PCMK_META_PROMOTABLE),
-                            strdup(PCMK_VALUE_TRUE));
+        pcmk__insert_dup(rsc->meta, PCMK_META_PROMOTABLE, PCMK_VALUE_TRUE);
         return TRUE;
     }
     return FALSE;

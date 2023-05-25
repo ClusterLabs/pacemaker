@@ -709,7 +709,6 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
 {
     GHashTable *meta = NULL;
     char *name = NULL;
-    char *value = NULL;
     const char *timeout_spec = NULL;
     const char *str = NULL;
 
@@ -755,10 +754,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
                                 "Setting default timeout for %s probe to "
                                 "most frequent monitor's timeout '%s'",
                                 rsc->id, timeout_spec);
-                name = strdup(PCMK_META_TIMEOUT);
-                value = strdup(timeout_spec);
-                CRM_ASSERT((name != NULL) && (value != NULL));
-                g_hash_table_insert(meta, name, value);
+                pcmk__insert_dup(meta, PCMK_META_TIMEOUT, timeout_spec);
             }
         }
     }
@@ -774,11 +770,8 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
          */
         for (xmlAttrPtr attr = action_config->properties;
              attr != NULL; attr = attr->next) {
-            name = strdup((const char *) attr->name);
-            value = strdup(pcmk__xml_attr_value(attr));
-
-            CRM_ASSERT((name != NULL) && (value != NULL));
-            g_hash_table_insert(meta, name, value);
+            pcmk__insert_dup(meta, (const char *) attr->name,
+                             pcmk__xml_attr_value(attr));
         }
     }
 
@@ -788,8 +781,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
     if (interval_ms > 0) {
         name = strdup(PCMK_META_INTERVAL);
         CRM_ASSERT(name != NULL);
-        value = crm_strdup_printf("%u", interval_ms);
-        g_hash_table_insert(meta, name, value);
+        g_hash_table_insert(meta, name, crm_strdup_printf("%u", interval_ms));
     } else {
         g_hash_table_remove(meta, PCMK_META_INTERVAL);
     }
@@ -818,10 +810,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
                             "Setting timeout for %s %s to "
                             "pcmk_monitor_timeout (%s)",
                             rsc->id, action_name, timeout_spec);
-            name = strdup(PCMK_META_TIMEOUT);
-            value = strdup(timeout_spec);
-            CRM_ASSERT((name != NULL) && (value != NULL));
-            g_hash_table_insert(meta, name, value);
+            pcmk__insert_dup(meta, PCMK_META_TIMEOUT, timeout_spec);
         }
     }
 

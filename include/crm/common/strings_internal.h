@@ -52,6 +52,7 @@ GHashTable *pcmk__strkey_table(GDestroyNotify key_destroy_func,
 GHashTable *pcmk__strikey_table(GDestroyNotify key_destroy_func,
                                 GDestroyNotify value_destroy_func);
 GHashTable *pcmk__str_table_dup(GHashTable *old_table);
+void pcmk__insert_dup(GHashTable *table, const char *name, const char *value);
 
 /*!
  * \internal

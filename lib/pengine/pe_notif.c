@@ -253,8 +253,7 @@ copy_meta_to_notify(gpointer key, gpointer value, gpointer user_data)
         return;
     }
 
-    g_hash_table_insert(notify->meta, strdup((const char *) key),
-                        strdup((const char *) value));
+    pcmk__insert_dup(notify->meta, (const char *) key, (const char *) value);
 }
 
 static void
