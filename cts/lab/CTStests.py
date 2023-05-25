@@ -35,33 +35,6 @@ AllTestClasses.append(RestartTest)
 AllTestClasses.append(StonithdTest)
 AllTestClasses.append(StartOnebyOne)
 AllTestClasses.append(SimulStart)
-
-
-class SimulStop(CTSTest):
-    '''Stop all the nodes ~ simultaneously'''
-    def __init__(self, cm):
-        CTSTest.__init__(self,cm)
-        self.name = "SimulStop"
-        self._startall = SimulStartLite(cm)
-        self.stopall = SimulStopLite(cm)
-
-    def __call__(self, dummy):
-        '''Perform the 'SimulStop' test. '''
-        self.incr("calls")
-
-        #     We ignore the "node" parameter...
-
-        #     Start up all the nodes...
-        ret = self._startall(None)
-        if not ret:
-            return self.failure("Setup failed")
-
-        if not self.stopall(None):
-            return self.failure("Stopall failed")
-
-        return self.success()
-
-#     Register SimulStop as a good test to run
 AllTestClasses.append(SimulStop)
 
 

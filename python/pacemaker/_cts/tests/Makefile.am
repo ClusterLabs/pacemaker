@@ -17,6 +17,7 @@ pkgpython_PYTHON = __init__.py \
 				   remotedriver.py \
 				   restarttest.py \
 				   simulstart.py \
+				   simulstop.py \
 				   simulstartlite.py \
 				   simulstoplite.py \
 				   startonebyone.py \
