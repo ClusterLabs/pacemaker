@@ -688,7 +688,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     value = crm_element_value((*rsc)->xml, PCMK__META_CLONE);
     if (value) {
         (*rsc)->id = crm_strdup_printf("%s:%s", id, value);
-        add_hash_param((*rsc)->meta, PCMK__META_CLONE, value);
+        pcmk__insert_meta(*rsc, PCMK__META_CLONE, value);
 
     } else {
         (*rsc)->id = strdup(id);

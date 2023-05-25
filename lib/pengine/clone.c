@@ -285,7 +285,7 @@ pe__create_clone_child(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         pe__set_resource_flags_recursive(child_rsc, pcmk_rsc_removed);
     }
 
-    add_hash_param(child_rsc->meta, PCMK_META_CLONE_MAX, inc_max);
+    pcmk__insert_meta(child_rsc, PCMK_META_CLONE_MAX, inc_max);
     pcmk__rsc_trace(rsc, "Added %s instance %s", rsc->id, child_rsc->id);
 
   bail:
@@ -412,15 +412,15 @@ clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
      * for no benefit in situations when pre-allocation is not appropriate
      */
     if (g_hash_table_lookup(rsc->meta, PCMK_META_RESOURCE_STICKINESS) == NULL) {
-        add_hash_param(rsc->meta, PCMK_META_RESOURCE_STICKINESS, "1");
+        pcmk__insert_meta(rsc, PCMK_META_RESOURCE_STICKINESS, "1");
     }
 
     /* This ensures that the PCMK_META_GLOBALLY_UNIQUE value always exists for
      * children to inherit when being unpacked, as well as in resource agents'
      * environment.
      */
-    add_hash_param(rsc->meta, PCMK_META_GLOBALLY_UNIQUE,
-                   pcmk__flag_text(rsc->flags, pcmk_rsc_unique));
+    pcmk__insert_meta(rsc, PCMK_META_GLOBALLY_UNIQUE,
+                      pcmk__flag_text(rsc->flags, pcmk_rsc_unique));
 
     if (clone_data->clone_max <= 0) {
         /* Create one child instance so that unpack_find_resource() will hook up

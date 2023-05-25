@@ -843,7 +843,7 @@ create_replica_resources(pcmk_resource_t *parent,
     }
 
     if ((replica->child != NULL) && (replica->ipaddr != NULL)) {
-        add_hash_param(replica->child->meta, "external-ip", replica->ipaddr);
+        pcmk__insert_meta(replica->child, "external-ip", replica->ipaddr);
     }
 
     if (replica->remote != NULL) {

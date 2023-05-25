@@ -1291,11 +1291,10 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
         stonith_op = custom_action(NULL, op_key, PCMK_ACTION_STONITH, node,
                                    TRUE, scheduler);
 
-        add_hash_param(stonith_op->meta, PCMK__META_ON_NODE,
-                       node->details->uname);
-        add_hash_param(stonith_op->meta, PCMK__META_ON_NODE_UUID,
-                       node->details->id);
-        add_hash_param(stonith_op->meta, PCMK__META_STONITH_ACTION, op);
+        pcmk__insert_meta(stonith_op, PCMK__META_ON_NODE, node->details->uname);
+        pcmk__insert_meta(stonith_op, PCMK__META_ON_NODE_UUID,
+                          node->details->id);
+        pcmk__insert_meta(stonith_op, PCMK__META_STONITH_ACTION, op);
 
         if (pcmk_is_set(scheduler->flags, pcmk_sched_enable_unfencing)) {
             /* Extra work to detect device changes
@@ -1872,7 +1871,7 @@ pe__new_rsc_pseudo_action(pcmk_resource_t *rsc, const char *task, bool optional,
  * \param[in,out] action           Action to add expected result to
  * \param[in]     expected_result  Expected result to add
  *
- * \note This is more efficient than calling add_hash_param().
+ * \note This is more efficient than calling pcmk__insert_meta().
  */
 void
 pe__add_action_expected_result(pcmk_action_t *action, int expected_result)
