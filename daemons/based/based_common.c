@@ -201,7 +201,7 @@ static const cib_operation_t cib_server_ops[] = {
     },
     {
         PCMK__CIB_REQUEST_SECONDARY,
-        cib_op_attr_privileged,
+        cib_op_attr_privileged|cib_op_attr_local,
         cib_prepare_none, cib_cleanup_none, cib_process_readwrite
     },
     {
@@ -216,7 +216,7 @@ static const cib_operation_t cib_server_ops[] = {
     },
     {
         PCMK__CIB_REQUEST_PRIMARY,
-        cib_op_attr_modifies|cib_op_attr_privileged,
+        cib_op_attr_modifies|cib_op_attr_privileged|cib_op_attr_local,
         cib_prepare_data, cib_cleanup_data, cib_process_readwrite
     },
     {

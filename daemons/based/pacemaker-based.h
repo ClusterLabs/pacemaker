@@ -52,6 +52,7 @@ enum cib_op_attr {
     cib_op_attr_none       = 0,         //!< No special attributes
     cib_op_attr_modifies   = (1 << 1),  //!< Modifies CIB
     cib_op_attr_privileged = (1 << 2),  //!< Requires privileges
+    cib_op_attr_local      = (1 << 3),  //!< Must only be processed locally
 };
 
 typedef struct cib_operation_s {

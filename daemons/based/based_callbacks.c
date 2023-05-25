@@ -573,26 +573,29 @@ parse_local_options_v2(const pcmk__client_t *cib_client,
                        gboolean *needs_reply, gboolean *process,
                        gboolean *needs_forward)
 {
-    if (pcmk_is_set(operation->flags, cib_op_attr_modifies)) {
-        if (pcmk__str_any_of(op, PCMK__CIB_REQUEST_PRIMARY,
-                             PCMK__CIB_REQUEST_SECONDARY, NULL)) {
-            /* Always handle these locally */
-            *process = TRUE;
-            *needs_reply = FALSE;
-            *local_notify = TRUE;
-            *needs_forward = FALSE;
-            return;
+    if (pcmk_is_set(operation->flags, cib_op_attr_local)) {
+        /* Always process locally.
+         *
+         * @COMPAT: Currently host is ignored. At a compatibility break, throw
+         * an error (from cib_process_request() or earlier) if host is not NULL or
+         * OUR_NODENAME.
+         */
+        *process = TRUE;
+        *needs_reply = FALSE;
+        *local_notify = TRUE;
+        *needs_forward = FALSE;
+        return;
+    }
 
-        } else {
-            /* Redirect all other updates via CPG */
-            *needs_reply = TRUE;
-            *needs_forward = TRUE;
-            *process = FALSE;
-            crm_trace("%s op from %s needs to be forwarded to %s",
-                      op, pcmk__client_name(cib_client),
-                      pcmk__s(host, "all nodes"));
-            return;
-        }
+    if (pcmk_is_set(operation->flags, cib_op_attr_modifies)) {
+        // Forward via cluster if cib_op_attr_local was not set
+        *needs_reply = TRUE;
+        *needs_forward = TRUE;
+        *process = FALSE;
+        crm_trace("%s op from %s needs to be forwarded to %s",
+                  op, pcmk__client_name(cib_client),
+                  pcmk__s(host, "all nodes"));
+        return;
     }
 
     *process = TRUE;
