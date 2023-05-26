@@ -1248,7 +1248,6 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     xmlNode *input = NULL;
     xmlNode *output = NULL;
     xmlNode *result_cib = NULL;
-    xmlNode *current_cib = NULL;
 
     int call_options = 0;
 
@@ -1284,7 +1283,6 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
 
     *reply = NULL;
     *cib_diff = NULL;
-    current_cib = the_cib;
 
     /* Start processing the request... */
     op = crm_element_value(request, F_CIB_OPERATION);
@@ -1310,7 +1308,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
 
     if (!pcmk_is_set(operation->flags, cib_op_attr_modifies)) {
         rc = cib_perform_op(op, call_options, operation->fn, TRUE, section,
-                            request, input, FALSE, &config_changed, current_cib,
+                            request, input, FALSE, &config_changed, the_cib,
                             &result_cib, NULL, &output);
 
         CRM_CHECK(result_cib == NULL, free_xml(result_cib));
@@ -1359,11 +1357,11 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         && pcmk__str_eq(op, PCMK__CIB_REQUEST_REPLACE, pcmk__str_none)) {
 
         current_nodes_digest = calculate_section_digest(XPATH_NODES,
-                                                        current_cib);
+                                                        the_cib);
         current_alerts_digest = calculate_section_digest(XPATH_ALERTS,
-                                                         current_cib);
+                                                         the_cib);
         current_status_digest = calculate_section_digest(XPATH_STATUS,
-                                                         current_cib);
+                                                         the_cib);
         crm_trace("current-digest %s:%s:%s", current_nodes_digest,
                   current_alerts_digest, current_status_digest);
     }
@@ -1371,7 +1369,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     // result_cib must not be modified after cib_perform_op() returns
     rc = cib_perform_op(op, call_options, operation->fn, FALSE, section,
                         request, input, manage_counters, &config_changed,
-                        current_cib, &result_cib, cib_diff, &output);
+                        the_cib, &result_cib, cib_diff, &output);
 
     // @COMPAT: Legacy code
     if (!manage_counters) {
@@ -1400,14 +1398,16 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
 
     if (rc == pcmk_ok && !pcmk_is_set(call_options, cib_dryrun)) {
         crm_trace("Activating %s->%s%s%s",
-                  crm_element_value(current_cib, XML_ATTR_NUMUPDATES),
+                  crm_element_value(the_cib, XML_ATTR_NUMUPDATES),
                   crm_element_value(result_cib, XML_ATTR_NUMUPDATES),
                   (pcmk_is_set(call_options, cib_zero_copy)? " zero-copy" : ""),
                   (config_changed? " changed" : ""));
+
         if (!pcmk_is_set(call_options, cib_zero_copy)) {
             rc = activateCibXml(result_cib, config_changed, op);
-            crm_trace("Activated %s (%d)",
-                      crm_element_value(current_cib, XML_ATTR_NUMUPDATES), rc);
+            if (rc != pcmk_ok) {
+                crm_err("Failed to activate new CIB: %s", pcmk_strerror(rc));
+            }
         }
 
         if ((rc == pcmk_ok) && contains_config_change(*cib_diff)) {
