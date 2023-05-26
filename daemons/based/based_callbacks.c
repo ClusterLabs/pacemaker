@@ -573,53 +573,56 @@ parse_local_options_v2(const pcmk__client_t *cib_client,
                        gboolean *needs_reply, gboolean *process,
                        gboolean *needs_forward)
 {
+    // Process locally and notify local client
+    *process = TRUE;
+    *needs_reply = FALSE;
+    *local_notify = TRUE;
+    *needs_forward = FALSE;
+
     if (pcmk_is_set(operation->flags, cib_op_attr_local)) {
-        /* Always process locally.
+        /* Always process locally if cib_op_attr_local is set.
          *
          * @COMPAT: Currently host is ignored. At a compatibility break, throw
          * an error (from cib_process_request() or earlier) if host is not NULL or
          * OUR_NODENAME.
          */
-        *process = TRUE;
-        *needs_reply = FALSE;
-        *local_notify = TRUE;
-        *needs_forward = FALSE;
+        crm_trace("Processing always-local %s op from client %s",
+                  op, pcmk__client_name(cib_client));
+
+        if (!pcmk__str_eq(host, OUR_NODENAME,
+                          pcmk__str_casei|pcmk__str_null_matches)) {
+
+            crm_warn("Operation '%s' is always local but its target host is "
+                     "set to '%s'",
+                     op, host);
+        }
         return;
     }
 
-    if (pcmk_is_set(operation->flags, cib_op_attr_modifies)) {
-        // Forward via cluster if cib_op_attr_local was not set
-        *needs_reply = TRUE;
-        *needs_forward = TRUE;
+    if (pcmk_is_set(operation->flags, cib_op_attr_modifies)
+        || !pcmk__str_eq(host, OUR_NODENAME,
+                         pcmk__str_casei|pcmk__str_null_matches)) {
+
+        // Forward modifying and non-local requests via cluster
         *process = FALSE;
+        *needs_reply = FALSE;
+        *local_notify = FALSE;
+        *needs_forward = TRUE;
+
         crm_trace("%s op from %s needs to be forwarded to %s",
                   op, pcmk__client_name(cib_client),
                   pcmk__s(host, "all nodes"));
         return;
     }
 
-    *process = TRUE;
-    *needs_reply = FALSE;
-    *local_notify = TRUE;
-    *needs_forward = FALSE;
-
     if (stand_alone) {
         crm_trace("Processing %s op from client %s (stand-alone)",
                   op, pcmk__client_name(cib_client));
 
-    } else if (host == NULL) {
-        crm_trace("Processing unaddressed %s op from client %s",
-                  op, pcmk__client_name(cib_client));
-
-    } else if (pcmk__str_eq(host, OUR_NODENAME, pcmk__str_casei)) {
-        crm_trace("Processing locally addressed %s op from client %s",
-                  op, pcmk__client_name(cib_client));
-
     } else {
-        crm_trace("%s op from %s needs to be forwarded to client %s",
-                  op, pcmk__client_name(cib_client), host);
-        *needs_forward = TRUE;
-        *process = FALSE;
+        crm_trace("Processing %saddressed %s op from client %s",
+                  ((host != NULL)? "locally " : "un"),
+                  op, pcmk__client_name(cib_client));
     }
 }
 
