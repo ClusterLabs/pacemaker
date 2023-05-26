@@ -221,6 +221,7 @@ crmd_exit(crm_exit_t exit_code)
     g_list_free(controld_globals.fsa_message_queue);
     controld_globals.fsa_message_queue = NULL;
 
+    controld_free_node_pending_timers();
     controld_election_fini();
 
     /* Tear down the CIB manager connection, but don't free it yet -- it could

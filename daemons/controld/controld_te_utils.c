@@ -17,6 +17,8 @@
 //! Triggers transition graph processing
 static crm_trigger_t *transition_trigger = NULL;
 
+static GHashTable *node_pending_timers = NULL;
+
 gboolean
 stop_te_timer(pcmk__graph_action_t *action)
 {
@@ -161,6 +163,136 @@ abort_after_delay(int abort_priority, enum pcmk__graph_next abort_action,
     abort_timer.action = abort_action;
     abort_timer.text = abort_text;
     abort_timer.id = g_timeout_add(delay_ms, abort_timer_popped, &abort_timer);
+}
+
+static void
+free_node_pending_timer(gpointer data)
+{
+    struct abort_timer_s *node_pending_timer = (struct abort_timer_s *) data;
+
+    if (node_pending_timer->id != 0) {
+        g_source_remove(node_pending_timer->id);
+        node_pending_timer->id = 0;
+    }
+
+    free(node_pending_timer);
+}
+
+static gboolean
+node_pending_timer_popped(gpointer key)
+{
+    struct abort_timer_s *node_pending_timer = NULL;
+
+    if (node_pending_timers == NULL) {
+        return FALSE;
+    }
+
+    node_pending_timer = g_hash_table_lookup(node_pending_timers, key);
+    if (node_pending_timer == NULL) {
+        return FALSE;
+    }
+
+    crm_warn("Node with id '%s' pending timed out (%us) on joining the process "
+             "group",
+             (const char *) key, controld_globals.node_pending_timeout);
+
+    abort_timer_popped(node_pending_timer);
+
+    g_hash_table_remove(node_pending_timers, key);
+
+    return FALSE; // do not reschedule timer
+}
+
+static void
+init_node_pending_timer(const crm_node_t *node, guint timeout)
+{
+    struct abort_timer_s *node_pending_timer = NULL;
+    char *key = NULL;
+
+    if (node->uuid == NULL) {
+        return;
+    }
+
+    if (node_pending_timers == NULL) {
+        node_pending_timers = pcmk__strikey_table(free,
+                                                  free_node_pending_timer);
+
+    // The timer is somehow already existing
+    } else if (g_hash_table_lookup(node_pending_timers, node->uuid) != NULL) {
+        return;
+    }
+
+    crm_notice("Waiting for pending %s with id '%s' to join the process "
+               "group (timeout=%us)",
+               node->uname ? node->uname : "node", node->uuid,
+               controld_globals.node_pending_timeout);
+
+    node_pending_timer = calloc(1, sizeof(struct abort_timer_s));
+    CRM_ASSERT(node_pending_timer != NULL);
+
+    node_pending_timer->aborted = FALSE;
+    node_pending_timer->priority = INFINITY;
+    node_pending_timer->action = pcmk__graph_restart;
+    node_pending_timer->text = "Node pending timed out";
+
+    key = strdup(node->uuid);
+    CRM_ASSERT(key != NULL);
+
+    g_hash_table_replace(node_pending_timers, key, node_pending_timer);
+
+    node_pending_timer->id = g_timeout_add_seconds(timeout,
+                                                   node_pending_timer_popped,
+                                                   key);
+    CRM_ASSERT(node_pending_timer->id != 0);
+}
+
+static void
+remove_node_pending_timer(const char *node_uuid)
+{
+    if (node_pending_timers == NULL) {
+        return;
+    }
+
+    g_hash_table_remove(node_pending_timers, node_uuid);
+}
+
+void
+controld_node_pending_timer(const crm_node_t *node)
+{
+    long long remaining_timeout = 0;
+
+    /* Node is either not even a cluster member or it's as well online in CPG.
+     * Free any node pending timer of it.
+     */
+    if (node->when_member <= 0 || node->when_online != 0) {
+        remove_node_pending_timer(node->uuid);
+        return;
+    }
+    // Node is a cluster member but offline in CPG
+
+    remaining_timeout = node->when_member - time(NULL)
+                        + controld_globals.node_pending_timeout;
+
+    /* It already passed node pending timeout somehow.
+     * Free any node pending timer of it.
+     */
+    if (remaining_timeout <= 0) {
+        remove_node_pending_timer(node->uuid);
+        return;
+    }
+
+    init_node_pending_timer(node, remaining_timeout);
+}
+
+void
+controld_free_node_pending_timers(void)
+{
+    if (node_pending_timers == NULL) {
+        return;
+    }
+
+    g_hash_table_destroy(node_pending_timers);
+    node_pending_timers = NULL;
 }
 
 static const char *
