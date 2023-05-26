@@ -132,11 +132,13 @@ static struct abort_timer_s {
 static gboolean
 abort_timer_popped(gpointer data)
 {
-    if (AM_I_DC && (abort_timer.aborted == FALSE)) {
-        abort_transition(abort_timer.priority, abort_timer.action,
-                         abort_timer.text, NULL);
+    struct abort_timer_s *abort_timer = (struct abort_timer_s *) data;
+
+    if (AM_I_DC && (abort_timer->aborted == FALSE)) {
+        abort_transition(abort_timer->priority, abort_timer->action,
+                         abort_timer->text, NULL);
     }
-    abort_timer.id = 0;
+    abort_timer->id = 0;
     return FALSE; // do not immediately reschedule timer
 }
 
@@ -158,7 +160,7 @@ abort_after_delay(int abort_priority, enum pcmk__graph_next abort_action,
     abort_timer.priority = abort_priority;
     abort_timer.action = abort_action;
     abort_timer.text = abort_text;
-    abort_timer.id = g_timeout_add(delay_ms, abort_timer_popped, NULL);
+    abort_timer.id = g_timeout_add(delay_ms, abort_timer_popped, &abort_timer);
 }
 
 static const char *
