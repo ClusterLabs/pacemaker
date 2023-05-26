@@ -93,6 +93,9 @@ typedef struct {
     //! Max lifetime (in seconds) of a resource's shutdown lock to a node
     guint shutdown_lock_limit;
 
+    //! Node pending timeout
+    guint node_pending_timeout;
+
     //! Main event loop
     GMainLoop *mainloop;
 } controld_globals_t;
