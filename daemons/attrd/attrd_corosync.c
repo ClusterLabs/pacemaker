@@ -180,7 +180,7 @@ cache_remote_node(const char *node_name)
     /* If we previously assumed this node was an unseen cluster node,
      * remove its entry from the cluster peer cache.
      */
-    crm_node_t *dup = pcmk__search_cluster_node_cache(0, node_name);
+    crm_node_t *dup = pcmk__search_cluster_node_cache(0, node_name, NULL);
 
     if (dup && (dup->uuid == NULL)) {
         reap_crm_member(0, node_name);

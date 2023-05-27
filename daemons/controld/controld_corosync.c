@@ -122,7 +122,8 @@ cpg_membership_callback(cpg_handle_t handle, const struct cpg_name *cpg_name,
     if (controld_globals.dc_name != NULL) {
         crm_node_t *peer = NULL;
 
-        peer = pcmk__search_cluster_node_cache(0, controld_globals.dc_name);
+        peer = pcmk__search_cluster_node_cache(0, controld_globals.dc_name,
+                                               NULL);
         if (peer != NULL) {
             for (int i = 0; i < left_list_entries; ++i) {
                 if (left_list[i].nodeid == peer->id) {

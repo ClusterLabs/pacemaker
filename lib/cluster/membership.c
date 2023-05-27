@@ -515,7 +515,7 @@ pcmk__search_node_caches(unsigned int id, const char *uname, uint32_t flags)
     }
 
     if ((node == NULL) && pcmk_is_set(flags, CRM_GET_PEER_CLUSTER)) {
-        node = pcmk__search_cluster_node_cache(id, uname);
+        node = pcmk__search_cluster_node_cache(id, uname, NULL);
     }
     return node;
 }
@@ -554,11 +554,14 @@ crm_get_peer_full(unsigned int id, const char *uname, int flags)
  *
  * \param[in] id     If not 0, cluster node ID to search for
  * \param[in] uname  If not NULL, node name to search for
+ * \param[in] uuid   If not NULL while id is 0, node UUID instead of cluster
+ *                   node ID to search for
  *
  * \return Cluster node cache entry if found, otherwise NULL
  */
 crm_node_t *
-pcmk__search_cluster_node_cache(unsigned int id, const char *uname)
+pcmk__search_cluster_node_cache(unsigned int id, const char *uname,
+                                const char *uuid)
 {
     GHashTableIter iter;
     crm_node_t *node = NULL;
@@ -585,6 +588,16 @@ pcmk__search_cluster_node_cache(unsigned int id, const char *uname)
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             if(node->id == id) {
                 crm_trace("ID match: %u = %p", node->id, node);
+                by_id = node;
+                break;
+            }
+        }
+
+    } else if (uuid != NULL) {
+        g_hash_table_iter_init(&iter, crm_peer_cache);
+        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+            if (pcmk__str_eq(node->uuid, uuid, pcmk__str_casei)) {
+                crm_trace("UUID match: %s = %p", node->uuid, node);
                 by_id = node;
                 break;
             }
@@ -707,7 +720,7 @@ crm_get_peer(unsigned int id, const char *uname)
 
     crm_peer_init();
 
-    node = pcmk__search_cluster_node_cache(id, uname);
+    node = pcmk__search_cluster_node_cache(id, uname, NULL);
 
     /* if uname wasn't provided, and find_peer did not turn up a uname based on id.
      * we need to do a lookup of the node name using the id in the cluster membership. */
@@ -721,7 +734,7 @@ crm_get_peer(unsigned int id, const char *uname)
 
         /* try to turn up the node one more time now that we know the uname. */
         if (node == NULL) {
-            node = pcmk__search_cluster_node_cache(id, uname);
+            node = pcmk__search_cluster_node_cache(id, uname, NULL);
         }
     }
 
