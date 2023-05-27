@@ -525,12 +525,15 @@ pcmk__search_node_caches(unsigned int id, const char *uname, uint32_t flags)
  *
  * \param[in] id     If not 0, cluster node ID to search for
  * \param[in] uname  If not NULL, node name to search for
+ * \param[in] uuid   If not NULL while id is 0, node UUID instead of cluster
+ *                   node ID to search for
  * \param[in] flags  Bitmask of enum crm_get_peer_flags
  *
  * \return (Possibly newly created) node cache entry
  */
 crm_node_t *
-crm_get_peer_full(unsigned int id, const char *uname, int flags)
+pcmk__get_peer_full(unsigned int id, const char *uname, const char *uuid,
+                    int flags)
 {
     crm_node_t *node = NULL;
 
@@ -543,9 +546,24 @@ crm_get_peer_full(unsigned int id, const char *uname, int flags)
     }
 
     if ((node == NULL) && pcmk_is_set(flags, CRM_GET_PEER_CLUSTER)) {
-        node = crm_get_peer(id, uname);
+        node = pcmk__get_peer(id, uname, uuid);
     }
     return node;
+}
+
+/*!
+ * \brief Get a node cache entry (cluster or Pacemaker Remote)
+ *
+ * \param[in] id     If not 0, cluster node ID to search for
+ * \param[in] uname  If not NULL, node name to search for
+ * \param[in] flags  Bitmask of enum crm_get_peer_flags
+ *
+ * \return (Possibly newly created) node cache entry
+ */
+crm_node_t *
+crm_get_peer_full(unsigned int id, const char *uname, int flags)
+{
+    return pcmk__get_peer_full(id, uname, NULL, flags);
 }
 
 /*!
@@ -706,12 +724,14 @@ remove_conflicting_peer(crm_node_t *node)
  *
  * \param[in] id     If not 0, cluster node ID to search for
  * \param[in] uname  If not NULL, node name to search for
+ * \param[in] uuid   If not NULL while id is 0, node UUID instead of cluster
+ *                   node ID to search for
  *
  * \return (Possibly newly created) cluster node cache entry
  */
 /* coverity[-alloc] Memory is referenced in one or both hashtables */
 crm_node_t *
-crm_get_peer(unsigned int id, const char *uname)
+pcmk__get_peer(unsigned int id, const char *uname, const char *uuid)
 {
     crm_node_t *node = NULL;
     char *uname_lookup = NULL;
@@ -720,7 +740,7 @@ crm_get_peer(unsigned int id, const char *uname)
 
     crm_peer_init();
 
-    node = pcmk__search_cluster_node_cache(id, uname, NULL);
+    node = pcmk__search_cluster_node_cache(id, uname, uuid);
 
     /* if uname wasn't provided, and find_peer did not turn up a uname based on id.
      * we need to do a lookup of the node name using the id in the cluster membership. */
@@ -734,7 +754,7 @@ crm_get_peer(unsigned int id, const char *uname)
 
         /* try to turn up the node one more time now that we know the uname. */
         if (node == NULL) {
-            node = pcmk__search_cluster_node_cache(id, uname, NULL);
+            node = pcmk__search_cluster_node_cache(id, uname, uuid);
         }
     }
 
@@ -763,7 +783,9 @@ crm_get_peer(unsigned int id, const char *uname)
     }
 
     if(node->uuid == NULL) {
-        const char *uuid = crm_peer_uuid(node);
+        if (uuid == NULL) {
+            uuid = crm_peer_uuid(node);
+        }
 
         if (uuid) {
             crm_info("Node %u has uuid %s", id, uuid);
@@ -776,6 +798,21 @@ crm_get_peer(unsigned int id, const char *uname)
     free(uname_lookup);
 
     return node;
+}
+
+/*!
+ * \brief Get a cluster node cache entry
+ *
+ * \param[in] id     If not 0, cluster node ID to search for
+ * \param[in] uname  If not NULL, node name to search for
+ *
+ * \return (Possibly newly created) cluster node cache entry
+ */
+/* coverity[-alloc] Memory is referenced in one or both hashtables */
+crm_node_t *
+crm_get_peer(unsigned int id, const char *uname)
+{
+    return pcmk__get_peer(id, uname, NULL);
 }
 
 /*!

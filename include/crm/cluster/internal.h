@@ -131,4 +131,9 @@ void pcmk__refresh_node_caches_from_cib(xmlNode *cib);
 crm_node_t *pcmk__search_known_node_cache(unsigned int id, const char *uname,
                                           uint32_t flags);
 
+crm_node_t *pcmk__get_peer(unsigned int id, const char *uname,
+                           const char *uuid);
+crm_node_t *pcmk__get_peer_full(unsigned int id, const char *uname,
+                                const char *uuid, int flags);
+
 #endif
