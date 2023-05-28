@@ -1262,7 +1262,6 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
 
     int rc = pcmk_ok;
 
-    gboolean send_r_notify = FALSE;
     gboolean config_changed = FALSE;
     gboolean manage_counters = TRUE;
 
@@ -1271,9 +1270,6 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     char *current_nodes_digest = NULL;
     char *current_alerts_digest = NULL;
     char *current_status_digest = NULL;
-    uint32_t change_section = cib_change_section_nodes
-                              |cib_change_section_alerts
-                              |cib_change_section_status;
 
     CRM_ASSERT(cib_status == pcmk_ok);
 
@@ -1352,9 +1348,12 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
 #define XPATH_ALERTS    XPATH_CONFIG "/" XML_CIB_TAG_ALERTS
 #define XPATH_STATUS    "//" XML_TAG_CIB "/" XML_CIB_TAG_STATUS
 
-    // Calculate the hash value of the section before the change
+    // Calculate the digests of relevant sections before the operation
     if (!pcmk_any_flags_set(call_options, cib_dryrun|cib_inhibit_notify)
-        && pcmk__str_eq(op, PCMK__CIB_REQUEST_REPLACE, pcmk__str_none)) {
+        && pcmk__str_any_of(op,
+                            PCMK__CIB_REQUEST_ERASE,
+                            PCMK__CIB_REQUEST_REPLACE,
+                            NULL)) {
 
         current_nodes_digest = calculate_section_digest(XPATH_NODES,
                                                         the_cib);
@@ -1417,13 +1416,20 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         }
 
         if (!pcmk_is_set(call_options, cib_inhibit_notify)
-            && pcmk__str_eq(op, PCMK__CIB_REQUEST_REPLACE, pcmk__str_none)) {
+            && pcmk__str_any_of(op,
+                                PCMK__CIB_REQUEST_ERASE,
+                                PCMK__CIB_REQUEST_REPLACE,
+                                NULL)) {
 
             char *result_nodes_digest = NULL;
             char *result_alerts_digest = NULL;
             char *result_status_digest = NULL;
 
-            /* Calculate the hash value of the changed section. */
+            uint32_t change_section = cib_change_section_nodes
+                                      |cib_change_section_alerts
+                                      |cib_change_section_status;
+
+            // Calculate the digests of relevant sections after the operation
             result_nodes_digest = calculate_section_digest(XPATH_NODES,
                                                            result_cib);
             result_alerts_digest = calculate_section_digest(XPATH_ALERTS,
@@ -1462,18 +1468,14 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
                                          cib_change_section_status, "status");
             }
 
-            if (change_section != cib_change_section_none) {
-                send_r_notify = TRUE;
-            }
-
             free(result_nodes_digest);
             free(result_alerts_digest);
             free(result_status_digest);
 
-        } else if (!pcmk_is_set(call_options, cib_inhibit_notify)
-                   && pcmk__str_eq(op, PCMK__CIB_REQUEST_ERASE,
-                                   pcmk__str_none)) {
-            send_r_notify = TRUE;
+            if (change_section != cib_change_section_none) {
+                cib_replace_notify(op, rc, call_id, client_id, client_name,
+                                   origin, the_cib, *cib_diff, change_section);
+            }
         }
 
         mainloop_timer_stop(digest_timer);
@@ -1503,11 +1505,6 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
                   pcmk_is_set(call_options, cib_dryrun));
         cib_diff_notify(op, rc, call_id, client_id, client_name, origin, input,
                         *cib_diff);
-    }
-
-    if (send_r_notify) {
-        cib_replace_notify(op, rc, call_id, client_id, client_name, origin,
-                           the_cib, *cib_diff, change_section);
     }
 
     pcmk__output_set_log_level(logger_out, LOG_TRACE);
