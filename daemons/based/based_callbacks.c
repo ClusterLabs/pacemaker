@@ -1417,9 +1417,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
             char *result_alerts_digest = NULL;
             char *result_status_digest = NULL;
 
-            uint32_t change_section = cib_change_section_nodes
-                                      |cib_change_section_alerts
-                                      |cib_change_section_status;
+            uint32_t change_section = cib_change_section_none;
 
             // Calculate the digests of relevant sections after the operation
             result_nodes_digest = calculate_section_digest(XPATH_NODES,
@@ -1433,31 +1431,37 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
                       pcmk__s(result_alerts_digest, "(null)"),
                       pcmk__s(result_status_digest, "(null)"));
 
-            if (pcmk__str_eq(current_nodes_digest, result_nodes_digest,
-                             pcmk__str_none)) {
-                change_section =
-                    pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE,
-                                         "CIB change section",
-                                         "change_section", change_section,
-                                         cib_change_section_nodes, "nodes");
+            if (!pcmk__str_eq(current_nodes_digest, result_nodes_digest,
+                              pcmk__str_none)) {
+                change_section = pcmk__set_flags_as(__func__, __LINE__,
+                                                    LOG_TRACE,
+                                                    "CIB change section",
+                                                    "change_section",
+                                                    change_section,
+                                                    cib_change_section_nodes,
+                                                    "nodes");
             }
 
-            if (pcmk__str_eq(current_alerts_digest, result_alerts_digest,
-                             pcmk__str_none)) {
-                change_section =
-                    pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE,
-                                         "CIB change section",
-                                         "change_section", change_section,
-                                         cib_change_section_alerts, "alerts");
+            if (!pcmk__str_eq(current_alerts_digest, result_alerts_digest,
+                              pcmk__str_none)) {
+                change_section = pcmk__set_flags_as(__func__, __LINE__,
+                                                    LOG_TRACE,
+                                                    "CIB change section",
+                                                    "change_section",
+                                                    change_section,
+                                                    cib_change_section_alerts,
+                                                    "alerts");
             }
 
-            if (pcmk__str_eq(current_status_digest, result_status_digest,
-                             pcmk__str_none)) {
-                change_section =
-                    pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE,
-                                         "CIB change section",
-                                         "change_section", change_section,
-                                         cib_change_section_status, "status");
+            if (!pcmk__str_eq(current_status_digest, result_status_digest,
+                              pcmk__str_none)) {
+                change_section = pcmk__set_flags_as(__func__, __LINE__,
+                                                    LOG_TRACE,
+                                                    "CIB change section",
+                                                    "change_section",
+                                                    change_section,
+                                                    cib_change_section_status,
+                                                    "status");
             }
 
             free(result_nodes_digest);
