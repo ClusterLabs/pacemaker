@@ -1362,8 +1362,10 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
                                                          the_cib);
         current_status_digest = calculate_section_digest(XPATH_STATUS,
                                                          the_cib);
-        crm_trace("current-digest %s:%s:%s", current_nodes_digest,
-                  current_alerts_digest, current_status_digest);
+        crm_trace("current-digest %s:%s:%s",
+                  pcmk__s(current_nodes_digest, "(null)"),
+                  pcmk__s(current_alerts_digest, "(null)"),
+                  pcmk__s(current_status_digest, "(null)");
     }
 
     // result_cib must not be modified after cib_perform_op() returns
@@ -1428,8 +1430,10 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
                                                             result_cib);
             result_status_digest = calculate_section_digest(XPATH_STATUS,
                                                             result_cib);
-            crm_trace("result-digest %s:%s:%s", result_nodes_digest,
-                      result_alerts_digest, result_status_digest);
+            crm_trace("result-digest %s:%s:%s",
+                      pcmk__s(result_nodes_digest, "(null)"),
+                      pcmk__s(result_alerts_digest, "(null)"),
+                      pcmk__s(result_status_digest, "(null)"));
 
             if (pcmk__str_eq(current_nodes_digest, result_nodes_digest,
                              pcmk__str_none)) {
