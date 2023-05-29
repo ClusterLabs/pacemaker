@@ -1267,6 +1267,35 @@ get_digests(xmlNode *cib, struct digest_data *digests)
     digests->status = calculate_section_digest(XPATH_STATUS, cib);
 }
 
+/*!
+ * \internal
+ * \brief Determine which CIB sections were changed by an operation
+ *
+ * \param[in] before  Digests before the operation
+ * \param[in] after   Digests after the operation
+ *
+ * \return Group of <tt>enum cib_change_section_info</tt> flags indicating which
+ *         sections have changed
+ */
+static uint32_t
+get_change_sections(const struct digest_data *before,
+                    const struct digest_data *after)
+{
+    uint32_t change_sections = cib_change_section_none;
+
+    if (!pcmk__str_eq(before->nodes, after->nodes, pcmk__str_none)) {
+        pcmk__set_change_section(change_sections, cib_change_section_nodes);
+    }
+    if (!pcmk__str_eq(before->alerts, after->alerts, pcmk__str_none)) {
+        pcmk__set_change_section(change_sections, cib_change_section_alerts);
+    }
+    if (!pcmk__str_eq(before->status, after->status, pcmk__str_none)) {
+        pcmk__set_change_section(change_sections, cib_change_section_status);
+    }
+
+    return change_sections;
+}
+
 // v1 and v2 patch formats
 #define XPATH_CONFIG_CHANGE             \
     "//" XML_CIB_TAG_CRMCONFIG " | "    \
@@ -1449,41 +1478,21 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
             && !pcmk_is_set(call_options, cib_inhibit_notify)) {
 
             struct digest_data after_digests = { 0, };
-            uint32_t change_section = cib_change_section_none;
+            uint32_t change_sections = cib_change_section_none;
 
-            // Calculate the digests of relevant sections after the operation
             get_digests(result_cib, &after_digests);
             crm_trace("after-digest %s:%s:%s",
                       pcmk__s(after_digests.nodes, "(null)"),
                       pcmk__s(after_digests.alerts, "(null)"),
                       pcmk__s(after_digests.status, "(null)"));
 
-            if (!pcmk__str_eq(before_digests.nodes, after_digests.nodes,
-                              pcmk__str_none)) {
-
-                pcmk__set_change_section(change_section,
-                                         cib_change_section_nodes);
-            }
-
-            if (!pcmk__str_eq(before_digests.alerts, after_digests.alerts,
-                              pcmk__str_none)) {
-
-                pcmk__set_change_section(change_section,
-                                         cib_change_section_alerts);
-            }
-
-            if (!pcmk__str_eq(before_digests.status, after_digests.status,
-                              pcmk__str_none)) {
-
-                pcmk__set_change_section(change_section,
-                                         cib_change_section_status);
-            }
-
+            change_sections = get_change_sections(&before_digests,
+                                                  &after_digests);
             free_digests(&after_digests);
 
-            if (change_section != cib_change_section_none) {
+            if (change_sections != cib_change_section_none) {
                 cib_replace_notify(op, rc, call_id, client_id, client_name,
-                                   origin, the_cib, *cib_diff, change_section);
+                                   origin, the_cib, *cib_diff, change_sections);
             }
         }
 
