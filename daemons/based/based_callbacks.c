@@ -42,6 +42,12 @@ typedef struct cib_local_notify_s {
     gboolean sync_reply;
 } cib_local_notify_t;
 
+struct digest_data {
+    char *nodes;
+    char *alerts;
+    char *status;
+};
+
 int next_client_id = 0;
 
 gboolean legacy_mode = FALSE;
@@ -63,6 +69,24 @@ gboolean
 cib_legacy_mode(void)
 {
     return legacy_mode;
+}
+
+/*!
+ * \internal
+ * \brief Free a <tt>struct digest_data</tt> object's members
+ *
+ * \param[in,out] digests  Object whose members to free
+ *
+ * \note This does not free the object itself, which may be stack-allocated.
+ */
+static void
+free_digests(struct digest_data *digests)
+{
+    if (digests != NULL) {
+        free(digests->nodes);
+        free(digests->alerts);
+        free(digests->status);
+    }
 }
 
 static int32_t
@@ -1220,6 +1244,29 @@ calculate_section_digest(const char *xpath, xmlNode * xml_obj)
 
 }
 
+#define XPATH_CONFIG    "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION
+#define XPATH_NODES     XPATH_CONFIG "/" XML_CIB_TAG_NODES
+#define XPATH_ALERTS    XPATH_CONFIG "/" XML_CIB_TAG_ALERTS
+#define XPATH_STATUS    "/" XML_TAG_CIB "/" XML_CIB_TAG_STATUS
+
+/*!
+ * \internal
+ * \brief Calculate digests of CIB sections
+ *
+ * \param[in]  cib      CIB to get digests from
+ * \param[out] digests  Where to store digests
+ *
+ * \note The caller is responsible for freeing the output argument's members
+ *       using \p free_digests().
+ */
+static void
+get_digests(xmlNode *cib, struct digest_data *digests)
+{
+    digests->nodes = calculate_section_digest(XPATH_NODES, cib);
+    digests->alerts = calculate_section_digest(XPATH_ALERTS, cib);
+    digests->status = calculate_section_digest(XPATH_STATUS, cib);
+}
+
 // v1 and v2 patch formats
 #define XPATH_CONFIG_CHANGE             \
     "//" XML_CIB_TAG_CRMCONFIG " | "    \
@@ -1267,9 +1314,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
 
     static mainloop_timer_t *digest_timer = NULL;
 
-    char *current_nodes_digest = NULL;
-    char *current_alerts_digest = NULL;
-    char *current_status_digest = NULL;
+    struct digest_data before_digests = { 0, };
 
     CRM_ASSERT(cib_status == pcmk_ok);
 
@@ -1343,25 +1388,15 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         cib__clear_call_options(call_options, "call", cib_zero_copy);
     }
 
-#define XPATH_CONFIG    "//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION
-#define XPATH_NODES     XPATH_CONFIG "/" XML_CIB_TAG_NODES
-#define XPATH_ALERTS    XPATH_CONFIG "/" XML_CIB_TAG_ALERTS
-#define XPATH_STATUS    "//" XML_TAG_CIB "/" XML_CIB_TAG_STATUS
-
     // Calculate the digests of relevant sections before the operation
     if (pcmk_is_set(operation->flags, cib_op_attr_replaces)
         && !pcmk_any_flags_set(call_options, cib_dryrun|cib_inhibit_notify)) {
 
-        current_nodes_digest = calculate_section_digest(XPATH_NODES,
-                                                        the_cib);
-        current_alerts_digest = calculate_section_digest(XPATH_ALERTS,
-                                                         the_cib);
-        current_status_digest = calculate_section_digest(XPATH_STATUS,
-                                                         the_cib);
-        crm_trace("current-digest %s:%s:%s",
-                  pcmk__s(current_nodes_digest, "(null)"),
-                  pcmk__s(current_alerts_digest, "(null)"),
-                  pcmk__s(current_status_digest, "(null)");
+        get_digests(the_cib, &before_digests);
+        crm_trace("before-digest %s:%s:%s",
+                  pcmk__s(before_digests.nodes, "(null)"),
+                  pcmk__s(before_digests.alerts, "(null)"),
+                  pcmk__s(before_digests.status, "(null)"));
     }
 
     // result_cib must not be modified after cib_perform_op() returns
@@ -1413,48 +1448,38 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         if (pcmk_is_set(operation->flags, cib_op_attr_replaces)
             && !pcmk_is_set(call_options, cib_inhibit_notify)) {
 
-            char *result_nodes_digest = NULL;
-            char *result_alerts_digest = NULL;
-            char *result_status_digest = NULL;
-
+            struct digest_data after_digests = { 0, };
             uint32_t change_section = cib_change_section_none;
 
             // Calculate the digests of relevant sections after the operation
-            result_nodes_digest = calculate_section_digest(XPATH_NODES,
-                                                           result_cib);
-            result_alerts_digest = calculate_section_digest(XPATH_ALERTS,
-                                                            result_cib);
-            result_status_digest = calculate_section_digest(XPATH_STATUS,
-                                                            result_cib);
-            crm_trace("result-digest %s:%s:%s",
-                      pcmk__s(result_nodes_digest, "(null)"),
-                      pcmk__s(result_alerts_digest, "(null)"),
-                      pcmk__s(result_status_digest, "(null)"));
+            get_digests(result_cib, &after_digests);
+            crm_trace("after-digest %s:%s:%s",
+                      pcmk__s(after_digests.nodes, "(null)"),
+                      pcmk__s(after_digests.alerts, "(null)"),
+                      pcmk__s(after_digests.status, "(null)"));
 
-            if (!pcmk__str_eq(current_nodes_digest, result_nodes_digest,
+            if (!pcmk__str_eq(before_digests.nodes, after_digests.nodes,
                               pcmk__str_none)) {
 
                 pcmk__set_change_section(change_section,
                                          cib_change_section_nodes);
             }
 
-            if (!pcmk__str_eq(current_alerts_digest, result_alerts_digest,
+            if (!pcmk__str_eq(before_digests.alerts, after_digests.alerts,
                               pcmk__str_none)) {
 
                 pcmk__set_change_section(change_section,
                                          cib_change_section_alerts);
             }
 
-            if (!pcmk__str_eq(current_status_digest, result_status_digest,
+            if (!pcmk__str_eq(before_digests.status, after_digests.status,
                               pcmk__str_none)) {
 
                 pcmk__set_change_section(change_section,
                                          cib_change_section_status);
             }
 
-            free(result_nodes_digest);
-            free(result_alerts_digest);
-            free(result_status_digest);
+            free_digests(&after_digests);
 
             if (change_section != cib_change_section_none) {
                 cib_replace_notify(op, rc, call_id, client_id, client_name,
@@ -1506,9 +1531,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         operation->cleanup(call_options, &input, &output);
     }
 
-    free(current_nodes_digest);
-    free(current_alerts_digest);
-    free(current_status_digest);
+    free_digests(&before_digests);
 
     crm_trace("done");
     return rc;
