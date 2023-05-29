@@ -647,7 +647,7 @@ parse_local_options(const pcmk__client_t *cib_client,
 static gboolean
 parse_peer_options_v1(const cib_operation_t *operation, xmlNode *request,
                       gboolean *local_notify, gboolean *needs_reply,
-                      gboolean *process, gboolean *needs_forward)
+                      gboolean *process)
 {
     const char *op = NULL;
     const char *host = NULL;
@@ -745,7 +745,7 @@ parse_peer_options_v1(const cib_operation_t *operation, xmlNode *request,
 static gboolean
 parse_peer_options_v2(const cib_operation_t *operation, xmlNode *request,
                       gboolean *local_notify, gboolean *needs_reply,
-                      gboolean *process, gboolean *needs_forward)
+                      gboolean *process)
 {
     const char *host = NULL;
     const char *delegated = crm_element_value(request, F_CIB_DELEGATED);
@@ -866,7 +866,7 @@ parse_peer_options_v2(const cib_operation_t *operation, xmlNode *request,
 static gboolean
 parse_peer_options(const cib_operation_t *operation, xmlNode *request,
                    gboolean *local_notify, gboolean *needs_reply,
-                   gboolean *process, gboolean *needs_forward)
+                   gboolean *process)
 {
     /* TODO: What happens when an update comes in after node A
      * requests the CIB from node B, but before it gets the reply (and
@@ -874,10 +874,10 @@ parse_peer_options(const cib_operation_t *operation, xmlNode *request,
      */
     if(cib_legacy_mode()) {
         return parse_peer_options_v1(operation, request, local_notify,
-                                     needs_reply, process, needs_forward);
+                                     needs_reply, process);
     } else {
         return parse_peer_options_v2(operation, request, local_notify,
-                                     needs_reply, process, needs_forward);
+                                     needs_reply, process);
     }
 }
 
@@ -1036,7 +1036,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
                             &needs_forward);
 
     } else if (!parse_peer_options(operation, request, &local_notify,
-                                   &needs_reply, &process, &needs_forward)) {
+                                   &needs_reply, &process)) {
         return;
     }
 
