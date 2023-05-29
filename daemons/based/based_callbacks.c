@@ -905,29 +905,44 @@ parse_peer_options(const cib_operation_t *operation, xmlNode *request,
     }
 }
 
+/*!
+ * \internal
+ * \brief Forward a CIB request to the appropriate target host(s)
+ *
+ * \param[in] request  CIB request to forward
+ */
 static void
-forward_request(xmlNode *request, int call_options)
+forward_request(xmlNode *request)
 {
     const char *op = crm_element_value(request, F_CIB_OPERATION);
+    const char *section = crm_element_value(request, F_CIB_SECTION);
     const char *host = crm_element_value(request, F_CIB_HOST);
+    const char *originator = crm_element_value(request, F_ORIG);
+    const char *client_name = crm_element_value(request, F_CIB_CLIENTNAME);
+    const char *call_id = crm_element_value(request, F_CIB_CALLID);
+
+    int log_level = LOG_INFO;
+
+    if (pcmk__str_eq(op, PCMK__CIB_REQUEST_NOOP, pcmk__str_none)) {
+        log_level = LOG_DEBUG;
+    }
+
+    do_crm_log(log_level,
+               "Forwarding %s operation for section %s to %s (origin=%s/%s/%s)",
+               pcmk__s(op, "invalid"),
+               pcmk__s(section, "all"),
+               pcmk__s(host, (cib_legacy_mode()? "primary" : "all")),
+               pcmk__s(originator, "local"),
+               pcmk__s(client_name, "unspecified"),
+               pcmk__s(call_id, "unspecified"));
 
     crm_xml_add(request, F_CIB_DELEGATED, OUR_NODENAME);
 
-    if (host != NULL) {
-        crm_trace("Forwarding %s op to %s", op, host);
-        send_cluster_message(crm_get_peer(0, host), crm_msg_cib, request, FALSE);
+    send_cluster_message(((host != NULL)? crm_get_peer(0, host) : NULL),
+                         crm_msg_cib, request, FALSE);
 
-    } else {
-        crm_trace("Forwarding %s op to primary instance", op);
-        send_cluster_message(NULL, crm_msg_cib, request, FALSE);
-    }
-
-    /* Return the request to its original state */
+    // Return the request to its original state
     xml_remove_prop(request, F_CIB_DELEGATED);
-
-    if (call_options & cib_discard_reply) {
-        crm_trace("Client not interested in reply");
-    }
 }
 
 static gboolean
@@ -1066,32 +1081,18 @@ cib_process_request(xmlNode *request, gboolean privileged,
 
     is_update = pcmk_is_set(operation->flags, cib_op_attr_modifies);
 
-    if (call_options & cib_discard_reply) {
+    if (pcmk_is_set(call_options, cib_discard_reply)) {
         /* If the request will modify the CIB, and we are in legacy mode, we
          * need to build a reply so we can broadcast a diff, even if the
          * requester doesn't want one.
          */
         needs_reply = is_update && cib_legacy_mode();
         local_notify = FALSE;
+        crm_trace("Client is not interested in the reply");
     }
 
     if (needs_forward) {
-        const char *section = crm_element_value(request, F_CIB_SECTION);
-        int log_level = LOG_INFO;
-
-        if (pcmk__str_eq(op, PCMK__CIB_REQUEST_NOOP, pcmk__str_none)) {
-            log_level = LOG_DEBUG;
-        }
-
-        do_crm_log(log_level,
-                   "Forwarding %s operation for section %s to %s (origin=%s/%s/%s)",
-                   op,
-                   section ? section : "'all'",
-                   pcmk__s(host, (cib_legacy_mode() ? "primary" : "all")),
-                   originator ? originator : "local",
-                   client_name, call_id);
-
-        forward_request(request, call_options);
+        forward_request(request);
         return;
     }
 
@@ -1186,10 +1187,9 @@ cib_process_request(xmlNode *request, gboolean privileged,
             op_reply = NULL;    /* the reply is queued, so don't free here */
         }
 
-    } else if (call_options & cib_discard_reply) {
-        crm_trace("Caller isn't interested in reply");
+    } else if ((cib_client == NULL)
+               && !pcmk_is_set(call_options, cib_discard_reply)) {
 
-    } else if (cib_client == NULL) {
         if (is_update == FALSE || result_diff == NULL) {
             crm_trace("Request not broadcast: R/O call");
 
