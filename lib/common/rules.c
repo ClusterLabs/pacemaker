@@ -11,6 +11,7 @@
 
 #include <stdio.h>                          // NULL
 #include <stdint.h>                         // uint32_t
+#include <inttypes.h>                       // PRIu32
 #include <glib.h>                           // gboolean, FALSE
 #include <libxml/tree.h>                    // xmlNode
 
@@ -97,69 +98,57 @@ phase_of_the_moon(const crm_time_t *now)
     return (((((diy + epact) * 6) + 11) % 177) / 22) & 7;
 }
 
+/*!
+ * \internal
+ * \brief Check an integer value against a range from a date specification
+ *
+ * \param[in] date_spec  XML of PCMK_XE_DATE_SPEC element to check
+ * \param[in] attr       Name of XML attribute with range to check against
+ * \param[in] value      Value to compare against range
+ *
+ * \return Standard Pacemaker return code (specifically, pcmk_rc_before_range,
+ *         pcmk_rc_after_range, or pcmk_rc_ok to indicate that result is either
+ *         within range or undetermined)
+ * \note We return pcmk_rc_ok for an undetermined result so we can continue
+ *       checking the next range attribute.
+ */
 static int
-check_one(const xmlNode *cron_spec, const char *xml_field, uint32_t time_field)
+check_range(const xmlNode *date_spec, const char *attr, uint32_t value)
 {
-    int rc = pcmk_rc_undetermined;
-    const char *value = crm_element_value(cron_spec, xml_field);
+    int rc = pcmk_rc_ok;
+    const char *range = crm_element_value(date_spec, attr);
     long long low, high;
 
-    if (value == NULL) {
-        /* Return pe_date_result_undetermined if the field is missing. */
+    if (range == NULL) { // Attribute not present
         goto bail;
     }
 
-    if (pcmk__parse_ll_range(value, &low, &high) != pcmk_rc_ok) {
-       goto bail;
-    } else if (low == high) {
-        /* A single number was given, not a range. */
-        if (time_field < low) {
-            rc = pcmk_rc_before_range;
-        } else if (time_field > high) {
-            rc = pcmk_rc_after_range;
-        } else {
-            rc = pcmk_rc_within_range;
-        }
-    } else if (low != -1 && high != -1) {
-        /* This is a range with both bounds. */
-        if (time_field < low) {
-            rc = pcmk_rc_before_range;
-        } else if (time_field > high) {
-            rc = pcmk_rc_after_range;
-        } else {
-            rc = pcmk_rc_within_range;
-        }
-    } else if (low == -1) {
-       /* This is a range with no starting value. */
-        rc = time_field <= high ? pcmk_rc_within_range : pcmk_rc_after_range;
-    } else if (high == -1) {
-        /* This is a range with no ending value. */
-        rc = time_field >= low ? pcmk_rc_within_range : pcmk_rc_before_range;
+    if (pcmk__parse_ll_range(range, &low, &high) != pcmk_rc_ok) {
+        // Invalid range
+        /* @COMPAT When we can break behavioral backward compatibility, treat
+         * the entire rule as not passing.
+         */
+        pcmk__config_err("Ignoring " PCMK_XE_DATE_SPEC
+                         " %s attribute %s because '%s' is not a valid range",
+                         pcmk__xe_id(date_spec), attr, range);
+
+    } else if ((low != -1) && (value < low)) {
+        rc = pcmk_rc_before_range;
+
+    } else if ((high != -1) && (value > high)) {
+        rc = pcmk_rc_after_range;
     }
 
 bail:
-    if (rc == pcmk_rc_within_range) {
-        crm_debug("Condition '%s' in %s: passed", value, xml_field);
-    } else {
-        crm_debug("Condition '%s' in %s: failed", value, xml_field);
-    }
-
+    crm_trace("Checked " PCMK_XE_DATE_SPEC " %s %s='%s' for %" PRIu32 ": %s",
+              pcmk__xe_id(date_spec), attr, pcmk__s(range, ""), value,
+              pcmk_rc_str(rc));
     return rc;
 }
 
-static gboolean
-check_passes(int rc) {
-    /* _within_range is obvious.  _undetermined is a pass because
-     * this is the return value if a field is not given.  In this
-     * case, we just want to ignore it and check other fields to
-     * see if they place some restriction on what can pass.
-     */
-    return rc == pcmk_rc_within_range || rc == pcmk_rc_undetermined;
-}
-
 #define CHECK_ONE(spec, name, var) do { \
-    int subpart_rc = check_one(spec, name, var); \
-    if (check_passes(subpart_rc) == FALSE) { \
+    int subpart_rc = check_range(spec, name, var); \
+    if (subpart_rc != pcmk_rc_ok) { \
         return subpart_rc; \
     } \
 } while (0)
