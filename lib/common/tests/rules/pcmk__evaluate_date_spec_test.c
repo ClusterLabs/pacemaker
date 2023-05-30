@@ -20,7 +20,7 @@ run_one_test(const char *t, const char *x, int expected) {
     crm_time_t *tm = crm_time_new(t);
     xmlNodePtr xml = string2xml(x);
 
-    assert_int_equal(pe_cron_range_satisfied(tm, xml), expected);
+    assert_int_equal(pcmk__evaluate_date_spec(xml, tm), expected);
 
     crm_time_free(tm);
     free_xml(xml);
@@ -28,14 +28,15 @@ run_one_test(const char *t, const char *x, int expected) {
 
 static void
 no_time_given(void **state) {
-    assert_int_equal(pe_cron_range_satisfied(NULL, NULL), pcmk_rc_op_unsatisfied);
+    assert_int_equal(pcmk__evaluate_date_spec(NULL, NULL),
+                     pcmk_rc_op_unsatisfied);
 }
 
 static void
 any_time_satisfies_empty_spec(void **state) {
     crm_time_t *tm = crm_time_new(NULL);
 
-    assert_int_equal(pe_cron_range_satisfied(tm, NULL), pcmk_rc_ok);
+    assert_int_equal(pcmk__evaluate_date_spec(NULL, tm), pcmk_rc_ok);
 
     crm_time_free(tm);
 }

@@ -925,7 +925,7 @@ pe__eval_date_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data,
         }
 
     } else if (pcmk__str_eq(op, PCMK_VALUE_DATE_SPEC, pcmk__str_casei)) {
-        rc = pe_cron_range_satisfied(rule_data->now, date_spec);
+        rc = pcmk__evaluate_date_spec(date_spec, rule_data->now);
         // @TODO set next_change appropriately
 
     } else if (pcmk__str_eq(op, PCMK_VALUE_GT, pcmk__str_casei)) {

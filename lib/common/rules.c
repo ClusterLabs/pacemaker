@@ -146,50 +146,72 @@ bail:
     return rc;
 }
 
-#define CHECK_ONE(spec, name, var) do { \
-    int subpart_rc = check_range(spec, name, var); \
-    if (subpart_rc != pcmk_rc_ok) { \
-        return subpart_rc; \
-    } \
-} while (0)
-
+/*!
+ * \internal
+ * \brief Evaluate a date specification for a given date/time
+ *
+ * \param[in] date_spec  XML of PCMK_XE_DATE_SPEC element to evaluate
+ * \param[in] now        Time to check
+ *
+ * \return Standard Pacemaker return code (specifically, pcmk_rc_ok,
+ *         pcmk_rc_before_range, pcmk_rc_after_range, or pcmk_rc_op_unsatisfied)
+ */
 int
-pe_cron_range_satisfied(const crm_time_t *now, const xmlNode *cron_spec)
+pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now)
 {
-    uint32_t h, m, s, y, d, w;
+    // Range attributes that can be specified for a PCMK_XE_DATE_SPEC element
+    struct range {
+        const char *attr;
+        uint32_t value;
+    } ranges[] = {
+        { PCMK_XA_YEARS, 0U },
+        { PCMK_XA_MONTHS, 0U },
+        { PCMK_XA_MONTHDAYS, 0U },
+        { PCMK_XA_HOURS, 0U },
+        { PCMK_XA_MINUTES, 0U },
+        { PCMK_XA_SECONDS, 0U },
+        { PCMK_XA_YEARDAYS, 0U },
+        { PCMK_XA_WEEKYEARS, 0U },
+        { PCMK_XA_WEEKS, 0U },
+        { PCMK_XA_WEEKDAYS, 0U },
+        { PCMK__XA_MOON, 0U },
+    };
 
     CRM_CHECK(now != NULL, return pcmk_rc_op_unsatisfied);
 
-    crm_time_get_gregorian(now, &y, &m, &d);
-    CHECK_ONE(cron_spec, PCMK_XA_YEARS, y);
-    CHECK_ONE(cron_spec, PCMK_XA_MONTHS, m);
-    CHECK_ONE(cron_spec, PCMK_XA_MONTHDAYS, d);
+    // Year, month, day
+    crm_time_get_gregorian(now, &(ranges[0].value), &(ranges[1].value),
+                           &(ranges[2].value));
 
-    crm_time_get_timeofday(now, &h, &m, &s);
-    CHECK_ONE(cron_spec, PCMK_XA_HOURS, h);
-    CHECK_ONE(cron_spec, PCMK_XA_MINUTES, m);
-    CHECK_ONE(cron_spec, PCMK_XA_SECONDS, s);
+    // Hour, minute, second
+    crm_time_get_timeofday(now, &(ranges[3].value), &(ranges[4].value),
+                           &(ranges[5].value));
 
-    crm_time_get_ordinal(now, &y, &d);
-    CHECK_ONE(cron_spec, PCMK_XA_YEARDAYS, d);
+    // Year (redundant) and day of year
+    crm_time_get_ordinal(now, &(ranges[0].value), &(ranges[6].value));
 
-    crm_time_get_isoweek(now, &y, &w, &d);
-    CHECK_ONE(cron_spec, PCMK_XA_WEEKYEARS, y);
-    CHECK_ONE(cron_spec, PCMK_XA_WEEKS, w);
-    CHECK_ONE(cron_spec, PCMK_XA_WEEKDAYS, d);
+    // Week year, week of week year, day of week
+    crm_time_get_isoweek(now, &(ranges[7].value), &(ranges[8].value),
+                         &(ranges[9].value));
 
-    CHECK_ONE(cron_spec, PCMK__XA_MOON, phase_of_the_moon(now));
-    if (crm_element_value(cron_spec, PCMK__XA_MOON) != NULL) {
+    // Moon phase (deprecated)
+    ranges[10].value = phase_of_the_moon(now);
+    if (crm_element_value(date_spec, PCMK__XA_MOON) != NULL) {
         pcmk__config_warn("Support for '" PCMK__XA_MOON "' in "
                           PCMK_XE_DATE_SPEC " elements (such as %s) is "
                           "deprecated and will be removed in a future release "
                           "of Pacemaker",
-                          pcmk__xe_id(cron_spec));
+                          pcmk__xe_id(date_spec));
     }
 
-    /* If we get here, either no fields were specified (which is success), or all
-     * the fields that were specified had their conditions met (which is also a
-     * success).  Thus, the result is success.
-     */
+    for (int i = 0; i < PCMK__NELEM(ranges); ++i) {
+        int rc = check_range(date_spec, ranges[i].attr, ranges[i].value);
+
+        if (rc != pcmk_rc_ok) {
+            return rc;
+        }
+    }
+
+    // All specified ranges passed, or none were given (also considered a pass)
     return pcmk_rc_ok;
 }

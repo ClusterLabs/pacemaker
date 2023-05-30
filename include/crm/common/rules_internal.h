@@ -16,6 +16,6 @@
 #include <crm/common/iso8601.h>         // crm_time_t
 
 enum expression_type pcmk__expression_type(const xmlNode *expr);
-int pe_cron_range_satisfied(const crm_time_t *now, const xmlNode *cron_spec);
+int pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now);
 
 #endif // PCMK__CRM_COMMON_RULES_INTERNAL__H

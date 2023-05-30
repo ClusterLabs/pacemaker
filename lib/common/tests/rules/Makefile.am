@@ -11,6 +11,6 @@ include $(top_srcdir)/mk/tap.mk
 include $(top_srcdir)/mk/unittest.mk
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
-check_PROGRAMS = pe_cron_range_satisfied_test
+check_PROGRAMS = pcmk__evaluate_date_spec_test
 
 TESTS = $(check_PROGRAMS)
