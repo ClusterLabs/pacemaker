@@ -801,94 +801,66 @@ pcmk__parse_type(const char *type, enum pcmk__comparison op,
 
 /*!
  * \internal
- * \brief   Compare two values in a rule's node attribute expression
+ * \brief Compare two strings according to a given type
  *
- * \param[in]   l_val   Value on left-hand side of comparison
- * \param[in]   r_val   Value on right-hand side of comparison
- * \param[in]   type    How to interpret the values
+ * \param[in] value1  String with first value to compare
+ * \param[in] value2  String with second value to compare
+ * \param[in] type    How to interpret the values
  *
- * \return  -1 if <tt>(l_val < r_val)</tt>,
- *           0 if <tt>(l_val == r_val)</tt>,
- *           1 if <tt>(l_val > r_val)</tt>
+ * \return Standard comparison result (a negative integer if \p value1 is
+ *         lesser, 0 if the values are equal, and a positive integer if
+ *         \p value1 is greater)
  */
 int
-pcmk__cmp_by_type(const char *l_val, const char *r_val, enum pcmk__type type)
+pcmk__cmp_by_type(const char *value1, const char *value2, enum pcmk__type type)
 {
-    int cmp = 0;
-
-    if (l_val != NULL && r_val != NULL) {
-        switch (type) {
-            case pcmk__type_string:
-                cmp = strcasecmp(l_val, r_val);
-                break;
-
-            case pcmk__type_integer:
-                {
-                    long long l_val_num;
-                    int rc1 = pcmk__scan_ll(l_val, &l_val_num, 0LL);
-
-                    long long r_val_num;
-                    int rc2 = pcmk__scan_ll(r_val, &r_val_num, 0LL);
-
-                    if ((rc1 == pcmk_rc_ok) && (rc2 == pcmk_rc_ok)) {
-                        if (l_val_num < r_val_num) {
-                            cmp = -1;
-                        } else if (l_val_num > r_val_num) {
-                            cmp = 1;
-                        } else {
-                            cmp = 0;
-                        }
-
-                    } else {
-                        crm_debug("Integer parse error. Comparing %s and %s "
-                                  "as strings", l_val, r_val);
-                        cmp = pcmk__cmp_by_type(l_val, r_val,
-                                                pcmk__type_string);
-                    }
-                }
-                break;
-
-            case pcmk__type_number:
-                {
-                    double l_val_num;
-                    double r_val_num;
-
-                    int rc1 = pcmk__scan_double(l_val, &l_val_num, NULL, NULL);
-                    int rc2 = pcmk__scan_double(r_val, &r_val_num, NULL, NULL);
-
-                    if (rc1 == pcmk_rc_ok && rc2 == pcmk_rc_ok) {
-                        if (l_val_num < r_val_num) {
-                            cmp = -1;
-                        } else if (l_val_num > r_val_num) {
-                            cmp = 1;
-                        } else {
-                            cmp = 0;
-                        }
-
-                    } else {
-                        crm_debug("Floating-point parse error. Comparing %s "
-                                  "and %s as strings", l_val, r_val);
-                        cmp = pcmk__cmp_by_type(l_val, r_val,
-                                                pcmk__type_string);
-                    }
-                }
-                break;
-
-            case pcmk__type_version:
-                cmp = compare_version(l_val, r_val);
-                break;
-
-            default:
-                break;
-        }
-
-    } else if (l_val == NULL && r_val == NULL) {
-        cmp = 0;
-    } else if (r_val == NULL) {
-        cmp = 1;
-    } else {    // l_val == NULL && r_val != NULL
-        cmp = -1;
+    //  NULL compares as less than non-NULL
+    if (value2 == NULL) {
+        return (value1 == NULL)? 0 : 1;
+    }
+    if (value1 == NULL) {
+        return -1;
     }
 
-    return cmp;
+    switch (type) {
+        case pcmk__type_string:
+            return strcasecmp(value1, value2);
+
+        case pcmk__type_integer:
+            {
+                long long integer1;
+                long long integer2;
+
+                if ((pcmk__scan_ll(value1, &integer1, 0LL) != pcmk_rc_ok)
+                    || (pcmk__scan_ll(value2, &integer2, 0LL) != pcmk_rc_ok)) {
+                    crm_warn("Comparing '%s' and '%s' as strings because "
+                             "invalid as integers", value1, value2);
+                    return strcasecmp(value1, value2);
+                }
+                return (integer1 < integer2)? -1 : (integer1 > integer2)? 1 : 0;
+            }
+            break;
+
+        case pcmk__type_number:
+            {
+                double num1;
+                double num2;
+
+                if ((pcmk__scan_double(value1, &num1, NULL, NULL) != pcmk_rc_ok)
+                    || (pcmk__scan_double(value2, &num2, NULL,
+                                          NULL) != pcmk_rc_ok)) {
+                    crm_warn("Comparing '%s' and '%s' as strings because invalid as "
+                             "numbers", value1, value2);
+                    return strcasecmp(value1, value2);
+                }
+                return (num1 < num2)? -1 : (num1 > num2)? 1 : 0;
+            }
+            break;
+
+        case pcmk__type_version:
+            return compare_version(value1, value2);
+
+        default: // Invalid type
+            return 0;
+    }
 }

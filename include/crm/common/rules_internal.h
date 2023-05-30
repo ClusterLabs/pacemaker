@@ -42,7 +42,7 @@ enum expression_type pcmk__expression_type(const xmlNode *expr);
 enum pcmk__comparison pcmk__parse_comparison(const char *op);
 enum pcmk__type pcmk__parse_type(const char *type, enum pcmk__comparison op,
                                  const char *value1, const char *value2);
-int pcmk__cmp_by_type(const char *l_val, const char *r_val,
+int pcmk__cmp_by_type(const char *value1, const char *value2,
                       enum pcmk__type type);
 char *pcmk__replace_submatches(const char *string, const char *match,
                                const regmatch_t submatches[], int nmatches);
