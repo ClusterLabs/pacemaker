@@ -18,9 +18,11 @@
 #include <time.h>
 #include <ctype.h>
 #include <inttypes.h>
+#include <limits.h>         // INT_MIN, INT_MAX
 #include <string.h>
 #include <stdbool.h>
 #include <crm/common/iso8601.h>
+#include <crm/common/iso8601_internal.h>
 
 /*
  * Andrew's code was originally written for OSes whose "struct tm" contains:
@@ -1371,6 +1373,23 @@ void
 crm_time_set_timet(crm_time_t *target, const time_t *source)
 {
     ha_set_tm_time(target, localtime(source));
+}
+
+/*!
+ * \internal
+ * \brief Set one time object to another if the other is earlier
+ *
+ * \param[in,out] target  Time object to set
+ * \param[in]     source  Time object to use if earlier
+ */
+void
+pcmk__set_time_if_earlier(crm_time_t *target, const crm_time_t *source)
+{
+    if ((target != NULL) && (source != NULL)
+        && (!crm_time_is_defined(target)
+            || (crm_time_compare(source, target) < 0))) {
+        crm_time_set(target, source);
+    }
 }
 
 crm_time_t *

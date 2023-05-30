@@ -8,15 +8,17 @@
  */
 
 #include <crm_internal.h>
-#include <crm/crm.h>
-#include <crm/common/xml.h>
-#include <crm/common/xml_internal.h>
 
 #include <glib.h>
 
+#include <crm/crm.h>
+#include <crm/common/xml.h>
 #include <crm/pengine/rules.h>
-#include <crm/pengine/rules_internal.h>
+
+#include <crm/common/iso8601_internal.h>
+#include <crm/common/xml_internal.h>
 #include <crm/pengine/internal.h>
+#include <crm/pengine/rules_internal.h>
 
 #include <sys/types.h>
 #include <regex.h>
@@ -110,18 +112,6 @@ parse_xml_duration(const crm_time_t *start, const xmlNode *duration_spec)
     pcmk__add_time_from_xml(end, pcmk__time_minutes, duration_spec);
     pcmk__add_time_from_xml(end, pcmk__time_seconds, duration_spec);
     return end;
-}
-
-// Set next_change to t if t is earlier
-static void
-crm_time_set_if_earlier(crm_time_t *next_change, crm_time_t *t)
-{
-    if ((next_change != NULL) && (t != NULL)) {
-        if (!crm_time_is_defined(next_change)
-            || (crm_time_compare(t, next_change) < 0)) {
-            crm_time_set(next_change, t);
-        }
-    }
 }
 
 // Information about a block of nvpair elements
@@ -899,7 +889,7 @@ pe__eval_date_expr(const xmlNode *expr, const crm_time_t *now,
             // in_range requires at least one of start or end
         } else if ((start != NULL) && (crm_time_compare(now, start) < 0)) {
             rc = pcmk_rc_before_range;
-            crm_time_set_if_earlier(next_change, start);
+            pcmk__set_time_if_earlier(next_change, start);
         } else if ((end != NULL) && (crm_time_compare(now, end) > 0)) {
             rc = pcmk_rc_after_range;
         } else {
@@ -907,7 +897,7 @@ pe__eval_date_expr(const xmlNode *expr, const crm_time_t *now,
             if (end && next_change) {
                 // Evaluation doesn't change until second after end
                 crm_time_add_seconds(end, 1);
-                crm_time_set_if_earlier(next_change, end);
+                pcmk__set_time_if_earlier(next_change, end);
             }
         }
 
@@ -925,7 +915,7 @@ pe__eval_date_expr(const xmlNode *expr, const crm_time_t *now,
 
             // Evaluation doesn't change until second after start
             crm_time_add_seconds(start, 1);
-            crm_time_set_if_earlier(next_change, start);
+            pcmk__set_time_if_earlier(next_change, start);
         }
 
     } else if (pcmk__str_eq(op, PCMK_VALUE_LT, pcmk__str_casei)) {
@@ -933,7 +923,7 @@ pe__eval_date_expr(const xmlNode *expr, const crm_time_t *now,
             // lt requires end
         } else if (crm_time_compare(now, end) < 0) {
             rc = pcmk_rc_within_range;
-            crm_time_set_if_earlier(next_change, end);
+            pcmk__set_time_if_earlier(next_change, end);
         } else {
             rc = pcmk_rc_after_range;
         }
