@@ -97,35 +97,6 @@ pe_test_expression(xmlNode *expr, GHashTable *node_hash, enum rsc_role_e role,
     return pe_eval_subexpr(expr, &rule_data, next_change);
 }
 
-enum expression_type
-find_expression_type(xmlNode * expr)
-{
-    const char *attr = NULL;
-
-    attr = crm_element_value(expr, PCMK_XA_ATTRIBUTE);
-
-    if (pcmk__xe_is(expr, PCMK_XE_DATE_EXPRESSION)) {
-        return pcmk__subexpr_datetime;
-
-    } else if (pcmk__xe_is(expr, PCMK_XE_RSC_EXPRESSION)) {
-        return pcmk__subexpr_resource;
-
-    } else if (pcmk__xe_is(expr, PCMK_XE_OP_EXPRESSION)) {
-        return pcmk__subexpr_operation;
-
-    } else if (pcmk__xe_is(expr, PCMK_XE_RULE)) {
-        return pcmk__subexpr_rule;
-
-    } else if (!pcmk__xe_is(expr, PCMK_XE_EXPRESSION)) {
-        return pcmk__subexpr_unknown;
-
-    } else if (pcmk__str_any_of(attr, CRM_ATTR_UNAME, CRM_ATTR_KIND, CRM_ATTR_ID, NULL)) {
-        return pcmk__subexpr_location;
-    }
-
-    return pcmk__subexpr_attribute;
-}
-
 /* As per the nethack rules:
  *
  * moon period = 29.53058 days ~= 30, year = 365.2422 days
@@ -723,7 +694,7 @@ pe_eval_subexpr(xmlNode *expr, const pe_rule_eval_data_t *rule_data,
     gboolean accept = FALSE;
     const char *uname = NULL;
 
-    switch (find_expression_type(expr)) {
+    switch (pcmk__expression_type(expr)) {
         case pcmk__subexpr_rule:
             accept = pe_eval_expr(expr, rule_data, next_change);
             break;
@@ -1272,6 +1243,12 @@ unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj, const char *set_name,
 
     pe_eval_nvpairs(top, xml_obj, set_name, &rule_data, hash, always_first,
                     overwrite, NULL);
+}
+
+enum expression_type
+find_expression_type(xmlNode *expr)
+{
+    return pcmk__expression_type(expr);
 }
 
 // LCOV_EXCL_STOP

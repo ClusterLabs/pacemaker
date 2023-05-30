@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,8 +19,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-enum expression_type find_expression_type(xmlNode * expr);
 
 gboolean pe_evaluate_rules(xmlNode *ruleset, GHashTable *node_hash,
                            crm_time_t *now, crm_time_t *next_change);
