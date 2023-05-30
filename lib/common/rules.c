@@ -60,37 +60,41 @@ pcmk__expression_type(const xmlNode *expr)
     return pcmk__subexpr_attribute;
 }
 
-/* As per the nethack rules:
+/*!
+ * \internal
+ * \brief Get the moon phase corresponding to a given date/time
  *
- * moon period = 29.53058 days ~= 30, year = 365.2422 days
- * days moon phase advances on first day of year compared to preceding year
- *      = 365.2422 - 12*29.53058 ~= 11
- * years in Metonic cycle (time until same phases fall on the same days of
- *      the month) = 18.6 ~= 19
- * moon phase on first day of year (epact) ~= (11*(year%19) + 29) % 30
- *      (29 as initial condition)
- * current phase in days = first day phase + days elapsed in year
- * 6 moons ~= 177 days
- * 177 ~= 8 reported phases * 22
- * + 11/22 for rounding
+ * \param[in] now  Date/time to get moon phase for
  *
- * 0-7, with 0: new, 4: full
+ * \return Phase of the moon corresponding to \p now, where 0 is the new moon
+ *         and 7 is the full moon
+ * \deprecated This feature has been deprecated since 2.1.6.
  */
-
 static int
 phase_of_the_moon(const crm_time_t *now)
 {
+    /* As per the nethack rules:
+     * - A moon period is 29.53058 days ~= 30
+     * - A year is 365.2422 days
+     * - Number of days moon phase advances on first day of year compared to
+     *   preceding year is (365.2422 - 12 * 29.53058) ~= 11
+     * - Number of years until same phases fall on the same days of the month
+     *   is 18.6 ~= 19
+     * - Moon phase on first day of year (epact) ~= (11 * (year%19) + 29) % 30
+     *   (29 as initial condition)
+     * - Current phase in days = first day phase + days elapsed in year
+     * - 6 moons ~= 177 days ~= 8 reported phases * 22 (+ 11/22 for rounding)
+     */
     uint32_t epact, diy, goldn;
     uint32_t y;
 
     crm_time_get_ordinal(now, &y, &diy);
-
     goldn = (y % 19) + 1;
     epact = (11 * goldn + 18) % 30;
-    if ((epact == 25 && goldn > 11) || epact == 24)
+    if (((epact == 25) && (goldn > 11)) || (epact == 24)) {
         epact++;
-
-    return ((((((diy + epact) * 6) + 11) % 177) / 22) & 7);
+    }
+    return (((((diy + epact) * 6) + 11) % 177) / 22) & 7;
 }
 
 static int
