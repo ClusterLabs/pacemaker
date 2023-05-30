@@ -296,6 +296,95 @@ pcmk__unpack_duration(const xmlNode *duration, const crm_time_t *start,
 
 /*!
  * \internal
+ * \brief Evaluate a range check for a given date/time
+ *
+ * \param[in]     date_expression  XML of PCMK_XE_DATE_EXPRESSION element
+ * \param[in]     id               Expression ID for logging purposes
+ * \param[in]     now              Date/time to compare
+ * \param[in,out] next_change      If not NULL, set this to when the evaluation
+ *                                 will change, if known and earlier than the
+ *                                 original value
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+evaluate_in_range(const xmlNode *date_expression, const char *id,
+                  const crm_time_t *now, crm_time_t *next_change)
+{
+    crm_time_t *start = NULL;
+    crm_time_t *end = NULL;
+
+    if (pcmk__xe_get_datetime(date_expression, PCMK_XA_START,
+                              &start) != pcmk_rc_ok) {
+        /* @COMPAT When we can break behavioral backward compatibility,
+         * return pcmk_rc_unpack_error
+         */
+        pcmk__config_warn("Ignoring " PCMK_XA_START " in "
+                          PCMK_XE_DATE_EXPRESSION " %s because it is invalid",
+                          id);
+    }
+
+    if (pcmk__xe_get_datetime(date_expression, PCMK_XA_END,
+                              &end) != pcmk_rc_ok) {
+        /* @COMPAT When we can break behavioral backward compatibility,
+         * return pcmk_rc_unpack_error
+         */
+        pcmk__config_warn("Ignoring " PCMK_XA_END " in "
+                          PCMK_XE_DATE_EXPRESSION " %s because it is invalid",
+                          id);
+    }
+
+    if ((start == NULL) && (end == NULL)) {
+        // Not possible with schema validation enabled
+        /* @COMPAT When we can break behavioral backward compatibility,
+         * return pcmk_rc_unpack_error
+         */
+        pcmk__config_warn("Treating " PCMK_XE_DATE_EXPRESSION " %s as not "
+                          "passing because in_range requires at least one of "
+                          PCMK_XA_START " or " PCMK_XA_END, id);
+        return pcmk_rc_undetermined;
+    }
+
+    if (end == NULL) {
+        xmlNode *duration = first_named_child(date_expression,
+                                              PCMK_XE_DURATION);
+
+        if (duration != NULL) {
+            /* @COMPAT When we can break behavioral backward compatibility,
+             * return the result of this if not OK
+             */
+            pcmk__unpack_duration(duration, start, &end);
+        }
+    }
+
+    if ((start != NULL) && (crm_time_compare(now, start) < 0)) {
+        pcmk__set_time_if_earlier(next_change, start);
+        crm_time_free(start);
+        crm_time_free(end);
+        return pcmk_rc_before_range;
+    }
+
+    if (end != NULL) {
+        if (crm_time_compare(now, end) > 0) {
+            crm_time_free(start);
+            crm_time_free(end);
+            return pcmk_rc_after_range;
+        }
+
+        // Evaluation doesn't change until second after end
+        if (next_change != NULL) {
+            crm_time_add_seconds(end, 1);
+            pcmk__set_time_if_earlier(next_change, end);
+        }
+    }
+
+    crm_time_free(start);
+    crm_time_free(end);
+    return pcmk_rc_within_range;
+}
+
+/*!
+ * \internal
  * \brief Evaluate a date_expression
  *
  * \param[in]  expr         XML of rule expression
@@ -308,54 +397,30 @@ int
 pe__eval_date_expr(const xmlNode *expr, const crm_time_t *now,
                    crm_time_t *next_change)
 {
+    const char *id = pcmk__xe_id(expr);
     const char *op = crm_element_value(expr, PCMK_XA_OPERATION);
-
-    crm_time_t *start = NULL;
-    crm_time_t *end = NULL;
-    xmlNode *duration_spec = NULL;
     xmlNode *date_spec = NULL;
 
     // "undetermined" will also be returned for parsing errors
     int rc = pcmk_rc_undetermined;
 
-    crm_trace("Testing expression: %s", pcmk__xe_id(expr));
+    crm_trace("Testing expression: %s", id);
 
-    duration_spec = first_named_child(expr, PCMK_XE_DURATION);
     date_spec = first_named_child(expr, PCMK_XE_DATE_SPEC);
-
-    pcmk__xe_get_datetime(expr, PCMK_XA_START, &start);
-    pcmk__xe_get_datetime(expr, PCMK_XA_END, &end);
-
-    if (start != NULL && end == NULL && duration_spec != NULL) {
-        /* @COMPAT When we can break behavioral backward compatibility,
-         * return the result of this if it fails
-         */
-        pcmk__unpack_duration(duration_spec, start, &end);
-    }
 
     if (pcmk__str_eq(op, PCMK_VALUE_IN_RANGE,
                      pcmk__str_null_matches|pcmk__str_casei)) {
-        if ((start == NULL) && (end == NULL)) {
-            // in_range requires at least one of start or end
-        } else if ((start != NULL) && (crm_time_compare(now, start) < 0)) {
-            rc = pcmk_rc_before_range;
-            pcmk__set_time_if_earlier(next_change, start);
-        } else if ((end != NULL) && (crm_time_compare(now, end) > 0)) {
-            rc = pcmk_rc_after_range;
-        } else {
-            rc = pcmk_rc_within_range;
-            if (end && next_change) {
-                // Evaluation doesn't change until second after end
-                crm_time_add_seconds(end, 1);
-                pcmk__set_time_if_earlier(next_change, end);
-            }
-        }
+        rc = evaluate_in_range(expr, id, now, next_change);
 
     } else if (pcmk__str_eq(op, PCMK_VALUE_DATE_SPEC, pcmk__str_casei)) {
         rc = pcmk__evaluate_date_spec(date_spec, now);
         // @TODO set next_change appropriately
 
     } else if (pcmk__str_eq(op, PCMK_VALUE_GT, pcmk__str_casei)) {
+        crm_time_t *start = NULL;
+
+        pcmk__xe_get_datetime(expr, PCMK_XA_START, &start);
+
         if (start == NULL) {
             // gt requires start
         } else if (crm_time_compare(now, start) > 0) {
@@ -367,8 +432,13 @@ pe__eval_date_expr(const xmlNode *expr, const crm_time_t *now,
             crm_time_add_seconds(start, 1);
             pcmk__set_time_if_earlier(next_change, start);
         }
+        crm_time_free(start);
 
     } else if (pcmk__str_eq(op, PCMK_VALUE_LT, pcmk__str_casei)) {
+        crm_time_t *end = NULL;
+
+        pcmk__xe_get_datetime(expr, PCMK_XA_END, &end);
+
         if (end == NULL) {
             // lt requires end
         } else if (crm_time_compare(now, end) < 0) {
@@ -377,9 +447,8 @@ pe__eval_date_expr(const xmlNode *expr, const crm_time_t *now,
         } else {
             rc = pcmk_rc_after_range;
         }
+        crm_time_free(end);
     }
 
-    crm_time_free(start);
-    crm_time_free(end);
     return rc;
 }
