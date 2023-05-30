@@ -59,8 +59,10 @@ qb_ipcs_service_t *ipcs_shm = NULL;
 static void cib_process_request(xmlNode *request, gboolean privileged,
                                 const pcmk__client_t *cib_client);
 
-static int cib_process_command(xmlNode *request, xmlNode **reply,
-                               xmlNode **cib_diff, gboolean privileged);
+static int cib_process_command(xmlNode *request,
+                               const cib_operation_t *operation,
+                               xmlNode **reply, xmlNode **cib_diff,
+                               bool privileged);
 
 static gboolean cib_common_callback(qb_ipcs_connection_t *c, void *data,
                                     size_t size, gboolean privileged);
@@ -1110,7 +1112,8 @@ cib_process_request(xmlNode *request, gboolean privileged,
         int level = LOG_INFO;
         const char *section = crm_element_value(request, F_CIB_SECTION);
 
-        rc = cib_process_command(request, &op_reply, &result_diff, privileged);
+        rc = cib_process_command(request, operation, &op_reply, &result_diff,
+                                 privileged);
 
         if (!is_update) {
             level = LOG_TRACE;
@@ -1363,7 +1366,8 @@ contains_config_change(xmlNode *diff)
 }
 
 static int
-cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gboolean privileged)
+cib_process_command(xmlNode *request, const cib_operation_t *operation,
+                    xmlNode **reply, xmlNode **cib_diff, bool privileged)
 {
     xmlNode *input = NULL;
     xmlNode *output = NULL;
@@ -1377,8 +1381,6 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     const char *client_id = crm_element_value(request, F_CIB_CLIENTID);
     const char *client_name = crm_element_value(request, F_CIB_CLIENTNAME);
     const char *origin = crm_element_value(request, F_ORIG);
-
-    const cib_operation_t *operation = NULL;
 
     int rc = pcmk_ok;
 
@@ -1401,12 +1403,6 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     /* Start processing the request... */
     op = crm_element_value(request, F_CIB_OPERATION);
     crm_element_value_int(request, F_CIB_CALLOPTS, &call_options);
-
-    rc = cib_get_operation(op, &operation);
-    if (rc != pcmk_ok) {
-        crm_trace("Failed to get operation: %s", pcmk_strerror(rc));
-        goto done;
-    }
 
     if (!privileged && pcmk_is_set(operation->flags, cib_op_attr_privileged)) {
         rc = -EACCES;
@@ -1567,10 +1563,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     }
 
     crm_trace("cleanup");
-
-    if (operation != NULL) {
-        operation->cleanup(call_options, &input, &output);
-    }
+    operation->cleanup(call_options, &input, &output);
 
     free_digests(&before_digests);
 
