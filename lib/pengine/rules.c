@@ -16,6 +16,7 @@
 #include <crm/pengine/rules.h>
 
 #include <crm/common/iso8601_internal.h>
+#include <crm/common/nvpair_internal.h>
 #include <crm/common/xml_internal.h>
 #include <crm/pengine/internal.h>
 #include <crm/pengine/rules_internal.h>
@@ -855,11 +856,10 @@ int
 pe__eval_date_expr(const xmlNode *expr, const crm_time_t *now,
                    crm_time_t *next_change)
 {
-    crm_time_t *start = NULL;
-    crm_time_t *end = NULL;
-    const char *value = NULL;
     const char *op = crm_element_value(expr, PCMK_XA_OPERATION);
 
+    crm_time_t *start = NULL;
+    crm_time_t *end = NULL;
     xmlNode *duration_spec = NULL;
     xmlNode *date_spec = NULL;
 
@@ -871,14 +871,8 @@ pe__eval_date_expr(const xmlNode *expr, const crm_time_t *now,
     duration_spec = first_named_child(expr, PCMK_XE_DURATION);
     date_spec = first_named_child(expr, PCMK_XE_DATE_SPEC);
 
-    value = crm_element_value(expr, PCMK_XA_START);
-    if (value != NULL) {
-        start = crm_time_new(value);
-    }
-    value = crm_element_value(expr, PCMK_XA_END);
-    if (value != NULL) {
-        end = crm_time_new(value);
-    }
+    pcmk__xe_get_datetime(expr, PCMK_XA_START, &start);
+    pcmk__xe_get_datetime(expr, PCMK_XA_END, &end);
 
     if (start != NULL && end == NULL && duration_spec != NULL) {
         end = parse_xml_duration(start, duration_spec);

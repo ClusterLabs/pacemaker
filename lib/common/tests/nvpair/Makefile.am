@@ -14,6 +14,7 @@ include $(top_srcdir)/mk/unittest.mk
 check_PROGRAMS = crm_meta_name_test		\
 		 crm_meta_value_test		\
 		 pcmk__xe_attr_is_true_test 	\
+		 pcmk__xe_get_datetime_test	\
 		 pcmk__xe_get_bool_attr_test 	\
 		 pcmk__xe_set_bool_attr_test
 
