@@ -24,7 +24,6 @@
 
 #include <sys/types.h>
 #include <regex.h>
-#include <ctype.h>
 
 CRM_TRACE_INIT_DATA(pe_rules);
 
@@ -334,72 +333,6 @@ pe_unpack_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
 
     pe_eval_nvpairs(top, xml_obj, set_name, &rule_data, hash,
                     always_first, overwrite, next_change);
-}
-
-/*!
- * \brief Expand any regular expression submatches (%0-%9) in a string
- *
- * \param[in] string      String possibly containing submatch variables
- * \param[in] match_data  If not NULL, regular expression matches
- *
- * \return Newly allocated string identical to \p string with submatches
- *         expanded, or NULL if there were no matches
- */
-char *
-pe_expand_re_matches(const char *string, const pe_re_match_data_t *match_data)
-{
-    size_t len = 0;
-    int i;
-    const char *p, *last_match_index;
-    char *p_dst, *result = NULL;
-
-    if (pcmk__str_empty(string) || !match_data) {
-        return NULL;
-    }
-
-    p = last_match_index = string;
-
-    while (*p) {
-        if (*p == '%' && *(p + 1) && isdigit(*(p + 1))) {
-            i = *(p + 1) - '0';
-            if (match_data->nregs >= i && match_data->pmatch[i].rm_so != -1 &&
-                match_data->pmatch[i].rm_eo > match_data->pmatch[i].rm_so) {
-                len += p - last_match_index + (match_data->pmatch[i].rm_eo - match_data->pmatch[i].rm_so);
-                last_match_index = p + 2;
-            }
-            p++;
-        }
-        p++;
-    }
-    len += p - last_match_index + 1;
-
-    /* FIXME: Excessive? */
-    if (len - 1 <= 0) {
-        return NULL;
-    }
-
-    p_dst = result = calloc(1, len);
-    p = string;
-
-    while (*p) {
-        if (*p == '%' && *(p + 1) && isdigit(*(p + 1))) {
-            i = *(p + 1) - '0';
-            if (match_data->nregs >= i && match_data->pmatch[i].rm_so != -1 &&
-                match_data->pmatch[i].rm_eo > match_data->pmatch[i].rm_so) {
-                /* rm_eo can be equal to rm_so, but then there is nothing to do */
-                int match_len = match_data->pmatch[i].rm_eo - match_data->pmatch[i].rm_so;
-                memcpy(p_dst, match_data->string + match_data->pmatch[i].rm_so, match_len);
-                p_dst += match_len;
-            }
-            p++;
-        } else {
-            *(p_dst) = *(p);
-            p_dst++;
-        }
-        p++;
-    }
-
-    return result;
 }
 
 /*!
@@ -804,7 +737,12 @@ pe__eval_attr_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
     if (rule_data->match_data != NULL) {
         // Expand any regular expression submatches (%0-%9) in attribute name
         if (rule_data->match_data->re != NULL) {
-            char *resolved_attr = pe_expand_re_matches(attr, rule_data->match_data->re);
+            const char *match = rule_data->match_data->re->string;
+            const regmatch_t *submatches = rule_data->match_data->re->pmatch;
+            const int nmatches = rule_data->match_data->re->nregs;
+            char *resolved_attr = pcmk__replace_submatches(attr, match,
+                                                           submatches,
+                                                           nmatches);
 
             if (resolved_attr != NULL) {
                 attr = (const char *) resolved_attr;
@@ -980,6 +918,16 @@ enum expression_type
 find_expression_type(xmlNode *expr)
 {
     return pcmk__expression_type(expr);
+}
+
+char *
+pe_expand_re_matches(const char *string, const pe_re_match_data_t *match_data)
+{
+    if (match_data == NULL) {
+        return NULL;
+    }
+    return pcmk__replace_submatches(string, match_data->string,
+                                    match_data->pmatch, match_data->nregs);
 }
 
 // LCOV_EXCL_STOP

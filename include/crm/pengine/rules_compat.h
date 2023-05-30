@@ -68,6 +68,10 @@ void unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj,
 //! \deprecated Do not use
 enum expression_type find_expression_type(xmlNode *expr);
 
+//! \deprecated Do not use
+char *pe_expand_re_matches(const char *string,
+                           const pe_re_match_data_t *match_data);
+
 #ifdef __cplusplus
 }
 #endif

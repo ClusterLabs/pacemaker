@@ -9,7 +9,10 @@
 
 #include <crm_internal.h>
 
-#include <stdio.h>                          // NULL
+#include <stdio.h>                          // NULL, size_t
+#include <stdlib.h>                         // calloc()
+#include <ctype.h>                          // isdigit()
+#include <regex.h>                          // regmatch_t
 #include <stdint.h>                         // uint32_t
 #include <inttypes.h>                       // PRIu32
 #include <glib.h>                           // gboolean, FALSE
@@ -590,4 +593,76 @@ pcmk__evaluate_date_expression(const xmlNode *date_expression,
     crm_trace(PCMK_XE_DATE_EXPRESSION " %s (%s): %s (%d)",
               id, op, pcmk_rc_str(rc), rc);
     return rc;
+}
+
+/*!
+ * \internal
+ * \brief Expand any regular expression submatches (%0-%9) in a string
+ *
+ * \param[in] string      String possibly containing submatch variables
+ * \param[in] match       String that matched the regular expression
+ * \param[in] submatches  Regular expression submatches (as set by regexec())
+ * \param[in] nmatches    Number of entries in \p submatches[]
+ *
+ * \return Newly allocated string identical to \p string with submatches
+ *         expanded, or NULL if there were no matches
+ */
+char *
+pcmk__replace_submatches(const char *string, const char *match,
+                         const regmatch_t submatches[], int nmatches)
+{
+    size_t len = 0;
+    int i;
+    const char *p, *last_match_index;
+    char *p_dst, *result = NULL;
+
+    if (pcmk__str_empty(string)) {
+        return NULL;
+    }
+
+    p = last_match_index = string;
+
+    while (*p) {
+        if (*p == '%' && *(p + 1) && isdigit(*(p + 1))) {
+            i = *(p + 1) - '0';
+            if ((nmatches >= i) && (submatches[i].rm_so != -1)
+                && (submatches[i].rm_eo > submatches[i].rm_so)) {
+                len += p - last_match_index
+                       + (submatches[i].rm_eo - submatches[i].rm_so);
+                last_match_index = p + 2;
+            }
+            p++;
+        }
+        p++;
+    }
+    len += p - last_match_index + 1;
+
+    /* FIXME: Excessive? */
+    if (len - 1 <= 0) {
+        return NULL;
+    }
+
+    p_dst = result = calloc(1, len);
+    p = string;
+
+    while (*p) {
+        if (*p == '%' && *(p + 1) && isdigit(*(p + 1))) {
+            i = *(p + 1) - '0';
+            if ((nmatches >= i) && (submatches[i].rm_so != -1)
+                && (submatches[i].rm_eo > submatches[i].rm_so)) {
+                // rm_eo can be equal to rm_so, but then there is nothing to do
+                int match_len = submatches[i].rm_eo - submatches[i].rm_so;
+
+                memcpy(p_dst, match + submatches[i].rm_so, match_len);
+                p_dst += match_len;
+            }
+            p++;
+        } else {
+            *(p_dst) = *(p);
+            p_dst++;
+        }
+        p++;
+    }
+
+    return result;
 }

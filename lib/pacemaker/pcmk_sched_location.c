@@ -172,7 +172,9 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
     if ((re_match_data != NULL) && (re_match_data->nregs > 0)
         && (re_match_data->pmatch[0].rm_so != -1) && !raw_score) {
 
-        char *result = pe_expand_re_matches(score, re_match_data);
+        char *result = pcmk__replace_submatches(score, re_match_data->string,
+                                                re_match_data->pmatch,
+                                                re_match_data->nregs);
 
         if (result != NULL) {
             score = result;
