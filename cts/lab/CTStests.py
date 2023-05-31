@@ -16,10 +16,8 @@ __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT AN
 #                Thank you.
 #
 
-import os
 import re
 import time
-import tempfile
 
 from stat import *
 
@@ -40,134 +38,6 @@ AllTestClasses.append(StopOnebyOne)
 AllTestClasses.append(RestartOnebyOne)
 AllTestClasses.append(PartialStart)
 AllTestClasses.append(StandbyTest)
-
-
-class BandwidthTest(CTSTest):
-#        Tests should not be cluster-manager-specific
-#        If you need to find out cluster manager configuration to do this, then
-#        it should be added to the generic cluster manager API.
-    '''Test the bandwidth which the cluster uses'''
-    def __init__(self, cm):
-        CTSTest.__init__(self, cm)
-
-        self.stats["min"] = 0
-        self.stats["max"] = 0
-        self.stats["totalbandwidth"] = 0
-
-        self.name = "Bandwidth"
-        self._start = StartTest(cm)
-        (handle, self.tempfile) = tempfile.mkstemp(".cts")
-        os.close(handle)
-        self._startall = SimulStartLite(cm)
-
-    def __call__(self, node):
-        '''Perform the Bandwidth test'''
-        self.incr("calls")
-
-        if self._cm.upcount() < 1:
-            return self.skipped()
-
-        Path = self._cm.InternalCommConfig()
-        if "ip" not in Path["mediatype"]:
-             return self.skipped()
-
-        port = Path["port"][0]
-        port = int(port)
-
-        ret = self._startall(None)
-        if not ret:
-            return self.failure("Test setup failed")
-        time.sleep(5)  # We get extra messages right after startup.
-
-        fstmpfile = "/var/run/band_estimate"
-        dumpcmd = "tcpdump -p -n -c 102 -i any udp port %d > %s 2>&1" \
-        %                (port, fstmpfile)
-
-        (rc, _) = self._rsh(node, dumpcmd)
-        if rc == 0:
-            farfile = "root@%s:%s" % (node, fstmpfile)
-            self._rsh.copy(farfile, self.tempfile)
-            Bandwidth = self.countbandwidth(self.tempfile)
-            if not Bandwidth:
-                self._logger.log("Could not compute bandwidth.")
-                return self.success()
-            intband = int(Bandwidth + 0.5)
-            self._logger.log("...bandwidth: %d bits/sec" % intband)
-
-            self.stats["totalbandwidth"] += Bandwidth
-
-            if self.stats["min"] == 0:
-                self.stats["min"] = Bandwidth
-
-            if Bandwidth > self.stats["max"]:
-                self.stats["max"] = Bandwidth
-
-            if Bandwidth < self.stats["min"]:
-                self.stats["min"] = Bandwidth
-
-            self._rsh(node, "rm -f %s" % fstmpfile)
-            os.unlink(self.tempfile)
-            return self.success()
-        else:
-            return self.failure("no response from tcpdump command [%d]!" % rc)
-
-    def countbandwidth(self, file):
-        fp = open(file, "r")
-        fp.seek(0)
-        count = 0
-        sum = 0
-        while 1:
-            line = fp.readline()
-            if not line:
-                return None
-            if re.search("udp",line) or re.search("UDP,", line):
-                count = count + 1
-                linesplit = line.split(" ")
-                for j in range(len(linesplit)-1):
-                    if linesplit[j] == "udp": break
-                    if linesplit[j] == "length:": break
-
-                try:
-                    sum = sum + int(linesplit[j+1])
-                except ValueError:
-                    self._logger.log("Invalid tcpdump line: %s" % line)
-                    return None
-                T1 = linesplit[0]
-                timesplit = T1.split(":")
-                time2split = timesplit[2].split(".")
-                time1 = (int(timesplit[0])*60+int(timesplit[1]))*60+int(time2split[0])+int(time2split[1])*0.000001
-                break
-
-        while count < 100:
-            line = fp.readline()
-            if not line:
-                return None
-            if re.search("udp",line) or re.search("UDP,", line):
-                count = count+1
-                linessplit = line.split(" ")
-                for j in range(len(linessplit)-1):
-                    if linessplit[j] == "udp": break
-                    if linessplit[j] == "length:": break
-                try:
-                    sum = int(linessplit[j+1]) + sum
-                except ValueError:
-                    self._logger.log("Invalid tcpdump line: %s" % line)
-                    return None
-
-        T2 = linessplit[0]
-        timesplit = T2.split(":")
-        time2split = timesplit[2].split(".")
-        time2 = (int(timesplit[0])*60+int(timesplit[1]))*60+int(time2split[0])+int(time2split[1])*0.000001
-        time = time2-time1
-        if (time <= 0):
-            return 0
-        return int((sum*8)/time)
-
-    def is_applicable(self):
-        '''BandwidthTest never applicable'''
-        return False
-
-AllTestClasses.append(BandwidthTest)
 
 
 ###################################################################
