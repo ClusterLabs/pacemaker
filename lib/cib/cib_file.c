@@ -186,8 +186,8 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
         data = pcmk_find_cib_element(data, section);
     }
 
-    rc = cib_perform_op(op, call_options, fn, query,
-                        section, request, data, TRUE, &changed, in_mem_cib, &result_cib, &cib_diff,
+    rc = cib_perform_op(op, call_options, fn, query, section, request, data,
+                        TRUE, &changed, &in_mem_cib, &result_cib, &cib_diff,
                         &output);
 
     free_xml(request);

@@ -141,11 +141,11 @@ typedef int (*cib_op_t) (const char *, int, const char *, xmlNode *,
 
 cib_t *cib_new_variant(void);
 
-int cib_perform_op(const char *op, int call_options, cib_op_t fn, gboolean is_query,
-                   const char *section, xmlNode * req, xmlNode * input,
-                   gboolean manage_counters, gboolean * config_changed,
-                   xmlNode * current_cib, xmlNode ** result_cib, xmlNode ** diff,
-                   xmlNode ** output);
+int cib_perform_op(const char *op, int call_options, cib_op_t fn,
+                   gboolean is_query, const char *section, xmlNode *req,
+                   xmlNode *input, gboolean manage_counters,
+                   gboolean *config_changed, xmlNode **current_cib,
+                   xmlNode **result_cib, xmlNode **diff, xmlNode **output);
 
 xmlNode *cib_create_op(int call_id, const char *op, const char *host,
                        const char *section, xmlNode * data, int call_options,

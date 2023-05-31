@@ -1416,7 +1416,7 @@ cib_process_command(xmlNode *request, const cib_operation_t *operation,
 
     if (!pcmk_is_set(operation->flags, cib_op_attr_modifies)) {
         rc = cib_perform_op(op, call_options, operation->fn, TRUE, section,
-                            request, input, FALSE, &config_changed, the_cib,
+                            request, input, FALSE, &config_changed, &the_cib,
                             &result_cib, NULL, &output);
 
         CRM_CHECK(result_cib == NULL, free_xml(result_cib));
@@ -1469,7 +1469,7 @@ cib_process_command(xmlNode *request, const cib_operation_t *operation,
     // result_cib must not be modified after cib_perform_op() returns
     rc = cib_perform_op(op, call_options, operation->fn, FALSE, section,
                         request, input, manage_counters, &config_changed,
-                        the_cib, &result_cib, cib_diff, &output);
+                        &the_cib, &result_cib, cib_diff, &output);
 
     // @COMPAT: Legacy code
     if (!manage_counters) {

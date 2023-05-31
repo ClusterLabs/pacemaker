@@ -107,12 +107,14 @@ cib_process_erase(const char *op, int options, const char *section, xmlNode * re
     int result = pcmk_ok;
 
     crm_trace("Processing \"%s\" event", op);
-    *answer = NULL;
-    free_xml(*result_cib);
-    *result_cib = createEmptyCib(0);
 
+    if (*result_cib != existing_cib) {
+        free_xml(*result_cib);
+    }
+    *result_cib = createEmptyCib(0);
     copy_in_properties(*result_cib, existing_cib);
     update_counter(*result_cib, XML_ATTR_GENERATION_ADMIN, false);
+    *answer = NULL;
 
     return result;
 }
@@ -262,7 +264,9 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
                      replace_admin_epoch, replace_epoch, replace_updates, peer);
         }
 
-        free_xml(*result_cib);
+        if (*result_cib != existing_cib) {
+            free_xml(*result_cib);
+        }
         *result_cib = copy_xml(input);
 
     } else {
@@ -646,8 +650,11 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
               op, originator,
               (pcmk_is_set(options, cib_force_diff)? " (global update)" : ""));
 
-    free_xml(*result_cib);
+    if (*result_cib != existing_cib) {
+        free_xml(*result_cib);
+    }
     *result_cib = copy_xml(existing_cib);
+
     return xml_apply_patchset(*result_cib, input, TRUE);
 }
 

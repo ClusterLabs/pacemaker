@@ -143,14 +143,16 @@ cib_acl_enabled(xmlNode *xml, const char *user)
 
 int
 cib_perform_op(const char *op, int call_options, cib_op_t fn, gboolean is_query,
-               const char *section, xmlNode * req, xmlNode * input,
-               gboolean manage_counters, gboolean * config_changed,
-               xmlNode * current_cib, xmlNode ** result_cib, xmlNode ** diff, xmlNode ** output)
+               const char *section, xmlNode *req, xmlNode *input,
+               gboolean manage_counters, gboolean *config_changed,
+               xmlNode **current_cib, xmlNode **result_cib, xmlNode **diff,
+               xmlNode **output)
 {
     int rc = pcmk_ok;
     gboolean check_schema = TRUE;
     xmlNode *top = NULL;
     xmlNode *scratch = NULL;
+    xmlNode *patchset_cib = NULL;
     xmlNode *local_diff = NULL;
 
     const char *new_version = NULL;
@@ -165,6 +167,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t fn, gboolean is_query,
               (is_query? "read-only " : ""), op);
 
     CRM_CHECK(output != NULL, return -ENOMSG);
+    CRM_CHECK(current_cib != NULL, return -ENOMSG);
     CRM_CHECK(result_cib != NULL, return -ENOMSG);
     CRM_CHECK(config_changed != NULL, return -ENOMSG);
 
@@ -180,18 +183,19 @@ cib_perform_op(const char *op, int call_options, cib_op_t fn, gboolean is_query,
     }
 
     if (is_query) {
-        xmlNode *cib_ro = current_cib;
+        xmlNode *cib_ro = *current_cib;
         xmlNode *cib_filtered = NULL;
 
-        if(cib_acl_enabled(cib_ro, user)) {
-            if(xml_acl_filtered_copy(user, current_cib, current_cib, &cib_filtered)) {
-                if (cib_filtered == NULL) {
-                    crm_debug("Pre-filtered the entire cib");
-                    return -EACCES;
-                }
-                cib_ro = cib_filtered;
-                crm_log_xml_trace(cib_ro, "filtered");
+        if (cib_acl_enabled(cib_ro, user)
+            && xml_acl_filtered_copy(user, *current_cib, *current_cib,
+                                     &cib_filtered)) {
+
+            if (cib_filtered == NULL) {
+                crm_debug("Pre-filtered the entire cib");
+                return -EACCES;
             }
+            cib_ro = cib_filtered;
+            crm_log_xml_trace(cib_ro, "filtered");
         }
 
         rc = (*fn) (op, call_options, section, req, input, cib_ro, result_cib, output);
@@ -202,14 +206,14 @@ cib_perform_op(const char *op, int call_options, cib_op_t fn, gboolean is_query,
         } else if(cib_filtered == *output) {
             cib_filtered = NULL; /* Let them have this copy */
 
-        } else if(*output == current_cib) {
+        } else if (*output == *current_cib) {
             /* They already know not to free it */
 
         } else if(cib_filtered && (*output)->doc == cib_filtered->doc) {
             /* We're about to free the document of which *output is a part */
             *output = copy_xml(*output);
 
-        } else if((*output)->doc == current_cib->doc) {
+        } else if ((*output)->doc == (*current_cib)->doc) {
             /* Give them a copy they can free */
             *output = copy_xml(*output);
         }
@@ -222,27 +226,36 @@ cib_perform_op(const char *op, int call_options, cib_op_t fn, gboolean is_query,
     if (pcmk_is_set(call_options, cib_zero_copy)) {
         /* Conditional on v2 patch style */
 
-        scratch = current_cib;
+        scratch = *current_cib;
 
-        /* Create a shallow copy of current_cib for the version details */
-        current_cib = create_xml_node(NULL, (const char *)scratch->name);
-        copy_in_properties(current_cib, scratch);
-        top = current_cib;
+        // Make a copy of the top-level element to store version details
+        top = create_xml_node(NULL, (const char *) scratch->name);
+        copy_in_properties(top, scratch);
+        patchset_cib = top;
 
         xml_track_changes(scratch, user, NULL, cib_acl_enabled(scratch, user));
         rc = (*fn) (op, call_options, section, req, input, scratch, &scratch, output);
 
+        /* If scratch points to a new object now (for example, after an erase
+         * operation), then *current_cib should point to the same object.
+         */
+        *current_cib = scratch;
+
     } else {
-        scratch = copy_xml(current_cib);
+        scratch = copy_xml(*current_cib);
+        patchset_cib = *current_cib;
+
         xml_track_changes(scratch, user, NULL, cib_acl_enabled(scratch, user));
-        rc = (*fn) (op, call_options, section, req, input, current_cib, &scratch, output);
+        rc = (*fn) (op, call_options, section, req, input, *current_cib,
+                    &scratch, output);
 
         if(scratch && xml_tracking_changes(scratch) == FALSE) {
             crm_trace("Inferring changes after %s op", op);
-            xml_track_changes(scratch, user, current_cib, cib_acl_enabled(current_cib, user));
-            xml_calculate_changes(current_cib, scratch);
+            xml_track_changes(scratch, user, *current_cib,
+                              cib_acl_enabled(*current_cib, user));
+            xml_calculate_changes(*current_cib, scratch);
         }
-        CRM_CHECK(current_cib != scratch, return -EINVAL);
+        CRM_CHECK(*current_cib != scratch, return -EINVAL);
     }
 
     xml_acl_disable(scratch); /* Allow the system to make any additional changes */
@@ -271,12 +284,12 @@ cib_perform_op(const char *op, int call_options, cib_op_t fn, gboolean is_query,
         }
     }
 
-    if (current_cib) {
+    if (patchset_cib != NULL) {
         int old = 0;
         int new = 0;
 
         crm_element_value_int(scratch, XML_ATTR_GENERATION_ADMIN, &new);
-        crm_element_value_int(current_cib, XML_ATTR_GENERATION_ADMIN, &old);
+        crm_element_value_int(patchset_cib, XML_ATTR_GENERATION_ADMIN, &old);
 
         if (old > new) {
             crm_err("%s went backwards: %d -> %d (Opts: %#x)",
@@ -287,7 +300,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t fn, gboolean is_query,
 
         } else if (old == new) {
             crm_element_value_int(scratch, XML_ATTR_GENERATION, &new);
-            crm_element_value_int(current_cib, XML_ATTR_GENERATION, &old);
+            crm_element_value_int(patchset_cib, XML_ATTR_GENERATION, &old);
             if (old > new) {
                 crm_err("%s went backwards: %d -> %d (Opts: %#x)",
                         XML_ATTR_GENERATION, old, new, call_options);
@@ -303,12 +316,14 @@ cib_perform_op(const char *op, int call_options, cib_op_t fn, gboolean is_query,
     fix_plus_plus_recursive(scratch);
 
     if (pcmk_is_set(call_options, cib_zero_copy)) {
-        /* At this point, current_cib is just the 'cib' tag and its properties,
+        /* At this point, patchset_cib is just the "cib" tag and its properties.
          *
          * The v1 format would barf on this, but we know the v2 patch
          * format only needs it for the top-level version fields
          */
-        local_diff = xml_create_patchset(2, current_cib, scratch, (bool*)config_changed, manage_counters);
+        local_diff = xml_create_patchset(2, patchset_cib, scratch,
+                                         (bool*) config_changed,
+                                         manage_counters);
 
     } else {
         static time_t expires = 0;
@@ -319,7 +334,9 @@ cib_perform_op(const char *op, int call_options, cib_op_t fn, gboolean is_query,
             with_digest = TRUE;
         }
 
-        local_diff = xml_create_patchset(0, current_cib, scratch, (bool*)config_changed, manage_counters);
+        local_diff = xml_create_patchset(0, patchset_cib, scratch,
+                                         (bool*) config_changed,
+                                         manage_counters);
     }
 
     // Create a log output object only if we're going to use it
@@ -338,7 +355,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t fn, gboolean is_query,
     if(local_diff) {
         int temp_rc = pcmk_rc_no_output;
 
-        patchset_process_digest(local_diff, current_cib, scratch, with_digest);
+        patchset_process_digest(local_diff, patchset_cib, scratch, with_digest);
 
         if (out == NULL) {
             rc = pcmk_rc2legacy(pcmk__log_output_new(&out));
@@ -364,7 +381,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t fn, gboolean is_query,
                 // Validate the calculated patch set
                 int test_rc = pcmk_ok;
                 int format = 1;
-                xmlNode *cib_copy = copy_xml(current_cib);
+                xmlNode *cib_copy = copy_xml(patchset_cib);
 
                 crm_element_value_int(local_diff, "format", &format);
                 test_rc = xml_apply_patchset(cib_copy, local_diff,
@@ -372,7 +389,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t fn, gboolean is_query,
 
                 if (test_rc != pcmk_ok) {
                     save_xml_to_file(cib_copy, "PatchApply:calculated", NULL);
-                    save_xml_to_file(current_cib, "PatchApply:input", NULL);
+                    save_xml_to_file(patchset_cib, "PatchApply:input", NULL);
                     save_xml_to_file(scratch, "PatchApply:actual", NULL);
                     save_xml_to_file(local_diff, "PatchApply:diff", NULL);
                     crm_err("v%d patchset error, patch failed to apply: %s "
@@ -444,13 +461,17 @@ cib_perform_op(const char *op, int call_options, cib_op_t fn, gboolean is_query,
   done:
 
     *result_cib = scratch;
-    if(rc != pcmk_ok && cib_acl_enabled(current_cib, user)) {
-        if(xml_acl_filtered_copy(user, current_cib, scratch, result_cib)) {
-            if (*result_cib == NULL) {
-                crm_debug("Pre-filtered the entire cib result");
-            }
-            free_xml(scratch);
+
+    /* @TODO: This may not work correctly with cib_zero_copy, since we don't
+     * keep the original CIB.
+     */
+    if ((rc != pcmk_ok) && cib_acl_enabled(patchset_cib, user)
+        && xml_acl_filtered_copy(user, patchset_cib, scratch, result_cib)) {
+
+        if (*result_cib == NULL) {
+            crm_debug("Pre-filtered the entire cib result");
         }
+        free_xml(scratch);
     }
 
     if(diff) {
