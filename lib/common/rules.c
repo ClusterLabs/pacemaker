@@ -1296,60 +1296,56 @@ pcmk__evaluate_op_expression(const xmlNode *op_expression,
 
 /*!
  * \internal
- * \brief Evaluate a single rule expression, including any subexpressions
+ * \brief Evaluate a rule condition
  *
- * \param[in,out] expr         XML containing a rule expression
+ * \param[in,out] condition    XML containing a rule condition (a subrule, or an
+ *                             expression of any type)
  * \param[in]     rule_input   Values used to evaluate rule criteria
  * \param[out]    next_change  If not NULL, set to when evaluation will change
  *
- * \return Standard Pacemaker return code (\c pcmk_rc_ok if the expression
+ * \return Standard Pacemaker return code (\c pcmk_rc_ok if the condition
  *         passes, some other value if it does not)
  */
 int
-pcmk__evaluate_condition(xmlNode *expr, const pcmk_rule_input_t *rule_input,
+pcmk__evaluate_condition(xmlNode *condition,
+                         const pcmk_rule_input_t *rule_input,
                          crm_time_t *next_change)
 {
-    int rc = pcmk_rc_ok;
-    const char *uname = NULL;
 
-    switch (pcmk__expression_type(expr)) {
+    if ((condition == NULL) || (rule_input == NULL)) {
+        return EINVAL;
+    }
+
+    switch (pcmk__expression_type(condition)) {
         case pcmk__subexpr_rule:
-            rc = pcmk_evaluate_rule(expr, rule_input, next_change);
-            break;
+            return pcmk_evaluate_rule(condition, rule_input, next_change);
 
         case pcmk__subexpr_attribute:
         case pcmk__subexpr_location:
-            rc = pcmk__evaluate_attr_expression(expr, rule_input);
-            break;
+            return pcmk__evaluate_attr_expression(condition, rule_input);
 
         case pcmk__subexpr_datetime:
-            rc = pcmk__evaluate_date_expression(expr, rule_input->now,
-                                                next_change);
-            if (rc == pcmk_rc_within_range) {
-                rc = pcmk_rc_ok;
+            {
+                int rc = pcmk__evaluate_date_expression(condition,
+                                                        rule_input->now,
+                                                        next_change);
+
+                return (rc == pcmk_rc_within_range)? pcmk_rc_ok : rc;
             }
-            break;
 
         case pcmk__subexpr_resource:
-            rc = pcmk__evaluate_rsc_expression(expr, rule_input);
-            break;
+            return pcmk__evaluate_rsc_expression(condition, rule_input);
 
         case pcmk__subexpr_operation:
-            rc = pcmk__evaluate_op_expression(expr, rule_input);
-            break;
+            return pcmk__evaluate_op_expression(condition, rule_input);
 
-        default:
-            CRM_CHECK(FALSE /* bad type */ , return pcmk_rc_unpack_error);
-            break;
+        default: // Not possible with schema validation enabled
+            pcmk__config_err("Treating rule condition %s as not passing "
+                             "because %s is not a valid condition type",
+                             pcmk__s(pcmk__xe_id(condition), "without ID"),
+                             (const char *) condition->name);
+            return pcmk_rc_unpack_error;
     }
-    if (rule_input->node_attrs) {
-        uname = g_hash_table_lookup(rule_input->node_attrs, CRM_ATTR_UNAME);
-    }
-
-    crm_trace("Expression %s %s on %s",
-              pcmk__xe_id(expr), ((rc == pcmk_rc_ok)? "passed" : "failed"),
-              pcmk__s(uname, "all nodes"));
-    return rc;
 }
 
 /*!
