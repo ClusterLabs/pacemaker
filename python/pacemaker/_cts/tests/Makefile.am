@@ -13,8 +13,17 @@ pkgpythondir = $(pythondir)/$(PACKAGE)/_cts/tests
 
 pkgpython_PYTHON = __init__.py \
 				   ctstest.py \
+				   fliptest.py \
+				   partialstart.py \
 				   remotedriver.py \
+				   restarttest.py \
+				   restartonebyone.py \
+				   simulstart.py \
+				   simulstop.py \
 				   simulstartlite.py \
 				   simulstoplite.py \
+				   standbytest.py \
+				   startonebyone.py \
 				   starttest.py \
+				   stonithdtest.py \
 				   stoptest.py
