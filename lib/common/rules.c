@@ -891,66 +891,67 @@ pcmk__parse_source(const char *source)
 
 /*!
  * \internal
- * \brief Check whether an attribute expression evaluates to \c true
+ * \brief Get the result of a node attribute comparison for rule evaluation
  *
- * \param[in]   l_val   Value on left-hand side of comparison
- * \param[in]   r_val   Value on right-hand side of comparison
- * \param[in]   type    How to interpret the values
- * \param[in]   op      Type of comparison.
+ * \param[in] actual      Actual node attribute value
+ * \param[in] reference   Node attribute value from rule (ignored for
+ *                        \p comparison of \c pcmk__comparison_defined or
+ *                        \c pcmk__comparison_undefined)
+ * \param[in] type        How to interpret the values
+ * \param[in] comparison  How to compare the values
  *
- * \return  \c true if expression evaluates to \c true, \c false
- *          otherwise
+ * \return Standard Pacemaker return code (specifically, \c pcmk_rc_ok if the
+ *         comparison passes, and some other value if it does not)
  */
-static bool
-accept_attr_expr(const char *l_val, const char *r_val, enum pcmk__type type,
-                 enum pcmk__comparison op)
+static int
+evaluate_attr_comparison(const char *actual, const char *reference,
+                         enum pcmk__type type, enum pcmk__comparison comparison)
 {
-    int cmp;
+    int cmp = 0;
 
-    switch (op) {
+    switch (comparison) {
         case pcmk__comparison_defined:
-            return (l_val != NULL);
+            return (actual != NULL)? pcmk_rc_ok : pcmk_rc_op_unsatisfied;
 
         case pcmk__comparison_undefined:
-            return (l_val == NULL);
+            return (actual == NULL)? pcmk_rc_ok : pcmk_rc_op_unsatisfied;
 
         default:
             break;
     }
 
-    cmp = pcmk__cmp_by_type(l_val, r_val, type);
+    cmp = pcmk__cmp_by_type(actual, reference, type);
 
-    switch (op) {
+    switch (comparison) {
         case pcmk__comparison_eq:
-            return (cmp == 0);
+            return (cmp == 0)? pcmk_rc_ok : pcmk_rc_op_unsatisfied;
 
         case pcmk__comparison_ne:
-            return (cmp != 0);
+            return (cmp != 0)? pcmk_rc_ok : pcmk_rc_op_unsatisfied;
 
         default:
             break;
     }
 
-    if ((l_val == NULL) || (r_val == NULL)) {
-        // The comparison is meaningless from this point on
-        return false;
+    if ((actual == NULL) || (reference == NULL)) {
+        return pcmk_rc_op_unsatisfied; // Comparison would be meaningless
     }
 
-    switch (op) {
+    switch (comparison) {
         case pcmk__comparison_lt:
-            return (cmp < 0);
+            return (cmp < 0)? pcmk_rc_ok : pcmk_rc_after_range;
 
         case pcmk__comparison_lte:
-            return (cmp <= 0);
+            return (cmp <= 0)? pcmk_rc_ok : pcmk_rc_after_range;
 
         case pcmk__comparison_gt:
-            return (cmp > 0);
+            return (cmp > 0)? pcmk_rc_ok : pcmk_rc_before_range;
 
         case pcmk__comparison_gte:
-            return (cmp >= 0);
+            return (cmp >= 0)? pcmk_rc_ok : pcmk_rc_before_range;
 
         default: // Not possible with schema validation enabled
-            return false;
+            return pcmk_rc_op_unsatisfied;
     }
 }
 
@@ -1098,9 +1099,5 @@ pcmk__evaluate_attr_expression(const xmlNode *expr,
                           "valid type", pcmk__s(id, "without ID"), type);
     }
 
-    if (accept_attr_expr(h_val, value, type, comparison)) {
-        return pcmk_rc_ok;
-    } else {
-        return pcmk_rc_op_unsatisfied;
-    }
+    return evaluate_attr_comparison(h_val, value, type, comparison);
 }

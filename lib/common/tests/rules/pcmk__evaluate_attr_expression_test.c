@@ -477,7 +477,7 @@ type_version_equality(void **state)
 static void
 type_version_fails(void **state)
 {
-    assert_attr_expression(EXPR_TYPE_VERSION_FAILS, pcmk_rc_op_unsatisfied);
+    assert_attr_expression(EXPR_TYPE_VERSION_FAILS, pcmk_rc_before_range);
 }
 
 /*
@@ -530,7 +530,7 @@ op_lt_passes(void **state)
 static void
 op_lt_fails(void **state)
 {
-    assert_attr_expression(EXPR_OP_LT_FAILS, pcmk_rc_op_unsatisfied);
+    assert_attr_expression(EXPR_OP_LT_FAILS, pcmk_rc_after_range);
 }
 
 #define EXPR_OP_GT_PASSES                               \
@@ -556,7 +556,7 @@ op_gt_passes(void **state)
 static void
 op_gt_fails(void **state)
 {
-    assert_attr_expression(EXPR_OP_GT_FAILS, pcmk_rc_op_unsatisfied);
+    assert_attr_expression(EXPR_OP_GT_FAILS, pcmk_rc_before_range);
 }
 
 #define EXPR_OP_LTE_LT_PASSES                           \
@@ -595,7 +595,7 @@ op_lte_eq_passes(void **state)
 static void
 op_lte_fails(void **state)
 {
-    assert_attr_expression(EXPR_OP_LTE_FAILS, pcmk_rc_op_unsatisfied);
+    assert_attr_expression(EXPR_OP_LTE_FAILS, pcmk_rc_after_range);
 }
 
 #define EXPR_OP_GTE_GT_PASSES                           \
@@ -634,7 +634,7 @@ op_gte_eq_passes(void **state)
 static void
 op_gte_fails(void **state)
 {
-    assert_attr_expression(EXPR_OP_GTE_FAILS, pcmk_rc_op_unsatisfied);
+    assert_attr_expression(EXPR_OP_GTE_FAILS, pcmk_rc_before_range);
 }
 
 // This also tests that string is used if values aren't parseable as numbers
