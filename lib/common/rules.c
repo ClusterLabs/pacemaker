@@ -1319,12 +1319,7 @@ pcmk__evaluate_condition(xmlNode *expr, const pcmk_rule_input_t *rule_input,
 
         case pcmk__subexpr_attribute:
         case pcmk__subexpr_location:
-            /* these expressions can never succeed if there is
-             * no node to compare with
-             */
-            if (rule_input->node_attrs != NULL) {
-                rc = pcmk__evaluate_attr_expression(expr, rule_input);
-            }
+            rc = pcmk__evaluate_attr_expression(expr, rule_input);
             break;
 
         case pcmk__subexpr_datetime:
