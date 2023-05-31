@@ -1,5 +1,4 @@
-""" Test-specific classes for Pacemaker's Cluster Test Suite (CTS)
-"""
+""" Toggle nodes in and out of maintenance mode """
 
 __all__ = ["MaintenanceMode"]
 __copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
@@ -14,21 +13,32 @@ from pacemaker._cts.tests.starttest import StartTest
 from pacemaker._cts.timer import Timer
 
 
-###################################################################
 class MaintenanceMode(CTSTest):
-###################################################################
+    """ A concrete test that toggles nodes in and out of maintenance mode """
+
     def __init__(self, cm):
-        CTSTest.__init__(self,cm)
-        self.name = "MaintenanceMode"
-        self._start = StartTest(cm)
-        self._startall = SimulStartLite(cm)
-        self.max = 30
-        self.benchmark = True
+        """ Create a new MaintenanceMode instance
+
+            Arguments:
+
+            cm -- A ClusterManager instance
+        """
+
+        CTSTest.__init__(self, cm)
+
         self.action = "asyncmon"
+        self.benchmark = True
         self.interval = 0
+        self.max = 30
+        self.name = "MaintenanceMode"
         self.rid = "maintenanceDummy"
 
+        self._start = StartTest(cm)
+        self._startall = SimulStartLite(cm)
+
     def toggleMaintenanceMode(self, node, action):
+        """ Toggle maintenance mode on the given node """
+
         pats = []
         pats.append(self.templates["Pat:DC_IDLE"])
 
@@ -45,6 +55,7 @@ class MaintenanceMode(CTSTest):
 
         self.debug("Turning maintenance mode %s" % action)
         self._rsh(node, self.templates["MaintenanceMode%s" % (action)])
+
         if (action == "On"):
             self._rsh(node, "crm_resource -V -F -r %s -H %s &>/dev/null" % (self.rid, node))
 
@@ -58,6 +69,8 @@ class MaintenanceMode(CTSTest):
         return ""
 
     def insertMaintenanceDummy(self, node):
+        """ Create a dummy resource on the given node """
+
         pats = []
         pats.append(("%s.*" % node) + (self.templates["Pat:RscOpOK"] % ("start", self.rid)))
 
@@ -72,9 +85,12 @@ class MaintenanceMode(CTSTest):
         if watch.unmatched:
             self.debug("Failed to find patterns when adding maintenance dummy resource")
             return repr(watch.unmatched)
+
         return ""
 
     def removeMaintenanceDummy(self, node):
+        """ Remove the previously created dummy resource on the given node """
+
         pats = []
         pats.append(self.templates["Pat:RscOpOK"] % ("stop", self.rid))
 
@@ -88,22 +104,32 @@ class MaintenanceMode(CTSTest):
         if watch.unmatched:
             self.debug("Failed to find patterns when removing maintenance dummy resource")
             return repr(watch.unmatched)
+
         return ""
 
     def managedRscList(self, node):
+        """ Return a list of all resources managed by the cluster """
+
         rscList = []
         (_, lines) = self._rsh(node, "crm_resource -c", verbose=1)
+
         for line in lines:
             if re.search("^Resource", line):
                 tmp = AuditResource(self._cm, line)
+
                 if tmp.managed:
                     rscList.append(tmp.id)
 
         return rscList
 
     def verifyResources(self, node, rscList, managed):
+        """ Verify that all resources in rscList are managed if they are expected
+            to be, or unmanaged if they are expected to be.
+        """
+
         managedList = list(rscList)
         managed_str = "managed"
+
         if not managed:
             managed_str = "unmanaged"
 
@@ -111,6 +137,7 @@ class MaintenanceMode(CTSTest):
         for line in lines:
             if re.search("^Resource", line):
                 tmp = AuditResource(self._cm, line)
+
                 if managed and not tmp.managed:
                     continue
                 elif not managed and tmp.managed:
@@ -126,7 +153,8 @@ class MaintenanceMode(CTSTest):
         return False
 
     def __call__(self, node):
-        '''Perform the 'MaintenanceMode' test. '''
+        """ Perform this test """
+
         self.incr("calls")
         verify_managed = False
         verify_unmanaged = False
