@@ -364,6 +364,49 @@ cib_process_delete_absolute(const char *op, int options, const char *section, xm
     return -EINVAL;
 }
 
+static xmlNode *
+cib_msg_copy(xmlNode *msg)
+{
+    static const char *field_list[] = {
+        F_XML_TAGNAME,
+        F_TYPE,
+        F_CIB_CLIENTID,
+        F_CIB_CALLOPTS,
+        F_CIB_CALLID,
+        F_CIB_OPERATION,
+        F_CIB_ISREPLY,
+        F_CIB_SECTION,
+        F_CIB_HOST,
+        F_CIB_RC,
+        F_CIB_DELEGATED,
+        F_CIB_OBJID,
+        F_CIB_OBJTYPE,
+        F_CIB_EXISTING,
+        F_CIB_SEENCOUNT,
+        F_CIB_TIMEOUT,
+        F_CIB_GLOBAL_UPDATE,
+        F_CIB_CLIENTNAME,
+        F_CIB_USER,
+        F_CIB_NOTIFY_TYPE,
+        F_CIB_NOTIFY_ACTIVATE
+    };
+
+    xmlNode *copy = create_xml_node(NULL, "copy");
+
+    CRM_ASSERT(copy != NULL);
+
+    for (int lpc = 0; lpc < PCMK__NELEM(field_list); lpc++) {
+        const char *field = field_list[lpc];
+        const char *value = crm_element_value(msg, field);
+
+        if (value != NULL) {
+            crm_xml_add(copy, field, value);
+        }
+    }
+
+    return copy;
+}
+
 int
 sync_our_cib(xmlNode * request, gboolean all)
 {
@@ -375,22 +418,12 @@ sync_our_cib(xmlNode * request, gboolean all)
     xmlNode *replace_request = NULL;
 
     CRM_CHECK(the_cib != NULL, return -EINVAL);
-
-    replace_request = cib_msg_copy(request);
-    CRM_CHECK(replace_request != NULL, return -EINVAL);
+    CRM_CHECK(all || (host != NULL), return -EINVAL);
 
     crm_debug("Syncing CIB to %s", all ? "all peers" : host);
-    if (all == FALSE && host == NULL) {
-        crm_log_xml_err(request, "bad sync");
-    }
 
-    /* remove the "all == FALSE" condition
-     *
-     * sync_from was failing, the local client wasn't being notified
-     *    because it didn't know it was a reply
-     * setting this does not prevent the other nodes from applying it
-     *    if all == TRUE
-     */
+    replace_request = cib_msg_copy(request);
+
     if (host != NULL) {
         crm_xml_add(replace_request, F_CIB_ISREPLY, host);
     }

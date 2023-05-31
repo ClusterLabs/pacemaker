@@ -49,9 +49,12 @@ enum cib_client_flags {
  * \brief Bit flags for CIB operation attributes
  */
 enum cib_op_attr {
-    cib_op_attr_none       = 0,         //!< No special attributes
-    cib_op_attr_modifies   = (1 << 1),  //!< Modifies CIB
-    cib_op_attr_privileged = (1 << 2),  //!< Requires privileges
+    cib_op_attr_none           = 0,         //!< No special attributes
+    cib_op_attr_modifies       = (1 << 1),  //!< Modifies CIB
+    cib_op_attr_privileged     = (1 << 2),  //!< Requires privileges
+    cib_op_attr_local          = (1 << 3),  //!< Must only be processed locally
+    cib_op_attr_replaces       = (1 << 4),  //!< Replaces CIB
+    cib_op_attr_writes_through = (1 << 5),  //!< Writes to disk on success
 };
 
 typedef struct cib_operation_s {
@@ -133,7 +136,6 @@ int cib_process_upgrade_server(const char *op, int options, const char *section,
 void send_sync_request(const char *host);
 int sync_our_cib(xmlNode *request, gboolean all);
 
-xmlNode *cib_msg_copy(xmlNode *msg);
 int cib_get_operation(const char *op, const cib_operation_t **operation);
 void cib_diff_notify(const char *op, int result, const char *call_id,
                      const char *client_id, const char *client_name,

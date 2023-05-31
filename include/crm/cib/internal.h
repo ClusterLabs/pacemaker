@@ -15,7 +15,6 @@
 
 // Request types for CIB manager IPC/CPG
 #define PCMK__CIB_REQUEST_SECONDARY     "cib_slave"
-#define PCMK__CIB_REQUEST_ALL_SECONDARY "cib_slave_all"
 #define PCMK__CIB_REQUEST_PRIMARY       "cib_master"
 #define PCMK__CIB_REQUEST_SYNC_TO_ALL   "cib_sync"
 #define PCMK__CIB_REQUEST_SYNC_TO_ONE   "cib_sync_one"
@@ -82,6 +81,19 @@ enum cib_change_section_info {
     cib_change_section_status   = (1 << 2), //!< The status section has changed
 };
 
+/*!
+ * \internal
+ * \brief Set given <tt>enum cib_change_section_info</tt> flags
+ *
+ * \param[in,out] flags_orig    Group of flags to update
+ * \param[in]     flags_to_set  Flags to clear from \p flags_orig
+ */
+#define pcmk__set_change_section(flags_orig, flags_to_set) do {         \
+        flags_orig = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,  \
+                                        "CIB change section",           \
+                                        "change_section", flags_orig,   \
+                                        flags_to_set, #flags_to_set);   \
+    } while (0)
 
 gboolean cib_diff_version_details(xmlNode * diff, int *admin_epoch, int *epoch, int *updates,
                                   int *_admin_epoch, int *_epoch, int *_updates);

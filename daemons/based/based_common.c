@@ -156,7 +156,10 @@ static const cib_operation_t cib_server_ops[] = {
     },
     {
         PCMK__CIB_REQUEST_REPLACE,
-        cib_op_attr_modifies|cib_op_attr_privileged,
+        cib_op_attr_modifies
+        |cib_op_attr_privileged
+        |cib_op_attr_replaces
+        |cib_op_attr_writes_through,
         cib_prepare_data, cib_cleanup_data, cib_process_replace_svr
     },
     {
@@ -181,7 +184,7 @@ static const cib_operation_t cib_server_ops[] = {
     },
     {
         PCMK__CIB_REQUEST_ERASE,
-        cib_op_attr_modifies|cib_op_attr_privileged,
+        cib_op_attr_modifies|cib_op_attr_privileged|cib_op_attr_replaces,
         cib_prepare_none, cib_cleanup_output, cib_process_erase
     },
     {
@@ -196,17 +199,12 @@ static const cib_operation_t cib_server_ops[] = {
     },
     {
         PCMK__CIB_REQUEST_UPGRADE,
-        cib_op_attr_modifies|cib_op_attr_privileged,
+        cib_op_attr_modifies|cib_op_attr_privileged|cib_op_attr_writes_through,
         cib_prepare_none, cib_cleanup_output, cib_process_upgrade_server
     },
     {
         PCMK__CIB_REQUEST_SECONDARY,
-        cib_op_attr_privileged,
-        cib_prepare_none, cib_cleanup_none, cib_process_readwrite
-    },
-    {
-        PCMK__CIB_REQUEST_ALL_SECONDARY,
-        cib_op_attr_privileged,
+        cib_op_attr_privileged|cib_op_attr_local,
         cib_prepare_none, cib_cleanup_none, cib_process_readwrite
     },
     {
@@ -215,8 +213,9 @@ static const cib_operation_t cib_server_ops[] = {
         cib_prepare_sync, cib_cleanup_none, cib_process_sync_one
     },
     {
+        // @COMPAT: Drop cib_op_attr_modifies when we drop legacy mode support
         PCMK__CIB_REQUEST_PRIMARY,
-        cib_op_attr_modifies|cib_op_attr_privileged,
+        cib_op_attr_modifies|cib_op_attr_privileged|cib_op_attr_local,
         cib_prepare_data, cib_cleanup_data, cib_process_readwrite
     },
     {
@@ -261,47 +260,4 @@ cib_get_operation(const char *op, const cib_operation_t **operation)
         return -EINVAL;
     }
     return pcmk_ok;
-}
-
-xmlNode *
-cib_msg_copy(xmlNode *msg)
-{
-    static const char *field_list[] = {
-        F_XML_TAGNAME,
-        F_TYPE,
-        F_CIB_CLIENTID,
-        F_CIB_CALLOPTS,
-        F_CIB_CALLID,
-        F_CIB_OPERATION,
-        F_CIB_ISREPLY,
-        F_CIB_SECTION,
-        F_CIB_HOST,
-        F_CIB_RC,
-        F_CIB_DELEGATED,
-        F_CIB_OBJID,
-        F_CIB_OBJTYPE,
-        F_CIB_EXISTING,
-        F_CIB_SEENCOUNT,
-        F_CIB_TIMEOUT,
-        F_CIB_GLOBAL_UPDATE,
-        F_CIB_CLIENTNAME,
-        F_CIB_USER,
-        F_CIB_NOTIFY_TYPE,
-        F_CIB_NOTIFY_ACTIVATE
-    };
-
-    xmlNode *copy = create_xml_node(NULL, "copy");
-
-    CRM_ASSERT(copy != NULL);
-
-    for (int lpc = 0; lpc < PCMK__NELEM(field_list); lpc++) {
-        const char *field = field_list[lpc];
-        const char *value = crm_element_value(msg, field);
-
-        if (value != NULL) {
-            crm_xml_add(copy, field, value);
-        }
-    }
-
-    return copy;
 }
