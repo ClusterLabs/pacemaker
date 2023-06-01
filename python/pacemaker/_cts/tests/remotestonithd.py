@@ -1,5 +1,4 @@
-""" Test-specific classes for Pacemaker's Cluster Test Suite (CTS)
-"""
+""" Fail the connection resource and fence the remote node """
 
 __all__ = ["RemoteStonithd"]
 __copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
@@ -9,12 +8,24 @@ from pacemaker._cts.tests.remotedriver import RemoteDriver
 
 
 class RemoteStonithd(RemoteDriver):
+    """ A concrete test that fails the connection resource and fences the
+        remote node
+    """
+
     def __init__(self, cm):
+        """ Create a new RemoteStonithd instance
+
+            Arguments:
+
+            cm -- A ClusterManager instance
+        """
+
         RemoteDriver.__init__(self, cm)
+
         self.name = "RemoteStonithd"
 
     def __call__(self, node):
-        '''Perform the 'RemoteStonithd' test. '''
+        """ Perform this test """
 
         if not self.start_new_test(node):
             return self.failure(self.fail_string)
@@ -30,13 +41,12 @@ class RemoteStonithd(RemoteDriver):
         return self.success()
 
     def is_applicable(self):
+        """ Return True if this test is applicable in the current test configuration. """
+
         if not RemoteDriver.is_applicable(self):
             return False
 
-        if "DoFencing" in self._env:
-            return self._env["DoFencing"]
-
-        return True
+        return self._env.get("DoFencing", True)
 
     @property
     def errors_to_ignore(self):
