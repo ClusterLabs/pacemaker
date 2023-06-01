@@ -9,6 +9,7 @@ from pacemaker._cts.tests.componentfail import ComponentFail
 from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.fliptest import FlipTest
 from pacemaker._cts.tests.maintenancemode import MaintenanceMode
+from pacemaker._cts.tests.nearquorumpointtest import NearQuorumPointTest
 from pacemaker._cts.tests.partialstart import PartialStart
 from pacemaker._cts.tests.reattach import Reattach
 from pacemaker._cts.tests.restartonebyone import RestartOnebyOne

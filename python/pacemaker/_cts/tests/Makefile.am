@@ -16,6 +16,7 @@ pkgpython_PYTHON = __init__.py \
 				   ctstest.py \
 				   fliptest.py \
 				   maintenancemode.py \
+				   nearquorumpointtest.py \
 				   partialstart.py \
 				   reattach.py \
 				   remotedriver.py \
