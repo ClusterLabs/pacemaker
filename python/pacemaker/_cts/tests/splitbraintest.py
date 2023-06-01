@@ -1,5 +1,4 @@
-""" Test-specific classes for Pacemaker's Cluster Test Suite (CTS)
-"""
+""" Create a split brain cluster and verify a resource is multiply managed """
 
 __all__ = ["SplitBrainTest"]
 __copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
@@ -13,16 +12,30 @@ from pacemaker._cts.tests.starttest import StartTest
 
 
 class SplitBrainTest(CTSTest):
-    '''It is used to test split-brain. when the path between the two nodes break
-       check the two nodes both take over the resource'''
-    def __init__(self,cm):
-        CTSTest.__init__(self,cm)
+    """ A concrete test that creates a split brain cluster and verifies that
+        one node in each partition takes over the resource, resulting in two
+        nodes running the same resource.
+    """
+
+    def __init__(self, cm):
+        """ Create a new SplitBrainTest instance
+
+            Arguments:
+
+            cm -- A ClusterManager instance
+        """
+
+        CTSTest.__init__(self, cm)
+
+        self.is_experimental = True
         self.name = "SplitBrain"
+
         self._start = StartTest(cm)
         self._startall = SimulStartLite(cm)
-        self.is_experimental = True
 
     def isolate_partition(self, partition):
+        """ Create a new partition containing the given nodes """
+
         other_nodes = []
         other_nodes.extend(self._env["nodes"])
 
@@ -46,6 +59,8 @@ class SplitBrainTest(CTSTest):
         return 1
 
     def heal_partition(self, partition):
+        """ Move the given nodes out of their own partition back into the cluster """
+
         other_nodes = []
         other_nodes.extend(self._env["nodes"])
 
@@ -65,7 +80,8 @@ class SplitBrainTest(CTSTest):
             self._cm.unisolate_node(node, other_nodes)
 
     def __call__(self, node):
-        '''Perform split-brain test'''
+        """ Perform this test """
+
         self.incr("calls")
         self.passed = True
         partitions = {}
@@ -78,11 +94,15 @@ class SplitBrainTest(CTSTest):
             # Retry until we get multiple partitions
             partitions = {}
             p_max = len(self._env["nodes"])
+
             for node in self._env["nodes"]:
                 p = self._env.random_gen.randint(1, p_max)
+
                 if not p in partitions:
                     partitions[p] = []
+
                 partitions[p].append(node)
+
             p_max = len(list(partitions.keys()))
             if p_max > 1:
                 break
@@ -115,6 +135,7 @@ class SplitBrainTest(CTSTest):
         self._cm.partitions_expected = p_max
         if not self.audit():
             self.failure("Audits failed")
+
         self._cm.partitions_expected = 1
 
         # And heal them again
@@ -153,13 +174,15 @@ class SplitBrainTest(CTSTest):
         # trying to continue with in a messed up state
         if not self._cm.cluster_stable(1200):
             self.failure("Reformed cluster not stable")
+
             if self._env["continue"]:
                 answer = "Y"
             else:
                 try:
                     answer = input('Continue? [nY]')
                 except EOFError as e:
-                    answer = "n" 
+                    answer = "n"
+
             if answer and answer == "n":
                 raise ValueError("Reformed cluster not stable")
 
@@ -171,6 +194,7 @@ class SplitBrainTest(CTSTest):
 
         if self.passed:
             return self.success()
+
         return self.failure("See previous errors")
 
     @property
@@ -183,6 +207,9 @@ class SplitBrainTest(CTSTest):
                  r"CRIT:.*node.*returning after partition" ]
 
     def is_applicable(self):
+        """ Return True if this test is applicable in the current test configuration. """
+
         if not CTSTest.is_applicable(self):
             return False
+
         return len(self._env["nodes"]) > 2
