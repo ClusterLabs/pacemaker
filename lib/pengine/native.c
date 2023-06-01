@@ -1412,3 +1412,17 @@ pe__native_is_filtered(const pe_resource_t *rsc, GList *only_rsc,
 
     return TRUE;
 }
+
+/*!
+ * \brief Get maximum primitive resource instances per node
+ *
+ * \param[in] rsc  Primitive resource to check
+ *
+ * \return Maximum number of \p rsc instances that can be active on one node
+ */
+unsigned int
+pe__primitive_max_per_node(const pe_resource_t *rsc)
+{
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_native));
+    return 1U;
+}

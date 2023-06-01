@@ -40,23 +40,6 @@ pe__bundle_max(const pe_resource_t *rsc)
     return bundle_data->nreplicas;
 }
 
-/*!
- * \internal
- * \brief Get maximum number of bundle replicas allowed to run on one node
- *
- * \param[in] rsc  Bundle or bundled resource to check
- *
- * \return Maximum replicas per node for bundle corresponding to \p rsc
- */
-int
-pe__bundle_max_per_node(const pe_resource_t *rsc)
-{
-    const pe__bundle_variant_data_t *bundle_data = NULL;
-
-    get_bundle_variant_data(bundle_data, pe__const_top_resource(rsc, true));
-    return bundle_data->nreplicas_per_host;
-}
-
 static char *
 next_ip(const char *last_ip)
 {
@@ -2001,4 +1984,21 @@ done:
     g_list_free(containers);
     g_hash_table_destroy(nodes);
     return active;
+}
+
+/*!
+ * \brief Get maximum bundle resource instances per node
+ *
+ * \param[in] rsc  Bundle resource to check
+ *
+ * \return Maximum number of \p rsc instances that can be active on one node
+ */
+unsigned int
+pe__bundle_max_per_node(const pe_resource_t *rsc)
+{
+    pe__bundle_variant_data_t *bundle_data = NULL;
+
+    get_bundle_variant_data(bundle_data, rsc);
+    CRM_ASSERT(bundle_data->nreplicas_per_host >= 0);
+    return (unsigned int) bundle_data->nreplicas_per_host;
 }

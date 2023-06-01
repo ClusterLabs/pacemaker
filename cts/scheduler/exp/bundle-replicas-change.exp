@@ -116,6 +116,9 @@
         <rsc_op id="29" operation="start" operation_key="httpd-bundle-2_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
       </trigger>
       <trigger>
+        <rsc_op id="35" operation="start" operation_key="httpd:0_start_0" on_node="httpd-bundle-0" on_node_uuid="httpd-bundle-0" router_node="rh74-test"/>
+      </trigger>
+      <trigger>
         <rsc_op id="37" operation="start" operation_key="httpd:1_start_0" on_node="httpd-bundle-1" on_node_uuid="httpd-bundle-1" router_node="rh74-test"/>
       </trigger>
       <trigger>

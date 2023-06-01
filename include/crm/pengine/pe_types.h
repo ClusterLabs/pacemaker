@@ -58,8 +58,7 @@ typedef struct resource_object_functions_s {
     gboolean (*is_filtered) (const pe_resource_t*, GList *, gboolean);
 
     /*!
-     * \brief
-     * \internal Find a node (and optionally count all) where resource is active
+     * \brief Find a node (and optionally count all) where resource is active
      *
      * \param[in]  rsc          Resource to check
      * \param[out] count_all    If not NULL, set this to count of active nodes
@@ -72,6 +71,15 @@ typedef struct resource_object_functions_s {
      */
     pe_node_t *(*active_node)(const pe_resource_t *rsc, unsigned int *count_all,
                               unsigned int *count_clean);
+
+    /*!
+     * \brief Get maximum resource instances per node
+     *
+     * \param[in] rsc  Resource to check
+     *
+     * \return Maximum number of \p rsc instances that can be active on one node
+     */
+    unsigned int (*max_per_node)(const pe_resource_t *rsc);
 } resource_object_functions_t;
 
 typedef struct resource_alloc_functions_s resource_alloc_functions_t;

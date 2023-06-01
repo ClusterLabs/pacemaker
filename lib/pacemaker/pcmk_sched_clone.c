@@ -78,89 +78,40 @@ pcmk__clone_assign(pe_resource_t *rsc, const pe_node_t *prefer)
     return NULL;
 }
 
-static pe_action_t *
-find_rsc_action(pe_resource_t *rsc, const char *task)
-{
-    pe_action_t *match = NULL;
-    GList *actions = pe__resource_actions(rsc, NULL, task, FALSE);
-
-    for (GList *item = actions; item != NULL; item = item->next) {
-        pe_action_t *op = (pe_action_t *) item->data;
-
-        if (!pcmk_is_set(op->flags, pe_action_optional)) {
-            if (match != NULL) {
-                // More than one match, don't return any
-                match = NULL;
-                break;
-            }
-            match = op;
-        }
-    }
-    g_list_free(actions);
-    return match;
-}
-
 /*!
  * \internal
- * \brief Order starts and stops of an ordered clone's instances
+ * \brief Create all actions needed for a given clone resource
  *
- * \param[in,out] rsc  Clone resource
+ * \param[in,out] rsc  Clone resource to create actions for
  */
-static void
-order_instance_starts_stops(pe_resource_t *rsc)
-{
-    pe_action_t *last_stop = NULL;
-    pe_action_t *last_start = NULL;
-
-    // Instances must be ordered by ascending instance number, so sort them
-    rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance_number);
-
-    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
-        pe_resource_t *child = (pe_resource_t *) iter->data;
-        pe_action_t *action = NULL;
-
-        // Order this instance's stop after previous instance's stop
-        // @TODO: Should instances be stopped in reverse order instead?
-        action = find_rsc_action(child, RSC_STOP);
-        if (action != NULL) {
-            if (last_stop != NULL) {
-                order_actions(action, last_stop, pe_order_optional);
-            }
-            last_stop = action;
-        }
-
-        // Order this instance's start after previous instance's start
-        action = find_rsc_action(child, RSC_START);
-        if (action != NULL) {
-            if (last_start != NULL) {
-                order_actions(last_start, action, pe_order_optional);
-            }
-            last_start = action;
-        }
-    }
-}
-
 void
-clone_create_actions(pe_resource_t *rsc)
+pcmk__clone_create_actions(pe_resource_t *rsc)
 {
-    pe_rsc_debug(rsc, "Creating actions for clone %s", rsc->id);
+    CRM_ASSERT(pe_rsc_is_clone(rsc));
+
+    pe_rsc_trace(rsc, "Creating actions for clone %s", rsc->id);
     pcmk__create_instance_actions(rsc, rsc->children);
-    if (pe__clone_is_ordered(rsc)) {
-        order_instance_starts_stops(rsc);
-    }
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
         pcmk__create_promotable_actions(rsc);
     }
 }
 
+/*!
+ * \internal
+ * \brief Create implicit constraints needed for a clone resource
+ *
+ * \param[in,out] rsc  Clone resource to create implicit constraints for
+ */
 void
-clone_internal_constraints(pe_resource_t *rsc)
+pcmk__clone_internal_constraints(pe_resource_t *rsc)
 {
-    pe_resource_t *last_rsc = NULL;
-    GList *gIter;
     bool ordered = pe__clone_is_ordered(rsc);
 
-    pe_rsc_trace(rsc, "Internal constraints for %s", rsc->id);
+    CRM_ASSERT(pe_rsc_is_clone(rsc));
+
+    pe_rsc_trace(rsc, "Creating internal constraints for clone %s", rsc->id);
+
+    // Restart ordering: Stop -> stopped -> start -> started
     pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, RSC_START,
                                  pe_order_optional);
     pcmk__order_resource_actions(rsc, RSC_START, rsc, RSC_STARTED,
@@ -168,6 +119,7 @@ clone_internal_constraints(pe_resource_t *rsc)
     pcmk__order_resource_actions(rsc, RSC_STOP, rsc, RSC_STOPPED,
                                  pe_order_runnable_left);
 
+    // Demoted -> stop and started -> promote
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
         pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, RSC_STOP,
                                      pe_order_optional);
@@ -176,34 +128,83 @@ clone_internal_constraints(pe_resource_t *rsc)
     }
 
     if (ordered) {
-        /* we have to maintain a consistent sorted child list when building order constraints */
+        /* Ordered clone instances must start and stop by instance number. The
+         * instances might have been previously shuffled for assignment or
+         * promotion purposes, so re-sort them.
+         */
         rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance_number);
     }
-    for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *instance = (pe_resource_t *) iter->data;
 
-        child_rsc->cmds->internal_constraints(child_rsc);
+        instance->cmds->internal_constraints(instance);
 
-        pcmk__order_starts(rsc, child_rsc,
-                           pe_order_runnable_left|pe_order_implies_first_printed);
-        pcmk__order_resource_actions(child_rsc, RSC_START, rsc, RSC_STARTED,
+        // Start clone -> start instance -> clone started
+        pcmk__order_starts(rsc, instance, pe_order_runnable_left
+                                          |pe_order_implies_first_printed);
+        pcmk__order_resource_actions(instance, RSC_START, rsc, RSC_STARTED,
                                      pe_order_implies_then_printed);
-        if (ordered && (last_rsc != NULL)) {
-            pcmk__order_starts(last_rsc, child_rsc, pe_order_optional);
-        }
 
-        pcmk__order_stops(rsc, child_rsc, pe_order_implies_first_printed);
-        pcmk__order_resource_actions(child_rsc, RSC_STOP, rsc, RSC_STOPPED,
+        // Stop clone -> stop instance -> clone stopped
+        pcmk__order_stops(rsc, instance, pe_order_implies_first_printed);
+        pcmk__order_resource_actions(instance, RSC_STOP, rsc, RSC_STOPPED,
                                      pe_order_implies_then_printed);
-        if (ordered && (last_rsc != NULL)) {
-            pcmk__order_stops(child_rsc, last_rsc, pe_order_optional);
-        }
 
-        last_rsc = child_rsc;
+        /* Instances of unique clones must be started and stopped by instance
+         * number. Since only some instances may be starting or stopping, order
+         * each instance relative to every later instance.
+         */
+        if (ordered) {
+            for (GList *later = iter->next;
+                 later != NULL; later = later->next) {
+                pcmk__order_starts(instance, (pe_resource_t *) later->data,
+                                   pe_order_optional);
+                pcmk__order_stops((pe_resource_t *) later->data, instance,
+                                  pe_order_optional);
+            }
+        }
     }
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
         pcmk__order_promotable_instances(rsc);
     }
+}
+
+/*!
+ * \internal
+ * \brief Check whether colocated resources can be interleaved
+ *
+ * \param[in] colocation  Colocation constraint with clone as primary
+ *
+ * \return true if colocated resources can be interleaved, otherwise false
+ */
+static bool
+can_interleave(const pcmk__colocation_t *colocation)
+{
+    const pe_resource_t *dependent = colocation->dependent;
+
+    // Only colocations between clone or bundle resources use interleaving
+    if (dependent->variant <= pe_group) {
+        return false;
+    }
+
+    // Only the dependent needs to be marked for interleaving
+    if (!crm_is_true(g_hash_table_lookup(dependent->meta,
+                                         XML_RSC_ATTR_INTERLEAVE))) {
+        return false;
+    }
+
+    /* @TODO Do we actually care about multiple primary instances sharing a
+     * dependent instance?
+     */
+    if (dependent->fns->max_per_node(dependent)
+        != colocation->primary->fns->max_per_node(colocation->primary)) {
+        pcmk__config_err("Cannot interleave %s and %s because they do not "
+                         "support the same number of instances per node",
+                         dependent->id, colocation->primary->id);
+        return false;
+    }
+
+    return true;
 }
 
 /*!
@@ -225,122 +226,102 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
                               const pcmk__colocation_t *colocation,
                               bool for_dependent)
 {
-    GList *gIter = NULL;
-    gboolean do_interleave = FALSE;
-    const char *interleave_s = NULL;
+    GList *iter = NULL;
 
     /* This should never be called for the clone itself as a dependent. Instead,
      * we add its colocation constraints to its instances and call the
-     * apply_coloc_score() for the instances as dependents.
+     * apply_coloc_score() method for the instances as dependents.
      */
     CRM_ASSERT(!for_dependent);
 
-    CRM_CHECK((colocation != NULL) && (dependent != NULL) && (primary != NULL),
-              return);
-    CRM_CHECK(dependent->variant == pe_native, return);
-
-    pe_rsc_trace(primary, "Processing constraint %s: %s -> %s %d",
-                 colocation->id, dependent->id, primary->id, colocation->score);
-
-    if (pcmk_is_set(primary->flags, pe_rsc_promotable)) {
-        if (pcmk_is_set(primary->flags, pe_rsc_provisional)) {
-            // We haven't placed the primary yet, so we can't apply colocation
-            pe_rsc_trace(primary, "%s is still provisional", primary->id);
-            return;
-
-        } else if (colocation->primary_role == RSC_ROLE_UNKNOWN) {
-            // This isn't a role-specfic colocation, so handle normally
-            pe_rsc_trace(primary, "Handling %s as a clone colocation",
-                         colocation->id);
-
-        } else if (pcmk_is_set(dependent->flags, pe_rsc_provisional)) {
-            // We're placing the dependent
-            pcmk__update_dependent_with_promotable(primary, dependent,
-                                                   colocation);
-            return;
-
-        } else if (colocation->dependent_role == RSC_ROLE_PROMOTED) {
-            // We're choosing roles for the dependent
-            pcmk__update_promotable_dependent_priority(primary, dependent,
-                                                       colocation);
-            return;
-        }
-    }
-
-    // Only the dependent needs to be marked for interleave
-    interleave_s = g_hash_table_lookup(colocation->dependent->meta,
-                                       XML_RSC_ATTR_INTERLEAVE);
-    if (crm_is_true(interleave_s)
-        && (colocation->dependent->variant > pe_group)) {
-        /* @TODO Do we actually care about multiple primary copies sharing a
-         * dependent copy anymore?
-         */
-        if (copies_per_node(colocation->dependent) != copies_per_node(colocation->primary)) {
-            pcmk__config_err("Cannot interleave %s and %s because they do not "
-                             "support the same number of instances per node",
-                             colocation->dependent->id,
-                             colocation->primary->id);
-
-        } else {
-            do_interleave = TRUE;
-        }
-    }
+    CRM_ASSERT((colocation != NULL) && pe_rsc_is_clone(primary)
+               && (dependent != NULL) && (dependent->variant == pe_native));
 
     if (pcmk_is_set(primary->flags, pe_rsc_provisional)) {
-        pe_rsc_trace(primary, "%s is still provisional", primary->id);
+        pe_rsc_trace(primary,
+                     "Delaying processing colocation %s "
+                     "because cloned primary %s is still provisional",
+                     colocation->id, primary->id);
         return;
+    }
 
-    } else if (do_interleave) {
+    pe_rsc_trace(primary, "Processing colocation %s (%s with clone %s @%s)",
+                 colocation->id, dependent->id, primary->id,
+                 pcmk_readable_score(colocation->score));
+
+    // Apply role-specific colocations
+    if (pcmk_is_set(primary->flags, pe_rsc_promotable)
+        && (colocation->primary_role != RSC_ROLE_UNKNOWN)) {
+
+        if (pcmk_is_set(dependent->flags, pe_rsc_provisional)) {
+            // We're assigning the dependent to a node
+            pcmk__update_dependent_with_promotable(primary, dependent,
+                                                   colocation);
+
+        } else if (colocation->dependent_role == RSC_ROLE_PROMOTED) {
+            // We're choosing a role for the dependent
+            pcmk__update_promotable_dependent_priority(primary, dependent,
+                                                       colocation);
+        }
+        return;
+    }
+
+    // Apply interleaved colocations
+    if (can_interleave(colocation)) {
         pe_resource_t *primary_instance = NULL;
 
         primary_instance = pcmk__find_compatible_instance(dependent, primary,
                                                           RSC_ROLE_UNKNOWN,
                                                           false);
         if (primary_instance != NULL) {
-            pe_rsc_debug(primary, "Pairing %s with %s",
+            pe_rsc_debug(primary, "Interleaving %s with %s",
                          dependent->id, primary_instance->id);
             dependent->cmds->apply_coloc_score(dependent, primary_instance,
                                                colocation, true);
 
         } else if (colocation->score >= INFINITY) {
-            crm_notice("Cannot pair %s with instance of %s",
-                       dependent->id, primary->id);
+            crm_notice("%s cannot run because it cannot interleave with "
+                       "any instance of %s", dependent->id, primary->id);
             pcmk__assign_resource(dependent, NULL, true);
 
         } else {
-            pe_rsc_debug(primary, "Cannot pair %s with instance of %s",
+            pe_rsc_debug(primary,
+                         "%s will not colocate with %s "
+                         "because no instance can interleave with it",
                          dependent->id, primary->id);
         }
 
         return;
+    }
 
-    } else if (colocation->score >= INFINITY) {
-        GList *affected_nodes = NULL;
+    // Apply mandatory colocations
+    if (colocation->score >= INFINITY) {
+        GList *primary_nodes = NULL;
 
-        gIter = primary->children;
-        for (; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-            pe_node_t *chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
+        // Dependent can run only where primary will have unblocked instances
+        for (iter = primary->children; iter != NULL; iter = iter->next) {
+            const pe_resource_t *instance = iter->data;
+            pe_node_t *chosen = instance->fns->location(instance, NULL, 0);
 
-            if (chosen != NULL && is_set_recursive(child_rsc, pe_rsc_block, TRUE) == FALSE) {
+            if ((chosen != NULL)
+                && !is_set_recursive(instance, pe_rsc_block, TRUE)) {
                 pe_rsc_trace(primary, "Allowing %s: %s %d",
                              colocation->id, pe__node_name(chosen),
                              chosen->weight);
-                affected_nodes = g_list_prepend(affected_nodes, chosen);
+                primary_nodes = g_list_prepend(primary_nodes, chosen);
             }
         }
-
-        node_list_exclude(dependent->allowed_nodes, affected_nodes, FALSE);
-        g_list_free(affected_nodes);
+        node_list_exclude(dependent->allowed_nodes, primary_nodes, FALSE);
+        g_list_free(primary_nodes);
         return;
     }
 
-    gIter = primary->children;
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
+    // Apply optional colocations
+    for (iter = primary->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *instance = (pe_resource_t *) iter->data;
 
-        child_rsc->cmds->apply_coloc_score(dependent, child_rsc, colocation,
-                                           false);
+        instance->cmds->apply_coloc_score(dependent, instance, colocation,
+                                          false);
     }
 }
 
@@ -372,137 +353,167 @@ pcmk__clone_with_colocations(const pe_resource_t *rsc,
     }
 }
 
+/*!
+ * \internal
+ * \brief Return action flags for a given clone resource action
+ *
+ * \param[in,out] action  Action to get flags for
+ * \param[in]     node    If not NULL, limit effects to this node
+ *
+ * \return Flags appropriate to \p action on \p node
+ */
 enum pe_action_flags
-clone_action_flags(pe_action_t *action, const pe_node_t *node)
+pcmk__clone_action_flags(pe_action_t *action, const pe_node_t *node)
 {
+    CRM_ASSERT((action != NULL) && pe_rsc_is_clone(action->rsc));
+
     return pcmk__collective_action_flags(action, action->rsc->children, node);
 }
 
+/*!
+ * \internal
+ * \brief Apply a location constraint to a clone resource's allowed node scores
+ *
+ * \param[in,out] rsc       Clone resource to apply constraint to
+ * \param[in,out] location  Location constraint to apply
+ */
 void
-clone_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
+pcmk__clone_apply_location(pe_resource_t *rsc, pe__location_t *constraint)
 {
-    GList *gIter = rsc->children;
-
-    pe_rsc_trace(rsc, "Processing location constraint %s for %s", constraint->id, rsc->id);
+    CRM_CHECK((constraint != NULL) && pe_rsc_is_clone(rsc), return);
 
     pcmk__apply_location(rsc, constraint);
 
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *instance = (pe_resource_t *) iter->data;
 
-        child_rsc->cmds->apply_location(child_rsc, constraint);
+        instance->cmds->apply_location(instance, constraint);
     }
 }
 
 /*!
  * \internal
- * \brief Add a resource's actions to the transition graph
+ * \brief Add a clone resource's actions to the transition graph
  *
  * \param[in,out] rsc  Resource whose actions should be added
  */
 void
-clone_expand(pe_resource_t *rsc)
+pcmk__clone_add_actions_to_graph(pe_resource_t *rsc)
 {
-    GList *gIter = NULL;
+    CRM_CHECK(pe_rsc_is_clone(rsc), return);
 
     g_list_foreach(rsc->actions, (GFunc) rsc->cmds->action_flags, NULL);
-
     pe__create_clone_notifications(rsc);
 
-    /* Now that the notifcations have been created we can expand the children */
-
-    gIter = rsc->children;
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *child_rsc = (pe_resource_t *) iter->data;
 
         child_rsc->cmds->add_actions_to_graph(child_rsc);
     }
 
     pcmk__add_rsc_actions_to_graph(rsc);
-
-    /* The notifications are in the graph now, we can destroy the notify_data */
     pe__free_clone_notification_data(rsc);
 }
 
-// Check whether a resource or any of its children is known on node
+/*!
+ * \internal
+ * \brief Check whether a resource or any children have been probed on a node
+ *
+ * \param[in] rsc   Resource to check
+ * \param[in] node  Node to check
+ *
+ * \return true if \p node is in the known_on table of \p rsc or any of its
+ *         children, otherwise false
+ */
 static bool
-rsc_known_on(const pe_resource_t *rsc, const pe_node_t *node)
+rsc_probed_on(const pe_resource_t *rsc, const pe_node_t *node)
 {
-    if (rsc->children) {
+    if (rsc->children != NULL) {
         for (GList *child_iter = rsc->children; child_iter != NULL;
              child_iter = child_iter->next) {
 
             pe_resource_t *child = (pe_resource_t *) child_iter->data;
 
-            if (rsc_known_on(child, node)) {
-                return TRUE;
+            if (rsc_probed_on(child, node)) {
+                return true;
             }
         }
+        return false;
+    }
 
-    } else if (rsc->known_on) {
+    if (rsc->known_on != NULL) {
         GHashTableIter iter;
         pe_node_t *known_node = NULL;
 
         g_hash_table_iter_init(&iter, rsc->known_on);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &known_node)) {
-            if (node->details == known_node->details) {
-                return TRUE;
+            if (pe__same_node(node, known_node)) {
+                return true;
             }
         }
     }
-    return FALSE;
+    return false;
 }
 
-// Look for an instance of clone that is known on node
+/*!
+ * \internal
+ * \brief Find clone instance that has been probed on given node
+ *
+ * \param[in] clone  Clone resource to check
+ * \param[in] node   Node to check
+ *
+ * \return Instance of \p clone that has been probed on \p node if any,
+ *         otherwise NULL
+ */
 static pe_resource_t *
-find_instance_on(const pe_resource_t *clone, const pe_node_t *node)
+find_probed_instance_on(const pe_resource_t *clone, const pe_node_t *node)
 {
-    for (GList *gIter = clone->children; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child = (pe_resource_t *) gIter->data;
+    for (GList *iter = clone->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *instance = (pe_resource_t *) iter->data;
 
-        if (rsc_known_on(child, node)) {
-            return child;
+        if (rsc_probed_on(instance, node)) {
+            return instance;
         }
     }
     return NULL;
 }
 
-// For anonymous clones, only a single instance needs to be probed
+/*!
+ * \internal
+ * \brief Probe an anonymous clone on a node
+ *
+ * \param[in] clone  Anonymous clone to probe
+ * \param[in] node   Node to probe \p clone on
+ */
 static bool
-probe_anonymous_clone(pe_resource_t *rsc, pe_node_t *node,
-                      pe_working_set_t *data_set)
+probe_anonymous_clone(pe_resource_t *clone, pe_node_t *node)
 {
-    // First, check if we probed an instance on this node last time
-    pe_resource_t *child = find_instance_on(rsc, node);
+    // Check whether we already probed an instance on this node
+    pe_resource_t *child = find_probed_instance_on(clone, node);
 
     // Otherwise, check if we plan to start an instance on this node
-    if (child == NULL) {
-        for (GList *child_iter = rsc->children; child_iter && !child;
-             child_iter = child_iter->next) {
+    for (GList *iter = clone->children; (iter != NULL) && (child == NULL);
+         iter = iter->next) {
+        pe_resource_t *instance = (pe_resource_t *) iter->data;
+        const pe_node_t *instance_node = NULL;
 
-            pe_node_t *local_node = NULL;
-            pe_resource_t *child_rsc = (pe_resource_t *) child_iter->data;
-
-            if (child_rsc) { /* make clang analyzer happy */
-                local_node = child_rsc->fns->location(child_rsc, NULL, FALSE);
-                if (local_node && (local_node->details == node->details)) {
-                    child = child_rsc;
-                }
-            }
+        instance_node = instance->fns->location(instance, NULL, 0);
+        if (pe__same_node(instance_node, node)) {
+            child = instance;
         }
     }
 
     // Otherwise, use the first clone instance
     if (child == NULL) {
-        child = rsc->children->data;
+        child = clone->children->data;
     }
-    CRM_ASSERT(child);
+
+    // Anonymous clones only need to probe a single instance
     return child->cmds->create_probe(child, node);
 }
 
 /*!
  * \internal
- *
  * \brief Schedule any probes needed for a resource on a node
  *
  * \param[in,out] rsc   Resource to create probe for
@@ -511,42 +522,57 @@ probe_anonymous_clone(pe_resource_t *rsc, pe_node_t *node,
  * \return true if any probe was created, otherwise false
  */
 bool
-clone_create_probe(pe_resource_t *rsc, pe_node_t *node)
+pcmk__clone_create_probe(pe_resource_t *rsc, pe_node_t *node)
 {
-    CRM_ASSERT(rsc);
-
-    rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance_number);
-    if (rsc->children == NULL) {
-        pe_warn("Clone %s has no children", rsc->id);
-        return false;
-    }
+    CRM_CHECK((node != NULL) && pe_rsc_is_clone(rsc), return false);
 
     if (rsc->exclusive_discover) {
-        pe_node_t *allowed = g_hash_table_lookup(rsc->allowed_nodes, node->details->id);
-        if (allowed && allowed->rsc_discover_mode != pe_discover_exclusive) {
-            /* exclusive discover is enabled and this node is not marked
-             * as a node this resource should be discovered on
-             *
-             * remove the node from allowed_nodes so that the
-             * notification contains only nodes that we might ever run
-             * on
-             */
-            g_hash_table_remove(rsc->allowed_nodes, node->details->id);
+        /* The clone is configured to be probed only where a location constraint
+         * exists with resource-discovery set to exclusive.
+         *
+         * This check is not strictly necessary here since the instance's
+         * create_probe() method would also check, but doing it here is more
+         * efficient (especially for unique clones with a large number of
+         * instances), and affects the CRM_meta_notify_available_uname variable
+         * passed with notify actions.
+         */
+        pe_node_t *allowed = g_hash_table_lookup(rsc->allowed_nodes,
+                                                 node->details->id);
 
-            /* Bit of a shortcut - might as well take it */
+        if ((allowed == NULL)
+            || (allowed->rsc_discover_mode != pe_discover_exclusive)) {
+            /* This node is not marked for resource discovery. Remove it from
+             * allowed_nodes so that notifications contain only nodes that the
+             * clone can possibly run on.
+             */
+            pe_rsc_trace(rsc,
+                         "Skipping probe for %s on %s because resource has "
+                         "exclusive discovery but is not allowed on node",
+                         rsc->id, pe__node_name(node));
+            g_hash_table_remove(rsc->allowed_nodes, node->details->id);
             return false;
         }
     }
 
+    rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance_number);
     if (pcmk_is_set(rsc->flags, pe_rsc_unique)) {
         return pcmk__probe_resource_list(rsc->children, node);
     } else {
-        return probe_anonymous_clone(rsc, node, rsc->cluster);
+        return probe_anonymous_clone(rsc, node);
     }
 }
 
+/*!
+ * \internal
+ * \brief Add meta-attributes relevant to transition graph actions to XML
+ *
+ * Add clone-specific meta-attributes needed for transition graph actions.
+ *
+ * \param[in]     rsc  Clone resource whose meta-attributes should be added
+ * \param[in,out] xml  Transition graph action attributes XML to add to
+ */
 void
-clone_append_meta(const pe_resource_t *rsc, xmlNode *xml)
+pcmk__clone_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml)
 {
     char *name = NULL;
 

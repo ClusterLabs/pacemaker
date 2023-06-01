@@ -24,8 +24,6 @@
 /* Constraint helper functions */
 GList *pcmk__copy_node_list(const GList *list, bool reset);
 
-int copies_per_node(pe_resource_t * rsc);
-
 xmlNode *pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *event,
                                  const char *caller_version, int target_rc,
                                  const char *node, const char *origin);

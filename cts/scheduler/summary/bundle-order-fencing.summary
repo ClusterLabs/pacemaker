@@ -145,6 +145,7 @@ Executing Cluster Transition:
   * Pseudo action:   galera-bundle_stopped_0
   * Resource action: rabbitmq        notify on rabbitmq-bundle-1
   * Resource action: rabbitmq        notify on rabbitmq-bundle-2
+  * Pseudo action:   rabbitmq_notified_0
   * Pseudo action:   rabbitmq-bundle-clone_confirmed-post_notify_stopped_0
   * Pseudo action:   rabbitmq-bundle-clone_pre_notify_start_0
   * Pseudo action:   galera-bundle-master_running_0
@@ -155,7 +156,6 @@ Executing Cluster Transition:
   * Pseudo action:   redis-bundle-docker-0_stop_0
   * Pseudo action:   galera-bundle_running_0
   * Pseudo action:   rabbitmq-bundle_stopped_0
-  * Pseudo action:   rabbitmq_notified_0
   * Pseudo action:   rabbitmq-bundle-clone_confirmed-pre_notify_start_0
   * Pseudo action:   rabbitmq-bundle-clone_start_0
   * Pseudo action:   redis_stop_0
@@ -165,11 +165,11 @@ Executing Cluster Transition:
   * Pseudo action:   rabbitmq-bundle-clone_post_notify_running_0
   * Resource action: redis           notify on redis-bundle-1
   * Resource action: redis           notify on redis-bundle-2
+  * Pseudo action:   redis_notified_0
   * Pseudo action:   redis-bundle-master_confirmed-post_notify_stopped_0
   * Pseudo action:   redis-bundle-master_pre_notify_start_0
   * Pseudo action:   redis-bundle_stopped_0
   * Pseudo action:   rabbitmq-bundle-clone_confirmed-post_notify_running_0
-  * Pseudo action:   redis_notified_0
   * Pseudo action:   redis-bundle-master_confirmed-pre_notify_start_0
   * Pseudo action:   redis-bundle-master_start_0
   * Pseudo action:   rabbitmq-bundle_running_0

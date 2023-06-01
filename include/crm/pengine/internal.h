@@ -568,7 +568,6 @@ int pe__common_output_html(pcmk__output_t *out, const pe_resource_t *rsc,
 GList *pe__bundle_containers(const pe_resource_t *bundle);
 
 int pe__bundle_max(const pe_resource_t *rsc);
-int pe__bundle_max_per_node(const pe_resource_t *rsc);
 
 pe_resource_t *pe__find_bundle_replica(const pe_resource_t *bundle,
                                        const pe_node_t *node);

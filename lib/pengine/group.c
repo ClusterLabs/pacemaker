@@ -519,3 +519,17 @@ pe__group_is_filtered(const pe_resource_t *rsc, GList *only_rsc,
 
     return !passes;
 }
+
+/*!
+ * \brief Get maximum group resource instances per node
+ *
+ * \param[in] rsc  Group resource to check
+ *
+ * \return Maximum number of \p rsc instances that can be active on one node
+ */
+unsigned int
+pe__group_max_per_node(const pe_resource_t *rsc)
+{
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_group));
+    return 1U;
+}

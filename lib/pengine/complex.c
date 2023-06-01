@@ -34,6 +34,7 @@ resource_object_functions_t resource_class_functions[] = {
          pe__count_common,
          pe__native_is_filtered,
          active_node,
+         pe__primitive_max_per_node,
     },
     {
          group_unpack,
@@ -47,6 +48,7 @@ resource_object_functions_t resource_class_functions[] = {
          pe__count_common,
          pe__group_is_filtered,
          active_node,
+         pe__group_max_per_node,
     },
     {
          clone_unpack,
@@ -60,6 +62,7 @@ resource_object_functions_t resource_class_functions[] = {
          pe__count_common,
          pe__clone_is_filtered,
          active_node,
+         pe__clone_max_per_node,
     },
     {
          pe__unpack_bundle,
@@ -73,6 +76,7 @@ resource_object_functions_t resource_class_functions[] = {
          pe__count_bundle,
          pe__bundle_is_filtered,
          pe__bundle_active_node,
+         pe__bundle_max_per_node,
     }
 };
 

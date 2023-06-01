@@ -1468,3 +1468,25 @@ pe__create_clone_notif_pseudo_ops(pe_resource_t *clone,
         }
     }
 }
+
+/*!
+ * \brief Get maximum clone resource instances per node
+ *
+ * \param[in] rsc  Clone resource to check
+ *
+ * \return Maximum number of \p rsc instances that can be active on one node
+ */
+unsigned int
+pe__clone_max_per_node(const pe_resource_t *rsc)
+{
+    const char *max_clones_node = NULL;
+    int max_instances = 1;
+
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_clone));
+    max_clones_node = g_hash_table_lookup(rsc->meta,
+                                          XML_RSC_ATTR_INCARNATION_NODEMAX);
+    if (max_clones_node != NULL) {
+        pcmk__scan_min_int(max_clones_node, &max_instances, 0);
+    }
+    return (unsigned int) max_instances;
+}

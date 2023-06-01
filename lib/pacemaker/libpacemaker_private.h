@@ -759,6 +759,15 @@ G_GNUC_INTERNAL
 pe_node_t *pcmk__clone_assign(pe_resource_t *rsc, const pe_node_t *prefer);
 
 G_GNUC_INTERNAL
+void pcmk__clone_create_actions(pe_resource_t *rsc);
+
+G_GNUC_INTERNAL
+bool pcmk__clone_create_probe(pe_resource_t *rsc, pe_node_t *node);
+
+G_GNUC_INTERNAL
+void pcmk__clone_internal_constraints(pe_resource_t *rsc);
+
+G_GNUC_INTERNAL
 void pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
                                    const pe_resource_t *primary,
                                    const pcmk__colocation_t *colocation,
@@ -771,6 +780,27 @@ void pcmk__with_clone_colocations(const pe_resource_t *rsc,
 G_GNUC_INTERNAL
 void pcmk__clone_with_colocations(const pe_resource_t *rsc,
                                   const pe_resource_t *orig_rsc, GList **list);
+
+G_GNUC_INTERNAL
+void pcmk__clone_apply_location(pe_resource_t *rsc, pe__location_t *constraint);
+
+G_GNUC_INTERNAL
+enum pe_action_flags pcmk__clone_action_flags(pe_action_t *action,
+                                              const pe_node_t *node);
+
+G_GNUC_INTERNAL
+void pcmk__clone_add_actions_to_graph(pe_resource_t *rsc);
+
+G_GNUC_INTERNAL
+void pcmk__clone_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml);
+
+G_GNUC_INTERNAL
+void pcmk__clone_add_utilization(const pe_resource_t *rsc,
+                                 const pe_resource_t *orig_rsc,
+                                 GList *all_rscs, GHashTable *utilization);
+
+G_GNUC_INTERNAL
+void pcmk__clone_shutdown_lock(pe_resource_t *rsc);
 
 // Bundles (pcmk_sched_bundle.c)
 
