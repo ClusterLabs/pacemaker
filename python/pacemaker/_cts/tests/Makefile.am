@@ -17,6 +17,7 @@ pkgpython_PYTHON = __init__.py \
 				   maintenancemode.py \
 				   partialstart.py \
 				   remotedriver.py \
+				   resourcerecover.py \
 				   restarttest.py \
 				   restartonebyone.py \
 				   simulstart.py \
