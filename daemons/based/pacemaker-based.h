@@ -47,29 +47,6 @@ enum cib_client_flags {
     cib_is_daemon      = (UINT64_C(1) << 12),
 };
 
-/*!
- * \internal
- * \enum cib_op_attr
- * \brief Bit flags for CIB operation attributes
- */
-enum cib_op_attr {
-    cib_op_attr_none           = 0,         //!< No special attributes
-    cib_op_attr_modifies       = (1 << 1),  //!< Modifies CIB
-    cib_op_attr_privileged     = (1 << 2),  //!< Requires privileges
-    cib_op_attr_local          = (1 << 3),  //!< Must only be processed locally
-    cib_op_attr_replaces       = (1 << 4),  //!< Replaces CIB
-    cib_op_attr_writes_through = (1 << 5),  //!< Writes to disk on success
-    cib_op_attr_transaction    = (1 << 6),  //!< Supported in a transaction
-};
-
-typedef struct cib_operation_s {
-    const char *name;
-    uint32_t flags; //!< Group of <tt>enum cib_op_attr</tt> flags
-    int (*prepare) (xmlNode *, xmlNode **, const char **);
-    int (*cleanup) (int, xmlNode **, xmlNode **);
-    cib_op_t fn;
-} cib_operation_t;
-
 extern bool based_is_primary;
 extern GHashTable *config_hash;
 extern xmlNode *the_cib;
