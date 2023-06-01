@@ -47,22 +47,70 @@ typedef struct cib_file_opaque_s {
     char *filename;
 } cib_file_opaque_t;
 
-struct cib_func_entry {
-    const char *op;
-    bool read_only;
-    cib_op_t fn;
-};
-
-static const struct cib_func_entry cib_file_ops[] = {
-    { PCMK__CIB_REQUEST_QUERY,       true,   cib_process_query },
-    { PCMK__CIB_REQUEST_MODIFY,      false,  cib_process_modify },
-    { PCMK__CIB_REQUEST_APPLY_PATCH, false,  cib_process_diff },
-    { PCMK__CIB_REQUEST_BUMP,        false,  cib_process_bump },
-    { PCMK__CIB_REQUEST_REPLACE,     false,  cib_process_replace },
-    { PCMK__CIB_REQUEST_CREATE,      false,  cib_process_create },
-    { PCMK__CIB_REQUEST_DELETE,      false,  cib_process_delete },
-    { PCMK__CIB_REQUEST_ERASE,       false,  cib_process_erase },
-    { PCMK__CIB_REQUEST_UPGRADE,     false,  cib_process_upgrade },
+/* This table is adapted from cib_server_ops in pacemaker-based. Flags that are
+ * not used in cib_file.c (for example, cib_op_attr_replaces) are not currently
+ * included. Also, cib_file.c does not use prepare or cleanup functions.
+ *
+ * @TODO: Try to create a shared table that merges cib_server_ops with
+ * cib_file_ops. We would want a new cib_op_attr_file enum value (for an
+ * operation that supports running against a file). We can easily ignore the
+ * prepare and cleanup functions.
+ *
+ * The main challenge is that the fn member (cib_op_t) may differ depending on
+ * whether we're processing the request on the server side or with the
+ * file-based client. Processor functions defined in pacemaker-based shouldn't
+ * be declared in libcib, but we need them accessible via the table somehow.
+ *
+ * Maybe use an enum that indexes into an array of cib_op_t functions. That
+ * would be obnoxiously similar to the call_type (index) argument that we
+ * eliminated in c13bf8b2.
+ */
+static const cib_operation_t cib_file_ops[] = {
+    {
+        PCMK__CIB_REQUEST_APPLY_PATCH,
+        cib_op_attr_modifies,
+        NULL, NULL, cib_process_diff
+    },
+    {
+        PCMK__CIB_REQUEST_BUMP,
+        cib_op_attr_modifies,
+        NULL, NULL, cib_process_bump
+    },
+    {
+        PCMK__CIB_REQUEST_CREATE,
+        cib_op_attr_modifies,
+        NULL, NULL, cib_process_create
+    },
+    {
+        PCMK__CIB_REQUEST_DELETE,
+        cib_op_attr_modifies,
+        NULL, NULL, cib_process_delete
+    },
+    {
+        PCMK__CIB_REQUEST_ERASE,
+        cib_op_attr_modifies,
+        NULL, NULL, cib_process_erase
+    },
+    {
+        PCMK__CIB_REQUEST_MODIFY,
+        cib_op_attr_modifies,
+        NULL, NULL, cib_process_modify
+    },
+    {
+        PCMK__CIB_REQUEST_QUERY,
+        cib_op_attr_none,
+        NULL, NULL, cib_process_query
+    },
+    {
+        PCMK__CIB_REQUEST_REPLACE,
+        cib_op_attr_modifies,
+        NULL, NULL, cib_process_replace
+    },
+    {
+        PCMK__CIB_REQUEST_UPGRADE,
+        cib_op_attr_modifies,
+        NULL, NULL, cib_process_upgrade
+    },
 };
 
 static xmlNode *in_mem_cib = NULL;
@@ -132,13 +180,14 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
 {
     int rc = pcmk_ok;
     bool changed = false;
+    bool read_only = false;
     xmlNode *request = NULL;
     xmlNode *output = NULL;
     xmlNode *cib_diff = NULL;
     xmlNode *result_cib = NULL;
     cib_file_opaque_t *private = cib->variant_opaque;
 
-    const struct cib_func_entry *operation = NULL;
+    const cib_operation_t *operation = NULL;
 
     crm_info("Handling %s operation for %s as %s",
              pcmk__s(op, "invalid"), pcmk__s(section, "entire CIB"),
@@ -157,7 +206,7 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     }
 
     for (int lpc = 0; lpc < PCMK__NELEM(cib_file_ops); lpc++) {
-        if (pcmk__str_eq(op, cib_file_ops[lpc].op, pcmk__str_none)) {
+        if (pcmk__str_eq(op, cib_file_ops[lpc].name, pcmk__str_none)) {
             operation = &(cib_file_ops[lpc]);
             break;
         }
@@ -166,6 +215,8 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     if (operation == NULL) {
         return -EPROTONOSUPPORT;
     }
+
+    read_only = !pcmk_is_set(operation->flags, cib_op_attr_modifies);
 
     cib->call_id++;
     cib__set_call_options(call_options, "file operation", cib_no_mtime);
@@ -181,9 +232,9 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
         data = pcmk_find_cib_element(data, section);
     }
 
-    rc = cib_perform_op(op, call_options, operation->fn, operation->read_only,
-                        section, request, data, true, &changed, &in_mem_cib,
-                        &result_cib, &cib_diff, &output);
+    rc = cib_perform_op(op, call_options, operation->fn, read_only, section,
+                        request, data, true, &changed, &in_mem_cib, &result_cib,
+                        &cib_diff, &output);
     free_xml(request);
 
     if (rc == -pcmk_err_schema_validation) {
@@ -193,7 +244,7 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     if (rc != pcmk_ok) {
         free_xml(result_cib);
 
-    } else if (!operation->read_only) {
+    } else if (!read_only) {
         pcmk__output_t *out = NULL;
 
         rc = pcmk_rc2legacy(pcmk__log_output_new(&out));
