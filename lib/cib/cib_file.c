@@ -53,7 +53,7 @@ struct cib_func_entry {
     cib_op_t fn;
 };
 
-static struct cib_func_entry cib_file_ops[] = {
+static const struct cib_func_entry cib_file_ops[] = {
     { PCMK__CIB_REQUEST_QUERY,       true,   cib_process_query },
     { PCMK__CIB_REQUEST_MODIFY,      false,  cib_process_modify },
     { PCMK__CIB_REQUEST_APPLY_PATCH, false,  cib_process_diff },
@@ -131,66 +131,61 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
                              const char *user_name)
 {
     int rc = pcmk_ok;
-    char *effective_user = NULL;
-    bool query = false;
     bool changed = false;
     xmlNode *request = NULL;
     xmlNode *output = NULL;
     xmlNode *cib_diff = NULL;
     xmlNode *result_cib = NULL;
-    cib_op_t fn = NULL;
-    int lpc = 0;
-    static int max_msg_types = PCMK__NELEM(cib_file_ops);
     cib_file_opaque_t *private = cib->variant_opaque;
 
+    const struct cib_func_entry *operation = NULL;
+
     crm_info("Handling %s operation for %s as %s",
-             (op? op : "invalid"), (section? section : "entire CIB"),
-             (user_name? user_name : "default user"));
-
-    cib__set_call_options(call_options, "file operation",
-                          cib_no_mtime|cib_inhibit_bcast|cib_scope_local);
-
-    if (cib->state == cib_disconnected) {
-        return -ENOTCONN;
-    }
+             pcmk__s(op, "invalid"), pcmk__s(section, "entire CIB"),
+             pcmk__s(user_name, "default user"));
 
     if (output_data != NULL) {
         *output_data = NULL;
+    }
+
+    if (cib->state == cib_disconnected) {
+        return -ENOTCONN;
     }
 
     if (op == NULL) {
         return -EINVAL;
     }
 
-    for (lpc = 0; lpc < max_msg_types; lpc++) {
-        if (pcmk__str_eq(op, cib_file_ops[lpc].op, pcmk__str_casei)) {
-            fn = cib_file_ops[lpc].fn;
-            query = cib_file_ops[lpc].read_only;
+    for (int lpc = 0; lpc < PCMK__NELEM(cib_file_ops); lpc++) {
+        if (pcmk__str_eq(op, cib_file_ops[lpc].op, pcmk__str_none)) {
+            operation = &(cib_file_ops[lpc]);
             break;
         }
     }
 
-    if (fn == NULL) {
+    if (operation == NULL) {
         return -EPROTONOSUPPORT;
     }
 
     cib->call_id++;
+    cib__set_call_options(call_options, "file operation", cib_no_mtime);
+
     request = cib_create_op(cib->call_id, op, host, section, data, call_options,
                             user_name);
-    if(user_name) {
-        crm_xml_add(request, XML_ACL_TAG_USER, user_name);
-    }
+    crm_xml_add(request, XML_ACL_TAG_USER, user_name);
 
-    /* Mirror the logic in cib_prepare_common() */
-    if (section != NULL && data != NULL && pcmk__str_eq(crm_element_name(data), XML_TAG_CIB, pcmk__str_none)) {
+    // Mirror the logic in cib_prepare_common()
+    if ((section != NULL) && (data != NULL)
+        && pcmk__str_eq(crm_element_name(data), XML_TAG_CIB, pcmk__str_none)) {
+
         data = pcmk_find_cib_element(data, section);
     }
 
-    rc = cib_perform_op(op, call_options, fn, query, section, request, data,
-                        true, &changed, &in_mem_cib, &result_cib, &cib_diff,
-                        &output);
-
+    rc = cib_perform_op(op, call_options, operation->fn, operation->read_only,
+                        section, request, data, true, &changed, &in_mem_cib,
+                        &result_cib, &cib_diff, &output);
     free_xml(request);
+
     if (rc == -pcmk_err_schema_validation) {
         validate_xml_verbose(result_cib);
     }
@@ -198,7 +193,7 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     if (rc != pcmk_ok) {
         free_xml(result_cib);
 
-    } else if (!query) {
+    } else if (!operation->read_only) {
         pcmk__output_t *out = NULL;
 
         rc = pcmk_rc2legacy(pcmk__log_output_new(&out));
@@ -233,7 +228,6 @@ done:
          */
         free_xml(output);
     }
-    free(effective_user);
     return rc;
 }
 
