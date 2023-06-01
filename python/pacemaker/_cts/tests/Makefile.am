@@ -22,6 +22,7 @@ pkgpython_PYTHON = __init__.py \
 				   resourcerecover.py \
 				   restarttest.py \
 				   restartonebyone.py \
+				   resynccib.py \
 				   simulstart.py \
 				   simulstop.py \
 				   simulstartlite.py \
