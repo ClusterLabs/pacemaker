@@ -21,6 +21,7 @@ pkgpython_PYTHON = __init__.py \
 				   reattach.py \
 				   remotebasic.py \
 				   remotedriver.py \
+				   remotestonithd.py \
 				   resourcerecover.py \
 				   restarttest.py \
 				   restartonebyone.py \
