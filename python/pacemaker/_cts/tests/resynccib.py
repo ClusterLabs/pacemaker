@@ -10,6 +10,14 @@ from pacemaker._cts.tests.restarttest import RestartTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
 from pacemaker._cts.tests.simulstoplite import SimulStopLite
 
+# Disable various pylint warnings that occur in so many places throughout this
+# file it's easiest to just take care of them globally.  This does introduce the
+# possibility that we'll miss some other cause of the same warning, but we'll
+# just have to be careful.
+
+# pylint doesn't understand that self._rsh is callable.
+# pylint: disable=not-callable
+
 
 class ResyncCIB(CTSTest):
     """ A concrete test that starts the cluster on one node without a CIB and
@@ -27,10 +35,10 @@ class ResyncCIB(CTSTest):
         CTSTest.__init__(self, cm)
 
         self.name = "ResyncCIB"
-        self.restart1 = RestartTest(cm)
-        self.stopall = SimulStopLite(cm)
 
+        self._restart1 = RestartTest(cm)
         self._startall = SimulStartLite(cm)
+        self._stopall = SimulStopLite(cm)
 
     def __call__(self, node):
         """ Perform this test """
@@ -38,21 +46,18 @@ class ResyncCIB(CTSTest):
         self.incr("calls")
 
         # Shut down all the nodes...
-        ret = self.stopall(None)
-        if not ret:
+        if not self._stopall(None):
             return self.failure("Could not stop all nodes")
 
         # Test config recovery when the other nodes come up
-        self._rsh(node, "rm -f " + BuildOptions.CIB_DIR + "/cib*")
+        self._rsh(node, "rm -f %s/cib*" % BuildOptions.CIB_DIR)
 
         # Start the selected node
-        ret = self.restart1(node)
-        if not ret:
-            return self.failure("Could not start "+node)
+        if not self._restart1(node):
+            return self.failure("Could not start %s" % node)
 
         # Start all remaining nodes
-        ret = self._startall(None)
-        if not ret:
+        if not self._startall(None):
             return self.failure("Could not start the remaining nodes")
 
         return self.success()
