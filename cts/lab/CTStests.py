@@ -47,6 +47,7 @@ AllTestClasses.append(ResyncCIB)
 AllTestClasses.append(NearQuorumPointTest)
 AllTestClasses.append(RemoteBasic)
 AllTestClasses.append(RemoteStonithd)
+AllTestClasses.append(RemoteMigrate)
 
 
 def TestList(cm, audits):
@@ -57,40 +58,6 @@ def TestList(cm, audits):
             bound_test.audits = audits
             result.append(bound_test)
     return result
-
-
-class RemoteMigrate(RemoteDriver):
-    def __init__(self, cm):
-        RemoteDriver.__init__(self, cm)
-        self.name = "RemoteMigrate"
-
-    def __call__(self, node):
-        '''Perform the 'RemoteMigrate' test. '''
-
-        if not self.start_new_test(node):
-            return self.failure(self.fail_string)
-
-        self.migrate_connection(node)
-        self.cleanup_metal(node)
-
-        self.debug("Waiting for the cluster to recover")
-        self._cm.cluster_stable()
-        if self.failed:
-            return self.failure(self.fail_string)
-
-        return self.success()
-
-    def is_applicable(self):
-        if not RemoteDriver.is_applicable(self):
-            return 0
-        # This test requires at least three nodes: one to convert to a
-        # remote node, one to host the connection originally, and one
-        # to migrate the connection to.
-        if len(self._env["nodes"]) < 3:
-            return 0
-        return 1
-
-AllTestClasses.append(RemoteMigrate)
 
 
 class RemoteRscFailure(RemoteDriver):
