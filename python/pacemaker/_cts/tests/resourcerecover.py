@@ -1,5 +1,4 @@
-""" Test-specific classes for Pacemaker's Cluster Test Suite (CTS)
-"""
+""" Fail a random resource and verify its fail count increases """
 
 __copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
@@ -12,22 +11,32 @@ from pacemaker._cts.timer import Timer
 
 
 class ResourceRecover(CTSTest):
+    """ A concrete test that fails a random resource """
+
     def __init__(self, cm):
-        CTSTest.__init__(self,cm)
-        self.name = "ResourceRecover"
-        self._start = StartTest(cm)
-        self._startall = SimulStartLite(cm)
+        """ Create a new ResourceRecover instance
+
+            Arguments:
+
+            cm -- A ClusterManager instance
+        """
+
+        CTSTest.__init__(self, cm)
+
+        self.action = "asyncmon"
+        self.benchmark = True
+        self.interval = 0
         self.max = 30
+        self.name = "ResourceRecover"
         self.rid = None
         self.rid_alt = None
-        self.benchmark = True
 
-        # these are the values used for the new LRM API call
-        self.action = "asyncmon"
-        self.interval = 0
+        self._start = StartTest(cm)
+        self._startall = SimulStartLite(cm)
 
     def __call__(self, node):
-        '''Perform the 'ResourceRecover' test. '''
+        """ Perform this test """
+
         self.incr("calls")
 
         ret = self._startall(None)
@@ -44,6 +53,7 @@ class ResourceRecover(CTSTest):
         rsc = self.choose_resource(node, resourcelist)
         if rsc is None:
             return self.failure("Could not get details of resource '%s'" % self.rid)
+
         if rsc.id == rsc.clone_id:
             self.debug("Failing " + rsc.id)
         else:
@@ -52,8 +62,10 @@ class ResourceRecover(CTSTest):
         # Log patterns to watch for (failure, plus restart if managed)
         pats = []
         pats.append(self.templates["Pat:CloneOpFail"] % (self.action, rsc.id, rsc.clone_id))
+
         if rsc.managed:
             pats.append(self.templates["Pat:RscOpOK"] % ("stop", self.rid))
+
             if rsc.unique:
                 pats.append(self.templates["Pat:RscOpOK"] % ("start", self.rid))
             else:
@@ -75,13 +87,16 @@ class ResourceRecover(CTSTest):
         self.rid = self._env.random_gen.choice(resourcelist)
         self.rid_alt = self.rid
         (_, lines) = self._rsh(node, "crm_resource -c", verbose=1)
+
         for line in lines:
             if line.startswith("Resource: "):
                 rsc = AuditResource(self._cm, line)
+
                 if rsc.id == self.rid:
                     # Handle anonymous clones that get renamed
                     self.rid = rsc.clone_id
                     return rsc
+
         return None
 
     def get_failcount(self, node):
@@ -92,16 +107,19 @@ class ResourceRecover(CTSTest):
                                "--operation %s --interval %d "
                                "--node %s" % (self.rid, self.action,
                                self.interval, node), verbose=1)
+
         if rc != 0 or len(lines) != 1:
             self._logger.log("crm_failcount on %s failed (%d): %s" % (node, rc,
                             " // ".join(map(str.strip, lines))))
             return -1
+
         try:
             failcount = int(lines[0])
         except (IndexError, ValueError):
             self._logger.log("crm_failcount output on %s unparseable: %s" % (node,
                             ' '.join(lines)))
             return -1
+
         return failcount
 
     def fail_resource(self, rsc, node, pats):
