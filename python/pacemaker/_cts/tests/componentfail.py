@@ -1,5 +1,4 @@
-""" Test-specific classes for Pacemaker's Cluster Test Suite (CTS)
-"""
+""" Kill a pacemaker daemon and test how the cluster recovers """
 
 __all__ = ["ComponentFail"]
 __copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
@@ -13,17 +12,31 @@ from pacemaker._cts.tests.simulstartlite import SimulStartLite
 
 
 class ComponentFail(CTSTest):
+    """ A concrete test that kills a random pacemaker daemon and waits for the
+        cluster to recover
+    """
+
     def __init__(self, cm):
-        CTSTest.__init__(self,cm)
-        self.name = "ComponentFail"
-        self._startall = SimulStartLite(cm)
+        """ Create a new ComponentFail instance
+
+            Arguments:
+
+            cm -- A ClusterManager instance
+        """
+
+        CTSTest.__init__(self, cm)
+
         self.complist = cm.Components()
-        self.patterns = []
-        self.okerrpatterns = []
         self.is_unsafe = True
+        self.name = "ComponentFail"
+        self.okerrpatterns = []
+        self.patterns = []
+
+        self._startall = SimulStartLite(cm)
 
     def __call__(self, node):
-        '''Perform the 'ComponentFail' test. '''
+        """ Perform this test """
+
         self.incr("calls")
         self.patterns = []
         self.okerrpatterns = []
@@ -52,7 +65,7 @@ class ComponentFail(CTSTest):
 
         self.patterns.extend(chosen.pats)
         if node_is_dc:
-          self.patterns.extend(chosen.dc_pats)
+            self.patterns.extend(chosen.dc_pats)
 
         # @TODO this should be a flag in the Component
         if chosen.name in [ "corosync", "pacemaker-based", "pacemaker-fenced" ]:
@@ -60,9 +73,11 @@ class ComponentFail(CTSTest):
             # (their registration will be lost, and probes will fail)
             self.okerrpatterns = [ self.templates["Pat:Fencing_active"] ]
             (_, lines) = self._rsh(node, "crm_resource -c", verbose=1)
+
             for line in lines:
                 if re.search("^Resource", line):
                     r = AuditResource(self._cm, line)
+
                     if r.rclass == "stonith":
                         self.okerrpatterns.append(self.templates["Pat:Fencing_recover"] % r.id)
                         self.okerrpatterns.append(self.templates["Pat:Fencing_probe"] % r.id)
@@ -81,6 +96,7 @@ class ComponentFail(CTSTest):
         # set the watch for stable
         watch = self.create_watch(
             tmpPats, self._env["DeadTime"] + self._env["StableTime"] + self._env["StartTime"])
+
         watch.set_watch()
 
         # kill the component
@@ -97,6 +113,7 @@ class ComponentFail(CTSTest):
 
         self.debug("Checking if %s was shot" % node)
         shot = stonith.look(60)
+
         if shot:
             self.debug("Found: " + repr(shot))
             self.okerrpatterns.append(self.templates["Pat:Fencing_start"] % node)
