@@ -50,6 +50,6 @@ class StartOnebyOne(CTSTest):
                 failed.append(node)
 
         if failed:
-            return self.failure("Some node failed to start: " + repr(failed))
+            return self.failure("Some node failed to start: %r" % failed)
 
         return self.success()

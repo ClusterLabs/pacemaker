@@ -75,7 +75,7 @@ class StandbyTest(CTSTest):
 
         ret = watch.look_for_all()
         if not ret:
-            self._logger.log("Patterns not found: " + repr(watch.unmatched))
+            self._logger.log("Patterns not found: %r" % watch.unmatched)
             self._cm.SetStandbyMode(node, "off")
             return self.failure("cluster didn't react to standby change on %s" % node)
 
@@ -90,7 +90,7 @@ class StandbyTest(CTSTest):
         self.debug("Checking resources")
         rscs_on_node = self._cm.active_resources(node)
         if rscs_on_node:
-            rc = self.failure("%s set to standby, %s is still running on it" % (node, repr(rscs_on_node)))
+            rc = self.failure("%s set to standby, %r is still running on it" % (node, rscs_on_node))
             self.debug("Setting node %s to active mode" % node)
             self._cm.SetStandbyMode(node, "off")
             return rc

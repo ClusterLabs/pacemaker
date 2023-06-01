@@ -51,6 +51,6 @@ class StopOnebyOne(CTSTest):
                 failed.append(node)
 
         if failed:
-            return self.failure("Some node failed to stop: " + repr(failed))
+            return self.failure("Some node failed to stop: %r" % failed)
 
         return self.success()

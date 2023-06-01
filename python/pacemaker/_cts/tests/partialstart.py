@@ -53,7 +53,7 @@ class PartialStart(CTSTest):
         self._cm.StartaCMnoBlock(node)
         ret = watch.look_for_all()
         if not ret:
-            self._logger.log("Patterns not found: " + repr(watch.unmatched))
+            self._logger.log("Patterns not found: %r" % watch.unmatched)
             return self.failure("Setup of %s failed" % node)
 
         ret = self._stop(node)
