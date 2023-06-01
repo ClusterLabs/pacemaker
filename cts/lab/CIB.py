@@ -10,6 +10,7 @@ import tempfile
 
 from pacemaker.buildoptions import BuildOptions
 from pacemaker._cts.CTS import CtsLab
+from pacemaker._cts.network import next_ip
 
 
 class CibBase(object):
@@ -56,19 +57,6 @@ class ConfigBase(object):
     def version(self):
         return self.version
 
-    def NextIP(self):
-        ip = self.CM.Env["IPBase"]
-        if ":" in ip:
-            (prefix, sep, suffix) = ip.rpartition(":")
-            suffix = str(hex(int(suffix, 16)+1)).lstrip("0x")
-        else:
-            (prefix, sep, suffix) = ip.rpartition(".")
-            suffix = str(int(suffix)+1)
-
-        ip = prefix + sep + suffix
-        self.CM.Env["IPBase"] = ip
-        return ip.strip()
-
 
 class CIB12(ConfigBase):
     version = "pacemaker-1.2"
@@ -84,7 +72,7 @@ class CIB12(ConfigBase):
 
     def NewIP(self, name=None, standard="ocf"):
         if self.CM.Env["IPagent"] == "IPaddr2":
-            ip = self.NextIP()
+            ip = next_ip(self.CM.Env["IPBase"])
             if not name:
                 if ":" in ip:
                     (prefix, sep, suffix) = ip.rpartition(":")
