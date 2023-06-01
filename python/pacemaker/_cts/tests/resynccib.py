@@ -1,5 +1,4 @@
-""" Test-specific classes for Pacemaker's Cluster Test Suite (CTS)
-"""
+""" Start the cluster without a CIB and verify it gets copied from another node """
 
 __all__ = ["ResyncCIB"]
 __copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
@@ -13,19 +12,32 @@ from pacemaker._cts.tests.simulstoplite import SimulStopLite
 
 
 class ResyncCIB(CTSTest):
-    '''Set up a custom test to cause quorum failure issues for Andrew'''
+    """ A concrete test that starts the cluster on one node without a CIB and
+        verifies the CIB is copied over when the remaining nodes join
+    """
+
     def __init__(self, cm):
-        CTSTest.__init__(self,cm)
+        """ Create a new ResyncCIB instance
+
+            Arguments:
+
+            cm -- A ClusterManager instance
+        """
+
+        CTSTest.__init__(self, cm)
+
         self.name = "ResyncCIB"
-        self._startall = SimulStartLite(cm)
         self.restart1 = RestartTest(cm)
         self.stopall = SimulStopLite(cm)
 
+        self._startall = SimulStartLite(cm)
+
     def __call__(self, node):
-        '''Perform the 'ResyncCIB' test for Andrew. '''
+        """ Perform this test """
+
         self.incr("calls")
 
-        #        Shut down all the nodes...
+        # Shut down all the nodes...
         ret = self.stopall(None)
         if not ret:
             return self.failure("Could not stop all nodes")
@@ -33,12 +45,12 @@ class ResyncCIB(CTSTest):
         # Test config recovery when the other nodes come up
         self._rsh(node, "rm -f " + BuildOptions.CIB_DIR + "/cib*")
 
-        #        Start the selected node
+        # Start the selected node
         ret = self.restart1(node)
         if not ret:
             return self.failure("Could not start "+node)
 
-        #        Start all remaining nodes
+        # Start all remaining nodes
         ret = self._startall(None)
         if not ret:
             return self.failure("Could not start the remaining nodes")
