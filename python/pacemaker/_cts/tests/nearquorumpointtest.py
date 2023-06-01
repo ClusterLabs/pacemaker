@@ -1,5 +1,4 @@
-""" Test-specific classes for Pacemaker's Cluster Test Suite (CTS)
-"""
+""" Randomly start and stop nodes to bring the cluster close to the quorum point """
 
 __all__ = ["NearQuorumPointTest"]
 __copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
@@ -9,23 +8,25 @@ from pacemaker._cts.tests.ctstest import CTSTest
 
 
 class NearQuorumPointTest(CTSTest):
-    '''
-    This test brings larger clusters near the quorum point (50%).
-    In addition, it will test doing starts and stops at the same time.
-
-    Here is how I think it should work:
-    - loop over the nodes and decide randomly which will be up and which
-      will be down  Use a 50% probability for each of up/down.
-    - figure out what to do to get into that state from the current state
-    - in parallel, bring up those going up  and bring those going down.
-    '''
+    """ A concrete test that randomly starts and stops nodes to bring the
+        cluster close to the quorum point
+    """
 
     def __init__(self, cm):
-        CTSTest.__init__(self,cm)
+        """ Create a new NearQuorumPointTest instance
+
+            Arguments:
+
+            cm -- A ClusterManager instance
+        """
+
+        CTSTest.__init__(self, cm)
+
         self.name = "NearQuorumPoint"
 
     def __call__(self, dummy):
-        '''Perform the 'NearQuorumPoint' test. '''
+        """ Perform this test """
+
         self.incr("calls")
         startset = []
         stopset = []
@@ -33,8 +34,8 @@ class NearQuorumPointTest(CTSTest):
         stonith = self._cm.prepare_fencing_watcher("NearQuorumPoint")
         #decide what to do with each node
         for node in self._env["nodes"]:
-            action = self._env.random_gen.choice(["start","stop"])
-            #action = self._env.random_gen.choice(["start","stop","no change"])
+            action = self._env.random_gen.choice(["start", "stop"])
+
             if action == "start" :
                 startset.append(node)
             elif action == "stop" :
@@ -51,7 +52,6 @@ class NearQuorumPointTest(CTSTest):
 
         for node in startset:
             if self._cm.ShouldBeStatus[node] == "down":
-                #watchpats.append(self.templates["Pat:NonDC_started"] % node)
                 watchpats.append(self.templates["Pat:Local_started"] % node)
             else:
                 for stopping in stopset:
