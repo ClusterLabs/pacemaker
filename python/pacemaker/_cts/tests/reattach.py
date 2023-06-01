@@ -1,5 +1,4 @@
-""" Test-specific classes for Pacemaker's Cluster Test Suite (CTS)
-"""
+""" Restart the cluster and verify resources remain running """
 
 __all__ = ["Reattach"]
 __copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
@@ -17,28 +16,49 @@ from pacemaker._cts.tests.starttest import StartTest
 
 
 class Reattach(CTSTest):
+    """ A concrete test that restarts the cluster and verifies that resources
+        remain running throughout
+    """
+
     def __init__(self, cm):
-        CTSTest.__init__(self,cm)
+        """ Create a new Reattach instance
+
+            Arguments:
+
+            cm -- A ClusterManager instance
+        """
+
+        CTSTest.__init__(self, cm)
+
+        self.is_unsafe = False
         self.name = "Reattach"
-        self._startall = SimulStartLite(cm)
         self.restart1 = RestartTest(cm)
         self.stopall = SimulStopLite(cm)
-        self.is_unsafe = False
+
+        self._startall = SimulStartLite(cm)
 
     def _is_managed(self, node):
+        """ Are resources managed by the cluster? """
+
         (_, is_managed) = self._rsh(node, "crm_attribute -t rsc_defaults -n is-managed -q -G -d true", verbose=1)
         is_managed = is_managed[0].strip()
         return is_managed == "true"
 
     def _set_unmanaged(self, node):
+        """ Disable resource management """
+
         self.debug("Disable resource management")
         self._rsh(node, "crm_attribute -t rsc_defaults -n is-managed -v false")
 
     def _set_managed(self, node):
+        """ Enable resource management """
+
         self.debug("Re-enable resource management")
         self._rsh(node, "crm_attribute -t rsc_defaults -n is-managed -D")
 
     def setup(self, node):
+        """ Setup this test """
+
         attempt = 0
         if not self._startall(None):
             return None
@@ -57,6 +77,7 @@ class Reattach(CTSTest):
         return 1
 
     def teardown(self, node):
+        """ Tear down this test """
 
         # Make sure 'node' is up
         start = StartTest(self._cm)
@@ -66,6 +87,7 @@ class Reattach(CTSTest):
             self._logger.log("Attempting to re-enable resource management on %s" % node)
             self._set_managed(node)
             self._cm.cluster_stable()
+
             if not self._is_managed(node):
                 self._logger.log("Could not re-enable resource management")
                 return 0
@@ -73,7 +95,8 @@ class Reattach(CTSTest):
         return 1
 
     def can_run_now(self, node):
-        """ Return True if we can meaningfully run right now"""
+        """ Return True if we can meaningfully run right now """
+
         if self._find_ocfs2_resources(node):
             self._logger.log("Detach/Reattach scenarios are not possible with OCFS2 services present")
             return False
@@ -81,9 +104,12 @@ class Reattach(CTSTest):
         return True
 
     def __call__(self, node):
+        """ Perform this test """
+
         self.incr("calls")
 
         pats = []
+
         # Conveniently, the scheduler will display this message when disabling
         # management, even if fencing is not enabled, so we can rely on it.
         managed = self.create_watch(["No fencing will be done"], 60)
@@ -137,8 +163,8 @@ class Reattach(CTSTest):
         for line in lines:
             if re.search("^Resource", line):
                 r = AuditResource(self._cm, line)
-                if r.rclass == "stonith":
 
+                if r.rclass == "stonith":
                     self.debug("Ignoring start actions for %s" % r.id)
                     ignore.append(self.templates["Pat:RscOpOK"] % ("start", r.id))
 
