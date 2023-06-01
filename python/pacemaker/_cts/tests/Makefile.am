@@ -17,6 +17,7 @@ pkgpython_PYTHON = __init__.py \
 				   fliptest.py \
 				   maintenancemode.py \
 				   partialstart.py \
+				   reattach.py \
 				   remotedriver.py \
 				   resourcerecover.py \
 				   restarttest.py \
