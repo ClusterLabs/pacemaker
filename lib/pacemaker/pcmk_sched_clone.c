@@ -576,6 +576,8 @@ pcmk__clone_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml)
 {
     char *name = NULL;
 
+    CRM_ASSERT(pe_rsc_is_clone(rsc) && (xml != NULL));
+
     name = crm_meta_name(XML_RSC_ATTR_UNIQUE);
     crm_xml_add(xml, name, pe__rsc_bool_str(rsc, pe_rsc_unique));
     free(name);

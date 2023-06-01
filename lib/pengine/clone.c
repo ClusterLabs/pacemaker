@@ -1483,7 +1483,7 @@ pe__clone_max_per_node(const pe_resource_t *rsc)
     const char *max_clones_node = NULL;
     int max_instances = 1;
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_clone));
+    CRM_ASSERT(pe_rsc_is_clone(rsc));
     max_clones_node = g_hash_table_lookup(rsc->meta,
                                           XML_RSC_ATTR_INCARNATION_NODEMAX);
     if (max_clones_node != NULL) {
