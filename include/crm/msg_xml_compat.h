@@ -47,6 +47,9 @@ extern "C" {
 #define XML_ATTR_RA_VERSION "ra-version"
 
 //! \deprecated Do not use (will be removed in a future release)
+#define XML_TAG_FRAGMENT "cib_fragment"
+
+//! \deprecated Do not use (will be removed in a future release)
 #define XML_TAG_RSC_VER_ATTRS "rsc_versioned_attrs"
 
 //! \deprecated Do not use (will be removed in a future release)
