@@ -521,6 +521,7 @@ pe__group_is_filtered(const pe_resource_t *rsc, GList *only_rsc,
 }
 
 /*!
+ * \internal
  * \brief Get maximum group resource instances per node
  *
  * \param[in] rsc  Group resource to check

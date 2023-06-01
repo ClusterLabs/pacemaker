@@ -150,7 +150,7 @@ pcmk__clone_internal_constraints(pe_resource_t *rsc)
         pcmk__order_resource_actions(instance, RSC_STOP, rsc, RSC_STOPPED,
                                      pe_order_implies_then_printed);
 
-        /* Instances of unique clones must be started and stopped by instance
+        /* Instances of ordered clones must be started and stopped by instance
          * number. Since only some instances may be starting or stopping, order
          * each instance relative to every later instance.
          */
@@ -482,8 +482,8 @@ find_probed_instance_on(const pe_resource_t *clone, const pe_node_t *node)
  * \internal
  * \brief Probe an anonymous clone on a node
  *
- * \param[in] clone  Anonymous clone to probe
- * \param[in] node   Node to probe \p clone on
+ * \param[in,out] clone  Anonymous clone to probe
+ * \param[in,out] node   Node to probe \p clone on
  */
 static bool
 probe_anonymous_clone(pe_resource_t *clone, pe_node_t *node)

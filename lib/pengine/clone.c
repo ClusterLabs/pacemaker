@@ -1470,6 +1470,7 @@ pe__create_clone_notif_pseudo_ops(pe_resource_t *clone,
 }
 
 /*!
+ * \internal
  * \brief Get maximum clone resource instances per node
  *
  * \param[in] rsc  Clone resource to check
