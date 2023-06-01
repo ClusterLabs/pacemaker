@@ -142,14 +142,14 @@ cib_acl_enabled(xmlNode *xml, const char *user)
 }
 
 int
-cib_perform_op(const char *op, int call_options, cib_op_t fn, gboolean is_query,
+cib_perform_op(const char *op, int call_options, cib_op_t fn, bool is_query,
                const char *section, xmlNode *req, xmlNode *input,
-               gboolean manage_counters, gboolean *config_changed,
+               bool manage_counters, bool *config_changed,
                xmlNode **current_cib, xmlNode **result_cib, xmlNode **diff,
                xmlNode **output)
 {
     int rc = pcmk_ok;
-    gboolean check_schema = TRUE;
+    bool check_schema = true;
     xmlNode *top = NULL;
     xmlNode *scratch = NULL;
     xmlNode *patchset_cib = NULL;
@@ -157,7 +157,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t fn, gboolean is_query,
 
     const char *new_version = NULL;
     const char *user = crm_element_value(req, F_CIB_USER);
-    bool with_digest = FALSE;
+    bool with_digest = false;
 
     pcmk__output_t *out = NULL;
     int out_rc = pcmk_rc_no_output;
@@ -176,7 +176,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t fn, gboolean is_query,
     }
 
     *result_cib = NULL;
-    *config_changed = FALSE;
+    *config_changed = false;
 
     if (fn == NULL) {
         return -EINVAL;
@@ -249,7 +249,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t fn, gboolean is_query,
         rc = (*fn) (op, call_options, section, req, input, *current_cib,
                     &scratch, output);
 
-        if(scratch && xml_tracking_changes(scratch) == FALSE) {
+        if ((scratch != NULL) && !xml_tracking_changes(scratch)) {
             crm_trace("Inferring changes after %s op", op);
             xml_track_changes(scratch, user, *current_cib,
                               cib_acl_enabled(*current_cib, user));
@@ -322,8 +322,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t fn, gboolean is_query,
          * format only needs it for the top-level version fields
          */
         local_diff = xml_create_patchset(2, patchset_cib, scratch,
-                                         (bool*) config_changed,
-                                         manage_counters);
+                                         config_changed, manage_counters);
 
     } else {
         static time_t expires = 0;
@@ -331,12 +330,11 @@ cib_perform_op(const char *op, int call_options, cib_op_t fn, gboolean is_query,
 
         if (expires < tm_now) {
             expires = tm_now + 60;  /* Validate clients are correctly applying v2-style diffs at most once a minute */
-            with_digest = TRUE;
+            with_digest = true;
         }
 
         local_diff = xml_create_patchset(0, patchset_cib, scratch,
-                                         (bool*) config_changed,
-                                         manage_counters);
+                                         config_changed, manage_counters);
     }
 
     // Create a log output object only if we're going to use it
@@ -408,7 +406,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t fn, gboolean is_query,
          * a) we don't really care whats in the status section
          * b) we don't validate any of its contents at the moment anyway
          */
-        check_schema = FALSE;
+        check_schema = false;
     }
 
     /* === scratch must not be modified after this point ===
@@ -449,7 +447,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t fn, gboolean is_query,
     }
 
     crm_trace("Perform validation: %s", pcmk__btoa(check_schema));
-    if ((rc == pcmk_ok) && check_schema && !validate_xml(scratch, NULL, TRUE)) {
+    if ((rc == pcmk_ok) && check_schema && !validate_xml(scratch, NULL, true)) {
         const char *current_schema = crm_element_value(scratch,
                                                        XML_ATTR_VALIDATION);
 

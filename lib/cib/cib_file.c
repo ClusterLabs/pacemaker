@@ -49,20 +49,20 @@ typedef struct cib_file_opaque_s {
 
 struct cib_func_entry {
     const char *op;
-    gboolean read_only;
+    bool read_only;
     cib_op_t fn;
 };
 
 static struct cib_func_entry cib_file_ops[] = {
-    { PCMK__CIB_REQUEST_QUERY,       TRUE,   cib_process_query },
-    { PCMK__CIB_REQUEST_MODIFY,      FALSE,  cib_process_modify },
-    { PCMK__CIB_REQUEST_APPLY_PATCH, FALSE,  cib_process_diff },
-    { PCMK__CIB_REQUEST_BUMP,        FALSE,  cib_process_bump },
-    { PCMK__CIB_REQUEST_REPLACE,     FALSE,  cib_process_replace },
-    { PCMK__CIB_REQUEST_CREATE,      FALSE,  cib_process_create },
-    { PCMK__CIB_REQUEST_DELETE,      FALSE,  cib_process_delete },
-    { PCMK__CIB_REQUEST_ERASE,       FALSE,  cib_process_erase },
-    { PCMK__CIB_REQUEST_UPGRADE,     FALSE,  cib_process_upgrade },
+    { PCMK__CIB_REQUEST_QUERY,       true,   cib_process_query },
+    { PCMK__CIB_REQUEST_MODIFY,      false,  cib_process_modify },
+    { PCMK__CIB_REQUEST_APPLY_PATCH, false,  cib_process_diff },
+    { PCMK__CIB_REQUEST_BUMP,        false,  cib_process_bump },
+    { PCMK__CIB_REQUEST_REPLACE,     false,  cib_process_replace },
+    { PCMK__CIB_REQUEST_CREATE,      false,  cib_process_create },
+    { PCMK__CIB_REQUEST_DELETE,      false,  cib_process_delete },
+    { PCMK__CIB_REQUEST_ERASE,       false,  cib_process_erase },
+    { PCMK__CIB_REQUEST_UPGRADE,     false,  cib_process_upgrade },
 };
 
 static xmlNode *in_mem_cib = NULL;
@@ -132,8 +132,8 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
 {
     int rc = pcmk_ok;
     char *effective_user = NULL;
-    gboolean query = FALSE;
-    gboolean changed = FALSE;
+    bool query = false;
+    bool changed = false;
     xmlNode *request = NULL;
     xmlNode *output = NULL;
     xmlNode *cib_diff = NULL;
@@ -187,7 +187,7 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     }
 
     rc = cib_perform_op(op, call_options, fn, query, section, request, data,
-                        TRUE, &changed, &in_mem_cib, &result_cib, &cib_diff,
+                        true, &changed, &in_mem_cib, &result_cib, &cib_diff,
                         &output);
 
     free_xml(request);
@@ -198,7 +198,7 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     if (rc != pcmk_ok) {
         free_xml(result_cib);
 
-    } else if (query == FALSE) {
+    } else if (!query) {
         pcmk__output_t *out = NULL;
 
         rc = pcmk_rc2legacy(pcmk__log_output_new(&out));

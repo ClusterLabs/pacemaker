@@ -1429,8 +1429,8 @@ cib_process_command(xmlNode *request, const cib_operation_t *operation,
 
     int rc = pcmk_ok;
 
-    gboolean config_changed = FALSE;
-    gboolean manage_counters = TRUE;
+    bool config_changed = false;
+    bool manage_counters = true;
 
     static mainloop_timer_t *digest_timer = NULL;
 
@@ -1462,8 +1462,8 @@ cib_process_command(xmlNode *request, const cib_operation_t *operation,
     }
 
     if (!pcmk_is_set(operation->flags, cib_op_attr_modifies)) {
-        rc = cib_perform_op(op, call_options, operation->fn, TRUE, section,
-                            request, input, FALSE, &config_changed, &the_cib,
+        rc = cib_perform_op(op, call_options, operation->fn, true, section,
+                            request, input, false, &config_changed, &the_cib,
                             &result_cib, NULL, &output);
 
         CRM_CHECK(result_cib == NULL, free_xml(result_cib));
@@ -1478,7 +1478,7 @@ cib_process_command(xmlNode *request, const cib_operation_t *operation,
      * whether to update version/epoch info.
      */
     if (pcmk__xe_attr_is_true(request, F_CIB_GLOBAL_UPDATE)) {
-        manage_counters = FALSE;
+        manage_counters = false;
         cib__set_call_options(call_options, "call", cib_force_diff);
         crm_trace("Global update detected");
 
@@ -1491,7 +1491,7 @@ cib_process_command(xmlNode *request, const cib_operation_t *operation,
     ping_modified_since = TRUE;
     if (pcmk_is_set(call_options, cib_inhibit_bcast)) {
         crm_trace("Skipping update: inhibit broadcast");
-        manage_counters = FALSE;
+        manage_counters = false;
     }
 
     if (!pcmk_is_set(call_options, cib_dryrun)
@@ -1524,7 +1524,7 @@ cib_process_command(xmlNode *request, const cib_operation_t *operation,
     }
 
     // result_cib must not be modified after cib_perform_op() returns
-    rc = cib_perform_op(op, call_options, operation->fn, FALSE, section,
+    rc = cib_perform_op(op, call_options, operation->fn, false, section,
                         request, input, manage_counters, &config_changed,
                         &the_cib, &result_cib, cib_diff, &output);
 
@@ -1548,7 +1548,7 @@ cib_process_command(xmlNode *request, const cib_operation_t *operation,
     if ((rc == pcmk_ok)
         && pcmk_is_set(operation->flags, cib_op_attr_writes_through)) {
 
-        config_changed = TRUE;
+        config_changed = true;
     }
 
     if ((rc == pcmk_ok)
