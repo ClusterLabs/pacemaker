@@ -24,6 +24,7 @@ pkgpython_PYTHON = __init__.py \
 				   remotemigrate.py \
 				   remotestonithd.py \
 				   resourcerecover.py \
+				   remoterscfailure.py \
 				   restarttest.py \
 				   restartonebyone.py \
 				   resynccib.py \

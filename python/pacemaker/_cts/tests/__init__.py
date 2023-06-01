@@ -19,6 +19,7 @@ from pacemaker._cts.tests.resynccib import ResyncCIB
 from pacemaker._cts.tests.remotebasic import RemoteBasic
 from pacemaker._cts.tests.remotedriver import RemoteDriver
 from pacemaker._cts.tests.remotemigrate import RemoteMigrate
+from pacemaker._cts.tests.remoterscfailure import RemoteRscFailure
 from pacemaker._cts.tests.remotestonithd import RemoteStonithd
 from pacemaker._cts.tests.simulstart import SimulStart
 from pacemaker._cts.tests.simulstop import SimulStop
