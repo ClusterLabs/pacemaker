@@ -9,10 +9,17 @@ import time
 
 from pacemaker._cts.audits import AuditResource
 from pacemaker._cts.tests.ctstest import CTSTest
-from pacemaker._cts.tests.restarttest import RestartTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
 from pacemaker._cts.tests.simulstoplite import SimulStopLite
 from pacemaker._cts.tests.starttest import StartTest
+
+# Disable various pylint warnings that occur in so many places throughout this
+# file it's easiest to just take care of them globally.  This does introduce the
+# possibility that we'll miss some other cause of the same warning, but we'll
+# just have to be careful.
+
+# pylint doesn't understand that self._rsh is callable.
+# pylint: disable=not-callable
 
 
 class Reattach(CTSTest):
@@ -30,12 +37,10 @@ class Reattach(CTSTest):
 
         CTSTest.__init__(self, cm)
 
-        self.is_unsafe = False
         self.name = "Reattach"
-        self.restart1 = RestartTest(cm)
-        self.stopall = SimulStopLite(cm)
 
         self._startall = SimulStartLite(cm)
+        self._stopall = SimulStopLite(cm)
 
     def _is_managed(self, node):
         """ Are resources managed by the cluster? """
@@ -61,7 +66,7 @@ class Reattach(CTSTest):
 
         attempt = 0
         if not self._startall(None):
-            return None
+            return self.failure("Startall failed")
 
         # Make sure we are really _really_ stable and that all
         # resources, including those that depend on transient node
@@ -72,9 +77,9 @@ class Reattach(CTSTest):
                 self.debug("Not stable yet, re-testing")
             else:
                 self._logger.log("Cluster is not stable")
-                return None
+                return self.failure("Cluster is not stable")
 
-        return 1
+        return self.success()
 
     def teardown(self, node):
         """ Tear down this test """
@@ -90,9 +95,9 @@ class Reattach(CTSTest):
 
             if not self._is_managed(node):
                 self._logger.log("Could not re-enable resource management")
-                return 0
+                return self.failure("Could not re-establish resource management")
 
-        return 1
+        return self.success()
 
     def can_run_now(self, node):
         """ Return True if we can meaningfully run right now """
@@ -108,8 +113,6 @@ class Reattach(CTSTest):
 
         self.incr("calls")
 
-        pats = []
-
         # Conveniently, the scheduler will display this message when disabling
         # management, even if fencing is not enabled, so we can rely on it.
         managed = self.create_watch(["No fencing will be done"], 60)
@@ -118,21 +121,20 @@ class Reattach(CTSTest):
         self._set_unmanaged(node)
 
         if not managed.look_for_all():
-            self._logger.log("Patterns not found: " + repr(managed.unmatched))
+            self._logger.log("Patterns not found: %r" % managed.unmatched)
             return self.failure("Resource management not disabled")
 
-        pats = []
-        pats.append(self.templates["Pat:RscOpOK"] % ("start", ".*"))
-        pats.append(self.templates["Pat:RscOpOK"] % ("stop", ".*"))
-        pats.append(self.templates["Pat:RscOpOK"] % ("promote", ".*"))
-        pats.append(self.templates["Pat:RscOpOK"] % ("demote", ".*"))
-        pats.append(self.templates["Pat:RscOpOK"] % ("migrate", ".*"))
+        pats = [ self.templates["Pat:RscOpOK"] % ("start", ".*"),
+                 self.templates["Pat:RscOpOK"] % ("stop", ".*"),
+                 self.templates["Pat:RscOpOK"] % ("promote", ".*"),
+                 self.templates["Pat:RscOpOK"] % ("demote", ".*"),
+                 self.templates["Pat:RscOpOK"] % ("migrate", ".*") ]
 
         watch = self.create_watch(pats, 60, "ShutdownActivity")
         watch.set_watch()
 
         self.debug("Shutting down the cluster")
-        ret = self.stopall(None)
+        ret = self._stopall(None)
         if not ret:
             self._set_managed(node)
             return self.failure("Couldn't shut down the cluster")
@@ -178,6 +180,3 @@ class Reattach(CTSTest):
         """ Return list of errors which should be ignored """
 
         return [ r"resource( was|s were) active at shutdown" ]
-
-    def is_applicable(self):
-        return True
