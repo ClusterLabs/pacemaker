@@ -378,16 +378,16 @@ pcmk__clone_action_flags(pe_action_t *action, const pe_node_t *node)
  * \param[in,out] location  Location constraint to apply
  */
 void
-pcmk__clone_apply_location(pe_resource_t *rsc, pe__location_t *constraint)
+pcmk__clone_apply_location(pe_resource_t *rsc, pe__location_t *location)
 {
-    CRM_CHECK((constraint != NULL) && pe_rsc_is_clone(rsc), return);
+    CRM_CHECK((location != NULL) && pe_rsc_is_clone(rsc), return);
 
-    pcmk__apply_location(rsc, constraint);
+    pcmk__apply_location(rsc, location);
 
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
         pe_resource_t *instance = (pe_resource_t *) iter->data;
 
-        instance->cmds->apply_location(instance, constraint);
+        instance->cmds->apply_location(instance, location);
     }
 }
 
