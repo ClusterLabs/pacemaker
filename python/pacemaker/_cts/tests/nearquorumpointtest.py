@@ -6,6 +6,16 @@ __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT AN
 
 from pacemaker._cts.tests.ctstest import CTSTest
 
+# Disable various pylint warnings that occur in so many places throughout this
+# file it's easiest to just take care of them globally.  This does introduce the
+# possibility that we'll miss some other cause of the same warning, but we'll
+# just have to be careful.
+
+# pylint doesn't understand that self._rsh is callable.
+# pylint: disable=not-callable
+# pylint doesn't understand that self._env is subscriptable.
+# pylint: disable=unsubscriptable-object
+
 
 class NearQuorumPointTest(CTSTest):
     """ A concrete test that randomly starts and stops nodes to bring the
@@ -41,8 +51,8 @@ class NearQuorumPointTest(CTSTest):
             elif action == "stop" :
                 stopset.append(node)
 
-        self.debug("start nodes:" + repr(startset))
-        self.debug("stop nodes:" + repr(stopset))
+        self.debug("start nodes:%r" % startset)
+        self.debug("stop nodes:%r" % stopset)
 
         #add search patterns
         watchpats = [ ]
@@ -58,13 +68,13 @@ class NearQuorumPointTest(CTSTest):
                     if self._cm.ShouldBeStatus[stopping] == "up":
                         watchpats.append(self.templates["Pat:They_stopped"] % (node, self._cm.key_for_node(stopping)))
 
-        if len(watchpats) == 0:
+        if not watchpats:
             return self.skipped()
 
-        if len(startset) != 0:
+        if startset:
             watchpats.append(self.templates["Pat:DC_IDLE"])
 
-        watch = self.create_watch(watchpats, self._env["DeadTime"]+10)
+        watch = self.create_watch(watchpats, self._env["DeadTime"] + 10)
 
         watch.set_watch()
 
@@ -83,7 +93,7 @@ class NearQuorumPointTest(CTSTest):
             self._cm.fencing_cleanup("NearQuorumPoint", stonith)
             return self.success()
 
-        self._logger.log("Warn: Patterns not found: " + repr(watch.unmatched))
+        self._logger.log("Warn: Patterns not found: %r" % watch.unmatched)
 
         #get the "bad" nodes
         upnodes = []
@@ -97,7 +107,7 @@ class NearQuorumPointTest(CTSTest):
                 downnodes.append(node)
 
         self._cm.fencing_cleanup("NearQuorumPoint", stonith)
-        if upnodes == [] and downnodes == []:
+        if not upnodes and not downnodes:
             self._cm.cluster_stable()
 
             # Make sure they're completely down with no residule
@@ -106,13 +116,10 @@ class NearQuorumPointTest(CTSTest):
 
             return self.success()
 
-        if len(upnodes) > 0:
-            self._logger.log("Warn: Unstoppable nodes: " + repr(upnodes))
+        if upnodes:
+            self._logger.log("Warn: Unstoppable nodes: %r" % upnodes)
 
-        if len(downnodes) > 0:
-            self._logger.log("Warn: Unstartable nodes: " + repr(downnodes))
+        if downnodes:
+            self._logger.log("Warn: Unstartable nodes: %r" % downnodes)
 
         return self.failure()
-
-    def is_applicable(self):
-        return True
