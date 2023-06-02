@@ -6,9 +6,20 @@ __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT AN
 
 import time
 
+from pacemaker._cts.input import should_continue
 from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
 from pacemaker._cts.tests.starttest import StartTest
+
+# Disable various pylint warnings that occur in so many places throughout this
+# file it's easiest to just take care of them globally.  This does introduce the
+# possibility that we'll miss some other cause of the same warning, but we'll
+# just have to be careful.
+
+# pylint doesn't understand that self._rsh is callable.
+# pylint: disable=not-callable
+# pylint doesn't understand that self._env is subscriptable.
+# pylint: disable=unsubscriptable-object
 
 
 class SplitBrainTest(CTSTest):
@@ -33,48 +44,44 @@ class SplitBrainTest(CTSTest):
         self._start = StartTest(cm)
         self._startall = SimulStartLite(cm)
 
-    def isolate_partition(self, partition):
+    def _isolate_partition(self, partition):
         """ Create a new partition containing the given nodes """
 
-        other_nodes = []
-        other_nodes.extend(self._env["nodes"])
+        other_nodes = self._env["nodes"].copy()
 
         for node in partition:
             try:
                 other_nodes.remove(node)
             except ValueError:
-                self._logger.log("Node "+node+" not in " + repr(self._env["nodes"]) + " from " +repr(partition))
+                self._logger.log("Node %s not in %r from %r" % (node,self._env["nodes"], partition))
 
-        if len(other_nodes) == 0:
-            return 1
+        if not other_nodes:
+            return
 
-        self.debug("Creating partition: " + repr(partition))
-        self.debug("Everyone else: " + repr(other_nodes))
+        self.debug("Creating partition: %r" % partition)
+        self.debug("Everyone else: %r" % other_nodes)
 
         for node in partition:
             if not self._cm.isolate_node(node, other_nodes):
                 self._logger.log("Could not isolate %s" % node)
-                return 0
+                return
 
-        return 1
-
-    def heal_partition(self, partition):
+    def _heal_partition(self, partition):
         """ Move the given nodes out of their own partition back into the cluster """
 
-        other_nodes = []
-        other_nodes.extend(self._env["nodes"])
+        other_nodes = self._env["nodes"].copy()
 
         for node in partition:
             try:
                 other_nodes.remove(node)
             except ValueError:
-                self._logger.log("Node "+node+" not in " + repr(self._env["nodes"]))
+                self._logger.log("Node %s not in %r" % (node, self._env["nodes"]))
 
         if len(other_nodes) == 0:
-            return 1
+            return
 
-        self.debug("Healing partition: " + repr(partition))
-        self.debug("Everyone else: " + repr(other_nodes))
+        self.debug("Healing partition: %r" % partition)
+        self.debug("Everyone else: %r" % other_nodes)
 
         for node in partition:
             self._cm.unisolate_node(node, other_nodes)
@@ -86,37 +93,36 @@ class SplitBrainTest(CTSTest):
         self.passed = True
         partitions = {}
 
-        ret = self._startall(None)
-        if not ret:
+        if not self._startall(None):
             return self.failure("Setup failed")
 
-        while 1:
+        while True:
             # Retry until we get multiple partitions
             partitions = {}
             p_max = len(self._env["nodes"])
 
-            for node in self._env["nodes"]:
+            for n in self._env["nodes"]:
                 p = self._env.random_gen.randint(1, p_max)
 
-                if not p in partitions:
+                if p not in partitions:
                     partitions[p] = []
 
-                partitions[p].append(node)
+                partitions[p].append(n)
 
-            p_max = len(list(partitions.keys()))
+            p_max = len(partitions)
             if p_max > 1:
                 break
             # else, try again
 
         self.debug("Created %d partitions" % p_max)
-        for key in list(partitions.keys()):
-            self.debug("Partition["+str(key)+"]:\t"+repr(partitions[key]))
+        for (key, val) in partitions.items():
+            self.debug("Partition[%s]:\t%r" % (key, val))
 
         # Disabling STONITH to reduce test complexity for now
         self._rsh(node, "crm_attribute -V -n stonith-enabled -v false")
 
-        for key in list(partitions.keys()):
-            self.isolate_partition(partitions[key])
+        for val in partitions.values():
+            self._isolate_partition(val)
 
         count = 30
         while count > 0:
@@ -139,8 +145,8 @@ class SplitBrainTest(CTSTest):
         self._cm.partitions_expected = 1
 
         # And heal them again
-        for key in list(partitions.keys()):
-            self.heal_partition(partitions[key])
+        for val in partitions.values():
+            self._heal_partition(val)
 
         # Wait for a single partition to form
         count = 30
@@ -159,7 +165,7 @@ class SplitBrainTest(CTSTest):
             members = []
 
             partitions = self._cm.find_partitions()
-            if len(partitions) > 0:
+            if partitions:
                 members = partitions[0].split()
 
             if len(members) != len(self._env["nodes"]):
@@ -175,15 +181,7 @@ class SplitBrainTest(CTSTest):
         if not self._cm.cluster_stable(1200):
             self.failure("Reformed cluster not stable")
 
-            if self._env["continue"]:
-                answer = "Y"
-            else:
-                try:
-                    answer = input('Continue? [nY]')
-                except EOFError as e:
-                    answer = "n"
-
-            if answer and answer == "n":
+            if not should_continue(self._env):
                 raise ValueError("Reformed cluster not stable")
 
         # Turn fencing back on
