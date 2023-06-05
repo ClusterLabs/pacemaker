@@ -150,7 +150,7 @@ pcmk__clone_internal_constraints(pe_resource_t *rsc)
         pcmk__order_resource_actions(instance, RSC_STOP, rsc, RSC_STOPPED,
                                      pe_order_implies_then_printed);
 
-        /* Instances of unique clones must be started and stopped by instance
+        /* Instances of ordered clones must be started and stopped by instance
          * number. Since only some instances may be starting or stopping, order
          * each instance relative to every later instance.
          */
@@ -257,13 +257,15 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
             // We're assigning the dependent to a node
             pcmk__update_dependent_with_promotable(primary, dependent,
                                                    colocation);
+            return;
+        }
 
-        } else if (colocation->dependent_role == RSC_ROLE_PROMOTED) {
+        if (colocation->dependent_role == RSC_ROLE_PROMOTED) {
             // We're choosing a role for the dependent
             pcmk__update_promotable_dependent_priority(primary, dependent,
                                                        colocation);
+            return;
         }
-        return;
     }
 
     // Apply interleaved colocations
@@ -378,16 +380,16 @@ pcmk__clone_action_flags(pe_action_t *action, const pe_node_t *node)
  * \param[in,out] location  Location constraint to apply
  */
 void
-pcmk__clone_apply_location(pe_resource_t *rsc, pe__location_t *constraint)
+pcmk__clone_apply_location(pe_resource_t *rsc, pe__location_t *location)
 {
-    CRM_CHECK((constraint != NULL) && pe_rsc_is_clone(rsc), return);
+    CRM_CHECK((location != NULL) && pe_rsc_is_clone(rsc), return);
 
-    pcmk__apply_location(rsc, constraint);
+    pcmk__apply_location(rsc, location);
 
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
         pe_resource_t *instance = (pe_resource_t *) iter->data;
 
-        instance->cmds->apply_location(instance, constraint);
+        instance->cmds->apply_location(instance, location);
     }
 }
 
@@ -482,8 +484,8 @@ find_probed_instance_on(const pe_resource_t *clone, const pe_node_t *node)
  * \internal
  * \brief Probe an anonymous clone on a node
  *
- * \param[in] clone  Anonymous clone to probe
- * \param[in] node   Node to probe \p clone on
+ * \param[in,out] clone  Anonymous clone to probe
+ * \param[in,out] node   Node to probe \p clone on
  */
 static bool
 probe_anonymous_clone(pe_resource_t *clone, pe_node_t *node)
@@ -575,6 +577,8 @@ void
 pcmk__clone_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml)
 {
     char *name = NULL;
+
+    CRM_ASSERT(pe_rsc_is_clone(rsc) && (xml != NULL));
 
     name = crm_meta_name(XML_RSC_ATTR_UNIQUE);
     crm_xml_add(xml, name, pe__rsc_bool_str(rsc, pe_rsc_unique));

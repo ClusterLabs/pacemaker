@@ -1414,6 +1414,7 @@ pe__native_is_filtered(const pe_resource_t *rsc, GList *only_rsc,
 }
 
 /*!
+ * \internal
  * \brief Get maximum primitive resource instances per node
  *
  * \param[in] rsc  Primitive resource to check

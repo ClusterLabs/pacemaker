@@ -1987,6 +1987,7 @@ done:
 }
 
 /*!
+ * \internal
  * \brief Get maximum bundle resource instances per node
  *
  * \param[in] rsc  Bundle resource to check
