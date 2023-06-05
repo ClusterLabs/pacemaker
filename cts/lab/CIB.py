@@ -438,7 +438,6 @@ class ConfigFactory(object):
         self.register("pacemaker12", CIB12, CM, self)
         self.register("pacemaker20", CIB20, CM, self)
         self.register("pacemaker30", CIB30, CM, self)
-#        self.register("hae", HASI, CM, self)
         if not self.CM.Env["ListTests"]:
             self.target = self.CM.Env["nodes"][0]
         self.tmpfile = None
@@ -468,8 +467,6 @@ class ConfigFactory(object):
             name = "pacemaker20";
         elif name.startswith("pacemaker-3."):
             name = "pacemaker30";
-        elif name == "hasi":
-            name = "hae";
 
         if hasattr(self, name):
             return getattr(self, name)()
