@@ -93,7 +93,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
         } else {
             crm_xml_add(attr, XML_DIFF_OP, "set");
 
-            value = crm_element_value(xml, (const char *) pIter->name);
+            value = pcmk__xml_attr_value(pIter);
             crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, value);
         }
     }
@@ -229,7 +229,8 @@ xml_repair_v1_diff(xmlNode *last, xmlNode *next, xmlNode *local_diff,
     }
 
     for (xmlAttrPtr a = pcmk__xe_first_attr(next); a != NULL; a = a->next) {
-        const char *p_value = crm_element_value(next, (const char *) a->name);
+        
+        const char *p_value = pcmk__xml_attr_value(a);
 
         xmlSetProp(cib, a->name, (pcmkXmlStr) p_value);
     }
@@ -512,7 +513,7 @@ process_v1_additions(xmlNode *parent, xmlNode *target, xmlNode *patch)
     for (xIter = pcmk__xe_first_attr(patch); xIter != NULL;
          xIter = xIter->next) {
         const char *p_name = (const char *) xIter->name;
-        const char *p_value = crm_element_value(patch, p_name);
+        const char *p_value = pcmk__xml_attr_value(xIter);
 
         xml_remove_prop(target, p_name); // Preserve patch order
         crm_xml_add(target, p_name, p_value);
@@ -981,7 +982,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
             for (xmlAttrPtr pIter = pcmk__xe_first_attr(attrs); pIter != NULL;
                  pIter = pIter->next) {
                 const char *name = (const char *) pIter->name;
-                const char *value = crm_element_value(attrs, name);
+                const char *value = pcmk__xml_attr_value(pIter);
 
                 crm_xml_add(match, name, value);
             }
@@ -1371,7 +1372,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
                 break;
 
             } else {
-                const char *left_value = crm_element_value(left, prop_name);
+                const char *left_value = pcmk__xml_attr_value(xIter);
 
                 xmlSetProp(diff, (pcmkXmlStr) prop_name, (pcmkXmlStr) value);
                 crm_xml_add(diff, prop_name, left_value);
@@ -1379,7 +1380,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
 
         } else {
             /* Only now do we need the left value */
-            const char *left_value = crm_element_value(left, prop_name);
+            const char *left_value = pcmk__xml_attr_value(xIter);
 
             if (strcmp(left_value, right_val) == 0) {
                 /* unchanged */

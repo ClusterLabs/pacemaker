@@ -116,12 +116,14 @@ G_GNUC_INTERNAL
 void pcmk__log_xmllib_err(void *ctx, const char *fmt, ...)
 G_GNUC_PRINTF(2, 3);
 
-static inline const char *
-pcmk__xml_attr_value(const xmlAttr *attr)
-{
-    return ((attr == NULL) || (attr->children == NULL))? NULL
-           : (const char *) attr->children->content;
-}
+G_GNUC_INTERNAL
+void pcmk__mark_xml_node_dirty(xmlNode *xml);
+
+G_GNUC_INTERNAL
+bool pcmk__marked_as_deleted(xmlAttrPtr a, void *user_data);
+
+G_GNUC_INTERNAL
+void pcmk__dump_xml_attr(const xmlAttr *attr, GString *buffer);
 
 /*
  * IPC

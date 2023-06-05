@@ -421,4 +421,11 @@ pcmk__xe_foreach_child(xmlNode *xml, const char *child_element_name,
                        int (*handler)(xmlNode *xml, void *userdata),
                        void *userdata);
 
+static inline const char *
+pcmk__xml_attr_value(const xmlAttr *attr)
+{
+    return ((attr == NULL) || (attr->children == NULL))? NULL
+           : (const char *) attr->children->content;
+}
+
 #endif // PCMK__XML_INTERNAL__H

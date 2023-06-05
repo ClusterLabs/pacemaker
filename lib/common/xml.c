@@ -85,8 +85,8 @@ pcmk__set_xml_doc_flag(xmlNode *xml, enum xml_private_flags flag)
 }
 
 // Mark document, element, and all element's parents as changed
-static inline void
-mark_xml_node_dirty(xmlNode *xml)
+void
+pcmk__mark_xml_node_dirty(xmlNode *xml)
 {
     pcmk__set_xml_doc_flag(xml, pcmk__xf_dirty);
     set_parent_flag(xml, pcmk__xf_dirty);
@@ -122,24 +122,13 @@ pcmk__mark_xml_created(xmlNode *xml)
     if (nodepriv && pcmk__tracking_xml_changes(xml, FALSE)) {
         if (!pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
             pcmk__set_xml_flags(nodepriv, pcmk__xf_created);
-            mark_xml_node_dirty(xml);
+            pcmk__mark_xml_node_dirty(xml);
         }
         for (cIter = pcmk__xml_first_child(xml); cIter != NULL;
              cIter = pcmk__xml_next(cIter)) {
             pcmk__mark_xml_created(cIter);
         }
     }
-}
-
-void
-pcmk__mark_xml_attr_dirty(xmlAttr *a) 
-{
-    xmlNode *parent = a->parent;
-    xml_node_private_t *nodepriv = a->_private;
-
-    pcmk__set_xml_flags(nodepriv, pcmk__xf_dirty|pcmk__xf_modified);
-    pcmk__clear_xml_flags(nodepriv, pcmk__xf_deleted);
-    mark_xml_node_dirty(parent);
 }
 
 #define XML_DOC_PRIVATE_MAGIC   0x81726354UL
@@ -253,7 +242,7 @@ new_private_data(xmlNode *node)
                 /* XML_ELEMENT_NODE doesn't get picked up here, node->doc is
                  * not hooked up at the point we are called
                  */
-                mark_xml_node_dirty(node);
+                pcmk__mark_xml_node_dirty(node);
             }
             break;
         }
@@ -324,19 +313,6 @@ pcmk__xml_position(const xmlNode *xml, enum xml_private_flags ignore_if_set)
     return position;
 }
 
-// This also clears attribute's flags if not marked as deleted
-static bool
-marked_as_deleted(xmlAttrPtr a, void *user_data)
-{
-    xml_node_private_t *nodepriv = a->_private;
-
-    if (pcmk_is_set(nodepriv->flags, pcmk__xf_deleted)) {
-        return true;
-    }
-    nodepriv->flags = pcmk__xf_none;
-    return false;
-}
-
 // Remove all attributes marked as deleted from an XML node
 static void
 accept_attr_deletions(xmlNode *xml)
@@ -345,7 +321,7 @@ accept_attr_deletions(xmlNode *xml)
     ((xml_node_private_t *) xml->_private)->flags = pcmk__xf_none;
 
     // Remove this XML node's attributes that were marked as deleted
-    pcmk__xe_remove_matching_attrs(xml, marked_as_deleted, NULL);
+    pcmk__xe_remove_matching_attrs(xml, pcmk__marked_as_deleted, NULL);
 
     // Recursively do the same for this XML node's children
     for (xmlNodePtr cIter = pcmk__xml_first_child(xml); cIter != NULL;
@@ -1409,37 +1385,6 @@ crm_xml_escape(const char *text)
 
 /*!
  * \internal
- * \brief Append an XML attribute to a buffer
- *
- * \param[in]     attr     Attribute to append
- * \param[in,out] buffer   Where to append the content (must not be \p NULL)
- */
-static void
-dump_xml_attr(const xmlAttr *attr, GString *buffer)
-{
-    char *p_value = NULL;
-    const char *p_name = NULL;
-    xml_node_private_t *nodepriv = NULL;
-
-    if (attr == NULL || attr->children == NULL) {
-        return;
-    }
-
-    nodepriv = attr->_private;
-    if (nodepriv && pcmk_is_set(nodepriv->flags, pcmk__xf_deleted)) {
-        return;
-    }
-
-    p_name = (const char *) attr->name;
-    p_value = crm_xml_escape((const char *)attr->children->content);
-    pcmk__g_strcat(buffer, " ", p_name, "=\"", pcmk__s(p_value, "<null>"), "\"",
-                   NULL);
-
-    free(p_value);
-}
-
-/*!
- * \internal
  * \brief Append a string representation of an XML element to a buffer
  *
  * \param[in]     data     XML whose representation to append
@@ -1468,7 +1413,7 @@ dump_xml_element(const xmlNode *data, uint32_t options, GString *buffer,
          attr = attr->next) {
 
         if (!filtered || !pcmk__xa_filterable((const char *) (attr->name))) {
-            dump_xml_attr(attr, buffer);
+            pcmk__dump_xml_attr(attr, buffer);
         }
     }
 
@@ -1913,7 +1858,7 @@ mark_attr_moved(xmlNode *new_xml, const char *element, xmlAttr *old_attr,
               old_attr->name, p_old, p_new, element);
 
     // Mark document, element, and all element's parents as changed
-    mark_xml_node_dirty(new_xml);
+    pcmk__mark_xml_node_dirty(new_xml);
 
     // Mark attribute as changed
     pcmk__set_xml_flags(nodepriv, pcmk__xf_dirty|pcmk__xf_moved);
@@ -1935,10 +1880,10 @@ xml_diff_old_attrs(xmlNode *old_xml, xmlNode *new_xml)
     xmlAttr *attr_iter = pcmk__xe_first_attr(old_xml);
 
     while (attr_iter != NULL) {
+        const char *name = (const char *) attr_iter->name;
         xmlAttr *old_attr = attr_iter;
         xmlAttr *new_attr = xmlHasProp(new_xml, attr_iter->name);
-        const char *name = (const char *) attr_iter->name;
-        const char *old_value = crm_element_value(old_xml, name);
+        const char *old_value = pcmk__xml_attr_value(attr_iter);
 
         attr_iter = attr_iter->next;
         if (new_attr == NULL) {
@@ -1992,7 +1937,7 @@ mark_created_attrs(xmlNode *new_xml)
             const char *attr_name = (const char *) new_attr->name;
 
             crm_trace("Created new attribute %s=%s in %s",
-                      attr_name, crm_element_value(new_xml, attr_name),
+                      attr_name, pcmk__xml_attr_value(new_attr),
                       new_xml->name);
 
             /* Check ACLs (we can't use the remove-then-create trick because it
@@ -2066,7 +2011,7 @@ mark_child_moved(xmlNode *old_child, xmlNode *new_parent, xmlNode *new_child,
     crm_trace("Child element %s with id='%s' moved from position %d to %d under %s",
               new_child->name, (ID(new_child)? ID(new_child) : "<no id>"),
               p_old, p_new, new_parent->name);
-    mark_xml_node_dirty(new_parent);
+    pcmk__mark_xml_node_dirty(new_parent);
     pcmk__set_xml_flags(nodepriv, pcmk__xf_moved);
 
     if (p_old > p_new) {

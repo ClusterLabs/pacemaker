@@ -907,7 +907,7 @@ unpack_ticket_state(xmlNode * xml_ticket, pe_working_set_t * data_set)
 
     for (xIter = xml_ticket->properties; xIter; xIter = xIter->next) {
         const char *prop_name = (const char *)xIter->name;
-        const char *prop_value = crm_element_value(xml_ticket, prop_name);
+        const char *prop_value = pcmk__xml_attr_value(xIter);
 
         if (pcmk__str_eq(prop_name, XML_ATTR_ID, pcmk__str_none)) {
             continue;

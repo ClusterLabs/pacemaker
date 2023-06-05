@@ -304,14 +304,14 @@ show_xml_changes_recursive(pcmk__output_t *out, const xmlNode *data, int depth,
             nodepriv = attr->_private;
 
             if (pcmk_is_set(nodepriv->flags, pcmk__xf_deleted)) {
-                const char *value = crm_element_value(data, name);
+                const char *value = pcmk__xml_attr_value(attr);
 
                 temp_rc = out->info(out, "%s %*s @%s=%s",
                                     PCMK__XML_PREFIX_DELETED, spaces, "", name,
                                     value);
 
             } else if (pcmk_is_set(nodepriv->flags, pcmk__xf_dirty)) {
-                const char *value = crm_element_value(data, name);
+                const char *value = pcmk__xml_attr_value(attr);
 
                 if (pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
                     prefix = PCMK__XML_PREFIX_CREATED;

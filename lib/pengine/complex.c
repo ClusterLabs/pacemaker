@@ -174,7 +174,7 @@ get_meta_attributes(GHashTable * meta_hash, pe_resource_t * rsc,
 
     for (xmlAttrPtr a = pcmk__xe_first_attr(rsc->xml); a != NULL; a = a->next) {
         const char *prop_name = (const char *) a->name;
-        const char *prop_value = crm_element_value(rsc->xml, prop_name);
+        const char *prop_value = pcmk__xml_attr_value(a);
 
         add_hash_param(meta_hash, prop_name, prop_value);
     }

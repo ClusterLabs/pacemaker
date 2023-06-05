@@ -15,6 +15,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/pengine/internal.h>
+#include <crm/common/xml_internal.h>
 #include "pe_status_private.h"
 
 static void unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
@@ -696,7 +697,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
          */
         for (xIter = xml_obj->properties; xIter; xIter = xIter->next) {
             const char *prop_name = (const char *)xIter->name;
-            const char *prop_value = crm_element_value(xml_obj, prop_name);
+            const char *prop_value = pcmk__xml_attr_value(xIter);
 
             g_hash_table_replace(action->meta, strdup(prop_name), strdup(prop_value));
         }
