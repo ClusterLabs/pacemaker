@@ -180,17 +180,22 @@ struct resource_alloc_functions_s {
      * scores of the best nodes matching the attribute used for each of the
      * resource's relevant colocations.
      *
-     * \param[in,out] rsc      Resource to check colocations for
-     * \param[in]     log_id   Resource ID to use in logs (if NULL, use \p rsc ID)
-     * \param[in,out] nodes    Nodes to update
-     * \param[in]     attr     Colocation attribute (NULL to use default)
-     * \param[in]     factor   Incorporate scores multiplied by this factor
-     * \param[in]     flags    Bitmask of enum pcmk__coloc_select values
+     * \param[in,out] rsc         Resource to check colocations for
+     * \param[in]     log_id      Resource ID for logs (if NULL, use \p rsc ID)
+     * \param[in,out] nodes       Nodes to update (set initial contents to NULL
+     *                            to copy \p rsc's allowed nodes)
+     * \param[in]     colocation  Original colocation constraint (used to get
+     *                            colocation node attribute)
+     * \param[in]     factor      Incorporate scores multiplied by this factor
+     * \param[in]     flags       Bitmask of enum pcmk__coloc_select values
      *
+     * \note NULL *nodes, NULL colocation, and the pcmk__coloc_select_this_with
+     *       flag are used together (and only by cmp_resources()).
      * \note The caller remains responsible for freeing \p *nodes.
      */
     void (*add_colocated_node_scores)(pe_resource_t *rsc, const char *log_id,
-                                      GHashTable **nodes, const char *attr,
+                                      GHashTable **nodes,
+                                      pcmk__colocation_t *colocation,
                                       float factor, uint32_t flags);
 
     /*!
@@ -458,7 +463,8 @@ void pcmk__apply_coloc_to_priority(pe_resource_t *dependent,
 
 G_GNUC_INTERNAL
 void pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
-                                     GHashTable **nodes, const char *attr,
+                                     GHashTable **nodes,
+                                     pcmk__colocation_t *colocation,
                                      float factor, uint32_t flags);
 
 G_GNUC_INTERNAL
@@ -721,7 +727,8 @@ void pcmk__group_with_colocations(const pe_resource_t *rsc,
 G_GNUC_INTERNAL
 void pcmk__group_add_colocated_node_scores(pe_resource_t *rsc,
                                            const char *log_id,
-                                           GHashTable **nodes, const char *attr,
+                                           GHashTable **nodes,
+                                           pcmk__colocation_t *colocation,
                                            float factor, uint32_t flags);
 
 G_GNUC_INTERNAL

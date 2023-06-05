@@ -1407,23 +1407,29 @@ add_node_scores_matching_attr(GHashTable *nodes, const pe_resource_t *rsc,
  * scores of the best nodes matching the attribute used for each of the
  * resource's relevant colocations.
  *
- * \param[in,out] rsc      Resource to check colocations for
- * \param[in]     log_id   Resource ID to use in logs (if NULL, use \p rsc ID)
- * \param[in,out] nodes    Nodes to update
- * \param[in]     attr     Colocation attribute (NULL to use default)
- * \param[in]     factor   Incorporate scores multiplied by this factor
- * \param[in]     flags    Bitmask of enum pcmk__coloc_select values
+ * \param[in,out] rsc         Resource to check colocations for
+ * \param[in]     log_id      Resource ID for logs (if NULL, use \p rsc ID)
+ * \param[in,out] nodes       Nodes to update (set initial contents to NULL
+ *                            to copy \p rsc's allowed nodes)
+ * \param[in]     colocation  Original colocation constraint (used to get
+ *                            colocation node attribute)
+ * \param[in]     factor      Incorporate scores multiplied by this factor
+ * \param[in]     flags       Bitmask of enum pcmk__coloc_select values
  *
+ * \note NULL *nodes, NULL colocation, and the pcmk__coloc_select_this_with
+ *       flag are used together (and only by cmp_resources()).
  * \note The caller remains responsible for freeing \p *nodes.
  */
 void
 pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
-                                GHashTable **nodes, const char *attr,
+                                GHashTable **nodes,
+                                pcmk__colocation_t *colocation,
                                 float factor, uint32_t flags)
 {
     GHashTable *work = NULL;
 
-    CRM_CHECK((rsc != NULL) && (nodes != NULL), return);
+    CRM_ASSERT((rsc != NULL) && (nodes != NULL)
+               && ((colocation != NULL) || (*nodes == NULL)));
 
     if (log_id == NULL) {
         log_id = rsc->id;
@@ -1438,15 +1444,13 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
     pe__set_resource_flags(rsc, pe_rsc_merging);
 
     if (*nodes == NULL) {
-        /* Only cmp_resources() passes a NULL nodes table, which indicates we
-         * should initialize it with the resource's allowed node scores.
-         */
         work = pcmk__copy_node_table(rsc->allowed_nodes);
     } else {
         pe_rsc_trace(rsc, "%s: Merging scores from %s (at %.6f)",
                      log_id, rsc->id, factor);
         work = pcmk__copy_node_table(*nodes);
-        add_node_scores_matching_attr(work, rsc, attr, factor,
+        add_node_scores_matching_attr(work, rsc, colocation->node_attribute,
+                                      factor,
                                       pcmk_is_set(flags,
                                                   pcmk__coloc_select_nonnegative));
     }
@@ -1490,7 +1494,7 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
                          constraint->id, constraint->dependent->id,
                          constraint->primary->id);
             other->cmds->add_colocated_node_scores(other, log_id, &work,
-                                                   constraint->node_attribute,
+                                                   constraint,
                                                    other_factor, flags);
             pe__show_node_weights(true, NULL, log_id, work, rsc->cluster);
         }
@@ -1552,8 +1556,7 @@ pcmk__add_dependent_scores(gpointer data, gpointer user_data)
                  "%s: Incorporating attenuated %s assignment scores due "
                  "to colocation %s", rsc->id, other->id, colocation->id);
     other->cmds->add_colocated_node_scores(other, rsc->id, &rsc->allowed_nodes,
-                                           colocation->node_attribute, factor,
-                                           flags);
+                                           colocation, factor, flags);
 }
 
 /*!
