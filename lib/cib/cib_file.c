@@ -40,6 +40,9 @@
 // key: client ID (const char *) -> value: client (cib_t *)
 static GHashTable *client_table = NULL;
 
+// key: op name (const char *) -> value: operation (const cib_operation_t *)
+static GHashTable *op_table = NULL;
+
 enum cib_file_flags {
     cib_file_flag_dirty = (1 << 0),
     cib_file_flag_live  = (1 << 1),
@@ -86,17 +89,22 @@ unregister_client(const cib_t *cib)
 
     g_hash_table_remove(client_table, private->id);
 
-    /* There's no clean way to free the table at program exit time. We can't
+    /* There's no clean way to free the tables at program exit time. We can't
      * create a cleanup function in this file and add it to crm_exit(), which is
      * in libcrmcommon. libcrmcommon doesn't link against libcib.
      *
-     * As a hack for now, free the table when there are no more clients.
+     * As a hack for now, free the common tables when there are no more clients.
      *
      * @COMPAT: If libcib and libcrmcommon are merged, add this to crm_exit().
      */
     if (g_hash_table_size(client_table) == 0) {
         g_hash_table_destroy(client_table);
         client_table = NULL;
+
+        if (op_table != NULL) {
+            g_hash_table_destroy(op_table);
+            op_table = NULL;
+        }
     }
 }
 
@@ -192,6 +200,37 @@ static gboolean cib_do_chown = FALSE;
                                                 #flags_to_clear);       \
     } while (0)
 
+static int
+get_operation(const char *op, const cib_operation_t **operation)
+{
+    CRM_CHECK(op != NULL, return -EINVAL);
+
+    if (op_table == NULL) {
+        op_table = pcmk__strkey_table(NULL, NULL);
+
+        for (int lpc = 0; lpc < PCMK__NELEM(cib_file_ops); lpc++) {
+            const cib_operation_t *oper = &(cib_file_ops[lpc]);
+
+            g_hash_table_insert(op_table, (gpointer) oper->name,
+                                (gpointer) oper);
+        }
+    }
+
+    *operation = g_hash_table_lookup(op_table, op);
+
+    if (*operation == NULL) {
+        /* @COMPAT: EOPNOTSUPP makes more sense but would change existing
+         * behavior. If we merge the server and file ops tables in the future,
+         * then EINVAL makes sense: if we didn't find the op, it doesn't exist.
+         * Only an internal bug gets us to that point.
+         */
+        crm_err("Operation %s is invalid or unsupported for CIB file clients",
+                op);
+        return -EPROTONOSUPPORT;
+    }
+    return pcmk_ok;
+}
+
 /*!
  * \internal
  * \brief Check whether a file is the live CIB
@@ -252,19 +291,9 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
         return -ENOTCONN;
     }
 
-    if (op == NULL) {
-        return -EINVAL;
-    }
-
-    for (int lpc = 0; lpc < PCMK__NELEM(cib_file_ops); lpc++) {
-        if (pcmk__str_eq(op, cib_file_ops[lpc].name, pcmk__str_none)) {
-            operation = &(cib_file_ops[lpc]);
-            break;
-        }
-    }
-
-    if (operation == NULL) {
-        return -EPROTONOSUPPORT;
+    rc = get_operation(op, &operation);
+    if (rc != pcmk_ok) {
+        return rc;
     }
 
     read_only = !pcmk_is_set(operation->flags, cib_op_attr_modifies);
