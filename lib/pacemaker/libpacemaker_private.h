@@ -185,7 +185,10 @@ struct resource_alloc_functions_s {
      * \param[in,out] nodes       Nodes to update (set initial contents to NULL
      *                            to copy \p rsc's allowed nodes)
      * \param[in]     colocation  Original colocation constraint (used to get
-     *                            colocation node attribute)
+     *                            configured primary resource's stickiness, and
+     *                            to get colocation node attribute; if NULL,
+     *                            \p rsc's own matching node scores will not be
+     *                            added, and *nodes must be NULL as well)
      * \param[in]     factor      Incorporate scores multiplied by this factor
      * \param[in]     flags       Bitmask of enum pcmk__coloc_select values
      *

@@ -1306,28 +1306,59 @@ best_node_score_matching_attr(const pe_resource_t *rsc, const char *attr,
 
 /*!
  * \internal
+ * \brief Check whether a resource is allowed only on a single node
+ *
+ * \param[in] rsc   Resource to check
+ *
+ * \return \c true if \p rsc is allowed only on one node, otherwise \c false
+ */
+static bool
+allowed_on_one(const pe_resource_t *rsc)
+{
+    GHashTableIter iter;
+    pe_node_t *allowed_node = NULL;
+    int allowed_nodes = 0;
+
+    g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &allowed_node)) {
+        if ((allowed_node->weight >= 0) && (++allowed_nodes > 1)) {
+            pe_rsc_trace(rsc, "%s is allowed on multiple nodes", rsc->id);
+            return false;
+        }
+    }
+    pe_rsc_trace(rsc, "%s is allowed %s", rsc->id,
+                 ((allowed_nodes == 1)? "on a single node" : "nowhere"));
+    return (allowed_nodes == 1);
+}
+
+/*!
+ * \internal
  * \brief Add resource's colocation matches to current node allocation scores
  *
  * For each node in a given table, if any of a given resource's allowed nodes
  * have a matching value for the colocation attribute, add the highest of those
  * nodes' scores to the node's score.
  *
- * \param[in,out] nodes  Hash table of nodes with allocation scores so far
- * \param[in]     rsc    Resource whose allowed nodes should be compared
- * \param[in]     attr   Colocation attribute that must match (NULL for default)
- * \param[in]     factor Factor by which to multiply scores being added
+ * \param[in,out] nodes          Table of nodes with assignment scores so far
+ * \param[in]     rsc            Resource whose allowed nodes should be compared
+ * \param[in]     colocation     Original colocation constraint (used to get
+ *                               configured primary resource's stickiness, and
+ *                               to get colocation node attribute; pass NULL to
+ *                               ignore stickiness and use default attribute)
+ * \param[in]     factor         Factor by which to multiply scores being added
  * \param[in]     only_positive  Whether to add only positive scores
  */
 static void
 add_node_scores_matching_attr(GHashTable *nodes, const pe_resource_t *rsc,
-                              const char *attr, float factor,
+                              pcmk__colocation_t *colocation, float factor,
                               bool only_positive)
 {
     GHashTableIter iter;
     pe_node_t *node = NULL;
+    const char *attr = CRM_ATTR_UNAME;
 
-    if (attr == NULL) {
-        attr = CRM_ATTR_UNAME;
+    if ((colocation != NULL) && (colocation->node_attribute != NULL)) {
+        attr = colocation->node_attribute;
     }
 
     // Iterate through each node
@@ -1337,19 +1368,53 @@ add_node_scores_matching_attr(GHashTable *nodes, const pe_resource_t *rsc,
         int weight = 0;
         int score = 0;
         int new_score = 0;
+        const char *value = pe_node_attribute_raw(node, attr);
 
-        score = best_node_score_matching_attr(rsc, attr,
-                                              pe_node_attribute_raw(node, attr));
+        score = best_node_score_matching_attr(rsc, attr, value);
 
         if ((factor < 0) && (score < 0)) {
-            /* Negative preference for a node with a negative score
-             * should not become a positive preference.
+            /* If the dependent is anti-colocated, we generally don't want the
+             * primary to prefer nodes that the dependent avoids. That could
+             * lead to unnecessary shuffling of the primary when the dependent
+             * hits its migration threshold somewhere, for example.
              *
-             * @TODO Consider filtering only if weight is -INFINITY
+             * However, there are cases when it is desirable. If the dependent
+             * can't run anywhere but where the primary is, it would be
+             * worthwhile to move the primary for the sake of keeping the
+             * dependent active.
+             *
+             * We can't know that exactly at this point since we don't know
+             * where the primary will be assigned, but we can limit considering
+             * the preference to when the dependent is allowed only on one node.
+             * This is less than ideal for multiple reasons:
+             *
+             * - the dependent could be allowed on more than one node but have
+             *   anti-colocation primaries on each;
+             * - the dependent could be a clone or bundle with multiple
+             *   instances, and the dependent as a whole is allowed on multiple
+             *   nodes but some instance still can't run
+             * - the dependent has considered node-specific criteria such as
+             *   location constraints and stickiness by this point, but might
+             *   have other factors that end up disallowing a node
+             *
+             * but the alternative is making the primary move when it doesn't
+             * need to.
+             *
+             * We also consider the primary's stickiness and influence, so the
+             * user has some say in the matter. (This is the configured primary,
+             * not a particular instance of the primary, but that doesn't matter
+             * unless stickiness uses a rule to vary by node, and that seems
+             * acceptable to ignore.)
              */
-            crm_trace("%s: Filtering %d + %f * %d (double negative disallowed)",
-                      pe__node_name(node), node->weight, factor, score);
-            continue;
+            if ((colocation == NULL)
+                || (colocation->primary->stickiness >= -score)
+                || !pcmk__colocation_has_influence(colocation, NULL)
+                || !allowed_on_one(colocation->dependent)) {
+                crm_trace("%s: Filtering %d + %f * %d "
+                          "(double negative disallowed)",
+                          pe__node_name(node), node->weight, factor, score);
+                continue;
+            }
         }
 
         if (node->weight == INFINITY_HACK) {
@@ -1412,7 +1477,10 @@ add_node_scores_matching_attr(GHashTable *nodes, const pe_resource_t *rsc,
  * \param[in,out] nodes       Nodes to update (set initial contents to NULL
  *                            to copy \p rsc's allowed nodes)
  * \param[in]     colocation  Original colocation constraint (used to get
- *                            colocation node attribute)
+ *                            configured primary resource's stickiness, and
+ *                            to get colocation node attribute; if NULL,
+ *                            \p rsc's own matching node scores will not be
+ *                            added, and *nodes must be NULL as well)
  * \param[in]     factor      Incorporate scores multiplied by this factor
  * \param[in]     flags       Bitmask of enum pcmk__coloc_select values
  *
@@ -1449,8 +1517,7 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
         pe_rsc_trace(rsc, "%s: Merging scores from %s (at %.6f)",
                      log_id, rsc->id, factor);
         work = pcmk__copy_node_table(*nodes);
-        add_node_scores_matching_attr(work, rsc, colocation->node_attribute,
-                                      factor,
+        add_node_scores_matching_attr(work, rsc, colocation, factor,
                                       pcmk_is_set(flags,
                                                   pcmk__coloc_select_nonnegative));
     }
