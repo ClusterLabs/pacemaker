@@ -257,13 +257,15 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
             // We're assigning the dependent to a node
             pcmk__update_dependent_with_promotable(primary, dependent,
                                                    colocation);
+            return;
+        }
 
-        } else if (colocation->dependent_role == RSC_ROLE_PROMOTED) {
+        if (colocation->dependent_role == RSC_ROLE_PROMOTED) {
             // We're choosing a role for the dependent
             pcmk__update_promotable_dependent_priority(primary, dependent,
                                                        colocation);
+            return;
         }
-        return;
     }
 
     // Apply interleaved colocations
