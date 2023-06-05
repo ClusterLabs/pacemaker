@@ -71,7 +71,7 @@ class AsyncCmd(Thread):
         self._proc.wait()
 
         if self._delegate:
-            self._logger.debug("cmd: pid %d returned %d to %s" % (self._proc.pid, self._proc.returncode, repr(self._delegate)))
+            self._logger.debug("cmd: pid %d returned %d to %r" % (self._proc.pid, self._proc.returncode, self._delegate))
         else:
             self._logger.debug("cmd: pid %d returned %d" % (self._proc.pid, self._proc.returncode))
 

@@ -96,7 +96,7 @@ class StonithdTest(CTSTest):
 
         self.set_timer("reform")
         if watch.unmatched:
-            self._logger.log("Patterns not found: " + repr(watch.unmatched))
+            self._logger.log("Patterns not found: %r" % watch.unmatched)
 
         self.debug("Waiting for the cluster to recover")
         self._cm.cluster_stable()

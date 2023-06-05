@@ -139,7 +139,7 @@ class FileObj(SearchObj):
 
             if match:
                 self.offset = match.group(1)
-                self.debug("Got %d lines, new offset: %s  %s" % (len(out), self.offset, repr(self._delegate)))
+                self.debug("Got %d lines, new offset: %s  %r" % (len(out), self.offset, self._delegate))
             elif re.search(r"^CTSwatcher:.*truncated", line):
                 self.log(line)
             elif re.search(r"^CTSwatcher:", line):
@@ -413,7 +413,7 @@ class LogWatcher:
         for t in pending:
             t.join(60.0)
             if t.is_alive():
-                self._logger.log("%s: Aborting after 20s waiting for %s logging commands" % (self.name, repr(t)))
+                self._logger.log("%s: Aborting after 20s waiting for %r logging commands" % (self.name, t))
                 return
 
     def end(self):

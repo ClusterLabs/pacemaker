@@ -76,7 +76,7 @@ class LogAudit(ClusterAudit):
         if not nodes:
             nodes = self._cm.Env["nodes"]
 
-        self._cm.debug("Restarting logging on: %s" % repr(nodes))
+        self._cm.debug("Restarting logging on: %r" % nodes)
 
         for node in nodes:
             if self._cm.Env["have_systemd"]:
@@ -426,28 +426,24 @@ class PrimitiveAudit(ClusterAudit):
 
         if len(active) == 1:
             if quorum:
-                self.debug("Resource %s active on %s" % (resource.id, repr(active)))
+                self.debug("Resource %s active on %r" % (resource.id, active))
 
             elif resource.needs_quorum == 1:
-                self._cm.log("Resource %s active without quorum: %s"
-                            % (resource.id, repr(active)))
+                self._cm.log("Resource %s active without quorum: %r" % (resource.id, active))
                 rc = False
 
         elif not resource.managed:
-            self._cm.log("Resource %s not managed. Active on %s"
-                        % (resource.id, repr(active)))
+            self._cm.log("Resource %s not managed. Active on %r" % (resource.id, active))
 
         elif not resource.unique:
             # TODO: Figure out a clever way to actually audit these resource types
             if len(active) > 1:
-                self.debug("Non-unique resource %s is active on: %s"
-                              % (resource.id, repr(active)))
+                self.debug("Non-unique resource %s is active on: %r" % (resource.id, active))
             else:
                 self.debug("Non-unique resource %s is not active" % resource.id)
 
         elif len(active) > 1:
-            self._cm.log("Resource %s is active multiple times: %s"
-                        % (resource.id, repr(active)))
+            self._cm.log("Resource %s is active multiple times: %r" % (resource.id, active))
             rc = False
 
         elif resource.orphan:
@@ -459,15 +455,15 @@ class PrimitiveAudit(ClusterAudit):
 
         elif self._cm.Env["warn-inactive"]:
             if quorum or not resource.needs_quorum:
-                self._cm.log("WARN: Resource %s not served anywhere (Inactive nodes: %s)"
-                            % (resource.id, repr(self._inactive_nodes)))
+                self._cm.log("WARN: Resource %s not served anywhere (Inactive nodes: %r)"
+                            % (resource.id, self._inactive_nodes))
             else:
-                self.debug("Resource %s not served anywhere (Inactive nodes: %s)"
-                              % (resource.id, repr(self._inactive_nodes)))
+                self.debug("Resource %s not served anywhere (Inactive nodes: %r)"
+                              % (resource.id, self._inactive_nodes))
 
         elif quorum or not resource.needs_quorum:
-            self.debug("Resource %s not served anywhere (Inactive nodes: %s)"
-                          % (resource.id, repr(self._inactive_nodes)))
+            self.debug("Resource %s not served anywhere (Inactive nodes: %r)"
+                          % (resource.id, self._inactive_nodes))
 
         return rc
 
@@ -571,8 +567,8 @@ class GroupAudit(PrimitiveAudit):
 
                 if len(nodes) > 1:
                     result = False
-                    self._cm.log("Child %s of %s is active more than once: %s"
-                                % (child.id, group.id, repr(nodes)))
+                    self._cm.log("Child %s of %s is active more than once: %r"
+                                % (child.id, group.id, nodes))
 
                 elif not nodes:
                     # Groups are allowed to be partially active
@@ -675,11 +671,11 @@ class ColocationAudit(PrimitiveAudit):
                 for node in source:
                     if not node in target:
                         result = False
-                        self._cm.log("Colocation audit (%s): %s running on %s (not in %s)"
-                                    % (coloc.id, coloc.rsc, node, repr(target)))
+                        self._cm.log("Colocation audit (%s): %s running on %s (not in %r)"
+                                    % (coloc.id, coloc.rsc, node, target))
                     else:
-                        self.debug("Colocation audit (%s): %s running on %s (in %s)"
-                                      % (coloc.id, coloc.rsc, node, repr(target)))
+                        self.debug("Colocation audit (%s): %s running on %s (in %r)"
+                                      % (coloc.id, coloc.rsc, node, target))
 
         return result
 
@@ -722,8 +718,8 @@ class ControllerStateAudit(ClusterAudit):
 
         if len(unstable_list) > 0:
             result = False
-            self._cm.log("Cluster is not stable: %d (of %d): %s"
-                     % (len(unstable_list), self._cm.upcount(), repr(unstable_list)))
+            self._cm.log("Cluster is not stable: %d (of %d): %r"
+                     % (len(unstable_list), self._cm.upcount(), unstable_list))
 
         if up_are_down > 0:
             result = False

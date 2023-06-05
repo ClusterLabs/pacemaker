@@ -53,7 +53,6 @@ class RestartOnebyOne(CTSTest):
                 did_fail.append(node)
 
         if did_fail:
-            return self.failure("Could not restart %d nodes: %s"
-                                % (len(did_fail), repr(did_fail)))
+            return self.failure("Could not restart %d nodes: %r" % (len(did_fail), did_fail))
 
         return self.success()
