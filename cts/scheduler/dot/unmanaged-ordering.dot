@@ -1,7 +1,7 @@
  digraph "g" {
-"dummy1a_monitor_10000 rhel8-2" [ style=bold color="green" fontcolor="black"]
-"dummy1a_start_0 rhel8-2" -> "dummy1a_monitor_10000 rhel8-2" [ style = bold]
-"dummy1a_start_0 rhel8-2" [ style=bold color="green" fontcolor="black"]
+"dummy1a_monitor_10000 rhel8-2" [ style=dashed color="red" fontcolor="black"]
+"dummy1a_start_0 rhel8-2" -> "dummy1a_monitor_10000 rhel8-2" [ style = dashed]
+"dummy1a_start_0 rhel8-2" [ style=dashed color="red" fontcolor="black"]
 "dummy2a_monitor_10000 rhel8-4" [ style=bold color="green" fontcolor="black"]
 "dummy2a_start_0 rhel8-4" -> "dummy2a_monitor_10000 rhel8-4" [ style = bold]
 "dummy2a_start_0 rhel8-4" [ style=bold color="green" fontcolor="black"]
