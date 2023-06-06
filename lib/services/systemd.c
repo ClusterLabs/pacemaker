@@ -717,6 +717,8 @@ process_unit_method_reply(DBusMessage *reply, svc_action_t *op)
 {
     DBusError error;
 
+    dbus_error_init(&error);
+
     /* The first use of error here is not used other than as a non-NULL flag to
      * indicate that a request was indeed sent
      */
