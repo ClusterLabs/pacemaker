@@ -126,7 +126,7 @@ class RemoteExec:
         sysname = args[0]
         command = args[1]
 
-        if sysname is None or sysname.lower() == self._our_node or sysname == "localhost":
+        if sysname is None or sysname.lower() in [self._our_node, "localhost"]:
             ret = command
         else:
             ret = "%s %s '%s'" % (self._command, sysname, self._fixcmd(command))

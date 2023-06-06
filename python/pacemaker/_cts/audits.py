@@ -203,7 +203,7 @@ class DiskAudit(ClusterAudit):
         result = True
 
         # @TODO Use directory of PCMK_logfile if set on host
-        dfcmd = "df -BM " + BuildOptions.LOG_DIR + " | tail -1 | awk '{print $(NF-1)\" \"$(NF-2)}' | tr -d 'M%'"
+        dfcmd = "df -BM %s | tail -1 | awk '{print $(NF-1)\" \"$(NF-2)}' | tr -d 'M%%'" % BuildOptions.LOG_DIR
 
         self._cm.ns.wait_for_all_nodes(self._cm.Env["nodes"])
         for node in self._cm.Env["nodes"]:
@@ -284,7 +284,7 @@ class FileAudit(ClusterAudit):
                     self.known.append(line)
                     self._cm.log("Warning: Corosync core file on %s: %s" % (node, line))
 
-            if node in self._cm.ShouldBeStatus and self._cm.ShouldBeStatus[node] == "down":
+            if self._cm.ShouldBeStatus.get(node) == "down":
                 clean = False
                 (_, lsout) = self._cm.rsh(node, "ls -al /dev/shm | grep qb-", verbose=1)
 

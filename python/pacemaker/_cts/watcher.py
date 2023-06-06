@@ -13,7 +13,7 @@ from pacemaker.buildoptions import BuildOptions
 from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.remote import RemoteFactory
 
-LOG_WATCHER_BIN = BuildOptions.DAEMON_DIR + "/cts-log-watcher"
+LOG_WATCHER_BIN = "%s/cts-log-watcher" % BuildOptions.DAEMON_DIR
 
 @unique
 class LogKind(Enum):

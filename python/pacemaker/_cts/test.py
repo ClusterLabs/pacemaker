@@ -147,7 +147,7 @@ class Test:
             this requires all subclasses to set self._daemon_location before
             accessing this property or an exception will be raised.
         """
-        return os.path.join(self.logdir, self._daemon_location + ".log")
+        return os.path.join(self.logdir, "%s.log" % self._daemon_location)
 
     ###
     ### PRIVATE METHODS
@@ -287,6 +287,15 @@ class Test:
 
         self._patterns.append(Pattern(pattern, negative=negative, regex=regex))
 
+    def _signal_dict(self):
+        """ Return a dictionary mapping signal numbers to their names """
+
+        # FIXME: When we support python >= 3.5, this function can be replaced with:
+        #   signal.Signals(self.daemon_process.returncode).name
+        return { getattr(signal, _signame): _signame
+                     for _signame in dir(signal)
+                     if _signame.startswith("SIG") and not _signame.startswith("SIG_") }
+
     def clean_environment(self):
         """ Clean up the host after executing a test """
 
@@ -295,13 +304,11 @@ class Test:
                 self._daemon_process.terminate()
                 self._daemon_process.wait()
             else:
-                return_code = {
-                    getattr(signal, _signame): _signame
-                        for _signame in dir(signal)
-                        if _signame.startswith('SIG') and not _signame.startswith("SIG_")
-                }.get(-self._daemon_process.returncode, "RET=%d" % (self._daemon_process.returncode))
+                rc = self._daemon_process.returncode
+                signame = self._signal_dict().get(-rc, "RET=%s" % rc)
                 msg = "FAILURE - '%s' failed. %s abnormally exited during test (%s)."
-                self._result_txt = msg % (self.name, self._daemon_location, return_code)
+
+                self._result_txt = msg % (self.name, self._daemon_location, signame)
                 self.exitcode = ExitStatus.ERROR
 
         self._daemon_process = None
@@ -361,7 +368,7 @@ class Test:
             if self.verbose:
                 print("Step %d SUCCESS" % (i))
 
-            i = i + 1
+            i += 1
 
         self.clean_environment()
 
@@ -427,7 +434,7 @@ class Test:
 
         if args['validate']:
             if args['check_rng']:
-                rng_file = rng_directory() + "/api/api-result.rng"
+                rng_file = "%s/api/api-result.rng" % rng_directory()
             else:
                 rng_file = None
 
@@ -562,10 +569,10 @@ class Tests:
                 continue
 
             if test.exitcode != ExitStatus.OK:
-                failures = failures + 1
+                failures += 1
                 test.print_result("    ")
             else:
-                success = success + 1
+                success += 1
 
         if failures == 0:
             print("    None")
