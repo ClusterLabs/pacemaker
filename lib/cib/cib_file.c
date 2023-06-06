@@ -263,18 +263,87 @@ cib_file_is_live(const char *filename)
 }
 
 static int
+cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
+{
+    int rc = pcmk_ok;
+    const cib_operation_t *operation = NULL;
+
+    int call_id = 0;
+    int call_options = cib_none;
+    const char *op = crm_element_value(request, F_CIB_OPERATION);
+    const char *section = crm_element_value(request, F_CIB_SECTION);
+    xmlNode *data = get_message_xml(request, F_CIB_CALLDATA);
+
+    bool changed = false;
+    bool read_only = false;
+    xmlNode *result_cib = NULL;
+    xmlNode *cib_diff = NULL;
+
+    cib_file_opaque_t *private = cib->variant_opaque;
+
+    rc = get_operation(op, &operation);
+    if (rc != pcmk_ok) {
+        goto done;
+    }
+
+    crm_element_value_int(request, F_CIB_CALLID, &call_id);
+    crm_element_value_int(request, F_CIB_CALLOPTS, &call_options);
+
+    read_only = !pcmk_is_set(operation->flags, cib_op_attr_modifies);
+
+    // Mirror the logic in cib_prepare_common()
+    if ((section != NULL) && (data != NULL)
+        && pcmk__str_eq(crm_element_name(data), XML_TAG_CIB, pcmk__str_none)) {
+
+        data = pcmk_find_cib_element(data, section);
+    }
+
+    rc = cib_perform_op(op, call_options, operation->fn, read_only, section,
+                        request, data, true, &changed, &private->cib_xml,
+                        &result_cib, &cib_diff, output);
+
+    if (rc == -pcmk_err_schema_validation) {
+        validate_xml_verbose(result_cib);
+
+    } else if ((rc == pcmk_ok) && !read_only) {
+        pcmk__output_t *out = NULL;
+
+        rc = pcmk_rc2legacy(pcmk__log_output_new(&out));
+        CRM_CHECK(rc == pcmk_ok, goto done);
+
+        pcmk__output_set_log_level(out, LOG_DEBUG);
+        rc = out->message(out, "xml-patchset", cib_diff);
+        out->finish(out, pcmk_rc2exitc(rc), true, NULL);
+        pcmk__output_free(out);
+        rc = pcmk_ok;
+
+        free_xml(private->cib_xml);
+        private->cib_xml = result_cib;
+        cib_set_file_flags(private, cib_file_flag_dirty);
+    }
+
+    // Global operation callback (deprecated)
+    if (cib->op_callback != NULL) {
+        cib->op_callback(NULL, call_id, rc, *output);
+    }
+
+done:
+    if ((result_cib != private->cib_xml) && (result_cib != *output)) {
+        free_xml(result_cib);
+    }
+    free_xml(cib_diff);
+    return rc;
+}
+
+static int
 cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
                              const char *section, xmlNode *data,
                              xmlNode **output_data, int call_options,
                              const char *user_name)
 {
     int rc = pcmk_ok;
-    bool changed = false;
-    bool read_only = false;
     xmlNode *request = NULL;
     xmlNode *output = NULL;
-    xmlNode *cib_diff = NULL;
-    xmlNode *result_cib = NULL;
     cib_file_opaque_t *private = cib->variant_opaque;
 
     const cib_operation_t *operation = NULL;
@@ -296,8 +365,6 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
         return rc;
     }
 
-    read_only = !pcmk_is_set(operation->flags, cib_op_attr_modifies);
-
     cib->call_id++;
     cib__set_call_options(call_options, "file operation", cib_no_mtime);
 
@@ -306,60 +373,18 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     crm_xml_add(request, XML_ACL_TAG_USER, user_name);
     crm_xml_add(request, F_CIB_CLIENTID, private->id);
 
-    // Mirror the logic in cib_prepare_common()
-    if ((section != NULL) && (data != NULL)
-        && pcmk__str_eq(crm_element_name(data), XML_TAG_CIB, pcmk__str_none)) {
-
-        data = pcmk_find_cib_element(data, section);
-    }
-
-    rc = cib_perform_op(op, call_options, operation->fn, read_only, section,
-                        request, data, true, &changed, &private->cib_xml,
-                        &result_cib, &cib_diff, &output);
-    free_xml(request);
-
-    if (rc == -pcmk_err_schema_validation) {
-        validate_xml_verbose(result_cib);
-    }
-
-    if (rc != pcmk_ok) {
-        free_xml(result_cib);
-
-    } else if (!read_only) {
-        pcmk__output_t *out = NULL;
-
-        rc = pcmk_rc2legacy(pcmk__log_output_new(&out));
-        CRM_CHECK(rc == pcmk_ok, goto done);
-
-        pcmk__output_set_log_level(out, LOG_DEBUG);
-        rc = out->message(out, "xml-patchset", cib_diff);
-        out->finish(out, pcmk_rc2exitc(rc), true, NULL);
-        pcmk__output_free(out);
-        rc = pcmk_ok;
-
-        free_xml(private->cib_xml);
-        private->cib_xml = result_cib;
-        cib_set_file_flags(private, cib_file_flag_dirty);
-    }
-
-    // Global operation callback (deprecated)
-    if (cib->op_callback != NULL) {
-        cib->op_callback(NULL, cib->call_id, rc, output);
-    }
+    rc = cib_file_process_request(cib, request, &output);
 
     if ((output_data != NULL) && (output != NULL)) {
         *output_data = (output == private->cib_xml)? copy_xml(output) : output;
     }
 
-done:
-    free_xml(cib_diff);
+    if ((output != private->cib_xml)
+        && ((output_data == NULL) || (output != *output_data))) {
 
-    if ((output_data == NULL) && (output != private->cib_xml)) {
-        /* Don't free output if we're still using it. (output_data != NULL)
-         * means we may have assigned *output_data = output above.
-         */
         free_xml(output);
     }
+    free_xml(request);
     return rc;
 }
 
