@@ -1,0 +1,41 @@
+Using the original execution date of: 2021-07-02 17:44:03Z
+Current cluster status:
+  * Node List:
+    * Online: [ rhel8-1 rhel8-2 rhel8-3 rhel8-4 rhel8-5 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started rhel8-1
+    * dummy1a	(ocf:pacemaker:Dummy):	 Stopped
+    * dummy1b	(ocf:pacemaker:Dummy):	 Started rhel8-3 (unmanaged)
+    * dummy2a	(ocf:pacemaker:Dummy):	 Stopped
+    * dummy2b	(ocf:pacemaker:Dummy):	 Started rhel8-5 (unmanaged)
+    * Resource Group: group1:
+      * group1-rsc1	(ocf:pacemaker:Dummy):	 Stopped
+      * group1-rsc2	(ocf:pacemaker:Dummy):	 Started rhel8-1 (unmanaged)
+
+Transition Summary:
+  * Start      dummy1a         ( rhel8-2 )
+  * Start      dummy2a         ( rhel8-4 )
+  * Start      group1-rsc1     ( rhel8-1 )  due to unrunnable group1-rsc2 stop (blocked)
+
+Executing Cluster Transition:
+  * Resource action: dummy1a         start on rhel8-2
+  * Resource action: dummy2a         start on rhel8-4
+  * Pseudo action:   group1_start_0
+  * Resource action: dummy1a         monitor=10000 on rhel8-2
+  * Resource action: dummy2a         monitor=10000 on rhel8-4
+Using the original execution date of: 2021-07-02 17:44:03Z
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ rhel8-1 rhel8-2 rhel8-3 rhel8-4 rhel8-5 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started rhel8-1
+    * dummy1a	(ocf:pacemaker:Dummy):	 Started rhel8-2
+    * dummy1b	(ocf:pacemaker:Dummy):	 Started rhel8-3 (unmanaged)
+    * dummy2a	(ocf:pacemaker:Dummy):	 Started rhel8-4
+    * dummy2b	(ocf:pacemaker:Dummy):	 Started rhel8-5 (unmanaged)
+    * Resource Group: group1:
+      * group1-rsc1	(ocf:pacemaker:Dummy):	 Stopped
+      * group1-rsc2	(ocf:pacemaker:Dummy):	 Started rhel8-1 (unmanaged)

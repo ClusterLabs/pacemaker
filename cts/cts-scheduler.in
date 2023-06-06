@@ -230,6 +230,12 @@ TESTS = [
         [ "ordered-set-basic-startup", "Constraint set with default order settings" ],
         [ "ordered-set-natural", "Allow natural set ordering" ],
         [ "order-wrong-kind", "Order (error)" ],
+        [ "unmanaged-ordering",
+          "Block 'first' from starting if 'then' can't restart",
+        ],
+        [ "unmanaged-ordering-stopped",
+          "Allow 'first' to start even if 'then' can't",
+        ],
     ],
     [
         [ "coloc-loop", "Colocation - loop" ],

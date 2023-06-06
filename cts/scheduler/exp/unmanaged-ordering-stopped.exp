@@ -1,0 +1,80 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="1"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <rsc_op id="8" operation="monitor" operation_key="dummy1a_monitor_10000" on_node="rhel8-2" on_node_uuid="2">
+        <primitive id="dummy1a" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="rhel8-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="7" operation="start" operation_key="dummy1a_start_0" on_node="rhel8-2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="7" operation="start" operation_key="dummy1a_start_0" on_node="rhel8-2" on_node_uuid="2">
+        <primitive id="dummy1a" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="rhel8-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <rsc_op id="10" operation="monitor" operation_key="dummy2a_monitor_10000" on_node="rhel8-3" on_node_uuid="3">
+        <primitive id="dummy2a" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="rhel8-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="9" operation="start" operation_key="dummy2a_start_0" on_node="rhel8-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <rsc_op id="9" operation="start" operation_key="dummy2a_start_0" on_node="rhel8-3" on_node_uuid="3">
+        <primitive id="dummy2a" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="rhel8-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <pseudo_event id="13" operation="start" operation_key="group1_start_0">
+        <attributes CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <rsc_op id="12" operation="monitor" operation_key="group1-rsc1_monitor_10000" on_node="rhel8-4" on_node_uuid="4">
+        <primitive id="group1-rsc1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="rhel8-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="11" operation="start" operation_key="group1-rsc1_start_0" on_node="rhel8-4" on_node_uuid="4"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <rsc_op id="11" operation="start" operation_key="group1-rsc1_start_0" on_node="rhel8-4" on_node_uuid="4">
+        <primitive id="group1-rsc1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="rhel8-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="13" operation="start" operation_key="group1_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>

@@ -1,0 +1,16 @@
+ digraph "g" {
+"dummy1a_monitor_10000 rhel8-2" [ style=bold color="green" fontcolor="black"]
+"dummy1a_start_0 rhel8-2" -> "dummy1a_monitor_10000 rhel8-2" [ style = bold]
+"dummy1a_start_0 rhel8-2" [ style=bold color="green" fontcolor="black"]
+"dummy2a_monitor_10000 rhel8-3" [ style=bold color="green" fontcolor="black"]
+"dummy2a_start_0 rhel8-3" -> "dummy2a_monitor_10000 rhel8-3" [ style = bold]
+"dummy2a_start_0 rhel8-3" [ style=bold color="green" fontcolor="black"]
+"group1-rsc1_monitor_10000 rhel8-4" [ style=bold color="green" fontcolor="black"]
+"group1-rsc1_start_0 rhel8-4" -> "group1-rsc1_monitor_10000 rhel8-4" [ style = bold]
+"group1-rsc1_start_0 rhel8-4" -> "group1_running_0" [ style = dashed]
+"group1-rsc1_start_0 rhel8-4" [ style=bold color="green" fontcolor="black"]
+"group1_running_0" [ style=dashed color="red" fontcolor="orange"]
+"group1_start_0" -> "group1-rsc1_start_0 rhel8-4" [ style = bold]
+"group1_start_0" -> "group1_running_0" [ style = dashed]
+"group1_start_0" [ style=bold color="green" fontcolor="orange"]
+}
