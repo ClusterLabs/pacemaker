@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 the Pacemaker project contributors
+ * Copyright 2020-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -112,6 +112,16 @@ negative_score_2(void **state) {
 }
 
 static void
+negative_score_3(void **state) {
+    const char *argv[] = { "crm_attribute", "-p", "-v", "-INFINITY", NULL };
+    const gchar *expected[] = { "crm_attribute", "-p", "-v", "-INFINITY", NULL };
+
+    gchar **processed = pcmk__cmdline_preproc((char **) argv, "pv");
+    LISTS_EQ(processed, expected);
+    g_strfreev(processed);
+}
+
+static void
 string_arg_with_dash(void **state) {
     const char *argv[] = { "crm_mon", "-n", "crm_mon_options", "-v", "--opt1 --opt2", NULL };
     const gchar *expected[] = { "crm_mon", "-n", "crm_mon_options", "-v", "--opt1 --opt2", NULL };
@@ -151,6 +161,7 @@ PCMK__UNIT_TEST(NULL, NULL,
                 cmocka_unit_test(long_arg),
                 cmocka_unit_test(negative_score),
                 cmocka_unit_test(negative_score_2),
+                cmocka_unit_test(negative_score_3),
                 cmocka_unit_test(string_arg_with_dash),
                 cmocka_unit_test(string_arg_with_dash_2),
                 cmocka_unit_test(string_arg_with_dash_3))
