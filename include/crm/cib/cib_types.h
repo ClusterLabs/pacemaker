@@ -222,9 +222,6 @@ typedef struct cib_api_operations_s {
      *
      * \return Legacy Pacemaker return code
      *
-     * \note The client IDs are assigned by \p pacemaker-based when the client
-     *       connects. \p cib_t variants that don't connect to
-     *       \p pacemaker-based may never be assigned a client ID.
      * \note Some variants may have only one client for both asynchronous and
      *       synchronous requests.
      */

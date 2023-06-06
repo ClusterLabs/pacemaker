@@ -37,15 +37,68 @@
 
 #define CIB_LIVE_NAME CIB_SERIES ".xml"
 
+// key: client ID (const char *) -> value: client (cib_t *)
+static GHashTable *client_table = NULL;
+
 enum cib_file_flags {
     cib_file_flag_dirty = (1 << 0),
     cib_file_flag_live  = (1 << 1),
 };
 
 typedef struct cib_file_opaque_s {
-    uint32_t flags; // Group of enum cib_file_flags
+    char *id;
     char *filename;
+    uint32_t flags; // Group of enum cib_file_flags
+    xmlNode *cib_xml;
 } cib_file_opaque_t;
+
+/*!
+ * \internal
+ * \brief Add a CIB file client to client table
+ *
+ * \param[in] cib  CIB client
+ */
+static void
+register_client(const cib_t *cib)
+{
+    cib_file_opaque_t *private = cib->variant_opaque;
+
+    if (client_table == NULL) {
+        client_table = pcmk__strkey_table(NULL, NULL);
+    }
+    g_hash_table_insert(client_table, private->id, (gpointer) cib);
+}
+
+/*!
+ * \internal
+ * \brief Remove a CIB file client from client table
+ *
+ * \param[in] cib  CIB client
+ */
+static void
+unregister_client(const cib_t *cib)
+{
+    cib_file_opaque_t *private = cib->variant_opaque;
+
+    if (client_table == NULL) {
+        return;
+    }
+
+    g_hash_table_remove(client_table, private->id);
+
+    /* There's no clean way to free the table at program exit time. We can't
+     * create a cleanup function in this file and add it to crm_exit(), which is
+     * in libcrmcommon. libcrmcommon doesn't link against libcib.
+     *
+     * As a hack for now, free the table when there are no more clients.
+     *
+     * @COMPAT: If libcib and libcrmcommon are merged, add this to crm_exit().
+     */
+    if (g_hash_table_size(client_table) == 0) {
+        g_hash_table_destroy(client_table);
+        client_table = NULL;
+    }
+}
 
 /* This table is adapted from cib_server_ops in pacemaker-based. Flags that are
  * not used in cib_file.c (for example, cib_op_attr_replaces) are not currently
@@ -112,8 +165,6 @@ static const cib_operation_t cib_file_ops[] = {
         NULL, NULL, cib_process_upgrade
     },
 };
-
-static xmlNode *in_mem_cib = NULL;
 
 /* cib_file_backup() and cib_file_write_with_digest() need to chown the
  * written files only in limited circumstances, so these variables allow
@@ -224,6 +275,7 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     request = cib_create_op(cib->call_id, op, host, section, data, call_options,
                             user_name);
     crm_xml_add(request, XML_ACL_TAG_USER, user_name);
+    crm_xml_add(request, F_CIB_CLIENTID, private->id);
 
     // Mirror the logic in cib_prepare_common()
     if ((section != NULL) && (data != NULL)
@@ -233,8 +285,8 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     }
 
     rc = cib_perform_op(op, call_options, operation->fn, read_only, section,
-                        request, data, true, &changed, &in_mem_cib, &result_cib,
-                        &cib_diff, &output);
+                        request, data, true, &changed, &private->cib_xml,
+                        &result_cib, &cib_diff, &output);
     free_xml(request);
 
     if (rc == -pcmk_err_schema_validation) {
@@ -256,8 +308,8 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
         pcmk__output_free(out);
         rc = pcmk_ok;
 
-        free_xml(in_mem_cib);
-        in_mem_cib = result_cib;
+        free_xml(private->cib_xml);
+        private->cib_xml = result_cib;
         cib_set_file_flags(private, cib_file_flag_dirty);
     }
 
@@ -267,13 +319,13 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     }
 
     if ((output_data != NULL) && (output != NULL)) {
-        *output_data = (output == in_mem_cib)? copy_xml(output) : output;
+        *output_data = (output == private->cib_xml)? copy_xml(output) : output;
     }
 
 done:
     free_xml(cib_diff);
 
-    if ((output_data == NULL) && (output != in_mem_cib)) {
+    if ((output_data == NULL) && (output != private->cib_xml)) {
         /* Don't free output if we're still using it. (output_data != NULL)
          * means we may have assigned *output_data = output above.
          */
@@ -286,7 +338,8 @@ done:
  * \internal
  * \brief Read CIB from disk and validate it against XML schema
  *
- * \param[in] filename Name of file to read CIB from
+ * \param[in]   filename  Name of file to read CIB from
+ * \param[out]  output    Where to store the read CIB XML
  *
  * \return pcmk_ok on success,
  *         -ENXIO if file does not exist (or stat() otherwise fails), or
@@ -297,7 +350,7 @@ done:
  *       because some callers might not need to write.
  */
 static int
-load_file_cib(const char *filename)
+load_file_cib(const char *filename, xmlNode **output)
 {
     struct stat buf;
     xmlNode *root = NULL;
@@ -328,7 +381,7 @@ load_file_cib(const char *filename)
     }
 
     /* Remember the parsed XML for later use */
-    in_mem_cib = root;
+    *output = root;
     return pcmk_ok;
 }
 
@@ -341,7 +394,7 @@ cib_file_signon(cib_t *cib, const char *name, enum cib_conn_type type)
     if (private->filename == NULL) {
         rc = -EINVAL;
     } else {
-        rc = load_file_cib(private->filename);
+        rc = load_file_cib(private->filename, &private->cib_xml);
     }
 
     if (rc == pcmk_ok) {
@@ -349,10 +402,11 @@ cib_file_signon(cib_t *cib, const char *name, enum cib_conn_type type)
                   private->filename, name);
         cib->state = cib_connected_command;
         cib->type = cib_command;
+        register_client(cib);
 
     } else {
-        crm_info("Connection to local file '%s' for %s failed: %s\n",
-                 private->filename, name, pcmk_strerror(rc));
+        crm_info("Connection to local file '%s' for %s (client %s) failed: %s",
+                 private->filename, name, private->id, pcmk_strerror(rc));
     }
     return rc;
 }
@@ -361,12 +415,13 @@ cib_file_signon(cib_t *cib, const char *name, enum cib_conn_type type)
  * \internal
  * \brief Write out the in-memory CIB to a live CIB file
  *
- * param[in,out] path  Full path to file to write
+ * param[in]     cib_root  Root of XML tree to write
+ * param[in,out] path      Full path to file to write
  *
  * \return 0 on success, -1 on failure
  */
 static int
-cib_file_write_live(char *path)
+cib_file_write_live(xmlNode *cib_root, char *path)
 {
     uid_t uid = geteuid();
     struct passwd *daemon_pwent;
@@ -416,7 +471,7 @@ cib_file_write_live(char *path)
     }
 
     /* write the file */
-    if (cib_file_write_with_digest(in_mem_cib, cib_dirname,
+    if (cib_file_write_with_digest(cib_root, cib_dirname,
                                    cib_filename) != pcmk_ok) {
         rc = -1;
     }
@@ -456,13 +511,14 @@ cib_file_signoff(cib_t *cib)
     crm_debug("Disconnecting from the CIB manager");
     cib->state = cib_disconnected;
     cib->type = cib_no_connection;
+    unregister_client(cib);
 
     /* If the in-memory CIB has been changed, write it to disk */
     if (pcmk_is_set(private->flags, cib_file_flag_dirty)) {
 
         /* If this is the live CIB, write it out with a digest */
         if (pcmk_is_set(private->flags, cib_file_flag_live)) {
-            if (cib_file_write_live(private->filename) < 0) {
+            if (cib_file_write_live(private->cib_xml, private->filename) < 0) {
                 rc = pcmk_err_generic;
             }
 
@@ -470,7 +526,8 @@ cib_file_signoff(cib_t *cib)
         } else {
             gboolean do_bzip = pcmk__ends_with_ext(private->filename, ".bz2");
 
-            if (write_xml_file(in_mem_cib, private->filename, do_bzip) <= 0) {
+            if (write_xml_file(private->cib_xml, private->filename,
+                               do_bzip) <= 0) {
                 rc = pcmk_err_generic;
             }
         }
@@ -484,8 +541,8 @@ cib_file_signoff(cib_t *cib)
     }
 
     /* Free the in-memory CIB */
-    free_xml(in_mem_cib);
-    in_mem_cib = NULL;
+    free_xml(private->cib_xml);
+    private->cib_xml = NULL;
     return rc;
 }
 
@@ -501,9 +558,10 @@ cib_file_free(cib_t *cib)
     if (rc == pcmk_ok) {
         cib_file_opaque_t *private = cib->variant_opaque;
 
+        free(private->id);
         free(private->filename);
-        free(cib->cmds);
         free(private);
+        free(cib->cmds);
         free(cib);
 
     } else {
@@ -540,24 +598,24 @@ cib_file_set_connection_dnotify(cib_t *cib,
  * \param[out] async_id  If not \p NULL, where to store asynchronous client ID
  * \param[out] sync_id   If not \p NULL, where to store synchronous client ID
  *
- * \return Legacy Pacemaker return code (specifically, \p -EPROTONOSUPPORT)
+ * \return Legacy Pacemaker return code
  *
  * \note This is the \p cib_file variant implementation of
  *       \p cib_api_operations_t:client_id().
- * \note A \p cib_file object doesn't connect to the CIB and is never assigned a
- *       client ID.
  */
 static int
 cib_file_client_id(const cib_t *cib, const char **async_id,
                    const char **sync_id)
 {
+    cib_file_opaque_t *private = cib->variant_opaque;
+
     if (async_id != NULL) {
-        *async_id = NULL;
+        *async_id = private->id;
     }
     if (sync_id != NULL) {
-        *sync_id = NULL;
+        *sync_id = private->id;
     }
-    return -EPROTONOSUPPORT;
+    return pcmk_ok;
 }
 
 cib_t *
@@ -576,6 +634,7 @@ cib_file_new(const char *cib_location)
         free(cib);
         return NULL;
     }
+    private->id = crm_generate_uuid();
 
     cib->variant = cib_file;
     cib->variant_opaque = private;
