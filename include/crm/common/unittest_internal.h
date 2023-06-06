@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -59,6 +59,44 @@
             } \
             if (!(WIFSIGNALED(wstatus) && WTERMSIG(wstatus) == SIGABRT)) { \
                 fail_msg("statement terminated in child without asserting"); \
+            } \
+        } else { \
+            fail_msg("unable to fork for assert test"); \
+        } \
+    } while (0);
+
+/*!
+ * \internal
+ * \brief Assert that a statement exits with the expected exit status.
+ *
+ * \param[in] stmt  Statement to execute; can be an expression.
+ * \param[in] rc    The expected exit status.
+ *
+ * This functions just like \c pcmk__assert_asserts, except that it tests for
+ * an expected exit status.  Abnormal termination or incorrect exit status is
+ * treated as a failure of the test.
+ *
+ * In the event that stmt does not exit at all, the special code \c CRM_EX_NONE
+ * will be returned.  It is expected that this code is not used anywhere, thus
+ * always causing an error.
+ */
+#define pcmk__assert_exits(rc, stmt) \
+    do { \
+        pid_t p = fork(); \
+        if (p == 0) { \
+            struct rlimit cores = { 0, 0 }; \
+            setrlimit(RLIMIT_CORE, &cores); \
+            stmt; \
+            _exit(CRM_EX_NONE); \
+        } else if (p > 0) { \
+            int wstatus = 0; \
+            if (waitpid(p, &wstatus, 0) == -1) { \
+                fail_msg("waitpid failed"); \
+            } \
+            if (!WIFEXITED(wstatus)) { \
+                fail_msg("statement terminated abnormally"); \
+            } else if (WEXITSTATUS(wstatus) != rc) { \
+                fail_msg("statement exited with %d, not expected %d", WEXITSTATUS(wstatus), rc); \
             } \
         } else { \
             fail_msg("unable to fork for assert test"); \
