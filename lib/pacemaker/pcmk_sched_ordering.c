@@ -169,13 +169,14 @@ get_ordering_symmetry(const xmlNode *xml_obj, enum pe_order_kind parent_kind,
  *
  * \param[in] kind      Ordering kind
  * \param[in] first     Action name for 'first' action
+ * \param[in] then      Action name for 'then' action
  * \param[in] symmetry  This ordering's symmetry role
  *
  * \return Minimal ordering flags appropriate to \p kind
  */
 static uint32_t
 ordering_flags_for_kind(enum pe_order_kind kind, const char *first,
-                        enum ordering_symmetry symmetry)
+                        const char *then, enum ordering_symmetry symmetry)
 {
     uint32_t flags = pe_order_none; // so we trace-log all flags set
 
@@ -200,6 +201,30 @@ ordering_flags_for_kind(enum pe_order_kind kind, const char *first,
                     if (pcmk__strcase_any_of(first, RSC_START, RSC_PROMOTE,
                                              NULL)) {
                         pe__set_order_flags(flags, pe_order_runnable_left);
+                    }
+
+                    /* If 'then' is start or promote, it might be part of a
+                     * restart or re-promote, but if it's unmanaged (whether
+                     * explicitly or via being blocked or in maintenance mode),
+                     * it can't be done, so prevent 'first' from happening in
+                     * that case, so we don't lose the need for it.
+                     *
+                     * Example:
+                     *
+                     * Resource B is already in the configuration, and we add
+                     * both resource A and the ordering "start A then start B"
+                     * to the configuration.
+                     *
+                     * If B is managed and active, we will properly restart it.
+                     * "stop B" and "start A" can proceed in any order, and
+                     * "start B" is already ordered after both.
+                     *
+                     * If B is unmanaged and active, we can't restart it. If we
+                     * allow A to start, we will lose the knowledge that B must
+                     * restart once it becomes managed again.
+                     */
+                    if (pcmk__str_any_of(then, RSC_START, RSC_PROMOTE, NULL)) {
+                        pe__set_order_flags(flags, pe_order_managed_then);
                     }
                     break;
 
@@ -406,7 +431,8 @@ inverse_ordering(const char *id, enum pe_order_kind kind,
         pcmk__config_warn("Cannot invert constraint '%s' "
                           "(please specify inverse manually)", id);
     } else {
-        uint32_t flags = ordering_flags_for_kind(kind, action_first,
+        uint32_t flags = ordering_flags_for_kind(kind,
+                                                 action_first, action_then,
                                                  ordering_symmetric_inverse);
 
         handle_restart_type(rsc_then, kind, pe_order_implies_first, flags);
@@ -465,7 +491,8 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
     kind = get_ordering_type(xml_obj);
 
     symmetry = get_ordering_symmetry(xml_obj, kind, NULL);
-    cons_weight = ordering_flags_for_kind(kind, action_first, symmetry);
+    cons_weight = ordering_flags_for_kind(kind, action_first, action_then,
+                                          symmetry);
 
     handle_restart_type(rsc_then, kind, pe_order_implies_then, cons_weight);
 
@@ -595,7 +622,7 @@ unpack_order_set(const xmlNode *set, enum pe_order_kind parent_kind,
     pe_resource_t *last = NULL;
     pe_resource_t *resource = NULL;
 
-    int local_kind = parent_kind;
+    enum pe_order_kind local_kind = parent_kind;
     bool sequential = false;
     uint32_t flags = pe_order_optional;
     enum ordering_symmetry symmetry;
@@ -604,23 +631,21 @@ unpack_order_set(const xmlNode *set, enum pe_order_kind parent_kind,
     const char *id = ID(set);
     const char *action = crm_element_value(set, "action");
     const char *sequential_s = crm_element_value(set, "sequential");
-    const char *kind_s = crm_element_value(set, XML_ORDER_ATTR_KIND);
 
     if (action == NULL) {
         action = RSC_START;
     }
 
-    if (kind_s) {
+    // If the set explicitly sets kind, override the parent's
+    if (crm_element_value(set, XML_ORDER_ATTR_KIND) != NULL) {
         local_kind = get_ordering_type(set);
     }
-    if (sequential_s == NULL) {
-        sequential_s = "1";
-    }
 
-    sequential = crm_is_true(sequential_s);
+    // Sequential defaults to true
+    sequential = (sequential_s == NULL) || crm_is_true(sequential_s);
 
     symmetry = get_ordering_symmetry(set, parent_kind, parent_symmetrical_s);
-    flags = ordering_flags_for_kind(local_kind, action, symmetry);
+    flags = ordering_flags_for_kind(local_kind, action, action, symmetry);
 
     for (const xmlNode *xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
          xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
@@ -669,7 +694,7 @@ unpack_order_set(const xmlNode *set, enum pe_order_kind parent_kind,
     last = NULL;
     action = invert_action(action);
 
-    flags = ordering_flags_for_kind(local_kind, action,
+    flags = ordering_flags_for_kind(local_kind, action, action,
                                     ordering_symmetric_inverse);
 
     set_iter = resources;
@@ -747,7 +772,7 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
         require_all = true;
     }
 
-    flags = ordering_flags_for_kind(kind, action_1, symmetry);
+    flags = ordering_flags_for_kind(kind, action_1, action_2, symmetry);
 
     /* If we have an unordered set1, whether it is sequential or not is
      * irrelevant in regards to set2.
