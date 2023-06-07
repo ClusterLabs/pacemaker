@@ -125,7 +125,6 @@ configure
 /cts/lab/cluster_test
 /cts/lab/cts
 /cts/lab/cts-log-watcher
-/cts/lxc_autogen.sh
 /cts/support/LSBDummy
 /cts/support/cts-support
 /cts/support/fence_dummy
@@ -297,6 +296,7 @@ pacemaker_*.info
 /cts/cts-support
 /cts/fence_dummy
 /cts/lab/CTSvars.py
+/cts/lxc_autogen.sh
 /cts/pacemaker-cts-dummyd
 /cts/pacemaker-cts-dummyd@.service
 /daemons/based/cibmon

@@ -60,7 +60,6 @@ class CTSTest:
 
         self.benchmark = True  # which tests to benchmark
         self.failed = False
-        self.is_container = False
         self.is_experimental = False
         self.is_loop = False
         self.is_unsafe = False
@@ -238,9 +237,6 @@ class CTSTest:
             return False
 
         if self.is_experimental and not self._env["experimental-tests"]:
-            return False
-
-        if self.is_container and not self._env["container-tests"]:
             return False
 
         if self._env["benchmark"] and not self.benchmark:

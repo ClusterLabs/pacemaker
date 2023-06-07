@@ -409,9 +409,6 @@ class Environment:
         grp4.add_argument("--cib-filename",
                           metavar="PATH",
                           help="Install the given CIB file to the cluster")
-        grp4.add_argument("--container-tests",
-                          action="store_true",
-                          help="Include pacemaker_remote tests that run in lxc container resources")
         grp4.add_argument("--experimental-tests",
                           action="store_true",
                           help="Include experimental tests")
@@ -496,7 +493,6 @@ class Environment:
         self["at-boot"] = args.at_boot in ["1", "yes"]
         self["benchmark"] = args.benchmark
         self["continue"] = args.always_continue
-        self["container-tests"] = args.container_tests
         self["experimental-tests"] = args.experimental_tests
         self["iterations"] = args.iterations
         self["loop-minutes"] = args.loop_minutes
