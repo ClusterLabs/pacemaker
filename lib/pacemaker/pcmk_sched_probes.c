@@ -159,7 +159,7 @@ pcmk__probe_rsc_on_node(pe_resource_t *rsc, pe_node_t *node)
     pe_resource_t *top = uber_parent(rsc);
     const char *reason = NULL;
 
-    CRM_CHECK((rsc != NULL) && (node != NULL), return false);
+    CRM_ASSERT((rsc != NULL) && (node != NULL));
 
     if (!pcmk_is_set(rsc->cluster->flags, pe_flag_startup_probes)) {
         reason = "start-up probes are disabled";

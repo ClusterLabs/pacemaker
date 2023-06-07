@@ -31,7 +31,7 @@ pcmk__group_assign(pe_resource_t *rsc, const pe_node_t *prefer)
     pe_node_t *first_assigned_node = NULL;
     pe_resource_t *first_member = NULL;
 
-    CRM_ASSERT(rsc != NULL);
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_group));
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
         return rsc->allocated_to; // Assignment already done
@@ -103,7 +103,7 @@ create_group_pseudo_op(pe_resource_t *group, const char *action)
 void
 pcmk__group_create_actions(pe_resource_t *rsc)
 {
-    CRM_ASSERT(rsc != NULL);
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_group));
 
     pe_rsc_trace(rsc, "Creating actions for group %s", rsc->id);
 
@@ -285,7 +285,7 @@ pcmk__group_internal_constraints(pe_resource_t *rsc)
 {
     struct member_data member_data = { false, };
 
-    CRM_ASSERT(rsc != NULL);
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_group));
 
     /* Order group pseudo-actions relative to each other for restarting:
      * stop group -> group is stopped -> start group -> group is started
@@ -543,10 +543,9 @@ pcmk__group_update_ordered_actions(pe_action_t *first, pe_action_t *then,
 {
     uint32_t changed = pcmk__updated_none;
 
-    CRM_ASSERT((first != NULL) && (then != NULL) && (data_set != NULL));
-
-    // Group method can be called only for group action as "then" action
-    CRM_ASSERT(then->rsc != NULL);
+    // Group method can be called only on behalf of "then" action
+    CRM_ASSERT((first != NULL) && (then != NULL) && (then->rsc != NULL)
+               && (data_set != NULL));
 
     // Update the actions for the group itself
     changed |= pcmk__update_ordered_actions(first, then, node, flags, filter,
@@ -583,7 +582,8 @@ pcmk__group_apply_location(pe_resource_t *rsc, pe__location_t *location)
     GList *node_list_copy = NULL;
     bool reset_scores = true;
 
-    CRM_ASSERT((rsc != NULL) && (location != NULL));
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_group)
+               && (location != NULL));
 
     node_list_orig = location->node_list_rh;
     node_list_copy = pcmk__copy_node_list(node_list_orig, true);
@@ -620,7 +620,7 @@ pcmk__group_colocated_resources(const pe_resource_t *rsc,
 {
     const pe_resource_t *member = NULL;
 
-    CRM_ASSERT(rsc != NULL);
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_group));
 
     if (orig_rsc == NULL) {
         orig_rsc = rsc;
@@ -658,9 +658,8 @@ pcmk__with_group_colocations(const pe_resource_t *rsc,
                              const pe_resource_t *orig_rsc, GList **list)
 
 {
-    CRM_CHECK((rsc != NULL) && (rsc->variant == pe_group)
-              && (orig_rsc != NULL) && (list != NULL),
-              return);
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_group)
+               && (orig_rsc != NULL) && (list != NULL));
 
     // Ignore empty groups
     if (rsc->children == NULL) {
@@ -687,9 +686,8 @@ void
 pcmk__group_with_colocations(const pe_resource_t *rsc,
                              const pe_resource_t *orig_rsc, GList **list)
 {
-    CRM_CHECK((rsc != NULL) && (rsc->variant == pe_group)
-              && (orig_rsc != NULL) && (list != NULL),
-              return);
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_group)
+               && (orig_rsc != NULL) && (list != NULL));
 
     // Ignore empty groups
     if (rsc->children == NULL) {
@@ -824,7 +822,8 @@ pcmk__group_add_utilization(const pe_resource_t *rsc,
 {
     pe_resource_t *member = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (orig_rsc != NULL) && (utilization != NULL));
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_group)
+               && (orig_rsc != NULL) && (utilization != NULL));
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
         return;
@@ -862,7 +861,7 @@ pcmk__group_add_utilization(const pe_resource_t *rsc,
 void
 pcmk__group_shutdown_lock(pe_resource_t *rsc)
 {
-    CRM_ASSERT(rsc != NULL);
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_group));
 
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
         pe_resource_t *member = (pe_resource_t *) iter->data;

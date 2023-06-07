@@ -833,9 +833,13 @@ pcmk__update_ordered_actions(pe_action_t *first, pe_action_t *then,
                              pe_working_set_t *data_set)
 {
     uint32_t changed = pcmk__updated_none;
-    uint32_t then_flags = then->flags;
-    uint32_t first_flags = first->flags;
+    uint32_t then_flags = 0U;
+    uint32_t first_flags = 0U;
 
+    CRM_ASSERT((first != NULL) && (then != NULL) && (data_set != NULL));
+
+    then_flags = then->flags;
+    first_flags = first->flags;
     if (pcmk_is_set(type, pe_order_asymmetrical)) {
         handle_asymmetric_ordering(first, then);
     }

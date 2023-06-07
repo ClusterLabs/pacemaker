@@ -522,9 +522,8 @@ void
 pcmk__with_bundle_colocations(const pe_resource_t *rsc,
                               const pe_resource_t *orig_rsc, GList **list)
 {
-    CRM_CHECK((rsc != NULL) && (rsc->variant == pe_container)
-              && (orig_rsc != NULL) && (list != NULL),
-              return);
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container)
+               && (orig_rsc != NULL) && (list != NULL));
 
     if (rsc == orig_rsc) { // Colocations are wanted for bundle itself
         pcmk__add_with_this_list(list, rsc->rsc_cons_lhs);
@@ -540,9 +539,8 @@ void
 pcmk__bundle_with_colocations(const pe_resource_t *rsc,
                               const pe_resource_t *orig_rsc, GList **list)
 {
-    CRM_CHECK((rsc != NULL) && (rsc->variant == pe_container)
-              && (orig_rsc != NULL) && (list != NULL),
-              return);
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container)
+               && (orig_rsc != NULL) && (list != NULL));
 
     if (rsc == orig_rsc) { // Colocations are wanted for bundle itself
         pcmk__add_this_with_list(list, rsc->rsc_cons);

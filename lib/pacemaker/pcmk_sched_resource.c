@@ -294,14 +294,22 @@ pcmk__noop_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml)
 {
 }
 
+/*!
+ * \internal
+ * \brief Output a summary of scheduled actions for a resource
+ *
+ * \param[in] rsc  Resource to output actions for
+ */
 void
 pcmk__output_resource_actions(pe_resource_t *rsc)
 {
-    pcmk__output_t *out = rsc->cluster->priv;
-
     pe_node_t *next = NULL;
     pe_node_t *current = NULL;
+    pcmk__output_t *out = NULL;
 
+    CRM_ASSERT(rsc != NULL);
+
+    out = rsc->cluster->priv;
     if (rsc->children != NULL) {
         for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
             pe_resource_t *child = (pe_resource_t *) iter->data;

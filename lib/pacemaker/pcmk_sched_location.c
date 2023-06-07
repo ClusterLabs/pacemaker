@@ -617,7 +617,7 @@ pcmk__apply_location(pe_resource_t *rsc, pe__location_t *location)
 {
     bool need_role = false;
 
-    CRM_CHECK((rsc != NULL) && (location != NULL), return);
+    CRM_ASSERT((rsc != NULL) && (location != NULL));
 
     // If a role was specified, ensure constraint is applicable
     need_role = (location->role_filter > RSC_ROLE_UNKNOWN);

@@ -1493,6 +1493,8 @@ pcmk__instance_update_ordered_actions(pe_action_t *first, pe_action_t *then,
                                       uint32_t filter, uint32_t type,
                                       pe_working_set_t *data_set)
 {
+    CRM_ASSERT((first != NULL) && (then != NULL) && (data_set != NULL));
+
     if (then->rsc == NULL) {
         return pcmk__updated_none;
 
