@@ -19,6 +19,7 @@ pkgpython_PYTHON = CTS.py \
 				   errors.py \
 				   input.py \
 				   logging.py \
+				   network.py \
 				   patterns.py \
 				   process.py \
 				   remote.py \

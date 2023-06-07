@@ -450,7 +450,7 @@ class ClusterManager(UserDict):
 
         for node in nodes:
             if node != target:
-                rc = self.rsh(target, self.templates["BreakCommCmd"] % self.key_for_node(node))
+                (rc, _) = self.rsh(target, self.templates["BreakCommCmd"] % self.key_for_node(node))
                 if rc != 0:
                     self.logger.log("Could not break the communication between %s and %s: %d" % (target, node, rc))
                     return None
