@@ -1494,23 +1494,6 @@ cib_process_command(xmlNode *request, const cib_operation_t *operation,
         manage_counters = false;
     }
 
-    if (!pcmk_is_set(call_options, cib_dryrun)
-        && !pcmk__str_eq(op, PCMK__CIB_REQUEST_COMMIT_TRANSACT, pcmk__str_none)
-        && (pcmk_is_set(call_options, cib_transaction)
-            || pcmk__str_eq(section, XML_CIB_TAG_STATUS, pcmk__str_none))) {
-        /* Dry runs and commit-transaction requests must always make a copy.
-         *
-         * Requests in a transaction: we made a working CIB copy earlier in the
-         * call chain, and we need to accumulate changes in it.
-         *
-         * Status updates: copying large CIBs accounts for a huge percentage of
-         * our CIB usage, and this avoids some of it.
-         */
-        cib__set_call_options(call_options, "call", cib_zero_copy);
-    } else {
-        cib__clear_call_options(call_options, "call", cib_zero_copy);
-    }
-
     // Calculate the digests of relevant sections before the operation
     if (pcmk_is_set(operation->flags, cib_op_attr_replaces)
         && !pcmk_any_flags_set(call_options,
@@ -1556,13 +1539,12 @@ cib_process_command(xmlNode *request, const cib_operation_t *operation,
 
         uint32_t change_sections = cib_change_section_none;
 
-        crm_trace("Activating %s->%s%s%s",
-                  crm_element_value(the_cib, XML_ATTR_NUMUPDATES),
-                  crm_element_value(result_cib, XML_ATTR_NUMUPDATES),
-                  (pcmk_is_set(call_options, cib_zero_copy)? " zero-copy" : ""),
-                  (config_changed? " changed" : ""));
+        if (result_cib != the_cib) {
+            crm_trace("Activating %s->%s%s",
+                      crm_element_value(the_cib, XML_ATTR_NUMUPDATES),
+                      crm_element_value(result_cib, XML_ATTR_NUMUPDATES),
+                      (config_changed? " changed" : ""));
 
-        if (!pcmk_is_set(call_options, cib_zero_copy)) {
             rc = activateCibXml(result_cib, config_changed, op);
             if (rc != pcmk_ok) {
                 crm_err("Failed to activate new CIB: %s", pcmk_strerror(rc));
@@ -1597,7 +1579,7 @@ cib_process_command(xmlNode *request, const cib_operation_t *operation,
         mainloop_timer_start(digest_timer);
 
     } else if (rc == -pcmk_err_schema_validation) {
-        CRM_ASSERT(!pcmk_is_set(call_options, cib_zero_copy));
+        CRM_ASSERT(result_cib != the_cib);
 
         if (output != NULL) {
             crm_log_xml_info(output, "cib:output");
@@ -1610,7 +1592,8 @@ cib_process_command(xmlNode *request, const cib_operation_t *operation,
         crm_trace("Not activating %d %d %s", rc,
                   pcmk_is_set(call_options, cib_dryrun),
                   crm_element_value(result_cib, XML_ATTR_NUMUPDATES));
-        if (!pcmk_is_set(call_options, cib_zero_copy)) {
+
+        if (result_cib != the_cib) {
             free_xml(result_cib);
         }
     }

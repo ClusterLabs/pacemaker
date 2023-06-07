@@ -141,6 +141,54 @@ cib_acl_enabled(xmlNode *xml, const char *user)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Determine whether to perform operations on a scratch copy of the CIB
+ *
+ * \param[in] op            CIB operation
+ * \param[in] section       CIB section
+ * \param[in] call_options  CIB call options
+ *
+ * \return \p true if we should make a copy of the CIB, or \p false otherwise
+ */
+static bool
+should_copy_cib(const char *op, const char *section, int call_options)
+{
+    if (pcmk_is_set(call_options, cib_dryrun)) {
+        // cib_dryrun implies a scratch copy by definition; no side effects
+        return true;
+    }
+
+    if (pcmk__str_eq(op, PCMK__CIB_REQUEST_COMMIT_TRANSACT, pcmk__str_none)) {
+        /* Commit-transaction must make a copy for atomicity. We must revert to
+         * the original CIB if the entire transaction cannot be applied
+         * successfully.
+         */
+        return true;
+    }
+
+    if (pcmk_is_set(call_options, cib_transaction)) {
+        /* If cib_transaction is set, then we're in the process of committing a
+         * transaction. The commit-transaction request already made a scratch
+         * copy, and we're accumulating changes in that copy.
+         */
+        return false;
+    }
+
+    if (pcmk__str_eq(section, XML_CIB_TAG_STATUS, pcmk__str_none)) {
+        /* Copying large CIBs accounts for a huge percentage of our CIB usage,
+         * and this avoids some of it.
+         *
+         * @TODO: Is this safe? See discussion at
+         * https://github.com/ClusterLabs/pacemaker/pull/3094#discussion_r1211400690.
+         */
+        return false;
+    }
+
+    // Default behavior is to operate on a scratch copy
+    return true;
+}
+
 int
 cib_perform_op(const char *op, int call_options, cib_op_t fn, bool is_query,
                const char *section, xmlNode *req, xmlNode *input,
@@ -150,6 +198,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t fn, bool is_query,
 {
     int rc = pcmk_ok;
     bool check_schema = true;
+    bool make_copy = true;
     xmlNode *top = NULL;
     xmlNode *scratch = NULL;
     xmlNode *patchset_cib = NULL;
@@ -222,8 +271,9 @@ cib_perform_op(const char *op, int call_options, cib_op_t fn, bool is_query,
         return rc;
     }
 
+    make_copy = should_copy_cib(op, section, call_options);
 
-    if (pcmk_is_set(call_options, cib_zero_copy)) {
+    if (!make_copy) {
         /* Conditional on v2 patch style */
 
         scratch = *current_cib;
@@ -315,7 +365,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t fn, bool is_query,
     pcmk__strip_xml_text(scratch);
     fix_plus_plus_recursive(scratch);
 
-    if (pcmk_is_set(call_options, cib_zero_copy)) {
+    if (!make_copy) {
         /* At this point, patchset_cib is just the "cib" tag and its properties.
          *
          * The v1 format would barf on this, but we know the v2 patch
@@ -372,7 +422,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t fn, bool is_query,
         out = NULL;
     }
 
-    if (!pcmk_is_set(call_options, cib_zero_copy) && (local_diff != NULL)) {
+    if (make_copy && (local_diff != NULL)) {
         // Original to compare against doesn't exist
         pcmk__if_tracing(
             {
@@ -460,7 +510,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t fn, bool is_query,
 
     *result_cib = scratch;
 
-    /* @TODO: This may not work correctly with cib_zero_copy, since we don't
+    /* @TODO: This may not work correctly with !make_copy, since we don't
      * keep the original CIB.
      */
     if ((rc != pcmk_ok) && cib_acl_enabled(patchset_cib, user)

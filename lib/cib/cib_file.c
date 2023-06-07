@@ -317,8 +317,10 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
         pcmk__output_free(out);
         rc = pcmk_ok;
 
-        free_xml(private->cib_xml);
-        private->cib_xml = result_cib;
+        if (result_cib != private->cib_xml) {
+            free_xml(private->cib_xml);
+            private->cib_xml = result_cib;
+        }
         cib_set_file_flags(private, cib_file_flag_dirty);
     }
 
