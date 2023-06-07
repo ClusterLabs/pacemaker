@@ -86,7 +86,12 @@ enum cib_call_options {
 
     cib_sync_call       = (1 << 12),
     cib_no_mtime        = (1 << 13),
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated This value will be removed in a future release
     cib_zero_copy       = (1 << 14),
+#endif // !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+
     cib_inhibit_notify  = (1 << 16),
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
