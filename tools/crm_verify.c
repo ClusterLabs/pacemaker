@@ -85,10 +85,23 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
                               "Check the consistency of the configuration in the running cluster:\n\n"
                               "\tcrm_verify --live-check\n\n"
                               "Check the consistency of the configuration in a given file and "
+                              "produce quiet output:\n\n"
+                              "\tcrm_verify --xml-file file.xml --quiet\n\n"
+                              "Check the consistency of the configuration in a given file and "
                               "produce verbose output:\n\n"
                               "\tcrm_verify --xml-file file.xml --verbose\n\n";
 
+    GOptionEntry extra_prog_entries[] = {
+        { "quiet", 'q', 0, G_OPTION_ARG_NONE, &(args->quiet),
+          "Don't print verify information",
+          NULL },
+        { NULL }
+    };
+
     context = pcmk__build_arg_context(args, "text (default), xml", group, NULL);
+
+    pcmk__add_main_args(context, extra_prog_entries);
+
     g_option_context_set_description(context, description);
 
     pcmk__add_arg_group(context, "data", "Data sources:",
@@ -124,6 +137,10 @@ main(int argc, char **argv)
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
         goto done;
+    }
+
+    if (args->verbosity > 0) {
+        args->verbosity -= args->quiet;
     }
 
     pcmk__cli_init_logging("crm_verify", args->verbosity);
