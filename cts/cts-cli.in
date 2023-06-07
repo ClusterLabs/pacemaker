@@ -3382,6 +3382,11 @@ function print_or_remove_file() {
     rm -f "$TMPFILE"
   else
     echo "    $TMPFILE"
+    if [ $verbose -ne 0 ]; then
+      echo "======================================================"
+      cat "$TMPFILE"
+      echo "======================================================"
+    fi
   fi
 }
 
