@@ -61,9 +61,10 @@ assign_replica(pe__bundle_replica_t *replica, void *user_data)
         GHashTableIter iter;
 
         g_hash_table_iter_init(&iter, replica->child->allowed_nodes);
-        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & node)) {
-            if (!pe__same_node(node, replica->node)
-                || !pcmk__threshold_reached(replica->child, node, NULL)) {
+        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+            if (!pe__same_node(node, replica->node)) {
+                node->weight = -INFINITY;
+            } else if (!pcmk__threshold_reached(replica->child, node, NULL)) {
                 node->weight = INFINITY;
             }
         }
