@@ -206,7 +206,7 @@ pe__first_container(const pe_resource_t *bundle)
  * \param[in,out] user_data  Pointer to pass to \p fn
  */
 void
-pe__foreach_bundle_replica(const pe_resource_t *bundle,
+pe__foreach_bundle_replica(pe_resource_t *bundle,
                            bool (*fn)(pe__bundle_replica_t *, void *),
                            void *user_data)
 {

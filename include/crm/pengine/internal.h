@@ -585,7 +585,7 @@ bool pe__node_is_bundle_instance(const pe_resource_t *bundle,
 pe_resource_t *pe__bundled_resource(const pe_resource_t *rsc);
 const pe_resource_t *pe__get_rsc_in_container(const pe_resource_t *instance);
 pe_resource_t *pe__first_container(const pe_resource_t *bundle);
-void pe__foreach_bundle_replica(const pe_resource_t *bundle,
+void pe__foreach_bundle_replica(pe_resource_t *bundle,
                                 bool (*fn)(pe__bundle_replica_t *, void *),
                                 void *user_data);
 pe_resource_t *pe__find_bundle_replica(const pe_resource_t *bundle,

@@ -346,8 +346,7 @@ match_replica_container(pe__bundle_replica_t *replica, void *user_data)
 
 static pe_resource_t *
 compatible_replica_for_node(const pe_resource_t *rsc_lh,
-                            const pe_node_t *candidate,
-                            const pe_resource_t *rsc)
+                            const pe_node_t *candidate, pe_resource_t *rsc)
 {
     struct match_data match_data = { candidate, NULL };
 
@@ -367,7 +366,7 @@ compatible_replica_for_node(const pe_resource_t *rsc_lh,
 }
 
 static pe_resource_t *
-compatible_replica(const pe_resource_t *rsc_lh, const pe_resource_t *rsc,
+compatible_replica(const pe_resource_t *rsc_lh, pe_resource_t *rsc,
                    pe_working_set_t *data_set)
 {
     GList *scratch = NULL;
