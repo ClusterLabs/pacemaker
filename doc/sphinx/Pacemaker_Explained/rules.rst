@@ -534,6 +534,7 @@ A small sample of how time-based expressions can be used:
          </date_expression>
          <date_expression id="date_expr6-2" operation="in_range"
            start="2005-03-01" end="2005-04-01"/>
+         </date_expression>
       </rule>
 
    .. note:: Because no time is specified with the above dates, 00:00:00 is
