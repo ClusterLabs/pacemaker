@@ -201,7 +201,8 @@ pe__first_container(const pe_resource_t *bundle)
  * \brief Iterate over bundle replicas
  *
  * \param[in,out] bundle     Bundle to iterate over
- * \param[in]     fn         Function to call for each replica
+ * \param[in]     fn         Function to call for each replica (its return value
+ *                           indicates whether to continue iterating)
  * \param[in,out] user_data  Pointer to pass to \p fn
  */
 void

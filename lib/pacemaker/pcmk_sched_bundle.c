@@ -130,7 +130,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
 
 /*!
  * \internal
- * \brief Create actions for a bundle replica's resources (other than container)
+ * \brief Create actions for a bundle replica's resources (other than child)
  *
  * \param[in,out] replica    Replica to create actions for
  * \param[in]     user_data  Unused
@@ -407,7 +407,7 @@ struct coloc_data {
  * \brief Apply a colocation score to replica node weights or resource priority
  *
  * \param[in,out] replica    Replica to apply colocation score to
- * \param[in]     user_data  struct coloc_data for colocation being applied
+ * \param[in,out] user_data  struct coloc_data for colocation being applied
  *
  * \return true (to indicate that any further replicas should be processed)
  */
@@ -635,7 +635,7 @@ pcmk__bundle_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
  * \brief Add a bundle replica's actions to transition graph
  *
  * \param[in,out] replica    Replica to add to graph
- * \param[in]     user_data  Preferred node, if any
+ * \param[in]     user_data  Preferred node, if any (ignored)
  *
  * \return true (to indicate that any further replicas should be processed)
  */
@@ -727,7 +727,7 @@ struct probe_data {
  * \brief Order a bundle replica's start after another replica's probe
  *
  * \param[in,out] replica    Replica to order start for
- * \param[in]     user_data  Replica with probe to order after
+ * \param[in,out] user_data  Replica with probe to order after
  *
  * \return true (to indicate that any further replicas should be processed)
  */
@@ -754,7 +754,7 @@ order_replica_start_after(pe__bundle_replica_t *replica, void *user_data)
  * \brief Create probes for a bundle replica's resources
  *
  * \param[in,out] replica    Replica to create probes for
- * \param[in]     user_data  struct probe_data
+ * \param[in,out] user_data  struct probe_data
  *
  * \return true (to indicate that any further replicas should be processed)
  */
