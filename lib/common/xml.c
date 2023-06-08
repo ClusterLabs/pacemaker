@@ -2493,42 +2493,21 @@ replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean 
             free_xml(child);
 
         } else {
-            /* The new XML needs a doc **only** for calling
-             * xml_accept_changes(). Otherwise we could use
-             * xmlCopyNode(update, 1) and avoid the doc overhead.
-             *
-             * It's unclear whether xml_accept_changes() is necessary. It mostly
-             * operates on new->doc->_private. However, we link new to old->doc
-             * before applying ACLs or calculating changes, so the changes to
-             * new->doc are pointless. The only thing it does to new itself is
-             * call accept_attr_deletions(), whose only effect in this case is
-             * to clear the node private flags.
-             *
-             * Dropping the doc and xml_accept_changes() doesn't cause any tests
-             * to fail, but it does cause additional trace lines from
-             * pcmk__apply_creation_acl() to appear in the output.
-             */
             xmlNode *old = child;
-            xmlNode *new = copy_xml(update);
-            xmlDoc *tmp_doc = new->doc;
+            xmlNode *new = xmlCopyNode(update, 1);
 
-            xml_accept_changes(new);
+            CRM_ASSERT(new != NULL);
 
-            // Link new into old's doc, popping old out of the doc
+            // May be unnecessary but avoids slight changes to some test outputs
+            reset_xml_node_flags(new);
+
             old = xmlReplaceNode(old, new);
-
-            // new is no longer linked to tmp_doc
-            xmlFreeDoc(tmp_doc);
 
             if (xml_tracking_changes(new)) {
                 // Replaced sections may have included relevant ACLs
                 pcmk__apply_acl(new);
             }
             xml_calculate_changes(old, new);
-
-            /* old does not belong to a document, and we can ignore ACLs, so
-             * don't call free_xml()
-             */
             xmlFreeNode(old);
         }
         return TRUE;
