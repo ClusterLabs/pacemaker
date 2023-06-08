@@ -376,10 +376,15 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     rc = cib_file_process_request(cib, request, &output);
 
     if ((output_data != NULL) && (output != NULL)) {
-        *output_data = (output == private->cib_xml)? copy_xml(output) : output;
+        if (output->doc == private->cib_xml->doc) {
+            *output_data = copy_xml(output);
+        } else {
+            *output_data = output;
+        }
     }
 
-    if ((output != private->cib_xml)
+    if ((output != NULL)
+        && (output->doc != private->cib_xml->doc)
         && ((output_data == NULL) || (output != *output_data))) {
 
         free_xml(output);
