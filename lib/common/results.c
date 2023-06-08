@@ -305,6 +305,10 @@ static const struct pcmk__rc_info {
       "Bad XML patch format",
       -pcmk_err_generic,
     },
+    { "pcmk_rc_no_transaction",
+      "No active transaction found",
+      -pcmk_err_generic,
+    },
 };
 
 /*!
@@ -759,6 +763,7 @@ pcmk_rc2exitc(int rc)
         case ENODEV:
         case ENOENT:
         case ENXIO:
+        case pcmk_rc_no_transaction:
         case pcmk_rc_unknown_format:
             return CRM_EX_NOSUCH;
 

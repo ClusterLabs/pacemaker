@@ -292,6 +292,7 @@ done:
     if (config_hash != NULL) {
         g_hash_table_destroy(config_hash);
     }
+    based_free_transaction_table();
     pcmk__client_cleanup();
     pcmk_cluster_free(crm_cluster);
     g_free(cib_root);

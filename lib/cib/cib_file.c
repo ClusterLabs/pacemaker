@@ -37,35 +37,201 @@
 
 #define CIB_LIVE_NAME CIB_SERIES ".xml"
 
+// key: client ID (const char *) -> value: client (cib_t *)
+static GHashTable *client_table = NULL;
+
+// key: op name (const char *) -> value: operation (const cib_operation_t *)
+static GHashTable *op_table = NULL;
+
 enum cib_file_flags {
     cib_file_flag_dirty = (1 << 0),
     cib_file_flag_live  = (1 << 1),
 };
 
 typedef struct cib_file_opaque_s {
-    uint32_t flags; // Group of enum cib_file_flags
+    char *id;
     char *filename;
+    uint32_t flags; // Group of enum cib_file_flags
+    xmlNode *cib_xml;
+    GQueue *transaction;
 } cib_file_opaque_t;
 
-struct cib_func_entry {
-    const char *op;
-    gboolean read_only;
-    cib_op_t fn;
-};
+static int cib_file_extend_transaction(cib_t *cib,
+                                       const cib_operation_t *operation,
+                                       xmlNode *request);
 
-static struct cib_func_entry cib_file_ops[] = {
-    { PCMK__CIB_REQUEST_QUERY,       TRUE,   cib_process_query },
-    { PCMK__CIB_REQUEST_MODIFY,      FALSE,  cib_process_modify },
-    { PCMK__CIB_REQUEST_APPLY_PATCH, FALSE,  cib_process_diff },
-    { PCMK__CIB_REQUEST_BUMP,        FALSE,  cib_process_bump },
-    { PCMK__CIB_REQUEST_REPLACE,     FALSE,  cib_process_replace },
-    { PCMK__CIB_REQUEST_CREATE,      FALSE,  cib_process_create },
-    { PCMK__CIB_REQUEST_DELETE,      FALSE,  cib_process_delete },
-    { PCMK__CIB_REQUEST_ERASE,       FALSE,  cib_process_erase },
-    { PCMK__CIB_REQUEST_UPGRADE,     FALSE,  cib_process_upgrade },
-};
+static void cib_file_discard_transaction(cib_t *cib);
 
-static xmlNode *in_mem_cib = NULL;
+static int cib_file_process_init_transaction(const char *op, int options,
+                                             const char *section, xmlNode *req,
+                                             xmlNode *input,
+                                             xmlNode *existing_cib,
+                                             xmlNode **result_cib,
+                                             xmlNode **answer);
+
+static int cib_file_process_commit_transaction(const char *op, int options,
+                                               const char *section,
+                                               xmlNode *req, xmlNode *input,
+                                               xmlNode *existing_cib,
+                                               xmlNode **result_cib,
+                                               xmlNode **answer);
+
+static int cib_file_process_discard_transaction(const char *op, int options,
+                                                const char *section,
+                                                xmlNode *req, xmlNode *input,
+                                                xmlNode *existing_cib,
+                                                xmlNode **result_cib,
+                                                xmlNode **answer);
+/*!
+ * \internal
+ * \brief Add a CIB file client to client table
+ *
+ * \param[in] cib  CIB client
+ */
+static void
+register_client(const cib_t *cib)
+{
+    cib_file_opaque_t *private = cib->variant_opaque;
+
+    if (client_table == NULL) {
+        client_table = pcmk__strkey_table(NULL, NULL);
+    }
+    g_hash_table_insert(client_table, private->id, (gpointer) cib);
+}
+
+/*!
+ * \internal
+ * \brief Remove a CIB file client from client table
+ *
+ * \param[in] cib  CIB client
+ */
+static void
+unregister_client(const cib_t *cib)
+{
+    cib_file_opaque_t *private = cib->variant_opaque;
+
+    if (client_table == NULL) {
+        return;
+    }
+
+    g_hash_table_remove(client_table, private->id);
+
+    /* There's no clean way to free the tables at program exit time. We can't
+     * create a cleanup function in this file and add it to crm_exit(), which is
+     * in libcrmcommon. libcrmcommon doesn't link against libcib.
+     *
+     * As a hack for now, free the common tables when there are no more clients.
+     *
+     * @COMPAT: If libcib and libcrmcommon are merged, add this to crm_exit().
+     */
+    if (g_hash_table_size(client_table) == 0) {
+        g_hash_table_destroy(client_table);
+        client_table = NULL;
+
+        if (op_table != NULL) {
+            g_hash_table_destroy(op_table);
+            op_table = NULL;
+        }
+    }
+}
+
+/*!
+ * \internal
+ * \brief Look up a CIB file client by its ID
+ *
+ * \param[in] client_id  CIB client ID
+ *
+ * \return CIB client with matching ID if found, or \p NULL otherwise
+ */
+static cib_t *
+get_client(const char *client_id)
+{
+    if (client_table == NULL) {
+        return NULL;
+    }
+    return g_hash_table_lookup(client_table, (gpointer) client_id);
+}
+
+/* This table is adapted from cib_server_ops in pacemaker-based. Flags that are
+ * not used in cib_file.c (for example, cib_op_attr_replaces) are not currently
+ * included. Also, cib_file.c does not use prepare or cleanup functions.
+ *
+ * @TODO: Try to create a shared table that merges cib_server_ops with
+ * cib_file_ops. We would want a new cib_op_attr_file enum value (for an
+ * operation that supports running against a file). We can easily ignore the
+ * prepare and cleanup functions.
+ *
+ * The main challenge is that the fn member (cib_op_t) may differ depending on
+ * whether we're processing the request on the server side or with the
+ * file-based client. Processor functions defined in pacemaker-based shouldn't
+ * be declared in libcib, but we need them accessible via the table somehow.
+ *
+ * Maybe use an enum that indexes into an array of cib_op_t functions. That
+ * would be obnoxiously similar to the call_type (index) argument that we
+ * eliminated in c13bf8b2.
+ */
+static const cib_operation_t cib_file_ops[] = {
+    {
+        PCMK__CIB_REQUEST_APPLY_PATCH,
+        cib_op_attr_modifies|cib_op_attr_transaction,
+        NULL, NULL, cib_process_diff
+    },
+    {
+        PCMK__CIB_REQUEST_BUMP,
+        cib_op_attr_modifies|cib_op_attr_transaction,
+        NULL, NULL, cib_process_bump
+    },
+    {
+        PCMK__CIB_REQUEST_CREATE,
+        cib_op_attr_modifies|cib_op_attr_transaction,
+        NULL, NULL, cib_process_create
+    },
+    {
+        PCMK__CIB_REQUEST_DELETE,
+        cib_op_attr_modifies|cib_op_attr_transaction,
+        NULL, NULL, cib_process_delete
+    },
+    {
+        PCMK__CIB_REQUEST_ERASE,
+        cib_op_attr_modifies|cib_op_attr_transaction,
+        NULL, NULL, cib_process_erase
+    },
+    {
+        PCMK__CIB_REQUEST_MODIFY,
+        cib_op_attr_modifies|cib_op_attr_transaction,
+        NULL, NULL, cib_process_modify
+    },
+    {
+        PCMK__CIB_REQUEST_QUERY,
+        cib_op_attr_none,
+        NULL, NULL, cib_process_query
+    },
+    {
+        PCMK__CIB_REQUEST_REPLACE,
+        cib_op_attr_modifies|cib_op_attr_transaction,
+        NULL, NULL, cib_process_replace
+    },
+    {
+        PCMK__CIB_REQUEST_UPGRADE,
+        cib_op_attr_modifies|cib_op_attr_transaction,
+        NULL, NULL, cib_process_upgrade
+    },
+    {
+        PCMK__CIB_REQUEST_INIT_TRANSACT,
+        cib_op_attr_none,
+        NULL, NULL, cib_file_process_init_transaction
+    },
+    {
+        PCMK__CIB_REQUEST_COMMIT_TRANSACT,
+        cib_op_attr_modifies,
+        NULL, NULL, cib_file_process_commit_transaction
+    },
+    {
+        PCMK__CIB_REQUEST_DISCARD_TRANSACT,
+        cib_op_attr_none,
+        NULL, NULL, cib_file_process_discard_transaction
+    },
+};
 
 /* cib_file_backup() and cib_file_write_with_digest() need to chown the
  * written files only in limited circumstances, so these variables allow
@@ -92,6 +258,37 @@ static gboolean cib_do_chown = FALSE;
                                                 (flags_to_clear),       \
                                                 #flags_to_clear);       \
     } while (0)
+
+static int
+get_operation(const char *op, const cib_operation_t **operation)
+{
+    CRM_CHECK(op != NULL, return -EINVAL);
+
+    if (op_table == NULL) {
+        op_table = pcmk__strkey_table(NULL, NULL);
+
+        for (int lpc = 0; lpc < PCMK__NELEM(cib_file_ops); lpc++) {
+            const cib_operation_t *oper = &(cib_file_ops[lpc]);
+
+            g_hash_table_insert(op_table, (gpointer) oper->name,
+                                (gpointer) oper);
+        }
+    }
+
+    *operation = g_hash_table_lookup(op_table, op);
+
+    if (*operation == NULL) {
+        /* @COMPAT: EOPNOTSUPP makes more sense but would change existing
+         * behavior. If we merge the server and file ops tables in the future,
+         * then EINVAL makes sense: if we didn't find the op, it doesn't exist.
+         * Only an internal bug gets us to that point.
+         */
+        crm_err("Operation %s is invalid or unsupported for CIB file clients",
+                op);
+        return -EPROTONOSUPPORT;
+    }
+    return pcmk_ok;
+}
 
 /*!
  * \internal
@@ -125,80 +322,53 @@ cib_file_is_live(const char *filename)
 }
 
 static int
-cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
-                             const char *section, xmlNode *data,
-                             xmlNode **output_data, int call_options,
-                             const char *user_name)
+cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
 {
     int rc = pcmk_ok;
-    char *effective_user = NULL;
-    gboolean query = FALSE;
-    gboolean changed = FALSE;
-    xmlNode *request = NULL;
-    xmlNode *output = NULL;
-    xmlNode *cib_diff = NULL;
+    const cib_operation_t *operation = NULL;
+
+    int call_id = 0;
+    int call_options = cib_none;
+    const char *op = crm_element_value(request, F_CIB_OPERATION);
+    const char *section = crm_element_value(request, F_CIB_SECTION);
+    xmlNode *data = get_message_xml(request, F_CIB_CALLDATA);
+
+    bool changed = false;
+    bool read_only = false;
     xmlNode *result_cib = NULL;
-    cib_op_t fn = NULL;
-    int lpc = 0;
-    static int max_msg_types = PCMK__NELEM(cib_file_ops);
+    xmlNode *cib_diff = NULL;
+
     cib_file_opaque_t *private = cib->variant_opaque;
 
-    crm_info("Handling %s operation for %s as %s",
-             (op? op : "invalid"), (section? section : "entire CIB"),
-             (user_name? user_name : "default user"));
-
-    cib__set_call_options(call_options, "file operation",
-                          cib_no_mtime|cib_inhibit_bcast|cib_scope_local);
-
-    if (cib->state == cib_disconnected) {
-        return -ENOTCONN;
+    rc = get_operation(op, &operation);
+    if (rc != pcmk_ok) {
+        goto done;
     }
 
-    if (output_data != NULL) {
-        *output_data = NULL;
-    }
+    crm_element_value_int(request, F_CIB_CALLID, &call_id);
+    crm_element_value_int(request, F_CIB_CALLOPTS, &call_options);
 
-    if (op == NULL) {
-        return -EINVAL;
-    }
+    read_only = !pcmk_is_set(operation->flags, cib_op_attr_modifies);
 
-    for (lpc = 0; lpc < max_msg_types; lpc++) {
-        if (pcmk__str_eq(op, cib_file_ops[lpc].op, pcmk__str_casei)) {
-            fn = cib_file_ops[lpc].fn;
-            query = cib_file_ops[lpc].read_only;
-            break;
-        }
-    }
+    // Mirror the logic in cib_prepare_common()
+    if ((section != NULL) && (data != NULL)
+        && pcmk__str_eq(crm_element_name(data), XML_TAG_CIB, pcmk__str_none)) {
 
-    if (fn == NULL) {
-        return -EPROTONOSUPPORT;
-    }
-
-    cib->call_id++;
-    request = cib_create_op(cib->call_id, op, host, section, data, call_options,
-                            user_name);
-    if(user_name) {
-        crm_xml_add(request, XML_ACL_TAG_USER, user_name);
-    }
-
-    /* Mirror the logic in cib_prepare_common() */
-    if (section != NULL && data != NULL && pcmk__str_eq(crm_element_name(data), XML_TAG_CIB, pcmk__str_none)) {
         data = pcmk_find_cib_element(data, section);
     }
 
-    rc = cib_perform_op(op, call_options, fn, query,
-                        section, request, data, TRUE, &changed, in_mem_cib, &result_cib, &cib_diff,
-                        &output);
+    rc = cib_perform_op(op, call_options, operation->fn, read_only, section,
+                        request, data, true, &changed, &private->cib_xml,
+                        &result_cib, &cib_diff, output);
 
-    free_xml(request);
-    if (rc == -pcmk_err_schema_validation) {
-        validate_xml_verbose(result_cib);
+    if (pcmk_is_set(call_options, cib_transaction)) {
+        goto done;
     }
 
-    if (rc != pcmk_ok) {
-        free_xml(result_cib);
+    if (rc == -pcmk_err_schema_validation) {
+        validate_xml_verbose(result_cib);
 
-    } else if (query == FALSE) {
+    } else if ((rc == pcmk_ok) && !read_only) {
         pcmk__output_t *out = NULL;
 
         rc = pcmk_rc2legacy(pcmk__log_output_new(&out));
@@ -210,30 +380,93 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
         pcmk__output_free(out);
         rc = pcmk_ok;
 
-        free_xml(in_mem_cib);
-        in_mem_cib = result_cib;
+        if (result_cib != private->cib_xml) {
+            free_xml(private->cib_xml);
+            private->cib_xml = result_cib;
+        }
         cib_set_file_flags(private, cib_file_flag_dirty);
     }
 
     // Global operation callback (deprecated)
     if (cib->op_callback != NULL) {
-        cib->op_callback(NULL, cib->call_id, rc, output);
-    }
-
-    if ((output_data != NULL) && (output != NULL)) {
-        *output_data = (output == in_mem_cib)? copy_xml(output) : output;
+        cib->op_callback(NULL, call_id, rc, *output);
     }
 
 done:
+    if ((result_cib != private->cib_xml) && (result_cib != *output)) {
+        free_xml(result_cib);
+    }
     free_xml(cib_diff);
+    return rc;
+}
 
-    if ((output_data == NULL) && (output != in_mem_cib)) {
-        /* Don't free output if we're still using it. (output_data != NULL)
-         * means we may have assigned *output_data = output above.
-         */
+static int
+cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
+                             const char *section, xmlNode *data,
+                             xmlNode **output_data, int call_options,
+                             const char *user_name)
+{
+    int rc = pcmk_ok;
+    xmlNode *request = NULL;
+    xmlNode *output = NULL;
+    cib_file_opaque_t *private = cib->variant_opaque;
+
+    const cib_operation_t *operation = NULL;
+
+    crm_info("Handling %s operation for %s as %s",
+             pcmk__s(op, "invalid"), pcmk__s(section, "entire CIB"),
+             pcmk__s(user_name, "default user"));
+
+    if (output_data != NULL) {
+        *output_data = NULL;
+    }
+
+    if (cib->state == cib_disconnected) {
+        return -ENOTCONN;
+    }
+
+    rc = get_operation(op, &operation);
+    if (rc != pcmk_ok) {
+        return rc;
+    }
+
+    cib->call_id++;
+    cib__set_call_options(call_options, "file operation", cib_no_mtime);
+
+    request = cib_create_op(cib->call_id, op, host, section, data, call_options,
+                            user_name);
+    crm_xml_add(request, XML_ACL_TAG_USER, user_name);
+    crm_xml_add(request, F_CIB_CLIENTID, private->id);
+
+    if (pcmk_is_set(call_options, cib_transaction)) {
+        rc = cib_file_extend_transaction(cib, operation, request);
+
+        if (rc != pcmk_rc_ok) {
+            crm_warn("Could not extend transaction for CIB file client: %s",
+                     pcmk_rc_str(rc));
+        }
+        rc = pcmk_rc2legacy(rc);
+        goto done;
+    }
+
+    rc = cib_file_process_request(cib, request, &output);
+
+    if ((output_data != NULL) && (output != NULL)) {
+        if (output->doc == private->cib_xml->doc) {
+            *output_data = copy_xml(output);
+        } else {
+            *output_data = output;
+        }
+    }
+
+done:
+    if ((output != NULL)
+        && (output->doc != private->cib_xml->doc)
+        && ((output_data == NULL) || (output != *output_data))) {
+
         free_xml(output);
     }
-    free(effective_user);
+    free_xml(request);
     return rc;
 }
 
@@ -241,7 +474,8 @@ done:
  * \internal
  * \brief Read CIB from disk and validate it against XML schema
  *
- * \param[in] filename Name of file to read CIB from
+ * \param[in]   filename  Name of file to read CIB from
+ * \param[out]  output    Where to store the read CIB XML
  *
  * \return pcmk_ok on success,
  *         -ENXIO if file does not exist (or stat() otherwise fails), or
@@ -252,7 +486,7 @@ done:
  *       because some callers might not need to write.
  */
 static int
-load_file_cib(const char *filename)
+load_file_cib(const char *filename, xmlNode **output)
 {
     struct stat buf;
     xmlNode *root = NULL;
@@ -283,7 +517,7 @@ load_file_cib(const char *filename)
     }
 
     /* Remember the parsed XML for later use */
-    in_mem_cib = root;
+    *output = root;
     return pcmk_ok;
 }
 
@@ -296,7 +530,7 @@ cib_file_signon(cib_t *cib, const char *name, enum cib_conn_type type)
     if (private->filename == NULL) {
         rc = -EINVAL;
     } else {
-        rc = load_file_cib(private->filename);
+        rc = load_file_cib(private->filename, &private->cib_xml);
     }
 
     if (rc == pcmk_ok) {
@@ -304,10 +538,11 @@ cib_file_signon(cib_t *cib, const char *name, enum cib_conn_type type)
                   private->filename, name);
         cib->state = cib_connected_command;
         cib->type = cib_command;
+        register_client(cib);
 
     } else {
-        crm_info("Connection to local file '%s' for %s failed: %s\n",
-                 private->filename, name, pcmk_strerror(rc));
+        crm_info("Connection to local file '%s' for %s (client %s) failed: %s",
+                 private->filename, name, private->id, pcmk_strerror(rc));
     }
     return rc;
 }
@@ -316,12 +551,13 @@ cib_file_signon(cib_t *cib, const char *name, enum cib_conn_type type)
  * \internal
  * \brief Write out the in-memory CIB to a live CIB file
  *
- * param[in,out] path  Full path to file to write
+ * param[in]     cib_root  Root of XML tree to write
+ * param[in,out] path      Full path to file to write
  *
  * \return 0 on success, -1 on failure
  */
 static int
-cib_file_write_live(char *path)
+cib_file_write_live(xmlNode *cib_root, char *path)
 {
     uid_t uid = geteuid();
     struct passwd *daemon_pwent;
@@ -371,7 +607,7 @@ cib_file_write_live(char *path)
     }
 
     /* write the file */
-    if (cib_file_write_with_digest(in_mem_cib, cib_dirname,
+    if (cib_file_write_with_digest(cib_root, cib_dirname,
                                    cib_filename) != pcmk_ok) {
         rc = -1;
     }
@@ -411,13 +647,15 @@ cib_file_signoff(cib_t *cib)
     crm_debug("Disconnecting from the CIB manager");
     cib->state = cib_disconnected;
     cib->type = cib_no_connection;
+    unregister_client(cib);
+    cib_file_discard_transaction(cib);
 
     /* If the in-memory CIB has been changed, write it to disk */
     if (pcmk_is_set(private->flags, cib_file_flag_dirty)) {
 
         /* If this is the live CIB, write it out with a digest */
         if (pcmk_is_set(private->flags, cib_file_flag_live)) {
-            if (cib_file_write_live(private->filename) < 0) {
+            if (cib_file_write_live(private->cib_xml, private->filename) < 0) {
                 rc = pcmk_err_generic;
             }
 
@@ -425,7 +663,8 @@ cib_file_signoff(cib_t *cib)
         } else {
             gboolean do_bzip = pcmk__ends_with_ext(private->filename, ".bz2");
 
-            if (write_xml_file(in_mem_cib, private->filename, do_bzip) <= 0) {
+            if (write_xml_file(private->cib_xml, private->filename,
+                               do_bzip) <= 0) {
                 rc = pcmk_err_generic;
             }
         }
@@ -439,8 +678,8 @@ cib_file_signoff(cib_t *cib)
     }
 
     /* Free the in-memory CIB */
-    free_xml(in_mem_cib);
-    in_mem_cib = NULL;
+    free_xml(private->cib_xml);
+    private->cib_xml = NULL;
     return rc;
 }
 
@@ -456,9 +695,10 @@ cib_file_free(cib_t *cib)
     if (rc == pcmk_ok) {
         cib_file_opaque_t *private = cib->variant_opaque;
 
+        free(private->id);
         free(private->filename);
-        free(cib->cmds);
         free(private);
+        free(cib->cmds);
         free(cib);
 
     } else {
@@ -495,24 +735,24 @@ cib_file_set_connection_dnotify(cib_t *cib,
  * \param[out] async_id  If not \p NULL, where to store asynchronous client ID
  * \param[out] sync_id   If not \p NULL, where to store synchronous client ID
  *
- * \return Legacy Pacemaker return code (specifically, \p -EPROTONOSUPPORT)
+ * \return Legacy Pacemaker return code
  *
  * \note This is the \p cib_file variant implementation of
  *       \p cib_api_operations_t:client_id().
- * \note A \p cib_file object doesn't connect to the CIB and is never assigned a
- *       client ID.
  */
 static int
 cib_file_client_id(const cib_t *cib, const char **async_id,
                    const char **sync_id)
 {
+    cib_file_opaque_t *private = cib->variant_opaque;
+
     if (async_id != NULL) {
-        *async_id = NULL;
+        *async_id = private->id;
     }
     if (sync_id != NULL) {
-        *sync_id = NULL;
+        *sync_id = private->id;
     }
-    return -EPROTONOSUPPORT;
+    return pcmk_ok;
 }
 
 cib_t *
@@ -531,6 +771,7 @@ cib_file_new(const char *cib_location)
         free(cib);
         return NULL;
     }
+    private->id = crm_generate_uuid();
 
     cib->variant = cib_file;
     cib->variant_opaque = private;
@@ -917,4 +1158,262 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
     free(tmp_digest);
     free(tmp_cib);
     return exit_rc;
+}
+
+/*!
+ * \internal
+ * \brief Create a new transaction for a given CIB file client
+ *
+ * \param[in,out] cib  CIB file client
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+cib_file_init_transaction(cib_t *cib)
+{
+    cib_file_opaque_t *private = cib->variant_opaque;
+
+    // A client can have at most one transaction at a time
+    if (private->transaction != NULL) {
+        return pcmk_rc_already;
+    }
+
+    crm_trace("Initiating transaction for CIB file client (%s) on file '%s'",
+              private->id, private->filename);
+
+    private->transaction = g_queue_new();
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
+ * \brief Add a new CIB request to an existing transaction
+ *
+ * \param[in,out] cib        CIB file client
+ * \param[in]     operation  CIB operation
+ * \param[in]     request    CIB request
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+cib_file_extend_transaction(cib_t *cib, const cib_operation_t *operation,
+                            xmlNode *request)
+{
+    cib_file_opaque_t *private = cib->variant_opaque;
+
+    if (private->transaction == NULL) {
+        return pcmk_rc_no_transaction;
+    }
+
+    if (!pcmk_is_set(operation->flags, cib_op_attr_transaction)) {
+        crm_err("Operation '%s' is not supported in CIB transaction",
+                operation->name);
+        return EOPNOTSUPP;
+    }
+
+    g_queue_push_tail(private->transaction, copy_xml(request));
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
+ * \brief Free a CIB file client's transaction (if any) and its requests
+ *
+ * \param[in,out] cib  CIB file client
+ */
+static void
+cib_file_discard_transaction(cib_t *cib)
+{
+    bool found = false;
+    cib_file_opaque_t *private = cib->variant_opaque;
+
+    if (private->transaction != NULL) {
+        found = true;
+        g_queue_free_full(private->transaction, (GDestroyNotify) free_xml);
+        private->transaction = NULL;
+    }
+
+    crm_trace("%s for CIB file client (%s) on file '%s'",
+              (found? "Discarded transaction" : "No transaction found"),
+              private->id, private->filename);
+}
+
+/*!
+ * \internal
+ * \brief Process requests in a CIB file client's transaction
+ *
+ * Stop when a request fails or when all requests have been processed.
+ *
+ * \param[in,out] cib  CIB file client
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+cib_file_process_transaction_requests(cib_t *cib)
+{
+    cib_file_opaque_t *private = cib->variant_opaque;
+    GQueue *transaction = private->transaction;
+
+    for (xmlNode *request = g_queue_pop_head(transaction); request != NULL;
+         request = g_queue_pop_head(transaction)) {
+
+        xmlNode *output = NULL;
+        const char *op = crm_element_value(request, F_CIB_OPERATION);
+
+        int rc = cib_file_process_request(cib, request, &output);
+
+        rc = pcmk_legacy2rc(rc);
+        if (rc != pcmk_rc_ok) {
+            crm_err("Aborting transaction for CIB file client (%s) on file "
+                    "'%s' due to failed %s request: %s",
+                    private->id, private->filename, op, pcmk_rc_str(rc));
+            crm_log_xml_info(request, "Failed request");
+            free_xml(request);
+            return rc;
+        }
+
+        crm_trace("Applied %s request to transaction working CIB for CIB file "
+                  "client (%s) on file '%s'",
+                  op, private->id, private->filename);
+        crm_log_xml_trace(request, "Successful request");
+        free_xml(request);
+    }
+
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
+ * \brief Commit a given CIB file client's transaction to a working CIB copy
+ *
+ * \param[in,out] cib         CIB file client
+ * \param[in,out] result_cib  Where to store result CIB
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note The caller is responsible for replacing the \p cib argument's
+ *       \p private->cib_xml with \p result_cib on success, and for freeing
+ *       \p result_cib using \p free_xml() on failure.
+ */
+static int
+cib_file_commit_transaction(cib_t *cib, xmlNode **result_cib)
+{
+    int rc = pcmk_rc_ok;
+    cib_file_opaque_t *private = cib->variant_opaque;
+    xmlNode *saved_cib = private->cib_xml;
+
+    /* *result_cib should be a copy of private->cib_xml (created by
+     * cib_perform_op()). If not, make a copy now. Change tracking isn't
+     * strictly required here because:
+     * * Each request in the transaction will have changes tracked and ACLs
+     *   checked if appropriate.
+     * * cib_perform_op() will infer changes for the commit request at the end.
+     */
+    CRM_CHECK((*result_cib != NULL) && (*result_cib != private->cib_xml),
+              *result_cib = copy_xml(private->cib_xml));
+
+    if (private->transaction == NULL) {
+        return pcmk_rc_no_transaction;
+    }
+
+    crm_trace("Committing transaction for CIB file client (%s) on file '%s' to "
+              "working CIB",
+              private->id, private->filename);
+
+    // Apply all changes to a working copy of the CIB
+    private->cib_xml = *result_cib;
+
+    rc = cib_file_process_transaction_requests(cib);
+
+    crm_trace("Transaction commit %s for CIB file client (%s) on file '%s'; "
+              "discarding queue",
+              ((rc != pcmk_rc_ok)? "succeeded" : "failed"),
+              private->id, private->filename);
+
+    // Free the transaction and (if aborted) free any remaining requests
+    cib_file_discard_transaction(cib);
+
+    /* Some request types (for example, erase) may have freed private->cib_xml
+     * (the working copy) and pointed it at a new XML object. In that case, it
+     * follows that *result_cib (the working copy) was freed.
+     *
+     * Point *result_cib at the updated working copy stored in private->cib_xml.
+     */
+    *result_cib = private->cib_xml;
+
+    // Point private->cib_xml back to the unchanged original copy
+    private->cib_xml = saved_cib;
+
+    return rc;
+}
+
+static int
+cib_file_process_init_transaction(const char *op, int options,
+                                  const char *section, xmlNode *req,
+                                  xmlNode *input, xmlNode *existing_cib,
+                                  xmlNode **result_cib, xmlNode **answer)
+{
+    int rc = pcmk_rc_ok;
+    const char *client_id = crm_element_value(req, F_CIB_CLIENTID);
+    cib_t *cib = NULL;
+
+    CRM_CHECK(client_id != NULL, return -EINVAL);
+
+    cib = get_client(client_id);
+    CRM_CHECK(cib != NULL, return -EINVAL);
+
+    rc = cib_file_init_transaction(cib);
+
+    if (rc != pcmk_rc_ok) {
+        cib_file_opaque_t *private = cib->variant_opaque;
+
+        crm_err("Could not initiate transaction for CIB file client (%s) on "
+                "file '%s': %s",
+                private->id, private->filename, pcmk_rc_str(rc));
+    }
+    return pcmk_rc2legacy(rc);
+}
+
+static int
+cib_file_process_commit_transaction(const char *op, int options,
+                                    const char *section, xmlNode *req,
+                                    xmlNode *input, xmlNode *existing_cib,
+                                    xmlNode **result_cib, xmlNode **answer)
+{
+    int rc = pcmk_rc_ok;
+    const char *client_id = crm_element_value(req, F_CIB_CLIENTID);
+    cib_t *cib = NULL;
+
+    CRM_CHECK(client_id != NULL, return -EINVAL);
+
+    cib = get_client(client_id);
+    CRM_CHECK(cib != NULL, return -EINVAL);
+
+    rc = cib_file_commit_transaction(cib, result_cib);
+    if (rc != pcmk_rc_ok) {
+        cib_file_opaque_t *private = cib->variant_opaque;
+
+        crm_err("Could not commit transaction for CIB file client (%s) on "
+                "file '%s': %s",
+                private->id, private->filename, pcmk_rc_str(rc));
+    }
+    return pcmk_rc2legacy(rc);
+}
+
+static int
+cib_file_process_discard_transaction(const char *op, int options,
+                                     const char *section, xmlNode *req,
+                                     xmlNode *input, xmlNode *existing_cib,
+                                     xmlNode **result_cib, xmlNode **answer)
+{
+    const char *client_id = crm_element_value(req, F_CIB_CLIENTID);
+    cib_t *cib = NULL;
+
+    CRM_CHECK(client_id != NULL, return -EINVAL);
+
+    cib = get_client(client_id);
+    CRM_CHECK(cib != NULL, return -EINVAL);
+
+    cib_file_discard_transaction(cib);
+    return pcmk_ok;
 }

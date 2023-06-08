@@ -26,9 +26,13 @@
 #include <crm/common/mainloop.h>
 #include <crm/cib/internal.h>
 
+#include "based_transaction.h"
+
 #ifdef HAVE_GNUTLS_GNUTLS_H
 #  include <gnutls/gnutls.h>
 #endif
+
+#define OUR_NODENAME (stand_alone? "localhost" : crm_cluster->uname)
 
 // CIB-specific client flags
 enum cib_client_flags {
@@ -42,28 +46,6 @@ enum cib_client_flags {
     // Whether client is another cluster daemon
     cib_is_daemon      = (UINT64_C(1) << 12),
 };
-
-/*!
- * \internal
- * \enum cib_op_attr
- * \brief Bit flags for CIB operation attributes
- */
-enum cib_op_attr {
-    cib_op_attr_none           = 0,         //!< No special attributes
-    cib_op_attr_modifies       = (1 << 1),  //!< Modifies CIB
-    cib_op_attr_privileged     = (1 << 2),  //!< Requires privileges
-    cib_op_attr_local          = (1 << 3),  //!< Must only be processed locally
-    cib_op_attr_replaces       = (1 << 4),  //!< Replaces CIB
-    cib_op_attr_writes_through = (1 << 5),  //!< Writes to disk on success
-};
-
-typedef struct cib_operation_s {
-    const char *name;
-    uint32_t flags; //!< Group of <tt>enum cib_op_attr</tt> flags
-    int (*prepare) (xmlNode *, xmlNode **, const char **);
-    int (*cleanup) (int, xmlNode **, xmlNode **);
-    cib_op_t fn;
-} cib_operation_t;
 
 extern bool based_is_primary;
 extern GHashTable *config_hash;
@@ -91,6 +73,8 @@ void cib_peer_callback(xmlNode *msg, void *private_data);
 void cib_common_callback_worker(uint32_t id, uint32_t flags,
                                 xmlNode *op_request, pcmk__client_t *cib_client,
                                 gboolean privileged);
+int cib_process_request(xmlNode *request, gboolean privileged,
+                        const pcmk__client_t *cib_client);
 void cib_shutdown(int nsig);
 void terminate_cib(const char *caller, int fast);
 gboolean cib_legacy_mode(void);
@@ -133,6 +117,18 @@ int cib_process_upgrade_server(const char *op, int options, const char *section,
                                xmlNode *req, xmlNode *input,
                                xmlNode *existing_cib, xmlNode **result_cib,
                                xmlNode **answer);
+int cib_process_init_transaction(const char *op, int options,
+                                 const char *section, xmlNode *req,
+                                 xmlNode *input, xmlNode *existing_cib,
+                                 xmlNode **result_cib, xmlNode **answer);
+int cib_process_commit_transaction(const char *op, int options,
+                                   const char *section, xmlNode *req,
+                                   xmlNode *input, xmlNode *existing_cib,
+                                   xmlNode **result_cib, xmlNode **answer);
+int cib_process_discard_transaction(const char *op, int options,
+                                    const char *section, xmlNode *req,
+                                    xmlNode *input, xmlNode *existing_cib,
+                                    xmlNode **result_cib, xmlNode **answer);
 void send_sync_request(const char *host);
 int sync_our_cib(xmlNode *request, gboolean all);
 

@@ -826,7 +826,6 @@ copy_xml(xmlNode * src)
 
     CRM_ASSERT(copy != NULL);
     xmlDocSetRootElement(doc, copy);
-    xmlSetTreeDoc(copy, doc);
     return copy;
 }
 
@@ -2438,23 +2437,23 @@ replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean 
             free_xml(child);
 
         } else {
-            xmlNode *tmp = copy_xml(update);
-            xmlDoc *doc = tmp->doc;
-            xmlNode *old = NULL;
+            xmlNode *old = child;
+            xmlNode *new = xmlCopyNode(update, 1);
 
-            xml_accept_changes(tmp);
-            old = xmlReplaceNode(child, tmp);
+            CRM_ASSERT(new != NULL);
 
-            if(xml_tracking_changes(tmp)) {
-                /* Replaced sections may have included relevant ACLs */
-                pcmk__apply_acl(tmp);
+            // May be unnecessary but avoids slight changes to some test outputs
+            reset_xml_node_flags(new);
+
+            old = xmlReplaceNode(old, new);
+
+            if (xml_tracking_changes(new)) {
+                // Replaced sections may have included relevant ACLs
+                pcmk__apply_acl(new);
             }
-
-            xml_calculate_changes(old, tmp);
-            xmlDocSetRootElement(doc, old);
-            free_xml(old);
+            xml_calculate_changes(old, new);
+            xmlFreeNode(old);
         }
-        child = NULL;
         return TRUE;
 
     } else if (can_delete) {
