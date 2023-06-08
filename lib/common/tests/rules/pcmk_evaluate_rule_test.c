@@ -43,22 +43,18 @@ static pcmk_rule_input_t rule_input = {
 static void
 null_invalid(void **state)
 {
-#if 0
     xmlNode *xml = NULL;
-#endif
     crm_time_t *next_change = crm_time_new_undefined();
 
     assert_int_equal(pcmk_evaluate_rule(NULL, NULL, next_change),
-                     pcmk_rc_unpack_error);
+                     EINVAL);
 
-#if 0 // Currently segfaults
     xml = pcmk__xml_parse(RULE_OP);
     assert_int_equal(pcmk_evaluate_rule(xml, NULL, next_change), EINVAL);
     free_xml(xml);
-#endif
 
     assert_int_equal(pcmk_evaluate_rule(NULL, &rule_input, next_change),
-                     pcmk_rc_unpack_error);
+                     EINVAL);
 
     crm_time_free(next_change);
 }

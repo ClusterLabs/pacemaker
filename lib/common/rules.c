@@ -1372,41 +1372,55 @@ pcmk__evaluate_condition(xmlNode *condition,
 }
 
 /*!
- * \brief Evaluate all of a rule's expressions
+ * \brief Evaluate a single rule, including all its conditions
  *
  * \param[in,out] rule         XML containing a rule definition or its id-ref
  * \param[in]     rule_input   Values used to evaluate rule criteria
  * \param[out]    next_change  If not NULL, set to when evaluation will change
  *
- * \return Standard Pacemaker return code (\c pcmk_rc_ok if the expression
- *         passes, some other value if it does not)
+ * \return Standard Pacemaker return code (\c pcmk_rc_ok if the rule is
+ *         satisfied, some other value if it is not)
  */
 int
 pcmk_evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
                    crm_time_t *next_change)
 {
-    xmlNode *expr = NULL;
-    gboolean test = TRUE;
-    gboolean empty = TRUE;
-    gboolean passed = TRUE;
+    bool empty = true;
+    int rc = pcmk_rc_ok;
+    const char *id = NULL;
     const char *value = NULL;
     enum pcmk__combine combine = pcmk__combine_unknown;
 
+    if ((rule == NULL) || (rule_input == NULL)) {
+        return EINVAL;
+    }
+
     rule = expand_idref(rule, NULL);
-    if (rule == NULL) { // Not possible with schema validation enabled
+    if (rule == NULL) {
+        // Not possible with schema validation enabled; message already logged
         return pcmk_rc_unpack_error;
+    }
+
+    // Validate XML ID
+    id = pcmk__xe_id(rule);
+    if (pcmk__str_empty(id)) {
+        /* @COMPAT When we can break behavioral backward compatibility,
+         * fail the rule
+         */
+        pcmk__config_warn(PCMK_XE_RULE " has no " PCMK_XA_ID);
+        id = "without ID"; // for logging
     }
 
     value = crm_element_value(rule, PCMK_XA_BOOLEAN_OP);
     combine = pcmk__parse_combine(value);
     switch (combine) {
         case pcmk__combine_and:
-            // For "and", passed defaults to TRUE (reset on failure below)
+            // For "and", rc defaults to success (reset on failure below)
             break;
 
         case pcmk__combine_or:
-            // For "or", passed defaults to FALSE (reset on success below)
-            passed = FALSE;
+            // For "or", rc defaults to failure (reset on success below)
+            rc = pcmk_rc_op_unsatisfied;
             break;
 
         default:
@@ -1420,31 +1434,32 @@ pcmk_evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
             break;
     }
 
-    crm_trace("Testing rule %s", pcmk__xe_id(rule));
-    for (expr = pcmk__xe_first_child(rule, NULL, NULL, NULL); expr != NULL;
-         expr = pcmk__xe_next(expr)) {
+    // Evaluate each condition
+    for (xmlNode *condition = pcmk__xe_first_child(rule, NULL, NULL, NULL);
+         condition != NULL; condition = pcmk__xe_next(condition)) {
 
-        test = (pcmk__evaluate_condition(expr, rule_input,
-                                         next_change) == pcmk_rc_ok);
-        empty = FALSE;
-
-        if (test && (combine == pcmk__combine_or)) {
-            crm_trace("Expression %s/%s passed",
-                      pcmk__xe_id(rule), pcmk__xe_id(expr));
-            return pcmk_rc_ok;
-
-        } else if (!test && (combine == pcmk__combine_and)) {
-            crm_trace("Expression %s/%s failed",
-                      pcmk__xe_id(rule), pcmk__xe_id(expr));
-            return pcmk_rc_op_unsatisfied;
+        empty = false;
+        if (pcmk__evaluate_condition(condition, rule_input,
+                                     next_change) == pcmk_rc_ok) {
+            if (combine == pcmk__combine_or) {
+                rc = pcmk_rc_ok; // Any pass is final for "or"
+                break;
+            }
+        } else if (combine == pcmk__combine_and) {
+            rc = pcmk_rc_op_unsatisfied; // Any failure is final for "and"
+            break;
         }
     }
 
-    if (empty) {
-        pcmk__config_err("Ignoring rule %s because it contains no expressions",
-                         pcmk__xe_id(rule));
+    if (empty) { // Not possible with schema validation enabled
+        /* @COMPAT Currently, we don't actually ignore "or" rules because
+         * rc is initialized to failure above in that case. When we can break
+         * backward compatibility, reset rc to pcmk_rc_ok here.
+         */
+        pcmk__config_warn("Ignoring rule %s because it contains no conditions",
+                          id);
     }
 
-    crm_trace("Rule %s %s", pcmk__xe_id(rule), passed ? "passed" : "failed");
-    return passed? pcmk_rc_ok : pcmk_rc_op_unsatisfied;
+    crm_trace("Rule %s is %ssatisfied", id, ((rc == pcmk_rc_ok)? "" : "not "));
+    return rc;
 }
