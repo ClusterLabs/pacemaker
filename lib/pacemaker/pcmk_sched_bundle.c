@@ -285,7 +285,7 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
         }
     }
 
-    pe__foreach_bundle_replica(rsc, replica_internal_constraints, (void *) rsc);
+    pe__foreach_bundle_replica(rsc, replica_internal_constraints, rsc);
 
     if (bundled_resource != NULL) {
         bundled_resource->cmds->internal_constraints(bundled_resource);
@@ -507,8 +507,7 @@ pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
     pe_rsc_trace(primary, "Processing constraint %s: %s -> %s %d",
                  colocation->id, dependent->id, primary->id, colocation->score);
 
-    pe__foreach_bundle_replica(primary, replica_apply_coloc_score,
-                               (void *) &coloc_data);
+    pe__foreach_bundle_replica(primary, replica_apply_coloc_score, &coloc_data);
 
     if (colocation->score >= INFINITY) {
         node_list_exclude(dependent->allowed_nodes, coloc_data.container_hosts,
