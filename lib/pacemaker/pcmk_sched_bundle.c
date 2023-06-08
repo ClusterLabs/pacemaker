@@ -456,13 +456,12 @@ replica_apply_coloc_score(pe__bundle_replica_t *replica, void *user_data)
  * we are choosing promotable clone instance roles).
  *
  * \param[in,out] dependent      Dependent resource in colocation
- * \param[in]     primary        Primary resource in colocation
+ * \param[in,out] primary        Primary resource in colocation
  * \param[in]     colocation     Colocation constraint to apply
  * \param[in]     for_dependent  true if called on behalf of dependent
  */
 void
-pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
-                               const pe_resource_t *primary,
+pcmk__bundle_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
                                const pcmk__colocation_t *colocation,
                                bool for_dependent)
 {

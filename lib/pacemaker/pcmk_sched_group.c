@@ -312,11 +312,11 @@ pcmk__group_internal_constraints(pe_resource_t *rsc)
  * resources) or priority (if we are choosing promotable clone instance roles).
  *
  * \param[in,out] dependent      Dependent group resource in colocation
- * \param[in]     primary        Primary resource in colocation
+ * \param[in,out] primary        Primary resource in colocation
  * \param[in]     colocation     Colocation constraint to apply
  */
 static void
-colocate_group_with(pe_resource_t *dependent, const pe_resource_t *primary,
+colocate_group_with(pe_resource_t *dependent, pe_resource_t *primary,
                     const pcmk__colocation_t *colocation)
 {
     pe_resource_t *member = NULL;
@@ -421,13 +421,12 @@ colocate_with_group(pe_resource_t *dependent, const pe_resource_t *primary,
  * we are choosing promotable clone instance roles).
  *
  * \param[in,out] dependent      Dependent resource in colocation
- * \param[in]     primary        Primary resource in colocation
+ * \param[in,out] primary        Primary resource in colocation
  * \param[in]     colocation     Colocation constraint to apply
  * \param[in]     for_dependent  true if called on behalf of dependent
  */
 void
-pcmk__group_apply_coloc_score(pe_resource_t *dependent,
-                              const pe_resource_t *primary,
+pcmk__group_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
                               const pcmk__colocation_t *colocation,
                               bool for_dependent)
 {

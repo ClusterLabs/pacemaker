@@ -216,13 +216,12 @@ can_interleave(const pcmk__colocation_t *colocation)
  * we are choosing promotable clone instance roles).
  *
  * \param[in,out] dependent      Dependent resource in colocation
- * \param[in]     primary        Primary resource in colocation
+ * \param[in,out] primary        Primary resource in colocation
  * \param[in]     colocation     Colocation constraint to apply
  * \param[in]     for_dependent  true if called on behalf of dependent
  */
 void
-pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
-                              const pe_resource_t *primary,
+pcmk__clone_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
                               const pcmk__colocation_t *colocation,
                               bool for_dependent)
 {
