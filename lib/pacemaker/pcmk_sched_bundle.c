@@ -635,7 +635,7 @@ pcmk__bundle_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
  * \brief Add a bundle replica's actions to transition graph
  *
  * \param[in,out] replica    Replica to add to graph
- * \param[in]     user_data  Preferred node, if any (ignored)
+ * \param[in]     user_data  Bundle that replica belongs to (for logging only)
  *
  * \return true (to indicate that any further replicas should be processed)
  */
@@ -673,6 +673,8 @@ add_replica_actions_to_graph(pe__bundle_replica_t *replica, void *user_data)
                                  strdup(XML_RSC_ATTR_REMOTE_RA_ADDR),
                                  strdup(calculated_addr));
         } else {
+            pe_resource_t *bundle = user_data;
+
             /* The only way to get here is if the remote connection is
              * neither currently running nor scheduled to run. That means we
              * won't be doing any operations that require addr (only start
@@ -680,8 +682,9 @@ add_replica_actions_to_graph(pe__bundle_replica_t *replica, void *user_data)
              * unpacking status, promote, and migrate_from history, but
              * that's already happened by this point).
              */
-            crm_info("Unable to determine address for bundle %s remote connection",
-                     pe__const_top_resource(replica->remote, true)->id);
+            pe_rsc_info(bundle,
+                        "Unable to determine address for bundle %s "
+                        "remote connection", bundle->id);
         }
     }
     if (replica->ip != NULL) {
@@ -713,7 +716,7 @@ pcmk__bundle_expand(pe_resource_t *rsc)
     if (bundled_resource != NULL) {
         bundled_resource->cmds->add_actions_to_graph(bundled_resource);
     }
-    pe__foreach_bundle_replica(rsc, add_replica_actions_to_graph, NULL);
+    pe__foreach_bundle_replica(rsc, add_replica_actions_to_graph, rsc);
 }
 
 struct probe_data {
@@ -809,8 +812,8 @@ create_replica_probes(pe__bundle_replica_t *replica, void *user_data)
         free(probe_uuid);
         if (probe != NULL) {
             probe_data->any_created = true;
-            crm_trace("Ordering %s probe on %s",
-                      replica->remote->id, pe__node_name(probe_data->node));
+            pe_rsc_trace(probe_data->bundle, "Ordering %s probe on %s",
+                         replica->remote->id, pe__node_name(probe_data->node));
             pcmk__new_ordering(replica->container,
                                pcmk__op_key(replica->container->id, RSC_START,
                                             0),
