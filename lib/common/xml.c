@@ -850,7 +850,6 @@ copy_xml(xmlNode * src)
 
     CRM_ASSERT(copy != NULL);
     xmlDocSetRootElement(doc, copy);
-    xmlSetTreeDoc(copy, doc);
     return copy;
 }
 
