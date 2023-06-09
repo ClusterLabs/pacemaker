@@ -191,21 +191,26 @@ COVERAGE_DIR = $(top_builddir)/coverage
 .PHONY: coverage
 coverage: coverage-partial-clean
 	cd $(top_builddir)						\
-	&& $(MAKE) $(AM_MAKEFLAGS) core					\
+	&& $(MAKE) $(AM_MAKEFLAGS)					\
 	&& lcov --no-external --exclude='*_test.c' -c -i -d .		\
 		-o pacemaker_base.info					\
 	&& $(MAKE) $(AM_MAKEFLAGS) check				\
 	&& lcov --no-external --exclude='*_test.c' -c -d .		\
 		-o pacemaker_test.info					\
 	&& lcov -a pacemaker_base.info -a pacemaker_test.info		\
-		-o pacemaker_total.info
-	genhtml $(top_builddir)/pacemaker_total.info -o $(COVERAGE_DIR) -s
+		-o pacemaker_total.info					\
+	&& lcov --remove pacemaker_total.info -o pacemaker_filtered.info\
+		"$(abs_top_builddir)/tools/*"				\
+		"$(abs_top_builddir)/daemons/*/*"			\
+		"$(abs_top_builddir)/replace/*"				\
+		"$(abs_top_builddir)/lib/gnu/*"
+	genhtml $(top_builddir)/pacemaker_filtered.info -o $(COVERAGE_DIR) -s -t "Pacemaker code coverage"
 
 # Check coverage of CLI regression tests
 .PHONY: coverage-cts
 coverage-cts: coverage-partial-clean
 	cd $(top_builddir)						\
-	&& $(MAKE) $(AM_MAKEFLAGS) core					\
+	&& $(MAKE) $(AM_MAKEFLAGS)					\
 	&& lcov --no-external -c -i -d tools -o pacemaker_base.info	\
 	&& cts/cts-cli							\
 	&& lcov --no-external -c -d tools -o pacemaker_test.info	\
