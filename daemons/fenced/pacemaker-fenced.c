@@ -1568,13 +1568,13 @@ fencer_metadata(void)
 
 static GOptionEntry entries[] = {
     { "stand-alone", 's', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &stand_alone,
-      "Deprecated (will be removed in a future release)", NULL },
+      N_("Deprecated (will be removed in a future release)"), NULL },
 
     { "stand-alone-w-cpg", 'c', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
-      stand_alone_cpg_cb, "Intended for use in regression testing only", NULL },
+      stand_alone_cpg_cb, N_("Intended for use in regression testing only"), NULL },
 
     { "logfile", 'l', G_OPTION_FLAG_NONE, G_OPTION_ARG_FILENAME_ARRAY,
-      &options.log_files, "Send logs to the additional named logfile", NULL },
+      &options.log_files, N_("Send logs to the additional named logfile"), NULL },
 
     { NULL }
 };
