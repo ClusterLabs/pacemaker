@@ -1354,6 +1354,7 @@ determine_online_status_no_fencing(pe_working_set_t *data_set,
     long long when_member = 0;
     long long when_online = 0;
 
+    // @COMPAT DCs < 2.1.7 use boolean instead of time for cluster membership
     if (crm_str_to_boolean(in_cluster, &member) != 1) {
         pcmk__scan_ll(in_cluster, &when_member, 0LL);
         member = (when_member > 0) ? true : false;
