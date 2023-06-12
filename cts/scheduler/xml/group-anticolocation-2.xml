@@ -6,12 +6,13 @@
          * There are two nodes, and the groups are active on different ones
          * The dependent group's last member (member2b) is failed and has
            reached its migration-threshold
-         * Stickiness is zero
+         * Stickiness is infinite
          * The anti-colocation has influence
          * The dependent has nowhere to run other than the primary's node
 
          In this situation, the goal of keeping as many resources active as
-         possible and the lack of stickiness mean the groups should swap nodes.
+         possible should override the anti-colocation, so the dependent should
+         move, but given the stickiness, the primary should stay where it is.
       -->
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -97,6 +98,7 @@
     <rsc_defaults>
       <meta_attributes id="rsc_defaults-meta_attributes">
         <nvpair id="rsc_defaults-meta_attributes-migration-threshold" name="migration-threshold" value="1"/>
+        <nvpair id="rsc_defaults-meta_attributes-resource-stickiness" name="resource-stickiness" value="INFINITY"/>
       </meta_attributes>
     </rsc_defaults>
   </configuration>

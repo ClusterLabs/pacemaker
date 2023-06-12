@@ -1,0 +1,41 @@
+Current cluster status:
+  * Node List:
+    * Online: [ node1 node2 node3 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started node1
+    * Resource Group: group1:
+      * member1a	(ocf:pacemaker:Dummy):	 Started node2
+      * member1b	(ocf:pacemaker:Dummy):	 Started node2
+    * Resource Group: group2:
+      * member2a	(ocf:pacemaker:Dummy):	 Started node1
+      * member2b	(ocf:pacemaker:Dummy):	 FAILED node1
+
+Transition Summary:
+  * Move       member2a     ( node1 -> node3 )
+  * Recover    member2b     ( node1 -> node3 )
+
+Executing Cluster Transition:
+  * Pseudo action:   group2_stop_0
+  * Resource action: member2b        stop on node1
+  * Resource action: member2a        stop on node1
+  * Pseudo action:   group2_stopped_0
+  * Pseudo action:   group2_start_0
+  * Resource action: member2a        start on node3
+  * Resource action: member2b        start on node3
+  * Pseudo action:   group2_running_0
+  * Resource action: member2a        monitor=10000 on node3
+  * Resource action: member2b        monitor=10000 on node3
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 node2 node3 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started node1
+    * Resource Group: group1:
+      * member1a	(ocf:pacemaker:Dummy):	 Started node2
+      * member1b	(ocf:pacemaker:Dummy):	 Started node2
+    * Resource Group: group2:
+      * member2a	(ocf:pacemaker:Dummy):	 Started node3
+      * member2b	(ocf:pacemaker:Dummy):	 Started node3

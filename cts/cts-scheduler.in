@@ -253,6 +253,18 @@ TESTS = [
         [ "anti-colocation-promoted", "Organize order of actions for promoted resources in anti-colocations" ],
         [ "anti-colocation-unpromoted", "Organize order of actions for unpromoted resources in anti-colocations" ],
         [ "group-anticolocation", "Group with failed last member anti-colocated with another group" ],
+        [ "group-anticolocation-2",
+          "Group with failed last member anti-colocated with another sticky group"
+        ],
+        [ "group-anticolocation-3",
+          "Group with failed last member mandatorily anti-colocated with another group"
+        ],
+        [ "group-anticolocation-4",
+          "Group with failed last member anti-colocated without influence with another group"
+        ],
+        [ "group-anticolocation-5",
+          "Group with failed last member anti-colocated with another group (third node allowed)"
+        ],
         [ "group-colocation-failure",
           "Group with sole member failed, colocated with another group"
         ],

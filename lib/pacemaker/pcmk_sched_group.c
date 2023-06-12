@@ -751,23 +751,32 @@ pcmk__group_with_colocations(const pe_resource_t *rsc,
  * scores of the best nodes matching the attribute used for each of the
  * resource's relevant colocations.
  *
- * \param[in,out] rsc      Resource to check colocations for
- * \param[in]     log_id   Resource ID to use in logs (if NULL, use \p rsc ID)
- * \param[in,out] nodes    Nodes to update
- * \param[in]     attr     Colocation attribute (NULL to use default)
- * \param[in]     factor   Incorporate scores multiplied by this factor
- * \param[in]     flags    Bitmask of enum pcmk__coloc_select values
+ * \param[in,out] rsc         Group resource to check colocations for
+ * \param[in]     log_id      Resource ID for logs (if NULL, use \p rsc ID)
+ * \param[in,out] nodes       Nodes to update (set initial contents to NULL
+ *                            to copy \p rsc's allowed nodes)
+ * \param[in]     colocation  Original colocation constraint (used to get
+ *                            configured primary resource's stickiness, and
+ *                            to get colocation node attribute; if NULL,
+ *                            \p rsc's own matching node scores will not be
+ *                            added, and *nodes must be NULL as well)
+ * \param[in]     factor      Incorporate scores multiplied by this factor
+ * \param[in]     flags       Bitmask of enum pcmk__coloc_select values
  *
+ * \note NULL *nodes, NULL colocation, and the pcmk__coloc_select_this_with
+ *       flag are used together (and only by cmp_resources()).
  * \note The caller remains responsible for freeing \p *nodes.
  */
 void
 pcmk__group_add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
-                                      GHashTable **nodes, const char *attr,
+                                      GHashTable **nodes,
+                                      pcmk__colocation_t *colocation,
                                       float factor, uint32_t flags)
 {
     pe_resource_t *member = NULL;
 
-    CRM_CHECK((rsc != NULL) && (nodes != NULL), return);
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_group) && (nodes != NULL)
+               && ((colocation != NULL) || (*nodes == NULL)));
 
     if (log_id == NULL) {
         log_id = rsc->id;
@@ -803,8 +812,8 @@ pcmk__group_add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
     }
     pe_rsc_trace(rsc, "%s: Merging scores from group %s using member %s "
                  "(at %.6f)", log_id, rsc->id, member->id, factor);
-    member->cmds->add_colocated_node_scores(member, log_id, nodes, attr, factor,
-                                            flags);
+    member->cmds->add_colocated_node_scores(member, log_id, nodes, colocation,
+                                            factor, flags);
     pe__clear_resource_flags(rsc, pe_rsc_merging);
 }
 

@@ -7,11 +7,13 @@
          * The dependent group's last member (member2b) is failed and has
            reached its migration-threshold
          * Stickiness is zero
-         * The anti-colocation has influence
+         * The anti-colocation does not have influence
          * The dependent has nowhere to run other than the primary's node
 
          In this situation, the goal of keeping as many resources active as
-         possible and the lack of stickiness mean the groups should swap nodes.
+         possible should override the anti-colocation, so the dependent should
+         move, but given the lack of influence, the primary should stay where
+         it is.
       -->
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -89,7 +91,8 @@
       </group>
     </resources>
     <constraints>
-      <rsc_colocation id="colocation-group2-group1--5000" rsc="group2" score="-5000" with-rsc="group1"/>
+      <rsc_colocation id="colocation-group2-group1--5000" rsc="group2" with-rsc="group1"
+        score="-5000" influence="false"/>
     </constraints>
     <fencing-topology/>
     <op_defaults/>

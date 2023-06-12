@@ -1,0 +1,8 @@
+ digraph "g" {
+"group2_stop_0" -> "group2_stopped_0" [ style = bold]
+"group2_stop_0" -> "member2b_stop_0 node1" [ style = bold]
+"group2_stop_0" [ style=bold color="green" fontcolor="orange"]
+"group2_stopped_0" [ style=bold color="green" fontcolor="orange"]
+"member2b_stop_0 node1" -> "group2_stopped_0" [ style = bold]
+"member2b_stop_0 node1" [ style=bold color="green" fontcolor="black"]
+}

@@ -3,15 +3,15 @@
     <!-- The essential elements of this test are:
          * A group (group2) is optionally anti-colocated (at score -5000) with
            another group (group1)
-         * There are two nodes, and the groups are active on different ones
+         * There are three nodes, and the groups are active on different ones
          * The dependent group's last member (member2b) is failed and has
            reached its migration-threshold
          * Stickiness is zero
          * The anti-colocation has influence
-         * The dependent has nowhere to run other than the primary's node
+         * The dependent is allowed on the third node
 
-         In this situation, the goal of keeping as many resources active as
-         possible and the lack of stickiness mean the groups should swap nodes.
+         In this situation, the dependent should move to the third node, and
+         the primary should stay where it is.
       -->
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -24,6 +24,7 @@
     <nodes>
       <node id="1" uname="node1"/>
       <node id="2" uname="node2"/>
+      <node id="3" uname="node3"/>
     </nodes>
     <resources>
       <primitive class="stonith" id="Fencing" type="fence_xvm">
@@ -101,6 +102,29 @@
     </rsc_defaults>
   </configuration>
   <status>
+    <node_state id="3" uname="node3" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="3">
+      </transient_attributes>
+      <lrm id="3">
+        <lrm_resources>
+          <lrm_resource id="Fencing" class="stonith" type="fence_xvm">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.4" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1686003179" exec-time="0" queue-time="0" op-digest="52e34745a77d95a636428d3b550eb867"/>
+          </lrm_resource>
+          <lrm_resource id="member1a" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="member1a_last_0" operation_key="member1a_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.4" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1686003179" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="member1b" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="member1b_last_0" operation_key="member1b_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.4" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1686003179" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="member2a" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="member2a_last_0" operation_key="member2a_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.4" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1686003179" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="member2b" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="member2b_last_0" operation_key="member2b_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.17.4" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1686003179" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+</node_state>
     <node_state id="1" uname="node1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
       <transient_attributes id="1">
         <instance_attributes id="status-1">
