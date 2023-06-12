@@ -218,8 +218,11 @@ send_stonith_update(pcmk__graph_action_t *action, const char *target,
     CRM_CHECK(target != NULL, return);
     CRM_CHECK(uuid != NULL, return);
 
-    /* Make sure the membership and join caches are accurate */
-    peer = crm_get_peer_full(0, target, CRM_GET_PEER_ANY);
+    /* Make sure the membership and join caches are accurate.
+     * Try getting any existing node cache entry also by node uuid in case it
+     * doesn't have an uname yet.
+     */
+    peer = pcmk__get_peer_full(0, target, uuid, CRM_GET_PEER_ANY);
 
     CRM_CHECK(peer != NULL, return);
 

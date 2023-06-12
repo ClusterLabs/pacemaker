@@ -124,10 +124,16 @@ void pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
                                    void (*destroy) (gpointer));
 crm_node_t *pcmk__search_node_caches(unsigned int id, const char *uname,
                                      uint32_t flags);
-crm_node_t *pcmk__search_cluster_node_cache(unsigned int id, const char *uname);
+crm_node_t *pcmk__search_cluster_node_cache(unsigned int id, const char *uname,
+                                            const char *uuid);
 
 void pcmk__refresh_node_caches_from_cib(xmlNode *cib);
 crm_node_t *pcmk__search_known_node_cache(unsigned int id, const char *uname,
                                           uint32_t flags);
+
+crm_node_t *pcmk__get_peer(unsigned int id, const char *uname,
+                           const char *uuid);
+crm_node_t *pcmk__get_peer_full(unsigned int id, const char *uname,
+                                const char *uuid, int flags);
 
 #endif

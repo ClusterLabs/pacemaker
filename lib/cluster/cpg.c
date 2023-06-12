@@ -628,7 +628,7 @@ node_left(const char *cpg_group_name, int event_counter,
           size_t member_list_entries)
 {
     crm_node_t *peer = pcmk__search_cluster_node_cache(cpg_peer->nodeid,
-                                                       NULL);
+                                                       NULL, NULL);
     const struct cpg_address **rival = NULL;
 
     /* Most CPG-related Pacemaker code assumes that only one process on a node

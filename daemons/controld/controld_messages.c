@@ -455,7 +455,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         }
 
         if (host_to) {
-            node_to = pcmk__search_cluster_node_cache(0, host_to);
+            node_to = pcmk__search_cluster_node_cache(0, host_to, NULL);
             if (node_to == NULL) {
                 crm_warn("Cannot route message %s: Unknown node %s",
                          ref, host_to);
@@ -995,7 +995,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
 
     if (strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0) {
         const char *from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
-        crm_node_t *node = pcmk__search_cluster_node_cache(0, from);
+        crm_node_t *node = pcmk__search_cluster_node_cache(0, from, NULL);
 
         pcmk__update_peer_expected(__func__, node, CRMD_JOINSTATE_DOWN);
         if(AM_I_DC == FALSE) {

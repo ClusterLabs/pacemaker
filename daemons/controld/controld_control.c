@@ -221,6 +221,7 @@ crmd_exit(crm_exit_t exit_code)
     g_list_free(controld_globals.fsa_message_queue);
     controld_globals.fsa_message_queue = NULL;
 
+    controld_free_node_pending_timers();
     controld_election_fini();
 
     /* Tear down the CIB manager connection, but don't free it yet -- it could
@@ -760,6 +761,10 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
                                 XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT);
     controld_globals.shutdown_lock_limit = crm_parse_interval_spec(value)
                                            / 1000;
+
+    value = g_hash_table_lookup(config_hash,
+                                XML_CONFIG_ATTR_NODE_PENDING_TIMEOUT);
+    controld_globals.node_pending_timeout = crm_parse_interval_spec(value) / 1000;
 
     value = g_hash_table_lookup(config_hash, "cluster-name");
     pcmk__str_update(&(controld_globals.cluster_name), value);

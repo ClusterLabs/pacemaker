@@ -107,6 +107,8 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
     bool appeared = FALSE;
     bool is_remote = pcmk_is_set(node->flags, crm_remote_node);
 
+    controld_node_pending_timer(node);
+
     /* The controller waits to receive some information from the membership
      * layer before declaring itself operational. If this is being called for a
      * cluster node, indicate that we have it.

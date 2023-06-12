@@ -159,6 +159,15 @@ static pcmk__cluster_option_t pe_opts[] = {
     },
 
     {
+        XML_CONFIG_ATTR_NODE_PENDING_TIMEOUT, NULL, "time", NULL,
+        "10min", pcmk__valid_interval_spec,
+        N_("How long to wait for a node that has joined the cluster to join "
+           "the process group"),
+        N_("A node that has joined the cluster can be pending on joining the "
+           "process group. We wait up to this much time for it. If it times "
+           "out, fencing targeting the node will be issued if enabled.")
+    },
+    {
         "cluster-delay", NULL, "time", NULL,
         "60s", pcmk__valid_interval_spec,
         N_("Maximum time for node-to-node communication"),

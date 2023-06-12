@@ -515,7 +515,38 @@ pcmk__search_node_caches(unsigned int id, const char *uname, uint32_t flags)
     }
 
     if ((node == NULL) && pcmk_is_set(flags, CRM_GET_PEER_CLUSTER)) {
-        node = pcmk__search_cluster_node_cache(id, uname);
+        node = pcmk__search_cluster_node_cache(id, uname, NULL);
+    }
+    return node;
+}
+
+/*!
+ * \brief Get a node cache entry (cluster or Pacemaker Remote)
+ *
+ * \param[in] id     If not 0, cluster node ID to search for
+ * \param[in] uname  If not NULL, node name to search for
+ * \param[in] uuid   If not NULL while id is 0, node UUID instead of cluster
+ *                   node ID to search for
+ * \param[in] flags  Bitmask of enum crm_get_peer_flags
+ *
+ * \return (Possibly newly created) node cache entry
+ */
+crm_node_t *
+pcmk__get_peer_full(unsigned int id, const char *uname, const char *uuid,
+                    int flags)
+{
+    crm_node_t *node = NULL;
+
+    CRM_ASSERT(id > 0 || uname != NULL);
+
+    crm_peer_init();
+
+    if (pcmk_is_set(flags, CRM_GET_PEER_REMOTE)) {
+        node = g_hash_table_lookup(crm_remote_peer_cache, uname);
+    }
+
+    if ((node == NULL) && pcmk_is_set(flags, CRM_GET_PEER_CLUSTER)) {
+        node = pcmk__get_peer(id, uname, uuid);
     }
     return node;
 }
@@ -532,20 +563,7 @@ pcmk__search_node_caches(unsigned int id, const char *uname, uint32_t flags)
 crm_node_t *
 crm_get_peer_full(unsigned int id, const char *uname, int flags)
 {
-    crm_node_t *node = NULL;
-
-    CRM_ASSERT(id > 0 || uname != NULL);
-
-    crm_peer_init();
-
-    if (pcmk_is_set(flags, CRM_GET_PEER_REMOTE)) {
-        node = g_hash_table_lookup(crm_remote_peer_cache, uname);
-    }
-
-    if ((node == NULL) && pcmk_is_set(flags, CRM_GET_PEER_CLUSTER)) {
-        node = crm_get_peer(id, uname);
-    }
-    return node;
+    return pcmk__get_peer_full(id, uname, NULL, flags);
 }
 
 /*!
@@ -554,11 +572,14 @@ crm_get_peer_full(unsigned int id, const char *uname, int flags)
  *
  * \param[in] id     If not 0, cluster node ID to search for
  * \param[in] uname  If not NULL, node name to search for
+ * \param[in] uuid   If not NULL while id is 0, node UUID instead of cluster
+ *                   node ID to search for
  *
  * \return Cluster node cache entry if found, otherwise NULL
  */
 crm_node_t *
-pcmk__search_cluster_node_cache(unsigned int id, const char *uname)
+pcmk__search_cluster_node_cache(unsigned int id, const char *uname,
+                                const char *uuid)
 {
     GHashTableIter iter;
     crm_node_t *node = NULL;
@@ -585,6 +606,16 @@ pcmk__search_cluster_node_cache(unsigned int id, const char *uname)
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             if(node->id == id) {
                 crm_trace("ID match: %u = %p", node->id, node);
+                by_id = node;
+                break;
+            }
+        }
+
+    } else if (uuid != NULL) {
+        g_hash_table_iter_init(&iter, crm_peer_cache);
+        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+            if (pcmk__str_eq(node->uuid, uuid, pcmk__str_casei)) {
+                crm_trace("UUID match: %s = %p", node->uuid, node);
                 by_id = node;
                 break;
             }
@@ -693,12 +724,14 @@ remove_conflicting_peer(crm_node_t *node)
  *
  * \param[in] id     If not 0, cluster node ID to search for
  * \param[in] uname  If not NULL, node name to search for
+ * \param[in] uuid   If not NULL while id is 0, node UUID instead of cluster
+ *                   node ID to search for
  *
  * \return (Possibly newly created) cluster node cache entry
  */
 /* coverity[-alloc] Memory is referenced in one or both hashtables */
 crm_node_t *
-crm_get_peer(unsigned int id, const char *uname)
+pcmk__get_peer(unsigned int id, const char *uname, const char *uuid)
 {
     crm_node_t *node = NULL;
     char *uname_lookup = NULL;
@@ -707,7 +740,7 @@ crm_get_peer(unsigned int id, const char *uname)
 
     crm_peer_init();
 
-    node = pcmk__search_cluster_node_cache(id, uname);
+    node = pcmk__search_cluster_node_cache(id, uname, uuid);
 
     /* if uname wasn't provided, and find_peer did not turn up a uname based on id.
      * we need to do a lookup of the node name using the id in the cluster membership. */
@@ -721,7 +754,7 @@ crm_get_peer(unsigned int id, const char *uname)
 
         /* try to turn up the node one more time now that we know the uname. */
         if (node == NULL) {
-            node = pcmk__search_cluster_node_cache(id, uname);
+            node = pcmk__search_cluster_node_cache(id, uname, uuid);
         }
     }
 
@@ -750,7 +783,9 @@ crm_get_peer(unsigned int id, const char *uname)
     }
 
     if(node->uuid == NULL) {
-        const char *uuid = crm_peer_uuid(node);
+        if (uuid == NULL) {
+            uuid = crm_peer_uuid(node);
+        }
 
         if (uuid) {
             crm_info("Node %u has uuid %s", id, uuid);
@@ -763,6 +798,21 @@ crm_get_peer(unsigned int id, const char *uname)
     free(uname_lookup);
 
     return node;
+}
+
+/*!
+ * \brief Get a cluster node cache entry
+ *
+ * \param[in] id     If not 0, cluster node ID to search for
+ * \param[in] uname  If not NULL, node name to search for
+ *
+ * \return (Possibly newly created) cluster node cache entry
+ */
+/* coverity[-alloc] Memory is referenced in one or both hashtables */
+crm_node_t *
+crm_get_peer(unsigned int id, const char *uname)
+{
+    return pcmk__get_peer(id, uname, NULL);
 }
 
 /*!
@@ -917,6 +967,13 @@ crm_update_peer_proc(const char *source, crm_node_t * node, uint32_t flag, const
                      proc2text(flag), status);
         }
 
+        if (pcmk_is_set(node->processes, crm_get_cluster_proc())) {
+            node->when_online = time(NULL);
+
+        } else {
+            node->when_online = 0;
+        }
+
         /* Call the client callback first, then update the peer state,
          * in case the node will be reaped
          */
@@ -1024,6 +1081,13 @@ update_peer_state_iter(const char *source, crm_node_t *node, const char *state,
 
     if (state && !pcmk__str_eq(node->state, state, pcmk__str_casei)) {
         char *last = node->state;
+
+        if (is_member) {
+             node->when_member = time(NULL);
+
+        } else {
+             node->when_member = 0;
+        }
 
         node->state = strdup(state);
         crm_notice("Node %s state is now %s " CRM_XS
