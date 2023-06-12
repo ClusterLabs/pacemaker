@@ -1212,7 +1212,7 @@ find_instance_action(const pe_action_t *action, const pe_resource_t *instance,
                                            CRMD_ACTION_DEMOTE,
                                            CRMD_ACTION_DEMOTED, NULL))) {
 
-        rsc = pcmk__get_rsc_in_container(instance);
+        rsc = pe__get_rsc_in_container(instance);
     }
     if (rsc == NULL) {
         rsc = instance; // No containerized resource, use instance itself

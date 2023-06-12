@@ -10,6 +10,7 @@
 #ifndef PE_INTERNAL__H
 #  define PE_INTERNAL__H
 
+#  include <stdbool.h>
 #  include <stdint.h>
 #  include <string.h>
 #  include <crm/msg_xml.h>
@@ -565,10 +566,28 @@ int pe__common_output_html(pcmk__output_t *out, const pe_resource_t *rsc,
                            const char *name, const pe_node_t *node,
                            unsigned int options);
 
+//! A single instance of a bundle
+typedef struct {
+    int offset;                 //!< 0-origin index of this instance in bundle
+    char *ipaddr;               //!< IP address associated with this instance
+    pe_node_t *node;            //!< Node created for this instance
+    pe_resource_t *ip;          //!< IP address resource for ipaddr
+    pe_resource_t *child;       //!< Instance of bundled resource
+    pe_resource_t *container;   //!< Container associated with this instance
+    pe_resource_t *remote;      //!< Pacemaker Remote connection into container
+} pe__bundle_replica_t;
+
 GList *pe__bundle_containers(const pe_resource_t *bundle);
 
 int pe__bundle_max(const pe_resource_t *rsc);
-
+bool pe__node_is_bundle_instance(const pe_resource_t *bundle,
+                                 const pe_node_t *node);
+pe_resource_t *pe__bundled_resource(const pe_resource_t *rsc);
+const pe_resource_t *pe__get_rsc_in_container(const pe_resource_t *instance);
+pe_resource_t *pe__first_container(const pe_resource_t *bundle);
+void pe__foreach_bundle_replica(pe_resource_t *bundle,
+                                bool (*fn)(pe__bundle_replica_t *, void *),
+                                void *user_data);
 pe_resource_t *pe__find_bundle_replica(const pe_resource_t *bundle,
                                        const pe_node_t *node);
 bool pe__bundle_needs_remote_name(pe_resource_t *rsc);

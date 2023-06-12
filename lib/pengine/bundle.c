@@ -20,8 +20,69 @@
 #include <crm/common/xml_internal.h>
 #include <pe_status_private.h>
 
-#define PE__VARIANT_BUNDLE 1
-#include "./variant.h"
+enum pe__bundle_mount_flags {
+    pe__bundle_mount_none       = 0x00,
+
+    // mount instance-specific subdirectory rather than source directly
+    pe__bundle_mount_subdir     = 0x01
+};
+
+typedef struct {
+    char *source;
+    char *target;
+    char *options;
+    uint32_t flags; // bitmask of pe__bundle_mount_flags
+} pe__bundle_mount_t;
+
+typedef struct {
+    char *source;
+    char *target;
+} pe__bundle_port_t;
+
+enum pe__container_agent {
+    PE__CONTAINER_AGENT_UNKNOWN,
+    PE__CONTAINER_AGENT_DOCKER,
+    PE__CONTAINER_AGENT_RKT,
+    PE__CONTAINER_AGENT_PODMAN,
+};
+
+#define PE__CONTAINER_AGENT_UNKNOWN_S "unknown"
+#define PE__CONTAINER_AGENT_DOCKER_S  "docker"
+#define PE__CONTAINER_AGENT_RKT_S     "rkt"
+#define PE__CONTAINER_AGENT_PODMAN_S  "podman"
+
+typedef struct pe__bundle_variant_data_s {
+        int promoted_max;
+        int nreplicas;
+        int nreplicas_per_host;
+        char *prefix;
+        char *image;
+        const char *ip_last;
+        char *host_network;
+        char *host_netmask;
+        char *control_port;
+        char *container_network;
+        char *ip_range_start;
+        gboolean add_host;
+        gchar *container_host_options;
+        char *container_command;
+        char *launcher_options;
+        const char *attribute_target;
+
+        pe_resource_t *child;
+
+        GList *replicas;    // pe__bundle_replica_t *
+        GList *ports;       // pe__bundle_port_t *
+        GList *mounts;      // pe__bundle_mount_t *
+
+        enum pe__container_agent agent_type;
+} pe__bundle_variant_data_t;
+
+#define get_bundle_variant_data(data, rsc)                      \
+    CRM_ASSERT(rsc != NULL);                                    \
+    CRM_ASSERT(rsc->variant == pe_container);                   \
+    CRM_ASSERT(rsc->variant_opaque != NULL);                    \
+    data = (pe__bundle_variant_data_t *) rsc->variant_opaque;
 
 /*!
  * \internal
@@ -38,6 +99,125 @@ pe__bundle_max(const pe_resource_t *rsc)
 
     get_bundle_variant_data(bundle_data, pe__const_top_resource(rsc, true));
     return bundle_data->nreplicas;
+}
+
+/*!
+ * \internal
+ * \brief Get the resource inside a bundle
+ *
+ * \param[in] bundle  Bundle to check
+ *
+ * \return Resource inside \p bundle if any, otherwise NULL
+ */
+pe_resource_t *
+pe__bundled_resource(const pe_resource_t *rsc)
+{
+    const pe__bundle_variant_data_t *bundle_data = NULL;
+
+    get_bundle_variant_data(bundle_data, pe__const_top_resource(rsc, true));
+    return bundle_data->child;
+}
+
+/*!
+ * \internal
+ * \brief Get containerized resource corresponding to a given bundle container
+ *
+ * \param[in] instance  Collective instance that might be a bundle container
+ *
+ * \return Bundled resource instance inside \p instance if it is a bundle
+ *         container instance, otherwise NULL
+ */
+const pe_resource_t *
+pe__get_rsc_in_container(const pe_resource_t *instance)
+{
+    const pe__bundle_variant_data_t *data = NULL;
+    const pe_resource_t *top = pe__const_top_resource(instance, true);
+
+    if ((top == NULL) || (top->variant != pe_container)) {
+        return NULL;
+    }
+    get_bundle_variant_data(data, top);
+
+    for (const GList *iter = data->replicas; iter != NULL; iter = iter->next) {
+        const pe__bundle_replica_t *replica = iter->data;
+
+        if (instance == replica->container) {
+            return replica->child;
+        }
+    }
+    return NULL;
+}
+
+/*!
+ * \internal
+ * \brief Check whether a given node is created by a bundle
+ *
+ * \param[in] bundle  Bundle resource to check
+ * \param[in] node    Node to check
+ *
+ * \return true if \p node is an instance of \p bundle, otherwise false
+ */
+bool
+pe__node_is_bundle_instance(const pe_resource_t *bundle, const pe_node_t *node)
+{
+    pe__bundle_variant_data_t *bundle_data = NULL;
+
+    get_bundle_variant_data(bundle_data, bundle);
+    for (GList *iter = bundle_data->replicas; iter != NULL; iter = iter->next) {
+        pe__bundle_replica_t *replica = iter->data;
+
+        if (pe__same_node(node, replica->node)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/*!
+ * \internal
+ * \brief Get the container of a bundle's first replica
+ *
+ * \param[in] bundle  Bundle resource to get container for
+ *
+ * \return Container resource from first replica of \p bundle if any,
+ *         otherwise NULL
+ */
+pe_resource_t *
+pe__first_container(const pe_resource_t *bundle)
+{
+    const pe__bundle_variant_data_t *bundle_data = NULL;
+    const pe__bundle_replica_t *replica = NULL;
+
+    get_bundle_variant_data(bundle_data, bundle);
+    if (bundle_data->replicas == NULL) {
+        return NULL;
+    }
+    replica = bundle_data->replicas->data;
+    return replica->container;
+}
+
+/*!
+ * \internal
+ * \brief Iterate over bundle replicas
+ *
+ * \param[in,out] bundle     Bundle to iterate over
+ * \param[in]     fn         Function to call for each replica (its return value
+ *                           indicates whether to continue iterating)
+ * \param[in,out] user_data  Pointer to pass to \p fn
+ */
+void
+pe__foreach_bundle_replica(pe_resource_t *bundle,
+                           bool (*fn)(pe__bundle_replica_t *, void *),
+                           void *user_data)
+{
+    const pe__bundle_variant_data_t *bundle_data = NULL;
+
+    get_bundle_variant_data(bundle_data, bundle);
+    for (GList *iter = bundle_data->replicas; iter != NULL; iter = iter->next) {
+        if (!fn((pe__bundle_replica_t *) iter->data, user_data)) {
+            break;
+        }
+    }
 }
 
 static char *

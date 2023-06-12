@@ -1022,13 +1022,13 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
  * we are choosing promotable clone instance roles).
  *
  * \param[in,out] dependent      Dependent resource in colocation
- * \param[in]     primary        Primary resource in colocation
+ * \param[in,out] primary        Primary resource in colocation
  * \param[in]     colocation     Colocation constraint to apply
- * \param[in] for_dependent  true if called on behalf of dependent
+ * \param[in]     for_dependent  true if called on behalf of dependent
  */
 void
 pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
-                                  const pe_resource_t *primary,
+                                  pe_resource_t *primary,
                                   const pcmk__colocation_t *colocation,
                                   bool for_dependent)
 {

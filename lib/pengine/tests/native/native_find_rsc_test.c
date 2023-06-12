@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,10 +14,6 @@
 #include <crm/pengine/internal.h>
 #include <crm/pengine/status.h>
 #include <crm/pengine/pe_types.h>
-
-/* Needed to access replicas inside a bundle. */
-#define PE__VARIANT_BUNDLE 1
-#include <lib/pengine/variant.h>
 
 xmlNode *input = NULL;
 pe_working_set_t *data_set = NULL;
@@ -428,23 +424,13 @@ bundle_rsc(void **state) {
     assert_ptr_equal(httpd_bundle, native_find_rsc(httpd_bundle, "httpd-bundle", cluster01, pe_find_current));
 }
 
-static void
-bundle_replica_rsc(void **state) {
-    pe__bundle_variant_data_t *bundle_data = NULL;
-    pe__bundle_replica_t *replica_0 = NULL;
-
-    pe_resource_t *ip_0 = NULL;
-    pe_resource_t *child_0 = NULL;
-    pe_resource_t *container_0 = NULL;
-    pe_resource_t *remote_0 = NULL;
-
-    get_bundle_variant_data(bundle_data, httpd_bundle);
-    replica_0 = (pe__bundle_replica_t *) bundle_data->replicas->data;
-
-    ip_0 = replica_0->ip;
-    child_0 = replica_0->child;
-    container_0 = replica_0->container;
-    remote_0 = replica_0->remote;
+static bool
+bundle_first_replica(pe__bundle_replica_t *replica, void *user_data)
+{
+    pe_resource_t *ip_0 = replica->ip;
+    pe_resource_t *child_0 = replica->child;
+    pe_resource_t *container_0 = replica->container;
+    pe_resource_t *remote_0 = replica->remote;
 
     assert_non_null(ip_0);
     assert_non_null(child_0);
@@ -509,6 +495,13 @@ bundle_replica_rsc(void **state) {
     assert_ptr_equal(child_0, native_find_rsc(httpd_bundle, "httpd:0", httpd_bundle_0, pe_find_current));
     assert_ptr_equal(container_0, native_find_rsc(httpd_bundle, "httpd-bundle-docker-0", cluster01, pe_find_current));
     assert_ptr_equal(remote_0, native_find_rsc(httpd_bundle, "httpd-bundle-0", cluster01, pe_find_current));
+    return false; // Do not iterate through any further replicas
+}
+
+static void
+bundle_replica_rsc(void **state)
+{
+    pe__foreach_bundle_replica(httpd_bundle, bundle_first_replica, NULL);
 }
 
 static void
