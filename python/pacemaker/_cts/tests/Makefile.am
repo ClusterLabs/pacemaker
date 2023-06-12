@@ -12,16 +12,23 @@ MAINTAINERCLEANFILES    = Makefile.in
 pkgpythondir = $(pythondir)/$(PACKAGE)/_cts/tests
 
 pkgpython_PYTHON = __init__.py \
+				   componentfail.py \
 				   ctstest.py \
 				   fliptest.py \
+				   maintenancemode.py \
+				   nearquorumpointtest.py \
 				   partialstart.py \
+				   reattach.py \
 				   remotedriver.py \
+				   resourcerecover.py \
 				   restarttest.py \
 				   restartonebyone.py \
+				   resynccib.py \
 				   simulstart.py \
 				   simulstop.py \
 				   simulstartlite.py \
 				   simulstoplite.py \
+				   splitbraintest.py \
 				   standbytest.py \
 				   startonebyone.py \
 				   starttest.py \

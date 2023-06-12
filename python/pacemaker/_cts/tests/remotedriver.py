@@ -242,10 +242,12 @@ class RemoteDriver(CTSTest):
             return
 
         # Convert node to baremetal now that it has shutdown the cluster stack
-        pats = [ self.templates["Pat:RscOpOK"] % ("start", self._remote_node),
-                 self.templates["Pat:DC_IDLE"] ]
+        pats = [ ]
         watch = self.create_watch(pats, 120)
         watch.set_watch()
+
+        pats.extend([ self.templates["Pat:RscOpOK"] % ("start", self._remote_node),
+                      self.templates["Pat:DC_IDLE"] ])
 
         self._add_connection_rsc(node)
 
@@ -337,13 +339,15 @@ class RemoteDriver(CTSTest):
         self.debug("Waiting for the remote node to come back up")
         self._cm.ns.wait_for_node(node, 120)
 
-        pats = [ self.templates["Pat:RscOpOK"] % ("start", self._remote_node) ]
+        pats = [ ]
+
+        watch = self.create_watch(pats, 240)
+        watch.set_watch()
+
+        pats.append(self.templates["Pat:RscOpOK"] % ("start", self._remote_node))
 
         if self._remote_rsc_added:
             pats.append(self.templates["Pat:RscRemoteOpOK"] % ("start", self._remote_rsc, self._remote_node))
-
-        watch = self.create_watch([], 240)
-        watch.set_watch()
 
         # start the remote node again watch it integrate back into cluster.
         self._start_pcmk_remote(node)
@@ -366,11 +370,12 @@ class RemoteDriver(CTSTest):
             return
 
         # verify we can put a resource on the remote node
-        pats = [ self.templates["Pat:RscRemoteOpOK"] % ("start", self._remote_rsc, self._remote_node),
-                 self.templates["Pat:DC_IDLE"] ]
-
+        pats = [ ]
         watch = self.create_watch(pats, 120)
         watch.set_watch()
+
+        pats.extend([ self.templates["Pat:RscRemoteOpOK"] % ("start", self._remote_rsc, self._remote_node),
+                      self.templates["Pat:DC_IDLE"] ])
 
         # Add a resource that must live on remote-node
         self._add_primitive_rsc(node)
