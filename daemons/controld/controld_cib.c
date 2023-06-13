@@ -896,10 +896,12 @@ should_preserve_lock(lrmd_event_data_t *op)
  * \internal
  * \brief Request a CIB update
  *
- * \param[in]     section   Section of CIB to update
- * \param[in,out] data      New XML of CIB section to update
- * \param[in]     options   CIB call options
- * \param[in]     callback  If not NULL, set this as the operation callback
+ * \param[in]     section    Section of CIB to update
+ * \param[in]     data       New XML of CIB section to update
+ * \param[in]     options    CIB call options
+ * \param[in]     callback   If not \c NULL, set this as the operation callback
+ * \param[in,out] user_data  Data to pass to \p callback (must be freeable using
+ *                           \c free())
  *
  * \return Standard Pacemaker return code
  *
@@ -908,11 +910,12 @@ should_preserve_lock(lrmd_event_data_t *op)
  */
 int
 controld_update_cib(const char *section, xmlNode *data, int options,
-                    void (*callback)(xmlNode *, int, int, xmlNode *, void *))
+                    void (*callback)(xmlNode *, int, int, xmlNode *, void *),
+                    void *user_data)
 {
     int cib_rc = -ENOTCONN;
 
-    CRM_ASSERT(data != NULL);
+    CRM_ASSERT((data != NULL) && ((callback != NULL) || (user_data == NULL)));
 
     if (controld_globals.cib_conn != NULL) {
         cib_rc = cib_internal_op(controld_globals.cib_conn,
@@ -938,7 +941,7 @@ controld_update_cib(const char *section, xmlNode *data, int options,
              */
             pending_rsc_update = cib_rc;
         }
-        fsa_register_cib_callback(cib_rc, NULL, callback);
+        fsa_register_cib_callback(cib_rc, user_data, callback);
     }
 
     return (cib_rc >= 0)? pcmk_rc_ok : pcmk_legacy2rc(cib_rc);
@@ -1032,7 +1035,8 @@ controld_update_resource_history(const char *node_name,
      * fenced for running a resource it isn't.
      */
     crm_log_xml_trace(update, __func__);
-    controld_update_cib(XML_CIB_TAG_STATUS, update, call_opt, cib_rsc_callback);
+    controld_update_cib(XML_CIB_TAG_STATUS, update, call_opt, cib_rsc_callback,
+                        NULL);
     free_xml(update);
 }
 

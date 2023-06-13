@@ -50,7 +50,8 @@ void controld_destroy_cib_replacements_table(void);
 
 int controld_update_cib(const char *section, xmlNode *data, int options,
                         void (*callback)(xmlNode *, int, int, xmlNode *,
-                                         void *));
+                                         void *),
+                        void *user_data);
 unsigned int cib_op_timeout(void);
 
 // Subsections of node_state

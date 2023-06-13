@@ -764,19 +764,19 @@ do_dc_join_ack(long long action,
             crm_debug("Updating local node history for join-%d "
                       "from query result", join_id);
             controld_update_cib(XML_CIB_TAG_STATUS, now_dc_lrmd_state, cib_opts,
-                                join_update_complete_callback);
+                                join_update_complete_callback, NULL);
             free_xml(now_dc_lrmd_state);
         } else {
             crm_warn("Updating local node history from join-%d confirmation "
                      "because query failed", join_id);
             controld_update_cib(XML_CIB_TAG_STATUS, join_ack->xml, cib_opts,
-                                join_update_complete_callback);
+                                join_update_complete_callback, NULL);
         }
     } else {
         crm_debug("Updating node history for %s from join-%d confirmation",
                   join_from, join_id);
         controld_update_cib(XML_CIB_TAG_STATUS, join_ack->xml, cib_opts,
-                            join_update_complete_callback);
+                            join_update_complete_callback, NULL);
     }
 }
 

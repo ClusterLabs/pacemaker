@@ -367,7 +367,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
     crm_trace("Populating <nodes> section from %s", from_hashtable ? "hashtable" : "cluster");
 
     if ((controld_update_cib(XML_CIB_TAG_NODES, node_list, cib_scope_local,
-                             node_list_update_callback) == pcmk_rc_ok)
+                             node_list_update_callback, NULL) == pcmk_rc_ok)
          && (crm_peer_cache != NULL) && AM_I_DC) {
         /*
          * There is no need to update the local CIB with our values if
@@ -392,7 +392,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
         }
 
         controld_update_cib(XML_CIB_TAG_STATUS, node_list, cib_scope_local,
-                            crmd_node_update_complete);
+                            crmd_node_update_complete, NULL);
     }
     free_xml(node_list);
 }
@@ -437,7 +437,7 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
 
         crm_debug("Updating quorum status to %s", pcmk__btoa(quorum));
         controld_update_cib(XML_TAG_CIB, update, cib_scope_local,
-                            cib_quorum_update_complete);
+                            cib_quorum_update_complete, NULL);
         free_xml(update);
 
         /* Quorum changes usually cause a new transition via other activity:
