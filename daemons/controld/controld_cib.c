@@ -411,16 +411,17 @@ void
 controld_delete_node_state(const char *uname, enum controld_section_e section,
                            int options)
 {
-    cib_t *cib_conn = controld_globals.cib_conn;
-
+    cib_t *cib = controld_globals.cib_conn;
     char *xpath = NULL;
     char *desc = NULL;
+    int cib_rc = pcmk_ok;
 
     // Shutdown locks that started before this time are expired
     long long expire = (long long) time(NULL)
                        - controld_globals.shutdown_lock_limit;
 
-    CRM_CHECK(uname != NULL, return);
+    CRM_ASSERT((uname != NULL) && (cib != NULL));
+
     switch (section) {
         case controld_section_lrm:
             xpath = crm_strdup_printf(XPATH_NODE_LRM, uname);
@@ -446,22 +447,19 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
             desc = crm_strdup_printf("all state (other than shutdown locks) "
                                      "for node %s", uname);
             break;
+        default:
+            // Should be impossible
+            return;
     }
 
-    if (cib_conn == NULL) {
-        crm_warn("Unable to delete %s: no CIB connection", desc);
-        free(desc);
-    } else {
-        int call_id;
+    cib__set_call_options(options, "node state deletion",
+                          cib_xpath|cib_multiple);
+    cib_rc = cib->cmds->remove(cib, xpath, NULL, options);
+    fsa_register_cib_callback(cib_rc, desc, cib_delete_callback);
+    crm_info("Deleting %s (via CIB call %d) " CRM_XS " xpath=%s",
+             desc, cib_rc, xpath);
 
-        cib__set_call_options(options, "node state deletion",
-                              cib_xpath|cib_multiple);
-        call_id = cib_conn->cmds->remove(cib_conn, xpath, NULL, options);
-        crm_info("Deleting %s (via CIB call %d) " CRM_XS " xpath=%s",
-                 desc, call_id, xpath);
-        fsa_register_cib_callback(call_id, desc, cib_delete_callback);
-        // CIB library handles freeing desc
-    }
+    // CIB library handles freeing desc
     free(xpath);
 }
 
