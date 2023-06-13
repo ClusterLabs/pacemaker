@@ -62,6 +62,9 @@ enum controld_section_e {
     controld_section_all_unlocked
 };
 
+void controld_node_state_deletion_strings(const char *uname,
+                                          enum controld_section_e section,
+                                          char **xpath, char **desc);
 void controld_delete_node_state(const char *uname,
                                 enum controld_section_e section, int options);
 int controld_delete_resource_history(const char *rsc_id, const char *node,

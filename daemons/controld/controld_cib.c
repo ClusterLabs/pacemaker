@@ -401,6 +401,60 @@ cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
 
 /*!
  * \internal
+ * \brief Get the XPath and description of a node state section to be deleted
+ *
+ * \param[in]  uname    Desired node
+ * \param[in]  section  Subsection of node_state to be deleted
+ * \param[out] xpath    Where to store XPath of \p section
+ * \param[out] desc     If not \c NULL, where to store description of \p section
+ */
+void
+controld_node_state_deletion_strings(const char *uname,
+                                     enum controld_section_e section,
+                                     char **xpath, char **desc)
+{
+    const char *desc_pre = NULL;
+
+    // Shutdown locks that started before this time are expired
+    long long expire = (long long) time(NULL)
+                       - controld_globals.shutdown_lock_limit;
+
+    switch (section) {
+        case controld_section_lrm:
+            *xpath = crm_strdup_printf(XPATH_NODE_LRM, uname);
+            desc_pre = "resource history";
+            break;
+        case controld_section_lrm_unlocked:
+            *xpath = crm_strdup_printf(XPATH_NODE_LRM_UNLOCKED,
+                                       uname, uname, expire);
+            desc_pre = "resource history (other than shutdown locks)";
+            break;
+        case controld_section_attrs:
+            *xpath = crm_strdup_printf(XPATH_NODE_ATTRS, uname);
+            desc_pre = "transient attributes";
+            break;
+        case controld_section_all:
+            *xpath = crm_strdup_printf(XPATH_NODE_ALL, uname);
+            desc_pre = "all state";
+            break;
+        case controld_section_all_unlocked:
+            *xpath = crm_strdup_printf(XPATH_NODE_ALL_UNLOCKED,
+                                       uname, uname, expire, uname);
+            desc_pre = "all state (other than shutdown locks)";
+            break;
+        default:
+            // We called this function incorrectly
+            CRM_ASSERT(false);
+            break;
+    }
+
+    if (desc != NULL) {
+        *desc = crm_strdup_printf("%s for node %s", desc_pre, uname);
+    }
+}
+
+/*!
+ * \internal
  * \brief Delete subsection of a node's CIB node_state
  *
  * \param[in] uname    Desired node
@@ -416,41 +470,9 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
     char *desc = NULL;
     int cib_rc = pcmk_ok;
 
-    // Shutdown locks that started before this time are expired
-    long long expire = (long long) time(NULL)
-                       - controld_globals.shutdown_lock_limit;
-
     CRM_ASSERT((uname != NULL) && (cib != NULL));
 
-    switch (section) {
-        case controld_section_lrm:
-            xpath = crm_strdup_printf(XPATH_NODE_LRM, uname);
-            desc = crm_strdup_printf("resource history for node %s", uname);
-            break;
-        case controld_section_lrm_unlocked:
-            xpath = crm_strdup_printf(XPATH_NODE_LRM_UNLOCKED,
-                                      uname, uname, expire);
-            desc = crm_strdup_printf("resource history (other than shutdown "
-                                     "locks) for node %s", uname);
-            break;
-        case controld_section_attrs:
-            xpath = crm_strdup_printf(XPATH_NODE_ATTRS, uname);
-            desc = crm_strdup_printf("transient attributes for node %s", uname);
-            break;
-        case controld_section_all:
-            xpath = crm_strdup_printf(XPATH_NODE_ALL, uname);
-            desc = crm_strdup_printf("all state for node %s", uname);
-            break;
-        case controld_section_all_unlocked:
-            xpath = crm_strdup_printf(XPATH_NODE_ALL_UNLOCKED,
-                                      uname, uname, expire, uname);
-            desc = crm_strdup_printf("all state (other than shutdown locks) "
-                                     "for node %s", uname);
-            break;
-        default:
-            // Should be impossible
-            return;
-    }
+    controld_node_state_deletion_strings(uname, section, &xpath, &desc);
 
     cib__set_call_options(options, "node state deletion",
                           cib_xpath|cib_multiple);
