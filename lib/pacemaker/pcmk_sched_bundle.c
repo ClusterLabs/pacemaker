@@ -563,11 +563,11 @@ pcmk__bundle_with_colocations(const pe_resource_t *rsc,
  *
  * \return Flags appropriate to \p action on \p node
  */
-enum pe_action_flags
+uint32_t
 pcmk__bundle_action_flags(pe_action_t *action, const pe_node_t *node)
 {
     GList *containers = NULL;
-    enum pe_action_flags flags = 0;
+    uint32_t flags = 0;
     pe_resource_t *bundled_resource = NULL;
 
     CRM_ASSERT((action != NULL) && (action->rsc != NULL)

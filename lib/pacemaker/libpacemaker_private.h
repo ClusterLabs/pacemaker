@@ -221,8 +221,7 @@ struct resource_alloc_functions_s {
      *       of node. For collective resources, the flags can differ due to
      *       multiple instances possibly being involved.
      */
-    enum pe_action_flags (*action_flags)(pe_action_t *action,
-                                         const pe_node_t *node);
+    uint32_t (*action_flags)(pe_action_t *action, const pe_node_t *node);
 
     /*!
      * \internal
@@ -672,8 +671,8 @@ G_GNUC_INTERNAL
 void pcmk__primitive_internal_constraints(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
-enum pe_action_flags pcmk__primitive_action_flags(pe_action_t *action,
-                                                  const pe_node_t *node);
+uint32_t pcmk__primitive_action_flags(pe_action_t *action,
+                                      const pe_node_t *node);
 
 G_GNUC_INTERNAL
 void pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
@@ -743,8 +742,7 @@ G_GNUC_INTERNAL
 void pcmk__group_apply_location(pe_resource_t *rsc, pe__location_t *location);
 
 G_GNUC_INTERNAL
-enum pe_action_flags pcmk__group_action_flags(pe_action_t *action,
-                                              const pe_node_t *node);
+uint32_t pcmk__group_action_flags(pe_action_t *action, const pe_node_t *node);
 
 G_GNUC_INTERNAL
 uint32_t pcmk__group_update_ordered_actions(pe_action_t *first,
@@ -800,8 +798,7 @@ G_GNUC_INTERNAL
 void pcmk__clone_apply_location(pe_resource_t *rsc, pe__location_t *constraint);
 
 G_GNUC_INTERNAL
-enum pe_action_flags pcmk__clone_action_flags(pe_action_t *action,
-                                              const pe_node_t *node);
+uint32_t pcmk__clone_action_flags(pe_action_t *action, const pe_node_t *node);
 
 G_GNUC_INTERNAL
 void pcmk__clone_add_actions_to_graph(pe_resource_t *rsc);
@@ -850,8 +847,7 @@ void pcmk__bundle_apply_location(pe_resource_t *rsc,
                                  pe__location_t *constraint);
 
 G_GNUC_INTERNAL
-enum pe_action_flags pcmk__bundle_action_flags(pe_action_t *action,
-                                               const pe_node_t *node);
+uint32_t pcmk__bundle_action_flags(pe_action_t *action, const pe_node_t *node);
 
 G_GNUC_INTERNAL
 void pcmk__output_bundle_actions(pe_resource_t *rsc);
@@ -897,9 +893,9 @@ uint32_t pcmk__instance_update_ordered_actions(pe_action_t *first,
                                                pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-enum pe_action_flags pcmk__collective_action_flags(pe_action_t *action,
-                                                   const GList *instances,
-                                                   const pe_node_t *node);
+uint32_t pcmk__collective_action_flags(pe_action_t *action,
+                                       const GList *instances,
+                                       const pe_node_t *node);
 
 G_GNUC_INTERNAL
 void pcmk__add_collective_constraints(GList **list,

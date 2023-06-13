@@ -1534,22 +1534,21 @@ pcmk__instance_update_ordered_actions(pe_action_t *first, pe_action_t *then,
  *
  * \return Flags appropriate to \p action on \p node
  */
-enum pe_action_flags
+uint32_t
 pcmk__collective_action_flags(pe_action_t *action, const GList *instances,
                               const pe_node_t *node)
 {
     bool any_runnable = false;
-    enum pe_action_flags flags;
     const char *action_name = orig_action_name(action);
 
     // Set original assumptions (optional and runnable may be cleared below)
-    flags = pe_action_optional|pe_action_runnable|pe_action_pseudo;
+    uint32_t flags = pe_action_optional|pe_action_runnable|pe_action_pseudo;
 
     for (const GList *iter = instances; iter != NULL; iter = iter->next) {
         const pe_resource_t *instance = iter->data;
         const pe_node_t *instance_node = NULL;
         pe_action_t *instance_action = NULL;
-        enum pe_action_flags instance_flags;
+        uint32_t instance_flags;
 
         // Node is relevant only to primitive instances
         if (instance->variant == pe_native) {

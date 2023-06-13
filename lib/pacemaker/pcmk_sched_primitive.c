@@ -1109,11 +1109,11 @@ pcmk__primitive_with_colocations(const pe_resource_t *rsc,
  *
  * \return Flags appropriate to \p action on \p node
  */
-enum pe_action_flags
+uint32_t
 pcmk__primitive_action_flags(pe_action_t *action, const pe_node_t *node)
 {
     CRM_ASSERT(action != NULL);
-    return action->flags;
+    return (uint32_t) action->flags;
 }
 
 /*!
