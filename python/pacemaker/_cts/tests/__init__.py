@@ -16,6 +16,7 @@ from pacemaker._cts.tests.restartonebyone import RestartOnebyOne
 from pacemaker._cts.tests.resourcerecover import ResourceRecover
 from pacemaker._cts.tests.restarttest import RestartTest
 from pacemaker._cts.tests.resynccib import ResyncCIB
+from pacemaker._cts.tests.remotebasic import RemoteBasic
 from pacemaker._cts.tests.remotedriver import RemoteDriver
 from pacemaker._cts.tests.simulstart import SimulStart
 from pacemaker._cts.tests.simulstop import SimulStop

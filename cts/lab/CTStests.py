@@ -45,6 +45,7 @@ AllTestClasses.append(SplitBrainTest)
 AllTestClasses.append(Reattach)
 AllTestClasses.append(ResyncCIB)
 AllTestClasses.append(NearQuorumPointTest)
+AllTestClasses.append(RemoteBasic)
 
 
 def TestList(cm, audits):
@@ -56,29 +57,6 @@ def TestList(cm, audits):
             result.append(bound_test)
     return result
 
-
-class RemoteBasic(RemoteDriver):
-    def __init__(self, cm):
-        RemoteDriver.__init__(self, cm)
-        self.name = "RemoteBasic"
-
-    def __call__(self, node):
-        '''Perform the 'RemoteBaremetal' test. '''
-
-        if not self.start_new_test(node):
-            return self.failure(self.fail_string)
-
-        self.test_attributes(node)
-        self.cleanup_metal(node)
-
-        self.debug("Waiting for the cluster to recover")
-        self._cm.cluster_stable()
-        if self.failed:
-            return self.failure(self.fail_string)
-
-        return self.success()
-
-AllTestClasses.append(RemoteBasic)
 
 class RemoteStonithd(RemoteDriver):
     def __init__(self, cm):
