@@ -32,3 +32,55 @@ from pacemaker._cts.tests.startonebyone import StartOnebyOne
 from pacemaker._cts.tests.stonithdtest import StonithdTest
 from pacemaker._cts.tests.stoponebyone import StopOnebyOne
 from pacemaker._cts.tests.stoptest import StopTest
+
+def test_list(cm, audits):
+    """ Return a list of test class objects that are enabled and whose
+        is_applicable methods return True.  These are the tests that
+        should be run.
+    """
+
+    # cm is a reasonable name here.
+    # pylint: disable=invalid-name
+
+    # A list of all enabled test classes, in the order that they should
+    # be run (if we're doing --once).  There are various other ways of
+    # specifying which tests should be run, in which case the order here
+    # will not matter.
+    #
+    # Note that just because a test is listed here doesn't mean it will
+    # definitely be run - is_applicable is still taken into consideration.
+    # Also note that there are other tests that are excluded from this
+    # list for various reasons.
+    enabled_test_classes = [ FlipTest,
+                             RestartTest,
+                             StonithdTest,
+                             StartOnebyOne,
+                             SimulStart,
+                             SimulStop,
+                             StopOnebyOne,
+                             RestartOnebyOne,
+                             PartialStart,
+                             StandbyTest,
+                             MaintenanceMode,
+                             ResourceRecover,
+                             ComponentFail,
+                             SplitBrainTest,
+                             Reattach,
+                             ResyncCIB,
+                             NearQuorumPointTest,
+                             RemoteBasic,
+                             RemoteStonithd,
+                             RemoteMigrate,
+                             RemoteRscFailure,
+                           ]
+
+    result = []
+
+    for testclass in enabled_test_classes:
+        bound_test = testclass(cm)
+
+        if bound_test.is_applicable():
+            bound_test.audits = audits
+            result.append(bound_test)
+
+    return result
