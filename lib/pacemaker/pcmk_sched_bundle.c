@@ -486,13 +486,13 @@ pcmk__bundle_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
      * of its instances. Look for a compatible instance of this bundle.
      */
     if (colocation->dependent->variant > pe_group) {
-        pe_resource_t *primary_replica = NULL;
+        pe_resource_t *primary_container = NULL;
 
-        primary_replica = compatible_container(dependent, primary);
-        if (primary_replica != NULL) { // Success, we found one
+        primary_container = compatible_container(dependent, primary);
+        if (primary_container != NULL) { // Success, we found one
             pe_rsc_debug(primary, "Pairing %s with %s",
-                         dependent->id, primary_replica->id);
-            dependent->cmds->apply_coloc_score(dependent, primary_replica,
+                         dependent->id, primary_container->id);
+            dependent->cmds->apply_coloc_score(dependent, primary_container,
                                                colocation, true);
 
         } else if (colocation->score >= INFINITY) { // Failure, and it's fatal
