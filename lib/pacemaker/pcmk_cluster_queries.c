@@ -9,7 +9,6 @@
 
 #include <crm_internal.h>
 
-#include <glib.h>               // GMainLoop, etc.
 #include <libxml/tree.h>        // xmlNode
 
 #include <pacemaker.h>
