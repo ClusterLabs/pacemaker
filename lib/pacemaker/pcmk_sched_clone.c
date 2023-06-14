@@ -363,7 +363,7 @@ pcmk__clone_with_colocations(const pe_resource_t *rsc,
  *
  * \return Flags appropriate to \p action on \p node
  */
-enum pe_action_flags
+uint32_t
 pcmk__clone_action_flags(pe_action_t *action, const pe_node_t *node)
 {
     CRM_ASSERT((action != NULL) && pe_rsc_is_clone(action->rsc));

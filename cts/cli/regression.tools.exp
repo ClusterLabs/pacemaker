@@ -5529,34 +5529,34 @@ export overcloud-rabbit-2=overcloud-rabbit-2
     <node_weight function="pcmk__primitive_assign" node="httpd-bundle-0" score="-INFINITY" id="inactive-dummy-2"/>
     <node_weight function="pcmk__primitive_assign" node="httpd-bundle-1" score="-INFINITY" id="inactive-dummy-2"/>
     <node_weight function="pcmk__primitive_assign" node="httpd-bundle-2" score="-INFINITY" id="inactive-dummy-2"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle-docker-0"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle-docker-0"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle-ip-192.168.122.131"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle-ip-192.168.122.131"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle-0"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle-0"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle-docker-1"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle-docker-1"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle-ip-192.168.122.132"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle-ip-192.168.122.132"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle-1"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle-1"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle-docker-2"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle-docker-2"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle-ip-192.168.122.133"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle-ip-192.168.122.133"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle-2"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle-2"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle-clone"/>
-    <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle-clone"/>
-    <node_weight function="pcmk__bundle_allocate" node="httpd-bundle-0" score="-INFINITY" id="httpd-bundle-clone"/>
-    <node_weight function="pcmk__bundle_allocate" node="httpd-bundle-1" score="-INFINITY" id="httpd-bundle-clone"/>
-    <node_weight function="pcmk__bundle_allocate" node="httpd-bundle-2" score="-INFINITY" id="httpd-bundle-clone"/>
-    <node_weight function="pcmk__bundle_allocate" node="httpd-bundle-0" score="501" id="httpd:0"/>
-    <node_weight function="pcmk__bundle_allocate" node="httpd-bundle-1" score="501" id="httpd:1"/>
-    <node_weight function="pcmk__bundle_allocate" node="httpd-bundle-2" score="500" id="httpd:2"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-docker-0"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-docker-0"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-ip-192.168.122.131"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-ip-192.168.122.131"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-0"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-0"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-docker-1"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-docker-1"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-ip-192.168.122.132"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-ip-192.168.122.132"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-1"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-1"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-docker-2"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-docker-2"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-ip-192.168.122.133"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-ip-192.168.122.133"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-2"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-2"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-clone"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-clone"/>
+    <node_weight function="pcmk__bundle_assign" node="httpd-bundle-0" score="-INFINITY" id="httpd-bundle-clone"/>
+    <node_weight function="pcmk__bundle_assign" node="httpd-bundle-1" score="-INFINITY" id="httpd-bundle-clone"/>
+    <node_weight function="pcmk__bundle_assign" node="httpd-bundle-2" score="-INFINITY" id="httpd-bundle-clone"/>
+    <node_weight function="pcmk__bundle_assign" node="httpd-bundle-0" score="501" id="httpd:0"/>
+    <node_weight function="pcmk__bundle_assign" node="httpd-bundle-1" score="501" id="httpd:1"/>
+    <node_weight function="pcmk__bundle_assign" node="httpd-bundle-2" score="500" id="httpd:2"/>
     <node_weight function="pcmk__primitive_assign" node="cluster01" score="0" id="httpd-bundle-docker-0"/>
     <node_weight function="pcmk__primitive_assign" node="cluster02" score="0" id="httpd-bundle-docker-0"/>
     <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="httpd-bundle-docker-1"/>

@@ -27,11 +27,11 @@
  *
  * \return Action flags that should be used for orderings
  */
-static enum pe_action_flags
+static uint32_t
 action_flags_for_ordering(pe_action_t *action, const pe_node_t *node)
 {
     bool runnable = false;
-    enum pe_action_flags flags;
+    uint32_t flags;
 
     // For non-resource actions, return the action flags
     if (action->rsc == NULL) {
@@ -216,8 +216,7 @@ action_for_ordering(pe_action_t *action)
  */
 static uint32_t
 update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
-                                 enum pe_action_flags first_flags,
-                                 enum pe_action_flags then_flags,
+                                 uint32_t first_flags, uint32_t then_flags,
                                  pe_action_wrapper_t *order,
                                  pe_working_set_t *data_set)
 {
@@ -605,7 +604,7 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
              * could mean it is a non-resource action, a primitive resource
              * action, or already expanded.
              */
-            enum pe_action_flags first_flags, then_flags;
+            uint32_t first_flags, then_flags;
 
             first_flags = action_flags_for_ordering(first, then_node);
             then_flags = action_flags_for_ordering(then, first_node);

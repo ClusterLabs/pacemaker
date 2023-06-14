@@ -453,13 +453,11 @@ pcmk__group_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
  *
  * \return Flags appropriate to \p action on \p node
  */
-enum pe_action_flags
+uint32_t
 pcmk__group_action_flags(pe_action_t *action, const pe_node_t *node)
 {
     // Default flags for a group action
-    enum pe_action_flags flags = pe_action_optional
-                                 |pe_action_runnable
-                                 |pe_action_pseudo;
+    uint32_t flags = pe_action_optional|pe_action_runnable|pe_action_pseudo;
 
     CRM_ASSERT(action != NULL);
 
@@ -474,9 +472,8 @@ pcmk__group_action_flags(pe_action_t *action, const pe_node_t *node)
                                                        task_s, node);
 
         if (member_action != NULL) {
-            enum pe_action_flags member_flags;
-
-            member_flags = member->cmds->action_flags(member_action, node);
+            uint32_t member_flags = member->cmds->action_flags(member_action,
+                                                               node);
 
             // Group action is mandatory if any member action is
             if (pcmk_is_set(flags, pe_action_optional)

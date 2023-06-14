@@ -88,30 +88,34 @@ assign_replica(pe__bundle_replica_t *replica, void *user_data)
  * \return Node that \p rsc is assigned to, if assigned entirely to one node
  */
 pe_node_t *
-pcmk__bundle_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
+pcmk__bundle_assign(pe_resource_t *rsc, const pe_node_t *prefer)
 {
     GList *containers = NULL;
     pe_resource_t *bundled_resource = NULL;
 
-    CRM_CHECK(rsc != NULL, return NULL);
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container));
 
+    pe_rsc_trace(rsc, "Assigning bundle %s", rsc->id);
     pe__set_resource_flags(rsc, pe_rsc_allocating);
-    containers = pe__bundle_containers(rsc);
 
     pe__show_node_weights(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
                           rsc, __func__, rsc->allowed_nodes, rsc->cluster);
 
-    containers = g_list_sort(containers, pcmk__cmp_instance);
+    // Assign all containers first, so we know what nodes the bundle will be on
+    containers = g_list_sort(pe__bundle_containers(rsc), pcmk__cmp_instance);
     pcmk__assign_instances(rsc, containers, pe__bundle_max(rsc),
                            rsc->fns->max_per_node(rsc));
     g_list_free(containers);
 
+    // Then assign remaining replica resources
     pe__foreach_bundle_replica(rsc, assign_replica, (void *) prefer);
 
+    // Finally, assign the bundled resources to each bundle node
     bundled_resource = pe__bundled_resource(rsc);
     if (bundled_resource != NULL) {
         pe_node_t *node = NULL;
         GHashTableIter iter;
+
         g_hash_table_iter_init(&iter, bundled_resource->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & node)) {
             if (pe__node_is_bundle_instance(rsc, node)) {
@@ -120,8 +124,6 @@ pcmk__bundle_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
                 node->weight = -INFINITY;
             }
         }
-        pe_rsc_trace(rsc, "Allocating bundle %s child %s",
-                     rsc->id, bundled_resource->id);
         bundled_resource->cmds->assign(bundled_resource, prefer);
     }
 
@@ -153,6 +155,12 @@ create_replica_actions(pe__bundle_replica_t *replica, void *user_data)
     return true;
 }
 
+/*!
+ * \internal
+ * \brief Create all actions needed for a given bundle resource
+ *
+ * \param[in,out] rsc  Bundle resource to create actions for
+ */
 void
 pcmk__bundle_create_actions(pe_resource_t *rsc)
 {
@@ -160,31 +168,28 @@ pcmk__bundle_create_actions(pe_resource_t *rsc)
     GList *containers = NULL;
     pe_resource_t *bundled_resource = NULL;
 
-    CRM_CHECK(rsc != NULL, return);
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container));
 
     pe__foreach_bundle_replica(rsc, create_replica_actions, NULL);
 
     containers = pe__bundle_containers(rsc);
     pcmk__create_instance_actions(rsc, containers);
+    g_list_free(containers);
 
     bundled_resource = pe__bundled_resource(rsc);
     if (bundled_resource != NULL) {
         bundled_resource->cmds->create_actions(bundled_resource);
 
         if (pcmk_is_set(bundled_resource->flags, pe_rsc_promotable)) {
-            /* promote */
             pe__new_rsc_pseudo_action(rsc, RSC_PROMOTE, true, true);
             action = pe__new_rsc_pseudo_action(rsc, RSC_PROMOTED, true, true);
             action->priority = INFINITY;
 
-            /* demote */
             pe__new_rsc_pseudo_action(rsc, RSC_DEMOTE, true, true);
             action = pe__new_rsc_pseudo_action(rsc, RSC_DEMOTED, true, true);
             action->priority = INFINITY;
         }
     }
-
-    g_list_free(containers);
 }
 
 /*!
@@ -255,65 +260,69 @@ replica_internal_constraints(pe__bundle_replica_t *replica, void *user_data)
     return true;
 }
 
+/*!
+ * \internal
+ * \brief Create implicit constraints needed for a bundle resource
+ *
+ * \param[in,out] rsc  Bundle resource to create implicit constraints for
+ */
 void
 pcmk__bundle_internal_constraints(pe_resource_t *rsc)
 {
     pe_resource_t *bundled_resource = NULL;
 
-    CRM_CHECK(rsc != NULL, return);
-
-    bundled_resource = pe__bundled_resource(rsc);
-    if (bundled_resource != NULL) {
-        pcmk__order_resource_actions(rsc, RSC_START, bundled_resource,
-                                     RSC_START, pe_order_implies_first_printed);
-        pcmk__order_resource_actions(rsc, RSC_STOP, bundled_resource, RSC_STOP,
-                                     pe_order_implies_first_printed);
-
-        if (bundled_resource->children != NULL) {
-            pcmk__order_resource_actions(bundled_resource, RSC_STARTED, rsc,
-                                         RSC_STARTED,
-                                         pe_order_implies_then_printed);
-            pcmk__order_resource_actions(bundled_resource, RSC_STOPPED, rsc,
-                                         RSC_STOPPED,
-                                         pe_order_implies_then_printed);
-        } else {
-            pcmk__order_resource_actions(bundled_resource, RSC_START, rsc,
-                                         RSC_STARTED,
-                                         pe_order_implies_then_printed);
-            pcmk__order_resource_actions(bundled_resource, RSC_STOP, rsc,
-                                         RSC_STOPPED,
-                                         pe_order_implies_then_printed);
-        }
-    }
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container));
 
     pe__foreach_bundle_replica(rsc, replica_internal_constraints, rsc);
 
-    if (bundled_resource != NULL) {
-        bundled_resource->cmds->internal_constraints(bundled_resource);
-        if (pcmk_is_set(bundled_resource->flags, pe_rsc_promotable)) {
-            pcmk__promotable_restart_ordering(rsc);
-
-            /* child demoted before global demoted */
-            pcmk__order_resource_actions(bundled_resource, RSC_DEMOTED, rsc,
-                                         RSC_DEMOTED,
-                                         pe_order_implies_then_printed);
-
-            /* global demote before child demote */
-            pcmk__order_resource_actions(rsc, RSC_DEMOTE, bundled_resource,
-                                         RSC_DEMOTE,
-                                         pe_order_implies_first_printed);
-
-            /* child promoted before global promoted */
-            pcmk__order_resource_actions(bundled_resource, RSC_PROMOTED, rsc,
-                                         RSC_PROMOTED,
-                                         pe_order_implies_then_printed);
-
-            /* global promote before child promote */
-            pcmk__order_resource_actions(rsc, RSC_PROMOTE, bundled_resource,
-                                         RSC_PROMOTE,
-                                         pe_order_implies_first_printed);
-        }
+    bundled_resource = pe__bundled_resource(rsc);
+    if (bundled_resource == NULL) {
+        return;
     }
+
+    // Start bundle -> start bundled clone
+    pcmk__order_resource_actions(rsc, RSC_START, bundled_resource,
+                                 RSC_START, pe_order_implies_first_printed);
+
+    // Bundled clone is started -> bundle is started
+    pcmk__order_resource_actions(bundled_resource, RSC_STARTED,
+                                 rsc, RSC_STARTED,
+                                 pe_order_implies_then_printed);
+
+    // Stop bundle -> stop bundled clone
+    pcmk__order_resource_actions(rsc, RSC_STOP, bundled_resource, RSC_STOP,
+                                 pe_order_implies_first_printed);
+
+    // Bundled clone is stopped -> bundle is stopped
+    pcmk__order_resource_actions(bundled_resource, RSC_STOPPED,
+                                 rsc, RSC_STOPPED,
+                                 pe_order_implies_then_printed);
+
+    bundled_resource->cmds->internal_constraints(bundled_resource);
+
+    if (!pcmk_is_set(bundled_resource->flags, pe_rsc_promotable)) {
+        return;
+    }
+    pcmk__promotable_restart_ordering(rsc);
+
+    // Demote bundle -> demote bundled clone
+    pcmk__order_resource_actions(rsc, RSC_DEMOTE, bundled_resource, RSC_DEMOTE,
+                                 pe_order_implies_first_printed);
+
+    // Bundled clone is demoted -> bundle is demoted
+    pcmk__order_resource_actions(bundled_resource, RSC_DEMOTED,
+                                 rsc, RSC_DEMOTED,
+                                 pe_order_implies_then_printed);
+
+    // Promote bundle -> promote bundled clone
+    pcmk__order_resource_actions(rsc, RSC_PROMOTE,
+                                 bundled_resource, RSC_PROMOTE,
+                                 pe_order_implies_first_printed);
+
+    // Bundled clone is promoted -> bundle is promoted
+    pcmk__order_resource_actions(bundled_resource, RSC_PROMOTED,
+                                 rsc, RSC_PROMOTED,
+                                 pe_order_implies_then_printed);
 }
 
 struct match_data {
@@ -344,56 +353,44 @@ match_replica_container(pe__bundle_replica_t *replica, void *user_data)
     return true; // No match, keep searching
 }
 
+/*!
+ * \internal
+ * \brief Find a bundle container compatible with a dependent resource
+ *
+ * \param[in] dependent  Dependent resource in colocation with bundle
+ * \param[in] bundle     Bundle that \p dependent is colocated with
+ *
+ * \return A container from \p bundle assigned to the same node as \p dependent
+ *         if assigned, otherwise assigned to any of dependent's allowed nodes,
+ *         otherwise NULL.
+ */
 static pe_resource_t *
-compatible_replica_for_node(const pe_resource_t *rsc_lh,
-                            const pe_node_t *candidate, pe_resource_t *rsc)
-{
-    struct match_data match_data = { candidate, NULL };
-
-    CRM_CHECK(candidate != NULL, return NULL);
-
-    crm_trace("Looking for compatible child from %s for %s on %s",
-              rsc_lh->id, rsc->id, pe__node_name(candidate));
-    pe__foreach_bundle_replica(rsc, match_replica_container, &match_data);
-    if (match_data.container == NULL) {
-        pe_rsc_trace(rsc, "Can't pair %s with %s", rsc_lh->id, rsc->id);
-    } else {
-        pe_rsc_trace(rsc, "Pairing %s with %s on %s",
-                     rsc_lh->id, match_data.container->id,
-                     pe__node_name(candidate));
-    }
-    return match_data.container;
-}
-
-static pe_resource_t *
-compatible_replica(const pe_resource_t *rsc_lh, pe_resource_t *rsc,
-                   pe_working_set_t *data_set)
+compatible_container(const pe_resource_t *dependent, pe_resource_t *bundle)
 {
     GList *scratch = NULL;
-    pe_resource_t *pair = NULL;
-    pe_node_t *active_node_lh = NULL;
+    struct match_data match_data = { NULL, NULL };
 
-    active_node_lh = rsc_lh->fns->location(rsc_lh, NULL, 0);
-    if (active_node_lh) {
-        return compatible_replica_for_node(rsc_lh, active_node_lh, rsc);
+    // If dependent is assigned, only check there
+    match_data.node = dependent->fns->location(dependent, NULL, 0);
+    if (match_data.node != NULL) {
+        pe__foreach_bundle_replica(bundle, match_replica_container,
+                                   &match_data);
+        return match_data.container;
     }
 
-    scratch = g_hash_table_get_values(rsc_lh->allowed_nodes);
+    // Otherwise, check for any of the dependent's allowed nodes
+    scratch = g_hash_table_get_values(dependent->allowed_nodes);
     scratch = pcmk__sort_nodes(scratch, NULL);
-
-    for (GList *gIter = scratch; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *node = (pe_node_t *) gIter->data;
-
-        pair = compatible_replica_for_node(rsc_lh, node, rsc);
-        if (pair) {
-            goto done;
+    for (const GList *iter = scratch; iter != NULL; iter = iter->next) {
+        match_data.node = (const pe_node_t *) iter->data;
+        pe__foreach_bundle_replica(bundle, match_replica_container,
+                                   &match_data);
+        if (match_data.container != NULL) {
+            break;
         }
     }
-
-    pe_rsc_debug(rsc, "Can't pair %s with %s", rsc_lh->id, (rsc? rsc->id : "none"));
-  done:
     g_list_free(scratch);
-    return pair;
+    return match_data.container;
 }
 
 struct coloc_data {
@@ -467,44 +464,50 @@ pcmk__bundle_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
     struct coloc_data coloc_data = { colocation, dependent, NULL };
 
     /* This should never be called for the bundle itself as a dependent.
-     * Instead, we add its colocation constraints to its replicas and call the
-     * apply_coloc_score() for the replicas as dependents.
+     * Instead, we add its colocation constraints to its containers and call the
+     * apply_coloc_score() method for the containers as dependents.
      */
-    CRM_ASSERT(!for_dependent);
-
-    CRM_CHECK((colocation != NULL) && (dependent != NULL) && (primary != NULL),
-              return);
-    CRM_ASSERT(dependent->variant == pe_native);
+    CRM_ASSERT((primary != NULL) && (primary->variant == pe_container)
+               && (dependent != NULL) && (dependent->variant == pe_native)
+               && (colocation != NULL) && !for_dependent);
 
     if (pcmk_is_set(primary->flags, pe_rsc_provisional)) {
-        pe_rsc_trace(primary, "%s is still provisional", primary->id);
+        pe_rsc_trace(primary,
+                     "Skipping applying colocation %s "
+                     "because %s is still provisional",
+                     colocation->id, primary->id);
         return;
+    }
+    pe_rsc_trace(primary, "Applying colocation %s (%s with %s at %s)",
+                 colocation->id, dependent->id, primary->id,
+                 pcmk_readable_score(colocation->score));
 
-    } else if (colocation->dependent->variant > pe_group) {
-        pe_resource_t *primary_replica = compatible_replica(dependent, primary,
-                                                            dependent->cluster);
+    /* If the constraint dependent is a clone or bundle, "dependent" here is one
+     * of its instances. Look for a compatible instance of this bundle.
+     */
+    if (colocation->dependent->variant > pe_group) {
+        pe_resource_t *primary_container = NULL;
 
-        if (primary_replica) {
+        primary_container = compatible_container(dependent, primary);
+        if (primary_container != NULL) { // Success, we found one
             pe_rsc_debug(primary, "Pairing %s with %s",
-                         dependent->id, primary_replica->id);
-            dependent->cmds->apply_coloc_score(dependent, primary_replica,
+                         dependent->id, primary_container->id);
+            dependent->cmds->apply_coloc_score(dependent, primary_container,
                                                colocation, true);
 
-        } else if (colocation->score >= INFINITY) {
-            crm_notice("Cannot pair %s with instance of %s",
+        } else if (colocation->score >= INFINITY) { // Failure, and it's fatal
+            crm_notice("%s cannot run because there is no compatible "
+                       "instance of %s to colocate with",
                        dependent->id, primary->id);
             pcmk__assign_resource(dependent, NULL, true);
 
-        } else {
-            pe_rsc_debug(primary, "Cannot pair %s with instance of %s",
+        } else { // Failure, but we can ignore it
+            pe_rsc_debug(primary,
+                         "%s cannot be colocated with any instance of %s",
                          dependent->id, primary->id);
         }
-
         return;
     }
-
-    pe_rsc_trace(primary, "Processing constraint %s: %s -> %s %d",
-                 colocation->id, dependent->id, primary->id, colocation->score);
 
     pe__foreach_bundle_replica(primary, replica_apply_coloc_score, &coloc_data);
 
@@ -551,18 +554,29 @@ pcmk__bundle_with_colocations(const pe_resource_t *rsc,
     }
 }
 
-enum pe_action_flags
+/*!
+ * \internal
+ * \brief Return action flags for a given bundle resource action
+ *
+ * \param[in,out] action  Bundle resource action to get flags for
+ * \param[in]     node    If not NULL, limit effects to this node
+ *
+ * \return Flags appropriate to \p action on \p node
+ */
+uint32_t
 pcmk__bundle_action_flags(pe_action_t *action, const pe_node_t *node)
 {
     GList *containers = NULL;
-    enum pe_action_flags flags = 0;
-    pe_resource_t *bundled_resource = pe__bundled_resource(action->rsc);
+    uint32_t flags = 0;
+    pe_resource_t *bundled_resource = NULL;
 
+    CRM_ASSERT((action != NULL) && (action->rsc != NULL)
+               && (action->rsc->variant == pe_container));
+
+    bundled_resource = pe__bundled_resource(action->rsc);
     if (bundled_resource != NULL) {
-        enum action_tasks task = get_complex_task(bundled_resource,
-                                                  action->task);
-
-        switch(task) {
+        // Clone actions are done on the bundled clone resource, not container
+        switch (get_complex_task(bundled_resource, action->task)) {
             case no_action:
             case action_notify:
             case action_notified:
@@ -607,22 +621,31 @@ apply_location_to_replica(pe__bundle_replica_t *replica, void *user_data)
     return true;
 }
 
+/*!
+ * \internal
+ * \brief Apply a location constraint to a bundle resource's allowed node scores
+ *
+ * \param[in,out] rsc       Bundle resource to apply constraint to
+ * \param[in,out] location  Location constraint to apply
+ */
 void
-pcmk__bundle_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
+pcmk__bundle_apply_location(pe_resource_t *rsc, pe__location_t *location)
 {
     pe_resource_t *bundled_resource = NULL;
 
-    pcmk__apply_location(rsc, constraint);
-    pe__foreach_bundle_replica(rsc, apply_location_to_replica, constraint);
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container)
+               && (location != NULL));
+
+    pcmk__apply_location(rsc, location);
+    pe__foreach_bundle_replica(rsc, apply_location_to_replica, location);
 
     bundled_resource = pe__bundled_resource(rsc);
     if ((bundled_resource != NULL)
-        && ((constraint->role_filter == RSC_ROLE_UNPROMOTED)
-            || (constraint->role_filter == RSC_ROLE_PROMOTED))) {
-        bundled_resource->cmds->apply_location(bundled_resource,
-                                               constraint);
-        bundled_resource->rsc_location = g_list_prepend(bundled_resource->rsc_location,
-                                                        constraint);
+        && ((location->role_filter == RSC_ROLE_UNPROMOTED)
+            || (location->role_filter == RSC_ROLE_PROMOTED))) {
+        bundled_resource->cmds->apply_location(bundled_resource, location);
+        bundled_resource->rsc_location = g_list_prepend(
+            bundled_resource->rsc_location, location);
     }
 }
 
@@ -699,16 +722,16 @@ add_replica_actions_to_graph(pe__bundle_replica_t *replica, void *user_data)
 
 /*!
  * \internal
- * \brief Add a resource's actions to the transition graph
+ * \brief Add a bundle resource's actions to the transition graph
  *
- * \param[in,out] rsc  Resource whose actions should be added
+ * \param[in,out] rsc  Bundle resource whose actions should be added
  */
 void
-pcmk__bundle_expand(pe_resource_t *rsc)
+pcmk__bundle_add_actions_to_graph(pe_resource_t *rsc)
 {
     pe_resource_t *bundled_resource = NULL;
 
-    CRM_CHECK(rsc != NULL, return);
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container));
 
     bundled_resource = pe__bundled_resource(rsc);
     if (bundled_resource != NULL) {
@@ -825,9 +848,9 @@ create_replica_probes(pe__bundle_replica_t *replica, void *user_data)
 /*!
  * \internal
  *
- * \brief Schedule any probes needed for a resource on a node
+ * \brief Schedule any probes needed for a bundle resource on a node
  *
- * \param[in,out] rsc   Resource to create probe for
+ * \param[in,out] rsc   Bundle resource to create probes for
  * \param[in,out] node  Node to create probe on
  *
  * \return true if any probe was created, otherwise false
@@ -837,7 +860,7 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node)
 {
     struct probe_data probe_data = { rsc, node, false };
 
-    CRM_CHECK(rsc != NULL, return false);
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container));
     pe__foreach_bundle_replica(rsc, create_replica_probes, &probe_data);
     return probe_data.any_created;
 }
@@ -869,11 +892,16 @@ output_replica_actions(pe__bundle_replica_t *replica, void *user_data)
     return true;
 }
 
+/*!
+ * \internal
+ * \brief Output a summary of scheduled actions for a bundle resource
+ *
+ * \param[in,out] rsc  Bundle resource to output actions for
+ */
 void
 pcmk__output_bundle_actions(pe_resource_t *rsc)
 {
-    CRM_CHECK(rsc != NULL, return);
-
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container));
     pe__foreach_bundle_replica(rsc, output_replica_actions, NULL);
 }
 
@@ -884,6 +912,8 @@ pcmk__bundle_add_utilization(const pe_resource_t *rsc,
                              GHashTable *utilization)
 {
     pe_resource_t *container = NULL;
+
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container));
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
         return;
@@ -904,5 +934,6 @@ pcmk__bundle_add_utilization(const pe_resource_t *rsc,
 void
 pcmk__bundle_shutdown_lock(pe_resource_t *rsc)
 {
-    return; // Bundles currently don't support shutdown locks
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container));
+    // Bundles currently don't support shutdown locks
 }
