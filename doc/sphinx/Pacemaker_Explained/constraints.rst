@@ -434,6 +434,20 @@ Because the above example lets ``symmetrical`` default to TRUE, **Webserver**
 must be stopped before **Database** can be stopped, and **Webserver** should be
 stopped before **IP** if they both need to be stopped.
 
+Symmetric and asymmetric ordering
+_________________________________
+
+A mandatory symmetric ordering of "start A then start B" implies not only that
+the start actions must be ordered, but that B is not allowed to be active
+unless A is active. For example, if the ordering is added to the configuration
+when A is stopped (due to target-role, failure, etc.) and B is already active,
+then B will be stopped.
+
+By contrast, asymmetric ordering of "start A then start B" means the stops can
+occur in either order, which implies that B *can* remain active in the same
+situation.
+
+
 .. index::
    single: colocation
    single: constraint; colocation
