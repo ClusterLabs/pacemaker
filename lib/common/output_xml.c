@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2022 the Pacemaker project contributors
+ * Copyright 2019-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -47,8 +47,8 @@ typedef struct subst_s {
 
 static subst_t substitutions[] = {
     { "Active Resources",                               "resources" },
-    { "Allocation Scores",                              "allocations" },
-    { "Allocation Scores and Utilization Information",  "allocations_utilizations" },
+    { "Assignment Scores",                              "allocations" },
+    { "Assignment Scores and Utilization Information",  "allocations_utilizations" },
     { "Cluster Summary",                                "summary" },
     { "Current cluster status",                         "cluster_status" },
     { "Executing Cluster Transition",                   "transition" },

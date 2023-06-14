@@ -882,12 +882,12 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
                                pe_flag_show_scores|pe_flag_show_utilization)) {
             PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
             out->begin_list(out, NULL, NULL,
-                            "Allocation Scores and Utilization Information");
+                            "Assignment Scores and Utilization Information");
             printed = pcmk_rc_ok;
 
         } else if (pcmk_is_set(data_set->flags, pe_flag_show_scores)) {
             PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
-            out->begin_list(out, NULL, NULL, "Allocation Scores");
+            out->begin_list(out, NULL, NULL, "Assignment Scores");
             printed = pcmk_rc_ok;
 
         } else if (pcmk_is_set(data_set->flags, pe_flag_show_utilization)) {
