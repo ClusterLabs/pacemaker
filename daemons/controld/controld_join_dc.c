@@ -743,6 +743,10 @@ join_node_state_delete_callback(xmlNode *msg, int call_id, int rc,
 {
     xmlNode *join_msg = user_data;
     char *join_from = NULL;
+
+    xmlNode *state = join_msg;
+    xmlNode *execd_state = NULL;
+
     const int call_options = cib_scope_local|cib_can_create|cib_transaction;
 
     if (rc != pcmk_ok) {
@@ -765,30 +769,29 @@ join_node_state_delete_callback(xmlNode *msg, int call_id, int rc,
     if (pcmk__str_eq(join_from, controld_globals.our_nodename,
                      pcmk__str_casei)) {
 
-        xmlNode *state = controld_query_executor_state();
+        // Use the latest possible state if processing our own join ack
+        execd_state = controld_query_executor_state();
 
-        if (state != NULL) {
+        if (execd_state != NULL) {
             crm_debug("Updating local node history for join-%d from query "
                       "result",
                       current_join_id);
-            controld_update_cib(XML_CIB_TAG_STATUS, state, call_options,
-                                join_node_state_update_callback, join_from);
-            free_xml(state);
+            state = execd_state;
 
         } else {
             crm_warn("Updating local node history from join-%d confirmation "
                      "because query failed",
                      current_join_id);
-            controld_update_cib(XML_CIB_TAG_STATUS, join_msg, call_options,
-                                join_node_state_update_callback, join_from);
         }
 
     } else {
         crm_debug("Updating node history for %s from join-%d confirmation",
                   join_from, current_join_id);
-        controld_update_cib(XML_CIB_TAG_STATUS, join_msg, call_options,
-                            join_node_state_update_callback, join_from);
     }
+
+    controld_update_cib(XML_CIB_TAG_STATUS, state, call_options,
+                        join_node_state_update_callback, join_from);
+    free_xml(execd_state);
 }
 
 static void
