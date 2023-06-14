@@ -279,6 +279,21 @@ pcmk__is_up_action(const char *action)
                             PCMK_ACTION_MIGRATE_FROM, NULL);
 }
 
+/*!
+ * \internal
+ * \brief Check whether an action lowers a resource's role
+ *
+ * \param[in] action  Action to check
+ *
+ * \return \c true if \p action is "stop", "demote", or "migrate_to"
+ */
+static inline bool
+pcmk__is_down_action(const char *action)
+{
+    return pcmk__str_any_of(action, PCMK_ACTION_STOP, PCMK_ACTION_DEMOTE,
+                            PCMK_ACTION_MIGRATE_TO, NULL);
+}
+
 #ifdef __cplusplus
 }
 #endif
