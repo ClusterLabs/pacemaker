@@ -16,8 +16,8 @@
 
 #include "libpacemaker_private.h"
 
-// Resource allocation methods that vary by resource variant
-static resource_alloc_functions_t allocation_methods[] = {
+// Resource assignment methods by resource variant
+static resource_alloc_functions_t assignment_methods[] = {
     {
         pcmk__primitive_assign,
         pcmk__primitive_create_actions,
@@ -193,28 +193,28 @@ pcmk__rscs_matching_id(const char *id, const pe_working_set_t *data_set)
 
 /*!
  * \internal
- * \brief Set the variant-appropriate allocation methods for a resource
+ * \brief Set the variant-appropriate assignment methods for a resource
  *
- * \param[in,out] rsc      Resource to set allocation methods for
+ * \param[in,out] rsc      Resource to set assignment methods for
  * \param[in]     ignored  Here so function can be used with g_list_foreach()
  */
 static void
-set_allocation_methods_for_rsc(pe_resource_t *rsc, void *ignored)
+set_assignment_methods_for_rsc(pe_resource_t *rsc, void *ignored)
 {
-    rsc->cmds = &allocation_methods[rsc->variant];
-    g_list_foreach(rsc->children, (GFunc) set_allocation_methods_for_rsc, NULL);
+    rsc->cmds = &assignment_methods[rsc->variant];
+    g_list_foreach(rsc->children, (GFunc) set_assignment_methods_for_rsc, NULL);
 }
 
 /*!
  * \internal
- * \brief Set the variant-appropriate allocation methods for all resources
+ * \brief Set the variant-appropriate assignment methods for all resources
  *
  * \param[in,out] data_set  Cluster working set
  */
 void
-pcmk__set_allocation_methods(pe_working_set_t *data_set)
+pcmk__set_assignment_methods(pe_working_set_t *data_set)
 {
-    g_list_foreach(data_set->resources, (GFunc) set_allocation_methods_for_rsc,
+    g_list_foreach(data_set->resources, (GFunc) set_assignment_methods_for_rsc,
                    NULL);
 }
 
@@ -364,10 +364,10 @@ pcmk__finalize_assignment(pe_resource_t *rsc, pe_node_t *chosen, bool force)
                 && !pe__is_guest_node(chosen))) {
 
             crm_debug("All nodes for resource %s are unavailable, unclean or "
-                      "shutting down (%s can%s run resources, with weight %d)",
+                      "shutting down (%s can%s run resources, with score %s)",
                       rsc->id, pe__node_name(chosen),
                       (pcmk__node_available(chosen, true, false)? "" : "not"),
-                      chosen->weight);
+                      pcmk_readable_score(chosen->weight));
             pe__set_next_role(rsc, RSC_ROLE_STOPPED, "node availability");
             chosen = NULL;
         }
@@ -377,13 +377,14 @@ pcmk__finalize_assignment(pe_resource_t *rsc, pe_node_t *chosen, bool force)
     pe__clear_resource_flags(rsc, pe_rsc_provisional);
 
     if (chosen == NULL) {
-        crm_debug("Could not allocate a node for %s", rsc->id);
-        pe__set_next_role(rsc, RSC_ROLE_STOPPED, "unable to allocate");
+        crm_debug("Could not assign %s to a node", rsc->id);
+        pe__set_next_role(rsc, RSC_ROLE_STOPPED, "unable to assign");
 
         for (GList *iter = rsc->actions; iter != NULL; iter = iter->next) {
             pe_action_t *op = (pe_action_t *) iter->data;
 
-            crm_debug("Updating %s for allocation failure", op->uuid);
+            pe_rsc_debug(rsc, "Updating %s for %s assignment failure",
+                         op->uuid, rsc->id);
 
             if (pcmk__str_eq(op->task, RSC_STOP, pcmk__str_casei)) {
                 pe__clear_action_flags(op, pe_action_optional);
@@ -573,34 +574,34 @@ convert_const_pointer(const void *ptr)
 
 /*!
  * \internal
- * \brief Get a node's weight
+ * \brief Get a node's score
  *
- * \param[in] node     Unweighted node to check (for node ID)
- * \param[in] nodes    List of weighted nodes to look for \p node in
+ * \param[in] node     Node with ID to check
+ * \param[in] nodes    List of nodes to look for \p node score in
  *
- * \return Node's weight, or -INFINITY if not found
+ * \return Node's score, or -INFINITY if not found
  */
 static int
-get_node_weight(const pe_node_t *node, GHashTable *nodes)
+get_node_score(const pe_node_t *node, GHashTable *nodes)
 {
-    pe_node_t *weighted_node = NULL;
+    pe_node_t *found_node = NULL;
 
     if ((node != NULL) && (nodes != NULL)) {
-        weighted_node = g_hash_table_lookup(nodes, node->details->id);
+        found_node = g_hash_table_lookup(nodes, node->details->id);
     }
-    return (weighted_node == NULL)? -INFINITY : weighted_node->weight;
+    return (found_node == NULL)? -INFINITY : found_node->weight;
 }
 
 /*!
  * \internal
- * \brief Compare two resources according to which should be allocated first
+ * \brief Compare two resources according to which should be assigned first
  *
  * \param[in] a     First resource to compare
  * \param[in] b     Second resource to compare
  * \param[in] data  Sorted list of all nodes in cluster
  *
- * \return -1 if \p a should be allocated before \b, 0 if they are equal,
- *         or +1 if \p a should be allocated after \b
+ * \return -1 if \p a should be assigned before \b, 0 if they are equal,
+ *         or +1 if \p a should be assigned after \b
  */
 static gint
 cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
@@ -610,23 +611,23 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
     const GList *nodes = (const GList *) data;
 
     int rc = 0;
-    int r1_weight = -INFINITY;
-    int r2_weight = -INFINITY;
+    int r1_score = -INFINITY;
+    int r2_score = -INFINITY;
     pe_node_t *r1_node = NULL;
     pe_node_t *r2_node = NULL;
     GHashTable *r1_nodes = NULL;
     GHashTable *r2_nodes = NULL;
     const char *reason = NULL;
 
-    // Resources with highest priority should be allocated first
+    // Resources with highest priority should be assigned first
     reason = "priority";
-    r1_weight = resource1->priority;
-    r2_weight = resource2->priority;
-    if (r1_weight > r2_weight) {
+    r1_score = resource1->priority;
+    r2_score = resource2->priority;
+    if (r1_score > r2_score) {
         rc = -1;
         goto done;
     }
-    if (r1_weight < r2_weight) {
+    if (r1_score < r2_score) {
         rc = 1;
         goto done;
     }
@@ -637,17 +638,17 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
         goto done;
     }
 
-    // Calculate and log node weights
+    // Calculate and log node scores
     resource1->cmds->add_colocated_node_scores(convert_const_pointer(resource1),
                                                resource1->id, &r1_nodes, NULL,
                                                1, pcmk__coloc_select_this_with);
     resource2->cmds->add_colocated_node_scores(convert_const_pointer(resource2),
                                                resource2->id, &r2_nodes, NULL,
                                                1, pcmk__coloc_select_this_with);
-    pe__show_node_weights(true, NULL, resource1->id, r1_nodes,
-                          resource1->cluster);
-    pe__show_node_weights(true, NULL, resource2->id, r2_nodes,
-                          resource2->cluster);
+    pe__show_node_scores(true, NULL, resource1->id, r1_nodes,
+                         resource1->cluster);
+    pe__show_node_scores(true, NULL, resource2->id, r2_nodes,
+                         resource2->cluster);
 
     // The resource with highest score on its current node goes first
     reason = "current location";
@@ -657,29 +658,29 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
     if (resource2->running_on != NULL) {
         r2_node = pe__current_node(resource2);
     }
-    r1_weight = get_node_weight(r1_node, r1_nodes);
-    r2_weight = get_node_weight(r2_node, r2_nodes);
-    if (r1_weight > r2_weight) {
+    r1_score = get_node_score(r1_node, r1_nodes);
+    r2_score = get_node_score(r2_node, r2_nodes);
+    if (r1_score > r2_score) {
         rc = -1;
         goto done;
     }
-    if (r1_weight < r2_weight) {
+    if (r1_score < r2_score) {
         rc = 1;
         goto done;
     }
 
-    // Otherwise a higher weight on any node will do
+    // Otherwise a higher score on any node will do
     reason = "score";
     for (const GList *iter = nodes; iter != NULL; iter = iter->next) {
         const pe_node_t *node = (const pe_node_t *) iter->data;
 
-        r1_weight = get_node_weight(node, r1_nodes);
-        r2_weight = get_node_weight(node, r2_nodes);
-        if (r1_weight > r2_weight) {
+        r1_score = get_node_score(node, r1_nodes);
+        r2_score = get_node_score(node, r2_nodes);
+        if (r1_score > r2_score) {
             rc = -1;
             goto done;
         }
-        if (r1_weight < r2_weight) {
+        if (r1_score < r2_score) {
             rc = 1;
             goto done;
         }
@@ -687,11 +688,11 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
 
 done:
     crm_trace("%s (%d)%s%s %c %s (%d)%s%s: %s",
-              resource1->id, r1_weight,
+              resource1->id, r1_score,
               ((r1_node == NULL)? "" : " on "),
               ((r1_node == NULL)? "" : r1_node->details->id),
               ((rc < 0)? '>' : ((rc > 0)? '<' : '=')),
-              resource2->id, r2_weight,
+              resource2->id, r2_score,
               ((r2_node == NULL)? "" : " on "),
               ((r2_node == NULL)? "" : r2_node->details->id),
               reason);
@@ -706,7 +707,7 @@ done:
 
 /*!
  * \internal
- * \brief Sort resources in the order they should be allocated to nodes
+ * \brief Sort resources in the order they should be assigned to nodes
  *
  * \param[in,out] data_set  Cluster working set
  */

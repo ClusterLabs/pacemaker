@@ -301,7 +301,7 @@ directly. This allows them to run using a ``CIB_file`` without the cluster
 needing to be active.
 
 The main entry point for the scheduler code is
-``lib/pacemaker/pcmk_sched_allocate.c:pcmk__schedule_actions()``. It sets
+``lib/pacemaker/pcmk_scheduler.c:pcmk__schedule_actions()``. It sets
 defaults and calls a series of functions for the scheduling. Some key steps:
 
 * ``unpack_cib()`` parses most of the CIB XML into data structures, and
@@ -315,7 +315,7 @@ defaults and calls a series of functions for the scheduling. Some key steps:
   the CIB status section. This is used to decide whether certain
   actions need to be done, such as deleting orphan resources, forcing a restart
   when a resource definition changes, etc.
-* ``allocate_resources()`` assigns resources to nodes.
+* ``assign_resources()`` assigns resources to nodes.
 * ``schedule_resource_actions()`` schedules resource-specific actions (which
   might or might not end up in the final graph).
 * ``pcmk__apply_orderings()`` processes ordering constraints in order to modify
@@ -374,7 +374,7 @@ The resource object has members for two sets of methods,
 The object functions have basic capabilities such as unpacking the resource
 XML, and determining the current or planned location of the resource.
 
-The allocation functions have more obscure capabilities needed for scheduling,
+The assignment functions have more obscure capabilities needed for scheduling,
 such as processing location and ordering constraints. For example,
 ``pcmk__create_internal_constraints()`` simply calls the
 ``internal_constraints()`` method for each top-level resource in the cluster.
@@ -385,9 +385,9 @@ such as processing location and ordering constraints. For example,
 Nodes
 _____
 
-Allocation of resources to nodes is done by choosing the node with the highest
+Assignment of resources to nodes is done by choosing the node with the highest
 score for a given resource. The scheduler does a bunch of processing to
-generate the scores, then the actual allocation is straightforward.
+generate the scores, then the actual assignment is straightforward.
 
 Node lists are frequently used. For example, ``pe_working_set_t`` has a
 ``nodes`` member which is a list of all nodes in the cluster, and
@@ -396,7 +396,7 @@ which the resource is (or might be) active. These are lists of ``pe_node_t``
 objects.
 
 The ``pe_node_t`` object contains a ``struct pe_node_shared_s *details`` member
-with all node information that is independent of resource allocation (the node
+with all node information that is independent of resource assignment (the node
 name, etc.).
 
 The working set's ``nodes`` member contains the original of this information.
@@ -443,7 +443,7 @@ Colocation constraints come into play in these parts of the scheduler code:
 * When choosing roles for promotable clone instances, so colocations involving
   a specific role can affect which instances are promoted
 
-The resource allocation functions have several methods related to colocations:
+The resource assignment functions have several methods related to colocations:
 
 * ``apply_coloc_score():`` This applies a colocation's score to either the
   dependent's allowed node scores (if called while resources are being

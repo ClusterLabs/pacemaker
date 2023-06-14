@@ -560,7 +560,7 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
         // Disable constraint if it only applies when on same node, but isn't
         if (pcmk_is_set(other->type, pe_order_same_node)
             && (first_node != NULL) && (then_node != NULL)
-            && (first_node->details != then_node->details)) {
+            && !pe__same_node(first_node, then_node)) {
 
             pe_rsc_trace(then->rsc,
                          "Disabled ordering %s on %s then %s on %s: not same node",
@@ -1290,8 +1290,7 @@ pcmk__action_locks_rsc_to_node(const pe_action_t *action)
 {
     // Only resource actions taking place on resource's lock node are locked
     if ((action == NULL) || (action->rsc == NULL)
-        || (action->rsc->lock_node == NULL) || (action->node == NULL)
-        || (action->node->details != action->rsc->lock_node->details)) {
+        || !pe__same_node(action->node, action->rsc->lock_node)) {
         return false;
     }
 
@@ -1811,7 +1810,7 @@ process_rsc_history(const xmlNode *rsc_entry, pe_resource_t *rsc,
              */
 
             if (pe__bundle_needs_remote_name(rsc)) {
-                /* We haven't allocated resources to nodes yet, so if the
+                /* We haven't assigned resources to nodes yet, so if the
                  * REMOTE_CONTAINER_HACK is used, we may calculate the digest
                  * based on the literal "#uname" value rather than the properly
                  * substituted value. That would mistakenly make the action

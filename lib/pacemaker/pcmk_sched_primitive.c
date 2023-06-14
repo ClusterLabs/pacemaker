@@ -118,11 +118,11 @@ static rsc_transition_fn rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
 
 /*!
  * \internal
- * \brief Get a list of a resource's allowed nodes sorted by node weight
+ * \brief Get a list of a resource's allowed nodes sorted by node score
  *
  * \param[in] rsc  Resource to check
  *
- * \return List of allowed nodes sorted by node weight
+ * \return List of allowed nodes sorted by node score
  */
 static GList *
 sorted_allowed_nodes(const pe_resource_t *rsc)
@@ -164,7 +164,7 @@ assign_best_node(pe_resource_t *rsc, const pe_node_t *prefer)
         return rsc->allocated_to != NULL;
     }
 
-    // Sort allowed nodes by weight
+    // Sort allowed nodes by score
     nodes = sorted_allowed_nodes(rsc);
     if (nodes != NULL) {
         best = (pe_node_t *) nodes->data; // First node has best score
@@ -178,11 +178,11 @@ assign_best_node(pe_resource_t *rsc, const pe_node_t *prefer)
             pe_rsc_trace(rsc, "Preferred node %s for %s was unknown",
                          pe__node_name(prefer), rsc->id);
 
-        /* Favor the preferred node as long as its weight is at least as good as
+        /* Favor the preferred node as long as its score is at least as good as
          * the best allowed node's.
          *
          * An alternative would be to favor the preferred node even if the best
-         * node is better, when the best node's weight is less than INFINITY.
+         * node is better, when the best node's score is less than INFINITY.
          */
         } else if (chosen->weight < best->weight) {
             pe_rsc_trace(rsc, "Preferred node %s for %s was unsuitable",
@@ -236,7 +236,7 @@ assign_best_node(pe_resource_t *rsc, const pe_node_t *prefer)
                     pe_node_t *allowed = (pe_node_t *) iter->data;
 
                     if (allowed->weight != chosen->weight) {
-                        // The nodes are sorted by weight, so no more are equal
+                        // The nodes are sorted by score, so no more are equal
                         break;
                     }
                     if (pe__same_node(allowed, running)) {
@@ -386,8 +386,8 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer)
     }
     pe__set_resource_flags(rsc, pe_rsc_allocating);
 
-    pe__show_node_weights(true, rsc, "Pre-assignment", rsc->allowed_nodes,
-                          rsc->cluster);
+    pe__show_node_scores(true, rsc, "Pre-assignment", rsc->allowed_nodes,
+                         rsc->cluster);
 
     this_with_colocations = pcmk__this_with_colocations(rsc);
     with_this_colocations = pcmk__with_this_colocations(rsc);
@@ -408,8 +408,8 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer)
         }
     }
 
-    pe__show_node_weights(true, rsc, "Mandatory-colocations",
-                          rsc->allowed_nodes, rsc->cluster);
+    pe__show_node_scores(true, rsc, "Mandatory-colocations",
+                         rsc->allowed_nodes, rsc->cluster);
 
     // Then apply optional colocations
     for (iter = this_with_colocations; iter != NULL; iter = iter->next) {
@@ -448,8 +448,8 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer)
         pe__set_next_role(rsc, rsc->role, "no-quorum-policy=freeze");
     }
 
-    pe__show_node_weights(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
-                          rsc, __func__, rsc->allowed_nodes, rsc->cluster);
+    pe__show_node_scores(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
+                         rsc, __func__, rsc->allowed_nodes, rsc->cluster);
 
     // Unmanage resource if fencing is enabled but no device is configured
     if (pcmk_is_set(rsc->cluster->flags, pe_flag_stonith_enabled)
@@ -668,7 +668,7 @@ pcmk__primitive_create_actions(pe_resource_t *rsc)
                    rsc);
 
     if ((current != NULL) && (rsc->allocated_to != NULL)
-        && (current->details != rsc->allocated_to->details)
+        && !pe__same_node(current, rsc->allocated_to)
         && (rsc->next_role >= RSC_ROLE_STARTED)) {
 
         pe_rsc_trace(rsc, "Moving %s from %s to %s",
@@ -1015,10 +1015,10 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
 
 /*!
  * \internal
- * \brief Apply a colocation's score to node weights or resource priority
+ * \brief Apply a colocation's score to node scores or resource priority
  *
  * Given a colocation constraint, apply its score to the dependent's
- * allowed node weights (if we are still placing resources) or priority (if
+ * allowed node scores (if we are still placing resources) or priority (if
  * we are choosing promotable clone instance roles).
  *
  * \param[in,out] dependent      Dependent resource in colocation
@@ -1055,7 +1055,7 @@ pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
             pcmk__apply_coloc_to_priority(dependent, primary, colocation);
             break;
         case pcmk__coloc_affects_location:
-            pcmk__apply_coloc_to_weights(dependent, primary, colocation);
+            pcmk__apply_coloc_to_scores(dependent, primary, colocation);
             break;
         default: // pcmk__coloc_affects_nothing
             return;

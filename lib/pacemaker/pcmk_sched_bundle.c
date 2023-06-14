@@ -98,8 +98,8 @@ pcmk__bundle_assign(pe_resource_t *rsc, const pe_node_t *prefer)
     pe_rsc_trace(rsc, "Assigning bundle %s", rsc->id);
     pe__set_resource_flags(rsc, pe_rsc_allocating);
 
-    pe__show_node_weights(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
-                          rsc, __func__, rsc->allowed_nodes, rsc->cluster);
+    pe__show_node_scores(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
+                         rsc, __func__, rsc->allowed_nodes, rsc->cluster);
 
     // Assign all containers first, so we know what nodes the bundle will be on
     containers = g_list_sort(pe__bundle_containers(rsc), pcmk__cmp_instance);
@@ -401,7 +401,7 @@ struct coloc_data {
 
 /*!
  * \internal
- * \brief Apply a colocation score to replica node weights or resource priority
+ * \brief Apply a colocation score to replica node scores or resource priority
  *
  * \param[in,out] replica    Replica to apply colocation score to
  * \param[in,out] user_data  struct coloc_data for colocation being applied
@@ -445,10 +445,10 @@ replica_apply_coloc_score(pe__bundle_replica_t *replica, void *user_data)
 
 /*!
  * \internal
- * \brief Apply a colocation's score to node weights or resource priority
+ * \brief Apply a colocation's score to node scores or resource priority
  *
  * Given a colocation constraint, apply its score to the dependent's
- * allowed node weights (if we are still placing resources) or priority (if
+ * allowed node scores (if we are still placing resources) or priority (if
  * we are choosing promotable clone instance roles).
  *
  * \param[in,out] dependent      Dependent resource in colocation

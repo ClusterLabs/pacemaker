@@ -8,16 +8,14 @@
  */
 
 #ifndef PCMK__PCMKI_PCMKI_SCHEDULER__H
-#  define PCMK__PCMKI_PCMKI_SCHEDULER__H
+#define PCMK__PCMKI_PCMKI_SCHEDULER__H
 
-#  include <glib.h>
-#  include <crm/crm.h>
-#  include <crm/common/iso8601.h>
-#  include <crm/pengine/rules.h>
-#  include <crm/pengine/common.h>
-#  include <crm/pengine/status.h>
+#include <glib.h>               // GList
+#include <stdbool.h>            // bool
+#include <libxml/tree.h>        // xmlNode
 
-#  include <crm/pengine/complex.h>
+#include <crm/lrmd.h>           // lrmd_event_data_t
+#include <crm/pengine/status.h> // pe_resource_t, pe_working_set_t
 
 typedef struct {
     const char *id;
@@ -39,5 +37,11 @@ void pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
 
 GList *pcmk__with_this_colocations(const pe_resource_t *rsc);
 GList *pcmk__this_with_colocations(const pe_resource_t *rsc);
+
+GList *pcmk__copy_node_list(const GList *list, bool reset);
+
+xmlNode *pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *event,
+                                  const char *caller_version, int target_rc,
+                                  const char *node, const char *origin);
 
 #endif

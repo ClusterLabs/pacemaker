@@ -4,19 +4,19 @@ Utilization and Placement Strategy
 ----------------------------------
 
 Pacemaker decides where to place a resource according to the resource
-allocation scores on every node. The resource will be allocated to the
+assignment scores on every node. The resource will be assigned to the
 node where the resource has the highest score.
 
-If the resource allocation scores on all the nodes are equal, by the default
+If the resource assignment scores on all the nodes are equal, by the default
 placement strategy, Pacemaker will choose a node with the least number of
-allocated resources for balancing the load. If the number of resources on each
+assigned resources for balancing the load. If the number of resources on each
 node is equal, the first eligible node listed in the CIB will be chosen to run
 the resource.
 
 Often, in real-world situations, different resources use significantly
 different proportions of a node's capacities (memory, I/O, etc.).
 We cannot balance the load ideally just according to the number of resources
-allocated to a node. Besides, if resources are placed such that their combined
+assigned to a node. Besides, if resources are placed such that their combined
 requirements exceed the provided capacity, they may fail to start completely or
 run with degraded performance.
 
@@ -119,7 +119,7 @@ Four values are available for the ``placement-strategy``:
 * **default**
 
    Utilization values are not taken into account at all.
-   Resources are allocated according to allocation scores. If scores are equal,
+   Resources are assigned according to assignment scores. If scores are equal,
    resources are evenly distributed across nodes.
 
 * **utilization**
@@ -127,7 +127,7 @@ Four values are available for the ``placement-strategy``:
    Utilization values are taken into account *only* when deciding whether a node
    is considered eligible (i.e. whether it has sufficient free capacity to satisfy
    the resource's requirements). Load-balancing is still done based on the
-   number of resources allocated to a node. 
+   number of resources assigned to a node. 
 
 * **balanced**
 
@@ -152,11 +152,11 @@ Now Pacemaker will ensure the load from your resources will be distributed
 evenly throughout the cluster, without the need for convoluted sets of
 colocation constraints.
 
-Allocation Details
+Assignment Details
 ##################
 
-Which node is preferred to get consumed first when allocating resources?
-________________________________________________________________________
+Which node is preferred to get consumed first when assigning resources?
+_______________________________________________________________________
 
 * The node with the highest node weight gets consumed first. Node weight
   is a score maintained by the cluster to represent node health.
@@ -164,18 +164,18 @@ ________________________________________________________________________
 * If multiple nodes have the same node weight:
 
  * If ``placement-strategy`` is ``default`` or ``utilization``,
-   the node that has the least number of allocated resources gets consumed first.
+   the node that has the least number of assigned resources gets consumed first.
 
-   * If their numbers of allocated resources are equal,
+   * If their numbers of assigned resources are equal,
      the first eligible node listed in the CIB gets consumed first.
 
  * If ``placement-strategy`` is ``balanced``,
    the node that has the most free capacity gets consumed first.
 
    * If the free capacities of the nodes are equal,
-     the node that has the least number of allocated resources gets consumed first.
+     the node that has the least number of assigned resources gets consumed first.
 
-     * If their numbers of allocated resources are equal,
+     * If their numbers of assigned resources are equal,
        the first eligible node listed in the CIB gets consumed first.
 
  * If ``placement-strategy`` is ``minimal``,
@@ -201,17 +201,17 @@ Which resource is preferred to be assigned first?
 _________________________________________________
 
 * The resource that has the highest ``priority`` (see :ref:`resource_options`) gets
-  allocated first.
+  assigned first.
 
 * If their priorities are equal, check whether they are already running. The
-  resource that has the highest score on the node where it's running gets allocated
+  resource that has the highest score on the node where it's running gets assigned
   first, to prevent resource shuffling.
 
 * If the scores above are equal or the resources are not running, the resource has
-  the highest score on the preferred node gets allocated first.
+  the highest score on the preferred node gets assigned first.
 
 * If the scores above are equal, the first runnable resource listed in the CIB
-  gets allocated first.
+  gets assigned first.
 
 Limitations and Workarounds
 ###########################
@@ -233,9 +233,9 @@ services stopped.
 
 In the contrived example at the start of this chapter:
 
-* ``rsc-small`` would be allocated to ``node1``
+* ``rsc-small`` would be assigned to ``node1``
 
-* ``rsc-medium`` would be allocated to ``node2``
+* ``rsc-medium`` would be assigned to ``node2``
 
 * ``rsc-large`` would remain inactive
 

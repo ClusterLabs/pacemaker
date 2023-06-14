@@ -378,14 +378,14 @@ pe_hash_table_lookup(GHashTable * hash, gconstpointer key)
 extern pe_action_t *get_pseudo_op(const char *name, pe_working_set_t * data_set);
 extern gboolean order_actions(pe_action_t * lh_action, pe_action_t * rh_action, enum pe_ordering order);
 
-void pe__show_node_weights_as(const char *file, const char *function,
-                              int line, bool to_log, const pe_resource_t *rsc,
-                              const char *comment, GHashTable *nodes,
-                              pe_working_set_t *data_set);
+void pe__show_node_scores_as(const char *file, const char *function,
+                             int line, bool to_log, const pe_resource_t *rsc,
+                             const char *comment, GHashTable *nodes,
+                             pe_working_set_t *data_set);
 
-#define pe__show_node_weights(level, rsc, text, nodes, data_set)    \
-        pe__show_node_weights_as(__FILE__, __func__, __LINE__,      \
-                                 (level), (rsc), (text), (nodes), (data_set))
+#define pe__show_node_scores(level, rsc, text, nodes, data_set)    \
+        pe__show_node_scores_as(__FILE__, __func__, __LINE__,      \
+                                (level), (rsc), (text), (nodes), (data_set))
 
 xmlNode *find_rsc_op_entry(const pe_resource_t *rsc, const char *key);
 

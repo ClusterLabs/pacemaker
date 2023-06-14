@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 the Pacemaker project contributors
+ * Copyright 2020-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,7 +9,6 @@
 
 #include <crm_internal.h>
 
-#include <glib.h>               // gboolean, GMainLoop, etc.
 #include <libxml/tree.h>        // xmlNode
 
 #include <pacemaker.h>
@@ -806,7 +805,7 @@ struct node_data {
     int found;
     const char *field;  /* XML attribute to check for node name */
     const char *type;
-    gboolean bash_export;
+    bool bash_export;
 };
 
 static void
@@ -819,16 +818,13 @@ remote_node_print_helper(xmlNode *result, void *user_data)
 
     // node name and node id are the same for remote/guest nodes
     out->message(out, "crmadmin-node", data->type,
-                 name ? name : id,
-                 id,
-                 data->bash_export);
+                 pcmk__s(name, id), id, data->bash_export);
     data->found++;
 }
 
 // \return Standard Pacemaker return code
 int
-pcmk__list_nodes(pcmk__output_t *out, const char *node_types,
-                 gboolean bash_export)
+pcmk__list_nodes(pcmk__output_t *out, const char *node_types, bool bash_export)
 {
     xmlNode *xml_node = NULL;
     int rc;

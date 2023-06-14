@@ -164,6 +164,7 @@ void pcmk__free_graph(pcmk__graph_t *graph);
 const char *pcmk__graph_status2text(enum pcmk__graph_status state);
 void pcmk__log_graph(unsigned int log_level, pcmk__graph_t *graph);
 void pcmk__log_graph_action(int log_level, pcmk__graph_action_t *action);
+void pcmk__log_transition_summary(const char *filename);
 lrmd_event_data_t *pcmk__event_from_graph_action(const xmlNode *resource,
                                                  const pcmk__graph_action_t *action,
                                                  int status, int rc,

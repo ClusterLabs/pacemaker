@@ -1001,7 +1001,7 @@ pcmk__block_colocation_dependents(pe_action_t *action,
  * \param[in] dependent   Dependent resource in colocation
  * \param[in] primary     Primary resource in colocation
  * \param[in] colocation  Colocation constraint
- * \param[in] preview     If true, pretend resources have already been allocated
+ * \param[in] preview     If true, pretend resources have already been assigned
  *
  * \return How colocation constraint should be applied at this point
  */
@@ -1011,7 +1011,7 @@ pcmk__colocation_affects(const pe_resource_t *dependent,
                          const pcmk__colocation_t *colocation, bool preview)
 {
     if (!preview && pcmk_is_set(primary->flags, pe_rsc_provisional)) {
-        // Primary resource has not been allocated yet, so we can't do anything
+        // Primary resource has not been assigned yet, so we can't do anything
         return pcmk__coloc_affects_nothing;
     }
 
@@ -1021,14 +1021,14 @@ pcmk__colocation_affects(const pe_resource_t *dependent,
         && !pcmk_is_set(dependent->flags, pe_rsc_provisional)) {
 
         /* This is a colocation by role, and the dependent is a promotable clone
-         * that has already been allocated, so the colocation should now affect
+         * that has already been assigned, so the colocation should now affect
          * the role.
          */
         return pcmk__coloc_affects_role;
     }
 
     if (!preview && !pcmk_is_set(dependent->flags, pe_rsc_provisional)) {
-        /* The dependent resource has already been through allocation, so the
+        /* The dependent resource has already been through assignment, so the
          * constraint no longer has any effect. Log an error if a mandatory
          * colocation constraint has been violated.
          */
@@ -1042,8 +1042,7 @@ pcmk__colocation_affects(const pe_resource_t *dependent,
         } else if (colocation->score >= INFINITY) {
             // Dependent resource must colocate with primary resource
 
-            if ((primary_node == NULL) ||
-                (primary_node->details != dependent->allocated_to->details)) {
+            if (!pe__same_node(primary_node, dependent->allocated_to)) {
                 crm_err("%s must be colocated with %s but is not (%s vs. %s)",
                         dependent->id, primary->id,
                         pe__node_name(dependent->allocated_to),
@@ -1053,9 +1052,8 @@ pcmk__colocation_affects(const pe_resource_t *dependent,
         } else if (colocation->score <= -CRM_SCORE_INFINITY) {
             // Dependent resource must anti-colocate with primary resource
 
-            if ((primary_node != NULL) &&
-                (dependent->allocated_to->details == primary_node->details)) {
-                crm_err("%s and %s must be anti-colocated but are allocated "
+            if (pe__same_node(dependent->allocated_to, primary_node)) {
+                crm_err("%s and %s must be anti-colocated but are assigned "
                         "to the same node (%s)",
                         dependent->id, primary->id, pe__node_name(primary_node));
             }
@@ -1106,19 +1104,19 @@ pcmk__colocation_affects(const pe_resource_t *dependent,
 
 /*!
  * \internal
- * \brief Apply colocation to dependent for allocation purposes
+ * \brief Apply colocation to dependent for assignment purposes
  *
- * Update the allowed node weights of the dependent resource in a colocation,
- * for the purposes of allocating it to a node
+ * Update the allowed node scores of the dependent resource in a colocation,
+ * for the purposes of assigning it to a node.
  *
  * \param[in,out] dependent   Dependent resource in colocation
  * \param[in]     primary     Primary resource in colocation
  * \param[in]     colocation  Colocation constraint
  */
 void
-pcmk__apply_coloc_to_weights(pe_resource_t *dependent,
-                             const pe_resource_t *primary,
-                             const pcmk__colocation_t *colocation)
+pcmk__apply_coloc_to_scores(pe_resource_t *dependent,
+                            const pe_resource_t *primary,
+                            const pcmk__colocation_t *colocation)
 {
     const char *attribute = CRM_ATTR_ID;
     const char *value = NULL;
@@ -1333,7 +1331,7 @@ allowed_on_one(const pe_resource_t *rsc)
 
 /*!
  * \internal
- * \brief Add resource's colocation matches to current node allocation scores
+ * \brief Add resource's colocation matches to current node assignment scores
  *
  * For each node in a given table, if any of a given resource's allowed nodes
  * have a matching value for the colocation attribute, add the highest of those
@@ -1364,8 +1362,8 @@ add_node_scores_matching_attr(GHashTable *nodes, const pe_resource_t *rsc,
     // Iterate through each node
     g_hash_table_iter_init(&iter, nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-        float weight_f = 0;
-        int weight = 0;
+        float delta_f = 0;
+        int delta = 0;
         int score = 0;
         int new_score = 0;
         const char *value = pe_node_attribute_raw(node, attr);
@@ -1423,24 +1421,24 @@ add_node_scores_matching_attr(GHashTable *nodes, const pe_resource_t *rsc,
             continue;
         }
 
-        weight_f = factor * score;
+        delta_f = factor * score;
 
         // Round the number; see http://c-faq.com/fp/round.html
-        weight = (int) ((weight_f < 0)? (weight_f - 0.5) : (weight_f + 0.5));
+        delta = (int) ((delta_f < 0)? (delta_f - 0.5) : (delta_f + 0.5));
 
         /* Small factors can obliterate the small scores that are often actually
          * used in configurations. If the score and factor are nonzero, ensure
          * that the result is nonzero as well.
          */
-        if ((weight == 0) && (score != 0)) {
+        if ((delta == 0) && (score != 0)) {
             if (factor > 0.0) {
-                weight = 1;
+                delta = 1;
             } else if (factor < 0.0) {
-                weight = -1;
+                delta = -1;
             }
         }
 
-        new_score = pcmk__add_scores(weight, node->weight);
+        new_score = pcmk__add_scores(delta, node->weight);
 
         if (only_positive && (new_score < 0) && (node->weight > 0)) {
             crm_trace("%s: Filtering %d + %f * %d = %d "
@@ -1563,7 +1561,7 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
             other->cmds->add_colocated_node_scores(other, log_id, &work,
                                                    constraint,
                                                    other_factor, flags);
-            pe__show_node_weights(true, NULL, log_id, work, rsc->cluster);
+            pe__show_node_scores(true, NULL, log_id, work, rsc->cluster);
         }
         g_list_free(colocations);
 

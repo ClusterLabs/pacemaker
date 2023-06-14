@@ -111,10 +111,10 @@ pcmk__copy_node_list(const GList *list, bool reset)
 
 /*!
  * \internal
- * \brief Compare two nodes for allocation desirability
+ * \brief Compare two nodes for assignment preference
  *
- * Given two nodes, check which one is more preferred by allocation criteria
- * such as node weight and utilization.
+ * Given two nodes, check which one is more preferred by assignment criteria
+ * such as node score and utilization.
  *
  * \param[in] a     First node to compare
  * \param[in] b     Second node to compare
@@ -130,8 +130,8 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
     const pe_node_t *node2 = (const pe_node_t *) b;
     const pe_node_t *active = (const pe_node_t *) data;
 
-    int node1_weight = 0;
-    int node2_weight = 0;
+    int node1_score = 0;
+    int node2_score = 0;
 
     int result = 0;
 
@@ -142,28 +142,28 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
         return -1;
     }
 
-    // Compare node weights
+    // Compare node scores
 
-    node1_weight = pcmk__node_available(node1, false, false)? node1->weight : -INFINITY;
-    node2_weight = pcmk__node_available(node2, false, false)? node2->weight : -INFINITY;
+    node1_score = pcmk__node_available(node1, false, false)? node1->weight : -INFINITY;
+    node2_score = pcmk__node_available(node2, false, false)? node2->weight : -INFINITY;
 
-    if (node1_weight > node2_weight) {
-        crm_trace("%s (%d) > %s (%d) : weight",
-                  pe__node_name(node1), node1_weight, pe__node_name(node2),
-                  node2_weight);
+    if (node1_score > node2_score) {
+        crm_trace("%s (%d) > %s (%d) : score",
+                  pe__node_name(node1), node1_score, pe__node_name(node2),
+                  node2_score);
         return -1;
     }
 
-    if (node1_weight < node2_weight) {
-        crm_trace("%s (%d) < %s (%d) : weight",
-                  pe__node_name(node1), node1_weight, pe__node_name(node2),
-                  node2_weight);
+    if (node1_score < node2_score) {
+        crm_trace("%s (%d) < %s (%d) : score",
+                  pe__node_name(node1), node1_score, pe__node_name(node2),
+                  node2_score);
         return 1;
     }
 
-    crm_trace("%s (%d) == %s (%d) : weight",
-              pe__node_name(node1), node1_weight, pe__node_name(node2),
-              node2_weight);
+    crm_trace("%s (%d) == %s (%d) : score",
+              pe__node_name(node1), node1_score, pe__node_name(node2),
+              node2_score);
 
     // If appropriate, compare node utilization
 
@@ -186,7 +186,7 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
         }
     }
 
-    // Compare number of allocated resources
+    // Compare number of resources already assigned to node
 
     if (node1->details->num_resources < node2->details->num_resources) {
         crm_trace("%s (%d) > %s (%d) : resources",
@@ -204,12 +204,12 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
     // Check whether one node is already running desired resource
 
     if (active != NULL) {
-        if (active->details == node1->details) {
+        if (pe__same_node(active, node1)) {
             crm_trace("%s (%d) > %s (%d) : active",
                       pe__node_name(node1), node1->details->num_resources,
                       pe__node_name(node2), node2->details->num_resources);
             return -1;
-        } else if (active->details == node2->details) {
+        } else if (pe__same_node(active, node2)) {
             crm_trace("%s (%d) < %s (%d) : active",
                       pe__node_name(node1), node1->details->num_resources,
                       pe__node_name(node2), node2->details->num_resources);
@@ -225,7 +225,7 @@ equal:
 
 /*!
  * \internal
- * \brief Sort a list of nodes by allocation desirability
+ * \brief Sort a list of nodes by assigment preference
  *
  * \param[in,out] nodes        Node list to sort
  * \param[in]     active_node  Node where resource being assigned is active

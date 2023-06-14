@@ -62,8 +62,8 @@ pcmk__clone_assign(pe_resource_t *rsc, const pe_node_t *prefer)
      */
     g_list_foreach(rsc->rsc_cons_lhs, pcmk__add_dependent_scores, rsc);
 
-    pe__show_node_weights(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
-                          rsc, __func__, rsc->allowed_nodes, rsc->cluster);
+    pe__show_node_scores(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
+                         rsc, __func__, rsc->allowed_nodes, rsc->cluster);
 
     rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance);
     pcmk__assign_instances(rsc, rsc->children, pe__clone_max(rsc),
@@ -209,10 +209,10 @@ can_interleave(const pcmk__colocation_t *colocation)
 
 /*!
  * \internal
- * \brief Apply a colocation's score to node weights or resource priority
+ * \brief Apply a colocation's score to node scores or resource priority
  *
  * Given a colocation constraint, apply its score to the dependent's
- * allowed node weights (if we are still placing resources) or priority (if
+ * allowed node scores (if we are still placing resources) or priority (if
  * we are choosing promotable clone instance roles).
  *
  * \param[in,out] dependent      Dependent resource in colocation

@@ -286,10 +286,10 @@ pe__log_node_weights(const char *file, const char *function, int line,
  * \param[in,out] data_set  Cluster working set
  */
 void
-pe__show_node_weights_as(const char *file, const char *function, int line,
-                         bool to_log, const pe_resource_t *rsc,
-                         const char *comment, GHashTable *nodes,
-                         pe_working_set_t *data_set)
+pe__show_node_scores_as(const char *file, const char *function, int line,
+                        bool to_log, const pe_resource_t *rsc,
+                        const char *comment, GHashTable *nodes,
+                        pe_working_set_t *data_set)
 {
     if (rsc != NULL && pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
         // Don't show allocation scores for orphans
@@ -311,8 +311,8 @@ pe__show_node_weights_as(const char *file, const char *function, int line,
         for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child = (pe_resource_t *) gIter->data;
 
-            pe__show_node_weights_as(file, function, line, to_log, child,
-                                     comment, child->allowed_nodes, data_set);
+            pe__show_node_scores_as(file, function, line, to_log, child,
+                                    comment, child->allowed_nodes, data_set);
         }
     }
 }

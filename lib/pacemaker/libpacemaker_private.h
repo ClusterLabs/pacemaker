@@ -15,6 +15,7 @@
  */
 
 #include <crm/pengine/pe_types.h> // pe_action_t, pe_node_t, pe_working_set_t
+#include <crm/pengine/internal.h> // pe__location_t
 
 // Flags to modify the behavior of add_colocated_node_scores()
 enum pcmk__coloc_select {
@@ -52,7 +53,7 @@ enum pcmk__updated {
                                         (flags_to_clear), #flags_to_clear); \
     } while (0)
 
-// Resource allocation methods
+// Resource assignment methods
 struct resource_alloc_functions_s {
     /*!
      * \internal
@@ -94,10 +95,10 @@ struct resource_alloc_functions_s {
 
     /*!
      * \internal
-     * \brief Apply a colocation's score to node weights or resource priority
+     * \brief Apply a colocation's score to node scores or resource priority
      *
      * Given a colocation constraint, apply its score to the dependent's
-     * allowed node weights (if we are still placing resources) or priority (if
+     * allowed node scores (if we are still placing resources) or priority (if
      * we are choosing promotable clone instance roles).
      *
      * \param[in,out] dependent      Dependent resource in colocation
@@ -287,10 +288,10 @@ struct resource_alloc_functions_s {
      * resources colocated with it, to determine whether a node has sufficient
      * capacity. Given a resource and a table of utilization values, it will add
      * the resource's utilization to the existing values, if the resource has
-     * not yet been allocated to a node.
+     * not yet been assigned to a node.
      *
      * \param[in]     rsc          Resource with utilization to add
-     * \param[in]     orig_rsc     Resource being allocated (for logging only)
+     * \param[in]     orig_rsc     Resource being assigned (for logging only)
      * \param[in]     all_rscs     List of all resources that will be summed
      * \param[in,out] utilization  Table of utilization values to add to
      */
@@ -433,7 +434,7 @@ void pcmk__unpack_location(xmlNode *xml_obj, pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
 pe__location_t *pcmk__new_location(const char *id, pe_resource_t *rsc,
-                                   int node_weight, const char *discover_mode,
+                                   int node_score, const char *discover_mode,
                                    pe_node_t *foo_node,
                                    pe_working_set_t *data_set);
 
@@ -459,9 +460,9 @@ enum pcmk__coloc_affects pcmk__colocation_affects(const pe_resource_t *dependent
                                                   bool preview);
 
 G_GNUC_INTERNAL
-void pcmk__apply_coloc_to_weights(pe_resource_t *dependent,
-                                  const pe_resource_t *primary,
-                                  const pcmk__colocation_t *colocation);
+void pcmk__apply_coloc_to_scores(pe_resource_t *dependent,
+                                 const pe_resource_t *primary,
+                                 const pcmk__colocation_t *colocation);
 
 G_GNUC_INTERNAL
 void pcmk__apply_coloc_to_priority(pe_resource_t *dependent,
@@ -957,7 +958,7 @@ pe_node_t *pcmk__top_allowed_node(const pe_resource_t *rsc,
 // Functions applying to more than one variant (pcmk_sched_resource.c)
 
 G_GNUC_INTERNAL
-void pcmk__set_allocation_methods(pe_working_set_t *data_set);
+void pcmk__set_assignment_methods(pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
 bool pcmk__rsc_agent_changed(pe_resource_t *rsc, pe_node_t *node,

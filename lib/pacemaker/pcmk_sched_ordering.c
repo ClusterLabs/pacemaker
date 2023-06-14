@@ -422,7 +422,7 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
     pe_resource_t *rsc_first = NULL;
     int min_required_before = 0;
     enum pe_order_kind kind = pe_order_kind_mandatory;
-    uint32_t cons_weight = pe_order_none;
+    uint32_t flags = pe_order_none;
     enum ordering_symmetry symmetry;
 
     const char *action_then = NULL;
@@ -465,9 +465,9 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
     kind = get_ordering_type(xml_obj);
 
     symmetry = get_ordering_symmetry(xml_obj, kind, NULL);
-    cons_weight = ordering_flags_for_kind(kind, action_first, symmetry);
+    flags = ordering_flags_for_kind(kind, action_first, symmetry);
 
-    handle_restart_type(rsc_then, kind, pe_order_implies_then, cons_weight);
+    handle_restart_type(rsc_then, kind, pe_order_implies_then, flags);
 
     /* If there is a minimum number of instances that must be runnable before
      * the 'then' action is runnable, we use a pseudo-action for convenience:
@@ -477,10 +477,10 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
     min_required_before = get_minimum_first_instances(rsc_first, xml_obj);
     if (min_required_before > 0) {
         clone_min_ordering(id, rsc_first, action_first, rsc_then, action_then,
-                           cons_weight, min_required_before, data_set);
+                           flags, min_required_before, data_set);
     } else {
         pcmk__order_resource_actions(rsc_first, action_first, rsc_then,
-                                     action_then, cons_weight);
+                                     action_then, flags);
     }
 
     if (symmetry == ordering_symmetric) {
@@ -1126,8 +1126,7 @@ pcmk__order_stops_before_shutdown(pe_node_t *node, pe_action_t *shutdown_op)
         pe_action_t *action = (pe_action_t *) iter->data;
 
         // Only stops on the node shutting down are relevant
-        if ((action->rsc == NULL) || (action->node == NULL)
-            || (action->node->details != node->details)
+        if (!pe__same_node(action->node, node)
             || !pcmk__str_eq(action->task, RSC_STOP, pcmk__str_casei)) {
             continue;
         }
