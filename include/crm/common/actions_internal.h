@@ -20,6 +20,8 @@
 #include <crm/common/scheduler_types.h>     // pcmk_resource_t, pcmk_node_t
 #include <crm/common/strings_internal.h>    // pcmk__str_eq()
 
+#include <crm/common/strings_internal.h>    // pcmk__str_any_of()
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -260,6 +262,21 @@ pcmk__readable_action(const char *action_name, guint interval_ms) {
         return "probe";
     }
     return action_name;
+}
+
+/*!
+ * \internal
+ * \brief Check whether an action raises a resource's role
+ *
+ * \param[in] action  Action to check
+ *
+ * \return \c true if \p action is "start", "promote", or "migrate_from"
+ */
+static inline bool
+pcmk__is_up_action(const char *action)
+{
+    return pcmk__str_any_of(action, PCMK_ACTION_START, PCMK_ACTION_PROMOTE,
+                            PCMK_ACTION_MIGRATE_FROM, NULL);
 }
 
 #ifdef __cplusplus

@@ -207,8 +207,7 @@ ordering_flags_for_kind(enum pe_order_kind kind, const char *first,
                 case ordering_symmetric:
                     pcmk__set_relation_flags(flags,
                                              pcmk__ar_first_implies_then);
-                    if (pcmk__strcase_any_of(first, PCMK_ACTION_START,
-                                             PCMK_ACTION_PROMOTE, NULL)) {
+                    if (pcmk__is_up_action(first)) {
                         pcmk__set_relation_flags(flags,
                                                  pcmk__ar_unrunnable_first_blocks);
                     }

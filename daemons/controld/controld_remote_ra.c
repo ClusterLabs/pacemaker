@@ -538,8 +538,7 @@ retry_start_cmd_cb(gpointer data)
         return FALSE;
     }
     cmd = ra_data->cur_cmd;
-    if (!pcmk__strcase_any_of(cmd->action, PCMK_ACTION_START,
-                              PCMK_ACTION_MIGRATE_FROM, NULL)) {
+    if (!pcmk__is_up_action(cmd->action)) {
         return FALSE;
     }
 
@@ -727,9 +726,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
 
     /* Start actions and migrate from actions complete after connection
      * comes back to us. */
-    if ((op->type == lrmd_event_connect)
-        && pcmk__strcase_any_of(cmd->action, PCMK_ACTION_START,
-                                PCMK_ACTION_MIGRATE_FROM, NULL)) {
+    if ((op->type == lrmd_event_connect) && pcmk__is_up_action(cmd->action)) {
         if (op->connection_rc < 0) {
             int remaining = remaining_timeout_sec(cmd);
 
