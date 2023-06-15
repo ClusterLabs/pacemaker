@@ -683,8 +683,7 @@ is_primitive_action(const pe_action_t *action)
             pe__clear_action_flags(action, flag);                           \
             if ((action)->rsc != (reason)->rsc) {                           \
                 char *reason_text = pe__action2reason((reason), (flag));    \
-                pe_action_set_reason((action), reason_text,                 \
-                                   ((flag) == pe_action_migrate_runnable)); \
+                pe_action_set_reason((action), reason_text, false);         \
                 free(reason_text);                                          \
             }                                                               \
         }                                                                   \

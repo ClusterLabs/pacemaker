@@ -1430,8 +1430,10 @@ pe__action2reason(const pe_action_t *action, enum pe_action_flags flag)
 
     switch (flag) {
         case pe_action_runnable:
-        case pe_action_migrate_runnable:
             change = "unrunnable";
+            break;
+        case pe_action_migrate_runnable:
+            change = "unmigrateable";
             break;
         case pe_action_optional:
             change = "required";
