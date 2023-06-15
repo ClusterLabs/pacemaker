@@ -236,6 +236,19 @@ bool pe_can_fence(const pe_working_set_t *data_set, const pe_node_t *node);
 
 void add_hash_param(GHashTable * hash, const char *name, const char *value);
 
+/*!
+ * \internal
+ * \enum pe__rsc_node
+ * \brief Type of resource location lookup to perform
+ */
+enum pe__rsc_node {
+    pe__rsc_node_assigned = 0,  //!< Where resource is assigned
+    pe__rsc_node_current  = 1,  //!< Where resource is running
+
+    // @COMPAT: Use in native_location() at a compatibility break
+    pe__rsc_node_pending  = 2,  //!< Where resource is pending
+};
+
 char *native_parameter(pe_resource_t * rsc, pe_node_t * node, gboolean create, const char *name,
                        pe_working_set_t * data_set);
 pe_node_t *native_location(const pe_resource_t *rsc, GList **list, int current);
@@ -594,9 +607,11 @@ bool pe__bundle_needs_remote_name(pe_resource_t *rsc);
 const char *pe__add_bundle_remote_name(pe_resource_t *rsc,
                                        pe_working_set_t *data_set,
                                        xmlNode *xml, const char *field);
+
 const char *pe_node_attribute_calculated(const pe_node_t *node,
                                          const char *name,
-                                         const pe_resource_t *rsc);
+                                         const pe_resource_t *rsc,
+                                         enum pe__rsc_node node_type);
 const char *pe_node_attribute_raw(const pe_node_t *node, const char *name);
 bool pe__is_universal_clone(const pe_resource_t *rsc,
                             const pe_working_set_t *data_set);
