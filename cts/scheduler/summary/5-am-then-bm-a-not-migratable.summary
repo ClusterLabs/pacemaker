@@ -8,7 +8,7 @@ Current cluster status:
 
 Transition Summary:
   * Move       A       ( 18node1 -> 18node2 )
-  * Move       B       ( 18node2 -> 18node1 )  due to unrunnable A stop
+  * Move       B       ( 18node2 -> 18node1 )  due to unmigrateable A stop
 
 Executing Cluster Transition:
   * Resource action: B               stop on 18node2
