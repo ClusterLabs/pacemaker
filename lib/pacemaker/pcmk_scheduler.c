@@ -171,17 +171,18 @@ apply_exclusive_discovery(pe_resource_t *rsc, const pe_node_t *node)
  * \internal
  * \brief Apply stickiness to a resource if appropriate
  *
- * \param[in,out] rsc       Resource to check for stickiness
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] data       Resource to check for stickiness
+ * \param[in]     user_data  Ignored
  */
 static void
-apply_stickiness(pe_resource_t *rsc, pe_working_set_t *data_set)
+apply_stickiness(gpointer data, gpointer user_data)
 {
+    pe_resource_t *rsc = data;
     pe_node_t *node = NULL;
 
     // If this is a collective resource, apply recursively to children instead
     if (rsc->children != NULL) {
-        g_list_foreach(rsc->children, (GFunc) apply_stickiness, data_set);
+        g_list_foreach(rsc->children, apply_stickiness, NULL);
         return;
     }
 
@@ -212,7 +213,7 @@ apply_stickiness(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     pe_rsc_debug(rsc, "Resource %s has %d stickiness on %s",
                  rsc->id, rsc->stickiness, pe__node_name(node));
-    resource_location(rsc, node, rsc->stickiness, "stickiness", data_set);
+    resource_location(rsc, node, rsc->stickiness, "stickiness", rsc->cluster);
 }
 
 /*!
@@ -274,7 +275,7 @@ apply_node_criteria(pe_working_set_t *data_set)
     apply_shutdown_locks(data_set);
     count_available_nodes(data_set);
     pcmk__apply_locations(data_set);
-    g_list_foreach(data_set->resources, (GFunc) apply_stickiness, data_set);
+    g_list_foreach(data_set->resources, apply_stickiness, NULL);
 
     for (GList *node_iter = data_set->nodes; node_iter != NULL;
          node_iter = node_iter->next) {
@@ -341,12 +342,14 @@ assign_resources(pe_working_set_t *data_set)
  * \internal
  * \brief Schedule fail count clearing on online nodes if resource is orphaned
  *
- * \param[in,out] rsc       Resource to check
- * \param[in,out] data_set  Cluster working set
+ * \param[in,out] data       Resource to check
+ * \param[in]     user_data  Ignored
  */
 static void
-clear_failcounts_if_orphaned(pe_resource_t *rsc, pe_working_set_t *data_set)
+clear_failcounts_if_orphaned(gpointer data, gpointer user_data)
 {
+    pe_resource_t *rsc = data;
+
     if (!pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
         return;
     }
@@ -356,7 +359,7 @@ clear_failcounts_if_orphaned(pe_resource_t *rsc, pe_working_set_t *data_set)
      * should just be unassigned clone instances.
      */
 
-    for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
+    for (GList *iter = rsc->cluster->nodes; iter != NULL; iter = iter->next) {
         pe_node_t *node = (pe_node_t *) iter->data;
         pe_action_t *clear_op = NULL;
 
@@ -367,13 +370,14 @@ clear_failcounts_if_orphaned(pe_resource_t *rsc, pe_working_set_t *data_set)
             continue;
         }
 
-        clear_op = pe__clear_failcount(rsc, node, "it is orphaned", data_set);
+        clear_op = pe__clear_failcount(rsc, node, "it is orphaned",
+                                       rsc->cluster);
 
         /* We can't use order_action_then_stop() here because its
          * pe_order_preserve breaks things
          */
         pcmk__new_ordering(clear_op->rsc, NULL, clear_op, rsc, stop_key(rsc),
-                           NULL, pe_order_optional, data_set);
+                           NULL, pe_order_optional, rsc->cluster);
     }
 }
 
@@ -396,8 +400,7 @@ schedule_resource_actions(pe_working_set_t *data_set)
     }
 
     if (pcmk_is_set(data_set->flags, pe_flag_stop_rsc_orphans)) {
-        g_list_foreach(data_set->resources,
-                       (GFunc) clear_failcounts_if_orphaned, data_set);
+        g_list_foreach(data_set->resources, clear_failcounts_if_orphaned, NULL);
     }
 
     crm_trace("Scheduling resource actions");
@@ -456,16 +459,14 @@ any_managed_resources(const pe_working_set_t *data_set)
  *
  * \param[in] node          Node to check
  * \param[in] have_managed  Whether any resource in cluster is managed
- * \param[in] data_set      Cluster working set
  *
  * \return true if \p node should be fenced, otherwise false
  */
 static bool
-needs_fencing(const pe_node_t *node, bool have_managed,
-              const pe_working_set_t *data_set)
+needs_fencing(const pe_node_t *node, bool have_managed)
 {
     return have_managed && node->details->unclean
-           && pe_can_fence(data_set, node);
+           && pe_can_fence(node->details->data_set, node);
 }
 
 /*!
@@ -519,16 +520,15 @@ add_nondc_fencing(GList *list, pe_action_t *action,
  * \brief Schedule a node for fencing
  *
  * \param[in,out] node      Node that requires fencing
- * \param[in,out] data_set  Cluster working set
  */
 static pe_action_t *
-schedule_fencing(pe_node_t *node, pe_working_set_t *data_set)
+schedule_fencing(pe_node_t *node)
 {
     pe_action_t *fencing = pe_fence_op(node, NULL, FALSE, "node is unclean",
-                                       FALSE, data_set);
+                                       FALSE, node->details->data_set);
 
     pe_warn("Scheduling node %s for fencing", pe__node_name(node));
-    pcmk__order_vs_fence(fencing, data_set);
+    pcmk__order_vs_fence(fencing, node->details->data_set);
     return fencing;
 }
 
@@ -568,8 +568,8 @@ schedule_fencing_and_shutdowns(pe_working_set_t *data_set)
             continue;
         }
 
-        if (needs_fencing(node, have_managed, data_set)) {
-            fencing = schedule_fencing(node, data_set);
+        if (needs_fencing(node, have_managed)) {
+            fencing = schedule_fencing(node);
 
             // Track DC and non-DC fence actions separately
             if (node->details->is_dc) {

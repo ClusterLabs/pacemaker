@@ -563,16 +563,15 @@ locations_list_xml(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("locations-and-colocations", "pe_resource_t *",
-                  "pe_working_set_t *", "bool", "bool")
+                  "bool", "bool")
 static int
 locations_and_colocations(pcmk__output_t *out, va_list args)
 {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
     bool recursive = va_arg(args, int);
     bool force = va_arg(args, int);
 
-    pcmk__unpack_constraints(data_set);
+    pcmk__unpack_constraints(rsc->cluster);
 
     // Constraints apply to group/clone, not member/instance
     if (!force) {
@@ -581,25 +580,24 @@ locations_and_colocations(pcmk__output_t *out, va_list args)
 
     out->message(out, "locations-list", rsc);
 
-    pe__clear_resource_flags_on_all(data_set, pe_rsc_detect_loop);
+    pe__clear_resource_flags_on_all(rsc->cluster, pe_rsc_detect_loop);
     out->message(out, "rscs-colocated-with-list", rsc, recursive);
 
-    pe__clear_resource_flags_on_all(data_set, pe_rsc_detect_loop);
+    pe__clear_resource_flags_on_all(rsc->cluster, pe_rsc_detect_loop);
     out->message(out, "rsc-is-colocated-with-list", rsc, recursive);
     return pcmk_rc_ok;
 }
 
 PCMK__OUTPUT_ARGS("locations-and-colocations", "pe_resource_t *",
-                  "pe_working_set_t *", "bool", "bool")
+                  "bool", "bool")
 static int
 locations_and_colocations_xml(pcmk__output_t *out, va_list args)
 {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
     bool recursive = va_arg(args, int);
     bool force = va_arg(args, int);
 
-    pcmk__unpack_constraints(data_set);
+    pcmk__unpack_constraints(rsc->cluster);
 
     // Constraints apply to group/clone, not member/instance
     if (!force) {
@@ -609,10 +607,10 @@ locations_and_colocations_xml(pcmk__output_t *out, va_list args)
     pcmk__output_xml_create_parent(out, "constraints", NULL);
     do_locations_list_xml(out, rsc, false);
 
-    pe__clear_resource_flags_on_all(data_set, pe_rsc_detect_loop);
+    pe__clear_resource_flags_on_all(rsc->cluster, pe_rsc_detect_loop);
     out->message(out, "rscs-colocated-with-list", rsc, recursive);
 
-    pe__clear_resource_flags_on_all(data_set, pe_rsc_detect_loop);
+    pe__clear_resource_flags_on_all(rsc->cluster, pe_rsc_detect_loop);
     out->message(out, "rsc-is-colocated-with-list", rsc, recursive);
 
     pcmk__output_xml_pop_parent(out);

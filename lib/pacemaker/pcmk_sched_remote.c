@@ -60,24 +60,24 @@ state2text(enum remote_connection_state state)
 
 static inline void
 order_start_then_action(pe_resource_t *first_rsc, pe_action_t *then_action,
-                        uint32_t extra, pe_working_set_t *data_set)
+                        uint32_t extra)
 {
-    if ((first_rsc != NULL) && (then_action != NULL) && (data_set != NULL)) {
+    if ((first_rsc != NULL) && (then_action != NULL)) {
         pcmk__new_ordering(first_rsc, start_key(first_rsc), NULL,
                            then_action->rsc, NULL, then_action,
                            pe_order_preserve|pe_order_runnable_left|extra,
-                           data_set);
+                           first_rsc->cluster);
     }
 }
 
 static inline void
 order_action_then_stop(pe_action_t *first_action, pe_resource_t *then_rsc,
-                       uint32_t extra, pe_working_set_t *data_set)
+                       uint32_t extra)
 {
-    if ((first_action != NULL) && (then_rsc != NULL) && (data_set != NULL)) {
+    if ((first_action != NULL) && (then_rsc != NULL)) {
         pcmk__new_ordering(first_action->rsc, NULL, first_action,
                            then_rsc, stop_key(then_rsc), NULL,
-                           pe_order_preserve|extra, data_set);
+                           pe_order_preserve|extra, then_rsc->cluster);
     }
 }
 
@@ -205,15 +205,13 @@ apply_remote_ordering(pe_action_t *action)
             }
 
             /* Ensure connection is up before running this action */
-            order_start_then_action(remote_rsc, action, order_opts,
-                                    remote_rsc->cluster);
+            order_start_then_action(remote_rsc, action, order_opts);
             break;
 
         case stop_rsc:
             if (state == remote_state_alive) {
                 order_action_then_stop(action, remote_rsc,
-                                       pe_order_implies_first,
-                                       remote_rsc->cluster);
+                                       pe_order_implies_first);
 
             } else if (state == remote_state_failed) {
                 /* The resource is active on the node, but since we don't have a
@@ -232,15 +230,13 @@ apply_remote_ordering(pe_action_t *action)
                  * transition, stop this resource first.
                  */
                 order_action_then_stop(action, remote_rsc,
-                                       pe_order_implies_first,
-                                       remote_rsc->cluster);
+                                       pe_order_implies_first);
 
             } else {
                 /* The connection is going to be started somewhere else, so
                  * stop this resource after that completes.
                  */
-                order_start_then_action(remote_rsc, action, pe_order_none,
-                                        remote_rsc->cluster);
+                order_start_then_action(remote_rsc, action, pe_order_none);
             }
             break;
 
@@ -252,8 +248,7 @@ apply_remote_ordering(pe_action_t *action)
             if ((state == remote_state_resting)
                 || (state == remote_state_unknown)) {
 
-                order_start_then_action(remote_rsc, action, pe_order_none,
-                                        remote_rsc->cluster);
+                order_start_then_action(remote_rsc, action, pe_order_none);
             } /* Otherwise we can rely on the stop ordering */
             break;
 
@@ -265,8 +260,7 @@ apply_remote_ordering(pe_action_t *action)
                  * the connection was re-established
                  */
                 order_start_then_action(remote_rsc, action,
-                                        pe_order_implies_then,
-                                        remote_rsc->cluster);
+                                        pe_order_implies_then);
 
             } else {
                 pe_node_t *cluster_node = pe__current_node(remote_rsc);
@@ -287,12 +281,10 @@ apply_remote_ordering(pe_action_t *action)
                      * stopped _before_ we let the connection get closed.
                      */
                     order_action_then_stop(action, remote_rsc,
-                                           pe_order_runnable_left,
-                                           remote_rsc->cluster);
+                                           pe_order_runnable_left);
 
                 } else {
-                    order_start_then_action(remote_rsc, action, pe_order_none,
-                                            remote_rsc->cluster);
+                    order_start_then_action(remote_rsc, action, pe_order_none);
                 }
             }
             break;
@@ -300,7 +292,7 @@ apply_remote_ordering(pe_action_t *action)
 }
 
 static void
-apply_container_ordering(pe_action_t *action, pe_working_set_t *data_set)
+apply_container_ordering(pe_action_t *action)
 {
     /* VMs are also classified as containers for these purposes... in
      * that they both involve a 'thing' running on a real or remote
@@ -324,7 +316,8 @@ apply_container_ordering(pe_action_t *action, pe_working_set_t *data_set)
     CRM_ASSERT(container != NULL);
 
     if (pcmk_is_set(container->flags, pe_rsc_failed)) {
-        pe_fence_node(data_set, action->node, "container failed", FALSE);
+        pe_fence_node(action->rsc->cluster, action->node, "container failed",
+                      FALSE);
     }
 
     crm_trace("Order %s action %s relative to %s%s for %s%s",
@@ -346,12 +339,10 @@ apply_container_ordering(pe_action_t *action, pe_working_set_t *data_set)
         case start_rsc:
         case action_promote:
             // Force resource recovery if the container is recovered
-            order_start_then_action(container, action, pe_order_implies_then,
-                                    data_set);
+            order_start_then_action(container, action, pe_order_implies_then);
 
             // Wait for the connection resource to be up, too
-            order_start_then_action(remote_rsc, action, pe_order_none,
-                                    data_set);
+            order_start_then_action(remote_rsc, action, pe_order_none);
             break;
 
         case stop_rsc:
@@ -372,8 +363,7 @@ apply_container_ordering(pe_action_t *action, pe_working_set_t *data_set)
                  * stopped (otherwise we re-introduce an ordering loop when the
                  * connection is restarting).
                  */
-                order_action_then_stop(action, remote_rsc, pe_order_none,
-                                       data_set);
+                order_action_then_stop(action, remote_rsc, pe_order_none);
             }
             break;
 
@@ -386,11 +376,10 @@ apply_container_ordering(pe_action_t *action, pe_working_set_t *data_set)
                  */
                 if(task != no_action) {
                     order_start_then_action(remote_rsc, action,
-                                            pe_order_implies_then, data_set);
+                                            pe_order_implies_then);
                 }
             } else {
-                order_start_then_action(remote_rsc, action, pe_order_none,
-                                        data_set);
+                order_start_then_action(remote_rsc, action, pe_order_none);
             }
             break;
     }
@@ -489,7 +478,7 @@ pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
          */
         if (remote->container) {
             crm_trace("Container ordering for %s", action->uuid);
-            apply_container_ordering(action, data_set);
+            apply_container_ordering(action);
 
         } else {
             crm_trace("Remote ordering for %s", action->uuid);

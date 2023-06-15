@@ -297,13 +297,12 @@ anti_colocation_order(pe_resource_t *first_rsc, int first_role,
  * \param[in]     dependent_role  Current role of \p dependent
  * \param[in]     primary_role    Current role of \p primary
  * \param[in]     influence       Whether colocation constraint has influence
- * \param[in,out] data_set        Cluster working set to add constraint to
  */
 void
 pcmk__new_colocation(const char *id, const char *node_attr, int score,
                      pe_resource_t *dependent, pe_resource_t *primary,
                      const char *dependent_role, const char *primary_role,
-                     bool influence, pe_working_set_t *data_set)
+                     bool influence)
 {
     pcmk__colocation_t *new_con = NULL;
 
@@ -351,8 +350,8 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
     pcmk__add_this_with(&(dependent->rsc_cons), new_con);
     pcmk__add_with_this(&(primary->rsc_cons_lhs), new_con);
 
-    data_set->colocation_constraints = g_list_append(data_set->colocation_constraints,
-                                                     new_con);
+    dependent->cluster->colocation_constraints = g_list_append(
+        dependent->cluster->colocation_constraints, new_con);
 
     if (score <= -INFINITY) {
         anti_colocation_order(dependent, new_con->dependent_role, primary,
@@ -433,7 +432,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
                 pcmk__new_colocation(set_id, NULL, local_score, resource,
                                      with, role, role,
                                      unpack_influence(coloc_id, resource,
-                                                      influence_s), data_set);
+                                                      influence_s));
             }
             with = resource;
         }
@@ -451,7 +450,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
                 pcmk__new_colocation(set_id, NULL, local_score, last,
                                      resource, role, role,
                                      unpack_influence(coloc_id, last,
-                                                      influence_s), data_set);
+                                                      influence_s));
             }
 
             last = resource;
@@ -484,8 +483,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
                 pe_rsc_trace(resource, "Anti-Colocating %s with %s", resource->id,
                              with->id);
                 pcmk__new_colocation(set_id, NULL, local_score,
-                                     resource, with, role, role,
-                                     influence, data_set);
+                                     resource, with, role, role, influence);
             }
         }
     }
@@ -535,8 +533,7 @@ colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
 
     if ((rsc_1 != NULL) && (rsc_2 != NULL)) {
         pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2, role_1, role_2,
-                             unpack_influence(id, rsc_1, influence_s),
-                             data_set);
+                             unpack_influence(id, rsc_1, influence_s));
 
     } else if (rsc_1 != NULL) {
         bool influence = unpack_influence(id, rsc_1, influence_s);
@@ -546,7 +543,7 @@ colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
 
             EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc));
             pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2, role_1,
-                                 role_2, influence, data_set);
+                                 role_2, influence);
         }
 
     } else if (rsc_2 != NULL) {
@@ -556,8 +553,7 @@ colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
             EXPAND_CONSTRAINT_IDREF(id, rsc_1, ID(xml_rsc));
             pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2, role_1,
                                  role_2,
-                                 unpack_influence(id, rsc_1, influence_s),
-                                 data_set);
+                                 unpack_influence(id, rsc_1, influence_s));
         }
 
     } else {
@@ -576,8 +572,7 @@ colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
 
                 EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc_2));
                 pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2,
-                                     role_1, role_2, influence,
-                                     data_set);
+                                     role_1, role_2, influence);
             }
         }
     }
@@ -678,7 +673,7 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
 
     pcmk__new_colocation(id, attr, score_i, dependent, primary,
                          dependent_role, primary_role,
-                         unpack_influence(id, dependent, influence_s), data_set);
+                         unpack_influence(id, dependent, influence_s));
 }
 
 // \return Standard Pacemaker return code
@@ -887,7 +882,7 @@ mark_action_blocked(pe_resource_t *rsc, const char *task,
 
             pe__clear_action_flags(action, pe_action_runnable);
             pe_action_set_reason(action, reason_text, false);
-            pcmk__block_colocation_dependents(action, rsc->cluster);
+            pcmk__block_colocation_dependents(action);
             pcmk__update_action_for_orderings(action, rsc->cluster);
         }
     }
@@ -907,12 +902,10 @@ mark_action_blocked(pe_resource_t *rsc, const char *task,
  * promote actions of resources colocated with it, as appropriate to the
  * colocations' configured roles.
  *
- * \param[in,out] action    Action to check
- * \param[in]     data_set  Cluster working set (ignored)
+ * \param[in,out] action  Action to check
  */
 void
-pcmk__block_colocation_dependents(pe_action_t *action,
-                                  pe_working_set_t *data_set)
+pcmk__block_colocation_dependents(pe_action_t *action)
 {
     GList *gIter = NULL;
     GList *colocations = NULL;
