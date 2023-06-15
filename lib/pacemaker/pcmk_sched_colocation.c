@@ -902,7 +902,7 @@ mark_action_blocked(pe_resource_t *rsc, const char *task,
  * promote actions of resources colocated with it, as appropriate to the
  * colocations' configured roles.
  *
- * \param[in,out] data       Action to check
+ * \param[in,out] action  Action to check
  */
 void
 pcmk__block_colocation_dependents(pe_action_t *action)

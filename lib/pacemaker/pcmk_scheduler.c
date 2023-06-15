@@ -172,7 +172,7 @@ apply_exclusive_discovery(pe_resource_t *rsc, const pe_node_t *node)
  * \brief Apply stickiness to a resource if appropriate
  *
  * \param[in,out] data       Resource to check for stickiness
- * \param[in,out] user_data  Ignored
+ * \param[in]     user_data  Ignored
  */
 static void
 apply_stickiness(gpointer data, gpointer user_data)
