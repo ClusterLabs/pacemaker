@@ -336,7 +336,7 @@ BuildRequires: pam-devel
 BuildRequires: %{pkgname_gettext} >= 0.18
 
 # Required for "make check"
-BuildRequires: libcmocka-devel
+BuildRequires: libcmocka-devel >= 1.1.0
 
 %if %{systemd_native}
 BuildRequires: pkgconfig(systemd)
