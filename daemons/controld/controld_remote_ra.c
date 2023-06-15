@@ -341,7 +341,7 @@ remote_node_up(const char *node_name)
      * actual fencing or allow recurring monitor failures to be cleared too
      * soon. Ideally, we wouldn't rely on the CIB for the fenced status.
      */
-    controld_update_cib(XML_CIB_TAG_STATUS, update, call_opt, NULL);
+    controld_update_cib(XML_CIB_TAG_STATUS, update, call_opt, NULL, NULL);
     free_xml(update);
 }
 
@@ -389,7 +389,7 @@ remote_node_down(const char *node_name, const enum down_opts opts)
     /* Update CIB node state */
     update = create_xml_node(NULL, XML_CIB_TAG_STATUS);
     create_node_state_update(node, node_update_cluster, update, __func__);
-    controld_update_cib(XML_CIB_TAG_STATUS, update, call_opt, NULL);
+    controld_update_cib(XML_CIB_TAG_STATUS, update, call_opt, NULL, NULL);
     free_xml(update);
 }
 
@@ -1387,7 +1387,7 @@ remote_ra_maintenance(lrm_state_t * lrm_state, gboolean maintenance)
     state = create_node_state_update(node, node_update_none, update,
                                      __func__);
     crm_xml_add(state, XML_NODE_IS_MAINTENANCE, maintenance?"1":"0");
-    if (controld_update_cib(XML_CIB_TAG_STATUS, update, call_opt,
+    if (controld_update_cib(XML_CIB_TAG_STATUS, update, call_opt, NULL,
                             NULL) == pcmk_rc_ok) {
         /* TODO: still not 100% sure that async update will succeed ... */
         if (maintenance) {

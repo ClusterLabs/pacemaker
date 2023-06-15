@@ -401,6 +401,60 @@ cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
 
 /*!
  * \internal
+ * \brief Get the XPath and description of a node state section to be deleted
+ *
+ * \param[in]  uname    Desired node
+ * \param[in]  section  Subsection of node_state to be deleted
+ * \param[out] xpath    Where to store XPath of \p section
+ * \param[out] desc     If not \c NULL, where to store description of \p section
+ */
+void
+controld_node_state_deletion_strings(const char *uname,
+                                     enum controld_section_e section,
+                                     char **xpath, char **desc)
+{
+    const char *desc_pre = NULL;
+
+    // Shutdown locks that started before this time are expired
+    long long expire = (long long) time(NULL)
+                       - controld_globals.shutdown_lock_limit;
+
+    switch (section) {
+        case controld_section_lrm:
+            *xpath = crm_strdup_printf(XPATH_NODE_LRM, uname);
+            desc_pre = "resource history";
+            break;
+        case controld_section_lrm_unlocked:
+            *xpath = crm_strdup_printf(XPATH_NODE_LRM_UNLOCKED,
+                                       uname, uname, expire);
+            desc_pre = "resource history (other than shutdown locks)";
+            break;
+        case controld_section_attrs:
+            *xpath = crm_strdup_printf(XPATH_NODE_ATTRS, uname);
+            desc_pre = "transient attributes";
+            break;
+        case controld_section_all:
+            *xpath = crm_strdup_printf(XPATH_NODE_ALL, uname);
+            desc_pre = "all state";
+            break;
+        case controld_section_all_unlocked:
+            *xpath = crm_strdup_printf(XPATH_NODE_ALL_UNLOCKED,
+                                       uname, uname, expire, uname);
+            desc_pre = "all state (other than shutdown locks)";
+            break;
+        default:
+            // We called this function incorrectly
+            CRM_ASSERT(false);
+            break;
+    }
+
+    if (desc != NULL) {
+        *desc = crm_strdup_printf("%s for node %s", desc_pre, uname);
+    }
+}
+
+/*!
+ * \internal
  * \brief Delete subsection of a node's CIB node_state
  *
  * \param[in] uname    Desired node
@@ -411,57 +465,23 @@ void
 controld_delete_node_state(const char *uname, enum controld_section_e section,
                            int options)
 {
-    cib_t *cib_conn = controld_globals.cib_conn;
-
+    cib_t *cib = controld_globals.cib_conn;
     char *xpath = NULL;
     char *desc = NULL;
+    int cib_rc = pcmk_ok;
 
-    // Shutdown locks that started before this time are expired
-    long long expire = (long long) time(NULL)
-                       - controld_globals.shutdown_lock_limit;
+    CRM_ASSERT((uname != NULL) && (cib != NULL));
 
-    CRM_CHECK(uname != NULL, return);
-    switch (section) {
-        case controld_section_lrm:
-            xpath = crm_strdup_printf(XPATH_NODE_LRM, uname);
-            desc = crm_strdup_printf("resource history for node %s", uname);
-            break;
-        case controld_section_lrm_unlocked:
-            xpath = crm_strdup_printf(XPATH_NODE_LRM_UNLOCKED,
-                                      uname, uname, expire);
-            desc = crm_strdup_printf("resource history (other than shutdown "
-                                     "locks) for node %s", uname);
-            break;
-        case controld_section_attrs:
-            xpath = crm_strdup_printf(XPATH_NODE_ATTRS, uname);
-            desc = crm_strdup_printf("transient attributes for node %s", uname);
-            break;
-        case controld_section_all:
-            xpath = crm_strdup_printf(XPATH_NODE_ALL, uname);
-            desc = crm_strdup_printf("all state for node %s", uname);
-            break;
-        case controld_section_all_unlocked:
-            xpath = crm_strdup_printf(XPATH_NODE_ALL_UNLOCKED,
-                                      uname, uname, expire, uname);
-            desc = crm_strdup_printf("all state (other than shutdown locks) "
-                                     "for node %s", uname);
-            break;
-    }
+    controld_node_state_deletion_strings(uname, section, &xpath, &desc);
 
-    if (cib_conn == NULL) {
-        crm_warn("Unable to delete %s: no CIB connection", desc);
-        free(desc);
-    } else {
-        int call_id;
+    cib__set_call_options(options, "node state deletion",
+                          cib_xpath|cib_multiple);
+    cib_rc = cib->cmds->remove(cib, xpath, NULL, options);
+    fsa_register_cib_callback(cib_rc, desc, cib_delete_callback);
+    crm_info("Deleting %s (via CIB call %d) " CRM_XS " xpath=%s",
+             desc, cib_rc, xpath);
 
-        cib__set_call_options(options, "node state deletion",
-                              cib_xpath|cib_multiple);
-        call_id = cib_conn->cmds->remove(cib_conn, xpath, NULL, options);
-        crm_info("Deleting %s (via CIB call %d) " CRM_XS " xpath=%s",
-                 desc, call_id, xpath);
-        fsa_register_cib_callback(call_id, desc, cib_delete_callback);
-        // CIB library handles freeing desc
-    }
+    // CIB library handles freeing desc
     free(xpath);
 }
 
@@ -876,10 +896,12 @@ should_preserve_lock(lrmd_event_data_t *op)
  * \internal
  * \brief Request a CIB update
  *
- * \param[in]     section   Section of CIB to update
- * \param[in,out] data      New XML of CIB section to update
- * \param[in]     options   CIB call options
- * \param[in]     callback  If not NULL, set this as the operation callback
+ * \param[in]     section    Section of CIB to update
+ * \param[in]     data       New XML of CIB section to update
+ * \param[in]     options    CIB call options
+ * \param[in]     callback   If not \c NULL, set this as the operation callback
+ * \param[in,out] user_data  Data to pass to \p callback (must be freeable using
+ *                           \c free())
  *
  * \return Standard Pacemaker return code
  *
@@ -888,11 +910,12 @@ should_preserve_lock(lrmd_event_data_t *op)
  */
 int
 controld_update_cib(const char *section, xmlNode *data, int options,
-                    void (*callback)(xmlNode *, int, int, xmlNode *, void *))
+                    void (*callback)(xmlNode *, int, int, xmlNode *, void *),
+                    void *user_data)
 {
     int cib_rc = -ENOTCONN;
 
-    CRM_ASSERT(data != NULL);
+    CRM_ASSERT((data != NULL) && ((callback != NULL) || (user_data == NULL)));
 
     if (controld_globals.cib_conn != NULL) {
         cib_rc = cib_internal_op(controld_globals.cib_conn,
@@ -918,7 +941,7 @@ controld_update_cib(const char *section, xmlNode *data, int options,
              */
             pending_rsc_update = cib_rc;
         }
-        fsa_register_cib_callback(cib_rc, NULL, callback);
+        fsa_register_cib_callback(cib_rc, user_data, callback);
     }
 
     return (cib_rc >= 0)? pcmk_rc_ok : pcmk_legacy2rc(cib_rc);
@@ -1012,7 +1035,8 @@ controld_update_resource_history(const char *node_name,
      * fenced for running a resource it isn't.
      */
     crm_log_xml_trace(update, __func__);
-    controld_update_cib(XML_CIB_TAG_STATUS, update, call_opt, cib_rsc_callback);
+    controld_update_cib(XML_CIB_TAG_STATUS, update, call_opt, cib_rsc_callback,
+                        NULL);
     free_xml(update);
 }
 

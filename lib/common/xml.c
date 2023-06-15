@@ -633,7 +633,6 @@ getDocPtr(xmlNode * node)
     if (doc == NULL) {
         doc = xmlNewDoc((pcmkXmlStr) "1.0");
         xmlDocSetRootElement(doc, node);
-        xmlSetTreeDoc(node, doc);
     }
     return doc;
 }
