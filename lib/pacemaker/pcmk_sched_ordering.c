@@ -368,18 +368,21 @@ inverse_ordering(const char *id, enum pe_order_kind kind,
                  pcmk_resource_t *rsc_first, const char *action_first,
                  pcmk_resource_t *rsc_then, const char *action_then)
 {
-    action_then = invert_action(action_then);
-    action_first = invert_action(action_first);
-    if ((action_then == NULL) || (action_first == NULL)) {
+    uint32_t flags;
+    const char *inverted_first = invert_action(action_first);
+    const char *inverted_then = invert_action(action_then);
+
+    if ((inverted_then == NULL) || (inverted_first == NULL)) {
         pcmk__config_warn("Cannot invert constraint '%s' "
                           "(please specify inverse manually)", id);
-    } else {
-        uint32_t flags = ordering_flags_for_kind(kind, action_first,
-                                                 ordering_symmetric_inverse);
-
-        pcmk__order_resource_actions(rsc_then, action_then, rsc_first,
-                                     action_first, flags);
+        return;
     }
+
+    // Order inverted actions
+    flags = ordering_flags_for_kind(kind, inverted_first,
+                                    ordering_symmetric_inverse);
+    pcmk__order_resource_actions(rsc_then, inverted_then,
+                                 rsc_first, inverted_first, flags);
 }
 
 static void
