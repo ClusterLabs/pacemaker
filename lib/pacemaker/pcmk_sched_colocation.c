@@ -38,8 +38,8 @@ cmp_dependent_priority(gconstpointer a, gconstpointer b)
 {
     const pcmk__colocation_t *rsc_constraint1 = (const pcmk__colocation_t *) a;
     const pcmk__colocation_t *rsc_constraint2 = (const pcmk__colocation_t *) b;
-    const pe_resource_t *dependent1 = rsc_constraint1->dependent;
-    const pe_resource_t *dependent2 = rsc_constraint2->dependent;
+    const pe_resource_t *dependent1 = NULL;
+    const pe_resource_t *dependent2 = NULL;
 
     if (a == NULL) {
         return 1;
@@ -48,7 +48,11 @@ cmp_dependent_priority(gconstpointer a, gconstpointer b)
         return -1;
     }
 
-    CRM_ASSERT((dependent1 != NULL) && (rsc_constraint1->primary != NULL));
+    dependent1 = rsc_constraint1->dependent;
+    dependent2 = rsc_constraint2->dependent;
+
+    CRM_ASSERT((dependent1 != NULL) && (dependent2 != NULL)
+               && (rsc_constraint1->primary != NULL));
 
     if (dependent1->priority > dependent2->priority) {
         return -1;
@@ -87,8 +91,8 @@ cmp_primary_priority(gconstpointer a, gconstpointer b)
 {
     const pcmk__colocation_t *rsc_constraint1 = (const pcmk__colocation_t *) a;
     const pcmk__colocation_t *rsc_constraint2 = (const pcmk__colocation_t *) b;
-    const pe_resource_t *primary1 = rsc_constraint1->primary;
-    const pe_resource_t *primary2 = rsc_constraint2->primary;
+    const pe_resource_t *primary1 = NULL;
+    const pe_resource_t *primary2 = NULL;
 
     if (a == NULL) {
         return 1;
@@ -97,7 +101,11 @@ cmp_primary_priority(gconstpointer a, gconstpointer b)
         return -1;
     }
 
-    CRM_ASSERT((rsc_constraint1->dependent != NULL) && (primary1 != NULL));
+    primary1 = rsc_constraint1->primary;
+    primary2 = rsc_constraint2->primary;
+
+    CRM_ASSERT((primary1 != NULL) && (primary2 != NULL)
+               && (rsc_constraint1->dependent != NULL));
 
     if (primary1->priority > primary2->priority) {
         return -1;
