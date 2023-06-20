@@ -598,8 +598,8 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
 
     const char *primary_instance = NULL;
     const char *dependent_instance = NULL;
-    pe_resource_t *dependent = NULL;
     pe_resource_t *primary = NULL;
+    pe_resource_t *dependent = NULL;
 
     primary = pcmk__find_constraint_resource(data_set->resources, primary_id);
     dependent = pcmk__find_constraint_resource(data_set->resources,

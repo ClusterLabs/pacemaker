@@ -99,7 +99,7 @@ update_synapse_confirmed(pcmk__graph_synapse_t *synapse, int action_id)
     }
 
     if (all_confirmed
-        && !(pcmk_is_set(synapse->flags, pcmk__synapse_confirmed))) {
+        && !pcmk_is_set(synapse->flags, pcmk__synapse_confirmed)) {
         crm_trace("Confirmed synapse %d", synapse->id);
         pcmk__set_synapse_flags(synapse, pcmk__synapse_confirmed);
     }
@@ -186,8 +186,9 @@ should_fire_synapse(pcmk__graph_t *graph, pcmk__graph_synapse_t *synapse)
             pcmk__clear_synapse_flags(synapse, pcmk__synapse_ready);
             break;
 
-        } else if (pcmk_is_set(prereq->flags, pcmk__graph_action_failed) &&
-                   !pcmk_is_set(prereq->flags, pcmk__graph_action_can_fail)) {
+        } else if (pcmk_is_set(prereq->flags, pcmk__graph_action_failed)
+                   && !pcmk_is_set(prereq->flags,
+                                   pcmk__graph_action_can_fail)) {
             crm_trace("Input %d for synapse %d confirmed but failed",
                       prereq->id, synapse->id);
             pcmk__clear_synapse_flags(synapse, pcmk__synapse_ready);

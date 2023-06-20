@@ -95,12 +95,12 @@ reduce_fence_history(stonith_history_t *history)
         for (np = new; ; np = np->next) {
             if ((hp->state == st_done) || (hp->state == st_failed)) {
                 /* action not in progress */
-                if (pcmk__str_eq(hp->target, np->target, pcmk__str_casei) &&
-                    pcmk__str_eq(hp->action, np->action, pcmk__str_none) &&
-                    (hp->state == np->state) &&
-                    ((hp->state == st_done) ||
-                     pcmk__str_eq(hp->delegate, np->delegate,
-                                  pcmk__str_casei))) {
+                if (pcmk__str_eq(hp->target, np->target, pcmk__str_casei)
+                    && pcmk__str_eq(hp->action, np->action, pcmk__str_none)
+                    && (hp->state == np->state)
+                    && ((hp->state == st_done)
+                        || pcmk__str_eq(hp->delegate, np->delegate,
+                                        pcmk__str_casei))) {
                         /* purge older hp */
                         stonith_history_free(hp);
                         break;
@@ -507,7 +507,7 @@ pcmk__fence_registered(pcmk__output_t *out, stonith_t *st, const char *target,
 
     out->begin_list(out, "fence device", "fence devices",
                     "Registered fence devices");
-    for (stonith_key_value_t *iter = devices; iter; iter = iter->next) {
+    for (stonith_key_value_t *iter = devices; iter != NULL; iter = iter->next) {
         out->list_item(out, "device", "%s", iter->value);
     }
     out->end_list(out);

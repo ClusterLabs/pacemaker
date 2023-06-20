@@ -126,68 +126,72 @@ pcmk__acl_annotate_permissions_recursive(xmlNode *xml_modify)
 
     for (i_node = xml_modify; i_node != NULL; i_node = i_node->next) {
         switch (i_node->type) {
-        case XML_ELEMENT_NODE:
-            pcmk__set_xml_doc_flag(i_node, pcmk__xf_tracking);
+            case XML_ELEMENT_NODE:
+                pcmk__set_xml_doc_flag(i_node, pcmk__xf_tracking);
 
-            if (!pcmk__check_acl(i_node, NULL, pcmk__xf_acl_read)) {
-                ns = NS_DENIED;
-            } else if (!pcmk__check_acl(i_node, NULL, pcmk__xf_acl_write)) {
-                ns = NS_READABLE;
-            } else {
-                ns = NS_WRITABLE;
-            }
-            pcmk__acl_mark_node_with_namespace(i_node, ns, &ret,
-                                               &ns_recycle_writable,
-                                               &ns_recycle_readable,
-                                               &ns_recycle_denied);
-            /* XXX recursion can be turned into plain iteration to save stack */
-            if (i_node->properties != NULL) {
-                /* this is not entirely clear, but relies on the very same
-                   class-hierarchy emulation that libxml2 has firmly baked in
-                   its API/ABI */
-                ret |= pcmk__acl_annotate_permissions_recursive((xmlNodePtr) i_node->properties);
-            }
-            if (i_node->children != NULL) {
-                ret |= pcmk__acl_annotate_permissions_recursive(i_node->children);
-            }
-            break;
-        case XML_ATTRIBUTE_NODE:
-            /* we can utilize that parent has already been assigned the ns */
-            if (!pcmk__check_acl(i_node->parent,
-                                 (const char *) i_node->name,
-                                 pcmk__xf_acl_read)) {
-                ns = NS_DENIED;
-            } else if (!pcmk__check_acl(i_node,
-                                   (const char *) i_node->name,
-                                   pcmk__xf_acl_write)) {
-                ns = NS_READABLE;
-            } else {
-                ns = NS_WRITABLE;
-            }
-            pcmk__acl_mark_node_with_namespace(i_node, ns, &ret,
-                                               &ns_recycle_writable,
-                                               &ns_recycle_readable,
-                                               &ns_recycle_denied);
-            break;
-        case XML_COMMENT_NODE:
-            /* we can utilize that parent has already been assigned the ns */
-            if (!pcmk__check_acl(i_node->parent, (const char *) i_node->name,
-                                 pcmk__xf_acl_read)) {
-                ns = NS_DENIED;
-            } else if (!pcmk__check_acl(i_node->parent,
-                                        (const char *) i_node->name,
-                                        pcmk__xf_acl_write)) {
-                ns = NS_READABLE;
-            } else {
-                ns = NS_WRITABLE;
-            }
-            pcmk__acl_mark_node_with_namespace(i_node, ns, &ret,
-                                               &ns_recycle_writable,
-                                               &ns_recycle_readable,
-                                               &ns_recycle_denied);
-            break;
-        default:
-            break;
+                if (!pcmk__check_acl(i_node, NULL, pcmk__xf_acl_read)) {
+                    ns = NS_DENIED;
+                } else if (!pcmk__check_acl(i_node, NULL, pcmk__xf_acl_write)) {
+                    ns = NS_READABLE;
+                } else {
+                    ns = NS_WRITABLE;
+                }
+                pcmk__acl_mark_node_with_namespace(i_node, ns, &ret,
+                                                   &ns_recycle_writable,
+                                                   &ns_recycle_readable,
+                                                   &ns_recycle_denied);
+                // @TODO Could replace recursion with iteration to save stack
+                if (i_node->properties != NULL) {
+                    /* This is not entirely clear, but relies on the very same
+                     * class-hierarchy emulation that libxml2 has firmly baked
+                     * in its API/ABI
+                     */
+                    ret |= pcmk__acl_annotate_permissions_recursive((xmlNodePtr) i_node->properties);
+                }
+                if (i_node->children != NULL) {
+                    ret |= pcmk__acl_annotate_permissions_recursive(i_node->children);
+                }
+                break;
+
+            case XML_ATTRIBUTE_NODE:
+                /* we can utilize that parent has already been assigned the ns */
+                if (!pcmk__check_acl(i_node->parent,
+                                     (const char *) i_node->name,
+                                     pcmk__xf_acl_read)) {
+                    ns = NS_DENIED;
+                } else if (!pcmk__check_acl(i_node,
+                                       (const char *) i_node->name,
+                                       pcmk__xf_acl_write)) {
+                    ns = NS_READABLE;
+                } else {
+                    ns = NS_WRITABLE;
+                }
+                pcmk__acl_mark_node_with_namespace(i_node, ns, &ret,
+                                                   &ns_recycle_writable,
+                                                   &ns_recycle_readable,
+                                                   &ns_recycle_denied);
+                break;
+
+            case XML_COMMENT_NODE:
+                /* we can utilize that parent has already been assigned the ns */
+                if (!pcmk__check_acl(i_node->parent, (const char *) i_node->name,
+                                     pcmk__xf_acl_read)) {
+                    ns = NS_DENIED;
+                } else if (!pcmk__check_acl(i_node->parent,
+                                            (const char *) i_node->name,
+                                            pcmk__xf_acl_write)) {
+                    ns = NS_READABLE;
+                } else {
+                    ns = NS_WRITABLE;
+                }
+                pcmk__acl_mark_node_with_namespace(i_node, ns, &ret,
+                                                   &ns_recycle_writable,
+                                                   &ns_recycle_readable,
+                                                   &ns_recycle_denied);
+                break;
+
+            default:
+                break;
         }
     }
 

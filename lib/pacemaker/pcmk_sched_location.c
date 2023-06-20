@@ -316,7 +316,9 @@ unpack_simple_location(xmlNode *xml_obj, pe_working_set_t *data_set)
             return;
         }
 
-        for (GList *iter = data_set->resources; iter; iter = iter->next) {
+        for (GList *iter = data_set->resources; iter != NULL;
+             iter = iter->next) {
+
             pe_resource_t *r = iter->data;
             int nregs = 0;
             regmatch_t *pmatch = NULL;
