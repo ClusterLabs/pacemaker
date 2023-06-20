@@ -195,8 +195,8 @@ pcmk__rscs_matching_id(const char *id, const pe_working_set_t *data_set)
  * \internal
  * \brief Set the variant-appropriate assignment methods for a resource
  *
- * \param[in,out] data     Resource to set assignment methods for
- * \param[in]     ignored  Here so function can be used with g_list_foreach()
+ * \param[in,out] data       Resource to set assignment methods for
+ * \param[in]     user_data  Ignored
  */
 static void
 set_assignment_methods_for_rsc(gpointer data, gpointer user_data)
@@ -298,7 +298,7 @@ pcmk__noop_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml)
  * \internal
  * \brief Output a summary of scheduled actions for a resource
  *
- * \param[in] rsc  Resource to output actions for
+ * \param[in,out] rsc  Resource to output actions for
  */
 void
 pcmk__output_resource_actions(pe_resource_t *rsc)
