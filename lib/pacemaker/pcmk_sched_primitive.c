@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <stdbool.h>
+#include <stdint.h>                 // uint8_t, uint32_t
 
 #include <crm/msg_xml.h>
 #include <pacemaker-internal.h>
@@ -196,7 +197,8 @@ assign_best_node(pe_resource_t *rsc, const pe_node_t *prefer)
 
         } else {
             pe_rsc_trace(rsc,
-                         "Chose preferred node %s for %s (ignoring %d candidates)",
+                         "Chose preferred node %s for %s "
+                         "(ignoring %d candidates)",
                          pe__node_name(chosen), rsc->id, g_list_length(nodes));
         }
     }
@@ -226,7 +228,8 @@ assign_best_node(pe_resource_t *rsc, const pe_node_t *prefer)
                 // Nothing to do
 
             } else if (!pcmk__node_available(running, true, false)) {
-                pe_rsc_trace(rsc, "Current node for %s (%s) can't run resources",
+                pe_rsc_trace(rsc,
+                             "Current node for %s (%s) can't run resources",
                              rsc->id, pe__node_name(running));
 
             } else {
@@ -247,7 +250,12 @@ assign_best_node(pe_resource_t *rsc, const pe_node_t *prefer)
                 }
 
                 if (nodes_with_best_score > 1) {
-                    do_crm_log(((chosen->weight >= INFINITY)? LOG_WARNING : LOG_INFO),
+                    uint8_t log_level = LOG_INFO;
+
+                    if (chosen->weight >= INFINITY) {
+                        log_level = LOG_WARNING;
+                    }
+                    do_crm_log(log_level,
                                "Chose %s for %s from %d nodes with score %s",
                                pe__node_name(chosen), rsc->id,
                                nodes_with_best_score,
@@ -365,7 +373,7 @@ pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer)
     GList *iter = NULL;
     pcmk__colocation_t *colocation = NULL;
 
-    CRM_ASSERT(rsc != NULL);
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_native));
 
     // Never assign a child without parent being assigned first
     if ((rsc->parent != NULL)
@@ -653,7 +661,7 @@ pcmk__primitive_create_actions(pe_resource_t *rsc)
     unsigned int num_clean_active = 0;
     const char *next_role_source = NULL;
 
-    CRM_ASSERT(rsc != NULL);
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_native));
 
     next_role_source = set_default_next_role(rsc);
     pe_rsc_trace(rsc,
@@ -865,7 +873,7 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
     bool check_unfencing = false;
     bool check_utilization = false;
 
-    CRM_ASSERT(rsc != NULL);
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_native));
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
         pe_rsc_trace(rsc,
@@ -876,7 +884,8 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
 
     // Whether resource requires unfencing
     check_unfencing = !pcmk_is_set(rsc->flags, pe_rsc_fence_device)
-                      && pcmk_is_set(rsc->cluster->flags, pe_flag_enable_unfencing)
+                      && pcmk_is_set(rsc->cluster->flags,
+                                     pe_flag_enable_unfencing)
                       && pcmk_is_set(rsc->flags, pe_rsc_needs_unfencing);
 
     // Whether a non-default placement strategy is used
@@ -1033,8 +1042,8 @@ pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
 {
     enum pcmk__coloc_affects filter_results;
 
-    CRM_CHECK((colocation != NULL) && (dependent != NULL) && (primary != NULL),
-              return);
+    CRM_ASSERT((dependent != NULL) && (primary != NULL)
+               && (colocation != NULL));
 
     if (for_dependent) {
         // Always process on behalf of primary resource
@@ -1069,9 +1078,8 @@ pcmk__with_primitive_colocations(const pe_resource_t *rsc,
                                  const pe_resource_t *orig_rsc, GList **list)
 {
     // Primitives don't have children, so rsc should also be orig_rsc
-    CRM_CHECK((rsc != NULL) && (rsc->variant == pe_native)
-              && (rsc == orig_rsc) && (list != NULL),
-              return);
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_native)
+               && (rsc == orig_rsc) && (list != NULL));
 
     // Add primitive's own colocations plus any relevant ones from parent
     pcmk__add_with_this_list(list, rsc->rsc_cons_lhs);
@@ -1088,9 +1096,8 @@ pcmk__primitive_with_colocations(const pe_resource_t *rsc,
                                  const pe_resource_t *orig_rsc, GList **list)
 {
     // Primitives don't have children, so rsc should also be orig_rsc
-    CRM_CHECK((rsc != NULL) && (rsc->variant == pe_native)
-              && (rsc == orig_rsc) && (list != NULL),
-              return);
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_native)
+               && (rsc == orig_rsc) && (list != NULL));
 
     // Add primitive's own colocations plus any relevant ones from parent
     pcmk__add_this_with_list(list, rsc->rsc_cons);
@@ -1407,7 +1414,7 @@ pcmk__primitive_add_graph_meta(const pe_resource_t *rsc, xmlNode *xml)
     char *value = NULL;
     const pe_resource_t *parent = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (xml != NULL));
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_native) && (xml != NULL));
 
     /* Clone instance numbers get set internally as meta-attributes, and are
      * needed in the transition graph (for example, to tell unique clone
@@ -1455,6 +1462,9 @@ pcmk__primitive_add_utilization(const pe_resource_t *rsc,
                                 const pe_resource_t *orig_rsc, GList *all_rscs,
                                 GHashTable *utilization)
 {
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_native)
+               && (orig_rsc != NULL) && (utilization != NULL));
+
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
         return;
     }
@@ -1511,7 +1521,11 @@ ban_if_not_locked(gpointer data, gpointer user_data)
 void
 pcmk__primitive_shutdown_lock(pe_resource_t *rsc)
 {
-    const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    const char *class = NULL;
+
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_native));
+
+    class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
     // Fence devices and remote connections can't be locked
     if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_null_matches)

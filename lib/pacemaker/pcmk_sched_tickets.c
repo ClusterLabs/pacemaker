@@ -63,7 +63,7 @@ ticket_role_matches(const pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
 static void
 constraints_for_ticket(pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
 {
-    GList *gIter = NULL;
+    GList *iter = NULL;
 
     CRM_CHECK((rsc != NULL) && (rsc_ticket != NULL), return);
 
@@ -73,8 +73,8 @@ constraints_for_ticket(pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
 
     if (rsc->children) {
         pe_rsc_trace(rsc, "Processing ticket dependencies from %s", rsc->id);
-        for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-            constraints_for_ticket((pe_resource_t *) gIter->data, rsc_ticket);
+        for (iter = rsc->children; iter != NULL; iter = iter->next) {
+            constraints_for_ticket((pe_resource_t *) iter->data, rsc_ticket);
         }
         return;
     }
@@ -107,9 +107,8 @@ constraints_for_ticket(pe_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
                 resource_location(rsc, NULL, -INFINITY, "__loss_of_ticket__",
                                   rsc->cluster);
 
-                for (gIter = rsc->running_on; gIter != NULL;
-                     gIter = gIter->next) {
-                    pe_fence_node(rsc->cluster, (pe_node_t *) gIter->data,
+                for (iter = rsc->running_on; iter != NULL; iter = iter->next) {
+                    pe_fence_node(rsc->cluster, (pe_node_t *) iter->data,
                                   "deadman ticket was lost", FALSE);
                 }
                 break;
@@ -404,7 +403,7 @@ unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     *expanded_xml = copy_xml(xml_obj);
 
-    // Convert template/tag reference in "rsc" into resource_set under rsc_ticket
+    // Convert any template or tag reference in "rsc" into ticket resource_set
     if (!pcmk__tag_to_set(*expanded_xml, &rsc_set, XML_COLOC_ATTR_SOURCE,
                           false, data_set)) {
         free_xml(*expanded_xml);
@@ -434,8 +433,7 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
     bool any_sets = false;
 
     const char *id = NULL;
-    const char *ticket_str = crm_element_value(xml_obj, XML_TICKET_ATTR_TICKET);
-    const char *loss_policy = crm_element_value(xml_obj, XML_TICKET_ATTR_LOSS_POLICY);
+    const char *ticket_str = NULL;
 
     pe_ticket_t *ticket = NULL;
 
@@ -455,6 +453,7 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
         data_set->tickets = pcmk__strkey_table(free, destroy_ticket);
     }
 
+    ticket_str = crm_element_value(xml_obj, XML_TICKET_ATTR_TICKET);
     if (ticket_str == NULL) {
         pcmk__config_err("Ignoring constraint '%s' without ticket", id);
         return;
@@ -481,8 +480,12 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
     for (set = first_named_child(xml_obj, XML_CONS_TAG_RSC_SET); set != NULL;
          set = crm_next_same_xml(set)) {
 
+        const char *loss_policy = NULL;
+
         any_sets = true;
         set = expand_idref(set, data_set->input);
+        loss_policy = crm_element_value(xml_obj, XML_TICKET_ATTR_LOSS_POLICY);
+
         if ((set == NULL) // Configuration error, message already logged
             || (unpack_rsc_ticket_set(set, ticket, loss_policy,
                                       data_set) != pcmk_rc_ok)) {

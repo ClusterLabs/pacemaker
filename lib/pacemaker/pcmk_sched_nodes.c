@@ -96,9 +96,9 @@ pcmk__copy_node_list(const GList *list, bool reset)
 {
     GList *result = NULL;
 
-    for (const GList *gIter = list; gIter != NULL; gIter = gIter->next) {
+    for (const GList *iter = list; iter != NULL; iter = iter->next) {
         pe_node_t *new_node = NULL;
-        pe_node_t *this_node = (pe_node_t *) gIter->data;
+        pe_node_t *this_node = iter->data;
 
         new_node = pe__copy_node(this_node);
         if (reset) {
@@ -130,8 +130,8 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
     const pe_node_t *node2 = (const pe_node_t *) b;
     const pe_node_t *active = (const pe_node_t *) data;
 
-    int node1_score = 0;
-    int node2_score = 0;
+    int node1_score = -INFINITY;
+    int node2_score = -INFINITY;
 
     int result = 0;
 
@@ -144,8 +144,12 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
 
     // Compare node scores
 
-    node1_score = pcmk__node_available(node1, false, false)? node1->weight : -INFINITY;
-    node2_score = pcmk__node_available(node2, false, false)? node2->weight : -INFINITY;
+    if (pcmk__node_available(node1, false, false)) {
+        node1_score = node1->weight;
+    }
+    if (pcmk__node_available(node2, false, false)) {
+        node2_score = node2->weight;
+    }
 
     if (node1_score > node2_score) {
         crm_trace("%s (%d) > %s (%d) : score",

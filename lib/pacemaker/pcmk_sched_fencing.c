@@ -33,7 +33,8 @@ rsc_is_known_on(const pe_resource_t *rsc, const pe_node_t *node)
 
    } else if ((rsc->variant == pe_native)
               && pe_rsc_is_anon_clone(rsc->parent)
-              && pe_hash_table_lookup(rsc->parent->known_on, node->details->id)) {
+              && pe_hash_table_lookup(rsc->parent->known_on,
+                                      node->details->id)) {
        /* We check only the parent, not the uber-parent, because we cannot
         * assume that the resource is known if it is in an anonymously cloned
         * group (which may be only partially known).
@@ -54,13 +55,12 @@ static void
 order_start_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
 {
     pe_node_t *target;
-    GList *gIter = NULL;
 
     CRM_CHECK(stonith_op && stonith_op->node, return);
     target = stonith_op->node;
 
-    for (gIter = rsc->actions; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
+    for (GList *iter = rsc->actions; iter != NULL; iter = iter->next) {
+        pe_action_t *action = iter->data;
 
         switch (action->needs) {
             case rsc_req_nothing:
@@ -72,8 +72,9 @@ order_start_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
                 break;
 
             case rsc_req_quorum:
-                if (pcmk__str_eq(action->task, RSC_START, pcmk__str_casei)
-                    && pe_hash_table_lookup(rsc->allowed_nodes, target->details->id)
+                if (pcmk__str_eq(action->task, RSC_START, pcmk__str_none)
+                    && pe_hash_table_lookup(rsc->allowed_nodes,
+                                            target->details->id)
                     && !rsc_is_known_on(rsc, target)) {
 
                     /* If we don't know the status of the resource on the node
@@ -85,8 +86,8 @@ order_start_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
                      * The most likely explanation is that the DC died and took
                      * its status with it.
                      */
-                    pe_rsc_debug(rsc, "Ordering %s after %s recovery", action->uuid,
-                                 pe__node_name(target));
+                    pe_rsc_debug(rsc, "Ordering %s after %s recovery",
+                                 action->uuid, pe__node_name(target));
                     order_actions(stonith_op, action,
                                   pe_order_optional | pe_order_runnable_left);
                 }
@@ -105,7 +106,7 @@ order_start_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
 static void
 order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
 {
-    GList *gIter = NULL;
+    GList *iter = NULL;
     GList *action_list = NULL;
     bool order_implicit = false;
 
@@ -135,8 +136,8 @@ order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
         parent_stop = find_first_action(top->actions, NULL, RSC_STOP, NULL);
     }
 
-    for (gIter = action_list; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
+    for (iter = action_list; iter != NULL; iter = iter->next) {
+        pe_action_t *action = iter->data;
 
         // The stop would never complete, so convert it into a pseudo-action.
         pe__set_action_flags(action, pe_action_pseudo|pe_action_runnable);
@@ -208,15 +209,16 @@ order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
     /* Get a list of demote actions potentially implied by the fencing */
     action_list = pe__resource_actions(rsc, target, RSC_DEMOTE, FALSE);
 
-    for (gIter = action_list; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
+    for (iter = action_list; iter != NULL; iter = iter->next) {
+        pe_action_t *action = iter->data;
 
         if (!(action->node->details->online) || action->node->details->unclean
             || pcmk_is_set(rsc->flags, pe_rsc_failed)) {
 
             if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
                 pe_rsc_info(rsc,
-                            "Demote of failed resource %s is implicit after %s is fenced",
+                            "Demote of failed resource %s is implicit "
+                            "after %s is fenced",
                             rsc->id, pe__node_name(target));
             } else {
                 pe_rsc_info(rsc, "%s is implicit after %s is fenced",
@@ -229,10 +231,11 @@ order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
             pe__set_action_flags(action, pe_action_pseudo|pe_action_runnable);
 
             if (pe_rsc_is_bundled(rsc)) {
-                // Do nothing, let recovery be ordered after parent's implied stop
+                // Recovery will be ordered as usual after parent's implied stop
 
             } else if (order_implicit) {
-                order_actions(stonith_op, action, pe_order_preserve|pe_order_optional);
+                order_actions(stonith_op, action,
+                              pe_order_preserve|pe_order_optional);
             }
         }
     }
@@ -251,10 +254,8 @@ static void
 rsc_stonith_ordering(pe_resource_t *rsc, pe_action_t *stonith_op)
 {
     if (rsc->children) {
-        GList *gIter = NULL;
-
-        for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
+        for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+            pe_resource_t *child_rsc = iter->data;
 
             rsc_stonith_ordering(child_rsc, stonith_op);
         }

@@ -47,7 +47,10 @@ update_synapse_ready(pcmk__graph_synapse_t *synapse, int action_id)
     if (pcmk_is_set(synapse->flags, pcmk__synapse_ready)) {
         return; // All inputs have already been confirmed
     }
-    pcmk__set_synapse_flags(synapse, pcmk__synapse_ready); // Presume ready until proven otherwise
+
+    // Presume ready until proven otherwise
+    pcmk__set_synapse_flags(synapse, pcmk__synapse_ready);
+
     for (GList *lpc = synapse->inputs; lpc != NULL; lpc = lpc->next) {
         pcmk__graph_action_t *prereq = (pcmk__graph_action_t *) lpc->data;
 
@@ -56,7 +59,7 @@ update_synapse_ready(pcmk__graph_synapse_t *synapse, int action_id)
                       action_id, synapse->id);
             pcmk__set_graph_action_flags(prereq, pcmk__graph_action_confirmed);
 
-        } else if (!(pcmk_is_set(prereq->flags, pcmk__graph_action_confirmed))) {
+        } else if (!pcmk_is_set(prereq->flags, pcmk__graph_action_confirmed)) {
             pcmk__clear_synapse_flags(synapse, pcmk__synapse_ready);
             crm_trace("Synapse %d still not ready after action %d",
                       synapse->id, action_id);
@@ -87,14 +90,16 @@ update_synapse_confirmed(pcmk__graph_synapse_t *synapse, int action_id)
                       action_id, synapse->id);
             pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
 
-        } else if (all_confirmed && !(pcmk_is_set(action->flags, pcmk__graph_action_confirmed))) {
+        } else if (all_confirmed &&
+                   !pcmk_is_set(action->flags, pcmk__graph_action_confirmed)) {
             all_confirmed = false;
             crm_trace("Synapse %d still not confirmed after action %d",
                       synapse->id, action_id);
         }
     }
 
-    if (all_confirmed && !(pcmk_is_set(synapse->flags, pcmk__synapse_confirmed))) {
+    if (all_confirmed
+        && !pcmk_is_set(synapse->flags, pcmk__synapse_confirmed)) {
         crm_trace("Confirmed synapse %d", synapse->id);
         pcmk__set_synapse_flags(synapse, pcmk__synapse_confirmed);
     }
@@ -113,13 +118,15 @@ pcmk__update_graph(pcmk__graph_t *graph, const pcmk__graph_action_t *action)
     for (GList *lpc = graph->synapses; lpc != NULL; lpc = lpc->next) {
         pcmk__graph_synapse_t *synapse = (pcmk__graph_synapse_t *) lpc->data;
 
-        if (pcmk_any_flags_set(synapse->flags, pcmk__synapse_confirmed|pcmk__synapse_failed)) {
+        if (pcmk_any_flags_set(synapse->flags,
+                               pcmk__synapse_confirmed|pcmk__synapse_failed)) {
             continue; // This synapse already completed
 
         } else if (pcmk_is_set(synapse->flags, pcmk__synapse_executed)) {
             update_synapse_confirmed(synapse, action->id);
 
-        } else if (!(pcmk_is_set(action->flags, pcmk__graph_action_failed)) || (synapse->priority == INFINITY)) {
+        } else if (!pcmk_is_set(action->flags, pcmk__graph_action_failed)
+                   || (synapse->priority == INFINITY)) {
             update_synapse_ready(synapse, action->id);
         }
     }
@@ -179,7 +186,9 @@ should_fire_synapse(pcmk__graph_t *graph, pcmk__graph_synapse_t *synapse)
             pcmk__clear_synapse_flags(synapse, pcmk__synapse_ready);
             break;
 
-        } else if (pcmk_is_set(prereq->flags, pcmk__graph_action_failed) && !(pcmk_is_set(prereq->flags, pcmk__graph_action_can_fail))) {
+        } else if (pcmk_is_set(prereq->flags, pcmk__graph_action_failed)
+                   && !pcmk_is_set(prereq->flags,
+                                   pcmk__graph_action_can_fail)) {
             crm_trace("Input %d for synapse %d confirmed but failed",
                       prereq->id, synapse->id);
             pcmk__clear_synapse_flags(synapse, pcmk__synapse_ready);
@@ -244,7 +253,7 @@ initiate_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
         case pcmk__cluster_graph_action:
             if (pcmk__str_eq(crm_element_value(action->xml, XML_LRM_ATTR_TASK),
-                             CRM_OP_FENCE, pcmk__str_casei)) {
+                             CRM_OP_FENCE, pcmk__str_none)) {
                 crm_trace("Executing fencing action %d (%s)",
                           action->id, id);
                 return graph_fns->fence(graph, action);
@@ -374,7 +383,8 @@ pcmk__execute_graph(pcmk__graph_t *graph)
         if (pcmk_is_set(synapse->flags, pcmk__synapse_confirmed)) {
             graph->completed++;
 
-        } else if (!(pcmk_is_set(synapse->flags, pcmk__synapse_failed)) && pcmk_is_set(synapse->flags, pcmk__synapse_executed)) {
+        } else if (!pcmk_is_set(synapse->flags, pcmk__synapse_failed)
+                   && pcmk_is_set(synapse->flags, pcmk__synapse_executed)) {
             graph->pending++;
         }
     }
@@ -396,7 +406,9 @@ pcmk__execute_graph(pcmk__graph_t *graph)
             graph->skipped++;
             continue;
 
-        } else if (pcmk_any_flags_set(synapse->flags, pcmk__synapse_confirmed|pcmk__synapse_executed)) {
+        } else if (pcmk_any_flags_set(synapse->flags,
+                                      pcmk__synapse_confirmed
+                                      |pcmk__synapse_executed)) {
             continue; // Already handled
 
         } else if (should_fire_synapse(graph, synapse)) {
@@ -479,15 +491,14 @@ unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
         return NULL;
     }
 
-    if (pcmk__str_eq(element, XML_GRAPH_TAG_RSC_OP, pcmk__str_casei)) {
+    if (pcmk__str_eq(element, XML_GRAPH_TAG_RSC_OP, pcmk__str_none)) {
         action_type = pcmk__rsc_graph_action;
 
     } else if (pcmk__str_eq(element, XML_GRAPH_TAG_PSEUDO_EVENT,
-                            pcmk__str_casei)) {
+                            pcmk__str_none)) {
         action_type = pcmk__pseudo_graph_action;
 
-    } else if (pcmk__str_eq(element, XML_GRAPH_TAG_CRM_EVENT,
-                            pcmk__str_casei)) {
+    } else if (pcmk__str_eq(element, XML_GRAPH_TAG_CRM_EVENT, pcmk__str_none)) {
         action_type = pcmk__cluster_graph_action;
 
     } else {

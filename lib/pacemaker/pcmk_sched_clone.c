@@ -105,7 +105,7 @@ pcmk__clone_create_actions(pe_resource_t *rsc)
 void
 pcmk__clone_internal_constraints(pe_resource_t *rsc)
 {
-    bool ordered = pe__clone_is_ordered(rsc);
+    bool ordered = false;
 
     CRM_ASSERT(pe_rsc_is_clone(rsc));
 
@@ -127,6 +127,7 @@ pcmk__clone_internal_constraints(pe_resource_t *rsc)
                                      pe_order_runnable_left);
     }
 
+    ordered = pe__clone_is_ordered(rsc);
     if (ordered) {
         /* Ordered clone instances must start and stop by instance number. The
          * instances might have been previously shuffled for assignment or
@@ -392,6 +393,15 @@ pcmk__clone_apply_location(pe_resource_t *rsc, pe__location_t *location)
     }
 }
 
+// GFunc wrapper for calling the action_flags() resource method
+static void
+call_action_flags(gpointer data, gpointer user_data)
+{
+    pe_resource_t *rsc = user_data;
+
+    rsc->cmds->action_flags((pe_action_t *) data, NULL);
+}
+
 /*!
  * \internal
  * \brief Add a clone resource's actions to the transition graph
@@ -401,9 +411,9 @@ pcmk__clone_apply_location(pe_resource_t *rsc, pe__location_t *location)
 void
 pcmk__clone_add_actions_to_graph(pe_resource_t *rsc)
 {
-    CRM_CHECK(pe_rsc_is_clone(rsc), return);
+    CRM_ASSERT(pe_rsc_is_clone(rsc));
 
-    g_list_foreach(rsc->actions, (GFunc) rsc->cmds->action_flags, NULL);
+    g_list_foreach(rsc->actions, call_action_flags, rsc);
     pe__create_clone_notifications(rsc);
 
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
@@ -525,7 +535,7 @@ probe_anonymous_clone(pe_resource_t *clone, pe_node_t *node)
 bool
 pcmk__clone_create_probe(pe_resource_t *rsc, pe_node_t *node)
 {
-    CRM_CHECK((node != NULL) && pe_rsc_is_clone(rsc), return false);
+    CRM_ASSERT((node != NULL) && pe_rsc_is_clone(rsc));
 
     if (rsc->exclusive_discover) {
         /* The clone is configured to be probed only where a location constraint
@@ -629,6 +639,9 @@ pcmk__clone_add_utilization(const pe_resource_t *rsc,
     bool existing = false;
     pe_resource_t *child = NULL;
 
+    CRM_ASSERT(pe_rsc_is_clone(rsc) && (orig_rsc != NULL)
+               && (utilization != NULL));
+
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
         return;
     }
@@ -668,5 +681,6 @@ pcmk__clone_add_utilization(const pe_resource_t *rsc,
 void
 pcmk__clone_shutdown_lock(pe_resource_t *rsc)
 {
+    CRM_ASSERT(pe_rsc_is_clone(rsc));
     return; // Clones currently don't support shutdown locks
 }

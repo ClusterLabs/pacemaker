@@ -1065,7 +1065,8 @@ find_compatible_instance_on_node(const pe_resource_t *match_rsc,
         pe_resource_t *instance = (pe_resource_t *) iter->data;
 
         if (pcmk__instance_matches(instance, node, role, current)) {
-            pe_rsc_trace(match_rsc, "Found %s %s instance %s compatible with %s on %s",
+            pe_rsc_trace(match_rsc,
+                         "Found %s %s instance %s compatible with %s on %s",
                          role == RSC_ROLE_UNKNOWN? "matching" : role2text(role),
                          rsc->id, instance->id, match_rsc->id,
                          pe__node_name(node));
@@ -1492,6 +1493,8 @@ pcmk__instance_update_ordered_actions(pe_action_t *first, pe_action_t *then,
                                       uint32_t filter, uint32_t type,
                                       pe_working_set_t *data_set)
 {
+    CRM_ASSERT((first != NULL) && (then != NULL) && (data_set != NULL));
+
     if (then->rsc == NULL) {
         return pcmk__updated_none;
 

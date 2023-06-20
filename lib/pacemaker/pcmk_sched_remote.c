@@ -221,7 +221,8 @@ apply_remote_ordering(pe_action_t *action)
                  * by the fencing.
                  */
                 pe_fence_node(remote_rsc->cluster, action->node,
-                              "resources are active but connection is unrecoverable",
+                              "resources are active but "
+                              "connection is unrecoverable",
                               FALSE);
 
             } else if (remote_rsc->next_role == RSC_ROLE_STOPPED) {
@@ -374,7 +375,7 @@ apply_container_ordering(pe_action_t *action)
                  * recurring monitors to be restarted, even if just
                  * the connection was re-established
                  */
-                if(task != no_action) {
+                if (task != no_action) {
                     order_start_then_action(remote_rsc, action,
                                             pe_order_implies_then);
                 }
@@ -400,8 +401,8 @@ pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
 
     crm_trace("Creating remote connection orderings");
 
-    for (GList *gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
+    for (GList *iter = data_set->actions; iter != NULL; iter = iter->next) {
+        pe_action_t *action = iter->data;
         pe_resource_t *remote = NULL;
 
         // We are only interested in resource actions
@@ -414,7 +415,8 @@ pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
          * any start of the resource in this transition.
          */
         if (action->rsc->is_remote_node &&
-            pcmk__str_eq(action->task, CRM_OP_CLEAR_FAILCOUNT, pcmk__str_casei)) {
+            pcmk__str_eq(action->task, CRM_OP_CLEAR_FAILCOUNT,
+                         pcmk__str_none)) {
 
             pcmk__new_ordering(action->rsc, NULL, action, action->rsc,
                                pcmk__op_key(action->rsc->id, RSC_START, 0),
@@ -453,13 +455,14 @@ pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
          * remote connection. This ensures that if the connection fails to
          * start, we leave the resource running on the original node.
          */
-        if (pcmk__str_eq(action->task, RSC_START, pcmk__str_casei)) {
+        if (pcmk__str_eq(action->task, RSC_START, pcmk__str_none)) {
             for (GList *item = action->rsc->actions; item != NULL;
                  item = item->next) {
                 pe_action_t *rsc_action = item->data;
 
                 if (!pe__same_node(rsc_action->node, action->node)
-                    && pcmk__str_eq(rsc_action->task, RSC_STOP, pcmk__str_casei)) {
+                    && pcmk__str_eq(rsc_action->task, RSC_STOP,
+                                    pcmk__str_none)) {
                     pcmk__new_ordering(remote, start_key(remote), NULL,
                                        action->rsc, NULL, rsc_action,
                                        pe_order_optional, data_set);
@@ -542,7 +545,7 @@ pcmk__connection_host_for_action(const pe_action_t *action)
     bool partial_migration = false;
     const char *task = action->task;
 
-    if (pcmk__str_eq(task, CRM_OP_FENCE, pcmk__str_casei)
+    if (pcmk__str_eq(task, CRM_OP_FENCE, pcmk__str_none)
         || !pe__is_guest_or_remote_node(action->node)) {
         return NULL;
     }
@@ -591,7 +594,7 @@ pcmk__connection_host_for_action(const pe_action_t *action)
      * on.
      */
 
-    if (pcmk__str_eq(task, "notify", pcmk__str_casei)) {
+    if (pcmk__str_eq(task, "notify", pcmk__str_none)) {
         task = g_hash_table_lookup(action->meta, "notify_operation");
     }
 
@@ -672,10 +675,11 @@ pcmk__substitute_remote_addr(pe_resource_t *rsc, GHashTable *params)
 void
 pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pe_action_t *action)
 {
+    const pe_node_t *guest = action->node;
     const pe_node_t *host = NULL;
     enum action_tasks task;
 
-    if (!pe__is_guest_node(action->node)) {
+    if (!pe__is_guest_node(guest)) {
         return;
     }
 
@@ -690,7 +694,7 @@ pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pe_action_t *action)
         case action_demote:
         case action_demoted:
             // "Down" actions take place on guest's current host
-            host = pe__current_node(action->node->details->remote_rsc->container);
+            host = pe__current_node(guest->details->remote_rsc->container);
             break;
 
         case start_rsc:
@@ -699,7 +703,7 @@ pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pe_action_t *action)
         case action_promote:
         case action_promoted:
             // "Up" actions take place on guest's next host
-            host = action->node->details->remote_rsc->container->allocated_to;
+            host = guest->details->remote_rsc->container->allocated_to;
             break;
 
         default:

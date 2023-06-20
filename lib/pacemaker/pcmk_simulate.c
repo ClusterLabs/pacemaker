@@ -96,7 +96,7 @@ create_action_name(const pe_action_t *action, bool verbose)
         }
         free(key);
 
-    } else if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_none)) {
         const char *op = g_hash_table_lookup(action->meta, "stonith_action");
 
         action_name = crm_strdup_printf("%s%s '%s' %s",
@@ -135,7 +135,8 @@ create_action_name(const pe_action_t *action, bool verbose)
  */
 static void
 print_cluster_status(pe_working_set_t *data_set, uint32_t show_opts,
-                     uint32_t section_opts, const char *title, bool print_spacer)
+                     uint32_t section_opts, const char *title,
+                     bool print_spacer)
 {
     pcmk__output_t *out = data_set->priv;
     GList *all = NULL;
@@ -220,7 +221,7 @@ static int
 write_sim_dotfile(pe_working_set_t *data_set, const char *dot_file,
                   bool all_actions, bool verbose)
 {
-    GList *gIter = NULL;
+    GList *iter = NULL;
     FILE *dot_strm = fopen(dot_file, "w");
 
     if (dot_strm == NULL) {
@@ -228,8 +229,8 @@ write_sim_dotfile(pe_working_set_t *data_set, const char *dot_file,
     }
 
     fprintf(dot_strm, " digraph \"g\" {\n");
-    for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
+    for (iter = data_set->actions; iter != NULL; iter = iter->next) {
+        pe_action_t *action = (pe_action_t *) iter->data;
         const char *style = "dashed";
         const char *font = "black";
         const char *color = "black";
@@ -269,13 +270,13 @@ write_sim_dotfile(pe_working_set_t *data_set, const char *dot_file,
         free(action_name);
     }
 
-    for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
+    for (iter = data_set->actions; iter != NULL; iter = iter->next) {
+        pe_action_t *action = (pe_action_t *) iter->data;
 
-        GList *gIter2 = NULL;
+        for (GList *before_iter = action->actions_before;
+             before_iter != NULL; before_iter = before_iter->next) {
 
-        for (gIter2 = action->actions_before; gIter2 != NULL; gIter2 = gIter2->next) {
-            pe_action_wrapper_t *before = (pe_action_wrapper_t *) gIter2->data;
+            pe_action_wrapper_t *before = before_iter->data;
 
             char *before_name = NULL;
             char *after_name = NULL;
@@ -398,7 +399,8 @@ pcmk__profile_dir(const char *dir, long long repeat, pe_working_set_t *data_set,
                 free(namelist[file_num]);
                 continue;
             }
-            snprintf(buffer, sizeof(buffer), "%s/%s", dir, namelist[file_num]->d_name);
+            snprintf(buffer, sizeof(buffer), "%s/%s",
+                     dir, namelist[file_num]->d_name);
             if (stat(buffer, &prop) == 0 && S_ISREG(prop.st_mode)) {
                 profile_file(buffer, repeat, data_set, use_date);
             }
@@ -809,6 +811,8 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
     }
 
     if (!out->is_quiet(out)) {
+        const bool show_pending = pcmk_is_set(flags, pcmk_sim_show_pending);
+
         if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
             printed = out->message(out, "maint-mode", data_set->flags);
         }
@@ -826,8 +830,7 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
         /* Most formatted output headers use caps for each word, but this one
          * only has the first word capitalized for compatibility with pcs.
          */
-        print_cluster_status(data_set,
-                             pcmk_is_set(flags, pcmk_sim_show_pending)? pcmk_show_pending : 0,
+        print_cluster_status(data_set, (show_pending? pcmk_show_pending : 0),
                              section_opts, "Current cluster status",
                              (printed == pcmk_rc_ok));
         printed = pcmk_rc_ok;
@@ -947,8 +950,8 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
     }
 
     PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
-    if (pcmk__simulate_transition(data_set, cib,
-                                  injections->op_fail) != pcmk__graph_complete) {
+    if (pcmk__simulate_transition(data_set, cib, injections->op_fail)
+            != pcmk__graph_complete) {
         rc = pcmk_rc_invalid_transition;
     }
 

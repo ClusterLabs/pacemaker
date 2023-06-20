@@ -115,7 +115,7 @@ struct resource_alloc_functions_s {
      * \brief Create list of all resources in colocations with a given resource
      *
      * Given a resource, create a list of all resources involved in mandatory
-     * colocations with it, whether directly or indirectly via chained colocations.
+     * colocations with it, whether directly or via chained colocations.
      *
      * \param[in]     rsc             Resource to add to colocated list
      * \param[in]     orig_rsc        Resource originally requested
@@ -453,9 +453,11 @@ enum pcmk__coloc_affects {
 };
 
 G_GNUC_INTERNAL
-enum pcmk__coloc_affects pcmk__colocation_affects(const pe_resource_t *dependent,
+enum pcmk__coloc_affects pcmk__colocation_affects(const pe_resource_t
+                                                    *dependent,
                                                   const pe_resource_t *primary,
-                                                  const pcmk__colocation_t *colocation,
+                                                  const pcmk__colocation_t
+                                                    *colocation,
                                                   bool preview);
 
 G_GNUC_INTERNAL
@@ -552,7 +554,7 @@ G_GNUC_INTERNAL
 void pcmk__new_ordering(pe_resource_t *first_rsc, char *first_task,
                         pe_action_t *first_action, pe_resource_t *then_rsc,
                         char *then_task, pe_action_t *then_action,
-                        uint32_t flags, pe_working_set_t *data_set);
+                        uint32_t flags, pe_working_set_t *sched);
 
 G_GNUC_INTERNAL
 void pcmk__unpack_ordering(xmlNode *xml_obj, pe_working_set_t *data_set);
@@ -565,7 +567,7 @@ void pcmk__order_stops_before_shutdown(pe_node_t *node,
                                        pe_action_t *shutdown_op);
 
 G_GNUC_INTERNAL
-void pcmk__apply_orderings(pe_working_set_t *data_set);
+void pcmk__apply_orderings(pe_working_set_t *sched);
 
 G_GNUC_INTERNAL
 void pcmk__order_after_each(pe_action_t *after, GList *list);
@@ -628,12 +630,14 @@ void pcmk__order_promotable_instances(pe_resource_t *clone);
 G_GNUC_INTERNAL
 void pcmk__update_dependent_with_promotable(const pe_resource_t *primary,
                                             pe_resource_t *dependent,
-                                            const pcmk__colocation_t *colocation);
+                                            const pcmk__colocation_t
+                                                *colocation);
 
 G_GNUC_INTERNAL
 void pcmk__update_promotable_dependent_priority(const pe_resource_t *primary,
                                                 pe_resource_t *dependent,
-                                                const pcmk__colocation_t *colocation);
+                                                const pcmk__colocation_t
+                                                    *colocation);
 
 
 // Pacemaker Remote nodes (pcmk_sched_remote.c)

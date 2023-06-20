@@ -29,39 +29,40 @@ enum ordering_symmetry {
     ordering_symmetric_inverse, // the inverse relation in a symmetric ordering
 };
 
-#define EXPAND_CONSTRAINT_IDREF(__set, __rsc, __name) do {                      \
-        __rsc = pcmk__find_constraint_resource(data_set->resources, __name);    \
-        if (__rsc == NULL) {                                                    \
-            pcmk__config_err("%s: No resource found for %s", __set, __name);    \
-            return pcmk_rc_unpack_error;                                        \
-        }                                                                       \
+#define EXPAND_CONSTRAINT_IDREF(__set, __rsc, __name) do {                  \
+        __rsc = pcmk__find_constraint_resource(data_set->resources,         \
+                                               __name);                     \
+        if (__rsc == NULL) {                                                \
+            pcmk__config_err("%s: No resource found for %s", __set, __name);\
+            return pcmk_rc_unpack_error;                                    \
+        }                                                                   \
     } while (0)
 
 static const char *
 invert_action(const char *action)
 {
-    if (pcmk__str_eq(action, RSC_START, pcmk__str_casei)) {
+    if (pcmk__str_eq(action, RSC_START, pcmk__str_none)) {
         return RSC_STOP;
 
-    } else if (pcmk__str_eq(action, RSC_STOP, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(action, RSC_STOP, pcmk__str_none)) {
         return RSC_START;
 
-    } else if (pcmk__str_eq(action, RSC_PROMOTE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(action, RSC_PROMOTE, pcmk__str_none)) {
         return RSC_DEMOTE;
 
-    } else if (pcmk__str_eq(action, RSC_DEMOTE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(action, RSC_DEMOTE, pcmk__str_none)) {
         return RSC_PROMOTE;
 
-    } else if (pcmk__str_eq(action, RSC_PROMOTED, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(action, RSC_PROMOTED, pcmk__str_none)) {
         return RSC_DEMOTED;
 
-    } else if (pcmk__str_eq(action, RSC_DEMOTED, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(action, RSC_DEMOTED, pcmk__str_none)) {
         return RSC_PROMOTED;
 
-    } else if (pcmk__str_eq(action, RSC_STARTED, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(action, RSC_STARTED, pcmk__str_none)) {
         return RSC_STOPPED;
 
-    } else if (pcmk__str_eq(action, RSC_STOPPED, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(action, RSC_STOPPED, pcmk__str_none)) {
         return RSC_STARTED;
     }
     crm_warn("Unknown action '%s' specified in order constraint", action);
@@ -92,13 +93,13 @@ get_ordering_type(const xmlNode *xml_obj)
                          "(use 'kind' instead)");
         }
 
-    } else if (pcmk__str_eq(kind, "Mandatory", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(kind, "Mandatory", pcmk__str_none)) {
         kind_e = pe_order_kind_mandatory;
 
-    } else if (pcmk__str_eq(kind, "Optional", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(kind, "Optional", pcmk__str_none)) {
         kind_e = pe_order_kind_optional;
 
-    } else if (pcmk__str_eq(kind, "Serialize", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(kind, "Serialize", pcmk__str_none)) {
         kind_e = pe_order_kind_serialize;
 
     } else {
@@ -346,10 +347,8 @@ clone_min_ordering(const char *id,
     pe__set_action_flags(clone_min_met, pe_action_requires_any);
 
     // Order the actions for each clone instance before the pseudo-action
-    for (GList *rIter = rsc_first->children; rIter != NULL;
-         rIter = rIter->next) {
-
-        pe_resource_t *child = rIter->data;
+    for (GList *iter = rsc_first->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *child = iter->data;
 
         pcmk__new_ordering(child, pcmk__op_key(child->id, action_first, 0),
                            NULL, NULL, NULL, clone_min_met,
@@ -511,7 +510,7 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
  *                                   \p then_action_task must be set)
  *
  * \param[in]     flags              Flag set of enum pe_ordering
- * \param[in,out] data_set           Cluster working set to add ordering to
+ * \param[in,out] sched              Cluster working set to add ordering to
  *
  * \note This function takes ownership of first_action_task and
  *       then_action_task, which do not need to be freed by the caller.
@@ -520,7 +519,7 @@ void
 pcmk__new_ordering(pe_resource_t *first_rsc, char *first_action_task,
                    pe_action_t *first_action, pe_resource_t *then_rsc,
                    char *then_action_task, pe_action_t *then_action,
-                   uint32_t flags, pe_working_set_t *data_set)
+                   uint32_t flags, pe_working_set_t *sched)
 {
     pe__ordering_t *order = NULL;
 
@@ -539,7 +538,7 @@ pcmk__new_ordering(pe_resource_t *first_rsc, char *first_action_task,
     order = calloc(1, sizeof(pe__ordering_t));
     CRM_ASSERT(order != NULL);
 
-    order->id = data_set->order_id++;
+    order->id = sched->order_id++;
     order->flags = flags;
     order->lh_rsc = first_rsc;
     order->rh_rsc = then_rsc;
@@ -565,12 +564,12 @@ pcmk__new_ordering(pe_resource_t *first_rsc, char *first_action_task,
     }
 
     pe_rsc_trace(first_rsc, "Created ordering %d for %s then %s",
-                 (data_set->order_id - 1),
+                 (sched->order_id - 1),
                  pcmk__s(order->lh_action_task, "an underspecified action"),
                  pcmk__s(order->rh_action_task, "an underspecified action"));
 
-    data_set->ordering_constraints = g_list_prepend(data_set->ordering_constraints,
-                                                    order);
+    sched->ordering_constraints = g_list_prepend(sched->ordering_constraints,
+                                                 order);
     pcmk__order_migration_equivalents(order);
 }
 
@@ -643,8 +642,8 @@ unpack_order_set(const xmlNode *set, enum pe_order_kind parent_kind,
         if (local_kind == pe_order_kind_serialize) {
             /* Serialize before everything that comes after */
 
-            for (GList *gIter = set_iter; gIter != NULL; gIter = gIter->next) {
-                pe_resource_t *then_rsc = (pe_resource_t *) gIter->data;
+            for (GList *iter = set_iter; iter != NULL; iter = iter->next) {
+                pe_resource_t *then_rsc = iter->data;
                 char *then_key = pcmk__op_key(then_rsc->id, action, 0);
 
                 pcmk__new_ordering(resource, strdup(key), NULL, then_rsc,
@@ -736,8 +735,8 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
         action_2 = invert_action(action_2);
     }
 
-    if (pcmk__str_eq(RSC_STOP, action_1, pcmk__str_casei)
-        || pcmk__str_eq(RSC_DEMOTE, action_1, pcmk__str_casei)) {
+    if (pcmk__str_eq(RSC_STOP, action_1, pcmk__str_none)
+        || pcmk__str_eq(RSC_DEMOTE, action_1, pcmk__str_none)) {
         /* Assuming: A -> ( B || C) -> D
          * The one-or-more logic only applies during the start/promote phase.
          * During shutdown neither B nor can shutdown until D is down, so simply
@@ -769,7 +768,8 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
              */
             pcmk__new_ordering(rsc_1, pcmk__op_key(rsc_1->id, action_1, 0),
                                NULL, NULL, NULL, unordered_action,
-                               pe_order_one_or_more|pe_order_implies_then_printed,
+                               pe_order_one_or_more
+                               |pe_order_implies_then_printed,
                                data_set);
         }
         for (xml_rsc_2 = first_named_child(set2, XML_TAG_RESOURCE_REF);
@@ -858,7 +858,8 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
 
             EXPAND_CONSTRAINT_IDREF(id, rsc_1, ID(xml_rsc));
 
-            for (xmlNode *xml_rsc_2 = first_named_child(set2, XML_TAG_RESOURCE_REF);
+            for (xmlNode *xml_rsc_2 = first_named_child(set2,
+                                                        XML_TAG_RESOURCE_REF);
                  xml_rsc_2 != NULL; xml_rsc_2 = crm_next_same_xml(xml_rsc_2)) {
 
                 EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc_2));
@@ -936,7 +937,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     *expanded_xml = copy_xml(xml_obj);
 
-    // Convert template/tag reference in "first" into resource_set under constraint
+    // Convert template/tag reference in "first" into constraint resource_set
     if (!pcmk__tag_to_set(*expanded_xml, &rsc_set_first, XML_ORDER_ATTR_FIRST,
                           true, data_set)) {
         free_xml(*expanded_xml);
@@ -953,7 +954,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         any_sets = true;
     }
 
-    // Convert template/tag reference in "then" into resource_set under constraint
+    // Convert template/tag reference in "then" into constraint resource_set
     if (!pcmk__tag_to_set(*expanded_xml, &rsc_set_then, XML_ORDER_ATTR_THEN,
                           true, data_set)) {
         free_xml(*expanded_xml);
@@ -1083,7 +1084,7 @@ ordering_is_invalid(pe_action_t *action, pe_action_wrapper_t *input)
      * break the order "load_stopped_node2" -> "rscA_migrate_to node1".
      */
     if ((input->type == pe_order_load) && action->rsc
-        && pcmk__str_eq(action->task, RSC_MIGRATE, pcmk__str_casei)
+        && pcmk__str_eq(action->task, RSC_MIGRATE, pcmk__str_none)
         && pcmk__graph_has_loop(action, action, input)) {
         return true;
     }
@@ -1126,7 +1127,7 @@ pcmk__order_stops_before_shutdown(pe_node_t *node, pe_action_t *shutdown_op)
 
         // Only stops on the node shutting down are relevant
         if (!pe__same_node(action->node, node)
-            || !pcmk__str_eq(action->task, RSC_STOP, pcmk__str_casei)) {
+            || !pcmk__str_eq(action->task, RSC_STOP, pcmk__str_none)) {
             continue;
         }
 
@@ -1303,14 +1304,15 @@ rsc_order_first(pe_resource_t *first_rsc, pe__ordering_t *order)
         key = pcmk__op_key(first_rsc->id, op_type, interval_ms);
 
         if ((first_rsc->fns->state(first_rsc, TRUE) == RSC_ROLE_STOPPED)
-            && pcmk__str_eq(op_type, RSC_STOP, pcmk__str_casei)) {
+            && pcmk__str_eq(op_type, RSC_STOP, pcmk__str_none)) {
             free(key);
             pe_rsc_trace(first_rsc,
                          "Ignoring constraint %d: first (%s for %s) not found",
                          order->id, order->lh_action_task, first_rsc->id);
 
-        } else if ((first_rsc->fns->state(first_rsc, TRUE) == RSC_ROLE_UNPROMOTED)
-                   && pcmk__str_eq(op_type, RSC_DEMOTE, pcmk__str_casei)) {
+        } else if ((first_rsc->fns->state(first_rsc,
+                                          TRUE) == RSC_ROLE_UNPROMOTED)
+                   && pcmk__str_eq(op_type, RSC_DEMOTE, pcmk__str_none)) {
             free(key);
             pe_rsc_trace(first_rsc,
                          "Ignoring constraint %d: first (%s for %s) not found",
@@ -1336,8 +1338,8 @@ rsc_order_first(pe_resource_t *first_rsc, pe__ordering_t *order)
         }
         then_rsc = order->rh_action->rsc;
     }
-    for (GList *gIter = first_actions; gIter != NULL; gIter = gIter->next) {
-        first_action = (pe_action_t *) gIter->data;
+    for (GList *iter = first_actions; iter != NULL; iter = iter->next) {
+        first_action = iter->data;
 
         if (then_rsc == NULL) {
             order_actions(first_action, order->rh_action, order->flags);
@@ -1357,8 +1359,22 @@ block_colocation_dependents(gpointer data, gpointer user_data)
     pcmk__block_colocation_dependents(data);
 }
 
+// GFunc to call pcmk__update_action_for_orderings()
+static void
+update_action_for_orderings(gpointer data, gpointer user_data)
+{
+    pcmk__update_action_for_orderings((pe_action_t *) data,
+                                      (pe_working_set_t *) user_data);
+}
+
+/*!
+ * \internal
+ * \brief Apply all ordering constraints
+ *
+ * \param[in,out] sched  Cluster working set
+ */
 void
-pcmk__apply_orderings(pe_working_set_t *data_set)
+pcmk__apply_orderings(pe_working_set_t *sched)
 {
     crm_trace("Applying ordering constraints");
 
@@ -1374,12 +1390,12 @@ pcmk__apply_orderings(pe_working_set_t *data_set)
      * @TODO This is brittle and should be carefully redesigned so that the
      * order of creation doesn't matter, and the reverse becomes unneeded.
      */
-    data_set->ordering_constraints = g_list_reverse(data_set->ordering_constraints);
+    sched->ordering_constraints = g_list_reverse(sched->ordering_constraints);
 
-    for (GList *gIter = data_set->ordering_constraints;
-         gIter != NULL; gIter = gIter->next) {
+    for (GList *iter = sched->ordering_constraints;
+         iter != NULL; iter = iter->next) {
 
-        pe__ordering_t *order = gIter->data;
+        pe__ordering_t *order = iter->data;
         pe_resource_t *rsc = order->lh_rsc;
 
         if (rsc != NULL) {
@@ -1398,16 +1414,15 @@ pcmk__apply_orderings(pe_working_set_t *data_set)
         }
     }
 
-    g_list_foreach(data_set->actions, block_colocation_dependents, NULL);
+    g_list_foreach(sched->actions, block_colocation_dependents, NULL);
 
     crm_trace("Ordering probes");
-    pcmk__order_probes(data_set);
+    pcmk__order_probes(sched);
 
-    crm_trace("Updating %d actions", g_list_length(data_set->actions));
-    g_list_foreach(data_set->actions,
-                   (GFunc) pcmk__update_action_for_orderings, data_set);
+    crm_trace("Updating %d actions", g_list_length(sched->actions));
+    g_list_foreach(sched->actions, update_action_for_orderings, sched);
 
-    pcmk__disable_invalid_orderings(data_set);
+    pcmk__disable_invalid_orderings(sched);
 }
 
 /*!

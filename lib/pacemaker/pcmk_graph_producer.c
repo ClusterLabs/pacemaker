@@ -68,39 +68,40 @@ add_node_to_xml(const pe_node_t *node, void *xml)
 
 /*!
  * \internal
- * \brief Add XML with nodes that need an update of their maintenance state
+ * \brief Count (optionally add to XML) nodes needing maintenance state update
  *
- * \param[in,out] xml       Parent XML tag to add to
+ * \param[in,out] xml       Parent XML tag to add to, if any
  * \param[in]     data_set  Working set for cluster
+ *
+ * \return Count of nodes added
+ * \note Only Pacemaker Remote nodes are considered currently
  */
 static int
 add_maintenance_nodes(xmlNode *xml, const pe_working_set_t *data_set)
 {
-    GList *gIter = NULL;
-    xmlNode *maintenance =
-        xml?create_xml_node(xml, XML_GRAPH_TAG_MAINTENANCE):NULL;
+    xmlNode *maintenance = NULL;
     int count = 0;
 
-    for (gIter = data_set->nodes; gIter != NULL;
-         gIter = gIter->next) {
-        pe_node_t *node = (pe_node_t *) gIter->data;
-        struct pe_node_shared_s *details = node->details;
+    if (xml != NULL) {
+        maintenance = create_xml_node(xml, XML_GRAPH_TAG_MAINTENANCE);
+    }
+    for (const GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
+        const pe_node_t *node = iter->data;
 
-        if (!pe__is_guest_or_remote_node(node)) {
-            continue; /* just remote nodes need to know atm */
-        }
+        if (pe__is_guest_or_remote_node(node) &&
+            (node->details->maintenance != node->details->remote_maintenance)) {
 
-        if (details->maintenance != details->remote_maintenance) {
-            if (maintenance) {
-                crm_xml_add(
-                    add_node_to_xml_by_id(node->details->id, maintenance),
-                    XML_NODE_IS_MAINTENANCE, details->maintenance?"1":"0");
+            if (maintenance != NULL) {
+                crm_xml_add(add_node_to_xml_by_id(node->details->id,
+                                                  maintenance),
+                            XML_NODE_IS_MAINTENANCE,
+                            (node->details->maintenance? "1" : "0"));
             }
             count++;
         }
     }
-    crm_trace("%s %d nodes to adjust maintenance-mode "
-              "to transition", maintenance?"Added":"Counted", count);
+    crm_trace("%s %d nodes in need of maintenance mode update in state",
+              ((maintenance == NULL)? "Counted" : "Added"), count);
     return count;
 }
 
@@ -115,8 +116,7 @@ add_maintenance_update(pe_working_set_t *data_set)
 {
     pe_action_t *action = NULL;
 
-    if (add_maintenance_nodes(NULL, data_set)) {
-        crm_trace("adding maintenance state update pseudo action");
+    if (add_maintenance_nodes(NULL, data_set) != 0) {
         action = get_pseudo_op(CRM_OP_MAINTENANCE_NODES, data_set);
         pe__set_action_flags(action, pe_action_print_always);
     }
@@ -139,13 +139,13 @@ add_downed_nodes(xmlNode *xml, const pe_action_t *action)
     CRM_CHECK((xml != NULL) && (action != NULL) && (action->node != NULL),
               return);
 
-    if (pcmk__str_eq(action->task, CRM_OP_SHUTDOWN, pcmk__str_casei)) {
+    if (pcmk__str_eq(action->task, CRM_OP_SHUTDOWN, pcmk__str_none)) {
 
         /* Shutdown makes the action's node down */
         xmlNode *downed = create_xml_node(xml, XML_GRAPH_TAG_DOWNED);
         add_node_to_xml_by_id(action->node->details->id, downed);
 
-    } else if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_none)) {
 
         /* Fencing makes the action's node and any hosted guest nodes down */
         const char *fence = g_hash_table_lookup(action->meta, "stonith_action");
@@ -158,7 +158,8 @@ add_downed_nodes(xmlNode *xml, const pe_action_t *action)
         }
 
     } else if (action->rsc && action->rsc->is_remote_node
-               && pcmk__str_eq(action->task, CRMD_ACTION_STOP, pcmk__str_casei)) {
+               && pcmk__str_eq(action->task, CRMD_ACTION_STOP,
+                               pcmk__str_none)) {
 
         /* Stopping a remote connection resource makes connected node down,
          * unless it's part of a migration
@@ -169,8 +170,10 @@ add_downed_nodes(xmlNode *xml, const pe_action_t *action)
 
         for (iter = action->actions_before; iter != NULL; iter = iter->next) {
             input = ((pe_action_wrapper_t *) iter->data)->action;
-            if (input->rsc && pcmk__str_eq(action->rsc->id, input->rsc->id, pcmk__str_casei)
-                && pcmk__str_eq(input->task, CRMD_ACTION_MIGRATED, pcmk__str_casei)) {
+            if ((input->rsc != NULL)
+                && pcmk__str_eq(action->rsc->id, input->rsc->id, pcmk__str_none)
+                && pcmk__str_eq(input->task, CRMD_ACTION_MIGRATED,
+                                pcmk__str_none)) {
                 migrating = true;
                 break;
             }
@@ -367,7 +370,8 @@ add_action_attributes(pe_action_t *action, xmlNode *action_xml)
          * added in 33d99707, probably for the libfence-based implementation in
          * c9a90bd, which is no longer used.
          */
-        g_hash_table_foreach(action->node->details->attrs, hash2metafield, args_xml);
+        g_hash_table_foreach(action->node->details->attrs, hash2metafield,
+                             args_xml);
     }
 
     sorted_xml(args_xml, action_xml, FALSE);
@@ -397,12 +401,13 @@ create_graph_action(xmlNode *parent, pe_action_t *action, bool skip_details,
 
     // Create the top-level element based on task
 
-    if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_casei)) {
+    if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_none)) {
         /* All fences need node info; guest node fences are pseudo-events */
-        action_xml = create_xml_node(parent,
-                                     pcmk_is_set(action->flags, pe_action_pseudo)?
-                                     XML_GRAPH_TAG_PSEUDO_EVENT :
-                                     XML_GRAPH_TAG_CRM_EVENT);
+        if (pcmk_is_set(action->flags, pe_action_pseudo)) {
+            action_xml = create_xml_node(parent, XML_GRAPH_TAG_PSEUDO_EVENT);
+        } else {
+            action_xml = create_xml_node(parent, XML_GRAPH_TAG_CRM_EVENT);
+        }
 
     } else if (pcmk__str_any_of(action->task,
                                 CRM_OP_SHUTDOWN,
@@ -439,7 +444,8 @@ create_graph_action(xmlNode *parent, pe_action_t *action, bool skip_details,
         }
         clone_key = clone_op_key(action, interval_ms);
         crm_xml_add(action_xml, XML_LRM_ATTR_TASK_KEY, clone_key);
-        crm_xml_add(action_xml, "internal_" XML_LRM_ATTR_TASK_KEY, action->uuid);
+        crm_xml_add(action_xml, "internal_" XML_LRM_ATTR_TASK_KEY,
+                    action->uuid);
         free(clone_key);
     } else {
         crm_xml_add(action_xml, XML_LRM_ATTR_TASK_KEY, action->uuid);
@@ -634,7 +640,8 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
         return false;
 
     } else if (pcmk_is_set(input->type, pe_order_apply_first_non_migratable)
-               && pcmk_is_set(input->action->flags, pe_action_migrate_runnable)) {
+               && pcmk_is_set(input->action->flags,
+                              pe_action_migrate_runnable)) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
                   "only if input unmigratable but input unrunnable",
                   action->uuid, action->id,
@@ -655,7 +662,9 @@ should_add_input_to_graph(const pe_action_t *action, pe_action_wrapper_t *input)
 
         // load orderings are relevant only if actions are for same node
 
-        if (action->rsc && pcmk__str_eq(action->task, RSC_MIGRATE, pcmk__str_casei)) {
+        if ((action->rsc != NULL)
+            && pcmk__str_eq(action->task, RSC_MIGRATE, pcmk__str_none)) {
+
             pe_node_t *assigned = action->rsc->allocated_to;
 
             /* For load_stopped -> migrate_to orderings, we care about where it
@@ -1060,12 +1069,16 @@ pcmk__create_graph(pe_working_set_t *data_set)
              */
             if (pcmk_is_set(data_set->flags, pe_flag_have_quorum)
                 || (data_set->no_quorum_policy == no_quorum_ignore)) {
+                const bool managed = pcmk_is_set(action->rsc->flags,
+                                                 pe_rsc_managed);
+                const bool failed = pcmk_is_set(action->rsc->flags,
+                                                pe_rsc_failed);
+
                 crm_crit("Cannot %s %s because of %s:%s%s (%s)",
                          action->node->details->unclean? "fence" : "shut down",
                          pe__node_name(action->node), action->rsc->id,
-                         pcmk_is_set(action->rsc->flags, pe_rsc_managed)? " blocked" : " unmanaged",
-                         pcmk_is_set(action->rsc->flags, pe_rsc_failed)? " failed" : "",
-                         action->uuid);
+                         (managed? " blocked" : " unmanaged"),
+                         (failed? " failed" : ""), action->uuid);
             }
         }
 

@@ -84,16 +84,17 @@ pcmk__unpack_constraints(pe_working_set_t *data_set)
         if ((lifetime != NULL) && !evaluate_lifetime(lifetime, data_set)) {
             crm_info("Constraint %s %s is not active", tag, id);
 
-        } else if (pcmk__str_eq(XML_CONS_TAG_RSC_ORDER, tag, pcmk__str_casei)) {
+        } else if (pcmk__str_eq(XML_CONS_TAG_RSC_ORDER, tag, pcmk__str_none)) {
             pcmk__unpack_ordering(xml_obj, data_set);
 
-        } else if (pcmk__str_eq(XML_CONS_TAG_RSC_DEPEND, tag, pcmk__str_casei)) {
+        } else if (pcmk__str_eq(XML_CONS_TAG_RSC_DEPEND, tag, pcmk__str_none)) {
             pcmk__unpack_colocation(xml_obj, data_set);
 
-        } else if (pcmk__str_eq(XML_CONS_TAG_RSC_LOCATION, tag, pcmk__str_casei)) {
+        } else if (pcmk__str_eq(XML_CONS_TAG_RSC_LOCATION, tag,
+                                pcmk__str_none)) {
             pcmk__unpack_location(xml_obj, data_set);
 
-        } else if (pcmk__str_eq(XML_CONS_TAG_RSC_TICKET, tag, pcmk__str_casei)) {
+        } else if (pcmk__str_eq(XML_CONS_TAG_RSC_TICKET, tag, pcmk__str_none)) {
             pcmk__unpack_rsc_ticket(xml_obj, data_set);
 
         } else {
@@ -105,15 +106,16 @@ pcmk__unpack_constraints(pe_working_set_t *data_set)
 pe_resource_t *
 pcmk__find_constraint_resource(GList *rsc_list, const char *id)
 {
-    GList *rIter = NULL;
-
-    for (rIter = rsc_list; id && rIter; rIter = rIter->next) {
-        pe_resource_t *parent = rIter->data;
+    if (id == NULL) {
+        return NULL;
+    }
+    for (GList *iter = rsc_list; iter != NULL; iter = iter->next) {
+        pe_resource_t *parent = iter->data;
         pe_resource_t *match = parent->fns->find_rsc(parent, id, NULL,
                                                      pe_find_renamed);
 
         if (match != NULL) {
-            if(!pcmk__str_eq(match->id, id, pcmk__str_casei)) {
+            if (!pcmk__str_eq(match->id, id, pcmk__str_none)) {
                 /* We found an instance of a clone instead */
                 match = uber_parent(match);
                 crm_debug("Found %s for %s", match->id, id);
@@ -228,7 +230,7 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pe_working_set_t *data_set)
          set != NULL; set = crm_next_same_xml(set)) {
 
         GList *tag_refs = NULL;
-        GList *gIter = NULL;
+        GList *iter = NULL;
 
         for (xmlNode *xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
@@ -248,37 +250,36 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pe_working_set_t *data_set)
                 continue;
 
             } else if (tag) {
-                /* The resource_ref under the resource_set references a template/tag */
+                // resource_ref under resource_set references template or tag
                 xmlNode *last_ref = xml_rsc;
 
-                /* A sample:
-
-                   Original XML:
-
-                   <resource_set id="tag1-colocation-0" sequential="true">
-                     <resource_ref id="rsc1"/>
-                     <resource_ref id="tag1"/>
-                     <resource_ref id="rsc4"/>
-                   </resource_set>
-
-                   Now we are appending rsc2 and rsc3 which are tagged with tag1 right after it:
-
-                   <resource_set id="tag1-colocation-0" sequential="true">
-                     <resource_ref id="rsc1"/>
-                     <resource_ref id="tag1"/>
-                     <resource_ref id="rsc2"/>
-                     <resource_ref id="rsc3"/>
-                     <resource_ref id="rsc4"/>
-                   </resource_set>
-
+                /* For example, given the original XML:
+                 *
+                 *   <resource_set id="tag1-colocation-0" sequential="true">
+                 *     <resource_ref id="rsc1"/>
+                 *     <resource_ref id="tag1"/>
+                 *     <resource_ref id="rsc4"/>
+                 *   </resource_set>
+                 *
+                 * If rsc2 and rsc3 are tagged with tag1, we add them after it:
+                 *
+                 *   <resource_set id="tag1-colocation-0" sequential="true">
+                 *     <resource_ref id="rsc1"/>
+                 *     <resource_ref id="tag1"/>
+                 *     <resource_ref id="rsc2"/>
+                 *     <resource_ref id="rsc3"/>
+                 *     <resource_ref id="rsc4"/>
+                 *   </resource_set>
                  */
 
-                for (gIter = tag->refs; gIter != NULL; gIter = gIter->next) {
-                    const char *obj_ref = (const char *) gIter->data;
+                for (iter = tag->refs; iter != NULL; iter = iter->next) {
+                    const char *obj_ref = iter->data;
                     xmlNode *new_rsc_ref = NULL;
 
                     new_rsc_ref = xmlNewDocRawNode(getDocPtr(set), NULL,
-                                                   (pcmkXmlStr) XML_TAG_RESOURCE_REF, NULL);
+                                                   (pcmkXmlStr)
+                                                   XML_TAG_RESOURCE_REF,
+                                                   NULL);
                     crm_xml_add(new_rsc_ref, XML_ATTR_ID, obj_ref);
                     xmlAddNextSibling(last_ref, new_rsc_ref);
 
@@ -304,8 +305,8 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pe_working_set_t *data_set)
            </resource_set>
 
          */
-        for (gIter = tag_refs; gIter != NULL; gIter = gIter->next) {
-            xmlNode *tag_ref = gIter->data;
+        for (iter = tag_refs; iter != NULL; iter = iter->next) {
+            xmlNode *tag_ref = iter->data;
 
             free_xml(tag_ref);
         }
@@ -324,9 +325,10 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pe_working_set_t *data_set)
  * \brief Convert a tag into a resource set of tagged resources
  *
  * \param[in,out] xml_obj      Constraint XML
- * \param[out]    rsc_set      Where to store resource set XML created based on tag
- * \param[in]     attr         Name of XML attribute containing resource or tag ID
- * \param[in]     convert_rsc  Convert to set even if \p attr references a resource
+ * \param[out]    rsc_set      Where to store resource set XML
+ * \param[in]     attr         Name of XML attribute with resource or tag ID
+ * \param[in]     convert_rsc  If true, convert to set even if \p attr
+ *                             references a resource
  * \param[in]     data_set     Cluster working set
  */
 bool
@@ -361,16 +363,15 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
         return false;
 
     } else if (tag) {
-        GList *gIter = NULL;
-
-        /* A template/tag is referenced by the "attr" attribute (first, then, rsc or with-rsc).
-           Add the template/tag's corresponding "resource_set" which contains the resources derived
-           from it or tagged with it under the constraint. */
+        /* The "attr" attribute (for a resource in a constraint) specifies a
+         * template or tag. Add the corresponding resource_set containing the
+         * resources derived from or tagged with it.
+         */
         *rsc_set = create_xml_node(xml_obj, XML_CONS_TAG_RSC_SET);
         crm_xml_add(*rsc_set, XML_ATTR_ID, id);
 
-        for (gIter = tag->refs; gIter != NULL; gIter = gIter->next) {
-            const char *obj_ref = (const char *) gIter->data;
+        for (GList *iter = tag->refs; iter != NULL; iter = iter->next) {
+            const char *obj_ref = iter->data;
             xmlNode *rsc_ref = NULL;
 
             rsc_ref = create_xml_node(*rsc_set, XML_TAG_RESOURCE_REF);
@@ -381,8 +382,10 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
         pcmk__xe_set_bool_attr(*rsc_set, "sequential", false);
 
     } else if ((rsc != NULL) && convert_rsc) {
-        /* Even a regular resource is referenced by "attr", convert it into a resource_set.
-           Because the other side of the constraint could be a template/tag reference. */
+        /* Even if a regular resource is referenced by "attr", convert it into a
+         * resource_set, because the other resource reference in the constraint
+         * could be a template or tag.
+         */
         xmlNode *rsc_ref = NULL;
 
         *rsc_set = create_xml_node(xml_obj, XML_CONS_TAG_RSC_SET);

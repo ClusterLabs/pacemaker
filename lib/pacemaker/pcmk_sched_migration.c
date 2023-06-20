@@ -90,7 +90,8 @@ pcmk__create_migration_actions(pe_resource_t *rsc, const pe_node_t *current)
             pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_MIGRATE, 0), NULL,
                                rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0),
                                NULL,
-                               pe_order_optional|pe_order_implies_first_migratable,
+                               pe_order_optional
+                               |pe_order_implies_first_migratable,
                                rsc->cluster);
         } else {
             pe__set_action_flags(migrate_from, pe_action_migrate_runnable);
@@ -109,7 +110,9 @@ pcmk__create_migration_actions(pe_resource_t *rsc, const pe_node_t *current)
                            rsc->cluster);
         pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0), NULL,
                            rsc, pcmk__op_key(rsc->id, RSC_START, 0), NULL,
-                           pe_order_optional|pe_order_implies_first_migratable|pe_order_pseudo_left,
+                           pe_order_optional
+                           |pe_order_implies_first_migratable
+                           |pe_order_pseudo_left,
                            rsc->cluster);
     }
 
@@ -370,12 +373,14 @@ pcmk__order_migration_equivalents(pe__ordering_t *order)
                                pcmk__op_key(order->rh_rsc->id, RSC_MIGRATE, 0),
                                NULL, flags, order->lh_rsc->cluster);
 
-            // Also order B migrate_from after A demote during partial migrations
+            // Order B migrate_from after A demote during partial migrations
             if (order->rh_rsc->partial_migration_target) {
                 pcmk__new_ordering(order->lh_rsc,
-                                   pcmk__op_key(order->lh_rsc->id, RSC_DEMOTE, 0),
+                                   pcmk__op_key(order->lh_rsc->id,
+                                                RSC_DEMOTE, 0),
                                    NULL, order->rh_rsc,
-                                   pcmk__op_key(order->rh_rsc->id, RSC_MIGRATED, 0),
+                                   pcmk__op_key(order->rh_rsc->id,
+                                                RSC_MIGRATED, 0),
                                    NULL, flags, order->lh_rsc->cluster);
             }
         }

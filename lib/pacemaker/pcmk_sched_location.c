@@ -61,8 +61,8 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
     const char *boolean = NULL;
     const char *role = NULL;
 
-    GList *gIter = NULL;
-    GList *match_L = NULL;
+    GList *iter = NULL;
+    GList *nodes = NULL;
 
     bool do_and = true;
     bool accept = true;
@@ -127,19 +127,17 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
         }
     }
     if (do_and) {
-        GList *gIter = NULL;
-
-        match_L = pcmk__copy_node_list(rsc->cluster->nodes, true);
-        for (gIter = match_L; gIter != NULL; gIter = gIter->next) {
-            pe_node_t *node = (pe_node_t *) gIter->data;
+        nodes = pcmk__copy_node_list(rsc->cluster->nodes, true);
+        for (iter = nodes; iter != NULL; iter = iter->next) {
+            pe_node_t *node = iter->data;
 
             node->weight = get_node_score(rule_id, score, raw_score, node, rsc);
         }
     }
 
-    for (gIter = rsc->cluster->nodes; gIter != NULL; gIter = gIter->next) {
+    for (iter = rsc->cluster->nodes; iter != NULL; iter = iter->next) {
         int score_f = 0;
-        pe_node_t *node = (pe_node_t *) gIter->data;
+        pe_node_t *node = iter->data;
         pe_match_data_t match_data = {
             .re = re_match_data,
             .params = pe_rsc_params(rsc, node, rsc->cluster),
@@ -155,14 +153,14 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
         score_f = get_node_score(rule_id, score, raw_score, node, rsc);
 
         if (accept) {
-            pe_node_t *local = pe_find_node_id(match_L, node->details->id);
+            pe_node_t *local = pe_find_node_id(nodes, node->details->id);
 
             if ((local == NULL) && do_and) {
                 continue;
 
             } else if (local == NULL) {
                 local = pe__copy_node(node);
-                match_L = g_list_append(match_L, local);
+                nodes = g_list_append(nodes, local);
             }
 
             if (!do_and) {
@@ -173,10 +171,10 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
 
         } else if (do_and && !accept) {
             // Remove it
-            pe_node_t *delete = pe_find_node_id(match_L, node->details->id);
+            pe_node_t *delete = pe_find_node_id(nodes, node->details->id);
 
             if (delete != NULL) {
-                match_L = g_list_remove(match_L, delete);
+                nodes = g_list_remove(nodes, delete);
                 crm_trace("%s did not match", pe__node_name(node));
             }
             free(delete);
@@ -187,7 +185,7 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
         free((char *)score);
     }
 
-    location_rule->node_list_rh = match_L;
+    location_rule->node_list_rh = nodes;
     if (location_rule->node_list_rh == NULL) {
         crm_trace("No matching nodes for rule %s", rule_id);
         return NULL;
@@ -206,7 +204,8 @@ unpack_rsc_location(xmlNode *xml_obj, pe_resource_t *rsc, const char *role,
     const char *rsc_id = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
     const char *node = crm_element_value(xml_obj, XML_CIB_TAG_NODE);
-    const char *discovery = crm_element_value(xml_obj, XML_LOCATION_ATTR_DISCOVERY);
+    const char *discovery = crm_element_value(xml_obj,
+                                              XML_LOCATION_ATTR_DISCOVERY);
 
     if (rsc == NULL) {
         pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
@@ -271,7 +270,7 @@ unpack_rsc_location(xmlNode *xml_obj, pe_resource_t *rsc, const char *role,
 
         } else {
             enum rsc_role_e r = text2role(role);
-            switch(r) {
+            switch (r) {
                 case RSC_ROLE_UNKNOWN:
                 case RSC_ROLE_STARTED:
                 case RSC_ROLE_UNPROMOTED:
@@ -303,7 +302,6 @@ unpack_simple_location(xmlNode *xml_obj, pe_working_set_t *data_set)
     if (value) {
         regex_t *r_patt = calloc(1, sizeof(regex_t));
         bool invert = false;
-        GList *rIter = NULL;
 
         if (value[0] == '!') {
             value++;
@@ -318,13 +316,15 @@ unpack_simple_location(xmlNode *xml_obj, pe_working_set_t *data_set)
             return;
         }
 
-        for (rIter = data_set->resources; rIter; rIter = rIter->next) {
-            pe_resource_t *r = rIter->data;
+        for (GList *iter = data_set->resources; iter != NULL;
+             iter = iter->next) {
+
+            pe_resource_t *r = iter->data;
             int nregs = 0;
             regmatch_t *pmatch = NULL;
             int status;
 
-            if(r_patt->re_nsub > 0) {
+            if (r_patt->re_nsub > 0) {
                 nregs = r_patt->re_nsub + 1;
             } else {
                 nregs = 1;
@@ -409,7 +409,7 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     *expanded_xml = copy_xml(xml_obj);
 
-    // Convert template/tag reference in "rsc" into resource_set under constraint
+    // Convert any template or tag reference into constraint resource_set
     if (!pcmk__tag_to_set(*expanded_xml, &rsc_set, XML_LOC_ATTR_SOURCE,
                           false, data_set)) {
         free_xml(*expanded_xml);
@@ -619,7 +619,7 @@ pcmk__apply_location(pe_resource_t *rsc, pe__location_t *location)
 {
     bool need_role = false;
 
-    CRM_CHECK((rsc != NULL) && (location != NULL), return);
+    CRM_ASSERT((rsc != NULL) && (location != NULL));
 
     // If a role was specified, ensure constraint is applicable
     need_role = (location->role_filter > RSC_ROLE_UNKNOWN);
@@ -641,10 +641,10 @@ pcmk__apply_location(pe_resource_t *rsc, pe__location_t *location)
                  (need_role? " for role " : ""),
                  (need_role? role2text(location->role_filter) : ""), rsc->id);
 
-    for (GList *gIter = location->node_list_rh; gIter != NULL;
-         gIter = gIter->next) {
+    for (GList *iter = location->node_list_rh;
+         iter != NULL; iter = iter->next) {
 
-        pe_node_t *node = (pe_node_t *) gIter->data;
+        pe_node_t *node = iter->data;
         pe_node_t *allowed_node = NULL;
 
         allowed_node = (pe_node_t *) pe_hash_table_lookup(rsc->allowed_nodes,

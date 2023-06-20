@@ -35,6 +35,7 @@ bool pcmk__simulate_node_config = false;
 
 #define XPATH_NODE_CONFIG   "//" XML_CIB_TAG_NODE "[@" XML_ATTR_UNAME "='%s']"
 #define XPATH_NODE_STATE    "//" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='%s']"
+#define XPATH_NODE_STATE_BY_ID "//" XML_CIB_TAG_STATE "[@" XML_ATTR_ID "='%s']"
 #define XPATH_RSC_HISTORY   XPATH_NODE_STATE \
                             "//" XML_LRM_TAG_RESOURCE "[@" XML_ATTR_ID "='%s']"
 
@@ -249,7 +250,7 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
         }
 
         if (found_uuid) {
-            char *xpath_by_uuid = crm_strdup_printf("//" XML_CIB_TAG_STATE "[@" XML_ATTR_ID "='%s']",
+            char *xpath_by_uuid = crm_strdup_printf(XPATH_NODE_STATE_BY_ID,
                                                     found_uuid);
 
             // It's possible that a node_state entry doesn't have an uname yet.
@@ -257,8 +258,8 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
                                        cib_xpath|cib_sync_call|cib_scope_local);
 
             if ((cib_object != NULL) && (ID(cib_object) == NULL)) {
-                crm_err("Detected multiple node_state entries for xpath=%s, bailing",
-                        xpath_by_uuid);
+                crm_err("Can't inject node state for %s because multiple "
+                        "state entries found for ID %s", node, found_uuid);
                 duplicate = true;
                 free(xpath_by_uuid);
                 goto done;
@@ -266,7 +267,8 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
             } else if (cib_object != NULL) {
                 crm_xml_add(cib_object, XML_ATTR_UNAME, node);
 
-                rc = cib_conn->cmds->modify(cib_conn, XML_CIB_TAG_STATUS, cib_object,
+                rc = cib_conn->cmds->modify(cib_conn, XML_CIB_TAG_STATUS,
+                                            cib_object,
                                             cib_sync_call|cib_scope_local);
             }
 
@@ -400,8 +402,10 @@ pcmk__inject_resource_history(pcmk__output_t *out, xmlNode *cib_node,
 
     if ((rclass == NULL) || (rtype == NULL)) {
         // @TODO query configuration for class, provider, type
-        out->err(out, "Resource %s not found in the status section of %s."
-                 "  Please supply the class and type to continue", resource, ID(cib_node));
+        out->err(out,
+                 "Resource %s not found in the status section of %s "
+                 "(supply class and type to continue)",
+                 resource, ID(cib_node));
         return NULL;
 
     } else if (!pcmk__strcase_any_of(rclass,
@@ -654,9 +658,9 @@ pcmk__inject_scheduler_input(pe_working_set_t *data_set, cib_t *cib,
 
     if (injections->watchdog != NULL) {
         rc = cib__update_node_attr(out, cib, cib_sync_call|cib_scope_local,
-                                   XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
-                                   XML_ATTR_HAVE_WATCHDOG, injections->watchdog,
-                                   NULL, NULL);
+                                   XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL,
+                                   NULL, XML_ATTR_HAVE_WATCHDOG,
+                                   injections->watchdog, NULL, NULL);
         CRM_ASSERT(rc == pcmk_rc_ok);
     }
 

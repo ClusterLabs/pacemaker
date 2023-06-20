@@ -63,8 +63,7 @@ is_op_dup(const pe_resource_t *rsc, const char *name, guint interval_ms)
          op != NULL; op = crm_next_same_xml(op)) {
 
         // Check whether action name and interval match
-        if (!pcmk__str_eq(crm_element_value(op, "name"),
-                          name, pcmk__str_none)
+        if (!pcmk__str_eq(crm_element_value(op, "name"), name, pcmk__str_none)
             || (xe_interval(op) != interval_ms)) {
             continue;
         }
@@ -243,6 +242,7 @@ recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
 {
     pe_action_t *mon = NULL;
     bool is_optional = true;
+    const bool is_default_role = (op->role == RSC_ROLE_UNKNOWN);
 
     // We're only interested in recurring actions for active roles
     if (op->role == RSC_ROLE_STOPPED) {
@@ -252,9 +252,8 @@ recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
     is_optional = active_recurring_should_be_optional(rsc, node, op->key,
                                                       start);
 
-    if (((op->role != RSC_ROLE_UNKNOWN) && (rsc->next_role != op->role))
-        || ((op->role == RSC_ROLE_UNKNOWN)
-            && (rsc->next_role == RSC_ROLE_PROMOTED))) {
+    if ((!is_default_role && (rsc->next_role != op->role))
+        || (is_default_role && (rsc->next_role == RSC_ROLE_PROMOTED))) {
         // Configured monitor role doesn't match role resource will have
 
         if (is_optional) { // It's running, so cancel it
@@ -291,7 +290,7 @@ recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
                    "%s recurring action %s because %s configured for %s role "
                    "(not %s)",
                    (is_optional? "Cancelling" : "Ignoring"), op->key, op->id,
-                   role2text((op->role == RSC_ROLE_UNKNOWN)? RSC_ROLE_UNPROMOTED : op->role),
+                   role2text(is_default_role? RSC_ROLE_UNPROMOTED : op->role),
                    role2text(rsc->next_role));
         return;
     }
@@ -648,7 +647,7 @@ pcmk__new_cancel_action(pe_resource_t *rsc, const char *task, guint interval_ms,
  * \param[in]     task         Action name
  * \param[in]     interval_ms  Action interval
  * \param[in]     node         Node that history entry is for
- * \param[in]     reason       Short description of why action is being cancelled
+ * \param[in]     reason       Short description of why action is cancelled
  */
 void
 pcmk__schedule_cancel(pe_resource_t *rsc, const char *call_id, const char *task,

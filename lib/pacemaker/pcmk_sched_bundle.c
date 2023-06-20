@@ -522,9 +522,8 @@ void
 pcmk__with_bundle_colocations(const pe_resource_t *rsc,
                               const pe_resource_t *orig_rsc, GList **list)
 {
-    CRM_CHECK((rsc != NULL) && (rsc->variant == pe_container)
-              && (orig_rsc != NULL) && (list != NULL),
-              return);
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container)
+               && (orig_rsc != NULL) && (list != NULL));
 
     if (rsc == orig_rsc) { // Colocations are wanted for bundle itself
         pcmk__add_with_this_list(list, rsc->rsc_cons_lhs);
@@ -540,9 +539,8 @@ void
 pcmk__bundle_with_colocations(const pe_resource_t *rsc,
                               const pe_resource_t *orig_rsc, GList **list)
 {
-    CRM_CHECK((rsc != NULL) && (rsc->variant == pe_container)
-              && (orig_rsc != NULL) && (list != NULL),
-              return);
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_container)
+               && (orig_rsc != NULL) && (list != NULL));
 
     if (rsc == orig_rsc) { // Colocations are wanted for bundle itself
         pcmk__add_this_with_list(list, rsc->rsc_cons);
@@ -792,7 +790,8 @@ create_replica_probes(pe__bundle_replica_t *replica, void *user_data)
     }
     if ((replica->child != NULL)
         && pe__same_node(probe_data->node, replica->node)
-        && replica->child->cmds->create_probe(replica->child, probe_data->node)) {
+        && replica->child->cmds->create_probe(replica->child,
+                                              probe_data->node)) {
         probe_data->any_created = true;
     }
     if ((replica->container != NULL)
