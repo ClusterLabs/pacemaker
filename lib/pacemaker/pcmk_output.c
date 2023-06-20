@@ -1088,12 +1088,15 @@ rsc_action_default(pcmk__output_t *out, va_list args)
     pe_action_t *stop = NULL;
     pe_action_t *promote = NULL;
     pe_action_t *demote = NULL;
+    pe_action_t *reason_op = NULL;
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_managed)
         || (current == NULL && next == NULL)) {
+        const bool managed = pcmk_is_set(rsc->flags, pe_rsc_managed);
+
         pe_rsc_info(rsc, "Leave   %s\t(%s%s)",
                     rsc->id, role2text(rsc->role),
-                    !pcmk_is_set(rsc->flags, pe_rsc_managed)? " unmanaged" : "");
+                    (managed? "" : " unmanaged"));
         return rc;
     }
 
@@ -1171,14 +1174,21 @@ rsc_action_default(pcmk__output_t *out, va_list args)
             }
 
         } else if (!pcmk_is_set(start->flags, pe_action_runnable)) {
+            if ((stop == NULL) || (stop->reason == NULL)) {
+                reason_op = start;
+            } else {
+                reason_op = stop;
+            }
             rc = out->message(out, "rsc-action-item", "Stop", rsc, current,
-                              NULL, stop, (stop && stop->reason)? stop : start);
+                              NULL, stop, reason_op);
             STOP_SANITY_ASSERT(__LINE__);
 
         } else if (moving && current) {
+            const bool failed = pcmk_is_set(rsc->flags, pe_rsc_failed);
+
             rc = out->message(out, "rsc-action-item",
-                              pcmk_is_set(rsc->flags, pe_rsc_failed)? "Recover" : "Move",
-                              rsc, current, next, stop, NULL);
+                              (failed? "Recover" : "Move"), rsc, current, next,
+                              stop, NULL);
 
         } else if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
             rc = out->message(out, "rsc-action-item", "Recover", rsc, current,
@@ -1210,19 +1220,24 @@ rsc_action_default(pcmk__output_t *out, va_list args)
             pe_node_t *node = iter->data;
             pe_action_t *stop_op = NULL;
 
+            reason_op = start;
             possible_matches = find_actions(rsc->actions, key, node);
             if (possible_matches) {
                 stop_op = possible_matches->data;
                 g_list_free(possible_matches);
             }
 
-            if (stop_op && (stop_op->flags & pe_action_runnable)) {
-                STOP_SANITY_ASSERT(__LINE__);
+            if (stop_op != NULL) {
+                if (pcmk_is_set(stop_op->flags, pe_action_runnable)) {
+                    STOP_SANITY_ASSERT(__LINE__);
+                }
+                if (stop_op->reason != NULL) {
+                    reason_op = stop_op;
+                }
             }
 
             if (out->message(out, "rsc-action-item", "Stop", rsc, node, NULL,
-                             stop_op,
-                             (stop_op && stop_op->reason)? stop_op : start) == pcmk_rc_ok) {
+                             stop_op, reason_op) == pcmk_rc_ok) {
                 rc = pcmk_rc_ok;
             }
         }

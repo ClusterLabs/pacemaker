@@ -675,10 +675,11 @@ pcmk__substitute_remote_addr(pe_resource_t *rsc, GHashTable *params)
 void
 pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pe_action_t *action)
 {
+    const pe_node_t *guest = action->node;
     const pe_node_t *host = NULL;
     enum action_tasks task;
 
-    if (!pe__is_guest_node(action->node)) {
+    if (!pe__is_guest_node(guest)) {
         return;
     }
 
@@ -693,7 +694,7 @@ pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pe_action_t *action)
         case action_demote:
         case action_demoted:
             // "Down" actions take place on guest's current host
-            host = pe__current_node(action->node->details->remote_rsc->container);
+            host = pe__current_node(guest->details->remote_rsc->container);
             break;
 
         case start_rsc:
@@ -702,7 +703,7 @@ pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pe_action_t *action)
         case action_promote:
         case action_promoted:
             // "Up" actions take place on guest's next host
-            host = action->node->details->remote_rsc->container->allocated_to;
+            host = guest->details->remote_rsc->container->allocated_to;
             break;
 
         default:

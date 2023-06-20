@@ -510,7 +510,7 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
  *                                   \p then_action_task must be set)
  *
  * \param[in]     flags              Flag set of enum pe_ordering
- * \param[in,out] data_set           Cluster working set to add ordering to
+ * \param[in,out] sched              Cluster working set to add ordering to
  *
  * \note This function takes ownership of first_action_task and
  *       then_action_task, which do not need to be freed by the caller.
@@ -519,7 +519,7 @@ void
 pcmk__new_ordering(pe_resource_t *first_rsc, char *first_action_task,
                    pe_action_t *first_action, pe_resource_t *then_rsc,
                    char *then_action_task, pe_action_t *then_action,
-                   uint32_t flags, pe_working_set_t *data_set)
+                   uint32_t flags, pe_working_set_t *sched)
 {
     pe__ordering_t *order = NULL;
 
@@ -538,7 +538,7 @@ pcmk__new_ordering(pe_resource_t *first_rsc, char *first_action_task,
     order = calloc(1, sizeof(pe__ordering_t));
     CRM_ASSERT(order != NULL);
 
-    order->id = data_set->order_id++;
+    order->id = sched->order_id++;
     order->flags = flags;
     order->lh_rsc = first_rsc;
     order->rh_rsc = then_rsc;
@@ -564,12 +564,12 @@ pcmk__new_ordering(pe_resource_t *first_rsc, char *first_action_task,
     }
 
     pe_rsc_trace(first_rsc, "Created ordering %d for %s then %s",
-                 (data_set->order_id - 1),
+                 (sched->order_id - 1),
                  pcmk__s(order->lh_action_task, "an underspecified action"),
                  pcmk__s(order->rh_action_task, "an underspecified action"));
 
-    data_set->ordering_constraints = g_list_prepend(data_set->ordering_constraints,
-                                                    order);
+    sched->ordering_constraints = g_list_prepend(sched->ordering_constraints,
+                                                 order);
     pcmk__order_migration_equivalents(order);
 }
 
@@ -1367,8 +1367,14 @@ update_action_for_orderings(gpointer data, gpointer user_data)
                                       (pe_working_set_t *) user_data);
 }
 
+/*!
+ * \internal
+ * \brief Apply all ordering constraints
+ *
+ * \param[in,out] sched  Cluster working set
+ */
 void
-pcmk__apply_orderings(pe_working_set_t *data_set)
+pcmk__apply_orderings(pe_working_set_t *sched)
 {
     crm_trace("Applying ordering constraints");
 
@@ -1384,9 +1390,9 @@ pcmk__apply_orderings(pe_working_set_t *data_set)
      * @TODO This is brittle and should be carefully redesigned so that the
      * order of creation doesn't matter, and the reverse becomes unneeded.
      */
-    data_set->ordering_constraints = g_list_reverse(data_set->ordering_constraints);
+    sched->ordering_constraints = g_list_reverse(sched->ordering_constraints);
 
-    for (GList *iter = data_set->ordering_constraints;
+    for (GList *iter = sched->ordering_constraints;
          iter != NULL; iter = iter->next) {
 
         pe__ordering_t *order = iter->data;
@@ -1408,15 +1414,15 @@ pcmk__apply_orderings(pe_working_set_t *data_set)
         }
     }
 
-    g_list_foreach(data_set->actions, block_colocation_dependents, NULL);
+    g_list_foreach(sched->actions, block_colocation_dependents, NULL);
 
     crm_trace("Ordering probes");
-    pcmk__order_probes(data_set);
+    pcmk__order_probes(sched);
 
-    crm_trace("Updating %d actions", g_list_length(data_set->actions));
-    g_list_foreach(data_set->actions, update_action_for_orderings, data_set);
+    crm_trace("Updating %d actions", g_list_length(sched->actions));
+    g_list_foreach(sched->actions, update_action_for_orderings, sched);
 
-    pcmk__disable_invalid_orderings(data_set);
+    pcmk__disable_invalid_orderings(sched);
 }
 
 /*!

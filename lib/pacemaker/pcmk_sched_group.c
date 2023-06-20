@@ -284,6 +284,7 @@ void
 pcmk__group_internal_constraints(pe_resource_t *rsc)
 {
     struct member_data member_data = { false, };
+    const pe_resource_t *top = NULL;
 
     CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_group));
 
@@ -297,10 +298,11 @@ pcmk__group_internal_constraints(pe_resource_t *rsc)
     pcmk__order_resource_actions(rsc, RSC_START, rsc, RSC_STARTED,
                                  pe_order_runnable_left);
 
+    top = pe__const_top_resource(rsc, false);
+
     member_data.ordered = pe__group_flag_is_set(rsc, pe__group_ordered);
     member_data.colocated = pe__group_flag_is_set(rsc, pe__group_colocated);
-    member_data.promotable = pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
-                                         pe_rsc_promotable);
+    member_data.promotable = pcmk_is_set(top->flags, pe_rsc_promotable);
     g_list_foreach(rsc->children, member_internal_constraints, &member_data);
 }
 

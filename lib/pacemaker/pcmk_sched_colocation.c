@@ -1520,12 +1520,12 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
     if (*nodes == NULL) {
         work = pcmk__copy_node_table(rsc->allowed_nodes);
     } else {
-        pe_rsc_trace(rsc, "%s: Merging scores from %s (at %.6f)",
-                     log_id, rsc->id, factor);
+        const bool pos = pcmk_is_set(flags, pcmk__coloc_select_nonnegative);
+
+        pe_rsc_trace(rsc, "%s: Merging %s scores from %s (at %.6f)",
+                     log_id, (pos? "positive" : "all"), rsc->id, factor);
         work = pcmk__copy_node_table(*nodes);
-        add_node_scores_matching_attr(work, rsc, colocation, factor,
-                                      pcmk_is_set(flags,
-                                                  pcmk__coloc_select_nonnegative));
+        add_node_scores_matching_attr(work, rsc, colocation, factor, pos);
     }
 
     if (work == NULL) {

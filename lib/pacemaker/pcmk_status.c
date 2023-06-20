@@ -307,7 +307,7 @@ pcmk__output_simple_status(pcmk__output_t *out,
 {
     int nodes_online = 0;
     int nodes_standby = 0;
-    int nodes_maintenance = 0;
+    int nodes_maint = 0;
     GString *offline_nodes = NULL;
     bool no_dc = false;
     bool offline = false;
@@ -324,7 +324,7 @@ pcmk__output_simple_status(pcmk__output_t *out,
         if (node->details->standby && node->details->online) {
             nodes_standby++;
         } else if (node->details->maintenance && node->details->online) {
-            nodes_maintenance++;
+            nodes_maint++;
         } else if (node->details->online) {
             nodes_online++;
         } else {
@@ -355,10 +355,10 @@ pcmk__output_simple_status(pcmk__output_t *out,
                                                 pcmk__plural_s(nodes_standby));
         }
 
-        if (nodes_maintenance > 0) {
+        if (nodes_maint > 0) {
             nodes_maint_s = crm_strdup_printf(", %d maintenance node%s",
-                                              nodes_maintenance,
-                                              pcmk__plural_s(nodes_maintenance));
+                                              nodes_maint,
+                                              pcmk__plural_s(nodes_maint));
         }
 
         out->info(out, "CLUSTER OK: %d node%s online%s%s, "

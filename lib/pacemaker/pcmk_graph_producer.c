@@ -1069,12 +1069,16 @@ pcmk__create_graph(pe_working_set_t *data_set)
              */
             if (pcmk_is_set(data_set->flags, pe_flag_have_quorum)
                 || (data_set->no_quorum_policy == no_quorum_ignore)) {
+                const bool managed = pcmk_is_set(action->rsc->flags,
+                                                 pe_rsc_managed);
+                const bool failed = pcmk_is_set(action->rsc->flags,
+                                                pe_rsc_failed);
+
                 crm_crit("Cannot %s %s because of %s:%s%s (%s)",
                          action->node->details->unclean? "fence" : "shut down",
                          pe__node_name(action->node), action->rsc->id,
-                         pcmk_is_set(action->rsc->flags, pe_rsc_managed)? " blocked" : " unmanaged",
-                         pcmk_is_set(action->rsc->flags, pe_rsc_failed)? " failed" : "",
-                         action->uuid);
+                         (managed? " blocked" : " unmanaged"),
+                         (failed? " failed" : ""), action->uuid);
             }
         }
 

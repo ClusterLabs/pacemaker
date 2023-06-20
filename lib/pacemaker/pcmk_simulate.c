@@ -811,6 +811,8 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
     }
 
     if (!out->is_quiet(out)) {
+        const bool show_pending = pcmk_is_set(flags, pcmk_sim_show_pending);
+
         if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
             printed = out->message(out, "maint-mode", data_set->flags);
         }
@@ -828,8 +830,7 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
         /* Most formatted output headers use caps for each word, but this one
          * only has the first word capitalized for compatibility with pcs.
          */
-        print_cluster_status(data_set,
-                             pcmk_is_set(flags, pcmk_sim_show_pending)? pcmk_show_pending : 0,
+        print_cluster_status(data_set, (show_pending? pcmk_show_pending : 0),
                              section_opts, "Current cluster status",
                              (printed == pcmk_rc_ok));
         printed = pcmk_rc_ok;
@@ -949,8 +950,8 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
     }
 
     PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
-    if (pcmk__simulate_transition(data_set, cib,
-                                  injections->op_fail) != pcmk__graph_complete) {
+    if (pcmk__simulate_transition(data_set, cib, injections->op_fail)
+            != pcmk__graph_complete) {
         rc = pcmk_rc_invalid_transition;
     }
 

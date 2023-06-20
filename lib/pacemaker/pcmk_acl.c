@@ -91,10 +91,10 @@ pcmk__acl_mark_node_with_namespace(xmlNode *i_node, const xmlChar *ns, int *ret,
 }
 
 /*!
- * \brief This function takes some XML, and annotates it with XML
- *        namespaces to indicate the ACL permissions.
+ * \brief Annotate a given XML element or property and its siblings with
+ *        XML namespaces to indicate ACL permissions
  *
- * \param[in,out] xml_modify  
+ * \param[in,out] xml_modify  XML to annotate
  *
  * \return  A standard Pacemaker return code
  *          Namely:
@@ -107,7 +107,7 @@ pcmk__acl_mark_node_with_namespace(xmlNode *i_node, const xmlChar *ns, int *ret,
  * \note This function is recursive
  */
 static int
-pcmk__acl_annotate_permissions_recursive(xmlNode *xml_modify)
+annotate_with_siblings(xmlNode *xml_modify)
 {
 
     static xmlNs *ns_recycle_writable = NULL,
@@ -146,15 +146,16 @@ pcmk__acl_annotate_permissions_recursive(xmlNode *xml_modify)
                      * class-hierarchy emulation that libxml2 has firmly baked
                      * in its API/ABI
                      */
-                    ret |= pcmk__acl_annotate_permissions_recursive((xmlNodePtr) i_node->properties);
+                    ret |= annotate_with_siblings((xmlNodePtr)
+                                                  i_node->properties);
                 }
                 if (i_node->children != NULL) {
-                    ret |= pcmk__acl_annotate_permissions_recursive(i_node->children);
+                    ret |= annotate_with_siblings(i_node->children);
                 }
                 break;
 
             case XML_ATTRIBUTE_NODE:
-                /* we can utilize that parent has already been assigned the ns */
+                // We can utilize that parent has already been assigned the ns
                 if (!pcmk__check_acl(i_node->parent,
                                      (const char *) i_node->name,
                                      pcmk__xf_acl_read)) {
@@ -173,8 +174,9 @@ pcmk__acl_annotate_permissions_recursive(xmlNode *xml_modify)
                 break;
 
             case XML_COMMENT_NODE:
-                /* we can utilize that parent has already been assigned the ns */
-                if (!pcmk__check_acl(i_node->parent, (const char *) i_node->name,
+                // We can utilize that parent has already been assigned the ns
+                if (!pcmk__check_acl(i_node->parent,
+                                     (const char *) i_node->name,
                                      pcmk__xf_acl_read)) {
                     ns = NS_DENIED;
                 } else if (!pcmk__check_acl(i_node->parent,
@@ -236,7 +238,7 @@ pcmk__acl_annotate_permissions(const char *cred, const xmlDoc *cib_doc,
 
     pcmk__enable_acl(target, target, cred);
 
-    ret = pcmk__acl_annotate_permissions_recursive(target);
+    ret = annotate_with_siblings(target);
 
     if (ret == pcmk_rc_ok) {
         char *credentials = crm_strdup_printf("ACLs as evaluated for user %s",

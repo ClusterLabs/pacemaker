@@ -219,6 +219,23 @@ pcmk__set_assignment_methods(pe_working_set_t *data_set)
     g_list_foreach(data_set->resources, set_assignment_methods_for_rsc, NULL);
 }
 
+/*!
+ * \internal
+ * \brief Wrapper for colocated_resources() method for readability
+ *
+ * \param[in]      rsc       Resource to add to colocated list
+ * \param[in]      orig_rsc  Resource originally requested
+ * \param[in,out]  list      Pointer to list to add to
+ *
+ * \return (Possibly new) head of list
+ */
+static inline void
+add_colocated_resources(const pe_resource_t *rsc, const pe_resource_t *orig_rsc,
+                        GList **list)
+{
+    *list = rsc->cmds->colocated_resources(rsc, orig_rsc, *list);
+}
+
 // Shared implementation of resource_alloc_functions_t:colocated_resources()
 GList *
 pcmk__colocated_resources(const pe_resource_t *rsc,
@@ -252,10 +269,7 @@ pcmk__colocated_resources(const pe_resource_t *rsc,
         if ((constraint->score == INFINITY) &&
             (pcmk__colocation_affects(rsc, primary, constraint,
                                       true) == pcmk__coloc_affects_location)) {
-
-            colocated_rscs = primary->cmds->colocated_resources(primary,
-                                                                orig_rsc,
-                                                                colocated_rscs);
+            add_colocated_resources(primary, orig_rsc, &colocated_rscs);
         }
     }
     g_list_free(colocations);
@@ -277,10 +291,7 @@ pcmk__colocated_resources(const pe_resource_t *rsc,
         if ((constraint->score == INFINITY) &&
             (pcmk__colocation_affects(dependent, rsc, constraint,
                                       true) == pcmk__coloc_affects_location)) {
-
-            colocated_rscs = dependent->cmds->colocated_resources(dependent,
-                                                                  orig_rsc,
-                                                                  colocated_rscs);
+            add_colocated_resources(dependent, orig_rsc, &colocated_rscs);
         }
     }
     g_list_free(colocations);
@@ -336,6 +347,20 @@ pcmk__output_resource_actions(pe_resource_t *rsc)
     }
 
     out->message(out, "rsc-action", rsc, current, next);
+}
+
+/*!
+ * \internal
+ * \brief Add a resource to a node's list of assigned resources
+ *
+ * \param[in,out] node  Node to add resource to
+ * \param[in]     rsc   Resource to add
+ */
+static inline void
+add_assigned_resource(pe_node_t *node, pe_resource_t *rsc)
+{
+    node->details->allocated_rsc = g_list_prepend(node->details->allocated_rsc,
+                                                  rsc);
 }
 
 /*!
@@ -426,8 +451,7 @@ pcmk__finalize_assignment(pe_resource_t *rsc, pe_node_t *chosen, bool force)
     crm_debug("Assigning %s to %s", rsc->id, pe__node_name(chosen));
     rsc->allocated_to = pe__copy_node(chosen);
 
-    chosen->details->allocated_rsc = g_list_prepend(chosen->details->allocated_rsc,
-                                                    rsc);
+    add_assigned_resource(chosen, rsc);
     chosen->details->num_resources++;
     chosen->count++;
     pcmk__consume_node_capacity(chosen->details->utilization, rsc);

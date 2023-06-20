@@ -242,6 +242,7 @@ recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
 {
     pe_action_t *mon = NULL;
     bool is_optional = true;
+    const bool is_default_role = (op->role == RSC_ROLE_UNKNOWN);
 
     // We're only interested in recurring actions for active roles
     if (op->role == RSC_ROLE_STOPPED) {
@@ -251,9 +252,8 @@ recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
     is_optional = active_recurring_should_be_optional(rsc, node, op->key,
                                                       start);
 
-    if (((op->role != RSC_ROLE_UNKNOWN) && (rsc->next_role != op->role))
-        || ((op->role == RSC_ROLE_UNKNOWN)
-            && (rsc->next_role == RSC_ROLE_PROMOTED))) {
+    if ((!is_default_role && (rsc->next_role != op->role))
+        || (is_default_role && (rsc->next_role == RSC_ROLE_PROMOTED))) {
         // Configured monitor role doesn't match role resource will have
 
         if (is_optional) { // It's running, so cancel it
@@ -290,7 +290,7 @@ recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
                    "%s recurring action %s because %s configured for %s role "
                    "(not %s)",
                    (is_optional? "Cancelling" : "Ignoring"), op->key, op->id,
-                   role2text((op->role == RSC_ROLE_UNKNOWN)? RSC_ROLE_UNPROMOTED : op->role),
+                   role2text(is_default_role? RSC_ROLE_UNPROMOTED : op->role),
                    role2text(rsc->next_role));
         return;
     }

@@ -341,6 +341,8 @@ add_probe_orderings_for_stops(pe_working_set_t *data_set)
         uint32_t order_flags = pe_order_optional;
         GList *probes = NULL;
         GList *then_actions = NULL;
+        pe_action_t *first = NULL;
+        pe_action_t *then = NULL;
 
         // Skip disabled orderings
         if (order->flags == pe_order_none) {
@@ -353,17 +355,18 @@ add_probe_orderings_for_stops(pe_working_set_t *data_set)
         }
 
         // Skip invalid orderings (shouldn't be possible)
-        if (((order->lh_action == NULL) && (order->lh_action_task == NULL)) ||
-            ((order->rh_action == NULL) && (order->rh_action_task == NULL))) {
+        first = order->lh_action;
+        then = order->rh_action;
+        if (((first == NULL) && (order->lh_action_task == NULL))
+            || ((then == NULL) && (order->rh_action_task == NULL))) {
             continue;
         }
 
         // Skip orderings for first actions other than stop
-        if ((order->lh_action != NULL)
-            && !pcmk__str_eq(order->lh_action->task, RSC_STOP,
-                             pcmk__str_none)) {
+        if ((first != NULL) && !pcmk__str_eq(first->task, RSC_STOP,
+                                             pcmk__str_none)) {
             continue;
-        } else if ((order->lh_action == NULL)
+        } else if ((first == NULL)
                    && !pcmk__ends_with(order->lh_action_task,
                                        "_" RSC_STOP "_0")) {
             continue;
@@ -376,11 +379,10 @@ add_probe_orderings_for_stops(pe_working_set_t *data_set)
         if ((order->rh_rsc != NULL)
             && (order->lh_rsc->container == order->rh_rsc)) {
 
-            if ((order->rh_action != NULL)
-                && pcmk__str_eq(order->rh_action->task, RSC_STOP,
-                                pcmk__str_none)) {
+            if ((then != NULL) && pcmk__str_eq(then->task, RSC_STOP,
+                                               pcmk__str_none)) {
                 continue;
-            } else if ((order->rh_action == NULL)
+            } else if ((then == NULL)
                        && pcmk__ends_with(order->rh_action_task,
                                           "_" RSC_STOP "_0")) {
                 continue;
@@ -409,8 +411,8 @@ add_probe_orderings_for_stops(pe_working_set_t *data_set)
         }
 
         // List all relevant "then" actions
-        if (order->rh_action != NULL) {
-            then_actions = g_list_prepend(NULL, order->rh_action);
+        if (then != NULL) {
+            then_actions = g_list_prepend(NULL, then);
 
         } else if (order->rh_rsc != NULL) {
             then_actions = find_actions(order->rh_rsc->actions,
@@ -423,8 +425,8 @@ add_probe_orderings_for_stops(pe_working_set_t *data_set)
 
         crm_trace("Implying 'probe then' orderings for '%s then %s' "
                   "(id=%d, type=%.6x)",
-                  order->lh_action? order->lh_action->uuid : order->lh_action_task,
-                  order->rh_action? order->rh_action->uuid : order->rh_action_task,
+                  ((first == NULL)? order->lh_action_task : first->uuid),
+                  ((then == NULL)? order->rh_action_task : then->uuid),
                   order->id, order->flags);
 
         for (GList *probe_iter = probes; probe_iter != NULL;
@@ -473,7 +475,7 @@ add_start_orderings_for_probe(pe_action_t *probe, pe_action_wrapper_t *after)
      * starting unless the probe is runnable so that we don't risk starting too
      * many instances before we know the state on all nodes.
      */
-    if (after->action->rsc->variant <= pe_group
+    if ((after->action->rsc->variant <= pe_group)
         || pcmk_is_set(probe->flags, pe_action_runnable)
         // The order type is already enforced for its parent.
         || pcmk_is_set(after->type, pe_order_runnable_left)
@@ -482,10 +484,9 @@ add_start_orderings_for_probe(pe_action_t *probe, pe_action_wrapper_t *after)
         return;
     }
 
-    crm_trace("Adding probe start orderings for '%s@%s (%s) "
+    crm_trace("Adding probe start orderings for 'unrunnable %s@%s "
               "then instances of %s@%s'",
               probe->uuid, pe__node_name(probe->node),
-              pcmk_is_set(probe->flags, pe_action_runnable)? "runnable" : "unrunnable",
               after->action->uuid, pe__node_name(after->action->node));
 
     for (GList *then_iter = after->action->actions_after; then_iter != NULL;
@@ -500,12 +501,10 @@ add_start_orderings_for_probe(pe_action_t *probe, pe_action_wrapper_t *after)
             continue;
         }
 
-        crm_trace("Adding probe start ordering for '%s@%s (%s) "
+        crm_trace("Adding probe start ordering for 'unrunnable %s@%s "
                   "then %s@%s' (type=%#.6x)",
                   probe->uuid, pe__node_name(probe->node),
-                  pcmk_is_set(probe->flags, pe_action_runnable)? "runnable" : "unrunnable",
-                  then->action->uuid, pe__node_name(then->action->node),
-                  flags);
+                  then->action->uuid, pe__node_name(then->action->node), flags);
 
         /* Prevent the instance from starting if the instance can't, but don't
          * cause any other intances to stop if already active.

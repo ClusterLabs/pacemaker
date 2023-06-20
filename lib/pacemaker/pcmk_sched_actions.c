@@ -203,6 +203,34 @@ action_for_ordering(pe_action_t *action)
 
 /*!
  * \internal
+ * \brief Wrapper for update_ordered_actions() method for readability
+ *
+ * \param[in,out] rsc       Resource to call method for
+ * \param[in,out] first     'First' action in an ordering
+ * \param[in,out] then      'Then' action in an ordering
+ * \param[in]     node      If not NULL, limit scope of ordering to this
+ *                          node (only used when interleaving instances)
+ * \param[in]     flags     Action flags for \p first for ordering purposes
+ * \param[in]     filter    Action flags to limit scope of certain updates
+ *                          (may include pe_action_optional to affect only
+ *                          mandatory actions, and pe_action_runnable to
+ *                          affect only runnable actions)
+ * \param[in]     type      Group of enum pe_ordering flags to apply
+ * \param[in,out] data_set  Cluster working set
+ *
+ * \return Group of enum pcmk__updated flags indicating what was updated
+ */
+static inline uint32_t
+update(pe_resource_t *rsc, pe_action_t *first, pe_action_t *then,
+       const pe_node_t *node, uint32_t flags, uint32_t filter, uint32_t type,
+       pe_working_set_t *data_set)
+{
+    return rsc->cmds->update_ordered_actions(first, then, node, flags, filter,
+                                             type, data_set);
+}
+
+/*!
+ * \internal
  * \brief Update flags for ordering's actions appropriately for ordering's flags
  *
  * \param[in,out] first        First action in an ordering
@@ -246,12 +274,10 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
 
     if (pcmk_is_set(order->type, pe_order_implies_then)) {
         if (then->rsc != NULL) {
-            changed |= then->rsc->cmds->update_ordered_actions(first, then,
-                                                               node,
-                                                               first_flags & pe_action_optional,
-                                                               pe_action_optional,
-                                                               pe_order_implies_then,
-                                                               data_set);
+            changed |= update(then->rsc, first, then, node,
+                              first_flags & pe_action_optional,
+                              pe_action_optional, pe_order_implies_then,
+                              data_set);
         } else if (!pcmk_is_set(first_flags, pe_action_optional)
                    && pcmk_is_set(then->flags, pe_action_optional)) {
             pe__clear_action_flags(then, pe_action_optional);
@@ -265,10 +291,8 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
     if (pcmk_is_set(order->type, pe_order_restart) && (then->rsc != NULL)) {
         enum pe_action_flags restart = pe_action_optional|pe_action_runnable;
 
-        changed |= then->rsc->cmds->update_ordered_actions(first, then, node,
-                                                           first_flags, restart,
-                                                           pe_order_restart,
-                                                           data_set);
+        changed |= update(then->rsc, first, then, node, first_flags, restart,
+                          pe_order_restart, data_set);
         pe_rsc_trace(then->rsc, "%s then %s: %s after pe_order_restart",
                      first->uuid, then->uuid,
                      (changed? "changed" : "unchanged"));
@@ -276,12 +300,9 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
 
     if (pcmk_is_set(order->type, pe_order_implies_first)) {
         if (first->rsc != NULL) {
-            changed |= first->rsc->cmds->update_ordered_actions(first, then,
-                                                                node,
-                                                                first_flags,
-                                                                pe_action_optional,
-                                                                pe_order_implies_first,
-                                                                data_set);
+            changed |= update(first->rsc, first, then, node, first_flags,
+                              pe_action_optional, pe_order_implies_first,
+                              data_set);
         } else if (!pcmk_is_set(first_flags, pe_action_optional)
                    && pcmk_is_set(first->flags, pe_action_runnable)) {
             pe__clear_action_flags(first, pe_action_runnable);
@@ -294,12 +315,10 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
 
     if (pcmk_is_set(order->type, pe_order_promoted_implies_first)) {
         if (then->rsc != NULL) {
-            changed |= then->rsc->cmds->update_ordered_actions(first, then,
-                                                               node,
-                                                               first_flags & pe_action_optional,
-                                                               pe_action_optional,
-                                                               pe_order_promoted_implies_first,
-                                                               data_set);
+            changed |= update(then->rsc, first, then, node,
+                              first_flags & pe_action_optional,
+                              pe_action_optional,
+                              pe_order_promoted_implies_first, data_set);
         }
         pe_rsc_trace(then->rsc,
                      "%s then %s: %s after pe_order_promoted_implies_first",
@@ -309,12 +328,9 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
 
     if (pcmk_is_set(order->type, pe_order_one_or_more)) {
         if (then->rsc != NULL) {
-            changed |= then->rsc->cmds->update_ordered_actions(first, then,
-                                                               node,
-                                                               first_flags,
-                                                               pe_action_runnable,
-                                                               pe_order_one_or_more,
-                                                               data_set);
+            changed |= update(then->rsc, first, then, node, first_flags,
+                              pe_action_runnable, pe_order_one_or_more,
+                              data_set);
 
         } else if (pcmk_is_set(first_flags, pe_action_runnable)) {
             // We have another runnable instance of "first"
@@ -344,12 +360,9 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
                          first->uuid, then->uuid);
             order->type = pe_order_none;
         } else {
-            changed |= then->rsc->cmds->update_ordered_actions(first, then,
-                                                               node,
-                                                               first_flags,
-                                                               pe_action_runnable,
-                                                               pe_order_runnable_left,
-                                                               data_set);
+            changed |= update(then->rsc, first, then, node, first_flags,
+                              pe_action_runnable, pe_order_runnable_left,
+                              data_set);
         }
         pe_rsc_trace(then->rsc, "%s then %s: %s after pe_order_probe",
                      first->uuid, then->uuid,
@@ -358,12 +371,9 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
 
     if (pcmk_is_set(order->type, pe_order_runnable_left)) {
         if (then->rsc != NULL) {
-            changed |= then->rsc->cmds->update_ordered_actions(first, then,
-                                                               node,
-                                                               first_flags,
-                                                               pe_action_runnable,
-                                                               pe_order_runnable_left,
-                                                               data_set);
+            changed |= update(then->rsc, first, then, node, first_flags,
+                              pe_action_runnable, pe_order_runnable_left,
+                              data_set);
 
         } else if (!pcmk_is_set(first_flags, pe_action_runnable)
                    && pcmk_is_set(then->flags, pe_action_runnable)) {
@@ -378,12 +388,9 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
 
     if (pcmk_is_set(order->type, pe_order_implies_first_migratable)) {
         if (then->rsc != NULL) {
-            changed |= then->rsc->cmds->update_ordered_actions(first, then,
-                                                               node,
-                                                               first_flags,
-                                                               pe_action_optional,
-                                                               pe_order_implies_first_migratable,
-                                                               data_set);
+            changed |= update(then->rsc, first, then, node, first_flags,
+                              pe_action_optional,
+                              pe_order_implies_first_migratable, data_set);
         }
         pe_rsc_trace(then->rsc, "%s then %s: %s after "
                      "pe_order_implies_first_migratable",
@@ -393,12 +400,9 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
 
     if (pcmk_is_set(order->type, pe_order_pseudo_left)) {
         if (then->rsc != NULL) {
-            changed |= then->rsc->cmds->update_ordered_actions(first, then,
-                                                               node,
-                                                               first_flags,
-                                                               pe_action_optional,
-                                                               pe_order_pseudo_left,
-                                                               data_set);
+            changed |= update(then->rsc, first, then, node, first_flags,
+                              pe_action_optional, pe_order_pseudo_left,
+                              data_set);
         }
         pe_rsc_trace(then->rsc, "%s then %s: %s after pe_order_pseudo_left",
                      first->uuid, then->uuid,
@@ -407,12 +411,8 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
 
     if (pcmk_is_set(order->type, pe_order_optional)) {
         if (then->rsc != NULL) {
-            changed |= then->rsc->cmds->update_ordered_actions(first, then,
-                                                               node,
-                                                               first_flags,
-                                                               pe_action_runnable,
-                                                               pe_order_optional,
-                                                               data_set);
+            changed |= update(then->rsc, first, then, node, first_flags,
+                              pe_action_runnable, pe_order_optional, data_set);
         }
         pe_rsc_trace(then->rsc, "%s then %s: %s after pe_order_optional",
                      first->uuid, then->uuid,
@@ -421,12 +421,9 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
 
     if (pcmk_is_set(order->type, pe_order_asymmetrical)) {
         if (then->rsc != NULL) {
-            changed |= then->rsc->cmds->update_ordered_actions(first, then,
-                                                               node,
-                                                               first_flags,
-                                                               pe_action_runnable,
-                                                               pe_order_asymmetrical,
-                                                               data_set);
+            changed |= update(then->rsc, first, then, node, first_flags,
+                              pe_action_runnable, pe_order_asymmetrical,
+                              data_set);
         }
         pe_rsc_trace(then->rsc, "%s then %s: %s after pe_order_asymmetrical",
                      first->uuid, then->uuid,
@@ -1415,9 +1412,11 @@ pcmk__output_actions(pe_working_set_t *data_set)
         }
 
         if (pe__is_guest_node(action->node)) {
+            const pe_resource_t *remote = action->node->details->remote_rsc;
+
             node_name = crm_strdup_printf("%s (resource: %s)",
                                           pe__node_name(action->node),
-                                          action->node->details->remote_rsc->container->id);
+                                          remote->container->id);
         } else if (action->node != NULL) {
             node_name = crm_strdup_printf("%s", pe__node_name(action->node));
         }
