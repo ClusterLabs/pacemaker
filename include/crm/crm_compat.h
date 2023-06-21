@@ -61,6 +61,9 @@ extern "C" {
 //! \deprecated Use PCMK_ACTION_META_DATA instead
 #define RSC_METADATA PCMK_ACTION_META_DATA
 
+//! \deprecated Use PCMK_ACTION_NOTIFY instead
+#define RSC_NOTIFY PCMK_ACTION_NOTIFY
+
 //! \deprecated Use PCMK_ACTION_START instead
 #define RSC_START PCMK_ACTION_START
 
