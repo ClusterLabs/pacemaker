@@ -37,6 +37,9 @@ extern "C" {
 //! \deprecated This defined constant will be removed in a future release
 #define CRM_ATTR_RA_VERSION "#ra-version"
 
+//! \deprecated Use PCMK_ACTION_START instead
+#define CRMD_ACTION_START PCMK_ACTION_START
+
 //!@{
 //! \deprecated This macro will be removed in a future release
 
