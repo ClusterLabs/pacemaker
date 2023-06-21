@@ -397,9 +397,9 @@ pe_action_t *custom_action(pe_resource_t *rsc, char *key, const char *task,
                            const pe_node_t *on_node, gboolean optional,
                            gboolean foo, pe_working_set_t *data_set);
 
-#  define delete_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_DELETE, 0)
+#  define delete_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_DELETE, 0)
 #  define delete_action(rsc, node, optional) custom_action(		\
-		rsc, delete_key(rsc), CRMD_ACTION_DELETE, node,		\
+		rsc, delete_key(rsc), PCMK_ACTION_DELETE, node, \
 		optional, TRUE, rsc->cluster);
 
 #  define stopped_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_STOPPED, 0)

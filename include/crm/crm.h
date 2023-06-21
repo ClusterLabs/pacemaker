@@ -163,7 +163,7 @@ extern char *crm_system_name;
 #  define CRMD_JOINSTATE_MEMBER         "member"
 #  define CRMD_JOINSTATE_NACK           "banned"
 
-#  define CRMD_ACTION_DELETE		"delete"
+#  define CRMD_ACTION_DELETE		PCMK_ACTION_DELETE
 #  define CRMD_ACTION_CANCEL		"cancel"
 
 #  define CRMD_ACTION_MIGRATE		"migrate_to"
@@ -181,7 +181,7 @@ extern char *crm_system_name;
 #  define CRMD_METADATA_CALL_TIMEOUT   30000
 
 /* short names */
-#  define RSC_DELETE	CRMD_ACTION_DELETE
+#  define RSC_DELETE	PCMK_ACTION_DELETE
 #  define RSC_CANCEL	CRMD_ACTION_CANCEL
 
 #  define RSC_MIGRATE	CRMD_ACTION_MIGRATE

@@ -21,6 +21,7 @@ extern "C" {
  */
 
 // Action names as strings
+#define PCMK_ACTION_DELETE              "delete"
 #define PCMK_ACTION_DEMOTE              "demote"
 #define PCMK_ACTION_META_DATA           "meta-data"
 #define PCMK_ACTION_MONITOR             "monitor"

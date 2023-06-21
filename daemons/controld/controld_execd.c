@@ -672,7 +672,7 @@ notify_deleted(lrm_state_t * lrm_state, ha_msg_input_t * input, const char *rsc_
     crm_info("Notifying %s on %s that %s was%s deleted",
              from_sys, (from_host? from_host : "localhost"), rsc_id,
              ((rc == pcmk_ok)? "" : " not"));
-    op = construct_op(lrm_state, input->xml, rsc_id, CRMD_ACTION_DELETE);
+    op = construct_op(lrm_state, input->xml, rsc_id, PCMK_ACTION_DELETE);
     controld_rc2event(op, pcmk_legacy2rc(rc));
     controld_ack_event_directly(from_host, from_sys, NULL, op, rsc_id);
     lrmd_free_event(op);
@@ -1334,7 +1334,7 @@ do_lrm_delete(ha_msg_input_t *input, lrm_state_t *lrm_state,
     if (cib_rc != pcmk_rc_ok) {
         lrmd_event_data_t *op = NULL;
 
-        op = construct_op(lrm_state, input->xml, rsc->id, CRMD_ACTION_DELETE);
+        op = construct_op(lrm_state, input->xml, rsc->id, PCMK_ACTION_DELETE);
 
         /* These are resource clean-ups, not actions, so no exit reason is
          * needed.
@@ -1447,7 +1447,7 @@ do_lrm_invoke(long long action,
         if (!pcmk__str_eq(from_sys, CRM_SYSTEM_TENGINE, pcmk__str_none)) {
             crm_rsc_delete = TRUE; // from crm_resource
         }
-        operation = CRMD_ACTION_DELETE;
+        operation = PCMK_ACTION_DELETE;
 
     } else if (input->xml != NULL) {
         operation = crm_element_value(input->xml, XML_LRM_ATTR_TASK);
@@ -1491,7 +1491,7 @@ do_lrm_invoke(long long action,
     } else if (operation != NULL) {
         lrmd_rsc_info_t *rsc = NULL;
         xmlNode *xml_rsc = find_xml_node(input->xml, XML_CIB_TAG_RESOURCE, TRUE);
-        gboolean create_rsc = !pcmk__str_eq(operation, CRMD_ACTION_DELETE,
+        gboolean create_rsc = !pcmk__str_eq(operation, PCMK_ACTION_DELETE,
                                             pcmk__str_none);
         int rc;
 
@@ -1544,7 +1544,8 @@ do_lrm_invoke(long long action,
                 crm_log_xml_warn(input->xml, "Bad command");
             }
 
-        } else if (pcmk__str_eq(operation, CRMD_ACTION_DELETE, pcmk__str_none)) {
+        } else if (pcmk__str_eq(operation, PCMK_ACTION_DELETE,
+                                pcmk__str_none)) {
             do_lrm_delete(input, lrm_state, rsc, from_sys, from_host,
                           crm_rsc_delete, user_name);
 

@@ -1453,9 +1453,10 @@ pcmk__schedule_cleanup(pe_resource_t *rsc, const pe_node_t *node, bool optional)
     delete_action(rsc, node, optional);
 
     // stop -> clean-up -> start
-    pcmk__order_resource_actions(rsc, PCMK_ACTION_STOP, rsc, RSC_DELETE, flag);
-    pcmk__order_resource_actions(rsc, RSC_DELETE, rsc, PCMK_ACTION_START,
-                                 flag);
+    pcmk__order_resource_actions(rsc, PCMK_ACTION_STOP,
+                                 rsc, PCMK_ACTION_DELETE, flag);
+    pcmk__order_resource_actions(rsc, PCMK_ACTION_DELETE,
+                                 rsc, PCMK_ACTION_START, flag);
 }
 
 /*!
