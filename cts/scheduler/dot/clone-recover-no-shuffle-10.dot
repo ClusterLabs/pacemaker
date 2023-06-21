@@ -1,0 +1,10 @@
+ digraph "g" {
+"dummy-clone_running_0" [ style=bold color="green" fontcolor="orange"]
+"dummy-clone_start_0" -> "dummy-clone_running_0" [ style = bold]
+"dummy-clone_start_0" -> "dummy:2_start_0 node1" [ style = bold]
+"dummy-clone_start_0" [ style=bold color="green" fontcolor="orange"]
+"dummy:2_monitor_11000 node1" [ style=bold color="green" fontcolor="black"]
+"dummy:2_start_0 node1" -> "dummy-clone_running_0" [ style = bold]
+"dummy:2_start_0 node1" -> "dummy:2_monitor_11000 node1" [ style = bold]
+"dummy:2_start_0 node1" [ style=bold color="green" fontcolor="black"]
+}
