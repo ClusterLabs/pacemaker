@@ -223,7 +223,7 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
         entry->last = lrmd_copy_event(op);
 
         if (op->params && pcmk__strcase_any_of(op->op_type, PCMK_ACTION_START,
-                                               CRMD_ACTION_RELOAD,
+                                               PCMK_ACTION_RELOAD,
                                                CRMD_ACTION_RELOAD_AGENT,
                                                PCMK_ACTION_MONITOR, NULL)) {
             if (entry->stop_params) {
@@ -1937,7 +1937,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
         return;
     }
 
-    if (pcmk__str_any_of(operation, CRMD_ACTION_RELOAD,
+    if (pcmk__str_any_of(operation, PCMK_ACTION_RELOAD,
                          CRMD_ACTION_RELOAD_AGENT, NULL)) {
         /* Pre-2.1.0 DCs will schedule reload actions only, and 2.1.0+ DCs
          * will schedule reload-agent actions only. In either case, we need
@@ -1946,7 +1946,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
          */
         if ((md != NULL)
             && pcmk_is_set(md->ra_flags, ra_supports_legacy_reload)) {
-            operation = CRMD_ACTION_RELOAD;
+            operation = PCMK_ACTION_RELOAD;
         } else {
             operation = CRMD_ACTION_RELOAD_AGENT;
         }

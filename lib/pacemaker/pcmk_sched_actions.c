@@ -1136,7 +1136,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
      * only ever get results for actions scheduled by us, so we can reasonably
      * assume any "reload" is actually a pre-1.1 agent reload.
      */
-    if (pcmk__str_any_of(task, CRMD_ACTION_RELOAD, CRMD_ACTION_RELOAD_AGENT,
+    if (pcmk__str_any_of(task, PCMK_ACTION_RELOAD, CRMD_ACTION_RELOAD_AGENT,
                          NULL)) {
         if (op->op_status == PCMK_EXEC_DONE) {
             task = PCMK_ACTION_START;
