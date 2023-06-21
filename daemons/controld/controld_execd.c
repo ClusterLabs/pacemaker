@@ -1539,7 +1539,7 @@ do_lrm_invoke(long long action,
             return;
         }
 
-        if (pcmk__str_eq(operation, CRMD_ACTION_CANCEL, pcmk__str_none)) {
+        if (pcmk__str_eq(operation, PCMK_ACTION_CANCEL, pcmk__str_none)) {
             if (!do_lrm_cancel(input, lrm_state, rsc, from_host, from_sys)) {
                 crm_log_xml_warn(input->xml, "Bad command");
             }

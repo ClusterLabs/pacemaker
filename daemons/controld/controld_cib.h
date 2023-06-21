@@ -122,7 +122,7 @@ int crmd_cib_smart_opt(void);
 static inline bool
 controld_action_is_recordable(const char *action)
 {
-    return !pcmk__str_any_of(action, CRMD_ACTION_CANCEL, PCMK_ACTION_DELETE,
+    return !pcmk__str_any_of(action, PCMK_ACTION_CANCEL, PCMK_ACTION_DELETE,
                              PCMK_ACTION_NOTIFY, PCMK_ACTION_META_DATA, NULL);
 }
 

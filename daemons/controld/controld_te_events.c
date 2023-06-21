@@ -314,7 +314,7 @@ get_cancel_action(const char *id, const char *node)
             pcmk__graph_action_t *action = (pcmk__graph_action_t *) gIter2->data;
 
             task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
-            if (!pcmk__str_eq(CRMD_ACTION_CANCEL, task, pcmk__str_casei)) {
+            if (!pcmk__str_eq(PCMK_ACTION_CANCEL, task, pcmk__str_casei)) {
                 continue;
             }
 

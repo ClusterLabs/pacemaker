@@ -611,7 +611,7 @@ pcmk__connection_host_for_action(const pe_action_t *action)
      * the connection's pseudo-start on the migration target, so the target is
      * the router node.
      */
-    if (pcmk__strcase_any_of(task, "cancel", PCMK_ACTION_STOP,
+    if (pcmk__strcase_any_of(task, PCMK_ACTION_CANCEL, PCMK_ACTION_STOP,
                              PCMK_ACTION_DEMOTE, "migrate_from", "migrate_to",
                              NULL)
         && !partial_migration) {

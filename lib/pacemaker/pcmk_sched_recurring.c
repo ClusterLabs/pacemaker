@@ -625,10 +625,10 @@ pcmk__new_cancel_action(pe_resource_t *rsc, const char *task, guint interval_ms,
     // @TODO dangerous if possible to schedule another action with this key
     key = pcmk__op_key(rsc->id, task, interval_ms);
 
-    cancel_op = custom_action(rsc, key, RSC_CANCEL, node, FALSE, TRUE,
+    cancel_op = custom_action(rsc, key, PCMK_ACTION_CANCEL, node, FALSE, TRUE,
                               rsc->cluster);
 
-    pcmk__str_update(&cancel_op->task, RSC_CANCEL);
+    pcmk__str_update(&cancel_op->task, PCMK_ACTION_CANCEL);
     pcmk__str_update(&cancel_op->cancel_task, task);
 
     interval_ms_s = crm_strdup_printf("%u", interval_ms);

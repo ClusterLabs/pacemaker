@@ -391,7 +391,7 @@ new_post_notify_action(pe_resource_t *rsc, const pe_node_t *node,
         interval_ms_s = g_hash_table_lookup(mon->meta,
                                             XML_LRM_ATTR_INTERVAL_MS);
         if (pcmk__str_eq(interval_ms_s, "0", pcmk__str_null_matches)
-            || pcmk__str_eq(mon->task, RSC_CANCEL, pcmk__str_none)) {
+            || pcmk__str_eq(mon->task, PCMK_ACTION_CANCEL, pcmk__str_none)) {
             continue; // Not a recurring monitor
         }
         order_actions(n_data->post_done, mon, pe_order_optional);

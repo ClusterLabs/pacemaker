@@ -55,7 +55,7 @@ create_action_name(const pe_action_t *action, bool verbose)
         action_host = "<none>";
     }
 
-    if (pcmk__str_eq(action->task, RSC_CANCEL, pcmk__str_none)) {
+    if (pcmk__str_eq(action->task, PCMK_ACTION_CANCEL, pcmk__str_none)) {
         prefix = "Cancel ";
         task = action->cancel_task;
     }

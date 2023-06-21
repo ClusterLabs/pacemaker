@@ -385,7 +385,7 @@ text2task(const char *task)
         return action_demoted;
     }
 #if SUPPORT_TRACING
-    if (pcmk__str_eq(task, CRMD_ACTION_CANCEL, pcmk__str_casei)) {
+    if (pcmk__str_eq(task, PCMK_ACTION_CANCEL, pcmk__str_casei)) {
         return no_action;
     } else if (pcmk__str_eq(task, PCMK_ACTION_DELETE, pcmk__str_casei)) {
         return no_action;
