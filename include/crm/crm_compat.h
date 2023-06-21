@@ -40,6 +40,9 @@ extern "C" {
 //! \deprecated Use PCMK_ACTION_START instead
 #define CRMD_ACTION_START PCMK_ACTION_START
 
+//! \deprecated Use PCMK_ACTION_START instead
+#define RSC_START PCMK_ACTION_START
+
 //!@{
 //! \deprecated This macro will be removed in a future release
 
