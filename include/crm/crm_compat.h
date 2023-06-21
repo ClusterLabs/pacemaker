@@ -52,6 +52,9 @@ extern "C" {
 //! \deprecated Use PCMK_ACTION_RELOAD instead
 #define CRMD_ACTION_RELOAD PCMK_ACTION_RELOAD
 
+//! \deprecated Use PCMK_ACTION_RELOAD_AGENT instead
+#define CRMD_ACTION_RELOAD_AGENT PCMK_ACTION_RELOAD_AGENT
+
 //! \deprecated Use PCMK_ACTION_START instead
 #define CRMD_ACTION_START PCMK_ACTION_START
 
