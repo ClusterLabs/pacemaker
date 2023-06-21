@@ -655,11 +655,11 @@ promotion_attr_value(const pe_resource_t *rsc, const pe_node_t *node,
 {
     char *attr_name = NULL;
     const char *attr_value = NULL;
-    enum pe__rsc_node node_type = pe__rsc_node_assigned;
+    enum pcmk__rsc_node node_type = pcmk__rsc_node_assigned;
 
     if (pcmk_is_set(rsc->flags, pcmk_rsc_unassigned)) {
         // Not assigned yet
-        node_type = pe__rsc_node_current;
+        node_type = pcmk__rsc_node_current;
     }
     attr_name = pcmk_promotion_score_name(name);
     attr_value = pe__node_attribute_calculated(node, attr_name, rsc, node_type,

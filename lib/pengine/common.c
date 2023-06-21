@@ -544,7 +544,7 @@ add_hash_param(GHashTable * hash, const char *name, const char *value)
 const char *
 pe__node_attribute_calculated(const pe_node_t *node, const char *name,
                               const pe_resource_t *rsc,
-                              enum pe__rsc_node node_type,
+                              enum pcmk__rsc_node node_type,
                               bool force_host)
 {
     // @TODO: Use pe__is_guest_node() after merging libpe_{rules,status}
@@ -575,7 +575,7 @@ pe__node_attribute_calculated(const pe_node_t *node, const char *name,
     container = node->details->remote_rsc->container;
 
     switch (node_type) {
-        case pe__rsc_node_assigned:
+        case pcmk__rsc_node_assigned:
             node_type_s = "assigned";
             host = container->allocated_to;
             if (host == NULL) {
@@ -583,7 +583,7 @@ pe__node_attribute_calculated(const pe_node_t *node, const char *name,
             }
             break;
 
-        case pe__rsc_node_current:
+        case pcmk__rsc_node_current:
             node_type_s = "current";
 
             if (container->running_on != NULL) {
@@ -595,7 +595,7 @@ pe__node_attribute_calculated(const pe_node_t *node, const char *name,
             break;
 
         default:
-            // Add support for other enum pe__rsc_node values if needed
+            // Add support for other enum pcmk__rsc_node values if needed
             CRM_ASSERT(false);
             break;
     }

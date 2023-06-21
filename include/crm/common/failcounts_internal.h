@@ -21,6 +21,19 @@ enum pcmk__fc_flags {
     pcmk__fc_fillers   = (1 << 2),  // If container, include filler failures
 };
 
+/*!
+ * \internal
+ * \enum pcmk__rsc_node
+ * \brief Type of resource location lookup to perform
+ */
+enum pcmk__rsc_node {
+    pcmk__rsc_node_assigned = 0,  //!< Where resource is assigned
+    pcmk__rsc_node_current  = 1,  //!< Where resource is running
+
+    // @COMPAT: Use in native_location() at a compatibility break
+    pcmk__rsc_node_pending  = 2,  //!< Where resource is pending
+};
+
 #ifdef __cplusplus
 }
 #endif

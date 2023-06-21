@@ -509,8 +509,8 @@ pcmk__colocation_node_attr(const pe_node_t *node, const char *attr,
                             && pe_rsc_is_bundled(rsc)
                             && (top == pe__bundled_resource(rsc));
 
-    return pe__node_attribute_calculated(node, attr, rsc, pe__rsc_node_assigned,
-                                         force_host);
+    return pe__node_attribute_calculated(node, attr, rsc,
+                                         pcmk__rsc_node_assigned, force_host);
 }
 
 G_GNUC_INTERNAL
