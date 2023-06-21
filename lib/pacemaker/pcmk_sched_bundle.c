@@ -203,7 +203,7 @@ pcmk__bundle_create_actions(pe_resource_t *rsc)
         bundled_resource->cmds->create_actions(bundled_resource);
 
         if (pcmk_is_set(bundled_resource->flags, pe_rsc_promotable)) {
-            pe__new_rsc_pseudo_action(rsc, RSC_PROMOTE, true, true);
+            pe__new_rsc_pseudo_action(rsc, PCMK_ACTION_PROMOTE, true, true);
             action = pe__new_rsc_pseudo_action(rsc, RSC_PROMOTED, true, true);
             action->priority = INFINITY;
 
@@ -340,8 +340,8 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
                                  pe_order_implies_then_printed);
 
     // Promote bundle -> promote bundled clone
-    pcmk__order_resource_actions(rsc, RSC_PROMOTE,
-                                 bundled_resource, RSC_PROMOTE,
+    pcmk__order_resource_actions(rsc, PCMK_ACTION_PROMOTE,
+                                 bundled_resource, PCMK_ACTION_PROMOTE,
                                  pe_order_implies_first_printed);
 
     // Bundled clone is promoted -> bundle is promoted

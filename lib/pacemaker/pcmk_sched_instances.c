@@ -1272,7 +1272,7 @@ find_instance_action(const pe_action_t *action, const pe_resource_t *instance,
     if ((for_first && !pcmk__str_any_of(action->task, PCMK_ACTION_STOP,
                                         CRMD_ACTION_STOPPED, NULL))
 
-        || (!for_first && pcmk__str_any_of(action->task, CRMD_ACTION_PROMOTE,
+        || (!for_first && pcmk__str_any_of(action->task, PCMK_ACTION_PROMOTE,
                                            CRMD_ACTION_PROMOTED,
                                            PCMK_ACTION_DEMOTE,
                                            CRMD_ACTION_DEMOTED, NULL))) {

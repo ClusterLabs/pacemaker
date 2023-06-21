@@ -47,11 +47,11 @@ invert_action(const char *action)
     } else if (pcmk__str_eq(action, PCMK_ACTION_STOP, pcmk__str_none)) {
         return PCMK_ACTION_START;
 
-    } else if (pcmk__str_eq(action, RSC_PROMOTE, pcmk__str_none)) {
+    } else if (pcmk__str_eq(action, PCMK_ACTION_PROMOTE, pcmk__str_none)) {
         return PCMK_ACTION_DEMOTE;
 
     } else if (pcmk__str_eq(action, PCMK_ACTION_DEMOTE, pcmk__str_none)) {
-        return RSC_PROMOTE;
+        return PCMK_ACTION_PROMOTE;
 
     } else if (pcmk__str_eq(action, RSC_PROMOTED, pcmk__str_none)) {
         return RSC_DEMOTED;
@@ -199,7 +199,7 @@ ordering_flags_for_kind(enum pe_order_kind kind, const char *first,
                 case ordering_symmetric:
                     pe__set_order_flags(flags, pe_order_implies_then);
                     if (pcmk__strcase_any_of(first, PCMK_ACTION_START,
-                                             RSC_PROMOTE, NULL)) {
+                                             PCMK_ACTION_PROMOTE, NULL)) {
                         pe__set_order_flags(flags, pe_order_runnable_left);
                     }
                     break;
@@ -1461,7 +1461,7 @@ pcmk__promotable_restart_ordering(pe_resource_t *rsc)
     // Order start and promote after all instances are stopped
     pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, PCMK_ACTION_START,
                                  pe_order_optional);
-    pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, RSC_PROMOTE,
+    pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, PCMK_ACTION_PROMOTE,
                                  pe_order_optional);
 
     // Order stop, start, and promote after all instances are demoted
@@ -1469,11 +1469,11 @@ pcmk__promotable_restart_ordering(pe_resource_t *rsc)
                                  pe_order_optional);
     pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, PCMK_ACTION_START,
                                  pe_order_optional);
-    pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, RSC_PROMOTE,
+    pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, PCMK_ACTION_PROMOTE,
                                  pe_order_optional);
 
     // Order promote after all instances are started
-    pcmk__order_resource_actions(rsc, RSC_STARTED, rsc, RSC_PROMOTE,
+    pcmk__order_resource_actions(rsc, RSC_STARTED, rsc, PCMK_ACTION_PROMOTE,
                                  pe_order_optional);
 
     // Order demote after all instances are demoted

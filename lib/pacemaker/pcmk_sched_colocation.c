@@ -301,13 +301,13 @@ anti_colocation_order(pe_resource_t *first_rsc, int first_role,
         first_tasks[0] = PCMK_ACTION_STOP;
 
         if (first_role == RSC_ROLE_UNPROMOTED) {
-            first_tasks[1] = CRMD_ACTION_PROMOTE;
+            first_tasks[1] = PCMK_ACTION_PROMOTE;
         }
     }
 
     /* Actions to make then_rsc gain then_role */
     if (then_role == RSC_ROLE_PROMOTED) {
-        then_tasks[0] = CRMD_ACTION_PROMOTE;
+        then_tasks[0] = PCMK_ACTION_PROMOTE;
 
     } else {
         then_tasks[0] = PCMK_ACTION_START;
@@ -1058,7 +1058,8 @@ pcmk__block_colocation_dependents(pe_action_t *action)
     }
 
     is_start = pcmk__str_eq(action->task, PCMK_ACTION_START, pcmk__str_none);
-    if (!is_start && !pcmk__str_eq(action->task, RSC_PROMOTE, pcmk__str_none)) {
+    if (!is_start
+        && !pcmk__str_eq(action->task, PCMK_ACTION_PROMOTE, pcmk__str_none)) {
         return; // Only unrunnable starts and promotes block dependents
     }
 
@@ -1112,7 +1113,7 @@ pcmk__block_colocation_dependents(pe_action_t *action)
 
         // Block the dependent from reaching its colocated role
         if (colocation->dependent_role == RSC_ROLE_PROMOTED) {
-            mark_action_blocked(colocation->dependent, RSC_PROMOTE,
+            mark_action_blocked(colocation->dependent, PCMK_ACTION_PROMOTE,
                                 action->rsc);
         } else {
             mark_action_blocked(colocation->dependent, PCMK_ACTION_START,

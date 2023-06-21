@@ -491,7 +491,7 @@ unpack_operation_on_fail(pe_action_t * action)
         interval_spec = crm_element_value(action->op_entry,
                                           XML_LRM_ATTR_INTERVAL);
 
-        if (!pcmk__str_eq(name, CRMD_ACTION_PROMOTE, pcmk__str_casei)
+        if (!pcmk__str_eq(name, PCMK_ACTION_PROMOTE, pcmk__str_casei)
             && (!pcmk__str_eq(name, PCMK_ACTION_MONITOR, pcmk__str_casei)
                 || !pcmk__strcase_any_of(role, RSC_ROLE_PROMOTED_S,
                                          RSC_ROLE_PROMOTED_LEGACY_S, NULL)
@@ -751,7 +751,8 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
     g_hash_table_replace(action->meta, strdup(XML_ATTR_TIMEOUT),
                          pcmk__itoa(timeout_ms));
 
-    if (!pcmk__strcase_any_of(action->task, PCMK_ACTION_START, RSC_PROMOTE, NULL)) {
+    if (!pcmk__strcase_any_of(action->task, PCMK_ACTION_START,
+                              PCMK_ACTION_PROMOTE, NULL)) {
         action->needs = rsc_req_nothing;
         value = "nothing (not start or promote)";
 
@@ -902,7 +903,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
     }
     /* defaults */
     if (action->fail_role == RSC_ROLE_UNKNOWN) {
-        if (pcmk__str_eq(action->task, CRMD_ACTION_PROMOTE, pcmk__str_casei)) {
+        if (pcmk__str_eq(action->task, PCMK_ACTION_PROMOTE, pcmk__str_casei)) {
             action->fail_role = RSC_ROLE_UNPROMOTED;
         } else {
             action->fail_role = RSC_ROLE_STARTED;

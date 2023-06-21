@@ -1133,7 +1133,8 @@ rsc_action_default(pcmk__output_t *out, va_list args)
         }
     }
 
-    possible_matches = pe__resource_actions(rsc, next, RSC_PROMOTE, false);
+    possible_matches = pe__resource_actions(rsc, next, PCMK_ACTION_PROMOTE,
+                                            false);
     if (possible_matches) {
         promote = possible_matches->data;
         g_list_free(possible_matches);

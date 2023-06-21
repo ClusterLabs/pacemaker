@@ -25,6 +25,7 @@ extern "C" {
 #define PCMK_ACTION_META_DATA           "meta-data"
 #define PCMK_ACTION_MONITOR             "monitor"
 #define PCMK_ACTION_NOTIFY              "notify"
+#define PCMK_ACTION_PROMOTE             "promote"
 #define PCMK_ACTION_START               "start"
 #define PCMK_ACTION_STOP                "stop"
 

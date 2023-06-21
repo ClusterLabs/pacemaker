@@ -1358,8 +1358,8 @@ pe__create_promotable_pseudo_ops(pe_resource_t *clone, bool any_promoting,
     get_clone_variant_data(clone_data, clone);
 
     // Create a "promote" action for the clone itself
-    action = pe__new_rsc_pseudo_action(clone, RSC_PROMOTE, !any_promoting,
-                                       true);
+    action = pe__new_rsc_pseudo_action(clone, PCMK_ACTION_PROMOTE,
+                                       !any_promoting, true);
 
     // Create a "promoted" action for when all promotions are done
     action_complete = pe__new_rsc_pseudo_action(clone, RSC_PROMOTED,
@@ -1369,7 +1369,7 @@ pe__create_promotable_pseudo_ops(pe_resource_t *clone, bool any_promoting,
     // Create notification pseudo-actions for promotion
     if (clone_data->promote_notify == NULL) {
         clone_data->promote_notify = pe__action_notif_pseudo_ops(clone,
-                                                                 RSC_PROMOTE,
+                                                                 PCMK_ACTION_PROMOTE,
                                                                  action,
                                                                  action_complete);
     }

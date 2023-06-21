@@ -471,7 +471,7 @@ crm_op_needs_metadata(const char *rsc_class, const char *op)
 
     // Metadata is needed only for these actions
     return pcmk__str_any_of(op, PCMK_ACTION_START, PCMK_ACTION_MONITOR,
-                            CRMD_ACTION_PROMOTE, PCMK_ACTION_DEMOTE,
+                            PCMK_ACTION_PROMOTE, PCMK_ACTION_DEMOTE,
                             CRMD_ACTION_RELOAD, CRMD_ACTION_RELOAD_AGENT,
                             CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED,
                             PCMK_ACTION_NOTIFY, NULL);

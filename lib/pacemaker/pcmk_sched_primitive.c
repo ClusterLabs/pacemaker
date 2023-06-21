@@ -934,7 +934,8 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
 
         pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, PCMK_ACTION_START, 0),
                            NULL,
-                           rsc, pcmk__op_key(rsc->id, RSC_PROMOTE, 0), NULL,
+                           rsc, pcmk__op_key(rsc->id, PCMK_ACTION_PROMOTE, 0),
+                           NULL,
                            pe_order_runnable_left, rsc->cluster);
     }
 
@@ -1366,7 +1367,8 @@ promote_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
     } else {
         pe_rsc_trace(rsc, "Not promoting %s on %s: start unrunnable",
                      rsc->id, pe__node_name(node));
-        action_list = pe__resource_actions(rsc, node, RSC_PROMOTE, true);
+        action_list = pe__resource_actions(rsc, node, PCMK_ACTION_PROMOTE,
+                                           true);
         for (iter = action_list; iter != NULL; iter = iter->next) {
             pe_action_t *promote = (pe_action_t *) iter->data;
 

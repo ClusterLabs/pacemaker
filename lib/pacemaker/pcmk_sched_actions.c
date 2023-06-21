@@ -1471,7 +1471,7 @@ task_for_digest(const char *task, guint interval_ms)
      */
     if ((interval_ms == 0)
         && pcmk__str_any_of(task, PCMK_ACTION_MONITOR, RSC_MIGRATED,
-                            RSC_PROMOTE, NULL)) {
+                            PCMK_ACTION_PROMOTE, NULL)) {
         task = PCMK_ACTION_START;
     }
     return task;
@@ -1814,7 +1814,8 @@ process_rsc_history(const xmlNode *rsc_entry, pe_resource_t *rsc,
 
         } else if ((interval_ms > 0)
                    || pcmk__strcase_any_of(task, PCMK_ACTION_MONITOR,
-                                           PCMK_ACTION_START, RSC_PROMOTE,
+                                           PCMK_ACTION_START,
+                                           PCMK_ACTION_PROMOTE,
                                            RSC_MIGRATED, NULL)) {
             /* If a resource operation failed, and the operation's definition
              * has changed, clear any fail count so they can be retried fresh.

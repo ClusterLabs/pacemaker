@@ -352,7 +352,7 @@ pcmk__order_migration_equivalents(pe__ordering_t *order)
                                NULL, flags, order->lh_rsc->cluster);
         }
 
-    } else if (pcmk__str_eq(first_task, RSC_PROMOTE, pcmk__str_none)
+    } else if (pcmk__str_eq(first_task, PCMK_ACTION_PROMOTE, pcmk__str_none)
                && pcmk__str_eq(then_task, PCMK_ACTION_START, pcmk__str_none)) {
 
         uint32_t flags = pe_order_optional;
@@ -361,7 +361,8 @@ pcmk__order_migration_equivalents(pe__ordering_t *order)
             /* A promote then B start
              * -> A promote then B migrate_to */
             pcmk__new_ordering(order->lh_rsc,
-                               pcmk__op_key(order->lh_rsc->id, RSC_PROMOTE, 0),
+                               pcmk__op_key(order->lh_rsc->id,
+                                            PCMK_ACTION_PROMOTE, 0),
                                NULL, order->rh_rsc,
                                pcmk__op_key(order->rh_rsc->id, RSC_MIGRATE, 0),
                                NULL, flags, order->lh_rsc->cluster);

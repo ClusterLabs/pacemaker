@@ -375,7 +375,7 @@ text2task(const char *task)
         return action_notify;
     } else if (pcmk__str_eq(task, CRMD_ACTION_NOTIFIED, pcmk__str_casei)) {
         return action_notified;
-    } else if (pcmk__str_eq(task, CRMD_ACTION_PROMOTE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(task, PCMK_ACTION_PROMOTE, pcmk__str_casei)) {
         return action_promote;
     } else if (pcmk__str_eq(task, PCMK_ACTION_DEMOTE, pcmk__str_casei)) {
         return action_demote;
@@ -439,7 +439,7 @@ task2text(enum action_tasks task)
             result = CRMD_ACTION_NOTIFIED;
             break;
         case action_promote:
-            result = CRMD_ACTION_PROMOTE;
+            result = PCMK_ACTION_PROMOTE;
             break;
         case action_promoted:
             result = CRMD_ACTION_PROMOTED;

@@ -2419,7 +2419,7 @@ calculate_active_ops(const GList *sorted_op_list, int *start_index,
             if (pcmk__strcase_any_of(rc, "0", "8", NULL)) {
                 implied_monitor_start = counter;
             }
-        } else if (pcmk__strcase_any_of(task, CRMD_ACTION_PROMOTE,
+        } else if (pcmk__strcase_any_of(task, PCMK_ACTION_PROMOTE,
                                         PCMK_ACTION_DEMOTE, NULL)) {
             implied_clone_start = counter;
         }
@@ -3512,7 +3512,7 @@ unpack_rsc_op_failure(struct action_history *history, xmlNode **last_failure,
     } else if (strcmp(history->task, CRMD_ACTION_MIGRATED) == 0) {
         unpack_migrate_from_failure(history);
 
-    } else if (strcmp(history->task, CRMD_ACTION_PROMOTE) == 0) {
+    } else if (strcmp(history->task, PCMK_ACTION_PROMOTE) == 0) {
         history->rsc->role = RSC_ROLE_PROMOTED;
 
     } else if (strcmp(history->task, PCMK_ACTION_DEMOTE) == 0) {
@@ -4163,7 +4163,7 @@ update_resource_state(struct action_history *history, int exit_status,
         history->rsc->role = RSC_ROLE_STOPPED;
         clear_past_failure = true;
 
-    } else if (pcmk__str_eq(history->task, CRMD_ACTION_PROMOTE,
+    } else if (pcmk__str_eq(history->task, PCMK_ACTION_PROMOTE,
                             pcmk__str_none)) {
         history->rsc->role = RSC_ROLE_PROMOTED;
         clear_past_failure = true;
@@ -4251,7 +4251,7 @@ can_affect_state(struct action_history *history)
      */
      return pcmk__str_any_of(history->task, PCMK_ACTION_MONITOR,
                              PCMK_ACTION_START, PCMK_ACTION_STOP,
-                             CRMD_ACTION_PROMOTE, PCMK_ACTION_DEMOTE,
+                             PCMK_ACTION_PROMOTE, PCMK_ACTION_DEMOTE,
                              CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED,
                              "asyncmon", NULL);
 #else
@@ -4475,7 +4475,7 @@ process_pending_action(struct action_history *history,
         pe__set_resource_flags(history->rsc, pe_rsc_start_pending);
         set_active(history->rsc);
 
-    } else if (strcmp(history->task, CRMD_ACTION_PROMOTE) == 0) {
+    } else if (strcmp(history->task, PCMK_ACTION_PROMOTE) == 0) {
         history->rsc->role = RSC_ROLE_PROMOTED;
 
     } else if ((strcmp(history->task, CRMD_ACTION_MIGRATE) == 0)

@@ -571,7 +571,8 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
                 then_actions = pe__resource_actions(after->rsc, NULL,
                                                     PCMK_ACTION_STOP, FALSE);
 
-            } else if (pcmk__str_eq(after->task, RSC_PROMOTE, pcmk__str_none)) {
+            } else if (pcmk__str_eq(after->task, PCMK_ACTION_PROMOTE,
+                                    pcmk__str_none)) {
                 then_actions = pe__resource_actions(after->rsc, NULL,
                                                     PCMK_ACTION_DEMOTE, FALSE);
             }

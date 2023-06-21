@@ -135,7 +135,7 @@ pcmk__clone_internal_constraints(pe_resource_t *rsc)
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
         pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, PCMK_ACTION_STOP,
                                      pe_order_optional);
-        pcmk__order_resource_actions(rsc, RSC_STARTED, rsc, RSC_PROMOTE,
+        pcmk__order_resource_actions(rsc, RSC_STARTED, rsc, PCMK_ACTION_PROMOTE,
                                      pe_order_runnable_left);
     }
 
