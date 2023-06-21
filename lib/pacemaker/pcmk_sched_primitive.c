@@ -939,7 +939,8 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
 
     // Don't clear resource history if probing on same node
     pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, CRM_OP_LRM_DELETE, 0),
-                       NULL, rsc, pcmk__op_key(rsc->id, RSC_STATUS, 0),
+                       NULL, rsc,
+                       pcmk__op_key(rsc->id, PCMK_ACTION_MONITOR, 0),
                        NULL, pe_order_same_node|pe_order_then_cancels_first,
                        rsc->cluster);
 
@@ -975,8 +976,9 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
              * so that if we detect the container running, we will trigger a new
              * transition and avoid the unnecessary recovery.
              */
-            pcmk__order_resource_actions(rsc->container, RSC_STATUS, rsc,
-                                         PCMK_ACTION_STOP, pe_order_optional);
+            pcmk__order_resource_actions(rsc->container, PCMK_ACTION_MONITOR,
+                                         rsc, PCMK_ACTION_STOP,
+                                         pe_order_optional);
 
         /* A user can specify that a resource must start on a Pacemaker Remote
          * node by explicitly configuring it with the container=NODENAME

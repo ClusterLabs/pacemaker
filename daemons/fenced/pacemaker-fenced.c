@@ -1512,7 +1512,8 @@ static pcmk__cluster_option_t fencer_options[] = {
            " Use this option to alter the number of times Pacemaker retries \'list\' actions before giving up.")
     },
     {
-	"pcmk_monitor_action",NULL, "string", NULL, "monitor", NULL,
+        "pcmk_monitor_action", NULL, "string", NULL,
+        PCMK_ACTION_MONITOR, NULL,
 	N_("Advanced use only: An alternate command to run instead of \'monitor\'"),
         N_("Some devices do not support the standard commands or may provide additional ones."
                  "Use this to specify an alternate, device-specific, command that implements the \'monitor\' action.")

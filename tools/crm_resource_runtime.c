@@ -1857,7 +1857,7 @@ get_action(const char *rsc_action) {
         action = "validate-all";
 
     } else if (pcmk__str_eq(rsc_action, "force-check", pcmk__str_casei)) {
-        action = "monitor";
+        action = PCMK_ACTION_MONITOR;
 
     } else if (pcmk__strcase_any_of(rsc_action, "force-start", "force-stop",
                                     "force-demote", "force-promote", NULL)) {

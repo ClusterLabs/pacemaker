@@ -587,7 +587,7 @@ main(int argc, char **argv)
             goto done;
         }
         options.api_call = "exec";
-        options.action = "monitor";
+        options.action = PCMK_ACTION_MONITOR;
         options.exec_call_opts = lrmd_opt_notify_orig_only;
     }
 

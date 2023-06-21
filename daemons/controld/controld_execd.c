@@ -225,7 +225,7 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
         if (op->params && pcmk__strcase_any_of(op->op_type, PCMK_ACTION_START,
                                                CRMD_ACTION_RELOAD,
                                                CRMD_ACTION_RELOAD_AGENT,
-                                               CRMD_ACTION_STATUS, NULL)) {
+                                               PCMK_ACTION_MONITOR, NULL)) {
             if (entry->stop_params) {
                 g_hash_table_destroy(entry->stop_params);
             }
@@ -243,7 +243,9 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
                   op->rsc_id, op->op_type, op->interval_ms);
         entry->recurring_op_list = g_list_prepend(entry->recurring_op_list, lrmd_copy_event(op));
 
-    } else if (entry->recurring_op_list && !pcmk__str_eq(op->op_type, RSC_STATUS, pcmk__str_casei)) {
+    } else if ((entry->recurring_op_list != NULL)
+                && !pcmk__str_eq(op->op_type, PCMK_ACTION_MONITOR,
+                                 pcmk__str_casei)) {
         crm_trace("Dropping %d recurring ops because of: " PCMK__OP_FMT,
                   g_list_length(entry->recurring_op_list), op->rsc_id,
                   op->op_type, op->interval_ms);
@@ -1657,7 +1659,7 @@ construct_op(const lrm_state_t *lrm_state, const xmlNode *rsc_op,
     class = crm_element_value(primitive, XML_AGENT_ATTR_CLASS);
 
     if (pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_fence_params)
-            && pcmk__str_eq(operation, CRMD_ACTION_STATUS, pcmk__str_casei)
+            && pcmk__str_eq(operation, PCMK_ACTION_MONITOR, pcmk__str_casei)
             && (op->interval_ms > 0)) {
 
         op_timeout = g_hash_table_lookup(params, "pcmk_monitor_timeout");
@@ -1863,8 +1865,8 @@ should_cancel_recurring(const char *rsc_id, const char *action, guint interval_m
 
     // Cancel recurring actions before changing resource state
     return (interval_ms == 0)
-            && !pcmk__str_any_of(action, CRMD_ACTION_STATUS, CRMD_ACTION_NOTIFY,
-                                 NULL);
+            && !pcmk__str_any_of(action, PCMK_ACTION_MONITOR,
+                                 CRMD_ACTION_NOTIFY, NULL);
 }
 
 /*!

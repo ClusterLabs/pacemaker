@@ -57,7 +57,7 @@ best_op(const pe_resource_t *rsc, const pe_node_t *node)
 
         crm_element_value_ms(lrm_rsc_op, XML_LRM_ATTR_INTERVAL, &interval_ms);
         effective_op = interval_ms == 0
-                       && pcmk__strcase_any_of(task, RSC_STATUS,
+                       && pcmk__strcase_any_of(task, PCMK_ACTION_MONITOR,
                                                PCMK_ACTION_START, RSC_PROMOTE,
                                                RSC_MIGRATED, NULL);
 

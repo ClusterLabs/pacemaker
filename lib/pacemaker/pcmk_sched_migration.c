@@ -84,8 +84,9 @@ pcmk__create_migration_actions(pe_resource_t *rsc, const pe_node_t *current)
             }
 
             // Probe -> migrate_to -> migrate_from
-            pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_STATUS, 0), NULL,
-                               rsc, pcmk__op_key(rsc->id, RSC_MIGRATE, 0),
+            pcmk__new_ordering(rsc,
+                               pcmk__op_key(rsc->id, PCMK_ACTION_MONITOR, 0),
+                               NULL, rsc, pcmk__op_key(rsc->id, RSC_MIGRATE, 0),
                                NULL, pe_order_optional, rsc->cluster);
             pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_MIGRATE, 0), NULL,
                                rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0),
@@ -98,7 +99,9 @@ pcmk__create_migration_actions(pe_resource_t *rsc, const pe_node_t *current)
             migrate_from->needs = start->needs;
 
             // Probe -> migrate_from (migrate_to already completed)
-            pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_STATUS, 0), NULL,
+            pcmk__new_ordering(rsc,
+                               pcmk__op_key(rsc->id, PCMK_ACTION_MONITOR, 0),
+                               NULL,
                                rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0),
                                NULL, pe_order_optional, rsc->cluster);
         }

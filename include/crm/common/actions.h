@@ -21,6 +21,7 @@ extern "C" {
  */
 
 // Action names as strings
+#define PCMK_ACTION_MONITOR             "monitor"
 #define PCMK_ACTION_START               "start"
 #define PCMK_ACTION_STOP                "stop"
 

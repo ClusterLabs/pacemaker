@@ -971,7 +971,7 @@ digests_text(pcmk__output_t *out, va_list args)
     if (interval_ms != 0) {
         action_desc = crm_strdup_printf("%ums-interval %s action", interval_ms,
                                         ((task == NULL)? "unknown" : task));
-    } else if (pcmk__str_eq(task, "monitor", pcmk__str_none)) {
+    } else if (pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_none)) {
         action_desc = strdup("probe action");
     } else {
         action_desc = crm_strdup_printf("%s action",

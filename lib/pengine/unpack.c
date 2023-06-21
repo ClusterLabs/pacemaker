@@ -2411,7 +2411,9 @@ calculate_active_ops(const GList *sorted_op_list, int *start_index,
         } else if (pcmk__strcase_any_of(task, PCMK_ACTION_START, CRMD_ACTION_MIGRATED, NULL)) {
             *start_index = counter;
 
-        } else if ((implied_monitor_start <= *stop_index) && pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
+        } else if ((implied_monitor_start <= *stop_index)
+                   && pcmk__str_eq(task, PCMK_ACTION_MONITOR,
+                                   pcmk__str_casei)) {
             const char *rc = crm_element_value(rsc_op, XML_LRM_ATTR_RC);
 
             if (pcmk__strcase_any_of(rc, "0", "8", NULL)) {
@@ -2796,7 +2798,7 @@ monitor_not_running_after(const char *rsc_id, const char *node_name,
     /* Any probe/monitor operation on the node indicating it was not running
      * there
      */
-    xmlNode *monitor = find_lrm_op(rsc_id, CRMD_ACTION_STATUS, node_name,
+    xmlNode *monitor = find_lrm_op(rsc_id, PCMK_ACTION_MONITOR, node_name,
                                    NULL, PCMK_OCF_NOT_RUNNING, data_set);
 
     return (monitor && pe__is_newer_op(monitor, xml_op, same_node) > 0);
@@ -3843,8 +3845,7 @@ static bool
 should_clear_for_param_change(const xmlNode *xml_op, const char *task,
                               pe_resource_t *rsc, pe_node_t *node)
 {
-    if (!strcmp(task, PCMK_ACTION_START) || !strcmp(task, "monitor")) {
-
+    if (pcmk__str_any_of(task, PCMK_ACTION_START, PCMK_ACTION_MONITOR, NULL)) {
         if (pe__bundle_needs_remote_name(rsc)) {
             /* We haven't allocated resources yet, so we can't reliably
              * substitute addr parameters for the REMOTE_CONTAINER_HACK.
@@ -3916,7 +3917,8 @@ should_ignore_failure_timeout(const pe_resource_t *rsc, const char *task,
      */
     if (rsc->remote_reconnect_ms
         && pcmk_is_set(rsc->cluster->flags, pe_flag_stonith_enabled)
-        && (interval_ms != 0) && pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
+        && (interval_ms != 0)
+        && pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_casei)) {
 
         pe_node_t *remote_node = pe_find_node(rsc->cluster->nodes, rsc->id);
 
@@ -4063,7 +4065,7 @@ check_operation_expiry(struct action_history *history)
     }
 
     if (expired && (history->interval_ms == 0)
-        && pcmk__str_eq(history->task, CRMD_ACTION_STATUS, pcmk__str_none)) {
+        && pcmk__str_eq(history->task, PCMK_ACTION_MONITOR, pcmk__str_none)) {
         switch (history->exit_status) {
             case PCMK_OCF_OK:
             case PCMK_OCF_NOT_RUNNING:
@@ -4141,7 +4143,7 @@ update_resource_state(struct action_history *history, int exit_status,
     } else if (exit_status == PCMK_OCF_NOT_RUNNING) {
         clear_past_failure = true;
 
-    } else if (pcmk__str_eq(history->task, CRMD_ACTION_STATUS,
+    } else if (pcmk__str_eq(history->task, PCMK_ACTION_MONITOR,
                             pcmk__str_none)) {
         if ((last_failure != NULL)
             && pcmk__str_eq(history->key, pe__xe_history_key(last_failure),
@@ -4246,7 +4248,7 @@ can_affect_state(struct action_history *history)
      * Currently, unknown operations can affect whether a resource is considered
      * active and/or failed.
      */
-     return pcmk__str_any_of(history->task, CRMD_ACTION_STATUS,
+     return pcmk__str_any_of(history->task, PCMK_ACTION_MONITOR,
                              PCMK_ACTION_START, PCMK_ACTION_STOP,
                              CRMD_ACTION_PROMOTE, CRMD_ACTION_DEMOTE,
                              CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED,

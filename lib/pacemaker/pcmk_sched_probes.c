@@ -78,7 +78,9 @@ probe_then_start(pe_resource_t *rsc1, pe_resource_t *rsc2)
         && (g_hash_table_lookup(rsc1->known_on,
                                 rsc1->allocated_to->details->id) == NULL)) {
 
-        pcmk__new_ordering(rsc1, pcmk__op_key(rsc1->id, RSC_STATUS, 0), NULL,
+        pcmk__new_ordering(rsc1,
+                           pcmk__op_key(rsc1->id, PCMK_ACTION_MONITOR, 0),
+                           NULL,
                            rsc2, pcmk__op_key(rsc2->id, PCMK_ACTION_START, 0),
                            NULL,
                            pe_order_optional, rsc1->cluster);
@@ -126,12 +128,12 @@ static pe_action_t *
 probe_action(pe_resource_t *rsc, pe_node_t *node)
 {
     pe_action_t *probe = NULL;
-    char *key = pcmk__op_key(rsc->id, RSC_STATUS, 0);
+    char *key = pcmk__op_key(rsc->id, PCMK_ACTION_MONITOR, 0);
 
     crm_debug("Scheduling probe of %s %s on %s",
               role2text(rsc->role), rsc->id, pe__node_name(node));
 
-    probe = custom_action(rsc, key, RSC_STATUS, node, FALSE, TRUE,
+    probe = custom_action(rsc, key, PCMK_ACTION_MONITOR, node, FALSE, TRUE,
                           rsc->cluster);
     pe__clear_action_flags(probe, pe_action_optional);
 
@@ -408,7 +410,8 @@ add_probe_orderings_for_stops(pe_working_set_t *data_set)
         }
 
         // List all scheduled probes for the first resource
-        probes = pe__resource_actions(order->lh_rsc, NULL, RSC_STATUS, FALSE);
+        probes = pe__resource_actions(order->lh_rsc, NULL, PCMK_ACTION_MONITOR,
+                                      FALSE);
         if (probes == NULL) { // There aren't any
             continue;
         }
@@ -542,7 +545,7 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
     // Validate that this is a resource probe followed by some action
     if ((after == NULL) || (probe == NULL) || (probe->rsc == NULL)
         || (probe->rsc->variant != pe_native)
-        || !pcmk__str_eq(probe->task, RSC_STATUS, pcmk__str_none)) {
+        || !pcmk__str_eq(probe->task, PCMK_ACTION_MONITOR, pcmk__str_none)) {
         return;
     }
 
@@ -691,7 +694,7 @@ add_start_restart_orderings_for_rsc(gpointer data, gpointer user_data)
     }
 
     // Find all probes for given resource
-    probes = pe__resource_actions(rsc, NULL, RSC_STATUS, FALSE);
+    probes = pe__resource_actions(rsc, NULL, PCMK_ACTION_MONITOR, FALSE);
 
     // Add probe restart orderings for each probe found
     for (GList *iter = probes; iter != NULL; iter = iter->next) {
@@ -771,7 +774,7 @@ order_then_probes(pe_working_set_t *data_set)
             continue;
         }
 
-        probes = pe__resource_actions(rsc, NULL, RSC_STATUS, FALSE);
+        probes = pe__resource_actions(rsc, NULL, PCMK_ACTION_MONITOR, FALSE);
 
         for (actions = start->actions_before; actions != NULL;
              actions = actions->next) {

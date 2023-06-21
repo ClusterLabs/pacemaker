@@ -183,7 +183,7 @@ extern char *crm_system_name;
 #  define CRMD_ACTION_NOTIFY		"notify"
 #  define CRMD_ACTION_NOTIFIED		"notified"
 
-#  define CRMD_ACTION_STATUS		"monitor"
+#  define CRMD_ACTION_STATUS		PCMK_ACTION_MONITOR
 #  define CRMD_ACTION_METADATA		"meta-data"
 #  define CRMD_METADATA_CALL_TIMEOUT   30000
 
@@ -206,7 +206,7 @@ extern char *crm_system_name;
 #  define RSC_NOTIFY	CRMD_ACTION_NOTIFY
 #  define RSC_NOTIFIED	CRMD_ACTION_NOTIFIED
 
-#  define RSC_STATUS	CRMD_ACTION_STATUS
+#  define RSC_STATUS	PCMK_ACTION_MONITOR
 #  define RSC_METADATA	CRMD_ACTION_METADATA
 /* *INDENT-ON* */
 
@@ -218,7 +218,7 @@ extern char *crm_system_name;
 static inline const char *
 crm_action_str(const char *task, guint interval_ms) {
     if ((task != NULL) && (interval_ms == 0)
-        && (strcasecmp(task, RSC_STATUS) == 0)) {
+        && (strcasecmp(task, PCMK_ACTION_MONITOR) == 0)) {
         return "probe";
     }
     return task;

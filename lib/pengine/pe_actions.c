@@ -468,7 +468,7 @@ unpack_operation_on_fail(pe_action_t * action)
                 continue;
             } else if (pcmk__xe_get_bool_attr(operation, "enabled", &enabled) == pcmk_rc_ok && !enabled) {
                 continue;
-            } else if (!pcmk__str_eq(name, "monitor", pcmk__str_casei)
+            } else if (!pcmk__str_eq(name, PCMK_ACTION_MONITOR, pcmk__str_casei)
                        || !pcmk__strcase_any_of(role, RSC_ROLE_PROMOTED_S,
                                                 RSC_ROLE_PROMOTED_LEGACY_S,
                                                 NULL)) {
@@ -491,7 +491,7 @@ unpack_operation_on_fail(pe_action_t * action)
                                           XML_LRM_ATTR_INTERVAL);
 
         if (!pcmk__str_eq(name, CRMD_ACTION_PROMOTE, pcmk__str_casei)
-            && (!pcmk__str_eq(name, CRMD_ACTION_STATUS, pcmk__str_casei)
+            && (!pcmk__str_eq(name, PCMK_ACTION_MONITOR, pcmk__str_casei)
                 || !pcmk__strcase_any_of(role, RSC_ROLE_PROMOTED_S,
                                          RSC_ROLE_PROMOTED_LEGACY_S, NULL)
                 || (crm_parse_interval_spec(interval_spec) == 0))) {
@@ -604,7 +604,7 @@ find_min_interval_mon(pe_resource_t * rsc, gboolean include_disabled)
                 continue;
             }
 
-            if (!pcmk__str_eq(name, RSC_STATUS, pcmk__str_casei)) {
+            if (!pcmk__str_eq(name, PCMK_ACTION_MONITOR, pcmk__str_casei)) {
                 continue;
             }
 
@@ -845,7 +845,8 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
      * failures. */
     } else if (((value == NULL) || !pcmk_is_set(action->rsc->flags, pe_rsc_managed))
                && pe__resource_is_remote_conn(action->rsc, data_set)
-               && !(pcmk__str_eq(action->task, CRMD_ACTION_STATUS, pcmk__str_casei)
+               && !(pcmk__str_eq(action->task, PCMK_ACTION_MONITOR,
+                                 pcmk__str_casei)
                     && (interval_ms == 0))
                && !pcmk__str_eq(action->task, PCMK_ACTION_START, pcmk__str_casei)) {
 

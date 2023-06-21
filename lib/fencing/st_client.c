@@ -647,7 +647,8 @@ stonith_api_list(stonith_t * stonith, int call_options, const char *id, char **l
 static int
 stonith_api_monitor(stonith_t * stonith, int call_options, const char *id, int timeout)
 {
-    return stonith_api_call(stonith, call_options, id, "monitor", NULL, timeout, NULL);
+    return stonith_api_call(stonith, call_options, id, PCMK_ACTION_MONITOR,
+                            NULL, timeout, NULL);
 }
 
 static int

@@ -1980,7 +1980,7 @@ execute_agent_action(xmlNode *msg, pcmk__action_result_t *result)
                                     NULL);
             return;
 
-        } else if (pcmk__str_eq(action, "monitor", pcmk__str_none)) {
+        } else if (pcmk__str_eq(action, PCMK_ACTION_MONITOR, pcmk__str_none)) {
             pcmk__set_result(result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
             return;
         }
@@ -1994,7 +1994,8 @@ execute_agent_action(xmlNode *msg, pcmk__action_result_t *result)
                             "'%s' not found", id);
         return;
 
-    } else if (!device->api_registered && !strcmp(action, "monitor")) {
+    } else if (!device->api_registered
+               && (strcmp(action, PCMK_ACTION_MONITOR) == 0)) {
         // Monitors may run only on "started" (API-registered) devices
         crm_info("Ignoring API '%s' action request because device %s not active",
                  action, id);
@@ -2765,8 +2766,9 @@ st_child_done(int pid, const pcmk__action_result_t *result, void *user_data)
 
     /* The device is ready to do something else now */
     if (device) {
-        if (!device->verified && pcmk__result_ok(result) &&
-            (pcmk__strcase_any_of(cmd->action, "list", "monitor", "status", NULL))) {
+        if (!device->verified && pcmk__result_ok(result)
+            && pcmk__strcase_any_of(cmd->action, "list", PCMK_ACTION_MONITOR,
+                                    "status", NULL)) {
 
             device->verified = TRUE;
         }

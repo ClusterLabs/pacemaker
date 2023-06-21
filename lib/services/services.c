@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2022 the Pacemaker project contributors
+ * Copyright 2010-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -233,7 +233,7 @@ copy_action_arguments(svc_action_t *op, uint32_t ra_caps, const char *name,
     }
 
     if (pcmk_is_set(ra_caps, pcmk_ra_cap_status)
-        && pcmk__str_eq(action, "monitor", pcmk__str_casei)) {
+        && pcmk__str_eq(action, PCMK_ACTION_MONITOR, pcmk__str_casei)) {
         action = "status";
     }
     op->action = strdup(action);

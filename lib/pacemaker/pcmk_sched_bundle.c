@@ -869,8 +869,8 @@ order_replica_start_after(pe__bundle_replica_t *replica, void *user_data)
         return true;
     }
     pcmk__new_ordering(probed_replica->container,
-                       pcmk__op_key(probed_replica->container->id, RSC_STATUS,
-                                    0),
+                       pcmk__op_key(probed_replica->container->id,
+                                    PCMK_ACTION_MONITOR, 0),
                        NULL, replica->container,
                        pcmk__op_key(replica->container->id, PCMK_ACTION_START,
                                     0),
@@ -932,7 +932,8 @@ create_replica_probes(pe__bundle_replica_t *replica, void *user_data)
          * running. This is required for REMOTE_CONTAINER_HACK to correctly
          * probe remote resources.
          */
-        char *probe_uuid = pcmk__op_key(replica->remote->id, RSC_STATUS, 0);
+        char *probe_uuid = pcmk__op_key(replica->remote->id,
+                                        PCMK_ACTION_MONITOR, 0);
         pe_action_t *probe = find_first_action(replica->remote->actions,
                                                probe_uuid, NULL,
                                                probe_data->node);

@@ -1141,7 +1141,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
         if (op->op_status == PCMK_EXEC_DONE) {
             task = PCMK_ACTION_START;
         } else {
-            task = CRMD_ACTION_STATUS;
+            task = PCMK_ACTION_MONITOR;
         }
     }
 
@@ -1469,8 +1469,9 @@ task_for_digest(const char *task, guint interval_ms)
     /* Certain actions need to be compared against the parameters used to start
      * the resource.
      */
-    if ((interval_ms == 0) && pcmk__str_any_of(task, RSC_STATUS, RSC_MIGRATED,
-                                               RSC_PROMOTE, NULL)) {
+    if ((interval_ms == 0)
+        && pcmk__str_any_of(task, PCMK_ACTION_MONITOR, RSC_MIGRATED,
+                            RSC_PROMOTE, NULL)) {
         task = PCMK_ACTION_START;
     }
     return task;
@@ -1812,8 +1813,9 @@ process_rsc_history(const xmlNode *rsc_entry, pe_resource_t *rsc,
                                   task, interval_ms, node, "maintenance mode");
 
         } else if ((interval_ms > 0)
-                   || pcmk__strcase_any_of(task, RSC_STATUS, PCMK_ACTION_START,
-                                           RSC_PROMOTE, RSC_MIGRATED, NULL)) {
+                   || pcmk__strcase_any_of(task, PCMK_ACTION_MONITOR,
+                                           PCMK_ACTION_START, RSC_PROMOTE,
+                                           RSC_MIGRATED, NULL)) {
             /* If a resource operation failed, and the operation's definition
              * has changed, clear any fail count so they can be retried fresh.
              */

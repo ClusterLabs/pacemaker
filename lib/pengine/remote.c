@@ -203,7 +203,7 @@ pe_create_remote_xml(xmlNode *parent, const char *uname,
 
     // Add operations
     xml_sub = create_xml_node(remote, "operations");
-    crm_create_op_xml(xml_sub, uname, "monitor", "30s", "30s");
+    crm_create_op_xml(xml_sub, uname, PCMK_ACTION_MONITOR, "30s", "30s");
     if (start_timeout) {
         crm_create_op_xml(xml_sub, uname, PCMK_ACTION_START, "0",
                           start_timeout);

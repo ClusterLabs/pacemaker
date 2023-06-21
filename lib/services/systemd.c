@@ -934,7 +934,7 @@ invoke_unit_by_path(svc_action_t *op, const char *unit)
     DBusMessage *msg = NULL;
     DBusMessage *reply = NULL;
 
-    if (pcmk__str_any_of(op->action, "monitor", "status", NULL)) {
+    if (pcmk__str_any_of(op->action, PCMK_ACTION_MONITOR, "status", NULL)) {
         DBusPendingCall *pending = NULL;
         char *state;
 

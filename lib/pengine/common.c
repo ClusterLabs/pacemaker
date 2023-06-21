@@ -369,7 +369,7 @@ text2task(const char *task)
         return shutdown_crm;
     } else if (pcmk__str_eq(task, CRM_OP_FENCE, pcmk__str_casei)) {
         return stonith_node;
-    } else if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_casei)) {
         return monitor_rsc;
     } else if (pcmk__str_eq(task, CRMD_ACTION_NOTIFY, pcmk__str_casei)) {
         return action_notify;
@@ -389,7 +389,7 @@ text2task(const char *task)
         return no_action;
     } else if (pcmk__str_eq(task, CRMD_ACTION_DELETE, pcmk__str_casei)) {
         return no_action;
-    } else if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_casei)) {
         return no_action;
     } else if (pcmk__str_eq(task, CRMD_ACTION_MIGRATE, pcmk__str_casei)) {
         return no_action;
@@ -430,7 +430,7 @@ task2text(enum action_tasks task)
             result = CRM_OP_FENCE;
             break;
         case monitor_rsc:
-            result = CRMD_ACTION_STATUS;
+            result = PCMK_ACTION_MONITOR;
             break;
         case action_notify:
             result = CRMD_ACTION_NOTIFY;

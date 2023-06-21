@@ -749,7 +749,9 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
         report_remote_ra_result(cmd);
         cmd_handled = TRUE;
 
-    } else if (op->type == lrmd_event_poke && pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)) {
+    } else if ((op->type == lrmd_event_poke)
+               && pcmk__str_eq(cmd->action, PCMK_ACTION_MONITOR,
+                               pcmk__str_casei)) {
 
         if (cmd->monitor_timeout_id) {
             g_source_remove(cmd->monitor_timeout_id);
@@ -776,7 +778,9 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
         }
         cmd_handled = TRUE;
 
-    } else if (op->type == lrmd_event_disconnect && pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)) {
+    } else if ((op->type == lrmd_event_disconnect)
+               && pcmk__str_eq(cmd->action, PCMK_ACTION_MONITOR,
+                               pcmk__str_casei)) {
         if (pcmk_is_set(ra_data->status, remote_active) &&
             !pcmk_is_set(cmd->status, cmd_cancel)) {
             pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
@@ -915,7 +919,7 @@ handle_remote_ra_exec(gpointer user_data)
             }
             report_remote_ra_result(cmd);
 
-        } else if (!strcmp(cmd->action, "monitor")) {
+        } else if (!strcmp(cmd->action, PCMK_ACTION_MONITOR)) {
 
             if (lrm_state_is_connected(lrm_state) == TRUE) {
                 rc = lrm_state_poke_connection(lrm_state);
@@ -1052,7 +1056,7 @@ is_remote_ra_supported_action(const char *action)
     return pcmk__str_any_of(action,
                             PCMK_ACTION_START,
                             PCMK_ACTION_STOP,
-                            CRMD_ACTION_STATUS,
+                            PCMK_ACTION_MONITOR,
                             CRMD_ACTION_MIGRATE,
                             CRMD_ACTION_MIGRATED,
                             CRMD_ACTION_RELOAD_AGENT,
@@ -1069,7 +1073,9 @@ fail_all_monitor_cmds(GList * list)
 
     for (gIter = list; gIter != NULL; gIter = gIter->next) {
         cmd = gIter->data;
-        if ((cmd->interval_ms > 0) && pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)) {
+        if ((cmd->interval_ms > 0)
+            && pcmk__str_eq(cmd->action, PCMK_ACTION_MONITOR,
+                            pcmk__str_casei)) {
             rm_list = g_list_append(rm_list, cmd);
         }
     }
@@ -1158,8 +1164,9 @@ handle_dup_monitor(remote_ra_data_t *ra_data, guint interval_ms,
 
     if (ra_data->cur_cmd &&
         !pcmk_is_set(ra_data->cur_cmd->status, cmd_cancel) &&
-        (ra_data->cur_cmd->interval_ms == interval_ms) &&
-        pcmk__str_eq(ra_data->cur_cmd->action, "monitor", pcmk__str_casei)) {
+        (ra_data->cur_cmd->interval_ms == interval_ms)
+        && pcmk__str_eq(ra_data->cur_cmd->action, PCMK_ACTION_MONITOR,
+                        pcmk__str_casei)) {
 
         cmd = ra_data->cur_cmd;
         goto handle_dup;
@@ -1168,7 +1175,8 @@ handle_dup_monitor(remote_ra_data_t *ra_data, guint interval_ms,
     for (gIter = ra_data->recurring_cmds; gIter != NULL; gIter = gIter->next) {
         cmd = gIter->data;
         if ((cmd->interval_ms == interval_ms)
-            && pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)) {
+            && pcmk__str_eq(cmd->action, PCMK_ACTION_MONITOR,
+                            pcmk__str_casei)) {
             goto handle_dup;
         }
     }
@@ -1176,7 +1184,8 @@ handle_dup_monitor(remote_ra_data_t *ra_data, guint interval_ms,
     for (gIter = ra_data->cmds; gIter != NULL; gIter = gIter->next) {
         cmd = gIter->data;
         if ((cmd->interval_ms == interval_ms)
-            && pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)) {
+            && pcmk__str_eq(cmd->action, PCMK_ACTION_MONITOR,
+                            pcmk__str_casei)) {
             goto handle_dup;
         }
     }
@@ -1186,7 +1195,7 @@ handle_dup_monitor(remote_ra_data_t *ra_data, guint interval_ms,
 handle_dup:
 
     crm_trace("merging duplicate monitor cmd " PCMK__OP_FMT,
-              cmd->rsc_id, "monitor", interval_ms);
+              cmd->rsc_id, PCMK_ACTION_MONITOR, interval_ms);
 
     /* update the userdata */
     if (userdata) {

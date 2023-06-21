@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2022 the Pacemaker project contributors
+ * Copyright 2010-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,7 +10,7 @@
 #ifndef PCMK__CRM_SERVICES_COMPAT__H
 #  define PCMK__CRM_SERVICES_COMPAT__H
 
-
+#include <crm/common/actions.h>
 #include <crm/common/results.h>
 #include <crm/services.h>
 #include <glib.h>
@@ -68,7 +68,8 @@ static inline enum ocf_exitcode
 services_get_ocf_exitcode(const char *action, int lsb_exitcode)
 {
     /* For non-status actions, LSB and OCF share error code meaning <= 7 */
-    if (action && strcmp(action, "status") && strcmp(action, "monitor")) {
+    if ((action != NULL) && (strcmp(action, "status") != 0)
+        && (strcmp(action, PCMK_ACTION_MONITOR) != 0)) {
         if ((lsb_exitcode < 0) || (lsb_exitcode > PCMK_LSB_NOT_RUNNING)) {
             return PCMK_OCF_UNKNOWN_ERROR;
         }

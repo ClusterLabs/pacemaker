@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2022 the Pacemaker project contributors
+ * Copyright 2010-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -290,7 +290,7 @@ enum ocf_exitcode
 services__lsb2ocf(const char *action, int exit_status)
 {
     // For non-status actions, LSB and OCF share error codes <= 7
-    if (!pcmk__str_any_of(action, "status", "monitor", NULL)) {
+    if (!pcmk__str_any_of(action, "status", PCMK_ACTION_MONITOR, NULL)) {
         if ((exit_status < 0) || (exit_status > PCMK_LSB_NOT_RUNNING)) {
             return PCMK_OCF_UNKNOWN_ERROR;
         }

@@ -400,7 +400,7 @@ native_pending_task(const pe_resource_t *rsc)
 {
     const char *pending_task = NULL;
 
-    if (pcmk__str_eq(rsc->pending_task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
+    if (pcmk__str_eq(rsc->pending_task, PCMK_ACTION_MONITOR, pcmk__str_casei)) {
         pending_task = "Monitoring";
 
     /* Pending probes are not printed, even if pending

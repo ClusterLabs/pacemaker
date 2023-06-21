@@ -470,7 +470,7 @@ crm_op_needs_metadata(const char *rsc_class, const char *op)
     }
 
     // Metadata is needed only for these actions
-    return pcmk__str_any_of(op, PCMK_ACTION_START, CRMD_ACTION_STATUS,
+    return pcmk__str_any_of(op, PCMK_ACTION_START, PCMK_ACTION_MONITOR,
                             CRMD_ACTION_PROMOTE, CRMD_ACTION_DEMOTE,
                             CRMD_ACTION_RELOAD, CRMD_ACTION_RELOAD_AGENT,
                             CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED,
@@ -498,7 +498,8 @@ pcmk_is_probe(const char *task, guint interval)
         return false;
     }
 
-    return (interval == 0) && pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_none);
+    return (interval == 0)
+           && pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_none);
 }
 
 bool

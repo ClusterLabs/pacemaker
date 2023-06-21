@@ -409,7 +409,7 @@ static void
 order_after_probes(pe_resource_t *rsc, const pe_node_t *node,
                    pe_action_t *action)
 {
-    GList *probes = pe__resource_actions(rsc, node, RSC_STATUS, FALSE);
+    GList *probes = pe__resource_actions(rsc, node, PCMK_ACTION_MONITOR, FALSE);
 
     for (GList *iter = probes; iter != NULL; iter = iter->next) {
         order_actions((pe_action_t *) iter->data, action,

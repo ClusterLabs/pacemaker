@@ -512,7 +512,7 @@ should_add_action_to_graph(const pe_action_t *action)
      */
     if ((action->rsc != NULL)
         && !pcmk_is_set(action->rsc->flags, pe_rsc_managed)
-        && !pcmk__str_eq(action->task, RSC_STATUS, pcmk__str_none)) {
+        && !pcmk__str_eq(action->task, PCMK_ACTION_MONITOR, pcmk__str_none)) {
         const char *interval_ms_s;
 
         /* A cancellation of a recurring monitor will get here because the task

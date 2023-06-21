@@ -886,7 +886,8 @@ should_preserve_lock(lrmd_event_data_t *op)
     if (!strcmp(op->op_type, PCMK_ACTION_STOP) && (op->rc == PCMK_OCF_OK)) {
         return true;
     }
-    if (!strcmp(op->op_type, RSC_STATUS) && (op->rc == PCMK_OCF_NOT_RUNNING)) {
+    if (!strcmp(op->op_type, PCMK_ACTION_MONITOR)
+        && (op->rc == PCMK_OCF_NOT_RUNNING)) {
         return true;
     }
     return false;

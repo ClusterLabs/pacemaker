@@ -150,7 +150,7 @@ get_operation_list(xmlNode *rsc_entry) {
         pcmk__scan_min_int(op_rc, &op_rc_i, 0);
 
         /* Display 0-interval monitors as "probe" */
-        if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)
+        if (pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_casei)
             && pcmk__str_eq(interval_ms_s, "0", pcmk__str_null_matches | pcmk__str_casei)) {
             task = "probe";
         }
@@ -2864,7 +2864,7 @@ resource_operation_list(pcmk__output_t *out, va_list args)
         pcmk__scan_min_int(op_rc, &op_rc_i, 0);
 
         /* Display 0-interval monitors as "probe" */
-        if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)
+        if (pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_casei)
             && pcmk__str_eq(interval_ms_s, "0", pcmk__str_null_matches | pcmk__str_casei)) {
             task = "probe";
         }
