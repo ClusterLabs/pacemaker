@@ -163,8 +163,6 @@ extern char *crm_system_name;
 #  define CRMD_JOINSTATE_MEMBER         "member"
 #  define CRMD_JOINSTATE_NACK           "banned"
 
-#  define CRMD_ACTION_CANCEL		PCMK_ACTION_CANCEL
-
 #  define CRMD_ACTION_MIGRATE		"migrate_to"
 #  define CRMD_ACTION_MIGRATED		"migrate_from"
 
