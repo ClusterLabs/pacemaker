@@ -79,7 +79,8 @@ probe_then_start(pe_resource_t *rsc1, pe_resource_t *rsc2)
                                 rsc1->allocated_to->details->id) == NULL)) {
 
         pcmk__new_ordering(rsc1, pcmk__op_key(rsc1->id, RSC_STATUS, 0), NULL,
-                           rsc2, pcmk__op_key(rsc2->id, RSC_START, 0), NULL,
+                           rsc2, pcmk__op_key(rsc2->id, PCMK_ACTION_START, 0),
+                           NULL,
                            pe_order_optional, rsc1->cluster);
     }
 }
@@ -243,7 +244,8 @@ pcmk__probe_rsc_on_node(pe_resource_t *rsc, pe_node_t *node)
 
             // Order resource start after guest stop (in case it's restarting)
             pcmk__new_ordering(guest, pcmk__op_key(guest->id, RSC_STOP, 0),
-                               NULL, top, pcmk__op_key(top->id, RSC_START, 0),
+                               NULL, top,
+                               pcmk__op_key(top->id, PCMK_ACTION_START, 0),
                                NULL, pe_order_optional, rsc->cluster);
             goto no_probe;
         }
@@ -271,7 +273,7 @@ pcmk__probe_rsc_on_node(pe_resource_t *rsc, pe_node_t *node)
 
     // Start or reload after probing the resource
     pcmk__new_ordering(rsc, NULL, probe,
-                       top, pcmk__op_key(top->id, RSC_START, 0), NULL,
+                       top, pcmk__op_key(top->id, PCMK_ACTION_START, 0), NULL,
                        flags, rsc->cluster);
     pcmk__new_ordering(rsc, NULL, probe, top, reload_key(rsc), NULL,
                        pe_order_optional, rsc->cluster);
@@ -480,7 +482,8 @@ add_start_orderings_for_probe(pe_action_t *probe, pe_action_wrapper_t *after)
         // The order type is already enforced for its parent.
         || pcmk_is_set(after->type, pe_order_runnable_left)
         || (pe__const_top_resource(probe->rsc, false) != after->action->rsc)
-        || !pcmk__str_eq(after->action->task, RSC_START, pcmk__str_none)) {
+        || !pcmk__str_eq(after->action->task, PCMK_ACTION_START,
+                         pcmk__str_none)) {
         return;
     }
 
@@ -497,7 +500,8 @@ add_start_orderings_for_probe(pe_action_t *probe, pe_action_wrapper_t *after)
         if (then->action->rsc->running_on
             || (pe__const_top_resource(then->action->rsc, false)
                 != after->action->rsc)
-            || !pcmk__str_eq(then->action->task, RSC_START, pcmk__str_none)) {
+            || !pcmk__str_eq(then->action->task, PCMK_ACTION_START,
+                             pcmk__str_none)) {
             continue;
         }
 
@@ -559,7 +563,7 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
 
             GList *then_actions = NULL;
 
-            if (pcmk__str_eq(after->task, RSC_START, pcmk__str_none)) {
+            if (pcmk__str_eq(after->task, PCMK_ACTION_START, pcmk__str_none)) {
                 then_actions = pe__resource_actions(after->rsc, NULL, RSC_STOP,
                                                     FALSE);
 
@@ -754,7 +758,7 @@ order_then_probes(pe_working_set_t *data_set)
         GList *actions = NULL;
         GList *probes = NULL;
 
-        actions = pe__resource_actions(rsc, NULL, RSC_START, FALSE);
+        actions = pe__resource_actions(rsc, NULL, PCMK_ACTION_START, FALSE);
 
         if (actions) {
             start = actions->data;
@@ -791,7 +795,8 @@ order_then_probes(pe_working_set_t *data_set)
                     break;
                 }
 
-            } else if (!pcmk__str_eq(first->task, RSC_START, pcmk__str_none)) {
+            } else if (!pcmk__str_eq(first->task, PCMK_ACTION_START,
+                                     pcmk__str_none)) {
                 crm_trace("Not a start op %s for %s", first->uuid, start->uuid);
             }
 

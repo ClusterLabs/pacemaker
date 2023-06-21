@@ -171,7 +171,7 @@ extern char *crm_system_name;
 #  define CRMD_ACTION_MIGRATE		"migrate_to"
 #  define CRMD_ACTION_MIGRATED		"migrate_from"
 
-#  define CRMD_ACTION_START		"start"
+#define CRMD_ACTION_START           PCMK_ACTION_START
 #  define CRMD_ACTION_STARTED		"running"
 
 #  define CRMD_ACTION_STOP		"stop"
@@ -196,7 +196,7 @@ extern char *crm_system_name;
 #  define RSC_MIGRATE	CRMD_ACTION_MIGRATE
 #  define RSC_MIGRATED	CRMD_ACTION_MIGRATED
 
-#  define RSC_START	CRMD_ACTION_START
+#  define RSC_START	PCMK_ACTION_START
 #  define RSC_STARTED	CRMD_ACTION_STARTED
 
 #  define RSC_STOP	CRMD_ACTION_STOP
@@ -214,6 +214,7 @@ extern char *crm_system_name;
 #  define RSC_METADATA	CRMD_ACTION_METADATA
 /* *INDENT-ON* */
 
+#  include <crm/common/actions.h>
 #  include <crm/common/cib.h>
 #  include <crm/common/logging.h>
 #  include <crm/common/util.h>

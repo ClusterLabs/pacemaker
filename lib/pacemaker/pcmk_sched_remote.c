@@ -419,7 +419,8 @@ pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
                          pcmk__str_none)) {
 
             pcmk__new_ordering(action->rsc, NULL, action, action->rsc,
-                               pcmk__op_key(action->rsc->id, RSC_START, 0),
+                               pcmk__op_key(action->rsc->id, PCMK_ACTION_START,
+                                            0),
                                NULL, pe_order_optional, data_set);
 
             continue;
@@ -455,7 +456,7 @@ pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
          * remote connection. This ensures that if the connection fails to
          * start, we leave the resource running on the original node.
          */
-        if (pcmk__str_eq(action->task, RSC_START, pcmk__str_none)) {
+        if (pcmk__str_eq(action->task, PCMK_ACTION_START, pcmk__str_none)) {
             for (GList *item = action->rsc->actions; item != NULL;
                  item = item->next) {
                 pe_action_t *rsc_action = item->data;

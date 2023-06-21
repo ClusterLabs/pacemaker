@@ -41,11 +41,11 @@ enum ordering_symmetry {
 static const char *
 invert_action(const char *action)
 {
-    if (pcmk__str_eq(action, RSC_START, pcmk__str_none)) {
+    if (pcmk__str_eq(action, PCMK_ACTION_START, pcmk__str_none)) {
         return RSC_STOP;
 
     } else if (pcmk__str_eq(action, RSC_STOP, pcmk__str_none)) {
-        return RSC_START;
+        return PCMK_ACTION_START;
 
     } else if (pcmk__str_eq(action, RSC_PROMOTE, pcmk__str_none)) {
         return RSC_DEMOTE;
@@ -198,8 +198,8 @@ ordering_flags_for_kind(enum pe_order_kind kind, const char *first,
 
                 case ordering_symmetric:
                     pe__set_order_flags(flags, pe_order_implies_then);
-                    if (pcmk__strcase_any_of(first, RSC_START, RSC_PROMOTE,
-                                             NULL)) {
+                    if (pcmk__strcase_any_of(first, PCMK_ACTION_START,
+                                             RSC_PROMOTE, NULL)) {
                         pe__set_order_flags(flags, pe_order_runnable_left);
                     }
                     break;
@@ -452,7 +452,7 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
 
     action_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST_ACTION);
     if (action_first == NULL) {
-        action_first = RSC_START;
+        action_first = PCMK_ACTION_START;
     }
 
     action_then = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN_ACTION);
@@ -605,7 +605,7 @@ unpack_order_set(const xmlNode *set, enum pe_order_kind parent_kind,
     const char *kind_s = crm_element_value(set, XML_ORDER_ATTR_KIND);
 
     if (action == NULL) {
-        action = RSC_START;
+        action = PCMK_ACTION_START;
     }
 
     if (kind_s) {
@@ -723,11 +723,11 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
     (void) pcmk__xe_get_bool_attr(set1, "require-all", &require_all);
 
     if (action_1 == NULL) {
-        action_1 = RSC_START;
+        action_1 = PCMK_ACTION_START;
     }
 
     if (action_2 == NULL) {
-        action_2 = RSC_START;
+        action_2 = PCMK_ACTION_START;
     }
 
     if (symmetry == ordering_symmetric_inverse) {
@@ -1458,7 +1458,7 @@ void
 pcmk__promotable_restart_ordering(pe_resource_t *rsc)
 {
     // Order start and promote after all instances are stopped
-    pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, RSC_START,
+    pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, PCMK_ACTION_START,
                                  pe_order_optional);
     pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, RSC_PROMOTE,
                                  pe_order_optional);
@@ -1466,7 +1466,7 @@ pcmk__promotable_restart_ordering(pe_resource_t *rsc)
     // Order stop, start, and promote after all instances are demoted
     pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, RSC_STOP,
                                  pe_order_optional);
-    pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, RSC_START,
+    pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, PCMK_ACTION_START,
                                  pe_order_optional);
     pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, RSC_PROMOTE,
                                  pe_order_optional);

@@ -2408,7 +2408,7 @@ calculate_active_ops(const GList *sorted_op_list, int *start_index,
             && pcmk__str_eq(status, "0", pcmk__str_casei)) {
             *stop_index = counter;
 
-        } else if (pcmk__strcase_any_of(task, CRMD_ACTION_START, CRMD_ACTION_MIGRATED, NULL)) {
+        } else if (pcmk__strcase_any_of(task, PCMK_ACTION_START, CRMD_ACTION_MIGRATED, NULL)) {
             *start_index = counter;
 
         } else if ((implied_monitor_start <= *stop_index) && pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
@@ -2836,7 +2836,7 @@ non_monitor_after(const char *rsc_id, const char *node_name,
 
         task = crm_element_value(op, XML_LRM_ATTR_TASK);
 
-        if (pcmk__str_any_of(task, CRMD_ACTION_START, CRMD_ACTION_STOP,
+        if (pcmk__str_any_of(task, PCMK_ACTION_START, CRMD_ACTION_STOP,
                              CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED, NULL)
             && pe__is_newer_op(op, xml_op, same_node) > 0) {
             return true;
@@ -3843,7 +3843,7 @@ static bool
 should_clear_for_param_change(const xmlNode *xml_op, const char *task,
                               pe_resource_t *rsc, pe_node_t *node)
 {
-    if (!strcmp(task, "start") || !strcmp(task, "monitor")) {
+    if (!strcmp(task, PCMK_ACTION_START) || !strcmp(task, "monitor")) {
 
         if (pe__bundle_needs_remote_name(rsc)) {
             /* We haven't allocated resources yet, so we can't reliably
@@ -4152,7 +4152,7 @@ update_resource_state(struct action_history *history, int exit_status,
             set_active(history->rsc);
         }
 
-    } else if (pcmk__str_eq(history->task, CRMD_ACTION_START, pcmk__str_none)) {
+    } else if (pcmk__str_eq(history->task, PCMK_ACTION_START, pcmk__str_none)) {
         history->rsc->role = RSC_ROLE_STARTED;
         clear_past_failure = true;
 
@@ -4247,7 +4247,7 @@ can_affect_state(struct action_history *history)
      * active and/or failed.
      */
      return pcmk__str_any_of(history->task, CRMD_ACTION_STATUS,
-                             CRMD_ACTION_START, CRMD_ACTION_STOP,
+                             PCMK_ACTION_START, CRMD_ACTION_STOP,
                              CRMD_ACTION_PROMOTE, CRMD_ACTION_DEMOTE,
                              CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED,
                              "asyncmon", NULL);
@@ -4468,7 +4468,7 @@ process_pending_action(struct action_history *history,
         return;
     }
 
-    if (strcmp(history->task, CRMD_ACTION_START) == 0) {
+    if (strcmp(history->task, PCMK_ACTION_START) == 0) {
         pe__set_resource_flags(history->rsc, pe_rsc_start_pending);
         set_active(history->rsc);
 

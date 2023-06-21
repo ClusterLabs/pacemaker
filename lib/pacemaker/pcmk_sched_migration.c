@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -109,7 +109,8 @@ pcmk__create_migration_actions(pe_resource_t *rsc, const pe_node_t *current)
                            pe_order_optional|pe_order_implies_first_migratable,
                            rsc->cluster);
         pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0), NULL,
-                           rsc, pcmk__op_key(rsc->id, RSC_START, 0), NULL,
+                           rsc, pcmk__op_key(rsc->id, PCMK_ACTION_START, 0),
+                           NULL,
                            pe_order_optional
                            |pe_order_implies_first_migratable
                            |pe_order_pseudo_left,
@@ -285,8 +286,8 @@ pcmk__order_migration_equivalents(pe__ordering_t *order)
     then_task = task_from_action_or_key(order->rh_action,
                                         order->rh_action_task);
 
-    if (pcmk__str_eq(first_task, RSC_START, pcmk__str_none)
-        && pcmk__str_eq(then_task, RSC_START, pcmk__str_none)) {
+    if (pcmk__str_eq(first_task, PCMK_ACTION_START, pcmk__str_none)
+        && pcmk__str_eq(then_task, PCMK_ACTION_START, pcmk__str_none)) {
 
         uint32_t flags = pe_order_optional;
 
@@ -310,7 +311,8 @@ pcmk__order_migration_equivalents(pe__ordering_t *order)
              *    migration)
              */
             pcmk__new_ordering(order->lh_rsc,
-                               pcmk__op_key(order->lh_rsc->id, RSC_START, 0),
+                               pcmk__op_key(order->lh_rsc->id,
+                                            PCMK_ACTION_START, 0),
                                NULL, order->rh_rsc,
                                pcmk__op_key(order->rh_rsc->id, RSC_MIGRATE, 0),
                                NULL, flags, order->lh_rsc->cluster);
@@ -345,7 +347,7 @@ pcmk__order_migration_equivalents(pe__ordering_t *order)
         }
 
     } else if (pcmk__str_eq(first_task, RSC_PROMOTE, pcmk__str_none)
-               && pcmk__str_eq(then_task, RSC_START, pcmk__str_none)) {
+               && pcmk__str_eq(then_task, PCMK_ACTION_START, pcmk__str_none)) {
 
         uint32_t flags = pe_order_optional;
 

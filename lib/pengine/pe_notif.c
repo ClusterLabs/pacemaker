@@ -682,7 +682,7 @@ add_notif_keys(const pe_resource_t *rsc, notify_data_t *n_data)
     add_notify_env_free_gs(n_data, "notify_stop_uname", node_list);
 
     if ((n_data->start != NULL)
-        && pcmk__str_eq(n_data->action, RSC_START, pcmk__str_none)) {
+        && pcmk__str_eq(n_data->action, PCMK_ACTION_START, pcmk__str_none)) {
         required = true;
     }
     n_data->start = notify_entries_to_strings(n_data->start,
@@ -782,7 +782,8 @@ find_remote_start(pe_action_t *action)
         pe_resource_t *remote_rsc = action->node->details->remote_rsc;
 
         if (remote_rsc != NULL) {
-            return find_first_action(remote_rsc->actions, NULL, RSC_START,
+            return find_first_action(remote_rsc->actions, NULL,
+                                     PCMK_ACTION_START,
                                      NULL);
         }
     }
@@ -894,7 +895,7 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
     if ((rsc->next_role != RSC_ROLE_STOPPED)
         && ((task == start_rsc) || (task == action_promote))) {
 
-        start = find_first_action(rsc->actions, NULL, RSC_START, NULL);
+        start = find_first_action(rsc->actions, NULL, PCMK_ACTION_START, NULL);
         if (start != NULL) {
             pe_action_t *remote_start = find_remote_start(start);
 

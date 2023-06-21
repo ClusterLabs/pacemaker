@@ -72,7 +72,8 @@ order_start_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
                 break;
 
             case rsc_req_quorum:
-                if (pcmk__str_eq(action->task, RSC_START, pcmk__str_none)
+                if (pcmk__str_eq(action->task, PCMK_ACTION_START,
+                                 pcmk__str_none)
                     && (g_hash_table_lookup(rsc->allowed_nodes,
                                             target->details->id) != NULL)
                     && !rsc_is_known_on(rsc, target)) {
@@ -367,7 +368,7 @@ pcmk__fence_guest(pe_node_t *node)
         stop = find_first_action(container->actions, NULL, CRMD_ACTION_STOP,
                                  NULL);
 
-        if (find_first_action(container->actions, NULL, CRMD_ACTION_START,
+        if (find_first_action(container->actions, NULL, PCMK_ACTION_START,
                               NULL)) {
             fence_action = "reboot";
         }

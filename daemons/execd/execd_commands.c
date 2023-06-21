@@ -844,7 +844,8 @@ action_complete(svc_action_t * action)
 
     if (pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_SYSTEMD, pcmk__str_casei)) {
         if (pcmk__result_ok(&(cmd->result))
-            && pcmk__strcase_any_of(cmd->action, "start", "stop", NULL)) {
+            && pcmk__strcase_any_of(cmd->action, PCMK_ACTION_START, "stop",
+                                    NULL)) {
             /* systemd returns from start and stop actions after the action
              * begins, not after it completes. We have to jump through a few
              * hoops so that we don't report 'complete' to the rest of pacemaker
@@ -878,7 +879,8 @@ action_complete(svc_action_t * action)
                 if ((cmd->result.execution_status == PCMK_EXEC_DONE)
                     && (cmd->result.exit_status == PCMK_OCF_NOT_RUNNING)) {
 
-                    if (pcmk__str_eq(cmd->real_action, "start", pcmk__str_casei)) {
+                    if (pcmk__str_eq(cmd->real_action, PCMK_ACTION_START,
+                                     pcmk__str_casei)) {
                         cmd->result.exit_status = PCMK_OCF_UNKNOWN_ERROR;
                     } else if (pcmk__str_eq(cmd->real_action, "stop", pcmk__str_casei)) {
                         cmd->result.exit_status = PCMK_OCF_OK;
@@ -896,7 +898,7 @@ action_complete(svc_action_t * action)
             /* Successfully executed --version for the nagios plugin */
             cmd->result.exit_status = PCMK_OCF_NOT_RUNNING;
 
-        } else if (pcmk__str_eq(cmd->action, "start", pcmk__str_casei)
+        } else if (pcmk__str_eq(cmd->action, PCMK_ACTION_START, pcmk__str_casei)
                    && !pcmk__result_ok(&(cmd->result))) {
 #ifdef PCMK__TIME_USE_CGT
             goagain = true;
@@ -1035,7 +1037,7 @@ stonith_action_complete(lrmd_cmd_t *cmd, int exit_status,
     // Certain successful actions change the known state of the resource
     if ((rsc != NULL) && pcmk__result_ok(&(cmd->result))) {
 
-        if (pcmk__str_eq(cmd->action, "start", pcmk__str_casei)) {
+        if (pcmk__str_eq(cmd->action, PCMK_ACTION_START, pcmk__str_casei)) {
             pcmk__set_result(&rsc->fence_probe_result, CRM_EX_OK,
                              PCMK_EXEC_DONE, NULL); // "running"
 
@@ -1249,7 +1251,7 @@ execute_stonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
                                 "No connection to fencer");
         return;
 
-    } else if (pcmk__str_eq(cmd->action, "start", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(cmd->action, PCMK_ACTION_START, pcmk__str_casei)) {
         rc = execd_stonith_start(stonith_api, rsc, cmd);
         if (rc == pcmk_ok) {
             do_monitor = TRUE;

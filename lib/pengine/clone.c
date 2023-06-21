@@ -1474,7 +1474,8 @@ pe__create_clone_notif_pseudo_ops(pe_resource_t *clone,
     get_clone_variant_data(clone_data, clone);
 
     if (clone_data->start_notify == NULL) {
-        clone_data->start_notify = pe__action_notif_pseudo_ops(clone, RSC_START,
+        clone_data->start_notify = pe__action_notif_pseudo_ops(clone,
+                                                               PCMK_ACTION_START,
                                                                start, started);
     }
 

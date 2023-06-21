@@ -917,7 +917,7 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
 
     // Order stops before starts (i.e. restart)
     pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
-                       rsc, pcmk__op_key(rsc->id, RSC_START, 0), NULL,
+                       rsc, pcmk__op_key(rsc->id, PCMK_ACTION_START, 0), NULL,
                        pe_order_optional|pe_order_implies_then|pe_order_restart,
                        rsc->cluster);
 
@@ -930,7 +930,8 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
                            rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
                            pe_order_promoted_implies_first, rsc->cluster);
 
-        pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_START, 0), NULL,
+        pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, PCMK_ACTION_START, 0),
+                           NULL,
                            rsc, pcmk__op_key(rsc->id, RSC_PROMOTE, 0), NULL,
                            pe_order_runnable_left, rsc->cluster);
     }
@@ -1013,8 +1014,10 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
                       rsc->id, rsc->container->id);
 
             pcmk__new_ordering(rsc->container,
-                               pcmk__op_key(rsc->container->id, RSC_START, 0),
-                               NULL, rsc, pcmk__op_key(rsc->id, RSC_START, 0),
+                               pcmk__op_key(rsc->container->id,
+                                            PCMK_ACTION_START, 0),
+                               NULL, rsc,
+                               pcmk__op_key(rsc->id, PCMK_ACTION_START, 0),
                                NULL,
                                pe_order_implies_then|pe_order_runnable_left,
                                rsc->cluster);
@@ -1326,7 +1329,7 @@ promote_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
     CRM_ASSERT(node != NULL);
 
     // Any start must be runnable for promotion to be runnable
-    action_list = pe__resource_actions(rsc, node, RSC_START, true);
+    action_list = pe__resource_actions(rsc, node, PCMK_ACTION_START, true);
     for (iter = action_list; iter != NULL; iter = iter->next) {
         pe_action_t *start = (pe_action_t *) iter->data;
 
@@ -1442,7 +1445,8 @@ pcmk__schedule_cleanup(pe_resource_t *rsc, const pe_node_t *node, bool optional)
 
     // stop -> clean-up -> start
     pcmk__order_resource_actions(rsc, RSC_STOP, rsc, RSC_DELETE, flag);
-    pcmk__order_resource_actions(rsc, RSC_DELETE, rsc, RSC_START, flag);
+    pcmk__order_resource_actions(rsc, RSC_DELETE, rsc, PCMK_ACTION_START,
+                                 flag);
 }
 
 /*!

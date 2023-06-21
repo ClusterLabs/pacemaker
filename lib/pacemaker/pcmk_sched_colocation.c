@@ -310,7 +310,7 @@ anti_colocation_order(pe_resource_t *first_rsc, int first_role,
         then_tasks[0] = CRMD_ACTION_PROMOTE;
 
     } else {
-        then_tasks[0] = CRMD_ACTION_START;
+        then_tasks[0] = PCMK_ACTION_START;
 
         if (then_role == RSC_ROLE_UNPROMOTED) {
             then_tasks[1] = CRMD_ACTION_DEMOTE;
@@ -1057,7 +1057,7 @@ pcmk__block_colocation_dependents(pe_action_t *action)
         return; // Only unrunnable actions block dependents
     }
 
-    is_start = pcmk__str_eq(action->task, RSC_START, pcmk__str_none);
+    is_start = pcmk__str_eq(action->task, PCMK_ACTION_START, pcmk__str_none);
     if (!is_start && !pcmk__str_eq(action->task, RSC_PROMOTE, pcmk__str_none)) {
         return; // Only unrunnable starts and promotes block dependents
     }
@@ -1115,7 +1115,8 @@ pcmk__block_colocation_dependents(pe_action_t *action)
             mark_action_blocked(colocation->dependent, RSC_PROMOTE,
                                 action->rsc);
         } else {
-            mark_action_blocked(colocation->dependent, RSC_START, action->rsc);
+            mark_action_blocked(colocation->dependent, PCMK_ACTION_START,
+                                action->rsc);
         }
     }
     g_list_free(colocations);

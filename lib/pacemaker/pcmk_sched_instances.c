@@ -920,7 +920,7 @@ check_instance_state(const pe_resource_t *instance, uint32_t *state)
         const pe_action_t *action = (const pe_action_t *) iter->data;
         const bool optional = pcmk_is_set(action->flags, pe_action_optional);
 
-        if (pcmk__str_eq(RSC_START, action->task, pcmk__str_none)) {
+        if (pcmk__str_eq(PCMK_ACTION_START, action->task, pcmk__str_none)) {
             if (!optional && pcmk_is_set(action->flags, pe_action_runnable)) {
                 pe_rsc_trace(instance, "Instance is starting due to %s",
                              action->uuid);
@@ -987,7 +987,7 @@ pcmk__create_instance_actions(pe_resource_t *collective, GList *instances)
     }
 
     // Create pseudo-actions for rsc start and started
-    start = pe__new_rsc_pseudo_action(collective, RSC_START,
+    start = pe__new_rsc_pseudo_action(collective, PCMK_ACTION_START,
                                       !pcmk_is_set(state, instance_starting),
                                       true);
     started = pe__new_rsc_pseudo_action(collective, RSC_STARTED,

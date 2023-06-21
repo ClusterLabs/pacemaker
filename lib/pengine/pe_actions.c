@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -414,7 +414,7 @@ update_resource_flags_for_action(pe_resource_t *rsc, const pe_action_t *action)
     if (pcmk__str_eq(action->task, CRMD_ACTION_STOP, pcmk__str_casei)) {
         pe__set_resource_flags(rsc, pe_rsc_stopping);
 
-    } else if (pcmk__str_eq(action->task, CRMD_ACTION_START, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(action->task, PCMK_ACTION_START, pcmk__str_casei)) {
         if (pcmk_is_set(action->flags, pe_action_runnable)) {
             pe__set_resource_flags(rsc, pe_rsc_starting);
         } else {
@@ -729,7 +729,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
      */
     if (pcmk_is_set(pcmk_get_ra_caps(rsc_rule_data.standard),
                     pcmk_ra_cap_fence_params)
-        && (pcmk__str_eq(action->task, RSC_START, pcmk__str_casei)
+        && (pcmk__str_eq(action->task, PCMK_ACTION_START, pcmk__str_casei)
             || is_probe)) {
 
         GHashTable *params = pe_rsc_params(action->rsc, action->node, data_set);
@@ -750,7 +750,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
     g_hash_table_replace(action->meta, strdup(XML_ATTR_TIMEOUT),
                          pcmk__itoa(timeout_ms));
 
-    if (!pcmk__strcase_any_of(action->task, RSC_START, RSC_PROMOTE, NULL)) {
+    if (!pcmk__strcase_any_of(action->task, PCMK_ACTION_START, RSC_PROMOTE, NULL)) {
         action->needs = rsc_req_nothing;
         value = "nothing (not start or promote)";
 
@@ -847,7 +847,7 @@ unpack_operation(pe_action_t *action, const xmlNode *xml_obj,
                && pe__resource_is_remote_conn(action->rsc, data_set)
                && !(pcmk__str_eq(action->task, CRMD_ACTION_STATUS, pcmk__str_casei)
                     && (interval_ms == 0))
-               && !pcmk__str_eq(action->task, CRMD_ACTION_START, pcmk__str_casei)) {
+               && !pcmk__str_eq(action->task, PCMK_ACTION_START, pcmk__str_casei)) {
 
         if (!pcmk_is_set(action->rsc->flags, pe_rsc_managed)) {
             action->on_fail = action_fail_stop;

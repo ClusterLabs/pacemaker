@@ -1103,7 +1103,8 @@ rsc_action_default(pcmk__output_t *out, va_list args)
     moving = (current != NULL) && (next != NULL)
              && !pe__same_node(current, next);
 
-    possible_matches = pe__resource_actions(rsc, next, RSC_START, false);
+    possible_matches = pe__resource_actions(rsc, next, PCMK_ACTION_START,
+                                            false);
     if (possible_matches) {
         start = possible_matches->data;
         g_list_free(possible_matches);

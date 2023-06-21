@@ -464,7 +464,8 @@ pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force,
             if (pcmk__str_eq(op->task, RSC_STOP, pcmk__str_none)) {
                 pe__clear_action_flags(op, pe_action_optional);
 
-            } else if (pcmk__str_eq(op->task, RSC_START, pcmk__str_none)) {
+            } else if (pcmk__str_eq(op->task, PCMK_ACTION_START,
+                                    pcmk__str_none)) {
                 pe__clear_action_flags(op, pe_action_runnable);
 
             } else {

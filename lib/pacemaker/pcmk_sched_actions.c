@@ -534,7 +534,7 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
 
         if ((first->rsc != NULL)
             && (first->rsc->variant == pe_group)
-            && pcmk__str_eq(first->task, RSC_START, pcmk__str_none)) {
+            && pcmk__str_eq(first->task, PCMK_ACTION_START, pcmk__str_none)) {
 
             first_node = first->rsc->fns->location(first->rsc, NULL, FALSE);
             if (first_node != NULL) {
@@ -545,7 +545,7 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
 
         if ((then->rsc != NULL)
             && (then->rsc->variant == pe_group)
-            && pcmk__str_eq(then->task, RSC_START, pcmk__str_none)) {
+            && pcmk__str_eq(then->task, PCMK_ACTION_START, pcmk__str_none)) {
 
             then_node = then->rsc->fns->location(then->rsc, NULL, FALSE);
             if (then_node != NULL) {
@@ -720,7 +720,7 @@ handle_asymmetric_ordering(const pe_action_t *first, pe_action_t *then)
              */
             return;
         } else if ((then_rsc_role >= RSC_ROLE_STARTED)
-            && pcmk__str_eq(then->task, RSC_START, pcmk__str_none)
+            && pcmk__str_eq(then->task, PCMK_ACTION_START, pcmk__str_none)
             && pe__rsc_running_on_only(then->rsc, then->node)) {
             /* Similarly if 'then' should start after 'first' but is already
              * started on a single node.
@@ -1139,7 +1139,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     if (pcmk__str_any_of(task, CRMD_ACTION_RELOAD, CRMD_ACTION_RELOAD_AGENT,
                          NULL)) {
         if (op->op_status == PCMK_EXEC_DONE) {
-            task = CRMD_ACTION_START;
+            task = PCMK_ACTION_START;
         } else {
             task = CRMD_ACTION_STATUS;
         }
@@ -1471,7 +1471,7 @@ task_for_digest(const char *task, guint interval_ms)
      */
     if ((interval_ms == 0) && pcmk__str_any_of(task, RSC_STATUS, RSC_MIGRATED,
                                                RSC_PROMOTE, NULL)) {
-        task = RSC_START;
+        task = PCMK_ACTION_START;
     }
     return task;
 }
@@ -1812,7 +1812,7 @@ process_rsc_history(const xmlNode *rsc_entry, pe_resource_t *rsc,
                                   task, interval_ms, node, "maintenance mode");
 
         } else if ((interval_ms > 0)
-                   || pcmk__strcase_any_of(task, RSC_STATUS, RSC_START,
+                   || pcmk__strcase_any_of(task, RSC_STATUS, PCMK_ACTION_START,
                                            RSC_PROMOTE, RSC_MIGRATED, NULL)) {
             /* If a resource operation failed, and the operation's definition
              * has changed, clear any fail count so they can be retried fresh.

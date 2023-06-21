@@ -243,7 +243,7 @@ replica_internal_constraints(pe__bundle_replica_t *replica, void *user_data)
                       pe_order_implies_first_printed);
 
     // Start replica container -> bundle is started
-    pcmk__order_resource_actions(replica->container, RSC_START, bundle,
+    pcmk__order_resource_actions(replica->container, PCMK_ACTION_START, bundle,
                                  RSC_STARTED,
                                  pe_order_implies_then_printed);
 
@@ -303,8 +303,9 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
     }
 
     // Start bundle -> start bundled clone
-    pcmk__order_resource_actions(rsc, RSC_START, bundled_resource,
-                                 RSC_START, pe_order_implies_first_printed);
+    pcmk__order_resource_actions(rsc, PCMK_ACTION_START, bundled_resource,
+                                 PCMK_ACTION_START,
+                                 pe_order_implies_first_printed);
 
     // Bundled clone is started -> bundle is started
     pcmk__order_resource_actions(bundled_resource, RSC_STARTED,
@@ -870,8 +871,9 @@ order_replica_start_after(pe__bundle_replica_t *replica, void *user_data)
                        pcmk__op_key(probed_replica->container->id, RSC_STATUS,
                                     0),
                        NULL, replica->container,
-                       pcmk__op_key(replica->container->id, RSC_START, 0), NULL,
-                       pe_order_optional|pe_order_same_node,
+                       pcmk__op_key(replica->container->id, PCMK_ACTION_START,
+                                    0),
+                       NULL, pe_order_optional|pe_order_same_node,
                        replica->container->cluster);
     return true;
 }
@@ -940,8 +942,8 @@ create_replica_probes(pe__bundle_replica_t *replica, void *user_data)
             pe_rsc_trace(probe_data->bundle, "Ordering %s probe on %s",
                          replica->remote->id, pe__node_name(probe_data->node));
             pcmk__new_ordering(replica->container,
-                               pcmk__op_key(replica->container->id, RSC_START,
-                                            0),
+                               pcmk__op_key(replica->container->id,
+                                            PCMK_ACTION_START, 0),
                                NULL, replica->remote, NULL, probe,
                                pe_order_probe, probe_data->bundle->cluster);
         }

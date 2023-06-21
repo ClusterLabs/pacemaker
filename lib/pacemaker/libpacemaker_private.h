@@ -671,8 +671,8 @@ void pcmk__order_after_each(pe_action_t *after, GList *list);
                        NULL, (flags), (first_rsc)->cluster)
 
 #define pcmk__order_starts(rsc1, rsc2, flags)                \
-    pcmk__order_resource_actions((rsc1), CRMD_ACTION_START,  \
-                                 (rsc2), CRMD_ACTION_START, (flags))
+    pcmk__order_resource_actions((rsc1), PCMK_ACTION_START,  \
+                                 (rsc2), PCMK_ACTION_START, (flags))
 
 #define pcmk__order_stops(rsc1, rsc2, flags)                 \
     pcmk__order_resource_actions((rsc1), CRMD_ACTION_STOP,   \

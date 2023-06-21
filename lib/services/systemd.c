@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 the Pacemaker project contributors
+ * Copyright 2012-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -957,7 +957,7 @@ invoke_unit_by_path(svc_action_t *op, const char *unit)
         }
         return;
 
-    } else if (pcmk__str_eq(op->action, "start", pcmk__str_none)) {
+    } else if (pcmk__str_eq(op->action, PCMK_ACTION_START, pcmk__str_none)) {
         method = "StartUnit";
         systemd_create_override(op->agent, op->timeout);
 

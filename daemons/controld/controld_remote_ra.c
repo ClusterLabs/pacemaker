@@ -407,7 +407,7 @@ check_remote_node_state(const remote_ra_cmd_t *cmd)
         return;
     }
 
-    if (pcmk__str_eq(cmd->action, "start", pcmk__str_casei)) {
+    if (pcmk__str_eq(cmd->action, PCMK_ACTION_START, pcmk__str_casei)) {
         remote_node_up(cmd->rsc_id);
 
     } else if (pcmk__str_eq(cmd->action, "migrate_from", pcmk__str_casei)) {
@@ -525,7 +525,8 @@ retry_start_cmd_cb(gpointer data)
         return FALSE;
     }
     cmd = ra_data->cur_cmd;
-    if (!pcmk__strcase_any_of(cmd->action, "start", "migrate_from", NULL)) {
+    if (!pcmk__strcase_any_of(cmd->action, PCMK_ACTION_START, "migrate_from",
+                              NULL)) {
         return FALSE;
     }
     update_remaining_timeout(cmd);
@@ -710,8 +711,9 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
 
     /* Start actions and migrate from actions complete after connection
      * comes back to us. */
-    if (op->type == lrmd_event_connect && pcmk__strcase_any_of(cmd->action, "start",
-                                                               "migrate_from", NULL)) {
+    if ((op->type == lrmd_event_connect)
+        && pcmk__strcase_any_of(cmd->action, PCMK_ACTION_START, "migrate_from",
+                                NULL)) {
         if (op->connection_rc < 0) {
             update_remaining_timeout(cmd);
 
@@ -897,7 +899,8 @@ handle_remote_ra_exec(gpointer user_data)
         ra_data->cmds = g_list_remove_link(ra_data->cmds, first);
         g_list_free_1(first);
 
-        if (!strcmp(cmd->action, "start") || !strcmp(cmd->action, "migrate_from")) {
+        if (pcmk__str_any_of(cmd->action, PCMK_ACTION_START, "migrate_from",
+                             NULL)) {
             lrm_remote_clear_flags(lrm_state, expect_takeover | takeover_complete);
             if (handle_remote_ra_start(lrm_state, cmd,
                                        cmd->timeout) == pcmk_rc_ok) {
@@ -1044,7 +1047,7 @@ static gboolean
 is_remote_ra_supported_action(const char *action)
 {
     return pcmk__str_any_of(action,
-                            CRMD_ACTION_START,
+                            PCMK_ACTION_START,
                             CRMD_ACTION_STOP,
                             CRMD_ACTION_STATUS,
                             CRMD_ACTION_MIGRATE,

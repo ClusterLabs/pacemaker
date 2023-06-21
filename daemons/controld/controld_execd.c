@@ -222,7 +222,7 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
         }
         entry->last = lrmd_copy_event(op);
 
-        if (op->params && pcmk__strcase_any_of(op->op_type, CRMD_ACTION_START,
+        if (op->params && pcmk__strcase_any_of(op->op_type, PCMK_ACTION_START,
                                                CRMD_ACTION_RELOAD,
                                                CRMD_ACTION_RELOAD_AGENT,
                                                CRMD_ACTION_STATUS, NULL)) {
@@ -1554,7 +1554,7 @@ do_lrm_invoke(long long action,
              * changed (using something like inotify, or a hash or modification
              * time of the agent executable).
              */
-            if (strcmp(operation, CRMD_ACTION_START) != 0) {
+            if (strcmp(operation, PCMK_ACTION_START) != 0) {
                 md = controld_get_rsc_metadata(lrm_state, rsc,
                                                controld_metadata_from_cache);
             }
@@ -1703,7 +1703,7 @@ construct_op(const lrm_state_t *lrm_state, const xmlNode *rsc_op,
     op->user_data = strdup(transition);
 
     if (op->interval_ms != 0) {
-        if (pcmk__strcase_any_of(operation, CRMD_ACTION_START, CRMD_ACTION_STOP, NULL)) {
+        if (pcmk__strcase_any_of(operation, PCMK_ACTION_START, CRMD_ACTION_STOP, NULL)) {
             crm_err("Start and Stop actions cannot have an interval: %u",
                     op->interval_ms);
             op->interval_ms = 0;
@@ -1876,7 +1876,7 @@ static const char *
 should_nack_action(const char *action)
 {
     if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)
-        && pcmk__str_eq(action, RSC_START, pcmk__str_none)) {
+        && pcmk__str_eq(action, PCMK_ACTION_START, pcmk__str_none)) {
 
         register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
         return "Not attempting start due to shutdown in progress";

@@ -125,7 +125,7 @@ pcmk__group_create_actions(pe_resource_t *rsc)
     }
 
     // Create pseudo-actions for group itself to serve as ordering points
-    create_group_pseudo_op(rsc, RSC_START);
+    create_group_pseudo_op(rsc, PCMK_ACTION_START);
     create_group_pseudo_op(rsc, RSC_STARTED);
     create_group_pseudo_op(rsc, RSC_STOP);
     create_group_pseudo_op(rsc, RSC_STOPPED);
@@ -215,7 +215,8 @@ member_internal_constraints(gpointer data, gpointer user_data)
 
     // Start group -> start member -> group is started
     pcmk__order_starts(member->parent, member, pe_order_implies_first_printed);
-    pcmk__order_resource_actions(member, RSC_START, member->parent, RSC_STARTED,
+    pcmk__order_resource_actions(member, PCMK_ACTION_START, member->parent,
+                                 RSC_STARTED,
                                  pe_order_runnable_left
                                  |pe_order_implies_then
                                  |pe_order_implies_then_printed);
@@ -258,7 +259,7 @@ member_internal_constraints(gpointer data, gpointer user_data)
             && (member_data->previous_member->running_on == NULL)) {
             pcmk__order_resource_actions(member, RSC_STOP,
                                          member_data->previous_member,
-                                         RSC_START,
+                                         PCMK_ACTION_START,
                                          pe_order_implies_first
                                          |pe_order_runnable_left);
         }
@@ -308,9 +309,9 @@ pcmk__group_internal_constraints(pe_resource_t *rsc)
      */
     pcmk__order_resource_actions(rsc, RSC_STOP, rsc, RSC_STOPPED,
                                  pe_order_runnable_left);
-    pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, RSC_START,
+    pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, PCMK_ACTION_START,
                                  pe_order_optional);
-    pcmk__order_resource_actions(rsc, RSC_START, rsc, RSC_STARTED,
+    pcmk__order_resource_actions(rsc, PCMK_ACTION_START, rsc, RSC_STARTED,
                                  pe_order_runnable_left);
 
     top = pe__const_top_resource(rsc, false);

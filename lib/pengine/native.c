@@ -371,7 +371,7 @@ native_pending_state(const pe_resource_t *rsc)
 {
     const char *pending_state = NULL;
 
-    if (pcmk__str_eq(rsc->pending_task, CRMD_ACTION_START, pcmk__str_casei)) {
+    if (pcmk__str_eq(rsc->pending_task, PCMK_ACTION_START, pcmk__str_casei)) {
         pending_state = "Starting";
 
     } else if (pcmk__str_eq(rsc->pending_task, CRMD_ACTION_STOP, pcmk__str_casei)) {

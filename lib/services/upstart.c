@@ -423,7 +423,7 @@ set_result_from_method_error(svc_action_t *op, const DBusError *error)
         services__set_result(op, PCMK_OCF_NOT_INSTALLED,
                              PCMK_EXEC_NOT_INSTALLED, "Upstart job not found");
 
-    } else if (pcmk__str_eq(op->action, "start", pcmk__str_casei)
+    } else if (pcmk__str_eq(op->action, PCMK_ACTION_START, pcmk__str_casei)
                && strstr(error->name, UPSTART_06_API ".Error.AlreadyStarted")) {
         crm_trace("Masking start failure (%s) for %s "
                   "because already started resource is OK",
@@ -598,7 +598,7 @@ services__execute_upstart(svc_action_t *op)
 
         goto cleanup;
 
-    } else if (pcmk__str_eq(action, "start", pcmk__str_none)) {
+    } else if (pcmk__str_eq(action, PCMK_ACTION_START, pcmk__str_none)) {
         action = "Start";
 
     } else if (pcmk__str_eq(action, "stop", pcmk__str_none)) {

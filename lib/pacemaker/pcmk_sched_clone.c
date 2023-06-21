@@ -124,9 +124,9 @@ pcmk__clone_internal_constraints(pe_resource_t *rsc)
     pe_rsc_trace(rsc, "Creating internal constraints for clone %s", rsc->id);
 
     // Restart ordering: Stop -> stopped -> start -> started
-    pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, RSC_START,
+    pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, PCMK_ACTION_START,
                                  pe_order_optional);
-    pcmk__order_resource_actions(rsc, RSC_START, rsc, RSC_STARTED,
+    pcmk__order_resource_actions(rsc, PCMK_ACTION_START, rsc, RSC_STARTED,
                                  pe_order_runnable_left);
     pcmk__order_resource_actions(rsc, RSC_STOP, rsc, RSC_STOPPED,
                                  pe_order_runnable_left);
@@ -155,7 +155,8 @@ pcmk__clone_internal_constraints(pe_resource_t *rsc)
         // Start clone -> start instance -> clone started
         pcmk__order_starts(rsc, instance, pe_order_runnable_left
                                           |pe_order_implies_first_printed);
-        pcmk__order_resource_actions(instance, RSC_START, rsc, RSC_STARTED,
+        pcmk__order_resource_actions(instance, PCMK_ACTION_START, rsc,
+                                     RSC_STARTED,
                                      pe_order_implies_then_printed);
 
         // Stop clone -> stop instance -> clone stopped

@@ -12,6 +12,7 @@ MAINTAINERCLEANFILES = Makefile.in
 headerdir=$(pkgincludedir)/crm/common
 
 header_HEADERS = acl.h \
+		 actions.h		\
 				 agents.h \
 				 agents_compat.h \
 				 cib.h \
