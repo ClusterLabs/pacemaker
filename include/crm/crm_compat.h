@@ -67,6 +67,9 @@ extern "C" {
 //! \deprecated Use PCMK_ACTION_STOP instead
 #define CRMD_ACTION_STOP PCMK_ACTION_STOP
 
+//! \deprecated Use PCMK_ACTION_DELETE instead
+#define RSC_DELETE PCMK_ACTION_DELETE
+
 //! \deprecated Use PCMK_ACTION_DEMOTE instead
 #define RSC_DEMOTE PCMK_ACTION_DEMOTE
 
