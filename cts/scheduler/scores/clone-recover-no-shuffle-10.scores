@@ -1,0 +1,31 @@
+
+dummy:0 promotion score on node3: 5
+dummy:1 promotion score on node2: 15
+dummy:2 promotion score on node1: 10
+pcmk__clone_assign: dummy-clone allocation score on node1: 0
+pcmk__clone_assign: dummy-clone allocation score on node2: 0
+pcmk__clone_assign: dummy-clone allocation score on node3: 0
+pcmk__clone_assign: dummy:0 allocation score on node1: 10
+pcmk__clone_assign: dummy:0 allocation score on node2: 0
+pcmk__clone_assign: dummy:0 allocation score on node3: 6
+pcmk__clone_assign: dummy:1 allocation score on node1: 10
+pcmk__clone_assign: dummy:1 allocation score on node2: 16
+pcmk__clone_assign: dummy:1 allocation score on node3: 0
+pcmk__clone_assign: dummy:2 allocation score on node1: 10
+pcmk__clone_assign: dummy:2 allocation score on node2: 15
+pcmk__clone_assign: dummy:2 allocation score on node3: 5
+pcmk__primitive_assign: Fencing allocation score on node1: 0
+pcmk__primitive_assign: Fencing allocation score on node2: 0
+pcmk__primitive_assign: Fencing allocation score on node3: 0
+pcmk__primitive_assign: dummy:0 allocation score on node1: -INFINITY
+pcmk__primitive_assign: dummy:0 allocation score on node1: 10
+pcmk__primitive_assign: dummy:0 allocation score on node2: -INFINITY
+pcmk__primitive_assign: dummy:0 allocation score on node2: -INFINITY
+pcmk__primitive_assign: dummy:0 allocation score on node3: 6
+pcmk__primitive_assign: dummy:0 allocation score on node3: 6
+pcmk__primitive_assign: dummy:1 allocation score on node1: 10
+pcmk__primitive_assign: dummy:1 allocation score on node2: 16
+pcmk__primitive_assign: dummy:1 allocation score on node3: 0
+pcmk__primitive_assign: dummy:2 allocation score on node1: 10
+pcmk__primitive_assign: dummy:2 allocation score on node2: -INFINITY
+pcmk__primitive_assign: dummy:2 allocation score on node3: 5

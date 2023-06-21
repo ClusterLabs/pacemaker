@@ -1,0 +1,29 @@
+Current cluster status:
+  * Node List:
+    * Online: [ node1 node2 node3 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started node2
+    * Clone Set: dummy-clone [dummy] (promotable):
+      * Promoted: [ node2 ]
+      * Unpromoted: [ node3 ]
+      * Stopped: [ node1 ]
+
+Transition Summary:
+  * Start      dummy:2     ( node1 )
+
+Executing Cluster Transition:
+  * Pseudo action:   dummy-clone_start_0
+  * Resource action: dummy           start on node1
+  * Pseudo action:   dummy-clone_running_0
+  * Resource action: dummy           monitor=11000 on node1
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 node2 node3 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started node2
+    * Clone Set: dummy-clone [dummy] (promotable):
+      * Promoted: [ node2 ]
+      * Unpromoted: [ node1 node3 ]

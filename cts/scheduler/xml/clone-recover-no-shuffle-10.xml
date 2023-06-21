@@ -1,0 +1,120 @@
+<cib crm_feature_set="3.17.4" validate-with="pacemaker-3.9" epoch="89" num_updates="50" admin_epoch="0" cib-last-written="Tue Jun 20 18:29:07 2023" update-origin="node1" update-client="cibadmin" update-user="root" have-quorum="1" dc-uuid="3">
+  <configuration>
+    <!-- The essential elements of this test are:
+         * An anonymous promotable clone resource (dummy) is stopped on node1,
+           promoted on node2, and unpromoted on node3
+         * Clone instances are primitives
+         * There are no location constraints or stickiness configured
+         * dummy has the highest promotion score on node2
+
+         The following should happen:
+         * Instance dummy:0 should remain started (unpromoted) on node3
+         * Instance dummy:1 should remain promoted on node2
+         * Instance dummy:2 should start (unpromoted) on node1
+      -->
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="2.1.5-1.0a457786a.git.el9-0a457786a"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="test"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1687288330"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="node1"/>
+      <node id="2" uname="node2"/>
+      <node id="3" uname="node3"/>
+    </nodes>
+    <resources>
+      <primitive class="stonith" id="Fencing" type="fence_xvm">
+        <instance_attributes id="Fencing-instance_attributes">
+          <nvpair id="Fencing-instance_attributes_pcmk_host_list" name="pcmk_host_list" value="node1 node2 node3"/>
+        </instance_attributes>
+        <operations>
+          <op id="Fencing-monitor-120s" interval="120s" name="monitor" timeout="120s"/>
+        </operations>
+      </primitive>
+      <clone id="dummy-clone">
+        <primitive id="dummy" class="ocf" type="Stateful" provider="pacemaker">
+          <operations>
+            <op name="demote" interval="0s" timeout="10s" id="dummy-demote-interval-0s"/>
+            <op name="monitor" interval="10s" timeout="20s" role="Promoted" id="dummy-monitor-interval-10s"/>
+            <op name="monitor" interval="11s" timeout="20s" role="Unpromoted" id="dummy-monitor-interval-11s"/>
+            <op name="notify" interval="0s" timeout="5s" id="dummy-notify-interval-0s"/>
+            <op name="promote" interval="0s" timeout="10s" id="dummy-promote-interval-0s"/>
+            <op name="reload-agent" interval="0s" timeout="10s" id="dummy-reload-agent-interval-0s"/>
+            <op name="start" interval="0s" timeout="20s" id="dummy-start-interval-0s"/>
+            <op name="stop" interval="0s" timeout="20s" id="dummy-stop-interval-0s"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="dummy-clone-meta_attributes">
+          <nvpair id="dummy-clone-meta_attributes-promotable" name="promotable" value="true"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints/>
+    <op_defaults/>
+    <alerts/>
+    <rsc_defaults/>
+  </configuration>
+  <status>
+    <node_state id="3" uname="node3" in_ccm="true" crmd="online" crm-debug-origin="controld_update_resource_history" join="member" expected="member">
+      <lrm id="3">
+        <lrm_resources>
+          <lrm_resource id="Fencing" class="stonith" type="fence_xvm">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_monitor_0" operation="monitor" crm-debug-origin="controld_update_resource_history" crm_feature_set="3.17.4" transition-key="5:0:7:ecbbb42b-f6a4-47dc-90de-b2ccf960124e" transition-magic="0:7;5:0:7:ecbbb42b-f6a4-47dc-90de-b2ccf960124e" exit-reason="" on_node="node3" call-id="9" rc-code="7" op-status="0" interval="0" last-rc-change="1687310966" exec-time="3" queue-time="0" op-digest="f551693977f94a4fa8883fb70e439592"/>
+          </lrm_resource>
+          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Stateful">
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_demote_0" operation="demote" crm-debug-origin="controld_update_resource_history" crm_feature_set="3.17.4" transition-key="7:6:0:ecbbb42b-f6a4-47dc-90de-b2ccf960124e" transition-magic="0:0;7:6:0:ecbbb42b-f6a4-47dc-90de-b2ccf960124e" exit-reason="" on_node="node3" call-id="15" rc-code="0" op-status="0" interval="0" last-rc-change="1687311113" exec-time="39" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart="  state  " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dummy_monitor_11000" operation_key="dummy_monitor_11000" operation="monitor" crm-debug-origin="controld_update_resource_history" crm_feature_set="3.17.4" transition-key="9:6:0:ecbbb42b-f6a4-47dc-90de-b2ccf960124e" transition-magic="0:0;9:6:0:ecbbb42b-f6a4-47dc-90de-b2ccf960124e" exit-reason="" on_node="node3" call-id="16" rc-code="0" op-status="0" interval="11000" last-rc-change="1687311113" exec-time="14" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="3">
+        <instance_attributes id="status-3">
+          <nvpair id="status-3-.feature-set" name="#feature-set" value="3.17.4"/>
+          <nvpair id="status-3-master-dummy" name="master-dummy" value="5"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="1" uname="node1" in_ccm="true" crmd="online" crm-debug-origin="controld_update_resource_history" join="member" expected="member">
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="Fencing" class="stonith" type="fence_xvm">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_monitor_0" operation="monitor" crm-debug-origin="controld_update_resource_history" crm_feature_set="3.17.4" transition-key="1:0:7:ecbbb42b-f6a4-47dc-90de-b2ccf960124e" transition-magic="0:7;1:0:7:ecbbb42b-f6a4-47dc-90de-b2ccf960124e" exit-reason="" on_node="node1" call-id="9" rc-code="7" op-status="0" interval="0" last-rc-change="1687310966" exec-time="3" queue-time="0" op-digest="f551693977f94a4fa8883fb70e439592"/>
+          </lrm_resource>
+          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Stateful">
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="controld_update_resource_history" crm_feature_set="3.17.4" transition-key="2:0:7:ecbbb42b-f6a4-47dc-90de-b2ccf960124e" transition-magic="0:7;2:0:7:ecbbb42b-f6a4-47dc-90de-b2ccf960124e" exit-reason="" on_node="node1" call-id="10" rc-code="7" op-status="0" interval="0" last-rc-change="1687310967" exec-time="19" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart="  state  " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-.feature-set" name="#feature-set" value="3.17.4"/>
+          <nvpair id="status-1-master-dummy" name="master-dummy" value="10"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="2" uname="node2" in_ccm="true" crmd="online" crm-debug-origin="controld_update_resource_history" join="member" expected="member">
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="Fencing" class="stonith" type="fence_xvm">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_start_0" operation="start" crm-debug-origin="controld_update_resource_history" crm_feature_set="3.17.4" transition-key="7:0:0:ecbbb42b-f6a4-47dc-90de-b2ccf960124e" transition-magic="0:0;7:0:0:ecbbb42b-f6a4-47dc-90de-b2ccf960124e" exit-reason="" on_node="node2" call-id="10" rc-code="0" op-status="0" interval="0" last-rc-change="1687310967" exec-time="47" queue-time="0" op-digest="f551693977f94a4fa8883fb70e439592"/>
+            <lrm_rsc_op id="Fencing_monitor_120000" operation_key="Fencing_monitor_120000" operation="monitor" crm-debug-origin="controld_update_resource_history" crm_feature_set="3.17.4" transition-key="8:0:0:ecbbb42b-f6a4-47dc-90de-b2ccf960124e" transition-magic="0:0;8:0:0:ecbbb42b-f6a4-47dc-90de-b2ccf960124e" exit-reason="" on_node="node2" call-id="13" rc-code="0" op-status="0" interval="120000" last-rc-change="1687310967" exec-time="35" queue-time="0" op-digest="24989640311980988fb77ddd1cc1002b"/>
+          </lrm_resource>
+          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Stateful">
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_promote_0" operation="promote" crm-debug-origin="controld_update_resource_history" crm_feature_set="3.17.4" transition-key="12:6:0:ecbbb42b-f6a4-47dc-90de-b2ccf960124e" transition-magic="0:0;12:6:0:ecbbb42b-f6a4-47dc-90de-b2ccf960124e" exit-reason="" on_node="node2" call-id="16" rc-code="0" op-status="0" interval="0" last-rc-change="1687311114" exec-time="23" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart="  state  " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dummy_monitor_10000" operation_key="dummy_monitor_10000" operation="monitor" crm-debug-origin="controld_update_resource_history" crm_feature_set="3.17.4" transition-key="13:6:8:ecbbb42b-f6a4-47dc-90de-b2ccf960124e" transition-magic="0:8;13:6:8:ecbbb42b-f6a4-47dc-90de-b2ccf960124e" exit-reason="" on_node="node2" call-id="17" rc-code="8" op-status="0" interval="10000" last-rc-change="1687311114" exec-time="10" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-.feature-set" name="#feature-set" value="3.17.4"/>
+          <nvpair id="status-2-master-dummy" name="master-dummy" value="15"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>
