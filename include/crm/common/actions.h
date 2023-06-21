@@ -30,6 +30,7 @@ extern "C" {
 #define PCMK_ACTION_RELOAD_AGENT        "reload-agent"
 #define PCMK_ACTION_START               "start"
 #define PCMK_ACTION_STOP                "stop"
+#define PCMK_ACTION_VALIDATE_ALL        "validate-all"
 
 #ifdef __cplusplus
 }

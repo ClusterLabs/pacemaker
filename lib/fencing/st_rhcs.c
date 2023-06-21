@@ -292,7 +292,7 @@ stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
         host_arg = NULL;
     }
 
-    action = stonith__action_create(agent, "validate-all", target, 0,
+    action = stonith__action_create(agent, PCMK_ACTION_VALIDATE_ALL, target, 0,
                                     remaining_timeout, params, NULL, host_arg);
 
     rc = stonith__execute(action);
