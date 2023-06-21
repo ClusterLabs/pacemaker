@@ -203,8 +203,6 @@ extern char *crm_system_name;
 
 #  define RSC_NOTIFY	CRMD_ACTION_NOTIFY
 #  define RSC_NOTIFIED	CRMD_ACTION_NOTIFIED
-
-#  define RSC_METADATA	PCMK_ACTION_META_DATA
 /* *INDENT-ON* */
 
 #  include <crm/common/actions.h>
