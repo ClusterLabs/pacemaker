@@ -1,0 +1,35 @@
+Current cluster status:
+  * Node List:
+    * Online: [ node1 node2 node3 ]
+    * GuestOnline: [ bundle-a-0 bundle-a-1 bundle-a-2 bundle-b-0 bundle-b-1 bundle-b-2 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started node2
+    * Container bundle set: bundle-a [localhost/pcmktest]:
+      * bundle-a-0	(ocf:pacemaker:Stateful):	 Unpromoted node1
+      * bundle-a-1	(ocf:pacemaker:Stateful):	 Promoted node3
+      * bundle-a-2	(ocf:pacemaker:Stateful):	 Unpromoted node2
+    * Container bundle set: bundle-b [localhost/pcmktest]:
+      * bundle-b-0	(ocf:pacemaker:Stateful):	 Unpromoted node1
+      * bundle-b-1	(ocf:pacemaker:Stateful):	 Unpromoted node3
+      * bundle-b-2	(ocf:pacemaker:Stateful):	 Promoted node2
+
+Transition Summary:
+
+Executing Cluster Transition:
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 node2 node3 ]
+    * GuestOnline: [ bundle-a-0 bundle-a-1 bundle-a-2 bundle-b-0 bundle-b-1 bundle-b-2 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started node2
+    * Container bundle set: bundle-a [localhost/pcmktest]:
+      * bundle-a-0	(ocf:pacemaker:Stateful):	 Unpromoted node1
+      * bundle-a-1	(ocf:pacemaker:Stateful):	 Promoted node3
+      * bundle-a-2	(ocf:pacemaker:Stateful):	 Unpromoted node2
+    * Container bundle set: bundle-b [localhost/pcmktest]:
+      * bundle-b-0	(ocf:pacemaker:Stateful):	 Unpromoted node1
+      * bundle-b-1	(ocf:pacemaker:Stateful):	 Unpromoted node3
+      * bundle-b-2	(ocf:pacemaker:Stateful):	 Promoted node2

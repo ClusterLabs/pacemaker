@@ -1,0 +1,29 @@
+Current cluster status:
+  * Node List:
+    * Online: [ node1 node2 node3 ]
+    * GuestOnline: [ base-bundle-0 base-bundle-1 base-bundle-2 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started node2
+    * Container bundle set: base-bundle [localhost/pcmktest]:
+      * base-bundle-0	(ocf:pacemaker:Stateful):	 Unpromoted node1
+      * base-bundle-1	(ocf:pacemaker:Stateful):	 Unpromoted node2
+      * base-bundle-2	(ocf:pacemaker:Stateful):	 Promoted node3
+    * vip	(ocf:heartbeat:IPaddr2):	 Started node1
+
+Transition Summary:
+
+Executing Cluster Transition:
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 node2 node3 ]
+    * GuestOnline: [ base-bundle-0 base-bundle-1 base-bundle-2 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started node2
+    * Container bundle set: base-bundle [localhost/pcmktest]:
+      * base-bundle-0	(ocf:pacemaker:Stateful):	 Unpromoted node1
+      * base-bundle-1	(ocf:pacemaker:Stateful):	 Unpromoted node2
+      * base-bundle-2	(ocf:pacemaker:Stateful):	 Promoted node3
+    * vip	(ocf:heartbeat:IPaddr2):	 Started node1
