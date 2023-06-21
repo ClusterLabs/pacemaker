@@ -48,9 +48,9 @@ invert_action(const char *action)
         return PCMK_ACTION_START;
 
     } else if (pcmk__str_eq(action, RSC_PROMOTE, pcmk__str_none)) {
-        return RSC_DEMOTE;
+        return PCMK_ACTION_DEMOTE;
 
-    } else if (pcmk__str_eq(action, RSC_DEMOTE, pcmk__str_none)) {
+    } else if (pcmk__str_eq(action, PCMK_ACTION_DEMOTE, pcmk__str_none)) {
         return RSC_PROMOTE;
 
     } else if (pcmk__str_eq(action, RSC_PROMOTED, pcmk__str_none)) {
@@ -736,7 +736,7 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
     }
 
     if (pcmk__str_eq(PCMK_ACTION_STOP, action_1, pcmk__str_none)
-        || pcmk__str_eq(RSC_DEMOTE, action_1, pcmk__str_none)) {
+        || pcmk__str_eq(PCMK_ACTION_DEMOTE, action_1, pcmk__str_none)) {
         /* Assuming: A -> ( B || C) -> D
          * The one-or-more logic only applies during the start/promote phase.
          * During shutdown neither B nor can shutdown until D is down, so simply
@@ -1312,7 +1312,8 @@ rsc_order_first(pe_resource_t *first_rsc, pe__ordering_t *order)
 
         } else if ((first_rsc->fns->state(first_rsc,
                                           TRUE) == RSC_ROLE_UNPROMOTED)
-                   && pcmk__str_eq(op_type, RSC_DEMOTE, pcmk__str_none)) {
+                   && pcmk__str_eq(op_type, PCMK_ACTION_DEMOTE,
+                                   pcmk__str_none)) {
             free(key);
             pe_rsc_trace(first_rsc,
                          "Ignoring constraint %d: first (%s for %s) not found",
@@ -1476,6 +1477,6 @@ pcmk__promotable_restart_ordering(pe_resource_t *rsc)
                                  pe_order_optional);
 
     // Order demote after all instances are demoted
-    pcmk__order_resource_actions(rsc, RSC_DEMOTE, rsc, RSC_DEMOTED,
+    pcmk__order_resource_actions(rsc, PCMK_ACTION_DEMOTE, rsc, RSC_DEMOTED,
                                  pe_order_optional);
 }

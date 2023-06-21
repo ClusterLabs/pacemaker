@@ -197,7 +197,7 @@ update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
     /* Decide whether update is necessary and what value to use */
     if ((interval_ms > 0)
         || pcmk__str_eq(task, CRMD_ACTION_PROMOTE, pcmk__str_none)
-        || pcmk__str_eq(task, CRMD_ACTION_DEMOTE, pcmk__str_none)) {
+        || pcmk__str_eq(task, PCMK_ACTION_DEMOTE, pcmk__str_none)) {
         do_update = TRUE;
 
     } else if (pcmk__str_eq(task, PCMK_ACTION_START, pcmk__str_none)) {

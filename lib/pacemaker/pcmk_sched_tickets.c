@@ -191,7 +191,7 @@ rsc_ticket_new(const char *id, pe_resource_t *rsc, pe_ticket_t *ticket,
                   role2text(new_rsc_ticket->role));
         new_rsc_ticket->loss_policy = loss_ticket_freeze;
 
-    } else if (pcmk__str_eq(loss_policy, "demote", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(loss_policy, PCMK_ACTION_DEMOTE, pcmk__str_casei)) {
         crm_debug("On loss of ticket '%s': Demote %s (%s)",
                   new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
                   role2text(new_rsc_ticket->role));

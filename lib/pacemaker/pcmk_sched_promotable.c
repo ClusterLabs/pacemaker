@@ -52,15 +52,17 @@ order_instance_demotion(pe_resource_t *clone, pe_resource_t *child,
                         pe_resource_t *last)
 {
     // "Demote clone" -> demote instance -> "clone demoted"
-    pcmk__order_resource_actions(clone, RSC_DEMOTE, child, RSC_DEMOTE,
+    pcmk__order_resource_actions(clone, PCMK_ACTION_DEMOTE, child,
+                                 PCMK_ACTION_DEMOTE,
                                  pe_order_implies_first_printed);
-    pcmk__order_resource_actions(child, RSC_DEMOTE, clone, RSC_DEMOTED,
+    pcmk__order_resource_actions(child, PCMK_ACTION_DEMOTE, clone,
+                                 RSC_DEMOTED,
                                  pe_order_implies_then_printed);
 
     // If clone is ordered, order this instance relative to last
     if ((last != NULL) && pe__clone_is_ordered(clone)) {
-        pcmk__order_resource_actions(child, RSC_DEMOTE, last, RSC_DEMOTE,
-                                     pe_order_optional);
+        pcmk__order_resource_actions(child, PCMK_ACTION_DEMOTE, last,
+                                     PCMK_ACTION_DEMOTE, pe_order_optional);
     }
 }
 
@@ -95,7 +97,8 @@ check_for_role_change(const pe_resource_t *rsc, bool *demoting, bool *promoting)
         } else if (pcmk_is_set(action->flags, pe_action_optional)) {
             continue;
 
-        } else if (pcmk__str_eq(RSC_DEMOTE, action->task, pcmk__str_none)) {
+        } else if (pcmk__str_eq(PCMK_ACTION_DEMOTE, action->task,
+                                pcmk__str_none)) {
             *demoting = true;
 
         } else if (pcmk__str_eq(RSC_PROMOTE, action->task, pcmk__str_none)) {
@@ -1134,7 +1137,7 @@ pcmk__order_promotable_instances(pe_resource_t *clone)
         pe_resource_t *instance = (pe_resource_t *) iter->data;
 
         // Demote before promote
-        pcmk__order_resource_actions(instance, RSC_DEMOTE,
+        pcmk__order_resource_actions(instance, PCMK_ACTION_DEMOTE,
                                      instance, RSC_PROMOTE,
                                      pe_order_optional);
 

@@ -295,7 +295,7 @@ anti_colocation_order(pe_resource_t *first_rsc, int first_role,
 
     /* Actions to make first_rsc lose first_role */
     if (first_role == RSC_ROLE_PROMOTED) {
-        first_tasks[0] = CRMD_ACTION_DEMOTE;
+        first_tasks[0] = PCMK_ACTION_DEMOTE;
 
     } else {
         first_tasks[0] = PCMK_ACTION_STOP;
@@ -313,7 +313,7 @@ anti_colocation_order(pe_resource_t *first_rsc, int first_role,
         then_tasks[0] = PCMK_ACTION_START;
 
         if (then_role == RSC_ROLE_UNPROMOTED) {
-            then_tasks[1] = CRMD_ACTION_DEMOTE;
+            then_tasks[1] = PCMK_ACTION_DEMOTE;
         }
     }
 

@@ -1274,7 +1274,7 @@ find_instance_action(const pe_action_t *action, const pe_resource_t *instance,
 
         || (!for_first && pcmk__str_any_of(action->task, CRMD_ACTION_PROMOTE,
                                            CRMD_ACTION_PROMOTED,
-                                           CRMD_ACTION_DEMOTE,
+                                           PCMK_ACTION_DEMOTE,
                                            CRMD_ACTION_DEMOTED, NULL))) {
 
         rsc = pe__get_rsc_in_container(instance);
@@ -1291,7 +1291,8 @@ find_instance_action(const pe_action_t *action, const pe_resource_t *instance,
     }
 
     if (pcmk_is_set(instance->flags, pe_rsc_orphan)
-        || pcmk__str_any_of(action_name, PCMK_ACTION_STOP, RSC_DEMOTE, NULL)) {
+        || pcmk__str_any_of(action_name, PCMK_ACTION_STOP, PCMK_ACTION_DEMOTE,
+                            NULL)) {
         crm_trace("No %s action found for %s%s",
                   action_name,
                   pcmk_is_set(instance->flags, pe_rsc_orphan)? "orphan " : "",

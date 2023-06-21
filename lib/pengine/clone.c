@@ -1375,7 +1375,8 @@ pe__create_promotable_pseudo_ops(pe_resource_t *clone, bool any_promoting,
     }
 
     // Create a "demote" action for the clone itself
-    action = pe__new_rsc_pseudo_action(clone, RSC_DEMOTE, !any_demoting, true);
+    action = pe__new_rsc_pseudo_action(clone, PCMK_ACTION_DEMOTE,
+                                       !any_demoting, true);
 
     // Create a "demoted" action for when all demotions are done
     action_complete = pe__new_rsc_pseudo_action(clone, RSC_DEMOTED,
@@ -1385,7 +1386,7 @@ pe__create_promotable_pseudo_ops(pe_resource_t *clone, bool any_promoting,
     // Create notification pseudo-actions for demotion
     if (clone_data->demote_notify == NULL) {
         clone_data->demote_notify = pe__action_notif_pseudo_ops(clone,
-                                                                RSC_DEMOTE,
+                                                                PCMK_ACTION_DEMOTE,
                                                                 action,
                                                                 action_complete);
 

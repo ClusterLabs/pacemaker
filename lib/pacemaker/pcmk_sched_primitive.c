@@ -926,7 +926,8 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
                     pe_rsc_promotable)
         || (rsc->role > RSC_ROLE_UNPROMOTED)) {
 
-        pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_DEMOTE, 0), NULL,
+        pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, PCMK_ACTION_DEMOTE, 0),
+                           NULL,
                            rsc, pcmk__op_key(rsc->id, PCMK_ACTION_STOP, 0),
                            NULL,
                            pe_order_promoted_implies_first, rsc->cluster);

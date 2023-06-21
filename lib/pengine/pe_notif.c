@@ -691,7 +691,7 @@ add_notif_keys(const pe_resource_t *rsc, notify_data_t *n_data)
     add_notify_env_free_gs(n_data, "notify_start_uname", node_list);
 
     if ((n_data->demote != NULL)
-        && pcmk__str_eq(n_data->action, RSC_DEMOTE, pcmk__str_none)) {
+        && pcmk__str_eq(n_data->action, PCMK_ACTION_DEMOTE, pcmk__str_none)) {
         required = true;
     }
     n_data->demote = notify_entries_to_strings(n_data->demote,

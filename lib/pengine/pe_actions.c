@@ -446,7 +446,8 @@ unpack_operation_on_fail(pe_action_t * action)
                          "allowed for stop", action->rsc->id, value);
         return NULL;
 
-    } else if (pcmk__str_eq(action->task, CRMD_ACTION_DEMOTE, pcmk__str_casei) && !value) {
+    } else if (pcmk__str_eq(action->task, PCMK_ACTION_DEMOTE, pcmk__str_casei)
+               && (value == NULL)) {
         // demote on_fail defaults to monitor value for promoted role if present
         xmlNode *operation = NULL;
 

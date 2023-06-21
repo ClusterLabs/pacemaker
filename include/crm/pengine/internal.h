@@ -433,9 +433,9 @@ pe_action_t *custom_action(pe_resource_t *rsc, char *key, const char *task,
 		rsc, promoted_key(rsc), CRMD_ACTION_PROMOTED, node,	\
 		optional, TRUE, rsc->cluster)
 
-#  define demote_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_DEMOTE, 0)
+#  define demote_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_DEMOTE, 0)
 #  define demote_action(rsc, node, optional) custom_action(		\
-		rsc, demote_key(rsc), CRMD_ACTION_DEMOTE, node,		\
+		rsc, demote_key(rsc), PCMK_ACTION_DEMOTE, node, \
 		optional, TRUE, rsc->cluster)
 
 #  define demoted_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_DEMOTED, 0)

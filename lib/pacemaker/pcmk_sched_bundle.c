@@ -207,7 +207,7 @@ pcmk__bundle_create_actions(pe_resource_t *rsc)
             action = pe__new_rsc_pseudo_action(rsc, RSC_PROMOTED, true, true);
             action->priority = INFINITY;
 
-            pe__new_rsc_pseudo_action(rsc, RSC_DEMOTE, true, true);
+            pe__new_rsc_pseudo_action(rsc, PCMK_ACTION_DEMOTE, true, true);
             action = pe__new_rsc_pseudo_action(rsc, RSC_DEMOTED, true, true);
             action->priority = INFINITY;
         }
@@ -330,7 +330,8 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
     pcmk__promotable_restart_ordering(rsc);
 
     // Demote bundle -> demote bundled clone
-    pcmk__order_resource_actions(rsc, RSC_DEMOTE, bundled_resource, RSC_DEMOTE,
+    pcmk__order_resource_actions(rsc, PCMK_ACTION_DEMOTE, bundled_resource,
+                                 PCMK_ACTION_DEMOTE,
                                  pe_order_implies_first_printed);
 
     // Bundled clone is demoted -> bundle is demoted

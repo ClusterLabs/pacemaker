@@ -2419,7 +2419,8 @@ calculate_active_ops(const GList *sorted_op_list, int *start_index,
             if (pcmk__strcase_any_of(rc, "0", "8", NULL)) {
                 implied_monitor_start = counter;
             }
-        } else if (pcmk__strcase_any_of(task, CRMD_ACTION_PROMOTE, CRMD_ACTION_DEMOTE, NULL)) {
+        } else if (pcmk__strcase_any_of(task, CRMD_ACTION_PROMOTE,
+                                        PCMK_ACTION_DEMOTE, NULL)) {
             implied_clone_start = counter;
         }
     }
@@ -3514,7 +3515,7 @@ unpack_rsc_op_failure(struct action_history *history, xmlNode **last_failure,
     } else if (strcmp(history->task, CRMD_ACTION_PROMOTE) == 0) {
         history->rsc->role = RSC_ROLE_PROMOTED;
 
-    } else if (strcmp(history->task, CRMD_ACTION_DEMOTE) == 0) {
+    } else if (strcmp(history->task, PCMK_ACTION_DEMOTE) == 0) {
         if (action->on_fail == action_fail_block) {
             history->rsc->role = RSC_ROLE_PROMOTED;
             pe__set_next_role(history->rsc, RSC_ROLE_STOPPED,
@@ -4167,7 +4168,7 @@ update_resource_state(struct action_history *history, int exit_status,
         history->rsc->role = RSC_ROLE_PROMOTED;
         clear_past_failure = true;
 
-    } else if (pcmk__str_eq(history->task, CRMD_ACTION_DEMOTE,
+    } else if (pcmk__str_eq(history->task, PCMK_ACTION_DEMOTE,
                             pcmk__str_none)) {
         if (*on_fail == action_fail_demote) {
             // Demote clears an error only if on-fail=demote
@@ -4250,7 +4251,7 @@ can_affect_state(struct action_history *history)
      */
      return pcmk__str_any_of(history->task, PCMK_ACTION_MONITOR,
                              PCMK_ACTION_START, PCMK_ACTION_STOP,
-                             CRMD_ACTION_PROMOTE, CRMD_ACTION_DEMOTE,
+                             CRMD_ACTION_PROMOTE, PCMK_ACTION_DEMOTE,
                              CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED,
                              "asyncmon", NULL);
 #else

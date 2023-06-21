@@ -177,7 +177,7 @@ extern char *crm_system_name;
 
 #  define CRMD_ACTION_PROMOTE		"promote"
 #  define CRMD_ACTION_PROMOTED		"promoted"
-#  define CRMD_ACTION_DEMOTE		"demote"
+#  define CRMD_ACTION_DEMOTE		PCMK_ACTION_DEMOTE
 #  define CRMD_ACTION_DEMOTED		"demoted"
 
 #  define CRMD_ACTION_NOTIFY		"notify"
@@ -198,7 +198,7 @@ extern char *crm_system_name;
 
 #  define RSC_PROMOTE	CRMD_ACTION_PROMOTE
 #  define RSC_PROMOTED	CRMD_ACTION_PROMOTED
-#  define RSC_DEMOTE	CRMD_ACTION_DEMOTE
+#  define RSC_DEMOTE	PCMK_ACTION_DEMOTE
 #  define RSC_DEMOTED	CRMD_ACTION_DEMOTED
 
 #  define RSC_NOTIFY	CRMD_ACTION_NOTIFY

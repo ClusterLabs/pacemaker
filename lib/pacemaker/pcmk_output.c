@@ -1139,7 +1139,8 @@ rsc_action_default(pcmk__output_t *out, va_list args)
         g_list_free(possible_matches);
     }
 
-    possible_matches = pe__resource_actions(rsc, next, RSC_DEMOTE, false);
+    possible_matches = pe__resource_actions(rsc, next, PCMK_ACTION_DEMOTE,
+                                            false);
     if (possible_matches) {
         demote = possible_matches->data;
         g_list_free(possible_matches);

@@ -130,7 +130,7 @@ pcmk__group_create_actions(pe_resource_t *rsc)
     create_group_pseudo_op(rsc, PCMK_ACTION_STOP);
     create_group_pseudo_op(rsc, RSC_STOPPED);
     if (crm_is_true(g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_PROMOTABLE))) {
-        create_group_pseudo_op(rsc, RSC_DEMOTE);
+        create_group_pseudo_op(rsc, PCMK_ACTION_DEMOTE);
         create_group_pseudo_op(rsc, RSC_DEMOTED);
         create_group_pseudo_op(rsc, RSC_PROMOTE);
         create_group_pseudo_op(rsc, RSC_PROMOTED);
@@ -191,9 +191,9 @@ member_internal_constraints(gpointer data, gpointer user_data)
 
     if (member_data->promotable) {
         // Demote group -> demote member -> group is demoted
-        pcmk__order_resource_actions(member->parent, RSC_DEMOTE,
-                                     member, RSC_DEMOTE, down_flags);
-        pcmk__order_resource_actions(member, RSC_DEMOTE,
+        pcmk__order_resource_actions(member->parent, PCMK_ACTION_DEMOTE,
+                                     member, PCMK_ACTION_DEMOTE, down_flags);
+        pcmk__order_resource_actions(member, PCMK_ACTION_DEMOTE,
                                      member->parent, RSC_DEMOTED,
                                      post_down_flags);
 
@@ -269,9 +269,10 @@ member_internal_constraints(gpointer data, gpointer user_data)
                                          RSC_PROMOTE, member, RSC_PROMOTE,
                                          pe_order_implies_then
                                          |pe_order_runnable_left);
-            pcmk__order_resource_actions(member, RSC_DEMOTE,
+            pcmk__order_resource_actions(member, PCMK_ACTION_DEMOTE,
                                          member_data->previous_member,
-                                         RSC_DEMOTE, pe_order_optional);
+                                         PCMK_ACTION_DEMOTE,
+                                         pe_order_optional);
         }
     }
 

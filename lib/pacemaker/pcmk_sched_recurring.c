@@ -104,7 +104,8 @@ static bool
 op_cannot_recur(const char *name)
 {
     return pcmk__str_any_of(name, PCMK_ACTION_STOP, PCMK_ACTION_START,
-                            RSC_DEMOTE, RSC_PROMOTE, CRMD_ACTION_RELOAD_AGENT,
+                            PCMK_ACTION_DEMOTE, RSC_PROMOTE,
+                            CRMD_ACTION_RELOAD_AGENT,
                             CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED, NULL);
 }
 

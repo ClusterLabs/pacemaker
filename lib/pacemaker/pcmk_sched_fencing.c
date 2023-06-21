@@ -209,7 +209,7 @@ order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op)
     g_list_free(action_list);
 
     /* Get a list of demote actions potentially implied by the fencing */
-    action_list = pe__resource_actions(rsc, target, RSC_DEMOTE, FALSE);
+    action_list = pe__resource_actions(rsc, target, PCMK_ACTION_DEMOTE, FALSE);
 
     for (iter = action_list; iter != NULL; iter = iter->next) {
         pe_action_t *action = iter->data;

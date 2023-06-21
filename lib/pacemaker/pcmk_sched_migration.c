@@ -367,7 +367,7 @@ pcmk__order_migration_equivalents(pe__ordering_t *order)
                                NULL, flags, order->lh_rsc->cluster);
         }
 
-    } else if (pcmk__str_eq(first_task, RSC_DEMOTE, pcmk__str_none)
+    } else if (pcmk__str_eq(first_task, PCMK_ACTION_DEMOTE, pcmk__str_none)
                && pcmk__str_eq(then_task, PCMK_ACTION_STOP, pcmk__str_none)) {
 
         uint32_t flags = pe_order_optional;
@@ -376,7 +376,8 @@ pcmk__order_migration_equivalents(pe__ordering_t *order)
             /* A demote then B stop
              * -> A demote then B migrate_to */
             pcmk__new_ordering(order->lh_rsc,
-                               pcmk__op_key(order->lh_rsc->id, RSC_DEMOTE, 0),
+                               pcmk__op_key(order->lh_rsc->id,
+                                            PCMK_ACTION_DEMOTE, 0),
                                NULL, order->rh_rsc,
                                pcmk__op_key(order->rh_rsc->id, RSC_MIGRATE, 0),
                                NULL, flags, order->lh_rsc->cluster);
@@ -385,7 +386,7 @@ pcmk__order_migration_equivalents(pe__ordering_t *order)
             if (order->rh_rsc->partial_migration_target) {
                 pcmk__new_ordering(order->lh_rsc,
                                    pcmk__op_key(order->lh_rsc->id,
-                                                RSC_DEMOTE, 0),
+                                                PCMK_ACTION_DEMOTE, 0),
                                    NULL, order->rh_rsc,
                                    pcmk__op_key(order->rh_rsc->id,
                                                 RSC_MIGRATED, 0),

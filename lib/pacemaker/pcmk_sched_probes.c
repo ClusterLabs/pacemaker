@@ -573,7 +573,7 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after)
 
             } else if (pcmk__str_eq(after->task, RSC_PROMOTE, pcmk__str_none)) {
                 then_actions = pe__resource_actions(after->rsc, NULL,
-                                                    RSC_DEMOTE, FALSE);
+                                                    PCMK_ACTION_DEMOTE, FALSE);
             }
 
             for (iter = then_actions; iter != NULL; iter = iter->next) {
