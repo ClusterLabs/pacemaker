@@ -2407,7 +2407,8 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
     log_executor_event(op, op_key, node_name, removed);
 
     if (lrm_state) {
-        if (!pcmk__str_eq(op->op_type, RSC_METADATA, pcmk__str_casei)) {
+        if (!pcmk__str_eq(op->op_type, PCMK_ACTION_META_DATA,
+                          pcmk__str_casei)) {
             crmd_alert_resource_op(lrm_state->node_name, op);
         } else if (rsc && (op->rc == PCMK_OCF_OK)) {
             char *metadata = unescape_newlines(op->output);

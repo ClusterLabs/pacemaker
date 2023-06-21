@@ -183,7 +183,7 @@ extern char *crm_system_name;
 #  define CRMD_ACTION_NOTIFY		"notify"
 #  define CRMD_ACTION_NOTIFIED		"notified"
 
-#  define CRMD_ACTION_METADATA		"meta-data"
+#  define CRMD_ACTION_METADATA		PCMK_ACTION_META_DATA
 #  define CRMD_METADATA_CALL_TIMEOUT   30000
 
 /* short names */
@@ -205,7 +205,7 @@ extern char *crm_system_name;
 #  define RSC_NOTIFY	CRMD_ACTION_NOTIFY
 #  define RSC_NOTIFIED	CRMD_ACTION_NOTIFIED
 
-#  define RSC_METADATA	CRMD_ACTION_METADATA
+#  define RSC_METADATA	PCMK_ACTION_META_DATA
 /* *INDENT-ON* */
 
 #  include <crm/common/actions.h>

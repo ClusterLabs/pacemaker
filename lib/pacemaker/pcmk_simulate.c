@@ -545,7 +545,8 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     }
 
     // Certain actions need to be displayed but don't need history entries
-    if (pcmk__strcase_any_of(operation, "delete", RSC_METADATA, NULL)) {
+    if (pcmk__strcase_any_of(operation, "delete", PCMK_ACTION_META_DATA,
+                             NULL)) {
         out->message(out, "inject-rsc-action", resource, operation, node,
                      (guint) 0);
         goto done; // Confirm action and update graph

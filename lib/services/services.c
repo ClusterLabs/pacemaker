@@ -1028,7 +1028,7 @@ services_action_sync(svc_action_t * op)
 
     op->synchronous = true;
 
-    if (pcmk__str_eq(op->action, "meta-data", pcmk__str_casei)) {
+    if (pcmk__str_eq(op->action, PCMK_ACTION_META_DATA, pcmk__str_casei)) {
         /* Synchronous meta-data operations are handled specially. Since most
          * resource classes don't provide any meta-data, it has to be
          * synthesized from available information about the agent.

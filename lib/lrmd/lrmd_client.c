@@ -1975,7 +1975,7 @@ lrmd_api_get_metadata_params(lrmd_t *lrmd, const char *standard,
         g_hash_table_insert(params_table, strdup(param->key), strdup(param->value));
     }
     action = services__create_resource_action(type, standard, provider, type,
-                                              CRMD_ACTION_METADATA, 0,
+                                              PCMK_ACTION_META_DATA, 0,
                                               CRMD_METADATA_CALL_TIMEOUT,
                                               params_table, 0);
     lrmd_key_value_freeall(params);
@@ -2438,8 +2438,9 @@ lrmd__metadata_async(const lrmd_rsc_info_t *rsc,
 
     action = services__create_resource_action(pcmk__s(rsc->id, rsc->type),
                                               rsc->standard, rsc->provider,
-                                              rsc->type, CRMD_ACTION_METADATA,
-                                              0, CRMD_METADATA_CALL_TIMEOUT,
+                                              rsc->type,
+                                              PCMK_ACTION_META_DATA, 0,
+                                              CRMD_METADATA_CALL_TIMEOUT,
                                               NULL, 0);
     if (action == NULL) {
         pcmk__set_result(&result, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,

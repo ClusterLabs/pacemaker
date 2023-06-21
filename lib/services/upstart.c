@@ -539,7 +539,7 @@ services__execute_upstart(svc_action_t *op)
         goto cleanup;
     }
 
-    if (pcmk__str_eq(op->action, "meta-data", pcmk__str_casei)) {
+    if (pcmk__str_eq(op->action, PCMK_ACTION_META_DATA, pcmk__str_casei)) {
         op->stdout_data = upstart_job_metadata(op->agent);
         services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
         goto cleanup;

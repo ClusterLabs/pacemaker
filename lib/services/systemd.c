@@ -459,7 +459,11 @@ invoke_unit_by_name(const char *arg_name, svc_action_t *op, char **path)
     CRM_ASSERT(msg != NULL);
 
     // Add the (expanded) unit name as the argument
-    name = systemd_service_name(arg_name, op == NULL || pcmk__str_eq(op->action, "meta-data", pcmk__str_none));
+    name = systemd_service_name(arg_name,
+                                (op == NULL)
+                                || pcmk__str_eq(op->action,
+                                                PCMK_ACTION_META_DATA,
+                                                pcmk__str_none));
     CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &name,
                                             DBUS_TYPE_INVALID));
     free(name);
@@ -990,7 +994,10 @@ invoke_unit_by_path(svc_action_t *op, const char *unit)
     /* (ss) */
     {
         const char *replace_s = "replace";
-        char *name = systemd_service_name(op->agent, pcmk__str_eq(op->action, "meta-data", pcmk__str_none));
+        char *name = systemd_service_name(op->agent,
+                                          pcmk__str_eq(op->action,
+                                                       PCMK_ACTION_META_DATA,
+                                                       pcmk__str_none));
 
         CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &name, DBUS_TYPE_INVALID));
         CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &replace_s, DBUS_TYPE_INVALID));
@@ -1074,7 +1081,7 @@ services__execute_systemd(svc_action_t *op)
               (op->synchronous? "" : "a"), op->action, op->agent,
               ((op->rsc == NULL)? "" : " for resource "), pcmk__s(op->rsc, ""));
 
-    if (pcmk__str_eq(op->action, "meta-data", pcmk__str_casei)) {
+    if (pcmk__str_eq(op->action, PCMK_ACTION_META_DATA, pcmk__str_casei)) {
         op->stdout_data = systemd_unit_metadata(op->agent, op->timeout);
         services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
         goto done;
