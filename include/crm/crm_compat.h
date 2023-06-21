@@ -46,6 +46,9 @@ extern "C" {
 //! \deprecated Use PCMK_ACTION_NOTIFY instead
 #define CRMD_ACTION_NOTIFY PCMK_ACTION_NOTIFY
 
+//! \deprecated Use PCMK_ACTION_PROMOTE instead
+#define CRMD_ACTION_PROMOTE PCMK_ACTION_PROMOTE
+
 //! \deprecated Use PCMK_ACTION_START instead
 #define CRMD_ACTION_START PCMK_ACTION_START
 
