@@ -1074,14 +1074,25 @@ void
 pcmk__with_primitive_colocations(const pe_resource_t *rsc,
                                  const pe_resource_t *orig_rsc, GList **list)
 {
-    // Primitives don't have children, so rsc should also be orig_rsc
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_native)
-               && (rsc == orig_rsc) && (list != NULL));
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_native) && (list != NULL));
 
-    // Add primitive's own colocations plus any relevant ones from parent
-    pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
-    if (rsc->parent != NULL) {
-        rsc->parent->cmds->with_this_colocations(rsc->parent, rsc, list);
+    if (rsc == orig_rsc) {
+        /* For the resource itself, add all of its own colocations and relevant
+         * colocations from its parent (if any).
+         */
+        pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
+        if (rsc->parent != NULL) {
+            rsc->parent->cmds->with_this_colocations(rsc->parent, rsc, list);
+        }
+    } else {
+        // For an ancestor, add only explicitly configured constraints
+        for (GList *iter = rsc->rsc_cons_lhs; iter != NULL; iter = iter->next) {
+            pcmk__colocation_t *colocation = iter->data;
+
+            if (pcmk_is_set(colocation->flags, pcmk__coloc_explicit)) {
+                pcmk__add_with_this(list, colocation, orig_rsc);
+            }
+        }
     }
 }
 
@@ -1092,14 +1103,25 @@ void
 pcmk__primitive_with_colocations(const pe_resource_t *rsc,
                                  const pe_resource_t *orig_rsc, GList **list)
 {
-    // Primitives don't have children, so rsc should also be orig_rsc
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_native)
-               && (rsc == orig_rsc) && (list != NULL));
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_native) && (list != NULL));
 
-    // Add primitive's own colocations plus any relevant ones from parent
-    pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
-    if (rsc->parent != NULL) {
-        rsc->parent->cmds->this_with_colocations(rsc->parent, rsc, list);
+    if (rsc == orig_rsc) {
+        /* For the resource itself, add all of its own colocations and relevant
+         * colocations from its parent (if any).
+         */
+        pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
+        if (rsc->parent != NULL) {
+            rsc->parent->cmds->this_with_colocations(rsc->parent, rsc, list);
+        }
+    } else {
+        // For an ancestor, add only explicitly configured constraints
+        for (GList *iter = rsc->rsc_cons; iter != NULL; iter = iter->next) {
+            pcmk__colocation_t *colocation = iter->data;
+
+            if (pcmk_is_set(colocation->flags, pcmk__coloc_explicit)) {
+                pcmk__add_this_with(list, colocation, orig_rsc);
+            }
+        }
     }
 }
 
