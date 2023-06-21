@@ -595,7 +595,7 @@ pcmk__connection_host_for_action(const pe_action_t *action)
      * on.
      */
 
-    if (pcmk__str_eq(task, "notify", pcmk__str_none)) {
+    if (pcmk__str_eq(task, PCMK_ACTION_NOTIFY, pcmk__str_none)) {
         task = g_hash_table_lookup(action->meta, "notify_operation");
     }
 

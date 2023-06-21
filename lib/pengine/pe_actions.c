@@ -134,7 +134,7 @@ find_rsc_op_entry_helper(const pe_resource_t *rsc, const char *key,
         goto retry;
 
     } else if (strstr(key, "_notify_")) {
-        local_key = pcmk__op_key(rsc->id, "notify", 0);
+        local_key = pcmk__op_key(rsc->id, PCMK_ACTION_NOTIFY, 0);
         key = local_key;
         goto retry;
     }

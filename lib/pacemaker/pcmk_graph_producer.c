@@ -197,7 +197,7 @@ add_downed_nodes(xmlNode *xml, const pe_action_t *action)
 static char *
 clone_op_key(const pe_action_t *action, guint interval_ms)
 {
-    if (pcmk__str_eq(action->task, RSC_NOTIFY, pcmk__str_none)) {
+    if (pcmk__str_eq(action->task, PCMK_ACTION_NOTIFY, pcmk__str_none)) {
         const char *n_type = g_hash_table_lookup(action->meta, "notify_type");
         const char *n_task = g_hash_table_lookup(action->meta,
                                                  "notify_operation");

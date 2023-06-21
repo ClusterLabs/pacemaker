@@ -112,10 +112,10 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
         NULL
     };
     const char *action_prefixes_with_underbars[] = {
-        "pre_" CRMD_ACTION_NOTIFY,
-        "post_" CRMD_ACTION_NOTIFY,
-        "confirmed-pre_" CRMD_ACTION_NOTIFY,
-        "confirmed-post_" CRMD_ACTION_NOTIFY,
+        "pre_" PCMK_ACTION_NOTIFY,
+        "post_" PCMK_ACTION_NOTIFY,
+        "confirmed-pre_" PCMK_ACTION_NOTIFY,
+        "confirmed-post_" PCMK_ACTION_NOTIFY,
         NULL,
     };
 
@@ -474,7 +474,7 @@ crm_op_needs_metadata(const char *rsc_class, const char *op)
                             CRMD_ACTION_PROMOTE, PCMK_ACTION_DEMOTE,
                             CRMD_ACTION_RELOAD, CRMD_ACTION_RELOAD_AGENT,
                             CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED,
-                            CRMD_ACTION_NOTIFY, NULL);
+                            PCMK_ACTION_NOTIFY, NULL);
 }
 
 /*!

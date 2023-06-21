@@ -4255,7 +4255,7 @@ can_affect_state(struct action_history *history)
                              CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED,
                              "asyncmon", NULL);
 #else
-     return !pcmk__str_any_of(history->task, CRMD_ACTION_NOTIFY,
+     return !pcmk__str_any_of(history->task, PCMK_ACTION_NOTIFY,
                               PCMK_ACTION_META_DATA, NULL);
 #endif
 }

@@ -99,7 +99,7 @@ action_uuid_for_ordering(const char *first_uuid, const pe_resource_t *first_rsc)
     enum action_tasks remapped_task = no_action;
 
     // Only non-notify actions for collective resources need remapping
-    if ((strstr(first_uuid, "notify") != NULL)
+    if ((strstr(first_uuid, PCMK_ACTION_NOTIFY) != NULL)
         || (first_rsc->variant < pe_group)) {
         goto done;
     }
@@ -1146,7 +1146,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     }
 
     key = pcmk__op_key(op->rsc_id, task, op->interval_ms);
-    if (pcmk__str_eq(task, CRMD_ACTION_NOTIFY, pcmk__str_none)) {
+    if (pcmk__str_eq(task, PCMK_ACTION_NOTIFY, pcmk__str_none)) {
         const char *n_type = crm_meta_value(op->params, "notify_type");
         const char *n_task = crm_meta_value(op->params, "notify_operation");
 

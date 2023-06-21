@@ -179,7 +179,7 @@ extern char *crm_system_name;
 #  define CRMD_ACTION_PROMOTED		"promoted"
 #  define CRMD_ACTION_DEMOTED		"demoted"
 
-#  define CRMD_ACTION_NOTIFY		"notify"
+#  define CRMD_ACTION_NOTIFY		PCMK_ACTION_NOTIFY
 #  define CRMD_ACTION_NOTIFIED		"notified"
 
 #  define CRMD_METADATA_CALL_TIMEOUT   30000
@@ -199,7 +199,7 @@ extern char *crm_system_name;
 #  define RSC_PROMOTED	CRMD_ACTION_PROMOTED
 #  define RSC_DEMOTED	CRMD_ACTION_DEMOTED
 
-#  define RSC_NOTIFY	CRMD_ACTION_NOTIFY
+#  define RSC_NOTIFY	PCMK_ACTION_NOTIFY
 #  define RSC_NOTIFIED	CRMD_ACTION_NOTIFIED
 /* *INDENT-ON* */
 

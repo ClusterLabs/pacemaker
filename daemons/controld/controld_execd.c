@@ -171,7 +171,7 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
         return;
     }
 
-    if (pcmk__str_eq(op->op_type, RSC_NOTIFY, pcmk__str_casei)) {
+    if (pcmk__str_eq(op->op_type, PCMK_ACTION_NOTIFY, pcmk__str_casei)) {
         return;
     }
 
@@ -1121,7 +1121,8 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, const xmlNode *action,
 
     op = construct_op(lrm_state, action, ID(xml_rsc), operation);
 
-    if (pcmk__str_eq(operation, RSC_NOTIFY, pcmk__str_casei)) { // Notifications can't fail
+    if (pcmk__str_eq(operation, PCMK_ACTION_NOTIFY, pcmk__str_casei)) {
+        // Notifications can't fail
         fake_op_status(lrm_state, op, PCMK_EXEC_DONE, PCMK_OCF_OK, NULL);
     } else {
         fake_op_status(lrm_state, op, op_status, rc, exit_reason);
@@ -1866,7 +1867,7 @@ should_cancel_recurring(const char *rsc_id, const char *action, guint interval_m
     // Cancel recurring actions before changing resource state
     return (interval_ms == 0)
             && !pcmk__str_any_of(action, PCMK_ACTION_MONITOR,
-                                 CRMD_ACTION_NOTIFY, NULL);
+                                 PCMK_ACTION_NOTIFY, NULL);
 }
 
 /*!
