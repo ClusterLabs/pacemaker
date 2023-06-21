@@ -67,6 +67,9 @@ extern "C" {
 //! \deprecated Use PCMK_ACTION_NOTIFY instead
 #define RSC_NOTIFY PCMK_ACTION_NOTIFY
 
+//! \deprecated Use PCMK_ACTION_PROMOTE instead
+#define RSC_PROMOTE PCMK_ACTION_PROMOTE
+
 //! \deprecated Use PCMK_ACTION_START instead
 #define RSC_START PCMK_ACTION_START
 
